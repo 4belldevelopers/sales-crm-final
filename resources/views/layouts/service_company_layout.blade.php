@@ -113,7 +113,6 @@
      a debug note for future readers instead of deleting it; if you delete it,
      please delete this too. --}}
 <script src="{{ asset('assets/plugins/jquery/jquery.min.js') }}{{ TM_VERSION }}"></script>
-
 @stack('head-script')
 <style>         
       @media  only screen and (min-width: 1024px) and (max-width: 1440px)
@@ -128,6 +127,78 @@
       }
        #kt_activitiesIntTeam{width: 1200px;} }
       #kt_activitiesIntTeam{z-index:9999;}
+
+      /* Candidate drawer — V2 hero redesign: full structural layout rules here so the
+         drawer renders correctly even when candidates-details.css is cached (old version).
+         These rules are always in the browser CSSOM and apply the moment AJAX inserts HTML. */
+      #kt_activitiesApplication .cdr-dl-menu{display:none;}
+      #kt_activitiesApplication .cdr-dl-menu.open{display:block;}
+      #kt_activitiesApplication .cdr-dl-item-logo svg{width:13px;height:13px;flex-shrink:0;}
+      /* Topbar: horizontal flex row, close button pushed to the right */
+      #kt_activitiesApplication .cdr-topbar{display:flex!important;align-items:center;flex-wrap:nowrap;gap:8px;padding:12px 16px;background:#fff;border-bottom:1px solid #e2e8f0;justify-content:space-between;}
+      #kt_activitiesApplication .cdr-topbar-group{display:flex!important;align-items:center;gap:8px;flex:1 1 auto;min-width:0;overflow-x:auto;flex-wrap:nowrap;}
+      /* Action buttons: outlined inline-flex pill */
+      #kt_activitiesApplication .cdr-action-btn{display:inline-flex!important;align-items:center;gap:6px;padding:7px 14px;border:1.5px solid #d1d5db;border-radius:8px;background:#fff;color:#374151;font-family:'Poppins',sans-serif;font-size:12.5px;font-weight:500;cursor:pointer;text-decoration:none;white-space:nowrap;line-height:1;}
+      #kt_activitiesApplication .cdr-action-btn.cdr-btn-wa{background:#25D366;color:#fff;border-color:#25D366;}
+      #kt_activitiesApplication .cdr-action-btn svg{width:14px;height:14px;flex-shrink:0;}
+      #kt_activitiesApplication .cdr-action-btn .cdr-caret{width:12px;height:12px;flex-shrink:0;color:#9ca3af;}
+      /* Close button */
+      #kt_activitiesApplication .cdr-topbar-close{width:34px;height:34px;flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;background:none;border:1.5px solid #e2e8f0;border-radius:8px;cursor:pointer;color:#6b7280;padding:0;margin-left:4px;}
+      #kt_activitiesApplication .cdr-topbar-close svg{width:16px;height:16px;}
+      /* Hero card v3: 2-column grid — identity left (wider), metrics right */
+      #kt_activitiesApplication .cdr-hero-card{display:grid!important;grid-template-columns:1.4fr 1fr;background:#fff;border-bottom:1px solid #f0f4f8;}
+      /* Identity sub-card: flex row — avatar-wrap left + id-body right */
+      #kt_activitiesApplication .cdr-subcard-id{display:flex!important;gap:16px;align-items:flex-start;padding:18px 20px;border-right:1px solid #f1f5f9;}
+      /* Rounded-square avatar + availability dot */
+      #kt_activitiesApplication .cdr-avatar-wrap{position:relative;flex-shrink:0;align-self:flex-start;}
+      #kt_activitiesApplication .cdr-avatar-sq{width:88px;height:88px;border-radius:16px;background:#eef2ff;color:#1e3a8a;font-family:'Poppins',sans-serif;font-weight:700;font-size:26px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+      #kt_activitiesApplication .cdr-avail-dot-v2{position:absolute;bottom:4px;right:4px;width:14px;height:14px;border-radius:50%;background:#22c55e;border:2.5px solid #fff;}
+      /* Name / role */
+      #kt_activitiesApplication .cdr-id-body{flex:1 1 auto;min-width:0;}
+      #kt_activitiesApplication .cdr-name-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+      #kt_activitiesApplication .cdr-name{margin:0;font-size:18px;font-weight:700;color:#0f172a;line-height:1.2;font-family:'Poppins',sans-serif;}
+      #kt_activitiesApplication .cdr-verified-v2{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%;background:#2563eb;margin-left:6px;flex-shrink:0;}
+      #kt_activitiesApplication .cdr-verified-v2 svg{width:11px;height:11px;color:#fff;stroke-width:3;}
+      #kt_activitiesApplication .cdr-role{margin:3px 0 0 0;font-size:13px;font-weight:600;color:#2563eb;line-height:1.3;font-family:'Poppins',sans-serif;}
+      /* 2-col meta grid */
+      #kt_activitiesApplication .cdr-meta-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px 12px;margin-top:10px;}
+      #kt_activitiesApplication .cdr-meta-grid .cdr-meta-item{display:flex;align-items:center;gap:6px;font-size:12px;font-weight:500;color:#475569;font-family:'Poppins',sans-serif;white-space:nowrap;overflow:hidden;min-width:0;}
+      #kt_activitiesApplication .cdr-meta-grid .cdr-meta-item svg{width:13px;height:13px;flex-shrink:0;color:#94a3b8;}
+      #kt_activitiesApplication .cdr-meta-grid .cdr-meta-item.cmi-green{color:#16a34a;}
+      /* Skills */
+      #kt_activitiesApplication .cdr-skills-sec{margin-top:14px;}
+      #kt_activitiesApplication .cdr-skills-lbl{font-size:10.5px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.4px;display:block;margin-bottom:6px;font-family:'Poppins',sans-serif;}
+      #kt_activitiesApplication .cdr-skills{display:flex;align-items:center;gap:6px;flex-wrap:wrap;}
+      #kt_activitiesApplication .cdr-skill-pill{display:inline-flex;align-items:center;padding:3px 9px;border-radius:999px;background:#f1f5f9;color:#334155;font-size:11px;font-weight:500;border:1px solid #e2e8f0;font-family:'Poppins',sans-serif;line-height:1.2;}
+      #kt_activitiesApplication .cdr-skill-more{background:#eef2ff;color:#4338ca;border-color:#c7d2fe;font-weight:600;}
+      /* Metrics sub-card v3: 4-row vertical list */
+      #kt_activitiesApplication .cdr-subcard-metrics{padding:0;}
+      #kt_activitiesApplication .cdr-metric-list{display:flex;flex-direction:column;height:100%;justify-content:space-evenly;padding:8px 20px 8px 16px;}
+      #kt_activitiesApplication .cdr-metric-row{display:flex;align-items:center;gap:12px;padding:9px 0;border-bottom:1px solid #f0f4f8;}
+      #kt_activitiesApplication .cdr-metric-row:last-child{border-bottom:none;}
+      #kt_activitiesApplication .cdr-metric-icon{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+      #kt_activitiesApplication .cdr-metric-icon svg{width:16px;height:16px;}
+      #kt_activitiesApplication .cdr-metric-icon.ci-green{background:#ecfdf5;color:#16a34a;}
+      #kt_activitiesApplication .cdr-metric-icon.ci-red{background:#fef2f2;color:#dc2626;}
+      #kt_activitiesApplication .cdr-metric-icon.ci-blue{background:#eff6ff;color:#2563eb;}
+      #kt_activitiesApplication .cdr-metric-label{flex:1 1 auto;font-size:12.5px;font-weight:500;color:#475569;font-family:'Poppins',sans-serif;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+      #kt_activitiesApplication .cdr-metric-val{font-size:13px;font-weight:700;color:#0f172a;text-align:right;white-space:nowrap;font-family:'Poppins',sans-serif;}
+      #kt_activitiesApplication .cdr-metric-val.cv-green{color:#16a34a;}
+      #kt_activitiesApplication .cdr-metric-val.cv-red{color:#dc2626;}
+      #kt_activitiesApplication .cdr-metric-frac{font-size:12px;font-weight:500;color:#64748b;}
+      #kt_activitiesApplication .cdr-metric-val-block{text-align:right;min-width:0;}
+      #kt_activitiesApplication .cdr-metric-sub{font-size:11px;color:#94a3b8;font-weight:400;display:block;margin-top:1px;white-space:nowrap;font-family:'Poppins',sans-serif;}
+      /* Card/subcard system: page-content background + section-card display (FOUC-safe) */
+      #kt_activitiesApplication .page-content{background:#eef2f7;padding:16px 20px;display:flex;flex-direction:column;gap:16px;}
+      #kt_activitiesApplication .section-card{background:#fff;border:1px solid #e2e8f0;border-radius:12px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.05),0 4px 12px rgba(0,0,0,.03);}
+      #kt_activitiesApplication .section-card-header{display:flex;align-items:center;gap:10px;padding:14px 20px;background:#fff;border-bottom:1px solid #f0f4f8;}
+      #kt_activitiesApplication .section-card-body{padding:16px 20px 20px;background:#fff;}
+      #kt_activitiesApplication .cardshow{background:#fff;border:1px solid #e2e8f0;border-radius:12px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.05),0 4px 12px rgba(0,0,0,.03);}
+      #kt_activitiesApplication .card-header-sidebar{display:flex;align-items:center;gap:10px;background:#fff;border-bottom:1px solid #f0f4f8;padding:13px 24px;margin:-24px -24px 16px;}
+      #kt_activitiesApplication .info-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:0;}
+      #kt_activitiesApplication .info-card{background:#fff;border:1px solid #e8edf5;border-radius:10px;padding:14px 16px;display:flex;align-items:flex-start;gap:12px;box-shadow:0 1px 2px rgba(0,0,0,.04);}
+      #kt_activitiesApplication .content-split{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+      #kt_activitiesApplication .content-main,#kt_activitiesApplication .content-sidebar{display:flex;flex-direction:column;gap:16px;}
 
       /* Select-Interviewer picker: 60% desktop / 75% tablet / 100% mobile is
          set via data-kt-drawer-width on the element itself (KTDrawer computes
@@ -427,6 +498,9 @@
         position: absolute !important;
         z-index: 2147483647 !important
     }
+
+/* Remove online-status green dot from all avatar/image icons */
+.bg-success.rounded-circle.h-20px.w-20px{display:none!important;}
 
 </style>
 

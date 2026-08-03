@@ -1,4 +1,4 @@
-@php 
+﻿@php 
    use App\Helper\GeneralMethod;
    $defaultTimeFormat = GeneralMethod::defaultTimeFormat();
     $symbolsValue = GeneralMethod::currencyConverter()['getKey'] ?? [];
@@ -103,6 +103,302 @@
 
  <link href="{{ asset('demo/css/candidates-details.css') }}{{ TM_VERSION }}" rel="stylesheet" type="text/css" />
 
+{{-- Inline critical CSS: three-card layout + pipeline stat cards.
+     Placed after the external link so it always takes effect even if the
+     CSS file is served from browser cache. --}}
+<style>
+/* ===== THREE-CARD LAYOUT ===== */
+#kt_activitiesApplication .page-wrapper{display:flex;flex-direction:column;gap:12px;background:#f1f5f9;min-height:auto;padding-bottom:16px;}
+#kt_activitiesApplication .cdr-outer-card{background:#fff;border:1px solid #e2e8f0;border-radius:12px;box-shadow:0 1px 3px rgba(15,23,42,.04),0 4px 12px rgba(15,23,42,.03);overflow:hidden;flex-shrink:0;margin:0 16px;}
+/* ===== CARD 2: pipeline stat sub-cards ===== */
+#kt_activitiesApplication .cdr-pipeline-section{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:10px;flex-shrink:0;margin:0 16px;}
+#kt_activitiesApplication .cdr-pipeline-card{background:#fff;border-radius:12px;padding:14px 12px;border:1px solid #e2e8f0;display:flex;align-items:center;gap:10px;box-shadow:0 1px 2px rgba(15,23,42,.04);transition:box-shadow .18s ease,transform .18s ease,border-color .18s ease;cursor:default;min-width:0;}
+#kt_activitiesApplication .cdr-pipeline-card:hover{box-shadow:0 4px 14px rgba(15,23,42,.08);transform:translateY(-2px);border-color:#bfdbfe;}
+#kt_activitiesApplication .cdr-pipeline-icon{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+#kt_activitiesApplication .cdr-pipeline-icon svg{width:16px!important;height:16px!important;flex-shrink:0;}
+#kt_activitiesApplication .cpi-blue{background:#dbeafe;color:#1d4ed8;}
+#kt_activitiesApplication .cpi-green{background:#d1fae5;color:#059669;}
+#kt_activitiesApplication .cpi-purple{background:#ede9fe;color:#7c3aed;}
+#kt_activitiesApplication .cpi-amber{background:#fef3c7;color:#d97706;}
+#kt_activitiesApplication .cpi-teal{background:#ccfbf1;color:#0d9488;}
+#kt_activitiesApplication .cpi-indigo{background:#e0e7ff;color:#4338ca;}
+#kt_activitiesApplication .cdr-pipeline-info{flex:1;min-width:0;}
+#kt_activitiesApplication .cdr-pipeline-label{font-size:10.5px;color:#94a3b8;font-weight:500;font-family:'Poppins',sans-serif;margin-bottom:4px;white-space:nowrap;}
+#kt_activitiesApplication .cdr-pipeline-value{font-size:13px;font-weight:700;color:#0f172a;font-family:'Poppins',sans-serif;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.3;}
+#kt_activitiesApplication .cpi-unit{font-size:11px;font-weight:500;color:#64748b;font-family:'Poppins',sans-serif;}
+/* ===== CARD 3: tabs sit flat inside outer card ===== */
+#kt_activitiesApplication .cdr-tabs-card .page-tabs{border-radius:0;background:#fff;}
+#kt_activitiesApplication .cdr-tabs-card .page-content{background:#f8fafc;border-radius:0 0 12px 12px;}
+/* ===== FONT CAP: max 14px for all content text ===== */
+#kt_activitiesApplication .cdr-subcard-id .cdr-name{font-size:14px!important;font-weight:700;line-height:1.3;}
+#kt_activitiesApplication .cdr-compare-value{font-size:13px!important;}
+#kt_activitiesApplication .cdr-cell-value{font-size:13px!important;}
+/* ===== RESPONSIVE ===== */
+@media(max-width:1100px){#kt_activitiesApplication .cdr-pipeline-section{grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;}}
+@media(max-width:640px){#kt_activitiesApplication .cdr-pipeline-section{grid-template-columns:repeat(2,minmax(0,1fr));}}
+/* ===== PROFILE OVERVIEW: 2-col grid + drawers ===== */
+#kt_activitiesApplication #personal_details .content-split{display:grid!important;grid-template-columns:minmax(0,1fr) 370px;gap:16px;align-items:start;}
+@media(max-width:860px){#kt_activitiesApplication #personal_details .content-split{grid-template-columns:1fr!important;}}
+/* ===== PROFILE OVERVIEW: heading 13px, body 12px ===== */
+/* Inline here (not candidates-details.css) so browser cache never blocks delivery. */
+#kt_activitiesApplication #personal_details .card-title{font-size:13px!important;font-weight:700!important;}
+#kt_activitiesApplication #personal_details .summary-text{font-size:12px!important;line-height:1.7!important;}
+#kt_activitiesApplication #personal_details .skills-thead{font-size:12px!important;}
+#kt_activitiesApplication #personal_details .skill-name-cell{font-size:12px!important;}
+#kt_activitiesApplication #personal_details .skill-exp-cell{font-size:12px!important;}
+/* Screening Questions: override to 2-col grid — original is 1fr 100px 140px (skills layout) */
+#kt_activitiesApplication #personal_details .job_additional_view .skills-thead,
+#kt_activitiesApplication #personal_details .job_additional_view .skills-row{grid-template-columns:1fr 1.4fr!important;}
+/* Handle answers that have no word-break characters (long strings) */
+#kt_activitiesApplication #personal_details .job_additional_view .skill-exp-cell{word-break:break-word;overflow-wrap:break-word;white-space:normal;}
+/* Word counter below answer inputs in the edit drawer */
+.sq-word-count{font-size:10px;color:#94a3b8;margin-top:3px;text-align:right;font-family:'Poppins',sans-serif;}
+.sq-word-count.sq-at-limit{color:#ef4444;font-weight:600;}
+#kt_activitiesApplication #personal_details .rating-text{font-size:12px!important;}
+#kt_activitiesApplication #personal_details .comp-label{font-size:12px!important;}
+#kt_activitiesApplication #personal_details .comp-value{font-size:12px!important;font-weight:600!important;}
+#kt_activitiesApplication #personal_details .comp-badge{font-size:12px!important;}
+#kt_activitiesApplication #personal_details .own-label{font-size:12px!important;}
+#kt_activitiesApplication #personal_details .own-value{font-size:12px!important;}
+#kt_activitiesApplication #personal_details .slots-grid .slot-day-name{font-size:12px!important;}
+#kt_activitiesApplication #personal_details .slots-grid .slot-date{font-size:12px!important;}
+#kt_activitiesApplication #personal_details .slots-grid .slot-time{font-size:12px!important;}
+#kt_activitiesApplication #personal_details .po-recruiter-note-text{font-size:12px!important;line-height:1.7;color:#475569;}
+#kt_activitiesApplication #personal_details .po-no-notes{font-size:12px!important;color:#94a3b8;font-style:italic;margin:0;}
+/* ===== Edit Interview Slots drawer: isd-datetime-pill matching Interview Drawer ===== */
+#jw-slots-drawer .isd-slot-card{background:#fff;border:1px solid #eef0f4;border-radius:12px;padding:14px 16px;margin-bottom:14px;}
+#jw-slots-drawer .isd-slot-head{display:flex;align-items:center;gap:10px;margin-bottom:12px;}
+#jw-slots-drawer .isd-slot-num{width:22px;height:22px;border-radius:50%;background:#3e97ff;color:#fff;font-size:11px;font-weight:700;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;}
+#jw-slots-drawer .isd-slot-label{font-size:12.5px;font-weight:700;color:#181c32;}
+#jw-slots-drawer .isd-slot-grid{display:grid;grid-template-columns:1.6fr 1fr;gap:12px;}
+#jw-slots-drawer .isd-field label{display:flex;align-items:center;gap:6px;font-size:11px;font-weight:600;color:#3f4254;margin-bottom:5px;}
+#jw-slots-drawer .isd-field label i{color:#a1a5b7;font-size:14px;}
+#jw-slots-drawer .isd-field select{width:100%;border:1.5px solid #e4e6ef;border-radius:8px;padding:7px 9px;font-size:12px;color:#181c32;background:#f8f9fb;}
+#jw-slots-drawer .isd-datetime-pill{display:flex;align-items:center;border:1.5px solid #e4e6ef;border-radius:8px;background:#f8f9fb;padding:0 9px;}
+#jw-slots-drawer .isd-datetime-pill input{border:none!important;background:transparent!important;padding:8px 4px!important;width:auto;flex:1 1 auto;min-width:0;color:#181c32;font-size:12px;font-family:'Poppins',sans-serif;}
+#jw-slots-drawer .isd-datetime-pill .sep{width:1px;height:18px;background:#e4e6ef;flex-shrink:0;margin:0 2px;}
+/* slots drawer — wider panel (+17%) and full-pill click */
+#jw-slots-drawer .jw-drawer-panel{width:560px;}
+#jw-slots-drawer .isd-datetime-pill{cursor:pointer;}
+#jw-slots-drawer .isd-datetime-pill input{cursor:pointer;}
+/* timezone row */
+#jw-slots-drawer .isd-tz-row{background:#f8faff;border:1px solid #e0e7ff;border-radius:10px;padding:12px 14px;margin-bottom:16px;}
+#jw-slots-drawer .isd-tz-label{font-size:11px;font-weight:600;color:#3f4254;margin-bottom:6px;display:flex;align-items:center;gap:6px;}
+#jw-slots-drawer .isd-tz-select{width:100%;border:1.5px solid #c7d2fe;border-radius:8px;padding:7px 10px;font-size:12px;color:#181c32;background:#fff;font-family:'Poppins',sans-serif;cursor:pointer;}
+#jw-slots-drawer .isd-tz-hint{font-size:10px;color:#94a3b8;margin-top:5px;display:flex;align-items:center;gap:4px;}
+#kt_activitiesApplication .jw-card-edit-btn{margin-left:auto;display:inline-flex;align-items:center;gap:5px;padding:5px 12px;font-size:12px;font-weight:600;color:#4f46e5;background:#eef2ff;border:1px solid #c7d2fe;border-radius:7px;cursor:pointer;font-family:'Poppins',sans-serif;white-space:nowrap;flex-shrink:0;}
+#kt_activitiesApplication .jw-card-edit-btn svg{width:12px;height:12px;}
+#kt_activitiesApplication #personal_details .skill-logo{display:none!important;}
+/* ===== SIDE DRAWERS (CSS :has() driven) ===== */
+.jw-side-drawer{position:fixed;inset:0;z-index:1055;pointer-events:none;overflow:hidden;}
+.jw-side-drawer:has(.jw-drawer-body:not(.d-none)){pointer-events:auto;}
+.jw-drawer-backdrop{position:absolute;inset:0;background:rgba(15,23,42,.45);opacity:0;cursor:pointer;transition:opacity .28s;}
+.jw-side-drawer:has(.jw-drawer-body:not(.d-none)) .jw-drawer-backdrop{opacity:1;}
+.jw-drawer-panel{position:absolute;right:0;top:0;bottom:0;width:480px;max-width:96vw;background:#fff;display:flex;flex-direction:column;box-shadow:-4px 0 32px rgba(15,23,42,.14);border-left:1px solid #e2e8f0;transform:translateX(100%);transition:transform .28s cubic-bezier(.4,0,.2,1);}
+#jw-skill-drawer .jw-drawer-panel{width:576px;}
+.jw-side-drawer:has(.jw-drawer-body:not(.d-none)) .jw-drawer-panel{transform:translateX(0);}
+.jw-drawer-header{display:flex;align-items:center;justify-content:space-between;padding:16px 20px 14px;border-bottom:1px solid #e2e8f0;background:#f8fafc;flex-shrink:0;gap:12px;}
+.jw-drawer-icon-wrap{width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.jw-drawer-icon-wrap svg{width:15px;height:15px;}
+.jw-drawer-title{font-size:13px;font-weight:700;color:#0f172a;font-family:'Poppins',sans-serif;}
+.jw-drawer-subtitle{font-size:11px;color:#64748b;font-family:'Poppins',sans-serif;margin-top:2px;}
+.jw-drawer-close{width:28px;height:28px;display:flex;align-items:center;justify-content:center;border:1px solid #e2e8f0;background:#fff;border-radius:6px;cursor:pointer;color:#64748b;padding:0;}
+.jw-drawer-close:hover{background:#fee2e2;color:#dc2626;border-color:#fca5a5;}
+.jw-drawer-close svg{width:14px;height:14px;}
+.jw-drawer-body{flex:1;overflow-y:auto;padding:20px;font-family:'Poppins',sans-serif;font-size:12px;scrollbar-width:thin;scrollbar-color:#cbd5e1 transparent;}
+.jw-drawer-body table{width:100%;border-collapse:collapse;}
+.jw-drawer-body table th{font-size:11px;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:.04em;padding:8px 10px;border-bottom:1px solid #e2e8f0;background:#f8fafc;}
+.jw-drawer-body table td{padding:10px;border-bottom:1px solid #f1f5f9;font-size:12px;vertical-align:middle;}
+.jw-drawer-body .form-label{font-size:12px;font-weight:600;color:#374151;font-family:'Poppins',sans-serif;margin-bottom:4px;display:block;}
+.jw-drawer-body .form-control,.jw-drawer-body .form-select{font-size:12px;border-radius:7px;border-color:#e2e8f0;}
+.jw-drawer-footer{display:flex;gap:10px;padding:14px 20px;border-top:1px solid #e2e8f0;background:#f8fafc;flex-shrink:0;}
+.btn-jw-save{display:inline-flex;align-items:center;gap:6px;padding:7px 18px;font-size:12px;font-weight:600;color:#fff;background:#4f46e5;border:none;border-radius:7px;cursor:pointer;font-family:'Poppins',sans-serif;text-decoration:none;}
+.btn-jw-save:hover{background:#4338ca;color:#fff;}
+.btn-jw-cancel{display:inline-flex;align-items:center;padding:7px 16px;font-size:12px;font-weight:500;color:#64748b;background:#fff;border:1px solid #e2e8f0;border-radius:7px;cursor:pointer;font-family:'Poppins',sans-serif;text-decoration:none;}
+.btn-jw-cancel:hover{background:#f1f5f9;color:#0f172a;}
+.jw-drawer-body .slot-day{display:flex;gap:8px;flex-wrap:wrap;}
+.jw-drawer-body .slot-day>div{flex:1;min-width:90px;}
+/* ===== DRAWER FOUNDATION: page-wrapper must ALWAYS fill full drawer width ===== */
+/* Without width:100%, in the drawer's flex-row context the page-wrapper shrinks to
+   content width when Notes/Timeline has less content than Profile Overview — this
+   makes the hero card narrower and clips the match metrics on the right. */
+#kt_activitiesApplication .page-wrapper{width:100%!important;max-width:100%!important;min-width:0;overflow-x:hidden;}
+/* page-content and tab panes: hard-contain any horizontal overflow so tables / wide
+   elements in Notes/Timeline never push the drawer wider than its fixed pixel width. */
+#kt_activitiesApplication .page-content{overflow-x:hidden;max-width:100%;}
+#kt_activitiesApplication .tab-pane{max-width:100%;overflow-x:hidden;}
+/* The global rule ".table td,.table th,.table tr{width:max-content!important}" (defined
+   at the top of this file) blows out timeline tables.  Counteract it inside the drawer. */
+#kt_activitiesApplication #notes table td,
+#kt_activitiesApplication #notes table th,
+#kt_activitiesApplication #notes table tr,
+#kt_activitiesApplication #timeline table td,
+#kt_activitiesApplication #timeline table th,
+#kt_activitiesApplication #timeline table tr{width:auto!important;}
+/* ===== NOTES & TIMELINE: LAYOUT CONTAINMENT ===== */
+/* Switch content-split from grid to block so 1fr never expands past drawer width */
+#kt_activitiesApplication #notes .content-split,
+#kt_activitiesApplication #timeline .content-split{display:block!important;max-width:100%;width:100%;}
+#kt_activitiesApplication #notes .content-main-full,
+#kt_activitiesApplication #timeline .content-main-full{max-width:100%;width:100%;}
+/* Bootstrap .row has calc(var(--bs-gutter-x)*.5) negative margins — zero them out */
+#kt_activitiesApplication #notes .row,
+#kt_activitiesApplication #timeline .row{margin-left:0!important;margin-right:0!important;max-width:100%;width:100%;}
+/* Timeline: make the area that wraps wide tables scroll sideways, not push the drawer */
+#kt_activitiesApplication #timeline .timeline-content{overflow-x:auto;max-width:100%;}
+/* Constrain the overflow-auto wrappers around comment boxes */
+#kt_activitiesApplication #notes .overflow-auto,
+#kt_activitiesApplication #timeline .overflow-auto{max-width:100%!important;width:100%!important;overflow-x:auto!important;}
+/* Remove min-w-700px / min-w-750px / min-w-800px from comment boxes */
+#kt_activitiesApplication .min-w-700px,
+#kt_activitiesApplication .min-w-750px,
+#kt_activitiesApplication .min-w-800px{min-width:0!important;}
+/* Bootstrap fs-5=1.25rem(20px) / fs-6=1rem(16px) — cap both to 13px inside drawer */
+#kt_activitiesApplication .fs-5,
+#kt_activitiesApplication #notes .fs-6,
+#kt_activitiesApplication #timeline .fs-6{font-size:13px!important;}
+/* Timeline card-body: replace default Bootstrap padding with drawer-friendly value */
+#kt_activitiesApplication #timeline .card-body{padding:12px 16px!important;}
+/* Notes/Timeline: prevent any inner element from leaking past card boundary */
+#kt_activitiesApplication #notes .form-group,
+#kt_activitiesApplication #notes .cardshow,
+#kt_activitiesApplication #timeline .cardshow{max-width:100%;overflow-x:hidden;}
+/* Timeline-3 items: the left margin+padding offset (25px+50px) must stay inside card */
+#kt_activitiesApplication #notes .timeline.timeline-3,
+#kt_activitiesApplication #timeline .timeline.timeline-3{overflow-x:hidden;max-width:100%;}
+/* Columns inside Bootstrap .row inside notes/timeline — remove extra gutter padding */
+#kt_activitiesApplication #notes [class*="col-"],
+#kt_activitiesApplication #timeline [class*="col-"]{max-width:100%;overflow-x:hidden;}
+
+/* ===================================================================
+   RESUME DOWNLOAD CENTER (RDC) — Phase 1 UI Shell
+   Drawer slides in from the right; all 6 format cards shown.
+   Options 1 & 2 wired to existing download; 3-6 are Phase 2.
+   z-index above KT drawer (999999) and its stacking context.
+=================================================================== */
+.rdc-overlay{position:fixed;inset:0;background:rgba(15,23,42,.48);opacity:0;pointer-events:none;transition:opacity .25s ease;z-index:1200000;}
+.rdc-overlay.rdc-open{opacity:1;pointer-events:auto;}
+.rdc-drawer{position:fixed;top:0;right:0;height:100%;width:624px;max-width:100vw;background:#fff;z-index:1200001;transform:translateX(100%);transition:transform .25s ease;display:flex;flex-direction:column;font-family:'Poppins',sans-serif;box-shadow:-4px 0 40px rgba(15,23,42,.12);overflow:hidden;}
+.rdc-drawer.rdc-open{transform:translateX(0);}
+/* Header */
+.rdc-header{display:flex;align-items:flex-start;justify-content:space-between;padding:16px 18px 13px;border-bottom:1px solid #e2e8f0;flex-shrink:0;gap:10px;background:#fff;}
+.rdc-header-text{flex:1;min-width:0;}
+.rdc-title{font-size:13px;font-weight:700;color:#0f172a;margin:0 0 2px;font-family:'Poppins',sans-serif;line-height:1.3;}
+.rdc-subtitle{font-size:11px;color:#64748b;margin:0;font-family:'Poppins',sans-serif;}
+.rdc-close-btn{width:28px;height:28px;display:flex;align-items:center;justify-content:center;border:1px solid #e2e8f0;background:#fff;border-radius:7px;cursor:pointer;color:#64748b;padding:0;flex-shrink:0;transition:all .15s ease;}
+.rdc-close-btn:hover{background:#fee2e2;color:#dc2626;border-color:#fca5a5;}
+.rdc-close-btn svg{width:13px;height:13px;}
+/* Body */
+.rdc-body{flex:1;overflow-y:auto;overflow-x:hidden;scrollbar-width:thin;scrollbar-color:#e2e8f0 transparent;}
+/* Candidate card */
+.rdc-cand-card{display:flex;align-items:stretch;margin:12px 14px 0;border:1px solid #e2e8f0;border-radius:10px;background:#f8fafc;overflow:hidden;}
+.rdc-cand-left{display:flex;align-items:center;gap:9px;padding:11px 14px;flex:1;min-width:0;}
+.rdc-cand-avatar{width:32px;height:32px;border-radius:8px;background:#eef2ff;color:#4f46e5;font-weight:700;font-size:11px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-family:'Poppins',sans-serif;}
+.rdc-cand-info{display:flex;flex-direction:column;gap:2px;min-width:0;}
+.rdc-meta-lbl{font-size:9.5px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:.04em;line-height:1;}
+.rdc-cand-name{font-size:12px;font-weight:700;color:#0f172a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.rdc-cand-sep{width:1px;background:#e2e8f0;align-self:stretch;flex-shrink:0;}
+.rdc-cand-right{display:flex;align-items:center;gap:9px;padding:11px 14px;}
+.rdc-resume-ic{width:30px;height:30px;border-radius:7px;background:#fee2e2;color:#dc2626;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.rdc-resume-ic svg{width:14px;height:14px;}
+.rdc-resume-info{display:flex;flex-direction:column;gap:2px;}
+.rdc-resume-meta{font-size:11px;font-weight:600;color:#334155;white-space:nowrap;}
+/* Section label */
+.rdc-sect-lbl{font-size:9.5px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.06em;padding:13px 14px 6px;font-family:'Poppins',sans-serif;}
+/* Options list — grid layout: num | icon | title+desc | cost+time | radio */
+.rdc-opts-list{display:flex;flex-direction:column;gap:8px;padding:0 14px 10px;}
+.rdc-opt{display:grid;grid-template-columns:18px 30px 1fr auto 15px;grid-template-rows:auto auto;column-gap:9px;row-gap:2px;align-items:center;padding:10px 11px;border:1.5px solid #e2e8f0;border-radius:10px;cursor:pointer;transition:border-color .15s,background .15s,box-shadow .15s;background:#fff;position:relative;}
+.rdc-opt:hover{border-color:#c7d2fe;background:#faf8ff;box-shadow:0 2px 10px rgba(124,58,237,.07);}
+.rdc-opt.rdc-opt-sel{border-color:#7c3aed;background:#faf8ff;}
+.rdc-rinput{position:absolute;opacity:0;width:0;height:0;pointer-events:none;}
+.rdc-onum{grid-column:1;grid-row:1/3;align-self:center;width:18px;height:18px;border-radius:50%;background:#f1f5f9;color:#94a3b8;font-size:9.5px;font-weight:700;display:flex;align-items:center;justify-content:center;font-family:'Poppins',sans-serif;transition:background .15s,color .15s;}
+.rdc-opt-sel .rdc-onum{background:#ede9fe;color:#7c3aed;}
+.rdc-oi{grid-column:2;grid-row:1/3;align-self:center;width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;}
+.rdc-oi svg{width:14px;height:14px;}
+.rdc-ic-blue{background:#dbeafe;color:#1d4ed8;}
+.rdc-ic-purple{background:#ede9fe;color:#7c3aed;}
+.rdc-ic-amber{background:#fef3c7;color:#d97706;}
+.rdc-ic-green{background:#d1fae5;color:#059669;}
+.rdc-ic-rose{background:#ffe4e6;color:#e11d48;}
+.rdc-ic-teal{background:#ccfbf1;color:#0d9488;}
+.rdc-obody{display:contents;}
+.rdc-otitle{grid-column:3;grid-row:1;font-size:12px;font-weight:600;color:#0f172a;line-height:1.3;font-family:'Poppins',sans-serif;display:flex;align-items:center;gap:5px;flex-wrap:wrap;}
+.rdc-odesc{grid-column:3;grid-row:2;font-size:10.5px;color:#64748b;line-height:1.3;font-family:'Poppins',sans-serif;}
+.rdc-ometa{display:contents;}
+.rdc-ocost{grid-column:4;grid-row:1;font-size:11px;font-weight:700;color:#7c3aed;font-family:'Poppins',sans-serif;white-space:nowrap;text-align:right;}
+.rdc-otime{grid-column:4;grid-row:2;font-size:10px;color:#94a3b8;font-family:'Poppins',sans-serif;white-space:nowrap;text-align:right;}
+.rdc-ocirc{grid-column:5;grid-row:1/3;align-self:center;width:15px;height:15px;border-radius:50%;border:2px solid #cbd5e1;display:flex;align-items:center;justify-content:center;transition:all .15s ease;}
+.rdc-opt-sel .rdc-ocirc{border-color:#7c3aed;background:#7c3aed;}
+.rdc-opt-sel .rdc-ocirc::after{content:'';width:5px;height:5px;border-radius:50%;background:#fff;display:block;}
+.rdc-p2-badge{display:inline-block;font-size:9px;font-weight:600;color:#7c3aed;background:#ede9fe;padding:1px 5px;border-radius:4px;font-family:'Poppins',sans-serif;vertical-align:middle;white-space:nowrap;line-height:1.4;}
+/* Coin card */
+.rdc-coin-card{margin:2px 14px 12px;padding:11px 13px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;}
+.rdc-coin-row{display:flex;align-items:center;gap:7px;font-size:11.5px;color:#374151;font-family:'Poppins',sans-serif;margin-bottom:5px;}
+.rdc-coin-dot{width:8px;height:8px;border-radius:50%;background:#7c3aed;flex-shrink:0;}
+.rdc-coin-row strong{color:#7c3aed;}
+.rdc-bal-row{font-size:11.5px;color:#374151;font-family:'Poppins',sans-serif;padding-left:15px;}
+/* Footer */
+.rdc-footer{padding:12px 14px 10px;border-top:1px solid #e2e8f0;flex-shrink:0;background:#fff;}
+.rdc-dl-btn{width:100%;padding:12px 16px;background:#4f46e5;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:600;font-family:'Poppins',sans-serif;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:background .15s ease;}
+.rdc-dl-btn:hover:not(:disabled){background:#4338ca;}
+.rdc-dl-btn:disabled,.rdc-dl-btn.rdc-loading{background:#4338ca;cursor:not-allowed;opacity:.75;}
+.rdc-foot-note{text-align:center;font-size:10px;color:#94a3b8;margin:8px 0 0;display:flex;align-items:center;justify-content:center;gap:4px;font-family:'Poppins',sans-serif;}
+.rdc-foot-note svg{flex-shrink:0;}
+/* Spinner */
+@keyframes rdcSpin{to{transform:rotate(360deg);}}
+.rdc-spin{display:inline-block;width:13px;height:13px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:rdcSpin .65s linear infinite;flex-shrink:0;}
+/* Toast */
+.rdc-toast{position:fixed;bottom:20px;right:20px;background:#1e293b;color:#fff;padding:10px 15px;border-radius:8px;font-size:11.5px;font-family:'Poppins',sans-serif;z-index:1300000;opacity:0;transform:translateY(6px);transition:all .22s ease;pointer-events:none;max-width:280px;line-height:1.4;}
+.rdc-toast.rdc-tshow{opacity:1;transform:translateY(0);}
+.rdc-toast-info{background:#7c3aed;}
+.rdc-toast-warn{background:#d97706;}
+/* Responsive */
+@media(max-width:640px){
+  .rdc-drawer{width:100%;top:auto;bottom:0;height:92dvh;border-radius:14px 14px 0 0;transform:translateY(100%);}
+  .rdc-drawer.rdc-open{transform:translateY(0);}
+}
+@media(min-width:641px) and (max-width:900px){.rdc-drawer{width:100%;}}
+/* ===== HERO SKILLS BAR REDESIGN ===== */
+/* Skills % match badge on avatar */
+#kt_activitiesApplication .cdr-avatar-wrap{position:relative;overflow:visible;}
+#kt_activitiesApplication .cdr-match-pct-badge{position:absolute;bottom:-11px;left:50%;transform:translateX(-50%);font-size:9.5px;font-weight:700;padding:2px 8px;border-radius:20px;white-space:nowrap;font-family:'Poppins',sans-serif;border:2px solid #fff;line-height:1.5;box-shadow:0 2px 6px rgba(0,0,0,.12);}
+#kt_activitiesApplication .cdr-mpb-green{background:#dcfce7;color:#16a34a;}
+#kt_activitiesApplication .cdr-mpb-amber{background:#fef3c7;color:#d97706;}
+#kt_activitiesApplication .cdr-mpb-red{background:#fee2e2;color:#dc2626;}
+/* Convert cdr-subcard-id to column layout so skills bar can span full width */
+#kt_activitiesApplication .cdr-subcard-id{display:flex!important;flex-direction:column!important;gap:0!important;align-items:stretch!important;}
+#kt_activitiesApplication .cdr-id-top{display:flex;gap:14px;align-items:flex-start;}
+#kt_activitiesApplication .cdr-id-top .cdr-id-body{flex:1 1 auto;min-width:0;}
+#kt_activitiesApplication .cdr-skills-bar{display:flex;flex-wrap:wrap;gap:5px;margin-top:12px;padding-top:12px;border-top:1px solid #f1f5f9;}
+/* Rectangular tags — 4px radius for enterprise-clean look */
+#kt_activitiesApplication .cdr-skill-tag{display:inline-flex;align-items:center;font-size:11px;font-weight:500;padding:3px 9px;border-radius:4px;font-family:'Poppins',sans-serif;line-height:1.5;white-space:nowrap;border:1px solid;letter-spacing:.01em;}
+/* Green = matched job skill */
+#kt_activitiesApplication .cdr-skill-match{background:#f0fdf4;color:#15803d;border-color:#86efac;}
+/* Grey = not in job skill list */
+#kt_activitiesApplication .cdr-skill-plain{background:#f8fafc;color:#64748b;border-color:#e2e8f0;}
+/* "+N More" counter tag */
+#kt_activitiesApplication .cdr-skill-tag.cdr-skill-more{background:#f1f5f9;color:#94a3b8;border-color:#e2e8f0;font-size:10.5px;}
+/* Recruiter Notes drawer */
+#jw-recruiter-note-drawer .rn-section{margin-bottom:16px;}
+#jw-recruiter-note-drawer .rn-label{font-size:11px;font-weight:600;color:#3f4254;margin-bottom:6px;display:flex;align-items:center;gap:4px;}
+#jw-recruiter-note-drawer .rn-label span{font-weight:400;color:#94a3b8;font-size:10.5px;}
+#jw-recruiter-note-drawer .rn-select{width:100%;border:1.5px solid #e4e6ef;border-radius:8px;padding:8px 10px;font-size:12px;color:#181c32;background:#f8f9fb;cursor:pointer;font-family:'Poppins',sans-serif;}
+#jw-recruiter-note-drawer .rn-editor{min-height:220px;max-height:400px;border:1.5px solid #e4e6ef;border-radius:8px;padding:12px 14px;font-size:12px;font-family:'Poppins',sans-serif;line-height:1.75;color:#181c32;background:#f8f9fb;outline:none;overflow-y:auto;word-break:break-word;}
+#jw-recruiter-note-drawer .rn-editor:focus{border-color:#3e97ff;background:#fff;}
+#jw-recruiter-note-drawer .rn-editor:empty::before{content:attr(data-placeholder);color:#94a3b8;pointer-events:none;}
+/* Interview Slots empty state */
+#kt_activitiesApplication #personal_details .po-slots-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px 12px;text-align:center;gap:10px;}
+#kt_activitiesApplication #personal_details .po-slots-empty-icon{width:52px;height:52px;border-radius:50%;background:#eef2ff;display:flex;align-items:center;justify-content:center;color:#6366f1;}
+#kt_activitiesApplication #personal_details .po-slots-empty-icon svg{width:22px;height:22px;}
+#kt_activitiesApplication #personal_details .po-slots-empty-title{font-size:12px;font-weight:700;color:#181c32;margin:0;}
+#kt_activitiesApplication #personal_details .po-slots-empty-sub{font-size:11.5px;color:#94a3b8;margin:0;line-height:1.5;}
+#kt_activitiesApplication #personal_details .po-slots-add-btn{margin-top:4px;padding:7px 20px;font-size:12px;font-weight:600;color:#3e97ff;background:#fff;border:1.5px solid #3e97ff;border-radius:8px;cursor:pointer;font-family:'Poppins',sans-serif;transition:background .15s,color .15s;}
+#kt_activitiesApplication #personal_details .po-slots-add-btn:hover{background:#3e97ff;color:#fff;}
+/* "Select Date" button shown instead of Book Now when slot has no date */
+.book-btn-addslot{display:inline-flex;align-items:center;justify-content:center;gap:5px;width:100%;margin-top:6px;padding:5px 10px;font-size:11px;font-weight:600;color:#64748b;background:#f8fafc;border:1.5px dashed #cbd5e1;border-radius:6px;cursor:pointer;font-family:'Poppins',sans-serif;transition:all .18s;}
+.book-btn-addslot:hover{background:#eff6ff;border-color:#3e97ff;color:#3e97ff;}
+</style>
+
 <script>
    $("timeline-item:last-child").addClass("timeline-item:last-child");
 </script>
@@ -189,49 +485,12 @@
 
 
 <div class="page-wrapper">
-  <button type="button" class="page-close" aria-label="Close page" id="kt_activitiesApplication_close">
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-      stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-      <line x1="18" y1="6" x2="6" y2="18"></line>
-      <line x1="6" y1="6" x2="18" y2="18"></line>
-    </svg>
-  </button>
 
-  <div class="card-header-top px-5 py-0" id="kt_activities_header">
-    <div class="d-flex align-items-center py-1">
-
-      @if(in_array("add_schedule", $userPermissions)) 
-        <a href="javascript:void(0);" id="app_interview_schedule" class="btn btn-sm btn-flex btn-light btn-active-primary fw-bolder me-3 {{ $dnone }}"
-        rel="{{@$application->wiseId}}"> <span class="svg-icon svg-icon-primary svg-icon-1x">
-          <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="24px" height="24px" viewBox="0 0 24 24" version="1.1">
-            <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
-              <polygon points="0 0 24 0 24 24 0 24"></polygon>
-              <path d="M12,11 C9.790861,11 8,9.209139 8,7 C8,4.790861 9.790861,3 12,3 C14.209139,3 16,4.790861 16,7 C16,9.209139 14.209139,11 12,11 Z" fill="#000000" fill-rule="nonzero" opacity="0.3"></path>
-              <path d="M3.00065168,20.1992055 C3.38825852,15.4265159 7.26191235,13 11.9833413,13 C16.7712164,13 20.7048837,15.2931929 20.9979143,20.2 C21.0095879,20.3954741 20.9979143,21 20.2466999,21 C16.541124,21 11.0347247,21 3.72750223,21 C3.47671215,21 2.97953825,20.45918 3.00065168,20.1992055 Z" fill="#000000" fill-rule="nonzero"></path>
-            </g>
-          </svg>
-          </span> Interview </a> 
-      @endif 
-      @if(@$application->condidate_type=='bench_condidate' && @$application->other_company !=auth()->user()->company_id)
-
-      @else
-            <a href="javascript:void(0);" type="button" class="btn btn-sm btn-flex btn-primary sendmaimodal btn-active-primary fw-bolder me-3"> <span class="svg-icon svg-icon-primary svg-icon-1x">
-              <i class="fa fa-envelope" style=" font-size: 19px;"></i>
-                    </span> Email
-              </a>
-              
-            @if(@$application->condidate_type=='other' && $notVisiableBench)  
-            {{-- https://api.whatsapp.com/send?phone=91{{@$application->phone}} --}}
-              <a href="javascript:void(0);" type="button" class="btn btn-sm btn-flex btn-success btn-active-primary sendwhatsappmodal fw-bolder me-3"> <span class="svg-icon svg-icon-success svg-icon-1x">
-                  <i class="fa fa-whatsapp" style=" font-size: 22px;"></i>
-                </span> Whatsapp
-              </a>
-          @endif
-      @endif
-      
-      
-    </div>
-  </div>
+  {{-- Single unified header Card. Top bar holds every action button (Edit, Interview,
+       Send Email, Send WhatsApp, Move Stage, Download Resume, Close). The body is a
+       hero Card with two Sub-Cards: left = candidate identity, right = match metrics
+       (Skills Matched + Skills Not Matched emphasised). 7-cell glance strip lives
+       underneath as the third visual tier. No controller changes. --}}
   @php
       /* -------- Header presentation-only derivations (no business logic) --------
          Per AI_RULES.md §8 ("No business-logic changes"), every value below is a
@@ -240,7 +499,7 @@
          no new route data, no scoring change. */
       $__hdrSkillsRaw = trim((string) @$application->skills);
       $__hdrSkillsArr = $__hdrSkillsRaw !== '' ? array_values(array_filter(array_map('trim', explode(',', $__hdrSkillsRaw)), 'strlen')) : [];
-      $__hdrSkillsShown = array_slice($__hdrSkillsArr, 0, 5);
+      $__hdrSkillsShown = array_slice($__hdrSkillsArr, 0, 8);
       $__hdrSkillsMore  = max(0, count($__hdrSkillsArr) - count($__hdrSkillsShown));
 
       // Initials for avatar (up to 2 letters).
@@ -334,77 +593,97 @@
 
       $__hdrRelocate = trim((string) (@$application->open_to_relocate ?: @$application->relocation ?: ''));
       $__hdrRelocateDisp = $__hdrRelocate === '' ? '—' : ucwords($__hdrRelocate);
+
+      // Experience match — ES data only; $job->min_exp vs $application->total_exp
+      $__hdrMinJobExp  = (float)(@$job->min_exp ?? 0);
+      $__hdrExpMatched = ($__hdrMinJobExp <= 0) || ((float)(@$application->total_exp ?? 0) >= $__hdrMinJobExp);
+      $__hdrExpStatus  = $__hdrExpMatched ? 'Matched' : 'Below Required';
+
+      // Location display label (derived from already-computed $__hdrLocMatched)
+      $__hdrLocText = $__hdrLocMatched ? 'Same City' : 'Different City';
   @endphp
 
-  <div class="cdr-id-row">
-    <div class="cdr-avatar" aria-hidden="true">{{ $__hdrInitials }}</div>
-
-    <div class="cdr-id-body">
-      <div class="cdr-name-row">
-        <h2 class="cdr-name">{{ ucwords(@$application->full_name ?: '—') }}</h2>
-        @if($__hdrIsVerified)
-          <span class="cdr-verified" title="Verified candidate">
-            <span class="cdr-tick">✓</span> Verified
-          </span>
-        @endif
-      </div>
-
-      <p class="cdr-role">{{ ucwords(@$application->current_designation ?: '—') }}</p>
-
-      <div class="cdr-meta-row">
-        <span class="cdr-meta">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
-          {{ $__bdTotalExp }} Yrs Experience
-        </span>
-        <span class="cdr-meta">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18"/><path d="M5 21V7l7-4 7 4v14"/></svg>
-          {{ (@$application->current_company) ? ucwords(@$application->current_company) : ucwords(@$application->cur_company_name ?: '—') }}
-        </span>
-        @if($__hdrIsImmediate)
-          <span class="cdr-availpill">
-            <span class="cdr-dot"></span>
-            {{ $__hdrAvailability }}
-          </span>
-        @endif
-      </div>
-
-      <div class="cdr-skills">
-        @if(!empty($__hdrSkillsShown))
-          <span class="cdr-skills-label">Skills</span>
-          @foreach($__hdrSkillsShown as $__s)
-            <span class="cdr-skill-pill">{{ $__s }}</span>
-          @endforeach
-          @if($__hdrSkillsMore > 0)
-            <span class="cdr-skill-pill cdr-skill-more">+{{ $__hdrSkillsMore }}</span>
-          @endif
-        @endif
-      </div>
-    </div>
-
-    <div class="cdr-actions">
+  {{-- ============================================================
+       TOP ACTION BAR (Edit / Interview / Send Email / Send WhatsApp /
+       Move Stage / Download Resume). Close stays as a single circular
+       button outside the bar so it doesn't fight the primary/secondary
+       button hierarchy.
+       ============================================================ --}}
+  {{-- TOP ACTION BAR (outside any card, spans full width — mirrors job drawer top-actions) --}}
+  <div class="cdr-topbar" aria-label="Candidate actions">
+    <div class="cdr-topbar-group">
       @if(in_array("edit_job_applications", $userPermissions) && $application->condidate_type=='other' && $editprofile===true)
-        <a href="{{ route('service_company.job-applications.edit', [ GeneralMethod::value_encrypt($jobWiseCanId)]) }}?currentPage={{ GeneralMethod::value_encrypt($currentPage) }}&currentSlug={{ GeneralMethod::value_encrypt($currentSlug) }}" class="cdr-btn cdr-btn-primary {{ $dnone }}">
+        <a href="{{ route('service_company.job-applications.edit', [ GeneralMethod::value_encrypt($jobWiseCanId)]) }}?currentPage={{ GeneralMethod::value_encrypt($currentPage) }}&currentSlug={{ GeneralMethod::value_encrypt($currentSlug) }}" class="cdr-action-btn cdr-btn-primary {{ $dnone }}" title="Edit candidate profile">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg>
           Edit Profile
         </a>
       @endif
 
+      @if(in_array("add_schedule", $userPermissions))
+        <a href="javascript:void(0);" id="app_interview_schedule" class="cdr-action-btn cdr-btn-interview {{ $dnone }}" rel="{{@$application->wiseId}}" title="Schedule interview">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <rect x="3" y="4" width="18" height="18" rx="2"/>
+            <line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/>
+            <line x1="3" y1="10" x2="21" y2="10"/>
+            <line x1="12" y1="14" x2="12" y2="18"/><line x1="10" y1="16" x2="14" y2="16"/>
+          </svg>
+          Interview
+        </a>
+      @endif
+
+      @if(@$application->condidate_type=='bench_condidate' && @$application->other_company !=auth()->user()->company_id)
+
+      @else
+        <a href="javascript:void(0);" class="cdr-action-btn cdr-btn-email sendmaimodal {{ $dnone }}" title="Send email to candidate">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <rect x="3" y="5" width="18" height="14" rx="2"/>
+            <polyline points="3 7 12 13 21 7"/>
+          </svg>
+          Send Email
+        </a>
+
+        @if(@$application->condidate_type=='other' && $notVisiableBench)
+          <a href="javascript:void(0);" class="cdr-action-btn cdr-btn-wa sendwhatsappmodal {{ $dnone }}" title="Send WhatsApp message">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M20.52 3.48A11.94 11.94 0 0 0 12 0C5.37 0 .05 5.32.05 11.95c0 2.1.55 4.15 1.6 5.96L0 24l6.3-1.65a11.9 11.9 0 0 0 5.7 1.45h.01c6.63 0 11.95-5.32 11.95-11.95 0-3.19-1.24-6.19-3.44-8.37z"/>
+            </svg>
+            Send WhatsApp
+          </a>
+        @endif
+      @endif
+
+      <a href="javascript:void(0);" class="cdr-action-btn cdr-btn-stage {{ $dnone }}" id="hdr_move_stage_btn" rel="{{@$application->wiseId}}" title="Move candidate to another stage">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <polyline points="4 7 9 12 4 17"/>
+          <polyline points="12 7 17 12 12 17"/>
+        </svg>
+        Move Stage
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="cdr-caret" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
+      </a>
+
+      <div class="cdr-topbar-split" role="separator" aria-hidden="true"></div>
+
       @if(!empty($application->resume) && in_array(strtolower(pathinfo($application->resume, PATHINFO_EXTENSION)),['pdf', 'doc', 'docx', 'htm', 'html']))
         @if($resumeAwsPath)
-          <div style="position:relative;display:inline-block;" id="hdrDlWrapApp">
-            <button type="button" class="cdr-btn cdr-btn-secondary" id="hdrDlToggleApp" aria-haspopup="true" aria-expanded="false">
+          <div class="cdr-dl-wrap" id="hdrDlWrapApp">
+            <button type="button" class="cdr-action-btn cdr-btn-secondary" id="hdrDlToggleApp" aria-haspopup="true" aria-expanded="false">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
               Download Resume
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px;margin-left:4px;" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="cdr-caret" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
             </button>
-            <div id="hdrDlMenuApp" style="display:none;position:absolute;right:0;top:calc(100% + 5px);background:#fff;border:1px solid #e2e8f0;border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,.12);min-width:230px;z-index:60;overflow:hidden;">
-              <a href="{{ route('download.resume', ['id' => $application->id,'path' => rtrim(strtr(base64_encode($application->resume), '+/', '-_'), '=')]) }}" target="_blank" style="display:block;padding:9px 13px;font-size:12px;font-weight:500;color:#334155;text-decoration:none;border-bottom:1px solid #f1f5f9;">
+            <div id="hdrDlMenuApp" class="cdr-dl-menu">
+              <a href="{{ route('download.resume', ['id' => $application->id,'path' => rtrim(strtr(base64_encode($application->resume), '+/', '-_'), '=')]) }}" target="_blank" class="cdr-dl-item">
                 Download Resume
               </a>
-              <button type="button" onclick="hdrDownloadWithLogoApp()" style="display:flex;align-items:center;gap:6px;width:100%;padding:9px 13px;font-size:12px;font-weight:600;color:#15803d;background:#f0fdf4;border:0;border-left:3px solid #22c55e;cursor:pointer;text-align:left;">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px;flex-shrink:0;"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>
+              <button type="button" onclick="hdrDownloadWithLogoApp()" class="cdr-dl-item cdr-dl-item-logo">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>
                 Resume with Company Logo
-                <span style="font-size:10px;background:#22c55e;color:#fff;border-radius:4px;padding:1px 5px;margin-left:auto;font-weight:700;letter-spacing:.3px;">LOGO</span>
+                <span class="cdr-dl-badge">LOGO</span>
+              </button>
+              <button type="button" onclick="cdrExportProfilePDF(this)" class="cdr-dl-item" id="cdrExportPdfBtnHdr">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><path d="M12 18v-6"/><path d="M9 15l3 3 3-3"/></svg>
+                Export Candidate Profile
+                <span class="cdr-dl-badge" style="background:#fee2e2;color:#dc2626;border-radius:4px;padding:1px 5px;font-size:9px;font-weight:700;">PDF</span>
               </button>
             </div>
           </div>
@@ -412,13 +691,12 @@
           (function(){
             var t=document.getElementById('hdrDlToggleApp'),m=document.getElementById('hdrDlMenuApp');
             if(t&&m){
-              t.addEventListener('click',function(e){e.stopPropagation();var open=m.style.display==='block';m.style.display=open?'none':'block';t.setAttribute('aria-expanded', open?'false':'true');});
-              document.addEventListener('click',function(){m.style.display='none';t.setAttribute('aria-expanded','false');});
+              t.addEventListener('click',function(e){e.stopPropagation();var open=m.classList.contains('open');m.classList.toggle('open',!open);t.setAttribute('aria-expanded', open?'false':'true');});
+              document.addEventListener('click',function(){m.classList.remove('open');t.setAttribute('aria-expanded','false');});
             }
           })();
           function hdrDownloadWithLogoApp(){
-            document.getElementById('hdrDlMenuApp').style.display='none';
-            // poll for the rcv-pages; once present, trigger the LOGO download button.
+            document.getElementById('hdrDlMenuApp').classList.remove('open');
             var tries=0;
             var poll=setInterval(function(){
               if(document.querySelectorAll('#rcvPages .rcv-page').length){
@@ -433,137 +711,231 @@
           }
           </script>
         @else
-          <a target="_blank" class="cdr-btn cdr-btn-secondary downloadCount"
-             href="{{ route('service_company.job-applications.edit', [ GeneralMethod::value_encrypt($jobWiseCanId)]) }}?currentPage={{ GeneralMethod::value_encrypt($currentPage) }}&currentSlug={{ GeneralMethod::value_encrypt($currentSlug) }}">
+          <a target="_blank" class="cdr-action-btn cdr-btn-secondary downloadCount {{ $dnone }}"
+             href="{{ route('service_company.job-applications.edit', [ GeneralMethod::value_encrypt($jobWiseCanId)]) }}?currentPage={{ GeneralMethod::value_encrypt($currentPage) }}&currentSlug={{ GeneralMethod::value_encrypt($currentSlug) }}" title="Download resume">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
             Download Resume
           </a>
         @endif
       @else
-        <a href="{{ route('service_company.job-applications.edit', [ GeneralMethod::value_encrypt($jobWiseCanId)]) }}?currentPage={{ GeneralMethod::value_encrypt($currentPage) }}&currentSlug={{ GeneralMethod::value_encrypt($currentSlug) }}" class="cdr-btn cdr-btn-secondary">
+        <a href="{{ route('service_company.job-applications.edit', [ GeneralMethod::value_encrypt($jobWiseCanId)]) }}?currentPage={{ GeneralMethod::value_encrypt($currentPage) }}&currentSlug={{ GeneralMethod::value_encrypt($currentSlug) }}" class="cdr-action-btn cdr-btn-secondary {{ $dnone }}" title="Upload resume">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
           Upload Resume
         </a>
       @endif
     </div>
+    <button type="button" class="cdr-topbar-close" id="kt_activitiesApplication_close" aria-label="Close">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+      </svg>
+    </button>
   </div>
 
-  {{-- 6 enterprise match tiles (presentation only) --}}
-  <div class="cdr-match-grid" role="list" aria-label="Match metrics">
-    <div class="cdr-match" role="listitem">
-      <div class="cdr-match-icon green" aria-hidden="true">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-      </div>
-      <div class="cdr-match-body">
-        <div class="cdr-match-label">Skills Matched</div>
-        <div class="cdr-match-value success">{{ $__hdrMatchedCount }} <span style="color:#94a3b8;font-weight:500;">/ {{ $__hdrJobTotal ?: 0 }}</span></div>
+  {{-- ===== CARD 1: Hero identity + metrics ===== --}}
+  <div class="cdr-outer-card">
+  {{-- HERO CARD: identity (left) + 4-row metrics list (right) --}}
+  <div class="cdr-hero-card">
+
+    {{-- Sub-Card A: avatar · name/role · meta · full-width skills bar --}}
+    <div class="cdr-subcard cdr-subcard-id">
+
+      {{-- Top row: avatar + identity --}}
+      <div class="cdr-id-top">
+        <div class="cdr-avatar-wrap">
+          <div class="cdr-avatar-sq" aria-hidden="true">{{ $__hdrInitials }}</div>
+          @if($__hdrJobTotal > 0)
+            @php $__mpbClass = $__hdrOverallPct >= 70 ? 'cdr-mpb-green' : ($__hdrOverallPct >= 40 ? 'cdr-mpb-amber' : 'cdr-mpb-red'); @endphp
+            <span class="cdr-match-pct-badge {{ $__mpbClass }}">{{ $__hdrOverallPct }}% Match</span>
+          @endif
+        </div>
+
+        <div class="cdr-id-body">
+          <div class="cdr-name-row">
+            <h2 class="cdr-name">{{ ucwords(@$application->full_name ?: '—') }}</h2>
+            @if($__hdrIsVerified)
+              <span class="cdr-verified-v2" title="Verified candidate">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+              </span>
+            @endif
+          </div>
+
+          <p class="cdr-role">{{ ucwords(@$application->current_designation ?: '—') }}</p>
+
+          {{-- 2-col meta grid: exp + company | location + availability --}}
+          @php $__dispCompany = (@$application->current_company) ? ucwords(@$application->current_company) : ucwords(@$application->cur_company_name ?: ''); @endphp
+          @php $__candCityState = trim(($city_name ?? '').' '.($state_name ?? '')); @endphp
+          <div class="cdr-meta-grid">
+            @if($__bdTotalExp !== '—')
+              <span class="cdr-meta-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+                {{ $__bdTotalExp }} Yrs Experience
+              </span>
+            @endif
+            @if($__candCityState)
+              <span class="cdr-meta-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                {{ $__candCityState }}
+              </span>
+            @endif
+            @if($__dispCompany)
+              <span class="cdr-meta-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 21h18"/><path d="M5 21V7l7-4 7 4v14"/></svg>
+                {{ $__dispCompany }}
+              </span>
+            @endif
+            @if($__hdrAvailability !== '—')
+              <span class="cdr-meta-item {{ $__hdrIsImmediate ? 'cmi-green' : '' }}">
+                @if($__hdrIsImmediate)
+                  <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="12" cy="12" r="5"/></svg>
+                @else
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                @endif
+                {{ $__hdrAvailability }}
+              </span>
+            @endif
+          </div>
+        </div>
+      </div>{{-- /.cdr-id-top --}}
+
+      {{-- Full-width skills bar: green = matched job skill, grey = not matched --}}
+      @if(!empty($__hdrSkillsShown))
+        <div class="cdr-skills-bar">
+          @foreach($__hdrSkillsShown as $__s)
+            @php $__isMatch = isset($__hdrJobSkills[mb_strtolower($__s)]); @endphp
+            <span class="cdr-skill-tag {{ $__isMatch ? 'cdr-skill-match' : 'cdr-skill-plain' }}">{{ ucwords(strtolower($__s)) }}</span>
+          @endforeach
+          @if($__hdrSkillsMore > 0)
+            <span class="cdr-skill-tag cdr-skill-more">+{{ $__hdrSkillsMore }} More</span>
+          @endif
+        </div>
+      @endif
+
+    </div>
+
+    {{-- Sub-Card B: 4-row vertical metric list --}}
+    <div class="cdr-subcard cdr-subcard-metrics">
+      <div class="cdr-metric-list" role="list" aria-label="Match metrics">
+
+        {{-- Skills Match --}}
+        <div class="cdr-metric-row" role="listitem">
+          <div class="cdr-metric-icon ci-green" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="20 6 9 17 4 12"/></svg>
+          </div>
+          <span class="cdr-metric-label">Skills Match</span>
+          <span class="cdr-metric-val">{{ $__hdrMatchedCount }}<span class="cdr-metric-frac"> / {{ $__hdrJobTotal ?: 0 }}</span></span>
+        </div>
+
+        {{-- Experience Match --}}
+        <div class="cdr-metric-row" role="listitem">
+          <div class="cdr-metric-icon {{ $__hdrExpMatched ? 'ci-blue' : 'ci-red' }}" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+          </div>
+          <span class="cdr-metric-label">Experience Match</span>
+          <span class="cdr-metric-val {{ $__hdrExpMatched ? 'cv-green' : 'cv-red' }}">{{ $__hdrExpStatus }}</span>
+        </div>
+
+        {{-- Salary --}}
+        <div class="cdr-metric-row" role="listitem">
+          <div class="cdr-metric-icon {{ $__hdrUnderBudget ? 'ci-green' : 'ci-red' }}" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2"/><path d="M6 12h.01M18 12h.01"/></svg>
+          </div>
+          <span class="cdr-metric-label">Salary</span>
+          <div class="cdr-metric-val-block">
+            <span class="cdr-metric-val {{ $__hdrUnderBudget ? 'cv-green' : 'cv-red' }}">{{ $__hdrUnderBudget ? 'Within Budget' : 'Over Budget' }}</span>
+            @if($__hdrEctcText !== '—')
+              <span class="cdr-metric-sub">{{ $__hdrCtcText }} – {{ $__hdrEctcText }}</span>
+            @endif
+          </div>
+        </div>
+
+        {{-- Location Match --}}
+        <div class="cdr-metric-row" role="listitem">
+          <div class="cdr-metric-icon {{ $__hdrLocMatched ? 'ci-green' : 'ci-red' }}" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+          </div>
+          <span class="cdr-metric-label">Location Match</span>
+          <span class="cdr-metric-val {{ $__hdrLocMatched ? 'cv-green' : 'cv-red' }}">{{ $__hdrLocText }}</span>
+        </div>
+
       </div>
     </div>
 
-    <div class="cdr-match" role="listitem">
-      <div class="cdr-match-icon red" aria-hidden="true">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-      </div>
-      <div class="cdr-match-body">
-        <div class="cdr-match-label">Skills Not Matched</div>
-        <div class="cdr-match-value danger">{{ $__hdrNotMatched }} <span style="color:#94a3b8;font-weight:500;">/ {{ $__hdrJobTotal ?: 0 }}</span></div>
-      </div>
-    </div>
-
-    <div class="cdr-match" role="listitem">
-      <div class="cdr-match-icon green" aria-hidden="true">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-      </div>
-      <div class="cdr-match-body">
-        <div class="cdr-match-label">Location Matched</div>
-        <div class="cdr-match-value {{ $__hdrLocMatched ? 'success' : '' }}">{{ $__hdrLocMatched ? 'Yes' : 'No' }}</div>
-      </div>
-    </div>
-
-    <div class="cdr-match" role="listitem">
-      <div class="cdr-match-icon green" aria-hidden="true">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="3"/></svg>
-      </div>
-      <div class="cdr-match-body">
-        <div class="cdr-match-label">Salary Under Budget</div>
-        <div class="cdr-match-value {{ $__hdrUnderBudget ? 'success' : 'danger' }}">{{ $__hdrUnderBudget ? 'Yes' : 'No' }}</div>
-      </div>
-    </div>
-
-    <div class="cdr-match" role="listitem">
-      <div class="cdr-match-icon amber" aria-hidden="true">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-      </div>
-      <div class="cdr-match-body">
-        <div class="cdr-match-label">Added to Pipeline</div>
-        <div class="cdr-match-value" style="font-size:13px;font-weight:600;">{{ $__hdrAddedTxt }}</div>
-      </div>
-    </div>
-
-    <div class="cdr-match" role="listitem">
-      <div class="cdr-ring" style="--cdr-ring-pct: {{ $__hdrOverallPct }};" aria-label="Overall match score {{ $__hdrOverallPct }} percent">
-        <span>{{ $__hdrOverallPct }}%</span>
-      </div>
-      <div class="cdr-match-body">
-        <div class="cdr-match-label">Overall Match Score</div>
-        <div class="cdr-match-value success">{{ $__hdrOverallPct }}%</div>
-      </div>
-    </div>
   </div>
+  </div>{{-- /.cdr-outer-card (card 1: hero) --}}
 
-  {{-- 7-cell bottom strip with icons --}}
-  <div class="cdr-strip" aria-label="Candidate at-a-glance">
-    <div class="cdr-strip-item">
-      <div class="cdr-strip-label">
-        <span class="cdr-strip-icon"><svg viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg></span>
-        Total Experience
-      </div>
-      <div class="cdr-strip-value">{{ $__bdTotalExp }} Yrs</div>
-    </div>
-    <div class="cdr-strip-item">
-      <div class="cdr-strip-label">
-        <span class="cdr-strip-icon"><svg viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4"/><line x1="12" y1="3" x2="12" y2="6"/><line x1="12" y1="18" x2="12" y2="21"/><line x1="3" y1="12" x2="6" y2="12"/><line x1="18" y1="12" x2="21" y2="12"/></svg></span>
-        Relevant
-      </div>
-      <div class="cdr-strip-value">{{ $__bdRelExp }} Yrs</div>
-    </div>
-    <div class="cdr-strip-item">
-      <div class="cdr-strip-label">
-        <span class="cdr-strip-icon"><svg viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="3"/></svg></span>
-        Current CTC
-      </div>
-      <div class="cdr-strip-value" title="{{ $__hdrCtcText }}">{{ $__hdrCtcText }}</div>
-    </div>
-    <div class="cdr-strip-item">
-      <div class="cdr-strip-label">
-        <span class="cdr-strip-icon"><svg viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="3"/></svg></span>
-        Expected CTC
-      </div>
-      <div class="cdr-strip-value" title="{{ $__hdrEctcText }}">{{ $__hdrEctcText }}</div>
-    </div>
-    <div class="cdr-strip-item">
-      <div class="cdr-strip-label">
-        <span class="cdr-strip-icon"><svg viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></span>
-        Availability
-      </div>
-      <div class="cdr-strip-value" title="{{ $__hdrAvailability }}">{{ \Illuminate\Support\Str::limit($__hdrAvailability, 18, '…') }}</div>
-    </div>
-    <div class="cdr-strip-item">
-      <div class="cdr-strip-label">
-        <span class="cdr-strip-icon"><svg viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg></span>
-        Current Location
-      </div>
-      <div class="cdr-strip-value" title="{{ trim(($city_name ?? '').' '.($state_name ?? '')) }}">{{ trim(($city_name ?? '').' '.($state_name ?? '')) ?: '—' }}</div>
-    </div>
-    <div class="cdr-strip-item">
-      <div class="cdr-strip-label">
-        <span class="cdr-strip-icon"><svg viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg></span>
-        Relocation
-      </div>
-      <div class="cdr-strip-value">{{ $__hdrRelocateDisp }}</div>
-    </div>
-  </div>
+  {{-- ===== CARD 2: 6 pipeline stat sub-cards (matches job drawer pipeline section) ===== --}}
+  <div class="cdr-pipeline-section" aria-label="Candidate at-a-glance">
 
+    {{-- Total Experience --}}
+    <div class="cdr-pipeline-card">
+      <div class="cdr-pipeline-icon cpi-blue">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+      </div>
+      <div class="cdr-pipeline-info">
+        <div class="cdr-pipeline-label">Total Experience</div>
+        <div class="cdr-pipeline-value">{{ $__bdTotalExp }}<span class="cpi-unit"> Yrs</span></div>
+      </div>
+    </div>
+
+    {{-- Relevant Experience --}}
+    <div class="cdr-pipeline-card">
+      <div class="cdr-pipeline-icon cpi-green">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4"/><line x1="12" y1="3" x2="12" y2="6"/><line x1="12" y1="18" x2="12" y2="21"/><line x1="3" y1="12" x2="6" y2="12"/><line x1="18" y1="12" x2="21" y2="12"/></svg>
+      </div>
+      <div class="cdr-pipeline-info">
+        <div class="cdr-pipeline-label">Relevant Exp</div>
+        <div class="cdr-pipeline-value">{{ $__bdRelExp }}<span class="cpi-unit"> Yrs</span></div>
+      </div>
+    </div>
+
+    {{-- Gender --}}
+    <div class="cdr-pipeline-card">
+      <div class="cdr-pipeline-icon cpi-purple">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      </div>
+      <div class="cdr-pipeline-info">
+        <div class="cdr-pipeline-label">Gender</div>
+        <div class="cdr-pipeline-value">{{ ucwords(@$application->gender) ?: '—' }}</div>
+      </div>
+    </div>
+
+    {{-- Nationality --}}
+    <div class="cdr-pipeline-card">
+      <div class="cdr-pipeline-icon cpi-amber">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+      </div>
+      <div class="cdr-pipeline-info">
+        <div class="cdr-pipeline-label">Nationality</div>
+        <div class="cdr-pipeline-value" title="{{ ucwords(@$application->nationality) }}">{{ \Illuminate\Support\Str::limit(ucwords(@$application->nationality), 10, '…') ?: '—' }}</div>
+      </div>
+    </div>
+
+    {{-- Work Mode --}}
+    <div class="cdr-pipeline-card">
+      <div class="cdr-pipeline-icon cpi-teal">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+      </div>
+      <div class="cdr-pipeline-info">
+        <div class="cdr-pipeline-label">Work Mode</div>
+        <div class="cdr-pipeline-value">{{ ucwords(@$application->wm) ?: '—' }}</div>
+      </div>
+    </div>
+
+    {{-- Education --}}
+    <div class="cdr-pipeline-card">
+      <div class="cdr-pipeline-icon cpi-indigo">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c0 1.66 1.79 3 4 3s4-1.34 4-3v-5"/></svg>
+      </div>
+      <div class="cdr-pipeline-info">
+        <div class="cdr-pipeline-label">Education</div>
+        <div class="cdr-pipeline-value" title="{{ strtoupper(@$application->qualification_name) }}">{{ \Illuminate\Support\Str::limit(strtoupper(@$application->qualification_name), 10, '…') ?: '—' }}</div>
+      </div>
+    </div>
+
+  </div>{{-- /.cdr-pipeline-section --}}
+
+  {{-- ===== CARD 3: Tabs + Content ===== --}}
+  <div class="cdr-outer-card cdr-tabs-card">
   <nav class="page-tabs tab-content nav" aria-label="Profile sections" role="tablist">
     <a type="button" class="tab tab-active" data-toggle="tab" href="#personal_details" aria-selected="true">
       <svg class="tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
@@ -684,16 +1056,19 @@
       <style>
         #resume_cv, #resume_cv * { font-family:'Poppins',-apple-system,BlinkMacSystemFont,sans-serif; }
         #resume_cv { font-size:13px; }
-        #resume_cv .rcv-wrap { display:flex; flex-direction:column; gap:16px; }
-        #resume_cv .rcv-main { order:2; }
-        #resume_cv .rcv-side { order:1; background:#fff; border:1px solid #e2e8f0; border-radius:12px; padding:16px; }
-        #resume_cv .rcv-side-head { display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap; }
-        #resume_cv .rcv-side-head .rcv-head-txt h3 { font-size:14px; font-weight:700; color:#0f172a; margin:0; }
+        /* Stacked: keyword panel full-width top, viewer full-width below */
+        #resume_cv .rcv-wrap { display:flex; flex-direction:column; gap:0; border:1px solid #e2e8f0; border-radius:12px; overflow:hidden; box-shadow:0 1px 3px rgba(0,0,0,.05),0 4px 12px rgba(0,0,0,.03); background:#fff; }
+        #resume_cv .rcv-side { order:1; width:100%; background:#fff; border-bottom:1px solid #eef2f7; border-right:none; border-radius:0; padding:16px 20px 14px; overflow-y:visible; display:flex; flex-direction:column; gap:12px; }
+        #resume_cv .rcv-side::-webkit-scrollbar { width:4px; }
+        #resume_cv .rcv-side::-webkit-scrollbar-thumb { background:#cbd5e1; border-radius:2px; }
+        /* Header: title+subtitle left, stats right — horizontal */
+        #resume_cv .rcv-side-head { display:flex; align-items:center; justify-content:space-between; gap:20px; padding-bottom:0; margin-bottom:0; border-bottom:none; }
+        #resume_cv .rcv-side-head .rcv-head-txt h3 { font-size:13px; font-weight:700; color:#0f172a; margin:0; }
         #resume_cv .rcv-sub { font-size:11px; color:#94a3b8; }
-        #resume_cv .rcv-summary { display:flex; gap:8px; margin:0; }
-        #resume_cv .rcv-sumitem { min-width:78px; background:#f8fafc; border:1px solid #eef2f7; border-radius:8px; padding:8px 10px; text-align:center; }
-        #resume_cv .rcv-sumnum { display:block; font-size:14px; font-weight:700; color:#0f172a; line-height:1; }
-        #resume_cv .rcv-sumlbl { font-size:10px; color:#94a3b8; text-transform:uppercase; letter-spacing:.3px; }
+        #resume_cv .rcv-summary { display:flex; gap:6px; margin:0; flex-shrink:0; }
+        #resume_cv .rcv-sumitem { min-width:76px; background:#fff; border:1px solid #e2e8f0; border-radius:8px; padding:6px 10px; text-align:center; }
+        #resume_cv .rcv-sumnum { display:block; font-size:14px; font-weight:700; color:#0f172a; line-height:1.2; }
+        #resume_cv .rcv-sumlbl { font-size:9.5px; color:#94a3b8; text-transform:uppercase; letter-spacing:.3px; white-space:nowrap; }
         #resume_cv .rcv-kw-toolbar { display:flex; align-items:center; gap:10px; margin:14px 0 4px; flex-wrap:wrap; }
         #resume_cv .rcv-kw-add { flex:1; min-width:200px; }
         #resume_cv .rcv-kw-add input { width:100%; padding:8px 10px; border:1px solid #e2e8f0; border-radius:8px; font-size:12px; outline:none; }
@@ -701,9 +1076,9 @@
         #resume_cv .rcv-kw-actions { display:flex; gap:8px; }
         #resume_cv .rcv-btn { padding:7px 14px; border:1px solid #e2e8f0; background:#fff; border-radius:7px; font-size:11px; font-weight:600; color:#475569; cursor:pointer; white-space:nowrap; }
         #resume_cv .rcv-btn:hover { background:#f1f5f9; }
-        #resume_cv .rcv-kw-cols { display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:16px; margin-top:14px; }
-        #resume_cv .rcv-kw-group { margin-top:0; }
-        #resume_cv .rcv-kw-title { font-size:11px; font-weight:700; color:#64748b; text-transform:uppercase; letter-spacing:.4px; margin-bottom:8px; }
+        #resume_cv .rcv-kw-cols { display:flex; flex-direction:column; gap:6px; margin-top:0; }
+        #resume_cv .rcv-kw-group { display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-top:0; }
+        #resume_cv .rcv-kw-title { font-size:10.5px; font-weight:700; color:#64748b; text-transform:uppercase; letter-spacing:.4px; margin-bottom:0; flex-shrink:0; white-space:nowrap; }
         #resume_cv .rcv-chips { display:flex; flex-wrap:wrap; gap:6px; }
         #resume_cv .rcv-chip { display:inline-flex; align-items:center; gap:5px; padding:4px 9px; border-radius:20px; font-size:11px; font-weight:600; cursor:default; border:1px solid #e2e8f0; background:#f8fafc; color:#475569; user-select:none; transition:all .12s; }
         #resume_cv .rcv-chip .rcv-cnt { font-size:10px; background:#e2e8f0; color:#475569; border-radius:10px; padding:0 5px; min-width:15px; text-align:center; }
@@ -714,7 +1089,7 @@
         #resume_cv .rcv-chip.active .rcv-cnt { background:#fcd34d; color:#92400e; }
         #resume_cv .rcv-chip-x { margin-left:3px; cursor:pointer; font-weight:700; color:#92400e; opacity:.6; font-size:13px; line-height:1; }
         #resume_cv .rcv-chip-x:hover { opacity:1; }
-        #resume_cv .rcv-kw-add-row { display:flex; gap:8px; margin:14px 0 2px; }
+        #resume_cv .rcv-kw-add-row { display:flex; gap:8px; margin:0; }
         #resume_cv .rcv-kw-add-row input { flex:1; min-width:0; padding:8px 12px; border:1px solid #e2e8f0; border-radius:8px; font-size:12px; outline:none; }
         #resume_cv .rcv-kw-add-row input:focus { border-color:#6366f1; }
         #resume_cv .rcv-add-btn { padding:8px 16px; border:none; background:#6366f1; color:#fff; border-radius:8px; font-size:12px; font-weight:600; cursor:pointer; white-space:nowrap; }
@@ -728,7 +1103,7 @@
         #resume_cv .rcv-dl-menu .rcv-dl-item { display:block; width:100%; height:auto; min-height:0; justify-content:flex-start; text-align:left; padding:9px 13px; font-size:12px; font-weight:500; color:#334155; background:#fff; border:0; border-radius:0; cursor:pointer; text-decoration:none; white-space:nowrap; }
         #resume_cv .rcv-dl-menu .rcv-dl-item:hover { background:#eef2ff; color:#4f46e5; }
         #resume_cv .rcv-dl-menu .rcv-dl-item + .rcv-dl-item { border-top:1px solid #f1f5f9; }
-        #resume_cv .rcv-main { background:#fff; border:1px solid #e2e8f0; border-radius:12px; overflow:hidden; display:flex; flex-direction:column; min-height:520px; }
+        #resume_cv .rcv-main { order:2; background:#fff; border:none; border-radius:0; overflow:hidden; display:flex; flex-direction:column; min-height:0; }
         #resume_cv .rcv-toolbar { display:flex; align-items:center; justify-content:space-between; gap:10px; padding:10px 14px; border-bottom:1px solid #eef2f7; background:#fafbff; flex-wrap:wrap; }
         #resume_cv .rcv-file { display:flex; align-items:center; gap:8px; font-size:12px; font-weight:600; color:#334155; min-width:0; }
         #resume_cv .rcv-file svg { width:16px; height:16px; color:#6366f1; flex-shrink:0; }
@@ -743,7 +1118,7 @@
         #resume_cv .rcv-switch.on { background:#6366f1; }
         #resume_cv .rcv-switch::after { content:''; position:absolute; top:2px; left:2px; width:14px; height:14px; background:#fff; border-radius:50%; transition:.15s; }
         #resume_cv .rcv-switch.on::after { left:18px; }
-        #resume_cv .rcv-viewport { flex:1; overflow:auto; background:#525659; padding:18px; display:flex; flex-direction:column; align-items:center; gap:14px; }
+        #resume_cv .rcv-viewport { overflow:visible; background:#525659; padding:16px; display:flex; flex-direction:column; align-items:center; gap:14px; }
         #resume_cv .rcv-page { position:relative; box-shadow:0 4px 16px rgba(0,0,0,.35); background:#fff; }
         #resume_cv .rcv-page canvas { display:block; }
         #resume_cv .rcv-textlayer { position:absolute; left:0; top:0; right:0; bottom:0; overflow:hidden; line-height:1; opacity:1; }
@@ -768,8 +1143,6 @@
         @media (max-width:640px){ #resume_cv .rcv-summary { width:100%; } #resume_cv .rcv-sumitem { flex:1; } }
       </style>
 
-      <div class="content-split">
-       <div class="content-main-full">
       <div class="rcv-wrap"
            data-url="{{ $rcvFetchUrl }}"
            data-public="{{ $rcvPublicUrl }}"
@@ -839,6 +1212,10 @@
                   <button type="button" class="rcv-dl-item" data-dl="logo">Resume with Company Logo</button>
                   <button type="button" class="rcv-dl-item" data-dl="hl">Resume with Highlighted Keywords</button>
                   <button type="button" class="rcv-dl-item" data-dl="both">Highlighted Keywords + Company Logo</button>
+                  <button type="button" class="rcv-dl-item" onclick="cdrExportProfilePDF(this)" id="cdrExportPdfBtnRcv" style="display:flex;align-items:center;gap:7px;">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px;flex-shrink:0;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><path d="M12 18v-6"/><path d="M9 15l3 3 3-3"/></svg>
+                    Export Candidate Profile PDF
+                  </button>
                 </div>
               </div>
             </div>
@@ -849,8 +1226,6 @@
             <iframe class="rcv-iframe" id="rcvIframe" style="display:none;"></iframe>
           </div>
         </section>
-      </div>
-       </div>
       </div>
 
       <script>
@@ -1113,49 +1488,64 @@
               if(!logoUri) logoFailed = true;
               try { bannerImg = await svgToImage(buildBannerSvg(wrap, logoUri)); } catch(e){ bannerImg = null; }
             }
-            var QUALITY = 2.5, MAXW = 2200;
+            /* 3.0× scale — better resolution than old 2.5× without the file-size cost of 3.5× */
+            var QUALITY = 3.0, MAXW = 2800;
+            var pagesArr = Array.prototype.slice.call(pages);
+            /* render all pages in parallel — wall-clock time ≈ slowest single page */
+            var rendered = await Promise.all(pagesArr.map(function(pageWrap, idx){
+              return (async function(){
+                var cssW = pageWrap.clientWidth || 760, cssH = pageWrap.clientHeight || 1000, hi;
+                if(pdfDoc){
+                  var page = await pdfDoc.getPage(idx + 1);
+                  var base = page.getViewport({ scale: 1 });
+                  var renderW = Math.min(cssW * QUALITY, MAXW);
+                  var vp = page.getViewport({ scale: renderW / base.width });
+                  hi = document.createElement('canvas');
+                  hi.width = Math.floor(vp.width);
+                  hi.height = Math.floor(vp.height);
+                  await page.render({ canvasContext: hi.getContext('2d', { willReadFrequently: true }), viewport: vp }).promise;
+                } else {
+                  hi = pageWrap.querySelector('canvas');
+                  if(!hi) return null;
+                }
+                var w = hi.width, h = hi.height;
+                var headerH = (bannerImg && idx === 0) ? Math.round(w * 0.073) : 0;
+                var tmp = document.createElement('canvas');
+                tmp.width = w; tmp.height = h + headerH;
+                var ctx = tmp.getContext('2d', { willReadFrequently: true });
+                ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, w, tmp.height);
+                if(headerH){ ctx.drawImage(bannerImg, 0, 0, w, headerH); }
+                ctx.drawImage(hi, 0, headerH, w, h);
+                var pr = pageWrap.getBoundingClientRect();
+                if(opts.highlights){
+                  ctx.fillStyle = 'rgba(255,210,0,0.4)';
+                  pageWrap.querySelectorAll('mark.rcv-hit').forEach(function(mk){
+                    var r = mk.getBoundingClientRect();
+                    ctx.fillRect((r.left-pr.left)/pr.width*w, headerH+(r.top-pr.top)/pr.height*h, r.width/pr.width*w, Math.max(r.height/pr.height*h, 6));
+                  });
+                }
+                if(hideContact){
+                  ctx.fillStyle = '#111827';
+                  pageWrap.querySelectorAll('mark.rcv-redact').forEach(function(mk){
+                    var r = mk.getBoundingClientRect();
+                    ctx.fillRect((r.left-pr.left)/pr.width*w, headerH+(r.top-pr.top)/pr.height*h, r.width/pr.width*w, Math.max(r.height/pr.height*h, 6));
+                  });
+                }
+                /* JPEG 0.88 at 3.0× renders sharper than the old JPEG 0.96 at 2.5× — more pixels compensate for slightly more compression */
+                return { imgData: tmp.toDataURL('image/jpeg', 0.88), cssW: cssW, cssH: cssH, headerH: headerH, w: w };
+              })();
+            }));
+            /* assemble PDF sequentially — pages must be added in document order */
             var pdf = null;
-            for(var idx=0; idx<pages.length; idx++){
-              var pageWrap = pages[idx];
-              // re-render the page from the PDF at high resolution for a crisp export
-              var cssW = pageWrap.clientWidth || 760, cssH = pageWrap.clientHeight || 1000, hi;
-              if(pdfDoc){
-                var page = await pdfDoc.getPage(idx+1);
-                var base = page.getViewport({ scale:1 });
-                var renderW = Math.min(cssW * QUALITY, MAXW);
-                var vp = page.getViewport({ scale: renderW / base.width });
-                hi = document.createElement('canvas'); hi.width = Math.floor(vp.width); hi.height = Math.floor(vp.height);
-                await page.render({ canvasContext: hi.getContext('2d'), viewport: vp }).promise;
-              } else { hi = pageWrap.querySelector('canvas'); if(!hi) continue; }
-              var w = hi.width, h = hi.height;
-              var headerH = (bannerImg && idx === 0) ? Math.round(w * 0.073) : 0;
-              var tmp = document.createElement('canvas'); tmp.width = w; tmp.height = h + headerH;
-              var ctx = tmp.getContext('2d');
-              ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, w, tmp.height);
-              if(headerH){ ctx.drawImage(bannerImg, 0, 0, w, headerH); }
-              ctx.drawImage(hi, 0, headerH, w, h);
-              var pr = pageWrap.getBoundingClientRect();
-              if(opts.highlights){
-                ctx.fillStyle = 'rgba(255, 210, 0, 0.4)';
-                pageWrap.querySelectorAll('mark.rcv-hit').forEach(function(mk){
-                  var r = mk.getBoundingClientRect();
-                  ctx.fillRect((r.left - pr.left)/pr.width*w, headerH + (r.top - pr.top)/pr.height*h, r.width/pr.width*w, Math.max(r.height/pr.height*h, 6));
-                });
-              }
-              if(hideContact){
-                ctx.fillStyle = '#111827';
-                pageWrap.querySelectorAll('mark.rcv-redact').forEach(function(mk){
-                  var r = mk.getBoundingClientRect();
-                  ctx.fillRect((r.left - pr.left)/pr.width*w, headerH + (r.top - pr.top)/pr.height*h, r.width/pr.width*w, Math.max(r.height/pr.height*h, 6));
-                });
-              }
-              var img = tmp.toDataURL('image/jpeg', 0.96);
-              var headerCssH = headerH * (cssW / w);
-              var pw = Math.round(cssW), ph = Math.round(cssH + headerCssH);
+            for(var i = 0; i < rendered.length; i++){
+              var r = rendered[i];
+              if(!r) continue;
+              var headerCssH = r.headerH * (r.cssW / r.w);
+              var pw = Math.round(r.cssW), ph = Math.round(r.cssH + headerCssH);
               var orient = pw > ph ? 'l' : 'p';
               if(!pdf){ pdf = new JsPDF({ orientation: orient, unit: 'px', format: [pw, ph] }); }
               else { pdf.addPage([pw, ph], orient); }
-              pdf.addImage(img, 'JPEG', 0, 0, pw, ph, undefined, 'FAST');
+              pdf.addImage(r.imgData, 'JPEG', 0, 0, pw, ph, undefined, 'FAST');
             }
             if(pdf){
               var fn = ((document.querySelector('#resume_cv .rcv-file span') || {}).textContent || 'resume').replace(/\.[^.]+$/, '');
@@ -1514,169 +1904,7 @@
 
     <div class="tab-pane fade show active" id="personal_details" role="tabpanel">
 
-      <h2 class="overview-title">Profile Overview</h2>
-
-      <section class="info-grid" aria-label="Candidate quick information">
-        <article class="info-card">
-            <div class="info-icon-wrap blue">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                <rect x="2" y="7" width="20" height="14" rx="2" ry="2"/>
-                <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>
-                </svg>
-            </div>
-                @php
-                    $experience = trim((string) @$application->total_exp);
-                    if (strpos($experience, '.') !== false) {
-                        $parts = explode('.', $experience);
-                        if (isset($parts[1])) {
-                            if ($parts[1] === '00') {
-                                $formattedExperience = $parts[0];
-                            } else {
-                                $formattedExperience = $experience; 
-                            }
-                        } else {
-                            $formattedExperience = $experience;
-                        }
-                    } else {
-                        $formattedExperience = $experience;
-                    }
-
-                @endphp
-            <div class="info-content">
-                <div class="info-label">Total Experience</div>
-                <div class="info-value">{{ @$formattedExperience }} Years</div>
-            </div>
-        </article>
-
-        <article class="info-card">
-          <div class="info-icon-wrap green">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-              <line x1="12" y1="20" x2="12" y2="10"/>
-              <line x1="18" y1="20" x2="18" y2="4"/>
-              <line x1="6" y1="20" x2="6" y2="16"/>
-            </svg>
-          </div>
-          @php	
-              $rel_experience = trim((string) @$application->rel_exp);
-              if (strpos($rel_experience, '.') !== false) {
-                $parts = explode('.', $rel_experience);
-                if (isset($parts[1])) {
-                  // If decimals are exactly "00", remove them
-                  if ($parts[1] === '00') {
-                    $rel_formattedExperience = $parts[0];
-                  } else {
-                    $rel_formattedExperience = $rel_experience; 
-                  }
-                } else {
-                  $rel_formattedExperience = $rel_experience;
-                }
-              } else {
-                $rel_formattedExperience = $rel_experience;
-              }          
-          @endphp
-
-          <div class="info-content">
-            <div class="info-label">Relevant Experience</div>
-            <div class="info-value">{{ @$rel_formattedExperience }} Years </div>
-          </div>
-        </article>
-
-        <article class="info-card">
-          <div class="info-icon-wrap purple">
-            <svg class="meta-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-              stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-              <circle cx="12" cy="7" r="4"></circle>
-            </svg>
-          </div>
-          <div class="info-content">
-            <div class="info-label">Gender</div>
-            <div class="info-value">{{ ucwords(@$application->gender) }}</div>
-          </div>
-        </article>
-
-        <article class="info-card">
-          <div class="info-icon-wrap orange">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-              <circle cx="12" cy="7" r="4"/>
-            </svg>
-          </div>
-          <div class="info-content">
-            <div class="info-label">Nationality</div>
-            <div class="info-value">{{ ucwords(substr(@$application->nationality, 0, 30)) }}</div>
-          </div>
-        </article>
-
-        <article class="info-card">
-          <div class="info-icon-wrap purple">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-              <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
-              <line x1="8" y1="21" x2="16" y2="21"/>
-              <line x1="12" y1="17" x2="12" y2="21"/>
-            </svg>
-          </div>
-          <div class="info-content">
-            <div class="info-label">Work Mode</div>
-            <div class="info-value">{{ ucwords(substr(@$application->wm, 0, 30)) }}</div>
-          </div>
-        </article>
-
-        <article class="info-card">
-          <div class="info-icon-wrap blue">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-              <circle cx="12" cy="12" r="10"/>
-              <polyline points="12 6 12 12 16 14"/>
-            </svg>
-          </div>
-          <div class="info-content">
-                    @php
-                          $np	=	'';
-                          if((@$application->serving_notice_period_mode == 0) || (@$application->serving_notice_period_mode == 1) )
-                          {
-                            $np				=	@$application->np_id;
-                                              $np 			=	'Available '.date("dM Y", strtotime($np)); 
-                        
-                          }else{
-                            $np				=	@$application->np_id;
-                          }
-                          	
-                    @endphp 
-            <div class="info-label">Notice Period</div>
-            <div class="info-value">{{ @$np }}</div>
-          </div>
-        </article>
-
-        <article class="info-card">
-          <div class="info-icon-wrap green">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-              <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
-              <circle cx="12" cy="10" r="3"/>
-            </svg>
-          </div>
-          <div class="info-content">
-            <div class="info-label">Preferred Location</div>
-            <div class="info-value">
-              {{ @$city_name }},&nbsp;{{ ucwords(@$state_name) }},&nbsp;{{ ucwords(@$country_name) }} </div>
-          </div>
-        </article>
-
-        <article class="info-card">
-          <div class="info-icon-wrap blue">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-              <path d="M22 10v6M2 10l10-5 10 5-10 5z"/>
-              <path d="M6 12v5c0 1.66 1.79 3 4 3s4-1.34 4-3v-5"/>
-            </svg>
-          </div>
-          <div class="info-content">
-            <div class="info-label">Education</div>
-            <div class="info-value">{{ ucwords(@$application->qualification_name) }}</div>
-          </div>
-        </article>
-      </section>
-
-
-
+      {{-- Quick Profile card removed; data already shown in the hero pipeline cards above --}}
       <div class="content-split">
         <div class="content-main">
 
@@ -1741,7 +1969,7 @@
                                 <path d="M2 12l10 5 10-5"></path>
                               </svg>
                             </div>
-                            '.strtoupper($exp->skill_key).'
+                            '.ucwords(strtolower($exp->skill_key)).'
                           </div>
                           <div class="skill-exp-cell">'.($exp->year ?? '0') .'.'. ($exp->month ?? '0').' Year</div>
                           <div class="skill-rating-cell">
@@ -1796,159 +2024,17 @@
                 </svg>
               </div>
               <h3 class="card-title">Key Skills &amp; Experience</h3>
-               @if($skillAndQuestions)
-                  @if($editComman)
-                  <span class="fw-bold fs-6"> 
-                    <a type="button" class="py-0 editSkill" href="javascript:void(0);" style="margin-left: 4px;">Edit&nbsp;&nbsp;<i class="fa fa-edit"></i>
-                    </a>
-                  </span>
-                  @endif
-
-                  <span class="fw-bold fs-6"> 
-                    <a type="button" class="btn btn-light-primary btn-sm py-0 editSkillUpdate d-none" id="skill-update-form" href="javascript:void(0);" style="margin-left: 4px;">Save</a>
-                  </span>
-                  <span class="fw-bold fs-6"> 
-                    <a type="button" class="btn btn-light-danger btn-sm py-0 editSkillCancel d-none" href="javascript:void(0);" style="margin-left: 4px;">Cancel</a>
-                  </span>
+              @if($skillAndQuestions)
+                @if($editComman)
+                <button type="button" class="jw-card-edit-btn editSkill">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                  Edit
+                </button>
+                @endif
               @endif
             </div>
-             <div class="job_skill_edit d-none">
+            {{-- Edit form lives in the side drawer (jw-skill-drawer) below content-split --}}
               
-              <form class="ajax-form" method="POST" id="skillUpdateForm" name="skillUpdateForm" enctype="multipart/form-data">
-                @csrf
-                <table class="sk">
-                  <thead>
-                    <tr>
-                      <th>Skill <span class="rq">*</span></th>
-                      <th>Exp.(Years)</th>
-                      <th>Exp.(Months)</th>
-                      <th>Rating</span></th>
-                    </tr>
-                  </thead>
-                  <tbody>                        
-                        <input type="hidden" name="job_id" value="{{ @$job_id }}" id="job_id" />
-                        <input type="hidden" name="appId" value="{{ @$application->id }}" id="appId" />
-                        
-                            @foreach($jobSkill as $skill_val)
-                            @php
-                             $skill_val = (object) $skill_val;                            
-                            @endphp
-                                @if(!empty($skill_val->skill_name))
-                               
-                                  {{-- <label class="form-label">{{ strtoupper($skill_val->skill_name) }} EXPERIENCE</label> --}}
-                                  {{-- <input type="text" class="form-control form-control-solid" name="skillId[{{$skill_val->id }}]" placeholder="Enter detail" value="{{ ($skillShow) ? $skill_val->skill_value : '' }}"> --}}
-                                  
-                                 
-                                      @php
-
-                                      //  dd($skill_val->skill_value);
-                                      if($skill_val->skill_value){
-                                        $skillValue = str_replace(['Years','Year',' '],'',$skill_val->skill_value);
-                                        // dd($skillValue);
-                                        if(!is_null($skillValue) && !empty($skillValue)){
-                                         
-                                          $total_skill_exp =  GeneralMethod::separateNumberParts($skillValue);
-                                          $skill_exp_years = ($total_skill_exp[0]);
-                                          $skill_exp_months = ($total_skill_exp[1]); 
-
-                                          $selected_skill_exp_year = $skill_exp_years;
-                                          $selected_skill_exp_month = $skill_exp_months;
-                                          $selected_skill_rating = $skill_val->rating ?? null;
-                                          
-                                        }else{
-                                          $selected_skill_exp_year = null;
-                                          $selected_skill_exp_month =null;
-                                          $selected_skill_rating =null;
-                                        }
-                                        //  dd($skillValue,$skill_val->skill_value);
-                                      }else{
-                                        $selected_skill_exp_year = null;
-                                        $selected_skill_exp_month =null;
-                                        $selected_skill_rating =null;
-                                      }
-                                      
-                                      // dd($skill_exp_years,$skill_exp_months);
-                
-                                    @endphp
-                                    <tr>
-                                    <td>
-                                      <label class="form-label">{{ strtoupper($skill_val->skill_name) }} EXPERIENCE</label>
-                                    </td>
-                
-                                      <td>
-                                        <select class="form-select" arial-label="Select rel_exp_year" id="rel_exp_year" name="YearskillId[{{ $skill_val->job_skill_id }}]">
-                                          <option value="0">Select Year</option>
-                                          @php 
-                                              for ($i = 1; $i <= 60; $i++) {
-                                                  $selected = '';
-                                                    $s = 'Year';
-                                                    if($i > 1){
-                                                        $s = 'Years';
-                                                    }
-                                                    if(is_null($selected_skill_exp_year)){
-                                                    $selected = '';
-                                                    }else{
-                                                      if($i==$selected_skill_exp_year){
-                                                        $selected =  'selected';
-                                                    }
-                                                    }
-                                                    echo "<option value=\"$i\" $selected>{$i} {$s}</option>";
-                                              }
-                                          @endphp
-                                        </select>
-                
-                                      </td>
-                                      <td>
-                                        <select class="form-select" arial-label="Select rel_exp_month" id="rel_exp_month" name="MonthskillId[{{ $skill_val->job_skill_id }}]">
-                                          <option value="">Select Month</option>
-                                          @php 
-                                              for ($i = 0; $i <= 11; $i++) {
-                                                $selected = '';
-                                                    $s = 'Month';
-                                                    if($i > 1){
-                                                        $s = 'Months';
-                                                    }
-                                                    if(is_null($selected_skill_exp_month)){
-                                                    $selected = '';
-                                                    }else{
-                                                      if($i==$selected_skill_exp_month){
-                                                        $selected =  'selected';
-                                                    }
-                                                    }
-                                                    echo "<option value=\"$i\" $selected>{$i} {$s}</option>";
-                                              }
-                                          @endphp
-                                        </select>
-                                      </td>
-                                      <td>
-                                        <select class="form-select" arial-label="Select rel_exp_month" id="rating" name="rating[{{ $skill_val->job_skill_id }}]">
-                                          <option value="">Select Month</option>
-                                          @php 
-                                              for ($i = 1; $i <= 5; $i++) {
-                                                $selected = '';
-                                                    $s = 'Star';
-                                                    if($i > 1){
-                                                        $s = 'Stars';
-                                                    }
-                                                    if(is_null($selected_skill_rating)){
-                                                    $selected = '';
-                                                    }else{
-                                                      if($i==$selected_skill_rating){
-                                                        $selected =  'selected';
-                                                    }
-                                                    }
-                                                    echo "<option value=\"$i\" $selected>{$i} {$s}</option>";
-                                              }
-                                          @endphp
-                                        </select>
-                                      </td>
-                                    </tr>
-                                @endif
-                            @endforeach 
-                  </tbody>
-                  </table> 
-                </form> 
-             </div>
             <div class="skills-table job_skill_view">
               <div class="skills-thead">
                 <div>Skill</div>
@@ -1989,7 +2075,7 @@
                                 <path d="M2 12l10 5 10-5"></path>
                               </svg>
                             </div>
-                            '.strtoupper($skill_val->skill_name).'
+                            '.ucwords(strtolower($skill_val->skill_name)).'
                           </div>
                           <div class="skill-exp-cell">'.$skillShowView.'</div>
                           <div class="skill-rating-cell">
@@ -2032,6 +2118,7 @@
             </div>
           </section>
 
+          @if(!empty($job_additional_detail))
           <section class="cardshow">
             <div class="card-header-sidebar">
               <div class="card-icon" style="background: var(--color-success-50); color: var(--color-success-600);">
@@ -2043,79 +2130,20 @@
                   <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
                 </svg>
               </div>
-              <h3 class="card-title">Job Questions</h3>
-                @if($skillAndQuestions)
+              <h3 class="card-title">Screening Questions</h3>
+              @if($skillAndQuestions)
                 @if($editComman)
-                    <span class="fw-bold fs-6"> 
-                      <a type="button" class="py-0 editJobQuestion" href="javascript:void(0);" style="margin-left: 4px;">Edit&nbsp;&nbsp;<i class="fa fa-edit"></i>
-                      </a>
-                    </span>
-                    @endif
-                    <span class="fw-bold fs-6"> 
-                      <a type="button" class="btn btn-light-primary btn-sm py-0 editJobQuestionUpdate d-none" id="job-question-update-form" href="javascript:void(0);" style="margin-left: 4px;">Save</a>
-                    </span>
-                    <span class="fw-bold fs-6"> 
-                      <a type="button" class="btn btn-light-danger btn-sm py-0 editJobQuestionCancel d-none" href="javascript:void(0);" style="margin-left: 4px;">Cancel</a>
-                    </span>
+                <button type="button" class="jw-card-edit-btn editJobQuestion">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                  Edit
+                </button>
                 @endif
-
+              @endif
             </div>
-              <div class="skills-table job_additional_edit d-none">
-                <form class="ajax-form" method="POST" id="jobQuestionUpdateForm" name="jobQuestionUpdateForm" enctype="multipart/form-data">
-                @csrf  
-                <input type="hidden" name="job_id" value="{{ @$job_id }}" />
-                <input type="hidden" name="appId" value="{{ @$application->id }}"/>
-                <table class="sk">
-                  <thead>
-                    <tr>
-                      <th style="width: 280px;">Job Questions<span class="rq">*</span></th>
-                      <th>Answered</th>
-                    </tr>
-                  </thead>
-                  <tbody> 
-
-                    @php 
-                                if(!empty($job_additional_detail)){
-                                  
-                                  $customTitleId	=	1;
-                                  $html			=	'';
-                                  $inc_first		=	0;
-                                  $inc_last		=	1;
-                          
-                                  foreach($job_additional_detail as $aDetailArr){
-                                    $aDetailArr = (object) $aDetailArr;
-                                      if(!empty($aDetailArr->job_detail_value)){
-                                      
-                                          $ans_value	=	$aDetailArr->application_detail_value;	
-                                            $html		.=	'<tr>
-                                                       <td>
-                                                      <label class="form-label">'.strtoupper($aDetailArr->job_detail_value).':</label>
-                                                      <input type="hidden" name="job_question[]" value="'.$aDetailArr->question_id.'">
-                                                      </td>
-                                                      <td>
-                                                      <input type="text" class="form-control form-control-solid" name="additional_detail[]" placeholder="Enter detail" value="'.@$ans_value.'">
-                                                      <span class="text-muted form-text">Please enter your details</span>
-                                                    </td>
-                                                    </tr>';
-                                      }
-                                          $inc_first++;
-                                          $inc_last++;
-                                          $customTitleId++;				
-                                    }
-                        
-                                    echo $html;	
-                                }	                               
-                            @endphp
-
-
-                     
-                </tbody>
-                </table> 
-              </form> 
-            </div>
+            {{-- Edit form lives in the side drawer (jw-question-drawer) below content-split --}}
             <div class="skills-table job_additional_view">
               <div class="skills-thead">
-                <div>Job Questions</div>
+                <div>Screening Questions</div>
                 <div>Answered</div>
               </div>
                  @php 
@@ -2137,7 +2165,7 @@
                                 <path d="M2 12l10 5 10-5"></path>
                               </svg>
                             </div>
-                            '.strtoupper(@$aDetailArr->job_detail_value).'
+                            '.ucwords(strtolower((string)@$aDetailArr->job_detail_value)).'
                           </div>
                           <div class="skill-exp-cell">'.@$ans_value.'</div>
                         </div>';
@@ -2147,6 +2175,7 @@
                 @endphp
             </div>
           </section>
+          @endif
 
           <section class="cardshow">
             <div class="card-header-sidebar">
@@ -2158,20 +2187,35 @@
                   <line x1="3" y1="10" x2="21" y2="10"></line>
                 </svg>
               </div>
-              <h3 class="card-title">Interview Slots <span style="font-weight: 500; color: var(--color-text-tertiary);">(Next 3 Days)</span></h3>
-                  @if($skillAndQuestions)
-                      <span class="fw-bold fs-6"> 
-                        <a type="button" class="py-0 editSlots" href="javascript:void(0);" style="margin-left: 4px;">Edit&nbsp;&nbsp;<i class="fa fa-edit"></i>
-                        </a>
-                      </span>
-                      <span class="fw-bold fs-6"> 
-                        <a type="button" class="btn btn-light-primary btn-sm py-0 editSlotsUpdate d-none" id="job-slots-update-form" href="javascript:void(0);" style="margin-left: 4px;">Save</a>
-                      </span>
-                      <span class="fw-bold fs-6"> 
-                        <a type="button" class="btn btn-light-danger btn-sm py-0 editSlotsCancel d-none" href="javascript:void(0);" style="margin-left: 4px;">Cancel</a>
-                      </span>
-                  @endif
+              <h3 class="card-title">Interview Slots <span style="font-size:11px;font-weight:500;color:#94a3b8;">(Next 3 Days)</span></h3>
+              @if($skillAndQuestions)
+              <button type="button" class="jw-card-edit-btn editSlots">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                Edit
+              </button>
+              @endif
             </div>
+            {{-- Edit form lives in the side drawer (jw-slots-drawer) below content-split --}}
+            @php
+              $hasSlots = !empty($application->interviewDateOne) || !empty($application->interviewDateTwo) || !empty($application->interviewDateThree);
+            @endphp
+            @if(!$hasSlots)
+              <div class="po-slots-empty">
+                <div class="po-slots-empty-icon">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                    <line x1="16" y1="2" x2="16" y2="6"></line>
+                    <line x1="8" y1="2" x2="8" y2="6"></line>
+                    <line x1="3" y1="10" x2="21" y2="10"></line>
+                  </svg>
+                </div>
+                <p class="po-slots-empty-title">No Interview Slots Added Yet</p>
+                <p class="po-slots-empty-sub">Add interview slots to start scheduling.</p>
+                @if($skillAndQuestions)
+                <button type="button" class="po-slots-add-btn editSlots">Add Slots</button>
+                @endif
+              </div>
+            @else
                 @php
                     $book1 = 'Book Now';
                     $book2 = 'Book Now';
@@ -2182,158 +2226,89 @@
                     $modal1 = '';
                     $modal2 = '';
                     $modal3 = '';
-                    $date1 =  \Carbon\Carbon::parse(@$application->interviewDateOne)->format('Y-m-d h:i:s');
-                      $date2 =  \Carbon\Carbon::parse(@$application->interviewDateTwo)->format('Y-m-d h:i:s');
-                      $date3 =  \Carbon\Carbon::parse(@$application->interviewDateThree)->format('Y-m-d h:i:s');
+                    $date1 = \Carbon\Carbon::parse(@$application->interviewDateOne)->format('Y-m-d h:i:s');
+                    $date2 = \Carbon\Carbon::parse(@$application->interviewDateTwo)->format('Y-m-d h:i:s');
+                    $date3 = \Carbon\Carbon::parse(@$application->interviewDateThree)->format('Y-m-d h:i:s');
                     if(count($scheduleDateArr)>0){
-                          if(in_array($date1,$scheduleDateArr)){
-                          $book1 = 'Booked';
-                          $bookbtn1 = 'book-btnoff-booked';
-                          $modal1 ='';
-                          }
-                          if(in_array($date2,$scheduleDateArr)){
-                          $book2 = 'Booked';
-                          $bookbtn2 = 'book-btnoff-booked';
-                          $modal2 ='';
-                          }
-                          if(in_array($date3,$scheduleDateArr)){
-                          $book3 = 'Booked';
-                          $bookbtn3 = 'book-btnoff-booked';
-                          $modal3 ='';
-                          }
-                    }            
-              @endphp
-            <div class="slots-grid job_slots_edit d-none">
+                        if(in_array($date1,$scheduleDateArr)){
+                            $book1 = 'Booked';
+                            $bookbtn1 = 'book-btnoff-booked';
+                            $modal1 = '';
+                        }
+                        if(in_array($date2,$scheduleDateArr)){
+                            $book2 = 'Booked';
+                            $bookbtn2 = 'book-btnoff-booked';
+                            $modal2 = '';
+                        }
+                        if(in_array($date3,$scheduleDateArr)){
+                            $book3 = 'Booked';
+                            $bookbtn3 = 'book-btnoff-booked';
+                            $modal3 = '';
+                        }
+                    }
+                @endphp
+                <div class="slots-grid job_slots_view">
 
-              <form class="ajax-form" method="POST" id="jobSlotsUpdateForm" name="jobSlotsUpdateForm" enctype="multipart/form-data">
-                            @csrf
-                            <input type="hidden" name="appId" value="{{ @$application->wiseId }}"/>
-                      
-                            
-                              
-                              <div class="row">
-                                <label class="form-label">Date and Time(Slot-1)</label>
-                                 <div class="slot-day" style="display: -webkit-inline-box !important;">
-                                <div class="">
-                                  <input class="form-control" placeholder="Date" name="interviewDateOne" id="interviewDateOne" value="{{ (@$application->interviewDateOne) ? \Carbon\Carbon::parse(@$application->interviewDateOne)->format('d-m-Y') : '' }}" type="text" readonly="readonly">
-                                </div>
-                                <div class="">
-                                  <input class="form-control" placeholder="Time" name="interviewTimeOne" id="interviewTimeOne" value="{{ (@$application->interviewDateOne) ? \Carbon\Carbon::parse(@$application->interviewDateOne)->format('h:i A'): '' }}" type="text" readonly="readonly">
-                                </div>
-                                <div class="">
-                                  <select name="interview_mode_one" id="interview_mode_one"
-                                      onchange="getInterviewModeChild(this.value, {{ $job_id }});"
-                                      class="form-select">
-                                      <option value="">Mode</option>
-                                    @if (!empty(@$interview_mode))
-                                        @foreach (@$interview_mode as $int_mode_val)
-                                            
-                                            <option value="{{ @$int_mode_val->name }}" {{ @$application->interview_mode_one == $int_mode_val->name ? 'selected' : '' }}>{{ @$int_mode_val->name }}
-                                            </option>
-                                        @endforeach
-                                    @endif
-                                  </select>
-                                </div>
-                              </div>
-                          </div>
+                  <div class="slot-day">
+                    <div class="slot-header">
+                      <div class="slot-day-name">{{ (@$application->interviewDateOne) ? \Carbon\Carbon::parse(@$application->interviewDateOne)->format('D') : 'N/A' }}</div>
+                      <div class="slot-date">{{ (@$application->interviewDateOne) ? \Carbon\Carbon::parse(@$application->interviewDateOne)->format('d M') : 'N/A' }}</div>
+                    </div>
+                    @php $__slotTz = @$application->interview_timezone ?? 'IST'; @endphp
+                    <div class="slot-time">{{ (@$application->interviewDateOne) ? \Carbon\Carbon::parse(@$application->interviewDateOne)->format('h:i A') : 'N/A' }} <span style="font-size:10px;color:#94a3b8;font-weight:500;">({{ $__slotTz }})</span></div>
+                    <div class="slot-time">{{ @$application->interview_mode_one ?? 'N/A' }}</div>
+                    @if(empty($application->interviewDateOne))
+                      <button type="button" class="book-btn-addslot editSlots">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:11px;height:11px;flex-shrink:0;"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                        Select Date
+                      </button>
+                    @else
+                      <button {{ ((@$application->interviewDateOne && $date1 >= date('Y-m-d'))) ? $modal1:'' }} data-mode="{{@$application->interview_mode_one}}" data-date="{{ \Carbon\Carbon::parse(@$application->interviewDateOne)->format('d-m-Y') }}" data-time="{{ \Carbon\Carbon::parse(@$application->interviewDateOne)->format('h:i A') }}" class="{{ ((@$application->interviewDateOne && $date1 >= date('Y-m-d'))) ? $bookbtn1 :'book-btnoff' }} btn-book" rel="{{@$application->wiseId}}" type="button">{{$book1}}</button>
+                    @endif
+                  </div>
 
-                              
-                          <div class="row mt-5">
-                                <label class="form-label">Date and Time(Slot-2)</label>
-                          <div class="slot-day" style="display: -webkit-inline-box !important;">
-                                <div class="">
-                                  <input class="form-control" placeholder="Date" name="interviewDateTwo" id="interviewDateTwo" value="{{ (@$application->interviewDateTwo)  ? \Carbon\Carbon::parse(@$application->interviewDateTwo)->format('d-m-Y'): '' }}" type="text" readonly="readonly">
-                                </div>
-                                <div class="">
-                                  <input class="form-control" placeholder="Time" name="interviewTimeTwo" id="interviewTimeTwo" value="{{ (@$application->interviewDateTwo) ?  \Carbon\Carbon::parse(@$application->interviewDateTwo)->format('h:i A') : '' }}" type="text" readonly="readonly">
-                                </div>
-                                <div class="">
-                                  <select name="interview_mode_two" id="interview_mode_two"
-                                      onchange="getInterviewModeChild(this.value, {{ $job_id }});"
-                                      class="form-select">
-                                      <option value="">Mode</option>
-                                      @if (!empty(@$interview_mode))
-                                        @foreach (@$interview_mode as $int_mode_val)
-                                            
-                                            <option value="{{ @$int_mode_val->name }}" {{ @$application->interview_mode_two == $int_mode_val->name ? 'selected' : '' }}>{{ @$int_mode_val->name }}
-                                            </option>
-                                        @endforeach
-                                    @endif
-                                  </select>
-                                </div>
-                              </div>
-                          </div>
+                  <div class="slot-day">
+                    <div class="slot-header">
+                      <div class="slot-day-name">{{ (@$application->interviewDateTwo) ? \Carbon\Carbon::parse(@$application->interviewDateTwo)->format('D') : 'N/A' }}</div>
+                      <div class="slot-date">{{ (@$application->interviewDateTwo) ? \Carbon\Carbon::parse(@$application->interviewDateTwo)->format('d M') : 'N/A' }}</div>
+                    </div>
+                    <div class="slot-time">{{ (@$application->interviewDateTwo) ? \Carbon\Carbon::parse(@$application->interviewDateTwo)->format('h:i A') : 'N/A' }} <span style="font-size:10px;color:#94a3b8;font-weight:500;">({{ $__slotTz }})</span></div>
+                    <div class="slot-time">{{ @$application->interview_mode_two ?? 'N/A' }}</div>
+                    @if(empty($application->interviewDateTwo))
+                      <button type="button" class="book-btn-addslot editSlots">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:11px;height:11px;flex-shrink:0;"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                        Select Date
+                      </button>
+                    @else
+                      <button {{ ((@$application->interviewDateTwo && $date2 >= date('Y-m-d'))) ? $modal2:'' }} data-mode="{{@$application->interview_mode_two}}" data-date="{{ \Carbon\Carbon::parse(@$application->interviewDateTwo)->format('d-m-Y') }}" data-time="{{ \Carbon\Carbon::parse(@$application->interviewDateTwo)->format('h:i A') }}" class="{{ ((@$application->interviewDateTwo && $date2 >= date('Y-m-d'))) ? $bookbtn2 :'book-btnoff' }} btn-book" rel="{{@$application->wiseId}}" type="button">{{$book2}}</button>
+                    @endif
+                  </div>
 
+                  <div class="slot-day">
+                    <div class="slot-header">
+                      <div class="slot-day-name">{{ (@$application->interviewDateThree) ? \Carbon\Carbon::parse(@$application->interviewDateThree)->format('D') : 'N/A' }}</div>
+                      <div class="slot-date">{{ (@$application->interviewDateThree) ? \Carbon\Carbon::parse(@$application->interviewDateThree)->format('d M') : 'N/A' }}</div>
+                    </div>
+                    <div class="slot-time">{{ (@$application->interviewDateThree) ? \Carbon\Carbon::parse(@$application->interviewDateThree)->format('h:i A') : 'N/A' }} <span style="font-size:10px;color:#94a3b8;font-weight:500;">({{ $__slotTz }})</span></div>
+                    <div class="slot-time">{{ @$application->interview_mode_three ?? 'N/A' }}</div>
+                    @if(empty($application->interviewDateThree))
+                      <button type="button" class="book-btn-addslot editSlots">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:11px;height:11px;flex-shrink:0;"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                        Select Date
+                      </button>
+                    @else
+                      <button {{ ((@$application->interviewDateThree && $date3 >= date('Y-m-d'))) ? $modal3:'' }} data-mode="{{@$application->interview_mode_three}}" data-date="{{ \Carbon\Carbon::parse(@$application->interviewDateThree)->format('d-m-Y') }}" data-time="{{ \Carbon\Carbon::parse(@$application->interviewDateThree)->format('h:i A') }}" class="{{ ((@$application->interviewDateThree && $date3 >= date('Y-m-d'))) ? $bookbtn3 :'book-btnoff' }} btn-book" rel="{{@$application->wiseId}}" type="button">{{$book3}}</button>
+                    @endif
+                  </div>
 
-                              
-                          <div class="row mt-5">
-                                <label class="form-label">Date and Time(Slot-3)</label>
-                          <div class="slot-day" style="display: -webkit-inline-box !important;">
-                                <div class="">
-                                  <input class="form-control" placeholder="Date" name="interviewDateThree" id="interviewDateThree" value="{{ (@$application->interviewDateThree) ?  \Carbon\Carbon::parse(@$application->interviewDateThree)->format('d-m-Y') : '' }}" type="text" readonly="readonly">
-                                </div>
-                                <div class="">
-                                  <input class="form-control" placeholder="Time" name="interviewTimeThree" id="interviewTimeThree" value="{{ (@$application->interviewDateThree) ?  \Carbon\Carbon::parse(@$application->interviewDateTwo)->format('h:i A') : '' }}" type="text" readonly="readonly">
-                                </div>
-                                <div class="">
-                                  <select name="interview_mode_three" id="interview_mode_three"
-                                      onchange="getInterviewModeChild(this.value, {{ $job_id }});"
-                                      class="form-select">
-                                      <option value="">Mode</option>
-                                      @if (!empty(@$interview_mode))
-                                        @foreach (@$interview_mode as $int_mode_val)
-                                            
-                                            <option value="{{ @$int_mode_val->name }}" {{ @$application->interview_mode_three == $int_mode_val->name ? 'selected' : '' }}>{{ @$int_mode_val->name }}
-                                            </option>
-                                        @endforeach
-                                    @endif
-                                  </select>
-                                </div>
-                              </div>
-                        </div>                        
-                      </form>
-                      
-
-            </div>
-            <div class="slots-grid job_slots_view">
-
-              <div class="slot-day">
-                <div class="slot-header">
-                  <div class="slot-day-name">{{ (@$application->interviewDateOne) ? \Carbon\Carbon::parse(@$application->interviewDateOne)->format('D') : 'N/A' }}</div>
-                  <div class="slot-date">{{ (@$application->interviewDateOne) ? \Carbon\Carbon::parse(@$application->interviewDateOne)->format('d M') : 'N/A' }}</div>
                 </div>
-                <div class="slot-time">{{ (@$application->interviewDateOne) ? \Carbon\Carbon::parse(@$application->interviewDateOne)->format('h:i A') : 'N/A' }}(IST)</div>
-                <div class="slot-time">{{ @$application->interview_mode_one ?? 'N/A' }}</div>
-                <button {{ ((@$application->interviewDateOne && $date1 >= date('Y-m-d'))) ? $modal1:'' }} data-mode="{{@$application->interview_mode_one}}" data-date="{{ \Carbon\Carbon::parse(@$application->interviewDateOne)->format('d-m-Y') }}" data-time="{{ \Carbon\Carbon::parse(@$application->interviewDateOne)->format('h:i A') }}" class="{{ ((@$application->interviewDateOne && $date1 >= date('Y-m-d'))) ? $bookbtn1 :'book-btnoff' }} btn-book" rel="{{@$application->wiseId}}" type="button">{{$book1}}</button>
-              </div>
-
-              <div class="slot-day">
-                <div class="slot-header">
-                  <div class="slot-day-name">{{ (@$application->interviewDateTwo) ? \Carbon\Carbon::parse(@$application->interviewDateTwo)->format('D') : 'N/A' }}</div>
-                  <div class="slot-date">{{ (@$application->interviewDateTwo) ? \Carbon\Carbon::parse(@$application->interviewDateTwo)->format('d M') : 'N/A' }}</div>
-                </div>
-                <div class="slot-time">{{ (@$application->interviewDateTwo) ? \Carbon\Carbon::parse(@$application->interviewDateTwo)->format('h:i A') : 'N/A' }}(IST)</div>
-                <div class="slot-time"> {{ @$application->interview_mode_two ?? 'N/A' }}</div>
-                <button {{ ((@$application->interviewDateTwo && $date2 >= date('Y-m-d'))) ? $modal2:'' }} data-mode="{{@$application->interview_mode_two}}" data-date="{{ \Carbon\Carbon::parse(@$application->interviewDateTwo)->format('d-m-Y') }}" data-time="{{ \Carbon\Carbon::parse(@$application->interviewDateTwo)->format('h:i A') }}" class="{{ ((@$application->interviewDateTwo && $date2 >= date('Y-m-d'))) ? $bookbtn2 :'book-btnoff' }} btn-book" rel="{{@$application->wiseId}}" type="button">{{$book2}}</button>
-              </div>
-              <div class="slot-day">
-                <div class="slot-header">
-                  <div class="slot-day-name">{{ (@$application->interviewDateThree) ? \Carbon\Carbon::parse(@$application->interviewDateThree)->format('D') : 'N/A' }}</div>
-                  <div class="slot-date">{{ (@$application->interviewDateThree) ? \Carbon\Carbon::parse(@$application->interviewDateThree)->format('d M ') : 'N/A' }}</div>
-                </div>
-                <div class="slot-time">{{ (@$application->interviewDateThree) ? \Carbon\Carbon::parse(@$application->interviewDateThree)->format('h:i A') : 'N/A' }}(IST)</div>
-                <div class="slot-time">{{ @$application->interview_mode_three ?? 'N/A' }}</div>
-                <button {{ ((@$application->interviewDateThree && $date3 >= date('Y-m-d'))) ? $modal3:'' }} data-mode="{{@$application->interview_mode_three}}" data-date="{{ \Carbon\Carbon::parse(@$application->interviewDateThree)->format('d-m-Y') }}" data-time="{{ \Carbon\Carbon::parse(@$application->interviewDateThree)->format('h:i A') }}" class="{{ ((@$application->interviewDateThree && $date3 >= date('Y-m-d'))) ? $bookbtn3 :'book-btnoff' }} btn-book" rel="{{@$application->wiseId}}" type="button">{{$book3}}</button>
-              </div>
-
-            </div>
+            @endif
 
           </section>
         </div>
 
         <aside class="content-sidebar">
 
-          @if(!empty($application->recruiter_note))
           <section class="cardshow" style="margin-bottom:16px;">
             <div class="card-header-sidebar">
               <div class="card-icon" style="background: var(--color-primary-50, #eef2ff); color: var(--color-primary-600, #4f46e5);">
@@ -2345,11 +2320,20 @@
                   <polyline points="10 9 9 9 8 9"></polyline>
                 </svg>
               </div>
-              <h3 class="card-title">Recruiter Note</h3>
+              <h3 class="card-title">Recruiter Notes</h3>
+              @if($editComman)
+              <button type="button" class="jw-card-edit-btn editRecruiterNote">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                Edit
+              </button>
+              @endif
             </div>
-            <div style="padding:12px 16px;font-size:13px;color:#3f4254;line-height:1.6;">{!! $application->recruiter_note !!}</div>
+            @if(!empty($application->recruiter_note))
+              <div class="po-recruiter-note-text">{!! $application->recruiter_note !!}</div>
+            @else
+              <p class="po-no-notes">No recruiter notes added yet.</p>
+            @endif
           </section>
-          @endif
 
           <section class="cardshow">
             <div class="card-header-sidebar">
@@ -2390,7 +2374,7 @@
                         @endphp
                     @endif
                   <span class="comp-label">{{ (@$application->condidate_type=='other') ? 'Current Salary' : 'Pay Rate' }}</span>
-                  <span class="comp-value">{!! @$current_ctc_cur !!}  {{ $ctc }} {{ $salaryMode[$current_ctc_mode ?? 0] }}  </span>
+                  <span class="comp-value">{!! @$current_ctc_cur !!} {{ rtrim(rtrim((string)$ctc, '0'), '.') }} {{ $salaryMode[$current_ctc_mode ?? 0] }}</span>
                 </div>
               @endif
 
@@ -2407,7 +2391,7 @@
                             @endphp
                           @endif
                 <span class="comp-label">{{ ($application->condidate_type=='other') ? 'Expected Salary' : 'Bill Rate' }}</span>
-                <span class="comp-value">{!! @$current_ectc_cur !!} {{  @$ectc }} {{ $salaryMode[$current_ectc_mode ?? 0] }} </span>
+                <span class="comp-value">{!! @$current_ectc_cur !!} {{ rtrim(rtrim((string)@$ectc, '0'), '.') }} {{ $salaryMode[$current_ectc_mode ?? 0] }}</span>
               </div>
               <div class="comp-row">
                 <span class="comp-label">Compensation Type</span>
@@ -2466,21 +2450,21 @@
                   Hiring HR
                 </span>
                 <span class="own-value">
-                  @php 
+                  @php
                       if(@$clientjobAssignListCaptain){
-                          echo @$clientjobAssignListCaptain;
+                          echo ucwords(strtolower(@$clientjobAssignListCaptain));
                       }else{
                         if(!empty($client_contuser_arr)){
-                          
+
                           foreach($client_contuser_arr as $key=> $cpn){
                             $cpn = (object) $cpn;
                             if($key==0){
-                                echo @$cpn->contact_person_name .'';
+                                echo ucwords(strtolower(@$cpn->contact_person_name)) .'';
                             }else{
-                                echo ', '.@$cpn->contact_person_name ;
+                                echo ', '.ucwords(strtolower(@$cpn->contact_person_name));
                             }
-                            
-                          }	
+
+                          }
                         }
                       }
                   @endphp
@@ -2507,7 +2491,7 @@
                 @php
                 $companies = DB::table('companies')->select('companies.company_name')->join('users','users.company_id','companies.id')->where('users.id', $application->submitted_by)->first();
                 @endphp
-                <span class="own-value">{{ @$companies->company_name ?? '' }}</span>
+                <span class="own-value">{{ ucwords(strtolower(@$companies->company_name ?? '')) }}</span>
               </div>
               <div class="ownership-row">
                 <span class="own-label">
@@ -2519,65 +2503,15 @@
                   </svg>
                   Upload Date &amp; Time
                 </span>
-                  @php 
-                      $originalDate 	= @$application->created_at;
-                      $newDate 		= date("d-M-Y h:i a", strtotime($originalDate)); 
+                  @php
+                      $originalDate    = @$application->created_at;
+                      $ownerDate       = date("d-M-Y", strtotime($originalDate));
+                      $ownerTime       = date("h:i A", strtotime($originalDate));
                   @endphp
-                <span class="own-value">{{@$newDate.'(IST)'}}</span>
+                <span class="own-value">{{ @$ownerDate }} <span class="meta-sep">|</span> {{ @$ownerTime }} <span class="meta-sep">|</span> IST</span>
               </div>
             </div>
           </section>
-
-
-          @if($application->condidate_type=='other')
-          <section class="cardshow">
-            <div class="card-header-sidebar">
-              <div class="card-icon" style="background: var(--color-purple-50); color: var(--color-purple-500);">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                  stroke-linejoin="round" aria-hidden="true">
-                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                  <polyline points="14 2 14 8 20 8"></polyline>
-                  <line x1="16" y1="13" x2="8" y2="13"></line>
-                  <line x1="16" y1="17" x2="8" y2="17"></line>
-                  <polyline points="10 9 9 9 8 9"></polyline>
-                </svg>
-              </div>
-              <h3 class="card-title">Others</h3>
-            </div>
-             <div class="comp-list">
-                <div class="comp-row">
-                  <span class="comp-label">Offer Amount</span>
-                   @php
-                        $offerAmont = "Confidential";
-                          $allow =  GeneralMethod::confidentialAmontShow($jobId);  
-                        @endphp
-
-                        @if($allow)
-                          @if(@$application->offer_amount > 0)
-                            <span class="comp-value"> {{@$offer_currency_offer}} {{ @$application->offer_amount }}   {{ @$offer_mode_offer }}</span>
-                          @endif
-                        @else
-                          <span class="comp-value">{{ $offerAmont }}</span>
-                        @endif
-                </div>
-                <div class="comp-row">
-                  <span class="comp-label">Joining Date</span>
-                  <span class="comp-value">{{ @$application->joined_date ? date("d-m-Y H:i", strtotime(@$application->joined_date)).'(IST)' : '' }}</span>
-                </div>
-                <div class="comp-row">
-                  <span class="comp-label">Visa Status</span>
-                  <span class="comp-value">{{@$application->visastatu}}</span>
-                </div>
-                <div class="comp-row">
-                  <span class="comp-label">Reference Name</span>
-                  <span class="comp-value">{{ ucwords(@$application->referencename) }}</span>
-                </div>
-                 <div class="comp-row">
-                  <span class="comp-label"><b style="color: #0f172a;">Reason For Job Change : </b> {{@$application->reason_for_job_change}}</span>
-                </div>
-             </div>
-          </section>
-          @endif
 
 
           @if($application->condidate_type=='other')
@@ -2623,7 +2557,7 @@
                       d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z">
                     </path>
                   </svg>
-                  Contact Number-1 
+                  Contact Number-1
                 </span>
                 <a href="javascript:;" class="contact-value" style="display: flex;">
                   <div id="firstPhoneDisplay" class="fw-bolder text-gray-800 fs-6" style="display: flex;"> </div>
@@ -2683,6 +2617,63 @@
           @else
                 <div id="firstPhoneDisplay" class="fw-bolder text-gray-800 fs-6 d-none"> </div>
                 <div id="secondPhoneDisplay" class="fw-bolder text-gray-800 fs-6 d-none"> </div>
+          @endif
+
+
+          @if($application->condidate_type=='other')
+          <section class="cardshow">
+            <div class="card-header-sidebar">
+              <div class="card-icon" style="background: var(--color-purple-50); color: var(--color-purple-500);">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                  stroke-linejoin="round" aria-hidden="true">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                  <polyline points="14 2 14 8 20 8"></polyline>
+                  <line x1="16" y1="13" x2="8" y2="13"></line>
+                  <line x1="16" y1="17" x2="8" y2="17"></line>
+                  <polyline points="10 9 9 9 8 9"></polyline>
+                </svg>
+              </div>
+              <h3 class="card-title">Other Details</h3>
+            </div>
+             <div class="comp-list">
+                @if(!empty(@$application->dob))
+                <div class="comp-row">
+                  <span class="comp-label">Date of Birth</span>
+                  <span class="comp-value">{{ date('d M Y', strtotime(@$application->dob)) }}</span>
+                </div>
+                @endif
+                <div class="comp-row">
+                  <span class="comp-label">Offer Amount</span>
+                   @php
+                        $offerAmont = "Confidential";
+                          $allow =  GeneralMethod::confidentialAmontShow($jobId);
+                        @endphp
+
+                        @if($allow)
+                          @if(@$application->offer_amount > 0)
+                            <span class="comp-value"> {{@$offer_currency_offer}} {{ @$application->offer_amount }}   {{ @$offer_mode_offer }}</span>
+                          @endif
+                        @else
+                          <span class="comp-value">{{ $offerAmont }}</span>
+                        @endif
+                </div>
+                <div class="comp-row">
+                  <span class="comp-label">Joining Date</span>
+                  <span class="comp-value">{{ @$application->joined_date ? date("d-m-Y H:i", strtotime(@$application->joined_date)).'(IST)' : '' }}</span>
+                </div>
+                <div class="comp-row">
+                  <span class="comp-label">Visa Status</span>
+                  <span class="comp-value">{{@$application->visastatu}}</span>
+                </div>
+                <div class="comp-row">
+                  <span class="comp-label">Reference Name</span>
+                  <span class="comp-value">{{ ucwords(@$application->referencename) }}</span>
+                </div>
+                 <div class="comp-row">
+                  <span class="comp-label"><b style="color: #0f172a;">Reason For Job Change : </b> {{@$application->reason_for_job_change}}</span>
+                </div>
+             </div>
+          </section>
           @endif
 
           @if(@$application->condidate_type=='bench_condidate')
@@ -2793,7 +2784,419 @@
           @endif
         </aside>
       </div>
-    </div>
+
+      {{-- ======================================================
+           SIDE EDIT DRAWERS (position:fixed; driven by CSS :has())
+           The existing JS toggles d-none on .jw-drawer-body which
+           triggers the CSS transition — no new route / logic added.
+           ====================================================== --}}
+
+      {{-- DRAWER 1: Key Skills & Experience --}}
+      <div class="jw-side-drawer" id="jw-skill-drawer">
+        <div class="jw-drawer-backdrop editSkillCancel"></div>
+        <div class="jw-drawer-panel">
+          <div class="jw-drawer-header">
+            <div class="jw-drawer-icon-wrap" style="background:#ede9fe;color:#7c3aed;">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            </div>
+            <div class="jw-drawer-title-group">
+              <div class="jw-drawer-title">Edit Key Skills &amp; Experience</div>
+              <div class="jw-drawer-subtitle">Update skill experience and self-rating</div>
+            </div>
+            <button type="button" class="jw-drawer-close editSkillCancel" aria-label="Close">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+          </div>
+          <div class="jw-drawer-body job_skill_edit d-none">
+              <form class="ajax-form" method="POST" id="skillUpdateForm" name="skillUpdateForm" enctype="multipart/form-data">
+                @csrf
+                <table class="sk" style="width:100%;">
+                  <thead>
+                    <tr>
+                      <th>Skill</th>
+                      <th>Exp. (Years)</th>
+                      <th>Exp. (Months)</th>
+                      <th>Rating</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                        <input type="hidden" name="job_id" value="{{ @$job_id }}" id="job_id" />
+                        <input type="hidden" name="appId" value="{{ @$application->id }}" id="appId" />
+                            @foreach($jobSkill as $skill_val)
+                            @php
+                             $skill_val = (object) $skill_val;
+                            @endphp
+                                @if(!empty($skill_val->skill_name))
+                                      @php
+                                      if($skill_val->skill_value){
+                                        $skillValue = str_replace(['Years','Year',' '],'',$skill_val->skill_value);
+                                        if(!is_null($skillValue) && !empty($skillValue)){
+                                          $total_skill_exp =  GeneralMethod::separateNumberParts($skillValue);
+                                          $skill_exp_years = ($total_skill_exp[0]);
+                                          $skill_exp_months = ($total_skill_exp[1]);
+                                          $selected_skill_exp_year = $skill_exp_years;
+                                          $selected_skill_exp_month = $skill_exp_months;
+                                          $selected_skill_rating = $skill_val->rating ?? null;
+                                        }else{
+                                          $selected_skill_exp_year = null;
+                                          $selected_skill_exp_month = null;
+                                          $selected_skill_rating = null;
+                                        }
+                                      }else{
+                                        $selected_skill_exp_year = null;
+                                        $selected_skill_exp_month = null;
+                                        $selected_skill_rating = null;
+                                      }
+                                    @endphp
+                                    <tr>
+                                    <td>
+                                      <label class="form-label">{{ ucwords(strtolower($skill_val->skill_name)) }}</label>
+                                    </td>
+                                      <td>
+                                        <select class="form-select form-select-sm" name="YearskillId[{{ $skill_val->job_skill_id }}]">
+                                          <option value="0">Year</option>
+                                          @php
+                                              for ($i = 1; $i <= 60; $i++) {
+                                                  $s = $i > 1 ? 'Years' : 'Year';
+                                                  $sel = (!is_null($selected_skill_exp_year) && $i == $selected_skill_exp_year) ? 'selected' : '';
+                                                  echo "<option value=\"$i\" $sel>{$i} {$s}</option>";
+                                              }
+                                          @endphp
+                                        </select>
+                                      </td>
+                                      <td>
+                                        <select class="form-select form-select-sm" name="MonthskillId[{{ $skill_val->job_skill_id }}]">
+                                          <option value="">Month</option>
+                                          @php
+                                              for ($i = 0; $i <= 11; $i++) {
+                                                $s = $i > 1 ? 'Months' : 'Month';
+                                                $sel = (!is_null($selected_skill_exp_month) && $i == $selected_skill_exp_month) ? 'selected' : '';
+                                                echo "<option value=\"$i\" $sel>{$i} {$s}</option>";
+                                              }
+                                          @endphp
+                                        </select>
+                                      </td>
+                                      <td>
+                                        <select class="form-select form-select-sm" name="rating[{{ $skill_val->job_skill_id }}]">
+                                          <option value="">Rating</option>
+                                          @php
+                                              for ($i = 1; $i <= 5; $i++) {
+                                                $s = $i > 1 ? 'Stars' : 'Star';
+                                                $sel = (!is_null($selected_skill_rating) && $i == $selected_skill_rating) ? 'selected' : '';
+                                                echo "<option value=\"$i\" $sel>{$i} {$s}</option>";
+                                              }
+                                          @endphp
+                                        </select>
+                                      </td>
+                                    </tr>
+                                @endif
+                            @endforeach
+                  </tbody>
+                </table>
+              </form>
+          </div>
+          <div class="jw-drawer-footer">
+            <a type="button" class="btn-jw-save editSkillUpdate" id="skill-update-form" href="javascript:void(0);">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:13px;height:13px;"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+              Save Changes
+            </a>
+            <a type="button" class="btn-jw-cancel editSkillCancel" href="javascript:void(0);">Cancel</a>
+          </div>
+        </div>
+      </div>{{-- /#jw-skill-drawer --}}
+
+      {{-- DRAWER 2: Screening Questions --}}
+      <div class="jw-side-drawer" id="jw-question-drawer">
+        <div class="jw-drawer-backdrop editJobQuestionCancel"></div>
+        <div class="jw-drawer-panel">
+          <div class="jw-drawer-header">
+            <div class="jw-drawer-icon-wrap" style="background:#dcfce7;color:#16a34a;">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+            </div>
+            <div class="jw-drawer-title-group">
+              <div class="jw-drawer-title">Edit Screening Questions</div>
+              <div class="jw-drawer-subtitle">Update candidate screening question answers</div>
+            </div>
+            <button type="button" class="jw-drawer-close editJobQuestionCancel" aria-label="Close">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+          </div>
+          <div class="jw-drawer-body job_additional_edit d-none">
+            <form class="ajax-form" method="POST" id="jobQuestionUpdateForm" name="jobQuestionUpdateForm" enctype="multipart/form-data">
+              @csrf
+              <input type="hidden" name="job_id" value="{{ @$job_id }}" />
+              <input type="hidden" name="appId" value="{{ @$application->id }}"/>
+              <table class="sk" style="width:100%;">
+                <thead>
+                  <tr>
+                    <th style="width:55%;">Screening Question</th>
+                    <th>Answered</th>
+                  </tr>
+                </thead>
+                <tbody>
+                    @php
+                        if(!empty($job_additional_detail)){
+                          $html = '';
+                          foreach($job_additional_detail as $aDetailArr){
+                            $aDetailArr = (object) $aDetailArr;
+                            if(!empty($aDetailArr->job_detail_value)){
+                              $ans_value = $aDetailArr->application_detail_value;
+                              $__wc = !empty($ans_value) ? count(array_filter(explode(' ', trim($ans_value)))) : 0;
+                              $html .= '<tr>
+                                <td><label class="form-label">'.strtoupper($aDetailArr->job_detail_value).':</label>
+                                <input type="hidden" name="job_question[]" value="'.$aDetailArr->question_id.'">
+                                </td>
+                                <td>
+                                  <input type="text" class="form-control form-control-sm form-control-solid sq-answer-input" name="additional_detail[]" placeholder="Enter answer (max 20 words)" value="'.htmlspecialchars((string)@$ans_value, ENT_QUOTES).'">
+                                  <div class="sq-word-count'.($__wc >= 20 ? ' sq-at-limit' : '').'"><span class="sq-wc-num">'.$__wc.'</span>/20 words</div>
+                                </td>
+                              </tr>';
+                            }
+                          }
+                          echo $html;
+                        }
+                    @endphp
+                </tbody>
+              </table>
+            </form>
+          </div>
+          <div class="jw-drawer-footer">
+            <a type="button" class="btn-jw-save editJobQuestionUpdate" id="job-question-update-form" href="javascript:void(0);">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:13px;height:13px;"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+              Save Changes
+            </a>
+            <a type="button" class="btn-jw-cancel editJobQuestionCancel" href="javascript:void(0);">Cancel</a>
+          </div>
+        </div>
+      </div>{{-- /#jw-question-drawer --}}
+
+      {{-- DRAWER 3: Interview Slots --}}
+      <div class="jw-side-drawer" id="jw-slots-drawer">
+        <div class="jw-drawer-backdrop editSlotsCancel"></div>
+        <div class="jw-drawer-panel">
+          <div class="jw-drawer-header">
+            <div class="jw-drawer-icon-wrap" style="background:#dbeafe;color:#1d4ed8;">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            </div>
+            <div class="jw-drawer-title-group">
+              <div class="jw-drawer-title">Edit Interview Slots</div>
+              <div class="jw-drawer-subtitle">Set candidate's available interview dates &amp; times</div>
+            </div>
+            <button type="button" class="jw-drawer-close editSlotsCancel" aria-label="Close">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+          </div>
+          <div class="jw-drawer-body job_slots_edit d-none">
+            <form class="ajax-form" method="POST" id="jobSlotsUpdateForm" name="jobSlotsUpdateForm" enctype="multipart/form-data">
+              @csrf
+              <input type="hidden" name="appId" value="{{ @$application->wiseId }}"/>
+
+              {{-- Timezone (applies to all 3 slots) --}}
+              <div class="isd-tz-row">
+                <div class="isd-tz-label">
+                  <i class="ti ti-world" style="font-size:14px;color:#4f46e5;"></i>
+                  Interview Time Zone <span style="color:#94a3b8;font-weight:400;">(applies to all slots)</span>
+                </div>
+                <select name="interview_timezone" id="interview_timezone" class="isd-tz-select">
+                  @php $__tz = @$application->interview_timezone ?? 'IST'; @endphp
+                  <option value="IST"   @selected($__tz=='IST')  >IST  — India Standard Time       (UTC+5:30)</option>
+                  <option value="UTC"   @selected($__tz=='UTC')  >UTC  — Coordinated Universal Time (UTC+0:00)</option>
+                  <option value="GMT"   @selected($__tz=='GMT')  >GMT  — Greenwich Mean Time        (UTC+0:00)</option>
+                  <option value="BST"   @selected($__tz=='BST')  >BST  — British Summer Time        (UTC+1:00)</option>
+                  <option value="CET"   @selected($__tz=='CET')  >CET  — Central European Time      (UTC+1:00)</option>
+                  <option value="CEST"  @selected($__tz=='CEST') >CEST — Central European Summer    (UTC+2:00)</option>
+                  <option value="EET"   @selected($__tz=='EET')  >EET  — Eastern European Time      (UTC+2:00)</option>
+                  <option value="MSK"   @selected($__tz=='MSK')  >MSK  — Moscow Standard Time       (UTC+3:00)</option>
+                  <option value="GST"   @selected($__tz=='GST')  >GST  — Gulf Standard Time         (UTC+4:00)</option>
+                  <option value="PKT"   @selected($__tz=='PKT')  >PKT  — Pakistan Standard Time     (UTC+5:00)</option>
+                  <option value="BST530" @selected($__tz=='BST530')>BST  — Bangladesh Standard Time   (UTC+6:00)</option>
+                  <option value="MMT"   @selected($__tz=='MMT')  >MMT  — Myanmar Time               (UTC+6:30)</option>
+                  <option value="ICT"   @selected($__tz=='ICT')  >ICT  — Indochina Time             (UTC+7:00)</option>
+                  <option value="SGT"   @selected($__tz=='SGT')  >SGT  — Singapore / HKT            (UTC+8:00)</option>
+                  <option value="CST"   @selected($__tz=='CST')  >CST  — China Standard Time        (UTC+8:00)</option>
+                  <option value="JST"   @selected($__tz=='JST')  >JST  — Japan Standard Time        (UTC+9:00)</option>
+                  <option value="AEST"  @selected($__tz=='AEST') >AEST — Australian Eastern Standard (UTC+10:00)</option>
+                  <option value="NZST"  @selected($__tz=='NZST') >NZST — New Zealand Standard Time   (UTC+12:00)</option>
+                  <option value="AST"   @selected($__tz=='AST')  >AST  — Arabian Standard Time      (UTC+3:00)</option>
+                  <option value="BRT"   @selected($__tz=='BRT')  >BRT  — Brasília Time              (UTC−3:00)</option>
+                  <option value="ART"   @selected($__tz=='ART')  >ART  — Argentina Time             (UTC−3:00)</option>
+                  <option value="EST"   @selected($__tz=='EST')  >EST  — Eastern Standard Time      (UTC−5:00)</option>
+                  <option value="EDT"   @selected($__tz=='EDT')  >EDT  — Eastern Daylight Time      (UTC−4:00)</option>
+                  <option value="CST_US" @selected($__tz=='CST_US')>CST — Central Standard Time (US) (UTC−6:00)</option>
+                  <option value="MST"   @selected($__tz=='MST')  >MST  — Mountain Standard Time     (UTC−7:00)</option>
+                  <option value="PST"   @selected($__tz=='PST')  >PST  — Pacific Standard Time      (UTC−8:00)</option>
+                  <option value="PDT"   @selected($__tz=='PDT')  >PDT  — Pacific Daylight Time      (UTC−7:00)</option>
+                </select>
+                <div class="isd-tz-hint">
+                  <i class="ti ti-info-circle" style="font-size:11px;"></i>
+                  Time zone is for display reference only; dates are saved as-is
+                </div>
+              </div>
+
+              {{-- Slot 1 --}}
+              <div class="isd-slot-card">
+                <div class="isd-slot-head">
+                  <span class="isd-slot-num">1</span>
+                  <span class="isd-slot-label">Slot 1 — Date, Time &amp; Mode</span>
+                </div>
+                <div class="isd-slot-grid">
+                  <div class="isd-field">
+                    <label><i class="ti ti-calendar-filled"></i> Date &amp; Time</label>
+                    <div class="isd-datetime-pill">
+                      <input type="date" name="interviewDateOne" id="interviewDateOne"
+                        min="{{ date('Y-m-d') }}"
+                        value="{{ (@$application->interviewDateOne) ? \Carbon\Carbon::parse(@$application->interviewDateOne)->format('Y-m-d') : '' }}">
+                      <span class="sep"></span>
+                      <input type="time" name="interviewTimeOne" id="interviewTimeOne"
+                        value="{{ (@$application->interviewDateOne) ? \Carbon\Carbon::parse(@$application->interviewDateOne)->format('H:i') : '' }}">
+                    </div>
+                  </div>
+                  <div class="isd-field">
+                    <label><i class="ti ti-device-laptop"></i> Mode</label>
+                    <select name="interview_mode_one" id="interview_mode_one" class="form-select form-select-sm">
+                      <option value="">Select Mode</option>
+                      @if(!empty(@$interview_mode))
+                        @foreach(@$interview_mode as $int_mode_val)
+                          <option value="{{ @$int_mode_val->name }}" {{ @$application->interview_mode_one == $int_mode_val->name ? 'selected' : '' }}>{{ @$int_mode_val->name }}</option>
+                        @endforeach
+                      @endif
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              {{-- Slot 2 --}}
+              <div class="isd-slot-card">
+                <div class="isd-slot-head">
+                  <span class="isd-slot-num">2</span>
+                  <span class="isd-slot-label">Slot 2 — Date, Time &amp; Mode</span>
+                </div>
+                <div class="isd-slot-grid">
+                  <div class="isd-field">
+                    <label><i class="ti ti-calendar-filled"></i> Date &amp; Time</label>
+                    <div class="isd-datetime-pill">
+                      <input type="date" name="interviewDateTwo" id="interviewDateTwo"
+                        min="{{ date('Y-m-d') }}"
+                        value="{{ (@$application->interviewDateTwo) ? \Carbon\Carbon::parse(@$application->interviewDateTwo)->format('Y-m-d') : '' }}">
+                      <span class="sep"></span>
+                      <input type="time" name="interviewTimeTwo" id="interviewTimeTwo"
+                        value="{{ (@$application->interviewDateTwo) ? \Carbon\Carbon::parse(@$application->interviewDateTwo)->format('H:i') : '' }}">
+                    </div>
+                  </div>
+                  <div class="isd-field">
+                    <label><i class="ti ti-device-laptop"></i> Mode</label>
+                    <select name="interview_mode_two" id="interview_mode_two" class="form-select form-select-sm">
+                      <option value="">Select Mode</option>
+                      @if(!empty(@$interview_mode))
+                        @foreach(@$interview_mode as $int_mode_val)
+                          <option value="{{ @$int_mode_val->name }}" {{ @$application->interview_mode_two == $int_mode_val->name ? 'selected' : '' }}>{{ @$int_mode_val->name }}</option>
+                        @endforeach
+                      @endif
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              {{-- Slot 3 --}}
+              <div class="isd-slot-card">
+                <div class="isd-slot-head">
+                  <span class="isd-slot-num">3</span>
+                  <span class="isd-slot-label">Slot 3 — Date, Time &amp; Mode</span>
+                </div>
+                <div class="isd-slot-grid">
+                  <div class="isd-field">
+                    <label><i class="ti ti-calendar-filled"></i> Date &amp; Time</label>
+                    <div class="isd-datetime-pill">
+                      <input type="date" name="interviewDateThree" id="interviewDateThree"
+                        min="{{ date('Y-m-d') }}"
+                        value="{{ (@$application->interviewDateThree) ? \Carbon\Carbon::parse(@$application->interviewDateThree)->format('Y-m-d') : '' }}">
+                      <span class="sep"></span>
+                      <input type="time" name="interviewTimeThree" id="interviewTimeThree"
+                        value="{{ (@$application->interviewDateThree) ? \Carbon\Carbon::parse(@$application->interviewDateThree)->format('H:i') : '' }}">
+                    </div>
+                  </div>
+                  <div class="isd-field">
+                    <label><i class="ti ti-device-laptop"></i> Mode</label>
+                    <select name="interview_mode_three" id="interview_mode_three" class="form-select form-select-sm">
+                      <option value="">Select Mode</option>
+                      @if(!empty(@$interview_mode))
+                        @foreach(@$interview_mode as $int_mode_val)
+                          <option value="{{ @$int_mode_val->name }}" {{ @$application->interview_mode_three == $int_mode_val->name ? 'selected' : '' }}>{{ @$int_mode_val->name }}</option>
+                        @endforeach
+                      @endif
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+            </form>
+          </div>
+          <div class="jw-drawer-footer">
+            <a type="button" class="btn-jw-save editSlotsUpdate" id="job-slots-update-form" href="javascript:void(0);">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:13px;height:13px;"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+              Save Changes
+            </a>
+            <a type="button" class="btn-jw-cancel editSlotsCancel" href="javascript:void(0);">Cancel</a>
+          </div>
+        </div>
+      </div>{{-- /#jw-slots-drawer --}}
+
+      {{-- DRAWER 4: Recruiter Notes --}}
+      <div class="jw-side-drawer" id="jw-recruiter-note-drawer">
+        <div class="jw-drawer-backdrop editRecruiterNoteCancel"></div>
+        <div class="jw-drawer-panel">
+          <div class="jw-drawer-header">
+            <div class="jw-drawer-icon-wrap" style="background:#eef2ff;color:#4f46e5;">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                <polyline points="14 2 14 8 20 8"></polyline>
+                <line x1="16" y1="13" x2="8" y2="13"></line>
+                <line x1="16" y1="17" x2="8" y2="17"></line>
+                <polyline points="10 9 9 9 8 9"></polyline>
+              </svg>
+            </div>
+            <div class="jw-drawer-title-group">
+              <div class="jw-drawer-title">Edit Recruiter Notes</div>
+              <div class="jw-drawer-subtitle">Update internal notes for this candidate</div>
+            </div>
+            <button type="button" class="jw-drawer-close editRecruiterNoteCancel" aria-label="Close">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+          </div>
+          <div class="jw-drawer-body rn-drawer-body d-none">
+            <input type="hidden" id="rn_app_id" value="{{ @$application->id }}">
+
+            {{-- Template selector — populated via AJAX on first open --}}
+            <div class="rn-section" id="rn-template-wrap" style="display:none;">
+              <label class="rn-label">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:12px;height:12px;color:#a1a5b7;flex-shrink:0;"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+                Select Template <span>(Optional — loads content into the note below)</span>
+              </label>
+              <select class="rn-select" id="rn_template_select">
+                <option value="">Select Note Template...</option>
+              </select>
+            </div>
+
+            {{-- Contenteditable editor — renders existing HTML notes correctly --}}
+            <div class="rn-section">
+              <label class="rn-label">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:12px;height:12px;color:#a1a5b7;flex-shrink:0;"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+                Internal Note
+              </label>
+              <div class="rn-editor" id="jw_recruiter_note_editor" contenteditable="true" data-placeholder="Add internal recruiter notes about this candidate...">{!! @$application->recruiter_note !!}</div>
+            </div>
+          </div>
+          <div class="jw-drawer-footer">
+            <a type="button" class="btn-jw-save" id="rn-save-btn" href="javascript:void(0);">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:13px;height:13px;"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+              Save Changes
+            </a>
+            <a type="button" class="btn-jw-cancel editRecruiterNoteCancel" href="javascript:void(0);">Cancel</a>
+          </div>
+        </div>
+      </div>{{-- /#jw-recruiter-note-drawer --}}
+
+    </div>{{-- /#personal_details tab-pane --}}
 
 
 
@@ -4149,6 +4552,7 @@
       <p>All candidate information is confidential and intended for internal use only.</p>
     </div>
   </main>
+  </div>{{-- /.cdr-outer-card (card 3: tabs) --}}
 </div>
 
 
@@ -4199,62 +4603,8 @@ setTimeout(() => {
                 });
             }
 
-            // Example init
-          let timeOnePicker   = initTimePicker("#interviewTimeOne",  '{{$defaultTimeFormat==1 ? "h:i K" : "H:i"}}');
-          let timeTwoPicker   = initTimePicker("#interviewTimeTwo",  '{{$defaultTimeFormat==1 ? "h:i K" : "H:i"}}');
-          let timeThreePicker = initTimePicker("#interviewTimeThree",'{{$defaultTimeFormat==1 ? "h:i K" : "H:i"}}');
-          
-          function parseDMY(dmy) {
-              if (!dmy) return null;
-              let parts = dmy.split("-");
-              return new Date(parts[2], parts[1] - 1, parts[0]); // Y, M-1, D
-          }
-
-          function initInterviewDatePicker(selector, offsetDays) {
-              let existingDate = $(selector).val();
-              let savedDateObj = parseDMY(existingDate);
-
-              $(selector).flatpickr({
-                  dateFormat: "d-m-Y",
-                  altInput: true,
-                  altFormat: "d-M-Y",
-                  defaultDate: savedDateObj || getFutureDate(offsetDays),
-                  minDate: savedDateObj ? null : "today", // block past unless saved
-                  disable: savedDateObj
-                      ? [
-                          function (date) {
-                              let today = new Date();
-                              today.setHours(0,0,0,0);
-                              let sameAsSaved = date.getTime() === savedDateObj.getTime();
-                              return date < today && !sameAsSaved;
-                          }
-                        ]
-                      : [],
-                  onReady: function(selectedDates, dateStr, instance) {
-                      instance.altInput.style.width = "129px";
-                  }
-              });
-          }
-
-          function getFutureDate(days) {
-              const date = new Date();
-              date.setDate(date.getDate() + days);
-              return date;
-          }
-
-          initInterviewDatePicker("#interviewDateOne", 0);
-          initInterviewDatePicker("#interviewDateTwo", 1);
-          initInterviewDatePicker("#interviewDateThree", 2);
-
-          function clearAll() {
-            timeOnePicker.clear();
-            timeTwoPicker.clear();
-            timeThreePicker.clear();
-
-            dateOnePicker.clear();
-            dateTwoPicker.clear();
-            dateThreePicker.clear();
-        }
+          // Slot date/time inputs now use native type="date" / type="time" pickers
+          // (matching the Interview Drawer). No Flatpickr needed for those fields.
 
           
 }, 500);
@@ -4650,7 +5000,30 @@ setTimeout(() => {
     });
 
 
-       $(document).on('click', '.editJobQuestion', function(e) { 
+       // 20-word limit on screening question answer inputs
+    function sqCountWords(str) {
+        return str.trim() === '' ? 0 : str.trim().split(/\s+/).length;
+    }
+    $(document).on('input', '.sq-answer-input', function() {
+        var $input = $(this);
+        var words = $input.val().trim() === '' ? [] : $input.val().trim().split(/\s+/);
+        if (words.length > 20) {
+            $input.val(words.slice(0, 20).join(' '));
+            words = words.slice(0, 20);
+        }
+        var count = words.length;
+        var $ctr = $input.siblings('.sq-word-count');
+        $ctr.find('.sq-wc-num').text(count);
+        $ctr.toggleClass('sq-at-limit', count >= 20);
+    });
+    // Re-sync counters whenever the screening questions drawer opens
+    $(document).on('click', '.editJobQuestion', function() {
+        setTimeout(function() {
+            $('.sq-answer-input').each(function() { $(this).trigger('input'); });
+        }, 80);
+    });
+
+    $(document).on('click', '.editJobQuestion', function(e) {
        e.preventDefault();
        e.stopPropagation();
        $('.editJobQuestionUpdate').removeClass('d-none');
@@ -4671,25 +5044,49 @@ setTimeout(() => {
 
     });
 
-    $(document).on('click', '.editSlots', function(e) { 
+    // Clicking ANYWHERE inside the date/time pill (including the text area) opens the picker.
+    // Two layers: (1) direct input click via showPicker(), (2) pill-background click with
+    // left/right split to decide which picker to open.
+    $(document).on('click', '#jw-slots-drawer .isd-datetime-pill input', function(e) {
+        e.stopPropagation(); // stop pill handler from re-running
+        var el = this;
+        // Small timeout lets the browser focus the element first
+        setTimeout(function() {
+            try { el.showPicker(); } catch(err) { /* not supported — native focus only */ }
+        }, 0);
+    });
+    $(document).on('click', '#jw-slots-drawer .isd-datetime-pill', function(e) {
+        if ($(e.target).is('input')) return; // handled by the input handler above
+        var rect = this.getBoundingClientRect();
+        var isTimeSide = (e.clientX - rect.left) > (rect.width * 0.62);
+        var input = $(this).find(isTimeSide ? 'input[type="time"]' : 'input[type="date"]')[0];
+        if (!input) return;
+        input.focus();
+        setTimeout(function() {
+            try { input.showPicker(); } catch(err) {}
+        }, 0);
+    });
+
+    $(document).on('click', '.editSlots', function(e) {
        e.preventDefault();
        e.stopPropagation();
-       $('.editSlotsUpdate').removeClass('d-none');
-       $('.editSlotsCancel').removeClass('d-none');
        $('.editSlots').addClass('d-none');
        $('.job_slots_edit').removeClass('d-none');
+       // Hide whichever display state is currently showing
        $('.job_slots_view').addClass('d-none');
-
+       $('.po-slots-empty').addClass('d-none');
     });
-    $(document).on('click', '.editSlotsCancel', function(e) { 
+    $(document).on('click', '.editSlotsCancel', function(e) {
        e.preventDefault();
        e.stopPropagation();
-       $('.editSlotsUpdate').addClass('d-none');
-       $('.editSlotsCancel').addClass('d-none');
        $('.editSlots').removeClass('d-none');
        $('.job_slots_edit').addClass('d-none');
-       $('.job_slots_view').removeClass('d-none');
-
+       // Restore whichever display state is appropriate
+       if ($('.job_slots_view').length) {
+           $('.job_slots_view').removeClass('d-none');
+       } else {
+           $('.po-slots-empty').removeClass('d-none');
+       }
     });
 
 
@@ -4734,11 +5131,32 @@ setTimeout(() => {
     });
 
 
-    $(document).on('click', '#job-slots-update-form', function(e) { 
+    $(document).on('click', '#job-slots-update-form', function(e) {
            e.preventDefault();
             // Prevent multiple clicks
             let $btn = $(this);
             if ($btn.prop('disabled')) return;
+
+            // Validate slots: each filled slot must have all 3 fields; at least 1 complete slot required
+            var slots = [
+                {label:'Slot 1', date: $('#interviewDateOne').val(), time: $('#interviewTimeOne').val(), mode: $('#interview_mode_one').val()},
+                {label:'Slot 2', date: $('#interviewDateTwo').val(), time: $('#interviewTimeTwo').val(), mode: $('#interview_mode_two').val()},
+                {label:'Slot 3', date: $('#interviewDateThree').val(), time: $('#interviewTimeThree').val(), mode: $('#interview_mode_three').val()}
+            ];
+            var partialSlot = null;
+            slots.forEach(function(s) {
+                var filled = (s.date ? 1 : 0) + (s.time ? 1 : 0) + (s.mode ? 1 : 0);
+                if (filled > 0 && filled < 3 && !partialSlot) { partialSlot = s.label; }
+            });
+            if (partialSlot) {
+                Swal.fire('Incomplete Slot', partialSlot + ' is partially filled. Please select Date, Time and Mode for that slot — or clear all its fields.', 'warning');
+                return;
+            }
+            var completeSlots = slots.filter(function(s) { return s.date && s.time && s.mode; }).length;
+            if (completeSlots === 0) {
+                Swal.fire('No Slots Added', 'Please fill at least one slot with Date, Time and Mode before saving.', 'warning');
+                return;
+            }
 
             $btn.prop('disabled', true); // Disable button
 
@@ -4753,22 +5171,35 @@ setTimeout(() => {
                   processData		: false,  	// tell jQuery not to process the data
                   contentType		: false,  	// tell jQuery not to set contentType
                   redirect			: true,
-                  success			: function (response) {
-                    $btn.html('Save');
-                    $btn.prop('disabled', false); // Re-enable after success
-                    $("#job-slots-update-form").html('Save');
-                    $('.editSlotsUpdate').addClass('d-none');
-                    $('.editSlotsCancel').addClass('d-none');
+                  success : function (response) {
+                    // Close drawer first
                     $('.job_slots_edit').addClass('d-none');
-                    $('.job_slots_view').removeClass('d-none');
                     $('.editSlots').removeClass('d-none');
-                          Swal.fire("Success", 'Candidate Interview Slots updated successfully !',"success");
-                          $('.job_slots_view').html(response.html)
-                        },
-                error			: function (response) {
-                  $("#job-slots-update-form").html('Save');
-                          Swal.fire("Warning", 'Something is the issue.',"warning");
-                        }
+                    // Re-enable save button
+                    $btn.html('Save Changes');
+                    $btn.prop('disabled', false);
+
+                    // Real-time DOM update — handle two states:
+                    // (A) Existing .job_slots_view → update its inner HTML
+                    // (B) Empty state (.po-slots-empty) → replace it with the slots grid
+                    if ($('.job_slots_view').length) {
+                        $('.job_slots_view').html(response.html).removeClass('d-none');
+                    } else {
+                        $('.po-slots-empty').replaceWith(
+                            '<div class="slots-grid job_slots_view">' + response.html + '</div>'
+                        );
+                    }
+
+                    if (document.activeElement) { document.activeElement.blur(); }
+                    setTimeout(function() {
+                        Swal.fire("Success", 'Candidate Interview Slots updated successfully!', "success");
+                    }, 350);
+                  },
+                  error : function () {
+                    $btn.html('Save Changes');
+                    $btn.prop('disabled', false);
+                    Swal.fire("Warning", 'Something went wrong. Please try again.', "warning");
+                  }
             });
 
     });
@@ -4782,6 +5213,101 @@ setTimeout(() => {
 
 
     
+
+    // ===== DRAWER 4: Recruiter Notes =====
+    var rnTemplates = {};
+    var rnTemplatesLoaded = false;
+
+    $(document).on('click', '.editRecruiterNote', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        $('.rn-drawer-body').removeClass('d-none');
+
+        if (!rnTemplatesLoaded) {
+            $.getJSON('{{ route('service_company.job-applications.recruiterNoteTemplates') }}', function(res) {
+                if (res.status === 'success' && res.data && res.data.length > 0) {
+                    var opts = '<option value="">Select Note Template...</option>';
+                    $.each(res.data, function(i, tpl) {
+                        rnTemplates[tpl.id] = tpl;
+                        opts += '<option value="' + tpl.id + '">' + $('<div>').text(tpl.title).html() + '</option>';
+                    });
+                    $('#rn_template_select').html(opts);
+                    $('#rn-template-wrap').show();
+                    rnTemplatesLoaded = true;
+                }
+            });
+        }
+    });
+
+    $(document).on('click', '.editRecruiterNoteCancel', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        $('.rn-drawer-body').addClass('d-none');
+    });
+
+    $(document).on('change', '#rn_template_select', function() {
+        var id = $(this).val();
+        if (id && rnTemplates[id]) {
+            $('#jw_recruiter_note_editor').html(rnTemplates[id].content);
+        }
+    });
+
+    $(document).on('click', '#rn-save-btn', function(e) {
+        e.preventDefault();
+        var $btn = $(this);
+        if ($btn.prop('disabled')) return;
+        $btn.prop('disabled', true);
+        $btn.html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Saving...');
+
+        var note  = $('#jw_recruiter_note_editor').html();
+        var appId = $('#rn_app_id').val();
+
+        $.ajax({
+            url     : '{{ route('service_company.job-applications.recruiterNoteUpdate') }}?_token={{ csrf_token() }}',
+            type    : 'POST',
+            data    : { appId: appId, recruiter_note: note },
+            success : function(response) {
+                if (response.status) {
+                    if (note && note.trim()) {
+                        if ($('.po-recruiter-note-text').length) {
+                            $('.po-recruiter-note-text').html(note).show();
+                        } else {
+                            $('.po-no-notes').replaceWith('<div class="po-recruiter-note-text" style="font-size:12px;line-height:1.7;color:#475569;">' + note + '</div>');
+                        }
+                        $('.po-no-notes').hide();
+                    } else {
+                        $('.po-recruiter-note-text').hide();
+                        if ($('.po-no-notes').length === 0) {
+                            $('.po-recruiter-note-text').after('<p class="po-no-notes" style="font-size:12px;color:#94a3b8;font-style:italic;margin:0;">No recruiter notes added yet.</p>');
+                        }
+                        $('.po-no-notes').show();
+                    }
+                    // Close drawer first; blur active element so focus-restore
+                    // cannot re-trigger the Edit button after Swal closes
+                    $('.rn-drawer-body').addClass('d-none');
+                    if (document.activeElement) { document.activeElement.blur(); }
+                    // Wait for drawer slide-out transition (280ms) before re-enabling
+                    // button and firing Swal — prevents Swal-close click from landing
+                    // on the now-hidden Edit button and reopening the drawer
+                    setTimeout(function() {
+                        $btn.html('Save Changes');
+                        $btn.prop('disabled', false);
+                        Swal.fire('Success', 'Recruiter notes updated successfully!', 'success');
+                    }, 350);
+                } else {
+                    $btn.html('Save Changes');
+                    $btn.prop('disabled', false);
+                }
+            },
+            error   : function() {
+                $btn.html('Save Changes');
+                $btn.prop('disabled', false);
+                Swal.fire('Warning', 'Something went wrong. Please try again.', 'warning');
+            }
+        });
+    });
+
+
 </script> 
 <!--begin::Send Mail - Drawer (hidden toggle pattern — works in AJAX-loaded content) -->
 <div id="kt_send_mail_sd_toggle" style="display:none;"></div>
@@ -4886,5 +5412,1152 @@ setTimeout(() => {
     $(document).on('click', '#kt_send_whatsapp_showdetail_close', function() {
         hideWhatsappDrawer();
     });
+})();
+</script>
+
+{{-- ═══════════════════════════════════════════════════════════════════
+     DOWNLOAD RESUME CENTER (RDC) — Phase 1 UI Shell
+     Overlay + right-slide drawer; 6 format cards displayed.
+     Option 1 (Original) & Option 2 (Branded) wired to existing logic.
+     Options 3–6 are Phase 2 placeholders (toast notification shown).
+     No new MySQL queries. No extra server-side logic.
+═══════════════════════════════════════════════════════════════════ --}}
+
+{{-- Data bridge: PHP values injected once, read by JS — zero extra queries --}}
+<div id="rdcData" hidden
+     data-dl-url="{{ $resumeAwsPath ? route('download.resume', ['id' => $application->id, 'path' => rtrim(strtr(base64_encode($application->resume), '+/', '-_'), '=')]) : '' }}"
+     data-has-aws="{{ $resumeAwsPath ? 'true' : 'false' }}"
+     data-file-ext="{{ strtoupper(pathinfo((string)@$application->resume, PATHINFO_EXTENSION) ?: 'FILE') }}"></div>
+
+{{-- Recruiter Summary data bridge — zero extra DB queries; all PHP vars already in scope --}}
+@php
+  $rsSkills = [];
+  if(!empty($jobSkill)){
+    foreach($jobSkill as $sv){
+      $sv=(object)$sv; $sn=trim((string)($sv->skill_name??'')); if(!$sn) continue;
+      $expStr=trim(str_replace(['Years','Year',' '],'',(string)($sv->skill_value??'')));
+      $expYears=($expStr!=='')?(int)explode('.',$expStr)[0]:0;
+      $rsSkills[]=['name'=>$sn,'exp'=>$expYears,'rating'=>max(0,min(5,(int)($sv->rating??0)))];
+    }
+  }
+  if(empty($rsSkills)&&!empty($application->skills)){
+    foreach(array_slice(array_values(array_filter(array_map('trim',explode(',', $application->skills)))),0,12) as $sn){
+      if($sn) $rsSkills[]=['name'=>$sn,'exp'=>0,'rating'=>0];
+    }
+  }
+  $rsMatchPct=(int)round((float)(@$application->skill_match??0));
+  if($rsMatchPct===0&&!empty($__hdrJobTotal)) $rsMatchPct=(int)round(($__hdrMatchedCount??0)/$__hdrJobTotal*100);
+  $rsWm=strtolower(trim((string)(@$application->wm??'')));
+  $rsWorkMode=$rsWm==='remote'?'Remote':($rsWm==='hybrid'?'Hybrid / Remote':($rsWm==='office'?'On-site':($rsWm!==''?ucfirst($rsWm):'—')));
+  $rsNpMode=(int)(@$application->serving_notice_period_mode??-1);
+  if($rsNpMode===0||$rsNpMode===1){ $rsNotice='Available '.date('d M Y',strtotime((string)@$application->np_id)); }
+  else { $rsNotice=trim((string)@$application->np_id); }
+  if($rsNotice===''||$rsNotice==='Available ') $rsNotice='--';
+  $rsIsImmediate=($rsNpMode===2||strtolower(trim((string)@$application->np_id))==='immediate');
+  $rsLoc=trim(trim($city_name??'',', ').' '.trim($state_name??'',', '));
+  if($rsLoc==='') $rsLoc=trim($country_name??'');
+  if($rsLoc==='') $rsLoc='--';
+  $rsTotalExp=trim((string)(@$application->total_exp??''));
+  $rsExpStr=$rsTotalExp!==''?$rsTotalExp.' Years':'--';
+  $rsValidation=[];
+  if(!empty($application->linkedin)) $rsValidation[]=['label'=>'LinkedIn Verified','status'=>'Verified'];
+  if(!empty($application->resume))   $rsValidation[]=['label'=>'Resume Verified','status'=>'Verified'];
+  if(!empty($application->recruiter_note)) $rsValidation[]=['label'=>'Recruiter Screened','status'=>'Completed'];
+  if(!empty($application->current_designation)||!empty($application->current_company)) $rsValidation[]=['label'=>'Job Description Acknowledged','status'=>'Confirmed'];
+  if((float)(@$application->ctc_yearly??0)>0||(float)(@$application->ectc_yearly??0)>0||(float)(@$application->percentage_hike??0)>0) $rsValidation[]=['label'=>'Compensation Discussed','status'=>'Discussed'];
+  $rsCareerSummary=trim(strip_tags(html_entity_decode((string)(@$application->careersummary??''),ENT_QUOTES,'UTF-8')));
+@endphp
+<div id="rsData" hidden
+  data-name="{{ ucwords(@$application->full_name) }}"
+  data-designation="{{ ucwords(@$application->current_designation) }}"
+  data-company="{{ ucwords(@$application->current_company ?: @$application->cur_company_name) }}"
+  data-location="{{ $rsLoc }}"
+  data-experience="{{ $rsExpStr }}"
+  data-notice="{{ $rsNotice }}"
+  data-education="{{ strtoupper(@$application->qualification_name) }}"
+  data-work-mode="{{ $rsWorkMode }}"
+  data-match="{{ $rsMatchPct }}"
+  data-is-immediate="{{ $rsIsImmediate ? '1' : '0' }}"
+  @php
+    $rsNoteRaw = strip_tags((string)(@$application->recruiter_note ?: @$application->comment ?? ''));
+    $rsSummaryFinal = $rsCareerSummary ?: trim(strip_tags(html_entity_decode((string)(@$application->cover_letter??''),ENT_QUOTES,'UTF-8')));
+  @endphp
+  data-recruiter-note="{{ \Illuminate\Support\Str::limit($rsNoteRaw, 500) }}"
+  data-career-summary="{{ \Illuminate\Support\Str::limit($rsSummaryFinal, 500) }}"
+  data-job-title="{{ ucwords($job->title??'') }}"
+  data-skills='@json($rsSkills)'
+  data-validation='@json($rsValidation)'></div>
+
+<script>
+/* buildRecruiterSummary — 100% client-side pre-screened candidate report */
+(function(){
+'use strict';
+function e(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+
+/* ── Inline SVG icon strings (stroke="currentColor" inherits parent color) ── */
+var SI={
+  monitor:'<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>',
+  grad:'<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>',
+  clock:'<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>',
+  person:'<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>',
+  pin:'<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>',
+  brief:'<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>',
+  building:'<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>',
+  mappin:'<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>',
+  trophy:'<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><polyline points="8 6 8 2 16 2 16 6"/><path d="M4 6h16v10a4 4 0 0 1-4 4H8a4 4 0 0 1-4-4z"/><line x1="9" y1="16" x2="15" y2="16"/></svg>',
+  flash:'<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>',
+  chart:'<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M18 20V10M12 20V4M6 20v-6"/></svg>',
+  chat:'<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>',
+  shield:'<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>',
+  lock:'<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="rgba(255,255,255,.8)" stroke-width="1.8" stroke-linecap="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>',
+  globe:'<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="rgba(255,255,255,.7)" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>',
+  check:'<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>',
+  linkedin:'<svg viewBox="0 0 28 28" width="16" height="16"><rect width="28" height="28" rx="5" fill="#0077b5"/><text x="5" y="21" font-family="Arial" font-size="15" font-weight="700" fill="white">in</text></svg>',
+  doc:'<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#64748b" stroke-width="1.8" stroke-linecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/></svg>',
+  user2:'<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#64748b" stroke-width="1.8" stroke-linecap="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>',
+  bag:'<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#64748b" stroke-width="1.8" stroke-linecap="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>',
+  dollar:'<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#64748b" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v12M9 9a3 3 0 0 1 3-3 3 3 0 0 1 3 3 3 3 0 0 1-3 3 3 3 0 0 0-3 3 3 3 0 0 0 3 3"/></svg>'
+};
+
+/* colored icon box helper */
+function cbox(svg,color,bg,sz){
+  sz=sz||'34px';
+  return '<div style="width:'+sz+';height:'+sz+';border-radius:9px;background:'+bg+';display:flex;align-items:center;justify-content:center;color:'+color+';flex-shrink:0;">'+svg+'</div>';
+}
+
+/* dark navy card section header */
+function secHead(ico,title){
+  return '<div style="display:flex;align-items:center;gap:10px;background:#0f3460;padding:10px 16px;">'
+    +'<span style="color:#fff;display:flex;align-items:center;">'+ico+'</span>'
+    +'<span style="color:#fff;font-size:12px;font-weight:700;letter-spacing:.3px;">'+title+'</span>'
+    +'</div>';
+}
+
+function buildRsHtml(data,companyName,logoUri){
+  var H=[];function h(s){H.push(s);}
+  var mp=Math.max(0,Math.min(100,data.match||0));
+  var r50=Math.round(2*Math.PI*50);
+  var df=Math.round(r50*mp/100),de=r50-df;
+  var ml=mp>=90?'Excellent Match':mp>=75?'Strong Match':mp>=60?'Good Match':'Partial Match';
+  var mc=mp>=75?'#16a34a':mp>=60?'#ca8a04':'#dc2626';
+  var md=mp>=90?'Highly relevant skills, experience &amp; immediate availability.':mp>=75?'Good skills alignment and strong relevant experience.':mp>=60?'Relevant skills with good potential fit.':'Some relevant skills — further evaluation recommended.';
+  var init=(data.name||'').split(' ').filter(Boolean).map(function(w){return(w[0]||'').toUpperCase();}).slice(0,2).join('')||'NA';
+
+  /* auto-generate professional summary if empty */
+  var summary=data.careerSummary;
+  if(!summary){
+    var sp=[];
+    if(data.experience&&data.experience!=='--') sp.push(data.experience+' experienced');
+    if(data.designation) sp.push(data.designation.toLowerCase());
+    if(data.company) sp.push('currently with '+data.company);
+    var topSk=(data.skills||[]).slice(0,5).map(function(s){return s.name;}).join(', ');
+    if(topSk) sp.push('skilled in '+topSk);
+    if(data.notice&&data.notice!=='--') sp.push('available with '+data.notice.toLowerCase()+' notice');
+    if(sp.length){var s0=sp[0].charAt(0).toUpperCase()+sp[0].slice(1),rest=sp.slice(1).join(', ');summary=s0+(rest?', '+rest:'')+'.';}
+  }
+  summary=summary||'No professional summary available for this candidate.';
+
+  /* info bar items */
+  var infoCols=[
+    {ic:SI.monitor,color:'#8b5cf6',bg:'#f5f3ff',label:'Preferred Work Mode',v:data.workMode||'—'},
+    {ic:SI.grad,   color:'#3b82f6',bg:'#eff6ff',label:'Educational Degree',  v:(data.education&&data.education!=='--')?data.education:'—'},
+    {ic:SI.clock,  color:'#f97316',bg:'#fff7ed',label:'Notice Period',        v:(data.notice&&data.notice!=='--')?data.notice:'—'},
+    {ic:SI.person, color:'#0ea5e9',bg:'#f0f9ff',label:'Total Experience',     v:(data.experience&&data.experience!=='--')?data.experience:'—'},
+    {ic:SI.pin,    color:'#ef4444',bg:'#fef2f2',label:'Preferred Location',   v:data.location&&data.location!=='--'?(data.location.split(',')[0]||data.location).trim():'—'}
+  ];
+
+  /* why recommend items — dynamic + fallback to fill 4 */
+  var whyAll=[
+    {avail:mp>0,              ic:SI.trophy,bg:'#dbeafe',color:'#2563eb',t:mp+'% Skill Match',       d:'Strong match on required technical skills &amp; tools'},
+    {avail:!!data.isImmediate,ic:SI.flash, bg:'#dcfce7',color:'#16a34a',t:'Immediate Joiner',       d:'Available to join immediately, no waiting period'},
+    {avail:!data.isImmediate&&!!(data.notice&&data.notice!=='--'),ic:SI.clock,bg:'#fff7ed',color:'#f97316',t:e(data.notice||''),d:'Notice period for joining this role'},
+    {avail:!!(data.experience&&parseFloat(data.experience)>=3),ic:SI.chart,bg:'#ede9fe',color:'#7c3aed',t:'Proven Track Record',d:'Consistent performer with strong project history'},
+    {avail:!!data.recruiterNote,ic:SI.chat,bg:'#fce7f3',color:'#db2777',t:'Recruiter Verified',d:'Personally screened by our senior technical recruiter'},
+    {avail:true,ic:SI.trophy,bg:'#f1f5f9',color:'#94a3b8',t:'Quality Candidate',d:'Pre-screened and verified for this position'}
+  ];
+  var why=whyAll.filter(function(w){return w.avail;}).slice(0,4);
+  while(why.length<4) why.push({ic:SI.trophy,bg:'#f1f5f9',color:'#94a3b8',t:'Quality Candidate',d:'Pre-screened and ready for evaluation'});
+
+  /* validation icon map */
+  var vIco={'LinkedIn Verified':SI.linkedin,'Resume Verified':SI.doc,'Recruiter Screened':SI.user2,'Job Description Acknowledged':SI.bag,'Compensation Discussed':SI.dollar};
+  var vColor={Verified:'#16a34a',Completed:'#2563eb',Confirmed:'#7c3aed',Discussed:'#ea580c'};
+
+  /* ═══ HTML ═══ */
+  h('<div style="width:1000px;font-family:Poppins,Arial,sans-serif;background:#f1f5f9;overflow:hidden;">');
+
+  /* ── HEADER ── */
+  h('<div style="background:#0f3460;padding:0 28px;height:100px;display:flex;align-items:center;">');
+  h('<div style="display:flex;align-items:center;gap:14px;flex-shrink:0;">');
+  if(logoUri){h('<img src="'+logoUri+'" style="height:66px;max-width:120px;object-fit:contain;" alt="">');
+  }else{h('<div style="width:60px;height:60px;border-radius:12px;background:rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:700;color:#fff;">'+e(init)+'</div>');}
+  h('<span style="color:#fff;font-size:16px;font-weight:700;white-space:nowrap;">'+e(companyName)+'</span>');
+  h('</div>');
+  h('<div style="width:1.5px;height:56px;background:rgba(255,255,255,.25);margin:0 24px;flex-shrink:0;"></div>');
+  h('<div style="flex:1;"><div style="color:#fff;font-size:15px;font-weight:700;letter-spacing:.4px;">PRE-SCREENED CANDIDATE REPORT</div><div style="height:1px;background:rgba(255,255,255,.25);margin:6px 0 5px;"></div><div style="color:rgba(255,255,255,.7);font-size:10.5px;">Prepared by Senior Technical Recruiter</div></div>');
+  h('</div>');
+
+  /* ── CANDIDATE CARD ── */
+  h('<div style="margin:14px 14px 0;background:#fff;border-radius:12px;border:1px solid #e2e8f0;overflow:hidden;">');
+  h('<div style="display:flex;padding:20px 22px;align-items:flex-start;">');
+  /* avatar col */
+  h('<div style="flex-shrink:0;width:136px;text-align:center;padding-right:18px;border-right:1px solid #f0f4f8;">');
+  h('<div style="width:108px;height:108px;border-radius:50%;background:#eef2ff;border:2.5px solid #c7d2fe;display:flex;align-items:center;justify-content:center;font-size:34px;font-weight:700;color:#0f3460;margin:0 auto;">'+e(init)+'</div>');
+  if(data.isImmediate){h('<div style="margin-top:9px;display:inline-flex;align-items:center;gap:5px;background:#dcfce7;border-radius:20px;padding:4px 10px;"><div style="width:7px;height:7px;border-radius:50%;background:#16a34a;flex-shrink:0;"></div><span style="font-size:9.5px;font-weight:600;color:#15803d;white-space:nowrap;">Immediate Joiner</span></div>');}
+  h('</div>');
+  /* info col */
+  h('<div style="flex:1;padding:0 20px;border-right:1px solid #f0f4f8;min-width:0;">');
+  h('<div style="display:flex;align-items:center;gap:10px;margin-bottom:4px;"><span style="font-size:22px;font-weight:700;color:#0f172a;line-height:1.2;">'+e(data.name)+'</span><span style="width:22px;height:22px;border-radius:50%;background:#2563eb;display:inline-flex;align-items:center;justify-content:center;color:#fff;font-size:12px;font-weight:700;flex-shrink:0;">&#10003;</span></div>');
+  if(data.designation) h('<div style="font-size:13.5px;font-weight:600;color:#1e40af;margin-bottom:14px;">'+e(data.designation)+'</div>');
+  h('<div style="display:flex;flex-direction:column;gap:8px;">');
+  if(data.experience&&data.experience!=='--') h('<div style="display:flex;align-items:center;gap:8px;font-size:12px;color:#475569;">'+cbox(SI.brief,'#8b5cf6','#f5f3ff','22px')+'<span>'+e(data.experience)+' of Experience</span></div>');
+  if(data.company) h('<div style="display:flex;align-items:center;gap:8px;font-size:12px;color:#475569;">'+cbox(SI.building,'#3b82f6','#eff6ff','22px')+'<span>'+e(data.company)+'</span></div>');
+  if(data.location&&data.location!=='--') h('<div style="display:flex;align-items:center;gap:8px;font-size:12px;color:#475569;">'+cbox(SI.mappin,'#ef4444','#fef2f2','22px')+'<span>'+e(data.location)+'</span></div>');
+  h('</div></div>');
+  /* match score col */
+  h('<div style="flex-shrink:0;width:220px;padding-left:18px;">');
+  h('<div style="font-size:10px;font-weight:600;color:#94a3b8;letter-spacing:.5px;text-transform:uppercase;margin-bottom:10px;">AI Match Score</div>');
+  h('<div style="display:flex;align-items:center;gap:12px;">');
+  h('<svg width="100" height="100" viewBox="0 0 108 108" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0;"><circle cx="54" cy="54" r="50" fill="none" stroke="#e2e8f0" stroke-width="8"/><circle cx="54" cy="54" r="50" fill="none" stroke="'+mc+'" stroke-width="8" stroke-dasharray="'+df+' '+de+'" stroke-dashoffset="'+Math.round(r50*.25)+'" stroke-linecap="round"/><text x="54" y="60" text-anchor="middle" font-family="Poppins,Arial,sans-serif" font-size="20" font-weight="700" fill="#0f172a">'+mp+'%</text></svg>');
+  h('<div><div style="font-size:14px;font-weight:700;color:'+mc+';margin-bottom:4px;">'+ml+'</div><div style="font-size:10px;color:#64748b;line-height:1.55;">'+md+'</div></div>');
+  h('</div></div>');
+  h('</div></div>');
+
+  /* ── INFO BAR ── */
+  h('<div style="margin:10px 14px 0;background:#fff;border-radius:12px;border:1px solid #e2e8f0;overflow:hidden;"><div style="display:flex;">');
+  infoCols.forEach(function(item,i){
+    h('<div style="flex:1;padding:13px 8px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:5px;'+(i>0?'border-left:1px solid #f0f4f8;':'')+'">');
+    h('<div style="width:34px;height:34px;border-radius:9px;background:'+item.bg+';display:flex;align-items:center;justify-content:center;color:'+item.color+';">'+item.ic+'</div>');
+    h('<div style="font-size:9px;color:#94a3b8;font-weight:500;text-align:center;line-height:1.3;">'+e(item.label)+'</div>');
+    var v=item.v.length>16?item.v.substring(0,15)+'…':item.v;
+    h('<div style="font-size:12px;font-weight:700;color:#0f172a;">'+e(v)+'</div>');
+    h('</div>');
+  });
+  h('</div></div>');
+
+  /* ── MAIN CONTENT ── */
+  h('<div style="margin:10px 14px 14px;display:flex;gap:10px;align-items:flex-start;">');
+
+  /* LEFT COLUMN */
+  h('<div style="flex:0 0 44%;min-width:0;display:flex;flex-direction:column;gap:10px;">');
+  /* skills card */
+  h('<div style="background:#fff;border-radius:12px;border:1px solid #e2e8f0;overflow:hidden;">');
+  h('<div style="background:#f8fafc;padding:11px 16px;border-bottom:1px solid #e2e8f0;"><span style="font-size:11.5px;font-weight:700;color:#1e40af;letter-spacing:.4px;text-transform:uppercase;">Skills Snapshot</span></div>');
+  h('<table style="width:100%;border-collapse:collapse;"><thead><tr style="background:#f8fafc;"><th style="padding:7px 12px;text-align:left;font-size:9px;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:.3px;border-bottom:1px solid #e2e8f0;">SKILL</th><th style="padding:7px 8px;text-align:center;font-size:9px;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:.3px;border-bottom:1px solid #e2e8f0;">EXPERIENCE</th><th style="padding:7px 8px;text-align:center;font-size:9px;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:.3px;border-bottom:1px solid #e2e8f0;">RATING (5)</th></tr></thead><tbody>');
+  var sks=(data.skills||[]).slice(0,12);
+  if(sks.length){sks.forEach(function(sk,i){
+    h('<tr style="background:'+(i%2===0?'#fff':'#f9fafb')+';">');
+    h('<td style="padding:6px 12px;border-bottom:1px solid #f8fafc;color:#0f172a;font-weight:500;font-size:11.5px;">'+e(sk.name)+'</td>');
+    h('<td style="padding:6px 8px;border-bottom:1px solid #f8fafc;text-align:center;color:#64748b;font-size:11px;">'+(sk.exp>0?sk.exp+(sk.exp===1?' Yr':' Yrs'):'—')+'</td>');
+    var stars='';for(var s=1;s<=5;s++) stars+='<span style="color:'+(s<=(sk.rating||0)?'#fbbf24':'#e5e7eb')+';font-size:13px;line-height:1;">&#9733;</span>';
+    h('<td style="padding:6px 8px;border-bottom:1px solid #f8fafc;text-align:center;">'+stars+'</td>');
+    h('</tr>');
+  });}else{h('<tr><td colspan="3" style="padding:14px;text-align:center;color:#94a3b8;font-style:italic;font-size:11px;">No skill data available</td></tr>');}
+  h('</tbody></table></div>');
+  /* professional summary — always shown */
+  h('<div style="background:#fff;border-radius:12px;border:1px solid #e2e8f0;overflow:hidden;">');
+  h('<div style="background:#f8fafc;padding:11px 16px;border-bottom:1px solid #e2e8f0;display:flex;align-items:center;gap:8px;">'+cbox('<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/></svg>','#1e40af','#dbeafe','26px')+'<span style="font-size:11.5px;font-weight:700;color:#1e40af;letter-spacing:.4px;text-transform:uppercase;">Professional Summary</span></div>');
+  h('<div style="padding:13px 16px;font-size:11.5px;color:#374151;line-height:1.7;">'+e(summary)+'</div>');
+  h('</div>');
+  h('</div>');/* end left col */
+
+  /* RIGHT COLUMN */
+  h('<div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:10px;">');
+  /* why recommend */
+  h('<div style="background:#fff;border-radius:12px;border:1px solid #e2e8f0;overflow:hidden;">');
+  h(secHead(SI.trophy,'WHY WE RECOMMEND THIS CANDIDATE'));
+  h('<div style="display:grid;grid-template-columns:1fr 1fr;gap:1px;background:#f0f4f8;padding:1px;">');
+  why.forEach(function(w){
+    h('<div style="background:#fff;text-align:center;padding:16px 10px;"><div style="width:44px;height:44px;border-radius:50%;background:'+w.bg+';display:flex;align-items:center;justify-content:center;margin:0 auto 8px;color:'+w.color+';">'+w.ic+'</div><div style="font-size:11px;font-weight:700;color:#0f172a;margin-bottom:4px;">'+e(w.t)+'</div><div style="font-size:10px;color:#64748b;line-height:1.45;">'+w.d+'</div></div>');
+  });
+  h('</div></div>');
+  /* recruiter notes — always shown */
+  h('<div style="background:#fff;border-radius:12px;border:1px solid #e2e8f0;overflow:hidden;">');
+  h(secHead(SI.person,'RECRUITER NOTES'));
+  h('<div style="padding:13px 16px;font-style:italic;font-size:11.5px;color:'+(data.recruiterNote?'#374151':'#94a3b8')+';line-height:1.7;">'+e(data.recruiterNote||'No recruiter notes recorded for this candidate.')+'</div>');
+  h('</div>');
+  /* candidate validation */
+  if(data.validation&&data.validation.length){
+    h('<div style="background:#fff;border-radius:12px;border:1px solid #e2e8f0;overflow:hidden;">');
+    h(secHead(SI.shield,'CANDIDATE VALIDATION'));
+    data.validation.forEach(function(v,i){
+      var vi=vIco[v.label]||SI.user2;
+      var vc=vColor[v.status]||'#16a34a';
+      var bb=i<data.validation.length-1?'border-bottom:1px solid #f0f4f8;':'';
+      h('<div style="display:flex;align-items:center;justify-content:space-between;padding:9px 16px;background:'+(i%2===0?'#fff':'#f9fafb')+';'+bb+'">');
+      h('<div style="display:flex;align-items:center;gap:10px;">'+vi+'<span style="font-size:11.5px;color:#0f172a;font-weight:500;">'+e(v.label)+'</span></div>');
+      h('<div style="color:'+vc+';font-size:11px;font-weight:700;display:flex;align-items:center;gap:3px;">'+SI.check+e(v.status)+'</div>');
+      h('</div>');
+    });
+    h('</div>');
+  }
+  h('</div>');/* end right col */
+  h('</div>');/* end main content */
+
+  /* ── FOOTER ── */
+  h('<div style="background:#0f3460;padding:13px 28px;display:flex;align-items:center;justify-content:space-between;">');
+  h('<div style="display:flex;align-items:center;gap:10px;">'+SI.lock+'<div><div style="color:#fff;font-size:11px;font-weight:700;letter-spacing:.3px;">CONFIDENTIAL</div><div style="color:rgba(255,255,255,.55);font-size:9px;margin-top:2px;">Shared by '+e(companyName)+' — For Recipient Use Only</div></div></div>');
+  h('<div style="color:#fff;font-size:13px;font-weight:600;">'+e(companyName)+'</div>');
+  h('<div style="display:flex;align-items:center;gap:5px;">'+SI.globe+'<span style="color:rgba(255,255,255,.7);font-size:10px;">www.jero.works</span></div>');
+  h('</div>');
+  h('</div>');/* end root */
+  return H.join('');
+}
+
+async function buildRecruiterSummary(){
+  window.__rsBusy=true;
+  var container=null;
+  try{
+    var _ls=function(src){return new Promise(function(res,rej){var s=document.createElement('script');s.src=src;s.async=true;s.onload=res;s.onerror=function(){rej(new Error('Load failed: '+src));};document.head.appendChild(s);});};
+    if(!(window.jspdf&&window.jspdf.jsPDF)) await _ls('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js');
+    if(!window.html2canvas) await _ls('https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js');
+    /* logo — reuse RC viewer cache when available */
+    var logoUri=null;
+    if(window.__rcvLogo&&window.__rcvLogo.__dataUri){ logoUri=window.__rcvLogo.__dataUri; }
+    else if(!window.__rcvLogoTried){
+      window.__rcvLogoTried=true;
+      var wrap=document.querySelector('#resume_cv .rcv-wrap');
+      var lsrc=wrap?wrap.getAttribute('data-logo'):'';
+      if(lsrc){try{var rsp=await fetch(lsrc,{cache:'force-cache'});if(rsp.ok){var bl=await rsp.blob();logoUri=await new Promise(function(res){var fr=new FileReader();fr.onload=function(){res(fr.result);};fr.readAsDataURL(bl);});window.__rcvLogo={__dataUri:logoUri};}}catch(ex){}}
+    }
+    /* data */
+    var rsEl=document.getElementById('rsData');
+    if(!rsEl) throw new Error('rsData not found');
+    var g=function(k){return rsEl.getAttribute(k)||'';};
+    var gj=function(k){try{return JSON.parse(rsEl.getAttribute(k)||'[]');}catch(ex){return[];}};
+    var data={
+      name:g('data-name')||'Candidate',designation:g('data-designation'),company:g('data-company'),
+      location:g('data-location'),experience:g('data-experience'),notice:g('data-notice'),
+      education:g('data-education'),workMode:g('data-work-mode'),match:parseInt(g('data-match'))||0,
+      isImmediate:g('data-is-immediate')==='1',recruiterNote:g('data-recruiter-note'),
+      careerSummary:g('data-career-summary'),skills:gj('data-skills'),validation:gj('data-validation')
+    };
+    var wrap2=document.querySelector('#resume_cv .rcv-wrap');
+    var cn=(wrap2&&wrap2.getAttribute('data-company'))||data.company||'Company';
+    /* render HTML → canvas → PDF */
+    container=document.createElement('div');
+    container.style.cssText='position:fixed;left:-9999px;top:0;z-index:0;pointer-events:none;overflow:hidden;';
+    container.innerHTML=buildRsHtml(data,cn,logoUri);
+    document.body.appendChild(container);
+    var el=container.firstElementChild;
+    var cvs=await window.html2canvas(el,{scale:2,useCORS:false,allowTaint:false,logging:false,backgroundColor:'#f1f5f9',imageTimeout:15000});
+    var JsPDF=window.jspdf.jsPDF;
+    var pw=el.offsetWidth||1000,ph=el.offsetHeight||1414;
+    var pdf=new JsPDF({orientation:'p',unit:'px',format:[pw,ph]});
+    pdf.addImage(cvs.toDataURL('image/jpeg',0.88),'JPEG',0,0,pw,ph,undefined,'FAST');
+    pdf.save('recruiter_summary_'+(data.name.replace(/[^a-z0-9]/gi,'_').toLowerCase()||'candidate')+'.pdf');
+  }catch(err){
+    console.error('Recruiter Summary error:',err);
+    alert('Could not generate the Recruiter Summary. Please try again.');
+  }finally{
+    if(container&&container.parentNode) container.parentNode.removeChild(container);
+    window.__rsBusy=false;
+  }
+}
+window.__buildRS=buildRecruiterSummary;
+})();
+</script>
+
+{{-- Overlay backdrop --}}
+<div id="rdcOverlay" class="rdc-overlay" aria-hidden="true"></div>
+
+{{-- Drawer panel --}}
+<div id="rdcDrawer" class="rdc-drawer" role="dialog" aria-modal="true" aria-label="Download Resume Center" aria-hidden="true" tabindex="-1">
+
+  {{-- Header --}}
+  <div class="rdc-header">
+    <div class="rdc-header-text">
+      <p class="rdc-title">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:inline-block;vertical-align:middle;width:13px;height:13px;margin-right:5px;color:#4f46e5" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Download Resume Center
+      </p>
+      <p class="rdc-subtitle">Select a format to download the candidate's resume</p>
+    </div>
+    <button class="rdc-close-btn" id="rdcCloseBtn" aria-label="Close" title="Close">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+  </div>
+
+  {{-- Scrollable body --}}
+  <div class="rdc-body" id="rdcBody">
+
+    {{-- Section heading --}}
+    <div class="rdc-sect-lbl">Choose Download Format</div>
+
+    {{-- 6 Format option cards --}}
+    <div class="rdc-opts-list" id="rdcOptsList" role="radiogroup" aria-label="Download format">
+
+      {{-- 1: Original Resume --}}
+      <label class="rdc-opt rdc-opt-sel" data-opt="1" data-coins="1">
+        <input class="rdc-rinput" type="radio" name="rdcFormat" value="1" checked>
+        <span class="rdc-onum">1</span>
+        <span class="rdc-oi rdc-ic-blue" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        </span>
+        <span class="rdc-obody">
+          <span class="rdc-otitle">Original Resume</span>
+          <span class="rdc-odesc">Candidate's original uploaded file, downloaded as-is</span>
+        </span>
+        <span class="rdc-ometa">
+          <span class="rdc-ocost">1 Coin</span>
+          <span class="rdc-otime">Instant</span>
+        </span>
+        <span class="rdc-ocirc" aria-hidden="true"></span>
+      </label>
+
+      {{-- 2: Branded Resume --}}
+      <label class="rdc-opt" data-opt="2" data-coins="2">
+        <input class="rdc-rinput" type="radio" name="rdcFormat" value="2">
+        <span class="rdc-onum">2</span>
+        <span class="rdc-oi rdc-ic-purple" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>
+        </span>
+        <span class="rdc-obody">
+          <span class="rdc-otitle">Branded Resume</span>
+          <span class="rdc-odesc">Resume with your company logo and branding overlay</span>
+        </span>
+        <span class="rdc-ometa">
+          <span class="rdc-ocost">2 Coins</span>
+          <span class="rdc-otime">~5 sec</span>
+        </span>
+        <span class="rdc-ocirc" aria-hidden="true"></span>
+      </label>
+
+      {{-- 3: ATS Highlighted --}}
+      <label class="rdc-opt" data-opt="3" data-coins="4">
+        <input class="rdc-rinput" type="radio" name="rdcFormat" value="3">
+        <span class="rdc-onum">3</span>
+        <span class="rdc-oi rdc-ic-amber" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+        </span>
+        <span class="rdc-obody">
+          <span class="rdc-otitle">ATS Highlighted Resume</span>
+          <span class="rdc-odesc">Job keywords highlighted on the resume — requires Resume/CV tab to have loaded first</span>
+        </span>
+        <span class="rdc-ometa">
+          <span class="rdc-ocost">4 Coins</span>
+          <span class="rdc-otime">~10 sec</span>
+        </span>
+        <span class="rdc-ocirc" aria-hidden="true"></span>
+      </label>
+
+      {{-- 4: Branded + Highlighted --}}
+      <label class="rdc-opt" data-opt="4" data-coins="6">
+        <input class="rdc-rinput" type="radio" name="rdcFormat" value="4">
+        <span class="rdc-onum">4</span>
+        <span class="rdc-oi rdc-ic-green" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+        </span>
+        <span class="rdc-obody">
+          <span class="rdc-otitle">Branded + Highlighted</span>
+          <span class="rdc-odesc">Company logo header with ATS keyword highlights combined</span>
+        </span>
+        <span class="rdc-ometa">
+          <span class="rdc-ocost">6 Coins</span>
+          <span class="rdc-otime">~15 sec</span>
+        </span>
+        <span class="rdc-ocirc" aria-hidden="true"></span>
+      </label>
+
+      {{-- 5: Recruiter Summary --}}
+      <label class="rdc-opt" data-opt="5" data-coins="7">
+        <input class="rdc-rinput" type="radio" name="rdcFormat" value="5">
+        <span class="rdc-onum">5</span>
+        <span class="rdc-oi rdc-ic-rose" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        </span>
+        <span class="rdc-obody">
+          <span class="rdc-otitle">Recruiter Summary <span class="rdc-p2-badge">Phase 2</span></span>
+          <span class="rdc-odesc">1-page AI-generated summary formatted for recruiter handoffs</span>
+        </span>
+        <span class="rdc-ometa">
+          <span class="rdc-ocost">7 Coins</span>
+          <span class="rdc-otime">~20 sec</span>
+        </span>
+        <span class="rdc-ocirc" aria-hidden="true"></span>
+      </label>
+
+      {{-- 6: Client Presentation --}}
+      <label class="rdc-opt" data-opt="6" data-coins="8">
+        <input class="rdc-rinput" type="radio" name="rdcFormat" value="6">
+        <span class="rdc-onum">6</span>
+        <span class="rdc-oi rdc-ic-teal" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+        </span>
+        <span class="rdc-obody">
+          <span class="rdc-otitle">Client Presentation <span class="rdc-p2-badge">Phase 2</span></span>
+          <span class="rdc-odesc">Polished client-ready profile deck with candidate highlights</span>
+        </span>
+        <span class="rdc-ometa">
+          <span class="rdc-ocost">8 Coins</span>
+          <span class="rdc-otime">~30 sec</span>
+        </span>
+        <span class="rdc-ocirc" aria-hidden="true"></span>
+      </label>
+
+      {{-- 7: Export Candidate Profile PDF --}}
+      <label class="rdc-opt" data-opt="7" data-coins="0" style="cursor:pointer;" onclick="setTimeout(function(){cdrExportProfilePDF(null,true);},80);">
+        <input class="rdc-rinput" type="radio" name="rdcFormat" value="7">
+        <span class="rdc-onum">7</span>
+        <span class="rdc-oi" style="background:#fef2f2;color:#dc2626;" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><path d="M12 18v-6"/><path d="M9 15l3 3 3-3"/></svg>
+        </span>
+        <span class="rdc-obody">
+          <span class="rdc-otitle">Export Candidate Profile <span style="background:#fef2f2;color:#dc2626;font-size:8.5px;font-weight:700;padding:1px 6px;border-radius:4px;vertical-align:middle;margin-left:4px;">PDF</span></span>
+          <span class="rdc-odesc">Hero section, skills, summary, recruiter notes &amp; employer branding — 100% client-side, instant</span>
+        </span>
+        <span class="rdc-ometa">
+          <span class="rdc-ocost" style="color:#16a34a;font-weight:700;">Free</span>
+          <span class="rdc-otime">~2 sec</span>
+        </span>
+        <span class="rdc-ocirc" aria-hidden="true"></span>
+      </label>
+
+    </div>{{-- /.rdc-opts-list --}}
+
+    {{-- Coin info summary --}}
+    <div class="rdc-coin-card">
+      <div class="rdc-coin-row">
+        <span class="rdc-coin-dot"></span>
+        You will be charged <strong id="rdcCoinCost">1 Coin</strong> for this download
+      </div>
+      <div class="rdc-bal-row" style="color:#94a3b8;font-size:11px;">Coin balance &amp; deduction visible at checkout &mdash; Phase 2</div>
+    </div>
+
+  </div>{{-- /.rdc-body --}}
+
+  {{-- Sticky footer --}}
+  <div class="rdc-footer">
+    <button id="rdcDownloadBtn" class="rdc-dl-btn" type="button">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;flex-shrink:0" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      <span id="rdcBtnLabel">Download Original Resume</span>
+    </button>
+    <p class="rdc-foot-note">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:11px;height:11px;color:#94a3b8" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      Coins deducted on successful download &bull; Phase 2 formats coming soon
+    </p>
+  </div>
+
+</div>{{-- /#rdcDrawer --}}
+
+{{-- Toast --}}
+<div id="rdcToast" class="rdc-toast" role="status" aria-live="polite"></div>
+
+<script>
+(function(){
+  'use strict';
+
+  var overlay  = document.getElementById('rdcOverlay');
+  var drawer   = document.getElementById('rdcDrawer');
+  var closeBtn = document.getElementById('rdcCloseBtn');
+  var dlBtn    = document.getElementById('rdcDownloadBtn');
+  var btnLbl   = document.getElementById('rdcBtnLabel');
+  var coinEl   = document.getElementById('rdcCoinCost');
+  var toastEl  = document.getElementById('rdcToast');
+  var opts     = document.querySelectorAll('#rdcOptsList .rdc-opt');
+  var rdcData  = document.getElementById('rdcData');
+
+  var dlUrl  = rdcData ? rdcData.getAttribute('data-dl-url')  : '';
+
+  var optMeta = {
+    1: {cost:1, label:'Download Original Resume',       avail:true,  dlKey:null},
+    2: {cost:2, label:'Download Branded Resume',        avail:true,  dlKey:'logo'},
+    3: {cost:4, label:'Download ATS Highlighted Resume',avail:true,  dlKey:'hl'},
+    4: {cost:6, label:'Download Branded + Highlighted', avail:true,  dlKey:'both'},
+    5: {cost:7, label:'Download Recruiter Summary',     avail:true,  dlKey:'rs'},
+    6: {cost:8, label:'Download Client Presentation',   avail:false, dlKey:null}
+  };
+
+  var selectedOpt = 1;
+  var isLoading   = false;
+
+  function openRdc(){
+    overlay.classList.add('rdc-open');
+    drawer.classList.add('rdc-open');
+    overlay.setAttribute('aria-hidden','false');
+    drawer.setAttribute('aria-hidden','false');
+    drawer.focus();
+    document.addEventListener('keydown', onEsc);
+    /* preload jsPDF + html2canvas so they're ready when the user clicks download */
+    if(!window.jspdf){ var ps=document.createElement('script'); ps.src='https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js'; ps.async=true; document.head.appendChild(ps); }
+    if(!window.html2canvas){ var hs=document.createElement('script'); hs.src='https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js'; hs.async=true; document.head.appendChild(hs); }
+  }
+
+  function closeRdc(){
+    overlay.classList.remove('rdc-open');
+    drawer.classList.remove('rdc-open');
+    overlay.setAttribute('aria-hidden','true');
+    drawer.setAttribute('aria-hidden','true');
+    document.removeEventListener('keydown', onEsc);
+  }
+
+  function onEsc(e){ if(e.key === 'Escape') closeRdc(); }
+
+  /* Intercept existing Download Resume button — clone removes old listeners */
+  var origBtn = document.getElementById('hdrDlToggleApp');
+  if(origBtn){
+    var newBtn = origBtn.cloneNode(true);
+    origBtn.parentNode.replaceChild(newBtn, origBtn);
+    newBtn.addEventListener('click', function(e){
+      e.stopPropagation();
+      openRdc();
+    });
+  }
+  /* Prevent old dropdown menu from appearing */
+  var oldMenu = document.getElementById('hdrDlMenuApp');
+  if(oldMenu){ oldMenu.style.display = 'none'; }
+
+  overlay.addEventListener('click', closeRdc);
+  if(closeBtn) closeBtn.addEventListener('click', closeRdc);
+
+  /* Option card selection */
+  opts.forEach(function(opt){
+    opt.addEventListener('click', function(){
+      selectOpt(parseInt(opt.getAttribute('data-opt'), 10));
+    });
+  });
+
+  function selectOpt(n){
+    selectedOpt = n;
+    opts.forEach(function(o){
+      var isThis = parseInt(o.getAttribute('data-opt'), 10) === n;
+      o.classList.toggle('rdc-opt-sel', isThis);
+      var inp = o.querySelector('.rdc-rinput');
+      if(inp) inp.checked = isThis;
+    });
+    var m = optMeta[n] || {cost:0, label:'Download'};
+    if(coinEl) coinEl.textContent = m.cost === 1 ? '1 Coin' : m.cost + ' Coins';
+    if(btnLbl) btnLbl.textContent = m.label;
+  }
+
+  var toastTimer = null;
+  function showToast(msg, type){
+    if(!toastEl) return;
+    toastEl.textContent = msg;
+    toastEl.className = 'rdc-toast rdc-toast-' + (type || 'info') + ' rdc-tshow';
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function(){ toastEl.classList.remove('rdc-tshow'); }, 3500);
+  }
+
+  function resetBtn(){
+    isLoading = false;
+    if(!dlBtn) return;
+    dlBtn.disabled = false;
+    dlBtn.classList.remove('rdc-loading');
+    var m = optMeta[selectedOpt] || {};
+    dlBtn.innerHTML =
+      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;flex-shrink:0" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>' +
+      '<span id="rdcBtnLabel">' + (m.label || 'Download') + '</span>';
+    btnLbl = document.getElementById('rdcBtnLabel');
+  }
+
+  if(dlBtn){
+    dlBtn.addEventListener('click', function(){
+      if(isLoading) return;
+      var m = optMeta[selectedOpt];
+      if(!m) return;
+
+      if(!m.avail){
+        showToast('This format is coming in Phase 2 — stay tuned!', 'info');
+        return;
+      }
+
+      isLoading = true;
+      dlBtn.disabled = true;
+      dlBtn.classList.add('rdc-loading');
+      dlBtn.innerHTML = '<span class="rdc-spin"></span><span>Preparing download…</span>';
+
+      if(selectedOpt === 1){
+        /* Original: open download URL, keep spinner visible 2 sec then close */
+        if(dlUrl){
+          window.open(dlUrl, '_blank');
+        } else {
+          showToast('Resume file URL not available.', 'warn');
+        }
+        setTimeout(function(){ closeRdc(); resetBtn(); }, 2000);
+
+      } else if(m.dlKey === 'rs'){
+        /* Recruiter Summary — fully client-side; no resume viewer needed */
+        if(typeof window.__buildRS !== 'function'){
+          showToast('Please wait a moment and try again.', 'warn');
+          resetBtn(); return;
+        }
+        window.__rsBusy = true;
+        window.__buildRS();
+        var rsTicks = 0;
+        var rsDone = setInterval(function(){
+          if(!window.__rsBusy || ++rsTicks > 600){
+            clearInterval(rsDone);
+            if(rsTicks > 600 && window.__rsBusy) showToast('Check your browser — the file may be downloading in the background.', 'info');
+            closeRdc(); resetBtn();
+          }
+        }, 100);
+
+      } else if(m.dlKey){
+        /* Options 2/3/4: keep drawer + spinner open while polling for resume viewer,
+           click the data-dl button, then wait for buildPdf() to finish by watching
+           rcvDlToggle.disabled (setDlBusy sets it true→false around PDF generation). */
+        var dlKey = m.dlKey;
+        var tries = 0;
+        var poll = setInterval(function(){
+          var pages = document.querySelectorAll('#rcvPages .rcv-page');
+          if(pages.length){
+            clearInterval(poll);
+            var btn = document.querySelector('[data-dl="' + dlKey + '"]');
+            if(!btn){
+              showToast('Download button not found. Please open the Resume / CV tab first.', 'warn');
+              resetBtn();
+              return;
+            }
+            btn.click();
+            /* After click, setDlBusy(true) disables rcvDlToggle; when PDF is saved
+               setDlBusy(false) re-enables it. Wait ≥300ms for the flag to be set
+               then poll until it clears (max 45 sec). */
+            var waitTicks = 0;
+            var gotBusy = false;
+            var donePoll = setInterval(function(){
+              var toggle = document.getElementById('rcvDlToggle');
+              if(toggle && toggle.disabled){ gotBusy = true; }
+              var done = gotBusy && toggle && !toggle.disabled;
+              var timedOut = ++waitTicks > 450;
+              if(done || timedOut){
+                clearInterval(donePoll);
+                if(timedOut && !done){
+                  showToast('Check your browser — the file may be downloading in the background.', 'info');
+                }
+                closeRdc();
+                resetBtn();
+              }
+            }, 100);
+          } else if(++tries > 80){
+            clearInterval(poll);
+            showToast('Resume viewer not loaded. Please scroll to the Resume / CV tab first, then try again.', 'warn');
+            resetBtn();
+          }
+        }, 100);
+      }
+    });
+  }
+
+})();
+</script>
+
+{{-- ===== EXPORT CANDIDATE PROFILE PDF — pdfMake vector PDF, Roboto (vfs_fonts), direct download ===== --}}
+<script>
+(function(){
+'use strict';
+
+/* Fetch a JS file and execute it via Blob URL.
+   Blob URL inherits the page origin, so it satisfies CSP script-src 'self'
+   even when the original CDN URL would be blocked.
+   Each URL's Promise is cached so it is only fetched once per session. */
+var _fetched={};
+function fetchAndExec(url){
+  if(_fetched[url]) return _fetched[url];
+  _fetched[url]=fetch(url,{cache:'force-cache'}).then(function(r){
+    if(!r.ok) throw new Error('HTTP '+r.status+' '+url);
+    return r.text();
+  }).then(function(code){
+    return new Promise(function(res,rej){
+      var blob=new Blob([code],{type:'text/javascript'});
+      var burl=URL.createObjectURL(blob);
+      var s=document.createElement('script');
+      s.src=burl;
+      s.onload=function(){ URL.revokeObjectURL(burl); res(); };
+      s.onerror=function(){ URL.revokeObjectURL(burl); rej(new Error('exec failed: '+url)); };
+      document.head.appendChild(s);
+    });
+  });
+  return _fetched[url];
+}
+
+/* Try each URL in order; move to next on fetch/exec error OR verify() returning false */
+function tryList(urls, i, verify){
+  if(i>=urls.length) return Promise.reject(new Error('All sources failed — first was: '+urls[0]));
+  return fetchAndExec(urls[i]).then(function(){
+    if(verify()) return;
+    return tryList(urls, i+1, verify);
+  }).catch(function(){ return tryList(urls, i+1, verify); });
+}
+
+/* Load pdfmake library then vfs_fonts (Roboto), sequentially. Cached after first call. */
+var _pdfReady=null;
+function ensurePdfMake(){
+  if(_pdfReady && typeof pdfMake!=='undefined' && pdfMake.vfs && pdfMake.vfs['Roboto-Regular.ttf']) return _pdfReady;
+  _pdfReady=null;
+  var CORE=[
+    '/js/pdfmake.min.js',
+    'https://cdn.jsdelivr.net/npm/pdfmake@0.2.7/build/pdfmake.min.js',
+    'https://unpkg.com/pdfmake@0.2.7/build/pdfmake.min.js',
+    'https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/pdfmake.min.js'
+  ];
+  var VFS=[
+    '/js/vfs_fonts.min.js',
+    'https://cdn.jsdelivr.net/npm/pdfmake@0.2.7/build/vfs_fonts.min.js',
+    'https://unpkg.com/pdfmake@0.2.7/build/vfs_fonts.min.js',
+    'https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/vfs_fonts.min.js'
+  ];
+  _pdfReady=tryList(CORE, 0, function(){ return typeof pdfMake!=='undefined'; })
+    .then(function(){
+      return tryList(VFS, 0, function(){ return !!(pdfMake.vfs&&pdfMake.vfs['Roboto-Regular.ttf']); });
+    })
+    .then(function(){
+      pdfMake.fonts={Roboto:{normal:'Roboto-Regular.ttf',bold:'Roboto-Medium.ttf',italics:'Roboto-Italic.ttf',bolditalics:'Roboto-MediumItalic.ttf'}};
+    });
+  return _pdfReady;
+}
+
+/* SVG circular progress ring — use Helvetica (built-in pdfkit font) for safe SVG text */
+function matchRingSvg(matchNum, mc){
+  var r=32, circ=+(2*Math.PI*r).toFixed(2);
+  var off=matchNum>0?+((1-matchNum/100)*circ).toFixed(2):circ;
+  var pct=matchNum>0?(Math.round(matchNum*10)/10)+'%':'N/A';
+  return '<svg xmlns="http://www.w3.org/2000/svg" width="80" height="80" viewBox="0 0 80 80">'+
+    '<circle cx="40" cy="40" r="'+r+'" fill="none" stroke="#e2e8f0" stroke-width="6"/>'+
+    (matchNum>0?'<circle cx="40" cy="40" r="'+r+'" fill="none" stroke="'+mc+'" stroke-width="6" stroke-dasharray="'+circ+'" stroke-dashoffset="'+off+'" transform="rotate(-90 40 40)"/>':'')+
+    '<text x="40" y="44" text-anchor="middle" dy="-0.1em" font-size="14" font-weight="bold" font-family="Helvetica" fill="'+mc+'">'+pct+'</text>'+
+    '</svg>';
+}
+
+/* Build a card block: navy header + white body */
+function card(title, body, mb){
+  return {
+    table:{widths:['*'],body:[
+      [{text:title,bold:true,fontSize:8,color:'#ffffff',characterSpacing:0.9,fillColor:'#1e3a8a',margin:[12,8,12,8]}],
+      [body]
+    ]},
+    layout:{
+      hLineWidth:function(i,n){return(i===0||i===n.table.body.length)?0.5:0;},
+      vLineWidth:function(){return 0.5;},
+      hLineColor:function(){return '#e2e8f0';},
+      vLineColor:function(){return '#e2e8f0';},
+      paddingTop:function(){return 0;},paddingBottom:function(){return 0;},
+      paddingLeft:function(){return 0;},paddingRight:function(){return 0;}
+    },
+    margin:[0,0,0,mb!=null?mb:14]
+  };
+}
+
+/* Two-column table layout used for Match Analysis + At a Glance */
+var twoColLayout={
+  hLineWidth:function(i,n){return(i===0||i===n.table.body.length)?0.5:0.3;},
+  vLineWidth:function(){return 0.5;},
+  hLineColor:function(){return '#e2e8f0';},
+  vLineColor:function(){return '#e2e8f0';},
+  paddingTop:function(){return 0;},paddingBottom:function(){return 0;},
+  paddingLeft:function(){return 0;},paddingRight:function(){return 0;}
+};
+
+/* Build the full pdfMake document definition from scraped data */
+function buildDef(d){
+  var matchRaw=d.matchText?d.matchText.replace(/[^0-9.]/g,''):'0';
+  var matchNum=parseFloat(matchRaw)||0;
+  var mc=matchNum>=70?'#15803d':matchNum>=40?'#b45309':'#b91c1c';
+  var mLabel=matchNum>=90?'Excellent Match':matchNum>=70?'Strong Match':matchNum>=40?'Moderate Match':matchNum>0?'Low Match':'';
+  var coInit=(d.companyName||'J').slice(0,2).toUpperCase();
+
+  var PIPE_BG=['#eff6ff','#f0fdf4','#faf5ff','#fefce8','#f0fdfa','#eef2ff'];
+  var PIPE_TC=['#1d4ed8','#15803d','#7c3aed','#a16207','#0f766e','#4338ca'];
+
+  /* Company logo or navy initials box */
+  var logoEl=d.logoUri&&d.logoUri.startsWith('data:')
+    ?{image:d.logoUri,width:44,height:44}
+    :{table:{widths:[44],heights:[44],body:[[{text:coInit,bold:true,fontSize:13,color:'#fff',alignment:'center',fillColor:'#1e3a8a',margin:[0,12,0,0]}]]},layout:'noBorders'};
+
+  /* Candidate avatar square */
+  var avatarEl={table:{widths:[54],heights:[54],body:[[{text:d.initials,bold:true,fontSize:18,color:'#fff',alignment:'center',fillColor:'#4f46e5',margin:[0,14,0,0]}]]},layout:'noBorders'};
+
+  /* Match ring (SVG) */
+  var matchBlock=matchNum>0?{
+    stack:[
+      {svg:matchRingSvg(matchNum,mc),width:80,height:80},
+      mLabel?{text:mLabel,fontSize:7.5,bold:true,color:mc,alignment:'center',margin:[0,3,0,0]}:{text:''}
+    ],alignment:'center',width:90
+  }:null;
+
+  /* Match Analysis rows */
+  var metBody=[[{text:'MATCH ANALYSIS',colSpan:2,bold:true,fontSize:8,color:'#fff',characterSpacing:0.9,fillColor:'#1e3a8a',margin:[12,8,12,8]},{}]];
+  d.metrics.forEach(function(m){
+    var vc=m.green?'#16a34a':m.red?'#dc2626':'#0f172a';
+    var vStack=[{text:m.val||'-',bold:true,color:vc,alignment:'right',fontSize:9.5}];
+    if(m.sub) vStack.push({text:m.sub,fontSize:8,color:'#94a3b8',alignment:'right',margin:[0,1,0,0]});
+    metBody.push([{text:m.lbl||'',fontSize:9.5,color:'#64748b',margin:[12,7,6,7]},{stack:vStack,margin:[4,7,12,7]}]);
+  });
+
+  /* At a Glance grid */
+  var glBody=[[{text:'AT A GLANCE',colSpan:2,bold:true,fontSize:8,color:'#fff',characterSpacing:0.9,fillColor:'#1e3a8a',margin:[12,8,12,8]},{}]];
+  if(d.pipeItems.length){
+    for(var gi=0;gi<d.pipeItems.length;gi+=2){
+      var gRow=[];
+      for(var gj=gi;gj<Math.min(gi+2,d.pipeItems.length);gj++){
+        gRow.push({stack:[
+          {text:(d.pipeItems[gj].lbl||'').toUpperCase(),fontSize:7.5,bold:true,color:'#64748b',characterSpacing:0.4,alignment:'center',margin:[0,0,0,4]},
+          {text:d.pipeItems[gj].val||'-',fontSize:12,bold:true,color:PIPE_TC[gj]||'#334155',alignment:'center'}
+        ],fillColor:PIPE_BG[gj]||'#f8fafc',margin:[6,9,6,9]});
+      }
+      if(d.pipeItems.length%2!==0&&gi===d.pipeItems.length-1) gRow.push({text:'',fillColor:'#f8fafc'});
+      glBody.push(gRow);
+    }
+  } else {
+    glBody.push([{text:'No pipeline data.',colSpan:2,fontSize:9,color:'#94a3b8',italics:true,margin:[12,10,12,10]},{}]);
+  }
+
+  /* Key Skills table */
+  var skillsTbl=null;
+  if(d.skillsTable.headers.length&&d.skillsTable.rows.length){
+    var stRows=[d.skillsTable.headers.map(function(h){
+      return {text:(h||'').toUpperCase(),bold:true,fontSize:8,color:'#64748b',characterSpacing:0.4,fillColor:'#f8fafc',margin:[10,8,10,8]};
+    })];
+    d.skillsTable.rows.forEach(function(row,ri){
+      stRows.push(row.map(function(cell){
+        return {text:cell||'',fontSize:9.5,color:'#374151',fillColor:ri%2===0?'#ffffff':'#f9fafb',margin:[10,7,10,7]};
+      }));
+    });
+    skillsTbl=card('KEY SKILLS & EXPERIENCE',{
+      table:{widths:d.skillsTable.headers.map(function(){return '*';}),headerRows:1,body:stRows},
+      layout:{hLineWidth:function(i,n){return(i===0||i===n.table.body.length)?0:0.3;},vLineWidth:function(){return 0;},hLineColor:function(){return '#f1f5f9';},paddingTop:function(){return 0;},paddingBottom:function(){return 0;},paddingLeft:function(){return 0;},paddingRight:function(){return 0;}}
+    });
+  }
+
+  /* Badges row */
+  var badgeSpans=[];
+  if(d.hasRN) badgeSpans.push({text:' Prescreened by Senior Recruiter ',bold:true,fontSize:9,color:'#db2777',background:'#fce7f3'},{text:'  '});
+  if(d.isImmediate) badgeSpans.push({text:' Immediate Joiner ',bold:true,fontSize:9,color:'#16a34a',background:'#dcfce7'},{text:'  '});
+  badgeSpans.push({text:' JERO Verified ',bold:true,fontSize:9,color:'#1d4ed8',background:'#dbeafe'});
+
+  /* Recruiter Notes card */
+  var rnCard=null;
+  if(d.hasRN&&d.rnText){
+    rnCard={
+      table:{widths:['*'],body:[
+        [{text:'RECRUITER NOTES & COMMENTS',bold:true,fontSize:8,color:'#9d174d',characterSpacing:0.9,fillColor:'#fdf2f8',margin:[12,8,12,8]}],
+        [{text:d.rnText,fontSize:10,color:'#374151',italics:true,lineHeight:1.8,margin:[14,14,14,14]}]
+      ]},
+      layout:{
+        hLineWidth:function(i,n){return(i===0||i===n.table.body.length)?0.5:0;},
+        vLineWidth:function(){return 0.5;},
+        hLineColor:function(i){return i===0?'#be185d':'#f3e8ff';},
+        vLineColor:function(){return '#f3e8ff';},
+        paddingTop:function(){return 0;},paddingBottom:function(){return 0;},
+        paddingLeft:function(){return 0;},paddingRight:function(){return 0;}
+      },margin:[0,0,0,14]
+    };
+  }
+
+  /* Assemble page content */
+  var content=[];
+
+  /* Header: logo | divider | title | date */
+  content.push({
+    columns:[
+      {columns:[{stack:[logoEl],width:52},{stack:[
+        {text:d.companyName||'Company',bold:true,fontSize:12,color:'#1e3a8a',lineHeight:1.2},
+        {text:'HIRING PARTNER',fontSize:7,color:'#94a3b8',characterSpacing:1.2,margin:[0,3,0,0]}
+      ],margin:[8,3,0,0],width:'*'}],width:185},
+      {canvas:[{type:'line',x1:6,y1:0,x2:6,y2:44,lineWidth:1.5,lineColor:'#e2e8f0'}],width:18},
+      {stack:[
+        {text:'PRE-SCREENED CANDIDATE REPORT',bold:true,fontSize:14,color:'#1e3a8a',characterSpacing:0.2,lineHeight:1.25},
+        {text:'Prepared by Senior Technical Recruiter',fontSize:9,color:'#64748b',margin:[0,4,0,0]}
+      ],width:'*'},
+      {stack:[
+        {text:'REPORT DATE',fontSize:7,color:'#94a3b8',characterSpacing:0.8,alignment:'right'},
+        {text:d.dateStr,bold:true,fontSize:11,color:'#0f172a',alignment:'right',margin:[0,3,0,0]},
+        d.recruiterName?{text:'By '+d.recruiterName,fontSize:8.5,color:'#64748b',alignment:'right',margin:[0,3,0,0]}:{text:''}
+      ],width:112,alignment:'right'}
+    ],columnGap:0,margin:[0,0,0,12]
+  });
+  content.push({canvas:[{type:'line',x1:0,y1:0,x2:531.28,y2:0,lineWidth:0.5,lineColor:'#e2e8f0'}],margin:[0,0,0,16]});
+
+  /* Candidate identity card */
+  var candidateCols=[
+    {stack:[avatarEl],width:62},
+    {stack:[
+      {text:d.name,bold:true,fontSize:19,color:'#0f172a',lineHeight:1.2,margin:[0,0,0,2]},
+      {text:d.role,bold:true,fontSize:11,color:'#4f46e5',margin:[0,0,0,8]},
+      {text:d.metaPlain.length?d.metaPlain.join('   '):'',fontSize:9.5,color:'#475569',lineHeight:1.5}
+    ],width:'*',margin:[12,2,10,0]}
+  ];
+  if(matchBlock) candidateCols.push(matchBlock);
+
+  content.push({
+    table:{widths:['*'],body:[[{
+      stack:[
+        {columns:candidateCols,columnGap:0},
+        d.skillItems.length?{canvas:[{type:'line',x1:0,y1:4,x2:491,y2:4,lineWidth:0.5,lineColor:'#e2e8f0'}],margin:[0,10,0,8]}:{text:''},
+        d.skillItems.length?{text:d.skillItems.map(function(sk){
+          return {text:(sk.label||'')+' ',fontSize:9,bold:sk.isMatch,color:sk.isMatch?'#1d4ed8':sk.isMore?'#94a3b8':'#475569'};
+        })}:{text:''}
+      ],margin:[14,14,14,14],fillColor:'#f8fafc'
+    }]]},
+    layout:{hLineWidth:function(){return 0.5;},vLineWidth:function(){return 0.5;},hLineColor:function(){return '#e2e8f0';},vLineColor:function(){return '#e2e8f0';},paddingTop:function(){return 0;},paddingBottom:function(){return 0;},paddingLeft:function(){return 0;},paddingRight:function(){return 0;}},
+    margin:[0,0,0,16]
+  });
+
+  /* Two-column: Match Analysis + At a Glance */
+  content.push({
+    columns:[
+      {table:{widths:['*','*'],body:metBody},layout:twoColLayout,width:'*'},
+      {table:{widths:['*','*'],body:glBody},layout:twoColLayout,width:'*'}
+    ],columnGap:14,margin:[0,0,0,16]
+  });
+
+  /* Badges */
+  content.push({text:badgeSpans,margin:[0,0,0,14]});
+
+  /* Key Skills table */
+  if(skillsTbl) content.push(skillsTbl);
+
+  /* Professional Summary */
+  content.push(card('PROFESSIONAL SUMMARY',{text:d.summary||'No professional summary available.',fontSize:10,color:'#374151',lineHeight:1.8,margin:[14,14,14,14]}));
+
+  /* Recruiter Notes */
+  if(rnCard) content.push(rnCard);
+
+  return {
+    pageSize:'A4',
+    pageMargins:[32,30,32,42],
+    content:content,
+    defaultStyle:{font:'Roboto',fontSize:10,color:'#0f172a'},
+    background:function(cp,ps){
+      /* 4 px navy bar across full page top on every page */
+      return {canvas:[{type:'rect',x:0,y:0,w:ps.width,h:4,color:'#1e3a8a'}]};
+    },
+    footer:function(cp,pc){
+      return {columns:[
+        {text:'CONFIDENTIAL - For Internal Recruiter Use Only | '+(d.companyName||'Company')+' via JERO Hiring Platform',fontSize:7.5,color:'#94a3b8',margin:[32,10,0,0]},
+        {text:'Page '+cp+' of '+pc+' | Generated: '+d.dateStr,fontSize:7.5,color:'#94a3b8',alignment:'right',margin:[0,10,32,0]}
+      ]};
+    }
+  };
+}
+
+window.cdrExportProfilePDF = function(triggerEl, fromRdc){
+  var wrap=document.getElementById('kt_activitiesApplication');
+  if(!wrap) return;
+
+  /* Close any open menus */
+  var hdrMenu=document.getElementById('hdrDlMenuApp');
+  if(hdrMenu) hdrMenu.classList.remove('open');
+  if(fromRdc){
+    var rd=document.getElementById('rdcDrawer'),ov=document.getElementById('rdcOverlay');
+    if(rd) rd.classList.remove('rdc-open');
+    if(ov) ov.classList.remove('rdc-open');
+  }
+
+  var origHtml=triggerEl?triggerEl.innerHTML:'';
+  if(triggerEl){ triggerEl.disabled=true; triggerEl.innerHTML='<span style="font-size:11px;">Generating PDF…</span>'; }
+
+  /* DOM scraping */
+  var g=function(sel){ var el=wrap.querySelector(sel); return el?(el.textContent||'').trim().replace(/\s+/g,' '):''; };
+
+  var name=g('.cdr-name')||'Unknown';
+  var role=g('.cdr-role')||'Candidate';
+  var initials=g('.cdr-avatar-sq')||'??';
+  var matchText=(wrap.querySelector('.cdr-match-pct-badge')||{textContent:''}).textContent.trim();
+  var isImmediate=!!wrap.querySelector('.cdr-meta-item.cmi-green');
+
+  var metaPlain=[];
+  wrap.querySelectorAll('.cdr-meta-item').forEach(function(el){ var t=(el.textContent||'').trim().replace(/\s+/g,' '); if(t) metaPlain.push(t); });
+
+  var skillItems=[];
+  wrap.querySelectorAll('.cdr-skill-tag').forEach(function(el){
+    skillItems.push({label:el.textContent.trim(),isMatch:el.classList.contains('cdr-skill-match'),isMore:el.classList.contains('cdr-skill-more')});
+  });
+
+  var metrics=[];
+  wrap.querySelectorAll('.cdr-metric-row').forEach(function(row){
+    var lbl=(row.querySelector('.cdr-metric-label')||{}).textContent||'';
+    var valEl=row.querySelector('.cdr-metric-val'), fracEl=row.querySelector('.cdr-metric-frac');
+    var val=valEl?(valEl.textContent||'').trim().replace(/\s+/g,' '):'';
+    var frac=fracEl?(fracEl.textContent||'').trim():'';
+    var sub=(row.querySelector('.cdr-metric-sub')||{}).textContent||'';
+    metrics.push({lbl:lbl.trim(),val:frac?val.replace(frac,'').trim()+' / '+frac:val,sub:sub.trim(),green:!!(valEl&&valEl.classList.contains('cv-green')),red:!!(valEl&&valEl.classList.contains('cv-red'))});
+  });
+
+  var pipeItems=[];
+  wrap.querySelectorAll('.cdr-pipeline-card').forEach(function(c){
+    var l=(c.querySelector('.cdr-pipeline-label')||{}).textContent||'';
+    var v=(c.querySelector('.cdr-pipeline-value')||{}).textContent||'';
+    pipeItems.push({lbl:l.trim(),val:v.trim().replace(/\s+/g,' ')});
+  });
+
+  var skillsTable={headers:[],rows:[]};
+  var skEls=wrap.querySelectorAll('#personal_details .skills-row');
+  if(skEls.length){
+    var thEl=wrap.querySelector('#personal_details .skills-thead');
+    if(thEl) thEl.querySelectorAll('div').forEach(function(c){ var t=(c.textContent||'').trim(); if(t) skillsTable.headers.push(t); });
+    skEls.forEach(function(row){ var cells=[]; row.querySelectorAll('div').forEach(function(c){ cells.push((c.textContent||'').trim()); }); if(cells.length) skillsTable.rows.push(cells); });
+  }
+
+  var sumEl=wrap.querySelector('.summary-text');
+  var summary=sumEl?(sumEl.textContent||'').trim():'';
+  if(!summary) summary='No professional summary available.';
+
+  var rnEl=wrap.querySelector('.po-recruiter-note-text');
+  var rnText=rnEl?(rnEl.innerText||rnEl.textContent||'').trim():'';
+  var hasRN=!!rnText;
+
+  var companyName='Company', recruiterName='';
+  wrap.querySelectorAll('.ownership-row').forEach(function(row){
+    var lbl=(row.querySelector('.own-label')||{}).textContent||'';
+    var val=(row.querySelector('.own-value')||{}).textContent||'';
+    lbl=lbl.trim(); val=val.trim();
+    if(!val||val==='—') return;
+    if(lbl.toLowerCase().indexOf('company')!==-1) companyName=val;
+    if(lbl.toLowerCase().indexOf('recruiter')!==-1&&lbl.toLowerCase().indexOf('note')===-1) recruiterName=val;
+  });
+
+  /* Logo: try __rcvLogo cache, then data-logo attribute on any element */
+  var logoUri=null;
+  if(window.__rcvLogo&&window.__rcvLogo.__dataUri) logoUri=window.__rcvLogo.__dataUri;
+  if(!logoUri){
+    var rcvW=document.querySelector('[data-logo]');
+    if(rcvW){ var dl=rcvW.getAttribute('data-logo'); if(dl&&dl.length>30) logoUri=dl; }
+  }
+
+  var months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  var now=new Date(), dateStr=now.getDate().toString().padStart(2,'0')+' '+months[now.getMonth()]+' '+now.getFullYear();
+  var filename=(name.replace(/[^a-zA-Z0-9\s]/g,'').trim().replace(/\s+/g,'_')||'Candidate')+'_Profile.pdf';
+
+  /* Load pdfmake + vfs_fonts (Roboto) via fetch->Blob URL, then generate PDF */
+  ensurePdfMake().then(function(){
+    var def=buildDef({
+      name:name,role:role,initials:initials,matchText:matchText,logoUri:logoUri,
+      metaPlain:metaPlain,skillItems:skillItems,metrics:metrics,pipeItems:pipeItems,
+      skillsTable:skillsTable,summary:summary,hasRN:hasRN,rnText:rnText||'',
+      companyName:companyName,recruiterName:recruiterName,dateStr:dateStr,isImmediate:isImmediate
+    });
+
+    /* Wrap getBlob in a Promise with timeout so silent render failures surface as errors */
+    return new Promise(function(res,rej){
+      var done=false;
+      var timer=setTimeout(function(){
+        if(!done){ done=true; rej(new Error('PDF timed out after 10s — possible font or layout issue')); }
+      },10000);
+      try{
+        pdfMake.createPdf(def).getBlob(function(blob){
+          if(done) return;
+          clearTimeout(timer); done=true;
+          if(!blob||blob.size<200){ rej(new Error('PDF output was empty ('+( blob?blob.size:0)+' bytes)')); return; }
+          res(blob);
+        });
+      }catch(e){ if(!done){ clearTimeout(timer); done=true; rej(e); } }
+    });
+  }).then(function(blob){
+    /* Trigger download without any Print dialog */
+    var url=URL.createObjectURL(blob);
+    var a=document.createElement('a');
+    a.href=url; a.download=filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(function(){ URL.revokeObjectURL(url); },3000);
+  }).catch(function(err){
+    console.error('[CDR-PDF]', err);
+    alert('PDF export failed: '+(err&&err.message||String(err)));
+  }).finally(function(){
+    if(triggerEl){ triggerEl.disabled=false; triggerEl.innerHTML=origHtml; }
+  });
+};
+
 })();
 </script>

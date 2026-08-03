@@ -539,6 +539,7 @@ protected $elasticService;
 							'interview_mode_two' => $request->interview_mode_two,
 							'interviewDateThree' => ($interviewDateThree) ? Carbon::parse($interviewDateThree)->toIso8601String() : null,
 							'interview_mode_three' => $request->interview_mode_three,
+							'interview_timezone' => $request->interview_timezone ?? 'IST',
 						],
 						'doc_as_upsert' => false // Changed to false since we verified existence
 					],
@@ -562,6 +563,7 @@ protected $elasticService;
 					$interview_mode_two = @$data->interview_mode_two;			
 					$interviewDateThree = @$data->interviewDateThree;	
 					$interview_mode_three = @$data->interview_mode_three;
+					 $interview_timezone = @$data->interview_timezone ?? 'IST';
 					$wiseId = $addJobWiseCondidate_id;
 
 					 $scheduleDateArr = DB::table('interview_schedules')->where('interview_job_wise_con_id',$addJobWiseCondidate_id)->pluck('schedule_date')->toArray();
@@ -607,14 +609,13 @@ protected $elasticService;
 								<div class="slot-day-name">'.($interviewDateOne ? Carbon::parse($interviewDateOne)->format('D') : 'N/A').'</div>
 								<div class="slot-date">'.($interviewDateOne ? Carbon::parse($interviewDateOne)->format('d M') : 'N/A' ).'</div>
 							</div>
-							<div class="slot-time">'.($interviewDateOne ? Carbon::parse($interviewDateOne)->format('h:i A') : 'N/A' ).'(IST)</div>
+							<div class="slot-time">'.($interviewDateOne ? Carbon::parse($interviewDateOne)->format('h:i A') : 'N/A' ).' <span style="font-size:10px;color:#94a3b8;font-weight:500;">('.$interview_timezone.')</span></div>
 							<div class="slot-time">'.(@$interview_mode_one ?? 'N/A' ).'</div>
 
-							<button '.(($interviewDateOne && $date1 >= date('Y-m-d')) ? $modal1 : '' ).' data-mode="'. $interview_mode_one .'"
-                                data-date="'. ($interviewDateOne ? Carbon::parse($interviewDateOne)->format('d-m-Y') : '') .'"
-                                data-time="'. ($interviewDateOne ? Carbon::parse($interviewDateOne)->format('h:i A') : '') .'"
-                                class="'. (($interviewDateOne && $date1 >= date('Y-m-d')) ? $bookbtn1 : 'book-btnoff') .'"
-                                rel="'. @$wiseId .'">'.$book1.'</button>
+							'.($interviewDateOne
+                                ? '<button '.(($interviewDateOne && $date1 >= date('Y-m-d')) ? $modal1 : '').' data-mode="'.$interview_mode_one.'" data-date="'.Carbon::parse($interviewDateOne)->format('d-m-Y').'" data-time="'.Carbon::parse($interviewDateOne)->format('h:i A').'" class="'.(($interviewDateOne && $date1 >= date('Y-m-d')) ? $bookbtn1 : 'book-btnoff').'" rel="'.$wiseId.'">'.$book1.'</button>'
+                                : '<button type="button" class="book-btn-addslot editSlots"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:11px;height:11px;flex-shrink:0;"><rect x=\'3\' y=\'4\' width=\'18\' height=\'18\' rx=\'2\'/><line x1=\'16\' y1=\'2\' x2=\'16\' y2=\'6\'/><line x1=\'8\' y1=\'2\' x2=\'8\' y2=\'6\'/><line x1=\'3\' y1=\'10\' x2=\'21\' y2=\'10\'/></svg> Select Date</button>'
+                            ).'
                         </div>
 
 						<div class="slot-day">
@@ -622,13 +623,12 @@ protected $elasticService;
 								<div class="slot-day-name">'.($interviewDateTwo ? Carbon::parse($interviewDateTwo)->format('D') : 'N/A').'</div>
 								<div class="slot-date">'.($interviewDateTwo ? Carbon::parse($interviewDateTwo)->format('d M') : 'N/A' ).'</div>
 							</div>
-							<div class="slot-time">'.($interviewDateTwo ? Carbon::parse($interviewDateTwo)->format('h:i A') : 'N/A').'(IST)</div>
+							<div class="slot-time">'.($interviewDateTwo ? Carbon::parse($interviewDateTwo)->format('h:i A') : 'N/A').' <span style="font-size:10px;color:#94a3b8;font-weight:500;">('.$interview_timezone.')</span></div>
 							<div class="slot-time">'.(@$interview_mode_two ?? 'N/A') .'</div>
-								<button '.(($interviewDateTwo && $date2 >= date('Y-m-d')) ? $modal2:'').' data-mode="'. $interview_mode_two .'"
-										data-date="'. ($interviewDateTwo ? Carbon::parse($interviewDateTwo)->format('d-m-Y') : '') .'"
-										data-time="'. ($interviewDateTwo ? Carbon::parse($interviewDateTwo)->format('h:i A') : '') .'"
-										class="'. (($interviewDateTwo && $date2 >= date('Y-m-d')) ? $bookbtn2 : 'book-btnoff') .'"
-										rel="'. @$wiseId .'">'.$book2.'</button>
+								'.($interviewDateTwo
+                                        ? '<button '.(($interviewDateTwo && $date2 >= date('Y-m-d')) ? $modal2 : '').' data-mode="'.$interview_mode_two.'" data-date="'.Carbon::parse($interviewDateTwo)->format('d-m-Y').'" data-time="'.Carbon::parse($interviewDateTwo)->format('h:i A').'" class="'.(($interviewDateTwo && $date2 >= date('Y-m-d')) ? $bookbtn2 : 'book-btnoff').'" rel="'.$wiseId.'">'.$book2.'</button>'
+                                        : '<button type="button" class="book-btn-addslot editSlots"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:11px;height:11px;flex-shrink:0;"><rect x=\'3\' y=\'4\' width=\'18\' height=\'18\' rx=\'2\'/><line x1=\'16\' y1=\'2\' x2=\'16\' y2=\'6\'/><line x1=\'8\' y1=\'2\' x2=\'8\' y2=\'6\'/><line x1=\'3\' y1=\'10\' x2=\'21\' y2=\'10\'/></svg> Select Date</button>'
+                                    ).'
 						</div>
 
 						<div class="slot-day">						
@@ -636,13 +636,12 @@ protected $elasticService;
 								<div class="slot-day-name">'.($interviewDateThree ? Carbon::parse($interviewDateThree)->format('D') : 'N/A').'</div>
 								<div class="slot-date">'.($interviewDateThree ? Carbon::parse($interviewDateThree)->format('d M') : 'N/A' ).'</div>
 							</div>
-							<div class="slot-time">'.($interviewDateThree ? Carbon::parse($interviewDateThree)->format('h:i A') : 'N/A').'(IST)</div>
+							<div class="slot-time">'.($interviewDateThree ? Carbon::parse($interviewDateThree)->format('h:i A') : 'N/A').' <span style="font-size:10px;color:#94a3b8;font-weight:500;">('.$interview_timezone.')</span></div>
 							<div class="slot-time">'.(@$interview_mode_three ?? 'N/A' ).'</div>
-								<button '.(($interviewDateThree && $date3 >= date('Y-m-d')) ? $modal3:'').' data-mode="'. $interview_mode_three .'"
-										data-date="'. ($interviewDateThree ? Carbon::parse($interviewDateThree)->format('d-m-Y') : '') .'"
-										data-time="'. ($interviewDateThree ? Carbon::parse($interviewDateThree)->format('h:i A') : '') .'"
-										class="'. (($interviewDateThree && $date3 >= date('Y-m-d')) ? $bookbtn3 : 'book-btnoff') .'"
-										rel="'. @$wiseId .'">'.$book3.'</button>
+								'.($interviewDateThree
+                                        ? '<button '.(($interviewDateThree && $date3 >= date('Y-m-d')) ? $modal3 : '').' data-mode="'.$interview_mode_three.'" data-date="'.Carbon::parse($interviewDateThree)->format('d-m-Y').'" data-time="'.Carbon::parse($interviewDateThree)->format('h:i A').'" class="'.(($interviewDateThree && $date3 >= date('Y-m-d')) ? $bookbtn3 : 'book-btnoff').'" rel="'.$wiseId.'">'.$book3.'</button>'
+                                        : '<button type="button" class="book-btn-addslot editSlots"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:11px;height:11px;flex-shrink:0;"><rect x=\'3\' y=\'4\' width=\'18\' height=\'18\' rx=\'2\'/><line x1=\'16\' y1=\'2\' x2=\'16\' y2=\'6\'/><line x1=\'8\' y1=\'2\' x2=\'8\' y2=\'6\'/><line x1=\'3\' y1=\'10\' x2=\'21\' y2=\'10\'/></svg> Select Date</button>'
+                                    ).'
 						</div>';
 
                 
@@ -657,9 +656,47 @@ protected $elasticService;
 				return response()->json(['status'=>true,'html'=>$html]);
 
 			}
-		
+
 
 	}
+
+	/** Updates recruiter_note in both Elasticsearch (read store) and MySQL (write store). */
+	public function recruiterNoteUpdate(Request $request){
+		$appId        = $request->appId;
+		$recruiterNote = $request->recruiter_note ?? '';
+
+		$exists = $this->elasticService->getClient()->exists([
+			'index' => ELASTIC_CANDIDATES,
+			'id'    => $appId,
+		]);
+
+		if ($exists) {
+			$this->elasticService->getClient()->update([
+				'index'  => ELASTIC_CANDIDATES,
+				'id'     => $appId,
+				'body'   => [
+					'doc'          => ['recruiter_note' => $recruiterNote],
+					'doc_as_upsert' => false,
+				],
+				'refresh' => true,
+			]);
+
+			// Keep MySQL write-store in sync (tenant-scoped via company_id)
+			JobApplication::where('id', $appId)
+				->where('company_id', auth()->user()->company_id)
+				->update(['recruiter_note' => $recruiterNote]);
+
+			$cachekeys = ['candidateDetails_version_user_' . $this->user->id];
+			foreach ($cachekeys as $key) {
+				GeneralMethod::cacheClean($key);
+			}
+
+			return response()->json(['status' => true]);
+		}
+
+		return response()->json(['status' => false], 422);
+	}
+
 	public function clientCandidateList(Request $request)
 	{
 		// $candidates = JobApplication::query();
