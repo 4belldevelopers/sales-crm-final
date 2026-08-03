@@ -6303,12 +6303,13 @@ var SVG_ICONS = {
   grad: '<svg width="11" height="11" viewBox="0 0 24 24"><path fill="#64748b" d="M5 13.18v4L12 21l7-3.82v-4L12 17l-7-3.82zM12 3L1 9l11 6 9-4.91V17h2V9L12 3z"/></svg>',
   clock: '<svg width="11" height="11" viewBox="0 0 24 24"><path fill="#64748b" d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z"/></svg>',
   laptop: '<svg width="11" height="11" viewBox="0 0 24 24"><path fill="#64748b" d="M20 18c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2H4c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2H0v2h24v-2h-4zM4 6h16v10H4V6z"/></svg>',
-  chart: '<svg width="12" height="12" viewBox="0 0 24 24"><path fill="#1e3a8a" d="M5 9.2h3V19H5zM10.6 5h2.8v14h-2.8zM16.2 13H19v6h-2.8z"/></svg>',
   note: '<svg width="12" height="12" viewBox="0 0 24 24"><path fill="#1e3a8a" d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>',
   bulb: '<svg width="12" height="12" viewBox="0 0 24 24"><path fill="#1e3a8a" d="M9 21c0 .55.45 1 1 1h4c.55 0 1-.45 1-1v-1H9v1zm3-19C8.14 2 5 5.14 5 9c0 2.38 1.19 4.47 3 5.74V17c0 .55.45 1 1 1h6c.55 0 1-.45 1-1v-2.26c1.81-1.27 3-3.36 3-5.74 0-3.86-3.14-7-7-7z"/></svg>',
   chat: '<svg width="12" height="12" viewBox="0 0 24 24"><path fill="#1e3a8a" d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/></svg>',
-  trophy: '<svg width="16" height="16" viewBox="0 0 24 24"><path fill="#ffffff" d="M19 5h-2V3H7v2H5c-1.1 0-2 .9-2 2v1c0 2.55 1.92 4.63 4.39 4.94A5.01 5.01 0 0 0 11 15.9V18H8v2h8v-2h-3v-2.1c2.25-.45 4-2.45 4-4.9v-1c0-1.1-.9-2-2-2zM5 8V7h2v3.82C5.84 10.4 5 9.3 5 8zm14 0c0 1.3-.84 2.4-2 2.82V7h2v1z"/></svg>',
-  info: '<svg width="10" height="10" viewBox="0 0 24 24"><path fill="#475569" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>'
+  info: '<svg width="10" height="10" viewBox="0 0 24 24"><path fill="#475569" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>',
+  goldStars: '<svg width="54" height="10" viewBox="0 0 120 24"><path fill="#f59e0b" d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z M36 17.27L42.18 21l-1.64-7.03L46 9.24l-7.19-.61L36 2 33.19 8.63 26 9.24l5.46 4.73L29.82 21z M60 17.27L66.18 21l-1.64-7.03L70 9.24l-6.19-.61L60 2 57.19 8.63 50 9.24l5.46 4.73L53.82 21z M84 17.27L90.18 21l-1.64-7.03L94 9.24l-8.19-.61L84 2 81.19 8.63 74 9.24l5.46 4.73L77.82 21z M108 17.27L114.18 21l-1.64-7.03L118 9.24l-10.19-.61L108 2 105.19 8.63 98 9.24l5.46 4.73L101.82 21z"/></svg>',
+  greenCheck: '<svg width="12" height="12" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="#166534"/><path fill="#ffffff" d="M10 15.5l-3.5-3.5 1.4-1.4 2.1 2.1 5.6-5.6 1.4 1.4z"/></svg>',
+  amberClock: '<svg width="12" height="12" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="#b45309"/><path fill="#ffffff" d="M12 7v5l3.5 2.1.8-1.3-2.8-1.7V7z"/></svg>'
 };
 
 /* Helper for rounded card containers */
@@ -6388,10 +6389,10 @@ function buildDef(d){
               body: [[
                 {
                   columns: [
-                    {svg: SVG_ICONS.shield, width: 12, margin: [0, 1, 4, 0]},
+                    {svg: SVG_ICONS.shield, width: 11, margin: [0, 1, 4, 0]},
                     {text:'CONFIDENTIAL',bold:true,fontSize:7.5,color:'#166534'}
                   ],
-                  fillColor: '#dcfce7', margin: [6, 3, 6, 3]
+                  fillColor: '#dcfce7', margin: [8, 4, 8, 4]
                 }
               ]]
             },
@@ -6400,7 +6401,7 @@ function buildDef(d){
           },
           {text:'For Internal Hiring Use Only',fontSize:6.5,color:'#64748b',alignment:'right',margin:[0,2,0,0]}
         ],
-        width: 120
+        width: 125
       }
     ],
     margin: [0, 0, 0, 10]
@@ -6411,10 +6412,10 @@ function buildDef(d){
     table: {
       widths: ['*', '*', '*', '*'],
       body: [[
-        {columns:[{svg:SVG_ICONS.doc,width:11,margin:[0,1,3,0]},{text:[{text:'Report ID: ',color:'#64748b',fontSize:7.5},{text:d.reportId||('JR-'+d.dateStr.replace(/\s+/g,'')+'-00125'),bold:true,fontSize:7.5,color:'#0f172a'}]}],fillColor:'#ffffff',margin:[8,5,8,5]},
-        {columns:[{svg:SVG_ICONS.cal,width:11,margin:[0,1,3,0]},{text:[{text:'Report Date: ',color:'#64748b',fontSize:7.5},{text:d.dateStr,bold:true,fontSize:7.5,color:'#0f172a'}]}],fillColor:'#ffffff',margin:[8,5,8,5]},
-        {columns:[{svg:SVG_ICONS.brain,width:11,margin:[0,1,3,0]},{text:[{text:'AI Version: ',color:'#64748b',fontSize:7.5},{text:'Jero AI v4.5',bold:true,fontSize:7.5,color:'#0f172a'}]}],fillColor:'#ffffff',margin:[8,5,8,5]},
-        {columns:[{svg:SVG_ICONS.user,width:11,margin:[0,1,3,0]},{text:[{text:'Recruiter: ',color:'#64748b',fontSize:7.5},{text:d.recruiterName||'Priya Sharma',bold:true,fontSize:7.5,color:'#0f172a'}]}],fillColor:'#ffffff',margin:[8,5,8,5]}
+        {columns:[{svg:SVG_ICONS.doc,width:11,margin:[0,2,4,0]},{text:[{text:'Report ID: ',color:'#64748b',fontSize:7.5},{text:d.reportId||('JR-'+d.dateStr.replace(/\s+/g,'')+'-00125'),bold:true,fontSize:7.5,color:'#0f172a'}]}],fillColor:'#ffffff',margin:[8,5,8,5]},
+        {columns:[{svg:SVG_ICONS.cal,width:11,margin:[0,2,4,0]},{text:[{text:'Report Date: ',color:'#64748b',fontSize:7.5},{text:d.dateStr,bold:true,fontSize:7.5,color:'#0f172a'}]}],fillColor:'#ffffff',margin:[8,5,8,5]},
+        {columns:[{svg:SVG_ICONS.brain,width:11,margin:[0,2,4,0]},{text:[{text:'AI Version: ',color:'#64748b',fontSize:7.5},{text:'Jero AI v4.5',bold:true,fontSize:7.5,color:'#0f172a'}]}],fillColor:'#ffffff',margin:[8,5,8,5]},
+        {columns:[{svg:SVG_ICONS.user,width:11,margin:[0,2,4,0]},{text:[{text:'Recruiter: ',color:'#64748b',fontSize:7.5},{text:d.recruiterName||'Priya Sharma',bold:true,fontSize:7.5,color:'#0f172a'}]}],fillColor:'#ffffff',margin:[8,5,8,5]}
       ]]
     },
     layout: {
@@ -6424,7 +6425,7 @@ function buildDef(d){
     margin: [0, 0, 0, 12]
   };
 
-  /* 2. HERO SECTION (25% Height Card) */
+  /* 2. HERO SECTION (Candidate Hero Card) */
   var avatarBlock = {
     stack: [
       avatarEl,
@@ -6452,13 +6453,36 @@ function buildDef(d){
 
   var candidateDetails = {
     stack: [
-      {columns:[{text:(d.name||'V Eena'),bold:true,fontSize:18,color:'#0f172a'},{svg:SVG_ICONS.blueCheck,width:14,margin:[4,3,0,0]}]},
-      {text:d.role||'Senior Frontend Developer',bold:true,fontSize:11,color:'#2563eb',margin:[0,2,0,6]},
-      {columns:[{svg:SVG_ICONS.briefcase,width:11,margin:[0,1,5,0]},{text:(d.totalExp||'6.2 Years of Experience'),fontSize:8.5,color:'#334155'}],margin:[0,0,0,3]},
-      {columns:[{svg:SVG_ICONS.company,width:11,margin:[0,1,5,0]},{text:(d.companyName||'ABC Technologies'),fontSize:8.5,color:'#334155'}],margin:[0,0,0,3]},
-      {columns:[{svg:SVG_ICONS.location,width:11,margin:[0,1,5,0]},{text:(d.location||'Hyderabad, Telangana, India'),fontSize:8.5,color:'#334155'}],margin:[0,0,0,0]}
+      {columns:[{text:(d.name||'Nitish Raj'),bold:true,fontSize:18,color:'#0f172a'},{svg:SVG_ICONS.blueCheck,width:14,margin:[4,3,0,0]}]},
+      {text:d.role||'Python Developer',bold:true,fontSize:11,color:'#2563eb',margin:[0,2,0,6]},
+      {columns:[{svg:SVG_ICONS.briefcase,width:11,margin:[0,2,5,0]},{text:(d.totalExp||'6.2 Years of Experience'),fontSize:8.5,color:'#334155'}],margin:[0,0,0,3]},
+      {columns:[{svg:SVG_ICONS.company,width:11,margin:[0,2,5,0]},{text:(d.companyName||'4bell Technology'),fontSize:8.5,color:'#334155'}],margin:[0,0,0,3]},
+      {columns:[{svg:SVG_ICONS.location,width:11,margin:[0,2,5,0]},{text:(d.location||'Hyderabad, Telangana, India'),fontSize:8.5,color:'#334155'}],margin:[0,0,0,0]}
     ],
     width: '*'
+  };
+
+  /* Circular Score Ring Box */
+  var scoreCircle = {
+    stack: [
+      {
+        canvas: [
+          { type: 'circle', x: 30, y: 30, r: 26, color: '#ffffff', lineColor: mc, lineWidth: 3 }
+        ],
+        width: 60,
+        height: 60
+      },
+      {
+        text: (Math.round(matchNum * 10) / 10) + '%',
+        bold: true,
+        fontSize: 15,
+        color: mc,
+        alignment: 'center',
+        margin: [0, -42, 0, 16]
+      }
+    ],
+    alignment: 'center',
+    margin: [0, 0, 0, 4]
   };
 
   var scoreBlock = {
@@ -6467,20 +6491,8 @@ function buildDef(d){
       body: [[{
         stack: [
           {columns:[{text:'OVERALL MATCH',fontSize:7,bold:true,color:'#475569'},{svg:SVG_ICONS.info,width:10,margin:[3,0,0,0]}],alignment:'center',margin:[0,0,0,4]},
-          {
-            table: {
-              widths: [56], heights: [56],
-              body: [[
-                {text:(Math.round(matchNum*10)/10)+'%',bold:true,fontSize:18,color:mc,alignment:'center',fillColor:'#ffffff',margin:[0,16,0,0]}
-              ]]
-            },
-            layout: {
-              hLineWidth:function(){return 2.5;},vLineWidth:function(){return 2.5;},
-              hLineColor:function(){return mc;},vLineColor:function(){return mc;}
-            },
-            alignment: 'center', margin: [0, 0, 0, 4]
-          },
-          {text:'★ ★ ★ ★ ★',color:'#f59e0b',fontSize:9,alignment:'center',margin:[0,0,0,2]},
+          scoreCircle,
+          {svg:SVG_ICONS.goldStars,width:54,alignment:'center',margin:[0,0,0,3]},
           {text:mLabel,fontSize:8,bold:true,color:mc,alignment:'center',margin:[0,0,0,4]},
           {
             table: {
@@ -6509,7 +6521,7 @@ function buildDef(d){
     table: {
       widths: ['*', '*', '*', '*', '*'],
       body: [[
-        {stack:[{columns:[{svg:SVG_ICONS.user,width:11,margin:[0,1,3,0]},{text:'Preferred Role',fontSize:7,color:'#64748b'}]},{text:d.preferredRole||d.role||'Senior Frontend',bold:true,fontSize:8.5,color:'#0f172a',margin:[0,3,0,0]}],fillColor:'#ffffff',margin:[6,8,6,8]},
+        {stack:[{columns:[{svg:SVG_ICONS.user,width:11,margin:[0,1,3,0]},{text:'Preferred Role',fontSize:7,color:'#64748b'}]},{text:d.preferredRole||d.role||'Python Developer',bold:true,fontSize:8.5,color:'#0f172a',margin:[0,3,0,0]}],fillColor:'#ffffff',margin:[6,8,6,8]},
         {stack:[{columns:[{svg:SVG_ICONS.grad,width:11,margin:[0,1,3,0]},{text:'Highest Education',fontSize:7,color:'#64748b'}]},{text:d.education||'B.Tech (CS)',bold:true,fontSize:8.5,color:'#0f172a',margin:[0,3,0,0]}],fillColor:'#ffffff',margin:[6,8,6,8]},
         {stack:[{columns:[{svg:SVG_ICONS.clock,width:11,margin:[0,1,3,0]},{text:'Notice Period',fontSize:7,color:'#64748b'}]},{text:d.noticePeriod||'Immediate',bold:true,fontSize:8.5,color:'#0f172a',margin:[0,3,0,0]}],fillColor:'#ffffff',margin:[6,8,6,8]},
         {stack:[{columns:[{svg:SVG_ICONS.location,width:11,margin:[0,1,3,0]},{text:'Preferred Location',fontSize:7,color:'#64748b'}]},{text:d.prefLocation||'Hyderabad / Remote',bold:true,fontSize:8.5,color:'#0f172a',margin:[0,3,0,0]}],fillColor:'#ffffff',margin:[6,8,6,8]},
@@ -6523,102 +6535,65 @@ function buildDef(d){
     margin: [0, 0, 0, 12]
   };
 
-  /* 4. MATCH BREAKDOWN (Left Column) */
-  var matchBars = [];
-  if(d.metrics && d.metrics.length){
-    d.metrics.forEach(function(m){
-      var rawP = m.val ? parseFloat(m.val.replace(/[^0-9.]/g,'')) : 85;
-      matchBars.push({ label: m.lbl || 'Match', pct: rawP || 85 });
-    });
-  }
-  if(!matchBars.length){
-    matchBars = [
-      {label:'Skills Match', pct:95},
-      {label:'Experience Match', pct:82},
-      {label:'Salary Match', pct:100},
-      {label:'Location Match', pct:90},
-      {label:'Availability Match', pct:100}
-    ];
-  }
-
-  var matchStack = [{columns:[{svg:SVG_ICONS.chart,width:12,margin:[0,1,5,0]},{text:'MATCH BREAKDOWN',bold:true,fontSize:8.5,color:'#0f172a'}],margin:[0,0,0,10]}];
-  matchBars.forEach(function(b){
-    matchStack.push({
-      columns: [
-        {text:b.label,fontSize:7.5,color:'#334155',width:92},
-        {
-          canvas: [
-            {type:'rect',x:0,y:2,w:112,h:5,r:2.5,color:'#e2e8f0'},
-            {type:'rect',x:0,y:2,w:Math.round(112*(b.pct/100)),h:5,r:2.5,color:'#16a34a'}
-          ],
-          width: 118
-        },
-        {text:b.pct+'%',bold:true,fontSize:7.5,color:'#0f172a',alignment:'right',width:'*'}
-      ],
-      margin: [0, 0, 0, 7]
-    });
-  });
-
-  var matchBreakdownCard = roundedCard(matchStack, '#ffffff', '#e2e8f0', 0);
-
-  /* 5. SKILLS INTELLIGENCE (Right Column) */
+  /* 4. SKILLS INTELLIGENCE (FULL PAGE WIDTH - NO Match Breakdown) */
   var skillRows = [
-    [{text:'Skill',bold:true,fontSize:7.5,color:'#2563eb'},{text:'Candidate Experience',bold:true,fontSize:7.5,color:'#2563eb'},{text:'Rating',bold:true,fontSize:7.5,color:'#2563eb'},{text:'Status',bold:true,fontSize:7.5,color:'#2563eb',alignment:'center'}]
+    [
+      {text:'Skill',bold:true,fontSize:8,color:'#2563eb'},
+      {text:'Candidate Experience',bold:true,fontSize:8,color:'#2563eb'},
+      {text:'Rating',bold:true,fontSize:8,color:'#2563eb'},
+      {text:'Status',bold:true,fontSize:8,color:'#2563eb',alignment:'center'}
+    ]
   ];
-  var rawSkills = (d.skillsTable && d.skillsTable.rows && d.skillsTable.rows.length) ? d.skillsTable.rows.map(function(r){
-    return [r[0]||'Skill', r[1]||'Exp', r[2]||'★★★★★', r[3]||'✔'];
+
+  /* Extract & Filter pure candidate skills (excluding screening questions) */
+  var rawSkills = (d.skillsTable && d.skillsTable.rows && d.skillsTable.rows.length) ? d.skillsTable.rows.filter(function(r){
+    var name = (r[0]||'').toString().toLowerCase();
+    return name.indexOf('question') === -1 && name.indexOf('communication rating') === -1 && name.indexOf('comfortable with wfo') === -1;
+  }).map(function(r){
+    return [r[0]||'Skill', r[1]||'Exp', r[2]||'3.5 Years', r[3]||'✔'];
   }) : [
-    ['React', '5 Years', '★★★★★', '✔'],
-    ['JavaScript', '6 Years', '★★★★★', '✔'],
-    ['TypeScript', '2 Years', '★★★★☆', '✔'],
-    ['Redux', '3 Years', '★★★★★', '✔'],
-    ['HTML / CSS', '6 Years', '★★★★★', '✔'],
-    ['REST APIs', '4 Years', '★★★★☆', '✔'],
-    ['Node.js', '1.5 Years', '★★★★☆', '⚠'],
-    ['AWS', 'No Exp.', '★☆☆☆☆', '✖'],
-    ['Docker', 'Beginner', '★★☆☆☆', '⚠']
+    ['Python', 'Exp', '3.5 Years', '✔'],
+    ['JavaScript', 'Exp', '1.0 Years', '✔'],
+    ['HTML / CSS', 'Exp', '0.5 Years', '✔'],
+    ['Web Scraping / Crawling', 'Exp', '1.5 Years', '✔'],
+    ['BeautifulSoup', 'Exp', '1.0 Years', '✔'],
+    ['MySQL', 'Exp', '3.5 Years', '✔'],
+    ['Asynchronous Programming', 'Exp', '2.0 Years', '✔']
   ];
+
   rawSkills.forEach(function(s){
     var stCol = s[3]==='✖'?'#dc2626':s[3]==='⚠'?'#d97706':'#16a34a';
     skillRows.push([
-      {text:s[0],fontSize:8,bold:true,color:'#0f172a'},
-      {text:s[1],fontSize:8,color:'#475569'},
-      {text:s[2],fontSize:7.5,color:'#f59e0b'},
-      {text:s[3],bold:true,fontSize:8.5,color:stCol,alignment:'center'}
+      {text:s[0],fontSize:8.5,bold:true,color:'#0f172a'},
+      {text:s[1],fontSize:8.5,color:'#475569'},
+      {text:s[2],fontSize:8.5,color:'#d97706',bold:true},
+      {columns:[{svg:s[3]==='✖'?SVG_ICONS.amberClock:SVG_ICONS.greenCheck,width:11,margin:[0,1,0,0]}],alignment:'center'}
     ]);
   });
 
   var skillsIntelligenceCard = roundedCard([
-    {columns:[{svg:SVG_ICONS.note,width:12,margin:[0,1,5,0]},{text:'SKILLS INTELLIGENCE',bold:true,fontSize:8.5,color:'#0f172a'}],margin:[0,0,0,8]},
+    {columns:[{svg:SVG_ICONS.note,width:12,margin:[0,1,5,0]},{text:'SKILLS INTELLIGENCE',bold:true,fontSize:9,color:'#0f172a'}],margin:[0,0,0,8]},
     {
-      table: {widths:['*', '*', '*', 32],body:skillRows},
+      table: {widths:[170, 120, 120, '*'],body:skillRows},
       layout: {hLineWidth:function(){return 0.3;},vLineWidth:function(){return 0;},hLineColor:function(){return '#f1f5f9';}}
     }
-  ], '#ffffff', '#e2e8f0', 0);
+  ], '#ffffff', '#e2e8f0', 12);
 
-  var section2Col = {
-    columns: [
-      {stack:[matchBreakdownCard],width:'*'},
-      {stack:[skillsIntelligenceCard],width:'*'}
-    ],
-    columnGap: 12, margin: [0, 0, 0, 12]
-  };
-
-  /* 6. PROFESSIONAL SUMMARY & RECRUITER COMMENTS */
-  var summaryText = d.summary || 'V Eena is a Frontend Developer with more than six years of experience building enterprise web applications using React, JavaScript, TypeScript and Redux.\n\nShe has worked extensively on responsive UI development, REST API integration and agile delivery.\n\nShe demonstrates strong problem-solving abilities, clean code practices and a solid understanding of modern frontend tools and frameworks.\n\nSuitable for Frontend Engineer, UI Developer and React Lead roles.';
+  /* 5. PROFESSIONAL SUMMARY & RECRUITER COMMENTS */
+  var summaryText = d.summary || 'Nitish Raj is a Python Developer with hands-on experience building web scrapers, data processing pipelines, and RESTful microservices using Python, MySQL, and BeautifulSoup.\n\nHe has delivered robust data crawlers and asynchronous threading systems, demonstrating strong analytical and clean code principles.\n\nSuitable for Python Developer, Data Engineer, and Backend Engineer roles.';
   var summaryCard = roundedCard([
     {columns:[{svg:SVG_ICONS.bulb,width:12,margin:[0,1,5,0]},{text:'PROFESSIONAL SUMMARY',bold:true,fontSize:8.5,color:'#0f172a'}],margin:[0,0,0,6]},
     {text:summaryText,fontSize:8,color:'#334155',lineHeight:1.45}
   ], '#ffffff', '#e2e8f0', 0);
 
-  var rnContent = d.rnText || 'Strong frontend developer with solid hands-on experience in React and modern JavaScript. Has delivered multiple enterprise projects with clean and maintainable code. Immediate joiner and a good team player. Recommended to proceed for technical interview.';
+  var rnContent = d.rnText || 'Solid Python engineer with proven expertise in Web Scraping and MySQL backend operations. Clean code style, immediate joiner, recommended to proceed for technical interview.';
   var recruiterCommentsCard = roundedCard([
     {columns:[{svg:SVG_ICONS.chat,width:12,margin:[0,1,5,0]},{text:'RECRUITER COMMENTS',bold:true,fontSize:8.5,color:'#0f172a'}],margin:[0,0,0,6]},
     {text:rnContent,fontSize:8,color:'#334155',lineHeight:1.4,margin:[0,0,0,12]},
     {canvas:[{type:'line',x1:0,y1:0,x2:220,y2:0,lineWidth:0.5,lineColor:'#f1f5f9'}],margin:[0,0,0,10]},
     {
       columns: [
-        {columns:[{svg:SVG_ICONS.user,width:11,margin:[0,1,4,0]},{text:[{text:(d.recruiterName||'Priya Sharma')+'\n',bold:true,fontSize:8,color:'#0f172a'},{text:'Senior Technical Recruiter',fontSize:7,color:'#64748b'}]}]},
+        {columns:[{svg:SVG_ICONS.user,width:11,margin:[0,1,4,0]},{text:[{text:(d.recruiterName||'Aayush Jain')+'\n',bold:true,fontSize:8,color:'#0f172a'},{text:'Senior Technical Recruiter',fontSize:7,color:'#64748b'}]}]},
         {columns:[{svg:SVG_ICONS.cal,width:11,margin:[0,1,4,0]},{text:d.dateStr,fontSize:7.5,color:'#64748b'}],alignment:'right'}
       ]
     }
@@ -6632,32 +6607,37 @@ function buildDef(d){
     columnGap: 12, margin: [0, 0, 0, 12]
   };
 
-  /* 7. VERIFICATION STATUS */
+  /* 6. VERIFICATION STATUS CARD WITH SVG CHECKMARKS */
   var verificationCard = roundedCard([
     {columns:[{svg:SVG_ICONS.shield,width:12,margin:[0,1,5,0]},{text:'VERIFICATION STATUS',bold:true,fontSize:8.5,color:'#2563eb'}],margin:[0,0,0,8]},
     {
       columns: [
-        {stack:[
-          {text:'Resume Verified  ✔',fontSize:8,color:'#166534',margin:[0,2,0,2]},
-          {text:'Email Verified  ✔',fontSize:8,color:'#166534',margin:[0,2,0,2]},
-          {text:'Phone Verified  ✔',fontSize:8,color:'#166534',margin:[0,2,0,2]},
-          {text:'LinkedIn Verified  ✔',fontSize:8,color:'#166534',margin:[0,2,0,2]}
-        ],width:'*'},
-        {stack:[
-          {text:'Documents Verified  🕒 Pending',fontSize:8,color:'#b45309',margin:[0,2,0,2]},
-          {text:'Identity Verified  🕒 Pending',fontSize:8,color:'#b45309',margin:[0,2,0,2]},
-          {text:'Education Verified  ✔',fontSize:8,color:'#166534',margin:[0,2,0,2]}
-        ],width:'*'},
-        {stack:[
-          {text:'Education Verified  ✔',fontSize:8,color:'#166534',margin:[0,2,0,2]},
-          {text:'Experience Verified  ✔',fontSize:8,color:'#166534',margin:[0,2,0,2]},
-          {text:'References Verified  🕒 Pending',fontSize:8,color:'#b45309',margin:[0,2,0,2]}
-        ],width:'*'}
+        {
+          stack: [
+            {columns:[{svg:SVG_ICONS.greenCheck,width:11,margin:[0,1,4,0]},{text:'Resume Verified',fontSize:8,color:'#166534'}],margin:[0,2,0,3]},
+            {columns:[{svg:SVG_ICONS.greenCheck,width:11,margin:[0,1,4,0]},{text:'Email Verified',fontSize:8,color:'#166534'}],margin:[0,2,0,3]}
+          ],
+          width: '*'
+        },
+        {
+          stack: [
+            {columns:[{svg:SVG_ICONS.amberClock,width:11,margin:[0,1,4,0]},{text:'Documents Verified (Pending)',fontSize:8,color:'#b45309'}],margin:[0,2,0,3]},
+            {columns:[{svg:SVG_ICONS.amberClock,width:11,margin:[0,1,4,0]},{text:'Identity Verified (Pending)',fontSize:8,color:'#b45309'}],margin:[0,2,0,3]}
+          ],
+          width: '*'
+        },
+        {
+          stack: [
+            {columns:[{svg:SVG_ICONS.greenCheck,width:11,margin:[0,1,4,0]},{text:'Education Verified',fontSize:8,color:'#166534'}],margin:[0,2,0,3]},
+            {columns:[{svg:SVG_ICONS.greenCheck,width:11,margin:[0,1,4,0]},{text:'Experience Verified',fontSize:8,color:'#166534'}],margin:[0,2,0,3]}
+          ],
+          width: '*'
+        }
       ]
     }
   ], '#ffffff', '#e2e8f0', 12);
 
-  /* 8. FINAL HIRING RECOMMENDATION */
+  /* 7. FINAL HIRING RECOMMENDATION (Font Reduced 20% for Perfect Alignment) */
   var finalRecommendationCard = roundedCard([
     {
       columns: [
@@ -6665,59 +6645,54 @@ function buildDef(d){
           stack: [
             {
               columns: [
-                {
-                  canvas: [
-                    {type:'circle',x:16,y:16,r:16,color:'#15803d'}
-                  ],
-                  width: 36
-                },
+                {svg: SVG_ICONS.greenCheck, width: 22, margin: [0, 2, 6, 0]},
                 {
                   stack: [
-                    {text:'★ ★ ★ ★ ★',color:'#f59e0b',fontSize:9.5,margin:[0,0,0,2]},
-                    {text:'RECOMMENDED FOR INTERVIEW',bold:true,fontSize:11.5,color:'#166534'}
+                    {svg: SVG_ICONS.goldStars, width: 54, margin: [0, 0, 0, 2]},
+                    {text:'RECOMMENDED FOR INTERVIEW',bold:true,fontSize:9.5,color:'#166534'}
                   ],
                   width: '*'
                 }
               ],
-              columnGap: 8
+              columnGap: 6
             }
           ],
           width: '*'
         },
-        {stack:[{text:'Overall Confidence',fontSize:7,color:'#64748b',alignment:'center'},{text:'96%',bold:true,fontSize:12,color:'#166534',alignment:'center',margin:[0,2,0,0]}],width:85},
-        {stack:[{text:'Recommended Round',fontSize:7,color:'#64748b',alignment:'center'},{text:'Technical L1',bold:true,fontSize:10.5,color:'#166534',alignment:'center',margin:[0,2,0,0]}],width:95},
-        {stack:[{text:'Priority',fontSize:7,color:'#64748b',alignment:'center'},{text:'HIGH',bold:true,fontSize:10.5,color:'#166534',alignment:'center',margin:[0,2,0,0]}],width:65},
-        {stack:[{text:'Expected Joining',fontSize:7,color:'#64748b',alignment:'center'},{text:'Immediate',bold:true,fontSize:10.5,color:'#166534',alignment:'center',margin:[0,2,0,0]}],width:85}
+        {stack:[{text:'Overall Confidence',fontSize:6.5,color:'#64748b',alignment:'center'},{text:'96%',bold:true,fontSize:11,color:'#166534',alignment:'center',margin:[0,2,0,0]}],width:85},
+        {stack:[{text:'Recommended Round',fontSize:6.5,color:'#64748b',alignment:'center'},{text:'Technical L1',bold:true,fontSize:9.5,color:'#166534',alignment:'center',margin:[0,2,0,0]}],width:95},
+        {stack:[{text:'Priority',fontSize:6.5,color:'#64748b',alignment:'center'},{text:'HIGH',bold:true,fontSize:9.5,color:'#166534',alignment:'center',margin:[0,2,0,0]}],width:60},
+        {stack:[{text:'Expected Joining',fontSize:6.5,color:'#64748b',alignment:'center'},{text:'Immediate',bold:true,fontSize:9.5,color:'#166534',alignment:'center',margin:[0,2,0,0]}],width:80}
       ]
     }
   ], '#f0fdf4', '#bbf7d0', 12);
 
-  /* 9. DARK NAVY FOOTER */
+  /* 8. DARK NAVY FOOTER (Font Reduced 15% for Perfect Alignment) */
   var footerBlock = {
     table: {widths:['*'],body:[[{
       columns: [
         {
           stack: [
-            {text:'ABOUT THIS REPORT',bold:true,fontSize:7,color:'#94a3b8'},
-            {text:'This report is generated using advanced AI algorithms and data from multiple sources. Final hiring decisions should include technical and managerial interviews.',fontSize:6,color:'#64748b',margin:[0,2,0,0]}
+            {text:'ABOUT THIS REPORT',bold:true,fontSize:6,color:'#94a3b8'},
+            {text:'This report is generated using advanced AI algorithms and data from multiple sources. Final hiring decisions should include technical and managerial interviews.',fontSize:5,color:'#64748b',margin:[0,2,0,0]}
           ],
-          width: 170
+          width: 160
         },
         {
           stack: [
-            {text:'Generated using Jero AI Recruitment Intelligence',fontSize:7,color:'#cbd5e1',alignment:'center',margin:[0,6,0,0]}
+            {text:'Generated using Jero AI Recruitment Intelligence',fontSize:6,color:'#cbd5e1',alignment:'center',margin:[0,5,0,0]}
           ],
           width: '*'
         },
         {
           stack: [
-            {text:'www.jero.works',bold:true,fontSize:8.5,color:'#ffffff',alignment:'right'},
-            {text:'© 2026 Jero AI. All rights reserved.',fontSize:6,color:'#64748b',alignment:'right',margin:[0,2,0,0]}
+            {text:'www.jero.works',bold:true,fontSize:7.5,color:'#ffffff',alignment:'right'},
+            {text:'© 2026 Jero AI. All rights reserved.',fontSize:5,color:'#64748b',alignment:'right',margin:[0,2,0,0]}
           ],
-          width: 130
+          width: 120
         }
       ],
-      fillColor:'#0f172a',margin:[10,8,10,8]
+      fillColor:'#0f172a',margin:[8,6,8,6]
     }]]},
     layout: 'noBorders'
   };
@@ -6728,7 +6703,7 @@ function buildDef(d){
     metaRow,
     heroCard,
     quickInfoStrip,
-    section2Col,
+    skillsIntelligenceCard,
     sectionSummaryComments,
     verificationCard,
     finalRecommendationCard,
