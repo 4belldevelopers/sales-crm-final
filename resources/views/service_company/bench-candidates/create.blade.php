@@ -375,6 +375,7 @@ if($snp_mode== 1){
               <div class="col-lg-8 col-xl-8">
                 {{-- <input class="select-file w-100 mb-2 dropzone bg-light " accept=".png,.jpg,.jpeg,.pdf,.doc,.docx,.xls,.xlsx,.rtf" type="file" > --}}
                 <input type="hidden" name="uploaded_file_path" id="uploaded_file_path">
+                <input type="hidden" name="resume_original_name" id="resume_original_name" value="">
                 <div class="fv-row"> <span class="form-text text-muted d-block">*Please upload the resume (Max file size 2MB). Allowed file types: PDF or Word.</span> </div>
                 <!--end::Input group-->
               </div>
@@ -1109,6 +1110,8 @@ $(document).ready(function () {
                     + '<span><strong>Upload complete!</strong> Resume ready — fill in the form and save.</span>'
                 ).show();
                 $('#uploaded_file_path').val('');
+                $('#resume_original_name').val('');
+                var ri = document.getElementById('resume'); if (ri) ri.value = ''; // prevent multipart file on submit
             } else if (data.state === 'failed') {
                 if (typeof _showUploadError === 'function') {
                     _showUploadError(data.error || 'Upload failed. Please remove and try again.');
@@ -1178,6 +1181,7 @@ $(document).ready(function () {
         $('#resume').val('');
         $('#resumeCheck').val('');
         $('#uploaded_file_path').val('');
+        $('#resume_original_name').val('');
         $('.download-file').addClass('d-none');
     }
 
@@ -1313,6 +1317,7 @@ $(document).ready(function () {
                     +'<span><strong>Upload complete!</strong> Resume uploaded &amp; queued for parsing.</span>'
                 ).show();
                 $('#uploaded_file_path').val(r.file_path || '');
+                $('#resume_original_name').val(r.original_name || file.name || '');
                 $('#resumeCheck').val('1');
                 showUploadedCard(file);
                 if (r.resume_upload_id) _startParsePoller(r.resume_upload_id);

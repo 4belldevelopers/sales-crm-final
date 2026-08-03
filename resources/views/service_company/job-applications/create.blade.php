@@ -436,6 +436,7 @@
               <div class="col-lg-8 col-xl-8">
                 {{-- <input class="select-file w-100 mb-2 dropzone bg-light " accept=".png,.jpg,.jpeg,.pdf,.doc,.docx,.xls,.xlsx,.rtf" type="file" > --}}
                 <input type="hidden" name="uploaded_file_path" id="uploaded_file_path">
+                <input type="hidden" name="resume_original_name" id="resume_original_name" value="">
                 <div class="fv-row"> <span class="form-text text-muted d-block">*Please upload the resume (Max file size 2MB). Allowed file types: PDF or Word.</span> </div>
                 <!--end::Input group-->
               </div>
@@ -1385,7 +1386,10 @@ $(document).ready(function () {
                     + '<circle cx="12" cy="12" r="10"/><polyline points="9 12 11 14 16 9"/></svg>'
                     + '<span><strong>Upload complete!</strong> Resume ready — fill in the form and save.</span>'
                 ).show();
-                $('#uploaded_file_path').val('');  // v2 uses session_uuid, not file path
+                $('#uploaded_file_path').val('');   // v2 uses session_uuid, not file path
+                $('#resume_original_name').val('');
+                $('#resumeCheck').val('1');
+                var ri = document.getElementById('resume'); if (ri) ri.value = ''; // prevent multipart file on submit
             } else if (data.state === 'failed') {
                 if (typeof _showUploadError === 'function') {
                     _showUploadError(data.error || 'Upload failed. Please remove and try again.');
@@ -1664,6 +1668,7 @@ $(document).ready(function () {
                 ).show();
 
                 $('#uploaded_file_path').val(r.file_path || '');
+                $('#resume_original_name').val(r.original_name || file.name || '');
                 showUploadedCard(file, null);
 
                 if (r.resume_upload_id) _startParsePoller(r.resume_upload_id);
@@ -3824,7 +3829,7 @@ document.addEventListener('DOMContentLoaded', function () {
           // document.getElementById('output').textContent = resumeText;
 
            const cleanText = normalizeResumeText(resumeText);
-         // re_test(cleanText);
+         re_test(cleanText);
 
 
           // Extract name, email, mobile
@@ -3853,7 +3858,7 @@ document.addEventListener('DOMContentLoaded', function () {
             // Display extracted text
             // document.getElementById('output').textContent = resumeText;
              const cleanText = normalizeResumeText(resumeText);
-            //re_test(cleanText);
+            re_test(cleanText);
 
             // Extract name, email, mobile, and skills (similar to the PDF example)
             const nameRegex = /([A-Z]+ [A-Z]+) \w+/i;

@@ -374,6 +374,7 @@ $currencySymbole = GeneralMethod::currencySymbole();
             <input type="hidden" name="company_id" value="{{ @$company_id }}" id="company_id" />
             <input type="hidden" name="resumeCheck" value="1" id="resumeCheck" />
             <input type="hidden" name="resume_session_uuid" id="resume_session_uuid" value="">
+            <input type="hidden" name="resume_original_name" id="resume_original_name" value="">
             <input type="hidden" name="AddJobWiseCondidateRankRow" id="AddJobWiseCondidateRankRow" value="{{ (@$AddJobWiseCondidateRankRow) ? $AddJobWiseCondidateRankRow : '' }}">
           <div class="fc">
             <!-- Upload + Career Summary -->
@@ -1470,6 +1471,8 @@ $(document).ready(function () {
                     + '<span><strong>Upload complete!</strong> Resume ready — fill in the form and save.</span>'
                 ).show();
                 $('#uploaded_file_path').val('');
+                $('#resume_original_name').val('');
+                var ri = document.getElementById('resume'); if (ri) ri.value = ''; // prevent multipart file on submit
             } else if (data.state === 'failed') {
                 if (typeof _showUploadError === 'function') {
                     _showUploadError(data.error || 'Upload failed. Please remove and try again.');
@@ -1536,6 +1539,7 @@ $(document).ready(function () {
         $('#resume').val('');
         $('#resumeCheck').val('');
         $('#uploaded_file_path').val('');
+        $('#resume_original_name').val('');
         $('.download-file').addClass('d-none');
     }
 
@@ -1606,6 +1610,7 @@ $(document).ready(function () {
                     +'<span><strong>Upload complete!</strong> Resume uploaded successfully.</span>'
                 ).show();
                 $('#uploaded_file_path').val(r.file_path || '');
+                $('#resume_original_name').val(r.original_name || file.name || '');
                 $('#resumeCheck').val('1');
                 showUploadedCard(file);
             } else {

@@ -2298,7 +2298,13 @@ protected $elasticService;
 			DB::table('job_assign')->insert($values);
 		}
 
-		if ($request->hasFile('resume')) {
+		if ($resumeSession) {
+			// v2 path: file moved to company CDN path in the claim block above.
+			$r2ResumeUrl = $finalResumeUrl;
+			DB::table('job_applications')
+				->where('id', $jobApplication->id)
+				->update(['resume' => $r2ResumeUrl]);
+		} elseif ($request->hasFile('resume')) {
 
 			$companyNameR2 = DB::table('companies')
 			->where('id',auth()->user()->company_id)
@@ -2309,26 +2315,21 @@ protected $elasticService;
 			$year  = date('Y');
             $month = date('m');
 
-			$tempPath = session('resume_temp_path');
-			$full_name = session('resume_original_name');
-			UploadResumeToTestRTwo::dispatch($tempPath, $full_name,$jobApplication->id,$companyNameRTwo,$year,$month)->onConnection('emails');
-
-			$fileUrl = "https://file.jero.works/Companies/{$companyNameRTwo}/Resumes/{$year}/{$month}/{$full_name}";
-
-			DB::table('job_applications')
-							->where('id', $jobApplication->id)
-							->update(['resume' =>$fileUrl]);
-							session()->forget([
-								'resume_temp_path',
-								'resume_original_name'
-							]);
-
-		} elseif ($resumeSession) {
-			// v2 path: file moved to company CDN path in the claim block above.
-			$r2ResumeUrl = $finalResumeUrl;
-			DB::table('job_applications')
-				->where('id', $jobApplication->id)
-				->update(['resume' => $r2ResumeUrl]);
+			$tempPath  = $request->input('uploaded_file_path') ?: session('resume_temp_path');
+			$full_name = $request->input('resume_original_name') ?: session('resume_original_name');
+			if ($tempPath && $full_name) {
+				UploadResumeToTestRTwo::dispatch($tempPath, $full_name,$jobApplication->id,$companyNameRTwo,$year,$month)->onConnection('emails');
+				$fileUrl = "https://file.jero.works/Companies/{$companyNameRTwo}/Resumes/{$year}/{$month}/{$full_name}";
+				DB::table('job_applications')
+								->where('id', $jobApplication->id)
+								->update(['resume' =>$fileUrl]);
+				session()->forget(['resume_temp_path', 'resume_original_name']);
+			} else {
+				\Log::warning('v1 upload: missing tempPath or filename on form submit — resume not saved', [
+					'company_id' => auth()->user()->company_id,
+					'job_application_id' => $jobApplication->id ?? null,
+				]);
+			}
 		}
 
 		// Guard: do not wipe the resume URL when v2 already set it above.
@@ -5882,10 +5883,52 @@ protected $elasticService;
 		}
          //  dd("dkd");
 
+		// ── v2 pre-flight: validate resume_session_uuid ────────────────────────────
+		$resumeSession = null;
+		$finalResumeUrl = null;
+		if (config('resumes.features.submit_with_session') && $request->filled('resume_session_uuid')) {
+			$resumeSession = ResumeUpload::byUuid($request->input('resume_session_uuid'))
+				->forCompany($company_id)->first();
+			if (!$resumeSession) {
+				return Reply::dataOnly(['status' => 'error', 'msgType' => 'warning',
+					'message' => 'Resume upload session not found. Please upload the resume again.']);
+			}
+			if ($resumeSession->status !== ResumeUploadStatus::Uploaded->value) {
+				return Reply::dataOnly(['status' => 'error', 'msgType' => 'warning',
+					'message' => 'Resume upload is not yet complete. Please wait for the upload to finish and try again.']);
+			}
+		}
+		// ─────────────────────────────────────────────────────────────────────────────
+
 		DB::beginTransaction();
 		try {
 
 		$jobApplication->save();
+
+		// ── v2 atomic claim ───────────────────────────────────────────────────────
+		if ($resumeSession) {
+			$claimed = ResumeUpload::where('id', $resumeSession->id)
+				->where('company_id', $company_id)
+				->where('status', ResumeUploadStatus::Uploaded->value)
+				->update(['status' => ResumeUploadStatus::Completed->value, 'updated_at' => now()]);
+			if ($claimed === 0) {
+				DB::rollBack();
+				return Reply::dataOnly(['status' => 'error', 'msgType' => 'warning',
+					'message' => 'Resume upload session is no longer valid. Please upload again.']);
+			}
+			$r2Exists = false;
+			try { $r2Exists = Storage::disk('r2')->exists('resumes/' . $resumeSession->uuid); } catch (\Throwable) {}
+			if (!$r2Exists) {
+				ResumeUpload::where('id', $resumeSession->id)
+					->where('status', ResumeUploadStatus::Completed->value)
+					->update(['status' => ResumeUploadStatus::Uploaded->value, 'updated_at' => now()]);
+				DB::rollBack();
+				return Reply::dataOnly(['status' => 'error', 'msgType' => 'warning',
+					'message' => 'Uploaded file not found in storage. Please upload the resume again.']);
+			}
+			$finalResumeUrl = app(\App\Services\ResumeUploadSession::class)->moveToCompanyPath($resumeSession);
+		}
+		// ─────────────────────────────────────────────────────────────────────────────
 
 
 		if ($request->has('YearskillId') && is_array($request->input('YearskillId'))) {
@@ -5974,13 +6017,24 @@ protected $elasticService;
 		}
 		//GeneralMethod :: manageTimeline(auth()->user()->id, $jobApplication->id, $jobApplication->job_id, $request->status_id, $status_name, 'Successfully Application  Update ');
 			//GeneralMethod :: manageTimeline(auth()->user()->id, $jobApplication->id, $jobApplication->job_id, $request->status_id, $status_name, 'Successfully Application  Update ');
-		// Resume handling on UPDATE mirrors the two-stage flow used by store():
-		//   - Ajax pre-upload writes to R2 temp and stashes the path in session.
-		//   - Submit dispatches UploadResumeToTestRTwo to move temp → final R2
-		//     location, then persists the final URL on the row.
-		//   - If user picked nothing new, the existing resume column is preserved.
-		if ($request->hasFile('resume')) {
-
+		// Resume handling on UPDATE: v2 session takes priority over v1 file upload.
+		// If no resume change: existing resume column is preserved (resumeCheck guard below).
+		if ($resumeSession) {
+			DB::table('job_applications')
+				->where('id', $jobApplication->id)
+				->update(['resume' => $finalResumeUrl]);
+			ResumeUpload::where('id', $resumeSession->id)
+				->where('company_id', $company_id)
+				->where('status', ResumeUploadStatus::Completed->value)
+				->update([
+					'linked_candidate_id' => $jobApplication->id,
+					'r2_url'              => $finalResumeUrl,
+					'updated_at'          => now(),
+				]);
+			UploadSessionAudit::record($resumeSession->id, 'ActionUpdateLinked', [
+				'candidate_id' => $jobApplication->id,
+			], $company_id, auth()->id());
+		} elseif ($request->hasFile('resume')) {
 			$companyNameR2 = DB::table('companies')
 			->where('id',auth()->user()->company_id)
 			->value('company_name');
@@ -5988,23 +6042,23 @@ protected $elasticService;
 			$companyNameR2 = preg_replace('/[^a-z0-9_-]/i','_', $companyNameR2);
 			$companyNameRTwo = $companyNameR2 . '_' . auth()->user()->company_id;
 			$year  = date('Y');
-            $month = date('m');
+			$month = date('m');
 
-			$tempPath = session('resume_temp_path');
-			$full_name = session('resume_original_name');
-			UploadResumeToTestRTwo::dispatch($tempPath, $full_name,$jobApplication->id,$companyNameRTwo,$year,$month)->onConnection('emails');
-
-			$fileUrl = "https://file.jero.works/Companies/{$companyNameRTwo}/Resumes/{$year}/{$month}/{$full_name}";
-
-			DB::table('job_applications')
-							->where('id', $jobApplication->id)
-							->update(['resume' =>$fileUrl]);
-							session()->forget([
-								'resume_temp_path',
-								'resume_original_name'
-							]);
-
-
+			$tempPath  = $request->input('uploaded_file_path') ?: session('resume_temp_path');
+			$full_name = $request->input('resume_original_name') ?: session('resume_original_name');
+			if ($tempPath && $full_name) {
+				UploadResumeToTestRTwo::dispatch($tempPath, $full_name, $jobApplication->id, $companyNameRTwo, $year, $month)->onConnection('emails');
+				$fileUrl = "https://file.jero.works/Companies/{$companyNameRTwo}/Resumes/{$year}/{$month}/{$full_name}";
+				DB::table('job_applications')
+					->where('id', $jobApplication->id)
+					->update(['resume' => $fileUrl]);
+				session()->forget(['resume_temp_path', 'resume_original_name']);
+			} else {
+				\Log::warning('v1 upload: missing tempPath or filename on form submit — resume not saved', [
+					'company_id'         => auth()->user()->company_id,
+					'job_application_id' => $jobApplication->id ?? null,
+				]);
+			}
 		}
 
 		if(empty($request->resumeCheck)){
@@ -10493,7 +10547,13 @@ protected $elasticService;
 			DB::table('job_assign')->insert($values);
 		}
 
-		if ($request->hasFile('resume')) {
+		if ($resumeSession) {
+			// v2 path: file moved to company CDN path in the claim block above.
+			$r2ResumeUrl = $finalResumeUrl;
+			DB::table('job_applications')
+				->where('id', $jobApplicationGet->id)
+				->update(['resume' => $r2ResumeUrl]);
+		} elseif ($request->hasFile('resume')) {
 
 		   $companyNameR2 = DB::table('companies')
 			->where('id',auth()->user()->company_id)
@@ -10504,25 +10564,21 @@ protected $elasticService;
 			$year  = date('Y');
             $month = date('m');
 
-			$tempPath = session('resume_temp_path');
-			$full_name = session('resume_original_name');
-
-			UploadResumeToTestRTwo::dispatch($tempPath, $full_name,$jobApplicationGet->id,$companyNameRTwo,$year,$month)->onConnection('emails');
-			$fileUrl = "https://file.jero.works/Companies/{$companyNameRTwo}/Resumes/{$year}/{$month}/{$full_name}";
-			DB::table('job_applications')
-							->where('id', $jobApplicationGet->id)
-							->update(['resume' =>$fileUrl]);
-							session()->forget([
-								'resume_temp_path',
-								'resume_original_name'
-							]);
-
-		} elseif ($resumeSession) {
-			// v2 path: file moved to company CDN path in the claim block above.
-			$r2ResumeUrl = $finalResumeUrl;
-			DB::table('job_applications')
-				->where('id', $jobApplicationGet->id)
-				->update(['resume' => $r2ResumeUrl]);
+			$tempPath  = $request->input('uploaded_file_path') ?: session('resume_temp_path');
+			$full_name = $request->input('resume_original_name') ?: session('resume_original_name');
+			if ($tempPath && $full_name) {
+				UploadResumeToTestRTwo::dispatch($tempPath, $full_name,$jobApplicationGet->id,$companyNameRTwo,$year,$month)->onConnection('emails');
+				$fileUrl = "https://file.jero.works/Companies/{$companyNameRTwo}/Resumes/{$year}/{$month}/{$full_name}";
+				DB::table('job_applications')
+								->where('id', $jobApplicationGet->id)
+								->update(['resume' =>$fileUrl]);
+				session()->forget(['resume_temp_path', 'resume_original_name']);
+			} else {
+				\Log::warning('v1 upload: missing tempPath or filename on form submit — resume not saved', [
+					'company_id' => auth()->user()->company_id,
+					'job_application_id' => $jobApplicationGet->id ?? null,
+				]);
+			}
 		}
 
 		if(empty($request->resumeCheck) && !$resumeSession){
