@@ -6324,22 +6324,17 @@ function buildDef(d){
   if(d.isImmediate) badgeSpans.push({text:' Immediate Joiner ',bold:true,fontSize:9,color:'#16a34a',background:'#dcfce7'},{text:'  '});
   badgeSpans.push({text:' JERO Verified ',bold:true,fontSize:9,color:'#1d4ed8',background:'#dbeafe'});
 
-  /* Recruiter Notes card */
+  /* Recruiter Notes card — mirrors the summary card structure to avoid a per-frame
+     layout-function dispatch overhead in the original bespoke table (was 25s+). */
   var rnCard=null;
   if(d.hasRN&&d.rnText){
     rnCard={
       table:{widths:['*'],body:[
         [{text:'RECRUITER NOTES & COMMENTS',bold:true,fontSize:8,color:'#9d174d',characterSpacing:0.9,fillColor:'#fdf2f8',margin:[12,8,12,8]}],
-        [{text:d.rnText,fontSize:10,color:'#374151',italics:true,lineHeight:1.8,margin:[14,14,14,14]}]
+        [{text:d.rnText,fontSize:10,color:'#374151',lineHeight:1.5,margin:[14,14,14,14]}]
       ]},
-      layout:{
-        hLineWidth:function(i,n){return(i===0||i===n.table.body.length)?0.5:0;},
-        vLineWidth:function(){return 0.5;},
-        hLineColor:function(i){return i===0?'#be185d':'#f3e8ff';},
-        vLineColor:function(){return '#f3e8ff';},
-        paddingTop:function(){return 0;},paddingBottom:function(){return 0;},
-        paddingLeft:function(){return 0;},paddingRight:function(){return 0;}
-      },margin:[0,0,0,14]
+      layout:'noBorders',
+      margin:[0,0,0,14]
     };
   }
 
@@ -6491,10 +6486,15 @@ window.cdrExportProfilePDF = function(triggerEl, fromRdc){
   var sumEl=wrap.querySelector('.summary-text');
   var summary=sumEl?(sumEl.textContent||'').trim():'';
   if(!summary) summary='No professional summary available.';
+  /* Cap summary to 2000 chars — pdfkit text layout is O(n^2) on a single giant
+     paragraph and stalls getBlob() well past 45s on bloated content. */
+  if(summary.length>2000) summary=summary.substring(0,2000).replace(/\s+\S*$/,'') + '…';
 
   var rnEl=wrap.querySelector('.po-recruiter-note-text');
   var rnText=rnEl?(rnEl.innerText||rnEl.textContent||'').trim():'';
   var hasRN=!!rnText;
+  /* Same cap for recruiter notes — same O(n^2) failure mode. */
+  if(rnText.length>1500) rnText=rnText.substring(0,1500).replace(/\s+\S*$/,'') + '…';
 
   var companyName='Company', recruiterName='';
   wrap.querySelectorAll('.ownership-row').forEach(function(row){
