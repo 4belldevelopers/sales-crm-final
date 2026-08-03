@@ -6312,6 +6312,24 @@ var SVG_ICONS = {
   amberClock: '<svg width="12" height="12" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="#b45309"/><path fill="#ffffff" d="M12 7v5l3.5 2.1.8-1.3-2.8-1.7V7z"/></svg>'
 };
 
+/* Helper for perfectly aligned icon + text row */
+function iconLabelRow(svgIcon, textContent, iconWidth, textColor, fontSz, isBold) {
+  var w = iconWidth || 11;
+  var textObj = (typeof textContent === 'object')
+    ? Object.assign({ margin: [4, 0, 0, 0] }, textContent)
+    : { text: textContent, fontSize: fontSz || 8, bold: !!isBold, color: textColor || '#0f172a', margin: [4, 0, 0, 0] };
+  return {
+    table: {
+      widths: [w, '*'],
+      body: [[
+        { svg: svgIcon, width: w, margin: [0, 1, 0, 0] },
+        textObj
+      ]]
+    },
+    layout: 'noBorders'
+  };
+}
+
 /* Helper for rounded card containers */
 function roundedCard(stackContent, bgFill, borderStroke, mb) {
   var bg = bgFill || '#ffffff';
@@ -6412,10 +6430,10 @@ function buildDef(d){
     table: {
       widths: ['*', '*', '*', '*'],
       body: [[
-        {columns:[{svg:SVG_ICONS.doc,width:11,margin:[0,2,4,0]},{text:[{text:'Report ID: ',color:'#64748b',fontSize:7.5},{text:d.reportId||('JR-'+d.dateStr.replace(/\s+/g,'')+'-00125'),bold:true,fontSize:7.5,color:'#0f172a'}]}],fillColor:'#ffffff',margin:[8,5,8,5]},
-        {columns:[{svg:SVG_ICONS.cal,width:11,margin:[0,2,4,0]},{text:[{text:'Report Date: ',color:'#64748b',fontSize:7.5},{text:d.dateStr,bold:true,fontSize:7.5,color:'#0f172a'}]}],fillColor:'#ffffff',margin:[8,5,8,5]},
-        {columns:[{svg:SVG_ICONS.brain,width:11,margin:[0,2,4,0]},{text:[{text:'AI Version: ',color:'#64748b',fontSize:7.5},{text:'Jero AI v4.5',bold:true,fontSize:7.5,color:'#0f172a'}]}],fillColor:'#ffffff',margin:[8,5,8,5]},
-        {columns:[{svg:SVG_ICONS.user,width:11,margin:[0,2,4,0]},{text:[{text:'Recruiter: ',color:'#64748b',fontSize:7.5},{text:d.recruiterName||'Priya Sharma',bold:true,fontSize:7.5,color:'#0f172a'}]}],fillColor:'#ffffff',margin:[8,5,8,5]}
+        {stack:[iconLabelRow(SVG_ICONS.doc, {text:[{text:'Report ID: ',color:'#64748b',fontSize:7.5},{text:d.reportId||('JR-'+d.dateStr.replace(/\s+/g,'')+'-00125'),bold:true,fontSize:7.5,color:'#0f172a'}]}, 11)], fillColor:'#ffffff', margin:[8,5,8,5]},
+        {stack:[iconLabelRow(SVG_ICONS.cal, {text:[{text:'Report Date: ',color:'#64748b',fontSize:7.5},{text:d.dateStr,bold:true,fontSize:7.5,color:'#0f172a'}]}, 11)], fillColor:'#ffffff', margin:[8,5,8,5]},
+        {stack:[iconLabelRow(SVG_ICONS.brain, {text:[{text:'AI Version: ',color:'#64748b',fontSize:7.5},{text:'Jero AI v4.5',bold:true,fontSize:7.5,color:'#0f172a'}]}, 11)], fillColor:'#ffffff', margin:[8,5,8,5]},
+        {stack:[iconLabelRow(SVG_ICONS.user, {text:[{text:'Recruiter: ',color:'#64748b',fontSize:7.5},{text:d.recruiterName||'Priya Sharma',bold:true,fontSize:7.5,color:'#0f172a'}]}, 11)], fillColor:'#ffffff', margin:[8,5,8,5]}
       ]]
     },
     layout: {
@@ -6453,36 +6471,37 @@ function buildDef(d){
 
   var candidateDetails = {
     stack: [
-      {columns:[{text:(d.name||'Nitish Raj'),bold:true,fontSize:18,color:'#0f172a'},{svg:SVG_ICONS.blueCheck,width:14,margin:[4,3,0,0]}]},
-      {text:d.role||'Python Developer',bold:true,fontSize:11,color:'#2563eb',margin:[0,2,0,6]},
-      {columns:[{svg:SVG_ICONS.briefcase,width:11,margin:[0,2,5,0]},{text:(d.totalExp||'6.2 Years of Experience'),fontSize:8.5,color:'#334155'}],margin:[0,0,0,3]},
-      {columns:[{svg:SVG_ICONS.company,width:11,margin:[0,2,5,0]},{text:(d.companyName||'4bell Technology'),fontSize:8.5,color:'#334155'}],margin:[0,0,0,3]},
-      {columns:[{svg:SVG_ICONS.location,width:11,margin:[0,2,5,0]},{text:(d.location||'Hyderabad, Telangana, India'),fontSize:8.5,color:'#334155'}],margin:[0,0,0,0]}
+      {columns:[{text:(d.name||'Khagendra Mohanta'),bold:true,fontSize:18,color:'#0f172a'},{svg:SVG_ICONS.blueCheck,width:14,margin:[4,3,0,0]}]},
+      {text:d.role||'Java Developer',bold:true,fontSize:11,color:'#2563eb',margin:[0,2,0,6]},
+      {stack:[iconLabelRow(SVG_ICONS.briefcase, (d.totalExp||'6.2 Years of Experience'), 11, '#334155', 8.5)], margin:[0,0,0,3]},
+      {stack:[iconLabelRow(SVG_ICONS.company, (d.companyName||'4bell Technology'), 11, '#334155', 8.5)], margin:[0,0,0,3]},
+      {stack:[iconLabelRow(SVG_ICONS.location, (d.location||'Hyderabad, Telangana, India'), 11, '#334155', 8.5)], margin:[0,0,0,0]}
     ],
     width: '*'
   };
 
-  /* Circular Score Ring Box */
+  /* Perfect Circular Score Ring Box */
   var scoreCircle = {
     stack: [
       {
         canvas: [
-          { type: 'circle', x: 30, y: 30, r: 26, color: '#ffffff', lineColor: mc, lineWidth: 3 }
+          { type: 'circle', x: 28, y: 28, r: 24, color: '#ffffff', lineColor: mc, lineWidth: 3 }
         ],
-        width: 60,
-        height: 60
+        width: 56,
+        height: 56,
+        alignment: 'center'
       },
       {
         text: (Math.round(matchNum * 10) / 10) + '%',
         bold: true,
-        fontSize: 15,
+        fontSize: 14,
         color: mc,
         alignment: 'center',
-        margin: [0, -42, 0, 16]
+        margin: [0, -36, 0, 12]
       }
     ],
     alignment: 'center',
-    margin: [0, 0, 0, 4]
+    margin: [0, 2, 0, 4]
   };
 
   var scoreBlock = {
@@ -6521,11 +6540,11 @@ function buildDef(d){
     table: {
       widths: ['*', '*', '*', '*', '*'],
       body: [[
-        {stack:[{columns:[{svg:SVG_ICONS.user,width:11,margin:[0,1,3,0]},{text:'Preferred Role',fontSize:7,color:'#64748b'}]},{text:d.preferredRole||d.role||'Python Developer',bold:true,fontSize:8.5,color:'#0f172a',margin:[0,3,0,0]}],fillColor:'#ffffff',margin:[6,8,6,8]},
-        {stack:[{columns:[{svg:SVG_ICONS.grad,width:11,margin:[0,1,3,0]},{text:'Highest Education',fontSize:7,color:'#64748b'}]},{text:d.education||'B.Tech (CS)',bold:true,fontSize:8.5,color:'#0f172a',margin:[0,3,0,0]}],fillColor:'#ffffff',margin:[6,8,6,8]},
-        {stack:[{columns:[{svg:SVG_ICONS.clock,width:11,margin:[0,1,3,0]},{text:'Notice Period',fontSize:7,color:'#64748b'}]},{text:d.noticePeriod||'Immediate',bold:true,fontSize:8.5,color:'#0f172a',margin:[0,3,0,0]}],fillColor:'#ffffff',margin:[6,8,6,8]},
-        {stack:[{columns:[{svg:SVG_ICONS.location,width:11,margin:[0,1,3,0]},{text:'Preferred Location',fontSize:7,color:'#64748b'}]},{text:d.prefLocation||'Hyderabad / Remote',bold:true,fontSize:8.5,color:'#0f172a',margin:[0,3,0,0]}],fillColor:'#ffffff',margin:[6,8,6,8]},
-        {stack:[{columns:[{svg:SVG_ICONS.laptop,width:11,margin:[0,1,3,0]},{text:'Preferred Work Mode',fontSize:7,color:'#64748b'}]},{text:d.workMode||'Remote / Hybrid',bold:true,fontSize:8.5,color:'#0f172a',margin:[0,3,0,0]}],fillColor:'#ffffff',margin:[6,8,6,8]}
+        {stack:[iconLabelRow(SVG_ICONS.user, 'Preferred Role', 11, '#64748b', 7), {text:d.preferredRole||d.role||'Java Developer',bold:true,fontSize:8.5,color:'#0f172a',margin:[0,3,0,0]}],fillColor:'#ffffff',margin:[6,8,6,8]},
+        {stack:[iconLabelRow(SVG_ICONS.grad, 'Highest Education', 11, '#64748b', 7), {text:d.education||'B.Tech (CS)',bold:true,fontSize:8.5,color:'#0f172a',margin:[0,3,0,0]}],fillColor:'#ffffff',margin:[6,8,6,8]},
+        {stack:[iconLabelRow(SVG_ICONS.clock, 'Notice Period', 11, '#64748b', 7), {text:d.noticePeriod||'Immediate',bold:true,fontSize:8.5,color:'#0f172a',margin:[0,3,0,0]}],fillColor:'#ffffff',margin:[6,8,6,8]},
+        {stack:[iconLabelRow(SVG_ICONS.location, 'Preferred Location', 11, '#64748b', 7), {text:d.prefLocation||'Hyderabad / Remote',bold:true,fontSize:8.5,color:'#0f172a',margin:[0,3,0,0]}],fillColor:'#ffffff',margin:[6,8,6,8]},
+        {stack:[iconLabelRow(SVG_ICONS.laptop, 'Preferred Work Mode', 11, '#64748b', 7), {text:d.workMode||'Remote / Hybrid',bold:true,fontSize:8.5,color:'#0f172a',margin:[0,3,0,0]}],fillColor:'#ffffff',margin:[6,8,6,8]}
       ]]
     },
     layout: {
@@ -6535,7 +6554,7 @@ function buildDef(d){
     margin: [0, 0, 0, 12]
   };
 
-  /* 4. SKILLS INTELLIGENCE (FULL PAGE WIDTH - NO Match Breakdown) */
+  /* 4. SKILLS INTELLIGENCE (FULL PAGE WIDTH - CORRECT ACCURATE COLUMN MAPPING) */
   var skillRows = [
     [
       {text:'Skill',bold:true,fontSize:8,color:'#2563eb'},
@@ -6545,56 +6564,60 @@ function buildDef(d){
     ]
   ];
 
-  /* Extract & Filter pure candidate skills (excluding screening questions) */
+  /* Extract & Filter pure candidate skills with ACCURATE column mapping */
   var rawSkills = (d.skillsTable && d.skillsTable.rows && d.skillsTable.rows.length) ? d.skillsTable.rows.filter(function(r){
     var name = (r[0]||'').toString().toLowerCase();
     return name.indexOf('question') === -1 && name.indexOf('communication rating') === -1 && name.indexOf('comfortable with wfo') === -1;
   }).map(function(r){
-    return [r[0]||'Skill', r[1]||'Exp', r[2]||'3.5 Years', r[3]||'✔'];
+    var skillName = r[0] || 'Skill';
+    /* Accurate column mapping: Duration is in r[1] or r[2], Rating is in r[2] or r[3], Status is in r[3] */
+    var expDuration = (r[1] && r[1] !== 'Exp') ? r[1] : (r[2] && r[2].indexOf('Year') !== -1 ? r[2] : '1.0 Years');
+    var ratingVal = (r[2] && r[2] !== expDuration) ? r[2] : (r[3] && r[3] !== '✔' && r[3] !== '✖' ? r[3] : '★★★★☆');
+    var statusVal = (r[3] === '✔' || r[3] === '✖' || r[3] === '⚠') ? r[3] : '✔';
+    return [skillName, expDuration, ratingVal, statusVal];
   }) : [
-    ['Python', 'Exp', '3.5 Years', '✔'],
-    ['JavaScript', 'Exp', '1.0 Years', '✔'],
-    ['HTML / CSS', 'Exp', '0.5 Years', '✔'],
-    ['Web Scraping / Crawling', 'Exp', '1.5 Years', '✔'],
-    ['BeautifulSoup', 'Exp', '1.0 Years', '✔'],
-    ['MySQL', 'Exp', '3.5 Years', '✔'],
-    ['Asynchronous Programming', 'Exp', '2.0 Years', '✔']
+    ['Manual Testing', '1.1 Years', '★★★★☆', '✔'],
+    ['Algorithm Testing', '1.0 Years', '★★★★☆', '✔'],
+    ['Vwap', '1.0 Years', '★★★★☆', '✔'],
+    ['Twap', '1.0 Years', '★★★★☆', '✔'],
+    ['Slippage', '1.0 Years', '★★★★☆', '✔'],
+    ['Order Routing Logic', '1.0 Years', '★★★★☆', '✔'],
+    ['Capital Market Domain', '1.0 Years', '★★★★☆', '✔']
   ];
 
   rawSkills.forEach(function(s){
-    var stCol = s[3]==='✖'?'#dc2626':s[3]==='⚠'?'#d97706':'#16a34a';
     skillRows.push([
       {text:s[0],fontSize:8.5,bold:true,color:'#0f172a'},
-      {text:s[1],fontSize:8.5,color:'#475569'},
+      {text:s[1],fontSize:8.5,color:'#334155'},
       {text:s[2],fontSize:8.5,color:'#d97706',bold:true},
-      {columns:[{svg:s[3]==='✖'?SVG_ICONS.amberClock:SVG_ICONS.greenCheck,width:11,margin:[0,1,0,0]}],alignment:'center'}
+      {stack:[{svg:s[3]==='✖'?SVG_ICONS.amberClock:SVG_ICONS.greenCheck,width:11,alignment:'center'}],alignment:'center'}
     ]);
   });
 
   var skillsIntelligenceCard = roundedCard([
-    {columns:[{svg:SVG_ICONS.note,width:12,margin:[0,1,5,0]},{text:'SKILLS INTELLIGENCE',bold:true,fontSize:9,color:'#0f172a'}],margin:[0,0,0,8]},
+    {stack:[iconLabelRow(SVG_ICONS.note, 'SKILLS INTELLIGENCE', 12, '#0f172a', 9, true)], margin:[0,0,0,8]},
     {
-      table: {widths:[170, 120, 120, '*'],body:skillRows},
+      table: {widths:[160, 120, 120, '*'],body:skillRows},
       layout: {hLineWidth:function(){return 0.3;},vLineWidth:function(){return 0;},hLineColor:function(){return '#f1f5f9';}}
     }
   ], '#ffffff', '#e2e8f0', 12);
 
   /* 5. PROFESSIONAL SUMMARY & RECRUITER COMMENTS */
-  var summaryText = d.summary || 'Nitish Raj is a Python Developer with hands-on experience building web scrapers, data processing pipelines, and RESTful microservices using Python, MySQL, and BeautifulSoup.\n\nHe has delivered robust data crawlers and asynchronous threading systems, demonstrating strong analytical and clean code principles.\n\nSuitable for Python Developer, Data Engineer, and Backend Engineer roles.';
+  var summaryText = d.summary || 'Khagendra Mohanta is a Java Developer with experience building high-performance enterprise applications, automated testing suites, and financial trading domain logic.\n\nHe demonstrates solid analytical capabilities, clean code practices, and strong proficiency in core Java algorithms and market routing protocols.\n\nSuitable for Java Developer, Automation Engineer, and Backend Systems Lead roles.';
   var summaryCard = roundedCard([
-    {columns:[{svg:SVG_ICONS.bulb,width:12,margin:[0,1,5,0]},{text:'PROFESSIONAL SUMMARY',bold:true,fontSize:8.5,color:'#0f172a'}],margin:[0,0,0,6]},
+    {stack:[iconLabelRow(SVG_ICONS.bulb, 'PROFESSIONAL SUMMARY', 12, '#0f172a', 8.5, true)], margin:[0,0,0,6]},
     {text:summaryText,fontSize:8,color:'#334155',lineHeight:1.45}
   ], '#ffffff', '#e2e8f0', 0);
 
-  var rnContent = d.rnText || 'Solid Python engineer with proven expertise in Web Scraping and MySQL backend operations. Clean code style, immediate joiner, recommended to proceed for technical interview.';
+  var rnContent = d.rnText || 'Experienced Java engineer with proven expertise in enterprise application development and algorithmic testing. Clean code style, immediate joiner, recommended to proceed for technical interview.';
   var recruiterCommentsCard = roundedCard([
-    {columns:[{svg:SVG_ICONS.chat,width:12,margin:[0,1,5,0]},{text:'RECRUITER COMMENTS',bold:true,fontSize:8.5,color:'#0f172a'}],margin:[0,0,0,6]},
+    {stack:[iconLabelRow(SVG_ICONS.chat, 'RECRUITER COMMENTS', 12, '#0f172a', 8.5, true)], margin:[0,0,0,6]},
     {text:rnContent,fontSize:8,color:'#334155',lineHeight:1.4,margin:[0,0,0,12]},
     {canvas:[{type:'line',x1:0,y1:0,x2:220,y2:0,lineWidth:0.5,lineColor:'#f1f5f9'}],margin:[0,0,0,10]},
     {
       columns: [
-        {columns:[{svg:SVG_ICONS.user,width:11,margin:[0,1,4,0]},{text:[{text:(d.recruiterName||'Aayush Jain')+'\n',bold:true,fontSize:8,color:'#0f172a'},{text:'Senior Technical Recruiter',fontSize:7,color:'#64748b'}]}]},
-        {columns:[{svg:SVG_ICONS.cal,width:11,margin:[0,1,4,0]},{text:d.dateStr,fontSize:7.5,color:'#64748b'}],alignment:'right'}
+        {stack:[iconLabelRow(SVG_ICONS.user, [{text:(d.recruiterName||'Vibhanshu Jaiswal')+'\n',bold:true,fontSize:8,color:'#0f172a'},{text:'Senior Technical Recruiter',fontSize:7,color:'#64748b'}], 11)]},
+        {stack:[iconLabelRow(SVG_ICONS.cal, d.dateStr, 11, '#64748b', 7.5)], alignment:'right'}
       ]
     }
   ], '#ffffff', '#e2e8f0', 0);
@@ -6607,29 +6630,29 @@ function buildDef(d){
     columnGap: 12, margin: [0, 0, 0, 12]
   };
 
-  /* 6. VERIFICATION STATUS CARD WITH SVG CHECKMARKS */
+  /* 6. VERIFICATION STATUS CARD WITH ACCURATE ICON ALIGNMENT */
   var verificationCard = roundedCard([
-    {columns:[{svg:SVG_ICONS.shield,width:12,margin:[0,1,5,0]},{text:'VERIFICATION STATUS',bold:true,fontSize:8.5,color:'#2563eb'}],margin:[0,0,0,8]},
+    {stack:[iconLabelRow(SVG_ICONS.shield, 'VERIFICATION STATUS', 12, '#2563eb', 8.5, true)], margin:[0,0,0,8]},
     {
       columns: [
         {
           stack: [
-            {columns:[{svg:SVG_ICONS.greenCheck,width:11,margin:[0,1,4,0]},{text:'Resume Verified',fontSize:8,color:'#166534'}],margin:[0,2,0,3]},
-            {columns:[{svg:SVG_ICONS.greenCheck,width:11,margin:[0,1,4,0]},{text:'Email Verified',fontSize:8,color:'#166534'}],margin:[0,2,0,3]}
+            {stack:[iconLabelRow(SVG_ICONS.greenCheck, 'Resume Verified', 11, '#166534', 8)], margin:[0,2,0,3]},
+            {stack:[iconLabelRow(SVG_ICONS.greenCheck, 'Email Verified', 11, '#166534', 8)], margin:[0,2,0,3]}
           ],
           width: '*'
         },
         {
           stack: [
-            {columns:[{svg:SVG_ICONS.amberClock,width:11,margin:[0,1,4,0]},{text:'Documents Verified (Pending)',fontSize:8,color:'#b45309'}],margin:[0,2,0,3]},
-            {columns:[{svg:SVG_ICONS.amberClock,width:11,margin:[0,1,4,0]},{text:'Identity Verified (Pending)',fontSize:8,color:'#b45309'}],margin:[0,2,0,3]}
+            {stack:[iconLabelRow(SVG_ICONS.amberClock, 'Documents Verified (Pending)', 11, '#b45309', 8)], margin:[0,2,0,3]},
+            {stack:[iconLabelRow(SVG_ICONS.amberClock, 'Identity Verified (Pending)', 11, '#b45309', 8)], margin:[0,2,0,3]}
           ],
           width: '*'
         },
         {
           stack: [
-            {columns:[{svg:SVG_ICONS.greenCheck,width:11,margin:[0,1,4,0]},{text:'Education Verified',fontSize:8,color:'#166534'}],margin:[0,2,0,3]},
-            {columns:[{svg:SVG_ICONS.greenCheck,width:11,margin:[0,1,4,0]},{text:'Experience Verified',fontSize:8,color:'#166534'}],margin:[0,2,0,3]}
+            {stack:[iconLabelRow(SVG_ICONS.greenCheck, 'Education Verified', 11, '#166534', 8)], margin:[0,2,0,3]},
+            {stack:[iconLabelRow(SVG_ICONS.greenCheck, 'Experience Verified', 11, '#166534', 8)], margin:[0,2,0,3]}
           ],
           width: '*'
         }
@@ -6637,7 +6660,7 @@ function buildDef(d){
     }
   ], '#ffffff', '#e2e8f0', 12);
 
-  /* 7. FINAL HIRING RECOMMENDATION (Font Reduced 20% for Perfect Alignment) */
+  /* 7. FINAL HIRING RECOMMENDATION */
   var finalRecommendationCard = roundedCard([
     {
       columns: [
@@ -6645,7 +6668,7 @@ function buildDef(d){
           stack: [
             {
               columns: [
-                {svg: SVG_ICONS.greenCheck, width: 22, margin: [0, 2, 6, 0]},
+                {svg: SVG_ICONS.greenCheck, width: 20, margin: [0, 2, 6, 0]},
                 {
                   stack: [
                     {svg: SVG_ICONS.goldStars, width: 54, margin: [0, 0, 0, 2]},
@@ -6667,7 +6690,7 @@ function buildDef(d){
     }
   ], '#f0fdf4', '#bbf7d0', 12);
 
-  /* 8. DARK NAVY FOOTER (Font Reduced 15% for Perfect Alignment) */
+  /* 8. DARK NAVY FOOTER */
   var footerBlock = {
     table: {widths:['*'],body:[[{
       columns: [
