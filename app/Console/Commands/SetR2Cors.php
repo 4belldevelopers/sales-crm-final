@@ -40,9 +40,9 @@ class SetR2Cors extends Command
                 'CORSConfiguration' => [
                     'CORSRules' => [
                         [
-                            'AllowedHeaders' => ['Content-Type', 'Content-Length', 'x-amz-*'],
-                            'AllowedMethods' => ['PUT', 'GET'],
-                            'AllowedOrigins' => [$appUrl, 'http://localhost', 'http://localhost:*'],
+                            'AllowedHeaders' => ['*'],
+                            'AllowedMethods' => ['PUT', 'GET', 'HEAD', 'DELETE'],
+                            'AllowedOrigins' => ['*'],
                             'ExposeHeaders'  => ['ETag'],
                             'MaxAgeSeconds'  => 3600,
                         ],
@@ -50,7 +50,7 @@ class SetR2Cors extends Command
                 ],
             ]);
 
-            $this->info("R2 CORS configured successfully for origin: {$appUrl}");
+            $this->info("R2 CORS configured successfully for bucket: {$disk['bucket']}");
             return Command::SUCCESS;
         } catch (\Throwable $e) {
             $this->error('Failed to set CORS: ' . $e->getMessage());

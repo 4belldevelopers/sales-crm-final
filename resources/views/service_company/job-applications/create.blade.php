@@ -1346,19 +1346,21 @@
 @push('footer-script')
 <script src="{{ asset('demo/ckeditor/ckeditor.js') }}"></script>
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
-@if(config('resumes.features.browser_upload'))
 <script src="{{ asset('js/resume-presign.js') }}"></script>
-@endif
 
 <script>
 $(document).ready(function () {
 
-    // ── v2 upload: feature flag + route URL injected from PHP ────────────────
-    var RESUMES_FEATURE_BROWSER_UPLOAD = @json(config('resumes.features.browser_upload', false));
-    var RESUME_PRESIGN_URL = @json(route('service_company.resume.v2.sessions.store'));
-    if (window.ResumePresign) {
-        window.RESUME_PRESIGN_URL = RESUME_PRESIGN_URL;
-        window.RESUMES_FEATURE_BROWSER_UPLOAD = RESUMES_FEATURE_BROWSER_UPLOAD;
+    // ── v2 upload: presign URL injected from PHP; flag computed at runtime ──────
+    // resume-presign.js is always loaded unconditionally so it is never missing
+    // from a cached page. v2 activates only when BOTH conditions are true at
+    // runtime: the module is loaded AND the server emitted the presign URL.
+    @if(config('resumes.features.browser_upload'))
+    window.RESUME_PRESIGN_URL = @json(route('service_company.resume.v2.sessions.store'));
+    @endif
+    var RESUMES_FEATURE_BROWSER_UPLOAD = !!(window.ResumePresign && window.RESUME_PRESIGN_URL);
+    if (RESUMES_FEATURE_BROWSER_UPLOAD) {
+        window.RESUMES_FEATURE_BROWSER_UPLOAD = true;
         // Phase 6: server-controlled retry config passed to the JS module.
         window.RESUMES_CONFIG = {
             maxPutAttempts: @json(config('resumes.network_resilience.max_put_attempts', 3)),
@@ -1367,7 +1369,7 @@ $(document).ready(function () {
     }
 
     // ── v2 state → existing progress bar UI bridge ───────────────────────────
-    if (RESUMES_FEATURE_BROWSER_UPLOAD && window.ResumePresign) {
+    if (RESUMES_FEATURE_BROWSER_UPLOAD) {
         window.ResumePresign.onStateChange(function (data) {
             if (data.state === 'uploading') {
                 $('#upWrap').show();
@@ -1397,23 +1399,18 @@ $(document).ready(function () {
     // recover() reads localStorage UUID → pings status endpoint → restores
     // UPLOADED state if the file is still in R2, so the user can submit without
     // re-uploading. Silent no-op when nothing is stored or the session expired.
-    if (RESUMES_FEATURE_BROWSER_UPLOAD && window.ResumePresign) {
+    if (RESUMES_FEATURE_BROWSER_UPLOAD) {
         window.ResumePresign.recover().then(function (session) {
             if (session) {
-                // Session recovered — show the "upload complete" banner so the
-                // user knows their previous file is still attached.
-                $('#upWrap').show();
-                $('#upBar').css('width', '100%');
-                $('#upStats').html('100% &middot; Upload restored');
-                $('#upPill').css('display', 'inline-flex');
-                $('#upBanner').removeClass('err').addClass('ok').html(
-                    '<svg class="up-banner-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"'
-                    + ' stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'
-                    + '<circle cx="12" cy="12" r="10"/><polyline points="9 12 11 14 16 9"/></svg>'
-                    + '<span><strong>Resume restored.</strong> Your previously uploaded file is still attached.</span>'
-                ).show();
+                // Session recovered — populate the upInfo card (outside #uploadBox)
+                // and hide the dropzone. Showing things inside #uploadBox then hiding
+                // the box would make them invisible — use #upInfo instead.
+                var sizeKb = session.file_size_bytes ? Math.round(session.file_size_bytes / 1024) + ' KB' : '';
+                $('#upFileName').text(session.original_filename || 'Resume');
+                $('#upFileSub').text(sizeKb);
+                $('#upDetailUploadedOn').text('Previously uploaded');
                 $('#uploadBox').hide();
-                $('#fileInfo').show();
+                $('#upInfo').addClass('show');
             }
         });
     }
@@ -1460,7 +1457,7 @@ $(document).ready(function () {
         // Upload the file. v2 (presign → R2 PUT) takes priority when the flag
         // is ON; falls through to the legacy multipart POST otherwise.
         window.__upXhrChannelClaimed = true;
-        if (RESUMES_FEATURE_BROWSER_UPLOAD && window.ResumePresign) {
+        if (RESUMES_FEATURE_BROWSER_UPLOAD) {
             // v2 path: direct browser → R2, zero PHP bytes.
             // startUpload() is async; state changes drive the UI via onStateChange.
             window.ResumePresign.startUpload(file).catch(function () {
@@ -1518,7 +1515,7 @@ $(document).ready(function () {
     function backToDropzone() {
         resetProgress();
         // Cancel v2 upload if in progress (aborts R2 XHR + clears session UUID)
-        if (RESUMES_FEATURE_BROWSER_UPLOAD && window.ResumePresign) {
+        if (RESUMES_FEATURE_BROWSER_UPLOAD) {
             window.ResumePresign.cancelUpload();
         }
         $('#upInfo').removeClass('show');
@@ -3827,7 +3824,7 @@ document.addEventListener('DOMContentLoaded', function () {
           // document.getElementById('output').textContent = resumeText;
 
            const cleanText = normalizeResumeText(resumeText);
-          re_test(cleanText);
+         // re_test(cleanText);
 
 
           // Extract name, email, mobile
@@ -3856,7 +3853,7 @@ document.addEventListener('DOMContentLoaded', function () {
             // Display extracted text
             // document.getElementById('output').textContent = resumeText;
              const cleanText = normalizeResumeText(resumeText);
-            re_test(cleanText);
+            //re_test(cleanText);
 
             // Extract name, email, mobile, and skills (similar to the PDF example)
             const nameRegex = /([A-Z]+ [A-Z]+) \w+/i;

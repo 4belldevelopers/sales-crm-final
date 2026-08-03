@@ -892,7 +892,9 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
 		$this->currencyConverter = GeneralMethod::currencyConverter();
         $this->skillExperiences =[];
 
-		return view('service_company.bench-candidates.create', $this->data);
+		return response()->view('service_company.bench-candidates.create', $this->data)
+			->header('Cache-Control', 'no-cache, no-store, must-revalidate')
+			->header('Pragma', 'no-cache');
 
 	}
 	public function store(Request $request)
@@ -1148,6 +1150,7 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
 
 		// ── v2 pre-flight: validate resume_session_uuid before opening the transaction ──
 		$resumeSession = null;
+		$finalResumeUrl = null;  // set in claim block; reused in resume URL block
 		if (config('resumes.features.submit_with_session') && $request->filled('resume_session_uuid')) {
 			$resumeSession = ResumeUpload::byUuid($request->input('resume_session_uuid'))
 				->forCompany($company_id)->first();
@@ -1188,12 +1191,14 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
 				return Reply::dataOnly(['status' => 'error', 'msgType' => 'warning',
 					'message' => 'Resume file not found in storage. Please upload the resume again.']);
 			}
+			// Move file to company-structured CDN path (mirrors v1 storage convention).
+			$finalResumeUrl = app(\App\Services\ResumeUploadSession::class)->moveToCompanyPath($resumeSession);
 			ResumeUpload::where('id', $resumeSession->id)
 				->where('company_id', $company_id)
 				->where('status', ResumeUploadStatus::Completed->value)
 				->update([
 					'linked_candidate_id' => $benchApplication->id,
-					'r2_url'              => Storage::disk('r2')->url('resumes/' . $resumeSession->uuid),
+					'r2_url'              => $finalResumeUrl,
 					'updated_at'          => now(),
 				]);
 			UploadSessionAudit::record($resumeSession->id, 'ActionSubmitLinked', [
@@ -1326,8 +1331,8 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
 							]);
 ;
 			} elseif ($resumeSession) {
-				// v2 path (edit): file already in R2; persist the public URL.
-				$r2ResumeUrl = Storage::disk('r2')->url('resumes/' . $resumeSession->uuid);
+				// v2 path (edit): file moved to company CDN path in the claim block above.
+				$r2ResumeUrl = $finalResumeUrl;
 				DB::table('job_applications')
 					->where('id', $benchApplication->id)
 					->update(['resume' => $r2ResumeUrl]);
@@ -1357,8 +1362,8 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
 								'resume_original_name'
 							]);
 			} elseif ($resumeSession) {
-				// v2 path (add): file already in R2; persist the public URL.
-				$r2ResumeUrl = Storage::disk('r2')->url('resumes/' . $resumeSession->uuid);
+				// v2 path (add): file moved to company CDN path in the claim block above.
+				$r2ResumeUrl = $finalResumeUrl;
 				DB::table('job_applications')
 					->where('id', $benchApplication->id)
 					->update(['resume' => $r2ResumeUrl]);
@@ -1744,7 +1749,9 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
 			
 
 
-		return view('service_company.bench-candidates.create', $this->data);
+		return response()->view('service_company.bench-candidates.create', $this->data)
+			->header('Cache-Control', 'no-cache, no-store, must-revalidate')
+			->header('Pragma', 'no-cache');
 	}
 	public function benchListingPoolData(Request $request)
 	{
