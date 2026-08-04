@@ -38,6 +38,9 @@ Generated to optimize this repo for AI coding agents (Claude Code, Cursor, Winds
 - [ENTERPRISE_PLAYBOOK.md](ENTERPRISE_PLAYBOOK.md) — GOD-mode strategy: lightning speed, near-zero server load, clean icon-based design, feature velocity + AI operating doctrine
 - [adr/](adr/) — architecture decision records
 
+## Per-feature audits & implementation plans
+- [V2_Apptracker/](V2_Apptracker/) — `service_company/apptracker` GOD-level audit + 10-step roll-out plan (Aug 2026)
+
 ## Product & engineering strategy (architect-level)
 - [PRODUCT_VISION.md](PRODUCT_VISION.md) — the concept: pitch, personas, problem, how it works, principles
 - [ROADMAP.md](ROADMAP.md) — sequenced build plan (Phase 0 → 6) tying every strategy doc together
