@@ -151,7 +151,9 @@ Route::group(['middleware' => 'auth'], function () {
 						Route::get('jobs/assignRejected', [ServiceCompanyJobsController::class,'assignRejected'])->name('jobs.assignRejected');
 						Route::get('jobs/removeJob', [ServiceCompanyJobsController::class,'removeJob'])->name('jobs.removeJob');
 						Route::get('jobs/resend_job_recommanded_request/{id?}', [ServiceCompanyJobsController::class,'resend_job_recommanded_request'])->name('jobs.resend_job_recommanded_request');
-						Route::resource('jobs', ServiceCompanyJobsController::class); 
+						Route::middleware('recruiter.throttle:60,1')->group(function () {
+							Route::resource('jobs', ServiceCompanyJobsController::class);
+						});
 						Route::post('jobs/updatestatus', [ServiceCompanyJobsController::class,'updatestatus'])->name('jobs.updatestatus'); 		
 						Route::post('jobs/hiring_manager/{id?}', [ServiceCompanyJobsController::class,'hiring_manager'])->name('jobs.hiring_manager'); 
 						Route::post('jobs/newUpdateJobstatus', [ServiceCompanyJobsController::class,'newUpdateJobstatus'])->name('jobs.newUpdateJobstatus'); 					
