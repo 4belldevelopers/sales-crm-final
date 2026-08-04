@@ -98,7 +98,7 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 			$this->skills = Skill::all();
 			$this->clients = Client::all();
 			//$this->users 					=	User::company()->get();
-			$this->noticeperiod = Cache::remember('notice_periods', 86400, fn() => NoticePeriod::orderBy('days')->get());
+			$this->noticeperiod = Cache::remember('notice_periods', 86400, fn() => NoticePeriod::orderBy('np_id')->get());
 			$this->job = Job::findOrFail($id);
 			//echo '<pre>'; print_r($this->job); exit;
 			if ($mstatus_id != 'all') {
@@ -124,7 +124,7 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 			$this->skills = Skill::all();
 			$this->clients = Client::all();
 			//$this->users 					=	User::company()->get();
-			$this->noticeperiod = Cache::remember('notice_periods', 86400, fn() => NoticePeriod::orderBy('days')->get());
+			$this->noticeperiod = Cache::remember('notice_periods', 86400, fn() => NoticePeriod::orderBy('np_id')->get());
 
 		}
 

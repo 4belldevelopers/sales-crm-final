@@ -164,7 +164,7 @@ $end_date   =	date('d-M-Y', $date);
             --radius-lg: 12px;
         }
 
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+        .jd-wrap * { box-sizing: border-box; }
 
         
 
@@ -538,44 +538,46 @@ $end_date   =	date('d-M-Y', $date);
             border-radius: 2px 2px 0 0;
         }
 
-        .tabs-content { padding: 24px; }
-        .tab-panel { display: none; animation: fadeIn 0.3s ease; }
-        .tab-panel.active { display: block; }
+        .jd-wrap .tabs-content { padding: 24px; }
+        .jd-wrap .tab-panel { display: none; animation: fadeIn 0.3s ease; }
+        .jd-wrap .tab-panel.active { display: block !important; }
 
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(8px); }
             to { opacity: 1; transform: translateY(0); }
         }
 
-        .info-grid {
-            display: grid;
+        .jd-wrap .info-grid {
+            display: grid !important;
             grid-template-columns: repeat(3, 1fr);
             gap: 24px;
             margin-bottom: 24px;
         }
 
-        .info-card {
+        .jd-wrap .info-card {
+            display: block !important;
             background: var(--bg-white);
             border-radius: var(--radius-md);
             border: 1px solid var(--border-color);
             padding: 20px;
             transition: all 0.2s;
             position: relative;
+            min-width: 0;
         }
 
-        .info-card:hover { box-shadow: var(--shadow-sm); }
+        .jd-wrap .info-card:hover { box-shadow: var(--shadow-sm); }
 
-        .info-card-header {
-            display: flex;
+        .jd-wrap .info-card-header {
+            display: flex !important;
             justify-content: space-between;
             align-items: center;
             margin-bottom: 16px;
         }
 
-        .info-card-title { font-size: 13px; font-weight: 600; color: var(--text-primary); }
+        .jd-wrap .info-card-title { font-size: 13px; font-weight: 600; color: var(--text-primary); }
 
-        .info-card-actions {
-            display: flex;
+        .jd-wrap .info-card-actions {
+            display: flex !important;
             align-items: center;
             gap: 8px;
         }
@@ -614,33 +616,37 @@ $end_date   =	date('d-M-Y', $date);
             border-color: var(--success);
         }
 
-        .info-row {
-            display: flex;
+        .jd-wrap .info-row {
+            display: flex !important;
+            flex-direction: row !important;
             justify-content: space-between;
             align-items: flex-start;
+            width: 100% !important;
             padding: 8px 0;
             border-bottom: 1px solid var(--border-color);
         }
 
-        .info-row:last-child { border-bottom: none; }
-        .info-label { font-size: 12px; color: var(--text-secondary); font-weight: 400; }
-        .info-value { font-size: 12px; color: var(--text-primary); font-weight: 500; text-align: right; max-width: 60%; }
-        .info-value a { color: var(--primary); text-decoration: none; transition: all 0.2s; }
-        .info-value a:hover { text-decoration: underline; }
+        .jd-wrap .info-row:last-child { border-bottom: none; }
+        .jd-wrap .info-label { font-size: 12px; color: var(--text-secondary); font-weight: 400; flex-shrink: 0; }
+        .jd-wrap .info-value { font-size: 12px; color: var(--text-primary); font-weight: 500; text-align: right; max-width: 60%; }
+        .jd-wrap .info-value a { color: var(--primary); text-decoration: none; transition: all 0.2s; }
+        .jd-wrap .info-value a:hover { text-decoration: underline; }
 
-        .desc-grid {
-            display: grid;
+        .jd-wrap .desc-grid {
+            display: grid !important;
             grid-template-columns: 1fr 1fr;
             gap: 24px;
             margin-bottom: 24px;
         }
 
-        .desc-card {
+        .jd-wrap .desc-card {
+            display: block !important;
             background: var(--bg-white);
             border-radius: var(--radius-md);
             border: 1px solid var(--border-color);
             padding: 20px;
             position: relative;
+            min-width: 0;
         }
 
         .desc-card-header {
@@ -942,9 +948,9 @@ $end_date   =	date('d-M-Y', $date);
         }
 
         @media (max-width: 900px) {
-            .info-grid { grid-template-columns: repeat(2, 1fr); }
-            .desc-grid { grid-template-columns: 1fr; }
-            .questions-section { grid-template-columns: 1fr; }
+            .jd-wrap .info-grid { grid-template-columns: repeat(2, 1fr); }
+            .jd-wrap .desc-grid { grid-template-columns: 1fr; }
+            .jd-wrap .questions-section { grid-template-columns: 1fr; }
         }
 
         @media (max-width: 1024px) {
@@ -958,11 +964,11 @@ $end_date   =	date('d-M-Y', $date);
         }
 
         @media (max-width: 768px) {
-            .pipeline-section { grid-template-columns: 1fr; }
-            .info-grid { grid-template-columns: 1fr; }
-            .content-area { padding: 16px; }
-            .top-actions { padding: 12px 16px; }
-            .hero-personnel-inline { flex-direction: column; align-items: flex-start; }
+            .jd-wrap .pipeline-section { grid-template-columns: 1fr; }
+            .jd-wrap .info-grid { grid-template-columns: 1fr; }
+            .jd-wrap .content-area { padding: 16px; }
+            .jd-wrap .top-actions { padding: 12px 16px; }
+            .jd-wrap .hero-personnel-inline { flex-direction: column; align-items: flex-start; }
         }
 
         .fade-in-up {
@@ -1102,15 +1108,15 @@ $end_date   =	date('d-M-Y', $date);
     }
 
     @media (max-width: 1366px) {
-        .top-actions { overflow-x: auto; flex-wrap: nowrap; scrollbar-width: none; }
-        .top-actions::-webkit-scrollbar { display: none; }
-        .action-btn { white-space: nowrap; flex-shrink: 0; padding: 5px 9px; font-size: 10.5px; }
-        .job-title-section h1 { font-size: 13.5px; }
-        .info-grid { grid-template-columns: repeat(3, 1fr); gap: 14px; }
-        .desc-grid { grid-template-columns: 1fr 1fr; gap: 14px; }
-        .questions-section { grid-template-columns: 1fr 1fr; gap: 14px; }
-        .hero-personnel-inline { gap: 10px; }
-        .personnel-card-inline { padding: 8px 10px; gap: 8px; }
+        .jd-wrap .top-actions { overflow-x: auto; flex-wrap: nowrap; scrollbar-width: none; }
+        .jd-wrap .top-actions::-webkit-scrollbar { display: none; }
+        .jd-wrap .action-btn { white-space: nowrap; flex-shrink: 0; padding: 5px 9px; font-size: 10.5px; }
+        .jd-wrap .job-title-section h1 { font-size: 13.5px; }
+        .jd-wrap .info-grid { grid-template-columns: repeat(3, 1fr); gap: 14px; }
+        .jd-wrap .desc-grid { grid-template-columns: 1fr 1fr; gap: 14px; }
+        .jd-wrap .questions-section { grid-template-columns: 1fr 1fr; gap: 14px; }
+        .jd-wrap .hero-personnel-inline { gap: 10px; }
+        .jd-wrap .personnel-card-inline { padding: 8px 10px; gap: 8px; }
     }
     </style>
 
@@ -1240,7 +1246,7 @@ $end_date   =	date('d-M-Y', $date);
     </div>
     @endif {{-- hideMarketSections: kt_activitiesJob_close --}}
 
-    <div class="app-container">
+    <div class="app-container jd-wrap">
 
         <main class="main-content" id="mainContent">
 
