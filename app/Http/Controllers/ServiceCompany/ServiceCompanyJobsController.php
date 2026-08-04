@@ -1274,7 +1274,7 @@ protected $elasticService;
 	{
 		// Step 9b: ETag derived from user+company+permissions. Unchanged page load → 304, zero DB hit.
 		$etagSource = $this->user->id . ':' . $this->user->company_id . ':' . implode(',', $this->userPermissions ?? []);
-		$etag = '"' . hash('xxh3', $etagSource) . '"';
+		$etag = '"' . hash('sha256', $etagSource) . '"';
 		if (request()->header('If-None-Match') === $etag) {
 			return response()->noContent(304)->header('ETag', $etag);
 		}
