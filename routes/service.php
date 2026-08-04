@@ -107,7 +107,7 @@ Route::group(['middleware' => 'auth'], function () {
 						Route::get('jobs/client_requisition_data', [ServiceCompanyJobsController::class,'client_requisition_data'])->name('jobs.client_requisition_data');
 						Route::get('client_jobs_ajax/client_requisition_data', [ServiceCompanyJobsController::class,'client_requisition_data_ajax'])->name('jobs.client_requisition_data_ajax');
 						Route::get('jobs/all_data', [ServiceCompanyJobsController::class,'all_data'])->name('jobs.all_data');
-						Route::get('jobs_ajax/all_data', [ServiceCompanyJobsController::class,'all_data_ajax'])->name('jobs.all_data_ajax');
+						Route::get('jobs_ajax/all_data', [ServiceCompanyJobsController::class,'all_data_ajax'])->name('jobs.all_data_ajax')->middleware('recruiter.throttle');
 						Route::get('mail_jobs_ajax/{UrlMailJobId?}', [ServiceCompanyJobsController::class,'all_data_assing'])->name('jobs.all_data_assing');
 						Route::get('jobs/data', [ServiceCompanyJobsController::class,'data'])->name('jobs.data');
 						Route::get('jobs_side_bar_job_ajax/data', [ServiceCompanyJobsController::class,'client_job_data_ajax'])->name('jobs.data_client_ajax');

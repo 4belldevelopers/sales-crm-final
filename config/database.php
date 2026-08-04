@@ -45,7 +45,15 @@ return [
         'mysql' => [
             'driver' => 'mysql',
             'url' => env('DB_URL'),
-            'host' => env('DB_HOST', '127.0.0.1'),
+            // Step 10c: read/write split. Set DB_HOST_READ in .env to your replica IP.
+            // Falls back to primary when DB_HOST_READ is unset (single-node dev/staging).
+            'read' => [
+                'host' => [env('DB_HOST_READ', env('DB_HOST', '127.0.0.1'))],
+            ],
+            'write' => [
+                'host' => [env('DB_HOST', '127.0.0.1')],
+            ],
+            'sticky' => true, // Return last write's data within same request
             'port' => env('DB_PORT', '3306'),
             'database' => env('DB_DATABASE', 'laravel'),
             'username' => env('DB_USERNAME', 'root'),

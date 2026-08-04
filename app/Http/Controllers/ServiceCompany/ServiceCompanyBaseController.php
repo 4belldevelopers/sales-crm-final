@@ -21,6 +21,7 @@ use Spatie\Permission\Models\Role;
 use Spatie\Permission\Models\Permission;
 use App\Models\User;
 use App\Models\CompanyPackage;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use App\Models\GlobalSetting;
 use Illuminate\Support\Facades\Route;
@@ -247,7 +248,7 @@ class ServiceCompanyBaseController extends Controller
             if ($this->user && $this->user->roles->count() > 0) {
                 $this->todoItems 		=	$this->user->todoItems()->select('status', 'position', DB::raw('COUNT(*) as total'))->groupBy('status', 'position')->get(); 
             }
-            $this->superSettings 		=	GlobalSetting::with('currency')->first();
+            $this->superSettings        = Cache::remember('global_settings', 86400, fn() => GlobalSetting::with('currency')->first());
            
             $userPermissions = array();
 
@@ -265,7 +266,7 @@ class ServiceCompanyBaseController extends Controller
 
             //echo '<pre>'; print_r($this->user); exit; 
             //  dd($this->user->company_id);
-            $this->global 				= Company::findOrFail($this->user->company_id);
+            $this->global               = $this->client ?? Company::findOrFail($this->user->company_id);
             $this->adminTheme 			= ThemeSetting::where('company_id', '=', $this->global->id)->first();
             $this->companyName 			= $this->global->company_name;
 			 $this->companyId 			= $this->global->id;
@@ -463,7 +464,7 @@ DB::table('package_active')->insert($package_arr);
 			}
 			$this->customActivePackage 			=	$customActivePackage;
 
-            $this->languageSettings 			=	LanguageSetting::where('status', 'enabled')->orderBy('language_name')->get();
+            $this->languageSettings         = Cache::remember('language_settings_enabled', 86400, fn() => LanguageSetting::where('status', 'enabled')->orderBy('language_name')->get());
             $this->activePackage 				=	CompanyPackage::with('package')->where('company_id', $this->user->company_id)
                 ->where('status', 'active')
                 ->where(function($query){

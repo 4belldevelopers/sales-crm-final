@@ -5,6 +5,7 @@ namespace App\Http\Middleware;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Session;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -28,11 +29,14 @@ class EnsureOneDeviceLogin
             
 
             if (Session::has('token_check')) {
-                
-                $user->super_admin_login_code = '';
-                $user->save();
-                 
-             }else{
+                // Throttle: write super_admin_login_code clear at most once per minute per user
+                $throttleKey = 'token_check_save_' . $user->id;
+                if (!Cache::has($throttleKey)) {
+                    $user->super_admin_login_code = '';
+                    $user->save();
+                    Cache::put($throttleKey, true, 60);
+                }
+            } else {
 
                 if ($user->status !== 'active') {
                     Auth::logout();
@@ -42,23 +46,19 @@ class EnsureOneDeviceLogin
                 }
 
                 $currentSessionId = session()->getId();
-                // Check if the session ID stored for the user matches the current session ID
-                if ($user->session_id && $user->session_id !== session()->getId()) {
-                        // Logout the user if the session IDs do not match
-                        // Auth::logout();
-                        session()->getHandler()->destroy($user->session_id);
+                if ($user->session_id && $user->session_id !== $currentSessionId) {
+                    session()->getHandler()->destroy($user->session_id);
+                }
 
-                        // Optionally, redirect them to the login page with a message
-                        // return redirect('/login')->withErrors([
-                        //     'device_message' => 'You have been logged out because your account was accessed from another device.'
-                        // ]);
-                    }
-
-                    // Save the current session ID in the database
+                // Only write to DB when the session ID actually changes (BUG-01 fix)
+                $cachedSessionId = Cache::get('user_session_' . $user->id);
+                if ($cachedSessionId !== $currentSessionId) {
                     $user->session_id = $currentSessionId;
                     $user->save();
+                    Cache::put('user_session_' . $user->id, $currentSessionId, 3600);
+                }
 
-             }
+            }
             
 
 
