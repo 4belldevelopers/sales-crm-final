@@ -5722,38 +5722,15 @@ async function buildRecruiterSummary(){
       var wrap=document.querySelector('#resume_cv .rcv-wrap');
       var lsrc=wrap?wrap.getAttribute('data-logo'):'';
       if(lsrc){try{var rsp=await fetch(lsrc,{cache:'force-cache'});if(rsp.ok){var bl=await rsp.blob();logoUri=await new Promise(function(res){var fr=new FileReader();fr.onload=function(){res(fr.result);};fr.readAsDataURL(bl);});window.__rcvLogo={__dataUri:logoUri};}}catch(ex){}}
+    if(typeof window.cdrExportProfilePDF === 'function'){
+      window.cdrExportProfilePDF(null, true);
+    } else {
+      alert('PDF generator engine not ready yet. Please try again in a moment.');
     }
-    /* data */
-    var rsEl=document.getElementById('rsData');
-    if(!rsEl) throw new Error('rsData not found');
-    var g=function(k){return rsEl.getAttribute(k)||'';};
-    var gj=function(k){try{return JSON.parse(rsEl.getAttribute(k)||'[]');}catch(ex){return[];}};
-    var data={
-      name:g('data-name')||'Candidate',designation:g('data-designation'),company:g('data-company'),
-      location:g('data-location'),experience:g('data-experience'),notice:g('data-notice'),
-      education:g('data-education'),workMode:g('data-work-mode'),match:parseInt(g('data-match'))||0,
-      isImmediate:g('data-is-immediate')==='1',recruiterNote:g('data-recruiter-note'),
-      careerSummary:g('data-career-summary'),skills:gj('data-skills'),validation:gj('data-validation')
-    };
-    var wrap2=document.querySelector('#resume_cv .rcv-wrap');
-    var cn=(wrap2&&wrap2.getAttribute('data-company'))||data.company||'Company';
-    /* render HTML → canvas → PDF */
-    container=document.createElement('div');
-    container.style.cssText='position:fixed;left:-9999px;top:0;z-index:0;pointer-events:none;overflow:hidden;';
-    container.innerHTML=buildRsHtml(data,cn,logoUri);
-    document.body.appendChild(container);
-    var el=container.firstElementChild;
-    var cvs=await window.html2canvas(el,{scale:2,useCORS:false,allowTaint:false,logging:false,backgroundColor:'#f1f5f9',imageTimeout:15000});
-    var JsPDF=window.jspdf.jsPDF;
-    var pw=el.offsetWidth||1000,ph=el.offsetHeight||1414;
-    var pdf=new JsPDF({orientation:'p',unit:'px',format:[pw,ph]});
-    pdf.addImage(cvs.toDataURL('image/jpeg',0.88),'JPEG',0,0,pw,ph,undefined,'FAST');
-    pdf.save('recruiter_summary_'+(data.name.replace(/[^a-z0-9]/gi,'_').toLowerCase()||'candidate')+'.pdf');
   }catch(err){
     console.error('Recruiter Summary error:',err);
     alert('Could not generate the Recruiter Summary. Please try again.');
   }finally{
-    if(container&&container.parentNode) container.parentNode.removeChild(container);
     window.__rsBusy=false;
   }
 }
