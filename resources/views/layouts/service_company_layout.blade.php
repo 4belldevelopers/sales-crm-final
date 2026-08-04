@@ -82,9 +82,22 @@
 <meta property="og:site_name" content="" />
 <link rel="canonical" href="" />
 <link rel="shortcut icon" type="image/x-icon"  href="{{ asset('img/favicon.svg')}}">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Poppins:300,400,500,600,700" />
- @vite(['resources/css/app.css', 'resources/js/app.js'])
-<link href="{{ asset('demo/plugins/custom/fullcalendar/fullcalendar.bundle.css') }}{{ TM_VERSION }}" rel="stylesheet" type="text/css" />
+{{-- Step 8a: Self-hosted Poppins, reduced to 400+500 weights only (-400KB).
+     Deployment task: copy poppins-400.woff2 and poppins-500.woff2 to public/fonts/.
+     Until fonts are deployed, the CDN fallback below is the active source. --}}
+@if(file_exists(public_path('fonts/poppins-400.woff2')))
+<style>
+@font-face{font-family:'Poppins';src:url('{{ asset('fonts/poppins-400.woff2') }}') format('woff2');font-weight:400;font-style:normal;font-display:swap;}
+@font-face{font-family:'Poppins';src:url('{{ asset('fonts/poppins-500.woff2') }}') format('woff2');font-weight:500;font-style:normal;font-display:swap;}
+</style>
+@else
+{{-- CDN fallback until fonts/poppins-*.woff2 are deployed to public/fonts/ --}}
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500&display=swap" />
+@endif
+@vite(['resources/css/app.css', 'resources/js/app.js'])
+<link rel="preload" href="{{ asset('demo/plugins/custom/fullcalendar/fullcalendar.bundle.css') }}{{ TM_VERSION }}" as="style" onload="this.onload=null;this.rel='stylesheet'">
+<noscript><link href="{{ asset('demo/plugins/custom/fullcalendar/fullcalendar.bundle.css') }}{{ TM_VERSION }}" rel="stylesheet"></noscript>
 <link href="{{ asset('demo/plugins/custom/datatables/datatables.bundle.css') }}" rel="stylesheet" type="text/css" />
 <link href="{{ asset('demo/plugins/global/plugins.bundle.css') }}{{ TM_VERSION }}" rel="stylesheet" type="text/css" />
 <link href="{{ asset('demo/css/style.bundle.css') }}{{ TM_VERSION }}" rel="stylesheet" type="text/css" />
