@@ -1,19 +1,62 @@
 # Apptracker — GOD-level Audit
 
-> Audit of `service_company/apptracker` feature (Aug 2026).
+> Audit of the apptracker feature (Aug 2026), scoped to **ServiceCompany + Admin only**
+> per the user's explicit directive. ProductCompany and Staffing controllers ship
+> as parallel files but are treated as reference-only here (see §1.1 for the open
+> question that contradicts this).
+>
 > For 10,000 recruiters on 32 GB RAM (Laravel + MySQL + Elasticsearch + Redis/Horizon + Octane).
-> Subject: `service_company/apptracker` — the ATS pipeline that 95% of recruiter time lives in.
+> Subject: the ATS pipeline that 95% of recruiter time lives in.
 > Status: **working but not scalable as-is**; ~9 must-fix issues, ~7 quick wins, 1 critical missing constant.
 
 ---
 
 ## 1. Surface area (the "what")
 
+**ServiceCompany (canonical):**
 - **Controller:** `ServiceCompanyAppTrackerController.php` — **11,374 lines, 33 methods, 377 KB**. Largest god-controller in the repo after HomeController.
 - **Helper:** `GeneralMethod.php` — **522 KB, ~14,087 lines** — single static helper class. Apptracker helper `custome_count_all` alone is ~1,300 lines.
 - **Views:** 13 blade files in `resources/views/service_company/apptracker/` (51–178 KB each; total ~1.7 MB).
 - **Routes:** `routes/service.php` lines 239–287 — **39 named apptracker routes**. Two routes are **unnamed** (`apptracker/{id}/{mstatus_id}` line 265, `apptracker/clientapp/{id}/{mstatus_id}` line 273), blocking `route:cache`.
-- **Companion controllers:** Staffing/Product/Admin all ship near-identical `AppTracker` controllers. Code is duplicated 4× not abstracted.
+
+**Admin (secondary, JERO internal panel):**
+- **Controller:** `AdminAppTrackerController.php` — **1,410 lines, 40 methods**.
+- **Views:** `resources/views/admin/apptracker/`.
+- **Routes:** `routes/web.php` lines 1483–1507 — **26 named apptracker routes** wired into the JERO admin panel under the `admin.*` prefix.
+
+**Companion controllers (out of scope, reference-only):** Staffing and Product both ship parallel `AppTracker` controllers. ServiceCompany is the **only** one that talks to Elasticsearch. Admin runs on MySQL-only queries for the admin panel.
+
+### 1.1. RESOLVED: Product routes ARE reachable (Aug 2026 reconciliation)
+
+The earlier open question has been resolved. Evidence:
+
+- **Route group:** `routes/web.php:447` wraps the Product routes in
+  `Route::prefix('product_company')->name('product_company.')->group(function () { ... })`
+  with `middleware(['custom-package'])` (line 449). The 26 apptracker routes at
+  lines 887-933 resolve to `product_company/apptracker/*` URLs.
+- **Middleware (`app/Http/Middleware/CustomPackage.php`):** blocks only when
+  `working_status == 0` (lines 36-46). When `working_status == 1` (active
+  subscription), the middleware is `return $next($request)` — pass-through.
+- **Login flow (`app/Http/Controllers/Auth/CustomloginController.php:91-92`):**
+  Users with `company_type == 3` (Product Based) are redirected to
+  `product_company/dashboard`. The login path is wired for product-company users.
+
+**Conclusion:** **Product routes are reachable** for any product-company user
+with an active subscription. The user's stated directive ("Product/Staffing are
+not used and not integrated") reflects current business intent (deprecating the
+product-company persona), but the code is still live.
+
+**Implications for this audit (Aug 2026):**
+1. The user's *business* directive still holds — Product is being deprecated.
+   This audit continues to treat Product as out-of-scope for feature work.
+2. **However**, the 26 Product routes at `routes/web.php:887-933` will 500 if a
+   product-company user hits any of the methods that exist on Admin but not on
+   Product (e.g., `apptracker.data` → `ProductCompanyAppTrackerController::data`).
+   This is a security/reliability concern until the Product routes are removed
+   OR the missing methods are copied over.
+3. **Recommendation:** as part of the persona-deprecation cleanup, either (a)
+   delete the 26 Product routes, or (b) duplicate Step 9's route-repair changes
+   into `ProductCompanyAppTrackerController`.
 
 ---
 
@@ -37,7 +80,7 @@ With 32 GB RAM each on MySQL/ES/Redis this is fine for **today** (893 companies,
 `config/constants.php` defines all `ELASTIC_*` keys and `AppServiceProvider::boot()` (line 21–25) does `define($key, config('constants.'.$key))` for every one before any controller runs. So the constants ARE available at runtime. Audit agent missed this.
 
 ### C-2. 8 routes reference missing methods → 500 in production
-Confirmed via grep — these service-side apptracker routes **target methods that don't exist** on `ServiceCompanyAppTrackerController` (they exist only on `ProductCompanyAppTrackerController` / `AdminAppTrackerController`):
+Confirmed via grep — these service-side apptracker routes **target methods that don't exist** on `ServiceCompanyAppTrackerController` (they exist on `AdminAppTrackerController`; per the scope directive, Product/Staffing are reference-only and not the source for the fix):
 
 | Route | Missing method |
 |---|---|
@@ -54,7 +97,7 @@ Confirmed via grep — these service-side apptracker routes **target methods tha
 | `apptracker.getchild` | `getchild` |
 | `tickets.ticketUpdateStatus` | `ticketUpdateStatus` |
 
-→ These will 500 the moment a recruiter hits them. **Either** add the methods to the Service controller, **or** point the routes at the shared base.
+→ These will 500 the moment a recruiter hits them. **Either** add the methods to the Service controller (copy from the Admin implementation), **or** point the routes at a shared base.
 
 ### C-3. `findTalent()` is hardcoded to job_id=48
 `app/Http/Controllers/ServiceCompany/ServiceCompanyAppTrackerController.php:10606` — `Job::findOrFail(48)`. Every recruiter landing on `/findTalent` sees job 48 regardless of company. Cross-tenant display bug. Replace with the user's most-recent job or a feature flag.
@@ -161,7 +204,10 @@ Assuming 10 K companies, 100 M records, 5 K concurrent recruiters at peak:
 
 ## 8. Refactor: a 10-K-recruiter-ready apptracker
 
-The 11,374-line god-controller needs to be sliced. Per `docs/AI_RULES.md` rule #11, build vertical slices. The plan:
+The 11,374-line god-controller needs to be sliced. Per `docs/AI_RULES.md` rule #11, build vertical slices. The full plan now lives in
+[`13_STEP_IMPLEMENTATION_PLAN.md`](13_STEP_IMPLEMENTATION_PLAN.md) (file renamed from
+`10_STEP_IMPLEMENTATION_PLAN.md`; content renamed from "10-step plan" to
+"13-step plan + 6-phase slice refactor" in Aug 2026). Summary:
 
 1. **Extract `CandidateListingService`** — owns `buildCandidateSearchQuery()`, `prepareRowMaps()`, `resolveTagifyFilters()`, and the cache-key scheme. Used by all 8 `_data_ajax` methods.
 2. **Extract `CounterService`** — owns `loadCounter()`, `customeCountAll()`, the ES counter doc, and the Redis cache layer. Returns counts as plain array.
@@ -170,6 +216,9 @@ The 11,374-line god-controller needs to be sliced. Per `docs/AI_RULES.md` rule #
 5. **Inject** all four services via the constructor (the controller already takes `MailService` etc. — just add 4 more).
 6. **Move common page-render bootstrap** (`Job::findOrFail`, `Client::findOrFail`, `custome_count_all`, `prepareRowMaps`) into a `ApptrackerPageData` value object assembled once per page.
 7. **Wire Horizon queues** for `CounterUpdateJob`, `ReindexAfterStageMoveJob` (fire from `JobApplicationObserver`).
+8. **Step 11 — Phase A through Phase F.** The full 6-phase slice that delivers
+   the long-term modular architecture. Each phase ships independently; combined
+   effort ~12.5 dev-days.
 
 Result: **~2,500 line controller**, services testable in isolation, 80% fewer SQL queries, 75% fewer ES round-trips, real-time counters via Reverb.
 
@@ -205,13 +254,50 @@ Result: **~2,500 line controller**, services testable in isolation, 80% fewer SQ
 | #12 Measure & verify | N/A — audit only |
 | #13 State the purpose of every new code | N/A — audit only |
 
+### 10.1. 12-Objective compliance (Aug 2026)
+
+A separate objective-level review (see "Plan Review" message in session log) mapped
+the 10-step plan against 12 explicit objectives (10 K recruiters, 32 GB × 3, dynamic UI,
+minimal server load, exact SQL minimum, near real-time, accurate counters, client-side
+offload, modular architecture, network resilience, no re-renders, scalable + fault-tolerant).
+
+The original 10-step plan covered **6 of 12 fully**, **5 of 12 partially**, and
+**1 of 12 not at all** (network resilience — objective #10).
+
+The plan has been **expanded to 13 steps + a 6-phase slice refactor** to close
+these gaps. The mapping:
+
+| # | Objective | Steps |
+|---|---|---|
+| 1 | 10,000 concurrent recruiters | 1, 4, 5, 8, 11 |
+| 2 | 32 GB RAM × 3 server math | 1, 4, 5, 8, 10 |
+| 3 | Dynamic, responsive UI | 0, 6, 6.5, 7.5 |
+| 4 | Fastest response, minimal server load | 1, 2, 2.5, 3, 4, 5, 8, 10 |
+| 5 | Minimum SQL, optimize DB | 1, 2, 3, 5, 12 |
+| 6 | Near real-time data updates | 7, 7.5 |
+| 7 | Counters accurate + synchronized | 4, 4.5, 12 |
+| 8 | Client-side offload | 0, 6, 6.5, 7, 7.5, 8, 8.5 |
+| 9 | Low-maintenance, modular, scalable architecture | 11 |
+| 10 | Network failures, timeouts, retries, offline, reconnections | 0, 13 |
+| 11 | No re-renders, duplicate API calls, redundant SQL, expensive computations | 0, 3, 5, 5.5, 8.5, 11 |
+| 12 | Scalable, fault-tolerant, production-ready | 0, 4, 4.5, 11, 12, 13 |
+
+The three additions that are **non-negotiable for "production-ready"**:
+1. **Step 0** — client-side resilience (without it, the 10 K-recruiter UX falls apart on WiFi hiccups)
+2. **Step 4.5** — counter drift correction (without it, counters silently drift away from truth)
+3. **Step 11** — controller slicing (without it, the codebase can't scale to 10 K recruiters without 11 K-line files)
+
+See `13_STEP_IMPLEMENTATION_PLAN.md` for the full plan.
+
 ---
 
 ## 11. Bottom line
 
 - **It works today** but the missing constant (C-1), the 8 broken routes (C-2), and the unindexed `add_job_wise_condidates` (P-1) are the three things to fix **before** the next deploy.
-- The god controller must be sliced (section 8) before you 10× the recruiter count.
-- The counter strategy (section 5) — Redis + Reverb + ES counter doc — is what makes "almost real-time" achievable without hammering MySQL/ES.
+- The god controller must be sliced (section 8 + Step 11 in the implementation plan) before you 10× the recruiter count.
+- The counter strategy (section 5) — Redis + Reverb + ES counter doc — is what makes "almost real-time" achievable without hammering MySQL/ES. The drift-correction sweep (Step 4.5) is the companion that keeps it accurate.
 - Most of the wins are DDL + config + 8 lines of `'request_cache' => true` — low risk, high ROI.
+- **The 12-objective compliance review** (Aug 2026, see §10.1) added 3 non-negotiables: Step 0 (client-side resilience), Step 4.5 (counter drift), Step 11 (controller slicing). Without these, the system is fast but not "production-ready" by the user's 12-objective definition.
+- Total effort to ship all 13 steps + slice refactor: **~26.25 dev-days** (round: ~26 dev-days; was ~3 dev-days for the original 10). The extra ~23 days buys: failure-mode correctness (Steps 0, 13), counter-accuracy under load (Step 4.5), the structural ability to evolve (Step 11), and the Product route mirror in Step 9 (so the 26 reachable Product routes don't 500 on methods that exist on Admin/Service but not on Product).
 
 See [[tenant-isolation-blanket-scopes-break-marketplace]] for why the blanket-scope hardening approach in BUG-03/13 has tradeoffs in the marketplace.

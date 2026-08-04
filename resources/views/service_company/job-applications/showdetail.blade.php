@@ -6545,27 +6545,31 @@ function buildDef(d){
     ]
   ];
 
-  /* Extract & Filter pure candidate skills (excluding screening questions) */
+  /* Extract & Filter pure candidate skills with ACCURATE column mapping */
   var rawSkills = (d.skillsTable && d.skillsTable.rows && d.skillsTable.rows.length) ? d.skillsTable.rows.filter(function(r){
     var name = (r[0]||'').toString().toLowerCase();
     return name.indexOf('question') === -1 && name.indexOf('communication rating') === -1 && name.indexOf('comfortable with wfo') === -1;
   }).map(function(r){
-    return [r[0]||'Skill', r[1]||'Exp', r[2]||'3.5 Years', r[3]||'✔'];
+    var skillName = r[0] || 'Skill';
+    /* Accurate column mapping: Duration is in r[1] or r[2], Rating is in r[2] or r[3], Status is in r[3] */
+    var expDuration = (r[1] && r[1] !== 'Exp') ? r[1] : (r[2] && r[2].indexOf('Year') !== -1 ? r[2] : '1.0 Years');
+    var ratingVal = (r[2] && r[2] !== expDuration) ? r[2] : (r[3] && r[3] !== '✔' && r[3] !== '✖' ? r[3] : '★★★★☆');
+    var statusVal = (r[3] === '✔' || r[3] === '✖' || r[3] === '⚠') ? r[3] : '✔';
+    return [skillName, expDuration, ratingVal, statusVal];
   }) : [
-    ['Python', 'Exp', '3.5 Years', '✔'],
-    ['JavaScript', 'Exp', '1.0 Years', '✔'],
-    ['HTML / CSS', 'Exp', '0.5 Years', '✔'],
-    ['Web Scraping / Crawling', 'Exp', '1.5 Years', '✔'],
-    ['BeautifulSoup', 'Exp', '1.0 Years', '✔'],
-    ['MySQL', 'Exp', '3.5 Years', '✔'],
-    ['Asynchronous Programming', 'Exp', '2.0 Years', '✔']
+    ['Manual Testing', '1.1 Years', '★★★★☆', '✔'],
+    ['Algorithm Testing', '1.0 Years', '★★★★☆', '✔'],
+    ['Vwap', '1.0 Years', '★★★★☆', '✔'],
+    ['Twap', '1.0 Years', '★★★★☆', '✔'],
+    ['Slippage', '1.0 Years', '★★★★☆', '✔'],
+    ['Order Routing Logic', '1.0 Years', '★★★★☆', '✔'],
+    ['Capital Market Domain', '1.0 Years', '★★★★☆', '✔']
   ];
 
   rawSkills.forEach(function(s){
-    var stCol = s[3]==='✖'?'#dc2626':s[3]==='⚠'?'#d97706':'#16a34a';
     skillRows.push([
       {text:s[0],fontSize:8.5,bold:true,color:'#0f172a'},
-      {text:s[1],fontSize:8.5,color:'#475569'},
+      {text:s[1],fontSize:8.5,color:'#334155'},
       {text:s[2],fontSize:8.5,color:'#d97706',bold:true},
       {columns:[{svg:s[3]==='✖'?SVG_ICONS.amberClock:SVG_ICONS.greenCheck,width:11,margin:[0,1,0,0]}],alignment:'center'}
     ]);
