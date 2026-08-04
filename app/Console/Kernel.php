@@ -14,15 +14,12 @@ class Kernel extends ConsoleKernel
             ->everyMinute()
             ->timezone('Asia/Kolkata');
 
-        // Phase 1 — Resume Upload Session orphan cleanup.
-        // Runs at 03:30 IST to avoid overlap with the bulk of recruiter traffic.
-        // Dispatches CleanupOrphanUploadsJob onto the queue so multiple pods can
-        // share the work without locking; the job itself is idempotent at the row
-        // level via the conditional UPDATE on the Cleaning transition.
-        $schedule->command('uploads:cleanup-orphans --dispatch')
-            ->dailyAt('03:30')
-            ->timezone('Asia/Kolkata')
-            ->withoutOverlapping();
+        // Resume v2 — orphan sweep (feature flag guards the actual work inside the command).
+        // withoutOverlapping prevents pile-up if the previous run is still processing.
+        $schedule->command('resumes:reconcile-orphans')
+            ->hourly()
+            ->withoutOverlapping(10)
+            ->runInBackground();
     }
 
     protected function commands()

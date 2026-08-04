@@ -27,6 +27,12 @@
       "port": 5174,
       "autoPort": true,
       "url": "http://localhost:5174"
+    },
+    {
+      "name": "pdf-repro",
+      "runtimeExecutable": "php",
+      "runtimeArgs": ["-S", "127.0.0.1:8910", "-t", "C:/Users/VIBHANSHU JAISWAL.000/AppData/Local/Temp/claude/C--Users-VIBHANSHU-JAISWAL-000-Documents-GitHub-JWMaincode28June2026/pdf-repro"],
+      "port": 8910
     }
   ]
 }

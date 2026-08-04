@@ -1259,10 +1259,7 @@ END:VCALENDAR";
 				    $company_details = isset($response['_source']) ? (object) $response['_source'] : null;
 					
 
-
 					// return users
-					
-
 
                     $response = $elasticService->getClient()->update([
                         'index' => ELASTIC_CANDIDATE_TIMELINE,

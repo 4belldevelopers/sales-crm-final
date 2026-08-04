@@ -1,397 +1,299 @@
 <?php
-
 namespace App\Services;
 
-use App\Jobs\ParseResumeJob;
+use App\Enums\ResumeUploadStatus;
 use App\Models\ResumeUpload;
 use App\Models\UploadSessionAudit;
-use Carbon\Carbon;
-use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
-use RuntimeException;
 
 /**
- * Phase 2 service: orchestrates the resume upload session lifecycle.
+ * Intent: Orchestrates the resume upload session lifecycle.
+ * Every v2 endpoint delegates here. Stateless — all state lives in MySQL.
  *
- * Responsibilities:
- *   1. Create (or replay by idempotency-key) — writes row + R2 file
- *   2. Finalize — Uploading -> Uploaded + records upload_completed_at
- *   3. Parse asynchronously — sets Parsing -> Parsed
- *   4. Atomic Link — conditional UPDATE on (status='Parsed' AND candidate_id IS NULL)
- *      so two concurrent submits cannot both create candidates.
- *   5. Replace — old session goes Parsed -> Replaced when a new Linked transition happens.
- *   6. Cancel — owner-initiated cleanup (Uploaded -> Cleaning -> ... -> deleted)
+ * Invariants enforced:
+ * - INV-1: new file pick → new key (enforced by JS) → new session here
+ * - INV-4: same key + company → replays the existing non-terminal session
  *
- * Tenant isolation: every public method accepts $companyId explicitly. All
- * DB reads use company_id in the WHERE clause. We deliberately do NOT use
- * a global scope here (see CLAUDE.md BUG-03 / memory note about why blanket
- * scopes break multi-tenant marketplace reads). Caller is responsible for
- * passing the right companyId; the forCompany() helper enforces it on lookup.
- *
- * Backward compatibility:
- *   - The existing service-company uploadresume() flow continues to work
- *     unchanged when sessionUuid is absent.
- *   - The new flow is opt-in: the JS client must send #upload_session_uuid.
+ * Tenancy: company_id and user_id MUST come from Auth::user(), never from
+ * request body (CLAUDE.md rule 3).
  */
 class ResumeUploadSession
 {
-    public const DEFAULT_EXPIRY_HOURS = 24;
-
-    public function __construct(
-        private readonly ResumeUploadService $uploads,
-        private readonly string $disk = 'r2',
-    ) {}
-
     /**
-     * Create a new session, or replay an existing one if Idempotency-Key matches.
+     * Create a new upload session OR replay an existing one for the same
+     * Idempotency-Key header (transport retry safety — INV-4).
      *
-     * @return array{session: ResumeUpload, replayed: bool}
+     * The browser generates a fresh key per presign request. Two file picks
+     * → two keys → two sessions, even for identical bytes. A network retry
+     * of the same fetch() carries the same key → same session returned.
+     *
+     * @throws \InvalidArgumentException for malformed Idempotency-Key
      */
-    public function createOrReplay(
-        UploadedFile|string $file,
-        string $originalFilename,
-        string $companyName,
-        int|string $companyId,
-        int $userId,
-        ?string $idempotencyKey = null,
-        ?int $jobId = null,
-        ?int $actorIp = null,
-        ?string $userAgent = null,
-        ?string $requestId = null,
-        int $expiryHours = self::DEFAULT_EXPIRY_HOURS,
-        string $resourceType = ResumeUpload::RESOURCE_TYPE_JOB_APPLICATION,
+    public function createOrPresign(
+        int     $companyId,
+        int     $userId,
+        string  $idempotencyKey,
+        string  $originalFilename,
+        int     $fileSizeBytes,
+        string  $mimeType,
+        string  $clientIp,
+        ?string $sha256Hex = null,
     ): array {
-        if ($idempotencyKey !== null && $idempotencyKey !== '') {
-            $existing = ResumeUpload::query()
-                ->where('company_id', $companyId)
-                ->where('idempotency_key', $idempotencyKey)
-                ->whereNotIn('status', [
-                    ResumeUpload::STATUS_CLEANING,
-                    ResumeUpload::STATUS_DELETE_FAILED,
-                    ResumeUpload::STATUS_EXPIRED,
-                    ResumeUpload::STATUS_REDACTED_FOR_GDPR,
-                ])
-                ->orderByDesc('id')
-                ->first();
-            if ($existing !== null) {
-                UploadSessionAudit::record(
-                    sessionUuid: $existing->uuid,
-                    companyId: (int) $existing->company_id,
-                    action: 'Replay',
-                    actorId: $userId,
-                    actorIp: $actorIp,
-                    userAgent: $userAgent,
-                    requestId: $requestId,
-                    metadata: ['idempotency_key' => substr((string) $idempotencyKey, 0, 64)],
-                );
-                return ['session' => $existing, 'replayed' => true];
-            }
+        // Validate: UUID (36 chars with dashes) or hex string (32–64 chars)
+        if (!preg_match('/^[a-f0-9\-]{36,64}$/i', $idempotencyKey)) {
+            throw new \InvalidArgumentException('Invalid Idempotency-Key format');
         }
 
-        // Write to R2 final path. If this throws, we abort before creating a row,
-        // so the user can retry without leaving a stuck Created row.
-        $uploadResult = $this->uploads->uploadDirect(
-            $file,
-            $originalFilename,
-            $companyName,
-            $companyId,
-            now(),
-        );
-
-        $now = Carbon::now();
-        $uuid = (string) Str::uuid();
-
-        $session = DB::transaction(function () use (
-            $uuid, $companyId, $userId, $jobId, $idempotencyKey,
-            $uploadResult, $originalFilename, $file, $now, $expiryHours, $resourceType,
-        ) {
-            $storedFilename = basename($uploadResult['path']);
-            $row = ResumeUpload::create([
-                'uuid' => $uuid,
-                'company_id' => $companyId,
-                'user_id' => $userId,
-                'job_id' => $jobId,
-                'resource_type' => $resourceType,
-                'original_filename' => $originalFilename,
-                'stored_filename' => $storedFilename,
-                'r2_path' => $uploadResult['path'],
-                'r2_url' => $uploadResult['url'],
-                'mime_type' => $file instanceof UploadedFile
-                    ? ($file->getClientMimeType() ?: 'application/pdf')
-                    : 'application/pdf',
-                'file_size_bytes' => $this->resolveSize($file, $uploadResult['path']),
-                'idempotency_key' => $idempotencyKey,
-                'status' => ResumeUpload::STATUS_UPLOADED,
-                'upload_started_at' => $now,
-                'upload_completed_at' => $now,
-                'expires_at' => $now->copy()->addHours($expiryHours),
-            ]);
-
-            UploadSessionAudit::record(
-                sessionUuid: $row->uuid,
-                companyId: (int) $row->company_id,
-                action: 'Created',
-                actorId: $userId,
-                metadata: ['r2_path' => $row->r2_path, 'resource_type' => $resourceType],
-            );
-            UploadSessionAudit::record(
-                sessionUuid: $row->uuid,
-                companyId: (int) $row->company_id,
-                action: 'UploadSuccess',
-                actorId: $userId,
-                metadata: [
-                    'file_size_bytes' => $row->file_size_bytes,
-                    'mime_type' => $row->mime_type,
-                ],
-            );
-
-            return $row;
-        });
-
-        // Parse asynchronously. The stub marks the session Parsed quickly; Phase 3
-        // will swap this for the real parser client (e.g. the existing internal
-        // resume parser). We dispatch onto 'emails' so it's the same queue as the
-        // candidates' indexing work.
-        ParseResumeJob::dispatch($session->uuid, (int) $session->company_id, $userId)
-            ->onConnection('emails');
-
-        return ['session' => $session, 'replayed' => false];
-    }
-
-    /**
-     * Atomically claim and Link a session to a candidate row.
-     *
-     * Returns true on success, false on contention (the row was already linked
-     * by another submit or has terminal status). Caller decides how to surface
-     * the false case (recommended: 409 Conflict).
-     */
-    public function tryLink(
-        string $uuid,
-        int $companyId,
-        int $candidateId,
-        ?int $actorId = null,
-        ?string $requestId = null,
-    ): bool {
-        // Read once for company check + sentinel. The actual write is conditional.
-        $row = ResumeUpload::query()
-            ->where('uuid', $uuid)
-            ->where('company_id', $companyId)
-            ->first();
-        if ($row === null) {
-            return false;
-        }
-
-        $now = Carbon::now();
-
-        $updated = DB::table('resume_uploads')
-            ->where('uuid', $uuid)
-            ->where('company_id', $companyId)
-            ->where('resource_type', ResumeUpload::RESOURCE_TYPE_JOB_APPLICATION)
-            ->whereIn('status', [
-                ResumeUpload::STATUS_PARSED,
-                ResumeUpload::STATUS_MANUAL_REVIEW_REQUIRED,
-                ResumeUpload::STATUS_ABORTED_BY_SUBMIT,
-            ])
-            ->whereNull('candidate_id')
-            ->update([
-                'status' => ResumeUpload::STATUS_LINKED,
-                'candidate_id' => $candidateId,
-                'linked_at' => $now,
-                'updated_at' => $now,
-            ]);
-
-        if ($updated === 0) {
-            return false;
-        }
-
-        UploadSessionAudit::record(
-            sessionUuid: $uuid,
-            companyId: $companyId,
-            action: 'Linked',
-            actorId: $actorId,
-            requestId: $requestId,
-            metadata: ['candidate_id' => $candidateId, 'resource_type' => 'job_application'],
-        );
-
-        return true;
-    }
-
-    /**
-     * Same Link semantics as tryLink() but the session was created with
-     * resource_type='bench_application', so we write into bench_application_id
-     * instead of candidate_id. Used by the bench manager flow.
-     */
-    public function tryLinkBench(
-        string $uuid,
-        int $companyId,
-        int $benchApplicationId,
-        ?int $actorId = null,
-        ?string $requestId = null,
-    ): bool {
-        $row = ResumeUpload::query()
-            ->where('uuid', $uuid)
-            ->where('company_id', $companyId)
-            ->first();
-        if ($row === null) {
-            return false;
-        }
-
-        $now = Carbon::now();
-
-        $updated = DB::table('resume_uploads')
-            ->where('uuid', $uuid)
-            ->where('company_id', $companyId)
-            ->where('resource_type', ResumeUpload::RESOURCE_TYPE_BENCH_APPLICATION)
-            ->whereIn('status', [
-                ResumeUpload::STATUS_PARSED,
-                ResumeUpload::STATUS_MANUAL_REVIEW_REQUIRED,
-                ResumeUpload::STATUS_ABORTED_BY_SUBMIT,
-            ])
-            ->whereNull('bench_application_id')
-            ->update([
-                'status' => ResumeUpload::STATUS_LINKED,
-                'bench_application_id' => $benchApplicationId,
-                'linked_at' => $now,
-                'updated_at' => $now,
-            ]);
-
-        if ($updated === 0) {
-            return false;
-        }
-
-        UploadSessionAudit::record(
-            sessionUuid: $uuid,
-            companyId: $companyId,
-            action: 'Linked',
-            actorId: $actorId,
-            requestId: $requestId,
-            metadata: ['bench_application_id' => $benchApplicationId, 'resource_type' => 'bench_application'],
-        );
-
-        return true;
-    }
-
-    /**
-     * Mark a previously Linked session as Replaced by a new session, only if
-     * the new session reached Linked. This is what protects against losing
-     * the old resume when the user picks a new file in EDIT flow.
-     */
-    public function markReplacedAfterReplacementLinked(
-        string $oldUuid,
-        int $companyId,
-        string $newUuid,
-        ?int $actorId = null,
-    ): bool {
-        $updated = DB::table('resume_uploads')
-            ->where('uuid', $oldUuid)
-            ->where('company_id', $companyId)
-            ->whereIn('status', [ResumeUpload::STATUS_LINKED])
-            ->update([
-                'status' => ResumeUpload::STATUS_REPLACED,
-                'updated_at' => Carbon::now(),
-            ]);
-        if ($updated === 0) {
-            return false;
-        }
-        UploadSessionAudit::record(
-            sessionUuid: $oldUuid,
-            companyId: $companyId,
-            action: 'Replaced',
-            actorId: $actorId,
-            metadata: ['replaced_by' => $newUuid],
-        );
-        // Update the new session's replaces_session_uuid so the audit graph
-        // is reversible.
-        DB::table('resume_uploads')
-            ->where('uuid', $newUuid)
-            ->where('company_id', $companyId)
-            ->update(['replaces_session_uuid' => $oldUuid]);
-        return true;
-    }
-
-    /**
-     * User-initiated cancel. Marks the row Cleaning; the nightly GC job takes
-     * care of the R2 deletion + row hard delete.
-     */
-    public function cancel(string $uuid, int $companyId, ?int $actorId = null): bool
-    {
-        $updated = DB::table('resume_uploads')
-            ->where('uuid', $uuid)
-            ->where('company_id', $companyId)
-            ->whereIn('status', [
-                ResumeUpload::STATUS_UPLOADED,
-                ResumeUpload::STATUS_PARSED,
-                ResumeUpload::STATUS_PARSE_FAILED,
-                ResumeUpload::STATUS_MANUAL_REVIEW_REQUIRED,
-                ResumeUpload::STATUS_ABORTED_BY_SUBMIT,
-                ResumeUpload::STATUS_REPLACED,
-            ])
-            ->update([
-                'status' => ResumeUpload::STATUS_CLEANING,
-                'updated_at' => Carbon::now(),
-            ]);
-        if ($updated === 0) {
-            return false;
-        }
-        UploadSessionAudit::record(
-            sessionUuid: $uuid,
-            companyId: $companyId,
-            action: 'CleaningStart',
-            actorId: $actorId,
-            metadata: ['cancel' => true],
-        );
-        // The nightly GC sweep will hard-delete R2 + row for any row in
-        // Cleaning (or ActiveReplaced/Replaced/Parsed past expiry).
-        // For instant feedback we run a focused per-row cleanup here:
-        $session = ResumeUpload::query()
-            ->where('uuid', $uuid)
-            ->where('company_id', $companyId)
-            ->first();
-        if ($session !== null) {
-            try {
-                \Illuminate\Support\Facades\Storage::disk('r2')->delete($session->r2_path);
-            } catch (\Throwable $e) {
-                report($e);
-            }
-            DB::table('resume_uploads')->where('id', $session->id)->delete();
-        }
-        return true;
-    }
-
-    /**
-     * Returns the active session (Parsed/Parsing/Uploaded/AbortedBySubmit) for
-     * the calling user so the form can pre-fill parsed data on a re-open.
-     * Returns null if no active session exists.
-     */
-    public function activeForUser(int $companyId, int $userId): ?ResumeUpload
-    {
-        return ResumeUpload::query()
-            ->where('company_id', $companyId)
-            ->where('user_id', $userId)
-            ->whereIn('status', [
-                ResumeUpload::STATUS_UPLOADED,
-                ResumeUpload::STATUS_PARSING,
-                ResumeUpload::STATUS_PARSED,
-                ResumeUpload::STATUS_ABORTED_BY_SUBMIT,
-            ])
-            ->where(function ($q) {
-                $q->whereNull('expires_at')->orWhere('expires_at', '>', Carbon::now());
-            })
+        // INV-4 — replay lookup (non-unique index; last non-terminal match wins)
+        $existing = ResumeUpload::forCompany($companyId)
+            ->where('idempotency_key', $idempotencyKey)
+            ->nonTerminal()
             ->orderByDesc('id')
             ->first();
+
+        if ($existing) {
+            UploadSessionAudit::record($existing->id, 'ActionSessionReplayed', [
+                'previous_created_at' => $existing->created_at->toIso8601String(),
+            ], $existing->company_id, $existing->user_id);
+
+            return $this->buildResponse(
+                $existing,
+                $this->generatePresignedUrl($existing->uuid),
+                replayed: true,
+            );
+        }
+
+        // Create new session row
+        $uuid      = (string) Str::uuid();
+        $expiresAt = now()->addSeconds(config('resumes.session.ttl', 1800));
+
+        try {
+            $session = ResumeUpload::create([
+                'uuid'              => $uuid,
+                'company_id'        => $companyId,
+                'user_id'           => $userId,
+                'original_filename' => $originalFilename,
+                'file_size_bytes'   => $fileSizeBytes,
+                'mime_type'         => $mimeType,
+                'status'            => ResumeUploadStatus::Pending->value,
+                'idempotency_key'   => $idempotencyKey,
+                'expires_at'        => $expiresAt,
+                'sha256_hex'        => $sha256Hex,
+            ]);
+        } catch (\Illuminate\Database\QueryException $e) {
+            // Issue 7: Race window — two concurrent retries both found no row.
+            // Re-run the lookup; the winner is now visible in the index.
+            if (str_starts_with((string) $e->getCode(), '23')) {
+                $session = ResumeUpload::forCompany($companyId)
+                    ->where('idempotency_key', $idempotencyKey)
+                    ->nonTerminal()
+                    ->orderByDesc('id')
+                    ->firstOrFail();
+
+                return $this->buildResponse(
+                    $session,
+                    $this->generatePresignedUrl($session->uuid),
+                    replayed: true,
+                );
+            }
+            throw $e;
+        }
+
+        UploadSessionAudit::record($session->id, 'ActionSessionCreated', [
+            'ip_hash' => hash('sha256', $clientIp . now()->format('Y-m-d')),
+        ], $companyId, $userId);
+
+        return $this->buildResponse(
+            $session,
+            $this->generatePresignedUrl($uuid),
+            replayed: false,
+        );
     }
 
-    private function resolveSize(UploadedFile|string $file, string $r2Path): int
+    /**
+     * Mark a session as Uploaded after the browser confirms R2 PUT completed.
+     * Idempotent — calling twice on an already-Uploaded session is a safe no-op.
+     *
+     * R2 HEAD check runs BEFORE the DB conditional-UPDATE so the network call
+     * never holds a DB lock open (Issue 5 fix).
+     *
+     * @throws \RuntimeException (code 404) if session not found for this tenant
+     */
+    public function finalize(string $uuid, int $companyId): array
     {
-        if ($file instanceof UploadedFile) {
-            return (int) $file->getSize();
+        $session = ResumeUpload::byUuid($uuid)->forCompany($companyId)->first();
+        if (!$session) {
+            throw new \RuntimeException('Session not found', 404);
         }
-        // Re-read from R2 if file was raw content.
-        $size = \Illuminate\Support\Facades\Storage::disk($this->disk)->size($r2Path);
-        if ($size === false) {
-            throw new RuntimeException("Cannot resolve size for {$r2Path}");
+
+        // Issue 5: preflight outside any transaction — no DB lock during network I/O
+        $r2Exists = $this->headCheck($uuid);
+
+        if (!$r2Exists) {
+            Log::warning('jobs.resume.finalize_r2_missing', [
+                'uuid'       => $uuid,
+                'company_id' => $companyId,
+                'status'     => $session->status,
+            ]);
         }
-        return (int) $size;
+
+        // Conditional UPDATE — second finalize call finds 0 rows → idempotent no-op
+        $updated = DB::table('resume_uploads')
+            ->where('uuid', $uuid)
+            ->whereIn('status', [
+                ResumeUploadStatus::Pending->value,
+                ResumeUploadStatus::Uploading->value,
+            ])
+            ->update([
+                'status'              => ResumeUploadStatus::Uploaded->value,
+                'upload_completed_at' => now(),
+                'updated_at'          => now(),
+            ]);
+
+        $action  = $updated === 0 ? 'ActionFinalizeIdempotent' : 'ActionUploadCompleted';
+        UploadSessionAudit::record($session->id, $action, [
+            'previous_status' => $session->status,
+            'r2_verified'     => $r2Exists,
+        ], $companyId);
+
+        return [
+            'uuid'                => $session->uuid,
+            'status'              => ResumeUploadStatus::Uploaded->value,
+            'r2_verified'         => $r2Exists,
+            'linked_candidate_id' => $session->linked_candidate_id,
+        ];
+    }
+
+    /**
+     * Read session state. Returns null when not found or wrong tenant.
+     */
+    public function get(string $uuid, int $companyId): ?ResumeUpload
+    {
+        return ResumeUpload::byUuid($uuid)->forCompany($companyId)->first();
+    }
+
+    /**
+     * Cancel an in-progress upload. Idempotent — double-cancel is a no-op.
+     *
+     * @throws \RuntimeException (code 404) if session not found for this tenant
+     */
+    public function cancel(string $uuid, int $companyId): void
+    {
+        $session = ResumeUpload::byUuid($uuid)->forCompany($companyId)->first();
+        if (!$session) {
+            throw new \RuntimeException('Session not found', 404);
+        }
+
+        $updated = DB::table('resume_uploads')
+            ->where('uuid', $uuid)
+            ->whereNotIn('status', [
+                ResumeUploadStatus::Cancelled->value,
+                ResumeUploadStatus::Reconciled->value,
+                ResumeUploadStatus::Expired->value,
+                ResumeUploadStatus::Completed->value,
+            ])
+            ->update([
+                'status'     => ResumeUploadStatus::Cancelled->value,
+                'updated_at' => now(),
+            ]);
+
+        $action = $updated === 0 ? 'ActionCancelIdempotent' : 'ActionCancelled';
+        UploadSessionAudit::record($session->id, $action, [
+            'previous_status' => $session->status,
+        ], $companyId);
+
+        // Best-effort R2 cleanup — non-critical; 30-day lifecycle rule also cleans up
+        try {
+            Storage::disk('r2')->delete('resumes/' . $uuid);
+        } catch (\Throwable $e) {
+            Log::warning('jobs.resume.r2_delete_failed', [
+                'uuid'  => $uuid,
+                'error' => $e->getMessage(),
+            ]);
+        }
+    }
+
+    /**
+     * Move a v2 resume from the temp presign path (resumes/{uuid}) to the
+     * company-structured CDN path that v1 uses:
+     *   Companies/{slug}_{id}/Resumes/{YYYY}/{MM}/{original_filename}
+     *
+     * Returns the public file.jero.works CDN URL on success.
+     * Fail-open: on any R2 error, logs and returns a CDN URL for the temp path
+     * so the form submission still records a usable URL.
+     *
+     * Call this AFTER the R2 HEAD check confirms the file exists at the temp path.
+     */
+    public function moveToCompanyPath(ResumeUpload $session): string
+    {
+        $companyName = DB::table('companies')
+            ->where('id', $session->company_id)
+            ->value('company_name');
+        $slug = strtolower(trim($companyName ?? 'unknown'));
+        $slug = preg_replace('/[^a-z0-9_-]/i', '_', $slug);
+        $companyFolder = $slug . '_' . $session->company_id;
+
+        $year     = now()->format('Y');
+        $month    = now()->format('m');
+        $filename = $session->original_filename ?? ($session->uuid . '.pdf');
+        $srcPath  = 'resumes/' . $session->uuid;
+        $destPath = "Companies/{$companyFolder}/Resumes/{$year}/{$month}/{$filename}";
+
+        try {
+            Storage::disk('r2')->copy($srcPath, $destPath);
+            Storage::disk('r2')->delete($srcPath);   // best-effort; lifecycle rule handles orphans
+        } catch (\Throwable $e) {
+            Log::warning('resume.move_company_path_failed', [
+                'uuid'  => $session->uuid,
+                'dest'  => $destPath,
+                'error' => $e->getMessage(),
+            ]);
+            return 'https://file.jero.works/' . $srcPath;
+        }
+
+        return 'https://file.jero.works/' . $destPath;
+    }
+
+    // ─── Private helpers ──────────────────────────────────────────────────────
+
+    /**
+     * Generate a presigned PUT URL for direct browser-to-R2 upload.
+     * Uses Flysystem S3 temporaryUploadUrl (requires flysystem-aws-s3-v3 ≥3.10).
+     */
+    private function generatePresignedUrl(string $uuid): string
+    {
+        $disk   = Storage::disk('r2');
+        $path   = 'resumes/' . $uuid;
+        $ttl    = config('resumes.r2.presign_ttl', 900);
+        // temporaryUploadUrl returns ['url' => ..., 'headers' => ...] in Flysystem 3.x
+        $result = $disk->temporaryUploadUrl($path, now()->addSeconds($ttl));
+
+        return is_array($result) ? $result['url'] : $result;
+    }
+
+    /** HEAD check against R2 — returns false on any error (fail-open). */
+    private function headCheck(string $uuid): bool
+    {
+        try {
+            return Storage::disk('r2')->exists('resumes/' . $uuid);
+        } catch (\Throwable) {
+            return false;
+        }
+    }
+
+    private function buildResponse(ResumeUpload $session, string $presignedUrl, bool $replayed): array
+    {
+        return [
+            'uuid'              => $session->uuid,
+            'status'            => $session->status,
+            'upload_url'        => $presignedUrl,
+            'expires_at'        => $session->expires_at?->toIso8601String(),
+            'original_filename' => $session->original_filename,
+            'file_size_bytes'   => $session->file_size_bytes,
+            'replayed'          => $replayed,
+        ];
     }
 }

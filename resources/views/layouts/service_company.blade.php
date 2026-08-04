@@ -64,6 +64,8 @@
       {
          z-index:9999;
       }
+      /* Remove online-status green dot from all avatar/image icons */
+      .bg-success.rounded-circle.h-20px.w-20px{display:none!important;}
       </style>
    </head>
    <!--end::Head-->

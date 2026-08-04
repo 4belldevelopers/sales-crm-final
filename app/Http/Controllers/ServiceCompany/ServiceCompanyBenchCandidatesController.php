@@ -37,6 +37,9 @@ use Yajra\DataTables\Facades\DataTables;
 use App\Models\JobSkill;
 use App\Jobs\ElasticBenchCandidateIndex;
 use App\Models\NoticePeriod;
+use App\Enums\ResumeUploadStatus;
+use App\Models\ResumeUpload;
+use App\Models\UploadSessionAudit;
 use App\Services\MailService;
 use App\Jobs\ProcessCandidateRequest;
 use App\Services\ElasticService;
@@ -889,7 +892,9 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
 		$this->currencyConverter = GeneralMethod::currencyConverter();
         $this->skillExperiences =[];
 
-		return view('service_company.bench-candidates.create', $this->data);
+		return response()->view('service_company.bench-candidates.create', $this->data)
+			->header('Cache-Control', 'no-cache, no-store, must-revalidate')
+			->header('Pragma', 'no-cache');
 
 	}
 	public function store(Request $request)
@@ -1143,10 +1148,65 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
 		$benchApplication->behance = $request->behance;
 		$benchApplication->otherLink = $request->otherLink;
 
+		// ── v2 pre-flight: validate resume_session_uuid before opening the transaction ──
+		$resumeSession = null;
+		$finalResumeUrl = null;  // set in claim block; reused in resume URL block
+		if (config('resumes.features.submit_with_session') && $request->filled('resume_session_uuid')) {
+			$resumeSession = ResumeUpload::byUuid($request->input('resume_session_uuid'))
+				->forCompany($company_id)->first();
+			if (!$resumeSession) {
+				return Reply::dataOnly(['status' => 'error', 'msgType' => 'warning',
+					'message' => 'Resume upload session not found. Please upload the resume again.']);
+			}
+			if ($resumeSession->status !== ResumeUploadStatus::Uploaded->value) {
+				return Reply::dataOnly(['status' => 'error', 'msgType' => 'warning',
+					'message' => 'Resume upload is not yet complete. Please wait for the upload to finish and try again.']);
+			}
+		}
+		// ─────────────────────────────────────────────────────────────────────────────
+
 		DB::beginTransaction();
 		try {
 
 		$benchApplication->save();
+
+		// ── v2 session: atomic claim + R2 HEAD check + link (inside transaction) ──
+		if ($resumeSession) {
+			$claimed = ResumeUpload::where('id', $resumeSession->id)
+				->where('company_id', $company_id)
+				->where('status', ResumeUploadStatus::Uploaded->value)
+				->update(['status' => ResumeUploadStatus::Completed->value, 'updated_at' => now()]);
+			if ($claimed === 0) {
+				DB::rollBack();
+				return Reply::dataOnly(['status' => 'error', 'msgType' => 'warning',
+					'message' => 'Resume session was already claimed. Please upload the resume again.']);
+			}
+			$r2Exists = false;
+			try { $r2Exists = Storage::disk('r2')->exists('resumes/' . $resumeSession->uuid); } catch (\Throwable) {}
+			if (!$r2Exists) {
+				ResumeUpload::where('id', $resumeSession->id)
+					->where('status', ResumeUploadStatus::Completed->value)
+					->update(['status' => ResumeUploadStatus::Uploaded->value, 'updated_at' => now()]);
+				DB::rollBack();
+				return Reply::dataOnly(['status' => 'error', 'msgType' => 'warning',
+					'message' => 'Resume file not found in storage. Please upload the resume again.']);
+			}
+			// Move file to company-structured CDN path (mirrors v1 storage convention).
+			$finalResumeUrl = app(\App\Services\ResumeUploadSession::class)->moveToCompanyPath($resumeSession);
+			ResumeUpload::where('id', $resumeSession->id)
+				->where('company_id', $company_id)
+				->where('status', ResumeUploadStatus::Completed->value)
+				->update([
+					'linked_candidate_id' => $benchApplication->id,
+					'r2_url'              => $finalResumeUrl,
+					'updated_at'          => now(),
+				]);
+			UploadSessionAudit::record($resumeSession->id, 'ActionSubmitLinked', [
+				'candidate_id' => $benchApplication->id,
+			], $company_id, auth()->user()->id);
+		}
+		// ─────────────────────────────────────────────────────────────────────────
+
 		// if($added){
 		// 	$eventId = 5;
 		// 	GeneralMethod::coinsDeductions((int) $company_id,$eventId,auth()->user()->id,$company_id,'','');
@@ -1246,7 +1306,13 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
 		}
 		
 		if($request->edit_token !=''){
-			if ($request->hasFile('resume')) {
+			if ($resumeSession) {
+				// v2 path (edit): file moved to company CDN path in the claim block above.
+				$r2ResumeUrl = $finalResumeUrl;
+				DB::table('job_applications')
+					->where('id', $benchApplication->id)
+					->update(['resume' => $r2ResumeUrl]);
+			} elseif ($request->hasFile('resume')) {
 
 					$companyNameR2 = DB::table('companies')
 					->where('id',auth()->user()->company_id)
@@ -1257,52 +1323,27 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
 					$year  = date('Y');
 					$month = date('m');
 
-			        $tempPath = session('resume_temp_path');
-					$full_name = session('resume_original_name');
-
-					// Phase 3: bench manager flow uses resource_type="bench_application".
-					// The session is created earlier (controllers/.uploadresume-style path)
-					// and the bench_application_id is set here via tryLinkBench when the
-					// session uuid is present in the session. Falls back to the legacy
-					// UploadResumeToTestRTwo dispatch for clients that haven't migrated
-					// their frontend yet.
-					$postedSessionUuid = (string) (session('resume_session_uuid') ?? '');
-					if ($postedSessionUuid !== '') {
-						/** @var \App\Services\ResumeUploadSession $sessionService */
-						$sessionService = app(\App\Services\ResumeUploadSession::class);
-						$linked = $sessionService->tryLinkBench(
-							uuid: $postedSessionUuid,
-							companyId: (int) auth()->user()->company_id,
-							benchApplicationId: (int) $benchApplication->id,
-							actorId: (int) (auth()->id() ?? 0),
-							requestId: request()->header('X-Request-Id'),
-						);
-						if ($linked) {
-							// Bench row gets the canonical URL via the session's r2_url.
-							$r2Url = DB::table('resume_uploads')->where('uuid', $postedSessionUuid)->value('r2_url');
-							DB::table('job_applications')
-								->where('id', $benchApplication->id)
-								->update([
-									'current_resume_session_uuid' => $postedSessionUuid,
-									'resume' => $r2Url,
-								]);
-						}
-						session()->forget('resume_session_uuid');
-					} else {
+			        $tempPath  = $request->input('uploaded_file_path') ?: session('resume_temp_path');
+					$full_name = $request->input('resume_original_name') ?: session('resume_original_name');
+					if ($tempPath && $full_name) {
 						UploadResumeToTestRTwo::dispatch($tempPath, $full_name,$benchApplication->id,$companyNameRTwo,$year,$month)->onConnection('emails');
 						$fileUrl = "https://file.jero.works/Companies/{$companyNameRTwo}/Resumes/{$year}/{$month}/{$full_name}";
 						DB::table('job_applications')
 								->where('id', $benchApplication->id)
 								->update(['resume' =>$fileUrl]);
+						session()->forget(['resume_temp_path', 'resume_original_name']);
+					} else {
+						\Log::warning('v1 upload (edit): missing tempPath or filename', ['id' => $benchApplication->id]);
 					}
-						session()->forget([
-								'resume_temp_path',
-								'resume_original_name'
-							]);
-;
 			}
 		}else{
-			if ($request->hasFile('resume')) {
+			if ($resumeSession) {
+				// v2 path (add): file moved to company CDN path in the claim block above.
+				$r2ResumeUrl = $finalResumeUrl;
+				DB::table('job_applications')
+					->where('id', $benchApplication->id)
+					->update(['resume' => $r2ResumeUrl]);
+			} elseif ($request->hasFile('resume')) {
 
 				    $companyNameR2 = DB::table('companies')
 					->where('id',auth()->user()->company_id)
@@ -1313,48 +1354,22 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
 					$year  = date('Y');
 					$month = date('m');
 
-					$tempPath = session('resume_temp_path');
-					$full_name = session('resume_original_name');
-
-					// Same Phase 3 pattern as the EDIT branch above: prefer
-					// tryLinkBench if a session uuid is present in the session,
-					// otherwise fall back to legacy UploadResumeToTestRTwo dispatch.
-					$postedSessionUuid = (string) (session('resume_session_uuid') ?? '');
-					if ($postedSessionUuid !== '') {
-						/** @var \App\Services\ResumeUploadSession $sessionService */
-						$sessionService = app(\App\Services\ResumeUploadSession::class);
-						$linked = $sessionService->tryLinkBench(
-							uuid: $postedSessionUuid,
-							companyId: (int) auth()->user()->company_id,
-							benchApplicationId: (int) $benchApplication->id,
-							actorId: (int) (auth()->id() ?? 0),
-							requestId: request()->header('X-Request-Id'),
-						);
-						if ($linked) {
-							$r2Url = DB::table('resume_uploads')->where('uuid', $postedSessionUuid)->value('r2_url');
-							DB::table('job_applications')
-								->where('id', $benchApplication->id)
-								->update([
-									'current_resume_session_uuid' => $postedSessionUuid,
-									'resume' => $r2Url,
-								]);
-						}
-						session()->forget('resume_session_uuid');
-					} else {
+					$tempPath  = $request->input('uploaded_file_path') ?: session('resume_temp_path');
+					$full_name = $request->input('resume_original_name') ?: session('resume_original_name');
+					if ($tempPath && $full_name) {
 						UploadResumeToTestRTwo::dispatch($tempPath, $full_name,$benchApplication->id,$companyNameRTwo,$year,$month)->onConnection('emails');
 						$fileUrl = "https://file.jero.works/Companies/{$companyNameRTwo}/Resumes/{$year}/{$month}/{$full_name}";
 						DB::table('job_applications')
 								->where('id', $benchApplication->id)
 								->update(['resume' =>$fileUrl]);
+						session()->forget(['resume_temp_path', 'resume_original_name']);
+					} else {
+						\Log::warning('v1 upload (add): missing tempPath or filename', ['id' => $benchApplication->id]);
 					}
-							session()->forget([
-								'resume_temp_path',
-								'resume_original_name'
-							]);
 			}
 		}
 
-		if(empty($request->resumeCheck)){
+		if(empty($request->resumeCheck) && !$resumeSession){
 					DB::table('job_applications')
 				->where('id', $benchApplication->id)
 				->update(['resume' =>'']);
@@ -1733,7 +1748,9 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
 			
 
 
-		return view('service_company.bench-candidates.create', $this->data);
+		return response()->view('service_company.bench-candidates.create', $this->data)
+			->header('Cache-Control', 'no-cache, no-store, must-revalidate')
+			->header('Pragma', 'no-cache');
 	}
 	public function benchListingPoolData(Request $request)
 	{

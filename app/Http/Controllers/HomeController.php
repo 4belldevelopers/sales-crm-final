@@ -34,6 +34,10 @@ use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Http;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Imports\MeetingImport;
+use App\Enums\ResumeUploadStatus;
+use App\Models\ResumeUpload;
+use App\Models\UploadSessionAudit;
+use App\Services\ResumeUploadSession as ResumeUploadSessionService;
 
 
 class HomeController extends Controller
@@ -2083,11 +2087,61 @@ class HomeController extends Controller
                     $jobApplication->interview_mode_five = $request->interview_mode_five;
                     $jobApplication->interview_mode_six = $request->interview_mode_six;
 
+                    // ── v2 pre-flight: validate resume_session_uuid (career page, public) ──
+                    $resumeSession = null;
+                    if (config('resumes.features.submit_with_session') && config('resumes.features.career_controller') && $request->filled('resume_session_uuid')) {
+                        $resumeSession = ResumeUpload::byUuid($request->input('resume_session_uuid'))
+                            ->forCompany($company_id)->first();
+                        if (!$resumeSession) {
+                            return Reply::dataOnly(['status' => 'error', 'msgType' => 'warning',
+                                'message' => 'Resume upload session not found. Please upload the resume again.']);
+                        }
+                        if ($resumeSession->status !== ResumeUploadStatus::Uploaded->value) {
+                            return Reply::dataOnly(['status' => 'error', 'msgType' => 'warning',
+                                'message' => 'Resume upload is not yet complete. Please wait for the upload to finish and try again.']);
+                        }
+                    }
+                    // ─────────────────────────────────────────────────────────────────────
+
                     DB::beginTransaction();
                     try {
 
                     $jobApplication->save();
 
+                    // ── v2 session: atomic claim + R2 HEAD check + link ───────────────────
+                    if ($resumeSession) {
+                        $claimed = ResumeUpload::where('id', $resumeSession->id)
+                            ->where('company_id', $company_id)
+                            ->where('status', ResumeUploadStatus::Uploaded->value)
+                            ->update(['status' => ResumeUploadStatus::Completed->value, 'updated_at' => now()]);
+                        if ($claimed === 0) {
+                            DB::rollBack();
+                            return Reply::dataOnly(['status' => 'error', 'msgType' => 'warning',
+                                'message' => 'Resume session was already claimed. Please upload the resume again.']);
+                        }
+                        $r2Exists = false;
+                        try { $r2Exists = Storage::disk('r2')->exists('resumes/' . $resumeSession->uuid); } catch (\Throwable) {}
+                        if (!$r2Exists) {
+                            ResumeUpload::where('id', $resumeSession->id)
+                                ->where('status', ResumeUploadStatus::Completed->value)
+                                ->update(['status' => ResumeUploadStatus::Uploaded->value, 'updated_at' => now()]);
+                            DB::rollBack();
+                            return Reply::dataOnly(['status' => 'error', 'msgType' => 'warning',
+                                'message' => 'Resume file not found in storage. Please upload the resume again.']);
+                        }
+                        ResumeUpload::where('id', $resumeSession->id)
+                            ->where('company_id', $company_id)
+                            ->where('status', ResumeUploadStatus::Completed->value)
+                            ->update([
+                                'linked_candidate_id' => $jobApplication->id,
+                                'r2_url'              => Storage::disk('r2')->url('resumes/' . $resumeSession->uuid),
+                                'updated_at'          => now(),
+                            ]);
+                        UploadSessionAudit::record($resumeSession->id, 'ActionSubmitLinked', [
+                            'candidate_id' => $jobApplication->id,
+                        ], $company_id, null);
+                    }
+                    // ─────────────────────────────────────────────────────────────────────
 
                     if ($request->has('YearskillId') && is_array($request->input('YearskillId'))) {
                         $YearskillId = $request->input('YearskillId');
@@ -2173,34 +2227,41 @@ class HomeController extends Controller
                         DB::table('job_assign')->insert($values);
                     }
                     
-                    if ($request->hasFile('resume')) {
-
-                    $companyNameR2 = DB::table('companies')
-                        ->where('id',$company_id)
-                        ->value('company_name');   // change column if needed
+                    $finalResumeUrl = null;
+                    if ($resumeSession) {
+                        // v2 path: move from temp R2 path to company-structured CDN path.
+                        $finalResumeUrl = app(ResumeUploadSessionService::class)->moveToCompanyPath($resumeSession);
+                        DB::table('job_applications')
+                            ->where('id', $jobApplication->id)
+                            ->update(['resume' => $finalResumeUrl]);
+                    } elseif ($request->hasFile('resume')) {
+                        $companyNameR2 = DB::table('companies')
+                            ->where('id',$company_id)
+                            ->value('company_name');
                         $companyNameR2 = strtolower(trim($companyNameR2 ?? 'unknown'));
                         $companyNameR2 = preg_replace('/[^a-z0-9_-]/i','_', $companyNameR2);
                         $companyNameRTwo = $companyNameR2 . '_' . $company_id;
                         $year  = date('Y');
                         $month = date('m');
 
-
-                        $tempPath = session('resume_temp_path');
-                        $full_name = session('resume_original_name');
-                        // dd($tempPath, $full_name,$jobApplication->id);
-                        UploadResumeToTestRTwo::dispatch($tempPath, $full_name,$jobApplication->id,$companyNameRTwo,$year,$month)->onConnection('emails');
-                        $fileUrl = "https://file.jero.works/".$full_name;
-                        DB::table('job_applications')
-							->where('id', $jobApplication->id)
-							->update(['resume' =>$fileUrl]);
-							session()->forget([
-								'resume_temp_path',
-								'resume_original_name'
-							]);	
-                            
+                        $tempPath  = $request->input('uploaded_file_path') ?: session('resume_temp_path');
+                        $full_name = $request->input('resume_original_name') ?: session('resume_original_name');
+                        if ($tempPath && $full_name) {
+                            UploadResumeToTestRTwo::dispatch($tempPath, $full_name, $jobApplication->id, $companyNameRTwo, $year, $month)->onConnection('emails');
+                            $fileUrl = "https://file.jero.works/" . $full_name;
+                            DB::table('job_applications')
+                                ->where('id', $jobApplication->id)
+                                ->update(['resume' => $fileUrl]);
+                            session()->forget(['resume_temp_path', 'resume_original_name']);
+                        } else {
+                            \Log::warning('v1 upload: missing tempPath or filename on career form submit', [
+                                'company_id'         => $company_id,
+                                'job_application_id' => $jobApplication->id,
+                            ]);
+                        }
                     }
 
-                    if(empty($request->resumeCheck)){
+                    if(empty($request->resumeCheck) && !$resumeSession){
                         DB::table('job_applications')
                             ->where('id', $jobApplication->id)
                             ->update(['resume' =>'']);
