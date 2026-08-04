@@ -5707,21 +5707,9 @@ function buildRsHtml(data,companyName,logoUri){
   return H.join('');
 }
 
-async function buildRecruiterSummary(){
+function buildRecruiterSummary(){
   window.__rsBusy=true;
-  var container=null;
   try{
-    var _ls=function(src){return new Promise(function(res,rej){var s=document.createElement('script');s.src=src;s.async=true;s.onload=res;s.onerror=function(){rej(new Error('Load failed: '+src));};document.head.appendChild(s);});};
-    if(!(window.jspdf&&window.jspdf.jsPDF)) await _ls('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js');
-    if(!window.html2canvas) await _ls('https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js');
-    /* logo — reuse RC viewer cache when available */
-    var logoUri=null;
-    if(window.__rcvLogo&&window.__rcvLogo.__dataUri){ logoUri=window.__rcvLogo.__dataUri; }
-    else if(!window.__rcvLogoTried){
-      window.__rcvLogoTried=true;
-      var wrap=document.querySelector('#resume_cv .rcv-wrap');
-      var lsrc=wrap?wrap.getAttribute('data-logo'):'';
-      if(lsrc){try{var rsp=await fetch(lsrc,{cache:'force-cache'});if(rsp.ok){var bl=await rsp.blob();logoUri=await new Promise(function(res){var fr=new FileReader();fr.onload=function(){res(fr.result);};fr.readAsDataURL(bl);});window.__rcvLogo={__dataUri:logoUri};}}catch(ex){}}
     if(typeof window.cdrExportProfilePDF === 'function'){
       window.cdrExportProfilePDF(null, true);
     } else {
@@ -6057,27 +6045,12 @@ window.__buildRS=buildRecruiterSummary;
         }
         setTimeout(function(){ closeRdc(); resetBtn(); }, 2000);
 
-      } else if(m.dlKey === 'rs'){
-        /* Recruiter Summary — fully client-side; no resume viewer needed */
-        if(typeof window.__buildRS !== 'function'){
-          showToast('Please wait a moment and try again.', 'warn');
-          resetBtn(); return;
-        }
-        window.__rsBusy = true;
-        window.__buildRS();
-        var rsTicks = 0;
-        var rsDone = setInterval(function(){
-          if(!window.__rsBusy || ++rsTicks > 600){
-            clearInterval(rsDone);
-            if(rsTicks > 600 && window.__rsBusy) showToast('Check your browser — the file may be downloading in the background.', 'info');
-            closeRdc(); resetBtn();
-          }
-        }, 100);
-
-      } else if(m.dlKey === 'pdf'){
-        /* Option 7: Export Candidate Profile PDF — triggered only when user clicks Download button */
+      } else if(m.dlKey === 'rs' || m.dlKey === 'pdf'){
+        /* Option 5 (Recruiter Summary) & Option 7 (Export Candidate Profile PDF) — client-side vector PDF */
         if(typeof window.cdrExportProfilePDF === 'function'){
           window.cdrExportProfilePDF(null, true);
+        } else if(typeof window.__buildRS === 'function'){
+          window.__buildRS();
         } else {
           showToast('PDF Export feature unavailable.', 'warn');
         }
