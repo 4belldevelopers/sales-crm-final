@@ -35,6 +35,8 @@ class UpdatePipelineCountersJob implements ShouldQueue
             Redis::pipeline(function ($pipe) use ($jobId, $stage) {
                 $pipe->hincrby("pipeline:{$jobId}", $stage, 1);
                 $pipe->hset("pipeline:{$jobId}", 'last_event_at', now()->toIso8601String());
+                // Bust the ProductCompanyAppTrackerController::loadcounter cache for this job.
+                $pipe->del("loadcounter:{$jobId}");
             });
         } catch (\Throwable) {
             // Redis unavailable — DB summary table still updated below
