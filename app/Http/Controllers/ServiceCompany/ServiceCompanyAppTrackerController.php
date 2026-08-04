@@ -55,6 +55,7 @@ use App\Services\NotificationMailService;
 use App\Jobs\ElasticCompanyIndex;
 use App\Services\ElasticService;
 use App\Jobs\ElasticCandidateIndex;
+use Illuminate\Support\Facades\Cache;
 
 class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 {
@@ -97,7 +98,7 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 			$this->skills = Skill::all();
 			$this->clients = Client::all();
 			//$this->users 					=	User::company()->get();
-			$this->noticeperiod = NoticePeriod::all();
+			$this->noticeperiod = Cache::remember('notice_periods', 86400, fn() => NoticePeriod::orderBy('np_id')->get());
 			$this->job = Job::findOrFail($id);
 			//echo '<pre>'; print_r($this->job); exit;
 			if ($mstatus_id != 'all') {
@@ -123,7 +124,7 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 			$this->skills = Skill::all();
 			$this->clients = Client::all();
 			//$this->users 					=	User::company()->get();
-			$this->noticeperiod = NoticePeriod::all();
+			$this->noticeperiod = Cache::remember('notice_periods', 86400, fn() => NoticePeriod::orderBy('np_id')->get());
 
 		}
 
@@ -271,6 +272,71 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 		return Reply::dataOnly(['status' => 'success', 'data' => $applicationCounter, 'allCounter' => $allCounter]);
 
 	}
+	/**
+	 * Pre-fetch per-row data for all_apptracker blade to eliminate 4 N+1 queries.
+	 * Returns maps keyed by job_id/jobId so the blade reads from arrays, not DB per-row.
+	 */
+	protected function prepareRowMaps(array $data, int $companyId, int $appDuplicate, int $appDuplicateDays): array
+	{
+		if (empty($data)) {
+			return ['jobs' => [], 'skills' => [], 'duplicates' => []];
+		}
+
+		$jobIds = collect($data)
+			->flatMap(fn($row) => [(int)($row['jobId'] ?? 0), (int)($row['job_id'] ?? 0)])
+			->filter()
+			->unique()
+			->values()
+			->all();
+
+		// One query for job salary mode/currency (was N+1 #1)
+		$jobsMap = DB::table('jobs')
+			->select('id', 'max_sal_mode', 'max_salary_currency')
+			->whereIn('id', $jobIds)
+			->get()
+			->keyBy('id')
+			->toArray();
+
+		// One query for required skills per job (was N+1 #2 and #3)
+		$skillsByJob = DB::table('job_metronics_skills')
+			->select('job_id', 'skill_name')
+			->whereIn('job_id', $jobIds)
+			->get()
+			->groupBy('job_id')
+			->toArray();
+
+		// Batch duplicate detection (was N+1 #4)
+		$duplicateMap = [];
+		if ($appDuplicate > 0) {
+			$emails = collect($data)->pluck('email')->filter()->unique()->values()->all();
+			$phones = collect($data)->pluck('phone')->filter()->unique()->values()->all();
+			if (!empty($emails) || !empty($phones)) {
+				$dupQuery = DB::table('job_applications')
+					->select('job_id', 'email', 'phone', DB::raw('COUNT(*) as cnt'))
+					->where('company_id', $companyId);
+				if ($appDuplicate === 1) {
+					// Job-wise duplicate within days
+					$dupQuery->where('created_at', '>', DB::raw('DATE_SUB(CURDATE(), INTERVAL ' . $appDuplicateDays . ' DAY)'));
+				}
+				$dups = $dupQuery->where(function ($q) use ($emails, $phones) {
+						$q->whereIn('email', $emails)->orWhereIn('phone', $phones);
+					})
+					->groupBy('job_id', 'email', 'phone')
+					->get();
+				foreach ($dups as $d) {
+					$key = ($appDuplicate === 1 ? $d->job_id . ':' : '') . $d->email . '|' . $d->phone;
+					$duplicateMap[$key] = (int) $d->cnt;
+				}
+			}
+		}
+
+		return [
+			'jobs'       => $jobsMap,
+			'skills'     => $skillsByJob,
+			'duplicates' => $duplicateMap,
+		];
+	}
+
 	public function allDataAjax(Request $request)
 	{
 		// dd("hi");
@@ -822,8 +888,9 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 		];
 		// dd($pagination);
 		$userPermissions = $this->userPermissions;
+		$rowMaps = $this->prepareRowMaps($data, $company_id, (int) $request->input('app_duplicate', 0), (int) $request->input('app_duplicate_days', 0));
 		$responseData = [
-			'html' => view('service_company.ajax_pages.all_apptracker', compact('data', 'userPermissions'))->render(),
+			'html' => view('service_company.ajax_pages.all_apptracker', compact('data', 'userPermissions', 'rowMaps'))->render(),
 			'pagination' => view('service_company.ajax_pages.pagination', compact('pagination'))->render(),
 		];
 
