@@ -56,6 +56,7 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Carbon;
 use App\Models\User;
 use App\Services\ElasticService;
+use Illuminate\Support\Facades\Redis;
 
 class ServiceCompanyJobsController extends ServiceCompanyBaseController
 {
@@ -2688,6 +2689,16 @@ protected $elasticService;
 		$custom_hiringtype = request('custom_hiringtype');
 		$employment_type   = request('employment_type');
 		$custom_search  = trim(request('custom_search'));
+
+		// Step 7b: persist non-empty search terms per-user in a Redis sorted set (score = unix time).
+		// zrevrange("user:searches:{$userId}", 0, 4) returns the 5 most-recent unique terms
+		// which the front-end can show as "recent searches" in the search dropdown.
+		if ($custom_search !== '') {
+			$rk = 'user:searches:' . $userId;
+			Redis::zadd($rk, time(), $custom_search);
+			Redis::zremrangebyrank($rk, 0, -6); // keep only the 5 newest
+			Redis::expire($rk, 86400);           // auto-expire the set after 24 h
+		}
 
 		// Step 9a: cursor (keyset) pagination — ?after_id=N eliminates OFFSET cost on deep pages.
 		// Falls back to OFFSET when after_id is absent so existing callers keep working.

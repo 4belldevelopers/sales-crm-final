@@ -29,8 +29,8 @@ class JobApplicationObserver
 
     public function saved(JobApplication $app): void
     {
-        // Bust the ES counter cache for this job
-        Cache::forget("custome_count_all:{$app->job_id}");
+        // Bust the ES counter cache — key format must match GeneralMethod::custome_count_all().
+        Cache::forget("custome_count_all:{$app->company_id}:{$app->job_id}");
 
         UpdatePipelineCountersJob::dispatch($app->id)->onQueue('counters');
         UpdateApplicationCountersJob::dispatch($app->id)->onQueue('counters');
