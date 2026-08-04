@@ -95,17 +95,12 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500&display=swap" />
 @endif
-{{-- Step 8c: Vite JS deferred — parser no longer blocked by JS bundle --}}
-@vite(['resources/css/app.css'])
-<script src="{{ Vite::asset('resources/js/app.js') }}" defer></script>
-{{-- Step 8c: Metronic CSS preloaded then applied asynchronously — eliminates render-blocking --}}
+@vite(['resources/css/app.css', 'resources/js/app.js'])
 <link rel="preload" href="{{ asset('demo/plugins/custom/fullcalendar/fullcalendar.bundle.css') }}{{ TM_VERSION }}" as="style" onload="this.onload=null;this.rel='stylesheet'">
 <noscript><link href="{{ asset('demo/plugins/custom/fullcalendar/fullcalendar.bundle.css') }}{{ TM_VERSION }}" rel="stylesheet"></noscript>
 <link href="{{ asset('demo/plugins/custom/datatables/datatables.bundle.css') }}" rel="stylesheet" type="text/css" />
-<link rel="preload" href="{{ asset('demo/plugins/global/plugins.bundle.css') }}{{ TM_VERSION }}" as="style" onload="this.onload=null;this.rel='stylesheet'">
-<noscript><link href="{{ asset('demo/plugins/global/plugins.bundle.css') }}{{ TM_VERSION }}" rel="stylesheet"></noscript>
-<link rel="preload" href="{{ asset('demo/css/style.bundle.css') }}{{ TM_VERSION }}" as="style" onload="this.onload=null;this.rel='stylesheet'">
-<noscript><link href="{{ asset('demo/css/style.bundle.css') }}{{ TM_VERSION }}" rel="stylesheet"></noscript>
+<link href="{{ asset('demo/plugins/global/plugins.bundle.css') }}{{ TM_VERSION }}" rel="stylesheet" type="text/css" />
+<link href="{{ asset('demo/css/style.bundle.css') }}{{ TM_VERSION }}" rel="stylesheet" type="text/css" />
 
 {{-- <link href="{{ asset('demo/css/intlTelInput.css') }}{{ TM_VERSION }}" rel="stylesheet" type="text/css" />
 <script src="{{ asset('demo/js/pdf.min.js') }}{{ TM_VERSION }}"></script>
@@ -1486,24 +1481,22 @@
 
 
 
-{{-- Step 8d: All Metronic/plugin JS deferred — saves ~300ms parse time on first load.
-     defer guarantees execution order across siblings, so DOMContentLoaded fires after all. --}}
-<script defer src="{{ asset('demo/plugins/global/plugins.bundle.js') }}{{ TM_VERSION }}"></script>
-<script defer src="{{ asset('demo/js/scripts.bundle.js') }}{{ TM_VERSION }}"></script>
-<script defer src="{{ asset('demo/plugins/custom/fullcalendar/fullcalendar.bundle.js') }}{{ TM_VERSION }}"></script>
-<script defer src="{{ asset('demo/js/custom/widgets.js') }}{{ TM_VERSION }}"></script>
-<script defer src="{{ asset('demo/js/custom/apps/chat/chat.js') }}{{ TM_VERSION }}"></script>
+<script src="{{ asset('demo/plugins/global/plugins.bundle.js') }}{{ TM_VERSION }}"></script>
+<script src="{{ asset('demo/js/scripts.bundle.js') }}{{ TM_VERSION }}"></script>
+<script src="{{ asset('demo/plugins/custom/fullcalendar/fullcalendar.bundle.js') }}{{ TM_VERSION }}"></script>
+<script src="{{ asset('demo/js/custom/widgets.js') }}{{ TM_VERSION }}"></script>
+<script src="{{ asset('demo/js/custom/apps/chat/chat.js') }}{{ TM_VERSION }}"></script>
 {{-- jquery.min.js intentionally only loaded in the head (above @stack('head-script'))
      to keep pages that push inline $(function(){...}) into the head from throwing
      "$ is not defined". See the head-side comment for context. --}}
-<script defer src="{{ asset('assets/plugins/bootstrap/js/bootstrap.bundle.min.js') }}{{ TM_VERSION }}"></script>
-<script defer src="{{ asset('assets/plugins/datatables/jquery.dataTables.js') }}{{ TM_VERSION }}"></script>
-<script defer src="{{ asset('assets/plugins/datatables/dataTables.bootstrap4.js') }}{{ TM_VERSION }}"></script>
+<script src="{{ asset('assets/plugins/bootstrap/js/bootstrap.bundle.min.js') }}{{ TM_VERSION }}"></script>
+<script src="{{ asset('assets/plugins/datatables/jquery.dataTables.js') }}{{ TM_VERSION }}"></script>
+<script src="{{ asset('assets/plugins/datatables/dataTables.bootstrap4.js') }}{{ TM_VERSION }}"></script>
 {{-- <script src="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.17/js/intlTelInput.min.js"></script> --}}
-<script defer src="{{ asset('demo/js/intlTelInput.min.js') }}{{ TM_VERSION }}"></script>
-<script defer src="{{ asset('front/assets/js/number-to-words.js') }}"></script>
-<script defer src="{{ asset('front/assets/js/countryDialCodes.js') }}"></script>
-<script defer src="{{ asset('demo/js/daterangepicker.min.js') }}{{ TM_VERSION }}"></script>
+<script src="{{ asset('demo/js/intlTelInput.min.js') }}{{ TM_VERSION }}"></script>
+<script src="{{ asset('front/assets/js/number-to-words.js') }}"></script>
+<script src="{{ asset('front/assets/js/countryDialCodes.js') }}"></script>
+<script src="{{ asset('demo/js/daterangepicker.min.js') }}{{ TM_VERSION }}"></script>
 {{-- <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script> --}}
 {{-- <script src="{{ asset('demo/js/select2.min.js') }}{{ TM_VERSION }}"></script> --}}
  
