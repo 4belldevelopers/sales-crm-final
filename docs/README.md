@@ -39,7 +39,8 @@ Generated to optimize this repo for AI coding agents (Claude Code, Cursor, Winds
 - [adr/](adr/) — architecture decision records
 
 ## Per-feature audits & implementation plans
-- [V2_Apptracker/](V2_Apptracker/) — `service_company/apptracker` GOD-level audit + 10-step roll-out plan (Aug 2026)
+- [V2_Apptracker/](V2_Apptracker/) — `service_company/apptracker` GOD-level audit + 13-step roll-out plan (Service+Admin scoped, Aug 2026)
+- [V2_ServiceCompanyAppTrackerController/](V2_ServiceCompanyAppTrackerController/) — controller-only audit: 33-method ledger, hidden shared-state machine, duplication matrix, 6-phase slice refactor
 
 ## Product & engineering strategy (architect-level)
 - [PRODUCT_VISION.md](PRODUCT_VISION.md) — the concept: pitch, personas, problem, how it works, principles
