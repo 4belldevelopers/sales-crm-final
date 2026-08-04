@@ -131,16 +131,85 @@
 
                     $skilltag = '';
                     $skilltagclass = '';
-                    $skillArr = $row->matched_skills;//explode(',', $row->skills);
-                    // $percentage =  GeneralMethod::skill_percentage($jobid,$skillArr);
+                    // Use the SAME candidate skill source Total Candidates in
+                    // Job uses (resources/.../ajax_pages/all_apptracker.blade.php
+                    // line ~154: $skillArr = explode(',', $row->skills)). Here
+                    // the row is an Elasticsearch hit, not a MySQL
+                    // job_applications row, so the candidate's own skills live
+                    // in $row->all_skills (already plucked server-side from
+                    // job_application_skills.skills). Falling back to
+                    // $row->matched_skills keeps the row rendering if the
+                    // document lacks the all_skills field for any reason.
+                    $skillArr = is_array($row->matched_skills ?? null) ? $row->matched_skills : [];
+                    $candidateAllSkills = is_array($row->all_skills ?? null) ? $row->all_skills : $skillArr;
 
-                    $percentage=0;
-                    $matches = $row->matched_skill_count;
-                    $totalElements = count($requiredSkills);
-                    // dd($totalElements);
-                    $matchPercentage = $totalElements > 0 ? ($matches / $totalElements) * 100 : 0;
-                    $matchPercentage = min($matchPercentage, 100);
-                    $percentage = round($matchPercentage, 1);
+                    // Job's required-skills source for the match itself, same
+                    // Total Candidates uses (job_metronics_skills). Used for
+                    // both the percentage and the green-badge highlighting so
+                    // the two pages produce identical Match% and identical
+                    // matched-skill sets for the same candidate.
+                    $jobRequiredSkills = \Illuminate\Support\Facades\DB::table('job_metronics_skills')
+                        ->where('job_id', $row->job_id ?? $jobid)
+                        ->pluck('skill_name')
+                        ->map(fn($s) => strtolower(trim($s)))
+                        ->values()
+                        ->toArray();
+
+                    // Distinct required skills the candidate actually
+                    // satisfies, with the candidate skill entry that did the
+                    // matching recorded as the "representative" for that
+                    // requirement — used by both the matched-required list
+                    // and the missing-required list below.
+                    $satisfiedRequired = [];
+                    $representativeByRequired = [];
+                    foreach ($jobRequiredSkills as $req) {
+                        foreach ($candidateAllSkills as $cand) {
+                            if (GeneralMethod::skillMatchesPhrasePrefix($req, $cand)) {
+                                $satisfiedRequired[$req] = true;
+                                if (!isset($representativeByRequired[$req])) {
+                                    $representativeByRequired[$req] = $cand;
+                                }
+                                break;
+                            }
+                        }
+                    }
+                    $mandatorySatisfied = [];
+                    $optionalSatisfied = [];
+                    // Split satisfied required skills into mandatory vs
+                    // optional. The controller's $row->matched_mandatory_skills
+                    // is matchedSkillsList($jobSkills, $mandatorySkills), so
+                    // lower-casing it gives the candidate entries that
+                    // phrase-matched the starred/mandatory required skills.
+                    // A satisfied required skill is "mandatory" if its
+                    // representative candidate entry also appears there.
+                    $mandatoryCandidateKeys = array_map('strtolower', (array) ($row->matched_mandatory_skills ?? []));
+                    foreach (array_keys($satisfiedRequired) as $req) {
+                        $rep = $representativeByRequired[$req] ?? null;
+                        $isMandatory = $rep !== null && in_array(strtolower($rep), $mandatoryCandidateKeys, true);
+                        if ($isMandatory) {
+                            $mandatorySatisfied[] = $req;
+                        } else {
+                            $optionalSatisfied[] = $req;
+                        }
+                    }
+
+                    $percentage = 0;
+                    // Match % is computed the same way Total Candidates in Job
+                    // does it (resources/.../ajax_pages/all_apptracker.blade.php
+                    // line ~156): GeneralMethod::skill_percentage($jobId,
+                    // $candidateAllSkills). That helper reads the FULL job
+                    // requirements from `job_metronics_skills` and counts
+                    // distinct required skills satisfied via
+                    // skillMatchesPhrasePrefix (the same match used
+                    // throughout ATS). Using the SAME helper on the same
+                    // (jobId, candidate skills) inputs guarantees the two
+                    // pages produce identical percentages for the same
+                    // candidate.
+                    $percentageString = GeneralMethod::skill_percentage(
+                        $row->job_id ?? $jobid,
+                        $candidateAllSkills
+                    );
+                    $percentage = (float) rtrim($percentageString ?: '0%', '%');
 
                     // Match % badge — color reflects the numeric match score, same
                     // thresholds/colors used on the Pool tab / CV Tracker: >90 green,
@@ -162,29 +231,26 @@
                     // change and a Bootstrap-tooltip re-init isn't guaranteed
                     // to run against freshly-injected markup; a native title
                     // works with zero JS dependency regardless.
-                    // A plain array_diff() compared required skill KEYWORDS
-                    // ("java") against the candidate's own matched skill TEXT
-                    // ("java developer") as exact strings — never equal, so a
-                    // required skill the candidate actually has (via a
-                    // differently-worded skill entry) still showed up in the
-                    // tooltip as "Missing". Same phrase-prefix check
-                    // matched_skills itself was computed with.
-                    $missingSkills = array_values(array_filter($requiredSkills, function ($required) use ($skillArr) {
-                        foreach ($skillArr as $matched) {
-                            if (GeneralMethod::skillMatchesPhrasePrefix($required, $matched)) {
-                                return false;
-                            }
-                        }
-                        return true;
+                    // Computed against $jobRequiredSkills (the same set the
+                    // percentage above is computed against), NOT against the
+                    // recruiter filter subset $requiredSkills — otherwise the
+                    // "Matched/Missing" list drifts from the percentage
+                    // denominator whenever the filter is a strict subset of
+                    // the job's required skills.
+                    $missingSkills = array_values(array_filter($jobRequiredSkills, function ($required) use ($satisfiedRequired) {
+                        return empty($satisfiedRequired[$required]);
                     }));
                     $matchTooltipParts = [];
-                    if (!empty($skillArr)) {
-                        $matchTooltipParts[] = 'Matched: ' . implode(', ', array_map('ucfirst', $skillArr));
+                    if (!empty($satisfiedRequired)) {
+                        $matchedLabels = array_map(function ($req) use ($representativeByRequired) {
+                            return ucfirst($representativeByRequired[$req]);
+                        }, array_keys($satisfiedRequired));
+                        $matchTooltipParts[] = 'Matched: ' . implode(', ', $matchedLabels);
                     }
                     if (!empty($missingSkills)) {
                         $matchTooltipParts[] = 'Missing: ' . implode(', ', array_map('ucfirst', $missingSkills));
                     }
-                    $matchTooltipText = !empty($matchTooltipParts) ? implode(' — ', $matchTooltipParts) : 'No skills specified in filter';
+                    $matchTooltipText = !empty($matchTooltipParts) ? implode(' — ', $matchTooltipParts) : 'No required skills configured for this job';
 
                     $matchBadge = '<span class="badge my-1" title="'.htmlspecialchars($matchTooltipText, ENT_QUOTES).'" style="background:'.$matchBg.';color:'.$matchColor.';font-weight:600;cursor:help;">Match '.$percentage.'%</span>';
 
@@ -204,19 +270,30 @@
                     // stay plain green. Unmatched skills are capped so a
                     // candidate with a long skill list doesn't make the row
                     // unreadable.
-                    $mandatoryMatched = $row->matched_mandatory_skills ?? [];
-                    $optionalMatched = array_values(array_udiff($skillArr, $mandatoryMatched, 'strcasecmp'));
-                    $allSkillsList = $row->all_skills ?? $skillArr;
-                    $unmatchedSkills = array_values(array_udiff($allSkillsList, $skillArr, 'strcasecmp'));
+                    // Skill-tag list now mirrors the satisfied-required set
+                    // (one badge per matched required skill) instead of one
+                    // badge per matched candidate entry. This keeps the badge
+                    // count in lockstep with the Match% number, so the
+                    // "Matched: Java, AWS, Node" tooltip lines up with the
+                    // three green badges on screen.
+                    $mandatoryMatched = $mandatorySatisfied;
+                    $optionalMatched = $optionalSatisfied;
+                    $allSkillsList = $candidateAllSkills;
+                    $matchedRepresentativeStrings = array_map(function ($req) use ($representativeByRequired) {
+                        return strtolower($representativeByRequired[$req]);
+                    }, array_keys($satisfiedRequired));
+                    $unmatchedSkills = array_values(array_udiff($allSkillsList, $matchedRepresentativeStrings, 'strcasecmp'));
                     $maxUnmatchedShown = 6;
                     $unmatchedShown = array_slice($unmatchedSkills, 0, $maxUnmatchedShown);
                     $unmatchedRemaining = max(count($unmatchedSkills) - count($unmatchedShown), 0);
 
-                    foreach ($mandatoryMatched as $sval) {
-                        $skilltag .= '<span class="badge my-1" style="background:#dbeafe;color:#1d4ed8;font-weight:600;border:1px solid #bfdbfe;" title="Matches a mandatory (starred) skill"><span style="color:#eab308;">★</span> ' . ucfirst($sval) . '</span>  ';
+                    foreach ($mandatoryMatched as $req) {
+                        $display = ucfirst($representativeByRequired[$req] ?? $req);
+                        $skilltag .= '<span class="badge my-1" style="background:#dbeafe;color:#1d4ed8;font-weight:600;border:1px solid #bfdbfe;" title="Matches a mandatory (starred) skill"><span style="color:#eab308;">★</span> ' . $display . '</span>  ';
                     }
-                    foreach ($optionalMatched as $sval) {
-                        $skilltag .= '<span class="badge my-1" style="background:#dcfce7;color:#15803d;font-weight:600;border:1px solid #bbf7d0;" title="Matches a required skill">' . ucfirst($sval) . '</span>  ';
+                    foreach ($optionalMatched as $req) {
+                        $display = ucfirst($representativeByRequired[$req] ?? $req);
+                        $skilltag .= '<span class="badge my-1" style="background:#dcfce7;color:#15803d;font-weight:600;border:1px solid #bbf7d0;" title="Matches a required skill">' . $display . '</span>  ';
                     }
                     foreach ($unmatchedShown as $sval) {
                         $skilltag .= '<span class="badge badge-light my-1" style="font-weight: 300;">' . ucfirst($sval) . '</span>  ';

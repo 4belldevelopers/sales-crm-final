@@ -344,84 +344,136 @@
   }
 
   .page-tabs {
-    background: var(--color-surface);
-    padding: 0 var(--space-4);
-    border-bottom: 1px solid var(--color-border);
+    background: #ffffff;
+    padding: 0 24px;
+    border-bottom: 1px solid #e2e8f0;
     display: flex;
-    gap: var(--space-1);
+    gap: 0;
+    font-family: 'Poppins', sans-serif;
   }
 
   .tab {
     display: flex;
     align-items: center;
-    gap: 8px;
-    padding: var(--space-2) var(--space-1);
+    gap: 6px;
+    padding: 14px 16px;
     background: none;
     border: none;
     border-bottom: 3px solid transparent;
-    font-family: var(--font-family);
-    font-size: var(--font-size-sm);
-    font-weight: var(--font-weight-semibold);
-    color: var(--color-text-tertiary);
+    font-family: 'Poppins', sans-serif;
+    font-size: 12px;
+    font-weight: 500;
+    color: #64748b;
     cursor: pointer;
-    transition: all var(--transition-fast);
+    transition: color 150ms ease, border-color 150ms ease;
     margin-bottom: -1px;
-    line-height: var(--line-height-tight);
+    line-height: 1.25;
+    text-decoration: none;
+    white-space: nowrap;
   }
 
   .tab:hover {
-    color: var(--color-text-secondary);
+    color: #334155;
   }
 
   .tab-active {
-    color: var(--color-primary-600);
-    border-bottom-color: var(--color-primary-600);
+    color: #1a73e8;
+    border-bottom-color: #1a73e8;
+    font-weight: 600;
   }
 
   .tab-icon {
-    width: 18px;
-    height: 18px;
+    width: 15px;
+    height: 15px;
     flex-shrink: 0;
   }
 
+  /* Page content: slate-tinted gray background so white cards always pop.
+     All content sections MUST live inside a .section-card or .cardshow — never
+     place text/data directly on this background. See UI_UX_STANDARDS §10. */
   .page-content {
-    padding: var(--space-3) var(--space-4);
+    padding: 20px 24px;
+    background: #f8fafc;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    font-family: 'Poppins', sans-serif;
   }
 
+  /* ---------------------------------------------------------------
+     CARD + SUBCARD LAYOUT SYSTEM (mandatory from 2026-08-01)
+     Every content section in any drawer/page uses this pattern:
+       .section-card > .section-card-header + .section-card-body
+     Nested items that need row-level separation use .subcard.
+     White background (#fff) on every card/subcard — no exceptions.
+     --------------------------------------------------------------- */
+  .section-card {
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04), 0 4px 12px rgba(0,0,0,0.03);
+    font-family: 'Poppins', sans-serif;
+  }
+  .section-card-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 24px;
+    background: #fff;
+    border-bottom: 1px solid #f0f4f8;
+  }
+  .section-card-body {
+    padding: 20px 24px;
+    background: #fff;
+  }
+  /* Subcard: visually distinct inner row within a section-card or cardshow.
+     Use for each metric cell, each row, or any item that needs a divider. */
+  .subcard {
+    background: #fff;
+    padding: 14px 20px;
+    border-bottom: 1px solid #f0f4f8;
+  }
+  .subcard:last-child { border-bottom: none; }
+
   .overview-title {
-    font-size: var(--font-size-md);
-    font-weight: var(--font-weight-bold);
-    color: var(--color-text-primary);
-    margin-bottom: var(--space-3);
-    line-height: var(--line-height-tight);
+    font-size: 13px;
+    font-weight: 700;
+    color: #0f172a;
+    margin: 0;
+    line-height: 1.25;
+    font-family: 'Poppins', sans-serif;
   }
 
   .info-grid {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
-    gap: var(--space-2);
-    margin-bottom: var(--space-3);
+    gap: 12px;
+    margin-bottom: 0;
   }
 
   .info-card {
-    background: var(--color-surface);
-    border-radius: var(--radius-lg);
-    padding: var(--space-2);
-    border: 1px solid var(--color-border);
+    background: #ffffff;
+    border-radius: 10px;
+    padding: 14px 16px;
+    border: 1px solid #e2e8f0;
     display: flex;
     align-items: flex-start;
-    gap: var(--space-2);
-    transition: box-shadow var(--transition-base);
+    gap: 12px;
+    transition: box-shadow 0.15s ease, border-color 0.15s ease;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+    font-family: 'Poppins', sans-serif;
   }
 
   .info-card:hover {
-    box-shadow: var(--shadow-card);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+    border-color: #c7d2e3;
   }
 
   .info-icon-wrap {
-    width: 40px;
-    height: 40px;
-    border-radius: var(--radius-md);
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -434,8 +486,8 @@
   .info-icon-wrap.orange { background: var(--color-warning-50); color: var(--color-warning-600); }
 
   .info-icon-wrap svg {
-    width: 20px;
-    height: 20px;
+    width: 17px;
+    height: 17px;
   }
 
   .info-content {
@@ -443,48 +495,61 @@
   }
 
   .info-label {
-    font-size: var(--font-size-xs);
-    color: var(--color-text-tertiary);
-    margin-bottom: 4px;
-    font-weight: var(--font-weight-medium);
-    line-height: var(--line-height-tight);
+    font-size: 11px;
+    color: #64748b;
+    margin-bottom: 3px;
+    font-weight: 500;
+    line-height: 1.25;
+    font-family: 'Poppins', sans-serif;
   }
 
   .info-value {
-    font-size: var(--font-size-sm);
-    font-weight: var(--font-weight-bold);
-    color: var(--color-text-primary);
-    line-height: var(--line-height-tight);
+    font-size: 12px;
+    font-weight: 700;
+    color: #0f172a;
+    line-height: 1.25;
+    font-family: 'Poppins', sans-serif;
   }
 
   .content-split {
     display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: var(--space-3);
+    grid-template-columns: 1fr;
+    gap: 16px;
   }
 
   .content-main,
   .content-sidebar {
     display: flex;
     flex-direction: column;
-    gap: var(--space-3);
+    gap: 16px;
   }
   .content-main-full {
-     width: 1029px !important;
+    width: 100% !important;
   }
 
+  /* cardshow = named card variant used by existing content sections.
+     Same visual system as .section-card: white bg, border, shadow.
+     overflow:hidden clips the full-width card-header-sidebar to border-radius. */
   .cardshow {
-    background: var(--color-surface);
-    border-radius: var(--radius-lg);
-    padding: var(--space-3);
-    border: 1px solid var(--color-border);
+    background: #ffffff;
+    border-radius: 12px;
+    padding: 24px;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04), 0 4px 12px rgba(0,0,0,0.03);
+    overflow: hidden;
+    font-family: 'Poppins', sans-serif;
   }
 
   .card-header-sidebar {
     display: flex;
     align-items: center;
     gap: 10px;
-    margin-bottom: var(--space-3);
+    /* Pull header edge-to-edge inside the cardshow padding so the
+       border-bottom separator runs the full card width. */
+    margin: -24px -24px 16px;
+    padding: 14px 24px;
+    border-bottom: 1px solid #f0f4f8;
+    background: #fff;
   }
   .card-header-top {
     display: flex;
@@ -510,20 +575,22 @@
   }
 
   .card-title {
-    font-size: var(--font-size-md);
-    font-weight: var(--font-weight-bold);
-    color: var(--color-text-primary);
-    line-height: var(--line-height-tight);
+    font-size: 13px;
+    font-weight: 700;
+    color: #0f172a;
+    line-height: 1.25;
+    font-family: 'Poppins', sans-serif;
   }
 
   .summary-text {
-    font-size: var(--font-size-sm);
-    line-height: var(--line-height-relaxed);
-    color: var(--color-text-secondary);
-    margin-bottom: var(--space-2);
+    font-size: 12px;
+    line-height: 1.7;
+    color: #475569;
+    margin-bottom: 16px;
+    font-family: 'Poppins', sans-serif;
   }
   .summary-text-width {
-        width: 486px;
+    width: 100%;
   }
 
   .word-count-badge {
@@ -584,22 +651,23 @@
   .skills-thead {
     display: grid;
     grid-template-columns: 1fr 100px 140px;
-    gap: var(--space-2);
+    gap: 16px;
     padding: 10px 0;
-    border-bottom: 1px solid var(--color-border);
-    font-size: var(--font-size-xs);
-    font-weight: var(--font-weight-semibold);
-    color: var(--color-text-tertiary);
+    border-bottom: 1px solid #e2e8f0;
+    font-size: 11px;
+    font-weight: 600;
+    color: #64748b;
     text-transform: uppercase;
     letter-spacing: 0.05em;
+    font-family: 'Poppins', sans-serif;
   }
 
   .skills-row {
     display: grid;
     grid-template-columns: 1fr 100px 140px;
-    gap: var(--space-2);
-    padding: 14px 0;
-    border-bottom: 1px solid var(--color-border-light);
+    gap: 16px;
+    padding: 12px 0;
+    border-bottom: 1px solid #f1f5f9;
     align-items: center;
   }
 
@@ -611,9 +679,10 @@
     display: flex;
     align-items: center;
     gap: 10px;
-    font-size: var(--font-size-sm);
-    font-weight: var(--font-weight-semibold);
-    color: var(--color-text-primary);
+    font-size: 12px;
+    font-weight: 600;
+    color: #0f172a;
+    font-family: 'Poppins', sans-serif;
   }
 
   .skill-logo {
@@ -633,9 +702,10 @@
   }
 
   .skill-exp-cell {
-    font-size: var(--font-size-sm);
-    color: var(--color-text-secondary);
-    font-weight: var(--font-weight-medium);
+    font-size: 12px;
+    color: #475569;
+    font-weight: 500;
+    font-family: 'Poppins', sans-serif;
   }
 
   .skill-rating-cell {
@@ -661,9 +731,10 @@
   }
 
   .rating-text {
-    font-size: var(--font-size-sm);
-    font-weight: var(--font-weight-semibold);
-    color: var(--color-text-secondary);
+    font-size: 12px;
+    font-weight: 600;
+    color: #475569;
+    font-family: 'Poppins', sans-serif;
   }
 
   .slots-grid {
@@ -681,28 +752,31 @@
   }
 
   .slot-day-name {
-    font-size: var(--font-size-xs);
-    font-weight: var(--font-weight-bold);
-    color: var(--color-text-primary);
+    font-size: 11px;
+    font-weight: 700;
+    color: #0f172a;
     text-transform: uppercase;
     letter-spacing: 0.05em;
-    line-height: var(--line-height-tight);
+    line-height: 1.25;
+    font-family: 'Poppins', sans-serif;
   }
 
   .slot-date {
-    font-size: var(--font-size-sm);
-    color: var(--color-danger-500);
-    font-weight: var(--font-weight-semibold);
+    font-size: 12px;
+    color: #ef4444;
+    font-weight: 600;
     margin-top: 2px;
-    line-height: var(--line-height-tight);
+    line-height: 1.25;
+    font-family: 'Poppins', sans-serif;
   }
 
   .slot-time {
-    font-size: var(--font-size-xs);
-    color: var(--color-text-secondary);
+    font-size: 11px;
+    color: #475569;
     padding: 6px 0;
-    border-bottom: 1px solid var(--color-border-light);
-    line-height: var(--line-height-tight);
+    border-bottom: 1px solid #f1f5f9;
+    line-height: 1.25;
+    font-family: 'Poppins', sans-serif;
   }
 
   .slot-time:last-of-type {
@@ -1098,10 +1172,6 @@
       grid-template-columns: repeat(2, 1fr);
     }
 
-    .content-split {
-      grid-template-columns: 1fr;
-    }
-
     .page-header {
       flex-wrap: wrap;
       padding-right: var(--space-4);
@@ -1115,48 +1185,36 @@
   }
 
   @media (max-width: 768px) {
-    .page-header,
-    .page-tabs,
-    .page-content {
-      padding-left: var(--space-2);
-      padding-right: var(--space-2);
+    .page-tabs {
+      padding-left: 16px;
+      padding-right: 16px;
+      overflow-x: auto;
     }
-
+    .page-content {
+      padding: 16px;
+    }
     .page-header {
-      padding-right: calc(var(--space-2) + 40px);
+      padding-right: calc(16px + 40px);
     }
     .agency-grid {
-        grid-template-columns: 100px 1fr;
-      }
-
+      grid-template-columns: 100px 1fr;
+    }
     .candidate-name-show {
       font-size: var(--font-size-lg);
     }
-
     .info-grid {
-      grid-template-columns: 1fr;
+      grid-template-columns: repeat(2, 1fr);
     }
-
     .slots-grid {
       grid-template-columns: 1fr;
     }
-
     .skills-thead,
     .skills-row {
       grid-template-columns: 1fr 80px 100px;
       gap: 8px;
     }
-
-    .page-tabs {
-      gap: var(--space-1);
-      overflow-x: auto;
-      padding-bottom: 2px;
-    }
-
     .tab {
-      white-space: nowrap;
-      padding-left: var(--space-1);
-      padding-right: var(--space-1);
+      padding: 12px 12px;
     }
   }
 
@@ -1195,4 +1253,2015 @@
       padding: var(--space-2);
     }
   }
- 
+
+  /* ===================================================================
+     DRAWER — Candidate identity, match metrics and bottom strip
+     Scope: prefix every selector with #kt_activitiesApplication so the
+     styles only apply inside the Job-Details drawer and never leak into
+     other pages (which also load this stylesheet for the legacy right
+     sidebars). Poppins, ≤16px, enterprise Metronic flat surfaces.
+     =================================================================== */
+
+  #kt_activitiesApplication *,
+  #kt_activitiesApplication *::before,
+  #kt_activitiesApplication *::after { box-sizing: border-box; }
+
+  #kt_activitiesApplication .cdr-id-row {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-3);
+    padding: var(--space-3) var(--space-4);
+    background: var(--color-surface);
+    border-bottom: 1px solid var(--color-border);
+    width: 100%;
+  }
+
+  /* Avatar — flat 64px disc with initials (no shadows / no 3D) */
+  #kt_activitiesApplication .cdr-avatar {
+    width: 64px; height: 64px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%);
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Poppins', sans-serif;
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--color-primary-700);
+    letter-spacing: .3px;
+    flex-shrink: 0;
+  }
+
+  #kt_activitiesApplication .cdr-id-body {
+    flex: 1; min-width: 0;
+    display: flex; flex-direction: column; gap: 6px;
+  }
+
+  #kt_activitiesApplication .cdr-name-row {
+    display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+  }
+
+  #kt_activitiesApplication .cdr-name {
+    font-family: 'Poppins', sans-serif;
+    font-size: 16px; font-weight: 700;
+    color: var(--color-text-primary);
+    letter-spacing: -.01em; line-height: 1.25;
+    margin: 0;
+  }
+
+  #kt_activitiesApplication .cdr-verified {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 2px 8px;
+    background: var(--color-primary-50);
+    color: var(--color-primary-700);
+    font-size: 11px; font-weight: 600;
+    border-radius: var(--radius-full);
+    border: 1px solid var(--color-primary-100);
+  }
+
+  #kt_activitiesApplication .cdr-verified .cdr-tick {
+    width: 12px; height: 12px;
+    background: var(--color-primary-600);
+    color: #fff; border-radius: 50%;
+    display: inline-flex; align-items: center; justify-content: center;
+    font-size: 9px; font-weight: 700;
+  }
+
+  #kt_activitiesApplication .cdr-role {
+    font-size: 14px; font-weight: 600;
+    color: var(--color-primary-600);
+    line-height: 1.3; margin: 0;
+  }
+
+  #kt_activitiesApplication .cdr-meta-row {
+    display: flex; flex-wrap: wrap; gap: 14px;
+    color: var(--color-text-secondary);
+    font-size: 13px; font-weight: 500;
+  }
+
+  #kt_activitiesApplication .cdr-meta {
+    display: inline-flex; align-items: center; gap: 6px;
+    color: var(--color-text-secondary);
+    font-size: 13px; font-weight: 500;
+  }
+
+  #kt_activitiesApplication .cdr-meta svg {
+    width: 14px; height: 14px; color: var(--color-text-quaternary); flex-shrink: 0;
+  }
+
+  /* skill pills — first 5 + "+N" */
+  #kt_activitiesApplication .cdr-skills {
+    display: flex; align-items: center; gap: 6px;
+    flex-wrap: wrap; margin-top: 4px;
+  }
+  #kt_activitiesApplication .cdr-skills-label {
+    font-size: 12px; font-weight: 600; color: var(--color-text-primary);
+    margin-right: 4px;
+  }
+  #kt_activitiesApplication .cdr-skill-pill {
+    display: inline-flex; align-items: center;
+    padding: 4px 10px;
+    background: var(--color-primary-50);
+    color: var(--color-primary-700);
+    font-size: 12px; font-weight: 600;
+    border-radius: var(--radius-full);
+    border: 1px solid var(--color-primary-100);
+    line-height: 1.2;
+    white-space: nowrap;
+  }
+  #kt_activitiesApplication .cdr-skill-more {
+    background: var(--color-border-light);
+    color: var(--color-text-tertiary);
+    border-color: var(--color-border);
+  }
+
+  /* Availability pill under the role (matches the green Immediate Joiner) */
+  #kt_activitiesApplication .cdr-availpill {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 4px 10px;
+    background: #ecfdf5;
+    color: #065f46;
+    font-size: 12px; font-weight: 600;
+    border-radius: var(--radius-full);
+    border: 1px solid #a7f3d0;
+    align-self: flex-start;
+  }
+  #kt_activitiesApplication .cdr-availpill .cdr-dot {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: #10b981;
+  }
+
+  /* Right side action buttons (Edit + Download Resume) */
+  #kt_activitiesApplication .cdr-actions {
+    display: flex; flex-direction: column; gap: 8px;
+    flex-shrink: 0;
+  }
+  #kt_activitiesApplication .cdr-btn {
+    display: inline-flex; align-items: center; justify-content: center;
+    gap: 8px; padding: 9px 16px;
+    border-radius: var(--radius-md);
+    font-family: 'Poppins', sans-serif;
+    font-size: 13px; font-weight: 600;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    border: 1px solid transparent;
+    line-height: 1; text-decoration: none;
+    min-width: 160px;
+  }
+  #kt_activitiesApplication .cdr-btn svg { width: 15px; height: 15px; flex-shrink: 0; }
+  #kt_activitiesApplication .cdr-btn-primary {
+    background: var(--color-primary-600);
+    color: #fff;
+    border-color: var(--color-primary-600);
+  }
+  #kt_activitiesApplication .cdr-btn-primary:hover {
+    background: var(--color-primary-700);
+    border-color: var(--color-primary-700);
+  }
+  #kt_activitiesApplication .cdr-btn-secondary {
+    background: var(--color-surface);
+    color: var(--color-text-secondary);
+    border-color: var(--color-border);
+  }
+  #kt_activitiesApplication .cdr-btn-secondary:hover {
+    background: var(--color-bg-base);
+    border-color: var(--color-text-quaternary);
+  }
+
+  /* 6-tile match metrics (3 × 2 grid under the identity) */
+  #kt_activitiesApplication .cdr-match-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 10px;
+    padding: var(--space-2) var(--space-4);
+    background: var(--color-bg-base);
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  #kt_activitiesApplication .cdr-match {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    padding: 10px 12px;
+    display: flex; align-items: center; gap: 10px;
+    min-width: 0;
+  }
+  #kt_activitiesApplication .cdr-match-icon {
+    width: 32px; height: 32px;
+    border-radius: var(--radius-md);
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    font-family: 'Poppins', sans-serif;
+    font-size: 13px; font-weight: 700;
+  }
+  #kt_activitiesApplication .cdr-match-icon svg { width: 16px; height: 16px; }
+  #kt_activitiesApplication .cdr-match-icon.green  { background: var(--color-success-50); color: #059669; }
+  #kt_activitiesApplication .cdr-match-icon.red    { background: var(--color-danger-50);  color: #dc2626; }
+  #kt_activitiesApplication .cdr-match-icon.amber  { background: var(--color-warning-50); color: #d97706; }
+  #kt_activitiesApplication .cdr-match-icon.purple { background: var(--color-purple-50);  color: #7c3aed; }
+  #kt_activitiesApplication .cdr-match-body { min-width: 0; line-height: 1.2; }
+  #kt_activitiesApplication .cdr-match-label {
+    font-size: 11px; font-weight: 500; color: var(--color-text-tertiary);
+    text-transform: uppercase; letter-spacing: .3px;
+    margin-bottom: 3px;
+  }
+  #kt_activitiesApplication .cdr-match-value {
+    font-size: 14px; font-weight: 700; color: var(--color-text-primary);
+    font-variant-numeric: tabular-nums;
+  }
+  #kt_activitiesApplication .cdr-match-value.success { color: #059669; }
+  #kt_activitiesApplication .cdr-match-value.danger  { color: #dc2626; }
+
+  #kt_activitiesApplication .cdr-match-sub {
+    font-size: 11px; color: var(--color-text-quaternary);
+    font-weight: 500;
+  }
+
+  /* Circular match ring */
+  #kt_activitiesApplication .cdr-ring {
+    --cdr-ring-pct: 0;
+    --cdr-ring-size: 36px;
+    width: var(--cdr-ring-size); height: var(--cdr-ring-size);
+    border-radius: 50%;
+    background:
+      conic-gradient(#10b981 0deg calc(var(--cdr-ring-pct) * 3.6deg),
+                    #e2e8f0 calc(var(--cdr-ring-pct) * 3.6deg) 360deg);
+    display: flex; align-items: center; justify-content: center;
+    position: relative;
+    flex-shrink: 0;
+  }
+  #kt_activitiesApplication .cdr-ring::before {
+    content: ''; position: absolute; inset: 4px;
+    background: #fff; border-radius: 50%;
+  }
+  #kt_activitiesApplication .cdr-ring span {
+    position: relative; z-index: 1;
+    font-size: 10px; font-weight: 700; color: var(--color-text-primary);
+  }
+
+  /* Bottom strip — 7 quick stats (the second screenshot block) */
+  #kt_activitiesApplication .cdr-strip {
+    display: grid;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+    gap: 0;
+    padding: 10px var(--space-4);
+    background: var(--color-surface);
+    border-bottom: 1px solid var(--color-border);
+  }
+  #kt_activitiesApplication .cdr-strip-item {
+    padding: 4px 10px;
+    border-right: 1px solid var(--color-border-light);
+    min-width: 0;
+    display: flex; flex-direction: column; gap: 2px;
+  }
+  #kt_activitiesApplication .cdr-strip-item:last-child { border-right: 0; }
+  #kt_activitiesApplication .cdr-strip-label {
+    font-size: 11px; font-weight: 500; color: var(--color-text-tertiary);
+  }
+  #kt_activitiesApplication .cdr-strip-icon {
+    width: 12px; height: 12px; display: inline-block; vertical-align: -2px; margin-right: 4px;
+  }
+  #kt_activitiesApplication .cdr-strip-icon svg { width: 12px; height: 12px; }
+  #kt_activitiesApplication .cdr-strip-value {
+    font-size: 13px; font-weight: 700; color: var(--color-text-primary);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Responsive — drawer = 1366x768 is the design target, see UI_UX_STANDARDS §3 */
+  @media (max-width: 1280px) {
+    #kt_activitiesApplication .cdr-match-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    #kt_activitiesApplication .cdr-strip { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    #kt_activitiesApplication .cdr-strip-item:nth-child(4n) { border-right: 0; }
+    #kt_activitiesApplication .cdr-strip-item:nth-child(n+5) { border-top: 1px solid var(--color-border-light); padding-top: 8px; margin-top: 4px; }
+  }
+  @media (max-width: 960px) {
+    #kt_activitiesApplication .cdr-id-row { flex-wrap: wrap; padding: var(--space-2) var(--space-3); }
+    #kt_activitiesApplication .cdr-actions {
+      flex-direction: row; width: 100%;
+      margin-top: 8px;
+    }
+    #kt_activitiesApplication .cdr-btn { flex: 1; min-width: 0; }
+    #kt_activitiesApplication .cdr-match-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    #kt_activitiesApplication .cdr-strip { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    #kt_activitiesApplication .cdr-strip-item:nth-child(3n) { border-right: 0; }
+    #kt_activitiesApplication .cdr-strip-item:nth-child(n+4) { border-top: 1px solid var(--color-border-light); padding-top: 8px; margin-top: 4px; }
+  }
+  @media (max-width: 640px) {
+    #kt_activitiesApplication .cdr-match-grid { grid-template-columns: 1fr; }
+    #kt_activitiesApplication .cdr-strip { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    #kt_activitiesApplication .cdr-strip-item:nth-child(2n) { border-right: 0; }
+    #kt_activitiesApplication .cdr-strip-item:nth-child(n+3) { border-top: 1px solid var(--color-border-light); padding-top: 8px; margin-top: 4px; }
+    #kt_activitiesApplication .cdr-actions { flex-direction: column; }
+  }
+  /* ensure the parent drawer keeps its tabular-figures look */
+  #kt_activitiesApplication { font-family: 'Poppins', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+  #kt_activitiesApplication .cdr-btn,
+  #kt_activitiesApplication .cdr-name,
+  #kt_activitiesApplication .cdr-role,
+  #kt_activitiesApplication .cdr-meta,
+  #kt_activitiesApplication .cdr-skill-pill,
+  #kt_activitiesApplication .cdr-availpill,
+  #kt_activitiesApplication .cdr-match-label,
+  #kt_activitiesApplication .cdr-match-value,
+  #kt_activitiesApplication .cdr-strip-label,
+  #kt_activitiesApplication .cdr-strip-value { font-family: 'Poppins', sans-serif; }
+
+  /* ============================================================
+     PHASE 2 — Card / Sub-Card header.
+     - Hero is a single parent card (#kt_activitiesApplication .cdr-hero-card)
+     - Two sub-cards sit inside it (id | metrics)
+     - Top action bar runs full-width above the hero card
+     All measurements use the existing drawer font cap (14px) and
+     Poppins family already wired above.
+     ============================================================ */
+  #kt_activitiesApplication .cdr-topbar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 20px 10px 20px;
+    background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+    border-bottom: 1px solid #e2e8f0;
+    flex-wrap: nowrap;
+  }
+  #kt_activitiesApplication .cdr-topbar-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: nowrap;
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow-x: auto;
+    scrollbar-width: thin;
+    scrollbar-color: #cbd5e1 transparent;
+  }
+  #kt_activitiesApplication .cdr-topbar-group::-webkit-scrollbar { height: 4px; }
+  #kt_activitiesApplication .cdr-topbar-group::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 2px; }
+  #kt_activitiesApplication .cdr-topbar-split {
+    width: 1px;
+    height: 22px;
+    background: #e2e8f0;
+    flex: 0 0 auto;
+    margin: 0 4px;
+  }
+
+  /* Action button variants for the top bar. Existing helpers .cdr-btn /
+     .cdr-btn-primary / .cdr-btn-secondary already exist (they remain for
+     the Resume dropdown trigger). New coloured variants for Interview /
+     Email / WhatsApp / Move Stage. */
+  #kt_activitiesApplication .cdr-btn.cdr-btn-interview {
+    background: linear-gradient(180deg, #fef3c7 0%, #fde68a 100%);
+    color: #92400e;
+    border: 1px solid #fcd34d;
+  }
+  #kt_activitiesApplication .cdr-btn.cdr-btn-interview:hover {
+    background: linear-gradient(180deg, #fde68a 0%, #fcd34d 100%);
+    color: #78350f;
+    box-shadow: 0 4px 14px rgba(245, 158, 11, 0.25);
+  }
+  #kt_activitiesApplication .cdr-btn.cdr-btn-email {
+    background: linear-gradient(180deg, #dbeafe 0%, #bfdbfe 100%);
+    color: #1e40af;
+    border: 1px solid #93c5fd;
+  }
+  #kt_activitiesApplication .cdr-btn.cdr-btn-email:hover {
+    background: linear-gradient(180deg, #bfdbfe 0%, #93c5fd 100%);
+    color: #1e3a8a;
+    box-shadow: 0 4px 14px rgba(59, 130, 246, 0.25);
+  }
+  #kt_activitiesApplication .cdr-btn.cdr-btn-whatsapp {
+    background: linear-gradient(180deg, #dcfce7 0%, #bbf7d0 100%);
+    color: #166534;
+    border: 1px solid #86efac;
+  }
+  #kt_activitiesApplication .cdr-btn.cdr-btn-whatsapp:hover {
+    background: linear-gradient(180deg, #bbf7d0 0%, #86efac 100%);
+    color: #14532d;
+    box-shadow: 0 4px 14px rgba(22, 163, 74, 0.28);
+  }
+  #kt_activitiesApplication .cdr-btn.cdr-btn-stage {
+    background: linear-gradient(180deg, #ede9fe 0%, #ddd6fe 100%);
+    color: #5b21b6;
+    border: 1px solid #c4b5fd;
+  }
+  #kt_activitiesApplication .cdr-btn.cdr-btn-stage:hover {
+    background: linear-gradient(180deg, #ddd6fe 0%, #c4b5fd 100%);
+    color: #4c1d95;
+    box-shadow: 0 4px 14px rgba(124, 58, 237, 0.25);
+  }
+
+  /* Resume dropdown — promoted from inline styles to a proper class block. */
+  #kt_activitiesApplication .cdr-dl-wrap { position: relative; display: inline-block; }
+  #kt_activitiesApplication .cdr-dl-menu {
+    display: none;
+    position: absolute;
+    right: 0;
+    top: calc(100% + 6px);
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    box-shadow: 0 12px 28px rgba(15, 23, 42, 0.14);
+    min-width: 230px;
+    z-index: 60;
+    overflow: hidden;
+    padding: 4px 0;
+  }
+  #kt_activitiesApplication .cdr-dl-menu.open { display: block; }
+  #kt_activitiesApplication .cdr-dl-item {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    width: 100%;
+    padding: 9px 13px;
+    font-size: 12px;
+    font-weight: 500;
+    color: #334155;
+    text-decoration: none;
+    border: 0;
+    background: transparent;
+    cursor: pointer;
+    text-align: left;
+    font-family: 'Poppins', sans-serif;
+    border-bottom: 1px solid #f1f5f9;
+  }
+  #kt_activitiesApplication .cdr-dl-item:last-child { border-bottom: 0; }
+  #kt_activitiesApplication .cdr-dl-item:hover { background: #f8fafc; }
+  #kt_activitiesApplication .cdr-dl-item-logo {
+    color: #15803d;
+    background: #f0fdf4;
+    font-weight: 600;
+  }
+  #kt_activitiesApplication .cdr-dl-item-logo:hover { background: #ecfdf5; }
+  #kt_activitiesApplication .cdr-dl-item-logo svg { width: 13px; height: 13px; flex-shrink: 0; }
+  #kt_activitiesApplication .cdr-dl-badge {
+    font-size: 10px;
+    background: #22c55e;
+    color: #ffffff;
+    border-radius: 4px;
+    padding: 1px 5px;
+    margin-left: auto;
+    font-weight: 700;
+    letter-spacing: 0.3px;
+  }
+  #kt_activitiesApplication .cdr-btn .cdr-caret {
+    width: 13px;
+    height: 13px;
+    margin-left: 4px;
+  }
+
+  /* Parent Card: cdr-hero-card. White background, 12px radius, single
+     soft shadow, a one-pixel border so it reads as a stacked surface. */
+  #kt_activitiesApplication .cdr-hero-card {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    margin: 12px 16px 4px 16px;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04), 0 8px 24px rgba(15, 23, 42, 0.04);
+    overflow: hidden;
+    display: grid;
+    grid-template-columns: 1.4fr 1fr;
+  }
+
+  /* Sub-Card shared surface */
+  #kt_activitiesApplication .cdr-subcard {
+    background: #ffffff;
+    padding: 18px 20px;
+    position: relative;
+    min-width: 0;
+  }
+  #kt_activitiesApplication .cdr-subcard-id {
+    border-right: 1px solid #f1f5f9;
+    background: linear-gradient(180deg, #ffffff 0%, #fbfcfe 100%);
+    display: flex;
+    gap: 16px;
+    align-items: flex-start;
+  }
+  #kt_activitiesApplication .cdr-subcard-metrics {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  /* Skills-compare row — emphasis on Skills Matched + Skills Not Matched
+     inside Sub-Card B. These are separate from the 4 secondary tiles. */
+  #kt_activitiesApplication .cdr-skills-compare {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+  #kt_activitiesApplication .cdr-compare-card {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 14px;
+    border-radius: 10px;
+    border: 1px solid #e2e8f0;
+    background: #ffffff;
+    transition: box-shadow 0.18s ease, transform 0.18s ease;
+  }
+  #kt_activitiesApplication .cdr-compare-card:hover {
+    box-shadow: 0 6px 18px rgba(15, 23, 42, 0.06);
+    transform: translateY(-1px);
+  }
+  #kt_activitiesApplication .cdr-compare-match {
+    background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+    border-color: #bbf7d0;
+  }
+  #kt_activitiesApplication .cdr-compare-miss {
+    background: linear-gradient(135deg, #fff7ed 0%, #fee2e2 100%);
+    border-color: #fecaca;
+  }
+  #kt_activitiesApplication .cdr-compare-icon {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    background: #ffffff;
+    box-shadow: inset 0 0 0 3px currentColor;
+  }
+  #kt_activitiesApplication .cdr-compare-match .cdr-compare-icon { color: #16a34a; }
+  #kt_activitiesApplication .cdr-compare-miss .cdr-compare-icon { color: #b91c1c; }
+  #kt_activitiesApplication .cdr-compare-icon svg { width: 16px; height: 16px; }
+  #kt_activitiesApplication .cdr-compare-label {
+    font-size: 11px;
+    font-weight: 500;
+    color: #64748b;
+    letter-spacing: 0.2px;
+    text-transform: uppercase;
+    line-height: 1.2;
+  }
+  #kt_activitiesApplication .cdr-match .cdr-compare-miss .cdr-compare-icon,
+  #kt_activitiesApplication .cdr-compare-miss .cdr-compare-label { color: #991b1b; }
+  #kt_activitiesApplication .cdr-compare-value {
+    font-size: 18px;
+    font-weight: 700;
+    color: #0f172a;
+    line-height: 1.1;
+    margin-top: 2px;
+    font-family: 'Poppins', sans-serif;
+  }
+  #kt_activitiesApplication .cdr-compare-match .cdr-compare-value { color: #15803d; }
+  #kt_activitiesApplication .cdr-compare-miss .cdr-compare-value { color: #b91c1c; }
+  #kt_activitiesApplication .cdr-compare-of {
+    color: #94a3b8;
+    font-weight: 500;
+    font-size: 13px;
+  }
+
+  /* Identity block — same look as before, slotted inside Sub-Card A */
+  #kt_activitiesApplication .cdr-subcard-id .cdr-avatar {
+    width: 64px;
+    height: 64px;
+    border-radius: 14px;
+    background: linear-gradient(135deg, #6366f1 0%, #4338ca 100%);
+    color: #ffffff;
+    font-family: 'Poppins', sans-serif;
+    font-weight: 700;
+    font-size: 22px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    box-shadow: 0 4px 12px rgba(67, 56, 202, 0.28);
+  }
+  #kt_activitiesApplication .cdr-subcard-id .cdr-id-body { flex: 1 1 auto; min-width: 0; }
+  #kt_activitiesApplication .cdr-subcard-id .cdr-name-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  #kt_activitiesApplication .cdr-subcard-id .cdr-name {
+    margin: 0;
+    font-size: 20px;
+    font-weight: 600;
+    color: #0f172a;
+    line-height: 1.2;
+    font-family: 'Poppins', sans-serif;
+  }
+  #kt_activitiesApplication .cdr-subcard-id .cdr-verified {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 3px 9px;
+    border-radius: 999px;
+    background: #ecfdf5;
+    color: #047857;
+    border: 1px solid #a7f3d0;
+    font-size: 11px;
+    font-weight: 600;
+    font-family: 'Poppins', sans-serif;
+    line-height: 1;
+  }
+  #kt_activitiesApplication .cdr-subcard-id .cdr-tick {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: #10b981;
+    color: #ffffff;
+    font-size: 10px;
+    line-height: 1;
+  }
+  #kt_activitiesApplication .cdr-subcard-id .cdr-role {
+    margin: 6px 0 0 0;
+    font-size: 13px;
+    font-weight: 500;
+    color: #475569;
+    line-height: 1.3;
+    font-family: 'Poppins', sans-serif;
+  }
+  #kt_activitiesApplication .cdr-subcard-id .cdr-meta-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 10px;
+    flex-wrap: wrap;
+  }
+  #kt_activitiesApplication .cdr-subcard-id .cdr-meta {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    font-weight: 500;
+    color: #475569;
+    font-family: 'Poppins', sans-serif;
+  }
+  #kt_activitiesApplication .cdr-subcard-id .cdr-meta svg {
+    width: 13px;
+    height: 13px;
+    color: #94a3b8;
+    flex-shrink: 0;
+  }
+  #kt_activitiesApplication .cdr-subcard-id .cdr-availpill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 3px 10px;
+    border-radius: 999px;
+    background: #ecfdf5;
+    color: #047857;
+    border: 1px solid #a7f3d0;
+    font-size: 11px;
+    font-weight: 600;
+    font-family: 'Poppins', sans-serif;
+  }
+  #kt_activitiesApplication .cdr-subcard-id .cdr-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #10b981;
+    box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.18);
+  }
+  #kt_activitiesApplication .cdr-subcard-id .cdr-skills {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+    margin-top: 12px;
+  }
+  #kt_activitiesApplication .cdr-subcard-id .cdr-skills-label {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    color: #64748b;
+    font-weight: 600;
+    margin-right: 2px;
+    font-family: 'Poppins', sans-serif;
+  }
+  #kt_activitiesApplication .cdr-subcard-id .cdr-skill-pill {
+    display: inline-flex;
+    align-items: center;
+    padding: 3px 9px;
+    border-radius: 999px;
+    background: #f1f5f9;
+    color: #334155;
+    font-size: 11px;
+    font-weight: 500;
+    border: 1px solid #e2e8f0;
+    font-family: 'Poppins', sans-serif;
+    line-height: 1.2;
+  }
+  #kt_activitiesApplication .cdr-subcard-id .cdr-skill-more {
+    background: #eef2ff;
+    color: #4338ca;
+    border-color: #c7d2fe;
+    font-weight: 600;
+  }
+
+  /* Secondary match grid lives inside Sub-Card B. 4 tiles, 2x2 on wide
+     drawer, collapses to single column on very small drawers. */
+  #kt_activitiesApplication .cdr-subcard-metrics .cdr-match-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+  #kt_activitiesApplication .cdr-subcard-metrics .cdr-match {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    padding: 11px 12px;
+    border-radius: 10px;
+    border: 1px solid #e2e8f0;
+    background: #ffffff;
+  }
+  #kt_activitiesApplication .cdr-subcard-metrics .cdr-match-icon {
+    width: 34px;
+    height: 34px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  #kt_activitiesApplication .cdr-subcard-metrics .cdr-match-icon svg {
+    width: 16px;
+    height: 16px;
+  }
+  #kt_activitiesApplication .cdr-subcard-metrics .cdr-match-icon.green {
+    background: #ecfdf5;
+    color: #047857;
+  }
+  #kt_activitiesApplication .cdr-subcard-metrics .cdr-match-icon.amber {
+    background: #fffbeb;
+    color: #b45309;
+  }
+  #kt_activitiesApplication .cdr-subcard-metrics .cdr-match-icon.purple {
+    background: #f5f3ff;
+    color: #5b21b6;
+  }
+  #kt_activitiesApplication .cdr-subcard-metrics .cdr-match-body {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+  #kt_activitiesApplication .cdr-subcard-metrics .cdr-match-label {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    font-weight: 600;
+    color: #64748b;
+    line-height: 1.2;
+    font-family: 'Poppins', sans-serif;
+  }
+  #kt_activitiesApplication .cdr-subcard-metrics .cdr-match-value {
+    font-size: 14px;
+    font-weight: 700;
+    color: #0f172a;
+    line-height: 1.2;
+    margin-top: 1px;
+    font-family: 'Poppins', sans-serif;
+  }
+  #kt_activitiesApplication .cdr-subcard-metrics .cdr-match-value.success { color: #047857; }
+  #kt_activitiesApplication .cdr-subcard-metrics .cdr-match-value.danger { color: #b91c1c; }
+  #kt_activitiesApplication .cdr-subcard-metrics .cdr-match-value.plain {
+    font-size: 13px;
+    font-weight: 600;
+  }
+  #kt_activitiesApplication .cdr-subcard-metrics .cdr-match-ring { padding: 10px 12px; }
+  #kt_activitiesApplication .cdr-subcard-metrics .cdr-match-ring .cdr-ring {
+    --cdr-ring-size: 56px;
+    --cdr-ring-thickness: 6px;
+    width: var(--cdr-ring-size);
+    height: var(--cdr-ring-size);
+    flex-shrink: 0;
+    border-radius: 50%;
+    background:
+      conic-gradient(#10b981 0deg calc(var(--cdr-ring-pct) * 3.6deg), #e2e8f0 calc(var(--cdr-ring-pct) * 3.6deg) 360deg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+  }
+  #kt_activitiesApplication .cdr-subcard-metrics .cdr-match-ring .cdr-ring::before {
+    content: "";
+    position: absolute;
+    inset: var(--cdr-ring-thickness);
+    border-radius: 50%;
+    background: #ffffff;
+  }
+  #kt_activitiesApplication .cdr-subcard-metrics .cdr-match-ring .cdr-ring span {
+    position: relative;
+    font-family: 'Poppins', sans-serif;
+    font-size: 12px;
+    font-weight: 700;
+    color: #047857;
+  }
+
+  /* Page-close button now sits inside the topbar (not absolutely). */
+  #kt_activitiesApplication .page-close {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    border: 1px solid #e2e8f0;
+    background: #ffffff;
+    color: #64748b;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 70;
+    box-shadow: 0 2px 6px rgba(15, 23, 42, 0.06);
+    transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+  }
+  #kt_activitiesApplication .page-close:hover {
+    background: #fff1f2;
+    color: #b91c1c;
+    border-color: #fecdd3;
+  }
+  #kt_activitiesApplication .page-close svg {
+    width: 14px;
+    height: 14px;
+  }
+
+  /* At-a-glance strip — single enterprise card with internal dividers */
+  #kt_activitiesApplication .cdr-strip-card {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    margin: 0 16px 8px 16px;
+    box-shadow: 0 1px 2px rgba(15,23,42,0.04), 0 4px 12px rgba(15,23,42,0.03);
+    overflow: hidden;
+  }
+  #kt_activitiesApplication .cdr-strip {
+    display: grid;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: 0;
+    padding: 0;
+    background: transparent;
+  }
+  #kt_activitiesApplication .cdr-strip .cdr-strip-item {
+    padding: 14px 20px;
+    border-right: 1px solid #f0f4f8;
+    background: transparent;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    transition: background 0.15s ease;
+  }
+  #kt_activitiesApplication .cdr-strip .cdr-strip-item:last-child {
+    border-right: none;
+  }
+  #kt_activitiesApplication .cdr-strip .cdr-strip-item:hover {
+    background: #fafbfd;
+  }
+  #kt_activitiesApplication .cdr-strip .cdr-strip-label {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 10.5px;
+    font-weight: 500;
+    color: #94a3b8;
+    letter-spacing: 0.2px;
+    line-height: 1.2;
+    font-family: 'Poppins', sans-serif;
+  }
+  #kt_activitiesApplication .cdr-strip .cdr-strip-icon {
+    display: inline-flex;
+    align-items: center;
+    flex-shrink: 0;
+  }
+  #kt_activitiesApplication .cdr-strip .cdr-strip-icon svg {
+    width: 12px;
+    height: 12px;
+    color: #cbd5e1;
+    flex-shrink: 0;
+  }
+  #kt_activitiesApplication .cdr-strip .cdr-strip-value {
+    font-size: 13px;
+    font-weight: 600;
+    color: #0f172a;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-family: 'Poppins', sans-serif;
+    line-height: 1.3;
+  }
+
+  /* ============================================================
+     V2 Hero Redesign — outlined topbar buttons, large circle avatar,
+     2×3 metrics grid. All rules override the Phase-2 rules above.
+     ============================================================ */
+
+  /* Topbar v2: flat white, space-between (close btn on right) */
+  #kt_activitiesApplication .cdr-topbar {
+    background: #ffffff;
+    justify-content: space-between;
+  }
+
+  /* Outlined action buttons — compact style matching job drawer action-btn */
+  #kt_activitiesApplication .cdr-action-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 14px;
+    border: 1px solid #e2e8f0;
+    border-radius: 7px;
+    background: #ffffff;
+    color: #374151;
+    font-family: 'Poppins', sans-serif;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    text-decoration: none;
+    transition: background 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+    white-space: nowrap;
+    line-height: 1;
+  }
+  #kt_activitiesApplication .cdr-action-btn svg {
+    width: 13px;
+    height: 13px;
+    flex-shrink: 0;
+  }
+  #kt_activitiesApplication .cdr-action-btn:hover {
+    background: #f8fafc;
+    border-color: #cbd5e1;
+    box-shadow: 0 1px 4px rgba(15,23,42,0.06);
+    text-decoration: none;
+  }
+  #kt_activitiesApplication .cdr-action-btn.cdr-btn-primary svg   { color: #2563eb; }
+  #kt_activitiesApplication .cdr-action-btn.cdr-btn-interview svg { color: #d97706; }
+  #kt_activitiesApplication .cdr-action-btn.cdr-btn-email svg     { color: #2563eb; }
+  #kt_activitiesApplication .cdr-action-btn.cdr-btn-stage svg     { color: #7c3aed; }
+  #kt_activitiesApplication .cdr-action-btn.cdr-btn-secondary svg { color: #059669; }
+
+  /* WhatsApp — solid green, white text/icon */
+  #kt_activitiesApplication .cdr-action-btn.cdr-btn-wa {
+    background: #25D366;
+    color: #ffffff;
+    border-color: #25D366;
+  }
+  #kt_activitiesApplication .cdr-action-btn.cdr-btn-wa svg { color: #ffffff; }
+  #kt_activitiesApplication .cdr-action-btn.cdr-btn-wa:hover {
+    background: #1ebe5d;
+    border-color: #1ebe5d;
+    box-shadow: 0 2px 8px rgba(37,211,102,0.28);
+  }
+
+  /* Chevron caret inside action buttons */
+  #kt_activitiesApplication .cdr-action-btn .cdr-caret {
+    width: 12px;
+    height: 12px;
+    margin-left: 2px;
+    color: #9ca3af;
+    flex-shrink: 0;
+  }
+
+  /* Close button integrated into topbar (right edge) */
+  #kt_activitiesApplication .cdr-topbar-close {
+    width: 34px;
+    height: 34px;
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: none;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 8px;
+    cursor: pointer;
+    color: #6b7280;
+    padding: 0;
+    transition: border-color 0.15s ease, color 0.15s ease, background 0.15s ease;
+    margin-left: 4px;
+  }
+  #kt_activitiesApplication .cdr-topbar-close svg { width: 16px; height: 16px; }
+  #kt_activitiesApplication .cdr-topbar-close:hover {
+    border-color: #fca5a5;
+    color: #dc2626;
+    background: #fff5f5;
+  }
+
+  /* Hero card v2 — no outer border/shadow, flat layout */
+  #kt_activitiesApplication .cdr-hero-card {
+    border: none;
+    border-radius: 0;
+    margin: 0;
+    box-shadow: none;
+    grid-template-columns: minmax(280px, 1.05fr) minmax(300px, 1fr);
+    background: #ffffff;
+    border-bottom: 1px solid #f0f4f8;
+  }
+
+  /* Identity sub-card v2 */
+  #kt_activitiesApplication .cdr-subcard-id {
+    border-right: 1px solid #edf0f5;
+    background: #ffffff;
+    padding: 22px 18px 20px 22px;
+    gap: 20px;
+  }
+
+  /* Avatar column: wraps the large circle and availability badge */
+  #kt_activitiesApplication .cdr-id-avatar-col {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    flex-shrink: 0;
+  }
+
+  /* Large circle avatar (replaces 64px square) */
+  #kt_activitiesApplication .cdr-avatar-lg {
+    width: 116px;
+    height: 116px;
+    border-radius: 50%;
+    background: #eef2ff;
+    color: #1e3a8a;
+    font-family: 'Poppins', sans-serif;
+    font-weight: 700;
+    font-size: 34px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    border: 3px solid #e0e7ff;
+  }
+
+  /* Availability pill below avatar */
+  #kt_activitiesApplication .cdr-avail-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 11px;
+    background: #f0fdf4;
+    color: #166534;
+    border: 1px solid #bbf7d0;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 600;
+    font-family: 'Poppins', sans-serif;
+    white-space: nowrap;
+  }
+  #kt_activitiesApplication .cdr-avail-badge-neutral {
+    background: #f8fafc;
+    color: #475569;
+    border-color: #e2e8f0;
+  }
+  #kt_activitiesApplication .cdr-avail-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #22c55e;
+    flex-shrink: 0;
+  }
+
+  /* Name — larger/bolder in v2 */
+  #kt_activitiesApplication .cdr-subcard-id .cdr-name { font-size: 18px; font-weight: 700; }
+
+  /* Role — blue in v2 */
+  #kt_activitiesApplication .cdr-subcard-id .cdr-role {
+    color: #2563eb;
+    font-weight: 600;
+    font-size: 13px;
+    margin-top: 3px;
+  }
+
+  /* Verified badge v2 — solid blue circle with white checkmark */
+  #kt_activitiesApplication .cdr-subcard-id .cdr-verified-v2 {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: #2563eb;
+    margin-left: 6px;
+    vertical-align: middle;
+    flex-shrink: 0;
+  }
+  #kt_activitiesApplication .cdr-subcard-id .cdr-verified-v2 svg {
+    width: 11px; height: 11px; color: #ffffff; stroke-width: 3;
+  }
+
+  /* Meta list: experience + company (column instead of row) */
+  #kt_activitiesApplication .cdr-subcard-id .cdr-meta-list {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+    margin-top: 12px;
+  }
+  #kt_activitiesApplication .cdr-subcard-id .cdr-meta-item {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 12.5px;
+    font-weight: 500;
+    color: #374151;
+    font-family: 'Poppins', sans-serif;
+  }
+  #kt_activitiesApplication .cdr-subcard-id .cdr-meta-item svg {
+    width: 14px; height: 14px; color: #6b7280; flex-shrink: 0;
+  }
+
+  /* Metrics sub-card v2: no padding, full-height grid */
+  #kt_activitiesApplication .cdr-subcard-metrics { padding: 0; gap: 0; background: #ffffff; }
+
+  /* 2×3 grid for the 6 metric cells */
+  #kt_activitiesApplication .cdr-match-grid-v2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    height: 100%;
+  }
+  #kt_activitiesApplication .cdr-match-cell {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 17px 15px;
+    border-bottom: 1px solid #f0f4f8;
+    border-right: 1px solid #f0f4f8;
+  }
+  #kt_activitiesApplication .cdr-match-cell:nth-child(2n) { border-right: none; }
+  #kt_activitiesApplication .cdr-match-cell:nth-last-child(-n+2) { border-bottom: none; }
+
+  /* Icon circle inside each cell */
+  #kt_activitiesApplication .cdr-cell-icon {
+    width: 40px; height: 40px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  }
+  #kt_activitiesApplication .cdr-cell-icon svg { width: 18px; height: 18px; }
+  #kt_activitiesApplication .cdr-cell-icon.ci-green  { background: #ecfdf5; color: #16a34a; }
+  #kt_activitiesApplication .cdr-cell-icon.ci-red    { background: #fef2f2; color: #dc2626; }
+  #kt_activitiesApplication .cdr-cell-icon.ci-gray   { background: #f1f5f9; color: #64748b; }
+  #kt_activitiesApplication .cdr-cell-icon.ci-amber  { background: #fffbeb; color: #d97706; }
+
+  /* Cell text */
+  #kt_activitiesApplication .cdr-cell-body { min-width: 0; flex: 1 1 auto; }
+  #kt_activitiesApplication .cdr-cell-label {
+    font-size: 10px; font-weight: 600; text-transform: uppercase;
+    letter-spacing: 0.4px; color: #9ca3af;
+    font-family: 'Poppins', sans-serif; line-height: 1.2; margin-bottom: 3px;
+  }
+  #kt_activitiesApplication .cdr-cell-value {
+    font-family: 'Poppins', sans-serif; font-size: 18px;
+    font-weight: 700; line-height: 1.1; color: #0f172a;
+  }
+  #kt_activitiesApplication .cdr-cell-value.cv-green { color: #16a34a; }
+  #kt_activitiesApplication .cdr-cell-value.cv-red   { color: #dc2626; }
+  #kt_activitiesApplication .cdr-cell-value .cv-frac {
+    color: #9ca3af; font-weight: 400; font-size: 13px;
+  }
+  #kt_activitiesApplication .cdr-cell-sub {
+    font-size: 11px; color: #9ca3af; font-weight: 400;
+    font-family: 'Poppins', sans-serif; margin-top: 1px;
+  }
+  #kt_activitiesApplication .cdr-score-ring-svg { width: 56px; height: 56px; flex-shrink: 0; }
+
+  /* ============================================================
+     Hero card v3 — rounded-sq avatar, green dot, 2-col meta grid,
+     4-row vertical metrics list (replaces the 2×3 cdr-match-grid-v2)
+     ============================================================ */
+
+  /* Avatar wrapper: relative so availability dot can be positioned */
+  #kt_activitiesApplication .cdr-avatar-wrap {
+    position: relative;
+    flex-shrink: 0;
+    align-self: flex-start;
+  }
+
+  /* Rounded-square avatar — lavender bg, dark-blue initials */
+  #kt_activitiesApplication .cdr-avatar-sq {
+    width: 88px;
+    height: 88px;
+    border-radius: 16px;
+    background: #eef2ff;
+    color: #1e3a8a;
+    font-family: 'Poppins', sans-serif;
+    font-weight: 700;
+    font-size: 26px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    letter-spacing: -0.5px;
+    flex-shrink: 0;
+    user-select: none;
+  }
+
+  /* Green availability dot pinned to avatar bottom-right */
+  #kt_activitiesApplication .cdr-avail-dot-v2 {
+    position: absolute;
+    bottom: 4px;
+    right: 4px;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: #22c55e;
+    border: 2.5px solid #ffffff;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+  }
+
+  /* 2-column meta grid: Exp | Company / Location | Availability */
+  #kt_activitiesApplication .cdr-subcard-id .cdr-meta-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 7px 12px;
+    margin-top: 10px;
+  }
+  #kt_activitiesApplication .cdr-subcard-id .cdr-meta-grid .cdr-meta-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    font-weight: 500;
+    color: #475569;
+    font-family: 'Poppins', sans-serif;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    min-width: 0;
+  }
+  #kt_activitiesApplication .cdr-subcard-id .cdr-meta-grid .cdr-meta-item svg {
+    width: 13px;
+    height: 13px;
+    flex-shrink: 0;
+    color: #94a3b8;
+  }
+  /* Immediate availability meta item — green */
+  #kt_activitiesApplication .cdr-subcard-id .cdr-meta-grid .cdr-meta-item.cmi-green {
+    color: #16a34a;
+  }
+  #kt_activitiesApplication .cdr-subcard-id .cdr-meta-grid .cdr-meta-item.cmi-green svg {
+    color: #16a34a;
+    width: 8px;
+    height: 8px;
+  }
+
+  /* Skills section at bottom of identity sub-card */
+  #kt_activitiesApplication .cdr-subcard-id .cdr-skills-sec {
+    margin-top: 14px;
+  }
+  #kt_activitiesApplication .cdr-subcard-id .cdr-skills-lbl {
+    font-size: 10.5px;
+    font-weight: 700;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    display: block;
+    margin-bottom: 6px;
+    font-family: 'Poppins', sans-serif;
+  }
+
+  /* 4-row vertical metric list inside Sub-Card B */
+  #kt_activitiesApplication .cdr-subcard-metrics .cdr-metric-list {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    justify-content: space-evenly;
+    padding: 8px 20px 8px 16px;
+  }
+  #kt_activitiesApplication .cdr-subcard-metrics .cdr-metric-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 9px 0;
+    border-bottom: 1px solid #f0f4f8;
+  }
+  #kt_activitiesApplication .cdr-subcard-metrics .cdr-metric-row:last-child {
+    border-bottom: none;
+  }
+
+  /* Icon circle — 36px with green / red / blue states */
+  #kt_activitiesApplication .cdr-subcard-metrics .cdr-metric-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  #kt_activitiesApplication .cdr-subcard-metrics .cdr-metric-icon svg {
+    width: 16px;
+    height: 16px;
+  }
+  #kt_activitiesApplication .cdr-subcard-metrics .cdr-metric-icon.ci-green {
+    background: #ecfdf5;
+    color: #16a34a;
+  }
+  #kt_activitiesApplication .cdr-subcard-metrics .cdr-metric-icon.ci-red {
+    background: #fef2f2;
+    color: #dc2626;
+  }
+  #kt_activitiesApplication .cdr-subcard-metrics .cdr-metric-icon.ci-blue {
+    background: #eff6ff;
+    color: #2563eb;
+  }
+
+  /* Metric label — grows to fill; left padding on the list shifts
+     the whole icon+label group rightward, reducing the gap to the value */
+  #kt_activitiesApplication .cdr-subcard-metrics .cdr-metric-label {
+    flex: 1 1 auto;
+    font-size: 12.5px;
+    font-weight: 500;
+    color: #475569;
+    font-family: 'Poppins', sans-serif;
+    min-width: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  /* Metric value — right-aligned at the list's right edge */
+  #kt_activitiesApplication .cdr-subcard-metrics .cdr-metric-val {
+    font-size: 13px;
+    font-weight: 700;
+    color: #0f172a;
+    text-align: right;
+    white-space: nowrap;
+    font-family: 'Poppins', sans-serif;
+  }
+  #kt_activitiesApplication .cdr-subcard-metrics .cdr-metric-val.cv-green { color: #16a34a; }
+  #kt_activitiesApplication .cdr-subcard-metrics .cdr-metric-val.cv-red   { color: #dc2626; }
+
+  /* Fraction part (e.g. " / 10") lighter than the main value */
+  #kt_activitiesApplication .cdr-subcard-metrics .cdr-metric-frac {
+    font-size: 12px;
+    font-weight: 500;
+    color: #64748b;
+  }
+
+  /* Multi-line value block (salary: status line + sub-text) */
+  #kt_activitiesApplication .cdr-subcard-metrics .cdr-metric-val-block {
+    text-align: right;
+    min-width: 0;
+  }
+  #kt_activitiesApplication .cdr-subcard-metrics .cdr-metric-sub {
+    font-size: 11px;
+    color: #94a3b8;
+    font-weight: 400;
+    display: block;
+    margin-top: 1px;
+    white-space: nowrap;
+    font-family: 'Poppins', sans-serif;
+  }
+
+  /* ============================================================
+     Responsive — hero card collapses to stack on tablet/mobile,
+     skills-compare stays 2-up at 960px then stacks at 640px.
+     Top bar buttons smaller + tighter on tablet.
+     ============================================================ */
+  @media (max-width: 1280px) {
+    #kt_activitiesApplication .cdr-topbar { padding: 10px 14px 8px 14px; }
+    #kt_activitiesApplication .cdr-hero-card { margin: 10px 12px 4px 12px; grid-template-columns: 1.3fr 1fr; }
+    #kt_activitiesApplication .cdr-subcard { padding: 14px 16px; }
+  }
+  @media (max-width: 960px) {
+    #kt_activitiesApplication .cdr-topbar { padding: 9px 12px 7px 12px; gap: 6px; }
+    #kt_activitiesApplication .cdr-topbar-group { gap: 6px; }
+    #kt_activitiesApplication .cdr-btn svg { width: 13px; height: 13px; }
+    #kt_activitiesApplication .cdr-btn { font-size: 12px; padding: 6px 10px; gap: 4px; }
+    #kt_activitiesApplication .cdr-hero-card { grid-template-columns: 1fr; }
+    #kt_activitiesApplication .cdr-subcard-id { border-right: 0; border-bottom: 1px solid #f1f5f9; }
+    #kt_activitiesApplication .cdr-strip { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  }
+  @media (max-width: 640px) {
+    #kt_activitiesApplication .cdr-hero-card { margin: 8px 8px 4px 8px; }
+    #kt_activitiesApplication .cdr-subcard { padding: 12px 12px; }
+    #kt_activitiesApplication .cdr-subcard-id .cdr-avatar { width: 54px; height: 54px; font-size: 18px; border-radius: 12px; }
+    #kt_activitiesApplication .cdr-subcard-id .cdr-name { font-size: 17px; }
+    #kt_activitiesApplication .cdr-skills-compare { grid-template-columns: 1fr; }
+    #kt_activitiesApplication .cdr-subcard-metrics .cdr-match-grid { grid-template-columns: 1fr; }
+    #kt_activitiesApplication .cdr-strip { grid-template-columns: repeat(2, minmax(0, 1fr)); padding: 0 8px 8px 8px; }
+  }
+
+  /* ============================================================
+     THREE-CARD LAYOUT — matches jobs/show.blade.php card pattern
+     Topbar = full-width action bar (outside cards, like job drawer top-actions)
+     Card 1 = Hero identity + match metrics
+     Card 2 = 6 pipeline stat sub-cards
+     Card 3 = Tabs + Content
+     ============================================================ */
+
+  /* Page wrapper: vertical flex column, gray background between cards.
+     No padding — topbar spans full width edge-to-edge (same as job drawer). */
+  #kt_activitiesApplication .page-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    background: #f1f5f9;
+    min-height: auto;
+    padding-bottom: 16px;
+  }
+
+  /* Outer card — shared white-card frame used for Card 1 (hero) and Card 3 (tabs).
+     16px horizontal margin pulls it away from the drawer edges. */
+  #kt_activitiesApplication .cdr-outer-card {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    box-shadow: 0 1px 3px rgba(15,23,42,0.04), 0 4px 12px rgba(15,23,42,0.03);
+    overflow: hidden;
+    flex-shrink: 0;
+    margin: 0 16px;
+  }
+
+  /* Hero card sits flat inside .cdr-outer-card (border/margin/shadow reset at line 2241) */
+
+  /* CARD 2: 6 pipeline stat sub-cards — 6-col grid, mirrors job drawer pipeline section */
+  #kt_activitiesApplication .cdr-pipeline-section {
+    display: grid;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: 10px;
+    flex-shrink: 0;
+    margin: 0 16px;
+  }
+
+  #kt_activitiesApplication .cdr-pipeline-card {
+    background: #ffffff;
+    border-radius: 12px;
+    padding: 14px 12px;
+    border: 1px solid #e2e8f0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    box-shadow: 0 1px 2px rgba(15,23,42,0.04);
+    transition: box-shadow 0.18s ease, transform 0.18s ease, border-color 0.18s ease;
+    cursor: default;
+    min-width: 0;
+  }
+
+  #kt_activitiesApplication .cdr-pipeline-card:hover {
+    box-shadow: 0 4px 14px rgba(15,23,42,0.08);
+    transform: translateY(-2px);
+    border-color: #bfdbfe;
+  }
+
+  /* Icon square — color-coded like job drawer pipeline icons */
+  #kt_activitiesApplication .cdr-pipeline-icon {
+    width: 38px;
+    height: 38px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  #kt_activitiesApplication .cdr-pipeline-icon svg { width: 16px; height: 16px; }
+
+  #kt_activitiesApplication .cpi-blue   { background: #dbeafe; color: #1d4ed8; }
+  #kt_activitiesApplication .cpi-green  { background: #d1fae5; color: #059669; }
+  #kt_activitiesApplication .cpi-purple { background: #ede9fe; color: #7c3aed; }
+  #kt_activitiesApplication .cpi-amber  { background: #fef3c7; color: #d97706; }
+  #kt_activitiesApplication .cpi-teal   { background: #ccfbf1; color: #0d9488; }
+  #kt_activitiesApplication .cpi-indigo { background: #e0e7ff; color: #4338ca; }
+
+  #kt_activitiesApplication .cdr-pipeline-info { flex: 1; min-width: 0; }
+
+  #kt_activitiesApplication .cdr-pipeline-label {
+    font-size: 10.5px;
+    color: #94a3b8;
+    font-weight: 500;
+    font-family: 'Poppins', sans-serif;
+    margin-bottom: 4px;
+    white-space: nowrap;
+  }
+
+  #kt_activitiesApplication .cdr-pipeline-value {
+    font-size: 13px;
+    font-weight: 700;
+    color: #0f172a;
+    font-family: 'Poppins', sans-serif;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 1.3;
+  }
+
+  #kt_activitiesApplication .cpi-unit {
+    font-size: 11px;
+    font-weight: 500;
+    color: #64748b;
+    font-family: 'Poppins', sans-serif;
+  }
+
+  /* CARD 3: tabs outer card — page-tabs and page-content sit flat inside */
+  #kt_activitiesApplication .cdr-tabs-card .page-tabs {
+    border-radius: 0;
+    background: #ffffff;
+  }
+
+  #kt_activitiesApplication .cdr-tabs-card .page-content {
+    background: #f8fafc;
+    border-radius: 0 0 12px 12px;
+  }
+
+  /* ============================================================
+     FONT-SIZE CORRECTIONS — cap all content text at 14px max
+     (UI_UX_STANDARDS §10: "max font 14px").
+     Avatar initials (visual decorative elements) are exempt.
+     ============================================================ */
+
+  /* Candidate name: was 18px at line 2314 */
+  #kt_activitiesApplication .cdr-subcard-id .cdr-name {
+    font-size: 14px !important;
+    font-weight: 700;
+    line-height: 1.3;
+  }
+
+  /* Skills-compare count value (e.g. "3"): was 18px at line 1797 */
+  #kt_activitiesApplication .cdr-compare-value { font-size: 13px !important; }
+
+  /* Metric cell value (old hero design fallback): was 18px at line 2400 */
+  #kt_activitiesApplication .cdr-cell-value { font-size: 13px !important; }
+
+  /* Pipeline responsive — collapse at narrower drawer widths */
+  @media (max-width: 1100px) {
+    #kt_activitiesApplication .cdr-pipeline-section { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+  }
+  @media (max-width: 640px) {
+    #kt_activitiesApplication .cdr-pipeline-section { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    /* Name cap stays 14px on narrow widths (override the 17px responsive rule at line 2625) */
+    #kt_activitiesApplication .cdr-subcard-id .cdr-name { font-size: 14px !important; }
+  }
+
+  /* ============================================================
+     NOTES & TIMELINE TABS — overflow containment
+     Prevents wide tables and min-w-700px comment boxes from
+     expanding the drawer horizontally and breaking the layout.
+     CSS-only, no PHP / business-logic changes.
+     ============================================================ */
+
+  /* ── DRAWER FOUNDATION ────────────────────────────────────────────
+     page-wrapper MUST fill the full drawer pixel width at all times.
+     Without width:100% the page-wrapper shrinks to its content in the
+     drawer's flex-row context; switching to Notes/Timeline (whose
+     content is narrower than Profile Overview) lets it shrink and
+     clips the right sub-card of the hero card. */
+  #kt_activitiesApplication .page-wrapper {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0;
+    overflow-x: hidden;
+  }
+
+  /* Contain every tab pane and the page-content wrapper so that wide
+     elements inside Notes/Timeline never push the drawer wider. */
+  #kt_activitiesApplication .page-content { overflow-x: hidden; max-width: 100%; }
+  #kt_activitiesApplication .tab-pane     { max-width: 100%; overflow-x: hidden; }
+
+  /* The global ".table td,.table th,.table tr{width:max-content!important}"
+     rule (in the top <style> block of showdetail.blade.php) makes timeline
+     tables try to be as wide as their content.  Override it here. */
+  #kt_activitiesApplication #notes table td,
+  #kt_activitiesApplication #notes table th,
+  #kt_activitiesApplication #notes table tr,
+  #kt_activitiesApplication #timeline table td,
+  #kt_activitiesApplication #timeline table th,
+  #kt_activitiesApplication #timeline table tr { width: auto !important; }
+
+  /* ── NOTES & TIMELINE: layout containment ─────────────────────── */
+
+  /* Switch from CSS Grid to block so 1fr never expands past drawer width */
+  #kt_activitiesApplication #notes .content-split,
+  #kt_activitiesApplication #timeline .content-split { display: block !important; max-width: 100%; width: 100%; }
+
+  #kt_activitiesApplication #notes .content-main-full,
+  #kt_activitiesApplication #timeline .content-main-full { max-width: 100%; width: 100%; }
+
+  /* Bootstrap .row negative gutter margins bleed past the card — zero them */
+  #kt_activitiesApplication #notes .row,
+  #kt_activitiesApplication #timeline .row { margin-left: 0 !important; margin-right: 0 !important; max-width: 100%; width: 100%; }
+
+  /* Timeline: wide multi-column tables scroll horizontally inside their cell */
+  #kt_activitiesApplication #timeline .timeline-content { overflow-x: auto; max-width: 100%; }
+
+  /* Constrain overflow-auto wrappers that hold min-w-700px comment boxes */
+  #kt_activitiesApplication #notes .overflow-auto,
+  #kt_activitiesApplication #timeline .overflow-auto { max-width: 100% !important; width: 100% !important; overflow-x: auto !important; }
+
+  /* Remove the 700/750/800px floor so comment boxes fill available width */
+  #kt_activitiesApplication .min-w-700px,
+  #kt_activitiesApplication .min-w-750px,
+  #kt_activitiesApplication .min-w-800px { min-width: 0 !important; }
+
+  /* Bootstrap fs-5=1.25rem(20px) / fs-6=1rem(16px) — cap to 13px in drawer */
+  #kt_activitiesApplication .fs-5 { font-size: 13px !important; }
+  #kt_activitiesApplication #notes .fs-6,
+  #kt_activitiesApplication #timeline .fs-6 { font-size: 13px !important; }
+
+  /* Timeline card-body: replace Bootstrap defaults with drawer-friendly padding */
+  #kt_activitiesApplication #timeline .card-body { padding: 12px 16px !important; }
+
+  /* Notes / Timeline: prevent form-group and cards from leaking past boundary */
+  #kt_activitiesApplication #notes .form-group,
+  #kt_activitiesApplication #notes .cardshow,
+  #kt_activitiesApplication #timeline .cardshow { max-width: 100%; overflow-x: hidden; }
+
+  /* Timeline-3 left margin+padding offset must stay inside the card boundary */
+  #kt_activitiesApplication #notes .timeline.timeline-3,
+  #kt_activitiesApplication #timeline .timeline.timeline-3 { overflow-x: hidden; max-width: 100%; }
+
+  /* Bootstrap col gutters inside notes/timeline */
+  #kt_activitiesApplication #notes [class*="col-"],
+  #kt_activitiesApplication #timeline [class*="col-"] { max-width: 100%; overflow-x: hidden; }
+
+  /* ============================================================
+     PROFILE OVERVIEW TAB — Enterprise Redesign
+     Two-column grid, edit button top-right, side drawers,
+     typography 13px cap, salary decimal strip, ownership format.
+     All scoped to #personal_details inside the drawer.
+     ============================================================ */
+
+  /* Two-column layout for Profile Overview only */
+  #kt_activitiesApplication #personal_details .content-split {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) 300px;
+    gap: 16px;
+    align-items: start;
+  }
+  /* Collapse to single column on narrow drawer widths */
+  @media (max-width: 860px) {
+    #kt_activitiesApplication #personal_details .content-split {
+      grid-template-columns: 1fr !important;
+    }
+  }
+
+  /* Card header: flex row with icon + title + right-aligned action */
+  #kt_activitiesApplication .card-header-sidebar {
+    position: relative;
+  }
+
+  /* Enterprise edit button — icon + text, right-aligned via margin-left:auto */
+  #kt_activitiesApplication .jw-card-edit-btn {
+    margin-left: auto;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 5px 12px;
+    font-size: 12px;
+    font-weight: 600;
+    color: #4f46e5;
+    background: #eef2ff;
+    border: 1px solid #c7d2fe;
+    border-radius: 7px;
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s, border-color 0.15s;
+    font-family: 'Poppins', sans-serif;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  #kt_activitiesApplication .jw-card-edit-btn:hover {
+    background: #e0e7ff;
+    color: #3730a3;
+    border-color: #a5b4fc;
+  }
+  #kt_activitiesApplication .jw-card-edit-btn svg {
+    width: 12px;
+    height: 12px;
+    flex-shrink: 0;
+  }
+
+  /* ===== SIDE EDIT DRAWER ===== */
+  /* Full-screen overlay; pointer-events disabled until drawer is open */
+  .jw-side-drawer {
+    position: fixed;
+    inset: 0;
+    z-index: 1055;
+    pointer-events: none;
+    overflow: hidden;
+  }
+  /* :has() detects when the inner body's d-none is removed — opens the drawer */
+  .jw-side-drawer:has(.jw-drawer-body:not(.d-none)) {
+    pointer-events: auto;
+  }
+  /* Semi-transparent backdrop */
+  .jw-drawer-backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.45);
+    opacity: 0;
+    cursor: pointer;
+    transition: opacity 0.28s;
+  }
+  .jw-side-drawer:has(.jw-drawer-body:not(.d-none)) .jw-drawer-backdrop {
+    opacity: 1;
+  }
+  /* Slide-in panel */
+  .jw-drawer-panel {
+    position: absolute;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    width: 480px;
+    max-width: 96vw;
+    background: #ffffff;
+    display: flex;
+    flex-direction: column;
+    box-shadow: -4px 0 32px rgba(15, 23, 42, 0.14);
+    border-left: 1px solid #e2e8f0;
+    transform: translateX(100%);
+    transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .jw-side-drawer:has(.jw-drawer-body:not(.d-none)) .jw-drawer-panel {
+    transform: translateX(0);
+  }
+  /* Drawer header */
+  .jw-drawer-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px 14px;
+    border-bottom: 1px solid #e2e8f0;
+    background: #f8fafc;
+    flex-shrink: 0;
+    gap: 12px;
+  }
+  .jw-drawer-icon-wrap {
+    width: 30px;
+    height: 30px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .jw-drawer-icon-wrap svg { width: 15px; height: 15px; }
+  .jw-drawer-title-group { flex: 1; min-width: 0; }
+  .jw-drawer-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: #0f172a;
+    font-family: 'Poppins', sans-serif;
+    line-height: 1.3;
+  }
+  .jw-drawer-subtitle {
+    font-size: 11px;
+    color: #64748b;
+    font-family: 'Poppins', sans-serif;
+    margin-top: 2px;
+  }
+  .jw-drawer-close {
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid #e2e8f0;
+    background: #fff;
+    border-radius: 6px;
+    cursor: pointer;
+    color: #64748b;
+    transition: background 0.15s, color 0.15s, border-color 0.15s;
+    flex-shrink: 0;
+    padding: 0;
+  }
+  .jw-drawer-close:hover { background: #fee2e2; color: #dc2626; border-color: #fca5a5; }
+  .jw-drawer-close svg { width: 14px; height: 14px; }
+  /* Scrollable form body */
+  .jw-drawer-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px;
+    font-family: 'Poppins', sans-serif;
+    font-size: 12px;
+    color: #374151;
+    scrollbar-width: thin;
+    scrollbar-color: #cbd5e1 transparent;
+  }
+  .jw-drawer-body table { width: 100%; border-collapse: collapse; }
+  .jw-drawer-body table th {
+    font-size: 11px;
+    font-weight: 600;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    padding: 8px 10px;
+    border-bottom: 1px solid #e2e8f0;
+    background: #f8fafc;
+    font-family: 'Poppins', sans-serif;
+  }
+  .jw-drawer-body table td {
+    padding: 10px;
+    border-bottom: 1px solid #f1f5f9;
+    font-size: 12px;
+    font-family: 'Poppins', sans-serif;
+    vertical-align: middle;
+  }
+  .jw-drawer-body .form-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: #374151;
+    font-family: 'Poppins', sans-serif;
+    margin-bottom: 4px;
+  }
+  .jw-drawer-body .form-control,
+  .jw-drawer-body .form-select {
+    font-size: 12px;
+    font-family: 'Poppins', sans-serif;
+    border-radius: 7px;
+    border-color: #e2e8f0;
+    color: #0f172a;
+  }
+  .jw-drawer-body .form-control:focus,
+  .jw-drawer-body .form-select:focus {
+    border-color: #6366f1;
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.12);
+  }
+  /* Sticky footer with Save / Cancel */
+  .jw-drawer-footer {
+    display: flex;
+    gap: 10px;
+    padding: 14px 20px;
+    border-top: 1px solid #e2e8f0;
+    background: #f8fafc;
+    flex-shrink: 0;
+  }
+  .jw-drawer-footer .btn-jw-save {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 18px;
+    font-size: 12px;
+    font-weight: 600;
+    color: #fff;
+    background: #4f46e5;
+    border: none;
+    border-radius: 7px;
+    cursor: pointer;
+    font-family: 'Poppins', sans-serif;
+    transition: background 0.15s;
+  }
+  .jw-drawer-footer .btn-jw-save:hover { background: #4338ca; }
+  .jw-drawer-footer .btn-jw-cancel {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 16px;
+    font-size: 12px;
+    font-weight: 500;
+    color: #64748b;
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 7px;
+    cursor: pointer;
+    font-family: 'Poppins', sans-serif;
+    transition: background 0.15s, color 0.15s;
+  }
+  .jw-drawer-footer .btn-jw-cancel:hover { background: #f1f5f9; color: #0f172a; }
+  /* Interview slot inputs inside drawer */
+  .jw-drawer-body .slot-day { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 4px; }
+  .jw-drawer-body .slot-day > div { flex: 1; min-width: 100px; }
+
+  /* ===== PROFILE OVERVIEW: hide skill logo icons in view mode ===== */
+  #kt_activitiesApplication #personal_details .skill-logo { display: none !important; }
+  #kt_activitiesApplication #personal_details .skill-name-cell { padding-left: 0 !important; }
+
+  /* ===== FONT CAP 13px throughout Profile Overview ===== */
+  #kt_activitiesApplication #personal_details * { font-family: 'Poppins', sans-serif; }
+  #kt_activitiesApplication #personal_details .fs-6 { font-size: 12px !important; }
+  #kt_activitiesApplication #personal_details .fs-7 { font-size: 11px !important; }
+
+  /* ===== OWNERSHIP meta separator ===== */
+  #kt_activitiesApplication .meta-sep {
+    color: #94a3b8;
+    margin: 0 6px;
+    font-weight: 400;
+  }
+
+  /* ===== COMPENSATION: label/value sizing ===== */
+  #kt_activitiesApplication .comp-label { font-size: 11.5px; }
+  #kt_activitiesApplication .comp-value { font-size: 12px; font-weight: 600; }
+  #kt_activitiesApplication .comp-badge {
+    font-size: 11px;
+    padding: 3px 8px;
+    border-radius: 12px;
+    background: #e0e7ff;
+    color: #4338ca;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+
+  /* ===== SIDEBAR cards ===== */
+  #kt_activitiesApplication .content-sidebar .cardshow { margin-bottom: 0; }
+  #kt_activitiesApplication .ownership-row {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    padding: 10px 0;
+    border-bottom: 1px solid #f1f5f9;
+  }
+  #kt_activitiesApplication .ownership-row:last-child { border-bottom: none; }
+  #kt_activitiesApplication .own-label {
+    font-size: 11px;
+    color: #94a3b8;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+  #kt_activitiesApplication .own-label svg { width: 12px; height: 12px; }
+  #kt_activitiesApplication .own-value {
+    font-size: 12px;
+    color: #0f172a;
+    font-weight: 600;
+    padding-left: 17px;
+  }
+  /* Interview Slot view in drawer-closed state */
+  #kt_activitiesApplication .slots-grid .slot-day {
+    border-radius: 10px;
+    border: 1px solid #e2e8f0;
+    padding: 12px;
+    background: #fafbfc;
+  }
+  #kt_activitiesApplication .slots-grid .slot-header { margin-bottom: 6px; }
+  #kt_activitiesApplication .slots-grid .slot-day-name {
+    font-size: 11px;
+    font-weight: 600;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  #kt_activitiesApplication .slots-grid .slot-date {
+    font-size: 13px;
+    font-weight: 700;
+    color: #0f172a;
+  }
+  #kt_activitiesApplication .slots-grid .slot-time {
+    font-size: 11.5px;
+    color: #475569;
+    margin-bottom: 4px;
+  }
+
+/* ===================================================================
+   RESUME DOWNLOAD CENTER (RDC) — Phase 1 UI Shell
+   Drawer slides in from the right; 6 format cards shown.
+   Options 1 & 2 wired to existing download; 3–6 are Phase 2.
+   z-index above KT drawer (999999) and its stacking context.
+=================================================================== */
+.rdc-overlay{position:fixed;inset:0;background:rgba(15,23,42,.48);opacity:0;pointer-events:none;transition:opacity .25s ease;z-index:1200000;}
+.rdc-overlay.rdc-open{opacity:1;pointer-events:auto;}
+.rdc-drawer{position:fixed;top:0;right:0;height:100%;width:624px;max-width:100vw;background:#fff;z-index:1200001;transform:translateX(100%);transition:transform .25s ease;display:flex;flex-direction:column;font-family:'Poppins',sans-serif;box-shadow:-4px 0 40px rgba(15,23,42,.12);overflow:hidden;}
+.rdc-drawer.rdc-open{transform:translateX(0);}
+.rdc-header{display:flex;align-items:flex-start;justify-content:space-between;padding:16px 18px 13px;border-bottom:1px solid #e2e8f0;flex-shrink:0;gap:10px;background:#fff;}
+.rdc-header-text{flex:1;min-width:0;}
+.rdc-title{font-size:13px;font-weight:700;color:#0f172a;margin:0 0 2px;font-family:'Poppins',sans-serif;line-height:1.3;}
+.rdc-subtitle{font-size:11px;color:#64748b;margin:0;font-family:'Poppins',sans-serif;}
+.rdc-close-btn{width:28px;height:28px;display:flex;align-items:center;justify-content:center;border:1px solid #e2e8f0;background:#fff;border-radius:7px;cursor:pointer;color:#64748b;padding:0;flex-shrink:0;transition:all .15s ease;}
+.rdc-close-btn:hover{background:#fee2e2;color:#dc2626;border-color:#fca5a5;}
+.rdc-close-btn svg{width:13px;height:13px;}
+.rdc-body{flex:1;overflow-y:auto;overflow-x:hidden;scrollbar-width:thin;scrollbar-color:#e2e8f0 transparent;}
+.rdc-cand-card{display:flex;align-items:stretch;margin:12px 14px 0;border:1px solid #e2e8f0;border-radius:10px;background:#f8fafc;overflow:hidden;}
+.rdc-cand-left{display:flex;align-items:center;gap:9px;padding:11px 14px;flex:1;min-width:0;}
+.rdc-cand-avatar{width:32px;height:32px;border-radius:8px;background:#eef2ff;color:#4f46e5;font-weight:700;font-size:11px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-family:'Poppins',sans-serif;}
+.rdc-cand-info{display:flex;flex-direction:column;gap:2px;min-width:0;}
+.rdc-meta-lbl{font-size:9.5px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:.04em;line-height:1;}
+.rdc-cand-name{font-size:12px;font-weight:700;color:#0f172a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.rdc-cand-sep{width:1px;background:#e2e8f0;align-self:stretch;flex-shrink:0;}
+.rdc-cand-right{display:flex;align-items:center;gap:9px;padding:11px 14px;}
+.rdc-resume-ic{width:30px;height:30px;border-radius:7px;background:#fee2e2;color:#dc2626;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.rdc-resume-ic svg{width:14px;height:14px;}
+.rdc-resume-info{display:flex;flex-direction:column;gap:2px;}
+.rdc-resume-meta{font-size:11px;font-weight:600;color:#334155;white-space:nowrap;}
+.rdc-sect-lbl{font-size:9.5px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.06em;padding:13px 14px 6px;font-family:'Poppins',sans-serif;}
+.rdc-opts-list{display:flex;flex-direction:column;gap:8px;padding:0 14px 10px;}
+.rdc-opt{display:grid;grid-template-columns:18px 30px 1fr auto 15px;grid-template-rows:auto auto;column-gap:9px;row-gap:2px;align-items:center;padding:10px 11px;border:1.5px solid #e2e8f0;border-radius:10px;cursor:pointer;transition:border-color .15s,background .15s,box-shadow .15s;background:#fff;position:relative;}
+.rdc-opt:hover{border-color:#c7d2fe;background:#faf8ff;box-shadow:0 2px 10px rgba(124,58,237,.07);}
+.rdc-opt.rdc-opt-sel{border-color:#7c3aed;background:#faf8ff;}
+.rdc-rinput{position:absolute;opacity:0;width:0;height:0;pointer-events:none;}
+.rdc-onum{grid-column:1;grid-row:1/3;align-self:center;width:18px;height:18px;border-radius:50%;background:#f1f5f9;color:#94a3b8;font-size:9.5px;font-weight:700;display:flex;align-items:center;justify-content:center;font-family:'Poppins',sans-serif;transition:background .15s,color .15s;}
+.rdc-opt-sel .rdc-onum{background:#ede9fe;color:#7c3aed;}
+.rdc-oi{grid-column:2;grid-row:1/3;align-self:center;width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;}
+.rdc-oi svg{width:14px;height:14px;}
+.rdc-ic-blue{background:#dbeafe;color:#1d4ed8;}
+.rdc-ic-purple{background:#ede9fe;color:#7c3aed;}
+.rdc-ic-amber{background:#fef3c7;color:#d97706;}
+.rdc-ic-green{background:#d1fae5;color:#059669;}
+.rdc-ic-rose{background:#ffe4e6;color:#e11d48;}
+.rdc-ic-teal{background:#ccfbf1;color:#0d9488;}
+.rdc-obody{display:contents;}
+.rdc-otitle{grid-column:3;grid-row:1;font-size:12px;font-weight:600;color:#0f172a;line-height:1.3;font-family:'Poppins',sans-serif;display:flex;align-items:center;gap:5px;flex-wrap:wrap;}
+.rdc-odesc{grid-column:3;grid-row:2;font-size:10.5px;color:#64748b;line-height:1.3;font-family:'Poppins',sans-serif;}
+.rdc-ometa{display:contents;}
+.rdc-ocost{grid-column:4;grid-row:1;font-size:11px;font-weight:700;color:#7c3aed;font-family:'Poppins',sans-serif;white-space:nowrap;text-align:right;}
+.rdc-otime{grid-column:4;grid-row:2;font-size:10px;color:#94a3b8;font-family:'Poppins',sans-serif;white-space:nowrap;text-align:right;}
+.rdc-ocirc{grid-column:5;grid-row:1/3;align-self:center;width:15px;height:15px;border-radius:50%;border:2px solid #cbd5e1;display:flex;align-items:center;justify-content:center;transition:all .15s ease;}
+.rdc-opt-sel .rdc-ocirc{border-color:#7c3aed;background:#7c3aed;}
+.rdc-opt-sel .rdc-ocirc::after{content:'';width:5px;height:5px;border-radius:50%;background:#fff;display:block;}
+.rdc-p2-badge{display:inline-block;font-size:9px;font-weight:600;color:#7c3aed;background:#ede9fe;padding:1px 5px;border-radius:4px;font-family:'Poppins',sans-serif;vertical-align:middle;white-space:nowrap;line-height:1.4;}
+.rdc-coin-card{margin:2px 14px 12px;padding:11px 13px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;}
+.rdc-coin-row{display:flex;align-items:center;gap:7px;font-size:11.5px;color:#374151;font-family:'Poppins',sans-serif;margin-bottom:5px;}
+.rdc-coin-dot{width:8px;height:8px;border-radius:50%;background:#7c3aed;flex-shrink:0;}
+.rdc-coin-row strong{color:#7c3aed;}
+.rdc-bal-row{font-size:11.5px;color:#374151;font-family:'Poppins',sans-serif;padding-left:15px;}
+.rdc-footer{padding:12px 14px 10px;border-top:1px solid #e2e8f0;flex-shrink:0;background:#fff;}
+.rdc-dl-btn{width:100%;padding:12px 16px;background:#4f46e5;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:600;font-family:'Poppins',sans-serif;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:background .15s ease;}
+.rdc-dl-btn:hover:not(:disabled){background:#4338ca;}
+.rdc-dl-btn:disabled,.rdc-dl-btn.rdc-loading{background:#4338ca;cursor:not-allowed;opacity:.75;}
+.rdc-foot-note{text-align:center;font-size:10px;color:#94a3b8;margin:8px 0 0;display:flex;align-items:center;justify-content:center;gap:4px;font-family:'Poppins',sans-serif;}
+.rdc-foot-note svg{flex-shrink:0;}
+@keyframes rdcSpin{to{transform:rotate(360deg);}}
+.rdc-spin{display:inline-block;width:13px;height:13px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:rdcSpin .65s linear infinite;flex-shrink:0;}
+.rdc-toast{position:fixed;bottom:20px;right:20px;background:#1e293b;color:#fff;padding:10px 15px;border-radius:8px;font-size:11.5px;font-family:'Poppins',sans-serif;z-index:1300000;opacity:0;transform:translateY(6px);transition:all .22s ease;pointer-events:none;max-width:280px;line-height:1.4;}
+.rdc-toast.rdc-tshow{opacity:1;transform:translateY(0);}
+.rdc-toast-info{background:#7c3aed;}
+.rdc-toast-warn{background:#d97706;}
+@media(max-width:640px){
+  .rdc-drawer{width:100%;top:auto;bottom:0;height:92dvh;border-radius:14px 14px 0 0;transform:translateY(100%);}
+  .rdc-drawer.rdc-open{transform:translateY(0);}
+}
+@media(min-width:641px) and (max-width:900px){.rdc-drawer{width:100%;}}

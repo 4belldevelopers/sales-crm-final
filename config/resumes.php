@@ -21,6 +21,7 @@ return [
         'network_resilience'   => (bool) env('RESUMES_FEATURE_NETWORK_RESILIENCE', false),
         'broadcast_channel'    => (bool) env('RESUMES_FEATURE_BROADCAST_CHANNEL', false),
         'career_controller'    => (bool) env('RESUMES_FEATURE_CAREER_CONTROLLER', false),
+        'reconcile_orphans'    => (bool) env('RESUMES_FEATURE_RECONCILE_ORPHANS', false),
     ],
 
     /*
@@ -70,9 +71,35 @@ return [
     |--------------------------------------------------------------------------
     */
     'rate_limits' => [
-        'presign_per_user'    => 30,  // POST /resume-sessions per minute
-        'presign_per_company' => 120, // per company across all users
-        'submit_per_user'     => 20,  // POST /job-applications per minute
+        'presign_per_user'  => 3,   // 3/min per recruiter
+        'finalize_per_user' => 10,  // one per upload attempt; generous for retries
+        'status_per_user'   => 60,  // polling endpoint; high limit
+        'submit_per_user'   => 20,  // POST /job-applications per minute
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Network resilience (Phase 6) — browser-side retry config
+    | Injected as window.RESUMES_CONFIG in blade; JS module reads these values.
+    |--------------------------------------------------------------------------
+    */
+    'network_resilience' => [
+        // Maximum number of R2 PUT attempts (first try + retries).
+        'max_put_attempts' => (int) env('RESUMES_MAX_PUT_ATTEMPTS', 3),
+        // Base back-off delay in milliseconds; doubled each retry (1s → 2s → 4s).
+        'put_backoff_ms'   => (int) env('RESUMES_PUT_BACKOFF_MS', 1000),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Orphan reconciliation (cron sweep)
+    |--------------------------------------------------------------------------
+    */
+    'reconcile' => [
+        // Rows processed per DB query; keep ≤200 to avoid lock contention.
+        'chunk_size'        => (int) env('RESUMES_RECONCILE_CHUNK', 100),
+        // Expired sessions older than this many days are promoted to Reconciled.
+        'expire_after_days' => (int) env('RESUMES_RECONCILE_EXPIRE_DAYS', 7),
     ],
 
     /*

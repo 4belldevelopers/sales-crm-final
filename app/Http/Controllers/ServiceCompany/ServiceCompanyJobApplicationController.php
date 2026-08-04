@@ -87,6 +87,9 @@ use Google_Client;
 use Google_Service_Calendar;
 use App\Services\ElasticService;
 use App\Models\ElasticCandidate;
+use App\Enums\ResumeUploadStatus;
+use App\Models\ResumeUpload;
+use App\Models\UploadSessionAudit;
 
 
 
@@ -536,6 +539,7 @@ protected $elasticService;
 							'interview_mode_two' => $request->interview_mode_two,
 							'interviewDateThree' => ($interviewDateThree) ? Carbon::parse($interviewDateThree)->toIso8601String() : null,
 							'interview_mode_three' => $request->interview_mode_three,
+							'interview_timezone' => $request->interview_timezone ?? 'IST',
 						],
 						'doc_as_upsert' => false // Changed to false since we verified existence
 					],
@@ -559,6 +563,7 @@ protected $elasticService;
 					$interview_mode_two = @$data->interview_mode_two;			
 					$interviewDateThree = @$data->interviewDateThree;	
 					$interview_mode_three = @$data->interview_mode_three;
+					 $interview_timezone = @$data->interview_timezone ?? 'IST';
 					$wiseId = $addJobWiseCondidate_id;
 
 					 $scheduleDateArr = DB::table('interview_schedules')->where('interview_job_wise_con_id',$addJobWiseCondidate_id)->pluck('schedule_date')->toArray();
@@ -604,14 +609,13 @@ protected $elasticService;
 								<div class="slot-day-name">'.($interviewDateOne ? Carbon::parse($interviewDateOne)->format('D') : 'N/A').'</div>
 								<div class="slot-date">'.($interviewDateOne ? Carbon::parse($interviewDateOne)->format('d M') : 'N/A' ).'</div>
 							</div>
-							<div class="slot-time">'.($interviewDateOne ? Carbon::parse($interviewDateOne)->format('h:i A') : 'N/A' ).'(IST)</div>
+							<div class="slot-time">'.($interviewDateOne ? Carbon::parse($interviewDateOne)->format('h:i A') : 'N/A' ).' <span style="font-size:10px;color:#94a3b8;font-weight:500;">('.$interview_timezone.')</span></div>
 							<div class="slot-time">'.(@$interview_mode_one ?? 'N/A' ).'</div>
 
-							<button '.(($interviewDateOne && $date1 >= date('Y-m-d')) ? $modal1 : '' ).' data-mode="'. $interview_mode_one .'"
-                                data-date="'. ($interviewDateOne ? Carbon::parse($interviewDateOne)->format('d-m-Y') : '') .'"
-                                data-time="'. ($interviewDateOne ? Carbon::parse($interviewDateOne)->format('h:i A') : '') .'"
-                                class="'. (($interviewDateOne && $date1 >= date('Y-m-d')) ? $bookbtn1 : 'book-btnoff') .'"
-                                rel="'. @$wiseId .'">'.$book1.'</button>
+							'.($interviewDateOne
+                                ? '<button '.(($interviewDateOne && $date1 >= date('Y-m-d')) ? $modal1 : '').' data-mode="'.$interview_mode_one.'" data-date="'.Carbon::parse($interviewDateOne)->format('d-m-Y').'" data-time="'.Carbon::parse($interviewDateOne)->format('h:i A').'" class="'.(($interviewDateOne && $date1 >= date('Y-m-d')) ? $bookbtn1 : 'book-btnoff').'" rel="'.$wiseId.'">'.$book1.'</button>'
+                                : '<button type="button" class="book-btn-addslot editSlots"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:11px;height:11px;flex-shrink:0;"><rect x=\'3\' y=\'4\' width=\'18\' height=\'18\' rx=\'2\'/><line x1=\'16\' y1=\'2\' x2=\'16\' y2=\'6\'/><line x1=\'8\' y1=\'2\' x2=\'8\' y2=\'6\'/><line x1=\'3\' y1=\'10\' x2=\'21\' y2=\'10\'/></svg> Select Date</button>'
+                            ).'
                         </div>
 
 						<div class="slot-day">
@@ -619,13 +623,12 @@ protected $elasticService;
 								<div class="slot-day-name">'.($interviewDateTwo ? Carbon::parse($interviewDateTwo)->format('D') : 'N/A').'</div>
 								<div class="slot-date">'.($interviewDateTwo ? Carbon::parse($interviewDateTwo)->format('d M') : 'N/A' ).'</div>
 							</div>
-							<div class="slot-time">'.($interviewDateTwo ? Carbon::parse($interviewDateTwo)->format('h:i A') : 'N/A').'(IST)</div>
+							<div class="slot-time">'.($interviewDateTwo ? Carbon::parse($interviewDateTwo)->format('h:i A') : 'N/A').' <span style="font-size:10px;color:#94a3b8;font-weight:500;">('.$interview_timezone.')</span></div>
 							<div class="slot-time">'.(@$interview_mode_two ?? 'N/A') .'</div>
-								<button '.(($interviewDateTwo && $date2 >= date('Y-m-d')) ? $modal2:'').' data-mode="'. $interview_mode_two .'"
-										data-date="'. ($interviewDateTwo ? Carbon::parse($interviewDateTwo)->format('d-m-Y') : '') .'"
-										data-time="'. ($interviewDateTwo ? Carbon::parse($interviewDateTwo)->format('h:i A') : '') .'"
-										class="'. (($interviewDateTwo && $date2 >= date('Y-m-d')) ? $bookbtn2 : 'book-btnoff') .'"
-										rel="'. @$wiseId .'">'.$book2.'</button>
+								'.($interviewDateTwo
+                                        ? '<button '.(($interviewDateTwo && $date2 >= date('Y-m-d')) ? $modal2 : '').' data-mode="'.$interview_mode_two.'" data-date="'.Carbon::parse($interviewDateTwo)->format('d-m-Y').'" data-time="'.Carbon::parse($interviewDateTwo)->format('h:i A').'" class="'.(($interviewDateTwo && $date2 >= date('Y-m-d')) ? $bookbtn2 : 'book-btnoff').'" rel="'.$wiseId.'">'.$book2.'</button>'
+                                        : '<button type="button" class="book-btn-addslot editSlots"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:11px;height:11px;flex-shrink:0;"><rect x=\'3\' y=\'4\' width=\'18\' height=\'18\' rx=\'2\'/><line x1=\'16\' y1=\'2\' x2=\'16\' y2=\'6\'/><line x1=\'8\' y1=\'2\' x2=\'8\' y2=\'6\'/><line x1=\'3\' y1=\'10\' x2=\'21\' y2=\'10\'/></svg> Select Date</button>'
+                                    ).'
 						</div>
 
 						<div class="slot-day">						
@@ -633,13 +636,12 @@ protected $elasticService;
 								<div class="slot-day-name">'.($interviewDateThree ? Carbon::parse($interviewDateThree)->format('D') : 'N/A').'</div>
 								<div class="slot-date">'.($interviewDateThree ? Carbon::parse($interviewDateThree)->format('d M') : 'N/A' ).'</div>
 							</div>
-							<div class="slot-time">'.($interviewDateThree ? Carbon::parse($interviewDateThree)->format('h:i A') : 'N/A').'(IST)</div>
+							<div class="slot-time">'.($interviewDateThree ? Carbon::parse($interviewDateThree)->format('h:i A') : 'N/A').' <span style="font-size:10px;color:#94a3b8;font-weight:500;">('.$interview_timezone.')</span></div>
 							<div class="slot-time">'.(@$interview_mode_three ?? 'N/A' ).'</div>
-								<button '.(($interviewDateThree && $date3 >= date('Y-m-d')) ? $modal3:'').' data-mode="'. $interview_mode_three .'"
-										data-date="'. ($interviewDateThree ? Carbon::parse($interviewDateThree)->format('d-m-Y') : '') .'"
-										data-time="'. ($interviewDateThree ? Carbon::parse($interviewDateThree)->format('h:i A') : '') .'"
-										class="'. (($interviewDateThree && $date3 >= date('Y-m-d')) ? $bookbtn3 : 'book-btnoff') .'"
-										rel="'. @$wiseId .'">'.$book3.'</button>
+								'.($interviewDateThree
+                                        ? '<button '.(($interviewDateThree && $date3 >= date('Y-m-d')) ? $modal3 : '').' data-mode="'.$interview_mode_three.'" data-date="'.Carbon::parse($interviewDateThree)->format('d-m-Y').'" data-time="'.Carbon::parse($interviewDateThree)->format('h:i A').'" class="'.(($interviewDateThree && $date3 >= date('Y-m-d')) ? $bookbtn3 : 'book-btnoff').'" rel="'.$wiseId.'">'.$book3.'</button>'
+                                        : '<button type="button" class="book-btn-addslot editSlots"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:11px;height:11px;flex-shrink:0;"><rect x=\'3\' y=\'4\' width=\'18\' height=\'18\' rx=\'2\'/><line x1=\'16\' y1=\'2\' x2=\'16\' y2=\'6\'/><line x1=\'8\' y1=\'2\' x2=\'8\' y2=\'6\'/><line x1=\'3\' y1=\'10\' x2=\'21\' y2=\'10\'/></svg> Select Date</button>'
+                                    ).'
 						</div>';
 
                 
@@ -654,9 +656,47 @@ protected $elasticService;
 				return response()->json(['status'=>true,'html'=>$html]);
 
 			}
-		
+
 
 	}
+
+	/** Updates recruiter_note in both Elasticsearch (read store) and MySQL (write store). */
+	public function recruiterNoteUpdate(Request $request){
+		$appId        = $request->appId;
+		$recruiterNote = $request->recruiter_note ?? '';
+
+		$exists = $this->elasticService->getClient()->exists([
+			'index' => ELASTIC_CANDIDATES,
+			'id'    => $appId,
+		]);
+
+		if ($exists) {
+			$this->elasticService->getClient()->update([
+				'index'  => ELASTIC_CANDIDATES,
+				'id'     => $appId,
+				'body'   => [
+					'doc'          => ['recruiter_note' => $recruiterNote],
+					'doc_as_upsert' => false,
+				],
+				'refresh' => true,
+			]);
+
+			// Keep MySQL write-store in sync (tenant-scoped via company_id)
+			JobApplication::where('id', $appId)
+				->where('company_id', auth()->user()->company_id)
+				->update(['recruiter_note' => $recruiterNote]);
+
+			$cachekeys = ['candidateDetails_version_user_' . $this->user->id];
+			foreach ($cachekeys as $key) {
+				GeneralMethod::cacheClean($key);
+			}
+
+			return response()->json(['status' => true]);
+		}
+
+		return response()->json(['status' => false], 422);
+	}
+
 	public function clientCandidateList(Request $request)
 	{
 		// $candidates = JobApplication::query();
@@ -1581,7 +1621,9 @@ protected $elasticService;
 			->where('status', 1)
 			->where(function($q){ $q->whereNull('company_id')->orWhere('company_id', auth()->user()->company_id); })
 			->orderBy('id')->get();
-		return view('service_company.job-applications.create', $this->data);
+		return response()->view('service_company.job-applications.create', $this->data)
+			->header('Cache-Control', 'no-cache, no-store, must-revalidate')
+			->header('Pragma', 'no-cache');
 	}
 	public function statelist($cid)
 	{
@@ -1895,11 +1937,77 @@ protected $elasticService;
 		$jobApplication->interview_mode_five = $request->interview_mode_five;
 		$jobApplication->interview_mode_six = $request->interview_mode_six;
 
+		// ── v2 upload session pre-flight (feature-flagged, runs before transaction) ─
+		// Validates the session is Uploaded BEFORE we open the DB transaction so we
+		// avoid a wasted BEGIN + ROLLBACK on the common path. Tenancy: session must
+		// belong to this company (byUuid + forCompany composite — CLAUDE.md rule 3).
+		$resumeSession = null;
+		$finalResumeUrl = null;  // set in claim block; reused in resume URL block
+		if (config('resumes.features.submit_with_session') && $request->filled('resume_session_uuid')) {
+			$resumeSession = ResumeUpload::byUuid($request->input('resume_session_uuid'))
+				->forCompany($company_id)
+				->first();
+
+			if (!$resumeSession) {
+				return Reply::dataOnly(['status' => 'error', 'msgType' => 'warning',
+					'message' => 'Resume upload session not found. Please upload the resume again.']);
+			}
+
+			if ($resumeSession->status !== ResumeUploadStatus::Uploaded->value) {
+				return Reply::dataOnly(['status' => 'error', 'msgType' => 'warning',
+					'message' => 'Resume upload is not yet complete. Please wait for the upload to finish and try again.']);
+			}
+		}
+		// ─────────────────────────────────────────────────────────────────────────────
+
 		DB::beginTransaction();
 		try {
 
 		$jobApplication->save();
 
+		// ── v2 atomic claim — must run inside the existing transaction ────────────
+		// Conditional UPDATE (Uploaded → Completed) is the source of truth.
+		// Two concurrent submits race on this; only the one that gets rows=1 proceeds.
+		// R2 HEAD check is done AFTER claim but still inside the transaction so we
+		// can revert without leaving Completed state orphaned.
+		if ($resumeSession) {
+			$claimed = ResumeUpload::where('id', $resumeSession->id)
+				->where('company_id', $company_id)
+				->where('status', ResumeUploadStatus::Uploaded->value)
+				->update(['status' => ResumeUploadStatus::Completed->value, 'updated_at' => now()]);
+
+			if ($claimed === 0) {
+				// Another request already claimed this session.
+				DB::rollBack();
+				$existing = ResumeUpload::byUuid($resumeSession->uuid)->forCompany($company_id)->first();
+				if ($existing && $existing->linked_candidate_id) {
+					return Reply::redirect(
+						url('/service_company/apptracker/' . GeneralMethod::value_encrypt($request->job_id) . '/all'),
+						'Candidate already saved from this upload.'
+					);
+				}
+				return Reply::dataOnly(['status' => 'error', 'msgType' => 'warning',
+					'message' => 'Resume upload session is no longer valid. Please upload again.']);
+			}
+
+			// R2 HEAD check — if the file is missing, revert claim so the user can retry
+			$r2Exists = false;
+			try {
+				$r2Exists = Storage::disk('r2')->exists('resumes/' . $resumeSession->uuid);
+			} catch (\Throwable) {}
+
+			if (!$r2Exists) {
+				ResumeUpload::where('id', $resumeSession->id)
+					->where('status', ResumeUploadStatus::Completed->value)
+					->update(['status' => ResumeUploadStatus::Uploaded->value, 'updated_at' => now()]);
+				DB::rollBack();
+				return Reply::dataOnly(['status' => 'error', 'msgType' => 'warning',
+					'message' => 'Uploaded file not found in storage. Please upload the resume again.']);
+			}
+			// File confirmed; move to company-structured CDN path (mirrors v1 convention).
+			$finalResumeUrl = app(\App\Services\ResumeUploadSession::class)->moveToCompanyPath($resumeSession);
+		}
+		// ── end v2 atomic claim ───────────────────────────────────────────────────
 
 		if ($request->has('YearskillId') && is_array($request->input('YearskillId'))) {
 			$YearskillId = $request->input('YearskillId');
@@ -1996,6 +2104,24 @@ protected $elasticService;
 		$insertArr = array('job_id' => $request->job_id, 'job_application_id' => $jobApplication->id, 'status_id' => $jobApplication->status_id, 'master_status_id' => $jobApplication->master_status_id, 'child_status_id' => $jobApplication->child_status_id, 'company_id' => $company_id, 'submitted_by' => $submitted_by,'skill_match' => $percentage,'created_at' => $now,'updated_at' => $now);
 		$add_job_wise_condidates = DB::table('add_job_wise_condidates')->insert($insertArr);
 		$lastInsertedId = DB::getPdo()->lastInsertId();
+
+		// ── v2 session link — runs inside the same transaction ────────────────────
+		// Sets linked_candidate_id so the session row points at the new candidate.
+		// Conditional UPDATE on Completed guards against any unexpected double-insert.
+		if ($resumeSession) {
+			ResumeUpload::where('id', $resumeSession->id)
+				->where('company_id', $company_id)
+				->where('status', ResumeUploadStatus::Completed->value)
+				->update([
+					'linked_candidate_id' => $jobApplication->id,
+					'r2_url'              => $finalResumeUrl,
+					'updated_at'          => now(),
+				]);
+			UploadSessionAudit::record($resumeSession->id, 'ActionSubmitLinked', [
+				'candidate_id' => $jobApplication->id,
+			], $company_id, $submitted_by);
+		}
+		// ─────────────────────────────────────────────────────────────────────────
 
 		$cachekeys = [
 					'allcvtracker_version_user_'.$this->user->id,
@@ -2172,7 +2298,13 @@ protected $elasticService;
 			DB::table('job_assign')->insert($values);
 		}
 
-		if ($request->hasFile('resume')) {
+		if ($resumeSession) {
+			// v2 path: file moved to company CDN path in the claim block above.
+			$r2ResumeUrl = $finalResumeUrl;
+			DB::table('job_applications')
+				->where('id', $jobApplication->id)
+				->update(['resume' => $r2ResumeUrl]);
+		} elseif ($request->hasFile('resume')) {
 
 			$companyNameR2 = DB::table('companies')
 			->where('id',auth()->user()->company_id)
@@ -2183,24 +2315,25 @@ protected $elasticService;
 			$year  = date('Y');
             $month = date('m');
 
-			$tempPath = session('resume_temp_path');
-			$full_name = session('resume_original_name');
-			UploadResumeToTestRTwo::dispatch($tempPath, $full_name,$jobApplication->id,$companyNameRTwo,$year,$month)->onConnection('emails');
-			
-			$fileUrl = "https://file.jero.works/Companies/{$companyNameRTwo}/Resumes/{$year}/{$month}/{$full_name}";
-			
-			DB::table('job_applications')
-							->where('id', $jobApplication->id)
-							->update(['resume' =>$fileUrl]);
-							session()->forget([
-								'resume_temp_path',
-								'resume_original_name'
-							]);
-							
-
+			$tempPath  = $request->input('uploaded_file_path') ?: session('resume_temp_path');
+			$full_name = $request->input('resume_original_name') ?: session('resume_original_name');
+			if ($tempPath && $full_name) {
+				UploadResumeToTestRTwo::dispatch($tempPath, $full_name,$jobApplication->id,$companyNameRTwo,$year,$month)->onConnection('emails');
+				$fileUrl = "https://file.jero.works/Companies/{$companyNameRTwo}/Resumes/{$year}/{$month}/{$full_name}";
+				DB::table('job_applications')
+								->where('id', $jobApplication->id)
+								->update(['resume' =>$fileUrl]);
+				session()->forget(['resume_temp_path', 'resume_original_name']);
+			} else {
+				\Log::warning('v1 upload: missing tempPath or filename on form submit — resume not saved', [
+					'company_id' => auth()->user()->company_id,
+					'job_application_id' => $jobApplication->id ?? null,
+				]);
+			}
 		}
 
-		if(empty($request->resumeCheck)){
+		// Guard: do not wipe the resume URL when v2 already set it above.
+		if(empty($request->resumeCheck) && !$resumeSession){
 			DB::table('job_applications')
 				->where('id', $jobApplication->id)
 				->update(['resume' =>'']);
@@ -4269,7 +4402,9 @@ protected $elasticService;
 			->where('status', 1)
 			->where(function($q){ $q->whereNull('company_id')->orWhere('company_id', auth()->user()->company_id); })
 			->orderBy('id')->get();
-		return view('service_company.job-applications.create', $this->data);
+		return response()->view('service_company.job-applications.create', $this->data)
+			->header('Cache-Control', 'no-cache, no-store, must-revalidate')
+			->header('Pragma', 'no-cache');
 	}
 	public function createOffer($id){
 
@@ -5748,10 +5883,52 @@ protected $elasticService;
 		}
          //  dd("dkd");
 
+		// ── v2 pre-flight: validate resume_session_uuid ────────────────────────────
+		$resumeSession = null;
+		$finalResumeUrl = null;
+		if (config('resumes.features.submit_with_session') && $request->filled('resume_session_uuid')) {
+			$resumeSession = ResumeUpload::byUuid($request->input('resume_session_uuid'))
+				->forCompany($company_id)->first();
+			if (!$resumeSession) {
+				return Reply::dataOnly(['status' => 'error', 'msgType' => 'warning',
+					'message' => 'Resume upload session not found. Please upload the resume again.']);
+			}
+			if ($resumeSession->status !== ResumeUploadStatus::Uploaded->value) {
+				return Reply::dataOnly(['status' => 'error', 'msgType' => 'warning',
+					'message' => 'Resume upload is not yet complete. Please wait for the upload to finish and try again.']);
+			}
+		}
+		// ─────────────────────────────────────────────────────────────────────────────
+
 		DB::beginTransaction();
 		try {
 
 		$jobApplication->save();
+
+		// ── v2 atomic claim ───────────────────────────────────────────────────────
+		if ($resumeSession) {
+			$claimed = ResumeUpload::where('id', $resumeSession->id)
+				->where('company_id', $company_id)
+				->where('status', ResumeUploadStatus::Uploaded->value)
+				->update(['status' => ResumeUploadStatus::Completed->value, 'updated_at' => now()]);
+			if ($claimed === 0) {
+				DB::rollBack();
+				return Reply::dataOnly(['status' => 'error', 'msgType' => 'warning',
+					'message' => 'Resume upload session is no longer valid. Please upload again.']);
+			}
+			$r2Exists = false;
+			try { $r2Exists = Storage::disk('r2')->exists('resumes/' . $resumeSession->uuid); } catch (\Throwable) {}
+			if (!$r2Exists) {
+				ResumeUpload::where('id', $resumeSession->id)
+					->where('status', ResumeUploadStatus::Completed->value)
+					->update(['status' => ResumeUploadStatus::Uploaded->value, 'updated_at' => now()]);
+				DB::rollBack();
+				return Reply::dataOnly(['status' => 'error', 'msgType' => 'warning',
+					'message' => 'Uploaded file not found in storage. Please upload the resume again.']);
+			}
+			$finalResumeUrl = app(\App\Services\ResumeUploadSession::class)->moveToCompanyPath($resumeSession);
+		}
+		// ─────────────────────────────────────────────────────────────────────────────
 
 
 		if ($request->has('YearskillId') && is_array($request->input('YearskillId'))) {
@@ -5840,13 +6017,24 @@ protected $elasticService;
 		}
 		//GeneralMethod :: manageTimeline(auth()->user()->id, $jobApplication->id, $jobApplication->job_id, $request->status_id, $status_name, 'Successfully Application  Update ');
 			//GeneralMethod :: manageTimeline(auth()->user()->id, $jobApplication->id, $jobApplication->job_id, $request->status_id, $status_name, 'Successfully Application  Update ');
-		// Resume handling on UPDATE mirrors the two-stage flow used by store():
-		//   - Ajax pre-upload writes to R2 temp and stashes the path in session.
-		//   - Submit dispatches UploadResumeToTestRTwo to move temp → final R2
-		//     location, then persists the final URL on the row.
-		//   - If user picked nothing new, the existing resume column is preserved.
-		if ($request->hasFile('resume')) {
-
+		// Resume handling on UPDATE: v2 session takes priority over v1 file upload.
+		// If no resume change: existing resume column is preserved (resumeCheck guard below).
+		if ($resumeSession) {
+			DB::table('job_applications')
+				->where('id', $jobApplication->id)
+				->update(['resume' => $finalResumeUrl]);
+			ResumeUpload::where('id', $resumeSession->id)
+				->where('company_id', $company_id)
+				->where('status', ResumeUploadStatus::Completed->value)
+				->update([
+					'linked_candidate_id' => $jobApplication->id,
+					'r2_url'              => $finalResumeUrl,
+					'updated_at'          => now(),
+				]);
+			UploadSessionAudit::record($resumeSession->id, 'ActionUpdateLinked', [
+				'candidate_id' => $jobApplication->id,
+			], $company_id, auth()->id());
+		} elseif ($request->hasFile('resume')) {
 			$companyNameR2 = DB::table('companies')
 			->where('id',auth()->user()->company_id)
 			->value('company_name');
@@ -5854,23 +6042,23 @@ protected $elasticService;
 			$companyNameR2 = preg_replace('/[^a-z0-9_-]/i','_', $companyNameR2);
 			$companyNameRTwo = $companyNameR2 . '_' . auth()->user()->company_id;
 			$year  = date('Y');
-            $month = date('m');
+			$month = date('m');
 
-			$tempPath = session('resume_temp_path');
-			$full_name = session('resume_original_name');
-			UploadResumeToTestRTwo::dispatch($tempPath, $full_name,$jobApplication->id,$companyNameRTwo,$year,$month)->onConnection('emails');
-
-			$fileUrl = "https://file.jero.works/Companies/{$companyNameRTwo}/Resumes/{$year}/{$month}/{$full_name}";
-
-			DB::table('job_applications')
-							->where('id', $jobApplication->id)
-							->update(['resume' =>$fileUrl]);
-							session()->forget([
-								'resume_temp_path',
-								'resume_original_name'
-							]);
-
-
+			$tempPath  = $request->input('uploaded_file_path') ?: session('resume_temp_path');
+			$full_name = $request->input('resume_original_name') ?: session('resume_original_name');
+			if ($tempPath && $full_name) {
+				UploadResumeToTestRTwo::dispatch($tempPath, $full_name, $jobApplication->id, $companyNameRTwo, $year, $month)->onConnection('emails');
+				$fileUrl = "https://file.jero.works/Companies/{$companyNameRTwo}/Resumes/{$year}/{$month}/{$full_name}";
+				DB::table('job_applications')
+					->where('id', $jobApplication->id)
+					->update(['resume' => $fileUrl]);
+				session()->forget(['resume_temp_path', 'resume_original_name']);
+			} else {
+				\Log::warning('v1 upload: missing tempPath or filename on form submit — resume not saved', [
+					'company_id'         => auth()->user()->company_id,
+					'job_application_id' => $jobApplication->id ?? null,
+				]);
+			}
 		}
 
 		if(empty($request->resumeCheck)){
@@ -9808,7 +9996,9 @@ protected $elasticService;
 			->where(function($q){ $q->whereNull('company_id')->orWhere('company_id', auth()->user()->company_id); })
 			->orderBy('id')->get();
 
-		return view('service_company.job-applications.clientcreate', $this->data);
+		return response()->view('service_company.job-applications.clientcreate', $this->data)
+			->header('Cache-Control', 'no-cache, no-store, must-revalidate')
+			->header('Pragma', 'no-cache');
 
 	}
 	public function clientappstore(Request $request)
@@ -10167,13 +10357,54 @@ protected $elasticService;
 
 		$job_application_arr['created_at'] = date('Y-m-d');
 
+		// ── v2 pre-flight: validate resume_session_uuid before opening the transaction ──
+		$resumeSession = null;
+		$finalResumeUrl = null;  // set in claim block; reused in resume URL block
+		if (config('resumes.features.submit_with_session') && $request->filled('resume_session_uuid')) {
+			$resumeSession = ResumeUpload::byUuid($request->input('resume_session_uuid'))
+				->forCompany($company_id)->first();
+			if (!$resumeSession) {
+				return Reply::dataOnly(['status' => 'error', 'msgType' => 'warning',
+					'message' => 'Resume upload session not found. Please upload the resume again.']);
+			}
+			if ($resumeSession->status !== ResumeUploadStatus::Uploaded->value) {
+				return Reply::dataOnly(['status' => 'error', 'msgType' => 'warning',
+					'message' => 'Resume upload is not yet complete. Please wait for the upload to finish and try again.']);
+			}
+		}
+		// ─────────────────────────────────────────────────────────────────────────────
+
 		DB::beginTransaction();
 		try {
 
 		DB::table('job_applications')->insert($job_application_arr);
 		$application_id = DB::getPdo()->lastInsertId();
 
-		
+		// ── v2 session: atomic claim + R2 HEAD check (runs inside the transaction) ──
+		if ($resumeSession) {
+			$claimed = ResumeUpload::where('id', $resumeSession->id)
+				->where('company_id', $company_id)
+				->where('status', ResumeUploadStatus::Uploaded->value)
+				->update(['status' => ResumeUploadStatus::Completed->value, 'updated_at' => now()]);
+			if ($claimed === 0) {
+				DB::rollBack();
+				return Reply::dataOnly(['status' => 'error', 'msgType' => 'warning',
+					'message' => 'Resume session was already claimed. Please upload the resume again.']);
+			}
+			$r2Exists = false;
+			try { $r2Exists = Storage::disk('r2')->exists('resumes/' . $resumeSession->uuid); } catch (\Throwable) {}
+			if (!$r2Exists) {
+				ResumeUpload::where('id', $resumeSession->id)
+					->where('status', ResumeUploadStatus::Completed->value)
+					->update(['status' => ResumeUploadStatus::Uploaded->value, 'updated_at' => now()]);
+				DB::rollBack();
+				return Reply::dataOnly(['status' => 'error', 'msgType' => 'warning',
+					'message' => 'Resume file not found in storage. Please upload the resume again.']);
+			}
+			// File confirmed; move to company-structured CDN path (mirrors v1 convention).
+			$finalResumeUrl = app(\App\Services\ResumeUploadSession::class)->moveToCompanyPath($resumeSession);
+		}
+		// ─────────────────────────────────────────────────────────────────────────────
 
 		//$jobApplication->save();
 		$jobApplicationGet = JobApplication::find($application_id);
@@ -10188,6 +10419,22 @@ protected $elasticService;
 
 		$query_update = DB::table('add_job_wise_condidates')->insert($insertArr);
 		$lastInsertedId = DB::getPdo()->lastInsertId();
+
+		// ── v2 session link — runs inside the same transaction ────────────────────
+		if ($resumeSession) {
+			ResumeUpload::where('id', $resumeSession->id)
+				->where('company_id', $company_id)
+				->where('status', ResumeUploadStatus::Completed->value)
+				->update([
+					'linked_candidate_id' => $application_id,
+					'r2_url'              => $finalResumeUrl,
+					'updated_at'          => now(),
+				]);
+			UploadSessionAudit::record($resumeSession->id, 'ActionSubmitLinked', [
+				'candidate_id' => $application_id,
+			], $company_id, $submitted_by);
+		}
+		// ─────────────────────────────────────────────────────────────────────────
 
 		$cachekeys = [
 					'allcvtracker_version_user_'.$this->user->id,
@@ -10300,7 +10547,13 @@ protected $elasticService;
 			DB::table('job_assign')->insert($values);
 		}
 
-		if ($request->hasFile('resume')) {
+		if ($resumeSession) {
+			// v2 path: file moved to company CDN path in the claim block above.
+			$r2ResumeUrl = $finalResumeUrl;
+			DB::table('job_applications')
+				->where('id', $jobApplicationGet->id)
+				->update(['resume' => $r2ResumeUrl]);
+		} elseif ($request->hasFile('resume')) {
 
 		   $companyNameR2 = DB::table('companies')
 			->where('id',auth()->user()->company_id)
@@ -10310,23 +10563,25 @@ protected $elasticService;
 			$companyNameRTwo = $companyNameR2 . '_' . auth()->user()->company_id;
 			$year  = date('Y');
             $month = date('m');
-			
-			$tempPath = session('resume_temp_path');
-			$full_name = session('resume_original_name');
-			
-			UploadResumeToTestRTwo::dispatch($tempPath, $full_name,$jobApplicationGet->id,$companyNameRTwo,$year,$month)->onConnection('emails');
-			$fileUrl = "https://file.jero.works/Companies/{$companyNameRTwo}/Resumes/{$year}/{$month}/{$full_name}";
-			DB::table('job_applications')
-							->where('id', $jobApplicationGet->id)
-							->update(['resume' =>$fileUrl]);
-							session()->forget([
-								'resume_temp_path',
-								'resume_original_name'
-							]);	
 
+			$tempPath  = $request->input('uploaded_file_path') ?: session('resume_temp_path');
+			$full_name = $request->input('resume_original_name') ?: session('resume_original_name');
+			if ($tempPath && $full_name) {
+				UploadResumeToTestRTwo::dispatch($tempPath, $full_name,$jobApplicationGet->id,$companyNameRTwo,$year,$month)->onConnection('emails');
+				$fileUrl = "https://file.jero.works/Companies/{$companyNameRTwo}/Resumes/{$year}/{$month}/{$full_name}";
+				DB::table('job_applications')
+								->where('id', $jobApplicationGet->id)
+								->update(['resume' =>$fileUrl]);
+				session()->forget(['resume_temp_path', 'resume_original_name']);
+			} else {
+				\Log::warning('v1 upload: missing tempPath or filename on form submit — resume not saved', [
+					'company_id' => auth()->user()->company_id,
+					'job_application_id' => $jobApplicationGet->id ?? null,
+				]);
+			}
 		}
 
-		if(empty($request->resumeCheck)){
+		if(empty($request->resumeCheck) && !$resumeSession){
 					DB::table('job_applications')
 				->where('id', $jobApplicationGet->id)
 				->update(['resume' =>'']);

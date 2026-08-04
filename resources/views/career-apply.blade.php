@@ -373,6 +373,8 @@ $currencySymbole = GeneralMethod::currencySymbole();
             <input type="hidden" name="currentSlug" value="{{ @$currentSlug }}" id="currentSlug" />
             <input type="hidden" name="company_id" value="{{ @$company_id }}" id="company_id" />
             <input type="hidden" name="resumeCheck" value="1" id="resumeCheck" />
+            <input type="hidden" name="resume_session_uuid" id="resume_session_uuid" value="">
+            <input type="hidden" name="resume_original_name" id="resume_original_name" value="">
             <input type="hidden" name="AddJobWiseCondidateRankRow" id="AddJobWiseCondidateRankRow" value="{{ (@$AddJobWiseCondidateRankRow) ? $AddJobWiseCondidateRankRow : '' }}">
           <div class="fc">
             <!-- Upload + Career Summary -->
@@ -1430,9 +1432,75 @@ $currencySymbole = GeneralMethod::currencySymbole();
 <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
 
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+@if(config('resumes.features.career_controller'))
+<script src="{{ asset('js/resume-presign.js') }}"></script>
+@endif
 
 <script>
 $(document).ready(function () {
+
+    // ── v2 upload: career_controller flag (public presign endpoint required) ─
+    // Uses a separate feature flag so it can be enabled independently from the
+    // service-company browser_upload flag once a public presign route exists.
+    var RESUMES_FEATURE_BROWSER_UPLOAD = @json(config('resumes.features.career_controller', false));
+    var RESUME_PRESIGN_URL = @json(config('resumes.features.career_controller') ? url('/career/resume/v2/sessions') : '');
+    if (window.ResumePresign && RESUMES_FEATURE_BROWSER_UPLOAD) {
+        window.RESUME_PRESIGN_URL = RESUME_PRESIGN_URL;
+        window.RESUMES_FEATURE_BROWSER_UPLOAD = RESUMES_FEATURE_BROWSER_UPLOAD;
+        window.RESUMES_CONFIG = {
+            maxPutAttempts: @json(config('resumes.network_resilience.max_put_attempts', 3)),
+            putBackoffMs:   @json(config('resumes.network_resilience.put_backoff_ms', 1000)),
+        };
+    }
+
+    // ── v2 state → existing progress bar UI bridge ───────────────────────────
+    if (RESUMES_FEATURE_BROWSER_UPLOAD && window.ResumePresign) {
+        window.ResumePresign.onStateChange(function (data) {
+            if (data.state === 'uploading') {
+                $('#upWrap').show();
+                $('#upBar').css('width', data.progress + '%');
+                $('#upStats').html(data.progress + '% &middot; Uploading to cloud&hellip;');
+            } else if (data.state === 'uploaded') {
+                $('#upBar').css('width', '100%');
+                $('#upStats').html('100% &middot; Upload complete');
+                $('#upPill').css('display', 'inline-flex');
+                $('#upBanner').removeClass('err').addClass('ok').html(
+                    '<svg class="up-banner-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"'
+                    + ' stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'
+                    + '<circle cx="12" cy="12" r="10"/><polyline points="9 12 11 14 16 9"/></svg>'
+                    + '<span><strong>Upload complete!</strong> Resume ready — fill in the form and save.</span>'
+                ).show();
+                $('#uploaded_file_path').val('');
+                $('#resume_original_name').val('');
+                var ri = document.getElementById('resume'); if (ri) ri.value = ''; // prevent multipart file on submit
+            } else if (data.state === 'failed') {
+                if (typeof _showUploadError === 'function') {
+                    _showUploadError(data.error || 'Upload failed. Please remove and try again.');
+                }
+            }
+        });
+    }
+
+    // ── v2 Phase 6: recover a previous upload session after page refresh ──────
+    if (RESUMES_FEATURE_BROWSER_UPLOAD && window.ResumePresign) {
+        window.ResumePresign.recover().then(function (session) {
+            if (session) {
+                $('#upWrap').show();
+                $('#upBar').css('width', '100%');
+                $('#upStats').html('100% &middot; Upload restored');
+                $('#upPill').css('display', 'inline-flex');
+                $('#upBanner').removeClass('err').addClass('ok').html(
+                    '<svg class="up-banner-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"'
+                    + ' stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'
+                    + '<circle cx="12" cy="12" r="10"/><polyline points="9 12 11 14 16 9"/></svg>'
+                    + '<span><strong>Resume restored.</strong> Your previously uploaded file is still attached.</span>'
+                ).show();
+                $('#uploadBox').hide();
+                $('#fileInfo').show();
+            }
+        });
+    }
+    // ─────────────────────────────────────────────────────────────────────────
 
     const uploadBox  = document.getElementById('uploadBox');
     const resumeInput = document.getElementById('resume');
@@ -1459,6 +1527,10 @@ $(document).ready(function () {
     }
 
     function backToDropzone() {
+        // Cancel v2 upload if in progress (aborts R2 XHR + clears session UUID)
+        if (RESUMES_FEATURE_BROWSER_UPLOAD && window.ResumePresign) {
+            window.ResumePresign.cancelUpload();
+        }
         resetProgress();
         $('#upInfo').removeClass('show');
         $('#uploadBox').show();
@@ -1467,6 +1539,7 @@ $(document).ready(function () {
         $('#resume').val('');
         $('#resumeCheck').val('');
         $('#uploaded_file_path').val('');
+        $('#resume_original_name').val('');
         $('.download-file').addClass('d-none');
     }
 
@@ -1537,6 +1610,7 @@ $(document).ready(function () {
                     +'<span><strong>Upload complete!</strong> Resume uploaded successfully.</span>'
                 ).show();
                 $('#uploaded_file_path').val(r.file_path || '');
+                $('#resume_original_name').val(r.original_name || file.name || '');
                 $('#resumeCheck').val('1');
                 showUploadedCard(file);
             } else {
@@ -1580,7 +1654,13 @@ $(document).ready(function () {
 
         // Drive the zero-temp XHR first; guard tells handleFileInputChange to skip its jQuery POST.
         window.__upXhrChannelClaimed = true;
-        if (typeof uploadWithProgress === 'function') {
+        if (RESUMES_FEATURE_BROWSER_UPLOAD && window.ResumePresign) {
+            // v2 path: direct browser → R2, zero PHP bytes.
+            window.ResumePresign.startUpload(file).catch(function () {
+                // error already surfaced via onStateChange 'failed'
+            });
+        } else if (typeof uploadWithProgress === 'function') {
+            // v1 path: PHP multipart POST (unchanged)
             uploadWithProgress(file);
         }
         if (typeof handleFileInputChange === 'function') {

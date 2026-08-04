@@ -946,6 +946,7 @@ $country_code =  GeneralMethod::countryCodeFun();
 
     function getVideoMeetingUrl(currentId, ParentId, job_id) {
         $("#url").prop("readonly", false);
+         $("#isdMeetingLinkDisplay").prop("readonly", true);
         var baseurl = "{{ asset('assets/images/Loading2.gif') }}";
         $('#url_div').hide();
         $('#url').val('');
@@ -1039,6 +1040,7 @@ $country_code =  GeneralMethod::countryCodeFun();
         if ((ParentId == 2) && currentId == 6) { // Other video
             $('#url_div').show(); $('#url').show(); $('#lbl_call_mode').show();
             $('#lbl_call_mode').html('Enter Your Meeting Link'); $('#url').attr('placeholder', 'Enter Link here');
+            $("#isdMeetingLinkDisplay").prop("readonly", false);
             isdSyncMeetingLinkDisplay();
         } else if ((ParentId == 1) && ((currentId == 1) || (currentId == 4))) { // Phone / Skype
             $('#url_div').show(); $('#url').show(); $('#url').attr('placeholder', 'Enter Link here');

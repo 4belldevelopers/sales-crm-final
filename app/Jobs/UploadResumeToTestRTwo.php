@@ -53,6 +53,14 @@ class UploadResumeToTestRTwo implements ShouldQueue
 {
     $tempPath = $this->tempPath;    // example: temp/JERO_123.pdf
 
+    if (empty($tempPath)) {
+        \Log::error('UploadResumeToTestRTwo: tempPath is null — job dispatched without an uploaded file', [
+            'jobApplicationId' => $this->jobApplicationId,
+            'full_name'        => $this->full_name,
+        ]);
+        return;
+    }
+
     // ✅ CHECK INSIDE R2 (NOT LOCAL)
     if (!Storage::disk('r2')->exists($tempPath)) {
 

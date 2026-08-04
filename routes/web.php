@@ -139,6 +139,8 @@ Route::post('login', [LoginController::class, 'login']);
 Route::get('company-login-by-super-admin', [LoginController::class, 'superLoginForms'])->name('super.login.form');
 // Logout
 Route::post('logout', [LoginController::class, 'logout'])->name('logout');
+// Intent: Allow GET request on logout endpoint to gracefully handle direct URL visits or link clicks without triggering a 419 Page Expired error.
+Route::get('logout', [LoginController::class, 'logout']);
 
 // Register
 Route::get('register', [RegisterController::class, 'showRegistrationForm'])->name('register');
