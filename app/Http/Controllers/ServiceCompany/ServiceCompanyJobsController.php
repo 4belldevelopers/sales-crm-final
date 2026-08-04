@@ -2710,8 +2710,11 @@ protected $elasticService;
 		];
 
 		
-		$versionKey = 'alljobslist_version_user_'.$this->user->id;
-		$version = cache()->get($versionKey, 1);
+		// Two-axis version key: user (personal filter changes) + company (job creates/updates by any team member).
+		// JobObserver::saved bumps alljobslist_version_company_{id} so all team members see fresh data immediately.
+		$userVersionKey    = 'alljobslist_version_user_'.$this->user->id;
+		$companyVersionKey = 'alljobslist_version_company_'.$company_id;
+		$version    = cache()->get($userVersionKey, 1) . '_' . cache()->get($companyVersionKey, 1);
 		$cacheKeySet = 'ats:alljobslist:' . $this->user->id . ':' . $version . ':' . md5(json_encode($cachePayload));
 		/* ----------------------------
 		⚡ Check DragonflyDB first
@@ -3045,8 +3048,9 @@ protected $elasticService;
 			'custom_search' => $custom_search,
 		];
 
-		$versionKey = 'allclientrequisition_version_user_'.$this->user->id;
-		$version = cache()->get($versionKey, 1);
+		$userVersionKey    = 'allclientrequisition_version_user_'.$this->user->id;
+		$companyVersionKey = 'allclientrequisition_version_company_'.$company_id;
+		$version    = cache()->get($userVersionKey, 1) . '_' . cache()->get($companyVersionKey, 1);
 		$cacheKeySet = 'ats:allclientrequisition:' . $this->user->id . ':' . $version . ':' . md5(json_encode($cachePayload));
 		/* ----------------------------
 		⚡ Check DragonflyDB first
@@ -3370,8 +3374,9 @@ protected $elasticService;
 			'custom_search' => $custom_search,
 		];
 
-		$versionKey = 'allcustomrequisition_version_user_'.$this->user->id;
-		$version = cache()->get($versionKey, 1);
+		$userVersionKey    = 'allcustomrequisition_version_user_'.$this->user->id;
+		$companyVersionKey = 'allcustomrequisition_version_company_'.$company_id;
+		$version    = cache()->get($userVersionKey, 1) . '_' . cache()->get($companyVersionKey, 1);
 		$cacheKeySet = 'ats:allcustomrequisition:' . $this->user->id . ':' . $version . ':' . md5(json_encode($cachePayload));
 		/* ----------------------------
 		⚡ Check DragonflyDB first
@@ -4999,6 +5004,7 @@ protected $elasticService;
 			
 			$cachekeys = [
 				'alljobslist_version_user_'.$this->user->id,
+				'alljobslist_version_company_'.$current_company_id,   // invalidate list for all team members
 				'allclientrequisition_version_user_'.$this->user->id,
 				'allclients_version_user_'.$this->user->id,
 				'alldirectclient_version_user_'.$this->user->id,
@@ -13772,7 +13778,9 @@ protected $elasticService;
 			  
 			   $cachekeys = [
 							'alljobslist_version_user_'.$this->user->id,
+							'alljobslist_version_company_'.$current_company_id,
 							'allclientrequisition_version_user_'.$this->user->id,
+							'allclientrequisition_version_company_'.$current_company_id,
 							'alljobrequest_version_user_'.$this->user->id
 						];
 						foreach ($cachekeys as $key) {
