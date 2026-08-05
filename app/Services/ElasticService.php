@@ -66,4 +66,16 @@ class ElasticService
             ]
         ]);
     }
+
+    /**
+     * Execute multiple search/count requests in a single HTTP round-trip.
+     *
+     * @param  array  $body  Alternating [header, body] pairs per the ES msearch spec.
+     * @return array  `responses` array — one entry per search; may contain 'error' key.
+     * @throws \Throwable  Only if the network call itself fails (index-not-found is per-slot).
+     */
+    public function msearch(array $body): array
+    {
+        return $this->client->msearch(['body' => $body]);
+    }
 }

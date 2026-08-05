@@ -1,0 +1,133 @@
+/**
+ * _skeleton.css — CSS shimmer skeleton loaders for Apptracker tab content.
+ *
+ * While a tab's AJAX fetch is in flight, the grid is replaced with shimmer
+ * placeholder rows. When data arrives the skeleton is hidden and real content
+ * shown, providing a perceived performance boost with zero blank-screen flicker.
+ *
+ * Usage (JS):
+ *   AppTracker.skeleton.show('#tab-container');
+ *   AppTracker.skeleton.hide('#tab-container');
+ *
+ * Or pure CSS:
+ *   Add class  .at-loading  to the tab wrapper to show skeletons.
+ */
+
+/* ── Shimmer keyframe ─────────────────────────────────────────────────────── */
+@keyframes at-shimmer {
+    0%   { background-position: -600px 0; }
+    100% { background-position:  600px 0; }
+}
+
+/* ── Skeleton line base ───────────────────────────────────────────────────── */
+.at-skeleton-line {
+    display: block;
+    border-radius: 4px;
+    background: linear-gradient(
+        90deg,
+        #e8e8e8 25%,
+        #f5f5f5 50%,
+        #e8e8e8 75%
+    );
+    background-size: 1200px 100%;
+    animation: at-shimmer 1.4s infinite linear;
+}
+
+/* Dark-mode override */
+@media (prefers-color-scheme: dark) {
+    .at-skeleton-line {
+        background: linear-gradient(
+            90deg,
+            #2a2a2a 25%,
+            #383838 50%,
+            #2a2a2a 75%
+        );
+        background-size: 1200px 100%;
+    }
+}
+
+/* ── Skeleton row layout ─────────────────────────────────────────────────── */
+.at-skeleton-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 14px;
+    border-bottom: 1px solid rgba(0, 0, 0, .06);
+}
+
+.at-skeleton-avatar {
+    flex-shrink: 0;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+}
+
+.at-skeleton-text-group {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.at-skeleton-text {
+    height: 11px;
+}
+.at-skeleton-text.at-w-60  { width: 60%; }
+.at-skeleton-text.at-w-40  { width: 40%; }
+.at-skeleton-text.at-w-80  { width: 80%; }
+.at-skeleton-text.at-w-30  { width: 30%; }
+
+.at-skeleton-badge {
+    flex-shrink: 0;
+    width: 60px;
+    height: 22px;
+    border-radius: 12px;
+}
+
+/* ── Skeleton wrapper ────────────────────────────────────────────────────── */
+.at-skeleton-wrapper {
+    display: none;
+    padding: 4px 0;
+}
+
+/* Show skeleton, hide real content when .at-loading is on the tab container */
+.at-loading .at-skeleton-wrapper  { display: block; }
+.at-loading .at-real-content      { display: none !important; }
+
+/* ── Optimistic UI states ────────────────────────────────────────────────── */
+/* Row is pending server confirmation — subtle dim to signal in-flight */
+.at-optimistic-pending {
+    opacity: 0.7;
+    transition: opacity 120ms ease;
+}
+
+/* Row failed — brief red outline before reverting */
+.at-optimistic-failed {
+    outline: 2px solid #ef4444;
+    outline-offset: -2px;
+    border-radius: 4px;
+    animation: at-fade-out-outline 2s forwards;
+}
+@keyframes at-fade-out-outline {
+    80% { outline-color: #ef4444; }
+    100% { outline-color: transparent; }
+}
+
+/* ── View-Transition fade ────────────────────────────────────────────────── */
+/* Applied to the tab panel so startViewTransition() cross-fades it. */
+.at-tab-panel {
+    view-transition-name: at-tab-panel;
+}
+
+@keyframes at-fade-in {
+    from { opacity: 0; transform: translateY(6px); }
+    to   { opacity: 1; transform: translateY(0);   }
+}
+
+::view-transition-new(at-tab-panel) {
+    animation: at-fade-in 180ms ease-out;
+}
+
+::view-transition-old(at-tab-panel) {
+    animation: at-fade-in 180ms ease-out reverse;
+}

@@ -205,9 +205,8 @@ Assuming 10 K companies, 100 M records, 5 K concurrent recruiters at peak:
 ## 8. Refactor: a 10-K-recruiter-ready apptracker
 
 The 11,374-line god-controller needs to be sliced. Per `docs/AI_RULES.md` rule #11, build vertical slices. The full plan now lives in
-[`13_STEP_IMPLEMENTATION_PLAN.md`](13_STEP_IMPLEMENTATION_PLAN.md) (file renamed from
-`10_STEP_IMPLEMENTATION_PLAN.md`; content renamed from "10-step plan" to
-"13-step plan + 6-phase slice refactor" in Aug 2026). Summary:
+[`18_STEP_IMPLEMENTATION_PLAN.md`](18_STEP_IMPLEMENTATION_PLAN.md) (file renamed from
+`13_STEP_IMPLEMENTATION_PLAN.md`; expanded to 18 steps across 4 phases in Aug 2026). Summary:
 
 1. **Extract `CandidateListingService`** — owns `buildCandidateSearchQuery()`, `prepareRowMaps()`, `resolveTagifyFilters()`, and the cache-key scheme. Used by all 8 `_data_ajax` methods.
 2. **Extract `CounterService`** — owns `loadCounter()`, `customeCountAll()`, the ES counter doc, and the Redis cache layer. Returns counts as plain array.
@@ -287,7 +286,7 @@ The three additions that are **non-negotiable for "production-ready"**:
 2. **Step 4.5** — counter drift correction (without it, counters silently drift away from truth)
 3. **Step 11** — controller slicing (without it, the codebase can't scale to 10 K recruiters without 11 K-line files)
 
-See `13_STEP_IMPLEMENTATION_PLAN.md` for the full plan.
+See `18_STEP_IMPLEMENTATION_PLAN.md` for the full plan.
 
 ---
 

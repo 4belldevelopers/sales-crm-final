@@ -2,6 +2,7 @@
 
 namespace App\Observers;
 
+use App\Events\StageMoved;
 use App\Helper\Files;
 use App\Jobs\UpdateApplicationCountersJob;
 use App\Jobs\UpdatePipelineCountersJob;
@@ -34,6 +35,20 @@ class JobApplicationObserver
 
         UpdatePipelineCountersJob::dispatch($app->id)->onQueue('counters');
         UpdateApplicationCountersJob::dispatch($app->id)->onQueue('counters');
+
+        // Broadcast stage move over Reverb so all open Apptracker tabs refresh
+        // their counter badges in real time without a page reload.
+        if ($app->wasChanged('master_status_id') && $app->job_id && $app->master_status_id) {
+            // Also bust the Redis flexible cache so the next loadcounter() call
+            // reads fresh data instead of serving the stale 30-120s window.
+            Cache::forget("pipeline:{$app->job_id}");
+            broadcast(new StageMoved(
+                (int) $app->job_id,
+                (int) $app->id,
+                (int) $app->master_status_id,
+                (int) $app->company_id,
+            ))->toOthers();
+        }
     }
 
     public function deleted(JobApplication $app): void
