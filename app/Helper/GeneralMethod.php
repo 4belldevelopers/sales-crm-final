@@ -11827,25 +11827,9 @@ END:VCALENDAR";
 		
 		// dd($boolQuery);
 		
-		$params = [
-			'index' => ELASTIC_CANDIDATES,
-			'request_cache' => true,
-			'body' => [
-				'sort' => [],
-				'query' => $boolQueryPool,
-			]
-		];
+		$total_pool = 0;
 
-		if (!$elasticService->indexExists(ELASTIC_CANDIDATES)) {
-			$total_pool = 0;
-			$data = [];
-		}else{
-
-		    $response = $elasticService->getClient()->search($params);
-			$total_pool = $response['hits']['total']['value'] ?? 0;
-		}
-
-		//####################################   END   POOL APPLICATION COUNTER	
+		//####################################   END   POOL APPLICATION COUNTER (executed via msearch below)	
 
 		//####################################   START  EXISTING APPLICATION COUNTER
 
@@ -12056,31 +12040,9 @@ END:VCALENDAR";
 
 
 
-		// BUG-06: single cardinality agg replaces the old two-step collapse+agg round-trip
-		$aggParams = [
-			'index' => ELASTIC_CANDIDATES,
-			'body' => [
-				'size' => 0,
-				'query' => $boolQuery,
-				'aggs' => [
-					'unique_candidates' => [
-						'cardinality' => [
-							'field' => 'email'
-						]
-					]
-				]
-			]
-		];
+		$total_existingApplications = 0;
 
-		if (!$elasticService->indexExists(ELASTIC_CANDIDATES)) {
-			$total_existingApplications = 0;
-		} else {
-			$aggResponse = $elasticService->getClient()->search($aggParams);
-			$total_existingApplications = $aggResponse['aggregations']['unique_candidates']['value'] ?? 0;
-		}
-
-		
-       //####################################   END   EXISTING APPLICATION COUNTER	          
+		//####################################   END   EXISTING APPLICATION COUNTER (executed via msearch below)	          
 
        //####################################   START  Internal Bench APPLICATION COUNTER
 
@@ -12234,28 +12196,9 @@ END:VCALENDAR";
 			];
 		}
 
-		// BUG-06: single cardinality agg replaces the old two-step collapse+agg round-trip
-		$aggParamsInternalBench = [
-			'index' => ELASTIC_CANDIDATES_BENCH,
-			'body' => [
-				'size' => 0,
-				'query' => $boolQueryInternalBench,
-				'aggs' => [
-					'unique_candidates' => [
-						'cardinality' => [
-							'field' => 'email'
-						]
-					]
-				]
-			]
-		];
-		if (!$elasticService->indexExists(ELASTIC_CANDIDATES_BENCH)) {
-			$total_InternalBenchApplications = 0;
-		} else {
-			$aggResponse = $elasticService->getClient()->search($aggParamsInternalBench);
-			$total_InternalBenchApplications = $aggResponse['aggregations']['unique_candidates']['value'] ?? 0;
-		}
-		//####################################   END Internal Bench APPLICATION COUNTER
+		$total_InternalBenchApplications = 0;
+
+		//####################################   END Internal Bench APPLICATION COUNTER (executed via msearch below)
 
 		//####################################   START   CLIENT JOB APPLICATION COUNTER
 
@@ -12277,25 +12220,9 @@ END:VCALENDAR";
 			]
 		];
 
-		$params = [
-			'index' => ELASTIC_CANDIDATES,
-			'request_cache' => true,
-			'body' => [
-				'sort' => [],
-				'query' => $boolQueryPoolClientJobApplication,
-			]
-		];
+		$total_pool_client_application = 0;
 
-		if (!$elasticService->indexExists(ELASTIC_CANDIDATES)) {
-			$total_pool_client_application = 0;
-			$data = [];
-		}else{
-
-		    $response = $elasticService->getClient()->search($params);
-			$total_pool_client_application = $response['hits']['total']['value'] ?? 0;
-		}
-
-		//####################################   END CLIENT JOB APPLICATION COUNTER
+		//####################################   END CLIENT JOB APPLICATION COUNTER (executed via msearch below)
 
 		//####################################   START   Market Bench APPLICATION COUNTER	
 
@@ -12449,29 +12376,9 @@ END:VCALENDAR";
 			];
 		}
 
-		// BUG-06: single cardinality agg replaces the old two-step collapse+agg round-trip
-		$aggParamsMarketBench = [
-			'index' => ELASTIC_CANDIDATES_BENCH,
-			'body' => [
-				'size' => 0,
-				'query' => $boolQueryMarketBench,
-				'aggs' => [
-					'unique_candidates' => [
-						'cardinality' => [
-							'field' => 'email'
-						]
-					]
-				]
-			]
-		];
+		$total_MarketBenchApplications = 0;
 
-		if (!$elasticService->indexExists(ELASTIC_CANDIDATES_BENCH)) {
-			$total_MarketBenchApplications = 0;
-		} else {
-			$aggResponse = $elasticService->getClient()->search($aggParamsMarketBench);
-			$total_MarketBenchApplications = $aggResponse['aggregations']['unique_candidates']['value'] ?? 0;
-		}
-		//####################################   END Market Bench APPLICATION COUNTER
+		//####################################   END Market Bench APPLICATION COUNTER (executed via msearch below)
 
 		//####################################  START  Bench Talent Request
 
@@ -12495,22 +12402,9 @@ END:VCALENDAR";
 				'filter' => []
 			]
 		];
-		$params = [
-			'index' => ELASTIC_CANDIDATES_REQUEST,
-			'body' => [
-				'sort' => [],
-				'query' => $boolQuerytBenchRequest,
-			]
-		];
-		if(!$elasticService->indexExists(ELASTIC_CANDIDATES_REQUEST)) {
-			$total_RequestBenchApplications = 0;
-				$data = [];
-		}else{
-				$response = $elasticService->getClient()->search($params);
-				// This total reflects ALL matching docs, not just the current page.
-				$total_RequestBenchApplications = $response['hits']['total']['value'] ?? 0;
-		}
-		//####################################  END  Bench Talent Request
+		$total_RequestBenchApplications = 0;
+
+		//####################################  END  Bench Talent Request (executed via msearch below)
 
 		//####################################  START  CAREER COUNTER
 
@@ -12545,24 +12439,61 @@ END:VCALENDAR";
 			];
 		}
 
-		// BUG-07: use count() API — no docs fetched, no hits array allocated
-		$params_career_count = [
-			'index' => ELASTIC_CAREER_APPLY,
-			'body' => [
-				'query' => $boolQueryCareer
-			]
+		$total_career = 0;
+
+		//####################################  END  CAREER COUNTER (executed via msearch below)
+
+		// Step-5 consolidation: send all 7 counter queries in one msearch round-trip.
+		// Slot order: [0] pool, [1] existing, [2] internal_bench,
+		//             [3] pool_client, [4] market_bench, [5] bench_request, [6] career
+		$msearchBody = [
+			['index' => ELASTIC_CANDIDATES,         'request_cache' => true],
+			['size' => 0, 'query' => $boolQueryPool],
+
+			['index' => ELASTIC_CANDIDATES,         'request_cache' => true],
+			['size' => 0, 'query' => $boolQuery,
+			 'aggs' => ['uc' => ['cardinality' => ['field' => 'email']]]],
+
+			['index' => ELASTIC_CANDIDATES_BENCH,   'request_cache' => true],
+			['size' => 0, 'query' => $boolQueryInternalBench,
+			 'aggs' => ['uc' => ['cardinality' => ['field' => 'email']]]],
+
+			['index' => ELASTIC_CANDIDATES,         'request_cache' => true],
+			['size' => 0, 'query' => $boolQueryPoolClientJobApplication],
+
+			['index' => ELASTIC_CANDIDATES_BENCH,   'request_cache' => true],
+			['size' => 0, 'query' => $boolQueryMarketBench,
+			 'aggs' => ['uc' => ['cardinality' => ['field' => 'email']]]],
+
+			['index' => ELASTIC_CANDIDATES_REQUEST, 'request_cache' => true],
+			['size' => 0, 'query' => $boolQuerytBenchRequest],
+
+			['index' => ELASTIC_CAREER_APPLY,       'request_cache' => true],
+			['size' => 0, 'query' => $boolQueryCareer],
 		];
 
-		if (!$elasticService->indexExists(ELASTIC_CAREER_APPLY)) {
-			$total_career = 0;
-		} else {
-			$response = $elasticService->getClient()->count($params_career_count);
-			$total_career = $response['count'] ?? 0;
+		try {
+			$msResults = $elasticService->msearch($msearchBody)['responses'];
+
+			$hits = fn(array $r): int => isset($r['error']) ? 0
+				: (int) ($r['hits']['total']['value'] ?? 0);
+			$card = fn(array $r): int => isset($r['error']) ? 0
+				: (int) ($r['aggregations']['uc']['value'] ?? 0);
+
+			$total_pool                      = $hits($msResults[0]);
+			$total_existingApplications      = $card($msResults[1]);
+			$total_InternalBenchApplications = $card($msResults[2]);
+			$total_pool_client_application   = $hits($msResults[3]);
+			$total_MarketBenchApplications   = $card($msResults[4]);
+			$total_RequestBenchApplications  = $hits($msResults[5]);
+			$total_career                    = $hits($msResults[6]);
+		} catch (\Throwable $e) {
+			\Log::warning('custome_count_all_compute msearch error', [
+				'job_id' => $id,
+				'error'  => $e->getMessage(),
+			]);
+			// Counters stay at 0 — the 60-300 s flexible cache will serve the last good value
 		}
-
-		//####################################  END  CAREER COUNTER
-
-		// dd($boolQueryInternalBench);
 
 		$return  =  (object)[
 		      'existing_counter' => $total_existingApplications ? $total_existingApplications : 0,
@@ -12574,7 +12505,6 @@ END:VCALENDAR";
 			  'recomnded_counter' =>  $total_RequestBenchApplications ? $total_RequestBenchApplications : 0,
 			  'jobclient' => 0
 		];
-		// dd($return);
 
 		return $return;
 

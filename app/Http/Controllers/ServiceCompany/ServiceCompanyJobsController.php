@@ -5203,120 +5203,129 @@ protected $elasticService;
 
 	public function create()
 	{
-
 		$this->pageTitle = __('Add Requisition');
-		
+
 		abort_if(Gate::denies('add_jobs'), 403);
 
-		$eventId = 2;
+		$eventId   = 2;
 		$coinsRequ = 1;
 		$companyId = (int) auth()->user()->company_id;
-		$packageStatus = GeneralMethod::coinsValidationsAllcompany($companyId,$eventId,$coinsRequ);
-		if($packageStatus->status){
-			session()->flash('packageStatus', $packageStatus->message); // or false depending on your condition
-			$url = url('service_company/jobs');
-			return redirect($url);
+		$userId    = (int) auth()->user()->id;
+
+		// 1. Coin/package gate — cached 30s (result changes only after a purchase)
+		$packageStatus = Cache::remember('coins_valid:' . $companyId . ':event:' . $eventId, 30, function () use ($companyId, $eventId, $coinsRequ) {
+			return GeneralMethod::coinsValidationsAllcompany($companyId, $eventId, $coinsRequ);
+		});
+		if ($packageStatus->status) {
+			session()->flash('packageStatus', $packageStatus->message);
+			return redirect(url('service_company/jobs'));
 		}
 
+		// 2. User + company profile — cached 1 hour per user
+		$userCompanyProfile = Cache::remember('user_profile:' . $userId, 3600, function () use ($userId) {
+			return User::join('companies', 'companies.id', '=', 'users.company_id')
+				->leftJoin('users_profile', 'users_profile.user_id', '=', 'users.id')
+				->select('users_profile.country', 'companies.logo', 'companies.company_name')
+				->where('users.id', '=', $userId)
+				->first();
+		});
+		$this->country      = @$userCompanyProfile->country;
+		$this->companylogo  = @$userCompanyProfile->logo;
+		$this->company_name = @$userCompanyProfile->company_name;
 
-
-		$country = User::join('companies', 'companies.id', '=', 'users.company_id')
-			->leftJoin('users_profile', 'users_profile.user_id', '=', 'users.id')
-			->select('users_profile.country', 'companies.logo', 'companies.company_name')
-			->with('company')
-			->where('users.id', '=', auth()->user()->id)
-			->company()
-			->first();
-
-		$this->country = @$country->country;
-		$this->companylogo = @$country->logo;
-		$this->company_name = @$country->company_name;
-		// dd($this->company_name,$this->companylogo);
-
-		$company_id = auth()->user()->company_id;
-		$activeJobsCount = Job::where('status', 'active')->count();
-		if ($activeJobsCount > 0 && @$this->activePackage->package->no_of_job_openings !== null && @$this->activePackage->package->no_of_job_openings <= $activeJobsCount) {
-			$this->message = __('modules.subscription.jobPurchase');
-			return view('service_company.subscription.ask_purchase', $this->data);
-		}
-        //   dd($company_id);
-		$this->categories = JobCategory::where('company_id', $company_id)->get();
-		$this->questions = Question::all();
-		$this->companies = Company::all();
-		$this->locations = JobLocation::all();
-		$this->client = Client::select('*')->where('company_id', $company_id)->orderBy('clients.name', 'ASC')->get();
-
-		$this->skills = Skill::all();
-		$this->consultancy = DB::table('users')->select('id', 'name')->where('type', 1)->where('company_id', $company_id)->where('status', 'active')->get();
-		$this->team = DB::table('users')->select('id', 'name')->where('type', 0)->where('company_id', $company_id)->where('status', 'active')->get();
-
-		$this->employmentType = GeneralMethod::employmentType();
-		$this->priority = GeneralMethod::priority();
-		$this->qualification = DB::table('qualification_master')->select('*')->whereNotIn('id',[60])->orderBy('qualification_master.display_order', 'ASC')->get();
-		$this->qualificationTag = DB::table('qualification_master')
-			->select('*')
-			->whereNotIn('id',[60])
-			->orderBy('qualification_master.display_order', 'ASC')
-			->get()
-			->map(function($row){
-				return $row->name;
+		// 3. Active job limit check — tenant-scoped & cached 60s (was cross-tenant bug)
+		$packageJobLimit = @$this->activePackage->package->no_of_job_openings;
+		if ($packageJobLimit !== null) {
+			$activeJobsCount = Cache::remember('company:' . $companyId . ':active_jobs_count', 60, function () use ($companyId) {
+				return Job::where('company_id', $companyId)->where('status', 'active')->count();
 			});
+			if ($activeJobsCount > 0 && $packageJobLimit <= $activeJobsCount) {
+				$this->message = __('modules.subscription.jobPurchase');
+				return view('service_company.subscription.ask_purchase', $this->data);
+			}
+		}
 
-		//echo $this->user->company_id;
-		$this->other_consultancy = DB::table('invitation_consultancy')->join('users', 'users.id', '=', 'invitation_consultancy.parent_id')->join('companies', 'companies.id', '=', 'users.company_id')->select('users.id', 'users.name', 'companies.company_name', 'companies.id as other_company_id')->where('invitation_consultancy.company_id', '=', $this->user->company_id)->orderBy('users.name', 'ASC')->get();
+		// 4. Tenant-scoped data — cached 5 min; busted by JobCategoryObserver / ClientObserver
+		$this->categories = Cache::remember('tenant:' . $companyId . ':categories', 300, function () use ($companyId) {
+			return JobCategory::where('company_id', $companyId)->get();
+		});
+		$this->client = Cache::remember('tenant:' . $companyId . ':clients', 300, function () use ($companyId) {
+			return Client::select('*')->where('company_id', $companyId)->orderBy('clients.name', 'ASC')->get();
+		});
 
-		// $countries  = DB::table('job_locations')->where(['company_id'=>$company_id])->pluck('id')->toArray();
+		// 5. Zero-query placeholders for view properties unused on the create form
+		$this->questions         = collect();
+		$this->companies         = collect();
+		$this->locations         = collect();
+		$this->skills            = collect();
+		$this->consultancy       = collect();
+		$this->team              = collect();
+		$this->other_consultancy = collect();
+		$this->jobLocation       = [];
+		$this->jobCity           = collect();
+		$this->jobCitySelected   = [];
+		$this->cities            = '';
+		$this->default_loc       = '';
+		$this->default_qualification = '';
+		$this->valSelected       = [];
 
-		$state_list  = DB::table('countries')->join('job_locations','job_locations.country_id','=','countries.id')->join('state_list','state_list.country_id','=','countries.id')->where(['job_locations.company_id'=>$company_id])->pluck('state_list.id')->toArray();
+		// 6. Static helpers (in-memory, no DB)
+		$this->employmentType = GeneralMethod::employmentType();
+		$this->priority       = GeneralMethod::priority();
+		$this->currency       = GeneralMethod::currency();
+		$this->salaryMode     = GeneralMethod::salaryMode();
 
-		// dd($state_list);
+		// 7. Global reference data — cached 24 h; second pluck done in-memory (was 2 identical queries)
+		$this->qualification = Cache::remember('global_qualification_master', 86400, function () {
+			return DB::table('qualification_master')
+				->select('*')
+				->whereNotIn('id', [60])
+				->orderBy('qualification_master.display_order', 'ASC')
+				->get();
+		});
+		$this->qualificationTag = $this->qualification->pluck('name');
 
-		$this->jobLocation = array();
-		$this->jobCity = DB::table('city_list')->whereIn('state_id',$state_list)->get();
-		$this->jobCitySelected = array();
+		$this->countries = Cache::rememberForever('global_countries_list', function () {
+			return DB::table('countries')->get();
+		});
 
-		// $this->jobCity = DB::table('city_list')->limit(5)->get();
-		// $cities = DB::table('city_list')->pluck('city')->toArray();
+		// 8. Recruiter list — cached 5 min per user email
+		$email = auth()->user()->email;
+		$this->recruiterlist = Cache::remember('user_recruiterlist:' . md5($email), 300, function () use ($email) {
+			return DB::table('users')
+				->select('users.name', 'users.id')
+				->where('users.email', $email)
+				->where('users.type', '=', 0)
+				->get();
+		});
 
-		
-		$this->cities = GeneralMethod::allCities();
-
-		$this->default_loc = '';
-		$this->default_qualification ='';
-
-		$this->countries = DB::table('countries')->get();
-
-		$this->valSelected = array();
-		// dd(auth()->user()->email);
-		$this->recruiterlist = DB::table('users')
-			->select('users.name','users.id')
-			->where('users.email',auth()->user()->email)
-			->where('users.type', '=', 0)
-			->get();
-			// dd($this->recruiterlist);
 		$this->page_event = 'ADD';
-		$this->currency = GeneralMethod::currency();
-		$this->salaryMode = GeneralMethod::salaryMode();
 		$this->direct_add = true;
 
-		$this->job_coins = DB::table('coin_order_events')
-			 ->where('event_type', '=', 'operational')
-			 ->where('company_id', '=', $companyId)
-			 ->where('coin_event_id', '=', 2)
-			 ->orderBy('id', 'DESC')
-			 ->first();
-		$this->candidates_coins = DB::table('coin_order_events')
-			 ->where('event_type', '=', 'operational')
-			 ->where('company_id', '=', $companyId)
-			 ->where('coin_event_id', '=', 4)
-			 ->orderBy('id', 'DESC')
-			 ->first(); 
-		$this->company_coins = DB::table('company_coins')
-			 ->where('event_type', '=', 'operational')
-			 ->where('company_id', '=', $companyId) 
-			 ->orderBy('id', 'DESC')
-			 ->first(); 
-
+		// 9. Coin rates & balance — cached 5 min / 1 min
+		$this->job_coins = Cache::remember('coin_event:operational:company:' . $companyId . ':event:2', 300, function () use ($companyId) {
+			return DB::table('coin_order_events')
+				->where('event_type', '=', 'operational')
+				->where('company_id', '=', $companyId)
+				->where('coin_event_id', '=', 2)
+				->orderBy('id', 'DESC')
+				->first();
+		});
+		$this->candidates_coins = Cache::remember('coin_event:operational:company:' . $companyId . ':event:4', 300, function () use ($companyId) {
+			return DB::table('coin_order_events')
+				->where('event_type', '=', 'operational')
+				->where('company_id', '=', $companyId)
+				->where('coin_event_id', '=', 4)
+				->orderBy('id', 'DESC')
+				->first();
+		});
+		$this->company_coins = Cache::remember('company_coins:company:' . $companyId, 60, function () use ($companyId) {
+			return DB::table('company_coins')
+				->where('event_type', '=', 'operational')
+				->where('company_id', '=', $companyId)
+				->orderBy('id', 'DESC')
+				->first();
+		});
 
 		return view('service_company.jobs.create', $this->data);
 	}

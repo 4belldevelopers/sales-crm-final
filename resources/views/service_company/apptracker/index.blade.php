@@ -1,6 +1,7 @@
 @extends('layouts.service_company_layout')
 @push('head-script')
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta2/js/all.min.js" type="text/javascript"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta2/css/all.min.css" crossorigin="anonymous">
+    <link rel="stylesheet" href="{{ asset('css/apptracker/_skeleton.css') }}{{ TM_VERSION }}">
     <style>
 
        
@@ -1208,6 +1209,32 @@
     <!-- end::Job Status Drawer -->
 @endsection
 @push('footer-script')
+    {{-- AppTracker resilience layer: connection monitor, visibility handler, resilient fetch --}}
+    <script src="{{ asset('js/apptracker/_conn.js') }}{{ TM_VERSION }}"></script>
+    <script src="{{ asset('js/apptracker/_visibility.js') }}{{ TM_VERSION }}"></script>
+    <script src="{{ asset('js/apptracker/_fetch.js') }}{{ TM_VERSION }}"></script>
+    <script src="{{ asset('js/apptracker/_tabSwap.js') }}{{ TM_VERSION }}"></script>
+    <script src="{{ asset('js/apptracker/_filterParse.js') }}{{ TM_VERSION }}"></script>
+    <script src="{{ asset('js/apptracker/_optimistic.js') }}{{ TM_VERSION }}"></script>
+    <script src="{{ asset('js/apptracker/_echo.js') }}{{ TM_VERSION }}"></script>
+    <script>
+    // Step 13: initialise the Reverb WebSocket subscription for this job's pipeline.
+    // StageMoved events call countder() which re-fetches the counter badges via AJAX.
+    $(function () {
+        var jobId = parseInt($('#jobid').val(), 10);
+        if (jobId > 0) {
+            AppTracker.echo.init({
+                jobId: jobId,
+                onStageMove: function (payload) {
+                    // payload.newStatus is null for polling-triggered refreshes.
+                    if (typeof countder === 'function') {
+                        countder();
+                    }
+                }
+            });
+        }
+    });
+    </script>
     <script src="{{ asset('demo/cdn/js/dataTables.fixedHeader.min.js') }}{{ TM_VERSION }}"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/sweetalert/1.1.3/sweetalert.css" rel="stylesheet" />
     <script src="https://cdnjs.cloudflare.com/ajax/libs/sweetalert/1.1.3/sweetalert.min.js"></script>
