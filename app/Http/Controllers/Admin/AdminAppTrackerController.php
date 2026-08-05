@@ -38,6 +38,7 @@ use App\Models\NoticePeriod;
 use App\Models\JobSkill;
 use Mail;
 use App\Exports\AppTrackerExport;
+use App\Services\ReferenceDataCache;
 use Maatwebsite\Excel\Excel as ExcelExcel;
 use Maatwebsite\Excel\Facades\Excel;
 class AdminAppTrackerController extends AdminBaseController {
@@ -54,7 +55,7 @@ class AdminAppTrackerController extends AdminBaseController {
         $this->statusArr = array();
         $this->candStatusClass = array();
         if ($id > 0) {
-            $this->boardColumns = ApplicationStatus::all();
+            $this->boardColumns = ReferenceDataCache::applicationStatuses();
             $this->locations = JobLocation::all();
             //$this->jobs 			= Job::all();
             $this->skills = Skill::all();
@@ -94,7 +95,7 @@ class AdminAppTrackerController extends AdminBaseController {
 										->where('job_applications.job_id', '=', $id)->groupBy('job_applications.job_id')
 										->first();
         } else {
-            $this->boardColumns = ApplicationStatus::all();
+            $this->boardColumns = ReferenceDataCache::applicationStatuses();
             $this->locations = JobLocation::all();
             $this->jobs = Job::all();
             $this->skills = Skill::all();
@@ -190,7 +191,7 @@ class AdminAppTrackerController extends AdminBaseController {
        
 	    $chkAdminRole 		= DB::table('roles')->select('*')->where('id', $this->user->role->role_id)->where('name', 'admin')->count();
         $feedback_status 	= '';
-        $feedback_status 	= GeneralMethod::feedback_status();
+        $feedback_status = ReferenceDataCache::feedbackStatus();
 		
         $jobApplications 	= JobApplication::select('job_applications.*', 'jobs.title', 'job_locations.location', 'application_status.status', 'clients.name as client_name', 
 		'users.name as posted_by', 'users.image as posted_by_image', 
@@ -819,7 +820,7 @@ return '<div class="d-flex flex-column">
     }
     public function table() {
         abort_if(!$this->user->cans('view_job_applications'), 403);
-        $this->boardColumns = ApplicationStatus::all();
+        $this->boardColumns = ReferenceDataCache::applicationStatuses();
         $this->locations = JobLocation::all();
         $this->jobs = Job::all();
         $this->skills = Skill::all();

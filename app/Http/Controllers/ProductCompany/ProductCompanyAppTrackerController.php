@@ -40,6 +40,7 @@ use Mail;
 use App\Exports\AppTrackerExport;
 use Maatwebsite\Excel\Excel as ExcelExcel;
 use Maatwebsite\Excel\Facades\Excel;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Redis;
 
 class ProductCompanyAppTrackerController extends ProductCompanyBaseController
@@ -99,66 +100,88 @@ class ProductCompanyAppTrackerController extends ProductCompanyBaseController
 	public function loadcounter(Request $request)
 	{
 		$company_id  = auth()->user()->company_id;
-		$jobid       = $request->jobid;
-		$mstatus_id  = $request->mstatus_id;
+		$jobid       = (int) $request->jobid;
 		$inputSearch = $request->inputSearch;
 
-		// Step 6d: Redis cache for un-filtered loads (the dominant path).
-		// Filtered loads (inputSearch set) always hit the DB so live counts are accurate.
-		if (empty($inputSearch)) {
-			$cached = Redis::get("loadcounter:{$jobid}");
-			if ($cached) {
-				return Reply::dataOnly(json_decode($cached, true));
-			}
+		// Filtered search bypasses cache — counts must reflect the search term live.
+		if (!empty($inputSearch)) {
+			$data       = $this->runCounterMySQL($jobid, $inputSearch);
+			$allCounter = $data ? 1 : 0;
+			return Reply::dataOnly(['status' => 'success', 'data' => $data, 'allCounter' => $allCounter]);
 		}
 
-		// Step 6d: single aggregation query (was two identical queries — one for count(), one for first()).
-		// Both had the same SELECT/JOIN/WHERE/GROUP BY; the original count() just returned 0 or 1
-		// (number of distinct job_id groups), which is identical to ($applicationCounter ? 1 : 0).
-		$applicationCounter = DB::table('job_applications')
+		// Stale-while-revalidate: serve cached value up to 120s; refresh in background after 30s.
+		// Uses the same pipeline:{jobId} key as ServiceCompany so counters:reconcile (Step 9) feeds both.
+		$cacheKey = "pipeline:{$jobid}";
+		$payload  = Cache::flexible($cacheKey, [30, 120], function () use ($jobid, $company_id) {
+			try {
+				return Cache::lock("lock:pipeline:{$jobid}", 5)->block(6, function () use ($jobid, $company_id) {
+					// Prefer pipeline_counters DB snapshot (written by counters:reconcile).
+					$row = DB::table('pipeline_counters')
+						->where('job_id', $jobid)
+						->where('company_id', $company_id)
+						->whereNotNull('computed_at')
+						->first();
+					if ($row) {
+						return [
+							'allCandidate' => (int) $row->all_candidate,
+							'Sourcing'     => (int) $row->sourcing,
+							'Screening'    => (int) $row->screening,
+							'Interview'    => (int) $row->interview,
+							'Negotiation'  => (int) $row->negotiation,
+							'Offered'      => (int) $row->offered,
+							'Joined'       => (int) $row->joined,
+							'Rejected'     => (int) $row->rejected,
+						];
+					}
+					// Cold start: fall back to MySQL aggregation.
+					return $this->runCounterMySQL($jobid, null);
+				});
+			} catch (\Throwable) {
+				return $this->runCounterMySQL($jobid, null);
+			}
+		});
+
+		$allCounter = $payload ? 1 : 0;
+		return Reply::dataOnly(['status' => 'success', 'data' => $payload, 'allCounter' => $allCounter]);
+	}
+
+	/**
+	 * MySQL aggregation query for per-stage counts on a job.
+	 * Used on cold-start or for live filtered requests.
+	 */
+	private function runCounterMySQL(int $jobid, ?string $inputSearch): ?object
+	{
+		return DB::table('job_applications')
 			->select(
-				DB::raw("count(add_job_wise_condidates.id) as allCandidate"),
-				DB::raw("SUM(CASE WHEN add_job_wise_condidates.master_status_id = 1 THEN 1 ELSE 0 END) AS Sourcing"),
-				DB::raw("SUM(CASE WHEN add_job_wise_condidates.master_status_id = 2 THEN 1 ELSE 0 END) AS Screening"),
-				DB::raw("SUM(CASE WHEN add_job_wise_condidates.master_status_id = 3 THEN 1 ELSE 0 END) AS Interview"),
-				DB::raw("SUM(CASE WHEN add_job_wise_condidates.master_status_id = 4 THEN 1 ELSE 0 END) AS Negotiation"),
-				DB::raw("SUM(CASE WHEN add_job_wise_condidates.master_status_id = 5 THEN 1 ELSE 0 END) AS Offered"),
-				DB::raw("SUM(CASE WHEN add_job_wise_condidates.master_status_id = 6 THEN 1 ELSE 0 END) AS Joined"),
-				DB::raw("SUM(CASE WHEN add_job_wise_condidates.master_status_id = 7 THEN 1 ELSE 0 END) AS Rejected")
+				DB::raw('count(add_job_wise_condidates.id) as allCandidate'),
+				DB::raw('SUM(CASE WHEN add_job_wise_condidates.master_status_id = 1 THEN 1 ELSE 0 END) AS Sourcing'),
+				DB::raw('SUM(CASE WHEN add_job_wise_condidates.master_status_id = 2 THEN 1 ELSE 0 END) AS Screening'),
+				DB::raw('SUM(CASE WHEN add_job_wise_condidates.master_status_id = 3 THEN 1 ELSE 0 END) AS Interview'),
+				DB::raw('SUM(CASE WHEN add_job_wise_condidates.master_status_id = 4 THEN 1 ELSE 0 END) AS Negotiation'),
+				DB::raw('SUM(CASE WHEN add_job_wise_condidates.master_status_id = 5 THEN 1 ELSE 0 END) AS Offered'),
+				DB::raw('SUM(CASE WHEN add_job_wise_condidates.master_status_id = 6 THEN 1 ELSE 0 END) AS Joined'),
+				DB::raw('SUM(CASE WHEN add_job_wise_condidates.master_status_id = 7 THEN 1 ELSE 0 END) AS Rejected')
 			)
 			->join('add_job_wise_condidates', 'add_job_wise_condidates.job_application_id', 'job_applications.id')
-			->join('master_status', function ($join) {
-				$join->on('master_status.id', 'add_job_wise_condidates.master_status_id');
-			})
-			->where(function ($query) use ($jobid, $inputSearch) {
+			->join('master_status', 'master_status.id', 'add_job_wise_condidates.master_status_id')
+			->where(function ($q) use ($jobid, $inputSearch) {
+				$q->where('add_job_wise_condidates.thirdparty_company_id', '=', 0)
+				  ->where('add_job_wise_condidates.job_id', '=', $jobid);
 				if (!empty($inputSearch)) {
-					return $query->where('add_job_wise_condidates.thirdparty_company_id', '=', 0)->where('add_job_wise_condidates.job_id', '=', $jobid)->where('job_applications.full_name', 'LIKE', "%$inputSearch%");
-				} else {
-					return $query->where('add_job_wise_condidates.thirdparty_company_id', '=', 0)->where('add_job_wise_condidates.job_id', '=', $jobid);
+					$q->where('job_applications.full_name', 'LIKE', "%{$inputSearch}%");
 				}
 			})
-			->orWhere(function ($query) use ($jobid, $inputSearch) {
+			->orWhere(function ($q) use ($jobid, $inputSearch) {
+				$q->where('add_job_wise_condidates.thirdparty_company_id', '>', 0)
+				  ->where('add_job_wise_condidates.job_id', '=', $jobid)
+				  ->whereNotIn('add_job_wise_condidates.master_status_id', [8, 9]);
 				if (!empty($inputSearch)) {
-					return $query->where('add_job_wise_condidates.thirdparty_company_id', '>', 0)->where('add_job_wise_condidates.job_id', '=', $jobid)->where('add_job_wise_condidates.master_status_id', '!=', 8)->where('add_job_wise_condidates.master_status_id', '!=', 9)->where('job_applications.full_name', 'LIKE', "%$inputSearch%");
-				} else {
-					return $query->where('add_job_wise_condidates.thirdparty_company_id', '>', 0)->where('add_job_wise_condidates.job_id', '=', $jobid)->where('add_job_wise_condidates.master_status_id', '!=', 8)->where('add_job_wise_condidates.master_status_id', '!=', 9);
+					$q->where('job_applications.full_name', 'LIKE', "%{$inputSearch}%");
 				}
 			})
 			->groupBy('add_job_wise_condidates.job_id')
 			->first();
-
-		// 1 when the job has any candidates (one GROUP BY group returned), 0 when none.
-		$allCounter = $applicationCounter ? 1 : 0;
-
-		$payload = ['status' => 'success', 'data' => $applicationCounter, 'allCounter' => $allCounter];
-
-		// Cache unfiltered results for 10 minutes. Invalidated by UpdateJobCountersJob via
-		// Redis::del("loadcounter:{$jobId}") after any application counter change.
-		if (empty($inputSearch)) {
-			Redis::setex("loadcounter:{$jobid}", 600, json_encode($payload));
-		}
-
-		return Reply::dataOnly($payload);
 	}
 	public function data_old(Request $request)
 	{
@@ -3367,7 +3390,29 @@ class ProductCompanyAppTrackerController extends ProductCompanyBaseController
 		return Reply::dataOnly(['status' => 'success', 'view' => $view]);
 	}
 
+	/* ── Route stubs — prevent 500 on routes that target this controller ── */
+	// These features are not yet implemented for the Product Company persona.
+	// Each returns 404 rather than throwing a fatal PHP error.
 
-
+	public function dsimilar_candidates($id = null) { abort(404); }
+	public function dinternal_bench($id = null) { abort(404); }
+	public function update_sub_stage($status = null, $application_id = null, $job_id = null, $parent_status = null) { abort(404); }
+	public function sub_stage(Request $request) { abort(404); }
+	public function save_rejected_resion(Request $request) { abort(404); }
+	public function download($id4 = null) { abort(404); }
+	public function ratingSave(Request $request) { abort(404); }
+	public function viewDetails(Request $request) { abort(404); }
+	public function createSchedule($id2 = null) { abort(404); }
+	public function storeSchedule(Request $request) { abort(404); }
+	public function storeScheduleWithEmailTempate(Request $request) { abort(404); }
+	public function jobQuestion($jobID = null) { abort(404); }
+	public function clientappdata() { abort(404); }
+	public function dsimilar_existing_data(Request $request) { abort(404); }
+	public function dinternal_bench_data(Request $request) { abort(404); }
+	public function table() { abort(404); }
+	public function updateIndex(Request $request) { abort(404); }
+	public function statusupdate(Request $request) { abort(404); }
+	public function get_client_job(Request $request) { abort(404); }
+	public function showInterviews($id = null) { abort(404); }
 
 }

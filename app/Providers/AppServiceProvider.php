@@ -36,6 +36,8 @@ class AppServiceProvider extends ServiceProvider
         \App\Models\BenchApplication::observe(\App\Observers\BenchApplicationObserver::class);
         \App\Models\RecommendationRelation::observe(\App\Observers\RecommendationRelationObserver::class);
         \App\Models\JobSkill::observe(\App\Observers\JobSkillObserver::class);
+        \App\Models\JobCategory::observe(\App\Observers\JobCategoryObserver::class);
+        \App\Models\Client::observe(\App\Observers\ClientObserver::class);
     }
 
     /**

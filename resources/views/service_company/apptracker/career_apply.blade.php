@@ -1,7 +1,6 @@
 @extends('layouts.service_company_layout')
 @push('head-script')
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta2/js/all.min.js" type="text/javascript">
-    </script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta2/css/all.min.css" crossorigin="anonymous">
     <style>
         #send_email .modal-dialog {
             margin: .3rem auto !important;
@@ -1526,9 +1525,7 @@
                                                 <select class="form-select form-select-solid" name="min_exp" id="min_exp">
                                                     <option value="" selected="">Min Experience</option>
                                                     <option value="0" {{ 0 == $min_exp ? 'selected' : '' }}>Freshers</option>
-                                                    @for ($i = 1; $i <= 30; $i++)
-                                                        <option value="{{ $i }}" {{ $i == $min_exp ? 'selected' : '' }}>{{ $i }} Year{{ $i >= 1 ? 's' : '' }}</option>
-                                                    @endfor
+                                                    @include('service_company.apptracker._partials.experience_options', ['selectedValue' => $min_exp])
                                                 </select>
                                                 <div class="fv-plugins-message-container"></div>
                                             </div>
@@ -1537,9 +1534,7 @@
                                                 <select class="form-select form-select-solid" name="max_exp" id="max_exp">
                                                     <option value="" selected="">Max Experience</option>
                                                     <option value="0" {{ 0 == $max_exp ? 'selected' : '' }}>Freshers</option>
-                                                    @for ($i = 1; $i <= 30; $i++)
-                                                        <option value="{{ $i }}" {{ $i == $max_exp ? 'selected' : '' }}>{{ $i }} Year{{ $i >= 1 ? 's' : '' }}</option>
-                                                    @endfor
+                                                    @include('service_company.apptracker._partials.experience_options', ['selectedValue' => $max_exp])
                                                 </select>
                                                 <div class="fv-plugins-message-container" id="experience_error" style="color:red !important;text-align:center;"></div>
                                             </div>

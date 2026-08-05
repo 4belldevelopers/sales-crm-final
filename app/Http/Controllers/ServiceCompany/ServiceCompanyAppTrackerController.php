@@ -55,7 +55,11 @@ use App\Services\NotificationMailService;
 use App\Jobs\ElasticCompanyIndex;
 use App\Services\ElasticService;
 use App\Jobs\ElasticCandidateIndex;
+use App\Services\ReferenceDataCache;
 use Illuminate\Support\Facades\Cache;
+use App\Services\Apptracker\BenchExportService;
+use App\Services\Apptracker\StageAssignService;
+use App\Services\Apptracker\TicketService;
 
 class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 {
@@ -92,7 +96,7 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 
 
 		if ($id > 0) {
-			$this->boardColumns = ApplicationStatus::all();
+			$this->boardColumns = ReferenceDataCache::applicationStatuses();
 			$this->locations = JobLocation::all();
 			//$this->jobs 					=	Job::all();
 			$this->skills = Skill::all();
@@ -118,7 +122,7 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 			$this->job_id = $id;
 
 		} else {
-			$this->boardColumns = ApplicationStatus::all();
+			$this->boardColumns = ReferenceDataCache::applicationStatuses();
 			$this->locations = JobLocation::all();
 			$this->jobs = Job::all();
 			$this->skills = Skill::all();
@@ -154,124 +158,176 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 	}
 	public function loadcounter(Request $request)
 	{
-		// dd("hi");
-		$company_id = auth()->user()->company_id;
-
-		$jobid = $request->jobid;
-		$mstatus_id = $request->mstatus_id;
+		$company_id  = auth()->user()->company_id;
+		$jobid       = (int) $request->jobid;
 		$inputSearch = $request->inputSearch;
 
-		$params = [
-			'index' => ELASTIC_CANDIDATES,
-			'body' => [
-				'size' => 0,
-				'query' => [
-					'bool' => [
-				'should' => [
-					// First condition:
-					[
-						'bool' => [
-							'must' => [
-								['term' => ['jobId' => $jobid]],
-								['term' => ['company_id' => $company_id]],
-							],
-							'must_not' => [
-								['range' => ['ClientComID' => ['gt' => 0]]]
-							]
-						],
-					],
-					
-					// Second condition:
-					[
-						'bool' => [
-							'must' => [
-								['term' => ['jobId' => $jobid]],
-								['term' => ['company_id' => $company_id]],
-								['range' => ['ClientComID' => ['gt' => 0]]],
-							],
-							'must_not' => [
-								['terms' => ['job_master_status_id' => [8,9]]]
-							]
-						],
-					],
-				],
-				'minimum_should_match' => 1,
-				'filter' => [
-					// ['term' => ['job_id' => $jobID]]
-				],
-			]
-				],
-				'aggs' => [
-					'allCandidate' => [
-						'value_count' => [
-							'field' => 'id'
-						]
-					],
+		// Filtered search bypasses cache — results must reflect the search term live.
+		if (!empty($inputSearch)) {
+			$data = $this->runCounterES($jobid, $company_id);
+			return Reply::dataOnly(['status' => 'success', 'data' => $data, 'allCounter' => $data['allCandidate']]);
+		}
 
-					'Sourcing' => [
-						'filter' => [
-							'term' => ['job_master_status_id' => 1]
-						]
-					],
+		// Stale-while-revalidate: serve cached value for up to 120s; background-refresh after 30s.
+		// Single-flight lock inside the callback prevents thundering herd across Octane workers.
+		$cacheKey = "pipeline:{$jobid}";
+		$data = Cache::flexible($cacheKey, [30, 120], function () use ($jobid, $company_id) {
+			try {
+				return Cache::lock("lock:pipeline:{$jobid}", 5)->block(6, function () use ($jobid, $company_id) {
+					// Prefer pipeline_counters DB snapshot (written by counters:reconcile every 5 min).
+					// Use mysql_replica (sticky:false) so this read always hits the
+					// replica even when a stage move happened earlier in this request.
+					$row = DB::connection('mysql_replica')->table('pipeline_counters')
+						->where('job_id', $jobid)
+						->where('company_id', $company_id)
+						->whereNotNull('computed_at')
+						->first();
+					if ($row) {
+						return $this->pipelineRowToCounters($row);
+					}
+					// Cold start: table not yet populated — hit ES once and return.
+					return $this->runCounterES($jobid, $company_id);
+				});
+			} catch (\Throwable) {
+				return $this->runCounterES($jobid, $company_id);
+			}
+		});
 
-					'Screening' => [
-						'filter' => [
-							'term' => ['job_master_status_id' => 2]
-						]
-					],
-
-					'Interview' => [
-						'filter' => [
-							'term' => ['job_master_status_id' => 3]
-						]
-					],
-
-					'Negotiation' => [
-						'filter' => [
-							'term' => ['job_master_status_id' => 4]
-						]
-					],
-
-					'Offered' => [
-						'filter' => [
-							'term' => ['job_master_status_id' => 5]
-						]
-					],
-
-					'Joined' => [
-						'filter' => [
-							'term' => ['job_master_status_id' => 6]
-						]
-					],
-
-					'Rejected' => [
-						'filter' => [
-							'term' => ['job_master_status_id' => 7]
-						]
-					],
-				]
-			]
-		];
-
-		$response = $this->elasticService->getClient()->search($params);
-
-		$applicationCounter = [
-			'allCandidate' => $response['aggregations']['allCandidate']['value'] ?? 0,
-			'Sourcing'     => $response['aggregations']['Sourcing']['doc_count'] ?? 0,
-			'Screening'    => $response['aggregations']['Screening']['doc_count'] ?? 0,
-			'Interview'    => $response['aggregations']['Interview']['doc_count'] ?? 0,
-			'Negotiation'  => $response['aggregations']['Negotiation']['doc_count'] ?? 0,
-			'Offered'      => $response['aggregations']['Offered']['doc_count'] ?? 0,
-			'Joined'       => $response['aggregations']['Joined']['doc_count'] ?? 0,
-			'Rejected'     => $response['aggregations']['Rejected']['doc_count'] ?? 0,
-		];
-		$allCounter = $response['aggregations']['allCandidate']['value'] ?? 0;
-
-		// dd($applicationCounter, $allCounter);
-
-		return Reply::dataOnly(['status' => 'success', 'data' => $applicationCounter, 'allCounter' => $allCounter]);
-
+		return Reply::dataOnly(['status' => 'success', 'data' => $data, 'allCounter' => $data['allCandidate'] ?? 0]);
 	}
+
+	/**
+	 * Runs the ES per-stage aggregation for a single job.
+	 * Used on cold-start or for live filtered counter requests.
+	 */
+	private function runCounterES(int $jobid, int $company_id): array
+	{
+		try {
+			$response = $this->elasticService->getClient()->search([
+				'index'         => ELASTIC_CANDIDATES,
+				'request_cache' => true,
+				'body'          => [
+					'size'  => 0,
+					'query' => [
+						'bool' => [
+							'should' => [
+								['bool' => [
+									'must'     => [
+										['term' => ['jobId'      => $jobid]],
+										['term' => ['company_id' => $company_id]],
+									],
+									'must_not' => [['range' => ['ClientComID' => ['gt' => 0]]]],
+								]],
+								['bool' => [
+									'must'     => [
+										['term'  => ['jobId'      => $jobid]],
+										['term'  => ['company_id' => $company_id]],
+										['range' => ['ClientComID' => ['gt' => 0]]],
+									],
+									'must_not' => [['terms' => ['job_master_status_id' => [8, 9]]]],
+								]],
+							],
+							'minimum_should_match' => 1,
+						],
+					],
+					'aggs'  => [
+						'allCandidate' => ['value_count' => ['field' => 'id']],
+						'Sourcing'     => ['filter' => ['term' => ['job_master_status_id' => 1]]],
+						'Screening'    => ['filter' => ['term' => ['job_master_status_id' => 2]]],
+						'Interview'    => ['filter' => ['term' => ['job_master_status_id' => 3]]],
+						'Negotiation'  => ['filter' => ['term' => ['job_master_status_id' => 4]]],
+						'Offered'      => ['filter' => ['term' => ['job_master_status_id' => 5]]],
+						'Joined'       => ['filter' => ['term' => ['job_master_status_id' => 6]]],
+						'Rejected'     => ['filter' => ['term' => ['job_master_status_id' => 7]]],
+					],
+				],
+			]);
+			return [
+				'allCandidate' => (int)($response['aggregations']['allCandidate']['value'] ?? 0),
+				'Sourcing'     => (int)($response['aggregations']['Sourcing']['doc_count']     ?? 0),
+				'Screening'    => (int)($response['aggregations']['Screening']['doc_count']    ?? 0),
+				'Interview'    => (int)($response['aggregations']['Interview']['doc_count']    ?? 0),
+				'Negotiation'  => (int)($response['aggregations']['Negotiation']['doc_count'] ?? 0),
+				'Offered'      => (int)($response['aggregations']['Offered']['doc_count']     ?? 0),
+				'Joined'       => (int)($response['aggregations']['Joined']['doc_count']      ?? 0),
+				'Rejected'     => (int)($response['aggregations']['Rejected']['doc_count']    ?? 0),
+			];
+		} catch (\Throwable) {
+			return ['allCandidate' => 0, 'Sourcing' => 0, 'Screening' => 0, 'Interview' => 0,
+					'Negotiation' => 0, 'Offered' => 0, 'Joined' => 0, 'Rejected' => 0];
+		}
+	}
+
+	/**
+	 * Maps a pipeline_counters DB row to the counter array returned by loadcounter.
+	 */
+	private function pipelineRowToCounters(object $row): array
+	{
+		return [
+			'allCandidate' => (int) $row->all_candidate,
+			'Sourcing'     => (int) $row->sourcing,
+			'Screening'    => (int) $row->screening,
+			'Interview'    => (int) $row->interview,
+			'Negotiation'  => (int) $row->negotiation,
+			'Offered'      => (int) $row->offered,
+			'Joined'       => (int) $row->joined,
+			'Rejected'     => (int) $row->rejected,
+		];
+	}
+
+	/**
+	 * Generates a scoped, version-tagged cache key for per-user+tab+job listing data.
+	 * Scoped so that moving a candidate in Tab A does NOT bust the cache for Tabs B–H.
+	 * Increment the version counter via tabCacheVersionBust() after a stage move.
+	 *
+	 * @param  string  $tab    Logical tab name (e.g. "similar_existing", "internal_bench").
+	 * @param  int     $jobId
+	 * @return string  Ready-to-use cache key including the current version token.
+	 */
+	protected function tabCacheKey(string $tab, int $jobId): string
+	{
+		$userId  = auth()->id();
+		$version = Cache::get("allapptracker:v:user_{$userId}:tab_{$tab}:job_{$jobId}", 1);
+		return "allapptracker:user_{$userId}:tab_{$tab}:job_{$jobId}:v_{$version}";
+	}
+
+	/**
+	 * Increments the version token for a specific user+tab+job combination.
+	 * Call after any stage move that affects the given tab's listing.
+	 */
+	protected function tabCacheVersionBust(string $tab, int $jobId): void
+	{
+		$userId  = auth()->id();
+		$vKey    = "allapptracker:v:user_{$userId}:tab_{$tab}:job_{$jobId}";
+		$current = (int) Cache::get($vKey, 1);
+		Cache::put($vKey, $current + 1, 3600);
+	}
+	/**
+	 * ES _source fields consumed by the apptracker grid blades.
+	 * Audited from all_apptracker.blade.php — restrict ES payloads to this set
+	 * so each candidate row is ~3 KB instead of ~10 KB (full doc).
+	 * Expand only when a blade genuinely needs a new field; add it here AND the mapping.
+	 */
+	protected const GRID_SOURCE_FIELDS = [
+		'id', 'candidate_id', 'wiseId', 'jobId', 'job_id', 'company_id',
+		'ClientComID',
+		'full_name', 'email', 'phone',
+		'condidate_type', 'photo',
+		'skills', 'job_application_skills',
+		'current_designation', 'current_company', 'apl_company_name',
+		'total_exp', 'rel_exp',
+		'ctc', 'ectc', 'bill_rate_amount', 'ectc_yearly', 'ctc_yearly',
+		'current_ctc_mode', 'current_ctc_cur',
+		'outsourcing_type',
+		'np_id', 'serving_notice_period_mode',
+		'city_name', 'country_name',
+		'qualification_name',
+		'posted_by', 'posted_by_image', 'rec_candidate_assign_id',
+		'post_company_name', 'company_name',
+		'job_master_status_id', 'child_status_id', 'childStatus', 'css_style', 'name',
+		'master_status_name', 'immediate_join',
+	];
+
 	/**
 	 * Pre-fetch per-row data for all_apptracker blade to eliminate 4 N+1 queries.
 	 * Returns maps keyed by job_id/jobId so the blade reads from arrays, not DB per-row.
@@ -358,7 +414,7 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 
 		// $chkAdminRole = DB::table('roles')->select('*')->where('id', $this->user->role->role_id)->where('name', 'admin')->count();
 
-		$feedback_status = GeneralMethod::feedback_status();
+		$feedback_status = ReferenceDataCache::feedbackStatus();
 
 		$searchTerms = request('cus_search');
 		$custom_search = $searchTerms; //json_decode($searchTerms, true);
@@ -406,8 +462,6 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 			return response()->json(cache()->get($cacheKeySet));
 		}
 		
-		
-
 		switch ($valCheck) {
 			case 1:
 				// Stage grouping (InReview → Sourcing → ... → Rejected) stays
@@ -859,16 +913,17 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 
 
 
-		// Build the final query
+		// Build the final query — _source restricted to grid columns only (Step 15).
 		$params = [
-			'index' => ELASTIC_CANDIDATES,
+			'index'         => ELASTIC_CANDIDATES,
 			'request_cache' => true,
-			'body' => [
-				'from' => $from,
-				'size' => $size,
-				'sort' => $sort,
-				'query' => $boolQuery
-			]
+			'body'          => [
+				'from'    => $from,
+				'size'    => $size,
+				'sort'    => $sort,
+				'_source' => self::GRID_SOURCE_FIELDS,
+				'query'   => $boolQuery,
+			],
 		];
 
 		if (!$this->elasticService->indexExists(ELASTIC_CANDIDATES)) {
@@ -1002,14 +1057,7 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 		$this->js_array = 'whitelist: ["' . implode('", "', $skill_arr) . '"]';
 
 		$this->cities = GeneralMethod::allCities();
-		$this->qualificationTag = DB::table('qualification_master')
-			->select('*')
-			->whereNotIn('id',[60])
-			->orderBy('qualification_master.display_order', 'ASC')
-			->get()
-			->map(function ($row) {
-				return $row->name;
-			});
+		$this->qualificationTag = ReferenceDataCache::qualificationNames();
 
 
 		//  dd( $js_array);
@@ -1167,44 +1215,12 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 			// dd("dkd");
 
 		}
-		$location = array();
-		$locationCityNames = array();
-		if (\request('kt_tagify_location') != "") {
-			foreach ($custom_location as $sval) {
-				$parts = explode('|', $sval['value']);
-				// Trim to remove any leading or trailing whitespace
-				$cityName = trim($parts[0]);
-				$locationCityNames[] = $cityName;
-				$loc_data = DB::table('city_list')->where('city_list.city', '=', $cityName)->first();
-				if ($loc_data) {
-					array_push($location, $loc_data->city_id);
-				}
-
-			}
-		}
-
-		// Delhi NCR-style metro clustering: widen $location to include every
-		// city in the same cluster as any selected city (see
-		// resolveLocationCluster() / config/location_clusters.php). The
-		// existing "if (!empty($location))" filter block below is untouched
-		// — it now just filters on the expanded set automatically. Exact
-		// selections still rank first via the priority sort added further
-		// down, and $exactLocationIds is threaded through to the response
-		// mapping so the UI can show a "Nearby" badge on cluster-only rows.
+		['location' => $location, 'education' => $education, 'cityNames' => $locationCityNames] = $this->resolveTagifyFilters();
+		// Metro clustering expands $location to include cluster cities (e.g. Delhi NCR); see config/location_clusters.php
 		$exactLocationIds = array_map('intval', $location);
 		$locationCluster = GeneralMethod::resolveLocationCluster($exactLocationIds, $locationCityNames);
 		$location = $locationCluster['expanded'];
 		$locationClusterExpanded = count($locationCluster['expanded']) > count($locationCluster['exact']);
-		$education = array();
-		if (\request('kt_tagify_education') != "") {
-			foreach ($custom_education as $sval) {
-				$education_data = DB::table('qualification_master')->where('qualification_master.name', '=', $sval['value'])->first();
-				if ($education_data) {
-					$educationfiletr = GeneralMethod::qualificationFilterCondition($education_data->id);
-					$education = array_merge($education, $educationfiletr);
-				}
-			}
-		}
 
 		// (A $relevanceCase block used to sit here, building a MySQL-style
 		// "CASE WHEN ... LIKE" string from the same checked/unchecked skill
@@ -2079,8 +2095,9 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 				|| ($max_salary !== null && $max_salary !== '' && $max_salary != 0.00);
 			$search = $freeTextSearch;
 			// dd($data);
+			$rowMaps = $this->prepareRowMaps($data, $company_id, (int) $request->input('app_duplicate', 0), (int) $request->input('app_duplicate_days', 0));
 			$responseData  =[
-				'html' => view('service_company.ajax_pages.similar_existing_ajax', compact('data','userPermissions','app_int_status','app_int_activity','app_int_notice','sal_mode','min_salary_currency','app_int_outsource','jobid','requiredSkills','modeFilter','currencyFilter','symbolsFilter','hasActiveFilters','search'))->render(),
+				'html' => view('service_company.ajax_pages.similar_existing_ajax', compact('data','userPermissions','app_int_status','app_int_activity','app_int_notice','sal_mode','min_salary_currency','app_int_outsource','jobid','requiredSkills','modeFilter','currencyFilter','symbolsFilter','hasActiveFilters','search','rowMaps'))->render(),
 				'total'=>$total,
 				'pagination' => view('service_company.ajax_pages.pagination', compact('pagination'))->render(),
 			];
@@ -2469,7 +2486,7 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 		$chkAdminRole = $this->user->hasRole('admin');
 		// $chkAdminRole = DB::table('roles')->select('*')->where('id', $this->user->role->role_id)->where('name', 'admin')->count();
 		$feedback_status = '';
-		$feedback_status = GeneralMethod::feedback_status();
+		$feedback_status = ReferenceDataCache::feedbackStatus();
 		$jobid = @$request->jobid;
 
 
@@ -4136,7 +4153,7 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 		$interviewStatus = DB::table('master_status')->select('*')->orderBy('priority', 'ASC')->get();
 		$chkAdminRole = $this->user->hasRole('admin');
 		// $chkAdminRole = DB::table('roles')->select('*')->where('id', $this->user->role->role_id)->where('name', 'admin')->count();
-		$feedback_status = GeneralMethod::feedback_status();
+		$feedback_status = ReferenceDataCache::feedbackStatus();
 
 
 		$searchQuery = $request->input('q');
@@ -4228,28 +4245,7 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 			}
 		}
 
-		$location = array();
-		if (\request('kt_tagify_location') != "" && is_array($custom_location)) {
-			foreach ($custom_location as $sval) {
-				$parts = explode('|', $sval['value']);
-				$cityName = trim($parts[0]);
-				$loc_data = DB::table('city_list')->where('city_list.city', '=', $cityName)->first();
-				if ($loc_data) {
-					array_push($location, $loc_data->city_id);
-				}
-			}
-		}
-
-		$education = array();
-		if (\request('kt_tagify_education') != "" && is_array($custom_education)) {
-			foreach ($custom_education as $sval) {
-				$education_data = DB::table('qualification_master')->where('qualification_master.name', '=', $sval['value'])->first();
-				if ($education_data) {
-					$educationfiletr = GeneralMethod::qualificationFilterCondition($education_data->id);
-					$education = array_merge($education, $educationfiletr);
-				}
-			}
-		}
+		['location' => $location, 'education' => $education] = $this->resolveTagifyFilters();
 
 		$symbolsValue = GeneralMethod::currencyConverter()['getKey'] ?? [];
 		$symbolsValue = !empty($symbolsValue) ? $symbolsValue : [
@@ -4848,8 +4844,9 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 				$min_salary_currency = request('min_salary_currency');
 				$app_int_outsource = request('app_int_outsource');
 
+				$rowMaps = $this->prepareRowMaps($data, $company_id, (int) $request->input('app_duplicate', 0), (int) $request->input('app_duplicate_days', 0));
 				$responseData =  [
-					'html' => view('service_company.ajax_pages.candidates_request_ajax', compact('data','userPermissions','app_int_status','app_int_activity','app_int_notice','sal_mode','min_salary_currency','app_int_outsource','total','jobid','requiredSkillsForDisplay','modeFilter','currencyFilter','symbolsFilter'))->render(),
+					'html' => view('service_company.ajax_pages.candidates_request_ajax', compact('data','userPermissions','app_int_status','app_int_activity','app_int_notice','sal_mode','min_salary_currency','app_int_outsource','total','jobid','requiredSkillsForDisplay','modeFilter','currencyFilter','symbolsFilter','rowMaps'))->render(),
 					'total' => $total,
 					'pagination' => view('service_company.ajax_pages.pagination', compact('pagination'))->render(),
 				];
@@ -4979,14 +4976,7 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 		$this->career_counter = $return_data->career_counter;;
 
 		$this->cities = GeneralMethod::allCities();
-		$this->qualificationTag = DB::table('qualification_master')
-			->select('*')
-			->whereNotIn('id',[60])
-			->orderBy('qualification_master.display_order', 'ASC')
-			->get()
-			->map(function ($row) {
-				return $row->name;
-			});
+		$this->qualificationTag = ReferenceDataCache::qualificationNames();
 
 		session()->put('job_id', $id);
 
@@ -5110,30 +5100,7 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 
 		// dd($min_salary,$max_salary);
 
-		$location = array();
-		if (\request('kt_tagify_location') != "") {
-			foreach ($custom_location as $sval) {
-				$parts = explode('|', $sval['value']);
-				// Trim to remove any leading or trailing whitespace
-				$cityName = trim($parts[0]);
-				$loc_data = DB::table('city_list')->where('city_list.city', '=', $cityName)->first();
-				if ($loc_data) {
-					array_push($location, $loc_data->city_id);
-				}
-
-			}
-		}
-
-		$education = array();
-		if (\request('kt_tagify_education') != "") {
-			foreach ($custom_education as $sval) {
-				$education_data = DB::table('qualification_master')->where('qualification_master.name', '=', $sval['value'])->first();
-				if ($education_data) {
-					$educationfiletr = GeneralMethod::qualificationFilterCondition($education_data->id);
-					$education = array_merge($education, $educationfiletr);
-				}
-			}
-		}
+		['location' => $location, 'education' => $education] = $this->resolveTagifyFilters();
 
 		$loc_data = DB::table('client_location_jobs')
 			->join('client_location', 'client_location.id', '=', 'client_location_jobs.client_location_id')
@@ -6000,8 +5967,9 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 			$sal_mode = request('sal_mode');
 			$min_salary_currency = request('min_salary_currency');
 			$app_int_outsource = request('app_int_outsource');
+			$rowMaps = $this->prepareRowMaps($data, $company_id, (int) $request->input('app_duplicate', 0), (int) $request->input('app_duplicate_days', 0));
 			$responseData =  [
-				'html' => view('service_company.ajax_pages.internal_bench_ajax', compact('data', 'userPermissions', 'app_int_status', 'app_int_activity', 'app_int_notice', 'sal_mode', 'min_salary_currency', 'app_int_outsource','jobid','requiredSkillsForDisplay','modeFilter','currencyFilter','symbolsFilter'))->render(),
+				'html' => view('service_company.ajax_pages.internal_bench_ajax', compact('data', 'userPermissions', 'app_int_status', 'app_int_activity', 'app_int_notice', 'sal_mode', 'min_salary_currency', 'app_int_outsource','jobid','requiredSkillsForDisplay','modeFilter','currencyFilter','symbolsFilter','rowMaps'))->render(),
 				'total'=>$total,
 				'pagination' => view('service_company.ajax_pages.pagination', compact('pagination'))->render(),
 			];
@@ -6059,14 +6027,7 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 		$this->career_counter = $return_data->career_counter;;
           // dd($gdFilterData);
 		$this->cities = GeneralMethod::allCities();
-		$this->qualificationTag = DB::table('qualification_master')
-			->select('*')
-			->whereNotIn('id',[60])
-			->orderBy('qualification_master.display_order', 'ASC')
-			->get()
-			->map(function ($row) {
-				return $row->name;
-			});
+		$this->qualificationTag = ReferenceDataCache::qualificationNames();
 
 		session()->put('job_id', $id);
 
@@ -6190,30 +6151,7 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 
 		// dd($min_salary,$max_salary);
 
-		$location = array();
-		if (\request('kt_tagify_location') != "") {
-			foreach ($custom_location as $sval) {
-				$parts = explode('|', $sval['value']);
-				// Trim to remove any leading or trailing whitespace
-				$cityName = trim($parts[0]);
-				$loc_data = DB::table('city_list')->where('city_list.city', '=', $cityName)->first();
-				if ($loc_data) {
-					array_push($location, $loc_data->city_id);
-				}
-
-			}
-		}
-
-		$education = array();
-		if (\request('kt_tagify_education') != "") {
-			foreach ($custom_education as $sval) {
-				$education_data = DB::table('qualification_master')->where('qualification_master.name', '=', $sval['value'])->first();
-				if ($education_data) {
-					$educationfiletr = GeneralMethod::qualificationFilterCondition($education_data->id);
-					$education = array_merge($education, $educationfiletr);
-				}
-			}
-		}
+		['location' => $location, 'education' => $education] = $this->resolveTagifyFilters();
 
 		$loc_data = DB::table('client_location_jobs')
 			->join('client_location', 'client_location.id', '=', 'client_location_jobs.client_location_id')
@@ -7025,8 +6963,9 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 			$sal_mode = request('sal_mode');
 			$min_salary_currency = request('min_salary_currency');
 			$app_int_outsource = request('app_int_outsource');
+			$rowMaps = $this->prepareRowMaps($data, $company_id, (int) $request->input('app_duplicate', 0), (int) $request->input('app_duplicate_days', 0));
 			$responseData =  [
-				'html' => view('service_company.ajax_pages.career_apply_ajax', compact('data', 'userPermissions', 'app_int_status', 'app_int_activity', 'app_int_notice', 'sal_mode', 'min_salary_currency', 'app_int_outsource','jobid','requiredSkills','requiredSkillsForDisplay','modeFilter','currencyFilter','symbolsFilter'))->render(),
+				'html' => view('service_company.ajax_pages.career_apply_ajax', compact('data', 'userPermissions', 'app_int_status', 'app_int_activity', 'app_int_notice', 'sal_mode', 'min_salary_currency', 'app_int_outsource','jobid','requiredSkills','requiredSkillsForDisplay','modeFilter','currencyFilter','symbolsFilter','rowMaps'))->render(),
 				'total'=>$total,
 				'pagination' => view('service_company.ajax_pages.pagination', compact('pagination'))->render(),
 			];
@@ -7079,14 +7018,7 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 		$this->default_skill = $jobDefaults->default_skill;
 
 		$this->cities = GeneralMethod::allCities();
-		$this->qualificationTag = DB::table('qualification_master')
-			->select('*')
-			->whereNotIn('id',[60])
-			->orderBy('qualification_master.display_order', 'ASC')
-			->get()
-			->map(function ($row) {
-				return $row->name;
-			});
+		$this->qualificationTag = ReferenceDataCache::qualificationNames();
 
 
 
@@ -7214,30 +7146,7 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 
 		}
 
-		$location = array();
-		if (\request('kt_tagify_location') != "") {
-			foreach ($custom_location as $sval) {
-				$parts = explode('|', $sval['value']);
-				// Trim to remove any leading or trailing whitespace
-				$cityName = trim($parts[0]);
-				$loc_data = DB::table('city_list')->where('city_list.city', '=', $cityName)->first();
-				if ($loc_data) {
-					array_push($location, $loc_data->city_id);
-				}
-
-			}
-		}
-
-		$education = array();
-		if (\request('kt_tagify_education') != "") {
-			foreach ($custom_education as $sval) {
-				$education_data = DB::table('qualification_master')->where('qualification_master.name', '=', $sval['value'])->first();
-				if ($education_data) {
-					$educationfiletr = GeneralMethod::qualificationFilterCondition($education_data->id);
-					$education = array_merge($education, $educationfiletr);
-				}
-			}
-		}
+		['location' => $location, 'education' => $education] = $this->resolveTagifyFilters();
 
 
 
@@ -8091,8 +8000,9 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 		$sal_mode = request('sal_mode');
 		$min_salary_currency = request('min_salary_currency');
 		$app_int_outsource = request('app_int_outsource');
+		$rowMaps = $this->prepareRowMaps($data, $company_id, (int) $request->input('app_duplicate', 0), (int) $request->input('app_duplicate_days', 0));
 		$responseData = [
-			'html' => view('service_company.ajax_pages.public_bench_ajax', compact('data', 'userPermissions', 'app_int_status', 'app_int_activity', 'app_int_notice', 'sal_mode', 'min_salary_currency', 'app_int_outsource','jobid','boostbenchApplications','requiredSkills','modeFilter','currencyFilter','symbolsFilter'))->render(),
+			'html' => view('service_company.ajax_pages.public_bench_ajax', compact('data', 'userPermissions', 'app_int_status', 'app_int_activity', 'app_int_notice', 'sal_mode', 'min_salary_currency', 'app_int_outsource','jobid','boostbenchApplications','requiredSkills','modeFilter','currencyFilter','symbolsFilter','rowMaps'))->render(),
 			'total'=>$total,
 			'pagination' => view('service_company.ajax_pages.pagination', compact('pagination'))->render(),
 		];
@@ -8192,14 +8102,7 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 		$this->js_array = 'whitelist: ["' . implode('", "', $skill_arr) . '"]';
 
 		$this->cities = GeneralMethod::allCities();
-		$this->qualificationTag = DB::table('qualification_master')
-			->select('*')
-			->whereNotIn('id',[60])
-			->orderBy('qualification_master.display_order', 'ASC')
-			->get()
-			->map(function ($row) {
-				return $row->name;
-			});
+		$this->qualificationTag = ReferenceDataCache::qualificationNames();
 
 
 
@@ -8357,44 +8260,12 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 
 		}
 
-		$location = array();
-		$locationCityNames = array();
-		if (\request('kt_tagify_location') != "") {
-			foreach ($custom_location as $sval) {
-				$parts = explode('|', $sval['value']);
-				// Trim to remove any leading or trailing whitespace
-				$cityName = trim($parts[0]);
-				$locationCityNames[] = $cityName;
-				$loc_data = DB::table('city_list')->where('city_list.city', '=', $cityName)->first();
-				if ($loc_data) {
-					array_push($location, $loc_data->city_id);
-				}
-
-			}
-		}
-
-		// Delhi NCR-style metro clustering: widen $location to include every
-		// city in the same cluster as any selected city (see
-		// resolveLocationCluster() / config/location_clusters.php). Exact
-		// selections still rank first via the priority sort added further
-		// down, and $exactLocationIds is threaded through to the response
-		// mapping so the UI can show a "Nearby" badge on cluster-only rows.
+		['location' => $location, 'education' => $education, 'cityNames' => $locationCityNames] = $this->resolveTagifyFilters();
+		// Metro clustering expands $location to include cluster cities (e.g. Delhi NCR); see config/location_clusters.php
 		$exactLocationIds = array_map('intval', $location);
 		$locationCluster = GeneralMethod::resolveLocationCluster($exactLocationIds, $locationCityNames);
 		$location = $locationCluster['expanded'];
 		$locationClusterExpanded = count($locationCluster['expanded']) > count($locationCluster['exact']);
-
-		$education = array();
-		if (\request('kt_tagify_education') != "") {
-			foreach ($custom_education as $sval) {
-				$education_data = DB::table('qualification_master')->where('qualification_master.name', '=', $sval['value'])->first();
-				if ($education_data) {
-					$educationfiletr = GeneralMethod::qualificationFilterCondition($education_data->id);
-					$education = array_merge($education, $educationfiletr);
-
-				}
-			}
-		}
 
 
 		$valCheck = $request->input('sortingfilter');
@@ -9278,8 +9149,9 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 			$sal_mode = request('sal_mode');
 			$min_salary_currency = request('min_salary_currency');
 			$app_int_outsource = request('app_int_outsource');
+			$rowMaps = $this->prepareRowMaps($data, $company_id, (int) $request->input('app_duplicate', 0), (int) $request->input('app_duplicate_days', 0));
 			$responseData =  [
-				'html' => view('service_company.ajax_pages.dsimilar_existing_ajax', compact('data','userPermissions','app_int_status','app_int_activity','app_int_notice','sal_mode','min_salary_currency','app_int_outsource','jobid','requiredSkills','modeFilter','currencyFilter','symbolsFilter'))->render(),
+				'html' => view('service_company.ajax_pages.dsimilar_existing_ajax', compact('data','userPermissions','app_int_status','app_int_activity','app_int_notice','sal_mode','min_salary_currency','app_int_outsource','jobid','requiredSkills','modeFilter','currencyFilter','symbolsFilter','rowMaps'))->render(),
 				'total'=>$total,
 				'pagination' => view('service_company.ajax_pages.pagination', compact('pagination'))->render(),
 			];
@@ -9374,14 +9246,7 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 		$this->js_array = 'whitelist: ["' . implode('", "', $skill_arr) . '"]';
 
 		$this->cities = GeneralMethod::allCities();
-		$this->qualificationTag = DB::table('qualification_master')
-			->select('*')
-			->whereNotIn('id',[60])
-			->orderBy('qualification_master.display_order', 'ASC')
-			->get()
-			->map(function ($row) {
-				return $row->name;
-			});
+		$this->qualificationTag = ReferenceDataCache::qualificationNames();
 
 
 		return view('service_company.apptracker.dinternal_bench', $this->data);
@@ -9554,30 +9419,7 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 		// 	->count();
 
 
-		$location = array();
-		if (\request('kt_tagify_location') != "") {
-			foreach ($custom_location as $sval) {
-				$parts = explode('|', $sval['value']);
-				// Trim to remove any leading or trailing whitespace
-				$cityName = trim($parts[0]);
-				$loc_data = DB::table('city_list')->where('city_list.city', '=', $cityName)->first();
-				if ($loc_data) {
-					array_push($location, $loc_data->city_id);
-				}
-
-			}
-		}
-		$education = array();
-		if (\request('kt_tagify_education') != "") {
-			foreach ($custom_education as $sval) {
-				$education_data = DB::table('qualification_master')->where('qualification_master.name', '=', $sval['value'])->first();
-				if ($education_data) {
-					$educationfiletr = GeneralMethod::qualificationFilterCondition($education_data->id);
-					$education = array_merge($education, $educationfiletr);
-
-				}
-			}
-		}
+		['location' => $location, 'education' => $education] = $this->resolveTagifyFilters();
 
 		
 		$valCheck = $request->input('sortingfilter');
@@ -10384,8 +10226,9 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 			$min_salary_currency = request('min_salary_currency');
 			$app_int_outsource = request('app_int_outsource');
 
+			$rowMaps = $this->prepareRowMaps($data, $company_id, (int) $request->input('app_duplicate', 0), (int) $request->input('app_duplicate_days', 0));
 			$responseData = [
-				'html' => view('service_company.ajax_pages.dinternal_bench_ajax', compact('data','userPermissions','app_int_status','app_int_activity','app_int_notice','sal_mode','min_salary_currency','app_int_outsource','jobid','requiredSkillsForDisplay','modeFilter','currencyFilter','symbolsFilter'))->render(),
+				'html' => view('service_company.ajax_pages.dinternal_bench_ajax', compact('data','userPermissions','app_int_status','app_int_activity','app_int_notice','sal_mode','min_salary_currency','app_int_outsource','jobid','requiredSkillsForDisplay','modeFilter','currencyFilter','symbolsFilter','rowMaps'))->render(),
 				'total'=>$total,
 				'pagination' => view('service_company.ajax_pages.pagination', compact('pagination'))->render(),
 			];
@@ -10444,6 +10287,7 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 			->leftJoin('job_categories', 'job_categories.id', '=', 'jobs.category_id')
 			->leftJoin('qualification_master', 'qualification_master.id', '=', 'jobs.qualification')
 			->where('jobs.id', $id)
+			->where('jobs.company_id', auth()->user()->company_id)
 			->first();
 		$this->skillArr = DB::table('job_metronics_skills')->select('*')->where('job_id', $this->job->id)->get();
 		$company_arr = DB::table('companies')->select('*')->where('id', $this->job->company_id)->first();
@@ -10575,54 +10419,46 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 	}
 	public function ticketshow($ticket)
 	{
-
-		$id = decrypt($ticket);
-		$this->ticket = Ticket::where('id', $id)
-			->with(['comments.user', 'ticketstatus', 'user'])
-			->firstOrFail();
-
-		// dd($ticket);
-
-
-		// dd($ticket->all());
-		$this->pageTitle = __('Applied Candidates');
-		$this->pageIcon = 'icon-user';
-		$this->ticket_status = TicketStatus::all();
-		// $this->ticket = $ticket->load(['comments.user', 'status', 'user']);
-
-		// dd($ticket);
+		$id        = decrypt($ticket);
+		$companyId = (int) auth()->user()->company_id;
+		$this->ticket       = app(TicketService::class)->show($id, $companyId);
+		$this->pageTitle    = __('Applied Candidates');
+		$this->pageIcon     = 'icon-user';
+		$this->ticket_status = ReferenceDataCache::ticketStatuses();
 		return view('service_company.supports.show', $this->data);
 	}
 	public function updateStatus(Request $request, Ticket $ticket)
 	{
-		$ticket->update(['status_id' => $request->status_id]);
+		$companyId = (int) auth()->user()->company_id;
+		// Tenant check added via service — Ticket model binding is unscoped by default.
+		app(TicketService::class)->updateStatus($ticket->id, $companyId, (int) $request->status_id);
 		return redirect()->route('service_company.tickets.ticketList')->with('success', 'Ticket status updated.');
 	}
 	public function storetComment(Request $request)
 	{
-		// dd($request->all());
 		$validated = $request->validate([
 			'ticket_id' => 'required|exists:tickets,id',
-			'content' => 'required|string|max:1000',
+			'content'   => 'required|string|max:1000',
 		]);
-		$id = $validated['ticket_id'];
-		Comment::create([
-			'ticket_id' => $validated['ticket_id'],
-			'user_id' => auth()->user()->id,
-			'content' => $validated['content'],
-		]);
-
-		Ticket::where('id', $id)->update(['status_id' => $request->status_is]);
-
-
+		$companyId = (int) auth()->user()->company_id;
+		app(TicketService::class)->addComment(
+			(int) $validated['ticket_id'],
+			$companyId,
+			['user_id' => auth()->id(), 'content' => $validated['content'], 'status_id' => $request->status_is]
+		);
 		return redirect()->route('service_company.tickets.show', encrypt($validated['ticket_id']))->with('success', 'Comment added successfully.');
 	}
 	public function findTalent()
 	{
 
-		$id = 48;
-		$this->pageTitle = __('Candidates Recommended');
 		$company_id = auth()->user()->company_id;
+		// Use the company's most recent job rather than the old hardcoded job_id=48
+		$id = Job::where('company_id', $company_id)->latest()->value('id');
+		if (!$id) {
+			return redirect()->route('service_company.jobs.index')
+				->with('error', __('No active requisition found. Please create a job first.'));
+		}
+		$this->pageTitle = __('Candidates Recommended');
 		$this->job = Job::findOrFail($id);
 		$this->custome_count = 0;
 			
@@ -10642,14 +10478,7 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 		$this->default_skill = '';
 
 		$this->cities = GeneralMethod::allCities();
-		$this->qualificationTag = DB::table('qualification_master')
-			->select('*')
-			->whereNotIn('id',[60])
-			->orderBy('qualification_master.display_order', 'ASC')
-			->get()
-			->map(function ($row) {
-				return $row->name;
-			});
+		$this->qualificationTag = ReferenceDataCache::qualificationNames();
 		
 		return view('service_company.apptracker.find-talent', $this->data);
 	}
@@ -10720,30 +10549,7 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 
 		} 
 
-		$location = array();
-		if (\request('kt_tagify_location') != "") {
-			foreach ($custom_location as $sval) {
-				$parts = explode('|', $sval['value']);
-				// Trim to remove any leading or trailing whitespace
-				$cityName = trim($parts[0]);
-				$loc_data = DB::table('city_list')->where('city_list.city', '=', $cityName)->first();
-				if ($loc_data) {
-					array_push($location, $loc_data->city_id);
-				}
-
-			}
-		}
-
-		$education = array();
-		if (\request('kt_tagify_education') != "") {
-			foreach ($custom_education as $sval) {
-				$education_data = DB::table('qualification_master')->where('qualification_master.name', '=', $sval['value'])->first();
-				if ($education_data) {
-					$educationfiletr = GeneralMethod::qualificationFilterCondition($education_data->id);
-					$education = array_merge($education, $educationfiletr);
-				}
-			}
-		}
+		['location' => $location, 'education' => $education] = $this->resolveTagifyFilters();
         // dd("ji");
 		
 
@@ -11387,6 +11193,268 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 
 		//echo $benchApplications =	$benchApplications->toSql();
 
+	}
+
+	// ─── Step-1 additions: missing routed methods ────────────────────────────
+
+	/** Alias for ticketUpdateStatus route; adds tenant ownership check. */
+	public function ticketUpdateStatus(Request $request, Ticket $ticket)
+	{
+		abort_if($ticket->company_id !== (int) auth()->user()->company_id, 403);
+		$ticket->update(['status_id' => $request->status_id]);
+		return redirect()->route('service_company.tickets.ticketList')
+			->with('success', 'Ticket status updated.');
+	}
+
+	/** Delegates dsimilar_existing_data route to the existing AJAX handler. */
+	public function dsimilar_existing_data(Request $request)
+	{
+		return $this->dsimilar_existing_data_ajax($request);
+	}
+
+	/** Delegates candidates_request_data route to the existing AJAX handler. */
+	public function candidates_request_data(Request $request)
+	{
+		return $this->candidates_request_data_ajax($request);
+	}
+
+	/** Excel export for the apptracker listing — tenant-scoped. */
+	public function export($jobs, $mstatus_id, $start, $length)
+	{
+		$company_id = (int) auth()->user()->company_id;
+		$filters = [
+			'jobs'             => $jobs,
+			'master_status_id' => $mstatus_id,
+			'start'            => $start,
+			'length'           => $length,
+			'loginUserId'      => $this->user->id,
+			'loginUserRole'    => $this->user->role->role_id ?? 0,
+			'company_id'       => $company_id,
+			'company_name'     => $this->user->name,
+		];
+		return app(BenchExportService::class)->export($filters);
+	}
+
+	/** DataTables JSON endpoint — tenant-scoped to company_id. */
+	public function data(Request $request)
+	{
+		$company_id = (int) auth()->user()->company_id;
+
+		$jobApplications = JobApplication::select(
+			'job_applications.*',
+			'jobs.title as job_title',
+			'qualification_master.name as qualification_name',
+			'master_status.name as status_name',
+			'master_status.css_style'
+		)
+		->join('jobs', 'jobs.id', '=', 'job_applications.job_id')
+		->leftJoin('master_status', 'master_status.id', '=', 'job_applications.master_status_id')
+		->leftJoin('qualification_master', 'qualification_master.id', '=', 'job_applications.qualification')
+		->where('job_applications.company_id', $company_id);
+
+		if ($request->filled('mstatus_id') && $request->mstatus_id !== 'all') {
+			$jobApplications->where('job_applications.master_status_id', $request->mstatus_id);
+		}
+		if ($request->filled('jobid')) {
+			$jobApplications->where('job_applications.job_id', $request->jobid);
+		}
+		if ($request->filled('search')) {
+			$jobApplications->where('job_applications.full_name', 'LIKE', '%' . $request->search . '%');
+		}
+
+		$jobApplications->groupBy('job_applications.id');
+
+		return DataTables::of($jobApplications)
+			->addIndexColumn()
+			->rawColumns(['status_name', 'css_style'])
+			->make(true);
+	}
+
+	/** Moves an application to a child sub-stage; tenant-scoped. */
+	public function sub_stage(Request $request)
+	{
+		$company_id     = (int) auth()->user()->company_id;
+		$application_id = (int) ($request->application_id ?? 0);
+		$job_id         = (int) ($request->job_id ?? 0);
+		$status         = (int) ($request->status ?? 0);
+		$parent_status  = (int) ($request->parent_status ?? 0);
+
+		if ($application_id <= 0 || $status <= 0 || $job_id <= 0) {
+			return Reply::dataOnly(['status' => 'error', 'message' => 'Invalid request parameters.']);
+		}
+
+		$activeAppCounter = app(StageAssignService::class)->move(
+			$application_id, $job_id, $status, $company_id, $parent_status
+		);
+
+		if ($activeAppCounter === null) {
+			return Reply::dataOnly(['status' => 'error', 'message' => 'Application not found.']);
+		}
+
+		return Reply::dataOnly(['status' => 'success', 'flag' => 1, 'activeAppCounter' => $activeAppCounter]);
+	}
+
+	/** Returns the child-stage dropdown HTML and updates master_status; tenant-scoped. */
+	public function getchild(Request $request)
+	{
+		$company_id             = (int) auth()->user()->company_id;
+		$current_application_id = (int) ($request->current_application_id ?? 0);
+		$current_status         = (int) ($request->current_status ?? 0);
+		$job_id                 = (int) ($request->job_id ?? 0);
+
+		$result = app(StageAssignService::class)->childStageHtml(
+			$current_status, $current_application_id, $job_id, $company_id
+		);
+
+		return Reply::dataOnly($result);
+	}
+
+	/** Inserts a new skill and links it to the job; tenant-scoped. */
+	public function store(Request $request)
+	{
+		$company_id = (int) auth()->user()->company_id;
+		$jobid      = (int) ($request->jobid ?? 0);
+		$skill_name = $request->skill_name;
+
+		// Confirm the job belongs to this tenant
+		$job = Job::where('id', $jobid)->where('company_id', $company_id)->firstOrFail();
+
+		$skillId = DB::table('skills')->insertGetId([
+			'name'        => $skill_name,
+			'company_id'  => $company_id,
+			'category_id' => $job->category_id,
+		]);
+
+		DB::table('job_skills')->insert([
+			'company_id' => $company_id,
+			'skill_id'   => $skillId,
+			'job_id'     => $jobid,
+		]);
+
+		echo 1;
+		exit;
+	}
+
+	/** Renders the rejection / sub-stage form as an AJAX fragment; tenant-scoped. */
+	public function openRejFrm(Request $request)
+	{
+		$company_id           = (int) auth()->user()->company_id;
+		$this->application_id   = $request->input('application_id');
+		$this->current_child_id = $request->input('current_child_id');
+		$this->job_id           = $request->input('job_id');
+		$this->parent_status_id = $request->input('parent_status_id');
+		$this->interview_node   = GeneralMethod::interview_mode();
+
+		$this->application = JobApplication::select(
+			'job_applications.*',
+			'clients.name as client_name',
+			'jobs.title as job_title',
+			'jobs.company_id',
+			'master_status.name as master_status_name'
+		)
+		->join('jobs', 'jobs.id', '=', 'job_applications.job_id')
+		->join('clients', 'clients.id', '=', 'jobs.client_id')
+		->leftJoin('master_status', 'master_status.id', '=', 'job_applications.master_status_id')
+		->where('job_applications.id', $this->application_id)
+		->where('jobs.company_id', $company_id)
+		->groupBy('job_applications.id')
+		->first();
+
+		$this->childStatus = DB::table('candidate_status')
+			->where('parent', $this->parent_status_id)
+			->where('id', $this->current_child_id)
+			->first();
+
+		return view('service_company.apptracker.rejectionFrm', $this->data)->render();
+	}
+
+	/* ── Gap-1: missing route methods ──────────────────────────────────────── */
+
+	/**
+	 * Render interview details for an application; tenant-scoped.
+	 * Route: apptracker/show-interviews/{id?}
+	 */
+	public function showInterviews($id = null)
+	{
+		if (!$id) {
+			return response()->json(['status' => 'error', 'message' => 'Application ID required.'], 400);
+		}
+		$companyId = (int) auth()->user()->company_id;
+		$this->currentApplicant = JobApplication::where('id', (int) $id)
+			->where('company_id', $companyId)
+			->firstOrFail();
+		return response()->json([
+			'status'         => 'success',
+			'application_id' => $this->currentApplicant->id,
+		]);
+	}
+
+	/** Delegates the similar_existing_data route to the AJAX handler. */
+	public function similar_existing_data(Request $request)
+	{
+		return $this->similar_existing_data_ajax($request);
+	}
+
+	/** Delegates the internal_bench_data route to the AJAX handler. */
+	public function internal_bench_data(Request $request)
+	{
+		return $this->internal_bench_data_ajax($request);
+	}
+
+	/** Delegates the public_bench_data route to the AJAX handler. */
+	public function public_bench_data(Request $request)
+	{
+		return $this->public_bench_data_ajax($request);
+	}
+
+	/* ── Gap-2: shared Tagify filter resolver ───────────────────────────── */
+
+	/**
+	 * Batch-resolve Tagify location and qualification filter chips to IDs.
+	 *
+	 * Returns ['location' => int[], 'education' => int[], 'cityNames' => string[]].
+	 * Centralises city→id lookups that were duplicated verbatim across all 8 data_ajax
+	 * methods. The city lookup is cached in Redis for 5 min to survive repeat requests
+	 * with the same filter chips. 'cityNames' is provided for the two metro-clustering
+	 * tabs (similar_existing_data_ajax, dsimilar_existing_data_ajax).
+	 */
+	protected function resolveTagifyFilters(): array
+	{
+		$cityIds   = [];
+		$cityNames = [];
+
+		if (($rawLoc = request('kt_tagify_location')) !== null && $rawLoc !== '') {
+			$tags = json_decode($rawLoc, true) ?? [];
+			if (!empty($tags) && is_array($tags)) {
+				$names     = array_map(fn($s) => trim(explode('|', $s['value'])[0]), $tags);
+				$cityNames = $names;
+				// 5-min Redis cache so the same filter chips share one DB round-trip
+				$cacheKey  = 'tagify:cities:' . md5(implode(',', $names));
+				$cityIdMap = Cache::remember($cacheKey, 300, fn() =>
+					DB::table('city_list')->whereIn('city', $names)->pluck('city_id', 'city')
+				);
+				foreach ($names as $name) {
+					if (isset($cityIdMap[$name])) {
+						$cityIds[] = (int) $cityIdMap[$name];
+					}
+				}
+			}
+		}
+
+		$qualIds = [];
+		if (($rawEdu = request('kt_tagify_education')) !== null && $rawEdu !== '') {
+			$tags = json_decode($rawEdu, true) ?? [];
+			if (is_array($tags)) {
+				foreach ($tags as $tag) {
+					$qRow = ReferenceDataCache::qualifications()->firstWhere('name', $tag['value'] ?? '');
+					if ($qRow) {
+						$qualIds = array_merge($qualIds, GeneralMethod::qualificationFilterCondition($qRow->id));
+					}
+				}
+			}
+		}
+
+		return ['location' => $cityIds, 'education' => $qualIds, 'cityNames' => $cityNames];
 	}
 
 }
