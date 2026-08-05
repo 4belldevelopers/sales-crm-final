@@ -35,6 +35,8 @@ use App\Jobs\QueueStackCandidates;
 use App\Jobs\UploadResumeToS3;
 use App\Jobs\UploadResumeToTestS3;
 use App\Jobs\UploadResumeToTestRTwo;
+use App\Jobs\ProcessCandidateSubmissionJob;
+use App\Jobs\QueueCandidateNotificationJob;
 use App\Models\JobApplication;
 use App\Models\JobApplicationAnswer;
 use App\Models\JobLocation;
@@ -1523,17 +1525,25 @@ protected $elasticService;
 	{
        
 		$jobId = GeneralMethod::value_decrypt($jobId);
+		// Step 4: decrypt $appId symmetrically with $jobId — supports both plain integers
+		// (the common case) and encrypted hashes that some templates may produce.
+		$appId = GeneralMethod::value_decrypt($appId);
 		// dd($jobId);
 		$this->pageTitle = __('Add Candidate');
 		abort_if(Gate::denies('add_job_applications'), 403);
 		$eventId = 4;
 		$coinsRequ = 1;
 		$companyId = (int) auth()->user()->company_id;
-		$packageStatus = GeneralMethod::coinsValidationsAllcompany($companyId,$eventId,$coinsRequ);
-		if($packageStatus->status){
-			session()->flash('packageStatus', $packageStatus->message); // or false depending on your condition
-			$url = url('service_company/apptracker/' . @$jobId . '/all');
-			return redirect($url);
+		// Step 2: coins are consumed only when creating a new application, not when
+		// editing an existing one — $appId > 0 means an existing record is being edited.
+		$isEdit = !empty($appId) && (int) $appId !== 0;
+		if (!$isEdit) {
+			$packageStatus = GeneralMethod::coinsValidationsAllcompany($companyId,$eventId,$coinsRequ);
+			if($packageStatus->status){
+				session()->flash('packageStatus', $packageStatus->message);
+				$url = url('service_company/apptracker/' . @$jobId . '/all');
+				return redirect($url);
+			}
 		}
 		
 
@@ -1957,6 +1967,19 @@ protected $elasticService;
 				return Reply::dataOnly(['status' => 'error', 'msgType' => 'warning',
 					'message' => 'Resume upload is not yet complete. Please wait for the upload to finish and try again.']);
 			}
+
+			// ── R2 pre-flight: verify file exists BEFORE opening the DB transaction ──
+			// Eliminates network I/O from inside the DB row lock (V2 Step 5).
+			// Race window (file disappears post-check, pre-claim) is negligible for R2.
+			$r2Exists = false;
+			try {
+				$r2Exists = Storage::disk('r2')->exists('resumes/' . $resumeSession->uuid);
+			} catch (\Throwable) {}
+			if (!$r2Exists) {
+				return Reply::dataOnly(['status' => 'error', 'msgType' => 'warning',
+					'message' => 'Uploaded file not found in storage. Please upload the resume again.']);
+			}
+			// ─────────────────────────────────────────────────────────────────────────
 		}
 		// ─────────────────────────────────────────────────────────────────────────────
 
@@ -1968,8 +1991,7 @@ protected $elasticService;
 		// ── v2 atomic claim — must run inside the existing transaction ────────────
 		// Conditional UPDATE (Uploaded → Completed) is the source of truth.
 		// Two concurrent submits race on this; only the one that gets rows=1 proceeds.
-		// R2 HEAD check is done AFTER claim but still inside the transaction so we
-		// can revert without leaving Completed state orphaned.
+		// R2 existence was pre-checked above; only the claim itself runs under lock.
 		if ($resumeSession) {
 			$claimed = ResumeUpload::where('id', $resumeSession->id)
 				->where('company_id', $company_id)
@@ -1990,115 +2012,17 @@ protected $elasticService;
 					'message' => 'Resume upload session is no longer valid. Please upload again.']);
 			}
 
-			// R2 HEAD check — if the file is missing, revert claim so the user can retry
-			$r2Exists = false;
-			try {
-				$r2Exists = Storage::disk('r2')->exists('resumes/' . $resumeSession->uuid);
-			} catch (\Throwable) {}
-
-			if (!$r2Exists) {
-				ResumeUpload::where('id', $resumeSession->id)
-					->where('status', ResumeUploadStatus::Completed->value)
-					->update(['status' => ResumeUploadStatus::Uploaded->value, 'updated_at' => now()]);
-				DB::rollBack();
-				return Reply::dataOnly(['status' => 'error', 'msgType' => 'warning',
-					'message' => 'Uploaded file not found in storage. Please upload the resume again.']);
-			}
-			// File confirmed; move to company-structured CDN path (mirrors v1 convention).
+			// File confirmed by pre-flight; move to company-structured CDN path.
 			$finalResumeUrl = app(\App\Services\ResumeUploadSession::class)->moveToCompanyPath($resumeSession);
 		}
 		// ── end v2 atomic claim ───────────────────────────────────────────────────
 
-		if ($request->has('YearskillId') && is_array($request->input('YearskillId'))) {
-			$YearskillId = $request->input('YearskillId');
-			$MonthskillId = $request->input('MonthskillId');
-			$ratingId = $request->input('rating');
-			// dd($YearskillId,$MonthskillId);
-			DB::table('candidate_job_skill_exp')->where('candidate_id', $jobApplication->id)->where('job_id', $request->job_id)->delete();
-			$this->elasticService->getClient()->deleteByQuery([
-				'index' => ELASTIC_CANDIDATE_SKILLS_EXP,
-				'conflicts' => 'proceed',   // ⭐ THIS LINE FIXES YOUR ERROR
-				'body'  => [
-					'query' => [
-						'bool' => [
-							'must' => [
-								['term' => ['candidate_id' => $jobApplication->id]],
-								['term' => ['job_id' => $request->job_id]],
-							],
-						],
-					],
-				],
-			]);
-			foreach ($YearskillId as $skillId => $value) {
-				// if (!empty($value)) { 
-				$ss = "Year";
-				if($value >=1){
-					$ss = "Years";
-				}
-				if(!empty($MonthskillId[$skillId])){
-					$valMonth = $MonthskillId[$skillId] ;
-				}else{
-					$valMonth = $MonthskillId[$skillId] ;
-				}
-				 $skill_value = $value.'.'.$valMonth.' '.$ss;
-				 $rating = $ratingId[$skillId] ;
-
-					$values = array(
-						'job_skill_id' => $skillId,
-						'skill_value' => $skill_value,
-						'job_id' => (int)$request->job_id,
-						'rating' => (int)$rating,
-						'candidate_id' => $jobApplication->id
-					);
-					DB::table('candidate_job_skill_exp')->insert($values);
-					$expId = DB::getPdo()->lastInsertId();
-					$skills = DB::table('job_metronics_skills')->select('skill_name')->where('id', '=', $skillId)->first();
-					$this->elasticService->getClient()->index([
-						'index' => ELASTIC_CANDIDATE_SKILLS_EXP,
-						'id'    =>$expId,   // store as ES _id
-						'body'  => [
-							'skill_name' => $skills->skill_name ?? '',
-							'job_skill_id' => $skillId,
-							'skill_value' => $skill_value,
-							'job_id' =>(int)$request->job_id,
-							'candidate_id' =>$jobApplication->id,
-							'rating' =>(int)$rating,
-							'created_at' =>  now()->toIso8601String(),
-							'updated_at' =>  now()->toIso8601String()
-						]
-					]);
-				// }
-			}
-		}
-
-		// dd("j");
-      if (!empty($skillArr)) {
-		$skillsAddElastic = array_column($skillArr, 'value');
-		if(count( $skillsAddElastic)>0){
-          GeneralMethod::skillsAddElastic($skillsAddElastic);
-		}
-	}
-
-		if (!empty($skillArr)) {
-			foreach ($skillArr as $sval) {
-				$values = array(
-					'job_application_id' => $jobApplication->id,
-					'skills' => $sval['value']
-				);
-				if(!DB::table('job_application_skills')->where('job_application_id','=',$jobApplication->id)->where('skills','LIKE', '%'.$sval['value'].'%')->exists()){
-					DB::table('job_application_skills')->insert($values);
-				}
-			}
-		}
-		if (!empty($request->current_designation)) {
-		if(!DB::table('job_application_skills')->where('job_application_id','=',$jobApplication->id)->where('skills','LIKE', '%'. @$request->current_designation.'%')->exists()){
-			DB::table('job_application_skills')->insert(['job_application_id' => $jobApplication->id,'skills' =>  @$request->current_designation]);
-			}
-		}
-
-
-		$skillArr = explode(',', $jobApplication->skills);
-		$percentage =  GeneralMethod::skill_match_percentage($request->job_id,$skillArr);
+		// Skills ES indexing, job_application_skills inserts, skillsAddElastic, and
+		// teamRankElastic are all handled by ProcessCandidateSubmissionJob after commit.
+		// Only skill_match_percentage stays synchronous — its result is required for the
+		// add_job_wise_condidates insert below (V2 Steps 2–4).
+		$skillArr   = explode(',', $jobApplication->skills);
+		$percentage = GeneralMethod::skill_match_percentage($request->job_id, $skillArr);
 
         $now = now();
 		$insertArr = array('job_id' => $request->job_id, 'job_application_id' => $jobApplication->id, 'status_id' => $jobApplication->status_id, 'master_status_id' => $jobApplication->master_status_id, 'child_status_id' => $jobApplication->child_status_id, 'company_id' => $company_id, 'submitted_by' => $submitted_by,'skill_match' => $percentage,'created_at' => $now,'updated_at' => $now);
@@ -2130,173 +2054,10 @@ protected $elasticService;
 				foreach ($cachekeys as $key) {
 					GeneralMethod::cacheClean($key);
 				}
-		$teamRankElastic = [
-						'company_id'=>$company_id,
-						'user_id'=>$submitted_by,
-						'candidate_id'=>$lastInsertedId,
-						'profileUpload'=>1,
-						'interviewScheduled'=>0,
-						'interviewNoShow'=>0,
-						'offerReleased'=>0,
-						'candidateJoined'=>0,
-						'jobsPosted'=>0,
-						'feedbackGivenOnCVs'=>0,
-						'postJobToVendorMarket'=>0,
-						'outsourceJobsToVendors'=>0,
-						'listBenchCandidates'=>0,
-						'respondToBenchRequests'=>0
-					];
-					GeneralMethod::teamRankElastic($teamRankElastic);
-
-		
-
-		$jobId = $request->job_id;
-		$wise_c = DB::table('job_applications')
-			->select('master_status.name', 'master_status.css_style', 'add_job_wise_condidates.child_status_id as childStatus', 'add_job_wise_condidates.master_status_id', 'jobs.client_id', 'jobs.title', 'jobs.id as job_id', 'users.name as posted_by', 'users.image as posted_by_image', 'companies.company_name', 'add_job_wise_condidates.created_at', 'recommendation_relation.id as recommendation_id', 'recommendation_relation.from_company_id', 'recommendation_relation.final_status', 'recommendation_relation.to_company_id')
-			->join('add_job_wise_condidates', 'add_job_wise_condidates.job_application_id', 'job_applications.id')
-			->leftjoin('users', 'users.id', 'job_applications.submitted_by')
-			->leftjoin('companies', 'companies.id', 'users.company_id')
-			->join('master_status', function ($join) {
-				$join->on('master_status.id', 'add_job_wise_condidates.master_status_id');
-			})->join('jobs', function ($join) {
-				$join->on('jobs.id', 'add_job_wise_condidates.job_id');
-			})
-			->leftJoin('recommendation_relation', 'recommendation_relation.job_id', '=', 'jobs.id')
-			->where('add_job_wise_condidates.id', '=', $lastInsertedId)->where('add_job_wise_condidates.job_id', '=', $jobId)->first();
-			
-
-		$partnersData = DB::table('job_assign')->join('users', 'users.id', '=', 'job_assign.user_id')->where('job_assign.job_id', '=', $jobId)->pluck('users.email')->toArray();
-
-
-		
-		$recommendedDataList = DB::table('recommendation_relation');
-		$recommendedDataList = $recommendedDataList->join('companies', 'companies.id', 'recommendation_relation.to_company_id');
-		$recommendedDataList = $recommendedDataList->join('jobs', 'jobs.id', 'recommendation_relation.job_id');
-		$recommendedDataList = $recommendedDataList->leftJoin('job_applications', function ($join) use ($jobId) {
-			$join->on('job_applications.thirdparty_company_id', '=', 'companies.id');
-			$join->on('job_applications.job_id', '=', 'jobs.id');
-		});
-
-		$recommendedDataList = $recommendedDataList->where('recommendation_relation.final_status', 1);
-		$recommendedDataList = $recommendedDataList->where('recommendation_relation.job_id', '=', $jobId);
-		$recommendedDataList = $recommendedDataList->groupBy('companies.id');
-		$recommendedDataList = $recommendedDataList->pluck('companies.company_email');
-		$recommendedDataList = $recommendedDataList->toArray();
-
-
-		$company_or_client = GeneralMethod::companyDetailsByClient($jobId);
-
-		$name = '--------';
-		if (@$wise_c->master_status_id == 8) {
-			$name = '';
-		}
-		if (!empty(@$wise_c->childStatus) && @$wise_c->childStatus > 0) {
-			$childStatus = '';
-			$childStatus = DB::table('candidate_status')->select('*')->where('id', $wise_c->childStatus)->first();
-			if (!empty($childStatus)) {
-				$name = @$childStatus->name;
-			}
-		}
-
-		$np = $jobApplication->np_id;
-		if (empty($np)) {
-			$np = 'N/A';
-		}
-		if ($jobApplication->serving_notice_period_mode == 0) {
-			$np = $jobApplication->np_id . " Days";
-			if ($jobApplication->np_id == 1) {
-				$np = $jobApplication->np_id . '  Day';
-			}
-		} elseif ($jobApplication->serving_notice_period_mode == 1) {
-			$np = $jobApplication->np_id;
-			if ($np !='Immediate') {
-				$np = "SNP LWD ".date("d-M-Y", strtotime($jobApplication->np_id));
-			}
-		}
-		
-		$strAdded = DB::table('clients')->select('companies.company_name','clients.name','clients.self_company')
-		                     ->join('companies','companies.id','=','clients.company_id')
-		                     ->where('clients.id', @$wise_c->client_id)->first();
-		                     
-						$contact_person_name = '';
-                        if($strAdded->self_company==1){
-                             $contact_person_name = $strAdded->company_name;
-                        }else{
-                             $contact_person_name = $strAdded->name;
-                        }
-                        
-
-		$data = [
-			'VendorTeam' => @$wise_c->company_name,
-			'ReqID' => "R" . @$wise_c->job_id,
-			'Reqname' => @$wise_c->title,
-			'CompanyNameClientname' => $company_or_client,
-			'CandidateStatus' => $jobApplication->duplicate,
-			'CurrentStage' => @$wise_c->name,
-			'SubStage' => $name,
-			"CandidateName" => $jobApplication->full_name,
-			"Experience" => $jobApplication->total_exp,
-			'Position' => $jobApplication->current_designation,
-			'NoticePeriod' => $np,
-			'RefferedBy' => @$wise_c->posted_by,
-			'SubmittedOn' => date("d-M-Y H:i:s", strtotime(@$wise_c->created_at))
-		];
-		
-      // config(['mail.from.name' => auth()->user()->name]);
-		
-                        
-                $notification = DB::table('clients')->where('id','=', @$wise_c->client_id)->where('self_company','=', 1)->pluck('email')->toArray();
-                $email_to_remove = auth()->user()->email;
-                $index = array_search($email_to_remove, $notification);
-                if ($index !== false) {
-                    unset($notification[$index]);
-                    $notification = array_values($notification);
-                }
-				$cc = array();//$notification; //array_merge($partnersData, $recommendedDataList);
-				
-              // $cc = array_merge($partnersData, $recommendedDataList);
-		      $subject = "New Candidate Added | $wise_c->title | $contact_person_name | R-$wise_c->job_id";
-		
-		     $basecompany = GeneralMethod::baseCompany();
-             $senderName = ($basecompany->companyName) ? $basecompany->companyName : '';
-             $fromAddress = ($basecompany->companyEmail) ? $basecompany->companyEmail : '';
-             $attachments = array();
-			 $checkMailPermision = GeneralMethod::mailPermission(1);
-			 if($checkMailPermision){  
-				$mailTypeSubject = GeneralMethod::mailTypeSubject(1,1);
-		        $notificationemail = GeneralMethod::notification($company_id,'Recuitment');
-				$defailsEmail = DB::table('companies')->where('id',$company_id)->first()->company_email;
-				$to_Mail_Id = $notificationemail->email ?? $defailsEmail ?? '';
-
-
-				QueueNotificationMailService::dispatch(
-					$to_Mail_Id,
-					$subject,
-					'email.candidate.add-candidate',
-					(object) $data,
-					$attachments,
-					$fromAddress,
-					$senderName,
-					$cc,
-					$company_id
-				)->onConnection('emails');
-
-
-            //  $result = $this->notificationMailService->sendEmail($to_Mail_Id, $subject,'email.candidate.add-candidate', (object) $data, $attachments, $fromAddress, $senderName,$cc);
-
-			 }
-
-	   // 	Mail::to(auth()->user()->email)->cc($cc)->send(new AddCandidateMail((object) $data,$subject));
-
-
-		// Mail::to(auth()->user()->email)->send(new AddCandidateMail((object)$data));
-
-		// Check job Assign Or Not
-		$chkJobAssign = DB::table('job_assign')->select('job_assign.id')->where('company_id', $company_id)->where('job_id', $request->job_id)->where('user_id', $submitted_by)->count();
-		if ($chkJobAssign < 1) {
-			$values = array('company_id' => @$company_id, 'user_id' => @$submitted_by, 'job_id' => @$request->job_id);
-			DB::table('job_assign')->insert($values);
-		}
+		// teamRankElastic, email prep JOINs, email dispatch, and job_assign are handled
+		// by async jobs after commit (V2 Steps 4, 6). Capture submitter email now
+		// while auth() is available in the HTTP context.
+		$submittedByEmail = auth()->user()->email;
 
 		if ($resumeSession) {
 			// v2 path: file moved to company CDN path in the claim block above.
@@ -2339,128 +2100,49 @@ protected $elasticService;
 				->update(['resume' =>'']);
 		}
 
-		if (isset($request->jobskill) && !empty($request->jobskill)) {
-			DB::table('candidate_skills_value')->where('job_id', $request->job_id)->where('candidate_id', $jobApplication->id)->delete();
-			foreach ($request->jobskill as $key => $value) {
-				if (!empty(@$value)) {
-					$values = array('job_id' => @$request->job_id, 'skill_id' => @$key, 'candidate_id' => $jobApplication->id, 'skill_value' => @$value, );
-					DB::table('candidate_skills_value')->insert($values);
-				}
-			}
-		}
-		$status_name = $note = '';
-		$status_cnt = DB::table('candidate_status')->select('*')->where('company_id', user()->company_id)->where('parent', $applicationStatus->id)
-			//->orderBy('priority', 'ASC')
-			->count();
-		if ($status_cnt > 0) {
-			$status_row = DB::table('candidate_status')->select('*')->where('company_id', user()->company_id)->where('parent', $applicationStatus->id)->orderBy('priority', 'ASC')->first();
-			$status_name = $status_row->name;
-		}
+		// candidate_skills_value, timeline, tb_ranks, JobApplicationAnswer,
+		// job_additional_detail+ES, and packageRedeem are all handled by
+		// ProcessCandidateSubmissionJob dispatched after commit (V2 Steps 2–4).
 
-		$insert_type = 0;
-
-		$timelineArr = array(
-			'event_id' => 1,
-			'event_by_company_id' => auth()->user()->company_id,
-			'event_by_user_id' => auth()->user()->id,
-			'master_process_name' => 'InReview',
-			//'child_process_name'	=>	
-
-			'application_id' => $jobApplication->id,
-			'application_email' => $jobApplication->email,
-			'job_id' => @$request->job_id,
-			'note' => 'Successfully Added'
-		);
-		GeneralMethod::UpdateTimeline($timelineArr);
-
-		$tb_ranks = array('company_id' => @$company_id, 'user_id' => @$submitted_by, 'job_id' => @$request->job_id,'status' => 0,'application_id' => $jobApplication->id);
-		
-		DB::table('tb_ranks')->insert($tb_ranks);
-
-
-		// Job Application Answer save
-		if (isset($request->answer) && !empty($request->answer)) {
-			foreach ($request->answer as $key => $value) {
-				$answer = new JobApplicationAnswer();
-				$answer->job_application_id = $jobApplication->id;
-				$answer->job_id = $request->job_id;
-				$answer->question_id = $key;
-				$answer->answer = $value;
-				$answer->save();
-			}
-		}
-
-		$job_additional_detail_count = DB::table('job_additional_detail')->select('*')->where('job_id', $request->job_id)->orderBy('job_additional_detail.id', 'ASC')->count();
-		$job_additional_detail = DB::table('job_additional_detail')->select('*')->where('job_id', $request->job_id)->orderBy('job_additional_detail.id', 'ASC')->get();
-		if ($job_additional_detail_count > 0) {
-			$inc = 0;
-			foreach ($job_additional_detail as $jd) {
-
-
-				$values = array(
-					'job_id' => @$request->job_id,
-					'question_id' => @$jd->id,
-					'application_id' => @$jobApplication->id,
-					'job_detail_value' => @$jd->detail_value,
-					'application_detail_value' => @$request->additional_detail[$inc]
-				);
-				DB::table('application_additional_detail')->insert($values);
-				$expId = DB::getPdo()->lastInsertId();
-				 $this->elasticService->getClient()->update([
-						'index' => ELASTIC_CANDIDATE_JOB_QUESTION,
-						'id'    =>$expId,   // store as ES _id
-						'body'  => [
-                            'doc' => [
-								'job_id' => @$request->job_id,
-								'question_id' =>  @$jd->id,
-								'application_id' =>@$jobApplication->id,
-								'job_detail_value' => @$jd->detail_value,
-								'application_detail_value' =>@$request->additional_detail[$inc],
-								'created_at' =>  now()->toIso8601String(),
-								'updated_at' =>  now()->toIso8601String()
-							],
-							'doc_as_upsert' => true // 🔥 key to avoiding conflicts
-				      ]
-					]);
-				$inc++;
-
-			}
-		}
-
-		$company_id = auth()->user()->company_id;
-
-        $skillStr = '';
-		$skillArr = json_decode($request->skills, true);
-		$requiredSkills =  [];
-		if (!empty($skillArr)) {
-			foreach ($skillArr as $sval) {
-				array_push($requiredSkills, $sval['value']);
-			}
-		}
-
-		if (@$jobApplication->id > 0) {
-			$event_name = 'CVACCESS';
-			$event_table_name = 'job_applications';
-			$event_table_id = @$jobApplication->id;
-			$packageStatus = GeneralMethod::packageRedeem($event_name, $event_table_name, $event_table_id);
-		}
+		// Primary ES indexing kept synchronous — guarantees the candidate row is
+		// visible on the AppTracker grid the moment the HTTP redirect fires (V2 Step 1).
 		GeneralMethod::JobApplicationsAddEditUpload($lastInsertedId);
-	
+
 		$cachekeys = [
 			'alljobslist_version_user_'.$this->user->id,
 			'allcvtracker_version_user_'.$this->user->id,
 			'allapptracker_version_user_'.$this->user->id,
 		];
 		foreach ($cachekeys as $key) {
-			 GeneralMethod::cacheClean($key);
+			GeneralMethod::cacheClean($key);
 		}
 		$this->currencyConverter = GeneralMethod::currencyConverter();
 
-		// ElasticCandidateIndex::dispatch($lastInsertedId)->onConnection('emails');
 		DB::commit();
 
+		// ── V2 async secondary jobs — dispatched after commit so MySQL rows are visible ──
+		ProcessCandidateSubmissionJob::dispatch(
+			(int) $jobApplication->id,
+			(int) $lastInsertedId,
+			(int) $request->job_id,
+			(int) $company_id,
+			(int) $submitted_by,
+			(int) $company_id,
+			(int) $jobApplication->status_id,
+			(string) $jobApplication->email,
+			$request->all()
+		)->onConnection('emails');
+
+		QueueCandidateNotificationJob::dispatch(
+			(int) $lastInsertedId,
+			(int) $request->job_id,
+			(int) $company_id,
+			(string) $submittedByEmail
+		)->onConnection('emails');
+		// ─────────────────────────────────────────────────────────────────────────────
+
 		if (!empty($request->job_id)) {
-			return Reply::redirect(url('/service_company/apptracker/' .  GeneralMethod::value_encrypt($request->job_id) . '/all'), __('menu.jobApplications') . ' ' . __($message));
+			return Reply::redirect(url('/service_company/apptracker/' . GeneralMethod::value_encrypt($request->job_id) . '/all'), __('menu.jobApplications') . ' ' . __($message));
 		} else {
 			return Reply::redirect(route('service_company.job-applications.table'), __('menu.jobApplications') . ' ' . __($message));
 		}
@@ -9876,18 +9558,24 @@ protected $elasticService;
 	{
 
 		$jobId = GeneralMethod::value_decrypt($jobId);
-		
+		// Step 4: decrypt $appId symmetrically with $jobId.
+		$appId = GeneralMethod::value_decrypt($appId);
+
 		$this->pageTitle = __('Add Candidate');
 		abort_if(Gate::denies('add_job_applications'), 403);
 
 		$eventId = 4;
 		$coinsRequ = 1;
 		$companyId = (int) auth()->user()->company_id;
-		$packageStatus = GeneralMethod::coinsValidationsAllcompany($companyId,$eventId,$coinsRequ);
-		if($packageStatus->status){
-			session()->flash('packageStatus', $packageStatus->message); // or false depending on your condition
-			$url = url('service_company/apptracker/clientapp/' . @$jobId . '/all');
-			return redirect($url);
+		// Step 2: coins are consumed only on new-candidate creation, not on edit.
+		$isEdit = !empty($appId) && (int) $appId !== 0;
+		if (!$isEdit) {
+			$packageStatus = GeneralMethod::coinsValidationsAllcompany($companyId,$eventId,$coinsRequ);
+			if($packageStatus->status){
+				session()->flash('packageStatus', $packageStatus->message);
+				$url = url('service_company/apptracker/clientapp/' . @$jobId . '/all');
+				return redirect($url);
+			}
 		}
 
 		// $packageStatus = GeneralMethod::validatePackageRet('CVACCESS');
@@ -9899,14 +9587,18 @@ protected $elasticService;
 		$company_id = '';
 		$company_id = auth()->user()->company_id;
 
-		$this->job = DB::table('recommendation_relation')
+		// Step 3: during edit the job may be closed or paused — only enforce
+		// active status and final_status=1 when creating a new application.
+		$jobQuery = DB::table('recommendation_relation')
 			->select('jobs.id', 'jobs.title', 'jobs.status', 'recommendation_relation.id as recommendation_relation_id', 'recommendation_relation.final_status')
 			->join('jobs', 'jobs.id', '=', 'recommendation_relation.job_id')
 			->where('jobs.id', '=', $jobId)
-			->where('jobs.status', '=', 'active')
-			->where('recommendation_relation.final_status', '=', 1)
-			->where('recommendation_relation.to_company_id', '=', $company_id)
-			->count();
+			->where('recommendation_relation.to_company_id', '=', $company_id);
+		if (!$isEdit) {
+			$jobQuery->where('jobs.status', '=', 'active')
+			         ->where('recommendation_relation.final_status', '=', 1);
+		}
+		$this->job = $jobQuery->count();
 		if ($this->job == 0) {
 			return abort(404);
 		}

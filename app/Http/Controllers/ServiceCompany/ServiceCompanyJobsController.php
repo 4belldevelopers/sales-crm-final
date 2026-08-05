@@ -38,6 +38,7 @@ use App\Jobs\ElasticJobsIndex;
 use App\Notifications\NewJobOpening;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\RequisitionCreatedMail;
 use App\Mail\RequisitionUpdateStatusMail;
@@ -10876,8 +10877,20 @@ protected $elasticService;
 		/* ----------------------------
 		⚡ Check DragonflyDB first
 		----------------------------- */
-		if (cache()->has($cacheKeySet)) {
-			// return response()->json(cache()->get($cacheKeySet));
+		if (config('feature.use_three_drawers_v3')) {
+			// V3 Step 7: ETag check — 304 skips Redis lookup + ES search + view render entirely.
+			// ETag changes whenever the version key bumps (i.e. after any team-assignment write).
+			$etag = '"v3:team:' . md5($cacheKeySet) . '"';
+			if (request()->header('If-None-Match') === $etag) {
+				return response(null, 304)->header('ETag', $etag);
+			}
+
+			// V3 Step 3: Redis cache guard — skip ES search + view render on cache hit.
+			if (cache()->has($cacheKeySet)) {
+				return response()->json(cache()->get($cacheKeySet))
+					->header('ETag', $etag)
+					->header('Cache-Control', 'private, max-age=0, must-revalidate');
+			}
 		}
 
 
@@ -11001,8 +11014,23 @@ protected $elasticService;
 			'total' => $total,
 			'pagination' => view('service_company.ajax_pages.pagination', compact('pagination'))->render(),
 		];
+
+		// V3 Step 3: Populate cache now that $responseData is built. TTL=3 min matches other
+		// list caches in this controller. N+1 DB queries inside the view (contact lookup,
+		// agencyCandidatesCount per row) are all eliminated on subsequent cache hits.
+		if (config('feature.use_three_drawers_v3')) {
+			cache()->put($cacheKeySet, $responseData, now()->addMinutes(3));
+		}
+
+		// V3 Step 7: attach ETag to 200 so browser can revalidate on the next open.
+		if (config('feature.use_three_drawers_v3') && isset($etag)) {
+			return response()->json($responseData)
+				->header('ETag', $etag)
+				->header('Cache-Control', 'private, max-age=0, must-revalidate');
+		}
+
 		return response()->json($responseData);
-			
+
 
 
 
@@ -11202,14 +11230,33 @@ protected $elasticService;
 		/* ----------------------------
 		⚡ Check DragonflyDB first
 		----------------------------- */
-		if (cache()->has($cacheKeySet)) {
-			return response()->json(cache()->get($cacheKeySet));
+		// V3 Step 7: ETag check first — 304 skips Redis + ES relation scan + agency search + render.
+		// ETag changes when version key bumps after any agency-assignment write.
+		$etag = '"v3:agency:' . md5($cacheKeySet) . '"';
+		if (config('feature.use_three_drawers_v3') && request()->header('If-None-Match') === $etag) {
+			return response(null, 304)->header('ETag', $etag);
 		}
+
+		if (cache()->has($cacheKeySet)) {
+			$cachedResponse = response()->json(cache()->get($cacheKeySet));
+			if (config('feature.use_three_drawers_v3')) {
+				$cachedResponse = $cachedResponse
+					->header('ETag', $etag)
+					->header('Cache-Control', 'private, max-age=0, must-revalidate');
+			}
+			return $cachedResponse;
+		}
+
+		// V3 Step 4: cap from 10,000 → 500. At 10k concurrent users the unrestricted scan
+		// consumes ~200 MB of ES heap per request. 500 covers all real-world companies;
+		// a Log::warning fires if a tenant actually exceeds this so operators can review.
+		$relationScanSize = config('feature.use_three_drawers_v3') ? 500 : 10000;
 
 		$relationIds = $this->elasticService->getClient()->search([
 			'index' => ELASTIC_CLIENT_AND_AGENCY_RELATION_INDEX,
 				'body' => [
-					'size' => 10000,
+					'size' => $relationScanSize,
+					'track_total_hits' => true,
 					'query' => [
 						'bool' => [
 							'must' => [
@@ -11228,6 +11275,13 @@ protected $elasticService;
 			->unique()
 			->values()
 			->toArray();
+
+		if (config('feature.use_three_drawers_v3') && ($relationIds['hits']['total']['value'] ?? 0) > 500) {
+			Log::warning('v3:staffingPartnersRegister: company exceeded 500-relation cap; some agencies may be hidden in the Add Agency drawer.', [
+				'company_id'      => $company_id,
+				'total_relations' => $relationIds['hits']['total']['value'],
+			]);
+		}
 
 
 
@@ -11346,12 +11400,20 @@ protected $elasticService;
 				]
 			];
 
+			// V3 Step 4: the 4 nested aggregations (job_skill_match_count, candidate_skill_match_count,
+			// bench_candidates, other_candidates) are computed but their results are never referenced
+			// in $responseData — $response['aggregations'] is never read below. Dropping them saves
+			// significant ES heap and computation time on every cache-miss search.
+			if (config('feature.use_three_drawers_v3')) {
+				unset($params['body']['aggs']);
+			}
+
 			if (!$this->elasticService->indexExists(ELASTIC_COMPANIES_INDEX)) {
 				$total = 0;
 				$data = [];
 			}else{
 			// Execute search
-			
+
 				$response = $this->elasticService->getClient()->search($params);
 				$total = $response['hits']['total']['value'] ?? 0;
 
@@ -11413,6 +11475,13 @@ protected $elasticService;
 
 
 		cache()->put($cacheKeySet, $responseData, now()->addMinutes(3));
+
+		// V3 Step 7: attach ETag to 200 so browser can revalidate on the next open.
+		if (config('feature.use_three_drawers_v3')) {
+			return response()->json($responseData)
+				->header('ETag', $etag)
+				->header('Cache-Control', 'private, max-age=0, must-revalidate');
+		}
 
 		return response()->json($responseData);
 
@@ -14583,20 +14652,52 @@ protected $elasticService;
 	{
 		$this->id = $id;
 		if ($this->id) {
-			$this->job = DB::table('jobs')
-				->where('jobs.id', '=', $this->id)
-				->first();
+			if (config('feature.use_three_drawers_v3')) {
+				// V3 Step 2: job query cached; view rendered fresh so CSRF token is never stale.
+				$this->job = Cache::remember("v3:status_job:{$id}", 3600, function () use ($id) {
+					return DB::table('jobs')->where('jobs.id', '=', $id)->first();
+				});
 
-			// "Last updated by" footer — most recent status change of any kind, for attribution only.
-			$this->lastStatusChange = DB::table('job_status_logs')
-				->leftJoin('users', 'users.id', '=', 'job_status_logs.changed_by')
-				->select('job_status_logs.created_at', 'users.name as changed_by_name')
-				->where('job_status_logs.job_id', $this->id)
-				->orderByDesc('job_status_logs.created_at')
-				->first();
+				// V3 Step 7: ETag from job status+updated_at.
+				// 304 skips the lastStatusChange lookup + view render entirely.
+				// ETag auto-changes when newUpdateJobstatus busts the v3:status_job:{id} cache key.
+				if ($this->job) {
+					$etag = '"v3:status:' . $id . ':' . md5($this->job->status . $this->job->updated_at) . '"';
+					if (request()->header('If-None-Match') === $etag) {
+						return response(null, 304)->header('ETag', $etag);
+					}
+				}
+
+				$this->lastStatusChange = Cache::remember("v3:status_log:{$id}", 3600, function () use ($id) {
+					return DB::table('job_status_logs')
+						->leftJoin('users', 'users.id', '=', 'job_status_logs.changed_by')
+						->select('job_status_logs.created_at', 'users.name as changed_by_name')
+						->where('job_status_logs.job_id', $id)
+						->orderByDesc('job_status_logs.created_at')
+						->first();
+				});
+			} else {
+				$this->job = DB::table('jobs')
+					->where('jobs.id', '=', $this->id)
+					->first();
+
+				// "Last updated by" footer — most recent status change of any kind, for attribution only.
+				$this->lastStatusChange = DB::table('job_status_logs')
+					->leftJoin('users', 'users.id', '=', 'job_status_logs.changed_by')
+					->select('job_status_logs.created_at', 'users.name as changed_by_name')
+					->where('job_status_logs.job_id', $this->id)
+					->orderByDesc('job_status_logs.created_at')
+					->first();
+			}
 		}
 		$view = view('service_company.jobs.status', $this->data)->render();
 		// dd($view);
+		// V3 Step 7: attach ETag to 200 so the browser can validate on the next open.
+		if (config('feature.use_three_drawers_v3') && isset($etag)) {
+			return response()->json(['status' => 'success', 'view' => $view])
+				->header('ETag', $etag)
+				->header('Cache-Control', 'private, max-age=0, must-revalidate');
+		}
 		return Reply::dataOnly(['status' => 'success', 'view' => $view]);
 	}
 	public function newUpdateJobstatus(Request $request)
@@ -14684,6 +14785,14 @@ protected $elasticService;
 		   
 
 		DB::table('jobs')->where('id', @$job_id)->limit(1)->update($data);
+
+		// V3 Step 9 (drift prevention): invalidate immediately after the DB write and BEFORE
+		// anything that can throw (JobStatusLog, mail). If we invalidated after and an exception
+		// occurred mid-method, the V3 cache would silently serve the old status for up to 1 hour.
+		if (config('feature.use_three_drawers_v3')) {
+			Cache::forget("v3:status_job:{$job_id}");
+			Cache::forget("v3:status_log:{$job_id}");
+		}
 
 		// Status Timeline audit row for the Job Status drawer — one append-only entry per transition.
 		JobStatusLog::create([

@@ -6180,14 +6180,26 @@ END:VCALENDAR";
 		return base64_encode($iv . $encryptedData); // Combine IV and encrypted data
 	}
 	public static function value_decrypt($data) {
-		return decrypt($data);
-		$cipherMethod = 'AES-256-CBC';
-		$key = env('CUSTOM_ENCRYPTION_KEY');
-		$data = base64_decode($data);
-		$ivLength = openssl_cipher_iv_length($cipherMethod);
-		$iv = substr($data, 0, $ivLength);
-		$encryptedData = substr($data, $ivLength);
-		return openssl_decrypt($encryptedData, $cipherMethod, $key, 0, $iv);
+		// Use strict null/empty-string check — PHP's empty('0') is true which would
+		// incorrectly swallow a legitimate zero appId before the numeric path runs.
+		if ($data === null || $data === '') {
+			return null;
+		}
+		// Plain numeric IDs (new-candidate links pass raw integers) need no decryption.
+		if (is_numeric($data)) {
+			return (int) $data;
+		}
+		// Laravel Crypt::decrypt() is the primary path.
+		// URL transport mutates base64 '+' → ' '; the second attempt restores it.
+		try {
+			return decrypt($data);
+		} catch (\Throwable $e) {
+			try {
+				return decrypt(str_replace(' ', '+', $data));
+			} catch (\Throwable) {
+				return null;
+			}
+		}
 	}
 	public static function benchAutoPause($companyid){
 		$company_coins = DB::table('company_coins')->where('company_id',$companyid)->where('event_type','operational')->first();
