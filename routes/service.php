@@ -3,6 +3,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\ServiceCompany\ServiceCompanyDashboardController;
+use App\Http\Controllers\ServiceCompany\ServiceCompanyDashboardApiController;
 use App\Http\Controllers\ServiceCompany\ServiceCompanyClientController;
 use App\Http\Controllers\ServiceCompany\ServiceCompanyJobsController;
 use App\Http\Controllers\ServiceCompany\ServiceCompanyJobApplicationController;
@@ -66,6 +67,15 @@ Route::group(['middleware' => 'auth'], function () {
 			});
 			// ──────────────────────────────────────────────────────────────────────
 
+			// ─── V2 Dashboard JSON API (Phase 4) — compact Redis-cached JSON responses ──
+			Route::prefix('api/v2/service-company/dashboard')->name('api.v2.dashboard.')->group(function () {
+				Route::get('kpis',                  [ServiceCompanyDashboardApiController::class, 'kpis'])->name('kpis');
+				Route::get('leaderboards',          [ServiceCompanyDashboardApiController::class, 'leaderboards'])->name('leaderboards');
+				Route::get('interviews',            [ServiceCompanyDashboardApiController::class, 'interviews'])->name('interviews');
+				Route::post('cache/invalidate',     [ServiceCompanyDashboardApiController::class, 'invalidateCache'])->name('cache.invalidate');
+			});
+			// ─────────────────────────────────────────────────────────────────────────
+
 			Route::group(['middleware' => ['custom-package']], function () {
 						Route::get('/dashboard', [ServiceCompanyDashboardController::class,'index'])->name('dashboard');		
 						Route::get('meetingstoreScheduleList', [ServiceCompanyDashboardController::class,'meetingScheduleList'])->name('dashboard.meeting-schedule-list');
@@ -107,7 +117,7 @@ Route::group(['middleware' => 'auth'], function () {
 						Route::get('jobs/client_requisition_data', [ServiceCompanyJobsController::class,'client_requisition_data'])->name('jobs.client_requisition_data');
 						Route::get('client_jobs_ajax/client_requisition_data', [ServiceCompanyJobsController::class,'client_requisition_data_ajax'])->name('jobs.client_requisition_data_ajax');
 						Route::get('jobs/all_data', [ServiceCompanyJobsController::class,'all_data'])->name('jobs.all_data');
-						Route::get('jobs_ajax/all_data', [ServiceCompanyJobsController::class,'all_data_ajax'])->name('jobs.all_data_ajax');
+						Route::get('jobs_ajax/all_data', [ServiceCompanyJobsController::class,'all_data_ajax'])->name('jobs.all_data_ajax')->middleware('recruiter.throttle');
 						Route::get('mail_jobs_ajax/{UrlMailJobId?}', [ServiceCompanyJobsController::class,'all_data_assing'])->name('jobs.all_data_assing');
 						Route::get('jobs/data', [ServiceCompanyJobsController::class,'data'])->name('jobs.data');
 						Route::get('jobs_side_bar_job_ajax/data', [ServiceCompanyJobsController::class,'client_job_data_ajax'])->name('jobs.data_client_ajax');
@@ -139,19 +149,21 @@ Route::group(['middleware' => 'auth'], function () {
 						Route::get('jobs/recruiter/{id?}', [ServiceCompanyJobsController::class,'recruiter'])->name('jobs.recruiter'); 	
 						Route::get('jobs/getContactPerson/{client_id}', [ServiceCompanyJobsController::class,'getContactPerson'])->name('jobs.getContactPerson');
 						Route::get('jobs/getlocationCity/{location_id}', [ServiceCompanyJobsController::class,'getlocationCity'])->name('jobs.getlocationCity');
-						Route::get('jobs/editJobStatus/{id?}', [ServiceCompanyJobsController::class,'editJobStatus'])->name('jobs.editJobStatus'); 
+						Route::get('jobs/editJobStatus/{id?}', [ServiceCompanyJobsController::class,'editJobStatus'])->name('jobs.editJobStatus')->middleware('recruiter.throttle');
 						Route::get('jobs/hmlistingupdate/{id?}', [ServiceCompanyJobsController::class,'hmlistingupdate'])->name('jobs.hmlistingupdate'); 
 						Route::get('jobs/boostkeywords', [ServiceCompanyJobsController::class,'boostkeywords'])->name('jobs.boostkeywords');	
 						Route::get('jobs/recommendedData', [ServiceCompanyJobsController::class,'recommendedData'])->name('jobs.recommendedData');
-						Route::get('jobs/recommendedAssignList', [ServiceCompanyJobsController::class,'recommendedAssignList'])->name('jobs.recommendedAssignList');
-						Route::get('jobs/staffingPartnersRegister', [ServiceCompanyJobsController::class,'staffingPartnersRegister'])->name('jobs.staffingPartnersRegister');	
+						Route::get('jobs/recommendedAssignList', [ServiceCompanyJobsController::class,'recommendedAssignList'])->name('jobs.recommendedAssignList')->middleware('recruiter.throttle');
+						Route::get('jobs/staffingPartnersRegister', [ServiceCompanyJobsController::class,'staffingPartnersRegister'])->name('jobs.staffingPartnersRegister')->middleware('recruiter.throttle');
 						Route::get('jobs/send_only_job_invitation/{id?}', [ServiceCompanyJobsController::class,'send_only_job_invitation'])->name('jobs.send_only_job_invitation');	
 						Route::get('jobs/rsp_job_request_send/{id?}', [ServiceCompanyJobsController::class,'rsp_job_request_send'])->name('jobs.rsp_job_request_send');
 						Route::get('jobs/send_job_recommanded_request/{id?}', [ServiceCompanyJobsController::class,'send_job_recommanded_request'])->name('jobs.send_job_recommanded_request');
 						Route::get('jobs/assignRejected', [ServiceCompanyJobsController::class,'assignRejected'])->name('jobs.assignRejected');
 						Route::get('jobs/removeJob', [ServiceCompanyJobsController::class,'removeJob'])->name('jobs.removeJob');
 						Route::get('jobs/resend_job_recommanded_request/{id?}', [ServiceCompanyJobsController::class,'resend_job_recommanded_request'])->name('jobs.resend_job_recommanded_request');
-						Route::resource('jobs', ServiceCompanyJobsController::class); 
+						Route::middleware('recruiter.throttle:60,1')->group(function () {
+							Route::resource('jobs', ServiceCompanyJobsController::class);
+						});
 						Route::post('jobs/updatestatus', [ServiceCompanyJobsController::class,'updatestatus'])->name('jobs.updatestatus'); 		
 						Route::post('jobs/hiring_manager/{id?}', [ServiceCompanyJobsController::class,'hiring_manager'])->name('jobs.hiring_manager'); 
 						Route::post('jobs/newUpdateJobstatus', [ServiceCompanyJobsController::class,'newUpdateJobstatus'])->name('jobs.newUpdateJobstatus'); 					
@@ -272,7 +284,7 @@ Route::group(['middleware' => 'auth'], function () {
 						Route::get('agency-request/{id?}', [ServiceCompanyCompanyController::class,'findAgencyRequest'])->name('agency.recommanded_request');
 						Route::get('apptrackerajax/public_bench_data', [ServiceCompanyAppTrackerController::class,'public_bench_data_ajax'])->name('apptracker.public_bench_data_ajax');	
 						Route::get('apptracker/sub_stage/{status?}/{application_id?}/{job_id?}', [ServiceCompanyAppTrackerController::class,'sub_stage'])->name('apptracker.sub_stage');
-						Route::get('apptracker/{id}/{mstatus_id}', [ServiceCompanyAppTrackerController::class,'index']);
+						Route::get('apptracker/{id}/{mstatus_id}', [ServiceCompanyAppTrackerController::class,'index'])->name('apptracker.index');
 						Route::get('apptracker/benchReqViewMore/{id}/{job_applications_id}', [ServiceCompanyAppTrackerController::class,'benchReqViewMore'])->name('apptracker.benchReqViewMore');
 						Route::get('apptracker/loadcounter/{jobid?}/{mstatus_id?}/{inputSearch?}', [ServiceCompanyAppTrackerController::class,'loadcounter'])->name('apptracker.loadcounter');
 						Route::get('apptracker/export/{jobs}/{mstatus_id}/{start}/{length}', [ServiceCompanyAppTrackerController::class,'export'])->name('apptracker.export');
@@ -280,7 +292,7 @@ Route::group(['middleware' => 'auth'], function () {
 						Route::get('apptracker/candidates_request_data', [ServiceCompanyAppTrackerController::class,'candidates_request_data'])->name('apptracker.candidates_request_data');
 						Route::get('apptracker_request/candidates_request_data', [ServiceCompanyAppTrackerController::class,'candidates_request_data_ajax'])->name('apptracker.candidates_request_data_ajax');
 						Route::get('apptracker/openRejFrm/{application_id?}/{job_id?}/{parent_status_id?}/{current_child_id?}', [ServiceCompanyAppTrackerController::class,'openRejFrm'])->name('apptracker.openRejFrm');
-						Route::get('apptracker/clientapp/{id}/{mstatus_id}', [ServiceCompanyAppTrackerController::class,'clientapp']);
+						Route::get('apptracker/clientapp/{id}/{mstatus_id}', [ServiceCompanyAppTrackerController::class,'clientapp'])->name('apptracker.clientapp');
 						Route::get('apptracker_ajax/clientappdata', [ServiceCompanyAppTrackerController::class,'clientappdata_ajax'])->name('apptracker.clientappdata_ajax');
 						Route::get('apptracker/dsimilar_existing_data', [ServiceCompanyAppTrackerController::class,'dsimilar_existing_data'])->name('apptracker.dsimilar_existing_data');
 						Route::post('apptracker/store', [ServiceCompanyAppTrackerController::class,'store'])->name('apptracker.store');

@@ -14,15 +14,18 @@ class JobApplication extends Model
 {
     use Notifiable;
 
-	protected $appends = ['resume_url', 'photo_url'];
+	// BUG-12 fix: removed from $appends to stop N+1 on every hydration (accessors still callable explicitly).
+	protected $appends = [];
 	 
     protected static function boot()
     {
         parent::boot();
 
         static::addGlobalScope('company', function (Builder $builder) {
-            if (auth()->check()) {
-                // $builder->where('job_applications.company_id', user()->company_id);
+            // BUG-13 fix: filter to authenticated company; skip for super admins (is_superadmin = true)
+            // who need cross-company access and query without withoutGlobalScope().
+            if (auth()->check() && !auth()->user()->is_superadmin) {
+                $builder->where('job_applications.company_id', auth()->user()->company_id);
             }
         });
     }
@@ -62,10 +65,10 @@ class JobApplication extends Model
 
     public function getResumeUrlAttribute()
     {
-        if ($this->documents()->where('name', 'Resume')->first()) {
-            return asset_url('documents/' . $this->id . '/' . $this->documents()->where('name', 'Resume')->first()->hashname);
-        }
-        return false;
+        // BUG-12 fix: reuse resumeDocument() relation (1 lazy-loaded query, relation-cached on the instance).
+        // Old code called documents()->where('name','Resume')->first() TWICE = 2 DB queries per call.
+        $doc = $this->resumeDocument;
+        return $doc ? asset_url('documents/' . $this->id . '/' . $doc->hashname) : false;
     }
 	
 

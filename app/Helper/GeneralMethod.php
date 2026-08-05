@@ -6180,14 +6180,26 @@ END:VCALENDAR";
 		return base64_encode($iv . $encryptedData); // Combine IV and encrypted data
 	}
 	public static function value_decrypt($data) {
-		return decrypt($data);
-		$cipherMethod = 'AES-256-CBC';
-		$key = env('CUSTOM_ENCRYPTION_KEY');
-		$data = base64_decode($data);
-		$ivLength = openssl_cipher_iv_length($cipherMethod);
-		$iv = substr($data, 0, $ivLength);
-		$encryptedData = substr($data, $ivLength);
-		return openssl_decrypt($encryptedData, $cipherMethod, $key, 0, $iv);
+		// Use strict null/empty-string check — PHP's empty('0') is true which would
+		// incorrectly swallow a legitimate zero appId before the numeric path runs.
+		if ($data === null || $data === '') {
+			return null;
+		}
+		// Plain numeric IDs (new-candidate links pass raw integers) need no decryption.
+		if (is_numeric($data)) {
+			return (int) $data;
+		}
+		// Laravel Crypt::decrypt() is the primary path.
+		// URL transport mutates base64 '+' → ' '; the second attempt restores it.
+		try {
+			return decrypt($data);
+		} catch (\Throwable $e) {
+			try {
+				return decrypt(str_replace(' ', '+', $data));
+			} catch (\Throwable) {
+				return null;
+			}
+		}
 	}
 	public static function benchAutoPause($companyid){
 		$company_coins = DB::table('company_coins')->where('company_id',$companyid)->where('event_type','operational')->first();
@@ -6621,9 +6633,33 @@ END:VCALENDAR";
 					// dd($result);
 				return $result; // Rounds to 2 decimal places
 	}
+	/**
+	 * Compute match % from pre-fetched job_skills array — no DB hit.
+	 * Used by all_apptracker blade after prepareRowMaps() pre-fetches skills in one batch.
+	 */
+	public static function skill_percentage_from_array(array $job_skills, array $skillArr): string
+	{
+		$lowercaseArray1 = array_map(fn($i) => strtolower(trim($i)), $job_skills);
+		$lowercaseArray2 = array_map(fn($i) => strtolower(trim($i)), $skillArr);
+
+		$matches = 0;
+		foreach ($lowercaseArray1 as $required) {
+			foreach ($lowercaseArray2 as $candidate) {
+				if (self::skillMatchesPhrasePrefix($required, $candidate)) {
+					$matches++;
+					break;
+				}
+			}
+		}
+
+		$total = count($lowercaseArray1);
+		$pct = $total > 0 ? min(($matches / $total) * 100, 100) : 0;
+		return round($pct, 1) . '%';
+	}
+
 	public static function skill_percentage($jobId,$skillArr){
 
-		
+
 			$job_skills = DB::table('job_metronics_skills')->where('job_metronics_skills.job_id', $jobId)->pluck('skill_name')->toArray();
 		
 			$lowercaseArray1 = array_map(function ($item) {
@@ -11662,10 +11698,18 @@ END:VCALENDAR";
 		];
 	}
 
-	public static function  custome_count_all($id){
-	   
+	public static function custome_count_all($id)
+    {
+        $company_id = auth()->user()->company_id;
+        // BUG-05: stale-while-revalidate — serve cached counters immediately, refresh in background
+        return Cache::flexible("custome_count_all:{$company_id}:{$id}", [60, 300], function () use ($id, $company_id) {
+            return self::custome_count_all_compute($id, $company_id);
+        });
+    }
+
+    private static function custome_count_all_compute(int $id, int $company_id): object
+    {
 		$elasticService = app(ElasticService::class);
-		$company_id = auth()->user()->company_id;
 
 		// Same shared ES-only job lookup every tab page's default-filter
 		// population uses (see jobDefaultsFromEs() above) — jobEsDoc is the
@@ -11795,25 +11839,9 @@ END:VCALENDAR";
 		
 		// dd($boolQuery);
 		
-		$params = [
-			'index' => ELASTIC_CANDIDATES,
-			'request_cache' => true,
-			'body' => [
-				'sort' => [],
-				'query' => $boolQueryPool,
-			]
-		];
+		$total_pool = 0;
 
-		if (!$elasticService->indexExists(ELASTIC_CANDIDATES)) {
-			$total_pool = 0;
-			$data = [];
-		}else{
-
-		    $response = $elasticService->getClient()->search($params);
-			$total_pool = $response['hits']['total']['value'] ?? 0;
-		}
-
-		//####################################   END   POOL APPLICATION COUNTER	
+		//####################################   END   POOL APPLICATION COUNTER (executed via msearch below)	
 
 		//####################################   START  EXISTING APPLICATION COUNTER
 
@@ -12024,55 +12052,9 @@ END:VCALENDAR";
 
 
 
-		// dd($boolQuery);
+		$total_existingApplications = 0;
 
-		$params = [
-			'index' => ELASTIC_CANDIDATES,
-			'request_cache' => true,
-			'body' => [
-				'sort' => [],
-				'query' => $boolQuery,
-				'collapse' => [
-					'field' => 'email'
-				]
-			]
-		];
-
-		if (!$elasticService->indexExists(ELASTIC_CANDIDATES)) {
-			$total_existingApplications = 0;
-			$data = [];
-		}else{
-
-		    $response = $elasticService->getClient()->search($params);
-			// This total reflects ALL matching docs BEFORE collapse
-			$totalBeforeCollapse = $response['hits']['total']['value'] ?? 0;
-
-			// Count of current page records (after pagination & collapse)
-			$records = $response['hits']['hits'] ?? [];
-			$returnedCount = count($records);
-
-			// Optional: if you want real total of unique candidate_id (after collapse), use an aggregation
-			$aggParams = [
-				'index' => ELASTIC_CANDIDATES,
-				'body' => [
-					'size' => 0,
-					'query' => $boolQuery,
-					'aggs' => [
-						'unique_candidates' => [
-							'cardinality' => [
-								'field' => 'email'
-							]
-						]
-					]
-				]
-			];
-			$aggResponse = $elasticService->getClient()->search($aggParams);
-			// dd($aggResponse);
-			$total_existingApplications = $aggResponse['aggregations']['unique_candidates']['value'] ?? $returnedCount;
-		}
-
-		
-       //####################################   END   EXISTING APPLICATION COUNTER	          
+		//####################################   END   EXISTING APPLICATION COUNTER (executed via msearch below)	          
 
        //####################################   START  Internal Bench APPLICATION COUNTER
 
@@ -12226,49 +12208,9 @@ END:VCALENDAR";
 			];
 		}
 
-		// Build the final query
-		$params = [
-			'index' => ELASTIC_CANDIDATES_BENCH,
-			'body' => [
-				'sort' => [],
-				'query' => $boolQueryInternalBench,
-				'collapse' => [
-					'field' => 'email'
-				]
-			]
-		];
-		if(!$elasticService->indexExists(ELASTIC_CANDIDATES_BENCH)) {
-			$total_InternalBenchApplications = 0;
-				$data = [];
-		}else{
-				$response = $elasticService->getClient()->search($params);
-				// This total reflects ALL matching docs BEFORE collapse
-				$totalBeforeCollapse = $response['hits']['total']['value'] ?? 0;
+		$total_InternalBenchApplications = 0;
 
-				// Count of current page records (after pagination & collapse)
-				$records = $response['hits']['hits'] ?? [];
-				$returnedCount = count($records);
-
-				// Optional: if you want real total of unique candidate_id (after collapse), use an aggregation
-				$aggParams = [
-					'index' => ELASTIC_CANDIDATES_BENCH,
-					'body' => [
-						'size' => 0,
-						'query' => $boolQueryInternalBench,
-						'aggs' => [
-							'unique_candidates' => [
-								'cardinality' => [
-									'field' => 'email'
-								]
-							]
-						]
-					]
-				];
-				$aggResponse = $elasticService->getClient()->search($aggParams);
-				$total_InternalBenchApplications = $aggResponse['aggregations']['unique_candidates']['value'] ?? $returnedCount;
-
-		}
-		//####################################   END Internal Bench APPLICATION COUNTER
+		//####################################   END Internal Bench APPLICATION COUNTER (executed via msearch below)
 
 		//####################################   START   CLIENT JOB APPLICATION COUNTER
 
@@ -12290,25 +12232,9 @@ END:VCALENDAR";
 			]
 		];
 
-		$params = [
-			'index' => ELASTIC_CANDIDATES,
-			'request_cache' => true,
-			'body' => [
-				'sort' => [],
-				'query' => $boolQueryPoolClientJobApplication,
-			]
-		];
+		$total_pool_client_application = 0;
 
-		if (!$elasticService->indexExists(ELASTIC_CANDIDATES)) {
-			$total_pool_client_application = 0;
-			$data = [];
-		}else{
-
-		    $response = $elasticService->getClient()->search($params);
-			$total_pool_client_application = $response['hits']['total']['value'] ?? 0;
-		}
-
-		//####################################   END CLIENT JOB APPLICATION COUNTER
+		//####################################   END CLIENT JOB APPLICATION COUNTER (executed via msearch below)
 
 		//####################################   START   Market Bench APPLICATION COUNTER	
 
@@ -12462,48 +12388,9 @@ END:VCALENDAR";
 			];
 		}
 
-		// Build the final query
-		$params = [
-			'index' => ELASTIC_CANDIDATES_BENCH,
-			'body' => [
-				'sort' => [],
-				'query' => $boolQueryMarketBench,
-				'collapse' => [
-					'field' => 'email'
-				]
-			]
-		];
+		$total_MarketBenchApplications = 0;
 
-		if(!$elasticService->indexExists(ELASTIC_CANDIDATES_BENCH)) {
-			$total_MarketBenchApplications = 0;
-				$data = [];
-		}else{
-				$response = $elasticService->getClient()->search($params);
-				// This total reflects ALL matching docs BEFORE collapse
-				$totalBeforeCollapse = $response['hits']['total']['value'] ?? 0;
-
-				// Count of current page records (after pagination & collapse)
-				$records = $response['hits']['hits'] ?? [];
-				$returnedCount = count($records);
-				// Optional: if you want real total of unique candidate_id (after collapse), use an aggregation
-				$aggParams = [
-					'index' => ELASTIC_CANDIDATES_BENCH,
-					'body' => [
-						'size' => 0,
-						'query' => $boolQueryMarketBench,
-						'aggs' => [
-							'unique_candidates' => [
-								'cardinality' => [
-									'field' => 'email'
-								]
-							]
-						]
-					]
-				];
-				$aggResponse = $elasticService->getClient()->search($aggParams);
-				$total_MarketBenchApplications = $aggResponse['aggregations']['unique_candidates']['value'] ?? $returnedCount;
-		}
-		//####################################   END Market Bench APPLICATION COUNTER	
+		//####################################   END Market Bench APPLICATION COUNTER (executed via msearch below)
 
 		//####################################  START  Bench Talent Request
 
@@ -12527,22 +12414,9 @@ END:VCALENDAR";
 				'filter' => []
 			]
 		];
-		$params = [
-			'index' => ELASTIC_CANDIDATES_REQUEST,
-			'body' => [
-				'sort' => [],
-				'query' => $boolQuerytBenchRequest,
-			]
-		];
-		if(!$elasticService->indexExists(ELASTIC_CANDIDATES_REQUEST)) {
-			$total_RequestBenchApplications = 0;
-				$data = [];
-		}else{
-				$response = $elasticService->getClient()->search($params);
-				// This total reflects ALL matching docs, not just the current page.
-				$total_RequestBenchApplications = $response['hits']['total']['value'] ?? 0;
-		}
-		//####################################  END  Bench Talent Request
+		$total_RequestBenchApplications = 0;
+
+		//####################################  END  Bench Talent Request (executed via msearch below)
 
 		//####################################  START  CAREER COUNTER
 
@@ -12577,32 +12451,61 @@ END:VCALENDAR";
 			];
 		}
 
-		// Build the final query
-		$params_career = [
-			'index' => ELASTIC_CAREER_APPLY,
-			'request_cache' => true,
-			'body' => [
-				'from' => 0,
-				'size' => 10,
-				'sort' => [],
-				'query' => $boolQueryCareer
-			]
+		$total_career = 0;
+
+		//####################################  END  CAREER COUNTER (executed via msearch below)
+
+		// Step-5 consolidation: send all 7 counter queries in one msearch round-trip.
+		// Slot order: [0] pool, [1] existing, [2] internal_bench,
+		//             [3] pool_client, [4] market_bench, [5] bench_request, [6] career
+		$msearchBody = [
+			['index' => ELASTIC_CANDIDATES,         'request_cache' => true],
+			['size' => 0, 'query' => $boolQueryPool],
+
+			['index' => ELASTIC_CANDIDATES,         'request_cache' => true],
+			['size' => 0, 'query' => $boolQuery,
+			 'aggs' => ['uc' => ['cardinality' => ['field' => 'email']]]],
+
+			['index' => ELASTIC_CANDIDATES_BENCH,   'request_cache' => true],
+			['size' => 0, 'query' => $boolQueryInternalBench,
+			 'aggs' => ['uc' => ['cardinality' => ['field' => 'email']]]],
+
+			['index' => ELASTIC_CANDIDATES,         'request_cache' => true],
+			['size' => 0, 'query' => $boolQueryPoolClientJobApplication],
+
+			['index' => ELASTIC_CANDIDATES_BENCH,   'request_cache' => true],
+			['size' => 0, 'query' => $boolQueryMarketBench,
+			 'aggs' => ['uc' => ['cardinality' => ['field' => 'email']]]],
+
+			['index' => ELASTIC_CANDIDATES_REQUEST, 'request_cache' => true],
+			['size' => 0, 'query' => $boolQuerytBenchRequest],
+
+			['index' => ELASTIC_CAREER_APPLY,       'request_cache' => true],
+			['size' => 0, 'query' => $boolQueryCareer],
 		];
 
-		if (!$elasticService->indexExists(ELASTIC_CAREER_APPLY)) {
-			$total_career = 0;
-			$data = [];
-		}else{
-			$response = $elasticService->getClient()->search($params_career);
-			$total_career = $response['hits']['total']['value'] ?? 0;
-			$data = array_map(function ($hit) {
-				return $hit['_source'];
-			}, $response['hits']['hits']);
+		try {
+			$msResults = $elasticService->msearch($msearchBody)['responses'];
+
+			$hits = fn(array $r): int => isset($r['error']) ? 0
+				: (int) ($r['hits']['total']['value'] ?? 0);
+			$card = fn(array $r): int => isset($r['error']) ? 0
+				: (int) ($r['aggregations']['uc']['value'] ?? 0);
+
+			$total_pool                      = $hits($msResults[0]);
+			$total_existingApplications      = $card($msResults[1]);
+			$total_InternalBenchApplications = $card($msResults[2]);
+			$total_pool_client_application   = $hits($msResults[3]);
+			$total_MarketBenchApplications   = $card($msResults[4]);
+			$total_RequestBenchApplications  = $hits($msResults[5]);
+			$total_career                    = $hits($msResults[6]);
+		} catch (\Throwable $e) {
+			\Log::warning('custome_count_all_compute msearch error', [
+				'job_id' => $id,
+				'error'  => $e->getMessage(),
+			]);
+			// Counters stay at 0 — the 60-300 s flexible cache will serve the last good value
 		}
-
-		//####################################  END  CAREER COUNTER
-
-		// dd($boolQueryInternalBench);
 
 		$return  =  (object)[
 		      'existing_counter' => $total_existingApplications ? $total_existingApplications : 0,
@@ -12614,7 +12517,6 @@ END:VCALENDAR";
 			  'recomnded_counter' =>  $total_RequestBenchApplications ? $total_RequestBenchApplications : 0,
 			  'jobclient' => 0
 		];
-		// dd($return);
 
 		return $return;
 

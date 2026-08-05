@@ -25,9 +25,10 @@
     $row = (object) $rowArr;
     $row->id = $row->candidate_id;
     $row->add_job_wise_condidates_id = $row->wiseId;
-    $jobData = DB::table('jobs')->select('max_sal_mode as jobMode','max_salary_currency as jobCurrency')->where('id','=',$row->jobId)->first();
-    $jobMode = $jobData->jobMode ?? @$row->current_ctc_mode;
-    $jobCurrency = $jobData->jobCurrency ?? @$row->current_ctc_cur;
+    // BUG-04 fix: use pre-fetched map instead of per-row DB query (was N+1 #1)
+    $jobData = isset($rowMaps['jobs'][$row->jobId]) ? (object) $rowMaps['jobs'][$row->jobId] : null;
+    $jobMode = $jobData->max_sal_mode ?? @$row->current_ctc_mode;
+    $jobCurrency = $jobData->max_salary_currency ?? @$row->current_ctc_cur;
     $symbols = $symbolsValue[$jobCurrency] ?? "INR";
     @endphp
         <tr style="height: 102px; position: relative;">
@@ -60,66 +61,17 @@
                     }
 
                     $flag = 0;
-                    $duplicate = 0;
-                    $duplicate = $row->duplicate;
+                    $duplicate = $row->duplicate ?? 0;
                     $company_id = auth()->user()->roles[0]->company_id;
                     $app_duplicate = auth()->user()->company->app_duplicate;
                     $app_duplicate_days = auth()->user()->company->app_duplicate_days;
 
                     $covid = '';
-                    if ($duplicate == 1) {
-                        // CHECK RECORD IS DUPLICATE
-                        if ($app_duplicate == 1 || $app_duplicate == 2) {
-                            // CHECK SYSTEM MODE SET IN DUPLICATE
-                            if ($app_duplicate == 1) {
-                                // CHECK DUPLICATE JOBWISE WITH TIME INTERVAL IN DAYS FOR- 1
-                                $application_cnt = DB::table('job_applications')
-                                    ->select('*')
-                                    ->where('company_id', $company_id)
-                                    ->where('job_id', $row->job_id)
-                                    ->where('email', $row->email)
-                                    ->orWhere('phone', $row->phone)
-                                    ->where(
-                                        'job_applications.created_at',
-                                        '>',
-                                        DB::raw('DATE_SUB(CURDATE(), INTERVAL ' . @$app_duplicate_days . ' DAY)'),
-                                    )
-                                    ->orderby('job_applications.id', 'DESC')
-                                    ->count();
-                                if ($application_cnt > 1) {
-                                    $flag = 1;
-                                } else {
-                                    $flag = 0;
-                                }
-                            } elseif ($app_duplicate == 2) {
-                                // CHECK DUPLICATE OVERALL SYSTEM WITH TIME INTERVAL IN DAYS FOR- 2
-                                $application_cnt = DB::table('job_applications')
-                                    ->select('job_applications.id')
-                                    ->where('company_id', $company_id)
-                                    ->where('job_applications.email', $row->email)
-                                    ->orWhere('phone', $row->phone)
-                                    ->where(
-                                        'job_applications.created_at',
-                                        '>',
-                                        DB::raw('DATE_SUB(CURDATE(), INTERVAL ' . @$app_duplicate_days . ' DAY)'),
-                                    )
-                                    //->where('job_applications.duplicate', '=', 1 )
-                                    ->orderby('job_applications.id', 'DESC')
-                                    ->count();
-
-                                if ($application_cnt > 1) {
-                                    $flag = 1;
-                                } else {
-                                    $flag = 0;
-                                }
-                            } else {
-                                $flag = 0;
-                            }
-                        } else {
-                            $flag = 0;
-                        }
-                    } else {
-                        $flag = 0;
+                    // BUG-04 fix N+1 #4: look up pre-fetched duplicate map instead of per-row DB count
+                    if ($duplicate == 1 && ($app_duplicate == 1 || $app_duplicate == 2)) {
+                        $dupKey = ($app_duplicate === 1 ? $row->job_id . ':' : '') . ($row->email ?? '') . '|' . ($row->phone ?? '');
+                        $application_cnt = $rowMaps['duplicates'][$dupKey] ?? 0;
+                        $flag = $application_cnt > 1 ? 1 : 0;
                     }
 
                     if (@$row->condidate_type == 'bench_condidate') {
@@ -153,7 +105,11 @@
                     $skilltagclass = '';
                     $skillArr = explode(',', $row->skills);
 
-                    $percentage =  GeneralMethod::skill_percentage($row->job_id,$skillArr);
+                    // BUG-04 fix N+1 #2 & #3: use pre-fetched skill map instead of per-row DB queries
+                    $preSkillRows = $rowMaps['skills'][$row->job_id] ?? [];
+                    $jobRequiredSkills = collect($preSkillRows)->pluck('skill_name')->toArray();
+
+                    $percentage = GeneralMethod::skill_percentage_from_array($jobRequiredSkills, $skillArr);
 
                     // Match % badge — color reflects the numeric match score, same
                     // thresholds/colors as the CV Tracker page: >90 green, 50-90 orange,
@@ -169,16 +125,6 @@
                         $matchBg = '#dcfce7'; $matchColor = '#16a34a';
                     }
                     $matchBadge = '<span class="badge my-1" style="background:'.$matchBg.';color:'.$matchColor.';font-weight:600;">Match '.@$percentage.'</span>';
-
-                    // Matched vs unmatched skill highlighting — same job
-                    // required-skills source skill_percentage() above already
-                    // reads (job_metronics_skills), phrase-prefix matched via
-                    // the same GeneralMethod::matchedSkillsList() helper
-                    // Similar Candidates/CV Tracker use, so a required "Java"
-                    // correctly highlights a candidate skill of "Java
-                    // Developer" here too. No mandatory/starred tier — this
-                    // page has no user-driven skill filter to star against.
-                    $jobRequiredSkills = DB::table('job_metronics_skills')->where('job_id', $row->job_id)->pluck('skill_name')->toArray();
                     $matchedSkillsArr = GeneralMethod::matchedSkillsList($skillArr, $jobRequiredSkills);
                     $unmatchedSkillsArr = array_values(array_udiff($skillArr, $matchedSkillsArr, 'strcasecmp'));
                     $maxUnmatchedShown = 6;
