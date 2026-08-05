@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
@@ -24,6 +25,19 @@ class AppServiceProvider extends ServiceProvider
         }
 
         $this->configureRateLimiters();
+        $this->registerObservers();
+    }
+
+    private function registerObservers(): void
+    {
+        \App\Models\Job::observe(\App\Observers\JobObserver::class);
+        \App\Models\JobApplication::observe(\App\Observers\JobApplicationObserver::class);
+        \App\Models\NoticePeriod::observe(\App\Observers\NoticePeriodCacheInvalidateObserver::class);
+        \App\Models\BenchApplication::observe(\App\Observers\BenchApplicationObserver::class);
+        \App\Models\RecommendationRelation::observe(\App\Observers\RecommendationRelationObserver::class);
+        \App\Models\JobSkill::observe(\App\Observers\JobSkillObserver::class);
+        \App\Models\JobCategory::observe(\App\Observers\JobCategoryObserver::class);
+        \App\Models\Client::observe(\App\Observers\ClientObserver::class);
     }
 
     /**

@@ -42,6 +42,8 @@ return Application::configure(basePath: dirname(__DIR__))
                 'role' => \Spatie\Permission\Middleware\RoleMiddleware::class,
                 'permission' => \Spatie\Permission\Middleware\PermissionMiddleware::class,
                 'role_or_permission' => \Spatie\Permission\Middleware\RoleOrPermissionMiddleware::class,
+                'recruiter.throttle' => \App\Http\Middleware\RecruiterThrottle::class,
+                'recruiter.sliding'  => \App\Http\Middleware\RecruiterSlidingWindowThrottle::class,
             ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

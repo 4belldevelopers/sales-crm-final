@@ -45,7 +45,15 @@ return [
         'mysql' => [
             'driver' => 'mysql',
             'url' => env('DB_URL'),
-            'host' => env('DB_HOST', '127.0.0.1'),
+            // Step 10c: read/write split. Set DB_HOST_READ in .env to your replica IP.
+            // Falls back to primary when DB_HOST_READ is unset (single-node dev/staging).
+            'read' => [
+                'host' => [env('DB_HOST_READ', env('DB_HOST', '127.0.0.1'))],
+            ],
+            'write' => [
+                'host' => [env('DB_HOST', '127.0.0.1')],
+            ],
+            'sticky' => true, // Return last write's data within same request
             'port' => env('DB_PORT', '3306'),
             'database' => env('DB_DATABASE', 'laravel'),
             'username' => env('DB_USERNAME', 'root'),
@@ -58,6 +66,32 @@ return [
             'strict' => false,
             'engine' => null,
             'options' => extension_loaded('pdo_mysql') ? array_filter([
+                PDO::MYSQL_ATTR_SSL_CA => env('MYSQL_ATTR_SSL_CA'),
+            ]) : [],
+        ],
+
+        // Step 17: dedicated replica connection for counter reads.
+        // sticky:false so reads go to DB_HOST_READ even within a write request —
+        // counter queries can tolerate a few seconds of replication lag.
+        // Falls back to primary when DB_HOST_READ is unset (dev / single-node).
+        'mysql_replica' => [
+            'driver'    => 'mysql',
+            'url'       => env('DB_URL'),
+            'read'      => ['host' => [env('DB_HOST_READ', env('DB_HOST', '127.0.0.1'))]],
+            'write'     => ['host' => [env('DB_HOST', '127.0.0.1')]],
+            'sticky'    => false,
+            'port'      => env('DB_PORT', '3306'),
+            'database'  => env('DB_DATABASE', 'laravel'),
+            'username'  => env('DB_USERNAME', 'root'),
+            'password'  => env('DB_PASSWORD', ''),
+            'unix_socket' => env('DB_SOCKET', ''),
+            'charset'   => env('DB_CHARSET', 'utf8mb4'),
+            'collation' => env('DB_COLLATION', 'utf8mb4_unicode_ci'),
+            'prefix'    => '',
+            'prefix_indexes' => true,
+            'strict'    => false,
+            'engine'    => null,
+            'options'   => extension_loaded('pdo_mysql') ? array_filter([
                 PDO::MYSQL_ATTR_SSL_CA => env('MYSQL_ATTR_SSL_CA'),
             ]) : [],
         ],

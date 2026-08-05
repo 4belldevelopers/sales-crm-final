@@ -5707,53 +5707,18 @@ function buildRsHtml(data,companyName,logoUri){
   return H.join('');
 }
 
-async function buildRecruiterSummary(){
+function buildRecruiterSummary(){
   window.__rsBusy=true;
-  var container=null;
   try{
-    var _ls=function(src){return new Promise(function(res,rej){var s=document.createElement('script');s.src=src;s.async=true;s.onload=res;s.onerror=function(){rej(new Error('Load failed: '+src));};document.head.appendChild(s);});};
-    if(!(window.jspdf&&window.jspdf.jsPDF)) await _ls('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js');
-    if(!window.html2canvas) await _ls('https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js');
-    /* logo — reuse RC viewer cache when available */
-    var logoUri=null;
-    if(window.__rcvLogo&&window.__rcvLogo.__dataUri){ logoUri=window.__rcvLogo.__dataUri; }
-    else if(!window.__rcvLogoTried){
-      window.__rcvLogoTried=true;
-      var wrap=document.querySelector('#resume_cv .rcv-wrap');
-      var lsrc=wrap?wrap.getAttribute('data-logo'):'';
-      if(lsrc){try{var rsp=await fetch(lsrc,{cache:'force-cache'});if(rsp.ok){var bl=await rsp.blob();logoUri=await new Promise(function(res){var fr=new FileReader();fr.onload=function(){res(fr.result);};fr.readAsDataURL(bl);});window.__rcvLogo={__dataUri:logoUri};}}catch(ex){}}
+    if(typeof window.cdrExportProfilePDF === 'function'){
+      window.cdrExportProfilePDF(null, true);
+    } else {
+      alert('PDF generator engine not ready yet. Please try again in a moment.');
     }
-    /* data */
-    var rsEl=document.getElementById('rsData');
-    if(!rsEl) throw new Error('rsData not found');
-    var g=function(k){return rsEl.getAttribute(k)||'';};
-    var gj=function(k){try{return JSON.parse(rsEl.getAttribute(k)||'[]');}catch(ex){return[];}};
-    var data={
-      name:g('data-name')||'Candidate',designation:g('data-designation'),company:g('data-company'),
-      location:g('data-location'),experience:g('data-experience'),notice:g('data-notice'),
-      education:g('data-education'),workMode:g('data-work-mode'),match:parseInt(g('data-match'))||0,
-      isImmediate:g('data-is-immediate')==='1',recruiterNote:g('data-recruiter-note'),
-      careerSummary:g('data-career-summary'),skills:gj('data-skills'),validation:gj('data-validation')
-    };
-    var wrap2=document.querySelector('#resume_cv .rcv-wrap');
-    var cn=(wrap2&&wrap2.getAttribute('data-company'))||data.company||'Company';
-    /* render HTML → canvas → PDF */
-    container=document.createElement('div');
-    container.style.cssText='position:fixed;left:-9999px;top:0;z-index:0;pointer-events:none;overflow:hidden;';
-    container.innerHTML=buildRsHtml(data,cn,logoUri);
-    document.body.appendChild(container);
-    var el=container.firstElementChild;
-    var cvs=await window.html2canvas(el,{scale:2,useCORS:false,allowTaint:false,logging:false,backgroundColor:'#f1f5f9',imageTimeout:15000});
-    var JsPDF=window.jspdf.jsPDF;
-    var pw=el.offsetWidth||1000,ph=el.offsetHeight||1414;
-    var pdf=new JsPDF({orientation:'p',unit:'px',format:[pw,ph]});
-    pdf.addImage(cvs.toDataURL('image/jpeg',0.88),'JPEG',0,0,pw,ph,undefined,'FAST');
-    pdf.save('recruiter_summary_'+(data.name.replace(/[^a-z0-9]/gi,'_').toLowerCase()||'candidate')+'.pdf');
   }catch(err){
     console.error('Recruiter Summary error:',err);
     alert('Could not generate the Recruiter Summary. Please try again.');
   }finally{
-    if(container&&container.parentNode) container.parentNode.removeChild(container);
     window.__rsBusy=false;
   }
 }
@@ -6080,27 +6045,12 @@ window.__buildRS=buildRecruiterSummary;
         }
         setTimeout(function(){ closeRdc(); resetBtn(); }, 2000);
 
-      } else if(m.dlKey === 'rs'){
-        /* Recruiter Summary — fully client-side; no resume viewer needed */
-        if(typeof window.__buildRS !== 'function'){
-          showToast('Please wait a moment and try again.', 'warn');
-          resetBtn(); return;
-        }
-        window.__rsBusy = true;
-        window.__buildRS();
-        var rsTicks = 0;
-        var rsDone = setInterval(function(){
-          if(!window.__rsBusy || ++rsTicks > 600){
-            clearInterval(rsDone);
-            if(rsTicks > 600 && window.__rsBusy) showToast('Check your browser — the file may be downloading in the background.', 'info');
-            closeRdc(); resetBtn();
-          }
-        }, 100);
-
-      } else if(m.dlKey === 'pdf'){
-        /* Option 7: Export Candidate Profile PDF — triggered only when user clicks Download button */
+      } else if(m.dlKey === 'rs' || m.dlKey === 'pdf'){
+        /* Option 5 (Recruiter Summary) & Option 7 (Export Candidate Profile PDF) — client-side vector PDF */
         if(typeof window.cdrExportProfilePDF === 'function'){
           window.cdrExportProfilePDF(null, true);
+        } else if(typeof window.__buildRS === 'function'){
+          window.__buildRS();
         } else {
           showToast('PDF Export feature unavailable.', 'warn');
         }
@@ -6339,7 +6289,7 @@ function roundedCard(stackContent, bgFill, borderStroke, mb) {
 function buildDef(d){
   var matchRaw=d.matchText?d.matchText.replace(/[^0-9.]/g,''):'92';
   var matchNum=parseFloat(matchRaw)||92;
-  var mc=matchNum>=70?'#059669':matchNum>=40?'#d97706':'#dc2626';
+  var mc=matchNum>=70?'#16A34A':matchNum>=40?'#EA580C':'#DC2626';
   var mLabel=matchNum>=90?'Excellent Match':matchNum>=70?'Strong Match':matchNum>=40?'Moderate Match':'Low Match';
 
   /* Company Logo image or vector icon element */
@@ -6348,14 +6298,14 @@ function buildDef(d){
     ? { image: d.logoUri, fit: [42, 32], width: 42 }
     : {
         canvas: [
-          {type:'path',path:'M 4 2 L 18 2 L 10 26 L 4 26 Z',color:'#2563eb'},
-          {type:'path',path:'M 14 2 L 28 2 L 20 26 L 14 26 Z',color:'#3b82f6'}
+          {type:'path',path:'M 4 2 L 18 2 L 10 26 L 4 26 Z',color:'#1E40AF'},
+          {type:'path',path:'M 14 2 L 28 2 L 20 26 L 14 26 Z',color:'#2563EB'}
         ],
         width: 30
       };
 
   /* Candidate avatar square */
-  var avatarEl={table:{widths:[58],heights:[58],body:[[{text:d.initials||'VE',bold:true,fontSize:20,color:'#fff',alignment:'center',fillColor:'#4f46e5',margin:[0,16,0,0]}]]},layout:'noBorders'};
+  var avatarEl={table:{widths:[54],heights:[54],body:[[{text:d.initials||'VE',bold:true,fontSize:18,color:'#FFFFFF',alignment:'center',fillColor:'#1E40AF',margin:[0,14,0,0]}]]},layout:'noBorders'};
 
   /* 1. HEADER SECTION */
   var headerCol = {
@@ -6365,20 +6315,20 @@ function buildDef(d){
           logoGraphic,
           {
             stack: [
-              {text:(d.companyName||'JERO AI').toUpperCase(),bold:true,fontSize:12.5,color:'#0f172a',characterSpacing:0.3},
-              {text:'RECRUITMENT INTELLIGENCE',fontSize:5.5,bold:true,color:'#64748b',characterSpacing:1.1,margin:[0,1,0,0]}
+              {text:(d.companyName||'4BELL TECHNOLOGY').toUpperCase(),bold:true,fontSize:12,color:'#111827',characterSpacing:0.3},
+              {text:'RECRUITMENT INTELLIGENCE',fontSize:5.5,bold:true,color:'#6B7280',characterSpacing:1.1,margin:[0,1,0,0]}
             ],
             width: '*'
           }
         ],
         columnGap: 8,
-        width: 165
+        width: 160
       },
-      {canvas:[{type:'line',x1:0,y1:2,x2:0,y2:32,lineWidth:1,lineColor:'#cbd5e1'}],width:16},
+      {canvas:[{type:'line',x1:0,y1:2,x2:0,y2:30,lineWidth:1,lineColor:'#E5E7EB'}],width:14},
       {
         stack: [
-          {text:'PRE-SCREENED CANDIDATE REPORT',bold:true,fontSize:13,color:'#0f172a',characterSpacing:0.3},
-          {text:'AI Powered   |   Intelligent   |   Data Driven',fontSize:7.5,color:'#64748b',margin:[0,2,0,0]}
+          {text:'PRE-SCREENED CANDIDATE REPORT',bold:true,fontSize:12.5,color:'#111827',characterSpacing:0.3},
+          {text:'AI Powered   |   Intelligent   |   Data Driven',fontSize:7.5,color:'#6B7280',margin:[0,2,0,0]}
         ],
         width: '*'
       },
@@ -6389,22 +6339,22 @@ function buildDef(d){
               body: [[
                 {
                   columns: [
-                    {svg: SVG_ICONS.shield, width: 11, margin: [0, 1, 4, 0]},
-                    {text:'CONFIDENTIAL',bold:true,fontSize:7.5,color:'#166534'}
+                    {svg: SVG_ICONS.shield, width: 10, margin: [0, 1, 4, 0]},
+                    {text:'CONFIDENTIAL',bold:true,fontSize:7,color:'#16A34A'}
                   ],
-                  fillColor: '#dcfce7', margin: [8, 4, 8, 4]
+                  fillColor: '#F0FDF4', margin: [6, 3, 6, 3]
                 }
               ]]
             },
             layout: {hLineWidth:function(){return 0;},vLineWidth:function(){return 0;}},
             alignment: 'right'
           },
-          {text:'For Internal Hiring Use Only',fontSize:6.5,color:'#64748b',alignment:'right',margin:[0,2,0,0]}
+          {text:'For Internal Hiring Use Only',fontSize:6,color:'#6B7280',alignment:'right',margin:[0,2,0,0]}
         ],
-        width: 125
+        width: 120
       }
     ],
-    margin: [0, 0, 0, 10]
+    margin: [0, 0, 0, 8]
   };
 
   /* Metadata Strip with Pure Vector SVG Icons */
@@ -6412,17 +6362,17 @@ function buildDef(d){
     table: {
       widths: ['*', '*', '*', '*'],
       body: [[
-        {columns:[{svg:SVG_ICONS.doc,width:11,margin:[0,2,4,0]},{text:[{text:'Report ID: ',color:'#64748b',fontSize:7.5},{text:d.reportId||('JR-'+d.dateStr.replace(/\s+/g,'')+'-00125'),bold:true,fontSize:7.5,color:'#0f172a'}]}],fillColor:'#ffffff',margin:[8,5,8,5]},
-        {columns:[{svg:SVG_ICONS.cal,width:11,margin:[0,2,4,0]},{text:[{text:'Report Date: ',color:'#64748b',fontSize:7.5},{text:d.dateStr,bold:true,fontSize:7.5,color:'#0f172a'}]}],fillColor:'#ffffff',margin:[8,5,8,5]},
-        {columns:[{svg:SVG_ICONS.brain,width:11,margin:[0,2,4,0]},{text:[{text:'AI Version: ',color:'#64748b',fontSize:7.5},{text:'Jero AI v4.5',bold:true,fontSize:7.5,color:'#0f172a'}]}],fillColor:'#ffffff',margin:[8,5,8,5]},
-        {columns:[{svg:SVG_ICONS.user,width:11,margin:[0,2,4,0]},{text:[{text:'Recruiter: ',color:'#64748b',fontSize:7.5},{text:d.recruiterName||'Priya Sharma',bold:true,fontSize:7.5,color:'#0f172a'}]}],fillColor:'#ffffff',margin:[8,5,8,5]}
+        {columns:[{svg:SVG_ICONS.doc,width:11,margin:[0,2,4,0]},{text:[{text:'Report ID: ',color:'#6B7280',fontSize:7.5},{text:d.reportId||('JR-'+(d.dateStr||'05Aug2026').replace(/\s+/g,'')+'-00125'),bold:true,fontSize:7.5,color:'#111827'}]}],fillColor:'#FFFFFF',margin:[6,4,6,4]},
+        {columns:[{svg:SVG_ICONS.cal,width:11,margin:[0,2,4,0]},{text:[{text:'Report Date: ',color:'#6B7280',fontSize:7.5},{text:d.dateStr||'05 Aug 2026',bold:true,fontSize:7.5,color:'#111827'}]}],fillColor:'#FFFFFF',margin:[6,4,6,4]},
+        {columns:[{svg:SVG_ICONS.brain,width:11,margin:[0,2,4,0]},{text:[{text:'AI Version: ',color:'#6B7280',fontSize:7.5},{text:'Jero AI v4.5',bold:true,fontSize:7.5,color:'#111827'}]}],fillColor:'#FFFFFF',margin:[6,4,6,4]},
+        {columns:[{svg:SVG_ICONS.user,width:11,margin:[0,2,4,0]},{text:[{text:'Recruiter: ',color:'#6B7280',fontSize:7.5},{text:d.recruiterName||'Vibhanshu Jaiswal',bold:true,fontSize:7.5,color:'#111827'}]}],fillColor:'#FFFFFF',margin:[6,4,6,4]}
       ]]
     },
     layout: {
       hLineWidth: function(){return 0.5;}, vLineWidth: function(i){return 0.5;},
-      hLineColor: function(){return '#e2e8f0';}, vLineColor: function(){return '#e2e8f0';}
+      hLineColor: function(){return '#E5E7EB';}, vLineColor: function(){return '#E5E7EB';}
     },
-    margin: [0, 0, 0, 12]
+    margin: [0, 0, 0, 8]
   };
 
   /* 2. HERO SECTION (Candidate Hero Card) */
@@ -6434,210 +6384,212 @@ function buildDef(d){
           body: [[
             {
               columns: [
-                {svg: SVG_ICONS.bolt, width: 10, margin: [0, 1, 3, 0]},
-                {text:'Immediate Joiner',bold:true,fontSize:7.5,color:'#166534'}
+                {svg: SVG_ICONS.bolt, width: 9, margin: [0, 1, 2, 0]},
+                {text:'Immediate Joiner',bold:true,fontSize:7,color:'#16A34A'}
               ],
-              fillColor:'#f0fdf4',margin:[4,3,4,3]
+              fillColor:'#F0FDF4',margin:[3,2,3,2]
             }
           ]]
         },
         layout: {
           hLineWidth:function(){return 0.5;},vLineWidth:function(){return 0.5;},
-          hLineColor:function(){return '#bbf7d0';},vLineColor:function(){return '#bbf7d0';}
+          hLineColor:function(){return '#BBF7D0';},vLineColor:function(){return '#BBF7D0';}
         },
-        margin: [0, 6, 0, 0]
+        margin: [0, 4, 0, 0]
       } : {text:''}
     ],
-    width: 72
+    width: 66
   };
 
   var candidateDetails = {
     stack: [
-      {columns:[{text:(d.name||'Nitish Raj'),bold:true,fontSize:18,color:'#0f172a'},{svg:SVG_ICONS.blueCheck,width:14,margin:[4,3,0,0]}]},
-      {text:d.role||'Python Developer',bold:true,fontSize:11,color:'#2563eb',margin:[0,2,0,6]},
-      {columns:[{svg:SVG_ICONS.briefcase,width:11,margin:[0,2,5,0]},{text:(d.totalExp||'6.2 Years of Experience'),fontSize:8.5,color:'#334155'}],margin:[0,0,0,3]},
-      {columns:[{svg:SVG_ICONS.company,width:11,margin:[0,2,5,0]},{text:(d.companyName||'4bell Technology'),fontSize:8.5,color:'#334155'}],margin:[0,0,0,3]},
-      {columns:[{svg:SVG_ICONS.location,width:11,margin:[0,2,5,0]},{text:(d.location||'Hyderabad, Telangana, India'),fontSize:8.5,color:'#334155'}],margin:[0,0,0,0]}
+      {columns:[{text:(d.name||'Deepak Raut'),bold:true,fontSize:16,color:'#111827'},{svg:SVG_ICONS.blueCheck,width:13,margin:[4,2,0,0]}]},
+      {text:d.role||'UI/UX Designer',bold:true,fontSize:10.5,color:'#2563EB',margin:[0,1,0,4]},
+      {columns:[{svg:SVG_ICONS.briefcase,width:10,margin:[0,2,4,0]},{text:(d.totalExp||'6.2 Years of Experience'),fontSize:8,color:'#374151'}],margin:[0,0,0,2]},
+      {columns:[{svg:SVG_ICONS.company,width:10,margin:[0,2,4,0]},{text:(d.companyName||'4bell Technology'),fontSize:8,color:'#374151'}],margin:[0,0,0,2]},
+      {columns:[{svg:SVG_ICONS.location,width:10,margin:[0,2,4,0]},{text:(d.location||'Hyderabad, Telangana, India'),fontSize:8,color:'#374151'}],margin:[0,0,0,0]}
     ],
     width: '*'
   };
 
-  /* Circular Score Ring Box */
+  /* 100% Reliable Score Circle Box */
   var scoreCircle = {
-    stack: [
-      {
-        canvas: [
-          { type: 'circle', x: 30, y: 30, r: 26, color: '#ffffff', lineColor: mc, lineWidth: 3 }
-        ],
-        width: 60,
-        height: 60
-      },
-      {
-        text: (Math.round(matchNum * 10) / 10) + '%',
-        bold: true,
-        fontSize: 15,
-        color: mc,
-        alignment: 'center',
-        margin: [0, -42, 0, 16]
-      }
-    ],
+    table: {
+      widths: [48],
+      heights: [48],
+      body: [[
+        { text: (Math.round(matchNum * 10) / 10) + '%', bold: true, fontSize: 15, color: mc, alignment: 'center', fillColor: '#FFFFFF', margin: [0, 13, 0, 0] }
+      ]]
+    },
+    layout: {
+      hLineWidth: function(){ return 2.5; },
+      vLineWidth: function(){ return 2.5; },
+      hLineColor: function(){ return mc; },
+      vLineColor: function(){ return mc; }
+    },
     alignment: 'center',
-    margin: [0, 0, 0, 4]
+    margin: [0, 2, 0, 4]
   };
 
   var scoreBlock = {
     table: {
-      widths: [110],
+      widths: [105],
       body: [[{
         stack: [
-          {columns:[{text:'OVERALL MATCH',fontSize:7,bold:true,color:'#475569'},{svg:SVG_ICONS.info,width:10,margin:[3,0,0,0]}],alignment:'center',margin:[0,0,0,4]},
+          {columns:[{text:'OVERALL MATCH',fontSize:6.5,bold:true,color:'#4B5563'},{svg:SVG_ICONS.info,width:9,margin:[2,0,0,0]}],alignment:'center',margin:[0,0,0,2]},
           scoreCircle,
-          {svg:SVG_ICONS.goldStars,width:54,alignment:'center',margin:[0,0,0,3]},
-          {text:mLabel,fontSize:8,bold:true,color:mc,alignment:'center',margin:[0,0,0,4]},
+          {svg:SVG_ICONS.goldStars,width:50,alignment:'center',margin:[0,0,0,2]},
+          {text:mLabel,fontSize:7.5,bold:true,color:mc,alignment:'center',margin:[0,0,0,2]},
           {
             table: {
-              body: [[{text:'Priority: HIGH',fontSize:7.5,bold:true,color:'#1d4ed8',fillColor:'#eff6ff',margin:[6,2,6,2]}]]
+              body: [[{text:'Priority: HIGH',fontSize:7,bold:true,color:'#1E40AF',fillColor:'#EFF6FF',margin:[4,1,4,1]}]]
             },
             layout: {hLineWidth:function(){return 0;},vLineWidth:function(){return 0;}},
             alignment: 'center'
           }
         ],
-        fillColor:'#ffffff',margin:[6,6,6,6]
+        fillColor:'#FFFFFF',margin:[4,4,4,4]
       }]]
     },
     layout: {
       hLineWidth: function(){return 0.5;}, vLineWidth: function(){return 0.5;},
-      hLineColor: function(){return '#e2e8f0';}, vLineColor: function(){return '#e2e8f0';}
+      hLineColor: function(){return '#E5E7EB';}, vLineColor: function(){return '#E5E7EB';}
     },
-    width: 122
+    width: 115
   };
 
   var heroCard = roundedCard([
-    {columns: [avatarBlock, candidateDetails, scoreBlock], columnGap: 12}
-  ], '#ffffff', '#e2e8f0', 12);
+    {columns: [avatarBlock, candidateDetails, scoreBlock], columnGap: 10}
+  ], '#FFFFFF', '#E5E7EB', 8);
 
   /* 3. QUICK INFO STRIP */
   var quickInfoStrip = {
     table: {
       widths: ['*', '*', '*', '*', '*'],
       body: [[
-        {stack:[{columns:[{svg:SVG_ICONS.user,width:11,margin:[0,1,3,0]},{text:'Preferred Role',fontSize:7,color:'#64748b'}]},{text:d.preferredRole||d.role||'Python Developer',bold:true,fontSize:8.5,color:'#0f172a',margin:[0,3,0,0]}],fillColor:'#ffffff',margin:[6,8,6,8]},
-        {stack:[{columns:[{svg:SVG_ICONS.grad,width:11,margin:[0,1,3,0]},{text:'Highest Education',fontSize:7,color:'#64748b'}]},{text:d.education||'B.Tech (CS)',bold:true,fontSize:8.5,color:'#0f172a',margin:[0,3,0,0]}],fillColor:'#ffffff',margin:[6,8,6,8]},
-        {stack:[{columns:[{svg:SVG_ICONS.clock,width:11,margin:[0,1,3,0]},{text:'Notice Period',fontSize:7,color:'#64748b'}]},{text:d.noticePeriod||'Immediate',bold:true,fontSize:8.5,color:'#0f172a',margin:[0,3,0,0]}],fillColor:'#ffffff',margin:[6,8,6,8]},
-        {stack:[{columns:[{svg:SVG_ICONS.location,width:11,margin:[0,1,3,0]},{text:'Preferred Location',fontSize:7,color:'#64748b'}]},{text:d.prefLocation||'Hyderabad / Remote',bold:true,fontSize:8.5,color:'#0f172a',margin:[0,3,0,0]}],fillColor:'#ffffff',margin:[6,8,6,8]},
-        {stack:[{columns:[{svg:SVG_ICONS.laptop,width:11,margin:[0,1,3,0]},{text:'Preferred Work Mode',fontSize:7,color:'#64748b'}]},{text:d.workMode||'Remote / Hybrid',bold:true,fontSize:8.5,color:'#0f172a',margin:[0,3,0,0]}],fillColor:'#ffffff',margin:[6,8,6,8]}
+        {stack:[{columns:[{svg:SVG_ICONS.user,width:10,margin:[0,1,3,0]},{text:'Preferred Role',fontSize:6.5,color:'#6B7280'}]},{text:d.preferredRole||d.role||'UI/UX Designer',bold:true,fontSize:8,color:'#111827',margin:[0,2,0,0]}],fillColor:'#FFFFFF',margin:[4,5,4,5]},
+        {stack:[{columns:[{svg:SVG_ICONS.grad,width:10,margin:[0,1,3,0]},{text:'Highest Education',fontSize:6.5,color:'#6B7280'}]},{text:d.education||'B.Tech (CS)',bold:true,fontSize:8,color:'#111827',margin:[0,2,0,0]}],fillColor:'#FFFFFF',margin:[4,5,4,5]},
+        {stack:[{columns:[{svg:SVG_ICONS.clock,width:10,margin:[0,1,3,0]},{text:'Notice Period',fontSize:6.5,color:'#6B7280'}]},{text:d.noticePeriod||'Immediate',bold:true,fontSize:8,color:'#111827',margin:[0,2,0,0]}],fillColor:'#FFFFFF',margin:[4,5,4,5]},
+        {stack:[{columns:[{svg:SVG_ICONS.location,width:10,margin:[0,1,3,0]},{text:'Preferred Location',fontSize:6.5,color:'#6B7280'}]},{text:d.prefLocation||'Hyderabad / Remote',bold:true,fontSize:8,color:'#111827',margin:[0,2,0,0]}],fillColor:'#FFFFFF',margin:[4,5,4,5]},
+        {stack:[{columns:[{svg:SVG_ICONS.laptop,width:10,margin:[0,1,3,0]},{text:'Preferred Work Mode',fontSize:6.5,color:'#6B7280'}]},{text:d.workMode||'Remote / Hybrid',bold:true,fontSize:8,color:'#111827',margin:[0,2,0,0]}],fillColor:'#FFFFFF',margin:[4,5,4,5]}
       ]]
     },
     layout: {
       hLineWidth: function(){return 0.5;}, vLineWidth: function(i){return 0.5;},
-      hLineColor: function(){return '#e2e8f0';}, vLineColor: function(){return '#e2e8f0';}
+      hLineColor: function(){return '#E5E7EB';}, vLineColor: function(){return '#E5E7EB';}
     },
-    margin: [0, 0, 0, 12]
+    margin: [0, 0, 0, 8]
   };
 
-  /* 4. SKILLS INTELLIGENCE (FULL PAGE WIDTH - NO Match Breakdown) */
+  /* 4. SKILLS INTELLIGENCE (FULL PAGE WIDTH - CORRECT ACCURATE COLUMN MAPPING) */
   var skillRows = [
     [
-      {text:'Skill',bold:true,fontSize:8,color:'#2563eb'},
-      {text:'Candidate Experience',bold:true,fontSize:8,color:'#2563eb'},
-      {text:'Rating',bold:true,fontSize:8,color:'#2563eb'},
-      {text:'Status',bold:true,fontSize:8,color:'#2563eb',alignment:'center'}
+      {text:'Skill',bold:true,fontSize:7.5,color:'#2563EB'},
+      {text:'Candidate Experience',bold:true,fontSize:7.5,color:'#2563EB'},
+      {text:'Rating',bold:true,fontSize:7.5,color:'#2563EB'},
+      {text:'Status',bold:true,fontSize:7.5,color:'#2563EB',alignment:'center'}
     ]
   ];
 
-  /* Extract & Filter pure candidate skills (excluding screening questions) */
+  /* Extract & Filter pure candidate skills with ACCURATE column mapping */
   var rawSkills = (d.skillsTable && d.skillsTable.rows && d.skillsTable.rows.length) ? d.skillsTable.rows.filter(function(r){
     var name = (r[0]||'').toString().toLowerCase();
     return name.indexOf('question') === -1 && name.indexOf('communication rating') === -1 && name.indexOf('comfortable with wfo') === -1;
-  }).map(function(r){
-    return [r[0]||'Skill', r[1]||'Exp', r[2]||'3.5 Years', r[3]||'✔'];
+  }).slice(0, 8).map(function(r){
+    var skillName = r[0] || 'Skill';
+    var expDuration = (r[1] && r[1] !== 'Exp') ? r[1] : (r[2] && r[2].indexOf('Year') !== -1 ? r[2] : '1.0 Years');
+    var ratingVal = (r[2] && r[2] !== expDuration) ? r[2] : (r[3] && r[3] !== '✔' && r[3] !== '✖' ? r[3] : '★★★★☆');
+    var statusVal = (r[3] === '✔' || r[3] === '✖' || r[3] === '⚠') ? r[3] : '✔';
+    return [skillName, expDuration, ratingVal, statusVal];
   }) : [
-    ['Python', 'Exp', '3.5 Years', '✔'],
-    ['JavaScript', 'Exp', '1.0 Years', '✔'],
-    ['HTML / CSS', 'Exp', '0.5 Years', '✔'],
-    ['Web Scraping / Crawling', 'Exp', '1.5 Years', '✔'],
-    ['BeautifulSoup', 'Exp', '1.0 Years', '✔'],
-    ['MySQL', 'Exp', '3.5 Years', '✔'],
-    ['Asynchronous Programming', 'Exp', '2.0 Years', '✔']
+    ['UI DESIGNER', '1.1 Years', '2 / 5', '✔'],
+    ['FIGMA', '2.1 Years', '1 / 5', '✔'],
+    ['ADOBE XD', '10.9 Years', '2 / 5', '✔'],
+    ['SKETCH', '11. Years', '3 / 5', '✔'],
+    ['HTML', '12. Years', '4 / 5', '✔'],
+    ['CSS', '13. Years', '5 / 5', '✔']
   ];
 
   rawSkills.forEach(function(s){
-    var stCol = s[3]==='✖'?'#dc2626':s[3]==='⚠'?'#d97706':'#16a34a';
     skillRows.push([
-      {text:s[0],fontSize:8.5,bold:true,color:'#0f172a'},
-      {text:s[1],fontSize:8.5,color:'#475569'},
-      {text:s[2],fontSize:8.5,color:'#d97706',bold:true},
-      {columns:[{svg:s[3]==='✖'?SVG_ICONS.amberClock:SVG_ICONS.greenCheck,width:11,margin:[0,1,0,0]}],alignment:'center'}
+      {text:s[0],fontSize:8,bold:true,color:'#111827'},
+      {text:s[1],fontSize:8,color:'#374151'},
+      {text:s[2],fontSize:8,color:'#EA580C',bold:true},
+      {stack:[{svg:s[3]==='✖'?SVG_ICONS.amberClock:SVG_ICONS.greenCheck,width:10,alignment:'center'}],alignment:'center'}
     ]);
   });
 
   var skillsIntelligenceCard = roundedCard([
-    {columns:[{svg:SVG_ICONS.note,width:12,margin:[0,1,5,0]},{text:'SKILLS INTELLIGENCE',bold:true,fontSize:9,color:'#0f172a'}],margin:[0,0,0,8]},
+    {columns:[{svg:SVG_ICONS.note,width:11,margin:[0,1,4,0]},{text:'SKILLS INTELLIGENCE',bold:true,fontSize:8.5,color:'#111827'}],margin:[0,0,0,6]},
     {
-      table: {widths:[170, 120, 120, '*'],body:skillRows},
-      layout: {hLineWidth:function(){return 0.3;},vLineWidth:function(){return 0;},hLineColor:function(){return '#f1f5f9';}}
+      table: {widths:[160, 120, 120, '*'],body:skillRows},
+      layout: {hLineWidth:function(){return 0.3;},vLineWidth:function(){return 0;},hLineColor:function(){return '#F1F5F9';}}
     }
-  ], '#ffffff', '#e2e8f0', 12);
+  ], '#FFFFFF', '#E5E7EB', 8);
 
   /* 5. PROFESSIONAL SUMMARY & RECRUITER COMMENTS */
-  var summaryText = d.summary || 'Nitish Raj is a Python Developer with hands-on experience building web scrapers, data processing pipelines, and RESTful microservices using Python, MySQL, and BeautifulSoup.\n\nHe has delivered robust data crawlers and asynchronous threading systems, demonstrating strong analytical and clean code principles.\n\nSuitable for Python Developer, Data Engineer, and Backend Engineer roles.';
-  var summaryCard = roundedCard([
-    {columns:[{svg:SVG_ICONS.bulb,width:12,margin:[0,1,5,0]},{text:'PROFESSIONAL SUMMARY',bold:true,fontSize:8.5,color:'#0f172a'}],margin:[0,0,0,6]},
-    {text:summaryText,fontSize:8,color:'#334155',lineHeight:1.45}
-  ], '#ffffff', '#e2e8f0', 0);
+  var summaryText = d.summary || 'Deepak Raut is an experienced UI/UX Designer with strong expertise in user interface architecture, Figma design systems, wireframing, and interactive prototyping. Demonstrates clean design principles, usability testing, and cross-functional team collaboration.';
+  if(summaryText.length > 350) summaryText = summaryText.substring(0, 350) + '…';
 
-  var rnContent = d.rnText || 'Solid Python engineer with proven expertise in Web Scraping and MySQL backend operations. Clean code style, immediate joiner, recommended to proceed for technical interview.';
+  var summaryCard = roundedCard([
+    {columns:[{svg:SVG_ICONS.bulb,width:11,margin:[0,1,4,0]},{text:'PROFESSIONAL SUMMARY',bold:true,fontSize:8,color:'#111827'}],margin:[0,0,0,4]},
+    {text:summaryText,fontSize:7.5,color:'#374151',lineHeight:1.35}
+  ], '#FFFFFF', '#E5E7EB', 0);
+
+  var rnContent = d.rnText || 'Candidate has solid technical foundation with hands-on experience in the required technologies. Code quality, problem-solving approach, and technical depth were assessed during the screening.';
+  if(rnContent.length > 250) rnContent = rnContent.substring(0, 250) + '…';
+
   var recruiterCommentsCard = roundedCard([
-    {columns:[{svg:SVG_ICONS.chat,width:12,margin:[0,1,5,0]},{text:'RECRUITER COMMENTS',bold:true,fontSize:8.5,color:'#0f172a'}],margin:[0,0,0,6]},
-    {text:rnContent,fontSize:8,color:'#334155',lineHeight:1.4,margin:[0,0,0,12]},
-    {canvas:[{type:'line',x1:0,y1:0,x2:220,y2:0,lineWidth:0.5,lineColor:'#f1f5f9'}],margin:[0,0,0,10]},
+    {columns:[{svg:SVG_ICONS.chat,width:11,margin:[0,1,4,0]},{text:'RECRUITER COMMENTS',bold:true,fontSize:8,color:'#111827'}],margin:[0,0,0,4]},
+    {text:rnContent,fontSize:7.5,color:'#374151',lineHeight:1.35,margin:[0,0,0,8]},
+    {canvas:[{type:'line',x1:0,y1:0,x2:200,y2:0,lineWidth:0.5,lineColor:'#F1F5F9'}],margin:[0,0,0,6]},
     {
       columns: [
-        {columns:[{svg:SVG_ICONS.user,width:11,margin:[0,1,4,0]},{text:[{text:(d.recruiterName||'Aayush Jain')+'\n',bold:true,fontSize:8,color:'#0f172a'},{text:'Senior Technical Recruiter',fontSize:7,color:'#64748b'}]}]},
-        {columns:[{svg:SVG_ICONS.cal,width:11,margin:[0,1,4,0]},{text:d.dateStr,fontSize:7.5,color:'#64748b'}],alignment:'right'}
+        {columns:[{svg:SVG_ICONS.user,width:10,margin:[0,1,3,0]},{text:[{text:(d.recruiterName||'Vibhanshu Jaiswal')+'\n',bold:true,fontSize:7.5,color:'#111827'},{text:'Senior Technical Recruiter',fontSize:6.5,color:'#6B7280'}]}]},
+        {columns:[{svg:SVG_ICONS.cal,width:10,margin:[0,1,3,0]},{text:d.dateStr||'05 Aug 2026',fontSize:7,color:'#6B7280'}],alignment:'right'}
       ]
     }
-  ], '#ffffff', '#e2e8f0', 0);
+  ], '#FFFFFF', '#E5E7EB', 0);
 
   var sectionSummaryComments = {
     columns: [
       {stack:[summaryCard],width:'*'},
       {stack:[recruiterCommentsCard],width:'*'}
     ],
-    columnGap: 12, margin: [0, 0, 0, 12]
+    columnGap: 10, margin: [0, 0, 0, 8]
   };
 
-  /* 6. VERIFICATION STATUS CARD WITH SVG CHECKMARKS */
+  /* 6. VERIFICATION STATUS CARD WITH ACCURATE ICON ALIGNMENT */
   var verificationCard = roundedCard([
-    {columns:[{svg:SVG_ICONS.shield,width:12,margin:[0,1,5,0]},{text:'VERIFICATION STATUS',bold:true,fontSize:8.5,color:'#2563eb'}],margin:[0,0,0,8]},
+    {columns:[{svg:SVG_ICONS.shield,width:11,margin:[0,1,4,0]},{text:'VERIFICATION STATUS',bold:true,fontSize:8,color:'#2563EB'}],margin:[0,0,0,6]},
     {
       columns: [
         {
           stack: [
-            {columns:[{svg:SVG_ICONS.greenCheck,width:11,margin:[0,1,4,0]},{text:'Resume Verified',fontSize:8,color:'#166534'}],margin:[0,2,0,3]},
-            {columns:[{svg:SVG_ICONS.greenCheck,width:11,margin:[0,1,4,0]},{text:'Email Verified',fontSize:8,color:'#166534'}],margin:[0,2,0,3]}
+            {columns:[{svg:SVG_ICONS.greenCheck,width:10,margin:[0,1,3,0]},{text:'Resume Verified',fontSize:7.5,color:'#16A34A'}],margin:[0,1,0,2]},
+            {columns:[{svg:SVG_ICONS.greenCheck,width:10,margin:[0,1,3,0]},{text:'Email Verified',fontSize:7.5,color:'#16A34A'}],margin:[0,1,0,2]}
           ],
           width: '*'
         },
         {
           stack: [
-            {columns:[{svg:SVG_ICONS.amberClock,width:11,margin:[0,1,4,0]},{text:'Documents Verified (Pending)',fontSize:8,color:'#b45309'}],margin:[0,2,0,3]},
-            {columns:[{svg:SVG_ICONS.amberClock,width:11,margin:[0,1,4,0]},{text:'Identity Verified (Pending)',fontSize:8,color:'#b45309'}],margin:[0,2,0,3]}
+            {columns:[{svg:SVG_ICONS.amberClock,width:10,margin:[0,1,3,0]},{text:'Documents Verified (Pending)',fontSize:7.5,color:'#EA580C'}],margin:[0,1,0,2]},
+            {columns:[{svg:SVG_ICONS.amberClock,width:10,margin:[0,1,3,0]},{text:'Identity Verified (Pending)',fontSize:7.5,color:'#EA580C'}],margin:[0,1,0,2]}
           ],
           width: '*'
         },
         {
           stack: [
-            {columns:[{svg:SVG_ICONS.greenCheck,width:11,margin:[0,1,4,0]},{text:'Education Verified',fontSize:8,color:'#166534'}],margin:[0,2,0,3]},
-            {columns:[{svg:SVG_ICONS.greenCheck,width:11,margin:[0,1,4,0]},{text:'Experience Verified',fontSize:8,color:'#166534'}],margin:[0,2,0,3]}
+            {columns:[{svg:SVG_ICONS.greenCheck,width:10,margin:[0,1,3,0]},{text:'Education Verified',fontSize:7.5,color:'#16A34A'}],margin:[0,1,0,2]},
+            {columns:[{svg:SVG_ICONS.greenCheck,width:10,margin:[0,1,3,0]},{text:'Experience Verified',fontSize:7.5,color:'#16A34A'}],margin:[0,1,0,2]}
           ],
           width: '*'
         }
       ]
     }
-  ], '#ffffff', '#e2e8f0', 12);
+  ], '#FFFFFF', '#E5E7EB', 8);
 
-  /* 7. FINAL HIRING RECOMMENDATION (Font Reduced 20% for Perfect Alignment) */
+  /* 7. FINAL HIRING RECOMMENDATION */
   var finalRecommendationCard = roundedCard([
     {
       columns: [
@@ -6645,54 +6597,54 @@ function buildDef(d){
           stack: [
             {
               columns: [
-                {svg: SVG_ICONS.greenCheck, width: 22, margin: [0, 2, 6, 0]},
+                {svg: SVG_ICONS.greenCheck, width: 18, margin: [0, 1, 5, 0]},
                 {
                   stack: [
-                    {svg: SVG_ICONS.goldStars, width: 54, margin: [0, 0, 0, 2]},
-                    {text:'RECOMMENDED FOR INTERVIEW',bold:true,fontSize:9.5,color:'#166534'}
+                    {svg: SVG_ICONS.goldStars, width: 50, margin: [0, 0, 0, 2]},
+                    {text:'RECOMMENDED FOR INTERVIEW',bold:true,fontSize:9,color:'#16A34A'}
                   ],
                   width: '*'
                 }
               ],
-              columnGap: 6
+              columnGap: 5
             }
           ],
           width: '*'
         },
-        {stack:[{text:'Overall Confidence',fontSize:6.5,color:'#64748b',alignment:'center'},{text:'96%',bold:true,fontSize:11,color:'#166534',alignment:'center',margin:[0,2,0,0]}],width:85},
-        {stack:[{text:'Recommended Round',fontSize:6.5,color:'#64748b',alignment:'center'},{text:'Technical L1',bold:true,fontSize:9.5,color:'#166534',alignment:'center',margin:[0,2,0,0]}],width:95},
-        {stack:[{text:'Priority',fontSize:6.5,color:'#64748b',alignment:'center'},{text:'HIGH',bold:true,fontSize:9.5,color:'#166534',alignment:'center',margin:[0,2,0,0]}],width:60},
-        {stack:[{text:'Expected Joining',fontSize:6.5,color:'#64748b',alignment:'center'},{text:'Immediate',bold:true,fontSize:9.5,color:'#166534',alignment:'center',margin:[0,2,0,0]}],width:80}
+        {stack:[{text:'Overall Confidence',fontSize:6,color:'#6B7280',alignment:'center'},{text:'96%',bold:true,fontSize:10.5,color:'#16A34A',alignment:'center',margin:[0,1,0,0]}],width:80},
+        {stack:[{text:'Recommended Round',fontSize:6,color:'#6B7280',alignment:'center'},{text:'Technical L1',bold:true,fontSize:9,color:'#16A34A',alignment:'center',margin:[0,1,0,0]}],width:90},
+        {stack:[{text:'Priority',fontSize:6,color:'#6B7280',alignment:'center'},{text:'HIGH',bold:true,fontSize:9,color:'#16A34A',alignment:'center',margin:[0,1,0,0]}],width:55},
+        {stack:[{text:'Expected Joining',fontSize:6,color:'#6B7280',alignment:'center'},{text:'Immediate',bold:true,fontSize:9,color:'#16A34A',alignment:'center',margin:[0,1,0,0]}],width:75}
       ]
     }
-  ], '#f0fdf4', '#bbf7d0', 12);
+  ], '#F0FDF4', '#BBF7D0', 8);
 
-  /* 8. DARK NAVY FOOTER (Font Reduced 15% for Perfect Alignment) */
+  /* 8. DARK NAVY FOOTER */
   var footerBlock = {
     table: {widths:['*'],body:[[{
       columns: [
         {
           stack: [
-            {text:'ABOUT THIS REPORT',bold:true,fontSize:6,color:'#94a3b8'},
-            {text:'This report is generated using advanced AI algorithms and data from multiple sources. Final hiring decisions should include technical and managerial interviews.',fontSize:5,color:'#64748b',margin:[0,2,0,0]}
+            {text:'ABOUT THIS REPORT',bold:true,fontSize:5.5,color:'#9CA3AF'},
+            {text:'This report is generated using advanced AI algorithms and data from multiple sources. Final hiring decisions should include technical and managerial interviews.',fontSize:4.5,color:'#6B7280',margin:[0,1,0,0]}
           ],
-          width: 160
+          width: 150
         },
         {
           stack: [
-            {text:'Generated using Jero AI Recruitment Intelligence',fontSize:6,color:'#cbd5e1',alignment:'center',margin:[0,5,0,0]}
+            {text:'Generated using Jero AI Recruitment Intelligence',fontSize:5.5,color:'#D1D5DB',alignment:'center',margin:[0,4,0,0]}
           ],
           width: '*'
         },
         {
           stack: [
-            {text:'www.jero.works',bold:true,fontSize:7.5,color:'#ffffff',alignment:'right'},
-            {text:'© 2026 Jero AI. All rights reserved.',fontSize:5,color:'#64748b',alignment:'right',margin:[0,2,0,0]}
+            {text:'www.jero.works',bold:true,fontSize:7,color:'#FFFFFF',alignment:'right'},
+            {text:'© 2026 Jero AI. All rights reserved.',fontSize:4.5,color:'#6B7280',alignment:'right',margin:[0,1,0,0]}
           ],
-          width: 120
+          width: 110
         }
       ],
-      fillColor:'#0f172a',margin:[8,6,8,6]
+      fillColor:'#111827',margin:[6,5,6,5]
     }]]},
     layout: 'noBorders'
   };
