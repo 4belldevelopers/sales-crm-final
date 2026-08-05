@@ -62,8 +62,7 @@ class ServiceCompanyDashboardController extends ServiceCompanyBaseController
 				$this->company_id			=	auth()->user()->company_id;
 
 				$getTopFive = request()->query('getTopFive');
-				$this->autoCloseJobsService->closeExpiredJobs($this->company_id);
-				$this->autoRenewFreePackage->autoRenewFreePackageCompany($this->company_id);
+				// V2 Phase 1: job expiry & package renewal now run via AutoCloseExpiredJobsJob (hourly Horizon schedule).
 
 				// GeneralMethod::jobAutoExpiredAfterValidDate($this->company_id);
 
@@ -92,300 +91,10 @@ class ServiceCompanyDashboardController extends ServiceCompanyBaseController
 				]);
 				
 
-				$company_coins = DB::table('company_coins')->where('company_id', $this->company_id)->where('event_type','operational')->first();
-				$usersCount = DB::table('users')->where('company_id', $this->company_id)->where('status','=','active')->count();
-				$jobssCount = DB::table('jobs')->where('company_id', $this->company_id)->where('status','active')->count();
-				$jobssData = DB::table('jobs')->where('company_id', $this->company_id)->where('status','active')->get();
-				$usersData = DB::table('users')->where('company_id', $this->company_id)->where('status','=','active')->get();
+				// V2 Phase 1: team coin deductions moved to ProcessOperationalCoinDeductionsJob (scheduled every 5 min).
 
-
-				// dd($usersCount);
-				$balance_coin_limit = 20;
-				// dd($balance_coin_limit);
-				if($company_coins){
-					// dd($val_coins);
-					$eventId = 1;
-					$coin_order_events = DB::table('coin_order_events')->where('company_id',$this->company_id)->where('coin_event_id',$eventId)->where('deduction_type','daily')->where('event_type',$company_coins->event_type)->where('coin_order_id',$company_coins->coin_order_id)->first();
-                  if($coin_order_events){
-				    $today = Carbon::today();
-					$autoPaymentuser = false;
-						 $deductionsCoinsCount = 0;
-						foreach($usersData as $userVal){
-							$free_update_date = Carbon::parse($userVal->auto_date_team);
-							$diffInDays = abs($today->diffInDays($free_update_date));
-							$diffInDays = ceil($diffInDays);    // 0.65 => 1
-							// dd($userVal->auto_date_team,$userVal->id,$diffInDays);
-							if($diffInDays > 0){
-							$company_coins_check = DB::table('company_coins')->where('company_id', $this->company_id)->where('event_type','operational')->first();
-							if($company_coins_check->coins >= $coin_order_events->deductions){
-							$end_date = $company_coins_check->end_date;
-							$current_date = date("Y-m-d");
-							$end_date_timestamp = strtotime($end_date);
-							$current_date_timestamp = strtotime($current_date);
-							$deductionsCoins  = $diffInDays*1*$coin_order_events->deductions;
-							// dd($deductionsCoins,$diffInDays);
-							if($company_coins_check->coins >= $deductionsCoins){
-								$deductions = $company_coins_check->coins-$deductionsCoins;
-								$total_coins = $deductions;
-								$updateCoin = [
-									'coins'=>$deductions
-								];
-								$updateCoin['auto_team_coins'] = Carbon::today();
-								$deductions = $deductionsCoins;
-								$deductions = $deductionsCoins;
-								$balance_coins = 0;
-								// dd($updateCoin);
-
-								DB::table('company_coins')->where('company_id',$this->company_id)->where('event_type','operational')->update($updateCoin);
-
-								$autoPaymentuser = DB::table('users')->where('id', $userVal->id)->update(['working_status'=>1,'auto_date_team'=>Carbon::today()]);
-								$deductionsCoinsCount +=$deductionsCoins;
-
-							}else{
-								DB::table('users')->where('id', $userVal->id)->where('root_user','!=',1)->update(['working_status'=>0]);
-
-								 $exists = $this->elasticService->getClient()->exists([
-									'index' => ELASTIC_USERS_LIST,
-									'id' => $userVal->id
-									]);
-									if ($exists) {
-										$updateParams = [
-											'index' => ELASTIC_USERS_LIST,
-											'id' => $userVal->id,
-											'body' => [
-												'doc' => [
-													'working_status' => 0,
-												],
-												'doc_as_upsert' => false // Changed to false since we verified existence
-											],
-											'refresh' => true // Force immediate refresh
-										];
-									$this->elasticService->getClient()->update($updateParams);
-								}
-
-
-								// $updateCoin['balance_coin'] = abs($company_coins_check->balance_coin+$deductionsCoins);
-								// $deductions = $deductionsCoins;
-								// $balance_coins = $deductionsCoins;
-								// $updateCoin['auto_team_coins'] = Carbon::today();
-								// $total_coins = 0;
-							}
-							// dd($updateCoin);
-							
-							// dd($company_coins->coin_order_id,);
-								
-
-						}else{
-							DB::table('users')->where('id', $userVal->id)->where('root_user','!=',1)->update(['working_status'=>0]);
-							$exists = $this->elasticService->getClient()->exists([
-									'index' => ELASTIC_USERS_LIST,
-									'id' => $userVal->id
-									]);
-								if ($exists) {
-									$updateParams = [
-										'index' => ELASTIC_USERS_LIST,
-										'id' => $userVal->id,
-										'body' => [
-											'doc' => [
-												'working_status' => 0,
-											],
-											'doc_as_upsert' => false // Changed to false since we verified existence
-										],
-										'refresh' => true // Force immediate refresh
-									];
-								$this->elasticService->getClient()->update($updateParams);
-							}	
-						}
-						
-					   }
-
-						}
-						// dd($deductionsCoinsCount);
-						if($autoPaymentuser){
-							$coin_transection_logs = [
-								'coin_order_id'=>$company_coins->coin_order_id,
-								'from_company_id'=>$this->company_id,
-								'company_id'=>$this->company_id,
-								'event_by'=>auth()->user()->id,
-								'event'=> "Team Manage Auto Deductions",
-								'amount'=>'',
-								'discount'=>'',
-								'coins'=>$deductionsCoinsCount,
-								'remain_coins'=>$total_coins,
-								'transection_type'=>'Debit',
-								'settlement_coins'=>'',
-								'balance_coins'=>$balance_coins,
-								'actual_coins'=>$company_coins->coins,
-								'event_type'=>'operational',
-								'team_id'=>'',
-								'job_id'=>'',
-								'start_date'=>'',
-								'end_date'=>'',
-								'created_at'=>date("Y-m-d H:i:s"),
-								'updated_at'=>date("Y-m-d H:i:s")	
-							];
-							// dd($coin_transection_logs);
-							$coin_transection_logs = DB::table('coin_transection_logs')->insertGetId($coin_transection_logs);
-						}
-				  }
-
-				}
-
-				$company_coins = DB::table('company_coins')->where('company_id', $this->company_id)->where('event_type','operational')->first();
-
-				if($company_coins){
-					// dd($val_coins);
-					$eventId = 2;
-					$coin_order_events = DB::table('coin_order_events')->where('deduction_type','daily')->where('company_id',$this->company_id)->where('coin_event_id',$eventId)->where('event_type',$company_coins->event_type)->where('coin_order_id',$company_coins->coin_order_id)->first();
-					if($coin_order_events){
-					$free_update_date = Carbon::parse($company_coins->auto_job_coins);
-				    $today = Carbon::today();
-				    $diffInDays = abs($today->diffInDays($free_update_date));
-
-					$autoPaymentjob = false;
-				    $deductionsCoinsCountJob = 0;
-
-
-					foreach($jobssData as $jobVal){
-					$auto_job_coins_jobs = Carbon::parse($jobVal->auto_date_job);
-					$diffInDaysJobs = abs($today->diffInDays($auto_job_coins_jobs));
-					if($diffInDaysJobs > 0){
-						$company_coins_check = DB::table('company_coins')->where('company_id', $this->company_id)->where('event_type','operational')->first();
-					if($company_coins_check->coins >= $coin_order_events->deductions){
-
-					$end_date = $company_coins_check->end_date;
-					$current_date = date("Y-m-d");
-					$end_date_timestamp = strtotime($end_date);
-					$current_date_timestamp = strtotime($current_date);
-					// dd($coin_order_events->deductions);
-					$deductionsCoins  = $diffInDaysJobs*1*$coin_order_events->deductions;
-					// dd($diffInDaysJobs,$jobssCount,$deductionsCoins);
-					if($company_coins_check->coins >= $deductionsCoins){
-						$deductions = $company_coins_check->coins-$deductionsCoins;
-						$total_coins = $deductions;
-						$updateCoin = [
-							'coins'=>$deductions
-						];
-						$updateCoin['auto_job_coins'] = Carbon::today();
-						// dd($updateCoin);
-						$deductions = $deductionsCoins;
-						$deductions = $deductionsCoins;
-						$balance_coins = 0;
-						DB::table('company_coins')->where('company_id', $this->company_id)->where('event_type','operational')->update($updateCoin);
-						$autoPaymentjob = DB::table('jobs')->where('id', $jobVal->id)->update(['auto_date_job'=>Carbon::today()]);
-						$deductionsCoinsCountJob +=$deductionsCoins;
-
-					}else{
-					     DB::table('jobs')->where('id', $jobVal->id)->update(['status'=>'inactive']);
-
-						 $exists_jobs = $this->elasticService->getClient()->exists([
-									'index' => ELASTIC_JOBS,
-									'id' => $jobVal->id
-							]);
-								if ($exists_jobs) {
-									$updateParams = [
-										'index' => ELASTIC_COMPANIES_INDEX,
-										'id' => $jobVal->id,
-										'body' => [
-											'doc' => [
-												'status' => 'inactive',
-											],
-											'doc_as_upsert' => false // Changed to false since we verified existence
-										],
-										'refresh' => true // Force immediate refresh
-									];
-								$this->elasticService->getClient()->update($updateParams);
-							}
-
-						// $updateCoin['balance_coin'] = abs($company_coins->balance_coin+$deductionsCoins);
-						// $updateCoin['auto_job_coins'] = Carbon::today();
-						// $deductions = $deductionsCoins;
-						// $balance_coins = $deductionsCoins;
-					}
-					
-					// dd($updateCoin);
-						
-					// dd($company_coins->coin_order_id,);
-				     }else{
-						DB::table('jobs')->where('id', $jobVal->id)->update(['status'=>'inactive']);
-						 $exists_jobs = $this->elasticService->getClient()->exists([
-									'index' => ELASTIC_JOBS,
-									'id' => $jobVal->id
-							]);
-								if ($exists_jobs) {
-									$updateParams = [
-										'index' => ELASTIC_COMPANIES_INDEX,
-										'id' => $jobVal->id,
-										'body' => [
-											'doc' => [
-												'status' => 'inactive',
-											],
-											'doc_as_upsert' => false // Changed to false since we verified existence
-										],
-										'refresh' => true // Force immediate refresh
-									];
-								$this->elasticService->getClient()->update($updateParams);
-							}
-
-					 }
-
-				     }
-				     }
-					if($autoPaymentjob){
-					$coin_transection_logs = [
-						'coin_order_id'=>$company_coins->coin_order_id,
-						'from_company_id'=>$this->company_id,
-						'company_id'=>$this->company_id,
-						'event_by'=>auth()->user()->id,
-						'event'=> "Jobs Manage Auto Deductions",
-						'amount'=>'',
-						'discount'=>'',
-						'remain_coins'=>$total_coins,
-						'coins'=>$deductionsCoinsCountJob,
-						'transection_type'=>'Debit',
-						'settlement_coins'=>'',
-						'balance_coins'=>$balance_coins,
-						'actual_coins'=>$company_coins->coins,
-						'event_type'=>'operational',
-						'team_id'=>'',
-						'job_id'=>'',
-						'start_date'=>'',
-						'end_date'=>'',
-						'created_at'=>date("Y-m-d H:i:s"),
-						'updated_at'=>date("Y-m-d H:i:s")	
-					];
-					$coin_transection_logs = DB::table('coin_transection_logs')->insertGetId($coin_transection_logs);
-
-				     }
-				   
-				 }
-
-				}
-				
-				
-				$offer_create_main_tds = DB::table('offer_create_main_tds')
-				->join('offer_job_applications', 'offer_job_applications.id', '=', 'offer_create_main_tds.offer_id')
-				->select('offer_create_main_tds.*')
-				->where('offer_create_main_tds.candidate_status', '=',1)
-				->where('offer_create_main_tds.status', 1)
-				->where('offer_job_applications.company_id','=',$this->company_id)
-				->get();
-				// dd($offer_create_main_tds);
-				if($offer_create_main_tds){
-					foreach($offer_create_main_tds as $offer_create_main){
-						$createdAt = Carbon::parse($offer_create_main->updated_at);
-						$currentTime = Carbon::now();
-
-						// dd($currentTime->diffInHours($createdAt));
-			
-						if ($currentTime->diffInHours($createdAt) >= 72) {
-							// Update the status after 72 hours
-							DB::table('offer_create_main_tds')
-								->where('id', $offer_create_main->id)
-								->update(['candidate_status' => 4]); // Assuming 0 is the updated status
-						}
-					}
-				}
+				// V2 Phase 1: job coin deductions moved to ProcessOperationalCoinDeductionsJob (scheduled every 5 min).
+				// V2 Phase 1: offer 72-hour timeout moved to ProcessOfferTimeoutJob (scheduled every 5 min).
 
 				
 	
@@ -477,7 +186,11 @@ class ServiceCompanyDashboardController extends ServiceCompanyBaseController
 				
 				$currentDate = Carbon::now(company()->timezone)->format('Y-m-d');
 		
-				$this->totalTodayInterview = InterviewSchedule::where(DB::raw('DATE(`schedule_date`)'),  "$currentDate")
+				// Range query on schedule_date uses the idx_comp_sched_status index (V2 Phase 2).
+				$this->totalTodayInterview = InterviewSchedule::whereBetween('schedule_date', [
+						Carbon::now(company()->timezone)->startOfDay(),
+						Carbon::now(company()->timezone)->endOfDay(),
+					])
 					->count();
 				$this->todoItemsView = $this->generateTodoView();	
 
@@ -4231,7 +3944,11 @@ class ServiceCompanyDashboardController extends ServiceCompanyBaseController
 				
 				$currentDate = Carbon::now(company()->timezone)->format('Y-m-d');
 		
-				$this->totalTodayInterview = InterviewSchedule::where(DB::raw('DATE(`schedule_date`)'),  "$currentDate")
+				// Range query on schedule_date uses the idx_comp_sched_status index (V2 Phase 2).
+				$this->totalTodayInterview = InterviewSchedule::whereBetween('schedule_date', [
+						Carbon::now(company()->timezone)->startOfDay(),
+						Carbon::now(company()->timezone)->endOfDay(),
+					])
 					->count();
 				$this->todoItemsView = $this->generateTodoView();				
 				

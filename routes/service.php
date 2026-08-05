@@ -3,6 +3,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\ServiceCompany\ServiceCompanyDashboardController;
+use App\Http\Controllers\ServiceCompany\ServiceCompanyDashboardApiController;
 use App\Http\Controllers\ServiceCompany\ServiceCompanyClientController;
 use App\Http\Controllers\ServiceCompany\ServiceCompanyJobsController;
 use App\Http\Controllers\ServiceCompany\ServiceCompanyJobApplicationController;
@@ -65,6 +66,15 @@ Route::group(['middleware' => 'auth'], function () {
 				});
 			});
 			// ──────────────────────────────────────────────────────────────────────
+
+			// ─── V2 Dashboard JSON API (Phase 4) — compact Redis-cached JSON responses ──
+			Route::prefix('api/v2/service-company/dashboard')->name('api.v2.dashboard.')->group(function () {
+				Route::get('kpis',                  [ServiceCompanyDashboardApiController::class, 'kpis'])->name('kpis');
+				Route::get('leaderboards',          [ServiceCompanyDashboardApiController::class, 'leaderboards'])->name('leaderboards');
+				Route::get('interviews',            [ServiceCompanyDashboardApiController::class, 'interviews'])->name('interviews');
+				Route::post('cache/invalidate',     [ServiceCompanyDashboardApiController::class, 'invalidateCache'])->name('cache.invalidate');
+			});
+			// ─────────────────────────────────────────────────────────────────────────
 
 			Route::group(['middleware' => ['custom-package']], function () {
 						Route::get('/dashboard', [ServiceCompanyDashboardController::class,'index'])->name('dashboard');		
@@ -139,12 +149,12 @@ Route::group(['middleware' => 'auth'], function () {
 						Route::get('jobs/recruiter/{id?}', [ServiceCompanyJobsController::class,'recruiter'])->name('jobs.recruiter'); 	
 						Route::get('jobs/getContactPerson/{client_id}', [ServiceCompanyJobsController::class,'getContactPerson'])->name('jobs.getContactPerson');
 						Route::get('jobs/getlocationCity/{location_id}', [ServiceCompanyJobsController::class,'getlocationCity'])->name('jobs.getlocationCity');
-						Route::get('jobs/editJobStatus/{id?}', [ServiceCompanyJobsController::class,'editJobStatus'])->name('jobs.editJobStatus'); 
+						Route::get('jobs/editJobStatus/{id?}', [ServiceCompanyJobsController::class,'editJobStatus'])->name('jobs.editJobStatus')->middleware('recruiter.throttle');
 						Route::get('jobs/hmlistingupdate/{id?}', [ServiceCompanyJobsController::class,'hmlistingupdate'])->name('jobs.hmlistingupdate'); 
 						Route::get('jobs/boostkeywords', [ServiceCompanyJobsController::class,'boostkeywords'])->name('jobs.boostkeywords');	
 						Route::get('jobs/recommendedData', [ServiceCompanyJobsController::class,'recommendedData'])->name('jobs.recommendedData');
-						Route::get('jobs/recommendedAssignList', [ServiceCompanyJobsController::class,'recommendedAssignList'])->name('jobs.recommendedAssignList');
-						Route::get('jobs/staffingPartnersRegister', [ServiceCompanyJobsController::class,'staffingPartnersRegister'])->name('jobs.staffingPartnersRegister');	
+						Route::get('jobs/recommendedAssignList', [ServiceCompanyJobsController::class,'recommendedAssignList'])->name('jobs.recommendedAssignList')->middleware('recruiter.throttle');
+						Route::get('jobs/staffingPartnersRegister', [ServiceCompanyJobsController::class,'staffingPartnersRegister'])->name('jobs.staffingPartnersRegister')->middleware('recruiter.throttle');
 						Route::get('jobs/send_only_job_invitation/{id?}', [ServiceCompanyJobsController::class,'send_only_job_invitation'])->name('jobs.send_only_job_invitation');	
 						Route::get('jobs/rsp_job_request_send/{id?}', [ServiceCompanyJobsController::class,'rsp_job_request_send'])->name('jobs.rsp_job_request_send');
 						Route::get('jobs/send_job_recommanded_request/{id?}', [ServiceCompanyJobsController::class,'send_job_recommanded_request'])->name('jobs.send_job_recommanded_request');

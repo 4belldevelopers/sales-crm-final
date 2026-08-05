@@ -879,7 +879,8 @@ CREATE TABLE `coin_transection_logs` (
   `payment_Id` text CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci,
   `cart_id` int DEFAULT NULL,
   `payment_link_id` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL,
-  PRIMARY KEY (`id`)
+  PRIMARY KEY (`id`),
+  KEY `idx_comp_event_created` (`company_id`,`event_type`,`created_at`)
 ) ENGINE=InnoDB AUTO_INCREMENT=90371 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- ============================================================
@@ -1751,7 +1752,8 @@ CREATE TABLE `interview_schedules` (
   `reminder_60_sent` tinyint NOT NULL DEFAULT '0',
   `followup_status` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `followup_status_at` datetime DEFAULT NULL,
-  PRIMARY KEY (`id`)
+  PRIMARY KEY (`id`),
+  KEY `idx_comp_sched_status` (`company_id`,`schedule_date`,`status`)
 ) ENGINE=InnoDB AUTO_INCREMENT=2777 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ============================================================
@@ -2214,7 +2216,8 @@ CREATE TABLE `jobs` (
   KEY `jobs_category_id_foreign` (`category_id`),
   KEY `jobs_company_id_foreign` (`company_id`),
   KEY `idx_jobs_company_id` (`company_id`),
-  KEY `idx_company_id` (`company_id`)
+  KEY `idx_company_id` (`company_id`),
+  KEY `idx_comp_status_created` (`company_id`,`status`,`created_at`)
 ) ENGINE=InnoDB AUTO_INCREMENT=1411 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ============================================================
@@ -2630,7 +2633,8 @@ CREATE TABLE `offer_job_applications` (
   `confidential` int DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `job_applications_company_id_foreign` (`company_id`),
-  KEY `job_applications_job_id_foreign` (`job_id`)
+  KEY `job_applications_job_id_foreign` (`job_id`),
+  KEY `idx_comp_created_status` (`company_id`,`created_at`,`master_status_id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=188 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ============================================================
@@ -4339,6 +4343,22 @@ CREATE TABLE `whatsapp_instances` (
   `updated_at` timestamp NULL DEFAULT NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- ============================================================
+-- TABLE: job_status_logs
+-- ============================================================
+CREATE TABLE `job_status_logs` (
+  `id` bigint unsigned NOT NULL AUTO_INCREMENT,
+  `job_id` int unsigned NOT NULL,
+  `company_id` int unsigned DEFAULT NULL,
+  `from_status` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `to_status` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `changed_by` int unsigned DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `job_status_logs_job_id_index` (`job_id`),
+  KEY `job_status_logs_company_id_index` (`company_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ============================================================
 -- TABLE: zoomsettings
