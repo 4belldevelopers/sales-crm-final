@@ -389,7 +389,9 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 			'sortingfilter' => $valCheck,
 			'cus_search' => $custom_search,
 			'user_id' => $this->user->id,
-			'q' => $searchQuery
+			'q' => $searchQuery,
+			// V3 Phase 3.1: HTML and JSON responses are cached under separate keys.
+			'format' => $request->input('format', 'html'),
 		];
 
 		// dd($cachePayload );
@@ -889,6 +891,21 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 		// dd($pagination);
 		$userPermissions = $this->userPermissions;
 		$rowMaps = $this->prepareRowMaps($data, $company_id, (int) $request->input('app_duplicate', 0), (int) $request->input('app_duplicate_days', 0));
+
+		// V3 Phase 3.1: Pure JSON mode — returns raw ES data (~12 KB) instead of server-rendered HTML (~150 KB).
+		// Activated by ?format=json; existing fetchCandidates callers in index.blade.php are unaffected.
+		// Cache key already includes 'format' so HTML and JSON entries never collide.
+		if ($request->input('format') === 'json') {
+			$jsonResponse = [
+				'status'     => 'success',
+				'data'       => $data,
+				'rowMaps'    => $rowMaps,
+				'pagination' => $pagination,
+			];
+			cache()->put($cacheKeySet, $jsonResponse, now()->addMinutes(ALL_APPTRACKER_TIME));
+			return response()->json($jsonResponse);
+		}
+
 		$responseData = [
 			'html' => view('service_company.ajax_pages.all_apptracker', compact('data', 'userPermissions', 'rowMaps'))->render(),
 			'pagination' => view('service_company.ajax_pages.pagination', compact('pagination'))->render(),
