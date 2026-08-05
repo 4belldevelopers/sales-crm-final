@@ -264,7 +264,7 @@ Route::group(['middleware' => 'auth'], function () {
 						Route::get('agency-request/{id?}', [ServiceCompanyCompanyController::class,'findAgencyRequest'])->name('agency.recommanded_request');
 						Route::get('apptrackerajax/public_bench_data', [ServiceCompanyAppTrackerController::class,'public_bench_data_ajax'])->name('apptracker.public_bench_data_ajax');	
 						Route::get('apptracker/sub_stage/{status?}/{application_id?}/{job_id?}', [ServiceCompanyAppTrackerController::class,'sub_stage'])->name('apptracker.sub_stage');
-						Route::get('apptracker/{id}/{mstatus_id}', [ServiceCompanyAppTrackerController::class,'index']);
+						Route::get('apptracker/{id}/{mstatus_id}', [ServiceCompanyAppTrackerController::class,'index'])->name('apptracker.index');
 						Route::get('apptracker/benchReqViewMore/{id}/{job_applications_id}', [ServiceCompanyAppTrackerController::class,'benchReqViewMore'])->name('apptracker.benchReqViewMore');
 						Route::get('apptracker/loadcounter/{jobid?}/{mstatus_id?}/{inputSearch?}', [ServiceCompanyAppTrackerController::class,'loadcounter'])->name('apptracker.loadcounter');
 						Route::get('apptracker/export/{jobs}/{mstatus_id}/{start}/{length}', [ServiceCompanyAppTrackerController::class,'export'])->name('apptracker.export');
@@ -272,7 +272,7 @@ Route::group(['middleware' => 'auth'], function () {
 						Route::get('apptracker/candidates_request_data', [ServiceCompanyAppTrackerController::class,'candidates_request_data'])->name('apptracker.candidates_request_data');
 						Route::get('apptracker_request/candidates_request_data', [ServiceCompanyAppTrackerController::class,'candidates_request_data_ajax'])->name('apptracker.candidates_request_data_ajax');
 						Route::get('apptracker/openRejFrm/{application_id?}/{job_id?}/{parent_status_id?}/{current_child_id?}', [ServiceCompanyAppTrackerController::class,'openRejFrm'])->name('apptracker.openRejFrm');
-						Route::get('apptracker/clientapp/{id}/{mstatus_id}', [ServiceCompanyAppTrackerController::class,'clientapp']);
+						Route::get('apptracker/clientapp/{id}/{mstatus_id}', [ServiceCompanyAppTrackerController::class,'clientapp'])->name('apptracker.clientapp');
 						Route::get('apptracker_ajax/clientappdata', [ServiceCompanyAppTrackerController::class,'clientappdata_ajax'])->name('apptracker.clientappdata_ajax');
 						Route::get('apptracker/dsimilar_existing_data', [ServiceCompanyAppTrackerController::class,'dsimilar_existing_data'])->name('apptracker.dsimilar_existing_data');
 						Route::post('apptracker/store', [ServiceCompanyAppTrackerController::class,'store'])->name('apptracker.store');
