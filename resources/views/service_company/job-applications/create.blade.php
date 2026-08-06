@@ -1,4 +1,4 @@
-﻿@extends('layouts.service_company_layout')
+@extends('layouts.service_company_layout')
 @push('head-script')
 <script>
    $( function(){
@@ -2588,9 +2588,9 @@ async function isInternetAvailable() {
                                                     CKEDITOR.instances['recruiter_note'].updateElement();
                                                 }
 												var formData = new FormData($('#createForm')[0]);
-                        // formData.append('_method', 'PUT');
+												var candidateEditId = '{{ @$application->id ?: @$appId }}';
 												$.ajax({
-url				: '{{route('service_company.job-applications.update', @$application->id)}}'+'?_token=' + '{{ csrf_token() }}',
+													url				: '{{ url("service_company/job-applications/update") }}/' + candidateEditId + '?_token=' + '{{ csrf_token() }}',
 														   type 			: 'POST',
 														   data 			: formData,
 														   processData		: false,  	// tell jQuery not to process the data
