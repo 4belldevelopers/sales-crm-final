@@ -34,7 +34,7 @@ html, body { margin: 0 !important; padding: 0 !important; }
 
 /* ═══════════ LEFT PANEL ═══════════ */
 .v2-left {
-    width: 500px;
+    width: 635px;
     flex-shrink: 0;
     background: var(--lbg);
     display: flex;
