@@ -15,10 +15,10 @@
 
 | Severity | Count | Action |
 |---|---|---|
-| 🔴 Critical | 7 | Must fix before next production deploy |
-| 🟠 High | 9 | Fix in next sprint |
-| 🟡 Medium | 6 | Backlog |
-| 🟢 Low | 3 | Drift cleanup |
+| 🔴 Critical | 9 (7 form + 2 post-submit) | Must fix before next production deploy |
+| 🟠 High | 13 (9 form + 4 post-submit) | Fix in next sprint |
+| 🟡 Medium | 10 (6 form + 4 post-submit) | Backlog |
+| 🟢 Low | 6 (3 form + 3 post-submit) | Drift cleanup |
 
 **The single biggest finding:** `companyRegister()` is a 1,193-line method that performs ~10 MySQL inserts, ~30 synchronous Elasticsearch writes, 3 external HTTP calls (Clearbit, ipinfo, mail), and 7 hardcoded role seeds — all on the synchronous request thread inside one DB transaction. At 10k recruiters/day, the current architecture will **exhaust the InnoDB log writer and the ES heap before the connection pool fills**.
 
@@ -66,6 +66,137 @@ After the Tier 1 + Tier 2 fixes, the page becomes **production-safe at current l
 **Total ES writes per signup:** ~30 sync HTTP calls (department × N + city × 3 + relations + user + coin × 4).
 
 **Total external HTTP calls per signup:** 1 ipinfo.io + 1 mail (queued).
+
+---
+
+## 1.5. The Post-Submit & Email-Verification Flow (deep audit)
+
+The original audit covered the form → `companyRegister()` transaction. This section audits what happens **after** the form is submitted successfully — the success page, the email verification link, the resend flow, and the failure modes. All findings are cross-validated against the live code.
+
+### Post-submit success path
+
+| Layer | Code | Behavior |
+|---|---|---|
+| Server → Client | [`SaasFrontController.php:1528–1531`](../../app/Http/Controllers/SaasFront/SaasFrontController.php) | Returns `Reply::dataOnly(['status' => 'success', 'view' => $view])` where `$view` is rendered HTML of `registration_success.blade.php`. **Not a redirect.** |
+| Client → DOM | [`register.blade.php:921–923`](../../resources/views/saas-front/register.blade.php) | `Swal.fire("Sent!", ...)` then `$('#upgrade-plan').html(response.view)`. URL bar still reads `POST /company-register`. |
+| **Reload behavior** | — | Reload = POST replay = duplicate-email violation = generic error toast. **Success state is not bookmarkable or shareable.** |
+
+### Email verification flow
+
+| Step | Code | Behavior |
+|---|---|---|
+| Token generation | [`SaasFrontController.php:1082`](../../app/Http/Controllers/SaasFront/SaasFrontController.php) | `$user->email_verification_code = str_random(40);` — 40 alphanumeric chars, ~62⁴⁰ entropy. |
+| Email link | [`SaasFrontController.php:1338`](../../app/Http/Controllers/SaasFront/SaasFrontController.php) | `route('get-email-verification', $user->email_verification_code)` — raw token in URL, no signature, no expiry. |
+| Verify route | [`routes/web.php:360`](../../routes/web.php) | `GET /email-verification/{code}` — **no `signed`, no throttle, no auth.** |
+| Verify handler | [`SaasFrontController.php:3445–3530`](../../app/Http/Controllers/SaasFront/SaasFrontController.php) | Token lookup → raw DB update → dispatch confirmation mail + ES reindex + sync ES write. **All on the request thread.** |
+
+**Schema confirmation:** `users.email_verified_at` does **not** exist ([`mysql-schema.sql:4265–4296`](../../database/schema/mysql-schema.sql)) — only `status` enum + `email_verification_code` persist. The `User` model does not implement `MustVerifyEmail` ([`User.php`](../../app/Models/User.php)), so `hasVerifiedEmail()` always returns false.
+
+### Resend flow
+
+| Step | Code | Behavior |
+|---|---|---|
+| Route | [`routes/web.php:361`](../../routes/web.php) | `GET /resend/{id}` — **unauthenticated, unthrottled, no signature.** Sequential user ids (current `AUTO_INCREMENT=5883`) are enumerable in seconds. |
+| Handler | [`SaasFrontController.php:1749–1832`](../../app/Http/Controllers/SaasFront/SaasFrontController.php) | Looks up user by id where `status != active` AND `email_verification_code != ''`. **Token is NOT rotated** — same token re-mailed. |
+| Client cooldown | [`registration_success.blade.php:87–148`](../../resources/views/saas-front/registration_success.blade.php) | 120-second JS countdown. **Server has zero rate limit** — direct GET bypasses the cooldown. |
+
+### Token lifecycle race matrix
+
+| Scenario | Behavior |
+|---|---|
+| Click verify link once | User flips to `status='active'`, token cleared, confirmation mail + ES reindex fired. |
+| Click verify link twice | First click succeeds, second click sees `whereNotNull('email_verification_code')` fail → renders `view('404')`. **Silent error.** |
+| Two concurrent verify clicks | Race condition: both queries match pre-update, both raw DB updates fire, **two confirmation mails + two ES reindexes** dispatched. No `lockForUpdate()`. |
+| Wrong/expired token | `else` branch at [`SaasFrontController.php:3526`](../../app/Http/Controllers/SaasFront/SaasFrontController.php:3526) returns generic `view('404')` with no retry affordance. |
+| Token lifetime | **Indefinite** — persists in `users.email_verification_code` column until first successful verify. No expiry timestamp. |
+| Mailbox compromise | Anyone with read access to the user's email gets the token. Token is the **only auth** on the verify endpoint. |
+| Concurrent same-email registrations | `users.email` UNIQUE catches it (`QueryException` at `1086`) → generic `Throwable` catch at `1537–1540` → "Something went wrong" toast. No retry, no clean user message. |
+
+### 10 NEW Findings (post-submit + email-verify)
+
+#### 🔴 Critical (2)
+
+**C1 — `getEmailVerification` is unauthenticated, unthrottled, permanent, unsigned** ([SaasFrontController.php:3445–3530](../../app/Http/Controllers/SaasFront/SaasFrontController.php:3445)).
+**Compounds AUDIT #7.** Any read access to the user's mailbox = account takeover. No `expires_at`, no `signed` middleware, no throttling, no audit log. The 40-char token is the **only** gate. Brute force is impractical (62⁴⁰), but mailbox exposure is not — support agents with full-text search, forgotten IMAP backups, shared inbox.
+
+**Fix:**
+- Wrap route with `signed` middleware (`URL::signedRoute(...)` in welcome mail body).
+- Add `email_verification_expires_at TIMESTAMP NULL` to `users`; check `now() < expires_at`.
+- Throttle to 10/hr per IP.
+- Audit-log every successful verify.
+
+**C2 — `users.email_verified_at` does not exist** ([mysql-schema.sql:4265–4296](../../database/schema/mysql-schema.sql)).
+The custom `status='active'` flag is the only verification signal. Breeze's `MustVerifyEmail` contract is NOT wired. Any code that calls `Auth::user()->hasVerifiedEmail()` (e.g. new feature code, API guards, Jetstream adapters) silently returns false.
+
+**Fix:**
+- Migration: `ALTER TABLE users ADD COLUMN email_verified_at TIMESTAMP NULL AFTER email_verification_code, ADD UNIQUE KEY users_email_verification_code_unique (email_verification_code);`
+- Populate `email_verified_at` on `3471`.
+- Mark `User` `implements MustVerifyEmail`.
+- Convert `status='active'` reads to `email_verified_at IS NOT NULL` only after a deprecation window.
+
+#### 🟠 High (4)
+
+**H1 — Resend route leaks verification token + has zero rate limit** ([routes/web.php:361](../../routes/web.php:361); [SaasFrontController.php:1749–1832](../../app/Http/Controllers/SaasFront/SaasFrontController.php:1749)).
+`GET /resend/{id}` callable by anyone who knows or guesses a user id. Sequential AUTO_INCREMENT = enumerable in seconds. Same token re-mailed (no rotation). Once a user lands in this loop, the attacker can keep resending.
+
+**Fix:**
+- Rotate token on every resend.
+- Throttle: 3 reqs/hr per email + 10 reqs/hr per IP.
+- Require matching session token or signed URL derived from the original welcome mail.
+
+**H2 — Success page is JSON-injected DOM, not a navigable URL** ([register.blade.php:921–923](../../resources/views/saas-front/register.blade.php:921); [SaasFrontController.php:1528–1531](../../app/Http/Controllers/SaasFront/SaasFrontController.php:1528)).
+Reload = POST replay = duplicate-email violation = generic error toast. Users cannot bookmark, share, or refresh.
+
+**Fix:**
+- `return redirect()->route('registration.success', ['id' => $user->id])`.
+- Persist `$user->email` in session for one render.
+- New `GET /registration-success/{id}` route with `throttle` + token check.
+
+**H3 — Double-click on verify link fires two confirmation mails + two ES reindexes** ([SaasFrontController.php:3471–3494](../../app/Http/Controllers/SaasFront/SaasFrontController.php:3471)).
+Raw DB update at `3471` has no row-level lock. Two concurrent clicks both pass the `whereNotNull` check, both fire `QueueMailService::dispatch`, both dispatch `ElasticCompanyIndex`, both call `GeneralMethod::userIndexingupload` (sync).
+
+**Fix:**
+- Wrap in `DB::transaction` with `lockForUpdate()` on the user row.
+- Or re-check `email_verification_code === $code` inside the UPDATE and use `UPDATE ... WHERE email_verification_code = ?` (one-and-done by SQL).
+- Or move the side effects to a queued `MarkUserVerifiedJob` so the ES write is idempotent via the bulk job.
+
+**H4 — Verify + resend re-emit mail from the request thread on the public internet** ([SaasFrontController.php:3471–3494, 1796–1814](../../app/Http/Controllers/SaasFront/SaasFrontController.php:3471)).
+SMTP failure mid-verify surfaces as a 500 with no rollback of the `status='active'` flip. Row is now "active" but mail never delivered.
+
+**Fix:**
+- Dispatch a `MarkUserVerifiedJob` after the DB update.
+- Side effects (mail + ES) live inside the job.
+- `after_commit = true` on the queue + throttle on the route = the verify HTTP returns immediately.
+
+#### 🟡 Medium (4)
+
+**M1 — Wrong/expired token returns generic `view('404')`** ([SaasFrontController.php:3526](../../app/Http/Controllers/SaasFront/SaasFrontController.php:3526)).
+Users see 404 and conclude the site is broken. The dead `saas-front/email-verification.blade.php` is already in `resources/views/` — referenced only by commented-out lines `3512` and `3520`.
+
+**Fix:** Wire the dead blade as the wrong-token page with a "Resend verification link" CTA pointing at `/resend/{id}`.
+
+**M2 — `User::$guarded = []`** ([User.php:13](../../app/Models/User.php))
+**Reconfirmed** in this audit. Allows mass-assign of `status`, `email_verification_code`, `is_superadmin`. Any controller passing `$request->all()` to `User::create()` becomes a privilege-escalation primitive.
+
+**Fix:** `$fillable = ['name','email','password','company_id','calling_code','mobile']`. Add `MassAssignmentGuardTest`.
+
+**M3 — No UNIQUE index on `users.email_verification_code`** ([mysql-schema.sql:4280](../../database/schema/mysql-schema.sql)).
+Current 40-char alphanumeric space is collision-safe, but defense-in-depth costs nothing. If a future migration shortens the token (e.g. UUIDv4 = 36 chars), a collision breaks verification.
+
+**Fix:** `ALTER TABLE users ADD UNIQUE KEY users_email_verification_code_unique (email_verification_code);` (already in C2's migration).
+
+**M4 — `getDomainSpecificUrl` strips HTTPS for subdomain verify links** ([start.php:87](../../app/Helper/start.php:87)).
+Token-bearing verification links go over plaintext HTTP, enabling on-path token theft by any MITM on the user's network.
+
+**Fix:** Force HTTPS in `getDomainSpecificUrl` when the request scheme is HTTPS or when the env is production. Add a unit test.
+
+#### 🟢 Low (3)
+
+**L1 — Token never expires; no logout-on-verify.** Token persists in the column until first use. Unverified users with valid tokens are also a long-tail support query.
+
+**L2 — `email-verification.blade.php` is dead code.** See M1 — either wire it or delete it.
+
+**L3 — `registration_success.blade.php` and `invited_registration_success.blade.php` diverge.** Invited path goes to a different success page ([SaasFrontController.php:2122, 2243, 3268](../../app/Http/Controllers/SaasFront/SaasFrontController.php:2122)). No shared partial; resend/copy differs across blades.
 
 ---
 
@@ -435,9 +566,49 @@ From [`database/schema/mysql-schema.sql`](../../database/schema/mysql-schema.sql
 3. **`User` model + Breeze verify routes** — delete Breeze (recommended) or wire `MustVerifyEmail`?
 4. **`CompanyObserver` not in `AppServiceProvider`** — manual boot elsewhere, or regression?
 5. **Captcha vendor** — Cloudflare Turnstile (recommended), hCaptcha, or reCAPTCHA v3?
+6. **Verify mail vendor** — SMTP credentials in env; given C2/H4 (verify-thread blocks on SMTP), are we OK with a 30s timeout? Suggested: Cloudflare Email Routing or SES with fail-fast.
 
 ---
 
 ## 12. Where to Go Next
 
-→ See [`IMPLEMENTATION_PLAN.md`](IMPLEMENTATION_PLAN.md) for the phased rollout (6 sprints, ~12 dev-days, no business-logic changes).
+→ See [`IMPLEMENTATION_PLAN.md`](IMPLEMENTATION_PLAN.md) for the phased rollout (6 sprints, ~12 dev-days, no business-logic changes), now extended for the post-submit + email-verify flow.
+
+---
+
+## 13. Post-Submit & Email-Verify Risk at Scale
+
+Beyond the form-load risk (§10), the post-submit flow has its own scaling + correctness risks:
+
+| Risk | Magnitude at 10k/day | Mitigation |
+|---|---|---|
+| Verify-thread blocks on SMTP | 10k signups × ~1s SMTP = ~2.7 hours of Octane-worker time per day, all on the public request thread | Move mail dispatch to `MarkUserVerifiedJob` queued after DB update. Verify HTTP returns in <50ms. |
+| Idempotent double-click double-mail | Two confirmation mails per accidental double-click → user spam + ES heap pressure | `DB::transaction` + `lockForUpdate()` on the user row OR `UPDATE ... WHERE email_verification_code = ?` pattern. |
+| Resend endpoint enumeration | 10k known user ids × sequential AUTO_INCREMENT = trivially enumerable; attacker keeps spamming the same email as users sign up | Rotate token + IP-based throttle + require signed URL tied to original mail. |
+| Token persisted in mailbox | Permanent; no expiry | `email_verification_expires_at` column + 30min default. |
+| Token leaked by HTTP (not HTTPS) | `getDomainSpecificUrl` strips HTTPS → MITM on coffee-shop wifi = account takeover | Force HTTPS in `getDomainSpecificUrl` for production paths. |
+| Concurrent same-email registrations | Generic 500 — user retries, no clean error | `try` the `User::save()` and return "Email already registered. Try logging in instead." |
+
+**Verdict:** The post-submit flow has **higher security stakes** than the form-load flow but **lower performance stakes** (single request, not 10k/day). C1 + C2 + H1 + H2 must close before any production deployment.
+
+---
+
+## 14. Cross-Reference: Audit Finding → Implementation Plan Task
+
+The Implementation Plan has been extended to cover all 10 new findings. Quick map:
+
+| Audit ID | Plan Task |
+|---|---|
+| C1 (verify unsigned + unthrottled) | Sprint 1 task 1.5 (signed) + Sprint 5 new task 5.10 (verify-mail body URL::signedRoute + expires_at + throttle) |
+| C2 (no email_verified_at) | Sprint 5 new task 5.11 (migration + populate + MustVerifyEmail contract) |
+| H1 (resend enumeration) | Sprint 2 new task 2.10 (token rotation + throttle) |
+| H2 (success page not navigable) | Sprint 5 new task 5.12 (redirect route + session) |
+| H3 (double-click race) | Sprint 5 new task 5.13 (lockForUpdate on verify) |
+| H4 (verify-thread blocks on SMTP) | Sprint 5 new task 5.14 (MarkUserVerifiedJob) |
+| M1 (wrong-token 404) | Sprint 4 new task 4.10 (wire dead email-verification blade) |
+| M2 ($guarded = []) | Sprint 4 task 4.5 (already exists) |
+| M3 (no UNIQUE on code) | Sprint 5 new task 5.11 (rolled into migration with C2) |
+| M4 (HTTPS→HTTP) | Sprint 1 new task 1.10 (force HTTPS in getDomainSpecificUrl) |
+| L1 (token never expires) | Sprint 5 new task 5.11 (expires_at column) |
+| L2 (dead email-verification blade) | Sprint 4 new task 4.10 (same as M1) |
+| L3 (success page divergence) | Sprint 6 (folded into existing consolidation) |
