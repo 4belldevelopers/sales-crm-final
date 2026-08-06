@@ -932,7 +932,8 @@ Both console commands exist today (`app/Console/Commands/DeleteAccount.php:51-62
 - `docs/UI_UX_STANDARDS.md` — UI standards compliance
 - `docs/AI_RULES.md` — hard rules (no schema changes, no business-logic changes)
 - `docs/ARCHITECTURE.md` — system map
-- `docs/V2_login/BLOCKING_SCENARIOS_AUDIT.md` — companion audit (23 findings + refinement pass). Required reading before any Phase-3.x or Phase-6.4/6.5 work.
+- `docs/V2_login/BLOCKING_SCENARIOS_AUDIT.md` — companion audit (42+ findings, refinement pass). Required reading before any Phase-3.x or Phase-6.4/6.5 work.
+- `~/.claude/plans/memoized-stargazing-sutherland.md` — workflow history of the refinement + docs-only slices. Redundant with Appendix A but retained for audit trail.
 
 ---
 
@@ -959,6 +960,8 @@ Bold = new in this docs-only slice.
 
 These questions in `BLOCKING_SCENARIOS_AUDIT.md` §7 are **not answered**. They affect whether Phase-3 work ships as documented, or with adjustments.
 
+#### Load-bearing (must be answered before Phase 3.3 PR)
+
 1. **Hard-logout vs. soft-redirect on company block.** Audit proposes soft-redirect (epoch gate + lazy cleanup). Hard-logout would require per-user `Auth::logout()` iteration and defeats the O(1) design.
    - **If product wants hard-logout:** Phase 3.4 must gain an early-exit Redis loop before the epoch comparison. Phase 3.6's `BlockCompanyAction` would change from one Redis `SET` to one Redis `SET` + N session destroys. Design no longer O(1).
    - **Default if no answer:** soft-redirect (audit proposal). Ping product before Phase 3.6 PR.
@@ -968,6 +971,19 @@ These questions in `BLOCKING_SCENARIOS_AUDIT.md` §7 are **not answered**. They 
    - **Default if no answer:** keep the column nullable, no UI initially. Easy to drop later.
 
 Both items to flag in the Phase 3.3 PR description.
+
+#### Secondary (do not block Phase 3.3, but answer before adjacent slices)
+
+3. **`users` schema additions** (audit §4.4): `users.failed_login_attempts`, `users.locked_until`, `users.banned_at`, `users.deleted_at`, `users.last_active_at`, `users.blocked_by`, `users.blocked_at`, `users.block_reason`, `users.email_verified_at`. All require schema migrations. Decide which to add for Phase 3.7 / Phase 6.5 work vs. deferring to a separate ADR.
+   - **Default if no answer:** add none in this slice. Defer all to a separate schema-additions ADR.
+
+4. **Razorpay `payment.failed` and Stripe `invoice.payment_failed` auto-suspend** (audit §3.8): today these are no-op stubs. Should they flip `companies.status='hold'` automatically, or stay manual superadmin actions?
+   - **Default if no answer:** stay manual. Auto-suspend on transient card declines creates risk; superadmin keeps manual control.
+
+5. **Failed-login lockout policy** (audit §3.6): schema columns do not exist today; `LoginRequest` has a default of 5 attempts / 1 minute but is not wired. What is the desired policy?
+   - **Default if no answer:** do nothing in this slice (out of V2_login scope per audit §5.8). Defer to a separate login-hardening ADR.
+
+The audit doc's §7 has these as questions 1–5; this plan re-orders them so the load-bearing two come first.
 
 ### Out of scope (explicitly NOT in this audit's implementation pass)
 
