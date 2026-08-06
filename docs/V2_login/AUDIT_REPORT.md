@@ -5,6 +5,7 @@
 **Stack:** Laravel 11 + Octane/FrankenPHP + Redis (sessions/cache) + MySQL (write store) + Elasticsearch (read store) + Reverb.
 **Target:** 10,000 concurrent recruiters with near real-time performance and minimal server load.
 **Constraint:** No business-logic changes (rule #8). Only infrastructure, caching, async-ification, dead-code removal, UI standards compliance.
+**Companions:** [`IMPLEMENTATION_PLAN.md`](IMPLEMENTATION_PLAN.md), [`BEFORE_AFTER_COMPARISON.md`](BEFORE_AFTER_COMPARISON.md) (same folder). **See also:** [`BLOCKING_SCENARIOS_AUDIT.md`](BLOCKING_SCENARIOS_AUDIT.md) for the companion blocking-scenarios audit (covers user-block-by-company, company-block-by-superadmin, all other suspension flows).
 
 ---
 
@@ -13,6 +14,20 @@
 | Path | Role | LOC |
 |---|---|---|
 | `app/Http/Controllers/Auth/LoginController.php` | Active login controller (god class) | 825 |
+| `app/Http/Middleware/EnsureOneDeviceLogin.php` | Single-device enforcement (declared, not wired) | ~72 |
+| `app/Http/Middleware/RedirectIfAuthenticated.php` | Guest redirect; has bugs (raw-string returns, `exit`) | ~46 |
+| `app/Http/Middleware/VerifyCsrfToken.php` | Dead; Laravel 11 inlines CSRF | small |
+| `app/Listeners/LogSuccessfulLogin.php` | Side-effect listener (never registered); MySQL writes | small |
+| `app/Helper/GeneralMethod.php:9235` | `userIndexingupload()` ES sync helper (existing reuse) | inline block |
+| `app/Http/Controllers/ServiceCompany/ServiceCompanyTeamController.php` | `statusUpdate` (L2074) + `teamDelete` (L111) + `WorkingStatus` (L2006) | large |
+| `app/Http/Controllers/ProductCompany/ProductCompanyTeamController.php` | `statusUpdate` (L1854) — duplicate logic; **skips ES sync** | large |
+| `app/Http/Controllers/StaffingCompany/StaffingCompanyTeamController.php` | `statusUpdate` (L1752) — duplicate logic; **skips ES sync** | large |
+| `app/Http/Controllers/SuperAdmin/SuperAdminCompanyController.php` | `checkActive` (L11261), `checkStatusOperational` (L11346), `checkStatusSales` (L11363), `loginAsCompany` (L4721) | god |
+| `app/Console/Commands/DeleteAccount.php` | Timed company self-deactivation (not scheduled → dead) | small |
+| `app/Console/Commands/LicenceExpire.php` | Package expiry notify-only (not scheduled → dead) | ~50 |
+| `app/Http/Controllers/Razorpay/RazorpayWebhookController.php` | `paymentFailed` / `subscriptionCancelled` handlers (no-op stubs) | small |
+| `app/Http/Controllers/Stripe/StripeWebhookController.php` | `invoice.payment_succeeded` only; no `payment_failed` handler | small |
+| `app/Http/Controllers/Auth/CustomloginController.php` | Dead-code variant of LoginController | 295 |
 | `app/Http/Controllers/Auth/CustomloginController.php` | Dead alternate login controller | 295 |
 | `app/Http/Controllers/Auth/LoginRequest.php` | Breeze-style FormRequest (unused) | 85 |
 | `app/Http/Controllers/Auth/AuthenticatedSessionController.php` | Breeze stub (route never loaded) | ~30 |
@@ -436,6 +451,7 @@ if($user_id == $remember_token) {
 - **OAuth/Social login** — present as disabled links (display:none) but not implemented; out of scope here.
 - **Schema changes** — no migrations. The `session_id` column on `users` (used by `EnsureOneDeviceLogin` and `LogSuccessfulLogin`) stays.
 - **`hire.jero.works`** — per CLAUDE.md, work happens only in this repo.
+- **Blocking-scenarios audit** — user-block-by-company, company-block-by-superadmin, coin-depletion, self-deactivate, payment-failure suspend, super-admin impersonation, etc. — see companion doc [`BLOCKING_SCENARIOS_AUDIT.md`](BLOCKING_SCENARIOS_AUDIT.md). That audit identifies 23+ findings across 15 blocking vectors and proposes `SyncUserStatusAction` / `BlockCompanyAction` / `UserAccountSuspended` event / session-epoch pattern as the unified fix.
 
 ---
 

@@ -1,6 +1,6 @@
 # JERO Login V2 — Current vs. After-Implementation Comparison
 
-**Companion to:** `AUDIT_REPORT.md`, `IMPLEMENTATION_PLAN.md` (same folder)
+**Companion to:** `AUDIT_REPORT.md`, `IMPLEMENTATION_PLAN.md` (same folder). **See also:** [`BLOCKING_SCENARIOS_AUDIT.md`](BLOCKING_SCENARIOS_AUDIT.md) for the companion blocking-scenarios audit.
 **Date:** 2026-08-06
 **Purpose:** Side-by-side view of the current implementation vs. the post-V2 target state across every layer that the audit flagged. No business-logic changes; only infrastructure, caching, async-ification, dead-code removal, UI compliance.
 
@@ -437,3 +437,84 @@ The V2 implementation preserves all existing business logic. Specifically:
 - [ ] All Phase 6 functional tests pass
 - [ ] No regressions on existing login flows (snapshot tests)
 - [ ] CSP report-only mode green for 7 days before enforcing
+
+**Blocking-scenarios sign-off** (Phase 3.3–3.8 + Phase 6.4–6.5 — see [`BLOCKING_SCENARIOS_AUDIT.md`](BLOCKING_SCENARIOS_AUDIT.md) + [`IMPLEMENTATION_PLAN.md` Appendix A](IMPLEMENTATION_PLAN.md)):
+
+- [ ] Epoch gate: `Cache::put("company:epoch:42", t=200)` rejects any user whose `login_timestamp < 200` on next request
+- [ ] Epoch gate: `Cache::put("user:epoch:7", t=300)` rejects user 7 regardless of any company epoch
+- [ ] Reverb `UserAccountSuspended` event fires on `PrivateChannel('App.Models.User.{id}')` for single-user blocks
+- [ ] Reverb `UserAccountSuspended` event fires on `PrivateChannel('company.{companyId}.dashboard')` for company blocks with `companyBlocked=true`
+- [ ] `SyncUserStatusAction` cross-tenant guard: target user from a different company returns 403
+- [ ] `BlockCompanyAction` is O(1): `Cache::put` called once, broadcast fired once, audit log row count = 1, regardless of company size (load test with 5,000-member company)
+- [ ] All 20 `refresh:true` ES sites removed across 9 files; `bash scripts/ai-guards.sh` exits 0
+- [ ] `block_log` table populated for every blocking action with non-null `actor_user_id`
+- [ ] `superadmin-bulk-ops` rate limiter: 11th `POST /super-admin/check-active` within 60 s returns 429
+- [ ] Scheduler entries live: `php artisan schedule:list` shows `delete-account` (daily 02:00) and `licence-expire` (daily 03:00)
+
+**Product sign-off items** (must be answered before Phase 3.3 PR can land):
+
+- [ ] **Q1** Hard-logout vs. soft-redirect on company block — see `IMPLEMENTATION_PLAN.md` Appendix A #1
+- [ ] **Q2** `block_log.reason` free-text vs. typed categories only — see `IMPLEMENTATION_PLAN.md` Appendix A #2
+
+---
+
+## 16. Blocking-scenarios delta (companion to BLOCKING_SCENARIOS_AUDIT.md)
+
+This section captures the post-refinement architectural changes that are implemented in [`IMPLEMENTATION_PLAN.md`](IMPLEMENTATION_PLAN.md) Phase 3.3–3.8 and Phase 6.4–6.5. The full companion audit lives in [`BLOCKING_SCENARIOS_AUDIT.md`](BLOCKING_SCENARIOS_AUDIT.md). The 4 GOD-level refinements applied during the 2026-08-06 review pass are summarised below.
+
+### 16.1 Session-epoch pattern — replaces per-user iteration
+
+| Aspect | Before | After |
+|--------|--------|-------|
+| Per-user Redis writes on company block | N users → N `Cache::put` calls | 1 `Cache::put("company:epoch:{id}", $ts)` |
+| Per-user Redis reads on every request | N/A | 1 `Cache::get("company:epoch:{user->company_id}")` + 1 `Cache::get("user:epoch:{user->id}")` = 2 reads O(1) |
+| TTL | n/a | 7 days (auto-cleanup) |
+| Middleware path | `EnsureOneDeviceLogin` checks `users.status` only | Adds epoch comparison after status check; logout + redirect if mismatch |
+
+A single Redis write locks all sessions for a 5,000-user company. No per-user iteration loop.
+
+### 16.2 Reverb broadcast for instant kick — replaces lazy cleanup
+
+| Aspect | Before | After |
+|--------|--------|-------|
+| Time-to-kick after status flip | Next HTTP request (lazy, up to many minutes) | < 50 ms via Reverb `UserAccountSuspended` event |
+| Channel | n/a (no broadcast) | `PrivateChannel('App.Models.User.{id}')` for single-user blocks; `PrivateChannel('company.{companyId}.dashboard')` for company blocks |
+| Payload | n/a | `userId`, `companyId`, `newStatus`, `companyBlocked` |
+| Frontend listener | n/a | Out of scope per audit §9 (deferred to a separate frontend slice) |
+
+### 16.3 `refresh:true` removal — bulk ES becomes non-blocking
+
+| Aspect | Before | After |
+|--------|--------|-------|
+| `refresh:true` on bulk `updateByQuery` | Forces immediate shard refresh; tens to hundreds of ms per shard; self-DoS at 5,000-user scale | Drop `refresh:true` everywhere; rely on 1-second natural background refresh |
+| Sites affected | 20 across 9 files | All 20 sites get the flag dropped in Phase 3.5 + Phase 3.6 |
+| Single-company doc write | n/a (used `refresh:true`) | `refresh=wait_for` only on the single-company `updateByQuery` in `BlockCompanyAction`, so marketplace filters reflect within the same request |
+| Lint enforcement | n/a | New GUARD 3 in `scripts/ai-guards.sh` (Phase 3.7) prevents new `refresh:true` introductions |
+
+### 16.4 `SyncUserStatusAction` + `BlockCompanyAction` — single source of truth
+
+| Aspect | Before | After |
+|--------|--------|-------|
+| Number of `statusUpdate` methods touching `users.status` | 3 (ServiceCo / ProductCo / StaffingCo) — each near-duplicate | 3 methods, each delegating to one `SyncUserStatusAction` |
+| ES sync paths | 5 distinct patterns (1 ServiceCo sync + 4 nothing) | 1 `SyncUserStatusEsJob` dispatched by the Action |
+| Cross-tenant guard | None in `teamDelete`; bulk cross-tenant write possible | Action's `abort_if($affected !== 1, 403, ...)` rejects cross-tenant writes |
+| Audit trail | Zero rows written for any blocking action | 1 row per blocking action via `BlockLog::create([...])` |
+| Broadcast | Zero broadcasts | 1 `UserAccountSuspended` event per blocking action |
+| SuperAdmin bulk block | Inline `updateByQuery` + `refresh:true` in 3 places | 1 call to `BlockCompanyAction::execute(...)` |
+
+### 16.5 Audit log table — new
+
+| Aspect | Before | After |
+|--------|--------|-------|
+| Audit table | None (no `audit_logs`, no `activity_log`, no `blocked_by`/`blocked_at` columns) | New `block_log` table (Phase 6.4) with `id`, `target_user_id`, `target_company_id`, `actor_user_id`, `block_type`, `reason`, `created_at` |
+| Migration | n/a | `database/migrations/2026_08_06_000001_create_block_log_table.php` (co-located with Phase 3.3) |
+| Schema sign-off | n/a | `users` schema additions (audit §4.4) deferred to a separate ADR per `IMPLEMENTATION_PLAN.md` Appendix A #3 |
+
+### 16.6 Scheduler wires dead consoles
+
+| Console | Status before | Status after |
+|---------|----------------|--------------|
+| `app/Console/Commands/DeleteAccount.php` | Code exists, never runs | Phase 6.5: daily at 02:00 server time, `withoutOverlapping(50)` |
+| `app/Console/Commands/LicenceExpire.php` | Code exists, never runs | Phase 6.5: daily at 03:00 server time, `withoutOverlapping(50)` |
+
+Both were silently broken; the timed-delete feature and the licence-expiry notifications were no-ops in production.

@@ -116,7 +116,7 @@ But this only fires on the next request — not the current tab.
 
 | # | Issue | File:Line | Severity |
 |---|-------|-----------|----------|
-| 1 | **Company root user CAN be blocked** — no `root_user === 1` guard. Admin can lock themselves out of their own dashboard. | `ServiceCompanyTeamController.php:2074-2099` | **High** |
+| 1 | **Company root user CAN be blocked** — no `root_user === 1` guard. Admin can lock themselves out of their own dashboard. *(See "Pending product decision" footnote below this table — the `SyncUserStatusAction` does NOT add a root-user guard; that decision requires product sign-off.)* | `ServiceCompanyTeamController.php:2074-2099` | **High** |
 | 2 | **`teamDelete` has no `company_id` WHERE clause** — cross-tenant write: Admin A's checkbox payload can include Admin B's user IDs and they get bulk-inactivated. | `ServiceCompanyTeamController.php:133` | **High** |
 | 3 | **ES drift on ProductCompany/StaffingCompany** — `statusUpdate` writes MySQL but skips `userIndexingupload`. Blocked user keeps appearing in app-tracker candidate lists. | `ProductCompanyTeamController.php:1854` / `StaffingCompanyTeamController.php:1752` | **High** |
 | 4 | **No ES sync in bulk `teamDelete`** — mass block leaves ES entirely stale. | `ServiceCompanyTeamController.php:133` | Medium |
@@ -339,18 +339,20 @@ No `audit_logs` table, no Laravel Auditing, no `blocked_by` / `blocked_at` colum
 
 ### 4.3 Inconsistent ES sync
 
-| Sync path | ES updated? | refresh? | Bulk? |
-|-----------|-------------|----------|-------|
-| ServiceCompany `statusUpdate` (single) | yes | no | no |
-| ProductCompany `statusUpdate` (single) | **NO** | n/a | n/a |
-| StaffingCompany `statusUpdate` (single) | **NO** | n/a | n/a |
-| `teamDelete` bulk | **NO** | n/a | n/a |
-| `SuperAdminCompanyController::checkActive` | yes | **yes** | yes (`updateByQuery`) |
-| `checkStatusOperational` | **NO** | n/a | n/a |
-| `checkStatusSales` | **NO** | n/a | n/a |
-| Coin-deduction cron | yes | no | no |
-| `DeleteAccount` cron | **NO** | n/a | n/a |
-| `ProfileController::destroy` | **NO** (orphan) | n/a | n/a |
+| Sync path | ES updated? | refresh? | Bulk? | Fixed in plan |
+|-----------|-------------|----------|-------|---------------|
+| ServiceCompany `statusUpdate` (single) | yes | no | no | Phase 3.5 → `SyncUserStatusAction` |
+| ProductCompany `statusUpdate` (single) | **NO** | n/a | n/a | Phase 3.5 → `SyncUserStatusAction` (closes drift) |
+| StaffingCompany `statusUpdate` (single) | **NO** | n/a | n/a | Phase 3.5 → `SyncUserStatusAction` (closes drift) |
+| `teamDelete` bulk | **NO** | n/a | n/a | Phase 3.5 (Action's cross-tenant guard rejects cross-tenant IDs) |
+| `SuperAdminCompanyController::checkActive` | yes | **yes** | yes (`updateByQuery`) | Phase 3.6 → `BlockCompanyAction` (drops `refresh:true`) |
+| `checkStatusOperational` | **NO** | n/a | n/a | Phase 3.6 → `BlockCompanyAction` (no ES sync — only company_coins row + epoch) |
+| `checkStatusSales` | **NO** | n/a | n/a | Phase 3.6 → `BlockCompanyAction` (same as operational) |
+| Coin-deduction cron | yes | no | no | Already correct (no change) |
+| `DeleteAccount` cron | **NO** | n/a | n/a | Phase 6.5 wires scheduler, but ES sync remains a separate task (out of V2_login scope) |
+| `ProfileController::destroy` | **NO** (orphan) | n/a | n/a | Out of scope (self-delete path; needs separate ADR) |
+
+After Phase 3.5 and Phase 3.6 land, all 5 user-blocking paths (3 statusUpdate + teamDelete + checkActive) reduce to **one Action class** with **one ES sync path** (`SyncUserStatusEsJob` → `GeneralMethod::userIndexingupload()`), one audit-log row per event, one Redis `Cache::put` per blocking event, and one Reverb broadcast.
 
 ### 4.4 Schema gaps
 
@@ -720,4 +722,16 @@ This requires Blade layout changes and JS module wiring — outside the document
 
 ---
 
-**End of audit. Total findings: 23 (3 Critical, 7 High, 8 Medium, 5 Low). See IMPLEMENTATION_PLAN §5 for the binding fix sequence. Architectural refinements (session epoch, Reverb broadcast, `refresh:true` removal, `SyncUserStatusAction`) applied per user review on 2026-08-06.**
+**End of audit. Findings breakdown:**
+
+| Section | Findings | Severity mix |
+|---------|----------|--------------|
+| §1 User blocked by company | 9 (footguns table rows) | 3 High, 4 Medium, 1 Low, 1 Trivial |
+| §2 Company blocked by Superadmin | 7 (defects table rows) | 2 Critical, 2 High, 2 Medium, 1 Low |
+| §3 Other blocking scenarios (12 sub-sections) | ~22 (multiple per sub-section) | 4 P0, 5 P1, 3 P2 |
+| §4 Cross-cutting findings | 4 | 4 P0 patterns |
+| §6 verification matrix (post-fix expectations) | 16 rows | n/a — these are gates, not findings |
+| §8 `refresh:true` site inventory | 20 sites (9 files) | n/a — these are existing-code sites |
+| **Total findings (incl. P0/P1/P2 sub-flavouring)** | **~42 distinct** | **~6 Critical/P0, ~12 High, ~14 Medium, ~5 Low, 5 Low/Trivial** |
+
+The earlier "23 (3 Critical, 7 High, 8 Medium, 5 Low)" tally was the §1+§2 subset only and is superseded by the table above. See [`IMPLEMENTATION_PLAN.md` Appendix A](IMPLEMENTATION_PLAN.md) for the binding fix sequence. Architectural refinements (session epoch, Reverb broadcast, `refresh:true` removal, `SyncUserStatusAction`) applied per user review on 2026-08-06. See [`docs/adr/0007-blocking-scenarios-architecture.md`](../adr/0007-blocking-scenarios-architecture.md) for the decision record.
