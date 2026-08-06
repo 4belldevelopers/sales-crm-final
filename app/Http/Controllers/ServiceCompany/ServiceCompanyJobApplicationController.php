@@ -1570,6 +1570,10 @@ protected $elasticService;
 		$this->jobId = $jobId;
 		$this->appId = $appId;
 
+		if (!empty($appId) && (int) $appId !== 0) {
+			$this->application = JobApplication::find($appId);
+		}
+
 
 		$this->jobDetail = Job::select('jobs.id','jobs.company_id', 'jobs.title', 'jobs.min_salary', 'jobs.max_salary', 'jobs.created_at', 'jobs.min_exp', 'jobs.max_exp', 'jobs.status','jobs.total_positions', 'clients.name as client_name', 'client_location.city', 'client_location.postcode', 'client_location.city as location_city','jobs.min_sal_mode','jobs.max_sal_mode','jobs.min_salary_currency','jobs.max_salary_currency')
 			//->join('job_assign', 'job_assign.job_id', 'jobs.id')
@@ -5239,6 +5243,10 @@ protected $elasticService;
 	// Function to convert currency to INR
 	public function update(Request $request, $id)
 	{
+		$id = GeneralMethod::value_decrypt($id);
+		if (!$id) {
+			return Reply::dataOnly(['status' => 'error', 'msgType' => 'warning', 'message' => 'Invalid candidate application ID']);
+		}
 		// echo '<pre>'; print_r($_FILES); exit;
 		// die;
 
