@@ -168,6 +168,7 @@ Each sprint is independently shippable. Each one ends with the [Definition of Do
 | 1.7 | Remove three dead `use App\Notifications\*` imports | [`SaasFrontController.php:24–26`](../../app/Http/Controllers/SaasFront/SaasFrontController.php:24) | §2 Dead paths |
 | 1.8 | Add cache/session/index migration to schema | `database/migrations/2026_08_07_*.php` | §2.4 |
 | 1.9 | Add `companies.sub_domain` UNIQUE + `users(company_id,email)` composite + `packages(is_trial,status)` | migration | §7 + Finding #6 |
+| 1.10 | Force HTTPS in `getDomainSpecificUrl` for production paths (audit M4) | [`app/Helper/start.php:87`](../../app/Helper/start.php:87) | Audit §13 M4 |
 
 #### Verification (per [VERIFY.md](../VERIFY.md))
 
@@ -196,6 +197,7 @@ Each sprint is independently shippable. Each one ends with the [Definition of Do
 | 2.7 | Add `countryDialCodes.js` to `public/front/assets/js/` | `public/front/assets/js/countryDialCodes.js` | Finding #9 |
 | 2.8 | Replace missing `img/logo-transparent1.svg` with real logo | `public/img/` | Finding #9 |
 | 2.9 | Cache probe results in Redis with 60s TTL | [`SaasFrontController.php:1550, 1584, 1600, 1657`](../../app/Http/Controllers/SaasFront/SaasFrontController.php:1550) | Finding #2 (defense-in-depth) |
+| 2.10 | **Resend endpoint hardening (audit H1)**: rotate token on resend, throttle 3/hr per email + 10/hr per IP, require signed URL or session token | [`routes/web.php:361`](../../routes/web.php:361), [`SaasFrontController.php:1749–1832`](../../app/Http/Controllers/SaasFront/SaasFrontController.php:1749) | Audit §13 H1 |
 
 #### Verification
 
@@ -253,6 +255,7 @@ Each sprint is independently shippable. Each one ends with the [Definition of Do
 | 4.7 | Decide: delete Breeze verify routes OR wire `MustVerifyEmail` on User | [`routes/auth.php:39–48`](../../routes/auth.php:39), [`app/Models/User.php`](../../app/Models/User.php) | Finding #19 |
 | 4.8 | Delete dead `BK/` directory and old backup files | `resources/views/staffing_company/BK/`, root `OLD_*` | §2 Dead paths |
 | 4.9 | Add HTML5 input types + `minlength`/`maxlength` to all 4 register blades | all 4 register blades | Finding #21 |
+| 4.10 | **Wire the dead `email-verification.blade.php`** as the wrong/expired-token page (audit M1, L2) | [`SaasFrontController.php:3526`](../../app/Http/Controllers/SaasFront/SaasFrontController.php:3526), `resources/views/saas-front/email-verification.blade.php` | Audit §13 M1, L2 |
 
 #### Verification
 
@@ -474,6 +477,145 @@ If the connection name is different in this codebase, apply the same flag there.
 - [ ] **ADR-V2R-11 check:** Pest test mocks the `App\Actions\Registration\BootstrapTenantDefaultsAction`; verify it is RESOLVED FRESH for each `Company` request (i.e., two requests on the same Octane worker do not share mutation state).
 - [ ] **ADR-V2R-12 check:** synthetic deadlock test (`PDOException('40001', 'Serialization failure', 1213)` injected) → transaction retries 3 times then succeeds without surfacing to the user.
 - [ ] **ADR-V2R-13 check:** synthetic rollback test (force a constraint violation mid-transaction) → `Mail::queue()` is NOT observed in Horizon, `IndexCompanyBulkJob` is NOT observed on the `indexing` queue, `ats_companies` ES index is NOT touched.
+- [ ] **Audit C1 check:** verify route is `signed`, audit-logged, and throttled to 10/hr.
+- [ ] **Audit C2 check:** `email_verified_at IS NOT NULL` for every user one would expect to be verified (sample query).
+- [ ] **Audit H3 check:** simultaneous double-click on the verify link fires ONE confirmation mail, not two.
+- [ ] **Audit H4 check:** verify HTTP returns in <50ms; the `MarkUserVerifiedJob` runs in Horizon.
+
+#### 5.10 Email-verify URL signed + token expiry (audit C1)
+
+In the welcome mail body, replace:
+```php
+$urlLink = route('get-email-verification', $user->email_verification_code);
+```
+with:
+```php
+$urlLink = URL::temporarySignedRoute(
+    'get-email-verification',
+    now()->addMinutes(30),
+    ['code' => $user->email_verification_code],
+);
+```
+
+Apply `signed` middleware to the route in `routes/web.php:360` (already in Sprint 1 task 1.5 — confirm it stayed).
+
+In `getEmailVerification`, add:
+```php
+if (now()->greaterThan($user->email_verification_expires_at)) {
+    return view('saas-front.email-verification', ['expired' => true, ...$this->data]);
+}
+```
+
+#### 5.11 Schema migration — `email_verified_at`, `email_verification_expires_at`, UNIQUE on code (audit C2 + M3 + L1)
+
+Migration (online, zero-downtime):
+```sql
+ALTER TABLE users
+  ADD COLUMN email_verified_at TIMESTAMP NULL AFTER email_verification_code,
+  ADD COLUMN email_verification_expires_at TIMESTAMP NULL AFTER email_verified_at,
+  ADD UNIQUE KEY users_email_verification_code_unique (email_verification_code);
+```
+
+Update `User` model:
+```php
+class User extends Authenticatable implements MustVerifyEmail
+{
+    // existing $fillable / $guarded ...
+    public function hasVerifiedEmail(): bool
+    {
+        return $this->email_verified_at !== null;
+    }
+    public function markEmailAsVerified(): bool
+    {
+        return $this->forceFill([
+            'email_verified_at' => now(),
+            'status' => 'active',
+            'email_verification_code' => null,
+        ])->save();
+    }
+}
+```
+
+Populate on every existing active signup via a one-off artisan command in the migration.
+
+#### 5.12 Success page → redirect to a navigable URL (audit H2)
+
+Replace the JSON-injected DOM at [SaasFrontController.php:1528–1531](../../app/Http/Controllers/SaasFront/SaasFrontController.php:1528) with:
+
+```php
+$request->session()->put('registration.just_registered_email', $user->email);
+return redirect()->route('registration.success', ['id' => $user->id]);
+```
+
+New routes:
+```php
+Route::get('/registration-success/{id}', [SaasFrontController::class, 'registrationSuccess'])
+    ->name('registration.success')
+    ->middleware('throttle:register-success');
+```
+
+New `registrationSuccess($id)` method reads the email from the session, renders the existing `registration_success.blade.php`, and clears the session key on consume. Refresh-safe.
+
+#### 5.13 Verify race protection — `DB::transaction` + `lockForUpdate` (audit H3)
+
+Replace [SaasFrontController.php:3471](../../app/Http/Controllers/SaasFront/SaasFrontController.php:3471):
+```php
+DB::transaction(function () use ($code) {
+    $user = User::where('email_verification_code', $code)
+        ->whereNotNull('email_verification_code')
+        ->lockForUpdate()
+        ->first();
+
+    if (! $user) {
+        return null; // bubble up to view('saas-front.email-verification', ['expired' => true])
+    }
+
+    $user->forceFill([
+        'email_verification_code' => null,
+        'email_verified_at' => now(),
+        'status' => 'active',
+        'working_status' => 1,
+    ])->save();
+
+    return $user;
+});
+```
+
+This makes double-click idempotent at the SQL level.
+
+#### 5.14 `MarkUserVerifiedJob` — off-thread mail + ES (audit H4)
+
+Move the side effects from [SaasFrontController.php:3481–3494](../../app/Http/Controllers/SaasFront/SaasFrontController.php:3481) into a queued job:
+
+```php
+class MarkUserVerifiedJob implements ShouldQueue
+{
+    use Dispatchable, Queueable;
+
+    public $tries = 5;
+    public $backoff = [30, 60, 120, 240];
+    public $timeout = 600;
+
+    public function __construct(public int $userId) {}
+
+    public function handle(): void
+    {
+        $user = User::withoutGlobalScopes()->findOrFail($this->userId);
+
+        QueueMailService::dispatch(
+            $user->email, 'Company Profile Confirmation',
+            'email.company-profile.account-confirmation-team',
+            $this->dataFor($user),
+            [], $fromAddress, $senderName, [], $user->company_id,
+        )->onConnection('emails');
+
+        ElasticCompanyIndex::dispatch($user->company_id)->onConnection('emails');
+        GeneralMethod::userIndexingupload($user->id);
+    }
+}
+```
+
+Dispatch from the controller AFTER the DB transaction commits (inside §10.C guardrails). Result: verify HTTP returns in ~50ms; mail + ES run on the queue.
 
 ---
 
@@ -520,6 +662,11 @@ If the connection name is different in this codebase, apply the same flag there.
 | 5 | InnoDB deadlocks cause user-visible 500s | `DB::transaction(fn, 3)` retries; verify with `120 concurrent / 60s` synthetic-load test (see §10.A) |
 | 5 | Octane worker leaks tenant state across requests | `scoped` binding + Pest test asserting fresh instance per request (see §10.B) |
 | 5 | "Ghost tenant" mail on rollback | `after_commit = true` on `emails` connection + dispatch outside closure (see §10.C) |
+| 5 | Verify-thread blocks on SMTP, ties up Octane workers | `MarkUserVerifiedJob` (5.14) — verify HTTP returns in <50ms |
+| 5 | Double-click on verify link fires duplicate mail + ES reindex | `lockForUpdate()` (5.13) — idempotent at SQL level |
+| 5 | Token leaks via HTTP-not-HTTPS path | `getDomainSpecificUrl` (1.10) + audit-log every verify |
+| 5 | Resend endpoint enumeration → spam | Token rotation + IP throttle (2.10) |
+| 5 | `email_verification_code` collision if token is shortened in future | UNIQUE index added (5.11) |
 | 6 | Vite build emits different bundle hashes → asset-versioning issues | Set `APP_ENV=production`; verify asset paths resolve |
 
 ---
@@ -565,13 +712,13 @@ Every PR that lands must satisfy:
 
 | Sprint | Effort | Cumulative | Outcomes |
 |---|---|---|---|
-| **1** | 0.5 day | 0.5 day | Production-safe at current load; -50% MySQL QPS |
-| **2** | 1.5 days | 2 days | DoS surface closed; captcha + rate limit; page renders clean |
+| **1** | 0.5 day | 0.5 day | Production-safe at current load; -50% MySQL QPS; verify-route signed (1.5); HTTPS-only mail links (1.10) |
+| **2** | 1.5 days | 2 days | DoS surface closed; captcha + rate limit; page renders clean; resend enumeration hardened (2.10) |
 | **3** | 2 days | 4 days | P95 -400ms; -80% MySQL QPS |
-| **4** | 1 day | 5 days | GDPR-safe; Breeze cleaned up |
-| **5** | 5 days | 10 days | P95 -250ms; ES drift-free; horizontally scalable |
-| **6** | 2 days | 12 days | TTI -300ms; single-source register blade |
-| **Buffer** | 3 days | 15 days | Review, prod-deploy, post-deploy verification |
+| **4** | 1 day | 5 days | GDPR-safe; Breeze cleaned up; wrong-token page wired (4.10) |
+| **5** | 6 days | 11 days | P95 -250ms; ES drift-free; horizontally scalable; verify-thread offloaded (5.10–5.14) |
+| **6** | 2 days | 13 days | TTI -300ms; single-source register blade |
+| **Buffer** | 3 days | 16 days | Review, prod-deploy, post-deploy verification |
 
 ---
 
@@ -593,6 +740,12 @@ After Sprint 6, the audit's success criteria:
 - [ ] **§10.B** — Two requests on the same Octane worker resolve fresh `CreateCompanyAction` instances.
 - [ ] **§10.C** — Synthetic rollback test produces zero mail jobs and zero ES bulk jobs observed in Horizon.
 - [ ] **§10.D** — Trial package confirmation memo archived in `/docs/V2_Registration/product-owner-acks/`.
+- [ ] **Audit C1** — Verify token expiry enforced; signed middleware applied; 10/hr/IP throttle on the route.
+- [ ] **Audit C2** — `email_verified_at IS NOT NULL` for every user with `status='active'` after the backfill.
+- [ ] **Audit H1** — `GET /resend/{id}` is rejected without a valid session token / signed URL.
+- [ ] **Audit H2** — `GET /registration-success/{id}` returns the success page after a fresh registration; refresh does not replay the POST.
+- [ ] **Audit H3** — Synthetic double-click test fires one confirmation mail, not two.
+- [ ] **Audit H4** — Verify HTTP P95 <50ms; side-effect work observed in Horizon, not on the request thread.
 
 ---
 
