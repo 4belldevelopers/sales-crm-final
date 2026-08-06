@@ -5549,11 +5549,11 @@ protected $elasticService;
 		
 
 
-		if (!empty($request->current_designation)) {
-			if(!DB::table('job_application_skills')->where('job_application_id','=',$jobApplication->id)->where('skills','LIKE', '%'. @$request->current_designation.'%')->exists()){
-				DB::table('job_application_skills')->insert(['job_application_id' => $jobApplication->id,'skills' =>  @$request->current_designation]);
-				}
-			}
+		// if (!empty($request->current_designation)) {
+		// 	if(!DB::table('job_application_skills')->where('job_application_id','=',$jobApplication->id)->where('skills','LIKE', '%'. @$request->current_designation.'%')->exists()){
+		// 		DB::table('job_application_skills')->insert(['job_application_id' => $jobApplication->id,'skills' =>  @$request->current_designation]);
+		// 		}
+		// }
 		$jobApplication->skills = $skillStr;
 
 
