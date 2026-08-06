@@ -488,11 +488,158 @@ Event::listen(function (\Illuminate\Auth\Events\Login $event) {
 **Risk:** Lose audit trail if not preserved elsewhere.
 **Rollback:** Restore.
 
+### 3.3 Foundations — Action class, Event, Queue job, Model, Migration
+**Audit reference:** [`docs/V2_login/BLOCKING_SCENARIOS_AUDIT.md`](BLOCKING_SCENARIOS_AUDIT.md) §5.1, §5.1.1, §5.3
+
+This sub-phase and its successors (3.4–3.7) implement the refinements locked during audit review (epoch storage = Redis, Action location = `app/Actions/Auth/`, company-block channel = `company.{companyId}.dashboard`). They are the **only** state-flip entry points across the codebase once landed.
+
+**Files:**
+- New: `app/Actions/Auth/SyncUserStatusAction.php`
+- New: `app/Actions/Auth/BlockCompanyAction.php` (static helper for superadmin bulk block)
+- New: `app/Events/UserAccountSuspended.php` (Reverb event, `ShouldBroadcast`, mirrors `app/Events/OperationalCoinUpdated.php:20`)
+- New: `app/Jobs/SyncUserStatusEsJob.php` (mirrors `app/Jobs/ElasticCandidateIndexJob.php:16` — `ShouldQueue` + `$tries = 5` + `$backoff = [10,30,60,120,300]`; queue name `es-index`)
+- New: `database/migrations/2026_08_06_000001_create_block_log_table.php`
+- New: `app/Models/BlockLog.php`
+
+**Behaviour (descriptive, not code):**
+
+- `SyncUserStatusAction::execute(targetUserId, status, workingStatus)` runs five steps in order:
+  1. `DB::table('users')->where('id', $targetUserId)->where('company_id', $actor->company_id)->update([...])`. If the affected-row count is not exactly 1, `abort(403)` — this is the cross-tenant guard and closes the unguarded bulk `teamDelete` write path.
+  2. `SyncUserStatusEsJob::dispatch($targetUserId)` — async ES sync to `ELASTIC_USERS_LIST` via the existing `app/Helper/GeneralMethod.php:9235` `userIndexingupload()` helper.
+  3. `Cache::put("user:epoch:{$targetUserId}", now()->timestamp, 86400 * 7)` — single O(1) Redis write that locks the user's open session.
+  4. `BlockLog::create([...])` — single audit-log row.
+  5. `broadcast(new UserAccountSuspended(...))->toOthers()` — Reverb event on `PrivateChannel('App.Models.User.{id}')`.
+
+- `BlockCompanyAction::execute(companyId, newStatus, actorUserId, blockType)` runs six steps:
+  1. Bulk `DB::table('users')->where('company_id', $companyId)->where('working_status', 1)->update(['status' => $newStatus, ...])`.
+  2. Single `ELASTIC_USERS_LIST` `updateByQuery` — **without** `refresh:true` (rule from §3.7 below).
+  3. Single `ELASTIC_COMPANIES_INDEX` `updateByQuery` with `refresh=wait_for` (only place it's permitted).
+  4. `Cache::put("company:epoch:{$companyId}", now()->timestamp, 86400 * 7)` — single O(1) Redis write that locks all sessions for the company in one shot (5,000 users → 1 Redis op, not 5,000).
+  5. `broadcast(new UserAccountSuspended(...))->toOthers()` on `PrivateChannel('company.{companyId}.dashboard')`.
+  6. `BlockLog::create([...])`.
+
+**Order of operations:**
+1. `database/migrations/..._create_block_log_table.php` + `app/Models/BlockLog.php` first (the Actions write to this table).
+2. `app/Events/UserAccountSuspended.php` next (Actions broadcast this).
+3. `app/Jobs/SyncUserStatusEsJob.php` next (Actions dispatch this).
+4. `app/Actions/Auth/SyncUserStatusAction.php` last (uses all of the above).
+5. `app/Actions/Auth/BlockCompanyAction.php` last (uses all of the above).
+
+**Verify:** Audit §6 verification matrix rows 1–9 (epoch gates, Reverb dispatch, cross-tenant 403, O(1) Redis invariant).
+**Risk:** Low — all new files, no existing behaviour changed yet.
+**Rollback:** Delete the 5 new files; no existing handlers touched in this sub-phase.
+
+### 3.4 Epoch gate in `EnsureOneDeviceLogin`
+**Audit reference:** [`docs/V2_login/BLOCKING_SCENARIOS_AUDIT.md`](BLOCKING_SCENARIOS_AUDIT.md) §5.2
+
+Adds the epoch comparison after the existing line 41 `$user->status !== 'active'` check in `app/Http/Middleware/EnsureOneDeviceLogin.php`. The middleware becomes a **two-stage gate**: status-check first (already exists), epoch-check second (new). Either rejection logs the user out and redirects to `/login`.
+
+**Files:**
+- Modify: `app/Http/Middleware/EnsureOneDeviceLogin.php` (insert ~7 lines after L41)
+- Modify: `app/Http/Controllers/Auth/LoginController.php` (set `session(['login_timestamp' => now()->timestamp])` on successful auth — prerequisite for the epoch comparison)
+
+**Order of operations:**
+1. Modify `LoginController.php` first to set `login_timestamp` (the Action's epoch comparison has nothing to compare against otherwise).
+2. Modify `EnsureOneDeviceLogin.php` next.
+
+**Verify:** Audit §6 verification matrix row 1 (epoch-gate for `company:epoch`) and row 2 (epoch-gate for `user:epoch`).
+**Risk:** Low — additive change, existing status check still runs first.
+**Rollback:** Revert both edits.
+
+### 3.5 Wire the Actions into the 3 user-block controllers + bulk teamDelete
+**Audit reference:** [`docs/V2_login/BLOCKING_SCENARIOS_AUDIT.md`](BLOCKING_SCENARIOS_AUDIT.md) §5.1 wiring list
+
+Replaces the inline `DB::table('users')->update([...])` blocks in each of the four methods with a single `SyncUserStatusAction::execute(...)` call. Closes the **ProductCompany/StaffingCompany ES-drift footgun** and the **`teamDelete` no-`company_id`-scope footgun** simultaneously, because the Action's cross-tenant guard rejects non-matching IDs with 403.
+
+**Files:**
+- Modify: `app/Http/Controllers/ServiceCompany/ServiceCompanyTeamController.php` (`statusUpdate` ~L2074-2099; `teamDelete` ~L111-142)
+- Modify: `app/Http/Controllers/ProductCompany/ProductCompanyTeamController.php` (`statusUpdate` ~L1854-1882)
+- Modify: `app/Http/Controllers/StaffingCompany/StaffingCompanyTeamController.php` (`statusUpdate` ~L1752-1780)
+
+**Order of operations:**
+1. ServiceCo `statusUpdate` first (most complete variant — proves the pattern).
+2. ProductCo + StaffingCo `statusUpdate` next (simpler: just `status` flip, no `working_status`).
+3. ServiceCo `teamDelete` last — looping call exercises the cross-tenant 403 path on negative tests.
+
+**Verify:** Audit §6 verification matrix rows 8, 9, 10 (cross-tenant guard, BlockLog row, ES `ELASTIC_USERS_LIST` reflects new `status` within 1 s, no `refresh:true`).
+**Risk:** Medium — root-user block rejection (audit §1 footgun #1) means tenant admins lose the ability to "punish" themselves. Product sign-off recommended before launch.
+**Rollback:** Keep the dispatch site change, comment the dispatch line — original `DB::table()->update()` block is preserved if rolled back during the same PR.
+
+### 3.6 Wire `BlockCompanyAction` into `SuperAdminCompanyController`
+**Audit reference:** [`docs/V2_login/BLOCKING_SCENARIOS_AUDIT.md`](BLOCKING_SCENARIOS_AUDIT.md) §2 (defects 1–7), §5.1.1
+
+Replaces three handlers' ES `updateByQuery` + `refresh:true` cascade with a single `BlockCompanyAction::execute(...)` call. The superadmin UI does not freeze on a 5,000-user company because the per-user iteration loop is gone.
+
+**Files:**
+- Modify: `app/Http/Controllers/SuperAdmin/SuperAdminCompanyController.php` (`checkActive` ~L11261-11344; `checkStatusOperational` ~L11346-11361; `checkStatusSales` ~L11363-11380)
+
+**Order of operations:**
+1. `checkActive` first (the real "block the company" endpoint — full integration test).
+2. `checkStatusOperational` and `checkStatusSales` next (simpler: no ES sync at all, just company_coins row + epoch).
+
+**Verify:** Audit §6 verification matrix rows 1–7 (epoch gate fires for every blocked user; superadmin UI completes in <500 ms even with 5,000 users; only one `Cache::put` and one broadcast per call).
+**Risk:** Low — Action is idempotent; replay-safe.
+**Rollback:** Restore the inline `DB::table()` + `updateByQuery` block per handler.
+
+### 3.7 `refresh:true` lint guard (`scripts/ai-guards.sh`)
+**Audit reference:** [`docs/V2_login/BLOCKING_SCENARIOS_AUDIT.md`](BLOCKING_SCENARIOS_AUDIT.md) §5.5, §8
+
+Adds a GUARD 3 to `scripts/ai-guards.sh` that fails the build if any new `'refresh' => true` ES call is introduced outside the whitelisted reference comment in `app/Jobs/ProcessOperationalCoinDeductionsJob.php`. The current 20-site list (Phase 3.6's work removes them) must be empty after that sub-phase.
+
+**Files:**
+- Modify: `scripts/ai-guards.sh`
+
+**Change (added after existing GUARD 2 in the `for f in "${files[@]}"` loop):**
+
+```bash
+# GUARD 3: ban new "'refresh' => true" ES calls.
+# 1-second natural refresh is sufficient everywhere except the single doc
+# company write in BlockCompanyAction, which uses refresh=wait_for.
+# Whitelisted: ProcessOperationalCoinDeductionsJob deliberately omits the flag.
+if grep -nE "'refresh'\s*=>\s*true" "$f" \
+     | grep -v "ProcessOperationalCoinDeductionsJob" \
+     | grep -vE '^[[:space:]]*[0-9]+:[[:space:]]*(//|\*|#)' >/dev/null; then
+  echo "[$f] active 'refresh' => true ES call (causes shard refresh stall):"
+  grep -nE "'refresh'\s*=>\s*true" "$f" \
+    | grep -v "ProcessOperationalCoinDeductionsJob" \
+    | grep -vE '^[[:space:]]*[0-9]+:[[:space:]]*(//|\*|#)' | sed 's/^/    /'
+  note "drop refresh:true — use natural 1s refresh, or refresh=wait_for only for single docs (BLOCKING_SCENARIOS_AUDIT §5.5)"
+fi
+```
+
+**Order of operations:**
+1. Apply Phase 3.6 first (removes all 20 existing `refresh:true` sites).
+2. Add the lint guard **after** verifying `bash scripts/ai-guards.sh --all` exits 0 with only the whitelisted file matches.
+3. Add the guard to the staged/--changed modes of the script (existing loop already iterates changed files).
+
+**Verify:** `bash scripts/ai-guards.sh --all` exits 0; intentional re-add of `refresh:true` anywhere except `BlockCompanyAction` (with `wait_for`) fails pre-commit.
+**Risk:** Low — script is the only file changed.
+**Rollback:** Revert the script edit.
+
+### 3.8 `superadmin-bulk-ops` rate limiter
+**Audit reference:** [`docs/V2_login/BLOCKING_SCENARIOS_AUDIT.md`](BLOCKING_SCENARIOS_AUDIT.md) §5.6
+
+Caps the superadmin `checkActive` / `checkStatusOperational` / `checkStatusSales` endpoints at 10/min per superadmin. Even after `refresh:true` removal, the bulk operation itself is still heavy on a 5,000-user company — a rate limit prevents the superadmin UI from being used as a DoS vector.
+
+**Files:**
+- Modify: `routes/superadmin.php` (parent group middleware)
+- Modify: `app/Providers/AppServiceProvider.php` (`configureRateLimiters()`, mirrors `resume-presign` rate limiter at L53-74)
+
+**Order of operations:**
+1. `AppServiceProvider.php` first (declares the named limiter).
+2. `routes/superadmin.php` next (applies the middleware).
+
+**Verify:** 11th request to `POST /super-admin/check-active` within 60 s returns 429; 1st-10th succeed.
+**Risk:** Low — additive middleware.
+**Rollback:** Remove the throttle middleware from the route group.
+
 **Phase 3 exit gate:**
-- [ ] Zero MySQL writes per login (verified via DB query log)
-- [ ] Single-device invariant holds
-- [ ] Middleware registered on `web` group
-- [ ] `LogSuccessfulLogin` either deleted or queued
+- [ ] All sub-phases 3.1–3.8 merged to `staging`
+- [ ] Audit §6 verification matrix all-green
+- [ ] `bash scripts/ai-guards.sh --all` exits 0
+- [ ] No `app/Controller/...` still does inline `DB::table('users')->update(['status'=>...])` outside the Actions
+- [ ] No `refresh:true` outside `BlockCompanyAction`'s `wait_for` exception
+- [ ] Event::fake() tests pass for `UserAccountSuspended` on both event variants (single-user and company-block)
 
 ---
 
@@ -680,7 +827,56 @@ Wire from `LoginController::login()` and `AttemptLoginAction::execute()`.
 - [ ] Session fixation resistance (Laravel default + Redis-only)
 - [ ] Password hashing verified (bcrypt cost 12)
 
-**Phase 6 exit gate:** All gates green; load test passes; security review signed off.
+### 6.4 Audit table — `block_log` migration + `BlockLog` model
+**Audit reference:** [`docs/V2_login/BLOCKING_SCENARIOS_AUDIT.md`](BLOCKING_SCENARIOS_AUDIT.md) §5.3
+
+`block_log` is the canonical record of every blocking action. The Actions created in Phase 3.3 already write to it via `BlockLog::create([...])` — this sub-phase is the prerequisite migration that gives the table somewhere to land.
+
+**Files:**
+- New: `database/migrations/2026_08_06_000001_create_block_log_table.php` (or co-located with the Phase 3.3 work)
+- New: `app/Models/BlockLog.php` (Eloquent; `$table = 'block_log'`; `$timestamps = false`; `$guarded = []`; `public $incrementing = true`)
+
+**Schema (descriptive):**
+
+| Column | Type | Nullable | Indexed | Notes |
+|--------|------|----------|---------|-------|
+| `id` | bigint unsigned | no | pk | |
+| `target_user_id` | bigint unsigned | yes | yes | nullable because company-wide blocks have no specific user |
+| `target_company_id` | bigint unsigned | yes | yes | nullable because user-level blocks have no company-level target |
+| `actor_user_id` | bigint unsigned | no | no | who performed the block |
+| `block_type` | varchar(64) | no | no | enum string: `user_block`, `company_block_active`, `company_block_operational`, `company_block_sales`, `working_status_zero`, `self_deactivate`, `payment_failed`, `impersonation`, `self_delete` |
+| `reason` | varchar(255) | yes | no | optional free-text — see pending product sign-off below |
+| `created_at` | timestamp | no | no | `useCurrent()` |
+
+**Order of operations:**
+1. Migration + Model are written **alongside** Phase 3.3 (same files, same commit) so the Actions have a target table when they run.
+2. This 6.4 sub-phase is the docs/plan reference for the migration itself; the actual file is part of Phase 3.3.
+
+**Verify:** `php artisan migrate` succeeds; `php artisan test --filter=BlockLogTest` (new) covers `BlockLog::create()` end-to-end.
+**Risk:** Low — additive table, no existing rows affected.
+**Rollback:** `php artisan migrate:rollback` reverses the migration; no FK constraints to clean up.
+
+### 6.5 Scheduler — wire `delete-account` and `licence-expire`
+**Audit reference:** [`docs/V2_login/BLOCKING_SCENARIOS_AUDIT.md`](BLOCKING_SCENARIOS_AUDIT.md) §3.3, §3.1
+
+Both console commands exist today (`app/Console/Commands/DeleteAccount.php:51-62`, `app/Console/Commands/LicenceExpire.php:51-100`) but are **not registered** in `app/Console/Kernel.php:13-58`. The timed-delete and licence-expiry features are silently broken until these are scheduled.
+
+**Files:**
+- Modify: `app/Console/Kernel.php` (extend `protected function schedule(Schedule $schedule)`)
+
+**Change (descriptive):**
+
+- `$schedule->command('delete-account')->dailyAt('02:00')->timezone('Asia/Kolkata')->withoutOverlapping(50)->runInBackground();`
+- `$schedule->command('licence-expire')->dailyAt('03:00')->timezone('Asia/Kolkata')->withoutOverlapping(50)->runInBackground();`
+
+**Order of operations:**
+1. Single-file edit to `app/Console/Kernel.php`. Verify with `php artisan schedule:list` that both commands appear with the expected cron expression.
+
+**Verify:** `php artisan schedule:list` shows both; manual `php artisan delete-account --dry-run` and `php artisan licence-expire --dry-run` work; after 1 cron cycle in production, a test company with `delete_account_at < now()` flips to `status='inactive'` and the `block_log` table has a row.
+**Risk:** Low — additive cron entries. Risk of overnight flip on existing test companies → run in staging for a week first.
+**Rollback:** Remove the two `$schedule->command(...)` lines.
+
+**Phase 6 exit gate:** All gates green; load test passes; security review signed off; audit table populated; scheduler visible in `schedule:list`.
 
 ---
 
@@ -736,6 +932,56 @@ Wire from `LoginController::login()` and `AttemptLoginAction::execute()`.
 - `docs/UI_UX_STANDARDS.md` — UI standards compliance
 - `docs/AI_RULES.md` — hard rules (no schema changes, no business-logic changes)
 - `docs/ARCHITECTURE.md` — system map
+- `docs/V2_login/BLOCKING_SCENARIOS_AUDIT.md` — companion audit (23 findings + refinement pass). Required reading before any Phase-3.x or Phase-6.4/6.5 work.
+
+---
+
+## Appendix A — Cross-references to BLOCKING_SCENARIOS_AUDIT.md
+
+This appendix maps every Phase-3 sub-phase and every Phase-6 audit-block in this plan to the audit section that motivates it. **No Phase-3 work should start without reading the linked audit section.**
+
+| Plan phase | Subject | Audit reference |
+|------------|---------|-----------------|
+| 3.1 | Redis-only single-device enforcement | §3.6 (failed-login lockout context), §4.3 (inconsistent ES sync), §3.1 |
+| 3.2 | `LogSuccessfulLogin` listener | §3.1 (related) |
+| **3.3** | **Foundations (Action class + Event + Job + Model + Migration)** | **§5.1, §5.1.1, §5.3** |
+| **3.4** | **Epoch gate in `EnsureOneDeviceLogin`** | **§5.2** |
+| **3.5** | **Wire Actions into 3 user-block controllers + bulk teamDelete** | **§1 (defect footguns), §5.1 wiring list** |
+| **3.6** | **Wire `BlockCompanyAction` into `SuperAdminCompanyController`** | **§2 (defects 1–7), §5.1.1** |
+| **3.7** | **`refresh:true` lint guard** | **§5.5, §8** |
+| **3.8** | **`superadmin-bulk-ops` rate limiter** | **§5.6** |
+| **6.4** | **`block_log` migration + `BlockLog` model** | **§5.3** |
+| **6.5** | **Scheduler for `delete-account` + `licence-expire`** | **§3.1, §3.3** |
+
+Bold = new in this docs-only slice.
+
+### Pending product sign-off (load-bearing for implementation)
+
+These questions in `BLOCKING_SCENARIOS_AUDIT.md` §7 are **not answered**. They affect whether Phase-3 work ships as documented, or with adjustments.
+
+1. **Hard-logout vs. soft-redirect on company block.** Audit proposes soft-redirect (epoch gate + lazy cleanup). Hard-logout would require per-user `Auth::logout()` iteration and defeats the O(1) design.
+   - **If product wants hard-logout:** Phase 3.4 must gain an early-exit Redis loop before the epoch comparison. Phase 3.6's `BlockCompanyAction` would change from one Redis `SET` to one Redis `SET` + N session destroys. Design no longer O(1).
+   - **Default if no answer:** soft-redirect (audit proposal). Ping product before Phase 3.6 PR.
+
+2. **`block_log.reason` — free-text vs. typed categories only.** Migration creates a nullable `varchar(255)` column.
+   - **If product wants typed categories only:** drop the column from the migration; the `block_type` string is sufficient.
+   - **Default if no answer:** keep the column nullable, no UI initially. Easy to drop later.
+
+Both items to flag in the Phase 3.3 PR description.
+
+### Out of scope (explicitly NOT in this audit's implementation pass)
+
+These audit items require separate sign-off and are NOT in any Phase-3/6 sub-phase above:
+
+- Failed-login lockout policy (audit §3.6): requires `users.failed_login_attempts`, `users.locked_until` columns → **schema change** under AI_RULE #8.
+- Email-verification gate (audit §3.7): requires `users.email_verified_at` column → **schema change**.
+- Razorpay `payment.failed` auto-suspend (audit §3.8): **business-logic change** (risk profile decision).
+- Stripe `invoice.payment_failed` auto-suspend (audit §3.8): **business-logic change**.
+- Frontend Echo listener wiring (audit §9): **frontend slice**, separate from server-side implementation.
+- `teamDelete` root-user block rejection (audit §1 footgun #1): **business-logic change** (admin UX decision).
+- Self-deactivate `delete_account_at` bug (audit §3.3, line 63/67 `=` vs `==`): **bug fix**, schedule separately.
+- Super-admin impersonation exit route + audit (audit §3.5): **business-logic change**.
+- All `users.*` columns listed in audit §4.4 (`deleted_at`, `banned_at`, `last_active_at`, `blocked_by`, `blocked_at`, `block_reason`): **schema change**.
 - `docs/AI_BOOTSTRAP.md` — 5-step protocol
 - `docs/RECIPES.md` — cookbooks
 - `docs/VERIFY.md` — verification gates
