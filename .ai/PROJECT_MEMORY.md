@@ -6,7 +6,7 @@
 > decision, finish a phase, or learn something non-obvious, append it here (newest on top
 > in each section) and, if it's an architecture decision, also add an ADR.
 
-Last updated: 2026-07-16 (documented client-job stage-ownership & visibility business logic).
+Last updated: 2026-08-06 (V2_login audit + planning slices complete).
 
 ---
 
@@ -16,11 +16,17 @@ Last updated: 2026-07-16 (documented client-job stage-ownership & visibility bus
   Redis/Horizon · Octane/FrankenPHP · Reverb · S3 · Stripe/Razorpay/PhonePe/PayPal/Paddle · AI (OpenAI).
 - **Scale goal:** 10,000 companies, 100M+ records/year. See [docs/SCALABILITY.md](../docs/SCALABILITY.md).
 - **Active code folder:** `testing.jero.works` (NOT `hire.jero.works`).
-- **Current focus:** documentation & AI-context layer complete; engineering focus should be
-  **Phase 0 hardening** next ([docs/ROADMAP.md](../docs/ROADMAP.md)).
+- **Current focus:** V2_login slice fully designed (audit + plan + comparison + ADR), **awaiting** `app/` implementation per [docs/V2_login/IMPLEMENTATION_PLAN.md](../docs/V2_login/IMPLEMENTATION_PLAN.md) Phase 3.3–3.8 + 6.4/6.5. 2 product sign-off questions still open.
 - **Test coverage:** essentially none (default Breeze scaffolding only) — high regression risk.
+- **V2_login blocking-scenarios architecture:** session-epoch pattern + Reverb `UserAccountSuspended` event + `SyncUserStatusAction` (cross-tenant-safe) + `BlockCompanyAction` (static bulk helper) + `block_log` audit table + drop all 20 `refresh:true` ES sites + grep-lint guard. See [docs/V2_login/BLOCKING_SCENARIOS_AUDIT.md](../docs/V2_login/BLOCKING_SCENARIOS_AUDIT.md), [ADR 0007](../docs/adr/0007-blocking-scenarios-architecture.md). Code not yet landed.
 
 ## 2. Decision log (append-only; newest first)
+- *2026-08-06* — **V2_login blocking-scenarios architecture locked** (4 decisions in one pass):
+  1. **Session-epoch pattern** — single Redis key (`company:epoch:{id}` or `user:epoch:{id}`, TTL 7d) replaces per-user iteration for blocking. One Redis write locks all sessions for a 5,000-user company. Middleware `EnsureOneDeviceLogin` does one O(1) read per request.
+  2. **Reverb broadcast for instant kick** — new `App\Events\UserAccountSuspended` event on `PrivateChannel('App.Models.User.{id}')` for single-user blocks and `PrivateChannel('company.{companyId}.dashboard')` for company blocks. Affected users see the kick in <50ms instead of waiting for next HTTP request.
+  3. **Drop `refresh:true` everywhere** — 20 sites across 9 files set this flag today; all 20 get it dropped. Single exception: `BlockCompanyAction`'s company-doc write uses `refresh=wait_for`. New GUARD 3 in `scripts/ai-guards.sh` prevents future introductions.
+  4. **`SyncUserStatusAction` + `BlockCompanyAction`** — two Action classes become the only state-flip entry points across the codebase. Cross-tenant guard in `SyncUserStatusAction` closes the unguarded bulk-`teamDelete` footgun. Lives at `app/Actions/Auth/`. Plain invokables, no external Action package.
+  Full design: [docs/V2_login/BLOCKING_SCENARIOS_AUDIT.md](../docs/V2_login/BLOCKING_SCENARIOS_AUDIT.md) §5, [ADR 0007](../docs/adr/0007-blocking-scenarios-architecture.md), [docs/V2_login/IMPLEMENTATION_PLAN.md](../docs/V2_login/IMPLEMENTATION_PLAN.md) Phase 3.3–3.8. Code not yet landed — 2 product sign-off questions pending (Appendix A Q1: hard-logout vs soft-redirect; Q2: `block_log.reason` free-text vs typed). Decision deferred to a separate ADR if/when answered.
 - *2026-07-16* — **Client-job candidate pipeline: stage-ownership & visibility rules
   documented for the first time**, reconstructed from the product owner's explanation
   and verified against the `master_status` table + controller code (not previously
@@ -77,6 +83,11 @@ Last updated: 2026-07-16 (documented client-job stage-ownership & visibility bus
 - _(add new decisions here: what was decided, why, by whom, link to ADR/PR)_
 
 ## 3. Open questions / needs human confirmation
+- [ ] **V2_login product sign-off Q1:** hard-logout vs. soft-redirect on company block?
+      Defaults to soft-redirect per audit proposal. See
+      [docs/V2_login/IMPLEMENTATION_PLAN.md Appendix A](../docs/V2_login/IMPLEMENTATION_PLAN.md).
+- [ ] **V2_login product sign-off Q2:** `block_log.reason` free-text vs. typed categories only?
+      Defaults to free-text nullable. See Appendix A.
 - [ ] Tenant isolation: is `JobApplication`'s commented-out `company_id` scope intentional,
       or a bug? (Blocks safe marketplace work.) — see [BUG-03](../docs/BUG_REPORT.md).
 - [x] ~~`job_metronics_skills` — "metrics" or theme-related?~~ **RESOLVED 2026-06-27:**
@@ -116,6 +127,7 @@ Last updated: 2026-07-16 (documented client-job stage-ownership & visibility bus
   Protocol: [docs/AI_BOOTSTRAP.md](../docs/AI_BOOTSTRAP.md) · Vocab: [docs/GLOSSARY.md](../docs/GLOSSARY.md)
 - Module playbooks: [.ai/tasks/](tasks/) · Class indexes: [.ai/summaries/](summaries/)
 - Plan: [docs/ROADMAP.md](../docs/ROADMAP.md)
+- **V2_login slice:** [docs/V2_login/README.md](../docs/V2_login/README.md) (audit + plan + comparison + ADR index)
 
 ---
 ### How to maintain this file

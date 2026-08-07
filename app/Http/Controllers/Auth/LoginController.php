@@ -2,8 +2,6 @@
 
 namespace App\Http\Controllers\Auth; 
 
-use Artisan;
-
 use App\Models\FrontCmsHeader;
 use App\Http\Controllers\Controller;
 use App\Models\ThemeSetting;
@@ -22,7 +20,8 @@ use Illuminate\Support\Facades\DB;
 use App\Helper\GeneralMethod;
 use Illuminate\Support\Facades\Session;
 use App\Services\ElasticService;
-use Carbon\Carbon; 
+use App\Support\OpenRedirect;
+use Carbon\Carbon;
 
 class LoginController extends Controller
 {
@@ -60,9 +59,6 @@ class LoginController extends Controller
         $this->middleware('guest')->except('logout');
 
         App::setLocale($this->global->locale);
-		
-		Artisan::call('route:clear');
-		Artisan::call('cache:clear');
 		$this->elasticService = $elasticService;
 		
     }
@@ -178,13 +174,10 @@ class LoginController extends Controller
 		$newPasswordeeee	= Hash::make($request->password);
 		$user = User::where('email', $request->email)->first();
 		if ($user && Hash::check($request->password, $user->password)) {
-		
-			if(!empty($request->url)){
-               Session::put('open_url',  $request->url);
+			if (!empty($request->url)) {
+                Session::put('open_url', OpenRedirect::sanitize($request->url));
 			}
-			 
 		}
-
 
         $credentials = $request->only('email', 'password');
         if (Auth::attempt($credentials)) {
@@ -380,10 +373,6 @@ class LoginController extends Controller
 
     public function showLoginForm()
     {
-	
-		Artisan::call('route:clear');
-		Artisan::call('cache:clear');
-		
         // if (!$this->isLegal()) {
         //     return redirect('verify-purchase');    
         // }
@@ -484,9 +473,6 @@ class LoginController extends Controller
 	
 	public function superLoginForms()
     {
-		Artisan::call('route:clear');
-		Artisan::call('cache:clear');
-		
         // if (!$this->isLegal()) {
         //     return redirect('verify-purchase');    
         // }
@@ -642,16 +628,14 @@ class LoginController extends Controller
 				];
 		}
 		// dd("djdj");
-		GeneralMethod::userIndexingupload($request->userId);	
+		GeneralMethod::userIndexingupload($request->userId);
 		Session::forget('token_check');
 		$newPasswordeeee	= Hash::make($request->password);
 		$user = User::where('email', $request->email)->first();
 		if ($user && Hash::check($request->password, $user->password)) {
-		
-			if(!empty($request->url)){
-               Session::put('open_url',  $request->url);
+			if (!empty($request->url)) {
+                Session::put('open_url', OpenRedirect::sanitize($request->url));
 			}
-			 
 		}
         return [
 					'email' 		=> $request->{$this->username()},

@@ -5502,44 +5502,9 @@ protected $elasticService;
 		$this->hiring_namagerArr = explode(',', $hiring_namager);
 
 		$this->client_id = $id;
-		$contPersonArr = array();
 
-		$clientContactArr = DB::table('client_contact_info')
-			->select('client_contact_info.contact_person_designation')
-			->where('client_contact_info.client_id', $this->client_id)
-			->orderBy('client_contact_info.contact_person_designation', 'ASC')
-			->groupBy('client_contact_info.contact_person_designation')
-			->get();
-		$cnt = 0;
-		foreach ($clientContactArr as $cval) {
-
-			$personDetail = DB::table('client_contact_info')
-				->select('client_contact_info.id', 'client_contact_info.client_id', 'client_contact_info.contact_person_name', 'client_contact_info.contact_person_email', 'client_contact_info.contact_person_number','client_contact_info.calling_code', 'client_contact_info.contact_person_designation')
-				->where('client_contact_info.client_id', $this->client_id)
-				->where('client_contact_info.contact_person_designation', $cval->contact_person_designation)
-				->orderBy('client_contact_info.contact_person_name', 'ASC')
-				->get();
-			$i = 0;
-			foreach ($personDetail as $pDetail) {
-				// dd($this->team->email,$pDetail->contact_person_email ,$this->team->root_user);
-
-				$contPersonArr[$cval->contact_person_designation][$i]['id'] = $pDetail->id;
-				$contPersonArr[$cval->contact_person_designation][$i]['client_id'] = $pDetail->client_id;
-				$contPersonArr[$cval->contact_person_designation][$i]['contact_person_name'] = $pDetail->contact_person_name;
-				$contPersonArr[$cval->contact_person_designation][$i]['contact_person_email'] = $pDetail->contact_person_email;
-				$contPersonArr[$cval->contact_person_designation][$i]['contact_person_number'] = $pDetail->contact_person_number;
-				$contPersonArr[$cval->contact_person_designation][$i]['calling_code'] = $pDetail->calling_code;
-				$contPersonArr[$cval->contact_person_designation][$i]['contact_person_designation'] = $pDetail->contact_person_designation;
-
-
-				$i++;
-			}
-			$cnt++;
-		}
-
-     
-		
-		$this->contPersonArr = $contPersonArr;
+		// V2 Step 4: single query replaces 1+N per-designation queries; $contPersonArr
+		// was never accessed by hiring_manager.blade.php — only $assigned is rendered.
 		$this->assigned = DB::table('client_contact_info')
 			->select('client_contact_info.id', 'client_contact_info.client_id', 'client_contact_info.contact_person_name', 'client_contact_info.contact_person_email', 'client_contact_info.contact_person_number','client_contact_info.calling_code', 'client_contact_info.contact_person_designation')
 			->where('client_contact_info.client_id', $this->client_id)
@@ -11015,11 +10980,11 @@ protected $elasticService;
 			'pagination' => view('service_company.ajax_pages.pagination', compact('pagination'))->render(),
 		];
 
-		// V3 Step 3: Populate cache now that $responseData is built. TTL=3 min matches other
-		// list caches in this controller. N+1 DB queries inside the view (contact lookup,
-		// agencyCandidatesCount per row) are all eliminated on subsequent cache hits.
+		// V3 Step 3 / V2 Agency Step 5: TTL extended from 3 min → 60 min. Assigned agency
+		// list changes only when an agency is added/removed (write path purges the key).
+		// N+1 DB queries inside the view are eliminated on any warm cache hit.
 		if (config('feature.use_three_drawers_v3')) {
-			cache()->put($cacheKeySet, $responseData, now()->addMinutes(3));
+			cache()->put($cacheKeySet, $responseData, 3600);
 		}
 
 		// V3 Step 7: attach ETag to 200 so browser can revalidate on the next open.
@@ -11474,7 +11439,10 @@ protected $elasticService;
 		];
 
 
-		cache()->put($cacheKeySet, $responseData, now()->addMinutes(3));
+		// V2 Agency Step 5: extend TTL from 3 min → 60 min. Agency lists change only when
+		// an invitation is sent (which purges the key via SendAgencyInvitationAsyncJob).
+		// 3-min TTL caused constant cache churn with no benefit.
+		cache()->put($cacheKeySet, $responseData, 3600);
 
 		// V3 Step 7: attach ETag to 200 so browser can revalidate on the next open.
 		if (config('feature.use_three_drawers_v3')) {
