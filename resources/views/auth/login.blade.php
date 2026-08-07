@@ -8,7 +8,7 @@
     --ph: #E8960D;
     --pl: #FFF3DC;
     --lbg: #FFF9EC;
-    --rbg: #F5F5F5;
+    --rbg: #FFFFFF;
     --dk: #111827;
     --gr: #6b7280;
     --bd: #E5E7EB;
@@ -56,7 +56,7 @@ html, body { margin: 0 !important; padding: 0 !important; }
 .v2-hero p { font-size: 13.5px; color: var(--gr); line-height: 1.6; margin: 0; }
 
 /* Features */
-.v2-feats { display: flex; flex-direction: column; gap: 14px; margin-bottom: 0; flex: 1; }
+.v2-feats { display: flex; flex-direction: column; gap: 14px; margin-bottom: 0; }
 .v2-feat { display: flex; align-items: flex-start; gap: 16px; }
 .v2-feat-ico {
     width: 46px; height: 46px; border-radius: 12px;
@@ -69,8 +69,56 @@ html, body { margin: 0 !important; padding: 0 !important; }
 
 /* (testimonial removed) */
 
+/* Testimonial card */
+.v2-testi {
+    position: relative;
+    z-index: 2;
+    background: rgba(255,255,255,0.85);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    border: 1px solid rgba(255,255,255,0.9);
+    border-radius: 14px;
+    padding: 14px 18px;
+    margin-top: 18px;
+    margin-bottom: 110px;
+    box-shadow: 0 6px 20px rgba(180,130,30,0.10);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    max-width: 100%;
+}
+.v2-testi-q {
+    display: flex; align-items: flex-start; gap: 8px;
+    font-size: 12.5px; color: var(--dk); line-height: 1.55; font-weight: 500;
+}
+.v2-testi-q .qmark {
+    color: var(--p); font-size: 22px; line-height: 0.9; font-weight: 800; flex-shrink: 0;
+    font-family: Georgia, serif;
+}
+.v2-testi-foot {
+    display: flex; align-items: center; gap: 10px;
+}
+.v2-testi-avatar {
+    width: 32px; height: 32px; border-radius: 50%;
+    background: linear-gradient(135deg, #F5C840 0%, #E8960D 100%);
+    color: #fff; font-size: 12px; font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0; letter-spacing: 0.3px;
+    box-shadow: 0 2px 6px rgba(232,150,13,0.30);
+}
+.v2-testi-meta strong {
+    display: block; font-size: 13px; font-weight: 700; color: var(--dk); line-height: 1.2;
+}
+.v2-testi-meta span {
+    display: block; font-size: 11.5px; color: var(--gr); line-height: 1.3;
+}
+
 /* City skyline */
-.v2-city { position: absolute; bottom: 0; left: 0; right: 0; line-height: 0; }
+.v2-city { position: absolute; bottom: 0; left: 0; right: 0; line-height: 0; z-index: 1; }
+.v2-cloud {
+    position: absolute; bottom: 0; left: 0; right: 0; line-height: 0;
+    z-index: 0; pointer-events: none;
+}
 
 /* ═══════════ RIGHT PANEL ═══════════ */
 .v2-right {
@@ -259,6 +307,8 @@ html, body { margin: 0 !important; padding: 0 !important; }
     .v2-feat-ico svg{ width: 19px; height: 19px; }
     .v2-feat-body strong { font-size: 13px; }
     .v2-feat-body span   { font-size: 11px; }
+    .v2-testi       { margin-bottom: 110px; padding: 12px 16px; }
+    .v2-testi-q     { font-size: 12px; }
     .v2-body        { padding: 6px 30px 12px; }
     .v2-help        { padding: 12px 30px; }
     .v2-foot        { padding: 8px 30px; }
@@ -276,12 +326,23 @@ html, body { margin: 0 !important; padding: 0 !important; }
     .v2-hero h1     { font-size: 20px; }
     .v2-feat-ico    { width: 34px; height: 34px; }
     .v2-feat        { gap: 11px; }
+    .v2-testi       { display: none; }
     .v2-body        { padding: 6px 22px 10px; }
     .v2-help        { padding: 10px 22px; }
     .v2-foot        { padding: 8px 22px; }
     .v2-card        { padding: 20px 24px; max-width: 500px; }
     .v2-card-title  { font-size: 19px; }
     .v2-city svg    { max-height: 150px; }
+}
+
+/* Tall viewport – 880px+ allows full testimonial */
+@media (min-height: 880px) {
+    .v2-testi       { display: block; }
+}
+
+/* Short viewport – 879px or shorter hides testimonial */
+@media (max-height: 879px) {
+    .v2-testi       { display: none; }
 }
 
 /* Short viewport – 768px tall (1366×768 laptops, max-height wins over max-width) */
@@ -438,6 +499,35 @@ if (session('status')) {
                 <span>Enterprise-grade security for your data</span>
             </div>
         </div>
+    </div>
+
+    {{-- Testimonial card --}}
+    <div class="v2-testi">
+        <div class="v2-testi-q">
+            <span class="qmark">&ldquo;</span>
+            <span>Jero has transformed the way we hire. It&rsquo;s fast, simple and incredibly powerful.</span>
+        </div>
+        <div class="v2-testi-foot">
+            <div class="v2-testi-avatar">RS</div>
+            <div class="v2-testi-meta">
+                <strong>Rahul Sharma</strong>
+                <span>HR Head, TechNova Solutions</span>
+            </div>
+        </div>
+    </div>
+
+    {{-- Decorative clouds --}}
+    <div class="v2-cloud" aria-hidden="true">
+        <svg viewBox="0 0 500 80" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMax meet" style="width:100%;height:80px;">
+            <g fill="#FFE9A8" opacity="0.7">
+                <ellipse cx="60"  cy="50" rx="32" ry="9"/>
+                <ellipse cx="85"  cy="48" rx="22" ry="7"/>
+                <ellipse cx="180" cy="40" rx="28" ry="8"/>
+                <ellipse cx="320" cy="55" rx="36" ry="10"/>
+                <ellipse cx="345" cy="52" rx="20" ry="7"/>
+                <ellipse cx="440" cy="45" rx="26" ry="8"/>
+            </g>
+        </svg>
     </div>
 
     {{-- City skyline --}}
