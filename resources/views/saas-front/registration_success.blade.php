@@ -141,40 +141,21 @@
       font-weight: 700;
     }
 
-    /* Hero Layout (Two Columns) */
+    /* Hero Layout (Centered Single Column) */
     .hero-layout {
-      display: grid;
-      grid-template-columns: 44% 56%;
-      gap: 40px;
-      align-items: center;
-      margin: auto 0;
-      padding: 12px 0;
-    }
-
-    /* Left Column Illustration */
-    .illustration-col {
       display: flex;
-      justify-content: center;
-      align-items: center;
-    }
-
-    .illustration-wrapper {
-      width: 100%;
-      max-width: 480px;
-      display: flex;
+      flex-direction: column;
       align-items: center;
       justify-content: center;
-    }
-
-    .illustration-svg {
+      max-width: 680px;
       width: 100%;
-      height: auto;
-      display: block;
-      filter: drop-shadow(0 16px 30px rgba(29, 97, 242, 0.07));
+      margin: auto auto;
+      padding: 16px 0;
     }
 
-    /* Right Column Content */
+    /* Centered Content Column */
     .content-col {
+      width: 100%;
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -515,6 +496,8 @@
     /* Bottom Features Card */
     .features-card {
       width: 100%;
+      max-width: 680px;
+      margin: 16px auto 0;
       background: var(--card-bg);
       border: 1px solid var(--card-border);
       border-radius: var(--radius-lg);
@@ -696,41 +679,7 @@
     <!-- ═══════════ MAIN HERO LAYOUT ═══════════ -->
     <div class="hero-layout">
       
-      <!-- LEFT COLUMN: 3D GLASS ILLUSTRATION -->
-      <div class="illustration-col">
-        <div class="illustration-wrapper">
-          <svg class="illustration-svg" viewBox="0 0 500 420" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <defs>
-              <linearGradient id="bgGlow" x1="0" y1="0" x2="500" y2="420" gradientUnits="userSpaceOnUse">
-                <stop offset="0%" stop-color="#eff6ff" stop-opacity="0.9"/>
-                <stop offset="100%" stop-color="#dbeafe" stop-opacity="0.3"/>
-              </linearGradient>
-              <linearGradient id="envGrad" x1="50" y1="180" x2="250" y2="360" gradientUnits="userSpaceOnUse">
-                <stop offset="0%" stop-color="#3b82f6"/>
-                <stop offset="100%" stop-color="#1d4ed8"/>
-              </linearGradient>
-              <linearGradient id="cardGrad" x1="60" y1="70" x2="380" y2="280" gradientUnits="userSpaceOnUse">
-                <stop offset="0%" stop-color="#ffffff"/>
-                <stop offset="100%" stop-color="#f8fafc"/>
-              </linearGradient>
-              <filter id="shadowSoft" x="10" y="20" width="480" height="390" filterUnits="userSpaceOnUse">
-                <feDropShadow dx="0" dy="14" stdDeviation="18" flood-color="#1e3a8a" flood-opacity="0.08"/>
-              </filter>
-            </defs>
-            <ellipse cx="230" cy="220" rx="200" ry="160" fill="url(#bgGlow)" />
-            <g filter="url(#shadowSoft)">
-              <rect x="90" y="160" width="190" height="130" rx="12" fill="#ffffff" stroke="#dbeafe" stroke-width="1.5" />
-              <rect x="115" y="180" width="140" height="8" rx="4" fill="#e2e8f0" />
-              <rect x="115" y="196" width="100" height="6" rx="3" fill="#f1f5f9" />
-              <circle cx="185" cy="230" r="22" fill="#2563eb" />
-              <path d="M 176 230 L 182 236 L 194 224" stroke="#ffffff" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" fill="none" />
-              <path d="M 80 205 L 80 320 C 80 328 86 334 94 334 L 276 334 C 284 334 290 328 290 320 L 290 205 L 185 275 Z" fill="url(#envGrad)" />
-            </g>
-          </svg>
-        </div>
-      </div>
-
-      <!-- RIGHT COLUMN: VERIFICATION DETAILS & ACTIONS -->
+      <!-- CENTERED VERIFICATION DETAILS & ACTIONS -->
       <div class="content-col">
         
         <!-- Top Icon Header -->
