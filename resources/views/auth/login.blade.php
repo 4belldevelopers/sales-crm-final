@@ -19,7 +19,7 @@ html, body { margin: 0 !important; padding: 0 !important; }
 .v2-shell {
     display: flex;
     width: 100%;
-    height: 100vh;
+    min-height: 100vh;
     overflow: hidden;
     align-items: stretch;
     background: #fff;
@@ -27,7 +27,7 @@ html, body { margin: 0 !important; padding: 0 !important; }
 .v2-page {
     display: flex;
     width: 100%;
-    height: 100vh;
+    min-height: 100vh;
     overflow: hidden;
 }
 .v2-page * { box-sizing: border-box; font-family: 'Poppins', sans-serif; }
@@ -233,7 +233,109 @@ html, body { margin: 0 !important; padding: 0 !important; }
 .v2-foot a { font-size: 12.5px; color: var(--gr); text-decoration: none; }
 .v2-foot a:hover { color: var(--p); }
 
+<<<<<<< HEAD
 /* Responsive */
+=======
+/* ── Responsive ────────────────────────────────────────── */
+
+/* 1440px – larger 15.6" at lower resolution */
+@media (max-width: 1440px) {
+    .v2-left        { width: 500px; padding: 30px 36px 0; }
+    .v2-hero h1     { font-size: 28px; }
+    .v2-feats       { gap: 12px; }
+    .v2-body        { padding: 10px 42px 16px; }
+    .v2-help        { padding: 18px 42px; }
+    .v2-foot        { padding: 14px 42px; }
+}
+
+/* 1366px – most 14" / 15.6" laptops (1366×768 is the most common) */
+@media (max-width: 1366px) {
+    .v2-left        { width: 400px; padding: 22px 26px 0; }
+    .v2-logo        { margin-bottom: 18px; }
+    .v2-logo-text   { font-size: 22px; }
+    .v2-hero        { margin-bottom: 14px; }
+    .v2-hero h1     { font-size: 22px; letter-spacing: -.4px; line-height: 1.15; }
+    .v2-hero p      { font-size: 12.5px; line-height: 1.5; }
+    .v2-feats       { gap: 9px; }
+    .v2-feat        { gap: 12px; }
+    .v2-feat-ico    { width: 38px; height: 38px; border-radius: 9px; }
+    .v2-feat-ico svg{ width: 19px; height: 19px; }
+    .v2-feat-body strong { font-size: 13px; }
+    .v2-feat-body span   { font-size: 11px; }
+    .v2-body        { padding: 6px 30px 12px; }
+    .v2-help        { padding: 12px 30px; }
+    .v2-foot        { padding: 8px 30px; }
+    .v2-card        { padding: 22px 28px; max-width: 540px; }
+    .v2-card-title  { font-size: 20px; }
+    .v2-card-sub    { margin-bottom: 14px; }
+    .v2-city svg    { max-height: 180px; }
+}
+
+/* 1280px – smaller 14" laptops */
+@media (max-width: 1280px) {
+    .v2-left        { width: 340px; padding: 18px 20px 0; }
+    .v2-logo        { margin-bottom: 14px; }
+    .v2-hero        { margin-bottom: 12px; }
+    .v2-hero h1     { font-size: 20px; }
+    .v2-feat-ico    { width: 34px; height: 34px; }
+    .v2-feat        { gap: 11px; }
+    .v2-body        { padding: 6px 22px 10px; }
+    .v2-help        { padding: 10px 22px; }
+    .v2-foot        { padding: 8px 22px; }
+    .v2-card        { padding: 20px 24px; max-width: 500px; }
+    .v2-card-title  { font-size: 19px; }
+    .v2-city svg    { max-height: 150px; }
+}
+
+/* Short viewport – 768px tall (1366×768 laptops, max-height wins over max-width) */
+@media (max-height: 768px) {
+    .v2-logo        { margin-bottom: 14px; }
+    .v2-hero        { margin-bottom: 10px; }
+    .v2-feats       { gap: 7px; }
+    .v2-help        { padding-top: 8px; padding-bottom: 8px; }
+    .v2-foot        { padding-top: 6px; padding-bottom: 6px; }
+    .v2-card        { padding-top: 16px; padding-bottom: 16px; margin-bottom: 8px; }
+    .v2-card-title  { font-size: 19px; }
+    .v2-card-sub    { margin-bottom: 10px; }
+    .v2-field       { margin-bottom: 9px; }
+    .v2-field > label { margin-bottom: 4px; }
+    .v2-inp         { height: 40px; font-size: 13.5px; }
+    .v2-mid         { margin-bottom: 9px; }
+    .v2-cap-lbl     { margin-bottom: 4px; }
+    .v2-cap-row     { margin-bottom: 9px; }
+    .v2-cap-img     { height: 40px; width: 96px; }
+    .v2-cap-img img { height: 36px; }
+    .v2-cap-btn     { height: 40px; padding: 0 12px; font-size: 12.5px; }
+    .v2-cap-inp     { height: 40px; padding: 0 12px; }
+    .v2-btn         { height: 42px; font-size: 13.5px; }
+    .v2-sec         { padding: 10px 14px; gap: 12px; }
+    .v2-sec-ico     { width: 34px; height: 34px; }
+    .v2-sec-text strong { font-size: 12.5px; }
+    .v2-sec-text span   { font-size: 11px; }
+    .v2-city svg    { max-height: 120px; }
+}
+
+/* Very short – 700px tall (small laptops or zoomed browsers) */
+@media (max-height: 700px) {
+    .v2-city        { display: none; }
+    .v2-card        { padding: 14px 18px; margin-bottom: 6px; }
+    .v2-card-sub    { margin-bottom: 8px; }
+    .v2-field       { margin-bottom: 7px; }
+    .v2-cap-row     { margin-bottom: 7px; }
+    .v2-inp, .v2-cap-btn, .v2-cap-img, .v2-cap-inp { height: 38px; }
+    .v2-btn         { height: 40px; font-size: 13.5px; }
+    .v2-sec         { padding: 10px 14px; }
+}
+
+/* Very short – 600px tall */
+@media (max-height: 600px) {
+    .v2-sec         { display: none; }
+    .v2-card        { padding: 14px 18px; }
+    .v2-btn         { height: 38px; }
+}
+
+/* 960px and below – tablets: stack left over right */
+>>>>>>> e15e4ebf0d49eb0669c949cc48c7e236b5a6a290
 @media (max-width: 960px) {
     .v2-left  { width: 100%; padding-bottom: 220px; }
     .v2-page  { flex-direction: column; }
