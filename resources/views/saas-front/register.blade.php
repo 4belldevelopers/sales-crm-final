@@ -2340,19 +2340,17 @@ $(document).ready(function() {
 
           r.addEventListener("click", function (t) {
             t.preventDefault();
-            r.disabled = !0;
-            r.setAttribute("data-kt-indicator", "on");
-            $(r).prop("disabled", true);
+            var btn = $(r);
+            btn.prop("disabled", true).attr("data-kt-indicator", "on");
 
-            $('.indicator-label').hide();
-            $('.indicator-progress').show();
+            btn.find('.indicator-label').hide();
+            btn.find('.indicator-progress').css('display', 'inline-flex').show();
 
             if (!navigator.onLine) {
               Swal.fire({ title: 'No Internet', text: 'You are currently offline or the server is unreachable.', icon: 'warning', confirmButtonText: 'Ok, got it!', customClass: { confirmButton: 'btn btn-warning' } });
-              $('.indicator-label').show();
-              $('.indicator-progress').hide();
-              r.removeAttribute('data-kt-indicator');
-              r.disabled = false;
+              btn.find('.indicator-label').show();
+              btn.find('.indicator-progress').hide();
+              btn.removeAttr('data-kt-indicator').prop("disabled", false);
               return;
             }
 
@@ -2362,23 +2360,21 @@ $(document).ready(function() {
               type: "POST",
               data: $('#kt_create_account_form').serialize(),
               success: function(response) {
-                $('.indicator-label').hide();
-                $('.indicator-progress').show();
                 if(response.status == 'success') {	
                   $('#kt_create_account_form').trigger("reset");
                   Swal.fire("Sent!", "Your account has been created successfully.\n Check your email to activate your account.", "success");
                   $('#kt_create_account_stepper').html(response.view);
                 } else {
-                  $('.indicator-label').show();
-                  $('.indicator-progress').hide();
-                  Swal.fire("Error!", "You need to fill all the form fields!", "error");
+                  btn.find('.indicator-label').show();
+                  btn.find('.indicator-progress').hide();
+                  btn.removeAttr('data-kt-indicator').prop("disabled", false);
+                  Swal.fire("Error!", response.message || "You need to fill all the form fields!", "error");
                 }
               },
               error: function(xhr) {
-                $('.indicator-label').show();
-                $('.indicator-progress').hide();
-                r.removeAttribute('data-kt-indicator');
-                r.disabled = false;
+                btn.find('.indicator-label').show();
+                btn.find('.indicator-progress').hide();
+                btn.removeAttr('data-kt-indicator').prop("disabled", false);
                 if (xhr.status === 0 || !navigator.onLine) {
                   Swal.fire({ title: 'No Internet', text: 'You are currently offline or the server is unreachable. Please check your connection and try again.', icon: 'warning', confirmButtonText: 'Ok, got it!', customClass: { confirmButton: 'btn btn-warning' } });
                 } else {
@@ -2386,8 +2382,6 @@ $(document).ready(function() {
                 }
               }
             });
-            r.removeAttribute("data-kt-indicator");
-            r.disabled = !1;
           }),
 
           // Email check handler
