@@ -592,7 +592,61 @@
       display: none;
     }
 
-    /* Responsive Breakdown for Tablet & Mobile */
+    /* ── Responsive ────────────────────────────────────────── */
+
+    /* 1440px – large 15.6" at lower resolution */
+    @media (max-width: 1440px) {
+      .page-container { padding: 20px 32px; }
+    }
+
+    /* 1366px – most 14" / 15.6" laptops (1366×768) */
+    @media (max-width: 1366px) {
+      .page-container { padding: 18px 28px; }
+      .page-title     { font-size: 26px; }
+      .steps-card     { padding: 18px 20px; }
+      .features-card  { padding: 14px 20px; }
+      .hero-layout    { max-width: 620px; padding: 10px 0; }
+    }
+
+    /* 1280px – smaller 14" laptops */
+    @media (max-width: 1280px) {
+      .page-container { padding: 16px 20px; }
+      .page-title     { font-size: 24px; }
+      .hero-layout    { max-width: 580px; }
+      .features-card  { max-width: 580px; }
+    }
+
+    /* Short viewport – 768px height (1366×768 laptops) */
+    @media (max-height: 768px) {
+      .page-container { padding: 12px 28px; }
+      .hero-layout    { padding: 6px 0; }
+      .top-icon-wrapper { margin-bottom: 10px; }
+      .top-blue-badge { width: 46px; height: 46px; }
+      .page-title     { font-size: 22px; margin-bottom: 4px; }
+      .email-sent-text { margin-bottom: 6px; }
+      .email-badge    { margin-bottom: 10px; padding: 5px 16px; font-size: 13.5px; }
+      .page-description { margin-bottom: 14px; font-size: 12.5px; }
+      .steps-card     { padding: 14px 18px; margin-bottom: 10px; }
+      .steps-card-title { margin-bottom: 12px; font-size: 13.5px; }
+      .step-icon-wrapper { width: 40px; height: 40px; margin-bottom: 8px; }
+      .step-icon-circle { width: 40px; height: 40px; }
+      .status-card    { padding: 10px 16px; margin-bottom: 10px; }
+      .actions-grid   { gap: 8px; margin-bottom: 0; }
+      .action-card    { padding: 10px; }
+      .features-card  { padding: 12px 18px; margin-top: 10px; }
+      .features-grid  { gap: 14px; }
+      .footer         { padding-top: 10px; padding-bottom: 4px; margin-top: 10px; }
+    }
+
+    /* Very short – 640px height */
+    @media (max-height: 640px) {
+      .top-icon-wrapper { display: none; }
+      .status-card    { display: none; }
+      .features-card  { display: none; }
+      .page-description { margin-bottom: 10px; }
+    }
+
+    /* 1024px and below – tablets */
     @media (max-width: 1024px) {
       .page-container {
         padding: 20px;
@@ -614,6 +668,7 @@
       }
     }
 
+    /* 640px and below – phones */
     @media (max-width: 640px) {
       .page-container {
         padding: 16px;
