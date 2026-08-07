@@ -33,6 +33,8 @@ be made inside this folder.
 5. [docs/GLOSSARY.md](docs/GLOSSARY.md) — domain vocabulary (what "bench", "requisition", "coins"… mean)
 6. The relevant [`.ai/tasks/*.md`](.ai/tasks/) playbook + [`.ai/summaries/*`](.ai/summaries/)
 
+> **Active slice:** [docs/V2_login/](docs/V2_login/) — login + session-lifecycle + blocking-scenarios. Audit + plan + comparison + ADR complete; `app/` code not yet landed. See [V2_login README](docs/V2_login/README.md) for entry order.
+
 ## The full knowledge base ([docs/README.md](docs/README.md) is the index)
 - **Understand the code:** ARCHITECTURE · MODULE_MAP · DB_SCHEMA · API_CONTRACTS · DATA_FLOW · DEPENDENCY_GRAPH
 - **Work safely:** AI_RULES · AI_BOOTSTRAP · VERIFY · NAMING_CONVENTIONS · CODE_DOCUMENTATION_STANDARD

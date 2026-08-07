@@ -20,9 +20,7 @@ class Controller extends BaseController
     public function __construct()
     {
         $this->showInstall();
-        
 
-        $this->checkMigrateStatus();
         $this->global = GlobalSetting::first();
         $this->smsSettings = SmsSetting::first();
         $this->adminTheme = ThemeSetting::whereNull('company_id')->first();
