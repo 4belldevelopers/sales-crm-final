@@ -281,6 +281,9 @@ html, body { margin: 0 !important; padding: 0 !important; }
 .v2-foot a { font-size: 12.5px; color: var(--gr); text-decoration: none; }
 .v2-foot a:hover { color: var(--p); }
 
+<<<<<<< HEAD
+/* Responsive */
+=======
 /* ── Responsive ────────────────────────────────────────── */
 
 /* 1440px – larger 15.6" at lower resolution */
@@ -393,25 +396,13 @@ html, body { margin: 0 !important; padding: 0 !important; }
 }
 
 /* 960px and below – tablets: stack left over right */
+>>>>>>> e15e4ebf0d49eb0669c949cc48c7e236b5a6a290
 @media (max-width: 960px) {
-    .v2-left        { width: 100%; height: auto; padding: 32px 28px 220px; }
-    .v2-page        { flex-direction: column; overflow-y: auto; height: auto; min-height: 100vh; }
-    .v2-right       { height: auto; }
-    .v2-body        { padding: 24px 20px; justify-content: flex-start; }
-    .v2-card        { padding: 24px 20px; }
-    .v2-help        { padding: 16px 20px; }
-    .v2-foot        { padding: 14px 20px; }
-    .v2-sec         { max-width: 100%; }
-}
-
-/* 480px and below – phones */
-@media (max-width: 480px) {
-    .v2-left        { padding: 24px 16px 180px; }
-    .v2-hero h1     { font-size: 22px; }
-    .v2-body        { padding: 16px 12px; }
-    .v2-card        { padding: 20px 16px; border-radius: 12px; }
-    .v2-help        { padding: 12px 16px; }
-    .v2-foot        { gap: 10px; flex-wrap: wrap; padding: 12px 16px; }
+    .v2-left  { width: 100%; padding-bottom: 220px; }
+    .v2-page  { flex-direction: column; }
+    .v2-card  { padding: 24px 20px; }
+    .v2-body  { padding: 20px; }
+    .v2-help  { padding: 16px 20px; }
 }
 </style>
 
