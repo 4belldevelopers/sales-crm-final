@@ -538,6 +538,12 @@ if (session('status')) {
                 <span class="indicator-label">Login to Jero</span>
                 <span class="indicator-progress" style="display:none">Please wait…&nbsp;<span class="spinner-border spinner-border-sm align-middle"></span></span>
             </button>
+
+            {{-- Sign Up --}}
+            <div style="text-align:center;margin-top:16px;">
+                <span style="font-size:13px;color:var(--gr);">Don't have an account?</span>
+                <a href="{{ route('register') }}" style="font-size:13px;font-weight:700;color:var(--p);text-decoration:none;margin-left:5px;">Sign Up</a>
+            </div>
         </form>
 
         {{-- FORGOT PASSWORD FORM --}}

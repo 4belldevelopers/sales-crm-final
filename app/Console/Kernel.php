@@ -7,6 +7,7 @@ use App\Jobs\ProcessOfferTimeoutJob;
 use App\Jobs\ProcessOperationalCoinDeductionsJob;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Console\Kernel as ConsoleKernel;
+use Illuminate\Support\Facades\Artisan;
 
 class Kernel extends ConsoleKernel
 {
@@ -55,6 +56,18 @@ class Kernel extends ConsoleKernel
             ->everyTenMinutes()
             ->withoutOverlapping(9)
             ->runInBackground();
+
+        // Moved from Controller::__construct() — was spawning an artisan subprocess on every HTTP request.
+        // Nightly is sufficient; real deployments should run `php artisan migrate --force` explicitly.
+        $schedule->call(function () {
+            if (Artisan::call('migrate:check')) {
+                Artisan::call('migrate', ['--force' => true]);
+                Artisan::call('config:clear');
+                Artisan::call('route:clear');
+                Artisan::call('view:clear');
+                Artisan::call('cache:clear');
+            }
+        })->daily()->withoutOverlapping()->runInBackground();
     }
 
     protected function commands()
