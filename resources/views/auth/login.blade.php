@@ -233,13 +233,102 @@ html, body { margin: 0 !important; padding: 0 !important; }
 .v2-foot a { font-size: 12.5px; color: var(--gr); text-decoration: none; }
 .v2-foot a:hover { color: var(--p); }
 
-/* Responsive */
+/* ── Responsive ────────────────────────────────────────── */
+
+/* 1440px – larger 15.6" at lower resolution */
+@media (max-width: 1440px) {
+    .v2-left        { width: 500px; padding: 30px 36px 0; }
+    .v2-hero h1     { font-size: 28px; }
+    .v2-feats       { gap: 12px; }
+    .v2-body        { padding: 10px 42px 16px; }
+    .v2-help        { padding: 18px 42px; }
+    .v2-foot        { padding: 14px 42px; }
+}
+
+/* 1366px – most 14" / 15.6" laptops (1366×768 is the most common) */
+@media (max-width: 1366px) {
+    .v2-left        { width: 400px; padding: 24px 28px 0; }
+    .v2-logo        { margin-bottom: 22px; }
+    .v2-logo-text   { font-size: 22px; }
+    .v2-hero        { margin-bottom: 18px; }
+    .v2-hero h1     { font-size: 23px; letter-spacing: -.4px; }
+    .v2-hero p      { font-size: 12.5px; }
+    .v2-feats       { gap: 10px; }
+    .v2-feat-ico    { width: 40px; height: 40px; border-radius: 10px; }
+    .v2-feat-ico svg{ width: 20px; height: 20px; }
+    .v2-feat-body strong { font-size: 13px; }
+    .v2-feat-body span   { font-size: 11px; }
+    .v2-body        { padding: 8px 32px 14px; }
+    .v2-help        { padding: 14px 32px; }
+    .v2-foot        { padding: 10px 32px; }
+    .v2-card        { padding: 24px 30px; max-width: 560px; }
+    .v2-card-title  { font-size: 20px; }
+    .v2-card-sub    { margin-bottom: 16px; }
+}
+
+/* 1280px – smaller 14" laptops */
+@media (max-width: 1280px) {
+    .v2-left        { width: 340px; padding: 20px 22px 0; }
+    .v2-hero h1     { font-size: 21px; }
+    .v2-feat-ico    { width: 36px; height: 36px; }
+    .v2-feat        { gap: 12px; }
+    .v2-body        { padding: 8px 24px 12px; }
+    .v2-help        { padding: 12px 24px; }
+    .v2-foot        { padding: 10px 24px; }
+    .v2-card        { padding: 22px 26px; }
+}
+
+/* Short viewport – 768px tall (1366×768 laptops, max-height wins over max-width) */
+@media (max-height: 768px) {
+    .v2-logo        { margin-bottom: 16px; }
+    .v2-hero        { margin-bottom: 12px; }
+    .v2-feats       { gap: 8px; }
+    .v2-help        { padding-top: 10px; padding-bottom: 10px; }
+    .v2-foot        { padding-top: 8px; padding-bottom: 8px; }
+    .v2-card        { padding-top: 20px; padding-bottom: 20px; margin-bottom: 10px; }
+    .v2-card-sub    { margin-bottom: 14px; }
+    .v2-field       { margin-bottom: 12px; }
+    .v2-inp         { height: 44px; }
+    .v2-mid         { margin-bottom: 12px; }
+    .v2-cap-row     { margin-bottom: 12px; }
+    .v2-cap-img     { height: 44px; }
+    .v2-cap-img img { height: 40px; }
+    .v2-cap-btn     { height: 44px; }
+    .v2-cap-inp     { height: 44px; }
+    .v2-btn         { height: 46px; font-size: 14px; }
+}
+
+/* Very short – e.g. 600px tall (small laptops or zoomed browsers) */
+@media (max-height: 640px) {
+    .v2-city        { display: none; }
+    .v2-card        { padding: 16px 22px; margin-bottom: 8px; }
+    .v2-field       { margin-bottom: 10px; }
+    .v2-cap-row     { margin-bottom: 10px; }
+    .v2-inp, .v2-cap-btn, .v2-cap-img, .v2-cap-inp { height: 40px; }
+    .v2-btn         { height: 42px; }
+    .v2-sec         { display: none; }
+}
+
+/* 960px and below – tablets: stack left over right */
 @media (max-width: 960px) {
-    .v2-left  { width: 100%; padding-bottom: 220px; }
-    .v2-page  { flex-direction: column; }
-    .v2-card  { padding: 24px 20px; }
-    .v2-body  { padding: 20px; }
-    .v2-help  { padding: 16px 20px; }
+    .v2-left        { width: 100%; height: auto; padding: 32px 28px 220px; }
+    .v2-page        { flex-direction: column; overflow-y: auto; height: auto; min-height: 100vh; }
+    .v2-right       { height: auto; }
+    .v2-body        { padding: 24px 20px; justify-content: flex-start; }
+    .v2-card        { padding: 24px 20px; }
+    .v2-help        { padding: 16px 20px; }
+    .v2-foot        { padding: 14px 20px; }
+    .v2-sec         { max-width: 100%; }
+}
+
+/* 480px and below – phones */
+@media (max-width: 480px) {
+    .v2-left        { padding: 24px 16px 180px; }
+    .v2-hero h1     { font-size: 22px; }
+    .v2-body        { padding: 16px 12px; }
+    .v2-card        { padding: 20px 16px; border-radius: 12px; }
+    .v2-help        { padding: 12px 16px; }
+    .v2-foot        { gap: 10px; flex-wrap: wrap; padding: 12px 16px; }
 }
 </style>
 
