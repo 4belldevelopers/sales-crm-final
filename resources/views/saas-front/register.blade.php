@@ -999,6 +999,30 @@ body, html {
   background: var(--v2-ph);
   box-shadow: 0 6px 18px rgba(29,97,242,0.4);
 }
+.v2-btn-primary:disabled {
+  opacity: 0.75;
+  cursor: not-allowed;
+}
+
+@keyframes v2-spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+.spinner-border {
+  display: inline-block;
+  width: 1rem;
+  height: 1rem;
+  vertical-align: -0.125em;
+  border: 0.15em solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  animation: v2-spin 0.75s linear infinite;
+}
+.spinner-border-sm {
+  width: 0.875rem;
+  height: 0.875rem;
+  border-width: 0.12em;
+}
 
 .v2-btn-secondary {
   display: inline-flex;
@@ -1337,8 +1361,13 @@ body, html {
             <span class="fs-7 text-muted">You can complete setup anytime</span>
           </div>
           <button type="button" class="v2-btn-primary btn-next-step" data-kt-stepper-action="next">
-            Continue
-            <svg width="16" height="16" viewBox="0 0 20 20" fill="none"><path d="M4.166 10h11.668M10.833 5l5 5-5 5" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <span class="indicator-label d-flex align-items-center gap-2">
+              Continue
+              <svg width="16" height="16" viewBox="0 0 20 20" fill="none"><path d="M4.166 10h11.668M10.833 5l5 5-5 5" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </span>
+            <span class="indicator-progress" style="display:none;">
+              Please wait... <span class="spinner-border spinner-border-sm align-middle ms-2"></span>
+            </span>
           </button>
         </div>
       </div>
@@ -1583,8 +1612,13 @@ body, html {
             Previous
           </button>
           <button type="button" class="v2-btn-primary btn-next-step" data-kt-stepper-action="next">
-            Continue to Workspace Setup
-            <svg width="16" height="16" viewBox="0 0 20 20" fill="none"><path d="M4.166 10h11.668M10.833 5l5 5-5 5" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <span class="indicator-label d-flex align-items-center gap-2">
+              Continue to Workspace Setup
+              <svg width="16" height="16" viewBox="0 0 20 20" fill="none"><path d="M4.166 10h11.668M10.833 5l5 5-5 5" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </span>
+            <span class="indicator-progress" style="display:none;">
+              Please wait... <span class="spinner-border spinner-border-sm align-middle ms-2"></span>
+            </span>
           </button>
         </div>
       </div>
@@ -1689,8 +1723,13 @@ body, html {
             All changes are auto-saved
           </div>
           <button type="button" class="v2-btn-primary btn-next-step" data-kt-stepper-action="next">
-            Continue to Launch Workspace
-            <svg width="16" height="16" viewBox="0 0 20 20" fill="none"><path d="M4.166 10h11.668M10.833 5l5 5-5 5" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <span class="indicator-label d-flex align-items-center gap-2">
+              Continue to Launch Workspace
+              <svg width="16" height="16" viewBox="0 0 20 20" fill="none"><path d="M4.166 10h11.668M10.833 5l5 5-5 5" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </span>
+            <span class="indicator-progress" style="display:none;">
+              Please wait... <span class="spinner-border spinner-border-sm align-middle ms-2"></span>
+            </span>
           </button>
         </div>
       </div>
@@ -2111,6 +2150,28 @@ $(document).ready(function() {
             ev.stopPropagation();
             if (!s) return;
 
+            var btn = $(this);
+            var label = btn.find('.indicator-label');
+            var progress = btn.find('.indicator-progress');
+
+            function showLoading() {
+              btn.prop('disabled', true);
+              if (label.length && progress.length) {
+                label.hide();
+                progress.show();
+              }
+            }
+
+            function hideLoading() {
+              btn.prop('disabled', false);
+              if (label.length && progress.length) {
+                label.show();
+                progress.hide();
+              }
+            }
+
+            showLoading();
+
             var currentStep = s.getCurrentStepIndex();
 
             if (currentStep === 1) {
@@ -2118,10 +2179,14 @@ $(document).ready(function() {
               if (t1) {
                 t1.validate().then(function (status) {
                   if (status === "Valid") {
-                    s.goNext();
-                    updatePreviewData();
-                    scrollToTop();
+                    setTimeout(function() {
+                      hideLoading();
+                      s.goNext();
+                      updatePreviewData();
+                      scrollToTop();
+                    }, 150);
                   } else {
+                    hideLoading();
                     Swal.fire({
                       text: "Sorry, looks like there are some mandatory fields missing on Step 1.",
                       icon: "error",
@@ -2132,13 +2197,17 @@ $(document).ready(function() {
                   }
                 });
               } else {
-                s.goNext();
-                updatePreviewData();
-                scrollToTop();
+                setTimeout(function() {
+                  hideLoading();
+                  s.goNext();
+                  updatePreviewData();
+                  scrollToTop();
+                }, 150);
               }
             } else if (currentStep === 2) {
               var companyType = $("input[name='company_type']:checked").val();
               if (!companyType) {
+                hideLoading();
                 Swal.fire({
                   text: "Please select how your organization operates.",
                   icon: "error",
@@ -2148,18 +2217,25 @@ $(document).ready(function() {
                 });
                 return;
               }
-              s.goNext();
-              updatePreviewData();
-              scrollToTop();
+              setTimeout(function() {
+                hideLoading();
+                s.goNext();
+                updatePreviewData();
+                scrollToTop();
+              }, 150);
             } else if (currentStep === 3) {
               var t3 = a[2];
               if (t3) {
                 t3.validate().then(function (status) {
                   if (status === "Valid") {
-                    s.goNext();
-                    updatePreviewData();
-                    scrollToTop();
+                    setTimeout(function() {
+                      hideLoading();
+                      s.goNext();
+                      updatePreviewData();
+                      scrollToTop();
+                    }, 150);
                   } else {
+                    hideLoading();
                     Swal.fire({
                       text: "Please fill in all mandatory fields on Step 3.",
                       icon: "error",
@@ -2170,14 +2246,20 @@ $(document).ready(function() {
                   }
                 });
               } else {
+                setTimeout(function() {
+                  hideLoading();
+                  s.goNext();
+                  updatePreviewData();
+                  scrollToTop();
+                }, 150);
+              }
+            } else {
+              setTimeout(function() {
+                hideLoading();
                 s.goNext();
                 updatePreviewData();
                 scrollToTop();
-              }
-            } else {
-              s.goNext();
-              updatePreviewData();
-              scrollToTop();
+              }, 150);
             }
           }),
 
@@ -2285,7 +2367,7 @@ $(document).ready(function() {
                 if(response.status == 'success') {	
                   $('#kt_create_account_form').trigger("reset");
                   Swal.fire("Sent!", "Your account has been created successfully.\n Check your email to activate your account.", "success");
-                  $('#upgrade-plan').html(response.view);
+                  $('#kt_create_account_stepper').html(response.view);
                 } else {
                   $('.indicator-label').show();
                   $('.indicator-progress').hide();
