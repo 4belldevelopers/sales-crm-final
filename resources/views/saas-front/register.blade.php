@@ -1,1146 +1,2447 @@
 @extends('layouts.metronic_front_app')
-{{-- @dd("hi") --}}
-<!--begin::Page title-->
-<!--<title>Meecruit | Register</title>-->
-<!--end::Page title-->
+
 @section('content')
-<!--begin::Head-->
-<!--begin::Global Stylesheets Bundle(used by all pages)-->
+<!-- Stylesheets -->
 <link href="{{ asset('demo/dist/assets/plugins/global/plugins.bundle.css') }}" rel="stylesheet" type="text/css" />
 <link href="{{ asset('demo/dist/assets/css/style.bundle.css')}}" rel="stylesheet" type="text/css" />
-
 <link href="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.17/css/intlTelInput.css" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 
-<!--end::Global Stylesheets Bundle(used by all pages)-->
 <style>
-      /*Media query for smaller screen start*/
-      @media only screen and (min-width: 320px) and (max-width: 768px)
-      {
-         .mb-sm-0
-         {
-            margin-bottom: 0px!important;
-         }
-      }
-      /*Media query for smaller screen end*/
+/* Page Loader Override - Hidden by default */
+.page-loader {
+  display: none;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 99999;
+  background: rgba(15, 23, 42, 0.5);
+  backdrop-filter: blur(4px);
+}
 
-      /*Success screen popup css*/
-      .swal2-popup .swal2-content, .swal2-popup .swal2-html-container
-      {
-         font-size: 16px;
-      }
-      .swal2-popup .swal2-title
-      {
-         font-size: 18px;
-         font-weight: 600;
-      }
-      .swal2-styled.swal2-confirm
-      {
-         background-color: #009688;
-         width: 100%;
-         padding: 10px;
-      }
-      .iti--allow-dropdown{
-        width: 100% !important; 
-      }
-      .iti__flag {
-        margin-top: 2px !important;
-      }
+/* Stepper Display Controls */
+[data-kt-stepper-element="content"] {
+  display: none !important;
+}
+[data-kt-stepper-element="content"].current {
+  display: block !important;
+}
 
+:root {
+  --v2-p: #1d61f2;
+  --v2-ph: #154ec4;
+  --v2-pl: #f0f6ff;
+  --v2-pb: #d0e4ff;
+  --v2-dk: #0f172a;
+  --v2-gr: #64748b;
+  --v2-bd: #e2e8f0;
+  --v2-bg: #f5f7fa;
+}
 
-      .page-loader {
-        justify-content: center;
-        align-items: center;
-        flex-direction: column; /* Stack the spinner and text vertically */
-        height: 100vh; /* Full viewport height */
-        width: 100vw; /* Full viewport width */
-      }
+body, html {
+  margin: 0 !important;
+  padding: 0 !important;
+  font-family: 'Poppins', sans-serif !important;
+  background: var(--v2-bg) !important;
+  color: var(--v2-dk);
+  min-height: 100vh;
+}
 
-      .spinner-border-full {
-        width: 3rem; /* Adjust size as needed */
-        height: 3rem;
-      }
+.flex-root, .flex-column-fluid {
+  background: var(--v2-bg) !important;
+}
 
-      .text-gray-800 {
-        margin-top: 1rem; /* Space between spinner and text */
-      }
+/* Outer layout wrapper */
+.v2-wrapper {
+  display: flex;
+  width: 100%;
+  max-width: 1440px;
+  margin: 0 auto;
+  min-height: 100vh;
+  background: var(--v2-bg);
+  padding: 32px 40px;
+  box-sizing: border-box;
+  gap: 36px;
+}
 
-      /*Success screen popup css end*/
-   </style>
-<!--end::Head-->
-<!--begin::Body-->
-<body id="kt_body" class="bg-body">
+/* Left Column */
+.v2-left-col {
+  width: 320px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
 
-  <div class="page-loader flex-column bg-dark bg-opacity-25">
-    <span class="spinner-border spinner-border-full text-primary" role="status"></span>
-    <span class="text-gray-800 fs-6 fw-semibold mt-5">Loading...</span>
-  </div>
+.v2-logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  margin-bottom: 8px;
+}
+.v2-logo-text {
+  font-size: 24px;
+  font-weight: 800;
+  color: var(--v2-dk);
+  letter-spacing: -0.5px;
+  line-height: 1;
+}
+.v2-logo-sub {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--v2-gr);
+  margin-top: 4px;
+  display: block;
+}
 
-<!--begin::Main-->
-<div class="d-flex flex-column flex-root">
-  <!--begin::Authentication - Multi-steps-->
-  <div class="d-flex flex-column flex-lg-row flex-column-fluid stepper stepper-pills stepper-column" id="kt_create_account_stepper">
-    <!--begin::Aside-->
-    <div class="d-flex flex-column flex-lg-row-auto w-xl-500px bg-lighten shadow-sm">
-      <!--begin::Wrapper-->
-      <div class="d-flex flex-column position-xl-fixed top-0 bottom-0 w-xl-500px scroll-y">
-        <!--begin::Header-->
-        <div class="d-flex flex-row-fluid flex-column flex-center p-10 pt-lg-20">
-          <!--begin::Logo-->
-          <a href="https://jero.works/" class="mb-10 mb-lg-10"> <img alt="Logo" src="{{ asset('img/logo-transparent1.svg') }}" class="h-70px" /> </a>
-          <!--end::Logo-->
-          <!--begin::Nav-->
-          <div class="stepper-nav">
-            <!--begin::Registration Details-->
-            <div class="stepper-item current" data-kt-stepper-element="nav">
-              <div class="stepper-line w-40px"></div>
-              <div class="stepper-icon w-40px h-40px"> <i class="stepper-check fas fa-check"></i> <span class="stepper-number">1</span> </div>
-              <div class="stepper-label">
-                <h3 class="stepper-title">Registration Details</h3>
-                <div class="stepper-desc fw-bold">Setup Your Registration Details</div>
-              </div>
-            </div>
-            <!--end::Registration Details-->
-            <!--begin::Company Details-->
-            <div class="stepper-item" data-kt-stepper-element="nav">
-              <div class="stepper-line w-40px"></div>
-              <div class="stepper-icon w-40px h-40px"> <i class="stepper-check fas fa-check"></i> <span class="stepper-number">2</span> </div>
-              <div class="stepper-label">
-                <h3 class="stepper-title">Company Details</h3>
-                <div class="stepper-desc fw-bold">Setup Your Account Details</div>
-              </div>
-            </div>
-            <!--end::Company Details-->
-            <!--begin::Account Details-->
-            <div class="stepper-item" data-kt-stepper-element="nav">
-              <div class="stepper-line w-40px"></div>
-              <div class="stepper-icon w-40px h-40px"> <i class="stepper-check fas fa-check"></i> <span class="stepper-number">3</span> </div>
-              <div class="stepper-label">
-                <h3 class="stepper-title">Account Details</h3>
-                <div class="stepper-desc fw-bold">Your Company Related Details</div>
-              </div>
-            </div>
-            <!--end::Account Details-->
-            <!--begin::Completed-->
-            <div class="stepper-item" data-kt-stepper-element="nav">
-              <div class="stepper-line w-40px"></div>
-              <div class="stepper-icon w-40px h-40px"> <i class="stepper-check fas fa-check"></i> <span class="stepper-number">4</span> </div>
-              <div class="stepper-label">
-                <h3 class="stepper-title">Preview & Submit</h3>
-                <div class="stepper-desc fw-bold">Woah, we are here</div>
-              </div>
-            </div>
-            <!--end::Completed-->
-          </div>
-          <!--end::Nav-->
-        </div>
-        <!--end::Header-->
-        <!--begin::Illustration-->
-        <div class="d-flex flex-row-auto bgi-no-repeat bgi-position-x-center bgi-size-contain bgi-position-y-bottom min-h-150px min-h-lg-300px" style="background-image: url(assets/media/illustrations/sketchy-1/16.png"></div>
-        <!--end::Illustration-->
-      </div>
-      <!--end::Wrapper-->
-    </div>
-    <!--begin::Aside-->
-    <!--begin::Body-->
-    <div class="d-flex flex-column flex-lg-row-fluid py-10" id="upgrade-plan">
-      <!--begin::Content-->
-      <div class="d-flex flex-center flex-column flex-column-fluid">
-        <!--begin::Wrapper-->
-        <div class="w-lg-700px p-10 p-lg-15 mx-auto">
-          <!--begin::Form-->
-          <form class="my-auto pb-5" novalidate="novalidate" id="kt_create_account_form" method="post" name="kt_create_account_form">
-           
-          
+.v2-aside-hero h2 {
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--v2-dk);
+  margin: 0 0 6px;
+  letter-spacing: -0.4px;
+}
+.v2-aside-hero p {
+  font-size: 13px;
+  color: var(--v2-gr);
+  margin: 0;
+  line-height: 1.5;
+}
 
-             
-          
+/* Progress Card */
+.v2-prog-card {
+  background: #ffffff;
+  border-radius: 14px;
+  padding: 16px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+  border: 1px solid #edf0f4;
+}
+.v2-prog-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 12px;
+  font-weight: 600;
+}
+.v2-prog-bg {
+  width: 100%;
+  height: 7px;
+  background: #f1f5f9;
+  border-radius: 999px;
+  margin: 10px 0;
+  overflow: hidden;
+}
+.v2-prog-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #1d61f2, #3b82f6);
+  border-radius: 999px;
+  transition: width 0.3s ease;
+}
 
-          
-		    <!--begin::Registration Details-->
-            <div class="current" data-kt-stepper-element="content">
-              <div class="w-100">
-                <div class="pb-10 pb-lg-15">
-                  <h2 class="fw-bolder d-flex align-items-center text-dark">Registration Details</h2>
-                  <div class="text-muted fw-bold fs-6">If you need more info, please check out <a href="https://jero.works/book-a-demo" target="_blank" class="link-primary fw-bolder">Help Page</a>. </div>
-                </div>
+/* Stepper Card */
+.v2-stepper-card {
+  background: #ffffff;
+  border-radius: 14px;
+  padding: 12px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+  border: 1px solid #edf0f4;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
 
-                
-                <div class="mb-10 fv-row">
-                  <label class="form-label mb-3 required">Enter Company Name</label>
-                  <input type="text" class="form-control form-control-lg form-control-solid" name="company_name" placeholder="Enter company name" value="" />
-                </div>
+.v2-step-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid transparent;
+  transition: all 0.2s ease;
+  text-decoration: none !important;
+}
+.v2-step-item.current {
+  background: var(--v2-pl);
+  border-color: var(--v2-pb);
+}
+.v2-step-badge {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: #f1f5f9;
+  border: 1.5px solid var(--v2-bd);
+  color: var(--v2-gr);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12.5px;
+  font-weight: 700;
+  flex-shrink: 0;
+  transition: all 0.2s ease;
+}
+.v2-step-item.current .v2-step-badge {
+  background: var(--v2-p);
+  border-color: var(--v2-p);
+  color: #ffffff;
+}
+.v2-step-item.completed .v2-step-badge {
+  background: #16a34a;
+  border-color: #16a34a;
+  color: #ffffff;
+}
+.v2-step-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--v2-dk);
+  line-height: 1.2;
+}
+.v2-step-item.current .v2-step-title { color: var(--v2-p); }
+.v2-step-sub {
+  font-size: 11px;
+  color: var(--v2-gr);
+  margin-top: 2px;
+}
 
-                <div class="fv-row mb-10">
-                  <label class="form-label fw-bolder text-dark fs-6 required">Enter Your Name</label>
-                  <input class="form-control form-control-solid" type="text" placeholder=""
-                      name="name" autocomplete="off" />
-                </div>
+/* Value Props Card */
+.v2-value-card {
+  background: #ffffff;
+  border-radius: 14px;
+  padding: 16px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+  border: 1px solid #edf0f4;
+}
+.v2-value-title {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--v2-dk);
+  margin-bottom: 12px;
+}
+.v2-value-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+.v2-value-row:last-child { margin-bottom: 0; }
+.v2-value-icon {
+  width: 26px;
+  height: 26px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.v2-value-txt strong {
+  display: block;
+  font-size: 11.5px;
+  font-weight: 700;
+  color: var(--v2-dk);
+  line-height: 1.2;
+}
+.v2-value-txt span {
+  font-size: 10.5px;
+  color: var(--v2-gr);
+}
 
-                <div class="fv-row mb-10">
-                  <label class="form-label fw-bolder text-dark fs-6 required">Enter Your Email</label>
-                  <input class="form-control form-control-solid" type="email" placeholder="" name="email" autocomplete="off" />
-                </div>
-                <div class="mb-7 fv-row" data-kt-password-meter="true">
-                  <div class="mb-1">
-                    <label class="form-label fw-bolder text-dark fs-6 required">Password</label>
-                    <div class="position-relative mb-3">
-                      <input class="form-control form-control-solid" type="password" placeholder="" name="password" id="password" autocomplete="off" />
-                      <span class="btn btn-sm btn-icon position-absolute translate-middle top-50 end-0 me-n2" data-kt-password-meter-control="visibility"> <i class="bi bi-eye-slash fs-2"></i> <i class="bi bi-eye fs-2 d-none"></i> </span> </div>
-                    <div class="d-flex align-items-center mb-3" data-kt-password-meter-control="highlight">
-                      <div class="flex-grow-1 bg-secondary bg-active-success rounded h-5px me-2"></div>
-                      <div class="flex-grow-1 bg-secondary bg-active-success rounded h-5px me-2"></div>
-                      <div class="flex-grow-1 bg-secondary bg-active-success rounded h-5px me-2"></div>
-                      <div class="flex-grow-1 bg-secondary bg-active-success rounded h-5px"></div>
-                    </div>
-                  </div>
-                  <div class="text-muted d-none">Use 8 or more characters with a mix of letters, numbers &amp; symbols.</div>
-                </div>
-                <!--end::Input group=-->
-                <!--begin::Confirm password-->
-                <div class="mb-7 fv-row" data-kt-password-meter="true">
-                  <!--begin::Wrapper-->
-                  <div class="mb-1">
-                    <!--begin::Label-->
-                    <label class="form-label fw-bolder text-dark fs-6 required">Confirm Password</label>
-                    <!--end::Label-->
-                    <!--begin::Input wrapper-->
-                    <div class="position-relative mb-3">
-                      <input class="form-control form-control-solid" type="password" placeholder="" name="password_confirmation" id="password_confirmation" autocomplete="off" />
-                      <span class="btn btn-sm btn-icon position-absolute translate-middle top-50 end-0 me-n2" data-kt-password-meter-control="visibility"> <i class="bi bi-eye-slash fs-2"></i> <i class="bi bi-eye fs-2 d-none"></i> </span> </div>
-                    <!--end::Input wrapper-->
-                  </div>
-                  <!--end::Wrapper-->
-                </div>
-                <!--end::Confirm password=-->
-                <!--begin::Terms & conditions check-->
-                <div class="fv-row mb-10 fv-plugins-icon-container fv-plugins-bootstrap5-row-valid">
-                  <label class="form-check form-check-custom form-check-solid form-check-inline">
-                  <input class="form-check-input" type="checkbox" checked="checked" name="toc" value="1">
-                  <span class="form-check-label fw-bold text-gray-700 fs-6">I Agree <a href="{{ route('termsAndConditions') }}" target="_blank" class="ms-1 link-primary">Terms and conditions</a>. </span> </label>
-                  <div class="fv-plugins-message-container invalid-feedback"></div>
-                </div>
-                <!--end::Terms & confitions check-->
-              </div>
-            </div>
-            <!--end::Registration Details-->
-			
-            <!--begin::Company Details-->
-            <div class="" data-kt-stepper-element="content">
-              <div class="w-100">
-                <div class="pb-10 pb-lg-15">
-                  <h2 class="fw-bolder text-dark">Company Details</h2>
-                  <div class="text-muted fw-bold fs-6">If you need more info, please check out <a href="https://jero.works/book-a-demo" target="_blank" class="link-primary fw-bolder">Help Page</a>. </div>
-                </div>
-                
-                {{-- <div class="mb-10 fv-row">
-                  <label class="d-flex align-items-center form-label mb-3 required">Specify Team Size <i class="fas fa-exclamation-circle ms-2 fs-7" data-bs-toggle="tooltip" title="Provide your team size to help us setup your subscription"></i></label>
-                  <div class="row mb-2" data-kt-buttons="true">
-                    <div class="col">
-                      <label class="btn btn-outline btn-outline-dashed btn-outline-default w-100 p-4">
-                      <input type="radio" class="btn-check" name="team_size" value="0" />
-                      <span class="fw-bolder fs-3">1-50</span> </label>
-                    </div>
-                    <div class="col">
-                      <label class="btn btn-outline btn-outline-dashed btn-outline-default w-100 p-4">
-                      <input type="radio" class="btn-check" name="team_size" value="1" />
-                      <span class="fw-bolder fs-3">51-200</span> </label>
-                    </div>
-                    <div class="col">
-                      <label class="btn btn-outline btn-outline-dashed btn-outline-default w-100 p-4">
-                      <input type="radio" class="btn-check" name="team_size" value="2" />
-                      <span class="fw-bolder fs-3">201-1000</span> </label>
-                    </div>
-                    <div class="col">
-                      <label class="btn btn-outline btn-outline-dashed btn-outline-default w-100 p-4">
-                      <input type="radio" class="btn-check" name="team_size" value="3" />
-                      <span class="fw-bolder fs-3">1000+</span> </label>
-                    </div>
-                  </div>
-                  <div class="form-text">Customers will see this shortened version of your statement descriptor</div>
-                </div> --}}
-                <input type="hidden" name="team_size" id="team_size" value="">
-                <div class="mb-0 fv-row">
-                  <label class="d-flex align-items-center form-label mb-5 required">Select Company Type</label>
-                  <div class="mb-0">
-                    <label class="d-flex flex-stack mb-5 cursor-pointer"> <span class="d-flex align-items-center me-2"> <span class="symbol symbol-50px me-6"> <span class="symbol-label">
-                      <!--begin::Svg Icon-->
-                      <span class="svg-icon svg-icon-1 svg-icon-gray-600">
-                      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none">
-                        <path d="M13 10.9128V3.01281C13 2.41281 13.5 1.91281 14.1 2.01281C16.1 2.21281 17.9 3.11284 19.3 4.61284C20.7 6.01284 21.6 7.91285 21.9 9.81285C22 10.4129 21.5 10.9128 20.9 10.9128H13Z" fill="black" />
-                        <path opacity="0.3" d="M13 12.9128V20.8129C13 21.4129 13.5 21.9129 14.1 21.8129C16.1 21.6129 17.9 20.7128 19.3 19.2128C20.7 17.8128 21.6 15.9128 21.9 14.0128C22 13.4128 21.5 12.9128 20.9 12.9128H13Z" fill="black" />
-                        <path opacity="0.3" d="M11 19.8129C11 20.4129 10.5 20.9129 9.89999 20.8129C5.49999 20.2129 2 16.5128 2 11.9128C2 7.31283 5.39999 3.51281 9.89999 3.01281C10.5 2.91281 11 3.41281 11 4.01281V19.8129Z" fill="black" />
-                      </svg>
-                      </span>
-                      <!--end::Svg Icon-->
-                      </span> </span> <span class="d-flex flex-column"> <span class="fw-bolder text-gray-800 text-hover-primary fs-5">Corporate & Enterprise Companies</span> <span class="fs-6 fw-bold text-muted">Select if you are a product or manufacturing company.</span> </span> </span> <span class="form-check form-check-custom form-check-solid">
-                      <input class="form-check-input" type="radio" name="company_type" value="3" />
-                      </span> </label>
+/* Security Box */
+.v2-sec-card {
+  background: #ffffff;
+  border-radius: 14px;
+  padding: 14px 16px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+  border: 1px solid #edf0f4;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.v2-sec-card strong { display: block; font-size: 12px; font-weight: 700; color: var(--v2-dk); }
+.v2-sec-card span { font-size: 11px; color: var(--v2-gr); }
 
-                   
-                    <label class="d-flex flex-stack mb-5 cursor-pointer"> <span class="d-flex align-items-center me-2"> <span class="symbol symbol-50px me-6"> <span class="symbol-label">
-                    <!--begin::Svg Icon-->
-                    <span class="svg-icon svg-icon-1 svg-icon-gray-600">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none">
-                      <path d="M13 5.91517C15.8 6.41517 18 8.81519 18 11.8152C18 12.5152 17.9 13.2152 17.6 13.9152L20.1 15.3152C20.6 15.6152 21.4 15.4152 21.6 14.8152C21.9 13.9152 22.1 12.9152 22.1 11.8152C22.1 7.01519 18.8 3.11521 14.3 2.01521C13.7 1.91521 13.1 2.31521 13.1 3.01521V5.91517H13Z" fill="black" />
-                      <path opacity="0.3" d="M19.1 17.0152C19.7 17.3152 19.8 18.1152 19.3 18.5152C17.5 20.5152 14.9 21.7152 12 21.7152C9.1 21.7152 6.50001 20.5152 4.70001 18.5152C4.30001 18.0152 4.39999 17.3152 4.89999 17.0152L7.39999 15.6152C8.49999 16.9152 10.2 17.8152 12 17.8152C13.8 17.8152 15.5 17.0152 16.6 15.6152L19.1 17.0152ZM6.39999 13.9151C6.19999 13.2151 6 12.5152 6 11.8152C6 8.81517 8.2 6.41515 11 5.91515V3.01519C11 2.41519 10.4 1.91519 9.79999 2.01519C5.29999 3.01519 2 7.01517 2 11.8152C2 12.8152 2.2 13.8152 2.5 14.8152C2.7 15.4152 3.4 15.7152 4 15.3152L6.39999 13.9151Z" fill="black" />
-                    </svg>
-                    </span>
-                    <!--end::Svg Icon-->
-                    </span> </span> <span class="d-flex flex-column"> <span class="fw-bolder text-gray-800 text-hover-primary fs-5">Consulting or Service Companies</span> <span class="fs-6 fw-bold text-muted">Select if you Offer consulting services to your clients.</span> </span> </span> <span class="form-check form-check-custom form-check-solid">
-                    <input class="form-check-input" type="radio" name="company_type" value="2" />
-                    </span> </label>
-                    <label class="d-flex flex-stack mb-5 cursor-pointer"> <span class="d-flex align-items-center me-2"> <span class="symbol symbol-50px me-6"> <span class="symbol-label">
-                      <!--begin::Svg Icon-->
-                      <span class="svg-icon svg-icon-1 svg-icon-gray-600">
-                      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none">
-                        <path d="M20 19.725V18.725C20 18.125 19.6 17.725 19 17.725H5C4.4 17.725 4 18.125 4 18.725V19.725H3C2.4 19.725 2 20.125 2 20.725V21.725H22V20.725C22 20.125 21.6 19.725 21 19.725H20Z" fill="black" />
-                        <path opacity="0.3" d="M22 6.725V7.725C22 8.325 21.6 8.725 21 8.725H18C18.6 8.725 19 9.125 19 9.725C19 10.325 18.6 10.725 18 10.725V15.725C18.6 15.725 19 16.125 19 16.725V17.725H15V16.725C15 16.125 15.4 15.725 16 15.725V10.725C15.4 10.725 15 10.325 15 9.725C15 9.125 15.4 8.725 16 8.725H13C13.6 8.725 14 9.125 14 9.725C14 10.325 13.6 10.725 13 10.725V15.725C13.6 15.725 14 16.125 14 16.725V17.725H10V16.725C10 16.125 10.4 15.725 11 15.725V10.725C10.4 10.725 10 10.325 10 9.725C10 9.125 10.4 8.725 11 8.725H8C8.6 8.725 9 9.125 9 9.725C9 10.325 8.6 10.725 8 10.725V15.725C8.6 15.725 9 16.125 9 16.725V17.725H5V16.725C5 16.125 5.4 15.725 6 15.725V10.725C5.4 10.725 5 10.325 5 9.725C5 9.125 5.4 8.725 6 8.725H3C2.4 8.725 2 8.325 2 7.725V6.725L11 2.225C11.6 1.925 12.4 1.925 13.1 2.225L22 6.725ZM12 3.725C11.2 3.725 10.5 4.425 10.5 5.225C10.5 6.025 11.2 6.725 12 6.725C12.8 6.725 13.5 6.025 13.5 5.225C13.5 4.425 12.8 3.725 12 3.725Z" fill="black" />
-                      </svg>
-                      </span>
-                      <!--end::Svg Icon-->
-                      </span> </span> <span class="d-flex flex-column"> <span class="fw-bolder text-gray-800 text-hover-primary fs-5">Staffing Companies</span> <span class="fs-6 fw-bold text-muted">Select if you Offers staffing or recruitment services to your clients .</span> </span> </span> <span class="form-check form-check-custom form-check-solid">
-                      <input class="form-check-input" type="radio" name="company_type" value="1" />
-                      </span> </label>
+/* Right Column */
+.v2-right-col {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
 
-                  </div>
-                </div>
-              </div>
-            </div>
-            <!--end::Company Details-->
-			
-            <!--begin::Account Details-->
-            <div class="" data-kt-stepper-element="content">
-              <div class="w-100">
-                <div class="pb-10 pb-lg-12">
-                  <h2 class="fw-bolder text-dark">Account Details</h2>
-                  <div class="text-muted fw-bold fs-6">If you need more info, please check out <a href="https://jero.works/book-a-demo" target="_blank" class="link-primary fw-bolder">Help Page</a>. </div>
-                </div>
-                <div class="fv-row mb-10">
-                  <label class="form-label required">Website</label>
-                  <input name="website" type="website" class="form-control form-control-lg form-control-solid" placeholder="Enter website URL" value="" />
-                </div>
-                <div class="fv-row mb-10 smsForm">
-                  <label class="fs-6 fw-bold form-label required">Contact Number</label>
-                  <input name="contact_number" id="contact_number" type="number" class="form-control form-control-lg form-control-solid" placeholder="Enter contact number" value="" pattern="[7-9]{1}[0-9]{9}" required />
-                  <input name="contact_code" id="contact_code" type="hidden" class="form-control form-control-lg form-control-solid" />
-                </div>
-                <div class="fv-row mb-0 smsForm">
-                  <label class="fs-6 fw-bold form-label required">Select City:</label>
-                  <input class="form-control form-control-lg form-control-solid" value="" id="kt_tagify_work_location" name="kt_tagify_work_location" placeholder="Enter your Location..."/>
-               </div>
-              </div>
-            </div>
-            <!--end::Account Details-->
-			
-            <!--begin::Completed-->
-            <div class="" data-kt-stepper-element="content">
-              <div class="w-100">
-                <div class="pb-10 pb-lg-10">
-                  <h2 class="fw-bolder d-flex align-items-center text-dark">Registratation Preview!</h2>
-                  <div class="text-muted fw-bold fs-6">please check out all info before submit.</div>
-                </div>
-                <div class="mb-0">
-				
-                  <div class="fs-6 text-gray-600 mb-5">
-				  
-                    <div class="row mb-5">
-                      <div class="col-md-3 col-sm-12">
-                        <label class="form-label fw-bolder text-dark fs-6">Company Name</label>
-                      </div>
-                      <div class="col-md-9 col-sm-12"> <span id="preview_company_name">&nbsp;</span> </div>
-                    </div>
-                    
-                    <div class="row mb-5">
-                      <div class="col-md-3 col-sm-12">
-                        <label class="form-label fw-bolder text-dark fs-6">Name</label>
-                      </div>
-                      <div class="col-md-3 col-sm-12"> <span id="preview_name">&nbsp;</span> </div>
-                    </div>
+.v2-topbar {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 20px;
+  font-size: 13px;
+}
+.v2-topbar span { color: var(--v2-gr); }
+.v2-btn-signin {
+  padding: 7px 20px;
+  border: 1.5px solid var(--v2-p);
+  border-radius: 8px;
+  color: var(--v2-p);
+  font-weight: 700;
+  text-decoration: none !important;
+  font-size: 13px;
+  transition: all 0.2s ease;
+  background: transparent;
+}
+.v2-btn-signin:hover {
+  background: var(--v2-p);
+  color: #ffffff !important;
+}
 
-                    <div class="row mb-5">
-                      <div class="col-md-3 col-sm-12">
-                        <label class="form-label fw-bolder text-dark fs-6">Email</label>
-                      </div>
-                      <div class="col-md-3 col-sm-12"> <span id="preview_email">&nbsp;</span> </div>
-                    </div>
-					
-                    <div class="row mb-5">
-                      <div class="col-md-3 col-sm-12">
-                        <label class="form-label fw-bolder text-dark fs-6">Password</label>
-                      </div>
-                      <div class="col-md-9 col-sm-12"> <span id="preview_email">********</span> </div>
-                    </div>
-					
-                    {{-- <div class="row mb-5">
-                      <div class="col-md-3 col-sm-12">
-                        <label class="form-label fw-bolder text-dark fs-6">Specify Team Size</label>
-                      </div>
-                      <div class="col-md-9 col-sm-12"> <span id="preview_team_size" class="w-100">&nbsp;</span> </div>
-                    </div> --}}
-					
-                    <div class="row mb-5">
-                      <div class="col-md-3 col-sm-12">
-                        <label class="form-label fw-bolder text-dark fs-6">Company Type</label>
-                      </div>
-                      <div class="col-md-9 col-sm-12"> <span id="preview_company_type">&nbsp;</span> </div>
-                    </div>
-					
-                    <div class="row mb-5">
-                      <div class="col-md-3 col-sm-12">
-                        <label class="form-label fw-bolder text-dark fs-6">Website</label>
-                      </div>
-                      <div class="col-md-9 col-sm-12"> <span id="preview_website">&nbsp;</span> </div>
-                    </div>
-					
-                    <div class="row mb-5">
-                      <div class="col-md-3 col-sm-12">
-                        <label class="form-label fw-bolder text-dark fs-6">Contact Number</label>
-                      </div>
-                      <div class="col-md-9 col-sm-12" style="display: flex;"> 
-                        <div class="iti__flag-container" id="phoneDisplay" style="display: flex;position: relative;"> <!-- Flag and dial code will be appended here --> </div>
-                        <span id="preview_contact_number" style="margin-left:4px">&nbsp;</span> </div>
-                    </div>
+.v2-main-card {
+  background: #ffffff;
+  border-radius: 20px;
+  padding: 40px 44px;
+  box-shadow: 0 2px 16px rgba(0,0,0,0.03);
+  border: 1px solid #edf0f4;
+  width: 100%;
+  box-sizing: border-box;
+  min-height: 550px;
+}
 
-                    <div class="row mb-5">
-                      <div class="col-md-3 col-sm-12">
-                        <label class="form-label fw-bolder text-dark fs-6">City</label>
-                      </div>
-                      <div class="col-md-9 col-sm-12"> <span id="preview_city">&nbsp;</span> </div>
-                    </div>
-					
-                  </div>
-                </div>
-                <!-- <div class="pb-8 pb-lg-10">
-                              <h2 class="fw-bolder text-dark">Registratation Preview!</h2>
-                              <div class="text-muted fw-bold fs-6 d-none">If you need more info, please
-                                 <a href="{{ route('login') }}" class="link-primary fw-bolder">Sign In</a>.
-                              </div>  
-                           </div>-->
-                <div class="mb-0">
-                  <!--<div class="fs-6 text-gray-600 mb-5">
-							  		We have sent you a verifaction link on email 
-									<a href="javascript:void(0);" class="link-primary fw-bolder verification_email">&nbsp;</a> 
-									please click on the link and complete the registration process.
-                              </div>-->
-                  <!-- <div class="fs-6 text-gray-600 mb-5">Did't receive an email? <a href="javascript:void(0);" class="link-primary fw-bolder">Resend</a></div>-->
-                </div>
-              </div>
-            </div>
-            <!--end::Completed-->
-			
-			
-            <div class="d-flex flex-stack pt-5">
-              <div class="mr-2">
-                <button type="button" class="btn btn-lg btn-light-primary me-3" data-kt-stepper-action="previous"> <span class="svg-icon svg-icon-4 me-1">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none">
-                  <rect opacity="0.5" x="6" y="11" width="13" height="2" rx="1" fill="black" />
-                  <path d="M8.56569 11.4343L12.75 7.25C13.1642 6.83579 13.1642 6.16421 12.75 5.75C12.3358 5.33579 11.6642 5.33579 11.25 5.75L5.70711 11.2929C5.31658 11.6834 5.31658 12.3166 5.70711 12.7071L11.25 18.25C11.6642 18.6642 12.3358 18.6642 12.75 18.25C13.1642 17.8358 13.1642 17.1642 12.75 16.75L8.56569 12.5657C8.25327 12.2533 8.25327 11.7467 8.56569 11.4343Z" fill="black" />
-                </svg>
-                </span> Previous </button>
-              </div>
-              <div> </div>
-              <div> <a href="{{ route('login') }}" type="button" class="btn btn-lg btn-primary" data-kt-stepper-action="submit"> <span class="indicator-label"> Submit <span class="svg-icon svg-icon-4 ms-2">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none">
-                  <rect opacity="0.5" x="18" y="13" width="13" height="2" rx="1" transform="rotate(-180 18 13)" fill="black" />
-                  <path d="M15.4343 12.5657L11.25 16.75C10.8358 17.1642 10.8358 17.8358 11.25 18.25C11.6642 18.6642 12.3358 18.6642 12.75 18.25L18.2929 12.7071C18.6834 12.3166 18.6834 11.6834 18.2929 11.2929L12.75 5.75C12.3358 5.33579 11.6642 5.33579 11.25 5.75C10.8358 6.16421 10.8358 6.83579 11.25 7.25L15.4343 11.4343C15.7467 11.7467 15.7467 12.2533 15.4343 12.5657Z" fill="black" />
-                </svg>
-                </span> </span> <span class="indicator-progress">Please wait... <span class="spinner-border spinner-border-sm align-middle ms-2"></span></span> </a>
-                <button type="button" class="btn btn-lg btn-primary" data-kt-stepper-action="next"> Continue <span class="svg-icon svg-icon-4 ms-1">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none">
-                  <rect opacity="0.5" x="18" y="13" width="13" height="2" rx="1" transform="rotate(-180 18 13)" fill="black" />
-                  <path d="M15.4343 12.5657L11.25 16.75C10.8358 17.1642 10.8358 17.8358 11.25 18.25C11.6642 18.6642 12.3358 18.6642 12.75 18.25L18.2929 12.7071C18.6834 12.3166 18.6834 11.6834 18.2929 11.2929L12.75 5.75C12.3358 5.33579 11.6642 5.33579 11.25 5.75C10.8358 6.16421 10.8358 6.83579 11.25 7.25L15.4343 11.4343C15.7467 11.7467 15.7467 12.2533 15.4343 12.5657Z" fill="black" />
-                </svg>
-                </span> </button>
-              </div>
-            </div>
-            @csrf
-          </form>
-          <!--end::Form-->
-        </div>
-        <!--end::Wrapper-->
-      </div>
-      <!--end::Content-->
-      <!--begin::Footer-->
-      <div class="d-flex flex-center flex-wrap fs-6 p-5 pb-0">
-        <!--begin::Links-->
-        <div class="d-flex flex-center fw-bold fs-6"> 
-          <a href="https://jero.works/about-us" class="text-muted text-hover-primary px-2" target="_blank">About</a> 
-          <a href="https://jero.works/support-policy" class="text-muted text-hover-primary px-2" target="_blank">Support Policy</a>
-           <a href="https://ats.jero.works/payment-terms-and-conditions" class="text-muted text-hover-primary px-2" target="_blank">Purchase</a> 
-          </div>
-        <!--end::Links-->
-      </div>
-      <!--end::Footer-->
-    </div>
-    <!--end::Body-->
-  </div>
-  <!--end::Authentication - Multi-steps-->
+.v2-hero {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+.v2-hero-ico {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: var(--v2-pl);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--v2-p);
+  flex-shrink: 0;
+}
+.v2-hero h1 {
+  font-size: 26px;
+  font-weight: 800;
+  color: var(--v2-dk);
+  margin: 0 0 4px;
+  letter-spacing: -0.5px;
+}
+.v2-hero p {
+  font-size: 13.5px;
+  color: var(--v2-gr);
+  margin: 0;
+}
+
+/* Form Controls Common */
+.v2-fg { margin-bottom: 18px; }
+.v2-fg > label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--v2-dk);
+  margin-bottom: 6px;
+}
+.v2-fg > label .req { color: #dc2626; margin-left: 2px; }
+
+.v2-iw {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+.v2-il {
+  position: absolute;
+  left: 14px;
+  color: #94a3b8;
+  display: flex;
+  pointer-events: none;
+  z-index: 2;
+}
+.v2-ir {
+  position: absolute;
+  right: 14px;
+  color: #94a3b8;
+  display: flex;
+  cursor: pointer;
+  z-index: 2;
+}
+.v2-inp {
+  width: 100%;
+  height: 50px;
+  border: 1.5px solid var(--v2-bd);
+  border-radius: 10px;
+  padding: 0 16px 0 46px;
+  font-size: 13.5px;
+  font-family: 'Poppins', sans-serif;
+  color: var(--v2-dk);
+  background: #ffffff;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.v2-inp:focus {
+  border-color: var(--v2-p);
+  box-shadow: 0 0 0 3px rgba(29,97,242,0.12);
+}
+.v2-hint {
+  font-size: 12px;
+  color: var(--v2-gr);
+  margin-top: 5px;
+}
+
+/* Step 2 Pixel-Perfect Reference Match Styles */
+.v2-step2-title {
+  font-size: 26px;
+  font-weight: 800;
+  color: #0f172a;
+  margin: 0 0 4px;
+  letter-spacing: -0.5px;
+}
+.v2-step2-sub {
+  font-size: 13.5px;
+  color: #64748b;
+  margin: 0;
+}
+
+.v2-comp-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+  margin-bottom: 24px;
+}
+
+.v2-comp-card {
+  background: #ffffff;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 18px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+.v2-comp-card:hover {
+  border-color: #cbd5e1;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.04);
+}
+.v2-comp-card.selected {
+  border: 2px solid #1d61f2;
+  background: #ffffff;
+  box-shadow: 0 8px 24px rgba(29,97,242,0.08);
+}
+
+.v2-comp-check {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 1.5px solid #cbd5e1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  background: #ffffff;
+}
+.v2-comp-card.selected .v2-comp-check {
+  background: #1d61f2;
+  border-color: #1d61f2;
+  color: #ffffff;
+}
+
+.v2-card-img-wrap {
+  border-radius: 12px;
+  overflow: hidden;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.v2-card-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+.v2-type-icon-badge {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.v2-card-title {
+  font-size: 16px;
+  font-weight: 800;
+  color: #0f172a;
+  line-height: 1.25;
+}
+.v2-card-desc {
+  font-size: 12.5px;
+  color: #64748b;
+  line-height: 1.45;
+  margin-bottom: 14px;
+}
+
+.v2-card-hr {
+  border: 0;
+  border-top: 1px solid #f1f5f9;
+  margin: 14px 0;
+}
+
+.v2-comp-list {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+.v2-comp-list li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 12.5px;
+  color: #334155;
+  font-weight: 500;
+}
+.v2-chk-icon {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.v2-comp-banner {
+  border-radius: 10px;
+  padding: 10px 12px;
+  font-size: 11.5px;
+  line-height: 1.4;
+  margin-top: auto;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+/* Why selection matters container - Redesigned & Responsive */
+.v2-why-box {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 20px 24px;
+  margin-bottom: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  box-sizing: border-box;
+  width: 100%;
+}
+.v2-why-left {
+  flex-shrink: 0;
+  width: 220px;
+}
+.v2-why-title {
+  display: block;
+  font-size: 14px;
+  font-weight: 800;
+  color: #0f172a;
+  margin: 0 0 4px 0;
+  line-height: 1.3;
+}
+.v2-why-sub {
+  font-size: 12px;
+  color: #64748b;
+  margin: 0;
+  line-height: 1.4;
+  display: block;
+}
+.v2-why-items {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px 14px;
+  flex: 1;
+  min-width: 0;
+}
+.v2-why-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #ffffff;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 10px 14px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+  min-width: 0;
+}
+.v2-why-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 9px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.v2-why-item-txt {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #0f172a;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+@media (max-width: 1200px) {
+  .v2-why-box {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+  }
+  .v2-why-left {
+    width: 100%;
+  }
+  .v2-why-items {
+    width: 100%;
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* Step 3 Section Cards - Redesigned Pixel-Perfect */
+.v2-step3-box {
+  background: #ffffff;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 24px;
+  margin-bottom: 24px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+  transition: border-color 0.2s;
+  width: 100%;
+  box-sizing: border-box;
+}
+.v2-step3-box:focus-within {
+  border-color: #cbd5e1;
+}
+
+.v2-step3-head {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 18px;
+}
+.v2-step3-icon {
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.v2-step3-title {
+  font-size: 15px;
+  font-weight: 800;
+  color: #0f172a;
+  margin: 0 0 3px 0;
+  line-height: 1.2;
+}
+.v2-step3-sub {
+  font-size: 12.5px;
+  color: #64748b;
+  line-height: 1.35;
+  margin: 0;
+}
+
+/* Step 3 Website Group */
+.v2-web-group {
+  display: flex;
+  align-items: center;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 10px;
+  overflow: hidden;
+  background: #ffffff;
+  height: 50px;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.v2-web-group:focus-within {
+  border-color: #1d61f2;
+  box-shadow: 0 0 0 3px rgba(29,97,242,0.12);
+}
+.v2-web-prefix {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 14px;
+  background: #f8fafc;
+  border-right: 1.5px solid #e2e8f0;
+  color: #64748b;
+  font-size: 13.5px;
+  font-weight: 600;
+  height: 100%;
+  flex-shrink: 0;
+}
+.v2-web-input {
+  flex: 1;
+  border: none !important;
+  outline: none !important;
+  padding: 0 16px;
+  font-size: 13.5px;
+  font-family: 'Poppins', sans-serif;
+  color: #0f172a;
+  background: transparent;
+  height: 100%;
+}
+
+/* Step 3 Phone Input Container & intlTelInput styling */
+.v2-phone-wrap {
+  border: 1.5px solid #e2e8f0;
+  border-radius: 10px;
+  overflow: hidden;
+  height: 50px;
+  display: flex;
+  align-items: center;
+  background: #ffffff;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  width: 100%;
+}
+.v2-phone-wrap:focus-within {
+  border-color: #1d61f2;
+  box-shadow: 0 0 0 3px rgba(29,97,242,0.12);
+}
+.v2-phone-wrap .iti {
+  width: 100% !important;
+  height: 100% !important;
+  display: flex !important;
+  align-items: center !important;
+}
+.v2-phone-wrap .iti__selected-flag {
+  background: #f8fafc !important;
+  border-right: 1.5px solid #e2e8f0 !important;
+  border-radius: 9px 0 0 9px;
+  padding: 0 14px !important;
+  height: 100% !important;
+  display: flex !important;
+  align-items: center !important;
+}
+.v2-phone-wrap input#contact_number {
+  height: 100% !important;
+  width: 100% !important;
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+  padding-left: 100px !important;
+  font-size: 13.5px !important;
+  font-family: 'Poppins', sans-serif !important;
+  color: #0f172a !important;
+  background: transparent !important;
+}
+
+/* Step 3 Tagify Input Alignment */
+.v2-tagify-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+.v2-tagify-wrap .tagify {
+  width: 100%;
+  min-height: 50px;
+  height: auto;
+  border: 1.5px solid #e2e8f0 !important;
+  border-radius: 10px !important;
+  padding: 4px 44px 4px 44px !important;
+  font-size: 13.5px;
+  font-family: 'Poppins', sans-serif;
+  color: #0f172a;
+  background: #ffffff;
+  display: flex;
+  align-items: center;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.v2-tagify-wrap .tagify:focus-within {
+  border-color: #1d61f2 !important;
+  box-shadow: 0 0 0 3px rgba(29,97,242,0.12) !important;
+}
+.v2-tagify-wrap .tagify__tag {
+  margin: 2px 4px 2px 0;
+  height: 30px;
+}
+
+/* FormValidation Error Messages Styling */
+.fv-plugins-message-container {
+  margin-top: 8px !important;
+  font-size: 12px !important;
+  font-weight: 500 !important;
+  color: #dc2626 !important;
+}
+.fv-plugins-message-container .fv-help-block {
+  margin-bottom: 4px;
+}
+
+/* Step 3 Safe Box */
+.v2-safe-box {
+  background: #eff6ff;
+  border: 1px solid #dbeafe;
+  border-radius: 12px;
+  padding: 16px 20px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 24px;
+}
+.v2-safe-icon {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  background: #ffffff;
+  color: #1d61f2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+
+/* Step 4 Review Cards */
+.v2-review-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+  margin-bottom: 24px;
+}
+.v2-review-card {
+  background: #ffffff;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 20px 22px;
+  display: flex;
+  flex-direction: column;
+}
+.v2-review-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+.v2-review-icon-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 15px;
+  font-weight: 800;
+  color: #0f172a;
+}
+.v2-review-btn-edit {
+  color: #16a34a;
+  font-size: 13px;
+  font-weight: 700;
+  background: none;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0;
+}
+.v2-review-btn-edit:hover { text-decoration: underline; }
+
+.v2-review-val-title {
+  font-size: 18px;
+  font-weight: 800;
+  color: #0f172a;
+  margin-bottom: 4px;
+}
+.v2-review-val-sub {
+  font-size: 12.5px;
+  color: #64748b;
+  margin-bottom: 16px;
+}
+.v2-review-meta {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  font-size: 13px;
+  color: #334155;
+  padding-top: 14px;
+  border-top: 1px solid #f1f5f9;
+}
+.v2-review-meta-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Step 4 Workspace Includes Container */
+.v2-inc-card {
+  background: #ffffff;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 22px 24px;
+  margin-bottom: 24px;
+}
+.v2-inc-title {
+  font-size: 15px;
+  font-weight: 800;
+  color: #0f172a;
+  margin-bottom: 18px;
+}
+.v2-inc-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 18px;
+}
+.v2-inc-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+.v2-inc-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.v2-inc-txt strong {
+  display: block;
+  font-size: 13px;
+  font-weight: 800;
+  color: #0f172a;
+  line-height: 1.2;
+}
+.v2-inc-txt span {
+  font-size: 11.5px;
+  color: #64748b;
+}
+
+/* Step 4 Confirmation Box */
+.v2-confirm-box {
+  background: #eff6ff;
+  border: 1px solid #dbeafe;
+  border-radius: 14px;
+  padding: 16px 20px;
+  margin-bottom: 20px;
+}
+.v2-confirm-box .form-check-label {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: #0f172a;
+}
+.v2-confirm-sub {
+  font-size: 12px;
+  color: #64748b;
+  margin-top: 4px;
+  padding-left: 28px;
+}
+
+/* Step 4 Launch Container */
+.v2-launch-bar {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 18px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.v2-launch-sec {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.v2-launch-sec-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: #f0fdf4;
+  color: #16a34a;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+/* Buttons */
+.v2-btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 48px;
+  padding: 0 28px;
+  background: var(--v2-p);
+  color: #ffffff !important;
+  font-size: 14px;
+  font-weight: 700;
+  font-family: 'Poppins', sans-serif;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background 0.2s, box-shadow 0.2s;
+  box-shadow: 0 4px 14px rgba(29,97,242,0.3);
+  text-decoration: none !important;
+}
+.v2-btn-primary:hover {
+  background: var(--v2-ph);
+  box-shadow: 0 6px 18px rgba(29,97,242,0.4);
+}
+
+.v2-btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 44px;
+  padding: 0 18px;
+  background: #ffffff;
+  color: #334155;
+  font-size: 13px;
+  font-weight: 600;
+  font-family: 'Poppins', sans-serif;
+  border: 1.5px solid var(--v2-bd);
+  border-radius: 9px;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-decoration: none !important;
+}
+.v2-btn-secondary:hover {
+  background: #f1f5f9;
+  color: var(--v2-dk);
+}
+
+.v2-btn-secondary-blue {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 46px;
+  padding: 0 22px;
+  background: #eff6ff;
+  color: #1d61f2;
+  font-size: 13.5px;
+  font-weight: 700;
+  font-family: 'Poppins', sans-serif;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-decoration: none !important;
+}
+.v2-btn-secondary-blue:hover {
+  background: #dbeafe;
+  color: #154ec4;
+}
+
+.v2-acts {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 28px;
+  padding-top: 20px;
+  border-top: 1px solid var(--v2-bd);
+}
+
+/* Page Footer */
+.v2-page-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 32px;
+  font-size: 12.5px;
+  color: #64748b;
+  width: 100%;
+}
+.v2-page-footer a {
+  color: #64748b;
+  text-decoration: none;
+}
+.v2-page-footer a:hover { color: var(--v2-p); }
+
+.iti--allow-dropdown { width: 100% !important; }
+.iti__flag { margin-top: 2px !important; }
+</style>
+
+<!-- Loading Overlay -->
+<div class="page-loader">
+  <span class="spinner-border text-primary" style="width: 3rem; height: 3rem;" role="status"></span>
+  <span class="text-white fs-6 fw-semibold mt-3">Loading...</span>
 </div>
-<!--end::Main-->
-</body>
-<!--end::Body-->
-<!--begin::Global Javascript Bundle(used by all pages)-->
+
+<div class="v2-wrapper stepper stepper-pills stepper-column" id="kt_create_account_stepper">
+  <!-- ═══════════ LEFT COLUMN ═══════════ -->
+  <div class="v2-left-col">
+    <!-- Logo -->
+    <a href="https://jero.works/" class="v2-logo">
+      <svg width="36" height="36" viewBox="0 0 40 44" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M20 2C9.5 2 1 10.5 1 21H39C39 10.5 30.5 2 20 2Z" fill="#111827"/>
+        <path d="M1 21C1 21 7.5 17.5 20 21" stroke="rgba(255,255,255,0.35)" stroke-width="1.2"/>
+        <path d="M39 21C39 21 32.5 17.5 20 21" stroke="rgba(255,255,255,0.35)" stroke-width="1.2"/>
+        <line x1="20" y1="21" x2="20" y2="37" stroke="#111827" stroke-width="2.6" stroke-linecap="round"/>
+        <path d="M20 37C20 40.31 17.31 43 14 43" stroke="#111827" stroke-width="2.6" stroke-linecap="round" fill="none"/>
+      </svg>
+      <div>
+        <span class="v2-logo-text">jero.works</span>
+        <span class="v2-logo-sub">AI Recruitment Platform</span>
+      </div>
+    </a>
+
+    <!-- Sidebar Hero Header -->
+    <div class="v2-aside-hero">
+      <h2>Create Your Workspace</h2>
+      <p>Set up your organization once and start hiring in minutes.</p>
+    </div>
+
+    <!-- Progress Card -->
+    <div class="v2-prog-card">
+      <div class="v2-prog-head">
+        <span id="progress-step-text" style="color:#475569;">Step 1 of 4</span>
+        <span id="progress-pct-text" style="color:#1d61f2; font-weight:700;">25% Complete</span>
+      </div>
+      <div class="v2-prog-bg">
+        <div id="progress-bar-fill" class="v2-prog-fill" style="width: 25%;"></div>
+      </div>
+      <div class="d-flex align-items-center gap-2 text-muted fs-8">
+        <svg width="14" height="14" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="9" stroke="#64748b" stroke-width="1.6"/><path d="M10 5v5l3 3" stroke="#64748b" stroke-width="1.6" stroke-linecap="round"/></svg>
+        <span id="progress-time-text">Estimated Time: 2 Minutes</span>
+      </div>
+    </div>
+
+    <!-- Stepper Navigation Card -->
+    <div class="v2-stepper-card stepper-nav">
+      <!-- Step 1 -->
+      <div class="v2-step-item stepper-item current" data-kt-stepper-element="nav">
+        <div class="v2-step-badge">1</div>
+        <div>
+          <div class="v2-step-title">Registration Details</div>
+          <div class="v2-step-sub">Set up your account</div>
+        </div>
+      </div>
+
+      <!-- Step 2 -->
+      <div class="v2-step-item stepper-item" data-kt-stepper-element="nav">
+        <div class="v2-step-badge">2</div>
+        <div>
+          <div class="v2-step-title">Company Details</div>
+          <div class="v2-step-sub">Tell us about your company</div>
+        </div>
+      </div>
+
+      <!-- Step 3 -->
+      <div class="v2-step-item stepper-item" data-kt-stepper-element="nav">
+        <div class="v2-step-badge">3</div>
+        <div>
+          <div class="v2-step-title">Account Details</div>
+          <div class="v2-step-sub">Set up your workspace</div>
+        </div>
+      </div>
+
+      <!-- Step 4 -->
+      <div class="v2-step-item stepper-item" data-kt-stepper-element="nav">
+        <div class="v2-step-badge">4</div>
+        <div>
+          <div class="v2-step-title">Review &amp; Launch</div>
+          <div class="v2-step-sub">Review and finish</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Value Props Card -->
+    <div class="v2-value-card">
+      <div class="v2-value-title">Why complete your profile?</div>
+
+      <div class="v2-value-row">
+        <div class="v2-value-icon" style="background:#f0fdf4; color:#16a34a;">
+          <svg width="18" height="18" viewBox="0 0 20 20" fill="none"><path d="M10 2L3 6v5.5C3 15.25 6.8 19.6 10 21c3.2-1.4 7-5.75 7-11.5V6L10 2Z" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/><path d="M7 10.5l2 2 4-4" stroke="#16a34a" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <div class="v2-value-txt">
+          <strong>Get Verified Company Badge</strong>
+          <span>Build trust with clients and candidates</span>
+        </div>
+      </div>
+
+      <div class="v2-value-row">
+        <div class="v2-value-icon" style="background:#f5f3ff; color:#7c3aed;">
+          <svg width="18" height="18" viewBox="0 0 20 20" fill="none"><rect x="2" y="12" width="4" height="6" rx="1" fill="#ddd6fe" stroke="#7c3aed" stroke-width="1.4"/><rect x="8" y="8" width="4" height="10" rx="1" fill="#ddd6fe" stroke="#7c3aed" stroke-width="1.4"/><rect x="14" y="4" width="4" height="14" rx="1" fill="#ddd6fe" stroke="#7c3aed" stroke-width="1.4"/><path d="M3 9l5-4 4 3 5-6" stroke="#7c3aed" stroke-width="1.6" stroke-linecap="round"/></svg>
+        </div>
+        <div class="v2-value-txt">
+          <strong>Better Marketplace Ranking</strong>
+          <span>Increase your visibility and opportunities</span>
+        </div>
+      </div>
+
+      <div class="v2-value-row">
+        <div class="v2-value-icon" style="background:#eff6ff; color:#1d61f2;">
+          <svg width="18" height="18" viewBox="0 0 20 20" fill="none"><path d="M10 2L12.5 7.5L18 10L12.5 12.5L10 18L7.5 12.5L2 10L7.5 7.5L10 2Z" fill="#bfdbfe" stroke="#1d61f2" stroke-width="1.5"/></svg>
+        </div>
+        <div class="v2-value-txt">
+          <strong>Smart AI Recommendations</strong>
+          <span>Get better matches and suggestions</span>
+        </div>
+      </div>
+
+      <div class="v2-value-row">
+        <div class="v2-value-icon" style="background:#fff7ed; color:#ea580c;">
+          <svg width="18" height="18" viewBox="0 0 20 20" fill="none"><circle cx="7" cy="7" r="3" fill="#ffedd5" stroke="#ea580c" stroke-width="1.4"/><circle cx="14" cy="7" r="3" fill="#ffedd5" stroke="#ea580c" stroke-width="1.4"/><path d="M2 17c0-2.8 2.2-5 5-5h6c2.8 0 5 2.2 5 5" stroke="#ea580c" stroke-width="1.4" stroke-linecap="round"/></svg>
+        </div>
+        <div class="v2-value-txt">
+          <strong>Attract Top Talent &amp; Agencies</strong>
+          <span>Stand out and grow your network</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Security Card -->
+    <div class="v2-sec-card">
+      <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M10 2L3 6v5.5C3 15.25 6.8 19.6 10 21c3.2-1.4 7-5.75 7-11.5V6L10 2Z" fill="#bfdbfe" stroke="#1d61f2" stroke-width="1.6"/><path d="M7 10.5l2 2 4-4" stroke="#1d61f2" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <div>
+        <strong>Your information is secure</strong>
+        <span>We never share your data with anyone.</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════ RIGHT COLUMN ═══════════ -->
+  <div class="v2-right-col" id="upgrade-plan">
+    <!-- Top Right Bar -->
+    <div class="v2-topbar">
+      <span id="top-bar-text">Already have an account?</span>
+      <a href="{{ route('login') }}" class="v2-btn-signin" id="top-bar-btn">Sign In</a>
+    </div>
+
+    <!-- Main Card Container -->
+    <form class="v2-main-card" novalidate id="kt_create_account_form" method="post" name="kt_create_account_form">
+      <!-- ════════════════════════════════════════════════════════════════ -->
+      <!-- STEP 1: Registration Details                                    -->
+      <!-- ════════════════════════════════════════════════════════════════ -->
+      <div class="current" data-kt-stepper-element="content">
+        @csrf
+        <input type="hidden" name="team_size" id="team_size" value="">
+        <input type="hidden" name="contact_code" id="contact_code" value="">
+
+        <div class="v2-hero">
+          <div class="v2-hero-ico">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8" r="4" stroke="#1d61f2" stroke-width="2"/><path d="M4 20c0-4 4-7 8-7s8 3 8 7" stroke="#1d61f2" stroke-width="2" stroke-linecap="round"/></svg>
+          </div>
+          <div>
+            <h1>Let’s Create Your Workspace</h1>
+            <p>Tell us a few details to get started.</p>
+          </div>
+        </div>
+
+        <div style="font-size:16px; font-weight:800; color:#0f172a; margin-bottom:4px;">Registration Details</div>
+        <div style="font-size:13px; color:#64748b; margin-bottom:24px;">Enter the basic information to create your account.</div>
+
+        <!-- Company Name -->
+        <div class="v2-fg fv-row">
+          <label>Company Name <span class="req">*</span></label>
+          <div class="v2-iw">
+            <span class="v2-il">
+              <svg width="18" height="18" viewBox="0 0 20 20" fill="none"><rect x="3" y="3" width="14" height="15" rx="2" stroke="#94a3b8" stroke-width="1.6"/><path d="M7 7h2M11 7h2M7 11h2M11 11h2M9 18v-3h2v3" stroke="#94a3b8" stroke-width="1.6" stroke-linecap="round"/></svg>
+            </span>
+            <input type="text" class="v2-inp" name="company_name" placeholder="Enter your company or organization name" value="" />
+          </div>
+          <div class="v2-hint">This will be the name of your organization on Jero.works</div>
+        </div>
+
+        <!-- Full Name -->
+        <div class="v2-fg fv-row">
+          <label>Full Name <span class="req">*</span></label>
+          <div class="v2-iw">
+            <span class="v2-il">
+              <svg width="18" height="18" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="7" r="3.5" stroke="#94a3b8" stroke-width="1.6"/><path d="M3 17c0-3.3 3.1-6 7-6s7 2.7 7 6" stroke="#94a3b8" stroke-width="1.6" stroke-linecap="round"/></svg>
+            </span>
+            <input type="text" class="v2-inp" name="name" placeholder="Enter your full name" autocomplete="off" />
+          </div>
+          <div class="v2-hint">This should be your full legal name</div>
+        </div>
+
+        <!-- Work Email -->
+        <div class="v2-fg fv-row">
+          <label>Work Email <span class="req">*</span></label>
+          <div class="v2-iw">
+            <span class="v2-il">
+              <svg width="18" height="18" viewBox="0 0 20 20" fill="none"><rect x="2" y="4" width="16" height="12" rx="2" stroke="#94a3b8" stroke-width="1.6"/><path d="M2 7l8 5 8-5" stroke="#94a3b8" stroke-width="1.6" stroke-linecap="round"/></svg>
+            </span>
+            <input type="email" class="v2-inp" name="email" placeholder="Enter your official work email address" autocomplete="off" />
+          </div>
+          <div class="v2-hint">We'll use this email for all communications</div>
+        </div>
+
+        <!-- Password -->
+        <div class="v2-fg fv-row" data-kt-password-meter="true">
+          <label>Password <span class="req">*</span></label>
+          <div class="v2-iw">
+            <span class="v2-il">
+              <svg width="18" height="18" viewBox="0 0 20 20" fill="none"><rect x="4" y="9" width="12" height="9" rx="2" stroke="#94a3b8" stroke-width="1.6"/><path d="M7 9V6a3 3 0 1 1 6 0v3" stroke="#94a3b8" stroke-width="1.6" stroke-linecap="round"/></svg>
+            </span>
+            <input type="password" class="v2-inp" style="padding-right:46px;" name="password" id="password" placeholder="Create a strong password" autocomplete="off" />
+            <span class="v2-ir" data-kt-password-meter-control="visibility">
+              <i class="bi bi-eye-slash fs-4"></i>
+              <i class="bi bi-eye fs-4 d-none"></i>
+            </span>
+          </div>
+          <div class="d-flex align-items-center mt-2 mb-1" data-kt-password-meter-control="highlight">
+            <div class="flex-grow-1 bg-secondary bg-active-success rounded h-4px me-2"></div>
+            <div class="flex-grow-1 bg-secondary bg-active-success rounded h-4px me-2"></div>
+            <div class="flex-grow-1 bg-secondary bg-active-success rounded h-4px me-2"></div>
+            <div class="flex-grow-1 bg-secondary bg-active-success rounded h-4px"></div>
+          </div>
+          <div class="v2-hint">At least 8 characters with a mix of letters, numbers &amp; symbols</div>
+        </div>
+
+        <!-- Confirm Password -->
+        <div class="v2-fg fv-row" data-kt-password-meter="true">
+          <label>Confirm Password <span class="req">*</span></label>
+          <div class="v2-iw">
+            <span class="v2-il">
+              <svg width="18" height="18" viewBox="0 0 20 20" fill="none"><rect x="4" y="9" width="12" height="9" rx="2" stroke="#94a3b8" stroke-width="1.6"/><path d="M7 9V6a3 3 0 1 1 6 0v3" stroke="#94a3b8" stroke-width="1.6" stroke-linecap="round"/></svg>
+            </span>
+            <input type="password" class="v2-inp" style="padding-right:46px;" name="password_confirmation" id="password_confirmation" placeholder="Re-enter your password" autocomplete="off" />
+            <span class="v2-ir" data-kt-password-meter-control="visibility">
+              <i class="bi bi-eye-slash fs-4"></i>
+              <i class="bi bi-eye fs-4 d-none"></i>
+            </span>
+          </div>
+          <div class="v2-hint">Please enter the same password as above</div>
+        </div>
+
+        <!-- Terms Checkbox -->
+        <div class="fv-row mt-4 mb-2">
+          <label class="form-check form-check-custom form-check-solid cursor-pointer">
+            <input class="form-check-input" type="checkbox" checked="checked" name="toc" value="1" />
+            <span class="form-check-label text-gray-700 fs-7 ms-2">I Agree <a href="{{ route('termsAndConditions') }}" target="_blank" class="link-primary fw-semibold">Terms and conditions</a>.</span>
+          </label>
+        </div>
+
+        <!-- Action Bar -->
+        <div class="v2-acts">
+          <div class="d-flex align-items-center gap-3">
+            <button type="button" class="v2-btn-secondary">
+              <svg width="16" height="16" viewBox="0 0 20 20" fill="none"><path d="M4 4h12v12H4V4Z" stroke="#475569" stroke-width="1.6"/><path d="M4 8h12M8 4v4" stroke="#475569" stroke-width="1.6"/></svg>
+              Save &amp; Exit
+            </button>
+            <span class="fs-7 text-muted">You can complete setup anytime</span>
+          </div>
+          <button type="button" class="v2-btn-primary btn-next-step" data-kt-stepper-action="next">
+            Continue
+            <svg width="16" height="16" viewBox="0 0 20 20" fill="none"><path d="M4.166 10h11.668M10.833 5l5 5-5 5" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- ════════════════════════════════════════════════════════════════ -->
+      <!-- STEP 2: Company Details / Business Model                        -->
+      <!-- ════════════════════════════════════════════════════════════════ -->
+      <div class="" data-kt-stepper-element="content">
+        <!-- Top Header Row -->
+        <div class="d-flex align-items-start justify-content-between mb-4">
+          <div>
+            <h1 class="v2-step2-title">How does your organization operate?</h1>
+            <p class="v2-step2-sub">Choose the option that best describes how your organization works. You can customize more later.</p>
+          </div>
+          <div class="d-flex align-items-center gap-2 fs-7 text-muted">
+            <svg width="18" height="18" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="8" stroke="#64748b" stroke-width="1.6"/><path d="M7.5 7.5a2.5 2.5 0 0 1 5 0c0 1.5-1.5 2-2.5 2.5V11" stroke="#64748b" stroke-width="1.6" stroke-linecap="round"/><circle cx="10" cy="14" r="0.75" fill="#64748b"/></svg>
+            <span>Need help choosing?</span>
+            <a href="https://jero.works/support-policy" target="_blank" class="fw-bold text-primary text-decoration-none ms-1">View Help Center &rarr;</a>
+          </div>
+        </div>
+
+        <div class="v2-comp-grid fv-row">
+          <!-- Card 1: Product & Manufacturing -->
+          <div class="v2-comp-card selected" onclick="selectCompanyType(3, this)">
+            <input type="radio" class="btn-check" name="company_type" value="3" checked />
+            <div class="v2-comp-check">
+              <svg width="12" height="12" viewBox="0 0 20 20" fill="none"><path d="M4 10l4 4 8-8" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </div>
+
+            <!-- Top Vector Illustration -->
+            <div class="v2-card-img-wrap" style="background:#eef6ff;">
+              <svg width="100%" height="110" viewBox="0 0 260 110" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <rect width="260" height="110" fill="#f0f7ff"/>
+                <path d="M10 95 C 30 80, 70 80, 90 95" stroke="#86efac" stroke-width="6" fill="none"/>
+                <circle cx="20" cy="85" r="12" fill="#4ade80"/>
+                <circle cx="240" cy="88" r="10" fill="#4ade80"/>
+                
+                <rect x="35" y="45" width="45" height="55" rx="3" fill="#60a5fa"/>
+                <rect x="42" y="52" width="8" height="8" rx="1.5" fill="#ffffff"/>
+                <rect x="54" y="52" width="8" height="8" rx="1.5" fill="#ffffff"/>
+                <rect x="66" y="52" width="8" height="8" rx="1.5" fill="#ffffff"/>
+                <rect x="42" y="66" width="8" height="8" rx="1.5" fill="#ffffff"/>
+                <rect x="54" y="66" width="8" height="8" rx="1.5" fill="#ffffff"/>
+                <rect x="66" y="66" width="8" height="8" rx="1.5" fill="#ffffff"/>
+
+                <rect x="85" y="25" width="85" height="75" rx="4" fill="#2563eb"/>
+                <rect x="95" y="35" width="12" height="12" rx="2" fill="#93c5fd"/>
+                <rect x="113" y="35" width="12" height="12" rx="2" fill="#93c5fd"/>
+                <rect x="131" y="35" width="12" height="12" rx="2" fill="#93c5fd"/>
+                <rect x="149" y="35" width="12" height="12" rx="2" fill="#93c5fd"/>
+                <rect x="95" y="53" width="12" height="12" rx="2" fill="#93c5fd"/>
+                <rect x="113" y="53" width="12" height="12" rx="2" fill="#93c5fd"/>
+                <rect x="131" y="53" width="12" height="12" rx="2" fill="#93c5fd"/>
+                <rect x="149" y="53" width="12" height="12" rx="2" fill="#93c5fd"/>
+
+                <rect x="175" y="40" width="55" height="60" rx="3" fill="#3b82f6"/>
+                <rect x="183" y="48" width="10" height="10" rx="1.5" fill="#ffffff"/>
+                <rect x="198" y="48" width="10" height="10" rx="1.5" fill="#ffffff"/>
+                <rect x="213" y="48" width="10" height="10" rx="1.5" fill="#ffffff"/>
+
+                <rect x="0" y="98" width="260" height="12" fill="#94a3b8"/>
+                <rect x="120" y="88" width="28" height="12" rx="2" fill="#38bdf8"/>
+                <circle cx="126" cy="100" r="3.5" fill="#1e293b"/>
+                <circle cx="140" cy="100" r="3.5" fill="#1e293b"/>
+              </svg>
+            </div>
+
+            <!-- Icon Badge + Title -->
+            <div class="v2-card-head">
+              <div class="v2-type-icon-badge" style="background:#eff6ff; color:#2563eb;">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M3 21h18M5 21V7l8-4v18M13 21V11l6 3v7" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              </div>
+              <strong class="v2-card-title">Product &amp; Manufacturing Company</strong>
+            </div>
+            <p class="v2-card-desc">You build, manufacture or sell your own products and hire employees directly for your organization.</p>
+
+            <hr class="v2-card-hr" />
+
+            <ul class="v2-comp-list">
+              <li><div class="v2-chk-icon" style="background:#eff6ff; color:#2563eb;"><svg width="12" height="12" viewBox="0 0 20 20" fill="none"><path d="M4 10l4 4 8-8" stroke="#2563eb" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div> Internal hiring &amp; recruitment</li>
+              <li><div class="v2-chk-icon" style="background:#eff6ff; color:#2563eb;"><svg width="12" height="12" viewBox="0 0 20 20" fill="none"><path d="M4 10l4 4 8-8" stroke="#2563eb" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div> Employee &amp; team management</li>
+              <li><div class="v2-chk-icon" style="background:#eff6ff; color:#2563eb;"><svg width="12" height="12" viewBox="0 0 20 20" fill="none"><path d="M4 10l4 4 8-8" stroke="#2563eb" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div> Agency collaboration</li>
+              <li><div class="v2-chk-icon" style="background:#eff6ff; color:#2563eb;"><svg width="12" height="12" viewBox="0 0 20 20" fill="none"><path d="M4 10l4 4 8-8" stroke="#2563eb" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div> Campus &amp; bulk hiring</li>
+              <li><div class="v2-chk-icon" style="background:#eff6ff; color:#2563eb;"><svg width="12" height="12" viewBox="0 0 20 20" fill="none"><path d="M4 10l4 4 8-8" stroke="#2563eb" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div> Vendor management</li>
+            </ul>
+
+            <div class="v2-comp-banner" style="background:#eff6ff; color:#1e40af;">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" style="flex-shrink:0;"><path d="M12 2a7 7 0 0 1 7 7c0 2.38-1.19 4.47-3 5.74V17a1 1 0 0 1-1 1h-6a1 1 0 0 1-1-1v-2.26C6.19 13.47 5 11.38 5 9a7 7 0 0 1 7-7Z" stroke="#2563eb" stroke-width="2"/><path d="M9 21h6" stroke="#2563eb" stroke-width="2" stroke-linecap="round"/></svg>
+              <span>Best for organizations that don't serve external clients and focus on their own products or operations.</span>
+            </div>
+          </div>
+
+          <!-- Card 2: Enterprise Services & Consulting -->
+          <div class="v2-comp-card" onclick="selectCompanyType(2, this)">
+            <input type="radio" class="btn-check" name="company_type" value="2" />
+            <div class="v2-comp-check">
+              <svg width="12" height="12" viewBox="0 0 20 20" fill="none"><path d="M4 10l4 4 8-8" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </div>
+
+            <!-- Top Vector Illustration -->
+            <div class="v2-card-img-wrap" style="background:#faf5ff;">
+              <svg width="100%" height="110" viewBox="0 0 260 110" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <rect width="260" height="110" fill="#faf5ff"/>
+                <rect x="110" y="15" width="70" height="45" rx="4" fill="#ffffff" stroke="#e9d5ff" stroke-width="1.5"/>
+                <path d="M120 45 L135 32 L150 38 L165 24" stroke="#2563eb" stroke-width="2.5" stroke-linecap="round"/>
+                <circle cx="165" cy="24" r="3" fill="#2563eb"/>
+                <rect x="120" y="22" width="10" height="10" rx="5" fill="#60a5fa"/>
+
+                <circle cx="70" cy="38" r="14" fill="#fdba74"/>
+                <path d="M58 30 C 58 20, 82 20, 82 30" fill="#1e293b"/>
+                <path d="M52 75 C 52 55, 88 55, 88 75" fill="#1d4ed8"/>
+
+                <rect x="40" y="70" width="180" height="6" fill="#cbd5e1"/>
+                <rect x="120" y="55" width="40" height="16" rx="2" fill="#334155"/>
+
+                <circle cx="190" cy="38" r="14" fill="#fdba74"/>
+                <path d="M175 32 C 175 18, 205 18, 205 32 L 205 45" fill="#0f172a"/>
+                <path d="M172 75 C 172 55, 208 55, 208 75" fill="#16a34a"/>
+              </svg>
+            </div>
+
+            <!-- Icon Badge + Title -->
+            <div class="v2-card-head">
+              <div class="v2-type-icon-badge" style="background:#f5f3ff; color:#7c3aed;">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><rect x="3" y="7" width="18" height="13" rx="2" stroke="#7c3aed" stroke-width="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" stroke="#7c3aed" stroke-width="2"/></svg>
+              </div>
+              <strong class="v2-card-title">Enterprise Services &amp; Consulting Company</strong>
+            </div>
+            <p class="v2-card-desc">You deliver professional or technology services to clients and manage consultants, projects and billable resources.</p>
+
+            <hr class="v2-card-hr" />
+
+            <ul class="v2-comp-list">
+              <li><div class="v2-chk-icon" style="background:#f5f3ff; color:#7c3aed;"><svg width="12" height="12" viewBox="0 0 20 20" fill="none"><path d="M4 10l4 4 8-8" stroke="#7c3aed" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div> Client projects &amp; engagements</li>
+              <li><div class="v2-chk-icon" style="background:#f5f3ff; color:#7c3aed;"><svg width="12" height="12" viewBox="0 0 20 20" fill="none"><path d="M4 10l4 4 8-8" stroke="#7c3aed" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div> Consultant &amp; resource management</li>
+              <li><div class="v2-chk-icon" style="background:#f5f3ff; color:#7c3aed;"><svg width="12" height="12" viewBox="0 0 20 20" fill="none"><path d="M4 10l4 4 8-8" stroke="#7c3aed" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div> Contract &amp; project-based hiring</li>
+              <li><div class="v2-chk-icon" style="background:#f5f3ff; color:#7c3aed;"><svg width="12" height="12" viewBox="0 0 20 20" fill="none"><path d="M4 10l4 4 8-8" stroke="#7c3aed" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div> Timesheets &amp; utilization tracking</li>
+              <li><div class="v2-chk-icon" style="background:#f5f3ff; color:#7c3aed;"><svg width="12" height="12" viewBox="0 0 20 20" fill="none"><path d="M4 10l4 4 8-8" stroke="#7c3aed" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div> Billing &amp; resource allocation</li>
+            </ul>
+
+            <div class="v2-comp-banner" style="background:#f5f3ff; color:#5b21b6;">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" style="flex-shrink:0;"><path d="M12 2a7 7 0 0 1 7 7c0 2.38-1.19 4.47-3 5.74V17a1 1 0 0 1-1 1h-6a1 1 0 0 1-1-1v-2.26C6.19 13.47 5 11.38 5 9a7 7 0 0 1 7-7Z" stroke="#7c3aed" stroke-width="2"/><path d="M9 21h6" stroke="#7c3aed" stroke-width="2" stroke-linecap="round"/></svg>
+              <span>Best for service-based companies that work with external clients.</span>
+            </div>
+          </div>
+
+          <!-- Card 3: Recruitment & Staffing Agency -->
+          <div class="v2-comp-card" onclick="selectCompanyType(1, this)">
+            <input type="radio" class="btn-check" name="company_type" value="1" />
+            <div class="v2-comp-check">
+              <svg width="12" height="12" viewBox="0 0 20 20" fill="none"><path d="M4 10l4 4 8-8" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </div>
+
+            <!-- Top Vector Illustration -->
+            <div class="v2-card-img-wrap" style="background:#fff7ed;">
+              <svg width="100%" height="110" viewBox="0 0 260 110" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <rect width="260" height="110" fill="#fff7ed"/>
+                <rect x="140" y="15" width="90" height="60" rx="4" fill="#ffffff" stroke="#fed7aa" stroke-width="1.5"/>
+                <rect x="150" y="24" width="16" height="16" rx="8" fill="#16a34a"/>
+                <rect x="172" y="26" width="30" height="5" rx="2" fill="#cbd5e1"/>
+                <rect x="150" y="46" width="16" height="16" rx="8" fill="#2563eb"/>
+                <rect x="172" y="48" width="40" height="5" rx="2" fill="#cbd5e1"/>
+
+                <circle cx="210" cy="45" r="14" fill="#ffffff" stroke="#1e293b" stroke-width="3"/>
+                <line x1="220" y1="55" x2="235" y2="70" stroke="#1e293b" stroke-width="4" stroke-linecap="round"/>
+
+                <circle cx="70" cy="38" r="14" fill="#fdba74"/>
+                <path d="M55 30 C 55 16, 85 16, 85 30 L 85 45" fill="#451a03"/>
+                <path d="M52 75 C 52 55, 88 55, 88 75" fill="#ea580c"/>
+                <rect x="75" y="50" width="22" height="26" rx="2" fill="#334155"/>
+              </svg>
+            </div>
+
+            <!-- Icon Badge + Title -->
+            <div class="v2-card-head">
+              <div class="v2-type-icon-badge" style="background:#fff7ed; color:#ea580c;">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" stroke="#ea580c" stroke-width="2"/><circle cx="9" cy="7" r="4" stroke="#ea580c" stroke-width="2"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" stroke="#ea580c" stroke-width="2"/></svg>
+              </div>
+              <strong class="v2-card-title">Recruitment &amp; Staffing Agency</strong>
+            </div>
+            <p class="v2-card-desc">You source, recruit and submit candidates to client organizations.</p>
+
+            <hr class="v2-card-hr" />
+
+            <ul class="v2-comp-list">
+              <li><div class="v2-chk-icon" style="background:#fff7ed; color:#ea580c;"><svg width="12" height="12" viewBox="0 0 20 20" fill="none"><path d="M4 10l4 4 8-8" stroke="#ea580c" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div> Bench talent marketplace</li>
+              <li><div class="v2-chk-icon" style="background:#fff7ed; color:#ea580c;"><svg width="12" height="12" viewBox="0 0 20 20" fill="none"><path d="M4 10l4 4 8-8" stroke="#ea580c" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div> Candidate submissions</li>
+              <li><div class="v2-chk-icon" style="background:#fff7ed; color:#ea580c;"><svg width="12" height="12" viewBox="0 0 20 20" fill="none"><path d="M4 10l4 4 8-8" stroke="#ea580c" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div> Client &amp; requirement management</li>
+              <li><div class="v2-chk-icon" style="background:#fff7ed; color:#ea580c;"><svg width="12" height="12" viewBox="0 0 20 20" fill="none"><path d="M4 10l4 4 8-8" stroke="#ea580c" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div> Vendor marketplace</li>
+              <li><div class="v2-chk-icon" style="background:#fff7ed; color:#ea580c;"><svg width="12" height="12" viewBox="0 0 20 20" fill="none"><path d="M4 10l4 4 8-8" stroke="#ea580c" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div> Agency performance analytics</li>
+            </ul>
+
+            <div class="v2-comp-banner" style="background:#fff7ed; color:#9a3412;">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" style="flex-shrink:0;"><path d="M12 2a7 7 0 0 1 7 7c0 2.38-1.19 4.47-3 5.74V17a1 1 0 0 1-1 1h-6a1 1 0 0 1-1-1v-2.26C6.19 13.47 5 11.38 5 9a7 7 0 0 1 7-7Z" stroke="#ea580c" stroke-width="2"/><path d="M9 21h6" stroke="#ea580c" stroke-width="2" stroke-linecap="round"/></svg>
+              <span>Best for agencies that connect candidates with hiring companies.</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Bottom "Why selection matters" Box - Redesigned & Responsive -->
+        <div class="v2-why-box">
+          <div class="v2-why-left">
+            <strong class="v2-why-title">Why your selection matters</strong>
+            <span class="v2-why-sub">We'll personalize your workspace based on your choice.</span>
+          </div>
+
+          <div class="v2-why-items">
+            <div class="v2-why-item">
+              <div class="v2-why-icon" style="background:#eff6ff; color:#2563eb;">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="7" height="7" rx="1.5" stroke="#2563eb" stroke-width="2"/><rect x="14" y="3" width="7" height="7" rx="1.5" stroke="#2563eb" stroke-width="2"/><rect x="14" y="14" width="7" height="7" rx="1.5" stroke="#2563eb" stroke-width="2"/><rect x="3" y="14" width="7" height="7" rx="1.5" stroke="#2563eb" stroke-width="2"/></svg>
+              </div>
+              <strong class="v2-why-item-txt">Personalized Dashboard</strong>
+            </div>
+
+            <div class="v2-why-item">
+              <div class="v2-why-icon" style="background:#f5f3ff; color:#7c3aed;">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="3" stroke="#7c3aed" stroke-width="2"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1 0-2.83 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1Z" stroke="#7c3aed" stroke-width="2"/></svg>
+              </div>
+              <strong class="v2-why-item-txt">Relevant Features</strong>
+            </div>
+
+            <div class="v2-why-item">
+              <div class="v2-why-icon" style="background:#f0fdf4; color:#16a34a;">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z" stroke="#16a34a" stroke-width="2"/><path d="M9 12l2 2 4-4" stroke="#16a34a" stroke-width="2" stroke-linecap="round"/></svg>
+              </div>
+              <strong class="v2-why-item-txt">Smart Permissions</strong>
+            </div>
+
+            <div class="v2-why-item">
+              <div class="v2-why-icon" style="background:#fff7ed; color:#ea580c;">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 2l2.4 7.4H22l-6 4.6 2.3 7.4-6.3-4.6-6.3 4.6 2.3-7.4-6-4.6h7.6L12 2Z" stroke="#ea580c" stroke-width="2"/></svg>
+              </div>
+              <strong class="v2-why-item-txt">Better AI Recommendations</strong>
+            </div>
+          </div>
+        </div>
+
+        <!-- Action Bar -->
+        <div class="v2-acts">
+          <button type="button" class="v2-btn-secondary-blue btn-prev-step" data-kt-stepper-action="previous">
+            <svg width="16" height="16" viewBox="0 0 20 20" fill="none"><path d="M15.833 10H4.165M9.166 15l-5-5 5-5" stroke="#1d61f2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            Previous
+          </button>
+          <button type="button" class="v2-btn-primary btn-next-step" data-kt-stepper-action="next">
+            Continue to Workspace Setup
+            <svg width="16" height="16" viewBox="0 0 20 20" fill="none"><path d="M4.166 10h11.668M10.833 5l5 5-5 5" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- ════════════════════════════════════════════════════════════════ -->
+      <!-- STEP 3: Complete Your Organization Profile                      -->
+      <!-- ════════════════════════════════════════════════════════════════ -->
+      <div class="" data-kt-stepper-element="content">
+        <!-- Top Header Row -->
+        <div class="d-flex align-items-start justify-content-between mb-4">
+          <div>
+            <h1 class="v2-step2-title">Complete Your Organization Profile</h1>
+            <p class="v2-step2-sub">Help companies, agencies and candidates connect with your organization.</p>
+          </div>
+          <div class="border rounded-3 px-3 py-2 bg-white d-flex align-items-center gap-2 fs-7">
+            <svg width="18" height="18" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="8" stroke="#64748b" stroke-width="1.6"/><path d="M7.5 7.5a2.5 2.5 0 0 1 5 0c0 1.5-1.5 2-2.5 2.5V11" stroke="#64748b" stroke-width="1.6" stroke-linecap="round"/><circle cx="10" cy="14" r="0.75" fill="#64748b"/></svg>
+            <strong class="text-dark">Need assistance?</strong>
+            <span class="text-muted">|</span>
+            <a href="https://jero.works/support-policy" target="_blank" class="text-secondary text-decoration-none">Live Chat</a>
+            <span class="text-muted">|</span>
+            <a href="https://jero.works/support-policy" target="_blank" class="fw-bold text-primary text-decoration-none">Help Center &rarr;</a>
+          </div>
+        </div>
+
+        <!-- Section 1: Website -->
+        <div class="v2-step3-box fv-row">
+          <div class="v2-step3-head">
+            <div class="v2-step3-icon" style="background:#eff6ff; color:#1d61f2;">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="#1d61f2" stroke-width="2"/><path d="M3.6 9h16.8M3.6 15h16.8M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18" stroke="#1d61f2" stroke-width="2"/></svg>
+            </div>
+            <div>
+              <div class="v2-step3-title">Company Website <span class="text-muted fw-normal fs-7">(Optional)</span></div>
+              <div class="v2-step3-sub">Displayed on your public organization profile.</div>
+            </div>
+          </div>
+          <div class="v2-web-group">
+            <div class="v2-web-prefix">
+              <svg width="16" height="16" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="8" stroke="#64748b" stroke-width="1.6"/><path d="M2 10h16M10 2a12 12 0 0 1 0 16M10 2a12 12 0 0 0 0 16" stroke="#64748b" stroke-width="1.6"/></svg>
+              <span>https://</span>
+            </div>
+            <input type="text" name="website" id="website_field" class="v2-web-input" placeholder="www.yourcompany.com" value="" />
+          </div>
+        </div>
+
+        <!-- Section 2: Contact Number -->
+        <div class="v2-step3-box fv-row smsForm">
+          <div class="v2-step3-head">
+            <div class="v2-step3-icon" style="background:#f0fdf4; color:#16a34a;">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92Z" stroke="#16a34a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </div>
+            <div>
+              <div class="v2-step3-title">Business Contact Number <span class="text-danger">*</span></div>
+              <div class="v2-step3-sub">Visible only to verified users.</div>
+            </div>
+          </div>
+          <div class="v2-phone-wrap">
+            <input name="contact_number" id="contact_number" type="tel" class="v2-inp" placeholder="Enter 10 digit mobile number" value="" maxlength="10" inputmode="numeric" pattern="[0-9]{10}" autocomplete="tel-national" required />
+          </div>
+        </div>
+
+        <!-- Section 3: Headquarters Location -->
+        <div class="v2-step3-box fv-row smsForm">
+          <div class="v2-step3-head">
+            <div class="v2-step3-icon" style="background:#f5f3ff; color:#7c3aed;">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M12 2a8 8 0 0 0-8 8c0 5.25 8 12 8 12s8-6.75 8-12a8 8 0 0 0-8-8Z" stroke="#7c3aed" stroke-width="2"/><circle cx="12" cy="10" r="3" fill="#7c3aed"/></svg>
+            </div>
+            <div>
+              <div class="v2-step3-title">Headquarters Location <span class="text-danger">*</span></div>
+              <div class="v2-step3-sub">Used for job recommendations and marketplace visibility.</div>
+            </div>
+          </div>
+          <div class="v2-tagify-wrap">
+            <span class="v2-il">
+              <svg width="18" height="18" viewBox="0 0 20 20" fill="none"><circle cx="9" cy="9" r="6" stroke="#94a3b8" stroke-width="1.6"/><path d="M13.5 13.5L17 17" stroke="#94a3b8" stroke-width="1.6"/></svg>
+            </span>
+            <input class="v2-inp" value="" id="kt_tagify_work_location" name="kt_tagify_work_location" placeholder="Search city, state or country..." required />
+            <span class="v2-ir">
+              <svg width="18" height="18" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="7" stroke="#94a3b8" stroke-width="1.6"/><circle cx="10" cy="10" r="2" fill="#94a3b8"/></svg>
+            </span>
+          </div>
+        </div>
+
+        <!-- Safety Info Banner -->
+        <div class="v2-safe-box">
+          <div class="v2-safe-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><rect x="4" y="10" width="16" height="11" rx="2" stroke="#1d61f2" stroke-width="2"/><path d="M7 10V7a5 5 0 0 1 10 0v3" stroke="#1d61f2" stroke-width="2"/></svg>
+          </div>
+          <div>
+            <strong class="text-dark fs-7 d-block">Your information is safe with us.</strong>
+            <span class="fs-7 text-muted">We never share your contact details with anyone without your permission.</span>
+          </div>
+        </div>
+
+        <!-- Action Bar -->
+        <div class="v2-acts">
+          <button type="button" class="v2-btn-secondary-blue btn-prev-step" data-kt-stepper-action="previous">
+            <svg width="16" height="16" viewBox="0 0 20 20" fill="none"><path d="M15.833 10H4.165M9.166 15l-5-5 5-5" stroke="#1d61f2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            Previous
+          </button>
+          <div class="d-flex align-items-center gap-2 text-success fs-7 fw-semibold">
+            <svg width="16" height="16" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="8" fill="#dcfce7"/><path d="M6 10l3 3 5-5" stroke="#16a34a" stroke-width="1.8" stroke-linecap="round"/></svg>
+            All changes are auto-saved
+          </div>
+          <button type="button" class="v2-btn-primary btn-next-step" data-kt-stepper-action="next">
+            Continue to Launch Workspace
+            <svg width="16" height="16" viewBox="0 0 20 20" fill="none"><path d="M4.166 10h11.668M10.833 5l5 5-5 5" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- ════════════════════════════════════════════════════════════════ -->
+      <!-- STEP 4: Review & Launch Your Workspace                           -->
+      <!-- ════════════════════════════════════════════════════════════════ -->
+      <div class="" data-kt-stepper-element="content">
+        <!-- Top Header Row -->
+        <div class="v2-hero">
+          <div>
+            <h1 class="v2-step2-title">Review &amp; Launch Your Workspace 🚀</h1>
+            <p class="v2-step2-sub">Please review your details below. Once confirmed, your workspace will be ready to use.</p>
+          </div>
+        </div>
+
+        <div class="v2-review-grid">
+          <!-- Card 1: Organization -->
+          <div class="v2-review-card">
+            <div class="v2-review-head">
+              <div class="v2-review-icon-title">
+                <div class="v2-type-icon-badge" style="background:#eff6ff; color:#1d61f2;">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M3 21h18M5 21V7l8-4v18M13 21V11l6 3v7" stroke="#1d61f2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </div>
+                <span>Organization</span>
+              </div>
+              <button type="button" onclick="goToStep(1)" class="v2-review-btn-edit">
+                <svg width="14" height="14" viewBox="0 0 20 20" fill="none"><path d="M13.586 3.586a2 2 0 1 1 2.828 2.828l-.793.793-2.828-2.828.793-.793ZM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828Z" fill="#16a34a"/></svg>
+                Edit
+              </button>
+            </div>
+            <div class="v2-review-val-title" id="preview_company_name">-</div>
+            <div class="v2-review-val-sub" id="preview_company_type">-</div>
+            <div class="v2-review-meta">
+              <div class="v2-review-meta-item">
+                <svg width="16" height="16" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="8" stroke="#1d61f2" stroke-width="1.6"/><path d="M2 10h16M10 2a12 12 0 0 1 0 16M10 2a12 12 0 0 0 0 16" stroke="#1d61f2" stroke-width="1.6"/></svg>
+                <strong class="text-dark fs-7">Website</strong>
+                <span class="text-primary fw-semibold fs-7" id="preview_website">-</span>
+              </div>
+              <div class="v2-review-meta-item">
+                <svg width="16" height="16" viewBox="0 0 20 20" fill="none"><path d="M10 2a6 6 0 0 0-6 6c0 4.5 6 10 6 10s6-5.5 6-10a6 6 0 0 0-6-6Z" stroke="#7c3aed" stroke-width="1.6"/><circle cx="10" cy="8" r="2" fill="#7c3aed"/></svg>
+                <strong class="text-dark fs-7">Headquarters</strong>
+                <span class="text-secondary fs-7" id="preview_city">-</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Card 2: Administrator -->
+          <div class="v2-review-card">
+            <div class="v2-review-head">
+              <div class="v2-review-icon-title">
+                <div class="v2-type-icon-badge" style="background:#f0fdf4; color:#16a34a;">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8" r="4" stroke="#16a34a" stroke-width="2"/><path d="M4 20c0-4 4-7 8-7s8 3 8 7" stroke="#16a34a" stroke-width="2"/></svg>
+                </div>
+                <span>Administrator</span>
+              </div>
+              <button type="button" onclick="goToStep(1)" class="v2-review-btn-edit">
+                <svg width="14" height="14" viewBox="0 0 20 20" fill="none"><path d="M13.586 3.586a2 2 0 1 1 2.828 2.828l-.793.793-2.828-2.828.793-.793ZM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828Z" fill="#16a34a"/></svg>
+                Edit
+              </button>
+            </div>
+            <div class="v2-review-val-title" id="preview_name">-</div>
+            <div class="v2-review-val-sub" id="preview_email">-</div>
+            <div class="v2-review-meta">
+              <div class="v2-review-meta-item">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92Z" stroke="#334155" stroke-width="2"/></svg>
+                <div id="phoneDisplay" style="display:flex; align-items:center; gap:4px;"></div>
+                <span class="text-secondary fs-7" id="preview_contact_number">-</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Section: Your Workspace will include -->
+        <div class="v2-inc-card">
+          <div class="v2-inc-title">Your Workspace will include</div>
+          <div class="v2-inc-grid">
+            <div class="v2-inc-item">
+              <div class="v2-inc-icon" style="background:#f5f3ff; color:#7c3aed;">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 2L15 9L22 12L15 15L12 22L9 15L2 12L9 9L12 2Z" fill="#7c3aed"/></svg>
+              </div>
+              <div class="v2-inc-txt">
+                <strong>AI Recruitment ATS</strong>
+                <span>End-to-end hiring automation</span>
+              </div>
+            </div>
+
+            <div class="v2-inc-item">
+              <div class="v2-inc-icon" style="background:#f0fdf4; color:#16a34a;">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><rect x="3" y="7" width="18" height="13" rx="2" stroke="#16a34a" stroke-width="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" stroke="#16a34a" stroke-width="2"/></svg>
+              </div>
+              <div class="v2-inc-txt">
+                <strong>Job &amp; Candidate Management</strong>
+                <span>Post, track and manage easily</span>
+              </div>
+            </div>
+
+            <div class="v2-inc-item">
+              <div class="v2-inc-icon" style="background:#fff7ed; color:#ea580c;">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" stroke="#ea580c" stroke-width="2"/><circle cx="9" cy="7" r="4" stroke="#ea580c" stroke-width="2"/></svg>
+              </div>
+              <div class="v2-inc-txt">
+                <strong>Marketplace Access</strong>
+                <span>Connect with agencies &amp; talent</span>
+              </div>
+            </div>
+
+            <div class="v2-inc-item">
+              <div class="v2-inc-icon" style="background:#eff6ff; color:#1d61f2;">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6Z" stroke="#1d61f2" stroke-width="2"/><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8" stroke="#1d61f2" stroke-width="2"/></svg>
+              </div>
+              <div class="v2-inc-txt">
+                <strong>Resume Parser</strong>
+                <span>Smart extraction &amp; matching</span>
+              </div>
+            </div>
+
+            <div class="v2-inc-item">
+              <div class="v2-inc-icon" style="background:#fef2f2; color:#ef4444;">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v10Z" stroke="#ef4444" stroke-width="2"/></svg>
+              </div>
+              <div class="v2-inc-txt">
+                <strong>Interview &amp; Feedback</strong>
+                <span>Structured interview process</span>
+              </div>
+            </div>
+
+            <div class="v2-inc-item">
+              <div class="v2-inc-icon" style="background:#eff6ff; color:#1d61f2;">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><rect x="3" y="12" width="4" height="8" rx="1" fill="#1d61f2"/><rect x="10" y="7" width="4" height="13" rx="1" fill="#1d61f2"/><rect x="17" y="3" width="4" height="17" rx="1" fill="#1d61f2"/></svg>
+              </div>
+              <div class="v2-inc-txt">
+                <strong>Analytics &amp; Reports</strong>
+                <span>Insights that drive results</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Section: Confirmation Checkbox Box -->
+        <div class="v2-confirm-box">
+          <label class="form-check form-check-custom form-check-solid cursor-pointer">
+            <input class="form-check-input" type="checkbox" checked="checked" />
+            <span class="form-check-label">I confirm that all the above information is correct.</span>
+          </label>
+          <div class="v2-confirm-sub">You can update these details anytime from settings after launch.</div>
+        </div>
+
+        <!-- Section: Final Launch Bar with Previous Button -->
+        <div class="v2-launch-bar mb-4">
+          <div class="v2-launch-sec">
+            <div class="v2-launch-sec-icon">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><rect x="5" y="11" width="14" height="10" rx="2" stroke="#16a34a" stroke-width="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4" stroke="#16a34a" stroke-width="2"/></svg>
+            </div>
+            <div>
+              <strong class="text-dark fs-7 d-block">Secure • Trusted • Encrypted</strong>
+              <span class="fs-7 text-muted">Your information is protected and safe with us.</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Action Bar for Step 4 -->
+        <div class="v2-acts">
+          <button type="button" class="v2-btn-secondary-blue btn-prev-step" data-kt-stepper-action="previous">
+            <svg width="16" height="16" viewBox="0 0 20 20" fill="none"><path d="M15.833 10H4.165M9.166 15l-5-5 5-5" stroke="#1d61f2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            Previous
+          </button>
+          <button type="button" class="v2-btn-primary" data-kt-stepper-action="submit">
+            <span class="indicator-label d-flex align-items-center gap-2">
+              Create &amp; Launch Workspace
+              <svg width="16" height="16" viewBox="0 0 20 20" fill="none"><path d="M4.166 10h11.668M10.833 5l5 5-5 5" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </span>
+            <span class="indicator-progress" style="display:none;">
+              Please wait... <span class="spinner-border spinner-border-sm align-middle ms-2"></span>
+            </span>
+          </button>
+        </div>
+      </div>
+    </form>
+
+    <!-- Page Footer -->
+    <div class="v2-page-footer">
+      <span>© 2026 Jero Technologies Pvt. Ltd. All rights reserved.</span>
+      <div class="d-flex align-items-center gap-4">
+        <a href="https://jero.works/privacy-policy" target="_blank">Privacy Policy</a>
+        <a href="{{ route('termsAndConditions') }}" target="_blank">Terms of Service</a>
+        <a href="https://jero.works/support-policy" target="_blank">Support</a>
+        <span>🌐 English ∨</span>
+      </div>
+    </div>
+  </div>
+</div>
+
 <script src="{{ asset('demo/dist/assets/plugins/global/plugins.bundle.js') }}"></script>
 <script src="{{ asset('demo/dist/assets/js/scripts.bundle.js') }}"></script>
-
 <script src="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.17/js/intlTelInput.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
 <script src="{{ asset('front/assets/js/countryDialCodes.js') }}"></script>
 
 <script>
+function selectCompanyType(val, elem) {
+  $('.v2-comp-card').removeClass('selected');
+  $(elem).addClass('selected');
+  $('input[name="company_type"]').prop('checked', false);
+  var radio = $(elem).find('input[type="radio"]');
+  radio.prop('checked', true).trigger('change');
+}
 
+function goToStep(stepNum) {
+  if(window.regStepper) {
+    window.regStepper.goTo(stepNum);
+    scrollToTop();
+  }
+}
 
-let inputId = `#kt_tagify_work_location`;
-        let inputElement = document.querySelector(inputId);
+function scrollToTop() {
+  window.scrollTo({ top: 0, behavior: 'instant' });
+  document.body.scrollTop = 0;
+  document.documentElement.scrollTop = 0;
+  var container = document.querySelector('.v2-wrapper');
+  if (container) container.scrollTop = 0;
+}
 
-        if (inputElement) {
-            let tagifyInstance = new Tagify(inputElement, {
-                whitelist: [],
-                enforceWhitelist: true, // Prevents users from adding custom values
-                maxTags: 1,
-                dropdown: {
-                    maxItems: 20,           // maximum allowed rendered suggestions
-                    classname: "", // custom classname for this dropdown
-                    enabled: 0,             // show suggestions on focus
-                    closeOnSelect: true    // do not hide the suggestions dropdown once an item has been selected
-                }
-            });
+function updatePreviewData() {
+  try {
+    var email          = $("input[name=email]").val() || '-'; 
+    var name           = $("input[name=name]").val() || '-'; 
+    var company_name   = $("input[name=company_name]").val() || '-'; 
+    var company_type_val = $("input[name='company_type']:checked").val();
+    var company_type   = '-';
 
-            // Prevent creating tags on blur or enter key
-            tagifyInstance.on('input', function(e) {
-                tagifyInstance.dropdown.show(); // show the dropdown immediately
-            });
+    if (company_type_val == 1) {
+      company_type = 'Staffing Partners - Recruitment Consultant, Staffing Companies, Man-Power Companies.';
+    } else if (company_type_val == 2) {
+      company_type = 'Consulting Companies - IT Companies, Trainings Companies, Service Based Companies.';
+    } else if (company_type_val == 3) {
+      company_type = 'Product & Manufacturing Company - Product Based and similar Companies.';
+    }
 
-            // Create tags only on select
-            tagifyInstance.on('dropdown:select', function(e) {
-                tagifyInstance.addTags([e.detail.data.value]);
-            });
+    var website        = $("input[name=website]").val() || 'N/A';
+    var contact_number = $("input[name=contact_number]").val() || '-'; 
+    var kt_tagify_val  = $('#kt_tagify_work_location').val() || '';
+    var city           = '-';
 
-            function debounce(func, delay) {     
-            let timer;
-                return function (...args) {
-                    clearTimeout(timer);
-                    timer = setTimeout(() => func.apply(this, args), delay);
-                };
-            }
-
-            const fetchSuggestions = debounce(function(query) {
-            $.ajax({
-                url: "{{ url('/') }}" + "/city-job-suggestions?q=" + query,
-                method: 'GET',
-                success: function(data) {
-                    console.warn("Fetched Cities: ", data);
-
-                    if (Array.isArray(data)) {
-                      tagifyInstance.settings.whitelist = data; 
-                      // tagifyInstance.dropdown.show(query); 
-                      tagifyInstance.dropdown.show.call(tagifyInstance);
-                    } else {
-                        console.error("Invalid API response format: Expected array.");
-                    }
-                },
-                error: function(err) {
-                    console.error("Error fetching cities:", err);
-                }
-            });
-        }, 50); // 300ms delay
-        tagifyInstance.on('input', function(e) {
-            var query = e.detail.value.trim();
-            if (query.length < 1) return;
-            fetchSuggestions(query);
-            
-        });
-
-
+    if (kt_tagify_val) {
+      try {
+        var parsed = JSON.parse(kt_tagify_val);
+        if (Array.isArray(parsed) && parsed.length > 0 && parsed[0].value) {
+          city = parsed[0].value;
+        } else {
+          city = kt_tagify_val.replace(/\[\{"value":"/g, '').replace(/"\}\]/g, '');
         }
+      } catch (err) {
+        city = kt_tagify_val.replace(/\[\{"value":"/g, '').replace(/"\}\]/g, '');
+      }
+    }
 
+    var iti__active = $(".iti__active").attr('data-country-code') || "in"; 
+    $('#contact_code').val(iti__active);
 
+    $('#preview_email').text(email);
+    $('#preview_name').text(name);
+    $('#preview_company_name').text(company_name);
+    $('#preview_company_type').text(company_type);	
+    $('#preview_website').text(website);
+    $('#preview_contact_number').text(contact_number);
+    $('#preview_city').text(city || 'N/A');
 
+    const flagContainer = document.getElementById('phoneDisplay');
+    if (flagContainer && iti__active) {
+      $('#phoneDisplay').html('');
+      const flagDiv = document.createElement("div");
+      flagDiv.className = `iti__flag iti__${iti__active}`;
+      const dialCode = (typeof countryDialCodes !== 'undefined' ? countryDialCodes[iti__active] : '') || "";
+      const dialCodeSpan = document.createElement("span");
+      dialCodeSpan.textContent = dialCode;
+      flagContainer.appendChild(flagDiv);
+      flagContainer.appendChild(dialCodeSpan);
+    }
+  } catch(err) {
+    console.error("Preview update error:", err);
+  }
+}
 
-  const phoneInputField = document.querySelector("#contact_number");
-  const phoneInput = window.intlTelInput(phoneInputField, { 
-        separateDialCode: true,
-        dropdown: true,
-        initialCountry: "in",
-        preferredCountries: ["in", "us", "gb", "ca", "au"]
-      });
-      window.addEventListener('load', function() {
-        // Get the forms we want to add validation styles to
-        var forms = document.getElementsByClassName('needs-validation');
-        // Loop over them and prevent submission
-        var validation = Array.prototype.filter.call(forms, function(form) {
-          form.addEventListener('submit', function(event) {
-            if (form.checkValidity() === false) {
-              event.preventDefault();
-              event.stopPropagation();
+// Tagify
+let inputId = `#kt_tagify_work_location`;
+let inputElement = document.querySelector(inputId);
+let tagifyInstance = null;
+
+if (inputElement) {
+  tagifyInstance = new Tagify(inputElement, {
+    whitelist: [],
+    enforceWhitelist: true,
+    maxTags: 1,
+    dropdown: {
+      maxItems: 20,
+      classname: "",
+      enabled: 0,
+      closeOnSelect: true
+    }
+  });
+
+  tagifyInstance.on('input', function(e) {
+    tagifyInstance.dropdown.show();
+  });
+
+  tagifyInstance.on('dropdown:select', function(e) {
+    tagifyInstance.addTags([e.detail.data.value]);
+    if (window.formValidators && window.formValidators[2]) {
+      window.formValidators[2].revalidateField('kt_tagify_work_location');
+    }
+    updatePreviewData();
+  });
+
+  tagifyInstance.on('change', function(e) {
+    if (window.formValidators && window.formValidators[2]) {
+      window.formValidators[2].revalidateField('kt_tagify_work_location');
+    }
+    updatePreviewData();
+  });
+
+  function debounce(func, delay) {     
+    let timer;
+    return function (...args) {
+      clearTimeout(timer);
+      timer = setTimeout(() => func.apply(this, args), delay);
+    };
+  }
+
+  const fetchSuggestions = debounce(function(query) {
+    $.ajax({
+      url: "{{ url('/') }}" + "/city-job-suggestions?q=" + query,
+      method: 'GET',
+      success: function(data) {
+        if (Array.isArray(data)) {
+          tagifyInstance.settings.whitelist = data; 
+          tagifyInstance.dropdown.show.call(tagifyInstance);
+        }
+      }
+    });
+  }, 50);
+
+  tagifyInstance.on('input', function(e) {
+    var query = e.detail.value.trim();
+    if (query.length < 1) return;
+    fetchSuggestions(query);
+  });
+}
+
+// Phone Input
+const phoneInputField = document.querySelector("#contact_number");
+const phoneInput = window.intlTelInput(phoneInputField, { 
+  separateDialCode: true,
+  dropdown: true,
+  initialCountry: "in",
+  preferredCountries: ["in", "us", "gb", "ca", "au"],
+  autoPlaceholder: "off"
+});
+
+$(document).ready(function() {
+  $('.smsForm .iti__flag-container').click(function() { 
+    var countryCode = $('.smsForm .iti__selected-flag').attr('title');
+    if (countryCode) {
+      var dialCode = countryCode.replace(/[^0-9]/g,'');
+      $('#contact_code').val(dialCode);
+    }
+  });
+
+  $(".iti__flag-container").on("click", function (event) {
+    var iti__active = $(".iti__active").attr('data-country-code'); 
+    $('#contact_code').val(iti__active);
+  });
+});
+
+// Original Stepper & FormValidation Integration
+$(document).ready(function() {  
+  var KTCreateAccount = (function () {
+    var e, t, i, o, r, s, a = [];
+
+    function updateProgressBar(stepIndex) {
+      const stepTexts = ["Step 1 of 4", "Step 2 of 4", "Step 3 of 4", "Step 4 of 4"];
+      const pctTexts  = ["25% Complete", "50% Complete", "75% Complete", "100% Complete"];
+      const pcts      = ["25%", "50%", "75%", "100%"];
+      const times     = ["Estimated Time: 2 Minutes", "Est. Time: 2 Min", "Est. Time: 2-3 Min", "All steps done"];
+
+      const idx = Math.max(0, Math.min(stepIndex - 1, 3));
+      $('#progress-step-text').text(stepTexts[idx]);
+      $('#progress-pct-text').text(pctTexts[idx]);
+      $('#progress-bar-fill').css('width', pcts[idx]);
+      $('#progress-time-text').text(times[idx]);
+
+      if (stepIndex > 1) {
+        $('#top-bar-text').text('Need assistance?');
+        $('#top-bar-btn').attr('href', 'https://jero.works/support-policy').text('Help Center');
+      } else {
+        $('#top-bar-text').text('Already have an account?');
+        $('#top-bar-btn').attr('href', "{{ route('login') }}").text('Sign In');
+      }
+    }
+
+    return {
+      init: function () {
+        (i = document.querySelector("#kt_create_account_stepper")) && ( 
+          (o = i.querySelector("#kt_create_account_form")), 
+          (r = i.querySelector('[data-kt-stepper-action="submit"]')),
+          (s = new KTStepper(i)),
+          (window.regStepper = s),
+
+          s.on("kt.stepper.changed", function(e) {
+            updateProgressBar(e.getCurrentStepIndex());
+            updatePreviewData();
+            scrollToTop();
+          }),
+
+          // Delegated Next Step Click Handler across ALL step buttons
+          $(document).on('click', '.btn-next-step, [data-kt-stepper-action="next"]', function(ev) {
+            ev.preventDefault();
+            ev.stopPropagation();
+            if (!s) return;
+
+            var currentStep = s.getCurrentStepIndex();
+
+            if (currentStep === 1) {
+              var t1 = a[0];
+              if (t1) {
+                t1.validate().then(function (status) {
+                  if (status === "Valid") {
+                    s.goNext();
+                    updatePreviewData();
+                    scrollToTop();
+                  } else {
+                    Swal.fire({
+                      text: "Sorry, looks like there are some mandatory fields missing on Step 1.",
+                      icon: "error",
+                      buttonsStyling: false,
+                      confirmButtonText: "Ok, got it!",
+                      customClass: { confirmButton: "btn btn-light" },
+                    }).then(function () { scrollToTop(); });
+                  }
+                });
+              } else {
+                s.goNext();
+                updatePreviewData();
+                scrollToTop();
+              }
+            } else if (currentStep === 2) {
+              var companyType = $("input[name='company_type']:checked").val();
+              if (!companyType) {
+                Swal.fire({
+                  text: "Please select how your organization operates.",
+                  icon: "error",
+                  buttonsStyling: false,
+                  confirmButtonText: "Ok, got it!",
+                  customClass: { confirmButton: "btn btn-light" },
+                });
+                return;
+              }
+              s.goNext();
+              updatePreviewData();
+              scrollToTop();
+            } else if (currentStep === 3) {
+              var t3 = a[2];
+              if (t3) {
+                t3.validate().then(function (status) {
+                  if (status === "Valid") {
+                    s.goNext();
+                    updatePreviewData();
+                    scrollToTop();
+                  } else {
+                    Swal.fire({
+                      text: "Please fill in all mandatory fields on Step 3.",
+                      icon: "error",
+                      buttonsStyling: false,
+                      confirmButtonText: "Ok, got it!",
+                      customClass: { confirmButton: "btn btn-light" },
+                    }).then(function () { scrollToTop(); });
+                  }
+                });
+              } else {
+                s.goNext();
+                updatePreviewData();
+                scrollToTop();
+              }
+            } else {
+              s.goNext();
+              updatePreviewData();
+              scrollToTop();
             }
-            form.classList.add('was-validated');
-          }, false);
-        });
-      }, false);
-      $(document).ready(function() {
-        $('.smsForm .iti__flag-container').click(function() { 
-          var countryCode = $('.smsForm .iti__selected-flag').attr('title');
-          var countryCode = countryCode.replace(/[^0-9]/g,'');
-          $('#contact_number').val("");
-          $('#contact_number').val("+"+countryCode+" "+ $('#contact_number').val());
-        });
-        
-      });
+          }),
 
-      $(".iti__flag-container").on("click", function (event) {
-        var iti__active  			=	$(".iti__active").attr('data-country-code'); 
-         // alert(iti__active);
-         $('#contact_code').val(iti__active);
-      
-      });
-  
-</script>
+          // Delegated Previous Step Click Handler
+          $(document).on('click', '.btn-prev-step, [data-kt-stepper-action="previous"]', function(ev) {
+            ev.preventDefault();
+            ev.stopPropagation();
+            if (!s) return;
+            s.goPrevious();
+            scrollToTop();
+          }),
 
-<!--end::Global Javascript Bundle-->
-<script>
-   $(document).ready(function()
-   {  
-   
-	
-		
-       
-      var KTCreateAccount = (function () {
-         var e,
-            t,
-            i,
-            o,
-            r,
-            s,
-            a = [];
-         return {
-            init: function () {
-                  	(t = document.querySelector("#kt_modal_create_account")) && (e = new bootstrap.Modal(t)),
-					(i = document.querySelector("#kt_create_account_stepper")) && ( 
-					(o = i.querySelector("#kt_create_account_form")), 
-					(r = i.querySelector('[data-kt-stepper-action="submit"]')),
-					(s = new KTStepper(i)).on("kt.stepper.next", function (e) {
-												  console.log("stepper.next");
-												  var t = a[e.getCurrentStepIndex() - 1];
-												  
-												 
-												  
-var email  			=	$("input[name=email]").val(); 
-var name  			=	$("input[name=name]").val(); 
-var company_name  	=	$("input[name=company_name]").val(); 
-var team_size  		=	$("input[name='team_size']:checked").val();
-if(team_size == 0){
-	team_size	= '1-50';	
-}else if(team_size == 1){
-	team_size		=	'51-200';	
-}else if(team_size == 2){
-	team_size		=	'201-1000';	
-}else{ 
-	team_size		=	'1000+';	
-}
-var company_type  	=	$("input[name='company_type']:checked").val();
-if(company_type == 1){
-	company_type	=	'Staffing Partners - Recruitment Consultant, Staffing Companies, Man-Power Companies.';
-}else if(company_type == 2){
-	company_type	=	'Consulting Companies - IT Companies, Trainings Companies, Service Based Companies.';
-}else if(company_type == 3){
-	company_type	=	'Other Companies - Product Based and similar Companies.';
-}
-var website  		=	$("input[name=website]").val();
-var contact_number  =	$("input[name=contact_number]").val(); 
-var kt_tagify_work_location		=	$('#kt_tagify_work_location').val();
-var city = kt_tagify_work_location
-                    .replace('[{"value":"', '')  // Remove the starting part
-                    .replace('"}]', ''); 
-var iti__active  			=	$(".iti__active").attr('data-country-code'); 
-// alert(iti__active);
-$('#contact_code').val(iti__active);
+          // Step 1 Validation
+          a.push(
+            FormValidation.formValidation(o, {
+              fields: {
+                company_name: { validators: { notEmpty: { message: "Company name is required" } } },
+                name: { validators: { notEmpty: { message: "Name is required" } } },
+                email: { validators: { notEmpty: { message: "Email is required" }, emailAddress: { message: "The value is not a valid email address" } } },
+                password: { validators: { notEmpty: { message: "Please enter password" } } },
+                password_confirmation: {
+                  validators: {
+                    notEmpty: { message: "Please enter confirm password" },
+                    identical: {
+                      compare: function() {
+                        return o.querySelector('[name="password"]').value;
+                      },
+                      message: "The password and its confirm are not the same"
+                    }
+                  }
+                },
+                toc: { validators: { notEmpty: { message: "You must accept the terms and conditions" } } }
+              },
+              plugins: { trigger: new FormValidation.plugins.Trigger(), bootstrap: new FormValidation.plugins.Bootstrap5({ rowSelector: '.fv-row', eleInvalidClass: '', eleValidClass: '' }) }
+            })
+          ),
 
-$('#preview_email').html(email);
-$('#preview_name').html(name);
-$('#preview_company_name').html(company_name);
-$('#preview_team_size').html(team_size);	
-$('#preview_company_type').html(company_type);	
-$('#preview_website').html(website);
-$('#preview_contact_number').html(contact_number);
-$('#preview_city').html(city);
+          // Step 2 Validation
+          a.push(
+            FormValidation.formValidation(o, {
+              fields: {
+                company_type: { validators: { notEmpty: { message: "Company type is required" } } }
+              },
+              plugins: { trigger: new FormValidation.plugins.Trigger(), bootstrap: new FormValidation.plugins.Bootstrap5({ rowSelector: ".fv-row", eleInvalidClass: "", eleValidClass: "" }) }
+            })
+          ),
 
-const flagContainer = document.getElementById(`phoneDisplay`);
-                if (flagContainer) {
-                  $('#phoneDisplay').html('');
-                    const flagDiv = document.createElement("div");
-                    flagDiv.className = `iti__flag iti__${iti__active}`; // Ensure calling_code is in lowercase
+          // Step 3 Validation
+          a.push(
+            FormValidation.formValidation(o, {
+              fields: {
+                contact_number: {
+                  validators: {
+                    notEmpty: { message: "Contact Number is required" },
+                    digits: { message: "Contact Number must contain only digits" },
+                    stringLength: { min: 10, max: 10, message: "Contact Number must contain 10 digits only" }
+                  }
+                },
+                kt_tagify_work_location: { validators: { notEmpty: { message: "City is required" } } }
+              },
+              plugins: { trigger: new FormValidation.plugins.Trigger(), bootstrap: new FormValidation.plugins.Bootstrap5({ rowSelector: ".fv-row", eleInvalidClass: "", eleValidClass: "" }) }
+            })
+          ),
 
-                    const dialCode = countryDialCodes[iti__active] || ""; // Fetch the dial code dynamically
-                    const dialCodeSpan = document.createElement("span");
-                    dialCodeSpan.textContent = dialCode;
+          (window.formValidators = a),
 
-                    // Append the flag and dial code
-                    flagContainer.appendChild(flagDiv);
-                    flagContainer.appendChild(dialCodeSpan);
+          // Trigger FormValidation check without calling jQuery change or modifying input value
+          $('#contact_number').on('input', function() {
+            if (a[2]) {
+              a[2].revalidateField('contact_number');
+            }
+            updatePreviewData();
+          }),
+
+          $('#website_field').on('input', function() {
+            updatePreviewData();
+          }),
+
+          r.addEventListener("click", function (t) {
+            t.preventDefault();
+            r.disabled = !0;
+            r.setAttribute("data-kt-indicator", "on");
+            $(r).prop("disabled", true);
+
+            $('.indicator-label').hide();
+            $('.indicator-progress').show();
+
+            if (!navigator.onLine) {
+              Swal.fire({ title: 'No Internet', text: 'You are currently offline or the server is unreachable.', icon: 'warning', confirmButtonText: 'Ok, got it!', customClass: { confirmButton: 'btn btn-warning' } });
+              $('.indicator-label').show();
+              $('.indicator-progress').hide();
+              r.removeAttribute('data-kt-indicator');
+              r.disabled = false;
+              return;
+            }
+
+            $.ajax({
+              url: "{{route('company-register')}}",
+              container: '#kt_create_account_form',
+              type: "POST",
+              data: $('#kt_create_account_form').serialize(),
+              success: function(response) {
+                $('.indicator-label').hide();
+                $('.indicator-progress').show();
+                if(response.status == 'success') {	
+                  $('#kt_create_account_form').trigger("reset");
+                  Swal.fire("Sent!", "Your account has been created successfully.\n Check your email to activate your account.", "success");
+                  $('#upgrade-plan').html(response.view);
+                } else {
+                  $('.indicator-label').show();
+                  $('.indicator-progress').hide();
+                  Swal.fire("Error!", "You need to fill all the form fields!", "error");
                 }
+              },
+              error: function(xhr) {
+                $('.indicator-label').show();
+                $('.indicator-progress').hide();
+                r.removeAttribute('data-kt-indicator');
+                r.disabled = false;
+                if (xhr.status === 0 || !navigator.onLine) {
+                  Swal.fire({ title: 'No Internet', text: 'You are currently offline or the server is unreachable. Please check your connection and try again.', icon: 'warning', confirmButtonText: 'Ok, got it!', customClass: { confirmButton: 'btn btn-warning' } });
+                } else {
+                  Swal.fire('Error!', 'Something went wrong (HTTP ' + xhr.status + '). Please try again.', 'error');
+                }
+              }
+            });
+            r.removeAttribute("data-kt-indicator");
+            r.disabled = !1;
+          }),
 
+          // Email check handler
+          $(o.querySelector('[name="email"]')).on("change", function () {            
+            var email = $("input[name=email]").val();
+            if(email != '') {
+              $('.page-loader').css('display', 'flex');
+              $.ajax({
+                url: "{{route('company-register-chk')}}",
+                container: '#kt_create_account_form',
+                type: "POST",
+                data: $('#kt_create_account_form').serialize(),
+                success: function(response) {
+                  $('.page-loader').css('display', 'none');
+                  if(response.status == 'fail') {
+                    $("input[name=email]").val('');
+                    Swal.fire({
+                      text: "Sorry, Email ["+email+"] is already registered, Please use another email.",
+                      icon: "error",
+                      buttonsStyling: !1,
+                      confirmButtonText: "Ok, got it!",
+                      customClass: { confirmButton: "btn btn-light" },
+                    }).then(function () {
+                      scrollToTop();
+                    });
+                  } else if(response.status == 'emailchecker') {
+                    $("input[name=email]").val('');
+                    Swal.fire({
+                      text: response.message,
+                      icon: "error",
+                      buttonsStyling: !1,
+                      confirmButtonText: "Ok, got it!",
+                      customClass: { confirmButton: "btn btn-light" },
+                    }).then(function () {
+                      scrollToTop();
+                    });
+                  } else {
+                    $('.verification_email').val(email);
+                  }
+                },
+                error: function(xhr) {
+                  $('.page-loader').css('display', 'none');
+                  if (xhr.status === 0 || !navigator.onLine) {
+                    Swal.fire({ title: 'No Internet', text: 'You are currently offline or the server is unreachable.', icon: 'warning', confirmButtonText: 'Ok, got it!', customClass: { confirmButton: 'btn btn-warning' } });
+                  } else {
+                    Swal.fire('Error!', 'Something went wrong. Please try again.', 'error');
+                  }
+                }
+              });
+            }  	
+          }),
 
-												  
-												  console.log(t);
-												  
-												  t ? t.validate().then(function (t) {
-														console.log("validated!"),
-															  "Valid" == t ? (e.goNext(), KTUtil.scrollTop())
-																 : Swal.fire({
-																				text				: "Sorry, looks like there are some errors detected, please try again.",
-																				icon				: "error",
-																				buttonsStyling		: !1,
-																				confirmButtonText	: "Ok, got it!",
-																				customClass			: { confirmButton: "btn btn-light" },
-																 }).then(function () {
-																	KTUtil.scrollTop();
-																 }); }) : (e.goNext(), KTUtil.scrollTop());}),
-																 
-																 
-															 
-						
-						
-                        s.on("kt.stepper.previous", function (e) {
-							
-                              console.log("stepper.previous"), e.goPrevious(), KTUtil.scrollTop();
-                        }),
-                     
-                        a.push(
-                              FormValidation.formValidation(o,
-                              {
-                                 fields:
-                                 {
-                                  company_name:
-                                    {
-                                          validators: 
-                                          { 
-                                             notEmpty: 
-                                             { 
-                                                message: "Company name is required" 
-                                             } 
-                                          } 
-                                    },
-                                  name: {
-                                            validators: {
-                                                notEmpty: {
-                                                    message: "Name is required"
-                                                }
-                                            }
-                                        },
-                                    email:
-                                    {
-                                          validators:
-                                          {
-                                             notEmpty:
-                                             {
-                                                message: "Email is required"
-                                             },
-                                             emailAddress:
-                                             {
-                                                message: "The value is not a valid email address"
-                                             }
-                                          }
-                                    },                              
-                                    password:
-                                    {
-                                       validators:
-                                       {
-                                          notEmpty:
-                                          {
-                                             message: "Please enter password"
-                                          }
-                  
-                                       }
-                                    },	
-                                    password_confirmation:
-                                    {
-                                          validators:
-                                          {
-                                             notEmpty:
-                                             {
-                                                message: "Please enter confirm password"
-                                             },
-                                             identical: {
-                                                 compare: function() {
-                                                     return $('[name="password"]').val();
-                                                     },
-                                                     message: "The password and its confirm are not the same"
-                                                     }
-																																		
-                                          }
-                                    },
-                                    toc: 
-                                    { 
-                                       validators: 
-                                       { 
-                                          notEmpty: 
-                                          { 
-                                             message: "You must accept the terms and conditions" 
-                                          } 
-                                       } 
-                                    },
-                                 },
-                                 plugins:
-                                 {
-                                    trigger: new FormValidation.plugins.Trigger(),
-                                    bootstrap: new FormValidation.plugins.Bootstrap5({
-                                    													rowSelector		: '.fv-row',
-                                    													eleInvalidClass	: '',
-                                    													eleValidClass	: ''
-                                    												 })
-                                 }
-                              })
-                        ),
-                        a.push(
-                              FormValidation.formValidation(o, {
-                                 fields:
-                                 {
-                                    // team_size: 
-                                    // { 
-                                    //       validators: 
-                                    //       { 
-                                    //          notEmpty: 
-                                    //          { 
-                                    //             message: "Team size is required" 
-                                    //          } 
-                                    //       } 
-                                    // },
-                                    company_type: 
-                                    { 
-                                          validators: 
-                                          { 
-                                             notEmpty: 
-                                             { 
-                                                message: "Company type is required" 
-                                             } 
-                                          } 
-                                    },
-                                 },
-                                 plugins: { trigger: new FormValidation.plugins.Trigger(), bootstrap: new FormValidation.plugins.Bootstrap5({ rowSelector: ".fv-row", eleInvalidClass: "", eleValidClass: "" }) },
-                              })
-                        ),
-                        a.push(
-                              FormValidation.formValidation(o, {
-                                 fields:
-                                 {
-                                    website: 
-                                    { 
-                                          validators: 
-                                          { 
-                                             notEmpty: 
-                                             { 
-                                                message: "Website URL is required" 
-                                             } 
-                                          } 
-                                    },
-                                    specialties: 
-                                    { 
-                                          validators: 
-                                          { 
-                                             notEmpty: 
-                                             { 
-                                                message: "Specialties is required" 
-                                             } 
-                                          } 
-                                    },
-                                    contact_number: 
-                                    { 
-                                          validators: 
-                                          { 
-                                             notEmpty: 
-                                             { 
-                                                message: "Contact Number is required" 
-                                             },
-                                             digits: 
-                                             { 
-                                                message: "Contact Number must contain only digits" 
-                                             }, 
-                                             stringLength: 
-                                             { 
-                                                min: 10, 
-                                                max: 10, 
-                                                message: "Contact Number must contain 10 digits only" 
-                                             } 
-                                          } 
-                                    },
-                                    kt_tagify_work_location: 
-                                    { 
-                                          validators: 
-                                          { 
-                                             notEmpty: 
-                                             { 
-                                                message: "City is required" 
-                                             } 
-                                          } 
-                                    },
-                                 },
-                                 plugins: { trigger: new FormValidation.plugins.Trigger(), bootstrap: new FormValidation.plugins.Bootstrap5({ rowSelector: ".fv-row", eleInvalidClass: "", eleValidClass: "" }) },
-                              })
-                        ),
-                       
-                      
-						  r.addEventListener("click", function (t) {
-                              t.preventDefault(),
-                                 (r.disabled = !0),
-                                 r.setAttribute("data-kt-indicator", "on"),
-                                //  setTimeout(function () {
-                                          
-                                  $(this).prop("disabled", true);
-                                  r.setAttribute("disabled", true);
-                                  $(this).html(
-                                    `<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> <span class="indicator-label"> Submit <span class="svg-icon svg-icon-4 ms-2">
-                                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none">
-                                    <rect opacity="0.5" x="18" y="13" width="13" height="2" rx="1" transform="rotate(-180 18 13)" fill="black"></rect>
-                                    <path d="M15.4343 12.5657L11.25 16.75C10.8358 17.1642 10.8358 17.8358 11.25 18.25C11.6642 18.6642 12.3358 18.6642 12.75 18.25L18.2929 12.7071C18.6834 12.3166 18.6834 11.6834 18.2929 11.2929L12.75 5.75C12.3358 5.33579 11.6642 5.33579 11.25 5.75C10.8358 6.16421 10.8358 6.83579 11.25 7.25L15.4343 11.4343C15.7467 11.7467 15.7467 12.2533 15.4343 12.5657Z" fill="black"></path>
-                                  </svg>
-                                  </span> </span><span class="indicator-progress">Please wait... <span class="spinner-border spinner-border-sm align-middle ms-2"></span></span>`
-                                                    );
-                                  $('.indicator-label').hide();
-                                  $('.indicator-progress').show();
-                              if (!navigator.onLine) {
-                                  Swal.fire({ title: 'No Internet', text: 'You are currently offline or the server is unreachable.', icon: 'warning', confirmButtonText: 'Ok, got it!', customClass: { confirmButton: 'btn btn-warning' } });
-                                  $('.indicator-label').show(); $('.indicator-progress').hide();
-                                  r.removeAttribute('data-kt-indicator'); r.disabled = false;
-                                  return;
-                              }
-                              $.ajax({
-                                    url			: "{{route('company-register')}}",
-                                    container	: '#kt_create_account_form',
-                                    type		: "POST",
-                                    data		: $('#kt_create_account_form').serialize(),
-                                    success: function(response) 
-                                    {
-                                       $('.indicator-label').hide();
-                                       $('.indicator-progress').show();
-                                          //alert(response.status); 
-                                          // $('#kt_create_account_form').trigger("reset");
-                                          if(response.status=='success')
-                                          {	
-                                            $('#kt_create_account_form').trigger("reset");
-                                            Swal.fire("Sent!", "Your account has been created successfully.\n Check your email to activate your account.", "success");
-                                            
-                                            $('#upgrade-plan').html(response.view);
-                                          }
-                                          else
-                                          {
-                                            
-                                            $('.indicator-label').show();
-                                            $('.indicator-progress').hide();
-                                            Swal.fire("Error!", "Your need to fill all the form fields!", "error");
-                                          }
+          // Contact Number AJAX check handler
+          $(o.querySelector('[name="contact_number"]')).on("change", function () {            
+            var contact_number = $("input[name=contact_number]").val();
+            if(contact_number != '' && contact_number.length === 10) {
+              $('.page-loader').css('display', 'flex');
+              $.ajax({
+                url: "{{route('contact-company-register-chk')}}",
+                container: '#kt_create_account_form',
+                type: "POST",
+                data: $('#kt_create_account_form').serialize(),
+                success: function(response) {
+                  $('.page-loader').css('display', 'none');
+                  if(response.status == 'fail') {
+                    $("input[name=contact_number]").val('');
+                    if (a[2]) { a[2].revalidateField('contact_number'); }
+                    Swal.fire({
+                      text: "Sorry, Contact Number ["+contact_number+"] is already registered, Please use another Contact Number.",
+                      icon: "error",
+                      buttonsStyling: !1,
+                      confirmButtonText: "Ok, got it!",
+                      customClass: { confirmButton: "btn btn-light" },
+                    }).then(function () {
+                      scrollToTop();
+                    });
+                  }
+                },
+                error: function(xhr) {
+                  $('.page-loader').css('display', 'none');
+                  if (xhr.status === 0 || !navigator.onLine) {
+                    Swal.fire({ title: 'No Internet', text: 'You are currently offline or the server is unreachable.', icon: 'warning', confirmButtonText: 'Ok, got it!', customClass: { confirmButton: 'btn btn-warning' } });
+                  } else {
+                    Swal.fire('Error!', 'Something went wrong. Please try again.', 'error');
+                  }
+                }
+              });
+            }  	
+          }),
 
-                                          
+          // Website check handler
+          $(o.querySelector('[name="website"]')).on("change", function () {            
+            var website = $("input[name=website]").val();
+            if(website != '') {
+              $('.page-loader').css('display', 'flex');
+              $.ajax({
+                url: "{{route('domain-company-register-chk')}}",
+                container: '#kt_create_account_form',
+                type: "POST",
+                data: $('#kt_create_account_form').serialize(),
+                success: function(response) {
+                  $('.page-loader').css('display', 'none');
+                  if(response.status == 'fail') {
+                    $("input[name=website]").val('');
+                    Swal.fire({
+                      title: 'Account Already Exists',
+                      html: 'An account is already registered on <strong>Jero.Works</strong> using <strong><a href="javascript:void();">'+response.company_email+'</a></strong> <br><br>If you’ve forgotten your password, please use the <strong>“Forgot Password”</strong> option to log in.<br><br>If this email doesn’t belong to your organization, contact us at <a href="mailto:support@jero.works"> support@jero.works</a>.<br><br>Please avoid creating multiple accounts for the same organization. Duplicate accounts may lead to suspension.',
+                      icon: "warning",
+                      width: '800px',
+                      buttonsStyling: !1,
+                      confirmButtonText: "Ok, got it!",
+                      customClass: { confirmButton: "btn btn-light" },
+                    }).then(function () {
+                      scrollToTop();
+                    });
+                  }
+                },
+                error: function(xhr) {
+                  $('.page-loader').css('display', 'none');
+                  if (xhr.status === 0 || !navigator.onLine) {
+                    Swal.fire({ title: 'No Internet', text: 'You are currently offline or the server is unreachable.', icon: 'warning', confirmButtonText: 'Ok, got it!', customClass: { confirmButton: 'btn btn-warning' } });
+                  } else {
+                    Swal.fire('Error!', 'Something went wrong. Please try again.', 'error');
+                  }
+                }
+              });
+            }  	
+          })
+        );
+      }
+    };
+  })();
 
-                                    },
-                                     error: function(xhr) {
-                                             $('.indicator-label').show();
-                                             $('.indicator-progress').hide();
-                                             r.removeAttribute('data-kt-indicator'); r.disabled = false;
-                                             if (xhr.status === 0 || !navigator.onLine) {
-                                                 Swal.fire({ title: 'No Internet', text: 'You are currently offline or the server is unreachable. Please check your connection and try again.', icon: 'warning', confirmButtonText: 'Ok, got it!', customClass: { confirmButton: 'btn btn-warning' } });
-                                             } else {
-                                                 Swal.fire('Error!', 'Something went wrong (HTTP ' + xhr.status + '). Please try again.', 'error');
-                                             }
-                                     }
-                              }),
-      
-                                          
-                  r.removeAttribute("data-kt-indicator"),
-                     (r.disabled = !1)
-					 
-                    //  }, 2e3);
-                        }),
-						
-						
-						
-						  $(o.querySelector('[name="email"]')).on("change", function () {            
-							  		var email  = $("input[name=email]").val();
-										if(email != '')
-										{
-                      $('.page-loader').css('display', 'flex');
-												$.ajax({
-														url: "{{route('company-register-chk')}}",
-														container: '#kt_create_account_form',
-														type: "POST",
-														data: $('#kt_create_account_form').serialize(),
-														success: function(response) {
-                              $('.page-loader').css('display', 'none');
-                                                if(response.status == 'fail')
-                                                {
-                                                  //$('#kt_create_account_form').trigger("reset");
-                                                
-                                                  $("input[name=email]").val('');
-                                                  //new FormValidation.plugins.Trigger();
-                                                
-                                                
-                                                  "Valid" == t ? (e.goNext(), KTUtil.scrollTop())
-                                                  : Swal.fire({
-                                                            text				: "Sorry, Email ["+email+"]  is already registered, Please use another email.",
-                                                            icon				: "error",
-                                                            buttonsStyling		: !1,
-                                                            confirmButtonText	: "Ok, got it!",
-                                                            customClass			: { confirmButton: "btn btn-light" },
-                                                  }).then(function () {
-                                                    KTUtil.scrollTop();
-                                                  }); 
-                            
-                                                } else if(response.status == 'emailchecker'){
-                                                   $("input[name=email]").val('');
-                                                    //new FormValidation.plugins.Trigger();
-                                                  
-                                                  
-                                                    "Valid" == t ? (e.goNext(), KTUtil.scrollTop())
-                                                    : Swal.fire({
-                                                              text				: response.message,
-                                                              icon				: "error",
-                                                              buttonsStyling		: !1,
-                                                              confirmButtonText	: "Ok, got it!",
-                                                              customClass			: { confirmButton: "btn btn-light" },
-                                                    }).then(function () {
-                                                      KTUtil.scrollTop();
-                                                    }); 
-
-                                                } else {
-                                                  $('.verification_email').val(email);
-                                                }
-												 
-												 
-																					},
-																					error: function(xhr) {
-																						$('.page-loader').css('display', 'none');
-																						if (xhr.status === 0 || !navigator.onLine) {
-																							Swal.fire({ title: 'No Internet', text: 'You are currently offline or the server is unreachable.', icon: 'warning', confirmButtonText: 'Ok, got it!', customClass: { confirmButton: 'btn btn-warning' } });
-																						} else {
-																							Swal.fire('Error!', 'Something went wrong. Please try again.', 'error');
-																						}
-																					}
-													});
-																				
-                                    		
-                    }  	
-											   
-              }),
-
-              $(o.querySelector('[name="contact_number"]')).on("change", function () {            
-							  		var contact_number  = $("input[name=contact_number]").val();
-										if(contact_number != '')
-										{
-                      $('.page-loader').css('display', 'flex');
-												$.ajax({
-														url: "{{route('contact-company-register-chk')}}",
-														container: '#kt_create_account_form',
-														type: "POST",
-														data: $('#kt_create_account_form').serialize(),
-														success: function(response) {
-                              $('.page-loader').css('display', 'none');
-                                                if(response.status == 'fail')
-                                                {
-                                                  //$('#kt_create_account_form').trigger("reset");
-                                                
-                                                  $("input[name=contact_number]").val('');
-                                                  //new FormValidation.plugins.Trigger();
-                                                
-                                                
-                                                  "Valid" == t ? (e.goNext(), KTUtil.scrollTop())
-                                                  : Swal.fire({
-                                                            text				: "Sorry, Contact Number ["+contact_number+"]  is already registered, Please use another Contact Number.",
-                                                            icon				: "error",
-                                                            buttonsStyling		: !1,
-                                                            confirmButtonText	: "Ok, got it!",
-                                                            customClass			: { confirmButton: "btn btn-light" },
-                                                  }).then(function () {
-                                                    KTUtil.scrollTop();
-                                                  }); 
-                            
-                                                }
-                                                else
-                                                {
-                                                  $('#contact_number').val(contact_number);
-                                                }
-																					},
-																					error: function(xhr) {
-																						$('.page-loader').css('display', 'none');
-																						if (xhr.status === 0 || !navigator.onLine) {
-																							Swal.fire({ title: 'No Internet', text: 'You are currently offline or the server is unreachable.', icon: 'warning', confirmButtonText: 'Ok, got it!', customClass: { confirmButton: 'btn btn-warning' } });
-																						} else {
-																							Swal.fire('Error!', 'Something went wrong. Please try again.', 'error');
-																						}
-																					}
-													});             		
-                    }  	
-											   
-              }),
-
-              $(o.querySelector('[name="website"]')).on("change", function () {            
-							  		var website  = $("input[name=website]").val();
-                    
-										if(website != '')
-										{
-                      $('.page-loader').css('display', 'flex');
-												$.ajax({
-														url: "{{route('domain-company-register-chk')}}",
-														container: '#kt_create_account_form',
-														type: "POST",
-														data: $('#kt_create_account_form').serialize(),
-														success: function(response) {
-                              $('.page-loader').css('display', 'none');
-                                                if(response.status == 'fail')
-                                                {
-                                                  //$('#kt_create_account_form').trigger("reset");
-                                                
-                                                  $("input[name=website]").val('');
-                                                  //new FormValidation.plugins.Trigger();
-                                                
-                                                
-                                                  "Valid" == t ? (e.goNext(), KTUtil.scrollTop())
-                                                  : Swal.fire({
-                                                            title:'Account Already Exists',
-                                                            html				: 'An account is already registered on <strong>Jero.Works</strong> using <strong><a href="javascript:void();">'+response.company_email+'</a></strong> <br><br>If you’ve forgotten your password, please use the <strong>“Forgot Password”</strong> option to log in.<br><br>If this email doesn’t belong to your organization, contact us at <a href="mailto:support@jero.works"> support@jero.works</a>.</strong><br><br><strong></strong> Please avoid creating multiple accounts for the same organization. Duplicate accounts may lead to suspension.',
-                                                            icon				: "warning",
-                                                            width: '800px', // Large width
-                                                            buttonsStyling		: !1,
-                                                            confirmButtonText	: "Ok, got it!",
-                                                            customClass			: { confirmButton: "btn btn-light" },
-                                                  }).then(function () {
-                                                    KTUtil.scrollTop();
-                                                  }); 
-                            
-                                                }
-                                                else
-                                                {
-                                                  $('[name="website"]').val(website);
-                                                }
-																					},
-																					error: function(xhr) {
-																						$('.page-loader').css('display', 'none');
-																						if (xhr.status === 0 || !navigator.onLine) {
-																							Swal.fire({ title: 'No Internet', text: 'You are currently offline or the server is unreachable.', icon: 'warning', confirmButtonText: 'Ok, got it!', customClass: { confirmButton: 'btn btn-warning' } });
-																						} else {
-																							Swal.fire('Error!', 'Something went wrong. Please try again.', 'error');
-																						}
-																					}
-													});             		
-                    }  	
-											   
-              }),
-						
-              $(o.querySelector('[name="card_expiry_month"]')).on("change", function () {
-                    a[3].revalidateField("card_expiry_month");
-              }),
-              $(o.querySelector('[name="card_expiry_year"]')).on("change", function () {
-                    a[3].revalidateField("card_expiry_year");
-              }),
-              $(o.querySelector('[name="business_type"]')).on("change", function () {
-                    a[2].revalidateField("business_type");
-              }));
-            },
-         };
-      })();
-      KTUtil.onDOMContentLoaded(function () {
-         KTCreateAccount.init();
-      });         
-   });         
+  KTUtil.onDOMContentLoaded(function () {
+    KTCreateAccount.init();
+  });         
+});         
 </script>
-<!--end::Validation-->
 @endsection
