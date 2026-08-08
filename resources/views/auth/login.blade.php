@@ -1,408 +1,510 @@
 @extends('layouts.metronic_front_app')
-<title>Jero - Login</title>
+<title>jero.works - Login</title>
 
 <style>
-/* ── V2 Login ── */
+/* ── Tokens ────────────────────────────────────────────────── */
 :root {
-    --p:  #F5A623;
-    --ph: #E8960D;
-    --pl: #FFF3DC;
-    --lbg: #FFF9EC;
-    --rbg: #FFFFFF;
-    --dk: #111827;
-    --gr: #6b7280;
-    --bd: #E5E7EB;
+    --pri:    #2E66FF;          /* primary blue */
+    --pri-h:  #1F4FE0;
+    --pri-l:  #EEF2FF;
+    --acc:    #FF7A1A;          /* orange accent */
+    --acc-h:  #E86608;
+    --acc-l:  #FFF1E5;
+    --bg-pg:  #F6F7FB;          /* outer page background */
+    --bg-pn:  #F1EEFB;          /* left panel lavender */
+    --bg-card:#FFFFFF;
+    --dk:     #111827;
+    --tx:     #1F2937;
+    --gr:     #6B7280;
+    --gr-l:   #9CA3AF;
+    --bd:     #E5E7EB;
+    --bd-l:   #EEF1F6;
+    --ok:     #16A34A;
+    --ok-l:   #E8F8EE;
+    --p-purple:#F1ECFE;
+    --p-green: #E7F6EC;
+    --p-orange:#FFEDDC;
+    --p-pink:  #FFE6EE;
+    --p-blue:  #E2ECFF;
 }
 html, body { margin: 0 !important; padding: 0 !important; }
+body { background: var(--bg-pg); font-family: 'Poppins', sans-serif; }
 
-/* ── Shell centers the page on ultra-wide screens ── */
-.v2-shell {
-    display: flex;
-    width: 100%;
+/* ── Outer shell (centered on ultra-wide) ──────────────────── */
+.jw-shell {
     min-height: 100vh;
-    overflow: hidden;
+    width: 100%;
+    display: flex;
     align-items: stretch;
-    background: #fff;
+    background: var(--bg-pg);
 }
-.v2-page {
+.jw-page {
     display: flex;
+    flex: 1;
     width: 100%;
     min-height: 100vh;
-    overflow: hidden;
 }
-.v2-page * { box-sizing: border-box; font-family: 'Poppins', sans-serif; }
+.jw-page * { box-sizing: border-box; font-family: 'Poppins', sans-serif; }
 
-/* ═══════════ LEFT PANEL ═══════════ */
-.v2-left {
-    width: 635px;
-    flex-shrink: 0;
-    background: var(--lbg);
+/* ═══════════════ LEFT PANEL ═══════════════ */
+.jw-left {
+    flex: 1.15;
+    background: var(--bg-pn);
+    padding: 36px 48px 28px;
     display: flex;
     flex-direction: column;
-    padding: 36px 40px 0;
     position: relative;
     overflow: hidden;
-    height: 100vh;
-}
-
-/* Logo */
-.v2-logo { display: flex; align-items: center; gap: 12px; text-decoration: none; margin-bottom: 32px; }
-.v2-logo-text { font-size: 26px; font-weight: 800; color: var(--dk); letter-spacing: -0.5px; line-height: 1; }
-
-/* Hero */
-.v2-hero { margin-bottom: 24px; }
-.v2-hero h1 { font-size: 32px; font-weight: 800; line-height: 1.18; color: var(--dk); margin: 0 0 10px; letter-spacing: -0.6px; }
-.v2-hero h1 .acc { color: var(--p); }
-.v2-hero p { font-size: 13.5px; color: var(--gr); line-height: 1.6; margin: 0; }
-
-/* Features */
-.v2-feats { display: flex; flex-direction: column; gap: 14px; margin-bottom: 0; }
-.v2-feat { display: flex; align-items: flex-start; gap: 16px; }
-.v2-feat-ico {
-    width: 46px; height: 46px; border-radius: 12px;
-    background: var(--pl);
-    display: flex; align-items: center; justify-content: center;
-    flex-shrink: 0;
-}
-.v2-feat-body strong { display: block; font-size: 14px; font-weight: 700; color: var(--dk); margin-bottom: 3px; line-height: 1.3; }
-.v2-feat-body span { font-size: 12px; color: var(--gr); }
-
-/* (testimonial removed) */
-
-/* Testimonial card */
-.v2-testi {
-    position: relative;
-    z-index: 2;
-    background: rgba(255,255,255,0.85);
-    backdrop-filter: blur(6px);
-    -webkit-backdrop-filter: blur(6px);
-    border: 1px solid rgba(255,255,255,0.9);
-    border-radius: 14px;
-    padding: 14px 18px;
-    margin-top: 18px;
-    margin-bottom: 110px;
-    box-shadow: 0 6px 20px rgba(180,130,30,0.10);
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    max-width: 100%;
-}
-.v2-testi-q {
-    display: flex; align-items: flex-start; gap: 8px;
-    font-size: 12.5px; color: var(--dk); line-height: 1.55; font-weight: 500;
-}
-.v2-testi-q .qmark {
-    color: var(--p); font-size: 22px; line-height: 0.9; font-weight: 800; flex-shrink: 0;
-    font-family: Georgia, serif;
-}
-.v2-testi-foot {
-    display: flex; align-items: center; gap: 10px;
-}
-.v2-testi-avatar {
-    width: 32px; height: 32px; border-radius: 50%;
-    background: linear-gradient(135deg, #F5C840 0%, #E8960D 100%);
-    color: #fff; font-size: 12px; font-weight: 700;
-    display: flex; align-items: center; justify-content: center;
-    flex-shrink: 0; letter-spacing: 0.3px;
-    box-shadow: 0 2px 6px rgba(232,150,13,0.30);
-}
-.v2-testi-meta strong {
-    display: block; font-size: 13px; font-weight: 700; color: var(--dk); line-height: 1.2;
-}
-.v2-testi-meta span {
-    display: block; font-size: 11.5px; color: var(--gr); line-height: 1.3;
-}
-
-/* City skyline */
-.v2-city { position: absolute; bottom: 0; left: 0; right: 0; line-height: 0; z-index: 1; }
-.v2-cloud {
-    position: absolute; bottom: 0; left: 0; right: 0; line-height: 0;
-    z-index: 0; pointer-events: none;
-}
-
-/* ═══════════ RIGHT PANEL ═══════════ */
-.v2-right {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    background: var(--rbg);
     min-width: 0;
 }
 
-/* Help bar */
-.v2-help {
-    display: flex; align-items: center; justify-content: flex-end;
-    gap: 10px; padding: 20px 48px; flex-shrink: 0;
+/* Brand mark */
+.jw-brand { display: flex; align-items: center; gap: 10px; text-decoration: none; margin-bottom: 4px; }
+.jw-brand-name {
+    font-size: 22px; font-weight: 800; color: var(--dk);
+    letter-spacing: -0.5px; line-height: 1;
 }
-.v2-help-ico { color: var(--gr); display: flex; align-items: center; }
-.v2-help-need { font-size: 13px; color: var(--dk); }
-.v2-help-sep { color: #d1d5db; font-size: 15px; }
-.v2-help a { font-size: 13px; text-decoration: none; }
-.v2-help a.lc { color: var(--p); font-weight: 700; }
-.v2-help a.hc { color: var(--gr); }
-.v2-help a:hover { opacity: .8; }
+.jw-brand-sub {
+    display: block; font-size: 11px; color: var(--gr);
+    font-weight: 500; margin-top: 2px; margin-left: 38px;
+}
 
-/* Right body */
-.v2-body {
-    flex: 1; display: flex; flex-direction: column;
-    align-items: center; justify-content: center;
-    padding: 12px 48px 20px;
+/* Decorative dotted grid (top-right of left panel) */
+.jw-dots {
+    position: absolute;
+    top: 40px;
+    right: 60px;
+    width: 140px;
+    height: 80px;
+    pointer-events: none;
+    opacity: 0.7;
+}
+.jw-dots svg { width: 100%; height: 100%; }
+
+/* Hero */
+.jw-hero { margin: 28px 0 26px; max-width: 580px; }
+.jw-hero h1 {
+    font-size: 44px;
+    font-weight: 800;
+    color: var(--dk);
+    line-height: 1.12;
+    letter-spacing: -1px;
+    margin: 0 0 14px;
+}
+.jw-hero h1 .acc { color: var(--acc); }
+.jw-hero p {
+    font-size: 14px; color: var(--gr); line-height: 1.55; margin: 0; font-weight: 400;
+}
+
+/* 3 persona cards */
+.jw-cards {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 14px;
+    margin-bottom: 22px;
+}
+.jw-card {
+    background: var(--bg-card);
+    border-radius: 14px;
+    padding: 16px 16px 0;
+    border: 1px solid rgba(0,0,0,0.04);
+    box-shadow: 0 2px 10px rgba(60,40,140,0.06);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    position: relative;
+}
+.jw-card-badge {
+    display: inline-block;
+    font-size: 10px; font-weight: 700;
+    padding: 5px 10px;
+    border-radius: 999px;
+    letter-spacing: 0.3px;
+    margin-bottom: 10px;
+    text-transform: uppercase;
+}
+.jw-card-badge.b-comp  { background: var(--p-blue);   color: var(--pri); }
+.jw-card-badge.b-agc   { background: var(--p-green);  color: #15803D; }
+.jw-card-badge.b-tal   { background: var(--p-purple); color: #6D28D9; }
+.jw-card-title {
+    font-size: 15px; font-weight: 700; color: var(--dk);
+    line-height: 1.3; margin: 0 0 6px;
+}
+.jw-card-desc {
+    font-size: 12px; color: var(--gr); line-height: 1.5;
+    margin: 0 0 12px;
+}
+.jw-card-illu {
+    margin-top: auto;
+    height: 100px;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    padding-bottom: 0;
+}
+.jw-card-illu svg { width: 100%; height: 100%; display: block; }
+
+/* Stats bar */
+.jw-stats {
+    background: var(--bg-card);
+    border-radius: 14px;
+    padding: 16px 22px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border: 1px solid rgba(0,0,0,0.04);
+    box-shadow: 0 2px 10px rgba(60,40,140,0.05);
+    gap: 12px;
+}
+.jw-stat { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.jw-stat-ico {
+    width: 36px; height: 36px; border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+}
+.jw-stat-ico.s-people { background: var(--p-blue); }
+.jw-stat-ico.s-jobs   { background: var(--p-green); }
+.jw-stat-ico.s-cand   { background: var(--p-pink); }
+.jw-stat-ico.s-up     { background: var(--p-orange); }
+.jw-stat-meta strong {
+    display: block; font-size: 15px; font-weight: 800; color: var(--dk);
+    line-height: 1.1; letter-spacing: -0.3px;
+}
+.jw-stat-meta span {
+    display: block; font-size: 11px; color: var(--gr); line-height: 1.2;
+}
+
+/* Footer (left panel bottom) */
+.jw-left-foot {
+    margin-top: 22px;
+    display: flex; align-items: center; justify-content: space-between;
+    font-size: 12px; color: var(--gr);
+    gap: 16px; flex-wrap: wrap;
+}
+.jw-left-foot a { color: var(--gr); text-decoration: none; }
+.jw-left-foot a:hover { color: var(--dk); }
+.jw-left-foot .links { display: flex; gap: 22px; flex-wrap: wrap; }
+.jw-locale {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: var(--bg-card);
+    border: 1px solid var(--bd);
+    padding: 6px 12px; border-radius: 8px;
+    font-size: 12px; font-weight: 600; color: var(--dk); cursor: pointer;
+}
+
+/* ═══════════════ RIGHT PANEL ═══════════════ */
+.jw-right {
+    flex: 1;
+    background: var(--bg-pg);
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    position: relative;
+}
+
+/* Top bar (right) */
+.jw-top {
+    display: flex; align-items: center; justify-content: flex-end;
+    gap: 12px; padding: 28px 48px 0;
+    font-size: 13px; color: var(--gr);
+}
+.jw-top-cta {
+    color: var(--pri); text-decoration: none; font-weight: 500;
+}
+.jw-top-btn {
+    background: transparent;
+    color: var(--pri);
+    border: 1.5px solid var(--pri);
+    border-radius: 8px;
+    padding: 8px 16px;
+    font-size: 13px; font-weight: 600;
+    cursor: pointer; text-decoration: none;
+    transition: background .2s, color .2s;
+}
+.jw-top-btn:hover { background: var(--pri); color: #fff; }
+
+/* Right body (centered card) */
+.jw-body {
+    flex: 1;
+    display: flex; align-items: center; justify-content: center;
+    padding: 24px 48px 32px;
     overflow-y: auto;
 }
 
 /* Card */
-.v2-card {
-    width: 100%; max-width: 640px;
-    background: #fff;
-    border: 1px solid #E8E8E8;
-    border-radius: 16px;
-    padding: 32px 40px;
-    box-shadow: 0 2px 24px rgba(0,0,0,.06);
-    margin-bottom: 14px;
+.jw-card-form {
+    width: 100%;
+    max-width: 540px;
+    background: var(--bg-card);
+    border: 1px solid var(--bd-l);
+    border-radius: 18px;
+    padding: 36px 40px 28px;
+    box-shadow: 0 4px 30px rgba(40,30,90,0.07);
 }
-.v2-card-title { font-size: 24px; font-weight: 800; color: var(--dk); margin: 0 0 4px; letter-spacing: -0.3px; }
-.v2-card-sub { font-size: 13px; color: var(--gr); margin: 0 0 22px; }
+.jw-card-form h2 {
+    font-size: 26px; font-weight: 800; color: var(--dk);
+    margin: 0 0 6px; letter-spacing: -0.4px; text-align: center;
+}
+.jw-card-form .sub {
+    font-size: 13px; color: var(--gr); text-align: center;
+    margin: 0 0 26px;
+}
 
-/* Alerts */
-.v2-alert { border-radius: 8px; padding: 10px 14px; font-size: 12.5px; margin-bottom: 16px; line-height: 1.5; }
-.v2-alert-err { background: #fef2f2; color: #b91c1c; border: 1px solid #fee2e2; }
-.v2-alert-ok  { background: #f0fdf4; color: #15803d; border: 1px solid #bbf7d0; }
-.v2-err { font-size: 11.5px; color: #dc2626; margin-top: 4px; display: block; }
+/* Alerts (preserve existing behavior) */
+.jw-alert {
+    border-radius: 8px; padding: 10px 14px;
+    font-size: 12.5px; margin-bottom: 16px; line-height: 1.5;
+}
+.jw-alert-err { background: #FEF2F2; color: #B91C1C; border: 1px solid #FEE2E2; }
+.jw-alert-ok  { background: #F0FDF4; color: #15803D; border: 1px solid #BBF7D0; }
+.jw-err { font-size: 11.5px; color: #DC2626; margin-top: 4px; display: block; }
 
 /* Field */
-.v2-field { margin-bottom: 16px; }
-.v2-field > label { display: block; font-size: 13px; font-weight: 600; color: var(--dk); margin-bottom: 6px; }
-.v2-iw { position: relative; display: flex; align-items: center; }
-.v2-iw .il { position: absolute; left: 15px; color: #9ca3af; display: flex; pointer-events: none; }
-.v2-iw .ir { position: absolute; right: 15px; color: #9ca3af; display: flex; cursor: pointer; }
-.v2-inp {
-    width: 100%; height: 48px;
+.jw-field { margin-bottom: 16px; }
+.jw-field > label {
+    display: block; font-size: 13px; font-weight: 600;
+    color: var(--dk); margin-bottom: 6px;
+}
+.jw-iw { position: relative; display: flex; align-items: center; }
+.jw-iw .il {
+    position: absolute; left: 14px; color: var(--gr-l);
+    display: flex; pointer-events: none;
+}
+.jw-iw .ir {
+    position: absolute; right: 14px; color: var(--gr-l);
+    display: flex; cursor: pointer;
+}
+.jw-inp {
+    width: 100%; height: 46px;
     border: 1.5px solid var(--bd); border-radius: 10px;
-    padding: 0 48px;
-    font-size: 14px; font-family: 'Poppins', sans-serif; color: var(--dk);
-    outline: none; background: #fff;
+    padding: 0 44px;
+    font-size: 14px; font-family: 'Poppins', sans-serif;
+    color: var(--dk); outline: none; background: #fff;
     transition: border-color .2s, box-shadow .2s;
 }
-.v2-inp::placeholder { color: #9ca3af; }
-.v2-inp:focus { border-color: var(--p); box-shadow: 0 0 0 3px rgba(245,166,35,.12); }
+.jw-inp::placeholder { color: var(--gr-l); }
+.jw-inp:focus { border-color: var(--pri); box-shadow: 0 0 0 3px rgba(46,102,255,0.12); }
+.jw-inp.is-ok { border-color: var(--ok); }
+.jw-inp.is-ok:focus { box-shadow: 0 0 0 3px rgba(22,163,74,0.14); }
+.jw-iw .ok-mark {
+    position: absolute; right: 14px; color: var(--ok);
+    display: flex; pointer-events: none;
+}
 
 /* Mid row */
-.v2-mid { display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; }
-.v2-rem { display: flex; align-items: center; gap: 9px; }
-.v2-rem input[type=checkbox] { width: 19px; height: 19px; accent-color: var(--p); cursor: pointer; flex-shrink: 0; border-radius: 4px; }
-.v2-rem label { font-size: 13.5px; color: var(--dk); cursor: pointer; margin: 0; user-select: none; }
-.v2-fgt { font-size: 13.5px; font-weight: 600; color: var(--p); text-decoration: none; cursor: pointer; }
-.v2-fgt:hover { text-decoration: underline; color: var(--ph); }
-
-/* Captcha */
-.v2-cap-lbl { font-size: 13px; font-weight: 600; color: var(--dk); margin-bottom: 6px; }
-.v2-cap-row { display: flex; align-items: center; gap: 10px; margin-bottom: 18px; }
-.v2-cap-img {
-    width: 110px; height: 48px; border: 1.5px solid var(--bd); border-radius: 10px;
-    overflow: hidden; background: #f9fafb;
-    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+.jw-mid {
+    display: flex; align-items: center; justify-content: space-between;
+    margin: 4px 0 18px;
 }
-.v2-cap-img img { height: 44px; width: auto; object-fit: contain; }
-.v2-cap-btn {
+.jw-rem { display: flex; align-items: center; gap: 8px; }
+.jw-rem input[type=checkbox] {
+    width: 17px; height: 17px; accent-color: var(--pri);
+    cursor: pointer; flex-shrink: 0; border-radius: 4px;
+}
+.jw-rem label { font-size: 13px; color: var(--tx); cursor: pointer; user-select: none; }
+.jw-fgt {
+    font-size: 13px; font-weight: 600; color: var(--pri);
+    text-decoration: none; cursor: pointer;
+}
+.jw-fgt:hover { text-decoration: underline; color: var(--pri-h); }
+
+/* Captcha row */
+.jw-cap-lbl {
+    font-size: 13px; font-weight: 600; color: var(--dk);
+    margin-bottom: 6px;
+}
+.jw-cap-row {
+    display: flex; align-items: center; gap: 10px; margin-bottom: 18px;
+}
+.jw-cap-img {
+    width: 110px; height: 46px; border: 1.5px solid var(--bd);
+    border-radius: 10px; overflow: hidden;
+    background: #F9FAFB;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+}
+.jw-cap-img img { height: 42px; width: auto; object-fit: contain; }
+.jw-cap-btn {
     display: inline-flex; align-items: center; gap: 6px;
-    height: 48px; padding: 0 14px;
-    border: 1.5px solid var(--bd); border-radius: 10px;
-    background: #fff; color: var(--p);
-    font-size: 13px; font-weight: 600; font-family: 'Poppins', sans-serif;
-    cursor: pointer; white-space: nowrap; flex-shrink: 0;
-    transition: background .2s;
+    background: transparent; color: var(--pri);
+    font-size: 13px; font-weight: 600; cursor: pointer;
+    border: none; padding: 0 4px; white-space: nowrap;
+    flex-shrink: 0;
 }
-.v2-cap-btn:hover { background: var(--pl); }
-.v2-cap-field { flex: 1; }
-.v2-cap-inp {
-    width: 100%; height: 48px;
+.jw-cap-btn:hover { color: var(--pri-h); }
+.jw-cap-field { flex: 1; position: relative; }
+.jw-cap-inp {
+    width: 100%; height: 46px;
     border: 1.5px solid var(--bd); border-radius: 10px;
-    padding: 0 16px; font-size: 16px; letter-spacing: 5px; font-weight: 700;
-    font-family: 'Poppins', sans-serif; outline: none; background: #fff; color: var(--dk);
-    transition: border-color .2s;
+    padding: 0 14px; padding-right: 40px;
+    font-size: 16px; letter-spacing: 4px; font-weight: 700;
+    font-family: 'Poppins', sans-serif; outline: none; background: #fff;
+    color: var(--dk); transition: border-color .2s;
 }
-.v2-cap-inp:focus { border-color: var(--p); box-shadow: 0 0 0 3px rgba(245,166,35,.12); }
+.jw-cap-inp:focus { border-color: var(--pri); box-shadow: 0 0 0 3px rgba(46,102,255,0.12); }
+.jw-cap-inp.is-ok { border-color: var(--ok); }
+.jw-cap-field .ok-mark { right: 12px; }
 
-/* Login button */
-.v2-btn {
-    display: flex; align-items: center; justify-content: center; gap: 11px;
-    width: 100%; height: 52px;
-    background: var(--p); color: #fff;
-    border: none; border-radius: 12px;
-    font-size: 16px; font-weight: 700; font-family: 'Poppins', sans-serif;
-    cursor: pointer; letter-spacing: .2px;
-    transition: background .2s, box-shadow .2s;
-    box-shadow: 0 4px 16px rgba(245,166,35,.38);
+/* Sign-in button (BLUE with arrow) */
+.jw-btn {
+    display: flex; align-items: center; justify-content: center; gap: 10px;
+    width: 100%; height: 50px;
+    background: var(--pri); color: #fff;
+    border: none; border-radius: 10px;
+    font-size: 15px; font-weight: 600;
+    font-family: 'Poppins', sans-serif; cursor: pointer;
+    transition: background .2s, box-shadow .2s, transform .05s;
+    box-shadow: 0 4px 14px rgba(46,102,255,0.30);
+    letter-spacing: 0.2px;
 }
-.v2-btn:hover { background: var(--ph); box-shadow: 0 6px 22px rgba(245,166,35,.48); }
+.jw-btn:hover { background: var(--pri-h); box-shadow: 0 6px 20px rgba(46,102,255,0.40); }
+.jw-btn:active { transform: translateY(1px); }
+.jw-btn .arrow { display: flex; }
 
 /* Forgot form extras */
-.v2-fgt-acts { display: flex; gap: 12px; margin-top: 18px; }
-.v2-fgt-sub {
-    flex: 1; height: 54px; background: var(--p); color: #fff;
+.jw-fgt-acts { display: flex; gap: 12px; margin-top: 18px; }
+.jw-fgt-sub {
+    flex: 1; height: 50px; background: var(--pri); color: #fff;
     border: none; border-radius: 10px;
-    font-size: 15px; font-weight: 700; font-family: 'Poppins', sans-serif;
-    cursor: pointer; transition: background .2s;
+    font-size: 14px; font-weight: 600;
+    font-family: 'Poppins', sans-serif; cursor: pointer;
+    transition: background .2s;
 }
-.v2-fgt-sub:hover { background: var(--ph); }
-.v2-fgt-cancel {
-    height: 54px; padding: 0 22px; background: #f3f4f6; color: #374151;
-    border: none; border-radius: 10px; font-size: 14px; font-weight: 600;
+.jw-fgt-sub:hover { background: var(--pri-h); }
+.jw-fgt-cancel {
+    height: 50px; padding: 0 20px; background: #F3F4F6; color: #374151;
+    border: none; border-radius: 10px;
+    font-size: 14px; font-weight: 600;
     font-family: 'Poppins', sans-serif; text-decoration: none;
-    display: inline-flex; align-items: center; cursor: pointer; transition: background .2s;
+    display: inline-flex; align-items: center; cursor: pointer;
+    transition: background .2s;
 }
-.v2-fgt-cancel:hover { background: #e5e7eb; color: #374151; }
+.jw-fgt-cancel:hover { background: #E5E7EB; color: #374151; }
 
-/* Security strip */
-.v2-sec {
-    width: 100%; max-width: 640px;
-    background: var(--pl);
-    border: 1px solid rgba(245,166,35,.2);
+/* Trust strip (below sign-in card) */
+.jw-trust {
+    width: 100%; max-width: 540px;
+    margin-top: 16px;
+    background: var(--bg-card);
+    border: 1px solid var(--bd-l);
     border-radius: 14px;
-    padding: 16px 22px;
-    display: flex; align-items: center; gap: 16px;
+    padding: 14px 22px;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 14px;
+    box-shadow: 0 2px 12px rgba(40,30,90,0.04);
 }
-.v2-sec-ico {
-    width: 42px; height: 42px; border-radius: 10px;
-    background: rgba(245,166,35,.18);
-    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
-}
-.v2-sec-text strong { display: block; font-size: 13.5px; font-weight: 700; color: var(--dk); margin-bottom: 3px; }
-.v2-sec-text span { font-size: 12px; color: var(--gr); }
-
-/* Footer */
-.v2-foot {
+.jw-trust-item { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.jw-trust-ico {
+    width: 30px; height: 30px; border-radius: 8px;
+    background: var(--p-green); color: #15803D;
     display: flex; align-items: center; justify-content: center;
-    gap: 18px; padding: 16px 48px;
-    border-top: 1px solid #ebebeb; flex-shrink: 0;
+    flex-shrink: 0;
 }
-.v2-foot-copy { font-size: 12.5px; color: #9ca3af; }
-.v2-foot-sep { color: #d1d5db; }
-.v2-foot a { font-size: 12.5px; color: var(--gr); text-decoration: none; }
-.v2-foot a:hover { color: var(--p); }
+.jw-trust-meta { min-width: 0; }
+.jw-trust-meta strong {
+    display: block; font-size: 12.5px; font-weight: 700;
+    color: var(--dk); line-height: 1.15;
+}
+.jw-trust-meta span {
+    display: block; font-size: 11px; color: var(--gr); line-height: 1.2;
+}
 
-<<<<<<< HEAD
-/* Responsive */
-=======
-/* ── Responsive ────────────────────────────────────────── */
+/* ── Responsive ─────────────────────────────────────────────── */
 
 /* 1440px – larger 15.6" at lower resolution */
 @media (max-width: 1440px) {
-    .v2-left        { width: 500px; padding: 30px 36px 0; }
-    .v2-hero h1     { font-size: 28px; }
-    .v2-feats       { gap: 12px; }
-    .v2-body        { padding: 10px 42px 16px; }
-    .v2-help        { padding: 18px 42px; }
-    .v2-foot        { padding: 14px 42px; }
+    .jw-left  { padding: 30px 36px 22px; }
+    .jw-right { padding: 0; }
+    .jw-hero h1 { font-size: 38px; }
+    .jw-dots { right: 36px; top: 30px; width: 110px; height: 64px; }
 }
 
-/* 1366px – most 14" / 15.6" laptops (1366×768 is the most common) */
+/* 1366px – most 14" / 15.6" laptops */
 @media (max-width: 1366px) {
-    .v2-left        { width: 400px; padding: 22px 26px 0; }
-    .v2-logo        { margin-bottom: 18px; }
-    .v2-logo-text   { font-size: 22px; }
-    .v2-hero        { margin-bottom: 14px; }
-    .v2-hero h1     { font-size: 22px; letter-spacing: -.4px; line-height: 1.15; }
-    .v2-hero p      { font-size: 12.5px; line-height: 1.5; }
-    .v2-feats       { gap: 9px; }
-    .v2-feat        { gap: 12px; }
-    .v2-feat-ico    { width: 38px; height: 38px; border-radius: 9px; }
-    .v2-feat-ico svg{ width: 19px; height: 19px; }
-    .v2-feat-body strong { font-size: 13px; }
-    .v2-feat-body span   { font-size: 11px; }
-    .v2-testi       { margin-bottom: 110px; padding: 12px 16px; }
-    .v2-testi-q     { font-size: 12px; }
-    .v2-body        { padding: 6px 30px 12px; }
-    .v2-help        { padding: 12px 30px; }
-    .v2-foot        { padding: 8px 30px; }
-    .v2-card        { padding: 22px 28px; max-width: 540px; }
-    .v2-card-title  { font-size: 20px; }
-    .v2-card-sub    { margin-bottom: 14px; }
-    .v2-city svg    { max-height: 180px; }
+    .jw-left   { padding: 24px 28px 18px; }
+    .jw-hero   { margin: 18px 0 18px; }
+    .jw-hero h1{ font-size: 30px; letter-spacing: -0.6px; }
+    .jw-hero p { font-size: 13px; }
+    .jw-cards  { gap: 10px; margin-bottom: 16px; }
+    .jw-card   { padding: 12px 12px 0; border-radius: 12px; }
+    .jw-card-title { font-size: 13.5px; }
+    .jw-card-desc  { font-size: 11px; }
+    .jw-card-illu  { height: 76px; }
+    .jw-card-badge { font-size: 9px; padding: 4px 8px; }
+    .jw-stats { padding: 12px 14px; border-radius: 12px; gap: 8px; }
+    .jw-stat-meta strong { font-size: 13px; }
+    .jw-stat-meta span   { font-size: 10px; }
+    .jw-stat-ico { width: 30px; height: 30px; }
+    .jw-stat-ico svg { width: 16px; height: 16px; }
+    .jw-body { padding: 18px 30px 22px; }
+    .jw-top  { padding: 20px 30px 0; }
+    .jw-card-form { padding: 26px 28px 22px; max-width: 500px; }
+    .jw-card-form h2 { font-size: 22px; }
+    .jw-trust { padding: 12px 14px; gap: 10px; max-width: 500px; }
+    .jw-trust-meta strong { font-size: 11.5px; }
+    .jw-trust-meta span   { font-size: 10px; }
+    .jw-trust-ico { width: 26px; height: 26px; }
+    .jw-trust-ico svg { width: 14px; height: 14px; }
+    .jw-left-foot { font-size: 11px; margin-top: 14px; }
+    .jw-dots { display: none; }
 }
 
 /* 1280px – smaller 14" laptops */
 @media (max-width: 1280px) {
-    .v2-left        { width: 340px; padding: 18px 20px 0; }
-    .v2-logo        { margin-bottom: 14px; }
-    .v2-hero        { margin-bottom: 12px; }
-    .v2-hero h1     { font-size: 20px; }
-    .v2-feat-ico    { width: 34px; height: 34px; }
-    .v2-feat        { gap: 11px; }
-    .v2-testi       { display: none; }
-    .v2-body        { padding: 6px 22px 10px; }
-    .v2-help        { padding: 10px 22px; }
-    .v2-foot        { padding: 8px 22px; }
-    .v2-card        { padding: 20px 24px; max-width: 500px; }
-    .v2-card-title  { font-size: 19px; }
-    .v2-city svg    { max-height: 150px; }
+    .jw-left { padding: 20px 22px 14px; }
+    .jw-hero h1 { font-size: 26px; }
+    .jw-hero p  { font-size: 12.5px; }
+    .jw-cards   { gap: 8px; }
+    .jw-card-title { font-size: 13px; }
+    .jw-card-illu   { height: 64px; }
+    .jw-stats { padding: 10px 12px; }
+    .jw-stat-meta strong { font-size: 12.5px; }
+    .jw-stat-meta span   { font-size: 9.5px; }
+    .jw-body { padding: 14px 24px 20px; }
+    .jw-top  { padding: 16px 24px 0; font-size: 12px; }
+    .jw-card-form { padding: 22px 24px 18px; max-width: 460px; }
+    .jw-card-form h2 { font-size: 20px; }
+    .jw-card-form .sub { font-size: 12px; margin-bottom: 20px; }
+    .jw-trust { padding: 10px 14px; gap: 8px; max-width: 460px; }
+    .jw-trust-meta strong { font-size: 11px; }
+    .jw-trust-meta span   { font-size: 9.5px; }
 }
 
-/* Tall viewport – 880px+ allows full testimonial */
+/* Tall viewports – keep dots visible above 880h */
 @media (min-height: 880px) {
-    .v2-testi       { display: block; }
+    .jw-dots { display: block; }
 }
 
-/* Short viewport – 879px or shorter hides testimonial */
-@media (max-height: 879px) {
-    .v2-testi       { display: none; }
+/* 1024px and below – tablet */
+@media (max-width: 1024px) {
+    .jw-page { flex-direction: column; }
+    .jw-left { padding: 28px 24px 24px; }
+    .jw-hero h1 { font-size: 30px; }
+    .jw-cards { grid-template-columns: 1fr 1fr; }
+    .jw-card:last-child { grid-column: span 2; }
+    .jw-body { padding: 22px 24px; }
+    .jw-card-form { max-width: 100%; }
+    .jw-trust { grid-template-columns: 1fr 1fr; max-width: 100%; }
 }
 
-/* Short viewport – 768px tall (1366×768 laptops, max-height wins over max-width) */
-@media (max-height: 768px) {
-    .v2-logo        { margin-bottom: 14px; }
-    .v2-hero        { margin-bottom: 10px; }
-    .v2-feats       { gap: 7px; }
-    .v2-help        { padding-top: 8px; padding-bottom: 8px; }
-    .v2-foot        { padding-top: 6px; padding-bottom: 6px; }
-    .v2-card        { padding-top: 16px; padding-bottom: 16px; margin-bottom: 8px; }
-    .v2-card-title  { font-size: 19px; }
-    .v2-card-sub    { margin-bottom: 10px; }
-    .v2-field       { margin-bottom: 9px; }
-    .v2-field > label { margin-bottom: 4px; }
-    .v2-inp         { height: 40px; font-size: 13.5px; }
-    .v2-mid         { margin-bottom: 9px; }
-    .v2-cap-lbl     { margin-bottom: 4px; }
-    .v2-cap-row     { margin-bottom: 9px; }
-    .v2-cap-img     { height: 40px; width: 96px; }
-    .v2-cap-img img { height: 36px; }
-    .v2-cap-btn     { height: 40px; padding: 0 12px; font-size: 12.5px; }
-    .v2-cap-inp     { height: 40px; padding: 0 12px; }
-    .v2-btn         { height: 42px; font-size: 13.5px; }
-    .v2-sec         { padding: 10px 14px; gap: 12px; }
-    .v2-sec-ico     { width: 34px; height: 34px; }
-    .v2-sec-text strong { font-size: 12.5px; }
-    .v2-sec-text span   { font-size: 11px; }
-    .v2-city svg    { max-height: 120px; }
+/* 700px and below – small tablet / large phone */
+@media (max-width: 700px) {
+    .jw-cards { grid-template-columns: 1fr; }
+    .jw-card:last-child { grid-column: span 1; }
+    .jw-stats { flex-wrap: wrap; justify-content: flex-start; }
+    .jw-stat { flex: 1 1 45%; }
+    .jw-trust { grid-template-columns: 1fr 1fr; }
 }
 
-/* Very short – 700px tall (small laptops or zoomed browsers) */
-@media (max-height: 700px) {
-    .v2-city        { display: none; }
-    .v2-card        { padding: 14px 18px; margin-bottom: 6px; }
-    .v2-card-sub    { margin-bottom: 8px; }
-    .v2-field       { margin-bottom: 7px; }
-    .v2-cap-row     { margin-bottom: 7px; }
-    .v2-inp, .v2-cap-btn, .v2-cap-img, .v2-cap-inp { height: 38px; }
-    .v2-btn         { height: 40px; font-size: 13.5px; }
-    .v2-sec         { padding: 10px 14px; }
-}
-
-/* Very short – 600px tall */
-@media (max-height: 600px) {
-    .v2-sec         { display: none; }
-    .v2-card        { padding: 14px 18px; }
-    .v2-btn         { height: 38px; }
-}
-
-/* 960px and below – tablets: stack left over right */
->>>>>>> e15e4ebf0d49eb0669c949cc48c7e236b5a6a290
-@media (max-width: 960px) {
-    .v2-left  { width: 100%; padding-bottom: 220px; }
-    .v2-page  { flex-direction: column; }
-    .v2-card  { padding: 24px 20px; }
-    .v2-body  { padding: 20px; }
-    .v2-help  { padding: 16px 20px; }
+/* 480px and below – phone */
+@media (max-width: 480px) {
+    .jw-hero h1 { font-size: 26px; }
+    .jw-top-btn { padding: 6px 12px; font-size: 12px; }
+    .jw-card-form { padding: 22px 18px 16px; border-radius: 14px; }
+    .jw-trust { padding: 12px 14px; }
+    .jw-trust { grid-template-columns: 1fr; }
+    .jw-left-foot .links { gap: 12px; }
 }
 </style>
 
@@ -417,403 +519,482 @@ if (session('status')) {
 }
 ?>
 
-<div class="v2-shell">
-<div class="v2-page">
+<div class="jw-shell">
+<div class="jw-page">
 
-{{-- ═══════════ LEFT PANEL ═══════════ --}}
-<div class="v2-left">
+{{-- ═══════════════ LEFT PANEL ═══════════════ --}}
+<div class="jw-left">
 
-    {{-- Logo --}}
-    <a href="https://jero.works" class="v2-logo">
-        <svg width="40" height="44" viewBox="0 0 40 44" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M20 2C9.5 2 1 10.5 1 21H39C39 10.5 30.5 2 20 2Z" fill="#111827"/>
-            <path d="M1 21C1 21 7.5 17.5 20 21" stroke="rgba(255,255,255,0.35)" stroke-width="1.2"/>
-            <path d="M39 21C39 21 32.5 17.5 20 21" stroke="rgba(255,255,255,0.35)" stroke-width="1.2"/>
-            <line x1="20" y1="21" x2="20" y2="37" stroke="#111827" stroke-width="2.6" stroke-linecap="round"/>
-            <path d="M20 37C20 40.31 17.31 43 14 43" stroke="#111827" stroke-width="2.6" stroke-linecap="round" fill="none"/>
-        </svg>
-        <span class="v2-logo-text">Jero</span>
-    </a>
-
-    {{-- Hero --}}
-    <div class="v2-hero">
-        <h1>AI-Powered Hiring.<br>Faster. Smarter. <span class="acc">Free.</span></h1>
-        <p>The intelligent ATS &amp; hiring marketplace<br>trusted by 1000+ companies and recruiters.</p>
-    </div>
-
-    {{-- Features --}}
-    <div class="v2-feats">
-        <div class="v2-feat">
-            <div class="v2-feat-ico">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><polygon points="13,2 7,14 11.5,14 9,23 17,10 12.5,10" fill="#F5A623"/></svg>
-            </div>
-            <div class="v2-feat-body">
-                <strong>AI-Powered Automation</strong>
-                <span>Automate hiring workflows end-to-end</span>
-            </div>
-        </div>
-        <div class="v2-feat">
-            <div class="v2-feat-ico">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-                    <circle cx="9" cy="8" r="3.5" fill="#F5A623"/>
-                    <circle cx="16" cy="8" r="3.5" fill="#F5A623" opacity=".55"/>
-                    <path d="M2 21c0-3.87 3.13-7 7-7h5c3.87 0 7 3.13 7 7" stroke="#F5A623" stroke-width="2" fill="none" stroke-linecap="round"/>
-                </svg>
-            </div>
-            <div class="v2-feat-body">
-                <strong>Marketplace Access</strong>
-                <span>Connect with top agencies &amp; talent</span>
-            </div>
-        </div>
-        <div class="v2-feat">
-            <div class="v2-feat-ico">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-                    <rect x="3" y="14" width="4.5" height="8" rx="1.5" fill="#F5A623"/>
-                    <rect x="9.5" y="10" width="4.5" height="12" rx="1.5" fill="#F5A623" opacity=".72"/>
-                    <rect x="16" y="5" width="4.5" height="17" rx="1.5" fill="#F5A623" opacity=".5"/>
-                </svg>
-            </div>
-            <div class="v2-feat-body">
-                <strong>Smart Analytics</strong>
-                <span>Insights that help you hire the best</span>
-            </div>
-        </div>
-        <div class="v2-feat">
-            <div class="v2-feat-ico">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-                    <path d="M12 2L3 6v5.5C3 17.25 6.8 22.6 12 24c5.2-1.4 9-6.75 9-12.5V6L12 2Z" fill="rgba(245,166,35,.28)" stroke="#F5A623" stroke-width="1.7"/>
-                    <path d="M8 12l3 3 5-5" stroke="#F5A623" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                </svg>
-            </div>
-            <div class="v2-feat-body">
-                <strong>Secure &amp; Compliant</strong>
-                <span>Enterprise-grade security for your data</span>
-            </div>
-        </div>
-    </div>
-
-    {{-- Testimonial card --}}
-    <div class="v2-testi">
-        <div class="v2-testi-q">
-            <span class="qmark">&ldquo;</span>
-            <span>Jero has transformed the way we hire. It&rsquo;s fast, simple and incredibly powerful.</span>
-        </div>
-        <div class="v2-testi-foot">
-            <div class="v2-testi-avatar">RS</div>
-            <div class="v2-testi-meta">
-                <strong>Rahul Sharma</strong>
-                <span>HR Head, TechNova Solutions</span>
-            </div>
-        </div>
-    </div>
-
-    {{-- Decorative clouds --}}
-    <div class="v2-cloud" aria-hidden="true">
-        <svg viewBox="0 0 500 80" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMax meet" style="width:100%;height:80px;">
-            <g fill="#FFE9A8" opacity="0.7">
-                <ellipse cx="60"  cy="50" rx="32" ry="9"/>
-                <ellipse cx="85"  cy="48" rx="22" ry="7"/>
-                <ellipse cx="180" cy="40" rx="28" ry="8"/>
-                <ellipse cx="320" cy="55" rx="36" ry="10"/>
-                <ellipse cx="345" cy="52" rx="20" ry="7"/>
-                <ellipse cx="440" cy="45" rx="26" ry="8"/>
+    {{-- Decorative dot grid --}}
+    <div class="jw-dots" aria-hidden="true">
+        <svg viewBox="0 0 140 80">
+            <g fill="#FFB68A" opacity="0.55">
+                @for ($r = 0; $r < 8; $r++)
+                    @for ($c = 0; $c < 14; $c++)
+                        <circle cx="{{ 5 + $c*10 }}" cy="{{ 5 + $r*10 }}" r="1.6"/>
+                    @endfor
+                @endfor
             </g>
         </svg>
     </div>
 
-    {{-- City skyline --}}
-    <div class="v2-city">
-        <svg viewBox="0 0 500 230" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMax meet" style="width:100%">
-            <defs>
-                <linearGradient id="skyg" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stop-color="#FFF9EC" stop-opacity="0"/>
-                    <stop offset="100%" stop-color="#FFD060" stop-opacity="0.5"/>
-                </linearGradient>
-            </defs>
-            <!-- Atmosphere -->
-            <rect x="0" y="0" width="500" height="230" fill="url(#skyg)"/>
-
-            <!-- Back layer (lightest) -->
-            <rect x="0"   y="155" width="18"  height="75"  fill="#F5E4A8"/>
-            <rect x="20"  y="135" width="14"  height="95"  fill="#F5E4A8"/>
-            <rect x="36"  y="150" width="20"  height="80"  fill="#F5E0A0"/>
-            <rect x="58"  y="125" width="16"  height="105" fill="#F5DC98"/>
-            <rect x="76"  y="140" width="22"  height="90"  fill="#F5E0A0"/>
-            <rect x="100" y="110" width="18"  height="120" fill="#F5DC98"/>
-            <rect x="102" y="102" width="14"  height="10"  fill="#F5DC98"/>
-            <rect x="120" y="130" width="24"  height="100" fill="#F5E4A8"/>
-            <rect x="146" y="115" width="16"  height="115" fill="#F5DC98"/>
-            <rect x="164" y="135" width="20"  height="95"  fill="#F5E0A0"/>
-            <rect x="186" y="105" width="18"  height="125" fill="#F5DC98"/>
-            <rect x="188" y="95"  width="14"  height="12"  fill="#F5DC98"/>
-            <rect x="206" y="120" width="22"  height="110" fill="#F5E4A8"/>
-            <rect x="230" y="108" width="16"  height="122" fill="#F5DC98"/>
-            <rect x="232" y="98"  width="12"  height="12"  fill="#F5DC98"/>
-            <rect x="248" y="125" width="24"  height="105" fill="#F5E0A0"/>
-            <rect x="274" y="112" width="18"  height="118" fill="#F5DC98"/>
-            <rect x="294" y="130" width="20"  height="100" fill="#F5E4A8"/>
-            <rect x="316" y="100" width="16"  height="130" fill="#F5DC98"/>
-            <rect x="318" y="90"  width="12"  height="12"  fill="#F5DC98"/>
-            <rect x="334" y="120" width="24"  height="110" fill="#F5E0A0"/>
-            <rect x="360" y="108" width="18"  height="122" fill="#F5DC98"/>
-            <rect x="380" y="135" width="16"  height="95"  fill="#F5E4A8"/>
-            <rect x="398" y="115" width="22"  height="115" fill="#F5DC98"/>
-            <rect x="422" y="125" width="20"  height="105" fill="#F5E0A0"/>
-            <rect x="444" y="140" width="14"  height="90"  fill="#F5E4A8"/>
-            <rect x="460" y="130" width="18"  height="100" fill="#F5DC98"/>
-            <rect x="480" y="145" width="20"  height="85"  fill="#F5E0A0"/>
-
-            <!-- Mid layer -->
-            <rect x="0"   y="165" width="25"  height="65"  fill="#F5C840"/>
-            <rect x="27"  y="148" width="22"  height="82"  fill="#F0BC30"/>
-            <rect x="51"  y="155" width="28"  height="75"  fill="#F5C840"/>
-            <rect x="81"  y="143" width="20"  height="87"  fill="#F0BC30"/>
-            <rect x="103" y="152" width="26"  height="78"  fill="#F5C840"/>
-            <rect x="131" y="140" width="22"  height="90"  fill="#F0BC30"/>
-            <rect x="155" y="150" width="30"  height="80"  fill="#F5C840"/>
-            <rect x="187" y="138" width="22"  height="92"  fill="#F0BC30"/>
-            <rect x="211" y="148" width="28"  height="82"  fill="#F5C840"/>
-            <rect x="241" y="142" width="22"  height="88"  fill="#F0BC30"/>
-            <rect x="265" y="152" width="26"  height="78"  fill="#F5C840"/>
-            <rect x="293" y="140" width="24"  height="90"  fill="#F0BC30"/>
-            <rect x="319" y="150" width="28"  height="80"  fill="#F5C840"/>
-            <rect x="349" y="138" width="22"  height="92"  fill="#F0BC30"/>
-            <rect x="373" y="148" width="26"  height="82"  fill="#F5C840"/>
-            <rect x="401" y="142" width="22"  height="88"  fill="#F0BC30"/>
-            <rect x="425" y="150" width="28"  height="80"  fill="#F5C840"/>
-            <rect x="455" y="145" width="22"  height="85"  fill="#F0BC30"/>
-            <rect x="479" y="155" width="21"  height="75"  fill="#F5C840"/>
-
-            <!-- Front layer (darkest/tallest) — key skyscrapers -->
-            <!-- Far left cluster -->
-            <rect x="0"   y="175" width="32"  height="55"  fill="#F5B020"/>
-            <rect x="34"  y="160" width="28"  height="70"  fill="#EAA010"/>
-            <rect x="64"  y="150" width="20"  height="80"  fill="#F5B020"/>
-            <!-- Left-center cluster -->
-            <rect x="86"  y="168" width="26"  height="62"  fill="#EAA010"/>
-            <rect x="114" y="155" width="30"  height="75"  fill="#F5B020"/>
-            <rect x="146" y="162" width="22"  height="68"  fill="#EAA010"/>
-            <!-- Tall center tower -->
-            <rect x="170" y="105" width="26"  height="125" fill="#F5A623"/>
-            <rect x="172" y="92"  width="22"  height="15"  fill="#F5A623"/>
-            <rect x="175" y="84"  width="16"  height="10"  fill="#F5A623"/>
-            <rect x="179" y="78"  width="8"   height="8"   fill="#F5A623"/>
-            <!-- Windows on tall tower -->
-            <rect x="174" y="110" width="5" height="6" rx="1" fill="rgba(255,255,255,0.25)"/>
-            <rect x="183" y="110" width="5" height="6" rx="1" fill="rgba(255,255,255,0.25)"/>
-            <rect x="174" y="122" width="5" height="6" rx="1" fill="rgba(255,255,255,0.25)"/>
-            <rect x="183" y="122" width="5" height="6" rx="1" fill="rgba(255,255,255,0.25)"/>
-            <rect x="174" y="134" width="5" height="6" rx="1" fill="rgba(255,255,255,0.25)"/>
-            <rect x="183" y="134" width="5" height="6" rx="1" fill="rgba(255,255,255,0.25)"/>
-            <!-- Right-center buildings -->
-            <rect x="198" y="158" width="28"  height="72"  fill="#F5B020"/>
-            <rect x="228" y="145" width="24"  height="85"  fill="#EAA010"/>
-            <!-- Second tall tower -->
-            <rect x="254" y="112" width="24"  height="118" fill="#F5A623"/>
-            <rect x="256" y="100" width="20"  height="14"  fill="#F5A623"/>
-            <rect x="259" y="93"  width="14"  height="9"   fill="#F5A623"/>
-            <!-- Windows -->
-            <rect x="258" y="118" width="4" height="5" rx="1" fill="rgba(255,255,255,0.25)"/>
-            <rect x="266" y="118" width="4" height="5" rx="1" fill="rgba(255,255,255,0.25)"/>
-            <rect x="258" y="130" width="4" height="5" rx="1" fill="rgba(255,255,255,0.25)"/>
-            <rect x="266" y="130" width="4" height="5" rx="1" fill="rgba(255,255,255,0.25)"/>
-            <rect x="258" y="142" width="4" height="5" rx="1" fill="rgba(255,255,255,0.25)"/>
-            <rect x="266" y="142" width="4" height="5" rx="1" fill="rgba(255,255,255,0.25)"/>
-            <!-- Right cluster -->
-            <rect x="280" y="160" width="26"  height="70"  fill="#F5B020"/>
-            <rect x="308" y="148" width="28"  height="82"  fill="#EAA010"/>
-            <rect x="338" y="155" width="22"  height="75"  fill="#F5B020"/>
-            <rect x="362" y="142" width="30"  height="88"  fill="#EAA010"/>
-            <rect x="394" y="152" width="24"  height="78"  fill="#F5B020"/>
-            <rect x="420" y="160" width="28"  height="70"  fill="#EAA010"/>
-            <rect x="450" y="168" width="22"  height="62"  fill="#F5B020"/>
-            <rect x="474" y="158" width="26"  height="72"  fill="#EAA010"/>
-
-            <!-- Ground -->
-            <rect x="0" y="218" width="500" height="12" fill="#F0A800"/>
+    {{-- Brand --}}
+    <a href="https://jero.works" class="jw-brand">
+        <svg width="28" height="32" viewBox="0 0 28 32" fill="none" aria-hidden="true">
+            <path d="M14 1C6.82 1 1 6.82 1 14h26C27 6.82 21.18 1 14 1Z" fill="#111827"/>
+            <path d="M1 14c0 0 5-2 13 0" stroke="rgba(255,255,255,0.4)" stroke-width="1" fill="none"/>
+            <path d="M27 14c0 0 -5-2 -13 0" stroke="rgba(255,255,255,0.4)" stroke-width="1" fill="none"/>
+            <line x1="14" y1="14" x2="14" y2="26" stroke="#111827" stroke-width="2" stroke-linecap="round"/>
+            <path d="M14 26c0 2.2 -1.8 4 -4 4" stroke="#111827" stroke-width="2" stroke-linecap="round" fill="none"/>
         </svg>
-    </div>
-</div>{{-- /v2-left --}}
+        <span class="jw-brand-name">jero.works</span>
+    </a>
+    <span class="jw-brand-sub">AI Recruitment Platform</span>
 
-{{-- ═══════════ RIGHT PANEL ═══════════ --}}
-<div class="v2-right">
-
-    {{-- Help bar --}}
-    <div class="v2-help">
-        <span class="v2-help-ico">
-            <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="9" stroke="#6b7280" stroke-width="1.6"/><path d="M10 14.5v-1.2" stroke="#6b7280" stroke-width="1.6" stroke-linecap="round"/><path d="M10 11.5c0-1.8 2.2-1.8 2.2-3.3a2.2 2.2 0 0 0-4.4 0" stroke="#6b7280" stroke-width="1.6" stroke-linecap="round"/></svg>
-        </span>
-        <span class="v2-help-need">Need help?</span>
-        <span class="v2-help-sep">|</span>
-        <a href="javascript:void(0);" class="lc">Live Chat</a>
-        <span class="v2-help-sep">|</span>
-        <a href="https://jero.works/support-policy" target="_blank" class="hc">Help Center</a>
+    {{-- Hero --}}
+    <div class="jw-hero">
+        <h1>One Platform.<br>Every <span class="acc">Hiring Need.</span></h1>
+        <p>Connect companies, agencies and talent on a<br>modern recruitment platform built for speed and trust.</p>
     </div>
 
-    {{-- Body --}}
-    <div class="v2-body">
+    {{-- Persona cards --}}
+    <div class="jw-cards">
+
+        {{-- Card 1: Companies --}}
+        <div class="jw-card">
+            <span class="jw-card-badge b-comp">For Companies</span>
+            <h3 class="jw-card-title">Find Trusted Agencies</h3>
+            <p class="jw-card-desc">Connect with verified recruitment agencies and hire faster.</p>
+            <div class="jw-card-illu">
+                <svg viewBox="0 0 130 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    {{-- Building backdrop --}}
+                    <rect x="6"  y="55" width="22" height="40" fill="#E2ECFF"/>
+                    <rect x="30" y="48" width="18" height="47" fill="#D6E4FF"/>
+                    <rect x="92" y="55" width="22" height="40" fill="#E2ECFF"/>
+                    <rect x="78" y="60" width="12" height="35" fill="#D6E4FF"/>
+                    {{-- Man at laptop --}}
+                    <circle cx="62" cy="42" r="13" fill="#3D2817"/>
+                    <circle cx="62" cy="40" r="11" fill="#F5C9A3"/>
+                    <path d="M58 39c0-3 2-5 4-5s4 2 4 5" stroke="#222" stroke-width="1" fill="none"/>
+                    <rect x="55" y="48" width="16" height="20" rx="2" fill="#2E66FF"/>
+                    <rect x="56" y="50" width="14" height="6" rx="1" fill="#FFFFFF"/>
+                    <circle cx="59" cy="53" r="1.5" fill="#2E66FF"/>
+                    <circle cx="65" cy="53" r="1.5" fill="#FF7A1A"/>
+                    {{-- Laptop --}}
+                    <rect x="44" y="68" width="38" height="22" rx="2" fill="#1F2937"/>
+                    <rect x="46" y="70" width="34" height="18" rx="1" fill="#FFFFFF"/>
+                    <path d="M40 90h46l-3 4H43l-3-4Z" fill="#4B5563"/>
+                    {{-- Floating badge --}}
+                    <circle cx="100" cy="34" r="11" fill="#EEF2FF"/>
+                    <g transform="translate(94 28)" fill="#2E66FF">
+                        <circle cx="3" cy="3" r="2.2"/>
+                        <circle cx="9" cy="3" r="2.2"/>
+                        <path d="M0 11c0-3 2-5 6-5s6 2 6 5" stroke="#2E66FF" stroke-width="1.5" fill="none"/>
+                    </g>
+                </svg>
+            </div>
+        </div>
+
+        {{-- Card 2: Agencies --}}
+        <div class="jw-card">
+            <span class="jw-card-badge b-agc">For Agencies</span>
+            <h3 class="jw-card-title">Search Work Opportunities</h3>
+            <p class="jw-card-desc">Discover verified job opportunities from the leading companies.</p>
+            <div class="jw-card-illu">
+                <svg viewBox="0 0 130 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    {{-- Resume / list backdrop --}}
+                    <rect x="10" y="22" width="30" height="40" rx="2" fill="#E7F6EC"/>
+                    <rect x="14" y="28" width="14" height="2.4" rx="1" fill="#9CA3AF"/>
+                    <rect x="14" y="34" width="22" height="2.4" rx="1" fill="#9CA3AF"/>
+                    <rect x="14" y="40" width="18" height="2.4" rx="1" fill="#9CA3AF"/>
+                    <rect x="14" y="46" width="20" height="2.4" rx="1" fill="#9CA3AF"/>
+                    <rect x="14" y="52" width="16" height="2.4" rx="1" fill="#9CA3AF"/>
+                    {{-- Woman at laptop --}}
+                    <circle cx="66" cy="40" r="13" fill="#3D2817"/>
+                    <circle cx="66" cy="38" r="11" fill="#F5C9A3"/>
+                    <path d="M60 36c2-3 4-5 6-5s4 2 6 5" stroke="#222" stroke-width="1" fill="none"/>
+                    <path d="M55 36c1-5 5-7 11-7s10 2 11 7c-2 0-22 0-22 0Z" fill="#3D2817"/>
+                    <rect x="55" y="48" width="22" height="20" rx="2" fill="#16A34A"/>
+                    <rect x="56" y="50" width="20" height="6" rx="1" fill="#FFFFFF"/>
+                    <circle cx="60" cy="53" r="1.5" fill="#16A34A"/>
+                    <circle cx="68" cy="53" r="1.5" fill="#FF7A1A"/>
+                    <rect x="66" cy="51" width="2.5" height="6" fill="#FF7A1A"/>
+                    {{-- Laptop --}}
+                    <rect x="48" y="68" width="38" height="22" rx="2" fill="#1F2937"/>
+                    <rect x="50" y="70" width="34" height="18" rx="1" fill="#FFFFFF"/>
+                    <path d="M44 90h46l-3 4H47l-3-4Z" fill="#4B5563"/>
+                    {{-- Floating briefcase --}}
+                    <rect x="98" y="30" width="18" height="14" rx="2" fill="#E7F6EC"/>
+                    <rect x="103" y="28" width="8" height="3" rx="1" fill="#16A34A"/>
+                    <rect x="101" y="34" width="12" height="2" fill="#16A34A"/>
+                </svg>
+            </div>
+        </div>
+
+        {{-- Card 3: Talent --}}
+        <div class="jw-card">
+            <span class="jw-card-badge b-tal">For Talent</span>
+            <h3 class="jw-card-title">Hire Immediate Joiners</h3>
+            <p class="jw-card-desc">Explore bench talent ready to join at the earliest.</p>
+            <div class="jw-card-illu">
+                <svg viewBox="0 0 130 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    {{-- Mobile screen --}}
+                    <rect x="14" y="24" width="26" height="42" rx="4" fill="#F1ECFE"/>
+                    <circle cx="27" cy="34" r="4" fill="#6D28D9"/>
+                    <rect x="20" y="42" width="14" height="2" fill="#9CA3AF"/>
+                    <rect x="20" y="47" width="12" height="2" fill="#9CA3AF"/>
+                    <rect x="20" y="52" width="14" height="2" fill="#9CA3AF"/>
+                    <rect x="20" y="57" width="10" height="2" fill="#9CA3AF"/>
+                    {{-- Person with phone --}}
+                    <circle cx="66" cy="40" r="13" fill="#3D2817"/>
+                    <circle cx="66" cy="38" r="11" fill="#F5C9A3"/>
+                    <path d="M60 36c2-3 4-5 6-5s4 2 6 5" stroke="#222" stroke-width="1" fill="none"/>
+                    <path d="M55 36c1-5 5-7 11-7s10 2 11 7" fill="#3D2817"/>
+                    <rect x="55" y="48" width="22" height="20" rx="2" fill="#6D28D9"/>
+                    <rect x="58" y="56" width="6" height="10" rx="1" fill="#1F2937"/>
+                    <rect x="58.5" y="57" width="5" height="7" fill="#FFFFFF"/>
+                    {{-- Floating lightning --}}
+                    <circle cx="100" cy="34" r="11" fill="#F1ECFE"/>
+                    <path d="M101 28l-4 7h3l-2 6 5-8h-3l1-5Z" fill="#6D28D9"/>
+                </svg>
+            </div>
+        </div>
+    </div>
+
+    {{-- Stats bar --}}
+    <div class="jw-stats">
+        <div class="jw-stat">
+            <div class="jw-stat-ico s-people">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                    <circle cx="9" cy="8" r="3.2" fill="#2E66FF"/>
+                    <circle cx="16" cy="8" r="3.2" fill="#2E66FF" opacity=".55"/>
+                    <path d="M2 21c0-3.87 3.13-7 7-7h5c3.87 0 7 3.13 7 7" stroke="#2E66FF" stroke-width="2" fill="none" stroke-linecap="round"/>
+                </svg>
+            </div>
+            <div class="jw-stat-meta">
+                <strong>150+</strong>
+                <span>Enterprise Clients</span>
+            </div>
+        </div>
+        <div class="jw-stat">
+            <div class="jw-stat-ico s-jobs">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                    <rect x="3" y="7" width="18" height="13" rx="2" fill="#16A34A" opacity=".25"/>
+                    <path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" stroke="#16A34A" stroke-width="2" fill="none"/>
+                    <rect x="3" y="7" width="18" height="13" rx="2" stroke="#16A34A" stroke-width="2" fill="none"/>
+                </svg>
+            </div>
+            <div class="jw-stat-meta">
+                <strong>25,000+</strong>
+                <span>Active Jobs</span>
+            </div>
+        </div>
+        <div class="jw-stat">
+            <div class="jw-stat-ico s-cand">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                    <circle cx="12" cy="8" r="3.5" fill="#EC4899"/>
+                    <path d="M5 20c0-3.87 3.13-7 7-7s7 3.13 7 7" stroke="#EC4899" stroke-width="2" fill="none" stroke-linecap="round"/>
+                </svg>
+            </div>
+            <div class="jw-stat-meta">
+                <strong>250,000+</strong>
+                <span>Candidate Profiles</span>
+            </div>
+        </div>
+        <div class="jw-stat">
+            <div class="jw-stat-ico s-up">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                    <path d="M12 3l8 4v5c0 5-3.5 9-8 10-4.5-1-8-5-8-10V7l8-4Z" fill="#FF7A1A" opacity=".25" stroke="#FF7A1A" stroke-width="1.7"/>
+                    <path d="M8 12l3 3 5-5" stroke="#FF7A1A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+                </svg>
+            </div>
+            <div class="jw-stat-meta">
+                <strong>99.9%</strong>
+                <span>Platform Uptime</span>
+            </div>
+        </div>
+    </div>
+
+    {{-- Left footer --}}
+    <div class="jw-left-foot">
+        <span>© 2026 Jero Technologies Pvt. Ltd. All rights reserved.</span>
+        <div class="links">
+            <a href="/privacy-policy">Privacy Policy</a>
+            <a href="/terms">Terms of Service</a>
+            <a href="/support">Support</a>
+            <span class="jw-locale" aria-label="Language">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                    <circle cx="12" cy="12" r="9" stroke="#6B7280" stroke-width="1.6"/>
+                    <path d="M3 12h18M12 3c3 3 3 15 0 18M12 3c-3 3-3 15 0 18" stroke="#6B7280" stroke-width="1.6"/>
+                </svg>
+                English
+                <svg width="10" height="10" viewBox="0 0 12 12" fill="none">
+                    <path d="M3 5l3 3 3-3" stroke="#6B7280" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+            </span>
+        </div>
+    </div>
+
+</div>{{-- /jw-left --}}
+
+{{-- ═══════════════ RIGHT PANEL ═══════════════ --}}
+<div class="jw-right">
+
+    {{-- Top bar --}}
+    <div class="jw-top">
+        <span>New to jero.works?</span>
+        <a href="{{ route('register') }}" class="jw-top-btn">Create Free Account</a>
+    </div>
+
+    {{-- Body / Card --}}
+    <div class="jw-body">
 
         {{-- LOGIN FORM --}}
-        <form class="v2-card" novalidate id="kt_sign_in_form1" action="{{ route('login') }}" method="post" style="<?php echo $loginForm; ?>">
+        <form class="jw-card-form" novalidate id="kt_sign_in_form1" action="{{ route('login') }}" method="post" style="<?php echo $loginForm; ?>">
             @csrf
-            <h2 class="v2-card-title">Welcome Back! 👋</h2>
-            <p class="v2-card-sub">Login to continue to your Jero workspace</p>
+
+            <h2>Welcome Back!</h2>
+            <p class="sub">Sign in to continue to your jero.works account</p>
 
             @if(@$class && @$messsage)
-                <div class="v2-alert v2-alert-err"><strong>{{ @$class }}</strong> {!! @$messsage !!}</div>
+                <div class="jw-alert jw-alert-err"><strong>{{ @$class }}</strong> {!! @$messsage !!}</div>
             @endif
             @if(session('accountnotverify'))
-                <div class="v2-alert v2-alert-err">{{ session('accountnotverify') }}</div>
+                <div class="jw-alert jw-alert-err">{{ session('accountnotverify') }}</div>
             @endif
             @if($errors->has('device_message'))
-                <div class="v2-alert v2-alert-err">{{ $errors->first('device_message') }}</div>
+                <div class="jw-alert jw-alert-err">{{ $errors->first('device_message') }}</div>
             @endif
 
             {{-- Email --}}
-            <div class="v2-field">
+            <div class="jw-field">
                 <label>Email Address</label>
-                <div class="v2-iw">
+                <div class="jw-iw">
                     <span class="il">
-                        <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><rect x="1" y="4" width="16" height="11" rx="2.2" stroke="#9ca3af" stroke-width="1.5"/><path d="M1 7l8 5.5L17 7" stroke="#9ca3af" stroke-width="1.5" stroke-linecap="round"/></svg>
+                        <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><rect x="1" y="4" width="16" height="11" rx="2.2" stroke="#9CA3AF" stroke-width="1.5"/><path d="M1 7l8 5.5L17 7" stroke="#9CA3AF" stroke-width="1.5" stroke-linecap="round"/></svg>
                     </span>
-                    <input class="v2-inp" type="text" name="email" placeholder="Enter your email" autocomplete="off" value="{{ old('email') }}"/>
+                    <input class="jw-inp" type="text" name="email" id="jw-email" placeholder="Enter your email" autocomplete="off" value="{{ old('email') }}"/>
+                    <span class="ok-mark" id="jw-email-ok" style="display:none;">
+                        <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><circle cx="9" cy="9" r="8.4" fill="#16A34A"/><path d="M5 9l3 3 5-5.5" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    </span>
                     <input type="hidden" name="url" value="{{ @$url }}"/>
                 </div>
-                @if($errors->has('email'))<span class="v2-err">{{ $errors->first('email') }}</span>@endif
+                @if($errors->has('email'))<span class="jw-err">{{ $errors->first('email') }}</span>@endif
             </div>
 
             {{-- Password --}}
-            <div class="v2-field">
+            <div class="jw-field">
                 <label>Password</label>
-                <div class="v2-iw">
+                <div class="jw-iw">
                     <span class="il">
-                        <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><rect x="3" y="8" width="12" height="9" rx="2.2" stroke="#9ca3af" stroke-width="1.5"/><path d="M6 8V6a3 3 0 0 1 6 0v2" stroke="#9ca3af" stroke-width="1.5" stroke-linecap="round"/><circle cx="9" cy="12.5" r="1.3" fill="#9ca3af"/></svg>
+                        <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><rect x="3" y="8" width="12" height="9" rx="2.2" stroke="#9CA3AF" stroke-width="1.5"/><path d="M6 8V6a3 3 0 0 1 6 0v2" stroke="#9CA3AF" stroke-width="1.5" stroke-linecap="round"/><circle cx="9" cy="12.5" r="1.3" fill="#9CA3AF"/></svg>
                     </span>
-                    <input class="v2-inp" type="password" name="password" id="v2pwd" placeholder="Enter your password" autocomplete="off"/>
-                    <span class="ir" onclick="v2Eye()" style="user-select:none">
-                        <svg id="v2eye" width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M1.5 9s2.8-5.5 7.5-5.5S16.5 9 16.5 9s-2.8 5.5-7.5 5.5S1.5 9 1.5 9Z" stroke="#9ca3af" stroke-width="1.5"/><circle cx="9" cy="9" r="2.2" stroke="#9ca3af" stroke-width="1.5"/></svg>
+                    <input class="jw-inp" type="password" name="password" id="jw-pwd" placeholder="Enter your password" autocomplete="off"/>
+                    <span class="ir" onclick="jwEye()" style="user-select:none">
+                        <svg id="jw-eye" width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M1.5 9s2.8-5.5 7.5-5.5S16.5 9 16.5 9s-2.8 5.5-7.5 5.5S1.5 9 1.5 9Z" stroke="#9CA3AF" stroke-width="1.5"/><circle cx="9" cy="9" r="2.2" stroke="#9CA3AF" stroke-width="1.5"/></svg>
                     </span>
                 </div>
-                @if($errors->has('password'))<span class="v2-err"><strong>{{ $errors->first('password') }}</strong></span>@endif
+                @if($errors->has('password'))<span class="jw-err"><strong>{{ $errors->first('password') }}</strong></span>@endif
             </div>
 
             {{-- Remember + Forgot --}}
-            <div class="v2-mid">
-                <div class="v2-rem">
-                    <input type="checkbox" name="remember" id="v2rem" {{ old('remember') ? 'checked' : '' }}>
-                    <label for="v2rem">Remember me</label>
+            <div class="jw-mid">
+                <div class="jw-rem">
+                    <input type="checkbox" name="remember" id="jw-rem" {{ old('remember') ? 'checked' : '' }}>
+                    <label for="jw-rem">Remember me</label>
                 </div>
-                <a href="javascript:void(0);" id="to-recover" class="v2-fgt">Forgot Password?</a>
+                <a href="javascript:void(0);" id="to-recover" class="jw-fgt">Forgot Password?</a>
             </div>
 
             {{-- Captcha --}}
-            <div class="v2-cap-lbl">Enter the number in the box</div>
-            <div class="v2-cap-row">
-                <div class="v2-cap-img">
+            <div class="jw-cap-lbl">Enter the number in the box</div>
+            <div class="jw-cap-row">
+                <div class="jw-cap-img">
                     <img src="{{ route('captcha.generate') }}" id="captchaImg" alt="captcha">
                 </div>
-                <button type="button" onclick="refreshCaptcha()" class="v2-cap-btn">
-                    <svg width="15" height="15" viewBox="0 0 15 15" fill="none"><path d="M2 7.5A5.5 5.5 0 0 1 13 7.5" stroke="#F5A623" stroke-width="1.6" stroke-linecap="round"/><path d="M11 5.5L13 7.5l2-2" stroke="#F5A623" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M13 7.5A5.5 5.5 0 0 1 2 7.5" stroke="#F5A623" stroke-width="1.6" stroke-linecap="round"/><path d="M4 9.5L2 7.5 0 9.5" stroke="#F5A623" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                <button type="button" onclick="refreshCaptcha()" class="jw-cap-btn">
+                    <svg width="14" height="14" viewBox="0 0 15 15" fill="none">
+                        <path d="M2 7.5A5.5 5.5 0 0 1 13 7.5" stroke="#2E66FF" stroke-width="1.6" stroke-linecap="round"/>
+                        <path d="M11 5.5L13 7.5l2-2" stroke="#2E66FF" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M13 7.5A5.5 5.5 0 0 1 2 7.5" stroke="#2E66FF" stroke-width="1.6" stroke-linecap="round"/>
+                        <path d="M4 9.5L2 7.5 0 9.5" stroke="#2E66FF" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
                     Refresh
                 </button>
-                <div class="v2-cap-field">
-                    <input type="text" name="captcha" class="v2-cap-inp" autocomplete="off" required>
+                <div class="jw-cap-field">
+                    <input type="text" name="captcha" class="jw-cap-inp" id="jw-cap" autocomplete="off" required>
+                    <span class="ok-mark" id="jw-cap-ok" style="display:none;">
+                        <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><circle cx="9" cy="9" r="8.4" fill="#16A34A"/><path d="M5 9l3 3 5-5.5" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    </span>
                 </div>
             </div>
             @if($errors->has('captcha'))
-                <span class="v2-err" style="margin-top:-16px;margin-bottom:14px;display:block">{{ $errors->first('captcha') }}</span>
+                <span class="jw-err" style="margin-top:-16px;margin-bottom:14px;display:block">{{ $errors->first('captcha') }}</span>
             @endif
 
             {{-- Submit --}}
-            <button type="submit" id="kt_sign_in_submit" class="v2-btn">
-                <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><rect x="3" y="9" width="14" height="10" rx="2.5" stroke="white" stroke-width="1.7"/><path d="M7 9V7a3 3 0 0 1 6 0v2" stroke="white" stroke-width="1.7" stroke-linecap="round"/><circle cx="10" cy="14" r="1.5" fill="white"/></svg>
-                <span class="indicator-label">Login to Jero</span>
+            <button type="submit" id="kt_sign_in_submit" class="jw-btn">
+                <span class="indicator-label">Sign In</span>
+                <span class="arrow">
+                    <svg width="18" height="18" viewBox="0 0 20 20" fill="none">
+                        <path d="M3 10h13M11 5l5 5-5 5" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </span>
                 <span class="indicator-progress" style="display:none">Please wait…&nbsp;<span class="spinner-border spinner-border-sm align-middle"></span></span>
             </button>
 
             {{-- Sign Up --}}
-            <div style="text-align:center;margin-top:16px;">
+            <div style="text-align:center;margin-top:14px;">
                 <span style="font-size:13px;color:var(--gr);">Don't have an account?</span>
-                <a href="{{ route('register') }}" style="font-size:13px;font-weight:700;color:var(--p);text-decoration:none;margin-left:5px;">Sign Up</a>
+                <a href="{{ route('register') }}" style="font-size:13px;font-weight:700;color:var(--pri);text-decoration:none;margin-left:5px;">Sign Up</a>
             </div>
         </form>
 
         {{-- FORGOT PASSWORD FORM --}}
-        <form class="v2-card" novalidate id="recoverform" action="{{ route('password.emailsend') }}" method="post" style="<?php echo $resetForm; ?>">
+        <form class="jw-card-form" novalidate id="recoverform" action="{{ route('password.emailsend') }}" method="post" style="<?php echo $resetForm; ?>">
             {{ csrf_field() }}
-            <h2 class="v2-card-title">Forgot Password? 🔑</h2>
-            <p class="v2-card-sub">Enter your email to reset your password.</p>
+            <h2>Forgot Password? 🔑</h2>
+            <p class="sub">Enter your email to reset your password.</p>
 
             @if(session('status'))
-                <div class="v2-alert v2-alert-ok">{{ session('status') }}</div>
+                <div class="jw-alert jw-alert-ok">{{ session('status') }}</div>
             @endif
             @if(session('accountnotverify'))
-                <div class="v2-alert v2-alert-err">{{ session('accountnotverify') }}</div>
+                <div class="jw-alert jw-alert-err">{{ session('accountnotverify') }}</div>
             @endif
 
-            <div class="v2-field {{ $errors->has('email') ? 'has-error' : '' }}">
+            <div class="jw-field {{ $errors->has('email') ? 'has-error' : '' }}">
                 <label>Email Address</label>
-                <div class="v2-iw">
+                <div class="jw-iw">
                     <span class="il">
-                        <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><rect x="1" y="4" width="16" height="11" rx="2.2" stroke="#9ca3af" stroke-width="1.5"/><path d="M1 7l8 5.5L17 7" stroke="#9ca3af" stroke-width="1.5" stroke-linecap="round"/></svg>
+                        <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><rect x="1" y="4" width="16" height="11" rx="2.2" stroke="#9CA3AF" stroke-width="1.5"/><path d="M1 7l8 5.5L17 7" stroke="#9CA3AF" stroke-width="1.5" stroke-linecap="round"/></svg>
                     </span>
                     <input type="email" name="email" id="email"
-                           class="v2-inp {{ $errors->has('email') ? 'is-invalid' : '' }}"
+                           class="jw-inp {{ $errors->has('email') ? 'is-invalid' : '' }}"
                            placeholder="Enter your email" value="{{ old('email') }}"
                            required autocomplete="off">
                 </div>
-                @if($errors->has('email'))<span class="v2-err"><strong>{{ $errors->first('email') }}</strong></span>@endif
+                @if($errors->has('email'))<span class="jw-err"><strong>{{ $errors->first('email') }}</strong></span>@endif
             </div>
 
-            <div class="v2-fgt-acts">
-                <button type="submit" id="reset_password" class="v2-fgt-sub">
+            <div class="jw-fgt-acts">
+                <button type="submit" id="reset_password" class="jw-fgt-sub">
                     <span class="indicator-label">Reset Password</span>
                     <span class="indicator-progress" style="display:none">Please wait…&nbsp;<span class="spinner-border spinner-border-sm align-middle"></span></span>
                 </button>
-                <a href="{{ route('login') }}" class="v2-fgt-cancel">Cancel</a>
+                <a href="{{ route('login') }}" class="jw-fgt-cancel">Cancel</a>
             </div>
         </form>
 
-        {{-- Security strip --}}
-        <div class="v2-sec">
-            <div class="v2-sec-ico">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M12 2L3 6v5.5C3 17.25 6.8 22.6 12 24c5.2-1.4 9-6.75 9-12.5V6L12 2Z" fill="rgba(245,166,35,.28)" stroke="#F5A623" stroke-width="1.7"/><path d="M8 12l3 3 5-5" stroke="#F5A623" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        {{-- Trust strip --}}
+        <div class="jw-trust" role="list">
+            <div class="jw-trust-item" role="listitem">
+                <div class="jw-trust-ico">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                        <rect x="5" y="11" width="14" height="10" rx="2" stroke="#16A34A" stroke-width="2"/>
+                        <path d="M8 11V7a4 4 0 0 1 8 0v4" stroke="#16A34A" stroke-width="2"/>
+                    </svg>
+                </div>
+                <div class="jw-trust-meta">
+                    <strong>SSL Secured</strong>
+                    <span>256-bit encryption</span>
+                </div>
             </div>
-            <div class="v2-sec-text">
-                <strong>Secure &bull; Trusted &bull; Encrypted</strong>
-                <span>Your information is protected and safe with us.</span>
+            <div class="jw-trust-item" role="listitem">
+                <div class="jw-trust-ico">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                        <path d="M12 3l8 4v5c0 5-3.5 9-8 10-4.5-1-8-5-8-10V7l8-4Z" stroke="#16A34A" stroke-width="2" fill="none"/>
+                        <path d="M8 12l3 3 5-5" stroke="#16A34A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+                    </svg>
+                </div>
+                <div class="jw-trust-meta">
+                    <strong>99.9% Uptime</strong>
+                    <span>Reliable Platform</span>
+                </div>
+            </div>
+            <div class="jw-trust-item" role="listitem">
+                <div class="jw-trust-ico">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                        <path d="M12 3l8 4v5c0 5-3.5 9-8 10-4.5-1-8-5-8-10V7l8-4Z" stroke="#16A34A" stroke-width="2" fill="none"/>
+                        <path d="M8 12l3 3 5-5" stroke="#16A34A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+                    </svg>
+                </div>
+                <div class="jw-trust-meta">
+                    <strong>SOC 2 Ready</strong>
+                    <span>Enterprise Grade</span>
+                </div>
+            </div>
+            <div class="jw-trust-item" role="listitem">
+                <div class="jw-trust-ico">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                        <path d="M12 3l8 4v5c0 5-3.5 9-8 10-4.5-1-8-5-8-10V7l8-4Z" stroke="#16A34A" stroke-width="2" fill="none"/>
+                        <path d="M8 12l3 3 5-5" stroke="#16A34A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+                    </svg>
+                </div>
+                <div class="jw-trust-meta">
+                    <strong>GDPR Compliant</strong>
+                    <span>Data Protection</span>
+                </div>
             </div>
         </div>
 
-    </div>{{-- /v2-body --}}
+    </div>{{-- /jw-body --}}
 
-    {{-- Footer --}}
-    <div class="v2-foot">
-        <span class="v2-foot-copy">© 2025 Jero. All rights reserved.</span>
-        <span class="v2-foot-sep">|</span>
-        <a href="/privacy-policy">Privacy Policy</a>
-        <span class="v2-foot-sep">|</span>
-        <a href="/terms">Terms of Service</a>
-    </div>
+</div>{{-- /jw-right --}}
 
-</div>{{-- /v2-right --}}
-
-</div>{{-- /v2-page --}}
-</div>{{-- /v2-shell --}}
+</div>{{-- /jw-page --}}
+</div>{{-- /jw-shell --}}
 @endsection
 
 <script>
 function refreshCaptcha() {
     document.getElementById('captchaImg').src = "{{ route('captcha.generate') }}?t=" + Date.now();
+    var c = document.getElementById('jw-cap');
+    if (c) { c.value = ''; c.classList.remove('is-ok'); }
+    var ok = document.getElementById('jw-cap-ok');
+    if (ok) ok.style.display = 'none';
 }
-function v2Eye() {
-    var i = document.getElementById('v2pwd'), e = document.getElementById('v2eye');
+
+function jwEye() {
+    var i = document.getElementById('jw-pwd'), e = document.getElementById('jw-eye');
     if (i.type === 'password') {
         i.type = 'text';
-        e.innerHTML = '<path d="M1.5 9s2.8-5.5 7.5-5.5S16.5 9 16.5 9s-2.8 5.5-7.5 5.5S1.5 9 1.5 9Z" stroke="#6b7280" stroke-width="1.5"/><circle cx="9" cy="9" r="2.2" stroke="#6b7280" stroke-width="1.5"/><line x1="2" y1="2" x2="17" y2="17" stroke="#6b7280" stroke-width="1.5" stroke-linecap="round"/>';
+        e.innerHTML = '<path d="M1.5 9s2.8-5.5 7.5-5.5S16.5 9 16.5 9s-2.8 5.5-7.5 5.5S1.5 9 1.5 9Z" stroke="#6B7280" stroke-width="1.5"/><circle cx="9" cy="9" r="2.2" stroke="#6B7280" stroke-width="1.5"/><line x1="2" y1="2" x2="17" y2="17" stroke="#6B7280" stroke-width="1.5" stroke-linecap="round"/>';
     } else {
         i.type = 'password';
-        e.innerHTML = '<path d="M1.5 9s2.8-5.5 7.5-5.5S16.5 9 16.5 9s-2.8 5.5-7.5 5.5S1.5 9 1.5 9Z" stroke="#9ca3af" stroke-width="1.5"/><circle cx="9" cy="9" r="2.2" stroke="#9ca3af" stroke-width="1.5"/>';
+        e.innerHTML = '<path d="M1.5 9s2.8-5.5 7.5-5.5S16.5 9 16.5 9s-2.8 5.5-7.5 5.5S1.5 9 1.5 9Z" stroke="#9CA3AF" stroke-width="1.5"/><circle cx="9" cy="9" r="2.2" stroke="#9CA3AF" stroke-width="1.5"/>';
     }
 }
+
+// Show green check when fields have content (mirrors screenshot)
+document.addEventListener('DOMContentLoaded', function () {
+    var email = document.getElementById('jw-email');
+    var emailOk = document.getElementById('jw-email-ok');
+    function checkEmail() {
+        if (email && emailOk) {
+            var v = email.value.trim();
+            var ok = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
+            emailOk.style.display = ok ? 'flex' : 'none';
+            email.classList.toggle('is-ok', ok);
+        }
+    }
+    if (email) {
+        checkEmail();
+        email.addEventListener('input', checkEmail);
+    }
+
+    var cap = document.getElementById('jw-cap');
+    var capOk = document.getElementById('jw-cap-ok');
+    function checkCap() {
+        if (cap && capOk) {
+            var ok = cap.value.trim().length >= 3;
+            capOk.style.display = ok ? 'flex' : 'none';
+            cap.classList.toggle('is-ok', ok);
+        }
+    }
+    if (cap) {
+        checkCap();
+        cap.addEventListener('input', checkCap);
+    }
+});
 </script>
