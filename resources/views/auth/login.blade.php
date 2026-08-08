@@ -59,14 +59,16 @@ body { background: var(--bg-pg); font-family: 'Poppins', sans-serif; }
 }
 
 /* Brand mark */
-.jw-brand { display: flex; align-items: center; gap: 10px; text-decoration: none; margin-bottom: 2px; }
+.jw-brand { display: flex; align-items: center; gap: 8px; text-decoration: none; margin-bottom: 2px; line-height: 1; }
+.jw-brand-mark { height: 34px; width: auto; display: block; }
 .jw-brand-name {
-    font-size: 20px; font-weight: 800; color: var(--dk);
-    letter-spacing: -0.5px; line-height: 1;
+    font-size: 22px; font-weight: 800; color: var(--dk);
+    letter-spacing: -0.6px; line-height: 1;
+    font-family: 'Poppins', 'Nunito', 'Quicksand', system-ui, sans-serif;
 }
 .jw-brand-sub {
     display: block; font-size: 10.5px; color: var(--gr);
-    font-weight: 500; margin-top: 3px; margin-left: 34px;
+    font-weight: 500; margin-top: 3px; margin-left: 42px;
     letter-spacing: 0.1px;
 }
 
@@ -511,12 +513,17 @@ if (session('status')) {
 
     {{-- Brand --}}
     <a href="https://jero.works" class="jw-brand">
-        <svg width="28" height="32" viewBox="0 0 28 32" fill="none" aria-hidden="true">
-            <path d="M14 1C6.82 1 1 6.82 1 14h26C27 6.82 21.18 1 14 1Z" fill="#111827"/>
-            <path d="M1 14c0 0 5-2 13 0" stroke="rgba(255,255,255,0.4)" stroke-width="1" fill="none"/>
-            <path d="M27 14c0 0 -5-2 -13 0" stroke="rgba(255,255,255,0.4)" stroke-width="1" fill="none"/>
-            <line x1="14" y1="14" x2="14" y2="26" stroke="#111827" stroke-width="2" stroke-linecap="round"/>
-            <path d="M14 26c0 2.2 -1.8 4 -4 4" stroke="#111827" stroke-width="2" stroke-linecap="round" fill="none"/>
+        <svg class="jw-brand-mark" viewBox="0 0 38 44" fill="none" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+            {{-- Yellow dot above umbrella --}}
+            <circle cx="19" cy="2.6" r="1.9" fill="#F5C518"/>
+            {{-- Umbrella canopy (top dome) --}}
+            <path d="M19 3.6 C10 3.6 2.6 9.6 1 17.6 C0.5 19.6 2 21 4 21 H34 C36 21 37.5 19.6 37 17.6 C35.4 9.6 28 3.6 19 3.6 Z" fill="#111827"/>
+            {{-- Scalloped bottom edge (4 lobes) --}}
+            <path d="M1.4 18.6 C2 22 4.4 24.4 7.4 24.4 C10 24.4 12.2 22.6 13 20 C13.8 22.6 16 24.4 19 24.4 C22 24.4 24.2 22.6 25 20 C25.8 22.6 28 24.4 30.6 24.4 C33.6 24.4 36 22 36.6 18.6 C36.4 19.6 36 20.4 35.4 21 H2.6 C2 20.4 1.6 19.6 1.4 18.6 Z" fill="#111827"/>
+            {{-- Umbrella pole --}}
+            <rect x="18.2" y="24" width="1.6" height="11" fill="#111827"/>
+            {{-- Hook / "j" curl at the bottom --}}
+            <path d="M19.8 35 C19.8 37.4 18 39.4 15.6 39.8 C13.6 40.2 11.6 39.4 10.6 37.6 C10.2 37 10.4 36.2 11 35.8 C11.6 35.4 12.4 35.6 12.8 36.2 C13.4 37.2 14.4 37.6 15.4 37.4 C16.6 37.2 17.4 36.2 17.4 35 V35" stroke="#111827" stroke-width="1.6" fill="none" stroke-linecap="round"/>
         </svg>
         <span class="jw-brand-name">jero.works</span>
     </a>
