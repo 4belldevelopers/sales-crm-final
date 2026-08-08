@@ -228,7 +228,7 @@ body { background: var(--bg-pg); font-family: 'Poppins', sans-serif; }
 /* Right body (centered card) */
 .jw-body {
     flex: 1;
-    display: flex; align-items: center; justify-content: center;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
     padding: 24px 48px 32px;
     overflow-y: auto;
 }
@@ -390,26 +390,28 @@ body { background: var(--bg-pg); font-family: 'Poppins', sans-serif; }
     background: var(--bg-card);
     border: 1px solid var(--bd-l);
     border-radius: 14px;
-    padding: 14px 22px;
+    padding: 14px 18px;
     display: grid;
     grid-template-columns: repeat(4, 1fr);
-    gap: 14px;
+    gap: 10px;
     box-shadow: 0 2px 12px rgba(40,30,90,0.04);
 }
-.jw-trust-item { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.jw-trust-item { display: flex; align-items: center; gap: 8px; min-width: 0; }
 .jw-trust-ico {
-    width: 30px; height: 30px; border-radius: 8px;
+    width: 28px; height: 28px; border-radius: 7px;
     background: var(--p-green); color: #15803D;
     display: flex; align-items: center; justify-content: center;
     flex-shrink: 0;
 }
-.jw-trust-meta { min-width: 0; }
+.jw-trust-meta { min-width: 0; overflow: hidden; }
 .jw-trust-meta strong {
-    display: block; font-size: 12.5px; font-weight: 700;
+    display: block; font-size: 12px; font-weight: 700;
     color: var(--dk); line-height: 1.15;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 .jw-trust-meta span {
-    display: block; font-size: 11px; color: var(--gr); line-height: 1.2;
+    display: block; font-size: 10.5px; color: var(--gr); line-height: 1.2;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 
 /* ── Responsive ─────────────────────────────────────────────── */
