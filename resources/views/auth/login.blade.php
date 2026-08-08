@@ -59,14 +59,15 @@ body { background: var(--bg-pg); font-family: 'Poppins', sans-serif; }
 }
 
 /* Brand mark */
-.jw-brand { display: flex; align-items: center; gap: 10px; text-decoration: none; margin-bottom: 4px; }
+.jw-brand { display: flex; align-items: center; gap: 10px; text-decoration: none; margin-bottom: 2px; }
 .jw-brand-name {
     font-size: 22px; font-weight: 800; color: var(--dk);
     letter-spacing: -0.5px; line-height: 1;
 }
 .jw-brand-sub {
     display: block; font-size: 11px; color: var(--gr);
-    font-weight: 500; margin-top: 2px; margin-left: 38px;
+    font-weight: 500; margin-top: 4px; margin-left: 38px;
+    letter-spacing: 0.1px;
 }
 
 /* Decorative dotted grid (top-right of left panel) */
@@ -116,12 +117,13 @@ body { background: var(--bg-pg); font-family: 'Poppins', sans-serif; }
 }
 .jw-card-badge {
     display: inline-block;
-    font-size: 10px; font-weight: 700;
-    padding: 5px 10px;
+    font-size: 10.5px; font-weight: 700;
+    padding: 5px 12px;
     border-radius: 999px;
-    letter-spacing: 0.3px;
+    letter-spacing: 0.4px;
     margin-bottom: 10px;
     text-transform: uppercase;
+    align-self: flex-start;
 }
 .jw-card-badge.b-comp  { background: var(--p-blue);   color: var(--pri); }
 .jw-card-badge.b-agc   { background: var(--p-green);  color: #15803D; }
@@ -136,7 +138,7 @@ body { background: var(--bg-pg); font-family: 'Poppins', sans-serif; }
 }
 .jw-card-illu {
     margin-top: auto;
-    height: 100px;
+    height: 130px;
     display: flex;
     align-items: flex-end;
     justify-content: center;
@@ -317,7 +319,7 @@ body { background: var(--bg-pg); font-family: 'Poppins', sans-serif; }
     display: flex; align-items: center; gap: 10px; margin-bottom: 18px;
 }
 .jw-cap-img {
-    width: 110px; height: 46px; border: 1.5px solid var(--bd);
+    width: 100px; height: 46px; border: 1.5px solid var(--bd);
     border-radius: 10px; overflow: hidden;
     background: #F9FAFB;
     display: flex; align-items: center; justify-content: center;
@@ -430,7 +432,7 @@ body { background: var(--bg-pg); font-family: 'Poppins', sans-serif; }
     .jw-card   { padding: 12px 12px 0; border-radius: 12px; }
     .jw-card-title { font-size: 13.5px; }
     .jw-card-desc  { font-size: 11px; }
-    .jw-card-illu  { height: 76px; }
+    .jw-card-illu  { height: 96px; }
     .jw-card-badge { font-size: 9px; padding: 4px 8px; }
     .jw-stats { padding: 12px 14px; border-radius: 12px; gap: 8px; }
     .jw-stat-meta strong { font-size: 13px; }
@@ -457,7 +459,7 @@ body { background: var(--bg-pg); font-family: 'Poppins', sans-serif; }
     .jw-hero p  { font-size: 12.5px; }
     .jw-cards   { gap: 8px; }
     .jw-card-title { font-size: 13px; }
-    .jw-card-illu   { height: 64px; }
+    .jw-card-illu   { height: 80px; }
     .jw-stats { padding: 10px 12px; }
     .jw-stat-meta strong { font-size: 12.5px; }
     .jw-stat-meta span   { font-size: 9.5px; }
@@ -554,7 +556,7 @@ if (session('status')) {
     {{-- Hero --}}
     <div class="jw-hero">
         <h1>One Platform.<br>Every <span class="acc">Hiring Need.</span></h1>
-        <p>Connect companies, agencies and talent on a<br>modern recruitment platform built for speed and trust.</p>
+        <p>Connect companies, agencies and talent on a modern recruitment platform built for speed and trust.</p>
     </div>
 
     {{-- Persona cards --}}
@@ -563,33 +565,52 @@ if (session('status')) {
         {{-- Card 1: Companies --}}
         <div class="jw-card">
             <span class="jw-card-badge b-comp">For Companies</span>
-            <h3 class="jw-card-title">Find Trusted Agencies</h3>
+            <h3 class="jw-card-title">Find Trusted<br>Agencies</h3>
             <p class="jw-card-desc">Connect with verified recruitment agencies and hire faster.</p>
             <div class="jw-card-illu">
-                <svg viewBox="0 0 130 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    {{-- Building backdrop --}}
-                    <rect x="6"  y="55" width="22" height="40" fill="#E2ECFF"/>
-                    <rect x="30" y="48" width="18" height="47" fill="#D6E4FF"/>
-                    <rect x="92" y="55" width="22" height="40" fill="#E2ECFF"/>
-                    <rect x="78" y="60" width="12" height="35" fill="#D6E4FF"/>
-                    {{-- Man at laptop --}}
-                    <circle cx="62" cy="42" r="13" fill="#3D2817"/>
-                    <circle cx="62" cy="40" r="11" fill="#F5C9A3"/>
-                    <path d="M58 39c0-3 2-5 4-5s4 2 4 5" stroke="#222" stroke-width="1" fill="none"/>
-                    <rect x="55" y="48" width="16" height="20" rx="2" fill="#2E66FF"/>
-                    <rect x="56" y="50" width="14" height="6" rx="1" fill="#FFFFFF"/>
-                    <circle cx="59" cy="53" r="1.5" fill="#2E66FF"/>
-                    <circle cx="65" cy="53" r="1.5" fill="#FF7A1A"/>
+                <svg viewBox="0 0 160 110" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    {{-- City backdrop --}}
+                    <rect x="4"  y="64" width="14" height="40" fill="#E2ECFF"/>
+                    <rect x="20" y="56" width="12" height="48" fill="#D6E4FF"/>
+                    <rect x="34" y="48" width="14" height="56" fill="#C8DAFF"/>
+                    <rect x="50" y="60" width="10" height="44" fill="#D6E4FF"/>
+                    <rect x="120" y="58" width="14" height="46" fill="#D6E4FF"/>
+                    <rect x="136" y="50" width="12" height="54" fill="#C8DAFF"/>
+                    {{-- Man body / suit --}}
+                    {{-- Hair --}}
+                    <path d="M48 30c0-8 6-14 14-14s14 6 14 14c-3-3-7-5-14-5s-11 2-14 5Z" fill="#3D2817"/>
+                    {{-- Head --}}
+                    <ellipse cx="62" cy="32" rx="10" ry="11" fill="#F5C9A3"/>
+                    {{-- Glasses --}}
+                    <circle cx="58" cy="32" r="3" fill="none" stroke="#222" stroke-width="1.2"/>
+                    <circle cx="66" cy="32" r="3" fill="none" stroke="#222" stroke-width="1.2"/>
+                    <line x1="61" y1="32" x2="63" y2="32" stroke="#222" stroke-width="1.2"/>
+                    {{-- Smile --}}
+                    <path d="M58 38c1.5 1.5 5.5 1.5 8 0" stroke="#222" stroke-width="1" stroke-linecap="round" fill="none"/>
+                    {{-- Neck --}}
+                    <rect x="60" y="42" width="4" height="4" fill="#F5C9A3"/>
+                    {{-- Suit jacket --}}
+                    <path d="M44 46l16-2 16 2 4 24-2 36H46l-2-36Z" fill="#2E66FF"/>
+                    {{-- Shirt collar --}}
+                    <path d="M58 46l4 6 4-6-2 12h-4Z" fill="#FFFFFF"/>
+                    {{-- Tie --}}
+                    <path d="M61 52l2 8-1 14h-2l-1-14Z" fill="#FF7A1A"/>
+                    {{-- Arms forward to laptop --}}
+                    <path d="M44 50l-8 16 8 4 8-6Z" fill="#2E66FF"/>
+                    <path d="M80 50l8 16-8 4-8-6Z" fill="#2E66FF"/>
+                    {{-- Hands --}}
+                    <ellipse cx="42" cy="72" rx="4" ry="3" fill="#F5C9A3"/>
+                    <ellipse cx="82" cy="72" rx="4" ry="3" fill="#F5C9A3"/>
                     {{-- Laptop --}}
-                    <rect x="44" y="68" width="38" height="22" rx="2" fill="#1F2937"/>
-                    <rect x="46" y="70" width="34" height="18" rx="1" fill="#FFFFFF"/>
-                    <path d="M40 90h46l-3 4H43l-3-4Z" fill="#4B5563"/>
-                    {{-- Floating badge --}}
-                    <circle cx="100" cy="34" r="11" fill="#EEF2FF"/>
-                    <g transform="translate(94 28)" fill="#2E66FF">
-                        <circle cx="3" cy="3" r="2.2"/>
-                        <circle cx="9" cy="3" r="2.2"/>
-                        <path d="M0 11c0-3 2-5 6-5s6 2 6 5" stroke="#2E66FF" stroke-width="1.5" fill="none"/>
+                    <rect x="38" y="76" width="48" height="22" rx="2" fill="#1F2937"/>
+                    <rect x="40" y="78" width="44" height="18" rx="1" fill="#E5E7EB"/>
+                    <rect x="32" y="98" width="60" height="3" rx="1.5" fill="#374151"/>
+                    {{-- Floating badge (people) --}}
+                    <circle cx="108" cy="38" r="14" fill="#EEF2FF" stroke="#FFFFFF" stroke-width="2"/>
+                    <g transform="translate(100 30)" fill="#2E66FF">
+                        <circle cx="4" cy="3" r="2.6"/>
+                        <circle cx="11" cy="3" r="2.6" opacity=".65"/>
+                        <path d="M-1 13c0-3.5 2.5-6 7-6s7 2.5 7 6" stroke="#2E66FF" stroke-width="1.6" fill="none" stroke-linecap="round"/>
                     </g>
                 </svg>
             </div>
@@ -598,35 +619,49 @@ if (session('status')) {
         {{-- Card 2: Agencies --}}
         <div class="jw-card">
             <span class="jw-card-badge b-agc">For Agencies</span>
-            <h3 class="jw-card-title">Search Work Opportunities</h3>
+            <h3 class="jw-card-title">Search Work<br>Opportunities</h3>
             <p class="jw-card-desc">Discover verified job opportunities from the leading companies.</p>
             <div class="jw-card-illu">
-                <svg viewBox="0 0 130 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    {{-- Resume / list backdrop --}}
-                    <rect x="10" y="22" width="30" height="40" rx="2" fill="#E7F6EC"/>
-                    <rect x="14" y="28" width="14" height="2.4" rx="1" fill="#9CA3AF"/>
-                    <rect x="14" y="34" width="22" height="2.4" rx="1" fill="#9CA3AF"/>
-                    <rect x="14" y="40" width="18" height="2.4" rx="1" fill="#9CA3AF"/>
-                    <rect x="14" y="46" width="20" height="2.4" rx="1" fill="#9CA3AF"/>
-                    <rect x="14" y="52" width="16" height="2.4" rx="1" fill="#9CA3AF"/>
-                    {{-- Woman at laptop --}}
-                    <circle cx="66" cy="40" r="13" fill="#3D2817"/>
-                    <circle cx="66" cy="38" r="11" fill="#F5C9A3"/>
-                    <path d="M60 36c2-3 4-5 6-5s4 2 6 5" stroke="#222" stroke-width="1" fill="none"/>
-                    <path d="M55 36c1-5 5-7 11-7s10 2 11 7c-2 0-22 0-22 0Z" fill="#3D2817"/>
-                    <rect x="55" y="48" width="22" height="20" rx="2" fill="#16A34A"/>
-                    <rect x="56" y="50" width="20" height="6" rx="1" fill="#FFFFFF"/>
-                    <circle cx="60" cy="53" r="1.5" fill="#16A34A"/>
-                    <circle cx="68" cy="53" r="1.5" fill="#FF7A1A"/>
-                    <rect x="66" cy="51" width="2.5" height="6" fill="#FF7A1A"/>
+                <svg viewBox="0 0 160 110" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    {{-- Resume papers --}}
+                    <rect x="8"  y="22" width="32" height="42" rx="3" fill="#FFFFFF" stroke="#E5E7EB" stroke-width="1"/>
+                    <rect x="14" y="28" width="20" height="2.4" rx="1" fill="#16A34A"/>
+                    <rect x="14" y="34" width="14" height="2" rx="1" fill="#9CA3AF"/>
+                    <rect x="14" y="40" width="22" height="2" rx="1" fill="#9CA3AF"/>
+                    <rect x="14" y="46" width="18" height="2" rx="1" fill="#9CA3AF"/>
+                    <rect x="14" y="52" width="20" height="2" rx="1" fill="#9CA3AF"/>
+                    <circle cx="34" cy="58" r="3" fill="#16A34A" opacity=".25"/>
+                    {{-- Woman hair (long brown) --}}
+                    <path d="M48 28c0-9 6-15 14-15s14 6 14 15c-2-2-6-3-14-3s-12 1-14 3Z" fill="#3D2817"/>
+                    <path d="M44 30c-1 8 0 22 2 28l4-2c-2-6-3-18-2-26Z" fill="#3D2817"/>
+                    <path d="M80 30c1 8 0 22-2 28l-4-2c2-6 3-18 2-26Z" fill="#3D2817"/>
+                    {{-- Head --}}
+                    <ellipse cx="62" cy="32" rx="10" ry="11" fill="#F5C9A3"/>
+                    {{-- Eyes --}}
+                    <circle cx="58" cy="32" r="1.2" fill="#222"/>
+                    <circle cx="66" cy="32" r="1.2" fill="#222"/>
+                    {{-- Smile --}}
+                    <path d="M58 37c1.5 1.5 5.5 1.5 8 0" stroke="#222" stroke-width="1" stroke-linecap="round" fill="none"/>
+                    {{-- Neck --}}
+                    <rect x="60" y="42" width="4" height="4" fill="#F5C9A3"/>
+                    {{-- Green jacket --}}
+                    <path d="M46 46l16-2 16 2 4 24-2 36H48l-2-36Z" fill="#16A34A"/>
+                    {{-- Inner shirt --}}
+                    <path d="M58 46l4 6 4-6-1 8h-6Z" fill="#FFFFFF"/>
+                    {{-- Arms --}}
+                    <path d="M46 50l-8 18 8 4 8-8Z" fill="#16A34A"/>
+                    <path d="M78 50l8 18-8 4-8-8Z" fill="#16A34A"/>
+                    <ellipse cx="44" cy="74" rx="4" ry="3" fill="#F5C9A3"/>
+                    <ellipse cx="80" cy="74" rx="4" ry="3" fill="#F5C9A3"/>
                     {{-- Laptop --}}
-                    <rect x="48" y="68" width="38" height="22" rx="2" fill="#1F2937"/>
-                    <rect x="50" y="70" width="34" height="18" rx="1" fill="#FFFFFF"/>
-                    <path d="M44 90h46l-3 4H47l-3-4Z" fill="#4B5563"/>
+                    <rect x="38" y="78" width="48" height="22" rx="2" fill="#1F2937"/>
+                    <rect x="40" y="80" width="44" height="18" rx="1" fill="#E5E7EB"/>
+                    <rect x="32" y="100" width="60" height="3" rx="1.5" fill="#374151"/>
                     {{-- Floating briefcase --}}
-                    <rect x="98" y="30" width="18" height="14" rx="2" fill="#E7F6EC"/>
-                    <rect x="103" y="28" width="8" height="3" rx="1" fill="#16A34A"/>
-                    <rect x="101" y="34" width="12" height="2" fill="#16A34A"/>
+                    <rect x="106" y="32" width="26" height="20" rx="3" fill="#E7F6EC" stroke="#FFFFFF" stroke-width="2"/>
+                    <rect x="113" y="28" width="12" height="5" rx="1.5" fill="#16A34A"/>
+                    <rect x="110" y="38" width="18" height="2.5" fill="#16A34A"/>
+                    <circle cx="119" cy="46" r="1.5" fill="#16A34A"/>
                 </svg>
             </div>
         </div>
@@ -634,28 +669,41 @@ if (session('status')) {
         {{-- Card 3: Talent --}}
         <div class="jw-card">
             <span class="jw-card-badge b-tal">For Talent</span>
-            <h3 class="jw-card-title">Hire Immediate Joiners</h3>
+            <h3 class="jw-card-title">Hire Immediate<br>Joiners</h3>
             <p class="jw-card-desc">Explore bench talent ready to join at the earliest.</p>
             <div class="jw-card-illu">
-                <svg viewBox="0 0 130 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    {{-- Mobile screen --}}
-                    <rect x="14" y="24" width="26" height="42" rx="4" fill="#F1ECFE"/>
-                    <circle cx="27" cy="34" r="4" fill="#6D28D9"/>
-                    <rect x="20" y="42" width="14" height="2" fill="#9CA3AF"/>
-                    <rect x="20" y="47" width="12" height="2" fill="#9CA3AF"/>
-                    <rect x="20" y="52" width="14" height="2" fill="#9CA3AF"/>
-                    <rect x="20" y="57" width="10" height="2" fill="#9CA3AF"/>
-                    {{-- Person with phone --}}
-                    <circle cx="66" cy="40" r="13" fill="#3D2817"/>
-                    <circle cx="66" cy="38" r="11" fill="#F5C9A3"/>
-                    <path d="M60 36c2-3 4-5 6-5s4 2 6 5" stroke="#222" stroke-width="1" fill="none"/>
-                    <path d="M55 36c1-5 5-7 11-7s10 2 11 7" fill="#3D2817"/>
-                    <rect x="55" y="48" width="22" height="20" rx="2" fill="#6D28D9"/>
-                    <rect x="58" y="56" width="6" height="10" rx="1" fill="#1F2937"/>
-                    <rect x="58.5" y="57" width="5" height="7" fill="#FFFFFF"/>
-                    {{-- Floating lightning --}}
-                    <circle cx="100" cy="34" r="11" fill="#F1ECFE"/>
-                    <path d="M101 28l-4 7h3l-2 6 5-8h-3l1-5Z" fill="#6D28D9"/>
+                <svg viewBox="0 0 160 110" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    {{-- Phone in hand --}}
+                    <rect x="48" y="62" width="18" height="32" rx="3" fill="#1F2937"/>
+                    <rect x="50" y="64" width="14" height="26" rx="1.5" fill="#E2ECFF"/>
+                    <circle cx="57" cy="73" r="3" fill="#6D28D9"/>
+                    <rect x="52" y="80" width="10" height="2" fill="#9CA3AF"/>
+                    <rect x="52" y="84" width="8" height="2" fill="#9CA3AF"/>
+                    <rect x="52" y="88" width="10" height="2" fill="#9CA3AF"/>
+                    {{-- Man hair --}}
+                    <path d="M64 28c0-8 5-14 14-14s14 6 14 14c-3-3-7-5-14-5s-11 2-14 5Z" fill="#3D2817"/>
+                    {{-- Head --}}
+                    <ellipse cx="78" cy="32" rx="10" ry="11" fill="#F5C9A3"/>
+                    {{-- Eyes --}}
+                    <circle cx="74" cy="32" r="1.2" fill="#222"/>
+                    <circle cx="82" cy="32" r="1.2" fill="#222"/>
+                    {{-- Smile --}}
+                    <path d="M74 37c1.5 1.5 5.5 1.5 8 0" stroke="#222" stroke-width="1" stroke-linecap="round" fill="none"/>
+                    {{-- Neck --}}
+                    <rect x="76" y="42" width="4" height="4" fill="#F5C9A3"/>
+                    {{-- Purple hoodie --}}
+                    <path d="M60 46l18-2 18 2 4 26-2 38H62l-2-38Z" fill="#6D28D9"/>
+                    {{-- Hood collar --}}
+                    <path d="M70 46c2-2 6-2 8 0l-1 6-6-1Z" fill="#FFFFFF" opacity=".25"/>
+                    {{-- Arms (one forward holding phone) --}}
+                    <path d="M62 52l-12 18 12 6 6-8Z" fill="#6D28D9"/>
+                    {{-- Arm holding phone --}}
+                    <path d="M76 56l16 16-4 8-12-12Z" fill="#6D28D9"/>
+                    <ellipse cx="64" cy="76" rx="4" ry="3" fill="#F5C9A3"/>
+                    <ellipse cx="92" cy="80" rx="4" ry="3" fill="#F5C9A3"/>
+                    {{-- Floating lightning bolt --}}
+                    <circle cx="118" cy="34" r="14" fill="#F1ECFE" stroke="#FFFFFF" stroke-width="2"/>
+                    <path d="M120 26l-6 10h4l-3 8 7-12h-4l2-6Z" fill="#6D28D9"/>
                 </svg>
             </div>
         </div>
