@@ -50,7 +50,7 @@ body { background: var(--bg-pg); font-family: 'Poppins', sans-serif; }
 .jw-left {
     flex: 1.15;
     background: var(--bg-pn);
-    padding: 36px 48px 28px;
+    padding: 24px 36px 16px;
     display: flex;
     flex-direction: column;
     position: relative;
@@ -61,67 +61,68 @@ body { background: var(--bg-pg); font-family: 'Poppins', sans-serif; }
 /* Brand mark */
 .jw-brand { display: flex; align-items: center; gap: 10px; text-decoration: none; margin-bottom: 2px; }
 .jw-brand-name {
-    font-size: 22px; font-weight: 800; color: var(--dk);
+    font-size: 20px; font-weight: 800; color: var(--dk);
     letter-spacing: -0.5px; line-height: 1;
 }
 .jw-brand-sub {
-    display: block; font-size: 11px; color: var(--gr);
-    font-weight: 500; margin-top: 4px; margin-left: 38px;
+    display: block; font-size: 10.5px; color: var(--gr);
+    font-weight: 500; margin-top: 3px; margin-left: 34px;
     letter-spacing: 0.1px;
 }
 
 /* Decorative dotted grid (top-right of left panel) */
 .jw-dots {
     position: absolute;
-    top: 40px;
-    right: 60px;
-    width: 140px;
-    height: 80px;
+    top: 28px;
+    right: 48px;
+    width: 110px;
+    height: 64px;
     pointer-events: none;
     opacity: 0.7;
 }
 .jw-dots svg { width: 100%; height: 100%; }
 
 /* Hero */
-.jw-hero { margin: 28px 0 26px; max-width: 580px; }
+.jw-hero { margin: 16px 0 14px; max-width: 580px; }
 .jw-hero h1 {
-    font-size: 44px;
+    font-size: 34px;
     font-weight: 800;
     color: var(--dk);
-    line-height: 1.12;
-    letter-spacing: -1px;
-    margin: 0 0 14px;
+    line-height: 1.1;
+    letter-spacing: -0.8px;
+    margin: 0 0 10px;
 }
 .jw-hero h1 .acc { color: var(--acc); }
 .jw-hero p {
-    font-size: 14px; color: var(--gr); line-height: 1.55; margin: 0; font-weight: 400;
+    font-size: 13px; color: var(--gr); line-height: 1.5; margin: 0; font-weight: 400;
 }
 
 /* 3 persona cards */
 .jw-cards {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: 14px;
-    margin-bottom: 22px;
+    gap: 10px;
+    margin-bottom: 14px;
 }
 .jw-card {
     background: var(--bg-card);
-    border-radius: 14px;
-    padding: 16px 16px 0;
+    border-radius: 12px;
+    padding: 12px 12px 0;
     border: 1px solid rgba(0,0,0,0.04);
     box-shadow: 0 2px 10px rgba(60,40,140,0.06);
     display: flex;
     flex-direction: column;
     overflow: hidden;
     position: relative;
+    min-height: 0;
 }
 .jw-card-badge {
     display: inline-block;
-    font-size: 10.5px; font-weight: 700;
-    padding: 5px 12px;
+    font-size: 9.5px; font-weight: 700;
+    padding: 4px 10px;
     border-radius: 999px;
     letter-spacing: 0.4px;
-    margin-bottom: 10px;
+    margin-bottom: 8px;
     text-transform: uppercase;
     align-self: flex-start;
 }
@@ -129,16 +130,16 @@ body { background: var(--bg-pg); font-family: 'Poppins', sans-serif; }
 .jw-card-badge.b-agc   { background: var(--p-green);  color: #15803D; }
 .jw-card-badge.b-tal   { background: var(--p-purple); color: #6D28D9; }
 .jw-card-title {
-    font-size: 15px; font-weight: 700; color: var(--dk);
-    line-height: 1.3; margin: 0 0 6px;
+    font-size: 13.5px; font-weight: 700; color: var(--dk);
+    line-height: 1.25; margin: 0 0 5px;
 }
 .jw-card-desc {
-    font-size: 12px; color: var(--gr); line-height: 1.5;
-    margin: 0 0 12px;
+    font-size: 11px; color: var(--gr); line-height: 1.45;
+    margin: 0 0 8px;
 }
 .jw-card-illu {
     margin-top: auto;
-    height: 130px;
+    height: 90px;
     display: flex;
     align-items: flex-end;
     justify-content: center;
@@ -149,49 +150,50 @@ body { background: var(--bg-pg); font-family: 'Poppins', sans-serif; }
 /* Stats bar */
 .jw-stats {
     background: var(--bg-card);
-    border-radius: 14px;
-    padding: 16px 22px;
+    border-radius: 12px;
+    padding: 12px 18px;
     display: flex;
     align-items: center;
     justify-content: space-between;
     border: 1px solid rgba(0,0,0,0.04);
     box-shadow: 0 2px 10px rgba(60,40,140,0.05);
-    gap: 12px;
+    gap: 10px;
 }
-.jw-stat { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.jw-stat { display: flex; align-items: center; gap: 8px; min-width: 0; }
 .jw-stat-ico {
-    width: 36px; height: 36px; border-radius: 10px;
+    width: 30px; height: 30px; border-radius: 8px;
     display: flex; align-items: center; justify-content: center;
     flex-shrink: 0;
 }
+.jw-stat-ico svg { width: 16px; height: 16px; }
 .jw-stat-ico.s-people { background: var(--p-blue); }
 .jw-stat-ico.s-jobs   { background: var(--p-green); }
 .jw-stat-ico.s-cand   { background: var(--p-pink); }
 .jw-stat-ico.s-up     { background: var(--p-orange); }
 .jw-stat-meta strong {
-    display: block; font-size: 15px; font-weight: 800; color: var(--dk);
+    display: block; font-size: 13px; font-weight: 800; color: var(--dk);
     line-height: 1.1; letter-spacing: -0.3px;
 }
 .jw-stat-meta span {
-    display: block; font-size: 11px; color: var(--gr); line-height: 1.2;
+    display: block; font-size: 10px; color: var(--gr); line-height: 1.2;
 }
 
 /* Footer (left panel bottom) */
 .jw-left-foot {
-    margin-top: 22px;
+    margin-top: 14px;
     display: flex; align-items: center; justify-content: space-between;
-    font-size: 12px; color: var(--gr);
-    gap: 16px; flex-wrap: wrap;
+    font-size: 11px; color: var(--gr);
+    gap: 12px; flex-wrap: wrap;
 }
 .jw-left-foot a { color: var(--gr); text-decoration: none; }
 .jw-left-foot a:hover { color: var(--dk); }
-.jw-left-foot .links { display: flex; gap: 22px; flex-wrap: wrap; }
+.jw-left-foot .links { display: flex; gap: 14px; flex-wrap: wrap; align-items: center; }
 .jw-locale {
-    display: inline-flex; align-items: center; gap: 6px;
+    display: inline-flex; align-items: center; gap: 5px;
     background: var(--bg-card);
     border: 1px solid var(--bd);
-    padding: 6px 12px; border-radius: 8px;
-    font-size: 12px; font-weight: 600; color: var(--dk); cursor: pointer;
+    padding: 4px 10px; border-radius: 6px;
+    font-size: 11px; font-weight: 600; color: var(--dk); cursor: pointer;
 }
 
 /* ═══════════════ RIGHT PANEL ═══════════════ */
@@ -207,7 +209,7 @@ body { background: var(--bg-pg); font-family: 'Poppins', sans-serif; }
 /* Top bar (right) */
 .jw-top {
     display: flex; align-items: center; justify-content: flex-end;
-    gap: 12px; padding: 28px 48px 0;
+    gap: 10px; padding: 16px 36px 0;
     font-size: 13px; color: var(--gr);
 }
 .jw-top-cta {
@@ -229,7 +231,7 @@ body { background: var(--bg-pg); font-family: 'Poppins', sans-serif; }
 .jw-body {
     flex: 1;
     display: flex; flex-direction: column; align-items: center; justify-content: center;
-    padding: 24px 48px 32px;
+    padding: 12px 36px 18px;
     overflow-y: auto;
 }
 
@@ -239,17 +241,17 @@ body { background: var(--bg-pg); font-family: 'Poppins', sans-serif; }
     max-width: 540px;
     background: var(--bg-card);
     border: 1px solid var(--bd-l);
-    border-radius: 18px;
-    padding: 36px 40px 28px;
+    border-radius: 16px;
+    padding: 24px 32px 18px;
     box-shadow: 0 4px 30px rgba(40,30,90,0.07);
 }
 .jw-card-form h2 {
-    font-size: 26px; font-weight: 800; color: var(--dk);
-    margin: 0 0 6px; letter-spacing: -0.4px; text-align: center;
+    font-size: 22px; font-weight: 800; color: var(--dk);
+    margin: 0 0 4px; letter-spacing: -0.4px; text-align: center;
 }
 .jw-card-form .sub {
-    font-size: 13px; color: var(--gr); text-align: center;
-    margin: 0 0 26px;
+    font-size: 12.5px; color: var(--gr); text-align: center;
+    margin: 0 0 18px;
 }
 
 /* Alerts (preserve existing behavior) */
@@ -262,10 +264,10 @@ body { background: var(--bg-pg); font-family: 'Poppins', sans-serif; }
 .jw-err { font-size: 11.5px; color: #DC2626; margin-top: 4px; display: block; }
 
 /* Field */
-.jw-field { margin-bottom: 16px; }
+.jw-field { margin-bottom: 12px; }
 .jw-field > label {
-    display: block; font-size: 13px; font-weight: 600;
-    color: var(--dk); margin-bottom: 6px;
+    display: block; font-size: 12.5px; font-weight: 600;
+    color: var(--dk); margin-bottom: 5px;
 }
 .jw-iw { position: relative; display: flex; align-items: center; }
 .jw-iw .il {
@@ -277,10 +279,10 @@ body { background: var(--bg-pg); font-family: 'Poppins', sans-serif; }
     display: flex; cursor: pointer;
 }
 .jw-inp {
-    width: 100%; height: 46px;
-    border: 1.5px solid var(--bd); border-radius: 10px;
+    width: 100%; height: 42px;
+    border: 1.5px solid var(--bd); border-radius: 9px;
     padding: 0 44px;
-    font-size: 14px; font-family: 'Poppins', sans-serif;
+    font-size: 13.5px; font-family: 'Poppins', sans-serif;
     color: var(--dk); outline: none; background: #fff;
     transition: border-color .2s, box-shadow .2s;
 }
@@ -296,50 +298,50 @@ body { background: var(--bg-pg); font-family: 'Poppins', sans-serif; }
 /* Mid row */
 .jw-mid {
     display: flex; align-items: center; justify-content: space-between;
-    margin: 4px 0 18px;
+    margin: 2px 0 12px;
 }
 .jw-rem { display: flex; align-items: center; gap: 8px; }
 .jw-rem input[type=checkbox] {
-    width: 17px; height: 17px; accent-color: var(--pri);
+    width: 16px; height: 16px; accent-color: var(--pri);
     cursor: pointer; flex-shrink: 0; border-radius: 4px;
 }
-.jw-rem label { font-size: 13px; color: var(--tx); cursor: pointer; user-select: none; }
+.jw-rem label { font-size: 12.5px; color: var(--tx); cursor: pointer; user-select: none; }
 .jw-fgt {
-    font-size: 13px; font-weight: 600; color: var(--pri);
+    font-size: 12.5px; font-weight: 600; color: var(--pri);
     text-decoration: none; cursor: pointer;
 }
 .jw-fgt:hover { text-decoration: underline; color: var(--pri-h); }
 
 /* Captcha row */
 .jw-cap-lbl {
-    font-size: 13px; font-weight: 600; color: var(--dk);
-    margin-bottom: 6px;
+    font-size: 12.5px; font-weight: 600; color: var(--dk);
+    margin-bottom: 5px;
 }
 .jw-cap-row {
-    display: flex; align-items: center; gap: 10px; margin-bottom: 18px;
+    display: flex; align-items: center; gap: 10px; margin-bottom: 14px;
 }
 .jw-cap-img {
-    width: 100px; height: 46px; border: 1.5px solid var(--bd);
-    border-radius: 10px; overflow: hidden;
+    width: 92px; height: 42px; border: 1.5px solid var(--bd);
+    border-radius: 9px; overflow: hidden;
     background: #F9FAFB;
     display: flex; align-items: center; justify-content: center;
     flex-shrink: 0;
 }
-.jw-cap-img img { height: 42px; width: auto; object-fit: contain; }
+.jw-cap-img img { height: 38px; width: auto; object-fit: contain; }
 .jw-cap-btn {
-    display: inline-flex; align-items: center; gap: 6px;
+    display: inline-flex; align-items: center; gap: 5px;
     background: transparent; color: var(--pri);
-    font-size: 13px; font-weight: 600; cursor: pointer;
+    font-size: 12.5px; font-weight: 600; cursor: pointer;
     border: none; padding: 0 4px; white-space: nowrap;
     flex-shrink: 0;
 }
 .jw-cap-btn:hover { color: var(--pri-h); }
 .jw-cap-field { flex: 1; position: relative; }
 .jw-cap-inp {
-    width: 100%; height: 46px;
-    border: 1.5px solid var(--bd); border-radius: 10px;
-    padding: 0 14px; padding-right: 40px;
-    font-size: 16px; letter-spacing: 4px; font-weight: 700;
+    width: 100%; height: 42px;
+    border: 1.5px solid var(--bd); border-radius: 9px;
+    padding: 0 14px; padding-right: 38px;
+    font-size: 15px; letter-spacing: 4px; font-weight: 700;
     font-family: 'Poppins', sans-serif; outline: none; background: #fff;
     color: var(--dk); transition: border-color .2s;
 }
@@ -350,10 +352,10 @@ body { background: var(--bg-pg); font-family: 'Poppins', sans-serif; }
 /* Sign-in button (BLUE with arrow) */
 .jw-btn {
     display: flex; align-items: center; justify-content: center; gap: 10px;
-    width: 100%; height: 50px;
+    width: 100%; height: 44px;
     background: var(--pri); color: #fff;
-    border: none; border-radius: 10px;
-    font-size: 15px; font-weight: 600;
+    border: none; border-radius: 9px;
+    font-size: 14px; font-weight: 600;
     font-family: 'Poppins', sans-serif; cursor: pointer;
     transition: background .2s, box-shadow .2s, transform .05s;
     box-shadow: 0 4px 14px rgba(46,102,255,0.30);
@@ -386,31 +388,32 @@ body { background: var(--bg-pg); font-family: 'Poppins', sans-serif; }
 /* Trust strip (below sign-in card) */
 .jw-trust {
     width: 100%; max-width: 540px;
-    margin-top: 16px;
+    margin-top: 14px;
     background: var(--bg-card);
     border: 1px solid var(--bd-l);
     border-radius: 14px;
-    padding: 14px 18px;
+    padding: 12px 14px;
     display: grid;
     grid-template-columns: repeat(4, 1fr);
-    gap: 10px;
+    gap: 8px;
     box-shadow: 0 2px 12px rgba(40,30,90,0.04);
 }
-.jw-trust-item { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.jw-trust-item { display: flex; align-items: center; gap: 7px; min-width: 0; }
 .jw-trust-ico {
-    width: 28px; height: 28px; border-radius: 7px;
+    width: 24px; height: 24px; border-radius: 6px;
     background: var(--p-green); color: #15803D;
     display: flex; align-items: center; justify-content: center;
     flex-shrink: 0;
 }
+.jw-trust-ico svg { width: 12px; height: 12px; }
 .jw-trust-meta { min-width: 0; overflow: hidden; }
 .jw-trust-meta strong {
-    display: block; font-size: 12px; font-weight: 700;
+    display: block; font-size: 11.5px; font-weight: 700;
     color: var(--dk); line-height: 1.15;
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 .jw-trust-meta span {
-    display: block; font-size: 10.5px; color: var(--gr); line-height: 1.2;
+    display: block; font-size: 10px; color: var(--gr); line-height: 1.2;
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 
@@ -426,53 +429,17 @@ body { background: var(--bg-pg); font-family: 'Poppins', sans-serif; }
 
 /* 1366px – most 14" / 15.6" laptops */
 @media (max-width: 1366px) {
-    .jw-left   { padding: 24px 28px 18px; }
-    .jw-hero   { margin: 18px 0 18px; }
-    .jw-hero h1{ font-size: 30px; letter-spacing: -0.6px; }
-    .jw-hero p { font-size: 13px; }
-    .jw-cards  { gap: 10px; margin-bottom: 16px; }
-    .jw-card   { padding: 12px 12px 0; border-radius: 12px; }
-    .jw-card-title { font-size: 13.5px; }
-    .jw-card-desc  { font-size: 11px; }
-    .jw-card-illu  { height: 96px; }
-    .jw-card-badge { font-size: 9px; padding: 4px 8px; }
-    .jw-stats { padding: 12px 14px; border-radius: 12px; gap: 8px; }
-    .jw-stat-meta strong { font-size: 13px; }
-    .jw-stat-meta span   { font-size: 10px; }
-    .jw-stat-ico { width: 30px; height: 30px; }
-    .jw-stat-ico svg { width: 16px; height: 16px; }
-    .jw-body { padding: 18px 30px 22px; }
-    .jw-top  { padding: 20px 30px 0; }
-    .jw-card-form { padding: 26px 28px 22px; max-width: 500px; }
-    .jw-card-form h2 { font-size: 22px; }
-    .jw-trust { padding: 12px 14px; gap: 10px; max-width: 500px; }
-    .jw-trust-meta strong { font-size: 11.5px; }
-    .jw-trust-meta span   { font-size: 10px; }
-    .jw-trust-ico { width: 26px; height: 26px; }
-    .jw-trust-ico svg { width: 14px; height: 14px; }
-    .jw-left-foot { font-size: 11px; margin-top: 14px; }
+    .jw-card-illu  { height: 78px; }
+    .jw-card-form { max-width: 500px; }
+    .jw-trust { max-width: 500px; }
     .jw-dots { display: none; }
 }
 
 /* 1280px – smaller 14" laptops */
 @media (max-width: 1280px) {
-    .jw-left { padding: 20px 22px 14px; }
-    .jw-hero h1 { font-size: 26px; }
-    .jw-hero p  { font-size: 12.5px; }
-    .jw-cards   { gap: 8px; }
-    .jw-card-title { font-size: 13px; }
-    .jw-card-illu   { height: 80px; }
-    .jw-stats { padding: 10px 12px; }
-    .jw-stat-meta strong { font-size: 12.5px; }
-    .jw-stat-meta span   { font-size: 9.5px; }
-    .jw-body { padding: 14px 24px 20px; }
-    .jw-top  { padding: 16px 24px 0; font-size: 12px; }
-    .jw-card-form { padding: 22px 24px 18px; max-width: 460px; }
-    .jw-card-form h2 { font-size: 20px; }
-    .jw-card-form .sub { font-size: 12px; margin-bottom: 20px; }
-    .jw-trust { padding: 10px 14px; gap: 8px; max-width: 460px; }
-    .jw-trust-meta strong { font-size: 11px; }
-    .jw-trust-meta span   { font-size: 9.5px; }
+    .jw-card-illu   { height: 70px; }
+    .jw-card-form { max-width: 460px; }
+    .jw-trust { max-width: 460px; }
 }
 
 /* Tall viewports – keep dots visible above 880h */
@@ -947,7 +914,7 @@ if (session('status')) {
                 </div>
                 <div class="jw-trust-meta">
                     <strong>SSL Secured</strong>
-                    <span>256-bit encryption</span>
+                    <span>256-bit</span>
                 </div>
             </div>
             <div class="jw-trust-item" role="listitem">
@@ -959,7 +926,7 @@ if (session('status')) {
                 </div>
                 <div class="jw-trust-meta">
                     <strong>99.9% Uptime</strong>
-                    <span>Reliable Platform</span>
+                    <span>Reliable</span>
                 </div>
             </div>
             <div class="jw-trust-item" role="listitem">
@@ -971,7 +938,7 @@ if (session('status')) {
                 </div>
                 <div class="jw-trust-meta">
                     <strong>SOC 2 Ready</strong>
-                    <span>Enterprise Grade</span>
+                    <span>Enterprise</span>
                 </div>
             </div>
             <div class="jw-trust-item" role="listitem">
@@ -983,7 +950,7 @@ if (session('status')) {
                 </div>
                 <div class="jw-trust-meta">
                     <strong>GDPR Compliant</strong>
-                    <span>Data Protection</span>
+                    <span>Data Safe</span>
                 </div>
             </div>
         </div>
