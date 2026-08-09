@@ -134,6 +134,7 @@ body { background: var(--bg-pg); font-family: 'Poppins', system-ui, -apple-syste
     gap: 14px;
     margin-bottom: 16px;
     position: relative;
+    align-items: end;
 }
 .jw-card-link {
     display: flex;
@@ -141,18 +142,15 @@ body { background: var(--bg-pg); font-family: 'Poppins', system-ui, -apple-syste
     justify-content: center;
     text-decoration: none;
     color: inherit;
-    border-radius: var(--r-lg);
-    background: rgba(255, 255, 255, 0.55);
-    padding: 6px;
-    transition: transform .2s ease, background .2s ease, box-shadow .2s ease;
-    box-shadow: var(--shadow-sm);
+    border-radius: 0;
+    background: transparent;
+    padding: 0;
+    transition: transform .2s ease;
 }
 .jw-card-link:hover,
 .jw-card-link:focus-visible {
     transform: translateY(-3px);
     outline: none;
-    background: rgba(255, 255, 255, 0.75);
-    box-shadow: var(--shadow-md);
 }
 .jw-card-img {
     display: block;
