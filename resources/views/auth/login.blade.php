@@ -31,22 +31,24 @@
     --shadow-btn: 0 1px 2px rgba(46,102,255,0.30), 0 6px 16px rgba(46,102,255,0.30);
     --shadow-btn-h: 0 1px 2px rgba(31,79,224,0.40), 0 10px 24px rgba(31,79,224,0.40);
 }
-html, body { margin: 0 !important; padding: 0 !important; }
+html, body { margin: 0 !important; padding: 0 !important; height: 100%; overflow: hidden; }
 body { background: var(--bg-pg); font-family: 'Poppins', sans-serif; }
 
-/* ── Outer shell (centered on ultra-wide) ──────────────────── */
+/* ── Outer shell (locked to viewport) ────────────────────────── */
 .jw-shell {
-    min-height: 100vh;
+    height: 100vh;
     width: 100%;
     display: flex;
     align-items: stretch;
     background: var(--bg-pg);
+    overflow: hidden;
 }
 .jw-page {
     display: flex;
     flex: 1;
     width: 100%;
-    min-height: 100vh;
+    height: 100vh;
+    overflow: hidden;
 }
 .jw-page * { box-sizing: border-box; font-family: 'Poppins', sans-serif; }
 
@@ -54,13 +56,14 @@ body { background: var(--bg-pg); font-family: 'Poppins', sans-serif; }
 .jw-left {
     flex: 1.15;
     background: var(--bg-pn);
-    padding: 22px 36px 14px;
+    padding: 18px 32px 12px;
     display: flex;
     flex-direction: column;
     position: relative;
     overflow: hidden;
     min-width: 0;
     min-height: 0;
+    height: 100vh;
 }
 
 /* Brand mark */
@@ -90,19 +93,22 @@ body { background: var(--bg-pg); font-family: 'Poppins', sans-serif; }
 .jw-dots svg { width: 100%; height: 100%; }
 
 /* Hero */
-.jw-hero { margin: 14px 0 12px; max-width: 100%; }
+.jw-hero { margin: 10px 0 8px; max-width: 100%; }
 .jw-hero h1 {
-    font-size: 30px;
+    font-size: 28px;
     font-weight: 800;
     color: var(--dk);
     line-height: 1.15;
     letter-spacing: -0.9px;
-    margin: 0 0 8px;
+    margin: 0 0 6px;
 }
 .jw-hero h1 .acc { color: var(--acc); }
 .jw-hero p {
     font-size: 12.5px; color: var(--gr); line-height: 1.5; margin: 0; font-weight: 400;
-    max-width: 520px;
+    max-width: 100%;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 /* 3 persona cards */
@@ -215,12 +221,14 @@ body { background: var(--bg-pg); font-family: 'Poppins', sans-serif; }
     flex-direction: column;
     min-width: 0;
     position: relative;
+    height: 100vh;
+    overflow: hidden;
 }
 
 /* Top bar (right) */
 .jw-top {
     display: flex; align-items: center; justify-content: flex-end;
-    gap: 10px; padding: 14px 36px 0;
+    gap: 10px; padding: 10px 36px 0;
     font-size: 13px; color: var(--gr);
 }
 .jw-top-cta {
@@ -242,8 +250,9 @@ body { background: var(--bg-pg); font-family: 'Poppins', sans-serif; }
 .jw-body {
     flex: 1;
     display: flex; flex-direction: column; align-items: center; justify-content: center;
-    padding: 10px 36px 16px;
+    padding: 4px 36px 10px;
     overflow-y: hidden;
+    min-height: 0;
 }
 
 /* Card */
@@ -252,17 +261,17 @@ body { background: var(--bg-pg); font-family: 'Poppins', sans-serif; }
     max-width: 540px;
     background: var(--bg-card);
     border: 1px solid var(--bd-l);
-    border-radius: 16px;
-    padding: 22px 32px 16px;
+    border-radius: 14px;
+    padding: 18px 30px 12px;
     box-shadow: var(--shadow-card);
 }
 .jw-card-form h2 {
-    font-size: 22px; font-weight: 800; color: var(--dk);
-    margin: 0 0 4px; letter-spacing: -0.4px; text-align: center;
+    font-size: 20px; font-weight: 800; color: var(--dk);
+    margin: 0 0 2px; letter-spacing: -0.4px; text-align: center;
 }
 .jw-card-form .sub {
-    font-size: 12.5px; color: var(--gr); text-align: center;
-    margin: 0 0 16px;
+    font-size: 12px; color: var(--gr); text-align: center;
+    margin: 0 0 12px;
 }
 
 /* Alerts (preserve existing behavior) */
@@ -275,10 +284,10 @@ body { background: var(--bg-pg); font-family: 'Poppins', sans-serif; }
 .jw-err { font-size: 11.5px; color: #DC2626; margin-top: 4px; display: block; }
 
 /* Field */
-.jw-field { margin-bottom: 12px; }
+.jw-field { margin-bottom: 9px; }
 .jw-field > label {
-    display: block; font-size: 12.5px; font-weight: 600;
-    color: var(--dk); margin-bottom: 5px;
+    display: block; font-size: 12px; font-weight: 600;
+    color: var(--dk); margin-bottom: 4px;
 }
 .jw-iw { position: relative; display: flex; align-items: center; }
 .jw-iw .il {
@@ -290,18 +299,18 @@ body { background: var(--bg-pg); font-family: 'Poppins', sans-serif; }
     display: flex; cursor: pointer;
 }
 .jw-inp {
-    width: 100%; height: 44px;
-    border: 1.5px solid var(--bd); border-radius: 10px;
-    padding: 0 44px;
-    font-size: 13.5px; font-family: 'Poppins', sans-serif;
+    width: 100%; height: 40px;
+    border: 1.5px solid var(--bd); border-radius: 9px;
+    padding: 0 42px;
+    font-size: 13px; font-family: 'Poppins', sans-serif;
     color: var(--dk); outline: none; background: #fff;
     transition: border-color .2s, box-shadow .2s;
 }
 .jw-inp::placeholder { color: var(--gr-l); }
 .jw-inp:hover { border-color: #C9CFDB; }
-.jw-inp:focus { border-color: var(--pri); box-shadow: 0 0 0 4px rgba(46,102,255,0.12); }
+.jw-inp:focus { border-color: var(--pri); box-shadow: 0 0 0 3px rgba(46,102,255,0.12); }
 .jw-inp.is-ok { border-color: var(--ok); }
-.jw-inp.is-ok:focus { box-shadow: 0 0 0 4px rgba(22,163,74,0.14); }
+.jw-inp.is-ok:focus { box-shadow: 0 0 0 3px rgba(22,163,74,0.14); }
 .jw-iw .ok-mark {
     position: absolute; right: 14px; color: var(--ok);
     display: flex; pointer-events: none;
@@ -310,63 +319,63 @@ body { background: var(--bg-pg); font-family: 'Poppins', sans-serif; }
 /* Mid row */
 .jw-mid {
     display: flex; align-items: center; justify-content: space-between;
-    margin: 2px 0 12px;
+    margin: 0 0 9px;
 }
 .jw-rem { display: flex; align-items: center; gap: 8px; }
 .jw-rem input[type=checkbox] {
     width: 16px; height: 16px; accent-color: var(--pri);
     cursor: pointer; flex-shrink: 0; border-radius: 4px;
 }
-.jw-rem label { font-size: 12.5px; color: var(--tx); cursor: pointer; user-select: none; }
+.jw-rem label { font-size: 12px; color: var(--tx); cursor: pointer; user-select: none; }
 .jw-fgt {
-    font-size: 12.5px; font-weight: 600; color: var(--pri);
+    font-size: 12px; font-weight: 600; color: var(--pri);
     text-decoration: none; cursor: pointer;
 }
 .jw-fgt:hover { text-decoration: underline; color: var(--pri-h); }
 
 /* Captcha row */
 .jw-cap-lbl {
-    font-size: 12.5px; font-weight: 600; color: var(--dk);
-    margin-bottom: 5px;
+    font-size: 12px; font-weight: 600; color: var(--dk);
+    margin-bottom: 4px;
 }
 .jw-cap-row {
-    display: flex; align-items: center; gap: 10px; margin-bottom: 14px;
+    display: flex; align-items: center; gap: 9px; margin-bottom: 12px;
 }
 .jw-cap-img {
-    width: 96px; height: 44px; border: 1.5px solid var(--bd);
-    border-radius: 10px; overflow: hidden;
+    width: 90px; height: 40px; border: 1.5px solid var(--bd);
+    border-radius: 9px; overflow: hidden;
     background: #F9FAFB;
     display: flex; align-items: center; justify-content: center;
     flex-shrink: 0;
 }
-.jw-cap-img img { height: 38px; width: auto; object-fit: contain; }
+.jw-cap-img img { height: 34px; width: auto; object-fit: contain; }
 .jw-cap-btn {
-    display: inline-flex; align-items: center; gap: 5px;
+    display: inline-flex; align-items: center; gap: 4px;
     background: transparent; color: var(--pri);
-    font-size: 12.5px; font-weight: 600; cursor: pointer;
+    font-size: 12px; font-weight: 600; cursor: pointer;
     border: none; padding: 0 4px; white-space: nowrap;
     flex-shrink: 0; transition: color .15s;
 }
 .jw-cap-btn:hover { color: var(--pri-h); }
 .jw-cap-field { flex: 1; position: relative; }
 .jw-cap-inp {
-    width: 100%; height: 44px;
-    border: 1.5px solid var(--bd); border-radius: 10px;
-    padding: 0 14px; padding-right: 38px;
-    font-size: 15px; letter-spacing: 4px; font-weight: 700;
+    width: 100%; height: 40px;
+    border: 1.5px solid var(--bd); border-radius: 9px;
+    padding: 0 14px; padding-right: 36px;
+    font-size: 14px; letter-spacing: 4px; font-weight: 700;
     font-family: 'Poppins', sans-serif; outline: none; background: #fff;
     color: var(--dk); transition: border-color .2s, box-shadow .2s;
 }
-.jw-cap-inp:focus { border-color: var(--pri); box-shadow: 0 0 0 4px rgba(46,102,255,0.12); }
+.jw-cap-inp:focus { border-color: var(--pri); box-shadow: 0 0 0 3px rgba(46,102,255,0.12); }
 .jw-cap-inp.is-ok { border-color: var(--ok); }
-.jw-cap-field .ok-mark { right: 12px; }
+.jw-cap-field .ok-mark { right: 10px; }
 
 /* Sign-in button (BLUE with arrow) */
 .jw-btn {
     display: flex; align-items: center; justify-content: center; gap: 10px;
-    width: 100%; height: 46px;
+    width: 100%; height: 42px;
     background: var(--pri); color: #fff;
-    border: none; border-radius: 10px;
+    border: none; border-radius: 9px;
     font-size: 14px; font-weight: 600;
     font-family: 'Poppins', sans-serif; cursor: pointer;
     transition: background .2s, box-shadow .2s, transform .05s;
@@ -402,19 +411,19 @@ body { background: var(--bg-pg); font-family: 'Poppins', sans-serif; }
 /* Trust strip (below sign-in card) */
 .jw-trust {
     width: 100%; max-width: 540px;
-    margin-top: 12px;
+    margin-top: 10px;
     background: var(--bg-card);
     border: 1px solid var(--bd-l);
-    border-radius: 14px;
-    padding: 10px 14px;
+    border-radius: 12px;
+    padding: 8px 12px;
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 10px 14px;
+    gap: 6px 12px;
     box-shadow: var(--shadow-card);
 }
-.jw-trust-item { display: flex; align-items: center; gap: 9px; min-width: 0; }
+.jw-trust-item { display: flex; align-items: center; gap: 8px; min-width: 0; }
 .jw-trust-ico {
-    width: 26px; height: 26px; border-radius: 7px;
+    width: 24px; height: 24px; border-radius: 6px;
     background: var(--p-green);
     display: flex; align-items: center; justify-content: center;
     flex-shrink: 0;
@@ -423,16 +432,16 @@ body { background: var(--bg-pg); font-family: 'Poppins', sans-serif; }
 .jw-trust-ico.t-up   { background: var(--p-orange); }
 .jw-trust-ico.t-soc  { background: var(--p-purple); }
 .jw-trust-ico.t-gdpr { background: var(--p-pink); }
-.jw-trust-ico svg { width: 13px; height: 13px; }
+.jw-trust-ico svg { width: 12px; height: 12px; }
 .jw-trust-meta { min-width: 0; overflow: hidden; }
 .jw-trust-meta strong {
-    display: block; font-size: 12px; font-weight: 700;
+    display: block; font-size: 11.5px; font-weight: 700;
     color: var(--dk); line-height: 1.15;
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     letter-spacing: -0.1px;
 }
 .jw-trust-meta span {
-    display: block; font-size: 10.5px; color: var(--gr); line-height: 1.2;
+    display: block; font-size: 10px; color: var(--gr); line-height: 1.2;
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 
@@ -447,19 +456,31 @@ body { background: var(--bg-pg); font-family: 'Poppins', sans-serif; }
 
 /* 1366px – most 14" / 15.6" laptops */
 @media (max-width: 1366px) {
-    .jw-card-illu  { height: 70px; }
+    .jw-card-illu  { height: 58px; }
     .jw-card-form { max-width: 500px; }
     .jw-trust { max-width: 500px; }
     .jw-dots { display: none; }
-    .jw-hero h1 { font-size: 28px; }
+    .jw-hero h1 { font-size: 26px; }
+    .jw-left { padding: 14px 28px 10px; }
+    .jw-hero { margin: 8px 0 6px; }
+    .jw-hero p { font-size: 12px; }
+    .jw-cards { gap: 8px; margin-bottom: 8px; }
+    .jw-card { padding: 9px 9px 0; }
+    .jw-card-illu svg { transform: scale(0.92); }
+    .jw-stats { padding: 8px 12px; }
+    .jw-stat-ico { width: 24px; height: 24px; }
+    .jw-stat-ico svg { width: 13px; height: 13px; }
+    .jw-stat-meta strong { font-size: 12px; }
+    .jw-stat-meta span { font-size: 9px; }
+    .jw-left-foot { margin-top: 8px; font-size: 10px; }
 }
 
 /* 1280px – smaller 14" laptops */
 @media (max-width: 1280px) {
-    .jw-card-illu   { height: 62px; }
+    .jw-card-illu   { height: 50px; }
     .jw-card-form { max-width: 460px; }
     .jw-trust { max-width: 460px; }
-    .jw-hero h1 { font-size: 26px; }
+    .jw-hero h1 { font-size: 24px; }
 }
 
 /* Tall viewports – keep dots visible above 880h */
@@ -886,9 +907,9 @@ if (session('status')) {
             </button>
 
             {{-- Sign Up --}}
-            <div style="text-align:center;margin-top:14px;">
-                <span style="font-size:13px;color:var(--gr);">Don't have an account?</span>
-                <a href="{{ route('register') }}" style="font-size:13px;font-weight:700;color:var(--pri);text-decoration:none;margin-left:5px;">Sign Up</a>
+            <div style="text-align:center;margin-top:10px;">
+                <span style="font-size:12px;color:var(--gr);">Don't have an account?</span>
+                <a href="{{ route('register') }}" style="font-size:12px;font-weight:700;color:var(--pri);text-decoration:none;margin-left:5px;">Sign Up</a>
             </div>
         </form>
 
