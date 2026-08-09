@@ -131,21 +131,22 @@ body { background: var(--bg-pg); font-family: 'Poppins', system-ui, -apple-syste
 .jw-cards {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: 14px;
+    gap: 8px;
     margin-bottom: 16px;
     position: relative;
     align-items: stretch;
+    height: 300px;          /* fixed row height — equalizes all 3 cards */
 }
 .jw-card-link {
     display: flex;
-    align-items: stretch;
+    align-items: center;
     justify-content: center;
     text-decoration: none;
     color: inherit;
     border-radius: 0;
     background: transparent;
     padding: 0;
-    aspect-ratio: 3 / 4;
+    height: 100%;
     transition: transform .2s ease;
 }
 .jw-card-link:hover,
@@ -155,11 +156,13 @@ body { background: var(--bg-pg); font-family: 'Poppins', system-ui, -apple-syste
 }
 .jw-card-img {
     display: block;
-    width: 100%;
-    height: 100%;
+    max-width: 100%;
+    max-height: 100%;
+    width: auto;
+    height: auto;
     margin: 0 auto;
     object-fit: contain;
-    object-position: center;
+    object-position: center center;
     /* Never distort, crop, or stretch the art. */
     user-select: none;
     -webkit-user-drag: none;
@@ -504,7 +507,7 @@ body { background: var(--bg-pg); font-family: 'Poppins', system-ui, -apple-syste
     .jw-hero { margin: 12px 0 10px; }
     .jw-hero p { font-size: 12.5px; }
     .jw-left { padding: 14px 28px 12px; }
-    .jw-cards { gap: 10px; margin-bottom: 12px; }
+    .jw-cards { gap: 8px; margin-bottom: 12px; height: 260px; }
     .jw-stats { padding: 10px 14px; }
     .jw-stat { gap: 8px; }
     .jw-stat-ico { width: 26px; height: 26px; }
@@ -531,9 +534,10 @@ body { background: var(--bg-pg); font-family: 'Poppins', system-ui, -apple-syste
     .jw-left { padding: 24px; }
     .jw-cards {
         grid-template-columns: 1fr 1fr;
-        gap: 14px;
+        gap: 12px;
+        height: 280px;
     }
-    .jw-card-link:last-child { grid-column: span 2; max-width: 50%; justify-self: center; aspect-ratio: 3 / 4; }
+    .jw-card-link:last-child { grid-column: span 2; max-width: 50%; justify-self: center; }
     .jw-stats { flex-wrap: wrap; }
     .jw-stat { flex: 1 1 45%; }
     .jw-stat + .jw-stat::before { display: none; }
@@ -547,7 +551,8 @@ body { background: var(--bg-pg); font-family: 'Poppins', system-ui, -apple-syste
     .jw-cards {
         grid-template-columns: none;
         display: flex;
-        gap: 14px;
+        gap: 12px;
+        height: 240px;
         overflow-x: auto;
         scroll-snap-type: x mandatory;
         -webkit-overflow-scrolling: touch;
@@ -559,7 +564,6 @@ body { background: var(--bg-pg); font-family: 'Poppins', system-ui, -apple-syste
     .jw-card-link {
         flex: 0 0 70%;
         scroll-snap-align: start;
-        aspect-ratio: 3 / 4;
     }
     .jw-hero h1 { font-size: 30px; }
     .jw-left { padding: 20px 18px; }
@@ -622,7 +626,7 @@ if (session('status')) {
             <img class="jw-card-img"
                  src="{{ asset('img/cards/find-trusted-agencies.webp') }}"
                  alt="Find Trusted Agencies for Companies"
-                 width="240" height="320"
+                 width="1024" height="1536"
                  decoding="async">
         </a>
 
@@ -631,7 +635,7 @@ if (session('status')) {
             <img class="jw-card-img"
                  src="{{ asset('img/cards/find-hiring-opportunities.webp') }}"
                  alt="Find Hiring Opportunities for Recruitment Agencies"
-                 width="240" height="320"
+                 width="1254" height="1254"
                  decoding="async">
         </a>
 
@@ -640,7 +644,7 @@ if (session('status')) {
             <img class="jw-card-img"
                  src="{{ asset('img/cards/find-bench-talents.webp') }}"
                  alt="Find Bench Talents and Immediate Joiners"
-                 width="240" height="320"
+                 width="1254" height="1254"
                  decoding="async">
         </a>
     </div>
