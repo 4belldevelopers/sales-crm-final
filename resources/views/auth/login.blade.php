@@ -10,22 +10,26 @@
     --acc:    #FF7A1A;          /* orange accent */
     --acc-h:  #E86608;
     --acc-l:  #FFF1E5;
-    --bg-pg:  #F6F7FB;          /* outer page background */
-    --bg-pn:  #F1EEFB;          /* left panel lavender */
+    --bg-pg:  #F4F5FA;          /* outer page background */
+    --bg-pn:  #EFEBFB;          /* left panel lavender */
     --bg-card:#FFFFFF;
-    --dk:     #111827;
+    --dk:     #0B1424;
     --tx:     #1F2937;
-    --gr:     #6B7280;
-    --gr-l:   #9CA3AF;
-    --bd:     #E5E7EB;
-    --bd-l:   #EEF1F6;
+    --gr:     #5B6478;
+    --gr-l:   #98A0AE;
+    --bd:     #E2E5ED;
+    --bd-l:   #EDEFF4;
     --ok:     #16A34A;
     --ok-l:   #E8F8EE;
-    --p-purple:#F1ECFE;
-    --p-green: #E7F6EC;
+    --p-purple:#EFEAFE;
+    --p-green: #E3F4EA;
     --p-orange:#FFEDDC;
-    --p-pink:  #FFE6EE;
-    --p-blue:  #E2ECFF;
+    --p-pink:  #FFE3EC;
+    --p-blue:  #DEE9FE;
+    --shadow-card: 0 1px 2px rgba(15,23,42,0.04), 0 8px 24px rgba(15,23,42,0.06);
+    --shadow-card-hover: 0 1px 2px rgba(15,23,42,0.05), 0 16px 36px rgba(15,23,42,0.10);
+    --shadow-btn: 0 1px 2px rgba(46,102,255,0.30), 0 6px 16px rgba(46,102,255,0.30);
+    --shadow-btn-h: 0 1px 2px rgba(31,79,224,0.40), 0 10px 24px rgba(31,79,224,0.40);
 }
 html, body { margin: 0 !important; padding: 0 !important; }
 body { background: var(--bg-pg); font-family: 'Poppins', sans-serif; }
@@ -50,26 +54,27 @@ body { background: var(--bg-pg); font-family: 'Poppins', sans-serif; }
 .jw-left {
     flex: 1.15;
     background: var(--bg-pn);
-    padding: 24px 36px 16px;
+    padding: 22px 36px 14px;
     display: flex;
     flex-direction: column;
     position: relative;
     overflow: hidden;
     min-width: 0;
+    min-height: 0;
 }
 
 /* Brand mark */
-.jw-brand { display: flex; align-items: center; gap: 8px; text-decoration: none; margin-bottom: 2px; line-height: 1; }
-.jw-brand-mark { height: 34px; width: auto; display: block; }
+.jw-brand { display: flex; align-items: center; gap: 9px; text-decoration: none; line-height: 1; }
+.jw-brand-mark { height: 32px; width: auto; display: block; }
 .jw-brand-name {
-    font-size: 22px; font-weight: 800; color: var(--dk);
+    font-size: 21px; font-weight: 800; color: var(--dk);
     letter-spacing: -0.6px; line-height: 1;
     font-family: 'Poppins', 'Nunito', 'Quicksand', system-ui, sans-serif;
 }
 .jw-brand-sub {
     display: block; font-size: 10.5px; color: var(--gr);
-    font-weight: 500; margin-top: 3px; margin-left: 42px;
-    letter-spacing: 0.1px;
+    font-weight: 500; margin-top: 4px; margin-left: 41px;
+    letter-spacing: 0.2px;
 }
 
 /* Decorative dotted grid (top-right of left panel) */
@@ -85,18 +90,19 @@ body { background: var(--bg-pg); font-family: 'Poppins', sans-serif; }
 .jw-dots svg { width: 100%; height: 100%; }
 
 /* Hero */
-.jw-hero { margin: 16px 0 14px; max-width: 580px; }
+.jw-hero { margin: 14px 0 12px; max-width: 100%; }
 .jw-hero h1 {
-    font-size: 34px;
+    font-size: 30px;
     font-weight: 800;
     color: var(--dk);
-    line-height: 1.1;
-    letter-spacing: -0.8px;
-    margin: 0 0 10px;
+    line-height: 1.15;
+    letter-spacing: -0.9px;
+    margin: 0 0 8px;
 }
 .jw-hero h1 .acc { color: var(--acc); }
 .jw-hero p {
-    font-size: 13px; color: var(--gr); line-height: 1.5; margin: 0; font-weight: 400;
+    font-size: 12.5px; color: var(--gr); line-height: 1.5; margin: 0; font-weight: 400;
+    max-width: 520px;
 }
 
 /* 3 persona cards */
@@ -104,44 +110,46 @@ body { background: var(--bg-pg); font-family: 'Poppins', sans-serif; }
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     gap: 10px;
-    margin-bottom: 14px;
+    margin-bottom: 12px;
 }
 .jw-card {
     background: var(--bg-card);
     border-radius: 12px;
-    padding: 12px 12px 0;
-    border: 1px solid rgba(0,0,0,0.04);
-    box-shadow: 0 2px 10px rgba(60,40,140,0.06);
+    padding: 11px 11px 0;
+    border: 1px solid rgba(15,23,42,0.04);
+    box-shadow: var(--shadow-card);
     display: flex;
     flex-direction: column;
     overflow: hidden;
     position: relative;
     min-height: 0;
+    transition: transform .2s, box-shadow .2s;
 }
+.jw-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-card-hover); }
 .jw-card-badge {
     display: inline-block;
-    font-size: 9.5px; font-weight: 700;
-    padding: 4px 10px;
+    font-size: 9px; font-weight: 700;
+    padding: 3px 8px;
     border-radius: 999px;
-    letter-spacing: 0.4px;
-    margin-bottom: 8px;
+    letter-spacing: 0.5px;
+    margin-bottom: 6px;
     text-transform: uppercase;
     align-self: flex-start;
 }
-.jw-card-badge.b-comp  { background: var(--p-blue);   color: var(--pri); }
+.jw-card-badge.b-comp  { background: var(--p-blue);   color: #1F4FE0; }
 .jw-card-badge.b-agc   { background: var(--p-green);  color: #15803D; }
 .jw-card-badge.b-tal   { background: var(--p-purple); color: #6D28D9; }
 .jw-card-title {
-    font-size: 13.5px; font-weight: 700; color: var(--dk);
-    line-height: 1.25; margin: 0 0 5px;
+    font-size: 13px; font-weight: 700; color: var(--dk);
+    line-height: 1.25; margin: 0 0 4px; letter-spacing: -0.1px;
 }
 .jw-card-desc {
-    font-size: 11px; color: var(--gr); line-height: 1.45;
-    margin: 0 0 8px;
+    font-size: 10.5px; color: var(--gr); line-height: 1.45;
+    margin: 0 0 6px;
 }
 .jw-card-illu {
     margin-top: auto;
-    height: 90px;
+    height: 78px;
     display: flex;
     align-items: flex-end;
     justify-content: center;
@@ -153,49 +161,50 @@ body { background: var(--bg-pg); font-family: 'Poppins', sans-serif; }
 .jw-stats {
     background: var(--bg-card);
     border-radius: 12px;
-    padding: 12px 18px;
+    padding: 10px 16px;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    border: 1px solid rgba(0,0,0,0.04);
-    box-shadow: 0 2px 10px rgba(60,40,140,0.05);
+    border: 1px solid rgba(15,23,42,0.04);
+    box-shadow: var(--shadow-card);
     gap: 10px;
 }
 .jw-stat { display: flex; align-items: center; gap: 8px; min-width: 0; }
 .jw-stat-ico {
-    width: 30px; height: 30px; border-radius: 8px;
+    width: 28px; height: 28px; border-radius: 8px;
     display: flex; align-items: center; justify-content: center;
     flex-shrink: 0;
 }
-.jw-stat-ico svg { width: 16px; height: 16px; }
+.jw-stat-ico svg { width: 15px; height: 15px; }
 .jw-stat-ico.s-people { background: var(--p-blue); }
 .jw-stat-ico.s-jobs   { background: var(--p-green); }
 .jw-stat-ico.s-cand   { background: var(--p-pink); }
 .jw-stat-ico.s-up     { background: var(--p-orange); }
 .jw-stat-meta strong {
-    display: block; font-size: 13px; font-weight: 800; color: var(--dk);
+    display: block; font-size: 12.5px; font-weight: 800; color: var(--dk);
     line-height: 1.1; letter-spacing: -0.3px;
 }
 .jw-stat-meta span {
-    display: block; font-size: 10px; color: var(--gr); line-height: 1.2;
+    display: block; font-size: 9.5px; color: var(--gr); line-height: 1.2;
+    white-space: nowrap;
 }
 
 /* Footer (left panel bottom) */
 .jw-left-foot {
-    margin-top: 14px;
+    margin-top: 12px;
     display: flex; align-items: center; justify-content: space-between;
-    font-size: 11px; color: var(--gr);
-    gap: 12px; flex-wrap: wrap;
+    font-size: 10.5px; color: var(--gr);
+    gap: 10px; flex-wrap: wrap;
 }
-.jw-left-foot a { color: var(--gr); text-decoration: none; }
+.jw-left-foot a { color: var(--gr); text-decoration: none; transition: color .15s; }
 .jw-left-foot a:hover { color: var(--dk); }
-.jw-left-foot .links { display: flex; gap: 14px; flex-wrap: wrap; align-items: center; }
+.jw-left-foot .links { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
 .jw-locale {
     display: inline-flex; align-items: center; gap: 5px;
     background: var(--bg-card);
     border: 1px solid var(--bd);
-    padding: 4px 10px; border-radius: 6px;
-    font-size: 11px; font-weight: 600; color: var(--dk); cursor: pointer;
+    padding: 3px 9px; border-radius: 6px;
+    font-size: 10.5px; font-weight: 600; color: var(--dk); cursor: pointer;
 }
 
 /* ═══════════════ RIGHT PANEL ═══════════════ */
@@ -211,7 +220,7 @@ body { background: var(--bg-pg); font-family: 'Poppins', sans-serif; }
 /* Top bar (right) */
 .jw-top {
     display: flex; align-items: center; justify-content: flex-end;
-    gap: 10px; padding: 16px 36px 0;
+    gap: 10px; padding: 14px 36px 0;
     font-size: 13px; color: var(--gr);
 }
 .jw-top-cta {
@@ -222,7 +231,7 @@ body { background: var(--bg-pg); font-family: 'Poppins', sans-serif; }
     color: var(--pri);
     border: 1.5px solid var(--pri);
     border-radius: 8px;
-    padding: 8px 16px;
+    padding: 7px 14px;
     font-size: 13px; font-weight: 600;
     cursor: pointer; text-decoration: none;
     transition: background .2s, color .2s;
@@ -233,8 +242,8 @@ body { background: var(--bg-pg); font-family: 'Poppins', sans-serif; }
 .jw-body {
     flex: 1;
     display: flex; flex-direction: column; align-items: center; justify-content: center;
-    padding: 12px 36px 18px;
-    overflow-y: auto;
+    padding: 10px 36px 16px;
+    overflow-y: hidden;
 }
 
 /* Card */
@@ -244,8 +253,8 @@ body { background: var(--bg-pg); font-family: 'Poppins', sans-serif; }
     background: var(--bg-card);
     border: 1px solid var(--bd-l);
     border-radius: 16px;
-    padding: 24px 32px 18px;
-    box-shadow: 0 4px 30px rgba(40,30,90,0.07);
+    padding: 22px 32px 16px;
+    box-shadow: var(--shadow-card);
 }
 .jw-card-form h2 {
     font-size: 22px; font-weight: 800; color: var(--dk);
@@ -253,7 +262,7 @@ body { background: var(--bg-pg); font-family: 'Poppins', sans-serif; }
 }
 .jw-card-form .sub {
     font-size: 12.5px; color: var(--gr); text-align: center;
-    margin: 0 0 18px;
+    margin: 0 0 16px;
 }
 
 /* Alerts (preserve existing behavior) */
@@ -281,17 +290,18 @@ body { background: var(--bg-pg); font-family: 'Poppins', sans-serif; }
     display: flex; cursor: pointer;
 }
 .jw-inp {
-    width: 100%; height: 42px;
-    border: 1.5px solid var(--bd); border-radius: 9px;
+    width: 100%; height: 44px;
+    border: 1.5px solid var(--bd); border-radius: 10px;
     padding: 0 44px;
     font-size: 13.5px; font-family: 'Poppins', sans-serif;
     color: var(--dk); outline: none; background: #fff;
     transition: border-color .2s, box-shadow .2s;
 }
 .jw-inp::placeholder { color: var(--gr-l); }
-.jw-inp:focus { border-color: var(--pri); box-shadow: 0 0 0 3px rgba(46,102,255,0.12); }
+.jw-inp:hover { border-color: #C9CFDB; }
+.jw-inp:focus { border-color: var(--pri); box-shadow: 0 0 0 4px rgba(46,102,255,0.12); }
 .jw-inp.is-ok { border-color: var(--ok); }
-.jw-inp.is-ok:focus { box-shadow: 0 0 0 3px rgba(22,163,74,0.14); }
+.jw-inp.is-ok:focus { box-shadow: 0 0 0 4px rgba(22,163,74,0.14); }
 .jw-iw .ok-mark {
     position: absolute; right: 14px; color: var(--ok);
     display: flex; pointer-events: none;
@@ -323,8 +333,8 @@ body { background: var(--bg-pg); font-family: 'Poppins', sans-serif; }
     display: flex; align-items: center; gap: 10px; margin-bottom: 14px;
 }
 .jw-cap-img {
-    width: 92px; height: 42px; border: 1.5px solid var(--bd);
-    border-radius: 9px; overflow: hidden;
+    width: 96px; height: 44px; border: 1.5px solid var(--bd);
+    border-radius: 10px; overflow: hidden;
     background: #F9FAFB;
     display: flex; align-items: center; justify-content: center;
     flex-shrink: 0;
@@ -335,50 +345,52 @@ body { background: var(--bg-pg); font-family: 'Poppins', sans-serif; }
     background: transparent; color: var(--pri);
     font-size: 12.5px; font-weight: 600; cursor: pointer;
     border: none; padding: 0 4px; white-space: nowrap;
-    flex-shrink: 0;
+    flex-shrink: 0; transition: color .15s;
 }
 .jw-cap-btn:hover { color: var(--pri-h); }
 .jw-cap-field { flex: 1; position: relative; }
 .jw-cap-inp {
-    width: 100%; height: 42px;
-    border: 1.5px solid var(--bd); border-radius: 9px;
+    width: 100%; height: 44px;
+    border: 1.5px solid var(--bd); border-radius: 10px;
     padding: 0 14px; padding-right: 38px;
     font-size: 15px; letter-spacing: 4px; font-weight: 700;
     font-family: 'Poppins', sans-serif; outline: none; background: #fff;
-    color: var(--dk); transition: border-color .2s;
+    color: var(--dk); transition: border-color .2s, box-shadow .2s;
 }
-.jw-cap-inp:focus { border-color: var(--pri); box-shadow: 0 0 0 3px rgba(46,102,255,0.12); }
+.jw-cap-inp:focus { border-color: var(--pri); box-shadow: 0 0 0 4px rgba(46,102,255,0.12); }
 .jw-cap-inp.is-ok { border-color: var(--ok); }
 .jw-cap-field .ok-mark { right: 12px; }
 
 /* Sign-in button (BLUE with arrow) */
 .jw-btn {
     display: flex; align-items: center; justify-content: center; gap: 10px;
-    width: 100%; height: 44px;
+    width: 100%; height: 46px;
     background: var(--pri); color: #fff;
-    border: none; border-radius: 9px;
+    border: none; border-radius: 10px;
     font-size: 14px; font-weight: 600;
     font-family: 'Poppins', sans-serif; cursor: pointer;
     transition: background .2s, box-shadow .2s, transform .05s;
-    box-shadow: 0 4px 14px rgba(46,102,255,0.30);
+    box-shadow: var(--shadow-btn);
     letter-spacing: 0.2px;
 }
-.jw-btn:hover { background: var(--pri-h); box-shadow: 0 6px 20px rgba(46,102,255,0.40); }
+.jw-btn:hover { background: var(--pri-h); box-shadow: var(--shadow-btn-h); }
 .jw-btn:active { transform: translateY(1px); }
-.jw-btn .arrow { display: flex; }
+.jw-btn .arrow { display: flex; transition: transform .2s; }
+.jw-btn:hover .arrow { transform: translateX(3px); }
 
 /* Forgot form extras */
 .jw-fgt-acts { display: flex; gap: 12px; margin-top: 18px; }
 .jw-fgt-sub {
-    flex: 1; height: 50px; background: var(--pri); color: #fff;
+    flex: 1; height: 46px; background: var(--pri); color: #fff;
     border: none; border-radius: 10px;
     font-size: 14px; font-weight: 600;
     font-family: 'Poppins', sans-serif; cursor: pointer;
-    transition: background .2s;
+    transition: background .2s, box-shadow .2s;
+    box-shadow: var(--shadow-btn);
 }
-.jw-fgt-sub:hover { background: var(--pri-h); }
+.jw-fgt-sub:hover { background: var(--pri-h); box-shadow: var(--shadow-btn-h); }
 .jw-fgt-cancel {
-    height: 50px; padding: 0 20px; background: #F3F4F6; color: #374151;
+    height: 46px; padding: 0 20px; background: #F3F4F6; color: #374151;
     border: none; border-radius: 10px;
     font-size: 14px; font-weight: 600;
     font-family: 'Poppins', sans-serif; text-decoration: none;
@@ -390,32 +402,37 @@ body { background: var(--bg-pg); font-family: 'Poppins', sans-serif; }
 /* Trust strip (below sign-in card) */
 .jw-trust {
     width: 100%; max-width: 540px;
-    margin-top: 14px;
+    margin-top: 12px;
     background: var(--bg-card);
     border: 1px solid var(--bd-l);
     border-radius: 14px;
-    padding: 12px 14px;
+    padding: 10px 14px;
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 8px;
-    box-shadow: 0 2px 12px rgba(40,30,90,0.04);
+    grid-template-columns: 1fr 1fr;
+    gap: 10px 14px;
+    box-shadow: var(--shadow-card);
 }
-.jw-trust-item { display: flex; align-items: center; gap: 7px; min-width: 0; }
+.jw-trust-item { display: flex; align-items: center; gap: 9px; min-width: 0; }
 .jw-trust-ico {
-    width: 24px; height: 24px; border-radius: 6px;
-    background: var(--p-green); color: #15803D;
+    width: 26px; height: 26px; border-radius: 7px;
+    background: var(--p-green);
     display: flex; align-items: center; justify-content: center;
     flex-shrink: 0;
 }
-.jw-trust-ico svg { width: 12px; height: 12px; }
+.jw-trust-ico.t-ssl  { background: var(--p-blue); }
+.jw-trust-ico.t-up   { background: var(--p-orange); }
+.jw-trust-ico.t-soc  { background: var(--p-purple); }
+.jw-trust-ico.t-gdpr { background: var(--p-pink); }
+.jw-trust-ico svg { width: 13px; height: 13px; }
 .jw-trust-meta { min-width: 0; overflow: hidden; }
 .jw-trust-meta strong {
-    display: block; font-size: 11.5px; font-weight: 700;
+    display: block; font-size: 12px; font-weight: 700;
     color: var(--dk); line-height: 1.15;
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    letter-spacing: -0.1px;
 }
 .jw-trust-meta span {
-    display: block; font-size: 10px; color: var(--gr); line-height: 1.2;
+    display: block; font-size: 10.5px; color: var(--gr); line-height: 1.2;
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 
@@ -423,25 +440,26 @@ body { background: var(--bg-pg); font-family: 'Poppins', sans-serif; }
 
 /* 1440px – larger 15.6" at lower resolution */
 @media (max-width: 1440px) {
-    .jw-left  { padding: 30px 36px 22px; }
-    .jw-right { padding: 0; }
-    .jw-hero h1 { font-size: 38px; }
+    .jw-left  { padding: 26px 36px 18px; }
+    .jw-hero h1 { font-size: 34px; }
     .jw-dots { right: 36px; top: 30px; width: 110px; height: 64px; }
 }
 
 /* 1366px – most 14" / 15.6" laptops */
 @media (max-width: 1366px) {
-    .jw-card-illu  { height: 78px; }
+    .jw-card-illu  { height: 70px; }
     .jw-card-form { max-width: 500px; }
     .jw-trust { max-width: 500px; }
     .jw-dots { display: none; }
+    .jw-hero h1 { font-size: 28px; }
 }
 
 /* 1280px – smaller 14" laptops */
 @media (max-width: 1280px) {
-    .jw-card-illu   { height: 70px; }
+    .jw-card-illu   { height: 62px; }
     .jw-card-form { max-width: 460px; }
     .jw-trust { max-width: 460px; }
+    .jw-hero h1 { font-size: 26px; }
 }
 
 /* Tall viewports – keep dots visible above 880h */
@@ -452,13 +470,13 @@ body { background: var(--bg-pg); font-family: 'Poppins', sans-serif; }
 /* 1024px and below – tablet */
 @media (max-width: 1024px) {
     .jw-page { flex-direction: column; }
-    .jw-left { padding: 28px 24px 24px; }
-    .jw-hero h1 { font-size: 30px; }
+    .jw-left { padding: 24px 24px 20px; }
+    .jw-hero h1 { font-size: 28px; }
     .jw-cards { grid-template-columns: 1fr 1fr; }
     .jw-card:last-child { grid-column: span 2; }
     .jw-body { padding: 22px 24px; }
     .jw-card-form { max-width: 100%; }
-    .jw-trust { grid-template-columns: 1fr 1fr; max-width: 100%; }
+    .jw-trust { max-width: 100%; }
 }
 
 /* 700px and below – small tablet / large phone */
@@ -467,12 +485,12 @@ body { background: var(--bg-pg); font-family: 'Poppins', sans-serif; }
     .jw-card:last-child { grid-column: span 1; }
     .jw-stats { flex-wrap: wrap; justify-content: flex-start; }
     .jw-stat { flex: 1 1 45%; }
-    .jw-trust { grid-template-columns: 1fr 1fr; }
+    .jw-trust { grid-template-columns: 1fr; }
 }
 
 /* 480px and below – phone */
 @media (max-width: 480px) {
-    .jw-hero h1 { font-size: 26px; }
+    .jw-hero h1 { font-size: 24px; }
     .jw-top-btn { padding: 6px 12px; font-size: 12px; }
     .jw-card-form { padding: 22px 18px 16px; border-radius: 14px; }
     .jw-trust { padding: 12px 14px; }
@@ -531,7 +549,7 @@ if (session('status')) {
 
     {{-- Hero --}}
     <div class="jw-hero">
-        <h1>One Platform.<br>Every <span class="acc">Hiring Need.</span></h1>
+        <h1>One Platform. Every <span class="acc">Hiring Need.</span></h1>
         <p>Connect companies, agencies and talent on a modern recruitment platform built for speed and trust.</p>
     </div>
 
@@ -913,51 +931,51 @@ if (session('status')) {
         {{-- Trust strip --}}
         <div class="jw-trust" role="list">
             <div class="jw-trust-item" role="listitem">
-                <div class="jw-trust-ico">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-                        <rect x="5" y="11" width="14" height="10" rx="2" stroke="#16A34A" stroke-width="2"/>
-                        <path d="M8 11V7a4 4 0 0 1 8 0v4" stroke="#16A34A" stroke-width="2"/>
+                <div class="jw-trust-ico t-ssl">
+                    <svg viewBox="0 0 24 24" fill="none">
+                        <rect x="5" y="11" width="14" height="10" rx="2" stroke="#1F4FE0" stroke-width="2"/>
+                        <path d="M8 11V7a4 4 0 0 1 8 0v4" stroke="#1F4FE0" stroke-width="2"/>
                     </svg>
                 </div>
                 <div class="jw-trust-meta">
                     <strong>SSL Secured</strong>
-                    <span>256-bit</span>
+                    <span>256-bit encryption</span>
                 </div>
             </div>
             <div class="jw-trust-item" role="listitem">
-                <div class="jw-trust-ico">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-                        <path d="M12 3l8 4v5c0 5-3.5 9-8 10-4.5-1-8-5-8-10V7l8-4Z" stroke="#16A34A" stroke-width="2" fill="none"/>
-                        <path d="M8 12l3 3 5-5" stroke="#16A34A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+                <div class="jw-trust-ico t-up">
+                    <svg viewBox="0 0 24 24" fill="none">
+                        <path d="M12 3l8 4v5c0 5-3.5 9-8 10-4.5-1-8-5-8-10V7l8-4Z" stroke="#E86608" stroke-width="2" fill="none"/>
+                        <path d="M8 12l3 3 5-5" stroke="#E86608" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
                     </svg>
                 </div>
                 <div class="jw-trust-meta">
                     <strong>99.9% Uptime</strong>
-                    <span>Reliable</span>
+                    <span>Reliable Platform</span>
                 </div>
             </div>
             <div class="jw-trust-item" role="listitem">
-                <div class="jw-trust-ico">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-                        <path d="M12 3l8 4v5c0 5-3.5 9-8 10-4.5-1-8-5-8-10V7l8-4Z" stroke="#16A34A" stroke-width="2" fill="none"/>
-                        <path d="M8 12l3 3 5-5" stroke="#16A34A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+                <div class="jw-trust-ico t-soc">
+                    <svg viewBox="0 0 24 24" fill="none">
+                        <path d="M12 3l8 4v5c0 5-3.5 9-8 10-4.5-1-8-5-8-10V7l8-4Z" stroke="#6D28D9" stroke-width="2" fill="none"/>
+                        <path d="M9 12l2 2 4-4" stroke="#6D28D9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
                     </svg>
                 </div>
                 <div class="jw-trust-meta">
                     <strong>SOC 2 Ready</strong>
-                    <span>Enterprise</span>
+                    <span>Enterprise Grade</span>
                 </div>
             </div>
             <div class="jw-trust-item" role="listitem">
-                <div class="jw-trust-ico">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-                        <path d="M12 3l8 4v5c0 5-3.5 9-8 10-4.5-1-8-5-8-10V7l8-4Z" stroke="#16A34A" stroke-width="2" fill="none"/>
-                        <path d="M8 12l3 3 5-5" stroke="#16A34A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+                <div class="jw-trust-ico t-gdpr">
+                    <svg viewBox="0 0 24 24" fill="none">
+                        <path d="M12 3l8 4v5c0 5-3.5 9-8 10-4.5-1-8-5-8-10V7l8-4Z" stroke="#DB2777" stroke-width="2" fill="none"/>
+                        <path d="M8 12l3 3 5-5" stroke="#DB2777" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
                     </svg>
                 </div>
                 <div class="jw-trust-meta">
                     <strong>GDPR Compliant</strong>
-                    <span>Data Safe</span>
+                    <span>Data Protection</span>
                 </div>
             </div>
         </div>
