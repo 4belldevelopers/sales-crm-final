@@ -106,12 +106,15 @@ body { background: var(--bg-pg); font-family: 'Poppins', system-ui, -apple-syste
 /* Hero */
 .jw-hero { margin: 18px 0 14px; max-width: 100%; position: relative; }
 .jw-hero h1 {
-    font-size: 40px;
+    font-size: 34px;
     font-weight: 800;
     color: var(--dk);
-    line-height: 1.1;
+    line-height: 1.15;
     letter-spacing: -1.2px;
     margin: 0 0 10px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 .jw-hero h1 .acc { color: var(--acc); }
 .jw-hero p {
@@ -133,17 +136,23 @@ body { background: var(--bg-pg); font-family: 'Poppins', system-ui, -apple-syste
     position: relative;
 }
 .jw-card-link {
-    display: block;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     text-decoration: none;
     color: inherit;
     border-radius: var(--r-lg);
-    transition: transform .2s ease, box-shadow .2s ease;
-    /* No card surface — the image IS the card. */
+    background: rgba(255, 255, 255, 0.55);
+    padding: 6px;
+    transition: transform .2s ease, background .2s ease, box-shadow .2s ease;
+    box-shadow: var(--shadow-sm);
 }
 .jw-card-link:hover,
 .jw-card-link:focus-visible {
     transform: translateY(-3px);
     outline: none;
+    background: rgba(255, 255, 255, 0.75);
+    box-shadow: var(--shadow-md);
 }
 .jw-card-img {
     display: block;
@@ -238,8 +247,9 @@ body { background: var(--bg-pg); font-family: 'Poppins', system-ui, -apple-syste
 /* Top bar */
 .jw-top {
     display: flex; align-items: center; justify-content: flex-end;
-    gap: 10px; padding: 14px 36px 0;
+    gap: 10px; padding: 12px 36px 0;
     font-size: 13px; color: var(--gr);
+    flex-shrink: 0;
 }
 .jw-top-cta {
     color: var(--pri); text-decoration: none; font-weight: 500;
@@ -261,7 +271,7 @@ body { background: var(--bg-pg); font-family: 'Poppins', system-ui, -apple-syste
 .jw-body {
     flex: 1;
     display: flex; flex-direction: column; align-items: center; justify-content: center;
-    padding: 6px 36px 14px;
+    padding: 4px 36px 10px;
     overflow-y: hidden;
     min-height: 0;
 }
@@ -273,16 +283,16 @@ body { background: var(--bg-pg); font-family: 'Poppins', system-ui, -apple-syste
     background: var(--bg-card);
     border: 1px solid var(--bd-l);
     border-radius: var(--r-xl);
-    padding: 28px 32px 20px;
+    padding: 24px 32px 18px;
     box-shadow: var(--shadow-md);
 }
 .jw-card-form h2 {
-    font-size: 24px; font-weight: 800; color: var(--dk);
+    font-size: 22px; font-weight: 800; color: var(--dk);
     margin: 0 0 4px; letter-spacing: -0.5px; text-align: center;
 }
 .jw-card-form .sub {
-    font-size: 13px; color: var(--gr); text-align: center;
-    margin: 0 0 22px;
+    font-size: 12.5px; color: var(--gr); text-align: center;
+    margin: 0 0 18px;
 }
 
 /* Alerts */
@@ -295,10 +305,10 @@ body { background: var(--bg-pg); font-family: 'Poppins', system-ui, -apple-syste
 .jw-err { font-size: 11.5px; color: #DC2626; margin-top: 4px; display: block; }
 
 /* Field */
-.jw-field { margin-bottom: 12px; }
+.jw-field { margin-bottom: 10px; }
 .jw-field > label {
-    display: block; font-size: 12.5px; font-weight: 600;
-    color: var(--dk); margin-bottom: 6px;
+    display: block; font-size: 12px; font-weight: 600;
+    color: var(--dk); margin-bottom: 5px;
 }
 .jw-iw { position: relative; display: flex; align-items: center; }
 .jw-iw .il {
@@ -310,10 +320,10 @@ body { background: var(--bg-pg); font-family: 'Poppins', system-ui, -apple-syste
     display: flex; cursor: pointer;
 }
 .jw-inp {
-    width: 100%; height: 46px;
+    width: 100%; height: 44px;
     border: 1.5px solid var(--bd); border-radius: var(--r-md);
     padding: 0 42px;
-    font-size: 14px; font-family: 'Poppins', sans-serif;
+    font-size: 13.5px; font-family: 'Poppins', sans-serif;
     color: var(--dk); outline: none; background: #fff;
     transition: border-color .2s, box-shadow .2s;
 }
@@ -330,57 +340,57 @@ body { background: var(--bg-pg); font-family: 'Poppins', system-ui, -apple-syste
 /* Mid row */
 .jw-mid {
     display: flex; align-items: center; justify-content: space-between;
-    margin: 2px 0 14px;
+    margin: 2px 0 12px;
 }
 .jw-rem { display: flex; align-items: center; gap: 8px; }
 .jw-rem input[type=checkbox] {
     width: 16px; height: 16px; accent-color: var(--pri);
     cursor: pointer; flex-shrink: 0; border-radius: 4px;
 }
-.jw-rem label { font-size: 13px; color: var(--tx); cursor: pointer; user-select: none; }
+.jw-rem label { font-size: 12.5px; color: var(--tx); cursor: pointer; user-select: none; }
 .jw-fgt {
-    font-size: 13px; font-weight: 600; color: var(--pri);
+    font-size: 12.5px; font-weight: 600; color: var(--pri);
     text-decoration: none; cursor: pointer;
 }
 .jw-fgt:hover { text-decoration: underline; color: var(--pri-h); }
 
 /* Security verification block */
 .jw-sec {
-    margin-bottom: 14px;
+    margin-bottom: 12px;
 }
 .jw-sec-head {
     display: flex; align-items: center; gap: 8px;
     margin-bottom: 4px;
 }
 .jw-sec-icon {
-    width: 18px; height: 18px; color: var(--pri);
+    width: 16px; height: 16px; color: var(--pri);
     display: flex; align-items: center; justify-content: center;
 }
-.jw-sec-icon svg { width: 18px; height: 18px; }
+.jw-sec-icon svg { width: 16px; height: 16px; }
 .jw-sec-title {
-    font-size: 13px; font-weight: 700; color: var(--dk);
+    font-size: 12.5px; font-weight: 700; color: var(--dk);
 }
 .jw-sec-sub {
-    font-size: 11.5px; color: var(--gr);
-    margin: 0 0 10px 26px;
+    font-size: 11px; color: var(--gr);
+    margin: 0 0 8px 24px;
 }
 .jw-cap-row {
-    display: flex; align-items: center; gap: 10px;
+    display: flex; align-items: center; gap: 8px;
 }
 .jw-cap-img {
     flex: 0 0 auto;
-    height: 46px;
+    height: 42px;
     border: 1.5px solid var(--bd);
     border-radius: var(--r-md);
     overflow: hidden;
     background: #F9FAFB;
     display: flex; align-items: center; justify-content: center;
     padding: 0 8px;
-    min-width: 120px;
+    min-width: 110px;
 }
-.jw-cap-img img { height: 36px; width: auto; object-fit: contain; }
+.jw-cap-img img { height: 32px; width: auto; object-fit: contain; }
 .jw-cap-btn {
-    width: 30px; height: 30px;
+    width: 28px; height: 28px;
     display: inline-flex; align-items: center; justify-content: center;
     background: transparent; color: var(--pri);
     border: 1px solid var(--bd);
@@ -390,13 +400,13 @@ body { background: var(--bg-pg); font-family: 'Poppins', system-ui, -apple-syste
     transition: background .15s, border-color .15s, color .15s;
 }
 .jw-cap-btn:hover { background: var(--pri-l); border-color: var(--pri); color: var(--pri-h); }
-.jw-cap-btn svg { width: 14px; height: 14px; }
+.jw-cap-btn svg { width: 13px; height: 13px; }
 .jw-cap-field { flex: 1; position: relative; }
 .jw-cap-inp {
-    width: 100%; height: 46px;
+    width: 100%; height: 42px;
     border: 1.5px solid var(--bd); border-radius: var(--r-md);
     padding: 0 14px;
-    font-size: 14px; font-weight: 500;
+    font-size: 13.5px; font-weight: 500;
     font-family: 'Poppins', sans-serif; outline: none; background: #fff;
     color: var(--dk); transition: border-color .2s, box-shadow .2s;
 }
@@ -407,10 +417,10 @@ body { background: var(--bg-pg); font-family: 'Poppins', system-ui, -apple-syste
 /* Sign-in button */
 .jw-btn {
     display: flex; align-items: center; justify-content: center; gap: 10px;
-    width: 100%; height: 50px;
+    width: 100%; height: 46px;
     background: var(--pri); color: #fff;
     border: none; border-radius: var(--r-md);
-    font-size: 15px; font-weight: 600;
+    font-size: 14px; font-weight: 600;
     font-family: 'Poppins', sans-serif; cursor: pointer;
     transition: background .2s, box-shadow .2s, transform .05s;
     box-shadow: var(--shadow-btn);
@@ -422,54 +432,42 @@ body { background: var(--bg-pg); font-family: 'Poppins', system-ui, -apple-syste
 .jw-btn:hover .arrow { transform: translateX(4px); }
 .jw-btn[disabled] { opacity: 0.7; cursor: not-allowed; transform: none; }
 
-/* Sign Up link */
-.jw-signup {
-    text-align: center;
-    margin-top: 14px;
-    font-size: 13px;
-    color: var(--gr);
-}
-.jw-signup a {
-    color: var(--pri);
-    font-weight: 700;
-    text-decoration: none;
-    margin-left: 4px;
-}
-.jw-signup a:hover { text-decoration: underline; }
+/* Sign Up link removed — "Create Free Account" CTA is already in the top bar */
 
 /* Trust strip (3 items, compact) */
 .jw-trust {
     width: 100%; max-width: 520px;
-    margin-top: 12px;
+    margin-top: 10px;
     background: var(--bg-card);
     border: 1px solid var(--bd-l);
     border-radius: var(--r-lg);
-    padding: 10px 14px;
+    padding: 8px 12px;
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: 8px;
+    gap: 6px;
     box-shadow: var(--shadow-sm);
+    flex-shrink: 0;
 }
-.jw-trust-item { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.jw-trust-item { display: flex; align-items: center; gap: 7px; min-width: 0; }
 .jw-trust-ico {
-    width: 24px; height: 24px;
-    border-radius: 7px;
+    width: 22px; height: 22px;
+    border-radius: 6px;
     display: flex; align-items: center; justify-content: center;
     flex-shrink: 0;
 }
-.jw-trust-ico svg { width: 13px; height: 13px; }
+.jw-trust-ico svg { width: 12px; height: 12px; }
 .jw-trust-ico.t-secure  { background: var(--p-blue);   color: var(--c-blue); }
 .jw-trust-ico.t-private { background: var(--p-green);  color: var(--c-green); }
 .jw-trust-ico.t-uptime  { background: var(--p-orange); color: var(--c-orange); }
 .jw-trust-meta { min-width: 0; overflow: hidden; }
 .jw-trust-meta strong {
-    display: block; font-size: 11.5px; font-weight: 700;
+    display: block; font-size: 11px; font-weight: 700;
     color: var(--dk); line-height: 1.2;
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     letter-spacing: -0.1px;
 }
 .jw-trust-meta span {
-    display: block; font-size: 10px; color: var(--gr); line-height: 1.2;
+    display: block; font-size: 9.5px; color: var(--gr); line-height: 1.2;
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 
@@ -498,13 +496,13 @@ body { background: var(--bg-pg); font-family: 'Poppins', system-ui, -apple-syste
 
 /* 1440 */
 @media (max-width: 1440px) {
-    .jw-hero h1 { font-size: 36px; }
+    .jw-hero h1 { font-size: 30px; }
     .jw-left { padding: 18px 32px 14px; }
 }
 
 /* 1366 — most 15.6" laptops */
 @media (max-width: 1366px) {
-    .jw-hero h1 { font-size: 32px; letter-spacing: -1px; }
+    .jw-hero h1 { font-size: 26px; letter-spacing: -0.8px; }
     .jw-hero { margin: 12px 0 10px; }
     .jw-hero p { font-size: 12.5px; }
     .jw-left { padding: 14px 28px 12px; }
@@ -526,7 +524,7 @@ body { background: var(--bg-pg); font-family: 'Poppins', system-ui, -apple-syste
 
 /* 1280 */
 @media (max-width: 1280px) {
-    .jw-hero h1 { font-size: 28px; }
+    .jw-hero h1 { font-size: 24px; }
 }
 
 /* Tablet */
@@ -616,7 +614,7 @@ if (session('status')) {
 
     {{-- Hero --}}
     <div class="jw-hero">
-        <h1>One Platform.<br>Every <span class="acc">Hiring Need.</span></h1>
+        <h1>One Platform. Every <span class="acc">Hiring Need.</span></h1>
         <p>Connect companies, agencies and talent on one intelligent recruitment platform built for speed and trust.</p>
     </div>
 
@@ -823,11 +821,7 @@ if (session('status')) {
                 <span class="indicator-progress" style="display:none" aria-live="polite">Signing in…&nbsp;<span class="spinner-border spinner-border-sm align-middle"></span></span>
             </button>
 
-            {{-- Sign Up --}}
-            <p class="jw-signup">
-                Don't have an account?
-                <a href="{{ route('register') }}">Create Free Account</a>
-            </p>
+            {{-- Sign Up link removed — "Create Free Account" CTA is already in the top bar --}}
         </form>
 
         {{-- FORGOT PASSWORD FORM --}}
