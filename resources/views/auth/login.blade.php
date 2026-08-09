@@ -124,78 +124,39 @@ body { background: var(--bg-pg); font-family: 'Poppins', system-ui, -apple-syste
     overflow: hidden;
 }
 
-/* ── 3 Audience Cards (icon-only, premium, lightweight) ────── */
+/* ── 3 Image Cards (art-directed assets, no CSS rebuild) ──── */
 .jw-cards {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: 12px;
+    gap: 14px;
     margin-bottom: 16px;
     position: relative;
 }
-.jw-card {
-    background: var(--bg-card);
+.jw-card-link {
+    display: block;
+    text-decoration: none;
+    color: inherit;
     border-radius: var(--r-lg);
-    padding: 14px 14px 12px;
-    border: 1px solid rgba(15,23,42,0.04);
-    box-shadow: var(--shadow-sm);
-    display: flex;
-    flex-direction: column;
-    position: relative;
-    overflow: hidden;
     transition: transform .2s ease, box-shadow .2s ease;
+    /* No card surface — the image IS the card. */
 }
-.jw-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
-.jw-card-icon {
-    width: 36px; height: 36px;
-    border-radius: 10px;
-    display: flex; align-items: center; justify-content: center;
-    margin-bottom: 10px;
-    flex-shrink: 0;
+.jw-card-link:hover,
+.jw-card-link:focus-visible {
+    transform: translateY(-3px);
+    outline: none;
 }
-.jw-card-icon svg { width: 18px; height: 18px; }
-.jw-card-icon.i-comp  { background: var(--p-blue);   color: var(--c-blue); }
-.jw-card-icon.i-agc   { background: var(--p-green);  color: var(--c-green); }
-.jw-card-icon.i-tal   { background: var(--p-purple); color: var(--c-purple); }
-
-.jw-card-badge {
-    display: inline-block;
-    font-size: 9px; font-weight: 700;
-    padding: 3px 8px;
-    border-radius: 999px;
-    letter-spacing: 0.5px;
-    text-transform: uppercase;
-    align-self: flex-start;
-    margin-bottom: 8px;
+.jw-card-img {
+    display: block;
+    width: 100%;
+    height: auto;
+    max-width: 240px;
+    margin: 0 auto;
+    object-fit: contain;
+    object-position: center;
+    /* Never distort, crop, or stretch the art. */
+    user-select: none;
+    -webkit-user-drag: none;
 }
-.jw-card-badge.b-comp  { background: var(--p-blue);   color: var(--c-blue); }
-.jw-card-badge.b-agc   { background: var(--p-green);  color: var(--c-green); }
-.jw-card-badge.b-tal   { background: var(--p-purple); color: var(--c-purple); }
-
-.jw-card-title {
-    font-size: 14px; font-weight: 700; color: var(--dk);
-    line-height: 1.3; margin: 0 0 4px; letter-spacing: -0.2px;
-}
-.jw-card-desc {
-    font-size: 11px; color: var(--gr); line-height: 1.45;
-    margin: 0 0 10px;
-    display: -webkit-box;
-    -webkit-line-clamp: 3;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-}
-.jw-card-arrow {
-    margin-top: auto;
-    width: 26px; height: 26px;
-    border-radius: 50%;
-    display: flex; align-items: center; justify-content: center;
-    align-self: flex-start;
-    transition: transform .2s ease, background .2s ease;
-}
-.jw-card-arrow svg { width: 12px; height: 12px; }
-.jw-card-arrow.a-comp  { background: var(--p-blue);   color: var(--c-blue); }
-.jw-card-arrow.a-agc   { background: var(--p-green);  color: var(--c-green); }
-.jw-card-arrow.a-tal   { background: var(--p-purple); color: var(--c-purple); }
-.jw-card:hover .jw-card-arrow { transform: translateX(3px); }
 
 /* ── Stats bar with subtle dividers ────────────────────────── */
 .jw-stats {
@@ -548,12 +509,7 @@ body { background: var(--bg-pg); font-family: 'Poppins', system-ui, -apple-syste
     .jw-hero p { font-size: 12.5px; }
     .jw-left { padding: 14px 28px 12px; }
     .jw-cards { gap: 10px; margin-bottom: 12px; }
-    .jw-card { padding: 11px 11px 10px; }
-    .jw-card-icon { width: 32px; height: 32px; margin-bottom: 8px; }
-    .jw-card-icon svg { width: 16px; height: 16px; }
-    .jw-card-title { font-size: 13px; }
-    .jw-card-desc { font-size: 10.5px; }
-    .jw-card-arrow { width: 22px; height: 22px; }
+    .jw-card-img { max-width: 200px; }
     .jw-stats { padding: 10px 14px; }
     .jw-stat { gap: 8px; }
     .jw-stat-ico { width: 26px; height: 26px; }
@@ -571,7 +527,6 @@ body { background: var(--bg-pg); font-family: 'Poppins', system-ui, -apple-syste
 /* 1280 */
 @media (max-width: 1280px) {
     .jw-hero h1 { font-size: 28px; }
-    .jw-card-desc { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 }
 
 /* Tablet */
@@ -579,8 +534,12 @@ body { background: var(--bg-pg); font-family: 'Poppins', system-ui, -apple-syste
     .jw-page { flex-direction: column; height: auto; }
     .jw-left, .jw-right { height: auto; }
     .jw-left { padding: 24px; }
-    .jw-cards { grid-template-columns: 1fr 1fr; }
-    .jw-card:last-child { grid-column: span 2; }
+    .jw-cards {
+        grid-template-columns: 1fr 1fr;
+        gap: 14px;
+    }
+    .jw-card-link:last-child { grid-column: span 2; max-width: 50%; justify-self: center; }
+    .jw-card-img { max-width: 220px; }
     .jw-stats { flex-wrap: wrap; }
     .jw-stat { flex: 1 1 45%; }
     .jw-stat + .jw-stat::before { display: none; }
@@ -589,10 +548,25 @@ body { background: var(--bg-pg); font-family: 'Poppins', system-ui, -apple-syste
     .jw-trust { grid-template-columns: 1fr; }
 }
 
-/* Mobile */
+/* Mobile — horizontal-swipe carousel so all 3 cards stay accessible */
 @media (max-width: 700px) {
-    .jw-cards { grid-template-columns: 1fr; }
-    .jw-card:last-child { grid-column: span 1; }
+    .jw-cards {
+        grid-template-columns: none;
+        display: flex;
+        gap: 14px;
+        overflow-x: auto;
+        scroll-snap-type: x mandatory;
+        -webkit-overflow-scrolling: touch;
+        padding: 4px 2px 12px;
+        margin: 0 -18px 12px;
+        padding-left: 18px;
+        padding-right: 18px;
+    }
+    .jw-card-link {
+        flex: 0 0 70%;
+        scroll-snap-align: start;
+    }
+    .jw-card-img { max-width: 100%; }
     .jw-hero h1 { font-size: 30px; }
     .jw-left { padding: 20px 18px; }
     .jw-body { padding: 18px; }
@@ -646,47 +620,35 @@ if (session('status')) {
         <p>Connect companies, agencies and talent on one intelligent recruitment platform built for speed and trust.</p>
     </div>
 
-    {{-- 3 Audience Cards (icon-only) --}}
+    {{-- 3 Audience Cards (art-directed image assets) --}}
     <div class="jw-cards">
 
-        {{-- Card 1: Companies --}}
-        <div class="jw-card">
-            <div class="jw-card-icon i-comp" aria-hidden="true">
-                <svg viewBox="0 0 24 24" fill="none"><path d="M3 21V8l5-3 5 3v13M13 21V11l4-2 4 2v10M3 21h18M7 12h2M7 16h2M17 14h0M17 18h0" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
-            </div>
-            <span class="jw-card-badge b-comp">For Companies</span>
-            <h3 class="jw-card-title">Find Trusted<br>Agencies</h3>
-            <p class="jw-card-desc">Connect with verified recruitment partners and hire faster.</p>
-            <div class="jw-card-arrow a-comp" aria-hidden="true">
-                <svg viewBox="0 0 24 24" fill="none"><path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-            </div>
-        </div>
+        {{-- Card 1: Find Trusted Agencies (For Companies) --}}
+        <a href="{{ route('register') }}" class="jw-card-link" aria-label="Find Trusted Agencies for Companies">
+            <img class="jw-card-img"
+                 src="{{ asset('img/cards/find-trusted-agencies.webp') }}"
+                 alt="Find Trusted Agencies for Companies"
+                 width="240" height="320"
+                 decoding="async">
+        </a>
 
-        {{-- Card 2: Agencies --}}
-        <div class="jw-card">
-            <div class="jw-card-icon i-agc" aria-hidden="true">
-                <svg viewBox="0 0 24 24" fill="none"><rect x="3" y="7" width="18" height="13" rx="2" stroke="currentColor" stroke-width="1.8"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" stroke="currentColor" stroke-width="1.8"/><path d="M3 13h18" stroke="currentColor" stroke-width="1.8"/></svg>
-            </div>
-            <span class="jw-card-badge b-agc">For Agencies</span>
-            <h3 class="jw-card-title">Find Hiring<br>Opportunities</h3>
-            <p class="jw-card-desc">Discover verified jobs from top companies and grow your business.</p>
-            <div class="jw-card-arrow a-agc" aria-hidden="true">
-                <svg viewBox="0 0 24 24" fill="none"><path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-            </div>
-        </div>
+        {{-- Card 2: Find Hiring Opportunities (For Agencies) --}}
+        <a href="{{ route('register') }}" class="jw-card-link" aria-label="Find Hiring Opportunities for Recruitment Agencies">
+            <img class="jw-card-img"
+                 src="{{ asset('img/cards/find-hiring-opportunities.webp') }}"
+                 alt="Find Hiring Opportunities for Recruitment Agencies"
+                 width="240" height="320"
+                 decoding="async">
+        </a>
 
-        {{-- Card 3: Talent --}}
-        <div class="jw-card">
-            <div class="jw-card-icon i-tal" aria-hidden="true">
-                <svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8" r="4" stroke="currentColor" stroke-width="1.8"/><path d="M4 21c0-4 4-7 8-7s8 3 8 7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
-            </div>
-            <span class="jw-card-badge b-tal">For Talent</span>
-            <h3 class="jw-card-title">Find Your Next<br>Opportunity</h3>
-            <p class="jw-card-desc">Discover verified jobs and immediate-joiner opportunities.</p>
-            <div class="jw-card-arrow a-tal" aria-hidden="true">
-                <svg viewBox="0 0 24 24" fill="none"><path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-            </div>
-        </div>
+        {{-- Card 3: Find Bench Talents (For Bench Talent) --}}
+        <a href="{{ route('register') }}" class="jw-card-link" aria-label="Find Bench Talents and Immediate Joiners">
+            <img class="jw-card-img"
+                 src="{{ asset('img/cards/find-bench-talents.webp') }}"
+                 alt="Find Bench Talents and Immediate Joiners"
+                 width="240" height="320"
+                 decoding="async">
+        </a>
     </div>
 
     {{-- Stats --}}
