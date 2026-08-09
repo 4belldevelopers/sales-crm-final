@@ -134,17 +134,18 @@ body { background: var(--bg-pg); font-family: 'Poppins', system-ui, -apple-syste
     gap: 14px;
     margin-bottom: 16px;
     position: relative;
-    align-items: end;
+    align-items: stretch;
 }
 .jw-card-link {
     display: flex;
-    align-items: center;
+    align-items: stretch;
     justify-content: center;
     text-decoration: none;
     color: inherit;
     border-radius: 0;
     background: transparent;
     padding: 0;
+    aspect-ratio: 3 / 4;
     transition: transform .2s ease;
 }
 .jw-card-link:hover,
@@ -155,8 +156,7 @@ body { background: var(--bg-pg); font-family: 'Poppins', system-ui, -apple-syste
 .jw-card-img {
     display: block;
     width: 100%;
-    height: auto;
-    max-width: 240px;
+    height: 100%;
     margin: 0 auto;
     object-fit: contain;
     object-position: center;
@@ -505,7 +505,6 @@ body { background: var(--bg-pg); font-family: 'Poppins', system-ui, -apple-syste
     .jw-hero p { font-size: 12.5px; }
     .jw-left { padding: 14px 28px 12px; }
     .jw-cards { gap: 10px; margin-bottom: 12px; }
-    .jw-card-img { max-width: 200px; }
     .jw-stats { padding: 10px 14px; }
     .jw-stat { gap: 8px; }
     .jw-stat-ico { width: 26px; height: 26px; }
@@ -534,8 +533,7 @@ body { background: var(--bg-pg); font-family: 'Poppins', system-ui, -apple-syste
         grid-template-columns: 1fr 1fr;
         gap: 14px;
     }
-    .jw-card-link:last-child { grid-column: span 2; max-width: 50%; justify-self: center; }
-    .jw-card-img { max-width: 220px; }
+    .jw-card-link:last-child { grid-column: span 2; max-width: 50%; justify-self: center; aspect-ratio: 3 / 4; }
     .jw-stats { flex-wrap: wrap; }
     .jw-stat { flex: 1 1 45%; }
     .jw-stat + .jw-stat::before { display: none; }
@@ -561,8 +559,8 @@ body { background: var(--bg-pg); font-family: 'Poppins', system-ui, -apple-syste
     .jw-card-link {
         flex: 0 0 70%;
         scroll-snap-align: start;
+        aspect-ratio: 3 / 4;
     }
-    .jw-card-img { max-width: 100%; }
     .jw-hero h1 { font-size: 30px; }
     .jw-left { padding: 20px 18px; }
     .jw-body { padding: 18px; }
