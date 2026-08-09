@@ -62,14 +62,14 @@ body { background: var(--bg-pg); font-family: 'Poppins', system-ui, -apple-syste
 
 /* ═══════════════ LEFT PANEL ═══════════════ */
 .jw-left {
-    flex: 1.1;
+    flex: 1;
     min-width: 0;
     background: var(--bg-pn);
     display: flex;
     flex-direction: column;
     position: relative;
     overflow: hidden;
-    padding: 22px 36px 18px;
+    padding: 16px 28px 14px;
     min-height: 0;
     height: 100vh;
 }
@@ -91,30 +91,27 @@ body { background: var(--bg-pg); font-family: 'Poppins', system-ui, -apple-syste
     text-decoration: none; line-height: 1;
     position: relative;
 }
-.jw-brand-mark { height: 32px; width: auto; display: block; }
+.jw-brand-mark { height: 28px; width: auto; display: block; }
 .jw-brand-name {
-    font-size: 21px; font-weight: 800; color: var(--dk);
+    font-size: 19px; font-weight: 800; color: var(--dk);
     letter-spacing: -0.6px;
     font-family: 'Poppins', sans-serif;
 }
 .jw-brand-sub {
-    display: block; font-size: 10.5px; color: var(--gr);
-    font-weight: 500; margin-top: 4px; margin-left: 41px;
+    display: block; font-size: 10px; color: var(--gr);
+    font-weight: 500; margin-top: 3px; margin-left: 37px;
     letter-spacing: 0.15px;
 }
 
 /* Hero */
-.jw-hero { margin: 18px 0 14px; max-width: 100%; position: relative; }
+.jw-hero { margin: 12px 0 12px; max-width: 100%; position: relative; }
 .jw-hero h1 {
-    font-size: 34px;
+    font-size: 32px;
     font-weight: 800;
     color: var(--dk);
     line-height: 1.15;
-    letter-spacing: -1.2px;
+    letter-spacing: -1.1px;
     margin: 0 0 10px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
 }
 .jw-hero h1 .acc { color: var(--acc); }
 .jw-hero p {
@@ -127,14 +124,15 @@ body { background: var(--bg-pg); font-family: 'Poppins', system-ui, -apple-syste
     overflow: hidden;
 }
 
-/* ── 3 Image Cards (art-directed assets, no CSS rebuild) ──── */
-/* All 3 cards are normalized to 1024×1365 (3:4 portrait) at the source level,
-   so the row renders as 3 identical portrait slots. */
+/* ── 3 Audience Cards (full-card design, flush with page edge) ── */
+/* Each SVG renders its own complete card — header pill, title, description,
+   illustration — and sits flush with the page's left padding so it aligns
+   with the hero text above and stats below. */
 .jw-cards {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: 10px;
-    margin-bottom: 16px;
+    gap: 6px;
+    margin-bottom: 14px;
     position: relative;
     align-items: stretch;
 }
@@ -142,11 +140,13 @@ body { background: var(--bg-pg); font-family: 'Poppins', system-ui, -apple-syste
     display: block;
     text-decoration: none;
     color: inherit;
-    border-radius: 0;
-    background: transparent;
-    padding: 0;
-    aspect-ratio: 3 / 4;
+    border-radius: var(--r-lg);
+    overflow: hidden;
     transition: transform .2s ease;
+    line-height: 0;
+    aspect-ratio: 517 / 889;
+    background: transparent;
+    max-height: 520px;
 }
 .jw-card-link:hover,
 .jw-card-link:focus-visible {
@@ -160,27 +160,34 @@ body { background: var(--bg-pg); font-family: 'Poppins', system-ui, -apple-syste
     margin: 0;
     object-fit: contain;
     object-position: center center;
-    /* Contain + center: scales the image to fit the slot without cropping.
-       All 3 cards are already 3:4 portrait at source, so they fill edge-to-edge. */
     user-select: none;
     -webkit-user-drag: none;
+    pointer-events: none;
+}
+/* Card 1 source artwork is sparser at the bottom than cards 2/3 — stretch it
+   vertically so its visible content reaches the same bottom edge as siblings.
+   User has approved distortion for this card only. */
+.jw-cards > .jw-card-link:nth-child(1) .jw-card-img {
+    transform: scaleY(1.13);
+    transform-origin: top center;
 }
 
 /* ── Stats bar with subtle dividers ────────────────────────── */
 .jw-stats {
     background: var(--bg-card);
     border-radius: var(--r-lg);
-    padding: 12px 18px;
+    padding: 9px 14px;
     display: flex;
     align-items: stretch;
     border: 1px solid rgba(15,23,42,0.04);
     box-shadow: var(--shadow-sm);
     position: relative;
+    flex-shrink: 0;
 }
 .jw-stat {
     flex: 1;
-    display: flex; align-items: center; gap: 10px;
-    padding: 0 6px;
+    display: flex; align-items: center; gap: 8px;
+    padding: 0 4px;
     position: relative;
     min-width: 0;
 }
@@ -192,12 +199,12 @@ body { background: var(--bg-pg); font-family: 'Poppins', system-ui, -apple-syste
     background: var(--bd);
 }
 .jw-stat-ico {
-    width: 30px; height: 30px;
-    border-radius: 8px;
+    width: 26px; height: 26px;
+    border-radius: 7px;
     display: flex; align-items: center; justify-content: center;
     flex-shrink: 0;
 }
-.jw-stat-ico svg { width: 16px; height: 16px; }
+.jw-stat-ico svg { width: 14px; height: 14px; }
 .jw-stat-ico.s-people { background: var(--p-blue);   color: var(--c-blue); }
 .jw-stat-ico.s-jobs   { background: var(--p-green);  color: var(--c-green); }
 .jw-stat-ico.s-cand   { background: var(--p-pink);   color: #DB2777; }
@@ -214,10 +221,10 @@ body { background: var(--bg-pg); font-family: 'Poppins', system-ui, -apple-syste
 /* ── Left footer ──────────────────────────────────────────── */
 .jw-left-foot {
     margin-top: auto;
-    padding-top: 12px;
+    padding-top: 10px;
     display: flex; align-items: center; justify-content: space-between;
     flex-wrap: wrap; gap: 8px;
-    font-size: 10.5px; color: var(--gr);
+    font-size: 10px; color: var(--gr);
     position: relative;
 }
 .jw-left-foot .links { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
@@ -246,7 +253,7 @@ body { background: var(--bg-pg); font-family: 'Poppins', system-ui, -apple-syste
 /* Top bar */
 .jw-top {
     display: flex; align-items: center; justify-content: flex-end;
-    gap: 10px; padding: 12px 36px 0;
+    gap: 10px; padding: 8px 28px 0;
     font-size: 13px; color: var(--gr);
     flex-shrink: 0;
 }
@@ -270,7 +277,7 @@ body { background: var(--bg-pg); font-family: 'Poppins', system-ui, -apple-syste
 .jw-body {
     flex: 1;
     display: flex; flex-direction: column; align-items: center; justify-content: center;
-    padding: 4px 36px 10px;
+    padding: 2px 28px 8px;
     overflow-y: hidden;
     min-height: 0;
 }
@@ -282,16 +289,16 @@ body { background: var(--bg-pg); font-family: 'Poppins', system-ui, -apple-syste
     background: var(--bg-card);
     border: 1px solid var(--bd-l);
     border-radius: var(--r-xl);
-    padding: 24px 32px 18px;
+    padding: 20px 32px 16px;
     box-shadow: var(--shadow-md);
 }
 .jw-card-form h2 {
-    font-size: 22px; font-weight: 800; color: var(--dk);
+    font-size: 20px; font-weight: 800; color: var(--dk);
     margin: 0 0 4px; letter-spacing: -0.5px; text-align: center;
 }
 .jw-card-form .sub {
-    font-size: 12.5px; color: var(--gr); text-align: center;
-    margin: 0 0 18px;
+    font-size: 12px; color: var(--gr); text-align: center;
+    margin: 0 0 14px;
 }
 
 /* Alerts */
@@ -304,10 +311,10 @@ body { background: var(--bg-pg); font-family: 'Poppins', system-ui, -apple-syste
 .jw-err { font-size: 11.5px; color: #DC2626; margin-top: 4px; display: block; }
 
 /* Field */
-.jw-field { margin-bottom: 10px; }
+.jw-field { margin-bottom: 8px; }
 .jw-field > label {
-    display: block; font-size: 12px; font-weight: 600;
-    color: var(--dk); margin-bottom: 5px;
+    display: block; font-size: 11.5px; font-weight: 600;
+    color: var(--dk); margin-bottom: 4px;
 }
 .jw-iw { position: relative; display: flex; align-items: center; }
 .jw-iw .il {
@@ -319,10 +326,10 @@ body { background: var(--bg-pg); font-family: 'Poppins', system-ui, -apple-syste
     display: flex; cursor: pointer;
 }
 .jw-inp {
-    width: 100%; height: 44px;
+    width: 100%; height: 40px;
     border: 1.5px solid var(--bd); border-radius: var(--r-md);
     padding: 0 42px;
-    font-size: 13.5px; font-family: 'Poppins', sans-serif;
+    font-size: 13px; font-family: 'Poppins', sans-serif;
     color: var(--dk); outline: none; background: #fff;
     transition: border-color .2s, box-shadow .2s;
 }
@@ -339,73 +346,73 @@ body { background: var(--bg-pg); font-family: 'Poppins', system-ui, -apple-syste
 /* Mid row */
 .jw-mid {
     display: flex; align-items: center; justify-content: space-between;
-    margin: 2px 0 12px;
+    margin: 2px 0 10px;
 }
 .jw-rem { display: flex; align-items: center; gap: 8px; }
 .jw-rem input[type=checkbox] {
     width: 16px; height: 16px; accent-color: var(--pri);
     cursor: pointer; flex-shrink: 0; border-radius: 4px;
 }
-.jw-rem label { font-size: 12.5px; color: var(--tx); cursor: pointer; user-select: none; }
+.jw-rem label { font-size: 12px; color: var(--tx); cursor: pointer; user-select: none; }
 .jw-fgt {
-    font-size: 12.5px; font-weight: 600; color: var(--pri);
+    font-size: 12px; font-weight: 600; color: var(--pri);
     text-decoration: none; cursor: pointer;
 }
 .jw-fgt:hover { text-decoration: underline; color: var(--pri-h); }
 
 /* Security verification block */
 .jw-sec {
-    margin-bottom: 12px;
+    margin-bottom: 10px;
 }
 .jw-sec-head {
     display: flex; align-items: center; gap: 8px;
     margin-bottom: 4px;
 }
 .jw-sec-icon {
-    width: 16px; height: 16px; color: var(--pri);
+    width: 14px; height: 14px; color: var(--pri);
     display: flex; align-items: center; justify-content: center;
 }
-.jw-sec-icon svg { width: 16px; height: 16px; }
+.jw-sec-icon svg { width: 14px; height: 14px; }
 .jw-sec-title {
-    font-size: 12.5px; font-weight: 700; color: var(--dk);
+    font-size: 12px; font-weight: 700; color: var(--dk);
 }
 .jw-sec-sub {
-    font-size: 11px; color: var(--gr);
-    margin: 0 0 8px 24px;
+    font-size: 10.5px; color: var(--gr);
+    margin: 0 0 6px 22px;
 }
 .jw-cap-row {
-    display: flex; align-items: center; gap: 8px;
+    display: flex; align-items: center; gap: 6px;
 }
 .jw-cap-img {
     flex: 0 0 auto;
-    height: 42px;
+    height: 38px;
     border: 1.5px solid var(--bd);
     border-radius: var(--r-md);
     overflow: hidden;
     background: #F9FAFB;
     display: flex; align-items: center; justify-content: center;
-    padding: 0 8px;
-    min-width: 110px;
+    padding: 0 6px;
+    min-width: 100px;
 }
-.jw-cap-img img { height: 32px; width: auto; object-fit: contain; }
+.jw-cap-img img { height: 28px; width: auto; object-fit: contain; }
 .jw-cap-btn {
-    width: 28px; height: 28px;
+    width: 26px; height: 26px;
     display: inline-flex; align-items: center; justify-content: center;
     background: transparent; color: var(--pri);
     border: 1px solid var(--bd);
-    border-radius: 8px;
+    border-radius: 7px;
     cursor: pointer;
     flex-shrink: 0;
     transition: background .15s, border-color .15s, color .15s;
 }
 .jw-cap-btn:hover { background: var(--pri-l); border-color: var(--pri); color: var(--pri-h); }
-.jw-cap-btn svg { width: 13px; height: 13px; }
+.jw-cap-btn svg { width: 12px; height: 12px; }
 .jw-cap-field { flex: 1; position: relative; }
 .jw-cap-inp {
-    width: 100%; height: 42px;
+    width: 100%; height: 38px;
     border: 1.5px solid var(--bd); border-radius: var(--r-md);
-    padding: 0 14px;
-    font-size: 13.5px; font-weight: 500;
+    padding: 0 12px;
+    font-size: 13px; font-weight: 500;
     font-family: 'Poppins', sans-serif; outline: none; background: #fff;
     color: var(--dk); transition: border-color .2s, box-shadow .2s;
 }
@@ -416,10 +423,10 @@ body { background: var(--bg-pg); font-family: 'Poppins', system-ui, -apple-syste
 /* Sign-in button */
 .jw-btn {
     display: flex; align-items: center; justify-content: center; gap: 10px;
-    width: 100%; height: 46px;
+    width: 100%; height: 42px;
     background: var(--pri); color: #fff;
     border: none; border-radius: var(--r-md);
-    font-size: 14px; font-weight: 600;
+    font-size: 13.5px; font-weight: 600;
     font-family: 'Poppins', sans-serif; cursor: pointer;
     transition: background .2s, box-shadow .2s, transform .05s;
     box-shadow: var(--shadow-btn);
@@ -436,11 +443,11 @@ body { background: var(--bg-pg); font-family: 'Poppins', system-ui, -apple-syste
 /* Trust strip (3 items, compact) */
 .jw-trust {
     width: 100%; max-width: 520px;
-    margin-top: 10px;
+    margin-top: 8px;
     background: var(--bg-card);
     border: 1px solid var(--bd-l);
     border-radius: var(--r-lg);
-    padding: 8px 12px;
+    padding: 7px 10px;
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     gap: 6px;
@@ -495,29 +502,32 @@ body { background: var(--bg-pg); font-family: 'Poppins', system-ui, -apple-syste
 
 /* 1440 */
 @media (max-width: 1440px) {
-    .jw-hero h1 { font-size: 30px; }
-    .jw-left { padding: 18px 32px 14px; }
+    .jw-hero h1 { font-size: 28px; }
+    .jw-left { padding: 16px 30px 12px; }
 }
 
 /* 1366 — most 15.6" laptops */
 @media (max-width: 1366px) {
-    .jw-hero h1 { font-size: 26px; letter-spacing: -0.8px; }
-    .jw-hero { margin: 12px 0 10px; }
-    .jw-hero p { font-size: 12.5px; }
-    .jw-left { padding: 14px 28px 12px; }
-    .jw-cards { gap: 8px; margin-bottom: 12px; }
-    .jw-stats { padding: 10px 14px; }
-    .jw-stat { gap: 8px; }
-    .jw-stat-ico { width: 26px; height: 26px; }
-    .jw-stat-ico svg { width: 14px; height: 14px; }
-    .jw-stat-meta strong { font-size: 13px; }
-    .jw-stat-meta span { font-size: 9.5px; }
-    .jw-card-form { padding: 22px 28px 16px; }
-    .jw-card-form h2 { font-size: 22px; }
-    .jw-inp { height: 44px; font-size: 13.5px; }
-    .jw-cap-img, .jw-cap-inp { height: 44px; }
-    .jw-btn { height: 46px; font-size: 14px; }
-    .jw-trust { padding: 9px 12px; }
+    .jw-hero h1 { font-size: 24px; letter-spacing: -0.6px; }
+    .jw-hero { margin: 10px 0 8px; }
+    .jw-hero p { font-size: 11.5px; -webkit-line-clamp: 2; }
+    .jw-left { flex: 1; padding: 14px 22px 10px; }
+    .jw-right { flex: 1; }
+    .jw-cards { gap: 5px; margin-bottom: 10px; }
+    .jw-card-link { aspect-ratio: 517 / 889; }
+    .jw-stats { padding: 7px 10px; flex-wrap: nowrap; }
+    .jw-stat { padding: 0 2px; gap: 6px; }
+    .jw-stat-ico { width: 22px; height: 22px; border-radius: 6px; }
+    .jw-stat-ico svg { width: 12px; height: 12px; }
+    .jw-stat-meta strong { font-size: 12px; }
+    .jw-stat-meta span { font-size: 9px; }
+    .jw-card-form { max-width: 480px; padding: 16px 26px 14px; }
+    .jw-card-form h2 { font-size: 19px; }
+    .jw-inp { height: 40px; font-size: 13px; }
+    .jw-cap-img, .jw-cap-inp { height: 38px; }
+    .jw-btn { height: 42px; font-size: 13.5px; }
+    .jw-trust { max-width: 480px; padding: 6px 10px; }
+    .jw-left-foot { padding-top: 8px; font-size: 9.5px; }
 }
 
 /* 1280 */
@@ -529,10 +539,10 @@ body { background: var(--bg-pg); font-family: 'Poppins', system-ui, -apple-syste
 @media (max-width: 1024px) {
     .jw-page { flex-direction: column; height: auto; }
     .jw-left, .jw-right { height: auto; }
-    .jw-left { padding: 24px; }
+    .jw-left { padding: 22px 22px 18px; }
     .jw-cards {
         grid-template-columns: 1fr 1fr;
-        gap: 14px;
+        gap: 12px;
     }
     .jw-card-link:last-child { grid-column: span 2; max-width: 50%; justify-self: center; }
     .jw-stats { flex-wrap: wrap; }
@@ -543,24 +553,9 @@ body { background: var(--bg-pg); font-family: 'Poppins', system-ui, -apple-syste
     .jw-trust { grid-template-columns: 1fr; }
 }
 
-/* Mobile — horizontal-swipe carousel so all 3 cards stay accessible */
+/* Mobile */
 @media (max-width: 700px) {
-    .jw-cards {
-        grid-template-columns: none;
-        display: flex;
-        gap: 14px;
-        overflow-x: auto;
-        scroll-snap-type: x mandatory;
-        -webkit-overflow-scrolling: touch;
-        padding: 4px 2px 12px;
-        margin: 0 -18px 12px;
-        padding-left: 18px;
-        padding-right: 18px;
-    }
-    .jw-card-link {
-        flex: 0 0 70%;
-        scroll-snap-align: start;
-    }
+    .jw-cards { margin: 0 -4px 12px; }
     .jw-hero h1 { font-size: 30px; }
     .jw-left { padding: 20px 18px; }
     .jw-body { padding: 18px; }
@@ -614,33 +609,33 @@ if (session('status')) {
         <p>Connect companies, agencies and talent on one intelligent recruitment platform built for speed and trust.</p>
     </div>
 
-    {{-- 3 Audience Cards (art-directed image assets) --}}
+    {{-- 3 Audience Cards (full-card sub-card design, each flush with page left padding) --}}
     <div class="jw-cards">
 
-        {{-- Card 1: Find Trusted Agencies (For Companies) --}}
+        {{-- Card 1: For Companies (Find Trusted Agencies) --}}
         <a href="{{ route('register') }}" class="jw-card-link" aria-label="Find Trusted Agencies for Companies">
             <img class="jw-card-img"
-                 src="{{ asset('img/cards/find-trusted-agencies.webp') }}"
+                 src="{{ asset('img/cards/for-companies.svg') }}"
                  alt="Find Trusted Agencies for Companies"
-                 width="1024" height="1365"
+                 width="517" height="889"
                  decoding="async">
         </a>
 
-        {{-- Card 2: Find Hiring Opportunities (For Agencies) --}}
-        <a href="{{ route('register') }}" class="jw-card-link" aria-label="Find Hiring Opportunities for Recruitment Agencies">
+        {{-- Card 2: For Agencies (Search Work Opportunities) --}}
+        <a href="{{ route('register') }}" class="jw-card-link" aria-label="Search Work Opportunities for Recruitment Agencies">
             <img class="jw-card-img"
-                 src="{{ asset('img/cards/find-hiring-opportunities.webp') }}"
-                 alt="Find Hiring Opportunities for Recruitment Agencies"
-                 width="1024" height="1365"
+                 src="{{ asset('img/cards/for-agencies.svg') }}"
+                 alt="Search Work Opportunities for Recruitment Agencies"
+                 width="517" height="889"
                  decoding="async">
         </a>
 
-        {{-- Card 3: Find Bench Talents (For Bench Talent) --}}
-        <a href="{{ route('register') }}" class="jw-card-link" aria-label="Find Bench Talents and Immediate Joiners">
+        {{-- Card 3: For Bench Talent (Hire Immediate Joiners) --}}
+        <a href="{{ route('register') }}" class="jw-card-link" aria-label="Hire Immediate Joiners and Bench Talent">
             <img class="jw-card-img"
-                 src="{{ asset('img/cards/find-bench-talents.webp') }}"
-                 alt="Find Bench Talents and Immediate Joiners"
-                 width="1024" height="1365"
+                 src="{{ asset('img/cards/for-bench-talent.svg') }}"
+                 alt="Hire Immediate Joiners and Bench Talent"
+                 width="517" height="889"
                  decoding="async">
         </a>
     </div>
