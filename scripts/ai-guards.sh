@@ -17,9 +17,9 @@ cd "$(dirname "$0")/.." || exit 2
 mode="${1:-staged}"
 files=()
 
-collect_php_app_files() { # filter a newline list to existing app/*.php
+collect_php_app_files() { # filter a newline list to existing app/**/*.php
   while IFS= read -r f; do
-    [ -n "$f" ] && [[ "$f" == app/*.php ]] && [ -f "$f" ] && files+=("$f")
+    [ -n "$f" ] && [[ "$f" == app/*.php || "$f" == app/*/*.php || "$f" == app/*/*/*.php || "$f" == app/*/*/*/*.php ]] && [ -f "$f" ] && files+=("$f")
   done
 }
 
