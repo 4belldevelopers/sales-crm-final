@@ -2070,14 +2070,10 @@ class SaasFrontController extends SaasFrontBaseController
 			$custom_role_arr = array('Admin','Sub Administrator','Team Lead', 'Recruiter', 'Interviewer','Sales','Default');
 			$role_company_id = '';
 			$role_company_id = $company->id;
-			foreach ($custom_role_arr as $rolename) {
-				$role_priority = 1;
-				$role_row = DB::table('roles')->select('*')->where('company_id', $role_company_id)->orderBy('roles.id', 'DESC')->first();
-				if($role_row){
-					if ($role_row->priority >= 0) {
-						$role_priority = $role_row->priority + 1;
-					}
-				}
+			// Sprint 3.5 — single max() before loop replaces 7×SELECT inside loop (N+1 → 1 query).
+			$role_priority_base = (int)(DB::table('roles')->where('company_id', $role_company_id)->max('priority') ?? 0);
+			foreach ($custom_role_arr as $role_loop_index => $rolename) {
+				$role_priority = $role_priority_base + $role_loop_index + 1;
 
 
 
@@ -3209,17 +3205,12 @@ class SaasFrontController extends SaasFrontBaseController
 				
 				$custom_role_arr			=	array('Admin','Sub Administrator','Team Lead', 'Recruiter', 'Interviewer', 'Sales','Default');
 				$role_company_id			=	'';
-				$role_company_id			=	$company->id;	
-				foreach($custom_role_arr as $rolename)
+				$role_company_id			=	$company->id;
+				// Sprint 3.5 — single max() before loop replaces 7×SELECT inside loop (N+1 → 1 query).
+				$role_priority_base		=	(int)(DB::table('roles')->where('company_id', $role_company_id)->max('priority') ?? 0);
+				foreach($custom_role_arr as $role_loop_index => $rolename)
 				{
-						$role_priority	=	1;
-						$role_row 		=	DB::table('roles')->select('*')->where('company_id', $role_company_id)->orderBy('roles.id', 'DESC')->first();
-						// dd($role_row);
-						if($role_row){
-							if($role_row->priority >=0){
-							   $role_priority	=	$role_row->priority +1;	
-						    } 
-						}
+						$role_priority	=	$role_priority_base + $role_loop_index + 1;
 						
 
  
