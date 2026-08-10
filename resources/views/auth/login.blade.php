@@ -87,19 +87,24 @@ body { background: var(--bg-pg); font-family: 'Poppins', system-ui, -apple-syste
 
 /* Brand mark */
 .jw-brand {
-    display: inline-flex; align-items: center; gap: 9px;
-    text-decoration: none; line-height: 1;
+    display: inline-block;
+    text-decoration: none;
+    line-height: 1;
     position: relative;
 }
-.jw-brand-mark { height: 28px; width: auto; display: block; }
-.jw-brand-name {
-    font-size: 19px; font-weight: 800; color: var(--dk);
-    letter-spacing: -0.6px;
-    font-family: 'Poppins', sans-serif;
+.jw-brand-logo {
+    height: 38px;
+    width: auto;
+    max-width: 220px;
+    display: block;
 }
 .jw-brand-sub {
-    display: block; font-size: 10px; color: var(--gr);
-    font-weight: 500; margin-top: 3px; margin-left: 37px;
+    display: block;
+    font-size: 10.5px;
+    color: var(--gr);
+    font-weight: 500;
+    margin-top: 3px;
+    margin-left: 2px;
     letter-spacing: 0.15px;
 }
 
@@ -568,18 +573,10 @@ if (session('status')) {
 {{-- ═══════════════ LEFT PANEL ═══════════════ --}}
 <div class="jw-left">
 
-    {{-- Brand --}}
-    <a href="https://jero.works" class="jw-brand">
-        <svg class="jw-brand-mark" viewBox="0 0 38 44" fill="none" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
-            <circle cx="19" cy="2.6" r="1.9" fill="#F5C518"/>
-            <path d="M19 3.6 C10 3.6 2.6 9.6 1 17.6 C0.5 19.6 2 21 4 21 H34 C36 21 37.5 19.6 37 17.6 C35.4 9.6 28 3.6 19 3.6 Z" fill="#071A3A"/>
-            <path d="M1.4 18.6 C2 22 4.4 24.4 7.4 24.4 C10 24.4 12.2 22.6 13 20 C13.8 22.6 16 24.4 19 24.4 C22 24.4 24.2 22.6 25 20 C25.8 22.6 28 24.4 30.6 24.4 C33.6 24.4 36 22 36.6 18.6 C36.4 19.6 36 20.4 35.4 21 H2.6 C2 20.4 1.6 19.6 1.4 18.6 Z" fill="#071A3A"/>
-            <rect x="18.2" y="24" width="1.6" height="11" fill="#071A3A"/>
-            <path d="M19.8 35 C19.8 37.4 18 39.4 15.6 39.8 C13.6 40.2 11.6 39.4 10.6 37.6 C10.2 37 10.4 36.2 11 35.8 C11.6 35.4 12.4 35.6 12.8 36.2 C13.4 37.2 14.4 37.6 15.4 37.4 C16.6 37.2 17.4 36.2 17.4 35" stroke="#071A3A" stroke-width="1.6" fill="none" stroke-linecap="round"/>
-        </svg>
-        <span class="jw-brand-name">jero.works</span>
+    {{-- Official SVG Brand Logo from E:\ drive --}}
+    <a href="https://jero.works" class="jw-brand" aria-label="jero.works">
+        <img src="{{ asset('img/jero-logo-black-yellow.svg') }}" class="jw-brand-logo" alt="jero.works">
     </a>
-    <span class="jw-brand-sub">AI Recruitment Platform</span>
 
     {{-- Hero --}}
     <div class="jw-hero">
