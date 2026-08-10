@@ -84,25 +84,35 @@ body, html {
 }
 
 .v2-logo {
-  display: flex;
-  align-items: center;
-  gap: 10px;
+  display: inline-flex;
+  align-items: flex-start;
   text-decoration: none;
+  line-height: 1;
+  position: relative;
+  flex-shrink: 0;
   margin-bottom: 8px;
 }
-.v2-logo-text {
-  font-size: 24px;
-  font-weight: 800;
-  color: var(--v2-dk);
-  letter-spacing: -0.5px;
-  line-height: 1;
+.v2-logo-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+.v2-logo-img {
+  height: 38px;
+  width: auto;
+  max-width: 240px;
+  display: block;
 }
 .v2-logo-sub {
-  font-size: 11.5px;
-  font-weight: 600;
-  color: var(--v2-gr);
-  margin-top: 4px;
   display: block;
+  font-size: 11px;
+  font-weight: 600;
+  color: #475569;
+  line-height: 1.2;
+  margin-top: 2px;
+  margin-left: 48px;
+  letter-spacing: 0.1px;
+  font-family: 'Poppins', sans-serif !important;
 }
 
 .v2-aside-hero h2 {
@@ -1114,16 +1124,9 @@ body, html {
   <!-- ═══════════ LEFT COLUMN ═══════════ -->
   <div class="v2-left-col">
     <!-- Logo -->
-    <a href="https://jero.works/" class="v2-logo">
-      <svg width="36" height="36" viewBox="0 0 40 44" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M20 2C9.5 2 1 10.5 1 21H39C39 10.5 30.5 2 20 2Z" fill="#111827"/>
-        <path d="M1 21C1 21 7.5 17.5 20 21" stroke="rgba(255,255,255,0.35)" stroke-width="1.2"/>
-        <path d="M39 21C39 21 32.5 17.5 20 21" stroke="rgba(255,255,255,0.35)" stroke-width="1.2"/>
-        <line x1="20" y1="21" x2="20" y2="37" stroke="#111827" stroke-width="2.6" stroke-linecap="round"/>
-        <path d="M20 37C20 40.31 17.31 43 14 43" stroke="#111827" stroke-width="2.6" stroke-linecap="round" fill="none"/>
-      </svg>
-      <div>
-        <span class="v2-logo-text">jero.works</span>
+    <a href="https://jero.works/" class="v2-logo" aria-label="Jero.works">
+      <div class="v2-logo-wrapper">
+        <img src="{{ asset('img/jero-logo-black-yellow.svg') }}" class="v2-logo-img" alt="Jero.works">
         <span class="v2-logo-sub">AI Recruitment Platform</span>
       </div>
     </a>
