@@ -60,36 +60,27 @@ body, html {
 .v2-wrapper {
   display: flex;
   width: 100%;
-  max-width: 1360px;
+  max-width: 1440px;
   margin: 0 auto;
   min-height: 100vh;
   background: var(--v2-bg);
-  padding: 20px 24px;
+  padding: 32px 40px;
   box-sizing: border-box;
-  gap: 24px;
+  gap: 36px;
 }
 
-/* Left Column - Fixed sticky bounds for 15.6" laptops */
+/* Left Column */
 .v2-left-col {
-  width: 290px;
+  width: 320px;
   flex-shrink: 0;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 16px;
   position: sticky;
-  top: 16px;
+  top: 0;
   align-self: flex-start;
-  max-height: calc(100vh - 32px);
+  max-height: 100vh;
   overflow-y: auto;
-  scrollbar-width: thin;
-  scrollbar-color: #cbd5e1 transparent;
-}
-.v2-left-col::-webkit-scrollbar {
-  width: 4px;
-}
-.v2-left-col::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
-  border-radius: 4px;
 }
 
 .v2-logo {
@@ -97,42 +88,42 @@ body, html {
   align-items: center;
   gap: 10px;
   text-decoration: none;
-  margin-bottom: 4px;
+  margin-bottom: 8px;
 }
 .v2-logo-text {
-  font-size: 16px;
+  font-size: 24px;
   font-weight: 800;
   color: var(--v2-dk);
-  letter-spacing: -0.3px;
+  letter-spacing: -0.5px;
   line-height: 1;
 }
 .v2-logo-sub {
-  font-size: 11px;
+  font-size: 11.5px;
   font-weight: 600;
   color: var(--v2-gr);
-  margin-top: 3px;
+  margin-top: 4px;
   display: block;
 }
 
 .v2-aside-hero h2 {
-  font-size: 15px;
-  font-weight: 700;
+  font-size: 22px;
+  font-weight: 800;
   color: var(--v2-dk);
-  margin: 0 0 4px;
-  letter-spacing: -0.3px;
+  margin: 0 0 6px;
+  letter-spacing: -0.4px;
 }
 .v2-aside-hero p {
-  font-size: 12px;
+  font-size: 13px;
   color: var(--v2-gr);
   margin: 0;
-  line-height: 1.4;
+  line-height: 1.5;
 }
 
 /* Progress Card */
 .v2-prog-card {
   background: #ffffff;
-  border-radius: 12px;
-  padding: 12px 14px;
+  border-radius: 14px;
+  padding: 16px;
   box-shadow: 0 1px 3px rgba(0,0,0,0.03);
   border: 1px solid #edf0f4;
 }
@@ -140,15 +131,15 @@ body, html {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  font-size: 11.5px;
+  font-size: 12px;
   font-weight: 600;
 }
 .v2-prog-bg {
   width: 100%;
-  height: 6px;
+  height: 7px;
   background: #f1f5f9;
   border-radius: 999px;
-  margin: 8px 0;
+  margin: 10px 0;
   overflow: hidden;
 }
 .v2-prog-fill {
@@ -161,21 +152,21 @@ body, html {
 /* Stepper Card */
 .v2-stepper-card {
   background: #ffffff;
-  border-radius: 12px;
-  padding: 10px;
+  border-radius: 14px;
+  padding: 12px;
   box-shadow: 0 1px 3px rgba(0,0,0,0.03);
   border: 1px solid #edf0f4;
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 8px;
 }
 
 .v2-step-item {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 8px 10px;
-  border-radius: 10px;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: 12px;
   border: 1px solid transparent;
   transition: all 0.2s ease;
   text-decoration: none !important;
@@ -185,8 +176,8 @@ body, html {
   border-color: var(--v2-pb);
 }
 .v2-step-badge {
-  width: 26px;
-  height: 26px;
+  width: 30px;
+  height: 30px;
   border-radius: 50%;
   background: #f1f5f9;
   border: 1.5px solid var(--v2-bd);
@@ -194,7 +185,7 @@ body, html {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 11.5px;
+  font-size: 12.5px;
   font-weight: 700;
   flex-shrink: 0;
   transition: all 0.2s ease;
@@ -210,42 +201,42 @@ body, html {
   color: #ffffff;
 }
 .v2-step-title {
-  font-size: 12.5px;
+  font-size: 13px;
   font-weight: 700;
   color: var(--v2-dk);
   line-height: 1.2;
 }
 .v2-step-item.current .v2-step-title { color: var(--v2-p); }
 .v2-step-sub {
-  font-size: 10.5px;
+  font-size: 11px;
   color: var(--v2-gr);
-  margin-top: 1px;
+  margin-top: 2px;
 }
 
 /* Value Props Card */
 .v2-value-card {
   background: #ffffff;
-  border-radius: 12px;
-  padding: 12px 14px;
+  border-radius: 14px;
+  padding: 16px;
   box-shadow: 0 1px 3px rgba(0,0,0,0.03);
   border: 1px solid #edf0f4;
 }
 .v2-value-title {
-  font-size: 12px;
+  font-size: 12.5px;
   font-weight: 700;
   color: var(--v2-dk);
-  margin-bottom: 10px;
+  margin-bottom: 12px;
 }
 .v2-value-row {
   display: flex;
   align-items: flex-start;
-  gap: 8px;
-  margin-bottom: 8px;
+  gap: 10px;
+  margin-bottom: 10px;
 }
 .v2-value-row:last-child { margin-bottom: 0; }
 .v2-value-icon {
-  width: 24px;
-  height: 24px;
+  width: 26px;
+  height: 26px;
   border-radius: 6px;
   display: flex;
   align-items: center;
@@ -254,29 +245,29 @@ body, html {
 }
 .v2-value-txt strong {
   display: block;
-  font-size: 11px;
+  font-size: 11.5px;
   font-weight: 700;
   color: var(--v2-dk);
   line-height: 1.2;
 }
 .v2-value-txt span {
-  font-size: 10px;
+  font-size: 10.5px;
   color: var(--v2-gr);
 }
 
 /* Security Box */
 .v2-sec-card {
   background: #ffffff;
-  border-radius: 12px;
-  padding: 10px 12px;
+  border-radius: 14px;
+  padding: 14px 16px;
   box-shadow: 0 1px 3px rgba(0,0,0,0.03);
   border: 1px solid #edf0f4;
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
 }
-.v2-sec-card strong { display: block; font-size: 11.5px; font-weight: 700; color: var(--v2-dk); }
-.v2-sec-card span { font-size: 10.5px; color: var(--v2-gr); }
+.v2-sec-card strong { display: block; font-size: 12px; font-weight: 700; color: var(--v2-dk); }
+.v2-sec-card span { font-size: 11px; color: var(--v2-gr); }
 
 /* Right Column */
 .v2-right-col {
@@ -290,19 +281,19 @@ body, html {
   display: flex;
   justify-content: flex-end;
   align-items: center;
-  gap: 10px;
-  margin-bottom: 14px;
-  font-size: 12.5px;
+  gap: 12px;
+  margin-bottom: 20px;
+  font-size: 13px;
 }
 .v2-topbar span { color: var(--v2-gr); }
 .v2-btn-signin {
-  padding: 6px 16px;
+  padding: 7px 20px;
   border: 1.5px solid var(--v2-p);
   border-radius: 8px;
   color: var(--v2-p);
   font-weight: 700;
   text-decoration: none !important;
-  font-size: 12.5px;
+  font-size: 13px;
   transition: all 0.2s ease;
   background: transparent;
 }
@@ -313,23 +304,24 @@ body, html {
 
 .v2-main-card {
   background: #ffffff;
-  border-radius: 16px;
-  padding: 24px 28px;
+  border-radius: 20px;
+  padding: 40px 44px;
   box-shadow: 0 2px 16px rgba(0,0,0,0.03);
   border: 1px solid #edf0f4;
   width: 100%;
   box-sizing: border-box;
+  min-height: 550px;
 }
 
 .v2-hero {
   display: flex;
   align-items: flex-start;
-  gap: 14px;
-  margin-bottom: 18px;
+  gap: 16px;
+  margin-bottom: 24px;
 }
 .v2-hero-ico {
-  width: 40px;
-  height: 40px;
+  width: 48px;
+  height: 48px;
   border-radius: 50%;
   background: var(--v2-pl);
   display: flex;
@@ -339,31 +331,26 @@ body, html {
   flex-shrink: 0;
 }
 .v2-hero h1 {
-  font-size: 16px;
+  font-size: 26px;
   font-weight: 800;
   color: var(--v2-dk);
-  margin: 0 0 3px;
-  letter-spacing: -0.3px;
+  margin: 0 0 4px;
+  letter-spacing: -0.5px;
 }
 .v2-hero p {
-  font-size: 12.5px;
+  font-size: 13.5px;
   color: var(--v2-gr);
   margin: 0;
 }
 
 /* Form Controls Common */
-.v2-form-row {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 16px;
-}
-.v2-fg { margin-bottom: 14px; }
+.v2-fg { margin-bottom: 18px; }
 .v2-fg > label {
   display: block;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 600;
   color: var(--v2-dk);
-  margin-bottom: 5px;
+  margin-bottom: 6px;
 }
 .v2-fg > label .req { color: #dc2626; margin-left: 2px; }
 
@@ -374,7 +361,7 @@ body, html {
 }
 .v2-il {
   position: absolute;
-  left: 12px;
+  left: 14px;
   color: #94a3b8;
   display: flex;
   pointer-events: none;
@@ -382,7 +369,7 @@ body, html {
 }
 .v2-ir {
   position: absolute;
-  right: 12px;
+  right: 14px;
   color: #94a3b8;
   display: flex;
   cursor: pointer;
@@ -390,11 +377,11 @@ body, html {
 }
 .v2-inp {
   width: 100%;
-  height: 44px;
+  height: 50px;
   border: 1.5px solid var(--v2-bd);
-  border-radius: 9px;
-  padding: 0 14px 0 40px;
-  font-size: 13px;
+  border-radius: 10px;
+  padding: 0 16px 0 46px;
+  font-size: 13.5px;
   font-family: 'Poppins', sans-serif;
   color: var(--v2-dk);
   background: #ffffff;
@@ -406,21 +393,21 @@ body, html {
   box-shadow: 0 0 0 3px rgba(29,97,242,0.12);
 }
 .v2-hint {
-  font-size: 11px;
+  font-size: 12px;
   color: var(--v2-gr);
-  margin-top: 4px;
+  margin-top: 5px;
 }
 
 /* Step 2 Pixel-Perfect Reference Match Styles */
 .v2-step2-title {
-  font-size: 16px;
+  font-size: 26px;
   font-weight: 800;
   color: #0f172a;
-  margin: 0 0 3px;
-  letter-spacing: -0.3px;
+  margin: 0 0 4px;
+  letter-spacing: -0.5px;
 }
 .v2-step2-sub {
-  font-size: 12.5px;
+  font-size: 13.5px;
   color: #64748b;
   margin: 0;
 }
@@ -428,15 +415,15 @@ body, html {
 .v2-comp-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 16px;
-  margin-bottom: 18px;
+  gap: 20px;
+  margin-bottom: 24px;
 }
 
 .v2-comp-card {
   background: #ffffff;
   border: 1.5px solid #e2e8f0;
-  border-radius: 14px;
-  padding: 14px 16px;
+  border-radius: 16px;
+  padding: 18px;
   cursor: pointer;
   transition: all 0.2s ease;
   position: relative;
@@ -445,20 +432,20 @@ body, html {
 }
 .v2-comp-card:hover {
   border-color: #cbd5e1;
-  box-shadow: 0 4px 14px rgba(0,0,0,0.04);
+  box-shadow: 0 6px 20px rgba(0,0,0,0.04);
 }
 .v2-comp-card.selected {
   border: 2px solid #1d61f2;
   background: #ffffff;
-  box-shadow: 0 6px 18px rgba(29,97,242,0.08);
+  box-shadow: 0 8px 24px rgba(29,97,242,0.08);
 }
 
 .v2-comp-check {
   position: absolute;
-  top: 12px;
-  right: 12px;
-  width: 22px;
-  height: 22px;
+  top: 14px;
+  right: 14px;
+  width: 24px;
+  height: 24px;
   border-radius: 50%;
   border: 1.5px solid #cbd5e1;
   display: flex;
@@ -474,71 +461,67 @@ body, html {
 }
 
 .v2-card-img-wrap {
-  border-radius: 10px;
+  border-radius: 12px;
   overflow: hidden;
-  margin-bottom: 12px;
+  margin-bottom: 16px;
   display: flex;
   align-items: center;
   justify-content: center;
-}
-.v2-card-img-wrap svg {
-  height: 75px;
-  width: 100%;
 }
 
 .v2-card-head {
   display: flex;
   align-items: flex-start;
-  gap: 8px;
-  margin-bottom: 6px;
+  gap: 10px;
+  margin-bottom: 8px;
 }
 .v2-type-icon-badge {
-  width: 30px;
-  height: 30px;
-  border-radius: 8px;
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
 }
 .v2-card-title {
-  font-size: 13.5px;
-  font-weight: 700;
+  font-size: 16px;
+  font-weight: 800;
   color: #0f172a;
   line-height: 1.25;
 }
 .v2-card-desc {
-  font-size: 11.5px;
+  font-size: 12.5px;
   color: #64748b;
-  line-height: 1.4;
-  margin-bottom: 10px;
+  line-height: 1.45;
+  margin-bottom: 14px;
 }
 
 .v2-card-hr {
   border: 0;
   border-top: 1px solid #f1f5f9;
-  margin: 10px 0;
+  margin: 14px 0;
 }
 
 .v2-comp-list {
   list-style: none;
   padding: 0;
-  margin: 0 0 14px;
+  margin: 0 0 18px;
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 9px;
 }
 .v2-comp-list li {
   display: flex;
   align-items: center;
-  gap: 8px;
-  font-size: 11.5px;
+  gap: 10px;
+  font-size: 12.5px;
   color: #334155;
   font-weight: 500;
 }
 .v2-chk-icon {
-  width: 16px;
-  height: 16px;
+  width: 18px;
+  height: 18px;
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -547,78 +530,78 @@ body, html {
 }
 
 .v2-comp-banner {
-  border-radius: 8px;
-  padding: 8px 10px;
-  font-size: 11px;
-  line-height: 1.35;
+  border-radius: 10px;
+  padding: 10px 12px;
+  font-size: 11.5px;
+  line-height: 1.4;
   margin-top: auto;
   display: flex;
   align-items: flex-start;
-  gap: 6px;
+  gap: 8px;
 }
 
 /* Why selection matters container - Redesigned & Responsive */
 .v2-why-box {
   background: #f8fafc;
   border: 1px solid #e2e8f0;
-  border-radius: 14px;
-  padding: 14px 18px;
-  margin-bottom: 18px;
+  border-radius: 16px;
+  padding: 20px 24px;
+  margin-bottom: 24px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 18px;
+  gap: 24px;
   box-sizing: border-box;
   width: 100%;
 }
 .v2-why-left {
   flex-shrink: 0;
-  width: 200px;
+  width: 220px;
 }
 .v2-why-title {
   display: block;
-  font-size: 13px;
-  font-weight: 700;
+  font-size: 14px;
+  font-weight: 800;
   color: #0f172a;
-  margin: 0 0 3px 0;
+  margin: 0 0 4px 0;
   line-height: 1.3;
 }
 .v2-why-sub {
-  font-size: 11.5px;
+  font-size: 12px;
   color: #64748b;
   margin: 0;
-  line-height: 1.35;
+  line-height: 1.4;
   display: block;
 }
 .v2-why-items {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 10px 12px;
+  gap: 12px 14px;
   flex: 1;
   min-width: 0;
 }
 .v2-why-item {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
   background: #ffffff;
   border: 1.5px solid #e2e8f0;
-  border-radius: 10px;
-  padding: 8px 12px;
+  border-radius: 12px;
+  padding: 10px 14px;
   box-shadow: 0 1px 3px rgba(0,0,0,0.02);
   min-width: 0;
 }
 .v2-why-icon {
-  width: 28px;
-  height: 28px;
-  border-radius: 8px;
+  width: 32px;
+  height: 32px;
+  border-radius: 9px;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
 }
 .v2-why-item-txt {
-  font-size: 11.5px;
+  font-size: 12.5px;
   font-weight: 700;
   color: #0f172a;
   white-space: nowrap;
@@ -626,13 +609,28 @@ body, html {
   text-overflow: ellipsis;
 }
 
-/* Step 3 Section Cards */
+@media (max-width: 1200px) {
+  .v2-why-box {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+  }
+  .v2-why-left {
+    width: 100%;
+  }
+  .v2-why-items {
+    width: 100%;
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* Step 3 Section Cards - Redesigned Pixel-Perfect */
 .v2-step3-box {
   background: #ffffff;
   border: 1.5px solid #e2e8f0;
-  border-radius: 14px;
-  padding: 16px 20px;
-  margin-bottom: 16px;
+  border-radius: 16px;
+  padding: 24px;
+  margin-bottom: 24px;
   box-shadow: 0 1px 3px rgba(0,0,0,0.02);
   transition: border-color 0.2s;
   width: 100%;
@@ -645,27 +643,27 @@ body, html {
 .v2-step3-head {
   display: flex;
   align-items: center;
-  gap: 12px;
-  margin-bottom: 14px;
+  gap: 14px;
+  margin-bottom: 18px;
 }
 .v2-step3-icon {
-  width: 36px;
-  height: 36px;
-  border-radius: 10px;
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
 }
 .v2-step3-title {
-  font-size: 14px;
-  font-weight: 700;
+  font-size: 15px;
+  font-weight: 800;
   color: #0f172a;
-  margin: 0 0 2px 0;
+  margin: 0 0 3px 0;
   line-height: 1.2;
 }
 .v2-step3-sub {
-  font-size: 11.5px;
+  font-size: 12.5px;
   color: #64748b;
   line-height: 1.35;
   margin: 0;
@@ -676,10 +674,10 @@ body, html {
   display: flex;
   align-items: center;
   border: 1.5px solid #e2e8f0;
-  border-radius: 9px;
+  border-radius: 10px;
   overflow: hidden;
   background: #ffffff;
-  height: 44px;
+  height: 50px;
   transition: border-color 0.2s, box-shadow 0.2s;
 }
 .v2-web-group:focus-within {
@@ -690,11 +688,11 @@ body, html {
   display: flex;
   align-items: center;
   gap: 6px;
-  padding: 0 12px;
+  padding: 0 14px;
   background: #f8fafc;
   border-right: 1.5px solid #e2e8f0;
   color: #64748b;
-  font-size: 12.5px;
+  font-size: 13.5px;
   font-weight: 600;
   height: 100%;
   flex-shrink: 0;
@@ -703,20 +701,20 @@ body, html {
   flex: 1;
   border: none !important;
   outline: none !important;
-  padding: 0 14px;
-  font-size: 13px;
+  padding: 0 16px;
+  font-size: 13.5px;
   font-family: 'Poppins', sans-serif;
   color: #0f172a;
   background: transparent;
   height: 100%;
 }
 
-/* Step 3 Phone Input Container */
+/* Step 3 Phone Input Container & intlTelInput styling */
 .v2-phone-wrap {
   border: 1.5px solid #e2e8f0;
-  border-radius: 9px;
+  border-radius: 10px;
   overflow: hidden;
-  height: 44px;
+  height: 50px;
   display: flex;
   align-items: center;
   background: #ffffff;
@@ -736,8 +734,8 @@ body, html {
 .v2-phone-wrap .iti__selected-flag {
   background: #f8fafc !important;
   border-right: 1.5px solid #e2e8f0 !important;
-  border-radius: 8px 0 0 8px;
-  padding: 0 12px !important;
+  border-radius: 9px 0 0 9px;
+  padding: 0 14px !important;
   height: 100% !important;
   display: flex !important;
   align-items: center !important;
@@ -748,8 +746,8 @@ body, html {
   border: none !important;
   outline: none !important;
   box-shadow: none !important;
-  padding-left: 95px !important;
-  font-size: 13px !important;
+  padding-left: 100px !important;
+  font-size: 13.5px !important;
   font-family: 'Poppins', sans-serif !important;
   color: #0f172a !important;
   background: transparent !important;
@@ -764,12 +762,12 @@ body, html {
 }
 .v2-tagify-wrap .tagify {
   width: 100%;
-  min-height: 44px;
+  min-height: 50px;
   height: auto;
   border: 1.5px solid #e2e8f0 !important;
-  border-radius: 9px !important;
-  padding: 3px 38px 3px 38px !important;
-  font-size: 13px;
+  border-radius: 10px !important;
+  padding: 4px 44px 4px 44px !important;
+  font-size: 13.5px;
   font-family: 'Poppins', sans-serif;
   color: #0f172a;
   background: #ffffff;
@@ -783,35 +781,35 @@ body, html {
 }
 .v2-tagify-wrap .tagify__tag {
   margin: 2px 4px 2px 0;
-  height: 28px;
+  height: 30px;
 }
 
 /* FormValidation Error Messages Styling */
 .fv-plugins-message-container {
-  margin-top: 6px !important;
-  font-size: 11.5px !important;
+  margin-top: 8px !important;
+  font-size: 12px !important;
   font-weight: 500 !important;
   color: #dc2626 !important;
 }
 .fv-plugins-message-container .fv-help-block {
-  margin-bottom: 3px;
+  margin-bottom: 4px;
 }
 
 /* Step 3 Safe Box */
 .v2-safe-box {
   background: #eff6ff;
   border: 1px solid #dbeafe;
-  border-radius: 10px;
-  padding: 12px 16px;
+  border-radius: 12px;
+  padding: 16px 20px;
   display: flex;
   align-items: center;
-  gap: 12px;
-  margin-bottom: 18px;
+  gap: 14px;
+  margin-bottom: 24px;
 }
 .v2-safe-icon {
-  width: 32px;
-  height: 32px;
-  border-radius: 8px;
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
   background: #ffffff;
   color: #1d61f2;
   display: flex;
@@ -825,14 +823,14 @@ body, html {
 .v2-review-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 16px;
-  margin-bottom: 18px;
+  gap: 20px;
+  margin-bottom: 24px;
 }
 .v2-review-card {
   background: #ffffff;
   border: 1.5px solid #e2e8f0;
-  border-radius: 14px;
-  padding: 16px 18px;
+  border-radius: 16px;
+  padding: 20px 22px;
   display: flex;
   flex-direction: column;
 }
@@ -840,19 +838,19 @@ body, html {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 12px;
+  margin-bottom: 16px;
 }
 .v2-review-icon-title {
   display: flex;
   align-items: center;
-  gap: 8px;
-  font-size: 13.5px;
-  font-weight: 700;
+  gap: 10px;
+  font-size: 15px;
+  font-weight: 800;
   color: #0f172a;
 }
 .v2-review-btn-edit {
   color: #16a34a;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 700;
   background: none;
   border: none;
@@ -865,59 +863,59 @@ body, html {
 .v2-review-btn-edit:hover { text-decoration: underline; }
 
 .v2-review-val-title {
-  font-size: 15px;
+  font-size: 18px;
   font-weight: 800;
   color: #0f172a;
-  margin-bottom: 3px;
+  margin-bottom: 4px;
 }
 .v2-review-val-sub {
-  font-size: 11.5px;
+  font-size: 12.5px;
   color: #64748b;
-  margin-bottom: 12px;
+  margin-bottom: 16px;
 }
 .v2-review-meta {
   display: flex;
   align-items: center;
-  gap: 16px;
-  font-size: 12px;
+  gap: 20px;
+  font-size: 13px;
   color: #334155;
-  padding-top: 10px;
+  padding-top: 14px;
   border-top: 1px solid #f1f5f9;
 }
 .v2-review-meta-item {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
 }
 
 /* Step 4 Workspace Includes Container */
 .v2-inc-card {
   background: #ffffff;
   border: 1.5px solid #e2e8f0;
-  border-radius: 14px;
-  padding: 16px 20px;
-  margin-bottom: 18px;
+  border-radius: 16px;
+  padding: 22px 24px;
+  margin-bottom: 24px;
 }
 .v2-inc-title {
-  font-size: 14px;
-  font-weight: 700;
+  font-size: 15px;
+  font-weight: 800;
   color: #0f172a;
-  margin-bottom: 14px;
+  margin-bottom: 18px;
 }
 .v2-inc-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 12px;
+  gap: 18px;
 }
 .v2-inc-item {
   display: flex;
   align-items: flex-start;
-  gap: 10px;
+  gap: 12px;
 }
 .v2-inc-icon {
-  width: 30px;
-  height: 30px;
-  border-radius: 8px;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -925,13 +923,13 @@ body, html {
 }
 .v2-inc-txt strong {
   display: block;
-  font-size: 12px;
-  font-weight: 700;
+  font-size: 13px;
+  font-weight: 800;
   color: #0f172a;
   line-height: 1.2;
 }
 .v2-inc-txt span {
-  font-size: 10.5px;
+  font-size: 11.5px;
   color: #64748b;
 }
 
@@ -939,28 +937,28 @@ body, html {
 .v2-confirm-box {
   background: #eff6ff;
   border: 1px solid #dbeafe;
-  border-radius: 12px;
-  padding: 12px 16px;
-  margin-bottom: 16px;
+  border-radius: 14px;
+  padding: 16px 20px;
+  margin-bottom: 20px;
 }
 .v2-confirm-box .form-check-label {
-  font-size: 12.5px;
+  font-size: 13.5px;
   font-weight: 700;
   color: #0f172a;
 }
 .v2-confirm-sub {
-  font-size: 11px;
+  font-size: 12px;
   color: #64748b;
-  margin-top: 3px;
-  padding-left: 26px;
+  margin-top: 4px;
+  padding-left: 28px;
 }
 
 /* Step 4 Launch Container */
 .v2-launch-bar {
   background: #f8fafc;
   border: 1px solid #e2e8f0;
-  border-radius: 14px;
-  padding: 14px 18px;
+  border-radius: 16px;
+  padding: 18px 24px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -968,12 +966,12 @@ body, html {
 .v2-launch-sec {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
 }
 .v2-launch-sec-icon {
-  width: 32px;
-  height: 32px;
-  border-radius: 8px;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
   background: #f0fdf4;
   color: #16a34a;
   display: flex;
@@ -988,23 +986,23 @@ body, html {
   align-items: center;
   justify-content: center;
   gap: 8px;
-  height: 44px;
-  padding: 0 24px;
+  height: 48px;
+  padding: 0 28px;
   background: var(--v2-p);
   color: #ffffff !important;
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 700;
   font-family: 'Poppins', sans-serif;
   border: none;
-  border-radius: 9px;
+  border-radius: 10px;
   cursor: pointer;
   transition: background 0.2s, box-shadow 0.2s;
-  box-shadow: 0 3px 10px rgba(29,97,242,0.25);
+  box-shadow: 0 4px 14px rgba(29,97,242,0.3);
   text-decoration: none !important;
 }
 .v2-btn-primary:hover {
   background: var(--v2-ph);
-  box-shadow: 0 5px 14px rgba(29,97,242,0.35);
+  box-shadow: 0 6px 18px rgba(29,97,242,0.4);
 }
 .v2-btn-primary:disabled {
   opacity: 0.75;
@@ -1036,15 +1034,15 @@ body, html {
   align-items: center;
   justify-content: center;
   gap: 8px;
-  height: 40px;
-  padding: 0 16px;
+  height: 44px;
+  padding: 0 18px;
   background: #ffffff;
   color: #334155;
-  font-size: 12.5px;
+  font-size: 13px;
   font-weight: 600;
   font-family: 'Poppins', sans-serif;
   border: 1.5px solid var(--v2-bd);
-  border-radius: 8px;
+  border-radius: 9px;
   cursor: pointer;
   transition: all 0.2s;
   text-decoration: none !important;
@@ -1059,15 +1057,15 @@ body, html {
   align-items: center;
   justify-content: center;
   gap: 8px;
-  height: 40px;
-  padding: 0 18px;
+  height: 46px;
+  padding: 0 22px;
   background: #eff6ff;
   color: #1d61f2;
-  font-size: 12.5px;
+  font-size: 13.5px;
   font-weight: 700;
   font-family: 'Poppins', sans-serif;
   border: none;
-  border-radius: 8px;
+  border-radius: 10px;
   cursor: pointer;
   transition: all 0.2s;
   text-decoration: none !important;
@@ -1081,8 +1079,8 @@ body, html {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-top: 20px;
-  padding-top: 16px;
+  margin-top: 28px;
+  padding-top: 20px;
   border-top: 1px solid var(--v2-bd);
 }
 
@@ -1091,8 +1089,8 @@ body, html {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-top: 20px;
-  font-size: 11.5px;
+  margin-top: 32px;
+  font-size: 12.5px;
   color: #64748b;
   width: 100%;
 }
@@ -1104,83 +1102,6 @@ body, html {
 
 .iti--allow-dropdown { width: 100% !important; }
 .iti__flag { margin-top: 2px !important; }
-
-/* Multi-Screen Responsiveness Media Queries */
-@media (max-width: 1280px) {
-  .v2-wrapper {
-    padding: 16px 20px;
-    gap: 20px;
-  }
-  .v2-left-col {
-    width: 270px;
-  }
-  .v2-main-card {
-    padding: 20px 22px;
-  }
-}
-
-@media (max-width: 992px) {
-  .v2-wrapper {
-    flex-direction: column;
-    padding: 16px;
-    gap: 16px;
-  }
-  .v2-left-col {
-    width: 100%;
-    position: static;
-    max-height: none;
-    overflow-y: visible;
-  }
-  .v2-form-row {
-    grid-template-columns: 1fr;
-    gap: 0;
-  }
-  .v2-comp-grid {
-    grid-template-columns: 1fr;
-  }
-  .v2-why-box {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 14px;
-  }
-  .v2-why-left {
-    width: 100%;
-  }
-  .v2-why-items {
-    width: 100%;
-    grid-template-columns: repeat(2, 1fr);
-  }
-  .v2-inc-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-
-@media (max-width: 576px) {
-  .v2-wrapper {
-    padding: 12px;
-  }
-  .v2-main-card {
-    padding: 16px 14px;
-    border-radius: 12px;
-  }
-  .v2-why-items {
-    grid-template-columns: 1fr;
-  }
-  .v2-review-grid {
-    grid-template-columns: 1fr;
-  }
-  .v2-inc-grid {
-    grid-template-columns: 1fr;
-  }
-  .v2-acts {
-    flex-direction: column-reverse;
-    gap: 12px;
-    align-items: stretch;
-  }
-  .v2-acts button {
-    width: 100%;
-  }
-}
 </style>
 
 <!-- Loading Overlay -->
@@ -1206,6 +1127,12 @@ body, html {
         <span class="v2-logo-sub">AI Recruitment Platform</span>
       </div>
     </a>
+
+    <!-- Sidebar Hero Header -->
+    <div class="v2-aside-hero">
+      <h2>Create Your Workspace</h2>
+      <p>Set up your organization once and start hiring in minutes.</p>
+    </div>
 
     <!-- Progress Card -->
     <div class="v2-prog-card">
@@ -1347,8 +1274,8 @@ body, html {
           </div>
         </div>
 
-        <div style="font-size:15px; font-weight:700; color:#0f172a; margin-bottom:2px;">Registration Details</div>
-        <div style="font-size:12px; color:#64748b; margin-bottom:16px;">Enter the basic information to create your account.</div>
+        <div style="font-size:16px; font-weight:800; color:#0f172a; margin-bottom:4px;">Registration Details</div>
+        <div style="font-size:13px; color:#64748b; margin-bottom:24px;">Enter the basic information to create your account.</div>
 
         <!-- Company Name -->
         <div class="v2-fg fv-row">
@@ -1362,72 +1289,66 @@ body, html {
           <div class="v2-hint">This will be the name of your organization on Jero.works</div>
         </div>
 
-        <!-- Row 1: Full Name & Work Email -->
-        <div class="v2-form-row">
-          <!-- Full Name -->
-          <div class="v2-fg fv-row">
-            <label>Full Name <span class="req">*</span></label>
-            <div class="v2-iw">
-              <span class="v2-il">
-                <svg width="18" height="18" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="7" r="3.5" stroke="#94a3b8" stroke-width="1.6"/><path d="M3 17c0-3.3 3.1-6 7-6s7 2.7 7 6" stroke="#94a3b8" stroke-width="1.6" stroke-linecap="round"/></svg>
-              </span>
-              <input type="text" class="v2-inp" name="name" placeholder="Enter your full name" autocomplete="off" minlength="2" maxlength="191" />
-            </div>
-            <div class="v2-hint">This should be your full legal name</div>
+        <!-- Full Name -->
+        <div class="v2-fg fv-row">
+          <label>Full Name <span class="req">*</span></label>
+          <div class="v2-iw">
+            <span class="v2-il">
+              <svg width="18" height="18" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="7" r="3.5" stroke="#94a3b8" stroke-width="1.6"/><path d="M3 17c0-3.3 3.1-6 7-6s7 2.7 7 6" stroke="#94a3b8" stroke-width="1.6" stroke-linecap="round"/></svg>
+            </span>
+            <input type="text" class="v2-inp" name="name" placeholder="Enter your full name" autocomplete="off" minlength="2" maxlength="191" />
           </div>
-
-          <!-- Work Email -->
-          <div class="v2-fg fv-row">
-            <label>Work Email <span class="req">*</span></label>
-            <div class="v2-iw">
-              <span class="v2-il">
-                <svg width="18" height="18" viewBox="0 0 20 20" fill="none"><rect x="2" y="4" width="16" height="12" rx="2" stroke="#94a3b8" stroke-width="1.6"/><path d="M2 7l8 5 8-5" stroke="#94a3b8" stroke-width="1.6" stroke-linecap="round"/></svg>
-              </span>
-              <input type="email" class="v2-inp" name="email" placeholder="Enter your official work email address" autocomplete="off" />
-            </div>
-            <div class="v2-hint">We'll use this email for all communications</div>
-          </div>
+          <div class="v2-hint">This should be your full legal name</div>
         </div>
 
-        <!-- Row 2: Password & Confirm Password -->
-        <div class="v2-form-row">
-          <!-- Password -->
-          <div class="v2-fg fv-row" data-kt-password-meter="true">
-            <label>Password <span class="req">*</span></label>
-            <div class="v2-iw">
-              <span class="v2-il">
-                <svg width="18" height="18" viewBox="0 0 20 20" fill="none"><rect x="4" y="9" width="12" height="9" rx="2" stroke="#94a3b8" stroke-width="1.6"/><path d="M7 9V6a3 3 0 1 1 6 0v3" stroke="#94a3b8" stroke-width="1.6" stroke-linecap="round"/></svg>
-              </span>
-              <input type="password" class="v2-inp" style="padding-right:46px;" name="password" id="password" placeholder="Create a strong password" autocomplete="off" minlength="8" />
-              <span class="v2-ir" data-kt-password-meter-control="visibility">
-                <i class="bi bi-eye-slash fs-4"></i>
-                <i class="bi bi-eye fs-4 d-none"></i>
-              </span>
-            </div>
-            <div class="d-flex align-items-center mt-2 mb-1" data-kt-password-meter-control="highlight">
-              <div class="flex-grow-1 bg-secondary bg-active-success rounded h-4px me-2"></div>
-              <div class="flex-grow-1 bg-secondary bg-active-success rounded h-4px me-2"></div>
-              <div class="flex-grow-1 bg-secondary bg-active-success rounded h-4px me-2"></div>
-              <div class="flex-grow-1 bg-secondary bg-active-success rounded h-4px"></div>
-            </div>
-            <div class="v2-hint">At least 8 characters with letters &amp; numbers</div>
+        <!-- Work Email -->
+        <div class="v2-fg fv-row">
+          <label>Work Email <span class="req">*</span></label>
+          <div class="v2-iw">
+            <span class="v2-il">
+              <svg width="18" height="18" viewBox="0 0 20 20" fill="none"><rect x="2" y="4" width="16" height="12" rx="2" stroke="#94a3b8" stroke-width="1.6"/><path d="M2 7l8 5 8-5" stroke="#94a3b8" stroke-width="1.6" stroke-linecap="round"/></svg>
+            </span>
+            <input type="email" class="v2-inp" name="email" placeholder="Enter your official work email address" autocomplete="off" />
           </div>
+          <div class="v2-hint">We'll use this email for all communications</div>
+        </div>
 
-          <!-- Confirm Password -->
-          <div class="v2-fg fv-row" data-kt-password-meter="true">
-            <label>Confirm Password <span class="req">*</span></label>
-            <div class="v2-iw">
-              <span class="v2-il">
-                <svg width="18" height="18" viewBox="0 0 20 20" fill="none"><rect x="4" y="9" width="12" height="9" rx="2" stroke="#94a3b8" stroke-width="1.6"/><path d="M7 9V6a3 3 0 1 1 6 0v3" stroke="#94a3b8" stroke-width="1.6" stroke-linecap="round"/></svg>
-              </span>
-              <input type="password" class="v2-inp" style="padding-right:46px;" name="password_confirmation" id="password_confirmation" placeholder="Re-enter password" autocomplete="off" minlength="8" />
-              <span class="v2-ir" data-kt-password-meter-control="visibility">
-                <i class="bi bi-eye-slash fs-4"></i>
-                <i class="bi bi-eye fs-4 d-none"></i>
-              </span>
-            </div>
-            <div class="v2-hint">Please enter the same password as above</div>
+        <!-- Password -->
+        <div class="v2-fg fv-row" data-kt-password-meter="true">
+          <label>Password <span class="req">*</span></label>
+          <div class="v2-iw">
+            <span class="v2-il">
+              <svg width="18" height="18" viewBox="0 0 20 20" fill="none"><rect x="4" y="9" width="12" height="9" rx="2" stroke="#94a3b8" stroke-width="1.6"/><path d="M7 9V6a3 3 0 1 1 6 0v3" stroke="#94a3b8" stroke-width="1.6" stroke-linecap="round"/></svg>
+            </span>
+            <input type="password" class="v2-inp" style="padding-right:46px;" name="password" id="password" placeholder="Create a strong password" autocomplete="off" minlength="8" />
+            <span class="v2-ir" data-kt-password-meter-control="visibility">
+              <i class="bi bi-eye-slash fs-4"></i>
+              <i class="bi bi-eye fs-4 d-none"></i>
+            </span>
           </div>
+          <div class="d-flex align-items-center mt-2 mb-1" data-kt-password-meter-control="highlight">
+            <div class="flex-grow-1 bg-secondary bg-active-success rounded h-4px me-2"></div>
+            <div class="flex-grow-1 bg-secondary bg-active-success rounded h-4px me-2"></div>
+            <div class="flex-grow-1 bg-secondary bg-active-success rounded h-4px me-2"></div>
+            <div class="flex-grow-1 bg-secondary bg-active-success rounded h-4px"></div>
+          </div>
+          <div class="v2-hint">At least 8 characters with a mix of letters, numbers &amp; symbols</div>
+        </div>
+
+        <!-- Confirm Password -->
+        <div class="v2-fg fv-row" data-kt-password-meter="true">
+          <label>Confirm Password <span class="req">*</span></label>
+          <div class="v2-iw">
+            <span class="v2-il">
+              <svg width="18" height="18" viewBox="0 0 20 20" fill="none"><rect x="4" y="9" width="12" height="9" rx="2" stroke="#94a3b8" stroke-width="1.6"/><path d="M7 9V6a3 3 0 1 1 6 0v3" stroke="#94a3b8" stroke-width="1.6" stroke-linecap="round"/></svg>
+            </span>
+            <input type="password" class="v2-inp" style="padding-right:46px;" name="password_confirmation" id="password_confirmation" placeholder="Re-enter your password" autocomplete="off" minlength="8" />
+            <span class="v2-ir" data-kt-password-meter-control="visibility">
+              <i class="bi bi-eye-slash fs-4"></i>
+              <i class="bi bi-eye fs-4 d-none"></i>
+            </span>
+          </div>
+          <div class="v2-hint">Please enter the same password as above</div>
         </div>
 
         <!-- Terms Checkbox -->
