@@ -25,6 +25,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Hash;
 use Symfony\Component\HttpKernel\Tests\HttpCache\StoreTest;
 use Yajra\DataTables\Facades\DataTables;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Auth;
@@ -133,6 +134,10 @@ class ServiceCompanyTeamController extends ServiceCompanyBaseController
 			DB::table('users')->whereIn('id', $request->arr)->update(['status'=>'inactive','working_status'=>0]);
 			// DB::table('users_profile')->whereIn('user_id', $request->arr)->delete();
 			// DB::table('client_contact_info')->whereIn('user_id', $request->arr)->delete();
+			// Phase 3.4: bump epoch for each deactivated user so their sessions are kicked.
+			foreach ((array) $request->arr as $uid) {
+				Cache::put('user:epoch:' . (int) $uid, now()->timestamp, 7 * 24 * 3600);
+			}
 			$message		=	'Team member inactive successfully.';	
 			$type			=	'success';	
 			return Reply::dataOnly(['status' => 'success', 'msgType'=> $type, 'message' => $message]);	
@@ -2081,9 +2086,11 @@ class ServiceCompanyTeamController extends ServiceCompanyBaseController
 							DB::table('users')->where('company_id', @$company_id)->where('id', @$userId)->limit(1) ->update(array('status' => 'active','working_status' => 1,'auto_date_team'=>Carbon::today()));  
 							$status_text = 'Avtive'; 		 
 			}else{
-				
-							DB::table('users')->where('company_id', @$company_id)->where('id', @$userId)->limit(1) ->update(array('status' => 'inactive','working_status' => 0));  
-							$status_text = 'Avtive';  			 
+
+							DB::table('users')->where('company_id', @$company_id)->where('id', @$userId)->limit(1) ->update(array('status' => 'inactive','working_status' => 0));
+							// Phase 3.4: bump epoch so active sessions are kicked on next request.
+							Cache::put('user:epoch:' . (int) $userId, now()->timestamp, 7 * 24 * 3600);
+							$status_text = 'Avtive';
 			}
 
 			GeneralMethod::userIndexingupload($userId);	

@@ -228,9 +228,12 @@ Route::group(['middleware' => 'auth'], function () {
 
     Route::post('note-delete/comment', [SuperAdminCompanyController::class,'notedestroy'])->name('company.notedestroy');
 
-    Route::post('check-active', [SuperAdminCompanyController::class,'checkActive'])->name('company.checkActive');
-    Route::post('check-status-operational', [SuperAdminCompanyController::class,'checkStatusOperational'])->name('company.checkStatusOperational');
-    Route::post('check-status-sales', [SuperAdminCompanyController::class,'checkStatusSales'])->name('company.checkStatusSales');
+    // Phase 3.8: bulk-ops rate limit — 10/min per super-admin.
+    Route::middleware('throttle:superadmin-bulk-ops')->group(function () {
+        Route::post('check-active', [SuperAdminCompanyController::class,'checkActive'])->name('company.checkActive');
+        Route::post('check-status-operational', [SuperAdminCompanyController::class,'checkStatusOperational'])->name('company.checkStatusOperational');
+        Route::post('check-status-sales', [SuperAdminCompanyController::class,'checkStatusSales'])->name('company.checkStatusSales');
+    });
 
 
     Route::get('notification', [SuperAdminCompanyController::class,'notification'])->name('company.notification');

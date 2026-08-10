@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 
 namespace App\Http\Controllers\SuperAdmin;
 
@@ -46,6 +46,7 @@ use Illuminate\Pagination\LengthAwarePaginator;
 use App\Jobs\QueueMailService;
 use App\Jobs\QueueMassMailService;
 use App\Jobs\QueueNotificationMailService;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Validator;
 use App\Services\ElasticService;
 
@@ -11269,6 +11270,11 @@ if (!$this->elasticService->indexExists(ELASTIC_COMPANIES_INDEX)) {
           
         $result = DB::table('users')->where('company_id','=',$request->id)->where('working_status','=',1)->update(['status'=>$pack_status]); 
 
+        // Phase 3.4: bump company epoch when blocking, so all active sessions are invalidated.
+        if ($pack_status === 'inactive') {
+            Cache::put('company:epoch:' . (int) $request->id, now()->timestamp, 7 * 24 * 3600);
+        }
+
 
     
             $updateTime = now()->toIso8601String();
@@ -11296,7 +11302,7 @@ if (!$this->elasticService->indexExists(ELASTIC_COMPANIES_INDEX)) {
                         ]
                     ]
                 ],
-                'refresh' => true // Optional: make changes visible immediately
+
             ];
             // Elastic Execute the bulk update
             if ($this->elasticService->indexExists(ELASTIC_USERS_LIST)) {
@@ -11325,7 +11331,7 @@ if (!$this->elasticService->indexExists(ELASTIC_COMPANIES_INDEX)) {
                         ]
                     ]
                 ],
-                'refresh' => true // Optional: make changes visible immediately
+
             ];
             // Elastic Execute the bulk update
             if ($this->elasticService->indexExists(ELASTIC_COMPANIES_INDEX)) {

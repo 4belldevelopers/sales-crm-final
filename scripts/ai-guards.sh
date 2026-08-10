@@ -17,9 +17,9 @@ cd "$(dirname "$0")/.." || exit 2
 mode="${1:-staged}"
 files=()
 
-collect_php_app_files() { # filter a newline list to existing app/*.php
+collect_php_app_files() { # filter a newline list to existing app/**/*.php
   while IFS= read -r f; do
-    [ -n "$f" ] && [[ "$f" == app/*.php ]] && [ -f "$f" ] && files+=("$f")
+    [ -n "$f" ] && [[ "$f" == app/*.php || "$f" == app/*/*.php || "$f" == app/*/*/*.php || "$f" == app/*/*/*/*.php ]] && [ -f "$f" ] && files+=("$f")
   done
 }
 
@@ -62,6 +62,13 @@ for f in "${files[@]}"; do
     echo "[$f] env() used outside config/:"
     grep -nE '(^|[^_[:alnum:]])env[[:space:]]*\(' "$f" | sed 's/^/    /'
     note "move to config/*.php and read via config() (AI_RULES #5, BUG-02)"
+  fi
+  # GUARD 3: new 'refresh' => true in ES calls forces a shard sync in the HTTP response path,
+  # adding ~50-200 ms per call and blocking Octane worker threads. Remove it.
+  if grep -nE "'refresh'\s*=>\s*true" "$f" | grep -vE ':\s*(//|\*|#)' >/dev/null; then
+    echo "[$f] 'refresh' => true in ES call:"
+    grep -nE "'refresh'\s*=>\s*true" "$f" | grep -vE ':\s*(//|\*|#)' | sed 's/^/    /'
+    note "remove 'refresh' => true — ES eventual consistency is fine; sync flush blocks workers (V2_login Phase 3.7)"
   fi
 done
 

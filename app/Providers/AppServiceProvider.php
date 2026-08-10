@@ -2,9 +2,21 @@
 
 namespace App\Providers;
 
+use App\Actions\Auth\AttemptLoginAction;
+use App\Actions\Auth\LogoutAction;
+use App\Actions\Auth\ShowLoginFormAction;
+use App\Actions\Registration\BootstrapTenantDefaultsAction;
+use App\Actions\Registration\CreateCompanyAction;
+use App\Actions\Registration\CreateCompanyUserAction;
+use App\Actions\Registration\IssueVerificationTokenAction;
+use App\Actions\Registration\SeedCoinLedgerAction;
+use App\Actions\Registration\SeedCommercialRatesAction;
+use App\Events\CompanyRegistered;
+use App\Listeners\IndexNewCompany;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
@@ -13,7 +25,27 @@ class AppServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
-        //
+        $this->registerActions();
+    }
+
+    /**
+     * Sprint 5.8 / Phase 2 — scoped() gives each Octane request a fresh Action instance (ADR-V2R-11).
+     * Auth actions added in V2_login Phase 2 (docs/V2_login/IMPLEMENTATION_PLAN.md §2.1).
+     */
+    private function registerActions(): void
+    {
+        // Auth actions (V2_login Phase 2)
+        $this->app->scoped(AttemptLoginAction::class);
+        $this->app->scoped(ShowLoginFormAction::class);
+        $this->app->scoped(LogoutAction::class);
+
+        // Registration actions (Sprint 5.8)
+        $this->app->scoped(CreateCompanyAction::class);
+        $this->app->scoped(CreateCompanyUserAction::class);
+        $this->app->scoped(BootstrapTenantDefaultsAction::class);
+        $this->app->scoped(SeedCoinLedgerAction::class);
+        $this->app->scoped(SeedCommercialRatesAction::class);
+        $this->app->scoped(IssueVerificationTokenAction::class);
     }
 
     public function boot(): void
@@ -26,10 +58,13 @@ class AppServiceProvider extends ServiceProvider
 
         $this->configureRateLimiters();
         $this->registerObservers();
+        // Sprint 5.8 — event → listener wiring (no EventServiceProvider in L11 default scaffold).
+        Event::listen(CompanyRegistered::class, IndexNewCompany::class);
     }
 
     private function registerObservers(): void
     {
+        \App\Models\Company::observe(\App\Observers\CompanyObserver::class);
         \App\Models\Job::observe(\App\Observers\JobObserver::class);
         \App\Models\JobApplication::observe(\App\Observers\JobApplicationObserver::class);
         \App\Models\NoticePeriod::observe(\App\Observers\NoticePeriodCacheInvalidateObserver::class);
@@ -41,13 +76,33 @@ class AppServiceProvider extends ServiceProvider
     }
 
     /**
-     * Named rate limiters for the resume upload v2 subsystem.
+     * Named rate limiters for the resume upload v2 subsystem and the registration flow.
      *
      * All limits are read from config/resumes.php so they can be tuned
      * without a deploy. Fail-open design: Redis outage → pass through + log.
      */
     private function configureRateLimiters(): void
     {
+        // Registration submit: 10 attempts per hour per IP.
+        // Prevents bot farms from hammering the 80-insert / 30-ES-write companyRegister() path.
+        RateLimiter::for('register-submit', fn (Request $request) =>
+            Limit::perHour(10)->by('register-submit:' . $request->ip())
+        );
+
+        // Registration keystroke probes (email / phone / domain checks): 60 per minute per IP.
+        // Prevents customer-enumeration at scale while allowing normal typing-speed usage.
+        RateLimiter::for('register-form', fn (Request $request) =>
+            Limit::perMinute(60)->by('register-form:' . $request->ip())
+        );
+
+        // Verification resend: 3/hr per user-id + 10/hr per IP (audit H1 / Sprint 2.10).
+        // Dual limits: per-user prevents targeting a specific account; per-IP caps bot farms.
+        // Token is rotated on every resend so 3-attempt cap is acceptable.
+        RateLimiter::for('register-resend', fn (Request $request) => [
+            Limit::perHour(3)->by('register-resend:uid:' . $request->route('id')),
+            Limit::perHour(10)->by('register-resend:ip:' . $request->ip()),
+        ]);
+
         // Presign endpoint: 3/min per recruiter only — no company-level cap.
         // Fail-open on Redis outage so infra issues never block recruiters.
         RateLimiter::for('resume-presign', function (Request $request) {
@@ -86,5 +141,11 @@ class AppServiceProvider extends ServiceProvider
             return Limit::perMinute(config('resumes.rate_limits.status_per_user', 60))
                         ->by('resume-status:user:' . $userId);
         });
+
+        // Phase 3.8: super-admin bulk-ops (block/unblock company, toggle user status).
+        // 10 per minute per super-admin prevents accidental or scripted mass-toggle.
+        RateLimiter::for('superadmin-bulk-ops', fn (Request $request) =>
+            Limit::perMinute(10)->by('superadmin-bulk-ops:' . (optional($request->user())->id ?? 'anon'))
+        );
     }
 }
