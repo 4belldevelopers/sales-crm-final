@@ -1,6 +1,10 @@
 @extends('layouts.metronic_front_app')
 <title>Sign In — jero.works</title>
 
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
 <style>
 /* ── Tokens ────────────────────────────────────────────────── */
 :root {
@@ -42,13 +46,17 @@
 
 * { box-sizing: border-box; }
 html, body { margin: 0 !important; padding: 0 !important; height: 100%; overflow: hidden; }
-body { background: var(--bg-pg); font-family: 'Poppins', system-ui, -apple-system, sans-serif; color: var(--tx); }
+body, button, input, select, textarea, span, p, h1, h2, h3, h4, h5, h6, a, div, label {
+    font-family: 'Poppins', system-ui, -apple-system, sans-serif !important;
+}
+body { background: var(--bg-pg); color: var(--tx); }
 
 /* ── Unified Single-Panel Canvas ── */
 .jw-shell {
     height: 100vh;
     width: 100%;
     display: flex;
+    flex-direction: column;
     overflow: hidden;
     position: relative;
     background:
@@ -70,7 +78,7 @@ body { background: var(--bg-pg); font-family: 'Poppins', system-ui, -apple-syste
     display: flex;
     flex: 1;
     width: 100%;
-    height: 100vh;
+    min-height: 0;
     overflow: hidden;
     position: relative;
     z-index: 1;
@@ -83,23 +91,27 @@ body { background: var(--bg-pg); font-family: 'Poppins', system-ui, -apple-syste
     background: transparent;
     display: flex;
     flex-direction: column;
+    justify-content: space-between;
     position: relative;
     overflow: hidden;
-    padding: 16px 28px 14px;
+    padding: 14px 32px 10px;
     min-height: 0;
-    height: 100vh;
+    height: 100%;
 }
 .jw-left::before { display: none; }
 
 /* Brand mark */
 .jw-brand {
-    display: inline-block;
+    display: inline-flex;
+    align-items: center;
     text-decoration: none;
     line-height: 1;
     position: relative;
+    flex-shrink: 0;
+    height: 36px;
 }
 .jw-brand-logo {
-    height: 38px;
+    height: 36px;
     width: auto;
     max-width: 220px;
     display: block;
@@ -115,18 +127,18 @@ body { background: var(--bg-pg); font-family: 'Poppins', system-ui, -apple-syste
 }
 
 /* Hero */
-.jw-hero { margin: 12px 0 12px; max-width: 100%; position: relative; }
+.jw-hero { margin: 22px 0 12px; max-width: 100%; position: relative; flex-shrink: 0; }
 .jw-hero h1 {
-    font-size: 32px;
+    font-size: 36px !important;
     font-weight: 800;
     color: var(--dk);
     line-height: 1.15;
     letter-spacing: -1.1px;
-    margin: 0 0 10px;
+    margin: 0 0 8px;
 }
 .jw-hero h1 .acc { color: var(--acc); }
 .jw-hero p {
-    font-size: 13px; color: var(--gr); line-height: 1.55;
+    font-size: 12.5px; color: var(--gr); line-height: 1.5;
     margin: 0; font-weight: 400;
     max-width: 100%;
     display: -webkit-box;
@@ -139,15 +151,16 @@ body { background: var(--bg-pg); font-family: 'Poppins', system-ui, -apple-syste
 .jw-illustration-link {
     display: block;
     width: 100%;
-    margin-bottom: 14px;
+    flex: 1;
+    min-height: 0;
+    margin: 4px 0 8px;
     position: relative;
     border-radius: var(--r-lg);
     overflow: hidden;
     transition: transform .2s ease;
     line-height: 0;
-    aspect-ratio: 1152 / 768;
     background: transparent;
-    max-height: 480px;
+    max-height: 390px;
 }
 .jw-illustration-link:hover,
 .jw-illustration-link:focus-visible {
@@ -168,15 +181,17 @@ body { background: var(--bg-pg); font-family: 'Poppins', system-ui, -apple-syste
 
 /* ── Stats bar with subtle dividers ────────────────────────── */
 .jw-stats {
-    background: var(--bg-card);
+    background: rgba(255, 255, 255, 0.94);
+    backdrop-filter: blur(10px);
     border-radius: var(--r-lg);
-    padding: 9px 14px;
+    padding: 8px 12px;
     display: flex;
-    align-items: stretch;
-    border: 1px solid rgba(15,23,42,0.04);
-    box-shadow: var(--shadow-sm);
+    align-items: center;
+    border: 1px solid rgba(226, 232, 240, 0.9);
+    box-shadow: 0 4px 15px rgba(15, 23, 42, 0.04);
     position: relative;
     flex-shrink: 0;
+    z-index: 2;
 }
 .jw-stat {
     flex: 1;
@@ -203,34 +218,63 @@ body { background: var(--bg-pg); font-family: 'Poppins', system-ui, -apple-syste
 .jw-stat-ico.s-jobs   { background: var(--p-green);  color: var(--c-green); }
 .jw-stat-ico.s-cand   { background: var(--p-pink);   color: #DB2777; }
 .jw-stat-ico.s-up     { background: var(--p-orange); color: var(--c-orange); }
-.jw-stat-meta strong {
-    display: block; font-size: 14px; font-weight: 800; color: var(--dk);
-    line-height: 1.1; letter-spacing: -0.3px;
-}
 .jw-stat-meta span {
     display: block; font-size: 10px; color: var(--gr); line-height: 1.2;
     margin-top: 1px;
 }
 
-/* ── Left footer ──────────────────────────────────────────── */
-.jw-left-foot {
-    margin-top: auto;
-    padding-top: 10px;
-    display: flex; align-items: center; justify-content: space-between;
-    flex-wrap: wrap; gap: 8px;
-    font-size: 10px; color: var(--gr);
+/* ── Full-Width Transparent Footer Bar (100% Length across bottom) ── */
+.jw-full-foot {
+    width: 100%;
+    flex-shrink: 0;
+    padding: 10px 36px 14px;
+    background: transparent;
+    border-top: none;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
     position: relative;
+    z-index: 10;
 }
-.jw-left-foot .links { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
-.jw-left-foot a { color: var(--gr); text-decoration: none; transition: color .15s; }
-.jw-left-foot a:hover { color: var(--dk); }
+.jw-full-foot .copy {
+    font-size: 11px;
+    color: #64748B;
+    font-weight: 400;
+}
+.jw-full-foot .links {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+}
+.jw-full-foot .links a {
+    font-size: 11.5px;
+    color: #475569;
+    text-decoration: none;
+    font-weight: 500;
+    transition: color .15s;
+}
+.jw-full-foot .links a:hover {
+    color: var(--pri);
+}
 .jw-locale {
-    display: inline-flex; align-items: center; gap: 5px;
-    color: var(--tx); cursor: pointer; font-weight: 500;
-    background: transparent; border: none;
-    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: #FFFFFF;
+    border: 1.5px solid #CBD5E1;
+    border-radius: 8px;
+    padding: 5px 12px;
+    font-size: 11.5px;
+    font-weight: 500;
+    color: #334155;
+    cursor: pointer;
+    transition: background .15s, border-color .15s;
 }
-.jw-locale:hover { color: var(--dk); }
+.jw-locale:hover {
+    background: #F8FAFC;
+    border-color: #94A3B8;
+}
 
 /* ═══════════════ RIGHT PANEL ═══════════════ */
 .jw-right {
@@ -246,23 +290,36 @@ body { background: var(--bg-pg); font-family: 'Poppins', system-ui, -apple-syste
 
 /* Top bar */
 .jw-top {
-    display: flex; align-items: center; justify-content: flex-end;
-    gap: 10px; padding: 8px 28px 0;
-    font-size: 13px; color: var(--gr);
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 12px;
+    padding: 14px 0 0;
+    width: 100%;
+    max-width: 520px;
+    margin: 0 auto;
+    height: 50px;
+    font-size: 13px;
+    color: var(--gr);
     flex-shrink: 0;
 }
 .jw-top-cta {
     color: var(--pri); text-decoration: none; font-weight: 500;
 }
 .jw-top-btn {
-    display: inline-flex; align-items: center; gap: 6px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
     background: transparent;
     color: var(--pri);
     border: 1.5px solid var(--pri);
     border-radius: 8px;
-    padding: 8px 14px;
-    font-size: 13px; font-weight: 600;
-    cursor: pointer; text-decoration: none;
+    height: 36px;
+    padding: 0 14px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    text-decoration: none;
     transition: background .2s, color .2s;
 }
 .jw-top-btn:hover { background: var(--pri); color: #fff; }
@@ -272,7 +329,8 @@ body { background: var(--bg-pg); font-family: 'Poppins', system-ui, -apple-syste
     flex: 1;
     display: flex; flex-direction: column; align-items: center; justify-content: center;
     padding: 2px 28px 8px;
-    overflow-y: hidden;
+    overflow-y: auto;
+    scrollbar-width: thin;
     min-height: 0;
 }
 
@@ -284,16 +342,16 @@ body { background: var(--bg-pg); font-family: 'Poppins', system-ui, -apple-syste
     backdrop-filter: blur(12px);
     border: 1px solid rgba(226, 232, 240, 0.9);
     border-radius: var(--r-xl);
-    padding: 20px 32px 16px;
+    padding: 18px 32px 16px;
     box-shadow: 0 16px 40px rgba(15, 23, 42, 0.07), 0 1px 3px rgba(15, 23, 42, 0.03);
 }
 .jw-card-form h2 {
     font-size: 20px; font-weight: 800; color: var(--dk);
-    margin: 0 0 4px; letter-spacing: -0.5px; text-align: center;
+    margin: 0 0 3px; letter-spacing: -0.5px; text-align: center;
 }
 .jw-card-form .sub {
     font-size: 12px; color: var(--gr); text-align: center;
-    margin: 0 0 14px;
+    margin: 0 0 12px;
 }
 
 /* Alerts */
@@ -341,7 +399,7 @@ body { background: var(--bg-pg); font-family: 'Poppins', system-ui, -apple-syste
 /* Mid row */
 .jw-mid {
     display: flex; align-items: center; justify-content: space-between;
-    margin: 2px 0 10px;
+    margin: 2px 0 8px;
 }
 .jw-rem { display: flex; align-items: center; gap: 8px; }
 .jw-rem input[type=checkbox] {
@@ -360,8 +418,8 @@ body { background: var(--bg-pg); font-family: 'Poppins', system-ui, -apple-syste
     margin-bottom: 10px;
 }
 .jw-sec-head {
-    display: flex; align-items: center; gap: 8px;
-    margin-bottom: 4px;
+    display: flex; align-items: center; gap: 6px;
+    margin-bottom: 6px;
 }
 .jw-sec-icon {
     width: 14px; height: 14px; color: var(--pri);
@@ -371,40 +429,57 @@ body { background: var(--bg-pg); font-family: 'Poppins', system-ui, -apple-syste
 .jw-sec-title {
     font-size: 12px; font-weight: 700; color: var(--dk);
 }
-.jw-sec-sub {
-    font-size: 10.5px; color: var(--gr);
-    margin: 0 0 6px 22px;
+.jw-sec-bracket {
+    font-size: 11px; color: var(--gr); font-weight: 400;
 }
 .jw-cap-row {
-    display: flex; align-items: center; gap: 6px;
+    display: flex; align-items: center; gap: 8px;
 }
-.jw-cap-img {
-    flex: 0 0 auto;
-    height: 38px;
+.jw-cap-box {
+    display: inline-flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px;
+    height: 40px;
+    padding: 0 6px 0 10px;
+    background: #FFFFFF;
     border: 1.5px solid var(--bd);
     border-radius: var(--r-md);
-    overflow: hidden;
-    background: #F9FAFB;
-    display: flex; align-items: center; justify-content: center;
-    padding: 0 6px;
-    min-width: 100px;
+    box-shadow: inset 0 1px 2px rgba(15, 23, 42, 0.03);
+    flex: 0 0 auto;
 }
-.jw-cap-img img { height: 28px; width: auto; object-fit: contain; }
-.jw-cap-btn {
-    width: 26px; height: 26px;
-    display: inline-flex; align-items: center; justify-content: center;
-    background: transparent; color: var(--pri);
-    border: 1px solid var(--bd);
-    border-radius: 7px;
+.jw-cap-code-img {
+    height: 30px;
+    width: auto;
+    display: block;
+    user-select: none;
+    border-radius: 4px;
+}
+.jw-cap-refresh-btn {
+    width: 28px;
+    height: 28px;
+    background: transparent;
+    border: none;
+    color: var(--pri);
     cursor: pointer;
-    flex-shrink: 0;
-    transition: background .15s, border-color .15s, color .15s;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+    transition: background .15s, color .15s;
+    padding: 0;
 }
-.jw-cap-btn:hover { background: var(--pri-l); border-color: var(--pri); color: var(--pri-h); }
-.jw-cap-btn svg { width: 12px; height: 12px; }
+.jw-cap-refresh-btn:hover {
+    background: var(--pri-l);
+    color: var(--pri-h);
+}
+.jw-cap-refresh-btn svg {
+    width: 14px;
+    height: 14px;
+}
 .jw-cap-field { flex: 1; position: relative; }
 .jw-cap-inp {
-    width: 100%; height: 38px;
+    width: 100%; height: 40px;
     border: 1.5px solid var(--bd); border-radius: var(--r-md);
     padding: 0 12px;
     font-size: 13px; font-weight: 500;
@@ -433,45 +508,6 @@ body { background: var(--bg-pg); font-family: 'Poppins', system-ui, -apple-syste
 .jw-btn:hover .arrow { transform: translateX(4px); }
 .jw-btn[disabled] { opacity: 0.7; cursor: not-allowed; transform: none; }
 
-/* Sign Up link removed — "Create Free Account" CTA is already in the top bar */
-
-/* Trust strip (3 items, compact) */
-.jw-trust {
-    width: 100%; max-width: 520px;
-    margin-top: 8px;
-    background: var(--bg-card);
-    border: 1px solid var(--bd-l);
-    border-radius: var(--r-lg);
-    padding: 7px 10px;
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 6px;
-    box-shadow: var(--shadow-sm);
-    flex-shrink: 0;
-}
-.jw-trust-item { display: flex; align-items: center; gap: 7px; min-width: 0; }
-.jw-trust-ico {
-    width: 22px; height: 22px;
-    border-radius: 6px;
-    display: flex; align-items: center; justify-content: center;
-    flex-shrink: 0;
-}
-.jw-trust-ico svg { width: 12px; height: 12px; }
-.jw-trust-ico.t-secure  { background: var(--p-blue);   color: var(--c-blue); }
-.jw-trust-ico.t-private { background: var(--p-green);  color: var(--c-green); }
-.jw-trust-ico.t-uptime  { background: var(--p-orange); color: var(--c-orange); }
-.jw-trust-meta { min-width: 0; overflow: hidden; }
-.jw-trust-meta strong {
-    display: block; font-size: 11px; font-weight: 700;
-    color: var(--dk); line-height: 1.2;
-    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-    letter-spacing: -0.1px;
-}
-.jw-trust-meta span {
-    display: block; font-size: 9.5px; color: var(--gr); line-height: 1.2;
-    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-}
-
 /* Forgot form */
 .jw-fgt-acts { display: flex; gap: 12px; margin-top: 18px; }
 .jw-fgt-sub {
@@ -491,42 +527,86 @@ body { background: var(--bg-pg); font-family: 'Poppins', system-ui, -apple-syste
     display: inline-flex; align-items: center; cursor: pointer;
     transition: background .2s;
 }
-.jw-fgt-cancel:hover { background: #E5E7EB; color: #374151; }
+/* Inside Card Trust Strip (Matching attached screenshot) */
+.jw-card-trust {
+    margin-top: 14px;
+    background: #F8FAFC;
+    border: 1px solid #F1F5F9;
+    border-radius: var(--r-md);
+    padding: 9px 12px;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    align-items: center;
+}
+.jw-ct-item {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    min-width: 0;
+}
+.jw-ct-ico {
+    width: 22px;
+    height: 22px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+.jw-ct-ico svg { width: 14px; height: 14px; }
+.jw-ct-ico.t-green { color: #16A34A; }
+.jw-ct-ico.t-blue { color: #2563EB; }
+.jw-ct-ico.t-blue2 { color: #0284C7; }
+
+.jw-ct-meta { min-width: 0; }
+.jw-ct-meta strong {
+    display: block;
+    font-size: 10.5px;
+    font-weight: 700;
+    color: #0F172A;
+    line-height: 1.15;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.jw-ct-meta span {
+    display: block;
+    font-size: 9px;
+    color: #64748B;
+    line-height: 1.15;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-top: 1px;
+}
 
 /* ── Responsive ─────────────────────────────────────────────── */
 
 /* 1440 */
 @media (max-width: 1440px) {
-    .jw-hero h1 { font-size: 28px; }
+    .jw-hero h1 { font-size: 36px !important; }
     .jw-left { padding: 16px 30px 12px; }
 }
 
 /* 1366 — most 15.6" laptops */
 @media (max-width: 1366px) {
-    .jw-hero h1 { font-size: 24px; letter-spacing: -0.6px; }
-    .jw-hero { margin: 10px 0 8px; }
-    .jw-hero p { font-size: 11.5px; -webkit-line-clamp: 2; }
+    .jw-hero h1 { font-size: 36px !important; letter-spacing: -0.6px; }
+    .jw-hero { margin: 16px 0 8px; }
+    .jw-hero p { font-size: 12px; -webkit-line-clamp: 2; }
     .jw-left { flex: 1; padding: 14px 22px 10px; }
     .jw-right { flex: 1; }
     .jw-illustration-link { aspect-ratio: 1152 / 768; max-height: 420px; margin-bottom: 10px; }
-    .jw-stats { padding: 7px 10px; flex-wrap: nowrap; }
-    .jw-stat { padding: 0 2px; gap: 6px; }
-    .jw-stat-ico { width: 22px; height: 22px; border-radius: 6px; }
-    .jw-stat-ico svg { width: 12px; height: 12px; }
-    .jw-stat-meta strong { font-size: 12px; }
-    .jw-stat-meta span { font-size: 9px; }
-    .jw-card-form { max-width: 480px; padding: 16px 26px 14px; }
-    .jw-card-form h2 { font-size: 19px; }
+    .jw-card-form { max-width: 480px; padding: 22px 30px 18px; }
+    .jw-card-form h2 { font-size: 20px; }
     .jw-inp { height: 40px; font-size: 13px; }
     .jw-cap-img, .jw-cap-inp { height: 38px; }
     .jw-btn { height: 42px; font-size: 13.5px; }
-    .jw-trust { max-width: 480px; padding: 6px 10px; }
-    .jw-left-foot { padding-top: 8px; font-size: 9.5px; }
 }
 
 /* 1280 */
 @media (max-width: 1280px) {
-    .jw-hero h1 { font-size: 24px; }
+    .jw-hero h1 { font-size: 36px !important; }
 }
 
 /* Tablet */
@@ -535,12 +615,8 @@ body { background: var(--bg-pg); font-family: 'Poppins', system-ui, -apple-syste
     .jw-left, .jw-right { height: auto; }
     .jw-left { padding: 22px 22px 18px; }
     .jw-illustration-link { aspect-ratio: 1152 / 768; max-height: none; }
-    .jw-stats { flex-wrap: wrap; }
-    .jw-stat { flex: 1 1 45%; }
-    .jw-stat + .jw-stat::before { display: none; }
     .jw-body { padding: 22px 24px; overflow-y: auto; }
-    .jw-card-form, .jw-trust { max-width: 100%; }
-    .jw-trust { grid-template-columns: 1fr; }
+    .jw-card-form { max-width: 100%; }
 }
 
 /* Mobile */
@@ -587,7 +663,7 @@ if (session('status')) {
 
     {{-- Hero --}}
     <div class="jw-hero">
-        <h1>One Platform. Every <span class="acc">Hiring Need.</span></h1>
+        <h1>One Platform.<br>Every <span class="acc">Hiring Need.</span></h1>
         <p>Connect companies, agencies and talent on one intelligent recruitment platform built for speed and trust.</p>
     </div>
 
@@ -607,7 +683,7 @@ if (session('status')) {
                 <svg viewBox="0 0 24 24" fill="none"><circle cx="9" cy="8" r="3.2" fill="currentColor"/><circle cx="16" cy="8" r="3.2" fill="currentColor" opacity=".55"/><path d="M2 21c0-3.87 3.13-7 7-7h5c3.87 0 7 3.13 7 7" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg>
             </div>
             <div class="jw-stat-meta">
-                <strong>150+</strong>
+                <strong>15K+</strong>
                 <span>Enterprise Clients</span>
             </div>
         </div>
@@ -631,32 +707,12 @@ if (session('status')) {
         </div>
         <div class="jw-stat">
             <div class="jw-stat-ico s-up" aria-hidden="true">
-                <svg viewBox="0 0 24 24" fill="none"><path d="M12 3l8 4v5c0 5-3.5 9-8 10-4.5-1-8-5-8-10V7l8-4Z" stroke="currentColor" stroke-width="1.8" fill="none"/><path d="M8 12l3 3 5-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>
+                <svg viewBox="0 0 24 24" fill="none"><path d="M3 21h18M5 21V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16M9 9h2M13 9h2M9 13h2M13 13h2M9 17h2M13 17h2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
             </div>
             <div class="jw-stat-meta">
-                <strong>99.9%</strong>
-                <span>Platform Uptime</span>
+                <strong>20K+</strong>
+                <span>Agencies</span>
             </div>
-        </div>
-    </div>
-
-    {{-- Footer --}}
-    <div class="jw-left-foot">
-        <span>© 2026 Jero Technologies Pvt. Ltd. All rights reserved.</span>
-        <div class="links">
-            <a href="/privacy-policy">Privacy Policy</a>
-            <a href="/terms">Terms of Service</a>
-            <a href="/support">Support</a>
-            <button type="button" class="jw-locale" aria-label="Language selector">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                    <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.6"/>
-                    <path d="M3 12h18M12 3c3 3 3 15 0 18M12 3c-3 3-3 15 0 18" stroke="currentColor" stroke-width="1.6"/>
-                </svg>
-                English
-                <svg width="10" height="10" viewBox="0 0 12 12" fill="none" aria-hidden="true">
-                    <path d="M3 5l3 3 3-3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
-                </svg>
-            </button>
         </div>
     </div>
 
@@ -667,7 +723,7 @@ if (session('status')) {
 
     {{-- Top bar --}}
     <div class="jw-top">
-        <span>New to Jero?</span>
+        <span>New to Jero.works?</span>
         <a href="{{ route('register') }}" class="jw-top-btn">
             Create Free Account
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -743,15 +799,16 @@ if (session('status')) {
                         <svg viewBox="0 0 24 24" fill="none"><path d="M12 3l8 4v5c0 5-3.5 9-8 10-4.5-1-8-5-8-10V7l8-4Z" stroke="currentColor" stroke-width="1.8" fill="none"/><path d="M9 12l2 2 4-4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>
                     </span>
                     <span class="jw-sec-title">Security verification</span>
+                    <span class="jw-sec-bracket">{Enter the code shown below}</span>
                 </div>
-                <p class="jw-sec-sub">Enter the code shown below</p>
+
                 <div class="jw-cap-row">
-                    <div class="jw-cap-img">
-                        <img src="{{ route('captcha.generate') }}" id="captchaImg" alt="Security code">
+                    <div class="jw-cap-box">
+                        <img src="{{ route('captcha.generate') }}" id="captchaImg" alt="Security code" class="jw-cap-code-img">
+                        <button type="button" onclick="refreshCaptcha()" class="jw-cap-refresh-btn" aria-label="Refresh security code" title="Refresh security code">
+                            <svg viewBox="0 0 24 24" fill="none"><path d="M21 12a9 9 0 1 1-3.5-7.1" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M21 4v5h-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                        </button>
                     </div>
-                    <button type="button" onclick="refreshCaptcha()" class="jw-cap-btn" aria-label="Refresh security code">
-                        <svg viewBox="0 0 24 24" fill="none"><path d="M21 12a9 9 0 1 1-3.5-7.1" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M21 4v5h-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                    </button>
                     <div class="jw-cap-field">
                         <input type="text" inputmode="numeric" pattern="[0-9]*" maxlength="4" name="captcha" class="jw-cap-inp" id="jw-cap" placeholder="Enter code" autocomplete="off" required aria-describedby="jw-cap-help">
                     </div>
@@ -771,8 +828,36 @@ if (session('status')) {
                 </span>
                 <span class="indicator-progress" style="display:none" aria-live="polite">Signing in…&nbsp;<span class="spinner-border spinner-border-sm align-middle"></span></span>
             </button>
-
-            {{-- Sign Up link removed — "Create Free Account" CTA is already in the top bar --}}
+            {{-- In-Card Trust Footer (Matching attached mockup) --}}
+            <div class="jw-card-trust">
+                <div class="jw-ct-item">
+                    <div class="jw-ct-ico t-green">
+                        <svg viewBox="0 0 24 24" fill="none"><rect x="5" y="11" width="14" height="10" rx="2" stroke="currentColor" stroke-width="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4" stroke="currentColor" stroke-width="2"/></svg>
+                    </div>
+                    <div class="jw-ct-meta">
+                        <strong>Secure Login</strong>
+                        <span>256-bit encryption</span>
+                    </div>
+                </div>
+                <div class="jw-ct-item">
+                    <div class="jw-ct-ico t-blue">
+                        <svg viewBox="0 0 24 24" fill="none"><path d="M12 3l8 4v5c0 5-3.5 9-8 10-4.5-1-8-5-8-10V7l8-4Z" stroke="currentColor" stroke-width="2" fill="none"/><path d="M9 12l2 2 4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>
+                    </div>
+                    <div class="jw-ct-meta">
+                        <strong>Privacy Protected</strong>
+                        <span>Your data is safe</span>
+                    </div>
+                </div>
+                <div class="jw-ct-item">
+                    <div class="jw-ct-ico t-blue2">
+                        <svg viewBox="0 0 24 24" fill="none"><path d="M12 3l8 4v5c0 5-3.5 9-8 10-4.5-1-8-5-8-10V7l8-4Z" stroke="currentColor" stroke-width="2" fill="none"/><path d="M8 12l3 3 5-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>
+                    </div>
+                    <div class="jw-ct-meta">
+                        <strong>99.9% Uptime</strong>
+                        <span>Reliable platform</span>
+                    </div>
+                </div>
+            </div>
         </form>
 
         {{-- FORGOT PASSWORD FORM --}}
@@ -811,42 +896,32 @@ if (session('status')) {
             </div>
         </form>
 
-        {{-- Trust strip (3 items, no false cert claims) --}}
-        <div class="jw-trust" role="list">
-            <div class="jw-trust-item" role="listitem">
-                <div class="jw-trust-ico t-secure" aria-hidden="true">
-                    <svg viewBox="0 0 24 24" fill="none"><rect x="5" y="11" width="14" height="10" rx="2" stroke="currentColor" stroke-width="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4" stroke="currentColor" stroke-width="2"/></svg>
-                </div>
-                <div class="jw-trust-meta">
-                    <strong>Secure Login</strong>
-                    <span>256-bit encryption</span>
-                </div>
-            </div>
-            <div class="jw-trust-item" role="listitem">
-                <div class="jw-trust-ico t-private" aria-hidden="true">
-                    <svg viewBox="0 0 24 24" fill="none"><path d="M12 3l8 4v5c0 5-3.5 9-8 10-4.5-1-8-5-8-10V7l8-4Z" stroke="currentColor" stroke-width="2" fill="none"/><path d="M9 12l2 2 4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>
-                </div>
-                <div class="jw-trust-meta">
-                    <strong>Privacy Protected</strong>
-                    <span>Your data is safe</span>
-                </div>
-            </div>
-            <div class="jw-trust-item" role="listitem">
-                <div class="jw-trust-ico t-uptime" aria-hidden="true">
-                    <svg viewBox="0 0 24 24" fill="none"><path d="M12 3l8 4v5c0 5-3.5 9-8 10-4.5-1-8-5-8-10V7l8-4Z" stroke="currentColor" stroke-width="2" fill="none"/><path d="M8 12l3 3 5-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>
-                </div>
-                <div class="jw-trust-meta">
-                    <strong>99.9% Uptime</strong>
-                    <span>Reliable platform</span>
-                </div>
-            </div>
-        </div>
-
     </div>{{-- /jw-body --}}
 
 </div>{{-- /jw-right --}}
 
 </div>{{-- /jw-page --}}
+
+    {{-- Full-Length Complete Footer Bar --}}
+    <footer class="jw-full-foot">
+        <span class="copy">© 2026 Jero Technologies Pvt. Ltd. All rights reserved.</span>
+        <div class="links">
+            <a href="/privacy-policy">Privacy Policy</a>
+            <a href="/terms">Terms of Service</a>
+            <a href="/support">Support</a>
+            <button type="button" class="jw-locale" aria-label="Language selector">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                    <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.6"/>
+                    <path d="M3 12h18M12 3c3 3 3 15 0 18M12 3c-3 3-3 15 0 18" stroke="currentColor" stroke-width="1.6"/>
+                </svg>
+                English
+                <svg width="10" height="10" viewBox="0 0 12 12" fill="none" aria-hidden="true">
+                    <path d="M3 5l3 3 3-3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+            </button>
+        </div>
+    </footer>
+
 </div>{{-- /jw-shell --}}
 @endsection
 
