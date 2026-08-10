@@ -95,11 +95,13 @@ class AppServiceProvider extends ServiceProvider
             Limit::perMinute(60)->by('register-form:' . $request->ip())
         );
 
-        // Verification resend: 3 per hour per IP.
-        // Token is rotated on every resend (audit H1) so tighter cap is acceptable.
-        RateLimiter::for('register-resend', fn (Request $request) =>
-            Limit::perHour(3)->by('register-resend:' . $request->ip())
-        );
+        // Verification resend: 3/hr per user-id + 10/hr per IP (audit H1 / Sprint 2.10).
+        // Dual limits: per-user prevents targeting a specific account; per-IP caps bot farms.
+        // Token is rotated on every resend so 3-attempt cap is acceptable.
+        RateLimiter::for('register-resend', fn (Request $request) => [
+            Limit::perHour(3)->by('register-resend:uid:' . $request->route('id')),
+            Limit::perHour(10)->by('register-resend:ip:' . $request->ip()),
+        ]);
 
         // Presign endpoint: 3/min per recruiter only — no company-level cap.
         // Fail-open on Redis outage so infra issues never block recruiters.
