@@ -124,36 +124,26 @@ body { background: var(--bg-pg); font-family: 'Poppins', system-ui, -apple-syste
     overflow: hidden;
 }
 
-/* ── 3 Audience Cards (full-card design, flush with page edge) ── */
-/* Each SVG renders its own complete card — header pill, title, description,
-   illustration — and sits flush with the page's left padding so it aligns
-   with the hero text above and stats below. */
-.jw-cards {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 6px;
+/* ── Combined 3-in-1 Audience Illustration ── */
+.jw-illustration-link {
+    display: block;
+    width: 100%;
     margin-bottom: 14px;
     position: relative;
-    align-items: stretch;
-}
-.jw-card-link {
-    display: block;
-    text-decoration: none;
-    color: inherit;
     border-radius: var(--r-lg);
     overflow: hidden;
     transition: transform .2s ease;
     line-height: 0;
-    aspect-ratio: 517 / 889;
+    aspect-ratio: 1152 / 768;
     background: transparent;
-    max-height: 520px;
+    max-height: 480px;
 }
-.jw-card-link:hover,
-.jw-card-link:focus-visible {
+.jw-illustration-link:hover,
+.jw-illustration-link:focus-visible {
     transform: translateY(-3px);
     outline: none;
 }
-.jw-card-img {
+.jw-illustration-img {
     display: block;
     width: 100%;
     height: 100%;
@@ -163,13 +153,6 @@ body { background: var(--bg-pg); font-family: 'Poppins', system-ui, -apple-syste
     user-select: none;
     -webkit-user-drag: none;
     pointer-events: none;
-}
-/* Card 1 source artwork is sparser at the bottom than cards 2/3 — stretch it
-   vertically so its visible content reaches the same bottom edge as siblings.
-   User has approved distortion for this card only. */
-.jw-cards > .jw-card-link:nth-child(1) .jw-card-img {
-    transform: scaleY(1.13);
-    transform-origin: top center;
 }
 
 /* ── Stats bar with subtle dividers ────────────────────────── */
@@ -513,8 +496,7 @@ body { background: var(--bg-pg); font-family: 'Poppins', system-ui, -apple-syste
     .jw-hero p { font-size: 11.5px; -webkit-line-clamp: 2; }
     .jw-left { flex: 1; padding: 14px 22px 10px; }
     .jw-right { flex: 1; }
-    .jw-cards { gap: 5px; margin-bottom: 10px; }
-    .jw-card-link { aspect-ratio: 517 / 889; }
+    .jw-illustration-link { aspect-ratio: 1152 / 768; max-height: 420px; margin-bottom: 10px; }
     .jw-stats { padding: 7px 10px; flex-wrap: nowrap; }
     .jw-stat { padding: 0 2px; gap: 6px; }
     .jw-stat-ico { width: 22px; height: 22px; border-radius: 6px; }
@@ -540,11 +522,7 @@ body { background: var(--bg-pg); font-family: 'Poppins', system-ui, -apple-syste
     .jw-page { flex-direction: column; height: auto; }
     .jw-left, .jw-right { height: auto; }
     .jw-left { padding: 22px 22px 18px; }
-    .jw-cards {
-        grid-template-columns: 1fr 1fr;
-        gap: 12px;
-    }
-    .jw-card-link:last-child { grid-column: span 2; max-width: 50%; justify-self: center; }
+    .jw-illustration-link { aspect-ratio: 1152 / 768; max-height: none; }
     .jw-stats { flex-wrap: wrap; }
     .jw-stat { flex: 1 1 45%; }
     .jw-stat + .jw-stat::before { display: none; }
@@ -555,7 +533,7 @@ body { background: var(--bg-pg); font-family: 'Poppins', system-ui, -apple-syste
 
 /* Mobile */
 @media (max-width: 700px) {
-    .jw-cards { margin: 0 -4px 12px; }
+    .jw-illustration-link { margin-bottom: 12px; }
     .jw-hero h1 { font-size: 30px; }
     .jw-left { padding: 20px 18px; }
     .jw-body { padding: 18px; }
@@ -609,36 +587,14 @@ if (session('status')) {
         <p>Connect companies, agencies and talent on one intelligent recruitment platform built for speed and trust.</p>
     </div>
 
-    {{-- 3 Audience Cards (full-card sub-card design, each flush with page left padding) --}}
-    <div class="jw-cards">
-
-        {{-- Card 1: For Companies (Find Trusted Agencies) --}}
-        <a href="{{ route('register') }}" class="jw-card-link" aria-label="Find Trusted Agencies for Companies">
-            <img class="jw-card-img"
-                 src="{{ asset('img/cards/for-companies.svg') }}"
-                 alt="Find Trusted Agencies for Companies"
-                 width="517" height="889"
-                 decoding="async">
-        </a>
-
-        {{-- Card 2: For Agencies (Search Work Opportunities) --}}
-        <a href="{{ route('register') }}" class="jw-card-link" aria-label="Search Work Opportunities for Recruitment Agencies">
-            <img class="jw-card-img"
-                 src="{{ asset('img/cards/for-agencies.svg') }}"
-                 alt="Search Work Opportunities for Recruitment Agencies"
-                 width="517" height="889"
-                 decoding="async">
-        </a>
-
-        {{-- Card 3: For Bench Talent (Hire Immediate Joiners) --}}
-        <a href="{{ route('register') }}" class="jw-card-link" aria-label="Hire Immediate Joiners and Bench Talent">
-            <img class="jw-card-img"
-                 src="{{ asset('img/cards/for-bench-talent.svg') }}"
-                 alt="Hire Immediate Joiners and Bench Talent"
-                 width="517" height="889"
-                 decoding="async">
-        </a>
-    </div>
+    {{-- Combined 3-in-1 Audience Illustration (All 3-in-1) --}}
+    <a href="{{ route('register') }}" class="jw-illustration-link" aria-label="Find Trusted Agencies, Search Work Opportunities, and Hire Immediate Joiners">
+        <img class="jw-illustration-img"
+             src="{{ asset('img/cards/all-3in-one.svg') }}"
+             alt="Find Trusted Agencies, Search Work Opportunities, and Hire Immediate Joiners"
+             width="1152" height="768"
+             decoding="async">
+    </a>
 
     {{-- Stats --}}
     <div class="jw-stats">
