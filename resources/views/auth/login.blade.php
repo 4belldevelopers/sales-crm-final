@@ -101,29 +101,35 @@ body { background: var(--bg-pg); color: var(--tx); }
 .jw-left::before { display: none; }
 
 /* Brand mark */
-.jw-brand {
+.v2-logo {
     display: inline-flex;
-    align-items: center;
+    align-items: flex-start;
     text-decoration: none;
     line-height: 1;
     position: relative;
     flex-shrink: 0;
-    height: 36px;
 }
-.jw-brand-logo {
-    height: 36px;
+.v2-logo-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+}
+.v2-logo-img {
+    height: 38px;
     width: auto;
-    max-width: 220px;
+    max-width: 240px;
     display: block;
 }
-.jw-brand-sub {
+.v2-logo-sub {
     display: block;
-    font-size: 10.5px;
-    color: var(--gr);
-    font-weight: 500;
-    margin-top: 3px;
-    margin-left: 2px;
-    letter-spacing: 0.15px;
+    font-size: 11px;
+    font-weight: 600;
+    color: #475569;
+    line-height: 1.2;
+    margin-top: 2px;
+    margin-left: 48px;
+    letter-spacing: 0.1px;
+    font-family: 'Poppins', sans-serif !important;
 }
 
 /* Hero */
@@ -666,9 +672,12 @@ if (session('status')) {
 {{-- ═══════════════ LEFT PANEL ═══════════════ --}}
 <div class="jw-left">
 
-    {{-- Official SVG Brand Logo --}}
-    <a href="https://jero.works" class="jw-brand" aria-label="jero.works">
-        <img src="{{ asset('img/jero-logo-black-yellow.svg') }}" class="jw-brand-logo" alt="jero.works">
+    {{-- Official Jero.works Logo --}}
+    <a href="https://jero.works/" class="v2-logo" aria-label="Jero.works">
+      <div class="v2-logo-wrapper">
+        <img src="{{ asset('img/jero-logo-black-yellow.svg') }}" class="v2-logo-img" alt="Jero.works">
+        <span class="v2-logo-sub">AI Recruitment Platform</span>
+      </div>
     </a>
 
     {{-- Hero --}}
