@@ -353,11 +353,7 @@ body { background: var(--bg-pg); color: var(--tx); }
     font-size: 12px; color: var(--gr); text-align: center;
     margin: 0 0 12px;
 }
-<<<<<<< HEAD
-.v2-card-title { font-size: 16px; font-weight: 800; color: var(--dk); margin: 0 0 4px; letter-spacing: -0.3px; }
-.v2-card-sub { font-size: 13px; color: var(--gr); margin: 0 0 22px; }
-=======
->>>>>>> aae988763d544abdc82e1d4f6a9c45c3202dafd4
+
 
 /* Alerts */
 .jw-alert {
@@ -588,41 +584,9 @@ body { background: var(--bg-pg); color: var(--tx); }
 
 /* ── Responsive ─────────────────────────────────────────────── */
 
-<<<<<<< HEAD
-/* Security strip */
-.v2-sec {
-    width: 100%; max-width: 640px;
-    background: var(--pl);
-    border: 1px solid rgba(245,166,35,.2);
-    border-radius: 14px;
-    padding: 16px 22px;
-    display: flex; align-items: center; gap: 16px;
-}
-.v2-sec-ico {
-    width: 42px; height: 42px; border-radius: 10px;
-    background: rgba(245,166,35,.18);
-    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
-}
-.v2-sec-text strong { display: block; font-size: 13.5px; font-weight: 700; color: var(--dk); margin-bottom: 3px; }
-.v2-sec-text span { font-size: 12px; color: var(--gr); }
-
-/* Footer */
-.v2-foot {
-    display: flex; align-items: center; justify-content: center;
-    gap: 18px; padding: 16px 48px;
-    border-top: 1px solid #ebebeb; flex-shrink: 0;
-}
-.v2-foot-copy { font-size: 12.5px; color: #9ca3af; }
-.v2-foot-sep { color: #d1d5db; }
-.v2-foot a { font-size: 12.5px; color: var(--gr); text-decoration: none; }
-.v2-foot a:hover { color: var(--p); }
-
 /* ── Responsive ────────────────────────────────────────── */
 
-/* 1440px – larger 15.6" at lower resolution */
-=======
-/* 1440 */
->>>>>>> aae988763d544abdc82e1d4f6a9c45c3202dafd4
+/* 1440px */
 @media (max-width: 1440px) {
     .jw-hero h1 { font-size: 36px !important; }
     .jw-left { padding: 16px 30px 12px; }
@@ -630,27 +594,6 @@ body { background: var(--bg-pg); color: var(--tx); }
 
 /* 1366 — most 15.6" laptops */
 @media (max-width: 1366px) {
-<<<<<<< HEAD
-    .v2-left        { width: 400px; padding: 22px 26px 0; }
-    .v2-logo        { margin-bottom: 18px; }
-    .v2-logo-text   { font-size: 16px; }
-    .v2-hero        { margin-bottom: 14px; }
-    .v2-hero h1     { font-size: 16px; letter-spacing: -.4px; line-height: 1.15; }
-    .v2-hero p      { font-size: 12.5px; line-height: 1.5; }
-    .v2-feats       { gap: 9px; }
-    .v2-feat        { gap: 12px; }
-    .v2-feat-ico    { width: 38px; height: 38px; border-radius: 9px; }
-    .v2-feat-ico svg{ width: 19px; height: 19px; }
-    .v2-feat-body strong { font-size: 13px; }
-    .v2-feat-body span   { font-size: 11px; }
-    .v2-body        { padding: 6px 30px 12px; }
-    .v2-help        { padding: 12px 30px; }
-    .v2-foot        { padding: 8px 30px; }
-    .v2-card        { padding: 22px 28px; max-width: 540px; }
-    .v2-card-title  { font-size: 16px; }
-    .v2-card-sub    { margin-bottom: 14px; }
-    .v2-city svg    { max-height: 180px; }
-=======
     .jw-hero h1 { font-size: 36px !important; letter-spacing: -0.6px; }
     .jw-hero { margin: 16px 0 8px; }
     .jw-hero p { font-size: 12px; -webkit-line-clamp: 2; }
@@ -662,53 +605,10 @@ body { background: var(--bg-pg); color: var(--tx); }
     .jw-inp { height: 40px; font-size: 13px; }
     .jw-cap-img, .jw-cap-inp { height: 38px; }
     .jw-btn { height: 42px; font-size: 13.5px; }
->>>>>>> aae988763d544abdc82e1d4f6a9c45c3202dafd4
 }
 
-/* 1280 */
+/* 1280px */
 @media (max-width: 1280px) {
-<<<<<<< HEAD
-    .v2-left        { width: 340px; padding: 18px 20px 0; }
-    .v2-logo        { margin-bottom: 14px; }
-    .v2-hero        { margin-bottom: 12px; }
-    .v2-hero h1     { font-size: 16px; }
-    .v2-feat-ico    { width: 34px; height: 34px; }
-    .v2-feat        { gap: 11px; }
-    .v2-body        { padding: 6px 22px 10px; }
-    .v2-help        { padding: 10px 22px; }
-    .v2-foot        { padding: 8px 22px; }
-    .v2-card        { padding: 20px 24px; max-width: 500px; }
-    .v2-card-title  { font-size: 16px; }
-    .v2-city svg    { max-height: 150px; }
-}
-
-/* Short viewport – 768px tall (1366×768 laptops, max-height wins over max-width) */
-@media (max-height: 768px) {
-    .v2-logo        { margin-bottom: 14px; }
-    .v2-hero        { margin-bottom: 10px; }
-    .v2-feats       { gap: 7px; }
-    .v2-help        { padding-top: 8px; padding-bottom: 8px; }
-    .v2-foot        { padding-top: 6px; padding-bottom: 6px; }
-    .v2-card        { padding-top: 16px; padding-bottom: 16px; margin-bottom: 8px; }
-    .v2-card-title  { font-size: 16px; }
-    .v2-card-sub    { margin-bottom: 10px; }
-    .v2-field       { margin-bottom: 9px; }
-    .v2-field > label { margin-bottom: 4px; }
-    .v2-inp         { height: 40px; font-size: 13.5px; }
-    .v2-mid         { margin-bottom: 9px; }
-    .v2-cap-lbl     { margin-bottom: 4px; }
-    .v2-cap-row     { margin-bottom: 9px; }
-    .v2-cap-img     { height: 40px; width: 96px; }
-    .v2-cap-img img { height: 36px; }
-    .v2-cap-btn     { height: 40px; padding: 0 12px; font-size: 12.5px; }
-    .v2-cap-inp     { height: 40px; padding: 0 12px; }
-    .v2-btn         { height: 42px; font-size: 13.5px; }
-    .v2-sec         { padding: 10px 14px; gap: 12px; }
-    .v2-sec-ico     { width: 34px; height: 34px; }
-    .v2-sec-text strong { font-size: 12.5px; }
-    .v2-sec-text span   { font-size: 11px; }
-    .v2-city svg    { max-height: 120px; }
-=======
     .jw-hero h1 { font-size: 36px !important; }
 }
 
@@ -720,7 +620,6 @@ body { background: var(--bg-pg); color: var(--tx); }
     .jw-illustration-link { aspect-ratio: 1152 / 768; max-height: none; }
     .jw-body { padding: 22px 24px; overflow-y: auto; }
     .jw-card-form { max-width: 100%; }
->>>>>>> aae988763d544abdc82e1d4f6a9c45c3202dafd4
 }
 
 /* Mobile */
@@ -738,18 +637,9 @@ body { background: var(--bg-pg); color: var(--tx); }
     .jw-top-btn { padding: 6px 12px; font-size: 12px; }
 }
 
-<<<<<<< HEAD
-/* 960px and below – tablets: stack left over right */
-@media (max-width: 960px) {
-    .v2-left  { width: 100%; padding-bottom: 220px; }
-    .v2-page  { flex-direction: column; }
-    .v2-card  { padding: 24px 20px; }
-    .v2-body  { padding: 20px; }
-    .v2-help  { padding: 16px 20px; }
-=======
 @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
->>>>>>> aae988763d544abdc82e1d4f6a9c45c3202dafd4
+}
 }
 </style>
 
@@ -770,7 +660,7 @@ if (session('status')) {
 {{-- ═══════════════ LEFT PANEL ═══════════════ --}}
 <div class="jw-left">
 
-    {{-- Official SVG Brand Logo from E:\ drive --}}
+    {{-- Official SVG Brand Logo --}}
     <a href="https://jero.works" class="jw-brand" aria-label="jero.works">
         <img src="{{ asset('img/jero-logo-black-yellow.svg') }}" class="jw-brand-logo" alt="jero.works">
     </a>
@@ -783,11 +673,14 @@ if (session('status')) {
 
     {{-- Combined 3-in-1 Audience Illustration (All 3-in-1) --}}
     <a href="{{ route('register') }}" class="jw-illustration-link" aria-label="Find Trusted Agencies, Search Work Opportunities, and Hire Immediate Joiners">
-        <img class="jw-illustration-img"
-             src="{{ asset('img/cards/all-3in-one.svg') }}"
-             alt="Find Trusted Agencies, Search Work Opportunities, and Hire Immediate Joiners"
-             width="1152" height="768"
-             decoding="async">
+        <picture>
+            <source srcset="{{ asset('img/cards/all3-audiences.webp') }}" type="image/webp">
+            <img class="jw-illustration-img"
+                 src="{{ asset('img/cards/all-3in-one.svg') }}"
+                 alt="Find Trusted Agencies, Search Work Opportunities, and Hire Immediate Joiners"
+                 width="1152" height="768"
+                 decoding="async">
+        </picture>
     </a>
 
     {{-- Stats --}}
@@ -857,11 +750,7 @@ if (session('status')) {
             <p class="sub">Sign in to continue to your jero.works account</p>
 
             @if(@$class && @$messsage)
-<<<<<<< HEAD
-                <div class="v2-alert v2-alert-err"><strong>{{ @$class }}</strong> {{ @$messsage }}</div>
-=======
                 <div class="jw-alert jw-alert-err"><strong>{{ @$class }}</strong> {!! @$messsage !!}</div>
->>>>>>> aae988763d544abdc82e1d4f6a9c45c3202dafd4
             @endif
             @if(session('accountnotverify'))
                 <div class="jw-alert jw-alert-err">{{ session('accountnotverify') }}</div>
@@ -877,14 +766,10 @@ if (session('status')) {
                     <span class="il" aria-hidden="true">
                         <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><rect x="1" y="4" width="16" height="11" rx="2.2" stroke="currentColor" stroke-width="1.5"/><path d="M1 7l8 5.5L17 7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
                     </span>
-                    <input class="jw-inp" type="text" name="email" id="jw-email" placeholder="Enter your email" autocomplete="off" value="{{ old('email') }}" aria-describedby="jw-email-help"/>
+                    <input class="jw-inp" type="text" name="email" id="jw-email" placeholder="Enter your email" autocomplete="username" value="{{ old('email') }}" aria-describedby="jw-email-help"/>
                     <span class="ok-mark" id="jw-email-ok" style="display:none;" aria-hidden="true">
                         <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><circle cx="9" cy="9" r="8.4" fill="#16A34A"/><path d="M5 9l3 3 5-5.5" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
                     </span>
-<<<<<<< HEAD
-                    <input class="v2-inp" type="text" name="email" placeholder="Enter your email" autocomplete="username" value="{{ old('email') }}"/>
-=======
->>>>>>> aae988763d544abdc82e1d4f6a9c45c3202dafd4
                     <input type="hidden" name="url" value="{{ @$url }}"/>
                 </div>
                 @if($errors->has('email'))<span class="jw-err" id="jw-email-help">{{ $errors->first('email') }}</span>@endif
@@ -897,15 +782,9 @@ if (session('status')) {
                     <span class="il" aria-hidden="true">
                         <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><rect x="3" y="8" width="12" height="9" rx="2.2" stroke="currentColor" stroke-width="1.5"/><path d="M6 8V6a3 3 0 0 1 6 0v2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><circle cx="9" cy="12.5" r="1.3" fill="currentColor"/></svg>
                     </span>
-<<<<<<< HEAD
-                    <input class="v2-inp" type="password" name="password" id="v2pwd" placeholder="Enter your password" autocomplete="current-password"/>
-                    <span class="ir" onclick="v2Eye()" style="user-select:none">
-                        <svg id="v2eye" width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M1.5 9s2.8-5.5 7.5-5.5S16.5 9 16.5 9s-2.8 5.5-7.5 5.5S1.5 9 1.5 9Z" stroke="#9ca3af" stroke-width="1.5"/><circle cx="9" cy="9" r="2.2" stroke="#9ca3af" stroke-width="1.5"/></svg>
-=======
-                    <input class="jw-inp" type="password" name="password" id="jw-pwd" placeholder="Enter your password" autocomplete="off" aria-describedby="jw-pwd-help"/>
+                    <input class="jw-inp" type="password" name="password" id="jw-pwd" placeholder="Enter your password" autocomplete="current-password" aria-describedby="jw-pwd-help"/>
                     <span class="ir" onclick="jwEye()" role="button" tabindex="0" aria-label="Toggle password visibility" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();jwEye();}">
                         <svg id="jw-eye" width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M1.5 9s2.8-5.5 7.5-5.5S16.5 9 16.5 9s-2.8 5.5-7.5 5.5S1.5 9 1.5 9Z" stroke="currentColor" stroke-width="1.5"/><circle cx="9" cy="9" r="2.2" stroke="currentColor" stroke-width="1.5"/></svg>
->>>>>>> aae988763d544abdc82e1d4f6a9c45c3202dafd4
                     </span>
                 </div>
                 @if($errors->has('password'))<span class="jw-err" id="jw-pwd-help"><strong>{{ $errors->first('password') }}</strong></span>@endif
