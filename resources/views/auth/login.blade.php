@@ -1,210 +1,594 @@
 @extends('layouts.metronic_front_app')
-<title>Jero - Login</title>
+<title>Sign In — jero.works</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 
 <style>
-/* ── V2 Login ── */
+/* ── Tokens ────────────────────────────────────────────────── */
 :root {
-    --p:  #F5A623;
-    --ph: #E8960D;
-    --pl: #FFF3DC;
-    --lbg: #FFF9EC;
-    --rbg: #F5F5F5;
-    --dk: #111827;
-    --gr: #6b7280;
-    --bd: #E5E7EB;
+    --pri:       #2463FF;   /* primary blue */
+    --pri-h:     #1B4FE0;
+    --pri-d:     #0F3BCC;
+    --pri-l:     #EEF2FF;
+    --acc:       #FF6A00;   /* Jero orange */
+    --acc-d:     #E55A00;
+    --bg-pn:     #F4F1FF;   /* soft lavender */
+    --bg-pg:     #F6F7FB;
+    --bg-card:   #FFFFFF;
+    --dk:        #071A3A;   /* jero navy */
+    --tx:        #1F2937;
+    --gr:        #6B7280;
+    --gr-l:      #98A0AE;
+    --bd:        #E2E5ED;
+    --bd-l:      #EDEFF4;
+    --ok:        #16A34A;
+    --c-blue:    #2463FF;
+    --c-green:   #16A34A;
+    --c-purple:  #6D28D9;
+    --c-orange:  #FF6A00;
+    --p-blue:    #DEE9FE;
+    --p-green:   #DCF5E4;
+    --p-purple:  #EFE6FE;
+    --p-orange:  #FFE6D2;
+    --p-pink:    #FFE3EC;
+    --shadow-sm: 0 1px 2px rgba(15,23,42,0.04);
+    --shadow-md: 0 4px 16px rgba(15,23,42,0.06);
+    --shadow-lg: 0 12px 32px rgba(15,23,42,0.08);
+    --shadow-btn: 0 1px 2px rgba(36,99,255,0.30), 0 6px 16px rgba(36,99,255,0.30);
+    --shadow-btn-h: 0 2px 4px rgba(36,99,255,0.40), 0 12px 28px rgba(36,99,255,0.40);
+    --r-sm: 8px;
+    --r-md: 10px;
+    --r-lg: 14px;
+    --r-xl: 20px;
 }
-html, body { margin: 0 !important; padding: 0 !important; }
 
-/* ── Shell centers the page on ultra-wide screens ── */
-.v2-shell {
-    display: flex;
-    width: 100%;
-    min-height: 100vh;
-    overflow: hidden;
-    align-items: stretch;
-    background: #fff;
+* { box-sizing: border-box; }
+html, body { margin: 0 !important; padding: 0 !important; height: 100%; overflow: hidden; }
+body, button, input, select, textarea, span, p, h1, h2, h3, h4, h5, h6, a, div, label {
+    font-family: 'Poppins', system-ui, -apple-system, sans-serif !important;
 }
-.v2-page {
-    display: flex;
-    width: 100%;
-    min-height: 100vh;
-    overflow: hidden;
-}
-.v2-page * { box-sizing: border-box; font-family: 'Poppins', sans-serif; }
+body { background: var(--bg-pg); color: var(--tx); }
 
-/* ═══════════ LEFT PANEL ═══════════ */
-.v2-left {
-    width: 635px;
-    flex-shrink: 0;
-    background: var(--lbg);
+/* ── Unified Single-Panel Canvas ── */
+.jw-shell {
+    height: 100vh;
+    width: 100%;
     display: flex;
     flex-direction: column;
-    padding: 36px 40px 0;
-    position: relative;
     overflow: hidden;
-    height: 100vh;
+    position: relative;
+    background:
+        radial-gradient(circle at 10% 15%, rgba(36, 99, 255, 0.08) 0%, transparent 45%),
+        radial-gradient(circle at 90% 85%, rgba(255, 106, 0, 0.08) 0%, transparent 45%),
+        radial-gradient(circle at 50% 50%, rgba(139, 92, 246, 0.04) 0%, transparent 50%),
+        #F8FAFC;
+}
+.jw-shell::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image: radial-gradient(rgba(15, 23, 42, 0.05) 1.2px, transparent 1.2px);
+    background-size: 24px 24px;
+    pointer-events: none;
+    z-index: 0;
+}
+.jw-page {
+    display: flex;
+    flex: 1;
+    width: 100%;
+    min-height: 0;
+    overflow: hidden;
+    position: relative;
+    z-index: 1;
 }
 
-/* Logo */
-.v2-logo { display: flex; align-items: center; gap: 12px; text-decoration: none; margin-bottom: 32px; }
-.v2-logo-text { font-size: 26px; font-weight: 800; color: var(--dk); letter-spacing: -0.5px; line-height: 1; }
+/* ═══════════════ PANELS (Transparent Overlay) ═══════════════ */
+.jw-left {
+    flex: 1;
+    min-width: 0;
+    background: transparent;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    position: relative;
+    overflow: hidden;
+    padding: 14px 32px 10px;
+    min-height: 0;
+    height: 100%;
+}
+.jw-left::before { display: none; }
+
+/* Brand mark */
+.jw-brand {
+    display: inline-flex;
+    align-items: center;
+    text-decoration: none;
+    line-height: 1;
+    position: relative;
+    flex-shrink: 0;
+    height: 36px;
+}
+.jw-brand-logo {
+    height: 36px;
+    width: auto;
+    max-width: 220px;
+    display: block;
+}
+.jw-brand-sub {
+    display: block;
+    font-size: 10.5px;
+    color: var(--gr);
+    font-weight: 500;
+    margin-top: 3px;
+    margin-left: 2px;
+    letter-spacing: 0.15px;
+}
 
 /* Hero */
-.v2-hero { margin-bottom: 24px; }
-.v2-hero h1 { font-size: 32px; font-weight: 800; line-height: 1.18; color: var(--dk); margin: 0 0 10px; letter-spacing: -0.6px; }
-.v2-hero h1 .acc { color: var(--p); }
-.v2-hero p { font-size: 13.5px; color: var(--gr); line-height: 1.6; margin: 0; }
+.jw-hero { margin: 22px 0 12px; max-width: 100%; position: relative; flex-shrink: 0; }
+.jw-hero h1 {
+    font-size: 36px !important;
+    font-weight: 800;
+    color: var(--dk);
+    line-height: 1.15;
+    letter-spacing: -1.1px;
+    margin: 0 0 8px;
+}
+.jw-hero h1 .acc { color: var(--acc); }
+.jw-hero p {
+    font-size: 12.5px; color: var(--gr); line-height: 1.5;
+    margin: 0; font-weight: 400;
+    max-width: 100%;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
 
-/* Features */
-.v2-feats { display: flex; flex-direction: column; gap: 14px; margin-bottom: 0; flex: 1; }
-.v2-feat { display: flex; align-items: flex-start; gap: 16px; }
-.v2-feat-ico {
-    width: 46px; height: 46px; border-radius: 12px;
-    background: var(--pl);
+/* ── Combined 3-in-1 Audience Illustration ── */
+.jw-illustration-link {
+    display: block;
+    width: 100%;
+    flex: 1;
+    min-height: 0;
+    margin: 4px 0 8px;
+    position: relative;
+    border-radius: var(--r-lg);
+    overflow: hidden;
+    transition: transform .2s ease;
+    line-height: 0;
+    background: transparent;
+    max-height: 390px;
+}
+.jw-illustration-link:hover,
+.jw-illustration-link:focus-visible {
+    transform: translateY(-3px);
+    outline: none;
+}
+.jw-illustration-img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    object-fit: contain;
+    object-position: center center;
+    user-select: none;
+    -webkit-user-drag: none;
+    pointer-events: none;
+}
+
+/* ── Stats bar with subtle dividers ────────────────────────── */
+.jw-stats {
+    background: rgba(255, 255, 255, 0.94);
+    backdrop-filter: blur(10px);
+    border-radius: var(--r-lg);
+    padding: 8px 12px;
+    display: flex;
+    align-items: center;
+    border: 1px solid rgba(226, 232, 240, 0.9);
+    box-shadow: 0 4px 15px rgba(15, 23, 42, 0.04);
+    position: relative;
+    flex-shrink: 0;
+    z-index: 2;
+}
+.jw-stat {
+    flex: 1;
+    display: flex; align-items: center; gap: 8px;
+    padding: 0 4px;
+    position: relative;
+    min-width: 0;
+}
+.jw-stat + .jw-stat::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 18%; bottom: 18%;
+    width: 1px;
+    background: var(--bd);
+}
+.jw-stat-ico {
+    width: 26px; height: 26px;
+    border-radius: 7px;
     display: flex; align-items: center; justify-content: center;
     flex-shrink: 0;
 }
-.v2-feat-body strong { display: block; font-size: 14px; font-weight: 700; color: var(--dk); margin-bottom: 3px; line-height: 1.3; }
-.v2-feat-body span { font-size: 12px; color: var(--gr); }
+.jw-stat-ico svg { width: 14px; height: 14px; }
+.jw-stat-ico.s-people { background: var(--p-blue);   color: var(--c-blue); }
+.jw-stat-ico.s-jobs   { background: var(--p-green);  color: var(--c-green); }
+.jw-stat-ico.s-cand   { background: var(--p-pink);   color: #DB2777; }
+.jw-stat-ico.s-up     { background: var(--p-orange); color: var(--c-orange); }
+.jw-stat-meta span {
+    display: block; font-size: 10px; color: var(--gr); line-height: 1.2;
+    margin-top: 1px;
+}
 
-/* (testimonial removed) */
+/* ── Full-Width Transparent Footer Bar (100% Length across bottom) ── */
+.jw-full-foot {
+    width: 100%;
+    flex-shrink: 0;
+    padding: 10px 36px 14px;
+    background: transparent;
+    border-top: none;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    position: relative;
+    z-index: 10;
+}
+.jw-full-foot .copy {
+    font-size: 11px;
+    color: #64748B;
+    font-weight: 400;
+}
+.jw-full-foot .links {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+}
+.jw-full-foot .links a {
+    font-size: 11.5px;
+    color: #475569;
+    text-decoration: none;
+    font-weight: 500;
+    transition: color .15s;
+}
+.jw-full-foot .links a:hover {
+    color: var(--pri);
+}
+.jw-locale {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: #FFFFFF;
+    border: 1.5px solid #CBD5E1;
+    border-radius: 8px;
+    padding: 5px 12px;
+    font-size: 11.5px;
+    font-weight: 500;
+    color: #334155;
+    cursor: pointer;
+    transition: background .15s, border-color .15s;
+}
+.jw-locale:hover {
+    background: #F8FAFC;
+    border-color: #94A3B8;
+}
 
-/* City skyline */
-.v2-city { position: absolute; bottom: 0; left: 0; right: 0; line-height: 0; }
-
-/* ═══════════ RIGHT PANEL ═══════════ */
-.v2-right {
+/* ═══════════════ RIGHT PANEL ═══════════════ */
+.jw-right {
     flex: 1;
+    background: transparent;
     display: flex;
     flex-direction: column;
-    background: var(--rbg);
     min-width: 0;
+    position: relative;
+    height: 100vh;
+    overflow: hidden;
 }
 
-/* Help bar */
-.v2-help {
-    display: flex; align-items: center; justify-content: flex-end;
-    gap: 10px; padding: 20px 48px; flex-shrink: 0;
+/* Top bar */
+.jw-top {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 12px;
+    padding: 14px 0 0;
+    width: 100%;
+    max-width: 520px;
+    margin: 0 auto;
+    height: 50px;
+    font-size: 13px;
+    color: var(--gr);
+    flex-shrink: 0;
 }
-.v2-help-ico { color: var(--gr); display: flex; align-items: center; }
-.v2-help-need { font-size: 13px; color: var(--dk); }
-.v2-help-sep { color: #d1d5db; font-size: 15px; }
-.v2-help a { font-size: 13px; text-decoration: none; }
-.v2-help a.lc { color: var(--p); font-weight: 700; }
-.v2-help a.hc { color: var(--gr); }
-.v2-help a:hover { opacity: .8; }
+.jw-top-cta {
+    color: var(--pri); text-decoration: none; font-weight: 500;
+}
+.jw-top-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: transparent;
+    color: var(--pri);
+    border: 1.5px solid var(--pri);
+    border-radius: 8px;
+    height: 36px;
+    padding: 0 14px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    text-decoration: none;
+    transition: background .2s, color .2s;
+}
+.jw-top-btn:hover { background: var(--pri); color: #fff; }
 
 /* Right body */
-.v2-body {
-    flex: 1; display: flex; flex-direction: column;
-    align-items: center; justify-content: center;
-    padding: 12px 48px 20px;
+.jw-body {
+    flex: 1;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    padding: 2px 28px 8px;
     overflow-y: auto;
+    scrollbar-width: thin;
+    min-height: 0;
 }
 
 /* Card */
-.v2-card {
-    width: 100%; max-width: 640px;
-    background: #fff;
-    border: 1px solid #E8E8E8;
-    border-radius: 16px;
-    padding: 32px 40px;
-    box-shadow: 0 2px 24px rgba(0,0,0,.06);
-    margin-bottom: 14px;
+.jw-card-form {
+    width: 100%;
+    max-width: 520px;
+    background: rgba(255, 255, 255, 0.94);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(226, 232, 240, 0.9);
+    border-radius: var(--r-xl);
+    padding: 18px 32px 16px;
+    box-shadow: 0 16px 40px rgba(15, 23, 42, 0.07), 0 1px 3px rgba(15, 23, 42, 0.03);
 }
+.jw-card-form h2 {
+    font-size: 20px; font-weight: 800; color: var(--dk);
+    margin: 0 0 3px; letter-spacing: -0.5px; text-align: center;
+}
+.jw-card-form .sub {
+    font-size: 12px; color: var(--gr); text-align: center;
+    margin: 0 0 12px;
+}
+<<<<<<< HEAD
 .v2-card-title { font-size: 16px; font-weight: 800; color: var(--dk); margin: 0 0 4px; letter-spacing: -0.3px; }
 .v2-card-sub { font-size: 13px; color: var(--gr); margin: 0 0 22px; }
+=======
+>>>>>>> aae988763d544abdc82e1d4f6a9c45c3202dafd4
 
 /* Alerts */
-.v2-alert { border-radius: 8px; padding: 10px 14px; font-size: 12.5px; margin-bottom: 16px; line-height: 1.5; }
-.v2-alert-err { background: #fef2f2; color: #b91c1c; border: 1px solid #fee2e2; }
-.v2-alert-ok  { background: #f0fdf4; color: #15803d; border: 1px solid #bbf7d0; }
-.v2-err { font-size: 11.5px; color: #dc2626; margin-top: 4px; display: block; }
+.jw-alert {
+    border-radius: var(--r-sm); padding: 10px 14px;
+    font-size: 12.5px; margin-bottom: 14px; line-height: 1.5;
+}
+.jw-alert-err { background: #FEF2F2; color: #B91C1C; border: 1px solid #FEE2E2; }
+.jw-alert-ok  { background: #F0FDF4; color: #15803D; border: 1px solid #BBF7D0; }
+.jw-err { font-size: 11.5px; color: #DC2626; margin-top: 4px; display: block; }
 
 /* Field */
-.v2-field { margin-bottom: 16px; }
-.v2-field > label { display: block; font-size: 13px; font-weight: 600; color: var(--dk); margin-bottom: 6px; }
-.v2-iw { position: relative; display: flex; align-items: center; }
-.v2-iw .il { position: absolute; left: 15px; color: #9ca3af; display: flex; pointer-events: none; }
-.v2-iw .ir { position: absolute; right: 15px; color: #9ca3af; display: flex; cursor: pointer; }
-.v2-inp {
-    width: 100%; height: 48px;
-    border: 1.5px solid var(--bd); border-radius: 10px;
-    padding: 0 48px;
-    font-size: 14px; font-family: 'Poppins', sans-serif; color: var(--dk);
-    outline: none; background: #fff;
+.jw-field { margin-bottom: 8px; }
+.jw-field > label {
+    display: block; font-size: 11.5px; font-weight: 600;
+    color: var(--dk); margin-bottom: 4px;
+}
+.jw-iw { position: relative; display: flex; align-items: center; }
+.jw-iw .il {
+    position: absolute; left: 14px; color: var(--gr-l);
+    display: flex; pointer-events: none;
+}
+.jw-iw .ir {
+    position: absolute; right: 14px; color: var(--gr-l);
+    display: flex; cursor: pointer;
+}
+.jw-inp {
+    width: 100%; height: 40px;
+    border: 1.5px solid var(--bd); border-radius: var(--r-md);
+    padding: 0 42px;
+    font-size: 13px; font-family: 'Poppins', sans-serif;
+    color: var(--dk); outline: none; background: #fff;
     transition: border-color .2s, box-shadow .2s;
 }
-.v2-inp::placeholder { color: #9ca3af; }
-.v2-inp:focus { border-color: var(--p); box-shadow: 0 0 0 3px rgba(245,166,35,.12); }
+.jw-inp::placeholder { color: var(--gr-l); }
+.jw-inp:hover { border-color: #C9CFDB; }
+.jw-inp:focus { border-color: var(--pri); box-shadow: 0 0 0 4px rgba(36,99,255,0.12); }
+.jw-inp.is-ok { border-color: var(--ok); }
+.jw-inp.is-ok:focus { box-shadow: 0 0 0 4px rgba(22,163,74,0.14); }
+.jw-iw .ok-mark {
+    position: absolute; right: 14px; color: var(--ok);
+    display: flex; pointer-events: none;
+}
 
 /* Mid row */
-.v2-mid { display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; }
-.v2-rem { display: flex; align-items: center; gap: 9px; }
-.v2-rem input[type=checkbox] { width: 19px; height: 19px; accent-color: var(--p); cursor: pointer; flex-shrink: 0; border-radius: 4px; }
-.v2-rem label { font-size: 13.5px; color: var(--dk); cursor: pointer; margin: 0; user-select: none; }
-.v2-fgt { font-size: 13.5px; font-weight: 600; color: var(--p); text-decoration: none; cursor: pointer; }
-.v2-fgt:hover { text-decoration: underline; color: var(--ph); }
-
-/* Captcha */
-.v2-cap-lbl { font-size: 13px; font-weight: 600; color: var(--dk); margin-bottom: 6px; }
-.v2-cap-row { display: flex; align-items: center; gap: 10px; margin-bottom: 18px; }
-.v2-cap-img {
-    width: 110px; height: 48px; border: 1.5px solid var(--bd); border-radius: 10px;
-    overflow: hidden; background: #f9fafb;
-    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+.jw-mid {
+    display: flex; align-items: center; justify-content: space-between;
+    margin: 2px 0 8px;
 }
-.v2-cap-img img { height: 44px; width: auto; object-fit: contain; }
-.v2-cap-btn {
-    display: inline-flex; align-items: center; gap: 6px;
-    height: 48px; padding: 0 14px;
-    border: 1.5px solid var(--bd); border-radius: 10px;
-    background: #fff; color: var(--p);
-    font-size: 13px; font-weight: 600; font-family: 'Poppins', sans-serif;
-    cursor: pointer; white-space: nowrap; flex-shrink: 0;
+.jw-rem { display: flex; align-items: center; gap: 8px; }
+.jw-rem input[type=checkbox] {
+    width: 16px; height: 16px; accent-color: var(--pri);
+    cursor: pointer; flex-shrink: 0; border-radius: 4px;
+}
+.jw-rem label { font-size: 12px; color: var(--tx); cursor: pointer; user-select: none; }
+.jw-fgt {
+    font-size: 12px; font-weight: 600; color: var(--pri);
+    text-decoration: none; cursor: pointer;
+}
+.jw-fgt:hover { text-decoration: underline; color: var(--pri-h); }
+
+/* Security verification block */
+.jw-sec {
+    margin-bottom: 10px;
+}
+.jw-sec-head {
+    display: flex; align-items: center; gap: 6px;
+    margin-bottom: 6px;
+}
+.jw-sec-icon {
+    width: 14px; height: 14px; color: var(--pri);
+    display: flex; align-items: center; justify-content: center;
+}
+.jw-sec-icon svg { width: 14px; height: 14px; }
+.jw-sec-title {
+    font-size: 12px; font-weight: 700; color: var(--dk);
+}
+.jw-sec-bracket {
+    font-size: 11px; color: var(--gr); font-weight: 400;
+}
+.jw-cap-row {
+    display: flex; align-items: center; gap: 8px;
+}
+.jw-cap-box {
+    display: inline-flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px;
+    height: 40px;
+    padding: 0 6px 0 10px;
+    background: #FFFFFF;
+    border: 1.5px solid var(--bd);
+    border-radius: var(--r-md);
+    box-shadow: inset 0 1px 2px rgba(15, 23, 42, 0.03);
+    flex: 0 0 auto;
+}
+.jw-cap-code-img {
+    height: 30px;
+    width: auto;
+    display: block;
+    user-select: none;
+    border-radius: 4px;
+}
+.jw-cap-refresh-btn {
+    width: 28px;
+    height: 28px;
+    background: transparent;
+    border: none;
+    color: var(--pri);
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+    transition: background .15s, color .15s;
+    padding: 0;
+}
+.jw-cap-refresh-btn:hover {
+    background: var(--pri-l);
+    color: var(--pri-h);
+}
+.jw-cap-refresh-btn svg {
+    width: 14px;
+    height: 14px;
+}
+.jw-cap-field { flex: 1; position: relative; }
+.jw-cap-inp {
+    width: 100%; height: 40px;
+    border: 1.5px solid var(--bd); border-radius: var(--r-md);
+    padding: 0 12px;
+    font-size: 13px; font-weight: 500;
+    font-family: 'Poppins', sans-serif; outline: none; background: #fff;
+    color: var(--dk); transition: border-color .2s, box-shadow .2s;
+}
+.jw-cap-inp::placeholder { color: var(--gr-l); font-weight: 400; }
+.jw-cap-inp:focus { border-color: var(--pri); box-shadow: 0 0 0 4px rgba(36,99,255,0.12); }
+.jw-cap-inp.is-ok { border-color: var(--ok); }
+
+/* Sign-in button */
+.jw-btn {
+    display: flex; align-items: center; justify-content: center; gap: 10px;
+    width: 100%; height: 42px;
+    background: var(--pri); color: #fff;
+    border: none; border-radius: var(--r-md);
+    font-size: 13.5px; font-weight: 600;
+    font-family: 'Poppins', sans-serif; cursor: pointer;
+    transition: background .2s, box-shadow .2s, transform .05s;
+    box-shadow: var(--shadow-btn);
+    letter-spacing: 0.2px;
+}
+.jw-btn:hover { background: var(--pri-h); box-shadow: var(--shadow-btn-h); }
+.jw-btn:active { transform: translateY(1px); }
+.jw-btn .arrow { display: flex; transition: transform .2s; }
+.jw-btn:hover .arrow { transform: translateX(4px); }
+.jw-btn[disabled] { opacity: 0.7; cursor: not-allowed; transform: none; }
+
+/* Forgot form */
+.jw-fgt-acts { display: flex; gap: 12px; margin-top: 18px; }
+.jw-fgt-sub {
+    flex: 1; height: 50px; background: var(--pri); color: #fff;
+    border: none; border-radius: var(--r-md);
+    font-size: 14px; font-weight: 600;
+    font-family: 'Poppins', sans-serif; cursor: pointer;
+    transition: background .2s, box-shadow .2s;
+    box-shadow: var(--shadow-btn);
+}
+.jw-fgt-sub:hover { background: var(--pri-h); box-shadow: var(--shadow-btn-h); }
+.jw-fgt-cancel {
+    height: 50px; padding: 0 20px; background: #F3F4F6; color: #374151;
+    border: none; border-radius: var(--r-md);
+    font-size: 14px; font-weight: 600;
+    font-family: 'Poppins', sans-serif; text-decoration: none;
+    display: inline-flex; align-items: center; cursor: pointer;
     transition: background .2s;
 }
-.v2-cap-btn:hover { background: var(--pl); }
-.v2-cap-field { flex: 1; }
-.v2-cap-inp {
-    width: 100%; height: 48px;
-    border: 1.5px solid var(--bd); border-radius: 10px;
-    padding: 0 16px; font-size: 16px; letter-spacing: 5px; font-weight: 700;
-    font-family: 'Poppins', sans-serif; outline: none; background: #fff; color: var(--dk);
-    transition: border-color .2s;
+/* Inside Card Trust Strip (Matching attached screenshot) */
+.jw-card-trust {
+    margin-top: 14px;
+    background: #F8FAFC;
+    border: 1px solid #F1F5F9;
+    border-radius: var(--r-md);
+    padding: 9px 12px;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    align-items: center;
 }
-.v2-cap-inp:focus { border-color: var(--p); box-shadow: 0 0 0 3px rgba(245,166,35,.12); }
+.jw-ct-item {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    min-width: 0;
+}
+.jw-ct-ico {
+    width: 22px;
+    height: 22px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+.jw-ct-ico svg { width: 14px; height: 14px; }
+.jw-ct-ico.t-green { color: #16A34A; }
+.jw-ct-ico.t-blue { color: #2563EB; }
+.jw-ct-ico.t-blue2 { color: #0284C7; }
 
-/* Login button */
-.v2-btn {
-    display: flex; align-items: center; justify-content: center; gap: 11px;
-    width: 100%; height: 52px;
-    background: var(--p); color: #fff;
-    border: none; border-radius: 12px;
-    font-size: 16px; font-weight: 700; font-family: 'Poppins', sans-serif;
-    cursor: pointer; letter-spacing: .2px;
-    transition: background .2s, box-shadow .2s;
-    box-shadow: 0 4px 16px rgba(245,166,35,.38);
+.jw-ct-meta { min-width: 0; }
+.jw-ct-meta strong {
+    display: block;
+    font-size: 10.5px;
+    font-weight: 700;
+    color: #0F172A;
+    line-height: 1.15;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
-.v2-btn:hover { background: var(--ph); box-shadow: 0 6px 22px rgba(245,166,35,.48); }
+.jw-ct-meta span {
+    display: block;
+    font-size: 9px;
+    color: #64748B;
+    line-height: 1.15;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-top: 1px;
+}
 
-/* Forgot form extras */
-.v2-fgt-acts { display: flex; gap: 12px; margin-top: 18px; }
-.v2-fgt-sub {
-    flex: 1; height: 54px; background: var(--p); color: #fff;
-    border: none; border-radius: 10px;
-    font-size: 15px; font-weight: 700; font-family: 'Poppins', sans-serif;
-    cursor: pointer; transition: background .2s;
-}
-.v2-fgt-sub:hover { background: var(--ph); }
-.v2-fgt-cancel {
-    height: 54px; padding: 0 22px; background: #f3f4f6; color: #374151;
-    border: none; border-radius: 10px; font-size: 14px; font-weight: 600;
-    font-family: 'Poppins', sans-serif; text-decoration: none;
-    display: inline-flex; align-items: center; cursor: pointer; transition: background .2s;
-}
-.v2-fgt-cancel:hover { background: #e5e7eb; color: #374151; }
+/* ── Responsive ─────────────────────────────────────────────── */
 
+<<<<<<< HEAD
 /* Security strip */
 .v2-sec {
     width: 100%; max-width: 640px;
@@ -236,17 +620,17 @@ html, body { margin: 0 !important; padding: 0 !important; }
 /* ── Responsive ────────────────────────────────────────── */
 
 /* 1440px – larger 15.6" at lower resolution */
+=======
+/* 1440 */
+>>>>>>> aae988763d544abdc82e1d4f6a9c45c3202dafd4
 @media (max-width: 1440px) {
-    .v2-left        { width: 500px; padding: 30px 36px 0; }
-    .v2-hero h1     { font-size: 28px; }
-    .v2-feats       { gap: 12px; }
-    .v2-body        { padding: 10px 42px 16px; }
-    .v2-help        { padding: 18px 42px; }
-    .v2-foot        { padding: 14px 42px; }
+    .jw-hero h1 { font-size: 36px !important; }
+    .jw-left { padding: 16px 30px 12px; }
 }
 
-/* 1366px – most 14" / 15.6" laptops (1366×768 is the most common) */
+/* 1366 — most 15.6" laptops */
 @media (max-width: 1366px) {
+<<<<<<< HEAD
     .v2-left        { width: 400px; padding: 22px 26px 0; }
     .v2-logo        { margin-bottom: 18px; }
     .v2-logo-text   { font-size: 16px; }
@@ -266,10 +650,24 @@ html, body { margin: 0 !important; padding: 0 !important; }
     .v2-card-title  { font-size: 16px; }
     .v2-card-sub    { margin-bottom: 14px; }
     .v2-city svg    { max-height: 180px; }
+=======
+    .jw-hero h1 { font-size: 36px !important; letter-spacing: -0.6px; }
+    .jw-hero { margin: 16px 0 8px; }
+    .jw-hero p { font-size: 12px; -webkit-line-clamp: 2; }
+    .jw-left { flex: 1; padding: 14px 22px 10px; }
+    .jw-right { flex: 1; }
+    .jw-illustration-link { aspect-ratio: 1152 / 768; max-height: 420px; margin-bottom: 10px; }
+    .jw-card-form { max-width: 480px; padding: 22px 30px 18px; }
+    .jw-card-form h2 { font-size: 20px; }
+    .jw-inp { height: 40px; font-size: 13px; }
+    .jw-cap-img, .jw-cap-inp { height: 38px; }
+    .jw-btn { height: 42px; font-size: 13.5px; }
+>>>>>>> aae988763d544abdc82e1d4f6a9c45c3202dafd4
 }
 
-/* 1280px – smaller 14" laptops */
+/* 1280 */
 @media (max-width: 1280px) {
+<<<<<<< HEAD
     .v2-left        { width: 340px; padding: 18px 20px 0; }
     .v2-logo        { margin-bottom: 14px; }
     .v2-hero        { margin-bottom: 12px; }
@@ -310,27 +708,37 @@ html, body { margin: 0 !important; padding: 0 !important; }
     .v2-sec-text strong { font-size: 12.5px; }
     .v2-sec-text span   { font-size: 11px; }
     .v2-city svg    { max-height: 120px; }
+=======
+    .jw-hero h1 { font-size: 36px !important; }
 }
 
-/* Very short – 700px tall (small laptops or zoomed browsers) */
-@media (max-height: 700px) {
-    .v2-city        { display: none; }
-    .v2-card        { padding: 14px 18px; margin-bottom: 6px; }
-    .v2-card-sub    { margin-bottom: 8px; }
-    .v2-field       { margin-bottom: 7px; }
-    .v2-cap-row     { margin-bottom: 7px; }
-    .v2-inp, .v2-cap-btn, .v2-cap-img, .v2-cap-inp { height: 38px; }
-    .v2-btn         { height: 40px; font-size: 13.5px; }
-    .v2-sec         { padding: 10px 14px; }
+/* Tablet */
+@media (max-width: 1024px) {
+    .jw-page { flex-direction: column; height: auto; }
+    .jw-left, .jw-right { height: auto; }
+    .jw-left { padding: 22px 22px 18px; }
+    .jw-illustration-link { aspect-ratio: 1152 / 768; max-height: none; }
+    .jw-body { padding: 22px 24px; overflow-y: auto; }
+    .jw-card-form { max-width: 100%; }
+>>>>>>> aae988763d544abdc82e1d4f6a9c45c3202dafd4
 }
 
-/* Very short – 600px tall */
-@media (max-height: 600px) {
-    .v2-sec         { display: none; }
-    .v2-card        { padding: 14px 18px; }
-    .v2-btn         { height: 38px; }
+/* Mobile */
+@media (max-width: 700px) {
+    .jw-illustration-link { margin-bottom: 12px; }
+    .jw-hero h1 { font-size: 30px; }
+    .jw-left { padding: 20px 18px; }
+    .jw-body { padding: 18px; }
+    .jw-card-form { padding: 20px 18px; border-radius: 16px; }
+    .jw-card-form h2 { font-size: 22px; }
 }
 
+@media (max-width: 480px) {
+    .jw-hero h1 { font-size: 26px; }
+    .jw-top-btn { padding: 6px 12px; font-size: 12px; }
+}
+
+<<<<<<< HEAD
 /* 960px and below – tablets: stack left over right */
 @media (max-width: 960px) {
     .v2-left  { width: 100%; padding-bottom: 220px; }
@@ -338,6 +746,10 @@ html, body { margin: 0 !important; padding: 0 !important; }
     .v2-card  { padding: 24px 20px; }
     .v2-body  { padding: 20px; }
     .v2-help  { padding: 16px 20px; }
+=======
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+>>>>>>> aae988763d544abdc82e1d4f6a9c45c3202dafd4
 }
 </style>
 
@@ -352,376 +764,352 @@ if (session('status')) {
 }
 ?>
 
-<div class="v2-shell">
-<div class="v2-page">
+<div class="jw-shell">
+<div class="jw-page">
 
-{{-- ═══════════ LEFT PANEL ═══════════ --}}
-<div class="v2-left">
+{{-- ═══════════════ LEFT PANEL ═══════════════ --}}
+<div class="jw-left">
 
-    {{-- Logo --}}
-    <a href="https://jero.works" class="v2-logo">
-        <svg width="40" height="44" viewBox="0 0 40 44" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M20 2C9.5 2 1 10.5 1 21H39C39 10.5 30.5 2 20 2Z" fill="#111827"/>
-            <path d="M1 21C1 21 7.5 17.5 20 21" stroke="rgba(255,255,255,0.35)" stroke-width="1.2"/>
-            <path d="M39 21C39 21 32.5 17.5 20 21" stroke="rgba(255,255,255,0.35)" stroke-width="1.2"/>
-            <line x1="20" y1="21" x2="20" y2="37" stroke="#111827" stroke-width="2.6" stroke-linecap="round"/>
-            <path d="M20 37C20 40.31 17.31 43 14 43" stroke="#111827" stroke-width="2.6" stroke-linecap="round" fill="none"/>
-        </svg>
-        <span class="v2-logo-text">Jero</span>
+    {{-- Official SVG Brand Logo from E:\ drive --}}
+    <a href="https://jero.works" class="jw-brand" aria-label="jero.works">
+        <img src="{{ asset('img/jero-logo-black-yellow.svg') }}" class="jw-brand-logo" alt="jero.works">
     </a>
 
     {{-- Hero --}}
-    <div class="v2-hero">
-        <h1>AI-Powered Hiring.<br>Faster. Smarter. <span class="acc">Free.</span></h1>
-        <p>The intelligent ATS &amp; hiring marketplace<br>trusted by 1000+ companies and recruiters.</p>
+    <div class="jw-hero">
+        <h1>One Platform.<br>Every <span class="acc">Hiring Need.</span></h1>
+        <p>Connect companies, agencies and talent on one intelligent recruitment platform built for speed and trust.</p>
     </div>
 
-    {{-- Features --}}
-    <div class="v2-feats">
-        <div class="v2-feat">
-            <div class="v2-feat-ico">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><polygon points="13,2 7,14 11.5,14 9,23 17,10 12.5,10" fill="#F5A623"/></svg>
+    {{-- Combined 3-in-1 Audience Illustration (All 3-in-1) --}}
+    <a href="{{ route('register') }}" class="jw-illustration-link" aria-label="Find Trusted Agencies, Search Work Opportunities, and Hire Immediate Joiners">
+        <img class="jw-illustration-img"
+             src="{{ asset('img/cards/all-3in-one.svg') }}"
+             alt="Find Trusted Agencies, Search Work Opportunities, and Hire Immediate Joiners"
+             width="1152" height="768"
+             decoding="async">
+    </a>
+
+    {{-- Stats --}}
+    <div class="jw-stats">
+        <div class="jw-stat">
+            <div class="jw-stat-ico s-people" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none"><circle cx="9" cy="8" r="3.2" fill="currentColor"/><circle cx="16" cy="8" r="3.2" fill="currentColor" opacity=".55"/><path d="M2 21c0-3.87 3.13-7 7-7h5c3.87 0 7 3.13 7 7" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg>
             </div>
-            <div class="v2-feat-body">
-                <strong>AI-Powered Automation</strong>
-                <span>Automate hiring workflows end-to-end</span>
-            </div>
-        </div>
-        <div class="v2-feat">
-            <div class="v2-feat-ico">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-                    <circle cx="9" cy="8" r="3.5" fill="#F5A623"/>
-                    <circle cx="16" cy="8" r="3.5" fill="#F5A623" opacity=".55"/>
-                    <path d="M2 21c0-3.87 3.13-7 7-7h5c3.87 0 7 3.13 7 7" stroke="#F5A623" stroke-width="2" fill="none" stroke-linecap="round"/>
-                </svg>
-            </div>
-            <div class="v2-feat-body">
-                <strong>Marketplace Access</strong>
-                <span>Connect with top agencies &amp; talent</span>
+            <div class="jw-stat-meta">
+                <strong>15K+</strong>
+                <span>Enterprise Clients</span>
             </div>
         </div>
-        <div class="v2-feat">
-            <div class="v2-feat-ico">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-                    <rect x="3" y="14" width="4.5" height="8" rx="1.5" fill="#F5A623"/>
-                    <rect x="9.5" y="10" width="4.5" height="12" rx="1.5" fill="#F5A623" opacity=".72"/>
-                    <rect x="16" y="5" width="4.5" height="17" rx="1.5" fill="#F5A623" opacity=".5"/>
-                </svg>
+        <div class="jw-stat">
+            <div class="jw-stat-ico s-jobs" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none"><rect x="3" y="7" width="18" height="13" rx="2" stroke="currentColor" stroke-width="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" stroke="currentColor" stroke-width="2"/></svg>
             </div>
-            <div class="v2-feat-body">
-                <strong>Smart Analytics</strong>
-                <span>Insights that help you hire the best</span>
+            <div class="jw-stat-meta">
+                <strong>25K+</strong>
+                <span>Active Jobs</span>
             </div>
         </div>
-        <div class="v2-feat">
-            <div class="v2-feat-ico">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-                    <path d="M12 2L3 6v5.5C3 17.25 6.8 22.6 12 24c5.2-1.4 9-6.75 9-12.5V6L12 2Z" fill="rgba(245,166,35,.28)" stroke="#F5A623" stroke-width="1.7"/>
-                    <path d="M8 12l3 3 5-5" stroke="#F5A623" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                </svg>
+        <div class="jw-stat">
+            <div class="jw-stat-ico s-cand" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8" r="3.5" fill="currentColor"/><path d="M5 20c0-3.87 3.13-7 7-7s7 3.13 7 7" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg>
             </div>
-            <div class="v2-feat-body">
-                <strong>Secure &amp; Compliant</strong>
-                <span>Enterprise-grade security for your data</span>
+            <div class="jw-stat-meta">
+                <strong>250K+</strong>
+                <span>Talent Profiles</span>
+            </div>
+        </div>
+        <div class="jw-stat">
+            <div class="jw-stat-ico s-up" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none"><path d="M3 21h18M5 21V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16M9 9h2M13 9h2M9 13h2M13 13h2M9 17h2M13 17h2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </div>
+            <div class="jw-stat-meta">
+                <strong>20K+</strong>
+                <span>Agencies</span>
             </div>
         </div>
     </div>
 
-    {{-- City skyline --}}
-    <div class="v2-city">
-        <svg viewBox="0 0 500 230" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMax meet" style="width:100%">
-            <defs>
-                <linearGradient id="skyg" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stop-color="#FFF9EC" stop-opacity="0"/>
-                    <stop offset="100%" stop-color="#FFD060" stop-opacity="0.5"/>
-                </linearGradient>
-            </defs>
-            <!-- Atmosphere -->
-            <rect x="0" y="0" width="500" height="230" fill="url(#skyg)"/>
+</div>{{-- /jw-left --}}
 
-            <!-- Back layer (lightest) -->
-            <rect x="0"   y="155" width="18"  height="75"  fill="#F5E4A8"/>
-            <rect x="20"  y="135" width="14"  height="95"  fill="#F5E4A8"/>
-            <rect x="36"  y="150" width="20"  height="80"  fill="#F5E0A0"/>
-            <rect x="58"  y="125" width="16"  height="105" fill="#F5DC98"/>
-            <rect x="76"  y="140" width="22"  height="90"  fill="#F5E0A0"/>
-            <rect x="100" y="110" width="18"  height="120" fill="#F5DC98"/>
-            <rect x="102" y="102" width="14"  height="10"  fill="#F5DC98"/>
-            <rect x="120" y="130" width="24"  height="100" fill="#F5E4A8"/>
-            <rect x="146" y="115" width="16"  height="115" fill="#F5DC98"/>
-            <rect x="164" y="135" width="20"  height="95"  fill="#F5E0A0"/>
-            <rect x="186" y="105" width="18"  height="125" fill="#F5DC98"/>
-            <rect x="188" y="95"  width="14"  height="12"  fill="#F5DC98"/>
-            <rect x="206" y="120" width="22"  height="110" fill="#F5E4A8"/>
-            <rect x="230" y="108" width="16"  height="122" fill="#F5DC98"/>
-            <rect x="232" y="98"  width="12"  height="12"  fill="#F5DC98"/>
-            <rect x="248" y="125" width="24"  height="105" fill="#F5E0A0"/>
-            <rect x="274" y="112" width="18"  height="118" fill="#F5DC98"/>
-            <rect x="294" y="130" width="20"  height="100" fill="#F5E4A8"/>
-            <rect x="316" y="100" width="16"  height="130" fill="#F5DC98"/>
-            <rect x="318" y="90"  width="12"  height="12"  fill="#F5DC98"/>
-            <rect x="334" y="120" width="24"  height="110" fill="#F5E0A0"/>
-            <rect x="360" y="108" width="18"  height="122" fill="#F5DC98"/>
-            <rect x="380" y="135" width="16"  height="95"  fill="#F5E4A8"/>
-            <rect x="398" y="115" width="22"  height="115" fill="#F5DC98"/>
-            <rect x="422" y="125" width="20"  height="105" fill="#F5E0A0"/>
-            <rect x="444" y="140" width="14"  height="90"  fill="#F5E4A8"/>
-            <rect x="460" y="130" width="18"  height="100" fill="#F5DC98"/>
-            <rect x="480" y="145" width="20"  height="85"  fill="#F5E0A0"/>
+{{-- ═══════════════ RIGHT PANEL ═══════════════ --}}
+<div class="jw-right">
 
-            <!-- Mid layer -->
-            <rect x="0"   y="165" width="25"  height="65"  fill="#F5C840"/>
-            <rect x="27"  y="148" width="22"  height="82"  fill="#F0BC30"/>
-            <rect x="51"  y="155" width="28"  height="75"  fill="#F5C840"/>
-            <rect x="81"  y="143" width="20"  height="87"  fill="#F0BC30"/>
-            <rect x="103" y="152" width="26"  height="78"  fill="#F5C840"/>
-            <rect x="131" y="140" width="22"  height="90"  fill="#F0BC30"/>
-            <rect x="155" y="150" width="30"  height="80"  fill="#F5C840"/>
-            <rect x="187" y="138" width="22"  height="92"  fill="#F0BC30"/>
-            <rect x="211" y="148" width="28"  height="82"  fill="#F5C840"/>
-            <rect x="241" y="142" width="22"  height="88"  fill="#F0BC30"/>
-            <rect x="265" y="152" width="26"  height="78"  fill="#F5C840"/>
-            <rect x="293" y="140" width="24"  height="90"  fill="#F0BC30"/>
-            <rect x="319" y="150" width="28"  height="80"  fill="#F5C840"/>
-            <rect x="349" y="138" width="22"  height="92"  fill="#F0BC30"/>
-            <rect x="373" y="148" width="26"  height="82"  fill="#F5C840"/>
-            <rect x="401" y="142" width="22"  height="88"  fill="#F0BC30"/>
-            <rect x="425" y="150" width="28"  height="80"  fill="#F5C840"/>
-            <rect x="455" y="145" width="22"  height="85"  fill="#F0BC30"/>
-            <rect x="479" y="155" width="21"  height="75"  fill="#F5C840"/>
-
-            <!-- Front layer (darkest/tallest) — key skyscrapers -->
-            <!-- Far left cluster -->
-            <rect x="0"   y="175" width="32"  height="55"  fill="#F5B020"/>
-            <rect x="34"  y="160" width="28"  height="70"  fill="#EAA010"/>
-            <rect x="64"  y="150" width="20"  height="80"  fill="#F5B020"/>
-            <!-- Left-center cluster -->
-            <rect x="86"  y="168" width="26"  height="62"  fill="#EAA010"/>
-            <rect x="114" y="155" width="30"  height="75"  fill="#F5B020"/>
-            <rect x="146" y="162" width="22"  height="68"  fill="#EAA010"/>
-            <!-- Tall center tower -->
-            <rect x="170" y="105" width="26"  height="125" fill="#F5A623"/>
-            <rect x="172" y="92"  width="22"  height="15"  fill="#F5A623"/>
-            <rect x="175" y="84"  width="16"  height="10"  fill="#F5A623"/>
-            <rect x="179" y="78"  width="8"   height="8"   fill="#F5A623"/>
-            <!-- Windows on tall tower -->
-            <rect x="174" y="110" width="5" height="6" rx="1" fill="rgba(255,255,255,0.25)"/>
-            <rect x="183" y="110" width="5" height="6" rx="1" fill="rgba(255,255,255,0.25)"/>
-            <rect x="174" y="122" width="5" height="6" rx="1" fill="rgba(255,255,255,0.25)"/>
-            <rect x="183" y="122" width="5" height="6" rx="1" fill="rgba(255,255,255,0.25)"/>
-            <rect x="174" y="134" width="5" height="6" rx="1" fill="rgba(255,255,255,0.25)"/>
-            <rect x="183" y="134" width="5" height="6" rx="1" fill="rgba(255,255,255,0.25)"/>
-            <!-- Right-center buildings -->
-            <rect x="198" y="158" width="28"  height="72"  fill="#F5B020"/>
-            <rect x="228" y="145" width="24"  height="85"  fill="#EAA010"/>
-            <!-- Second tall tower -->
-            <rect x="254" y="112" width="24"  height="118" fill="#F5A623"/>
-            <rect x="256" y="100" width="20"  height="14"  fill="#F5A623"/>
-            <rect x="259" y="93"  width="14"  height="9"   fill="#F5A623"/>
-            <!-- Windows -->
-            <rect x="258" y="118" width="4" height="5" rx="1" fill="rgba(255,255,255,0.25)"/>
-            <rect x="266" y="118" width="4" height="5" rx="1" fill="rgba(255,255,255,0.25)"/>
-            <rect x="258" y="130" width="4" height="5" rx="1" fill="rgba(255,255,255,0.25)"/>
-            <rect x="266" y="130" width="4" height="5" rx="1" fill="rgba(255,255,255,0.25)"/>
-            <rect x="258" y="142" width="4" height="5" rx="1" fill="rgba(255,255,255,0.25)"/>
-            <rect x="266" y="142" width="4" height="5" rx="1" fill="rgba(255,255,255,0.25)"/>
-            <!-- Right cluster -->
-            <rect x="280" y="160" width="26"  height="70"  fill="#F5B020"/>
-            <rect x="308" y="148" width="28"  height="82"  fill="#EAA010"/>
-            <rect x="338" y="155" width="22"  height="75"  fill="#F5B020"/>
-            <rect x="362" y="142" width="30"  height="88"  fill="#EAA010"/>
-            <rect x="394" y="152" width="24"  height="78"  fill="#F5B020"/>
-            <rect x="420" y="160" width="28"  height="70"  fill="#EAA010"/>
-            <rect x="450" y="168" width="22"  height="62"  fill="#F5B020"/>
-            <rect x="474" y="158" width="26"  height="72"  fill="#EAA010"/>
-
-            <!-- Ground -->
-            <rect x="0" y="218" width="500" height="12" fill="#F0A800"/>
-        </svg>
-    </div>
-</div>{{-- /v2-left --}}
-
-{{-- ═══════════ RIGHT PANEL ═══════════ --}}
-<div class="v2-right">
-
-    {{-- Help bar --}}
-    <div class="v2-help">
-        <span class="v2-help-ico">
-            <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="9" stroke="#6b7280" stroke-width="1.6"/><path d="M10 14.5v-1.2" stroke="#6b7280" stroke-width="1.6" stroke-linecap="round"/><path d="M10 11.5c0-1.8 2.2-1.8 2.2-3.3a2.2 2.2 0 0 0-4.4 0" stroke="#6b7280" stroke-width="1.6" stroke-linecap="round"/></svg>
-        </span>
-        <span class="v2-help-need">Need help?</span>
-        <span class="v2-help-sep">|</span>
-        <a href="javascript:void(0);" class="lc">Live Chat</a>
-        <span class="v2-help-sep">|</span>
-        <a href="https://jero.works/support-policy" target="_blank" class="hc">Help Center</a>
+    {{-- Top bar --}}
+    <div class="jw-top">
+        <span>New to Jero.works?</span>
+        <a href="{{ route('register') }}" class="jw-top-btn">
+            Create Free Account
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+        </a>
     </div>
 
     {{-- Body --}}
-    <div class="v2-body">
+    <div class="jw-body">
 
         {{-- LOGIN FORM --}}
-        <form class="v2-card" novalidate id="kt_sign_in_form1" action="{{ route('login') }}" method="post" style="<?php echo $loginForm; ?>">
+        <form class="jw-card-form" novalidate id="kt_sign_in_form1" action="{{ route('login') }}" method="post" style="<?php echo $loginForm; ?>">
             @csrf
-            <h2 class="v2-card-title">Welcome Back! 👋</h2>
-            <p class="v2-card-sub">Login to continue to your Jero workspace</p>
+
+            <h2>Welcome Back!</h2>
+            <p class="sub">Sign in to continue to your jero.works account</p>
 
             @if(@$class && @$messsage)
+<<<<<<< HEAD
                 <div class="v2-alert v2-alert-err"><strong>{{ @$class }}</strong> {{ @$messsage }}</div>
+=======
+                <div class="jw-alert jw-alert-err"><strong>{{ @$class }}</strong> {!! @$messsage !!}</div>
+>>>>>>> aae988763d544abdc82e1d4f6a9c45c3202dafd4
             @endif
             @if(session('accountnotverify'))
-                <div class="v2-alert v2-alert-err">{{ session('accountnotverify') }}</div>
+                <div class="jw-alert jw-alert-err">{{ session('accountnotverify') }}</div>
             @endif
             @if($errors->has('device_message'))
-                <div class="v2-alert v2-alert-err">{{ $errors->first('device_message') }}</div>
+                <div class="jw-alert jw-alert-err">{{ $errors->first('device_message') }}</div>
             @endif
 
             {{-- Email --}}
-            <div class="v2-field">
-                <label>Email Address</label>
-                <div class="v2-iw">
-                    <span class="il">
-                        <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><rect x="1" y="4" width="16" height="11" rx="2.2" stroke="#9ca3af" stroke-width="1.5"/><path d="M1 7l8 5.5L17 7" stroke="#9ca3af" stroke-width="1.5" stroke-linecap="round"/></svg>
+            <div class="jw-field">
+                <label for="jw-email">Email Address</label>
+                <div class="jw-iw">
+                    <span class="il" aria-hidden="true">
+                        <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><rect x="1" y="4" width="16" height="11" rx="2.2" stroke="currentColor" stroke-width="1.5"/><path d="M1 7l8 5.5L17 7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
                     </span>
+                    <input class="jw-inp" type="text" name="email" id="jw-email" placeholder="Enter your email" autocomplete="off" value="{{ old('email') }}" aria-describedby="jw-email-help"/>
+                    <span class="ok-mark" id="jw-email-ok" style="display:none;" aria-hidden="true">
+                        <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><circle cx="9" cy="9" r="8.4" fill="#16A34A"/><path d="M5 9l3 3 5-5.5" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    </span>
+<<<<<<< HEAD
                     <input class="v2-inp" type="text" name="email" placeholder="Enter your email" autocomplete="username" value="{{ old('email') }}"/>
+=======
+>>>>>>> aae988763d544abdc82e1d4f6a9c45c3202dafd4
                     <input type="hidden" name="url" value="{{ @$url }}"/>
                 </div>
-                @if($errors->has('email'))<span class="v2-err">{{ $errors->first('email') }}</span>@endif
+                @if($errors->has('email'))<span class="jw-err" id="jw-email-help">{{ $errors->first('email') }}</span>@endif
             </div>
 
             {{-- Password --}}
-            <div class="v2-field">
-                <label>Password</label>
-                <div class="v2-iw">
-                    <span class="il">
-                        <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><rect x="3" y="8" width="12" height="9" rx="2.2" stroke="#9ca3af" stroke-width="1.5"/><path d="M6 8V6a3 3 0 0 1 6 0v2" stroke="#9ca3af" stroke-width="1.5" stroke-linecap="round"/><circle cx="9" cy="12.5" r="1.3" fill="#9ca3af"/></svg>
+            <div class="jw-field">
+                <label for="jw-pwd">Password</label>
+                <div class="jw-iw">
+                    <span class="il" aria-hidden="true">
+                        <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><rect x="3" y="8" width="12" height="9" rx="2.2" stroke="currentColor" stroke-width="1.5"/><path d="M6 8V6a3 3 0 0 1 6 0v2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><circle cx="9" cy="12.5" r="1.3" fill="currentColor"/></svg>
                     </span>
+<<<<<<< HEAD
                     <input class="v2-inp" type="password" name="password" id="v2pwd" placeholder="Enter your password" autocomplete="current-password"/>
                     <span class="ir" onclick="v2Eye()" style="user-select:none">
                         <svg id="v2eye" width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M1.5 9s2.8-5.5 7.5-5.5S16.5 9 16.5 9s-2.8 5.5-7.5 5.5S1.5 9 1.5 9Z" stroke="#9ca3af" stroke-width="1.5"/><circle cx="9" cy="9" r="2.2" stroke="#9ca3af" stroke-width="1.5"/></svg>
+=======
+                    <input class="jw-inp" type="password" name="password" id="jw-pwd" placeholder="Enter your password" autocomplete="off" aria-describedby="jw-pwd-help"/>
+                    <span class="ir" onclick="jwEye()" role="button" tabindex="0" aria-label="Toggle password visibility" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();jwEye();}">
+                        <svg id="jw-eye" width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M1.5 9s2.8-5.5 7.5-5.5S16.5 9 16.5 9s-2.8 5.5-7.5 5.5S1.5 9 1.5 9Z" stroke="currentColor" stroke-width="1.5"/><circle cx="9" cy="9" r="2.2" stroke="currentColor" stroke-width="1.5"/></svg>
+>>>>>>> aae988763d544abdc82e1d4f6a9c45c3202dafd4
                     </span>
                 </div>
-                @if($errors->has('password'))<span class="v2-err"><strong>{{ $errors->first('password') }}</strong></span>@endif
+                @if($errors->has('password'))<span class="jw-err" id="jw-pwd-help"><strong>{{ $errors->first('password') }}</strong></span>@endif
             </div>
 
             {{-- Remember + Forgot --}}
-            <div class="v2-mid">
-                <div class="v2-rem">
-                    <input type="checkbox" name="remember" id="v2rem" {{ old('remember') ? 'checked' : '' }}>
-                    <label for="v2rem">Remember me</label>
+            <div class="jw-mid">
+                <div class="jw-rem">
+                    <input type="checkbox" name="remember" id="jw-rem" {{ old('remember') ? 'checked' : '' }}>
+                    <label for="jw-rem">Remember me</label>
                 </div>
-                <a href="javascript:void(0);" id="to-recover" class="v2-fgt">Forgot Password?</a>
+                <a href="javascript:void(0);" id="to-recover" class="jw-fgt">Forgot password?</a>
             </div>
 
-            {{-- Captcha --}}
-            <div class="v2-cap-lbl">Enter the number in the box</div>
-            <div class="v2-cap-row">
-                <div class="v2-cap-img">
-                    <img src="{{ route('captcha.generate') }}" id="captchaImg" alt="captcha">
+            {{-- Security verification (CAPTCHA) --}}
+            <div class="jw-sec">
+                <div class="jw-sec-head">
+                    <span class="jw-sec-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none"><path d="M12 3l8 4v5c0 5-3.5 9-8 10-4.5-1-8-5-8-10V7l8-4Z" stroke="currentColor" stroke-width="1.8" fill="none"/><path d="M9 12l2 2 4-4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>
+                    </span>
+                    <span class="jw-sec-title">Security verification</span>
+                    <span class="jw-sec-bracket">{Enter the code shown below}</span>
                 </div>
-                <button type="button" onclick="refreshCaptcha()" class="v2-cap-btn">
-                    <svg width="15" height="15" viewBox="0 0 15 15" fill="none"><path d="M2 7.5A5.5 5.5 0 0 1 13 7.5" stroke="#F5A623" stroke-width="1.6" stroke-linecap="round"/><path d="M11 5.5L13 7.5l2-2" stroke="#F5A623" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M13 7.5A5.5 5.5 0 0 1 2 7.5" stroke="#F5A623" stroke-width="1.6" stroke-linecap="round"/><path d="M4 9.5L2 7.5 0 9.5" stroke="#F5A623" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                    Refresh
-                </button>
-                <div class="v2-cap-field">
-                    <input type="text" name="captcha" class="v2-cap-inp" autocomplete="off" required>
+
+                <div class="jw-cap-row">
+                    <div class="jw-cap-box">
+                        <img src="{{ route('captcha.generate') }}" id="captchaImg" alt="Security code" class="jw-cap-code-img">
+                        <button type="button" onclick="refreshCaptcha()" class="jw-cap-refresh-btn" aria-label="Refresh security code" title="Refresh security code">
+                            <svg viewBox="0 0 24 24" fill="none"><path d="M21 12a9 9 0 1 1-3.5-7.1" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M21 4v5h-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                        </button>
+                    </div>
+                    <div class="jw-cap-field">
+                        <input type="text" inputmode="numeric" pattern="[0-9]*" maxlength="4" name="captcha" class="jw-cap-inp" id="jw-cap" placeholder="Enter code" autocomplete="off" required aria-describedby="jw-cap-help">
+                    </div>
                 </div>
+                @if($errors->has('captcha'))
+                    <span class="jw-err" id="jw-cap-help" style="margin-top:6px;display:block">{{ $errors->first('captcha') }}</span>
+                @endif
             </div>
-            @if($errors->has('captcha'))
-                <span class="v2-err" style="margin-top:-16px;margin-bottom:14px;display:block">{{ $errors->first('captcha') }}</span>
-            @endif
 
             {{-- Submit --}}
-            <button type="submit" id="kt_sign_in_submit" class="v2-btn">
-                <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><rect x="3" y="9" width="14" height="10" rx="2.5" stroke="white" stroke-width="1.7"/><path d="M7 9V7a3 3 0 0 1 6 0v2" stroke="white" stroke-width="1.7" stroke-linecap="round"/><circle cx="10" cy="14" r="1.5" fill="white"/></svg>
-                <span class="indicator-label">Login to Jero</span>
-                <span class="indicator-progress" style="display:none">Please wait…&nbsp;<span class="spinner-border spinner-border-sm align-middle"></span></span>
+            <button type="submit" id="kt_sign_in_submit" class="jw-btn">
+                <span class="indicator-label">Sign In</span>
+                <span class="arrow" aria-hidden="true">
+                    <svg width="18" height="18" viewBox="0 0 20 20" fill="none">
+                        <path d="M3 10h13M11 5l5 5-5 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </span>
+                <span class="indicator-progress" style="display:none" aria-live="polite">Signing in…&nbsp;<span class="spinner-border spinner-border-sm align-middle"></span></span>
             </button>
-
-            {{-- Sign Up --}}
-            <div style="text-align:center;margin-top:16px;">
-                <span style="font-size:13px;color:var(--gr);">Don't have an account?</span>
-                <a href="{{ route('register') }}" style="font-size:13px;font-weight:700;color:var(--p);text-decoration:none;margin-left:5px;">Sign Up</a>
+            {{-- In-Card Trust Footer (Matching attached mockup) --}}
+            <div class="jw-card-trust">
+                <div class="jw-ct-item">
+                    <div class="jw-ct-ico t-green">
+                        <svg viewBox="0 0 24 24" fill="none"><rect x="5" y="11" width="14" height="10" rx="2" stroke="currentColor" stroke-width="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4" stroke="currentColor" stroke-width="2"/></svg>
+                    </div>
+                    <div class="jw-ct-meta">
+                        <strong>Secure Login</strong>
+                        <span>256-bit encryption</span>
+                    </div>
+                </div>
+                <div class="jw-ct-item">
+                    <div class="jw-ct-ico t-blue">
+                        <svg viewBox="0 0 24 24" fill="none"><path d="M12 3l8 4v5c0 5-3.5 9-8 10-4.5-1-8-5-8-10V7l8-4Z" stroke="currentColor" stroke-width="2" fill="none"/><path d="M9 12l2 2 4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>
+                    </div>
+                    <div class="jw-ct-meta">
+                        <strong>Privacy Protected</strong>
+                        <span>Your data is safe</span>
+                    </div>
+                </div>
+                <div class="jw-ct-item">
+                    <div class="jw-ct-ico t-blue2">
+                        <svg viewBox="0 0 24 24" fill="none"><path d="M12 3l8 4v5c0 5-3.5 9-8 10-4.5-1-8-5-8-10V7l8-4Z" stroke="currentColor" stroke-width="2" fill="none"/><path d="M8 12l3 3 5-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>
+                    </div>
+                    <div class="jw-ct-meta">
+                        <strong>99.9% Uptime</strong>
+                        <span>Reliable platform</span>
+                    </div>
+                </div>
             </div>
         </form>
 
         {{-- FORGOT PASSWORD FORM --}}
-        <form class="v2-card" novalidate id="recoverform" action="{{ route('password.emailsend') }}" method="post" style="<?php echo $resetForm; ?>">
+        <form class="jw-card-form" novalidate id="recoverform" action="{{ route('password.emailsend') }}" method="post" style="<?php echo $resetForm; ?>">
             {{ csrf_field() }}
-            <h2 class="v2-card-title">Forgot Password? 🔑</h2>
-            <p class="v2-card-sub">Enter your email to reset your password.</p>
+            <h2>Forgot Password?</h2>
+            <p class="sub">Enter your email to reset your password.</p>
 
             @if(session('status'))
-                <div class="v2-alert v2-alert-ok">{{ session('status') }}</div>
+                <div class="jw-alert jw-alert-ok">{{ session('status') }}</div>
             @endif
             @if(session('accountnotverify'))
-                <div class="v2-alert v2-alert-err">{{ session('accountnotverify') }}</div>
+                <div class="jw-alert jw-alert-err">{{ session('accountnotverify') }}</div>
             @endif
 
-            <div class="v2-field {{ $errors->has('email') ? 'has-error' : '' }}">
-                <label>Email Address</label>
-                <div class="v2-iw">
-                    <span class="il">
-                        <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><rect x="1" y="4" width="16" height="11" rx="2.2" stroke="#9ca3af" stroke-width="1.5"/><path d="M1 7l8 5.5L17 7" stroke="#9ca3af" stroke-width="1.5" stroke-linecap="round"/></svg>
+            <div class="jw-field {{ $errors->has('email') ? 'has-error' : '' }}">
+                <label for="email">Email Address</label>
+                <div class="jw-iw">
+                    <span class="il" aria-hidden="true">
+                        <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><rect x="1" y="4" width="16" height="11" rx="2.2" stroke="currentColor" stroke-width="1.5"/><path d="M1 7l8 5.5L17 7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
                     </span>
                     <input type="email" name="email" id="email"
-                           class="v2-inp {{ $errors->has('email') ? 'is-invalid' : '' }}"
+                           class="jw-inp {{ $errors->has('email') ? 'is-invalid' : '' }}"
                            placeholder="Enter your email" value="{{ old('email') }}"
                            required autocomplete="email">
                 </div>
-                @if($errors->has('email'))<span class="v2-err"><strong>{{ $errors->first('email') }}</strong></span>@endif
+                @if($errors->has('email'))<span class="jw-err"><strong>{{ $errors->first('email') }}</strong></span>@endif
             </div>
 
-            <div class="v2-fgt-acts">
-                <button type="submit" id="reset_password" class="v2-fgt-sub">
+            <div class="jw-fgt-acts">
+                <button type="submit" id="reset_password" class="jw-fgt-sub">
                     <span class="indicator-label">Reset Password</span>
                     <span class="indicator-progress" style="display:none">Please wait…&nbsp;<span class="spinner-border spinner-border-sm align-middle"></span></span>
                 </button>
-                <a href="{{ route('login') }}" class="v2-fgt-cancel">Cancel</a>
+                <a href="{{ route('login') }}" class="jw-fgt-cancel">Cancel</a>
             </div>
         </form>
 
-        {{-- Security strip --}}
-        <div class="v2-sec">
-            <div class="v2-sec-ico">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M12 2L3 6v5.5C3 17.25 6.8 22.6 12 24c5.2-1.4 9-6.75 9-12.5V6L12 2Z" fill="rgba(245,166,35,.28)" stroke="#F5A623" stroke-width="1.7"/><path d="M8 12l3 3 5-5" stroke="#F5A623" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-            </div>
-            <div class="v2-sec-text">
-                <strong>Secure &bull; Trusted &bull; Encrypted</strong>
-                <span>Your information is protected and safe with us.</span>
-            </div>
+    </div>{{-- /jw-body --}}
+
+</div>{{-- /jw-right --}}
+
+</div>{{-- /jw-page --}}
+
+    {{-- Full-Length Complete Footer Bar --}}
+    <footer class="jw-full-foot">
+        <span class="copy">© 2026 Jero Technologies Pvt. Ltd. All rights reserved.</span>
+        <div class="links">
+            <a href="/privacy-policy">Privacy Policy</a>
+            <a href="/terms">Terms of Service</a>
+            <a href="/support">Support</a>
+            <button type="button" class="jw-locale" aria-label="Language selector">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                    <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.6"/>
+                    <path d="M3 12h18M12 3c3 3 3 15 0 18M12 3c-3 3-3 15 0 18" stroke="currentColor" stroke-width="1.6"/>
+                </svg>
+                English
+                <svg width="10" height="10" viewBox="0 0 12 12" fill="none" aria-hidden="true">
+                    <path d="M3 5l3 3 3-3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+            </button>
         </div>
+    </footer>
 
-    </div>{{-- /v2-body --}}
-
-    {{-- Footer --}}
-    <div class="v2-foot">
-        <span class="v2-foot-copy">© 2025 Jero. All rights reserved.</span>
-        <span class="v2-foot-sep">|</span>
-        <a href="/privacy-policy">Privacy Policy</a>
-        <span class="v2-foot-sep">|</span>
-        <a href="/terms">Terms of Service</a>
-    </div>
-
-</div>{{-- /v2-right --}}
-
-</div>{{-- /v2-page --}}
-</div>{{-- /v2-shell --}}
+</div>{{-- /jw-shell --}}
 @endsection
 
 @push('scripts')
 <script>
 function refreshCaptcha() {
-    document.getElementById('captchaImg').src = "{{ route('captcha.generate') }}?t=" + Date.now();
+    var img = document.getElementById('captchaImg');
+    img.src = "{{ route('captcha.generate') }}?t=" + Date.now();
+    var c = document.getElementById('jw-cap');
+    if (c) { c.value = ''; c.classList.remove('is-ok'); c.focus(); }
 }
-function v2Eye() {
-    var i = document.getElementById('v2pwd'), e = document.getElementById('v2eye');
+
+function jwEye() {
+    var i = document.getElementById('jw-pwd'), e = document.getElementById('jw-eye');
     if (i.type === 'password') {
         i.type = 'text';
-        e.innerHTML = '<path d="M1.5 9s2.8-5.5 7.5-5.5S16.5 9 16.5 9s-2.8 5.5-7.5 5.5S1.5 9 1.5 9Z" stroke="#6b7280" stroke-width="1.5"/><circle cx="9" cy="9" r="2.2" stroke="#6b7280" stroke-width="1.5"/><line x1="2" y1="2" x2="17" y2="17" stroke="#6b7280" stroke-width="1.5" stroke-linecap="round"/>';
+        e.innerHTML = '<path d="M1.5 9s2.8-5.5 7.5-5.5S16.5 9 16.5 9s-2.8 5.5-7.5 5.5S1.5 9 1.5 9Z" stroke="currentColor" stroke-width="1.5"/><circle cx="9" cy="9" r="2.2" stroke="currentColor" stroke-width="1.5"/><line x1="2" y1="2" x2="17" y2="17" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>';
+        e.setAttribute('aria-label', 'Hide password');
     } else {
         i.type = 'password';
-        e.innerHTML = '<path d="M1.5 9s2.8-5.5 7.5-5.5S16.5 9 16.5 9s-2.8 5.5-7.5 5.5S1.5 9 1.5 9Z" stroke="#9ca3af" stroke-width="1.5"/><circle cx="9" cy="9" r="2.2" stroke="#9ca3af" stroke-width="1.5"/>';
+        e.innerHTML = '<path d="M1.5 9s2.8-5.5 7.5-5.5S16.5 9 16.5 9s-2.8 5.5-7.5 5.5S1.5 9 1.5 9Z" stroke="currentColor" stroke-width="1.5"/><circle cx="9" cy="9" r="2.2" stroke="currentColor" stroke-width="1.5"/>';
+        e.setAttribute('aria-label', 'Show password');
     }
 }
+
+// Email validation — only show genuine OK state (RFC-ish + valid TLD)
+document.addEventListener('DOMContentLoaded', function () {
+    var email = document.getElementById('jw-email');
+    var emailOk = document.getElementById('jw-email-ok');
+    var emailRe = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+    function checkEmail() {
+        if (!email || !emailOk) return;
+        var ok = emailRe.test(email.value.trim());
+        emailOk.style.display = ok ? 'flex' : 'none';
+        email.classList.toggle('is-ok', ok);
+    }
+    if (email) { checkEmail(); email.addEventListener('input', checkEmail); }
+
+    var cap = document.getElementById('jw-cap');
+    function checkCap() {
+        if (!cap) return;
+        var ok = cap.value.trim().length >= 4;
+        cap.classList.toggle('is-ok', ok);
+    }
+    if (cap) { checkCap(); cap.addEventListener('input', checkCap); }
+
+    // Prevent double submit + show progress
+    var btn = document.getElementById('kt_sign_in_submit');
+    var form = document.getElementById('kt_sign_in_form1');
+    if (form && btn) {
+        form.addEventListener('submit', function () {
+            var label = btn.querySelector('.indicator-label');
+            var prog = btn.querySelector('.indicator-progress');
+            var arrow = btn.querySelector('.arrow');
+            if (label) label.style.display = 'none';
+            if (arrow) arrow.style.display = 'none';
+            if (prog) prog.style.display = 'inline-flex';
+            btn.setAttribute('disabled', 'disabled');
+        });
+    }
+});
 </script>
 @endpush
