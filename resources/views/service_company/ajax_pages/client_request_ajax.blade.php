@@ -1,14 +1,5 @@
 @php
     use App\Helper\GeneralMethod;
-    use Illuminate\Support\Facades\DB;
-
-    $salaryMode = GeneralMethod::salaryMode();
-    $currencySymbole = GeneralMethod::currencySymbole();
-    $feedback_status = GeneralMethod::feedback_status();
-    $currency = GeneralMethod::currency();
-    $job_status_arr = GeneralMethod::job_status();
-    $job_status = GeneralMethod::job_status();
-    // dd(count($data));
 @endphp
 @if (count($data) > 0)
     @foreach ($data as $rowArr)

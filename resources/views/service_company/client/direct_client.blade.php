@@ -98,8 +98,12 @@
 <script>
 
 	$(document).ready(function() {
-		$('#kt_tagify_2').keyup(function() {
-            fetchCandidates();
+		var searchTimer = null;
+		$('#kt_tagify_2').on('keyup input', function() {
+			clearTimeout(searchTimer);
+			searchTimer = setTimeout(function() {
+				fetchCandidates(1);
+			}, 300);
 		});
 	});
 
