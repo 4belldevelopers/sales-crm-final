@@ -346,8 +346,14 @@ body { background: var(--bg-pg); color: var(--tx); }
     box-shadow: 0 16px 40px rgba(15, 23, 42, 0.07), 0 1px 3px rgba(15, 23, 42, 0.03);
 }
 .jw-card-form h2 {
-    font-size: 20px; font-weight: 800; color: var(--dk);
-    margin: 0 0 3px; letter-spacing: -0.5px; text-align: center;
+    font-family: 'Poppins', system-ui, -apple-system, sans-serif !important;
+    font-size: 24px !important;
+    font-weight: 800 !important;
+    color: var(--dk);
+    margin: 0 0 4px;
+    letter-spacing: -0.5px;
+    text-align: center;
+    line-height: 1.25;
 }
 .jw-card-form .sub {
     font-size: 12px; color: var(--gr); text-align: center;
@@ -601,7 +607,7 @@ body { background: var(--bg-pg); color: var(--tx); }
     .jw-right { flex: 1; }
     .jw-illustration-link { aspect-ratio: 1152 / 768; max-height: 420px; margin-bottom: 10px; }
     .jw-card-form { max-width: 480px; padding: 22px 30px 18px; }
-    .jw-card-form h2 { font-size: 20px; }
+    .jw-card-form h2 { font-size: 24px !important; }
     .jw-inp { height: 40px; font-size: 13px; }
     .jw-cap-img, .jw-cap-inp { height: 38px; }
     .jw-btn { height: 42px; font-size: 13.5px; }
@@ -777,7 +783,10 @@ if (session('status')) {
 
             {{-- Password --}}
             <div class="jw-field">
-                <label for="jw-pwd">Password</label>
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+                    <label for="jw-pwd" style="margin:0;">Password</label>
+                    <a href="javascript:void(0);" id="to-recover" class="jw-fgt">Forgot password?</a>
+                </div>
                 <div class="jw-iw">
                     <span class="il" aria-hidden="true">
                         <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><rect x="3" y="8" width="12" height="9" rx="2.2" stroke="currentColor" stroke-width="1.5"/><path d="M6 8V6a3 3 0 0 1 6 0v2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><circle cx="9" cy="12.5" r="1.3" fill="currentColor"/></svg>
@@ -788,15 +797,6 @@ if (session('status')) {
                     </span>
                 </div>
                 @if($errors->has('password'))<span class="jw-err" id="jw-pwd-help"><strong>{{ $errors->first('password') }}</strong></span>@endif
-            </div>
-
-            {{-- Remember + Forgot --}}
-            <div class="jw-mid">
-                <div class="jw-rem">
-                    <input type="checkbox" name="remember" id="jw-rem" {{ old('remember') ? 'checked' : '' }}>
-                    <label for="jw-rem">Remember me</label>
-                </div>
-                <a href="javascript:void(0);" id="to-recover" class="jw-fgt">Forgot password?</a>
             </div>
 
             {{-- Security verification (CAPTCHA) --}}
