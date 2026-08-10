@@ -39,4 +39,10 @@ return [
         'global_key' => env('EVOLUTION_KEY'),
     ],
 
+    // Cloudflare Turnstile — Sprint 2 task 2.4. Keys set via TURNSTILE_SITE_KEY / TURNSTILE_SECRET_KEY in .env
+    'turnstile' => [
+        'site_key'   => env('TURNSTILE_SITE_KEY', ''),
+        'secret_key' => env('TURNSTILE_SECRET_KEY', ''),
+    ],
+
 ];

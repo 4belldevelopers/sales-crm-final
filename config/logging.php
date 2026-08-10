@@ -149,6 +149,19 @@ return [
             ? ['driver' => 'monolog', 'handler' => NullHandler::class]
             : ['driver' => 'single', 'path' => storage_path('logs/deprecations.log'), 'level' => 'debug'],
 
+        // Phase 5.8 — structured JSON log for every login attempt.
+        // Fields: email (masked), ip, user_agent, success, captcha_ok, latency_ms, route.
+        // Set LOG_LOGIN_CHANNEL=null in .env to disable; default is daily rotation.
+        'login_attempts' => env('LOG_LOGIN_CHANNEL', 'null') === 'null'
+            ? ['driver' => 'monolog', 'handler' => NullHandler::class]
+            : [
+                'driver'    => 'daily',
+                'path'      => storage_path('logs/login_attempts.log'),
+                'level'     => 'info',
+                'days'      => 30,
+                'formatter' => Monolog\Formatter\JsonFormatter::class,
+            ],
+
     ],
 
 ];

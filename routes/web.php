@@ -125,7 +125,7 @@ Route::get('/download-resume/{id}/{path}', [HomeController::class, 'downloadResu
     ->where('path', '[A-Za-z0-9\-_]+')
     ->name('download.resume');
 
-Route::get('/captcha', [HomeController::class, 'generate'])->name('captcha.generate');
+Route::get('/captcha', [\App\Http\Controllers\Auth\CaptchaController::class, 'generate'])->name('captcha.generate');
 
 // Route::get('/', [LoginController::class, 'showLoginForm']);
 
@@ -142,7 +142,7 @@ Route::post('logout', [LoginController::class, 'logout'])->name('logout');
 
 // Register
 Route::get('register', [RegisterController::class, 'showRegistrationForm'])->name('register');
-Route::post('register', [RegisterController::class, 'register']);
+// POST /register removed — RegisterController::register() does not exist; POST would 500 (Finding 1.6)
 
 // Forgot Password
 Route::get('password/forgot', [ForgotPasswordController::class, 'showLinkRequestForm'])->name('password.request');
@@ -242,10 +242,7 @@ Route::get('/user-removed', [HomeController::class, 'userRemoved'])->name('get.u
 Route::get('/offer-expired', [HomeController::class, 'offerExpired'])->name('get.offerExpired');
 
 
-Route::get('run-queue', function () {
-    Artisan::call('queue:work emails --queue=default');
-    return 'Queue worker started!';
-});
+// /run-queue removed — unauthenticated queue-worker start (security: Finding #4)
 
 Route::get('/get-states', [HomeController::class, 'getStates'])->name('get.states');
 Route::get('/get-cities', [HomeController::class, 'getCities'])->name('get.cities');
@@ -346,17 +343,19 @@ Route::get('/offer-letter-stream/{offerId}', [HomeController::class, 'streamOffe
     Route::get('company-registration-invitation/{code?}', [SaasFrontController::class,'invitationCompanyRegisterDirectAccess'])->name('company-registration-invitation');
     Route::post('invitation-company-store/', [SaasFrontController::class,'invitationCompanyStore'])->name('invitation-company-store');
     Route::post('/', [SaasFrontController::class,'submitContact'])->name('contact');
-    Route::post('/company-register', [SaasFrontController::class,'companyRegister'])->name('company-register');
-    Route::post('/company-register-chk', [SaasFrontController::class,'companyRegisterChk'])->name('company-register-chk');
+    Route::post('/company-register', [SaasFrontController::class,'companyRegister'])->name('company-register')->middleware('throttle:register-submit');
+    Route::post('/company-register-chk', [SaasFrontController::class,'companyRegisterChk'])->name('company-register-chk')->middleware('throttle:register-form');
 
     Route::post('/valid-email-chk', [HomeController::class,'validEmailChk'])->name('valid-email-chk');
     Route::post('/import-meetings', [HomeController::class,'importMeetings'])->name('importMeetings');
 
-    Route::post('/contact-company-register-chk', [SaasFrontController::class,'contactCompanyRegisterChk'])->name('contact-company-register-chk');
-    Route::post('/domain-company-register-chk', [SaasFrontController::class,'domainCompanyRegisterChk'])->name('domain-company-register-chk');
-    Route::post('/client-domain-register-chk', [SaasFrontController::class,'domainClientRegisterChk'])->name('client-domain-register-chk');
-    Route::get('/email-verification/{code}', [SaasFrontController::class,'getEmailVerification'])->name('get-email-verification');
-    Route::get('/resend/{id}', [SaasFrontController::class,'resend'])->name('resend');
+    Route::post('/contact-company-register-chk', [SaasFrontController::class,'contactCompanyRegisterChk'])->name('contact-company-register-chk')->middleware('throttle:register-form');
+    Route::post('/domain-company-register-chk', [SaasFrontController::class,'domainCompanyRegisterChk'])->name('domain-company-register-chk')->middleware('throttle:register-form');
+    Route::post('/client-domain-register-chk', [SaasFrontController::class,'domainClientRegisterChk'])->name('client-domain-register-chk')->middleware('throttle:register-form');
+    // signed middleware added Sprint 5 task 1.5/5.10 — validates temporarySignedRoute URL.
+    // WARNING: in-flight unsigned links (sent before this deploy) will 403. Resend clears them.
+    Route::get('/email-verification/{code}', [SaasFrontController::class,'getEmailVerification'])->name('get-email-verification')->middleware('signed');
+    Route::get('/resend/{id}', [SaasFrontController::class,'resend'])->name('resend')->middleware('throttle:register-resend');
     Route::post('change-language/{code}', [SaasFrontController::class,'changeLanguage'])->name('changeLanguage');
     Route::get('page/{slug?}', [SaasFrontController::class,'page'])->name('page');
     Route::get('help/{slug?}', [SaasFrontController::class,'help'])->name('help');
