@@ -2,27 +2,19 @@
 
 namespace App\Listeners;
 
-use Illuminate\Contracts\Queue\ShouldQueue;
-use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Auth\Events\Login;
-use Illuminate\Support\Facades\DB;
 
+/**
+ * V2_login Phase 3.2 — replaced by DeviceSessionManager::recordLogin() in AttemptLoginAction.
+ *
+ * The original listener wrote users.session_id to MySQL on every Login event (BUG-01).
+ * Session tracking is now Redis-only (user:session:{id}).
+ * Class kept as a stub in case it is wired in a config/package not yet discovered.
+ */
 class LogSuccessfulLogin
 {
-    public function handle(Login $event)
+    public function handle(Login $event): void
     {
-        $user = $event->user;
-
-        // previous session ID stored?
-        if ($user->session_id) {
-            // destroy previous session
-            DB::table('sessions')
-                ->where('id', $user->session_id)
-                ->delete();
-        }
-
-        // store new session ID
-        $user->session_id = session()->getId();
-        $user->save();
+        // intentionally empty — see docblock above
     }
 }

@@ -76,6 +76,11 @@ body, html {
   display: flex;
   flex-direction: column;
   gap: 16px;
+  position: sticky;
+  top: 0;
+  align-self: flex-start;
+  max-height: 100vh;
+  overflow-y: auto;
 }
 
 .v2-logo {
@@ -1253,6 +1258,9 @@ body, html {
       <!-- ════════════════════════════════════════════════════════════════ -->
       <div class="current" data-kt-stepper-element="content">
         @csrf
+        {{-- Honeypot: invisible to humans; bots fill it. Server silently 200s on non-empty. (Sprint 2 task 2.5) --}}
+        <input type="text" name="website_url" id="website_url_hp" value=""
+               style="display:none;position:absolute;left:-9999px;" tabindex="-1" autocomplete="off" aria-hidden="true">
         <input type="hidden" name="team_size" id="team_size" value="">
         <input type="hidden" name="contact_code" id="contact_code" value="">
 
@@ -1276,7 +1284,7 @@ body, html {
             <span class="v2-il">
               <svg width="18" height="18" viewBox="0 0 20 20" fill="none"><rect x="3" y="3" width="14" height="15" rx="2" stroke="#94a3b8" stroke-width="1.6"/><path d="M7 7h2M11 7h2M7 11h2M11 11h2M9 18v-3h2v3" stroke="#94a3b8" stroke-width="1.6" stroke-linecap="round"/></svg>
             </span>
-            <input type="text" class="v2-inp" name="company_name" placeholder="Enter your company or organization name" value="" />
+            <input type="text" class="v2-inp" name="company_name" placeholder="Enter your company or organization name" value="" minlength="2" maxlength="191" />
           </div>
           <div class="v2-hint">This will be the name of your organization on Jero.works</div>
         </div>
@@ -1288,7 +1296,7 @@ body, html {
             <span class="v2-il">
               <svg width="18" height="18" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="7" r="3.5" stroke="#94a3b8" stroke-width="1.6"/><path d="M3 17c0-3.3 3.1-6 7-6s7 2.7 7 6" stroke="#94a3b8" stroke-width="1.6" stroke-linecap="round"/></svg>
             </span>
-            <input type="text" class="v2-inp" name="name" placeholder="Enter your full name" autocomplete="off" />
+            <input type="text" class="v2-inp" name="name" placeholder="Enter your full name" autocomplete="off" minlength="2" maxlength="191" />
           </div>
           <div class="v2-hint">This should be your full legal name</div>
         </div>
@@ -1312,7 +1320,7 @@ body, html {
             <span class="v2-il">
               <svg width="18" height="18" viewBox="0 0 20 20" fill="none"><rect x="4" y="9" width="12" height="9" rx="2" stroke="#94a3b8" stroke-width="1.6"/><path d="M7 9V6a3 3 0 1 1 6 0v3" stroke="#94a3b8" stroke-width="1.6" stroke-linecap="round"/></svg>
             </span>
-            <input type="password" class="v2-inp" style="padding-right:46px;" name="password" id="password" placeholder="Create a strong password" autocomplete="off" />
+            <input type="password" class="v2-inp" style="padding-right:46px;" name="password" id="password" placeholder="Create a strong password" autocomplete="off" minlength="8" />
             <span class="v2-ir" data-kt-password-meter-control="visibility">
               <i class="bi bi-eye-slash fs-4"></i>
               <i class="bi bi-eye fs-4 d-none"></i>
@@ -1334,7 +1342,7 @@ body, html {
             <span class="v2-il">
               <svg width="18" height="18" viewBox="0 0 20 20" fill="none"><rect x="4" y="9" width="12" height="9" rx="2" stroke="#94a3b8" stroke-width="1.6"/><path d="M7 9V6a3 3 0 1 1 6 0v3" stroke="#94a3b8" stroke-width="1.6" stroke-linecap="round"/></svg>
             </span>
-            <input type="password" class="v2-inp" style="padding-right:46px;" name="password_confirmation" id="password_confirmation" placeholder="Re-enter your password" autocomplete="off" />
+            <input type="password" class="v2-inp" style="padding-right:46px;" name="password_confirmation" id="password_confirmation" placeholder="Re-enter your password" autocomplete="off" minlength="8" />
             <span class="v2-ir" data-kt-password-meter-control="visibility">
               <i class="bi bi-eye-slash fs-4"></i>
               <i class="bi bi-eye fs-4 d-none"></i>
@@ -1659,7 +1667,7 @@ body, html {
               <svg width="16" height="16" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="8" stroke="#64748b" stroke-width="1.6"/><path d="M2 10h16M10 2a12 12 0 0 1 0 16M10 2a12 12 0 0 0 0 16" stroke="#64748b" stroke-width="1.6"/></svg>
               <span>https://</span>
             </div>
-            <input type="text" name="website" id="website_field" class="v2-web-input" placeholder="www.yourcompany.com" value="" />
+            <input type="url" name="website" id="website_field" class="v2-web-input" placeholder="www.yourcompany.com" value="" maxlength="255" />
           </div>
         </div>
 
@@ -1891,6 +1899,15 @@ body, html {
           </div>
         </div>
 
+        <!-- Cloudflare Turnstile — auto-mode; token populated into hidden input before AJAX submit. (Sprint 2 task 2.4) -->
+        @if(config('services.turnstile.site_key'))
+        <div class="cf-turnstile mb-3 d-flex justify-content-center"
+             data-sitekey="{{ config('services.turnstile.site_key') }}"
+             data-theme="light"
+             data-appearance="interaction-only">
+        </div>
+        @endif
+
         <!-- Action Bar for Step 4 -->
         <div class="v2-acts">
           <button type="button" class="v2-btn-secondary-blue btn-prev-step" data-kt-stepper-action="previous">
@@ -1923,6 +1940,9 @@ body, html {
   </div>
 </div>
 
+@if(config('services.turnstile.site_key'))
+<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+@endif
 <script src="{{ asset('demo/dist/assets/plugins/global/plugins.bundle.js') }}"></script>
 <script src="{{ asset('demo/dist/assets/js/scripts.bundle.js') }}"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.17/js/intlTelInput.min.js"></script>

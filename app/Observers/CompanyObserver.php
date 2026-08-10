@@ -12,9 +12,16 @@ use App\Models\CompanyPackage;
 use Carbon\Carbon;
 use App\Models\ThemeSetting;
 use App\Models\Permission;
+use App\Support\TenantLookup;
 
 class CompanyObserver
 {
+    /** Invalidate TenantLookup caches whenever a company record is saved. */
+    public function updated(Company $company): void
+    {
+        TenantLookup::invalidate($company->id);
+    }
+
     public function updating(Company $company)
     {
         $original = $company->getOriginal();

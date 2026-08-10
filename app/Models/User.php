@@ -10,18 +10,13 @@ use Spatie\Permission\Traits\HasRoles;
 class User extends Authenticatable
 {
     use Notifiable, HasRoles;
-    protected $guarded = [];
 
     public function scopeCompany($query)
     {
         return $query->where('users.company_id', auth()->user()->company_id);
     }
 
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var array
-     */
+    /** Only these 4 fields may be mass-assigned; sensitive fields (status, company_id, super_password…) require explicit property assignment. */
     protected $fillable = [
         'name', 'email', 'password', 'image',
     ];

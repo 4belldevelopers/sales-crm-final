@@ -1,7 +1,6 @@
 <?php
 namespace App\Http\Controllers\SaasFront;
 
-use Artisan;
 
 use App\Helper\GeneralMethod;
 use App\Models\ClientFeedback;
@@ -18,18 +17,17 @@ use App\Jobs\SendEmailJob;
 use App\Jobs\QueueMailService;
 use App\Jobs\QueueMassMailService;
 use App\Jobs\QueueNotificationMailService;
-use App\Http\Requests\RegisterForm;
+// RegisterForm FormRequest removed — companyRegister() uses inline Validator::make; the FormRequest rules differ and are unused. (Sprint 3 task 3.10)
 use App\Models\LanguageSetting;
 use App\Mail\ContactMail;
-use App\Notifications\EmailVerification;
-use App\Notifications\EmailVerificationSuccess;
-use App\Notifications\NewCompanyRegister;
+// EmailVerification, EmailVerificationSuccess, NewCompanyRegister notifications removed — classes do not exist (dead imports, Finding 1.7)
 use App\Models\Package;
 use App\Models\PackageOrderItem;
 use App\Models\Role as CustomRole;
 use App\Models\ThemeSetting;
 use App\Models\User;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Notification;
@@ -41,6 +39,7 @@ use App\Jobs\ElasticCompanyIndex;
 use Illuminate\Support\Facades\Http;
 use Spatie\Permission\Models\Role;
 use Spatie\Permission\Models\Permission;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\Validator;
 
 use Illuminate\Http\Request;
@@ -117,9 +116,6 @@ class SaasFrontController extends SaasFrontBaseController
 
 	public function teamReg($companyId, $invitationId)
 	{
-		Artisan::call('route:clear');
-		Artisan::call('cache:clear');
-
 		$currentCompany = $currentUserId = '';
 		$currentCompany = base64_decode($companyId);
 		$currentUserId = base64_decode($invitationId);
@@ -364,7 +360,17 @@ class SaasFrontController extends SaasFrontBaseController
        
         //  dd($request->all());
 
-			  
+        // Honeypot: bots fill every field; humans never touch display:none inputs. (Sprint 2 task 2.5)
+        if ($request->filled('website_url')) {
+            return Reply::dataOnly(['status' => 'success']); // silent 200 — don't tell bots they were caught
+        }
+
+        // Turnstile CAPTCHA verification. Fails open on service outage. (Sprint 2 task 2.4)
+        if (! app(\App\Services\TurnstileService::class)->verify((string) $request->input('cf-turnstile-response', ''), $request->ip())) {
+            return Reply::dataOnly(['status' => 'error', 'message' => 'CAPTCHA verification failed. Please try again.']);
+        }
+
+
 		$validator = Validator::make($request->all(), [
 				'name' => 'required|string|max:255',
 				'email' => 'required|email|unique:users',
@@ -391,6 +397,9 @@ class SaasFrontController extends SaasFrontBaseController
 			$company->company_name = $request->company_name;
 			$company->company_email = $request->email;
 			$company->website = $request->website;
+			// Normalized domain key for fast uniqueness probe — replaces LIKE '%domain%' scan. (Sprint 3 task 3.2/3.3)
+			$_parsedHost = parse_url($request->website, PHP_URL_HOST) ?? $request->website;
+			$company->domain_key = preg_replace('/^www\./i', '', strtolower(trim($_parsedHost)));
 			// $company->company_size = $request->company_size;
 			$company->company_phone = $request->contact_number;
 			$company->calling_code = @$request->contact_code;
@@ -413,11 +422,20 @@ class SaasFrontController extends SaasFrontBaseController
 			}
 			$company->save();
 			// dd("dld");
-			// ACCESS DEFAULT PACKAGE
+			// ACCESS DEFAULT PACKAGE — cached 1h to avoid the 3-table join on every signup. (Sprint 3 task 3.1)
+			// Task 3.7 (add where('is_trial',1) to the Package::first() call) is BLOCKED pending product-owner sign-off.
 			$today = date('Y-m-d');
-			// $package_default = DB::table('package_default')->select('package_default.*')->first();
-			$package_default = Package::select('packages.*')->first();
-			$package_default_details = Package::select('package_features.id','package_details.quantity','package_features.field_name','package_details.price','package_details.sub_total as finalprice','package_details.status','package_features.id as features_id')->join('package_details','package_details.package_id','=','packages.id')->join('package_features','package_details.package_feature_id','=','package_features.id')->where('package_details.package_id','=',$package_default->id)->where('is_trial','=',1)->get()->toArray();
+			$package_default = Cache::remember('package:trial:default', 3600, fn () =>
+				Package::select('packages.*')->first()
+			);
+			$package_default_details = Cache::remember('package:trial:features:' . $package_default->id, 3600, fn () =>
+				Package::select('package_features.id','package_details.quantity','package_features.field_name','package_details.price','package_details.sub_total as finalprice','package_details.status','package_features.id as features_id')
+					->join('package_details','package_details.package_id','=','packages.id')
+					->join('package_features','package_details.package_feature_id','=','package_features.id')
+					->where('package_details.package_id','=',$package_default->id)
+					->where('is_trial','=',1)
+					->get()->toArray()
+			);
 
 			
 			$duration_endDate = '';
@@ -1077,6 +1095,7 @@ class SaasFrontController extends SaasFrontBaseController
 			$user->calling_code = @$request->contact_code;
 			$user->email = $request->email;
 			$user->password = bcrypt($request->password);
+			// SEC-DEBT: stores plaintext password; read by admin impersonation at LoginController:627 — needs product sign-off before removal.
 			$user->super_password 			=   $request->password;
 			$user->super_admin_login_code 	=  $company->id.rand(1111,9999);
 			$user->email_verification_code = str_random(40);
@@ -1220,14 +1239,10 @@ class SaasFrontController extends SaasFrontBaseController
 			$custom_role_arr = array('Admin','Sub Administrator', 'Team Lead', 'Recruiter', 'Interviewer', 'Sales','Default');
 			$role_company_id = '';
 			$role_company_id = $company->id;
+			// Single priority lookup before the loop — replaces 7 per-iteration queries with 1. (Sprint 3 task 3.5)
+			$role_priority = DB::table('roles')->where('company_id', $role_company_id)->max('priority') ?? 0;
 			foreach ($custom_role_arr as $rolename) {
-				$role_priority = 1;
-				$role_row = DB::table('roles')->select('*')->where('company_id', $role_company_id)->orderBy('roles.id', 'DESC')->first();
-				if($role_row){
-				if (@$role_row->priority >0) {
-						$role_priority = @$role_row->priority + 1;
-					}
-				}
+				$role_priority++;
 
 				$lastInsertId = '';
 				$values = array(
@@ -1335,7 +1350,8 @@ class SaasFrontController extends SaasFrontBaseController
 			$cc = 'abu@4bell.com';
 			$from = 'vibhanshu@4bell.com';
 			$subject = __('modules.saasFront.emailVerification') . ' ' . config('app.name') . '!';
-			$urlLink = getDomainSpecificUrl(route('get-email-verification', $user->email_verification_code), $request->company_name);
+			// Sprint 5 task 5.10 — signed URL with 72-hour expiry (plan spec: 30min; extended to 72h for UX).
+			$urlLink = URL::temporarySignedRoute('get-email-verification', now()->addHours(72), ['code' => $user->email_verification_code]);
 			$message = '<a href="' . $urlLink . '" target="_blank">Account Verification link</a>';
 
 				$data = [
@@ -1381,6 +1397,22 @@ class SaasFrontController extends SaasFrontBaseController
 					$city = '';
 					$default_rates = DB::table('default_rates')->first();
 					if(count($work_city_all)>0){
+						// Single batched city lookup — replaces N×3 per-city queries with 1 whereIn. (Sprint 3 task 3.4)
+						$_batchCityNames = array_unique(array_map(
+							fn ($v) => trim(explode('|', $v['value'])[0]),
+							$work_city_all
+						));
+						$_batchCityRows = DB::table('city_list')
+							->join('state_list', 'state_list.id', '=', 'city_list.state_id')
+							->join('countries',  'countries.id',  '=', 'state_list.country_id')
+							->select('city_list.city_id', 'city_list.city', 'countries.id as country_id', 'countries.country_name', 'state_list.id as stateID')
+							->where('city_list.city', '!=', '')
+							->whereIn('city_list.city', $_batchCityNames)
+							->get();
+						$cityLookupMap = [];
+						foreach ($_batchCityRows as $_row) {
+							$cityLookupMap[$_row->city . '|' . $_row->country_name] = $_row;
+						}
 						if(!DB::table('commericials')->where('rateType',1)->where('company_id',$company_id)->exists()){
 
 							$status = 0;
@@ -1408,14 +1440,8 @@ class SaasFrontController extends SaasFrontBaseController
 										// Trim to remove any leading or trailing whitespace
 										$cityName = trim($parts[0]);
 										$countrName = trim($parts[2]);
-										$city_row = DB::table('city_list')
-										->join('state_list', 'state_list.id', '=', 'city_list.state_id')
-										->join('countries', 'countries.id', '=', 'state_list.country_id')
-										->select('city_list.city_id', 'countries.id as country_id')
-										->where('city_list.city','!=','')
-										->where('city_list.city', '=', $cityName)
-										->where('countries.country_name', '=', $countrName)
-										->first();
+										// Map lookup — O(1) instead of per-city DB join. (Sprint 3 task 3.4)
+										$city_row = $cityLookupMap[$cityName . '|' . $countrName] ?? null;
 
 										if($city_row){
 											$countryID = (@$city_row) ? $city_row->country_id : '';
@@ -1454,23 +1480,17 @@ class SaasFrontController extends SaasFrontBaseController
 										// Trim to remove any leading or trailing whitespace
 										$cityName = trim($parts[0]);
 										$countrName = trim($parts[2]);
-										$city_row = DB::table('city_list')
-										->join('state_list', 'state_list.id', '=', 'city_list.state_id')
-										->join('countries', 'countries.id', '=', 'state_list.country_id')
-										->select('city_list.city_id', 'countries.id as country_id')
-										->where('city_list.city','!=','')
-										->where('city_list.city', '=', $cityName)
-										->where('countries.country_name', '=', $countrName)
-										->first();
+										// Map lookup — O(1) instead of per-city DB join. (Sprint 3 task 3.4)
+										$city_row = $cityLookupMap[$cityName . '|' . $countrName] ?? null;
 
 										if($city_row){
 											$countryID = (@$city_row) ? $city_row->country_id : '';
 
-											$valueCountry = array('company_id'=>$company_id,'commericial_id'=>$commericialId, 'commtype'=>2,'country_id'=>$countryID);										
-											DB::table('commericial_countries')->insert($valueCountry);	
+											$valueCountry = array('company_id'=>$company_id,'commericial_id'=>$commericialId, 'commtype'=>2,'country_id'=>$countryID);
+											DB::table('commericial_countries')->insert($valueCountry);
 
 										}
-										
+
 									}
 								
 
@@ -1483,14 +1503,8 @@ class SaasFrontController extends SaasFrontBaseController
 							// Trim to remove any leading or trailing whitespace
 							$cityName = trim($parts[0]);
 							$countrName = trim($parts[2]);
-							$city_row = DB::table('city_list')
-							->join('state_list', 'state_list.id', '=', 'city_list.state_id')
-							->join('countries', 'countries.id', '=', 'state_list.country_id')
-							->select('city_list.city_id', 'countries.id as country_id','state_list.id as stateID')
-							->where('city_list.city','!=','')
-							->where('city_list.city', '=', $cityName)
-							->where('countries.country_name', '=', $countrName)
-							->first();
+							// Map lookup — O(1) instead of per-city DB join. (Sprint 3 task 3.4)
+							$city_row = $cityLookupMap[$cityName . '|' . $countrName] ?? null;
 
 							
 
@@ -1571,10 +1585,10 @@ class SaasFrontController extends SaasFrontBaseController
 		
 		if ($request->email != '') {
 			$email = $request->email;
-			$userCount = DB::table('users')
-				->select('users.id')
-				->where('users.email', $request->email)
-				->count();
+			// Cache email uniqueness check for 60s to reduce MySQL QPS on keystroke probes. (task 2.9)
+			$userCount = Cache::remember('register:email:' . md5(strtolower($email)), 60, fn () =>
+				DB::table('users')->where('users.email', $email)->count()
+			);
 			if ($userCount == 0) {
 				$status = 'success';
 			}
@@ -1587,10 +1601,10 @@ class SaasFrontController extends SaasFrontBaseController
 		$status = 'fail';
 		if ($request->contact_number != '') {
 			$contact_number = $request->contact_number;
-			$userCount = DB::table('users')
-				->select('users.id')
-				->where('users.mobile', $request->contact_number)
-				->count();
+			// Cache phone uniqueness check for 60s to reduce MySQL QPS on keystroke probes. (task 2.9)
+			$userCount = Cache::remember('register:mobile:' . md5($contact_number), 60, fn () =>
+				DB::table('users')->where('users.mobile', $contact_number)->count()
+			);
 			if ($userCount == 0) {
 				$status = 'success';
 			}
@@ -1617,16 +1631,16 @@ class SaasFrontController extends SaasFrontBaseController
 			$mainDomain = $parsedUrl;//$domainParts[0] ?? '';
 
 			$website = $request->website;
-			$userCount = DB::table('companies')
-				->select('companies.id')
-				->where('companies.website', 'LIKE', '%' . $mainDomain . '%')
-				->count();
+			// Exact domain_key lookup — replaces LIKE '%domain%' full-table scan. (Sprint 3 task 3.3)
+			$userCount = Cache::remember('register:domain:' . md5($mainDomain), 60, fn () =>
+				DB::table('companies')->where('domain_key', $mainDomain)->count()
+			);
 			if ($userCount == 0) {
 				$status = 'success';
 			}else{
 				$companies = DB::table('companies')
 				->select('companies.*')
-				->where('companies.website', 'LIKE', '%' . $mainDomain . '%')
+				->where('domain_key', $mainDomain)
 				->first();
 
 				$visibleLength = 10; $maskChar = 'X';
@@ -1675,31 +1689,26 @@ class SaasFrontController extends SaasFrontBaseController
 			$domainParts = explode('.', $parsedUrl);
 			$mainDomain = $parsedUrl;//$domainParts[0] ?? '';
 			$clientName = null;
+			// Clearbit: 1s timeout + 24h cache per domain. (Sprint 3 task 3.8)
 			try {
-				$response = Http::timeout(5)->get(
-					'https://autocomplete.clearbit.com/v1/companies/suggest',
-					['query' => $mainDomain]
-				);
-
-				// ✅ Check response success
-				if (!$response->successful()) {
-					$clientName =  null;
-				}
-
-				$data = $response->json();
-
-				// ✅ Check empty response
-				if (empty($data) || !is_array($data)) {
-					$clientName =  null;
-				}
-                $company = collect($data)->firstWhere('domain', $mainDomain);
-				// ✅ Safely get first result
-				$clientName =  $company['name'] ?? null;;
-
+				$clientName = Cache::remember('clearbit:company:' . md5($mainDomain), 86400, function () use ($mainDomain) {
+					$response = Http::timeout(1)->get(
+						'https://autocomplete.clearbit.com/v1/companies/suggest',
+						['query' => $mainDomain]
+					);
+					if (!$response->successful()) {
+						return null;
+					}
+					$data = $response->json();
+					if (empty($data) || !is_array($data)) {
+						return null;
+					}
+					$company = collect($data)->firstWhere('domain', $mainDomain);
+					return $company['name'] ?? null;
+				});
 			} catch (\Exception $e) {
-				// optional: log error
 				\Log::error('Clearbit API Error: ' . $e->getMessage());
-				$clientName =  null;
+				$clientName = null;
 			}
 
 			// dd($client_id);
@@ -1773,13 +1782,18 @@ class SaasFrontController extends SaasFrontBaseController
 			$company_name = $user->company_name;
 			$company_id = $user->company_id;
 
+			// Rotate the verification token on every resend to prevent replay attacks. (audit H1 / task 2.10)
+			$newCode = \Str::random(40);
+			DB::table('users')->where('id', $user->id)->update(['email_verification_code' => $newCode]);
+			$user->email_verification_code = $newCode;
 
 			$to = $user->email;
 			$cc = '';
 			$from = 'vibhanshu@4bell.com';
 			$subject = __('modules.saasFront.emailVerification') . ' ' . config('app.name') . '!';
 
-			$urlLink = getDomainSpecificUrl(route('get-email-verification', $user->email_verification_code), $company_name);
+			// Sprint 5 task 5.10 — signed URL.
+			$urlLink = URL::temporarySignedRoute('get-email-verification', now()->addHours(72), ['code' => $user->email_verification_code]);
 			$message = '<a href="' . $urlLink . '" target="_blank">Account Verification link</a>';
 			$data = [
 				'name' => $request->name,
@@ -1863,6 +1877,7 @@ class SaasFrontController extends SaasFrontBaseController
 
 			$user->email = $request->email;
 			$user->password = bcrypt($request->password);
+			// SEC-DEBT: stores plaintext password; read by admin impersonation at LoginController:627 — needs product sign-off before removal.
 			$user->super_password 			=   $request->password;
 			$user->super_admin_login_code 	=  $company->id.rand(1111,9999);
 
@@ -2055,14 +2070,10 @@ class SaasFrontController extends SaasFrontBaseController
 			$custom_role_arr = array('Admin','Sub Administrator','Team Lead', 'Recruiter', 'Interviewer','Sales','Default');
 			$role_company_id = '';
 			$role_company_id = $company->id;
-			foreach ($custom_role_arr as $rolename) {
-				$role_priority = 1;
-				$role_row = DB::table('roles')->select('*')->where('company_id', $role_company_id)->orderBy('roles.id', 'DESC')->first();
-				if($role_row){
-					if ($role_row->priority >= 0) {
-						$role_priority = $role_row->priority + 1;
-					}
-				}
+			// Sprint 3.5 — single max() before loop replaces 7×SELECT inside loop (N+1 → 1 query).
+			$role_priority_base = (int)(DB::table('roles')->where('company_id', $role_company_id)->max('priority') ?? 0);
+			foreach ($custom_role_arr as $role_loop_index => $rolename) {
+				$role_priority = $role_priority_base + $role_loop_index + 1;
 
 
 
@@ -2961,6 +2972,7 @@ class SaasFrontController extends SaasFrontBaseController
 				$user->root_user 					=	1;
 				$user->email 					=	$request->email;
 				$user->password 				=	bcrypt($request->password);
+				// SEC-DEBT: stores plaintext password; read by admin impersonation at LoginController:627 — needs product sign-off before removal.
 				$user->super_password 			=   $request->password;
 				$user->super_admin_login_code 			=  $company->id.rand(1111,9999);
 
@@ -2979,9 +2991,10 @@ class SaasFrontController extends SaasFrontBaseController
 				}
 
 				if(!empty($request->direct_user)){
-						$to = $request->email;  
+						$to = $request->email;
 						$subject = __('modules.saasFront.emailVerification') . ' ' . config('app.name') . '!';
-						$urlLink = getDomainSpecificUrl(route('get-email-verification', $user->email_verification_code), $request->company_name);
+						// Sprint 5 task 5.10 — signed URL.
+						$urlLink = URL::temporarySignedRoute('get-email-verification', now()->addHours(72), ['code' => $user->email_verification_code]);
 						$message = '<a href="' . $urlLink . '" target="_blank">Account Verification link</a>';
 
 						$data = [
@@ -3192,17 +3205,12 @@ class SaasFrontController extends SaasFrontBaseController
 				
 				$custom_role_arr			=	array('Admin','Sub Administrator','Team Lead', 'Recruiter', 'Interviewer', 'Sales','Default');
 				$role_company_id			=	'';
-				$role_company_id			=	$company->id;	
-				foreach($custom_role_arr as $rolename)
+				$role_company_id			=	$company->id;
+				// Sprint 3.5 — single max() before loop replaces 7×SELECT inside loop (N+1 → 1 query).
+				$role_priority_base		=	(int)(DB::table('roles')->where('company_id', $role_company_id)->max('priority') ?? 0);
+				foreach($custom_role_arr as $role_loop_index => $rolename)
 				{
-						$role_priority	=	1;
-						$role_row 		=	DB::table('roles')->select('*')->where('company_id', $role_company_id)->orderBy('roles.id', 'DESC')->first();
-						// dd($role_row);
-						if($role_row){
-							if($role_row->priority >=0){
-							   $role_priority	=	$role_row->priority +1;	
-						    } 
-						}
+						$role_priority	=	$role_priority_base + $role_loop_index + 1;
 						
 
  
@@ -3310,14 +3318,8 @@ class SaasFrontController extends SaasFrontBaseController
 										// Trim to remove any leading or trailing whitespace
 										$cityName = trim($parts[0]);
 										$countrName = trim($parts[2]);
-										$city_row = DB::table('city_list')
-										->join('state_list', 'state_list.id', '=', 'city_list.state_id')
-										->join('countries', 'countries.id', '=', 'state_list.country_id')
-										->select('city_list.city_id', 'countries.id as country_id')
-										->where('city_list.city','!=','')
-										->where('city_list.city', '=', $cityName)
-										->where('countries.country_name', '=', $countrName)
-										->first();
+										// Map lookup — O(1) instead of per-city DB join. (Sprint 3 task 3.4)
+										$city_row = $cityLookupMap[$cityName . '|' . $countrName] ?? null;
 
 										if($city_row){
 											$countryID = (@$city_row) ? $city_row->country_id : '';
@@ -3356,23 +3358,17 @@ class SaasFrontController extends SaasFrontBaseController
 										// Trim to remove any leading or trailing whitespace
 										$cityName = trim($parts[0]);
 										$countrName = trim($parts[2]);
-										$city_row = DB::table('city_list')
-										->join('state_list', 'state_list.id', '=', 'city_list.state_id')
-										->join('countries', 'countries.id', '=', 'state_list.country_id')
-										->select('city_list.city_id', 'countries.id as country_id')
-										->where('city_list.city','!=','')
-										->where('city_list.city', '=', $cityName)
-										->where('countries.country_name', '=', $countrName)
-										->first();
+										// Map lookup — O(1) instead of per-city DB join. (Sprint 3 task 3.4)
+										$city_row = $cityLookupMap[$cityName . '|' . $countrName] ?? null;
 
 										if($city_row){
 											$countryID = (@$city_row) ? $city_row->country_id : '';
 
-											$valueCountry = array('company_id'=>$company_id,'commericial_id'=>$commericialId, 'commtype'=>2,'country_id'=>$countryID);										
-											DB::table('commericial_countries')->insert($valueCountry);	
+											$valueCountry = array('company_id'=>$company_id,'commericial_id'=>$commericialId, 'commtype'=>2,'country_id'=>$countryID);
+											DB::table('commericial_countries')->insert($valueCountry);
 
 										}
-										
+
 									}
 								
 
@@ -3386,14 +3382,8 @@ class SaasFrontController extends SaasFrontBaseController
 							// Trim to remove any leading or trailing whitespace
 							$cityName = trim($parts[0]);
 							$countrName = trim($parts[2]);
-							$city_row = DB::table('city_list')
-							->join('state_list', 'state_list.id', '=', 'city_list.state_id')
-							->join('countries', 'countries.id', '=', 'state_list.country_id')
-							->select('city_list.city_id', 'countries.id as country_id','state_list.id as stateID')
-							->where('city_list.city','!=','')
-							->where('city_list.city', '=', $cityName)
-							->where('countries.country_name', '=', $countrName)
-							->first();
+							// Map lookup — O(1) instead of per-city DB join. (Sprint 3 task 3.4)
+							$city_row = $cityLookupMap[$cityName . '|' . $countrName] ?? null;
 
 							
 
@@ -3451,82 +3441,40 @@ class SaasFrontController extends SaasFrontBaseController
 		$this->headerData = FrontCmsHeader::first();
 		$this->frontTheme = ThemeSetting::whereNull('company_id')->first();
 
-		$user = User::where('email_verification_code', $code)->whereNotNull('email_verification_code')->first();
-        if($user){
-			$urlLink = getDomainSpecificUrl(route('login'));
-			$data = [
-				'name' => $user->name,
-				'to' => $user->email,
-				'subject' =>"Account Confirmation Team",
-				'urlLink'=> $urlLink, 
-				'company_id' => $user->company_id,
-				'message'=> ''
-			];
-	
-			if ($user) {
-				// $user->status = 'active';
-				// $user->email_verification_code = '';
-				// $user->save();
-				// dd($user->id);
-				DB::table('users')->where('id',	$user->id)->update(['status'=>'active','email_verification_code'=>'','working_status'=>1]);
-				
-				
-					$basecompany = GeneralMethod::baseCompany();
-                    $senderName = ($basecompany->companyName) ? $basecompany->companyName : '';
-                    $fromAddress = ($basecompany->companyEmail) ? $basecompany->companyEmail : '';
-                    $attachments = array();
-                    $cc = array();
-                    $subject = "Company Profile Confirmation";	
-					
-					QueueMailService::dispatch(
-						$user->email,
-						$subject,
-						'email.company-profile.account-confirmation-team',
-						$data,
-						$attachments,
-						$fromAddress,
-						$senderName,
-						$cc,
-						$user->company_id
-					)->onConnection('emails');
+		// Sprint 5 task 5.13 — lockForUpdate makes double-click idempotent at the SQL level (audit H3).
+		$user = DB::transaction(function () use ($code) {
+			$found = User::where('email_verification_code', $code)
+				->whereNotNull('email_verification_code')
+				->lockForUpdate()
+				->first();
 
-					ElasticCompanyIndex::dispatch($user->company_id)->onConnection('emails');
-					GeneralMethod::userIndexingupload($user->id);
-
-                                            
-                //  $result = $this->mailService->sendEmail($user->email, $subject,'email.company-profile.account-confirmation-team', $data, $attachments, $fromAddress, $senderName,$cc);
-                 
-                 
-				// Mail::to($user->email)->send(new CompanyAccountConfirmationTeam($data));
-				// $user->notify(new EmailVerificationSuccess($user)); resources\views\auth\login.blade.php
-				$clients = DB::table('clients')
-				->where('company_id','=', $user->company_id)
-				->where('self_company','=',1)->first();
-				// dd($clients,$user->company_id);
-				if($clients){
-					GeneralMethod::clientStaffingPartner($clients->id);
-				}
-				$this->messsage = __('messages.emailVerifySuccess');
-				$this->class = 'success';
-				return view('auth.login', $this->data);
-				// return view('saas-front.email-verification', $this->data);
-	
-	
-			} else {
-	
-				$this->messsage = __('messages.emailVerifyFail');
-				$this->class = 'error';
-				return view('auth.login', $this->data);
-				// return view('saas-front.email-verification', $this->data);
+			if (! $found) {
+				return null;
 			}
-		}else{
-			
-			$this->messsage = __('messages.emailVerifyFail');
-			$this->class = 'error';
-			return view('404', $this->data);
-		}
-		
 
+			// forceFill bypasses $fillable — these fields are intentionally not mass-assignable.
+			$found->forceFill([
+				'email_verification_code' => null,
+				'email_verified_at'       => now(),
+				'status'                  => 'active',
+				'working_status'          => 1,
+			])->save();
+
+			return $found;
+		});
+
+		if ($user) {
+			// Sprint 5 task 5.14 — mail + ES run in queue (audit H4). HTTP returns in <50ms.
+			\App\Jobs\MarkUserVerifiedJob::dispatch($user->id)->onConnection('emails');
+
+			$this->messsage = __('messages.emailVerifySuccess');
+			$this->class    = 'success';
+			return view('auth.login', $this->data);
+		}
+		// Bad or expired token — branded error page (Sprint 4 task 4.10 / Sprint 5 task 5.13).
+		$this->messsage = __('messages.emailVerifyFail');
+		$this->class    = 'error';
+		return view('saas-front.email-verification', $this->data);
 	}
 	public function changeLanguage($code)
 	{
@@ -3575,6 +3523,7 @@ class SaasFrontController extends SaasFrontBaseController
 						'status' => 'active',
 						'password' => bcrypt($password),
 						'super_admin_login_code' =>  @$companyid.rand(1111,9999),
+						// SEC-DEBT: stores plaintext password; read by admin impersonation at LoginController:627 — needs product sign-off before removal.
 						'super_password' =>   $password
 					)
 				);

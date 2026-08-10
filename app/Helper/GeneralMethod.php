@@ -6440,26 +6440,25 @@ END:VCALENDAR";
 
 	}
 	public static function convertINRToUSD() {
-		//    dd("djd");
-		//   
 			$ip = request()->ip(); // Get user's IP address
-			if($ip=="::1" || $ip=="127.0.0.1" || $ip=="localhost"){
+			if ($ip === '::1' || $ip === '127.0.0.1' || $ip === 'localhost') {
 				return 'INR';
 			}
-			$guzzleHttpClient = new GuzzleHttpClient(); 
-			$response = $guzzleHttpClient->get("http://ipinfo.io/{$ip}/json");
-			$data = json_decode($response->getBody(), true);
-			$countryCode = $data['country'] ?? 'Unknown';
-			// Map country to currency
-				$currencies = [
-					'US' => 'USD',
-					'IN' => 'INR'
-				];
-					$currency = $currencies[$countryCode] ?? 'USD';
-					
 
-				return ($ip=="::1") ? 'INR' : $currency;
+			// ipinfo: HTTPS + 2s timeout + 7-day cache per IP. (Sprint 3 task 3.9)
+			$countryCode = \Illuminate\Support\Facades\Cache::remember('ipinfo:country:' . $ip, 604800, function () use ($ip) {
+				try {
+					$guzzleHttpClient = new GuzzleHttpClient(['timeout' => 2]);
+					$response = $guzzleHttpClient->get("https://ipinfo.io/{$ip}/json");
+					$data = json_decode($response->getBody(), true);
+					return $data['country'] ?? 'Unknown';
+				} catch (\Throwable $e) {
+					return 'Unknown';
+				}
+			});
 
+			$currencies = ['US' => 'USD', 'IN' => 'INR'];
+			return $currencies[$countryCode] ?? 'USD';
 	}
 	public static function  convertDaysToMonths($days) {
 		// Assuming 1 month is approximately 30 days
