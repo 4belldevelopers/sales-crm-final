@@ -346,8 +346,14 @@ body { background: var(--bg-pg); color: var(--tx); }
     box-shadow: 0 16px 40px rgba(15, 23, 42, 0.07), 0 1px 3px rgba(15, 23, 42, 0.03);
 }
 .jw-card-form h2 {
-    font-size: 20px; font-weight: 800; color: var(--dk);
-    margin: 0 0 3px; letter-spacing: -0.5px; text-align: center;
+    font-family: 'Poppins', system-ui, -apple-system, sans-serif !important;
+    font-size: 24px !important;
+    font-weight: 800 !important;
+    color: var(--dk);
+    margin: 0 0 4px;
+    letter-spacing: -0.5px;
+    text-align: center;
+    line-height: 1.25;
 }
 .jw-card-form .sub {
     font-size: 12px; color: var(--gr); text-align: center;
@@ -598,7 +604,7 @@ body { background: var(--bg-pg); color: var(--tx); }
     .jw-right { flex: 1; }
     .jw-illustration-link { aspect-ratio: 1152 / 768; max-height: 420px; margin-bottom: 10px; }
     .jw-card-form { max-width: 480px; padding: 22px 30px 18px; }
-    .jw-card-form h2 { font-size: 20px; }
+    .jw-card-form h2 { font-size: 24px !important; }
     .jw-inp { height: 40px; font-size: 13px; }
     .jw-cap-img, .jw-cap-inp { height: 38px; }
     .jw-btn { height: 42px; font-size: 13.5px; }
