@@ -76,6 +76,11 @@ body, html {
   display: flex;
   flex-direction: column;
   gap: 16px;
+  position: sticky;
+  top: 0;
+  align-self: flex-start;
+  max-height: 100vh;
+  overflow-y: auto;
 }
 
 .v2-logo {
@@ -1253,6 +1258,9 @@ body, html {
       <!-- ════════════════════════════════════════════════════════════════ -->
       <div class="current" data-kt-stepper-element="content">
         @csrf
+        {{-- Honeypot: invisible to humans; bots fill it. Server silently 200s on non-empty. (Sprint 2 task 2.5) --}}
+        <input type="text" name="website_url" id="website_url_hp" value=""
+               style="display:none;position:absolute;left:-9999px;" tabindex="-1" autocomplete="off" aria-hidden="true">
         <input type="hidden" name="team_size" id="team_size" value="">
         <input type="hidden" name="contact_code" id="contact_code" value="">
 
@@ -1891,6 +1899,15 @@ body, html {
           </div>
         </div>
 
+        <!-- Cloudflare Turnstile — auto-mode; token populated into hidden input before AJAX submit. (Sprint 2 task 2.4) -->
+        @if(config('services.turnstile.site_key'))
+        <div class="cf-turnstile mb-3 d-flex justify-content-center"
+             data-sitekey="{{ config('services.turnstile.site_key') }}"
+             data-theme="light"
+             data-appearance="interaction-only">
+        </div>
+        @endif
+
         <!-- Action Bar for Step 4 -->
         <div class="v2-acts">
           <button type="button" class="v2-btn-secondary-blue btn-prev-step" data-kt-stepper-action="previous">
@@ -1923,6 +1940,9 @@ body, html {
   </div>
 </div>
 
+@if(config('services.turnstile.site_key'))
+<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+@endif
 <script src="{{ asset('demo/dist/assets/plugins/global/plugins.bundle.js') }}"></script>
 <script src="{{ asset('demo/dist/assets/js/scripts.bundle.js') }}"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.17/js/intlTelInput.min.js"></script>

@@ -112,7 +112,7 @@ html, body { margin: 0 !important; padding: 0 !important; }
     box-shadow: 0 2px 24px rgba(0,0,0,.06);
     margin-bottom: 14px;
 }
-.v2-card-title { font-size: 24px; font-weight: 800; color: var(--dk); margin: 0 0 4px; letter-spacing: -0.3px; }
+.v2-card-title { font-size: 16px; font-weight: 800; color: var(--dk); margin: 0 0 4px; letter-spacing: -0.3px; }
 .v2-card-sub { font-size: 13px; color: var(--gr); margin: 0 0 22px; }
 
 /* Alerts */
@@ -233,9 +233,6 @@ html, body { margin: 0 !important; padding: 0 !important; }
 .v2-foot a { font-size: 12.5px; color: var(--gr); text-decoration: none; }
 .v2-foot a:hover { color: var(--p); }
 
-<<<<<<< HEAD
-/* Responsive */
-=======
 /* ── Responsive ────────────────────────────────────────── */
 
 /* 1440px – larger 15.6" at lower resolution */
@@ -252,9 +249,9 @@ html, body { margin: 0 !important; padding: 0 !important; }
 @media (max-width: 1366px) {
     .v2-left        { width: 400px; padding: 22px 26px 0; }
     .v2-logo        { margin-bottom: 18px; }
-    .v2-logo-text   { font-size: 22px; }
+    .v2-logo-text   { font-size: 16px; }
     .v2-hero        { margin-bottom: 14px; }
-    .v2-hero h1     { font-size: 22px; letter-spacing: -.4px; line-height: 1.15; }
+    .v2-hero h1     { font-size: 16px; letter-spacing: -.4px; line-height: 1.15; }
     .v2-hero p      { font-size: 12.5px; line-height: 1.5; }
     .v2-feats       { gap: 9px; }
     .v2-feat        { gap: 12px; }
@@ -266,7 +263,7 @@ html, body { margin: 0 !important; padding: 0 !important; }
     .v2-help        { padding: 12px 30px; }
     .v2-foot        { padding: 8px 30px; }
     .v2-card        { padding: 22px 28px; max-width: 540px; }
-    .v2-card-title  { font-size: 20px; }
+    .v2-card-title  { font-size: 16px; }
     .v2-card-sub    { margin-bottom: 14px; }
     .v2-city svg    { max-height: 180px; }
 }
@@ -276,14 +273,14 @@ html, body { margin: 0 !important; padding: 0 !important; }
     .v2-left        { width: 340px; padding: 18px 20px 0; }
     .v2-logo        { margin-bottom: 14px; }
     .v2-hero        { margin-bottom: 12px; }
-    .v2-hero h1     { font-size: 20px; }
+    .v2-hero h1     { font-size: 16px; }
     .v2-feat-ico    { width: 34px; height: 34px; }
     .v2-feat        { gap: 11px; }
     .v2-body        { padding: 6px 22px 10px; }
     .v2-help        { padding: 10px 22px; }
     .v2-foot        { padding: 8px 22px; }
     .v2-card        { padding: 20px 24px; max-width: 500px; }
-    .v2-card-title  { font-size: 19px; }
+    .v2-card-title  { font-size: 16px; }
     .v2-city svg    { max-height: 150px; }
 }
 
@@ -295,7 +292,7 @@ html, body { margin: 0 !important; padding: 0 !important; }
     .v2-help        { padding-top: 8px; padding-bottom: 8px; }
     .v2-foot        { padding-top: 6px; padding-bottom: 6px; }
     .v2-card        { padding-top: 16px; padding-bottom: 16px; margin-bottom: 8px; }
-    .v2-card-title  { font-size: 19px; }
+    .v2-card-title  { font-size: 16px; }
     .v2-card-sub    { margin-bottom: 10px; }
     .v2-field       { margin-bottom: 9px; }
     .v2-field > label { margin-bottom: 4px; }
@@ -335,7 +332,6 @@ html, body { margin: 0 !important; padding: 0 !important; }
 }
 
 /* 960px and below – tablets: stack left over right */
->>>>>>> e15e4ebf0d49eb0669c949cc48c7e236b5a6a290
 @media (max-width: 960px) {
     .v2-left  { width: 100%; padding-bottom: 220px; }
     .v2-page  { flex-direction: column; }
@@ -570,7 +566,7 @@ if (session('status')) {
             <p class="v2-card-sub">Login to continue to your Jero workspace</p>
 
             @if(@$class && @$messsage)
-                <div class="v2-alert v2-alert-err"><strong>{{ @$class }}</strong> {!! @$messsage !!}</div>
+                <div class="v2-alert v2-alert-err"><strong>{{ @$class }}</strong> {{ @$messsage }}</div>
             @endif
             @if(session('accountnotverify'))
                 <div class="v2-alert v2-alert-err">{{ session('accountnotverify') }}</div>
@@ -586,7 +582,7 @@ if (session('status')) {
                     <span class="il">
                         <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><rect x="1" y="4" width="16" height="11" rx="2.2" stroke="#9ca3af" stroke-width="1.5"/><path d="M1 7l8 5.5L17 7" stroke="#9ca3af" stroke-width="1.5" stroke-linecap="round"/></svg>
                     </span>
-                    <input class="v2-inp" type="text" name="email" placeholder="Enter your email" autocomplete="off" value="{{ old('email') }}"/>
+                    <input class="v2-inp" type="text" name="email" placeholder="Enter your email" autocomplete="username" value="{{ old('email') }}"/>
                     <input type="hidden" name="url" value="{{ @$url }}"/>
                 </div>
                 @if($errors->has('email'))<span class="v2-err">{{ $errors->first('email') }}</span>@endif
@@ -599,7 +595,7 @@ if (session('status')) {
                     <span class="il">
                         <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><rect x="3" y="8" width="12" height="9" rx="2.2" stroke="#9ca3af" stroke-width="1.5"/><path d="M6 8V6a3 3 0 0 1 6 0v2" stroke="#9ca3af" stroke-width="1.5" stroke-linecap="round"/><circle cx="9" cy="12.5" r="1.3" fill="#9ca3af"/></svg>
                     </span>
-                    <input class="v2-inp" type="password" name="password" id="v2pwd" placeholder="Enter your password" autocomplete="off"/>
+                    <input class="v2-inp" type="password" name="password" id="v2pwd" placeholder="Enter your password" autocomplete="current-password"/>
                     <span class="ir" onclick="v2Eye()" style="user-select:none">
                         <svg id="v2eye" width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M1.5 9s2.8-5.5 7.5-5.5S16.5 9 16.5 9s-2.8 5.5-7.5 5.5S1.5 9 1.5 9Z" stroke="#9ca3af" stroke-width="1.5"/><circle cx="9" cy="9" r="2.2" stroke="#9ca3af" stroke-width="1.5"/></svg>
                     </span>
@@ -670,7 +666,7 @@ if (session('status')) {
                     <input type="email" name="email" id="email"
                            class="v2-inp {{ $errors->has('email') ? 'is-invalid' : '' }}"
                            placeholder="Enter your email" value="{{ old('email') }}"
-                           required autocomplete="off">
+                           required autocomplete="email">
                 </div>
                 @if($errors->has('email'))<span class="v2-err"><strong>{{ $errors->first('email') }}</strong></span>@endif
             </div>
@@ -712,6 +708,7 @@ if (session('status')) {
 </div>{{-- /v2-shell --}}
 @endsection
 
+@push('scripts')
 <script>
 function refreshCaptcha() {
     document.getElementById('captchaImg').src = "{{ route('captcha.generate') }}?t=" + Date.now();
@@ -727,3 +724,4 @@ function v2Eye() {
     }
 }
 </script>
+@endpush

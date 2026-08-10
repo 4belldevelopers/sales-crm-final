@@ -68,6 +68,20 @@ class Kernel extends ConsoleKernel
                 Artisan::call('cache:clear');
             }
         })->daily()->withoutOverlapping()->runInBackground();
+
+        // V2_login Phase 6.5 — was not registered; timed-delete and licence-expiry were silently broken.
+        // Runs off-peak IST; withoutOverlapping(50) prevents double-fire on slow runs.
+        $schedule->command('delete-account')
+            ->dailyAt('02:00')
+            ->timezone('Asia/Kolkata')
+            ->withoutOverlapping(50)
+            ->runInBackground();
+
+        $schedule->command('licence-expire')
+            ->dailyAt('03:00')
+            ->timezone('Asia/Kolkata')
+            ->withoutOverlapping(50)
+            ->runInBackground();
     }
 
     protected function commands()

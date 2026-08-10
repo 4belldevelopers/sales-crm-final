@@ -58,5 +58,6 @@
 			$('#save-form').click(function (e) {
 			});
 		</script>
+		@stack('scripts')
 	</body>
 </html>

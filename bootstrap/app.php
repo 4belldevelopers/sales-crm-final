@@ -15,6 +15,7 @@ use App\Http\Middleware\SuperAdmin;
 use App\Http\Middleware\Package;
 use App\Http\Middleware\EnsureOneDeviceLogin;
 use App\Http\Middleware\CustomPackage;
+use App\Http\Middleware\SecurityHeaders;
 
 use Illuminate\Session\TokenMismatchException;
 
@@ -26,6 +27,16 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
+            // Phase 5.5: exempt Stripe + Razorpay webhook receivers from CSRF.
+            // These endpoints are authenticated via provider signatures, not session tokens.
+            $middleware->validateCsrfTokens(except: [
+                '/save-invoices',
+                '/save-razorpay-invoices',
+            ]);
+
+            // Phase 5.7: security headers on every response.
+            $middleware->append(SecurityHeaders::class);
+
             $middleware->alias([
                 'auth'             => Authenticate::class,
                 'auth.basic'       => AuthenticateWithBasicAuth::class,
