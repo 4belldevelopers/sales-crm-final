@@ -178,7 +178,7 @@
                                  <!--end::Label-->
                                  <!--begin::Input wrapper-->
                                  <div class="position-relative mb-3">
-                                    <input class="form-control form-control-solid" type="password" placeholder="" name="confirm_password" id="confirm_password" autocomplete="off" />
+                                    <input class="form-control form-control-solid" type="password" placeholder="" name="confirm_password" id="confirm_password" autocomplete="off" minlength="8" />
                                     <span class="btn btn-sm btn-icon position-absolute translate-middle top-50 end-0 me-n2" data-kt-password-meter-control="visibility">
                                     <i class="bi bi-eye-slash fs-2"></i>
                                     <i class="bi bi-eye fs-2 d-none"></i>
@@ -203,7 +203,7 @@
                            </div>
                            <div class="mb-10 fv-row">
                               <label class="form-label mb-3 required">Company Name</label>
-                              <input type="text" class="form-control form-control-lg form-control-solid" name="company_name" placeholder="Enter company name" value="" />
+                              <input type="text" class="form-control form-control-lg form-control-solid" name="company_name" placeholder="Enter company name" value="" maxlength="191" minlength="2" />
                            </div>
                            <div class="mb-10 fv-row">
                               <label class="d-flex align-items-center form-label mb-3 required">Specify Team Size
@@ -325,7 +325,7 @@
                            </div>
                            <div class="fv-row mb-10">
                               <label class="form-label required">Website</label>
-                              <input name="website" type="website" class="form-control form-control-lg form-control-solid" placeholder="Enter website URL" value="" />
+                              <input name="website" type="url" class="form-control form-control-lg form-control-solid" placeholder="https://example.com" value="" maxlength="255" />
                            </div>
                            <div class="fv-row mb-0">
                               <label class="fs-6 fw-bold form-label required">Contact Number</label>
