@@ -44,13 +44,27 @@
 html, body { margin: 0 !important; padding: 0 !important; height: 100%; overflow: hidden; }
 body { background: var(--bg-pg); font-family: 'Poppins', system-ui, -apple-system, sans-serif; color: var(--tx); }
 
-/* ── Shell ─────────────────────────────────────────────────── */
+/* ── Unified Single-Panel Canvas ── */
 .jw-shell {
     height: 100vh;
     width: 100%;
     display: flex;
     overflow: hidden;
-    background: var(--bg-pg);
+    position: relative;
+    background:
+        radial-gradient(circle at 10% 15%, rgba(36, 99, 255, 0.08) 0%, transparent 45%),
+        radial-gradient(circle at 90% 85%, rgba(255, 106, 0, 0.08) 0%, transparent 45%),
+        radial-gradient(circle at 50% 50%, rgba(139, 92, 246, 0.04) 0%, transparent 50%),
+        #F8FAFC;
+}
+.jw-shell::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image: radial-gradient(rgba(15, 23, 42, 0.05) 1.2px, transparent 1.2px);
+    background-size: 24px 24px;
+    pointer-events: none;
+    z-index: 0;
 }
 .jw-page {
     display: flex;
@@ -58,13 +72,15 @@ body { background: var(--bg-pg); font-family: 'Poppins', system-ui, -apple-syste
     width: 100%;
     height: 100vh;
     overflow: hidden;
+    position: relative;
+    z-index: 1;
 }
 
-/* ═══════════════ LEFT PANEL ═══════════════ */
+/* ═══════════════ PANELS (Transparent Overlay) ═══════════════ */
 .jw-left {
     flex: 1;
     min-width: 0;
-    background: var(--bg-pn);
+    background: transparent;
     display: flex;
     flex-direction: column;
     position: relative;
@@ -73,17 +89,7 @@ body { background: var(--bg-pg); font-family: 'Poppins', system-ui, -apple-syste
     min-height: 0;
     height: 100vh;
 }
-
-/* Subtle decorative dotted wash */
-.jw-left::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background-image: radial-gradient(rgba(36,99,255,0.06) 1px, transparent 1px);
-    background-size: 22px 22px;
-    opacity: 0.5;
-    pointer-events: none;
-}
+.jw-left::before { display: none; }
 
 /* Brand mark */
 .jw-brand {
@@ -229,7 +235,7 @@ body { background: var(--bg-pg); font-family: 'Poppins', system-ui, -apple-syste
 /* ═══════════════ RIGHT PANEL ═══════════════ */
 .jw-right {
     flex: 1;
-    background: var(--bg-pg);
+    background: transparent;
     display: flex;
     flex-direction: column;
     min-width: 0;
@@ -274,11 +280,12 @@ body { background: var(--bg-pg); font-family: 'Poppins', system-ui, -apple-syste
 .jw-card-form {
     width: 100%;
     max-width: 520px;
-    background: var(--bg-card);
-    border: 1px solid var(--bd-l);
+    background: rgba(255, 255, 255, 0.94);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(226, 232, 240, 0.9);
     border-radius: var(--r-xl);
     padding: 20px 32px 16px;
-    box-shadow: var(--shadow-md);
+    box-shadow: 0 16px 40px rgba(15, 23, 42, 0.07), 0 1px 3px rgba(15, 23, 42, 0.03);
 }
 .jw-card-form h2 {
     font-size: 20px; font-weight: 800; color: var(--dk);
