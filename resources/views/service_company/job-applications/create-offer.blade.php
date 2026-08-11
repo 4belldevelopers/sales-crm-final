@@ -2813,13 +2813,6 @@
                                         </div>
                                     </div>
                                     <div class="co-appr-info-card">
-                                        <span class="co-appr-info-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></span>
-                                        <div>
-                                            <div class="co-appr-info-label">Role</div>
-                                            <div class="co-appr-info-value">{{ @$designation }}</div>
-                                        </div>
-                                    </div>
-                                    <div class="co-appr-info-card">
                                         <span class="co-appr-info-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></span>
                                         <div>
                                             <div class="co-appr-info-label">CTC (Annual)</div>
@@ -2838,13 +2831,6 @@
                                         <div>
                                             <div class="co-appr-info-label">Requested By</div>
                                             <div class="co-appr-info-value">{{ auth()->user()->name ?? '—' }}</div>
-                                        </div>
-                                    </div>
-                                    <div class="co-appr-info-card">
-                                        <span class="co-appr-info-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></span>
-                                        <div>
-                                            <div class="co-appr-info-label">Employment Type</div>
-                                            <div class="co-appr-info-value">{{ $co_emp_type_label }}</div>
                                         </div>
                                     </div>
                                 </div>
@@ -2981,8 +2967,7 @@
                                             <div class="co-appr-side-title">Details &amp; Insights</div>
                                             <div class="co-appr-detail-row"><span class="co-appr-detail-label">Offer ID</span><span class="co-appr-detail-value">{{ $offer_id }}</span></div>
                                             <div class="co-appr-detail-row"><span class="co-appr-detail-label">Template</span><span class="co-appr-detail-value">Company Offer Letter Template</span></div>
-                                            <div class="co-appr-detail-row"><span class="co-appr-detail-label">Employment Type</span><span class="co-appr-detail-value">{{ $co_emp_type_label }}</span></div>
-                                            <div class="co-appr-detail-row"><span class="co-appr-detail-label">Designation</span><span class="co-appr-detail-value">{{ @$designation ?: '—' }}</span></div>
+                                            <div class="co-appr-detail-row"><span class="co-appr-detail-label">Designation</span><span class="co-appr-detail-value" id="co-appr-designation-display">{{ @$designation ?: '—' }}</span></div>
                                             @if(!empty(@$application->phone))
                                             <div class="co-appr-detail-row"><span class="co-appr-detail-label">Candidate Mobile</span><span class="co-appr-detail-value">{{ $application->phone }}</span></div>
                                             @endif
@@ -6065,5 +6050,11 @@
                     $(document).on('click', '.addRowBtn, .addRowBtnbonus, .remove_points', function () { setTimeout(refreshPreviewPanel, 30); });
                     $(document).ready(function () { setTimeout(refreshPreviewPanel, 200); });
                 })();
+
+                // Sync Step 1 "Offered Designation" → Step 4 "Designation" display in real time.
+                $(document).on('input', '#current_designation', function () {
+                    var val = $(this).val().trim();
+                    $('#co-appr-designation-display').text(val || '—');
+                });
             </script>
         </div>
