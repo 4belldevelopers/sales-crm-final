@@ -701,7 +701,8 @@ CREATE TABLE `client_location` (
   `state` int DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`)
+  PRIMARY KEY (`id`),
+  KEY `idx_cl_client_id` (`client_id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=2532 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ============================================================
@@ -3634,7 +3635,8 @@ CREATE TABLE `recommendation_relation` (
   `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
   KEY `idx_recommendation_relation` (`to_company_id`,`job_id`),
-  KEY `idx_recommendation` (`job_id`,`to_user_id`)
+  KEY `idx_recommendation` (`job_id`,`to_user_id`),
+  KEY `idx_rr_from_to_final` (`from_company_id`,`to_company_id`,`final_status`)
 ) ENGINE=InnoDB AUTO_INCREMENT=49 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ============================================================
@@ -3818,7 +3820,8 @@ CREATE TABLE `staffing_company_invitation` (
   `to_status` int DEFAULT NULL COMMENT 'Registration status 0:For newly invitation, 1:Already Register  ',
   `job_id` int DEFAULT NULL,
   `to_invitation_status` int NOT NULL DEFAULT '0' COMMENT '0 : Pending , 1	: accept ,  -1 : ignore',
-  PRIMARY KEY (`id`)
+  PRIMARY KEY (`id`),
+  KEY `idx_sci_from_inv_status` (`from_company_id`,`to_invitation_status`)
 ) ENGINE=InnoDB AUTO_INCREMENT=911 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ============================================================
@@ -3840,7 +3843,8 @@ CREATE TABLE `staffing_company_relation` (
   `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
-  KEY `idx_staffing_company_relation` (`to_company_id`,`from_company_id`)
+  KEY `idx_staffing_company_relation` (`to_company_id`,`from_company_id`),
+  KEY `idx_scr_from_final_created` (`from_company_id`,`final_status`,`created_at`)
 ) ENGINE=InnoDB AUTO_INCREMENT=880 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ============================================================
