@@ -153,31 +153,43 @@ body { background: var(--bg-pg); color: var(--tx); }
     overflow: hidden;
 }
 
-/* ── Combined 3-in-1 Audience Illustration ── */
+/* ── Combined 3-in-1 Audience Illustration (Height +11.8%, Aspect Ratio Preserved) ── */
 .jw-illustration-link {
-    display: block;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     width: 100%;
     flex: 1;
     min-height: 0;
-    margin: 4px 0 8px;
+    margin: 4px 0 6px;
     position: relative;
     border-radius: var(--r-lg);
     overflow: hidden;
     transition: transform .2s ease;
     line-height: 0;
     background: transparent;
-    max-height: 390px;
+    max-height: 425px;
+    text-decoration: none;
 }
 .jw-illustration-link:hover,
 .jw-illustration-link:focus-visible {
     transform: translateY(-3px);
     outline: none;
 }
-.jw-illustration-img {
-    display: block;
+.jw-illustration-link picture {
+    display: flex;
+    align-items: center;
+    justify-content: center;
     width: 100%;
     height: 100%;
-    margin: 0;
+    max-height: 425px;
+}
+.jw-illustration-img {
+    display: block;
+    height: 100%;
+    max-height: 425px;
+    width: auto;
+    max-width: 100%;
     object-fit: contain;
     object-position: center center;
     user-select: none;
@@ -607,11 +619,11 @@ body { background: var(--bg-pg); color: var(--tx); }
 /* 1366 — most 15.6" laptops */
 @media (max-width: 1366px) {
     .jw-hero h1 { font-size: 36px !important; letter-spacing: -0.6px; }
-    .jw-hero { margin: 16px 0 8px; }
+    .jw-hero { margin: 12px 0 6px; }
     .jw-hero p { font-size: 12px; -webkit-line-clamp: 2; }
     .jw-left { flex: 1; padding: 14px 22px 10px; }
     .jw-right { flex: 1; }
-    .jw-illustration-link { aspect-ratio: 1152 / 768; max-height: 420px; margin-bottom: 10px; }
+    .jw-illustration-link { max-height: 410px; margin: 4px 0 6px; }
     .jw-card-form { max-width: 480px; padding: 22px 30px 18px; }
     .jw-card-form h2 { font-size: 24px !important; }
     .jw-inp { height: 40px; font-size: 13px; }
@@ -629,7 +641,7 @@ body { background: var(--bg-pg); color: var(--tx); }
     .jw-page { flex-direction: column; height: auto; }
     .jw-left, .jw-right { height: auto; }
     .jw-left { padding: 22px 22px 18px; }
-    .jw-illustration-link { aspect-ratio: 1152 / 768; max-height: none; }
+    .jw-illustration-link { max-height: none; }
     .jw-body { padding: 22px 24px; overflow-y: auto; }
     .jw-card-form { max-width: 100%; }
 }
@@ -686,7 +698,7 @@ if (session('status')) {
         <p>Connect companies, agencies and talent on one intelligent recruitment platform built for speed and trust.</p>
     </div>
 
-    {{-- Combined 3-in-1 Audience Illustration (All 3-in-1) --}}
+    {{-- Combined 3-in-1 Audience Illustration --}}
     <a href="{{ route('register') }}" class="jw-illustration-link" aria-label="Find Trusted Agencies, Search Work Opportunities, and Hire Immediate Joiners">
         <picture>
             <source srcset="{{ asset('img/cards/all3-audiences.webp') }}" type="image/webp">
