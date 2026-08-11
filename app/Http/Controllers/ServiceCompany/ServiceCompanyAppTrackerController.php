@@ -11179,11 +11179,26 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 		$sal_mode = request('sal_mode');
 		$min_salary_currency = request('min_salary_currency');
 		$app_int_outsource = request('app_int_outsource');
-		
+
+		// INTENT: Pre-fetch star-rated skill experiences for all returned candidates in 1 bulk query to eliminate N+1 queries during Blade rendering.
+		// TENANCY NOTE: candidate_id is scoped to candidates matching ES search results (already filtered by company_id constraints).
+		$candidateIds = array_filter(array_column($data, 'id'));
+		$skillExperiencesMap = [];
+		if (!empty($candidateIds)) {
+			$skills = DB::table('bench_candidate_skill_experience')
+				->whereIn('candidate_id', $candidateIds)
+				->get();
+			foreach ($skills as $sk) {
+				$skillExperiencesMap[$sk->candidate_id][] = $sk;
+			}
+		}
+
 		$responseData = [
-			'html' => view('service_company.ajax_pages.find_talent_ajax', compact('data', 'userPermissions', 'app_int_status', 'app_int_activity', 'app_int_notice', 'sal_mode', 'min_salary_currency', 'app_int_outsource','jobid'))->render(),
+			'html' => view('service_company.ajax_pages.find_talent_ajax', compact('data', 'userPermissions', 'app_int_status', 'app_int_activity', 'app_int_notice', 'sal_mode', 'min_salary_currency', 'app_int_outsource','jobid', 'skillExperiencesMap'))->render(),
 			'total'=>$total,
 			'pagination' => view('service_company.ajax_pages.pagination', compact('pagination'))->render(),
+			'candidates' => $data,
+			'skillExperiencesMap' => $skillExperiencesMap,
 		];
 
 		
