@@ -137,6 +137,7 @@ Route::group(['middleware' => 'auth'], function () {
 						Route::get('jobs/market-jobs/{id?}', [ServiceCompanyJobsController::class,'marketJobs'])->name('jobs.marketJobs');
 						Route::get('market-jobs-list/{id?}', [ServiceCompanyJobsController::class,'marketJobs'])->name('jobs.marketJobList');
 						Route::get('market-jobs-list-ajax', [ServiceCompanyJobsController::class,'marketJobList_ajax'])->name('jobs.marketJobList_ajax'); 
+						Route::get('market-jobs-list-v2-ajax', [ServiceCompanyJobsController::class,'marketJobListV2_ajax'])->name('jobs.marketJobListV2_ajax');
 						Route::get('market/requestaadded', [ServiceCompanyJobsController::class,'marketrequestaadded'])->name('jobs.marketrequestaadded'); 
 						Route::get('auction/send_job_request/{id?}', [ServiceCompanyJobsController::class,'auction_send_job_request'])->name('jobs.auction_send_job_request');
 						Route::get('jobs/job_request/{id?}', [ServiceCompanyJobsController::class,'job_request'])->name('jobs.job_request'); 

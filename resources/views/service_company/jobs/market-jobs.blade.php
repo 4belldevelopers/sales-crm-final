@@ -1049,9 +1049,7 @@
         function updateInputJobSearch() {
             const tags = tagify.value.map(tag => tag.value).join(',');
             inputJobSearch.value = tags;
-            autoclickstar();
             syncToTagify2();
-            
         }
 
         function updateTagifyUsers() {
@@ -1081,15 +1079,7 @@
         });
 
 
-        function autoclickstar() {
-            setTimeout(() => {
-                var starElement = document.querySelector('.star');
-                starElement.click();
-                setTimeout(() => {
-                    starElement.click();
-                }, 200);
-            }, 500);
-        }
+
 
         function debounceskill(func, delay) {
             let timeoutskill;
@@ -1564,11 +1554,85 @@ $(document).on('click', '.client-show-detail', function (){
         });
 
 
+        function renderMarketJobCard(row) {
+            let strVal = (row.title_short || 'J').charAt(0).toLowerCase();
+            let bgTextDecore = 'fs-3 bg-light-primary text-primary';
+            let code = strVal.charCodeAt(0);
+            if (code >= 97 && code <= 101) bgTextDecore = 'fs-3 bg-light-danger text-danger';
+            else if (code >= 102 && code <= 106) bgTextDecore = 'fs-3 bg-light-warning text-warning';
+            else if (code >= 107 && code <= 111) bgTextDecore = 'fs-3 bg-light-primary text-primary';
+            else if (code >= 112 && code <= 116) bgTextDecore = 'fs-3 bg-light-success text-success';
+            else if (code >= 117 && code <= 121) bgTextDecore = 'fs-3 bg-dark text-secondary';
+            else bgTextDecore = 'fs-3 bg-light-secondary text-dark';
+
+            let skillTagsHtml = (row.skills || []).map(s => `<span class="skill-tag">${s}</span>`).join('');
+            if (row.remaining_skills_count > 0) {
+                skillTagsHtml += `<span class="skill-tag skill-more client-show-detail" data-row-id="${row.id}">+${row.remaining_skills_count}</span>`;
+            }
+
+            let actionBtnHtml = '';
+            if (row.action_type === 'vendor_fulfilled') {
+                actionBtnHtml = `<button data-row-status="" data-row-id="${row.id}" data-row-recommendation_relation_id="${row.recommendation_relation_id || ''}" class="btn-submit btn btn-sm btn-danger">Vendor FullFilled</button>`;
+            } else if (row.action_type === 'apply_agency') {
+                actionBtnHtml = `<button class="btn-submit btn btn-sm btn-warning request_approval" data-row-status="accept" data-row-id="${row.id}" data-row-recommendation_relation_id="${row.recommendation_relation_id || ''}">Apply As Agency</button>`;
+            } else if (row.action_type === 'reject') {
+                actionBtnHtml = `<button data-row-status="accept" data-row-id="${row.id}" data-row-recommendation_relation_id="${row.recommendation_relation_id || ''}" class="btn-submit btn btn-sm btn-danger">Reject</button>`;
+            } else if (row.action_type === 'under_review') {
+                actionBtnHtml = `<button data-row-status="accept" data-row-id="${row.id}" data-row-recommendation_relation_id="${row.recommendation_relation_id || ''}" class="btn-submit btn btn-sm btn-warning">Under Review</button>`;
+            } else if (row.action_type === 'vendor_limit') {
+                actionBtnHtml = `<button data-row-status="accept" data-row-id="${row.id}" data-row-recommendation_relation_id="${row.recommendation_relation_id || ''}" class="btn-submit btn btn-sm btn-danger">Vendor Limit</button>`;
+            } else if (row.action_type === 'view_job' && row.view_job_url) {
+                actionBtnHtml = `<div class="d-flex my-4"><a href="${row.view_job_url}" class="btn-submit btn btn-sm btn-info">View Job</a></div>`;
+            } else {
+                actionBtnHtml = `<button data-row-id="${row.id}" data-mod="${row.mod}" data-cur="${row.cur}" class="btn btn-primary btn-submit open-bench-talents">Send Bench Request</button>`;
+            }
+
+            let companySizeText = (row.company_size_from >= 10000) ? `${row.company_size_from}+ Employees` : `${row.company_size_from} - ${row.company_size} Employees`;
+
+            return `
+            <div class="job-card">
+                <div class="job-main-info">
+                    <div class="job-header-row">
+                        <div class="job-icon ${bgTextDecore}">${strVal.toUpperCase()}</div>
+                        <div class="job-details">
+                            <h2>${row.title_short}</h2>
+                            <div class="job-dept">Department: ${row.department}</div>
+                        </div>
+                    </div>
+                    <div class="skills-row">${skillTagsHtml}</div>
+                    <div class="bench-match-box open-bench-talents" data-row-id="${row.id}" data-mod="${row.mod}" data-cur="${row.cur}" role="button" tabindex="0" title="View matching bench talents">
+                        <i class="fa-solid fa-user-plus bench-icon"></i>
+                        <div class="bench-text">
+                            <h4>Your Bench Match</h4>
+                            <p>You have ${row.bench_match_count} matching candidates</p>
+                        </div>
+                        <i class="fa-solid fa-chevron-right" style="margin-left: auto; color: #5E6C84;"></i>
+                    </div>
+                </div>
+                <div class="job-meta-info">
+                    <div class="meta-row"><i class="fa-regular fa-location-dot"></i><div class="meta-content"><p>Location</p><span>${row.work_type}</span></div></div>
+                    <div class="meta-row"><i class="fa-solid fa-laptop-house"></i><div class="meta-content"><p>Work Mode</p><span>${row.work_type}</span></div></div>
+                    <div class="meta-row"><i class="fa-regular fa-clock"></i><div class="meta-content"><p>Experience</p><span>${row.min_exp} Y - ${row.max_exp} Y</span></div></div>
+                    <div class="meta-row"><i class="fa-regular fa-clock"></i><div class="meta-content"><p>Openings</p><span>${row.total_positions}</span></div></div>
+                </div>
+                <div class="job-meta-info-2">
+                    <div class="meta-row"><i class="fa-solid fa-industry"></i><div class="meta-content"><p>Industry</p><span>${row.industry_name || ''}</span></div></div>
+                    <div class="meta-row"><i class="fa-regular fa-building"></i><div class="meta-content"><p>Company Size</p><span>${companySizeText}</span></div></div>
+                    <div class="meta-row"><i class="fa-regular fa-calendar"></i><div class="meta-content"><p>Posted</p><span>${row.created_at_formatted}</span></div></div>
+                    <div class="meta-row"><i class="fa-regular fa-calendar"></i><div class="meta-content"><p>Salary</p><span>${row.salary_currency} ${row.min_salary} - ${row.max_salary} / ${row.salary_mode_short}</span></div></div>
+                </div>
+                <div class="job-actions">
+                    ${actionBtnHtml}
+                    <button class="btn-view market-show-detail" data-row-id="${row.id}">View Requirement</button>
+                    <button class="btn-view client-terms-listing-find-job" data-row-id="${row.id}" data-row-recommendation_relation_id="${row.recommendation_relation_id || ''}">View T&C</button>
+                </div>
+            </div>`;
+        }
+
         function fetchCandidates(page = 1, search = '') {
-            var clientid = '1';
             $('.loadingMessage').css({ display: 'block' });
             $.ajax({
-                url: `{!! route('service_company.jobs.marketJobList_ajax') !!}?page=${page}`,
+                url: `{!! route('service_company.jobs.marketJobListV2_ajax') !!}?page=${page}`,
                 type: 'GET',
                 data: {
                   search:$('#inputSearch').val(),
@@ -1588,8 +1652,16 @@ $(document).on('click', '.client-show-detail', function (){
                 },
                 success: function(response) {
                     $('.loadingMessage').css({ display: 'none' });
-                  //   alert(response.total);
-                    $('#marketJobLists').html(response.html);
+                    if (response.items && Array.isArray(response.items)) {
+                        if (response.items.length > 0) {
+                            let html = response.items.map(item => renderMarketJobCard(item)).join('');
+                            $('#marketJobLists').html(html);
+                        } else {
+                            $('#marketJobLists').html('No data available in table');
+                        }
+                    } else if (response.html) {
+                        $('#marketJobLists').html(response.html);
+                    }
                     $('#span_jobMarket').html(response.total);
                     $('#pagination').html(response.pagination);
                 }

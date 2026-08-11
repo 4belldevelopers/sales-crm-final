@@ -246,7 +246,34 @@ class IndexJobsToElasticsearch extends Command
                         'format' => 'strict_date_optional_time||epoch_millis'
                      ],
                      'public_market_status' => ['type' => 'integer'],   
-                     'work_shifts' => ['type' => 'keyword', 'ignore_above' => 256]
+                     'work_shifts' => ['type' => 'keyword', 'ignore_above' => 256],
+                     'category_name' => [
+                        'type' => 'text',
+                        'fields' => [
+                            'keyword' => ['type' => 'keyword', 'ignore_above' => 256]
+                        ]
+                     ],
+                     'client_name' => [
+                        'type' => 'text',
+                        'fields' => [
+                            'keyword' => ['type' => 'keyword', 'ignore_above' => 256]
+                        ]
+                     ],
+                     'vendor_added_count' => ['type' => 'integer'],
+                     'job_metronics_skills' => [
+                        'type' => 'nested',
+                        'properties' => [
+                            'id' => ['type' => 'integer'],
+                            'job_id' => ['type' => 'integer'],
+                            'company_id' => ['type' => 'integer'],
+                            'skill_name' => [
+                                'type' => 'text',
+                                'fields' => [
+                                    'keyword' => ['type' => 'keyword', 'ignore_above' => 256]
+                                ]
+                            ]
+                        ]
+                     ]
                  ]
              ]
          ];
@@ -318,7 +345,17 @@ class IndexJobsToElasticsearch extends Command
              'auto_date_job' => Carbon::parse($row->auto_date_job)->toIso8601String(),
              'public_market_status' => $row->public_market_status,
              'work_shifts' => $row->work_shifts,
-             // Add other fields as needed
+             'category_name' => \Illuminate\Support\Facades\DB::table('job_categories')->where('id', $row->category_id)->value('name') ?? '',
+             'client_name' => $row->client_name ?? '',
+             'vendor_added_count' => (int) \Illuminate\Support\Facades\DB::table('market_job_added_count')->where('job_id', $row->id)->where('status', 0)->count(),
+             'job_metronics_skills' => \Illuminate\Support\Facades\DB::table('job_metronics_skills')->where('job_id', $row->id)->get()->map(function ($s) {
+                 return [
+                     'id' => $s->id ?? null,
+                     'job_id' => $s->job_id ?? null,
+                     'company_id' => $s->company_id ?? null,
+                     'skill_name' => $s->skill_name ?? '',
+                 ];
+             })->toArray(),
          ];
      }
 }

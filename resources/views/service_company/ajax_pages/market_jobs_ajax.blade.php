@@ -20,24 +20,15 @@
     $company_id = auth()->user()->company_id;
     
 
-    $relationget =  GeneralMethod::getrRcommendationRelationData($company_id,$targetJobId);
+    if (isset($row->v2_relation)) {
+        $relationget = $row->v2_relation;
+    } else {
+        $relationget = GeneralMethod::getrRcommendationRelationData($company_id,$targetJobId);
+    }
     $from_company_id = $relationget->from_company_id ?? null;
     $to_company_id = $relationget->to_company_id ?? null;
     $recommendation_id = $relationget->id ?? null;
     $final_status = $relationget->final_status ?? null;
-
-        // $match = collect($row->recommendation_relation)->first(function ($item) use ($company_id) {
-        //     return ($item['from_company_id'] ?? null) == $company_id
-        //         || ($item['to_company_id'] ?? null) == $company_id;
-        // });
-        // $from_company_id = ($match['from_company_id'] ?? null) == $company_id ? $match['from_company_id'] : null;
-        // $recommendation_id   = ($match['to_company_id'] ?? null) == $company_id ? $match['to_company_id'] : null;
-
-        // $row->final_status   = ($match['to_company_id'] ?? null) == $company_id ? $match['final_status'] : null;
-
-        // $final_status = collect($row->recommendation_relation)->first(function ($item) use ($targetJobId) {
-        //     return $item['job_id'] == $targetJobId;
-        // })['final_status'] ?? null;
 
         $row->final_status = $final_status;
         $row->recommendation_id =$recommendation_id;
@@ -77,8 +68,6 @@
         $client_city_jobs = $row->client_city_jobs;
         $jobCitySelected = is_array($client_city_jobs) ? count($client_city_jobs) : 0;
 
-        // dd($client_city_jobs);
-
         $employment_type = 'Full-time';
         if ($row->employment_type == 1) {
             $employment_type = 'Contract';
@@ -94,7 +83,6 @@
         }
 
         $min_sal_mode = $max_sal_mode = $max_salary_currency = $max_salary = $min_salary = '';
-                    // $sal_mode = ($row->min_sal_mode) ? $row->min_sal_mode : 0;
                     
         $mod = $sal_mode_set ?? $row->max_sal_mode;
 
@@ -125,13 +113,27 @@
         }elseif($row->work_type=='other'){
             $work_type = "Hybrid";
         }
-        $companyDetailsGet = GeneralMethod::companyDetailsGet($row->comId);
+        if (isset($row->company_size) || isset($row->industry_name)) {
+            $companyDetailsGet = (object) [
+                'industry' => ['industry_name' => $row->industry_name ?? ''],
+                'company_size_from' => $row->company_size_from ?? 0,
+                'company_size' => $row->company_size ?? 0,
+            ];
+        } else {
+            $companyDetailsGet = GeneralMethod::companyDetailsGet($row->comId);
+        }
+
         $agencyJobsCandidatesCount = GeneralMethod::agencyJobsCandidatesCountJobWise($row->comId,$row->id);
         $agencyJobsInterviewCountJobWise = GeneralMethod::agencyJobsInterviewCountJobWise($row->id);
-        $job_categories = DB::table('job_categories')
-        ->select('job_categories.name')
-        ->where('job_categories.id','=',$row->category_id)
-        ->first();
+
+        if (isset($row->category_name) && $row->category_name !== '') {
+            $job_categories = (object) ['name' => $row->category_name];
+        } else {
+            $job_categories = DB::table('job_categories')
+            ->select('job_categories.name')
+            ->where('job_categories.id','=',$row->category_id)
+            ->first();
+        }
 
         $candidateCount = GeneralMethod::benchCandidateCountSkillBase($row->id);
         
@@ -147,24 +149,22 @@
                                 <div class="job-details">
                                     <h2>{{ ucwords(mb_substr(@$row->title, 0, 25)) }}</h2>
                                     <div class="job-dept">Department: {{ ucwords(mb_substr(@$job_categories->name, 0, 35)) }}</div>
-                                    {{-- <div class="job-badges">
-                                        <span class="badge badge-red"><i class="fa-solid fa-fire"></i> Urgent Hiring</span>
-                                    </div> --}}
                                 </div>
-                                {{-- <div class="openings-count">
-                                    <span>8</span> Openings
-                                </div> --}}
                             </div>
                             @php
                                     $skilltag = '';
                                     $skilltagclass = '';
                                     $totalSkill = 0;
                                     if (empty($limit)) {
-                                        $skillArr = DB::table('job_metronics_skills')
-                                            ->select('*')
-                                            ->where('company_id','=',$row->comId)
-                                            ->where('job_id', $row->id)
-                                            ->get();
+                                        if (isset($row->job_metronics_skills) && is_array($row->job_metronics_skills)) {
+                                            $skillArr = array_map(fn($s) => (object)$s, $row->job_metronics_skills);
+                                        } else {
+                                            $skillArr = DB::table('job_metronics_skills')
+                                                ->select('*')
+                                                ->where('company_id','=',$row->comId)
+                                                ->where('job_id', $row->id)
+                                                ->get();
+                                        }
                                         if (!empty($skillArr)) {
                                             foreach ($skillArr as $key => $sval) {
                                                 if($key<=5){
@@ -328,7 +328,11 @@
                                 <div class="salary-period">Per Annum</div>
                             </div> --}}
                              @php
-                            $resultCount = DB::table('market_job_added_count')->where('job_id','=',$row->id)->where('status','=',0)->count();
+                            if (isset($row->vendor_added_count)) {
+                                $resultCount = (int) $row->vendor_added_count;
+                            } else {
+                                $resultCount = DB::table('market_job_added_count')->where('job_id','=',$row->id)->where('status','=',0)->count();
+                            }
                             $exceeded = 20;
 
                             if($row->public_market_status==2){
