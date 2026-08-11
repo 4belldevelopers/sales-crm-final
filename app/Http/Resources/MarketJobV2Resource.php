@@ -109,13 +109,17 @@ class MarketJobV2Resource extends JsonResource
         $companySize = $row->company_size ?? 0;
         $industryName = $row->industry_name ?? '';
 
-        // Bench candidate match count
+        // Bench candidate match count (Pre-fetched via V2 Service 0 DB queries, with fallback for isolated calls)
         $benchMatchCount = 0;
         if (auth()->check()) {
-            try {
-                $benchMatchCount = (int) GeneralMethod::benchCandidateCountSkillBase($row->id);
-            } catch (\Throwable $e) {
-                $benchMatchCount = 0;
+            if (isset($row->v2_bench_match_count)) {
+                $benchMatchCount = (int) $row->v2_bench_match_count;
+            } else {
+                try {
+                    $benchMatchCount = (int) GeneralMethod::benchCandidateCountSkillBase($row->id);
+                } catch (\Throwable $e) {
+                    $benchMatchCount = 0;
+                }
             }
         }
 
