@@ -153,7 +153,7 @@ body { background: var(--bg-pg); color: var(--tx); }
     overflow: hidden;
 }
 
-/* ── Combined 3-in-1 Audience Illustration (Height +11.8%, Aspect Ratio Preserved) ── */
+/* ── Combined 3-in-1 Audience Illustration (Natural Proportional Scaling) ── */
 .jw-illustration-link {
     display: flex;
     align-items: center;
@@ -168,7 +168,7 @@ body { background: var(--bg-pg); color: var(--tx); }
     transition: transform .2s ease;
     line-height: 0;
     background: transparent;
-    max-height: 425px;
+    max-height: 470px;
     text-decoration: none;
 }
 .jw-illustration-link:hover,
@@ -182,12 +182,12 @@ body { background: var(--bg-pg); color: var(--tx); }
     justify-content: center;
     width: 100%;
     height: 100%;
-    max-height: 425px;
+    max-height: 470px;
 }
 .jw-illustration-img {
     display: block;
     height: 100%;
-    max-height: 425px;
+    max-height: 470px;
     width: auto;
     max-width: 100%;
     object-fit: contain;
@@ -619,11 +619,11 @@ body { background: var(--bg-pg); color: var(--tx); }
 /* 1366 — most 15.6" laptops */
 @media (max-width: 1366px) {
     .jw-hero h1 { font-size: 36px !important; letter-spacing: -0.6px; }
-    .jw-hero { margin: 12px 0 6px; }
+    .jw-hero { margin: 10px 0 4px; }
     .jw-hero p { font-size: 12px; -webkit-line-clamp: 2; }
-    .jw-left { flex: 1; padding: 14px 22px 10px; }
+    .jw-left { flex: 1; padding: 12px 20px 8px; }
     .jw-right { flex: 1; }
-    .jw-illustration-link { max-height: 410px; margin: 4px 0 6px; }
+    .jw-illustration-link { max-height: 440px; margin: 4px 0 4px; }
     .jw-card-form { max-width: 480px; padding: 22px 30px 18px; }
     .jw-card-form h2 { font-size: 24px !important; }
     .jw-inp { height: 40px; font-size: 13px; }
