@@ -2141,9 +2141,6 @@ $(document).ready(function() {
       $('#progress-bar-fill').css('width', pcts[idx]);
       $('#progress-time-text').text(times[idx]);
 
-      $('[data-kt-stepper-element="nav"]').removeClass('current').eq(idx).addClass('current');
-      $('[data-kt-stepper-element="content"]').removeClass('current').eq(idx).addClass('current');
-
       if (stepIndex > 1) {
         $('#top-bar-text').text('Need assistance?');
         $('#top-bar-btn').attr('href', 'https://jero.works/support-policy').text('Help Center');
@@ -2167,21 +2164,33 @@ $(document).ready(function() {
             scrollToTop();
           }),
 
-          function advanceToNextStep() {
-            if (!s) return;
-            var current = s.getCurrentStepIndex();
-            var next = Math.min(current + 1, 4);
-            try { s.goTo(next); } catch(e) {}
-            updateProgressBar(next);
-            updatePreviewData();
-            scrollToTop();
-          }
-
           // Delegated Next Step Click Handler across ALL step buttons
           $(document).on('click', '.btn-next-step, [data-kt-stepper-action="next"]', function(ev) {
             ev.preventDefault();
             ev.stopPropagation();
             if (!s) return;
+
+            var btn = $(this);
+            var label = btn.find('.indicator-label');
+            var progress = btn.find('.indicator-progress');
+
+            function showLoading() {
+              btn.prop('disabled', true);
+              if (label.length && progress.length) {
+                label.hide();
+                progress.show();
+              }
+            }
+
+            function hideLoading() {
+              btn.prop('disabled', false);
+              if (label.length && progress.length) {
+                label.show();
+                progress.hide();
+              }
+            }
+
+            showLoading();
 
             var currentStep = s.getCurrentStepIndex();
 
@@ -2190,58 +2199,87 @@ $(document).ready(function() {
               if (t1) {
                 t1.validate().then(function (status) {
                   if (status === "Valid") {
-                    advanceToNextStep();
+                    setTimeout(function() {
+                      hideLoading();
+                      s.goNext();
+                      updatePreviewData();
+                      scrollToTop();
+                    }, 150);
                   } else {
+                    hideLoading();
                     Swal.fire({
-                      text: "Please fill in all mandatory fields on Step 1 (Company Name, Full Name, Work Email, Password & Terms).",
-                      icon: "warning",
+                      text: "Sorry, looks like there are some mandatory fields missing on Step 1.",
+                      icon: "error",
                       buttonsStyling: false,
                       confirmButtonText: "Ok, got it!",
-                      customClass: { confirmButton: "btn btn-primary" },
+                      customClass: { confirmButton: "btn btn-light" },
                     }).then(function () { scrollToTop(); });
                   }
-                }).catch(function() {
-                  advanceToNextStep();
                 });
               } else {
-                advanceToNextStep();
+                setTimeout(function() {
+                  hideLoading();
+                  s.goNext();
+                  updatePreviewData();
+                  scrollToTop();
+                }, 150);
               }
             } else if (currentStep === 2) {
               var companyType = $("input[name='company_type']:checked").val();
               if (!companyType) {
+                hideLoading();
                 Swal.fire({
                   text: "Please select how your organization operates.",
-                  icon: "warning",
+                  icon: "error",
                   buttonsStyling: false,
                   confirmButtonText: "Ok, got it!",
-                  customClass: { confirmButton: "btn btn-primary" },
+                  customClass: { confirmButton: "btn btn-light" },
                 });
                 return;
               }
-              advanceToNextStep();
+              setTimeout(function() {
+                hideLoading();
+                s.goNext();
+                updatePreviewData();
+                scrollToTop();
+              }, 150);
             } else if (currentStep === 3) {
               var t3 = a[2];
               if (t3) {
                 t3.validate().then(function (status) {
                   if (status === "Valid") {
-                    advanceToNextStep();
+                    setTimeout(function() {
+                      hideLoading();
+                      s.goNext();
+                      updatePreviewData();
+                      scrollToTop();
+                    }, 150);
                   } else {
+                    hideLoading();
                     Swal.fire({
                       text: "Please fill in all mandatory fields on Step 3.",
-                      icon: "warning",
+                      icon: "error",
                       buttonsStyling: false,
                       confirmButtonText: "Ok, got it!",
-                      customClass: { confirmButton: "btn btn-primary" },
+                      customClass: { confirmButton: "btn btn-light" },
                     }).then(function () { scrollToTop(); });
                   }
-                }).catch(function() {
-                  advanceToNextStep();
                 });
               } else {
-                advanceToNextStep();
+                setTimeout(function() {
+                  hideLoading();
+                  s.goNext();
+                  updatePreviewData();
+                  scrollToTop();
+                }, 150);
               }
             } else {
-              advanceToNextStep();
+              setTimeout(function() {
+                hideLoading();
+                s.goNext();
+                updatePreviewData();
+                scrollToTop();
+              }, 150);
             }
           }),
 
