@@ -1338,30 +1338,7 @@ protected $elasticService;
 		$chkAdminRole = $this->user->hasRole('admin');
 		// $chkAdminRole = DB::table('roles')->select('roles.id')->where('id', $this->user->role->role_id)->where('name', 'admin')->count();
 		if (($chkAdminRole > 0) && (in_array("all_requisition", $this->userPermissions) && in_array("view_jobs", $this->userPermissions))) {
-			//All Jobs			
-			$this->jobsAll = DB::table('jobs')->select('jobs.id');
-			$this->jobsAll = $this->jobsAll->leftJoin('recommendation_relation', function ($join) use ($company_id) {
-				$join->on('recommendation_relation.job_id', '=', 'jobs.id');
-				$join->on('recommendation_relation.to_company_id', '=', DB::raw("'" . $company_id . "'"));
-			});
-			
-			$this->jobsAll = $this->jobsAll->where('jobs.company_id', '=', $company_id);
-			$this->jobsAll = $this->jobsAll->where('jobs.status','=', 'active');
-			$this->jobsAll = $this->jobsAll->orWhere(function ($query) use ($company_id) {
-				return
-					$query->where('recommendation_relation.final_status', '=', 1)
-						->where('recommendation_relation.to_company_id', '=', $company_id)
-						->where('jobs.status','=', 'active');
-			});
-			$this->jobsAll = $this->jobsAll->orWhere(function ($query) use ($company_id) {
-				return
-					$query->where('recommendation_relation.final_status', '=', 2)
-						->where('recommendation_relation.to_company_id', '=', $company_id)
-						->where('jobs.status','=', 'active');
-			});
-			// $this->jobsAll = $this->jobsAll->count();
-
-
+			// All Jobs (ES Aggregation)
 			$filter[] = ['term' => ['status' => 'active']];
 			// 1. COMPANY ACCESS CONDITIONS
 			$must[] = [
@@ -3686,412 +3663,101 @@ protected $elasticService;
 
 	public function marketJobList_ajax(Request $request)
 	{
-
 		$company_id = auth()->user()->company_id;
-
-		$chkAdminRole = $this->user->hasRole('admin');
-
-		// $chkAdminRole = DB::table('roles')->select('roles.id')->where('id', $this->user->role->role_id)->where('name', 'admin')->count();
-
 		$job_status = GeneralMethod::job_status();
 		$salaryMode = GeneralMethod::salaryMode();
 		$currencySymbole = GeneralMethod::currencySymbole();
-         
 
-		$searchTerms = request('cus_search');
-    	$custom_search = json_decode($searchTerms, true);
-		// dd($custom_search);
-		$subQuery = array();
-		$requiredSkills = [];
-		if (\request('cus_search') != "") {
-
-			$checkedSkills = array_filter($custom_search, function($skill) {
-				return $skill['checked'] == true;
-			});
-		
-			$uncheckedSkills = array_filter($custom_search, function($skill) {
-				return $skill['checked'] == false;
-			});
-
-			if (!empty($checkedSkills)) {
-				   $requiredSkills = array_column($checkedSkills, 'value');
-				} else {
-					$requiredSkills = array_column($uncheckedSkills, 'value');
-				}
-
-				$subQuery = DB::table('jobs')
-					->leftJoin('job_metronics_skills', 'jobs.id', '=', 'job_metronics_skills.job_id')
-					->whereIn('job_metronics_skills.skill_name', $requiredSkills)
-					->where('jobs.company_id','!=',$company_id)
-					->orWhereIn('jobs.title', $requiredSkills) // Replace with actual current designation condition
-					->pluck('jobs.id')->toArray();
-
-			}
-
-		$location = request('kt_tagify_location');
-    	$custom_location = json_decode($location, true);
-		
-
-		$current_date = date('Y-m-d');
-		$current_timestamp = strtotime($current_date);
-		$current_previous_30_days = date('Y-m-d',strtotime('-30 days', $current_timestamp));
-		$current_previous_60_days = date('Y-m-d',strtotime('-60 days', $current_timestamp));
-		$current_previous_90_days = date('Y-m-d',strtotime('-90 days', $current_timestamp));
-		$current_previous_180_days = date('Y-m-d',strtotime('-180 days', $current_timestamp));
-		$current_previous_1_year = date('Y-m-d',strtotime('-365 days', $current_timestamp));
-		$app_int_activity = request('app_int_activity');
 		$sal_mode = request('sal_mode') ?? 0;
 		$min_salary_currency = request('min_salary_currency') ?? 0;
 		$sal_mode_set = request('sal_mode') ?? null;
-		$salary_currency_set = request('min_salary_currency') ?? null; 
-		$app_int_outsource = request('app_int_outsource') ?? 0;
+		$salary_currency_set = request('min_salary_currency') ?? null;
 
-		$min_exp = (request('min_exp')) ? request('min_exp') : 0;
-		$max_exp = request('max_exp');
+		$v2Service = app(\App\Services\MarketJobV2Service::class);
+		$cacheKey = $v2Service->getCacheKey($request, $company_id);
 
-		$min_salary = request('min_sal');
-	    $max_salary = request('max_sal');
-		$currency = GeneralMethod::currency();  // Currency code
-		
-		$ecurrency  = $currency[$min_salary_currency];
-		$econvertedAmount = (int) $max_salary;
-		if($min_salary_currency > 0){
-			$econvertedAmount = GeneralMethod::convertToINR($econvertedAmount, $ecurrency);
+		// Read-Through Cache Check
+		if (cache()->has($cacheKey)) {
+			return response()->json(cache()->get($cacheKey));
 		}
 
-		$ectcdivided = GeneralMethod::salaryDividedByMode($sal_mode, $econvertedAmount);
-		
-		
-		
-		
+		// Delegate to MarketJobV2Service for 0 DB queries & 1 ES search + single-pass bulk relation fetch
+		$v2Result = $v2Service->fetchMarketJobs($request, $company_id);
 
-		$currency  = $currency[$min_salary_currency];
-		$convertedAmount = (int) $min_salary;
-		if($min_salary_currency > 0){
-			$convertedAmount = GeneralMethod::convertToINR($convertedAmount, $currency);
-		}
-
-		$ctcdivided = GeneralMethod::salaryDividedByMode($sal_mode, $convertedAmount);
-		if($sal_mode==2){
-			$max_salary = @$ectcdivided->hourly;
-			$min_salary = @$ctcdivided->hourly;
-		}elseif($sal_mode==1){
-			$max_salary = @$ectcdivided->monthly;
-			$min_salary = @$ctcdivided->monthly;
-		}elseif($sal_mode==0){
-			$max_salary = @$ectcdivided->yearly;
-			$min_salary = @$ctcdivided->yearly;
-		}
-
-		$location= array();
-		if (\request('kt_tagify_location') != "") {
-			foreach ($custom_location as $sval) {
-				$loc_datas = DB::table('countries')
-				->select('countries.id as city_id')
-				->where('countries.country_name', 'LIKE', "%{$sval['value']}%")
-				->join('state_list','state_list.country_id','=','countries.id')
-				->join('city_list','city_list.state_id','=','state_list.id')
-				->get();
-
-			    // $loc_data = DB::table('city_list')->where('city_list.city_id', '=', $sval['value'])->first();
-				if($loc_datas){
-					foreach($loc_datas as $loc_data)
-					array_push($location,$loc_data->city_id);
-				}
-			}
-		}
-      
-
-		
-
-		$searchQuery = $request->input('q');
-		$page = max((int) $request->input('page', 1), 1);
-		$size = (int) $request->input('size', 10); // Default 20 results per page
-		$from = ($page - 1) * $size;
-		
-		
-		
-		$custom_status = request('custom_status');
-		$custom_hiringtype = request('app_int_outsource');
-		$custom_search = trim(request('custom_search'));
-
-		$cachePayload = [
-			'page' => $page,
-			'size' => $size,
-			'q' => $searchQuery,
-			'company' => $company_id,
-			'requiredSkills' => $requiredSkills ?? [],
-			'custom_hiringtype' => $custom_hiringtype,
-			'custom_status' => $custom_status,
-			'custom_search' => $custom_search,
-			'min_exp' => $min_exp,
-			'max_exp' => $max_exp,
-			'kt_tagify_location' => $location ?? [],
-			'min_sal' =>$min_salary,
-			'max_sal' => $max_salary,
-			'min_salary_currency' => $min_salary_currency,
-			'sal_mode' => $sal_mode,
-			'user_id' => $this->user->id,
-			'app_int_activity' => $app_int_activity
-		];
-
-
-		$versionKey = 'allmarketjobs_version_user_'.$this->user->id;
-		$version = cache()->get($versionKey, 1);
-		$cacheKeySet = 'ats:allmarketjobs:' . $this->user->id . ':' . $version . ':' . md5(json_encode($cachePayload));
-		/* ----------------------------
-		⚡ Check DragonflyDB first
-		----------------------------- */
-		if (cache()->has($cacheKeySet)) {
-			// return response()->json(cache()->get($cacheKeySet));
-		}
-
-
-		
-
-
-
-		$statusArr = ['active', 'hold', 'inactive', '2'];
-		$must = [];
-		$should = [];
-		$filter = [];
-
-		$must_not = [];
-		$sort = [];
-
-		$valCheck = request('custom_hiringtype');
-		switch ($valCheck) {
-			case 1:
-				$sort[] = ['id' => ['order' => 'desc']];
-				break;
-			case 2:
-				$sort[] = ['id' => ['order' => 'asc']];
-				break;
-			case 3:
-				$sort[] = ['max_salary' => ['order' => 'asc']];
-				break;
-			case 4:
-				$sort[] = ['max_salary' => ['order' => 'desc']];
-				break;
-			case 5:
-				$sort[] = ['client_name' => ['order' => 'asc']];
-				break;
-			case 6:
-				$sort[] = ['client_name' => ['order' => 'desc']];
-				break;
-			default:
-				$sort[] = ['id' => ['order' => 'desc']];
-		}
-
-
-		// 1. STATUS FILTERING
-		
-        $filter[] = ['terms' => ['status' => $statusArr]];
-
-
-		if ($valCheck != "" && $valCheck != "All") {
-
-			// Agency Jobs 
-			if ($valCheck == 2) {
-
-				$filter[] = [
-					'term' => [
-						'public_market_status' => 2
-					]
-				];
-			}
-
-			// Bench Talent Jobs 
-			elseif ($valCheck == 1) {
-
-				// NOT public_market_status = 2
-				$must_not[] = [
-					'term' => [
-						'public_market_status' => 2
-					]
-				];
-			}
-		}
-
-
-		// 2. HIRING TYPE
-		if ($custom_hiringtype != "" && $custom_hiringtype != "All") {
-			if ($custom_hiringtype == 0) {
-				$filter[] = ['term' => ['employment_type' => 0]];
-			} elseif ($custom_hiringtype == 1) {
-				$filter[] = ['term' => ['employment_type' => 1]];
-			}
-		}
-		
-		// 4. COMPANY ACCESS CONDITIONS  
-		$must[] = [
-			'bool' => [
-				'must' => [
-					[
-						'term' => ['status' => 'active'],
-					],
-				],
-				'must_not' => [
-					[
-						'term' => [
-							'comId' => $company_id,
-						],
-					]
-				],
-			],
-		];
-
-		if (!empty($requiredSkills)) {
-			$must[] = [
-				'nested' => [
-					'path' => 'job_metronics_skills',
-					'query' => [
-						'bool' => [
-							'should' => array_map(function ($skill) {
-								return [
-									'match' => [
-										'job_metronics_skills.skill_name' => $skill,
-									],
-								];
-							}, $requiredSkills),
-							'minimum_should_match' => 1,
-						],
-					],
-				],
-			];
-		}
-		if (!empty($location)) {
-			$must[] = [
-				'nested' => [
-					'path' => 'client_location',
-					'query' => [
-						'bool' => [
-							'should' => array_map(function ($countryId) {
-								return [
-									'term' => [
-										'client_location.country_id' => $countryId,
-									],
-								];
-							}, $location),
-							'minimum_should_match' => 1,
-						],
-					],
-				],
-			];
-		}
-
-		if ($min_exp !== null) {
-			$must[] = [
-				'range' => [
-					'max_exp' => [
-						'gte' => (int) $min_exp,
-					],
-				],
-			];
-		}
-		if ($max_exp !== null) {
-			$must[] = [
-				'range' => [
-					'max_exp' => [
-						'lte' => (int) $max_exp,
-					],
-				],
-			];
-		}
-
-
-
-		$salary_field = null;
-
-		if ($sal_mode !== null) {
-			switch ((int) $sal_mode) {
-				case 0:
-					$salary_field = 'max_yearly';
-					break;
-				case 1:
-					$salary_field = 'max_monthly';
-					break;
-				case 2:
-					$salary_field = 'max_hourly';
-					break;
-			}
-		}
-
-		if ($min_salary !== null && $salary_field) {
-			// dd($min_salary,$max_salary);
-			$must[] = [
-				'range' => [
-					$salary_field => [
-						'gte' => (float) $min_salary
-					],
-				],
-			];
-		}
-		if ($max_salary >0 && $salary_field) {
-			// dd($min_salary,$max_salary);
-			$must[] = [
-				'range' => [
-					$salary_field => [
-						'lte' => (float) $max_salary
-					],
-				],
-			];
-		}
-
-
-		// FINAL ELASTIC PARAMS
-		$params = [
-			'index' => ELASTIC_JOBS,
-			'request_cache' => true,
-			'body' => [
-				'from' => $from,
-				'size' => $size,
-				'sort' => $sort,
-				'track_total_hits' => true,
-				'query' => [
-					'bool' => [
-						'must' => $must,
-						'filter' => $filter,
-                		'must_not' => $must_not ?? []
-					],
-				],
-			],
-		];
-		
-
-		// dd($location);
-
-		if (!$this->elasticService->indexExists(ELASTIC_JOBS)) {
-			$total = 0;
-			$data = [];
-		}else{
-			$response = $this->elasticService->getClient()->search($params);
-			$total = $response['hits']['total']['value'] ?? 0;
-			$data = array_map(function ($hit) {
-				return $hit['_source'];
-			}, $response['hits']['hits']);
-		}
+		$data = $v2Result['data'];
+		$total = $v2Result['total'];
+		$page = $v2Result['page'];
+		$size = $v2Result['size'];
 
 		$pagination = [
 			'total' => $total,
 			'current_page' => $page,
-			'last_page' =>ceil($total / $size),
+			'last_page' => ceil($total / max($size, 1)),
 			'per_page' => $size,
 			'listType' => 'allcandidate',
 		];
 
-
 		$userPermissions = $this->userPermissions;
-		$responseData =  [
+		$responseData = [
 			'html' => view('service_company.ajax_pages.market_jobs_ajax', compact('data','userPermissions','salaryMode','currencySymbole','sal_mode', 'sal_mode_set', 'salary_currency_set','min_salary_currency','job_status','company_id'))->render(),
 			'total' => $total,
 			'pagination' => view('service_company.ajax_pages.pagination', compact('pagination'))->render(),
 		];
 
-		cache()->put($cacheKeySet, $responseData, now()->addMinutes(ALL_MARKET_JOBS_TIME));
+		$cacheTtlMinutes = (int) config('constants.ALL_MARKET_JOBS_TIME', 15);
+		cache()->put($cacheKey, $responseData, now()->addMinutes($cacheTtlMinutes));
 
-	    return response()->json($responseData);
+		return response()->json($responseData);
+	}
 
+	/**
+	 * marketJobListV2_ajax
+	 * 
+	 * Intent: Phase 4 clean JSON API endpoint for Market Jobs listing.
+	 * Returns a structured JSON DTO payload (~5 KB) instead of server-rendered HTML snippets.
+	 * Tenancy: Scoped to tenant company via MarketJobV2Service.
+	 * 
+	 * @param Request $request
+	 * @return \Illuminate\Http\JsonResponse
+	 */
+	public function marketJobListV2_ajax(Request $request)
+	{
+		$company_id = auth()->user()->company_id;
+		$v2Service = app(\App\Services\MarketJobV2Service::class);
+		$cacheKey = $v2Service->getCacheKey($request, $company_id) . ':v2json';
+
+		if (cache()->has($cacheKey)) {
+			return response()->json(cache()->get($cacheKey));
+		}
+
+		$v2Result = $v2Service->fetchMarketJobs($request, $company_id);
+
+		$data = $v2Result['data'];
+		$total = $v2Result['total'];
+		$page = $v2Result['page'];
+		$size = $v2Result['size'];
+
+		$pagination = [
+			'total' => $total,
+			'current_page' => $page,
+			'last_page' => ceil($total / max($size, 1)),
+			'per_page' => $size,
+			'listType' => 'allcandidate',
+		];
+
+		$itemsResource = \App\Http\Resources\MarketJobV2Resource::collection($data);
+
+		$responseData = [
+			'status' => 'success',
+			'items' => $itemsResource,
+			'total' => $total,
+			'pagination' => view('service_company.ajax_pages.pagination', compact('pagination'))->render(),
+		];
+
+		$cacheTtlMinutes = (int) config('constants.ALL_MARKET_JOBS_TIME', 15);
+		cache()->put($cacheKey, $responseData, now()->addMinutes($cacheTtlMinutes));
+
+		return response()->json($responseData);
 	}
 
 	public function marketrequestaadded(Request $request)
@@ -4500,7 +4166,8 @@ protected $elasticService;
 			);
 			DB::table('recommendation_relation')->where('id','=',$recommendationrelation->id)->update($insertArr);
 			GeneralMethod::jobRequestIndexElastic($recommendationrelation->id);
-
+			\App\Services\MarketJobV2Service::invalidateCacheForCompany($to_company_id);
+			\App\Services\MarketJobV2Service::invalidateCacheForCompany($from_company_id);
 		}
 
 		                    $basecompany = GeneralMethod::baseCompany();

@@ -14,7 +14,11 @@
 
     @php
     $row = (object) $rowArr;
-    $relationget =  GeneralMethod::getRelationData($company_id, $row->company_id);
+    if (isset($relationMap) && isset($relationMap[$row->company_id])) {
+        $relationget = $relationMap[$row->company_id];
+    } else {
+        $relationget = GeneralMethod::getRelationData($company_id, $row->company_id);
+    }
 
     $from_company_id = $relationget->from_company_id ?? null;
     $recommendation_id = $relationget->id ?? null;
@@ -97,9 +101,11 @@
 
     /* ── jobs (active / closed / hold) ── */
     if ($company_id == $row->clients_company_id) {
-        $jobsCount = GeneralMethod::InternalClientJobsCountAllStatus($company_id, $row->client_id);
+        $jKey = 'internal_' . $row->client_id;
+        $jobsCount = $jobsCountsMap[$jKey] ?? GeneralMethod::InternalClientJobsCountAllStatus($company_id, $row->client_id);
     } else {
-        $jobsCount = GeneralMethod::DirectClientJobsCountAllStatus($row->from_company_id, $row->to_company_id);
+        $jKey = 'direct_' . ($from_company_id ?? 0) . '_' . ($to_company_id ?? 0);
+        $jobsCount = $jobsCountsMap[$jKey] ?? GeneralMethod::DirectClientJobsCountAllStatus($from_company_id, $to_company_id);
     }
     $job_active   = $jobsCount->job_active ?? 0;
     $job_closed   = $jobsCount->job_inactive ?? 0;
@@ -107,9 +113,11 @@
 
     /* ── performance funnel ── */
     if ($company_id != $row->company_id) {
-        $perf = GeneralMethod::DirectClientCandidatesCountList($row->from_company_id, $row->to_company_id);
+        $pKey = 'direct_' . ($from_company_id ?? 0) . '_' . ($to_company_id ?? 0);
+        $perf = $candidateCountsMap[$pKey] ?? GeneralMethod::DirectClientCandidatesCountList($from_company_id, $to_company_id);
     } else {
-        $perf = GeneralMethod::InternalClientCandidatesCountList($client_id);
+        $pKey = 'internal_' . $client_id;
+        $perf = $candidateCountsMap[$pKey] ?? GeneralMethod::InternalClientCandidatesCountList($client_id);
     }
     $sourced       = $perf->sourced ?? 0;
     $evaluated     = $perf->evaluated ?? 0;
