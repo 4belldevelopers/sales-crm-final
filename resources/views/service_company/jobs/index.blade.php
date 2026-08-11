@@ -462,25 +462,32 @@ data-kt-drawer-toggle="#kt_activitiesJob_toggle" data-kt-drawer-close="#kt_activ
 
 
     $('body').on('click', '#AddjobSection', function(){
-			
-      var url 				=	"{{ route('service_company.auth-custom-package.validatePackage') }}";
-      var token 				=	"{{ csrf_token() }}";							
-      var baseurl    			=	"{{ asset('assets/images/Loading2.gif') }}"; 
-      var eventId 			=	2; 
+
+      var url      = "{{ route('service_company.auth-custom-package.validatePackage') }}";
+      var token    = $('meta[name="csrf-token"]').attr('content');
+      var eventId  = 2;
       $.ajax({
-            type		: 'POST',
-            url			: url,
-            beforeSend	: function(){ },
-            data		: {'_token': token, 'event':'CVACCESS','eventId':eventId},
-            success		: function (response){
-                                  if (response.status == "success"){  																					  																												                                                                                            	var url   			=	"{{url('service_company/jobs/create')}}";
-                                        window.location 	=	url;
-                                     }else if (response.status == "info"){   
-                                      sweetAlert("Fail!", response.message, "error");	
-                                     }										 
-                            }
+            type      : 'POST',
+            url       : url,
+            beforeSend: function(){ },
+            data      : {'_token': token, 'event':'CVACCESS','eventId':eventId},
+            success   : function (response){
+                          if (response.status == "success"){
+                              var url = "{{url('service_company/jobs/create')}}";
+                              window.location = url;
+                          } else if (response.status == "info"){
+                              sweetAlert("Fail!", response.message, "error");
+                          }
+                        },
+            error     : function (xhr) {
+                          if (xhr.status === 419) {
+                              sweetAlert("Session Expired", "Your session has expired. Please reload the page and try again.", "warning");
+                          } else {
+                              sweetAlert("Error", "Something went wrong. Please try again.", "error");
+                          }
+                        }
           });
-  
+
 });
 
 
