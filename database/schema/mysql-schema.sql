@@ -21,7 +21,10 @@ CREATE TABLE `add_job_wise_condidates` (
   `placed_end_date` date DEFAULT NULL,
   `existing` int DEFAULT '0',
   `skill_match` double(15,1) DEFAULT '0.0',
-  PRIMARY KEY (`id`)
+  PRIMARY KEY (`id`),
+  KEY `idx_ajwc_app_company_status` (`job_application_id`,`company_id`,`master_status_id`),
+  KEY `idx_ajwc_thirdparty_company` (`thirdparty_company_id`,`master_status_id`),
+  KEY `idx_ajwc_job_id` (`job_id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=63804 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ============================================================
@@ -1896,7 +1899,9 @@ CREATE TABLE `job_application_skills` (
   `id` int NOT NULL AUTO_INCREMENT,
   `job_application_id` int DEFAULT NULL,
   `skills` varchar(55) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  PRIMARY KEY (`id`)
+  PRIMARY KEY (`id`),
+  KEY `idx_jas_app_skill` (`job_application_id`,`skills`),
+  KEY `idx_jas_skills` (`skills`)
 ) ENGINE=InnoDB AUTO_INCREMENT=470706 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- ============================================================
@@ -2018,7 +2023,10 @@ CREATE TABLE `job_applications` (
   PRIMARY KEY (`id`),
   KEY `job_applications_company_id_foreign` (`company_id`),
   KEY `job_applications_job_id_foreign` (`job_id`),
-  KEY `idx_job_id` (`job_id`)
+  KEY `idx_job_id` (`job_id`),
+  KEY `idx_ja_company_status` (`company_id`,`master_status_id`),
+  KEY `idx_ja_submitted_by` (`submitted_by`),
+  KEY `idx_ja_city_id` (`city_id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=63619 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ============================================================
@@ -2035,7 +2043,8 @@ CREATE TABLE `job_assign` (
   PRIMARY KEY (`id`),
   KEY `job_skills_skill_id_foreign` (`user_id`),
   KEY `job_skills_job_id_foreign` (`job_id`),
-  KEY `job_skills_company_id_foreign` (`company_id`)
+  KEY `job_skills_company_id_foreign` (`company_id`),
+  KEY `idx_ja_job_company_spok` (`job_id`,`company_id`,`spok_user_id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=9765 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ============================================================
