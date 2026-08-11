@@ -3574,15 +3574,17 @@ protected $elasticService;
 	{
 		$company_id = auth()->user()->company_id;
 		$this->pageTitle = __('Market Jobs');
-		$cities = DB::table('countries')
-					->select('countries.country_name')
-					->where('countries.country_name','!=','')
-					->orderBy('countries.country_name')
-					->get()
-					->map(function($city) {
-						return $city->country_name;
-					});
-				$this->cities =  $cities;
+		$cities = cache()->remember('global_countries_list', 86400, function () {
+			return DB::table('countries')
+				->select('countries.country_name')
+				->where('countries.country_name', '!=', '')
+				->orderBy('countries.country_name')
+				->get()
+				->map(function ($city) {
+					return $city->country_name;
+				});
+		});
+		$this->cities = $cities;
 				// $this->cities = GeneralMethod::allCities();
 		// 		$cities = DB::table('city_list')->pluck('city')->toArray();
 
@@ -13745,6 +13747,7 @@ protected $elasticService;
 				$job->public_market_status = 6;
 				$msg = "Your job Cancel for partners Job !";
 				$job->save();
+				\App\Services\MarketJobV2Service::invalidateGlobalCache();
 				return Reply::dataOnly(['status' => 'closeJob', 'message' => $msg,'text_change'=>$text_change,'color_change'=>$color_change]);
 			 }
 				if($global_settings->public_market_job_status){
@@ -13761,6 +13764,7 @@ protected $elasticService;
 				}
 			$job->job_requirement = $terms;
 			$job->save();
+			\App\Services\MarketJobV2Service::invalidateGlobalCache();
 
 			$teamRankElastic = [
 						'company_id'=>$this->user->company_id,

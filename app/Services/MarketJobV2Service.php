@@ -223,8 +223,11 @@ class MarketJobV2Service
         $jobIds = array_column($rawHits, 'id');
         $relationsMap = GeneralMethod::getrRcommendationRelationDataBulk($companyId, $jobIds);
 
+        // SINGLE-PASS BULK FETCH: Bulk load Bench Candidate Match Counts for all jobs on current page (0 DB queries)
+        $benchCountsMap = self::getBenchCandidateCountsBulk($companyId, $rawHits);
+
         // Pre-attach Bulk Data onto Job Hit Objects
-        $processedData = array_map(function ($hit) use ($relationsMap) {
+        $processedData = array_map(function ($hit) use ($relationsMap, $benchCountsMap) {
             $jobId = $hit['id'] ?? null;
             $relation = $relationsMap[$jobId] ?? (object) [];
 
@@ -233,6 +236,7 @@ class MarketJobV2Service
             $hit['v2_final_status'] = $relation->final_status ?? null;
             $hit['v2_from_company_id'] = $relation->from_company_id ?? null;
             $hit['v2_to_company_id'] = $relation->to_company_id ?? null;
+            $hit['v2_bench_match_count'] = $benchCountsMap[$jobId] ?? 0;
 
             return $hit;
         }, $rawHits);
@@ -293,5 +297,118 @@ class MarketJobV2Service
         $globalVersionKey = 'allmarketjobs_global_version';
         $currentVersion = (int) cache()->get($globalVersionKey, 1);
         cache()->forever($globalVersionKey, $currentVersion + 1);
+    }
+
+    /**
+     * Bulk fetch bench candidate match counts for an array of job hit documents.
+     *
+     * Intent: Executes a single Elasticsearch `msearch` query to compute bench candidate skill
+     * match counts for all jobs on the current page in 1 round trip with ZERO MySQL queries.
+     * Tenancy Note: Filtered by tenant $companyId, `condidate_type` = 'bench_condidate', status = 2.
+     *
+     * @param int $companyId Tenant company ID
+     * @param array $rawHits Raw job hits from ats_jobs search
+     * @return array Map of [job_id => match_count]
+     */
+    public static function getBenchCandidateCountsBulk(int $companyId, array $rawHits): array
+    {
+        if (empty($rawHits)) {
+            return [];
+        }
+
+        $elasticService = app(ElasticService::class);
+        $map = [];
+
+        if (! defined('ELASTIC_CANDIDATES_BENCH') || ! $elasticService->indexExists(ELASTIC_CANDIDATES_BENCH)) {
+            return [];
+        }
+
+        $msearchBody = [];
+        $jobIdOrder = [];
+
+        foreach ($rawHits as $hit) {
+            $jobId = $hit['id'] ?? null;
+            if (! $jobId) {
+                continue;
+            }
+
+            $skillNames = [];
+            $rawSkills = $hit['job_metronics_skills'] ?? [];
+            if (is_array($rawSkills)) {
+                foreach ($rawSkills as $s) {
+                    $name = is_array($s) ? ($s['skill_name'] ?? '') : ($s->skill_name ?? '');
+                    if (! empty($name)) {
+                        $skillNames[] = strtolower(trim($name));
+                    }
+                }
+            }
+
+            if (empty($skillNames) && ! empty($hit['default_skill'])) {
+                $parts = explode(',', $hit['default_skill']);
+                foreach ($parts as $p) {
+                    $pClean = strtolower(trim($p));
+                    if (! empty($pClean)) {
+                        $skillNames[] = $pClean;
+                    }
+                }
+            }
+
+            $skillShould = [];
+            foreach (array_unique($skillNames) as $skill) {
+                $skillShould[] = [
+                    'term' => [
+                        'job_application_skills.skills.keyword' => [
+                            'value' => $skill,
+                            'boost' => 10,
+                        ],
+                    ],
+                ];
+            }
+
+            $mustQuery = [
+                ['term' => ['company_id' => (int) $companyId]],
+                ['term' => ['condidate_type' => 'bench_condidate']],
+                ['term' => ['status' => 2]],
+            ];
+
+            $boolQuery = [
+                'must' => $mustQuery,
+            ];
+
+            if (! empty($skillShould)) {
+                $boolQuery['should'] = $skillShould;
+                $boolQuery['minimum_should_match'] = 1;
+            }
+
+            $msearchBody[] = ['index' => ELASTIC_CANDIDATES_BENCH, 'request_cache' => true];
+            $msearchBody[] = [
+                'size' => 0,
+                'track_total_hits' => true,
+                'query' => ['bool' => $boolQuery],
+            ];
+
+            $jobIdOrder[] = $jobId;
+        }
+
+        if (empty($msearchBody)) {
+            return [];
+        }
+
+        try {
+            $response = $elasticService->getClient()->msearch(['body' => $msearchBody]);
+            $responses = $response['responses'] ?? [];
+
+            foreach ($responses as $index => $res) {
+                $jobId = $jobIdOrder[$index] ?? null;
+                if ($jobId !== null) {
+                    $totalHits = $res['hits']['total']['value'] ?? 0;
+                    $map[$jobId] = (int) $totalHits;
+                }
+            }
+        } catch (\Throwable $e) {
+            \Log::error('getBenchCandidateCountsBulk failed: '.$e->getMessage());
+        }
+
+        return $map;
     }
 }

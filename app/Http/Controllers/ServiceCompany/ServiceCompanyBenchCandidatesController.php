@@ -6973,6 +6973,7 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
 				$query =  DB::table('rec_candidate_assign')->insert($values);
 				$rec_id = DB::getPdo()->lastInsertId();
 				GeneralMethod::candidateRequestIndexElastic($rec_id);
+				\App\Services\MarketJobV2Service::invalidateCacheForCompany((int) $source_from_company_id);
 
 		}
 			

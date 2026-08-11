@@ -251,7 +251,30 @@ class ElasticBenchCandidatesIndex
                         'qualification_name' => $application->qualification_name,
                         'percentage_hike' => $application->percentage_hike,
                         'superadminstatus' => $application->superadminstatus,
-                        'countforadd' => $application->countforadd
+                        'countforadd' => $application->countforadd,
+
+                        // V2 Pre-computed sorting & nested skills fields
+                        'ads_switch_order' => strtolower($application->ads_switch ?? 'no') === 'yes' ? 0 : 1,
+                        'np_epoch_day' => (function($npId) {
+                            $v = trim((string)$npId);
+                            if (empty($v)) return 999999999;
+                            if (strtolower($v) === 'immediate') return -999999998;
+                            if (($comma = strpos($v, ',')) !== false) $v = trim(substr($v, 0, $comma));
+                            if (($t = strpos($v, 'T')) !== false) $v = substr($v, 0, $t);
+                            $v = str_replace('/', '-', $v);
+                            try { return Carbon::parse($v)->getTimestamp() / 86400; } catch (\Exception $e) { return 999999999; }
+                        })($application->np_id),
+                        'np_is_immediate' => strtolower(trim((string)($application->np_id ?? ''))) === 'immediate',
+                        'candidate_skills' => DB::table('bench_candidate_skill_experience')
+                            ->where('candidate_id', $application->id)
+                            ->get()
+                            ->map(function ($sk) {
+                                return [
+                                    'skill_key' => strtolower(trim($sk->skill_key)),
+                                    'rating' => (int) $sk->rating,
+                                    'total_months' => (int) $sk->total_months,
+                                ];
+                            })->toArray(),
                     ];
                     $ik++;
                 }

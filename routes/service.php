@@ -9,6 +9,7 @@ use App\Http\Controllers\ServiceCompany\ServiceCompanyJobsController;
 use App\Http\Controllers\ServiceCompany\ServiceCompanyJobApplicationController;
 use App\Http\Controllers\ServiceCompany\ServiceCompanyAppTrackerController;
 use App\Http\Controllers\ServiceCompany\ServiceCompanyCvTrackerController;
+use App\Http\Controllers\ServiceCompany\ServiceCompanyCvTrackerV2Controller;
 use App\Http\Controllers\ServiceCompany\ServiceCompanyCompanyController;
 use App\Http\Controllers\ServiceCompany\InterviewScheduleController;
 use App\Http\Controllers\ServiceCompany\ServiceCompanyApplicationOfferController;
@@ -313,6 +314,7 @@ Route::group(['middleware' => 'auth'], function () {
 						Route::get('cvtracker/data', [ServiceCompanyCvTrackerController::class,'data'])->name('cvtracker.data');
 						Route::get('cvtracker/alldata', [ServiceCompanyCvTrackerController::class,'alldata'])->name('cvtracker.alldata');
 						Route::get('all-candidate-list', [ServiceCompanyCvTrackerController::class,'allcandidates'])->name('cvtracker.allcandidates');
+						Route::get('all-candidate-list-v2', [ServiceCompanyCvTrackerV2Controller::class,'allcandidates'])->name('cvtracker.v2.allcandidates');
 						Route::get('cvtracker/candidateRightSideBar/{id?}', [ServiceCompanyCvTrackerController::class,'candidateRightSideBar'])->name('cvtracker.candidateRightSideBar');
 						Route::get('cvtracker/export/{clients}/{jobs}/{source}/{search_passport}/{search_np_id}/{status}/{start}/{length}', [ServiceCompanyCvTrackerController::class,'export'])->name('cvtracker.export');	
 						Route::get('cvtracker/copyjobtable', [ServiceCompanyCvTrackerController::class,'copyjobtable'])->name('cvtracker.copyjobtable');
