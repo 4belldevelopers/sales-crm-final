@@ -3072,7 +3072,7 @@
                                                 </div>
                                                 <div class="co-send-hero-ident">
                                                     <div class="co-send-hero-name">{{ ucwords($so_name) }}</div>
-                                                    @if(!empty($so_role))<div class="co-send-hero-role">{{ ucwords($so_role) }}</div>@endif
+                                                    <div class="co-send-hero-role" id="co-send-step5-designation"@if(empty($so_role)) style="display:none"@endif>{{ ucwords($so_role) }}</div>
                                                     <div class="co-send-hero-meta">
                                                         @if(!empty($so_location))<span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>{{ ucwords($so_location) }}</span>@endif
                                                     </div>
@@ -6051,10 +6051,12 @@
                     $(document).ready(function () { setTimeout(refreshPreviewPanel, 200); });
                 })();
 
-                // Sync Step 1 "Offered Designation" → Step 4 "Designation" display in real time.
+                // Sync Step 1 "Offered Designation" → Step 4 & Step 5 "Designation" display in real time.
                 $(document).on('input', '#current_designation', function () {
                     var val = $(this).val().trim();
                     $('#co-appr-designation-display').text(val || '—');
+                    var $s5 = $('#co-send-step5-designation');
+                    if (val) { $s5.text(val).show(); } else { $s5.hide(); }
                 });
             </script>
         </div>
