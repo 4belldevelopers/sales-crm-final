@@ -4737,12 +4737,12 @@ protected $elasticService;
 		}
 		
 		if($request->current_ctc_mode==2){
-		      $totalSum = array_sum($request->option_percentage_hourly);
+		      $totalSum = array_sum(array_map('floatval', (array)$request->option_percentage_hourly));
 		}else{
-			$totalSum = array_sum($request->option_percentage);
+			$totalSum = array_sum(array_map('floatval', (array)$request->option_percentage));
 		}
 		// dd($totalSum);
-		if($totalSum != 100){
+		if(round($totalSum, 2) != 100){
 			  return response()->json(['status'=>'errors','message' => 'Please check Percentage and complete 100%']);
 		}
 
