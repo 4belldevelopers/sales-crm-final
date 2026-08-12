@@ -890,6 +890,7 @@ body, html {
 .v2-review-meta {
   display: flex;
   align-items: center;
+  flex-wrap: nowrap;
   gap: 20px;
   font-size: 13px;
   color: #334155;
@@ -900,6 +901,14 @@ body, html {
   display: flex;
   align-items: center;
   gap: 8px;
+  min-width: 0;
+  flex: 1 1 auto;
+}
+.v2-review-meta-item > span {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
 }
 
 /* Step 4 Workspace Includes Container */
