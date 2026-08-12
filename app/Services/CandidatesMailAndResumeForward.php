@@ -111,7 +111,7 @@ class CandidatesMailAndResumeForward
 
     }
 
-    private function setDynamicMailConfig($smtp, $fromName)
+    private function setDynamicMailConfig($smtp, $fromName = '')
     {
         config([
             'mail.default' => 'smtp',
