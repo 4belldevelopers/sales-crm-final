@@ -164,6 +164,29 @@ class ElasticBenchCandidatesIndex
                     ->get();
 
 
+                    $pipelineCounts = DB::table('add_job_wise_condidates')
+                        ->select('master_status_id', DB::raw('COUNT(*) as total'))
+                        ->where('job_application_id', $application->id)
+                        ->groupBy('master_status_id')
+                        ->pluck('total', 'master_status_id')
+                        ->toArray();
+
+                    $ads_switch_rank = (strtolower((string)($application->ads_switch ?? '')) === 'yes') ? 0 : 1;
+
+                    $np_days = 0;
+                    if ($application->serving_notice_period_mode == 0) {
+                        $np_days = (int) $application->np_id;
+                    } elseif ($application->serving_notice_period_mode == 1 && !empty($application->np_id)) {
+                        $lwdTime = strtotime($application->np_id);
+                        if ($lwdTime && $lwdTime > time()) {
+                            $np_days = (int) ceil(($lwdTime - time()) / 86400);
+                        } else {
+                            $np_days = 0;
+                        }
+                    } elseif ($application->serving_notice_period_mode == 2) {
+                        $np_days = 0;
+                    }
+
                     $bulkData[] = [
                         'index' => [
                             '_index' => ELASTIC_CANDIDATES_BENCH,
@@ -184,6 +207,16 @@ class ElasticBenchCandidatesIndex
                         'np_id' => $application->np_id,                    
                         'immediate_join' => $application->np_id,
                         'serving_notice_period_mode' => $application->serving_notice_period_mode,
+                        'np_days' => $np_days,
+                        'ads_switch_rank' => $ads_switch_rank,
+                        'sourcing_count' => $pipelineCounts[1] ?? 0,
+                        'screening_count' => $pipelineCounts[2] ?? 0,
+                        'interview_count' => $pipelineCounts[3] ?? 0,
+                        'evaluation_count' => $pipelineCounts[4] ?? 0,
+                        'negotiation_count' => $pipelineCounts[5] ?? 0,
+                        'offered_count' => $pipelineCounts[6] ?? 0,
+                        'joined_count' => $pipelineCounts[7] ?? 0,
+                        'rejected_count' => $pipelineCounts[8] ?? 0,
                         'state' => $application->state,
                         'city' => $application->city,
                         'submitted_by' => $application->submitted_by,

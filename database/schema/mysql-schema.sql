@@ -229,7 +229,8 @@ CREATE TABLE `bench_count_view_download` (
   `status` int NOT NULL DEFAULT '0' COMMENT '0-new, 1- old',
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL,
-  PRIMARY KEY (`id`)
+  PRIMARY KEY (`id`),
+  KEY `idx_bcvd_cand_type_stat` (`candidate_id`,`type`,`status`)
 ) ENGINE=InnoDB AUTO_INCREMENT=163 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- ============================================================
@@ -284,7 +285,8 @@ CREATE TABLE `bench_place` (
   `create_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `offer_currency` int DEFAULT NULL,
   `offer_mode` int DEFAULT NULL,
-  PRIMARY KEY (`id`)
+  PRIMARY KEY (`id`),
+  KEY `idx_bp_source_company` (`source_comapny_id`,`create_at`)
 ) ENGINE=InnoDB AUTO_INCREMENT=10 DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_unicode_ci;
 
 -- ============================================================
@@ -383,7 +385,8 @@ CREATE TABLE `boostkeywords` (
   `campaign_type` int DEFAULT NULL,
   `status` int NOT NULL DEFAULT '1',
   `clickCount` int DEFAULT '0',
-  PRIMARY KEY (`id`)
+  PRIMARY KEY (`id`),
+  KEY `idx_boostkeywords_company_country_id` (`company_id`,`country_id`,`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- ============================================================
@@ -445,7 +448,8 @@ CREATE TABLE `candidate_status` (
   `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `delete_status` int NOT NULL DEFAULT '1' COMMENT '0: For not deleted, 1:For deleted',
-  PRIMARY KEY (`id`)
+  PRIMARY KEY (`id`),
+  KEY `idx_candidate_status_company_parent_priority` (`company_id`,`parent`,`priority`)
 ) ENGINE=InnoDB AUTO_INCREMENT=11585 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ============================================================
@@ -702,7 +706,8 @@ CREATE TABLE `client_location` (
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
-  KEY `idx_cl_client_id` (`client_id`)
+  KEY `idx_cl_client_id` (`client_id`),
+  KEY `idx_client_location_client_id_id` (`client_id`,`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=2532 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ============================================================
@@ -1045,7 +1050,8 @@ CREATE TABLE `company_coins` (
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL,
   PRIMARY KEY (`id`),
-  KEY `idx_company_coins_company_id` (`company_id`)
+  KEY `idx_company_coins_company_id` (`company_id`),
+  KEY `idx_company_coins_company_event` (`company_id`,`event_type`)
 ) ENGINE=InnoDB AUTO_INCREMENT=1783 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- ============================================================
@@ -1611,7 +1617,8 @@ CREATE TABLE `interview_feedback` (
   `joining_probability` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `risk_factors` text COLLATE utf8mb4_unicode_ci,
   `compensation_comments` text COLLATE utf8mb4_unicode_ci,
-  PRIMARY KEY (`id`)
+  PRIMARY KEY (`id`),
+  KEY `idx_intfb_interview_id` (`interview_id`,`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=3517 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ============================================================
@@ -1919,6 +1926,7 @@ CREATE TABLE `job_applications` (
   `phone` varchar(191) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `np_id` varchar(55) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `serving_notice_period_mode` int NOT NULL DEFAULT '0',
+  `np_days` int DEFAULT NULL,
   `last_working_date` date DEFAULT NULL,
   `gender` varchar(191) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `dob` date DEFAULT NULL,
@@ -1995,6 +2003,7 @@ CREATE TABLE `job_applications` (
   `countforadd` int NOT NULL DEFAULT '0',
   `notice_comments` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
   `ads_switch` enum('Yes','No') CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'No',
+  `ads_switch_rank` tinyint NOT NULL DEFAULT '1',
   `linkedin` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
   `github` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
   `behance` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
@@ -2026,6 +2035,7 @@ CREATE TABLE `job_applications` (
   KEY `job_applications_job_id_foreign` (`job_id`),
   KEY `idx_job_id` (`job_id`),
   KEY `idx_ja_company_status` (`company_id`,`master_status_id`),
+  KEY `idx_ja_company_type_status` (`company_id`,`condidate_type`,`status`),
   KEY `idx_ja_submitted_by` (`submitted_by`),
   KEY `idx_ja_city_id` (`city_id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=63619 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -2662,7 +2672,8 @@ CREATE TABLE `offer_point_companies` (
   `deleteded` int DEFAULT '1',
   `section_divided` int NOT NULL DEFAULT '0',
   `show_default` int NOT NULL DEFAULT '1',
-  PRIMARY KEY (`id`)
+  PRIMARY KEY (`id`),
+  KEY `idx_offer_point_comp_type_divided_sorting` (`company_id`,`section_type`,`section_divided`,`sorting`)
 ) ENGINE=InnoDB AUTO_INCREMENT=279 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- ============================================================

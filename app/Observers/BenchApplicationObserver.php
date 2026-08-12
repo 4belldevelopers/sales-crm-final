@@ -17,6 +17,7 @@ class BenchApplicationObserver
         
         // INTENT: Asynchronously sync updated candidate to Elasticsearch bench index via background queue worker
         if ($bench->company_id) {
+            cache()->increment('allbenchcandidates_version_company_' . $bench->company_id);
             ElasticBenchCandidateIndex::dispatch($bench->company_id);
         }
     }
@@ -26,6 +27,7 @@ class BenchApplicationObserver
         UpdateBenchCountersJob::dispatch($bench->job_id, $bench->company_id);
         
         if ($bench->company_id) {
+            cache()->increment('allbenchcandidates_version_company_' . $bench->company_id);
             ElasticBenchCandidateIndex::dispatch($bench->company_id);
         }
     }

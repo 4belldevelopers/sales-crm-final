@@ -106,7 +106,8 @@ class ServiceCompanyTeamController extends ServiceCompanyBaseController
 				);
 
 				$this->usersCount 	= $this->teamCounts['total'];
-				$this->users 		= User::with('company')->company()->get();
+				// V2 Phase 1: Removed dead query `$this->users = User::with('company')->company()->get();`
+				// because row data is fetched asynchronously via data_ajax().
 				return view('service_company.team.index', $this->data);
     }
 	public function teamDelete(Request $request){
@@ -138,14 +139,40 @@ class ServiceCompanyTeamController extends ServiceCompanyBaseController
 			foreach ((array) $request->arr as $uid) {
 				Cache::put('user:epoch:' . (int) $uid, now()->timestamp, 7 * 24 * 3600);
 			}
+			// V2 Phase 4: Invalidate cached team counts and team listing for the company
+			$this->clearTeamCache($this->user->company_id);
+
 			$message		=	'Team member inactive successfully.';	
 			$type			=	'success';	
 			return Reply::dataOnly(['status' => 'success', 'msgType'=> $type, 'message' => $message]);	
 		}
-		
-		
-		
 	}
+
+	/**
+	 * Clears cached team counts and increments the tenant team version key
+	 * to instantly invalidate all cached team listings across the company.
+	 *
+	 * @param int $companyId
+	 * @return void
+	 */
+	protected function clearTeamCache($companyId)
+	{
+		if (empty($companyId)) {
+			return;
+		}
+
+		Cache::forget('ats:teamcounts:' . $companyId);
+		$versionKey = 'ats:teamversion:company_' . $companyId;
+		if (Cache::has($versionKey)) {
+			Cache::increment($versionKey);
+		} else {
+			Cache::put($versionKey, 2, now()->addDays(30));
+		}
+		if (isset($this->user->id)) {
+			GeneralMethod::cacheClean('allteam_version_user_' . $this->user->id);
+		}
+	}
+
 	public function data_ajax(Request $request) 
 	{ 
 		
@@ -182,9 +209,10 @@ class ServiceCompanyTeamController extends ServiceCompanyBaseController
 					'statusTab' => $statusTab
 				];
 
-				$versionKey = 'allteam_version_user_'.$this->user->id;
+				// V2 Phase 4: Tenant-scoped version key so all company team members see fresh updates instantly
+				$versionKey = 'ats:teamversion:company_' . $company_id;
 				$version = cache()->get($versionKey, 1);
-				$cacheKeySet = 'ats:allteam:' . $this->user->id . ':' . $version . ':' . md5(json_encode($cachePayload));
+				$cacheKeySet = 'ats:allteam:company:' . $company_id . ':' . $version . ':' . md5(json_encode($cachePayload));
 				/* ----------------------------
 				⚡ Check DragonflyDB first
 				----------------------------- */
@@ -267,8 +295,9 @@ class ServiceCompanyTeamController extends ServiceCompanyBaseController
 					'body' => [
 						'size' => 10000, // fetch all (for ranking)
 						'_source' => [
-							'id','company_id','company_name','root_user',
-							'name','email','calling_code','mobile','mobile_verified','password','remember_token','updated_at','created_at','image','is_superadmin','email_verification_code','status','working_status','type','active_session','session_time','last_login','auto_date_team','session_id','super_password','super_admin_login_code','display_name','role_name','designation','country_name','state_name','city_name','candidate_relation'
+							'id', 'company_id', 'company_name', 'root_user', 'name', 'email', 'calling_code',
+							'mobile', 'password', 'status', 'working_status', 'display_name',
+							'role_name', 'designation', 'image', 'last_login', 'created_at'
 						],
 						'query' => [
 							'bool' => [
@@ -458,7 +487,44 @@ class ServiceCompanyTeamController extends ServiceCompanyBaseController
 
 
 				$data = $allRankedUsers->slice($from, $size)->values();
-				// dd($data);
+
+				// V2 Phase 2: Batch pre-fetch workload and rank metrics for sliced page IDs
+				// to eliminate N+1 queries inside Blade view rendering.
+				$userIds = $data->pluck('id')->filter()->all();
+				$rankMonth = Carbon::now()->startOfMonth()->subMonth()->format('M Y');
+
+				$activeJobsMap = !empty($userIds) ? DB::table('job_assign')
+					->join('jobs', 'jobs.id', '=', 'job_assign.job_id')
+					->where('job_assign.company_id', $company_id)
+					->whereIn('job_assign.user_id', $userIds)
+					->where('jobs.status', 'active')
+					->select('job_assign.user_id', DB::raw('COUNT(DISTINCT job_assign.job_id) as total'))
+					->groupBy('job_assign.user_id')
+					->pluck('total', 'job_assign.user_id') : collect();
+
+				$captainJobsMap = !empty($userIds) ? DB::table('job_assign')
+					->where('company_id', $company_id)
+					->whereIn('spok_user_id', $userIds)
+					->select('spok_user_id', DB::raw('COUNT(DISTINCT job_id) as total'))
+					->groupBy('spok_user_id')
+					->pluck('total', 'spok_user_id') : collect();
+
+				$trmTalentsMap = !empty($userIds) ? DB::table('bench_assign')
+					->whereIn('user_id', $userIds)
+					->select('user_id', DB::raw('COUNT(*) as total'))
+					->groupBy('user_id')
+					->pluck('total', 'user_id') : collect();
+
+				$data = $data->map(function ($item) use ($activeJobsMap, $captainJobsMap, $trmTalentsMap, $rankMonth) {
+					$uid = $item['id'];
+					$item['pre_active_jobs']  = (int) ($activeJobsMap[$uid] ?? 0);
+					$item['pre_captain_jobs'] = (int) ($captainJobsMap[$uid] ?? 0);
+					$item['pre_trm_talents']  = (int) ($trmTalentsMap[$uid] ?? 0);
+					$item['pre_rank']         = (int) ($item['rank'] ?? 0);
+					$item['pre_score']        = (int) ($item['score'] ?? 0);
+					$item['pre_rank_month']   = $rankMonth;
+					return $item;
+				});
 
 				$pagination = [
 					'total' => $total,
@@ -2068,7 +2134,8 @@ class ServiceCompanyTeamController extends ServiceCompanyBaseController
 				$users_balance	=	0;
 			}										
 			DB::table('package_active')->where('package_active.company_id', @$company_id)->limit(1)
-			->update( array('users_used' 	=> $activeUserCount, 'users_balance' => $users_balance ) ); 							
+			->update( array('users_used' 	=> $activeUserCount, 'users_balance' => $users_balance ) ); 
+			$this->clearTeamCache($company_id);
 			return Reply::dataOnly(['status' => 'success']); 
 
 								
@@ -2095,12 +2162,8 @@ class ServiceCompanyTeamController extends ServiceCompanyBaseController
 
 			GeneralMethod::userIndexingupload($userId);	
 			
-			$cachekeys = [
-						'allteam_version_user_'.$this->user->id
-					];
-					foreach ($cachekeys as $key) {
-						GeneralMethod::cacheClean($key);
-					}
+			// V2 Phase 4: Invalidate cached team counts and tenant team listing
+			$this->clearTeamCache($company_id);
 				 
 			return Reply::dataOnly(['status' => 'success','status_text'=>$status_text]);
 	}

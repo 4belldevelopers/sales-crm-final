@@ -516,14 +516,16 @@ class InterviewScheduleController extends ServiceCompanyBaseController
         ];
     }
 
+    /**
+     * Display the Talent Bench Candidates interview schedule page shell.
+     * Candidate interview data is fetched asynchronously via benchinterviewdata_ajax().
+     *
+     * Intent: Serves lightweight Blade view shell without executing heavy DB queries on load.
+     * Tenancy: Data fetching in AJAX endpoint is strictly scoped by company_id.
+     */
     public function benchinterviewtable(Request $request)
     {
-        $chkAdminRole = $this->user->hasRole('admin');
-        if (! $chkAdminRole) {
-            $this->candidates = JobApplication::where('submitted_by', '=', $this->user->id)->get();
-        } else {
-            $this->candidates = JobApplication::all();
-        }
+        $this->candidates = [];
 
         return view('service_company.bench-candidates.interview-schedule', $this->data);
     }
@@ -720,7 +722,6 @@ class InterviewScheduleController extends ServiceCompanyBaseController
             ],
         ];
 
-        $response = $this->elasticService->getClient()->search($params);
         if (! $this->elasticService->indexExists(ELASTIC_INERTVIEW_TRACKER)) {
             $total = 0;
             $data = [];
@@ -729,7 +730,44 @@ class InterviewScheduleController extends ServiceCompanyBaseController
             $total = $response['hits']['total']['value'] ?? 0;
             $data = array_map(function ($hit) {
                 return $hit['_source'];
-            }, $response['hits']['hits']);
+            }, $response['hits']['hits'] ?? []);
+        }
+
+        // Batch pre-hydrate client names and latest feedback for the page to eliminate Blade N+1 queries
+        if (! empty($data)) {
+            $jobIds = array_values(array_unique(array_filter(array_column($data, 'job_id'))));
+            $clientMap = [];
+            if (! empty($jobIds)) {
+                $clientMap = DB::table('jobs')
+                    ->leftJoin('clients', 'clients.id', '=', 'jobs.client_id')
+                    ->leftJoin('companies', 'companies.id', '=', 'jobs.company_id')
+                    ->whereIn('jobs.id', $jobIds)
+                    ->select('jobs.id as job_id', DB::raw("COALESCE(clients.name, companies.company_name, '') as client_title"))
+                    ->pluck('client_title', 'job_id')
+                    ->all();
+            }
+
+            $interviewIds = array_values(array_unique(array_filter(array_column($data, 'id'))));
+            $feedbackMap = [];
+            if (! empty($interviewIds)) {
+                $feedbackRows = DB::table('interview_feedback')
+                    ->whereIn('interview_id', $interviewIds)
+                    ->orderBy('id', 'desc')
+                    ->get();
+                foreach ($feedbackRows as $fb) {
+                    if (! isset($feedbackMap[$fb->interview_id])) {
+                        $feedbackMap[$fb->interview_id] = $fb;
+                    }
+                }
+            }
+
+            foreach ($data as &$row) {
+                $jobId = $row['job_id'] ?? null;
+                $row['client_title_name_enriched'] = $clientMap[$jobId] ?? ($row['client_name'] ?? $row['company_name'] ?? '');
+                $intId = $row['id'] ?? null;
+                $row['latest_feedback_enriched'] = $feedbackMap[$intId] ?? null;
+            }
+            unset($row);
         }
         $pagination = [
             'total' => $total,
@@ -748,328 +786,6 @@ class InterviewScheduleController extends ServiceCompanyBaseController
         cache()->put($cacheKeySet, $responseData, now()->addMinutes(ALL_INTERVIEW_BENCH_CANDIDATES_TIME));
 
         return response()->json($responseData);
-
-        if (($chkAdminRole > 0) && (in_array('all_requisition', $this->userPermissions) && in_array('view_jobs', $this->userPermissions))) {
-            // dd("ki");
-            $interviewShedule = DB::table('interview_schedules')
-                ->join('job_applications', 'job_applications.id', 'interview_schedules.job_application_id')
-                ->join('add_job_wise_condidates', 'interview_schedules.interview_job_wise_con_id', 'add_job_wise_condidates.id')
-                ->join('jobs', function ($join) {
-                    $join->on('jobs.id', 'add_job_wise_condidates.job_id');
-                })
-                ->join('companies', function ($join) {
-                    $join->on('companies.id', 'jobs.company_id');
-                })
-                ->leftjoin('users', 'users.id', 'job_applications.submitted_by')
-                ->leftjoin('companies as uc', 'uc.id', '=', 'users.company_id')
-                ->leftjoin('countries', 'countries.id', 'job_applications.country')
-                ->leftjoin('state_list', 'state_list.id', 'job_applications.state')
-                ->leftjoin('city_list', 'city_list.city_id', 'job_applications.city_id')
-                // ->leftjoin('jobs', 'jobs.id', 'job_applications.job_id')
-                // ->leftjoin('companies', 'companies.id', 'jobs.company_id')
-                ->leftjoin('clients', 'clients.id', 'jobs.client_id')
-                ->leftjoin('interview_feedback', 'interview_feedback.interview_id', 'interview_schedules.id')
-                ->leftjoin('master_status', 'master_status.id', 'interview_schedules.stage')
-                ->leftjoin('interview_mode', 'interview_mode.id', 'interview_schedules.interview_mode')
-                ->leftjoin('interview_mode_lavel', 'interview_mode_lavel.id', 'interview_schedules.interview_mode_lavel')
-                ->leftjoin('candidate_status', 'candidate_status.id', 'interview_schedules.substage')
-                ->leftJoin('recommendation_relation', 'recommendation_relation.job_id', '=', 'jobs.id')
-                ->leftJoin('updatetimeline', 'updatetimeline.interview_schedules_id', 'interview_schedules.id') // Append new code
-                ->select(
-                    'interview_schedules.id',
-                    'job_applications.full_name',
-                    'interview_schedules.status',
-                    'interview_schedules.schedule_date',
-                    'interview_schedules.available_status',
-                    'interview_schedules.reschedule',
-                    'interview_schedules.stage as master_status_id',
-                    'interview_schedules.substage as child_status_id',
-                    'interview_schedules.feedback',
-                    'interview_schedules.interview_mode',
-                    'interview_schedules.timezone_abbreviation',
-                    'interview_schedules.schedule_to_time',
-                    'interview_schedules.interviewers',
-                    'interview_schedules.interview_type',
-                    'interview_schedules.schedule_from_time',
-                    'interview_schedules.company_id as real_company_id',
-                    'users.name as source',
-                    'users.name as posted_by',
-                    'users.image as posted_by_image',
-                    'interview_schedules.job_application_id',
-                    'master_status.name as master_status_name',
-                    'candidate_status.name as child_status_name',
-                    'jobs.title as job_title',
-                    'interview_schedules.interview_job_id as job_id',
-                    'companies.company_name',
-                    'add_job_wise_condidates.thirdparty_company_id as ClientComID',
-                    'add_job_wise_condidates.job_id as jobId',
-                    'interview_schedules.schedule_to_time',
-                    'interview_schedules.timezone_abbreviation',
-                    'job_applications.current_designation',
-                    'job_applications.thirdparty_company_id',
-                    'interview_mode.name as mode_name',
-                    'interview_mode_lavel.name as mode_lavel_name',
-                    'master_status.css_style',
-                    'interview_schedules.average_star_rating',
-                    'jobs.status as job_status',
-                    'recommendation_relation.id as recommendation_id',
-                    'recommendation_relation.from_company_id',
-                    'recommendation_relation.final_status',
-                    'recommendation_relation.to_company_id',
-                    'add_job_wise_condidates.id as wiseID',
-                    'uc.company_name as uc_company_name',
-                    'updatetimeline.interview_mention_link'
-                );
-
-            if (\request('sortingfilter') != '') {
-                $feedback = request('sortingfilter');
-                if ($feedback == 'Feedback Pending') {
-                    $interviewShedule = $interviewShedule->where(function ($query) {
-                        $query->whereNull('interview_feedback.id')  // Allow interviews without feedback
-                            ->orWhere('interview_schedules.feedback', '=', null);
-                    });
-                    $interviewShedule = $interviewShedule->where('interview_schedules.schedule_date', '<', now()->subHour());
-                }
-            }
-
-            $interviewShedule = $interviewShedule->where('job_applications.company_id', '=', $company_id);
-            $interviewShedule = $interviewShedule->where('job_applications.condidate_type', '=', 'bench_condidate');
-            if ($valCheck_date == 1) {
-                $interviewShedule->whereBetween('interview_schedules.schedule_date', [$startOfDay, $endOfDay]);
-            }
-
-            $searchTerms = request('cus_search');
-            $custom_search = $searchTerms; // json_decode($searchTerms, true);
-            if (\request('cus_search') != '') {
-
-                $interviewShedule = $interviewShedule->where(function ($query) use ($custom_search) {
-                    $query->orWhere('job_applications.full_name', 'LIKE', "%{$custom_search}%");
-                    $query->orWhere('job_applications.phone', 'LIKE', "%{$custom_search}%");
-                    $query->orWhere('job_applications.email', 'LIKE', "%{$custom_search}%");
-                    $query->orWhere('jobs.title', 'like', "%{$custom_search}%");
-                    $query->orWhere('countries.country_name', 'like', "%{$custom_search}%");
-                    $query->orWhere('state_list.state', 'like', "%{$custom_search}%");
-                    $query->orWhere('city_list.city', 'like', "%{$custom_search}%");
-                    $query->orWhere('users.name', 'like', "%{$custom_search}%");
-                    $query->orWhere('clients.name', 'like', "%{$custom_search}%");
-                    $query->orWhere('companies.company_name', 'like', "%{$custom_search}%");
-                });
-            }
-
-            if (\request('cus_search') != '') {
-                $interviewShedule = $interviewShedule->orWhere(function ($query) use ($company_id) {
-
-                    return
-                        $query->where('recommendation_relation.from_company_id', '=', $company_id)
-                            ->where('add_job_wise_condidates.thirdparty_company_id', '=', $company_id);
-                });
-                if ($valCheck_date == 1) {
-                    $interviewShedule = $interviewShedule->where(function ($subQuery) use ($startOfDay, $endOfDay) {
-                        $subQuery->whereBetween('interview_schedules.schedule_date', [$startOfDay, $endOfDay]);
-                    });
-                }
-
-            }
-
-            // 			if (\request('search') != "") {
-            // 				$search = request('search');
-            // 				$interviewShedule = $interviewShedule->where('job_applications.full_name', 'LIKE', "%$search%");
-            // 			}
-
-            // 			if (\request('search') != "") {
-            // 				$search = request('search');
-            // 				$interviewShedule = $interviewShedule->orWhere(function ($query) use ($company_id, $search) {
-            // 					return
-            // 						$query->where('recommendation_relation.from_company_id', '=', $company_id)
-            // 							->where('add_job_wise_condidates.thirdparty_company_id', '=', $company_id)
-            // 							->where('job_applications.full_name', 'LIKE', "%$search%");
-
-            // 				});
-            // 			}
-
-        } else {
-
-            $interviewShedule = DB::table('interview_schedules')
-                ->join('job_applications', 'job_applications.id', 'interview_schedules.job_application_id')
-                ->join('add_job_wise_condidates', 'interview_schedules.interview_job_wise_con_id', 'add_job_wise_condidates.id')
-                // ->join('add_job_wise_condidates', 'add_job_wise_condidates.job_application_id', 'job_applications.id')
-                ->join('jobs', function ($join) {
-                    $join->on('jobs.id', 'add_job_wise_condidates.job_id');
-                })
-                ->join('companies', function ($join) {
-                    $join->on('companies.id', 'jobs.company_id');
-                })
-                ->join('users', 'users.id', 'job_applications.submitted_by')
-                ->leftjoin('companies as uc', 'uc.id', '=', 'users.company_id')
-                // ->join('jobs', 'jobs.id', 'job_applications.job_id')
-                ->join('job_assign', 'job_assign.job_id', 'jobs.id')
-                ->leftjoin('countries', 'countries.id', 'job_applications.country')
-                ->leftjoin('state_list', 'state_list.id', 'job_applications.state')
-                ->leftjoin('city_list', 'city_list.city_id', 'job_applications.city_id')
-                // ->leftjoin('companies', 'companies.id', 'jobs.company_id')
-                ->leftjoin('clients', 'clients.id', 'jobs.client_id')
-                ->leftjoin('interview_feedback', 'interview_feedback.interview_id', 'interview_schedules.id')
-                ->leftjoin('master_status', 'master_status.id', 'interview_schedules.stage')
-                ->leftjoin('interview_mode', 'interview_mode.id', 'interview_schedules.interview_mode')
-                ->leftjoin('interview_mode_lavel', 'interview_mode_lavel.id', 'interview_schedules.interview_mode_lavel')
-                ->leftjoin('candidate_status', 'candidate_status.id', 'interview_schedules.substage')
-                ->leftJoin('recommendation_relation', 'recommendation_relation.job_id', '=', 'jobs.id')
-                ->leftJoin('updatetimeline', 'updatetimeline.interview_schedules_id', 'interview_schedules.id') // Append new code
-                ->select(
-                    'interview_schedules.id',
-                    'job_applications.full_name',
-                    'interview_schedules.status',
-                    'interview_schedules.schedule_date',
-                    'interview_schedules.available_status',
-                    'interview_schedules.reschedule',
-                    'interview_schedules.feedback',
-                    'interview_schedules.interview_mode',
-                    'interview_schedules.interviewers',
-                    'interview_schedules.interview_type',
-                    'interview_schedules.schedule_from_time',
-                    'interview_schedules.company_id as real_company_id',
-                    'users.name as source',
-                    'users.name as posted_by',
-                    'users.image as posted_by_image',
-                    'interview_schedules.job_application_id',
-                    'master_status.name as master_status_name',
-                    'candidate_status.name as child_status_name',
-                    'jobs.title as job_title',
-                    'jobs.company_id as companyIdCheck',
-                    'interview_schedules.interview_job_id as job_id',
-                    'companies.company_name',
-                    'add_job_wise_condidates.thirdparty_company_id as ClientComID',
-                    'add_job_wise_condidates.job_id as jobId',
-                    'interview_schedules.schedule_to_time',
-                    'interview_schedules.timezone_abbreviation',
-                    'job_applications.current_designation',
-                    'job_applications.thirdparty_company_id',
-                    'interview_mode.name as mode_name',
-                    'interview_mode_lavel.name as mode_lavel_name',
-                    'master_status.css_style',
-                    'interview_schedules.average_star_rating',
-                    'jobs.status as job_status',
-                    'recommendation_relation.id as recommendation_id',
-                    'recommendation_relation.from_company_id',
-                    'recommendation_relation.final_status',
-                    'recommendation_relation.to_company_id',
-                    'add_job_wise_condidates.id as wiseID',
-                    'uc.company_name as uc_company_name',
-                    'updatetimeline.interview_mention_link'
-                );
-
-            if (\request('sortingfilter') != '') {
-                $feedback = request('sortingfilter');
-                if ($feedback == 'Feedback Pending') {
-                    $interviewShedule = $interviewShedule->where(function ($query) {
-                        $query->whereNull('interview_feedback.id')  // Allow interviews without feedback
-                            ->orWhere('interview_schedules.feedback', '=', null);
-                    });
-                    $interviewShedule = $interviewShedule->where('interview_schedules.schedule_date', '<', now()->subHour());
-                }
-            }
-
-            // $interviewShedule = $interviewShedule->where('jobs.company_id', '=', $company_id)->where('job_assign.user_id', $this->user->id);
-            $interviewShedule = $interviewShedule->where('job_applications.condidate_type', '=', 'bench_condidate');
-            // 			if (\request('search') != "") {
-            // 				$search = request('search');
-            // 				$interviewShedule = $interviewShedule->where('job_applications.full_name', 'LIKE', "%$search%")->where('job_assign.user_id', $this->user->id);
-            // 			}
-            if ($valCheck_date == 1) {
-                $interviewShedule->whereBetween('interview_schedules.schedule_date', [$startOfDay, $endOfDay]);
-            }
-            $searchTerms = request('cus_search');
-            $custom_search = $searchTerms; // json_decode($searchTerms, true);
-            if (\request('cus_search') != '') {
-
-                $interviewShedule = $interviewShedule->where(function ($query) use ($custom_search) {
-                    $query->where('job_assign.user_id', $this->user->id);
-                    $query->orWhere('job_applications.full_name', 'LIKE', "%{$custom_search}%");
-                    $query->orWhere('job_applications.phone', 'LIKE', "%{$custom_search}%");
-                    $query->orWhere('job_applications.email', 'LIKE', "%{$custom_search}%");
-                    $query->orWhere('jobs.title', 'like', "%{$custom_search}%");
-                    $query->orWhere('countries.country_name', 'like', "%{$custom_search}%");
-                    $query->orWhere('state_list.state', 'like', "%{$custom_search}%");
-                    $query->orWhere('city_list.city', 'like', "%{$custom_search}%");
-                    $query->orWhere('users.name', 'like', "%{$custom_search}%");
-                    $query->orWhere('clients.name', 'like', "%{$custom_search}%");
-                    $query->orWhere('companies.company_name', 'like', "%{$custom_search}%");
-                });
-            }
-
-            if (\request('cus_search') != '') {
-                $interviewShedule = $interviewShedule->orWhere(function ($query) use ($company_id) {
-
-                    return
-                        $query->where('recommendation_relation.from_company_id', '=', $company_id)
-                            ->where('add_job_wise_condidates.thirdparty_company_id', '=', $company_id)
-                            ->where('job_assign.user_id', $this->user->id);
-                });
-                if ($valCheck_date == 1) {
-                    $interviewShedule = $interviewShedule->where(function ($subQuery) use ($startOfDay, $endOfDay) {
-                        $subQuery->whereBetween('interview_schedules.schedule_date', [$startOfDay, $endOfDay]);
-                    });
-                }
-
-            }
-
-        }
-        // $interviewShedule = $interviewShedule->where('job_applications.submitted_by', '=', auth()->user()->id);
-        $interviewShedule = $interviewShedule->where('job_applications.company_id', '=', auth()->user()->company_id);
-        $interviewShedule->groupBy('interview_schedules.id');
-
-        if (\request('sortingfilter') != '') {
-            $valCheck = request('sortingfilter');
-            if ($valCheck == 1) {
-                $interviewShedule = $interviewShedule->orderBy('interview_schedules.created_at', 'DESC');
-            } elseif ($valCheck == 2) {
-                $interviewShedule = $interviewShedule->orderBy('interview_schedules.created_at', 'ASC');
-            } elseif ($valCheck == 3) {
-                $interviewShedule = $interviewShedule->orderBy('interview_schedules.schedule_date', 'ASC');
-            } elseif ($valCheck == 4) {
-                $interviewShedule = $interviewShedule->orderBy('interview_schedules.schedule_date', 'DESC');
-            } elseif ($valCheck == 5) {
-                $interviewShedule = $interviewShedule->orderBy('job_applications.np_id', 'ASC');
-            } elseif ($valCheck == 6) {
-                $interviewShedule = $interviewShedule->orderBy('job_applications.np_id', 'DESC');
-            } elseif ($valCheck == 9) {
-                $interviewShedule = $interviewShedule->orderByRaw("FIELD(job_applications.np_id, 'Immediate') DESC")
-                    ->orderBy('job_applications.np_id', 'DESC')
-                    ->get();
-            } elseif ($valCheck == 7) {
-                $interviewShedule = $interviewShedule->orderBy('job_applications.total_exp', 'DESC');
-            } elseif ($valCheck == 8) {
-                $interviewShedule = $interviewShedule->orderBy('job_applications.total_exp', 'ASC');
-            } else {
-                $interviewShedule->orderBy('interview_schedules.schedule_date', 'DESC');
-            }
-
-        } else {
-            $interviewShedule->orderBy('interview_schedules.schedule_date', 'DESC');
-        }
-
-        $perPage = 10;
-        $page = $request->get('page', 1);
-        // dd($page);
-        $total = count($interviewShedule->get());
-        // dd($total);
-        $data = $interviewShedule->skip(($page - 1) * $perPage)->take($perPage)->get();
-
-        $pagination = [
-            'total' => $total,
-            'current_page' => $page,
-            'last_page' => ceil($total / $perPage),
-            'listType' => 'allcandidate',
-        ];
-        // dd($pagination);
-        $userPermissions = $this->userPermissions;
-
-        return response()->json([
-            'html' => view('service_company.ajax_pages.bench-candidate-interview-schedule-ajax', compact('data', 'userPermissions', 'company_id', 'available_status'))->render(),
-            'total' => $total,
-            'pagination' => view('service_company.ajax_pages.pagination', compact('pagination'))->render(),
-        ]);
-
     }
 
     public function benchinterviewdata(Request $request)
@@ -2399,7 +2115,7 @@ class InterviewScheduleController extends ServiceCompanyBaseController
             }
         }
 
-return $cols;
+        return $cols;
     }
 
     public function updateInterview(Request $request)
