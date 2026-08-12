@@ -1,4 +1,4 @@
-﻿@php
+@php
     use App\Helper\GeneralMethod;
 @endphp
 <div class="card shadow-none rounded-0 w-100" id="offer_create_show_right_bar">
@@ -701,6 +701,14 @@
 
         /* Form rows: icon label left, field right */
         .co-send-form { display: flex; flex-direction: column; }
+        .co-send-row-grid { display: flex; gap: 20px; border-bottom: 1px solid #f4f4f6; }
+        .co-send-row-grid .co-send-row-col { flex: 1 1 50%; min-width: 0; }
+        .co-send-row-grid .co-send-row { border-bottom: none; }
+        .co-send-row-grid .co-send-row-col:last-child .co-send-label { flex: 0 0 90px; }
+        @media (max-width: 768px) {
+            .co-send-row-grid { flex-direction: column; gap: 0; }
+            .co-send-row-grid .co-send-row-col:first-child .co-send-row { border-bottom: 1px solid #f4f4f6; }
+        }
         .co-send-row { display: flex; align-items: flex-start; gap: 20px; padding: 16px 0; border-bottom: 1px solid #f4f4f6; }
         .co-send-row:last-child { border-bottom: none; }
         .co-send-label { flex: 0 0 170px; font-size: 13px; font-weight: 600; color: #3f4254; display: flex; align-items: center; gap: 8px; padding-top: 10px; }
@@ -3107,11 +3115,24 @@
                                         <input type="hidden" id="co_send_fromemail" value="{{ $so_from_email }}">
                                         <input type="hidden" id="co_send_candidateemail" value="{{ $so_email }}">
 
-                                        <div class="co-send-row">
-                                            <label class="co-send-label"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg> From Email ID</label>
-                                            <div class="co-send-field">
-                                                <input type="text" class="co-send-input" value="{{ $so_from_name ? $so_from_name.' <'.$so_from_email.'>' : $so_from_email }}" readonly>
-                                                <div class="co-send-hint">This will be the email sender address</div>
+                                        <div class="co-send-row-grid">
+                                            <div class="co-send-row-col">
+                                                <div class="co-send-row">
+                                                    <label class="co-send-label"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg> From Email ID</label>
+                                                    <div class="co-send-field">
+                                                        <input type="text" class="co-send-input" value="{{ $so_from_name ? $so_from_name.' <'.$so_from_email.'>' : $so_from_email }}" readonly>
+                                                        <div class="co-send-hint">This will be the email sender address</div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="co-send-row-col">
+                                                <div class="co-send-row">
+                                                    <label class="co-send-label"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 17 4 12 9 7"/><path d="M20 18v-2a4 4 0 0 0-4-4H4"/></svg> Reply To</label>
+                                                    <div class="co-send-field">
+                                                        <input type="text" class="co-send-input" id="co_send_replyto" value="{{ $so_from_email }}" readonly>
+                                                        <div class="co-send-hint">Direct candidate replies to this address</div>
+                                                    </div>
+                                                </div>
                                             </div>
                                         </div>
 
@@ -5829,6 +5850,7 @@
                     });
                     var toArr = coCollectChips('co_to_chips');
                     if (!toArr.length) { Swal.fire('Warning', 'Please add at least one recipient email address.', 'warning'); return; }
+                    var replyTo = $('#co_send_replyto').val() ? $('#co_send_replyto').val().trim() : '';
                     var subject = $('#co_send_subject').val().trim();
                     if (!subject) { Swal.fire('Warning', 'Please enter an email subject.', 'warning'); return; }
                     var body = (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances.co_send_editor) ? CKEDITOR.instances.co_send_editor.getData() : '';
@@ -5839,6 +5861,7 @@
                     formData.append('from_email', JSON.stringify([{ value: fromEmail }]));   // backend json_decodes this
                     formData.append('to_email', toArr.join(','));
                     formData.append('cc_email', coCollectChips('co_cc_chips').join(','));
+                    formData.append('reply_to_email', replyTo);
                     formData.append('subject', subject);
                     formData.append('attached_cv', 0);
                     formData.append('editor1', body);
