@@ -1,21 +1,16 @@
 @php
-    use App\Helper\GeneralMethod;
-    use Illuminate\Support\Facades\DB;
     use Carbon\Carbon;
-
-    $reportMonth = Carbon::now()->startOfMonth()->subMonth();
-    $rankstartOfMonthForReport = $reportMonth->copy()->startOfMonth()->toDateTimeString();
-    $rankendOfMonthForReport = $reportMonth->copy()->endOfMonth()->toDateTimeString();
-    $rankstartOfMonthForReport = Carbon::parse($rankstartOfMonthForReport)->toIso8601String();
-    $rankendOfMonthForReport = Carbon::parse($rankendOfMonthForReport)->toIso8601String();
-    $isInternal = true;
 @endphp
 @if (count($data) > 0)
     @foreach ($data as $rowArr)
         @php
             $row = (object) $rowArr;
-            $teamRanks = (object) GeneralMethod::getTeamRankData(
-                $row->company_id, $row->id, $rankstartOfMonthForReport, $rankendOfMonthForReport, $isInternal = true);
+
+            // V2 Phase 2 & 3: Use pre-computed metrics passed from data_ajax() to eliminate N+1 sub-queries in Blade view
+            $rankVal = $row->pre_rank ?? $row->rank ?? 0;
+            $scoreVal = $row->pre_score ?? $row->score ?? 0;
+            $rankMonth = $row->pre_rank_month ?? Carbon::now()->startOfMonth()->subMonth()->format('M Y');
+            $teamRanks = (object) ['rank' => $rankVal, 'score' => $scoreVal, 'rankMonth' => $rankMonth];
 
             // ---- Avatar background tint (kept from the original first-letter logic) ----
             $strVal = strtolower(trim(@$row->name)[0] ?? '');
@@ -27,15 +22,10 @@
             elseif ($ascii >= 117 && $ascii <= 121) { $avatarClass = 'bg-dark text-white'; }
             else                                    { $avatarClass = 'bg-light-secondary text-dark'; }
 
-            // ---- Workload metrics (tenancy: filtered by the row's own company_id) ----
-            $activeJobs = GeneralMethod::teamActiveJobsCount($row->id);
-            $captainJobs = DB::table('job_assign')
-                ->where('company_id', $row->company_id)
-                ->where('spok_user_id', $row->id)
-                ->distinct()->count('job_id');
-            $trmTalents = DB::table('bench_assign')
-                ->where('user_id', $row->id)
-                ->count();
+            // ---- Pre-computed Workload metrics ----
+            $activeJobs  = $row->pre_active_jobs ?? 0;
+            $captainJobs = $row->pre_captain_jobs ?? 0;
+            $trmTalents  = $row->pre_trm_talents ?? 0;
 
             // ---- Role pill colour ----
             // Title Case for display (data is stored lowercase/inconsistently) — see memory.
@@ -59,7 +49,7 @@
                 } catch (\Throwable $e) {}
             }
 
-            $status_disabled = ($row->root_user == 1 || $row->status != 'active') ? 'disabled' : '';
+            $status_disabled = ((@$row->root_user == 1) || (@$row->status != 'active')) ? 'disabled' : '';
         @endphp
         <tr>
             {{-- Member --}}

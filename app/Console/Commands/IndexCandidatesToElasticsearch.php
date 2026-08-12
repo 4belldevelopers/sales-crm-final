@@ -257,6 +257,9 @@ class IndexCandidatesToElasticsearch extends Command
                     'assignment_remarks'           => ['type' => 'text', 'fields' => ['keyword' => ['type' => 'keyword', 'ignore_above' => 256]]],
                     // Phase 2 V2 Denormalized & Pre-computed Sort Fields
                     'spokperson_name'              => ['type' => 'keyword', 'ignore_above' => 256],
+                    'offer_released_at'            => ['type' => 'date', 'format' => 'strict_date_optional_time||epoch_millis||yyyy-MM-dd HH:mm:ss'],
+                    'sourcing_date'                => ['type' => 'date', 'format' => 'strict_date_optional_time||epoch_millis||yyyy-MM-dd HH:mm:ss'],
+                    'evaluation_date'              => ['type' => 'date', 'format' => 'strict_date_optional_time||epoch_millis||yyyy-MM-dd HH:mm:ss'],
                     'child_status_name'            => ['type' => 'keyword', 'ignore_above' => 256],
                     'is_duplicate'                 => ['type' => 'boolean'],
                     'notice_period_days'           => ['type' => 'integer'],

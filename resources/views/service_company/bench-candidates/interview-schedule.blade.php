@@ -422,8 +422,12 @@ function fetchBenchInterviewScheduleCandidateList(page = 1) {
 $(document).ready(function() {
     fetchBenchInterviewScheduleCandidateList();
 
+    var searchTimer = null;
     $('#kt_tagify_2').on('keyup', function() {
-        fetchBenchInterviewScheduleCandidateList(1);
+        clearTimeout(searchTimer);
+        searchTimer = setTimeout(function() {
+            fetchBenchInterviewScheduleCandidateList(1);
+        }, 300);
     });
 
     $(document).on('click', '#paginationbenchCandidateInterviewSchedule .page-link, #paginationbenchCandidateInterviewSchedule [data-page]', function(e) {

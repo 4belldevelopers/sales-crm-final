@@ -1,4 +1,5 @@
 <?php
+
 // Intent: master feature-flag registry for JERO incremental rollouts.
 // All flags default to false — safe to deploy before the feature is live.
 // Usage: config('feature.<flag_name>')
@@ -20,6 +21,14 @@ return [
     |   agency_drawer:{company_id}:{job_id}:{page}
     |--------------------------------------------------------------------------
     */
-    'use_three_drawers_v3' => (bool) env('FEATURE_THREE_DRAWERS_V3', false),
+    /*
+    |--------------------------------------------------------------------------
+    | Account Module V2 Optimization
+    |
+    | When true: uses lazy-loaded tab partials, Redis reference data caching,
+    | and consolidated DB queries for Account Settings V2.
+    |--------------------------------------------------------------------------
+    */
+    'account_v2' => (bool) env('FEATURE_ACCOUNT_V2', true),
 
 ];
