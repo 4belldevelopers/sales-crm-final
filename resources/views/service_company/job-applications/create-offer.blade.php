@@ -777,7 +777,7 @@
            wide enough for the 4-column member table (translateX avoids magic offsets). */
         .co-send-drawer-bd { display: none; position: absolute; inset: 0; background: rgba(24,28,50,.4); z-index: 1000; }
         .co-send-drawer-bd.co-send-drawer-bd--open { display: block; }
-        .co-send-drawer { position: absolute; top: 0; right: 0; bottom: 0; width: 560px; max-width: 96%; background: #fff; box-shadow: -8px 0 30px rgba(24,28,50,.22); z-index: 1001; display: flex; flex-direction: column; transform: translateX(100%); transition: transform .25s ease; visibility: hidden; }
+        .co-send-drawer { position: absolute; top: 0; right: 0; bottom: 0; width: 70%; max-width: 70%; background: #fff; box-shadow: -8px 0 30px rgba(24,28,50,.22); z-index: 1001; display: flex; flex-direction: column; transform: translateX(100%); transition: transform .25s ease; visibility: hidden; }
         .co-send-drawer.co-send-drawer--open { transform: translateX(0); visibility: visible; }
         .co-send-drawer-head { display: flex; align-items: flex-start; justify-content: space-between; padding: 16px 20px; border-bottom: 1px solid #eef1f7; flex-shrink: 0; }
         .co-send-drawer-title { font-size: 14px !important; font-weight: 700; color: #181c32; }
