@@ -583,6 +583,8 @@ Route::group(['middleware' => 'auth'], function () {
             Route::get('subscribe/viewmore/{id?}', [ManageSubscriptionController::class, 'viewMore'])->name('subscribe.viewmore');
 
             Route::get('transection-log', [ManageSubscriptionController::class, 'transectionLog'])->name('subscribe.transectionLog');
+            // V2 AJAX data endpoint — returns JSON for tab content, filters, search, pagination
+            Route::get('transection-log/data', [ManageSubscriptionController::class, 'transectionLogData'])->name('subscribe.transectionLogData');
             Route::get('new-subscribe/newindex', [ManageSubscriptionController::class, 'newindex'])->name('subscribe.newindex');
             Route::get('transactions/subscription', [ManageSubscriptionController::class, 'transactions'])->name('transactions.subscription');
             Route::get('transactions/subscription-ajax', [ManageSubscriptionController::class, 'transactionsAjax'])->name('transactions.subscriptionAjax');
