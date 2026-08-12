@@ -524,7 +524,8 @@ CREATE TABLE `cart_transaction_history` (
   `invoice_approval` enum('Yes','No') CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL DEFAULT 'No',
   `approval_invoice_no` text CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci,
   `approval_invoice_date` datetime DEFAULT NULL,
-  PRIMARY KEY (`id`)
+  PRIMARY KEY (`id`),
+  KEY `idx_cart_trans_company_gateway` (`company_id`,`payment_gateway`)
 ) ENGINE=InnoDB AUTO_INCREMENT=38 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- ============================================================
@@ -551,7 +552,8 @@ CREATE TABLE `carts` (
   `status` int NOT NULL DEFAULT '0',
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`)
+  PRIMARY KEY (`id`),
+  KEY `idx_carts_company_status` (`company_id`,`status`)
 ) ENGINE=InnoDB AUTO_INCREMENT=45 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- ============================================================
@@ -781,7 +783,8 @@ CREATE TABLE `coin_order_events` (
   `coin_order_id` int NOT NULL,
   `required_coin` double NOT NULL,
   `event_type` enum('operational','sales') CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
-  PRIMARY KEY (`id`)
+  PRIMARY KEY (`id`),
+  KEY `idx_coin_order_events_order` (`coin_order_id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=39281 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- ============================================================
@@ -815,7 +818,8 @@ CREATE TABLE `coin_package_points` (
   `coin_package_id` int NOT NULL,
   `title` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL,
   `status` int NOT NULL DEFAULT '1',
-  PRIMARY KEY (`id`)
+  PRIMARY KEY (`id`),
+  KEY `idx_coin_pkg_points_pkg` (`coin_package_id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=825 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- ============================================================
@@ -2931,7 +2935,8 @@ CREATE TABLE `package_active` (
   `packages_status` int DEFAULT '0' COMMENT '0-inactive,1-active',
   `payment_status` int DEFAULT '0' COMMENT '0-pending,1-paid',
   `package_id` int DEFAULT NULL,
-  PRIMARY KEY (`id`)
+  PRIMARY KEY (`id`),
+  KEY `idx_package_active_company` (`company_id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=979 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ============================================================
@@ -4217,7 +4222,8 @@ CREATE TABLE `top_up_logs` (
   `payment_Id` text CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci,
   `cart_id` int DEFAULT NULL,
   `payment_link_id` text CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci,
-  PRIMARY KEY (`id`)
+  PRIMARY KEY (`id`),
+  KEY `idx_topup_logs_company_event` (`company_id`,`event_type`)
 ) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- ============================================================

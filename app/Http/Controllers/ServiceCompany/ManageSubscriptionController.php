@@ -21,9 +21,11 @@ use App\Models\RazorpaySubscription;
 use App\Traits\StripeSettings;
 use Carbon\Carbon;
 use App\Jobs\QueueNotificationMailService;
+use App\Jobs\SyncPendingRazorpayPaymentsJob;
 use Illuminate\Http\Request;
 use App\Helper\GeneralMethod;
 use App\Package;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\View;
@@ -34,18 +36,22 @@ use PayPal\Rest\ApiContext;
 use Razorpay\Api\Api;
 use Stripe\Subscription;
 use App\Services\MailService;
+use App\Services\SubscriptionService;
 use Yajra\DataTables\DataTables;
 
 class ManageSubscriptionController extends ServiceCompanyBaseController
 {
     use StripeSettings;
     protected $mailService;
-    public function __construct(MailService $mailService)
+    protected $subscriptionService;
+
+    public function __construct(MailService $mailService, SubscriptionService $subscriptionService)
     {
         parent::__construct();
-        $this->pageTitle 	= 'menu.subscription';
-        $this->pageIcon 	= 'ti-settings';
-        $this->mailService = $mailService;
+        $this->pageTitle           = 'menu.subscription';
+        $this->pageIcon            = 'ti-settings';
+        $this->mailService         = $mailService;
+        $this->subscriptionService = $subscriptionService;
     }
     
     /**
@@ -142,185 +148,14 @@ class ManageSubscriptionController extends ServiceCompanyBaseController
     }
 
     public function newindex()
-    {      	
-        // die;	
-        
-        		
-		$company_id       			=	auth()->user()->company_id;
-		$this->package_active		=	DB:: table('package_active')->select('package_active.*')->where('package_active.company_id', '=', $company_id)->first();	
+    {
+        $companyId = auth()->user()->company_id;
+        $walletData = $this->subscriptionService->getWalletCenterData((int) $companyId);
 
-       $this->carts_count =   DB::table('carts')->where('company_id','=',$company_id)->where('status','=',0)->count();
-       $this->top_up_coin_packages_op = DB::table('top_up_coin_packages')->where('event_type','=','operational')->where('status','=',1)->get(); 
-       $this->top_up_coin_packages_sal = DB::table('top_up_coin_packages')->where('event_type','=','sales')->where('status','=',1)->get(); 
-        
-        $this->company = Company::withoutGlobalScope('company')->findOrFail($company_id);
-        $this->companyPackage = CompanyPackage::activePackage($company_id);
-        $this->company_id = $company_id;
-
-        $this->top_up_logs_op =   DB::table('top_up_logs')->select('top_up_logs.*')->leftJoin('carts','carts.id','=','top_up_logs.cart_id')->where('top_up_logs.event_type','=','operational')->where('top_up_logs.company_id','=',$company_id)->get();
-
-        $this->top_up_logs_sal =   DB::table('top_up_logs')->select('top_up_logs.*')->leftJoin('carts','carts.id','=','top_up_logs.cart_id')->where('top_up_logs.event_type','=','sales')->where('top_up_logs.company_id','=',$company_id)->get();
-
-        $this->cart_transaction_history = $this->loadTransactionHistory($company_id);
-
-        $this->account = DB::table('companies')->select('*')->where('id', $company_id)->first();
-        $this->package_active_all = DB::table('package_active')->join('package_invoice','package_invoice.id','=','package_active.package_invoice_id')->join('package_order_items','package_order_items.invoice_id','=','package_invoice.id')->join('package_features','package_features.id','=','package_order_items.feature_id')->select('package_active.*','package_features.title','package_features.field_name','package_features.id as gg_is')->where('package_active.company_id', $company_id)->get();
-
-        $this->package_active_details = DB::table('package_active')->join('package_invoice','package_invoice.id','=','package_active.package_invoice_id')->join('packages','packages.id','=','package_invoice.package_id')->select('package_active.*','packages.name')->where('package_active.company_id', $company_id)->first();
-
-        // dd("hi");
-
-        $this->current_coins_operational = DB::table('company_coins')
-        ->join('coin_orders','coin_orders.id','=','company_coins.coin_order_id')
-        ->join('coin_packages','coin_packages.id','=','coin_orders.coin_package_id')
-        ->join('coin_package_types','coin_package_types.id','=','coin_packages.coin_package_type_id')
-		->where('company_coins.company_id',$company_id)
-        ->where('company_coins.event_type','operational')
-        ->where('coin_orders.status',1)
-        ->select('company_coins.*','coin_package_types.title','coin_packages.custome_pck','coin_orders.id as coin_order_id','coin_orders.coins as order_coins','coin_orders.coin_package_id','coin_orders.price as order_price')
-        ->get()
-        ->map(function ($coinOrder) {
-            $coinOrder->coin_order_events = DB::table('coin_order_events')
-            ->join('coin_events','coin_events.id','=','coin_order_events.coin_event_id')
-                ->where('coin_order_id', $coinOrder->coin_order_id)
-                ->select('coin_order_events.*','coin_events.title')
-                ->get()
-                ->toArray();
-            return (array) $coinOrder;
-        })->toArray();
-
-        $this->current_coins_sales = DB::table('company_coins')
-        ->join('coin_orders','coin_orders.id','=','company_coins.coin_order_id')
-        ->join('coin_packages','coin_packages.id','=','coin_orders.coin_package_id')
-        ->join('coin_package_types','coin_package_types.id','=','coin_packages.coin_package_type_id')
-		->where('company_coins.company_id',$company_id)
-        ->where('company_coins.event_type','sales')
-        ->where('coin_orders.status',1)
-        ->select('company_coins.*','coin_package_types.title','coin_packages.custome_pck','coin_orders.id as coin_order_id','coin_orders.coins as order_coins','coin_orders.coin_package_id','coin_orders.price as order_price')
-        ->get()
-        ->map(function ($coinOrder) {
-            $coinOrder->coin_order_events = DB::table('coin_order_events')
-            ->join('coin_events','coin_events.id','=','coin_order_events.coin_event_id')
-                ->where('coin_order_id', $coinOrder->id)
-                ->select('coin_order_events.*','coin_events.title')
-                ->get()
-                ->toArray();
-            return (array) $coinOrder;
-        })->toArray();
-
-        $this->operational_package = DB::table('coin_packages')
-        ->join('coin_package_types','coin_package_types.id','=','coin_packages.coin_package_type_id')
-        ->select('coin_packages.*','coin_package_types.title')
-        ->where('coin_packages.custome_pck','!=',1)
-        ->where('coin_packages.event_type', '=', 'operational')
-        ->get()
-        ->map(function($row){
-            $row->features = DB::table('coin_package_points')
-                ->where('coin_package_points.coin_package_id', $row->id)
-                ->select('coin_package_points.*')
-                ->get()
-                ->toArray();
-            return (array) $row;
-        });
-
-        // dd($this->operational_package);
-        $this->sales_package = DB::table('coin_packages')
-        ->join('coin_package_types','coin_package_types.id','=','coin_packages.coin_package_type_id')
-        ->select('coin_packages.*','coin_package_types.title', DB::raw('
-        (SELECT COUNT(*) FROM coin_events 
-         WHERE coin_events.event_type = coin_packages.event_type) as event_count'))
-         ->where('coin_packages.custome_pck','!=',1)
-        ->where('coin_packages.event_type', '=', 'sales')
-        ->get()
-        ->map(function($row){
-            $row->features = DB::table('coin_package_points')
-                ->where('coin_package_points.coin_package_id', $row->id)
-                ->select('coin_package_points.*')
-                ->get()
-                ->toArray();
-            return (array) $row;
-        });
-        $this->username  =	auth()->user()->name;
-
-        // dd( $this->sales_package);
-
-
-        $actual_count  = DB::table('coin_transection_logs')
-        ->select('coin_transection_logs.coins')
-        ->orderByDesc('coin_transection_logs.id')
-		->where('coin_transection_logs.event_type','=','operational')
-        ->where('coin_transection_logs.transection_type','=','credit')
-        ->where(function($query) use ($company_id) {
-            $query->where('coin_transection_logs.company_id', $company_id);
-        })->first();
-
-		$remain_coins  = DB::table('company_coins')
-        ->select('company_coins.coins')
-        ->orderByDesc('company_coins.id')
-		->where('company_coins.event_type','=','operational')
-        ->where(function($query) use ($company_id) {
-            $query->where('company_coins.company_id', $company_id);
-        })->first();
-		$this->actual_count = $actual_count->coins ?? 0;
-        $this->remain_coins = $remain_coins->coins ?? 0;
-
-        // Wallet summary stats — Operational
-        // Root-cause fix: op_total_purchased is derived from coin_transection_logs
-        // (total credits ever posted), the same ledger that drives $remain_coins.
-        // Previously it summed company_coins.actual_coins filtered through
-        // coin_orders.status = 1, which on live excluded the package's coin grant
-        // (different status value), making available > purchased and clamping
-        // used-coins to 0 via max(0, negative). Both sides now come from the
-        // same source so available can never exceed purchased.
-        $op_total_credited = (int) DB::table('coin_transection_logs')
-            ->where('company_id', $company_id)
-            ->where('event_type', 'operational')
-            ->where('transection_type', 'credit')
-            ->sum('coins');
-        $this->op_total_purchased = $op_total_credited;
-        $this->op_total_spend     = collect($this->current_coins_operational)->sum('order_price');
-        $this->op_coins_used      = max(0, $this->op_total_purchased - (int) $this->remain_coins);
-        $opExpiry = collect($this->current_coins_operational)->pluck('end_date')->filter()->max();
-        $this->op_plan_expiry = $opExpiry ? Carbon::parse($opExpiry) : null;
-        $this->op_days_left   = $this->op_plan_expiry ? max(0, (int) now()->diffInDays($this->op_plan_expiry, false)) : 0;
-
-
-        $actual_count_sales  = DB::table('coin_transection_logs')
-        ->select('coin_transection_logs.coins')
-        ->orderByDesc('coin_transection_logs.id')
-		->where('coin_transection_logs.event_type','=','sales')
-        ->where('coin_transection_logs.transection_type','=','credit')
-        ->where(function($query) use ($company_id) {
-            $query->where('coin_transection_logs.company_id', $company_id);
-        })->first();
-
-		$remain_coins_sales  = DB::table('company_coins')
-        ->select('company_coins.coins')
-        ->orderByDesc('company_coins.id')
-		->where('company_coins.event_type','=','sales')
-        ->where(function($query) use ($company_id) {
-            $query->where('company_coins.company_id', $company_id);
-        })->first();
-		$this->actual_count_sales = $actual_count_sales->coins ?? 0;
-        $this->remain_coins_sales = $remain_coins_sales->coins ?? 0;
-
-        // Wallet summary stats — Sales (same fix as operational)
-        $sal_total_credited = (int) DB::table('coin_transection_logs')
-            ->where('company_id', $company_id)
-            ->where('event_type', 'sales')
-            ->where('transection_type', 'credit')
-            ->sum('coins');
-        $this->sal_total_purchased = $sal_total_credited;
-        $this->sal_total_spend     = collect($this->current_coins_sales)->sum('order_price');
-        $this->sal_coins_used      = max(0, $this->sal_total_purchased - (int) $this->remain_coins_sales);
-        $salExpiry = collect($this->current_coins_sales)->pluck('end_date')->filter()->max();
-        $this->sal_plan_expiry = $salExpiry ? Carbon::parse($salExpiry) : null;
-        $this->sal_days_left   = $this->sal_plan_expiry ? max(0, (int) now()->diffInDays($this->sal_plan_expiry, false)) : 0;
-
-        // Used-coins percentage for the wallet cards' progress ring (pure
-        // arithmetic on values already computed above — no extra queries).
-        $this->op_used_pct  = $this->op_total_purchased > 0 ? min(100, round(($this->op_coins_used / $this->op_total_purchased) * 100)) : 0;
-        $this->sal_used_pct = $this->sal_total_purchased > 0 ? min(100, round(($this->sal_coins_used / $this->sal_total_purchased) * 100)) : 0;
+        foreach ($walletData as $key => $value) {
+            $this->data[$key] = $value;
+            $this->{$key}     = $value;
+        }
 
         return view('service_company.subscription.newindex', $this->data);
     }
@@ -372,102 +207,139 @@ class ManageSubscriptionController extends ServiceCompanyBaseController
      */
     private function loadTransactionHistory($company_id)
     {
-        $transaction_history = DB::table('cart_transaction_history')->select('cart_transaction_history.*')
-        ->where('company_id','=',$company_id)
-        ->where('payment_gateway', 'razorpay')
-        ->where(function ($query) {
-            $query->whereNull('payment_Id')
-                  ->orWhere('payment_Id', '=', '');
-        })->orderByDesc('id')->limit(5)->get();
+        // Offload blocking Razorpay status sync to background Horizon/Redis queue job (V2 Phase 2)
+        SyncPendingRazorpayPaymentsJob::dispatch((int) $company_id);
 
-        $payment_settings = DB::table('payment_settings')->select('payment_settings.*')->first();
-        $key = $payment_settings->razorpay_key;
-        $secret = $payment_settings->razorpay_secret;
-
-        foreach($transaction_history as $tr_val){
-            if($tr_val->payment_orderId !='' && $tr_val->payment_gateway=='razorpay'){
-
-                $orderID = $tr_val->payment_orderId;
-
-                $ch = curl_init();
-                curl_setopt($ch, CURLOPT_URL, "https://api.razorpay.com/v1/orders/{$orderID}/payments");
-                curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-                curl_setopt($ch, CURLOPT_USERPWD, "{$key}:{$secret}");
-
-                $response = curl_exec($ch);
-                if (!curl_errno($ch)) {
-                    $payments = json_decode($response, true);
-
-                    if (!empty($payments['items'])) {
-                        foreach ($payments['items'] as $payment) {
-                            DB::table('cart_transaction_history')->where('payment_orderId','=',$orderID)->update(['status'=>$payment['status']]);
-                        }
-                    }
-                }
-                curl_close($ch);
-            }
-        }
-
-        return DB::table('cart_transaction_history')->select('cart_transaction_history.*')->where('cart_transaction_history.company_id','=',$company_id)->orderByDesc('id')->paginate(50);
+        return DB::table('cart_transaction_history')
+            ->select('cart_transaction_history.*')
+            ->where('cart_transaction_history.company_id', '=', $company_id)
+            ->orderByDesc('id')
+            ->paginate(50);
     }
 
 
-    public function  transectionLog(){
-        
-        $company_id = auth()->user()->company_id;
-
-        // dd($company_id);
-        $pagetype = request('pagetype');
-
-        if($pagetype){
-            $page = 1;
-            if($pagetype=='operationaltab'){
-                $page_opera = request('page');
-                $page_sales = 1;
-                
-            }elseif($pagetype=='salestab'){
-                $page_sales = request('page');
-                $page_opera = 1;
-            }
-        }else{
-            $page = request('page');
-            if($page==null){
-                $page_opera = 1;
-                $page_sales = 1;
-            }
-        }
-        
-        $perPage = 20;
-        // dd($pagetype);
-        $this->coin_transection_logs_sales  = DB::table('coin_transection_logs')
-        ->join('users','users.id','=','coin_transection_logs.event_by')
-        ->leftJoin('companies','companies.id','=','coin_transection_logs.from_company_id')
-        ->select('coin_transection_logs.*','users.name','companies.company_name')
-        ->orderByDesc('coin_transection_logs.id')
-        ->where('coin_transection_logs.event_type','=','sales')
-        ->where('coin_transection_logs.coins','>',0)
-        ->where(function($query) use ($company_id) {
-            $query->where('coin_transection_logs.company_id', $company_id);
-                //   ->orWhere('coin_transection_logs.from_company_id', $company_id);
-        })->skip(($page_sales - 1) * $perPage)->paginate($perPage);
-
-        // dd($this->coin_transection_logs_sales);
-
-        $this->coin_transection_logs  = DB::table('coin_transection_logs')
-        ->join('users','users.id','=','coin_transection_logs.event_by')
-        ->leftJoin('companies','companies.id','=','coin_transection_logs.from_company_id')
-        ->select('coin_transection_logs.*','users.name','companies.company_name')
-        ->orderByDesc('coin_transection_logs.id')
-        ->where('coin_transection_logs.event_type','=','operational')
-        ->where('coin_transection_logs.coins','>',0)
-        ->where(function($query) use ($company_id) {
-            $query->where('coin_transection_logs.company_id', $company_id);
-                //   ->orWhere('coin_transection_logs.from_company_id', $company_id);
-        })->skip(($page_opera - 1) * $perPage)->paginate($perPage);
-        
-        // dd($this->coin_transection_logs);
-
+    /**
+     * Display the coin transaction logs page (shell only).
+     * Active tab data is loaded via AJAX through transectionLogData().
+     *
+     * V2 Changes:
+     * - Page now renders a lightweight shell; tab data loaded via AJAX.
+     * - No database queries on initial page load.
+     * - Tenancy: company_id scoped via authenticated user.
+     */
+    public function transectionLog()
+    {
         return view('service_company.subscription.transection-logs', $this->data);
+    }
+
+    /**
+     * AJAX endpoint for the transaction log listing (V2).
+     *
+     * Handles: pagetype (operationaltab|salestab), search keyword,
+     * date_from, date_to, transection_type (credit|debit), page, per_page.
+     *
+     * Tenancy: All queries are strictly scoped to the authenticated company_id.
+     * Only the requested tab's query is executed (no dual-query waste).
+     *
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function transectionLogData()
+    {
+        $company_id      = auth()->user()->company_id;
+        $pagetype        = request('pagetype', 'operationaltab');
+        $search          = trim(request('search', ''));
+        $date_from       = request('date_from');
+        $date_to         = request('date_to');
+        $transection_type = request('transection_type'); // 'credit' | 'debit' | null
+        $perPage         = (int) request('per_page', 20);
+        $perPage         = in_array($perPage, [10, 20, 50, 100]) ? $perPage : 20;
+        $page            = max(1, (int) request('page', 1));
+
+        // Map pagetype to event_type column value
+        $event_type = ($pagetype === 'salestab') ? 'sales' : 'operational';
+
+        // Build the base query — only required columns selected, LEFT JOIN to preserve
+        // system-generated logs where event_by may not match a live user record.
+        $query = DB::table('coin_transection_logs')
+            ->leftJoin('users', 'users.id', '=', 'coin_transection_logs.event_by')
+            ->leftJoin('companies', 'companies.id', '=', 'coin_transection_logs.from_company_id')
+            ->select(
+                'coin_transection_logs.id',
+                'coin_transection_logs.created_at',
+                'coin_transection_logs.event',
+                'coin_transection_logs.event_type',
+                'coin_transection_logs.transection_type',
+                'coin_transection_logs.coins',
+                'coin_transection_logs.actual_coins',
+                'coin_transection_logs.settlement_coins',
+                'coin_transection_logs.remain_coins',
+                'coin_transection_logs.event_by',
+                'coin_transection_logs.from_company_id',
+                'users.name',
+                'companies.company_name'
+            )
+            ->where('coin_transection_logs.company_id', $company_id)
+            ->where('coin_transection_logs.event_type', $event_type)
+            ->where('coin_transection_logs.coins', '>', 0)
+            ->orderByDesc('coin_transection_logs.id');
+
+        // Optional: keyword search on event description or user name
+        if ($search !== '') {
+            $query->where(function ($q) use ($search) {
+                $q->where('coin_transection_logs.event', 'like', '%' . $search . '%')
+                  ->orWhere('users.name', 'like', '%' . $search . '%');
+            });
+        }
+
+        // Optional: date range filter
+        if ($date_from) {
+            $query->whereDate('coin_transection_logs.created_at', '>=', $date_from);
+        }
+        if ($date_to) {
+            $query->whereDate('coin_transection_logs.created_at', '<=', $date_to);
+        }
+
+        // Optional: credit/debit filter
+        if ($transection_type && in_array($transection_type, ['credit', 'debit'])) {
+            $query->where('coin_transection_logs.transection_type', $transection_type);
+        }
+
+        // Paginate — standard Laravel paginate (no double-offset bug)
+        $paginator = $query->paginate($perPage, ['*'], 'page', $page);
+
+        // Transform rows for JSON response
+        $items = $paginator->map(function ($row) {
+            $displayCoins = ($row->transection_type === 'credit')
+                ? (($row->actual_coins) ? $row->actual_coins : $row->coins)
+                : $row->coins;
+            $balanceCoins = ($row->remain_coins) ? $row->remain_coins : $row->coins;
+            $actorName    = ($row->event_by != 1) ? ($row->name ?? 'System') : 'Free';
+            $actorCompany = ($row->event_by != 1) ? ($row->company_name ?? 'Default') : 'Default';
+
+            return [
+                'id'               => $row->id,
+                'created_at'       => $row->created_at,
+                'event'            => $row->event,
+                'event_type'       => $row->event_type,
+                'transection_type' => $row->transection_type,
+                'display_coins'    => $displayCoins,
+                'settlement_coins' => $row->settlement_coins,
+                'balance_coins'    => $balanceCoins,
+                'actor_name'       => $actorName,
+                'actor_company'    => $actorCompany,
+            ];
+        });
+
+        return response()->json([
+            'success'      => true,
+            'data'         => $items,
+            'total'        => $paginator->total(),
+            'per_page'     => $paginator->perPage(),
+            'current_page' => $paginator->currentPage(),
+            'last_page'    => $paginator->lastPage(),
+            'from'         => $paginator->firstItem(),
+            'to'           => $paginator->lastItem(),
+        ]);
     }
 
     /**
