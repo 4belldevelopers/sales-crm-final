@@ -139,6 +139,35 @@ $country_code =  GeneralMethod::countryCodeFun();
     #url_div { display: none !important; }
 
     .isd-email-inline-head { font-size: 13px; font-weight: 700; color: #181c32; margin-bottom: 14px; }
+
+    /* mm-* form design — matches mass_mail / fwd_resume modern style */
+    .mm-wrap { font-family: 'Poppins', sans-serif; font-size: 13px; color: #374151; display: flex; flex-direction: column; height: 100%; background: #fff; border-radius: 12px; }
+    .mm-form-body { flex: 1; }
+    .mm-row { display: flex; align-items: flex-start; padding: 16px 24px; border-bottom: 1px solid #F3F4F6; gap: 16px; }
+    .mm-label-col { width: 150px; flex-shrink: 0; display: flex; align-items: center; gap: 8px; padding-top: 9px; font-size: 12.5px; font-weight: 600; color: #374151; }
+    .mm-label-icon { width: 28px; height: 28px; border-radius: 7px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .mm-label-icon svg { width: 14px; height: 14px; }
+    .mm-ic-blue   { background: #EFF6FF; color: #2563EB; }
+    .mm-ic-green  { background: #DCFCE7; color: #16A34A; }
+    .mm-ic-purple { background: #F5F3FF; color: #7C3AED; }
+    .mm-ic-teal   { background: #F0FDF4; color: #0D9488; }
+    .mm-ic-orange { background: #FFF7ED; color: #EA580C; }
+    .mm-req { color: #EF4444; margin-left: 1px; }
+    .mm-field-col { flex: 1; min-width: 0; position: relative; }
+    .mm-input { width: 100%; border: 1px solid #E5E7EB; border-radius: 8px; padding: 9px 14px; font-size: 13px; color: #374151; font-family: 'Poppins', sans-serif; background: #F9FAFB; outline: none; transition: border-color 0.15s; }
+    .mm-input:focus { border-color: #93C5FD; background: #fff; }
+    .mm-input[readonly] { color: #6B7280; cursor: default; background: #F3F4F6; }
+    .mm-hint { font-size: 11.5px; color: #9CA3AF; margin-top: 5px; line-height: 1.4; }
+    .mm-select { width: 100%; border: 1px solid #E5E7EB; border-radius: 8px; padding: 9px 36px 9px 14px; font-size: 13px; color: #374151; font-family: 'Poppins', sans-serif; background: #F9FAFB url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239CA3AF' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E") no-repeat right 12px center; appearance: none; -webkit-appearance: none; outline: none; cursor: pointer; transition: border-color 0.15s; }
+    .mm-select:focus { border-color: #93C5FD; background-color: #fff; }
+    .mm-chips-box { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; border: 1px solid #E5E7EB; border-radius: 8px; padding: 6px 10px; background: #F9FAFB; min-height: 40px; }
+    .mm-chip { display: inline-flex; align-items: center; gap: 6px; background: #EFF6FF; border: 1px solid #DBEAFE; border-radius: 20px; padding: 3px 10px 3px 4px; font-size: 12.5px; color: #1E40AF; font-family: 'Poppins', sans-serif; }
+    .mm-chip-av { width: 22px; height: 22px; border-radius: 50%; background: #DC2626; color: #fff; font-size: 10px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .mm-chip-text { max-width: 260px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .mm-chip-x { background: none; border: none; padding: 0; margin-left: 2px; color: #93C5FD; cursor: default; font-size: 13px; line-height: 1; }
+    .mm-add-email-btn { position: absolute; right: 0; top: 0; display: flex; align-items: center; gap: 5px; font-size: 12.5px; font-weight: 600; color: #2563EB; background: none; border: none; cursor: pointer; padding: 9px 14px; text-decoration: none; }
+    .mm-add-email-btn:hover { color: #1d4ed8; }
+    .mm-input-with-btn { padding-right: 110px; }
 </style>
 
 <script src="https://code.jquery.com/jquery-3.6.0.js" integrity="sha256-H+K7U5CnXl1h5ywQfKtSj8PCmoN9aaq30gDh27Xc0jk="
@@ -484,82 +513,152 @@ $country_code =  GeneralMethod::countryCodeFun();
     </div>
 
     <div id="div_interview_schedule_second" class="isd-wrap" style="display:none">
-        <div class="isd-main" style="padding:20px;">
-            <div class="isd-email-inline-head">Interview Schedule Email</div>
-            <div class="form-group row mb-4">
-                <label class="col-xl-2 col-lg-2 col-form-label text-dark fw-bolder fs-5">Template</label>
-                <div class="col-lg-10 col-xl-10">
-                    <select name="email_template" id="email_template" class="form-control form-control-solid"
-                        onchange="accessEmailTemplate(this.value, {{ @$application->id }} );">
-                        <option value="">Select Pre Define Email Template </option>
-                        @if (!empty($email_template))
-                            @foreach ($email_template as $email_temp)
-                                @if ($email_temp->tempForInterview == 1 && $selfCompany == 1)
-                                    <option value="{{ $email_temp->e_temp_id }}">
-                                        {{ str_replace(['[{CLIENT_NAME}]', '[{COMPANY_NAME}]'], [@$clientTemp, @$companyTemp], $email_temp->display_name) }}
-                                    </option>
-                                @endif
-                                @if ($selfCompany == '')
-                                    <option value="{{ $email_temp->e_temp_id }}">
-                                        {{ str_replace(['[{CLIENT_NAME}]', '[{COMPANY_NAME}]'], [@$clientTemp, @$companyTemp], $email_temp->display_name) }}
-                                    </option>
-                                @endif
-                            @endforeach
-                        @endif
-                    </select>
-                    <span class="form-text text-muted">Please select email template</span>
-                </div>
-            </div>
-            <div class="form-group row mb-4">
-                <label class="col-xl-2 col-lg-2 col-form-label text-dark fw-bolder fs-5">From</label>
-                <div class="col-lg-10 col-xl-10">
-                    <input type="text" name="from_email" id="from_email" placeholder="Ex: example@test.com" class="form-control form-control-solid" value="{{ @$from_email }}" readonly>
-                    <span class="form-text text-muted">Please enter email</span>
-                </div>
-            </div>
-            <div class="form-group row mb-4">
-                <label class="col-xl-2 col-lg-2 col-form-label text-dark fw-bolder fs-5">To</label>
-                <div class="col-lg-10 col-xl-10">
-                    <input type="text" name="to_email" id="to_email" placeholder="Ex: demo@test.com" class="form-control form-control-solid" value="{{ @$application->email }}" readonly>
-                    <span class="form-text text-muted">Please enter email</span>
-                </div>
-            </div>
-            <div class="form-group row mb-4">
-                <label class="col-xl-2 col-lg-2 col-form-label text-dark fw-bolder fs-5">CC</label>
-                <div class="col-lg-10 col-xl-10" style="position: relative;">
-                    <input type="text" name="cc_email" id="cc_email" placeholder="Ex: example2@test.com" class="form-control form-control-solid" value="">
-                    <span class="form-text text-muted">Please enter email</span>
-                    <div class="" style="position: absolute; right: 13px; top: 4px;">
-                        <a href="javascript:;" class="btn btn-primary btn-sm in_tr_email_panel" data-panel="0">Add E-mail ID</a>
+        <div class="mm-wrap">
+            <div class="mm-form-body">
+                <div class="isd-email-inline-head" style="padding: 18px 24px 8px; font-size: 16px; font-weight: 700; color: #111827;">Send Email</div>
+
+                {{-- From + Reply To --}}
+                <div class="mm-row">
+                    <div class="mm-label-col">
+                        <span class="mm-label-icon mm-ic-blue">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m2 7 10 7 10-7"/></svg>
+                        </span>
+                        From
+                    </div>
+                    <div class="mm-field-col" style="display:flex;gap:12px;align-items:center;">
+                        <select class="mm-select" name="from_email" id="from_email" style="flex:1;min-width:0;">
+                            <option value="notify@jeroworks.com">{{ auth()->user()->name ?? 'Jero' }} &lt;notify@jeroworks.com&gt;</option>
+                        </select>
+                        <div style="display:flex;align-items:center;gap:6px;flex-shrink:0;font-size:12.5px;font-weight:600;color:#374151;">
+                            <span class="mm-label-icon mm-ic-purple" style="width:24px;height:24px;border-radius:6px;display:inline-flex;align-items:center;justify-content:center;">
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 17 4 12 9 7"/><path d="M20 18v-2a4 4 0 0 0-4-4H4"/></svg>
+                            </span>
+                            Reply To
+                        </div>
+                        <select class="mm-select" name="reply_to_email" id="reply_to_email" style="flex:1;min-width:0;">
+                            <option value="{{ auth()->user()->email ?? 'notify@jeroworks.com' }}">{{ auth()->user()->email ?? 'notify@jeroworks.com' }}</option>
+                        </select>
                     </div>
                 </div>
-            </div>
-            <div class="form-group row mb-4">
-                <label class="col-xl-2 col-lg-2 col-form-label text-dark fw-bolder fs-5">Subject</label>
-                <div class="col-lg-10 col-xl-10">
-                    <input type="text" name="subject" id="subject" placeholder="Ex: Re-Schedule Interview" class="form-control form-control-solid">
-                    <span class="form-text text-muted">Please enter subject</span>
+
+                {{-- To Email ID (chip display) --}}
+                <div class="mm-row">
+                    <div class="mm-label-col">
+                        <span class="mm-label-icon mm-ic-blue">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                        </span>
+                        To <span class="mm-req">*</span>
+                    </div>
+                    <div class="mm-field-col">
+                        <input type="hidden" name="to_email" id="to_email" value="{{ @$application->email }}">
+                        <div class="mm-chips-box">
+                            @php
+                                $cName = trim((string) @$application->full_name) ?: 'Candidate';
+                                $cInit = strtoupper(substr($cName, 0, 1) ?: 'C');
+                                $cEmail = @$application->email ?: '';
+                            @endphp
+                            <div class="mm-chip">
+                                <span class="mm-chip-av">{{ $cInit }}</span>
+                                <span class="mm-chip-text">{{ $cEmail }}</span>
+                                <button type="button" class="mm-chip-x">&times;</button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-            </div>
-            <div class="form-group row mb-4">
-                <label class="col-xl-2 col-lg-2 col-form-label text-dark fw-bolder fs-5">Body</label>
-                <div class="col-lg-10 col-xl-10">
-                    <textarea id="editor1" name="editor1" class="form-control form-control-solid" row="10" placeholder="">&nbsp;</textarea>
-                    <span class="form-text text-muted">Please enter email content</span>
+
+                {{-- CC Email ID --}}
+                <div class="mm-row">
+                    <div class="mm-label-col">
+                        <span class="mm-label-icon mm-ic-green">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                        </span>
+                        CC Email ID
+                    </div>
+                    <div class="mm-field-col">
+                        <div style="position:relative;">
+                            <input class="mm-input mm-input-with-btn" name="cc_email" id="cc_email" value="" placeholder="Type an email...">
+                            <a href="javascript:;" class="mm-add-email-btn in_tr_email_panel" data-panel="0">+ Add Email</a>
+                        </div>
+                        <div class="mm-hint">Add email addresses separated by commas</div>
+                    </div>
                 </div>
-            </div>
-            <div class="form-group row mb-4">
-                <label class="col-xl-2 col-lg-2 col-form-label text-dark fw-bolder fs-5">Upload Files (2MB)</label>
-                <div class="col-xl-10 col-lg-10">
-                    <input type="file" name="attachment" id="attachment" class="dropzone-select btn btn-sm btn-primary me-2" />
+
+                {{-- Template --}}
+                <div class="mm-row">
+                    <div class="mm-label-col">
+                        <span class="mm-label-icon mm-ic-purple">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                        </span>
+                        Template
+                    </div>
+                    <div class="mm-field-col">
+                        <select name="email_template" id="email_template" class="mm-select"
+                            onchange="accessEmailTemplate(this.value, {{ @$application->id }} );">
+                            <option value="">Select Email Template...</option>
+                            @if (!empty($email_template))
+                                @foreach ($email_template as $email_temp)
+                                    @if ($email_temp->tempForInterview == 1 && $selfCompany == 1)
+                                        <option value="{{ $email_temp->e_temp_id }}">
+                                            {{ str_replace(['[{CLIENT_NAME}]', '[{COMPANY_NAME}]'], [@$clientTemp, @$companyTemp], $email_temp->display_name) }}
+                                        </option>
+                                    @endif
+                                    @if ($selfCompany == '')
+                                        <option value="{{ $email_temp->e_temp_id }}">
+                                            {{ str_replace(['[{CLIENT_NAME}]', '[{COMPANY_NAME}]'], [@$clientTemp, @$companyTemp], $email_temp->display_name) }}
+                                        </option>
+                                    @endif
+                                @endforeach
+                            @endif
+                        </select>
+                        <div class="mm-hint">Choosing a template replaces the Subject and Body below</div>
+                    </div>
                 </div>
+
+                {{-- Subject --}}
+                <div class="mm-row">
+                    <div class="mm-label-col">
+                        <span class="mm-label-icon mm-ic-blue">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+                        </span>
+                        Subject <span class="mm-req">*</span>
+                    </div>
+                    <div class="mm-field-col">
+                        <input type="text" name="subject" id="subject" placeholder="Enter email subject" class="mm-input">
+                    </div>
+                </div>
+
+                {{-- Email Body --}}
+                <div class="mm-row">
+                    <div class="mm-label-col">
+                        <span class="mm-label-icon mm-ic-green">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+                        </span>
+                        Email Body
+                    </div>
+                    <div class="mm-field-col">
+                        <textarea id="editor1" name="editor1" class="mm-input" rows="10" placeholder="">&nbsp;</textarea>
+                    </div>
+                </div>
+
+                {{-- Upload Files --}}
+                <div class="mm-row">
+                    <div class="mm-label-col">
+                        <span class="mm-label-icon mm-ic-teal">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                        </span>
+                        Upload Files
+                    </div>
+                    <div class="mm-field-col">
+                        <input type="file" name="attachment" id="attachment" class="dropzone-select btn btn-sm btn-primary me-2" />
+                        <div class="mm-hint">Max file size: 2MB</div>
+                    </div>
+                </div>
+
             </div>
+            <!-- Back/Send Email live in the shared drawer topbar now -->
+            <button type="button" class="divback isd-hidden-native"></button>
+            <button type="button" id="sendEmailBtn" class="isd-hidden-native"></button>
         </div>
-        <!-- Back/Send Email live in the shared drawer topbar now (window.isdShellSetStep);
-             these stay as hidden proxies so the existing .divback / #sendEmailBtn click
-             handlers below keep working untouched. -->
-        <button type="button" class="divback isd-hidden-native"></button>
-        <button type="button" id="sendEmailBtn" class="isd-hidden-native"></button>
     </div>
 </form>
 

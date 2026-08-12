@@ -230,7 +230,7 @@ if ((int) @$mtype === 2 && !empty($templateData)) {
       <input type="hidden" id="mtypeId" name="mtype"     value="{{ $mtype }}">
       <input type="hidden" id="offerId" name="offerId"   value="{{ $offerId }}">
       <input type="hidden" id="to_email" name="to_email" value="">
-      <input type="hidden" id="from_email" name="from_email" value="{{ $userdata->email }}">
+      <input type="hidden" id="from_email" name="from_email" value="notify@jeroworks.com">
       <input type="hidden" id="template"  name="template"  value="{{ @$_approvalTpl->id }}">
       <input type="hidden" id="subject"   name="subject"    value="">
       <input type="hidden" name="signature" value="0">
@@ -293,7 +293,7 @@ if ((int) @$mtype === 2 && !empty($templateData)) {
         <div class="form-group row mb-4">
           <label class="col-xl-2 col-lg-2 col-form-label text-dark fw-bold"><span class="co-so-licon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg></span>From</label>
           <div class="col-lg-10 col-xl-10">
-            <input class="form-control form-control-solid" name="from_email" id="from_email"  value="{{ $userdata->email }}" readonly="" data-role="from_email" >
+            <input class="form-control form-control-solid" name="from_email" id="from_email"  value="notify@jeroworks.com" readonly="" data-role="from_email" >
             <span class="form-text text-muted">Please enter email</span> </div>
         </div>
         <!--end::From email-->
