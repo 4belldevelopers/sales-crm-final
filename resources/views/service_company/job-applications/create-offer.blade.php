@@ -3036,7 +3036,7 @@
                                     $so_company = @$co_company_name ?: '';
                                     $so_initial = strtoupper(substr(trim($so_name), 0, 1) ?: 'C');
                                     $so_from_name  = auth()->user()->name ?? '';
-                                    $so_from_email = auth()->user()->email ?? '';
+                                    $so_from_email = 'notify@jeroworks.com';
                                     $so_currencyArr = ['INR','EUR','JPY','GBP','USD','AED'];
                                     $so_curr    = $so_currencyArr[(int) @$section_change_value->currency] ?? '';
                                     $so_ctc     = @$yearly_final_gross;

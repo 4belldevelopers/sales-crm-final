@@ -17,10 +17,12 @@ class MailService
         $mail = new PHPMailer(true);
         $fromAddress_reply = $fromAddress;
         $fromName_reply = $fromName;
-        // smtp.elasticemail.com	Vibhanshu@4bell.com	F35C64FB9C2B8BE5DEBC3B13DF05198B5947
         $smtp = EmailSetting::where('status', '=', 0)->where('id', 12)->orderByDesc('id')->first();
-        if ($smtp->id == 12 || $smtp->id == 11) {
-            $fromAddress = ($smtp->mail_from_email) ? $smtp->mail_from_email : $fromAddress;
+        if (! $smtp) {
+            $smtp = EmailSetting::where('status', '=', 0)->orderByDesc('id')->first() ?: EmailSetting::first();
+        }
+        if ($smtp && ! empty($smtp->mail_from_email)) {
+            $fromAddress = $smtp->mail_from_email;
         }
 
         // dd($fromAddress_reply,$fromAddress);
