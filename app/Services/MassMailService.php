@@ -27,7 +27,7 @@ class MassMailService
         Mail::purge();
 
         // ✅ 3. Set dynamic config
-        $this->setDynamicMailConfig($smtp);
+        $this->setDynamicMailConfig($smtp, $fromName);
 
         $fromAddress_reply = $fromAddress;
         $fromName_reply = $fromName;
@@ -252,7 +252,7 @@ class MassMailService
         }
     }
 
-    private function setDynamicMailConfig($smtp, $fromName)
+    private function setDynamicMailConfig($smtp, $fromName = '')
     {
         config([
             'mail.default' => 'smtp',

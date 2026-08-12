@@ -27,7 +27,7 @@ class NotificationMailService
         Mail::purge();
 
         // ✅ 3. Set dynamic config
-        $this->setDynamicMailConfig($smtp);
+        $this->setDynamicMailConfig($smtp, $fromName);
 
         $fromAddress_reply = $fromAddress;
         $fromName_reply = $fromName;
@@ -260,7 +260,7 @@ class NotificationMailService
         }
     }
 
-    private function setDynamicMailConfig($smtp, $fromName)
+    private function setDynamicMailConfig($smtp, $fromName = '')
     {
         config([
             'mail.default' => 'smtp',
