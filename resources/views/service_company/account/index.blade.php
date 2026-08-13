@@ -156,6 +156,43 @@ input[type="radio"]:checked {
 @media(max-width:1199px){.company-settings-v2 #setting_one>.card-body{grid-template-columns:repeat(2,minmax(0,1fr))}.company-settings-v2 .dept_content{grid-template-columns:repeat(3,minmax(0,1fr))}}
 @media(max-width:767px){.company-settings-v2 #setting_one>.card-body,.company-settings-v2 #application_duplicate_settings .row{grid-template-columns:1fr}.company-settings-v2 .dept_content{grid-template-columns:repeat(2,minmax(0,1fr))}.company-settings-v2 .card-footer{flex-wrap:wrap;gap:8px}}
 
+/* Notifications tab: uses the existing tenant email-routing backend in a dense two-column layout. */
+.csn,.csn *{font-family:'Poppins',-apple-system,BlinkMacSystemFont,sans-serif!important;box-sizing:border-box}
+.csn{color:#13224f;padding:0 2px 14px}
+.csn-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.csn-card{min-width:0;background:#fff;border:1px solid #d3dcea;border-radius:10px;box-shadow:0 2px 7px rgba(16,30,78,.055);overflow:hidden}
+.csn-card-head{display:flex;align-items:center;gap:12px;padding:15px 16px 10px}
+.csn-head-icon{display:flex;width:38px;height:38px;flex:0 0 38px;align-items:center;justify-content:center;border-radius:8px}
+.csn-head-icon svg,.csn-item-icon svg,.csn-email-icon svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.csn-purple{color:#6338ed;background:#f1ebff}.csn-green{color:#0d9c55;background:#e7f9ef}
+.csn-card-title{color:#111f4d;font-size:12px;font-weight:600;line-height:1.35}
+.csn-card-sub{margin-top:3px;color:#5c6d94;font-size:10px;font-weight:500;line-height:1.4}
+.csn-card-body{padding:7px 16px 14px}
+.csn-label{display:block;margin:0 0 6px;color:#172957;font-size:10.5px;font-weight:600}
+.csn-email-wrap{position:relative;margin-bottom:12px}
+.csn-email{width:100%;height:36px;padding:7px 38px 7px 11px;color:#2e426f;font-size:11px;font-weight:500;background:#fff;border:1px solid #ccd7e8;border-radius:6px;outline:0;transition:border-color .15s,box-shadow .15s}
+.csn-email:focus{border-color:#7456ee;box-shadow:0 0 0 3px rgba(99,56,237,.08)}
+.csn-email-icon{position:absolute;right:10px;top:50%;display:flex;width:18px;height:18px;align-items:center;justify-content:center;color:#5b6e99;transform:translateY(-50%);pointer-events:none}
+.csn-category-label{margin:0 0 7px;color:#172957;font-size:10.5px;font-weight:600}
+.csn-list{display:grid;gap:0;border:1px solid #e1e7f0;border-radius:8px;overflow:hidden}
+.csn-item{display:grid;grid-template-columns:28px minmax(0,1fr) 14px;align-items:center;gap:9px;min-height:50px;padding:7px 10px;background:#fff;border-bottom:1px solid #e9edf4}
+.csn-item:last-child{border-bottom:0}
+.csn-item-icon{display:flex;width:27px;height:27px;align-items:center;justify-content:center;border-radius:6px}
+.csn-item-icon svg{width:14px;height:14px}
+.csn-item-title{color:#172957;font-size:10.5px;font-weight:600;line-height:1.3}
+.csn-item-desc{margin-top:2px;color:#61719a;font-size:9px;font-weight:500;line-height:1.35}
+.csn-item-arrow{color:#41577f;font-size:15px;font-weight:500;text-align:center}
+.csn-sales .csn-item-title{color:#087343}
+.csn-actions{display:flex;align-items:center;justify-content:flex-end;gap:10px;margin-top:14px;padding:12px 14px;background:#fff;border:1px solid #d3dcea;border-radius:9px;box-shadow:0 2px 7px rgba(16,30,78,.045)}
+.csn-actions .btn{min-width:128px;padding:9px 14px;font-size:11px;font-weight:600;border-radius:5px}
+.csn-actions .btn-primary{background:#6338ed;border-color:#6338ed}
+.csn-save-spinner{display:none;width:15px;height:15px;margin-right:7px;vertical-align:-3px;border:2px solid rgba(255,255,255,.42);border-top-color:#fff;border-radius:50%;animation:csv2-save-spin .7s linear infinite}
+#saveNotificationSettings.is-loading .csn-save-spinner{display:inline-block}
+#saveNotificationSettings:disabled{cursor:not-allowed;opacity:.78}
+@media(max-width:1100px){.csn-item{min-height:50px}.csn-item-desc{font-size:8.5px}}
+@media(max-height:800px) and (min-width:901px){.csn-card-head{padding:11px 14px 7px}.csn-head-icon{width:34px;height:34px}.csn-card-body{padding:6px 14px 11px}.csn-email-wrap{margin-top:5px}.csn-email{height:34px}.csn-category-label{margin:9px 0 6px}.csn-item{min-height:43px;padding:5px 9px}.csn-item-icon{width:27px;height:27px}.csn-item-desc{font-size:8px;line-height:1.25}.csn-actions{margin-top:10px;padding:10px 12px}}
+@media(max-width:900px){.csn-grid{grid-template-columns:1fr}.csn-actions{position:sticky;bottom:0;z-index:2}.csn-actions .btn{flex:1;min-width:0}}
+
 /* ===== Company Dashboard redesign (scoped .cad) — Poppins, <=14px, Metronic-friendly ===== */
 .cad, .cad * { font-family:'Poppins',-apple-system,BlinkMacSystemFont,sans-serif; box-sizing:border-box; }
 .cad { font-size:13px; color:#1f2937; }
@@ -768,6 +805,7 @@ input[type="radio"]:checked {
       <li class="nav-item"><a class="nav-link csv2-account-tab {{$overview_tab}}" data-toggle="tab" href="#overview"><span class="csv2-account-tab-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="6" height="6" rx="1"/><rect x="14" y="4" width="6" height="6" rx="1"/><rect x="4" y="14" width="6" height="6" rx="1"/><rect x="14" y="14" width="6" height="6" rx="1"/></svg></span><span class="csv2-account-tab-copy"><span class="csv2-account-tab-title">Overview</span></span></a></li>
       <li class="nav-item"><a class="nav-link csv2-account-tab" data-toggle="tab" href="#interview_stage"><span class="csv2-account-tab-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h10M4 18h7"/><circle cx="18" cy="12" r="2"/><path d="M18 14v5"/></svg></span><span class="csv2-account-tab-copy"><span class="csv2-account-tab-title">Interview Stage</span></span></a></li>
       <li class="nav-item"><a class="nav-link csv2-account-tab" data-toggle="tab" href="#settings"><span class="csv2-account-tab-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1-2.8 2.8-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.6v.1h-4V21a1.7 1.7 0 0 0-1-1.6 1.7 1.7 0 0 0-1.9.3l-.1.1L4.2 17l.1-.1a1.7 1.7 0 0 0 .3-1.9A1.7 1.7 0 0 0 3 14v-4a1.7 1.7 0 0 0 1.6-1 1.7 1.7 0 0 0-.3-1.9L7 4.2l.1.1a1.7 1.7 0 0 0 1.9.3 1.7 1.7 0 0 0 1-1.6h4a1.7 1.7 0 0 0 1 1.6 1.7 1.7 0 0 0 1.9-.3L19.8 7l-.1.1a1.7 1.7 0 0 0-.3 1.9 1.7 1.7 0 0 0 1.6 1v4a1.7 1.7 0 0 0-1.6 1Z"/></svg></span><span class="csv2-account-tab-copy"><span class="csv2-account-tab-title">General</span></span></a></li>
+      <li class="nav-item"><a class="nav-link csv2-account-tab" data-toggle="tab" href="#notifications"><span class="csv2-account-tab-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/><path d="M10 21h4"/></svg></span><span class="csv2-account-tab-copy"><span class="csv2-account-tab-title">Notifications</span></span></a></li>
       <li class="nav-item"><a class="nav-link csv2-account-tab" data-toggle="tab" href="#offerterms"><span class="csv2-account-tab-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M6 3h9l3 3v15H6z"/><path d="M14 3v4h4M9 11h6M9 15h6"/></svg></span><span class="csv2-account-tab-copy"><span class="csv2-account-tab-title">Terms &amp; Conditions</span><span class="csv2-account-tab-sub">(For Candidate Offer Letter)</span></span></a></li>
       <li class="nav-item"><a class="nav-link csv2-account-tab" data-toggle="tab" href="#agencyofferterms"><span class="csv2-account-tab-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M6 3h9l3 3v15H6z"/><path d="M14 3v4h4M9 11h6M9 15h4"/></svg></span><span class="csv2-account-tab-copy"><span class="csv2-account-tab-title">Terms &amp; Conditions</span><span class="csv2-account-tab-sub">(For Agency Offer Letter)</span></span></a></li>
       <li class="nav-item"><a class="nav-link csv2-account-tab" data-toggle="tab" href="#offercomponent"><span class="csv2-account-tab-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M7 9h4M7 13h2M15 10v6M12 13h6"/></svg></span><span class="csv2-account-tab-copy"><span class="csv2-account-tab-title">Salary Structure</span><span class="csv2-account-tab-sub">(For Candidate Offer Letter)</span></span></a></li>
@@ -2372,41 +2410,6 @@ input[type="radio"]:checked {
         <!--end::Content-->
       </div>
       <!--end::Connected Accounts-->
-      <!--begin::Notifications-->  
-      <div class="card mb-3 mb-xl-3 mx-0 shadow-none rounded-0 settings-email-notifications">
-        <!--begin::Card header-->
-        <div class="card-header border-0 cursor-pointer px-0" role="button" data-bs-toggle="collapse" data-bs-target="#kt_notification_connected_notification" aria-expanded="true" aria-controls="kt_notification_connected_notification">
-          <div class="card-title m-0">
-            <h3 class="fw-bolder m-0">Email Notifications</h3>
-          </div>
-        </div>
-        <!--end::Card header-->
-        <!--begin::Content-->
-        <div id="kt_notification_connected_notification" class="collapse show">
-          <!--begin::Card body-->
-          <div class="card-body border-top py-8 px-2"><div class="row mb-6">
-            <label class="col-lg-3 col-form-label required fw-bold fs-6">Recuitment</label>
-            <div class="col-lg-9 fv-row">
-              <input type="email" name="recuitment_email" id="recuitment_email" value="{{ (@$notification['Recuitment']->email) ? @$notification['Recuitment']->email : @$account->company_email }}" placeholder="Enter email" class="form-control form-control-solid">
-              <div class="form-text">All recruitment-related communications will be sent exclusively to this email address.</div>
-              <div class="fv-plugins-message-container invalid-feedback"></div>
-            </div>
-          </div>
-            <div class="row mb-6">
-              <label class="col-lg-3 col-form-label required fw-bold fs-6">Sales</label>
-              <div class="col-lg-9 fv-row">
-                <input type="email" name="sales_email" id="sales_email" value="{{ (@$notification['Sales']->email) ? @$notification['Sales']->email : @$account->company_email }}" placeholder="Enter email" class="form-control form-control-solid">
-                <div class="form-text">All Sales-related communications will be sent exclusively to this email address.</div>
-                <div class="fv-plugins-message-container invalid-feedback"></div>
-              </div>
-            </div>
-            
-          </div>
-          <!--end::Card body-->
-        </div>
-        <!--end::Content-->
-      </div>
-      <!--end::Notifications-->
   <!--begin::Application Duplicate Settings-->
   <div class="card mb-3 mb-xl-3 mx-0 shadow-none rounded-0 settings-duplicate-card">
     <!--begin::Card header-->
@@ -2650,6 +2653,95 @@ input[type="radio"]:checked {
 <!--end::Form-->
 </div>
 <!--end::Settings Content-->
+
+<!--begin::Notifications Content-->
+<div class="tab-pane csn" id="notifications" role="tabpanel">
+  @if(in_array("view_settings", $userPermissions))
+    @php
+      // Intent: document the existing recruitment and sales routing coverage without adding new persistence fields.
+      $recruitmentNotificationItems = [
+        ['Candidate Stages', 'Candidate moves across applied, shortlisted, interview, offered and other stages.'],
+        ['Agencies Status', 'Agency performance, submission and status changes.'],
+        ['Offers Update', 'Offer creation, approval, release, acceptance and decline.'],
+        ['Joining Update', 'Candidate joining, postponement and cancellation updates.'],
+        ['Bench Candidate Request', 'Bench candidates requested for a job.'],
+        ['Team Member Status', 'Team invitations, role changes and account status updates.'],
+        ['Bench Notification on Jobs', 'Bench candidates submitted or placed on jobs.'],
+        ['Additional Notifications', 'Notes, comments and other important recruitment actions.'],
+      ];
+      $salesNotificationItems = [
+        ['New Job Request from Direct Client', 'A new job request raised by a direct client.'],
+        ['Bench Added on Client Jobs', 'Bench candidates added or submitted on client jobs.'],
+        ['Subscription Status', 'Subscription activation, renewal, expiry and plan changes.'],
+        ['Client Communication', 'Client messages, feedback and important updates.'],
+        ['Invoice & Payment Status', 'Invoices, payments, due dates and payment failures.'],
+        ['Contract & Agreement Updates', 'Contract creation, renewal, expiry and amendments.'],
+        ['Low Coins / Wallet Alerts', 'Low coin balance and wallet actions requiring attention.'],
+        ['Additional Sales Alerts', 'Other important sales updates and system alerts.'],
+      ];
+    @endphp
+    <form id="notification_content" class="form" method="post" novalidate="novalidate">
+      @csrf
+      <input type="hidden" name="pagename" value="settings">
+      <div class="csn-grid">
+        <section class="csn-card">
+          <div class="csn-card-head">
+            <span class="csn-head-icon csn-purple" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg></span>
+            <div><div class="csn-card-title">Recruitment Notifications</div><div class="csn-card-sub">Manage email routing for all hiring and recruitment activities.</div></div>
+          </div>
+          <div class="csn-card-body">
+            <label class="csn-label" for="recuitment_email">Primary Email</label>
+            <div class="csn-email-wrap">
+              <input type="email" name="recuitment_email" id="recuitment_email" value="{{ (@$notification['Recuitment']->email) ? @$notification['Recuitment']->email : @$account->company_email }}" placeholder="Enter recruitment email" class="csn-email" required>
+              <span class="csn-email-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg></span>
+            </div>
+            <div class="csn-category-label">Notification Categories Covered</div>
+            <div class="csn-list">
+              @foreach($recruitmentNotificationItems as $notificationIndex => $notificationItem)
+                <div class="csn-item">
+                  <span class="csn-item-icon csn-purple" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="5" y="4" width="14" height="16" rx="2"/><path d="M9 4V2h6v2M9 12l2 2 4-4"/></svg></span>
+                  <div><div class="csn-item-title">{{ $notificationIndex + 1 }}. {{ $notificationItem[0] }}</div><div class="csn-item-desc">{{ $notificationItem[1] }}</div></div>
+                  <span class="csn-item-arrow" aria-hidden="true">&rsaquo;</span>
+                </div>
+              @endforeach
+            </div>
+          </div>
+        </section>
+
+        <section class="csn-card csn-sales">
+          <div class="csn-card-head">
+            <span class="csn-head-icon csn-green" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="7"/><path d="M12 7v5l3 2M8 3 5 6M16 3l3 3"/></svg></span>
+            <div><div class="csn-card-title">Sales Notifications</div><div class="csn-card-sub">Manage email routing for sales and client related activities.</div></div>
+          </div>
+          <div class="csn-card-body">
+            <label class="csn-label" for="sales_email">Primary Email</label>
+            <div class="csn-email-wrap">
+              <input type="email" name="sales_email" id="sales_email" value="{{ (@$notification['Sales']->email) ? @$notification['Sales']->email : @$account->company_email }}" placeholder="Enter sales email" class="csn-email" required>
+              <span class="csn-email-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg></span>
+            </div>
+            <div class="csn-category-label">Notification Categories Covered</div>
+            <div class="csn-list">
+              @foreach($salesNotificationItems as $notificationIndex => $notificationItem)
+                <div class="csn-item">
+                  <span class="csn-item-icon csn-green" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 19V9l8-5 8 5v10H4Z"/><path d="M9 19v-5h6v5"/></svg></span>
+                  <div><div class="csn-item-title">{{ $notificationIndex + 1 }}. {{ $notificationItem[0] }}</div><div class="csn-item-desc">{{ $notificationItem[1] }}</div></div>
+                  <span class="csn-item-arrow" aria-hidden="true">&rsaquo;</span>
+                </div>
+              @endforeach
+            </div>
+          </div>
+        </section>
+      </div>
+      @if(in_array("edit_settings", $userPermissions))
+        <div class="csn-actions">
+          <button type="reset" class="btn btn-secondary">Discard Changes</button>
+          <button type="button" class="btn btn-primary" id="saveNotificationSettings"><span class="csn-save-spinner" aria-hidden="true"></span><span class="csn-save-label">Save Changes</span></button>
+        </div>
+      @endif
+    </form>
+  @endif
+</div>
+<!--end::Notifications Content-->
 </div>
 <!--end::Body-->
 </div>
@@ -3637,6 +3729,66 @@ $(document).ready(function(){
                                 }
                   });				
         });	
+
+        // Intent: save the two existing notification-routing fields independently from General settings.
+        $('body').on('click', '#saveNotificationSettings', function(){
+            var $saveNotificationButton = $(this);
+            var notificationForm = document.getElementById('notification_content');
+
+            if ($saveNotificationButton.prop('disabled') || !notificationForm) return;
+            if (!notificationForm.checkValidity()) {
+                notificationForm.reportValidity();
+                return;
+            }
+
+            var data = new FormData(notificationForm);
+            $.ajax({
+                url: '{{route('service_company.account.update', @$account->id)}}',
+                headers: {'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')},
+                method: 'POST',
+                processData: false,
+                contentType: false,
+                data: data,
+                beforeSend: function () {
+                    $saveNotificationButton
+                        .prop('disabled', true)
+                        .attr('aria-busy', 'true')
+                        .addClass('is-loading');
+                    $saveNotificationButton.find('.csn-save-label').text('Saving...');
+                },
+                success: function (response) {
+                    if (response.status === 'warning') {
+                        Swal.fire({
+                            text: response.message,
+                            icon: 'error',
+                            buttonsStyling: false,
+                            confirmButtonText: 'Ok, got it!',
+                            customClass: {confirmButton: 'btn btn-light'}
+                        });
+                        return;
+                    }
+
+                    if (response.status === 'success') {
+                        Swal.fire('Success', 'Notification settings updated successfully!', 'success');
+                        return;
+                    }
+
+                    Swal.fire('Unable to save', response.message || 'Please try again.', 'error');
+                },
+                error: function (xhr) {
+                    var response = xhr.responseJSON || {};
+                    var message = response.message || 'Notification settings could not be saved. Please try again.';
+                    Swal.fire('Unable to save', message, 'error');
+                },
+                complete: function () {
+                    $saveNotificationButton
+                        .prop('disabled', false)
+                        .removeAttr('aria-busy')
+                        .removeClass('is-loading');
+                    $saveNotificationButton.find('.csn-save-label').text('Save Changes');
+                }
+            });
+        });
 
 
             $('body').on('click', '#updateCompanyTerms', function(){
