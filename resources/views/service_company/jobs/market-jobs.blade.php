@@ -101,22 +101,28 @@
         display: flex;
         align-items: flex-start;
         justify-content: space-between;
+        gap: 24px;
         margin-bottom: 20px;
     }
+    .mjh-title-block { flex: 0 0 auto; min-width: 0; }
     .mjh-title {
         display: flex;
         align-items: center;
         gap: 8px;
-        font-size: 20px;
-        font-weight: 700;
+        font-size: 18px;
+        font-weight: 600;
         color: #111827;
         margin-bottom: 5px;
-        line-height: 1.2;
+        line-height: 1.25;
     }
     .mjh-sub {
-        font-size: 12.5px;
+        font-size: 13px;
+        font-weight: 400;
         color: #6B7280;
-        max-width: 600px;
+        max-width: 420px;
+        line-height: 1.45;
+        text-align: right;
+        flex: 1;
     }
     .mjh-btn-post {
         display: inline-flex;
@@ -164,31 +170,24 @@
     .mjh-icon-purple { background: #F3F0FF; color: #7C3AED; }
     .mjh-icon-orange { background: #FFF7ED; color: #EA580C; }
     .mjh-card-label {
-        font-size: 11.5px;
+        font-size: 13px;
         color: #6B7280;
         font-weight: 500;
         margin-bottom: 2px;
     }
     .mjh-card-num {
-        font-size: 26px;
-        font-weight: 700;
+        font-size: 18px;
+        font-weight: 600;
         color: #111827;
-        line-height: 1.1;
+        line-height: 1.2;
     }
     .mjh-card-sub {
-        font-size: 11.5px;
+        font-size: 12px;
+        font-weight: 400;
         color: #6B7280;
         margin-top: 2px;
     }
-    .mjh-trend {
-        display: flex;
-        align-items: center;
-        gap: 3px;
-        font-size: 11px;
-        font-weight: 600;
-        color: #16A34A;
-        margin-top: 5px;
-    }
+    .mjh-trend { display: none; }
 
     /* Filter bar */
     .mjh-filter-bar {
@@ -394,10 +393,6 @@
                                     <div class="mjh-card-label">All Jobs</div>
                                     <div class="mjh-card-num">{{ number_format($all_jobs) }}</div>
                                     <div class="mjh-card-sub">Live Opportunities</div>
-                                    <div class="mjh-trend">
-                                        <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M5 8V2M2 5l3-3 3 3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                                        {{ $newly_add }} today
-                                    </div>
                                 </div>
                             </div>
 
@@ -418,10 +413,6 @@
                                     <div class="mjh-card-label">Agency Jobs</div>
                                     <div class="mjh-card-num">{{ number_format($all_jobs - $market_place) }}</div>
                                     <div class="mjh-card-sub">Direct Roles</div>
-                                    <div class="mjh-trend">
-                                        <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M5 8V2M2 5l3-3 3 3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                                        Growing
-                                    </div>
                                 </div>
                             </div>
 
@@ -438,10 +429,6 @@
                                     <div class="mjh-card-label">Bench Talent Jobs</div>
                                     <div class="mjh-card-num">{{ number_format($market_place) }}</div>
                                     <div class="mjh-card-sub">Contract Roles</div>
-                                    <div class="mjh-trend">
-                                        <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M5 8V2M2 5l3-3 3 3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                                        Active
-                                    </div>
                                 </div>
                             </div>
 
@@ -458,10 +445,6 @@
                                     <div class="mjh-card-label">Newly Added</div>
                                     <div class="mjh-card-num">{{ number_format($newly_add) }}</div>
                                     <div class="mjh-card-sub">Ready to Submit</div>
-                                    <div class="mjh-trend">
-                                        <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M5 8V2M2 5l3-3 3 3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                                        This week
-                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -530,11 +513,6 @@
                         <span class="mjh-tag" onclick="addFromPopular(this)" data-value="AWS">AWS</span>
                         <span class="mjh-tag" onclick="addFromPopular(this)" data-value="DevOps">DevOps</span>
                         <span class="mjh-tag" onclick="addFromPopular(this)" data-value="Data Analyst">Data Analyst</span>
-                        <span class="mjh-tag mjh-tag-hot" onclick="addFromPopular(this)" data-value="Immediate Joiner">
-                            <svg width="11" height="11" viewBox="0 0 24 24" fill="#F59E0B"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
-                            Immediate Joiner
-                        </span>
-                        <span class="mjh-tag" onclick="addFromPopular(this)" data-value="Remote">Remote</span>
                         <span class="mjh-clear-all" onclick="clearAllTags()">Clear All</span>
                     </div>
 
