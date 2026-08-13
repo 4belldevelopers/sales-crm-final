@@ -42,68 +42,76 @@ input[type="radio"]:checked {
 }
 
 /* Company settings: visual-only enterprise card system; existing form contracts stay intact. */
-.company-settings-v2,.company-settings-v2 *{font-family:'Poppins',-apple-system,BlinkMacSystemFont,sans-serif;box-sizing:border-box}
-.company-settings-v2{color:#101e4e;font-size:12px;padding:0 0 2px}
+.company-settings-v2,.company-settings-v2 *{font-family:'Poppins',-apple-system,BlinkMacSystemFont,sans-serif!important;box-sizing:border-box}
+.company-settings-v2{color:#101e4e;font-size:12px;font-weight:500;padding:0 0 2px}
 .company-settings-v2 .csv2-heading{margin:0 0 18px}
-.company-settings-v2 .csv2-heading h2{margin:0;color:#0e1b4d;font-size:16px;font-weight:500;line-height:1.3}
-.company-settings-v2 .csv2-heading p,.company-settings-v2 .csv2-section-sub{margin:4px 0 0;color:#52638b;font-size:11px;font-weight:400;line-height:1.45}
-.company-settings-v2>.card{overflow:hidden;background:#fff!important;border:1px solid #e3e8f2!important;border-radius:10px!important;box-shadow:0 2px 10px rgba(16,30,78,.04)!important}
+.company-settings-v2 .csv2-heading h2{margin:0;color:#0e1b4d;font-size:16px;font-weight:600;line-height:1.3}
+.company-settings-v2 .csv2-heading p,.company-settings-v2 .csv2-section-sub{margin:4px 0 0;color:#52638b;font-size:11px;font-weight:500;line-height:1.45}
 .company-settings-v2 .card{display:block!important;height:auto!important;min-height:0!important;margin:0!important;background:transparent!important;border:0!important;border-radius:0!important;box-shadow:none!important;position:relative!important;flex:none!important}
+.company-settings-v2>.card{overflow:hidden;background:#fff!important;border:1px solid #cfd8e8!important;border-radius:10px!important;box-shadow:0 3px 14px rgba(16,30,78,.07)!important}
 .company-settings-v2 .card.d-none,.company-settings-v2 .settings-email-notifications{display:none!important}
-.company-settings-v2 .settings-general-card,.company-settings-v2 .settings-duplicate-card,.company-settings-v2 .settings-department-card{margin:14px!important;background:#fff!important;border:1px solid #e2e7f0!important;border-radius:9px!important;box-shadow:0 1px 4px rgba(16,30,78,.035)!important}
+.company-settings-v2 .settings-general-card,.company-settings-v2 .settings-duplicate-card,.company-settings-v2 .settings-department-card{margin:14px!important;background:#fff!important;border:1px solid #d3dcea!important;border-radius:9px!important;box-shadow:0 2px 7px rgba(16,30,78,.055)!important}
 .company-settings-v2 .card-header{min-height:0!important;padding:20px 20px 9px!important;border:0!important;background:#fff!important}
-.company-settings-v2 .card-title h3{margin:0;color:#101e4e;font-size:13px!important;font-weight:500!important}
+.company-settings-v2 .card-title h3{margin:0;color:#101e4e;font-size:13px!important;font-weight:600!important}
 .company-settings-v2 .settings-section-content,.company-settings-v2>.card>.card-body{display:block!important;height:auto!important;visibility:visible!important;opacity:1!important}
 .company-settings-v2 #setting_one>.card-body{display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;padding:12px 20px 22px!important;border:0!important}
-.company-settings-v2 #setting_one .row{display:grid!important;grid-template-columns:48px minmax(0,1fr);grid-template-rows:auto auto;column-gap:12px;align-items:center;min-width:0;min-height:82px;margin:0!important;padding:12px!important;background:#fff;border:1px solid #e2e7f0;border-radius:8px;transition:border-color .15s,box-shadow .15s}
-.company-settings-v2 #setting_one .row:hover,.company-settings-v2 #setting_one .row:focus-within{border-color:#b8c8ed;box-shadow:0 3px 12px rgba(25,68,150,.07)}
+.company-settings-v2 #setting_one .row{display:grid!important;grid-template-columns:48px minmax(0,1fr);grid-template-rows:auto auto;column-gap:12px;align-items:center;min-width:0;min-height:82px;margin:0!important;padding:12px!important;background:#fff;border:1px solid #ccd7e8;border-radius:8px;box-shadow:0 1px 3px rgba(16,30,78,.035);transition:border-color .15s,box-shadow .15s}
+.company-settings-v2 #setting_one .row:hover,.company-settings-v2 #setting_one .row:focus-within{border-color:#8eaae0;box-shadow:0 4px 14px rgba(25,68,150,.10)}
 .company-settings-v2 #setting_one .row.d-none{display:none!important}
-.company-settings-v2 #setting_one .row>label{grid-column:2;grid-row:1;width:auto;max-width:none;margin:0!important;padding:0;color:#13224f;font-size:11px!important;font-weight:500!important;line-height:1.35}
+.company-settings-v2 #setting_one .row>label{grid-column:2;grid-row:1;width:auto;max-width:none;margin:0!important;padding:0;color:#13224f;font-size:11px!important;font-weight:600!important;line-height:1.35}
 .company-settings-v2 #setting_one .row>.fv-row{grid-column:2;grid-row:2;width:auto;max-width:none;min-width:0;padding:0}
 .company-settings-v2 .csv2-field-icon{grid-column:1;grid-row:1/3;display:flex;width:42px;height:42px;align-items:center;justify-content:center;border-radius:10px}
 .company-settings-v2 .csv2-field-icon svg{width:23px;height:23px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 .company-settings-v2 .csv2-blue{color:#1764ef;background:#edf4ff}.company-settings-v2 .csv2-purple{color:#7638eb;background:#f3edff}.company-settings-v2 .csv2-green{color:#159957;background:#ebf9f0}.company-settings-v2 .csv2-orange{color:#f46a22;background:#fff1e8}
-.company-settings-v2 #setting_one .form-select{width:100%;min-height:30px;padding:3px 29px 3px 0!important;color:#334873;font-size:11px;font-weight:400;border:0!important;border-radius:0!important;background-color:transparent!important;box-shadow:none!important;cursor:pointer;text-overflow:ellipsis}
+.company-settings-v2 #setting_one .form-select{width:100%;min-height:30px;padding:3px 29px 3px 0!important;color:#334873;font-size:11px;font-weight:500;border:0!important;border-radius:0!important;background-color:transparent!important;box-shadow:none!important;cursor:pointer;text-overflow:ellipsis}
 .company-settings-v2 #setting_one .form-select:focus{color:#172a58;outline:0}
-.company-settings-v2 #setting_one .form-select option,.company-settings-v2 #setting_one .form-select optgroup{color:#354a76;font-family:'Poppins',sans-serif;font-size:11px;font-weight:400;background:#fff}
+.company-settings-v2 #setting_one .form-select option,.company-settings-v2 #setting_one .form-select optgroup{color:#354a76;font-family:'Poppins',sans-serif;font-size:11px;font-weight:500;background:#fff}
 .company-settings-v2 #setting_one .select2-container{width:100%!important;min-width:0}
 .company-settings-v2 #setting_one .select2-container .select2-selection--single{height:30px!important;padding:0!important;background:transparent!important;border:0!important;border-radius:0!important;box-shadow:none!important}
-.company-settings-v2 #setting_one .select2-container .select2-selection__rendered{height:30px!important;padding:5px 28px 4px 0!important;color:#334873!important;font-size:11px!important;font-weight:400!important;line-height:21px!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.company-settings-v2 #setting_one .select2-container .select2-selection__rendered{height:30px!important;padding:5px 28px 4px 0!important;color:#334873!important;font-size:11px!important;font-weight:500!important;line-height:21px!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .company-settings-v2 #setting_one .select2-container .select2-selection__arrow{right:0!important;top:2px!important;width:22px!important;height:26px!important}
 .company-settings-v2 #setting_one .select2-container--focus .select2-selection--single{outline:0!important}
-.select2-dropdown.csv2-enterprise-dropdown,.csv2-enterprise-select .select2-dropdown{margin-top:7px;padding:7px;background:#fff;border:1px solid #dce3ef!important;border-radius:8px!important;box-shadow:0 14px 32px rgba(16,30,78,.16)!important;font-family:'Poppins',sans-serif;overflow:hidden}
+.select2-dropdown.csv2-enterprise-dropdown,.csv2-enterprise-select .select2-dropdown{z-index:1065;margin-top:7px;padding:8px;background:#fff;border:1px solid #dce3ef!important;border-radius:9px!important;box-shadow:0 16px 38px rgba(16,30,78,.18)!important;font-family:'Poppins',sans-serif;overflow:hidden}
+.select2-dropdown.csv2-enterprise-dropdown.csv2-timezone-dropdown{width:min(390px,calc(100vw - 24px))!important;min-width:min(390px,calc(100vw - 24px))!important}
+.select2-dropdown.csv2-enterprise-dropdown.csv2-timeformat-dropdown{width:min(290px,calc(100vw - 24px))!important;min-width:min(290px,calc(100vw - 24px))!important}
 .select2-dropdown.csv2-enterprise-dropdown .select2-search--dropdown{padding:3px 3px 8px}
-.select2-dropdown.csv2-enterprise-dropdown .select2-search__field{height:34px;padding:6px 10px;color:#263a68;font-family:'Poppins',sans-serif;font-size:11px;font-weight:400;border:1px solid #dfe5ef!important;border-radius:6px!important;outline:0}
+.select2-dropdown.csv2-enterprise-dropdown .select2-search--dropdown::before{content:'Search';display:block;margin:0 0 5px 2px;color:#263a68;font-size:10px;font-weight:500;letter-spacing:.1px}
+.select2-dropdown.csv2-enterprise-dropdown .select2-search__field{height:36px;padding:7px 11px;color:#263a68;font-family:'Poppins',sans-serif;font-size:11px;font-weight:500;border:1px solid #cdd8e7!important;border-radius:6px!important;outline:0}
 .select2-dropdown.csv2-enterprise-dropdown .select2-search__field:focus{border-color:#1764ef!important;box-shadow:0 0 0 3px rgba(23,100,239,.08)}
-.select2-dropdown.csv2-enterprise-dropdown .select2-results__options{max-height:240px!important;padding:2px}
-.select2-dropdown.csv2-enterprise-dropdown .select2-results__option{min-height:34px;margin:2px 0;padding:8px 10px;color:#354a76;font-size:11px;font-weight:400;line-height:18px;border-radius:5px}
+.select2-dropdown.csv2-enterprise-dropdown .select2-results__options{max-height:260px!important;padding:2px;scrollbar-width:thin;scrollbar-color:#cbd5e1 transparent}
+.select2-dropdown.csv2-enterprise-dropdown .select2-results__group{padding:9px 10px 5px;color:#172957;font-size:10px;font-weight:500;letter-spacing:.2px;text-transform:uppercase}
+.select2-dropdown.csv2-enterprise-dropdown .select2-results__option{min-height:36px;margin:2px 0;padding:8px 10px;color:#354a76;font-size:11px;font-weight:500;line-height:19px;border-radius:6px}
+.select2-dropdown.csv2-enterprise-dropdown.csv2-timezone-dropdown .select2-results__option{white-space:normal;overflow-wrap:anywhere}
+.select2-dropdown.csv2-enterprise-dropdown.csv2-timeformat-dropdown .select2-results__option{display:flex;align-items:center;min-height:42px;padding:9px 11px;white-space:normal}
 .select2-dropdown.csv2-enterprise-dropdown .select2-results__option--highlighted[aria-selected]{color:#154dbb!important;background:#edf4ff!important}
-.select2-dropdown.csv2-enterprise-dropdown .select2-results__option[aria-selected=true]{color:#0f49bd!important;font-weight:500;background:#e8f1ff!important}
+.select2-dropdown.csv2-enterprise-dropdown .select2-results__option[aria-selected=true]{position:relative;padding-right:34px;color:#0f49bd!important;font-weight:600;background:#e8f1ff!important}
+.select2-dropdown.csv2-enterprise-dropdown .select2-results__option[aria-selected=true]::after{content:'✓';position:absolute;right:11px;top:50%;transform:translateY(-50%);display:flex;width:18px;height:18px;align-items:center;justify-content:center;color:#fff;font-size:10px;background:#1764ef;border-radius:50%}
+.select2-dropdown.csv2-enterprise-dropdown.select2-dropdown--above{margin-top:-7px;margin-bottom:7px}
 .company-settings-v2 #setting_one .form-text{display:none}
 .company-settings-v2 #application_duplicate_settings>.card-body{padding:12px 20px 22px!important;border:0!important}
 .company-settings-v2 #application_duplicate_settings .row{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin:0!important}
 .company-settings-v2 #application_duplicate_settings .col-lg-4{width:auto;max-width:none;padding:0}
-.company-settings-v2 #application_duplicate_settings label.option{display:grid!important;grid-template-columns:26px minmax(0,1fr);height:130px;margin:0;padding:15px;background:#fff;border:1px solid #e1e6ef;border-radius:8px;cursor:pointer;transition:border-color .15s,box-shadow .15s}
+.company-settings-v2 #application_duplicate_settings label.option{display:grid!important;grid-template-columns:26px minmax(0,1fr);height:130px;margin:0;padding:15px;background:#fff;border:1px solid #ccd7e8;border-radius:8px;box-shadow:0 1px 3px rgba(16,30,78,.035);cursor:pointer;transition:border-color .15s,box-shadow .15s}
 .company-settings-v2 #application_duplicate_settings label.option:hover{border-color:#b8c8ed}
 .company-settings-v2 #application_duplicate_settings label.option:has(input:checked){border-color:#1764ff;box-shadow:0 0 0 1px #1764ff inset}
 .company-settings-v2 #application_duplicate_settings .option-control{grid-column:1;margin:1px 0 0}
 .company-settings-v2 #application_duplicate_settings .option-label{grid-column:2;min-width:0}
 .company-settings-v2 #application_duplicate_settings .option-head{display:flex!important;align-items:flex-start;justify-content:space-between;gap:8px;min-height:34px}
-.company-settings-v2 #application_duplicate_settings .option-title{color:#142453;font-size:11px!important;font-weight:500!important;line-height:1.4}
-.company-settings-v2 #application_duplicate_settings .option-body{display:block;color:#56678f;font-size:10px;font-weight:400;line-height:1.5}
+.company-settings-v2 #application_duplicate_settings .option-title{color:#142453;font-size:11px!important;font-weight:600!important;line-height:1.4}
+.company-settings-v2 #application_duplicate_settings .option-body{display:block;color:#56678f;font-size:10px;font-weight:500;line-height:1.5}
 .company-settings-v2 #application_duplicate_settings input[type=radio]{width:17px;height:17px;margin:0;accent-color:#1764ff}
-.company-settings-v2 .csv2-days-row{display:flex;align-items:center;gap:10px;margin-top:15px;color:#56678f;font-size:10px}
-.company-settings-v2 #application_duplicate_settings input[type=number]{width:74px!important;height:32px;flex:0 0 74px;margin:0;padding:5px 9px;color:#172957;font-size:11px;font-weight:500;background:#fff;border:1px solid #dfe5ef;border-radius:6px!important;outline:0}
+.company-settings-v2 .csv2-days-row{display:flex;align-items:center;gap:10px;margin-top:15px;color:#56678f;font-size:10px;font-weight:500}
+.company-settings-v2 #application_duplicate_settings input[type=number]{width:74px!important;height:32px;flex:0 0 74px;margin:0;padding:5px 9px;color:#172957;font-size:11px;font-weight:600;background:#fff;border:1px solid #ccd7e8;border-radius:6px!important;outline:0}
 .company-settings-v2 #application_duplicate_settings input[type=number]:focus{border-color:#1764ff;box-shadow:0 0 0 3px rgba(23,100,255,.09)}
 .company-settings-v2 .settings-department-card .card-header{display:flex;align-items:center;justify-content:space-between;padding-top:20px!important}
 .company-settings-v2 .settings-department-card .card-header>.card-title:last-child{margin-left:auto!important}
-.company-settings-v2 .settings-department-card .btn-primary{display:inline-flex;align-items:center;gap:6px;padding:8px 14px;color:#fff;font-size:11px;font-weight:500;background:#1457e8;border:1px solid #1457e8;border-radius:5px;box-shadow:0 3px 8px rgba(20,87,232,.16)}
+.company-settings-v2 .settings-department-card .btn-primary{display:inline-flex;align-items:center;gap:6px;padding:8px 14px;color:#fff;font-size:11px;font-weight:600;background:#1457e8;border:1px solid #1457e8;border-radius:5px;box-shadow:0 3px 8px rgba(20,87,232,.16)}
 .company-settings-v2 .settings-department-card .btn-primary::before{content:'+';font-size:14px;line-height:1}
 .company-settings-v2 .dept_content{display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr));gap:11px;padding:10px 20px 22px!important;border:0!important}
 .company-settings-v2 .dept_content .form-group,.company-settings-v2 .dept_content .row{display:contents!important}
 .company-settings-v2 .dept_content .form-check,.company-settings-v2 .dept_content .form-text{display:none!important}
 .company-settings-v2 .dept_content .col-lg-4{width:auto;max-width:none;padding:0}
-.company-settings-v2 .dept_content .badge{position:relative;width:100%;min-height:44px;padding:8px 34px 8px 55px!important;color:#40517b;font-weight:400;background:#fff!important;border:1px solid #e3e8f1;border-radius:7px;overflow:hidden}
+.company-settings-v2 .dept_content .badge{position:relative;width:100%;min-height:44px;padding:8px 34px 8px 55px!important;color:#40517b;font-weight:500;background:#fff!important;border:1px solid #ccd7e8;border-radius:7px;box-shadow:0 1px 3px rgba(16,30,78,.035);overflow:hidden}
 .company-settings-v2 .dept_content .badge::before{content:'';position:absolute;left:12px;top:9px;width:26px;height:26px;border-radius:6px;background:#edf4ff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%231764ef' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2'/%3E%3Ccircle cx='9' cy='7' r='4'/%3E%3Cpath d='M22 21v-2a4 4 0 0 0-3-3.87'/%3E%3C/svg%3E") center/14px no-repeat}
 .company-settings-v2 .dept_content .col-lg-4:nth-of-type(4n+2) .badge::before{background-color:#f3edff;filter:hue-rotate(35deg)}
 .company-settings-v2 .dept_content .col-lg-4:nth-of-type(4n+3) .badge::before{background-color:#ebf9f0;filter:hue-rotate(105deg)}
@@ -116,10 +124,31 @@ input[type="radio"]:checked {
 .company-settings-v2 .dept_content .dept_delete::before{content:'×';font-size:17px;font-weight:400;line-height:1}
 .csv2-tab-icon{display:inline-flex;width:16px;height:16px;margin-right:6px;vertical-align:-3px;color:#1764ef}
 .csv2-tab-icon svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
-.nav-link[href="#settings"] .nav-text{font-weight:500!important}
+.nav-link[href="#settings"] .nav-text{font-family:'Poppins',sans-serif!important;font-weight:600!important}
+.csv2-account-tabs-wrap{width:100%;min-width:0;overflow:hidden}
+.csv2-account-tabs{display:flex!important;flex-wrap:nowrap!important;align-items:stretch;width:max-content;min-width:100%;margin:0!important;padding:0 8px!important;gap:2px;overflow-x:auto;overflow-y:hidden;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.csv2-account-tabs::-webkit-scrollbar{display:none}
+.csv2-account-tabs .nav-item{display:flex;flex:0 0 auto;margin:0!important}
+.csv2-account-tabs .csv2-account-tab{position:relative;display:flex!important;align-items:center;gap:7px;min-height:62px;margin:0!important;padding:10px 10px 9px!important;color:#556589!important;font-family:'Poppins',sans-serif!important;border:0!important;border-radius:0!important;white-space:nowrap;transition:color .15s,background-color .15s}
+.csv2-account-tabs .csv2-account-tab::after{content:'';position:absolute;right:10px;bottom:0;left:10px;height:2px;background:transparent;border-radius:2px 2px 0 0}
+.csv2-account-tabs .csv2-account-tab:hover,.csv2-account-tabs .csv2-account-tab:focus{color:#174fc2!important;background:#f8faff!important;outline:0}
+.csv2-account-tabs .csv2-account-tab.active{color:#1764ef!important;background:#f7faff!important}
+.csv2-account-tabs .csv2-account-tab.active::after{background:#1764ef}
+.csv2-account-tabs .csv2-account-tab-icon{display:flex;width:18px;height:18px;flex:0 0 18px;align-items:center;justify-content:center;color:currentColor}
+.csv2-account-tabs .csv2-account-tab-icon svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.csv2-account-tabs .csv2-account-tab-copy{display:flex;flex-direction:column;justify-content:center;min-width:0;line-height:1.25}
+.csv2-account-tabs .csv2-account-tab-title{color:currentColor;font-size:11px;font-weight:600;line-height:1.3}
+.csv2-account-tabs .csv2-account-tab-sub{margin-top:2px;color:#7b89aa;font-size:9px;font-weight:500;line-height:1.2;text-align:left}
+.csv2-account-tabs .csv2-account-tab.active .csv2-account-tab-sub{color:#5578c3}
+@media(max-width:1199px){.csv2-account-tabs{padding-right:3px!important;padding-left:3px!important;gap:0}.csv2-account-tabs .csv2-account-tab{gap:4px;padding-right:5px!important;padding-left:5px!important}.csv2-account-tabs .csv2-account-tab-icon{width:15px;height:15px;flex-basis:15px}.csv2-account-tabs .csv2-account-tab-icon svg{width:15px;height:15px}.csv2-account-tabs .csv2-account-tab-title{font-size:10px}.csv2-account-tabs .csv2-account-tab-sub{font-size:8.5px}}
 .company-settings-v2 .card-footer{display:flex!important;align-items:center;margin:0 12px 12px;padding:13px 16px!important;background:#fbfcff!important;border:1px solid #edf0f6!important;border-radius:7px;justify-content:flex-end!important}
-.company-settings-v2 .card-footer .btn{min-width:130px;padding:9px 14px;font-size:11px;font-weight:500;border-radius:5px}
+.company-settings-v2 .card-footer .btn{min-width:130px;padding:9px 14px;font-size:11px;font-weight:600;border-radius:5px}
 .company-settings-v2 .card-footer .btn-primary{color:#fff;background:#1457e8;border-color:#1457e8}
+.company-settings-v2 .csv2-save-spinner{display:none;width:15px;height:15px;margin-right:7px;vertical-align:-3px;border:2px solid rgba(255,255,255,.42);border-top-color:#fff;border-radius:50%;animation:csv2-save-spin .7s linear infinite}
+.company-settings-v2 #updateCompanyProfile.is-loading .csv2-save-spinner{display:inline-block}
+.company-settings-v2 #updateCompanyProfile:disabled{cursor:not-allowed;opacity:.78}
+@keyframes csv2-save-spin{to{transform:rotate(360deg)}}
+@media(prefers-reduced-motion:reduce){.company-settings-v2 .csv2-save-spinner{animation-duration:1.4s}}
 @media(max-width:1199px){.company-settings-v2 #setting_one>.card-body{grid-template-columns:repeat(2,minmax(0,1fr))}.company-settings-v2 .dept_content{grid-template-columns:repeat(3,minmax(0,1fr))}}
 @media(max-width:767px){.company-settings-v2 #setting_one>.card-body,.company-settings-v2 #application_duplicate_settings .row{grid-template-columns:1fr}.company-settings-v2 .dept_content{grid-template-columns:repeat(2,minmax(0,1fr))}.company-settings-v2 .card-footer{flex-wrap:wrap;gap:8px}}
 
@@ -730,43 +759,18 @@ input[type="radio"]:checked {
 <div class="card card-custom mx-2">
 <!--Begin::Tabs Header-->
 <div class="card-header card-header-tabs-line">
-  <div class="card-toolbar">
-    <ul class="nav nav-tabs nav-tabs-space-lg nav-tabs-line nav-tabs-bold nav-tabs-line-3x" role="tablist">
-      <li class="nav-item me-3"> <a class="nav-link {{$overview_tab}}" data-toggle="tab" href="#overview"> <span class="nav-text font-weight-bold">Overview</span> </a> </li>
-      <li class="nav-item me-3"> <a class="nav-link" data-toggle="tab" href="#interview_stage"> <span class="nav-text font-weight-bold">Interview Stage</span> </a> </li>
-      <li class="nav-item me-3"> <a class="nav-link" data-toggle="tab" href="#settings"> <span class="nav-text font-weight-bold"><span class="csv2-tab-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1-2.8 2.8-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.6v.1h-4V21a1.7 1.7 0 0 0-1-1.6 1.7 1.7 0 0 0-1.9.3l-.1.1L4.2 17l.1-.1a1.7 1.7 0 0 0 .3-1.9A1.7 1.7 0 0 0 3 14H3v-4h.1a1.7 1.7 0 0 0 1.6-1 1.7 1.7 0 0 0-.3-1.9L4.2 7 7 4.2l.1.1a1.7 1.7 0 0 0 1.9.3 1.7 1.7 0 0 0 1-1.6V3h4v.1a1.7 1.7 0 0 0 1 1.6 1.7 1.7 0 0 0 1.9-.3l.1-.1L19.8 7l-.1.1a1.7 1.7 0 0 0-.3 1.9 1.7 1.7 0 0 0 1.6 1h.1v4H21a1.7 1.7 0 0 0-1.6 1Z"/></svg></span>General</span> </a> </li>
-
-      <li class="nav-item me-3"> <a class="nav-link" data-toggle="tab" href="#offerterms">
-          <span class="nav-text font-weight-bold">Terms & Conditions</span>
-          <span class="fw-bold text-muted d-block fs-7" style=" text-align: center;">(For Candidate Offer Letter)</span>
-           </a>
-      </li>
-
-      <li class="nav-item me-3"> <a class="nav-link" data-toggle="tab" href="#agencyofferterms">
-          <span class="nav-text font-weight-bold">Terms & Conditions</span>
-          <span class="fw-bold text-muted d-block fs-7" style=" text-align: center;">(For Agency Offer Letter)</span>
-           </a>
-      </li>
-
-      <li class="nav-item me-3"> <a class="nav-link" data-toggle="tab" href="#offercomponent"> 
-        <span class="nav-text font-weight-bold">Salary Structure</span>
-        <span class="fw-bold text-muted d-block fs-7" style=" text-align: center;">(For Candidate Offer Letter)</span>
-         </a> 
-    </li>
-
-    <li class="nav-item me-3"> <a class="nav-link" data-toggle="tab" href="#terms" style="display: inline-grid;padding-bottom: 5px;"> <span class="nav-text font-weight-bold">Terms & Conditions</span>
-      <span class="fw-bold text-muted d-block fs-7" style=" text-align: center;">(For {{__('messages.Agency')}})</span> </a> </li>
-
-        @if(@$productAllowCompany)
-         <li class="nav-item me-3"> <a class="nav-link" data-toggle="tab" href="#services"> 
-        <span class="nav-text font-weight-bold">Commericials</span>
-        <span class="fw-bold text-muted d-block fs-7" style=" text-align: center;">(For Clients)</span>
-         </a> </li>
-        
-
-      <li class="nav-item me-3"> <a class="nav-link {{$boostkeyword_tab}}" data-toggle="tab" href="#boostkeyword"> <span
-          class="nav-text font-weight-bold"> Ads Settings  </span> </a> </li> 
-
+  <div class="card-toolbar csv2-account-tabs-wrap">
+    <ul class="nav nav-tabs csv2-account-tabs" role="tablist">
+      <li class="nav-item"><a class="nav-link csv2-account-tab {{$overview_tab}}" data-toggle="tab" href="#overview"><span class="csv2-account-tab-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="6" height="6" rx="1"/><rect x="14" y="4" width="6" height="6" rx="1"/><rect x="4" y="14" width="6" height="6" rx="1"/><rect x="14" y="14" width="6" height="6" rx="1"/></svg></span><span class="csv2-account-tab-copy"><span class="csv2-account-tab-title">Overview</span></span></a></li>
+      <li class="nav-item"><a class="nav-link csv2-account-tab" data-toggle="tab" href="#interview_stage"><span class="csv2-account-tab-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h10M4 18h7"/><circle cx="18" cy="12" r="2"/><path d="M18 14v5"/></svg></span><span class="csv2-account-tab-copy"><span class="csv2-account-tab-title">Interview Stage</span></span></a></li>
+      <li class="nav-item"><a class="nav-link csv2-account-tab" data-toggle="tab" href="#settings"><span class="csv2-account-tab-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1-2.8 2.8-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.6v.1h-4V21a1.7 1.7 0 0 0-1-1.6 1.7 1.7 0 0 0-1.9.3l-.1.1L4.2 17l.1-.1a1.7 1.7 0 0 0 .3-1.9A1.7 1.7 0 0 0 3 14v-4a1.7 1.7 0 0 0 1.6-1 1.7 1.7 0 0 0-.3-1.9L7 4.2l.1.1a1.7 1.7 0 0 0 1.9.3 1.7 1.7 0 0 0 1-1.6h4a1.7 1.7 0 0 0 1 1.6 1.7 1.7 0 0 0 1.9-.3L19.8 7l-.1.1a1.7 1.7 0 0 0-.3 1.9 1.7 1.7 0 0 0 1.6 1v4a1.7 1.7 0 0 0-1.6 1Z"/></svg></span><span class="csv2-account-tab-copy"><span class="csv2-account-tab-title">General</span></span></a></li>
+      <li class="nav-item"><a class="nav-link csv2-account-tab" data-toggle="tab" href="#offerterms"><span class="csv2-account-tab-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M6 3h9l3 3v15H6z"/><path d="M14 3v4h4M9 11h6M9 15h6"/></svg></span><span class="csv2-account-tab-copy"><span class="csv2-account-tab-title">Terms &amp; Conditions</span><span class="csv2-account-tab-sub">(For Candidate Offer Letter)</span></span></a></li>
+      <li class="nav-item"><a class="nav-link csv2-account-tab" data-toggle="tab" href="#agencyofferterms"><span class="csv2-account-tab-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M6 3h9l3 3v15H6z"/><path d="M14 3v4h4M9 11h6M9 15h4"/></svg></span><span class="csv2-account-tab-copy"><span class="csv2-account-tab-title">Terms &amp; Conditions</span><span class="csv2-account-tab-sub">(For Agency Offer Letter)</span></span></a></li>
+      <li class="nav-item"><a class="nav-link csv2-account-tab" data-toggle="tab" href="#offercomponent"><span class="csv2-account-tab-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M7 9h4M7 13h2M15 10v6M12 13h6"/></svg></span><span class="csv2-account-tab-copy"><span class="csv2-account-tab-title">Salary Structure</span><span class="csv2-account-tab-sub">(For Candidate Offer Letter)</span></span></a></li>
+      <li class="nav-item"><a class="nav-link csv2-account-tab" data-toggle="tab" href="#terms"><span class="csv2-account-tab-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 4h14v16H5z"/><path d="M8 8h8M8 12h8M8 16h5"/></svg></span><span class="csv2-account-tab-copy"><span class="csv2-account-tab-title">Terms &amp; Conditions</span><span class="csv2-account-tab-sub">(For {{__('messages.Agency')}})</span></span></a></li>
+      @if(@$productAllowCompany)
+      <li class="nav-item"><a class="nav-link csv2-account-tab" data-toggle="tab" href="#services"><span class="csv2-account-tab-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M9 7V4h6v3M3 12h18M10 12v2h4v-2"/></svg></span><span class="csv2-account-tab-copy"><span class="csv2-account-tab-title">Commericials</span><span class="csv2-account-tab-sub">(For Clients)</span></span></a></li>
+      <li class="nav-item"><a class="nav-link csv2-account-tab {{$boostkeyword_tab}}" data-toggle="tab" href="#boostkeyword"><span class="csv2-account-tab-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="m4 13 11-5v10L4 13Z"/><path d="M15 11h3a2 2 0 0 1 0 4h-3M6 14l2 6h3l-2-7"/></svg></span><span class="csv2-account-tab-copy"><span class="csv2-account-tab-title">Ads Settings</span></span></a></li>
       @endif
     </ul>
   </div>
@@ -2632,7 +2636,7 @@ input[type="radio"]:checked {
     <a href="{{ route('service_company.account.index') }}" class="btn btn-secondary me-2" >
     Discard Changes
 	</a>
-    <button class="btn btn-primary me-2 updateCompanyProfile" type="button" id="updateCompanyProfile">Save Changes</button>
+    <button class="btn btn-primary me-2 updateCompanyProfile" type="button" id="updateCompanyProfile"><span class="csv2-save-spinner" aria-hidden="true"></span><span class="csv2-save-label">Save Changes</span></button>
   </div>
 @endif
   </div>
@@ -3482,15 +3486,35 @@ $(document).ready(function(){
         if ($.fn.select2) {
             $('#language, #timezone, #currency, #time_format').each(function(){
                 var $settingSelect = $(this);
+                var settingDropdownClass = 'csv2-enterprise-dropdown';
+                if ($settingSelect.is('#timezone')) settingDropdownClass += ' csv2-timezone-dropdown';
+                if ($settingSelect.is('#time_format')) settingDropdownClass += ' csv2-timeformat-dropdown';
                 if (!$settingSelect.hasClass('select2-hidden-accessible')) {
                     $settingSelect.select2({
                         width: '100%',
-                        dropdownCssClass: 'csv2-enterprise-dropdown',
+                        dropdownCssClass: settingDropdownClass,
                         minimumResultsForSearch: ($settingSelect.is('#timezone, #currency')) ? 8 : Infinity
                     });
                 }
             }).on('select2:open', function(){
-                $('.select2-dropdown').last().addClass('csv2-enterprise-dropdown');
+                var $openedSelect = $(this);
+                var $settingDropdown = $('.select2-dropdown').last().addClass('csv2-enterprise-dropdown');
+                if ($openedSelect.is('#timezone')) {
+                    $settingDropdown.addClass('csv2-timezone-dropdown');
+                    $settingDropdown.find('.select2-search__field').attr('placeholder', 'Search time zones...');
+                }
+                if ($openedSelect.is('#time_format')) $settingDropdown.addClass('csv2-timeformat-dropdown');
+
+                // Keep wide enterprise menus inside the viewport at laptop and tablet widths.
+                setTimeout(function(){
+                    var dropdownNode = $settingDropdown.get(0);
+                    if (!dropdownNode) return;
+                    var dropdownBounds = dropdownNode.getBoundingClientRect();
+                    var horizontalShift = 0;
+                    if (dropdownBounds.right > window.innerWidth - 12) horizontalShift = (window.innerWidth - 12) - dropdownBounds.right;
+                    if (dropdownBounds.left + horizontalShift < 12) horizontalShift += 12 - (dropdownBounds.left + horizontalShift);
+                    $settingDropdown.css('margin-left', horizontalShift + 'px');
+                }, 0);
             });
         }
    
@@ -3559,7 +3583,9 @@ $(document).ready(function(){
    			});				
 			
         $('body').on('click', '#updateCompanyProfile', function(){
-                    
+            var $saveSettingsButton = $(this);
+            if ($saveSettingsButton.prop('disabled')) return;
+
             var data 				=	new FormData();
             var form_data 			=	$('#setting_content').serializeArray();
             $.each(form_data, function (key, input) {
@@ -3574,6 +3600,13 @@ $(document).ready(function(){
                     contentType			:	false,
                     data				:	data,
                     redirect			:	true,
+                    beforeSend         : function () {
+                                            $saveSettingsButton
+                                                .prop('disabled', true)
+                                                .attr('aria-busy', 'true')
+                                                .addClass('is-loading');
+                                            $saveSettingsButton.find('.csv2-save-label').text('Saving...');
+                                },
                     success				:	function (data) {
 
                                             if(data.status == 'warning'){
@@ -3590,6 +3623,13 @@ $(document).ready(function(){
                                           if(data.status == 'success'){
                                               Swal.fire("Success", "Account settings update successfully!", "success");	
                                           }
+                                },
+                    complete            : function () {
+                                            $saveSettingsButton
+                                                .prop('disabled', false)
+                                                .removeAttr('aria-busy')
+                                                .removeClass('is-loading');
+                                            $saveSettingsButton.find('.csv2-save-label').text('Save Changes');
                                 }
                   });				
         });	
