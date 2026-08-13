@@ -1569,11 +1569,7 @@ body, html {
             </div>
           </div>
           <div class="v2-phone-wrap">
-<<<<<<< HEAD
             <input name="contact_number" id="contact_number" type="tel" class="v2-inp" placeholder="Enter mobile number" value="" maxlength="15" inputmode="numeric" autocomplete="tel-national" required />
-=======
-            <input name="contact_number" id="contact_number" type="tel" class="v2-inp" placeholder="Enter mobile number" value="" inputmode="numeric" autocomplete="tel-national" required />
->>>>>>> c39334df197626650d9eabb33c4f847cc9d64079
           </div>
         </div>
 
@@ -2245,11 +2241,7 @@ $(document).ready(function() {
                   validators: {
                     notEmpty: { message: "Contact Number is required" },
                     digits: { message: "Contact Number must contain only digits" },
-<<<<<<< HEAD
                     stringLength: { min: 4, max: 15, message: "Please enter a valid mobile number (4–15 digits)" }
-=======
-                    stringLength: { min: 7, max: 15, message: "Contact Number must be 7 to 15 digits" }
->>>>>>> c39334df197626650d9eabb33c4f847cc9d64079
                   }
                 },
                 kt_tagify_work_location: { validators: { notEmpty: { message: "City is required" } } }
