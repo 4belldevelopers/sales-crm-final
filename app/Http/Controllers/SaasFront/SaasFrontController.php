@@ -379,7 +379,6 @@ class SaasFrontController extends SaasFrontBaseController
 				'toc' => 'required',
 				'company_name' => 'required',
 				'company_type' => 'required',
-				'website' => 'required',
 				'contact_number' => 'required',
 				'contact_code' => 'required',
         ]);
@@ -1551,6 +1550,7 @@ class SaasFrontController extends SaasFrontBaseController
 		} catch (\Throwable $e) {
 			DB::rollBack();
 			\Log::error('companyRegister failed: ' . $e->getMessage(), ['exception' => $e]);
+			// dd($e->getMessage(),$e);
 			return Reply::dataOnly(['status' => 'error', 'message' => 'Registration failed. Please try again.']);
 		}
 
