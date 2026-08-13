@@ -369,6 +369,9 @@ input[type="radio"]:checked {
 @media (max-width:1200px){ .atc-vars { grid-template-columns:repeat(3,1fr); } }
 @media (max-width:768px){ .atc-vars { grid-template-columns:1fr 1fr; } .atc-meta .atc-btn { margin-left:0; } }
 
+/* Commercials tab: presentation-only layer. It reuses the cached account payload and existing service actions. */
+.commercials-v2,.commercials-v2 *{box-sizing:border-box;font-family:'Poppins',sans-serif!important}.commercials-v2{color:#111b3d;font-size:12px;font-weight:500;padding:2px 0 8px}.commercials-v2 .cv2-head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:18px}.commercials-v2 .cv2-title{margin:0;color:#101735;font-size:16px!important;font-weight:600!important;line-height:1.25}.commercials-v2 .cv2-sub{max-width:600px;margin:6px 0 0;color:#52638b;font-size:12px;font-weight:500;line-height:1.5}.commercials-v2 .cv2-stat-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin-bottom:18px}.commercials-v2 .cv2-stat{display:flex;align-items:center;min-width:0;gap:13px;padding:16px;border:1px solid #e5eaf4;border-radius:11px;background:#fff;box-shadow:0 1px 3px rgba(15,23,66,.03)}.commercials-v2 .cv2-stat-icon,.commercials-v2 .cv2-service-icon{display:flex;flex:0 0 auto;align-items:center;justify-content:center;border-radius:11px}.commercials-v2 .cv2-stat-icon{width:46px;height:46px}.commercials-v2 .cv2-stat-icon svg{width:23px;height:23px}.commercials-v2 .cv2-service-icon{width:48px;height:48px}.commercials-v2 .cv2-service-icon svg{width:25px;height:25px}.commercials-v2 .blue{color:#1d3dff;background:#eaf1ff}.commercials-v2 .green{color:#08ac58;background:#e8f9ee}.commercials-v2 .amber{color:#f58911;background:#fff1e5}.commercials-v2 .cv2-stat-copy{min-width:0}.commercials-v2 .cv2-label{color:#52638b;font-size:11px;font-weight:500;line-height:1.35}.commercials-v2 .cv2-value{margin-top:3px;color:#101735;font-size:16px;font-weight:600;line-height:1.2;font-variant-numeric:tabular-nums}.commercials-v2 .cv2-hint{margin-top:5px;color:#08a851;font-size:10.5px;font-weight:500;line-height:1.25}.commercials-v2 .cv2-section-title{margin:0;color:#111b3d;font-size:14px;font-weight:600;line-height:1.35}.commercials-v2 .cv2-section-sub{margin:3px 0 12px;color:#52638b;font-size:11px;font-weight:500}.commercials-v2 .cv2-services{display:grid;gap:16px}.commercials-v2 .cv2-service{padding:16px 18px;border:1px solid #e2e8f3;border-radius:11px;background:#fff;box-shadow:0 1px 3px rgba(15,23,66,.025)}.commercials-v2 .cv2-service-top{display:flex;align-items:flex-start;justify-content:space-between;gap:16px}.commercials-v2 .cv2-service-name{display:flex;align-items:center;gap:13px;min-width:0}.commercials-v2 .cv2-service-name h4{margin:0;color:#101735;font-size:14px!important;font-weight:600!important;line-height:1.35}.commercials-v2 .cv2-service-desc{margin:3px 0 0;color:#52638b;font-size:11px;font-weight:500;line-height:1.4}.commercials-v2 .cv2-badge{display:inline-flex;align-items:center;margin-left:7px;padding:3px 8px;border-radius:5px;background:#e8f8ed;color:#08a851;font-size:10px;font-weight:600;vertical-align:2px}.commercials-v2 .cv2-badge.is-off{color:#c2410c;background:#fff2e8}.commercials-v2 .cv2-switch{display:inline-flex;align-items:center;gap:8px;flex:0 0 auto}.commercials-v2 .form-switch{margin:0}.commercials-v2 .form-check-input{width:38px!important;height:21px!important;margin:0!important;cursor:pointer}.commercials-v2 .cv2-switch-text{color:#52638b;font-size:10.5px;font-weight:600}.commercials-v2 .cv2-service-main{display:grid;grid-template-columns:minmax(0,1fr) 230px;gap:18px;margin-top:14px;padding-top:14px;border-top:1px solid #edf0f6}.commercials-v2 .cv2-disabled{opacity:.45}.commercials-v2 .cv2-facts{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:0}.commercials-v2 .cv2-fact{min-width:0;padding:0 14px;border-right:1px solid #e8ecf3}.commercials-v2 .cv2-fact:first-child{padding-left:0}.commercials-v2 .cv2-fact:last-child{border:0}.commercials-v2 .cv2-fact-label{color:#52638b;font-size:10px;font-weight:500;line-height:1.3}.commercials-v2 .cv2-fact-value{margin-top:5px;color:#111b3d;font-size:11px;font-weight:600;line-height:1.3;word-break:break-word}.commercials-v2 .cv2-fact-value.rate{color:#0a9f57}.commercials-v2 .cv2-side{display:grid;gap:8px;align-content:start;padding-left:18px;border-left:1px solid #e8ecf3}.commercials-v2 .cv2-side-row{display:flex;justify-content:space-between;gap:8px;color:#52638b;font-size:10px;font-weight:500}.commercials-v2 .cv2-side-row b{color:#111b3d;font-size:10.5px;font-weight:600;text-align:right;font-variant-numeric:tabular-nums}.commercials-v2 .cv2-bottom{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;margin-top:14px}.commercials-v2 .cv2-country-label{margin:0 0 8px;color:#111b3d;font-size:11px;font-weight:600}.commercials-v2 .cv2-country-chip{display:inline-flex;align-items:center;gap:8px;min-height:38px;padding:7px 12px;color:#33466f;background:#f8faff;border:1px solid #e1e7f2;border-radius:7px;font-size:10.5px;font-weight:500}.commercials-v2 .cv2-country-chip svg{width:15px;height:15px;color:#2764ff}.commercials-v2 .cv2-country-chip b{color:#101735;font-weight:600}.commercials-v2 .cv2-edit{display:inline-flex!important;align-items:center;gap:8px;padding:9px 13px!important;color:#173af5!important;background:#fff!important;border:1px solid #b9c4ff!important;border-radius:7px!important;font-size:11px!important;font-weight:600!important;white-space:nowrap}.commercials-v2 .cv2-edit:hover{background:#f5f7ff!important}.commercials-v2 .cv2-edit svg{width:15px;height:15px}.commercials-v2 .cv2-note{display:flex;align-items:center;gap:14px;margin-top:16px;padding:13px 16px;border:1px solid #cfead8;border-radius:9px;background:#f7fdf8;color:#40547e}.commercials-v2 .cv2-note-icon{display:flex;flex:0 0 auto;align-items:center;justify-content:center;width:34px;height:34px;color:#08a851;background:#e7f8ec;border-radius:50%}.commercials-v2 .cv2-note-icon svg{width:21px;height:21px}.commercials-v2 .cv2-note p{margin:0;font-size:10.5px;font-weight:500;line-height:1.5}.commercials-v2 .cv2-note b{color:#111b3d;font-weight:600}@media(max-width:1199px){.commercials-v2 .cv2-stat-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.commercials-v2 .cv2-service-main{grid-template-columns:1fr}.commercials-v2 .cv2-side{grid-template-columns:repeat(3,minmax(0,1fr));padding:12px 0 0;border-top:1px solid #e8ecf3;border-left:0}.commercials-v2 .cv2-side-row{display:block}.commercials-v2 .cv2-side-row b{display:block;margin-top:3px;text-align:left}}@media(max-width:767px){.commercials-v2 .cv2-head,.commercials-v2 .cv2-service-top,.commercials-v2 .cv2-bottom{display:block}.commercials-v2 .cv2-switch{margin-top:12px}.commercials-v2 .cv2-stat-grid{grid-template-columns:1fr}.commercials-v2 .cv2-facts{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.commercials-v2 .cv2-fact:nth-child(2){border-right:0}.commercials-v2 .cv2-fact:nth-child(n+3){padding-left:0}.commercials-v2 .cv2-side{grid-template-columns:1fr 1fr}.commercials-v2 .cv2-edit{margin-top:12px}.commercials-v2 .cv2-note{align-items:flex-start}}
+
 </style>
 
 @section('content')
@@ -1851,7 +1854,53 @@ input[type="radio"]:checked {
 
 
 
-<!--begin::Services Content-->
+{{-- Legacy commercial cards are retained in source below for reference while the redesigned presentation is rendered first. --}}
+<div class="tab-pane" id="services" role="tabpanel">
+  @php
+    // Presentation-only values sourced from AccountSettingsService's existing cached account payload.
+    $cv2FulltimeActive = (bool) (@$fullTimeStatus->status);
+    $cv2ContractActive = (bool) (@$contractStatus->status);
+    $cv2ActiveServices = (int) $cv2FulltimeActive + (int) $cv2ContractActive;
+    $cv2CountryTotal = (int) @$fullTimeCount + (int) @$contractCount;
+    $cv2Currency = optional($currencyArr->firstWhere('id', @$account->currency));
+    $cv2CurrencyCode = $cv2Currency->code ?: 'USD';
+    $cv2SalesBalance = number_format((float) (@$salesCoins->balance_coin ?? 0));
+  @endphp
+  <div class="commercials-v2">
+    <div class="cv2-head">
+      <div>
+        <h3 class="cv2-title">Commercials <span>(For Clients)</span></h3>
+        <p class="cv2-sub">Define your service offerings, pricing models and country-wise commercials that are visible to clients.</p>
+      </div>
+    </div>
+
+    <div class="cv2-stat-grid">
+      <div class="cv2-stat"><span class="cv2-stat-icon blue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M9 7V4h6v3M3 12h18M10 12v2h4v-2"/></svg></span><div class="cv2-stat-copy"><div class="cv2-label">Active Services</div><div class="cv2-value">{{ $cv2ActiveServices }}</div><div class="cv2-hint">of 2 total services</div></div></div>
+      <div class="cv2-stat"><span class="cv2-stat-icon green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3.8 3 14.2 0 18M12 3c-3 3.8-3 14.2 0 18"/></svg></span><div class="cv2-stat-copy"><div class="cv2-label">Countries Covered</div><div class="cv2-value">{{ $cv2CountryTotal }}</div><div class="cv2-hint">across configured services</div></div></div>
+      <div class="cv2-stat"><span class="cv2-stat-icon green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="5" rx="7" ry="3"/><path d="M5 5v6c0 1.7 3.1 3 7 3s7-1.3 7-3V5M5 11v6c0 1.7 3.1 3 7 3s7-1.3 7-3v-6"/></svg></span><div class="cv2-stat-copy"><div class="cv2-label">Sales Coin Balance</div><div class="cv2-value">{{ $cv2SalesBalance }}</div><div class="cv2-hint">available coins</div></div></div>
+      <div class="cv2-stat"><span class="cv2-stat-icon amber"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M15 8.5c-.6-.6-1.6-1-3-1-1.8 0-3 .8-3 2.1 0 3.3 6 1.2 6 4.5 0 1.3-1.2 2.1-3 2.1-1.4 0-2.5-.4-3.2-1.1M12 6v12"/></svg></span><div class="cv2-stat-copy"><div class="cv2-label">Default Currency</div><div class="cv2-value">{{ $cv2CurrencyCode }}</div><div class="cv2-hint">company preference</div></div></div>
+    </div>
+
+    <h4 class="cv2-section-title">Your Services</h4>
+    <p class="cv2-section-sub">Manage commercials for each service and the countries you operate in.</p>
+    <div class="cv2-services">
+      <section class="cv2-service">
+        <div class="cv2-service-top"><div class="cv2-service-name"><span class="cv2-service-icon blue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="7" r="4"/><path d="M4 21v-2a8 8 0 0 1 16 0v2"/></svg></span><div><h4>Fulltime Hiring Services <span id="f_status_badge" class="cv2-badge {{ $cv2FulltimeActive ? '' : 'is-off' }}">{{ $cv2FulltimeActive ? 'Active' : 'Inactive' }}</span></h4><p class="cv2-service-desc">Permanent staffing solutions for your clients</p></div></div><div class="cv2-switch"><label class="form-check form-switch form-check-custom form-check-solid"><input class="form-check-input update_main_status_fulltime" data-row_id="{{ encrypt((@$fullTimeStatus->id)) }}" type="checkbox" value="{{ @$fullTimeStatus->status }}" {{ $cv2FulltimeActive ? 'checked' : '' }} /></label><span id="f_text" class="cv2-switch-text">{{ $cv2FulltimeActive ? 'ON' : 'OFF' }}</span></div></div>
+        <div class="cv2-service-main class_change_fulltime {{ $cv2FulltimeActive ? '' : 'cv2-disabled' }}"><div class="cv2-facts"><div class="cv2-fact"><div class="cv2-fact-label">Commercial Model</div><div class="cv2-fact-value">{{ (@$fullTimeStatus->rateType == 2) ? 'Percentage of CTC' : 'Fixed commercial rate' }}</div></div><div class="cv2-fact"><div class="cv2-fact-label">Default Rate</div><div class="cv2-fact-value rate">Configured</div></div><div class="cv2-fact"><div class="cv2-fact-label">Rate Basis</div><div class="cv2-fact-value">One-time (upon joining)</div></div><div class="cv2-fact"><div class="cv2-fact-label">Currency</div><div class="cv2-fact-value">{{ $cv2CurrencyCode }}</div></div></div><div class="cv2-side"><div class="cv2-side-row"><span>Countries Served</span><b>{{ (int) @$fullTimeCount }}</b></div><div class="cv2-side-row"><span>Service Status</span><b>{{ $cv2FulltimeActive ? 'Active' : 'Inactive' }}</b></div></div></div>
+        <div class="cv2-bottom"><div><p class="cv2-country-label">Country-wise Commercials</p><span class="cv2-country-chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 5h18v14H3z"/><path d="M7 9h10M7 13h6"/></svg><b>{{ (int) @$fullTimeCount }}</b> configured countries</span></div><a href="javascript:;" class="btn ser_show-detail cv2-edit" data-type="2">Edit Commercials <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg></a></div>
+      </section>
+      <section class="cv2-service">
+        <div class="cv2-service-top"><div class="cv2-service-name"><span class="cv2-service-icon green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M8 3v4M16 3v4M8 11h8M8 15h5"/></svg></span><div><h4>Contract Hiring Services <span id="c_status_badge" class="cv2-badge {{ $cv2ContractActive ? '' : 'is-off' }}">{{ $cv2ContractActive ? 'Active' : 'Inactive' }}</span></h4><p class="cv2-service-desc">Contract staffing solutions for your clients</p></div></div><div class="cv2-switch"><label class="form-check form-switch form-check-custom form-check-solid"><input class="form-check-input contract_main_status_fulltime" data-row_id="{{ encrypt((@$contractStatus->id)) }}" type="checkbox" value="{{ @$contractStatus->status }}" {{ $cv2ContractActive ? 'checked' : '' }} /></label><span id="c_text" class="cv2-switch-text">{{ $cv2ContractActive ? 'ON' : 'OFF' }}</span></div></div>
+        <div class="cv2-service-main class_change_contract {{ $cv2ContractActive ? '' : 'cv2-disabled' }}"><div class="cv2-facts"><div class="cv2-fact"><div class="cv2-fact-label">Commercial Model</div><div class="cv2-fact-value">{{ (@$contractStatus->rateType == 1) ? 'Markup on Bill Rate' : 'Contract commercial rate' }}</div></div><div class="cv2-fact"><div class="cv2-fact-label">Default Rate</div><div class="cv2-fact-value rate">Configured</div></div><div class="cv2-fact"><div class="cv2-fact-label">Billing</div><div class="cv2-fact-value">{{ [0 => 'Annual', 1 => 'Monthly', 2 => 'Hourly'][@$contractStatus->sal_mode] ?? 'Configured' }}</div></div><div class="cv2-fact"><div class="cv2-fact-label">Currency</div><div class="cv2-fact-value">{{ [0 => 'INR', 1 => 'EUR', 2 => 'JPY', 3 => 'GBP', 4 => 'USD'][@$contractStatus->salary_currency] ?? $cv2CurrencyCode }}</div></div></div><div class="cv2-side"><div class="cv2-side-row"><span>Countries Served</span><b>{{ (int) @$contractCount }}</b></div><div class="cv2-side-row"><span>Service Status</span><b>{{ $cv2ContractActive ? 'Active' : 'Inactive' }}</b></div></div></div>
+        <div class="cv2-bottom"><div><p class="cv2-country-label">Country-wise Commercials</p><span class="cv2-country-chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 5h18v14H3z"/><path d="M7 9h10M7 13h6"/></svg><b>{{ (int) @$contractCount }}</b> configured countries</span></div><a href="javascript:;" class="btn ser_show-detail cv2-edit" data-type="1">Edit Commercials <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg></a></div>
+      </section>
+    </div>
+    <div class="cv2-note"><span class="cv2-note-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 10v6M12 7h.01"/></svg></span><p><b>Commercial recommendations:</b> Keep service rates and country coverage current so clients see accurate commercial terms when engaging your company.</p></div>
+  </div>
+</div>
+
+{{-- Legacy markup kept only until the next deployment removes this inactive fallback. --}}
+{{-- <!--begin::Services Content-->
 <div class="tab-pane" id="services" role="tabpanel">
   <!--begin::Overview header-->
   <div class="card-header cursor-pointer px-0 border-0 mb-2">
@@ -1979,6 +2028,7 @@ input[type="radio"]:checked {
   </div>
 </div>
 <!--end::Services Content-->
+--}}
 
 
         <!--begin::boost keyword Content-->
@@ -4036,9 +4086,11 @@ $(document).ready(function(){
            if(status == 1){
             var changeStatus = 0;
             $('#f_text').text('OFF');
+            $('#f_status_badge').text('Inactive').addClass('is-off');
            }else{
             var changeStatus = 1;
             $('#f_text').text('ON');
+            $('#f_status_badge').text('Active').removeClass('is-off');
            }
            var id = $(this).attr('data-row_id');
            
@@ -4051,9 +4103,9 @@ $(document).ready(function(){
                                    success 	: function (response) {
                                            if (response.status == "success") {
                                              if(changeStatus==1){
-                                                $('.class_change_fulltime').attr('style','');
+                                                $('.class_change_fulltime').removeClass('cv2-disabled').attr('style','');
                                              }else{
-                                                $('.class_change_fulltime').attr('style','opacity: 0.2 !important;');
+                                                $('.class_change_fulltime').addClass('cv2-disabled').attr('style','opacity: 0.2 !important;');
                                              }
                                             var status = $('.update_main_status_fulltime').val(changeStatus);
                                            }
@@ -4070,9 +4122,11 @@ $(document).ready(function(){
         if(status == 1){
         var changeStatus = 0;
         $('#c_text').text('OFF');
+        $('#c_status_badge').text('Inactive').addClass('is-off');
         }else{
         var changeStatus = 1;
         $('#c_text').text('ON');
+        $('#c_status_badge').text('Active').removeClass('is-off');
         }
         var id = $(this).attr('data-row_id');
 
@@ -4086,9 +4140,9 @@ $(document).ready(function(){
                                         if (response.status == "success") {
 
                                           if(changeStatus==1){
-                                                $('.class_change_contract').attr('style','');
+                                                $('.class_change_contract').removeClass('cv2-disabled').attr('style','');
                                              }else{
-                                                $('.class_change_contract').attr('style','opacity: 0.2 !important;');
+                                                $('.class_change_contract').addClass('cv2-disabled').attr('style','opacity: 0.2 !important;');
                                              }
 
                                           var status = $('.contract_main_status_fulltime').val(changeStatus);
