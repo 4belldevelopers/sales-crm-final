@@ -51,6 +51,7 @@ input[type="radio"]:checked {
 .company-settings-v2 .card { box-shadow:none !important; background:transparent !important; border:0 !important; border-radius:0 !important; margin:0 !important; }
 .company-settings-v2 .card-header { min-height:0; padding:20px 20px 8px !important; border:0 !important; }
 .company-settings-v2 .card-title h3 { color:#142453; font-size:13px !important; font-weight:600 !important; }
+.company-settings-v2 #setting_one { display:block !important; }
 .company-settings-v2 #setting_one > .card-body { border:0 !important; padding:12px 20px 20px !important; }
 .company-settings-v2 #setting_one > .card-body::before { content:'Basic configurations that control your system preferences.'; display:block; color:#5d6d97; font-size:11px; margin:-6px 0 17px; }
 .company-settings-v2 #setting_one > .card-body { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:14px; }
@@ -83,9 +84,9 @@ input[type="radio"]:checked {
 .company-settings-v2 .dept_content .badge { width:100%; min-height:44px; background:#fff !important; border:1px solid #e7ebf4; border-radius:7px; color:#3e517e; font-weight:400; padding:8px 10px !important; }
 .company-settings-v2 .dept_content .badge .fs-4 { font-size:11px !important; }
 .company-settings-v2 .dept_content .svg-icon svg { width:15px; height:15px; }
-.company-settings-v2 .card:has(#department) .card-header { padding-top:18px !important; }
-.company-settings-v2 .card:has(#department) .card-header::after { content:'Manage and organize your company departments.'; color:#5d6d97; font-size:11px; position:absolute; margin-top:22px; }
-.company-settings-v2 .card:has(#department) .btn-primary { background:#1764ef; border-color:#1764ef; font-size:11px; font-weight:600; padding:8px 13px; border-radius:5px; }
+.company-settings-v2 .settings-department-card .card-header { padding-top:18px !important; }
+.company-settings-v2 .settings-department-card .card-header::after { content:'Manage and organize your company departments.'; color:#5d6d97; font-size:11px; position:absolute; margin-top:22px; }
+.company-settings-v2 .settings-department-card .btn-primary { background:#1764ef; border-color:#1764ef; font-size:11px; font-weight:600; padding:8px 13px; border-radius:5px; }
 .company-settings-v2 .card-footer { margin:14px 20px 12px; padding:13px 16px !important; border:1px solid #edf0f6; border-radius:7px; background:#fbfcff !important; justify-content:flex-end !important; }
 .company-settings-v2 .card-footer::before { content:'✓  All changes saved automatically'; margin-right:auto; color:#4c618d; font-size:11px; }
 .company-settings-v2 .card-footer .btn { font-size:11px; font-weight:600; min-width:132px; }
@@ -2042,7 +2043,7 @@ input[type="radio"]:checked {
   <!--begin::Main body div-->
   <div class="card mb-3 bg-light mb-xl-3 mx-0 shadow-none rounded-0"> @if(in_array("view_settings", $userPermissions))
     <div class="card-body px-0 pt-0 pb-0">
-      <div class="card mb-3 mb-xl-3 mx-0 shadow-none rounded-0">
+      <div class="card mb-3 mb-xl-3 mx-0 shadow-none rounded-0 settings-general-card">
         <div class="card-header border-0 cursor-pointer px-0" role="button" data-bs-toggle="collapse" data-bs-target="#setting_one" aria-expanded="true" aria-controls="kt_account_profile_details">
           <div class="card-title m-0">
             <h3 class="fw-bolder m-0">General Settings</h3>
@@ -2456,7 +2457,7 @@ input[type="radio"]:checked {
   </div>
   <!--end::Account Type-->
   <!--begin::Department Type-->
-  <div class="card mb-3 mb-xl-3 mx-0 shadow-none rounded-0">
+  <div class="card mb-3 mb-xl-3 mx-0 shadow-none rounded-0 settings-department-card">
     <!--begin::Card header-->
     <div class="card-header row">
       <div class="cursor-pointer px-0 card-title m-0 col-lg-9" role="button" data-toggle="collapse" data-target="#department" aria-expanded="true" aria-controls="department">
