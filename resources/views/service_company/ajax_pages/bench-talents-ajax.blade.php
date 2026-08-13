@@ -184,9 +184,9 @@
             <td>
                 @php
                     $pay_rate_currency = $bill_rate_currency = $pay_rate_amount = $bill_rate_amount = $pay_rate_mode = $bill_rate_mode = '';
-
-                    $pay_rate_amount = GeneralMethod::thousandsCurrencyFormat($row->pay_rate_amount);
-                    $bill_rate_amount = GeneralMethod::thousandsCurrencyFormat($row->bill_rate_amount);
+                    //  dd($row);
+                    $pay_rate_amount = GeneralMethod::thousandsCurrencyFormat(@$row->pay_rate_amount ?? 0);
+                    $bill_rate_amount = GeneralMethod::thousandsCurrencyFormat(@$row->bill_rate_amount ?? 0);
                     $company_id 			=	auth()->user()->company_id;
                     $currencyBenchshowMode = GeneralMethod::getCompanyCurrencyBenchshowMode($company_id);
                     $currencyArr 	=	array(	
