@@ -125,23 +125,26 @@ input[type="radio"]:checked {
 .csv2-tab-icon{display:inline-flex;width:16px;height:16px;margin-right:6px;vertical-align:-3px;color:#1764ef}
 .csv2-tab-icon svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 .nav-link[href="#settings"] .nav-text{font-family:'Poppins',sans-serif!important;font-weight:600!important}
+.csv2-account-tabs-header{min-height:0!important;padding:4px 0!important;border-bottom:1px solid #e7edf5!important}
 .csv2-account-tabs-wrap{width:100%;min-width:0;overflow:visible}
-.csv2-account-tabs{display:flex!important;flex-wrap:nowrap!important;align-items:stretch;width:100%;min-width:0;margin:0!important;padding:0 4px!important;gap:0;overflow:visible}
+.csv2-account-tabs{display:flex!important;flex-wrap:nowrap!important;align-items:stretch;width:100%;min-width:0;margin:0!important;padding:0!important;gap:0;overflow:visible;font-family:'Poppins',sans-serif!important}
 .csv2-account-tabs::-webkit-scrollbar{display:none}
 .csv2-account-tabs .nav-item{display:flex;flex:1 1 0;min-width:0;margin:0!important}
-.csv2-account-tabs .csv2-account-tab{position:relative;display:flex!important;width:100%;min-width:0;align-items:center;justify-content:center;gap:5px;min-height:62px;margin:0!important;padding:9px 5px 8px!important;color:#556589!important;font-family:'Poppins',sans-serif!important;border:0!important;border-radius:0!important;white-space:nowrap;transition:color .15s,background-color .15s}
-.csv2-account-tabs .csv2-account-tab::after{content:'';position:absolute;right:10px;bottom:0;left:10px;height:2px;background:transparent;border-radius:2px 2px 0 0}
-.csv2-account-tabs .csv2-account-tab:hover,.csv2-account-tabs .csv2-account-tab:focus{color:#174fc2!important;background:#f8faff!important;outline:0}
-.csv2-account-tabs .csv2-account-tab.active{color:#1764ef!important;background:#f7faff!important}
-.csv2-account-tabs .csv2-account-tab.active::after{background:#1764ef}
-.csv2-account-tabs .csv2-account-tab-icon{display:flex;width:15px;height:15px;flex:0 0 15px;align-items:center;justify-content:center;color:currentColor}
-.csv2-account-tabs .csv2-account-tab-icon svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.csv2-account-tabs .csv2-account-tab{position:relative;display:flex!important;width:100%;min-width:0;align-items:center;justify-content:center;gap:5px;min-height:58px;margin:0!important;padding:11px 6px!important;color:#64748b!important;font-family:'Poppins',sans-serif!important;border:0!important;border-right:1px solid #e9eef5!important;border-radius:0!important;background:transparent!important;white-space:nowrap;transition:color .15s,background-color .15s}
+.csv2-account-tabs .nav-item:last-child .csv2-account-tab{border-right:0!important}
+.csv2-account-tabs .csv2-account-tab::after{content:'';position:absolute;right:8px;bottom:0;left:8px;height:2px;background:transparent;border-radius:2px 2px 0 0}
+.csv2-account-tabs .csv2-account-tab:hover,.csv2-account-tabs .csv2-account-tab:focus{color:#2456ad!important;background:#f8fafc!important;outline:0}
+.csv2-account-tabs .csv2-account-tab.active{color:#2563eb!important;background:rgba(37,99,235,.10)!important}
+.csv2-account-tabs .csv2-account-tab.active::after{background:#2563eb}
+.csv2-account-tabs .csv2-account-tab-icon{display:flex;width:14px;height:14px;flex:0 0 14px;align-items:center;justify-content:center;color:currentColor}
+.csv2-account-tabs .csv2-account-tab-icon svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 .csv2-account-tabs .csv2-account-tab-copy{display:flex;flex-direction:column;justify-content:center;min-width:0;overflow:hidden;line-height:1.25}
-.csv2-account-tabs .csv2-account-tab-title{display:block;max-width:100%;overflow:hidden;color:currentColor;font-size:9.5px;font-weight:600;line-height:1.3;text-overflow:ellipsis}
-.csv2-account-tabs .csv2-account-tab-sub{display:block;max-width:100%;margin-top:2px;overflow:hidden;color:#7b89aa;font-size:7.5px;font-weight:500;line-height:1.2;text-align:left;text-overflow:ellipsis}
+.csv2-account-tabs .csv2-account-tab-title{display:block;max-width:100%;overflow:hidden;color:currentColor;font-size:11px;font-weight:500;line-height:1.15;text-overflow:ellipsis}
+.csv2-account-tabs .csv2-account-tab-sub{display:block;max-width:100%;margin-top:3px;overflow:hidden;color:#7b89aa;font-size:9px;font-weight:500;line-height:1.15;text-align:left;text-overflow:ellipsis}
+.csv2-account-tabs .csv2-account-tab.active .csv2-account-tab-title{font-weight:600}
 .csv2-account-tabs .csv2-account-tab.active .csv2-account-tab-sub{color:#5578c3}
-@media(min-width:1440px){.csv2-account-tabs .csv2-account-tab{gap:7px;padding-right:8px!important;padding-left:8px!important}.csv2-account-tabs .csv2-account-tab-icon{width:17px;height:17px;flex-basis:17px}.csv2-account-tabs .csv2-account-tab-icon svg{width:17px;height:17px}.csv2-account-tabs .csv2-account-tab-title{font-size:10.5px}.csv2-account-tabs .csv2-account-tab-sub{font-size:8.5px}}
-@media(max-width:900px){.csv2-account-tabs{width:max-content;min-width:100%;overflow-x:auto;scrollbar-width:none}.csv2-account-tabs .nav-item{flex:0 0 auto}.csv2-account-tabs .csv2-account-tab{width:auto;padding-right:8px!important;padding-left:8px!important}.csv2-account-tabs .csv2-account-tab-title{font-size:9.5px}.csv2-account-tabs .csv2-account-tab-sub{font-size:7.5px}}
+@media(min-width:1440px){.csv2-account-tabs .csv2-account-tab{gap:6px;padding-right:8px!important;padding-left:8px!important}.csv2-account-tabs .csv2-account-tab-icon{width:15px;height:15px;flex-basis:15px}.csv2-account-tabs .csv2-account-tab-icon svg{width:15px;height:15px}.csv2-account-tabs .csv2-account-tab-title{font-size:11.5px}.csv2-account-tabs .csv2-account-tab-sub{font-size:9.5px}}
+@media(max-width:900px){.csv2-account-tabs-wrap{overflow-x:auto;scrollbar-width:none}.csv2-account-tabs{width:max-content;min-width:100%;overflow:visible}.csv2-account-tabs .nav-item{flex:0 0 auto}.csv2-account-tabs .csv2-account-tab{width:auto;min-width:112px;padding-right:10px!important;padding-left:10px!important}.csv2-account-tabs .csv2-account-tab-title{font-size:11px}.csv2-account-tabs .csv2-account-tab-sub{font-size:9px}}
 .company-settings-v2 .card-footer{display:flex!important;align-items:center;margin:0 12px 12px;padding:13px 16px!important;background:#fbfcff!important;border:1px solid #edf0f6!important;border-radius:7px;justify-content:flex-end!important}
 .company-settings-v2 .card-footer .btn{min-width:130px;padding:9px 14px;font-size:11px;font-weight:600;border-radius:5px}
 .company-settings-v2 .card-footer .btn-primary{color:#fff;background:#1457e8;border-color:#1457e8}
@@ -759,7 +762,7 @@ input[type="radio"]:checked {
 <!--begin::Tabs-->
 <div class="card card-custom mx-2">
 <!--Begin::Tabs Header-->
-<div class="card-header card-header-tabs-line">
+<div class="card-header card-header-tabs-line csv2-account-tabs-header">
   <div class="card-toolbar csv2-account-tabs-wrap">
     <ul class="nav nav-tabs csv2-account-tabs" role="tablist">
       <li class="nav-item"><a class="nav-link csv2-account-tab {{$overview_tab}}" data-toggle="tab" href="#overview"><span class="csv2-account-tab-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="6" height="6" rx="1"/><rect x="14" y="4" width="6" height="6" rx="1"/><rect x="4" y="14" width="6" height="6" rx="1"/><rect x="14" y="14" width="6" height="6" rx="1"/></svg></span><span class="csv2-account-tab-copy"><span class="csv2-account-tab-title">Overview</span></span></a></li>
