@@ -736,632 +736,19 @@ body {overflow-x:hidden; width:100%; font-family: Poppins, sans-serif;}
                 <form class="form mx-auto" novalidate="novalidate" action="javascript:void(0);" method="post" id="kt_form" name="kt_form">
                   <meta name="csrf-token" content="{{ csrf_token() }}" />
                   <!--begin::Client Information-->
-                  <div class="pb-5 client-info-step" data-wizard-type="step-content" data-wizard-state="current">
-                    <!-- Purpose: group identity and company metadata into compact cards that scan well on laptop screens. -->
-                    <div class="client-step-layout">
-                      <div class="client-main-column">
-                        <section class="client-section-card" aria-labelledby="client-branding-title">
-                          <h3 class="client-section-heading" id="client-branding-title">Company Branding</h3>
-                          <p class="client-section-copy">Upload company logo for visual identification.</p>
-                          <div class="client-branding-grid">
-                            <label class="client-logo-upload" for="client_logo_input">
-                              <span class="client-upload-icon"><i class="la la-cloud-upload-alt" aria-hidden="true"></i></span>
-                              <span class="client-upload-title">Upload Company Logo</span>
-                              <span class="client-upload-copy">PNG or JPG (Max. 2MB)</span>
-                              <span class="client-upload-copy">Recommended: square image</span>
-                            </label>
-                            <div class="client-logo-preview">
-                              <span class="client-preview-label">Preview</span>
-                              <div class="image-input image-input-outline" id="client_logo_preview">
-                                <div class="image-input-wrapper" style="background-image: url(<?php echo @$background_image; ?>);"></div>
-                                <label data-kt-image-input-action="change" title="Change company logo">
-                                  <input type="file" name="logo" id="client_logo_input" accept=".png, .jpg, .jpeg" onchange="loadFile(event)"/>
-                                  <input type="hidden" name="avatar_remove" />
-                                </label>
-                              </div>
-                              <button type="button" class="client-preview-remove" data-kt-image-input-action="cancel"><i class="la la-trash" aria-hidden="true"></i> Remove</button>
-                            </div>
-                            <div class="client-brand-fields">
-                              <div class="client-field fv-plugins-icon-container">
-                                <label class="form-label required" for="website">Website</label>
-                                <div class="input-group input-group-solid">
-                                  <span class="input-group-text"><i class="la la-globe"></i></span>
-                                  <input type="text" class="form-control form-control-solid" name="website" id="website" value="<?php echo @$website; ?>" placeholder="https://www.example.com">
-                                  <button type="button" class="btn client-auto-fetch" id="client_auto_fetch"><i class="la la-magic" aria-hidden="true"></i> Auto Fetch Data</button>
-                                </div>
-                                <span class="form-text text-muted">Enter website to auto-fetch available company details.</span>
-                              </div>
-                              <div class="client-field fv-plugins-icon-container">
-                                <label class="form-label required" for="client_id">Client Name</label>
-                                <div class="input-group input-group-solid">
-                                  <span class="input-group-text"><i class="la la-user"></i></span>
-                                  <input type="text" class="form-control form-control-solid" name="name" id="client_id" value="<?php echo @$name; ?>" placeholder="Enter client / company name">
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        </section>
+                  @include('service_company.client.components.tab-basic-info')
 
-                        <section class="client-section-card" aria-labelledby="client-details-title">
-                          <h3 class="client-section-heading" id="client-details-title">Company Details</h3>
-                          <p class="client-section-copy">Enter essential details about the client organization.</p>
-                          <div class="client-details-grid">
-                            <div class="client-field fv-plugins-icon-container">
-                              <label class="form-label required" for="industry">Industry</label>
-                              <div class="input-group input-group-solid">
-                                <span class="input-group-text"><i class="la la-briefcase"></i></span>
-                                <select class="form-select form-select-solid" name="industry" id="industry">
-                                  <option value="">Select industry</option>
-                                  <?php foreach($department as $key => $val){
-                                    $sel = $val->ind_id == $industry ? 'selected="selected"' : '';
-                                    echo '<option value="'.@$val->ind_id.'" '.@$sel.'>'.ucwords(@$val->ind_name).'</option>';
-                                  } ?>
-                                </select>
-                              </div>
-                            </div>
-                            <div class="client-field fv-plugins-icon-container">
-                              <label class="form-label required" for="company_sizes">Company Size</label>
-                              <div class="input-group input-group-solid">
-                                <span class="input-group-text"><i class="la la-users"></i></span>
-                                <select name="company_sizes" class="form-select form-select-solid" id="company_sizes">
-                                  <option value="">Select Company Size</option>
-                                  <option value="1-10"         <?php echo (@$company_sizes == '1-10'         ? 'selected' : ''); ?>>1–10</option>
-                                  <option value="11-50"        <?php echo (@$company_sizes == '11-50'        ? 'selected' : ''); ?>>11–50</option>
-                                  <option value="51-200"       <?php echo (@$company_sizes == '51-200'       ? 'selected' : ''); ?>>51–200</option>
-                                  <option value="201-500"      <?php echo (@$company_sizes == '201-500'      ? 'selected' : ''); ?>>201–500</option>
-                                  <option value="501-1000"     <?php echo (@$company_sizes == '501-1000'     ? 'selected' : ''); ?>>501–1,000</option>
-                                  <option value="1001-5000"    <?php echo (@$company_sizes == '1001-5000'    ? 'selected' : ''); ?>>1,001–5,000</option>
-                                  <option value="5001-10000"   <?php echo (@$company_sizes == '5001-10000'   ? 'selected' : ''); ?>>5,001–10,000</option>
-                                  <option value="10000-999999" <?php echo (@$company_sizes == '10000-999999' ? 'selected' : ''); ?>>10,000+</option>
-                                </select>
-                              </div>
-                            </div>
-                            <div class="client-field fv-plugins-icon-container">
-                              <label class="form-label required" for="company_type">Type</label>
-                              <div class="input-group input-group-solid">
-                                <span class="input-group-text"><i class="la la-city"></i></span>
-                                <select class="form-select form-select-solid" name="company_type" id="company_type">
-                                  <option value="">Select company type</option>
-                                  <?php foreach($companyType as $key => $val){
-                                    $sel = $key == $company_type ? 'selected="selected"' : '';
-                                    echo '<option value="'.@$key.'" '.@$sel.'>'.ucwords(@$val).'</option>';
-                                  } ?>
-                                </select>
-                              </div>
-                            </div>
-                            <div class="client-field fv-plugins-icon-container">
-                              <label class="form-label required" for="founded">Founded Year</label>
-                              <div class="input-group input-group-solid">
-                                <span class="input-group-text"><i class="la la-calendar"></i></span>
-                                <input type="number" class="form-control form-control-solid" name="founded" id="founded" value="<?php echo @$founded; ?>" placeholder="Select year">
-                              </div>
-                            </div>
-                          </div>
-                          <div class="client-tip"><i class="la la-info-circle" aria-hidden="true"></i><span><strong>Tip:</strong> You can update these details anytime from the client profile.</span></div>
-                        </section>
-                      </div>
-
-                      <aside class="client-assistant" aria-labelledby="client-assistant-title">
-                        <div class="client-assistant-head">
-                          <div>
-                            <div class="d-flex align-items-center gap-2">
-                              <h3 class="client-assistant-title" id="client-assistant-title">AI Assistant</h3>
-                              <span class="client-beta">Beta</span>
-                            </div>
-                            <p class="client-assistant-copy">We can auto-fetch available information from the company website.</p>
-                          </div>
-                          <span class="client-assistant-spark"><i class="la la-magic" aria-hidden="true"></i></span>
-                        </div>
-                        <div class="client-suggestions">
-                          <div class="client-suggestions-title">Profile Suggestions</div>
-                          <div class="client-suggestion-row">
-                            <span class="client-suggestion-label">Industry</span>
-                            <span class="client-assistant-value" data-client-field="industry">Not set</span>
-                            <i class="la la-check-circle client-suggestion-status is-missing" aria-hidden="true"></i>
-                          </div>
-                          <div class="client-suggestion-row">
-                            <span class="client-suggestion-label">Company Size</span>
-                            <span class="client-assistant-value" data-client-field="company_sizes">Not set</span>
-                            <i class="la la-check-circle client-suggestion-status is-missing" aria-hidden="true"></i>
-                          </div>
-                          <div class="client-suggestion-row">
-                            <span class="client-suggestion-label">Company Type</span>
-                            <span class="client-assistant-value" data-client-field="company_type">Not set</span>
-                            <i class="la la-check-circle client-suggestion-status is-missing" aria-hidden="true"></i>
-                          </div>
-                          <div class="client-suggestion-row">
-                            <span class="client-suggestion-label">Founded Year</span>
-                            <span class="client-assistant-value" data-client-field="founded">Not set</span>
-                            <i class="la la-check-circle client-suggestion-status is-missing" aria-hidden="true"></i>
-                          </div>
-                          <button type="button" class="client-assistant-action" id="client_review_details"><i class="la la-magic" aria-hidden="true"></i> Apply Website Data</button>
-                          <p class="client-assistant-note">Not accurate? You can edit every field manually.</p>
-                        </div>
-                      </aside>
-                    </div>
-                  </div>
-                  <!--end::Client Information-->
                   <!--begin::Client Description-->
-                  <div class="pb-5 client-desc-step" data-wizard-type="step-content">
-                    <div class="client-step-layout">
-                      <div class="client-main-column">
-                        <section class="client-section-card">
-                          <div class="client-step-header">
-                            <div>
-                              <h3>About the Company</h3>
-                              <p>Describe the client's business, mission and background.</p>
-                            </div>
-                          </div>
-                          <div class="client-editor-wrap">
-                            <div class="client-editor-toolbar">
-                              <span>Company Description</span>
-                              <span class="client-char-count"><span id="client_desc_count">0</span>/2000</span>
-                            </div>
-                            <textarea id="kt_docs_tinymce_hidden" name="kt_docs_tinymce_hidden" class="tox-target"><?php echo @$description; ?></textarea>
-                          </div>
-                        </section>
+                  @include('service_company.client.components.tab-details')
 
-                        <section class="client-section-card">
-                          <div class="client-step-header">
-                            <div>
-                              <h3>Service Offerings</h3>
-                              <p>Add the services this client provides or is known for (press Enter or comma to add).</p>
-                            </div>
-                          </div>
-                          <input class="form-control form-control-solid" name="tags" id="tags" placeholder="e.g. Software Development, IT Consulting..." value="<?php echo @$tags; ?>">
-                          <div class="mt-3">
-                            <span class="client-suggested-label">Suggested:</span>
-                            <div class="client-suggested-list" id="client_suggested_services">
-                              <?php
-                              $suggestedServices = ['Software Development','IT Consulting','Cloud Solutions','Digital Transformation','Data Analytics','Cybersecurity','UI/UX Design','Project Management','DevOps','Quality Assurance'];
-                              foreach ($suggestedServices as $svc): ?>
-                              <span class="client-suggested-tag" data-value="<?php echo htmlspecialchars($svc); ?>">
-                                <?php echo htmlspecialchars($svc); ?>
-                                <button type="button" class="client-suggest-add" title="Add <?php echo htmlspecialchars($svc); ?>"><i class="la la-plus" aria-hidden="true"></i></button>
-                              </span>
-                              <?php endforeach; ?>
-                            </div>
-                          </div>
-                          <!-- hidden: keeps live-preview in sidebar in sync -->
-                          <div id="client_services_preview" class="client-services-grid" style="display:none"></div>
-                        </section>
-                      </div>
-
-                      <aside class="client-side-column">
-                        <div class="client-helper-card client-helper-blue">
-                          <h4><i class="la la-lightbulb-o" aria-hidden="true"></i> Writing Tips</h4>
-                          <ul>
-                            <li><i class="la la-check-circle" aria-hidden="true"></i><span>Include company mission, vision and background.</span></li>
-                            <li><i class="la la-check-circle" aria-hidden="true"></i><span>Mention key products, services or market focus.</span></li>
-                            <li><i class="la la-check-circle" aria-hidden="true"></i><span>Keep the tone professional and concise.</span></li>
-                          </ul>
-                        </div>
-                        <div class="client-helper-card client-helper-purple">
-                          <h4><i class="la la-cube" aria-hidden="true"></i> Why add Services?</h4>
-                          <p>Services help match this client with relevant job requirements and improve search visibility across the platform.</p>
-                        </div>
-                        <div class="client-helper-card client-helper-green">
-                          <h4><i class="la la-eye" aria-hidden="true"></i> Live Preview</h4>
-                          <div class="client-preview-box">
-                            <div class="preview-title" id="client_preview_company"><?php echo @$name ?: 'Company Name'; ?></div>
-                            <div class="preview-body" id="client_preview_description">Your company description will appear here.</div>
-                            <div class="client-preview-tags" id="client_preview_tags"></div>
-                          </div>
-                        </div>
-                      </aside>
-                    </div>
-                  </div>
-                  <!--end::Client Description-->
                   <!--begin::Address Details-->
-                  <div class="pb-5 client-address-step" data-wizard-type="step-content">
-                    <div class="client-step-layout">
-                      <div class="client-main-column">
-                        <div class="client-step-header">
-                          <div>
-                            <h3>Address Details</h3>
-                            <p>Enter the city and full address of this client.</p>
-                          </div>
-                        </div>
-                        <div class="client-info-banner"><i class="la la-info-circle" aria-hidden="true"></i><span>The first address you enter will be considered as the headquarters.</span></div>
-                        <?php
-                          $countryListing = $stateListing = '';
-                          foreach ($countryArr as $cont) {
-                            $sel = ($cont['id'] == 101) ? 'selected="selected"' : '';
-                            $countryListing .= '<option value="'.$cont['id'].'" '.$sel.'>'.$cont['name'].'</option>';
-                          }
-                          foreach ($statelist as $state) {
-                            $stateListing .= '<option value="'.$state['id'].'">'.$state['name'].'</option>';
-                          }
+                  @include('service_company.client.components.tab-locations')
 
-                          $addressId = 0;
-                          $addressIdCount = 1;
-                          if ($page_event == 'EDIT') {
-                            $clhtml = '<div class="row client-address-container">';
-                            foreach ($client_location_arr as $clVal) {
-                              $countryListing = $stateListing = '';
-                              $countryName = '';
-                              foreach ($countryArr as $cont) {
-                                $sel = ($cont['id'] == $clVal->country_id) ? 'selected="selected"' : '';
-                                if ($cont['id'] == $clVal->country_id) {
-                                  $countryName = $cont['name'];
-                                }
-                                $countryListing .= '<option value="'.$cont['id'].'" '.$sel.'>'.$cont['name'].'</option>';
-                              }
-                              $statelist = GeneralMethod::statelist($clVal->country_id);
-                              foreach ($statelist as $state) {
-                                $sel = ($state['id'] == $clVal->state) ? 'selected="selected"' : '';
-                                $stateListing .= '<option value="'.$state['id'].'" '.$sel.'>'.$state['name'].'</option>';
-                              }
-                              $statelist = DB::table('state_list')
-                                ->select('state_list.id', 'state_list.state as name', DB::raw('101 as country_id'))
-                                ->where('state_list.country_id', $clVal->country_id)
-                                ->orderBy('state_list.state')
-                                ->get()->toArray();
-                              $indianStatelist = json_decode(json_encode($statelist), true);
-                              $stateListing = '';
-                              $cityListing = '';
-                              $stateName = '';
-                              $cityName = '';
-                              foreach ($indianStatelist as $sRow) {
-                                $sel = ($sRow['id'] == $clVal->state) ? 'selected="selected"' : '';
-                                if ($sRow['id'] == $clVal->state) {
-                                  $stateName = $sRow['name'];
-                                }
-                                $stateListing .= '<option value="'.$sRow['id'].'" '.$sel.'>'.$sRow['name'].'</option>';
-                              }
-                              $Rawcitylist = DB::table('city_list')->select('city_list.city_id as id', 'city_list.city as name')->where('city_list.state_id', $clVal->state)->orderBy('city_list.city')->get();
-                              foreach ($Rawcitylist as $cRow) {
-                                $sel = ($cRow->id == $clVal->city_id) ? 'selected="selected"' : '';
-                                if ($cRow->id == $clVal->city_id) {
-                                  $cityName = $cRow->name;
-                                }
-                                $cityListing .= '<option value="'.$cRow->id.'" '.$sel.'>'.$cRow->name.'</option>';
-                              }
-                              $return = $cityName.' | '.$stateName.' | '.$countryName;
-                              $cardClass = ($addressIdCount === 1) ? '' : ' is-additional';
-                              $cardTitle = ($addressIdCount === 1) ? 'Headquarters (Primary)' : 'Additional Address ('.($addressIdCount - 1).')';
-                              $clhtml .= '
-                                <div class="client-address-card'.$cardClass.' client-address-container-child" id="clientAddr_'.$addressId.'">
-                                  <div class="client-address-card-head">
-                                    <h4>'.$cardTitle.'</h4>
-                                    '.($addressIdCount > 1 ? '<button type="button" class="client-remove-address-btn remove_address_single" data-target="clientAddr_'.$addressId.'"><i class="la la-trash"></i> Remove</button>' : '').'
-                                  </div>
-                                  <div class="client-field fv-plugins-icon-container mb-3">
-                                    <label class="form-label required" for="kt_tagify_work_location_'.$addressId.'">City</label>
-                                    <div class="input-group input-group-solid">
-                                      <span class="input-group-text"><i class="la la-map-marker"></i></span>
-                                      <input type="hidden" name="hid_country_id[]" id="hid_country_id_'.$addressId.'" class="gethiddencountry" value="'.$clVal->country_id.'" />
-                                      <input class="form-control form-control-solid" value="'.$return.'" id="kt_tagify_work_location_'.$addressId.'" name="kt_tagify_work_location[]" placeholder="Start typing to search for a city"/>
-                                    </div>
-                                    <span class="form-text text-muted">Start typing to search for a city.</span>
-                                  </div>
-                                  <div class="client-field fv-plugins-icon-container">
-                                    <label class="form-label required" for="address_'.$addressId.'">Full Address</label>
-                                    <textarea class="form-control form-control-solid client-address-textarea" name="address[]" rows="4" maxlength="500" placeholder="Building, street, area, landmark, pincode, etc." id="address_'.$addressId.'">'.@$clVal->address.'</textarea>
-                                    <div class="d-flex justify-content-between mt-1">
-                                      <span class="form-text text-muted">Provide the complete and accurate address for better identification.</span>
-                                      <span class="client-char-count"><span class="client-address-count">0</span>/500</span>
-                                    </div>
-                                  </div>
-                                </div>';
-                              $addressId++;
-                              $addressIdCount++;
-                            }
-                            $clhtml .= '</div>';
-                            echo $clhtml;
-                            $addressId--;
-                          } else {
-                        ?>
-                        <div class="row client-address-container">
-                          <div class="client-address-card client-address-container-child" id="clientAddr_<?php echo @$addressId; ?>">
-                            <div class="client-address-card-head">
-                              <h4>Headquarters (Primary)</h4>
-                            </div>
-                            <div class="client-field fv-plugins-icon-container mb-3">
-                              <label class="form-label required" for="kt_tagify_work_location_<?php echo @$addressId; ?>">City</label>
-                              <div class="input-group input-group-solid">
-                                <span class="input-group-text"><i class="la la-map-marker"></i></span>
-                                <input class="form-control form-control-solid" value="" id="kt_tagify_work_location_<?php echo @$addressId; ?>" name="kt_tagify_work_location[]" placeholder="Start typing to search for a city"/>
-                              </div>
-                              <span class="form-text text-muted">Start typing to search for a city.</span>
-                            </div>
-                            <div class="client-field fv-plugins-icon-container">
-                              <label class="form-label required" for="address_<?php echo @$addressId; ?>">Full Address</label>
-                              <textarea class="form-control form-control-solid client-address-textarea" name="address[]" rows="4" maxlength="500" placeholder="Building, street, area, landmark, pincode, etc." id="address_<?php echo @$addressId; ?>"></textarea>
-                              <div class="d-flex justify-content-between mt-1">
-                                <span class="form-text text-muted">Provide the complete and accurate address for better identification.</span>
-                                <span class="client-char-count"><span class="client-address-count">0</span>/500</span>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                        <?php } ?>
-                        <section class="client-section-card mt-3">
-                          <div class="client-address-card-head">
-                            <div>
-                              <h4>Additional Address <span class="text-muted fw-normal">(Optional)</span></h4>
-                            </div>
-                            <button type="button" class="client-add-address-btn add_address"><i class="la la-plus" aria-hidden="true"></i> Add Another Address</button>
-                          </div>
-                          <div id="addressLoader"></div>
-                          <div class="client-address-empty" id="client_additional_empty">
-                            <i class="la la-building" aria-hidden="true"></i>
-                            <p>No additional address added yet.</p>
-                          </div>
-                        </section>
-                        <input type="hidden" name="addressId" id="addressId" value="<?php echo @$addressId; ?>" />
-                      </div>
-                      <aside class="client-side-column">
-                        <div class="client-helper-card client-helper-sky">
-                          <h4><i class="la la-map-marked-alt" aria-hidden="true"></i> About Headquarters</h4>
-                          <p>The first address is treated as the client headquarters and appears prominently on the client profile and job listings.</p>
-                        </div>
-                        <div class="client-helper-card client-helper-green">
-                          <h4><i class="la la-lightbulb-o" aria-hidden="true"></i> Tips for Accurate Address</h4>
-                          <ul>
-                            <li><i class="la la-check-circle" aria-hidden="true"></i><span>Search and select the correct city.</span></li>
-                            <li><i class="la la-check-circle" aria-hidden="true"></i><span>Include landmark and pincode in the full address.</span></li>
-                            <li><i class="la la-check-circle" aria-hidden="true"></i><span>Add branch offices as additional addresses if needed.</span></li>
-                          </ul>
-                        </div>
-                      </aside>
-                    </div>
-                  </div>
-                  <!--end::Address Details-->
                   <!--begin::Contact Person-->
-                  <div class="pb-5 client-contact-step" data-wizard-type="step-content">
-                    <div class="client-step-layout">
-                      <div class="client-main-column">
-                        <div class="client-contact-toolbar">
-                          <div>
-                            <h3 class="client-section-heading mb-1">Contact Person</h3>
-                            <p class="client-section-copy mb-0">Add key contacts for this client organization.</p>
-                          </div>
-                          <button type="button" class="client-add-address-btn" id="client_open_contact_drawer"><i class="la la-plus" aria-hidden="true"></i> Add Contact Person</button>
-                        </div>
-                        <div class="client-contact-table-wrap mb-3">
-                          <table class="client-contact-table">
-                            <thead>
-                              <tr>
-                                <th>Contact Person</th>
-                                <th>Designation</th>
-                                <th>Email</th>
-                                <th>Phone Number</th>
-                                <th>Type</th>
-                                <th>Actions</th>
-                              </tr>
-                            </thead>
-                            <tbody id="client_contact_table_body">
-                              <tr id="client_contact_empty_row">
-                                <td colspan="6" class="text-center text-muted py-6">No contact person added yet. Click "Add Contact Person" to begin.</td>
-                              </tr>
-                            </tbody>
-                          </table>
-                        </div>
-                        <div class="client-info-banner mb-0"><i class="la la-info-circle" aria-hidden="true"></i><span>The first contact person is set as the primary contact by default.</span></div>
+                  @include('service_company.client.components.tab-contacts')
 
-                        <div class="client-contact-fields">
-                          <div class="row client-cperson-row">
-<?php
-$contactPersonId = 0;
-$contactPersonIdCount = 1;
-if ($page_event == 'EDIT') {
-    if (count($client_contact_arr) > 0) {
-        foreach ($client_contact_arr as $ccArr) {
-            echo '<div class="row client-cperson-container" data-contact-index="'.$contactPersonId.'">
-              <div class="col-xl-3"><div class="form-group mb-0 client-cperson-container-child"><input type="text" name="cp_name[]" id="cp_name_'.$contactPersonId.'" class="form-control form-control-solid" value="'.$ccArr->contact_person_name.'" placeholder="Enter person name"></div></div>
-              <div class="col-xl-3"><div class="form-group mb-0 client-cperson-container-child"><input type="email" name="cp_email[]" id="cp_email_'.$contactPersonId.'" class="form-control form-control-solid" value="'.$ccArr->contact_person_email.'" placeholder="Enter email"></div></div>
-              <div class="col-xl-3"><div class="form-group mb-0 client-cperson-container-child"><input type="number" name="cp_number[]" id="cp_number_'.$contactPersonId.'" class="form-control form-control-solid" value="'.$ccArr->contact_person_number.'" placeholder="Enter contact number"><input type="hidden" value="'.($ccArr->calling_code ? $ccArr->calling_code : $country_code).'" class="calling_code" name="calling_code[]" id="calling_code_'.$contactPersonId.'"></div></div>
-              <div class="col-xl-3"><div class="form-group mb-0 client-cperson-container-child"><input type="text" name="cp_desigination[]" id="cp_desigination_'.$contactPersonId.'" class="form-control form-control-solid cp_desigination" value="'.$ccArr->contact_person_designation.'" placeholder="Enter desigination"></div></div>
-            </div>';
-            $contactPersonId++;
-            $contactPersonIdCount++;
-        }
-    } else {
-?>
-                            <div class="row client-cperson-container" data-contact-index="<?php echo $contactPersonId; ?>">
-                              <div class="col-xl-3"><div class="form-group mb-0 client-cperson-container-child"><input type="text" name="cp_name[]" id="cp_name_<?php echo $contactPersonId; ?>" class="form-control form-control-solid" placeholder="Enter person name"></div></div>
-                              <div class="col-xl-3"><div class="form-group mb-0 client-cperson-container-child"><input type="email" name="cp_email[]" id="cp_email_<?php echo $contactPersonId; ?>" class="form-control form-control-solid" placeholder="Enter email"></div></div>
-                              <div class="col-xl-3"><div class="form-group mb-0 client-cperson-container-child"><input type="number" name="cp_number[]" id="cp_number_<?php echo $contactPersonId; ?>" class="form-control form-control-solid" placeholder="Enter contact number"><input type="hidden" value="{{ $country_code }}" class="calling_code" name="calling_code[]" id="calling_code_<?php echo $contactPersonId; ?>"></div></div>
-                              <div class="col-xl-3"><div class="form-group mb-0 client-cperson-container-child"><input type="text" name="cp_desigination[]" id="cp_desigination_<?php echo $contactPersonId; ?>" class="form-control form-control-solid cp_desigination" placeholder="Enter desigination"></div></div>
-                            </div>
-<?php
-    }
-    $contactPersonId--;
-} else {
-?>
-                            <div class="row client-cperson-container" data-contact-index="<?php echo $contactPersonId; ?>">
-                              <div class="col-xl-3"><div class="form-group mb-0 client-cperson-container-child"><input type="text" name="cp_name[]" id="cp_name_<?php echo $contactPersonId; ?>" class="form-control form-control-solid" placeholder="Enter person name"></div></div>
-                              <div class="col-xl-3"><div class="form-group mb-0 client-cperson-container-child"><input type="email" name="cp_email[]" id="cp_email_<?php echo $contactPersonId; ?>" class="form-control form-control-solid" placeholder="Enter email"></div></div>
-                              <div class="col-xl-3"><div class="form-group mb-0 client-cperson-container-child"><input type="number" name="cp_number[]" id="cp_number_<?php echo $contactPersonId; ?>" class="form-control form-control-solid" placeholder="Enter contact number"><input type="hidden" value="{{ $country_code }}" class="calling_code" name="calling_code[]" id="calling_code_<?php echo $contactPersonId; ?>"></div></div>
-                              <div class="col-xl-3"><div class="form-group mb-0 client-cperson-container-child"><input type="text" name="cp_desigination[]" id="cp_desigination_<?php echo $contactPersonId; ?>" class="form-control form-control-solid cp_desigination" placeholder="Enter desigination"></div></div>
-                            </div>
-<?php } ?>
-                          </div>
-                        </div>
-                        <input type="hidden" name="contactPersonId" id="contactPersonId" value="<?php echo @$contactPersonId; ?>" />
-                        <button type="button" class="add_cperson d-none" aria-hidden="true"></button>
-                        <button type="button" class="remove_cperson d-none" aria-hidden="true"></button>
-                      </div>
-                      <aside class="client-side-column">
-                        <div class="client-helper-card client-helper-purple">
-                          <h4><i class="la la-users" aria-hidden="true"></i> Why add Contact Person?</h4>
-                          <ul>
-                            <li><i class="la la-check-circle" aria-hidden="true"></i><span>Quick communication for job requirements.</span></li>
-                            <li><i class="la la-check-circle" aria-hidden="true"></i><span>Track interactions and follow-ups easily.</span></li>
-                            <li><i class="la la-check-circle" aria-hidden="true"></i><span>Assign primary and secondary contacts.</span></li>
-                          </ul>
-                        </div>
-                        <div class="client-helper-card client-helper-green">
-                          <h4><i class="la la-lightbulb-o" aria-hidden="true"></i> Best Practices</h4>
-                          <ul>
-                            <li><i class="la la-check-circle" aria-hidden="true"></i><span>Ensure email and phone number are valid.</span></li>
-                            <li><i class="la la-check-circle" aria-hidden="true"></i><span>Add HR or hiring manager as primary contact.</span></li>
-                            <li><i class="la la-check-circle" aria-hidden="true"></i><span>Include designation for context.</span></li>
-                          </ul>
-                        </div>
-                      </aside>
-                    </div>
-                  </div>
-                  <div class="client-contact-drawer-backdrop" id="client_contact_drawer_backdrop"></div>
-                  <div class="client-contact-drawer" id="client_contact_drawer" aria-hidden="true">
-                    <!-- Header -->
-                    <div class="client-drawer-head">
-                      <div class="client-drawer-head-info">
-                        <h4 id="client_contact_drawer_title">Add Contact Person</h4>
-                        <p class="client-drawer-head-subtitle" id="client_contact_drawer_subtitle">Add the primary or secondary contact details for this client.</p>
-                      </div>
-                      <button type="button" class="client-drawer-close-btn" id="client_close_contact_drawer" title="Close" aria-label="Close drawer">
-                        <i class="la la-times" aria-hidden="true"></i>
-                      </button>
-                    </div>
-                    <!-- Body -->
-                    <div class="client-drawer-body">
-                      <input type="hidden" id="client_drawer_edit_index" value="">
-
-                      <div class="client-drawer-field">
-                        <label class="cdf-label" for="client_drawer_name">Contact Name<span class="cdf-required">*</span></label>
-                        <div class="cdf-input-wrap">
-                          <i class="la la-user cdf-input-icon" aria-hidden="true"></i>
-                          <input type="text" id="client_drawer_name" placeholder="Enter contact name" autocomplete="off">
-                        </div>
-                        <div class="cdf-error" id="cdf_err_name">Contact name is required.</div>
-                      </div>
-
-                      <div class="client-drawer-field">
-                        <label class="cdf-label" for="client_drawer_designation">Designation<span class="cdf-required">*</span></label>
-                        <div class="cdf-input-wrap">
-                          <i class="la la-id-badge cdf-input-icon" aria-hidden="true"></i>
-                          <input type="text" id="client_drawer_designation" placeholder="Enter designation" autocomplete="off">
-                        </div>
-                        <div class="cdf-error" id="cdf_err_designation">Designation is required.</div>
-                      </div>
-
-                      <div class="client-drawer-field">
-                        <label class="cdf-label" for="client_drawer_email">Email Address<span class="cdf-required">*</span></label>
-                        <div class="cdf-input-wrap">
-                          <i class="la la-envelope cdf-input-icon" aria-hidden="true"></i>
-                          <input type="email" id="client_drawer_email" placeholder="name@company.com" autocomplete="off">
-                        </div>
-                        <div class="cdf-error" id="cdf_err_email">Please enter a valid email address.</div>
-                      </div>
-
-                      <div class="client-drawer-field">
-                        <label class="cdf-label" for="client_drawer_phone">Phone Number</label>
-                        <div class="cdf-input-wrap">
-                          <i class="la la-phone cdf-input-icon" aria-hidden="true"></i>
-                          <input type="number" id="client_drawer_phone" placeholder="Enter 10-digit phone number" autocomplete="off">
-                        </div>
-                        <div class="cdf-error" id="cdf_err_phone">Please enter a valid 10-digit phone number.</div>
-                      </div>
-                    </div>
-                    <!-- Footer -->
-                    <div class="client-drawer-foot">
-                      <button type="button" class="cdf-cancel-btn" id="client_cancel_contact_drawer">Cancel</button>
-                      <button type="button" class="cdf-save-btn" id="client_save_contact_drawer">
-                        <span class="cdf-spinner"></span>
-                        <i class="la la-user-plus cdf-btn-icon" aria-hidden="true"></i>
-                        <span class="cdf-btn-text">Add Contact Person</span>
-                      </button>
-                    </div>
-                  </div>
-                  <!--end::Contact Person-->
                   <!--begin::Review and Submit-->
-                  <div class="pb-5 client-review-step" data-wizard-type="step-content">
-                    <div class="client-step-header mb-3">
-                      <div>
-                        <h3>Review &amp; Submit</h3>
-                        <p>Review all the information before submitting. You can edit any section if needed.</p>
-                      </div>
-                    </div>
-                    <div class="client-review-layout">
-                      <div class="client-review-main">
-                        <section class="client-review-card">
-                          <div class="client-review-card-head">
-                            <h4>Client Information</h4>
-                            <button type="button" class="client-review-edit" data-client-goto-step="1"><i class="la la-pencil"></i> Edit</button>
-                          </div>
-                          <div class="client-review-logo" id="client_review_logo" style="background-image: url(<?php echo @$background_image; ?>);"></div>
-                          <div class="client-review-grid">
-                            <div class="client-review-item"><label>Client Name</label><span class="span_name">&nbsp;</span></div>
-                            <div class="client-review-item"><label>Industry</label><span class="span_industry">&nbsp;</span></div>
-                            <div class="client-review-item"><label>Website</label><a href="javascript:void(0);" class="span_website">&nbsp;</a></div>
-                            <div class="client-review-item"><label>Company Size</label><span class="span_company_sizes">&nbsp;</span></div>
-                            <div class="client-review-item"><label>Company Type</label><span class="span_company_type">&nbsp;</span></div>
-                            <div class="client-review-item"><label>Founded Year</label><span class="span_founded">&nbsp;</span></div>
-                          </div>
-                        </section>
-
-                        <section class="client-review-card">
-                          <div class="client-review-card-head">
-                            <h4>Client Description</h4>
-                            <button type="button" class="client-review-edit" data-client-goto-step="2"><i class="la la-pencil"></i> Edit</button>
-                          </div>
-                          <div class="client-review-item mb-3"><label>About the Client</label></div>
-                          <p class="span_kt_docs_tinymce_hidden text-justify mb-3" style="font-size:11px;color:#53607e;">&nbsp;</p>
-                          <div class="client-review-item"><label>Services</label><span class="span_tags">&nbsp;</span></div>
-                        </section>
-
-                        <section class="client-review-card">
-                          <div class="client-review-card-head">
-                            <h4>Address Details</h4>
-                            <button type="button" class="client-review-edit" data-client-goto-step="3"><i class="la la-pencil"></i> Edit</button>
-                          </div>
-                          <div class="client-review-addresses divAddressDetail">&nbsp;</div>
-                        </section>
-
-                        <section class="client-review-card">
-                          <div class="client-review-card-head">
-                            <h4>Contact Persons</h4>
-                            <button type="button" class="client-review-edit" data-client-goto-step="4"><i class="la la-pencil"></i> Edit</button>
-                          </div>
-                          <div class="client-contact-table-wrap">
-                            <table class="client-contact-table">
-                              <thead>
-                                <tr>
-                                  <th>Contact Person</th>
-                                  <th>Designation</th>
-                                  <th>Email</th>
-                                  <th>Phone Number</th>
-                                  <th>Type</th>
-                                </tr>
-                              </thead>
-                              <tbody class="div-contact-person">&nbsp;</tbody>
-                            </table>
-                          </div>
-                        </section>
-                      </div>
-
-                      <aside class="client-side-column">
-                        <div class="client-summary-card">
-                          <span class="client-summary-icon"><i class="la la-building"></i></span>
-                          <div class="client-summary-body"><h5>Client Information</h5><p class="client_summary_name">—</p></div>
-                          <button type="button" class="client-summary-edit" data-client-goto-step="1"><i class="la la-pencil"></i></button>
-                        </div>
-                        <div class="client-summary-card">
-                          <span class="client-summary-icon"><i class="la la-file-alt"></i></span>
-                          <div class="client-summary-body"><h5>Description</h5><p class="client_summary_desc">—</p></div>
-                          <button type="button" class="client-summary-edit" data-client-goto-step="2"><i class="la la-pencil"></i></button>
-                        </div>
-                        <div class="client-summary-card">
-                          <span class="client-summary-icon"><i class="la la-map-marker"></i></span>
-                          <div class="client-summary-body"><h5>Address</h5><p class="client_summary_address">—</p></div>
-                          <button type="button" class="client-summary-edit" data-client-goto-step="3"><i class="la la-pencil"></i></button>
-                        </div>
-                        <div class="client-summary-card">
-                          <span class="client-summary-icon"><i class="la la-user"></i></span>
-                          <div class="client-summary-body"><h5>Contacts</h5><p class="client_summary_contacts">—</p></div>
-                          <button type="button" class="client-summary-edit" data-client-goto-step="4"><i class="la la-pencil"></i></button>
-                        </div>
-                        <div class="client-almost-done">
-                          <i class="la la-check-circle" aria-hidden="true"></i>
-                          <h5>You're Almost Done!</h5>
-                          <p>Review the details above and submit to create the client profile.</p>
-                        </div>
-                      </aside>
-                    </div>
-                  </div>
-                  <!--end::Review and Submit-->
+                  @include('service_company.client.components.tab-review')
                   <!--begin::Wizard Actions-->
                   <div class="d-flex border-top mt-5 pt-10">
                     <div class="client-action-left">
@@ -2540,13 +1927,176 @@ for (let i = 0; i < countAddrees; i++) {
     $('#client_preview_company').text($('#client_id').val() || 'Company Name');
   }
 
+  function clearInlineErrors() {
+    $('.is-invalid').removeClass('is-invalid');
+    $('.client-inline-error').remove();
+  }
+
+  function clearFieldError($field) {
+    if (!$field || !$field.length) return;
+    $field.removeClass('is-invalid');
+    var $container = $field.closest('.client-field, .fv-plugins-icon-container');
+    if ($container.length) {
+      $container.find('.client-inline-error').remove();
+    }
+    $field.next('.client-inline-error').remove();
+    if ($field.parent().length) {
+      $field.parent().next('.client-inline-error').remove();
+    }
+  }
+
+  function showInlineError($field, message) {
+    if (!$field || !$field.length) return;
+    clearFieldError($field);
+    $field.addClass('is-invalid');
+    var $container = $field.closest('.client-field, .fv-plugins-icon-container');
+    if ($container.length) {
+      $container.append('<span class="client-inline-error text-danger mt-1 d-block" style="font-size: 11px; font-weight: 600; color: #e11d48;"><i class="la la-exclamation-circle"></i> ' + message + '</span>');
+    } else {
+      var $target = $field.closest('.input-group').length ? $field.closest('.input-group') : $field;
+      $target.after('<span class="client-inline-error text-danger mt-1 d-block" style="font-size: 11px; font-weight: 600; color: #e11d48;"><i class="la la-exclamation-circle"></i> ' + message + '</span>');
+    }
+  }
+
+  function validateWizardStep(step) {
+    clearInlineErrors();
+    var isValid = true;
+    var $firstInvalid = null;
+
+    // Section 1: Client Information
+    if (step === 1) {
+      var clientName   = ($('#client_id').val() || '').trim();
+      var industry     = ($('#industry').val() || '').trim();
+      var companySizes = ($('#company_sizes').val() || '').trim();
+      var companyType  = ($('#company_type').val() || '').trim();
+      var founded      = ($('#founded').val() || '').trim();
+
+      if (!clientName) {
+        showInlineError($('#client_id'), 'Client Name is required.');
+        $firstInvalid = $firstInvalid || $('#client_id');
+        isValid = false;
+      }
+      if (!industry) {
+        showInlineError($('#industry'), 'Please select an Industry.');
+        $firstInvalid = $firstInvalid || $('#industry');
+        isValid = false;
+      }
+      if (!companySizes) {
+        showInlineError($('#company_sizes'), 'Please select Company Size.');
+        $firstInvalid = $firstInvalid || $('#company_sizes');
+        isValid = false;
+      }
+      if (!companyType) {
+        showInlineError($('#company_type'), 'Please select Company Type.');
+        $firstInvalid = $firstInvalid || $('#company_type');
+        isValid = false;
+      }
+      if (!founded) {
+        showInlineError($('#founded'), 'Please select Founded Year.');
+        $firstInvalid = $firstInvalid || $('#founded');
+        isValid = false;
+      }
+    }
+
+    // Section 2: Client Description & Offerings
+    if (step === 2) {
+      var descText = '';
+      if (typeof tinymce !== 'undefined' && tinymce.get('kt_docs_tinymce_hidden')) {
+        descText = tinymce.get('kt_docs_tinymce_hidden').getContent({ format: 'text' }).trim();
+      } else {
+        descText = ($('#kt_docs_tinymce_hidden').val() || '').trim();
+      }
+      var tagsVal = ($('#tags').val() || '').trim();
+
+      if (!descText) {
+        showInlineError($('#kt_docs_tinymce_hidden'), 'Company Description is required.');
+        $firstInvalid = $firstInvalid || $('#kt_docs_tinymce_hidden');
+        isValid = false;
+      }
+      if (!tagsVal || tagsVal === '[]') {
+        showInlineError($('#tags'), 'Please add at least 1 Service Offering.');
+        $firstInvalid = $firstInvalid || $('#tags');
+        isValid = false;
+      }
+    }
+
+    // Section 3: Address Details
+    if (step === 3) {
+      var $firstAddr = $('textarea[name="address[]"]').first();
+      var $firstCity = $('input[name="kt_tagify_work_location[]"]').first();
+      var firstAddress = ($firstAddr.val() || '').trim();
+      var firstCityVal = ($firstCity.val() || '').trim();
+
+      if (!firstAddress) {
+        showInlineError($firstAddr, 'Full Address is required for the primary location.');
+        $firstInvalid = $firstInvalid || $firstAddr;
+        isValid = false;
+      }
+      if (!firstCityVal || firstCityVal === '[]') {
+        showInlineError($firstCity, 'City selection is required for the primary location.');
+        $firstInvalid = $firstInvalid || $firstCity;
+        isValid = false;
+      }
+    }
+
+    // Section 4: Contact Person
+    if (step === 4) {
+      var contacts = getContactRowsData();
+      if (!contacts.length) {
+        var $contactSection = $('.client-contact-section, #client_contact_table_body').first();
+        showInlineError($contactSection, 'Minimum 1 Contact Person is required. Please click "Add Contact Person" to add details.');
+        $firstInvalid = $firstInvalid || $contactSection;
+        isValid = false;
+      }
+    }
+
+    if (!isValid && $firstInvalid) {
+      $firstInvalid.focus();
+      try {
+        $('html, body').animate({ scrollTop: $firstInvalid.offset().top - 120 }, 200);
+      } catch (e) {}
+    }
+
+    return isValid;
+  }
+
+  // Real-time listener: Immediately clear inline error as soon as user types or selects a value
+  $(document).on('input change keyup blur select2:select', '#kt_form input, #kt_form select, #kt_form textarea', function () {
+    var $field = $(this);
+    var val = ($field.val() || '').trim();
+    if (val && val !== '[]') {
+      clearFieldError($field);
+    }
+  });
+
+  // Native DOM Capture Phase Listener — Intercepts navigation BEFORE Metronic or jQuery handlers
+  document.addEventListener('click', function (e) {
+    var navTarget = e.target.closest('#continueButton, [data-wizard-type="action-next"], .wizard-step, [data-wizard-type="step"]');
+    if (!navTarget) return;
+
+    var activeStep = 1;
+    $('#kt_wizard .wizard-step').each(function (idx) {
+      if ($(this).attr('data-wizard-state') === 'current' || $(this).hasClass('active')) {
+        activeStep = idx + 1;
+      }
+    });
+
+    if (!validateWizardStep(activeStep)) {
+      e.preventDefault();
+      e.stopPropagation();
+      e.stopImmediatePropagation();
+      return false;
+    }
+  }, true);
+
   window.clientWizardUi = {
     syncAdditionalAddressEmpty: syncAdditionalAddressEmpty,
     bindAddressCounters: bindAddressCounters,
     populateReviewSummaries: populateReviewSummaries,
     updateAssistantPanel: updateAssistantPanel,
     updateCompletion: updateCompletion,
-    renderContactTable: renderContactTable
+    renderContactTable: renderContactTable,
+    validateWizardStep: validateWizardStep
   };
 
   $(function () {
@@ -2555,6 +2105,58 @@ for (let i = 0; i < countAddrees; i++) {
     updateAssistantPanel();
     updateCompletion();
     renderContactTable();
+
+    function getCurrentStepNumber() {
+      var activeStep = 1;
+      $('#kt_wizard .wizard-step').each(function (idx) {
+        if ($(this).attr('data-wizard-state') === 'current' || $(this).hasClass('active')) {
+          activeStep = idx + 1;
+        }
+      });
+      return activeStep;
+    }
+
+    // Intercept Continue button clicks — validate current step before advancing
+    $(document).on('click', '#continueButton, [data-wizard-type="action-next"]', function (e) {
+      var currentStep = getCurrentStepNumber();
+      if (!validateWizardStep(currentStep)) {
+        e.preventDefault();
+        e.stopPropagation();
+        e.stopImmediatePropagation();
+        return false;
+      }
+    });
+
+    // Intercept Step Header clicks — validate preceding steps when moving forward
+    $(document).on('click', '#kt_wizard .wizard-step, [data-wizard-type="step"]', function (e) {
+      var targetStep = $(this).index() + 1;
+      var currentStep = getCurrentStepNumber();
+      if (targetStep > currentStep) {
+        for (var s = currentStep; s < targetStep; s++) {
+          if (!validateWizardStep(s)) {
+            e.preventDefault();
+            e.stopPropagation();
+            e.stopImmediatePropagation();
+            return false;
+          }
+        }
+      }
+    });
+
+    // Hook Metronic KTWizard beforeNext event validation if available
+    setTimeout(function () {
+      if (window.KTWizard && $('#kt_wizard').length) {
+        var wizardInst = window.KTWizard.getInstance ? window.KTWizard.getInstance($('#kt_wizard')[0]) : null;
+        if (wizardInst && typeof wizardInst.on === 'function') {
+          wizardInst.on('beforeNext', function (wizardObj) {
+            var step = wizardObj.getStep();
+            if (!validateWizardStep(step)) {
+              wizardObj.stop();
+            }
+          });
+        }
+      }
+    }, 600);
 
     $(document).on('input change', '#kt_form input, #kt_form select, #kt_form textarea', function () {
       updateAssistantPanel();

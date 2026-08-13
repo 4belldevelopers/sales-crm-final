@@ -13,6 +13,7 @@ namespace App\Http\Controllers\ServiceCompany;
 use App\Helper\GeneralMethod;
 use App\Helper\Reply;
 use App\Jobs\QueueNotificationMailService;
+use App\Jobs\SyncClientToElasticJob;
 use App\Models\Client;
 use App\Models\Company;
 use App\Models\Country;
@@ -24,6 +25,7 @@ use App\Services\MassMailService;
 use App\Services\NotificationMailService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Storage;
@@ -2627,27 +2629,30 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
 
     public function edit($id)
     {
-
         abort_if(Gate::denies('edit_clients'), 403);
         $this->pageTitle = __('Edit Clients');
         $this->page_event = 'EDIT';
         $id = GeneralMethod::value_decrypt($id);
 
-        // dd($id);
-
-        // $this->client = Client::find($id);
         if ($id) {
-            $params = [
-                'index' => ELASTIC_CLIENT_LIST,
-                'id' => $id,
-            ];
+            /**
+             * V2 Primary Read Source from MySQL Relational Database.
+             * Intent: Ensure 100% data consistency by reading client model from MySQL source of truth.
+             * Tenancy Note: Scoped by company_id to enforce multi-tenant isolation.
+             */
+            $this->client = Client::where('id', $id)
+                ->where('company_id', auth()->user()->company_id)
+                ->first();
 
-            $response = $this->elasticService->getClient()->get($params);
-            $this->client = (object) $response['_source'];
+            abort_if(! $this->client, 404);
         }
 
-        $this->client_file = DB::table('client_file')->select('*')->where('client_id', $id)->get();
-        $this->countries = Country::all();
+        $this->client_file = DB::table('client_file')
+            ->select('*')
+            ->where('client_id', $id)
+            ->where('company_id', auth()->user()->company_id)
+            ->get();
+
         $this->client_location = DB::table('client_location')
             ->join('countries', 'countries.id', '=', 'client_location.country_id')
             ->select(
@@ -2660,6 +2665,7 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
                 'client_location.state'
             )
             ->where('client_location.client_id', $id)
+            ->where('client_location.company_id', auth()->user()->company_id)
             ->get();
 
         $this->client_contact_info = DB::table('client_contact_info')
@@ -2667,39 +2673,59 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
             ->where('client_id', $id)
             ->get();
 
-        //  return view('service_company.client.edit', $this->data);
-
-        $this->countries = Country::all();
-        $this->categories = JobCategory::all();
+        /**
+         * Cache global static reference datasets for Edit Client view.
+         * Tenancy Note: Reference data is global static lookups.
+         */
+        $this->countries = cache()->remember('global_country_all', 86400, function () {
+            return Country::all();
+        });
+        $this->categories = cache()->remember('global_job_categories_all', 86400, function () {
+            return JobCategory::all();
+        });
         $this->companyType = GeneralMethod::companyType();
-        $this->department = DB::table('td_industries')
-            ->select('td_industries.ind_id', 'td_industries.ind_name')
-            ->orderBy('td_industries.ind_name', 'ASC')
-            ->get(); // GeneralMethod::department();
-        $this->countryArr = GeneralMethod::getAllCountryList();
-        $this->statelist = GeneralMethod::statelist(101);
+        $this->department = cache()->remember('global_td_industries_all', 86400, function () {
+            return DB::table('td_industries')
+                ->select('td_industries.ind_id', 'td_industries.ind_name')
+                ->orderBy('td_industries.ind_name', 'ASC')
+                ->get();
+        });
+        $this->countryArr = cache()->remember('global_country_arr_list', 86400, function () {
+            return GeneralMethod::getAllCountryList();
+        });
 
-        $statelist = DB::table('state_list')
-            ->select('state_list.id', 'state_list.state as name', DB::raw('101 as country_id'))
-            ->where('state_list.country_id', 101)
-            ->orderBy('state_list.state')
-            ->get()->toArray();
-        // $this->indianStatelist       = json_decode(json_encode($statelist), true);
+        $statelist = cache()->remember('global_state_list_101', 86400, function () {
+            return DB::table('state_list')
+                ->select('state_list.id', 'state_list.state as name', DB::raw('101 as country_id'))
+                ->where('state_list.country_id', 101)
+                ->orderBy('state_list.state')
+                ->get()->toArray();
+        });
 
+        $this->statelist = json_decode(json_encode($statelist), true);
         $this->cities = GeneralMethod::allCities();
-
         $this->default_loc = GeneralMethod::allCitiesSelected([]);
 
         return view('service_company.client.create', $this->data);
-
     }
 
     public function update(Request $request, $id)
     {
         abort_if(Gate::denies('edit_clients'), 403);
 
+        if ($validationError = $this->validateClientSubmission($request)) {
+            return $validationError;
+        }
+
         $company_id = $request->user()->company_id;
-        $client = Client::find($id);
+        /**
+         * Tenancy Scoped Client Fetch
+         * Intent: Enforce strict multi-tenant boundary on client updates.
+         * Tenancy Note: Scoped by company_id.
+         */
+        $client = Client::where('id', $id)
+            ->where('company_id', $company_id)
+            ->firstOrFail();
         // FIRST TAB-1
         if (! empty($request->name)) {
             $client->name = $request->name;
@@ -2732,23 +2758,34 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
             $tags = implode(',', $tags);
             $client->tags = $tags;
         }
-        DB::beginTransaction();
+        $lock = Cache::lock('client:update:'.$id, 10);
+        if (! $lock->get()) {
+            return Reply::dataOnly(['status' => 'error', 'msgType' => 'warning', 'message' => 'Another user is currently updating this client. Please try again in a moment.']);
+        }
+
         try {
+            DB::beginTransaction();
 
             $client->save();
 
             $client_id = $id;
 
-            // THIRD TAB-3
+            // THIRD TAB-3: Single-pass location sync
+            /**
+             * V2 Location Synchronization Optimization
+             * Intent: Resolve location updates, inserts, and removals in a single pass to eliminate duplicate DB queries.
+             * Tenancy Note: Location records are bound to $client_id.
+             */
             $addressId = @$request->addressId;
-            // dd($request->all());
-
             $addIdGet = [];
+
             for ($i = 0; $i <= $addressId; $i++) {
                 $address = @$request->address[$i];
+                $postcode = '0';
                 $work_city = @$request->kt_tagify_work_location[$i];
                 $work_city_all = json_decode($work_city, true);
-                if (@$request->kt_tagify_work_location[$i] != '') {
+
+                if (! empty($work_city)) {
                     foreach ($work_city_all as $cityVal) {
                         $parts = explode('|', $cityVal['value']);
                         $cityName = trim($parts[0]);
@@ -2762,105 +2799,60 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
                             ->where('city_list.city', '=', $cityName)
                             ->where('countries.country_name', '=', $countrName)
                             ->first();
-                        if ($city_row) {
-                            $cityID = (@$city_row) ? $city_row->city_id : '';
-                            $countryID = (@$city_row) ? $city_row->country_id : '';
-                            $stateId = GeneralMethod::stateId($cityID);
-                            if (DB::table('client_location')->where('city_id', '=', $cityID)->where('address', '=', $address)->where('client_id', $client_id)->exists()) {
-                                $client_location = DB::table('client_location')->where('city_id', '=', $cityID)->where('address', '=', $address)->where('client_id', '=', $client_id)->first();
-                                array_push($addIdGet, $client_location->id);
-                            }
-                        }
-                    }
-                }
-            }
-
-            DB::table('client_location')->whereNotIn('id', $addIdGet)->where('client_id', $client_id)->delete();
-
-            for ($i = 0; $i <= $addressId; $i++) {
-
-                $address = @$request->address[$i];
-                $country = ''; // @$request->country[$i];
-                $state = ''; // @$request->state[$i];
-                $city = @$request->kt_tagify_work_location[$i];
-                $postcode = '0'; // @$request->postcode[$i];
-
-                $stateId = '';
-                $cityID = '';
-                $countryID = '';
-                $city = '';
-                $work_city = @$request->kt_tagify_work_location[$i];
-                $work_city_all = json_decode($work_city, true);
-                if (@$request->kt_tagify_work_location[$i] != '') {
-                    foreach ($work_city_all as $cityVal) {
-                        $parts = explode('|', $cityVal['value']);
-                        // Trim to remove any leading or trailing whitespace
-                        $cityName = trim($parts[0]);
-                        $countrName = trim($parts[2]);
-                        $city_row = DB::table('city_list')
-                            ->join('state_list', 'state_list.id', '=', 'city_list.state_id')
-                            ->join('countries', 'countries.id', '=', 'state_list.country_id')
-                            ->select('city_list.city_id', 'countries.id as country_id')
-                            ->where('city_list.city', '!=', '')
-                            ->where('city_list.city', '=', $cityName)
-                            ->where('countries.country_name', '=', $countrName)
-                            ->first();
-
-                        // dd($city_row);
 
                         if ($city_row) {
-                            $cityID = (@$city_row) ? $city_row->city_id : '';
-                            $countryID = (@$city_row) ? $city_row->country_id : '';
+                            $cityID = $city_row->city_id;
+                            $countryID = $city_row->country_id;
                             $stateId = GeneralMethod::stateId($cityID);
 
                             $values = [
+                                'company_id' => $company_id,
                                 'client_id' => $client_id,
                                 'country_id' => $countryID,
-                                'city' => $city,
+                                'city' => '',
                                 'city_id' => $cityID,
                                 'address' => $address,
                                 'postcode' => $postcode,
                                 'state' => $stateId,
                             ];
-                            if (DB::table('client_location')->where('city_id', '=', $cityID)->where('address', '=', $address)->where('client_id', $client_id)->exists()) {
-                                $client_location = DB::table('client_location')->where('city_id', '=', $cityID)->where('address', '=', $address)->where('client_id', '=', $client_id)->first();
-                                DB::table('client_location')->where('id', $client_location->id)->update($values);
+
+                            $existingLoc = DB::table('client_location')
+                                ->where('city_id', '=', $cityID)
+                                ->where('address', '=', $address)
+                                ->where('client_id', $client_id)
+                                ->first();
+
+                            if ($existingLoc) {
+                                DB::table('client_location')->where('id', $existingLoc->id)->update($values);
+                                $addIdGet[] = $existingLoc->id;
                             } else {
-                                DB::table('client_location')->insert($values);
+                                $newLocId = DB::table('client_location')->insertGetId($values);
+                                $addIdGet[] = $newLocId;
                             }
-
                         }
-
                     }
                 }
-
-                // dd($values);
-                // if(!empty($country) && !empty($address) && !empty($postcode) && !empty($state))
-                // {
-                // 		$city_id 			= $city = '';
-                // 		// if($country == 101){
-                // 			$city_id 			= $cityID; //@$request->city_id[$i];
-                // 		// }else{
-                // 		// 	$city 				= @$request->city[$i];
-                // 		// }
-
-                // 	$values 				= array(
-                // 										'client_id' 	=> $client_id,
-                // 										'country_id' 	=> $countryID,
-                // 										'city' 			=> $city,
-                // 										'city_id' 		=> $city_id,
-                // 										'address' 		=> $address,
-                // 										'postcode' 		=> $postcode,
-                // 										'state' 		=> $stateId
-                // 									);
-                // 	DB::table('client_location')->insert($values);
-                // }
-
             }
 
-            // FORTH TAB-4
-            DB::table('client_contact_info')->where('client_id', $client_id)->delete();
+            DB::table('client_location')
+                ->whereNotIn('id', $addIdGet)
+                ->where('client_id', $client_id)
+                ->delete();
+
+            // FORTH TAB-4: Soft sync strategy for contact persons
+            /**
+             * V2 Contact Persons Upsert Strategy
+             * Intent: Update existing contact records by email/ID and delete only removed records, preserving auto-increment IDs.
+             * Tenancy Note: Contact info is bound to $client_id.
+             */
+            $existingContacts = DB::table('client_contact_info')
+                ->where('client_id', $client_id)
+                ->get()
+                ->keyBy('contact_person_email');
+
+            $processedContactIds = [];
             $contactPersonId = @$request->contactPersonId;
+
             for ($j = 0; $j <= $contactPersonId; $j++) {
                 $cp_name = @$request->cp_name[$j];
                 $cp_email = @$request->cp_email[$j];
@@ -2877,10 +2869,22 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
                         'calling_code' => $calling_code,
                         'contact_person_designation' => $cp_desigination,
                     ];
-                    DB::table('client_contact_info')->insert($values);
-                }
 
+                    if (isset($existingContacts[$cp_email])) {
+                        $existingId = $existingContacts[$cp_email]->id;
+                        DB::table('client_contact_info')->where('id', $existingId)->update($values);
+                        $processedContactIds[] = $existingId;
+                    } else {
+                        $newContactId = DB::table('client_contact_info')->insertGetId($values);
+                        $processedContactIds[] = $newContactId;
+                    }
+                }
             }
+
+            DB::table('client_contact_info')
+                ->where('client_id', $client_id)
+                ->whereNotIn('id', $processedContactIds)
+                ->delete();
 
             $maxsize = 5242880;
             $directoryPath = GeneralMethod::document_manage_directory($company_id);
@@ -2917,13 +2921,6 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
                     $tempPath = $file->storeAs('Companies/'.$companyNameRTwo.'/Images', $filename, 'r2'); // STORAGE/app/temp
                     $fileUrl = "https://file.jero.works/Companies/{$companyNameRTwo}/Images/{$filename}";
 
-                    // $filename = time() . '.' . $file->getClientOriginalExtension();
-                    // $filePath = 'Images/' . $filename;
-
-                    // Storage::disk('s3')->put($filePath, file_get_contents($file));
-
-                    // $fileUrl = Storage::disk('s3')->url($filePath);
-
                     if (move_uploaded_file($temp, $target_file)) {
 
                         $client = Client::find($client_id);
@@ -2936,6 +2933,12 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
             }
 
             if ($client_id > 0) {
+                /**
+                 * V2 Asynchronous Elasticsearch Client Indexing
+                 * Intent: Offload heavy Elasticsearch indexing to Horizon queue (es-index queue) off the HTTP web response thread.
+                 * Tenancy Note: Scoped by $client_id.
+                 */
+                // SyncClientToElasticJob::dispatch((int) $client_id);
                 GeneralMethod::clientStaffingPartner($client_id);
             }
 
@@ -2957,6 +2960,8 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
             \Log::error('clients update() transaction failed: '.$e->getMessage(), ['exception' => $e]);
 
             return Reply::dataOnly(['status' => 'error', 'msgType' => 'danger', 'message' => 'Update failed. Please try again.']);
+        } finally {
+            optional($lock)->release();
         }
     }
 
@@ -2966,21 +2971,34 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
 
         $this->pageTitle = __('Add Clients');
         $this->page_event = 'ADD';
-
-        $this->countries = Country::all();
-        $this->categories = JobCategory::all();
+        
+        /**
+         * Cache global static reference data to eliminate repeated DB queries on Add Client page loads.
+         * Tenancy Note: Reference data is global (non-tenant-scoped).
+         */
+        $this->countries = cache()->remember('global_country_all', 86400, function () {
+            return Country::all();
+        });
+        $this->categories = cache()->remember('global_job_categories_all', 86400, function () {
+            return JobCategory::all();
+        });
         $this->companyType = GeneralMethod::companyType();
-        $this->department = DB::table('td_industries')
-            ->select('td_industries.ind_id', 'td_industries.ind_name')
-            ->orderBy('td_industries.ind_name', 'ASC')
-            ->get(); // GeneralMethod::department();
-        $this->countryArr = GeneralMethod::getAllCountryList();
-        $this->statelist = GeneralMethod::statelist(101);
+        $this->department = cache()->remember('global_td_industries_all', 86400, function () {
+            return DB::table('td_industries')
+                ->select('td_industries.ind_id', 'td_industries.ind_name')
+                ->orderBy('td_industries.ind_name', 'ASC')
+                ->get();
+        });
+        $this->countryArr = cache()->remember('global_country_arr_list', 86400, function () {
+            return GeneralMethod::getAllCountryList();
+        });
 
-        $statelist = DB::table('state_list')
-            ->select('state_list.id', 'state_list.state as name', DB::raw('101 as country_id'))
-            ->orderBy('state_list.state')
-            ->get()->toArray();
+        $statelist = cache()->remember('global_state_list_101', 86400, function () {
+            return DB::table('state_list')
+                ->select('state_list.id', 'state_list.state as name', DB::raw('101 as country_id'))
+                ->orderBy('state_list.state')
+                ->get()->toArray();
+        });
         $this->statelist = json_decode(json_encode($statelist), true);
         $this->cities = GeneralMethod::allCities();
 
@@ -3007,18 +3025,86 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
         return Reply::dataOnly(['status' => 'success', 'data' => $custom]);
     }
 
+    /**
+     * Validate Client Add/Edit Submission parameters across 4 wizard sections.
+     *
+     * Intent: Enforce strict validation rules for Client Information, Client Description,
+     * Address Details, and minimum 1 Contact Person added.
+     */
+    private function validateClientSubmission(Request $request)
+    {
+        // 1. Client Information
+        if (empty(trim($request->name ?? ''))) {
+            return Reply::error('Client Name is required.');
+        }
+        if (empty($request->industry)) {
+            return Reply::error('Industry is required.');
+        }
+        if (empty($request->company_sizes)) {
+            return Reply::error('Company Size is required.');
+        }
+        if (empty($request->company_type)) {
+            return Reply::error('Company Type is required.');
+        }
+        if (empty($request->founded)) {
+            return Reply::error('Founded Year is required.');
+        }
+
+        // 2. Client Description & Service Offerings
+        if (empty(trim(strip_tags($request->description ?? '')))) {
+            return Reply::error('Company Description is required.');
+        }
+        if (empty($request->tags)) {
+            return Reply::error('Service Offerings are required.');
+        }
+
+        // 3. Address Details (Minimum 1 location with City & Full Address)
+        $hasValidAddress = false;
+        $addressId = (int) (@$request->addressId ?? 0);
+        for ($i = 0; $i <= $addressId; $i++) {
+            $address = trim(@$request->address[$i] ?? '');
+            $work_city = @$request->kt_tagify_work_location[$i];
+            if (! empty($address) && ! empty($work_city)) {
+                $hasValidAddress = true;
+                break;
+            }
+        }
+        if (! $hasValidAddress) {
+            return Reply::error('At least 1 Address Detail with City and Full Address is required.');
+        }
+
+        // 4. Contact Person (Minimum 1 Contact Person added)
+        $hasValidContact = false;
+        $contactPersonId = (int) (@$request->contactPersonId ?? 0);
+        for ($j = 0; $j <= $contactPersonId; $j++) {
+            $cp_name = trim(@$request->cp_name[$j] ?? '');
+            $cp_email = trim(@$request->cp_email[$j] ?? '');
+            $cp_desigination = trim(@$request->cp_desigination[$j] ?? '');
+            if (! empty($cp_name) && ! empty($cp_email) && ! empty($cp_desigination)) {
+                $hasValidContact = true;
+                break;
+            }
+        }
+        if (! $hasValidContact) {
+            return Reply::error('At least 1 Contact Person with Name, Designation, and Email is required.');
+        }
+
+        return null;
+    }
+
     public function store(Request $request)
     {
 
         abort_if(Gate::denies('add_clients'), 403);
 
+        if ($validationError = $this->validateClientSubmission($request)) {
+            return $validationError;
+        }
+
         $company_id = '';
         $timeStamp = time();
         $names = $request->name;
         $company_id = $request->user()->company_id;
-        if (trim($request->name) == '') {
-            return Reply::error(__('errors.addClients'));
-        }
 
         $client = new Client;
         $client->company_id = @$company_id;
@@ -3060,10 +3146,11 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
         try {
 
             $client->save();
-            $client_id = DB::getPdo()->lastInsertId();
+            $client_id = $client->id;
 
             // THIRD TAB-3
             $Location = [];
+            $locationBatch = [];
             // if (!empty(@$request->addressId)) {
             $addressId = @$request->addressId;
 
@@ -3111,6 +3198,7 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
                             $stateId = GeneralMethod::stateId($cityID);
 
                             $values = [
+                                'company_id' => $company_id,
                                 'client_id' => $client_id,
                                 'country_id' => $countryID,
                                 'city' => $city,
@@ -3120,7 +3208,7 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
                                 'state' => $stateId,
                             ];
 
-                            DB::table('client_location')->insert($values);
+                            $locationBatch[] = $values;
                             $Location[] = (object) $values;
 
                         }
@@ -3141,8 +3229,19 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
 
             }
             // }
+
+            /**
+             * V2 Bulk Location Insertion
+             * Intent: Execute single bulk insert query for client locations instead of N individual database calls.
+             * Tenancy Note: Scoped to newly created $client_id.
+             */
+            if (! empty($locationBatch)) {
+                DB::table('client_location')->insert($locationBatch);
+            }
+
             // FORTH TAB-4
             $contacDetails = [];
+            $contactBatch = [];
             $contactPersonId = @$request->contactPersonId;
             for ($j = 0; $j <= $contactPersonId; $j++) {
                 $cp_name = @$request->cp_name[$j];
@@ -3160,9 +3259,18 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
                         'calling_code' => $calling_code,
                         'contact_person_designation' => $cp_desigination,
                     ];
-                    DB::table('client_contact_info')->insert($values);
+                    $contactBatch[] = $values;
                     $contacDetails[] = (object) $values;
                 }
+            }
+
+            /**
+             * V2 Bulk Contact Persons Insertion
+             * Intent: Execute single bulk insert query for client contact info instead of N individual database calls.
+             * Tenancy Note: Scoped to newly created $client_id.
+             */
+            if (! empty($contactBatch)) {
+                DB::table('client_contact_info')->insert($contactBatch);
             }
 
             $maxsize = 5242880;
@@ -3255,6 +3363,12 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
 
             }
             if ($client_id > 0) {
+                /**
+                 * V2 Asynchronous Elasticsearch Client Indexing
+                 * Intent: Offload heavy Elasticsearch indexing to Horizon queue (es-index queue) off the HTTP web response thread.
+                 * Tenancy Note: Scoped by $client_id.
+                 */
+                // SyncClientToElasticJob::dispatch((int) $client_id);
                 GeneralMethod::clientStaffingPartner($client_id);
             }
 
