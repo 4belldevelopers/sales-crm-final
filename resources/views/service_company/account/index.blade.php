@@ -41,64 +41,73 @@ input[type="radio"]:checked {
     background-color: currentColor;
 }
 
-/* Company settings: presentation-only treatment of the existing settings form. */
-.company-settings-v2, .company-settings-v2 * { font-family:'Poppins',sans-serif; box-sizing:border-box; }
-.company-settings-v2 { color:#152554; font-size:12px; padding:2px 0 0; }
-.company-settings-v2 .csv2-heading { margin:0 0 16px; }
-.company-settings-v2 .csv2-heading h2 { margin:0; color:#101e4e; font-size:16px; font-weight:600; line-height:1.25; }
-.company-settings-v2 .csv2-heading p { margin:5px 0 0; color:#51628e; font-size:11px; }
-.company-settings-v2 .card { box-shadow:none !important; background:transparent !important; border:0 !important; border-radius:0 !important; margin:0 !important; }
-.company-settings-v2 > .card { background:#fff !important; border:1px solid #e7ebf4 !important; border-radius:10px !important; box-shadow:0 2px 10px rgba(16,30,78,.035) !important; overflow:hidden; }
-.company-settings-v2 .card-header { min-height:0; padding:20px 20px 8px !important; border:0 !important; }
-.company-settings-v2 .card-title h3 { color:#142453; font-size:13px !important; font-weight:600 !important; }
-.company-settings-v2 .csv2-section-sub { margin:3px 0 0; color:#5d6d97; font-size:11px; line-height:1.4; }
-.company-settings-v2 > .card > .card-body { display:block !important; height:auto !important; }
-.company-settings-v2 .settings-section-content { display:block !important; height:auto !important; visibility:visible !important; opacity:1 !important; }
-.company-settings-v2 #setting_one > .card-body { border:0 !important; padding:12px 20px 20px !important; }
-.company-settings-v2 #setting_one > .card-body { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:14px; }
-.company-settings-v2 #setting_one .row { display:block; margin:0 !important; min-width:0; border:1px solid #e7ebf4; border-radius:8px; background:#fff; padding:13px 14px; min-height:84px; }
-.company-settings-v2 #setting_one .row > label, .company-settings-v2 #setting_one .row > .fv-row { width:100%; max-width:100%; padding:0; }
-.company-settings-v2 #setting_one .row > label { color:#17295b; font-size:11px !important; font-weight:600 !important; margin:0 0 8px; display:flex; align-items:center; gap:8px; }
-.company-settings-v2 #setting_one .row > label::before { content:attr(data-setting-icon); width:30px; height:30px; display:inline-flex; align-items:center; justify-content:center; border-radius:8px; font-size:18px; background:#eff5ff; }
-.company-settings-v2 #setting_one .row:nth-of-type(2) label::before { background:#f5efff; }
-.company-settings-v2 #setting_one .row:nth-of-type(3) label::before { background:#ecfbf1; }
-.company-settings-v2 #setting_one .row:nth-of-type(4) label::before { background:#fff4ea; }
-.company-settings-v2 #setting_one .form-select { min-height:25px; padding:2px 22px 2px 0 !important; border:0 !important; background-color:transparent !important; color:#52628d; font-size:11px; box-shadow:none !important; }
-.company-settings-v2 #setting_one .form-text { display:none; }
-.company-settings-v2 .settings-email-notifications { display:none; }
-.company-settings-v2 #application_duplicate_settings { display:block !important; }
-.company-settings-v2 #application_duplicate_settings > .card-body { border-top:1px solid #edf0f6 !important; padding:14px 20px 20px !important; }
-.company-settings-v2 #application_duplicate_settings .row { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:14px; margin:0; }
-.company-settings-v2 #application_duplicate_settings .col-lg-4 { width:auto; max-width:none; padding:0; }
-.company-settings-v2 #application_duplicate_settings label.option { display:block; height:130px; margin:0; padding:15px; border:1px solid #e4e9f3; border-radius:8px; background:#fff; cursor:pointer; }
-.company-settings-v2 #application_duplicate_settings label.option:has(input:checked) { border-color:#1764ff; box-shadow:0 0 0 1px #1764ff inset; }
-.company-settings-v2 #application_duplicate_settings .option-control { float:left; margin:2px 12px 0 0; }
-.company-settings-v2 #application_duplicate_settings .option-title { color:#162858; font-size:11px !important; font-weight:600 !important; }
-.company-settings-v2 #application_duplicate_settings .option-head { display:block; min-height:33px; }
-.company-settings-v2 #application_duplicate_settings .option-body { color:#51628e; font-size:10px; line-height:1.45; }
-.company-settings-v2 #application_duplicate_settings input[type=number] { width:74px !important; height:31px; float:right; border:1px solid #e1e7f1; border-radius:6px !important; padding:4px 8px; color:#17295b; font-size:11px; }
-.company-settings-v2 .dept_content { border-top:1px solid #edf0f6 !important; padding:6px 20px 20px !important; }
-.company-settings-v2 .dept_content .form-group { margin:0 !important; }
-.company-settings-v2 .dept_content .row { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:11px; margin:0 0 11px; }
-.company-settings-v2 .dept_content .col-lg-4 { width:auto; max-width:none; padding:0; }
-.company-settings-v2 .dept_content .badge { width:100%; min-height:44px; background:#fff !important; border:1px solid #e7ebf4; border-radius:7px; color:#3e517e; font-weight:400; padding:8px 10px !important; }
-.company-settings-v2 .dept_content .badge .fs-4 { font-size:11px !important; }
-.company-settings-v2 .dept_content .svg-icon svg { width:15px; height:15px; }
-.company-settings-v2 .settings-department-card .card-header { padding-top:18px !important; }
-.company-settings-v2 .settings-department-card .btn-primary { background:#1764ef; border-color:#1764ef; font-size:11px; font-weight:600; padding:8px 13px; border-radius:5px; }
-.company-settings-v2 .settings-general-card,
-.company-settings-v2 .settings-duplicate-card,
-.company-settings-v2 .settings-department-card { display:block !important; height:auto !important; min-height:0 !important; border-bottom:1px solid #edf0f6 !important; }
-.company-settings-v2 .settings-department-card { border-bottom:0 !important; }
-.company-settings-v2 .settings-general-card,
-.company-settings-v2 .settings-duplicate-card,
-.company-settings-v2 .settings-department-card { flex:none !important; position:relative !important; }
-.company-settings-v2 .card-footer { margin:14px 20px 12px; padding:13px 16px !important; border:1px solid #edf0f6; border-radius:7px; background:#fbfcff !important; justify-content:flex-end !important; }
-.company-settings-v2 .card-footer::before { content:'✓  All changes saved automatically'; margin-right:auto; color:#4c618d; font-size:11px; }
-.company-settings-v2 .card-footer .btn { font-size:11px; font-weight:600; min-width:132px; }
-.company-settings-v2 .card-footer .btn-primary { background:#1457e8; border-color:#1457e8; }
-@media (max-width:1199px){ .company-settings-v2 #setting_one > .card-body{grid-template-columns:repeat(2,minmax(0,1fr));} .company-settings-v2 .dept_content .row{grid-template-columns:repeat(3,minmax(0,1fr));} }
-@media (max-width:767px){ .company-settings-v2 #setting_one > .card-body,.company-settings-v2 #application_duplicate_settings .row{grid-template-columns:1fr;} .company-settings-v2 .dept_content .row{grid-template-columns:repeat(2,minmax(0,1fr));} }
+/* Company settings: visual-only enterprise card system; existing form contracts stay intact. */
+.company-settings-v2,.company-settings-v2 *{font-family:'Poppins',-apple-system,BlinkMacSystemFont,sans-serif;box-sizing:border-box}
+.company-settings-v2{color:#101e4e;font-size:12px;padding:0 0 2px}
+.company-settings-v2 .csv2-heading{margin:0 0 18px}
+.company-settings-v2 .csv2-heading h2{margin:0;color:#0e1b4d;font-size:16px;font-weight:600;line-height:1.3}
+.company-settings-v2 .csv2-heading p,.company-settings-v2 .csv2-section-sub{margin:4px 0 0;color:#60709a;font-size:11px;font-weight:400;line-height:1.45}
+.company-settings-v2>.card{overflow:hidden;background:#fff!important;border:1px solid #e3e8f2!important;border-radius:10px!important;box-shadow:0 2px 10px rgba(16,30,78,.04)!important}
+.company-settings-v2 .card{display:block!important;height:auto!important;min-height:0!important;margin:0!important;background:transparent!important;border:0!important;border-radius:0!important;box-shadow:none!important;position:relative!important;flex:none!important}
+.company-settings-v2 .settings-general-card,.company-settings-v2 .settings-duplicate-card{border-bottom:1px solid #edf0f6!important}
+.company-settings-v2 .card-header{min-height:0!important;padding:20px 20px 9px!important;border:0!important;background:#fff!important}
+.company-settings-v2 .card-title h3{margin:0;color:#101e4e;font-size:13px!important;font-weight:600!important}
+.company-settings-v2 .settings-section-content,.company-settings-v2>.card>.card-body{display:block!important;height:auto!important;visibility:visible!important;opacity:1!important}
+.company-settings-v2 #setting_one>.card-body{display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;padding:12px 20px 22px!important;border:0!important}
+.company-settings-v2 #setting_one .row{display:grid!important;grid-template-columns:48px minmax(0,1fr);grid-template-rows:auto auto;column-gap:12px;align-items:center;min-width:0;min-height:82px;margin:0!important;padding:12px!important;background:#fff;border:1px solid #e2e7f0;border-radius:8px;transition:border-color .15s,box-shadow .15s}
+.company-settings-v2 #setting_one .row:hover,.company-settings-v2 #setting_one .row:focus-within{border-color:#b8c8ed;box-shadow:0 3px 12px rgba(25,68,150,.07)}
+.company-settings-v2 #setting_one .row.d-none{display:none!important}
+.company-settings-v2 #setting_one .row>label{grid-column:2;grid-row:1;width:auto;max-width:none;margin:0!important;padding:0;color:#13224f;font-size:11px!important;font-weight:600!important;line-height:1.35}
+.company-settings-v2 #setting_one .row>.fv-row{grid-column:2;grid-row:2;width:auto;max-width:none;min-width:0;padding:0}
+.company-settings-v2 .csv2-field-icon{grid-column:1;grid-row:1/3;display:flex;width:42px;height:42px;align-items:center;justify-content:center;border-radius:10px}
+.company-settings-v2 .csv2-field-icon svg{width:23px;height:23px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.company-settings-v2 .csv2-blue{color:#1764ef;background:#edf4ff}.company-settings-v2 .csv2-purple{color:#7638eb;background:#f3edff}.company-settings-v2 .csv2-green{color:#159957;background:#ebf9f0}.company-settings-v2 .csv2-orange{color:#f46a22;background:#fff1e8}
+.company-settings-v2 #setting_one .form-select{width:100%;min-height:28px;padding:2px 27px 2px 0!important;color:#52638e;font-size:11px;font-weight:400;border:0!important;border-radius:0!important;background-color:transparent!important;box-shadow:none!important;cursor:pointer;text-overflow:ellipsis}
+.company-settings-v2 #setting_one .form-select:focus{color:#172a58;outline:0}
+.company-settings-v2 #setting_one .form-text{display:none}
+.company-settings-v2 .settings-email-notifications{display:none!important}
+.company-settings-v2 #application_duplicate_settings>.card-body{padding:12px 20px 22px!important;border:0!important}
+.company-settings-v2 #application_duplicate_settings .row{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin:0!important}
+.company-settings-v2 #application_duplicate_settings .col-lg-4{width:auto;max-width:none;padding:0}
+.company-settings-v2 #application_duplicate_settings label.option{display:grid!important;grid-template-columns:26px minmax(0,1fr);height:130px;margin:0;padding:15px;background:#fff;border:1px solid #e1e6ef;border-radius:8px;cursor:pointer;transition:border-color .15s,box-shadow .15s}
+.company-settings-v2 #application_duplicate_settings label.option:hover{border-color:#b8c8ed}
+.company-settings-v2 #application_duplicate_settings label.option:has(input:checked){border-color:#1764ff;box-shadow:0 0 0 1px #1764ff inset}
+.company-settings-v2 #application_duplicate_settings .option-control{grid-column:1;margin:1px 0 0}
+.company-settings-v2 #application_duplicate_settings .option-label{grid-column:2;min-width:0}
+.company-settings-v2 #application_duplicate_settings .option-head{display:flex!important;align-items:flex-start;justify-content:space-between;gap:8px;min-height:34px}
+.company-settings-v2 #application_duplicate_settings .option-title{color:#142453;font-size:11px!important;font-weight:600!important;line-height:1.4}
+.company-settings-v2 #application_duplicate_settings .option-body{display:block;color:#56678f;font-size:10px;font-weight:400;line-height:1.5}
+.company-settings-v2 #application_duplicate_settings input[type=radio]{width:17px;height:17px;margin:0;accent-color:#1764ff}
+.company-settings-v2 .csv2-days-row{display:flex;align-items:center;gap:10px;margin-top:15px;color:#56678f;font-size:10px}
+.company-settings-v2 #application_duplicate_settings input[type=number]{width:74px!important;height:32px;flex:0 0 74px;margin:0;padding:5px 9px;color:#172957;font-size:11px;font-weight:600;background:#fff;border:1px solid #dfe5ef;border-radius:6px!important;outline:0}
+.company-settings-v2 #application_duplicate_settings input[type=number]:focus{border-color:#1764ff;box-shadow:0 0 0 3px rgba(23,100,255,.09)}
+.company-settings-v2 .settings-department-card .card-header{display:flex;align-items:center;justify-content:space-between;padding-top:20px!important}
+.company-settings-v2 .settings-department-card .card-header>.card-title:last-child{margin-left:auto!important}
+.company-settings-v2 .settings-department-card .btn-primary{display:inline-flex;align-items:center;gap:6px;padding:8px 14px;color:#fff;font-size:11px;font-weight:500;background:#1457e8;border:1px solid #1457e8;border-radius:5px;box-shadow:0 3px 8px rgba(20,87,232,.16)}
+.company-settings-v2 .settings-department-card .btn-primary::before{content:'+';font-size:14px;line-height:1}
+.company-settings-v2 .dept_content{display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr));gap:11px;padding:10px 20px 22px!important;border:0!important}
+.company-settings-v2 .dept_content .form-group,.company-settings-v2 .dept_content .row{display:contents!important}
+.company-settings-v2 .dept_content .form-check,.company-settings-v2 .dept_content .form-text{display:none!important}
+.company-settings-v2 .dept_content .col-lg-4{width:auto;max-width:none;padding:0}
+.company-settings-v2 .dept_content .badge{position:relative;width:100%;min-height:44px;padding:8px 34px 8px 55px!important;color:#40517b;font-weight:400;background:#fff!important;border:1px solid #e3e8f1;border-radius:7px;overflow:hidden}
+.company-settings-v2 .dept_content .badge::before{content:'';position:absolute;left:12px;top:9px;width:26px;height:26px;border-radius:6px;background:#edf4ff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%231764ef' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2'/%3E%3Ccircle cx='9' cy='7' r='4'/%3E%3Cpath d='M22 21v-2a4 4 0 0 0-3-3.87'/%3E%3C/svg%3E") center/14px no-repeat}
+.company-settings-v2 .dept_content .col-lg-4:nth-of-type(4n+2) .badge::before{background-color:#f3edff;filter:hue-rotate(35deg)}
+.company-settings-v2 .dept_content .col-lg-4:nth-of-type(4n+3) .badge::before{background-color:#ebf9f0;filter:hue-rotate(105deg)}
+.company-settings-v2 .dept_content .col-lg-4:nth-of-type(4n+4) .badge::before{background-color:#fff1e8;filter:hue-rotate(185deg)}
+.company-settings-v2 .dept_content .badge .fs-4{width:100%;font-size:11px!important;font-weight:400!important;text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.company-settings-v2 .dept_content .edit_delete{position:absolute;right:10px;top:50%;transform:translateY(-50%)}
+.company-settings-v2 .dept_content .dept_delete{display:flex;width:24px;height:24px;align-items:center;justify-content:center;color:#64759b!important}
+.company-settings-v2 .dept_content .dept_delete:hover{color:#e11d48!important}
+.company-settings-v2 .dept_content .dept_delete .svg-icon{display:none!important}
+.company-settings-v2 .dept_content .dept_delete::before{content:'×';font-size:17px;font-weight:400;line-height:1}
+.csv2-tab-icon{display:inline-flex;width:16px;height:16px;margin-right:6px;vertical-align:-3px;color:#1764ef}
+.csv2-tab-icon svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.company-settings-v2 .card-footer{display:flex!important;align-items:center;margin:0 12px 12px;padding:13px 16px!important;background:#fbfcff!important;border:1px solid #edf0f6!important;border-radius:7px;justify-content:flex-end!important}
+.company-settings-v2 .card-footer::before{content:'All changes saved automatically';margin-right:auto;padding-left:28px;color:#4c618d;font-size:11px;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='%2316a75c' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='9'/%3E%3Cpath d='m8 12 3 3 5-6'/%3E%3C/svg%3E") left center/18px no-repeat}
+.company-settings-v2 .card-footer .btn{min-width:130px;padding:9px 14px;font-size:11px;font-weight:500;border-radius:5px}
+.company-settings-v2 .card-footer .btn-primary{color:#fff;background:#1457e8;border-color:#1457e8}
+@media(max-width:1199px){.company-settings-v2 #setting_one>.card-body{grid-template-columns:repeat(2,minmax(0,1fr))}.company-settings-v2 .dept_content{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:767px){.company-settings-v2 #setting_one>.card-body,.company-settings-v2 #application_duplicate_settings .row{grid-template-columns:1fr}.company-settings-v2 .dept_content{grid-template-columns:repeat(2,minmax(0,1fr))}.company-settings-v2 .card-footer{flex-wrap:wrap;gap:8px}.company-settings-v2 .card-footer::before{width:100%;margin-bottom:4px}}
 
 /* ===== Company Dashboard redesign (scoped .cad) — Poppins, <=14px, Metronic-friendly ===== */
 .cad, .cad * { font-family:'Poppins',-apple-system,BlinkMacSystemFont,sans-serif; box-sizing:border-box; }
@@ -711,7 +720,7 @@ input[type="radio"]:checked {
     <ul class="nav nav-tabs nav-tabs-space-lg nav-tabs-line nav-tabs-bold nav-tabs-line-3x" role="tablist">
       <li class="nav-item me-3"> <a class="nav-link {{$overview_tab}}" data-toggle="tab" href="#overview"> <span class="nav-text font-weight-bold">Overview</span> </a> </li>
       <li class="nav-item me-3"> <a class="nav-link" data-toggle="tab" href="#interview_stage"> <span class="nav-text font-weight-bold">Interview Stage</span> </a> </li>
-      <li class="nav-item me-3"> <a class="nav-link" data-toggle="tab" href="#settings"> <span class="nav-text font-weight-bold">Settings</span> </a> </li>
+      <li class="nav-item me-3"> <a class="nav-link" data-toggle="tab" href="#settings"> <span class="nav-text font-weight-bold"><span class="csv2-tab-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1-2.8 2.8-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.6v.1h-4V21a1.7 1.7 0 0 0-1-1.6 1.7 1.7 0 0 0-1.9.3l-.1.1L4.2 17l.1-.1a1.7 1.7 0 0 0 .3-1.9A1.7 1.7 0 0 0 3 14H3v-4h.1a1.7 1.7 0 0 0 1.6-1 1.7 1.7 0 0 0-.3-1.9L4.2 7 7 4.2l.1.1a1.7 1.7 0 0 0 1.9.3 1.7 1.7 0 0 0 1-1.6V3h4v.1a1.7 1.7 0 0 0 1 1.6 1.7 1.7 0 0 0 1.9-.3l.1-.1L19.8 7l-.1.1a1.7 1.7 0 0 0-.3 1.9 1.7 1.7 0 0 0 1.6 1h.1v4H21a1.7 1.7 0 0 0-1.6 1Z"/></svg></span>General</span> </a> </li>
 
       <li class="nav-item me-3"> <a class="nav-link" data-toggle="tab" href="#offerterms">
           <span class="nav-text font-weight-bold">Terms & Conditions</span>
@@ -2061,7 +2070,8 @@ input[type="radio"]:checked {
         <div id="setting_one" class="settings-section-content">
           <div class="card-body border-top py-8 px-2">
             <div class="row mb-6">
-              <label data-setting-icon="◎" class="col-lg-3 col-form-label required fw-bold fs-6">Language</label>
+              <span class="csv2-field-icon csv2-blue" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a15 15 0 0 1 0 18M12 3a15 15 0 0 0 0 18"/></svg></span>
+              <label class="col-lg-3 col-form-label required fw-bold fs-6">Language</label>
               <div class="col-lg-9 fv-row">
                 <select name="language" id="language" aria-label="Select a Language" data-placeholder="Select a language..." class="form-select form-select-solid" tabindex="-1" aria-hidden="true">
                   <option value=""  >Select a Language...</option>
@@ -2085,7 +2095,8 @@ input[type="radio"]:checked {
             </div>
             
             <div class="row mb-6">
-              <label data-setting-icon="◷" class="col-lg-3 col-form-label required fw-bold fs-6">Time Zone</label>
+              <span class="csv2-field-icon csv2-purple" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></span>
+              <label class="col-lg-3 col-form-label required fw-bold fs-6">Time Zone</label>
               <div class="col-lg-9 fv-row">
                 <select name="timezone" id="timezone" aria-label="Select a Time Zone" data-placeholder="Select a time zone..." class="form-select form-select-solid" tabindex="-1" aria-hidden="true">
                   <option value="" >Select a timezone...</option>
@@ -2129,7 +2140,8 @@ input[type="radio"]:checked {
               </div>
             </div>
             <div class="row mb-6">
-              <label data-setting-icon="₹" class="col-lg-3 col-form-label fw-bold fs-6">Currency</label>
+              <span class="csv2-field-icon csv2-green" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M7 6h10M7 10h10M9 6c5 0 5 7 0 7h-2l8 6"/></svg></span>
+              <label class="col-lg-3 col-form-label fw-bold fs-6">Currency</label>
               <div class="col-lg-9 fv-row">
                 <select name="currency" id="currency" aria-label="Select a Currency" data-placeholder="Select a currency..." class="form-select form-select-solid" tabindex="-1" aria-hidden="true">
                   <option value="" >Select a currency...</option>
@@ -2197,7 +2209,8 @@ input[type="radio"]:checked {
 
            
             <div class="row mb-6">
-              <label data-setting-icon="◴" class="col-lg-3 col-form-label fw-bold fs-6">Time Format</label>
+              <span class="csv2-field-icon csv2-orange" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M8 3v4M16 3v4M4 9h16M9 14l2 2 4-4"/></svg></span>
+              <label class="col-lg-3 col-form-label fw-bold fs-6">Time Format</label>
               <div class="col-lg-9 fv-row">
                 <select name="time_format" id="time_format" aria-label="Select a time format" data-placeholder="Select a time format..." class="form-select form-select-solid" tabindex="-1" aria-hidden="true">
                   <option value="" >Select a time format...</option>
@@ -2407,21 +2420,23 @@ input[type="radio"]:checked {
             <div class="col-lg-4">
               <label class="option"> <span class="option-control"> <span class="radio radio-outline">
               <input type="radio" name="app_duplicate" value="2" @php if($account->app_duplicate == 2){ echo 'checked="checked"'; } @endphp  >
-              <span></span> </span> </span> <span class="option-label"> <span class="option-head"> <span class="option-title fs-4 fw-bolder">Overrall System</span>
-              <input type="number" name="app_duplicate_overroll" id="app_duplicate_overroll" value="{{ @$app_duplicate_overroll_val }}" placeholder="Enter Days" class="w-33 rounded input_style">
-              </span> <span class="option-body">In the overall system, any candidate added to the same or a different job within a specified number of days will be considered a duplicate, and the candidate's status will be marked in red. Duplicate candidates will be detected based on the same phone number and email address only.</span> </span> </label>
+              <span></span> </span> </span> <span class="option-label"> <span class="option-head"> <span class="option-title fs-4 fw-bolder">Global Duplicate Detection</span></span>
+              <span class="option-body">Detect duplicates across all jobs in the system.</span>
+              <span class="csv2-days-row"><span>Check duplicates within</span><input type="number" name="app_duplicate_overroll" id="app_duplicate_overroll" value="{{ @$app_duplicate_overroll_val }}" placeholder="60" class="w-33 rounded input_style"><span>days</span></span>
+              </span> </label>
             </div>
             <div class="col-lg-4">
               <label class="option"> <span class="option-control"> <span class="radio radio-outline">
               <input type="radio" name="app_duplicate" value="1" @php if($account->app_duplicate == 1){ echo 'checked="checked"'; } @endphp  >
-              <span></span> </span> </span> <span class="option-label"> <span class="option-head"> <span class="option-title fs-4 fw-bolder">Job wise</span>
-              <input type="number" name="app_duplicate_requisition_wise" value="{{ @$app_duplicate_requisition_wise_val }}" placeholder="Enter Days" class="w-33 rounded input_style">
-              </span> <span class="option-body">Any candidate added to the same job with the same job ID within a specified number of days will be considered a duplicate, and the candidate's status will be marked in red. Duplicate candidates will be detected based on the same phone number and email address only.</span> <br></span> </label>
+              <span></span> </span> </span> <span class="option-label"> <span class="option-head"> <span class="option-title fs-4 fw-bolder">Job-wise Duplicate Detection</span></span>
+              <span class="option-body">Detect duplicates only within the same job.</span>
+              <span class="csv2-days-row"><span>Check duplicates within</span><input type="number" name="app_duplicate_requisition_wise" value="{{ @$app_duplicate_requisition_wise_val }}" placeholder="60" class="w-33 rounded input_style"><span>days</span></span>
+              </span> </label>
             </div>
             <div class="col-lg-4">
               <label class="option"> <span class="option-control"> <span class="radio radio-outline">
               <input type="radio" name="app_duplicate" value="0" @php if($account->app_duplicate == 0){ echo 'checked="checked"'; } @endphp  >
-              <span></span> </span> </span> <span class="option-label"> <span class="option-head"> <span class="option-title fs-4 fw-bolder">None</span> </span> <span class="option-body">Duplicates candidates will not be detected by the system based on the same phone number and email address.</span><br><br><br> </span> </label>
+              <span></span> </span> </span> <span class="option-label"> <span class="option-head"> <span class="option-title fs-4 fw-bolder">Duplicate Detection Disabled</span> </span> <span class="option-body">Do not detect any duplicate candidates.</span></span> </label>
             </div>
           </div>
           <div class="form-check"></div>
