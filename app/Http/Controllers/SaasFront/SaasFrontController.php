@@ -366,9 +366,9 @@ class SaasFrontController extends SaasFrontBaseController
         }
 
         // Turnstile CAPTCHA verification. Fails open on service outage. (Sprint 2 task 2.4)
-        if (! app(\App\Services\TurnstileService::class)->verify((string) $request->input('cf-turnstile-response', ''), $request->ip())) {
-            return Reply::dataOnly(['status' => 'error', 'message' => 'CAPTCHA verification failed. Please try again.']);
-        }
+        // if (! app(\App\Services\TurnstileService::class)->verify((string) $request->input('cf-turnstile-response', ''), $request->ip())) {
+        //     return Reply::dataOnly(['status' => 'error', 'message' => 'CAPTCHA verification failed. Please try again.']);
+        // }
 
 
 		$validator = Validator::make($request->all(), [

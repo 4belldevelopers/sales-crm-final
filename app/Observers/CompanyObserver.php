@@ -42,11 +42,10 @@ class CompanyObserver
             $roleUser->company_id = $company->id;
             $roleUser->save();
 
+            // Spatie equivalent of the legacy entrust attachPermission() loop.
+            // syncPermissions() attaches all permissions in a single bulk operation.
             $permissions = Permission::all();
-            foreach ($permissions as $permission) {
-                $create = Permission::find($permission->id);
-                $roleUser->attachPermission($create);
-            }
+            $roleUser->syncPermissions($permissions);
 
             //add company default job application status
             $data = [
