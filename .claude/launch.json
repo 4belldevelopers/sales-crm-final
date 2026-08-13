@@ -33,6 +33,12 @@
       "runtimeExecutable": "php",
       "runtimeArgs": ["-S", "127.0.0.1:8910", "-t", "C:/Users/VIBHANSHU JAISWAL.000/AppData/Local/Temp/claude/C--Users-VIBHANSHU-JAISWAL-000-Documents-GitHub-JWMaincode28June2026/pdf-repro"],
       "port": 8910
+    },
+    {
+      "name": "jero-register-preview",
+      "runtimeExecutable": "php",
+      "runtimeArgs": ["-S", "127.0.0.1:8921", "-t", "C:/Users/VIBHANSHU JAISWAL.000/AppData/Local/Temp/claude/register-preview"],
+      "port": 8921
     }
   ]
 }

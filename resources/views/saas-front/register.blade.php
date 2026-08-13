@@ -71,16 +71,15 @@ body, html {
 
 /* Left Column */
 .v2-left-col {
-  width: 320px;
+  width: 300px;
   flex-shrink: 0;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 18px;
   position: sticky;
   top: 0;
   align-self: flex-start;
-  max-height: 100vh;
-  overflow-y: auto;
+  overflow-y: visible;
 }
 
 .v2-logo {
@@ -88,186 +87,216 @@ body, html {
   align-items: center;
   gap: 10px;
   text-decoration: none;
-  margin-bottom: 8px;
+  margin-bottom: 5px;
+}
+.v2-logo-compact {
+  margin-bottom: 6px;
+  gap: 8px;
+}
+.v2-logo-compact .v2-logo-text {
+  font-size: 17px;
+  font-weight: 600;
 }
 .v2-logo-text {
   font-size: 24px;
-  font-weight: 800;
+  font-weight: 600;
   color: var(--v2-dk);
   letter-spacing: -0.5px;
   line-height: 1;
 }
 .v2-logo-sub {
   font-size: 11.5px;
-  font-weight: 600;
+  font-weight: 500;
   color: var(--v2-gr);
   margin-top: 4px;
   display: block;
 }
 
-.v2-aside-hero h2 {
-  font-size: 22px;
-  font-weight: 800;
-  color: var(--v2-dk);
-  margin: 0 0 6px;
-  letter-spacing: -0.4px;
-}
-.v2-aside-hero p {
-  font-size: 13px;
-  color: var(--v2-gr);
-  margin: 0;
-  line-height: 1.5;
-}
-
-/* Progress Card */
-.v2-prog-card {
-  background: #ffffff;
-  border-radius: 14px;
-  padding: 16px;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.03);
-  border: 1px solid #edf0f4;
-}
-.v2-prog-head {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  font-size: 12px;
-  font-weight: 600;
-}
-.v2-prog-bg {
-  width: 100%;
-  height: 7px;
-  background: #f1f5f9;
-  border-radius: 999px;
-  margin: 10px 0;
-  overflow: hidden;
-}
-.v2-prog-fill {
-  height: 100%;
-  background: linear-gradient(90deg, #1d61f2, #3b82f6);
-  border-radius: 999px;
-  transition: width 0.3s ease;
-}
-
-/* Stepper Card */
+/* Stepper Card — Timeline style */
 .v2-stepper-card {
   background: #ffffff;
   border-radius: 14px;
-  padding: 12px;
+  padding: 18px 16px;
   box-shadow: 0 1px 3px rgba(0,0,0,0.03);
   border: 1px solid #edf0f4;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 0;
 }
 
 .v2-step-item {
+  position: relative;
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 10px 12px;
-  border-radius: 12px;
-  border: 1px solid transparent;
+  gap: 14px;
+  padding: 10px 6px;
+  border-radius: 10px;
   transition: all 0.2s ease;
   text-decoration: none !important;
 }
-.v2-step-item.current {
-  background: var(--v2-pl);
-  border-color: var(--v2-pb);
+/* vertical connector line — drawn behind the badge, anchored to badge center */
+.v2-step-item:not(:last-child)::before {
+  content: "";
+  position: absolute;
+  left: 16px;
+  top: 36px;
+  bottom: -10px;
+  width: 2px;
+  background: #e2e8f0;
+  z-index: 0;
 }
+.v2-step-item.current:not(:last-child)::before,
+.v2-step-item.completed:not(:last-child)::before {
+  background: #1d61f2;
+}
+
+.v2-step-item.current {
+  /* background removed per request */
+  border-radius: 10px;
+}
+
+.v2-step-badge-wrap {
+  position: relative;
+  z-index: 1;
+  flex-shrink: 0;
+}
+
 .v2-step-badge {
-  width: 30px;
-  height: 30px;
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
-  background: #f1f5f9;
-  border: 1.5px solid var(--v2-bd);
-  color: var(--v2-gr);
+  background: #ffffff;
+  border: 2px solid #cbd5e1;
+  color: #94a3b8;
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 12.5px;
-  font-weight: 700;
-  flex-shrink: 0;
+  font-weight: 600;
   transition: all 0.2s ease;
 }
 .v2-step-item.current .v2-step-badge {
-  background: var(--v2-p);
-  border-color: var(--v2-p);
+  background: #1d61f2;
+  border-color: #1d61f2;
   color: #ffffff;
+  box-shadow: 0 0 0 4px rgba(29, 97, 242, 0.15);
 }
 .v2-step-item.completed .v2-step-badge {
-  background: #16a34a;
-  border-color: #16a34a;
+  background: #1d61f2;
+  border-color: #1d61f2;
   color: #ffffff;
+}
+.v2-step-item.current .v2-step-badge-check,
+.v2-step-item.completed .v2-step-badge-check { display: inline-flex; }
+.v2-step-item.current .v2-step-badge-num,
+.v2-step-item.completed .v2-step-badge-num { display: none; }
+.v2-step-badge-check { display: none; }
+.v2-step-badge-num { display: inline; }
+
+.v2-step-text {
+  padding-top: 0;
+  min-width: 0;
 }
 .v2-step-title {
   font-size: 13px;
-  font-weight: 700;
-  color: var(--v2-dk);
+  font-weight: 600;
+  color: #94a3b8;
   line-height: 1.2;
 }
-.v2-step-item.current .v2-step-title { color: var(--v2-p); }
+.v2-step-item.current .v2-step-title {
+  color: #0f172a;
+  font-weight: 600;
+}
+.v2-step-item.completed .v2-step-title {
+  color: #0f172a;
+}
 .v2-step-sub {
-  font-size: 11px;
-  color: var(--v2-gr);
-  margin-top: 2px;
+  font-size: 11.5px;
+  color: #94a3b8;
+  margin-top: 3px;
+  line-height: 1.3;
+}
+.v2-step-item.current .v2-step-sub {
+  color: #64748b;
+}
+.v2-step-item.completed .v2-step-sub {
+  color: #64748b;
 }
 
-/* Value Props Card */
-.v2-value-card {
+/* Need Help Card (left sidebar) */
+.v2-help-card {
   background: #ffffff;
-  border-radius: 14px;
-  padding: 16px;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.03);
   border: 1px solid #edf0f4;
+  border-radius: 14px;
+  padding: 16px 16px 8px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.03);
 }
-.v2-value-title {
-  font-size: 12.5px;
-  font-weight: 700;
-  color: var(--v2-dk);
-  margin-bottom: 12px;
-}
-.v2-value-row {
+.v2-help-head {
   display: flex;
-  align-items: flex-start;
-  gap: 10px;
+  align-items: center;
+  gap: 12px;
   margin-bottom: 10px;
 }
-.v2-value-row:last-child { margin-bottom: 0; }
-.v2-value-icon {
-  width: 26px;
-  height: 26px;
-  border-radius: 6px;
+.v2-help-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: #fff7ed;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
 }
-.v2-value-txt strong {
-  display: block;
-  font-size: 11.5px;
-  font-weight: 700;
-  color: var(--v2-dk);
+.v2-help-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: #0f172a;
   line-height: 1.2;
 }
-.v2-value-txt span {
-  font-size: 10.5px;
-  color: var(--v2-gr);
+.v2-help-sub {
+  font-size: 11.5px;
+  color: #94a3b8;
+  margin-top: 2px;
 }
-
-/* Security Box */
-.v2-sec-card {
-  background: #ffffff;
-  border-radius: 14px;
-  padding: 14px 16px;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.03);
-  border: 1px solid #edf0f4;
+.v2-help-rows {
+  display: flex;
+  flex-direction: column;
+  border-top: 1px solid #f1f5f9;
+}
+.v2-help-row {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
+  padding: 10px 2px;
+  border-bottom: 1px solid #f1f5f9;
+  text-decoration: none !important;
+  transition: background 0.15s ease;
+  border-radius: 4px;
 }
-.v2-sec-card strong { display: block; font-size: 12px; font-weight: 700; color: var(--v2-dk); }
-.v2-sec-card span { font-size: 11px; color: var(--v2-gr); }
+.v2-help-row:last-child { border-bottom: none; }
+.v2-help-row:hover { background: #f8fafc; }
+.v2-help-row-ico {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: #eff6ff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.v2-help-row-txt {
+  flex: 1;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #0f172a;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.v2-help-row-arrow {
+  flex-shrink: 0;
+}
 
 /* Right Column */
 .v2-right-col {
@@ -282,7 +311,7 @@ body, html {
   justify-content: flex-end;
   align-items: center;
   gap: 12px;
-  margin-bottom: 20px;
+  margin-bottom: 14px;
   font-size: 13px;
 }
 .v2-topbar span { color: var(--v2-gr); }
@@ -291,7 +320,7 @@ body, html {
   border: 1.5px solid var(--v2-p);
   border-radius: 8px;
   color: var(--v2-p);
-  font-weight: 700;
+  font-weight: 500;
   text-decoration: none !important;
   font-size: 13px;
   transition: all 0.2s ease;
@@ -332,7 +361,7 @@ body, html {
 }
 .v2-hero h1 {
   font-size: 26px;
-  font-weight: 800;
+  font-weight: 600;
   color: var(--v2-dk);
   margin: 0 0 4px;
   letter-spacing: -0.5px;
@@ -348,7 +377,7 @@ body, html {
 .v2-fg > label {
   display: block;
   font-size: 13px;
-  font-weight: 600;
+  font-weight: 500;
   color: var(--v2-dk);
   margin-bottom: 6px;
 }
@@ -401,7 +430,7 @@ body, html {
 /* Step 2 Pixel-Perfect Reference Match Styles */
 .v2-step2-title {
   font-size: 26px;
-  font-weight: 800;
+  font-weight: 500;
   color: #0f172a;
   margin: 0 0 4px;
   letter-spacing: -0.5px;
@@ -412,40 +441,84 @@ body, html {
   margin: 0;
 }
 
+/* Step 2 — Redesigned stacked card layout */
+.v2-step2-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 14px;
+}
+.v2-step2-title {
+  font-size: 20px;
+  font-weight: 600;
+  color: #0f172a;
+  margin: 0 0 4px;
+  line-height: 1.2;
+  letter-spacing: -0.2px;
+}
+.v2-step2-sub {
+  font-size: 12.5px;
+  color: #64748b;
+  margin: 0;
+  line-height: 1.45;
+  max-width: 480px;
+}
+.v2-step2-section-label {
+  display: block;
+  font-size: 13px;
+  font-weight: 500;
+  color: #0f172a;
+  margin-bottom: 10px;
+}
+.v2-step2-section-label .req {
+  color: #ef4444;
+  margin-left: 2px;
+}
+
 .v2-comp-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 20px;
-  margin-bottom: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 12px;
+  align-items: stretch;
+  flex: 0 0 auto;
+}
+.v2-comp-grid > .v2-comp-card {
+  flex: 0 0 auto;
 }
 
 .v2-comp-card {
   background: #ffffff;
   border: 1.5px solid #e2e8f0;
-  border-radius: 16px;
-  padding: 18px;
+  border-radius: 14px;
+  padding: 16px 18px;
+  min-height: 116px;
   cursor: pointer;
   transition: all 0.2s ease;
   position: relative;
   display: flex;
   flex-direction: column;
+  flex: 0 0 auto;
 }
 .v2-comp-card:hover {
   border-color: #cbd5e1;
   box-shadow: 0 6px 20px rgba(0,0,0,0.04);
+  transform: translateY(-1px);
 }
 .v2-comp-card.selected {
   border: 2px solid #1d61f2;
-  background: #ffffff;
-  box-shadow: 0 8px 24px rgba(29,97,242,0.08);
+  background: #f0f6ff;
+  box-shadow: 0 8px 24px rgba(29,97,242,0.12);
+  padding: 15px 17px;
 }
 
 .v2-comp-check {
   position: absolute;
   top: 14px;
   right: 14px;
-  width: 24px;
-  height: 24px;
+  width: 22px;
+  height: 22px;
   border-radius: 50%;
   border: 1.5px solid #cbd5e1;
   display: flex;
@@ -460,168 +533,133 @@ body, html {
   color: #ffffff;
 }
 
-.v2-card-img-wrap {
-  border-radius: 12px;
-  overflow: hidden;
-  margin-bottom: 16px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.v2-card-head {
+.v2-comp-card-inner {
   display: flex;
   align-items: flex-start;
-  gap: 10px;
-  margin-bottom: 8px;
+  gap: 14px;
+  margin-top: 2px;
 }
+.v2-comp-card-body {
+  flex: 0 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
 .v2-type-icon-badge {
-  width: 34px;
-  height: 34px;
-  border-radius: 10px;
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
 }
 .v2-card-title {
-  font-size: 16px;
-  font-weight: 800;
+  font-size: 14.5px;
+  font-weight: 600;
   color: #0f172a;
   line-height: 1.25;
+  letter-spacing: -0.1px;
 }
 .v2-card-desc {
-  font-size: 12.5px;
-  color: #64748b;
-  line-height: 1.45;
-  margin-bottom: 14px;
-}
-
-.v2-card-hr {
-  border: 0;
-  border-top: 1px solid #f1f5f9;
-  margin: 14px 0;
-}
-
-.v2-comp-list {
-  list-style: none;
-  padding: 0;
-  margin: 0 0 18px;
-  display: flex;
-  flex-direction: column;
-  gap: 9px;
-}
-.v2-comp-list li {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  font-size: 12.5px;
-  color: #334155;
-  font-weight: 500;
-}
-.v2-chk-icon {
-  width: 18px;
-  height: 18px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-
-.v2-comp-banner {
-  border-radius: 10px;
-  padding: 10px 12px;
-  font-size: 11.5px;
-  line-height: 1.4;
-  margin-top: auto;
-  display: flex;
-  align-items: flex-start;
-  gap: 8px;
-}
-
-/* Why selection matters container - Redesigned & Responsive */
-.v2-why-box {
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
-  border-radius: 16px;
-  padding: 20px 24px;
-  margin-bottom: 24px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 24px;
-  box-sizing: border-box;
-  width: 100%;
-}
-.v2-why-left {
-  flex-shrink: 0;
-  width: 220px;
-}
-.v2-why-title {
-  display: block;
-  font-size: 14px;
-  font-weight: 800;
-  color: #0f172a;
-  margin: 0 0 4px 0;
-  line-height: 1.3;
-}
-.v2-why-sub {
   font-size: 12px;
   color: #64748b;
-  margin: 0;
   line-height: 1.4;
-  display: block;
+  margin: 2px 0 0;
 }
-.v2-why-items {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 12px 14px;
-  flex: 1;
-  min-width: 0;
-}
-.v2-why-item {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  background: #ffffff;
-  border: 1.5px solid #e2e8f0;
-  border-radius: 12px;
-  padding: 10px 14px;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.02);
-  min-width: 0;
-}
-.v2-why-icon {
-  width: 32px;
-  height: 32px;
-  border-radius: 9px;
+
+.v2-comp-divider {
   display: flex;
   align-items: center;
   justify-content: center;
-  flex-shrink: 0;
+  gap: 6px;
+  margin: 10px 0 10px;
+  height: 6px;
 }
-.v2-why-item-txt {
-  font-size: 12.5px;
-  font-weight: 700;
-  color: #0f172a;
+.v2-comp-divider::before,
+.v2-comp-divider::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: #e2e8f0;
+}
+.v2-comp-divider-dot {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: #cbd5e1;
+}
+
+.v2-comp-examples {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0;
+  margin-top: 0;
+  font-size: 12px;
+  line-height: 1.5;
+}
+.v2-comp-ex-label {
+  font-size: 12px;
+  font-weight: 500;
+  color: #94a3b8;
+  margin-right: 6px;
+}
+.v2-comp-ex-tag {
+  font-size: 12px;
+  font-weight: 500;
+  color: #475569;
+  padding: 0;
   white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+}
+.v2-comp-ex-sep {
+  display: inline-block;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: #cbd5e1;
+  margin: 0 8px;
+  vertical-align: middle;
 }
 
 @media (max-width: 1200px) {
-  .v2-why-box {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 16px;
-  }
-  .v2-why-left {
-    width: 100%;
-  }
-  .v2-why-items {
-    width: 100%;
-    grid-template-columns: repeat(2, 1fr);
-  }
+  .v2-comp-card { padding: 12px 14px; }
+  .v2-comp-card.selected { padding: 11px 13px; }
+  .v2-type-icon-badge { width: 40px; height: 40px; }
+}
+
+@media (max-width: 991px) {
+  .v2-step2-head { flex-direction: column; gap: 10px; }
+}
+
+@media (max-width: 600px) {
+  .v2-step2-title { font-size: 18px; }
+  .v2-comp-card-inner { gap: 10px; }
+  .v2-type-icon-badge { width: 36px; height: 36px; }
+  .v2-card-title { font-size: 13.5px; }
+}
+
+/* obsolete classes from old design — no-op fallbacks to avoid breakage if any stray ref */
+.v2-card-img-wrap { display: none; }
+.v2-card-head { display: none; }
+.v2-card-hr { display: none; }
+.v2-comp-list { display: none; }
+.v2-comp-list li { display: none; }
+.v2-chk-icon { display: none; }
+.v2-comp-banner { display: none; }
+.v2-why-box { display: none; }
+.v2-why-left { display: none; }
+.v2-why-title { display: none; }
+.v2-why-sub { display: none; }
+.v2-why-items { display: none; }
+.v2-why-item { display: none; }
+.v2-why-icon { display: none; }
+.v2-why-item-txt { display: none; }
+
+@media (max-width: 1200px) {
+  /* Removed obsolete .v2-why-* + grid overrides for Step 2 redesign */
 }
 
 /* Step 3 Section Cards - Redesigned Pixel-Perfect */
@@ -657,7 +695,7 @@ body, html {
 }
 .v2-step3-title {
   font-size: 15px;
-  font-weight: 800;
+  font-weight: 600;
   color: #0f172a;
   margin: 0 0 3px 0;
   line-height: 1.2;
@@ -693,7 +731,7 @@ body, html {
   border-right: 1.5px solid #e2e8f0;
   color: #64748b;
   font-size: 13.5px;
-  font-weight: 600;
+  font-weight: 500;
   height: 100%;
   flex-shrink: 0;
 }
@@ -810,30 +848,6 @@ body, html {
   margin-bottom: 4px;
 }
 
-/* Step 3 Safe Box */
-.v2-safe-box {
-  background: #eff6ff;
-  border: 1px solid #dbeafe;
-  border-radius: 12px;
-  padding: 16px 20px;
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  margin-bottom: 24px;
-}
-.v2-safe-icon {
-  width: 38px;
-  height: 38px;
-  border-radius: 10px;
-  background: #ffffff;
-  color: #1d61f2;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-}
-
 /* Step 4 Review Cards */
 .v2-review-grid {
   display: grid;
@@ -860,13 +874,13 @@ body, html {
   align-items: center;
   gap: 10px;
   font-size: 15px;
-  font-weight: 800;
+  font-weight: 500;
   color: #0f172a;
 }
 .v2-review-btn-edit {
   color: #16a34a;
   font-size: 13px;
-  font-weight: 700;
+  font-weight: 500;
   background: none;
   border: none;
   cursor: pointer;
@@ -879,7 +893,7 @@ body, html {
 
 .v2-review-val-title {
   font-size: 18px;
-  font-weight: 800;
+  font-weight: 600;
   color: #0f172a;
   margin-bottom: 4px;
 }
@@ -891,6 +905,7 @@ body, html {
 .v2-review-meta {
   display: flex;
   align-items: center;
+  flex-wrap: nowrap;
   gap: 20px;
   font-size: 13px;
   color: #334155;
@@ -901,6 +916,14 @@ body, html {
   display: flex;
   align-items: center;
   gap: 8px;
+  min-width: 0;
+  flex: 1 1 auto;
+}
+.v2-review-meta-item > span {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
 }
 
 /* Step 4 Workspace Includes Container */
@@ -913,7 +936,7 @@ body, html {
 }
 .v2-inc-title {
   font-size: 15px;
-  font-weight: 800;
+  font-weight: 500;
   color: #0f172a;
   margin-bottom: 18px;
 }
@@ -939,7 +962,7 @@ body, html {
 .v2-inc-txt strong {
   display: block;
   font-size: 13px;
-  font-weight: 800;
+  font-weight: 500;
   color: #0f172a;
   line-height: 1.2;
 }
@@ -958,7 +981,7 @@ body, html {
 }
 .v2-confirm-box .form-check-label {
   font-size: 13.5px;
-  font-weight: 700;
+  font-weight: 500;
   color: #0f172a;
 }
 .v2-confirm-sub {
@@ -1006,7 +1029,7 @@ body, html {
   background: var(--v2-p);
   color: #ffffff !important;
   font-size: 14px;
-  font-weight: 700;
+  font-weight: 500;
   font-family: 'Poppins', sans-serif;
   border: none;
   border-radius: 10px;
@@ -1054,7 +1077,7 @@ body, html {
   background: #ffffff;
   color: #334155;
   font-size: 13px;
-  font-weight: 600;
+  font-weight: 500;
   font-family: 'Poppins', sans-serif;
   border: 1.5px solid var(--v2-bd);
   border-radius: 9px;
@@ -1077,7 +1100,7 @@ body, html {
   background: #eff6ff;
   color: #1d61f2;
   font-size: 13.5px;
-  font-weight: 700;
+  font-weight: 500;
   font-family: 'Poppins', sans-serif;
   border: none;
   border-radius: 10px;
@@ -1129,131 +1152,104 @@ body, html {
   <!-- ═══════════ LEFT COLUMN ═══════════ -->
   <div class="v2-left-col">
     <!-- Logo -->
-    <a href="https://jero.works/" class="v2-logo">
-      <svg width="36" height="36" viewBox="0 0 40 44" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <a href="https://jero.works/" class="v2-logo v2-logo-compact">
+      <svg width="28" height="28" viewBox="0 0 40 44" fill="none" xmlns="http://www.w3.org/2000/svg">
         <path d="M20 2C9.5 2 1 10.5 1 21H39C39 10.5 30.5 2 20 2Z" fill="#111827"/>
         <path d="M1 21C1 21 7.5 17.5 20 21" stroke="rgba(255,255,255,0.35)" stroke-width="1.2"/>
         <path d="M39 21C39 21 32.5 17.5 20 21" stroke="rgba(255,255,255,0.35)" stroke-width="1.2"/>
         <line x1="20" y1="21" x2="20" y2="37" stroke="#111827" stroke-width="2.6" stroke-linecap="round"/>
         <path d="M20 37C20 40.31 17.31 43 14 43" stroke="#111827" stroke-width="2.6" stroke-linecap="round" fill="none"/>
       </svg>
-      <div>
-        <span class="v2-logo-text">jero.works</span>
-        <span class="v2-logo-sub">AI Recruitment Platform</span>
-      </div>
+      <span class="v2-logo-text">jero.works</span>
     </a>
 
-    <!-- Sidebar Hero Header -->
-    <div class="v2-aside-hero">
-      <h2>Create Your Workspace</h2>
-      <p>Set up your organization once and start hiring in minutes.</p>
-    </div>
-
-    <!-- Progress Card -->
-    <div class="v2-prog-card">
-      <div class="v2-prog-head">
-        <span id="progress-step-text" style="color:#475569;">Step 1 of 4</span>
-        <span id="progress-pct-text" style="color:#1d61f2; font-weight:700;">25% Complete</span>
-      </div>
-      <div class="v2-prog-bg">
-        <div id="progress-bar-fill" class="v2-prog-fill" style="width: 25%;"></div>
-      </div>
-      <div class="d-flex align-items-center gap-2 text-muted fs-8">
-        <svg width="14" height="14" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="9" stroke="#64748b" stroke-width="1.6"/><path d="M10 5v5l3 3" stroke="#64748b" stroke-width="1.6" stroke-linecap="round"/></svg>
-        <span id="progress-time-text">Estimated Time: 2 Minutes</span>
-      </div>
-    </div>
-
-    <!-- Stepper Navigation Card -->
+    <!-- Stepper Navigation Card (Timeline) -->
     <div class="v2-stepper-card stepper-nav">
       <!-- Step 1 -->
       <div class="v2-step-item stepper-item current" data-kt-stepper-element="nav">
-        <div class="v2-step-badge">1</div>
-        <div>
-          <div class="v2-step-title">Registration Details</div>
-          <div class="v2-step-sub">Set up your account</div>
+        <div class="v2-step-badge-wrap">
+          <div class="v2-step-badge">
+            <span class="v2-step-badge-num">1</span>
+            <svg class="v2-step-badge-check" width="14" height="14" viewBox="0 0 20 20" fill="none"><path d="M5 10l3.5 3.5L15 7" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </div>
+        </div>
+        <div class="v2-step-text">
+          <div class="v2-step-title">Get Started</div>
+          <div class="v2-step-sub">Set up your registration</div>
         </div>
       </div>
 
       <!-- Step 2 -->
       <div class="v2-step-item stepper-item" data-kt-stepper-element="nav">
-        <div class="v2-step-badge">2</div>
-        <div>
-          <div class="v2-step-title">Company Details</div>
-          <div class="v2-step-sub">Tell us about your company</div>
+        <div class="v2-step-badge-wrap">
+          <div class="v2-step-badge">
+            <span class="v2-step-badge-num">2</span>
+            <svg class="v2-step-badge-check" width="14" height="14" viewBox="0 0 20 20" fill="none"><path d="M5 10l3.5 3.5L15 7" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </div>
+        </div>
+        <div class="v2-step-text">
+          <div class="v2-step-title">Organization Type</div>
+          <div class="v2-step-sub">Tell us about your organization</div>
         </div>
       </div>
 
       <!-- Step 3 -->
       <div class="v2-step-item stepper-item" data-kt-stepper-element="nav">
-        <div class="v2-step-badge">3</div>
-        <div>
-          <div class="v2-step-title">Account Details</div>
-          <div class="v2-step-sub">Set up your workspace</div>
+        <div class="v2-step-badge-wrap">
+          <div class="v2-step-badge">
+            <span class="v2-step-badge-num">3</span>
+            <svg class="v2-step-badge-check" width="14" height="14" viewBox="0 0 20 20" fill="none"><path d="M5 10l3.5 3.5L15 7" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </div>
+        </div>
+        <div class="v2-step-text">
+          <div class="v2-step-title">Organization Profile</div>
+          <div class="v2-step-sub">Add your business and contact details</div>
         </div>
       </div>
 
       <!-- Step 4 -->
       <div class="v2-step-item stepper-item" data-kt-stepper-element="nav">
-        <div class="v2-step-badge">4</div>
+        <div class="v2-step-badge-wrap">
+          <div class="v2-step-badge">
+            <span class="v2-step-badge-num">4</span>
+            <svg class="v2-step-badge-check" width="14" height="14" viewBox="0 0 20 20" fill="none"><path d="M5 10l3.5 3.5L15 7" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </div>
+        </div>
+        <div class="v2-step-text">
+          <div class="v2-step-title">Launch</div>
+          <div class="v2-step-sub">Review your information and get started</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Need Help Card -->
+    <div class="v2-help-card">
+      <div class="v2-help-head">
+        <div class="v2-help-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" fill="#fed7aa"/><path d="M9.5 9.5a2.5 2.5 0 0 1 5 0c0 1.5-1.5 2-2.5 2.5V13" stroke="#ea580c" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="16.5" r="0.9" fill="#ea580c"/></svg>
+        </div>
         <div>
-          <div class="v2-step-title">Review &amp; Launch</div>
-          <div class="v2-step-sub">Review and finish</div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Value Props Card -->
-    <div class="v2-value-card">
-      <div class="v2-value-title">Why complete your profile?</div>
-
-      <div class="v2-value-row">
-        <div class="v2-value-icon" style="background:#f0fdf4; color:#16a34a;">
-          <svg width="18" height="18" viewBox="0 0 20 20" fill="none"><path d="M10 2L3 6v5.5C3 15.25 6.8 19.6 10 21c3.2-1.4 7-5.75 7-11.5V6L10 2Z" fill="#dcfce7" stroke="#16a34a" stroke-width="1.6"/><path d="M7 10.5l2 2 4-4" stroke="#16a34a" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        </div>
-        <div class="v2-value-txt">
-          <strong>Get Verified Company Badge</strong>
-          <span>Build trust with clients and candidates</span>
+          <div class="v2-help-title">Need Help?</div>
+          <div class="v2-help-sub">We are here to assist you</div>
         </div>
       </div>
 
-      <div class="v2-value-row">
-        <div class="v2-value-icon" style="background:#f5f3ff; color:#7c3aed;">
-          <svg width="18" height="18" viewBox="0 0 20 20" fill="none"><rect x="2" y="12" width="4" height="6" rx="1" fill="#ddd6fe" stroke="#7c3aed" stroke-width="1.4"/><rect x="8" y="8" width="4" height="10" rx="1" fill="#ddd6fe" stroke="#7c3aed" stroke-width="1.4"/><rect x="14" y="4" width="4" height="14" rx="1" fill="#ddd6fe" stroke="#7c3aed" stroke-width="1.4"/><path d="M3 9l5-4 4 3 5-6" stroke="#7c3aed" stroke-width="1.6" stroke-linecap="round"/></svg>
-        </div>
-        <div class="v2-value-txt">
-          <strong>Better Marketplace Ranking</strong>
-          <span>Increase your visibility and opportunities</span>
-        </div>
-      </div>
+      <div class="v2-help-rows">
+        <a href="mailto:support@jero.works" class="v2-help-row">
+          <span class="v2-help-row-ico">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><rect x="3" y="5" width="18" height="14" rx="2" stroke="#1d61f2" stroke-width="1.8"/><path d="M3 7l9 6 9-6" stroke="#1d61f2" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </span>
+          <span class="v2-help-row-txt">support@jero.works</span>
+          <svg class="v2-help-row-arrow" width="14" height="14" viewBox="0 0 20 20" fill="none"><path d="M5 10h10M10 5l5 5-5 5" stroke="#cbd5e1" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </a>
 
-      <div class="v2-value-row">
-        <div class="v2-value-icon" style="background:#eff6ff; color:#1d61f2;">
-          <svg width="18" height="18" viewBox="0 0 20 20" fill="none"><path d="M10 2L12.5 7.5L18 10L12.5 12.5L10 18L7.5 12.5L2 10L7.5 7.5L10 2Z" fill="#bfdbfe" stroke="#1d61f2" stroke-width="1.5"/></svg>
-        </div>
-        <div class="v2-value-txt">
-          <strong>Smart AI Recommendations</strong>
-          <span>Get better matches and suggestions</span>
-        </div>
-      </div>
-
-      <div class="v2-value-row">
-        <div class="v2-value-icon" style="background:#fff7ed; color:#ea580c;">
-          <svg width="18" height="18" viewBox="0 0 20 20" fill="none"><circle cx="7" cy="7" r="3" fill="#ffedd5" stroke="#ea580c" stroke-width="1.4"/><circle cx="14" cy="7" r="3" fill="#ffedd5" stroke="#ea580c" stroke-width="1.4"/><path d="M2 17c0-2.8 2.2-5 5-5h6c2.8 0 5 2.2 5 5" stroke="#ea580c" stroke-width="1.4" stroke-linecap="round"/></svg>
-        </div>
-        <div class="v2-value-txt">
-          <strong>Attract Top Talent &amp; Agencies</strong>
-          <span>Stand out and grow your network</span>
-        </div>
-      </div>
-    </div>
-
-    <!-- Security Card -->
-    <div class="v2-sec-card">
-      <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M10 2L3 6v5.5C3 15.25 6.8 19.6 10 21c3.2-1.4 7-5.75 7-11.5V6L10 2Z" fill="#bfdbfe" stroke="#1d61f2" stroke-width="1.6"/><path d="M7 10.5l2 2 4-4" stroke="#1d61f2" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
-      <div>
-        <strong>Your information is secure</strong>
-        <span>We never share your data with anyone.</span>
+        <a href="tel:+918868888888" class="v2-help-row">
+          <span class="v2-help-row-ico">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M5 4h3l2 5-2.5 1.5a11 11 0 0 0 6 6L15 14l5 2v3a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2Z" stroke="#1d61f2" stroke-width="1.8" stroke-linejoin="round"/></svg>
+          </span>
+          <span class="v2-help-row-txt">+91 886 888 8888</span>
+          <svg class="v2-help-row-arrow" width="14" height="14" viewBox="0 0 20 20" fill="none"><path d="M5 10h10M10 5l5 5-5 5" stroke="#cbd5e1" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </a>
       </div>
     </div>
   </div>
@@ -1288,9 +1284,6 @@ body, html {
             <p>Tell us a few details to get started.</p>
           </div>
         </div>
-
-        <div style="font-size:16px; font-weight:800; color:#0f172a; margin-bottom:4px;">Registration Details</div>
-        <div style="font-size:13px; color:#64748b; margin-bottom:24px;">Enter the basic information to create your account.</div>
 
         <!-- Company Name -->
         <div class="v2-fg fv-row">
@@ -1400,230 +1393,116 @@ body, html {
       <!-- ════════════════════════════════════════════════════════════════ -->
       <div class="" data-kt-stepper-element="content">
         <!-- Top Header Row -->
-        <div class="d-flex align-items-start justify-content-between mb-4">
+        <div class="v2-step2-head">
           <div>
-            <h1 class="v2-step2-title">How does your organization operate?</h1>
-            <p class="v2-step2-sub">Choose the option that best describes how your organization works. You can customize more later.</p>
-          </div>
-          <div class="d-flex align-items-center gap-2 fs-7 text-muted">
-            <svg width="18" height="18" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="8" stroke="#64748b" stroke-width="1.6"/><path d="M7.5 7.5a2.5 2.5 0 0 1 5 0c0 1.5-1.5 2-2.5 2.5V11" stroke="#64748b" stroke-width="1.6" stroke-linecap="round"/><circle cx="10" cy="14" r="0.75" fill="#64748b"/></svg>
-            <span>Need help choosing?</span>
-            <a href="https://jero.works/support-policy" target="_blank" class="fw-bold text-primary text-decoration-none ms-1">View Help Center &rarr;</a>
+            <h1 class="v2-step2-title">Tell us about your organization</h1>
+            <p class="v2-step2-sub">This helps us personalize your workspace and show you the right features, workflows and marketplace.</p>
           </div>
         </div>
 
+        <label class="v2-step2-section-label">Select Company Type <span class="req">*</span></label>
+
         <div class="v2-comp-grid fv-row">
-          <!-- Card 1: Product & Manufacturing -->
+          <!-- Card 1: Product or Manufacturing -->
           <div class="v2-comp-card selected" onclick="selectCompanyType(3, this)">
             <input type="radio" class="btn-check" name="company_type" value="3" checked />
             <div class="v2-comp-check">
               <svg width="12" height="12" viewBox="0 0 20 20" fill="none"><path d="M4 10l4 4 8-8" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
             </div>
 
-            <!-- Top Vector Illustration -->
-            <div class="v2-card-img-wrap" style="background:#eef6ff;">
-              <svg width="100%" height="110" viewBox="0 0 260 110" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <rect width="260" height="110" fill="#f0f7ff"/>
-                <path d="M10 95 C 30 80, 70 80, 90 95" stroke="#86efac" stroke-width="6" fill="none"/>
-                <circle cx="20" cy="85" r="12" fill="#4ade80"/>
-                <circle cx="240" cy="88" r="10" fill="#4ade80"/>
-                
-                <rect x="35" y="45" width="45" height="55" rx="3" fill="#60a5fa"/>
-                <rect x="42" y="52" width="8" height="8" rx="1.5" fill="#ffffff"/>
-                <rect x="54" y="52" width="8" height="8" rx="1.5" fill="#ffffff"/>
-                <rect x="66" y="52" width="8" height="8" rx="1.5" fill="#ffffff"/>
-                <rect x="42" y="66" width="8" height="8" rx="1.5" fill="#ffffff"/>
-                <rect x="54" y="66" width="8" height="8" rx="1.5" fill="#ffffff"/>
-                <rect x="66" y="66" width="8" height="8" rx="1.5" fill="#ffffff"/>
-
-                <rect x="85" y="25" width="85" height="75" rx="4" fill="#2563eb"/>
-                <rect x="95" y="35" width="12" height="12" rx="2" fill="#93c5fd"/>
-                <rect x="113" y="35" width="12" height="12" rx="2" fill="#93c5fd"/>
-                <rect x="131" y="35" width="12" height="12" rx="2" fill="#93c5fd"/>
-                <rect x="149" y="35" width="12" height="12" rx="2" fill="#93c5fd"/>
-                <rect x="95" y="53" width="12" height="12" rx="2" fill="#93c5fd"/>
-                <rect x="113" y="53" width="12" height="12" rx="2" fill="#93c5fd"/>
-                <rect x="131" y="53" width="12" height="12" rx="2" fill="#93c5fd"/>
-                <rect x="149" y="53" width="12" height="12" rx="2" fill="#93c5fd"/>
-
-                <rect x="175" y="40" width="55" height="60" rx="3" fill="#3b82f6"/>
-                <rect x="183" y="48" width="10" height="10" rx="1.5" fill="#ffffff"/>
-                <rect x="198" y="48" width="10" height="10" rx="1.5" fill="#ffffff"/>
-                <rect x="213" y="48" width="10" height="10" rx="1.5" fill="#ffffff"/>
-
-                <rect x="0" y="98" width="260" height="12" fill="#94a3b8"/>
-                <rect x="120" y="88" width="28" height="12" rx="2" fill="#38bdf8"/>
-                <circle cx="126" cy="100" r="3.5" fill="#1e293b"/>
-                <circle cx="140" cy="100" r="3.5" fill="#1e293b"/>
-              </svg>
-            </div>
-
-            <!-- Icon Badge + Title -->
-            <div class="v2-card-head">
-              <div class="v2-type-icon-badge" style="background:#eff6ff; color:#2563eb;">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M3 21h18M5 21V7l8-4v18M13 21V11l6 3v7" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <div class="v2-comp-card-inner">
+              <div class="v2-type-icon-badge" style="background:#fff7ed; color:#ea580c;">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+                  <rect x="3" y="3" width="8" height="18" rx="1" stroke="#ea580c" stroke-width="1.8"/>
+                  <rect x="13" y="8" width="8" height="13" rx="1" stroke="#ea580c" stroke-width="1.8"/>
+                  <rect x="5" y="6" width="2" height="2" fill="#ea580c"/>
+                  <rect x="8" y="6" width="2" height="2" fill="#ea580c"/>
+                  <rect x="5" y="10" width="2" height="2" fill="#ea580c"/>
+                  <rect x="8" y="10" width="2" height="2" fill="#ea580c"/>
+                  <rect x="5" y="14" width="2" height="2" fill="#ea580c"/>
+                  <rect x="8" y="14" width="2" height="2" fill="#ea580c"/>
+                  <rect x="15" y="11" width="2" height="2" fill="#ea580c"/>
+                  <rect x="18" y="11" width="2" height="2" fill="#ea580c"/>
+                  <rect x="15" y="15" width="2" height="2" fill="#ea580c"/>
+                  <rect x="18" y="15" width="2" height="2" fill="#ea580c"/>
+                </svg>
               </div>
-              <strong class="v2-card-title">Product &amp; Manufacturing Company</strong>
-            </div>
-            <p class="v2-card-desc">You build, manufacture or sell your own products and hire employees directly for your organization.</p>
-
-            <hr class="v2-card-hr" />
-
-            <ul class="v2-comp-list">
-              <li><div class="v2-chk-icon" style="background:#eff6ff; color:#2563eb;"><svg width="12" height="12" viewBox="0 0 20 20" fill="none"><path d="M4 10l4 4 8-8" stroke="#2563eb" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div> Internal hiring &amp; recruitment</li>
-              <li><div class="v2-chk-icon" style="background:#eff6ff; color:#2563eb;"><svg width="12" height="12" viewBox="0 0 20 20" fill="none"><path d="M4 10l4 4 8-8" stroke="#2563eb" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div> Employee &amp; team management</li>
-              <li><div class="v2-chk-icon" style="background:#eff6ff; color:#2563eb;"><svg width="12" height="12" viewBox="0 0 20 20" fill="none"><path d="M4 10l4 4 8-8" stroke="#2563eb" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div> Agency collaboration</li>
-              <li><div class="v2-chk-icon" style="background:#eff6ff; color:#2563eb;"><svg width="12" height="12" viewBox="0 0 20 20" fill="none"><path d="M4 10l4 4 8-8" stroke="#2563eb" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div> Campus &amp; bulk hiring</li>
-              <li><div class="v2-chk-icon" style="background:#eff6ff; color:#2563eb;"><svg width="12" height="12" viewBox="0 0 20 20" fill="none"><path d="M4 10l4 4 8-8" stroke="#2563eb" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div> Vendor management</li>
-            </ul>
-
-            <div class="v2-comp-banner" style="background:#eff6ff; color:#1e40af;">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" style="flex-shrink:0;"><path d="M12 2a7 7 0 0 1 7 7c0 2.38-1.19 4.47-3 5.74V17a1 1 0 0 1-1 1h-6a1 1 0 0 1-1-1v-2.26C6.19 13.47 5 11.38 5 9a7 7 0 0 1 7-7Z" stroke="#2563eb" stroke-width="2"/><path d="M9 21h6" stroke="#2563eb" stroke-width="2" stroke-linecap="round"/></svg>
-              <span>Best for organizations that don't serve external clients and focus on their own products or operations.</span>
+              <div class="v2-comp-card-body">
+                <strong class="v2-card-title">Product or Manufacturing Companies</strong>
+                <p class="v2-card-desc">Ideal for organizations hiring employees for their own business and managing internal recruitment.</p>
+                <div class="v2-comp-divider">
+                  <span class="v2-comp-divider-dot"></span>
+                  <span class="v2-comp-divider-dot"></span>
+                  <span class="v2-comp-divider-dot"></span>
+                </div>
+                <div class="v2-comp-examples">
+                  <span class="v2-comp-ex-label">Examples:</span>
+                  <span class="v2-comp-ex-tag">Amazon</span><span class="v2-comp-ex-sep"></span><span class="v2-comp-ex-tag">Google</span><span class="v2-comp-ex-sep"></span><span class="v2-comp-ex-tag">TCS</span><span class="v2-comp-ex-sep"></span><span class="v2-comp-ex-tag">Infosys</span><span class="v2-comp-ex-sep"></span><span class="v2-comp-ex-tag">Microsoft</span>
+                </div>
+              </div>
             </div>
           </div>
 
-          <!-- Card 2: Enterprise Services & Consulting -->
+          <!-- Card 2: Consulting or Services -->
           <div class="v2-comp-card" onclick="selectCompanyType(2, this)">
             <input type="radio" class="btn-check" name="company_type" value="2" />
             <div class="v2-comp-check">
               <svg width="12" height="12" viewBox="0 0 20 20" fill="none"><path d="M4 10l4 4 8-8" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
             </div>
 
-            <!-- Top Vector Illustration -->
-            <div class="v2-card-img-wrap" style="background:#faf5ff;">
-              <svg width="100%" height="110" viewBox="0 0 260 110" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <rect width="260" height="110" fill="#faf5ff"/>
-                <rect x="110" y="15" width="70" height="45" rx="4" fill="#ffffff" stroke="#e9d5ff" stroke-width="1.5"/>
-                <path d="M120 45 L135 32 L150 38 L165 24" stroke="#2563eb" stroke-width="2.5" stroke-linecap="round"/>
-                <circle cx="165" cy="24" r="3" fill="#2563eb"/>
-                <rect x="120" y="22" width="10" height="10" rx="5" fill="#60a5fa"/>
-
-                <circle cx="70" cy="38" r="14" fill="#fdba74"/>
-                <path d="M58 30 C 58 20, 82 20, 82 30" fill="#1e293b"/>
-                <path d="M52 75 C 52 55, 88 55, 88 75" fill="#1d4ed8"/>
-
-                <rect x="40" y="70" width="180" height="6" fill="#cbd5e1"/>
-                <rect x="120" y="55" width="40" height="16" rx="2" fill="#334155"/>
-
-                <circle cx="190" cy="38" r="14" fill="#fdba74"/>
-                <path d="M175 32 C 175 18, 205 18, 205 32 L 205 45" fill="#0f172a"/>
-                <path d="M172 75 C 172 55, 208 55, 208 75" fill="#16a34a"/>
-              </svg>
-            </div>
-
-            <!-- Icon Badge + Title -->
-            <div class="v2-card-head">
-              <div class="v2-type-icon-badge" style="background:#f5f3ff; color:#7c3aed;">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><rect x="3" y="7" width="18" height="13" rx="2" stroke="#7c3aed" stroke-width="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" stroke="#7c3aed" stroke-width="2"/></svg>
+            <div class="v2-comp-card-inner">
+              <div class="v2-type-icon-badge" style="background:#f1f5f9; color:#475569;">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+                  <circle cx="9" cy="8" r="3" stroke="#475569" stroke-width="1.8"/>
+                  <circle cx="17" cy="9" r="2.5" stroke="#475569" stroke-width="1.8"/>
+                  <path d="M3 19c0-3.3 2.7-6 6-6s6 2.7 6 6" stroke="#475569" stroke-width="1.8" stroke-linecap="round"/>
+                  <path d="M14 18c0-2.5 2-4.5 4-4.5s3 2 3 4" stroke="#475569" stroke-width="1.8" stroke-linecap="round"/>
+                </svg>
               </div>
-              <strong class="v2-card-title">Enterprise Services &amp; Consulting Company</strong>
-            </div>
-            <p class="v2-card-desc">You deliver professional or technology services to clients and manage consultants, projects and billable resources.</p>
-
-            <hr class="v2-card-hr" />
-
-            <ul class="v2-comp-list">
-              <li><div class="v2-chk-icon" style="background:#f5f3ff; color:#7c3aed;"><svg width="12" height="12" viewBox="0 0 20 20" fill="none"><path d="M4 10l4 4 8-8" stroke="#7c3aed" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div> Client projects &amp; engagements</li>
-              <li><div class="v2-chk-icon" style="background:#f5f3ff; color:#7c3aed;"><svg width="12" height="12" viewBox="0 0 20 20" fill="none"><path d="M4 10l4 4 8-8" stroke="#7c3aed" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div> Consultant &amp; resource management</li>
-              <li><div class="v2-chk-icon" style="background:#f5f3ff; color:#7c3aed;"><svg width="12" height="12" viewBox="0 0 20 20" fill="none"><path d="M4 10l4 4 8-8" stroke="#7c3aed" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div> Contract &amp; project-based hiring</li>
-              <li><div class="v2-chk-icon" style="background:#f5f3ff; color:#7c3aed;"><svg width="12" height="12" viewBox="0 0 20 20" fill="none"><path d="M4 10l4 4 8-8" stroke="#7c3aed" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div> Timesheets &amp; utilization tracking</li>
-              <li><div class="v2-chk-icon" style="background:#f5f3ff; color:#7c3aed;"><svg width="12" height="12" viewBox="0 0 20 20" fill="none"><path d="M4 10l4 4 8-8" stroke="#7c3aed" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div> Billing &amp; resource allocation</li>
-            </ul>
-
-            <div class="v2-comp-banner" style="background:#f5f3ff; color:#5b21b6;">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" style="flex-shrink:0;"><path d="M12 2a7 7 0 0 1 7 7c0 2.38-1.19 4.47-3 5.74V17a1 1 0 0 1-1 1h-6a1 1 0 0 1-1-1v-2.26C6.19 13.47 5 11.38 5 9a7 7 0 0 1 7-7Z" stroke="#7c3aed" stroke-width="2"/><path d="M9 21h6" stroke="#7c3aed" stroke-width="2" stroke-linecap="round"/></svg>
-              <span>Best for service-based companies that work with external clients.</span>
+              <div class="v2-comp-card-body">
+                <strong class="v2-card-title">Consulting or Services Companies</strong>
+                <p class="v2-card-desc">For businesses that provide professional services or consulting and hire for client-based projects.</p>
+                <div class="v2-comp-divider">
+                  <span class="v2-comp-divider-dot"></span>
+                  <span class="v2-comp-divider-dot"></span>
+                  <span class="v2-comp-divider-dot"></span>
+                </div>
+                <div class="v2-comp-examples">
+                  <span class="v2-comp-ex-label">Examples:</span>
+                  <span class="v2-comp-ex-tag">Deloitte</span><span class="v2-comp-ex-sep"></span><span class="v2-comp-ex-tag">Accenture</span><span class="v2-comp-ex-sep"></span><span class="v2-comp-ex-tag">Capgemini</span><span class="v2-comp-ex-sep"></span><span class="v2-comp-ex-tag">Wipro</span>
+                </div>
+              </div>
             </div>
           </div>
 
-          <!-- Card 3: Recruitment & Staffing Agency -->
+          <!-- Card 3: Recruitment or Staffing -->
           <div class="v2-comp-card" onclick="selectCompanyType(1, this)">
             <input type="radio" class="btn-check" name="company_type" value="1" />
             <div class="v2-comp-check">
               <svg width="12" height="12" viewBox="0 0 20 20" fill="none"><path d="M4 10l4 4 8-8" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
             </div>
 
-            <!-- Top Vector Illustration -->
-            <div class="v2-card-img-wrap" style="background:#fff7ed;">
-              <svg width="100%" height="110" viewBox="0 0 260 110" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <rect width="260" height="110" fill="#fff7ed"/>
-                <rect x="140" y="15" width="90" height="60" rx="4" fill="#ffffff" stroke="#fed7aa" stroke-width="1.5"/>
-                <rect x="150" y="24" width="16" height="16" rx="8" fill="#16a34a"/>
-                <rect x="172" y="26" width="30" height="5" rx="2" fill="#cbd5e1"/>
-                <rect x="150" y="46" width="16" height="16" rx="8" fill="#2563eb"/>
-                <rect x="172" y="48" width="40" height="5" rx="2" fill="#cbd5e1"/>
-
-                <circle cx="210" cy="45" r="14" fill="#ffffff" stroke="#1e293b" stroke-width="3"/>
-                <line x1="220" y1="55" x2="235" y2="70" stroke="#1e293b" stroke-width="4" stroke-linecap="round"/>
-
-                <circle cx="70" cy="38" r="14" fill="#fdba74"/>
-                <path d="M55 30 C 55 16, 85 16, 85 30 L 85 45" fill="#451a03"/>
-                <path d="M52 75 C 52 55, 88 55, 88 75" fill="#ea580c"/>
-                <rect x="75" y="50" width="22" height="26" rx="2" fill="#334155"/>
-              </svg>
-            </div>
-
-            <!-- Icon Badge + Title -->
-            <div class="v2-card-head">
-              <div class="v2-type-icon-badge" style="background:#fff7ed; color:#ea580c;">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" stroke="#ea580c" stroke-width="2"/><circle cx="9" cy="7" r="4" stroke="#ea580c" stroke-width="2"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" stroke="#ea580c" stroke-width="2"/></svg>
+            <div class="v2-comp-card-inner">
+              <div class="v2-type-icon-badge" style="background:#eff6ff; color:#1d61f2;">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+                  <circle cx="12" cy="8" r="3.5" stroke="#1d61f2" stroke-width="1.8"/>
+                  <path d="M5 20c0-3.5 3.1-6 7-6s7 2.5 7 6" stroke="#1d61f2" stroke-width="1.8" stroke-linecap="round"/>
+                  <circle cx="12" cy="12" r="10" stroke="#1d61f2" stroke-width="1.8" stroke-dasharray="2 3"/>
+                </svg>
               </div>
-              <strong class="v2-card-title">Recruitment &amp; Staffing Agency</strong>
-            </div>
-            <p class="v2-card-desc">You source, recruit and submit candidates to client organizations.</p>
-
-            <hr class="v2-card-hr" />
-
-            <ul class="v2-comp-list">
-              <li><div class="v2-chk-icon" style="background:#fff7ed; color:#ea580c;"><svg width="12" height="12" viewBox="0 0 20 20" fill="none"><path d="M4 10l4 4 8-8" stroke="#ea580c" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div> Bench talent marketplace</li>
-              <li><div class="v2-chk-icon" style="background:#fff7ed; color:#ea580c;"><svg width="12" height="12" viewBox="0 0 20 20" fill="none"><path d="M4 10l4 4 8-8" stroke="#ea580c" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div> Candidate submissions</li>
-              <li><div class="v2-chk-icon" style="background:#fff7ed; color:#ea580c;"><svg width="12" height="12" viewBox="0 0 20 20" fill="none"><path d="M4 10l4 4 8-8" stroke="#ea580c" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div> Client &amp; requirement management</li>
-              <li><div class="v2-chk-icon" style="background:#fff7ed; color:#ea580c;"><svg width="12" height="12" viewBox="0 0 20 20" fill="none"><path d="M4 10l4 4 8-8" stroke="#ea580c" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div> Vendor marketplace</li>
-              <li><div class="v2-chk-icon" style="background:#fff7ed; color:#ea580c;"><svg width="12" height="12" viewBox="0 0 20 20" fill="none"><path d="M4 10l4 4 8-8" stroke="#ea580c" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div> Agency performance analytics</li>
-            </ul>
-
-            <div class="v2-comp-banner" style="background:#fff7ed; color:#9a3412;">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" style="flex-shrink:0;"><path d="M12 2a7 7 0 0 1 7 7c0 2.38-1.19 4.47-3 5.74V17a1 1 0 0 1-1 1h-6a1 1 0 0 1-1-1v-2.26C6.19 13.47 5 11.38 5 9a7 7 0 0 1 7-7Z" stroke="#ea580c" stroke-width="2"/><path d="M9 21h6" stroke="#ea580c" stroke-width="2" stroke-linecap="round"/></svg>
-              <span>Best for agencies that connect candidates with hiring companies.</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- Bottom "Why selection matters" Box - Redesigned & Responsive -->
-        <div class="v2-why-box">
-          <div class="v2-why-left">
-            <strong class="v2-why-title">Why your selection matters</strong>
-            <span class="v2-why-sub">We'll personalize your workspace based on your choice.</span>
-          </div>
-
-          <div class="v2-why-items">
-            <div class="v2-why-item">
-              <div class="v2-why-icon" style="background:#eff6ff; color:#2563eb;">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="7" height="7" rx="1.5" stroke="#2563eb" stroke-width="2"/><rect x="14" y="3" width="7" height="7" rx="1.5" stroke="#2563eb" stroke-width="2"/><rect x="14" y="14" width="7" height="7" rx="1.5" stroke="#2563eb" stroke-width="2"/><rect x="3" y="14" width="7" height="7" rx="1.5" stroke="#2563eb" stroke-width="2"/></svg>
+              <div class="v2-comp-card-body">
+                <strong class="v2-card-title">Recruitment or Staffing Companies</strong>
+                <p class="v2-card-desc">Perfect for recruitment &amp; staffing agencies that source and submit candidates for client organizations.</p>
+                <div class="v2-comp-divider">
+                  <span class="v2-comp-divider-dot"></span>
+                  <span class="v2-comp-divider-dot"></span>
+                  <span class="v2-comp-divider-dot"></span>
+                </div>
+                <div class="v2-comp-examples">
+                  <span class="v2-comp-ex-label">Examples:</span>
+                  <span class="v2-comp-ex-tag">Agencies</span><span class="v2-comp-ex-sep"></span><span class="v2-comp-ex-tag">Placement Consultants</span><span class="v2-comp-ex-sep"></span><span class="v2-comp-ex-tag">Recruiting Firms</span>
+                </div>
               </div>
-              <strong class="v2-why-item-txt">Personalized Dashboard</strong>
-            </div>
-
-            <div class="v2-why-item">
-              <div class="v2-why-icon" style="background:#f5f3ff; color:#7c3aed;">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="3" stroke="#7c3aed" stroke-width="2"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1 0-2.83 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1Z" stroke="#7c3aed" stroke-width="2"/></svg>
-              </div>
-              <strong class="v2-why-item-txt">Relevant Features</strong>
-            </div>
-
-            <div class="v2-why-item">
-              <div class="v2-why-icon" style="background:#f0fdf4; color:#16a34a;">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z" stroke="#16a34a" stroke-width="2"/><path d="M9 12l2 2 4-4" stroke="#16a34a" stroke-width="2" stroke-linecap="round"/></svg>
-              </div>
-              <strong class="v2-why-item-txt">Smart Permissions</strong>
-            </div>
-
-            <div class="v2-why-item">
-              <div class="v2-why-icon" style="background:#fff7ed; color:#ea580c;">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 2l2.4 7.4H22l-6 4.6 2.3 7.4-6.3-4.6-6.3 4.6 2.3-7.4-6-4.6h7.6L12 2Z" stroke="#ea580c" stroke-width="2"/></svg>
-              </div>
-              <strong class="v2-why-item-txt">Better AI Recommendations</strong>
             </div>
           </div>
         </div>
@@ -1636,7 +1515,7 @@ body, html {
           </button>
           <button type="button" class="v2-btn-primary btn-next-step" data-kt-stepper-action="next">
             <span class="indicator-label d-flex align-items-center gap-2">
-              Continue to Workspace Setup
+              Continue
               <svg width="16" height="16" viewBox="0 0 20 20" fill="none"><path d="M4.166 10h11.668M10.833 5l5 5-5 5" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
             </span>
             <span class="indicator-progress" style="display:none;">
@@ -1655,14 +1534,6 @@ body, html {
           <div>
             <h1 class="v2-step2-title">Complete Your Organization Profile</h1>
             <p class="v2-step2-sub">Help companies, agencies and candidates connect with your organization.</p>
-          </div>
-          <div class="border rounded-3 px-3 py-2 bg-white d-flex align-items-center gap-2 fs-7">
-            <svg width="18" height="18" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="8" stroke="#64748b" stroke-width="1.6"/><path d="M7.5 7.5a2.5 2.5 0 0 1 5 0c0 1.5-1.5 2-2.5 2.5V11" stroke="#64748b" stroke-width="1.6" stroke-linecap="round"/><circle cx="10" cy="14" r="0.75" fill="#64748b"/></svg>
-            <strong class="text-dark">Need assistance?</strong>
-            <span class="text-muted">|</span>
-            <a href="https://jero.works/support-policy" target="_blank" class="text-secondary text-decoration-none">Live Chat</a>
-            <span class="text-muted">|</span>
-            <a href="https://jero.works/support-policy" target="_blank" class="fw-bold text-primary text-decoration-none">Help Center &rarr;</a>
           </div>
         </div>
 
@@ -1698,7 +1569,11 @@ body, html {
             </div>
           </div>
           <div class="v2-phone-wrap">
+<<<<<<< HEAD
             <input name="contact_number" id="contact_number" type="tel" class="v2-inp" placeholder="Enter mobile number" value="" maxlength="15" inputmode="numeric" autocomplete="tel-national" required />
+=======
+            <input name="contact_number" id="contact_number" type="tel" class="v2-inp" placeholder="Enter mobile number" value="" inputmode="numeric" autocomplete="tel-national" required />
+>>>>>>> c39334df197626650d9eabb33c4f847cc9d64079
           </div>
         </div>
 
@@ -1721,17 +1596,6 @@ body, html {
             <span class="v2-ir">
               <svg width="18" height="18" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="7" stroke="#94a3b8" stroke-width="1.6"/><circle cx="10" cy="10" r="2" fill="#94a3b8"/></svg>
             </span>
-          </div>
-        </div>
-
-        <!-- Safety Info Banner -->
-        <div class="v2-safe-box">
-          <div class="v2-safe-icon">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><rect x="4" y="10" width="16" height="11" rx="2" stroke="#1d61f2" stroke-width="2"/><path d="M7 10V7a5 5 0 0 1 10 0v3" stroke="#1d61f2" stroke-width="2"/></svg>
-          </div>
-          <div>
-            <strong class="text-dark fs-7 d-block">Your information is safe with us.</strong>
-            <span class="fs-7 text-muted">We never share your contact details with anyone without your permission.</span>
           </div>
         </div>
 
@@ -2125,11 +1989,16 @@ if (inputElement) {
 // dropdownContainer:document.body ensures the country list is appended to <body>
 // so it is NEVER clipped by overflow:hidden on any ancestor element.
 const phoneInputField = document.querySelector("#contact_number");
+<<<<<<< HEAD
 window.phoneInput = window.intlTelInput(phoneInputField, {
+=======
+const phoneInput = window.intlTelInput(phoneInputField, {
+>>>>>>> c39334df197626650d9eabb33c4f847cc9d64079
   separateDialCode: true,
   initialCountry: "in",
   preferredCountries: ["in", "us", "gb", "ca", "au"],
   autoPlaceholder: "off",
+<<<<<<< HEAD
   dropdownContainer: document.body
 });
 
@@ -2149,6 +2018,60 @@ $(document).ready(function() {
   var dialCode = data.dialCode ? ('+' + data.dialCode) : '+91';
   $('#contact_code').val(dialCode);
 });
+=======
+  utilsScript: "https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.17/js/utils.js"
+});
+
+// Numeric-only enforcement: strip non-digit chars (except for typing) and apply length cap.
+(function () {
+  const maxLen = 15; // E.164 international max is 15 digits
+  function sanitizeDigits(raw) { return (raw || '').replace(/\D+/g, '').slice(0, maxLen); }
+  phoneInputField.setAttribute('inputmode', 'numeric');
+  phoneInputField.setAttribute('pattern', '[0-9]+');
+  phoneInputField.addEventListener('input', function (e) {
+    const caret = phoneInputField.selectionStart || 0;
+    const before = phoneInputField.value.slice(0, caret);
+    const sanitizedFull = sanitizeDigits(phoneInputField.value);
+    const sanitizedBefore = sanitizeDigits(before);
+    if (phoneInputField.value !== sanitizedFull) {
+      phoneInputField.value = sanitizedFull;
+      const newCaret = sanitizedBefore.length;
+      try { phoneInputField.setSelectionRange(newCaret, newCaret); } catch (_) {}
+    }
+    phoneInputField.setCustomValidity('');
+  });
+  // Block paste of non-digit content cleanly.
+  phoneInputField.addEventListener('paste', function (e) {
+    e.preventDefault();
+    const text = (e.clipboardData || window.clipboardData).getData('text') || '';
+    document.execCommand('insertText', false, sanitizeDigits(text));
+  });
+  // Block keypress of non-digit keys (covers letter entry on all keyboards).
+  phoneInputField.addEventListener('keypress', function (e) {
+    if (e.ctrlKey || e.metaKey || e.altKey) return;
+    const ch = String.fromCharCode(e.which || e.keyCode || 0);
+    if (!/[0-9]/.test(ch)) { e.preventDefault(); }
+  });
+})();
+
+// Sync hidden contact_code on any country change.
+phoneInputField.addEventListener('countrychange', function () {
+  const data = phoneInput.getSelectedCountryData();
+  $('#contact_code').val(data.iso2 || '');
+});
+
+// Form-submit gate: only proceed when intlTelInput considers the number valid.
+const phoneForm = phoneInputField.closest('form');
+if (phoneForm) {
+  phoneForm.addEventListener('submit', function (e) {
+    if (phoneInputField.value && !phoneInput.isValidNumber()) {
+      e.preventDefault();
+      phoneInputField.setCustomValidity('Please enter a valid phone number for the selected country.');
+      phoneInputField.reportValidity();
+    }
+  });
+}
+>>>>>>> c39334df197626650d9eabb33c4f847cc9d64079
 
 // Original Stepper & FormValidation Integration
 $(document).ready(function() {  
@@ -2166,14 +2089,6 @@ $(document).ready(function() {
       $('#progress-pct-text').text(pctTexts[idx]);
       $('#progress-bar-fill').css('width', pcts[idx]);
       $('#progress-time-text').text(times[idx]);
-
-      if (stepIndex > 1) {
-        $('#top-bar-text').text('Need assistance?');
-        $('#top-bar-btn').attr('href', 'https://jero.works/support-policy').text('Help Center');
-      } else {
-        $('#top-bar-text').text('Already have an account?');
-        $('#top-bar-btn').attr('href', "{{ route('login') }}").text('Sign In');
-      }
     }
 
     return {
@@ -2361,7 +2276,11 @@ $(document).ready(function() {
                   validators: {
                     notEmpty: { message: "Contact Number is required" },
                     digits: { message: "Contact Number must contain only digits" },
+<<<<<<< HEAD
                     stringLength: { min: 4, max: 15, message: "Please enter a valid mobile number (4–15 digits)" }
+=======
+                    stringLength: { min: 7, max: 15, message: "Contact Number must be 7 to 15 digits" }
+>>>>>>> c39334df197626650d9eabb33c4f847cc9d64079
                   }
                 },
                 kt_tagify_work_location: { validators: { notEmpty: { message: "City is required" } } }
@@ -2481,9 +2400,9 @@ $(document).ready(function() {
           }),
 
           // Contact Number AJAX check handler
-          $(o.querySelector('[name="contact_number"]')).on("change", function () {            
+          $(o.querySelector('[name="contact_number"]')).on("change", function () {
             var contact_number = $("input[name=contact_number]").val();
-            if(contact_number != '' && contact_number.length === 10) {
+            if(contact_number != '' && contact_number.length >= 7) {
               $('.page-loader').css('display', 'flex');
               $.ajax({
                 url: "{{route('contact-company-register-chk')}}",
