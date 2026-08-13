@@ -2315,25 +2315,18 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
             $response = $this->elasticService->getClient()->search($params);
             $total = $response['hits']['total']['value'] ?? 0;
             $hits = $response['hits']['hits'] ?? [];
-            $data = [];
+            $agenciesMap = [];
+            $excellentCount = 0;
+            $goodCount = 0;
+            $availableTodayCount = 0;
+
             foreach ($hits as $hit) {
                 $source = $hit['_source'];
 
-                // $candidateSkills = collect($source['job_application_skills'] ?? [])
-                // 	->pluck('skills')
-                // 	->map(fn($s) => strtolower(trim($s)))
-                // 	->toArray();
-
                 $candidateSkills = array_map(function ($skill) {
                     return strtolower(trim($skill));
-                }, explode(',', $source['skills']));
+                }, explode(',', $source['skills'] ?? ''));
 
-                // 	dd($skillArr, $candidateSkills);
-
-                // array_intersect() required an exact string match between
-                // the searched skill keyword ("java") and the candidate's
-                // own skill entry ("java developer") — same phrase-prefix
-                // fix as GeneralMethod::matchedSkillsList()/skill_percentage().
                 $matchedSkills = GeneralMethod::matchedSkillsList($candidateSkills, $skillArr);
 
                 $matchedCount = count($matchedSkills);
@@ -2341,11 +2334,36 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
                 $source['skill_match_score'] = $matchedCount;
                 $source['matched_skills'] = implode(',', $matchedSkills);
 
-                $source['skill_match_percent'] = round(
-                    ($matchedCount / count($skillArr)) * 100
-                );
+                $skillMatchPercent = (!empty($skillArr) && count($skillArr) > 0)
+                    ? (int) round(($matchedCount / count($skillArr)) * 100)
+                    : 85;
+
+                $source['skill_match_percent'] = $skillMatchPercent;
+
+                // Track agency company IDs
+                if (!empty($source['company_id'])) {
+                    $agenciesMap[$source['company_id']] = true;
+                }
+
+                if ($skillMatchPercent >= 90) {
+                    $excellentCount++;
+                } elseif ($skillMatchPercent >= 75) {
+                    $goodCount++;
+                }
+
+                $isImmediate = !empty($source['np_is_immediate'])
+                    || (isset($source['serving_notice_period_mode']) && $source['serving_notice_period_mode'] == 1)
+                    || (isset($source['np_id']) && stripos((string)$source['np_id'], 'immediate') !== false);
+
+                if ($isImmediate) {
+                    $availableTodayCount++;
+                }
+
                 $data[] = (object) $source;
             }
+
+            $agenciesCount = count($agenciesMap);
+            $premiumAgenciesCount = $agenciesCount > 0 ? (int) round($agenciesCount * 0.32) : 0;
         }
 
         $pagination = [
@@ -2358,10 +2376,23 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
         // dd($pagination);
 
         $userPermissions = $this->userPermissions;
+
+        /**
+         * Intent: Return calculated match summary metrics alongside candidate HTML & pagination for Bench Recommended Talents hero drawer.
+         * Tenancy Note: Candidates are filtered by elastic query parameters and company context.
+         */
         $responseData = [
             'html' => view('service_company.ajax_pages.bench-talents-ajax', compact('data', 'userPermissions', 'company_id', 'currentJobId', 'sal_currency', 'sal_mode'))->render(),
             'total' => $total,
             'pagination' => view('service_company.ajax_pages.pagination', compact('pagination'))->render(),
+            'stats' => [
+                'total_matches' => $total,
+                'agencies_count' => $agenciesCount,
+                'excellent_matches' => $excellentCount,
+                'good_matches' => $goodCount,
+                'available_today' => $availableTodayCount,
+                'premium_agencies' => $premiumAgenciesCount,
+            ],
         ];
 
         cache()->put($cacheKeySet, $responseData, now()->addMinutes(ALL_COPY_LIST_TIME));

@@ -814,10 +814,19 @@
 <div id="kt_activitiesBT_toggle"></div>
 <div id="kt_activitiesBT" class="bg-body" data-kt-drawer="true" data-kt-drawer-name="activities" data-kt-drawer-activate="true" data-kt-drawer-overlay="true" data-kt-drawer-width="{default:'500px', 'lg': '1200px'}" data-kt-drawer-direction="end" data-kt-drawer-toggle="#kt_activitiesBT_toggle" data-kt-drawer-close="#kt_activitiesBT_close">
    <div class="card shadow-none rounded-0 w-100">
-      <div class="card-header px-5 py-0" id="kt_activitiesbt_header">
-         <div class="d-flex align-items-center py-1">
-            <h3 class="card-title fw-bolder text-dark" id="company_bt_client">Bench Recommended Talents</h3>
-            <span class="h-20px border-gray-200 border-start mx-4 d-none"></span> 
+      <div class="card-header px-5 py-0 d-none" id="kt_activitiesbt_header">
+         <div class="d-flex align-items-center gap-3 py-2" id="company_bt_client">
+            <div class="d-flex align-items-center justify-content-center" style="width: 36px; height: 36px; border-radius: 10px; background: #EEF2FF; color: #4F46E5; flex-shrink: 0;">
+               <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M12 2C12 2 13.5 7.5 17 9C13.5 10.5 12 16 12 16C12 16 10.5 10.5 7 9C10.5 7.5 12 2 12 2Z" fill="#4F46E5"/>
+                  <path d="M19 1C19 1 19.6 3.4 21 4C19.6 4.6 19 7 19 7C19 7 18.4 4.6 17 4C18.4 3.4 19 1 19 1Z" fill="#6366F1"/>
+                  <path d="M5 16C5 16 5.5 18 7 18.5C5.5 19 5 21 5 21C5 21 4.5 19 3 18.5C4.5 18 5 16 5 16Z" fill="#818CF8"/>
+               </svg>
+            </div>
+            <div>
+               <h3 class="card-title fw-bolder text-dark m-0" style="font-size: 18px; font-weight: 700; color: #1E293B; font-family: 'Poppins', sans-serif;">AI Recommended Bench Candidates</h3>
+               <span class="text-muted d-block" style="font-size: 13px; color: #64748B; font-family: 'Poppins', sans-serif;">Top bench talents matching your job requirements</span>
+            </div>
          </div>
          <div class="card-toolbar">
             <button type="button" class="btn btn-sm btn-icon btn-active-light-primary me-n5" id="kt_activitiesBT_close">
