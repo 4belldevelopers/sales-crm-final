@@ -748,17 +748,20 @@
         <div class="bench-bt">
         <table class="table align-middle table-row-dashed fs-6">
           <thead>
-            <tr class="fw-bolder text-muted">
-              <th>Talent Name</th>
-              <th>Exp.</th>
-              <th>Rates</th>
-              <th>Education</th>
-              <th>Availability</th>
-              <th>Location</th>
-              <th>Status</th>
-              <th>Upload</th>
-              <th>Relationship Manager</th>
-              <th>Action</th>
+            <tr class="fw-bolder text-muted text-uppercase fs-8">
+              <th class="w-25px pe-2">
+                <div class="form-check form-check-sm form-check-custom form-check-solid me-3">
+                  <input class="form-check-input" type="checkbox" data-kt-check="true" data-kt-check-target="#copyJobTable .form-check-input" value="1" />
+                </div>
+              </th>
+              <th class="min-w-200px">TALENT</th>
+              <th class="min-w-100px">EXPERIENCE</th>
+              <th class="min-w-110px">AVAILABILITY</th>
+              <th class="min-w-120px">LOCATION</th>
+              <th class="min-w-130px">EXPECTED SALARY</th>
+              <th class="min-w-120px">BENCH STATUS</th>
+              <th class="min-w-150px">RELATIONSHIP MANAGER</th>
+              <th class="text-end min-w-130px">ACTION</th>
             </tr>
           </thead>
           <tbody class="text-gray-600 fw-bold" id="copyJobTable"></tbody>
