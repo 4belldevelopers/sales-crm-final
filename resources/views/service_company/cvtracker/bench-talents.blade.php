@@ -1,5 +1,52 @@
 @php
-		use App\Helper\GeneralMethod;
+    use App\Helper\GeneralMethod;
+
+    /**
+     * Intent: Fully Dynamic Data Extraction for Bench Recommended Talents Drawer Hero Section (Zero static fallbacks).
+     * Tenancy Note: $job is tenant-scoped from ServiceCompanyJobsController@btlisting.
+     */
+    $bHeroTitle = @$job->title ?? '';
+    $bHeroInitial = $bHeroTitle ? strtoupper(substr($bHeroTitle, 0, 1)) : '';
+    $bHeroEmpType = isset($job->employment_type) ? (($job->employment_type == 1) ? 'Contract' : 'Full-time') : '';
+    $bHeroLoc = !empty($default_loc) ? $default_loc : '';
+
+    $bHeroExpStr = '';
+    if (isset($job->min_exp) || isset($job->max_exp)) {
+        $minExpVal = $job->min_exp ?? 0;
+        $maxExpVal = $job->max_exp ?? 0;
+        $bHeroExpStr = "{$minExpVal}–{$maxExpVal} Years";
+    }
+
+    // Salary formatting — strictly dynamic based on $job attributes
+    $bMinSal = [
+        0 => @$job->min_yearly,
+        1 => @$job->min_monthly,
+        2 => @$job->min_hourly
+    ][@$job->min_sal_mode] ?? @$job->min_salary;
+
+    $bMaxSal = [
+        0 => @$job->max_yearly,
+        1 => @$job->max_monthly,
+        2 => @$job->max_hourly
+    ][@$job->max_sal_mode] ?? @$job->max_salary;
+
+    $bHeroSalStr = '';
+    if (($bMinSal && $bMinSal > 0) || ($bMaxSal && $bMaxSal > 0)) {
+        if ($bMinSal >= 100000 || $bMaxSal >= 100000) {
+            $minLpa = $bMinSal > 0 ? number_format($bMinSal / 100000, 2) : '0.00';
+            $maxLpa = $bMaxSal > 0 ? number_format($bMaxSal / 100000, 2) : '0.00';
+            $bHeroSalStr = "₹{$minLpa} – ₹{$maxLpa} LPA";
+        } elseif ($bMinSal > 0 && $bMaxSal > 0) {
+            $bHeroSalStr = "₹" . number_format($bMinSal) . " – ₹" . number_format($bMaxSal);
+        } elseif ($bMinSal > 0) {
+            $bHeroSalStr = "₹" . number_format($bMinSal);
+        } elseif ($bMaxSal > 0) {
+            $bHeroSalStr = "₹" . number_format($bMaxSal);
+        }
+    }
+
+    $bHeroNoticeStr = @$job->notice_period ?? 'Immediate – 30 Days';
+    $bHeroJobId = @$job->id;
 @endphp
 <style>
 .text-justify{text-align: justify!important;}
@@ -22,6 +69,290 @@
 
 /* Skill chips in the footer strip */
 .bench-bt .skill { font-size: 10px !important; font-weight: 300 !important; }
+
+/* ══════════════════════════════════════════════════════════════
+   Bench Recommended Talents Hero Section Styles (btr-hero-*)
+   ══════════════════════════════════════════════════════════════ */
+.btr-hero-container {
+    font-family: 'Poppins', sans-serif !important;
+    margin-bottom: 18px;
+}
+
+/* Top Job Details Bar */
+.btr-hero-card {
+    background: #ffffff;
+    border: 1px solid #E2E8F0;
+    border-radius: 12px;
+    padding: 16px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 14px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+}
+
+.btr-hero-left {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    min-width: 0;
+}
+
+.btr-hero-avatar {
+    width: 46px;
+    height: 46px;
+    border-radius: 10px;
+    background: #FEF3C7;
+    color: #D97706;
+    font-weight: 700;
+    font-size: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.btr-hero-title-block {
+    min-width: 0;
+}
+
+.btr-hero-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: #1E293B;
+    line-height: 1.3;
+    margin-bottom: 2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.btr-hero-sub {
+    font-size: 13px;
+    color: #64748B;
+    font-weight: 400;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    white-space: nowrap;
+}
+
+.btr-hero-sub-dot {
+    display: inline-block;
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: #94A3B8;
+}
+
+/* Stat items & vertical dividers */
+.btr-hero-right {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    flex-shrink: 0;
+}
+
+.btr-hero-divider {
+    width: 1px;
+    height: 36px;
+    background: #E2E8F0;
+    margin: 0 18px;
+}
+
+.btr-hero-stat-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.btr-hero-stat-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: #F1F5F9;
+    color: #64748B;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.btr-hero-stat-icon svg {
+    width: 18px;
+    height: 18px;
+}
+
+.btr-hero-stat-label {
+    font-size: 11px;
+    color: #64748B;
+    font-weight: 500;
+    line-height: 1.2;
+    margin-bottom: 2px;
+}
+
+.btr-hero-stat-value {
+    font-size: 13px;
+    color: #1E293B;
+    font-weight: 600;
+    line-height: 1.2;
+    white-space: nowrap;
+}
+
+.btr-hero-btn-details {
+    background: #FFFFFF;
+    border: 1px solid #CBD5E1;
+    color: #2563EB;
+    font-size: 13px;
+    font-weight: 600;
+    padding: 8px 16px;
+    border-radius: 8px;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.15s ease;
+    font-family: 'Poppins', sans-serif !important;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-left: 10px;
+}
+
+.btr-hero-btn-details:hover {
+    background: #EFF6FF;
+    border-color: #93C5FD;
+    color: #1D4ED8;
+}
+
+/* Match Summary Cards Grid */
+.btr-summary-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 12px;
+}
+
+.btr-summary-card {
+    border-radius: 12px;
+    padding: 14px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+    min-width: 0;
+}
+
+.btr-summary-card:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.btr-card-blue {
+    background: #F8F9FF;
+    border: 1px solid #E0E7FF;
+}
+.btr-card-green {
+    background: #F0FDF4;
+    border: 1px solid #DCFCE7;
+}
+.btr-card-cyan {
+    background: #EFF6FF;
+    border: 1px solid #DBEAFE;
+}
+.btr-card-orange {
+    background: #FFF7ED;
+    border: 1px solid #FFEDD5;
+}
+.btr-card-purple {
+    background: #FAF5FF;
+    border: 1px solid #F3E8FF;
+}
+
+.btr-card-num {
+    font-size: 24px;
+    font-weight: 700;
+    line-height: 1.1;
+    margin-bottom: 2px;
+}
+
+.btr-num-blue { color: #3B82F6; }
+.btr-num-green { color: #16A34A; }
+.btr-num-cyan { color: #2563EB; }
+.btr-num-orange { color: #EA580C; }
+.btr-num-purple { color: #9333EA; }
+
+.btr-card-label {
+    font-size: 13px;
+    font-weight: 600;
+    color: #1E293B;
+    margin-bottom: 1px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.btr-card-sub {
+    font-size: 11px;
+    color: #64748B;
+    white-space: nowrap;
+}
+
+.btr-card-icon-badge {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    margin-left: 8px;
+}
+
+.btr-card-icon-badge svg {
+    width: 20px;
+    height: 20px;
+}
+
+.btr-badge-blue { background: #EEF2FF; color: #3B82F6; }
+.btr-badge-green { background: #DCFCE7; color: #16A34A; }
+.btr-badge-cyan { background: #DBEAFE; color: #2563EB; }
+.btr-badge-orange { background: #FFEDD5; color: #EA580C; }
+.btr-badge-purple { background: #F3E8FF; color: #9333EA; }
+
+/* Responsive break points */
+@media (max-width: 1200px) {
+    .btr-summary-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+@media (max-width: 900px) {
+    .btr-hero-card {
+        flex-wrap: wrap;
+    }
+    .btr-hero-right {
+        width: 100%;
+        justify-content: space-between;
+        margin-top: 10px;
+        padding-top: 10px;
+        border-top: 1px solid #F1F5F9;
+    }
+    .btr-summary-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+@media (max-width: 600px) {
+    .btr-summary-grid {
+        grid-template-columns: 1fr;
+    }
+    .btr-hero-divider {
+        display: none;
+    }
+    .btr-hero-right {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+    }
+}
 </style>
 <div class="card-body position-relative px-0 py-0" id="kt_activities_body">
   <input type="hidden" name="hid_job_id" id="hid_job_id" value="" />
@@ -32,6 +363,191 @@
   <div id="kt_content_container" class="container-fluid px-3">
     <div class="card">
       <div class="card-body pt-3 px-5">
+
+        {{-- ── Bench Recommended Talents Hero & Match Summary Cards ── --}}
+        <div class="btr-hero-container">
+          <!-- Header Title Block with Shifted Close Button -->
+          <div class="d-flex align-items-center justify-content-between mb-4">
+            <div class="d-flex align-items-center gap-3">
+              <div class="d-flex align-items-center justify-content-center" style="width: 36px; height: 36px; border-radius: 10px; background: #EEF2FF; color: #4F46E5; flex-shrink: 0;">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M12 2C12 2 13.5 7.5 17 9C13.5 10.5 12 16 12 16C12 16 10.5 10.5 7 9C10.5 7.5 12 2 12 2Z" fill="#4F46E5"/>
+                  <path d="M19 1C19 1 19.6 3.4 21 4C19.6 4.6 19 7 19 7C19 7 18.4 4.6 17 4C18.4 3.4 19 1 19 1Z" fill="#6366F1"/>
+                  <path d="M5 16C5 16 5.5 18 7 18.5C5.5 19 5 21 5 21C5 21 4.5 19 3 18.5C4.5 18 5 16 5 16Z" fill="#818CF8"/>
+                </svg>
+              </div>
+              <div>
+                <h3 style="font-size: 18px; font-weight: 700; color: #1E293B; margin: 0; line-height: 1.25; font-family: 'Poppins', sans-serif;">AI Recommended Bench Candidates</h3>
+                <span style="font-size: 13px; color: #64748B; font-weight: 400; font-family: 'Poppins', sans-serif;">Top bench talents matching your job requirements</span>
+              </div>
+            </div>
+            <!-- Shifted Close Button -->
+            <button type="button" class="btn btn-sm btn-icon btn-active-light-primary me-n2" onclick="$('#kt_activitiesBT_close').trigger('click');" style="cursor: pointer; background: transparent; border: none; font-size: 20px; color: #64748B; padding: 4px 8px;" title="Close">
+              <span class="svg-icon svg-icon-1">
+                <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="24px" height="24px" viewBox="0 0 24 24" version="1.1">
+                  <g transform="translate(12.000000, 12.000000) rotate(-45.000000) translate(-12.000000, -12.000000) translate(4.000000, 4.000000)" fill="#000000">
+                    <rect fill="#000000" x="0" y="7" width="16" height="2" rx="1"></rect>
+                    <rect fill="#000000" opacity="0.5" transform="translate(8.000000, 8.000000) rotate(-270.000000) translate(-8.000000, -8.000000)" x="0" y="7" width="16" height="2" rx="1"></rect>
+                  </g>
+                </svg>
+              </span>
+            </button>
+          </div>
+
+          <!-- Top Job Details Bar -->
+          <div class="btr-hero-card">
+            <div class="btr-hero-left">
+              <div class="btr-hero-avatar">{{ $bHeroInitial }}</div>
+              <div class="btr-hero-title-block">
+                <div class="btr-hero-title" title="{{ $bHeroTitle }}">{{ $bHeroTitle }}</div>
+                <div class="btr-hero-sub">
+                  <span>{{ $bHeroEmpType }}</span>
+                  <span class="btr-hero-sub-dot"></span>
+                  <span>{{ $bHeroLoc }}</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="btr-hero-right">
+              <div class="btr-hero-divider"></div>
+              
+              <!-- Experience -->
+              <div class="btr-hero-stat-item">
+                <div class="btr-hero-stat-icon">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
+                    <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
+                  </svg>
+                </div>
+                <div>
+                  <div class="btr-hero-stat-label">Experience</div>
+                  <div class="btr-hero-stat-value">{{ $bHeroExpStr }}</div>
+                </div>
+              </div>
+
+              <div class="btr-hero-divider"></div>
+
+              <!-- CTC / Salary -->
+              <div class="btr-hero-stat-item">
+                <div class="btr-hero-stat-icon">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 2l-2 2m-2-2l2 2m2 4l-4 4M3 11l8-8 10 10-8 8L3 11z"></path>
+                    <circle cx="7.5" cy="7.5" r="1.5"></circle>
+                  </svg>
+                </div>
+                <div>
+                  <div class="btr-hero-stat-label">CTC</div>
+                  <div class="btr-hero-stat-value">{{ $bHeroSalStr }}</div>
+                </div>
+              </div>
+
+              <div class="btr-hero-divider"></div>
+
+              <!-- Notice Period -->
+              <div class="btr-hero-stat-item">
+                <div class="btr-hero-stat-icon">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                    <line x1="16" y1="2" x2="16" y2="6"></line>
+                    <line x1="8" y1="2" x2="8" y2="6"></line>
+                    <line x1="3" y1="10" x2="21" y2="10"></line>
+                    <path d="m9 16 2 2 4-4"></path>
+                  </svg>
+                </div>
+                <div>
+                  <div class="btr-hero-stat-label">Notice Period</div>
+                  <div class="btr-hero-stat-value">{{ $bHeroNoticeStr }}</div>
+                </div>
+              </div>
+
+              <div class="btr-hero-divider"></div>
+
+              <!-- View Job Details Action -->
+              <button type="button" class="btn btr-hero-btn-details client-show-detail" data-row-id="{{ $bHeroJobId }}">
+                View Job Details
+              </button>
+            </div>
+          </div>
+
+          <!-- 5 Match Summary Cards Row (Zero static initial numbers) -->
+          <div class="btr-summary-grid">
+            <!-- 1. Total Matches -->
+            <div class="btr-summary-card btr-card-blue">
+              <div>
+                <div class="btr-card-num btr-num-blue" id="bHeroTotalMatches">—</div>
+                <div class="btr-card-label">Total Matches</div>
+                <div class="btr-card-sub" id="bHeroAgenciesSub">Across agencies</div>
+              </div>
+              <div class="btr-card-icon-badge btr-badge-blue">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                  <circle cx="9" cy="7" r="4"></circle>
+                  <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                  <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                </svg>
+              </div>
+            </div>
+
+            <!-- 2. Excellent Match -->
+            <div class="btr-summary-card btr-card-green">
+              <div>
+                <div class="btr-card-num btr-num-green" id="bHeroExcellentMatches">—</div>
+                <div class="btr-card-label">Excellent Match</div>
+                <div class="btr-card-sub">90% and above</div>
+              </div>
+              <div class="btr-card-icon-badge btr-badge-green">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="12" cy="8" r="6"></circle>
+                  <path d="M15.477 12.89 17 22l-5-3-5 3 1.523-9.11"></path>
+                </svg>
+              </div>
+            </div>
+
+            <!-- 3. Good Match -->
+            <div class="btr-summary-card btr-card-cyan">
+              <div>
+                <div class="btr-card-num btr-num-cyan" id="bHeroGoodMatches">—</div>
+                <div class="btr-card-label">Good Match</div>
+                <div class="btr-card-sub">75% – 89%</div>
+              </div>
+              <div class="btr-card-icon-badge btr-badge-cyan">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                  <path d="m9 12 2 2 4-4"></path>
+                </svg>
+              </div>
+            </div>
+
+            <!-- 4. Available Today -->
+            <div class="btr-summary-card btr-card-orange">
+              <div>
+                <div class="btr-card-num btr-num-orange" id="bHeroAvailableToday">—</div>
+                <div class="btr-card-label">Available Today</div>
+                <div class="btr-card-sub">Immediate Joiners</div>
+              </div>
+              <div class="btr-card-icon-badge btr-badge-orange">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+                </svg>
+              </div>
+            </div>
+
+            <!-- 5. Premium Agencies -->
+            <div class="btr-summary-card btr-card-purple">
+              <div>
+                <div class="btr-card-num btr-num-purple" id="bHeroPremiumAgencies">—</div>
+                <div class="btr-card-label">Premium Agencies</div>
+                <div class="btr-card-sub">Gold & Verified</div>
+              </div>
+              <div class="btr-card-icon-badge btr-badge-purple">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="m2 4 3 12h14l3-12-6 7-4-5-4 5-6-7z"></path>
+                  <path d="M5 20h14"></path>
+                </svg>
+              </div>
+            </div>
+          </div>
+        </div>
 
 		 <div class="d-flex align-items-center position-relative my-1 me-3"> <span class="svg-icon svg-icon-1 position-absolute ms-6">
                   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none">
@@ -316,6 +832,16 @@
                     if (response && response.html !== undefined) {
                         $('#copyJobTable').html(response.html);
                         $('#paginationcopy').html(response.pagination);
+                        if (response.stats) {
+                            $('#bHeroTotalMatches').text(response.stats.total_matches);
+                            if (response.stats.agencies_count) {
+                                $('#bHeroAgenciesSub').text('Across ' + response.stats.agencies_count + ' Agencies');
+                            }
+                            $('#bHeroExcellentMatches').text(response.stats.excellent_matches);
+                            $('#bHeroGoodMatches').text(response.stats.good_matches);
+                            $('#bHeroAvailableToday').text(response.stats.available_today);
+                            $('#bHeroPremiumAgencies').text(response.stats.premium_agencies);
+                        }
                     }
                     $('#apptrackerfilterBench_close').click();
                 },
