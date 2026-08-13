@@ -434,6 +434,7 @@
           $.ajax({
                 type		: 'POST',
                 url			: url,
+                headers     : { 'X-CSRF-TOKEN': token },
                 beforeSend	: function(){ },
                 data		: {'_token': token, 'event':'CVACCESS','eventId':eventId},
                 success		: function (response){

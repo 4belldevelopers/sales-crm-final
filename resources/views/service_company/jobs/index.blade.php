@@ -464,11 +464,12 @@ data-kt-drawer-toggle="#kt_activitiesJob_toggle" data-kt-drawer-close="#kt_activ
     $('body').on('click', '#AddjobSection', function(){
 
       var url      = "{{ route('service_company.auth-custom-package.validatePackage') }}";
-      var token    = $('meta[name="csrf-token"]').attr('content');
+      var token    = "{{ csrf_token() }}";
       var eventId  = 2;
       $.ajax({
             type      : 'POST',
             url       : url,
+            headers   : { 'X-CSRF-TOKEN': token },
             beforeSend: function(){ },
             data      : {'_token': token, 'event':'CVACCESS','eventId':eventId},
             success   : function (response){
@@ -481,9 +482,9 @@ data-kt-drawer-toggle="#kt_activitiesJob_toggle" data-kt-drawer-close="#kt_activ
                         },
             error     : function (xhr) {
                           if (xhr.status === 419) {
-                              sweetAlert("Session Expired", "Your session has expired. Please reload the page and try again.", "warning");
+                              Swal.fire({ icon: 'warning', title: 'Session Expired', text: 'Your session has expired. Please reload the page and try again.', confirmButtonText: 'Reload', confirmButtonColor: '#3e97ff' }).then(function(){ location.reload(); });
                           } else {
-                              sweetAlert("Error", "Something went wrong. Please try again.", "error");
+                              Swal.fire({ icon: 'error', title: 'Error', text: 'Something went wrong. Please try again.' });
                           }
                         }
           });
