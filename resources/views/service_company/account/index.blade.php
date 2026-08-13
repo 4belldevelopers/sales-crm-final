@@ -41,6 +41,58 @@ input[type="radio"]:checked {
     background-color: currentColor;
 }
 
+/* Company settings: presentation-only treatment of the existing settings form. */
+.company-settings-v2, .company-settings-v2 * { font-family:'Poppins',sans-serif; box-sizing:border-box; }
+.company-settings-v2 { color:#152554; font-size:12px; padding:2px 0 0; }
+.company-settings-v2 .csv2-heading { margin:0 0 16px; }
+.company-settings-v2 .csv2-heading h2 { margin:0; color:#101e4e; font-size:16px; font-weight:600; line-height:1.25; }
+.company-settings-v2 .csv2-heading p { margin:5px 0 0; color:#51628e; font-size:11px; }
+.company-settings-v2 > .card { background:#fff !important; border:1px solid #e7ebf4 !important; border-radius:10px !important; box-shadow:0 2px 10px rgba(16,30,78,.035) !important; overflow:hidden; }
+.company-settings-v2 .card { box-shadow:none !important; background:transparent !important; border:0 !important; border-radius:0 !important; margin:0 !important; }
+.company-settings-v2 .card-header { min-height:0; padding:20px 20px 8px !important; border:0 !important; }
+.company-settings-v2 .card-title h3 { color:#142453; font-size:13px !important; font-weight:600 !important; }
+.company-settings-v2 #setting_one > .card-body { border:0 !important; padding:12px 20px 20px !important; }
+.company-settings-v2 #setting_one > .card-body::before { content:'Basic configurations that control your system preferences.'; display:block; color:#5d6d97; font-size:11px; margin:-6px 0 17px; }
+.company-settings-v2 #setting_one > .card-body { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:14px; }
+.company-settings-v2 #setting_one .row { display:block; margin:0 !important; min-width:0; border:1px solid #e7ebf4; border-radius:8px; background:#fff; padding:13px 14px; min-height:84px; }
+.company-settings-v2 #setting_one .row > label, .company-settings-v2 #setting_one .row > .fv-row { width:100%; max-width:100%; padding:0; }
+.company-settings-v2 #setting_one .row > label { color:#17295b; font-size:11px !important; font-weight:600 !important; margin:0 0 8px; display:flex; align-items:center; gap:8px; }
+.company-settings-v2 #setting_one .row > label::before { content:attr(data-setting-icon); width:30px; height:30px; display:inline-flex; align-items:center; justify-content:center; border-radius:8px; font-size:18px; background:#eff5ff; }
+.company-settings-v2 #setting_one .row:nth-of-type(2) label::before { background:#f5efff; }
+.company-settings-v2 #setting_one .row:nth-of-type(3) label::before { background:#ecfbf1; }
+.company-settings-v2 #setting_one .row:nth-of-type(4) label::before { background:#fff4ea; }
+.company-settings-v2 #setting_one .form-select { min-height:25px; padding:2px 22px 2px 0 !important; border:0 !important; background-color:transparent !important; color:#52628d; font-size:11px; box-shadow:none !important; }
+.company-settings-v2 #setting_one .form-text { display:none; }
+.company-settings-v2 .settings-email-notifications { display:none; }
+.company-settings-v2 #application_duplicate_settings { display:block !important; }
+.company-settings-v2 #application_duplicate_settings > .card-body { border-top:1px solid #edf0f6 !important; padding:14px 20px 20px !important; }
+.company-settings-v2 #application_duplicate_settings > .card-body::before { content:'Configure how duplicate candidates are identified in the system.'; display:block; color:#5d6d97; font-size:11px; margin:-2px 0 16px; }
+.company-settings-v2 #application_duplicate_settings .row { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:14px; margin:0; }
+.company-settings-v2 #application_duplicate_settings .col-lg-4 { width:auto; max-width:none; padding:0; }
+.company-settings-v2 #application_duplicate_settings label.option { display:block; height:130px; margin:0; padding:15px; border:1px solid #e4e9f3; border-radius:8px; background:#fff; cursor:pointer; }
+.company-settings-v2 #application_duplicate_settings label.option:has(input:checked) { border-color:#1764ff; box-shadow:0 0 0 1px #1764ff inset; }
+.company-settings-v2 #application_duplicate_settings .option-control { float:left; margin:2px 12px 0 0; }
+.company-settings-v2 #application_duplicate_settings .option-title { color:#162858; font-size:11px !important; font-weight:600 !important; }
+.company-settings-v2 #application_duplicate_settings .option-head { display:block; min-height:33px; }
+.company-settings-v2 #application_duplicate_settings .option-body { color:#51628e; font-size:10px; line-height:1.45; }
+.company-settings-v2 #application_duplicate_settings input[type=number] { width:74px !important; height:31px; float:right; border:1px solid #e1e7f1; border-radius:6px !important; padding:4px 8px; color:#17295b; font-size:11px; }
+.company-settings-v2 .dept_content { border-top:1px solid #edf0f6 !important; padding:6px 20px 20px !important; }
+.company-settings-v2 .dept_content .form-group { margin:0 !important; }
+.company-settings-v2 .dept_content .row { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:11px; margin:0 0 11px; }
+.company-settings-v2 .dept_content .col-lg-4 { width:auto; max-width:none; padding:0; }
+.company-settings-v2 .dept_content .badge { width:100%; min-height:44px; background:#fff !important; border:1px solid #e7ebf4; border-radius:7px; color:#3e517e; font-weight:400; padding:8px 10px !important; }
+.company-settings-v2 .dept_content .badge .fs-4 { font-size:11px !important; }
+.company-settings-v2 .dept_content .svg-icon svg { width:15px; height:15px; }
+.company-settings-v2 .card:has(#department) .card-header { padding-top:18px !important; }
+.company-settings-v2 .card:has(#department) .card-header::after { content:'Manage and organize your company departments.'; color:#5d6d97; font-size:11px; position:absolute; margin-top:22px; }
+.company-settings-v2 .card:has(#department) .btn-primary { background:#1764ef; border-color:#1764ef; font-size:11px; font-weight:600; padding:8px 13px; border-radius:5px; }
+.company-settings-v2 .card-footer { margin:14px 20px 12px; padding:13px 16px !important; border:1px solid #edf0f6; border-radius:7px; background:#fbfcff !important; justify-content:flex-end !important; }
+.company-settings-v2 .card-footer::before { content:'✓  All changes saved automatically'; margin-right:auto; color:#4c618d; font-size:11px; }
+.company-settings-v2 .card-footer .btn { font-size:11px; font-weight:600; min-width:132px; }
+.company-settings-v2 .card-footer .btn-primary { background:#1457e8; border-color:#1457e8; }
+@media (max-width:1199px){ .company-settings-v2 #setting_one > .card-body{grid-template-columns:repeat(2,minmax(0,1fr));} .company-settings-v2 .dept_content .row{grid-template-columns:repeat(3,minmax(0,1fr));} }
+@media (max-width:767px){ .company-settings-v2 #setting_one > .card-body,.company-settings-v2 #application_duplicate_settings .row{grid-template-columns:1fr;} .company-settings-v2 .dept_content .row{grid-template-columns:repeat(2,minmax(0,1fr));} }
+
 /* ===== Company Dashboard redesign (scoped .cad) — Poppins, <=14px, Metronic-friendly ===== */
 .cad, .cad * { font-family:'Poppins',-apple-system,BlinkMacSystemFont,sans-serif; box-sizing:border-box; }
 .cad { font-size:13px; color:#1f2937; }
@@ -1978,6 +2030,11 @@ input[type="radio"]:checked {
 <div class="tab-pane" id="settings" role="tabpanel">
 <!--begin::Form-->
 <form  id="setting_content" name="setting_content" class="form fv-plugins-bootstrap5 fv-plugins-framework" novalidate="novalidate" method="post">
+  <div class="company-settings-v2">
+  <div class="csv2-heading">
+    <h2>Company Settings</h2>
+    <p>Manage your company preferences and system configurations.</p>
+  </div>
   <meta name="csrf-token" content="{{ csrf_token() }}" />
   <input type="hidden" name="pagename" id="pagename" value="settings" />
   @csrf  
@@ -1988,13 +2045,13 @@ input[type="radio"]:checked {
       <div class="card mb-3 mb-xl-3 mx-0 shadow-none rounded-0">
         <div class="card-header border-0 cursor-pointer px-0" role="button" data-bs-toggle="collapse" data-bs-target="#setting_one" aria-expanded="true" aria-controls="kt_account_profile_details">
           <div class="card-title m-0">
-            <h3 class="fw-bolder m-0">Settings</h3>
+            <h3 class="fw-bolder m-0">General Settings</h3>
           </div>
         </div>
         <div id="setting_one" class="collapse show">
           <div class="card-body border-top py-8 px-2">
             <div class="row mb-6">
-              <label class="col-lg-3 col-form-label required fw-bold fs-6">Language</label>
+              <label data-setting-icon="◎" class="col-lg-3 col-form-label required fw-bold fs-6">Language</label>
               <div class="col-lg-9 fv-row">
                 <select name="language" id="language" aria-label="Select a Language" data-placeholder="Select a language..." class="form-select form-select-solid" tabindex="-1" aria-hidden="true">
                   <option value=""  >Select a Language...</option>
@@ -2018,7 +2075,7 @@ input[type="radio"]:checked {
             </div>
             
             <div class="row mb-6">
-              <label class="col-lg-3 col-form-label required fw-bold fs-6">Time Zone</label>
+              <label data-setting-icon="◷" class="col-lg-3 col-form-label required fw-bold fs-6">Time Zone</label>
               <div class="col-lg-9 fv-row">
                 <select name="timezone" id="timezone" aria-label="Select a Time Zone" data-placeholder="Select a time zone..." class="form-select form-select-solid" tabindex="-1" aria-hidden="true">
                   <option value="" >Select a timezone...</option>
@@ -2062,7 +2119,7 @@ input[type="radio"]:checked {
               </div>
             </div>
             <div class="row mb-6">
-              <label class="col-lg-3 col-form-label fw-bold fs-6">Currency</label>
+              <label data-setting-icon="₹" class="col-lg-3 col-form-label fw-bold fs-6">Currency</label>
               <div class="col-lg-9 fv-row">
                 <select name="currency" id="currency" aria-label="Select a Currency" data-placeholder="Select a currency..." class="form-select form-select-solid" tabindex="-1" aria-hidden="true">
                   <option value="" >Select a currency...</option>
@@ -2084,8 +2141,8 @@ input[type="radio"]:checked {
             </div>
 
             
-            <div class="row mb-6">
-              <label class="col-lg-3 col-form-label fw-bold fs-6">Bench Show Mode</label>
+            <div class="row mb-6 d-none">
+              <label data-setting-icon="◫" class="col-lg-3 col-form-label fw-bold fs-6">Bench Show Mode</label>
               <div class="col-lg-9 fv-row">
                 @php
                     $modeShow = ["Annual","Monthly","Hourly"];
@@ -2130,7 +2187,7 @@ input[type="radio"]:checked {
 
            
             <div class="row mb-6">
-              <label class="col-lg-3 col-form-label fw-bold fs-6">Time Format</label>
+              <label data-setting-icon="◴" class="col-lg-3 col-form-label fw-bold fs-6">Time Format</label>
               <div class="col-lg-9 fv-row">
                 <select name="time_format" id="time_format" aria-label="Select a time format" data-placeholder="Select a time format..." class="form-select form-select-solid" tabindex="-1" aria-hidden="true">
                   <option value="" >Select a time format...</option>
@@ -2275,7 +2332,7 @@ input[type="radio"]:checked {
       </div>
       <!--end::Connected Accounts-->
       <!--begin::Notifications-->  
-      <div class="card mb-3 mb-xl-3 mx-0 shadow-none rounded-0">
+      <div class="card mb-3 mb-xl-3 mx-0 shadow-none rounded-0 settings-email-notifications">
         <!--begin::Card header-->
         <div class="card-header border-0 cursor-pointer px-0" role="button" data-bs-toggle="collapse" data-bs-target="#kt_notification_connected_notification" aria-expanded="true" aria-controls="kt_notification_connected_notification">
           <div class="card-title m-0">
@@ -2314,7 +2371,7 @@ input[type="radio"]:checked {
     <!--begin::Card header-->
     <div class="card-header border-0 cursor-pointer px-0" role="button" data-bs-toggle="collapse" data-bs-target="#application_duplicate_settings" aria-expanded="true" aria-controls="application_duplicate_settings">
       <div class="card-title m-0">
-        <h3 class="fw-bolder m-0">Application Duplicate Setting</h3>
+        <h3 class="fw-bolder m-0">Duplicate Rules</h3>
       </div>
     </div>
     <!--end::Card header-->
@@ -2403,7 +2460,7 @@ input[type="radio"]:checked {
     <!--begin::Card header-->
     <div class="card-header row">
       <div class="cursor-pointer px-0 card-title m-0 col-lg-9" role="button" data-toggle="collapse" data-target="#department" aria-expanded="true" aria-controls="department">
-        <h3 class="fw-bolder m-0">Department</h3>
+        <h3 class="fw-bolder m-0">Department Management</h3>
       </div>
       <div class="card-title m-0 col-lg-2 "> @if(in_array("add_settings", $userPermissions)) <a href="javascript:void(0);" class="btn btn-primary align-self-center position-absolute end-0" data-toggle="modal" data-target="#add_department"> Add Department </a> @endif </div>
     </div>
@@ -2528,12 +2585,13 @@ input[type="radio"]:checked {
   
 @if(in_array("edit_settings", $userPermissions))
   <div class="card-footer d-flex justify-content-center py-6 px-9 bg-white">
-   <a href="{{ route('service_company.account.index') }}" class="btn btn-secondary me-2" >
-    	Cancel
+    <a href="{{ route('service_company.account.index') }}" class="btn btn-secondary me-2" >
+    Discard Changes
 	</a>
     <button class="btn btn-primary me-2 updateCompanyProfile" type="button" id="updateCompanyProfile">Save Changes</button>
   </div>
 @endif
+  </div>
   </div>
  
 </form>
