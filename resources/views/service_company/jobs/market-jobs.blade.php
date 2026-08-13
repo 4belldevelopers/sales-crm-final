@@ -119,10 +119,11 @@
         font-size: 13px;
         font-weight: 400;
         color: #6B7280;
-        max-width: 420px;
+        max-width: 640px;
         line-height: 1.45;
         text-align: right;
         flex: 1;
+        white-space: nowrap;
     }
     .mjh-btn-post {
         display: inline-flex;
