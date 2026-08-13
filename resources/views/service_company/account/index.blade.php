@@ -47,13 +47,14 @@ input[type="radio"]:checked {
 .company-settings-v2 .csv2-heading { margin:0 0 16px; }
 .company-settings-v2 .csv2-heading h2 { margin:0; color:#101e4e; font-size:16px; font-weight:600; line-height:1.25; }
 .company-settings-v2 .csv2-heading p { margin:5px 0 0; color:#51628e; font-size:11px; }
-.company-settings-v2 > .card { background:#fff !important; border:1px solid #e7ebf4 !important; border-radius:10px !important; box-shadow:0 2px 10px rgba(16,30,78,.035) !important; overflow:hidden; }
 .company-settings-v2 .card { box-shadow:none !important; background:transparent !important; border:0 !important; border-radius:0 !important; margin:0 !important; }
+.company-settings-v2 > .card { background:#fff !important; border:1px solid #e7ebf4 !important; border-radius:10px !important; box-shadow:0 2px 10px rgba(16,30,78,.035) !important; overflow:hidden; }
 .company-settings-v2 .card-header { min-height:0; padding:20px 20px 8px !important; border:0 !important; }
 .company-settings-v2 .card-title h3 { color:#142453; font-size:13px !important; font-weight:600 !important; }
-.company-settings-v2 #setting_one { display:block !important; }
+.company-settings-v2 .csv2-section-sub { margin:3px 0 0; color:#5d6d97; font-size:11px; line-height:1.4; }
+.company-settings-v2 > .card > .card-body { display:block !important; height:auto !important; }
+.company-settings-v2 .settings-section-content { display:block !important; height:auto !important; visibility:visible !important; opacity:1 !important; }
 .company-settings-v2 #setting_one > .card-body { border:0 !important; padding:12px 20px 20px !important; }
-.company-settings-v2 #setting_one > .card-body::before { content:'Basic configurations that control your system preferences.'; display:block; color:#5d6d97; font-size:11px; margin:-6px 0 17px; }
 .company-settings-v2 #setting_one > .card-body { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:14px; }
 .company-settings-v2 #setting_one .row { display:block; margin:0 !important; min-width:0; border:1px solid #e7ebf4; border-radius:8px; background:#fff; padding:13px 14px; min-height:84px; }
 .company-settings-v2 #setting_one .row > label, .company-settings-v2 #setting_one .row > .fv-row { width:100%; max-width:100%; padding:0; }
@@ -67,7 +68,6 @@ input[type="radio"]:checked {
 .company-settings-v2 .settings-email-notifications { display:none; }
 .company-settings-v2 #application_duplicate_settings { display:block !important; }
 .company-settings-v2 #application_duplicate_settings > .card-body { border-top:1px solid #edf0f6 !important; padding:14px 20px 20px !important; }
-.company-settings-v2 #application_duplicate_settings > .card-body::before { content:'Configure how duplicate candidates are identified in the system.'; display:block; color:#5d6d97; font-size:11px; margin:-2px 0 16px; }
 .company-settings-v2 #application_duplicate_settings .row { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:14px; margin:0; }
 .company-settings-v2 #application_duplicate_settings .col-lg-4 { width:auto; max-width:none; padding:0; }
 .company-settings-v2 #application_duplicate_settings label.option { display:block; height:130px; margin:0; padding:15px; border:1px solid #e4e9f3; border-radius:8px; background:#fff; cursor:pointer; }
@@ -85,8 +85,14 @@ input[type="radio"]:checked {
 .company-settings-v2 .dept_content .badge .fs-4 { font-size:11px !important; }
 .company-settings-v2 .dept_content .svg-icon svg { width:15px; height:15px; }
 .company-settings-v2 .settings-department-card .card-header { padding-top:18px !important; }
-.company-settings-v2 .settings-department-card .card-header::after { content:'Manage and organize your company departments.'; color:#5d6d97; font-size:11px; position:absolute; margin-top:22px; }
 .company-settings-v2 .settings-department-card .btn-primary { background:#1764ef; border-color:#1764ef; font-size:11px; font-weight:600; padding:8px 13px; border-radius:5px; }
+.company-settings-v2 .settings-general-card,
+.company-settings-v2 .settings-duplicate-card,
+.company-settings-v2 .settings-department-card { display:block !important; height:auto !important; min-height:0 !important; border-bottom:1px solid #edf0f6 !important; }
+.company-settings-v2 .settings-department-card { border-bottom:0 !important; }
+.company-settings-v2 .settings-general-card,
+.company-settings-v2 .settings-duplicate-card,
+.company-settings-v2 .settings-department-card { flex:none !important; position:relative !important; }
 .company-settings-v2 .card-footer { margin:14px 20px 12px; padding:13px 16px !important; border:1px solid #edf0f6; border-radius:7px; background:#fbfcff !important; justify-content:flex-end !important; }
 .company-settings-v2 .card-footer::before { content:'✓  All changes saved automatically'; margin-right:auto; color:#4c618d; font-size:11px; }
 .company-settings-v2 .card-footer .btn { font-size:11px; font-weight:600; min-width:132px; }
@@ -2044,12 +2050,15 @@ input[type="radio"]:checked {
   <div class="card mb-3 bg-light mb-xl-3 mx-0 shadow-none rounded-0"> @if(in_array("view_settings", $userPermissions))
     <div class="card-body px-0 pt-0 pb-0">
       <div class="card mb-3 mb-xl-3 mx-0 shadow-none rounded-0 settings-general-card">
-        <div class="card-header border-0 cursor-pointer px-0" role="button" data-bs-toggle="collapse" data-bs-target="#setting_one" aria-expanded="true" aria-controls="kt_account_profile_details">
+        <div class="card-header border-0 px-0">
           <div class="card-title m-0">
-            <h3 class="fw-bolder m-0">General Settings</h3>
+            <div>
+              <h3 class="fw-bolder m-0">General Settings</h3>
+              <p class="csv2-section-sub">Basic configurations that control your system preferences.</p>
+            </div>
           </div>
         </div>
-        <div id="setting_one" class="collapse show">
+        <div id="setting_one" class="settings-section-content">
           <div class="card-body border-top py-8 px-2">
             <div class="row mb-6">
               <label data-setting-icon="◎" class="col-lg-3 col-form-label required fw-bold fs-6">Language</label>
@@ -2368,16 +2377,19 @@ input[type="radio"]:checked {
       </div>
       <!--end::Notifications-->
   <!--begin::Application Duplicate Settings-->
-  <div class="card mb-3 mb-xl-3 mx-0 shadow-none rounded-0">
+  <div class="card mb-3 mb-xl-3 mx-0 shadow-none rounded-0 settings-duplicate-card">
     <!--begin::Card header-->
-    <div class="card-header border-0 cursor-pointer px-0" role="button" data-bs-toggle="collapse" data-bs-target="#application_duplicate_settings" aria-expanded="true" aria-controls="application_duplicate_settings">
+    <div class="card-header border-0 px-0">
       <div class="card-title m-0">
-        <h3 class="fw-bolder m-0">Duplicate Rules</h3>
+        <div>
+          <h3 class="fw-bolder m-0">Duplicate Rules</h3>
+          <p class="csv2-section-sub">Configure how duplicate candidates are identified in the system.</p>
+        </div>
       </div>
     </div>
     <!--end::Card header-->
     <!--begin::Content-->
-    <div id="application_duplicate_settings" class="collapse show">
+    <div id="application_duplicate_settings" class="settings-section-content">
       <!--begin::Card body-->
       <div class="card-body border-top py-8 px-2">
  
@@ -2460,14 +2472,17 @@ input[type="radio"]:checked {
   <div class="card mb-3 mb-xl-3 mx-0 shadow-none rounded-0 settings-department-card">
     <!--begin::Card header-->
     <div class="card-header row">
-      <div class="cursor-pointer px-0 card-title m-0 col-lg-9" role="button" data-toggle="collapse" data-target="#department" aria-expanded="true" aria-controls="department">
-        <h3 class="fw-bolder m-0">Department Management</h3>
+      <div class="px-0 card-title m-0 col-lg-9">
+        <div>
+          <h3 class="fw-bolder m-0">Department Management</h3>
+          <p class="csv2-section-sub">Manage and organize your company departments.</p>
+        </div>
       </div>
       <div class="card-title m-0 col-lg-2 "> @if(in_array("add_settings", $userPermissions)) <a href="javascript:void(0);" class="btn btn-primary align-self-center position-absolute end-0" data-toggle="modal" data-target="#add_department"> Add Department </a> @endif </div>
     </div>
     <!--end::Card header-->
     <!--begin::Content-->
-    <div id="department" class="collapse show">
+    <div id="department" class="settings-section-content">
       <!--begin::Card body-->
       <div class="card-body border-top py-8 px-2 dept_content">
         @php 
@@ -2522,6 +2537,9 @@ input[type="radio"]:checked {
                                     <div class="form-text text-muted"></div>
                                   </div>';
                             }			 
+              }
+              if($cnt > 0 && $cnt % 3 != 0){
+                $dept .= '</div><div class="form-check"></div><div class="form-text text-muted"></div></div>';
               }
               }			 
                   
