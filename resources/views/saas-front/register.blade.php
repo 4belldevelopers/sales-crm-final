@@ -1983,52 +1983,26 @@ if (inputElement) {
 }
 
 // Phone Input — intlTelInput v17 integration
-// Initialise the library and expose the instance on window.phoneInput so that
-// updatePreviewData() and the countrychange handler can read it reliably via
-// the official API (getSelectedCountryData) instead of CSS-class scraping.
-// dropdownContainer:document.body ensures the country list is appended to <body>
-// so it is NEVER clipped by overflow:hidden on any ancestor element.
+// window.phoneInput is used throughout (updatePreviewData, countrychange seed).
+// dropdownContainer:document.body lets the country list escape overflow:hidden ancestors.
+// utilsScript enables full number validation (isValidNumber).
 const phoneInputField = document.querySelector("#contact_number");
-<<<<<<< HEAD
 window.phoneInput = window.intlTelInput(phoneInputField, {
-=======
-const phoneInput = window.intlTelInput(phoneInputField, {
->>>>>>> c39334df197626650d9eabb33c4f847cc9d64079
   separateDialCode: true,
   initialCountry: "in",
   preferredCountries: ["in", "us", "gb", "ca", "au"],
   autoPlaceholder: "off",
-<<<<<<< HEAD
-  dropdownContainer: document.body
-});
-
-// Sync the hidden contact_code field whenever the user picks a different flag.
-// This is the only reliable hook — the old click-on-.iti__flag-container
-// approach fired before the library updated its internal state.
-phoneInputField.addEventListener("countrychange", function () {
-  var data = window.phoneInput.getSelectedCountryData();
-  var dialCode = data.dialCode ? ('+' + data.dialCode) : '';
-  $('#contact_code').val(dialCode);
-  updatePreviewData();
-});
-
-// Seed the hidden field immediately on page load with the default country (+91).
-$(document).ready(function() {
-  var data = window.phoneInput.getSelectedCountryData();
-  var dialCode = data.dialCode ? ('+' + data.dialCode) : '+91';
-  $('#contact_code').val(dialCode);
-});
-=======
+  dropdownContainer: document.body,
   utilsScript: "https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.17/js/utils.js"
 });
 
-// Numeric-only enforcement: strip non-digit chars (except for typing) and apply length cap.
+// Numeric-only enforcement: strip non-digit chars and apply E.164 length cap (15 digits).
 (function () {
-  const maxLen = 15; // E.164 international max is 15 digits
+  const maxLen = 15;
   function sanitizeDigits(raw) { return (raw || '').replace(/\D+/g, '').slice(0, maxLen); }
   phoneInputField.setAttribute('inputmode', 'numeric');
   phoneInputField.setAttribute('pattern', '[0-9]+');
-  phoneInputField.addEventListener('input', function (e) {
+  phoneInputField.addEventListener('input', function () {
     const caret = phoneInputField.selectionStart || 0;
     const before = phoneInputField.value.slice(0, caret);
     const sanitizedFull = sanitizeDigits(phoneInputField.value);
@@ -2040,13 +2014,11 @@ $(document).ready(function() {
     }
     phoneInputField.setCustomValidity('');
   });
-  // Block paste of non-digit content cleanly.
   phoneInputField.addEventListener('paste', function (e) {
     e.preventDefault();
     const text = (e.clipboardData || window.clipboardData).getData('text') || '';
     document.execCommand('insertText', false, sanitizeDigits(text));
   });
-  // Block keypress of non-digit keys (covers letter entry on all keyboards).
   phoneInputField.addEventListener('keypress', function (e) {
     if (e.ctrlKey || e.metaKey || e.altKey) return;
     const ch = String.fromCharCode(e.which || e.keyCode || 0);
@@ -2054,24 +2026,21 @@ $(document).ready(function() {
   });
 })();
 
-// Sync hidden contact_code on any country change.
-phoneInputField.addEventListener('countrychange', function () {
-  const data = phoneInput.getSelectedCountryData();
-  $('#contact_code').val(data.iso2 || '');
+// Sync the hidden contact_code field whenever the user picks a different flag.
+// Uses the official ITI API — fires AFTER the library updates its internal state.
+phoneInputField.addEventListener("countrychange", function () {
+  var data = window.phoneInput.getSelectedCountryData();
+  var dialCode = data.dialCode ? ('+' + data.dialCode) : '';
+  $('#contact_code').val(dialCode);
+  updatePreviewData();
 });
 
-// Form-submit gate: only proceed when intlTelInput considers the number valid.
-const phoneForm = phoneInputField.closest('form');
-if (phoneForm) {
-  phoneForm.addEventListener('submit', function (e) {
-    if (phoneInputField.value && !phoneInput.isValidNumber()) {
-      e.preventDefault();
-      phoneInputField.setCustomValidity('Please enter a valid phone number for the selected country.');
-      phoneInputField.reportValidity();
-    }
-  });
-}
->>>>>>> c39334df197626650d9eabb33c4f847cc9d64079
+// Seed the hidden field immediately on page load with the default country (+91).
+$(document).ready(function () {
+  var data = window.phoneInput.getSelectedCountryData();
+  var dialCode = data.dialCode ? ('+' + data.dialCode) : '+91';
+  $('#contact_code').val(dialCode);
+});
 
 // Original Stepper & FormValidation Integration
 $(document).ready(function() {  
