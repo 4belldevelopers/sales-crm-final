@@ -45,27 +45,41 @@ input[type="radio"]:checked {
 .company-settings-v2,.company-settings-v2 *{font-family:'Poppins',-apple-system,BlinkMacSystemFont,sans-serif;box-sizing:border-box}
 .company-settings-v2{color:#101e4e;font-size:12px;padding:0 0 2px}
 .company-settings-v2 .csv2-heading{margin:0 0 18px}
-.company-settings-v2 .csv2-heading h2{margin:0;color:#0e1b4d;font-size:16px;font-weight:600;line-height:1.3}
-.company-settings-v2 .csv2-heading p,.company-settings-v2 .csv2-section-sub{margin:4px 0 0;color:#60709a;font-size:11px;font-weight:400;line-height:1.45}
+.company-settings-v2 .csv2-heading h2{margin:0;color:#0e1b4d;font-size:16px;font-weight:500;line-height:1.3}
+.company-settings-v2 .csv2-heading p,.company-settings-v2 .csv2-section-sub{margin:4px 0 0;color:#52638b;font-size:11px;font-weight:400;line-height:1.45}
 .company-settings-v2>.card{overflow:hidden;background:#fff!important;border:1px solid #e3e8f2!important;border-radius:10px!important;box-shadow:0 2px 10px rgba(16,30,78,.04)!important}
 .company-settings-v2 .card{display:block!important;height:auto!important;min-height:0!important;margin:0!important;background:transparent!important;border:0!important;border-radius:0!important;box-shadow:none!important;position:relative!important;flex:none!important}
-.company-settings-v2 .settings-general-card,.company-settings-v2 .settings-duplicate-card{border-bottom:1px solid #edf0f6!important}
+.company-settings-v2 .card.d-none,.company-settings-v2 .settings-email-notifications{display:none!important}
+.company-settings-v2 .settings-general-card,.company-settings-v2 .settings-duplicate-card,.company-settings-v2 .settings-department-card{margin:14px!important;background:#fff!important;border:1px solid #e2e7f0!important;border-radius:9px!important;box-shadow:0 1px 4px rgba(16,30,78,.035)!important}
 .company-settings-v2 .card-header{min-height:0!important;padding:20px 20px 9px!important;border:0!important;background:#fff!important}
-.company-settings-v2 .card-title h3{margin:0;color:#101e4e;font-size:13px!important;font-weight:600!important}
+.company-settings-v2 .card-title h3{margin:0;color:#101e4e;font-size:13px!important;font-weight:500!important}
 .company-settings-v2 .settings-section-content,.company-settings-v2>.card>.card-body{display:block!important;height:auto!important;visibility:visible!important;opacity:1!important}
 .company-settings-v2 #setting_one>.card-body{display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;padding:12px 20px 22px!important;border:0!important}
 .company-settings-v2 #setting_one .row{display:grid!important;grid-template-columns:48px minmax(0,1fr);grid-template-rows:auto auto;column-gap:12px;align-items:center;min-width:0;min-height:82px;margin:0!important;padding:12px!important;background:#fff;border:1px solid #e2e7f0;border-radius:8px;transition:border-color .15s,box-shadow .15s}
 .company-settings-v2 #setting_one .row:hover,.company-settings-v2 #setting_one .row:focus-within{border-color:#b8c8ed;box-shadow:0 3px 12px rgba(25,68,150,.07)}
 .company-settings-v2 #setting_one .row.d-none{display:none!important}
-.company-settings-v2 #setting_one .row>label{grid-column:2;grid-row:1;width:auto;max-width:none;margin:0!important;padding:0;color:#13224f;font-size:11px!important;font-weight:600!important;line-height:1.35}
+.company-settings-v2 #setting_one .row>label{grid-column:2;grid-row:1;width:auto;max-width:none;margin:0!important;padding:0;color:#13224f;font-size:11px!important;font-weight:500!important;line-height:1.35}
 .company-settings-v2 #setting_one .row>.fv-row{grid-column:2;grid-row:2;width:auto;max-width:none;min-width:0;padding:0}
 .company-settings-v2 .csv2-field-icon{grid-column:1;grid-row:1/3;display:flex;width:42px;height:42px;align-items:center;justify-content:center;border-radius:10px}
 .company-settings-v2 .csv2-field-icon svg{width:23px;height:23px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 .company-settings-v2 .csv2-blue{color:#1764ef;background:#edf4ff}.company-settings-v2 .csv2-purple{color:#7638eb;background:#f3edff}.company-settings-v2 .csv2-green{color:#159957;background:#ebf9f0}.company-settings-v2 .csv2-orange{color:#f46a22;background:#fff1e8}
-.company-settings-v2 #setting_one .form-select{width:100%;min-height:28px;padding:2px 27px 2px 0!important;color:#52638e;font-size:11px;font-weight:400;border:0!important;border-radius:0!important;background-color:transparent!important;box-shadow:none!important;cursor:pointer;text-overflow:ellipsis}
+.company-settings-v2 #setting_one .form-select{width:100%;min-height:30px;padding:3px 29px 3px 0!important;color:#334873;font-size:11px;font-weight:400;border:0!important;border-radius:0!important;background-color:transparent!important;box-shadow:none!important;cursor:pointer;text-overflow:ellipsis}
 .company-settings-v2 #setting_one .form-select:focus{color:#172a58;outline:0}
+.company-settings-v2 #setting_one .form-select option,.company-settings-v2 #setting_one .form-select optgroup{color:#354a76;font-family:'Poppins',sans-serif;font-size:11px;font-weight:400;background:#fff}
+.company-settings-v2 #setting_one .select2-container{width:100%!important;min-width:0}
+.company-settings-v2 #setting_one .select2-container .select2-selection--single{height:30px!important;padding:0!important;background:transparent!important;border:0!important;border-radius:0!important;box-shadow:none!important}
+.company-settings-v2 #setting_one .select2-container .select2-selection__rendered{height:30px!important;padding:5px 28px 4px 0!important;color:#334873!important;font-size:11px!important;font-weight:400!important;line-height:21px!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.company-settings-v2 #setting_one .select2-container .select2-selection__arrow{right:0!important;top:2px!important;width:22px!important;height:26px!important}
+.company-settings-v2 #setting_one .select2-container--focus .select2-selection--single{outline:0!important}
+.select2-dropdown.csv2-enterprise-dropdown,.csv2-enterprise-select .select2-dropdown{margin-top:7px;padding:7px;background:#fff;border:1px solid #dce3ef!important;border-radius:8px!important;box-shadow:0 14px 32px rgba(16,30,78,.16)!important;font-family:'Poppins',sans-serif;overflow:hidden}
+.select2-dropdown.csv2-enterprise-dropdown .select2-search--dropdown{padding:3px 3px 8px}
+.select2-dropdown.csv2-enterprise-dropdown .select2-search__field{height:34px;padding:6px 10px;color:#263a68;font-family:'Poppins',sans-serif;font-size:11px;font-weight:400;border:1px solid #dfe5ef!important;border-radius:6px!important;outline:0}
+.select2-dropdown.csv2-enterprise-dropdown .select2-search__field:focus{border-color:#1764ef!important;box-shadow:0 0 0 3px rgba(23,100,239,.08)}
+.select2-dropdown.csv2-enterprise-dropdown .select2-results__options{max-height:240px!important;padding:2px}
+.select2-dropdown.csv2-enterprise-dropdown .select2-results__option{min-height:34px;margin:2px 0;padding:8px 10px;color:#354a76;font-size:11px;font-weight:400;line-height:18px;border-radius:5px}
+.select2-dropdown.csv2-enterprise-dropdown .select2-results__option--highlighted[aria-selected]{color:#154dbb!important;background:#edf4ff!important}
+.select2-dropdown.csv2-enterprise-dropdown .select2-results__option[aria-selected=true]{color:#0f49bd!important;font-weight:500;background:#e8f1ff!important}
 .company-settings-v2 #setting_one .form-text{display:none}
-.company-settings-v2 .settings-email-notifications{display:none!important}
 .company-settings-v2 #application_duplicate_settings>.card-body{padding:12px 20px 22px!important;border:0!important}
 .company-settings-v2 #application_duplicate_settings .row{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin:0!important}
 .company-settings-v2 #application_duplicate_settings .col-lg-4{width:auto;max-width:none;padding:0}
@@ -75,11 +89,11 @@ input[type="radio"]:checked {
 .company-settings-v2 #application_duplicate_settings .option-control{grid-column:1;margin:1px 0 0}
 .company-settings-v2 #application_duplicate_settings .option-label{grid-column:2;min-width:0}
 .company-settings-v2 #application_duplicate_settings .option-head{display:flex!important;align-items:flex-start;justify-content:space-between;gap:8px;min-height:34px}
-.company-settings-v2 #application_duplicate_settings .option-title{color:#142453;font-size:11px!important;font-weight:600!important;line-height:1.4}
+.company-settings-v2 #application_duplicate_settings .option-title{color:#142453;font-size:11px!important;font-weight:500!important;line-height:1.4}
 .company-settings-v2 #application_duplicate_settings .option-body{display:block;color:#56678f;font-size:10px;font-weight:400;line-height:1.5}
 .company-settings-v2 #application_duplicate_settings input[type=radio]{width:17px;height:17px;margin:0;accent-color:#1764ff}
 .company-settings-v2 .csv2-days-row{display:flex;align-items:center;gap:10px;margin-top:15px;color:#56678f;font-size:10px}
-.company-settings-v2 #application_duplicate_settings input[type=number]{width:74px!important;height:32px;flex:0 0 74px;margin:0;padding:5px 9px;color:#172957;font-size:11px;font-weight:600;background:#fff;border:1px solid #dfe5ef;border-radius:6px!important;outline:0}
+.company-settings-v2 #application_duplicate_settings input[type=number]{width:74px!important;height:32px;flex:0 0 74px;margin:0;padding:5px 9px;color:#172957;font-size:11px;font-weight:500;background:#fff;border:1px solid #dfe5ef;border-radius:6px!important;outline:0}
 .company-settings-v2 #application_duplicate_settings input[type=number]:focus{border-color:#1764ff;box-shadow:0 0 0 3px rgba(23,100,255,.09)}
 .company-settings-v2 .settings-department-card .card-header{display:flex;align-items:center;justify-content:space-between;padding-top:20px!important}
 .company-settings-v2 .settings-department-card .card-header>.card-title:last-child{margin-left:auto!important}
@@ -94,7 +108,7 @@ input[type="radio"]:checked {
 .company-settings-v2 .dept_content .col-lg-4:nth-of-type(4n+2) .badge::before{background-color:#f3edff;filter:hue-rotate(35deg)}
 .company-settings-v2 .dept_content .col-lg-4:nth-of-type(4n+3) .badge::before{background-color:#ebf9f0;filter:hue-rotate(105deg)}
 .company-settings-v2 .dept_content .col-lg-4:nth-of-type(4n+4) .badge::before{background-color:#fff1e8;filter:hue-rotate(185deg)}
-.company-settings-v2 .dept_content .badge .fs-4{width:100%;font-size:11px!important;font-weight:400!important;text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.company-settings-v2 .dept_content .badge .fs-4{width:100%;font-size:11px!important;font-weight:500!important;text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .company-settings-v2 .dept_content .edit_delete{position:absolute;right:10px;top:50%;transform:translateY(-50%)}
 .company-settings-v2 .dept_content .dept_delete{display:flex;width:24px;height:24px;align-items:center;justify-content:center;color:#64759b!important}
 .company-settings-v2 .dept_content .dept_delete:hover{color:#e11d48!important}
@@ -102,12 +116,12 @@ input[type="radio"]:checked {
 .company-settings-v2 .dept_content .dept_delete::before{content:'×';font-size:17px;font-weight:400;line-height:1}
 .csv2-tab-icon{display:inline-flex;width:16px;height:16px;margin-right:6px;vertical-align:-3px;color:#1764ef}
 .csv2-tab-icon svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.nav-link[href="#settings"] .nav-text{font-weight:500!important}
 .company-settings-v2 .card-footer{display:flex!important;align-items:center;margin:0 12px 12px;padding:13px 16px!important;background:#fbfcff!important;border:1px solid #edf0f6!important;border-radius:7px;justify-content:flex-end!important}
-.company-settings-v2 .card-footer::before{content:'All changes saved automatically';margin-right:auto;padding-left:28px;color:#4c618d;font-size:11px;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='%2316a75c' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='9'/%3E%3Cpath d='m8 12 3 3 5-6'/%3E%3C/svg%3E") left center/18px no-repeat}
 .company-settings-v2 .card-footer .btn{min-width:130px;padding:9px 14px;font-size:11px;font-weight:500;border-radius:5px}
 .company-settings-v2 .card-footer .btn-primary{color:#fff;background:#1457e8;border-color:#1457e8}
 @media(max-width:1199px){.company-settings-v2 #setting_one>.card-body{grid-template-columns:repeat(2,minmax(0,1fr))}.company-settings-v2 .dept_content{grid-template-columns:repeat(3,minmax(0,1fr))}}
-@media(max-width:767px){.company-settings-v2 #setting_one>.card-body,.company-settings-v2 #application_duplicate_settings .row{grid-template-columns:1fr}.company-settings-v2 .dept_content{grid-template-columns:repeat(2,minmax(0,1fr))}.company-settings-v2 .card-footer{flex-wrap:wrap;gap:8px}.company-settings-v2 .card-footer::before{width:100%;margin-bottom:4px}}
+@media(max-width:767px){.company-settings-v2 #setting_one>.card-body,.company-settings-v2 #application_duplicate_settings .row{grid-template-columns:1fr}.company-settings-v2 .dept_content{grid-template-columns:repeat(2,minmax(0,1fr))}.company-settings-v2 .card-footer{flex-wrap:wrap;gap:8px}}
 
 /* ===== Company Dashboard redesign (scoped .cad) — Poppins, <=14px, Metronic-friendly ===== */
 .cad, .cad * { font-family:'Poppins',-apple-system,BlinkMacSystemFont,sans-serif; box-sizing:border-box; }
@@ -2047,10 +2061,6 @@ input[type="radio"]:checked {
 <!--begin::Form-->
 <form  id="setting_content" name="setting_content" class="form fv-plugins-bootstrap5 fv-plugins-framework" novalidate="novalidate" method="post">
   <div class="company-settings-v2">
-  <div class="csv2-heading">
-    <h2>Company Settings</h2>
-    <p>Manage your company preferences and system configurations.</p>
-  </div>
   <meta name="csrf-token" content="{{ csrf_token() }}" />
   <input type="hidden" name="pagename" id="pagename" value="settings" />
   @csrf  
@@ -3468,8 +3478,23 @@ new Tagify(input)
 <script>
 
 $(document).ready(function(){
+        // Intent: enhance the four existing local selects with searchable, keyboard-friendly enterprise menus; no remote data is requested.
+        if ($.fn.select2) {
+            $('#language, #timezone, #currency, #time_format').each(function(){
+                var $settingSelect = $(this);
+                if (!$settingSelect.hasClass('select2-hidden-accessible')) {
+                    $settingSelect.select2({
+                        width: '100%',
+                        dropdownCssClass: 'csv2-enterprise-dropdown',
+                        minimumResultsForSearch: ($settingSelect.is('#timezone, #currency')) ? 8 : Infinity
+                    });
+                }
+            }).on('select2:open', function(){
+                $('.select2-dropdown').last().addClass('csv2-enterprise-dropdown');
+            });
+        }
    
-   			$('.submit_department').click(function(){
+			$('.submit_department').click(function(){
    									var dept_name	=	$('#dept_name').val();								
 									if(dept_name ==''){
 											$('#dept_name').val('');	
