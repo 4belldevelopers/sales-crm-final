@@ -41,6 +41,158 @@ input[type="radio"]:checked {
     background-color: currentColor;
 }
 
+/* Company settings: visual-only enterprise card system; existing form contracts stay intact. */
+.company-settings-v2,.company-settings-v2 *{font-family:'Poppins',-apple-system,BlinkMacSystemFont,sans-serif!important;box-sizing:border-box}
+.company-settings-v2{color:#101e4e;font-size:12px;font-weight:500;padding:0 0 2px}
+.company-settings-v2 .csv2-heading{margin:0 0 18px}
+.company-settings-v2 .csv2-heading h2{margin:0;color:#0e1b4d;font-size:16px;font-weight:600;line-height:1.3}
+.company-settings-v2 .csv2-heading p,.company-settings-v2 .csv2-section-sub{margin:4px 0 0;color:#52638b;font-size:11px;font-weight:500;line-height:1.45}
+.company-settings-v2 .card{display:block!important;height:auto!important;min-height:0!important;margin:0!important;background:transparent!important;border:0!important;border-radius:0!important;box-shadow:none!important;position:relative!important;flex:none!important}
+.company-settings-v2>.card{overflow:hidden;background:#fff!important;border:1px solid #cfd8e8!important;border-radius:10px!important;box-shadow:0 3px 14px rgba(16,30,78,.07)!important}
+.company-settings-v2 .card.d-none,.company-settings-v2 .settings-email-notifications{display:none!important}
+.company-settings-v2 .settings-general-card,.company-settings-v2 .settings-duplicate-card,.company-settings-v2 .settings-department-card{margin:14px!important;background:#fff!important;border:1px solid #d3dcea!important;border-radius:9px!important;box-shadow:0 2px 7px rgba(16,30,78,.055)!important}
+.company-settings-v2 .card-header{min-height:0!important;padding:20px 20px 9px!important;border:0!important;background:#fff!important}
+.company-settings-v2 .card-title h3{margin:0;color:#101e4e;font-size:13px!important;font-weight:600!important}
+.company-settings-v2 .settings-section-content,.company-settings-v2>.card>.card-body{display:block!important;height:auto!important;visibility:visible!important;opacity:1!important}
+.company-settings-v2 #setting_one>.card-body{display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;padding:12px 20px 22px!important;border:0!important}
+.company-settings-v2 #setting_one .row{display:grid!important;grid-template-columns:48px minmax(0,1fr);grid-template-rows:auto auto;column-gap:12px;align-items:center;min-width:0;min-height:82px;margin:0!important;padding:12px!important;background:#fff;border:1px solid #ccd7e8;border-radius:8px;box-shadow:0 1px 3px rgba(16,30,78,.035);transition:border-color .15s,box-shadow .15s}
+.company-settings-v2 #setting_one .row:hover,.company-settings-v2 #setting_one .row:focus-within{border-color:#8eaae0;box-shadow:0 4px 14px rgba(25,68,150,.10)}
+.company-settings-v2 #setting_one .row.d-none{display:none!important}
+.company-settings-v2 #setting_one .row>label{grid-column:2;grid-row:1;width:auto;max-width:none;margin:0!important;padding:0;color:#13224f;font-size:11px!important;font-weight:600!important;line-height:1.35}
+.company-settings-v2 #setting_one .row>.fv-row{grid-column:2;grid-row:2;width:auto;max-width:none;min-width:0;padding:0}
+.company-settings-v2 .csv2-field-icon{grid-column:1;grid-row:1/3;display:flex;width:42px;height:42px;align-items:center;justify-content:center;border-radius:10px}
+.company-settings-v2 .csv2-field-icon svg{width:23px;height:23px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.company-settings-v2 .csv2-blue{color:#1764ef;background:#edf4ff}.company-settings-v2 .csv2-purple{color:#7638eb;background:#f3edff}.company-settings-v2 .csv2-green{color:#159957;background:#ebf9f0}.company-settings-v2 .csv2-orange{color:#f46a22;background:#fff1e8}
+.company-settings-v2 #setting_one .form-select{width:100%;min-height:30px;padding:3px 29px 3px 0!important;color:#334873;font-size:11px;font-weight:500;border:0!important;border-radius:0!important;background-color:transparent!important;box-shadow:none!important;cursor:pointer;text-overflow:ellipsis}
+.company-settings-v2 #setting_one .form-select:focus{color:#172a58;outline:0}
+.company-settings-v2 #setting_one .form-select option,.company-settings-v2 #setting_one .form-select optgroup{color:#354a76;font-family:'Poppins',sans-serif;font-size:11px;font-weight:500;background:#fff}
+.company-settings-v2 #setting_one .select2-container{width:100%!important;min-width:0}
+.company-settings-v2 #setting_one .select2-container .select2-selection--single{height:30px!important;padding:0!important;background:transparent!important;border:0!important;border-radius:0!important;box-shadow:none!important}
+.company-settings-v2 #setting_one .select2-container .select2-selection__rendered{height:30px!important;padding:5px 28px 4px 0!important;color:#334873!important;font-size:11px!important;font-weight:500!important;line-height:21px!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.company-settings-v2 #setting_one .select2-container .select2-selection__arrow{right:0!important;top:2px!important;width:22px!important;height:26px!important}
+.company-settings-v2 #setting_one .select2-container--focus .select2-selection--single{outline:0!important}
+.select2-dropdown.csv2-enterprise-dropdown,.csv2-enterprise-select .select2-dropdown{z-index:1065;margin-top:7px;padding:8px;background:#fff;border:1px solid #dce3ef!important;border-radius:9px!important;box-shadow:0 16px 38px rgba(16,30,78,.18)!important;font-family:'Poppins',sans-serif;overflow:hidden}
+.select2-dropdown.csv2-enterprise-dropdown.csv2-timezone-dropdown{width:min(390px,calc(100vw - 24px))!important;min-width:min(390px,calc(100vw - 24px))!important}
+.select2-dropdown.csv2-enterprise-dropdown.csv2-timeformat-dropdown{width:min(290px,calc(100vw - 24px))!important;min-width:min(290px,calc(100vw - 24px))!important}
+.select2-dropdown.csv2-enterprise-dropdown .select2-search--dropdown{padding:3px 3px 8px}
+.select2-dropdown.csv2-enterprise-dropdown .select2-search--dropdown::before{content:'Search';display:block;margin:0 0 5px 2px;color:#263a68;font-size:10px;font-weight:500;letter-spacing:.1px}
+.select2-dropdown.csv2-enterprise-dropdown .select2-search__field{height:36px;padding:7px 11px;color:#263a68;font-family:'Poppins',sans-serif;font-size:11px;font-weight:500;border:1px solid #cdd8e7!important;border-radius:6px!important;outline:0}
+.select2-dropdown.csv2-enterprise-dropdown .select2-search__field:focus{border-color:#1764ef!important;box-shadow:0 0 0 3px rgba(23,100,239,.08)}
+.select2-dropdown.csv2-enterprise-dropdown .select2-results__options{max-height:260px!important;padding:2px;scrollbar-width:thin;scrollbar-color:#cbd5e1 transparent}
+.select2-dropdown.csv2-enterprise-dropdown .select2-results__group{padding:9px 10px 5px;color:#172957;font-size:10px;font-weight:500;letter-spacing:.2px;text-transform:uppercase}
+.select2-dropdown.csv2-enterprise-dropdown .select2-results__option{min-height:36px;margin:2px 0;padding:8px 10px;color:#354a76;font-size:11px;font-weight:500;line-height:19px;border-radius:6px}
+.select2-dropdown.csv2-enterprise-dropdown.csv2-timezone-dropdown .select2-results__option{white-space:normal;overflow-wrap:anywhere}
+.select2-dropdown.csv2-enterprise-dropdown.csv2-timeformat-dropdown .select2-results__option{display:flex;align-items:center;min-height:42px;padding:9px 11px;white-space:normal}
+.select2-dropdown.csv2-enterprise-dropdown .select2-results__option--highlighted[aria-selected]{color:#154dbb!important;background:#edf4ff!important}
+.select2-dropdown.csv2-enterprise-dropdown .select2-results__option[aria-selected=true]{position:relative;padding-right:34px;color:#0f49bd!important;font-weight:600;background:#e8f1ff!important}
+.select2-dropdown.csv2-enterprise-dropdown .select2-results__option[aria-selected=true]::after{content:'✓';position:absolute;right:11px;top:50%;transform:translateY(-50%);display:flex;width:18px;height:18px;align-items:center;justify-content:center;color:#fff;font-size:10px;background:#1764ef;border-radius:50%}
+.select2-dropdown.csv2-enterprise-dropdown.select2-dropdown--above{margin-top:-7px;margin-bottom:7px}
+.company-settings-v2 #setting_one .form-text{display:none}
+.company-settings-v2 #application_duplicate_settings>.card-body{padding:12px 20px 22px!important;border:0!important}
+.company-settings-v2 #application_duplicate_settings .row{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin:0!important}
+.company-settings-v2 #application_duplicate_settings .col-lg-4{width:auto;max-width:none;padding:0}
+.company-settings-v2 #application_duplicate_settings label.option{display:grid!important;grid-template-columns:26px minmax(0,1fr);height:130px;margin:0;padding:15px;background:#fff;border:1px solid #ccd7e8;border-radius:8px;box-shadow:0 1px 3px rgba(16,30,78,.035);cursor:pointer;transition:border-color .15s,box-shadow .15s}
+.company-settings-v2 #application_duplicate_settings label.option:hover{border-color:#b8c8ed}
+.company-settings-v2 #application_duplicate_settings label.option:has(input:checked){border-color:#1764ff;box-shadow:0 0 0 1px #1764ff inset}
+.company-settings-v2 #application_duplicate_settings .option-control{grid-column:1;margin:1px 0 0}
+.company-settings-v2 #application_duplicate_settings .option-label{grid-column:2;min-width:0}
+.company-settings-v2 #application_duplicate_settings .option-head{display:flex!important;align-items:flex-start;justify-content:space-between;gap:8px;min-height:34px}
+.company-settings-v2 #application_duplicate_settings .option-title{color:#142453;font-size:11px!important;font-weight:600!important;line-height:1.4}
+.company-settings-v2 #application_duplicate_settings .option-body{display:block;color:#56678f;font-size:10px;font-weight:500;line-height:1.5}
+.company-settings-v2 #application_duplicate_settings input[type=radio]{width:17px;height:17px;margin:0;accent-color:#1764ff}
+.company-settings-v2 .csv2-days-row{display:flex;align-items:center;gap:10px;margin-top:15px;color:#56678f;font-size:10px;font-weight:500}
+.company-settings-v2 #application_duplicate_settings input[type=number]{width:74px!important;height:32px;flex:0 0 74px;margin:0;padding:5px 9px;color:#172957;font-size:11px;font-weight:600;background:#fff;border:1px solid #ccd7e8;border-radius:6px!important;outline:0}
+.company-settings-v2 #application_duplicate_settings input[type=number]:focus{border-color:#1764ff;box-shadow:0 0 0 3px rgba(23,100,255,.09)}
+.company-settings-v2 .settings-department-card .card-header{display:flex;align-items:center;justify-content:space-between;padding-top:20px!important}
+.company-settings-v2 .settings-department-card .card-header>.card-title:last-child{margin-left:auto!important}
+.company-settings-v2 .settings-department-card .btn-primary{display:inline-flex;align-items:center;gap:6px;padding:8px 14px;color:#fff;font-size:11px;font-weight:600;background:#1457e8;border:1px solid #1457e8;border-radius:5px;box-shadow:0 3px 8px rgba(20,87,232,.16)}
+.company-settings-v2 .settings-department-card .btn-primary::before{content:'+';font-size:14px;line-height:1}
+.company-settings-v2 .dept_content{display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr));gap:11px;padding:10px 20px 22px!important;border:0!important}
+.company-settings-v2 .dept_content .form-group,.company-settings-v2 .dept_content .row{display:contents!important}
+.company-settings-v2 .dept_content .form-check,.company-settings-v2 .dept_content .form-text{display:none!important}
+.company-settings-v2 .dept_content .col-lg-4{width:auto;max-width:none;padding:0}
+.company-settings-v2 .dept_content .badge{position:relative;width:100%;min-height:44px;padding:8px 34px 8px 55px!important;color:#40517b;font-weight:500;background:#fff!important;border:1px solid #ccd7e8;border-radius:7px;box-shadow:0 1px 3px rgba(16,30,78,.035);overflow:hidden}
+.company-settings-v2 .dept_content .badge::before{content:'';position:absolute;left:12px;top:9px;width:26px;height:26px;border-radius:6px;background:#edf4ff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%231764ef' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2'/%3E%3Ccircle cx='9' cy='7' r='4'/%3E%3Cpath d='M22 21v-2a4 4 0 0 0-3-3.87'/%3E%3C/svg%3E") center/14px no-repeat}
+.company-settings-v2 .dept_content .col-lg-4:nth-of-type(4n+2) .badge::before{background-color:#f3edff;filter:hue-rotate(35deg)}
+.company-settings-v2 .dept_content .col-lg-4:nth-of-type(4n+3) .badge::before{background-color:#ebf9f0;filter:hue-rotate(105deg)}
+.company-settings-v2 .dept_content .col-lg-4:nth-of-type(4n+4) .badge::before{background-color:#fff1e8;filter:hue-rotate(185deg)}
+.company-settings-v2 .dept_content .badge .fs-4{width:100%;font-size:11px!important;font-weight:500!important;text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.company-settings-v2 .dept_content .edit_delete{position:absolute;right:10px;top:50%;transform:translateY(-50%)}
+.company-settings-v2 .dept_content .dept_delete{display:flex;width:24px;height:24px;align-items:center;justify-content:center;color:#64759b!important}
+.company-settings-v2 .dept_content .dept_delete:hover{color:#e11d48!important}
+.company-settings-v2 .dept_content .dept_delete .svg-icon{display:none!important}
+.company-settings-v2 .dept_content .dept_delete::before{content:'×';font-size:17px;font-weight:400;line-height:1}
+.csv2-tab-icon{display:inline-flex;width:16px;height:16px;margin-right:6px;vertical-align:-3px;color:#1764ef}
+.csv2-tab-icon svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.nav-link[href="#settings"] .nav-text{font-family:'Poppins',sans-serif!important;font-weight:600!important}
+.csv2-account-tabs-header{min-height:0!important;padding:4px 0!important;border-bottom:1px solid #e7edf5!important}
+.csv2-account-tabs-wrap{width:100%;min-width:0;overflow:visible}
+.csv2-account-tabs{display:flex!important;flex-wrap:nowrap!important;align-items:stretch;width:100%;min-width:0;margin:0!important;padding:0!important;gap:0;overflow:visible;font-family:'Poppins',sans-serif!important}
+.csv2-account-tabs::-webkit-scrollbar{display:none}
+.csv2-account-tabs .nav-item{display:flex;flex:1 1 0;min-width:0;margin:0!important}
+.csv2-account-tabs .csv2-account-tab{position:relative;display:flex!important;width:100%;min-width:0;align-items:center;justify-content:center;gap:5px;min-height:58px;margin:0!important;padding:11px 6px!important;color:#64748b!important;font-family:'Poppins',sans-serif!important;border:0!important;border-right:1px solid #e9eef5!important;border-radius:0!important;background:transparent!important;white-space:nowrap;transition:color .15s,background-color .15s}
+.csv2-account-tabs .nav-item:last-child .csv2-account-tab{border-right:0!important}
+.csv2-account-tabs .csv2-account-tab::after{content:'';position:absolute;right:8px;bottom:0;left:8px;height:2px;background:transparent;border-radius:2px 2px 0 0}
+.csv2-account-tabs .csv2-account-tab:hover,.csv2-account-tabs .csv2-account-tab:focus{color:#2456ad!important;background:#f8fafc!important;outline:0}
+.csv2-account-tabs .csv2-account-tab.active{color:#2563eb!important;background:rgba(37,99,235,.10)!important}
+.csv2-account-tabs .csv2-account-tab.active::after{background:#2563eb}
+.csv2-account-tabs .csv2-account-tab-icon{display:flex;width:14px;height:14px;flex:0 0 14px;align-items:center;justify-content:center;color:currentColor}
+.csv2-account-tabs .csv2-account-tab-icon svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.csv2-account-tabs .csv2-account-tab-copy{display:flex;flex-direction:column;justify-content:center;min-width:0;overflow:hidden;line-height:1.25}
+.csv2-account-tabs .csv2-account-tab-title{display:block;max-width:100%;overflow:hidden;color:currentColor;font-size:11px;font-weight:500;line-height:1.15;text-overflow:ellipsis}
+.csv2-account-tabs .csv2-account-tab-sub{display:block;max-width:100%;margin-top:3px;overflow:hidden;color:#7b89aa;font-size:9px;font-weight:500;line-height:1.15;text-align:left;text-overflow:ellipsis}
+.csv2-account-tabs .csv2-account-tab.active .csv2-account-tab-title{font-weight:600}
+.csv2-account-tabs .csv2-account-tab.active .csv2-account-tab-sub{color:#5578c3}
+@media(min-width:1440px){.csv2-account-tabs .csv2-account-tab{gap:6px;padding-right:8px!important;padding-left:8px!important}.csv2-account-tabs .csv2-account-tab-icon{width:15px;height:15px;flex-basis:15px}.csv2-account-tabs .csv2-account-tab-icon svg{width:15px;height:15px}.csv2-account-tabs .csv2-account-tab-title{font-size:11.5px}.csv2-account-tabs .csv2-account-tab-sub{font-size:9.5px}}
+@media(max-width:900px){.csv2-account-tabs-wrap{overflow-x:auto;scrollbar-width:none}.csv2-account-tabs{width:max-content;min-width:100%;overflow:visible}.csv2-account-tabs .nav-item{flex:0 0 auto}.csv2-account-tabs .csv2-account-tab{width:auto;min-width:112px;padding-right:10px!important;padding-left:10px!important}.csv2-account-tabs .csv2-account-tab-title{font-size:11px}.csv2-account-tabs .csv2-account-tab-sub{font-size:9px}}
+.company-settings-v2 .card-footer{display:flex!important;align-items:center;margin:0 12px 12px;padding:13px 16px!important;background:#fbfcff!important;border:1px solid #edf0f6!important;border-radius:7px;justify-content:flex-end!important}
+.company-settings-v2 .card-footer .btn{min-width:130px;padding:9px 14px;font-size:11px;font-weight:600;border-radius:5px}
+.company-settings-v2 .card-footer .btn-primary{color:#fff;background:#1457e8;border-color:#1457e8}
+.company-settings-v2 .csv2-save-spinner{display:none;width:15px;height:15px;margin-right:7px;vertical-align:-3px;border:2px solid rgba(255,255,255,.42);border-top-color:#fff;border-radius:50%;animation:csv2-save-spin .7s linear infinite}
+.company-settings-v2 #updateCompanyProfile.is-loading .csv2-save-spinner{display:inline-block}
+.company-settings-v2 #updateCompanyProfile:disabled{cursor:not-allowed;opacity:.78}
+@keyframes csv2-save-spin{to{transform:rotate(360deg)}}
+@media(prefers-reduced-motion:reduce){.company-settings-v2 .csv2-save-spinner{animation-duration:1.4s}}
+@media(max-width:1199px){.company-settings-v2 #setting_one>.card-body{grid-template-columns:repeat(2,minmax(0,1fr))}.company-settings-v2 .dept_content{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:767px){.company-settings-v2 #setting_one>.card-body,.company-settings-v2 #application_duplicate_settings .row{grid-template-columns:1fr}.company-settings-v2 .dept_content{grid-template-columns:repeat(2,minmax(0,1fr))}.company-settings-v2 .card-footer{flex-wrap:wrap;gap:8px}}
+
+/* Notifications tab: uses the existing tenant email-routing backend in a dense two-column layout. */
+.csn,.csn *{font-family:'Poppins',-apple-system,BlinkMacSystemFont,sans-serif!important;box-sizing:border-box}
+.csn{color:#13224f;padding:0 2px 14px}
+.csn-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.csn-card{min-width:0;background:#fff;border:1px solid #d3dcea;border-radius:10px;box-shadow:0 2px 7px rgba(16,30,78,.055);overflow:hidden}
+.csn-card-head{display:flex;align-items:center;gap:12px;padding:15px 16px 10px}
+.csn-head-icon{display:flex;width:38px;height:38px;flex:0 0 38px;align-items:center;justify-content:center;border-radius:8px}
+.csn-head-icon svg,.csn-item-icon svg,.csn-email-icon svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.csn-purple{color:#6338ed;background:#f1ebff}.csn-green{color:#0d9c55;background:#e7f9ef}
+.csn-card-title{color:#111f4d;font-size:12px;font-weight:600;line-height:1.35}
+.csn-card-sub{margin-top:3px;color:#5c6d94;font-size:10px;font-weight:500;line-height:1.4}
+.csn-card-body{padding:7px 16px 14px}
+.csn-label{display:block;margin:0 0 6px;color:#172957;font-size:10.5px;font-weight:600}
+.csn-email-wrap{position:relative;margin-bottom:12px}
+.csn-email{width:100%;height:36px;padding:7px 38px 7px 11px;color:#2e426f;font-size:11px;font-weight:500;background:#fff;border:1px solid #ccd7e8;border-radius:6px;outline:0;transition:border-color .15s,box-shadow .15s}
+.csn-email:focus{border-color:#7456ee;box-shadow:0 0 0 3px rgba(99,56,237,.08)}
+.csn-email-icon{position:absolute;right:10px;top:50%;display:flex;width:18px;height:18px;align-items:center;justify-content:center;color:#5b6e99;transform:translateY(-50%);pointer-events:none}
+.csn-category-label{margin:0 0 7px;color:#172957;font-size:10.5px;font-weight:600}
+.csn-list{display:grid;gap:0;border:1px solid #e1e7f0;border-radius:8px;overflow:hidden}
+.csn-item{display:grid;grid-template-columns:28px minmax(0,1fr) 14px;align-items:center;gap:9px;min-height:50px;padding:7px 10px;background:#fff;border-bottom:1px solid #e9edf4}
+.csn-item:last-child{border-bottom:0}
+.csn-item-icon{display:flex;width:27px;height:27px;align-items:center;justify-content:center;border-radius:6px}
+.csn-item-icon svg{width:14px;height:14px}
+.csn-item-title{color:#172957;font-size:10.5px;font-weight:600;line-height:1.3}
+.csn-item-desc{margin-top:2px;color:#61719a;font-size:9px;font-weight:500;line-height:1.35}
+.csn-item-arrow{color:#41577f;font-size:15px;font-weight:500;text-align:center}
+.csn-sales .csn-item-title{color:#087343}
+.csn-actions{display:flex;align-items:center;justify-content:flex-end;gap:10px;margin-top:14px;padding:12px 14px;background:#fff;border:1px solid #d3dcea;border-radius:9px;box-shadow:0 2px 7px rgba(16,30,78,.045)}
+.csn-actions .btn{min-width:128px;padding:9px 14px;font-size:11px;font-weight:600;border-radius:5px}
+.csn-actions .btn-primary{background:#6338ed;border-color:#6338ed}
+.csn-save-spinner{display:none;width:15px;height:15px;margin-right:7px;vertical-align:-3px;border:2px solid rgba(255,255,255,.42);border-top-color:#fff;border-radius:50%;animation:csv2-save-spin .7s linear infinite}
+#saveNotificationSettings.is-loading .csn-save-spinner{display:inline-block}
+#saveNotificationSettings:disabled{cursor:not-allowed;opacity:.78}
+@media(max-width:1100px){.csn-item{min-height:50px}.csn-item-desc{font-size:8.5px}}
+@media(max-height:800px) and (min-width:901px){.csn-card-head{padding:11px 14px 7px}.csn-head-icon{width:34px;height:34px}.csn-card-body{padding:6px 14px 11px}.csn-email-wrap{margin-top:5px}.csn-email{height:34px}.csn-category-label{margin:9px 0 6px}.csn-item{min-height:43px;padding:5px 9px}.csn-item-icon{width:27px;height:27px}.csn-item-desc{font-size:8px;line-height:1.25}.csn-actions{margin-top:10px;padding:10px 12px}}
+@media(max-width:900px){.csn-grid{grid-template-columns:1fr}.csn-actions{position:sticky;bottom:0;z-index:2}.csn-actions .btn{flex:1;min-width:0}}
+
 /* ===== Company Dashboard redesign (scoped .cad) — Poppins, <=14px, Metronic-friendly ===== */
 .cad, .cad * { font-family:'Poppins',-apple-system,BlinkMacSystemFont,sans-serif; box-sizing:border-box; }
 .cad { font-size:13px; color:#1f2937; }
@@ -647,44 +799,20 @@ input[type="radio"]:checked {
 <!--begin::Tabs-->
 <div class="card card-custom mx-2">
 <!--Begin::Tabs Header-->
-<div class="card-header card-header-tabs-line">
-  <div class="card-toolbar">
-    <ul class="nav nav-tabs nav-tabs-space-lg nav-tabs-line nav-tabs-bold nav-tabs-line-3x" role="tablist">
-      <li class="nav-item me-3"> <a class="nav-link {{$overview_tab}}" data-toggle="tab" href="#overview"> <span class="nav-text font-weight-bold">Overview</span> </a> </li>
-      <li class="nav-item me-3"> <a class="nav-link" data-toggle="tab" href="#interview_stage"> <span class="nav-text font-weight-bold">Interview Stage</span> </a> </li>
-      <li class="nav-item me-3"> <a class="nav-link" data-toggle="tab" href="#settings"> <span class="nav-text font-weight-bold">Settings</span> </a> </li>
-
-      <li class="nav-item me-3"> <a class="nav-link" data-toggle="tab" href="#offerterms">
-          <span class="nav-text font-weight-bold">Terms & Conditions</span>
-          <span class="fw-bold text-muted d-block fs-7" style=" text-align: center;">(For Candidate Offer Letter)</span>
-           </a>
-      </li>
-
-      <li class="nav-item me-3"> <a class="nav-link" data-toggle="tab" href="#agencyofferterms">
-          <span class="nav-text font-weight-bold">Terms & Conditions</span>
-          <span class="fw-bold text-muted d-block fs-7" style=" text-align: center;">(For Agency Offer Letter)</span>
-           </a>
-      </li>
-
-      <li class="nav-item me-3"> <a class="nav-link" data-toggle="tab" href="#offercomponent"> 
-        <span class="nav-text font-weight-bold">Salary Structure</span>
-        <span class="fw-bold text-muted d-block fs-7" style=" text-align: center;">(For Candidate Offer Letter)</span>
-         </a> 
-    </li>
-
-    <li class="nav-item me-3"> <a class="nav-link" data-toggle="tab" href="#terms" style="display: inline-grid;padding-bottom: 5px;"> <span class="nav-text font-weight-bold">Terms & Conditions</span>
-      <span class="fw-bold text-muted d-block fs-7" style=" text-align: center;">(For {{__('messages.Agency')}})</span> </a> </li>
-
-        @if(@$productAllowCompany)
-         <li class="nav-item me-3"> <a class="nav-link" data-toggle="tab" href="#services"> 
-        <span class="nav-text font-weight-bold">Commericials</span>
-        <span class="fw-bold text-muted d-block fs-7" style=" text-align: center;">(For Clients)</span>
-         </a> </li>
-        
-
-      <li class="nav-item me-3"> <a class="nav-link {{$boostkeyword_tab}}" data-toggle="tab" href="#boostkeyword"> <span
-          class="nav-text font-weight-bold"> Ads Settings  </span> </a> </li> 
-
+<div class="card-header card-header-tabs-line csv2-account-tabs-header">
+  <div class="card-toolbar csv2-account-tabs-wrap">
+    <ul class="nav nav-tabs csv2-account-tabs" role="tablist">
+      <li class="nav-item"><a class="nav-link csv2-account-tab {{$overview_tab}}" data-toggle="tab" href="#overview"><span class="csv2-account-tab-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="6" height="6" rx="1"/><rect x="14" y="4" width="6" height="6" rx="1"/><rect x="4" y="14" width="6" height="6" rx="1"/><rect x="14" y="14" width="6" height="6" rx="1"/></svg></span><span class="csv2-account-tab-copy"><span class="csv2-account-tab-title">Overview</span></span></a></li>
+      <li class="nav-item"><a class="nav-link csv2-account-tab" data-toggle="tab" href="#interview_stage"><span class="csv2-account-tab-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h10M4 18h7"/><circle cx="18" cy="12" r="2"/><path d="M18 14v5"/></svg></span><span class="csv2-account-tab-copy"><span class="csv2-account-tab-title">Interview Stage</span></span></a></li>
+      <li class="nav-item"><a class="nav-link csv2-account-tab" data-toggle="tab" href="#settings"><span class="csv2-account-tab-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1-2.8 2.8-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.6v.1h-4V21a1.7 1.7 0 0 0-1-1.6 1.7 1.7 0 0 0-1.9.3l-.1.1L4.2 17l.1-.1a1.7 1.7 0 0 0 .3-1.9A1.7 1.7 0 0 0 3 14v-4a1.7 1.7 0 0 0 1.6-1 1.7 1.7 0 0 0-.3-1.9L7 4.2l.1.1a1.7 1.7 0 0 0 1.9.3 1.7 1.7 0 0 0 1-1.6h4a1.7 1.7 0 0 0 1 1.6 1.7 1.7 0 0 0 1.9-.3L19.8 7l-.1.1a1.7 1.7 0 0 0-.3 1.9 1.7 1.7 0 0 0 1.6 1v4a1.7 1.7 0 0 0-1.6 1Z"/></svg></span><span class="csv2-account-tab-copy"><span class="csv2-account-tab-title">General</span></span></a></li>
+      <li class="nav-item"><a class="nav-link csv2-account-tab" data-toggle="tab" href="#notifications"><span class="csv2-account-tab-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/><path d="M10 21h4"/></svg></span><span class="csv2-account-tab-copy"><span class="csv2-account-tab-title">Notifications</span></span></a></li>
+      <li class="nav-item"><a class="nav-link csv2-account-tab" data-toggle="tab" href="#offerterms"><span class="csv2-account-tab-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M6 3h9l3 3v15H6z"/><path d="M14 3v4h4M9 11h6M9 15h6"/></svg></span><span class="csv2-account-tab-copy"><span class="csv2-account-tab-title">Terms &amp; Conditions</span><span class="csv2-account-tab-sub">(For Candidate Offer Letter)</span></span></a></li>
+      <li class="nav-item"><a class="nav-link csv2-account-tab" data-toggle="tab" href="#agencyofferterms"><span class="csv2-account-tab-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M6 3h9l3 3v15H6z"/><path d="M14 3v4h4M9 11h6M9 15h4"/></svg></span><span class="csv2-account-tab-copy"><span class="csv2-account-tab-title">Terms &amp; Conditions</span><span class="csv2-account-tab-sub">(For Agency Offer Letter)</span></span></a></li>
+      <li class="nav-item"><a class="nav-link csv2-account-tab" data-toggle="tab" href="#offercomponent"><span class="csv2-account-tab-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M7 9h4M7 13h2M15 10v6M12 13h6"/></svg></span><span class="csv2-account-tab-copy"><span class="csv2-account-tab-title">Salary Structure</span><span class="csv2-account-tab-sub">(For Candidate Offer Letter)</span></span></a></li>
+      <li class="nav-item"><a class="nav-link csv2-account-tab" data-toggle="tab" href="#terms"><span class="csv2-account-tab-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 4h14v16H5z"/><path d="M8 8h8M8 12h8M8 16h5"/></svg></span><span class="csv2-account-tab-copy"><span class="csv2-account-tab-title">Terms &amp; Conditions</span><span class="csv2-account-tab-sub">(For {{__('messages.Agency')}})</span></span></a></li>
+      @if(@$productAllowCompany)
+      <li class="nav-item"><a class="nav-link csv2-account-tab" data-toggle="tab" href="#services"><span class="csv2-account-tab-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M9 7V4h6v3M3 12h18M10 12v2h4v-2"/></svg></span><span class="csv2-account-tab-copy"><span class="csv2-account-tab-title">Commericials</span><span class="csv2-account-tab-sub">(For Clients)</span></span></a></li>
+      <li class="nav-item"><a class="nav-link csv2-account-tab {{$boostkeyword_tab}}" data-toggle="tab" href="#boostkeyword"><span class="csv2-account-tab-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="m4 13 11-5v10L4 13Z"/><path d="M15 11h3a2 2 0 0 1 0 4h-3M6 14l2 6h3l-2-7"/></svg></span><span class="csv2-account-tab-copy"><span class="csv2-account-tab-title">Ads Settings</span></span></a></li>
       @endif
     </ul>
   </div>
@@ -1978,6 +2106,7 @@ input[type="radio"]:checked {
 <div class="tab-pane" id="settings" role="tabpanel">
 <!--begin::Form-->
 <form  id="setting_content" name="setting_content" class="form fv-plugins-bootstrap5 fv-plugins-framework" novalidate="novalidate" method="post">
+  <div class="company-settings-v2">
   <meta name="csrf-token" content="{{ csrf_token() }}" />
   <input type="hidden" name="pagename" id="pagename" value="settings" />
   @csrf  
@@ -1985,15 +2114,19 @@ input[type="radio"]:checked {
   <!--begin::Main body div-->
   <div class="card mb-3 bg-light mb-xl-3 mx-0 shadow-none rounded-0"> @if(in_array("view_settings", $userPermissions))
     <div class="card-body px-0 pt-0 pb-0">
-      <div class="card mb-3 mb-xl-3 mx-0 shadow-none rounded-0">
-        <div class="card-header border-0 cursor-pointer px-0" role="button" data-bs-toggle="collapse" data-bs-target="#setting_one" aria-expanded="true" aria-controls="kt_account_profile_details">
+      <div class="card mb-3 mb-xl-3 mx-0 shadow-none rounded-0 settings-general-card">
+        <div class="card-header border-0 px-0">
           <div class="card-title m-0">
-            <h3 class="fw-bolder m-0">Settings</h3>
+            <div>
+              <h3 class="fw-bolder m-0">General Settings</h3>
+              <p class="csv2-section-sub">Basic configurations that control your system preferences.</p>
+            </div>
           </div>
         </div>
-        <div id="setting_one" class="collapse show">
+        <div id="setting_one" class="settings-section-content">
           <div class="card-body border-top py-8 px-2">
             <div class="row mb-6">
+              <span class="csv2-field-icon csv2-blue" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a15 15 0 0 1 0 18M12 3a15 15 0 0 0 0 18"/></svg></span>
               <label class="col-lg-3 col-form-label required fw-bold fs-6">Language</label>
               <div class="col-lg-9 fv-row">
                 <select name="language" id="language" aria-label="Select a Language" data-placeholder="Select a language..." class="form-select form-select-solid" tabindex="-1" aria-hidden="true">
@@ -2018,6 +2151,7 @@ input[type="radio"]:checked {
             </div>
             
             <div class="row mb-6">
+              <span class="csv2-field-icon csv2-purple" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></span>
               <label class="col-lg-3 col-form-label required fw-bold fs-6">Time Zone</label>
               <div class="col-lg-9 fv-row">
                 <select name="timezone" id="timezone" aria-label="Select a Time Zone" data-placeholder="Select a time zone..." class="form-select form-select-solid" tabindex="-1" aria-hidden="true">
@@ -2062,6 +2196,7 @@ input[type="radio"]:checked {
               </div>
             </div>
             <div class="row mb-6">
+              <span class="csv2-field-icon csv2-green" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M7 6h10M7 10h10M9 6c5 0 5 7 0 7h-2l8 6"/></svg></span>
               <label class="col-lg-3 col-form-label fw-bold fs-6">Currency</label>
               <div class="col-lg-9 fv-row">
                 <select name="currency" id="currency" aria-label="Select a Currency" data-placeholder="Select a currency..." class="form-select form-select-solid" tabindex="-1" aria-hidden="true">
@@ -2084,8 +2219,8 @@ input[type="radio"]:checked {
             </div>
 
             
-            <div class="row mb-6">
-              <label class="col-lg-3 col-form-label fw-bold fs-6">Bench Show Mode</label>
+            <div class="row mb-6 d-none">
+              <label data-setting-icon="◫" class="col-lg-3 col-form-label fw-bold fs-6">Bench Show Mode</label>
               <div class="col-lg-9 fv-row">
                 @php
                     $modeShow = ["Annual","Monthly","Hourly"];
@@ -2130,6 +2265,7 @@ input[type="radio"]:checked {
 
            
             <div class="row mb-6">
+              <span class="csv2-field-icon csv2-orange" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M8 3v4M16 3v4M4 9h16M9 14l2 2 4-4"/></svg></span>
               <label class="col-lg-3 col-form-label fw-bold fs-6">Time Format</label>
               <div class="col-lg-9 fv-row">
                 <select name="time_format" id="time_format" aria-label="Select a time format" data-placeholder="Select a time format..." class="form-select form-select-solid" tabindex="-1" aria-hidden="true">
@@ -2274,52 +2410,20 @@ input[type="radio"]:checked {
         <!--end::Content-->
       </div>
       <!--end::Connected Accounts-->
-      <!--begin::Notifications-->  
-      <div class="card mb-3 mb-xl-3 mx-0 shadow-none rounded-0">
-        <!--begin::Card header-->
-        <div class="card-header border-0 cursor-pointer px-0" role="button" data-bs-toggle="collapse" data-bs-target="#kt_notification_connected_notification" aria-expanded="true" aria-controls="kt_notification_connected_notification">
-          <div class="card-title m-0">
-            <h3 class="fw-bolder m-0">Email Notifications</h3>
-          </div>
-        </div>
-        <!--end::Card header-->
-        <!--begin::Content-->
-        <div id="kt_notification_connected_notification" class="collapse show">
-          <!--begin::Card body-->
-          <div class="card-body border-top py-8 px-2"><div class="row mb-6">
-            <label class="col-lg-3 col-form-label required fw-bold fs-6">Recuitment</label>
-            <div class="col-lg-9 fv-row">
-              <input type="email" name="recuitment_email" id="recuitment_email" value="{{ (@$notification['Recuitment']->email) ? @$notification['Recuitment']->email : @$account->company_email }}" placeholder="Enter email" class="form-control form-control-solid">
-              <div class="form-text">All recruitment-related communications will be sent exclusively to this email address.</div>
-              <div class="fv-plugins-message-container invalid-feedback"></div>
-            </div>
-          </div>
-            <div class="row mb-6">
-              <label class="col-lg-3 col-form-label required fw-bold fs-6">Sales</label>
-              <div class="col-lg-9 fv-row">
-                <input type="email" name="sales_email" id="sales_email" value="{{ (@$notification['Sales']->email) ? @$notification['Sales']->email : @$account->company_email }}" placeholder="Enter email" class="form-control form-control-solid">
-                <div class="form-text">All Sales-related communications will be sent exclusively to this email address.</div>
-                <div class="fv-plugins-message-container invalid-feedback"></div>
-              </div>
-            </div>
-            
-          </div>
-          <!--end::Card body-->
-        </div>
-        <!--end::Content-->
-      </div>
-      <!--end::Notifications-->
   <!--begin::Application Duplicate Settings-->
-  <div class="card mb-3 mb-xl-3 mx-0 shadow-none rounded-0">
+  <div class="card mb-3 mb-xl-3 mx-0 shadow-none rounded-0 settings-duplicate-card">
     <!--begin::Card header-->
-    <div class="card-header border-0 cursor-pointer px-0" role="button" data-bs-toggle="collapse" data-bs-target="#application_duplicate_settings" aria-expanded="true" aria-controls="application_duplicate_settings">
+    <div class="card-header border-0 px-0">
       <div class="card-title m-0">
-        <h3 class="fw-bolder m-0">Application Duplicate Setting</h3>
+        <div>
+          <h3 class="fw-bolder m-0">Duplicate Rules</h3>
+          <p class="csv2-section-sub">Configure how duplicate candidates are identified in the system.</p>
+        </div>
       </div>
     </div>
     <!--end::Card header-->
     <!--begin::Content-->
-    <div id="application_duplicate_settings" class="collapse show">
+    <div id="application_duplicate_settings" class="settings-section-content">
       <!--begin::Card body-->
       <div class="card-body border-top py-8 px-2">
  
@@ -2337,21 +2441,23 @@ input[type="radio"]:checked {
             <div class="col-lg-4">
               <label class="option"> <span class="option-control"> <span class="radio radio-outline">
               <input type="radio" name="app_duplicate" value="2" @php if($account->app_duplicate == 2){ echo 'checked="checked"'; } @endphp  >
-              <span></span> </span> </span> <span class="option-label"> <span class="option-head"> <span class="option-title fs-4 fw-bolder">Overrall System</span>
-              <input type="number" name="app_duplicate_overroll" id="app_duplicate_overroll" value="{{ @$app_duplicate_overroll_val }}" placeholder="Enter Days" class="w-33 rounded input_style">
-              </span> <span class="option-body">In the overall system, any candidate added to the same or a different job within a specified number of days will be considered a duplicate, and the candidate's status will be marked in red. Duplicate candidates will be detected based on the same phone number and email address only.</span> </span> </label>
+              <span></span> </span> </span> <span class="option-label"> <span class="option-head"> <span class="option-title fs-4 fw-bolder">Global Duplicate Detection</span></span>
+              <span class="option-body">Detect duplicates across all jobs in the system.</span>
+              <span class="csv2-days-row"><span>Check duplicates within</span><input type="number" name="app_duplicate_overroll" id="app_duplicate_overroll" value="{{ @$app_duplicate_overroll_val }}" placeholder="60" class="w-33 rounded input_style"><span>days</span></span>
+              </span> </label>
             </div>
             <div class="col-lg-4">
               <label class="option"> <span class="option-control"> <span class="radio radio-outline">
               <input type="radio" name="app_duplicate" value="1" @php if($account->app_duplicate == 1){ echo 'checked="checked"'; } @endphp  >
-              <span></span> </span> </span> <span class="option-label"> <span class="option-head"> <span class="option-title fs-4 fw-bolder">Job wise</span>
-              <input type="number" name="app_duplicate_requisition_wise" value="{{ @$app_duplicate_requisition_wise_val }}" placeholder="Enter Days" class="w-33 rounded input_style">
-              </span> <span class="option-body">Any candidate added to the same job with the same job ID within a specified number of days will be considered a duplicate, and the candidate's status will be marked in red. Duplicate candidates will be detected based on the same phone number and email address only.</span> <br></span> </label>
+              <span></span> </span> </span> <span class="option-label"> <span class="option-head"> <span class="option-title fs-4 fw-bolder">Job-wise Duplicate Detection</span></span>
+              <span class="option-body">Detect duplicates only within the same job.</span>
+              <span class="csv2-days-row"><span>Check duplicates within</span><input type="number" name="app_duplicate_requisition_wise" value="{{ @$app_duplicate_requisition_wise_val }}" placeholder="60" class="w-33 rounded input_style"><span>days</span></span>
+              </span> </label>
             </div>
             <div class="col-lg-4">
               <label class="option"> <span class="option-control"> <span class="radio radio-outline">
               <input type="radio" name="app_duplicate" value="0" @php if($account->app_duplicate == 0){ echo 'checked="checked"'; } @endphp  >
-              <span></span> </span> </span> <span class="option-label"> <span class="option-head"> <span class="option-title fs-4 fw-bolder">None</span> </span> <span class="option-body">Duplicates candidates will not be detected by the system based on the same phone number and email address.</span><br><br><br> </span> </label>
+              <span></span> </span> </span> <span class="option-label"> <span class="option-head"> <span class="option-title fs-4 fw-bolder">Duplicate Detection Disabled</span> </span> <span class="option-body">Do not detect any duplicate candidates.</span></span> </label>
             </div>
           </div>
           <div class="form-check"></div>
@@ -2399,17 +2505,20 @@ input[type="radio"]:checked {
   </div>
   <!--end::Account Type-->
   <!--begin::Department Type-->
-  <div class="card mb-3 mb-xl-3 mx-0 shadow-none rounded-0">
+  <div class="card mb-3 mb-xl-3 mx-0 shadow-none rounded-0 settings-department-card">
     <!--begin::Card header-->
     <div class="card-header row">
-      <div class="cursor-pointer px-0 card-title m-0 col-lg-9" role="button" data-toggle="collapse" data-target="#department" aria-expanded="true" aria-controls="department">
-        <h3 class="fw-bolder m-0">Department</h3>
+      <div class="px-0 card-title m-0 col-lg-9">
+        <div>
+          <h3 class="fw-bolder m-0">Department Management</h3>
+          <p class="csv2-section-sub">Manage and organize your company departments.</p>
+        </div>
       </div>
       <div class="card-title m-0 col-lg-2 "> @if(in_array("add_settings", $userPermissions)) <a href="javascript:void(0);" class="btn btn-primary align-self-center position-absolute end-0" data-toggle="modal" data-target="#add_department"> Add Department </a> @endif </div>
     </div>
     <!--end::Card header-->
     <!--begin::Content-->
-    <div id="department" class="collapse show">
+    <div id="department" class="settings-section-content">
       <!--begin::Card body-->
       <div class="card-body border-top py-8 px-2 dept_content">
         @php 
@@ -2464,6 +2573,9 @@ input[type="radio"]:checked {
                                     <div class="form-text text-muted"></div>
                                   </div>';
                             }			 
+              }
+              if($cnt > 0 && $cnt % 3 != 0){
+                $dept .= '</div><div class="form-check"></div><div class="form-text text-muted"></div></div>';
               }
               }			 
                   
@@ -2528,18 +2640,108 @@ input[type="radio"]:checked {
   
 @if(in_array("edit_settings", $userPermissions))
   <div class="card-footer d-flex justify-content-center py-6 px-9 bg-white">
-   <a href="{{ route('service_company.account.index') }}" class="btn btn-secondary me-2" >
-    	Cancel
+    <a href="{{ route('service_company.account.index') }}" class="btn btn-secondary me-2" >
+    Discard Changes
 	</a>
-    <button class="btn btn-primary me-2 updateCompanyProfile" type="button" id="updateCompanyProfile">Save Changes</button>
+    <button class="btn btn-primary me-2 updateCompanyProfile" type="button" id="updateCompanyProfile"><span class="csv2-save-spinner" aria-hidden="true"></span><span class="csv2-save-label">Save Changes</span></button>
   </div>
 @endif
+  </div>
   </div>
  
 </form>
 <!--end::Form-->
 </div>
 <!--end::Settings Content-->
+
+<!--begin::Notifications Content-->
+<div class="tab-pane csn" id="notifications" role="tabpanel">
+  @if(in_array("view_settings", $userPermissions))
+    @php
+      // Intent: document the existing recruitment and sales routing coverage without adding new persistence fields.
+      $recruitmentNotificationItems = [
+        ['Candidate Stages', 'Candidate moves across applied, shortlisted, interview, offered and other stages.'],
+        ['Agencies Status', 'Agency performance, submission and status changes.'],
+        ['Offers Update', 'Offer creation, approval, release, acceptance and decline.'],
+        ['Joining Update', 'Candidate joining, postponement and cancellation updates.'],
+        ['Bench Candidate Request', 'Bench candidates requested for a job.'],
+        ['Team Member Status', 'Team invitations, role changes and account status updates.'],
+        ['Bench Notification on Jobs', 'Bench candidates submitted or placed on jobs.'],
+        ['Additional Notifications', 'Notes, comments and other important recruitment actions.'],
+      ];
+      $salesNotificationItems = [
+        ['New Job Request from Direct Client', 'A new job request raised by a direct client.'],
+        ['Bench Added on Client Jobs', 'Bench candidates added or submitted on client jobs.'],
+        ['Subscription Status', 'Subscription activation, renewal, expiry and plan changes.'],
+        ['Client Communication', 'Client messages, feedback and important updates.'],
+        ['Invoice & Payment Status', 'Invoices, payments, due dates and payment failures.'],
+        ['Contract & Agreement Updates', 'Contract creation, renewal, expiry and amendments.'],
+        ['Low Coins / Wallet Alerts', 'Low coin balance and wallet actions requiring attention.'],
+        ['Additional Sales Alerts', 'Other important sales updates and system alerts.'],
+      ];
+    @endphp
+    <form id="notification_content" class="form" method="post" novalidate="novalidate">
+      @csrf
+      <input type="hidden" name="pagename" value="settings">
+      <div class="csn-grid">
+        <section class="csn-card">
+          <div class="csn-card-head">
+            <span class="csn-head-icon csn-purple" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg></span>
+            <div><div class="csn-card-title">Recruitment Notifications</div><div class="csn-card-sub">Manage email routing for all hiring and recruitment activities.</div></div>
+          </div>
+          <div class="csn-card-body">
+            <label class="csn-label" for="recuitment_email">Primary Email</label>
+            <div class="csn-email-wrap">
+              <input type="email" name="recuitment_email" id="recuitment_email" value="{{ (@$notification['Recuitment']->email) ? @$notification['Recuitment']->email : @$account->company_email }}" placeholder="Enter recruitment email" class="csn-email" required>
+              <span class="csn-email-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg></span>
+            </div>
+            <div class="csn-category-label">Notification Categories Covered</div>
+            <div class="csn-list">
+              @foreach($recruitmentNotificationItems as $notificationIndex => $notificationItem)
+                <div class="csn-item">
+                  <span class="csn-item-icon csn-purple" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="5" y="4" width="14" height="16" rx="2"/><path d="M9 4V2h6v2M9 12l2 2 4-4"/></svg></span>
+                  <div><div class="csn-item-title">{{ $notificationIndex + 1 }}. {{ $notificationItem[0] }}</div><div class="csn-item-desc">{{ $notificationItem[1] }}</div></div>
+                  <span class="csn-item-arrow" aria-hidden="true">&rsaquo;</span>
+                </div>
+              @endforeach
+            </div>
+          </div>
+        </section>
+
+        <section class="csn-card csn-sales">
+          <div class="csn-card-head">
+            <span class="csn-head-icon csn-green" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="7"/><path d="M12 7v5l3 2M8 3 5 6M16 3l3 3"/></svg></span>
+            <div><div class="csn-card-title">Sales Notifications</div><div class="csn-card-sub">Manage email routing for sales and client related activities.</div></div>
+          </div>
+          <div class="csn-card-body">
+            <label class="csn-label" for="sales_email">Primary Email</label>
+            <div class="csn-email-wrap">
+              <input type="email" name="sales_email" id="sales_email" value="{{ (@$notification['Sales']->email) ? @$notification['Sales']->email : @$account->company_email }}" placeholder="Enter sales email" class="csn-email" required>
+              <span class="csn-email-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg></span>
+            </div>
+            <div class="csn-category-label">Notification Categories Covered</div>
+            <div class="csn-list">
+              @foreach($salesNotificationItems as $notificationIndex => $notificationItem)
+                <div class="csn-item">
+                  <span class="csn-item-icon csn-green" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 19V9l8-5 8 5v10H4Z"/><path d="M9 19v-5h6v5"/></svg></span>
+                  <div><div class="csn-item-title">{{ $notificationIndex + 1 }}. {{ $notificationItem[0] }}</div><div class="csn-item-desc">{{ $notificationItem[1] }}</div></div>
+                  <span class="csn-item-arrow" aria-hidden="true">&rsaquo;</span>
+                </div>
+              @endforeach
+            </div>
+          </div>
+        </section>
+      </div>
+      @if(in_array("edit_settings", $userPermissions))
+        <div class="csn-actions">
+          <button type="reset" class="btn btn-secondary">Discard Changes</button>
+          <button type="button" class="btn btn-primary" id="saveNotificationSettings"><span class="csn-save-spinner" aria-hidden="true"></span><span class="csn-save-label">Save Changes</span></button>
+        </div>
+      @endif
+    </form>
+  @endif
+</div>
+<!--end::Notifications Content-->
 </div>
 <!--end::Body-->
 </div>
@@ -3376,8 +3578,43 @@ new Tagify(input)
 <script>
 
 $(document).ready(function(){
+        // Intent: enhance the four existing local selects with searchable, keyboard-friendly enterprise menus; no remote data is requested.
+        if ($.fn.select2) {
+            $('#language, #timezone, #currency, #time_format').each(function(){
+                var $settingSelect = $(this);
+                var settingDropdownClass = 'csv2-enterprise-dropdown';
+                if ($settingSelect.is('#timezone')) settingDropdownClass += ' csv2-timezone-dropdown';
+                if ($settingSelect.is('#time_format')) settingDropdownClass += ' csv2-timeformat-dropdown';
+                if (!$settingSelect.hasClass('select2-hidden-accessible')) {
+                    $settingSelect.select2({
+                        width: '100%',
+                        dropdownCssClass: settingDropdownClass,
+                        minimumResultsForSearch: ($settingSelect.is('#timezone, #currency')) ? 8 : Infinity
+                    });
+                }
+            }).on('select2:open', function(){
+                var $openedSelect = $(this);
+                var $settingDropdown = $('.select2-dropdown').last().addClass('csv2-enterprise-dropdown');
+                if ($openedSelect.is('#timezone')) {
+                    $settingDropdown.addClass('csv2-timezone-dropdown');
+                    $settingDropdown.find('.select2-search__field').attr('placeholder', 'Search time zones...');
+                }
+                if ($openedSelect.is('#time_format')) $settingDropdown.addClass('csv2-timeformat-dropdown');
+
+                // Keep wide enterprise menus inside the viewport at laptop and tablet widths.
+                setTimeout(function(){
+                    var dropdownNode = $settingDropdown.get(0);
+                    if (!dropdownNode) return;
+                    var dropdownBounds = dropdownNode.getBoundingClientRect();
+                    var horizontalShift = 0;
+                    if (dropdownBounds.right > window.innerWidth - 12) horizontalShift = (window.innerWidth - 12) - dropdownBounds.right;
+                    if (dropdownBounds.left + horizontalShift < 12) horizontalShift += 12 - (dropdownBounds.left + horizontalShift);
+                    $settingDropdown.css('margin-left', horizontalShift + 'px');
+                }, 0);
+            });
+        }
    
-   			$('.submit_department').click(function(){
+			$('.submit_department').click(function(){
    									var dept_name	=	$('#dept_name').val();								
 									if(dept_name ==''){
 											$('#dept_name').val('');	
@@ -3442,7 +3679,9 @@ $(document).ready(function(){
    			});				
 			
         $('body').on('click', '#updateCompanyProfile', function(){
-                    
+            var $saveSettingsButton = $(this);
+            if ($saveSettingsButton.prop('disabled')) return;
+
             var data 				=	new FormData();
             var form_data 			=	$('#setting_content').serializeArray();
             $.each(form_data, function (key, input) {
@@ -3457,6 +3696,13 @@ $(document).ready(function(){
                     contentType			:	false,
                     data				:	data,
                     redirect			:	true,
+                    beforeSend         : function () {
+                                            $saveSettingsButton
+                                                .prop('disabled', true)
+                                                .attr('aria-busy', 'true')
+                                                .addClass('is-loading');
+                                            $saveSettingsButton.find('.csv2-save-label').text('Saving...');
+                                },
                     success				:	function (data) {
 
                                             if(data.status == 'warning'){
@@ -3473,9 +3719,76 @@ $(document).ready(function(){
                                           if(data.status == 'success'){
                                               Swal.fire("Success", "Account settings update successfully!", "success");	
                                           }
+                                },
+                    complete            : function () {
+                                            $saveSettingsButton
+                                                .prop('disabled', false)
+                                                .removeAttr('aria-busy')
+                                                .removeClass('is-loading');
+                                            $saveSettingsButton.find('.csv2-save-label').text('Save Changes');
                                 }
                   });				
         });	
+
+        // Intent: save the two existing notification-routing fields independently from General settings.
+        $('body').on('click', '#saveNotificationSettings', function(){
+            var $saveNotificationButton = $(this);
+            var notificationForm = document.getElementById('notification_content');
+
+            if ($saveNotificationButton.prop('disabled') || !notificationForm) return;
+            if (!notificationForm.checkValidity()) {
+                notificationForm.reportValidity();
+                return;
+            }
+
+            var data = new FormData(notificationForm);
+            $.ajax({
+                url: '{{route('service_company.account.update', @$account->id)}}',
+                headers: {'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')},
+                method: 'POST',
+                processData: false,
+                contentType: false,
+                data: data,
+                beforeSend: function () {
+                    $saveNotificationButton
+                        .prop('disabled', true)
+                        .attr('aria-busy', 'true')
+                        .addClass('is-loading');
+                    $saveNotificationButton.find('.csn-save-label').text('Saving...');
+                },
+                success: function (response) {
+                    if (response.status === 'warning') {
+                        Swal.fire({
+                            text: response.message,
+                            icon: 'error',
+                            buttonsStyling: false,
+                            confirmButtonText: 'Ok, got it!',
+                            customClass: {confirmButton: 'btn btn-light'}
+                        });
+                        return;
+                    }
+
+                    if (response.status === 'success') {
+                        Swal.fire('Success', 'Notification settings updated successfully!', 'success');
+                        return;
+                    }
+
+                    Swal.fire('Unable to save', response.message || 'Please try again.', 'error');
+                },
+                error: function (xhr) {
+                    var response = xhr.responseJSON || {};
+                    var message = response.message || 'Notification settings could not be saved. Please try again.';
+                    Swal.fire('Unable to save', message, 'error');
+                },
+                complete: function () {
+                    $saveNotificationButton
+                        .prop('disabled', false)
+                        .removeAttr('aria-busy')
+                        .removeClass('is-loading');
+                    $saveNotificationButton.find('.csn-save-label').text('Save Changes');
+                }
+            });
+        });
 
 
             $('body').on('click', '#updateCompanyTerms', function(){
