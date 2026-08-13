@@ -713,7 +713,9 @@ body, html {
 .v2-phone-wrap {
   border: 1.5px solid #e2e8f0;
   border-radius: 10px;
-  overflow: hidden;
+  /* overflow:visible is REQUIRED — overflow:hidden clips the ITI country dropdown */
+  overflow: visible;
+  position: relative;
   height: 50px;
   display: flex;
   align-items: center;
@@ -730,6 +732,8 @@ body, html {
   height: 100% !important;
   display: flex !important;
   align-items: center !important;
+  border-radius: 10px;
+  overflow: hidden; /* clip only the iti wrapper so border-radius still applies */
 }
 .v2-phone-wrap .iti__selected-flag {
   background: #f8fafc !important;
@@ -751,6 +755,17 @@ body, html {
   font-family: 'Poppins', sans-serif !important;
   color: #0f172a !important;
   background: transparent !important;
+}
+/* Ensure the ITI dropdown list renders above everything */
+.iti__country-list {
+  z-index: 9999 !important;
+  max-height: 220px !important;
+  overflow-y: auto !important;
+  border-radius: 8px !important;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.14) !important;
+  border: 1px solid #e2e8f0 !important;
+  font-family: 'Poppins', sans-serif !important;
+  font-size: 13px !important;
 }
 
 /* Step 3 Tagify Input Alignment */
@@ -1683,7 +1698,7 @@ body, html {
             </div>
           </div>
           <div class="v2-phone-wrap">
-            <input name="contact_number" id="contact_number" type="tel" class="v2-inp" placeholder="Enter 10 digit mobile number" value="" maxlength="10" inputmode="numeric" pattern="[0-9]{10}" autocomplete="tel-national" required />
+            <input name="contact_number" id="contact_number" type="tel" class="v2-inp" placeholder="Enter mobile number" value="" maxlength="15" inputmode="numeric" autocomplete="tel-national" required />
           </div>
         </div>
 
@@ -2007,8 +2022,11 @@ function updatePreviewData() {
       }
     }
 
-    var iti__active = $(".iti__active").attr('data-country-code') || "in"; 
-    $('#contact_code').val(iti__active);
+    // Use official intlTelInput API to read the selected country's dial code
+    var selectedCountryData = (window.phoneInput && window.phoneInput.getSelectedCountryData) ? window.phoneInput.getSelectedCountryData() : {};
+    var itiDialCode = selectedCountryData.dialCode ? ('+' + selectedCountryData.dialCode) : '+91';
+    var iti__active = selectedCountryData.iso2 || 'in';
+    $('#contact_code').val(itiDialCode);
 
     $('#preview_email').text(email);
     $('#preview_name').text(name);
@@ -2023,7 +2041,8 @@ function updatePreviewData() {
       $('#phoneDisplay').html('');
       const flagDiv = document.createElement("div");
       flagDiv.className = `iti__flag iti__${iti__active}`;
-      const dialCode = (typeof countryDialCodes !== 'undefined' ? countryDialCodes[iti__active] : '') || "";
+      // Prefer the live dial code from the ITI API; fall back to the lookup table
+      const dialCode = itiDialCode || (typeof countryDialCodes !== 'undefined' ? countryDialCodes[iti__active] : '') || '';
       const dialCodeSpan = document.createElement("span");
       dialCodeSpan.textContent = dialCode;
       flagContainer.appendChild(flagDiv);
@@ -2099,29 +2118,36 @@ if (inputElement) {
   });
 }
 
-// Phone Input
+// Phone Input — intlTelInput v17 integration
+// Initialise the library and expose the instance on window.phoneInput so that
+// updatePreviewData() and the countrychange handler can read it reliably via
+// the official API (getSelectedCountryData) instead of CSS-class scraping.
+// dropdownContainer:document.body ensures the country list is appended to <body>
+// so it is NEVER clipped by overflow:hidden on any ancestor element.
 const phoneInputField = document.querySelector("#contact_number");
-const phoneInput = window.intlTelInput(phoneInputField, { 
+window.phoneInput = window.intlTelInput(phoneInputField, {
   separateDialCode: true,
-  dropdown: true,
   initialCountry: "in",
   preferredCountries: ["in", "us", "gb", "ca", "au"],
-  autoPlaceholder: "off"
+  autoPlaceholder: "off",
+  dropdownContainer: document.body
 });
 
-$(document).ready(function() {
-  $('.smsForm .iti__flag-container').click(function() { 
-    var countryCode = $('.smsForm .iti__selected-flag').attr('title');
-    if (countryCode) {
-      var dialCode = countryCode.replace(/[^0-9]/g,'');
-      $('#contact_code').val(dialCode);
-    }
-  });
+// Sync the hidden contact_code field whenever the user picks a different flag.
+// This is the only reliable hook — the old click-on-.iti__flag-container
+// approach fired before the library updated its internal state.
+phoneInputField.addEventListener("countrychange", function () {
+  var data = window.phoneInput.getSelectedCountryData();
+  var dialCode = data.dialCode ? ('+' + data.dialCode) : '';
+  $('#contact_code').val(dialCode);
+  updatePreviewData();
+});
 
-  $(".iti__flag-container").on("click", function (event) {
-    var iti__active = $(".iti__active").attr('data-country-code'); 
-    $('#contact_code').val(iti__active);
-  });
+// Seed the hidden field immediately on page load with the default country (+91).
+$(document).ready(function() {
+  var data = window.phoneInput.getSelectedCountryData();
+  var dialCode = data.dialCode ? ('+' + data.dialCode) : '+91';
+  $('#contact_code').val(dialCode);
 });
 
 // Original Stepper & FormValidation Integration
@@ -2335,7 +2361,7 @@ $(document).ready(function() {
                   validators: {
                     notEmpty: { message: "Contact Number is required" },
                     digits: { message: "Contact Number must contain only digits" },
-                    stringLength: { min: 10, max: 10, message: "Contact Number must contain 10 digits only" }
+                    stringLength: { min: 4, max: 15, message: "Please enter a valid mobile number (4–15 digits)" }
                   }
                 },
                 kt_tagify_work_location: { validators: { notEmpty: { message: "City is required" } } }

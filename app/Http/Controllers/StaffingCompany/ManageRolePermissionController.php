@@ -85,8 +85,9 @@ class ManageRolePermissionController extends StaffingCompanyBaseController
         $permissions = Permission::all();
 
         $role = Role::findOrFail($roleId);
-        $role->perms()->sync([]);
-        $role->attachPermissions($permissions);
+        // Spatie: syncPermissions() replaces all existing permissions atomically.
+        // (entrust: perms()->sync([]) + attachPermissions() is no longer valid)
+        $role->syncPermissions($permissions);
         return Reply::dataOnly(['status' => 'success']);
     }
     public function removeAllPermission(Request $request)
@@ -94,7 +95,9 @@ class ManageRolePermissionController extends StaffingCompanyBaseController
         $roleId = $request->roleId;
 
         $role = Role::findOrFail($roleId);
-        $role->perms()->sync([]);
+        // Spatie: syncPermissions([]) detaches all permissions.
+        // (entrust: perms()->sync([]) is no longer valid)
+        $role->syncPermissions([]);
 
         return Reply::dataOnly(['status' => 'success']);
     }
