@@ -645,7 +645,10 @@ CREATE TABLE `client_contact_info` (
   `user_id` int DEFAULT '0',
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`)
+  PRIMARY KEY (`id`),
+  KEY `idx_client_contact_info_client_id` (`client_id`),
+  KEY `idx_client_contact_info_client_id_id` (`client_id`,`id`),
+  KEY `idx_client_contact_info_email` (`contact_person_email`)
 ) ENGINE=InnoDB AUTO_INCREMENT=1811 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ============================================================
@@ -689,7 +692,9 @@ CREATE TABLE `client_file` (
   `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `file_type` varchar(30) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
   `file_size` varchar(10) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
-  PRIMARY KEY (`id`)
+  PRIMARY KEY (`id`),
+  KEY `idx_client_file_client_id` (`client_id`),
+  KEY `idx_client_file_company_id` (`company_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ============================================================
@@ -709,7 +714,9 @@ CREATE TABLE `client_location` (
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
   KEY `idx_cl_client_id` (`client_id`),
-  KEY `idx_client_location_client_id_id` (`client_id`,`id`)
+  KEY `idx_client_location_client_id_id` (`client_id`,`id`),
+  KEY `idx_client_location_company_id` (`company_id`),
+  KEY `idx_client_location_client_city_addr` (`client_id`,`city_id`,`address`)
 ) ENGINE=InnoDB AUTO_INCREMENT=2532 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ============================================================
@@ -753,7 +760,10 @@ CREATE TABLE `clients` (
   `payout` varchar(10) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
   `detail` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
   `feedback` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
-  PRIMARY KEY (`id`)
+  PRIMARY KEY (`id`),
+  KEY `idx_clients_company_id` (`company_id`),
+  KEY `idx_clients_website` (`website`),
+  KEY `idx_clients_company_created` (`company_id`,`created_at`)
 ) ENGINE=InnoDB AUTO_INCREMENT=1218 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ============================================================

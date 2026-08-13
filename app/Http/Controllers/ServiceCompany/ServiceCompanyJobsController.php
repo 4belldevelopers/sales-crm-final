@@ -3574,7 +3574,8 @@ protected $elasticService;
 	{
 		$company_id = auth()->user()->company_id;
 		$this->pageTitle = __('Market Jobs');
-		$cities = cache()->remember('global_countries_list', 86400, function () {
+		// Distinct key: this stores strings (plucked names), not objects — avoids collision with global_countries_list which stores full rows.
+		$cities = cache()->remember('global_country_names_list', 86400, function () {
 			return DB::table('countries')
 				->select('countries.country_name')
 				->where('countries.country_name', '!=', '')
