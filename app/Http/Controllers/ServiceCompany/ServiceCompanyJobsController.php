@@ -5470,6 +5470,7 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
         abort_if(Gate::denies('view_jobs'), 403);
         $company_id = auth()->user()->company_id;
         $this->salaryMode = GeneralMethod::salaryMode();
+        $this->currency = GeneralMethod::currency();
         $this->employmentType = GeneralMethod::employmentType();
 
         $cachePayload = [
@@ -14165,7 +14166,7 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
                 $status = 0; // Product Company
             }
 
-            $value = ['company_id' => $company_id, 'rateType' => $rateType, 'commtype' => $commType, 'status' => $status];
+            $value = ['company_id' => $company_id, 'rateType' => $rateType, 'commtype' => $commType, 'sal_mode' => $sal_mode, 'salary_currency' => $salary_currency, 'status' => $status];
         }
         DB::table('commericials')->where('company_id', $company_id)->where('commtype', $commType)->delete();
         $commericialId = DB::table('commericials')->insertGetId($value);
