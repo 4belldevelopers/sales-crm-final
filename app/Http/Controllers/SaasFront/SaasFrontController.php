@@ -106,40 +106,36 @@ class SaasFrontController extends SaasFrontBaseController
 
     public function teamReg($companyId, $invitationId)
     {
-        $currentCompany = $currentUserId = '';
         $currentCompany = base64_decode($companyId);
         $currentUserId = base64_decode($invitationId);
 
-        // dd($currentCompany,$currentUserId);
-
-        $count = 0;
-        $count = DB::table('users')
-            ->select('users.id', 'users.name', 'name.email', 'name.email_verification_code')
-            ->where('users.company_id', '=', $currentCompany)
-            ->where('users.id', '=', $currentUserId)
-            ->where('users.status', '=', 'inactive')
-            ->count();
-
-        if ($count == 0) {
+        if (! is_numeric($currentCompany) || ! is_numeric($currentUserId)) {
             abort(404);
-        } else {
-            $this->companyid = $currentCompany;
-            $this->userData = DB::table('users')
-                ->select('users.id', 'users.name', 'users.email', 'users.email_verification_code')
-                ->where('users.company_id', '=', $currentCompany)
-                ->where('users.id', '=', $currentUserId)
-                ->first();
-            if (! empty($this->userData->email_verification_code)) {
-
-                $user_id = $this->userData->id;
-
-                DB::table('users')->where('id', @$user_id)->limit(1)->update(['remember_token' => @$user_id]);
-
-                return view('saas-front.teamReg', $this->data);
-            } else {
-                abort(404);
-            }
         }
+
+        // Optimized single query: combines tenant scoping, status verification, and payload hydration
+        $userData = DB::table('users')
+            ->select('id', 'name', 'email', 'status', 'email_verification_code', 'remember_token')
+            ->where('company_id', $currentCompany)
+            ->where('id', $currentUserId)
+            ->first();
+
+        if (! $userData || $userData->status !== 'inactive' || empty($userData->email_verification_code)) {
+            abort(404);
+        }
+
+        $this->companyid = $currentCompany;
+        $this->userData = $userData;
+
+        // Conditional write: update remember_token only if not already assigned to avoid redundant DB writes
+        if ($userData->remember_token != $userData->id) {
+            DB::table('users')
+                ->where('id', $userData->id)
+                ->limit(1)
+                ->update(['remember_token' => $userData->id]);
+        }
+
+        return view('saas-front.teamReg', $this->data);
     }
 
     public function termsAndConditions()

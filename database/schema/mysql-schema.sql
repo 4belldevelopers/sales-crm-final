@@ -4334,7 +4334,8 @@ CREATE TABLE `users` (
   `linkedin` text COLLATE utf8mb4_unicode_ci,
   PRIMARY KEY (`id`),
   UNIQUE KEY `users_email_unique` (`email`),
-  KEY `users_company_id_foreign` (`company_id`)
+  KEY `users_company_id_foreign` (`company_id`),
+  KEY `idx_users_company_status` (`company_id`,`status`)
 ) ENGINE=InnoDB AUTO_INCREMENT=5883 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ============================================================
@@ -4353,7 +4354,8 @@ CREATE TABLE `users_profile` (
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL,
   PRIMARY KEY (`id`),
-  KEY `users_company_id_foreign` (`company_id`)
+  KEY `users_company_id_foreign` (`company_id`),
+  KEY `idx_users_profile_user_company` (`user_id`,`company_id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=154 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ============================================================
