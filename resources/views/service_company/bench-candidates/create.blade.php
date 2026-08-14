@@ -1,4 +1,4 @@
-﻿@extends('layouts.service_company_layout')
+@extends('layouts.service_company_layout')
 @php 
 	use App\Helper\GeneralMethod;	
 	$customTitleId	=	0;
@@ -1080,7 +1080,7 @@ if($snp_mode== 1){
 $(document).ready(function () {
 
     // ── v2 upload: presign URL injected from PHP; flag computed at runtime ──────
-    @if(config('resumes.features.browser_upload'))
+    @if(config('resumes.features.browser_upload') && \Illuminate\Support\Facades\Schema::hasTable('resume_uploads'))
     window.RESUME_PRESIGN_URL = @json(route('service_company.resume.v2.sessions.store'));
     @endif
     var RESUMES_FEATURE_BROWSER_UPLOAD = !!(window.ResumePresign && window.RESUME_PRESIGN_URL);

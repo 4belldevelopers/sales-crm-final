@@ -1356,7 +1356,7 @@ $(document).ready(function () {
     // resume-presign.js is always loaded unconditionally so it is never missing
     // from a cached page. v2 activates only when BOTH conditions are true at
     // runtime: the module is loaded AND the server emitted the presign URL.
-    @if(config('resumes.features.browser_upload'))
+    @if(config('resumes.features.browser_upload') && \Illuminate\Support\Facades\Schema::hasTable('resume_uploads'))
     window.RESUME_PRESIGN_URL = @json(route('service_company.resume.v2.sessions.store'));
     @endif
     var RESUMES_FEATURE_BROWSER_UPLOAD = !!(window.ResumePresign && window.RESUME_PRESIGN_URL);
@@ -3498,14 +3498,16 @@ var KTAddCandidate = function () {
                                           }
                                   }).then(function (result) {
                                       if (result.isConfirmed) {
-                                          form.querySelector('[name="email1"]').value 		= "";
-                                          form.querySelector('[name="password1"]').value 		= "";
+                                          var e1 = form.querySelector('[name="email1"]'); if (e1) e1.value = "";
+                                          var p1 = form.querySelector('[name="password1"]'); if (p1) p1.value = "";
                                       }
                                   });
                                   
                                   // Clear v2 session from localStorage so the next ADD form does not recover this already-completed session.
-                                  if (RESUMES_FEATURE_BROWSER_UPLOAD) { window.ResumePresign.cancelUpload(); }
-                                   window.location = response.url;
+                                  if (typeof RESUMES_FEATURE_BROWSER_UPLOAD !== 'undefined' && RESUMES_FEATURE_BROWSER_UPLOAD && window.ResumePresign) { window.ResumePresign.cancelUpload(); }
+                                  if (response.url) {
+                                      window.location.href = response.url;
+                                  }
 
 																			},
 															error			: function (xhr, textStatus, errorThrown) {
