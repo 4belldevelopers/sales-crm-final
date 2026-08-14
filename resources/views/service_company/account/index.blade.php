@@ -4218,12 +4218,13 @@ $(document).ready(function(){
                 },
                 success: function (response) {
                     if (response.status === 'success') {
-                        if (String(rateTypeClass) === '2') {
+                        if (String(commType) === '2') {
                             $('#fullTimeCount').text(countryCount);
                         }
-                        if (String(rateTypeClass) === '1') {
+                        if (String(commType) === '1') {
                             $('#contractCount').text(countryCount);
                         }
+                        $editor.get(0).dispatchEvent(new CustomEvent('commercial:saved'));
                         Swal.fire({toast: true, position: 'top-end', icon: 'success', title: 'Commercials saved successfully.', showConfirmButton: false, timer: 2200, timerProgressBar: true});
                         return;
                     }
