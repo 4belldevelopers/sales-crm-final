@@ -14068,6 +14068,7 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
         abort_if(Gate::denies('view_jobs'), 403);
         $company_id = auth()->user()->company_id;
         $this->salaryMode = GeneralMethod::salaryMode();
+        $this->currency = GeneralMethod::currency();
         $this->employmentType = GeneralMethod::employmentType();
 
         $commericials = DB::table('commericials')
