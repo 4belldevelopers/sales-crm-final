@@ -19,6 +19,17 @@
     ];
     $selectedSalaryMode = isset($commercial['sal_mode']) ? (int) $commercial['sal_mode'] : 0;
     $selectedCurrency = isset($commercial['salary_currency']) ? (int) $commercial['salary_currency'] : 4;
+    $availableCurrencies = collect($currency ?? [])->filter(function ($currencyCode) {
+        return trim((string) $currencyCode) !== '';
+    });
+    if ($availableCurrencies->isEmpty()) {
+        $availableCurrencies = collect(\App\Helper\GeneralMethod::currency())->filter(function ($currencyCode) {
+            return trim((string) $currencyCode) !== '';
+        });
+    }
+    if (! $availableCurrencies->has($selectedCurrency) && $availableCurrencies->isNotEmpty()) {
+        $selectedCurrency = (int) $availableCurrencies->keys()->first();
+    }
     $countryRegions = collect($countries ?? [])->groupBy(function ($country) {
         return trim((string) ($country->region ?? '')) ?: 'Other';
     });
@@ -70,7 +81,7 @@
                 <div class="cev3-default-pricing-card">
                     <div><label class="cev3-label" for="commercial_default_rate" data-rate-label>{{ $selectedCommercialModel === 2 ? 'Rate / Percentage' : 'Default Fee' }}</label><div class="cev3-rate-wrap"><input type="number" id="commercial_default_rate" class="cev3-control" data-fallback-rate="{{ $fallbackDefaultRate }}" step="0.01" min="0" value="{{ $defaultRate }}"><span class="cev3-rate-suffix" data-rate-suffix>{{ $selectedCommercialModel === 2 ? '%' : '' }}</span></div><p class="cev3-help">Changing this rate updates every experience range.</p></div>
                     <div><label class="cev3-label" for="commercial_salary_mode">Applied On</label><select id="commercial_salary_mode" name="sal_mode" class="cev3-control" data-applied-on>@foreach(($salaryMode ?? []) as $modeKey => $modeLabel)<option value="{{ $modeKey }}" {{ $selectedSalaryMode === (int) $modeKey ? 'selected' : '' }}>{{ $modeLabel }} {{ $isFulltime ? 'CTC' : 'Bill Rate' }}</option>@endforeach</select><p class="cev3-help">Choose the billing period.</p></div>
-                    <div><label class="cev3-label" for="commercial_salary_currency">Currency</label><select id="commercial_salary_currency" name="salary_currency" class="cev3-control" data-pricing-currency>@foreach(($currency ?? []) as $currencyKey => $currencyCode)<option value="{{ $currencyKey }}" {{ $selectedCurrency === (int) $currencyKey ? 'selected' : '' }}>{{ $currencyCode }}</option>@endforeach</select><p class="cev3-help">All backend currencies are available.</p></div>
+                    <div><label class="cev3-label" for="commercial_salary_currency">Currency</label><select id="commercial_salary_currency" name="salary_currency" class="cev3-control" data-pricing-currency>@foreach($availableCurrencies as $currencyKey => $currencyCode)<option value="{{ $currencyKey }}" {{ $selectedCurrency === (int) $currencyKey ? 'selected' : '' }}>{{ $currencyCode }}</option>@endforeach</select><p class="cev3-help">All backend currencies are available.</p></div>
                 </div>
             </div>
         </section>
@@ -88,7 +99,7 @@
                             <span class="cev3-rate-name">{{ $range['label'] }}</span>
                             <div class="cev3-rate-wrap"><input type="number" class="cev3-control" data-range-rate step="0.01" min="0" value="{{ $rangeRate }}"><span class="cev3-rate-suffix" data-rate-suffix>{{ $selectedCommercialModel === 2 ? '%' : '' }}</span></div>
                             <select class="cev3-control" data-range-applied-on>@foreach(($salaryMode ?? []) as $modeKey => $modeLabel)<option value="{{ $modeKey }}" {{ $selectedSalaryMode === (int) $modeKey ? 'selected' : '' }}>{{ $modeLabel }} {{ $isFulltime ? 'CTC' : 'Bill Rate' }}</option>@endforeach</select>
-                            <select class="cev3-control" data-range-currency>@foreach(($currency ?? []) as $currencyKey => $currencyCode)<option value="{{ $currencyKey }}" {{ $selectedCurrency === (int) $currencyKey ? 'selected' : '' }}>{{ $currencyCode }}</option>@endforeach</select>
+                            <select class="cev3-control" data-range-currency>@foreach($availableCurrencies as $currencyKey => $currencyCode)<option value="{{ $currencyKey }}" {{ $selectedCurrency === (int) $currencyKey ? 'selected' : '' }}>{{ $currencyCode }}</option>@endforeach</select>
                             <button type="button" class="cev3-range-reset" data-range-reset title="Reset this range to the default rate" aria-label="Reset {{ $range['label'] }}">↻</button>
                             @foreach($range['indexes'] as $experienceIndex)
                                 @php $experienceRate = data_get($commercialDetails->get($experienceIndex), 'rate', $defaultRate); @endphp
