@@ -65,9 +65,9 @@ class ServiceCompanyTeamController extends ServiceCompanyBaseController
             function () use ($companyId) {
                 $status = User::query()->company()
                     ->selectRaw('COUNT(*) as total')
-                    ->selectRaw("SUM(status = 'active' AND (password != '' AND password IS NOT NULL)) as active")
-                    ->selectRaw("SUM(status = 'inactive') as inactive")
-                    ->selectRaw("SUM(password = '' OR password IS NULL) as invited")
+                    ->selectRaw("SUM(status = 'active' AND (email_verification_code IS NULL OR email_verification_code = '')) as active")
+                    ->selectRaw("SUM(status = 'inactive' AND (email_verification_code IS NULL OR email_verification_code = '')) as inactive")
+                    ->selectRaw("SUM((email_verification_code IS NOT NULL AND email_verification_code != '') OR (password = '' OR password IS NULL)) as invited")
                     ->first();
 
                 // Captain = members acting as SPOC/captain on at least one assigned job.
@@ -255,10 +255,21 @@ class ServiceCompanyTeamController extends ServiceCompanyBaseController
         // resolves to an empty set. "all" applies no extra constraint.
         if (! empty($statusTab) && $statusTab !== 'all') {
             if ($statusTab === 'invited') {
-                $must[] = ['bool' => ['must_not' => [['wildcard' => ['password' => '?*']]]]];
+                $must[] = [
+                    'bool' => [
+                        'should' => [
+                            ['wildcard' => ['email_verification_code' => '?*']],
+                            ['bool' => ['must_not' => [['wildcard' => ['password' => '?*']]]]],
+                        ],
+                        'minimum_should_match' => 1,
+                    ],
+                ];
             } elseif ($statusTab === 'active') {
                 $must[] = ['term' => ['status' => 'active']];
-                $must[] = ['wildcard' => ['password' => '?*']];
+                $must[] = ['bool' => ['must_not' => [['wildcard' => ['email_verification_code' => '?*']]]]];
+            } elseif ($statusTab === 'inactive') {
+                $must[] = ['term' => ['status' => 'inactive']];
+                $must[] = ['bool' => ['must_not' => [['wildcard' => ['email_verification_code' => '?*']]]]];
             } elseif ($statusTab === 'suspended') {
                 $must[] = ['term' => ['status' => 'suspended']];
             } else {
@@ -478,7 +489,8 @@ class ServiceCompanyTeamController extends ServiceCompanyBaseController
         // Invited users (no password) & inactive users get 'N/A'
         $activeRankIndex = 1;
         $allRankedUsers = $allRankedUsers->map(function ($user) use (&$activeRankIndex) {
-            $isFullyActive = strtolower($user['status'] ?? '') === 'active' && ! empty($user['password']);
+            $isInvited = ! empty($user['email_verification_code']) || empty($user['password']);
+            $isFullyActive = strtolower($user['status'] ?? '') === 'active' && ! $isInvited;
             if ($isFullyActive) {
                 $user['rank'] = $activeRankIndex++;
             } else {
