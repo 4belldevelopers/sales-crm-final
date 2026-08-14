@@ -1,1266 +1,139 @@
-<style>
-    .text-justify {
-        text-align: justify !important;
-    }
-
-    .symbol1>img,
-    .symbol1 .symbol-label1 {
-        width: 32px !important;
-        height: 32px !important;
-    }
-
-    .table> :not(caption)>*>* {
-        padding: 0rem 0.4rem;
-    }
-
-    #kt_activitiesJob_close svg {
-            color: red;
-    }
-
-    /*.card .card-header{min-height: 80px;}*/
-</style>
+@php
+    // Intent: present the existing tenant commercial payload in the requested editor without inventing persistence fields.
+    $commercial = @$commericials[0] ?? [];
+    $isFulltime = (int) $sectionCheck === 2;
+    $rateType = (int) ($commercial['rateType'] ?? $sectionCheck);
+    $commercialDetails = collect($commercial['commericial_details'] ?? [])->keyBy('exp');
+    $selectedCountryIds = array_map('intval', $commercial['commericial_countries'] ?? []);
+    $defaultRate = $isFulltime ? (@$default_rates->rates_perecentage ?? 8.33) : (@$default_rates->rates_fixed ?? 0);
+    $experienceLabels = ['0 Years (Fresher)', '1 Year', '2 Years', '3 Years', '4 Years', '5 Years', '6 Years', '7 Years', '8 Years', '9 Years', '10+ Years'];
+    $currencyOptions = [0 => 'INR - Indian Rupee', 1 => 'EUR - Euro', 2 => 'JPY - Japanese Yen', 3 => 'GBP - British Pound', 4 => 'USD - US Dollar'];
+    $selectedCurrency = isset($commercial['salary_currency']) ? (int) $commercial['salary_currency'] : 4;
+    $countryRegions = collect($countries ?? [])->groupBy(function ($country) {
+        return trim((string) ($country->region ?? '')) ?: 'Other';
+    });
+@endphp
 
 <style>
-/* Intent: make the asynchronously loaded commercial drawer use the account page's enterprise card/subcard system without changing field names or save hooks. */
-.commercial-editor-v2{color:#172554;background:#eef2f7!important}
-.commercial-editor-v2-header{position:sticky;top:0;z-index:5;min-height:66px!important;padding:11px 18px!important;box-shadow:0 1px 0 rgba(15,23,42,.03)}
-.commercial-editor-heading{display:flex;align-items:center;min-width:0;gap:11px}
-.commercial-editor-heading-icon,.commercial-section-icon{display:flex;flex:0 0 auto;align-items:center;justify-content:center;color:#2563eb;background:#eff6ff;border-radius:9px}
-.commercial-editor-heading-icon{width:38px;height:38px}.commercial-section-icon{width:32px;height:32px;border-radius:8px}
-.commercial-editor-heading-icon svg{width:20px;height:20px}.commercial-section-icon svg{width:17px;height:17px}
-.commercial-editor-heading-icon svg,.commercial-section-icon svg{fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
-.commercial-editor-v2-header h3{display:flex;align-items:center;flex-wrap:wrap;gap:7px;margin:0!important;font-size:15px!important}
-.commercial-editor-v2-header h3 span{margin:0!important;padding:3px 8px!important}
-.commercial-editor-heading p{margin:3px 0 0;color:#64748b;font-size:10.5px;font-weight:500;line-height:1.35}
-.commercial-editor-v2-close{display:flex!important;flex:0 0 32px;align-items:center;justify-content:center;padding:0!important;transition:border-color .15s,background-color .15s,color .15s}
-.commercial-editor-v2-close:hover{color:#dc2626!important;background:#fef2f2!important;border-color:#fecaca!important}
-.commercial-editor-v2-close:focus-visible{outline:0;box-shadow:0 0 0 3px rgba(37,99,235,.18)!important}
-.commercial-editor-v2-scroll{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(300px,.85fr);align-items:start;gap:14px;padding:14px!important}
-.commercial-editor-note{grid-column:1/-1;margin:0!important;padding:10px 13px 10px 39px;position:relative;background:#fff!important;border-color:#cbdcff!important;box-shadow:0 1px 3px rgba(15,23,42,.035)}
-.commercial-editor-note:before{position:absolute;left:13px;top:10px;display:flex;width:18px;height:18px;align-items:center;justify-content:center;content:'i';color:#fff;background:#2563eb;border-radius:50%;font-size:10px;font-weight:600}
-.commercial-editor-v2 .commercial-editor-v2-scroll>.commercial-rates-card,.commercial-editor-v2 .commercial-editor-v2-scroll>.commercial-countries-card{width:auto!important;float:none!important;margin:0!important;border:1px solid #d9e2ef!important;border-radius:12px!important;background:#fff!important;box-shadow:0 1px 3px rgba(15,23,42,.05),0 5px 14px rgba(15,23,42,.025)!important}
-.commercial-editor-v2-scroll>.commercial-rates-card .card-body,.commercial-editor-v2-scroll>.commercial-countries-card .card-body{padding:13px!important}
-.commercial-section-heading{display:flex;align-items:center;gap:10px;margin:0 0 11px;padding:0 0 11px;border-bottom:1px solid #e7edf5}
-.commercial-section-heading h4{margin:0!important;color:#111b3d!important;font-size:13px!important;font-weight:600!important}
-.commercial-section-heading p{margin:2px 0 0;color:#64748b;font-size:10px;font-weight:500;line-height:1.35}
-.commercial-rates-card .form-group,.commercial-countries-card .form-group{margin:0!important}
-.commercial-rates-card .rate-section:not(.d-none),.commercial-rates-card .rate-perecentage:not(.d-none){display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:0!important}
-.commercial-rates-card .rate-section>.d-flex.mb-5,.commercial-rates-card .rate-perecentage>.d-flex.mb-5{display:grid!important;grid-template-columns:104px minmax(0,1fr);align-items:center!important;min-width:0;gap:9px;margin:0!important;padding:9px!important;background:#fbfdff;border:1px solid #e3eaf3!important;border-radius:8px}
-.commercial-rates-card .rate-section>.d-flex>.col-lg-3,.commercial-rates-card .rate-section>.d-flex>.col-lg-9,.commercial-rates-card .rate-perecentage>.d-flex>.col-lg-3,.commercial-rates-card .rate-perecentage>.d-flex>.col-lg-9{width:auto!important;max-width:none!important;padding:0!important}
-.commercial-rates-card .row{margin-right:0!important;margin-left:0!important}.commercial-rates-card .row>*{min-width:0}
-.commercial-rates-card .rate-section .col-lg-12,.commercial-rates-card .rate-perecentage .col-lg-12{padding:0!important}
-.commercial-rates-card .rate-perecentage .col-lg-8{width:100%!important;max-width:100%!important;padding:0!important}
-.commercial-rates-card .rate-section>.d-flex label,.commercial-rates-card .rate-perecentage>.d-flex label{margin:0!important;color:#26385e!important;font-size:10.5px!important;font-weight:600!important}
-.commercial-rates-card .form-control,.commercial-rates-card .form-select{height:32px!important;min-height:32px!important;border-color:#cfd9e8!important;background:#fff!important;font-variant-numeric:tabular-nums}
-.commercial-rates-card .rate-perecentage .col-lg-8>span{right:8px!important;top:50%!important;display:flex;transform:translateY(-50%)}
-.commercial-rates-card .rate-perecentage .col-lg-8>span svg{width:17px;height:17px}
-.commercial-country-grid{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;margin:0!important}
-.commercial-countries-card .commercial-country-grid{max-height:calc(100vh - 255px);padding-right:4px;overflow:auto;scrollbar-width:thin;scrollbar-color:#cbd5e1 transparent}
-.commercial-country-option{display:flex;align-items:center;min-width:0;min-height:36px;padding:7px 8px!important;background:#fbfdff;border:1px solid #e3eaf3;border-radius:7px}
-.commercial-editor-v2-scroll .commercial-country-option .countries{flex:0 0 16px;margin:0 7px 0 0!important}
-.commercial-editor-v2-scroll .commercial-country-option label{min-width:0;margin:0!important;overflow:hidden;color:#34476e!important;text-overflow:ellipsis;white-space:nowrap}
-.commercial-country-option:has(.countries:checked){background:#eff6ff;border-color:#b9d2ff}
-.commercial-editor-actions{position:sticky;bottom:0;z-index:4;display:flex;align-items:center;justify-content:flex-end;padding:11px 16px!important;background:rgba(255,255,255,.96);border-top:1px solid #dbe3ef;backdrop-filter:blur(8px)}
-.commercial-editor-actions .text-center{padding:0!important}.commercial-editor-v2 .copy_current_selected_applicant{min-width:142px!important;padding:9px 16px!important}
-@media(max-width:1199px){.commercial-editor-v2-scroll{grid-template-columns:1fr}.commercial-editor-note{grid-column:auto}.commercial-country-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
-@media(max-width:767px){.commercial-editor-v2-header{padding:10px 12px!important}.commercial-editor-heading-icon{display:none}.commercial-editor-v2-header h3{font-size:13px!important}.commercial-editor-heading p{font-size:9.5px}.commercial-editor-v2-scroll{padding:10px!important}.commercial-rates-card .rate-section:not(.d-none),.commercial-rates-card .rate-perecentage:not(.d-none){grid-template-columns:1fr}.commercial-country-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.commercial-editor-actions{padding:9px 10px!important}.commercial-editor-v2 .copy_current_selected_applicant{width:100%;min-width:0!important}}
-@media(prefers-reduced-motion:reduce){.commercial-editor-v2-close{transition:none}}
+/* Intent: scope the reference-inspired commercial editor to the AJAX drawer and preserve all legacy JavaScript selectors. */
+#kt_activitiesJob:has(#commercial-editor-v3)>.card>#kt_activities_header{display:none!important}#kt_activitiesJob:has(#commercial-editor-v3)>.card>#kt_activitiesJob_body{padding:0!important}
+.commercial-editor-v3,.commercial-editor-v3 *{box-sizing:border-box;font-family:'Poppins',sans-serif!important}.commercial-editor-v3{min-height:100%;color:#111b3d;background:#f6f8fc;font-size:11px;font-weight:500}.cev3-header{position:sticky;top:0;z-index:8;display:flex;align-items:center;justify-content:space-between;gap:14px;min-height:72px;padding:12px 18px;background:#fff;border-bottom:1px solid #e3e9f2}.cev3-heading{display:flex;align-items:center;min-width:0;gap:11px}.cev3-heading-icon,.cev3-section-icon{display:flex;align-items:center;justify-content:center;flex:0 0 auto;color:#4f46e5;background:#eef2ff;border-radius:8px}.cev3-heading-icon{width:38px;height:38px}.cev3-section-icon{width:30px;height:30px}.cev3-heading-icon svg{width:20px;height:20px}.cev3-section-icon svg{width:16px;height:16px}.cev3-heading-icon svg,.cev3-section-icon svg,.cev3-btn svg,.cev3-search svg,.cev3-input-icon svg{fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}.cev3-title-row{display:flex;align-items:center;flex-wrap:wrap;gap:8px}.cev3-title{margin:0!important;color:#0f1838!important;font-size:15px!important;font-weight:600!important;line-height:1.3}.cev3-active{display:inline-flex;align-items:center;min-height:21px;padding:2px 8px;color:#047857;background:#dff7ec;border-radius:6px;font-size:9.5px;font-weight:600}.cev3-subtitle{margin:3px 0 0;color:#657395;font-size:10.5px;font-weight:500}.cev3-header-actions{display:flex;align-items:center;gap:8px}.cev3-btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;min-height:34px;padding:7px 11px;color:#23345d;background:#fff;border:1px solid #d6dfeb;border-radius:6px;font-size:10.5px;font-weight:600;line-height:1;white-space:nowrap;transition:border-color .15s,background .15s,color .15s}.cev3-btn:hover{color:#3730a3;background:#f8f9ff;border-color:#b9c3eb}.cev3-btn:focus-visible{outline:0;box-shadow:0 0 0 3px rgba(79,70,229,.15)}.cev3-btn svg{width:15px;height:15px}.cev3-close{width:34px;padding:0;color:#64748b}.cev3-close:hover{color:#dc2626;background:#fef2f2;border-color:#fecaca}.cev3-workspace{display:grid;grid-template-columns:minmax(340px,.76fr) minmax(560px,1.72fr);gap:14px;padding:14px}.cev3-panel{min-width:0;padding:14px;background:#fff;border:1px solid #dbe3ef;border-radius:10px;box-shadow:0 1px 3px rgba(15,23,42,.045)}.cev3-section+.cev3-section{margin-top:14px;padding-top:14px;border-top:1px solid #e8edf4}.cev3-section-head{display:flex;align-items:flex-start;gap:9px;margin-bottom:10px}.cev3-section-number{display:flex;align-items:center;justify-content:center;flex:0 0 23px;width:23px;height:23px;color:#4338ca;background:#eef2ff;border-radius:6px;font-size:10px;font-weight:600}.cev3-section-title{margin:0;color:#111b3d;font-size:12px;font-weight:600;line-height:1.35}.cev3-section-copy{margin:2px 0 0;color:#697797;font-size:9.5px;font-weight:500;line-height:1.4}.cev3-label{display:block;margin:0 0 5px;color:#26365c;font-size:10px;font-weight:600}.cev3-field{position:relative}.cev3-control{width:100%;height:33px;padding:6px 10px;color:#172554;background:#fff;border:1px solid #ced8e7;border-radius:6px;outline:0;font-size:10.5px;font-weight:500;line-height:1.2}.cev3-control:focus{border-color:#6366f1;box-shadow:0 0 0 3px rgba(99,102,241,.1)}.cev3-control:disabled{color:#697797;background:#f8fafc;cursor:not-allowed}.cev3-control-icon{padding-left:38px}.cev3-input-icon{position:absolute;left:7px;top:50%;display:flex;width:25px;height:25px;align-items:center;justify-content:center;color:#059669;background:#e8f8ef;border-radius:5px;transform:translateY(-50%)}.cev3-input-icon svg{width:14px;height:14px}.cev3-help{margin:5px 0 0;color:#697797;font-size:9.5px;font-weight:500;line-height:1.4}.cev3-info{display:flex;align-items:flex-start;gap:8px;margin-top:8px;padding:9px 10px;color:#386252;background:#f0fbf6;border:1px solid #cceedd;border-radius:7px;font-size:9.5px;line-height:1.45}.cev3-info.blue{color:#405781;background:#f4f8ff;border-color:#d6e3ff}.cev3-info svg{flex:0 0 15px;width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:1.8}.cev3-price-grid{display:grid;grid-template-columns:88px minmax(0,1fr);gap:8px}.cev3-price-grid .wide{grid-column:1/-1}.cev3-rate-wrap{position:relative}.cev3-rate-wrap .cev3-control{padding-right:29px;font-variant-numeric:tabular-nums}.cev3-rate-suffix{position:absolute;right:10px;top:50%;color:#657395;font-size:10px;font-weight:600;transform:translateY(-50%)}.cev3-rate-table{overflow:hidden;border:1px solid #e1e7f0;border-radius:7px}.cev3-rate-head,.cev3-rate-row{display:grid;grid-template-columns:minmax(125px,1fr) 100px 24px;align-items:center;gap:8px}.cev3-rate-head{min-height:27px;padding:5px 8px;color:#697797;background:#f8fafc;border-bottom:1px solid #e6ebf2;font-size:8.5px;font-weight:600}.cev3-rate-row{min-height:36px;padding:4px 8px;border-bottom:1px solid #edf1f6}.cev3-rate-row:last-child{border-bottom:0}.cev3-rate-name{overflow:hidden;color:#24345a;font-size:9.5px;font-weight:600;text-overflow:ellipsis;white-space:nowrap}.cev3-rate-row .cev3-control{height:27px;padding:4px 25px 4px 7px;font-size:9.5px}.cev3-trash{display:flex;width:24px;height:24px;align-items:center;justify-content:center;color:#94a3b8;background:transparent;border:0;border-radius:5px;cursor:not-allowed}.cev3-trash svg{width:13px;height:13px;fill:none;stroke:currentColor;stroke-width:1.7}.cev3-dashed{width:100%;min-height:31px;margin-top:8px;color:#4f46e5;background:#fff;border:1px dashed #b9c3e7;border-radius:6px;font-size:9.5px;font-weight:600}.cev3-dashed:disabled{color:#94a3b8;background:#fafbfc;cursor:not-allowed}.cev3-country-toolbar{display:grid;grid-template-columns:minmax(180px,1fr) auto;gap:10px;margin-bottom:9px}.cev3-search{position:relative}.cev3-search svg{position:absolute;left:10px;top:50%;width:14px;height:14px;color:#71809e;transform:translateY(-50%)}.cev3-search .cev3-control{padding-left:31px}.cev3-country-actions{display:flex;gap:6px}.cev3-country-actions .cev3-btn{min-height:31px;padding:6px 9px;font-size:9px}.cev3-selected{display:flex;min-height:33px;align-items:center;flex-wrap:wrap;gap:6px;margin-bottom:9px}.cev3-chip{display:inline-flex;align-items:center;gap:6px;min-height:28px;padding:5px 8px;color:#25365d;background:#f9fbff;border:1px solid #dbe3ef;border-radius:6px;font-size:9.5px;font-weight:600}.cev3-chip-flag{font-size:14px;line-height:1}.cev3-chip-remove{display:flex;width:16px;height:16px;align-items:center;justify-content:center;padding:0;color:#70809e;background:transparent;border:0;font-size:14px}.cev3-country-box{padding:10px;border:1px solid #e0e7f0;border-radius:8px}.cev3-country-box-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:9px}.cev3-country-box-title{display:flex;align-items:center;gap:7px;color:#25365d;font-size:9.5px;font-weight:600}.cev3-country-box-title span{display:flex;width:18px;height:18px;align-items:center;justify-content:center;color:#4f46e5;background:#eef2ff;border-radius:5px}.cev3-region-tabs{display:flex;gap:6px;margin-bottom:9px;overflow-x:auto;scrollbar-width:none}.cev3-region-tabs::-webkit-scrollbar{display:none}.cev3-region-tab{min-height:27px;padding:5px 9px;color:#516184;background:#f5f7fb;border:1px solid transparent;border-radius:5px;font-size:8.8px;font-weight:600;white-space:nowrap}.cev3-region-tab.active{color:#4f46e5;background:#fff;border-color:#aeb8ff}.cev3-country-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:3px 14px;max-height:183px;overflow:hidden}.cev3-country-grid.expanded{max-height:310px;overflow:auto}.cev3-country-option{display:flex;align-items:center;min-width:0;min-height:25px;gap:6px;padding:3px 5px;border-radius:5px}.cev3-country-option:hover{background:#f7f9fc}.cev3-country-option[hidden]{display:none!important}.cev3-country-option input{flex:0 0 14px;width:14px;height:14px;margin:0;accent-color:#4f46e5}.cev3-country-option label{display:flex;align-items:center;min-width:0;gap:6px;margin:0;color:#526184;font-size:9px;font-weight:500;cursor:pointer}.cev3-country-option label b{overflow:hidden;font-weight:500;text-overflow:ellipsis;white-space:nowrap}.cev3-show-more{display:flex;align-items:center;justify-content:center;gap:5px;margin:8px auto 0;padding:3px 8px;color:#4f46e5;background:transparent;border:0;font-size:9px;font-weight:600}.cev3-overrides{margin-top:13px}.cev3-overrides-table{overflow:hidden;border:1px solid #e1e7f0;border-radius:7px}.cev3-overrides-head{display:grid;grid-template-columns:1.2fr .85fr .85fr .7fr 45px;gap:8px;padding:7px 9px;color:#697797;background:#f8fafc;border-bottom:1px solid #e5eaf1;font-size:8.5px;font-weight:600}.cev3-empty{padding:15px;color:#7a879f;text-align:center;font-size:9.5px;font-weight:500}.cev3-unavailable{display:inline-flex;margin-left:6px;padding:2px 6px;color:#b45309;background:#fff7e6;border-radius:5px;font-size:8px;font-weight:600;vertical-align:1px}.cev3-footer{position:sticky;bottom:0;z-index:8;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 14px;background:rgba(255,255,255,.97);border-top:1px solid #dce4ef;backdrop-filter:blur(8px)}.cev3-footer-group{display:flex;align-items:center;gap:8px}.cev3-primary{min-width:140px;color:#fff!important;background:#4f24e8!important;border-color:#4f24e8!important;box-shadow:0 4px 10px rgba(79,36,232,.18)}.cev3-primary:hover{background:#421cca!important;border-color:#421cca!important}.cev3-soft{color:#4f46e5;background:#fff;border-color:#c8c8ff}.cev3-btn:disabled{color:#94a3b8;background:#f8fafc;border-color:#e2e8f0;cursor:not-allowed}.cev3-menu-wrap{position:relative}.cev3-menu{position:absolute;right:0;top:40px;z-index:15;display:none;width:175px;padding:5px;background:#fff;border:1px solid #dbe3ef;border-radius:7px;box-shadow:0 12px 28px rgba(15,23,42,.14)}.cev3-menu.open{display:block}.cev3-menu button{display:flex;width:100%;align-items:center;padding:8px 9px;color:#334466;background:#fff;border:0;border-radius:5px;font-size:9.5px;font-weight:500;text-align:left}.cev3-menu button:hover{background:#f4f6fb}.cev3-hidden{display:none!important}
+@media(max-width:1199px){.cev3-workspace{grid-template-columns:1fr}.cev3-country-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:767px){.cev3-header{align-items:flex-start;padding:10px 12px}.cev3-heading-icon,.cev3-preview{display:none}.cev3-title{font-size:13px!important}.cev3-subtitle{font-size:9px}.cev3-workspace{padding:9px}.cev3-panel{padding:11px}.cev3-country-toolbar{grid-template-columns:1fr}.cev3-country-actions{overflow-x:auto}.cev3-country-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.cev3-overrides-head{grid-template-columns:1fr 1fr}.cev3-overrides-head span:nth-child(n+3){display:none}.cev3-footer{flex-wrap:wrap}.cev3-footer-group{flex:1}.cev3-footer-group:last-child{justify-content:flex-end}.cev3-primary{min-width:125px}}
+@media(prefers-reduced-motion:reduce){.cev3-btn{transition:none}}
 </style>
 
-<style>
-/* Commercial editor visual layer: existing pricing/country fields and save contract are intentionally preserved. */
-#kt_activitiesJob:has(#commercial-editor-v2)> .card > #kt_activities_header{display:none!important}#kt_activitiesJob:has(#commercial-editor-v2)> .card > #kt_activitiesJob_body{padding:0!important}.commercial-editor-v2{min-height:100%;font-family:'Poppins',sans-serif!important;background:#f8fafc!important}.commercial-editor-v2 *{font-family:'Poppins',sans-serif!important}.commercial-editor-v2 .card{border:0!important;box-shadow:none!important;background:transparent!important}.commercial-editor-v2-header{display:flex;align-items:center;justify-content:space-between;min-height:74px!important;padding:15px 22px!important;background:#fff!important;border-bottom:1px solid #e7edf5!important}.commercial-editor-v2-header h3{margin:0!important;color:#111b3d!important;font-size:16px!important;font-weight:600!important;line-height:1.3}.commercial-editor-v2-header h3 span{display:inline-flex;margin-left:8px;padding:3px 8px;color:#08a851!important;background:#e8f8ed;border-radius:5px;font-size:10px!important;font-weight:600!important;vertical-align:2px}.commercial-editor-v2-close{width:32px!important;height:32px!important;color:#52638b!important;background:#fff!important;border:1px solid #e2e8f3!important;border-radius:7px!important}.commercial-editor-v2-scroll{padding:18px!important;background:#f8fafc!important}.commercial-editor-note{margin:0 2px 14px;padding:10px 13px;color:#40547e;background:#f4f8ff;border:1px solid #d8e4ff;border-radius:8px;font-size:11px;font-weight:500;line-height:1.45}.commercial-editor-note b{color:#173af5;font-weight:600}.commercial-editor-v2-scroll>.card{margin:0 0 14px!important;border:1px solid #e2e8f3!important;border-radius:11px!important;background:#fff!important;box-shadow:0 1px 3px rgba(15,23,66,.025)!important}.commercial-editor-v2-scroll>.card .card-body{padding:18px!important}.commercial-editor-v2-scroll h4{color:#111b3d!important;font-size:13px!important;font-weight:600!important;line-height:1.35}.commercial-editor-v2-scroll .form-label{margin-bottom:4px;color:#52638b!important;font-size:10.5px!important;font-weight:500!important;line-height:1.35}.commercial-editor-v2-scroll .form-control,.commercial-editor-v2-scroll .form-select{height:34px!important;min-height:34px!important;padding:6px 10px!important;color:#172554!important;background:#fff!important;border:1px solid #dce4f0!important;border-radius:6px!important;font-size:11px!important;font-weight:500!important;box-shadow:none!important}.commercial-editor-v2-scroll .form-control:focus,.commercial-editor-v2-scroll .form-select:focus{border-color:#2563eb!important;box-shadow:0 0 0 3px rgba(37,99,235,.10)!important}.commercial-editor-v2-scroll .rate-perecentage .d-flex.mb-5,.commercial-editor-v2-scroll .rate-section .d-flex.mb-5{margin-bottom:6px!important;padding:8px 0;border-bottom:1px solid #f0f3f8}.commercial-editor-v2-scroll .rate-perecentage .d-flex.mb-5:last-child,.commercial-editor-v2-scroll .rate-section .d-flex.mb-5:last-child{border-bottom:0}.commercial-editor-v2-scroll .rate-perecentage label,.commercial-editor-v2-scroll .rate-section label{font-size:10.5px!important;font-weight:600!important;color:#283a61!important}.commercial-editor-v2-scroll .countries{width:16px!important;height:16px!important;margin:0 7px 0 0!important;accent-color:#2563eb}.commercial-editor-v2-scroll .countries+label{display:inline-block;min-width:90px;margin:0 0 9px!important;color:#40547e!important;font-size:10.5px!important;font-weight:500!important;vertical-align:2px}.commercial-editor-v2-scroll .countries:checked+label{color:#173af5!important;font-weight:600!important}.commercial-editor-v2 .copy_current_selected_applicant{min-width:150px!important;padding:10px 16px!important;color:#fff!important;background:#2563eb!important;border-color:#2563eb!important;border-radius:7px!important;font-size:11px!important;font-weight:600!important;box-shadow:0 4px 12px rgba(37,99,235,.2)!important}.commercial-editor-v2 .copy_current_selected_applicant:hover{background:#1d4ed8!important;border-color:#1d4ed8!important}@media(min-width:992px){.commercial-editor-v2-scroll>.card:first-of-type{width:46%;float:left;margin-right:2%!important}.commercial-editor-v2-scroll>.card:last-of-type{width:52%;float:left}.commercial-editor-v2-scroll::after{content:'';display:block;clear:both}}@media(max-width:991px){.commercial-editor-v2-scroll{padding:12px!important}}
-</style>
-
-<div id="commercial-editor-v2" class="commercial-editor-v2">
-    <div class="card shadow-none rounded-0 w-100">
-        <div class="commercial-editor-v2-header">
-            <div class="commercial-editor-heading">
-                <span class="commercial-editor-heading-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="14" rx="2"/><path d="M8 6V4h8v2M3 11h18M10 11v2h4v-2"/></svg></span>
-                <div>
-                    <h3>{{ ($sectionCheck==1) ? 'Contract' : 'Fulltime' }} Hiring Services <span>Commercial for your client</span></h3>
-                    <p>Configure experience-based rates and service availability.</p>
-                </div>
-            </div>
-            <input class="main_status" type="hidden" value="{{ (@$commericials[0]['status']) ? @$commericials[0]['status'] : 0 }}">
-            <div class="card-toolbar">
-                <button type="button" class="btn commercial-editor-v2-close" aria-label="Close commercial settings" title="Close"
-                    onclick="$('#kt_activitiesJob > .card > #kt_activities_header #kt_activitiesJob_close').trigger('click');"> <span class="svg-icon svg-icon-1">
-                        <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
-                            width="24px" height="24px" viewBox="0 0 24 24" version="1.1">
-                            <g transform="translate(12.000000, 12.000000) rotate(-45.000000) translate(-12.000000, -12.000000) translate(4.000000, 4.000000)"
-                                fill="currentColor">
-                                <rect x="0" y="7" width="16" height="2" rx="1"></rect>
-                                <rect opacity="0.5"
-                                    transform="translate(8.000000, 8.000000) rotate(-270.000000) translate(-8.000000, -8.000000)"
-                                    x="0" y="7" width="16" height="2" rx="1"></rect>
-                            </g>
-                        </svg>
-                    </span> </button>
-            </div>
+<div id="commercial-editor-v3" class="commercial-editor-v3">
+    <header class="cev3-header">
+        <div class="cev3-heading">
+            <span class="cev3-heading-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="14" rx="2"/><path d="M8 6V4h8v2M3 11h18M10 11v2h4v-2"/></svg></span>
+            <div><div class="cev3-title-row"><h3 class="cev3-title">Edit {{ $isFulltime ? 'Fulltime' : 'Contract' }} Hiring Services</h3><span class="cev3-active">{{ !empty($commercial['status']) ? 'Active' : 'Inactive' }}</span></div><p class="cev3-subtitle">Configure your placement fee structure and the countries where you offer hiring services.</p></div>
         </div>
-        <div class="card-body position-relative px-0 py-0">
-            <div class="card-body position-relative px-0 py-0">
-                <input type="hidden" name="hid_job_id" id="hid_job_id" value="2">
-                <div class="commercial-editor-v2-scroll">
-                    <div class="commercial-editor-note"><b>Commercial setup:</b> Configure the placement fee and select the countries where this service is available. Existing rates and selections are retained until you save.</div>
-                    <div class="card commercial-rates-card mb-5 mb-xl-5 mx-2">
-                        <div class="card-body pt-5 pb-0 px-5">
-                            <div class="form-group row fv-row fv-plugins-icon-container mb-4">
-                                <div class="commercial-section-heading">
-                                    <span class="commercial-section-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 19V8a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v11"/><path d="M8 6V4h8v2M8 11h8M8 15h5"/></svg></span>
-                                    <div>
-                                        <h4>Experience-based rates</h4>
-                                        <p>{{ ($sectionCheck==2) ? 'One-time service fee calculated from the candidate CTC.' : 'Set the billing rate by candidate experience.' }}</p>
-                                    </div>
-                                </div>
-                                <input type="hidden" class="rateTypeClass" value="{{ $sectionCheck }}" name="rateType">
-                                <div class="row rate-section {{ ($sectionCheck!=1) ? 'd-none' : '' }}"> 
-                                    <div class="d-flex mb-5" style="align-items: center;">
-                                        <div class="col-lg-3">
-                                            <div class="row">
-                                                <div class="col-lg-12">
-                                                    <label class="form-label">0 Year(Fresher)</label>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="col-lg-9">
-                                            <div class="row">
-                                                <div class="col-lg-12 px-1" style="align-items: center;">
-                                                    <div class="row">
-                                                        <div class="col-lg-2 px-1">
-                                                            <select class="form-select form-select-solid"
-                                                                arial-label="Select Currency" name="salary_currency"
-                                                                id="salary_currency">
-                                                                <option value="0" {{ isset($commericials[0]['salary_currency']) ? ($commericials[0]['salary_currency'] == 0 ? 'selected' : '') : '' }}>INR</option>
-                                                                <option value="1" {{ isset($commericials[0]['salary_currency']) ? ($commericials[0]['salary_currency'] == 1 ? 'selected' : '') : '' }}>EUR</option>
-                                                                <option value="2" {{ isset($commericials[0]['salary_currency']) ? ($commericials[0]['salary_currency'] == 2 ? 'selected' : '') : '' }}>JPY</option>
-                                                                <option value="3" {{ isset($commericials[0]['salary_currency']) ? ($commericials[0]['salary_currency'] == 3 ? 'selected' : '') : '' }}>GBP</option>
-                                                                <option value="4" {{ !isset($commericials[0]['salary_currency']) || $commericials[0]['salary_currency'] === null ? 'selected' : ($commericials[0]['salary_currency'] == 4 ? 'selected' : '') }}>USD</option>
-                                                            </select>
-                                                        </div>
-                                                        <div class="col-lg-4 px-0">
-                                                            <input type="number"
-                                                                class="form-control form-control-lg rate_val form-control-solid"
-                                                                name="rate[]" placeholder="Rates..."
-                                                                value="{{ (@$commericials[0]['rateType']==1) ? @$commericials[0]['commericial_details'][0]['rate']  : @$default_rates->rates_fixed}}">
-                                                        </div>
-                                                        <div class="col-lg-2 px-1">
-                                                            <select class="form-select form-select-solid"
-                                                                arial-label="Select Annual Salary" name="sal_mode"
-                                                                id="sal_mode">
-                                                                <option value="0" {{ isset($commericials[0]['sal_mode']) ? ($commericials[0]['sal_mode'] == 0 ? 'selected' : '') : '' }}>Annual</option>
-                                                                <option value="1" {{ isset($commericials[0]['sal_mode']) ? ($commericials[0]['sal_mode'] == 1 ? 'selected' : '') : '' }}>Monthly</option>
-                                                                <option value="2" {{ !isset($commericials[0]['sal_mode']) || $commericials[0]['sal_mode'] === null ? 'selected' : ($commericials[0]['sal_mode'] == 2 ? 'selected' : '') }}>Hourly</option>
-                                                            </select>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="d-flex mb-5" style="align-items: center;">
-                                        <div class="col-lg-3">
-                                            <div class="row">
-                                                <div class="col-lg-12">
-                                                    <label class="form-label">1 Year</label>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="col-lg-9">
-                                            {{-- {{ dd(@$commericials[0]) }} --}}
-                                            <div class="row">
-                                                <div class="col-lg-12 px-1" style="align-items: center;">
-                                                    <div class="row">
-                                                        <div class="col-lg-2 px-1">
-                                                            <select class="form-select form-select-solid"
-                                                                arial-label="Select Currency" name="salary_currency"
-                                                                id="salary_currency">
-                                                                <option value="0" {{ isset($commericials[0]['salary_currency']) ? ($commericials[0]['salary_currency'] == 0 ? 'selected' : '') : '' }}>INR</option>
-                                                                <option value="1" {{ isset($commericials[0]['salary_currency']) ? ($commericials[0]['salary_currency'] == 1 ? 'selected' : '') : '' }}>EUR</option>
-                                                                <option value="2" {{ isset($commericials[0]['salary_currency']) ? ($commericials[0]['salary_currency'] == 2 ? 'selected' : '') : '' }}>JPY</option>
-                                                                <option value="3" {{ isset($commericials[0]['salary_currency']) ? ($commericials[0]['salary_currency'] == 3 ? 'selected' : '') : '' }}>GBP</option>
-                                                                <option value="4" {{ !isset($commericials[0]['salary_currency']) || $commericials[0]['salary_currency'] === null ? 'selected' : ($commericials[0]['salary_currency'] == 4 ? 'selected' : '') }}>USD</option>
-                                                            </select>
-                                                        </div>
-                                                        <div class="col-lg-4 px-0">
-                                                            <input type="number"
-                                                                class="form-control form-control-lg rate_val form-control-solid"
-                                                                name="rate[]" placeholder="Rates..."
-                                                                value="{{ (@$commericials[0]['rateType']==1) ? @$commericials[0]['commericial_details'][1]['rate'] : @$default_rates->rates_fixed}}">
-                                                        </div>
-                                                        <div class="col-lg-2 px-1">
-                                                            <select class="form-select form-select-solid"
-                                                                arial-label="Select Annual Salary" name="sal_mode"
-                                                                id="sal_mode">
-                                                                <option value="0" {{ isset($commericials[0]['sal_mode']) ? ($commericials[0]['sal_mode'] == 0 ? 'selected' : '') : '' }}>Annual</option>
-                                                                <option value="1" {{ isset($commericials[0]['sal_mode']) ? ($commericials[0]['sal_mode'] == 1 ? 'selected' : '') : '' }}>Monthly</option>
-                                                                <option value="2" {{ !isset($commericials[0]['sal_mode']) || $commericials[0]['sal_mode'] === null ? 'selected' : ($commericials[0]['sal_mode'] == 2 ? 'selected' : '') }}>Hourly</option>
-                                                        
-                                                            </select>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="d-flex mb-5" style="align-items: center;">
-                                        <div class="col-lg-3">
-                                            <div class="row">
-                                                <div class="col-lg-12">
-                                                    <label class="form-label"> 2 Years</label>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="col-lg-9">
-                                            <div class="row">
-                                                <div class="col-lg-12 px-1" style="align-items: center;">
-                                                    <div class="row">
-                                                        <div class="col-lg-2 px-1">
-                                                            <select class="form-select form-select-solid"
-                                                                arial-label="Select Currency" name="salary_currency"
-                                                                id="salary_currency">
-                                                                <option value="0" {{ isset($commericials[0]['salary_currency']) ? ($commericials[0]['salary_currency'] == 0 ? 'selected' : '') : '' }}>INR</option>
-                                                                <option value="1" {{ isset($commericials[0]['salary_currency']) ? ($commericials[0]['salary_currency'] == 1 ? 'selected' : '') : '' }}>EUR</option>
-                                                                <option value="2" {{ isset($commericials[0]['salary_currency']) ? ($commericials[0]['salary_currency'] == 2 ? 'selected' : '') : '' }}>JPY</option>
-                                                                <option value="3" {{ isset($commericials[0]['salary_currency']) ? ($commericials[0]['salary_currency'] == 3 ? 'selected' : '') : '' }}>GBP</option>
-                                                                <option value="4" {{ !isset($commericials[0]['salary_currency']) || $commericials[0]['salary_currency'] === null ? 'selected' : ($commericials[0]['salary_currency'] == 4 ? 'selected' : '') }}>USD</option>
-                                                            </select>
-                                                        </div>
-                                                        <div class="col-lg-4 px-0">
-                                                            <input type="number"
-                                                                class="form-control form-control-lg rate_val form-control-solid"
-                                                                name="rate[]" placeholder="Rates..."
-                                                                value="{{ (@$commericials[0]['rateType']==1) ? @$commericials[0]['commericial_details'][2]['rate']  : @$default_rates->rates_fixed}}">
-                                                        </div>
-                                                        <div class="col-lg-2 px-1">
-                                                            <select class="form-select form-select-solid"
-                                                                arial-label="Select Annual Salary" name="sal_mode"
-                                                                id="sal_mode">
-                                                                <option value="0" {{ isset($commericials[0]['sal_mode']) ? ($commericials[0]['sal_mode'] == 0 ? 'selected' : '') : '' }}>Annual</option>
-                                                                <option value="1" {{ isset($commericials[0]['sal_mode']) ? ($commericials[0]['sal_mode'] == 1 ? 'selected' : '') : '' }}>Monthly</option>
-                                                                <option value="2" {{ !isset($commericials[0]['sal_mode']) || $commericials[0]['sal_mode'] === null ? 'selected' : ($commericials[0]['sal_mode'] == 2 ? 'selected' : '') }}>Hourly</option>
-                                                            </select>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="d-flex mb-5" style="align-items: center;">
-                                        <div class="col-lg-3">
-                                            <div class="row">
-                                                <div class="col-lg-12">
-                                                    <label class="form-label"> 3 Years</label>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="col-lg-9">
-                                            <div class="row">
-                                                <div class="col-lg-12 px-1" style="align-items: center;">
-                                                    <div class="row">
-                                                        <div class="col-lg-2 px-1">
-                                                            <select class="form-select form-select-solid"
-                                                                arial-label="Select Currency" name="salary_currency"
-                                                                id="salary_currency">
-                                                                <option value="0" {{ isset($commericials[0]['salary_currency']) ? ($commericials[0]['salary_currency'] == 0 ? 'selected' : '') : '' }}>INR</option>
-                                                                <option value="1" {{ isset($commericials[0]['salary_currency']) ? ($commericials[0]['salary_currency'] == 1 ? 'selected' : '') : '' }}>EUR</option>
-                                                                <option value="2" {{ isset($commericials[0]['salary_currency']) ? ($commericials[0]['salary_currency'] == 2 ? 'selected' : '') : '' }}>JPY</option>
-                                                                <option value="3" {{ isset($commericials[0]['salary_currency']) ? ($commericials[0]['salary_currency'] == 3 ? 'selected' : '') : '' }}>GBP</option>
-                                                                <option value="4" {{ !isset($commericials[0]['salary_currency']) || $commericials[0]['salary_currency'] === null ? 'selected' : ($commericials[0]['salary_currency'] == 4 ? 'selected' : '') }}>USD</option>
-                                                            </select>
-                                                        </div>
-                                                        <div class="col-lg-4 px-0">
-                                                            <input type="number"
-                                                                class="form-control form-control-lg rate_val form-control-solid"
-                                                                name="rate[]" placeholder="Rates..."
-                                                                value="{{ (@$commericials[0]['rateType']==1) ? @$commericials[0]['commericial_details'][3]['rate'] : @$default_rates->rates_fixed}}">
-                                                        </div>
-                                                        <div class="col-lg-2 px-1">
-                                                            <select class="form-select form-select-solid"
-                                                                arial-label="Select Annual Salary" name="sal_mode"
-                                                                id="sal_mode">
-                                                                <option value="0" {{ isset($commericials[0]['sal_mode']) ? ($commericials[0]['sal_mode'] == 0 ? 'selected' : '') : '' }}>Annual</option>
-                                                                <option value="1" {{ isset($commericials[0]['sal_mode']) ? ($commericials[0]['sal_mode'] == 1 ? 'selected' : '') : '' }}>Monthly</option>
-                                                                <option value="2" {{ !isset($commericials[0]['sal_mode']) || $commericials[0]['sal_mode'] === null ? 'selected' : ($commericials[0]['sal_mode'] == 2 ? 'selected' : '') }}>Hourly</option>
-                                                            </select>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="d-flex mb-5" style="align-items: center;">
-                                        <div class="col-lg-3">
-                                            <div class="row">
-                                                <div class="col-lg-12">
-                                                    <label class="form-label"> 4 Years</label>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="col-lg-9">
-                                            <div class="row">
-                                                <div class="col-lg-12 px-1" style="align-items: center;">
-                                                    <div class="row">
-                                                        <div class="col-lg-2 px-1">
-                                                            <select class="form-select form-select-solid"
-                                                                arial-label="Select Currency" name="salary_currency"
-                                                                id="salary_currency">
-                                                                <option value="0" {{ isset($commericials[0]['salary_currency']) ? ($commericials[0]['salary_currency'] == 0 ? 'selected' : '') : '' }}>INR</option>
-                                                                <option value="1" {{ isset($commericials[0]['salary_currency']) ? ($commericials[0]['salary_currency'] == 1 ? 'selected' : '') : '' }}>EUR</option>
-                                                                <option value="2" {{ isset($commericials[0]['salary_currency']) ? ($commericials[0]['salary_currency'] == 2 ? 'selected' : '') : '' }}>JPY</option>
-                                                                <option value="3" {{ isset($commericials[0]['salary_currency']) ? ($commericials[0]['salary_currency'] == 3 ? 'selected' : '') : '' }}>GBP</option>
-                                                                <option value="4" {{ !isset($commericials[0]['salary_currency']) || $commericials[0]['salary_currency'] === null ? 'selected' : ($commericials[0]['salary_currency'] == 4 ? 'selected' : '') }}>USD</option>
-                                                            </select>
-                                                        </div>
-                                                        <div class="col-lg-4 px-0">
-                                                            <input type="number"
-                                                                class="form-control form-control-lg rate_val form-control-solid"
-                                                                name="rate[]" placeholder="Rates..."
-                                                                value="{{ (@$commericials[0]['rateType']==1) ? @$commericials[0]['commericial_details'][4]['rate'] : @$default_rates->rates_fixed }}">
-                                                        </div>
-                                                        <div class="col-lg-2 px-1">
-                                                            <select class="form-select form-select-solid"
-                                                                arial-label="Select Annual Salary" name="sal_mode"
-                                                                id="sal_mode">
-                                                                <option value="0" {{ isset($commericials[0]['sal_mode']) ? ($commericials[0]['sal_mode'] == 0 ? 'selected' : '') : '' }}>Annual</option>
-                                                                <option value="1" {{ isset($commericials[0]['sal_mode']) ? ($commericials[0]['sal_mode'] == 1 ? 'selected' : '') : '' }}>Monthly</option>
-                                                                <option value="2" {{ !isset($commericials[0]['sal_mode']) || $commericials[0]['sal_mode'] === null ? 'selected' : ($commericials[0]['sal_mode'] == 2 ? 'selected' : '') }}>Hourly</option>
-                                                            </select>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="d-flex mb-5" style="align-items: center;">
-                                        <div class="col-lg-3">
-                                            <div class="row">
-                                                <div class="col-lg-12">
-                                                    <label class="form-label"> 5 Years</label>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="col-lg-9">
-                                            <div class="row">
-                                                <div class="col-lg-12 px-1" style="align-items: center;">
-                                                    <div class="row">
-                                                        <div class="col-lg-2 px-1">
-                                                            <select class="form-select form-select-solid"
-                                                                arial-label="Select Currency" name="salary_currency"
-                                                                id="salary_currency">
-                                                                <option value="0" {{ isset($commericials[0]['salary_currency']) ? ($commericials[0]['salary_currency'] == 0 ? 'selected' : '') : '' }}>INR</option>
-                                                                <option value="1" {{ isset($commericials[0]['salary_currency']) ? ($commericials[0]['salary_currency'] == 1 ? 'selected' : '') : '' }}>EUR</option>
-                                                                <option value="2" {{ isset($commericials[0]['salary_currency']) ? ($commericials[0]['salary_currency'] == 2 ? 'selected' : '') : '' }}>JPY</option>
-                                                                <option value="3" {{ isset($commericials[0]['salary_currency']) ? ($commericials[0]['salary_currency'] == 3 ? 'selected' : '') : '' }}>GBP</option>
-                                                                <option value="4" {{ !isset($commericials[0]['salary_currency']) || $commericials[0]['salary_currency'] === null ? 'selected' : ($commericials[0]['salary_currency'] == 4 ? 'selected' : '') }}>USD</option>
-                                                            </select>
-                                                        </div>
-                                                        <div class="col-lg-4 px-0">
-                                                            <input type="number"
-                                                                class="form-control form-control-lg rate_val form-control-solid"
-                                                                name="rate[]" placeholder="Rates..."
-                                                                value="{{ (@$commericials[0]['rateType']==1) ? @$commericials[0]['commericial_details'][5]['rate'] : @$default_rates->rates_fixed }}">
-                                                        </div>
-                                                        <div class="col-lg-2 px-1">
-                                                            <select class="form-select form-select-solid"
-                                                                arial-label="Select Annual Salary" name="sal_mode"
-                                                                id="sal_mode">
-                                                                <option value="0" {{ isset($commericials[0]['sal_mode']) ? ($commericials[0]['sal_mode'] == 0 ? 'selected' : '') : '' }}>Annual</option>
-                                                                <option value="1" {{ isset($commericials[0]['sal_mode']) ? ($commericials[0]['sal_mode'] == 1 ? 'selected' : '') : '' }}>Monthly</option>
-                                                                <option value="2" {{ !isset($commericials[0]['sal_mode']) || $commericials[0]['sal_mode'] === null ? 'selected' : ($commericials[0]['sal_mode'] == 2 ? 'selected' : '') }}>Hourly</option>
-                                                            </select>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="d-flex mb-5" style="align-items: center;">
-                                        <div class="col-lg-3">
-                                            <div class="row">
-                                                <div class="col-lg-12">
-                                                    <label class="form-label"> 6 Years</label>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="col-lg-9">
-                                            <div class="row">
-                                                <div class="col-lg-12 px-1" style="align-items: center;">
-                                                    <div class="row">
-                                                        <div class="col-lg-2 px-1">
-                                                            <select class="form-select form-select-solid"
-                                                                arial-label="Select Currency" name="salary_currency"
-                                                                id="salary_currency">
-                                                                <option value="0" {{ isset($commericials[0]['salary_currency']) ? ($commericials[0]['salary_currency'] == 0 ? 'selected' : '') : '' }}>INR</option>
-                                                                <option value="1" {{ isset($commericials[0]['salary_currency']) ? ($commericials[0]['salary_currency'] == 1 ? 'selected' : '') : '' }}>EUR</option>
-                                                                <option value="2" {{ isset($commericials[0]['salary_currency']) ? ($commericials[0]['salary_currency'] == 2 ? 'selected' : '') : '' }}>JPY</option>
-                                                                <option value="3" {{ isset($commericials[0]['salary_currency']) ? ($commericials[0]['salary_currency'] == 3 ? 'selected' : '') : '' }}>GBP</option>
-                                                                <option value="4" {{ !isset($commericials[0]['salary_currency']) || $commericials[0]['salary_currency'] === null ? 'selected' : ($commericials[0]['salary_currency'] == 4 ? 'selected' : '') }}>USD</option>
-                                                            </select>
-                                                        </div>
-                                                        <div class="col-lg-4 px-0">
-                                                            <input type="number"
-                                                                class="form-control form-control-lg rate_val form-control-solid"
-                                                                name="rate[]" placeholder="Rates..."
-                                                                value="{{ (@$commericials[0]['rateType']==1) ? @$commericials[0]['commericial_details'][6]['rate'] : @$default_rates->rates_fixed }}">
-                                                        </div>
-                                                        <div class="col-lg-2 px-1">
-                                                            <select class="form-select form-select-solid"
-                                                                arial-label="Select Annual Salary" name="sal_mode"
-                                                                id="sal_mode">
-                                                                <option value="0" {{ isset($commericials[0]['sal_mode']) ? ($commericials[0]['sal_mode'] == 0 ? 'selected' : '') : '' }}>Annual</option>
-                                                                <option value="1" {{ isset($commericials[0]['sal_mode']) ? ($commericials[0]['sal_mode'] == 1 ? 'selected' : '') : '' }}>Monthly</option>
-                                                                <option value="2" {{ !isset($commericials[0]['sal_mode']) || $commericials[0]['sal_mode'] === null ? 'selected' : ($commericials[0]['sal_mode'] == 2 ? 'selected' : '') }}>Hourly</option>
-                                                            </select>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="d-flex mb-5" style="align-items: center;">
-                                        <div class="col-lg-3">
-                                            <div class="row">
-                                                <div class="col-lg-12">
-                                                    <label class="form-label"> 7 Years</label>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="col-lg-9">
-                                            <div class="row">
-                                                <div class="col-lg-12 px-1" style="align-items: center;">
-                                                    <div class="row">
-                                                        <div class="col-lg-2 px-1">
-                                                            <select class="form-select form-select-solid"
-                                                                arial-label="Select Currency" name="salary_currency"
-                                                                id="salary_currency">
-                                                                <option value="0" {{ isset($commericials[0]['salary_currency']) ? ($commericials[0]['salary_currency'] == 0 ? 'selected' : '') : '' }}>INR</option>
-                                                                <option value="1" {{ isset($commericials[0]['salary_currency']) ? ($commericials[0]['salary_currency'] == 1 ? 'selected' : '') : '' }}>EUR</option>
-                                                                <option value="2" {{ isset($commericials[0]['salary_currency']) ? ($commericials[0]['salary_currency'] == 2 ? 'selected' : '') : '' }}>JPY</option>
-                                                                <option value="3" {{ isset($commericials[0]['salary_currency']) ? ($commericials[0]['salary_currency'] == 3 ? 'selected' : '') : '' }}>GBP</option>
-                                                                <option value="4" {{ !isset($commericials[0]['salary_currency']) || $commericials[0]['salary_currency'] === null ? 'selected' : ($commericials[0]['salary_currency'] == 4 ? 'selected' : '') }}>USD</option>
-                                                            </select>
-                                                        </div>
-                                                        <div class="col-lg-4 px-0">
-                                                            <input type="number"
-                                                                class="form-control form-control-lg rate_val form-control-solid"
-                                                                name="rate[]" placeholder="Rates..."
-                                                                value="{{ (@$commericials[0]['rateType']==1) ? @$commericials[0]['commericial_details'][7]['rate'] : @$default_rates->rates_fixed }}">
-                                                        </div>
-                                                        <div class="col-lg-2 px-1">
-                                                            <select class="form-select form-select-solid"
-                                                                arial-label="Select Annual Salary" name="sal_mode"
-                                                                id="sal_mode">
-                                                                <option value="0" {{ isset($commericials[0]['sal_mode']) ? ($commericials[0]['sal_mode'] == 0 ? 'selected' : '') : '' }}>Annual</option>
-                                                                <option value="1" {{ isset($commericials[0]['sal_mode']) ? ($commericials[0]['sal_mode'] == 1 ? 'selected' : '') : '' }}>Monthly</option>
-                                                                <option value="2" {{ !isset($commericials[0]['sal_mode']) || $commericials[0]['sal_mode'] === null ? 'selected' : ($commericials[0]['sal_mode'] == 2 ? 'selected' : '') }}>Hourly</option>
-                                                            </select>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="d-flex mb-5" style="align-items: center;">
-                                        <div class="col-lg-3">
-                                            <div class="row">
-                                                <div class="col-lg-12">
-                                                    <label class="form-label"> 8 Years</label>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="col-lg-9">
-                                            <div class="row">
-                                                <div class="col-lg-12 px-1" style="align-items: center;">
-                                                    <div class="row">
-                                                        <div class="col-lg-2 px-1">
-                                                            <select class="form-select form-select-solid"
-                                                                arial-label="Select Currency" name="salary_currency"
-                                                                id="salary_currency">
-                                                                <option value="0" {{ isset($commericials[0]['salary_currency']) ? ($commericials[0]['salary_currency'] == 0 ? 'selected' : '') : '' }}>INR</option>
-                                                                <option value="1" {{ isset($commericials[0]['salary_currency']) ? ($commericials[0]['salary_currency'] == 1 ? 'selected' : '') : '' }}>EUR</option>
-                                                                <option value="2" {{ isset($commericials[0]['salary_currency']) ? ($commericials[0]['salary_currency'] == 2 ? 'selected' : '') : '' }}>JPY</option>
-                                                                <option value="3" {{ isset($commericials[0]['salary_currency']) ? ($commericials[0]['salary_currency'] == 3 ? 'selected' : '') : '' }}>GBP</option>
-                                                                <option value="4" {{ !isset($commericials[0]['salary_currency']) || $commericials[0]['salary_currency'] === null ? 'selected' : ($commericials[0]['salary_currency'] == 4 ? 'selected' : '') }}>USD</option>
-                                                            </select>
-                                                        </div>
-                                                        <div class="col-lg-4 px-0">
-                                                            <input type="number"
-                                                                class="form-control form-control-lg rate_val form-control-solid"
-                                                                name="rate[]" placeholder="Rates..."
-                                                                value="{{ (@$commericials[0]['rateType']==1) ? @$commericials[0]['commericial_details'][8]['rate'] : @$default_rates->rates_fixed }}">
-                                                        </div>
-                                                        <div class="col-lg-2 px-1">
-                                                            <select class="form-select form-select-solid"
-                                                                arial-label="Select Annual Salary" name="sal_mode"
-                                                                id="sal_mode">
-                                                                <option value="0" {{ isset($commericials[0]['sal_mode']) ? ($commericials[0]['sal_mode'] == 0 ? 'selected' : '') : '' }}>Annual</option>
-                                                                <option value="1" {{ isset($commericials[0]['sal_mode']) ? ($commericials[0]['sal_mode'] == 1 ? 'selected' : '') : '' }}>Monthly</option>
-                                                                <option value="2" {{ !isset($commericials[0]['sal_mode']) || $commericials[0]['sal_mode'] === null ? 'selected' : ($commericials[0]['sal_mode'] == 2 ? 'selected' : '') }}>Hourly</option>
-                                                            </select>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="d-flex mb-5" style="align-items: center;">
-                                        <div class="col-lg-3">
-                                            <div class="row">
-                                                <div class="col-lg-12">
-                                                    <label class="form-label"> 9 Years</label>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="col-lg-9">
-                                            <div class="row">
-                                                <div class="col-lg-12 px-1" style="align-items: center;">
-                                                    <div class="row">
-                                                        <div class="col-lg-2 px-1">
-                                                            <select class="form-select form-select-solid"
-                                                                arial-label="Select Currency" name="salary_currency"
-                                                                id="salary_currency">
-                                                                <option value="0" {{ isset($commericials[0]['salary_currency']) ? ($commericials[0]['salary_currency'] == 0 ? 'selected' : '') : '' }}>INR</option>
-                                                                <option value="1" {{ isset($commericials[0]['salary_currency']) ? ($commericials[0]['salary_currency'] == 1 ? 'selected' : '') : '' }}>EUR</option>
-                                                                <option value="2" {{ isset($commericials[0]['salary_currency']) ? ($commericials[0]['salary_currency'] == 2 ? 'selected' : '') : '' }}>JPY</option>
-                                                                <option value="3" {{ isset($commericials[0]['salary_currency']) ? ($commericials[0]['salary_currency'] == 3 ? 'selected' : '') : '' }}>GBP</option>
-                                                                <option value="4" {{ !isset($commericials[0]['salary_currency']) || $commericials[0]['salary_currency'] === null ? 'selected' : ($commericials[0]['salary_currency'] == 4 ? 'selected' : '') }}>USD</option>
-                                                            </select>
-                                                        </div>
-                                                        <div class="col-lg-4 px-0">
-                                                            <input type="number"
-                                                                class="form-control form-control-lg rate_val form-control-solid"
-                                                                name="rate[]" placeholder="Rates..."
-                                                                value="{{ (@$commericials[0]['rateType']==1) ? @$commericials[0]['commericial_details'][9]['rate'] : @$default_rates->rates_fixed }}">
-                                                        </div>
-                                                        <div class="col-lg-2 px-1">
-                                                            <select class="form-select form-select-solid"
-                                                                arial-label="Select Annual Salary" name="sal_mode"
-                                                                id="sal_mode">
-                                                                <option value="0" {{ isset($commericials[0]['sal_mode']) ? ($commericials[0]['sal_mode'] == 0 ? 'selected' : '') : '' }}>Annual</option>
-                                                                <option value="1" {{ isset($commericials[0]['sal_mode']) ? ($commericials[0]['sal_mode'] == 1 ? 'selected' : '') : '' }}>Monthly</option>
-                                                                <option value="2" {{ !isset($commericials[0]['sal_mode']) || $commericials[0]['sal_mode'] === null ? 'selected' : ($commericials[0]['sal_mode'] == 2 ? 'selected' : '') }}>Hourly</option>
-                                                            </select>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="d-flex mb-5" style="align-items: center;">
-                                        <div class="col-lg-3">
-                                            <div class="row">
-                                                <div class="col-lg-12">
-                                                    <label class="form-label"> 10+ Years</label>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="col-lg-9">
-                                            <div class="row">
-                                                <div class="col-lg-12 px-1" style="align-items: center;">
-                                                    <div class="row">
-                                                        <div class="col-lg-2 px-1">
-                                                            <select class="form-select form-select-solid"
-                                                                arial-label="Select Currency" name="salary_currency"
-                                                                id="salary_currency">
-                                                                <option value="0" {{ isset($commericials[0]['salary_currency']) ? ($commericials[0]['salary_currency'] == 0 ? 'selected' : '') : '' }}>INR</option>
-                                                                <option value="1" {{ isset($commericials[0]['salary_currency']) ? ($commericials[0]['salary_currency'] == 1 ? 'selected' : '') : '' }}>EUR</option>
-                                                                <option value="2" {{ isset($commericials[0]['salary_currency']) ? ($commericials[0]['salary_currency'] == 2 ? 'selected' : '') : '' }}>JPY</option>
-                                                                <option value="3" {{ isset($commericials[0]['salary_currency']) ? ($commericials[0]['salary_currency'] == 3 ? 'selected' : '') : '' }}>GBP</option>
-                                                                <option value="4" {{ !isset($commericials[0]['salary_currency']) || $commericials[0]['salary_currency'] === null ? 'selected' : ($commericials[0]['salary_currency'] == 4 ? 'selected' : '') }}>USD</option>
-                                                            </select>
-                                                        </div>
-                                                        <div class="col-lg-4 px-0">
-                                                            <input type="number"
-                                                                class="form-control form-control-lg rate_val form-control-solid"
-                                                                name="rate[]" placeholder="Rates..."
-                                                                value="{{ (@$commericials[0]['rateType']==1) ? @$commericials[0]['commericial_details'][10]['rate']  : @$default_rates->rates_fixed}}">
-                                                        </div>
-                                                        <div class="col-lg-2 px-1">
-                                                            <select class="form-select form-select-solid"
-                                                                arial-label="Select Annual Salary" name="sal_mode"
-                                                                id="sal_mode">
-                                                                <option value="0" {{ isset($commericials[0]['sal_mode']) ? ($commericials[0]['sal_mode'] == 0 ? 'selected' : '') : '' }}>Annual</option>
-                                                                <option value="1" {{ isset($commericials[0]['sal_mode']) ? ($commericials[0]['sal_mode'] == 1 ? 'selected' : '') : '' }}>Monthly</option>
-                                                                <option value="2" {{ !isset($commericials[0]['sal_mode']) || $commericials[0]['sal_mode'] === null ? 'selected' : ($commericials[0]['sal_mode'] == 2 ? 'selected' : '') }}>Hourly</option>
-                                                            </select>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="row rate-perecentage {{ ($sectionCheck!=2) ? 'd-none' : '' }}"> 
-                                    <div class="d-flex mb-5" style="align-items: center;">
-                                        <div class="col-lg-3">
-                                            <div class="row">
-                                                <div class="col-lg-12">
-                                                    <label class="form-label">0 Year(Fresher)</label>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="col-lg-9">
-                                            <div class="row">
-                                                <div class="col-lg-12 px-1" style="align-items: center;">
-                                                    <div class="row">
-                                                        <div class="col-lg-8 px-0" style="position: relative;">
-                                                            <input type="number"
-                                                                class="form-control perecentage_val form-control-lg form-control-solid"
-                                                                name="perecentage[]" placeholder="Perecentage"
-                                                                value="{{ (@$commericials[0]['rateType']==2) ? @$commericials[0]['commericial_details'][0]['rate'] : @$default_rates->rates_perecentage}}">
+        <div class="cev3-header-actions">
+            <button type="button" class="cev3-btn cev3-preview" data-commercial-preview><svg viewBox="0 0 24 24"><path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6S2 12 2 12Z"/><circle cx="12" cy="12" r="2.5"/></svg>Preview for Agencies</button>
+            <div class="cev3-menu-wrap"><button type="button" class="cev3-btn" data-commercial-menu>More Actions <span aria-hidden="true">⌄</span></button><div class="cev3-menu" data-commercial-menu-panel><button type="button" data-commercial-reset>Reset rates to default</button><button type="button" data-country-select-all>Select all countries</button><button type="button" data-country-clear>Clear country selection</button></div></div>
+            <button type="button" class="cev3-btn cev3-close" aria-label="Close commercial settings" title="Close" onclick="$('#kt_activitiesJob > .card > #kt_activities_header #kt_activitiesJob_close').trigger('click');">×</button>
+        </div>
+    </header>
 
-                                                                
-                                                                <span style="position: absolute; right: 0; top: 10px;"> 
-                                                                    <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="24px" height="24px" viewBox="0 0 24 24" version="1.1" class="kt-svg-icon">
-                                                                        <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
-                                                                            <rect id="bound" x="0" y="0" width="24" height="24"></rect>
-                                                                            <path d="M16.0322024,5.68722152 L5.75790403,15.945742 C5.12139076,16.5812778 5.12059836,17.6124773 5.75613416,18.2489906 C5.75642891,18.2492858 5.75672377,18.2495809 5.75701875,18.2498759 L5.75701875,18.2498759 C6.39304347,18.8859006 7.42424328,18.8859006 8.060268,18.2498759 C8.06056298,18.2495809 8.06085784,18.2492858 8.0611526,18.2489906 L18.3196731,7.9746922 C18.9505124,7.34288268 18.9501191,6.31942463 18.3187946,5.68810005 L18.3187946,5.68810005 C17.68747,5.05677547 16.6640119,5.05638225 16.0322024,5.68722152 Z" id="Stroke-1" fill="#009ef7 " fill-rule="nonzero"></path>
-                                                                            <path d="M9.85714286,6.92857143 C9.85714286,8.54730513 8.5469533,9.85714286 6.93006028,9.85714286 C5.31316726,9.85714286 4,8.54730513 4,6.92857143 C4,5.30983773 5.31316726,4 6.93006028,4 C8.5469533,4 9.85714286,5.30983773 9.85714286,6.92857143 Z M20,17.0714286 C20,18.6901623 18.6898104,20 17.0729174,20 C15.4560244,20 14.1428571,18.6901623 14.1428571,17.0714286 C14.1428571,15.4497247 15.4560244,14.1428571 17.0729174,14.1428571 C18.6898104,14.1428571 20,15.4497247 20,17.0714286 Z" id="Combined-Shape" fill="#009ef7 " opacity="0.3"></path>
-                                                                        </g>
-                                                                    </svg>
-                                                                </span>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="d-flex mb-5" style="align-items: center;">
-                                        <div class="col-lg-3">
-                                            <div class="row">
-                                                <div class="col-lg-12">
-                                                    <label class="form-label">1 Year</label>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="col-lg-9">
-                                            <div class="row">
-                                                <div class="col-lg-12 px-1" style="align-items: center;">
-                                                    <div class="row">
-                                                        <div class="col-lg-8 px-0" style="position: relative;">
-                                                            <input type="number"
-                                                                class="form-control perecentage_val form-control-lg form-control-solid"
-                                                                name="perecentage[]" placeholder="Perecentage"
-                                                                value="{{ (@$commericials[0]['rateType']==2) ? @$commericials[0]['commericial_details'][1]['rate'] : @$default_rates->rates_perecentage }}">
+    <input class="main_status" type="hidden" value="{{ !empty($commercial['status']) ? 1 : 0 }}"><input class="rateTypeClass" type="hidden" value="{{ $rateType }}"><input class="updateId" type="hidden" value="{{ $commercial['id'] ?? '' }}"><input class="commType" type="hidden" value="{{ $sectionCheck }}">
+    <select name="sal_mode" class="cev3-hidden" aria-hidden="true"><option value="{{ $commercial['sal_mode'] ?? 0 }}" selected></option></select><select name="salary_currency" class="cev3-hidden" aria-hidden="true"><option value="{{ $selectedCurrency }}" selected></option></select>
 
-                                                                <span style="position: absolute; right: 0; top: 10px;"> 
-                                                                    <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="24px" height="24px" viewBox="0 0 24 24" version="1.1" class="kt-svg-icon">
-                                                                        <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
-                                                                            <rect id="bound" x="0" y="0" width="24" height="24"></rect>
-                                                                            <path d="M16.0322024,5.68722152 L5.75790403,15.945742 C5.12139076,16.5812778 5.12059836,17.6124773 5.75613416,18.2489906 C5.75642891,18.2492858 5.75672377,18.2495809 5.75701875,18.2498759 L5.75701875,18.2498759 C6.39304347,18.8859006 7.42424328,18.8859006 8.060268,18.2498759 C8.06056298,18.2495809 8.06085784,18.2492858 8.0611526,18.2489906 L18.3196731,7.9746922 C18.9505124,7.34288268 18.9501191,6.31942463 18.3187946,5.68810005 L18.3187946,5.68810005 C17.68747,5.05677547 16.6640119,5.05638225 16.0322024,5.68722152 Z" id="Stroke-1" fill="#009ef7 " fill-rule="nonzero"></path>
-                                                                            <path d="M9.85714286,6.92857143 C9.85714286,8.54730513 8.5469533,9.85714286 6.93006028,9.85714286 C5.31316726,9.85714286 4,8.54730513 4,6.92857143 C4,5.30983773 5.31316726,4 6.93006028,4 C8.5469533,4 9.85714286,5.30983773 9.85714286,6.92857143 Z M20,17.0714286 C20,18.6901623 18.6898104,20 17.0729174,20 C15.4560244,20 14.1428571,18.6901623 14.1428571,17.0714286 C14.1428571,15.4497247 15.4560244,14.1428571 17.0729174,14.1428571 C18.6898104,14.1428571 20,15.4497247 20,17.0714286 Z" id="Combined-Shape" fill="#009ef7 " opacity="0.3"></path>
-                                                                        </g>
-                                                                    </svg>
-                                                                </span>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="d-flex mb-5" style="align-items: center;">
-                                        <div class="col-lg-3">
-                                            <div class="row">
-                                                <div class="col-lg-12">
-                                                    <label class="form-label"> 2 Years</label>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="col-lg-9">
-                                            <div class="row">
-                                                <div class="col-lg-12 px-1" style="align-items: center;">
-                                                    <div class="row">
-                                                        <div class="col-lg-8 px-0" style="position: relative;">
-                                                            <input type="number"
-                                                                class="form-control perecentage_val form-control-lg form-control-solid"
-                                                                name="perecentage[]" placeholder="Perecentage"
-                                                                value="{{ (@$commericials[0]['rateType']==2) ? @$commericials[0]['commericial_details'][2]['rate'] : @$default_rates->rates_perecentage }}">
+    <main class="cev3-workspace">
+        <section class="cev3-panel">
+            <div class="cev3-section">
+                <div class="cev3-section-head"><span class="cev3-section-number">1</span><div><h4 class="cev3-section-title">Commercial Model</h4></div></div>
+                <label class="cev3-label" for="commercial_type_display">Commercial Type</label>
+                <div class="cev3-field"><span class="cev3-input-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="m5 19 14-14M7 7h.01M17 17h.01"/><circle cx="7" cy="7" r="2"/><circle cx="17" cy="17" r="2"/></svg></span><select id="commercial_type_display" class="cev3-control cev3-control-icon" disabled><option>{{ $isFulltime ? 'Percentage of CTC' : 'Fixed Rate' }}</option></select></div>
+                <div class="cev3-info"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg><span>{{ $isFulltime ? "Placement fees are calculated as a percentage of the candidate's Cost to Company (CTC)." : 'Billing is calculated from the configured fixed rate for each experience level.' }}</span></div>
+            </div>
 
-                                                                <span style="position: absolute; right: 0; top: 10px;"> 
-                                                                    <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="24px" height="24px" viewBox="0 0 24 24" version="1.1" class="kt-svg-icon">
-                                                                        <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
-                                                                            <rect id="bound" x="0" y="0" width="24" height="24"></rect>
-                                                                            <path d="M16.0322024,5.68722152 L5.75790403,15.945742 C5.12139076,16.5812778 5.12059836,17.6124773 5.75613416,18.2489906 C5.75642891,18.2492858 5.75672377,18.2495809 5.75701875,18.2498759 L5.75701875,18.2498759 C6.39304347,18.8859006 7.42424328,18.8859006 8.060268,18.2498759 C8.06056298,18.2495809 8.06085784,18.2492858 8.0611526,18.2489906 L18.3196731,7.9746922 C18.9505124,7.34288268 18.9501191,6.31942463 18.3187946,5.68810005 L18.3187946,5.68810005 C17.68747,5.05677547 16.6640119,5.05638225 16.0322024,5.68722152 Z" id="Stroke-1" fill="#009ef7 " fill-rule="nonzero"></path>
-                                                                            <path d="M9.85714286,6.92857143 C9.85714286,8.54730513 8.5469533,9.85714286 6.93006028,9.85714286 C5.31316726,9.85714286 4,8.54730513 4,6.92857143 C4,5.30983773 5.31316726,4 6.93006028,4 C8.5469533,4 9.85714286,5.30983773 9.85714286,6.92857143 Z M20,17.0714286 C20,18.6901623 18.6898104,20 17.0729174,20 C15.4560244,20 14.1428571,18.6901623 14.1428571,17.0714286 C14.1428571,15.4497247 15.4560244,14.1428571 17.0729174,14.1428571 C18.6898104,14.1428571 20,15.4497247 20,17.0714286 Z" id="Combined-Shape" fill="#009ef7 " opacity="0.3"></path>
-                                                                        </g>
-                                                                    </svg>
-                                                                </span>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="d-flex mb-5" style="align-items: center;">
-                                        <div class="col-lg-3">
-                                            <div class="row">
-                                                <div class="col-lg-12">
-                                                    <label class="form-label"> 3 Years</label>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="col-lg-9">
-                                            <div class="row">
-                                                <div class="col-lg-12 px-1" style="align-items: center;">
-                                                    <div class="row">
-                                                        <div class="col-lg-8 px-0" style="position: relative;">
-                                                            <input type="number"
-                                                                class="form-control perecentage_val form-control-lg form-control-solid"
-                                                                name="perecentage[]" placeholder="Perecentage"
-                                                                value="{{ (@$commericials[0]['rateType']==2) ? @$commericials[0]['commericial_details'][3]['rate'] : @$default_rates->rates_perecentage }}">
-
-                                                                <span style="position: absolute; right: 0; top: 10px;"> 
-                                                                    <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="24px" height="24px" viewBox="0 0 24 24" version="1.1" class="kt-svg-icon">
-                                                                        <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
-                                                                            <rect id="bound" x="0" y="0" width="24" height="24"></rect>
-                                                                            <path d="M16.0322024,5.68722152 L5.75790403,15.945742 C5.12139076,16.5812778 5.12059836,17.6124773 5.75613416,18.2489906 C5.75642891,18.2492858 5.75672377,18.2495809 5.75701875,18.2498759 L5.75701875,18.2498759 C6.39304347,18.8859006 7.42424328,18.8859006 8.060268,18.2498759 C8.06056298,18.2495809 8.06085784,18.2492858 8.0611526,18.2489906 L18.3196731,7.9746922 C18.9505124,7.34288268 18.9501191,6.31942463 18.3187946,5.68810005 L18.3187946,5.68810005 C17.68747,5.05677547 16.6640119,5.05638225 16.0322024,5.68722152 Z" id="Stroke-1" fill="#009ef7 " fill-rule="nonzero"></path>
-                                                                            <path d="M9.85714286,6.92857143 C9.85714286,8.54730513 8.5469533,9.85714286 6.93006028,9.85714286 C5.31316726,9.85714286 4,8.54730513 4,6.92857143 C4,5.30983773 5.31316726,4 6.93006028,4 C8.5469533,4 9.85714286,5.30983773 9.85714286,6.92857143 Z M20,17.0714286 C20,18.6901623 18.6898104,20 17.0729174,20 C15.4560244,20 14.1428571,18.6901623 14.1428571,17.0714286 C14.1428571,15.4497247 15.4560244,14.1428571 17.0729174,14.1428571 C18.6898104,14.1428571 20,15.4497247 20,17.0714286 Z" id="Combined-Shape" fill="#009ef7 " opacity="0.3"></path>
-                                                                        </g>
-                                                                    </svg>
-                                                                </span>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="d-flex mb-5" style="align-items: center;">
-                                        <div class="col-lg-3">
-                                            <div class="row">
-                                                <div class="col-lg-12">
-                                                    <label class="form-label"> 4 Years</label>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="col-lg-9">
-                                            <div class="row">
-                                                <div class="col-lg-12 px-1" style="align-items: center;">
-                                                    <div class="row">
-                                                        <div class="col-lg-8 px-0" style="position: relative;">
-                                                            <input type="number"
-                                                                class="form-control perecentage_val form-control-lg form-control-solid"
-                                                                name="perecentage[]" placeholder="Perecentage"
-                                                                value="{{ (@$commericials[0]['rateType']==2) ? @$commericials[0]['commericial_details'][4]['rate'] : @$default_rates->rates_perecentage }}">
-
-                                                                <span style="position: absolute; right: 0; top: 10px;"> 
-                                                                    <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="24px" height="24px" viewBox="0 0 24 24" version="1.1" class="kt-svg-icon">
-                                                                        <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
-                                                                            <rect id="bound" x="0" y="0" width="24" height="24"></rect>
-                                                                            <path d="M16.0322024,5.68722152 L5.75790403,15.945742 C5.12139076,16.5812778 5.12059836,17.6124773 5.75613416,18.2489906 C5.75642891,18.2492858 5.75672377,18.2495809 5.75701875,18.2498759 L5.75701875,18.2498759 C6.39304347,18.8859006 7.42424328,18.8859006 8.060268,18.2498759 C8.06056298,18.2495809 8.06085784,18.2492858 8.0611526,18.2489906 L18.3196731,7.9746922 C18.9505124,7.34288268 18.9501191,6.31942463 18.3187946,5.68810005 L18.3187946,5.68810005 C17.68747,5.05677547 16.6640119,5.05638225 16.0322024,5.68722152 Z" id="Stroke-1" fill="#009ef7 " fill-rule="nonzero"></path>
-                                                                            <path d="M9.85714286,6.92857143 C9.85714286,8.54730513 8.5469533,9.85714286 6.93006028,9.85714286 C5.31316726,9.85714286 4,8.54730513 4,6.92857143 C4,5.30983773 5.31316726,4 6.93006028,4 C8.5469533,4 9.85714286,5.30983773 9.85714286,6.92857143 Z M20,17.0714286 C20,18.6901623 18.6898104,20 17.0729174,20 C15.4560244,20 14.1428571,18.6901623 14.1428571,17.0714286 C14.1428571,15.4497247 15.4560244,14.1428571 17.0729174,14.1428571 C18.6898104,14.1428571 20,15.4497247 20,17.0714286 Z" id="Combined-Shape" fill="#009ef7 " opacity="0.3"></path>
-                                                                        </g>
-                                                                    </svg>
-                                                                </span>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="d-flex mb-5" style="align-items: center;">
-                                        <div class="col-lg-3">
-                                            <div class="row">
-                                                <div class="col-lg-12">
-                                                    <label class="form-label"> 5 Years</label>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="col-lg-9">
-                                            <div class="row">
-                                                <div class="col-lg-12 px-1" style="align-items: center;">
-                                                    <div class="row">
-                                                        <div class="col-lg-8 px-0" style="position: relative;">
-                                                            <input type="number"
-                                                                class="form-control perecentage_val form-control-lg form-control-solid"
-                                                                name="perecentage[]" placeholder="Perecentage"
-                                                                value="{{ (@$commericials[0]['rateType']==2) ? @$commericials[0]['commericial_details'][5]['rate'] : @$default_rates->rates_perecentage }}">
-
-                                                                <span style="position: absolute; right: 0; top: 10px;"> 
-                                                                    <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="24px" height="24px" viewBox="0 0 24 24" version="1.1" class="kt-svg-icon">
-                                                                        <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
-                                                                            <rect id="bound" x="0" y="0" width="24" height="24"></rect>
-                                                                            <path d="M16.0322024,5.68722152 L5.75790403,15.945742 C5.12139076,16.5812778 5.12059836,17.6124773 5.75613416,18.2489906 C5.75642891,18.2492858 5.75672377,18.2495809 5.75701875,18.2498759 L5.75701875,18.2498759 C6.39304347,18.8859006 7.42424328,18.8859006 8.060268,18.2498759 C8.06056298,18.2495809 8.06085784,18.2492858 8.0611526,18.2489906 L18.3196731,7.9746922 C18.9505124,7.34288268 18.9501191,6.31942463 18.3187946,5.68810005 L18.3187946,5.68810005 C17.68747,5.05677547 16.6640119,5.05638225 16.0322024,5.68722152 Z" id="Stroke-1" fill="#009ef7 " fill-rule="nonzero"></path>
-                                                                            <path d="M9.85714286,6.92857143 C9.85714286,8.54730513 8.5469533,9.85714286 6.93006028,9.85714286 C5.31316726,9.85714286 4,8.54730513 4,6.92857143 C4,5.30983773 5.31316726,4 6.93006028,4 C8.5469533,4 9.85714286,5.30983773 9.85714286,6.92857143 Z M20,17.0714286 C20,18.6901623 18.6898104,20 17.0729174,20 C15.4560244,20 14.1428571,18.6901623 14.1428571,17.0714286 C14.1428571,15.4497247 15.4560244,14.1428571 17.0729174,14.1428571 C18.6898104,14.1428571 20,15.4497247 20,17.0714286 Z" id="Combined-Shape" fill="#009ef7 " opacity="0.3"></path>
-                                                                        </g>
-                                                                    </svg>
-                                                                </span>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="d-flex mb-5" style="align-items: center;">
-                                        <div class="col-lg-3">
-                                            <div class="row">
-                                                <div class="col-lg-12">
-                                                    <label class="form-label"> 6 Years</label>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="col-lg-9">
-                                            <div class="row">
-                                                <div class="col-lg-12 px-1" style="align-items: center;">
-                                                    <div class="row">
-                                                        <div class="col-lg-8 px-0" style="position: relative;">
-                                                            <input type="number"
-                                                                class="form-control perecentage_val form-control-lg form-control-solid"
-                                                                name="perecentage[]" placeholder="Perecentage"
-                                                                value="{{ (@$commericials[0]['rateType']==2) ? @$commericials[0]['commericial_details'][6]['rate'] : @$default_rates->rates_perecentage }}">
-
-                                                                <span style="position: absolute; right: 0; top: 10px;"> 
-                                                                    <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="24px" height="24px" viewBox="0 0 24 24" version="1.1" class="kt-svg-icon">
-                                                                        <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
-                                                                            <rect id="bound" x="0" y="0" width="24" height="24"></rect>
-                                                                            <path d="M16.0322024,5.68722152 L5.75790403,15.945742 C5.12139076,16.5812778 5.12059836,17.6124773 5.75613416,18.2489906 C5.75642891,18.2492858 5.75672377,18.2495809 5.75701875,18.2498759 L5.75701875,18.2498759 C6.39304347,18.8859006 7.42424328,18.8859006 8.060268,18.2498759 C8.06056298,18.2495809 8.06085784,18.2492858 8.0611526,18.2489906 L18.3196731,7.9746922 C18.9505124,7.34288268 18.9501191,6.31942463 18.3187946,5.68810005 L18.3187946,5.68810005 C17.68747,5.05677547 16.6640119,5.05638225 16.0322024,5.68722152 Z" id="Stroke-1" fill="#009ef7 " fill-rule="nonzero"></path>
-                                                                            <path d="M9.85714286,6.92857143 C9.85714286,8.54730513 8.5469533,9.85714286 6.93006028,9.85714286 C5.31316726,9.85714286 4,8.54730513 4,6.92857143 C4,5.30983773 5.31316726,4 6.93006028,4 C8.5469533,4 9.85714286,5.30983773 9.85714286,6.92857143 Z M20,17.0714286 C20,18.6901623 18.6898104,20 17.0729174,20 C15.4560244,20 14.1428571,18.6901623 14.1428571,17.0714286 C14.1428571,15.4497247 15.4560244,14.1428571 17.0729174,14.1428571 C18.6898104,14.1428571 20,15.4497247 20,17.0714286 Z" id="Combined-Shape" fill="#009ef7 " opacity="0.3"></path>
-                                                                        </g>
-                                                                    </svg>
-                                                                </span>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="d-flex mb-5" style="align-items: center;">
-                                        <div class="col-lg-3">
-                                            <div class="row">
-                                                <div class="col-lg-12">
-                                                    <label class="form-label"> 7 Years</label>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="col-lg-9">
-                                            <div class="row">
-                                                <div class="col-lg-12 px-1" style="align-items: center;">
-                                                    <div class="row">
-                                                        <div class="col-lg-8 px-0" style="position: relative;">
-                                                            <input type="number"
-                                                                class="form-control perecentage_val form-control-lg form-control-solid"
-                                                                name="perecentage[]" placeholder="Perecentage"
-                                                                value="{{ (@$commericials[0]['rateType']==2) ? @$commericials[0]['commericial_details'][7]['rate'] : @$default_rates->rates_perecentage }}">
-
-                                                                <span style="position: absolute; right: 0; top: 10px;"> 
-                                                                    <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="24px" height="24px" viewBox="0 0 24 24" version="1.1" class="kt-svg-icon">
-                                                                        <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
-                                                                            <rect id="bound" x="0" y="0" width="24" height="24"></rect>
-                                                                            <path d="M16.0322024,5.68722152 L5.75790403,15.945742 C5.12139076,16.5812778 5.12059836,17.6124773 5.75613416,18.2489906 C5.75642891,18.2492858 5.75672377,18.2495809 5.75701875,18.2498759 L5.75701875,18.2498759 C6.39304347,18.8859006 7.42424328,18.8859006 8.060268,18.2498759 C8.06056298,18.2495809 8.06085784,18.2492858 8.0611526,18.2489906 L18.3196731,7.9746922 C18.9505124,7.34288268 18.9501191,6.31942463 18.3187946,5.68810005 L18.3187946,5.68810005 C17.68747,5.05677547 16.6640119,5.05638225 16.0322024,5.68722152 Z" id="Stroke-1" fill="#009ef7 " fill-rule="nonzero"></path>
-                                                                            <path d="M9.85714286,6.92857143 C9.85714286,8.54730513 8.5469533,9.85714286 6.93006028,9.85714286 C5.31316726,9.85714286 4,8.54730513 4,6.92857143 C4,5.30983773 5.31316726,4 6.93006028,4 C8.5469533,4 9.85714286,5.30983773 9.85714286,6.92857143 Z M20,17.0714286 C20,18.6901623 18.6898104,20 17.0729174,20 C15.4560244,20 14.1428571,18.6901623 14.1428571,17.0714286 C14.1428571,15.4497247 15.4560244,14.1428571 17.0729174,14.1428571 C18.6898104,14.1428571 20,15.4497247 20,17.0714286 Z" id="Combined-Shape" fill="#009ef7 " opacity="0.3"></path>
-                                                                        </g>
-                                                                    </svg>
-                                                                </span>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="d-flex mb-5" style="align-items: center;">
-                                        <div class="col-lg-3">
-                                            <div class="row">
-                                                <div class="col-lg-12">
-                                                    <label class="form-label"> 8 Years</label>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="col-lg-9">
-                                            <div class="row">
-                                                <div class="col-lg-12 px-1" style="align-items: center;">
-                                                    <div class="row">
-                                                        <div class="col-lg-8 px-0" style="position: relative;">
-                                                            <input type="number"
-                                                                class="form-control perecentage_val form-control-lg form-control-solid"
-                                                                name="perecentage[]" placeholder="Perecentage"
-                                                                value="{{ (@$commericials[0]['rateType']==2) ? @$commericials[0]['commericial_details'][8]['rate'] : @$default_rates->rates_perecentage }}">
-
-                                                                <span style="position: absolute; right: 0; top: 10px;"> 
-                                                                    <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="24px" height="24px" viewBox="0 0 24 24" version="1.1" class="kt-svg-icon">
-                                                                        <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
-                                                                            <rect id="bound" x="0" y="0" width="24" height="24"></rect>
-                                                                            <path d="M16.0322024,5.68722152 L5.75790403,15.945742 C5.12139076,16.5812778 5.12059836,17.6124773 5.75613416,18.2489906 C5.75642891,18.2492858 5.75672377,18.2495809 5.75701875,18.2498759 L5.75701875,18.2498759 C6.39304347,18.8859006 7.42424328,18.8859006 8.060268,18.2498759 C8.06056298,18.2495809 8.06085784,18.2492858 8.0611526,18.2489906 L18.3196731,7.9746922 C18.9505124,7.34288268 18.9501191,6.31942463 18.3187946,5.68810005 L18.3187946,5.68810005 C17.68747,5.05677547 16.6640119,5.05638225 16.0322024,5.68722152 Z" id="Stroke-1" fill="#009ef7 " fill-rule="nonzero"></path>
-                                                                            <path d="M9.85714286,6.92857143 C9.85714286,8.54730513 8.5469533,9.85714286 6.93006028,9.85714286 C5.31316726,9.85714286 4,8.54730513 4,6.92857143 C4,5.30983773 5.31316726,4 6.93006028,4 C8.5469533,4 9.85714286,5.30983773 9.85714286,6.92857143 Z M20,17.0714286 C20,18.6901623 18.6898104,20 17.0729174,20 C15.4560244,20 14.1428571,18.6901623 14.1428571,17.0714286 C14.1428571,15.4497247 15.4560244,14.1428571 17.0729174,14.1428571 C18.6898104,14.1428571 20,15.4497247 20,17.0714286 Z" id="Combined-Shape" fill="#009ef7 " opacity="0.3"></path>
-                                                                        </g>
-                                                                    </svg>
-                                                                </span>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="d-flex mb-5" style="align-items: center;">
-                                        <div class="col-lg-3">
-                                            <div class="row">
-                                                <div class="col-lg-12">
-                                                    <label class="form-label"> 9 Years</label>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="col-lg-9">
-                                            <div class="row">
-                                                <div class="col-lg-12 px-1" style="align-items: center;">
-                                                    <div class="row">
-                                                        <div class="col-lg-8 px-0" style="position: relative;">
-                                                            <input type="number"
-                                                                class="form-control perecentage_val form-control-lg form-control-solid"
-                                                                name="perecentage[]" placeholder="Perecentage"
-                                                                value="{{ (@$commericials[0]['rateType']==2) ? @$commericials[0]['commericial_details'][9]['rate'] : @$default_rates->rates_perecentage }}">
-
-                                                                <span style="position: absolute; right: 0; top: 10px;"> 
-                                                                    <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="24px" height="24px" viewBox="0 0 24 24" version="1.1" class="kt-svg-icon">
-                                                                        <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
-                                                                            <rect id="bound" x="0" y="0" width="24" height="24"></rect>
-                                                                            <path d="M16.0322024,5.68722152 L5.75790403,15.945742 C5.12139076,16.5812778 5.12059836,17.6124773 5.75613416,18.2489906 C5.75642891,18.2492858 5.75672377,18.2495809 5.75701875,18.2498759 L5.75701875,18.2498759 C6.39304347,18.8859006 7.42424328,18.8859006 8.060268,18.2498759 C8.06056298,18.2495809 8.06085784,18.2492858 8.0611526,18.2489906 L18.3196731,7.9746922 C18.9505124,7.34288268 18.9501191,6.31942463 18.3187946,5.68810005 L18.3187946,5.68810005 C17.68747,5.05677547 16.6640119,5.05638225 16.0322024,5.68722152 Z" id="Stroke-1" fill="#009ef7 " fill-rule="nonzero"></path>
-                                                                            <path d="M9.85714286,6.92857143 C9.85714286,8.54730513 8.5469533,9.85714286 6.93006028,9.85714286 C5.31316726,9.85714286 4,8.54730513 4,6.92857143 C4,5.30983773 5.31316726,4 6.93006028,4 C8.5469533,4 9.85714286,5.30983773 9.85714286,6.92857143 Z M20,17.0714286 C20,18.6901623 18.6898104,20 17.0729174,20 C15.4560244,20 14.1428571,18.6901623 14.1428571,17.0714286 C14.1428571,15.4497247 15.4560244,14.1428571 17.0729174,14.1428571 C18.6898104,14.1428571 20,15.4497247 20,17.0714286 Z" id="Combined-Shape" fill="#009ef7 " opacity="0.3"></path>
-                                                                        </g>
-                                                                    </svg>
-                                                                </span>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="d-flex mb-5" style="align-items: center;">
-                                        <div class="col-lg-3">
-                                            <div class="row">
-                                                <div class="col-lg-12">
-                                                    <label class="form-label"> 10+ Years</label>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="col-lg-9">
-                                            <div class="row">
-                                                <div class="col-lg-12 px-1" style="align-items: center;">
-                                                    <div class="row">
-                                                        <div class="col-lg-8 px-0" style="position: relative;">
-                                                            <input type="number"
-                                                                class="form-control perecentage_val form-control-lg form-control-solid"
-                                                                name="perecentage[]" placeholder="Perecentage"
-                                                                value="{{ (@$commericials[0]['rateType']==2) ? @$commericials[0]['commericial_details'][10]['rate'] : @$default_rates->rates_perecentage }}">
-
-                                                                <span style="position: absolute; right: 0; top: 10px;"> 
-                                                                    <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="24px" height="24px" viewBox="0 0 24 24" version="1.1" class="kt-svg-icon">
-                                                                        <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
-                                                                            <rect id="bound" x="0" y="0" width="24" height="24"></rect>
-                                                                            <path d="M16.0322024,5.68722152 L5.75790403,15.945742 C5.12139076,16.5812778 5.12059836,17.6124773 5.75613416,18.2489906 C5.75642891,18.2492858 5.75672377,18.2495809 5.75701875,18.2498759 L5.75701875,18.2498759 C6.39304347,18.8859006 7.42424328,18.8859006 8.060268,18.2498759 C8.06056298,18.2495809 8.06085784,18.2492858 8.0611526,18.2489906 L18.3196731,7.9746922 C18.9505124,7.34288268 18.9501191,6.31942463 18.3187946,5.68810005 L18.3187946,5.68810005 C17.68747,5.05677547 16.6640119,5.05638225 16.0322024,5.68722152 Z" id="Stroke-1" fill="#009ef7 " fill-rule="nonzero"></path>
-                                                                            <path d="M9.85714286,6.92857143 C9.85714286,8.54730513 8.5469533,9.85714286 6.93006028,9.85714286 C5.31316726,9.85714286 4,8.54730513 4,6.92857143 C4,5.30983773 5.31316726,4 6.93006028,4 C8.5469533,4 9.85714286,5.30983773 9.85714286,6.92857143 Z M20,17.0714286 C20,18.6901623 18.6898104,20 17.0729174,20 C15.4560244,20 14.1428571,18.6901623 14.1428571,17.0714286 C14.1428571,15.4497247 15.4560244,14.1428571 17.0729174,14.1428571 C18.6898104,14.1428571 20,15.4497247 20,17.0714286 Z" id="Combined-Shape" fill="#009ef7 " opacity="0.3"></path>
-                                                                        </g>
-                                                                    </svg>
-                                                                </span>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    {{-- <div class="card mb-5 mb-xl-5 mx-2">
-                        <div class="card-body pt-5 pb-0 px-5">
-                            <div class="form-group row fv-row mb-0 fv-plugins-icon-container mb-4">
-                                <div class="d-flex flex-column mb-3 fv-row">
-                                    <div class="d-flex mb-3 fv-row">
-                                        <h4 class="fw-bolder mb-3 col-lg-12">Industries</h4>
-                                    </div>
-                                    <div class="d-flex flex-column mb-6 fv-row">
-                                        <div class="row">    
-                                            @if(@$industries)  
-                                                @foreach($industries as $ind_val)                                      
-                                                    <div class="col-lg-3">
-                                                        <input class="form-check-input h-20px w-20px mr-2" type="checkbox"
-                                                            name="" value="{{ $ind_val->ind_id }}">
-                                                        <label class="form-label">{{ $ind_val->ind_name }}</label>
-                                                    </div>
-                                                 @endforeach   
-                                            @endif
-                                           
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div> --}}
-                     <!--start hiring type section-->
-                    {{-- <div class="card mb-5 mb-xl-5 mx-2">
-                        <div class="card-body pt-5 pb-0 px-5">
-                            <div class="form-group row fv-row mb-0 fv-plugins-icon-container mb-4">
-                                <div class="d-flex flex-column mb-3 fv-row">
-                                    <div class="d-flex mb-3 fv-row">
-                                        <h4 class="fw-bolder mb-3 col-lg-12">Hiring Type</h4>
-                                    </div>
-                                    <div class="d-flex flex-column mb-6 fv-row">
-                                        <div class="row">
-                                            <div class="col-lg-2">                                                
-                                                <input class="form-check-input h-20px w-20px mr-2" type="radio"
-                                                    name="hiring_type" value="1">
-                                                <label class="form-label">Technical</label>
-                                            </div>
-                                            <div class="col-lg-2">
-                                                <input class="form-check-input h-20px w-20px mr-2" type="radio"
-                                                    name="hiring_type" value="2">
-                                                <label class="form-label">Non-Technical</label>
-                                            </div>
-                                            <div class="col-lg-4">
-                                                <input class="form-check-input h-20px w-20px mr-2" type="radio"
-                                                    name="hiring_type" value="3">
-                                                <label class="form-label">Both</label>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div> --}}
-                     <!--end hiring type section-->
-                     <!--start skill section-->
-                    {{-- <div class="card mb-5 mb-xl-5 mx-2">
-                        <div class="card-body pt-5 pb-0 px-5">
-                            <div class="form-group row fv-row mb-0 fv-plugins-icon-container mb-4">
-                                <div class="d-flex flex-column mb-3 fv-row">
-                                    <div class="d-flex mb-3 fv-row">
-                                        <h4 class="fw-bolder mb-3 col-lg-12">Technical</h4>
-                                    </div>
-                                    <div class="d-flex flex-column mb-6 fv-row">
-                                        <div class="row">
-                                            <div class="col-lg-2">
-                                                <input class="form-check-input h-20px w-20px mr-2" type="checkbox"
-                                                    name="" value="">
-                                                <label class="form-label">Software</label>
-                                            </div>
-                                            <div class="col-lg-2">
-                                                <input class="form-check-input h-20px w-20px mr-2" type="checkbox"
-                                                    name="" value="">
-                                                <label class="form-label">IT</label>
-                                            </div>
-                                            <div class="col-lg-2">
-                                                <input class="form-check-input h-20px w-20px mr-2" type="checkbox"
-                                                    name="" value="">
-                                                <label class="form-label">Bootstrap</label>
-                                            </div>
-                                            <div class="col-lg-2">
-                                                <input class="form-check-input h-20px w-20px mr-2" type="checkbox"
-                                                    name="" value="">
-                                                <label class="form-label">HTML</label>
-                                            </div>
-                                            <div class="col-lg-2">
-                                                <input class="form-check-input h-20px w-20px mr-2" type="checkbox"
-                                                    name="" value="">
-                                                <label class="form-label">CSS</label>
-                                            </div>
-                                            <div class="col-lg-2">
-                                                <input class="form-check-input h-20px w-20px mr-2" type="checkbox"
-                                                    name="" value="">
-                                                <label class="form-label">Java</label>
-                                            </div>
-                                        </div>
-                                        <div class="row">
-                                            <div class="col-lg-2">
-                                                <input class="form-check-input h-20px w-20px mr-2" type="checkbox"
-                                                    name="" value="">
-                                                <label class="form-label">Software</label>
-                                            </div>
-                                            <div class="col-lg-2">
-                                                <input class="form-check-input h-20px w-20px mr-2" type="checkbox"
-                                                    name="" value="">
-                                                <label class="form-label">IT</label>
-                                            </div>
-                                            <div class="col-lg-2">
-                                                <input class="form-check-input h-20px w-20px mr-2" type="checkbox"
-                                                    name="" value="">
-                                                <label class="form-label">Bootstrap</label>
-                                            </div>
-                                            <div class="col-lg-2">
-                                                <input class="form-check-input h-20px w-20px mr-2" type="checkbox"
-                                                    name="" value="">
-                                                <label class="form-label">HTML</label>
-                                            </div>
-                                            <div class="col-lg-2">
-                                                <input class="form-check-input h-20px w-20px mr-2" type="checkbox"
-                                                    name="" value="">
-                                                <label class="form-label">CSS</label>
-                                            </div>
-                                            <div class="col-lg-2">
-                                                <input class="form-check-input h-20px w-20px mr-2" type="checkbox"
-                                                    name="" value="">
-                                                <label class="form-label">Java</label>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="card mb-5 mb-xl-5 mx-2">
-                        <div class="card-body pt-5 pb-0 px-5">
-                            <div class="form-group row fv-row mb-0 fv-plugins-icon-container mb-4">
-                                <div class="d-flex flex-column mb-3 fv-row">
-                                    <div class="d-flex mb-3 fv-row">
-                                        <h4 class="fw-bolder mb-3 col-lg-12">Non-Technical</h4>
-                                    </div>
-                                    <div class="d-flex flex-column mb-6 fv-row">
-                                        <div class="row">
-                                            <div class="col-lg-2">
-                                                <input class="form-check-input h-20px w-20px mr-2" type="checkbox"
-                                                    name="" value="">
-                                                <label class="form-label">Sales</label>
-                                            </div>
-                                            <div class="col-lg-2">
-                                                <input class="form-check-input h-20px w-20px mr-2" type="checkbox"
-                                                    name="" value="">
-                                                <label class="form-label">Reception</label>
-                                            </div>
-                                            <div class="col-lg-2">
-                                                <input class="form-check-input h-20px w-20px mr-2" type="checkbox"
-                                                    name="" value="">
-                                                <label class="form-label">Marketing</label>
-                                            </div>
-                                            <div class="col-lg-2">
-                                                <input class="form-check-input h-20px w-20px mr-2" type="checkbox"
-                                                    name="" value="">
-                                                <label class="form-label">Designing</label>
-                                            </div>
-                                            <div class="col-lg-2">
-                                                <input class="form-check-input h-20px w-20px mr-2" type="checkbox"
-                                                    name="" value="">
-                                                <label class="form-label">Printing</label>
-                                            </div>
-                                            <div class="col-lg-2">
-                                                <input class="form-check-input h-20px w-20px mr-2" type="checkbox"
-                                                    name="" value="">
-                                                <label class="form-label">Press Media</label>
-                                            </div>
-                                        </div>
-                                        <div class="row">
-                                            <div class="col-lg-2">
-                                                <input class="form-check-input h-20px w-20px mr-2" type="checkbox"
-                                                    name="" value="">
-                                                <label class="form-label">Hardware</label>
-                                            </div>
-                                            <div class="col-lg-2">
-                                                <input class="form-check-input h-20px w-20px mr-2" type="checkbox"
-                                                    name="" value="">
-                                                <label class="form-label">Installing</label>
-                                            </div>
-                                            <div class="col-lg-2">
-                                                <input class="form-check-input h-20px w-20px mr-2" type="checkbox"
-                                                    name="" value="">
-                                                <label class="form-label">Office Guard</label>
-                                            </div>
-                                            <div class="col-lg-2">
-                                                <input class="form-check-input h-20px w-20px mr-2" type="checkbox"
-                                                    name="" value="">
-                                                <label class="form-label">Field</label>
-                                            </div>
-                                            <div class="col-lg-2">
-                                                <input class="form-check-input h-20px w-20px mr-2" type="checkbox"
-                                                    name="" value="">
-                                                <label class="form-label">Staff</label>
-                                            </div>
-                                            <div class="col-lg-2">
-                                                <input class="form-check-input h-20px w-20px mr-2" type="checkbox"
-                                                    name="" value="">
-                                                <label class="form-label">Hospital</label>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div> --}}
-                    <!--end skill section-->
-                    <!--start countries section-->
-                    <div class="card commercial-countries-card mb-5 mb-xl-5 mx-2">
-                        <div class="card-body pt-5 pb-0 px-5">
-                            <div class="form-group row fv-row mb-0 fv-plugins-icon-container mb-4">
-                                <div class="d-flex flex-column mb-3 fv-row">
-                                    <div class="commercial-section-heading commercial-country-heading">
-                                        <span class="commercial-section-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/></svg></span>
-                                        <div><h4>Service countries</h4><p>Select every country where this commercial applies.</p></div>
-                                    </div>
-                                    <div class="d-flex flex-column mb-6 fv-row">
-                                        <div class="row commercial-country-grid">
-                                        @if(@$countries)
-                                            @foreach($countries as $countri_val)
-                                            <div class="col-lg-2 commercial-country-option" title="{{ $countri_val->country_name }}">
-                                                <input class="form-check-input h-20px w-20px mr-2 countries" type="checkbox" id="commercial_country_{{ $sectionCheck }}_{{ $countri_val->id }}"
-                                                    name="countries" value="{{ $countri_val->id }}" {{ (@$commericials) ? in_array($countri_val->id, @$commericials[0]['commericial_countries'] ?? []) ? 'checked' : '' : '' }}>
-                                                <label class="form-label" for="commercial_country_{{ $sectionCheck }}_{{ $countri_val->id }}">{{ $countri_val->country_name }}</label>
-                                            </div>
-                                            @endforeach
-                                        @endif
-
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                     <!--end countries section-->
+            <div class="cev3-section">
+                <div class="cev3-section-head"><span class="cev3-section-number">2</span><div><h4 class="cev3-section-title">Default Pricing</h4></div></div>
+                <div class="cev3-price-grid">
+                    <div class="wide"><label class="cev3-label" for="commercial_default_rate">Default Rate {{ $isFulltime ? '(%)' : '' }}</label><div class="cev3-rate-wrap"><input type="number" id="commercial_default_rate" class="cev3-control" step="0.01" min="0" value="{{ $defaultRate }}"><span class="cev3-rate-suffix">{{ $isFulltime ? '%' : '' }}</span></div><p class="cev3-help">Used when resetting or filling an experience rate.</p></div>
+                    <div><label class="cev3-label" for="commercial_min_currency">Minimum Fee</label><select id="commercial_min_currency" class="cev3-control" disabled><option>USD</option></select></div>
+                    <div><label class="cev3-label" for="commercial_min_fee">Optional</label><input id="commercial_min_fee" class="cev3-control" placeholder="Not configured" disabled></div>
+                    <div class="wide"><label class="cev3-label" for="commercial_currency_display">Currency</label><select id="commercial_currency_display" class="cev3-control" disabled>@foreach($currencyOptions as $currencyKey => $currencyLabel)<option value="{{ $currencyKey }}" {{ $selectedCurrency === $currencyKey ? 'selected' : '' }}>{{ $currencyLabel }}</option>@endforeach</select><p class="cev3-help">Minimum-fee storage is not available in the current commercial contract.</p></div>
                 </div>
             </div>
-            <div class="commercial-editor-actions">
-                <div class="text-center pt-15" style="text-align: center !important;">
-                    <input class="form-input updateId" type="hidden" value=""/>
-                    <input class="form-input commType" type="hidden" value="{{ $sectionCheck }}"/>
-                  <button type="button" id="{{ ($sectionCheck==2) ? 'form-submit' : 'form-submit'}}" class="btn btn-primary copy_current_selected_applicant"> 
-                      <span class="indicator-label">Save Changes</span>
-                      <span class="indicator-progress">
-                          Please wait...
-                      </span> 
-                  </button>
-                            
+
+            <div class="cev3-section">
+                <div class="cev3-section-head"><span class="cev3-section-number">3</span><div><h4 class="cev3-section-title">Experience-Based Pricing</h4><p class="cev3-section-copy">Define the placement fee for every existing experience band.</p></div></div>
+                <div class="cev3-rate-table"><div class="cev3-rate-head"><span>Experience Band</span><span>Rate {{ $isFulltime ? '(%)' : '' }}</span><span></span></div>
+                    @foreach($experienceLabels as $experienceIndex => $experienceLabel)
+                        @php $experienceRate = data_get($commercialDetails->get($experienceIndex), 'rate', $defaultRate); @endphp
+                        <div class="cev3-rate-row"><span class="cev3-rate-name" title="{{ $experienceLabel }}">{{ $experienceLabel }}</span><div class="cev3-rate-wrap"><input type="number" class="cev3-control {{ $isFulltime ? 'perecentage_val' : 'rate_val' }}" name="{{ $isFulltime ? 'perecentage[]' : 'rate[]' }}" step="0.01" min="0" value="{{ $experienceRate }}"><span class="cev3-rate-suffix">{{ $isFulltime ? '%' : '' }}</span></div><button type="button" class="cev3-trash" disabled title="Existing experience bands cannot be removed" aria-label="Experience band is fixed"><svg viewBox="0 0 24 24"><path d="M4 7h16M9 7V4h6v3M7 7l1 13h8l1-13M10 11v5M14 11v5"/></svg></button></div>
+                    @endforeach
                 </div>
-              </div> <br>   
-        </div>
-    </div>
+                <button type="button" class="cev3-dashed" disabled title="The current backend uses eleven fixed experience bands">＋ Add Experience Band</button>
+                <div class="cev3-info blue"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg><span>Leave a rate blank to use the default rate when you reset the editor.</span></div>
+            </div>
+        </section>
+
+        <section class="cev3-panel">
+            <div class="cev3-section">
+                <div class="cev3-section-head"><span class="cev3-section-number">4</span><div><h4 class="cev3-section-title">Country Coverage</h4><p class="cev3-section-copy">Select the countries where you offer {{ $isFulltime ? 'fulltime' : 'contract' }} hiring services.</p></div></div>
+                <div class="cev3-country-toolbar"><div class="cev3-search"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg><input type="search" class="cev3-control" placeholder="Search country..." data-country-search></div><div class="cev3-country-actions"><button type="button" class="cev3-btn" data-country-select-all>✓ Select All</button><button type="button" class="cev3-btn" data-country-top>⌂ Top Hiring Countries</button><button type="button" class="cev3-btn" data-country-clear>⊗ Deselect All</button></div></div>
+                <div class="cev3-selected" data-selected-countries></div>
+                <div class="cev3-country-box">
+                    <div class="cev3-country-box-head"><div class="cev3-country-box-title"><span>⊙</span>Browse Countries by Region</div><span aria-hidden="true">⌃</span></div>
+                    <div class="cev3-region-tabs"><button type="button" class="cev3-region-tab active" data-region="all">All</button>@foreach($countryRegions as $regionName => $regionCountries)<button type="button" class="cev3-region-tab" data-region="{{ strtolower($regionName) }}">{{ $regionName }}</button>@endforeach</div>
+                    <div class="cev3-country-grid" data-country-grid>
+                        @foreach(($countries ?? []) as $country)
+                            @php $countryId = (int) $country->id; $countryRegion = strtolower(trim((string) ($country->region ?? '')) ?: 'other'); @endphp
+                            <div class="cev3-country-option" data-country-item data-name="{{ strtolower($country->country_name) }}" data-region="{{ $countryRegion }}"><input class="countries" type="checkbox" id="commercial_country_{{ $sectionCheck }}_{{ $countryId }}" value="{{ $countryId }}" data-country-name="{{ $country->country_name }}" data-country-flag="{{ $country->emoji ?? '' }}" data-initial="{{ in_array($countryId, $selectedCountryIds, true) ? '1' : '0' }}" {{ in_array($countryId, $selectedCountryIds, true) ? 'checked' : '' }}><label for="commercial_country_{{ $sectionCheck }}_{{ $countryId }}"><span class="cev3-chip-flag">{{ $country->emoji ?? '🌐' }}</span><b>{{ $country->country_name }}</b></label></div>
+                        @endforeach
+                    </div>
+                    <button type="button" class="cev3-show-more" data-country-show-more>Show More⌄</button>
+                </div>
+            </div>
+
+            <div class="cev3-section cev3-overrides">
+                <div class="cev3-section-head"><span class="cev3-section-number">5</span><div><h4 class="cev3-section-title">Country-Specific Rate Overrides <span class="cev3-unavailable">Not available</span></h4><p class="cev3-section-copy">The current database stores country coverage only; override rates have no persistence fields.</p></div></div>
+                <div class="cev3-overrides-table"><div class="cev3-overrides-head"><span>Country</span><span>Custom Rate</span><span>Minimum Fee</span><span>Currency</span><span>Actions</span></div><div class="cev3-empty">No persisted country-specific overrides are available.</div></div>
+                <button type="button" class="cev3-dashed" disabled title="Requires backend persistence support">＋ Add Country Override</button>
+            </div>
+        </section>
+    </main>
+
+    <footer class="cev3-footer"><div class="cev3-footer-group"><button type="button" class="cev3-btn" data-commercial-cancel>Cancel</button><button type="button" class="cev3-btn cev3-soft" data-commercial-reset>Reset to Default</button></div><div class="cev3-footer-group"><button type="button" class="cev3-btn" disabled title="Draft status is not supported by the existing endpoint">▣ Save as Draft</button><button type="button" id="form-submit" class="btn copy_current_selected_applicant cev3-btn cev3-primary"><span class="indicator-label">✓ Save Commercials</span><span class="indicator-progress">Saving...</span></button></div></footer>
 </div>
 
-
-
-<script src="{{ asset('demo/plugins/custom/tinymce/tinymce.bundle.js') }}"></script>
-<script src="{{ asset('demo/dist/assets/js/custom/documentation/editors/tinymce/hidden.js') }}"></script>
 <script>
-    function opensidebar() {
-        $('#kt_activitiesClient_toggle').trigger('click');
+// Intent: provide reference-design interactions locally while the existing delegated Save Commercials handler remains authoritative.
+(function () {
+    var root = document.getElementById('commercial-editor-v3');
+    if (!root) return;
+    var countries = Array.prototype.slice.call(root.querySelectorAll('.countries'));
+    var countryItems = Array.prototype.slice.call(root.querySelectorAll('[data-country-item]'));
+    var selectedHost = root.querySelector('[data-selected-countries]');
+    var countryGrid = root.querySelector('[data-country-grid]');
+    var search = root.querySelector('[data-country-search]');
+    var activeRegion = 'all';
+    function renderSelectedCountries() {
+        var selected = countries.filter(function (country) { return country.checked; });
+        selectedHost.innerHTML = '';
+        selected.slice(0, 6).forEach(function (country) {
+            var chip = document.createElement('span'); chip.className = 'cev3-chip';
+            chip.innerHTML = '<span class="cev3-chip-flag"></span><span></span><button type="button" class="cev3-chip-remove" aria-label="Remove country">×</button>';
+            chip.children[0].textContent = country.dataset.countryFlag || '🌐'; chip.children[1].textContent = country.dataset.countryName;
+            chip.querySelector('button').addEventListener('click', function () { country.checked = false; renderSelectedCountries(); }); selectedHost.appendChild(chip);
+        });
+        if (selected.length > 6) { var more = document.createElement('span'); more.className = 'cev3-chip'; more.textContent = '+ ' + (selected.length - 6) + ' more'; selectedHost.appendChild(more); }
+        if (!selected.length) { var empty = document.createElement('span'); empty.className = 'cev3-help'; empty.textContent = 'No countries selected'; selectedHost.appendChild(empty); }
     }
-</script>
-<!--Tinymce Editor End-->
-<!--begin::Page Scripts-->
-<script src="{{ asset('demo/v7/js/plugins.bundle.js') }}<?php echo TM_VERSION; ?>"></script>
-<script src="{{ asset('demo/v7/js/v7scripts.bundle.js') }}<?php echo TM_VERSION; ?>"></script>
-<script src="{{ asset('demo/v7/js/add-requisition.js') }}<?php echo TM_VERSION; ?>"></script>
-<script src="{{ asset('demo/v7/js/pages/crud/forms/widgets/select2.js') }}<?php echo TM_VERSION; ?>"></script>
-<script src="{{ asset('demo/cdn/js/bootstrap-select.js') }}<?php echo TM_VERSION; ?>"></script>
-
-<script>
-    var inputloc = document.querySelector("#kt_tagify_work_location");
-    var cities = ['d', 't'];
-
-    // Initialize Tagify script on the above inputs
-    var tagifylocation = new Tagify(inputloc, {
-        whitelist: cities,
-        maxTags: 10,
-        dropdown: {
-            maxItems: 20, // <- mixumum allowed rendered suggestions
-            classname: "tagify__inline__suggestions", // <- custom classname for this dropdown, so it could be targeted
-            enabled: 0, // <- show suggestions on focus
-            closeOnSelect: false // <- do not hide the suggestions dropdown once an item has been selected
-        }
-    });
-
-    // Prevent creating tags on blur or enter key
-    tagifylocation.on('input', function(e) {
-        tagify.dropdown.show(); // show the dropdown immediately
-    });
-
-    // Create tags only on select
-    tagifylocation.on('dropdown:select', function(e) {
-        tagify.addTags([e.detail.data.value]);
-    });
+    function filterCountries() { var term = (search.value || '').trim().toLowerCase(); countryItems.forEach(function (item) { item.hidden = !((activeRegion === 'all' || item.dataset.region === activeRegion) && (!term || item.dataset.name.indexOf(term) !== -1)); }); }
+    countries.forEach(function (country) { country.addEventListener('change', renderSelectedCountries); }); search.addEventListener('input', filterCountries);
+    root.querySelectorAll('.cev3-region-tab[data-region]').forEach(function (button) { button.addEventListener('click', function () { activeRegion = button.dataset.region; root.querySelectorAll('.cev3-region-tab[data-region]').forEach(function (tab) { tab.classList.toggle('active', tab === button); }); filterCountries(); }); });
+    root.querySelectorAll('[data-country-select-all]').forEach(function (button) { button.addEventListener('click', function () { countryItems.filter(function (item) { return !item.hidden; }).forEach(function (item) { item.querySelector('.countries').checked = true; }); renderSelectedCountries(); }); });
+    root.querySelectorAll('[data-country-clear]').forEach(function (button) { button.addEventListener('click', function () { countries.forEach(function (country) { country.checked = false; }); renderSelectedCountries(); }); });
+    root.querySelector('[data-country-top]').addEventListener('click', function () { var topCountries = ['india','united states','australia','united kingdom','united arab emirates','singapore']; countries.forEach(function (country) { country.checked = topCountries.indexOf(country.dataset.countryName.toLowerCase()) !== -1; }); renderSelectedCountries(); });
+    root.querySelector('[data-country-show-more]').addEventListener('click', function () { countryGrid.classList.toggle('expanded'); this.textContent = countryGrid.classList.contains('expanded') ? 'Show Less⌃' : 'Show More⌄'; });
+    root.querySelectorAll('[data-commercial-reset]').forEach(function (button) { button.addEventListener('click', function () { var defaultRate = root.querySelector('#commercial_default_rate').value; root.querySelectorAll('.rate_val,.perecentage_val').forEach(function (rate) { rate.value = defaultRate; }); countries.forEach(function (country) { country.checked = country.dataset.initial === '1'; }); renderSelectedCountries(); }); });
+    root.querySelector('[data-commercial-cancel]').addEventListener('click', function () { root.querySelector('.cev3-close').click(); });
+    root.querySelector('[data-commercial-preview]').addEventListener('click', function () { var selectedCount = countries.filter(function (country) { return country.checked; }).length; var rateCount = root.querySelectorAll('.rate_val,.perecentage_val').length; Swal.fire({title:'Agency Preview',html:'<b>' + selectedCount + '</b> service countries<br><b>' + rateCount + '</b> experience rates configured',icon:'info',confirmButtonText:'Close'}); });
+    var menuButton = root.querySelector('[data-commercial-menu]'); var menuPanel = root.querySelector('[data-commercial-menu-panel]'); menuButton.addEventListener('click', function () { menuPanel.classList.toggle('open'); }); root.addEventListener('click', function (event) { if (!event.target.closest('.cev3-menu-wrap')) menuPanel.classList.remove('open'); });
+    renderSelectedCountries();
+})();
 </script>
