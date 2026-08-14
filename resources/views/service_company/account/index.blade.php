@@ -4194,8 +4194,6 @@ $(document).ready(function(){
             var commType = $editor.find('.commType').val();
 
             if (String(commType) === '2') {
-                salMode = null;
-                salaryCurrency = null;
                 rateVal = $editor.find('.perecentage_val').map(function () {
                     return this.value;
                 }).get();
