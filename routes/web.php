@@ -167,7 +167,8 @@ Route::get('/whatsapp-terms-and-conditions', [HomeController::class, 'whatsappTe
 Route::get('/job-details/{jobId}/{companyId}', [HomeController::class, 'jobDetails'])->name('get.jobDetails');
 Route::post('/uploadresume', [HomeController::class, 'uploadresume'])->name('get.uploadresume');
 Route::post('/extract-resume-applications', action: [HomeController::class, 'resumExtract'])->name('get.extract-resume-job-applications');
-Route::post('/careerStore', [HomeController::class, 'careerStore'])->name('get.careerStore');
+/* Intent: Rate limit public candidate submission route to 30 requests/minute to prevent bot spam and DDoS attacks */
+Route::post('/careerStore', [HomeController::class, 'careerStore'])->middleware('throttle:30,1')->name('get.careerStore');
 Route::get('benchCandidateDetails/public_show/{id?}', [HomeController::class,'benchCandidateDetails'])->name('get.benchCandidateDetails'); 
  //** Cron start here */
 Route::get('/company-wise-jobs', [HomeController::class, 'companyWiseJobs'])->name('get.companyWiseJobs');
