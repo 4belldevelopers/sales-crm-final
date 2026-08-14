@@ -1506,22 +1506,35 @@ class ServiceCompanyAccountSettingsController extends ServiceCompanyBaseControll
 
     public function add_team_member_form($id)
     {
-
         $company_id = auth()->user()->company_id;
+        $companyId = (int) $company_id;
 
         $eventId = 1;
         $coinsRequ = 1;
-        $companyId = (int) $company_id;
         $coinsDeductions = GeneralMethod::coinsValidationsAllcompany($companyId, $eventId, $coinsRequ);
         if ($coinsDeductions->status) {
             return Reply::dataOnly(['status' => 'coinCheck', 'message' => $coinsDeductions->message, 'company_coins' => $coinsDeductions->company_coins]);
         }
 
-        $this->company = DB::table('companies')->select('*')->where('id', $company_id)->first();
-        $this->roles = DB::table('roles')->select('*')->where('company_id', $company_id)->orderBy('roles.display_name', 'ASC')->get();
+        $this->company = DB::table('companies')->select('*')->where('id', $companyId)->first();
+
+        // Phase 1 Optimization: Cache roles in Redis for 24 hours to prevent repeated DB hits on drawer open
+        $roles = cache()->remember('ats:roles:company_'.$companyId, 86400, function () use ($companyId) {
+            return DB::table('roles')
+                ->select('id', 'display_name', 'name', 'description')
+                ->where('company_id', $companyId)
+                ->orderBy('display_name', 'ASC')
+                ->get();
+        });
+
+        $this->roles = $roles;
         $view = view('service_company.account.add_team_member_form', $this->data)->render();
 
-        return Reply::dataOnly(['status' => 'success', 'view' => $view]);
+        return Reply::dataOnly([
+            'status' => 'success',
+            'roles' => $roles,
+            'view' => $view,
+        ]);
     }
 
     public function boostkeywordadd(Request $request)

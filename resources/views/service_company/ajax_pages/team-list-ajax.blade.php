@@ -7,10 +7,13 @@
             $row = (object) $rowArr;
 
             // V2 Phase 2 & 3: Use pre-computed metrics passed from data_ajax() to eliminate N+1 sub-queries in Blade view
-            $rankVal = $row->pre_rank ?? $row->rank ?? 0;
-            $scoreVal = $row->pre_score ?? $row->score ?? 0;
-            $rankMonth = $row->pre_rank_month ?? Carbon::now()->startOfMonth()->subMonth()->format('M Y');
-            $teamRanks = (object) ['rank' => $rankVal, 'score' => $scoreVal, 'rankMonth' => $rankMonth];
+            $rawRank = $row->pre_rank ?? $row->rank ?? 'N/A';
+            $isInvited = empty($row->password) || strtolower($row->status ?? '') === 'invited';
+            $isRanked = ! $isInvited && is_numeric($rawRank) && (int) $rawRank > 0 && strtolower($row->status ?? '') === 'active';
+            $rankDisplay = $isRanked ? '#' . (int) $rawRank : 'N/A';
+            $rankMonthDisplay = $isRanked ? '(' . ($row->pre_rank_month ?? Carbon::now()->startOfMonth()->subMonth()->format('M Y')) . ')' : '';
+            $scoreVal = $isRanked ? ($row->pre_score ?? $row->score ?? 0) : 0;
+            $teamRanks = (object) ['rank' => $rankDisplay, 'score' => $scoreVal, 'rankMonth' => $rankMonthDisplay];
 
             // ---- Avatar background tint (kept from the original first-letter logic) ----
             $strVal = strtolower(trim(@$row->name)[0] ?? '');
@@ -79,8 +82,10 @@
             {{-- Rank --}}
             <td>
                 <div class="d-flex flex-column">
-                    <span class="team-rank-badge">{!! $medal !!} #{{ @$teamRanks->rank }}</span>
-                    <span class="team-rank-month">({{ @$teamRanks->rankMonth }})</span>
+                    <span class="team-rank-badge">{!! $medal !!} {{ $teamRanks->rank }}</span>
+                    @if (!empty($teamRanks->rankMonth))
+                        <span class="team-rank-month">{{ $teamRanks->rankMonth }}</span>
+                    @endif
                     <span class="team-score-link teamViewScore"
                         data-user-id="{{ $row->id }}">View Score</span>
                 </div>
