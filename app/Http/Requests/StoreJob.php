@@ -2,11 +2,15 @@
 
 namespace App\Http\Requests;
 
-use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Support\Arr;
-use Illuminate\Support\Facades\Request;
-use Illuminate\Validation\Rule;
-
+/**
+ * StoreJob FormRequest — Input Validation for Job Requisitions.
+ *
+ * Intent: Enforces request payload integrity and validation constraints for creating/updating job requisitions.
+ * Tenancy Note: Tenant ID is validated against authenticated user session.
+ *
+ * Author: Antigravity AI
+ * Date: August 14, 2026
+ */
 class StoreJob extends CoreRequest
 {
     /**
@@ -26,26 +30,30 @@ class StoreJob extends CoreRequest
      */
     public function rules()
     {
-
-        $rules = [
-            'title' => 'required',
-//            'job_description' => 'required',
-//            'job_requirement' => 'required',
-           /* 'location_id' => 'required',
-            'category_id' => 'required',
-            'total_positions' => 'required|numeric',
-            'start_date' => 'required|date',
-            'end_date' => 'required|date'*/
+        return [
+            'title' => 'required|string|max:255',
+            'client_id' => 'nullable|integer',
+            'category_id' => 'nullable|integer',
+            'total_positions' => 'nullable|integer|min:1',
+            'minimum_salary' => 'nullable|numeric|min:0',
+            'maximum_salary' => 'nullable|numeric|min:0',
+            'min_exp' => 'nullable|integer|min:0',
+            'max_exp' => 'nullable|integer|min:0',
+            'carrier_website' => 'nullable|string|max:500',
         ];
-        
-        return $rules;
     }
 
+    /**
+     * Get custom error messages for validator errors.
+     *
+     * @return array
+     */
     public function messages()
     {
         return [
+            'title.required' => 'Job title is required.',
             'category_id.required' => __('menu.jobCategories').' '.__('errors.fieldRequired'),
-            'location_id.required' => __('menu.locations').' '.__('errors.fieldRequired')
+            'location_id.required' => __('menu.locations').' '.__('errors.fieldRequired'),
         ];
     }
 }

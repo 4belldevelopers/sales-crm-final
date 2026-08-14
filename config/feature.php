@@ -31,4 +31,25 @@ return [
     */
     'account_v2' => (bool) env('FEATURE_ACCOUNT_V2', true),
 
+    /*
+    |--------------------------------------------------------------------------
+    | Jobs Module V2 Engine
+    |
+    | When true: uses JobService, Redis JobCacheKeys, EnsureIdempotentSubmission,
+    | JobConcurrencyLock, and asynchronous Horizon queue offloading for Jobs module.
+    |--------------------------------------------------------------------------
+    */
+    'jobs_v2_enabled' => (bool) env('FEATURE_JOBS_V2_ENABLED', true),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Talent (Bench Candidates) Module V2 Engine
+    |
+    | Intent: Controls feature activation for Talent V2 optimizations, including
+    | async Elasticsearch sync, bulk skill inserts, Redis cache tags, and backend
+    | idempotency. Defaults to false for zero-impact deployment.
+    |--------------------------------------------------------------------------
+    */
+    'talents_v2_enabled' => (bool) env('FEATURE_TALENTS_V2_ENABLED', false),
+
 ];

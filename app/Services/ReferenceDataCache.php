@@ -198,6 +198,17 @@ class ReferenceDataCache
     }
 
     /**
+     * Interview modes, cached 24 h.
+     * Global reference lookup for interview modes.
+     */
+    public static function interviewModes(): \Illuminate\Support\Collection
+    {
+        return Cache::remember('global_interview_modes', self::TTL_24H, function () {
+            return DB::table('interview_mode')->select('*')->orderBy('id', 'ASC')->get();
+        });
+    }
+
+    /**
      * Bust all global reference caches at once — call from a seeder or
      * an admin action after editing reference data.
      */
@@ -215,6 +226,7 @@ class ReferenceDataCache
         Cache::forget('global_master_email_preferences');
         Cache::forget('global_master_countries');
         Cache::forget('global_master_statuses');
+        Cache::forget('global_interview_modes');
         Cache::forget('global_master_notifications_elastic');
     }
 }
