@@ -1711,7 +1711,10 @@ END:VCALENDAR";
 	public static function packageRedeem($event_name, $event_table_name, $event_table_id,$source_to_company_id='')
 		{					
 					
-				$company_id 			=	auth()->user()->company_id; 
+				$company_id 			=	$source_to_company_id ?: (auth()->user()?->company_id ?? null); 
+				if (! $company_id) {
+					return false;
+				}
 			   
 				$package_active			=	0; 
 				$package_active_cnt		=	DB::table('package_active')->select('*')->where('company_id', $company_id)->count();
@@ -6834,8 +6837,11 @@ END:VCALENDAR";
 				return  $timezone;							
 
 	}
-	public static function defaultTimeFormat(){
-		$company_id      			=	auth()->user()->company_id;
+	public static function defaultTimeFormat($companyId = null){
+		$company_id      			=	$companyId ?: (auth()->user()?->company_id ?? null);
+		if (! $company_id) {
+			return 1;
+		}
 
 
 		

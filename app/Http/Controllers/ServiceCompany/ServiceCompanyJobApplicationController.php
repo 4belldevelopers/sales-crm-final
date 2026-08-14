@@ -23,10 +23,12 @@ use App\Helper\Zoom;
 use App\Imports\JobApplicationImport;
 use App\Jobs\ElasticCandidateIndex;
 use App\Jobs\ProcessCandidateSubmissionJob;
+use App\Jobs\ProcessCandidateUpdateJob;
 use App\Jobs\QueueCandidateNotificationJob;
 use App\Jobs\QueueMailService;
 use App\Jobs\QueueNotificationMailService;
 use App\Jobs\UploadResumeToTestRTwo;
+use App\Services\ReferenceDataCache;
 use App\Mail\AddCandidateMail;
 use App\Mail\ChangeStatusMail;
 use App\Mail\InterviewTrackerMail;
@@ -1602,7 +1604,7 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
             $this->jobs = Job::select('jobs.id', 'jobs.title', 'jobs.min_salary', 'jobs.max_salary', 'jobs.created_at', 'clients.name as client_name', 'client_location.city', 'client_location.postcode', 'client_location.city as location_city')->join('job_assign', 'job_assign.job_id', 'jobs.id')->join('clients', 'clients.id', 'jobs.client_id')->leftJoin('client_location_jobs', 'client_location_jobs.job_id', '=', 'jobs.id')->leftJoin('client_location', 'client_location.id', '=', 'client_location_jobs.client_location_id')->where('jobs.status', '=', 'active')->where('job_assign.user_id', '=', $this->user->id)->where('jobs.company_id', '=', $this->user->company_id)->groupBy('jobs.id')->get();
         }
 
-        $this->qualification = DB::table('qualification_master')->select('*')->whereNotIn('id', [57, 58, 59])->orderBy('qualification_master.display_order', 'ASC')->get();
+        $this->qualification = ReferenceDataCache::qualifications();
         $this->jobId = $jobId;
         $this->appId = $appId;
 
@@ -1621,7 +1623,7 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
         $this->page_event = 'ADD';
         $this->currency = GeneralMethod::currency();
         $this->salaryMode = GeneralMethod::salaryMode();
-        $this->interview_mode = DB::table('interview_mode')->select('*')->orderBy('interview_mode.id', 'ASC')->get();
+        $this->interview_mode = ReferenceDataCache::interviewModes();
         $this->statelist = GeneralMethod::statelist(101);
         $this->job_additional_detail = '';
         $this->job_additional_detail = DB::table('job_additional_detail')
@@ -2149,6 +2151,11 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
             DB::commit();
 
             // ── V2 async secondary jobs — dispatched after commit so MySQL rows are visible ──
+            $requestData = array_filter(
+                $request->except(['resume', 'photo', 'documents', 'file', 'files']),
+                fn ($val) => ! ($val instanceof \Illuminate\Http\UploadedFile)
+            );
+
             ProcessCandidateSubmissionJob::dispatch(
                 (int) $jobApplication->id,
                 (int) $lastInsertedId,
@@ -2158,7 +2165,7 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
                 (int) $company_id,
                 (int) $jobApplication->status_id,
                 (string) $jobApplication->email,
-                $request->all()
+                $requestData
             )->onConnection('emails');
 
             QueueCandidateNotificationJob::dispatch(
@@ -2169,11 +2176,19 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
             )->onConnection('emails');
             // ─────────────────────────────────────────────────────────────────────────────
 
-            if (! empty($request->job_id)) {
-                return Reply::redirect(url('/service_company/apptracker/'.GeneralMethod::value_encrypt($request->job_id).'/all'), __('menu.jobApplications').' '.__($message));
+            $rawJobId = GeneralMethod::value_decrypt($request->job_id);
+            if (! empty($rawJobId)) {
+                $redirectUrl = url('/service_company/apptracker/'.GeneralMethod::value_encrypt($rawJobId).'/all');
             } else {
-                return Reply::redirect(route('service_company.job-applications.table'), __('menu.jobApplications').' '.__($message));
+                $redirectUrl = route('service_company.job-applications.table');
             }
+
+            return Reply::successWithData(__('messages.createdSuccessfully'), [
+                'action' => 'redirect',
+                'url' => $redirectUrl,
+                'candidate_id' => (int) $jobApplication->id,
+                'resume' => (string) ($jobApplication->resume ?? ''),
+            ]);
 
         } catch (\Throwable $e) {
             DB::rollBack();
@@ -3834,13 +3849,13 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
         $AddJobWiseCondidate = AddJobWiseCondidate::find($id);
         $this->AddJobWiseCondidateRankRow = $id;
         // dd($AddJobWiseCondidate->job_id);
-        $this->statuses = ApplicationStatus::all();
+        $this->statuses = ReferenceDataCache::applicationStatuses();
         $this->application = JobApplication::find($AddJobWiseCondidate->job_application_id);
         $this->jobQuestion = $this->application->job->questions;
-        $this->jobs = Job::select('id', 'title', 'location_id', 'status', 'start_date', 'end_date', 'section_visibility')->get();
-        $this->noticeperiod = NoticePeriod::all();
-        $this->qualification = DB::table('qualification_master')->select('*')->whereNotIn('id', [57, 58, 59])->orderBy('qualification_master.display_order', 'ASC')->get();
-        $this->interviewStatus = DB::table('master_status')->select('*')->orderBy('priority', 'ASC')->get();
+        $this->jobs = Job::select('id', 'title', 'location_id', 'status', 'start_date', 'end_date', 'section_visibility')->where('company_id', $this->user->company_id)->get();
+        $this->noticeperiod = \Illuminate\Support\Facades\Cache::remember('notice_periods', 86400, fn () => \App\Models\NoticePeriod::orderBy('np_id')->get());
+        $this->qualification = ReferenceDataCache::qualifications();
+        $this->interviewStatus = ReferenceDataCache::masterStatuses();
         $this->childArr = DB::table('candidate_status')
             ->select('*')->where('parent', $this->application->master_status_id)
             ->where('company_id', $this->user->company_id)
@@ -3848,21 +3863,17 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
             ->get();
 
         $this->company_id = $this->user->company_id;
-        $this->application_add_detail_cnt = DB::table('application_additional_detail')
-            ->select('*')
-            ->where('application_id', $this->application->id)
-            ->orderBy('application_additional_detail.id', 'ASC')
-            ->count();
+        $this->jobId = $AddJobWiseCondidate->job_id;
+        $this->appId = $this->application->id;
 
-        $this->application_add_detail = DB::table('application_additional_detail')
+        $this->application_additional_detail = DB::table('application_additional_detail')
             ->select('*')
-            ->where('application_id', $this->application->id)
+            ->where('application_id', '=', $this->application->id)
+            ->where('job_id', '=', $this->jobId)
             ->orderBy('application_additional_detail.id', 'ASC')
             ->get();
-
-        // $jobId 							=	$this->application->job_id;
-        $this->jobId = $AddJobWiseCondidate->job_id; // $this->application->job_id;
-        $this->appId = $this->application->id;
+        $this->application_add_detail = $this->application_additional_detail;
+        $this->application_add_detail_cnt = $this->application_additional_detail->count();
 
         $this->jobDetail = Job::select('jobs.id', 'jobs.company_id', 'jobs.title', 'jobs.min_salary', 'jobs.max_salary', 'jobs.created_at', 'jobs.min_exp', 'jobs.max_exp', 'jobs.status', 'clients.name as client_name', 'client_location.city', 'client_location.postcode', 'client_location.city as location_city', 'jobs.min_sal_mode', 'jobs.max_sal_mode', 'jobs.min_salary_currency', 'jobs.max_salary_currency')
             // ->join('job_assign', 'job_assign.job_id', 'jobs.id')
@@ -3901,24 +3912,16 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
         $this->page_event = 'EDIT';
         $this->currency = GeneralMethod::currency();
         $this->salaryMode = GeneralMethod::salaryMode();
-        $this->countries = GeneralMethod::getAllCountryList();
-        $this->interview_mode = DB::table('interview_mode')->select('*')->orderBy('interview_mode.id', 'ASC')->get();
+        $this->countries = ReferenceDataCache::masterCountries();
+        $this->interview_mode = ReferenceDataCache::interviewModes();
         $this->statelist = GeneralMethod::statelist($this->application->country);
         $this->documents = DB::table('documents')->select('*')->where('documentable_id', $this->application->id)->where('name', 'Resume')->orderByDesc('id')->first();
 
-        $this->job_additional_detail = '';
         $this->job_additional_detail = DB::table('job_additional_detail')
             ->select('*')
             // ->where('job_additional_detail.company_id', '=', $company_id)
             ->where('job_additional_detail.job_id', '=', $this->jobId)
             ->orderBy('job_additional_detail.id', 'ASC')
-            ->get();
-        // dd($this->job_additional_detail,$this->application->id,$this->jobId);
-        $this->application_additional_detail = DB::table('application_additional_detail')
-            ->select('*')
-            ->where('application_additional_detail.application_id', '=', $this->application->id)
-            ->where('application_additional_detail.job_id', '=', $this->jobId)
-            ->orderBy('application_additional_detail.id', 'ASC')
             ->get();
         // dd($this->application_additional_detail);
 
@@ -5545,93 +5548,13 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
             }
             // ─────────────────────────────────────────────────────────────────────────────
 
-            if ($request->has('YearskillId') && is_array($request->input('YearskillId'))) {
-                $YearskillId = $request->input('YearskillId');
-                $MonthskillId = $request->input('MonthskillId');
-                $ratingId = $request->input('rating');
-                // dd($YearskillId,$MonthskillId);
-                DB::table('candidate_job_skill_exp')->where('candidate_id', $jobApplication->id)->where('job_id', $request->job_id)->delete();
-                $this->elasticService->getClient()->deleteByQuery([
-                    'index' => ELASTIC_CANDIDATE_SKILLS_EXP,
-                    'conflicts' => 'proceed',   // ⭐ THIS LINE FIXES YOUR ERROR
-                    'body' => [
-                        'query' => [
-                            'bool' => [
-                                'must' => [
-                                    ['term' => ['candidate_id' => $jobApplication->id]],
-                                    ['term' => ['job_id' => $request->job_id]],
-                                ],
-                            ],
-                        ],
-                    ],
-                ]);
-                foreach ($YearskillId as $skillId => $value) {
-                    // if (!empty($value)) {
-                    $ss = 'Year';
-                    if ($value >= 1) {
-                        $ss = 'Years';
-                    }
-                    if (! empty($MonthskillId[$skillId])) {
-                        $valMonth = $MonthskillId[$skillId];
-                    } else {
-                        $valMonth = $MonthskillId[$skillId];
-                    }
-                    $skill_value = $value.'.'.$valMonth.' '.$ss;
-                    $rating = $ratingId[$skillId];
-
-                    $values = [
-                        'job_skill_id' => $skillId,
-                        'skill_value' => $skill_value,
-                        'job_id' => $request->job_id,
-                        'rating' => (int) $rating,
-                        'candidate_id' => $jobApplication->id,
-                    ];
-                    DB::table('candidate_job_skill_exp')->insert($values);
-                    $expId = DB::getPdo()->lastInsertId();
-                    $skills = DB::table('job_metronics_skills')->select('skill_name')->where('id', '=', $skillId)->first();
-                    $this->elasticService->getClient()->index([
-                        'index' => ELASTIC_CANDIDATE_SKILLS_EXP,
-                        'id' => $expId,   // store as ES _id
-                        'body' => [
-                            'skill_name' => $skills->skill_name ?? '',
-                            'job_skill_id' => $skillId,
-                            'skill_value' => $skill_value,
-                            'job_id' => $request->job_id,
-                            'rating' => (int) $rating,
-                            'candidate_id' => $jobApplication->id,
-                            'created_at' => now()->toIso8601String(),
-                            'updated_at' => now()->toIso8601String(),
-                        ],
-                    ]);
-                    // }
-                }
+            if ($request->has('AddJobWiseCondidateRankRow') && $request->AddJobWiseCondidateRankRow > 0) {
+                $skillArr = explode(',', @$jobApplication->skills);
+                $percentage = GeneralMethod::skill_match_percentage(@$request->job_id, $skillArr);
+                DB::table('add_job_wise_condidates')->where('id', '=', $request->AddJobWiseCondidateRankRow)->update(['skill_match' => $percentage]);
             }
 
-            if ($request->has('AddJobWiseCondidateRankRow')) {
-                if ($request->AddJobWiseCondidateRankRow > 0) {
-                    $skillArr = explode(',', @$jobApplication->skills);
-                    $percentage = GeneralMethod::skill_match_percentage(@$request->job_id, $skillArr);
-                    DB::table('add_job_wise_condidates')->where('id', '=', $request->AddJobWiseCondidateRankRow)->update(['skill_match' => $percentage]);
-                }
-
-            }
-
-            // $mailSetting = ApplicationSetting::select('id', 'mail_setting')->first()->mail_setting;
-            $mailSetting = optional(ApplicationSetting::select('id', 'mail_setting')->first())->mail_setting;
-
-            $status_name = $note = '';
-            $status_cnt = DB::table('candidate_status')->select('*')->where('company_id', $this->user->company_id)->where('parent', $request->status_id)
-                // ->orderBy('priority', 'ASC')
-                ->count();
-            if ($status_cnt > 0) {
-                $status_row = DB::table('candidate_status')->select('*')->where('company_id', $this->user->company_id)->where('parent', $request->status_id)->where('id', @$request->childStatus)->first();
-                // $status_name			=	$status_row->name;
-
-            }
-            // GeneralMethod :: manageTimeline(auth()->user()->id, $jobApplication->id, $jobApplication->job_id, $request->status_id, $status_name, 'Successfully Application  Update ');
-            // GeneralMethod :: manageTimeline(auth()->user()->id, $jobApplication->id, $jobApplication->job_id, $request->status_id, $status_name, 'Successfully Application  Update ');
             // Resume handling on UPDATE: v2 session takes priority over v1 file upload.
-            // If no resume change: existing resume column is preserved (resumeCheck guard below).
             if ($resumeSession) {
                 DB::table('job_applications')
                     ->where('id', $jobApplication->id)
@@ -5680,241 +5603,10 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
                     ->update(['resume' => '']);
             }
 
-            // Job Application Answer save
-            if (isset($request->answer) && count($request->answer) > 0) {
-                foreach ($request->answer as $key => $value) {
-                    JobApplicationAnswer::updateOrCreate(['job_application_id' => $jobApplication->id, 'job_id' => $jobApplication->job_id, 'question_id' => $key], ['answer' => $value]);
-                }
-            }
-
-            DB::table('application_additional_detail')->where('application_id', $jobApplication->id)->where('job_id', $jobApplication->job_id)->delete();
-
-            $this->elasticService->getClient()->deleteByQuery([
-                'index' => ELASTIC_CANDIDATE_JOB_QUESTION,
-                'conflicts' => 'proceed',   // ⭐ THIS LINE FIXES YOUR ERROR
-                'body' => [
-                    'query' => [
-                        'bool' => [
-                            'must' => [
-                                ['term' => ['application_id' => (int) $jobApplication->id]],
-                                ['term' => ['job_id' => (int) $jobApplication->job_id]],
-                            ],
-                        ],
-                    ],
-                ],
-            ]);
-
-            $job_additional_detail_count = DB::table('job_additional_detail')->select('*')->where('job_id', $jobApplication->job_id)->orderBy('job_additional_detail.id', 'ASC')->count();
-            $job_additional_detail = DB::table('job_additional_detail')->select('*')->where('job_id', $jobApplication->job_id)->orderBy('job_additional_detail.id', 'ASC')->get();
-            if ($job_additional_detail_count > 0) {
-                $inc = 0;
-                foreach ($job_additional_detail as $jd) {
-
-                    $values = [
-                        'job_id' => @$jobApplication->job_id,
-                        'question_id' => @$jd->id,
-                        'application_id' => @$jobApplication->id,
-                        'job_detail_value' => @$jd->detail_value,
-                        'application_detail_value' => @$request->additional_detail[$inc],
-                    ];
-                    DB::table('application_additional_detail')->insert($values);
-                    $expId = DB::getPdo()->lastInsertId();
-                    $this->elasticService->getClient()->update([
-                        'index' => ELASTIC_CANDIDATE_JOB_QUESTION,
-                        'id' => $expId,   // store as ES _id
-                        'body' => [
-                            'doc' => [
-                                'job_id' => @$jobApplication->job_id,
-                                'question_id' => @$jd->id,
-                                'application_id' => @$jobApplication->id,
-                                'job_detail_value' => @$jd->detail_value,
-                                'application_detail_value' => @$request->additional_detail[$inc],
-                                'created_at' => now()->toIso8601String(),
-                                'updated_at' => now()->toIso8601String(),
-                            ],
-                            'doc_as_upsert' => true,
-                        ],
-                    ]);
-                    $inc++;
-
-                }
-            }
-
-            if ($request->has('AddJobWiseCondidateRankRow')) {
-                $addJobWiseCondidate_id = $request->AddJobWiseCondidateRankRow;
-                $exists = $this->elasticService->getClient()->exists([
-                    'index' => ELASTIC_CANDIDATES,
-                    'id' => $addJobWiseCondidate_id,
-                ]);
-                if ($exists) {
-                    // 2. Prepare the update timestamp
-                    $updateTime = now()->toIso8601String();
-                    $applications_up = JobApplication::select(
-                        'job_applications.*',
-                        'state_list.state as state_name',
-                        'city_list.city as city_name',
-                        'countries.country_name',
-                        'qualification_master.name as qualification_name')
-                        ->join('add_job_wise_condidates', 'add_job_wise_condidates.job_application_id', 'job_applications.id')
-                        ->leftJoin('countries', 'countries.id', '=', 'job_applications.country')
-                        ->leftJoin('state_list', 'state_list.id', '=', 'job_applications.state')
-                        ->leftJoin('city_list', 'city_list.city_id', '=', 'job_applications.city_id')
-                        ->leftjoin('qualification_master', 'qualification_master.id', 'job_applications.qualification')
-                        ->where('add_job_wise_condidates.id', $addJobWiseCondidate_id)
-                        ->first();
-
-                    $jobSkill = DB::table('job_metronics_skills')
-                        ->leftJoin('candidate_job_skill_exp', function ($join) use ($jobApplication) {
-                            $join->on('candidate_job_skill_exp.job_skill_id', '=', 'job_metronics_skills.id')
-                                ->where('candidate_job_skill_exp.candidate_id', '=', $jobApplication->id); // Add the candidate condition
-                        })
-                        ->select('job_metronics_skills.*', 'candidate_job_skill_exp.skill_value')
-                        ->where('job_metronics_skills.job_id', '=', $request->job_id)
-                        ->get();
-
-                    // dd($jobSkill);
-
-                    if (count($jobSkill) > 0) {
-                        foreach ($jobSkill as $sval) {
-
-                            $skillValue = str_replace(['Years', 'Year', ' '], '', $sval->skill_value);
-                            // dd($skillValue);
-                            if (! is_null($skillValue) && ! empty($skillValue) && $skillValue != '0.') {
-                                $values = [
-                                    'job_application_id' => $jobApplication->id,
-                                    'skills' => $sval->skill_name,
-                                ];
-                                if (! DB::table('job_application_skills')->where('job_application_id', '=', $jobApplication->id)->where('skills', 'LIKE', '%'.$sval->skill_name.'%')->exists()) {
-                                    DB::table('job_application_skills')->insert($values);
-                                }
-                            }
-
-                        }
-                    }
-
-                    $job_application_skills = DB::table('job_application_skills')
-                        ->where('job_application_id', $jobApplication->id)
-                        ->get()
-                        ->map(fn ($s) => [
-                            'id' => $s->id,
-                            'job_application_id' => $s->id,
-                            'skills' => strtolower($s->skills),
-                        ])
-                        ->toArray();
-
-                    $application_skills = DB::table('job_application_skills')
-                        ->where('job_application_id', $jobApplication->id)
-                        ->pluck('skills') // only take skills column
-                        ->map(fn ($skill) => strtolower($skill))
-                        ->implode(',');
-
-                    $defaultTimeFormat = GeneralMethod::defaultTimeFormat();
-
-                    $interviewDateOne = $this->formatInterviewDateTime($request->interviewDateOne, $request->interviewTimeOne, $defaultTimeFormat);
-                    $interviewDateTwo = $this->formatInterviewDateTime($request->interviewDateTwo, $request->interviewTimeTwo, $defaultTimeFormat);
-                    $interviewDateThree = $this->formatInterviewDateTime($request->interviewDateThree, $request->interviewTimeThree, $defaultTimeFormat);
-                    $interviewDateFour = $this->formatInterviewDateTime($request->interviewDateFour, $request->interviewTimeFour, $defaultTimeFormat);
-                    $interviewDateFive = $this->formatInterviewDateTime($request->interviewDateFive, $request->interviewTimeFive, $defaultTimeFormat);
-                    $interviewDateSix = $this->formatInterviewDateTime($request->interviewDateSix, $request->interviewTimeSix, $defaultTimeFormat);
-
-                    // interview_mode_one, interview_mode_two, interview_mode_three, interview_mode_four, interview_mode_five
-
-                    $updateParams = [
-                        'index' => ELASTIC_CANDIDATES,
-                        'id' => $addJobWiseCondidate_id,
-                        'retry_on_conflict' => 5,
-                        'body' => [
-                            'doc' => [
-                                'thirdparty_company_id' => $applications_up->thirdparty_company_id,
-                                'full_name' => $applications_up->full_name,
-                                'email' => $applications_up->email,
-                                'phone' => $applications_up->phone,
-                                'np_id' => $applications_up->np_id,
-                                'serving_notice_period_mode' => $applications_up->serving_notice_period_mode,
-                                'country' => $applications_up->country,
-                                'state' => $applications_up->state,
-                                'gender' => $applications_up->gender,
-                                'city' => $applications_up->city,
-                                'city_id' => $applications_up->city_id,
-                                'skills' => $application_skills,
-                                'photo' => $applications_up->photo,
-                                'pincode' => $applications_up->pincode,
-                                'total_exp' => $applications_up->total_exp,
-                                'rel_exp' => $applications_up->rel_exp,
-                                'careersummary' => $applications_up->careersummary,
-                                'nationality' => $applications_up->nationality,
-                                'wm' => $applications_up->wm,
-                                'employmentType' => $applications_up->employmentType,
-                                'oh' => $applications_up->oh,
-                                'visastatu' => $applications_up->visastatu,
-                                'referencename' => $applications_up->referencename,
-                                'reason_for_job_change' => $applications_up->reason_for_job_change,
-                                'ctc' => $applications_up->ctc,
-                                'job_application_skills' => $job_application_skills,
-                                'current_ctc_cur' => $applications_up->current_ctc_cur,
-                                'current_ctc_mode' => $applications_up->current_ctc_mode,
-                                'current_designation' => $applications_up->current_designation,
-                                'ectc' => $applications_up->ectc,
-                                'current_ectc_cur' => $applications_up->current_ectc_cur,
-                                'current_ectc_mode' => $applications_up->current_ectc_mode,
-                                'current_company' => $applications_up->current_company,
-                                'ctc_hourly' => $applications_up->ctc_hourly,
-                                'ctc_monthly' => $applications_up->ctc_monthly,
-                                'ctc_yearly' => $applications_up->ctc_yearly,
-                                'ectc_hourly' => $applications_up->ectc_hourly,
-                                'ectc_monthly' => $applications_up->ectc_monthly,
-                                'ectc_yearly' => $applications_up->ectc_yearly,
-                                'status' => $applications_up->status,
-                                'duplicate' => $applications_up->duplicate,
-                                'bill_rate_currency' => $applications_up->bill_rate_currency,
-                                'bill_rate_amount' => $applications_up->bill_rate_amount,
-                                'bill_rate_mode' => $applications_up->bill_rate_mode,
-                                'condidate_type' => $applications_up->condidate_type,
-                                'master_status_id' => $applications_up->master_status_id,
-                                'is_viewed' => $applications_up->is_viewed,
-                                'column_priority' => $applications_up->column_priority,
-                                'phone_code' => $applications_up->phone_code,
-                                'second_phone_code' => $applications_up->second_phone_code,
-                                'secondary_mobile' => $applications_up->secondary_mobile,
-                                'resume' => $applications_up->resume,
-                                'qualification_name' => $applications_up->qualification_name,
-                                'qualification' => $applications_up->qualification,
-                                'country_name' => $applications_up->country_name,
-                                'state_name' => $applications_up->state_name,
-                                'city_name' => $applications_up->city_name,
-                                'dob' => $applications_up->dob,
-                                'recruiter_note' => $applications_up->recruiter_note,
-                                'percentage_hike' => $applications_up->percentage_hike,
-                                'linkedin' => $request->linkedin,
-                                'github' => $request->github,
-                                'behance' => $request->behance,
-                                'otherLink' => $request->otherLink,
-                                'interviewDateOne' => ($interviewDateOne) ? Carbon::parse($interviewDateOne)->toIso8601String() : null,
-                                'interview_mode_one' => $request->interview_mode_one,
-                                'interviewDateTwo' => ($interviewDateTwo) ? Carbon::parse($interviewDateTwo)->toIso8601String() : null,
-                                'interview_mode_two' => $request->interview_mode_two,
-                                'interviewDateThree' => ($interviewDateThree) ? Carbon::parse($interviewDateThree)->toIso8601String() : null,
-                                'interview_mode_three' => $request->interview_mode_three,
-                                'interviewDateFour' => ($interviewDateFour) ? Carbon::parse($interviewDateFour)->toIso8601String() : null,
-                                'interview_mode_four' => $request->interview_mode_four,
-                                'interviewDateFive' => ($interviewDateFive) ? Carbon::parse($interviewDateFive)->toIso8601String() : null,
-                                'interview_mode_five' => $request->interview_mode_five,
-                                'interviewDateSix' => ($interviewDateSix) ? Carbon::parse($interviewDateSix)->toIso8601String() : null,
-                                'interview_mode_six' => $request->interview_mode_six,
-                                'comment' => $applications_up->comment,
-                            ],
-                            'doc_as_upsert' => true,
-                            'detect_noop' => false,
-                        ],
-                        'refresh' => true, // Force immediate refresh
-                    ];
-                    // GeneralMethod::JobApplicationsAddEditUpload($addJobWiseCondidate_id);
-                    $this->elasticService->getClient()->update($updateParams);
-                    GeneralMethod::elasticBenchCandidateAddEditIndex($jobApplication->id);
-                    GeneralMethod::addCompanyCandidate($company_id, $addJobWiseCondidate_id);
-                    GeneralMethod::addCompanyBenchCandidate($company_id, $jobApplication->id);
-                }
-
+            // Primary ES candidate update — kept fast and synchronous so edits reflect immediately in the UI.
+            $addJobWiseCandidateId = (int) ($request->AddJobWiseCondidateRankRow ?? 0);
+            if ($addJobWiseCandidateId > 0) {
+                GeneralMethod::JobApplicationsAddEditUpload($addJobWiseCandidateId);
             }
 
             $cachekeys = [
@@ -5927,6 +5619,24 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
                 GeneralMethod::cacheClean($key);
             }
 
+            DB::commit();
+
+            // ── V2 async candidate update job — dispatched post-commit ─────────────
+            // Handles secondary ES indexing (skills experience, answers, job questions, bench candidate indexes).
+            $requestData = array_filter(
+                $request->except(['resume', 'photo', 'documents', 'file', 'files']),
+                fn ($val) => ! ($val instanceof \Illuminate\Http\UploadedFile)
+            );
+
+            ProcessCandidateUpdateJob::dispatch(
+                (int) $jobApplication->id,
+                $addJobWiseCandidateId,
+                (int) $request->job_id,
+                (int) $company_id,
+                $requestData
+            )->onConnection('emails');
+            // ─────────────────────────────────────────────────────────────────────────────
+
             $currentPage = @$request->currentPage;
             $currentSlug = @$request->currentSlug;
 
@@ -5936,12 +5646,13 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
 
             // Mirror store() response shape so the JS hardened success gate
             // (response.status===success && response.candidate_id && response.url) on create.blade.php passes.
+            $rawJobId = GeneralMethod::value_decrypt($request->job_id);
             if ($currentSlug == 'cvtracker') {
                 $redirectUrl = url('/service_company/cvtracker/');
             } elseif ($recommendation_id > 0 && @$to_company_id == auth()->user()->company_id) {
-                $redirectUrl = url('/service_company/apptracker/clientapp/'.GeneralMethod::value_encrypt($request->job_id).'/all');
+                $redirectUrl = url('/service_company/apptracker/clientapp/'.GeneralMethod::value_encrypt($rawJobId).'/all');
             } else {
-                $redirectUrl = url('/service_company/apptracker/'.GeneralMethod::value_encrypt($request->job_id).'/all');
+                $redirectUrl = url('/service_company/apptracker/'.GeneralMethod::value_encrypt($rawJobId).'/all');
             }
             DB::commit();
 
@@ -9399,7 +9110,7 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
         $this->gender = ['male' => __('modules.front.male'), 'female' => __('modules.front.female'), 'others' => __('modules.front.others')];
         $chkAdminRole = $this->user->hasRole('admin');
 
-        $this->qualification = DB::table('qualification_master')->select('*')->whereNotIn('id', [57, 58, 59])->orderBy('qualification_master.display_order', 'ASC')->get();
+        $this->qualification = ReferenceDataCache::qualifications();
         $this->jobId = $jobId;
         $this->appId = $appId;
 
@@ -9418,7 +9129,7 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
         $this->page_event = 'ADD';
         $this->currency = GeneralMethod::currency();
         $this->salaryMode = GeneralMethod::salaryMode();
-        $this->interview_mode = DB::table('interview_mode')->select('*')->orderBy('interview_mode.id', 'ASC')->get();
+        $this->interview_mode = ReferenceDataCache::interviewModes();
         // $this->countries = Country::all();
 
         $this->statelist = GeneralMethod::statelist(101);
@@ -9920,275 +9631,12 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
                 GeneralMethod::cacheClean($key);
             }
 
-            $teamRankElastic = [
-                'company_id' => auth()->user()->company_id,
-                'user_id' => auth()->user()->id,
-                'candidate_id' => $lastInsertedId,
-                'profileUpload' => 1,
-                'interviewScheduled' => 0,
-                'interviewNoShow' => 0,
-                'offerReleased' => 0,
-                'candidateJoined' => 0,
-                'jobsPosted' => 0,
-                'feedbackGivenOnCVs' => 0,
-                'postJobToVendorMarket' => 0,
-                'outsourceJobsToVendors' => 0,
-                'listBenchCandidates' => 0,
-                'respondToBenchRequests' => 0,
-            ];
-            GeneralMethod::teamRankElastic($teamRankElastic);
+            // Skills ES indexing, candidate_job_skill_exp, teamRankElastic, answers,
+            // job_additional_detail+ES, and packageRedeem are all handled by
+            // ProcessCandidateSubmissionJob dispatched after commit.
 
-            if ($request->has('YearskillId') && is_array($request->input('YearskillId'))) {
-                $YearskillId = $request->input('YearskillId');
-                $MonthskillId = $request->input('MonthskillId');
-                $ratingId = $request->input('rating');
-                // dd($YearskillId,$MonthskillId);
-                DB::table('candidate_job_skill_exp')->where('candidate_id', $application_id)->where('job_id', $request->job_id)->delete();
-                $this->elasticService->getClient()->deleteByQuery([
-                    'index' => ELASTIC_CANDIDATE_SKILLS_EXP,
-                    'conflicts' => 'proceed',   // ⭐ THIS LINE FIXES YOUR ERROR
-                    'body' => [
-                        'query' => [
-                            'bool' => [
-                                'must' => [
-                                    ['term' => ['candidate_id' => $application_id]],
-                                    ['term' => ['job_id' => $request->job_id]],
-                                ],
-                            ],
-                        ],
-                    ],
-                ]);
-                foreach ($YearskillId as $skillId => $value) {
-                    // if (!empty($value)) {
-                    $ss = 'Year';
-                    if ($value >= 1) {
-                        $ss = 'Years';
-                    }
-                    if (! empty($MonthskillId[$skillId])) {
-                        $valMonth = $MonthskillId[$skillId];
-                    } else {
-                        $valMonth = $MonthskillId[$skillId];
-                    }
-                    $skill_value = $value.'.'.$valMonth.' '.$ss;
-                    $rating = $ratingId[$skillId];
-
-                    $values = [
-                        'job_skill_id' => $skillId,
-                        'skill_value' => $skill_value,
-                        'job_id' => $request->job_id,
-                        'rating' => (int) $rating,
-                        'candidate_id' => $application_id,
-                    ];
-                    DB::table('candidate_job_skill_exp')->insert($values);
-                    $expId = DB::getPdo()->lastInsertId();
-                    $skills = DB::table('job_metronics_skills')->select('skill_name')->where('id', '=', $skillId)->first();
-                    $this->elasticService->getClient()->index([
-                        'index' => ELASTIC_CANDIDATE_SKILLS_EXP,
-                        'id' => $expId,   // store as ES _id
-                        'body' => [
-                            'skill_name' => $skills->skill_name ?? '',
-                            'job_skill_id' => $skillId,
-                            'skill_value' => $skill_value,
-                            'job_id' => $request->job_id,
-                            'rating' => (int) $rating,
-                            'candidate_id' => $application_id,
-                            'created_at' => now()->toIso8601String(),
-                            'updated_at' => now()->toIso8601String(),
-                        ],
-                    ]);
-                    // }
-                }
-            }
-            //  dd($skillArr);
-            if (! empty($skillArr)) {
-                foreach ($skillArr as $sval) {
-                    $values = [
-                        'job_application_id' => $application_id,
-                        'skills' => $sval,
-                    ];
-                    if (! DB::table('job_application_skills')->where('job_application_id', '=', $application_id)->where('skills', 'LIKE', '%'.$sval.'%')->exists()) {
-                        DB::table('job_application_skills')->insert($values);
-                    }
-                }
-            }
-
-            // Check job Assign Or Not
-            $chkJobAssign = DB::table('job_assign')->select('job_assign.id')->where('company_id', $jobRow->company_id)->where('job_id', $request->job_id)->where('user_id', $submitted_by)->count();
-            if ($chkJobAssign < 1) {
-                $values = ['company_id' => $jobRow->company_id, 'user_id' => @$submitted_by, 'job_id' => @$request->job_id];
-                DB::table('job_assign')->insert($values);
-            }
-
-            if ($resumeSession) {
-                // v2 path: file moved to company CDN path in the claim block above.
-                $r2ResumeUrl = $finalResumeUrl;
-                DB::table('job_applications')
-                    ->where('id', $jobApplicationGet->id)
-                    ->update(['resume' => $r2ResumeUrl]);
-            } elseif ($request->hasFile('resume')) {
-
-                $companyNameR2 = DB::table('companies')
-                    ->where('id', auth()->user()->company_id)
-                    ->value('company_name');   // change column if needed
-                $companyNameR2 = strtolower(trim($companyNameR2 ?? 'unknown'));
-                $companyNameR2 = preg_replace('/[^a-z0-9_-]/i', '_', $companyNameR2);
-                $companyNameRTwo = $companyNameR2.'_'.auth()->user()->company_id;
-                $year = date('Y');
-                $month = date('m');
-
-                $tempPath = $request->input('uploaded_file_path') ?: session('resume_temp_path');
-                $full_name = $request->input('resume_original_name') ?: session('resume_original_name');
-                if ($tempPath && $full_name) {
-                    UploadResumeToTestRTwo::dispatch($tempPath, $full_name, $jobApplicationGet->id, $companyNameRTwo, $year, $month)->onConnection('emails');
-                    $fileUrl = "https://file.jero.works/Companies/{$companyNameRTwo}/Resumes/{$year}/{$month}/{$full_name}";
-                    DB::table('job_applications')
-                        ->where('id', $jobApplicationGet->id)
-                        ->update(['resume' => $fileUrl]);
-                    session()->forget(['resume_temp_path', 'resume_original_name']);
-                } else {
-                    \Log::warning('v1 upload: missing tempPath or filename on form submit — resume not saved', [
-                        'company_id' => auth()->user()->company_id,
-                        'job_application_id' => $jobApplicationGet->id ?? null,
-                    ]);
-                }
-            }
-
-            if (empty($request->resumeCheck) && ! $resumeSession) {
-                DB::table('job_applications')
-                    ->where('id', $jobApplicationGet->id)
-                    ->update(['resume' => '']);
-            }
-
-            // if ($request->hasFile('resume')) {
-            // 	$hashname = Files::upload($request->resume, 'documents/' . $application_id, null, null, false);
-            // 	//$jobApplication->documents()->create(['name' => 'Resume', 'hashname' => $hashname]);
-
-            // 	$documentArr = array(
-            // 		'company_id' => $jobRow->company_id,
-            // 		'documentable_id' => @$application_id,
-            // 		'documentable_type' => 'App\JobApplication',
-            // 		'name' => 'Resume',
-            // 		'hashname' => $hashname
-            // 	);
-            // 	DB::table('documents')->insert($documentArr);
-            // }
-
-            // if ($request->hasFile('resume')) {
-            // 	$hashname = Files::upload($request->resume, 'documents/' . $application_id, null, null, false);
-            // 	//$jobApplication->documents()->create(['name' => 'Resume', 'hashname' => $hashname]);
-
-            // 	$documentArr = array(
-            // 		'company_id' => $jobRow->company_id,
-            // 		'documentable_id' => @$application_id,
-            // 		'documentable_type' => 'App\JobApplication',
-            // 		'name' => 'Resume',
-            // 		'hashname' => $hashname
-            // 	);
-            // 	DB::table('documents')->insert($documentArr);
-            // }
-
-            if (isset($request->jobskill) && ! empty($request->jobskill)) {
-                DB::table('candidate_skills_value')->where('job_id', $request->job_id)->where('candidate_id', $application_id)->delete();
-                foreach ($request->jobskill as $key => $value) {
-                    if (! empty(@$value)) {
-                        $values = ['job_id' => @$request->job_id, 'skill_id' => @$key, 'candidate_id' => $application_id, 'skill_value' => @$value];
-                        DB::table('candidate_skills_value')->insert($values);
-                    }
-                }
-            }
-            $status_name = $note = '';
-            $status_cnt = DB::table('candidate_status')->select('*')->where('company_id', user()->company_id)->where('parent', $applicationStatus->id)
-                // ->orderBy('priority', 'ASC')
-                ->count();
-            if ($status_cnt > 0) {
-                $status_row = DB::table('candidate_status')->select('*')->where('company_id', user()->company_id)->where('parent', $applicationStatus->id)->orderBy('priority', 'ASC')->first();
-                $status_name = $status_row->name;
-            }
-
-            $timelineArr = [
-                'event_id' => 1,
-                'event_by_company_id' => auth()->user()->company_id,
-                'event_by_user_id' => auth()->user()->id,
-                'master_process_name' => 'InReview',
-                // 'child_process_name'	=>
-
-                'application_id' => $application_id,
-                'application_email' => $request->email,
-                'job_id' => @$request->job_id,
-                'note' => 'Successfully Added',
-            ];
-            GeneralMethod::UpdateTimeline($timelineArr);
-
-            $jobIdGet = @$request->job_id;
-            $tb_ranks = ['company_id' => auth()->user()->company_id, 'user_id' => $jobApplicationGet->submitted_by, 'job_id' => @$jobIdGet, 'status' => 0, 'application_id' => @$application_id];
-            DB::table('tb_ranks')->insert($tb_ranks);
-
-            // Job Application Answer save
-            if (isset($request->answer) && ! empty($request->answer)) {
-                foreach ($request->answer as $key => $value) {
-                    $answer = new JobApplicationAnswer;
-                    $answer->job_application_id = $application_id;
-                    $answer->job_id = $request->job_id;
-                    $answer->question_id = $key;
-                    $answer->answer = $value;
-                    $answer->save();
-                }
-            }
-
-            $job_additional_detail_count = DB::table('job_additional_detail')->select('*')->where('job_id', $request->job_id)->orderBy('job_additional_detail.id', 'ASC')->count();
-            $job_additional_detail = DB::table('job_additional_detail')->select('*')->where('job_id', $request->job_id)->orderBy('job_additional_detail.id', 'ASC')->get();
-            if ($job_additional_detail_count > 0) {
-                $inc = 0;
-                foreach ($job_additional_detail as $jd) {
-
-                    $values = [
-                        'job_id' => @$request->job_id,
-                        'question_id' => @$jd->id,
-                        'application_id' => $application_id,
-                        'job_detail_value' => @$jd->detail_value,
-                        'application_detail_value' => @$request->additional_detail[$inc],
-                    ];
-                    DB::table('application_additional_detail')->insert($values);
-                    $expId = DB::getPdo()->lastInsertId();
-                    $this->elasticService->getClient()->update([
-                        'index' => ELASTIC_CANDIDATE_JOB_QUESTION,
-                        'id' => $expId,   // store as ES _id
-                        'body' => [
-                            'doc' => [
-                                'job_id' => @$request->job_id,
-                                'question_id' => @$jd->id,
-                                'application_id' => $application_id,
-                                'job_detail_value' => @$jd->detail_value,
-                                'application_detail_value' => @$request->additional_detail[$inc],
-                                'created_at' => now()->toIso8601String(),
-                                'updated_at' => now()->toIso8601String(),
-                            ],
-                            'doc_as_upsert' => true,
-                        ],
-                    ]);
-                    $inc++;
-
-                }
-            }
-
-            $company_id = auth()->user()->company_id;
-
-            $skillStr = '';
-            $skillArr = json_decode($request->skills, true);
-            $requiredSkills = [];
-            if (! empty($skillArr)) {
-                foreach ($skillArr as $sval) {
-                    array_push($requiredSkills, $sval['value']);
-                }
-            }
-
-            if (@$application_id > 0) {
-                $event_name = 'CVACCESS';
-                $event_table_name = 'job_applications';
-                $event_table_id = @$application_id;
-                $packageStatus = GeneralMethod::packageRedeem($event_name, $event_table_name, $event_table_id);
-            }
-            // ElasticCandidateIndex::dispatch($lastInsertedId)->onConnection('emails');
+            // Primary ES indexing kept synchronous — guarantees the candidate row is
+            // visible on the AppTracker grid the moment the HTTP redirect fires.
             GeneralMethod::JobApplicationsAddEditUpload($lastInsertedId);
 
             $cachekeys = [
@@ -10201,14 +9649,49 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
             }
 
             $this->currencyConverter = GeneralMethod::currencyConverter();
+            $submittedByEmail = auth()->user()->email;
 
             DB::commit();
 
-            if (! empty($request->job_id)) {
-                return Reply::redirect(url('/service_company/apptracker/clientapp/'.GeneralMethod::value_encrypt($request->job_id).'/all'), __('menu.jobApplications').' '.__($message));
+            // ── V2 async secondary jobs — dispatched after commit so MySQL rows are visible ──
+            $requestData = array_filter(
+                $request->except(['resume', 'photo', 'documents', 'file', 'files']),
+                fn ($val) => ! ($val instanceof \Illuminate\Http\UploadedFile)
+            );
+
+            ProcessCandidateSubmissionJob::dispatch(
+                (int) $application_id,
+                (int) $lastInsertedId,
+                (int) $request->job_id,
+                (int) $jobRow->company_id,
+                (int) $submitted_by,
+                (int) $company_id,
+                (int) 8,
+                (string) $request->email,
+                $requestData
+            )->onConnection('emails');
+
+            QueueCandidateNotificationJob::dispatch(
+                (int) $lastInsertedId,
+                (int) $request->job_id,
+                (int) $company_id,
+                (string) $submittedByEmail
+            )->onConnection('emails');
+            // ─────────────────────────────────────────────────────────────────────────────
+
+            $rawJobId = GeneralMethod::value_decrypt($request->job_id);
+            if (! empty($rawJobId)) {
+                $redirectUrl = url('/service_company/apptracker/clientapp/'.GeneralMethod::value_encrypt($rawJobId).'/all');
             } else {
-                return Reply::redirect(route('service_company.job-applications.table'), __('menu.jobApplications').' '.__($message));
+                $redirectUrl = route('service_company.job-applications.table');
             }
+
+            return Reply::successWithData(__('messages.createdSuccessfully'), [
+                'action' => 'redirect',
+                'url' => $redirectUrl,
+                'candidate_id' => (int) $application_id,
+                'resume' => (string) ($jobApplicationGet->resume ?? ''),
+            ]);
 
         } catch (\Throwable $e) {
             DB::rollBack();
