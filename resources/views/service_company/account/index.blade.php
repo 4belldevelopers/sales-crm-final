@@ -4167,86 +4167,79 @@ $(document).ready(function(){
 
 
 
-        $(document).on('click','#form-submit', function(){					 
-						 
-             const swalWithBootstrapButtons = Swal.mixin({
-                 customClass: {
-                         confirmButton: 'btn btn-success',
-                         cancelButton: 'btn btn-danger'
-                       },
-                  buttonsStyling: false
-             })
-             swalWithBootstrapButtons.fire({
-                               title				: 'Are you sure?',
-                               text				: "You won't be able to revert this!",
-                               icon				: 'warning',
-                               showCancelButton	: true,
-                               confirmButtonText	: 'Yes, update it!',
-                               cancelButtonText	: 'No, cancel!',
-                               reverseButtons	: true 
-                           }).then((result) => {
-               if (result.isConfirmed) {
-                     
-                           var id        	=	1;
-                           var url       	=	"{{ route('service_company.jobs.addUpdateJobServices',':id') }}";
-                           url         	=	url.replace(':id', id);
-                           var baseurl     =	"{{ asset('assets/images/Loading2.gif') }}"; 
-                           var token       =	"{{ csrf_token() }}";
-                           var arrCountry 		=	[];
-                           $('.countries:checked').each(function () {
-                            arrCountry.push($(this).val());
-                           });
-                           var countryCount = arrCountry.length;
-                           var rate_val = $(".rate_val").map(function() {
-                              return this.value;
-                            }).get();
-                            var rateTypeClass = $('.rateTypeClass').val();
-                            var main_status = $('.main_status').val();
-                            var sal_mode = $('select[name="sal_mode"]').val();
-                            var salary_currency = $('select[name="salary_currency"]').val();
-                            var updateId = $('.updateId').val();
-                            var commType = $('.commType').val();
-                            if(commType==2){
-                              sal_mode =null;
-                              salary_currency =null;
+        // Intent: save the complete commercial editor payload immediately while preventing duplicate submissions.
+        $(document).on('click', '#commercial-editor-v3 .copy_current_selected_applicant', function () {
+            var $saveButton = $(this);
+            var $editor = $saveButton.closest('#commercial-editor-v3');
 
-                              rate_val = $(".perecentage_val").map(function() {
-                              return this.value;
-                            }).get();
+            if ($saveButton.prop('disabled')) {
+                return;
+            }
 
+            var id = 1;
+            var url = "{{ route('service_company.jobs.addUpdateJobServices', ':id') }}".replace(':id', id);
+            var token = "{{ csrf_token() }}";
+            var arrCountry = $editor.find('.countries:checked').map(function () {
+                return this.value;
+            }).get();
+            var countryCount = arrCountry.length;
+            var rateVal = $editor.find('.rate_val').map(function () {
+                return this.value;
+            }).get();
+            var rateTypeClass = $editor.find('.rateTypeClass').val();
+            var mainStatus = $editor.find('.main_status').val();
+            var salMode = $editor.find('select[name="sal_mode"]').val();
+            var salaryCurrency = $editor.find('select[name="salary_currency"]').val();
+            var updateId = $editor.find('.updateId').val();
+            var commType = $editor.find('.commType').val();
 
-                            }
-                         				
-                           $.ajax({
-                                   type		: 'POST',
-                                   url			: url,
-                                   data		: {'_token': token, '_method': 'POST', 'arrCountry' : arrCountry, 'rate_val': rate_val,'rateTypeClass':rateTypeClass,'sal_mode':sal_mode,'salary_currency':salary_currency,'updateId':updateId,'commType':commType,'main_status':main_status},
-                                   success 	: function (response) {
-                                           if (response.status == "success") {
-                                            if(rateTypeClass==2){
-                                             $('#fullTimeCount').text(countryCount);
-                                            }
-                                            if(rateTypeClass==1){
-                                              $('#contractCount').text(countryCount);
-                                            }
-                                               swalWithBootstrapButtons.fire(
-                                                                 'Success!',
-                                                                 'Updated Successfully.',
-                                                                 'success'
-                                                               )
-                                           }
-                                     }
-                           });
-                        
-               } 
-               else if (result.dismiss === Swal.DismissReason.cancel) {
-                     swalWithBootstrapButtons.fire(
-                                      'Cancelled',
-                                     'Selected request is safe :)',
-                                     'error'
-                                     )
-               }
-             })	});
+            if (String(commType) === '2') {
+                salMode = null;
+                salaryCurrency = null;
+                rateVal = $editor.find('.perecentage_val').map(function () {
+                    return this.value;
+                }).get();
+            }
+
+            $saveButton.prop('disabled', true).addClass('is-saving').attr('aria-busy', 'true');
+
+            $.ajax({
+                type: 'POST',
+                url: url,
+                data: {
+                    '_token': token,
+                    '_method': 'POST',
+                    'arrCountry': arrCountry,
+                    'rate_val': rateVal,
+                    'rateTypeClass': rateTypeClass,
+                    'sal_mode': salMode,
+                    'salary_currency': salaryCurrency,
+                    'updateId': updateId,
+                    'commType': commType,
+                    'main_status': mainStatus
+                },
+                success: function (response) {
+                    if (response.status === 'success') {
+                        if (String(rateTypeClass) === '2') {
+                            $('#fullTimeCount').text(countryCount);
+                        }
+                        if (String(rateTypeClass) === '1') {
+                            $('#contractCount').text(countryCount);
+                        }
+                        Swal.fire({toast: true, position: 'top-end', icon: 'success', title: 'Commercials saved successfully.', showConfirmButton: false, timer: 2200, timerProgressBar: true});
+                        return;
+                    }
+
+                    Swal.fire({toast: true, position: 'top-end', icon: 'error', title: response.message || 'Commercials could not be saved.', showConfirmButton: false, timer: 3200});
+                },
+                error: function () {
+                    Swal.fire({toast: true, position: 'top-end', icon: 'error', title: 'Commercials could not be saved. Please try again.', showConfirmButton: false, timer: 3200});
+                },
+                complete: function () {
+                    $saveButton.prop('disabled', false).removeClass('is-saving').removeAttr('aria-busy');
+                }
+            });
+        });
 
 
 
