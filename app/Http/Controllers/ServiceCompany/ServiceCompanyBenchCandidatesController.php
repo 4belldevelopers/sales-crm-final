@@ -31,6 +31,7 @@ use App\Services\MailService;
 use App\Services\ShortlistBenchCandidateListingService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Notification;
@@ -1066,15 +1067,34 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
 
         $this->recruiterlist = [];
 
-        $this->qualification = DB::table('qualification_master')->select('*')->whereNotIn('id', [57, 58, 59])->orderBy('qualification_master.display_order', 'ASC')->get();
-        $this->currency = GeneralMethod::currency();
-        $this->salaryMode = GeneralMethod::salaryMode();
-        $this->countries = GeneralMethod::getAllCountryList();
+        // Phase 1 Optimization: Cache static master datasets and avoid unneeded DB calls on Add Candidate view load
+        if (config('feature.talents_v2_enabled')) {
+            $this->qualification = Cache::remember('qualification_master_list', 86400, function () {
+                return DB::table('qualification_master')->select('*')->whereNotIn('id', [57, 58, 59])->orderBy('qualification_master.display_order', 'ASC')->get();
+            });
+            $this->currency = GeneralMethod::currency();
+            $this->salaryMode = GeneralMethod::salaryMode();
+            $this->countries = Cache::remember('country_list_json', 86400, function () {
+                return GeneralMethod::getAllCountryList();
+            });
 
-        $this->cities = []; // GeneralMethod::allCities();
-        $this->default_loc = GeneralMethod::allCitiesSelected([]);
-        $this->currencyConverter = GeneralMethod::currencyConverter();
-        $this->skillExperiences = [];
+            $this->cities = [];
+            $this->default_loc = '';
+            $this->currencyConverter = Cache::remember('currency_converter_rates', 3600, function () {
+                return GeneralMethod::currencyConverter();
+            });
+            $this->skillExperiences = [];
+        } else {
+            $this->qualification = DB::table('qualification_master')->select('*')->whereNotIn('id', [57, 58, 59])->orderBy('qualification_master.display_order', 'ASC')->get();
+            $this->currency = GeneralMethod::currency();
+            $this->salaryMode = GeneralMethod::salaryMode();
+            $this->countries = GeneralMethod::getAllCountryList();
+
+            $this->cities = []; // GeneralMethod::allCities();
+            $this->default_loc = GeneralMethod::allCitiesSelected([]);
+            $this->currencyConverter = GeneralMethod::currencyConverter();
+            $this->skillExperiences = [];
+        }
 
         return response()->view('service_company.bench-candidates.create', $this->data)
             ->header('Cache-Control', 'no-cache, no-store, must-revalidate')
@@ -1084,6 +1104,17 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
 
     public function store(Request $request)
     {
+        // Phase 9 Optimization: Idempotency lock check to prevent duplicate submission writes
+        if (config('feature.talents_v2_enabled')) {
+            $idempotencyKey = $request->header('X-Idempotency-Key') ?: $request->input('_idempotency_token');
+            if (! empty($idempotencyKey)) {
+                $lockKey = 'idempotency_lock:talent:'.$idempotencyKey;
+                $acquired = Cache::lock($lockKey, 10)->get();
+                if (! $acquired) {
+                    return Reply::dataOnly(['status' => 'error', 'msgType' => 'warning', 'message' => 'A submission is already in progress. Please wait.']);
+                }
+            }
+        }
 
         $packageStatus = GeneralMethod::validatePackageRet('CVACCESS');
 
@@ -1392,23 +1423,57 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
                 }
             }
 
-            if (! empty($skillArr)) {
-                if (DB::table('job_application_skills')->where('job_application_id', '=', @$benchApplication->id)->exists()) {
-                    DB::table('job_application_skills')->where('job_application_id', '=', @$benchApplication->id)->delete();
-                }
-                foreach ($skillArr as $sval) {
-                    $values = [
-                        'job_application_id' => $benchApplication->id,
-                        'skills' => $sval['value'],
-                    ];
-                    if (! DB::table('job_application_skills')->where('job_application_id', '=', $benchApplication->id)->where('skills', 'LIKE', '%'.$sval['value'].'%')->exists()) {
-                        DB::table('job_application_skills')->insert($values);
+            // Phase 3 Optimization: Bulk insertion for job_application_skills to eliminate N+1 DB queries
+            if (config('feature.talents_v2_enabled')) {
+                if (! empty($skillArr) || ! empty($request->current_designation)) {
+                    DB::table('job_application_skills')->where('job_application_id', $benchApplication->id)->delete();
+                    $insertSkills = [];
+                    $seenSkills = [];
+                    if (! empty($skillArr)) {
+                        foreach ($skillArr as $sval) {
+                            $skillName = trim($sval['value']);
+                            if ($skillName !== '' && ! isset($seenSkills[strtolower($skillName)])) {
+                                $seenSkills[strtolower($skillName)] = true;
+                                $insertSkills[] = [
+                                    'job_application_id' => $benchApplication->id,
+                                    'skills' => $skillName,
+                                ];
+                            }
+                        }
+                    }
+                    if (! empty($request->current_designation)) {
+                        $desigName = trim($request->current_designation);
+                        if ($desigName !== '' && ! isset($seenSkills[strtolower($desigName)])) {
+                            $seenSkills[strtolower($desigName)] = true;
+                            $insertSkills[] = [
+                                'job_application_id' => $benchApplication->id,
+                                'skills' => $desigName,
+                            ];
+                        }
+                    }
+                    if (! empty($insertSkills)) {
+                        DB::table('job_application_skills')->insert($insertSkills);
                     }
                 }
-            }
+            } else {
+                if (! empty($skillArr)) {
+                    if (DB::table('job_application_skills')->where('job_application_id', '=', @$benchApplication->id)->exists()) {
+                        DB::table('job_application_skills')->where('job_application_id', '=', @$benchApplication->id)->delete();
+                    }
+                    foreach ($skillArr as $sval) {
+                        $values = [
+                            'job_application_id' => $benchApplication->id,
+                            'skills' => $sval['value'],
+                        ];
+                        if (! DB::table('job_application_skills')->where('job_application_id', '=', $benchApplication->id)->where('skills', 'LIKE', '%'.$sval['value'].'%')->exists()) {
+                            DB::table('job_application_skills')->insert($values);
+                        }
+                    }
+                }
 
-            if (! DB::table('job_application_skills')->where('job_application_id', '=', $benchApplication->id)->where('skills', 'LIKE', '%'.@$request->current_designation.'%')->exists()) {
-                DB::table('job_application_skills')->insert(['job_application_id' => $benchApplication->id, 'skills' => @$request->current_designation]);
+                if (! DB::table('job_application_skills')->where('job_application_id', '=', $benchApplication->id)->where('skills', 'LIKE', '%'.@$request->current_designation.'%')->exists()) {
+                    DB::table('job_application_skills')->insert(['job_application_id' => $benchApplication->id, 'skills' => @$request->current_designation]);
+                }
             }
 
             if (! is_null($request->recruiter)) {
@@ -1597,8 +1662,12 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
 
             if ($request->edit_token == '') {
 
-                // ElasticBenchCandidateIndex::dispatch($benchApplication->id)->onConnection('emails');
-                GeneralMethod::elasticBenchCandidateAddEditIndex($benchApplication->id);
+                // Phase 3 & 10 Optimization: Offload candidate indexing to background Horizon queue after DB commit
+                if (config('feature.talents_v2_enabled')) {
+                    ElasticBenchCandidateIndex::dispatch($benchApplication->id)->afterCommit();
+                } else {
+                    GeneralMethod::elasticBenchCandidateAddEditIndex($benchApplication->id);
+                }
 
                 $skills = $request->input('skills', []);
                 $years = $request->input('years', []);
@@ -1630,114 +1699,9 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
                     $packageStatus = GeneralMethod::packageRedeem($event_name, $event_table_name, $event_table_id);
                 }
             } else {
-                $exists = $this->elasticService->getClient()->exists([
-                    'index' => ELASTIC_CANDIDATES_BENCH,
-                    'id' => $benchApplication->id,
-                ]);
-                if ($exists) {
-                    // dd($benchApplication->id);
-                    $applications_up = JobApplication::select(
-                        'job_applications.*',
-                        'state_list.state as state_name',
-                        'city_list.city as city_name',
-                        'countries.country_name',
-                        'qualification_master.name as qualification_name')
-                        ->join('bench_master_status', 'bench_master_status.id', 'job_applications.status')
-                        ->leftjoin('users', 'users.id', 'job_applications.submitted_by')
-                        ->leftjoin('companies', 'companies.id', 'job_applications.company_id')
-                        ->leftjoin('qualification_master', 'qualification_master.id', 'job_applications.qualification')
-                        ->leftJoin('countries', 'countries.id', '=', 'job_applications.country')
-                        ->leftJoin('state_list', 'state_list.id', '=', 'job_applications.state')
-                        ->leftJoin('city_list', 'city_list.city_id', '=', 'job_applications.city_id')
-                        ->where('job_applications.id', $benchApplication->id)
-                        ->where('condidate_type', '=', 'bench_condidate')
-                        ->first();
-                    $job_application_skills = DB::table('job_application_skills')
-                        ->where('job_application_id', $benchApplication->id)
-                        ->get()
-                        ->map(fn ($s) => [
-                            'id' => $s->id,
-                            'job_application_id' => $s->id,
-                            'skills' => strtolower($s->skills),
-                        ])
-                        ->toArray();
-                    // dd($job_application_skills);
-                    $updateParams = [
-                        'index' => ELASTIC_CANDIDATES_BENCH,
-                        'id' => $benchApplication->id,
-                        'body' => [
-                            'doc' => [
-                                'thirdparty_company_id' => $applications_up->thirdparty_company_id,
-                                'full_name' => $applications_up->full_name,
-                                'email' => $applications_up->email,
-                                'phone' => $applications_up->phone,
-                                'np_id' => $applications_up->np_id,
-                                'serving_notice_period_mode' => $applications_up->serving_notice_period_mode,
-                                'country' => $applications_up->country,
-                                'state' => $applications_up->state,
-                                'city' => $applications_up->city,
-                                'gender' => $applications_up->gender,
-                                'careersummary' => $applications_up->careersummary,
-                                'nationality' => $applications_up->nationality,
-                                'wm' => $applications_up->wm,
-                                'employmentType' => $applications_up->employmentType,
-                                'oh' => $applications_up->oh,
-                                'visastatu' => $applications_up->visastatu,
-                                'referencename' => $applications_up->referencename,
-                                'city_id' => $applications_up->city_id,
-                                'skills' => $applications_up->skills,
-                                'photo' => $applications_up->photo,
-                                'job_id' => $applications_up->job_id,
-                                'total_exp' => $applications_up->total_exp,
-                                'rel_exp' => $applications_up->rel_exp,
-                                'ctc' => $applications_up->ctc,
-                                'job_application_skills' => $job_application_skills,
-                                'current_ctc_cur' => $applications_up->current_ctc_cur,
-                                'current_ctc_mode' => $applications_up->current_ctc_mode,
-                                'current_designation' => $applications_up->current_designation,
-                                'ectc' => $applications_up->ectc,
-                                'current_ectc_cur' => $applications_up->current_ectc_cur,
-                                'current_ectc_mode' => $applications_up->current_ectc_mode,
-                                'current_company' => $applications_up->current_company,
-                                'ctc_hourly' => $applications_up->ctc_hourly,
-                                'ctc_monthly' => $applications_up->ctc_monthly,
-                                'ctc_yearly' => $applications_up->ctc_yearly,
-                                'ectc_hourly' => $applications_up->ectc_hourly,
-                                'ectc_monthly' => $applications_up->ectc_monthly,
-                                'ectc_yearly' => $applications_up->ectc_yearly,
-                                'status' => $applications_up->status,
-                                'duplicate' => $applications_up->duplicate,
-                                'pay_rate_currency' => $applications_up->pay_rate_currency,
-                                'pay_rate_amount' => $applications_up->pay_rate_amount,
-                                'pay_rate_mode' => $applications_up->pay_rate_mode,
-                                'bill_rate_currency' => $applications_up->bill_rate_currency,
-                                'bill_rate_amount' => $applications_up->bill_rate_amount,
-                                'bill_rate_mode' => $applications_up->bill_rate_mode,
-                                'condidate_type' => $applications_up->condidate_type,
-                                'master_status_id' => $applications_up->master_status_id,
-                                'is_viewed' => $applications_up->is_viewed,
-                                'column_priority' => $applications_up->column_priority,
-                                'phone_code' => $applications_up->phone_code,
-                                'second_phone_code' => $applications_up->second_phone_code,
-                                'secondary_mobile' => $applications_up->secondary_mobile,
-                                'resume' => $applications_up->resume,
-                                'qualification_name' => $applications_up->qualification_name,
-                                'country_name' => $applications_up->country_name,
-                                'state_name' => $applications_up->state_name,
-                                'city_name' => $applications_up->city_name,
-                                'dob' => $applications_up->dob,
-                                'linkedin' => $applications_up->linkedin,
-                                'github' => $applications_up->github,
-                                'behance' => $applications_up->behance,
-                                'otherLink' => $applications_up->otherLink,
-                            ],
-                            'doc_as_upsert' => false, // Changed to false since we verified existence
-                        ],
-                        'refresh' => true, // Force immediate refresh
-                    ];
-
-                    $this->elasticService->getClient()->update($updateParams);
-
+                // Phase 4 & 10 Optimization: Offload candidate update indexing to Horizon queue after DB commit
+                if (config('feature.talents_v2_enabled')) {
+                    ElasticBenchCandidateIndex::dispatch($benchApplication->id)->afterCommit();
                     GeneralMethod::addCompanyBenchCandidate($company_id, $benchApplication->id);
 
                     $skills = $request->input('skills', []);
@@ -1746,36 +1710,198 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
                     $ratings = $request->input('ratings', []);
 
                     if (count($skillArr) > 0) {
-
                         foreach ($skills as $skillKey => $exp) {
                             if (! empty($exp)) {
-                                DB::table('bench_candidate_skill_experience')->updateOrInsert([
-                                    'candidate_id' => $benchApplication->id,
-                                    'skill_key' => $exp],
+                                DB::table('bench_candidate_skill_experience')->updateOrInsert(
                                     [
-                                        'year' => ($years[$skillKey]) ? (int) $years[$skillKey] : null,
-                                        'month' => ($months[$skillKey]) ? (int) $months[$skillKey] : null,
-                                        'rating' => ($ratings[$skillKey]) ? (int) $ratings[$skillKey] : null,
+                                        'candidate_id' => $benchApplication->id,
+                                        'skill_key' => $exp,
+                                    ],
+                                    [
+                                        'year' => filled($years[$skillKey]) ? (int) $years[$skillKey] : null,
+                                        'month' => filled($months[$skillKey]) ? (int) $months[$skillKey] : null,
+                                        'rating' => filled($ratings[$skillKey]) ? (int) $ratings[$skillKey] : null,
                                         'updated_at' => now(),
                                     ]
                                 );
                             }
-
                         }
                     }
+                } else {
+                    $exists = $this->elasticService->getClient()->exists([
+                        'index' => ELASTIC_CANDIDATES_BENCH,
+                        'id' => $benchApplication->id,
+                    ]);
+                    if ($exists) {
+                        // dd($benchApplication->id);
+                        $applications_up = JobApplication::select(
+                            'job_applications.*',
+                            'state_list.state as state_name',
+                            'city_list.city as city_name',
+                            'countries.country_name',
+                            'qualification_master.name as qualification_name')
+                            ->join('bench_master_status', 'bench_master_status.id', 'job_applications.status')
+                            ->leftjoin('users', 'users.id', 'job_applications.submitted_by')
+                            ->leftjoin('companies', 'companies.id', 'job_applications.company_id')
+                            ->leftjoin('qualification_master', 'qualification_master.id', 'job_applications.qualification')
+                            ->leftJoin('countries', 'countries.id', '=', 'job_applications.country')
+                            ->leftJoin('state_list', 'state_list.id', '=', 'job_applications.state')
+                            ->leftJoin('city_list', 'city_list.city_id', '=', 'job_applications.city_id')
+                            ->where('job_applications.id', $benchApplication->id)
+                            ->where('condidate_type', '=', 'bench_condidate')
+                            ->first();
+                        $job_application_skills = DB::table('job_application_skills')
+                            ->where('job_application_id', $benchApplication->id)
+                            ->get()
+                            ->map(fn ($s) => [
+                                'id' => $s->id,
+                                'job_application_id' => $s->id,
+                                'skills' => strtolower($s->skills),
+                            ])
+                            ->toArray();
+                        // dd($job_application_skills);
+                        $updateParams = [
+                            'index' => ELASTIC_CANDIDATES_BENCH,
+                            'id' => $benchApplication->id,
+                            'body' => [
+                                'doc' => [
+                                    'thirdparty_company_id' => $applications_up->thirdparty_company_id,
+                                    'full_name' => $applications_up->full_name,
+                                    'email' => $applications_up->email,
+                                    'phone' => $applications_up->phone,
+                                    'np_id' => $applications_up->np_id,
+                                    'serving_notice_period_mode' => $applications_up->serving_notice_period_mode,
+                                    'country' => $applications_up->country,
+                                    'state' => $applications_up->state,
+                                    'city' => $applications_up->city,
+                                    'gender' => $applications_up->gender,
+                                    'careersummary' => $applications_up->careersummary,
+                                    'nationality' => $applications_up->nationality,
+                                    'wm' => $applications_up->wm,
+                                    'employmentType' => $applications_up->employmentType,
+                                    'oh' => $applications_up->oh,
+                                    'visastatu' => $applications_up->visastatu,
+                                    'referencename' => $applications_up->referencename,
+                                    'city_id' => $applications_up->city_id,
+                                    'skills' => $applications_up->skills,
+                                    'photo' => $applications_up->photo,
+                                    'job_id' => $applications_up->job_id,
+                                    'total_exp' => $applications_up->total_exp,
+                                    'rel_exp' => $applications_up->rel_exp,
+                                    'ctc' => $applications_up->ctc,
+                                    'job_application_skills' => $job_application_skills,
+                                    'current_ctc_cur' => $applications_up->current_ctc_cur,
+                                    'current_ctc_mode' => $applications_up->current_ctc_mode,
+                                    'current_designation' => $applications_up->current_designation,
+                                    'ectc' => $applications_up->ectc,
+                                    'current_ectc_cur' => $applications_up->current_ectc_cur,
+                                    'current_ectc_mode' => $applications_up->current_ectc_mode,
+                                    'current_company' => $applications_up->current_company,
+                                    'ctc_hourly' => $applications_up->ctc_hourly,
+                                    'ctc_monthly' => $applications_up->ctc_monthly,
+                                    'ctc_yearly' => $applications_up->ctc_yearly,
+                                    'ectc_hourly' => $applications_up->ectc_hourly,
+                                    'ectc_monthly' => $applications_up->ectc_monthly,
+                                    'ectc_yearly' => $applications_up->ectc_yearly,
+                                    'status' => $applications_up->status,
+                                    'duplicate' => $applications_up->duplicate,
+                                    'pay_rate_currency' => $applications_up->pay_rate_currency,
+                                    'pay_rate_amount' => $applications_up->pay_rate_amount,
+                                    'pay_rate_mode' => $applications_up->pay_rate_mode,
+                                    'bill_rate_currency' => $applications_up->bill_rate_currency,
+                                    'bill_rate_amount' => $applications_up->bill_rate_amount,
+                                    'bill_rate_mode' => $applications_up->bill_rate_mode,
+                                    'condidate_type' => $applications_up->condidate_type,
+                                    'master_status_id' => $applications_up->master_status_id,
+                                    'is_viewed' => $applications_up->is_viewed,
+                                    'column_priority' => $applications_up->column_priority,
+                                    'phone_code' => $applications_up->phone_code,
+                                    'second_phone_code' => $applications_up->second_phone_code,
+                                    'secondary_mobile' => $applications_up->secondary_mobile,
+                                    'resume' => $applications_up->resume,
+                                    'qualification_name' => $applications_up->qualification_name,
+                                    'country_name' => $applications_up->country_name,
+                                    'state_name' => $applications_up->state_name,
+                                    'city_name' => $applications_up->city_name,
+                                    'dob' => $applications_up->dob,
+                                    'linkedin' => $applications_up->linkedin,
+                                    'github' => $applications_up->github,
+                                    'behance' => $applications_up->behance,
+                                    'otherLink' => $applications_up->otherLink,
+                                ],
+                                'doc_as_upsert' => false, // Changed to false since we verified existence
+                            ],
+                            'refresh' => true, // Force immediate refresh
+                        ];
 
+                        $this->elasticService->getClient()->update($updateParams);
+
+                        GeneralMethod::addCompanyBenchCandidate($company_id, $benchApplication->id);
+
+                        $skills = $request->input('skills', []);
+                        $years = $request->input('years', []);
+                        $months = $request->input('months', []);
+                        $ratings = $request->input('ratings', []);
+
+                        if (count($skillArr) > 0) {
+
+                            foreach ($skills as $skillKey => $exp) {
+                                if (! empty($exp)) {
+                                    DB::table('bench_candidate_skill_experience')->updateOrInsert([
+                                        'candidate_id' => $benchApplication->id,
+                                        'skill_key' => $exp],
+                                        [
+                                            'year' => ($years[$skillKey]) ? (int) $years[$skillKey] : null,
+                                            'month' => ($months[$skillKey]) ? (int) $months[$skillKey] : null,
+                                            'rating' => ($ratings[$skillKey]) ? (int) $ratings[$skillKey] : null,
+                                            'updated_at' => now(),
+                                        ]
+                                    );
+                                }
+
+                            }
+                        }
+
+                    }
                 }
             }
 
-            $cachekeys = [
-                'allbenchcandidates_version_user_'.$this->user->id,
-                'benchviewmore_version_user_'.$this->user->id,
-            ];
-            foreach ($cachekeys as $key) {
-                GeneralMethod::cacheClean($key);
+            // Phase 7 Optimization: Invalidate company-wide candidate cache keys and flush Redis tags
+            if (config('feature.talents_v2_enabled')) {
+                $cachekeys = [
+                    'allbenchcandidates_version_user_'.$this->user->id,
+                    'benchviewmore_version_user_'.$this->user->id,
+                    'allbenchcandidates_version_company_'.$company_id,
+                    'benchcandidates_stats_company_'.$company_id,
+                ];
+                foreach ($cachekeys as $key) {
+                    GeneralMethod::cacheClean($key);
+                }
+                try {
+                    Cache::tags(['company_'.$company_id, 'bench_candidates'])->flush();
+                } catch (\BadMethodCallException) {
+                    // Fallback when Cache store driver does not support tagging
+                }
+            } else {
+                $cachekeys = [
+                    'allbenchcandidates_version_user_'.$this->user->id,
+                    'benchviewmore_version_user_'.$this->user->id,
+                ];
+                foreach ($cachekeys as $key) {
+                    GeneralMethod::cacheClean($key);
+                }
             }
 
             DB::commit();
+
+            // Phase 6 Optimization: Standardized JSON response payload contract with metadata
+            if (config('feature.talents_v2_enabled')) {
+                return Reply::successWithData(__('menu.jobApplications').' '.($added ? __('messages.createdSuccessfully') : __('messages.updatedSuccessfully')), [
+                    'candidate_id' => $benchApplication->id,
+                    'action' => $added ? 'created' : 'updated',
+                    'url' => url('service_company/bench-candidates'),
+                ]);
+            }
 
             return Reply::redirect(url('service_company/bench-candidates'), __('menu.jobApplications').' '.__('messages.createdSuccessfully'));
 
@@ -1798,34 +1924,67 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
         $company_id = '';
         $company_id = auth()->user()->company_id;
 
-        $this->statuses = ApplicationStatus::all();
-        $this->application = JobApplication::find($id);
-        // dd($this->application);
-        $this->jobQuestion = @$this->application->job->questions;
+        // Phase 2 Optimization: Consolidate duplicate DB queries, scope job selection, and cache static master lookups
+        if (config('feature.talents_v2_enabled')) {
+            $this->statuses = Cache::remember('application_statuses', 86400, fn () => ApplicationStatus::all());
+            $this->application = JobApplication::with('job')->find($id);
+            $this->jobQuestion = @$this->application->job->questions;
 
-        $this->jobs = Job::select('id', 'title', 'location_id', 'status', 'start_date', 'end_date', 'section_visibility')->get();
+            $this->jobs = Job::where('company_id', $company_id)
+                ->select('id', 'title', 'location_id', 'status', 'start_date', 'end_date', 'section_visibility')
+                ->limit(200)
+                ->get();
 
-        $this->noticeperiod = NoticePeriod::all();
-        $this->qualification = DB::table('qualification_master')->select('*')->whereNotIn('id', [57, 58, 59])->orderBy('qualification_master.display_order', 'ASC')->get();
-        $this->interviewStatus = DB::table('master_status')->select('*')->orderBy('priority', 'ASC')->get();
-        $this->childArr = DB::table('candidate_status')
-            ->select('*')->where('parent', $this->application->master_status_id)
-            ->where('company_id', $this->user->company_id)
-            ->orderBy('priority', 'ASC')
-            ->get();
+            $this->noticeperiod = Cache::remember('notice_periods', 86400, fn () => NoticePeriod::all());
+            $this->qualification = Cache::remember('qualification_master_list', 86400, function () {
+                return DB::table('qualification_master')->select('*')->whereNotIn('id', [57, 58, 59])->orderBy('qualification_master.display_order', 'ASC')->get();
+            });
+            $this->interviewStatus = Cache::remember('master_statuses_priority', 86400, fn () => DB::table('master_status')->select('*')->orderBy('priority', 'ASC')->get());
+            $this->childArr = DB::table('candidate_status')
+                ->select('*')->where('parent', $this->application->master_status_id)
+                ->where('company_id', $this->user->company_id)
+                ->orderBy('priority', 'ASC')
+                ->get();
 
-        $this->company_id = $this->user->company_id;
-        $this->application_add_detail_cnt = DB::table('application_additional_detail')
-            ->select('*')
-            ->where('application_id', $this->application->id)
-            ->orderBy('application_additional_detail.id', 'ASC')
-            ->count();
+            $this->company_id = $this->user->company_id;
 
-        $this->application_add_detail = DB::table('application_additional_detail')
-            ->select('*')
-            ->where('application_id', $this->application->id)
-            ->orderBy('application_additional_detail.id', 'ASC')
-            ->get();
+            // Consolidated single query for application_additional_detail (eliminates 3x duplicate DB calls)
+            $this->application_add_detail = DB::table('application_additional_detail')
+                ->select('*')
+                ->where('application_id', $this->application->id)
+                ->orderBy('id', 'ASC')
+                ->get();
+            $this->application_add_detail_cnt = $this->application_add_detail->count();
+            $this->application_additional_detail = $this->application_add_detail;
+        } else {
+            $this->statuses = ApplicationStatus::all();
+            $this->application = JobApplication::find($id);
+            $this->jobQuestion = @$this->application->job->questions;
+
+            $this->jobs = Job::select('id', 'title', 'location_id', 'status', 'start_date', 'end_date', 'section_visibility')->get();
+
+            $this->noticeperiod = NoticePeriod::all();
+            $this->qualification = DB::table('qualification_master')->select('*')->whereNotIn('id', [57, 58, 59])->orderBy('qualification_master.display_order', 'ASC')->get();
+            $this->interviewStatus = DB::table('master_status')->select('*')->orderBy('priority', 'ASC')->get();
+            $this->childArr = DB::table('candidate_status')
+                ->select('*')->where('parent', $this->application->master_status_id)
+                ->where('company_id', $this->user->company_id)
+                ->orderBy('priority', 'ASC')
+                ->get();
+
+            $this->company_id = $this->user->company_id;
+            $this->application_add_detail_cnt = DB::table('application_additional_detail')
+                ->select('*')
+                ->where('application_id', $this->application->id)
+                ->orderBy('application_additional_detail.id', 'ASC')
+                ->count();
+
+            $this->application_add_detail = DB::table('application_additional_detail')
+                ->select('*')
+                ->where('application_id', $this->application->id)
+                ->orderBy('application_additional_detail.id', 'ASC')
+                ->get();
+        }
 
         // dd($id);
         // $jobId 							=	$this->application->job_id;
@@ -1855,24 +2014,42 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
         $this->company_name = @$country->company_name;
 
         $this->page_event = 'EDIT';
-        $this->currency = GeneralMethod::currency();
-        $this->salaryMode = GeneralMethod::salaryMode();
-        $this->countries = GeneralMethod::getAllCountryList();
-        $this->statelist = GeneralMethod::statelist($this->application->country);
-        $this->documents = DB::table('documents')->select('*')->where('documentable_id', $this->application->id)->where('name', 'Resume')->first();
+        if (config('feature.talents_v2_enabled')) {
+            $this->currency = GeneralMethod::currency();
+            $this->salaryMode = GeneralMethod::salaryMode();
+            $this->countries = Cache::remember('country_list_json', 86400, fn () => GeneralMethod::getAllCountryList());
+            $this->statelist = GeneralMethod::statelist($this->application->country);
+            $this->documents = DB::table('documents')->select('*')->where('documentable_id', $this->application->id)->where('name', 'Resume')->first();
 
-        $this->job_additional_detail = '';
-        $this->job_additional_detail = DB::table('bench_additional_detail')
-            ->select('*')
-            ->where('bench_additional_detail.bench_id', '=', $this->application->id)
-            ->orderBy('bench_additional_detail.id', 'ASC')
-            ->get();
+            $this->job_additional_detail = DB::table('bench_additional_detail')
+                ->select('*')
+                ->where('bench_additional_detail.bench_id', '=', $this->application->id)
+                ->orderBy('bench_additional_detail.id', 'ASC')
+                ->get();
 
-        $this->application_additional_detail = DB::table('application_additional_detail')
-            ->select('*')
-            ->where('application_additional_detail.application_id', '=', $this->application->id)
-            ->orderBy('application_additional_detail.id', 'ASC')
-            ->get();
+            $this->cities = [];
+        } else {
+            $this->currency = GeneralMethod::currency();
+            $this->salaryMode = GeneralMethod::salaryMode();
+            $this->countries = GeneralMethod::getAllCountryList();
+            $this->statelist = GeneralMethod::statelist($this->application->country);
+            $this->documents = DB::table('documents')->select('*')->where('documentable_id', $this->application->id)->where('name', 'Resume')->first();
+
+            $this->job_additional_detail = '';
+            $this->job_additional_detail = DB::table('bench_additional_detail')
+                ->select('*')
+                ->where('bench_additional_detail.bench_id', '=', $this->application->id)
+                ->orderBy('bench_additional_detail.id', 'ASC')
+                ->get();
+
+            $this->application_additional_detail = DB::table('application_additional_detail')
+                ->select('*')
+                ->where('application_additional_detail.application_id', '=', $this->application->id)
+                ->orderBy('application_additional_detail.id', 'ASC')
+                ->get();
+
+            $this->cities = GeneralMethod::allCities();
+        }
 
         $this->cityListArr = '';
         if ($this->application->country == 101) {
