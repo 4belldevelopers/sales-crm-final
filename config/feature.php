@@ -31,4 +31,14 @@ return [
     */
     'account_v2' => (bool) env('FEATURE_ACCOUNT_V2', true),
 
+    /*
+    |--------------------------------------------------------------------------
+    | Jobs Module V2 Engine
+    |
+    | When true: uses JobService, Redis JobCacheKeys, EnsureIdempotentSubmission,
+    | JobConcurrencyLock, and asynchronous Horizon queue offloading for Jobs module.
+    |--------------------------------------------------------------------------
+    */
+    'jobs_v2_enabled' => (bool) env('FEATURE_JOBS_V2_ENABLED', true),
+
 ];
