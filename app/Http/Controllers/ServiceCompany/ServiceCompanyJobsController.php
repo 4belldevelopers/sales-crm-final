@@ -14177,10 +14177,13 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
             }
         }
 
-        if (count($request->arrCountry) > 0) {
-            DB::table('commericial_countries')->where('company_id', $company_id)->where('commtype', $commType)->delete();
-            for ($i = 0; $i < count($request->arrCountry); $i++) {
-                $value = ['company_id' => $company_id, 'commericial_id' => $commericialId, 'commtype' => $commType, 'country_id' => $request->arrCountry[$i]];
+        $countryIds = $request->input('arrCountry', []);
+
+        // Intent: replace this tenant's complete country selection, including a valid empty selection.
+        DB::table('commericial_countries')->where('company_id', $company_id)->where('commtype', $commType)->delete();
+        if (count($countryIds) > 0) {
+            for ($i = 0; $i < count($countryIds); $i++) {
+                $value = ['company_id' => $company_id, 'commericial_id' => $commericialId, 'commtype' => $commType, 'country_id' => $countryIds[$i]];
                 DB::table('commericial_countries')->insertGetId($value);
             }
         }
