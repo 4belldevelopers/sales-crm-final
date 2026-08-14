@@ -237,7 +237,7 @@ class ProcessCandidateUpdateJob implements ShouldQueue
                             ->implode(',');
 
                         // Format interview dates
-                        $defaultTimeFormat = GeneralMethod::defaultTimeFormat();
+                        $defaultTimeFormat = GeneralMethod::defaultTimeFormat($this->companyId);
                         $formatDt = function ($date, $time) use ($defaultTimeFormat) {
                             if (empty($date) || empty($time)) {
                                 return null;
