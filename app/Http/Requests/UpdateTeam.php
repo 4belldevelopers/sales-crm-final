@@ -2,8 +2,14 @@
 
 namespace App\Http\Requests;
 
-use Illuminate\Foundation\Http\FormRequest;
-
+/**
+ * Form Request: Update Team Member Profile
+ *
+ * Intent: Validates incoming request parameters when updating an existing team member profile.
+ *
+ * Author: Antigravity AI
+ * Date: August 14, 2026
+ */
 class UpdateTeam extends CoreRequest
 {
     /**
@@ -24,11 +30,26 @@ class UpdateTeam extends CoreRequest
     public function rules()
     {
         return [
-            'name' => 'required',
-            'email' => 'required|unique:users,email,'.$this->route('team'),
-            'image' => 'image|max:2048',
-            'mobile' => 'required',
-            'calling_code' => 'required_with:mobile'
+            'name' => 'required|string|max:191',
+            'mobile' => 'nullable|string|max:30',
+            'designation' => 'nullable|string|max:100',
+            'country' => 'nullable',
+            'state' => 'nullable',
+            'city' => 'nullable',
+            'logo' => 'nullable|image|max:2048',
+        ];
+    }
+
+    /**
+     * Custom validation messages.
+     *
+     * @return array
+     */
+    public function messages()
+    {
+        return [
+            'name.required' => 'Full name is required',
+            'logo.max' => 'Image file size must not exceed 2MB',
         ];
     }
 }

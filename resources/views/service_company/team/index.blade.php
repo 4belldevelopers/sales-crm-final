@@ -1305,18 +1305,30 @@
                         return;
                     }
                     if (response.status === 'success') {
-                        // Parse roles from the returned HTML and populate select
-                        var $html = $(response.view);
                         var $select = $('#inviteRole');
                         $select.find('option:not([disabled])').remove();
-                        $html.find('input[type="radio"][name="role_id"]').each(function() {
-                            var val = $(this).val();
-                            var label = $(this).siblings('label').find('.fw-bolder').text().trim()
-                                     || $(this).closest('.d-flex').find('.fw-bolder').text().trim();
-                            if (val && label) {
-                                $select.append('<option value="' + val + '">' + label + '</option>');
-                            }
-                        });
+
+                        // Phase 1 Optimization: Populate options directly from JSON roles array
+                        if (response.roles && response.roles.length > 0) {
+                            $.each(response.roles, function(i, role) {
+                                var val = role.id;
+                                var label = role.display_name || role.name;
+                                if (val && label) {
+                                    $select.append('<option value="' + val + '">' + label + '</option>');
+                                }
+                            });
+                        } else if (response.view) {
+                            // Fallback to legacy HTML string parsing
+                            var $html = $(response.view);
+                            $html.find('input[type="radio"][name="role_id"]').each(function() {
+                                var val = $(this).val();
+                                var label = $(this).siblings('label').find('.fw-bolder').text().trim()
+                                         || $(this).closest('.d-flex').find('.fw-bolder').text().trim();
+                                if (val && label) {
+                                    $select.append('<option value="' + val + '">' + label + '</option>');
+                                }
+                            });
+                        }
                     }
                 });
                 // Reset form
