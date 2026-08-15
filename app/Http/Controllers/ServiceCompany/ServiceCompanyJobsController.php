@@ -14098,14 +14098,18 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
         $this->billingTriggers = self::COMMERCIAL_BILLING_TRIGGERS;
         $this->paymentTerms = self::COMMERCIAL_PAYMENT_TERMS;
         $this->employmentType = GeneralMethod::employmentType();
-        // Intent: load the global range master once per cache window; this table contains no tenant-specific data.
-        $this->commercialExperienceBands = Cache::remember('commercial_experience_bands:v1', 3600, function () {
-            return DB::table('commercial_experience_bands')
+        // Intent: load the global range master from cache, replacing an old empty cache entry left by a pre-master deployment.
+        $commercialExperienceBands = Cache::get('commercial_experience_bands:v1');
+        if (collect($commercialExperienceBands)->isEmpty()) {
+            $commercialExperienceBands = DB::table('commercial_experience_bands')
                 ->select(['id', 'code', 'label', 'min_experience', 'max_experience', 'sort_order'])
                 ->where('is_active', 1)
                 ->orderBy('sort_order')
                 ->get();
-        });
+
+            Cache::put('commercial_experience_bands:v1', $commercialExperienceBands, 3600);
+        }
+        $this->commercialExperienceBands = $commercialExperienceBands;
 
         $commericials = DB::table('commericials')
             ->where('commtype', $id)

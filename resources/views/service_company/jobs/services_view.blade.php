@@ -6,14 +6,23 @@
     $commercialDetails = collect($commercial['commericial_details'] ?? [])->keyBy('exp');
     $selectedCountryIds = array_map('intval', $commercial['commericial_countries'] ?? []);
     $fallbackDefaultRate = $isFulltime ? (@$default_rates->rates_perecentage ?? 8.33) : (@$default_rates->rates_fixed ?? 0);
-    $firstExperienceIndex = (int) data_get(collect($commercialExperienceBands ?? [])->sortBy('sort_order')->first(), 'min_experience', 0);
+    // Intent: preserve a usable dynamic range payload when an older AJAX response did not include the controller value.
+    $experienceBandRows = collect($commercialExperienceBands ?? []);
+    if ($experienceBandRows->isEmpty()) {
+        $experienceBandRows = \Illuminate\Support\Facades\DB::table('commercial_experience_bands')
+            ->select(['id', 'code', 'label', 'min_experience', 'max_experience', 'sort_order'])
+            ->where('is_active', 1)
+            ->orderBy('sort_order')
+            ->get();
+    }
+    $firstExperienceIndex = (int) data_get($experienceBandRows->sortBy('sort_order')->first(), 'min_experience', 0);
     $defaultRate = data_get($commercialDetails->get($firstExperienceIndex), 'rate', $fallbackDefaultRate);
     $isFreeModel = $commercialDetails->isNotEmpty() && $commercialDetails->every(function ($detail) {
         return (float) data_get($detail, 'rate', 0) === 0.0;
     });
     $selectedCommercialModel = $isFreeModel ? 0 : $rateType;
     // Intent: make range labels and boundaries data-driven while retaining the existing numeric exp keys used by commercial details.
-    $experienceRanges = collect($commercialExperienceBands ?? [])
+    $experienceRanges = $experienceBandRows
         ->map(function ($band) {
             $minimum = (int) $band->min_experience;
             $maximum = (int) $band->max_experience;
@@ -56,6 +65,7 @@
 .cev3-workspace{grid-template-columns:minmax(0,1fr);gap:12px}.cev3-panel{padding:16px;border-color:#d7e0ec;box-shadow:0 2px 6px rgba(15,23,42,.045)}.cev3-section+.cev3-section{margin-top:0;padding-top:0;border-top:0}.cev3-default-pricing-card{display:grid;align-items:start;gap:14px;padding:14px;background:linear-gradient(135deg,#fbfcff,#f8f7ff);border:1px solid #e3e6f2;border-radius:8px}.cev3-model-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}.cev3-model-option{position:relative;display:grid;grid-template-columns:38px minmax(0,1fr);align-items:start;gap:11px;min-height:112px;padding:16px;color:#27365a;background:#fff;border:1px solid #dce3ee;border-radius:9px;text-align:left;transition:border-color .16s,box-shadow .16s,background .16s}.cev3-model-option:hover{border-color:#aaa5ff;background:#fcfbff}.cev3-model-option.active{border-color:#6657ff;background:#fcfbff;box-shadow:0 0 0 1px rgba(102,87,255,.12)}.cev3-model-option b{display:block;margin:2px 0 7px;color:#111b3d;font-size:11.5px;font-weight:600}.cev3-model-option small{display:block;color:#617091;font-size:10px;font-weight:500;line-height:1.55}.cev3-model-option i{position:absolute;left:18px;bottom:13px;width:16px;height:16px;border:1.5px solid #cdd5e3;border-radius:50%}.cev3-model-option.active i{border:5px solid #5b45f5}.cev3-model-icon{display:flex;width:34px;height:34px;align-items:center;justify-content:center;color:#4f46e5;background:#eff0ff;border-radius:8px;font-size:15px;font-weight:600}.cev3-default-pricing-card{grid-template-columns:repeat(3,minmax(0,1fr))}.cev3-range-table{overflow:hidden;border:1px solid #dce4ef;border-radius:8px;background:#fff}.cev3-range-head,.cev3-range-row{display:grid;grid-template-columns:minmax(150px,1.05fr) minmax(120px,.72fr) minmax(120px,.72fr) minmax(160px,1fr) 34px;align-items:center;gap:10px}.cev3-range-head{min-height:34px;padding:7px 10px;color:#657395;background:#f7f9fc;border-bottom:1px solid #dfe6ef;font-size:9.8px;font-weight:600}.cev3-range-row{min-height:48px;padding:7px 10px;border-bottom:1px solid #e8edf4}.cev3-range-row:last-child{border-bottom:0}.cev3-range-row .cev3-control{height:32px;font-size:10.5px}.cev3-range-reset{display:flex;width:30px;height:30px;align-items:center;justify-content:center;color:#4f46e5;background:#f1f3ff;border:1px solid #d9dcff;border-radius:6px;font-size:14px;font-weight:600}.cev3-range-reset:hover{color:#fff;background:#4f46e5}.cev3-policy-card{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));align-items:start;gap:14px;padding:14px;background:linear-gradient(135deg,#fbfcff,#f8f7ff);border:1px solid #e3e6f2;border-radius:8px}.cev3-payment-card{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;padding:14px;background:linear-gradient(135deg,#fbfcff,#f8f7ff);border:1px solid #e3e6f2;border-radius:8px}.cev3-policy-note{display:flex;grid-column:1/-1;min-height:54px;align-items:center;gap:9px;padding:11px;color:#435783;background:#f6f5ff;border:1px solid #d8d5ff;border-radius:7px;font-size:10px;line-height:1.5}.cev3-policy-note span:first-child{display:flex;width:22px;height:22px;align-items:center;justify-content:center;flex:0 0 22px;color:#4f46e5;border:1px solid #8d86ff;border-radius:50%;font-weight:600}.cev3-country-grid{grid-template-columns:repeat(4,minmax(0,1fr));min-height:390px}.cev3-country-panel,.cev3-country-section,.cev3-country-box{flex:initial}.cev3-country-box{display:flex;flex-direction:column}.cev3-country-grid{flex:initial}
 @media(max-width:1199px){.cev3-default-pricing-card{grid-template-columns:repeat(3,minmax(0,1fr))}.cev3-range-head,.cev3-range-row{grid-template-columns:minmax(135px,1fr) minmax(100px,.65fr) minmax(105px,.7fr) minmax(140px,.9fr) 32px}.cev3-policy-card{grid-template-columns:repeat(3,minmax(0,1fr))}.cev3-policy-note{grid-column:1/-1}.cev3-payment-card{grid-template-columns:repeat(3,minmax(0,1fr))}.cev3-country-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
 @media(max-width:767px){.cev3-header{align-items:flex-start;padding:10px 12px}.cev3-heading-icon{display:none}.cev3-title{font-size:14px!important}.cev3-subtitle{font-size:10px}.cev3-workspace{padding:9px}.cev3-panel{padding:11px}.cev3-model-grid,.cev3-default-pricing-card,.cev3-policy-card,.cev3-payment-card{grid-template-columns:1fr}.cev3-policy-note{grid-column:auto}.cev3-model-option{min-height:102px}.cev3-range-table{overflow-x:auto}.cev3-range-head,.cev3-range-row{grid-template-columns:145px 105px 110px 155px 32px;min-width:590px}.cev3-country-toolbar{grid-template-columns:1fr}.cev3-country-actions{overflow-x:auto}.cev3-country-grid{grid-template-columns:repeat(2,minmax(0,1fr));min-height:360px}.cev3-footer{flex-wrap:wrap}.cev3-footer-group{flex:1}.cev3-footer-group:last-child{justify-content:flex-end}.cev3-primary{min-width:125px}}
+.cev3-fixed-only{display:none}.commercial-editor-v3.is-fixed-fee .cev3-percentage-only{display:none}.commercial-editor-v3.is-fixed-fee .cev3-fixed-only{display:block}.commercial-editor-v3.is-fixed-fee .cev3-default-pricing-card{grid-template-columns:repeat(4,minmax(0,1fr))}.commercial-editor-v3.is-fixed-fee .cev3-default-rate{order:1}.commercial-editor-v3.is-fixed-fee .cev3-fixed-only:nth-last-child(2){order:2}.commercial-editor-v3.is-fixed-fee .cev3-fixed-only:last-child{order:3}.commercial-editor-v3.is-fixed-fee .cev3-default-currency{order:4}.commercial-editor-v3.is-fixed-fee .cev3-range-head,.commercial-editor-v3.is-fixed-fee .cev3-range-row{grid-template-columns:minmax(145px,1.05fr) minmax(100px,.7fr) minmax(120px,.82fr) minmax(135px,.9fr) minmax(115px,.78fr) 34px}.commercial-editor-v3.is-fixed-fee .cev3-range-head .cev3-fixed-only{display:block}.commercial-editor-v3.is-fixed-fee .cev3-range-row .cev3-fixed-only{display:block}@media(max-width:1199px){.commercial-editor-v3.is-fixed-fee .cev3-default-pricing-card{grid-template-columns:repeat(2,minmax(0,1fr))}.commercial-editor-v3.is-fixed-fee .cev3-range-head,.commercial-editor-v3.is-fixed-fee .cev3-range-row{grid-template-columns:minmax(140px,1fr) minmax(95px,.65fr) minmax(110px,.75fr) minmax(125px,.82fr) minmax(105px,.72fr) 32px}}@media(max-width:767px){.commercial-editor-v3.is-fixed-fee .cev3-default-pricing-card{grid-template-columns:1fr}.commercial-editor-v3.is-fixed-fee .cev3-range-head,.commercial-editor-v3.is-fixed-fee .cev3-range-row{grid-template-columns:145px 105px 120px 150px 125px 32px;min-width:677px}}
 @media(prefers-reduced-motion:reduce){.cev3-btn{transition:none}}
 </style>
 
@@ -88,19 +98,21 @@
 
         <section class="cev3-panel">
             <div class="cev3-section">
-                <div class="cev3-section-head"><span class="cev3-section-number">2</span><div><h4 class="cev3-section-title">Default Pricing</h4></div></div>
+                <div class="cev3-section-head"><span class="cev3-section-number">2</span><div><h4 class="cev3-section-title">Default Pricing</h4><p class="cev3-section-copy" data-default-pricing-copy>{{ $selectedCommercialModel === 1 ? 'Set the default fixed fee and how it will be charged.' : 'Set the default pricing for all experience ranges.' }}</p></div></div>
                 <div class="cev3-default-pricing-card">
-                    <div><label class="cev3-label" for="commercial_salary_currency">Currency</label><select id="commercial_salary_currency" name="salary_currency" class="cev3-control" data-pricing-currency>@foreach($availableCurrencies as $currencyKey => $currencyCode)<option value="{{ $currencyKey }}" {{ $selectedCurrency === (int) $currencyKey ? 'selected' : '' }}>{{ $currencyCode }}</option>@endforeach</select><p class="cev3-help">All backend currencies are available.</p></div>
-                    <div><label class="cev3-label" for="commercial_default_rate" data-rate-label>{{ $selectedCommercialModel === 2 ? 'Rate / Percentage' : 'Default Fee' }}</label><div class="cev3-rate-wrap"><input type="number" id="commercial_default_rate" class="cev3-control" data-fallback-rate="{{ $fallbackDefaultRate }}" step="0.01" min="0" value="{{ $defaultRate }}"><span class="cev3-rate-suffix" data-rate-suffix>{{ $selectedCommercialModel === 2 ? '%' : '' }}</span></div><p class="cev3-help">Changing this rate updates every experience range.</p></div>
-                    <div><label class="cev3-label" for="commercial_salary_mode">Applied On</label><select id="commercial_salary_mode" name="sal_mode" class="cev3-control" data-applied-on>@foreach(($salaryMode ?? []) as $modeKey => $modeLabel)<option value="{{ $modeKey }}" {{ $selectedSalaryMode === (int) $modeKey ? 'selected' : '' }}>{{ $modeLabel }} {{ $isFulltime ? 'CTC' : 'Bill Rate' }}</option>@endforeach</select><p class="cev3-help">Choose the billing period.</p></div>
+                    <div class="cev3-default-currency"><label class="cev3-label" for="commercial_salary_currency">Currency</label><select id="commercial_salary_currency" name="salary_currency" class="cev3-control" data-pricing-currency>@foreach($availableCurrencies as $currencyKey => $currencyCode)<option value="{{ $currencyKey }}" {{ $selectedCurrency === (int) $currencyKey ? 'selected' : '' }}>{{ $currencyCode }}</option>@endforeach</select><p class="cev3-help">All backend currencies are available.</p></div>
+                    <div class="cev3-default-rate"><label class="cev3-label" for="commercial_default_rate" data-rate-label>{{ $selectedCommercialModel === 2 ? 'Rate / Percentage' : 'Fixed Fee Amount' }}</label><div class="cev3-rate-wrap"><input type="number" id="commercial_default_rate" class="cev3-control" data-fallback-rate="{{ $fallbackDefaultRate }}" step="0.01" min="0" value="{{ $defaultRate }}"><span class="cev3-rate-suffix" data-rate-suffix>{{ $selectedCommercialModel === 2 ? '%' : '' }}</span></div><p class="cev3-help" data-rate-help>{{ $selectedCommercialModel === 2 ? 'Changing this rate updates every experience range.' : 'The default amount used for each successful placement.' }}</p></div>
+                    <div class="cev3-default-applied"><label class="cev3-label" for="commercial_salary_mode">Applied On</label><select id="commercial_salary_mode" name="sal_mode" class="cev3-control" data-applied-on>@foreach(($salaryMode ?? []) as $modeKey => $modeLabel)<option value="{{ $modeKey }}" {{ $selectedSalaryMode === (int) $modeKey ? 'selected' : '' }}>{{ $modeLabel }} {{ $isFulltime ? 'CTC' : 'Bill Rate' }}</option>@endforeach</select><p class="cev3-help">Choose the billing period.</p></div>
+                    <div class="cev3-fixed-only"><label class="cev3-label">Fee Charged On</label><select class="cev3-control" data-fixed-fee-trigger>@foreach(($billingTriggers ?? []) as $triggerValue => $triggerLabel)<option value="{{ $triggerValue }}" {{ $selectedBillingTrigger === (string) $triggerValue ? 'selected' : '' }}>{{ $triggerValue === 'candidate_joined' ? 'Per Successful Hire' : $triggerLabel }}</option>@endforeach</select><p class="cev3-help">When the fixed fee becomes chargeable.</p></div>
+                    <div class="cev3-fixed-only"><label class="cev3-label">Billing Frequency</label><select class="cev3-control" data-fixed-fee-frequency>@foreach(($billingFrequencies ?? []) as $frequencyValue => $frequencyLabel)<option value="{{ $frequencyValue }}" {{ $selectedBillingFrequency === (string) $frequencyValue ? 'selected' : '' }}>{{ $frequencyLabel }}</option>@endforeach</select><p class="cev3-help">How often this fee is billed.</p></div>
                 </div>
             </div>
         </section>
 
         <section class="cev3-panel">
             <div class="cev3-section">
-                <div class="cev3-section-head"><span class="cev3-section-number">3</span><div><h4 class="cev3-section-title">Experience-Based Pricing</h4><p class="cev3-section-copy">Define pricing using clear experience ranges.</p></div></div>
-                <div class="cev3-range-table"><div class="cev3-range-head"><span>Experience Band</span><span>Currency</span><span data-range-rate-label>{{ $selectedCommercialModel === 2 ? 'Rate / Percentage' : 'Fixed Fee' }}</span><span>Applied On</span><span></span></div>
+                <div class="cev3-section-head"><span class="cev3-section-number">3</span><div><h4 class="cev3-section-title">Experience-Based Pricing</h4><p class="cev3-section-copy" data-experience-pricing-copy>{{ $selectedCommercialModel === 1 ? 'Define different fixed fees for different experience bands.' : 'Define pricing using clear experience ranges.' }}</p></div></div>
+                <div class="cev3-range-table"><div class="cev3-range-head"><span>Experience Band</span><span>Currency</span><span data-range-rate-label>{{ $selectedCommercialModel === 2 ? 'Rate / Percentage' : 'Fixed Fee Amount' }}</span><span class="cev3-percentage-only">Applied On</span><span class="cev3-fixed-only">Fee Charged On</span><span class="cev3-fixed-only">Billing Frequency</span><span></span></div>
                     @foreach($experienceRanges as $range)
                         @php
                             $firstExperienceIndex = $range['indexes'][0];
@@ -110,7 +122,9 @@
                             <span class="cev3-rate-name">{{ $range['label'] }}</span>
                             <select class="cev3-control" data-range-currency>@foreach($availableCurrencies as $currencyKey => $currencyCode)<option value="{{ $currencyKey }}" {{ $selectedCurrency === (int) $currencyKey ? 'selected' : '' }}>{{ $currencyCode }}</option>@endforeach</select>
                             <div class="cev3-rate-wrap"><input type="number" class="cev3-control" data-range-rate step="0.01" min="0" value="{{ $rangeRate }}"><span class="cev3-rate-suffix" data-rate-suffix>{{ $selectedCommercialModel === 2 ? '%' : '' }}</span></div>
-                            <select class="cev3-control" data-range-applied-on>@foreach(($salaryMode ?? []) as $modeKey => $modeLabel)<option value="{{ $modeKey }}" {{ $selectedSalaryMode === (int) $modeKey ? 'selected' : '' }}>{{ $modeLabel }} {{ $isFulltime ? 'CTC' : 'Bill Rate' }}</option>@endforeach</select>
+                            <select class="cev3-control cev3-percentage-only" data-range-applied-on>@foreach(($salaryMode ?? []) as $modeKey => $modeLabel)<option value="{{ $modeKey }}" {{ $selectedSalaryMode === (int) $modeKey ? 'selected' : '' }}>{{ $modeLabel }} {{ $isFulltime ? 'CTC' : 'Bill Rate' }}</option>@endforeach</select>
+                            <select class="cev3-control cev3-fixed-only" data-range-fixed-trigger>@foreach(($billingTriggers ?? []) as $triggerValue => $triggerLabel)<option value="{{ $triggerValue }}" {{ $selectedBillingTrigger === (string) $triggerValue ? 'selected' : '' }}>{{ $triggerValue === 'candidate_joined' ? 'Per Successful Hire' : $triggerLabel }}</option>@endforeach</select>
+                            <select class="cev3-control cev3-fixed-only" data-range-fixed-frequency>@foreach(($billingFrequencies ?? []) as $frequencyValue => $frequencyLabel)<option value="{{ $frequencyValue }}" {{ $selectedBillingFrequency === (string) $frequencyValue ? 'selected' : '' }}>{{ $frequencyLabel }}</option>@endforeach</select>
                             <button type="button" class="cev3-range-reset" data-range-reset title="Reset this range to the default rate" aria-label="Reset {{ $range['label'] }}">↻</button>
                             @foreach($range['indexes'] as $experienceIndex)
                                 @php $experienceRate = data_get($commercialDetails->get($experienceIndex), 'rate', $defaultRate); @endphp
@@ -190,17 +204,21 @@
     var replacementEligibility = root.querySelector('[data-replacement-eligibility]');
     var billingFrequency = root.querySelector('[data-billing-frequency]');
     var billingTrigger = root.querySelector('[data-billing-trigger]');
+    var fixedFeeTrigger = root.querySelector('[data-fixed-fee-trigger]');
+    var fixedFeeFrequency = root.querySelector('[data-fixed-fee-frequency]');
     var paymentTerms = root.querySelector('[data-payment-terms]');
     var initialState;
     var activeRegion = 'all';
     function updateCommercialType() {
         var modelValue = commercialType.value;
         var isPercentage = modelValue === '2';
+        var isFixedFee = modelValue === '1';
         var isFree = modelValue === '0';
         var wasFree = defaultRateInput.disabled;
         var supportedServiceType = root.querySelector('.commType').value === '2' ? '2' : '1';
         root.querySelector('.rateTypeClass').value = isFree ? supportedServiceType : modelValue;
         root.querySelectorAll('[data-commercial-model]').forEach(function (option) { var active = option.dataset.commercialModel === modelValue; option.classList.toggle('active', active); option.setAttribute('aria-checked', active ? 'true' : 'false'); });
+        root.classList.toggle('is-fixed-fee', isFixedFee);
         if (isFree) {
             defaultRateInput.value = '0';
             defaultRateInput.dispatchEvent(new Event('input'));
@@ -211,10 +229,14 @@
         defaultRateInput.disabled = isFree;
         appliedOn.disabled = isFree;
         pricingCurrency.disabled = isFree;
-        root.querySelectorAll('[data-range-rate],[data-range-applied-on],[data-range-currency],[data-range-reset]').forEach(function (control) { control.disabled = isFree; });
+        root.querySelectorAll('[data-range-rate],[data-range-applied-on],[data-range-currency],[data-range-fixed-trigger],[data-range-fixed-frequency],[data-range-reset]').forEach(function (control) { control.disabled = isFree; });
+        root.querySelectorAll('[data-fixed-fee-trigger],[data-fixed-fee-frequency]').forEach(function (control) { control.disabled = isFree; });
         root.querySelectorAll('[data-rate-suffix]').forEach(function (suffix) { suffix.textContent = isPercentage ? '%' : ''; });
-        root.querySelector('[data-rate-label]').textContent = isFree ? 'No Fee' : (isPercentage ? 'Rate / Percentage' : 'Default Fee');
-        root.querySelector('[data-range-rate-label]').textContent = isFree ? 'No Fee' : (isPercentage ? 'Rate / Percentage' : 'Fixed Fee');
+        root.querySelector('[data-rate-label]').textContent = isFree ? 'No Fee' : (isPercentage ? 'Rate / Percentage' : 'Fixed Fee Amount');
+        root.querySelector('[data-rate-help]').textContent = isFree ? 'No commercial fee is charged.' : (isPercentage ? 'Changing this rate updates every experience range.' : 'The default amount used for each successful placement.');
+        root.querySelector('[data-range-rate-label]').textContent = isFree ? 'No Fee' : (isPercentage ? 'Rate / Percentage' : 'Fixed Fee Amount');
+        root.querySelector('[data-default-pricing-copy]').textContent = isFree ? 'No charge will be applied for this service.' : (isPercentage ? 'Set the default pricing for all experience ranges.' : 'Set the default fixed fee and how it will be charged.');
+        root.querySelector('[data-experience-pricing-copy]').textContent = isFree ? 'No per-range fee is required for this service.' : (isPercentage ? 'Define pricing using clear experience ranges.' : 'Define different fixed fees for different experience bands.');
         root.querySelector('[data-commercial-model-copy]').textContent = isFree ? 'No commercial fee will be charged for the selected countries.' : (isPercentage ? "Placement fees are calculated as a percentage of the candidate's Cost to Company (CTC)." : 'Billing is calculated from the configured fixed rate for each experience range.');
     }
     function captureInitialState() {
@@ -249,6 +271,8 @@
         countries.forEach(function (country, index) { country.checked = initialState.countries[index]; });
         syncRangeSelects('[data-range-applied-on]', appliedOn.value);
         syncRangeSelects('[data-range-currency]', pricingCurrency.value);
+        syncRangeSelects('[data-fixed-fee-trigger]', billingTrigger.value);
+        syncRangeSelects('[data-fixed-fee-frequency]', billingFrequency.value);
         updateCommercialType();
         updateReplacementSummary();
         renderSelectedCountries();
@@ -266,12 +290,16 @@
     });
     appliedOn.addEventListener('change', function () { syncRangeSelects('[data-range-applied-on]', appliedOn.value); });
     pricingCurrency.addEventListener('change', function () { syncRangeSelects('[data-range-currency]', pricingCurrency.value); });
+    billingTrigger.addEventListener('change', function () { syncRangeSelects('[data-fixed-fee-trigger]', billingTrigger.value); });
+    billingFrequency.addEventListener('change', function () { syncRangeSelects('[data-fixed-fee-frequency]', billingFrequency.value); });
     replacementPeriod.addEventListener('change', updateReplacementSummary);
     replacementType.addEventListener('change', updateReplacementSummary);
     root.querySelectorAll('[data-commercial-model]').forEach(function (option) { option.addEventListener('click', function () { commercialType.value = option.dataset.commercialModel; updateCommercialType(); }); });
     defaultRateInput.addEventListener('input', function () { root.querySelectorAll('[data-range-rate]').forEach(function (rangeRate) { rangeRate.value = defaultRateInput.value; rangeRate.dispatchEvent(new Event('input')); }); });
     root.querySelectorAll('[data-range-applied-on]').forEach(function (select) { select.addEventListener('change', function () { appliedOn.value = select.value; syncRangeSelects('[data-range-applied-on]', select.value); }); });
     root.querySelectorAll('[data-range-currency]').forEach(function (select) { select.addEventListener('change', function () { pricingCurrency.value = select.value; syncRangeSelects('[data-range-currency]', select.value); }); });
+    root.querySelectorAll('[data-fixed-fee-trigger]').forEach(function (select) { select.addEventListener('change', function () { billingTrigger.value = select.value; syncRangeSelects('[data-fixed-fee-trigger]', select.value); }); });
+    root.querySelectorAll('[data-fixed-fee-frequency]').forEach(function (select) { select.addEventListener('change', function () { billingFrequency.value = select.value; syncRangeSelects('[data-fixed-fee-frequency]', select.value); }); });
     function renderSelectedCountries() {
         var selected = countries.filter(function (country) { return country.checked; });
         selectedHost.innerHTML = '';
