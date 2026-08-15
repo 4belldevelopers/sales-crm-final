@@ -17,6 +17,11 @@ Redis/Horizon queues, Octane/FrankenPHP runtime, Reverb websockets, and multiple
 gateways. Goal: scale to **10,000 companies / 100M+ records per year** without failing.
 Full concept: [docs/PRODUCT_VISION.md](docs/PRODUCT_VISION.md).
 
+> **Persona scope (2026-08-15 directive):** **Build/audit/refactor only the four in-scope personas**
+> (Service Company, Super Admin, Admin, public Front). **Product Company and Staffing Company are
+> DORMANT — ignore them.** Do not enumerate, fix, refactor, or feature-add in those paths. Full rule:
+> [docs/PERSONA_SCOPE.md](docs/PERSONA_SCOPE.md).
+
 ## Where the code lives ⚠️
 **All work happens in this folder — `JWMaincode28June2026` (the `testing.jero.works`
 codebase)** and **only** here. **Never make changes in any other folder** (e.g.

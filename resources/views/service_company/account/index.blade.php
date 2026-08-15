@@ -4190,6 +4190,12 @@ $(document).ready(function(){
             var mainStatus = $editor.find('.main_status').val();
             var salMode = $editor.find('select[name="sal_mode"]').val();
             var salaryCurrency = $editor.find('select[name="salary_currency"]').val();
+            var replacementPeriodDays = $editor.find('[data-replacement-period]').val();
+            var replacementType = $editor.find('[data-replacement-type]').val();
+            var replacementEligibility = $editor.find('[data-replacement-eligibility]').val();
+            var billingFrequency = $editor.find('[data-billing-frequency]').val();
+            var billingTrigger = $editor.find('[data-billing-trigger]').val();
+            var paymentTermsDays = $editor.find('[data-payment-terms]').val();
             var updateId = $editor.find('.updateId').val();
             var commType = $editor.find('.commType').val();
 
@@ -4212,6 +4218,12 @@ $(document).ready(function(){
                     'rateTypeClass': rateTypeClass,
                     'sal_mode': salMode,
                     'salary_currency': salaryCurrency,
+                    'replacement_period_days': replacementPeriodDays,
+                    'replacement_type': replacementType,
+                    'replacement_eligibility': replacementEligibility,
+                    'billing_frequency': billingFrequency,
+                    'billing_trigger': billingTrigger,
+                    'payment_terms_days': paymentTermsDays,
                     'updateId': updateId,
                     'commType': commType,
                     'main_status': mainStatus

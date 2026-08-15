@@ -41,6 +41,8 @@ Generated to optimize this repo for AI coding agents (Claude Code, Cursor, Winds
 ## Per-feature audits & implementation plans
 - [V2_Apptracker/](V2_Apptracker/) — `service_company/apptracker` GOD-level audit + 13-step roll-out plan (Service+Admin scoped, Aug 2026)
 - [V2_ServiceCompanyAppTrackerController/](V2_ServiceCompanyAppTrackerController/) — controller-only audit: 33-method ledger, hidden shared-state machine, duplication matrix, 6-phase slice refactor
+- [Add-Edit-Submit-Audit.md](V2_Add-Edit-Submit/Add-Edit-Submit-Audit.md) — unified CRUD + transitions sweep (196 routes, 55 entity rows, 46 transition-mapped entities, 13 hotspots, 7-phase refactor plan ~31 dev-days) across Service Co / Super Admin / Admin / Front scope (2026-08-15). Evidence: [evidence/_Add-Edit-Submit-Audit-evidence.md](V2_Add-Edit-Submit/evidence/_Add-Edit-Submit-Audit-evidence.md)
+- [PERSONA_SCOPE.md](PERSONA_SCOPE.md) — **scope rule: ignore Product Co and Staffing Co** for all audits, plans, refactors. Read first.
 
 ## Product & engineering strategy (architect-level)
 - [PRODUCT_VISION.md](PRODUCT_VISION.md) — the concept: pitch, personas, problem, how it works, principles

@@ -957,6 +957,12 @@ CREATE TABLE `commericials` (
   `status` int DEFAULT '1',
   `sal_mode` int DEFAULT NULL,
   `salary_currency` int DEFAULT NULL,
+  `replacement_period_days` smallint unsigned DEFAULT NULL,
+  `replacement_type` varchar(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `replacement_eligibility` varchar(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `billing_frequency` varchar(24) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `billing_trigger` varchar(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `payment_terms_days` smallint unsigned DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `idx_commericials_company_id` (`company_id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=1351 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
@@ -4417,4 +4423,3 @@ CREATE TABLE `zoomsettings` (
   `status` int DEFAULT NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
