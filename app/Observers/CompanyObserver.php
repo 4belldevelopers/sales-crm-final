@@ -13,6 +13,7 @@ use Carbon\Carbon;
 use App\Models\ThemeSetting;
 use App\Models\Permission;
 use App\Support\TenantLookup;
+use App\Jobs\ElasticCompanyIndex;
 
 class CompanyObserver
 {
@@ -33,6 +34,8 @@ class CompanyObserver
     public function created(Company $company)
     {
         if ($company->id > 1) {
+
+            $this->createCommercialDefaults($company);
 
             // add company default role
             $roleUser = new Role();
@@ -114,6 +117,65 @@ class CompanyObserver
                 Company::where('id', $company->id)->update(['package_id' => $trialPackage->id]);
             }
         }
+    }
+
+    /**
+     * Create the explicitly approved commercial defaults for a new tenant only.
+     *
+     * This uses raw queries intentionally; every inserted row is explicitly scoped to
+     * the newly created company and no existing tenant configuration is modified.
+     */
+    private function createCommercialDefaults(Company $company): void
+    {
+        $usdCurrencyKey = DB::table('currencies')->where('currency_code', 'USD')->value('getKey');
+        $experienceIndexes = DB::table('commercial_experience_bands')
+            ->where('is_active', 1)
+            ->orderBy('sort_order')
+            ->get(['min_experience', 'max_experience'])
+            ->flatMap(function ($band) {
+                return range((int) $band->min_experience, (int) $band->max_experience);
+            })
+            ->unique()
+            ->values()
+            ->all();
+
+        if ($usdCurrencyKey === null || $experienceIndexes === []) {
+            return;
+        }
+
+        foreach ([
+            ['commtype' => 1, 'rateType' => 1, 'sal_mode' => 2, 'rate' => 5.00],
+            ['commtype' => 2, 'rateType' => 2, 'sal_mode' => 0, 'rate' => 8.33],
+        ] as $default) {
+            $commercialId = DB::table('commericials')->insertGetId([
+                'company_id' => $company->id,
+                'rateType' => $default['rateType'],
+                'commtype' => $default['commtype'],
+                'status' => in_array((int) $company->company_type, [1, 2], true) ? 1 : 0,
+                'sal_mode' => $default['sal_mode'],
+                'salary_currency' => (int) $usdCurrencyKey,
+                'replacement_period_days' => 90,
+                'replacement_type' => 'free_replacement',
+                'replacement_eligibility' => 'early_exit',
+                'billing_frequency' => 'one_time',
+                'billing_trigger' => 'candidate_joined',
+                'payment_terms_days' => 30,
+            ]);
+
+            $detailRows = array_map(function (int $experienceIndex) use ($company, $commercialId, $default) {
+                return [
+                    'commericial_id' => $commercialId,
+                    'exp' => $experienceIndex,
+                    'rate' => $default['rate'],
+                    'company_id' => $company->id,
+                    'commtype' => $default['commtype'],
+                ];
+            }, $experienceIndexes);
+            DB::table('commericial_details')->insert($detailRows);
+        }
+
+        // Intent: queue a read-model refresh so new tenant defaults are visible in agency search without an inline ES write.
+        ElasticCompanyIndex::dispatch($company->id);
     }
 
 }
