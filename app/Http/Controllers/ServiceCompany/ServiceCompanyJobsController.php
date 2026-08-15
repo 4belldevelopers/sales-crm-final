@@ -45,6 +45,19 @@ use Yajra\DataTables\Facades\DataTables;
 
 class ServiceCompanyJobsController extends ServiceCompanyBaseController
 {
+    /** Company-commercial policy options shared by drawer rendering and save validation. */
+    private const COMMERCIAL_REPLACEMENT_PERIODS = [30 => '30 Days', 60 => '60 Days', 90 => '90 Days', 180 => '180 Days'];
+
+    private const COMMERCIAL_REPLACEMENT_TYPES = ['free_replacement' => 'Free Replacement', 'credit_note' => 'Credit Note', 'none' => 'No Replacement'];
+
+    private const COMMERCIAL_REPLACEMENT_ELIGIBILITY = ['early_exit' => 'Candidate Resignation / Early Exit', 'employer_termination' => 'Employer Termination', 'any_separation' => 'Any Early Separation'];
+
+    private const COMMERCIAL_BILLING_FREQUENCIES = ['one_time' => 'One Time', 'monthly' => 'Monthly', 'quarterly' => 'Quarterly'];
+
+    private const COMMERCIAL_BILLING_TRIGGERS = ['candidate_joined' => 'Candidate Joined', 'offer_accepted' => 'Offer Accepted', 'invoice_raised' => 'Invoice Raised'];
+
+    private const COMMERCIAL_PAYMENT_TERMS = [0 => 'Due Immediately', 15 => '15 Days', 30 => '30 Days', 45 => '45 Days', 60 => '60 Days', 90 => '90 Days'];
+
     protected $mailService;
 
     protected $massMailService;
@@ -14069,6 +14082,12 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
         $company_id = auth()->user()->company_id;
         $this->salaryMode = GeneralMethod::salaryMode();
         $this->currency = GeneralMethod::currency();
+        $this->replacementPeriods = self::COMMERCIAL_REPLACEMENT_PERIODS;
+        $this->replacementTypes = self::COMMERCIAL_REPLACEMENT_TYPES;
+        $this->replacementEligibility = self::COMMERCIAL_REPLACEMENT_ELIGIBILITY;
+        $this->billingFrequencies = self::COMMERCIAL_BILLING_FREQUENCIES;
+        $this->billingTriggers = self::COMMERCIAL_BILLING_TRIGGERS;
+        $this->paymentTerms = self::COMMERCIAL_PAYMENT_TERMS;
         $this->employmentType = GeneralMethod::employmentType();
 
         $commericials = DB::table('commericials')
@@ -14107,6 +14126,12 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
                     'status' => $commericial->status,
                     'sal_mode' => $commericial->sal_mode,
                     'salary_currency' => $commericial->salary_currency,
+                    'replacement_period_days' => $commericial->replacement_period_days,
+                    'replacement_type' => $commericial->replacement_type,
+                    'replacement_eligibility' => $commericial->replacement_eligibility,
+                    'billing_frequency' => $commericial->billing_frequency,
+                    'billing_trigger' => $commericial->billing_trigger,
+                    'payment_terms_days' => $commericial->payment_terms_days,
                     'commericial_details' => $commericial_details,
                     'commericial_countries' => $commericial_countries,
                 ];
@@ -14144,6 +14169,15 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
         $main_status = ($request->main_status) ? $request->main_status : 0;
         $salary_currency = $request->salary_currency;
 
+        // Intent: accept only the controller-defined commercial policy values for this tenant's service record.
+        $replacementPeriod = array_key_exists((int) $request->replacement_period_days, self::COMMERCIAL_REPLACEMENT_PERIODS) ? (int) $request->replacement_period_days : 90;
+        $replacementType = array_key_exists((string) $request->replacement_type, self::COMMERCIAL_REPLACEMENT_TYPES) ? (string) $request->replacement_type : 'free_replacement';
+        $replacementEligibility = array_key_exists((string) $request->replacement_eligibility, self::COMMERCIAL_REPLACEMENT_ELIGIBILITY) ? (string) $request->replacement_eligibility : 'early_exit';
+        $billingFrequency = array_key_exists((string) $request->billing_frequency, self::COMMERCIAL_BILLING_FREQUENCIES) ? (string) $request->billing_frequency : 'one_time';
+        $billingTrigger = array_key_exists((string) $request->billing_trigger, self::COMMERCIAL_BILLING_TRIGGERS) ? (string) $request->billing_trigger : 'candidate_joined';
+        $paymentTermsDays = array_key_exists((int) $request->payment_terms_days, self::COMMERCIAL_PAYMENT_TERMS) ? (int) $request->payment_terms_days : 30;
+        $policyFields = ['replacement_period_days' => $replacementPeriod, 'replacement_type' => $replacementType, 'replacement_eligibility' => $replacementEligibility, 'billing_frequency' => $billingFrequency, 'billing_trigger' => $billingTrigger, 'payment_terms_days' => $paymentTermsDays];
+
         $company = Company::withoutGlobalScope('company')->findOrFail($company_id);
 
         if ($commType == 1) {
@@ -14156,7 +14190,7 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
                 $status = 0; // Product Company
             }
 
-            $value = ['company_id' => $company_id, 'rateType' => $rateType, 'commtype' => $commType, 'sal_mode' => $sal_mode, 'salary_currency' => $salary_currency, 'status' => $status];
+            $value = array_merge(['company_id' => $company_id, 'rateType' => $rateType, 'commtype' => $commType, 'sal_mode' => $sal_mode, 'salary_currency' => $salary_currency, 'status' => $status], $policyFields);
         } else {
             $status = 0;
             if ($company->company_type == 1) {
@@ -14167,7 +14201,7 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
                 $status = 0; // Product Company
             }
 
-            $value = ['company_id' => $company_id, 'rateType' => $rateType, 'commtype' => $commType, 'sal_mode' => $sal_mode, 'salary_currency' => $salary_currency, 'status' => $status];
+            $value = array_merge(['company_id' => $company_id, 'rateType' => $rateType, 'commtype' => $commType, 'sal_mode' => $sal_mode, 'salary_currency' => $salary_currency, 'status' => $status], $policyFields);
         }
         DB::table('commericials')->where('company_id', $company_id)->where('commtype', $commType)->delete();
         $commericialId = DB::table('commericials')->insertGetId($value);
