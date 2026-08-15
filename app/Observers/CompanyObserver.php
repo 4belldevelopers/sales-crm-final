@@ -175,7 +175,7 @@ class CompanyObserver
         }
 
         // Intent: queue a read-model refresh so new tenant defaults are visible in agency search without an inline ES write.
-        ElasticCompanyIndex::dispatch($company->id);
+        ElasticCompanyIndex::dispatch($company->id)->afterCommit();
     }
 
 }

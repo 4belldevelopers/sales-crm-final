@@ -1476,6 +1476,22 @@ class SaasFrontController extends SaasFrontBaseController
                     }
 
                 }
+
+                // Intent: make the registration-selected city country immediately eligible for Service/Staffing commercial matching.
+                $selectedCountryIds = collect($work_city_all)
+                    ->map(function ($cityVal) use ($cityLookupMap) {
+                        $parts = explode('|', $cityVal['value']);
+                        $cityName = trim($parts[0] ?? '');
+                        $countryName = trim($parts[2] ?? '');
+
+                        return $cityLookupMap[$cityName.'|'.$countryName]->country_id ?? null;
+                    })
+                    ->filter(fn ($countryId) => (int) $countryId > 0)
+                    ->map(fn ($countryId) => (int) $countryId)
+                    ->unique()
+                    ->values()
+                    ->all();
+                $this->syncRegistrationCommercialCountries($company, $selectedCountryIds);
             }
 
             if ($client_id > 0) {
@@ -1506,6 +1522,50 @@ class SaasFrontController extends SaasFrontBaseController
 
         return Reply::dataOnly(['status' => 'fail']);
 
+    }
+
+    /**
+     * Attach a registration-selected country to both commercial services for eligible agency types.
+     *
+     * Product companies (type 3) are deliberately excluded: their registration location must not
+     * make them discoverable as commercial agencies. Raw queries explicitly scope every row by company.
+     */
+    private function syncRegistrationCommercialCountries(Company $company, array $countryIds): void
+    {
+        if (!in_array((int) $company->company_type, [1, 2], true) || $countryIds === []) {
+            return;
+        }
+
+        $commercials = DB::table('commericials')
+            ->where('company_id', $company->id)
+            ->whereIn('commtype', [1, 2])
+            ->get(['id', 'commtype']);
+
+        foreach ($commercials as $commercial) {
+            $existingCountryIds = DB::table('commericial_countries')
+                ->where('company_id', $company->id)
+                ->where('commericial_id', $commercial->id)
+                ->whereIn('country_id', $countryIds)
+                ->pluck('country_id')
+                ->map(fn ($countryId) => (int) $countryId)
+                ->all();
+            $rows = collect($countryIds)
+                ->reject(fn (int $countryId) => in_array($countryId, $existingCountryIds, true))
+                ->map(fn (int $countryId) => [
+                    'company_id' => $company->id,
+                    'commericial_id' => $commercial->id,
+                    'commtype' => $commercial->commtype,
+                    'country_id' => $countryId,
+                ])
+                ->all();
+
+            if ($rows !== []) {
+                DB::table('commericial_countries')->insert($rows);
+            }
+        }
+
+        // Intent: index only after the surrounding registration transaction commits its commercial-country rows.
+        ElasticCompanyIndex::dispatch($company->id)->afterCommit();
     }
 
     public function companyRegisterChk(Request $request)
@@ -3262,8 +3322,6 @@ class SaasFrontController extends SaasFrontBaseController
 
                 }
 
-                // dd($client_id);
-
                 foreach ($work_city_all as $cityVal) {
                     $parts = explode('|', $cityVal['value']);
                     // Trim to remove any leading or trailing whitespace
@@ -3293,6 +3351,22 @@ class SaasFrontController extends SaasFrontBaseController
                     }
 
                 }
+
+                // Intent: retain commercial-country eligibility for invitation registrations after default records already exist.
+                $selectedCountryIds = collect($work_city_all)
+                    ->map(function ($cityVal) use ($cityLookupMap) {
+                        $parts = explode('|', $cityVal['value']);
+                        $cityName = trim($parts[0] ?? '');
+                        $countryName = trim($parts[2] ?? '');
+
+                        return $cityLookupMap[$cityName.'|'.$countryName]->country_id ?? null;
+                    })
+                    ->filter(fn ($countryId) => (int) $countryId > 0)
+                    ->map(fn ($countryId) => (int) $countryId)
+                    ->unique()
+                    ->values()
+                    ->all();
+                $this->syncRegistrationCommercialCountries($company, $selectedCountryIds);
             }
 
             if ($client_id > 0) {
