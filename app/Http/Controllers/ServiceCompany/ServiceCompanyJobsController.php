@@ -56,7 +56,7 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
 
     private const COMMERCIAL_BILLING_TRIGGERS = ['candidate_joined' => 'Candidate Joined', 'offer_accepted' => 'Offer Accepted', 'invoice_raised' => 'Invoice Raised'];
 
-    private const COMMERCIAL_PAYMENT_TERMS = [0 => 'Due Immediately', 15 => '15 Days', 30 => '30 Days', 45 => '45 Days', 60 => '60 Days', 90 => '90 Days'];
+    private const COMMERCIAL_PAYMENT_TERMS = [0 => 'Due Immediately', 15 => '15 Days', 30 => '30 Days', 45 => '45 Days', 60 => '60 Days', 90 => '90 Days', 120 => '120 Days', 150 => '150 Days', 180 => '180 Days', 210 => '210 Days', 240 => '240 Days'];
 
     protected $mailService;
 
@@ -9162,7 +9162,16 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
                     ->join('commericial_details', 'commericial_details.commericial_id', '=', 'commericials.id')
                     ->where('commericials.commtype', '=', $commtype)
                     ->where('commericials.company_id', '=', $row->id)
-                    ->whereBetween('commericial_details.exp', [$jobMinExp, $jobMaxExp])
+                    // Intent: choose a rate only from active backend bands overlapping this job's experience requirement.
+                    ->whereExists(function ($experienceBands) use ($jobMinExp, $jobMaxExp) {
+                        $experienceBands->selectRaw('1')
+                            ->from('commercial_experience_bands as experience_bands')
+                            ->where('experience_bands.is_active', 1)
+                            ->whereColumn('commericial_details.exp', '>=', 'experience_bands.min_experience')
+                            ->whereColumn('commericial_details.exp', '<=', 'experience_bands.max_experience')
+                            ->where('experience_bands.max_experience', '>=', $jobMinExp)
+                            ->where('experience_bands.min_experience', '<=', $jobMaxExp);
+                    })
                     ->min('commericial_details.rate');
 
                 $minimumRateType = DB::table('commericials')
@@ -14089,6 +14098,14 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
         $this->billingTriggers = self::COMMERCIAL_BILLING_TRIGGERS;
         $this->paymentTerms = self::COMMERCIAL_PAYMENT_TERMS;
         $this->employmentType = GeneralMethod::employmentType();
+        // Intent: load the global range master once per cache window; this table contains no tenant-specific data.
+        $this->commercialExperienceBands = Cache::remember('commercial_experience_bands:v1', 3600, function () {
+            return DB::table('commercial_experience_bands')
+                ->select(['id', 'code', 'label', 'min_experience', 'max_experience', 'sort_order'])
+                ->where('is_active', 1)
+                ->orderBy('sort_order')
+                ->get();
+        });
 
         $commericials = DB::table('commericials')
             ->where('commtype', $id)
@@ -14203,12 +14220,26 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
 
             $value = array_merge(['company_id' => $company_id, 'rateType' => $rateType, 'commtype' => $commType, 'sal_mode' => $sal_mode, 'salary_currency' => $salary_currency, 'status' => $status], $policyFields);
         }
+        // Intent: persist rates against the active global range-master indexes so agency rate cards and this editor share one definition.
+        $experienceIndexes = Cache::remember('commercial_experience_bands:v1', 3600, function () {
+            return DB::table('commercial_experience_bands')
+                ->where('is_active', 1)
+                ->orderBy('sort_order')
+                ->get(['min_experience', 'max_experience']);
+        })->flatMap(function ($band) {
+            return range((int) $band->min_experience, (int) $band->max_experience);
+        })->unique()->values()->all();
+
         DB::table('commericials')->where('company_id', $company_id)->where('commtype', $commType)->delete();
         $commericialId = DB::table('commericials')->insertGetId($value);
-        if (count($request->rate_val) > 0) {
+        if (count($request->rate_val) > 0 && count($experienceIndexes) > 0) {
             DB::table('commericial_details')->where('company_id', $company_id)->where('commtype', $commType)->delete();
-            for ($i = 0; $i < count($request->rate_val); $i++) {
-                $value = ['company_id' => $company_id, 'commericial_id' => $commericialId, 'commtype' => $commType, 'exp' => $i, 'rate' => $request->rate_val[$i]];
+            foreach ($experienceIndexes as $position => $experienceIndex) {
+                if (!array_key_exists($position, $request->rate_val)) {
+                    continue;
+                }
+
+                $value = ['company_id' => $company_id, 'commericial_id' => $commericialId, 'commtype' => $commType, 'exp' => $experienceIndex, 'rate' => $request->rate_val[$position]];
                 DB::table('commericial_details')->insertGetId($value);
             }
         }

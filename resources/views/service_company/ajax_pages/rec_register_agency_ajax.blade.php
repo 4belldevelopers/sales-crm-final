@@ -176,7 +176,16 @@
 					->join('commericial_details','commericial_details.commericial_id','=','commericials.id')
 					->where('commericials.commtype','=', $commtype)
 					->where('commericials.company_id','=',$row->id)
-					->whereBetween('commericial_details.exp', [$jobMinExp, $jobMaxExp])
+					// Intent: rate cards use the active global experience-band source configured in Commercials settings.
+					->whereExists(function ($experienceBands) use ($jobMinExp, $jobMaxExp) {
+						$experienceBands->selectRaw('1')
+							->from('commercial_experience_bands as experience_bands')
+							->where('experience_bands.is_active', 1)
+							->whereColumn('commericial_details.exp', '>=', 'experience_bands.min_experience')
+							->whereColumn('commericial_details.exp', '<=', 'experience_bands.max_experience')
+							->where('experience_bands.max_experience', '>=', $jobMinExp)
+							->where('experience_bands.min_experience', '<=', $jobMaxExp);
+					})
 					->min('commericial_details.rate');
 
 					$minimumRateType   =  DB::table('commericials')

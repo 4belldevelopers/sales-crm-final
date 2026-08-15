@@ -947,6 +947,25 @@ CREATE TABLE `commericial_details` (
 ) ENGINE=InnoDB AUTO_INCREMENT=13586 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- ============================================================
+-- TABLE: commercial_experience_bands
+-- ============================================================
+CREATE TABLE `commercial_experience_bands` (
+  `id` bigint unsigned NOT NULL AUTO_INCREMENT,
+  `code` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
+  `label` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
+  `min_experience` smallint unsigned NOT NULL,
+  `max_experience` smallint unsigned NOT NULL,
+  `sort_order` smallint unsigned NOT NULL,
+  `is_active` tinyint(1) NOT NULL DEFAULT '1',
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `commercial_experience_bands_code_unique` (`code`),
+  UNIQUE KEY `commercial_experience_bands_sort_order_unique` (`sort_order`),
+  KEY `commercial_experience_bands_active_sort_index` (`is_active`,`sort_order`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- ============================================================
 -- TABLE: commericials
 -- ============================================================
 CREATE TABLE `commericials` (
