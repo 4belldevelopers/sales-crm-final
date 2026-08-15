@@ -12740,7 +12740,17 @@ class HomeController extends Controller
                                                 $minimumRate   =  DB::table('commericials')
                                                     ->join('commericial_details','commericial_details.commericial_id','=','commericials.id')
                                                     ->where('commericials.commtype','=', $commtype)
-                                                    ->where('commericials.company_id','=',$row->id)->whereBetween('commericial_details.exp', [$jobMinExp, $jobMaxExp])
+                                                    ->where('commericials.company_id','=',$row->id)
+                                                    // Intent: rate cards use the same active global experience-band source as Commercials settings.
+                                                    ->whereExists(function ($experienceBands) use ($jobMinExp, $jobMaxExp) {
+                                                        $experienceBands->selectRaw('1')
+                                                            ->from('commercial_experience_bands as experience_bands')
+                                                            ->where('experience_bands.is_active', 1)
+                                                            ->whereColumn('commericial_details.exp', '>=', 'experience_bands.min_experience')
+                                                            ->whereColumn('commericial_details.exp', '<=', 'experience_bands.max_experience')
+                                                            ->where('experience_bands.max_experience', '>=', $jobMinExp)
+                                                            ->where('experience_bands.min_experience', '<=', $jobMaxExp);
+                                                    })
                                                     ->min('commericial_details.rate');
                                 
                                                     $minimumRateType   =  DB::table('commericials')

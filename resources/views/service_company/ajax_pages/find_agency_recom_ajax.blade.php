@@ -164,6 +164,14 @@
                         ->join('commericial_details', 'commericial_details.commericial_id', '=', 'commericials.id')
                         ->where('commericials.commtype', '=', $commtype)
                         ->where('commericials.company_id', '=', $row->id)
+                        // Intent: exclude detail indexes that are not covered by an active global experience band.
+                        ->whereExists(function ($experienceBands) {
+                            $experienceBands->selectRaw('1')
+                                ->from('commercial_experience_bands as experience_bands')
+                                ->where('experience_bands.is_active', 1)
+                                ->whereColumn('commericial_details.exp', '>=', 'experience_bands.min_experience')
+                                ->whereColumn('commericial_details.exp', '<=', 'experience_bands.max_experience');
+                        })
                         ->min('commericial_details.rate');
                         $minimumRateGet = $minimumRate;
 

@@ -1915,11 +1915,27 @@
                         ->join('commericial_details', 'commericial_details.commericial_id', '=', 'commericials.id')
                         ->where('commericials.commtype', '=', 1)
                         ->where('commericials.company_id', '=', $directClientDetail->company_id)
+                        // Intent: show only commercial rates covered by an active global experience band.
+                        ->whereExists(function ($experienceBands) {
+                            $experienceBands->selectRaw('1')
+                                ->from('commercial_experience_bands as experience_bands')
+                                ->where('experience_bands.is_active', 1)
+                                ->whereColumn('commericial_details.exp', '>=', 'experience_bands.min_experience')
+                                ->whereColumn('commericial_details.exp', '<=', 'experience_bands.max_experience');
+                        })
                         ->min('commericial_details.rate');
                     $minimumFulltimeRates = DB::table('commericials')
                         ->join('commericial_details', 'commericial_details.commericial_id', '=', 'commericials.id')
                         ->where('commericials.commtype', '=', 2)
                         ->where('commericials.company_id', '=', $directClientDetail->company_id)
+                        // Intent: show only commercial rates covered by an active global experience band.
+                        ->whereExists(function ($experienceBands) {
+                            $experienceBands->selectRaw('1')
+                                ->from('commercial_experience_bands as experience_bands')
+                                ->where('experience_bands.is_active', 1)
+                                ->whereColumn('commericial_details.exp', '>=', 'experience_bands.min_experience')
+                                ->whereColumn('commericial_details.exp', '<=', 'experience_bands.max_experience');
+                        })
                         ->min('commericial_details.rate');
 
                     $minimumContractType = DB::table('commericials')
