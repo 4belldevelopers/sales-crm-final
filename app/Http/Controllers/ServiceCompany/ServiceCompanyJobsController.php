@@ -52,7 +52,8 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
 
     private const COMMERCIAL_REPLACEMENT_ELIGIBILITY = ['early_exit' => 'Candidate Resignation / Early Exit', 'employer_termination' => 'Employer Termination', 'any_separation' => 'Any Early Separation', 'any_conditions' => 'Any conditions'];
 
-    private const COMMERCIAL_BILLING_FREQUENCIES = ['one_time' => 'One Time', 'monthly' => 'Monthly', 'quarterly' => 'Quarterly'];
+    // Intent: provide the validated billing cadence choices used by both the commercial drawer and save handler.
+    private const COMMERCIAL_BILLING_FREQUENCIES = ['one_time' => 'One Time', 'weekly' => 'Weekly', 'monthly' => 'Monthly', 'quarterly' => 'Quarterly'];
 
     private const COMMERCIAL_BILLING_TRIGGERS = ['candidate_joined' => 'Candidate Joined', 'offer_accepted' => 'Offer Accepted', 'invoice_raised' => 'Invoice Raised'];
 
