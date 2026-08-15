@@ -14255,6 +14255,9 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
             }
         }
 
+        // Intent: asynchronously refresh only this company's ES document after its MySQL commercial countries are replaced.
+        ElasticCompanyIndex::dispatch($company_id);
+
         // dd( $commericialId);
         return response()->json(['status' => 'success']);
     }
