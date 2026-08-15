@@ -50,7 +50,7 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
 
     private const COMMERCIAL_REPLACEMENT_TYPES = ['free_replacement' => 'Free Replacement', 'credit_note' => 'Credit Note', 'none' => 'No Replacement'];
 
-    private const COMMERCIAL_REPLACEMENT_ELIGIBILITY = ['early_exit' => 'Candidate Resignation / Early Exit', 'employer_termination' => 'Employer Termination', 'any_separation' => 'Any Early Separation'];
+    private const COMMERCIAL_REPLACEMENT_ELIGIBILITY = ['early_exit' => 'Candidate Resignation / Early Exit', 'employer_termination' => 'Employer Termination', 'any_separation' => 'Any Early Separation', 'any_conditions' => 'Any conditions'];
 
     private const COMMERCIAL_BILLING_FREQUENCIES = ['one_time' => 'One Time', 'monthly' => 'Monthly', 'quarterly' => 'Quarterly'];
 
