@@ -30,8 +30,10 @@ class AccountSettingsService
      *
      * Tenancy: Scoped strictly by $companyId.
      */
-    public function getAccountPageData(int $companyId): array
+    public function getAccountPageData(int $companyId, array $options = []): array
     {
+        $includeNotifications = $options['include_notifications'] ?? true;
+
         // 1. Get tenant-scoped company account data (cached in Redis)
         $tenantData = $this->accountRepository->getCompanyAccountSettings($companyId);
 
@@ -45,39 +47,45 @@ class AccountSettingsService
             'date_formatArr' => ReferenceDataCache::masterDateFormats(),
             'email_preferencesArr' => ReferenceDataCache::masterEmailPreferences(),
             'countries' => ReferenceDataCache::masterCountries(),
-            'master_notificationsArr' => ReferenceDataCache::masterNotificationsElastic($this->elasticService),
         ];
 
-        // 3. Elastic company notifications (cached in Redis per company)
-        $notificationData = \Illuminate\Support\Facades\Cache::remember(
-            "account_notifications:company:{$companyId}",
-            3600,
-            function () use ($companyId) {
-                try {
-                    $params = [
-                        'index' => ELASTIC_MASTER_NOTIFICATIONS,
-                        'body' => [
-                            'size' => 10000,
-                            'query' => [
-                                'bool' => [
-                                    'must' => [
-                                        ['term' => ['company_id' => (int) $companyId]],
+        // Intent: Commercials and Ads Settings are standalone tabs, so they can skip notification-only Elastic payloads.
+        $masterData['master_notificationsArr'] = collect([]);
+        $notificationData = collect([]);
+        if ($includeNotifications) {
+            $masterData['master_notificationsArr'] = ReferenceDataCache::masterNotificationsElastic($this->elasticService);
+
+            // 3. Elastic company notifications (cached in Redis per company)
+            $notificationData = \Illuminate\Support\Facades\Cache::remember(
+                "account_notifications:company:{$companyId}",
+                3600,
+                function () use ($companyId) {
+                    try {
+                        $params = [
+                            'index' => ELASTIC_MASTER_NOTIFICATIONS,
+                            'body' => [
+                                'size' => 10000,
+                                'query' => [
+                                    'bool' => [
+                                        'must' => [
+                                            ['term' => ['company_id' => (int) $companyId]],
+                                        ],
                                     ],
                                 ],
                             ],
-                        ],
-                    ];
-                    $response = $this->elasticService->getClient()->search($params);
+                        ];
+                        $response = $this->elasticService->getClient()->search($params);
 
-                    return collect($response['hits']['hits'] ?? [])
-                        ->map(function ($hit) {
-                            return (object) $hit['_source'];
-                        })->keyBy('notifications_name');
-                } catch (\Exception $e) {
-                    return collect([]);
+                        return collect($response['hits']['hits'] ?? [])
+                            ->map(function ($hit) {
+                                return (object) $hit['_source'];
+                            })->keyBy('notifications_name');
+                    } catch (\Exception $e) {
+                        return collect([]);
+                    }
                 }
-            }
-        );
+            );
+        }
 
         return array_merge($tenantData, $masterData, ['notification' => $notificationData]);
     }
