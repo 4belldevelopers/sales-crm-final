@@ -385,6 +385,35 @@
       .sst-2col > .sst-2col-main { flex:1 1 auto; min-width:0; }
       .sst-2col > .sst-preview { width:310px; flex:0 0 310px; position:sticky; top:80px; align-self:flex-start; }
       @media (max-width:1200px){ .sst-2col { flex-wrap:wrap; } .sst-2col > .sst-preview { width:100%; flex-basis:100%; position:static; } }
+      /* Embedded drawer: reproduce the compact Compensation Details layout without changing form names or save behavior. */
+      @if (request('embed'))
+      .sst-edit #kt_activities_scroll { background:#f5f8fa !important; padding:12px !important; overflow-x:hidden !important; }
+      .sst-edit #kt_offercreate_body .card, .sst-edit #kt_offercreate_body .card-custom { margin:0 !important; border:0 !important; box-shadow:none !important; background:transparent !important; }
+      .sst-edit #kt_offercreate_body .card-body { padding:0 !important; }
+      .sst-edit #step1 { padding-top:0 !important; }
+      .sst-edit #step1 > .tab-content { padding:14px !important; border-radius:9px !important; }
+      .sst-edit #createForm > .form-group.row > .col-lg-12:first-of-type { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:10px 14px; margin:0 0 14px !important; }
+      .sst-edit #createForm > .form-group.row > .col-lg-12:first-of-type > .row { display:contents; }
+      .sst-edit #createForm > .form-group.row > .col-lg-12:first-of-type .col-4 { width:auto !important; min-width:0 !important; max-width:none !important; padding:0 !important; margin:0 !important; }
+      .sst-edit #step1 .form-label { display:flex; align-items:center; gap:3px; margin:0 0 4px !important; font-size:10px !important; line-height:1.2; }
+      .sst-edit #step1 .form-select-solid, .sst-edit #step1 .form-control-solid { min-height:31px !important; height:31px !important; padding:5px 8px !important; border-color:#dce3ef !important; border-radius:5px !important; font-size:11px !important; }
+      .sst-edit #pointList, .sst-edit #bonusList, .sst-edit #insurenceList { width:100% !important; min-width:0 !important; table-layout:fixed; margin:0 !important; }
+      .sst-edit #pointList th, .sst-edit #pointList td, .sst-edit #bonusList th, .sst-edit #bonusList td, .sst-edit #insurenceList th, .sst-edit #insurenceList td { padding:5px 5px !important; font-size:10px !important; vertical-align:middle !important; }
+      .sst-edit #pointList th, .sst-edit #bonusList th, .sst-edit #insurenceList th { background:#f7f9fc; color:#64748b; font-weight:600; white-space:normal !important; line-height:1.15; }
+      .sst-edit #pointList th:nth-child(4), .sst-edit #pointList td:nth-child(4), .sst-edit #bonusList th:nth-child(4), .sst-edit #bonusList td:nth-child(4), .sst-edit #insurenceList th:nth-child(4), .sst-edit #insurenceList td:nth-child(4) { display:none; }
+      .sst-edit #pointList th:nth-child(1), .sst-edit #bonusList th:nth-child(1), .sst-edit #insurenceList th:nth-child(1) { width:25% !important; }
+      .sst-edit #pointList th:nth-child(2), .sst-edit #bonusList th:nth-child(2), .sst-edit #insurenceList th:nth-child(2) { width:15% !important; }
+      .sst-edit #pointList th:nth-child(3), .sst-edit #bonusList th:nth-child(3), .sst-edit #insurenceList th:nth-child(3) { width:11% !important; }
+      .sst-edit #pointList th:nth-child(5), .sst-edit #bonusList th:nth-child(5), .sst-edit #insurenceList th:nth-child(5) { width:14% !important; }
+      .sst-edit #pointList th:nth-child(6), .sst-edit #bonusList th:nth-child(6), .sst-edit #insurenceList th:nth-child(6) { width:14% !important; }
+      .sst-edit #pointList th:nth-child(7), .sst-edit #bonusList th:nth-child(7), .sst-edit #insurenceList th:nth-child(7) { width:14% !important; }
+      .sst-edit #pointList th:nth-child(8), .sst-edit #bonusList th:nth-child(8), .sst-edit #insurenceList th:nth-child(8) { width:7% !important; }
+      .sst-edit #pointList .form-control, .sst-edit #pointList .form-select, .sst-edit #bonusList .form-control, .sst-edit #bonusList .form-select, .sst-edit #insurenceList .form-control, .sst-edit #insurenceList .form-select { width:100% !important; min-width:0 !important; min-height:28px !important; height:28px !important; padding:3px 5px !important; font-size:10px !important; border-radius:4px !important; }
+      .sst-edit #pointList tbody tr.other_section_row > td:first-child, .sst-edit #bonusList tbody tr.other_section_row > td:first-child, .sst-edit #insurenceList tbody tr.other_section_row > td:first-child { padding-left:26px !important; }
+      .sst-edit #pointList tbody tr.other_section_row > td:first-child::before, .sst-edit #bonusList tbody tr.other_section_row > td:first-child::before, .sst-edit #insurenceList tbody tr.other_section_row > td:first-child::before { left:5px !important; font-size:9px !important; }
+      @media (max-width:900px){ .sst-edit #createForm > .form-group.row > .col-lg-12:first-of-type { grid-template-columns:repeat(2,minmax(0,1fr)); } }
+      @media (max-width:600px){ .sst-edit #createForm > .form-group.row > .col-lg-12:first-of-type { grid-template-columns:1fr; } .sst-edit #pointList, .sst-edit #bonusList, .sst-edit #insurenceList { min-width:720px !important; } .sst-edit #kt_offercreate_body .row { overflow-x:auto; } }
+      @endif
     </style>
     <div class="sst-edit">
       {{-- The drawer keeps only editable controls; standalone editing retains its navigation. --}}
@@ -575,7 +604,7 @@
                                                             value="{{ @$designation }}">
                                                     </div>
                                                     <div class="col-4 px-2">
-                                                        <label class="form-label">Effective From</label>
+                                                        <label class="form-label"><i class="far fa-calendar-alt me-1 text-primary"></i>Date of Joining (DOJ)</label>
                                                         <input type="datetime-local"
                                                             class="form-control form-control-solid" name="dob"
                                                             id="dob" placeholder="Enter dob"
