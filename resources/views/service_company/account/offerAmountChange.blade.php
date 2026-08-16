@@ -389,6 +389,7 @@
       @if (request('embed'))
       html, body, #kt_wrapper, #kt_content, #kt_content_container { min-height:100% !important; background:#f5f8fa !important; }
       .sst-edit #kt_activities_scroll { background:#f5f8fa !important; padding:12px !important; overflow-x:hidden !important; }
+      .sst-edit #kt_activities_scroll { height:auto !important; max-height:none !important; min-height:0 !important; overflow-y:visible !important; }
       .sst-edit #kt_offercreate_body .card, .sst-edit #kt_offercreate_body .card-custom { margin:0 !important; border:0 !important; box-shadow:none !important; background:transparent !important; }
       .sst-edit #kt_offercreate_body .card-body { padding:0 !important; }
       .sst-edit #step1 { padding-top:0 !important; }
@@ -414,6 +415,20 @@
       .sst-edit #pointList tbody tr.other_section_row > td:first-child, .sst-edit #bonusList tbody tr.other_section_row > td:first-child, .sst-edit #insurenceList tbody tr.other_section_row > td:first-child { padding-left:26px !important; }
       .sst-edit #pointList tbody tr.other_section_row > td:first-child .offer_points, .sst-edit #bonusList tbody tr.other_section_row > td:first-child .offer_points, .sst-edit #insurenceList tbody tr.other_section_row > td:first-child .offer_points { line-height:1.2 !important; vertical-align:middle !important; }
       .sst-edit #pointList tbody tr.other_section_row > td:first-child::before, .sst-edit #bonusList tbody tr.other_section_row > td:first-child::before, .sst-edit #insurenceList tbody tr.other_section_row > td:first-child::before { left:5px !important; font-size:9px !important; }
+      .salary-editor-card { margin:0 0 12px; border:1px solid #dce3ef; border-radius:8px; background:#fff; overflow:hidden; }
+      .salary-editor-card-head { display:flex; align-items:flex-start; justify-content:space-between; gap:12px; padding:12px 14px 7px; }
+      .salary-editor-card-head h3 { margin:0; color:#18223d; font-size:12px; font-weight:600; }
+      .salary-editor-card-head h3 span { color:#7d8aa6; font-size:10px; font-weight:500; }
+      .salary-editor-card-head p { margin:2px 0 0; color:#7d8aa6; font-size:9px; font-weight:500; }
+      .salary-editor-add { display:inline-flex; align-items:center; gap:5px; min-height:27px; padding:5px 9px; border:1px solid #d7e0ff; border-radius:5px; background:#f6f8ff; color:#315df6; font-size:10px; font-weight:600; white-space:nowrap; }
+      .salary-editor-card .row { margin:0 !important; overflow:visible !important; }
+      .salary-editor-card .addRowBtn, .salary-editor-card .addRowBtnbonus { display:none !important; }
+      .salary-editor-card #bonusList thead tr:first-child { display:none; }
+      .salary-editor-card #final_pay { border:0 !important; background:#e9fff2; }
+      .salary-editor-card #final_pay th { padding:8px 7px !important; background:#e9fff2 !important; }
+      .salary-editor-card-summary { margin:0 14px 10px; padding:7px 9px; border-radius:5px; background:#dcfbe9; color:#118651; font-size:10px; font-weight:600; }
+      .salary-editor-card.additional .salary-editor-card-summary { background:#f4efff; color:#6942c6; }
+      .salary-editor-card.final .salary-editor-card-head { padding-bottom:2px; }
       @media (max-width:900px){ .sst-edit #createForm > .form-group.row > .col-lg-12:first-of-type { grid-template-columns:repeat(2,minmax(0,1fr)); } }
       @media (max-width:600px){ .sst-edit #createForm > .form-group.row > .col-lg-12:first-of-type { grid-template-columns:1fr; } .sst-edit #pointList, .sst-edit #bonusList, .sst-edit #insurenceList { min-width:720px !important; } .sst-edit #kt_offercreate_body .row { overflow-x:auto; } }
       @endif
@@ -1764,13 +1779,59 @@
               wrap.appendChild(tablesCol);
               wrap.appendChild(preview);
             }
+            @if (request('embed'))
+            // Create visual card boundaries around the existing tables; original add handlers stay intact.
+            function buildSalaryEditorCards(){
+              var makeCard = function(tableId, title, subtitle, kind, buttonSelector, buttonLabel){
+                var table = document.getElementById(tableId);
+                var row = table && table.closest('.row');
+                if (!table || !row || row.closest('.salary-editor-card')) return;
+                var card = document.createElement('section');
+                card.className = 'salary-editor-card ' + kind;
+                var header = document.createElement('div');
+                header.className = 'salary-editor-card-head';
+                header.innerHTML = '<div><h3>' + title + '</h3><p>' + subtitle + '</p></div>';
+                if (buttonSelector){
+                  var add = document.createElement('button');
+                  add.type = 'button'; add.className = 'salary-editor-add';
+                  add.innerHTML = '<i class="fas fa-plus"></i>' + buttonLabel;
+                  add.addEventListener('click', function(){ var source = document.querySelector(buttonSelector); if (source) source.click(); });
+                  header.appendChild(add);
+                }
+                row.parentNode.insertBefore(card, row); card.appendChild(header); card.appendChild(row);
+                if (kind !== 'final'){
+                  var summary = document.createElement('div'); summary.className = 'salary-editor-card-summary';
+                  summary.setAttribute('data-summary-for', tableId); card.insertBefore(summary, row);
+                }
+              };
+              makeCard('pointList', 'Main Components <span>(Must Total 100%)</span>', 'These are core components. Total percentage must be exactly 100%.', 'main', '.addRowBtn', 'Add Main Component');
+              makeCard('bonusList', 'Additional Components <span>(Above 100% – Optional)</span>', 'These components are added on top of the main 100%.', 'additional', '.addRowBtnbonus', 'Add Additional Component');
+              makeCard('final_pay', 'Final CTC <span>(Cost to Company)</span>', 'Summary of total cost including main and additional components.', 'final');
+            }
+            function refreshEditorCardSummaries(){
+              var value = function(selector){ return Array.prototype.reduce.call(document.querySelectorAll(selector), function(total, el){ return total + num(el.value); }, 0); };
+              var main = value('#pointList .option_percentage');
+              var additional = value('#bonusList .bonus_option_percentage') + value('#insurenceList .insurence_option_percentage');
+              var mainSummary = document.querySelector('[data-summary-for="pointList"]');
+              var addSummary = document.querySelector('[data-summary-for="bonusList"]');
+              if (mainSummary) mainSummary.textContent = 'Total main components: ' + main.toFixed(2) + '% ' + (Math.abs(main - 100) < 0.01 ? '— exactly 100%' : '— must total 100%');
+              if (addSummary) addSummary.textContent = 'Total additional components: ' + additional.toFixed(2) + '% (allowed above 100%)';
+            }
+            @endif
             window.addEventListener('load', function(){
               relocateCards(); build2col();
+              @if (request('embed'))
+              buildSalaryEditorCards(); refreshEditorCardSummaries();
+              document.addEventListener('input', refreshEditorCardSummaries);
+              @endif
               setTimeout(function(){
                 relocateCards(); build2col();
                 var ctc = document.getElementById('ctc'), pv = document.getElementById('sstPvAmount');
                 if (ctc && pv && num(ctc.value) > 0) pv.value = ctc.value;
                 refreshSstCards();
+                @if (request('embed'))
+                buildSalaryEditorCards(); refreshEditorCardSummaries();
+                @endif
               }, 400);
             });
           })();
