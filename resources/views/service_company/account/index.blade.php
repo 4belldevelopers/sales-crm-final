@@ -377,6 +377,8 @@ input[type="radio"]:checked {
 .candidate-config-shell{display:grid;grid-template-columns:244px minmax(0,1fr);gap:18px;align-items:start;font-family:'Poppins',sans-serif}.candidate-config-nav{padding:12px;border:1px solid #e5eaf4;border-radius:12px;background:#fff}.candidate-config-nav h4{margin:0 0 12px;padding:4px 6px 12px;border-bottom:1px solid #edf0f6;color:#111b3d;font-size:13px;font-weight:600}.candidate-config-group{margin:14px 6px 6px;color:#8391b1;font-size:10px;font-weight:600;letter-spacing:.04em;text-transform:uppercase}.candidate-config-link{display:flex;align-items:center;gap:10px;margin:4px 0;padding:11px 10px;border-radius:8px;color:#52638b!important;font-size:12px;font-weight:500;text-decoration:none}.candidate-config-link i{width:20px;height:20px;display:inline-flex;align-items:center;justify-content:center;border-radius:6px;background:#f1f4ff;color:#275df6;font-size:11px}.candidate-config-link span{display:block}.candidate-config-link small{display:block;margin-top:2px;color:#8391b1;font-size:10px;font-weight:500}.candidate-config-link.active,.candidate-config-link:hover{background:#eef3ff;color:#1b55f6!important}.candidate-config-link.active i{background:#dce8ff}.candidate-config-panel{min-width:0;padding:2px 0}.candidate-config-panel .card-header{padding-top:0!important}.candidate-config-panel .card-title h3{font-family:'Poppins',sans-serif;font-size:16px;font-weight:600}@media(max-width:991px){.candidate-config-shell{grid-template-columns:1fr}.candidate-config-nav{display:flex;gap:8px;overflow-x:auto}.candidate-config-nav h4,.candidate-config-group{display:none}.candidate-config-link{flex:0 0 auto;margin:0}.candidate-config-link small{display:none}}
 /* Candidate offer-letter editing uses the original editor and persistence handler inside a focused right drawer. */
 .offer-letter-drawer-ov{position:fixed;inset:0;background:rgba(15,23,42,.42);opacity:0;visibility:hidden;transition:opacity .18s ease;z-index:1054}.offer-letter-drawer-ov.show{opacity:1;visibility:visible}.offer-letter-drawer{--offer-drawer-sidebar:220px;position:fixed!important;top:0;right:0;bottom:0;width:min(1180px,calc((100vw - var(--offer-drawer-sidebar))*0.9));max-width:calc(100vw - var(--offer-drawer-sidebar) - 18px);min-width:0;margin:0!important;padding:0!important;background:#f5f8fa;box-shadow:-12px 0 32px rgba(15,23,42,.18);z-index:1055;overflow:auto}.offer-letter-drawer-header{position:sticky;top:0;z-index:2;display:flex;align-items:center;justify-content:space-between;gap:14px;padding:14px 18px;background:#fff;border-bottom:1px solid #e4e9f2}.offer-letter-drawer-title{margin:0;color:#111b3d;font-size:15px;font-weight:600}.offer-letter-drawer-sub{margin:2px 0 0;color:#64748b;font-size:11px;font-weight:500}.offer-letter-drawer-actions{display:flex;align-items:center;gap:8px}.offer-letter-drawer-actions .btn{font-family:'Poppins',sans-serif;font-size:11px;font-weight:600}.offer-letter-drawer-close{width:32px;height:32px;border:1px solid #dce3ef;border-radius:7px;background:#fff;color:#64748b;font-size:20px;line-height:1;cursor:pointer}.offer-letter-drawer-body{padding:16px 18px 24px;background:#f5f8fa}.offer-letter-drawer .cke{width:100%!important;border:1px solid #dce3ef!important;border-radius:8px;overflow:hidden}.offer-letter-drawer .cke_contents{min-height:calc(100vh - 190px)!important}.offer-letter-drawer .card-footer{display:none!important}@media(max-width:1199px){.offer-letter-drawer{--offer-drawer-sidebar:160px;width:calc((100vw - var(--offer-drawer-sidebar))*0.9);max-width:calc(100vw - var(--offer-drawer-sidebar) - 14px)}}@media(max-width:991px){.offer-letter-drawer{--offer-drawer-sidebar:0px;width:92vw;max-width:92vw}.offer-letter-drawer-header{align-items:flex-start;padding:12px}.offer-letter-drawer-actions{flex-wrap:wrap;justify-content:flex-end}.offer-letter-drawer-body{padding:12px}.offer-letter-drawer .cke_contents{min-height:calc(100vh - 210px)!important}}@media(max-width:575px){.offer-letter-drawer{width:94vw;max-width:94vw}.offer-letter-drawer-actions .btn{padding:8px 10px}}
+.settings-offer-template,.settings-offer-template *{box-sizing:border-box;font-family:'Poppins',sans-serif}.settings-offer-template{font-size:12px;color:#181c32}.settings-offer-template .co-tpl-header{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:14px;flex-wrap:wrap}.settings-offer-template .co-tpl-title{margin:0;color:#181c32;font-size:14px!important;font-weight:700!important}.settings-offer-template .co-tpl-sub{margin-top:2px;color:#7e8299;font-size:11px;line-height:1.45}.settings-offer-template .co-tpl-select-wrap{display:flex;align-items:center;gap:8px;flex-shrink:0}.settings-offer-template .co-tpl-select-label{color:#181c32;font-size:12px;font-weight:700;white-space:nowrap}.settings-offer-template .co-tpl-select{height:36px;min-width:220px;padding:4px 10px;border:1px solid #e4e6ef;border-radius:8px;background:#fff;color:#3f4254;font-size:12px!important}.settings-offer-template .co-tpl-layout{display:flex;align-items:flex-start;gap:16px;background:#fff}.settings-offer-template .co-tpl-editor-col{flex:1 1 auto;min-width:0}.settings-offer-template .co-tpl-side{flex:0 0 210px;max-width:210px;display:flex;flex-direction:column}.settings-offer-template .co-tpl-editor-col,.settings-offer-template .co-tpl-side{padding:14px;border:1px solid #eef1f7;border-radius:14px;background:#fff;box-shadow:0 1px 3px rgba(24,28,50,.05)}.settings-offer-template .co-tpl-subcard{margin-bottom:10px;padding:10px 12px;border:1px solid #eef1f7;border-radius:10px;background:#f9fafd}.settings-offer-template .co-tpl-tabs{display:flex;gap:4px;margin-bottom:12px;border-bottom:1px solid #eef1f7}.settings-offer-template .co-tpl-tab{padding:7px 12px;border:0;border-bottom:2px solid transparent;background:none;color:#a1a5b7;font-size:12px!important;font-weight:600;cursor:pointer}.settings-offer-template .co-tpl-tab--active{color:#1b84ff;border-bottom-color:#1b84ff}.settings-offer-template .co-tpl-meta-row{display:flex;align-items:center;gap:16px;flex-wrap:wrap}.settings-offer-template .co-tpl-meta-item{color:#7e8299;font-size:10px}.settings-offer-template .co-tpl-meta-item b{margin-left:4px;color:#181c32;font-weight:600}.settings-offer-template .co-letterhead{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}.settings-offer-template .co-letterhead-logo img{display:block;max-width:150px;max-height:40px;object-fit:contain}.settings-offer-template .co-letterhead-address{max-width:260px;text-align:right;color:#7e8299;font-size:10px;line-height:1.5}.settings-offer-template .co-letterhead-company{color:#181c32;font-size:12px;font-weight:700}.settings-offer-template .co-tpl-side-title{color:#181c32;font-size:12px;font-weight:700}.settings-offer-template .co-tpl-side-sub{margin:3px 0 8px;color:#7e8299;font-size:10px;line-height:1.4}.settings-offer-template .co-var-chips{display:flex;flex-wrap:wrap;gap:5px}.settings-offer-template .co-var-chip{padding:4px 8px;border:1px solid #e0e7ff;border-radius:7px;background:#eef3ff;color:#4f46e5;font-size:10px!important;font-weight:600;white-space:nowrap;cursor:pointer}.settings-offer-template .co-var-chip:hover{background:#e0e7ff}.settings-offer-template .co-tpl-note{color:#7e8299;font-size:10px;line-height:1.5}.settings-offer-template .co-btn-reset{width:100%;height:36px;border:1px solid #f1416c!important;border-radius:8px;background:#fff!important;color:#f1416c!important;font-size:11px!important;font-weight:600!important}.settings-offer-template .co-tpl-preview{min-height:320px;max-height:460px;overflow:auto;padding:18px;border:1px solid #eef1f7;border-radius:10px;background:#fff;color:#334155;font-size:12px;line-height:1.6}.settings-offer-template .offer-letter-editor-shell .cke_contents{min-height:calc(100vh - 360px)!important}@media(max-width:1100px){.settings-offer-template .co-tpl-layout{flex-direction:column}.settings-offer-template .co-tpl-side{width:100%;max-width:none;flex:1 1 auto}.settings-offer-template .co-tpl-header{flex-direction:column;align-items:stretch}.settings-offer-template .co-tpl-select-wrap{width:100%}.settings-offer-template .co-tpl-select{flex:1 1 auto;min-width:0}}@media(max-width:575px){.settings-offer-template .co-letterhead{display:block}.settings-offer-template .co-letterhead-address{max-width:none;margin-top:10px;text-align:left}}
+.settings-offer-template .co-tpl-zoom{display:flex;align-items:center;gap:6px}.settings-offer-template .co-tpl-zoom-btn{width:24px;height:24px;border:1px solid #e4e6ef;border-radius:6px;background:#fff;color:#5e6278;font-size:12px!important;font-weight:700;line-height:1;cursor:pointer}.settings-offer-template .co-tpl-zoom-btn:hover{background:#f5f8fa}.settings-offer-template .co-tpl-zoom-pct{display:inline-block;min-width:30px;text-align:center;color:#7e8299;font-size:10px}.settings-offer-template .co-tpl-download-btn{display:inline-flex;align-items:center;gap:5px;padding:5px 10px;border:0;border-radius:7px;background:#eef3ff;color:#4f46e5;font-size:10px!important;font-weight:600;cursor:pointer}.settings-offer-template .co-tpl-download-btn:hover{background:#e0e7ff}.settings-offer-template .co-tpl-download-btn svg{width:11px;height:11px}.settings-offer-template .co-tpl-toolbar-extra{align-items:center;justify-content:space-between;gap:10px}.settings-offer-template .offer-letter-editor-shell .cke_contents{min-height:calc(100vh - 410px)!important}
 </style>
 
 @section('content')
@@ -1504,6 +1506,25 @@ input[type="radio"]:checked {
        
 
 
+        @php
+          // Intent: render the settings offer-letter editor with the same visual letterhead used by offer generation while keeping the saved template dynamic.
+          $settingsOfferLogo = (!empty(@$account->logo) && strlen(@$account->logo) > 10) ? @$account->logo : asset('assets/logo-not-found.png');
+          if (!empty(@$account->website) && empty(@$account->logo)) {
+            $settingsOfferDomain = GeneralMethod::getDomain($account->website);
+            $settingsOfferGoogleIcon = "https://www.google.com/s2/favicons?domain={$settingsOfferDomain}&sz=256";
+            $settingsOfferLogo = GeneralMethod::getDomainIconCompany($settingsOfferGoogleIcon, $account->id, false) ? $settingsOfferGoogleIcon : asset('assets/logo-not-found.png');
+          }
+          $settingsOfferAddress = trim(ucwords($company_city_name).(($company_city_name && $company_country_name) ? ', ' : '').ucwords($company_country_name), ', ');
+          $settingsOfferVariables = [
+            '[CANDIDATE_NAME]'   => 'Candidate Name',
+            '[CANDIDATE_EMAIL]'  => 'Candidate Email',
+            '[CANDIDATE_MOBILE]' => 'Candidate Mobile',
+            '[COMPANY_NAME]'     => 'Company Name',
+            '[JOB_TITLE]'        => 'Job Title',
+            '[JOINING_DATE]'     => 'Joining Date',
+            '[TODAY_DATE]'       => "Today's Date",
+          ];
+        @endphp
         <div class="col-lg-12 edit-terms offer-letter-drawer" id="editTermsoffer" style="display:none;">
           <div class="offer-letter-drawer-header">
             <div><h4 class="offer-letter-drawer-title">Edit Candidate Offer Letter</h4><p class="offer-letter-drawer-sub">Update the reusable template used when generating candidate offers.</p></div>
@@ -1514,8 +1535,98 @@ input[type="radio"]:checked {
             </div>
           </div>
           <div class="offer-letter-drawer-body">
-        
-            <textarea id="kt_docs_tinymce_hiddenoffer" name="kt_docs_tinymce_hiddenoffer" class="tox-target">{!! (@$account->offer_terms) ? @$account->offer_terms :  $global_settings->offer_terms !!}</textarea>
+            <div class="settings-offer-template">
+              <div class="co-tpl-header">
+                <div>
+                  <h5 class="co-tpl-title">Offer Letter Template</h5>
+                  <div class="co-tpl-sub">Personalize the candidate offer letter before using it in the offer workflow.</div>
+                </div>
+                <div class="co-tpl-select-wrap">
+                  <label class="co-tpl-select-label" for="settings_offer_tpl_select">Templates</label>
+                  <select id="settings_offer_tpl_select" class="co-tpl-select">
+                    <option value="company-offer-letter-template" selected>Company Offer Letter Template</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="co-tpl-layout">
+                <div class="co-tpl-editor-col">
+                  <div class="co-tpl-tabs">
+                    <button type="button" class="co-tpl-tab co-tpl-tab--active" data-settings-offer-tab="editor">Template Editor</button>
+                    <button type="button" class="co-tpl-tab" data-settings-offer-tab="preview">Preview</button>
+                  </div>
+
+                  <div class="co-tpl-subcard co-tpl-meta-row">
+                    <span class="co-tpl-meta-item">Type<b>Full Time</b></span>
+                    <span class="co-tpl-meta-item">Status<b style="color:#0f9463">Active</b></span>
+                  </div>
+
+                  <div class="settings-offer-tabpane" data-settings-offer-pane="editor">
+                    <div class="co-tpl-subcard">
+                      <div class="co-letterhead">
+                        <div class="co-letterhead-logo">
+                          <img src="{{ $settingsOfferLogo }}" alt="{{ e(@$account->company_name ?: 'Company') }}" onerror="this.src='{{ asset('assets/logo-not-found.png') }}'">
+                        </div>
+                        <div class="co-letterhead-address">
+                          <div class="co-letterhead-company">{{ ucwords(@$account->company_name ?: 'Company Name') }}</div>
+                          @if(!empty($settingsOfferAddress))
+                            <div>{{ $settingsOfferAddress }}</div>
+                          @endif
+                        </div>
+                      </div>
+                    </div>
+                    <div class="offer-letter-editor-shell">
+                      <textarea id="kt_docs_tinymce_hiddenoffer" name="kt_docs_tinymce_hiddenoffer" class="tox-target">{!! (@$account->offer_terms) ? @$account->offer_terms :  $global_settings->offer_terms !!}</textarea>
+                    </div>
+                    <div class="co-tpl-subcard co-tpl-toolbar-extra" style="margin-top:10px;margin-bottom:0;display:flex;">
+                      <div class="co-tpl-zoom">
+                        <button type="button" class="co-tpl-zoom-btn" id="settings_offer_zoom_out" aria-label="Zoom out">&minus;</button>
+                        <span class="co-tpl-zoom-pct" id="settings_offer_zoom_pct">100%</span>
+                        <button type="button" class="co-tpl-zoom-btn" id="settings_offer_zoom_in" aria-label="Zoom in">+</button>
+                      </div>
+                      <button type="button" class="co-tpl-download-btn" id="settings_offer_download_sample">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m0 0-4-4m4 4 4-4M4 19h16"/></svg>
+                        Download Sample
+                      </button>
+                    </div>
+                  </div>
+
+                  <div class="settings-offer-tabpane d-none" data-settings-offer-pane="preview">
+                    <div class="co-tpl-subcard">
+                      <div class="co-letterhead">
+                        <div class="co-letterhead-logo">
+                          <img src="{{ $settingsOfferLogo }}" alt="{{ e(@$account->company_name ?: 'Company') }}" onerror="this.src='{{ asset('assets/logo-not-found.png') }}'">
+                        </div>
+                        <div class="co-letterhead-address">
+                          <div class="co-letterhead-company">{{ ucwords(@$account->company_name ?: 'Company Name') }}</div>
+                          @if(!empty($settingsOfferAddress))
+                            <div>{{ $settingsOfferAddress }}</div>
+                          @endif
+                        </div>
+                      </div>
+                    </div>
+                    <div id="settings_offer_preview_content" class="co-tpl-preview"></div>
+                  </div>
+                </div>
+
+                <div class="co-tpl-side">
+                  <div class="co-tpl-subcard">
+                    <div class="co-tpl-side-title">Insert Variables</div>
+                    <div class="co-tpl-side-sub">Click to insert dynamic candidate and company fields at the cursor.</div>
+                    <div class="co-var-chips">
+                      @foreach($settingsOfferVariables as $token => $label)
+                        <button type="button" class="co-var-chip" data-settings-offer-variable="{{ $token }}">{{ $label }}</button>
+                      @endforeach
+                    </div>
+                  </div>
+                  <div class="co-tpl-subcard" style="margin-bottom:0;">
+                    <div class="co-tpl-side-title">About this template</div>
+                    <div class="co-tpl-note" style="margin-top:6px;">This is your company's default Offer Letter Template. Changes saved here are reused on candidate offer generation pages.</div>
+                  </div>
+                  <button type="button" class="co-btn-reset setToDefaultCompanyTermsofferTop" style="margin-top:10px;">Reset Template</button>
+                </div>
+              </div>
+            </div>
           
         
           <div class="card-footer d-flex justify-content-center py-6 px-9 bg-white d-none">
@@ -3480,7 +3591,8 @@ function openOfferLetterDrawer() {
     document.body.style.overflow = 'hidden';
     window.setTimeout(function () {
         var editor = window.CKEDITOR && CKEDITOR.instances.kt_docs_tinymce_hiddenoffer;
-        if (editor && editor.resize) editor.resize('100%', Math.max(360, window.innerHeight - 190), true);
+        if (editor && editor.resize) editor.resize('100%', Math.max(320, window.innerHeight - 410), true);
+        updateSettingsOfferPreview();
     }, 60);
 }
 function closeOfferLetterDrawer() {
@@ -3490,9 +3602,60 @@ function closeOfferLetterDrawer() {
     if (overlay) overlay.classList.remove('show');
     document.body.style.overflow = '';
 }
+function updateSettingsOfferPreview() {
+    var preview = document.getElementById('settings_offer_preview_content');
+    var editor = window.CKEDITOR && CKEDITOR.instances.kt_docs_tinymce_hiddenoffer;
+    if (preview && editor) preview.innerHTML = editor.getData();
+}
+function setSettingsOfferZoom(delta) {
+    var pct = document.getElementById('settings_offer_zoom_pct');
+    var editor = window.CKEDITOR && CKEDITOR.instances.kt_docs_tinymce_hiddenoffer;
+    window.settingsOfferEditorZoom = Math.max(80, Math.min(130, (window.settingsOfferEditorZoom || 100) + delta));
+    if (pct) pct.textContent = window.settingsOfferEditorZoom + '%';
+    if (editor && editor.document && editor.document.getBody()) {
+        editor.document.getBody().setStyle('zoom', String(window.settingsOfferEditorZoom / 100));
+    }
+}
 document.addEventListener('DOMContentLoaded', function() {
     var editBtn = document.getElementById('editBtnoffer');
     if (editBtn) editBtn.addEventListener('click', openOfferLetterDrawer);
+    document.querySelectorAll('[data-settings-offer-tab]').forEach(function(tabBtn) {
+        tabBtn.addEventListener('click', function() {
+            var target = tabBtn.getAttribute('data-settings-offer-tab');
+            document.querySelectorAll('[data-settings-offer-tab]').forEach(function(btn) { btn.classList.remove('co-tpl-tab--active'); });
+            document.querySelectorAll('[data-settings-offer-pane]').forEach(function(pane) { pane.classList.add('d-none'); });
+            tabBtn.classList.add('co-tpl-tab--active');
+            var pane = document.querySelector('[data-settings-offer-pane="' + target + '"]');
+            if (pane) pane.classList.remove('d-none');
+            if (target === 'preview') updateSettingsOfferPreview();
+        });
+    });
+    document.querySelectorAll('[data-settings-offer-variable]').forEach(function(chip) {
+        chip.addEventListener('click', function() {
+            var token = chip.getAttribute('data-settings-offer-variable');
+            var editor = window.CKEDITOR && CKEDITOR.instances.kt_docs_tinymce_hiddenoffer;
+            if (token && editor) editor.insertText(token);
+        });
+    });
+    var zoomOut = document.getElementById('settings_offer_zoom_out');
+    var zoomIn = document.getElementById('settings_offer_zoom_in');
+    var download = document.getElementById('settings_offer_download_sample');
+    if (zoomOut) zoomOut.addEventListener('click', function() { setSettingsOfferZoom(-10); });
+    if (zoomIn) zoomIn.addEventListener('click', function() { setSettingsOfferZoom(10); });
+    if (download) download.addEventListener('click', function() {
+        updateSettingsOfferPreview();
+        var preview = document.getElementById('settings_offer_preview_content');
+        var letterhead = document.querySelector('[data-settings-offer-pane="preview"] .co-tpl-subcard');
+        var html = '<!doctype html><html><head><meta charset="utf-8"><title>Offer Letter Template</title></head><body>' + (letterhead ? letterhead.innerHTML : '') + (preview ? preview.innerHTML : '') + '</body></html>';
+        var blob = new Blob([html], { type: 'text/html' });
+        var link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = 'candidate-offer-letter-template.html';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        window.setTimeout(function() { URL.revokeObjectURL(link.href); }, 1000);
+    });
 });
 
 document.addEventListener('DOMContentLoaded', function() {
