@@ -1954,7 +1954,7 @@ input[type="radio"]:checked {
       <span class="t">Edit Salary Template</span>
       <div class="sst-drawer-actions">
         <button type="button" class="btn btn-primary" onclick="submitSalaryTemplateFromDrawer()"><i class="far fa-save me-1"></i>Save Template</button>
-        <button type="button" class="btn" style="background:#5b21d6;color:#fff;" onclick="resetSalaryTemplateDrawer()"><i class="fas fa-undo me-1"></i>Reset</button>
+        <button type="button" class="btn" style="background:#5b21d6;color:#fff;" onclick="resetSalaryTemplateDrawer()" title="Load the Super Admin default components into this editor"><i class="fas fa-undo me-1"></i>Reset</button>
       </div>
       <button type="button" class="sst-drawer-x" onclick="closeSalaryEditDrawer()">&times;</button>
     </div>
@@ -2000,10 +2000,10 @@ input[type="radio"]:checked {
       var save = frame && frame.contentWindow && frame.contentWindow.document.getElementById('save-form');
       if (save) save.click();
     }
-    // Reset reloads the embedded editor from its persisted server state without submitting changes.
+    // Reset intentionally loads the Super Admin master components for review; the company data is unchanged until Save Template submits the existing form.
     function resetSalaryTemplateDrawer(){
       var frame = document.getElementById('sstDrawerFrame');
-      if (frame && frame.src && frame.src !== 'about:blank') frame.src = frame.src;
+      if (frame) frame.src = "{{ route('service_company.account.offerAmountChange', [encrypt(1)]) }}?embed=1";
     }
     function closeSalaryEditDrawer(){
       document.getElementById('sstDrawer').classList.remove('show');
