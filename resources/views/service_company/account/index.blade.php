@@ -3679,8 +3679,16 @@ function updateSettingsOfferPreview() {
 function getActiveCandidateOfferLink() {
     return document.querySelector('.candidate-offer-template-link.active') || document.querySelector('.candidate-offer-template-link');
 }
+function decodeCandidateOfferTemplateContent(html) {
+    if (!html) return '';
+    try {
+        return JSON.parse(html);
+    } catch (e) {
+        return html;
+    }
+}
 function setCandidateOfferTemplateContent(field, label, html, syncEditor) {
-    var safeHtml = html || '';
+    var safeHtml = decodeCandidateOfferTemplateContent(html);
     var fieldInput = document.getElementById('candidateOfferTemplateField');
     var title = document.getElementById('candidateOfferTemplateTitle');
     var drawerTitle = document.getElementById('candidateOfferDrawerTitle');
