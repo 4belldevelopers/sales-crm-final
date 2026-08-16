@@ -3517,7 +3517,16 @@
                             success: function(response) {
 
                                 if (response.status == 'success') {
-                                    Swal.fire("Success", response.message , "success");	
+                                    Swal.fire({
+                                        title: 'Salary template saved',
+                                        text: 'Your salary structure and component configuration have been updated and are ready for new offers.',
+                                        icon: 'success',
+                                        confirmButtonText: 'Done',
+                                        buttonsStyling: false,
+                                        customClass: {
+                                            confirmButton: 'btn btn-primary'
+                                        }
+                                    });
                                     return false;
                                 } else if (response.status == 'errors') {
                                     Swal.fire("Warning", response.message, "warning");
