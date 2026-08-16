@@ -20,7 +20,12 @@ class SecurityHeaders
     {
         $response = $next($request);
 
-        $response->headers->set('X-Frame-Options', 'DENY');
+        // The authenticated salary editor is deliberately rendered in the account page's same-origin drawer.
+        // Keep all other responses unframeable; this exception does not allow cross-origin embedding.
+        $isEmbeddedSalaryEditor = $request->boolean('embed')
+            && $request->routeIs('service_company.account.offerAmountChange');
+
+        $response->headers->set('X-Frame-Options', $isEmbeddedSalaryEditor ? 'SAMEORIGIN' : 'DENY');
         $response->headers->set('X-Content-Type-Options', 'nosniff');
         $response->headers->set('Referrer-Policy', 'strict-origin-when-cross-origin');
         $response->headers->set('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
