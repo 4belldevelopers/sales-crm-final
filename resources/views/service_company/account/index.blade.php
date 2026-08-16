@@ -440,10 +440,8 @@ input[type="radio"]:checked {
 <!--begin::Container-->
 <div id="kt_content_container" class="container-fluid px-0">
 {{-- Keep commercial and advertising workspaces focused; their existing data and handlers are unchanged. --}}
-@if(request('tab') !== 'services' && request('tab') !== 'ads' && request('ads') !== 'show')
-<!--begin::Company Dashboard hero (redesigned)-->
 @php
-  // Profile completion — derived only from already-loaded $account (no extra queries)
+  // Intent: retain overview-only display values even when the commercial or ads workspace hides the dashboard hero.
   $cad_pc = [
     'Basic Information' => (!empty(@$account->company_name) && !empty(@$industries_name)),
     'Company Details'   => (!empty(@$account->company_size) || !empty(@$account->founded)),
@@ -462,6 +460,8 @@ input[type="radio"]:checked {
     $cad_size = (@$account->company_size_from >= 10000) ? $account->company_size_from.'+ employees' : trim($account->company_size_from.' - '.@$account->company_size).' employees';
   }
 @endphp
+@if(request('tab') !== 'services' && request('tab') !== 'ads' && request('ads') !== 'show')
+<!--begin::Company Dashboard hero (redesigned)-->
 <div class="cad">
   <div class="cad-hero">
     <!-- Identity -->
