@@ -5268,7 +5268,7 @@ if (!$this->elasticService->indexExists(ELASTIC_COMPANIES_INDEX)) {
             $this->used = 'For Vendors';
         }elseif($id==2){
             $this->th_email_template = DB::table('global_settings')->select('global_settings.offer_terms as terms')->first();	
-            $this->title = 'Candidate Offer terms';
+            $this->title = 'Fulltime Offer Letter';
             $this->used = 'For Candidates';
         }elseif($id==3){
             $this->th_email_template = DB::table('global_settings')->select('global_settings.privacy_policy as terms')->first();	
