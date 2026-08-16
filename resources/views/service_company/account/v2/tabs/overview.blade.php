@@ -53,7 +53,7 @@
             'Offer letter template set'   => !empty(trim(strip_tags((string)@$account->offer_terms))),
             'Agency terms & conditions'   => !empty(trim(strip_tags((string)@$account->terms))),
             'Salary structure configured' => (!empty(@$offer_points) && count($offer_points) > 0),
-            'Commercials configured'      => ((@$contractStatus->status ?? 0) || (@$fullTimeStatus->status ?? 0)),
+            'Services configured'         => ((@$contractStatus->status ?? 0) || (@$fullTimeStatus->status ?? 0)),
           ];
         @endphp
         <div class="cad-card cad-sec">
