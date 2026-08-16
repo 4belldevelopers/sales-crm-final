@@ -390,8 +390,9 @@
       html, body, #kt_wrapper, #kt_content, #kt_content_container { min-height:100% !important; background:#f5f8fa !important; }
       .sst-edit #kt_activities_scroll { background:#f5f8fa !important; padding:12px !important; overflow-x:hidden !important; }
       .sst-edit #kt_activities_scroll { height:auto !important; max-height:none !important; min-height:0 !important; overflow-y:visible !important; }
-      .sst-edit #kt_offercreate_body .card, .sst-edit #kt_offercreate_body .card-custom { margin:0 !important; border:0 !important; box-shadow:none !important; background:transparent !important; }
-      .sst-edit #kt_offercreate_body .card-body { padding:0 !important; }
+      #kt_offercreate_body, #kt_offercreate_body > div, #kt_activities_scroll > .card, #kt_activities_scroll .card-custom { width:100% !important; max-width:none !important; }
+      #kt_activities_scroll > .card, #kt_activities_scroll .card-custom { margin:0 !important; border:0 !important; box-shadow:none !important; background:transparent !important; }
+      #kt_offercreate_body .card-body { padding:0 !important; }
       .sst-edit #step1 { padding-top:0 !important; }
       .sst-edit #step1 > .tab-content { padding:14px !important; border-radius:9px !important; }
       .sst-edit #createForm > .form-group.row > .col-lg-12:first-of-type { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:10px 14px; margin:0 0 14px !important; }
@@ -429,6 +430,11 @@
       .salary-editor-card-summary { margin:0 14px 10px; padding:7px 9px; border-radius:5px; background:#dcfbe9; color:#118651; font-size:10px; font-weight:600; }
       .salary-editor-card.additional .salary-editor-card-summary { background:#f4efff; color:#6942c6; }
       .salary-editor-card.final .salary-editor-card-head { padding-bottom:2px; }
+      .sst-edit #pointList tbody tr.other_section_row > td:last-child::before, .sst-edit #bonusList tbody tr.other_section_row > td:last-child::before, .sst-edit #insurenceList tbody tr.other_section_row > td:last-child::before { content:none !important; display:none !important; }
+      .sst-edit .remove_points { display:inline-flex !important; align-items:center; justify-content:center; width:26px; height:26px; padding:0 !important; border:1px solid #ffd8e2 !important; border-radius:5px !important; background:#fff5f8 !important; color:#f1416c !important; }
+      .sst-edit .remove_points svg { width:13px !important; height:13px !important; }
+      .sst-edit .remove_points svg rect { fill:#f1416c !important; }
+      .sst-edit .remove_points:disabled { opacity:.35; cursor:not-allowed; }
       @media (max-width:900px){ .sst-edit #createForm > .form-group.row > .col-lg-12:first-of-type { grid-template-columns:repeat(2,minmax(0,1fr)); } }
       @media (max-width:600px){ .sst-edit #createForm > .form-group.row > .col-lg-12:first-of-type { grid-template-columns:1fr; } .sst-edit #pointList, .sst-edit #bonusList, .sst-edit #insurenceList { min-width:720px !important; } .sst-edit #kt_offercreate_body .row { overflow-x:auto; } }
       @endif
@@ -569,7 +575,6 @@
                                                         <label class="form-label required">Template Name <span style="color:#f1416c;">*</span></label>
                                                         <div style="position:relative;">
                                                             <input type="text" class="form-control form-control-solid" id="sstTemplateName" name="template_name" value="Standard Payroll Structure" placeholder="Template name" style="padding-right:30px;">
-                                                            <i class="fas fa-pen" style="position:absolute;right:11px;top:50%;transform:translateY(-50%);color:#a1a5b7;font-size:11px;"></i>
                                                         </div>
                                                     </div>
                                                     <div class="col-4 pe-0">
