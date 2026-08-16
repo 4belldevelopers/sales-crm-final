@@ -22,6 +22,7 @@ use App\Services\ElasticService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
 use Validator;
 
@@ -564,6 +565,12 @@ class ServiceCompanyAccountSettingsController extends ServiceCompanyBaseControll
             // Intent: save the currently selected candidate offer template without affecting other templates.
             $offerTemplateFields = ['offer_terms', 'internship_offer_terms', 'contract_offer_terms', 'agency_offer_terms'];
             $templateField = in_array($request->descriptiontype, $offerTemplateFields, true) ? $request->descriptiontype : 'offer_terms';
+            if (! Schema::hasColumn('companies', $templateField)) {
+                return Reply::dataOnly([
+                    'status' => 'warning',
+                    'message' => 'This offer template cannot be saved until the database column is added.',
+                ]);
+            }
             $company->{$templateField} = @$request->description;
             $company->save();
 
@@ -571,6 +578,12 @@ class ServiceCompanyAccountSettingsController extends ServiceCompanyBaseControll
         } elseif ($request->pageterms == 'termsagencyoffer') {
             $company_id = auth()->user()->company_id;
             $company = Company::findOrFail($company_id);
+            if (! Schema::hasColumn('companies', 'agency_offer_terms')) {
+                return Reply::dataOnly([
+                    'status' => 'warning',
+                    'message' => 'This offer template cannot be saved until the database column is added.',
+                ]);
+            }
             $company->agency_offer_terms = @$request->description;
             $company->save();
 

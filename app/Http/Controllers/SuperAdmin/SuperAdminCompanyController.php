@@ -37,6 +37,7 @@ use Illuminate\Support\Facades\Http;
 use Crypt;
 use App\Helper\GeneralMethod;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 use App\Services\GoogleSheetServiceCandidate;
 use App\Services\GoogleSheetsServiceGet;
@@ -5181,6 +5182,15 @@ if (!$this->elasticService->indexExists(ELASTIC_COMPANIES_INDEX)) {
                 'mailType' =>$request->mailType_is,
                 'from_email_id' =>$request->from_email_id
             );
+            // Intent: avoid SQL errors on live databases that have not yet received newer default-term columns.
+            foreach (array_keys($values) as $settingsColumn) {
+                if (! Schema::hasColumn('global_settings', $settingsColumn)) {
+                    return Reply::dataOnly([
+                        'status' => 'warning',
+                        'message' => 'This default term cannot be saved until the database column is added.',
+                    ]);
+                }
+            }
             // dd($values);
             DB::table('email_notifications')->where('id','=',$request->tokenId)->update($values);
             
@@ -5289,17 +5299,21 @@ if (!$this->elasticService->indexExists(ELASTIC_COMPANIES_INDEX)) {
             $this->title = 'Grievances';
             $this->used = 'For Website';
         }elseif($id==10){
-            $this->th_email_template = DB::table('global_settings')->select(DB::raw("COALESCE(NULLIF(global_settings.agency_offer_terms, ''), global_settings.offer_terms) as terms"))->first();	
+            // Intent: support older live DBs that do not yet have the extra offer-template columns.
+            $offerTermsColumn = Schema::hasColumn('global_settings', 'agency_offer_terms') ? 'agency_offer_terms' : 'offer_terms';
+            $this->th_email_template = DB::table('global_settings')->select(DB::raw("COALESCE(NULLIF(global_settings.{$offerTermsColumn}, ''), global_settings.offer_terms) as terms"))->first();	
             $this->title = 'Agency Offer terms';
             $this->used = 'For Candidates';
         }elseif($id==11){
             // Intent: expose the internship offer-letter master text with Candidate Offer terms as the editable starter copy.
-            $this->th_email_template = DB::table('global_settings')->select(DB::raw("COALESCE(NULLIF(global_settings.internship_offer_terms, ''), global_settings.offer_terms) as terms"))->first();	
+            $offerTermsColumn = Schema::hasColumn('global_settings', 'internship_offer_terms') ? 'internship_offer_terms' : 'offer_terms';
+            $this->th_email_template = DB::table('global_settings')->select(DB::raw("COALESCE(NULLIF(global_settings.{$offerTermsColumn}, ''), global_settings.offer_terms) as terms"))->first();	
             $this->title = 'Internship Offer Letter';
             $this->used = 'For Candidates';
         }elseif($id==12){
             // Intent: expose the contract offer-letter master text with Candidate Offer terms as the editable starter copy.
-            $this->th_email_template = DB::table('global_settings')->select(DB::raw("COALESCE(NULLIF(global_settings.contract_offer_terms, ''), global_settings.offer_terms) as terms"))->first();	
+            $offerTermsColumn = Schema::hasColumn('global_settings', 'contract_offer_terms') ? 'contract_offer_terms' : 'offer_terms';
+            $this->th_email_template = DB::table('global_settings')->select(DB::raw("COALESCE(NULLIF(global_settings.{$offerTermsColumn}, ''), global_settings.offer_terms) as terms"))->first();	
             $this->title = 'Contract Offer Letter';
             $this->used = 'For Candidates';
         }
