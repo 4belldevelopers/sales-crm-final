@@ -14260,6 +14260,9 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
             }
         }
 
+        // Intent: prevent the account Commercials tab from serving pre-save rates, countries, or status from its tenant cache.
+        Cache::forget("account_settings:company:{$company_id}");
+
         // Intent: asynchronously refresh only this company's ES document after its MySQL commercial countries are replaced.
         ElasticCompanyIndex::dispatch($company_id);
 
@@ -14269,105 +14272,38 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
 
     public function updateserviceviewmore(Request $request)
     {
+        $request->validate([
+            'id' => ['required', 'string'],
+            'changeStatus' => ['required', 'boolean'],
+        ]);
 
         $id = decrypt($request->id);
         $company_id = auth()->user()->company_id;
-        $value = ['status' => $request->changeStatus];
-        $result = DB::table('commericials')->where('id','=',$id)->update($value);
+        $status = (int) $request->boolean('changeStatus');
 
-        $commericials = DB::table('commericials')
+        // Intent: update only the authenticated tenant's selected commercial service status.
+        // Tenancy: the record ID is always constrained by company_id to prevent cross-company updates.
+        $commercial = DB::table('commericials')
+            ->where('id', $id)
             ->where('company_id', $company_id)
-            ->get()
-            ->map(function ($comm) {
+            ->first(['id']);
 
-                $details = DB::table('commericial_details')
-                    ->where('commericial_id', $comm->id)
-                    ->get()
-                    ->map(function ($d) {
-
-                        return [
-                            'exp' => (int) $d->exp,
-                            'rate' => (float) $d->rate,
-                            'commtype' => (int) $d->commtype,
-                        ];
-
-                    })
-                    ->toArray();
-
-                return [
-
-                    'id' => (int) $comm->id,
-
-                    'company_id' => (int) $comm->company_id,
-
-                    'rateType' => (int) $comm->rateType,
-
-                    // 1-contract , 2-fulltime
-                    'commtype' => (int) $comm->commtype,
-
-                    // 0-inactive , 1-active
-                    'status' => (int) $comm->status,
-
-                    'sal_mode' => ! empty($comm->sal_mode)
-                        ? (int) $comm->sal_mode
-                        : null,
-
-                    'salary_currency' => ! empty($comm->salary_currency)
-                        ? (int) $comm->salary_currency
-                        : null,
-
-                    'commericial_details' => $details,
-
-                ];
-
-            })
-            ->values()
-            ->toArray();
-
-        $commercial_nested = collect($commericials)
-            ->map(function ($item) {
-
-                return [
-
-                    'id' => $item['id'],
-
-                    'company_id' => $item['company_id'],
-
-                    'commtype' => $item['commtype'],
-
-                    'status' => $item['status'],
-
-                    'rateType' => $item['rateType'],
-
-                    'sal_mode' => $item['sal_mode'],
-
-                    'salary_currency' => $item['salary_currency'],
-
-                ];
-
-            })
-            ->values()
-            ->toArray();
-
-        $response = $this->elasticService->getClient()->update([
-            'index' => ELASTIC_COMPANIES_INDEX,
-            'id' => $company_id,
-            'retry_on_conflict' => 5,
-            'body' => [
-                'doc' => [
-                    'id' => $company_id,
-                    'commercial_nested' => $commercial_nested,
-                ],
-                'doc_as_upsert' => true,
-                'detect_noop' => false,
-            ],
-        ]);
-
-        if ($result) {
-            return response()->json(['status' => 'success']);
-        } else {
-            return response()->json(['status' => 'error']);
+        if (! $commercial) {
+            return response()->json(['status' => 'error', 'message' => 'Commercial service not found.'], 404);
         }
+
+        DB::table('commericials')
+            ->where('id', $commercial->id)
+            ->where('company_id', $company_id)
+            ->update(['status' => $status]);
+
+        // Intent: invalidate the tenant-only account payload so refreshes always read the persisted service status.
+        Cache::forget("account_settings:company:{$company_id}");
+
+        // Intent: keep agency search/recommendation data synchronized without delaying this status-toggle response.
+        ElasticCompanyIndex::dispatch($company_id);
+
+        return response()->json(['status' => 'success', 'serviceStatus' => $status]);
 
     }
 

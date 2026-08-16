@@ -4065,19 +4065,13 @@ $(document).ready(function(){
         });
 
 
-        $(document).on('click','.update_main_status_fulltime', function(){
+        $(document).on('change','.update_main_status_fulltime', function(){
 
-           var status = $('.update_main_status_fulltime').val();
-           if(status == 1){
-            var changeStatus = 0;
-            $('#f_text').text('OFF');
-            $('#f_status_badge').text('Inactive').addClass('is-off');
-           }else{
-            var changeStatus = 1;
-            $('#f_text').text('ON');
-            $('#f_status_badge').text('Active').removeClass('is-off');
-           }
-           var id = $(this).attr('data-row_id');
+           var $toggle = $(this);
+           var changeStatus = $toggle.is(':checked') ? 1 : 0;
+           var previousStatus = changeStatus ? 0 : 1;
+           var id = $toggle.attr('data-row_id');
+           $toggle.prop('disabled', true);
            
            var url       	=	"{{ route('service_company.jobs.updateserviceviewmore',':id') }}";
            var token       =	"{{ csrf_token() }}";
@@ -4087,33 +4081,37 @@ $(document).ready(function(){
                                    data		: {'_token': token, '_method': 'POST', 'id' : id, 'changeStatus':changeStatus},
                                    success 	: function (response) {
                                            if (response.status == "success") {
+                                             $('#f_text').text(changeStatus ? 'ON' : 'OFF');
+                                             $('#f_status_badge').text(changeStatus ? 'Active' : 'Inactive').toggleClass('is-off', !changeStatus);
                                              if(changeStatus==1){
                                                 $('.class_change_fulltime').removeClass('cv2-disabled').attr('style','');
                                              }else{
                                                 $('.class_change_fulltime').addClass('cv2-disabled').attr('style','opacity: 0.2 !important;');
                                              }
-                                            var status = $('.update_main_status_fulltime').val(changeStatus);
+                                             $toggle.val(changeStatus);
+                                           } else {
+                                             $toggle.prop('checked', previousStatus === 1);
                                            }
-                                     }
+                                     },
+                                   error: function () {
+                                     $toggle.prop('checked', previousStatus === 1);
+                                   },
+                                   complete: function () {
+                                     $toggle.prop('disabled', false);
+                                   }
                            });
                           
 
 
         });
 
-        $(document).on('click','.contract_main_status_fulltime', function(){
+        $(document).on('change','.contract_main_status_fulltime', function(){
 
-        var status = $('.contract_main_status_fulltime').val();
-        if(status == 1){
-        var changeStatus = 0;
-        $('#c_text').text('OFF');
-        $('#c_status_badge').text('Inactive').addClass('is-off');
-        }else{
-        var changeStatus = 1;
-        $('#c_text').text('ON');
-        $('#c_status_badge').text('Active').removeClass('is-off');
-        }
-        var id = $(this).attr('data-row_id');
+        var $toggle = $(this);
+        var changeStatus = $toggle.is(':checked') ? 1 : 0;
+        var previousStatus = changeStatus ? 0 : 1;
+        var id = $toggle.attr('data-row_id');
+        $toggle.prop('disabled', true);
 
         var url       	=	"{{ route('service_company.jobs.updateserviceviewmore',':id') }}";
         var token       =	"{{ csrf_token() }}";
@@ -4123,16 +4121,24 @@ $(document).ready(function(){
                                 data		: {'_token': token, '_method': 'POST', 'id' : id, 'changeStatus':changeStatus},
                                 success 	: function (response) {
                                         if (response.status == "success") {
-
+                                          $('#c_text').text(changeStatus ? 'ON' : 'OFF');
+                                          $('#c_status_badge').text(changeStatus ? 'Active' : 'Inactive').toggleClass('is-off', !changeStatus);
                                           if(changeStatus==1){
                                                 $('.class_change_contract').removeClass('cv2-disabled').attr('style','');
                                              }else{
                                                 $('.class_change_contract').addClass('cv2-disabled').attr('style','opacity: 0.2 !important;');
                                              }
-
-                                          var status = $('.contract_main_status_fulltime').val(changeStatus);
+                                          $toggle.val(changeStatus);
+                                        } else {
+                                          $toggle.prop('checked', previousStatus === 1);
                                         }
-                                  }
+                                  },
+                                error: function () {
+                                  $toggle.prop('checked', previousStatus === 1);
+                                },
+                                complete: function () {
+                                  $toggle.prop('disabled', false);
+                                }
                         });
                       
 
