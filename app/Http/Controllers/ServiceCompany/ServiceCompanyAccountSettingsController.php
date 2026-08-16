@@ -57,9 +57,16 @@ class ServiceCompanyAccountSettingsController extends ServiceCompanyBaseControll
         $this->companyType = GeneralMethod::companyType();
         $this->industries_type_arr = GeneralMethod::industries_type_arr();
         $ads_show = request('ads');
+        $requestedTab = request('tab');
         $this->overview_tab = 'active show';
+        $this->services_tab = '';
         $this->boostkeyword_tab = '';
-        if ($ads_show == 'show') {
+        // Intent: route the Company Profile left-submenu directly to its existing account content without changing data flows.
+        if ($requestedTab === 'services') {
+            $this->overview_tab = '';
+            $this->services_tab = 'active show';
+        }
+        if ($requestedTab === 'ads' || $ads_show == 'show') {
             $this->boostkeyword_tab = 'active show';
             $this->overview_tab = '';
         }

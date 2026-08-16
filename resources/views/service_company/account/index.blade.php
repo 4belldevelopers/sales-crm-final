@@ -815,10 +815,6 @@ input[type="radio"]:checked {
       <li class="nav-item"><a class="nav-link csv2-account-tab" data-toggle="tab" href="#agencyofferterms"><span class="csv2-account-tab-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M6 3h9l3 3v15H6z"/><path d="M14 3v4h4M9 11h6M9 15h4"/></svg></span><span class="csv2-account-tab-copy"><span class="csv2-account-tab-title">Terms &amp; Conditions</span><span class="csv2-account-tab-sub">(For Agency Offer Letter)</span></span></a></li>
       <li class="nav-item"><a class="nav-link csv2-account-tab" data-toggle="tab" href="#offercomponent"><span class="csv2-account-tab-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M7 9h4M7 13h2M15 10v6M12 13h6"/></svg></span><span class="csv2-account-tab-copy"><span class="csv2-account-tab-title">Salary Structure</span><span class="csv2-account-tab-sub">(For Candidate Offer Letter)</span></span></a></li>
       <li class="nav-item"><a class="nav-link csv2-account-tab" data-toggle="tab" href="#terms"><span class="csv2-account-tab-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 4h14v16H5z"/><path d="M8 8h8M8 12h8M8 16h5"/></svg></span><span class="csv2-account-tab-copy"><span class="csv2-account-tab-title">Terms &amp; Conditions</span><span class="csv2-account-tab-sub">(For {{__('messages.Agency')}})</span></span></a></li>
-      @if(@$productAllowCompany)
-      <li class="nav-item"><a class="nav-link csv2-account-tab" data-toggle="tab" href="#services"><span class="csv2-account-tab-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M9 7V4h6v3M3 12h18M10 12v2h4v-2"/></svg></span><span class="csv2-account-tab-copy"><span class="csv2-account-tab-title">Commericials</span><span class="csv2-account-tab-sub">(For Clients)</span></span></a></li>
-      <li class="nav-item"><a class="nav-link csv2-account-tab {{$boostkeyword_tab}}" data-toggle="tab" href="#boostkeyword"><span class="csv2-account-tab-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="m4 13 11-5v10L4 13Z"/><path d="M15 11h3a2 2 0 0 1 0 4h-3M6 14l2 6h3l-2-7"/></svg></span><span class="csv2-account-tab-copy"><span class="csv2-account-tab-title">Ads Settings</span></span></a></li>
-      @endif
     </ul>
   </div>
 </div>
@@ -1857,7 +1853,7 @@ input[type="radio"]:checked {
 
 
 {{-- Legacy commercial cards are retained in source below for reference while the redesigned presentation is rendered first. --}}
-<div class="tab-pane" id="services" role="tabpanel">
+<div class="tab-pane {{$services_tab}}" id="services" role="tabpanel">
   @php
     // Presentation-only values sourced from AccountSettingsService's existing cached account payload.
     $cv2FulltimeActive = (bool) (@$fullTimeStatus->status);
