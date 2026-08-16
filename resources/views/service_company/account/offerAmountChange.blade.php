@@ -386,7 +386,8 @@
       @media (max-width:1200px){ .sst-2col { flex-wrap:wrap; } .sst-2col > .sst-preview { width:100%; flex-basis:100%; position:static; } }
     </style>
     <div class="sst-edit">
-      <!-- breadcrumb bar -->
+      {{-- The drawer keeps only editable controls; standalone editing retains its navigation. --}}
+      @unless (request('embed'))
       <div class="sst-bc">
         <div class="sst-bc-l">
           <span class="sst-bc-mut">Salary Structure</span>
@@ -402,19 +403,25 @@
           <button type="button" class="sst-bc-btn icon"><i class="fas fa-ellipsis-v"></i></button>
         </div>
       </div>
+      @endunless
 
       <div class="sst-edit-head">
+        @unless (request('embed'))
         <div>
           <div class="sst-edit-title">Edit Salary Template <span class="sst-edit-badge"><i class="fas fa-check" style="font-size:8px;"></i>Active</span></div>
           <div class="sst-edit-sub">Create and manage reusable salary components for the candidate offer letter.</div>
         </div>
+        @endunless
         <div class="sst-edit-acts">
+          @unless (request('embed'))
           <a href="{{ url()->previous() }}" onclick="event.preventDefault(); sstClose();" class="btn btn-light">Close</a>
+          @endunless
           <button type="button" class="btn" style="background:#1b84ff;color:#fff;" onclick="document.getElementById('save-form') && document.getElementById('save-form').click();">Save Template</button>
           <button type="button" class="btn" style="background:#5b21d6;color:#fff;" onclick="document.getElementById('save-form') && document.getElementById('save-form').click();">Save &amp; Set as Default</button>
         </div>
       </div>
 
+      @unless (request('embed'))
       <div class="sst-cards">
         <div class="sst-card">
           <div class="sst-card-l">Main Components (Must Total 100%)</div>
@@ -441,9 +448,11 @@
           </div>
         </div>
       </div>
+      @endunless
     </div>
 
-    {{-- ── Preview Salary Structure sidebar (client-side, off the live components) ── --}}
+    @unless (request('embed'))
+    {{-- Preview is intentionally available only in standalone editing, not in the account drawer. --}}
     <div class="sst-preview" id="sstPreview">
       <div class="sst-pv-title"><i class="fas fa-eye"></i>Preview Salary Structure</div>
       <div class="sst-pv-sub">See how this structure calculates for a given amount.</div>
@@ -482,6 +491,7 @@
         <div class="ck warn" id="sstCk2"><i class="fas fa-exclamation-triangle"></i><span>Additional components exceed 100% (Allowed)</span></div>
       </div>
     </div>
+    @endunless
 
     <div class="card-body position-relative px-0 py-0 sst-edit" id="kt_offercreate_body">
         <div id="kt_activities_scroll" class="position-relative scroll-y bg-light pt-2" data-kt-scroll="true"
