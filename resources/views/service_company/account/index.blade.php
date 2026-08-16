@@ -1467,7 +1467,7 @@ input[type="radio"]:checked {
     <aside class="candidate-config-nav" aria-label="Candidate configuration sections">
       <h4>Documents &amp; Templates</h4>
       <div class="candidate-config-group">Offer Letter Templates</div>
-      <a class="candidate-config-link active" data-toggle="tab" href="#offerterms"><i class="far fa-file-alt"></i><span>Candidate Offer Letter<small>{{ !empty(trim(strip_tags((string) @$account->offer_terms)) ? 'Configured template' : 'Default template' }}</small></span></a>
+      <a class="candidate-config-link active" data-toggle="tab" href="#offerterms"><i class="far fa-file-alt"></i><span>Candidate Offer Letter<small>{{ !empty(trim(strip_tags((string) @$account->offer_terms))) ? 'Configured template' : 'Default template' }}</small></span></a>
       <div class="candidate-config-group">Salary Annexures</div>
       <a class="candidate-config-link" data-toggle="tab" href="#offercomponent"><i class="far fa-money-bill-alt"></i><span>Standard Payroll Structure<small>{{ count($offer_points ?? []) }} salary components</small></span></a>
     </aside>
@@ -1571,7 +1571,7 @@ input[type="radio"]:checked {
     <aside class="candidate-config-nav" aria-label="Candidate configuration sections">
       <h4>Documents &amp; Templates</h4>
       <div class="candidate-config-group">Offer Letter Templates</div>
-      <a class="candidate-config-link" data-toggle="tab" href="#offerterms"><i class="far fa-file-alt"></i><span>Candidate Offer Letter<small>{{ !empty(trim(strip_tags((string) @$account->offer_terms)) ? 'Configured template' : 'Default template' }}</small></span></a>
+      <a class="candidate-config-link" data-toggle="tab" href="#offerterms"><i class="far fa-file-alt"></i><span>Candidate Offer Letter<small>{{ !empty(trim(strip_tags((string) @$account->offer_terms))) ? 'Configured template' : 'Default template' }}</small></span></a>
       <div class="candidate-config-group">Salary Annexures</div>
       <a class="candidate-config-link active" data-toggle="tab" href="#offercomponent"><i class="far fa-money-bill-alt"></i><span>Standard Payroll Structure<small>{{ count($offer_points ?? []) }} salary components</small></span></a>
     </aside>
