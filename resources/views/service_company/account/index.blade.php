@@ -1773,6 +1773,27 @@ input[type="radio"]:checked {
         </div>
         <div class="salary-comp-total additional"><span>Total Additional Components</span><span>{{ number_format($sstAddTotal, 2) }}%</span></div>
       </section>
+
+      {{-- A structure has no candidate CTC of its own; final amounts are calculated from the live offer CTC. --}}
+      <section class="salary-comp-card" aria-label="Final CTC">
+        <div class="salary-comp-heading">
+          <div><h4>Final CTC <span style="color:#7e8299;font-size:11px;font-weight:500;">(Cost to Company)</span></h4><p>Summary of the total cost including main and additional components.</p></div>
+        </div>
+        <div class="salary-comp-table-wrap">
+          <table class="salary-comp-table">
+            <thead><tr><th>Component</th><th>Allocation</th><th>Currency</th><th>Monthly</th><th>Annually</th></tr></thead>
+            <tbody>
+              <tr>
+                <td><strong>Total CTC (Main + Additional)</strong></td>
+                <td>{{ number_format($sstOverall, 2) }}%</td>
+                <td>Selected on offer</td>
+                <td>Calculated on offer</td>
+                <td>Calculated on offer</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
     </div>
 
     {{-- Legacy preview remains in markup only to preserve its existing client-side hooks; it is intentionally not rendered. --}}
