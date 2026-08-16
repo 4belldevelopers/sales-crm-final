@@ -5289,8 +5289,18 @@ if (!$this->elasticService->indexExists(ELASTIC_COMPANIES_INDEX)) {
             $this->title = 'Grievances';
             $this->used = 'For Website';
         }elseif($id==10){
-            $this->th_email_template = DB::table('global_settings')->select('global_settings.agency_offer_terms as terms')->first();	
+            $this->th_email_template = DB::table('global_settings')->select(DB::raw("COALESCE(NULLIF(global_settings.agency_offer_terms, ''), global_settings.offer_terms) as terms"))->first();	
             $this->title = 'Agency Offer terms';
+            $this->used = 'For Candidates';
+        }elseif($id==11){
+            // Intent: expose the internship offer-letter master text with Candidate Offer terms as the editable starter copy.
+            $this->th_email_template = DB::table('global_settings')->select(DB::raw("COALESCE(NULLIF(global_settings.internship_offer_terms, ''), global_settings.offer_terms) as terms"))->first();	
+            $this->title = 'Internship Offer Letter';
+            $this->used = 'For Candidates';
+        }elseif($id==12){
+            // Intent: expose the contract offer-letter master text with Candidate Offer terms as the editable starter copy.
+            $this->th_email_template = DB::table('global_settings')->select(DB::raw("COALESCE(NULLIF(global_settings.contract_offer_terms, ''), global_settings.offer_terms) as terms"))->first();	
+            $this->title = 'Contract Offer Letter';
             $this->used = 'For Candidates';
         }
         				
@@ -5349,6 +5359,16 @@ if (!$this->elasticService->indexExists(ELASTIC_COMPANIES_INDEX)) {
      }elseif($id==10){
         $values = array(
             'agency_offer_terms' =>$request->editor1
+        );
+     }elseif($id==11){
+        // Intent: persist the internship default offer template into the existing global settings singleton.
+        $values = array(
+            'internship_offer_terms' =>$request->editor1
+        );
+     }elseif($id==12){
+        // Intent: persist the contract default offer template into the existing global settings singleton.
+        $values = array(
+            'contract_offer_terms' =>$request->editor1
         );
      }
 

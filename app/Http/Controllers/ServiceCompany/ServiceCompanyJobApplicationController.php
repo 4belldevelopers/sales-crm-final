@@ -4460,11 +4460,46 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
 
         $this->offer_terms = str_replace($replaceFrom, $replaceTo, $offer_terms);
 
-        // Resolve both templates with variables replaced so the view can switch between them
+        // Resolve offer templates with variables replaced so the view can switch between saved defaults without an extra request.
         $raw_company_terms = (@$this->account->offer_terms) ? $this->account->offer_terms : @$this->global_settings->offer_terms;
+        $raw_internship_terms = (@$this->account->internship_offer_terms) ? $this->account->internship_offer_terms : (@$this->global_settings->internship_offer_terms ?: @$this->global_settings->offer_terms);
+        $raw_contract_terms = (@$this->account->contract_offer_terms) ? $this->account->contract_offer_terms : (@$this->global_settings->contract_offer_terms ?: @$this->global_settings->offer_terms);
         $raw_agency_terms = (@$this->account->agency_offer_terms) ? $this->account->agency_offer_terms : @$this->global_settings->agency_offer_terms;
         $this->company_offer_terms = str_replace($replaceFrom, $replaceTo, (string) $raw_company_terms);
+        $this->internship_offer_terms = str_replace($replaceFrom, $replaceTo, (string) $raw_internship_terms);
+        $this->contract_offer_terms = str_replace($replaceFrom, $replaceTo, (string) $raw_contract_terms);
         $this->agency_offer_terms = str_replace($replaceFrom, $replaceTo, (string) $raw_agency_terms);
+        $this->offer_template_options = [
+            [
+                'key' => 'candidate-offer-letter',
+                'field' => 'offer_terms',
+                'label' => 'Candidate Offer terms',
+                'content' => $this->company_offer_terms,
+                'selected' => ! $this->offer_terms_conditions && $this->application->condidate_type != 'bench_condidate',
+            ],
+            [
+                'key' => 'internship-offer-letter',
+                'field' => 'internship_offer_terms',
+                'label' => 'Internship Offer Letter',
+                'content' => $this->internship_offer_terms,
+                'selected' => false,
+            ],
+            [
+                'key' => 'contract-offer-letter',
+                'field' => 'contract_offer_terms',
+                'label' => 'Contract Offer Letter',
+                'content' => $this->contract_offer_terms,
+                'selected' => false,
+            ],
+            [
+                'key' => 'agency-offer-letter',
+                'field' => 'agency_offer_terms',
+                'label' => 'Agency Offer terms',
+                'content' => $this->agency_offer_terms,
+                'selected' => ! $this->offer_terms_conditions && $this->application->condidate_type == 'bench_condidate',
+            ],
+        ];
+        $this->offer_template_contents = collect($this->offer_template_options)->pluck('content', 'key')->all();
         $this->is_bench_candidate = ($this->application->condidate_type == 'bench_condidate');
 
         // Same values used in the merge above, exposed to the view so the Template step's

@@ -535,13 +535,14 @@ class ServiceCompanyAccountSettingsController extends ServiceCompanyBaseControll
         if ($request->description == 'setDefault') {
             $global_settings = DB::table('global_settings')->select('global_settings.*')->first();
             if ($global_settings) {
-                if ($request->descriptiontype == 'offer_terms') {
-                    $terms = @$global_settings->offer_terms;
-                } elseif ($request->descriptiontype == 'agency_offer_terms') {
-                    $terms = @$global_settings->agency_offer_terms;
-                } elseif ($request->descriptiontype == 'offer_terms_admin') {
-                    // $global_settings = Company::findOrFail(auth()->user()->company_id);
-                    $terms = @$global_settings->offer_terms;
+                // Intent: reset only the selected offer-template field while preserving the legacy terms endpoints.
+                $offerTemplateFields = ['offer_terms', 'internship_offer_terms', 'contract_offer_terms', 'agency_offer_terms', 'offer_terms_admin'];
+                $requestedTemplateField = in_array($request->descriptiontype, $offerTemplateFields, true) ? $request->descriptiontype : null;
+                if ($requestedTemplateField === 'offer_terms_admin') {
+                    $requestedTemplateField = 'offer_terms';
+                }
+                if ($requestedTemplateField) {
+                    $terms = @$global_settings->{$requestedTemplateField};
                 } else {
                     $terms = @$global_settings->terms;
                 }
@@ -560,10 +561,13 @@ class ServiceCompanyAccountSettingsController extends ServiceCompanyBaseControll
         } elseif ($request->pageterms == 'termsoffer') {
             $company_id = auth()->user()->company_id;
             $company = Company::findOrFail($company_id);
-            $company->offer_terms = @$request->description;
+            // Intent: save the currently selected candidate offer template without affecting other templates.
+            $offerTemplateFields = ['offer_terms', 'internship_offer_terms', 'contract_offer_terms', 'agency_offer_terms'];
+            $templateField = in_array($request->descriptiontype, $offerTemplateFields, true) ? $request->descriptiontype : 'offer_terms';
+            $company->{$templateField} = @$request->description;
             $company->save();
 
-            return Reply::dataOnly(['status' => 'success', 'terms' => $company->offer_terms]);
+            return Reply::dataOnly(['status' => 'success', 'terms' => $company->{$templateField}, 'template_field' => $templateField]);
         } elseif ($request->pageterms == 'termsagencyoffer') {
             $company_id = auth()->user()->company_id;
             $company = Company::findOrFail($company_id);

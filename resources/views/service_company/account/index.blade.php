@@ -824,7 +824,6 @@ input[type="radio"]:checked {
       <li class="nav-item"><a class="nav-link csv2-account-tab" data-toggle="tab" href="#settings"><span class="csv2-account-tab-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1-2.8 2.8-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.6v.1h-4V21a1.7 1.7 0 0 0-1-1.6 1.7 1.7 0 0 0-1.9.3l-.1.1L4.2 17l.1-.1a1.7 1.7 0 0 0 .3-1.9A1.7 1.7 0 0 0 3 14v-4a1.7 1.7 0 0 0 1.6-1 1.7 1.7 0 0 0-.3-1.9L7 4.2l.1.1a1.7 1.7 0 0 0 1.9.3 1.7 1.7 0 0 0 1-1.6h4a1.7 1.7 0 0 0 1 1.6 1.7 1.7 0 0 0 1.9-.3L19.8 7l-.1.1a1.7 1.7 0 0 0-.3 1.9 1.7 1.7 0 0 0 1.6 1v4a1.7 1.7 0 0 0-1.6 1Z"/></svg></span><span class="csv2-account-tab-copy"><span class="csv2-account-tab-title">General</span></span></a></li>
       <li class="nav-item"><a class="nav-link csv2-account-tab" data-toggle="tab" href="#notifications"><span class="csv2-account-tab-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/><path d="M10 21h4"/></svg></span><span class="csv2-account-tab-copy"><span class="csv2-account-tab-title">Notifications</span></span></a></li>
       <li class="nav-item"><a class="nav-link csv2-account-tab candidate-config-main-tab" data-toggle="tab" href="#offerterms"><span class="csv2-account-tab-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M6 3h9l3 3v15H6z"/><path d="M14 3v4h4M9 11h6M9 15h6"/></svg></span><span class="csv2-account-tab-copy"><span class="csv2-account-tab-title">Candidate Configurations</span></span></a></li>
-      <li class="nav-item"><a class="nav-link csv2-account-tab" data-toggle="tab" href="#agencyofferterms"><span class="csv2-account-tab-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M6 3h9l3 3v15H6z"/><path d="M14 3v4h4M9 11h6M9 15h4"/></svg></span><span class="csv2-account-tab-copy"><span class="csv2-account-tab-title">Terms &amp; Conditions</span><span class="csv2-account-tab-sub">(For Agency Offer Letter)</span></span></a></li>
       <li class="nav-item"><a class="nav-link csv2-account-tab" data-toggle="tab" href="#terms"><span class="csv2-account-tab-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 4h14v16H5z"/><path d="M8 8h8M8 12h8M8 16h5"/></svg></span><span class="csv2-account-tab-copy"><span class="csv2-account-tab-title">Terms &amp; Conditions</span><span class="csv2-account-tab-sub">(For {{__('messages.Agency')}})</span></span></a></li>
     </ul>
   </div>
@@ -1471,13 +1470,45 @@ input[type="radio"]:checked {
 
 <!--begin::offerterms Terms & conditions Content-->
 <div class="tab-pane" id="offerterms" role="tabpanel">
+  @php
+    // Intent: define the company-level candidate offer template catalog from existing company columns with global defaults as fallback.
+    $candidateOfferTemplates = [
+      [
+        'field' => 'offer_terms',
+        'label' => 'Candidate Offer terms',
+        'small' => !empty(trim(strip_tags((string) @$account->offer_terms))) ? 'Configured template' : 'Default template',
+        'content' => (@$account->offer_terms) ? @$account->offer_terms : @$global_settings->offer_terms,
+      ],
+      [
+        'field' => 'internship_offer_terms',
+        'label' => 'Internship Offer Letter',
+        'small' => !empty(trim(strip_tags((string) @$account->internship_offer_terms))) ? 'Configured template' : 'Default template',
+        'content' => (@$account->internship_offer_terms) ? @$account->internship_offer_terms : (@$global_settings->internship_offer_terms ?: @$global_settings->offer_terms),
+      ],
+      [
+        'field' => 'contract_offer_terms',
+        'label' => 'Contract Offer Letter',
+        'small' => !empty(trim(strip_tags((string) @$account->contract_offer_terms))) ? 'Configured template' : 'Default template',
+        'content' => (@$account->contract_offer_terms) ? @$account->contract_offer_terms : (@$global_settings->contract_offer_terms ?: @$global_settings->offer_terms),
+      ],
+      [
+        'field' => 'agency_offer_terms',
+        'label' => 'Agency Offer terms',
+        'small' => !empty(trim(strip_tags((string) @$account->agency_offer_terms))) ? 'Configured template' : 'Default template',
+        'content' => (@$account->agency_offer_terms) ? @$account->agency_offer_terms : (@$global_settings->agency_offer_terms ?: @$global_settings->offer_terms),
+      ],
+    ];
+    $activeCandidateOfferTemplate = $candidateOfferTemplates[0];
+  @endphp
   <div class="candidate-config-shell">
     <aside class="candidate-config-nav" aria-label="Candidate configuration sections">
       <h4>Documents &amp; Templates</h4>
       <div class="candidate-config-group">Salary Annexures</div>
       <a class="candidate-config-link" data-toggle="tab" href="#offercomponent"><i class="far fa-money-bill-alt"></i><span>Standard Payroll Structure<small>{{ count($offer_points ?? []) }} salary components</small></span></a>
       <div class="candidate-config-group">Offer Letter Templates</div>
-      <a class="candidate-config-link active" data-toggle="tab" href="#offerterms"><i class="far fa-file-alt"></i><span>Candidate Offer Letter<small>{{ !empty(trim(strip_tags((string) @$account->offer_terms))) ? 'Configured template' : 'Default template' }}</small></span></a>
+      @foreach($candidateOfferTemplates as $candidateOfferTemplate)
+        <a class="candidate-config-link candidate-offer-template-link {{ $loop->first ? 'active' : '' }}" data-toggle="tab" href="#offerterms" data-template-field="{{ $candidateOfferTemplate['field'] }}" data-template-label="{{ $candidateOfferTemplate['label'] }}" data-template-content='@json($candidateOfferTemplate["content"])'><i class="far fa-file-alt"></i><span>{{ $candidateOfferTemplate['label'] }}<small>{{ $candidateOfferTemplate['small'] }}</small></span></a>
+      @endforeach
     </aside>
     <div class="candidate-config-panel">
   <div class="candidate-config-main-card">
@@ -1485,7 +1516,7 @@ input[type="radio"]:checked {
   <div class="card-header cursor-pointer px-0 candidate-config-card-head">
     <!--begin::Card title-->
     <div class="card-title m-0">
-      <h3 class="fw-bolder m-0 candidate-config-title">Candidate Offer Letter</h3>
+      <h3 class="fw-bolder m-0 candidate-config-title" id="candidateOfferTemplateTitle">{{ $activeCandidateOfferTemplate['label'] }}</h3>
       <p class="candidate-config-subtitle">Manage the reusable offer letter template used during candidate offer generation.</p>
     </div>
     <!--end::Card title-->
@@ -1550,7 +1581,7 @@ input[type="radio"]:checked {
                   </div>
                 </div>
               </div>
-              <div class="col-lg-12 mb-0 view-terms co-tpl-preview candidate-offer-main-preview" id="viewTermsoffer">{!! (@$account->offer_terms) ? @$account->offer_terms :  $global_settings->offer_terms !!}</div>
+              <div class="col-lg-12 mb-0 view-terms co-tpl-preview candidate-offer-main-preview" id="viewTermsoffer">{!! $activeCandidateOfferTemplate['content'] !!}</div>
             </div>
           </div>
         </div>
@@ -1559,6 +1590,7 @@ input[type="radio"]:checked {
       <form  id="terms_contentoffer" name="terms_contentoffer" class="form fv-plugins-bootstrap5 fv-plugins-framework" novalidate="novalidate" method="post">
           <meta name="csrf-token" content="{{ csrf_token() }}" />
           <input type="hidden" name="pageterms" id="pagetermsoffer" value="termsoffer" />
+          <input type="hidden" name="descriptiontype" id="candidateOfferTemplateField" value="{{ $activeCandidateOfferTemplate['field'] }}" />
           @csrf  
           @method('POST')
         <!--begin::Col-Desc-->
@@ -1567,7 +1599,7 @@ input[type="radio"]:checked {
 
         <div class="col-lg-12 edit-terms offer-letter-drawer" id="editTermsoffer" style="display:none;">
           <div class="offer-letter-drawer-header">
-            <div><h4 class="offer-letter-drawer-title">Edit Candidate Offer Letter</h4><p class="offer-letter-drawer-sub">Update the reusable template used when generating candidate offers.</p></div>
+            <div><h4 class="offer-letter-drawer-title" id="candidateOfferDrawerTitle">Edit {{ $activeCandidateOfferTemplate['label'] }}</h4><p class="offer-letter-drawer-sub">Update the reusable template used when generating candidate offers.</p></div>
             <div class="offer-letter-drawer-actions">
               <button type="button" class="btn btn-light-primary setToDefaultCompanyTermsofferTop"><i class="fas fa-undo me-1"></i>Load Default</button>
               <button type="button" class="btn btn-primary updateCompanyTermsofferTop"><i class="far fa-save me-1"></i>Save Changes</button>
@@ -1603,7 +1635,7 @@ input[type="radio"]:checked {
                       </div>
                     </div>
                     <div class="offer-letter-editor-shell">
-                      <textarea id="kt_docs_tinymce_hiddenoffer" name="kt_docs_tinymce_hiddenoffer" class="tox-target">{!! (@$account->offer_terms) ? @$account->offer_terms :  $global_settings->offer_terms !!}</textarea>
+                      <textarea id="kt_docs_tinymce_hiddenoffer" name="kt_docs_tinymce_hiddenoffer" class="tox-target">{!! $activeCandidateOfferTemplate['content'] !!}</textarea>
                     </div>
                     <div class="co-tpl-subcard co-tpl-toolbar-extra" style="margin-top:10px;margin-bottom:0;display:flex;">
                       <div class="co-tpl-zoom">
@@ -1725,7 +1757,9 @@ input[type="radio"]:checked {
       <div class="candidate-config-group">Salary Annexures</div>
       <a class="candidate-config-link active" data-toggle="tab" href="#offercomponent"><i class="far fa-money-bill-alt"></i><span>Standard Payroll Structure<small>{{ count($offer_points ?? []) }} salary components</small></span></a>
       <div class="candidate-config-group">Offer Letter Templates</div>
-      <a class="candidate-config-link" data-toggle="tab" href="#offerterms"><i class="far fa-file-alt"></i><span>Candidate Offer Letter<small>{{ !empty(trim(strip_tags((string) @$account->offer_terms))) ? 'Configured template' : 'Default template' }}</small></span></a>
+      @foreach($candidateOfferTemplates as $candidateOfferTemplate)
+        <a class="candidate-config-link candidate-offer-template-link" data-toggle="tab" href="#offerterms" data-template-field="{{ $candidateOfferTemplate['field'] }}" data-template-label="{{ $candidateOfferTemplate['label'] }}" data-template-content='@json($candidateOfferTemplate["content"])'><i class="far fa-file-alt"></i><span>{{ $candidateOfferTemplate['label'] }}<small>{{ $candidateOfferTemplate['small'] }}</small></span></a>
+      @endforeach
     </aside>
     <div class="candidate-config-panel">
   @php
@@ -3635,6 +3669,33 @@ function updateSettingsOfferPreview() {
     var editor = window.CKEDITOR && CKEDITOR.instances.kt_docs_tinymce_hiddenoffer;
     if (preview && editor) preview.innerHTML = editor.getData();
 }
+function getActiveCandidateOfferLink() {
+    return document.querySelector('.candidate-offer-template-link.active') || document.querySelector('.candidate-offer-template-link');
+}
+function setCandidateOfferTemplateContent(field, label, html, syncEditor) {
+    var safeHtml = html || '';
+    var fieldInput = document.getElementById('candidateOfferTemplateField');
+    var title = document.getElementById('candidateOfferTemplateTitle');
+    var drawerTitle = document.getElementById('candidateOfferDrawerTitle');
+    var preview = document.getElementById('viewTermsoffer');
+    if (fieldInput && field) fieldInput.value = field;
+    if (title && label) title.textContent = label;
+    if (drawerTitle && label) drawerTitle.textContent = 'Edit ' + label;
+    if (preview) preview.innerHTML = safeHtml;
+    if (syncEditor) {
+        var editor = window.CKEDITOR && CKEDITOR.instances.kt_docs_tinymce_hiddenoffer;
+        if (editor) {
+            editor.setData(safeHtml, function() { updateSettingsOfferPreview(); });
+        } else {
+            var textarea = document.getElementById('kt_docs_tinymce_hiddenoffer');
+            if (textarea) textarea.value = safeHtml;
+        }
+    }
+}
+function updateActiveCandidateOfferTemplateCache(html) {
+    var active = getActiveCandidateOfferLink();
+    if (active) active.setAttribute('data-template-content', html || '');
+}
 function setSettingsOfferZoom(delta) {
     var pct = document.getElementById('settings_offer_zoom_pct');
     var editor = window.CKEDITOR && CKEDITOR.instances.kt_docs_tinymce_hiddenoffer;
@@ -3647,6 +3708,19 @@ function setSettingsOfferZoom(delta) {
 document.addEventListener('DOMContentLoaded', function() {
     var editBtn = document.getElementById('editBtnoffer');
     if (editBtn) editBtn.addEventListener('click', openOfferLetterDrawer);
+    document.querySelectorAll('.candidate-offer-template-link').forEach(function(templateLink) {
+        templateLink.addEventListener('click', function(event) {
+            event.preventDefault();
+            document.querySelectorAll('.candidate-offer-template-link').forEach(function(link) { link.classList.remove('active'); });
+            templateLink.classList.add('active');
+            setCandidateOfferTemplateContent(
+                templateLink.getAttribute('data-template-field'),
+                templateLink.getAttribute('data-template-label'),
+                templateLink.getAttribute('data-template-content') || '',
+                true
+            );
+        });
+    });
     document.querySelectorAll('[data-settings-offer-tab]').forEach(function(tabBtn) {
         tabBtn.addEventListener('click', function() {
             var target = tabBtn.getAttribute('data-settings-offer-tab');
@@ -4288,7 +4362,7 @@ $(document).ready(function(){
                     $.each(form_data, function (key, input) {
                         data.append(input.name, input.value);
                     });		
-                    data.append("descriptiontype", "offer_terms");
+                    data.set("descriptiontype", $('#candidateOfferTemplateField').val() || 'offer_terms');
                        
                       $.ajax({
                             url					:	'{{route('service_company.account.update', @$account->id)}}',
@@ -4302,6 +4376,7 @@ $(document).ready(function(){
                                                 $("#updateCompanyTermsofferTop").text("Save Changes");
                                                   if(data.status == 'success'){
                                                     $('#viewTermsoffer').html(data.terms);	
+                                                    updateActiveCandidateOfferTemplateCache(data.terms);
                                                        Swal.fire("Success", "Terms & Condition update successfully!", "success");
                                                        $('#viewTermsoffer').show();
                                                        $('#editTermsoffer').hide();
@@ -4353,13 +4428,12 @@ $(document).ready(function(){
                     var kt_docs_tinymce_hiddenoffer = 'setDefault';	
                     data.append("description", kt_docs_tinymce_hiddenoffer);
                     $("#setToDefaultCompanyTermsofferTop").text("Please wait...");
-                    var form_data 			=	$('#terms_content').serializeArray();
+                    var form_data 			=	$('#terms_contentoffer').serializeArray();
                     $.each(form_data, function (key, input) {
                         data.append(input.name, input.value);
                     });		
-                    CKEDITOR.replace('kt_docs_tinymce_hiddenoffer');
                     data.append("description", kt_docs_tinymce_hiddenoffer);
-                    data.append("descriptiontype", "offer_terms");
+                    data.set("descriptiontype", $('#candidateOfferTemplateField').val() || 'offer_terms');
                        
                       $.ajax({
                             url					:	'{{route('service_company.account.update', @$account->id)}}',
@@ -4372,7 +4446,9 @@ $(document).ready(function(){
                             success				:	function (data) {
                                                     $("#setToDefaultCompanyTermsofferTop").text("Set to Default")
                                                   if(data.status == 'success'){
-                                                    var kt_docs_tinymce_hidden = CKEDITOR.instances.kt_docs_tinymce_hiddenoffer.setData(data.terms);	
+                                                    var kt_docs_tinymce_hidden = CKEDITOR.instances.kt_docs_tinymce_hiddenoffer.setData(data.terms);
+                                                    $('#viewTermsoffer').html(data.terms);
+                                                    updateActiveCandidateOfferTemplateCache(data.terms);
                                                   }
                                         }
                           });
