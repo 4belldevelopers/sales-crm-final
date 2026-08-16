@@ -381,6 +381,8 @@ input[type="radio"]:checked {
 .settings-offer-template .co-tpl-zoom{display:flex;align-items:center;gap:6px}.settings-offer-template .co-tpl-zoom-btn{width:24px;height:24px;border:1px solid #e4e6ef;border-radius:6px;background:#fff;color:#5e6278;font-size:12px!important;font-weight:700;line-height:1;cursor:pointer}.settings-offer-template .co-tpl-zoom-btn:hover{background:#f5f8fa}.settings-offer-template .co-tpl-zoom-pct{display:inline-block;min-width:30px;text-align:center;color:#7e8299;font-size:10px}.settings-offer-template .co-tpl-download-btn{display:inline-flex;align-items:center;gap:5px;padding:5px 10px;border:0;border-radius:7px;background:#eef3ff;color:#4f46e5;font-size:10px!important;font-weight:600;cursor:pointer}.settings-offer-template .co-tpl-download-btn:hover{background:#e0e7ff}.settings-offer-template .co-tpl-download-btn svg{width:11px;height:11px}.settings-offer-template .co-tpl-toolbar-extra{align-items:center;justify-content:space-between;gap:10px}.settings-offer-template .offer-letter-editor-shell .cke_contents{min-height:calc(100vh - 410px)!important}
 /* Candidate Configuration: card/sub-card layout for 15.6-inch and smaller screens while reusing existing forms and handlers. */
 .candidate-config-shell{grid-template-columns:228px minmax(0,1fr)!important;gap:14px!important;width:100%;min-width:0}.candidate-config-nav{position:sticky;top:78px;padding:12px!important;border:1px solid #dbe4f1!important;border-radius:10px!important;box-shadow:0 3px 12px rgba(15,23,42,.045)!important}.candidate-config-nav h4{font-size:12.5px!important}.candidate-config-link{min-height:54px;padding:10px!important;border:1px solid transparent}.candidate-config-link.active{border-color:#dbe6ff}.candidate-config-link i{width:28px!important;height:28px!important;flex:0 0 28px}.candidate-config-panel{min-width:0!important;padding:0!important}.candidate-config-main-card{min-width:0;padding:15px;border:1px solid #dbe4f1;border-radius:10px;background:#fff;box-shadow:0 3px 12px rgba(15,23,42,.045)}.candidate-config-card-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:14px;padding-bottom:12px;border-bottom:1px solid #edf1f7}.candidate-config-title{margin:0;color:#101735;font-size:15px!important;font-weight:600!important;line-height:1.3}.candidate-config-subtitle{margin:4px 0 0;color:#667594;font-size:11px;font-weight:500;line-height:1.45}.candidate-config-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.candidate-config-actions .btn{display:inline-flex;align-items:center;gap:6px;min-height:34px;padding:8px 13px!important;border-radius:7px!important;font-family:'Poppins',sans-serif!important;font-size:11px!important;font-weight:600!important}.candidate-config-subcard{min-width:0;margin-bottom:12px;padding:13px;border:1px solid #e4eaf3;border-radius:9px;background:#fbfcff}.candidate-config-subcard:last-child{margin-bottom:0}.candidate-config-subcard-head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:10px}.candidate-config-subcard-title{color:#13224f;font-size:12.5px;font-weight:600;line-height:1.35}.candidate-config-subcard-sub{margin-top:2px;color:#7b89a8;font-size:10.5px;font-weight:500;line-height:1.45}.candidate-config-preview{max-height:calc(100vh - 285px);min-height:330px;overflow:auto;padding:14px 16px;border:1px solid #e4eaf3;border-radius:8px;background:#fff;color:#24314d;font-size:12px;font-weight:400;line-height:1.65}.candidate-config-preview *{max-width:100%;font-family:'Poppins',sans-serif!important}.candidate-config-main-card .card-header,.candidate-config-main-card .card-body{padding:0!important;border:0!important;background:transparent!important}.candidate-config-main-card .row{margin-right:0!important;margin-left:0!important}.candidate-config-main-card .col-lg-12{padding-right:0!important;padding-left:0!important}@media(max-width:1199px){.candidate-config-shell{grid-template-columns:214px minmax(0,1fr)!important;gap:12px!important}.candidate-config-main-card{padding:13px}.candidate-config-preview{max-height:none;min-height:300px}}@media(max-width:991px){.candidate-config-shell{grid-template-columns:1fr!important}.candidate-config-nav{position:relative;top:auto;display:flex;gap:8px;overflow-x:auto}.candidate-config-link{flex:0 0 210px}.candidate-config-card-head{align-items:stretch;flex-direction:column}.candidate-config-actions{justify-content:flex-start}}@media(max-width:575px){.candidate-config-main-card{padding:11px;border-radius:8px}.candidate-config-subcard{padding:10px}.candidate-config-link{flex-basis:185px}.candidate-config-preview{padding:12px;min-height:260px}.candidate-config-actions .btn{width:100%;justify-content:center}}
+/* Main Candidate Offer Letter preview mirrors the drawer preview while remaining a read-only card. */
+.settings-offer-template .co-tpl-layout--main-preview{display:block!important;background:transparent!important}.settings-offer-template .co-tpl-layout--main-preview .co-tpl-editor-col{width:100%;max-width:none;box-shadow:none}.settings-offer-template .candidate-offer-main-preview{max-height:calc(100vh - 360px);min-height:360px}.settings-offer-template .candidate-offer-main-preview p{margin-bottom:12px}@media(max-width:991px){.settings-offer-template .candidate-offer-main-preview{max-height:none;min-height:300px}}
 </style>
 
 @section('content')
@@ -1496,6 +1498,25 @@ input[type="radio"]:checked {
     <!--ensd::Action-->
   </div>
   <!--end::Terms & Canditions header-->
+  @php
+    // Intent: reuse the same dynamic offer-letter preview identity in the main view and edit drawer without changing persistence logic.
+    $settingsOfferLogo = (!empty(@$account->logo) && strlen(@$account->logo) > 10) ? @$account->logo : asset('assets/logo-not-found.png');
+    if (!empty(@$account->website) && empty(@$account->logo)) {
+      $settingsOfferDomain = GeneralMethod::getDomain($account->website);
+      $settingsOfferGoogleIcon = "https://www.google.com/s2/favicons?domain={$settingsOfferDomain}&sz=256";
+      $settingsOfferLogo = GeneralMethod::getDomainIconCompany($settingsOfferGoogleIcon, $account->id, false) ? $settingsOfferGoogleIcon : asset('assets/logo-not-found.png');
+    }
+    $settingsOfferAddress = trim(ucwords($company_city_name).(($company_city_name && $company_country_name) ? ', ' : '').ucwords($company_country_name), ', ');
+    $settingsOfferVariables = [
+      '[CANDIDATE_NAME]'   => 'Candidate Name',
+      '[CANDIDATE_EMAIL]'  => 'Candidate Email',
+      '[CANDIDATE_MOBILE]' => 'Candidate Mobile',
+      '[COMPANY_NAME]'     => 'Company Name',
+      '[JOB_TITLE]'        => 'Job Title',
+      '[JOINING_DATE]'     => 'Joining Date',
+      '[TODAY_DATE]'       => "Today's Date",
+    ];
+  @endphp
   <div class="card-body px-0 py-7"> 
     <!--begin::Terms & Canditions Content-->
     <div class="row">
@@ -1506,7 +1527,33 @@ input[type="radio"]:checked {
             <div class="candidate-config-subcard-sub">This content is dynamically merged with candidate, job, and company details in the offer workflow.</div>
           </div>
         </div>
-        <div class="col-lg-12 mb-0 view-terms candidate-config-preview" id="viewTermsoffer"> {!! (@$account->offer_terms) ? @$account->offer_terms :  $global_settings->offer_terms !!}</div>
+        <div class="settings-offer-template">
+          <div class="co-tpl-layout co-tpl-layout--main-preview">
+            <div class="co-tpl-editor-col">
+              <div class="co-tpl-tabs">
+                <button type="button" class="co-tpl-tab co-tpl-tab--active">Preview</button>
+              </div>
+              <div class="co-tpl-subcard co-tpl-meta-row">
+                <span class="co-tpl-meta-item">Type<b>Full Time</b></span>
+                <span class="co-tpl-meta-item">Status<b style="color:#0f9463">Active</b></span>
+              </div>
+              <div class="co-tpl-subcard">
+                <div class="co-letterhead">
+                  <div class="co-letterhead-logo">
+                    <img src="{{ $settingsOfferLogo }}" alt="{{ e(@$account->company_name ?: 'Company') }}" onerror="this.src='{{ asset('assets/logo-not-found.png') }}'">
+                  </div>
+                  <div class="co-letterhead-address">
+                    <div class="co-letterhead-company">{{ ucwords(@$account->company_name ?: 'Company Name') }}</div>
+                    @if(!empty($settingsOfferAddress))
+                      <div>{{ $settingsOfferAddress }}</div>
+                    @endif
+                  </div>
+                </div>
+              </div>
+              <div class="col-lg-12 mb-0 view-terms co-tpl-preview candidate-offer-main-preview" id="viewTermsoffer">{!! (@$account->offer_terms) ? @$account->offer_terms :  $global_settings->offer_terms !!}</div>
+            </div>
+          </div>
+        </div>
       </div>
       <div class="offer-letter-drawer-ov" id="offerLetterDrawerOverlay" onclick="closeOfferLetterDrawer()"></div>
       <form  id="terms_contentoffer" name="terms_contentoffer" class="form fv-plugins-bootstrap5 fv-plugins-framework" novalidate="novalidate" method="post">
@@ -1518,25 +1565,6 @@ input[type="radio"]:checked {
        
 
 
-        @php
-          // Intent: render the settings offer-letter editor with the same visual letterhead used by offer generation while keeping the saved template dynamic.
-          $settingsOfferLogo = (!empty(@$account->logo) && strlen(@$account->logo) > 10) ? @$account->logo : asset('assets/logo-not-found.png');
-          if (!empty(@$account->website) && empty(@$account->logo)) {
-            $settingsOfferDomain = GeneralMethod::getDomain($account->website);
-            $settingsOfferGoogleIcon = "https://www.google.com/s2/favicons?domain={$settingsOfferDomain}&sz=256";
-            $settingsOfferLogo = GeneralMethod::getDomainIconCompany($settingsOfferGoogleIcon, $account->id, false) ? $settingsOfferGoogleIcon : asset('assets/logo-not-found.png');
-          }
-          $settingsOfferAddress = trim(ucwords($company_city_name).(($company_city_name && $company_country_name) ? ', ' : '').ucwords($company_country_name), ', ');
-          $settingsOfferVariables = [
-            '[CANDIDATE_NAME]'   => 'Candidate Name',
-            '[CANDIDATE_EMAIL]'  => 'Candidate Email',
-            '[CANDIDATE_MOBILE]' => 'Candidate Mobile',
-            '[COMPANY_NAME]'     => 'Company Name',
-            '[JOB_TITLE]'        => 'Job Title',
-            '[JOINING_DATE]'     => 'Joining Date',
-            '[TODAY_DATE]'       => "Today's Date",
-          ];
-        @endphp
         <div class="col-lg-12 edit-terms offer-letter-drawer" id="editTermsoffer" style="display:none;">
           <div class="offer-letter-drawer-header">
             <div><h4 class="offer-letter-drawer-title">Edit Candidate Offer Letter</h4><p class="offer-letter-drawer-sub">Update the reusable template used when generating candidate offers.</p></div>
