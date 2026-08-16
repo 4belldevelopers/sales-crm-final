@@ -1548,19 +1548,6 @@ input[type="radio"]:checked {
           </div>
           <div class="offer-letter-drawer-body">
             <div class="settings-offer-template">
-              <div class="co-tpl-header">
-                <div>
-                  <h5 class="co-tpl-title">Offer Letter Template</h5>
-                  <div class="co-tpl-sub">Personalize the candidate offer letter before using it in the offer workflow.</div>
-                </div>
-                <div class="co-tpl-select-wrap">
-                  <label class="co-tpl-select-label" for="settings_offer_tpl_select">Templates</label>
-                  <select id="settings_offer_tpl_select" class="co-tpl-select">
-                    <option value="company-offer-letter-template" selected>Company Offer Letter Template</option>
-                  </select>
-                </div>
-              </div>
-
               <div class="co-tpl-layout">
                 <div class="co-tpl-editor-col">
                   <div class="co-tpl-tabs">
