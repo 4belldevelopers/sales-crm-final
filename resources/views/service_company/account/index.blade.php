@@ -438,6 +438,8 @@ input[type="radio"]:checked {
 <div class="post d-flex flex-column-fluid" id="kt_post">
 <!--begin::Container-->
 <div id="kt_content_container" class="container-fluid px-0">
+{{-- Keep commercial and advertising workspaces focused; their existing data and handlers are unchanged. --}}
+@if(request('tab') !== 'services' && request('tab') !== 'ads' && request('ads') !== 'show')
 <!--begin::Company Dashboard hero (redesigned)-->
 @php
   // Profile completion — derived only from already-loaded $account (no extra queries)
@@ -550,6 +552,7 @@ input[type="radio"]:checked {
   </div>
 </div>
 <!--end::Company Dashboard hero-->
+@endif
 <!--beign::Company Details (legacy, hidden)-->
 <div class="card mb-5 mb-xl-5 mx-2 d-none">
   <div class="card-body pt-5 pb-0 px-5">
