@@ -1477,24 +1477,28 @@ input[type="radio"]:checked {
       [
         'field' => 'offer_terms',
         'label' => 'Candidate Offer terms',
+        'type' => 'Full Time',
         'small' => !empty(trim(strip_tags((string) @$account->offer_terms))) ? 'Configured template' : 'Default template',
         'content' => (@$account->offer_terms) ? @$account->offer_terms : @$global_settings->offer_terms,
       ],
       [
         'field' => 'internship_offer_terms',
         'label' => 'Internship Offer Letter',
+        'type' => 'Internship',
         'small' => !empty(trim(strip_tags((string) @$account->internship_offer_terms))) ? 'Configured template' : 'Default template',
         'content' => (@$account->internship_offer_terms) ? @$account->internship_offer_terms : (@$global_settings->internship_offer_terms ?: @$global_settings->offer_terms),
       ],
       [
         'field' => 'contract_offer_terms',
         'label' => 'Contract Offer Letter',
+        'type' => 'Contract',
         'small' => !empty(trim(strip_tags((string) @$account->contract_offer_terms))) ? 'Configured template' : 'Default template',
         'content' => (@$account->contract_offer_terms) ? @$account->contract_offer_terms : (@$global_settings->contract_offer_terms ?: @$global_settings->offer_terms),
       ],
       [
         'field' => 'agency_offer_terms',
         'label' => 'Agency Offer terms',
+        'type' => 'Contract',
         'small' => !empty(trim(strip_tags((string) @$account->agency_offer_terms))) ? 'Configured template' : 'Default template',
         'content' => (@$account->agency_offer_terms) ? @$account->agency_offer_terms : (@$global_settings->agency_offer_terms ?: @$global_settings->offer_terms),
       ],
@@ -1508,7 +1512,7 @@ input[type="radio"]:checked {
       <a class="candidate-config-link" data-toggle="tab" href="#offercomponent"><i class="far fa-money-bill-alt"></i><span>Standard Payroll Structure<small>{{ count($offer_points ?? []) }} salary components</small></span></a>
       <div class="candidate-config-group">Offer Letter Templates</div>
       @foreach($candidateOfferTemplates as $candidateOfferTemplate)
-        <a class="candidate-config-link candidate-offer-template-link {{ $loop->first ? 'active' : '' }}" data-toggle="tab" href="#offerterms" data-template-field="{{ $candidateOfferTemplate['field'] }}" data-template-label="{{ $candidateOfferTemplate['label'] }}" data-template-content='@json($candidateOfferTemplate["content"])'><i class="far fa-file-alt"></i><span>{{ $candidateOfferTemplate['label'] }}<small>{{ $candidateOfferTemplate['small'] }}</small></span></a>
+        <a class="candidate-config-link candidate-offer-template-link {{ $loop->first ? 'active' : '' }}" data-toggle="tab" href="#offerterms" data-template-field="{{ $candidateOfferTemplate['field'] }}" data-template-label="{{ $candidateOfferTemplate['label'] }}" data-template-type="{{ $candidateOfferTemplate['type'] }}" data-template-content='@json($candidateOfferTemplate["content"])'><i class="far fa-file-alt"></i><span>{{ $candidateOfferTemplate['label'] }}<small>{{ $candidateOfferTemplate['small'] }}</small></span></a>
       @endforeach
     </aside>
     <div class="candidate-config-panel">
@@ -1566,7 +1570,7 @@ input[type="radio"]:checked {
                 <button type="button" class="co-tpl-tab co-tpl-tab--active">Preview</button>
               </div>
               <div class="co-tpl-subcard co-tpl-meta-row">
-                <span class="co-tpl-meta-item">Type<b>Full Time</b></span>
+                <span class="co-tpl-meta-item">Type<b class="candidate-offer-template-type">{{ $activeCandidateOfferTemplate['type'] }}</b></span>
                 <span class="co-tpl-meta-item">Status<b style="color:#0f9463">Active</b></span>
               </div>
               <div class="co-tpl-subcard">
@@ -1617,7 +1621,7 @@ input[type="radio"]:checked {
                   </div>
 
                   <div class="co-tpl-subcard co-tpl-meta-row">
-                    <span class="co-tpl-meta-item">Type<b>Full Time</b></span>
+                    <span class="co-tpl-meta-item">Type<b class="candidate-offer-template-type">{{ $activeCandidateOfferTemplate['type'] }}</b></span>
                     <span class="co-tpl-meta-item">Status<b style="color:#0f9463">Active</b></span>
                   </div>
 
@@ -1759,7 +1763,7 @@ input[type="radio"]:checked {
       <a class="candidate-config-link active" data-toggle="tab" href="#offercomponent"><i class="far fa-money-bill-alt"></i><span>Standard Payroll Structure<small>{{ count($offer_points ?? []) }} salary components</small></span></a>
       <div class="candidate-config-group">Offer Letter Templates</div>
       @foreach($candidateOfferTemplates as $candidateOfferTemplate)
-        <a class="candidate-config-link candidate-offer-template-link" data-toggle="tab" href="#offerterms" data-template-field="{{ $candidateOfferTemplate['field'] }}" data-template-label="{{ $candidateOfferTemplate['label'] }}" data-template-content='@json($candidateOfferTemplate["content"])'><i class="far fa-file-alt"></i><span>{{ $candidateOfferTemplate['label'] }}<small>{{ $candidateOfferTemplate['small'] }}</small></span></a>
+        <a class="candidate-config-link candidate-offer-template-link" data-toggle="tab" href="#offerterms" data-template-field="{{ $candidateOfferTemplate['field'] }}" data-template-label="{{ $candidateOfferTemplate['label'] }}" data-template-type="{{ $candidateOfferTemplate['type'] }}" data-template-content='@json($candidateOfferTemplate["content"])'><i class="far fa-file-alt"></i><span>{{ $candidateOfferTemplate['label'] }}<small>{{ $candidateOfferTemplate['small'] }}</small></span></a>
       @endforeach
     </aside>
     <div class="candidate-config-panel">
@@ -2251,7 +2255,8 @@ input[type="radio"]:checked {
         link.getAttribute('data-template-field'),
         link.getAttribute('data-template-label'),
         link.getAttribute('data-template-content') || '',
-        true
+        true,
+        link.getAttribute('data-template-type')
       );
     }
     document.querySelectorAll('.candidate-config-main-tab').forEach(function (item) {
@@ -3688,15 +3693,19 @@ function decodeCandidateOfferTemplateContent(html) {
         return html;
     }
 }
-function setCandidateOfferTemplateContent(field, label, html, syncEditor) {
+function setCandidateOfferTemplateContent(field, label, html, syncEditor, type) {
     var safeHtml = decodeCandidateOfferTemplateContent(html);
     var fieldInput = document.getElementById('candidateOfferTemplateField');
     var title = document.getElementById('candidateOfferTemplateTitle');
     var drawerTitle = document.getElementById('candidateOfferDrawerTitle');
     var preview = document.getElementById('viewTermsoffer');
+    var templateType = type || 'Full Time';
     if (fieldInput && field) fieldInput.value = field;
     if (title && label) title.textContent = label;
     if (drawerTitle && label) drawerTitle.textContent = 'Edit ' + label;
+    document.querySelectorAll('.candidate-offer-template-type').forEach(function(typeLabel) {
+        typeLabel.textContent = templateType;
+    });
     if (preview) preview.innerHTML = safeHtml;
     if (syncEditor) {
         var editor = window.CKEDITOR && CKEDITOR.instances.kt_docs_tinymce_hiddenoffer;
@@ -3733,7 +3742,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 templateLink.getAttribute('data-template-field'),
                 templateLink.getAttribute('data-template-label'),
                 templateLink.getAttribute('data-template-content') || '',
-                true
+                true,
+                templateLink.getAttribute('data-template-type')
             );
         });
     });
