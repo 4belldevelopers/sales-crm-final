@@ -329,7 +329,7 @@
         content:"\22EE\22EE  " counter(sstrow); position:absolute; left:12px; top:50%; transform:translateY(-50%); color:#a1a5b7; font-size:12px; font-weight:600; letter-spacing:-2px; }
       /* name input → looks like text, with a Main/Additional badge after it */
       .sst-edit #pointList .offer_points, .sst-edit #bonusList .offer_points, .sst-edit #insurenceList .offer_points,
-      .sst-edit #bonusList .bonus_offer_points, .sst-edit #insurenceList .insurence_offer_points {
+      .sst-edit #bonusList .bonus_points, .sst-edit #bonusList .bonus_offer_points, .sst-edit #insurenceList .insurence_offer_points {
         border:none !important; background:transparent !important; box-shadow:none !important; font-weight:600; color:#181c32; width:auto !important; max-width:150px; display:inline-block; vertical-align:middle; padding:4px 0 !important; }
       .sst-edit #pointList tbody tr.other_section_row > td:first-child::after,
       .sst-edit #bonusList tbody tr.other_section_row > td:first-child::after,
@@ -420,7 +420,8 @@
       .sst-edit #pointList tbody tr.other_section_row > td:first-child, .sst-edit #bonusList tbody tr.other_section_row > td:first-child, .sst-edit #insurenceList tbody tr.other_section_row > td:first-child { position:relative !important; padding:5px 64px 5px 27px !important; white-space:normal !important; }
       .sst-edit #pointList tbody tr.other_section_row > td:first-child::before, .sst-edit #bonusList tbody tr.other_section_row > td:first-child::before, .sst-edit #insurenceList tbody tr.other_section_row > td:first-child::before { content:counter(sstrow) !important; left:8px !important; width:13px; color:#71809d; font-size:10px !important; font-weight:600; letter-spacing:0; text-align:center; }
       .sst-edit #pointList tbody tr.other_section_row > td:first-child::after, .sst-edit #bonusList tbody tr.other_section_row > td:first-child::after, .sst-edit #insurenceList tbody tr.other_section_row > td:first-child::after { position:absolute !important; right:7px; left:auto !important; top:50%; margin:0 !important; transform:translateY(-50%); white-space:nowrap; }
-      .sst-edit #pointList tbody tr.other_section_row > td:first-child .offer_points, .sst-edit #bonusList tbody tr.other_section_row > td:first-child .offer_points, .sst-edit #bonusList tbody tr.other_section_row > td:first-child .bonus_offer_points, .sst-edit #insurenceList tbody tr.other_section_row > td:first-child .offer_points, .sst-edit #insurenceList tbody tr.other_section_row > td:first-child .insurence_offer_points { box-sizing:border-box; width:100% !important; max-width:none !important; }
+      /* Both live and newly added Additional rows use bonus_points, so keep their editable names visually identical to Main rows. */
+      .sst-edit #pointList tbody tr.other_section_row > td:first-child .offer_points, .sst-edit #bonusList tbody tr.other_section_row > td:first-child .offer_points, .sst-edit #bonusList tbody tr.other_section_row > td:first-child .bonus_points, .sst-edit #bonusList tbody tr.other_section_row > td:first-child .bonus_offer_points, .sst-edit #insurenceList tbody tr.other_section_row > td:first-child .offer_points, .sst-edit #insurenceList tbody tr.other_section_row > td:first-child .insurence_offer_points { box-sizing:border-box; width:100% !important; max-width:none !important; border:0 !important; background:transparent !important; box-shadow:none !important; color:#181c32 !important; font-weight:600 !important; padding:4px 0 !important; }
       .salary-editor-card { margin:0 0 12px; border:1px solid #dce3ef; border-radius:8px; background:#fff; overflow:hidden; }
       .salary-editor-card-head { display:flex; align-items:flex-start; justify-content:space-between; gap:12px; padding:12px 14px 7px; }
       .salary-editor-card-head h3 { margin:0; color:#18223d; font-size:12px; font-weight:600; }
@@ -3557,6 +3558,12 @@
                                         popup: 'text-left' // Align the text to the left
                                     }
                                 });
+                            },
+                            // Notify the account drawer after this existing save request settles so its button can be used again.
+                            complete: function() {
+                                if (window.parent && window.parent !== window) {
+                                    window.parent.dispatchEvent(new CustomEvent('salary-template-save-complete'));
+                                }
                             }
                         });
                     });
