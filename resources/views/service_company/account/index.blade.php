@@ -1875,10 +1875,20 @@ input[type="radio"]:checked {
 <!--end::Offer components-->
 
 <script>
-  // Intent: retain the existing Bootstrap panes while keeping Candidate Configurations visually selected across its vertical sections.
+  // Intent: switch the existing candidate configuration panes directly because the vertical links are nested inside a Bootstrap tab pane.
   document.addEventListener('click', function (event) {
     var link = event.target.closest ? event.target.closest('.candidate-config-link') : null;
     if (!link) return;
+
+    event.preventDefault();
+    event.stopPropagation();
+    var target = document.querySelector(link.getAttribute('href'));
+    if (!target) return;
+
+    document.querySelectorAll('#offerterms, #offercomponent').forEach(function (pane) {
+      pane.classList.remove('active', 'show');
+    });
+    target.classList.add('active', 'show');
 
     document.querySelectorAll('.candidate-config-link').forEach(function (item) {
       item.classList.toggle('active', item.getAttribute('href') === link.getAttribute('href'));
@@ -1886,7 +1896,7 @@ input[type="radio"]:checked {
     document.querySelectorAll('.candidate-config-main-tab').forEach(function (item) {
       item.classList.add('active');
     });
-  });
+  }, true);
 </script>
 
 
