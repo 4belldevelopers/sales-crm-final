@@ -1659,13 +1659,15 @@ input[type="radio"]:checked {
     .sst-drawer-h .t { font-size:15px; font-weight:700; color:var(--t); }
     .sst-drawer-x { width:34px; height:34px; border:none; background:var(--bg); border-radius:8px; cursor:pointer; font-size:15px; color:var(--tm); }
     .sst-drawer iframe { flex:1; width:100%; border:none; }
+    /* Read-only compensation view: the existing editor stays in the drawer so no salary persistence behavior changes. */
+    .sst-comp-overview{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin:16px 0 18px;padding:14px;border:1px solid var(--b);border-radius:10px;background:#fbfcff}.sst-comp-field{min-width:0;padding-right:12px;border-right:1px solid var(--b)}.sst-comp-field:last-child{padding-right:0;border-right:0}.sst-comp-label{display:block;margin-bottom:6px;color:var(--tm);font-size:10.5px;font-weight:600}.sst-comp-value{display:block;overflow:hidden;color:var(--t);font-size:12.5px;font-weight:600;text-overflow:ellipsis;white-space:nowrap}.sst-layout{display:block}.sst-cards,.sst-help,.sst-preview{display:none}.sst-section{padding:16px 18px}.sst-section-t{font-size:14px}.sst-table thead th{background:#f8faff}.sst-table tbody td{font-size:12px}.sst-table .sst-muted{color:#7e8299}@media(max-width:991px){.sst-comp-overview{grid-template-columns:repeat(2,minmax(0,1fr))}.sst-comp-field:nth-child(2){border-right:0}}@media(max-width:575px){.sst-comp-overview{grid-template-columns:1fr}.sst-comp-field{padding:0 0 10px;border-right:0;border-bottom:1px solid var(--b)}.sst-comp-field:last-child{padding-bottom:0;border-bottom:0}}
   </style>
 
   <div class="sst-wrap">
     <div class="sst-head">
       <div>
-        <div class="sst-title">Standard Payroll Structure <span class="sst-badge"><i class="fas fa-check" style="font-size:8px;"></i>Active</span></div>
-        <div class="sst-sub">Primary template for the candidate offer letter.</div>
+        <div class="sst-title">Salary Annexure <span class="sst-badge"><i class="fas fa-check" style="font-size:8px;"></i>Active</span></div>
+        <div class="sst-sub">Standard Payroll Structure · Primary template for candidate offers.</div>
       </div>
       <button type="button" class="btn btn-primary align-self-center" onclick="openSalaryEditDrawer()"><i class="fas fa-pen me-1" style="font-size:11px;"></i> Edit</button>
     </div>
@@ -1674,6 +1676,13 @@ input[type="radio"]:checked {
       <span class="mi"><i class="fas fa-hashtag"></i>Template ID: <b>TMPL-{{ str_pad(auth()->user()->company_id, 4, '0', STR_PAD_LEFT) }}</b></span>
       <span class="mi"><i class="far fa-calendar"></i>Created By: <b>{{ ucwords(auth()->user()->name) }}</b></span>
       <span class="mi"><i class="far fa-clock"></i>Last Updated: <b>{{ now()->format('d M Y') }}</b></span>
+    </div>
+
+    <div class="sst-comp-overview" aria-label="Compensation details">
+      <div class="sst-comp-field"><span class="sst-comp-label">Compensation Type</span><span class="sst-comp-value">Salary Annexure</span></div>
+      <div class="sst-comp-field"><span class="sst-comp-label">Main Components</span><span class="sst-comp-value">{{ $sstMain->count() }} components · {{ number_format($sstMainTotal, 2) }}%</span></div>
+      <div class="sst-comp-field"><span class="sst-comp-label">Additional Components</span><span class="sst-comp-value">{{ $sstAdd->count() }} components · {{ number_format($sstAddTotal, 2) }}%</span></div>
+      <div class="sst-comp-field"><span class="sst-comp-label">Validation</span><span class="sst-comp-value" style="color:{{ $sstMainValid ? '#1a9c61' : '#d97706' }}">{{ $sstMainValid ? 'Main total is 100%' : 'Main total requires review' }}</span></div>
     </div>
 
     <div class="sst-layout">
