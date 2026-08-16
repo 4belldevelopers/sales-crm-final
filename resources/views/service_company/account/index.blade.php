@@ -374,6 +374,7 @@ input[type="radio"]:checked {
 
 /* Compact enterprise service switch: native checkbox state and existing AJAX classes remain unchanged. */
 .commercials-v2 .cv2-switch{min-height:28px;padding:3px;border:1px solid #e2e8f3;border-radius:8px;background:#f8faff}.commercials-v2 .cv2-switch .form-switch{display:flex;align-items:center;min-height:20px}.commercials-v2 .cv2-switch .form-check-input{position:relative;width:36px!important;height:20px!important;margin:0!important;appearance:none!important;-webkit-appearance:none!important;background:#cbd5e1!important;border:0!important;border-radius:999px!important;box-shadow:none!important;outline:0;transition:background-color .16s ease}.commercials-v2 .cv2-switch .form-check-input::after{position:absolute;top:3px;left:3px;width:14px;height:14px;content:'';background:#fff;border-radius:50%;box-shadow:0 1px 2px rgba(15,23,42,.24);transition:transform .16s ease}.commercials-v2 .cv2-switch .form-check-input:checked{background:#2563eb!important}.commercials-v2 .cv2-switch .form-check-input:checked::after{transform:translateX(16px)}.commercials-v2 .cv2-switch .form-check-input:focus-visible{box-shadow:0 0 0 3px rgba(37,99,235,.22)!important}.commercials-v2 .cv2-switch-text{display:none!important}
+.candidate-config-shell{display:grid;grid-template-columns:220px minmax(0,1fr);gap:18px;align-items:start;font-family:'Poppins',sans-serif}.candidate-config-nav{padding:12px;border:1px solid #e5eaf4;border-radius:12px;background:#fff}.candidate-config-nav h4{margin:0 0 12px;padding:4px 6px 12px;border-bottom:1px solid #edf0f6;color:#111b3d;font-size:13px;font-weight:600}.candidate-config-link{display:flex;align-items:center;gap:10px;margin:4px 0;padding:11px 10px;border-radius:8px;color:#52638b!important;font-size:12px;font-weight:500;text-decoration:none}.candidate-config-link i{width:20px;height:20px;display:inline-flex;align-items:center;justify-content:center;border-radius:6px;background:#f1f4ff;color:#275df6;font-size:11px}.candidate-config-link span{display:block}.candidate-config-link small{display:block;margin-top:2px;color:#8391b1;font-size:10px;font-weight:500}.candidate-config-link.active,.candidate-config-link:hover{background:#eef3ff;color:#1b55f6!important}.candidate-config-link.active i{background:#dce8ff}.candidate-config-panel{min-width:0;padding:2px 0}.candidate-config-panel .card-header{padding-top:0!important}.candidate-config-panel .card-title h3{font-family:'Poppins',sans-serif;font-size:16px;font-weight:600}@media(max-width:991px){.candidate-config-shell{grid-template-columns:1fr}.candidate-config-nav{display:flex;gap:8px;overflow-x:auto}.candidate-config-nav h4{display:none}.candidate-config-link{flex:0 0 auto;margin:0}.candidate-config-link small{display:none}}
 </style>
 
 @section('content')
@@ -814,9 +815,8 @@ input[type="radio"]:checked {
       <li class="nav-item"><a class="nav-link csv2-account-tab" data-toggle="tab" href="#interview_stage"><span class="csv2-account-tab-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h10M4 18h7"/><circle cx="18" cy="12" r="2"/><path d="M18 14v5"/></svg></span><span class="csv2-account-tab-copy"><span class="csv2-account-tab-title">Interview Stage</span></span></a></li>
       <li class="nav-item"><a class="nav-link csv2-account-tab" data-toggle="tab" href="#settings"><span class="csv2-account-tab-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1-2.8 2.8-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.6v.1h-4V21a1.7 1.7 0 0 0-1-1.6 1.7 1.7 0 0 0-1.9.3l-.1.1L4.2 17l.1-.1a1.7 1.7 0 0 0 .3-1.9A1.7 1.7 0 0 0 3 14v-4a1.7 1.7 0 0 0 1.6-1 1.7 1.7 0 0 0-.3-1.9L7 4.2l.1.1a1.7 1.7 0 0 0 1.9.3 1.7 1.7 0 0 0 1-1.6h4a1.7 1.7 0 0 0 1 1.6 1.7 1.7 0 0 0 1.9-.3L19.8 7l-.1.1a1.7 1.7 0 0 0-.3 1.9 1.7 1.7 0 0 0 1.6 1v4a1.7 1.7 0 0 0-1.6 1Z"/></svg></span><span class="csv2-account-tab-copy"><span class="csv2-account-tab-title">General</span></span></a></li>
       <li class="nav-item"><a class="nav-link csv2-account-tab" data-toggle="tab" href="#notifications"><span class="csv2-account-tab-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/><path d="M10 21h4"/></svg></span><span class="csv2-account-tab-copy"><span class="csv2-account-tab-title">Notifications</span></span></a></li>
-      <li class="nav-item"><a class="nav-link csv2-account-tab" data-toggle="tab" href="#offerterms"><span class="csv2-account-tab-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M6 3h9l3 3v15H6z"/><path d="M14 3v4h4M9 11h6M9 15h6"/></svg></span><span class="csv2-account-tab-copy"><span class="csv2-account-tab-title">Terms &amp; Conditions</span><span class="csv2-account-tab-sub">(For Candidate Offer Letter)</span></span></a></li>
+      <li class="nav-item"><a class="nav-link csv2-account-tab candidate-config-main-tab" data-toggle="tab" href="#offerterms"><span class="csv2-account-tab-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M6 3h9l3 3v15H6z"/><path d="M14 3v4h4M9 11h6M9 15h6"/></svg></span><span class="csv2-account-tab-copy"><span class="csv2-account-tab-title">Candidate Configurations</span></span></a></li>
       <li class="nav-item"><a class="nav-link csv2-account-tab" data-toggle="tab" href="#agencyofferterms"><span class="csv2-account-tab-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M6 3h9l3 3v15H6z"/><path d="M14 3v4h4M9 11h6M9 15h4"/></svg></span><span class="csv2-account-tab-copy"><span class="csv2-account-tab-title">Terms &amp; Conditions</span><span class="csv2-account-tab-sub">(For Agency Offer Letter)</span></span></a></li>
-      <li class="nav-item"><a class="nav-link csv2-account-tab" data-toggle="tab" href="#offercomponent"><span class="csv2-account-tab-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M7 9h4M7 13h2M15 10v6M12 13h6"/></svg></span><span class="csv2-account-tab-copy"><span class="csv2-account-tab-title">Salary Structure</span><span class="csv2-account-tab-sub">(For Candidate Offer Letter)</span></span></a></li>
       <li class="nav-item"><a class="nav-link csv2-account-tab" data-toggle="tab" href="#terms"><span class="csv2-account-tab-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 4h14v16H5z"/><path d="M8 8h8M8 12h8M8 16h5"/></svg></span><span class="csv2-account-tab-copy"><span class="csv2-account-tab-title">Terms &amp; Conditions</span><span class="csv2-account-tab-sub">(For {{__('messages.Agency')}})</span></span></a></li>
     </ul>
   </div>
@@ -1463,11 +1463,18 @@ input[type="radio"]:checked {
 
 <!--begin::offerterms Terms & conditions Content-->
 <div class="tab-pane" id="offerterms" role="tabpanel">
+  <div class="candidate-config-shell">
+    <aside class="candidate-config-nav" aria-label="Candidate configuration sections">
+      <h4>Candidate Configurations</h4>
+      <a class="candidate-config-link active" data-toggle="tab" href="#offerterms"><i class="far fa-file-alt"></i><span>Offer Letter Templates<small>Candidate terms &amp; conditions</small></span></a>
+      <a class="candidate-config-link" data-toggle="tab" href="#offercomponent"><i class="far fa-money-bill-alt"></i><span>Salary Annexure<small>Salary structure and components</small></span></a>
+    </aside>
+    <div class="candidate-config-panel">
   <!--begin::Overview header-->
   <div class="card-header cursor-pointer px-0">
     <!--begin::Card title-->
     <div class="card-title m-0">
-      <h3 class="fw-bolder m-0">Terms & Conditions</h3>
+      <h3 class="fw-bolder m-0">Offer Letter Templates</h3>
     </div>
     <!--end::Card title-->
     <!--begin::Action-->
@@ -1510,6 +1517,8 @@ input[type="radio"]:checked {
 
   </div>
 </div>
+  </div>
+  </div>
 <!--end::offerterms Terms & Canditions Content-->
 
 
@@ -1556,6 +1565,13 @@ input[type="radio"]:checked {
 
 <!--begin::Offer components Content-->
 <div class="tab-pane" id="offercomponent" role="tabpanel">
+  <div class="candidate-config-shell">
+    <aside class="candidate-config-nav" aria-label="Candidate configuration sections">
+      <h4>Candidate Configurations</h4>
+      <a class="candidate-config-link" data-toggle="tab" href="#offerterms"><i class="far fa-file-alt"></i><span>Offer Letter Templates<small>Candidate terms &amp; conditions</small></span></a>
+      <a class="candidate-config-link active" data-toggle="tab" href="#offercomponent"><i class="far fa-money-bill-alt"></i><span>Salary Annexure<small>Salary structure and components</small></span></a>
+    </aside>
+    <div class="candidate-config-panel">
   @php
     $sstMain  = collect($offer_points ?? []);
     $sstAdd   = collect($offer_point_other ?? []);
@@ -1850,7 +1866,24 @@ input[type="radio"]:checked {
     }
   </script>
 </div>
+  </div>
+  </div>
 <!--end::Offer components-->
+
+<script>
+  // Intent: retain the existing Bootstrap panes while keeping Candidate Configurations visually selected across its vertical sections.
+  document.addEventListener('click', function (event) {
+    var link = event.target.closest ? event.target.closest('.candidate-config-link') : null;
+    if (!link) return;
+
+    document.querySelectorAll('.candidate-config-link').forEach(function (item) {
+      item.classList.toggle('active', item.getAttribute('href') === link.getAttribute('href'));
+    });
+    document.querySelectorAll('.candidate-config-main-tab').forEach(function (item) {
+      item.classList.add('active');
+    });
+  });
+</script>
 
 
 
