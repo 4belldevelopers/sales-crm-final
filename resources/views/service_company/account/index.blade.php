@@ -1476,7 +1476,7 @@ input[type="radio"]:checked {
     $candidateOfferTemplates = [
       [
         'field' => 'offer_terms',
-        'label' => 'Candidate Offer terms',
+        'label' => 'Fulltime Offer Letter',
         'type' => 'Full Time',
         'small' => !empty(trim(strip_tags((string) @$account->offer_terms))) ? 'Configured template' : 'Default template',
         'content' => (@$account->offer_terms) ? @$account->offer_terms : @$global_settings->offer_terms,

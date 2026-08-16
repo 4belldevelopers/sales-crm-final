@@ -114,7 +114,7 @@
                                                 class="text-dark fw-bolder text-hover-primary d-block fs-6">2</a>
                                         </td>
                                         <td><a href="javascript:void(0);"
-                                                class="text-dark fw-bolder text-hover-primary d-block fs-6">Candidate Offer terms</a>
+                                                class="text-dark fw-bolder text-hover-primary d-block fs-6">Fulltime Offer Letter</a>
                                         </td>
                                        
                                         <td> For Candidates</td>

@@ -4473,7 +4473,7 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
             [
                 'key' => 'candidate-offer-letter',
                 'field' => 'offer_terms',
-                'label' => 'Candidate Offer terms',
+                'label' => 'Fulltime Offer Letter',
                 'content' => $this->company_offer_terms,
                 'selected' => ! $this->offer_terms_conditions && $this->application->condidate_type != 'bench_condidate',
             ],
