@@ -1659,8 +1659,32 @@ input[type="radio"]:checked {
     .sst-drawer-h .t { font-size:15px; font-weight:700; color:var(--t); }
     .sst-drawer-x { width:34px; height:34px; border:none; background:var(--bg); border-radius:8px; cursor:pointer; font-size:15px; color:var(--tm); }
     .sst-drawer iframe { flex:1; width:100%; border:none; }
-    /* Read-only compensation view: the existing editor stays in the drawer so no salary persistence behavior changes. */
-    .sst-comp-overview{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin:16px 0 18px;padding:14px;border:1px solid var(--b);border-radius:10px;background:#fbfcff}.sst-comp-field{min-width:0;padding-right:12px;border-right:1px solid var(--b)}.sst-comp-field:last-child{padding-right:0;border-right:0}.sst-comp-label{display:block;margin-bottom:6px;color:var(--tm);font-size:10.5px;font-weight:600}.sst-comp-value{display:block;overflow:hidden;color:var(--t);font-size:12.5px;font-weight:600;text-overflow:ellipsis;white-space:nowrap}.sst-layout{display:block}.sst-cards,.sst-help,.sst-preview{display:none}.sst-section{padding:16px 18px}.sst-section-t{font-size:14px}.sst-table thead th{background:#f8faff}.sst-table tbody td{font-size:12px}.sst-table .sst-muted{color:#7e8299}@media(max-width:991px){.sst-comp-overview{grid-template-columns:repeat(2,minmax(0,1fr))}.sst-comp-field:nth-child(2){border-right:0}}@media(max-width:575px){.sst-comp-overview{grid-template-columns:1fr}.sst-comp-field{padding:0 0 10px;border-right:0;border-bottom:1px solid var(--b)}.sst-comp-field:last-child{padding-bottom:0;border-bottom:0}}
+    /* Read-only compensation view; editing remains in the existing drawer to preserve salary persistence behavior. */
+    .sst-comp-overview { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:12px; margin:16px 0 18px; padding:14px; border:1px solid var(--b); border-radius:10px; background:#fbfcff; }
+    .sst-comp-field { min-width:0; padding-right:12px; border-right:1px solid var(--b); }
+    .sst-comp-field:last-child { padding-right:0; border-right:0; }
+    .sst-comp-label { display:block; margin-bottom:6px; color:var(--tm); font-size:10.5px; font-weight:600; }
+    .sst-comp-value { display:block; overflow:hidden; color:var(--t); font-size:12.5px; font-weight:600; text-overflow:ellipsis; white-space:nowrap; }
+    .salary-compensation { display:grid; gap:14px; }
+    .salary-comp-card { border:1px solid var(--b); border-radius:10px; background:#fff; overflow:hidden; }
+    .salary-comp-heading { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:14px 16px 0; }
+    .salary-comp-heading h4 { margin:0; color:var(--t); font-size:14px; font-weight:600; }
+    .salary-comp-heading p { margin:3px 0 0; color:var(--tm); font-size:11.5px; font-weight:500; }
+    .salary-comp-grid { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:12px; padding:14px 16px 16px; }
+    .salary-comp-control { min-width:0; }
+    .salary-comp-control label { display:block; margin-bottom:5px; color:var(--t); font-size:11px; font-weight:600; }
+    .salary-comp-readonly { display:flex; align-items:center; min-height:35px; padding:8px 10px; border:1px solid #d8e0ee; border-radius:6px; color:#34405d; background:#fff; font-size:12px; font-weight:500; }
+    .salary-comp-table-wrap { overflow-x:auto; padding:12px 16px 16px; }
+    .salary-comp-table { width:100%; min-width:760px; border-collapse:separate; border-spacing:0; border:1px solid #e3e8f2; border-radius:7px; overflow:hidden; }
+    .salary-comp-table th { padding:9px 10px; background:#f7f9fc; border-bottom:1px solid #e3e8f2; color:#60708f; font-size:10.5px; font-weight:600; text-align:left; }
+    .salary-comp-table td { padding:9px 10px; border-bottom:1px solid #edf0f5; color:#26334f; font-size:11.5px; font-weight:500; vertical-align:middle; }
+    .salary-comp-table tbody tr:last-child td { border-bottom:0; }
+    .salary-comp-no { color:#7b88a2; font-size:10.5px; font-weight:600; }
+    .salary-comp-total { display:flex; justify-content:space-between; gap:12px; padding:10px 16px; border-top:1px solid #d8e9e0; background:#ecfff3; color:#177245; font-size:11.5px; font-weight:600; }
+    .salary-comp-total.additional { border-top-color:#eadfff; background:#faf7ff; color:#6b3ed1; }
+    .sst-legacy-layout { display:none !important; }
+    @media(max-width:991px){ .sst-comp-overview,.salary-comp-grid { grid-template-columns:repeat(2,minmax(0,1fr)); } .sst-comp-field:nth-child(2){ border-right:0; } }
+    @media(max-width:575px){ .sst-comp-overview,.salary-comp-grid { grid-template-columns:1fr; } .sst-comp-field{ padding:0 0 10px; border-right:0; border-bottom:1px solid var(--b); } .sst-comp-field:last-child{ padding-bottom:0; border-bottom:0; } }
   </style>
 
   <div class="sst-wrap">
@@ -1685,7 +1709,74 @@ input[type="radio"]:checked {
       <div class="sst-comp-field"><span class="sst-comp-label">Validation</span><span class="sst-comp-value" style="color:{{ $sstMainValid ? '#1a9c61' : '#d97706' }}">{{ $sstMainValid ? 'Main total is 100%' : 'Main total requires review' }}</span></div>
     </div>
 
-    <div class="sst-layout">
+    <div class="salary-compensation" aria-label="Salary annexure compensation details">
+      <section class="salary-comp-card">
+        <div class="salary-comp-heading">
+          <div><h4>Compensation Details</h4><p>Review the salary-annexure configuration for candidate offers.</p></div>
+        </div>
+        <div class="salary-comp-grid">
+          <div class="salary-comp-control"><label>Structure</label><div class="salary-comp-readonly">Standard Payroll Structure</div></div>
+          <div class="salary-comp-control"><label>Main Components</label><div class="salary-comp-readonly">{{ $sstMain->count() }} configured</div></div>
+          <div class="salary-comp-control"><label>Additional Components</label><div class="salary-comp-readonly">{{ $sstAdd->count() }} configured</div></div>
+          <div class="salary-comp-control"><label>Validation Status</label><div class="salary-comp-readonly" style="color:{{ $sstMainValid ? '#177245' : '#b45309' }}">{{ $sstMainValid ? 'Ready to use' : 'Requires review' }}</div></div>
+        </div>
+      </section>
+
+      <section class="salary-comp-card">
+        <div class="salary-comp-heading">
+          <div><h4>Main Components <span style="color:#7e8299;font-size:11px;font-weight:500;">(must total 100%)</span></h4><p>Core salary components used in the payroll structure.</p></div>
+        </div>
+        <div class="salary-comp-table-wrap">
+          <table class="salary-comp-table">
+            <thead><tr><th>#</th><th>Component Name</th><th>Applicable</th><th>Allocation</th><th>Condition</th><th>Monthly</th><th>Annually</th></tr></thead>
+            <tbody>
+              @forelse ($sstMain as $i => $c)
+                <tr>
+                  <td class="salary-comp-no">{{ $i + 1 }}</td>
+                  <td><strong>{{ $c->points }}</strong></td>
+                  <td>{{ $sstViewLabel[$c->view_type] ?? 'Both' }}</td>
+                  <td>{{ number_format($c->percentage, 2) }}%</td>
+                  <td>{{ $sstCondLabel[$c->condition_check] ?? 'Amount' }}</td>
+                  <td>—</td><td>—</td>
+                </tr>
+              @empty
+                <tr><td colspan="7" style="text-align:center;color:#7e8299;">No main components configured.</td></tr>
+              @endforelse
+            </tbody>
+          </table>
+        </div>
+        <div class="salary-comp-total"><span>Total Main Components</span><span>{{ number_format($sstMainTotal, 2) }}%</span></div>
+      </section>
+
+      <section class="salary-comp-card">
+        <div class="salary-comp-heading">
+          <div><h4>Additional Components <span style="color:#7e8299;font-size:11px;font-weight:500;">(optional)</span></h4><p>Additional allowances applied above the main salary allocation.</p></div>
+        </div>
+        <div class="salary-comp-table-wrap">
+          <table class="salary-comp-table">
+            <thead><tr><th>#</th><th>Component Name</th><th>Applicable</th><th>Allocation</th><th>Condition</th><th>Monthly</th><th>Annually</th></tr></thead>
+            <tbody>
+              @forelse ($sstAdd as $i => $c)
+                <tr>
+                  <td class="salary-comp-no">{{ $i + 1 }}</td>
+                  <td><strong>{{ $c->points }}</strong></td>
+                  <td>{{ $sstViewLabel[$c->view_type] ?? 'Both' }}</td>
+                  <td>{{ number_format($c->percentage, 2) }}%</td>
+                  <td>{{ $sstCondLabel[$c->condition_check] ?? 'Amount' }}</td>
+                  <td>—</td><td>—</td>
+                </tr>
+              @empty
+                <tr><td colspan="7" style="text-align:center;color:#7e8299;">No additional components configured.</td></tr>
+              @endforelse
+            </tbody>
+          </table>
+        </div>
+        <div class="salary-comp-total additional"><span>Total Additional Components</span><span>{{ number_format($sstAddTotal, 2) }}%</span></div>
+      </section>
+    </div>
+
+    {{-- Legacy preview remains in markup only to preserve its existing client-side hooks; it is intentionally not rendered. --}}
+    <div class="sst-layout sst-legacy-layout" aria-hidden="true">
       <div class="sst-mainside">
         <!-- Summary cards -->
         <div class="sst-cards">
