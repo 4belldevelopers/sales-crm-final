@@ -433,10 +433,24 @@ $productAllowCompany = GeneralMethod::companiesType();
                         @if (in_array('view_settings', $userPermissions))
                             <!--begin::Settings-->
                             <div class="menu-item"> <a href="{{ route('service_company.account.index') }}"
-                                    class="menu-link {{ request()->is('service_company/account*') ? 'active' : '' }}">
+                                    class="menu-link {{ request()->is('service_company/account*') && !request('tab') && request('ads') !== 'show' ? 'active' : '' }}">
                                     <span class="menu-bullet"> <span class="bullet bullet-dot"></span> </span> <span
                                         class="menu-title">Settings</span> </a> </div>
                             <!--end::Settings-->
+                            @if ($productAllowCompany)
+                                <!--begin::Commercials-->
+                                <div class="menu-item"> <a href="{{ route('service_company.account.index', ['tab' => 'services']) }}"
+                                        class="menu-link {{ request('tab') === 'services' ? 'active' : '' }}">
+                                        <span class="menu-bullet"> <span class="bullet bullet-dot"></span> </span> <span
+                                            class="menu-title">Commercials</span> </a> </div>
+                                <!--end::Commercials-->
+                                <!--begin::Ads Settings-->
+                                <div class="menu-item"> <a href="{{ route('service_company.account.index', ['tab' => 'ads']) }}"
+                                        class="menu-link {{ request('tab') === 'ads' || request('ads') === 'show' ? 'active' : '' }}">
+                                        <span class="menu-bullet"> <span class="bullet bullet-dot"></span> </span> <span
+                                            class="menu-title">Ads Settings</span> </a> </div>
+                                <!--end::Ads Settings-->
+                            @endif
                         @endif
                         @if (in_array('view_team', $userPermissions))
                             <!--begin::Team-->
