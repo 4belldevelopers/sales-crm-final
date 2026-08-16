@@ -1672,7 +1672,7 @@ input[type="radio"]:checked {
     .salary-comp-heading { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:14px 16px 0; }
     .salary-comp-heading h4 { margin:0; color:var(--t); font-size:14px; font-weight:600; }
     .salary-comp-heading p { margin:3px 0 0; color:var(--tm); font-size:11.5px; font-weight:500; }
-    .salary-comp-grid { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:12px; padding:14px 16px 16px; }
+    .salary-comp-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px; padding:14px 16px 16px; }
     .salary-comp-control { min-width:0; }
     .salary-comp-control label { display:block; margin-bottom:5px; color:var(--t); font-size:11px; font-weight:600; }
     .salary-comp-control label i { width:14px; margin-right:4px; color:#4d72ff; text-align:center; }
@@ -1716,15 +1716,15 @@ input[type="radio"]:checked {
     <div class="salary-compensation" aria-label="Salary annexure compensation details">
       <section class="salary-comp-card">
         <div class="salary-comp-heading">
-          <div><h4>Compensation Details</h4><p>Review the salary-annexure configuration for candidate offers.</p></div>
+          <div><h4>Compensation Details</h4><p>These offer details are captured when an offer is created from this salary annexure.</p></div>
         </div>
         <div class="salary-comp-grid">
-          <div class="salary-comp-control"><label>Structure</label><div class="salary-comp-readonly">Standard Payroll Structure</div></div>
+          <div class="salary-comp-control"><label><i class="fas fa-wallet"></i>Currency</label><div class="salary-comp-readonly">Selected when creating an offer</div></div>
           <div class="salary-comp-control"><label><i class="fas fa-wallet"></i>Enter Amount (CTC)</label><div class="salary-comp-readonly">Set when creating an offer</div></div>
+          <div class="salary-comp-control"><label><i class="fas fa-calendar-alt"></i>Salary Format</label><div class="salary-comp-readonly">Selected when creating an offer</div></div>
           <div class="salary-comp-control"><label><i class="fas fa-briefcase"></i>Offered Designation</label><div class="salary-comp-readonly">Set when creating an offer</div></div>
-          <div class="salary-comp-control"><label>Main Components</label><div class="salary-comp-readonly">{{ $sstMain->count() }} configured</div></div>
-          <div class="salary-comp-control"><label>Additional Components</label><div class="salary-comp-readonly">{{ $sstAdd->count() }} configured</div></div>
-          <div class="salary-comp-control"><label>Validation Status</label><div class="salary-comp-readonly" style="color:{{ $sstMainValid ? '#177245' : '#b45309' }}">{{ $sstMainValid ? 'Ready to use' : 'Requires review' }}</div></div>
+          <div class="salary-comp-control"><label><i class="far fa-calendar-alt"></i>Date of Joining (DOJ)</label><div class="salary-comp-readonly">Set when creating an offer</div></div>
+          <div class="salary-comp-control"><label><i class="fas fa-briefcase"></i>Job Type</label><div class="salary-comp-readonly">Selected when creating an offer</div></div>
         </div>
       </section>
 
@@ -1953,8 +1953,8 @@ input[type="radio"]:checked {
     <div class="sst-drawer-h">
       <span class="t">Edit Salary Template</span>
       <div class="sst-drawer-actions">
-        <button type="button" class="btn btn-primary" onclick="submitSalaryTemplateFromDrawer()"><i class="far fa-save me-1"></i>Save Template</button>
-        <button type="button" class="btn" style="background:#5b21d6;color:#fff;" onclick="resetSalaryTemplateDrawer()" title="Load the Super Admin default components into this editor"><i class="fas fa-undo me-1"></i>Reset</button>
+        <button type="button" id="sstSaveTemplateButton" class="btn btn-primary" onclick="submitSalaryTemplateFromDrawer()"><i class="far fa-save me-1"></i>Save Template</button>
+        <button type="button" id="sstResetTemplateButton" class="btn" style="background:#5b21d6;color:#fff;" onclick="resetSalaryTemplateDrawer()" title="Load the Super Admin default components into this editor"><i class="fas fa-undo me-1"></i>Reset</button>
       </div>
       <button type="button" class="sst-drawer-x" onclick="closeSalaryEditDrawer()">&times;</button>
     </div>
@@ -1994,17 +1994,42 @@ input[type="radio"]:checked {
       document.getElementById('sstDrawerOv').classList.add('show');
       document.body.style.overflow = 'hidden';
     }
+    // Intent: give the existing drawer actions immediate, non-blocking progress feedback while preserving their form and data behavior.
+    function setSalaryDrawerActionLoading(buttonId, isLoading, loadingText){
+      var button = document.getElementById(buttonId);
+      if (!button) return;
+      if (!button.dataset.idleHtml) button.dataset.idleHtml = button.innerHTML;
+      button.disabled = isLoading;
+      button.setAttribute('aria-busy', isLoading ? 'true' : 'false');
+      button.innerHTML = isLoading
+        ? '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>' + loadingText
+        : button.dataset.idleHtml;
+    }
     // The drawer header submits the existing embedded form, preserving its current validation and save endpoint.
     function submitSalaryTemplateFromDrawer(){
       var frame = document.getElementById('sstDrawerFrame');
       var save = frame && frame.contentWindow && frame.contentWindow.document.getElementById('save-form');
-      if (save) save.click();
+      if (save) {
+        setSalaryDrawerActionLoading('sstSaveTemplateButton', true, 'Saving…');
+        save.click();
+      }
     }
     // Reset intentionally loads the Super Admin master components for review; the company data is unchanged until Save Template submits the existing form.
     function resetSalaryTemplateDrawer(){
       var frame = document.getElementById('sstDrawerFrame');
-      if (frame) frame.src = "{{ route('service_company.account.offerAmountChange', [encrypt(1)]) }}?embed=1";
+      if (frame) {
+        setSalaryDrawerActionLoading('sstResetTemplateButton', true, 'Loading defaults…');
+        frame.addEventListener('load', function completeSalaryTemplateReset(){
+          setSalaryDrawerActionLoading('sstResetTemplateButton', false);
+          frame.removeEventListener('load', completeSalaryTemplateReset);
+        });
+        frame.src = "{{ route('service_company.account.offerAmountChange', [encrypt(1)]) }}?embed=1";
+      }
     }
+    // The embedded editor dispatches this only after its existing AJAX request completes.
+    window.addEventListener('salary-template-save-complete', function(){
+      setSalaryDrawerActionLoading('sstSaveTemplateButton', false);
+    });
     function closeSalaryEditDrawer(){
       document.getElementById('sstDrawer').classList.remove('show');
       document.getElementById('sstDrawerOv').classList.remove('show');
