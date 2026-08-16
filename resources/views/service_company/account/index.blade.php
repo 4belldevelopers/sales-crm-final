@@ -1653,10 +1653,12 @@ input[type="radio"]:checked {
     /* edit drawer */
     .sst-drawer-ov { position:fixed; inset:0; background:rgba(0,0,0,.4); z-index:1090; opacity:0; visibility:hidden; transition:opacity .2s; }
     .sst-drawer-ov.show { opacity:1; visibility:visible; }
-    .sst-drawer { position:fixed; top:0; right:0; height:100vh; width:min(1400px,96vw); background:#fff; z-index:1091; box-shadow:-8px 0 40px rgba(0,0,0,.15); transform:translateX(100%); transition:transform .25s ease; display:flex; flex-direction:column; }
+    .sst-drawer { position:fixed; top:0; right:0; height:100vh; width:min(1400px,calc(80vw - 168px)); min-width:720px; max-width:calc(100vw - 20px); background:#fff; z-index:1091; box-shadow:-8px 0 40px rgba(0,0,0,.15); transform:translateX(100%); transition:transform .25s ease; display:flex; flex-direction:column; }
     .sst-drawer.show { transform:translateX(0); }
-    .sst-drawer-h { display:flex; align-items:center; justify-content:space-between; padding:12px 18px; border-bottom:1px solid var(--b); }
+    .sst-drawer-h { display:flex; align-items:center; justify-content:space-between; gap:14px; padding:12px 18px; border-bottom:1px solid var(--b); }
     .sst-drawer-h .t { font-size:15px; font-weight:700; color:var(--t); }
+    .sst-drawer-actions { display:flex; align-items:center; justify-content:flex-end; gap:8px; margin-left:auto; }
+    .sst-drawer-actions .btn { font-size:12px; font-weight:600; white-space:nowrap; }
     .sst-drawer-x { width:34px; height:34px; border:none; background:var(--bg); border-radius:8px; cursor:pointer; font-size:15px; color:var(--tm); }
     .sst-drawer iframe { flex:1; width:100%; border:none; }
     /* Read-only compensation view; editing remains in the existing drawer to preserve salary persistence behavior. */
@@ -1673,6 +1675,7 @@ input[type="radio"]:checked {
     .salary-comp-grid { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:12px; padding:14px 16px 16px; }
     .salary-comp-control { min-width:0; }
     .salary-comp-control label { display:block; margin-bottom:5px; color:var(--t); font-size:11px; font-weight:600; }
+    .salary-comp-control label i { width:14px; margin-right:4px; color:#4d72ff; text-align:center; }
     .salary-comp-readonly { display:flex; align-items:center; min-height:35px; padding:8px 10px; border:1px solid #d8e0ee; border-radius:6px; color:#34405d; background:#fff; font-size:12px; font-weight:500; }
     .salary-comp-table-wrap { overflow-x:auto; padding:12px 16px 16px; }
     .salary-comp-table { width:100%; min-width:760px; border-collapse:separate; border-spacing:0; border:1px solid #e3e8f2; border-radius:7px; overflow:hidden; }
@@ -1684,6 +1687,7 @@ input[type="radio"]:checked {
     .salary-comp-total.additional { border-top-color:#eadfff; background:#faf7ff; color:#6b3ed1; }
     .sst-legacy-layout { display:none !important; }
     @media(max-width:991px){ .sst-comp-overview,.salary-comp-grid { grid-template-columns:repeat(2,minmax(0,1fr)); } .sst-comp-field:nth-child(2){ border-right:0; } }
+    @media(max-width:767px){ .sst-drawer { min-width:0; width:100vw; } .sst-drawer-actions .btn { padding:7px 9px; font-size:11px; } }
     @media(max-width:575px){ .sst-comp-overview,.salary-comp-grid { grid-template-columns:1fr; } .sst-comp-field{ padding:0 0 10px; border-right:0; border-bottom:1px solid var(--b); } .sst-comp-field:last-child{ padding-bottom:0; border-bottom:0; } }
   </style>
 
@@ -1716,6 +1720,8 @@ input[type="radio"]:checked {
         </div>
         <div class="salary-comp-grid">
           <div class="salary-comp-control"><label>Structure</label><div class="salary-comp-readonly">Standard Payroll Structure</div></div>
+          <div class="salary-comp-control"><label><i class="fas fa-wallet"></i>Enter Amount (CTC)</label><div class="salary-comp-readonly">Set when creating an offer</div></div>
+          <div class="salary-comp-control"><label><i class="fas fa-briefcase"></i>Offered Designation</label><div class="salary-comp-readonly">Set when creating an offer</div></div>
           <div class="salary-comp-control"><label>Main Components</label><div class="salary-comp-readonly">{{ $sstMain->count() }} configured</div></div>
           <div class="salary-comp-control"><label>Additional Components</label><div class="salary-comp-readonly">{{ $sstAdd->count() }} configured</div></div>
           <div class="salary-comp-control"><label>Validation Status</label><div class="salary-comp-readonly" style="color:{{ $sstMainValid ? '#177245' : '#b45309' }}">{{ $sstMainValid ? 'Ready to use' : 'Requires review' }}</div></div>
@@ -1946,6 +1952,10 @@ input[type="radio"]:checked {
   <div class="sst-drawer" id="sstDrawer">
     <div class="sst-drawer-h">
       <span class="t">Edit Salary Template</span>
+      <div class="sst-drawer-actions">
+        <button type="button" class="btn btn-primary" onclick="submitSalaryTemplateFromDrawer()"><i class="far fa-save me-1"></i>Save Template</button>
+        <button type="button" class="btn" style="background:#5b21d6;color:#fff;" onclick="submitSalaryTemplateFromDrawer()"><i class="fas fa-check-circle me-1"></i>Save &amp; Set as Default</button>
+      </div>
       <button type="button" class="sst-drawer-x" onclick="closeSalaryEditDrawer()">&times;</button>
     </div>
     <iframe id="sstDrawerFrame" src="about:blank" title="Edit Salary Template"></iframe>
@@ -1983,6 +1993,12 @@ input[type="radio"]:checked {
       document.getElementById('sstDrawer').classList.add('show');
       document.getElementById('sstDrawerOv').classList.add('show');
       document.body.style.overflow = 'hidden';
+    }
+    // The drawer header submits the existing embedded form, preserving its current validation and save endpoint.
+    function submitSalaryTemplateFromDrawer(){
+      var frame = document.getElementById('sstDrawerFrame');
+      var save = frame && frame.contentWindow && frame.contentWindow.document.getElementById('save-form');
+      if (save) save.click();
     }
     function closeSalaryEditDrawer(){
       document.getElementById('sstDrawer').classList.remove('show');

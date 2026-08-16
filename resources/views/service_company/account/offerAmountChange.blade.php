@@ -292,11 +292,12 @@
       .sst-edit #createForm > .form-group.row > .col-lg-12:first-of-type { display:flex; flex-wrap:wrap; gap:14px; }
       .sst-edit #createForm > .form-group.row > .col-lg-12:first-of-type > .row { display:contents; }
       .sst-edit #createForm > .form-group.row > .col-lg-12:first-of-type .col-4 { flex:1 1 15%; min-width:140px; max-width:none; width:auto; padding:0 !important; margin:0 !important; }
-      /* drop the non-template fields, reorder to match the screenshot */
-      .sst-edit #createForm .col-4:has(#ctc), .sst-edit #createForm .col-4:has(#current_designation) { display:none !important; }
+      /* Compensation fields mirror the read-only annexure view; all existing form names remain unchanged. */
+      .sst-edit #createForm .sst-mf-desc { display:none !important; }
       .sst-edit #createForm .sst-mf-name { order:1; } .sst-edit #createForm .col-4:has(#current_ctc_cur) { order:2; }
-      .sst-edit #createForm .col-4:has(#current_ctc_mode) { order:3; } .sst-edit #createForm .col-4:has(#employment_type) { order:4; }
-      .sst-edit #createForm .col-4:has(#dob) { order:5; } .sst-edit #createForm .sst-mf-desc { order:6; }
+      .sst-edit #createForm .col-4:has(#ctc) { order:3; } .sst-edit #createForm .col-4:has(#current_ctc_mode) { order:4; }
+      .sst-edit #createForm .col-4:has(#current_designation) { order:5; } .sst-edit #createForm .col-4:has(#dob) { order:6; }
+      .sst-edit #createForm .col-4:has(#employment_type) { order:7; }
       /* breadcrumb bar */
       .sst-bc { display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; background:#fff; border:1px solid var(--b); border-radius:12px; padding:12px 18px; margin:0 8px 12px; }
       .sst-bc-l { display:flex; align-items:center; gap:9px; font-size:13px; }
@@ -405,6 +406,7 @@
       </div>
       @endunless
 
+      @unless (request('embed'))
       <div class="sst-edit-head">
         @unless (request('embed'))
         <div>
@@ -420,6 +422,7 @@
           <button type="button" class="btn" style="background:#5b21d6;color:#fff;" onclick="document.getElementById('save-form') && document.getElementById('save-form').click();">Save &amp; Set as Default</button>
         </div>
       </div>
+      @endunless
 
       @unless (request('embed'))
       <div class="sst-cards">
@@ -542,7 +545,7 @@
                                                         </select>
                                                     </div>
                                                     <div class="col-4 px-2">
-                                                        <label class="form-label required">Amount</label>
+                                                        <label class="form-label required"><i class="fas fa-wallet me-1 text-primary"></i>Enter Amount (CTC)</label>
                                                         <input type="text" class="form-control form-control-solid"
                                                             name="ctc" id="ctc"
                                                             placeholder="Enter current CTC"
@@ -565,7 +568,7 @@
                                                 </div>
                                                 <div class="row">
                                                     <div class="col-4 pe-0">
-                                                        <label class="form-label required">Designation</label>
+                                                        <label class="form-label required"><i class="fas fa-briefcase me-1 text-primary"></i>Offered Designation</label>
                                                         <input type="text" class="form-control form-control-solid"
                                                             name="current_designation" id="current_designation"
                                                             placeholder="Enter designation"
@@ -593,13 +596,6 @@
                                                             {{ $employment_type == 3 ? 'selected' : '' }}>Part Time
                                                         </option>
                                                         </select>
-                                                    </div>
-                                                    <div class="col-4 sst-mf-desc">
-                                                        <label class="form-label">Description (Optional)</label>
-                                                        <div style="position:relative;">
-                                                            <input type="text" class="form-control form-control-solid" id="sstDescription" name="template_description" maxlength="100" value="Primary template for all" placeholder="Description" style="padding-right:46px;">
-                                                            <span style="position:absolute;right:10px;top:50%;transform:translateY(-50%);color:#a1a5b7;font-size:11px;"><span id="sstCC">21</span>/100</span>
-                                                        </div>
                                                     </div>
                                                 </div>
                                             </div>
