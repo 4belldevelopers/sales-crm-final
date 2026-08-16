@@ -4435,7 +4435,7 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
         } else {
             $offer_terms = (@$this->account->offer_terms) ? $this->account->offer_terms : @$this->global_settings->offer_terms;
             if ($this->application->condidate_type == 'bench_condidate') {
-                $offer_terms = (@$this->account->agency_offer_terms) ? $this->account->agency_offer_terms : @$this->global_settings->agency_offer_terms;
+                $offer_terms = (@$this->account->agency_offer_terms) ? $this->account->agency_offer_terms : (@$this->global_settings->agency_offer_terms ?: @$this->global_settings->offer_terms);
             }
         }
         $rowDataOfferDetails = GeneralMethod::offerLetterdetails($this->offer_id);
@@ -4464,7 +4464,7 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
         $raw_company_terms = (@$this->account->offer_terms) ? $this->account->offer_terms : @$this->global_settings->offer_terms;
         $raw_internship_terms = (@$this->account->internship_offer_terms) ? $this->account->internship_offer_terms : (@$this->global_settings->internship_offer_terms ?: @$this->global_settings->offer_terms);
         $raw_contract_terms = (@$this->account->contract_offer_terms) ? $this->account->contract_offer_terms : (@$this->global_settings->contract_offer_terms ?: @$this->global_settings->offer_terms);
-        $raw_agency_terms = (@$this->account->agency_offer_terms) ? $this->account->agency_offer_terms : @$this->global_settings->agency_offer_terms;
+        $raw_agency_terms = (@$this->account->agency_offer_terms) ? $this->account->agency_offer_terms : (@$this->global_settings->agency_offer_terms ?: @$this->global_settings->offer_terms);
         $this->company_offer_terms = str_replace($replaceFrom, $replaceTo, (string) $raw_company_terms);
         $this->internship_offer_terms = str_replace($replaceFrom, $replaceTo, (string) $raw_internship_terms);
         $this->contract_offer_terms = str_replace($replaceFrom, $replaceTo, (string) $raw_contract_terms);
@@ -4474,6 +4474,7 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
                 'key' => 'candidate-offer-letter',
                 'field' => 'offer_terms',
                 'label' => 'Fulltime Offer Letter',
+                'type' => 'Full Time',
                 'content' => $this->company_offer_terms,
                 'selected' => ! $this->offer_terms_conditions && $this->application->condidate_type != 'bench_condidate',
             ],
@@ -4481,6 +4482,7 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
                 'key' => 'internship-offer-letter',
                 'field' => 'internship_offer_terms',
                 'label' => 'Internship Offer Letter',
+                'type' => 'Internship',
                 'content' => $this->internship_offer_terms,
                 'selected' => false,
             ],
@@ -4488,6 +4490,7 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
                 'key' => 'contract-offer-letter',
                 'field' => 'contract_offer_terms',
                 'label' => 'Contract Offer Letter',
+                'type' => 'Contract',
                 'content' => $this->contract_offer_terms,
                 'selected' => false,
             ],
@@ -4495,11 +4498,13 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
                 'key' => 'agency-offer-letter',
                 'field' => 'agency_offer_terms',
                 'label' => 'Agency Offer terms',
+                'type' => 'Contract',
                 'content' => $this->agency_offer_terms,
                 'selected' => ! $this->offer_terms_conditions && $this->application->condidate_type == 'bench_condidate',
             ],
         ];
         $this->offer_template_contents = collect($this->offer_template_options)->pluck('content', 'key')->all();
+        $this->selected_offer_template_type = collect($this->offer_template_options)->firstWhere('selected', true)['type'] ?? 'Full Time';
         $this->is_bench_candidate = ($this->application->condidate_type == 'bench_condidate');
 
         // Same values used in the merge above, exposed to the view so the Template step's

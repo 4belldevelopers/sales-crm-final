@@ -897,6 +897,11 @@
             document.addEventListener('change', function (e) {
                 if (e.target && e.target.id === 'co_tpl_select') {
                     setEditorContent(offerTemplates[e.target.value] || '');
+                    var selectedOption = e.target.options[e.target.selectedIndex];
+                    var typeLabel = document.getElementById('co_tpl_type_label');
+                    if (typeLabel && selectedOption) {
+                        typeLabel.textContent = selectedOption.getAttribute('data-template-type') || 'Full Time';
+                    }
                 }
             });
         })();
@@ -2653,13 +2658,6 @@
 
                             <!-- Step 2 -->
                             <div class="tab-content-section pt-5" id="step2">
-                                @php
-                                    // Same mapping Step 1's Employment Type select uses — shown here purely as a
-                                    // read-only label (this is not an editable "template type" — the backend has
-                                    // exactly one offer-letter template per company, not a multi-template catalog).
-                                    $co_emp_type_label = ['Full Time', 'Contract', null, 'Part Time'][$employment_type ?? 0] ?? 'Full Time';
-                                @endphp
-
                                 <div class="co-tpl-header">
                                     <div>
                                         <h5 class="co-tpl-title">Offer Letter Template</h5>
@@ -2669,7 +2667,7 @@
                                         <label class="co-tpl-select-label" for="co_tpl_select">Templates</label>
                                         <select id="co_tpl_select" class="co-tpl-select">
                                             @foreach($offer_template_options ?? [] as $offerTemplate)
-                                                <option value="{{ $offerTemplate['key'] }}" data-template-field="{{ $offerTemplate['field'] }}" {{ !empty($offerTemplate['selected']) ? 'selected' : '' }}>{{ $offerTemplate['label'] }}</option>
+                                                <option value="{{ $offerTemplate['key'] }}" data-template-field="{{ $offerTemplate['field'] }}" data-template-type="{{ $offerTemplate['type'] }}" {{ !empty($offerTemplate['selected']) ? 'selected' : '' }}>{{ $offerTemplate['label'] }}</option>
                                             @endforeach
                                         </select>
                                     </div>
@@ -2702,7 +2700,7 @@
 
                                         {{-- Sub card: template type/status --}}
                                         <div class="co-tpl-subcard co-tpl-meta-row">
-                                            <span class="co-tpl-meta-item">Type<b>{{ $co_emp_type_label }}</b></span>
+                                            <span class="co-tpl-meta-item">Type<b id="co_tpl_type_label">{{ $selected_offer_template_type ?? 'Full Time' }}</b></span>
                                             <span class="co-tpl-meta-item">Status<b style="color:#0f9463">Active</b></span>
                                         </div>
 
