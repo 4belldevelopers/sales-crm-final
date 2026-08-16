@@ -379,6 +379,8 @@ input[type="radio"]:checked {
 .offer-letter-drawer-ov{position:fixed;inset:0;background:rgba(15,23,42,.42);opacity:0;visibility:hidden;transition:opacity .18s ease;z-index:1054}.offer-letter-drawer-ov.show{opacity:1;visibility:visible}.offer-letter-drawer{--offer-drawer-sidebar:220px;position:fixed!important;top:0;right:0;bottom:0;width:min(1180px,calc((100vw - var(--offer-drawer-sidebar))*0.9));max-width:calc(100vw - var(--offer-drawer-sidebar) - 18px);min-width:0;margin:0!important;padding:0!important;background:#f5f8fa;box-shadow:-12px 0 32px rgba(15,23,42,.18);z-index:1055;overflow:auto}.offer-letter-drawer-header{position:sticky;top:0;z-index:2;display:flex;align-items:center;justify-content:space-between;gap:14px;padding:14px 18px;background:#fff;border-bottom:1px solid #e4e9f2}.offer-letter-drawer-title{margin:0;color:#111b3d;font-size:15px;font-weight:600}.offer-letter-drawer-sub{margin:2px 0 0;color:#64748b;font-size:11px;font-weight:500}.offer-letter-drawer-actions{display:flex;align-items:center;gap:8px}.offer-letter-drawer-actions .btn{font-family:'Poppins',sans-serif;font-size:11px;font-weight:600}.offer-letter-drawer-close{width:32px;height:32px;border:1px solid #dce3ef;border-radius:7px;background:#fff;color:#64748b;font-size:20px;line-height:1;cursor:pointer}.offer-letter-drawer-body{padding:16px 18px 24px;background:#f5f8fa}.offer-letter-drawer .cke{width:100%!important;border:1px solid #dce3ef!important;border-radius:8px;overflow:hidden}.offer-letter-drawer .cke_contents{min-height:calc(100vh - 190px)!important}.offer-letter-drawer .card-footer{display:none!important}@media(max-width:1199px){.offer-letter-drawer{--offer-drawer-sidebar:160px;width:calc((100vw - var(--offer-drawer-sidebar))*0.9);max-width:calc(100vw - var(--offer-drawer-sidebar) - 14px)}}@media(max-width:991px){.offer-letter-drawer{--offer-drawer-sidebar:0px;width:92vw;max-width:92vw}.offer-letter-drawer-header{align-items:flex-start;padding:12px}.offer-letter-drawer-actions{flex-wrap:wrap;justify-content:flex-end}.offer-letter-drawer-body{padding:12px}.offer-letter-drawer .cke_contents{min-height:calc(100vh - 210px)!important}}@media(max-width:575px){.offer-letter-drawer{width:94vw;max-width:94vw}.offer-letter-drawer-actions .btn{padding:8px 10px}}
 .settings-offer-template,.settings-offer-template *{box-sizing:border-box;font-family:'Poppins',sans-serif}.settings-offer-template{font-size:12px;color:#181c32}.settings-offer-template .co-tpl-header{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:14px;flex-wrap:wrap}.settings-offer-template .co-tpl-title{margin:0;color:#181c32;font-size:14px!important;font-weight:700!important}.settings-offer-template .co-tpl-sub{margin-top:2px;color:#7e8299;font-size:11px;line-height:1.45}.settings-offer-template .co-tpl-select-wrap{display:flex;align-items:center;gap:8px;flex-shrink:0}.settings-offer-template .co-tpl-select-label{color:#181c32;font-size:12px;font-weight:700;white-space:nowrap}.settings-offer-template .co-tpl-select{height:36px;min-width:220px;padding:4px 10px;border:1px solid #e4e6ef;border-radius:8px;background:#fff;color:#3f4254;font-size:12px!important}.settings-offer-template .co-tpl-layout{display:flex;align-items:flex-start;gap:16px;background:#fff}.settings-offer-template .co-tpl-editor-col{flex:1 1 auto;min-width:0}.settings-offer-template .co-tpl-side{flex:0 0 210px;max-width:210px;display:flex;flex-direction:column}.settings-offer-template .co-tpl-editor-col,.settings-offer-template .co-tpl-side{padding:14px;border:1px solid #eef1f7;border-radius:14px;background:#fff;box-shadow:0 1px 3px rgba(24,28,50,.05)}.settings-offer-template .co-tpl-subcard{margin-bottom:10px;padding:10px 12px;border:1px solid #eef1f7;border-radius:10px;background:#f9fafd}.settings-offer-template .co-tpl-tabs{display:flex;gap:4px;margin-bottom:12px;border-bottom:1px solid #eef1f7}.settings-offer-template .co-tpl-tab{padding:7px 12px;border:0;border-bottom:2px solid transparent;background:none;color:#a1a5b7;font-size:12px!important;font-weight:600;cursor:pointer}.settings-offer-template .co-tpl-tab--active{color:#1b84ff;border-bottom-color:#1b84ff}.settings-offer-template .co-tpl-meta-row{display:flex;align-items:center;gap:16px;flex-wrap:wrap}.settings-offer-template .co-tpl-meta-item{color:#7e8299;font-size:10px}.settings-offer-template .co-tpl-meta-item b{margin-left:4px;color:#181c32;font-weight:600}.settings-offer-template .co-letterhead{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}.settings-offer-template .co-letterhead-logo img{display:block;max-width:150px;max-height:40px;object-fit:contain}.settings-offer-template .co-letterhead-address{max-width:260px;text-align:right;color:#7e8299;font-size:10px;line-height:1.5}.settings-offer-template .co-letterhead-company{color:#181c32;font-size:12px;font-weight:700}.settings-offer-template .co-tpl-side-title{color:#181c32;font-size:12px;font-weight:700}.settings-offer-template .co-tpl-side-sub{margin:3px 0 8px;color:#7e8299;font-size:10px;line-height:1.4}.settings-offer-template .co-var-chips{display:flex;flex-wrap:wrap;gap:5px}.settings-offer-template .co-var-chip{padding:4px 8px;border:1px solid #e0e7ff;border-radius:7px;background:#eef3ff;color:#4f46e5;font-size:10px!important;font-weight:600;white-space:nowrap;cursor:pointer}.settings-offer-template .co-var-chip:hover{background:#e0e7ff}.settings-offer-template .co-tpl-note{color:#7e8299;font-size:10px;line-height:1.5}.settings-offer-template .co-btn-reset{width:100%;height:36px;border:1px solid #f1416c!important;border-radius:8px;background:#fff!important;color:#f1416c!important;font-size:11px!important;font-weight:600!important}.settings-offer-template .co-tpl-preview{min-height:320px;max-height:460px;overflow:auto;padding:18px;border:1px solid #eef1f7;border-radius:10px;background:#fff;color:#334155;font-size:12px;line-height:1.6}.settings-offer-template .offer-letter-editor-shell .cke_contents{min-height:calc(100vh - 360px)!important}@media(max-width:1100px){.settings-offer-template .co-tpl-layout{flex-direction:column}.settings-offer-template .co-tpl-side{width:100%;max-width:none;flex:1 1 auto}.settings-offer-template .co-tpl-header{flex-direction:column;align-items:stretch}.settings-offer-template .co-tpl-select-wrap{width:100%}.settings-offer-template .co-tpl-select{flex:1 1 auto;min-width:0}}@media(max-width:575px){.settings-offer-template .co-letterhead{display:block}.settings-offer-template .co-letterhead-address{max-width:none;margin-top:10px;text-align:left}}
 .settings-offer-template .co-tpl-zoom{display:flex;align-items:center;gap:6px}.settings-offer-template .co-tpl-zoom-btn{width:24px;height:24px;border:1px solid #e4e6ef;border-radius:6px;background:#fff;color:#5e6278;font-size:12px!important;font-weight:700;line-height:1;cursor:pointer}.settings-offer-template .co-tpl-zoom-btn:hover{background:#f5f8fa}.settings-offer-template .co-tpl-zoom-pct{display:inline-block;min-width:30px;text-align:center;color:#7e8299;font-size:10px}.settings-offer-template .co-tpl-download-btn{display:inline-flex;align-items:center;gap:5px;padding:5px 10px;border:0;border-radius:7px;background:#eef3ff;color:#4f46e5;font-size:10px!important;font-weight:600;cursor:pointer}.settings-offer-template .co-tpl-download-btn:hover{background:#e0e7ff}.settings-offer-template .co-tpl-download-btn svg{width:11px;height:11px}.settings-offer-template .co-tpl-toolbar-extra{align-items:center;justify-content:space-between;gap:10px}.settings-offer-template .offer-letter-editor-shell .cke_contents{min-height:calc(100vh - 410px)!important}
+/* Candidate Configuration: card/sub-card layout for 15.6-inch and smaller screens while reusing existing forms and handlers. */
+.candidate-config-shell{grid-template-columns:228px minmax(0,1fr)!important;gap:14px!important;width:100%;min-width:0}.candidate-config-nav{position:sticky;top:78px;padding:12px!important;border:1px solid #dbe4f1!important;border-radius:10px!important;box-shadow:0 3px 12px rgba(15,23,42,.045)!important}.candidate-config-nav h4{font-size:12.5px!important}.candidate-config-link{min-height:54px;padding:10px!important;border:1px solid transparent}.candidate-config-link.active{border-color:#dbe6ff}.candidate-config-link i{width:28px!important;height:28px!important;flex:0 0 28px}.candidate-config-panel{min-width:0!important;padding:0!important}.candidate-config-main-card{min-width:0;padding:15px;border:1px solid #dbe4f1;border-radius:10px;background:#fff;box-shadow:0 3px 12px rgba(15,23,42,.045)}.candidate-config-card-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:14px;padding-bottom:12px;border-bottom:1px solid #edf1f7}.candidate-config-title{margin:0;color:#101735;font-size:15px!important;font-weight:600!important;line-height:1.3}.candidate-config-subtitle{margin:4px 0 0;color:#667594;font-size:11px;font-weight:500;line-height:1.45}.candidate-config-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.candidate-config-actions .btn{display:inline-flex;align-items:center;gap:6px;min-height:34px;padding:8px 13px!important;border-radius:7px!important;font-family:'Poppins',sans-serif!important;font-size:11px!important;font-weight:600!important}.candidate-config-subcard{min-width:0;margin-bottom:12px;padding:13px;border:1px solid #e4eaf3;border-radius:9px;background:#fbfcff}.candidate-config-subcard:last-child{margin-bottom:0}.candidate-config-subcard-head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:10px}.candidate-config-subcard-title{color:#13224f;font-size:12.5px;font-weight:600;line-height:1.35}.candidate-config-subcard-sub{margin-top:2px;color:#7b89a8;font-size:10.5px;font-weight:500;line-height:1.45}.candidate-config-preview{max-height:calc(100vh - 285px);min-height:330px;overflow:auto;padding:14px 16px;border:1px solid #e4eaf3;border-radius:8px;background:#fff;color:#24314d;font-size:12px;font-weight:400;line-height:1.65}.candidate-config-preview *{max-width:100%;font-family:'Poppins',sans-serif!important}.candidate-config-main-card .card-header,.candidate-config-main-card .card-body{padding:0!important;border:0!important;background:transparent!important}.candidate-config-main-card .row{margin-right:0!important;margin-left:0!important}.candidate-config-main-card .col-lg-12{padding-right:0!important;padding-left:0!important}@media(max-width:1199px){.candidate-config-shell{grid-template-columns:214px minmax(0,1fr)!important;gap:12px!important}.candidate-config-main-card{padding:13px}.candidate-config-preview{max-height:none;min-height:300px}}@media(max-width:991px){.candidate-config-shell{grid-template-columns:1fr!important}.candidate-config-nav{position:relative;top:auto;display:flex;gap:8px;overflow-x:auto}.candidate-config-link{flex:0 0 210px}.candidate-config-card-head{align-items:stretch;flex-direction:column}.candidate-config-actions{justify-content:flex-start}}@media(max-width:575px){.candidate-config-main-card{padding:11px;border-radius:8px}.candidate-config-subcard{padding:10px}.candidate-config-link{flex-basis:185px}.candidate-config-preview{padding:12px;min-height:260px}.candidate-config-actions .btn{width:100%;justify-content:center}}
 </style>
 
 @section('content')
@@ -1476,15 +1478,17 @@ input[type="radio"]:checked {
       <a class="candidate-config-link active" data-toggle="tab" href="#offerterms"><i class="far fa-file-alt"></i><span>Candidate Offer Letter<small>{{ !empty(trim(strip_tags((string) @$account->offer_terms))) ? 'Configured template' : 'Default template' }}</small></span></a>
     </aside>
     <div class="candidate-config-panel">
+  <div class="candidate-config-main-card">
   <!--begin::Overview header-->
-  <div class="card-header cursor-pointer px-0">
+  <div class="card-header cursor-pointer px-0 candidate-config-card-head">
     <!--begin::Card title-->
     <div class="card-title m-0">
-      <h3 class="fw-bolder m-0">Offer Letter Templates</h3>
+      <h3 class="fw-bolder m-0 candidate-config-title">Candidate Offer Letter</h3>
+      <p class="candidate-config-subtitle">Manage the reusable offer letter template used during candidate offer generation.</p>
     </div>
     <!--end::Card title-->
     <!--begin::Action-->
-    <div class="card-title m-0">
+    <div class="card-title m-0 candidate-config-actions">
     <a href="javascript:;" class="btn btn-success me-1 align-self-center updateCompanyTermsofferTop d-none" id="updateCompanyTermsofferTop">Save Changes</a>
     <a href="javascript:;" class="btn btn-warning me-1 align-self-center setToDefaultCompanyTermsofferTop d-none" id="setToDefaultCompanyTermsofferTop">Set to Default</a>
     <button type="button" class="btn btn-primary align-self-center" id="editBtnoffer"><i class="fas fa-pen me-1"></i>Edit</button>
@@ -1495,7 +1499,15 @@ input[type="radio"]:checked {
   <div class="card-body px-0 py-7"> 
     <!--begin::Terms & Canditions Content-->
     <div class="row">
-      <div class="col-lg-12 mb-7 view-terms" id="viewTermsoffer"> {!! (@$account->offer_terms) ? @$account->offer_terms :  $global_settings->offer_terms !!}</div>
+      <div class="candidate-config-subcard">
+        <div class="candidate-config-subcard-head">
+          <div>
+            <div class="candidate-config-subcard-title">Template Preview</div>
+            <div class="candidate-config-subcard-sub">This content is dynamically merged with candidate, job, and company details in the offer workflow.</div>
+          </div>
+        </div>
+        <div class="col-lg-12 mb-0 view-terms candidate-config-preview" id="viewTermsoffer"> {!! (@$account->offer_terms) ? @$account->offer_terms :  $global_settings->offer_terms !!}</div>
+      </div>
       <div class="offer-letter-drawer-ov" id="offerLetterDrawerOverlay" onclick="closeOfferLetterDrawer()"></div>
       <form  id="terms_contentoffer" name="terms_contentoffer" class="form fv-plugins-bootstrap5 fv-plugins-framework" novalidate="novalidate" method="post">
           <meta name="csrf-token" content="{{ csrf_token() }}" />
@@ -1641,6 +1653,7 @@ input[type="radio"]:checked {
 
     </div>
 
+  </div>
   </div>
 </div>
   </div>
@@ -1815,8 +1828,8 @@ input[type="radio"]:checked {
     @media(max-width:575px){ .sst-comp-overview,.salary-comp-grid { grid-template-columns:1fr; } .sst-comp-field{ padding:0 0 10px; border-right:0; border-bottom:1px solid var(--b); } .sst-comp-field:last-child{ padding-bottom:0; border-bottom:0; } }
   </style>
 
-  <div class="sst-wrap">
-    <div class="sst-head">
+  <div class="sst-wrap candidate-config-main-card">
+    <div class="sst-head candidate-config-card-head">
       <div>
         <div class="sst-title">Salary Annexure <span class="sst-badge"><i class="fas fa-check" style="font-size:8px;"></i>Active</span></div>
         <div class="sst-sub">Standard Payroll Structure · Primary template for candidate offers.</div>
@@ -1830,7 +1843,7 @@ input[type="radio"]:checked {
       <span class="mi"><i class="far fa-clock"></i>Last Updated: <b>{{ now()->format('d M Y') }}</b></span>
     </div>
 
-    <div class="sst-comp-overview" aria-label="Compensation details">
+    <div class="sst-comp-overview candidate-config-subcard" aria-label="Compensation details">
       <div class="sst-comp-field"><span class="sst-comp-label">Compensation Type</span><span class="sst-comp-value">Salary Annexure</span></div>
       <div class="sst-comp-field"><span class="sst-comp-label">Main Components</span><span class="sst-comp-value">{{ $sstMain->count() }} components · {{ number_format($sstMainTotal, 2) }}%</span></div>
       <div class="sst-comp-field"><span class="sst-comp-label">Additional Components</span><span class="sst-comp-value">{{ $sstAdd->count() }} components · {{ number_format($sstAddTotal, 2) }}%</span></div>
@@ -1838,7 +1851,7 @@ input[type="radio"]:checked {
     </div>
 
     <div class="salary-compensation" aria-label="Salary annexure compensation details">
-      <section class="salary-comp-card">
+      <section class="salary-comp-card candidate-config-subcard">
         <div class="salary-comp-heading">
           <div><h4>Compensation Details</h4><p>These offer details are captured when an offer is created from this salary annexure.</p></div>
         </div>
@@ -1852,7 +1865,7 @@ input[type="radio"]:checked {
         </div>
       </section>
 
-      <section class="salary-comp-card">
+      <section class="salary-comp-card candidate-config-subcard">
         <div class="salary-comp-heading">
           <div><h4>Main Components <span style="color:#7e8299;font-size:11px;font-weight:500;">(must total 100%)</span></h4><p>Core salary components used in the payroll structure.</p></div>
         </div>
@@ -1878,7 +1891,7 @@ input[type="radio"]:checked {
         <div class="salary-comp-total"><span>Total Main Components</span><span>{{ number_format($sstMainTotal, 2) }}%</span></div>
       </section>
 
-      <section class="salary-comp-card">
+      <section class="salary-comp-card candidate-config-subcard">
         <div class="salary-comp-heading">
           <div><h4>Additional Components <span style="color:#7e8299;font-size:11px;font-weight:500;">(optional)</span></h4><p>Additional allowances applied above the main salary allocation.</p></div>
         </div>
@@ -1905,7 +1918,7 @@ input[type="radio"]:checked {
       </section>
 
       {{-- A structure has no candidate CTC of its own; final amounts are calculated from the live offer CTC. --}}
-      <section class="salary-comp-card" aria-label="Final CTC">
+      <section class="salary-comp-card candidate-config-subcard" aria-label="Final CTC">
         <div class="salary-comp-heading">
           <div><h4>Final CTC <span style="color:#7e8299;font-size:11px;font-weight:500;">(Cost to Company)</span></h4><p>Summary of the total cost including main and additional components.</p></div>
         </div>
