@@ -880,10 +880,10 @@
 
         initSample();
 
-        // Template switcher — swap CKEditor content when the dropdown changes
+        // Template switcher: load the selected saved default template into the editor.
         (function () {
-            var companyTpl = {!! json_encode($company_offer_terms ?? '') !!};
-            var agencyTpl  = {!! json_encode($agency_offer_terms ?? '') !!};
+            var offerTemplates = @json($offer_template_contents ?? []);
+            window.coOfferTemplates = offerTemplates;
 
             function setEditorContent(html) {
                 if (CKEDITOR.instances['editorterms1']) {
@@ -896,12 +896,7 @@
 
             document.addEventListener('change', function (e) {
                 if (e.target && e.target.id === 'co_tpl_select') {
-                    var val = e.target.value;
-                    if (val === 'agency-offer-letter-template') {
-                        setEditorContent(agencyTpl);
-                    } else {
-                        setEditorContent(companyTpl);
-                    }
+                    setEditorContent(offerTemplates[e.target.value] || '');
                 }
             });
         })();
@@ -2670,15 +2665,12 @@
                                         <h5 class="co-tpl-title">Offer Letter Template</h5>
                                         <div class="co-tpl-sub">Personalize the offer letter before sending it for approval.</div>
                                     </div>
-                                    {{-- Templates: was a whole sidebar card (search + one card) for what is
-                                         always exactly one template (the company's default, set in Settings) —
-                                         collapsed into a dropdown in the heading row so the editor gets that
-                                         width back. Scales fine if a real multi-template catalog is added later. --}}
                                     <div class="co-tpl-select-wrap">
                                         <label class="co-tpl-select-label" for="co_tpl_select">Templates</label>
                                         <select id="co_tpl_select" class="co-tpl-select">
-                                            <option value="company-offer-letter-template" {{ empty($is_bench_candidate) ? 'selected' : '' }}>Company Offer Letter Template</option>
-                                            <option value="agency-offer-letter-template" {{ !empty($is_bench_candidate) ? 'selected' : '' }}>Agency Offer Letter Template</option>
+                                            @foreach($offer_template_options ?? [] as $offerTemplate)
+                                                <option value="{{ $offerTemplate['key'] }}" data-template-field="{{ $offerTemplate['field'] }}" {{ !empty($offerTemplate['selected']) ? 'selected' : '' }}>{{ $offerTemplate['label'] }}</option>
+                                            @endforeach
                                         </select>
                                     </div>
                                 </div>
@@ -3488,8 +3480,15 @@
 
                     $(document).on('click', '#setToDefaultCompanyTerms', function() {
 
+                        var selectedTemplateKey = $('#co_tpl_select').val();
+                        if (window.coOfferTemplates && Object.prototype.hasOwnProperty.call(window.coOfferTemplates, selectedTemplateKey)) {
+                            CKEDITOR.instances.editorterms1.setData(window.coOfferTemplates[selectedTemplateKey] || '');
+                            return false;
+                        }
+
                         var data = new FormData();
                         var kt_docs_tinymce_hidden = 'setDefault';
+                        var selectedTemplateField = $('#co_tpl_select option:selected').data('template-field') || 'offer_terms';
                         data.append("description", kt_docs_tinymce_hidden);
                         var form_data = $('#termConditioncreateForm').serializeArray();
                         $.each(form_data, function(key, input) {
@@ -3497,7 +3496,7 @@
                         });
                         CKEDITOR.replace('kt_docs_tinymce_hidden');
                         data.append("description", kt_docs_tinymce_hidden);
-                        data.append("descriptiontype", "offer_terms_admin");
+                        data.append("descriptiontype", selectedTemplateField);
 
                         $.ajax({
                             url: '{{ route('service_company.account.update', auth()->user()->id) }}',
@@ -3520,8 +3519,7 @@
                     // ── Step 2 (Offer Letter Template) — everything below is client-side only,
                     // no extra server round-trips: tab switching, zoom, insert-variable, and the
                     // sample export all run against the existing CKEditor instance already loaded
-                    // on the page. (The Templates dropdown in the heading row has exactly one real
-                    // option today — no filter/switch logic needed unless a real catalog is added.)
+                    // on the page. The Templates dropdown is hydrated from saved company/global defaults.
 
                     // Template Editor / Preview tabs
                     $(document).on('click', '.co-tpl-tab', function() {
