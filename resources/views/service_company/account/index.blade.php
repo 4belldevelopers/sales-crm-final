@@ -2234,7 +2234,6 @@ input[type="radio"]:checked {
     if (!link) return;
 
     event.preventDefault();
-    event.stopPropagation();
     var target = document.querySelector(link.getAttribute('href'));
     if (!target) return;
 
@@ -2244,8 +2243,16 @@ input[type="radio"]:checked {
     target.classList.add('active', 'show');
 
     document.querySelectorAll('.candidate-config-link').forEach(function (item) {
-      item.classList.toggle('active', item.getAttribute('href') === link.getAttribute('href'));
+      item.classList.toggle('active', item === link);
     });
+    if (link.classList.contains('candidate-offer-template-link') && typeof setCandidateOfferTemplateContent === 'function') {
+      setCandidateOfferTemplateContent(
+        link.getAttribute('data-template-field'),
+        link.getAttribute('data-template-label'),
+        link.getAttribute('data-template-content') || '',
+        true
+      );
+    }
     document.querySelectorAll('.candidate-config-main-tab').forEach(function (item) {
       item.classList.add('active');
     });
