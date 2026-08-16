@@ -1653,7 +1653,7 @@ input[type="radio"]:checked {
     /* edit drawer */
     .sst-drawer-ov { position:fixed; inset:0; background:rgba(0,0,0,.4); z-index:1090; opacity:0; visibility:hidden; transition:opacity .2s; }
     .sst-drawer-ov.show { opacity:1; visibility:visible; }
-    .sst-drawer { position:fixed; top:0; right:0; height:100vh; width:min(1400px,calc(80vw - 168px)); min-width:720px; max-width:calc(100vw - 20px); background:#fff; z-index:1091; box-shadow:-8px 0 40px rgba(0,0,0,.15); transform:translateX(100%); transition:transform .25s ease; display:flex; flex-direction:column; }
+    .sst-drawer { position:fixed; top:0; right:0; height:100vh; width:min(1600px,calc(95vw - 200px)); min-width:720px; max-width:calc(100vw - 12px); background:#fff; z-index:1091; box-shadow:-8px 0 40px rgba(0,0,0,.15); transform:translateX(100%); transition:transform .25s ease; display:flex; flex-direction:column; }
     .sst-drawer.show { transform:translateX(0); }
     .sst-drawer-h { display:flex; align-items:center; justify-content:space-between; gap:14px; padding:12px 18px; border-bottom:1px solid var(--b); }
     .sst-drawer-h .t { font-size:15px; font-weight:700; color:var(--t); }
@@ -1954,7 +1954,7 @@ input[type="radio"]:checked {
       <span class="t">Edit Salary Template</span>
       <div class="sst-drawer-actions">
         <button type="button" class="btn btn-primary" onclick="submitSalaryTemplateFromDrawer()"><i class="far fa-save me-1"></i>Save Template</button>
-        <button type="button" class="btn" style="background:#5b21d6;color:#fff;" onclick="submitSalaryTemplateFromDrawer()"><i class="fas fa-check-circle me-1"></i>Save &amp; Set as Default</button>
+        <button type="button" class="btn" style="background:#5b21d6;color:#fff;" onclick="resetSalaryTemplateDrawer()"><i class="fas fa-undo me-1"></i>Reset</button>
       </div>
       <button type="button" class="sst-drawer-x" onclick="closeSalaryEditDrawer()">&times;</button>
     </div>
@@ -1999,6 +1999,11 @@ input[type="radio"]:checked {
       var frame = document.getElementById('sstDrawerFrame');
       var save = frame && frame.contentWindow && frame.contentWindow.document.getElementById('save-form');
       if (save) save.click();
+    }
+    // Reset reloads the embedded editor from its persisted server state without submitting changes.
+    function resetSalaryTemplateDrawer(){
+      var frame = document.getElementById('sstDrawerFrame');
+      if (frame && frame.src && frame.src !== 'about:blank') frame.src = frame.src;
     }
     function closeSalaryEditDrawer(){
       document.getElementById('sstDrawer').classList.remove('show');
