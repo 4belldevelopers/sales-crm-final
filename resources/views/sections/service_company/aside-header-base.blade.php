@@ -438,12 +438,12 @@ $productAllowCompany = GeneralMethod::companiesType();
                                         class="menu-title">Settings</span> </a> </div>
                             <!--end::Settings-->
                             @if ($productAllowCompany)
-                                <!--begin::Commercials-->
+                                <!--begin::Services-->
                                 <div class="menu-item"> <a href="{{ route('service_company.account.index', ['tab' => 'services']) }}"
                                         class="menu-link {{ request('tab') === 'services' ? 'active' : '' }}">
                                         <span class="menu-bullet"> <span class="bullet bullet-dot"></span> </span> <span
-                                            class="menu-title">Commercials</span> </a> </div>
-                                <!--end::Commercials-->
+                                            class="menu-title">Services</span> </a> </div>
+                                <!--end::Services-->
                                 <!--begin::Ads Settings-->
                                 <div class="menu-item"> <a href="{{ route('service_company.account.index', ['tab' => 'ads']) }}"
                                         class="menu-link {{ request('tab') === 'ads' || request('ads') === 'show' ? 'active' : '' }}">

@@ -40,7 +40,7 @@
           </div>
           <div class="d-flex align-items-center mb-3">
             <span style="width: 12px; height: 4px; border-radius: 2px; background: #0085FF; display: inline-block; margin-right: 10px;"></span>
-            <span class="fw-semibold fs-6" style="color: #475569;">Commercials Configured</span>
+            <span class="fw-semibold fs-6" style="color: #475569;">Services Configured</span>
           </div>
           <div class="d-flex align-items-center mb-2">
             <span style="width: 12px; height: 4px; border-radius: 2px; background: #0085FF; display: inline-block; margin-right: 10px;"></span>
@@ -94,7 +94,7 @@
           </div>
           <div class="d-flex align-items-center mb-3">
             <span style="width: 12px; height: 4px; border-radius: 2px; background: {{ @$contractStatus->status ? '#A855F7' : '#CBD5E1' }}; display: inline-block; margin-right: 10px;"></span>
-            <span class="fw-semibold fs-6" style="color: {{ @$contractStatus->status ? '#475569' : '#94A3B8' }};">Commercials Configured</span>
+            <span class="fw-semibold fs-6" style="color: {{ @$contractStatus->status ? '#475569' : '#94A3B8' }};">Services Configured</span>
           </div>
           <div class="d-flex align-items-center mb-2">
             <span style="width: 12px; height: 4px; border-radius: 2px; background: {{ @$contractStatus->status ? '#A855F7' : '#CBD5E1' }}; display: inline-block; margin-right: 10px;"></span>
