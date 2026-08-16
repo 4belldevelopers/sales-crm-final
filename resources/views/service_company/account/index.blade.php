@@ -384,6 +384,7 @@ input[type="radio"]:checked {
 /* Main Candidate Offer Letter preview mirrors the drawer preview while remaining a read-only card. */
 .settings-offer-template .co-tpl-layout--main-preview{display:block!important;background:transparent!important}.settings-offer-template .co-tpl-layout--main-preview .co-tpl-editor-col{width:100%;max-width:none;box-shadow:none}.settings-offer-template .candidate-offer-main-preview{max-height:calc(100vh - 360px);min-height:360px}.settings-offer-template .candidate-offer-main-preview p{margin-bottom:12px}@media(max-width:991px){.settings-offer-template .candidate-offer-main-preview{max-height:none;min-height:300px}}
 .candidate-config-card-head>.card-title:not(.candidate-config-actions){display:block!important;min-width:0}.candidate-config-card-head .candidate-config-subtitle{display:block!important;clear:both}
+.candidate-config-link i svg,.candidate-action-icon svg{width:13px;height:13px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}.candidate-action-icon{display:inline-flex;align-items:center;justify-content:center;margin-right:6px;color:currentColor;line-height:1}
 </style>
 
 @section('content')
@@ -817,6 +818,7 @@ input[type="radio"]:checked {
 <!--begin::Tabs-->
 <div class="card card-custom mx-2">
 <!--Begin::Tabs Header-->
+@if(!@$hide_account_tabs_header)
 <div class="card-header card-header-tabs-line csv2-account-tabs-header">
   <div class="card-toolbar csv2-account-tabs-wrap">
     <ul class="nav nav-tabs csv2-account-tabs" role="tablist">
@@ -829,10 +831,11 @@ input[type="radio"]:checked {
     </ul>
   </div>
 </div>
+@endif
 <!--end::Tabs Header-->
 <!--Begin::Body-->
 <div class="card-body py-0">
-<div class="tab-content pt-5">
+<div class="tab-content {{ @$hide_account_tabs_header ? 'pt-0' : 'pt-5' }}">
 <!--begin::Overview Content-->
 <div class="tab-pane {{$overview_tab}}" id="overview" role="tabpanel">
   <!--begin::Overview header-->
@@ -1504,6 +1507,11 @@ input[type="radio"]:checked {
       ],
     ];
     $activeCandidateOfferTemplate = $candidateOfferTemplates[0];
+    // Intent: keep candidate configuration icons local to the template UI so they render even when icon fonts are unavailable.
+    $candidateOfferIcon = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h9l3 3v15H6z"/><path d="M14 3v4h4M9 11h6M9 15h5"/></svg>';
+    $candidateEditIcon = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>';
+    $candidateResetIcon = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7v6h6"/><path d="M21 17a9 9 0 0 1-15-6.7L3 13"/></svg>';
+    $candidateSaveIcon = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><path d="M17 21v-8H7v8M7 3v5h8"/></svg>';
   @endphp
   <div class="candidate-config-shell">
     <aside class="candidate-config-nav" aria-label="Candidate configuration sections">
@@ -1512,7 +1520,7 @@ input[type="radio"]:checked {
       <a class="candidate-config-link" data-toggle="tab" href="#offercomponent"><i class="far fa-money-bill-alt"></i><span>Standard Payroll Structure<small>{{ count($offer_points ?? []) }} salary components</small></span></a>
       <div class="candidate-config-group">Offer Letter Templates</div>
       @foreach($candidateOfferTemplates as $candidateOfferTemplate)
-        <a class="candidate-config-link candidate-offer-template-link {{ $loop->first ? 'active' : '' }}" data-toggle="tab" href="#offerterms" data-template-field="{{ $candidateOfferTemplate['field'] }}" data-template-label="{{ $candidateOfferTemplate['label'] }}" data-template-type="{{ $candidateOfferTemplate['type'] }}" data-template-content='@json($candidateOfferTemplate["content"])'><i class="far fa-file-alt"></i><span>{{ $candidateOfferTemplate['label'] }}<small>{{ $candidateOfferTemplate['small'] }}</small></span></a>
+        <a class="candidate-config-link candidate-offer-template-link {{ $loop->first ? 'active' : '' }}" data-toggle="tab" href="#offerterms" data-template-field="{{ $candidateOfferTemplate['field'] }}" data-template-label="{{ $candidateOfferTemplate['label'] }}" data-template-type="{{ $candidateOfferTemplate['type'] }}" data-template-content='@json($candidateOfferTemplate["content"])'><i>{!! $candidateOfferIcon !!}</i><span>{{ $candidateOfferTemplate['label'] }}<small>{{ $candidateOfferTemplate['small'] }}</small></span></a>
       @endforeach
     </aside>
     <div class="candidate-config-panel">
@@ -1529,7 +1537,7 @@ input[type="radio"]:checked {
     <div class="card-title m-0 candidate-config-actions">
     <a href="javascript:;" class="btn btn-success me-1 align-self-center updateCompanyTermsofferTop d-none" id="updateCompanyTermsofferTop">Save Changes</a>
     <a href="javascript:;" class="btn btn-warning me-1 align-self-center setToDefaultCompanyTermsofferTop d-none" id="setToDefaultCompanyTermsofferTop">Set to Default</a>
-    <button type="button" class="btn btn-primary align-self-center" id="editBtnoffer"><i class="fas fa-pen me-1"></i>Edit</button>
+    <button type="button" class="btn btn-primary align-self-center" id="editBtnoffer"><span class="candidate-action-icon">{!! $candidateEditIcon !!}</span>Edit</button>
     </div>
     <!--ensd::Action-->
   </div>
@@ -1606,8 +1614,8 @@ input[type="radio"]:checked {
           <div class="offer-letter-drawer-header">
             <div><h4 class="offer-letter-drawer-title" id="candidateOfferDrawerTitle">Edit {{ $activeCandidateOfferTemplate['label'] }}</h4><p class="offer-letter-drawer-sub">Update the reusable template used when generating candidate offers.</p></div>
             <div class="offer-letter-drawer-actions">
-              <button type="button" class="btn btn-light-primary setToDefaultCompanyTermsofferTop"><i class="fas fa-undo me-1"></i>Load Default</button>
-              <button type="button" class="btn btn-primary updateCompanyTermsofferTop"><i class="far fa-save me-1"></i>Save Changes</button>
+              <button type="button" class="btn btn-light-primary setToDefaultCompanyTermsofferTop"><span class="candidate-action-icon">{!! $candidateResetIcon !!}</span>Load Default</button>
+              <button type="button" class="btn btn-primary updateCompanyTermsofferTop"><span class="candidate-action-icon">{!! $candidateSaveIcon !!}</span>Save Changes</button>
               <button type="button" class="offer-letter-drawer-close" aria-label="Close offer letter editor" onclick="closeOfferLetterDrawer()">&times;</button>
             </div>
           </div>
@@ -1763,7 +1771,7 @@ input[type="radio"]:checked {
       <a class="candidate-config-link active" data-toggle="tab" href="#offercomponent"><i class="far fa-money-bill-alt"></i><span>Standard Payroll Structure<small>{{ count($offer_points ?? []) }} salary components</small></span></a>
       <div class="candidate-config-group">Offer Letter Templates</div>
       @foreach($candidateOfferTemplates as $candidateOfferTemplate)
-        <a class="candidate-config-link candidate-offer-template-link" data-toggle="tab" href="#offerterms" data-template-field="{{ $candidateOfferTemplate['field'] }}" data-template-label="{{ $candidateOfferTemplate['label'] }}" data-template-type="{{ $candidateOfferTemplate['type'] }}" data-template-content='@json($candidateOfferTemplate["content"])'><i class="far fa-file-alt"></i><span>{{ $candidateOfferTemplate['label'] }}<small>{{ $candidateOfferTemplate['small'] }}</small></span></a>
+        <a class="candidate-config-link candidate-offer-template-link" data-toggle="tab" href="#offerterms" data-template-field="{{ $candidateOfferTemplate['field'] }}" data-template-label="{{ $candidateOfferTemplate['label'] }}" data-template-type="{{ $candidateOfferTemplate['type'] }}" data-template-content='@json($candidateOfferTemplate["content"])'><i>{!! $candidateOfferIcon !!}</i><span>{{ $candidateOfferTemplate['label'] }}<small>{{ $candidateOfferTemplate['small'] }}</small></span></a>
       @endforeach
     </aside>
     <div class="candidate-config-panel">
@@ -3730,6 +3738,9 @@ function setSettingsOfferZoom(delta) {
         editor.document.getBody().setStyle('zoom', String(window.settingsOfferEditorZoom / 100));
     }
 }
+function getCandidateEditButtonHtml() {
+    return '<span class="candidate-action-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg></span>Edit';
+}
 document.addEventListener('DOMContentLoaded', function() {
     var editBtn = document.getElementById('editBtnoffer');
     if (editBtn) editBtn.addEventListener('click', openOfferLetterDrawer);
@@ -4407,7 +4418,7 @@ $(document).ready(function(){
                                                        $('#viewTermsoffer').show();
                                                        $('#editTermsoffer').hide();
                                                        if (typeof closeOfferLetterDrawer === 'function') closeOfferLetterDrawer();
-                                                       $("#editBtnoffer").html('<i class="fas fa-pen me-1"></i>Edit');
+                                                       $("#editBtnoffer").html(getCandidateEditButtonHtml());
                                                        $('#updateCompanyTermsofferTop').hide();
                                                        $('#setToDefaultCompanyTermsofferTop').hide();
 

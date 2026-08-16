@@ -59,6 +59,7 @@ class ServiceCompanyAccountSettingsController extends ServiceCompanyBaseControll
         $this->industries_type_arr = GeneralMethod::industries_type_arr();
         $ads_show = request('ads');
         $requestedTab = request('tab');
+        $isStandaloneAccountTab = $requestedTab === 'services' || $requestedTab === 'ads' || $ads_show == 'show';
         $this->overview_tab = 'active show';
         $this->services_tab = '';
         $this->boostkeyword_tab = '';
@@ -74,9 +75,12 @@ class ServiceCompanyAccountSettingsController extends ServiceCompanyBaseControll
 
         $company_id = auth()->user()->company_id;
         $this->company_id = $company_id;
+        $this->hide_account_tabs_header = $isStandaloneAccountTab;
 
-        // Retrieve cached page data from AccountSettingsService (Redis layer)
-        $pageData = $this->accountSettingsService->getAccountPageData($company_id);
+        // Retrieve cached page data from AccountSettingsService; standalone Commercials/Ads loads skip hidden notification payloads.
+        $pageData = $this->accountSettingsService->getAccountPageData($company_id, [
+            'include_notifications' => ! $isStandaloneAccountTab,
+        ]);
 
         foreach ($pageData as $key => $value) {
             $this->{$key} = $value;
