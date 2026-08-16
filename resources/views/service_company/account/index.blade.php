@@ -375,6 +375,8 @@ input[type="radio"]:checked {
 /* Compact enterprise service switch: native checkbox state and existing AJAX classes remain unchanged. */
 .commercials-v2 .cv2-switch{min-height:28px;padding:3px;border:1px solid #e2e8f3;border-radius:8px;background:#f8faff}.commercials-v2 .cv2-switch .form-switch{display:flex;align-items:center;min-height:20px}.commercials-v2 .cv2-switch .form-check-input{position:relative;width:36px!important;height:20px!important;margin:0!important;appearance:none!important;-webkit-appearance:none!important;background:#cbd5e1!important;border:0!important;border-radius:999px!important;box-shadow:none!important;outline:0;transition:background-color .16s ease}.commercials-v2 .cv2-switch .form-check-input::after{position:absolute;top:3px;left:3px;width:14px;height:14px;content:'';background:#fff;border-radius:50%;box-shadow:0 1px 2px rgba(15,23,42,.24);transition:transform .16s ease}.commercials-v2 .cv2-switch .form-check-input:checked{background:#2563eb!important}.commercials-v2 .cv2-switch .form-check-input:checked::after{transform:translateX(16px)}.commercials-v2 .cv2-switch .form-check-input:focus-visible{box-shadow:0 0 0 3px rgba(37,99,235,.22)!important}.commercials-v2 .cv2-switch-text{display:none!important}
 .candidate-config-shell{display:grid;grid-template-columns:244px minmax(0,1fr);gap:18px;align-items:start;font-family:'Poppins',sans-serif}.candidate-config-nav{padding:12px;border:1px solid #e5eaf4;border-radius:12px;background:#fff}.candidate-config-nav h4{margin:0 0 12px;padding:4px 6px 12px;border-bottom:1px solid #edf0f6;color:#111b3d;font-size:13px;font-weight:600}.candidate-config-group{margin:14px 6px 6px;color:#8391b1;font-size:10px;font-weight:600;letter-spacing:.04em;text-transform:uppercase}.candidate-config-link{display:flex;align-items:center;gap:10px;margin:4px 0;padding:11px 10px;border-radius:8px;color:#52638b!important;font-size:12px;font-weight:500;text-decoration:none}.candidate-config-link i{width:20px;height:20px;display:inline-flex;align-items:center;justify-content:center;border-radius:6px;background:#f1f4ff;color:#275df6;font-size:11px}.candidate-config-link span{display:block}.candidate-config-link small{display:block;margin-top:2px;color:#8391b1;font-size:10px;font-weight:500}.candidate-config-link.active,.candidate-config-link:hover{background:#eef3ff;color:#1b55f6!important}.candidate-config-link.active i{background:#dce8ff}.candidate-config-panel{min-width:0;padding:2px 0}.candidate-config-panel .card-header{padding-top:0!important}.candidate-config-panel .card-title h3{font-family:'Poppins',sans-serif;font-size:16px;font-weight:600}@media(max-width:991px){.candidate-config-shell{grid-template-columns:1fr}.candidate-config-nav{display:flex;gap:8px;overflow-x:auto}.candidate-config-nav h4,.candidate-config-group{display:none}.candidate-config-link{flex:0 0 auto;margin:0}.candidate-config-link small{display:none}}
+/* Candidate offer-letter editing uses the original editor and persistence handler inside a focused right drawer. */
+.offer-letter-drawer-ov{position:fixed;inset:0;background:rgba(15,23,42,.42);opacity:0;visibility:hidden;transition:opacity .18s ease;z-index:1054}.offer-letter-drawer-ov.show{opacity:1;visibility:visible}.offer-letter-drawer{position:fixed!important;top:0;right:0;bottom:0;width:min(1280px,calc(95vw - 200px));max-width:calc(100vw - 12px);min-width:720px;margin:0!important;padding:0!important;background:#f5f8fa;box-shadow:-12px 0 32px rgba(15,23,42,.18);z-index:1055;overflow:auto}.offer-letter-drawer-header{position:sticky;top:0;z-index:2;display:flex;align-items:center;justify-content:space-between;gap:14px;padding:14px 18px;background:#fff;border-bottom:1px solid #e4e9f2}.offer-letter-drawer-title{margin:0;color:#111b3d;font-size:15px;font-weight:600}.offer-letter-drawer-sub{margin:2px 0 0;color:#64748b;font-size:11px;font-weight:500}.offer-letter-drawer-actions{display:flex;align-items:center;gap:8px}.offer-letter-drawer-actions .btn{font-family:'Poppins',sans-serif;font-size:11px;font-weight:600}.offer-letter-drawer-close{width:32px;height:32px;border:1px solid #dce3ef;border-radius:7px;background:#fff;color:#64748b;font-size:20px;line-height:1;cursor:pointer}.offer-letter-drawer-body{padding:16px 18px 24px;background:#f5f8fa}.offer-letter-drawer .cke{width:100%!important;border:1px solid #dce3ef!important;border-radius:8px;overflow:hidden}.offer-letter-drawer .cke_contents{min-height:calc(100vh - 190px)!important}.offer-letter-drawer .card-footer{display:none!important}@media(max-width:767px){.offer-letter-drawer{width:100vw;min-width:0}.offer-letter-drawer-header{align-items:flex-start;padding:12px}.offer-letter-drawer-actions{flex-wrap:wrap;justify-content:flex-end}.offer-letter-drawer-body{padding:12px}.offer-letter-drawer .cke_contents{min-height:calc(100vh - 210px)!important}}
 </style>
 
 @section('content')
@@ -1481,9 +1483,9 @@ input[type="radio"]:checked {
     <!--end::Card title-->
     <!--begin::Action-->
     <div class="card-title m-0">
-    <a href="javascript:;" class="btn btn-success me-1 align-self-center updateCompanyTermsofferTop" id="updateCompanyTermsofferTop">Save Changes</a>
-    <a href="javascript:;" class="btn btn-warning me-1 align-self-center setToDefaultCompanyTermsofferTop" id="setToDefaultCompanyTermsofferTop">Set to Default</a>
-    <a href="javascript:;" class="btn btn-primary align-self-center" id="editBtnoffer">Edit</a>
+    <a href="javascript:;" class="btn btn-success me-1 align-self-center updateCompanyTermsofferTop d-none" id="updateCompanyTermsofferTop">Save Changes</a>
+    <a href="javascript:;" class="btn btn-warning me-1 align-self-center setToDefaultCompanyTermsofferTop d-none" id="setToDefaultCompanyTermsofferTop">Set to Default</a>
+    <button type="button" class="btn btn-primary align-self-center" id="editBtnoffer"><i class="fas fa-pen me-1"></i>Edit</button>
     </div>
     <!--ensd::Action-->
   </div>
@@ -1492,6 +1494,7 @@ input[type="radio"]:checked {
     <!--begin::Terms & Canditions Content-->
     <div class="row">
       <div class="col-lg-12 mb-7 view-terms" id="viewTermsoffer"> {!! (@$account->offer_terms) ? @$account->offer_terms :  $global_settings->offer_terms !!}</div>
+      <div class="offer-letter-drawer-ov" id="offerLetterDrawerOverlay" onclick="closeOfferLetterDrawer()"></div>
       <form  id="terms_contentoffer" name="terms_contentoffer" class="form fv-plugins-bootstrap5 fv-plugins-framework" novalidate="novalidate" method="post">
           <meta name="csrf-token" content="{{ csrf_token() }}" />
           <input type="hidden" name="pageterms" id="pagetermsoffer" value="termsoffer" />
@@ -1501,7 +1504,16 @@ input[type="radio"]:checked {
        
 
 
-        <div class="col-lg-12 edit-terms" id="editTermsoffer" style="display:none;">
+        <div class="col-lg-12 edit-terms offer-letter-drawer" id="editTermsoffer" style="display:none;">
+          <div class="offer-letter-drawer-header">
+            <div><h4 class="offer-letter-drawer-title">Edit Candidate Offer Letter</h4><p class="offer-letter-drawer-sub">Update the reusable template used when generating candidate offers.</p></div>
+            <div class="offer-letter-drawer-actions">
+              <button type="button" class="btn btn-light-primary setToDefaultCompanyTermsofferTop"><i class="fas fa-undo me-1"></i>Load Default</button>
+              <button type="button" class="btn btn-primary updateCompanyTermsofferTop"><i class="far fa-save me-1"></i>Save Changes</button>
+              <button type="button" class="offer-letter-drawer-close" aria-label="Close offer letter editor" onclick="closeOfferLetterDrawer()">&times;</button>
+            </div>
+          </div>
+          <div class="offer-letter-drawer-body">
         
             <textarea id="kt_docs_tinymce_hiddenoffer" name="kt_docs_tinymce_hiddenoffer" class="tox-target">{!! (@$account->offer_terms) ? @$account->offer_terms :  $global_settings->offer_terms !!}</textarea>
           
@@ -1510,6 +1522,7 @@ input[type="radio"]:checked {
           
             <button class="btn btn-primary me-2 updateCompanyTermsoffer" type="button" id="updateCompanyTermsoffer">Save Changes</button>
             <button class="btn btn-primary me-2 setToDefaultCompanyTermsoffer" type="button" id="setToDefaultCompanyTermsoffer">Set to Default</button>
+          </div>
           </div>
         </div>
   
@@ -3456,30 +3469,30 @@ document.getElementById('add_interview_sub_stage_form').addEventListener('keydow
     });
 });
 
-document.addEventListener('DOMContentLoaded', function() {
-    var editBtn = document.getElementById('editBtnoffer'); 
-    var viewTerms = document.getElementById('viewTermsoffer');
-    var editTerms = document.getElementById('editTermsoffer');
-   var updateCompanyTermsofferTop = document.getElementById('updateCompanyTermsofferTop'); 
-   var setToDefaultCompanyTermsofferTop = document.getElementById('setToDefaultCompanyTermsofferTop'); 
-   updateCompanyTermsofferTop.style.display = "none";
-   setToDefaultCompanyTermsofferTop.style.display = "none";
+// Intent: keep the candidate-offer preview in place while the existing CKEditor and its save flow operate in a focused drawer.
+function openOfferLetterDrawer() {
+    var drawer = document.getElementById('editTermsoffer');
+    var overlay = document.getElementById('offerLetterDrawerOverlay');
+    if (!drawer || !overlay) return;
 
-    editBtn.addEventListener('click', function() {
-        if (viewTerms.style.display === "none") {
-            viewTerms.style.display = "block";
-            editTerms.style.display = "none";
-            editBtn.textContent = "Edit";
-            updateCompanyTermsofferTop.style.display = "none";
-            setToDefaultCompanyTermsofferTop.style.display = "none";
-        } else {
-            viewTerms.style.display = "none";
-            editTerms.style.display = "block";
-            editBtn.textContent = "View";           
-            updateCompanyTermsofferTop.style.display = "block";
-            setToDefaultCompanyTermsofferTop.style.display = "block";
-        }
-    });
+    drawer.style.display = 'block';
+    overlay.classList.add('show');
+    document.body.style.overflow = 'hidden';
+    window.setTimeout(function () {
+        var editor = window.CKEDITOR && CKEDITOR.instances.kt_docs_tinymce_hiddenoffer;
+        if (editor && editor.resize) editor.resize('100%', Math.max(360, window.innerHeight - 190), true);
+    }, 60);
+}
+function closeOfferLetterDrawer() {
+    var drawer = document.getElementById('editTermsoffer');
+    var overlay = document.getElementById('offerLetterDrawerOverlay');
+    if (drawer) drawer.style.display = 'none';
+    if (overlay) overlay.classList.remove('show');
+    document.body.style.overflow = '';
+}
+document.addEventListener('DOMContentLoaded', function() {
+    var editBtn = document.getElementById('editBtnoffer');
+    if (editBtn) editBtn.addEventListener('click', openOfferLetterDrawer);
 });
 
 document.addEventListener('DOMContentLoaded', function() {
@@ -4098,12 +4111,13 @@ $(document).ready(function(){
                                                 $("#updateCompanyTermsofferTop").text("Save Changes");
                                                   if(data.status == 'success'){
                                                     $('#viewTermsoffer').html(data.terms);	
-                                                      Swal.fire("Success", "Terms & Condition update successfully!", "success");	
-                                                      $('#viewTermsoffer').show();
-                                                      $('#editTermsoffer').hide();
-                                                      $("#editBtnoffer").text("Edit");
-                                                      $('.updateCompanyTermsofferTop').hide(); 
-                                                      $('.setToDefaultCompanyTermsofferTop').hide(); 
+                                                       Swal.fire("Success", "Terms & Condition update successfully!", "success");
+                                                       $('#viewTermsoffer').show();
+                                                       $('#editTermsoffer').hide();
+                                                       if (typeof closeOfferLetterDrawer === 'function') closeOfferLetterDrawer();
+                                                       $("#editBtnoffer").html('<i class="fas fa-pen me-1"></i>Edit');
+                                                       $('#updateCompanyTermsofferTop').hide();
+                                                       $('#setToDefaultCompanyTermsofferTop').hide();
 
                                                   }
                                         }
