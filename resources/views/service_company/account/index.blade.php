@@ -374,7 +374,7 @@ input[type="radio"]:checked {
 
 /* Compact enterprise service switch: native checkbox state and existing AJAX classes remain unchanged. */
 .commercials-v2 .cv2-switch{min-height:28px;padding:3px;border:1px solid #e2e8f3;border-radius:8px;background:#f8faff}.commercials-v2 .cv2-switch .form-switch{display:flex;align-items:center;min-height:20px}.commercials-v2 .cv2-switch .form-check-input{position:relative;width:36px!important;height:20px!important;margin:0!important;appearance:none!important;-webkit-appearance:none!important;background:#cbd5e1!important;border:0!important;border-radius:999px!important;box-shadow:none!important;outline:0;transition:background-color .16s ease}.commercials-v2 .cv2-switch .form-check-input::after{position:absolute;top:3px;left:3px;width:14px;height:14px;content:'';background:#fff;border-radius:50%;box-shadow:0 1px 2px rgba(15,23,42,.24);transition:transform .16s ease}.commercials-v2 .cv2-switch .form-check-input:checked{background:#2563eb!important}.commercials-v2 .cv2-switch .form-check-input:checked::after{transform:translateX(16px)}.commercials-v2 .cv2-switch .form-check-input:focus-visible{box-shadow:0 0 0 3px rgba(37,99,235,.22)!important}.commercials-v2 .cv2-switch-text{display:none!important}
-.candidate-config-shell{display:grid;grid-template-columns:220px minmax(0,1fr);gap:18px;align-items:start;font-family:'Poppins',sans-serif}.candidate-config-nav{padding:12px;border:1px solid #e5eaf4;border-radius:12px;background:#fff}.candidate-config-nav h4{margin:0 0 12px;padding:4px 6px 12px;border-bottom:1px solid #edf0f6;color:#111b3d;font-size:13px;font-weight:600}.candidate-config-link{display:flex;align-items:center;gap:10px;margin:4px 0;padding:11px 10px;border-radius:8px;color:#52638b!important;font-size:12px;font-weight:500;text-decoration:none}.candidate-config-link i{width:20px;height:20px;display:inline-flex;align-items:center;justify-content:center;border-radius:6px;background:#f1f4ff;color:#275df6;font-size:11px}.candidate-config-link span{display:block}.candidate-config-link small{display:block;margin-top:2px;color:#8391b1;font-size:10px;font-weight:500}.candidate-config-link.active,.candidate-config-link:hover{background:#eef3ff;color:#1b55f6!important}.candidate-config-link.active i{background:#dce8ff}.candidate-config-panel{min-width:0;padding:2px 0}.candidate-config-panel .card-header{padding-top:0!important}.candidate-config-panel .card-title h3{font-family:'Poppins',sans-serif;font-size:16px;font-weight:600}@media(max-width:991px){.candidate-config-shell{grid-template-columns:1fr}.candidate-config-nav{display:flex;gap:8px;overflow-x:auto}.candidate-config-nav h4{display:none}.candidate-config-link{flex:0 0 auto;margin:0}.candidate-config-link small{display:none}}
+.candidate-config-shell{display:grid;grid-template-columns:244px minmax(0,1fr);gap:18px;align-items:start;font-family:'Poppins',sans-serif}.candidate-config-nav{padding:12px;border:1px solid #e5eaf4;border-radius:12px;background:#fff}.candidate-config-nav h4{margin:0 0 12px;padding:4px 6px 12px;border-bottom:1px solid #edf0f6;color:#111b3d;font-size:13px;font-weight:600}.candidate-config-group{margin:14px 6px 6px;color:#8391b1;font-size:10px;font-weight:600;letter-spacing:.04em;text-transform:uppercase}.candidate-config-link{display:flex;align-items:center;gap:10px;margin:4px 0;padding:11px 10px;border-radius:8px;color:#52638b!important;font-size:12px;font-weight:500;text-decoration:none}.candidate-config-link i{width:20px;height:20px;display:inline-flex;align-items:center;justify-content:center;border-radius:6px;background:#f1f4ff;color:#275df6;font-size:11px}.candidate-config-link span{display:block}.candidate-config-link small{display:block;margin-top:2px;color:#8391b1;font-size:10px;font-weight:500}.candidate-config-link.active,.candidate-config-link:hover{background:#eef3ff;color:#1b55f6!important}.candidate-config-link.active i{background:#dce8ff}.candidate-config-panel{min-width:0;padding:2px 0}.candidate-config-panel .card-header{padding-top:0!important}.candidate-config-panel .card-title h3{font-family:'Poppins',sans-serif;font-size:16px;font-weight:600}@media(max-width:991px){.candidate-config-shell{grid-template-columns:1fr}.candidate-config-nav{display:flex;gap:8px;overflow-x:auto}.candidate-config-nav h4,.candidate-config-group{display:none}.candidate-config-link{flex:0 0 auto;margin:0}.candidate-config-link small{display:none}}
 </style>
 
 @section('content')
@@ -1465,9 +1465,11 @@ input[type="radio"]:checked {
 <div class="tab-pane" id="offerterms" role="tabpanel">
   <div class="candidate-config-shell">
     <aside class="candidate-config-nav" aria-label="Candidate configuration sections">
-      <h4>Candidate Configurations</h4>
-      <a class="candidate-config-link active" data-toggle="tab" href="#offerterms"><i class="far fa-file-alt"></i><span>Offer Letter Templates<small>Candidate terms &amp; conditions</small></span></a>
-      <a class="candidate-config-link" data-toggle="tab" href="#offercomponent"><i class="far fa-money-bill-alt"></i><span>Salary Annexure<small>Salary structure and components</small></span></a>
+      <h4>Documents &amp; Templates</h4>
+      <div class="candidate-config-group">Offer Letter Templates</div>
+      <a class="candidate-config-link active" data-toggle="tab" href="#offerterms"><i class="far fa-file-alt"></i><span>Candidate Offer Letter<small>{{ !empty(trim(strip_tags((string) @$account->offer_terms)) ? 'Configured template' : 'Default template' }}</small></span></a>
+      <div class="candidate-config-group">Salary Annexures</div>
+      <a class="candidate-config-link" data-toggle="tab" href="#offercomponent"><i class="far fa-money-bill-alt"></i><span>Standard Payroll Structure<small>{{ count($offer_points ?? []) }} salary components</small></span></a>
     </aside>
     <div class="candidate-config-panel">
   <!--begin::Overview header-->
@@ -1567,9 +1569,11 @@ input[type="radio"]:checked {
 <div class="tab-pane" id="offercomponent" role="tabpanel">
   <div class="candidate-config-shell">
     <aside class="candidate-config-nav" aria-label="Candidate configuration sections">
-      <h4>Candidate Configurations</h4>
-      <a class="candidate-config-link" data-toggle="tab" href="#offerterms"><i class="far fa-file-alt"></i><span>Offer Letter Templates<small>Candidate terms &amp; conditions</small></span></a>
-      <a class="candidate-config-link active" data-toggle="tab" href="#offercomponent"><i class="far fa-money-bill-alt"></i><span>Salary Annexure<small>Salary structure and components</small></span></a>
+      <h4>Documents &amp; Templates</h4>
+      <div class="candidate-config-group">Offer Letter Templates</div>
+      <a class="candidate-config-link" data-toggle="tab" href="#offerterms"><i class="far fa-file-alt"></i><span>Candidate Offer Letter<small>{{ !empty(trim(strip_tags((string) @$account->offer_terms)) ? 'Configured template' : 'Default template' }}</small></span></a>
+      <div class="candidate-config-group">Salary Annexures</div>
+      <a class="candidate-config-link active" data-toggle="tab" href="#offercomponent"><i class="far fa-money-bill-alt"></i><span>Standard Payroll Structure<small>{{ count($offer_points ?? []) }} salary components</small></span></a>
     </aside>
     <div class="candidate-config-panel">
   @php
