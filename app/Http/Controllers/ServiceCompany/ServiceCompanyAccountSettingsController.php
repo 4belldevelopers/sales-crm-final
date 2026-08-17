@@ -15,6 +15,7 @@ use App\Helper\Reply;
 use App\Jobs\ElasticCompanyIndex;
 use App\Models\Client;
 use App\Models\Company;
+use App\Models\CompanyCareerSetting;
 use App\Models\Country;
 use App\Models\JobCategory;
 use App\Services\AccountSettingsService;
@@ -1338,19 +1339,22 @@ class ServiceCompanyAccountSettingsController extends ServiceCompanyBaseControll
     {
         $company_id = auth()->user()->company_id;
 
+        $primaryColor = $request->input('td_color_primary') ?: ($request->input('primary_color') ?: '#2563EB');
+        $secondaryColor = $request->input('td_color_secondary') ?: ($request->input('secondary_color') ?: '#1F2937');
+
         $data = [
-            'primary_color' => $request->primary_color,
-            'secondary_color' => $request->secondary_color,
-            'font_family' => $request->font_family,
-            'default_language' => $request->default_language,
-            'currency' => $request->currency,
-            'page_layout' => $request->page_layout,
-            'jobs_display' => $request->jobs_display,
+            'primary_color' => $primaryColor,
+            'secondary_color' => $secondaryColor,
+            'font_family' => $request->input('font_family', 'Poppins'),
+            'default_language' => $request->input('default_language', 'en'),
+            'currency' => $request->input('currency', 'INR'),
+            'page_layout' => $request->input('page_layout', 'modern'),
+            'jobs_display' => $request->input('jobs_display', 'card'),
             'career_page_status' => $request->has('career_page_status') ? 1 : 0,
             /* Template Design fields */
             'td_template' => $request->input('td_template', 'modern'),
-            'td_color_primary' => $request->input('td_color_primary', '#2563EB'),
-            'td_color_secondary' => $request->input('td_color_secondary', '#1F2937'),
+            'td_color_primary' => $primaryColor,
+            'td_color_secondary' => $secondaryColor,
             'td_color_accent' => $request->input('td_color_accent', '#10B981'),
             'td_color_bg' => $request->input('td_color_bg', '#FFFFFF'),
             'td_theme_mode' => $request->input('td_theme_mode', 'light'),
@@ -1359,6 +1363,69 @@ class ServiceCompanyAccountSettingsController extends ServiceCompanyBaseControll
             'td_opt_testi' => $request->has('td_opt_testi') ? 1 : 0,
             'td_opt_animation' => $request->has('td_opt_animation') ? 1 : 0,
             'td_custom_css' => $request->input('td_custom_css', ''),
+            /* Hero Section fields */
+            'hero_layout' => $request->input('hero_layout', 'left-right'),
+            'hero_badge' => $request->input('hero_badge'),
+            'hero_heading' => $request->input('hero_heading'),
+            'hero_description' => $request->input('hero_description'),
+            'hero_cta1_text' => $request->input('hero_cta1_text'),
+            'hero_cta1_link' => $request->input('hero_cta1_link'),
+            'hero_cta1_newtab' => $request->has('hero_cta1_newtab') ? 1 : 0,
+            'hero_cta2_text' => $request->input('hero_cta2_text'),
+            'hero_cta2_link' => $request->input('hero_cta2_link'),
+            'hero_cta2_newtab' => $request->has('hero_cta2_newtab') ? 1 : 0,
+            'hero_bg_style' => $request->input('hero_bg_style', 'gradient'),
+            'hero_bg_gradient' => $request->input('hero_bg_gradient'),
+            /* Company Info fields */
+            'ci_industry' => $request->input('ci_industry'),
+            'ci_company_name' => $request->input('ci_company_name'),
+            'ci_headquarters' => $request->input('ci_headquarters'),
+            'ci_tagline' => $request->input('ci_tagline'),
+            'ci_website' => $request->input('ci_website'),
+            'ci_linkedin' => $request->input('ci_linkedin'),
+            'ci_founded_year' => $request->input('ci_founded_year'),
+            'ci_company_size' => $request->input('ci_company_size'),
+            'ci_twitter' => $request->input('ci_twitter'),
+            'ci_about' => $request->input('ci_about'),
+            'ci_mission' => $request->input('ci_mission'),
+            'ci_vision' => $request->input('ci_vision'),
+            /* Benefits Section fields */
+            'benefits_enabled' => $request->has('benefits_enabled') ? 1 : 0,
+            'benefits_title' => $request->input('benefits_title', 'Why Work With Us'),
+            'benefits_description' => $request->input('benefits_description'),
+            'benefits_display_style' => $request->input('benefits_display_style', 'grid'),
+            'benefits_count' => $request->input('benefits_count', 8),
+            /* Job Settings fields */
+            'js_display_style' => $request->input('js_display_style', 'card'),
+            'js_per_page' => $request->input('js_per_page', 12),
+            'js_sort_by' => $request->input('js_sort_by', 'newest'),
+            'js_show_posted_date' => $request->has('js_show_posted_date') ? 1 : 0,
+            'js_show_experience' => $request->has('js_show_experience') ? 1 : 0,
+            'js_show_salary' => $request->has('js_show_salary') ? 1 : 0,
+            'js_show_tags' => $request->has('js_show_tags') ? 1 : 0,
+            'js_apply_option' => $request->input('js_apply_option', 'resume'),
+            /* SEO & Social fields */
+            'seo_meta_title' => $request->input('seo_meta_title'),
+            'seo_meta_desc' => $request->input('seo_meta_desc'),
+            'seo_keywords' => $request->input('seo_keywords'),
+            'seo_robots' => $request->input('seo_robots', 'index,follow'),
+            'seo_canonical' => $request->input('seo_canonical'),
+            'seo_linkedin' => $request->input('seo_linkedin'),
+            'seo_twitter' => $request->input('seo_twitter'),
+            'seo_facebook' => $request->input('seo_facebook'),
+            'seo_instagram' => $request->input('seo_instagram'),
+            'seo_youtube' => $request->input('seo_youtube'),
+            /* Advanced / Tracking fields */
+            'adv_caching' => $request->has('adv_caching') ? 1 : 0,
+            'adv_cache_ttl' => $request->input('adv_cache_ttl', 86400),
+            'adv_cdn' => $request->has('adv_cdn') ? 1 : 0,
+            'adv_img_opt' => $request->has('adv_img_opt') ? 1 : 0,
+            'adv_maintenance' => $request->has('adv_maintenance') ? 1 : 0,
+            'adv_maintenance_msg' => $request->input('adv_maintenance_msg'),
+            'adv_ga4_id' => $request->input('adv_ga4_id'),
+            'adv_fb_pixel' => $request->input('adv_fb_pixel'),
+            'adv_linkedin_tag' => $request->input('adv_linkedin_tag'),
+            'adv_hotjar_id' => $request->input('adv_hotjar_id'),
             'updated_at' => now(),
         ];
 

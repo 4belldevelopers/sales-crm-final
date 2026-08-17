@@ -16,7 +16,7 @@
                     <label class="cps-label">Enable Benefits Section</label>
                     <div class="bn-toggle-row" style="margin-top:6px;">
                         <label class="cps-switch">
-                            <input type="checkbox" name="benefits_enabled" value="1" checked>
+                            <input type="checkbox" name="benefits_enabled" value="1" {{ !isset($careerSettings->benefits_enabled) || !empty($careerSettings->benefits_enabled) ? 'checked' : '' }}>
                             <span class="cps-slider"></span>
                         </label>
                         <span class="bn-toggle-label">Display benefits section on the career page</span>
@@ -26,10 +26,10 @@
                 <div class="col-6">
                     <label class="cps-label">Section Title</label>
                     <input type="text" class="bn-input" name="benefits_title" id="bnTitle"
-                           maxlength="60" value="Why Work With Us"
+                           maxlength="60" value="{{ $careerSettings->benefits_title ?? 'Why Work With Us' }}"
                            oninput="document.getElementById('bnTitleCount').textContent=this.value.length+'/60';">
                     <div style="display:flex;justify-content:flex-end;">
-                        <span class="bn-char-count" id="bnTitleCount">17/60</span>
+                        <span class="bn-char-count" id="bnTitleCount">{{ strlen($careerSettings->benefits_title ?? 'Why Work With Us') }}/60</span>
                     </div>
                 </div>
             </div>
@@ -39,9 +39,9 @@
                 <label class="cps-label">Section Description</label>
                 <textarea class="bn-textarea" name="benefits_description" id="bnDesc" maxlength="200"
                           oninput="document.getElementById('bnDescCount').textContent=this.value.length+'/200';"
-                          placeholder="e.g. We believe in building a culture where people can do their best work and grow together.">We believe in building a culture where people can do their best work and grow together. Here are some of the benefits our team enjoys.</textarea>
+                          placeholder="e.g. We believe in building a culture where people can do their best work and grow together.">{{ $careerSettings->benefits_description ?? 'We believe in building a culture where people can do their best work and grow together. Here are some of the benefits our team enjoys.' }}</textarea>
                 <div style="display:flex;justify-content:flex-end;">
-                    <span class="bn-char-count" id="bnDescCount">117/200</span>
+                    <span class="bn-char-count" id="bnDescCount">{{ strlen($careerSettings->benefits_description ?? 'We believe in building a culture where people can do their best work and grow together. Here are some of the benefits our team enjoys.') }}/200</span>
                 </div>
             </div>
 
@@ -50,33 +50,34 @@
                 <div class="col-7">
                     <label class="cps-label">Display Style</label>
                     <p style="font-size:11px;color:#94A3B8;margin:0 0 10px;">Choose how benefits are displayed</p>
+                    @php $bnStyle = $careerSettings->benefits_display_style ?? 'grid'; @endphp
                     <div class="bn-style-grid">
-                        <div class="bn-style-card selected" onclick="selectBnStyle('grid',this)">
+                        <div class="bn-style-card {{ $bnStyle === 'grid' ? 'selected' : '' }}" onclick="selectBnStyle('grid',this)">
                             <div class="bn-style-check"><i class="ti ti-check" style="font-size:9px;color:#fff;"></i></div>
                             <i class="ti ti-layout-grid bn-style-icon"></i>
                             <div class="bn-style-name">Grid View</div>
                             <div class="bn-style-desc">Best for most cases</div>
                         </div>
-                        <div class="bn-style-card" onclick="selectBnStyle('icon-list',this)">
+                        <div class="bn-style-card {{ $bnStyle === 'icon-list' ? 'selected' : '' }}" onclick="selectBnStyle('icon-list',this)">
                             <div class="bn-style-check"><i class="ti ti-check" style="font-size:9px;color:#fff;"></i></div>
                             <i class="ti ti-list bn-style-icon"></i>
                             <div class="bn-style-name">Icon List</div>
                             <div class="bn-style-desc">Simple list layout</div>
                         </div>
-                        <div class="bn-style-card" onclick="selectBnStyle('card-row',this)">
+                        <div class="bn-style-card {{ $bnStyle === 'card-row' ? 'selected' : '' }}" onclick="selectBnStyle('card-row',this)">
                             <div class="bn-style-check"><i class="ti ti-check" style="font-size:9px;color:#fff;"></i></div>
                             <i class="ti ti-layout-columns bn-style-icon"></i>
                             <div class="bn-style-name">Card Row</div>
                             <div class="bn-style-desc">Horizontal scroll</div>
                         </div>
-                        <div class="bn-style-card" onclick="selectBnStyle('two-col',this)">
+                        <div class="bn-style-card {{ $bnStyle === 'two-col' ? 'selected' : '' }}" onclick="selectBnStyle('two-col',this)">
                             <div class="bn-style-check"><i class="ti ti-check" style="font-size:9px;color:#fff;"></i></div>
                             <i class="ti ti-columns bn-style-icon"></i>
                             <div class="bn-style-name">Two Column</div>
                             <div class="bn-style-desc">Compact layout</div>
                         </div>
                     </div>
-                    <input type="hidden" name="benefits_display_style" id="bnStyleInput" value="grid">
+                    <input type="hidden" name="benefits_display_style" id="bnStyleInput" value="{{ $bnStyle }}">
                 </div>
 
                 {{-- Number of Benefits to Show --}}
@@ -85,7 +86,7 @@
                     <p style="font-size:11px;color:#94A3B8;margin:0 0 10px;">Limit the number of benefits visible on the career page</p>
                     <select class="bn-select" name="benefits_count">
                         @foreach([4,6,8,10,12] as $n)
-                        <option value="{{ $n }}" {{ $n==8?'selected':'' }}>{{ $n }} Benefits</option>
+                        <option value="{{ $n }}" {{ ($careerSettings->benefits_count ?? 8) == $n ? 'selected' : '' }}>{{ $n }} Benefits</option>
                         @endforeach
                     </select>
                     <p style="font-size:11px;color:#94A3B8;margin:8px 0 0;">You can add more benefits, but only selected number will be shown.</p>

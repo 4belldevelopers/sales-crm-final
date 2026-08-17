@@ -3,15 +3,39 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ @$account->company_name ?? 'Company' }} – Careers</title>
     @php
         $headCS = $careerSettings ?? null;
+        $headFont = !empty($headCS->font_family) ? $headCS->font_family : 'Poppins';
+        $seoMetaTitle = !empty($headCS->seo_meta_title) ? $headCS->seo_meta_title : null;
+        $seoMetaDesc  = !empty($headCS->seo_meta_desc) ? $headCS->seo_meta_desc : null;
+        $seoKeywords  = !empty($headCS->seo_keywords) ? $headCS->seo_keywords : null;
+        $seoRobots    = !empty($headCS->seo_robots) ? $headCS->seo_robots : 'index,follow';
+        $seoCanonical = !empty($headCS->seo_canonical) ? $headCS->seo_canonical : null;
+        $advGa4Id     = !empty($headCS->adv_ga4_id) ? $headCS->adv_ga4_id : null;
+        $advFbPixel   = !empty($headCS->adv_fb_pixel) ? $headCS->adv_fb_pixel : null;
     @endphp
+    <title>{{ $seoMetaTitle ?: ((@$account->company_name ?? 'Company') . ' – Careers & Job Openings') }}</title>
+    @if($seoMetaDesc)<meta name="description" content="{{ $seoMetaDesc }}">@endif
+    @if($seoKeywords)<meta name="keywords" content="{{ $seoKeywords }}">@endif
+    <meta name="robots" content="{{ $seoRobots }}">
+    @if($seoCanonical)<link rel="canonical" href="{{ $seoCanonical }}">@endif
     <link rel="shortcut icon" type="image/x-icon" href="{{ !empty($headCS->td_favicon_path) ? asset($headCS->td_favicon_path) : asset('img/favicon.svg') }}">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Poppins:300,400,500,600,700,800,900" />
+    @if(!empty($headFont) && $headFont !== 'Poppins')
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family={{ urlencode($headFont) }}:wght@300;400;500;600;700;800;900&display=swap" />
+    @endif
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link href="{{ asset('demo/plugins/global/plugins.bundle.css') }}{{ TM_VERSION }}" rel="stylesheet">
     <link href="{{ asset('demo/css/style.bundle.css') }}{{ TM_VERSION }}" rel="stylesheet">
+    @if($advGa4Id)
+    <!-- Google Analytics 4 -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id={{ $advGa4Id }}"></script>
+    <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','{{ $advGa4Id }}');</script>
+    @endif
+    @if($advFbPixel)
+    <!-- Facebook Pixel -->
+    <script>!function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,document,'script','https://connect.facebook.net/en_US/fbevents.js');fbq('init','{{ $advFbPixel }}');fbq('track','PageView');</script>
+    @endif
 </head>
 
 @php
@@ -25,20 +49,66 @@
 
     /* ── Template Design settings ── */
     $cS = $careerSettings ?? null;
-    $cpP        = $cS->td_color_primary   ?? '#2563EB';
-    $cpS        = $cS->td_color_secondary ?? '#1F2937';
-    $cpA        = $cS->td_color_accent    ?? '#10B981';
-    $cpBg       = $cS->td_color_bg        ?? '#FFFFFF';
+    $cpP        = !empty($cS->td_color_primary) ? $cS->td_color_primary : (!empty($cS->primary_color) ? $cS->primary_color : '#2563EB');
+    $cpS        = !empty($cS->td_color_secondary) ? $cS->td_color_secondary : (!empty($cS->secondary_color) ? $cS->secondary_color : '#1F2937');
+    $cpA        = !empty($cS->td_color_accent) ? $cS->td_color_accent : '#10B981';
+    $cpBg       = !empty($cS->td_color_bg) ? $cS->td_color_bg : '#FFFFFF';
+    $cpFont     = !empty($cS->font_family) ? $cS->font_family : 'Poppins';
     $cpTheme    = $cS->td_theme_mode      ?? 'light';
     $cpTemplate = $cS->td_template        ?? 'modern';
     $cpLayout   = $cS->td_layout          ?? 'wide';
+    $cpJobsDisplay = !empty($cS->js_display_style) ? $cS->js_display_style : ($cS->jobs_display ?? 'card');
     $cpLogoPath = $cS->td_logo_path       ?? null;
     $cpFavPath  = $cS->td_favicon_path    ?? null;
     $cpCustomCss= $cS->td_custom_css      ?? '';
     $cpOptAnim  = $cS->td_opt_animation   ?? 1;
+    $cpStatus   = isset($cS->career_page_status) ? (int)$cS->career_page_status : 1;
+    $advMaintenance = !empty($cS->adv_maintenance);
+    $advMaintMsg    = $cS->adv_maintenance_msg ?? "We're making some updates to serve you better. Please check back shortly!";
 
-    $companyBrand    = @$account->company_name ?? '4Bell Technology';
+    /* ── Hero section settings ── */
+    $heroBadge     = !empty($cS->hero_badge) ? $cS->hero_badge : ('Top Employer ' . date('Y'));
+    $heroHeading   = !empty($cS->hero_heading) ? $cS->hero_heading : null;
+    $heroDesc      = !empty($cS->hero_description) ? $cS->hero_description : 'Join our team of innovators and problem solvers who are building products used by thousands of recruiters worldwide.';
+    $heroCta1Text  = $cS->hero_cta1_text ?? null;
+    $heroCta1Link  = $cS->hero_cta1_link ?? null;
+    $heroCta1Newtab= !empty($cS->hero_cta1_newtab);
+    $heroCta2Text  = $cS->hero_cta2_text ?? null;
+    $heroCta2Link  = $cS->hero_cta2_link ?? null;
+    $heroCta2Newtab= !empty($cS->hero_cta2_newtab);
+    $heroLayout    = $cS->hero_layout ?? 'left-right';
+    $heroBgStyle   = $cS->hero_bg_style ?? 'gradient';
+    $heroBgGradient= $cS->hero_bg_gradient ?? null;
+
+    /* ── Company Info settings ── */
+    $companyBrand    = !empty($cS->ci_company_name) ? $cS->ci_company_name : (@$account->company_name ?? '4Bell Technology');
     $companyInitials = strtoupper(substr(trim($companyBrand), 0, 2));
+    $companyTagline  = $cS->ci_tagline ?? 'Building the future of recruitment with technology and trust.';
+    $companyAbout    = $cS->ci_about ?? null;
+    $companyMission  = $cS->ci_mission ?? null;
+    $companyVision   = $cS->ci_vision ?? null;
+    $companyIndustry = $cS->ci_industry ?? 'Information Technology & Services';
+
+    /* ── Benefits settings ── */
+    $benefitsEnabled = !isset($cS->benefits_enabled) || !empty($cS->benefits_enabled);
+    $benefitsTitle   = $cS->benefits_title ?? 'Why Work With Us';
+    $benefitsDesc    = $cS->benefits_description ?? 'We believe in building a culture where people can do their best work and grow together. Here are some of the benefits our team enjoys.';
+    $benefitsStyle   = $cS->benefits_display_style ?? 'grid';
+    $benefitsCount   = $cS->benefits_count ?? 8;
+
+    /* ── Job settings ── */
+    $jsShowPostedDate = !isset($cS->js_show_posted_date) || !empty($cS->js_show_posted_date);
+    $jsShowExperience = !isset($cS->js_show_experience) || !empty($cS->js_show_experience);
+    $jsShowSalary     = !isset($cS->js_show_salary) || !empty($cS->js_show_salary);
+    $jsShowTags       = !isset($cS->js_show_tags) || !empty($cS->js_show_tags);
+
+    /* ── Social links ── */
+    $socLinkedin  = $cS->seo_linkedin ?? $cS->ci_linkedin ?? null;
+    $socTwitter   = $cS->seo_twitter ?? $cS->ci_twitter ?? null;
+    $socFacebook  = $cS->seo_facebook ?? null;
+    $socInstagram = $cS->seo_instagram ?? null;
+    $socYoutube   = $cS->seo_youtube ?? null;
+    $socWebsite   = $cS->ci_website ?? null;
 
     $statDepts     = $cS->stat_departments ?? 15;
     $statCountries = $cS->stat_countries   ?? 5;
@@ -59,7 +129,7 @@
 
 <style>
 /* ════════════════════════════════════════
-   CAREER JOB PAGE  ·  pixel-matched
+   CAREER JOB PAGE  ·  pixel-matched & dynamic
 ════════════════════════════════════════ */
 :root{
     --p:  {{ $cpP }};
@@ -73,8 +143,15 @@
 }
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
 html{scroll-behavior:auto;}
-body{font-family:'Poppins',sans-serif;font-size:13px;color:var(--t);background:var(--bg);overflow-x:hidden;}
+body{font-family:'{{ $cpFont }}','Poppins',sans-serif;font-size:13px;color:var(--t);background:var(--bg);overflow-x:hidden;}
+@if($cpLayout === 'boxed')
+.container{width:100%;max-width:1140px;margin:0 auto;padding:0 24px;}
+@elseif($cpLayout === 'fullwidth')
+.container{width:100%;max-width:100%;margin:0;padding:0 40px;}
+@else
 .container{width:100%;max-width:1280px;margin:0 auto;padding:0 24px;}
+@endif
+
 @if($cpTheme === 'dark')
 :root{--t:#F1F5F9;--m:#94A3B8;--b:#334155;--l:#1E293B;--bg:#0F172A;}
 body{background:#0F172A;}
@@ -110,18 +187,18 @@ a{text-decoration:none;}
 .btn-out{
     padding:7px 18px;border:1.5px solid var(--b);border-radius:8px;
     font-size:12px;font-weight:600;color:var(--s);background:#fff;
-    font-family:'Poppins',sans-serif;transition:all .15s;
+    font-family:'{{ $cpFont }}','Poppins',sans-serif;transition:all .15s;
 }
 .btn-out:hover{border-color:var(--p);color:var(--p);}
 .btn-pri{
     padding:8px 20px;background:var(--p);border-radius:8px;
     font-size:12px;font-weight:700;color:#fff;
-    font-family:'Poppins',sans-serif;transition:background .15s;
+    font-family:'{{ $cpFont }}','Poppins',sans-serif;transition:all .15s;
 }
-.btn-pri:hover{background:#1D4ED8;color:#fff;}
+.btn-pri:hover{filter:brightness(0.9);color:#fff;}
 
-/* ── HERO ── */
-.hero{ background:#fff; padding:56px 0 48px; }
+/* ── HERO LAYOUT VARIATIONS ── */
+.hero{ background:#fff; padding:56px 0 48px; position:relative; }
 .hero .container{
     display:grid;grid-template-columns:56% 44%;
     gap:40px 40px;align-items:start;
@@ -129,6 +206,23 @@ a{text-decoration:none;}
 .hero-search-wrap{
     grid-column:1/-1;
     margin-top:-16px;
+}
+.hero.hero-layout-center .container{
+    display:flex;flex-direction:column;align-items:center;text-align:center;
+    max-width:860px;margin:0 auto;
+}
+.hero.hero-layout-center .hero-sub{margin-left:auto;margin-right:auto;}
+.hero.hero-layout-center .hero-tags{justify-content:center;}
+.hero.hero-layout-center .hero-imgs{display:none;}
+.hero.hero-layout-center .hero-search-wrap{width:100%;margin-top:16px;}
+.hero.hero-layout-fullwidth{padding:72px 0 60px;}
+.hero.hero-layout-fullwidth .container{grid-template-columns:60% 40%;gap:30px;align-items:center;}
+.hero.hero-layout-video .hero-imgs::after{
+    content:"\f144";font-family:"Font Awesome 6 Free";font-weight:900;
+    position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+    font-size:48px;color:#fff;background:rgba(37,99,235,.85);
+    width:72px;height:72px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+    box-shadow:0 8px 24px rgba(0,0,0,.2);cursor:pointer;
 }
 .hero-eyebrow{
     display:inline-flex;align-items:center;gap:6px;
@@ -424,13 +518,48 @@ a{text-decoration:none;}
 
 <body class="career-tpl-{{ $cpTemplate }} career-layout-{{ $cpLayout }}{{ $cpOptAnim ? ' career-anim' : '' }}">
 
+@if($cpStatus === 0 || $advMaintenance)
+<div style="min-height:100vh;display:flex;align-items:center;justify-content:center;background:var(--bg);font-family:'{{ $cpFont }}',sans-serif;padding:40px;text-align:center;">
+    <div style="max-width:480px;background:#fff;border:1.5px solid var(--b);border-radius:16px;padding:40px;box-shadow:0 10px 30px rgba(0,0,0,.08);">
+        <div style="width:64px;height:64px;background:rgba(37,99,235,.1);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 20px;">
+            <i class="fa-solid fa-building-lock" style="font-size:28px;color:var(--p);"></i>
+        </div>
+        <h2 style="font-size:20px;font-weight:800;color:var(--s);margin-bottom:8px;">{{ $companyBrand }} Careers</h2>
+        <p style="font-size:13px;color:var(--m);line-height:1.6;margin-bottom:20px;">
+            @if($cpStatus === 0)
+                Our career portal is currently offline for scheduled maintenance. Please check back soon for open opportunities!
+            @else
+                {{ $advMaintMsg }}
+            @endif
+        </p>
+        <div style="font-size:11px;color:#94A3B8;">&copy; {{ date('Y') }} {{ $companyBrand }}. All rights reserved.</div>
+    </div>
+</div>
+@else
+
 {{-- ════ HERO ════ --}}
-<section class="hero">
+<section class="hero hero-layout-{{ $heroLayout }}" @if($heroBgStyle === 'gradient' && !empty($heroBgGradient)) style="background:{{ $heroBgGradient }};" @endif>
 <div class="container">
     <div>
-        <div class="hero-eyebrow"><i class="fa-solid fa-star"></i> Top Employer {{ date('Y') }}</div>
-        <h1 class="hero-h1">Build the Future with<br><span>{{ $companyBrand }}</span></h1>
-        <p class="hero-sub">Join our team of innovators and problem solvers who are building products used by thousands of recruiters worldwide.</p>
+        <div class="hero-eyebrow"><i class="fa-solid fa-star"></i> {{ $heroBadge }}</div>
+        @if(!empty($heroHeading))
+            <h1 class="hero-h1">{!! $heroHeading !!}</h1>
+        @else
+            <h1 class="hero-h1">Build the Future with<br><span>{{ $companyBrand }}</span></h1>
+        @endif
+        <p class="hero-sub">{{ $heroDesc }}</p>
+        
+        @if(!empty($heroCta1Text) || !empty($heroCta2Text))
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:22px;flex-wrap:wrap;">
+            @if(!empty($heroCta1Text))
+                <a href="{{ $heroCta1Link ?: '#jobs' }}" class="btn-pri" {{ $heroCta1Newtab ? 'target="_blank"' : '' }}>{{ $heroCta1Text }}</a>
+            @endif
+            @if(!empty($heroCta2Text))
+                <a href="{{ $heroCta2Link ?: '#about' }}" class="btn-out" {{ $heroCta2Newtab ? 'target="_blank"' : '' }}>{{ $heroCta2Text }}</a>
+            @endif
+        </div>
+        @endif
+
         <div class="hero-tags">
             <div class="hero-tag"><i class="fa-solid fa-user-group"></i> Great People</div>
             <div class="hero-tag"><i class="fa-regular fa-clock"></i> Flexible Work</div>
@@ -821,15 +950,18 @@ a{text-decoration:none;}
 </div>{{-- /container --}}
 </div>{{-- /main-grid --}}
 
+@if($benefitsEnabled)
 {{-- ════ BENEFITS ════ --}}
-<section class="benefits">
+<section class="benefits" id="benefits">
 <div class="container">
     @php $bens=[
         ['fa-house','#EFF6FF','#2563EB','Flexible Work Culture','Work from anywhere, anytime'],
         ['fa-heart-pulse','#FFF1F2','#E11D48','Health & Wellness','Health insurance & wellness programs'],
         ['fa-chart-line','#F0FDF4','#16A34A','Learning & Growth','Continuous learning & upskilling'],
         ['fa-rocket','#FFF7ED','#F97316','Career Acceleration','Fast-track your growth with us'],
-    ]; @endphp
+    ]; 
+    $bens = array_slice($bens, 0, $benefitsCount);
+    @endphp
     @foreach($bens as [$ico,$bg,$col,$title,$desc])
     <div class="benefit">
         <div class="benefit-icon" style="background:{{ $bg }};"><i class="fa-solid {{ $ico }}" style="color:{{ $col }};"></i></div>
@@ -838,8 +970,9 @@ a{text-decoration:none;}
     @endforeach
 </div>
 </section>
+@endif
 
-
+@endif
 
 <script src="{{ asset('demo/plugins/global/plugins.bundle.js') }}{{ TM_VERSION }}"></script>
 <script src="{{ asset('assets/plugins/jquery/jquery.min.js') }}{{ TM_VERSION }}"></script>
