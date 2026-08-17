@@ -42,6 +42,7 @@ use Illuminate\Support\Str;
 use App\Services\GoogleSheetServiceCandidate;
 use App\Services\GoogleSheetsServiceGet;
 use App\Services\MailService;
+use App\Services\AgencyCommercialTermsService;
 use Illuminate\Validation\Rule;
 use Illuminate\Pagination\LengthAwarePaginator;
 use App\Jobs\QueueMailService;
@@ -5316,6 +5317,12 @@ if (!$this->elasticService->indexExists(ELASTIC_COMPANIES_INDEX)) {
             $this->th_email_template = DB::table('global_settings')->select(DB::raw("COALESCE(NULLIF(global_settings.{$offerTermsColumn}, ''), global_settings.offer_terms) as terms"))->first();	
             $this->title = 'Contract Offer Letter';
             $this->used = 'For Candidates';
+        }elseif($id==13){
+            // Intent: let Super Admin maintain agency commercial defaults separately from client Services/Commercials.
+            $this->agencyCommercialDefaults = app(AgencyCommercialTermsService::class)->getGlobalDefault();
+            $this->th_email_template = (object) ['terms' => ''];
+            $this->title = 'Agency Commercial Defaults';
+            $this->used = 'For Agencies';
         }
         				
 				
@@ -5384,6 +5391,61 @@ if (!$this->elasticService->indexExists(ELASTIC_COMPANIES_INDEX)) {
         $values = array(
             'contract_offer_terms' =>$request->editor1
         );
+     }elseif($id==13){
+        // Intent: persist global agency commercial defaults in the agency-only terms table using company_id 0.
+        $agencyExperienceRows = function (array $labels, array $rates): array {
+            $rows = [];
+            foreach ($labels as $index => $label) {
+                $label = trim((string) $label);
+                if ($label === '') {
+                    continue;
+                }
+                $rows[] = [
+                    'label' => $label,
+                    'rate' => $rates[$index] ?? '',
+                ];
+            }
+
+            return $rows;
+        };
+        $payload = [
+            'company_id' => 0,
+            'status' => 'active',
+            'version' => '1.0',
+            'fulltime_fee_model' => $request->input('fulltime_fee_model', 'percentage'),
+            'fulltime_success_fee_percentage' => (float) $request->input('fulltime_success_fee_percentage', 8.33),
+            'fulltime_payment_terms_days' => (int) $request->input('fulltime_payment_terms_days', 30),
+            'fulltime_replacement_period_days' => (int) $request->input('fulltime_replacement_period_days', 90),
+            'contract_billing_model' => $request->input('contract_billing_model', 'monthly'),
+            'contract_rate_amount' => (float) $request->input('contract_rate_amount', 80000),
+            'contract_rate_currency' => (int) $request->input('contract_rate_currency', 4),
+            'contract_payment_terms_days' => (int) $request->input('contract_payment_terms_days', 30),
+            'contract_min_duration_months' => (int) $request->input('contract_min_duration_months', 3),
+            'contract_replacement_policy' => $request->input('contract_replacement_policy', 'As per Contract Terms'),
+            'applies_to' => 'All Agencies',
+            'acceptance_required' => 1,
+            'acceptance_trigger' => 'Before Candidate Submission',
+            'submission_before_acceptance' => 0,
+            'effective_from' => 'Agency Acceptance Date',
+            'agreement_duration_months' => 12,
+            'auto_renewal' => 1,
+            'agency_can_reject' => 1,
+            'updated_by' => auth()->id(),
+            'updated_by_name' => auth()->user()->name ?? null,
+            'settings_json' => json_encode([
+                'fulltime_fixed_fee_currency' => (int) $request->input('fulltime_fixed_fee_currency', 4),
+                'fulltime_fixed_fee_amount' => $request->filled('fulltime_fixed_fee_amount') ? (float) $request->input('fulltime_fixed_fee_amount') : null,
+                'fulltime_fixed_fee_unit' => $request->input('fulltime_fixed_fee_unit', 'Per Hire'),
+                'fulltime_experience_pricing' => $agencyExperienceRows((array) $request->input('fulltime_experience_label', []), (array) $request->input('fulltime_experience_rate', [])),
+                'fulltime_basis' => $request->input('fulltime_basis', 'Annual Fixed CTC'),
+                'contract_rate_display' => $request->input('contract_rate_display', 'Depend upon job requirements'),
+                'contract_experience_pricing' => $agencyExperienceRows((array) $request->input('contract_experience_label', []), (array) $request->input('contract_experience_rate', [])),
+                'contract_billing_cycle' => $request->input('contract_billing_cycle', 'Monthly in Advance'),
+            ]),
+        ];
+        app(AgencyCommercialTermsService::class)->upsertGlobalDefault($payload);
+
+        return Reply::dataOnly(['status' => 'success']);
      }
 
            
