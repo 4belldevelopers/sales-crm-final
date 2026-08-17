@@ -38,12 +38,26 @@ if (!empty(@$job->logo_logical_path) && strlen(@$job->logo_logical_path) > 10) {
 }
 
 $currency = GeneralMethod::currencySymbole();
-$max_salary = $min_salary = $max_sal_mode = $min_sal_mode = '';
-$max_salary = GeneralMethod::thousandsCurrencyFormat($job->max_salary);
-$min_salary = GeneralMethod::thousandsCurrencyFormat($job->min_salary);
 
-  $min_sal_mode = strtoupper(substr($salaryMode[$job->min_sal_mode], 0, 1));
-  $max_sal_mode = strtoupper(substr($salaryMode[$job->max_sal_mode], 0, 1));
+$max_salary = $min_salary = $max_sal_mode = $min_sal_mode = '';
+
+$max_salary = GeneralMethod::thousandsCurrencyFormat($job->max_salary ?? 0);
+$min_salary = GeneralMethod::thousandsCurrencyFormat($job->min_salary ?? 0);
+
+$min_sal_mode = strtoupper(
+    substr($salaryMode[$job->min_sal_mode ?? ''] ?? '', 0, 1)
+);
+
+$max_sal_mode = strtoupper(
+    substr($salaryMode[$job->max_sal_mode ?? ''] ?? '', 0, 1)
+);
+
+// $max_salary = GeneralMethod::thousandsCurrencyFormat($job->max_salary);
+// $min_salary = GeneralMethod::thousandsCurrencyFormat($job->min_salary);
+
+// $min_sal_mode = strtoupper(substr($salaryMode[$job->min_sal_mode], 0, 1));
+// $max_sal_mode = strtoupper(substr($salaryMode[$job->max_sal_mode], 0, 1));
+
 $work_type = 'Work From Office';
  if($job->work_type=='no'){
      $work_type = "Work From Office";
@@ -1612,13 +1626,13 @@ $end_date   =	date('d-M-Y', $date);
                                         </div>
                                     </div>
                                     <div class="info-row"><span class="info-label">Min Salary</span><span class="info-value">
-                                    {!! $currency[@$job->min_salary_currency] !!} {{ @$min_salary }} /{{ @$max_sal_mode }}</span></div>
-                                    <div class="info-row"><span class="info-label">Max Salary</span><span class="info-value">{!! $currency[@$job->min_salary_currency]!!} {{@$max_salary}} /{{@$max_sal_mode}}</span></div>
+                                    {!! $currency[@$job->min_salary_currency ?? 0] !!} {{ @$min_salary }} /{{ @$max_sal_mode }}</span></div>
+                                    <div class="info-row"><span class="info-label">Max Salary</span><span class="info-value">{!! $currency[@$job->min_salary_currency ?? 0]!!} {{@$max_salary}} /{{@$max_sal_mode}}</span></div>
                                     <div class="info-row"><span class="info-label">Pay Type</span><span class="info-value">
-                                    {{ $salaryMode[$job->max_sal_mode] }}</span></div>
+                                    {{ $salaryMode[@$job->max_sal_mode ?? 0] }}</span></div>
                                     <div class="info-row"><span class="info-label">Currency</span><span class="info-value">{{ $currencyArr[@$job->min_salary_currency ?? 0] }}</span></div>
                                     <div class="info-row"><span class="info-label">Hiring Manager</span><span class="info-value">{{ $hiringManager }}</span></div>
-                                    <div class="info-row"><span class="info-label">Hiring HR</span><span class="info-value">{{ $hrManager }}</span></div>
+                                    <div class="info-row"><span class="info-label">Hiring HR</span><span class="info-value">{{ @$hrManager }}</span></div>
                                 </div>
                             </div>
 
