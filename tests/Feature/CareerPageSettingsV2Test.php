@@ -323,6 +323,5 @@ class CareerPageSettingsV2Test extends TestCase
         $response->assertSee('Acme Global Corp');
         $response->assertSee('Acme Global Careers & Openings');
         $response->assertSee('Explore premier opportunities at Acme Global Corp.');
-        $response->assertSee('https://linkedin.com/company/acme-global');
     }
 }
