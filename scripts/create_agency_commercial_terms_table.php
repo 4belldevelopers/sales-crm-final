@@ -14,6 +14,12 @@ $app = require __DIR__.'/../bootstrap/app.php';
 $app->make(Kernel::class)->bootstrap();
 
 if (Schema::hasTable('agency_commercial_terms')) {
+    if (! Schema::hasColumn('agency_commercial_terms', 'settings_json')) {
+        DB::statement("ALTER TABLE `agency_commercial_terms` ADD COLUMN `settings_json` longtext COLLATE utf8mb4_unicode_ci NULL AFTER `agency_can_reject`");
+        echo "agency_commercial_terms settings_json column added.\n";
+        return;
+    }
+
     echo "agency_commercial_terms already exists.\n";
     return;
 }
@@ -42,6 +48,7 @@ DB::statement("
       `agreement_duration_months` smallint unsigned NOT NULL DEFAULT '12',
       `auto_renewal` tinyint(1) NOT NULL DEFAULT '1',
       `agency_can_reject` tinyint(1) NOT NULL DEFAULT '1',
+      `settings_json` longtext COLLATE utf8mb4_unicode_ci,
       `updated_by` int unsigned DEFAULT NULL,
       `updated_by_name` varchar(191) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
       `created_at` timestamp NULL DEFAULT NULL,
