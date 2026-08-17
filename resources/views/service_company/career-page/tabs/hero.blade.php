@@ -9,29 +9,30 @@
         <div class="cps-section">
             <div class="cps-section-title">Layout Style</div>
             <div class="cps-section-sub">Choose how your hero section is structured</div>
+            @php $currentLayout = $careerSettings->hero_layout ?? 'left-right'; @endphp
             <div class="hs-layout-grid">
-                <div class="hs-layout-card selected" onclick="selectHeroLayout('left-right',this)">
+                <div class="hs-layout-card {{ $currentLayout === 'left-right' ? 'selected' : '' }}" onclick="selectHeroLayout('left-right',this)">
                     <div class="hs-lc-check"><i class="ti ti-check" style="font-size:8px;color:#fff;"></i></div>
                     <div class="hs-lc-thumb">
                         <svg width="52" height="30" viewBox="0 0 52 30"><rect x="2" y="4" width="22" height="22" rx="2" fill="#A5B4FC"/><rect x="28" y="4" width="22" height="22" rx="2" fill="#C7D2FE"/></svg>
                     </div>
                     <div class="hs-lc-name">Left Content<br>Right Image</div>
                 </div>
-                <div class="hs-layout-card" onclick="selectHeroLayout('center',this)">
+                <div class="hs-layout-card {{ $currentLayout === 'center' ? 'selected' : '' }}" onclick="selectHeroLayout('center',this)">
                     <div class="hs-lc-check"><i class="ti ti-check" style="font-size:8px;color:#fff;"></i></div>
                     <div class="hs-lc-thumb">
                         <svg width="52" height="30" viewBox="0 0 52 30"><rect x="8" y="8" width="36" height="14" rx="2" fill="#A5B4FC"/></svg>
                     </div>
                     <div class="hs-lc-name">Center<br>Content</div>
                 </div>
-                <div class="hs-layout-card" onclick="selectHeroLayout('fullwidth',this)">
+                <div class="hs-layout-card {{ $currentLayout === 'fullwidth' ? 'selected' : '' }}" onclick="selectHeroLayout('fullwidth',this)">
                     <div class="hs-lc-check"><i class="ti ti-check" style="font-size:8px;color:#fff;"></i></div>
                     <div class="hs-lc-thumb">
                         <svg width="52" height="30" viewBox="0 0 52 30"><rect x="2" y="2" width="48" height="26" rx="2" fill="#A5B4FC"/></svg>
                     </div>
                     <div class="hs-lc-name">Full Width<br>Background</div>
                 </div>
-                <div class="hs-layout-card" onclick="selectHeroLayout('video',this)">
+                <div class="hs-layout-card {{ $currentLayout === 'video' ? 'selected' : '' }}" onclick="selectHeroLayout('video',this)">
                     <div class="hs-lc-check"><i class="ti ti-check" style="font-size:8px;color:#fff;"></i></div>
                     <div class="hs-lc-thumb">
                         <svg width="52" height="30" viewBox="0 0 52 30"><rect x="2" y="2" width="48" height="26" rx="2" fill="#C7D2FE"/><polygon points="20,10 20,20 34,15" fill="#6366F1"/></svg>
@@ -39,7 +40,7 @@
                     <div class="hs-lc-name">Video<br>Background</div>
                 </div>
             </div>
-            <input type="hidden" name="hero_layout" id="heroLayoutInput" value="left-right">
+            <input type="hidden" name="hero_layout" id="heroLayoutInput" value="{{ $currentLayout }}">
         </div>
 
         {{-- Badge / Eyebrow Text --}}
@@ -47,10 +48,11 @@
             <label class="hs-label">Badge / Eyebrow Text</label>
             <input type="text" class="hs-input" name="hero_badge" id="heroBadge"
                    maxlength="80" placeholder="e.g. 🚀 Now Hiring — Join Our Team"
+                   value="{{ $careerSettings->hero_badge ?? '' }}"
                    oninput="document.getElementById('heroBadgeCount').textContent=this.value.length+'/80';">
             <div style="display:flex;justify-content:space-between;align-items:center;margin-top:4px;">
                 <span class="hs-hint">Short text shown above the heading to grab attention</span>
-                <span class="hs-char-count" id="heroBadgeCount">0/80</span>
+                <span class="hs-char-count" id="heroBadgeCount">{{ strlen($careerSettings->hero_badge ?? '') }}/80</span>
             </div>
         </div>
 
@@ -59,10 +61,11 @@
             <label class="hs-label">Main Heading</label>
             <input type="text" class="hs-input" name="hero_heading" id="heroHeading"
                    maxlength="80" placeholder="e.g. Build the Future with TechCorp"
+                   value="{{ $careerSettings->hero_heading ?? '' }}"
                    oninput="document.getElementById('heroHeadingCount').textContent=this.value.length+'/80';">
             <div style="display:flex;justify-content:space-between;align-items:center;margin-top:4px;">
                 <span class="hs-hint">Use <code style="font-size:10px;background:#F1F5F9;padding:1px 4px;border-radius:4px;">&lt;span class="text-primary"&gt;keyword&lt;/span&gt;</code> to highlight a word</span>
-                <span class="hs-char-count" id="heroHeadingCount">0/80</span>
+                <span class="hs-char-count" id="heroHeadingCount">{{ strlen($careerSettings->hero_heading ?? '') }}/80</span>
             </div>
         </div>
 
@@ -71,10 +74,10 @@
             <label class="hs-label">Description</label>
             <textarea class="hs-textarea" name="hero_description" id="heroDesc" maxlength="200" rows="3"
                       placeholder="e.g. Join our team of innovators and help shape the future of technology. We offer great culture, growth, and benefits."
-                      oninput="document.getElementById('heroDescCount').textContent=this.value.length+'/200';"></textarea>
+                      oninput="document.getElementById('heroDescCount').textContent=this.value.length+'/200';">{{ $careerSettings->hero_description ?? '' }}</textarea>
             <div style="display:flex;justify-content:space-between;align-items:center;margin-top:4px;">
                 <span class="hs-hint">Brief description shown below the heading</span>
-                <span class="hs-char-count" id="heroDescCount">0/200</span>
+                <span class="hs-char-count" id="heroDescCount">{{ strlen($careerSettings->hero_description ?? '') }}/200</span>
             </div>
         </div>
 
@@ -110,15 +113,15 @@
             <div class="hs-cta-grid">
                 <div>
                     <label class="hs-label" style="font-weight:500;font-size:11px;">Button Text</label>
-                    <input type="text" class="hs-input" name="hero_cta1_text" placeholder="e.g. Explore Open Roles">
+                    <input type="text" class="hs-input" name="hero_cta1_text" value="{{ $careerSettings->hero_cta1_text ?? '' }}" placeholder="e.g. Explore Open Roles">
                 </div>
                 <div>
                     <label class="hs-label" style="font-weight:500;font-size:11px;">Button Link</label>
-                    <input type="text" class="hs-input" name="hero_cta1_link" placeholder="e.g. /careers/jobs">
+                    <input type="text" class="hs-input" name="hero_cta1_link" value="{{ $careerSettings->hero_cta1_link ?? '' }}" placeholder="e.g. /careers/jobs">
                 </div>
             </div>
             <label class="hs-cta-newtab" style="margin-top:8px;">
-                <input type="checkbox" name="hero_cta1_newtab" style="accent-color:#2563EB;width:14px;height:14px;">
+                <input type="checkbox" name="hero_cta1_newtab" value="1" {{ !empty($careerSettings->hero_cta1_newtab) ? 'checked' : '' }} style="accent-color:#2563EB;width:14px;height:14px;">
                 Open in new tab
             </label>
         </div>
@@ -129,15 +132,15 @@
             <div class="hs-cta-grid">
                 <div>
                     <label class="hs-label" style="font-weight:500;font-size:11px;">Button Text</label>
-                    <input type="text" class="hs-input" name="hero_cta2_text" placeholder="e.g. Learn About Us">
+                    <input type="text" class="hs-input" name="hero_cta2_text" value="{{ $careerSettings->hero_cta2_text ?? '' }}" placeholder="e.g. Learn About Us">
                 </div>
                 <div>
                     <label class="hs-label" style="font-weight:500;font-size:11px;">Button Link</label>
-                    <input type="text" class="hs-input" name="hero_cta2_link" placeholder="e.g. /about">
+                    <input type="text" class="hs-input" name="hero_cta2_link" value="{{ $careerSettings->hero_cta2_link ?? '' }}" placeholder="e.g. /about">
                 </div>
             </div>
             <label class="hs-cta-newtab" style="margin-top:8px;">
-                <input type="checkbox" name="hero_cta2_newtab" style="accent-color:#2563EB;width:14px;height:14px;">
+                <input type="checkbox" name="hero_cta2_newtab" value="1" {{ !empty($careerSettings->hero_cta2_newtab) ? 'checked' : '' }} style="accent-color:#2563EB;width:14px;height:14px;">
                 Open in new tab
             </label>
         </div>
@@ -147,17 +150,18 @@
             <div class="cps-section-title">Background Style</div>
             <div class="cps-section-sub">Choose the background style for your hero section</div>
             <div class="hs-bg-options">
+                @php $savedBgStyle = $careerSettings->hero_bg_style ?? 'gradient'; @endphp
                 <label class="hs-bg-opt">
-                    <input type="radio" name="hero_bg_style" value="gradient" checked> Gradient
+                    <input type="radio" name="hero_bg_style" value="gradient" {{ $savedBgStyle === 'gradient' ? 'checked' : '' }}> Gradient
                 </label>
                 <label class="hs-bg-opt">
-                    <input type="radio" name="hero_bg_style" value="image"> Image
+                    <input type="radio" name="hero_bg_style" value="image" {{ $savedBgStyle === 'image' ? 'checked' : '' }}> Image
                 </label>
                 <label class="hs-bg-opt">
-                    <input type="radio" name="hero_bg_style" value="video"> Video
+                    <input type="radio" name="hero_bg_style" value="video" {{ $savedBgStyle === 'video' ? 'checked' : '' }}> Video
                 </label>
                 <label class="hs-bg-opt">
-                    <input type="radio" name="hero_bg_style" value="solid"> Solid Color
+                    <input type="radio" name="hero_bg_style" value="solid" {{ $savedBgStyle === 'solid' ? 'checked' : '' }}> Solid Color
                 </label>
             </div>
             <label class="hs-label" style="margin-bottom:10px;">Gradient Style</label>
@@ -215,21 +219,32 @@
                     </div>
                     <div class="hs-prev-nav-btn">Apply Now</div>
                 </div>
-                <div class="hs-prev-hero" id="hsHeroPreview" style="background:linear-gradient(135deg,#EEF2FF,#E0E7FF);">
+                @php
+                    $savedBgGrad = $careerSettings->hero_bg_gradient ?? 'linear-gradient(135deg,#EEF2FF,#E0E7FF)';
+                @endphp
+                <div class="hs-prev-hero" id="hsHeroPreview" style="background:{{ $savedBgGrad }};">
                     <div>
-                        <div class="hs-prev-badge">
+                        <div class="hs-prev-badge" id="hsPreviewBadge">
                             <i class="ti ti-rocket" style="font-size:8px;"></i>
-                            Now Hiring
+                            <span>{{ !empty($careerSettings->hero_badge) ? $careerSettings->hero_badge : '🚀 Hiring Top Talent' }}</span>
                         </div>
-                        <div class="hs-prev-heading" id="hsPreviewHeading">Build the Future with <span>{{ $companyName }}</span></div>
-                        <div class="hs-prev-desc" id="hsPreviewDesc">Join our team of innovators and help shape the future of technology.</div>
+                        <div class="hs-prev-heading" id="hsPreviewHeading">
+                            @if(!empty($careerSettings->hero_heading))
+                                {!! $careerSettings->hero_heading !!}
+                            @else
+                                Build the Future with <span>{{ $companyName }}</span>
+                            @endif
+                        </div>
+                        <div class="hs-prev-desc" id="hsPreviewDesc">
+                            {{ !empty($careerSettings->hero_description) ? $careerSettings->hero_description : 'Join our team of innovators and help shape the future of technology.' }}
+                        </div>
                         <div class="hs-prev-highlights">
                             <div class="hs-prev-hl"><i class="ti ti-check"></i> Great Culture</div>
                             <div class="hs-prev-hl"><i class="ti ti-check"></i> Remote Friendly</div>
                         </div>
                         <div class="hs-prev-btns">
-                            <div class="hs-prev-btn-primary">Explore Roles</div>
-                            <div class="hs-prev-btn-secondary">Learn More</div>
+                            <div class="hs-prev-btn-primary" id="hsPreviewCta1">{{ !empty($careerSettings->hero_cta1_text) ? $careerSettings->hero_cta1_text : 'Explore Roles' }}</div>
+                            <div class="hs-prev-btn-secondary" id="hsPreviewCta2">{{ !empty($careerSettings->hero_cta2_text) ? $careerSettings->hero_cta2_text : 'Learn More' }}</div>
                         </div>
                     </div>
                     <div class="hs-prev-img">
