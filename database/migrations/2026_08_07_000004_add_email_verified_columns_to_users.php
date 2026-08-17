@@ -24,6 +24,7 @@ return new class extends Migration
         // Step 1: coerce empty-string codes to NULL so the UNIQUE constraint works.
         // (Active verified users get email_verification_code='' from the old controller;
         //  multiple empty strings would violate UNIQUE. MySQL allows multiple NULLs.)
+        
         DB::table('users')
             ->where('email_verification_code', '')
             ->update(['email_verification_code' => null]);

@@ -342,24 +342,19 @@ $current_job_id = @$job_id;
                                                         </div>
                                                     </a>
                                                 </div>';
-                                }
-
-                                $skilltag = '';
-                                $skilltagclass = '';
-                                if (empty($limit)) {
-                                    $skillArr = DB::table('job_metronics_skills')
-                                        ->select('*')
-                                        ->where('company_id','=',$company_id = auth()->user()->company_id)
-                                        ->where('job_id', $job->id)
-                                        ->get();
-                                    if (!empty($skillArr)) {
-                                        foreach ($skillArr as $sval) {
-                                            $skilltag .=
-                                                '<span class="badge badge-light my-1">' . ucfirst($sval->skill_name) . '</span>  ';
+                                    $skilltag = '';
+                                    $skilltagclass = '';
+                                    if (empty($limit)) {
+                                        $skillArrList = $skillArr ?? [];
+                                        if (!empty($skillArrList)) {
+                                            foreach ($skillArrList as $sval) {
+                                                $skilltag .=
+                                                    '<span class="badge badge-light my-1">' . ucfirst($sval->skill_name) . '</span>  ';
+                                            }
                                         }
+                                    } else {
+                                        $skilltagclass = 'd-none';
                                     }
-                                } else {
-                                    $skilltagclass = 'd-none';
                                 }
 
                                     echo ' <div class=" d-flex align-items-center border-0" >
@@ -1030,12 +1025,6 @@ $current_job_id = @$job_id;
                                 padding: 0 10px;
                             }
 
-                            .link-muted {
-                                font-size: 11px;
-                                color: #2563eb;
-                                font-weight: 500;
-                            }
-
                             input[type="radio"]:checked {
                                 border-color: transparent;
                                 background-color: currentColor;
@@ -1219,23 +1208,22 @@ $current_job_id = @$job_id;
                                                         <span class="job-detail-label">Location</span>
 
                                                          @php
-                                                            $country_id = $country_name = '';
-                                                            $jobid = $job->id;
-                                                            $client_loc = DB::table('client_location_jobs')
-                                                                ->join('client_location', 'client_location.id', '=', 'client_location_jobs.client_location_id')
-                                                                ->leftJoin('city_list', 'city_list.city_id', '=', 'client_location.city_id')
-                                                                ->select(
-                                                                    'client_location.address',
-                                                                    'client_location.city',
-                                                                    'client_location.postcode',
-                                                                    'client_location.country_id',
-                                                                    'city_list.city as city_name',
-                                                                )
-                                                                ->where('client_location_jobs.job_id', $jobid)
-                                                                ->first();
-
-                                                                    // dd($client_loc);
-                                            
+                             $client_loc = $jobLocation ?? null;
+                             if (empty($client_loc)) {
+                                 $client_loc = DB::table('client_location_jobs')
+                                     ->join('client_location', 'client_location.id', '=', 'client_location_jobs.client_location_id')
+                                     ->leftJoin('city_list', 'city_list.city_id', '=', 'client_location.city_id')
+                                     ->select(
+                                         'client_location.address',
+                                         'client_location.city',
+                                         'client_location.postcode',
+                                         'client_location.country_id',
+                                         'city_list.city as city_name',
+                                     )
+                                     ->where('client_location_jobs.job_id', $job->id)
+                                     ->first();
+                             }
+        
                                                                 $country_id = @$client_loc->country_id;
                                                                 if (@$country_id > 0) {
                                                                     $country_name = GeneralMethod::getCountryName($country_id);
@@ -1245,15 +1233,9 @@ $current_job_id = @$job_id;
                                                                 }
         
                                                                 $city = mb_substr(@$client_loc->city, 0, 6);
-                                                                // if (@$client_loc->country_id == 101) {
                                                                 $city = mb_substr(@$client_loc->city_name, 0, 6);
-                                                                // }
                                             
-                                                                $jobLocation = DB::table('client_location_jobs')
-                                                                    ->where('client_location_jobs.job_id', $jobid)
-                                                                    ->count();
-                                            
-                                                                $jobCitySelected = DB::table('client_city_jobs')->where('client_city_jobs.job_id', $jobid)->count();
+                                                                $jobCitySelected = DB::table('client_city_jobs')->where('client_city_jobs.job_id', $job->id)->count();
                                             
                                                                 $employment_type = 'Full-time';
                                                                 if ($job->employment_type == 1) {
@@ -1269,7 +1251,7 @@ $current_job_id = @$job_id;
                                                                         ->leftJoin('state_list', 'state_list.id', '=', 'city_list.state_id')
                                                                         ->leftJoin('countries', 'countries.id', '=', 'state_list.country_id')
                                                                         ->select('city_list.city as city_name', 'countries.country_name')
-                                                                        ->where('client_city_jobs.job_id', $jobid)
+                                                                        ->where('client_city_jobs.job_id', $job->id)
                                                                         ->first();
                                                                     $city = mb_substr(@$client_loc->city_name, 0, 21);
                                                                     $country_name = mb_substr(@$client_loc->country_name, 0, 6);
@@ -1285,7 +1267,7 @@ $current_job_id = @$job_id;
                                                                     ->leftJoin('state_list', 'state_list.id', '=', 'city_list.state_id')
                                                                     ->leftJoin('countries', 'countries.id', '=', 'state_list.country_id')
                                                                     ->select('city_list.city as city_name', 'countries.country_name')
-                                                                    ->where('client_city_jobs.job_id', $jobid)
+                                                                    ->where('client_city_jobs.job_id', $job->id)
                                                                     ->first();
                                                                 $city = mb_substr(@$client_loc->city_name, 0, 21);
                                                                 $country_name = mb_substr(@$client_loc->country_name, 0, 6);
@@ -1319,13 +1301,9 @@ $current_job_id = @$job_id;
                                                     $skilltagclass = '';
                                                     $totalSkill = 0;
                                                     if (empty($limit)) {
-                                                        $skillArr = DB::table('job_metronics_skills')
-                                                            ->select('*')
-                                                            ->where('company_id','=',$company_id = auth()->user()->company_id)
-                                                            ->where('job_id', $job->id)
-                                                            ->get();
-                                                        if (!empty($skillArr)) {
-                                                            foreach ($skillArr as $key => $sval) {
+                                                        $skillArrList = $skillArr ?? [];
+                                                        if (!empty($skillArrList)) {
+                                                            foreach ($skillArrList as $key => $sval) {
                                                                 if($key<=2){
                                                                     $skilltag .=
                                                                     '<span class="tag">' . ucfirst($sval->skill_name) . '</span>  ';
