@@ -634,6 +634,9 @@ class ServiceCompanyAccountSettingsController extends ServiceCompanyBaseControll
                 'updated_by_name' => auth()->user()->name ?? null,
             ];
             $agencyTermsPayload['settings_json'] = json_encode([
+                'fulltime_fixed_fee_currency' => (int) $request->input('fulltime_fixed_fee_currency', 4),
+                'fulltime_fixed_fee_amount' => $request->filled('fulltime_fixed_fee_amount') ? (float) $request->input('fulltime_fixed_fee_amount') : null,
+                'fulltime_fixed_fee_unit' => $request->input('fulltime_fixed_fee_unit', 'Per Hire'),
                 'fulltime_fee_cap_currency' => (int) $request->input('fulltime_fee_cap_currency', 4),
                 'fulltime_fee_cap_amount' => $request->filled('fulltime_fee_cap_amount') ? (float) $request->input('fulltime_fee_cap_amount') : null,
                 'fulltime_payment_timeline_from' => $request->input('fulltime_payment_timeline_from', 'From invoice date'),
@@ -647,6 +650,7 @@ class ServiceCompanyAccountSettingsController extends ServiceCompanyBaseControll
                 'contract_early_termination' => $request->input('contract_early_termination', 'As per contract terms'),
                 'contract_invoice_raising' => $request->input('contract_invoice_raising', 'Monthly in Advance'),
                 'contract_escalation_policy' => $request->input('contract_escalation_policy', 'As per contract terms'),
+                'contract_rate_display' => $request->input('contract_rate_display', 'Depend upon job requirements'),
                 'payment_modes_allowed' => array_values(array_unique((array) $request->input('payment_modes_allowed', ['bank_transfer', 'neft', 'rtgs']))),
                 'general_currency' => (int) $request->input('general_currency', 4),
                 'tax_handling' => $request->input('tax_handling', 'GST Extra'),

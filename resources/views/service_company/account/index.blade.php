@@ -383,6 +383,10 @@ input[type="radio"]:checked {
 
 /* Agency preview drawer: keep the document readable while fitting 15-16 inch and smaller screens. */
 .apv-head{padding:14px 18px!important}.apv-title h3{font-size:19px!important}.apv-body{grid-template-columns:minmax(0,1fr) 255px!important;gap:12px!important;padding:12px 18px 16px!important}.apv-toolbar{min-height:48px;padding:0 12px}.apv-tabs{gap:12px}.apv-tab{min-height:46px;font-size:11px}.apv-tools{gap:7px}.apv-tools .aat-btn{min-height:32px;padding:7px 10px}.apv-alert{margin:12px;padding:10px 12px}.apv-document{margin:0 12px 12px!important;padding:22px 32px!important;max-height:calc(100vh - 210px)!important;font-size:12px!important;line-height:1.65!important}.apv-document h1,.apv-document h2,.apv-document h3{font-size:16px!important}.apv-card h4{font-size:13px!important}.apv-pad{padding:13px!important}.apv-summary-list{gap:10px}.apv-commercial{margin-top:12px;padding:12px}.apv-info{margin:0 18px 16px!important;padding:11px 13px!important}@media(max-width:1200px){.apv-body{grid-template-columns:minmax(0,1fr) 230px!important;padding:10px 14px 14px!important}.apv-document{padding:20px 24px!important;max-height:calc(100vh - 225px)!important}.apv-tools .apv-select{width:96px!important}.apv-summary-row{display:block}.apv-summary-row b{display:block;margin-top:3px}}@media(max-width:991px){.apv-body{grid-template-columns:1fr!important}.apv-body>aside:last-child{grid-column:auto!important}.apv-document{max-height:560px!important}.apv-toolbar{align-items:flex-start;flex-direction:column;padding:10px 12px}.apv-tools{width:100%;justify-content:flex-start;flex-wrap:wrap}}@media(max-width:768px){.apv-head{padding:14px 12px!important}.apv-title h3{font-size:18px!important}.apv-body{padding:10px!important}.apv-document{padding:18px!important}.apv-info{margin:0 10px 12px!important}}
+.apv-party-intro{max-width:760px;margin:0 auto 28px;padding:0 0 20px;border-bottom:1px solid #dfe6f1;text-align:center;color:#101833}.apv-party-intro h2{margin:0 0 16px!important;color:#101833!important;font-size:16px!important;font-weight:700!important;letter-spacing:.02em;text-align:center!important}.apv-party-intro .apv-effective{margin:0 0 20px;color:#101833;font-size:11px;line-height:1.5}.apv-party-intro .apv-effective b{font-weight:700}.apv-party-grid{display:grid;grid-template-columns:minmax(0,1fr) 58px minmax(0,1fr);gap:18px;align-items:start}.apv-party-box{text-align:center}.apv-party-name{margin-bottom:6px;color:#4f2bd5;font-size:13px;font-weight:700;line-height:1.35}.apv-party-address{max-width:250px;margin:0 auto;color:#101833;font-size:10.5px;line-height:1.45}.apv-party-role{margin-top:7px;color:#101833;font-size:10.5px;line-height:1.45}.apv-party-role b{font-weight:700}.apv-party-and{align-self:center;color:#53617f;font-size:11px;font-weight:700}.apv-party-closing{max-width:580px;margin:17px auto 0;color:#101833;font-size:10.5px;line-height:1.55}.apv-party-closing b{font-weight:700}@media(max-width:768px){.apv-party-grid{grid-template-columns:1fr;gap:12px}.apv-party-and{padding:2px 0}.apv-party-intro{margin-bottom:20px}.apv-party-intro h2{font-size:15px!important}}
+
+/* Edit agreement drawer: compact editor-first layout for 15.6-inch and smaller screens. */
+.aga-head{padding:14px 18px!important}.aga-title-wrap h3{font-size:19px!important}.aga-title-wrap p{font-size:11.5px!important;line-height:1.45}.aga-head-actions{gap:8px}.aga-head-actions .aat-btn{min-height:32px;padding:7px 11px;font-size:10.5px}.aga-shell{grid-template-columns:minmax(0,1fr) 228px!important;gap:12px!important;padding:12px 18px 16px!important}.aga-tabs{min-height:46px;padding:0 12px}.aga-tabs-left{gap:12px}.aga-tab{min-height:44px;font-size:11px}.aga-tools{gap:7px}.aga-tools .aat-btn{min-height:32px;padding:7px 10px}.aga-toolbar{gap:6px;padding:10px 12px;overflow:auto}.aga-toolbar select,.aga-toolbar button{height:32px;font-size:10.5px}.aga-editor-wrap{padding:10px 12px}.aga-editor-card .cke_contents{min-height:calc(100vh - 235px)!important}.aga-editor-foot{padding:8px 12px;font-size:10px}.aga-right{padding:12px!important}.aga-var-tabs{grid-template-columns:1fr!important}.aga-var-list{max-height:calc(100vh - 310px);gap:6px}.aga-var-item{padding:5px 6px;border-radius:7px;cursor:pointer}.aga-var-item:hover{background:#f5f1ff}.aga-var-item code{cursor:pointer}.aga-card{padding:11px!important}.aga-tips{display:none!important}@media(max-width:1200px){.aga-shell{grid-template-columns:minmax(0,1fr) 205px!important;padding:10px 14px 14px!important}.aga-editor-card .cke_contents{min-height:calc(100vh - 255px)!important}.aga-var-list{max-height:calc(100vh - 330px)}.aga-meta-row{display:block}.aga-meta-row b{display:block;margin-top:3px}}@media(max-width:991px){.aga-shell{grid-template-columns:1fr!important}.aga-right{order:2}.aga-main{order:1}.aga-var-list{max-height:220px}.aga-head{align-items:flex-start;flex-direction:column}.aga-head-actions{justify-content:flex-start}.aga-editor-card .cke_contents{min-height:520px!important}}@media(max-width:768px){.aga-head{padding:14px 12px!important}.aga-title-wrap h3{font-size:18px!important}.aga-shell{padding:10px!important}.aga-toolbar{padding:8px}.aga-editor-wrap{padding:8px}.aga-tools{width:100%;justify-content:flex-start}}
 
 /* Commercials tab: presentation-only layer. It reuses the cached account payload and existing service actions. */
 .commercials-v2,.commercials-v2 *{box-sizing:border-box;font-family:'Poppins',sans-serif!important}.commercials-v2{color:#111b3d;font-size:12px;font-weight:500;padding:2px 0 8px}.commercials-v2 .cv2-head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:18px}.commercials-v2 .cv2-title{margin:0;color:#101735;font-size:16px!important;font-weight:600!important;line-height:1.25}.commercials-v2 .cv2-sub{max-width:600px;margin:6px 0 0;color:#52638b;font-size:12px;font-weight:500;line-height:1.5}.commercials-v2 .cv2-stat-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin-bottom:18px}.commercials-v2 .cv2-stat{display:flex;align-items:center;min-width:0;gap:13px;padding:16px;border:1px solid #e5eaf4;border-radius:11px;background:#fff;box-shadow:0 1px 3px rgba(15,23,66,.03)}.commercials-v2 .cv2-stat-icon,.commercials-v2 .cv2-service-icon{display:flex;flex:0 0 auto;align-items:center;justify-content:center;border-radius:11px}.commercials-v2 .cv2-stat-icon{width:46px;height:46px}.commercials-v2 .cv2-stat-icon svg{width:23px;height:23px}.commercials-v2 .cv2-service-icon{width:48px;height:48px}.commercials-v2 .cv2-service-icon svg{width:25px;height:25px}.commercials-v2 .blue{color:#1d3dff;background:#eaf1ff}.commercials-v2 .green{color:#08ac58;background:#e8f9ee}.commercials-v2 .amber{color:#f58911;background:#fff1e5}.commercials-v2 .cv2-stat-copy{min-width:0}.commercials-v2 .cv2-label{color:#52638b;font-size:11px;font-weight:500;line-height:1.35}.commercials-v2 .cv2-value{margin-top:3px;color:#101735;font-size:16px;font-weight:600;line-height:1.2;font-variant-numeric:tabular-nums}.commercials-v2 .cv2-hint{margin-top:5px;color:#08a851;font-size:10.5px;font-weight:500;line-height:1.25}.commercials-v2 .cv2-section-title{margin:0;color:#111b3d;font-size:14px;font-weight:600;line-height:1.35}.commercials-v2 .cv2-section-sub{margin:3px 0 12px;color:#52638b;font-size:11px;font-weight:500}.commercials-v2 .cv2-services{display:grid;gap:16px}.commercials-v2 .cv2-service{padding:16px 18px;border:1px solid #e2e8f3;border-radius:11px;background:#fff;box-shadow:0 1px 3px rgba(15,23,66,.025)}.commercials-v2 .cv2-service-top{display:flex;align-items:flex-start;justify-content:space-between;gap:16px}.commercials-v2 .cv2-service-name{display:flex;align-items:center;gap:13px;min-width:0}.commercials-v2 .cv2-service-name h4{margin:0;color:#101735;font-size:14px!important;font-weight:600!important;line-height:1.35}.commercials-v2 .cv2-service-desc{margin:3px 0 0;color:#52638b;font-size:11px;font-weight:500;line-height:1.4}.commercials-v2 .cv2-badge{display:inline-flex;align-items:center;margin-left:7px;padding:3px 8px;border-radius:5px;background:#e8f8ed;color:#08a851;font-size:10px;font-weight:600;vertical-align:2px}.commercials-v2 .cv2-badge.is-off{color:#c2410c;background:#fff2e8}.commercials-v2 .cv2-switch{display:inline-flex;align-items:center;gap:8px;flex:0 0 auto}.commercials-v2 .form-switch{margin:0}.commercials-v2 .form-check-input{width:38px!important;height:21px!important;margin:0!important;cursor:pointer}.commercials-v2 .cv2-switch-text{color:#52638b;font-size:10.5px;font-weight:600}.commercials-v2 .cv2-service-main{display:grid;grid-template-columns:minmax(0,1fr) 230px;gap:18px;margin-top:14px;padding-top:14px;border-top:1px solid #edf0f6}.commercials-v2 .cv2-disabled{opacity:.45}.commercials-v2 .cv2-facts{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:0}.commercials-v2 .cv2-fact{min-width:0;padding:0 14px;border-right:1px solid #e8ecf3}.commercials-v2 .cv2-fact:first-child{padding-left:0}.commercials-v2 .cv2-fact:last-child{border:0}.commercials-v2 .cv2-fact-label{color:#52638b;font-size:10px;font-weight:500;line-height:1.3}.commercials-v2 .cv2-fact-value{margin-top:5px;color:#111b3d;font-size:11px;font-weight:600;line-height:1.3;word-break:break-word}.commercials-v2 .cv2-fact-value.rate{color:#0a9f57}.commercials-v2 .cv2-side{display:grid;gap:8px;align-content:start;padding-left:18px;border-left:1px solid #e8ecf3}.commercials-v2 .cv2-side-row{display:flex;justify-content:space-between;gap:8px;color:#52638b;font-size:10px;font-weight:500}.commercials-v2 .cv2-side-row b{color:#111b3d;font-size:10.5px;font-weight:600;text-align:right;font-variant-numeric:tabular-nums}.commercials-v2 .cv2-bottom{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;margin-top:14px}.commercials-v2 .cv2-country-label{margin:0 0 8px;color:#111b3d;font-size:11px;font-weight:600}.commercials-v2 .cv2-country-chip{display:inline-flex;align-items:center;gap:8px;min-height:38px;padding:7px 12px;color:#33466f;background:#f8faff;border:1px solid #e1e7f2;border-radius:7px;font-size:10.5px;font-weight:500}.commercials-v2 .cv2-country-chip svg{width:15px;height:15px;color:#2764ff}.commercials-v2 .cv2-country-chip b{color:#101735;font-weight:600}.commercials-v2 .cv2-edit{display:inline-flex!important;align-items:center;gap:8px;padding:9px 13px!important;color:#173af5!important;background:#fff!important;border:1px solid #b9c4ff!important;border-radius:7px!important;font-size:11px!important;font-weight:600!important;white-space:nowrap}.commercials-v2 .cv2-edit:hover{background:#f5f7ff!important}.commercials-v2 .cv2-edit svg{width:15px;height:15px}.commercials-v2 .cv2-note{display:flex;align-items:center;gap:14px;margin-top:16px;padding:13px 16px;border:1px solid #cfead8;border-radius:9px;background:#f7fdf8;color:#40547e}.commercials-v2 .cv2-note-icon{display:flex;flex:0 0 auto;align-items:center;justify-content:center;width:34px;height:34px;color:#08a851;background:#e7f8ec;border-radius:50%}.commercials-v2 .cv2-note-icon svg{width:21px;height:21px}.commercials-v2 .cv2-note p{margin:0;font-size:10.5px;font-weight:500;line-height:1.5}.commercials-v2 .cv2-note b{color:#111b3d;font-weight:600}@media(max-width:1199px){.commercials-v2 .cv2-stat-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.commercials-v2 .cv2-service-main{grid-template-columns:1fr}.commercials-v2 .cv2-side{grid-template-columns:repeat(3,minmax(0,1fr));padding:12px 0 0;border-top:1px solid #e8ecf3;border-left:0}.commercials-v2 .cv2-side-row{display:block}.commercials-v2 .cv2-side-row b{display:block;margin-top:3px;text-align:left}}@media(max-width:767px){.commercials-v2 .cv2-head,.commercials-v2 .cv2-service-top,.commercials-v2 .cv2-bottom{display:block}.commercials-v2 .cv2-switch{margin-top:12px}.commercials-v2 .cv2-stat-grid{grid-template-columns:1fr}.commercials-v2 .cv2-facts{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.commercials-v2 .cv2-fact:nth-child(2){border-right:0}.commercials-v2 .cv2-fact:nth-child(n+3){padding-left:0}.commercials-v2 .cv2-side{grid-template-columns:1fr 1fr}.commercials-v2 .cv2-edit{margin-top:12px}.commercials-v2 .cv2-note{align-items:flex-start}}
@@ -400,6 +404,7 @@ input[type="radio"]:checked {
 .settings-offer-template .co-tpl-layout--main-preview{display:block!important;background:transparent!important}.settings-offer-template .co-tpl-layout--main-preview .co-tpl-editor-col{width:100%;max-width:none;box-shadow:none}.settings-offer-template .candidate-offer-main-preview{max-height:calc(100vh - 360px);min-height:360px}.settings-offer-template .candidate-offer-main-preview p{margin-bottom:12px}@media(max-width:991px){.settings-offer-template .candidate-offer-main-preview{max-height:none;min-height:300px}}
 .candidate-config-card-head>.card-title:not(.candidate-config-actions){display:block!important;min-width:0}.candidate-config-card-head .candidate-config-subtitle{display:block!important;clear:both}
 .candidate-config-link i svg,.candidate-action-icon svg{width:13px;height:13px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}.candidate-action-icon{display:inline-flex;align-items:center;justify-content:center;margin-right:6px;color:currentColor;line-height:1}
+.aat-input-group.aat-fixed-fee-group{grid-template-columns:82px minmax(0,1fr)}.aat-calc-row.simple{grid-template-columns:minmax(0,1fr) 28px minmax(0,1fr)}
 </style>
 
 @section('content')
@@ -1417,6 +1422,15 @@ input[type="radio"]:checked {
     $aatTerms = @$agencyCommercialTerms ?: (object) [];
     $aatCurrency = optional($currencyArr->firstWhere('id', @$aatTerms->contract_rate_currency));
     $aatCurrencyCode = $aatCurrency->code ?: ([0 => 'INR', 1 => 'EUR', 2 => 'JPY', 3 => 'GBP', 4 => 'USD'][@$aatTerms->contract_rate_currency ?? 4] ?? 'USD');
+    $aatFulltimeFeeModel = @$aatTerms->fulltime_fee_model ?: 'percentage';
+    $aatFulltimeFixedCurrency = optional($currencyArr->firstWhere('id', @$aatTerms->fulltime_fixed_fee_currency));
+    $aatFulltimeFixedCurrencyCode = $aatFulltimeFixedCurrency->code ?: ([0 => 'INR', 1 => 'EUR', 2 => 'JPY', 3 => 'GBP', 4 => 'INR'][@$aatTerms->fulltime_fixed_fee_currency ?? 4] ?? 'INR');
+    $aatFulltimeFixedUnit = @$aatTerms->fulltime_fixed_fee_unit ?: 'Per Hire';
+    $aatFulltimeFixedAmount = @$aatTerms->fulltime_fixed_fee_amount;
+    $aatFulltimeFixedLabel = $aatFulltimeFixedCurrencyCode.' '.number_format((float) ($aatFulltimeFixedAmount ?? 0), 2).' / '.$aatFulltimeFixedUnit;
+    $aatFulltimePercentageLabel = number_format((float) (@$aatTerms->fulltime_success_fee_percentage ?? 8.33), 2).'% of Annual CTC';
+    $aatFulltimeFeeLabel = $aatFulltimeFeeModel === 'fixed' ? $aatFulltimeFixedLabel : $aatFulltimePercentageLabel;
+    $aatContractRateDisplay = @$aatTerms->contract_rate_display ?: 'Depend upon job requirements';
     $aatUpdated = @$aatTerms->updated_at ?: $atcUpdated;
     $aatUpdatedBy = @$aatTerms->updated_by_name ?: (optional(auth()->user())->name ?: 'System');
     $aatVersion = @$aatTerms->version ?: '1.0';
@@ -1433,6 +1447,8 @@ input[type="radio"]:checked {
       '{PAYMENT_TERMS}'    => 'Payment Terms',
       '{REPLACEMENT_DAYS}' => 'Replacement Period',
     ];
+    $agencyPreviewCompanyAddress = trim(ucwords($company_city_name).(($company_city_name && $company_country_name) ? ', ' : '').ucwords($company_country_name), ', ');
+    $agencyPreviewCompanyAddress = $agencyPreviewCompanyAddress ?: (@$account->address ?: 'Tower A, 4th Floor, Sector-135, Noida, UP 201301');
     // Intent: expose a complete agency-agreement variable catalog from data already loaded on this page; no extra page-load queries are introduced.
     $agencyVariableCatalog = [
       ['code' => '{AGENCY_NAME}', 'desc' => 'Agency Name', 'category' => 'Agency Information', 'source' => 'Agency Profile', 'example' => 'TalentVerse Solutions Pvt. Ltd.', 'status' => 'Active'],
@@ -1442,17 +1458,17 @@ input[type="radio"]:checked {
       ['code' => '{AGENCY_GST}', 'desc' => 'Agency GST Number', 'category' => 'Agency Information', 'source' => 'Agency Profile', 'example' => '09AAECT1234F1Z5', 'status' => 'Active'],
       ['code' => '{AGENCY_PAN}', 'desc' => 'Agency PAN Number', 'category' => 'Agency Information', 'source' => 'Agency Profile', 'example' => 'AAECT1234F', 'status' => 'Active'],
       ['code' => '{COMPANY_NAME}', 'desc' => 'Company / Client Name', 'category' => 'Company Information', 'source' => 'Company Profile', 'example' => @$account->company_name ?: @$account->name ?: '4Bell Technology', 'status' => 'Active'],
-      ['code' => '{COMPANY_ADDRESS}', 'desc' => 'Company Address', 'category' => 'Company Information', 'source' => 'Company Profile', 'example' => @$account->address ?: 'Tower A, 4th Floor, Sector-135, Noida, UP 201301', 'status' => 'Active'],
+      ['code' => '{COMPANY_ADDRESS}', 'desc' => 'Company Address', 'category' => 'Company Information', 'source' => 'Company Profile', 'example' => $agencyPreviewCompanyAddress, 'status' => 'Active'],
       ['code' => '{COMPANY_CONTACT}', 'desc' => 'Company Contact Person', 'category' => 'Company Information', 'source' => 'Company Profile', 'example' => optional(auth()->user())->name ?: 'Vibhanshu Jaiswal', 'status' => 'Active'],
       ['code' => '{COMPANY_EMAIL}', 'desc' => 'Company Email', 'category' => 'Company Information', 'source' => 'Company Profile', 'example' => optional(auth()->user())->email ?: 'company@example.com', 'status' => 'Active'],
       ['code' => '{JOB_TITLE}', 'desc' => 'Job Title', 'category' => 'Job Information', 'source' => 'Job Details', 'example' => 'Senior PHP Developer', 'status' => 'Active'],
       ['code' => '{JOB_ID}', 'desc' => 'Job ID / Reference', 'category' => 'Job Information', 'source' => 'Job Details', 'example' => 'JW/2026/087', 'status' => 'Active'],
       ['code' => '{HIRING_TYPE}', 'desc' => 'Hiring Type', 'category' => 'Job Information', 'source' => 'Job Details', 'example' => 'Full-Time', 'status' => 'Active'],
       ['code' => '{JOINING_DATE}', 'desc' => 'Expected Joining Date', 'category' => 'Job Information', 'source' => 'Job Details', 'example' => '01 Sep 2026', 'status' => 'Active'],
-      ['code' => '{FULLTIME_FEE}', 'desc' => 'Full-Time Success Fee', 'category' => 'Commercial Terms', 'source' => 'Commercial Setup', 'example' => number_format((float) (@$aatTerms->fulltime_success_fee_percentage ?? 8.33), 2).'% of Annual CTC', 'status' => 'Active'],
+      ['code' => '{FULLTIME_FEE}', 'desc' => 'Full-Time Success Fee', 'category' => 'Commercial Terms', 'source' => 'Commercial Setup', 'example' => $aatFulltimeFeeLabel, 'status' => 'Active'],
       ['code' => '{FULLTIME_PAYMENT_DAYS}', 'desc' => 'Full-Time Payment Timeline', 'category' => 'Commercial Terms', 'source' => 'Commercial Setup', 'example' => (int) (@$aatTerms->fulltime_payment_terms_days ?? 30).' Days from Invoice', 'status' => 'Active'],
       ['code' => '{FULLTIME_REPLACEMENT_DAYS}', 'desc' => 'Full-Time Replacement Period', 'category' => 'Commercial Terms', 'source' => 'Commercial Setup', 'example' => (int) (@$aatTerms->fulltime_replacement_period_days ?? 90).' Days', 'status' => 'Active'],
-      ['code' => '{CONTRACT_RATE}', 'desc' => 'Contract Agency Rate', 'category' => 'Commercial Terms', 'source' => 'Commercial Setup', 'example' => $aatCurrencyCode.' '.number_format((float) (@$aatTerms->contract_rate_amount ?? 80000), 2).' / Month', 'status' => 'Active'],
+      ['code' => '{CONTRACT_RATE}', 'desc' => 'Contract Agency Rate', 'category' => 'Commercial Terms', 'source' => 'Commercial Setup', 'example' => $aatContractRateDisplay, 'status' => 'Active'],
       ['code' => '{CONTRACT_MIN_DURATION}', 'desc' => 'Minimum Contract Duration', 'category' => 'Commercial Terms', 'source' => 'Commercial Setup', 'example' => (int) (@$aatTerms->contract_min_duration_months ?? 3).' Months', 'status' => 'Active'],
       ['code' => '{TODAY_DATE}', 'desc' => "Today's Date", 'category' => 'Agreement System', 'source' => 'System', 'example' => date('d M Y'), 'status' => 'Active'],
       ['code' => '{AGREEMENT_VERSION}', 'desc' => 'Agreement Version', 'category' => 'Agreement System', 'source' => 'System', 'example' => 'Version '.$aatVersion, 'status' => 'Active'],
@@ -1500,7 +1516,27 @@ input[type="radio"]:checked {
             <div class="apv-tools"><select class="apv-select" style="width:110px;"><option>Fit Width</option><option>100%</option></select><button type="button" class="aat-btn" id="agencyPreviewPrint">Print</button><button type="button" class="aat-btn">⛶</button></div>
           </div>
           <div class="apv-alert">This preview shows exactly how the agreement will appear to the selected agency.</div>
-          <div class="apv-document" id="agencyPreviewDocument">{!! $agencyPreviewAgreementHtml !!}</div>
+          <div class="apv-document" id="agencyPreviewDocument">
+            <div class="apv-party-intro">
+              <h2>AGENCY TERMS &amp; CONDITIONS</h2>
+              <p class="apv-effective">This Agreement is made and executed on <b>{{ $agencyPreviewValues['{TODAY_DATE}'] }}</b> (<b>“Effective Date”</b>) by and between:</p>
+              <div class="apv-party-grid">
+                <div class="apv-party-box">
+                  <div class="apv-party-name">{{ $agencyPreviewValues['{COMPANY_NAME}'] }}</div>
+                  <div class="apv-party-address">{{ $agencyPreviewValues['{COMPANY_ADDRESS}'] }}</div>
+                  <div class="apv-party-role">(hereinafter referred to as the <b>“Client”</b>)</div>
+                </div>
+                <div class="apv-party-and">AND</div>
+                <div class="apv-party-box">
+                  <div class="apv-party-name">{{ $agencyPreviewValues['{AGENCY_NAME}'] }}</div>
+                  <div class="apv-party-address">{{ $agencyPreviewValues['{AGENCY_ADDRESS}'] }}</div>
+                  <div class="apv-party-role">(hereinafter referred to as the <b>“Agency”</b>)</div>
+                </div>
+              </div>
+              <p class="apv-party-closing">The Client and the Agency are hereinafter collectively referred to as the <b>“Parties”</b> and individually as a <b>“Party”</b>.</p>
+            </div>
+            {!! $agencyPreviewAgreementHtml !!}
+          </div>
           <pre class="apv-document apv-plain" id="agencyPreviewPlain">{{ trim(strip_tags($agencyPreviewAgreementHtml)) }}</pre>
         </main>
         <aside>
@@ -1531,9 +1567,9 @@ input[type="radio"]:checked {
       </div>
       <div class="aat-commercial-grid">
         <div class="aat-commercial purple">
-          <div class="aat-service-head"><div class="aat-service-title"><span class="aat-avatar"><svg viewBox="0 0 24 24"><circle cx="12" cy="7" r="4"/><path d="M4 21v-2a8 8 0 0 1 16 0v2"/></svg></span>Full-Time Hiring</div><span class="aat-tag">{{ ucfirst(@$aatTerms->fulltime_fee_model ?: 'percentage') }} Based</span></div>
+          <div class="aat-service-head"><div class="aat-service-title"><span class="aat-avatar"><svg viewBox="0 0 24 24"><circle cx="12" cy="7" r="4"/><path d="M4 21v-2a8 8 0 0 1 16 0v2"/></svg></span>Full-Time Hiring</div><span class="aat-tag">{{ $aatFulltimeFeeModel === 'fixed' ? 'Fixed Fee' : 'Percentage Based' }}</span></div>
           <div class="aat-rows">
-            <div class="aat-row"><span class="label">Success Fee</span><span class="value">{{ number_format((float) (@$aatTerms->fulltime_success_fee_percentage ?? 8.33), 2) }}% of Annual CTC</span></div>
+            <div class="aat-row"><span class="label">Success Fee</span><span class="value">{{ $aatFulltimeFeeLabel }}</span></div>
             <div class="aat-row"><span class="label">Payment Timeline</span><span class="value">{{ (int) (@$aatTerms->fulltime_payment_terms_days ?? 30) }} Days from Invoice</span></div>
             <div class="aat-row"><span class="label">Replacement Period</span><span class="value">{{ (int) (@$aatTerms->fulltime_replacement_period_days ?? 90) }} Days</span></div>
             <div class="aat-row"><span class="label">Basis</span><span class="value">Annual Fixed CTC</span></div>
@@ -1544,7 +1580,7 @@ input[type="radio"]:checked {
           <div class="aat-service-head"><div class="aat-service-title orange"><span class="aat-avatar orange"><svg viewBox="0 0 24 24"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></span>Contract Hiring</div><span class="aat-tag orange">{{ ucfirst(@$aatTerms->contract_billing_model ?: 'monthly') }} Billing</span></div>
           <div class="aat-rows">
             <div class="aat-row"><span class="label">Billing Model</span><span class="value">{{ ucfirst(@$aatTerms->contract_billing_model ?: 'monthly') }} Rate</span></div>
-            <div class="aat-row"><span class="label">Agency Rate</span><span class="value">{{ $aatCurrencyCode }} {{ number_format((float) (@$aatTerms->contract_rate_amount ?? 80000), 2) }} / Month</span></div>
+            <div class="aat-row"><span class="label">Agency Rate</span><span class="value">{{ $aatContractRateDisplay }}</span></div>
             <div class="aat-row"><span class="label">Payment Timeline</span><span class="value">{{ (int) (@$aatTerms->contract_payment_terms_days ?? 30) }} Days from Invoice</span></div>
             <div class="aat-row"><span class="label">Minimum Contract Duration</span><span class="value">{{ (int) (@$aatTerms->contract_min_duration_months ?? 3) }} Months</span></div>
             <div class="aat-row"><span class="label">Replacement Policy</span><span class="value">{{ @$aatTerms->contract_replacement_policy ?: 'As per Contract Terms' }}</span></div>
@@ -1583,15 +1619,17 @@ input[type="radio"]:checked {
               <div class="aat-edit-section-title"><span class="aat-avatar"><svg viewBox="0 0 24 24"><circle cx="12" cy="7" r="4"/><path d="M4 21v-2a8 8 0 0 1 16 0v2"/></svg></span><div><h4>Full-Time Hiring Commercial Terms</h4><p>Configure terms applicable for full-time / permanent placements.</p></div></div>
             </div>
             <div class="aat-edit-grid">
-              <div class="aat-field"><label>Pricing Model</label><select name="fulltime_fee_model"><option value="percentage" {{ (@$aatTerms->fulltime_fee_model ?: 'percentage') === 'percentage' ? 'selected' : '' }}>Percentage of CTC</option><option value="fixed" {{ @$aatTerms->fulltime_fee_model === 'fixed' ? 'selected' : '' }}>Fixed Fee</option></select></div>
-              <div class="aat-field"><label>Success Fee <span class="req">*</span></label><div class="aat-input-suffix"><input name="fulltime_success_fee_percentage" type="number" step="0.01" value="{{ @$aatTerms->fulltime_success_fee_percentage ?? 8.33 }}"><span>%</span></div></div>
+              <div class="aat-field"><label>Pricing Model</label><select name="fulltime_fee_model"><option value="percentage" {{ $aatFulltimeFeeModel === 'percentage' ? 'selected' : '' }}>Percentage of CTC</option><option value="fixed" {{ $aatFulltimeFeeModel === 'fixed' ? 'selected' : '' }}>Fixed Fee</option></select></div>
+              <div class="aat-field" data-fulltime-percentage-field><label>Success Fee <span class="req">*</span></label><div class="aat-input-suffix"><input name="fulltime_success_fee_percentage" type="number" step="0.01" value="{{ @$aatTerms->fulltime_success_fee_percentage ?? 8.33 }}"><span>%</span></div></div>
+              <div class="aat-field" data-fulltime-fixed-field><label>Success Fee <span class="req">*</span></label><div class="aat-input-group aat-fixed-fee-group"><select name="fulltime_fixed_fee_currency"><option value="4" {{ (@$aatTerms->fulltime_fixed_fee_currency ?? 4) == 4 ? 'selected' : '' }}>INR</option><option value="0" {{ @$aatTerms->fulltime_fixed_fee_currency == 0 ? 'selected' : '' }}>INR</option><option value="1" {{ @$aatTerms->fulltime_fixed_fee_currency == 1 ? 'selected' : '' }}>EUR</option><option value="3" {{ @$aatTerms->fulltime_fixed_fee_currency == 3 ? 'selected' : '' }}>GBP</option></select><input name="fulltime_fixed_fee_amount" type="number" step="0.01" placeholder="Enter fixed amount" value="{{ @$aatTerms->fulltime_fixed_fee_amount }}"></div><select name="fulltime_fixed_fee_unit" style="margin-top:8px;"><option value="Per Hire" {{ $aatFulltimeFixedUnit === 'Per Hire' ? 'selected' : '' }}>Per Hire</option><option value="Per Joining" {{ $aatFulltimeFixedUnit === 'Per Joining' ? 'selected' : '' }}>Per Joining</option></select></div>
               <div class="aat-field"><label>Fee Cap (Optional)</label><div class="aat-input-group"><select name="fulltime_fee_cap_currency"><option value="4" {{ (@$aatTerms->fulltime_fee_cap_currency ?? 4) == 4 ? 'selected' : '' }}>INR</option><option value="0" {{ @$aatTerms->fulltime_fee_cap_currency == 0 ? 'selected' : '' }}>INR</option><option value="1" {{ @$aatTerms->fulltime_fee_cap_currency == 1 ? 'selected' : '' }}>EUR</option><option value="3" {{ @$aatTerms->fulltime_fee_cap_currency == 3 ? 'selected' : '' }}>GBP</option></select><input name="fulltime_fee_cap_amount" type="number" step="0.01" placeholder="Enter maximum cap" value="{{ @$aatTerms->fulltime_fee_cap_amount }}"></div></div>
               <div class="aat-field"><label>Payment Timeline <span class="req">*</span></label><div class="aat-input-suffix"><input name="fulltime_payment_terms_days" type="number" value="{{ @$aatTerms->fulltime_payment_terms_days ?? 30 }}"><span>Days</span></div><select name="fulltime_payment_timeline_from" style="margin-top:8px;"><option>{{ @$aatTerms->fulltime_payment_timeline_from ?: 'From invoice date' }}</option><option>From invoice date</option><option>From candidate joining date</option></select></div>
               <div class="aat-field"><label>Replacement Period <span class="req">*</span></label><div class="aat-input-suffix"><input name="fulltime_replacement_period_days" type="number" value="{{ @$aatTerms->fulltime_replacement_period_days ?? 90 }}"><span>Days</span></div><select name="fulltime_replacement_from" style="margin-top:8px;"><option>{{ @$aatTerms->fulltime_replacement_from ?: 'From candidate joining date' }}</option><option>From candidate joining date</option><option>From invoice date</option></select></div>
               <div class="aat-field"><label>Notice Period (If any)</label><select name="fulltime_notice_period"><option>{{ @$aatTerms->fulltime_notice_period ?: 'As per client notice period' }}</option><option>As per client notice period</option><option>Not applicable</option></select></div>
               <div class="aat-field"><label>Basis of Calculation</label><select name="fulltime_basis"><option>{{ @$aatTerms->fulltime_basis ?: 'Annual Fixed CTC' }}</option><option>Annual Fixed CTC</option><option>Annual Gross CTC</option></select></div>
               <div class="aat-field"><label>Invoice Raising</label><select name="fulltime_invoice_raising"><option>{{ @$aatTerms->fulltime_invoice_raising ?: 'After candidate joins' }}</option><option>After candidate joins</option><option>After offer acceptance</option></select></div>
-              <div class="aat-calc"><h5>Example Calculation</h5><div class="aat-calc-row"><div class="aat-calc-cell">Annual CTC<b>₹ 12,00,000</b></div><div>×</div><div class="aat-calc-cell">Success Fee<b>{{ number_format((float) (@$aatTerms->fulltime_success_fee_percentage ?? 8.33), 2) }}%</b></div><div>=</div><div class="aat-calc-cell">Agency Fee<b>₹ {{ number_format(1200000 * ((float) (@$aatTerms->fulltime_success_fee_percentage ?? 8.33)) / 100) }}</b></div></div></div>
+              <div class="aat-calc" data-fulltime-percentage-calc><h5>Example Calculation</h5><div class="aat-calc-row"><div class="aat-calc-cell">Annual CTC<b>₹ 12,00,000</b></div><div>×</div><div class="aat-calc-cell">Success Fee<b>{{ number_format((float) (@$aatTerms->fulltime_success_fee_percentage ?? 8.33), 2) }}%</b></div><div>=</div><div class="aat-calc-cell">Agency Fee<b>₹ {{ number_format(1200000 * ((float) (@$aatTerms->fulltime_success_fee_percentage ?? 8.33)) / 100) }}</b></div></div></div>
+              <div class="aat-calc" data-fulltime-fixed-calc><h5>Example Calculation</h5><div class="aat-calc-row simple"><div class="aat-calc-cell">Fixed Fee<b>{{ $aatFulltimeFixedLabel }}</b></div><div>=</div><div class="aat-calc-cell">Agency Fee<b>{{ $aatFulltimeFixedLabel }}</b></div></div></div>
             </div>
           </section>
 
@@ -1602,7 +1640,7 @@ input[type="radio"]:checked {
             <div class="aat-edit-grid">
               <div class="aat-field"><label>Pricing Model</label><select name="contract_billing_model"><option value="monthly" {{ (@$aatTerms->contract_billing_model ?: 'monthly') === 'monthly' ? 'selected' : '' }}>Monthly Rate</option><option value="hourly" {{ @$aatTerms->contract_billing_model === 'hourly' ? 'selected' : '' }}>Hourly Rate</option></select></div>
               <div class="aat-field"><label>Agency Rate Type <span class="req">*</span></label><select name="contract_agency_rate_type"><option>{{ @$aatTerms->contract_agency_rate_type ?: 'Fixed Rate' }}</option><option>Fixed Rate</option><option>Markup</option></select></div>
-              <div class="aat-field"><label>Default Monthly Rate <span class="req">*</span></label><div class="aat-input-group"><select name="contract_rate_currency"><option value="4" {{ (@$aatTerms->contract_rate_currency ?? 4) == 4 ? 'selected' : '' }}>INR</option><option value="1" {{ @$aatTerms->contract_rate_currency == 1 ? 'selected' : '' }}>EUR</option><option value="3" {{ @$aatTerms->contract_rate_currency == 3 ? 'selected' : '' }}>GBP</option></select><input name="contract_rate_amount" type="number" step="0.01" value="{{ @$aatTerms->contract_rate_amount ?? 80000 }}"></div></div>
+              <div class="aat-field"><label>Default Monthly Rate <span class="req">*</span></label><input name="contract_rate_display" type="text" value="{{ $aatContractRateDisplay }}" placeholder="Depend upon job requirements"><input name="contract_rate_currency" type="hidden" value="{{ @$aatTerms->contract_rate_currency ?? 4 }}"><input name="contract_rate_amount" type="hidden" value="{{ @$aatTerms->contract_rate_amount ?? 80000 }}"></div>
               <div class="aat-field"><label>Billing Cycle <span class="req">*</span></label><select name="contract_billing_cycle"><option>{{ @$aatTerms->contract_billing_cycle ?: 'Monthly in Advance' }}</option><option>Monthly in Advance</option><option>Monthly in Arrears</option></select></div>
               <div class="aat-field"><label>Payment Timeline <span class="req">*</span></label><div class="aat-input-suffix"><input name="contract_payment_terms_days" type="number" value="{{ @$aatTerms->contract_payment_terms_days ?? 30 }}"><span>Days</span></div></div>
               <div class="aat-field"><label>Minimum Contract Duration <span class="req">*</span></label><div class="aat-input-suffix"><input name="contract_min_duration_months" type="number" value="{{ @$aatTerms->contract_min_duration_months ?? 3 }}"><span>Months</span></div></div>
@@ -1611,7 +1649,7 @@ input[type="radio"]:checked {
               <div class="aat-field"><label>Early Termination</label><select name="contract_early_termination"><option>{{ @$aatTerms->contract_early_termination ?: 'As per contract terms' }}</option><option>As per contract terms</option><option>30 days notice</option></select></div>
               <div class="aat-field"><label>Invoice Raising</label><select name="contract_invoice_raising"><option>{{ @$aatTerms->contract_invoice_raising ?: 'Monthly in Advance' }}</option><option>Monthly in Advance</option><option>Monthly in Arrears</option></select></div>
               <div class="aat-field"><label>Escalation / Price Revision</label><select name="contract_escalation_policy"><option>{{ @$aatTerms->contract_escalation_policy ?: 'As per contract terms' }}</option><option>As per contract terms</option><option>Annual revision</option></select></div>
-              <div class="aat-calc orange"><h5>Example Calculation</h5><div class="aat-calc-row"><div class="aat-calc-cell">Monthly Rate<b>₹ {{ number_format((float) (@$aatTerms->contract_rate_amount ?? 80000)) }}</b></div><div>+</div><div class="aat-calc-cell">GST (18%)<b>₹ {{ number_format(((float) (@$aatTerms->contract_rate_amount ?? 80000)) * .18) }}</b></div><div>=</div><div class="aat-calc-cell">Total Payable / Month<b>₹ {{ number_format(((float) (@$aatTerms->contract_rate_amount ?? 80000)) * 1.18) }}</b></div></div></div>
+              <div class="aat-calc orange"><h5>Example Calculation</h5><div class="aat-calc-row simple"><div class="aat-calc-cell">Default Monthly Rate<b>{{ $aatContractRateDisplay }}</b></div><div>=</div><div class="aat-calc-cell">Final Agency Rate<b>Defined per job requirement</b></div></div></div>
             </div>
           </section>
 
@@ -1731,66 +1769,21 @@ input[type="radio"]:checked {
             <div class="aga-title-wrap">
               <span class="aat-hero-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 3h9l3 3v15H6z"/><path d="M14 3v4h4M9 12h6M9 16h4"/><path d="m12 18 4-4"/></svg></span>
               <div>
-                <h3>Edit Agreement <span class="aat-pill v">Version {{ $aatVersion }}</span> <span class="aat-pill {{ $aatActive ? 'ok' : 'v' }}">{{ $aatActive ? 'Active' : 'Inactive' }}</span></h3>
+                <h3>Edit Agreement</h3>
                 <p>Create and manage the master agreement that will be shared with agencies.</p>
               </div>
             </div>
             <div class="aga-head-actions">
-              <div class="aga-meta">
-                @if($aatUpdated)<span>Last updated: <b>{{ date('d M Y, h:i A', strtotime($aatUpdated)) }}</b></span>@endif
-                <span>Updated by: <b>{{ $aatUpdatedBy }}</b></span>
-              </div>
               <button type="button" class="aat-btn" id="agencyAgreementPreviewDrawer"><svg viewBox="0 0 24 24"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg>Preview as Agency</button>
-              <button type="button" class="aat-btn"><svg viewBox="0 0 24 24"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg>Preview</button>
               <button type="button" class="aat-btn primary updateCompanyTermsTop"><svg viewBox="0 0 24 24"><path d="m20 6-11 11-5-5"/></svg>Save &amp; Publish</button>
               <button type="button" class="aga-close" id="closeAgencyAgreementDrawer" aria-label="Close agreement editor">&times;</button>
             </div>
           </div>
-          <div class="aga-info">
-            <span>This is the master agreement template. Changes here will create a new version when published.</span>
-            <a href="javascript:;" class="aat-btn">Learn about versioning</a>
-          </div>
           <div class="aga-shell">
-            <aside class="aga-side">
-              <h4>Document Outline</h4>
-              <input type="text" class="aga-search" placeholder="Search sections...">
-              <ul class="aga-outline">
-                <li class="active"><span>1. DEFINITIONS</span><span>⌄</span></li>
-                <li><span>2. SCOPE OF SERVICES</span><span>⌄</span></li>
-                <li><span>3. AGENCY OBLIGATIONS</span><span>⌄</span></li>
-                <li><span>4. CANDIDATE SUBMISSION</span><span>⌃</span></li>
-              </ul>
-              <ul class="aga-sublist">
-                <li>4.1 Candidate Source</li>
-                <li>4.2 Submission Process</li>
-                <li>4.3 Representation &amp; Warranties</li>
-              </ul>
-              <ul class="aga-outline">
-                <li><span>5. COMMERCIAL TERMS</span><span>⌄</span></li>
-                <li><span>6. REPLACEMENT POLICY</span><span>⌄</span></li>
-                <li><span>7. PAYMENT TERMS</span><span>⌄</span></li>
-                <li><span>8. CONFIDENTIALITY</span><span>⌄</span></li>
-                <li><span>9. TERMINATION</span><span>⌄</span></li>
-                <li><span>10. LIMITATION OF LIABILITY</span><span>⌄</span></li>
-                <li><span>11. GOVERNING LAW</span><span>⌄</span></li>
-                <li><span>12. MISCELLANEOUS</span><span>⌄</span></li>
-              </ul>
-              <button type="button" class="aga-add-section">+ Add New Section</button>
-              <div class="aga-settings">
-                <h4>Document Settings</h4>
-                <label>Font Family</label>
-                <select><option>Poppins</option></select>
-                <label>Base Font Size</label>
-                <select><option>14 px</option><option>13 px</option><option>12 px</option></select>
-                <label>Line Height</label>
-                <select><option>1.6</option><option>1.5</option><option>1.4</option></select>
-              </div>
-            </aside>
             <main class="aga-main">
               <div class="aga-tabs">
                 <div class="aga-tabs-left">
                   <button type="button" class="aga-tab active">Edit</button>
-                  <button type="button" class="aga-tab" id="agencyAgreementPreviewTab">Preview</button>
                   <button type="button" class="aga-tab">Compare with v{{ $aatVersion }}</button>
                 </div>
                 <div class="aga-tools">
@@ -1814,7 +1807,7 @@ input[type="radio"]:checked {
             <aside class="aga-right">
               <h4>Insert Variables</h4>
               <p style="margin:0 0 12px;color:#53617f;font-size:11px;">Click or drag variables to insert in the content.</p>
-              <div class="aga-var-tabs"><span class="active">All Variables</span><span>By Category</span></div>
+              <div class="aga-var-tabs"><span class="active">All Variables</span></div>
               <input type="text" class="aga-search" placeholder="Search variables...">
               <div class="aga-var-list">
                 @foreach($atcVars as $code => $desc)
@@ -4558,6 +4551,7 @@ $(document).ready(function(){
             $('#agencyCommercialDrawerOverlay').addClass('show');
             $('#agency_commercial_terms_form').addClass('open').attr('aria-hidden', 'false');
             $('body').addClass('modal-open');
+            syncFulltimeFeeModelFields();
         }
         function closeAgencyCommercialDrawer() {
             $('#agencyCommercialDrawerOverlay').removeClass('show');
@@ -4570,6 +4564,13 @@ $(document).ready(function(){
         $('body').on('click', '#cancelAgencyCommercialTerms, #closeAgencyCommercialDrawer, #agencyCommercialDrawerOverlay, .aat-edit-alert .aat-drawer-close', function(){
             closeAgencyCommercialDrawer();
         });
+        function syncFulltimeFeeModelFields() {
+            var isFixedFee = $('[name="fulltime_fee_model"]').val() === 'fixed';
+            $('[data-fulltime-percentage-field], [data-fulltime-percentage-calc]').toggle(!isFixedFee);
+            $('[data-fulltime-fixed-field], [data-fulltime-fixed-calc]').toggle(isFixedFee);
+        }
+        $('body').on('change', '[name="fulltime_fee_model"]', syncFulltimeFeeModelFields);
+        syncFulltimeFeeModelFields();
         $('body').on('click', '#saveAgencyCommercialTerms', function(){
             var $button = $(this);
             var form = document.getElementById('agency_commercial_terms_form');
@@ -4612,8 +4613,8 @@ $(document).ready(function(){
         $('body').on('click', '#agencyAgreementPreviewDrawer, #agencyAgreementPreviewTab', function(){
             openAgencyPreviewDrawer();
         });
-        $('body').on('click', '.aga-var-item code', function(){
-            var variableCode = $(this).text();
+        $('body').on('click', '.aga-var-item', function(){
+            var variableCode = $(this).find('code').text();
             if (window.CKEDITOR && CKEDITOR.instances.kt_docs_tinymce_hidden) {
                 CKEDITOR.instances.kt_docs_tinymce_hidden.insertText(variableCode);
             }
@@ -4710,6 +4711,27 @@ $(document).ready(function(){
             $(this).closest('.avd-info').hide();
         });
         var agencyPreviewValues = @json($agencyPreviewValues);
+        function escapeAgencyPreviewText(value) {
+            return $('<div>').text(value || '').html();
+        }
+        function buildAgencyPreviewIntroHtml() {
+            var todayDate = escapeAgencyPreviewText(agencyPreviewValues['{TODAY_DATE}']);
+            var companyName = escapeAgencyPreviewText(agencyPreviewValues['{COMPANY_NAME}']);
+            var companyAddress = escapeAgencyPreviewText(agencyPreviewValues['{COMPANY_ADDRESS}']);
+            var agencyName = escapeAgencyPreviewText(agencyPreviewValues['{AGENCY_NAME}']);
+            var agencyAddress = escapeAgencyPreviewText(agencyPreviewValues['{AGENCY_ADDRESS}']);
+
+            return '<div class="apv-party-intro">'
+                + '<h2>AGENCY TERMS &amp; CONDITIONS</h2>'
+                + '<p class="apv-effective">This Agreement is made and executed on <b>' + todayDate + '</b> (<b>“Effective Date”</b>) by and between:</p>'
+                + '<div class="apv-party-grid">'
+                + '<div class="apv-party-box"><div class="apv-party-name">' + companyName + '</div><div class="apv-party-address">' + companyAddress + '</div><div class="apv-party-role">(hereinafter referred to as the <b>“Client”</b>)</div></div>'
+                + '<div class="apv-party-and">AND</div>'
+                + '<div class="apv-party-box"><div class="apv-party-name">' + agencyName + '</div><div class="apv-party-address">' + agencyAddress + '</div><div class="apv-party-role">(hereinafter referred to as the <b>“Agency”</b>)</div></div>'
+                + '</div>'
+                + '<p class="apv-party-closing">The Client and the Agency are hereinafter collectively referred to as the <b>“Parties”</b> and individually as a <b>“Party”</b>.</p>'
+                + '</div>';
+        }
         function populateAgencyPreviewHtml(sourceHtml) {
             var populatedHtml = sourceHtml || '';
             Object.keys(agencyPreviewValues).forEach(function(variableCode){
@@ -4723,8 +4745,9 @@ $(document).ready(function(){
                 sourceHtml = CKEDITOR.instances.kt_docs_tinymce_hidden.getData();
             }
             var populatedHtml = populateAgencyPreviewHtml(sourceHtml);
-            $('#agencyPreviewDocument').html(populatedHtml);
-            $('#agencyPreviewPlain').text($('<div>').html(populatedHtml).text().replace(/\n{3,}/g, "\n\n").trim());
+            var previewHtml = buildAgencyPreviewIntroHtml() + populatedHtml;
+            $('#agencyPreviewDocument').html(previewHtml);
+            $('#agencyPreviewPlain').text($('<div>').html(previewHtml).text().replace(/\n{3,}/g, "\n\n").trim());
         }
         function openAgencyPreviewDrawer() {
             refreshAgencyPreview();
