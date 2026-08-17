@@ -52,7 +52,7 @@ class ServiceCompanyBaseController extends Controller
      */
     public function __get($name)
     {
-        return $this->data[$name];
+        return $this->data[$name] ?? null;
     }
 
     /**

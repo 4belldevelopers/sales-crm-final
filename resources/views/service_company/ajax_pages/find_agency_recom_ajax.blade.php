@@ -26,13 +26,10 @@
             }
           
             $from_company = $company_id = auth()->user()->company_id;
-           //dd(($row));
-           $client_data = GeneralMethod::getClientIdCompany($row->id);
+           $client_data = $row->_client_info ?? GeneralMethod::getClientIdCompany($row->id);
            $row->client_id =  $client_data->client_id ?? null;
 
-           $relationget =  GeneralMethod::getAgencyRelationData($from_company,$row->id);
-
-          // dd($relationget);
+           $relationget =  $row->_relation_info ?? GeneralMethod::getAgencyRelationData($from_company,$row->id);
 
            $from_company_id = $relationget->from_company_id ?? null;
            $recommendation_id = $relationget->to_company_id ?? null;
@@ -100,10 +97,10 @@
                 }
             }
 
-            $Sizecount = DB::table('users')->where('company_id', $row->id)->count();
-            $agencyJobsCount =  GeneralMethod::agencyJobsCount($row->id);
+            $Sizecount = $row->_user_size_count ?? DB::table('users')->where('company_id', $row->id)->count();
+            $agencyJobsCount =  $row->_agency_jobs_count ?? GeneralMethod::agencyJobsCount($row->id);
             $activeJobs = $agencyJobsCount->all_jobs ?? 0;
-            $agencyCandidatesCount =  GeneralMethod::agencyJobsCandidatesCount($row->id);
+            $agencyCandidatesCount =  $row->_agency_candidates_count ?? GeneralMethod::agencyJobsCandidatesCount($row->id);
             $all_candidates = $agencyCandidatesCount->all_candidates ?? 0;
             $all_candidate_bench = $agencyCandidatesCount->all_candidate_bench ?? 0;
 
