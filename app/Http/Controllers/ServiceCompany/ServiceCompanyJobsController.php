@@ -5466,7 +5466,7 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
 
             return Reply::redirect(route('service_company.jobs.index'), __('menu.jobs').' '.__('messages.createdSuccessfully'));
         } catch (\Throwable $e) {
-            dd($e->getMessage(),$e);
+            dd($e->getMessage(), $e);
             \Log::error('jobs store() transaction failed: '.$e->getMessage(), ['exception' => $e]);
 
             return Reply::dataOnly(['status' => 'error', 'msgType' => 'danger', 'message' => 'Submission failed. Please try again.']);
@@ -7888,11 +7888,15 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
         $versionKey = 'allrecommendedagency_version_user_'.$this->user->id;
         $version = cache()->get($versionKey, 1);
         $cacheKeySet = 'ats:allrecommendedagency:'.$this->user->id.':'.$version.':'.md5(json_encode($cachePayload));
-        /* ----------------------------
-        ⚡ Check DragonflyDB first
-        ----------------------------- */
+        $etag = '"v3:recom:'.md5($cacheKeySet).'"';
+        if (request()->header('If-None-Match') === $etag) {
+            return response(null, 304)->header('ETag', $etag);
+        }
+
         if (cache()->has($cacheKeySet)) {
-            // return response()->json(cache()->get($cacheKeySet));
+            return response()->json(cache()->get($cacheKeySet))
+                ->header('ETag', $etag)
+                ->header('Cache-Control', 'private, max-age=0, must-revalidate');
         }
 
         //  dd("dkjdjdjd");
@@ -7939,12 +7943,8 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
                 if (! empty($skill)) {
 
                     $skillQueries[] = [
-
-                        'wildcard' => [
-
-                            'skill_name' => [
-                                'value' => '*'.$skill.'*',
-                            ],
+                        'match_phrase_prefix' => [
+                            'skill_name' => $skill,
                         ],
                     ];
                 }
@@ -8363,6 +8363,43 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
             $data[] = $source;
         }
 
+        if (! empty($data)) {
+            $agencyIds = collect($data)->pluck('id')->filter()->unique()->values()->toArray();
+
+            if (! empty($agencyIds)) {
+                // Batch 1: Fetch self-company client info for all recommended agencies
+                $clientsMap = GeneralMethod::batchGetClientIdCompany($agencyIds);
+
+                // Batch 2: Fetch relation data between employer company and recommended agencies
+                $relationsMap = GeneralMethod::batchGetAgencyRelationData($company_id, $agencyIds);
+
+                // Batch 3: User size counts via single SQL query
+                // Intent: Single query counting users per agency company
+                // Tenancy: Filtered by company_id in $agencyIds
+                $userSizeCounts = DB::table('users')
+                    ->select('company_id', DB::raw('count(*) as total'))
+                    ->whereIn('company_id', $agencyIds)
+                    ->groupBy('company_id')
+                    ->pluck('total', 'company_id')
+                    ->toArray();
+
+                // Batch 4 & 5: Active jobs and candidates counts per agency
+                $agencyJobsMap = GeneralMethod::batchAgencyJobsCount($agencyIds);
+                $agencyCandidatesMap = GeneralMethod::batchAgencyJobsCandidatesCount($agencyIds);
+
+                // Pre-bind batch properties onto $data array objects to eliminate Blade N+1
+                foreach ($data as &$source) {
+                    $cId = $source['id'] ?? null;
+                    $source['_client_info'] = $clientsMap[$cId] ?? null;
+                    $source['_relation_info'] = $relationsMap[$cId] ?? null;
+                    $source['_user_size_count'] = $userSizeCounts[$cId] ?? 0;
+                    $source['_agency_jobs_count'] = $agencyJobsMap[$cId] ?? (object) ['all_jobs' => 0];
+                    $source['_agency_candidates_count'] = $agencyCandidatesMap[$cId] ?? (object) ['all_candidates' => 0, 'all_candidate_bench' => 0];
+                }
+                unset($source);
+            }
+        }
+
         $pagination = [
             'total' => $total,
             'current_page' => $page,
@@ -8384,9 +8421,11 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
             'pagination' => view('service_company.ajax_pages.pagination', compact('pagination'))->render(),
         ];
 
-        // cache()->put($cacheKeySet, $responseData, now()->addMinutes(ALL_RECOMMENDED_AGENCY_TIME));
+        cache()->put($cacheKeySet, $responseData, 3600);
 
-        return response()->json($responseData);
+        return response()->json($responseData)
+            ->header('ETag', $etag)
+            ->header('Cache-Control', 'private, max-age=0, must-revalidate');
 
         $commtypeArr = [1, 2];
         if (! empty($commtype)) {
@@ -9963,6 +10002,44 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
             }, $response['hits']['hits']);
         }
 
+        if (! empty($data)) {
+            $agencyIds = collect($data)->pluck('to_company_id')->filter()->unique()->values()->toArray();
+
+            if (! empty($agencyIds)) {
+                // Batch 1: Fetch self-company client info for all assigned agencies
+                $clientsMap = GeneralMethod::batchGetClientIdCompany($agencyIds);
+
+                // Batch 2: Fetch contact user for assigned job across all agencies
+                // Intent: Single SQL query to retrieve primary contact details per assigned agency
+                // Tenancy: Filtered by users.company_id in $agencyIds and job_assign.job_id = $job_id
+                $contactsList = DB::table('users')
+                    ->join('job_assign', 'job_assign.user_id', '=', 'users.id')
+                    ->select('users.name', 'users.image', 'users.mobile', 'users.email', 'users.company_id')
+                    ->whereIn('users.company_id', $agencyIds)
+                    ->where('job_assign.job_id', $job_id)
+                    ->get();
+
+                $contactsMap = [];
+                foreach ($contactsList as $cnt) {
+                    if (! isset($contactsMap[$cnt->company_id])) {
+                        $contactsMap[$cnt->company_id] = $cnt;
+                    }
+                }
+
+                // Batch 3: Fetch performance metrics (Upload, Interview, Joined) for all assigned agencies
+                $perfMap = GeneralMethod::batchAgencyCandidatesCount($agencyIds, $job_id);
+
+                // Pre-bind batch properties to eliminate Blade loop N+1 queries
+                foreach ($data as &$rowArr) {
+                    $toComId = $rowArr['to_company_id'] ?? null;
+                    $rowArr['_client_info'] = $clientsMap[$toComId] ?? null;
+                    $rowArr['_contact_info'] = $contactsMap[$toComId] ?? null;
+                    $rowArr['_perf_info'] = $perfMap[$toComId] ?? (object) ['Upload' => 0, 'Interview' => 0, 'Joined' => 0];
+                }
+                unset($rowArr);
+            }
+        }
+
         $pagination = [
             'total' => $total,
             'current_page' => $page,
@@ -10389,9 +10466,43 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
                     'matched_skills' => $matchedSkills,
                 ]);
             }, $response['hits']['hits']);
-            //    dd($cacheKey,$data,$cacheTTL);
-            // Cache::put($cacheKey, ['data' => $data,'total' => $total], $cacheTTL);
-            // Cache::put($cacheKey, $data, $cacheTTL);
+        }
+
+        if (! empty($data)) {
+            $agencyIds = collect($data)->pluck('id')->filter()->unique()->values()->toArray();
+
+            if (! empty($agencyIds)) {
+                // Batch 1: Fetch self-company client info for all registered agencies
+                $clientsMap = GeneralMethod::batchGetClientIdCompany($agencyIds);
+
+                // Batch 2: Fetch relation data between employer company and registered agencies
+                $relationsMap = GeneralMethod::batchGetAgencyRelationData($company_id, $agencyIds);
+
+                // Batch 3: User size counts via single SQL query
+                // Intent: Single query counting users per agency company
+                // Tenancy: Filtered by company_id in $agencyIds
+                $userSizeCounts = DB::table('users')
+                    ->select('company_id', DB::raw('count(*) as total'))
+                    ->whereIn('company_id', $agencyIds)
+                    ->groupBy('company_id')
+                    ->pluck('total', 'company_id')
+                    ->toArray();
+
+                // Batch 4 & 5: Active jobs and candidates counts per agency
+                $agencyJobsMap = GeneralMethod::batchAgencyJobsCount($agencyIds);
+                $agencyCandidatesMap = GeneralMethod::batchAgencyJobsCandidatesCount($agencyIds);
+
+                // Pre-bind batch properties onto $data array objects to eliminate Blade N+1
+                foreach ($data as &$source) {
+                    $cId = $source['id'] ?? null;
+                    $source['_client_info'] = $clientsMap[$cId] ?? null;
+                    $source['_relation_info'] = $relationsMap[$cId] ?? null;
+                    $source['_user_size_count'] = $userSizeCounts[$cId] ?? 0;
+                    $source['_agency_jobs_count'] = $agencyJobsMap[$cId] ?? (object) ['all_jobs' => 0];
+                    $source['_agency_candidates_count'] = $agencyCandidatesMap[$cId] ?? (object) ['all_candidates' => 0, 'all_candidate_bench' => 0];
+                }
+                unset($source);
+            }
         }
 
         $pagination = [
@@ -14240,7 +14351,7 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
         if (count($request->rate_val) > 0 && count($experienceIndexes) > 0) {
             DB::table('commericial_details')->where('company_id', $company_id)->where('commtype', $commType)->delete();
             foreach ($experienceIndexes as $position => $experienceIndex) {
-                if (!array_key_exists($position, $request->rate_val)) {
+                if (! array_key_exists($position, $request->rate_val)) {
                     continue;
                 }
 
