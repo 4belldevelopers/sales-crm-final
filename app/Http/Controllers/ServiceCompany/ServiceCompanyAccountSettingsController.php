@@ -18,6 +18,7 @@ use App\Models\Company;
 use App\Models\Country;
 use App\Models\JobCategory;
 use App\Services\AccountSettingsService;
+use App\Services\AgencyCommercialTermsService;
 use App\Services\ElasticService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
@@ -562,6 +563,7 @@ class ServiceCompanyAccountSettingsController extends ServiceCompanyBaseControll
             $company = Company::findOrFail($company_id);
             $company->terms = @$request->description;
             $company->save();
+            $this->accountSettingsService->flushAccountCache($company_id);
 
             return Reply::dataOnly(['status' => 'success', 'terms' => $company->terms]);
         } elseif ($request->pageterms == 'termsoffer') {
@@ -578,6 +580,7 @@ class ServiceCompanyAccountSettingsController extends ServiceCompanyBaseControll
             }
             $company->{$templateField} = @$request->description;
             $company->save();
+            $this->accountSettingsService->flushAccountCache($company_id);
 
             return Reply::dataOnly(['status' => 'success', 'terms' => $company->{$templateField}, 'template_field' => $templateField]);
         } elseif ($request->pageterms == 'termsagencyoffer') {
@@ -591,8 +594,49 @@ class ServiceCompanyAccountSettingsController extends ServiceCompanyBaseControll
             }
             $company->agency_offer_terms = @$request->description;
             $company->save();
+            $this->accountSettingsService->flushAccountCache($company_id);
 
             return Reply::dataOnly(['status' => 'success', 'terms' => $company->agency_offer_terms]);
+        } elseif ($request->pageterms == 'agency_commercial_terms') {
+            $company_id = auth()->user()->company_id;
+            if (! Schema::hasTable('agency_commercial_terms')) {
+                return Reply::dataOnly([
+                    'status' => 'warning',
+                    'message' => 'Agency commercial terms table is not available yet.',
+                ]);
+            }
+
+            // Intent: save agency-facing commercial terms separately from client Services/Commercials.
+            // Tenancy: Upsert is strictly scoped by the authenticated service company's company_id.
+            $agencyTermsPayload = [
+                'status' => $request->input('status', 'active'),
+                'version' => $request->input('version', '1.0'),
+                'fulltime_fee_model' => $request->input('fulltime_fee_model', 'percentage'),
+                'fulltime_success_fee_percentage' => (float) $request->input('fulltime_success_fee_percentage', 8.33),
+                'fulltime_payment_terms_days' => (int) $request->input('fulltime_payment_terms_days', 30),
+                'fulltime_replacement_period_days' => (int) $request->input('fulltime_replacement_period_days', 90),
+                'contract_billing_model' => $request->input('contract_billing_model', 'monthly'),
+                'contract_rate_amount' => (float) $request->input('contract_rate_amount', 80000),
+                'contract_rate_currency' => (int) $request->input('contract_rate_currency', 4),
+                'contract_payment_terms_days' => (int) $request->input('contract_payment_terms_days', 30),
+                'contract_min_duration_months' => (int) $request->input('contract_min_duration_months', 3),
+                'contract_replacement_policy' => $request->input('contract_replacement_policy', 'As per Contract Terms'),
+                'applies_to' => $request->input('applies_to', 'All Agencies'),
+                'acceptance_required' => $request->boolean('acceptance_required', true) ? 1 : 0,
+                'acceptance_trigger' => $request->input('acceptance_trigger', 'Before Candidate Submission'),
+                'submission_before_acceptance' => $request->boolean('submission_before_acceptance') ? 1 : 0,
+                'effective_from' => $request->input('effective_from', 'Agency Acceptance Date'),
+                'agreement_duration_months' => (int) $request->input('agreement_duration_months', 12),
+                'auto_renewal' => $request->boolean('auto_renewal', true) ? 1 : 0,
+                'agency_can_reject' => $request->boolean('agency_can_reject', true) ? 1 : 0,
+                'updated_by' => auth()->id(),
+                'updated_by_name' => auth()->user()->name ?? null,
+            ];
+
+            app(AgencyCommercialTermsService::class)->upsertForCompany($company_id, $agencyTermsPayload);
+            $this->accountSettingsService->flushAccountCache($company_id);
+
+            return Reply::dataOnly(['status' => 'success', 'message' => 'Agency commercial terms saved successfully.']);
         }
 
         $company_logo_path = '';
