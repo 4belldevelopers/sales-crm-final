@@ -1686,6 +1686,7 @@ input[type="radio"]:checked {
         // Derived defaults — kept here at the include site so the partial stays pure
         // (the previous inline drawer body computed these inline; the agency_commercials_drawer
         // partial expects them as already-resolved values).
+        $aatFulltimeDefaultRate = (float) (@$aatTerms->fulltime_success_fee_percentage ?? 8.33);
         $aatFixedFeeCurrency = (int) (@$aatTerms->fulltime_fixed_fee_currency ?? 4);
         $aatGeneralCurrency = (int) (@$aatTerms->general_currency ?? 4);
         $aatPaymentTerms = (int) (@$aatTerms->fulltime_payment_terms_days ?? 30);
@@ -1715,7 +1716,7 @@ input[type="radio"]:checked {
           'aatActive' => $aatActive,
           'aatVersion' => $aatVersion,
           'aatFulltimeFeeModel' => $aatFulltimeFeeModel,
-          'aatFulltimeDefaultRate' => $aatFulltimeDefaultRate ?? null,
+          'aatFulltimeDefaultRate' => $aatFulltimeDefaultRate,
           'aatFulltimeFixedUnit' => $aatFulltimeFixedUnit,
           'aatFulltimeFixedLabel' => $aatFulltimeFixedLabel,
           'aatFulltimeFixedAmount' => $aatFulltimeFixedAmount,
