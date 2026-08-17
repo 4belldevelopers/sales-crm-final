@@ -1015,6 +1015,7 @@ CREATE TABLE `agency_commercial_terms` (
   `agreement_duration_months` smallint unsigned NOT NULL DEFAULT '12',
   `auto_renewal` tinyint(1) NOT NULL DEFAULT '1',
   `agency_can_reject` tinyint(1) NOT NULL DEFAULT '1',
+  `settings_json` longtext COLLATE utf8mb4_unicode_ci,
   `updated_by` int unsigned DEFAULT NULL,
   `updated_by_name` varchar(191) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT NULL,
