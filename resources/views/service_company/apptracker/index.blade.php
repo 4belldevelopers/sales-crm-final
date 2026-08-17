@@ -1382,17 +1382,16 @@
                 }
 
                 $('#mstatus_id').val(page);
-                 var  mstatus_id = page;
+                var mstatus_id = page;
                 if (mstatus_id) {
                     localStorage.setItem('mstatusValueSet', JSON.stringify(mstatus_id));
                 }
                 localStorage.setItem('currentPage', 1);
-                //  var mstatus_id = localStorage.getItem('mstatusValueSet');
-                //  alert(mstatus_id+page);
+                page_no = 1;
                 var url = "{{ url('/service_company/apptracker/') }}";
                 url = url + '/' + jobIdEncrypt + '/' + page;
                 window.history.pushState('page2', 'Title', url);
-                fetchCandidates();
+                fetchCandidates(1);
 
             })
 
@@ -1648,7 +1647,7 @@
                                     // $('#stage_sub_stage').modal('hide');
                                     $("#stage_sub_stage_close").click();
                                 });
-                                var page = $('#paginationcandidate .active_disabled').data('page');
+                                var page = $('#paginationcandidate .pagi-page.pagi-active').data('page') || 1;
                                 fetchCandidates(page);
                                 //  	var table;
                                 // 				tableLoad('load');
@@ -2020,10 +2019,6 @@
 
             fetchCandidates();
 
-            // The pagination partial (ajax_pages/pagination.blade.php) renders
-            // buttons with class .pagi-page/.pagi-arrow, not .page-link — this
-            // handler was listening for a class that doesn't exist anywhere in
-            // the actual markup, so clicking a page number did nothing at all.
             var aptkPaginationLoading = false;
             $(document).on('click', '#paginationcandidate .pagi-page, #paginationcandidate .pagi-arrow', function(e) {
                 e.preventDefault();
@@ -2040,19 +2035,24 @@
                 });
             });
 
-
+            $(document).on('change', '#paginationcandidate .pagi-perpage', function() {
+                var selectedPerPage = $(this).val();
+                localStorage.setItem('candidatePerPage', selectedPerPage);
+                localStorage.setItem('currentPage', 1);
+                page_no = 1;
+                fetchCandidates(1);
+            });
         });
 
- 
-       var page_no = localStorage.getItem('currentPage');
-        if (!page_no) {
-            page_no = 1;
-            localStorage.setItem('currentPage', page_no);
-        }
 
-           
+        var page_no = localStorage.getItem('currentPage') || 1;
 
-        function fetchCandidates(page = page_no, search = '') {
+        function fetchCandidates(page, search = '') {
+            var targetPage = page || page_no || 1;
+            page_no = targetPage;
+            localStorage.setItem('currentPage', targetPage);
+
+            var perPage = $('#paginationcandidate .pagi-perpage').val() || localStorage.getItem('candidatePerPage') || 10;
 
             var mstatus_id = localStorage.getItem('mstatusValueSet');
           
@@ -2077,7 +2077,7 @@
                 $('.page-loader').css('display', 'flex');
             }
             return $.ajax({
-                url: `{!! route('service_company.apptracker.allDataAjax') !!}?page=${page}`,
+                url: `{!! route('service_company.apptracker.allDataAjax') !!}?page=${targetPage}`,
                 type: 'GET',
                 data: {
                   jobid : $('#jobid').val(),
@@ -2085,7 +2085,8 @@
                   search : $('#inputSearch').val(),
                   sortingfilter : $('#sortingfilter').val(),
                   country : $('#country').val(),
-                  cus_search : $('#kt_tagify_2').val()
+                  cus_search : $('#kt_tagify_2').val(),
+                  size : perPage
                 },
                 success: function(response) {
                     countder();
@@ -2095,9 +2096,9 @@
                     $('#sc_table_card').show();
                     $('#candidatetList').html(response.html);
                     $('#pool_counter').html(response.total);
-                     localStorage.setItem('currentPage', 1);
+                    localStorage.setItem('currentPage', targetPage);
                     var mstatusvalue = $('#mstatus_id').val();
-                     localStorage.setItem('mstatusValueSet', mstatusvalue);
+                    localStorage.setItem('mstatusValueSet', mstatusvalue);
                     
                     $('#paginationcandidate').html(response.pagination);
 

@@ -407,7 +407,7 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 
         $searchQuery = $request->input('q');
         $page = max((int) $request->input('page', 1), 1);
-        $size = (int) $request->input('size', 10); // Default 20 results per page
+        $size = (int) $request->input('size', $request->input('per_page', 10)); // Default 10 results per page
         $from = ($page - 1) * $size;
         $valCheck = $request->input('sortingfilter');
         $mstatus_id = $request->input('mstatus_id');
@@ -922,7 +922,8 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
         $pagination = [
             'total' => $total,
             'current_page' => $page,
-            'last_page' => ceil($total / $size),
+            'last_page' => (int) ceil($total / $size),
+            'per_page' => $size,
             'listType' => 'allcandidate',
         ];
         // dd($pagination);
@@ -1208,7 +1209,7 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
         $country = '';
         $searchQuery = $request->input('q');
         $page = max((int) $request->input('page', 1), 1);
-        $size = (int) $request->input('size', 10); // Default 20 results per page
+        $size = (int) $request->input('size', $request->input('per_page', 10)); // Default 10 results per page
         $from = ($page - 1) * $size;
         // dd(array_values($requiredSkills));
         $requiredSkills = array_map('strtolower', $requiredSkills);
@@ -2036,7 +2037,8 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
         $pagination = [
             'total' => $total,
             'current_page' => $page,
-            'last_page' => ceil($total / $size),
+            'last_page' => (int) ceil($total / $size),
+            'per_page' => $size,
             'listType' => 'allcandidate',
         ];
 
@@ -2452,7 +2454,7 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 
         $searchQuery = $request->input('q');
         $page = max((int) $request->input('page', 1), 1);
-        $size = (int) $request->input('size', 10); // Default 20 results per page
+        $size = (int) $request->input('size', $request->input('per_page', 10)); // Default 10 results per page
         $from = ($page - 1) * $size;
         $valCheck = $request->input('sortingfilter');
         $mstatus_id = $request->input('mstatus_id');
@@ -2961,7 +2963,8 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
         $pagination = [
             'total' => $total,
             'current_page' => $page,
-            'last_page' => ceil($total / $size),
+            'last_page' => (int) ceil($total / $size),
+            'per_page' => $size,
             'listType' => 'allcandidate',
         ];
         // dd($pagination);
@@ -4077,7 +4080,7 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 
         $searchQuery = $request->input('q');
         $page = max((int) $request->input('page', 1), 1);
-        $size = (int) $request->input('size', 10); // Default 20 results per page
+        $size = (int) $request->input('size', $request->input('per_page', 10)); // Default 10 results per page
         $from = ($page - 1) * $size;
         $valCheck = $request->input('sortingfilter');
         $mstatus_id = $request->input('mstatus_id');
@@ -4743,7 +4746,8 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
         $pagination = [
             'total' => $total,
             'current_page' => $page,
-            'last_page' => ceil($total / $size),
+            'last_page' => (int) ceil($total / $size),
+            'per_page' => $size,
             'listType' => 'allcandidate',
         ];
 
@@ -5066,7 +5070,7 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
         $country = '';
         $searchQuery = $request->input('q');
         $page = max((int) $request->input('page', 1), 1);
-        $size = (int) $request->input('size', 10); // Default 20 results per page
+        $size = (int) $request->input('size', $request->input('per_page', 10)); // Default 10 results per page
         $from = ($page - 1) * $size;
         $requiredSkills = array_map('strtolower', $requiredSkills);
         $mandatorySkills = array_map('strtolower', $mandatorySkills);
@@ -5852,7 +5856,8 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
         $pagination = [
             'total' => $total,
             'current_page' => $page,
-            'last_page' => ceil($total / $size),
+            'last_page' => (int) ceil($total / $size),
+            'per_page' => $size,
             'listType' => 'allcandidate',
         ];
 
@@ -6096,7 +6101,7 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
         $country = '';
         $searchQuery = $request->input('q');
         $page = max((int) $request->input('page', 1), 1);
-        $size = (int) $request->input('size', 10); // Default 20 results per page
+        $size = (int) $request->input('size', $request->input('per_page', 10)); // Default 10 results per page
         $from = ($page - 1) * $size;
         $requiredSkills = array_map('strtolower', $requiredSkills);
         $mandatorySkills = array_map('strtolower', $mandatorySkills);
@@ -6832,7 +6837,8 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
         $pagination = [
             'total' => $total,
             'current_page' => $page,
-            'last_page' => ceil($total / $size),
+            'last_page' => (int) ceil($total / $size),
+            'per_page' => $size,
             'listType' => 'allcandidate',
         ];
         // dd($pagination);
@@ -7074,7 +7080,7 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
         $country = '';
         $searchQuery = $request->input('q');
         $page = max((int) $request->input('page', 1), 1);
-        $size = (int) $request->input('size', 10); // Default 20 results per page
+        $size = (int) $request->input('size', $request->input('per_page', 10)); // Default 10 results per page
         $from = ($page - 1) * $size;
 
         // Free-text search box (#kt_tagify_2) — the JS already sent this as
@@ -7849,7 +7855,8 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
         $pagination = [
             'total' => $total,
             'current_page' => $page,
-            'last_page' => ceil($total / $size),
+            'last_page' => (int) ceil($total / $size),
+            'per_page' => $size,
             'listType' => 'allcandidate',
         ];
         $boostbenchApplications = [];
@@ -8111,7 +8118,7 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
         $country = '';
         $searchQuery = $request->input('q');
         $page = max((int) $request->input('page', 1), 1);
-        $size = (int) $request->input('size', 10); // Default 20 results per page
+        $size = (int) $request->input('size', $request->input('per_page', 10)); // Default 10 results per page
         $from = ($page - 1) * $size;
         // dd(array_values($requiredSkills));
         $requiredSkills = array_map('strtolower', $requiredSkills);
@@ -8971,7 +8978,8 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
         $pagination = [
             'total' => $total,
             'current_page' => $page,
-            'last_page' => ceil($total / $size),
+            'last_page' => (int) ceil($total / $size),
+            'per_page' => $size,
             'listType' => 'allcandidate',
         ];
 
@@ -9250,7 +9258,7 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
         $country = '';
         $searchQuery = $request->input('q');
         $page = max((int) $request->input('page', 1), 1);
-        $size = (int) $request->input('size', 10); // Default 20 results per page
+        $size = (int) $request->input('size', $request->input('per_page', 10)); // Default 10 results per page
         $from = ($page - 1) * $size;
         $requiredSkills = array_map('strtolower', $requiredSkills);
         $mandatorySkills = array_map('strtolower', $mandatorySkills);
@@ -10030,7 +10038,8 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
         $pagination = [
             'total' => $total,
             'current_page' => $page,
-            'last_page' => ceil($total / $size),
+            'last_page' => (int) ceil($total / $size),
+            'per_page' => $size,
             'listType' => 'allcandidate',
         ];
 
@@ -10413,7 +10422,7 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
         $country = '';
         $searchQuery = $request->input('q');
         $page = max((int) $request->input('page', 1), 1);
-        $size = (int) $request->input('size', 10); // Default 20 results per page
+        $size = (int) $request->input('size', $request->input('per_page', 10)); // Default 10 results per page
         $from = ($page - 1) * $size;
         $requiredSkills = array_map('strtolower', $requiredSkills);
 
@@ -10993,7 +11002,8 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
         $pagination = [
             'total' => $total,
             'current_page' => $page,
-            'last_page' => ceil($total / $size),
+            'last_page' => (int) ceil($total / $size),
+            'per_page' => $size,
             'listType' => 'allcandidate',
         ];
 
