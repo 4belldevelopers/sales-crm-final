@@ -5,6 +5,7 @@ namespace App\Repositories;
 use App\Helper\GeneralMethod;
 use App\Models\Client;
 use App\Models\Job;
+use App\Services\AgencyCommercialTermsService;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 
@@ -224,6 +225,8 @@ class AccountRepository
                 ->limit(4)
                 ->get();
 
+            $agencyCommercialTerms = $this->getAgencyCommercialTerms($companyId);
+
             return [
                 'boostkeywords' => $boostkeywords,
                 'account' => $account,
@@ -265,8 +268,21 @@ class AccountRepository
                 'agenciesEmpaneled' => $agenciesEmpaneled,
                 'agenciesActive' => $agenciesActive,
                 'administrators' => $administrators,
+                'agencyCommercialTerms' => $agencyCommercialTerms,
             ];
         });
+    }
+
+    /**
+     * Build the company-scoped agency commercial terms payload.
+     *
+     * Intent: Keep agency-facing commercial terms separate from client Services/Commercials
+     * while returning a stable cached object for high-read marketplace pages.
+     * Tenancy: Reads only the row keyed by the authenticated service company's company_id.
+     */
+    public function getAgencyCommercialTerms(int $companyId): object
+    {
+        return app(AgencyCommercialTermsService::class)->getForCompany($companyId);
     }
 
     /**

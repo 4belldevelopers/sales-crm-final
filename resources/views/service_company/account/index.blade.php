@@ -366,8 +366,10 @@ input[type="radio"]:checked {
 .atc-editor { border:1px solid #eef0f5; border-radius:11px; padding:16px 18px; max-height:520px; overflow:auto; background:#fff; }
 .atc-editor, .atc-editor * { font-size:13px; line-height:1.6; color:#334155; }
 .atc-editor h1,.atc-editor h2,.atc-editor h3 { font-size:14px !important; }
+.agency-agreement,.agency-agreement *{box-sizing:border-box;font-family:'Poppins',sans-serif!important}.agency-agreement{color:#151b3b;font-size:12px}.aat-hero{display:flex;align-items:flex-start;justify-content:space-between;gap:18px;margin:0 2px 16px}.aat-title-wrap{display:flex;gap:14px;min-width:0}.aat-hero-icon,.aat-sec-icon,.aat-flow-icon{display:inline-flex;align-items:center;justify-content:center;color:#6c3ff2;background:#f1ecff;border-radius:10px;flex:0 0 auto}.aat-hero-icon{width:50px;height:50px}.aat-hero-icon svg{width:27px;height:27px}.aat-title{margin:0;color:#111733;font-size:20px!important;font-weight:600!important;line-height:1.25}.aat-sub{max-width:650px;margin:6px 0 0;color:#53617f;font-size:12px;line-height:1.55}.aat-actions{display:grid;grid-template-columns:1fr 1fr;gap:9px;min-width:245px}.aat-status-row{display:flex;align-items:center;gap:8px;color:#53617f;font-size:11px;grid-column:1/-1}.aat-pill{display:inline-flex;align-items:center;gap:6px;padding:5px 9px;border-radius:7px;font-size:11px;font-weight:600}.aat-pill.ok{color:#0c8f52;background:#e8f9ef}.aat-pill.v{color:#6941c6;background:#f0e9ff}.aat-card{margin:0 2px 16px;padding:18px;background:#fff;border:1px solid #e8edf5;border-radius:14px;box-shadow:0 2px 6px rgba(15,23,42,.035)}.aat-sec-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:16px}.aat-sec-title{display:flex;gap:12px;align-items:flex-start}.aat-sec-icon{width:34px;height:34px}.aat-sec-icon svg{width:18px;height:18px}.aat-sec-t{font-size:14px;font-weight:600;color:#111733}.aat-sec-s{margin-top:2px;color:#73809a;font-size:11px}.aat-btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;min-height:34px;padding:8px 14px;border:1px solid #d8c9ff;border-radius:7px;background:#fff;color:#6941c6;font-size:11px;font-weight:600;text-decoration:none}.aat-btn.primary{background:linear-gradient(135deg,#7c4dff,#673ab7);border-color:#673ab7;color:#fff}.aat-btn svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2}.aat-commercial-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}.aat-commercial{padding:18px;border:1px solid #e5ebf3;border-radius:12px;background:#fff}.aat-commercial.purple{background:linear-gradient(135deg,#fff,#fbf8ff)}.aat-commercial.orange{background:linear-gradient(135deg,#fff,#fff9f1)}.aat-service-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:14px}.aat-service-title{display:flex;align-items:center;gap:12px;color:#5f3bd5;font-size:13px;font-weight:600}.aat-service-title.orange{color:#d56a00}.aat-avatar{width:48px;height:48px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;background:#f1ecff;color:#6c3ff2}.aat-avatar.orange{background:#fff0de;color:#d56a00}.aat-avatar svg{width:23px;height:23px;fill:none;stroke:currentColor;stroke-width:2}.aat-tag{padding:6px 9px;border-radius:7px;background:#f1ecff;color:#6c3ff2;font-size:10px;font-weight:600}.aat-tag.orange{background:#fff0de;color:#d56a00}.aat-rows{display:grid;gap:0}.aat-row{display:grid;grid-template-columns:190px 1fr;gap:12px;align-items:center;min-height:36px;border-bottom:1px solid #edf1f6;color:#24304d;font-size:11.5px}.aat-row:last-child{border-bottom:0}.aat-row .label{display:flex;align-items:center;gap:9px;color:#53617f}.aat-row .label svg{width:14px;height:14px;color:#7c4dff;fill:none;stroke:currentColor;stroke-width:2}.aat-row .value{font-weight:600;color:#1b2440}.aat-note{margin-top:14px;padding:10px 12px;border:1px solid #ddd1ff;border-radius:7px;background:#fbf9ff;color:#5f3bd5;font-size:11px}.aat-note.orange{border-color:#ffd9a8;background:#fffaf2;color:#c45f00}.aat-two-col{display:grid;grid-template-columns:minmax(0,.95fr) minmax(0,1.35fr);gap:16px}.aat-rule-grid{display:grid;gap:10px}.aat-rule{display:grid;grid-template-columns:190px 1fr;gap:12px;font-size:11.5px}.aat-rule .k{color:#53617f}.aat-rule .v{font-weight:600;color:#1b2440}.aat-yes{color:#12935a}.aat-no{color:#dc3545}.aat-flow{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;align-items:start;text-align:center}.aat-flow-step{position:relative}.aat-flow-step:not(:last-child):after{content:'→';position:absolute;right:-12px;top:27px;color:#a293d6;font-weight:600}.aat-flow-icon{width:56px;height:56px;margin:0 auto 10px;border:1px solid #dcd2ff;border-radius:50%;background:#fbf9ff}.aat-flow-icon svg{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:1.9}.aat-flow-n{font-size:13px;font-weight:700;color:#111733}.aat-flow-t{margin-top:5px;color:#111733;font-size:11.5px;font-weight:600}.aat-flow-s{margin-top:3px;color:#65718d;font-size:10.5px;line-height:1.45}.aat-vars{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px}.aat-var{padding:12px;border:1px solid #e8edf5;border-radius:9px;background:#fff}.aat-var code{display:block;color:#6941c6;font-size:10.5px;font-weight:700;background:transparent}.aat-var span{display:block;margin-top:5px;color:#65718d;font-size:10.5px}.aat-editor-card .atc-editor{border-radius:0 0 10px 10px;max-height:410px}.aat-editor-toolbar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:-4px 0 12px}.aat-important{display:flex;gap:10px;margin:0 2px 18px;padding:14px 16px;border:1px solid #ddd1ff;border-radius:10px;background:#fbf9ff;color:#4d3a91;font-size:11.5px;line-height:1.5}.aat-form{display:none;margin-top:12px;padding:14px;border:1px dashed #d8c9ff;border-radius:10px;background:#fbf9ff}.aat-form.open{display:block}.aat-form-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}.aat-form label{display:block;color:#34405f;font-size:10.5px;font-weight:600}.aat-form input,.aat-form select{width:100%;height:34px;margin-top:5px;padding:6px 9px;border:1px solid #dbe3ee;border-radius:7px;background:#fff;color:#17203a;font-size:11px}
 @media (max-width:1200px){ .atc-vars { grid-template-columns:repeat(3,1fr); } }
-@media (max-width:768px){ .atc-vars { grid-template-columns:1fr 1fr; } .atc-meta .atc-btn { margin-left:0; } }
+@media (max-width:1200px){.aat-commercial-grid,.aat-two-col{grid-template-columns:1fr}.aat-vars{grid-template-columns:repeat(3,1fr)}.aat-form-grid{grid-template-columns:repeat(2,1fr)}}
+@media (max-width:768px){ .atc-vars { grid-template-columns:1fr 1fr; } .atc-meta .atc-btn { margin-left:0; } .aat-hero{display:block}.aat-actions{margin-top:12px;min-width:0}.aat-flow,.aat-vars,.aat-form-grid{grid-template-columns:1fr}.aat-row,.aat-rule{grid-template-columns:1fr}.aat-flow-step:after{display:none} }
 
 /* Commercials tab: presentation-only layer. It reuses the cached account payload and existing service actions. */
 .commercials-v2,.commercials-v2 *{box-sizing:border-box;font-family:'Poppins',sans-serif!important}.commercials-v2{color:#111b3d;font-size:12px;font-weight:500;padding:2px 0 8px}.commercials-v2 .cv2-head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:18px}.commercials-v2 .cv2-title{margin:0;color:#101735;font-size:16px!important;font-weight:600!important;line-height:1.25}.commercials-v2 .cv2-sub{max-width:600px;margin:6px 0 0;color:#52638b;font-size:12px;font-weight:500;line-height:1.5}.commercials-v2 .cv2-stat-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin-bottom:18px}.commercials-v2 .cv2-stat{display:flex;align-items:center;min-width:0;gap:13px;padding:16px;border:1px solid #e5eaf4;border-radius:11px;background:#fff;box-shadow:0 1px 3px rgba(15,23,66,.03)}.commercials-v2 .cv2-stat-icon,.commercials-v2 .cv2-service-icon{display:flex;flex:0 0 auto;align-items:center;justify-content:center;border-radius:11px}.commercials-v2 .cv2-stat-icon{width:46px;height:46px}.commercials-v2 .cv2-stat-icon svg{width:23px;height:23px}.commercials-v2 .cv2-service-icon{width:48px;height:48px}.commercials-v2 .cv2-service-icon svg{width:25px;height:25px}.commercials-v2 .blue{color:#1d3dff;background:#eaf1ff}.commercials-v2 .green{color:#08ac58;background:#e8f9ee}.commercials-v2 .amber{color:#f58911;background:#fff1e5}.commercials-v2 .cv2-stat-copy{min-width:0}.commercials-v2 .cv2-label{color:#52638b;font-size:11px;font-weight:500;line-height:1.35}.commercials-v2 .cv2-value{margin-top:3px;color:#101735;font-size:16px;font-weight:600;line-height:1.2;font-variant-numeric:tabular-nums}.commercials-v2 .cv2-hint{margin-top:5px;color:#08a851;font-size:10.5px;font-weight:500;line-height:1.25}.commercials-v2 .cv2-section-title{margin:0;color:#111b3d;font-size:14px;font-weight:600;line-height:1.35}.commercials-v2 .cv2-section-sub{margin:3px 0 12px;color:#52638b;font-size:11px;font-weight:500}.commercials-v2 .cv2-services{display:grid;gap:16px}.commercials-v2 .cv2-service{padding:16px 18px;border:1px solid #e2e8f3;border-radius:11px;background:#fff;box-shadow:0 1px 3px rgba(15,23,66,.025)}.commercials-v2 .cv2-service-top{display:flex;align-items:flex-start;justify-content:space-between;gap:16px}.commercials-v2 .cv2-service-name{display:flex;align-items:center;gap:13px;min-width:0}.commercials-v2 .cv2-service-name h4{margin:0;color:#101735;font-size:14px!important;font-weight:600!important;line-height:1.35}.commercials-v2 .cv2-service-desc{margin:3px 0 0;color:#52638b;font-size:11px;font-weight:500;line-height:1.4}.commercials-v2 .cv2-badge{display:inline-flex;align-items:center;margin-left:7px;padding:3px 8px;border-radius:5px;background:#e8f8ed;color:#08a851;font-size:10px;font-weight:600;vertical-align:2px}.commercials-v2 .cv2-badge.is-off{color:#c2410c;background:#fff2e8}.commercials-v2 .cv2-switch{display:inline-flex;align-items:center;gap:8px;flex:0 0 auto}.commercials-v2 .form-switch{margin:0}.commercials-v2 .form-check-input{width:38px!important;height:21px!important;margin:0!important;cursor:pointer}.commercials-v2 .cv2-switch-text{color:#52638b;font-size:10.5px;font-weight:600}.commercials-v2 .cv2-service-main{display:grid;grid-template-columns:minmax(0,1fr) 230px;gap:18px;margin-top:14px;padding-top:14px;border-top:1px solid #edf0f6}.commercials-v2 .cv2-disabled{opacity:.45}.commercials-v2 .cv2-facts{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:0}.commercials-v2 .cv2-fact{min-width:0;padding:0 14px;border-right:1px solid #e8ecf3}.commercials-v2 .cv2-fact:first-child{padding-left:0}.commercials-v2 .cv2-fact:last-child{border:0}.commercials-v2 .cv2-fact-label{color:#52638b;font-size:10px;font-weight:500;line-height:1.3}.commercials-v2 .cv2-fact-value{margin-top:5px;color:#111b3d;font-size:11px;font-weight:600;line-height:1.3;word-break:break-word}.commercials-v2 .cv2-fact-value.rate{color:#0a9f57}.commercials-v2 .cv2-side{display:grid;gap:8px;align-content:start;padding-left:18px;border-left:1px solid #e8ecf3}.commercials-v2 .cv2-side-row{display:flex;justify-content:space-between;gap:8px;color:#52638b;font-size:10px;font-weight:500}.commercials-v2 .cv2-side-row b{color:#111b3d;font-size:10.5px;font-weight:600;text-align:right;font-variant-numeric:tabular-nums}.commercials-v2 .cv2-bottom{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;margin-top:14px}.commercials-v2 .cv2-country-label{margin:0 0 8px;color:#111b3d;font-size:11px;font-weight:600}.commercials-v2 .cv2-country-chip{display:inline-flex;align-items:center;gap:8px;min-height:38px;padding:7px 12px;color:#33466f;background:#f8faff;border:1px solid #e1e7f2;border-radius:7px;font-size:10.5px;font-weight:500}.commercials-v2 .cv2-country-chip svg{width:15px;height:15px;color:#2764ff}.commercials-v2 .cv2-country-chip b{color:#101735;font-weight:600}.commercials-v2 .cv2-edit{display:inline-flex!important;align-items:center;gap:8px;padding:9px 13px!important;color:#173af5!important;background:#fff!important;border:1px solid #b9c4ff!important;border-radius:7px!important;font-size:11px!important;font-weight:600!important;white-space:nowrap}.commercials-v2 .cv2-edit:hover{background:#f5f7ff!important}.commercials-v2 .cv2-edit svg{width:15px;height:15px}.commercials-v2 .cv2-note{display:flex;align-items:center;gap:14px;margin-top:16px;padding:13px 16px;border:1px solid #cfead8;border-radius:9px;background:#f7fdf8;color:#40547e}.commercials-v2 .cv2-note-icon{display:flex;flex:0 0 auto;align-items:center;justify-content:center;width:34px;height:34px;color:#08a851;background:#e7f8ec;border-radius:50%}.commercials-v2 .cv2-note-icon svg{width:21px;height:21px}.commercials-v2 .cv2-note p{margin:0;font-size:10.5px;font-weight:500;line-height:1.5}.commercials-v2 .cv2-note b{color:#111b3d;font-weight:600}@media(max-width:1199px){.commercials-v2 .cv2-stat-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.commercials-v2 .cv2-service-main{grid-template-columns:1fr}.commercials-v2 .cv2-side{grid-template-columns:repeat(3,minmax(0,1fr));padding:12px 0 0;border-top:1px solid #e8ecf3;border-left:0}.commercials-v2 .cv2-side-row{display:block}.commercials-v2 .cv2-side-row b{display:block;margin-top:3px;text-align:left}}@media(max-width:767px){.commercials-v2 .cv2-head,.commercials-v2 .cv2-service-top,.commercials-v2 .cv2-bottom{display:block}.commercials-v2 .cv2-switch{margin-top:12px}.commercials-v2 .cv2-stat-grid{grid-template-columns:1fr}.commercials-v2 .cv2-facts{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.commercials-v2 .cv2-fact:nth-child(2){border-right:0}.commercials-v2 .cv2-fact:nth-child(n+3){padding-left:0}.commercials-v2 .cv2-side{grid-template-columns:1fr 1fr}.commercials-v2 .cv2-edit{margin-top:12px}.commercials-v2 .cv2-note{align-items:flex-start}}
@@ -1399,76 +1401,151 @@ input[type="radio"]:checked {
   @php
     $atcCustom  = !empty(trim(strip_tags((string)@$account->terms)));
     $atcUpdated = @$account->updated_at;
+    $aatTerms = @$agencyCommercialTerms ?: (object) [];
+    $aatCurrency = optional($currencyArr->firstWhere('id', @$aatTerms->contract_rate_currency));
+    $aatCurrencyCode = $aatCurrency->code ?: ([0 => 'INR', 1 => 'EUR', 2 => 'JPY', 3 => 'GBP', 4 => 'USD'][@$aatTerms->contract_rate_currency ?? 4] ?? 'USD');
+    $aatUpdated = @$aatTerms->updated_at ?: $atcUpdated;
+    $aatUpdatedBy = @$aatTerms->updated_by_name ?: (@auth()->user()->name ?: 'System');
+    $aatVersion = @$aatTerms->version ?: '1.0';
+    $aatActive = (@$aatTerms->status ?: 'active') === 'active';
     $atcVars = [
       '{TODAY_DATE}'       => "Today's Date",
       '{AGENCY_NAME}'      => 'Agency Name',
       '{AGENCY_ADDRESS}'   => 'Agency Address',
       '{COMPANY_NAME}'     => 'Company Name',
       '{COMPANY_ADDRESS}'  => 'Company Address',
+      '{JOB_TITLE}'        => 'Job Title',
+      '{SUCCESS_FEE}'      => 'Agency Success Fee',
+      '{CONTRACT_RATE}'    => 'Contract Agency Rate',
+      '{PAYMENT_TERMS}'    => 'Payment Terms',
+      '{REPLACEMENT_DAYS}' => 'Replacement Period',
     ];
   @endphp
-  <!--begin::Header-->
-  <div class="atc-head">
-    <div>
-      <div class="atc-title">Agency Terms &amp; Conditions Template</div>
-      <div class="atc-sub">Create and manage the default Terms &amp; Conditions shared with agencies when jobs are assigned. <b>Agencies must accept these terms</b> before working on any position.</div>
-    </div>
-    <div class="atc-head-actions">
-      <a href="javascript:;" id="editBtn" class="atc-btn">Edit</a>
-      <a href="javascript:;" id="updateCompanyTermsTop" class="atc-btn atc-btn-primary updateCompanyTermsTop"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><path d="M17 21v-8H7v8M7 3v5h8"/></svg> Save Template</a>
-    </div>
-  </div>
-  <!--end::Header-->
-  <!--begin::Meta-->
-  <div class="atc-card atc-meta">
-    <div class="atc-meta-id">
-      <span class="atc-meta-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M9 13h6M9 17h4"/></svg></span>
-      <div><div class="atc-meta-lbl">Template Name</div><div class="atc-meta-v">Agency Terms &amp; Conditions</div></div>
-    </div>
-    <div><div class="atc-meta-lbl">Source</div><div class="atc-meta-v">{{ $atcCustom ? 'Custom' : 'Default' }}</div></div>
-    @if($atcUpdated)<div><div class="atc-meta-lbl">Last Updated</div><div class="atc-meta-v">{{ date('d M Y, h:i A', strtotime($atcUpdated)) }}</div></div>@endif
-    <div><div class="atc-meta-lbl">Status</div><div class="atc-meta-v"><span class="atc-status"><span class="dot"></span> Active</span></div></div>
-    <a href="javascript:;" id="setToDefaultCompanyTermsTop" class="atc-btn atc-btn-danger setToDefaultCompanyTermsTop"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 2v6h6"/><path d="M3.5 8a9 9 0 1 0 2.1-3.4L3 8"/></svg> Restore Default</a>
-  </div>
-  <!--end::Meta-->
-  <!--begin::Variables-->
-  <div class="atc-card atc-sec">
-    <div class="atc-sec-h"><div><div class="atc-sec-t">Variables Used in this Template</div><div class="atc-sec-s">These variables are replaced with actual values automatically.</div></div></div>
-    <div class="atc-vars">
-      @foreach($atcVars as $code => $desc)
-        <div class="atc-var"><code>{{ $code }}</code><div class="atc-var-s">{{ $desc }}</div></div>
-      @endforeach
-    </div>
-  </div>
-  <!--end::Variables-->
-  <!--begin::Acceptance Notice-->
-  <div class="atc-notice">
-    <span class="atc-notice-ic">i</span>
-    <div>
-      <div class="atc-notice-t">Agency Acceptance Notice</div>
-      <div class="atc-notice-s">This Terms &amp; Conditions template is automatically shared with agencies whenever jobs are assigned to them. Agencies must review and accept the agreement before they can submit candidates for any position.</div>
-    </div>
-  </div>
-  <!--end::Acceptance Notice-->
-  <!--begin::Template Content-->
-  <div class="atc-card atc-sec">
-    <div class="atc-sec-h"><div><div class="atc-sec-t">Template Content</div><div class="atc-sec-s">Edit the terms and conditions you want to share with agencies.</div></div></div>
-    <form id="terms_content" name="terms_content" class="form fv-plugins-bootstrap5 fv-plugins-framework" novalidate="novalidate" method="post">
-      <meta name="csrf-token" content="{{ csrf_token() }}" />
-      <input type="hidden" name="pageterms" id="pageterms" value="terms" />
-      @csrf
-      @method('POST')
-      <div class="atc-editor view-terms" id="viewTerms"> {!! (@$account->terms) ? @$account->terms :  $global_settings->terms !!} </div>
-      <div class="edit-terms" id="editTerms" style="display:none;">
-        <textarea id="kt_docs_tinymce_hidden" name="kt_docs_tinymce_hidden" class="tox-target">{!! (@$account->terms) ? @$account->terms :  $global_settings->terms !!}</textarea>
-        <div class="card-footer d-flex justify-content-center py-6 px-9 bg-white d-none">
-          <button class="btn btn-primary me-2 updateCompanyTerms" type="button" id="updateCompanyTerms">Save Changes</button>
-          <button class="btn btn-primary me-2 setToDefaultCompanyTerms" type="button" id="setToDefaultCompanyTerms">Set to Default</button>
+  <div class="agency-agreement">
+    <!-- Intent: dynamic agency-facing agreement UI; client Services/Commercials remain separate. -->
+    <div class="aat-hero">
+      <div class="aat-title-wrap">
+        <span class="aat-hero-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 3h9l3 3v15H6z"/><path d="M14 3v4h4M9 12h6M9 16h4"/><path d="m5 8-2 2 2 2"/></svg></span>
+        <div>
+          <h3 class="aat-title">Agency Agreement &amp; Commercial Terms</h3>
+          <p class="aat-sub">Define agency-facing commercial terms and the standard agreement that governs agency participation and candidate submissions.</p>
         </div>
       </div>
-    </form>
+      <div class="aat-actions">
+        <div class="aat-status-row"><span class="aat-pill {{ $aatActive ? 'ok' : 'v' }}">{{ $aatActive ? 'Active' : 'Inactive' }}</span><span class="aat-pill v">Version {{ $aatVersion }}</span></div>
+        <a href="javascript:;" class="aat-btn" id="agencyAgreementPreview"><svg viewBox="0 0 24 24"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg>Preview as Agency</a>
+        <a href="javascript:;" id="editBtn" class="aat-btn primary"><svg viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>Edit Agreement</a>
+        @if($aatUpdated)<span class="aat-status-row">Last updated: <b>{{ date('d M Y, h:i A', strtotime($aatUpdated)) }}</b> by <b>{{ $aatUpdatedBy }}</b></span>@endif
+      </div>
+    </div>
+
+    <div class="aat-card">
+      <div class="aat-sec-head">
+        <div class="aat-sec-title"><span class="aat-sec-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v18M17 7H9.5a3.5 3.5 0 0 0 0 7H14a3.5 3.5 0 0 1 0 7H6"/></svg></span><div><div class="aat-sec-t">1. Commercial Terms for Agencies</div><div class="aat-sec-s">Default agency commercial structure reflected in the agreement and marketplace job terms.</div></div></div>
+        <a href="javascript:;" class="aat-btn" id="toggleAgencyCommercialTerms"><svg viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>Edit Commercial Terms</a>
+      </div>
+      <div class="aat-commercial-grid">
+        <div class="aat-commercial purple">
+          <div class="aat-service-head"><div class="aat-service-title"><span class="aat-avatar"><svg viewBox="0 0 24 24"><circle cx="12" cy="7" r="4"/><path d="M4 21v-2a8 8 0 0 1 16 0v2"/></svg></span>Full-Time Hiring</div><span class="aat-tag">{{ ucfirst(@$aatTerms->fulltime_fee_model ?: 'percentage') }} Based</span></div>
+          <div class="aat-rows">
+            <div class="aat-row"><span class="label">Success Fee</span><span class="value">{{ number_format((float) (@$aatTerms->fulltime_success_fee_percentage ?? 8.33), 2) }}% of Annual CTC</span></div>
+            <div class="aat-row"><span class="label">Payment Timeline</span><span class="value">{{ (int) (@$aatTerms->fulltime_payment_terms_days ?? 30) }} Days from Invoice</span></div>
+            <div class="aat-row"><span class="label">Replacement Period</span><span class="value">{{ (int) (@$aatTerms->fulltime_replacement_period_days ?? 90) }} Days</span></div>
+            <div class="aat-row"><span class="label">Basis</span><span class="value">Annual Fixed CTC</span></div>
+          </div>
+          <div class="aat-note">Fee is applicable on confirmed joiners only.</div>
+        </div>
+        <div class="aat-commercial orange">
+          <div class="aat-service-head"><div class="aat-service-title orange"><span class="aat-avatar orange"><svg viewBox="0 0 24 24"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></span>Contract Hiring</div><span class="aat-tag orange">{{ ucfirst(@$aatTerms->contract_billing_model ?: 'monthly') }} Billing</span></div>
+          <div class="aat-rows">
+            <div class="aat-row"><span class="label">Billing Model</span><span class="value">{{ ucfirst(@$aatTerms->contract_billing_model ?: 'monthly') }} Rate</span></div>
+            <div class="aat-row"><span class="label">Agency Rate</span><span class="value">{{ $aatCurrencyCode }} {{ number_format((float) (@$aatTerms->contract_rate_amount ?? 80000), 2) }} / Month</span></div>
+            <div class="aat-row"><span class="label">Payment Timeline</span><span class="value">{{ (int) (@$aatTerms->contract_payment_terms_days ?? 30) }} Days from Invoice</span></div>
+            <div class="aat-row"><span class="label">Minimum Contract Duration</span><span class="value">{{ (int) (@$aatTerms->contract_min_duration_months ?? 3) }} Months</span></div>
+            <div class="aat-row"><span class="label">Replacement Policy</span><span class="value">{{ @$aatTerms->contract_replacement_policy ?: 'As per Contract Terms' }}</span></div>
+          </div>
+          <div class="aat-note orange">Rates may vary job-wise if custom terms are defined.</div>
+        </div>
+      </div>
+      <form class="aat-form" id="agency_commercial_terms_form">
+        @csrf
+        <input type="hidden" name="pageterms" value="agency_commercial_terms">
+        <div class="aat-form-grid">
+          <label>Version<input name="version" value="{{ $aatVersion }}"></label>
+          <label>Status<select name="status"><option value="active" {{ $aatActive ? 'selected' : '' }}>Active</option><option value="inactive" {{ ! $aatActive ? 'selected' : '' }}>Inactive</option></select></label>
+          <label>Fulltime Success Fee %<input name="fulltime_success_fee_percentage" type="number" step="0.01" value="{{ @$aatTerms->fulltime_success_fee_percentage ?? 8.33 }}"></label>
+          <label>Fulltime Payment Days<input name="fulltime_payment_terms_days" type="number" value="{{ @$aatTerms->fulltime_payment_terms_days ?? 30 }}"></label>
+          <label>Replacement Days<input name="fulltime_replacement_period_days" type="number" value="{{ @$aatTerms->fulltime_replacement_period_days ?? 90 }}"></label>
+          <label>Contract Billing<select name="contract_billing_model"><option value="monthly" {{ (@$aatTerms->contract_billing_model ?: 'monthly') === 'monthly' ? 'selected' : '' }}>Monthly</option><option value="hourly" {{ @$aatTerms->contract_billing_model === 'hourly' ? 'selected' : '' }}>Hourly</option></select></label>
+          <label>Contract Rate<input name="contract_rate_amount" type="number" step="0.01" value="{{ @$aatTerms->contract_rate_amount ?? 80000 }}"></label>
+          <label>Minimum Months<input name="contract_min_duration_months" type="number" value="{{ @$aatTerms->contract_min_duration_months ?? 3 }}"></label>
+          <label>Contract Payment Days<input name="contract_payment_terms_days" type="number" value="{{ @$aatTerms->contract_payment_terms_days ?? 30 }}"></label>
+          <label>Applies To<input name="applies_to" value="{{ @$aatTerms->applies_to ?: 'All Agencies' }}"></label>
+          <label>Acceptance Trigger<input name="acceptance_trigger" value="{{ @$aatTerms->acceptance_trigger ?: 'Before Candidate Submission' }}"></label>
+          <label>Duration Months<input name="agreement_duration_months" type="number" value="{{ @$aatTerms->agreement_duration_months ?? 12 }}"></label>
+        </div>
+        <div style="margin-top:12px;display:flex;justify-content:flex-end;gap:8px;"><button type="button" class="aat-btn" id="cancelAgencyCommercialTerms">Cancel</button><button type="button" class="aat-btn primary" id="saveAgencyCommercialTerms">Save Commercial Terms</button></div>
+      </form>
+    </div>
+
+    <div class="aat-two-col">
+      <div class="aat-card">
+        <div class="aat-sec-head"><div class="aat-sec-title"><span class="aat-sec-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3l8 4v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V7z"/></svg></span><div><div class="aat-sec-t">2. Agreement Rules</div><div class="aat-sec-s">Define when and how this agreement applies.</div></div></div></div>
+        <div class="aat-rule-grid">
+          <div class="aat-rule"><span class="k">Applies To</span><span class="v">{{ @$aatTerms->applies_to ?: 'All Agencies' }}</span></div>
+          <div class="aat-rule"><span class="k">Acceptance Required</span><span class="v aat-yes">{{ (@$aatTerms->acceptance_required ?? 1) ? 'Yes' : 'No' }}</span></div>
+          <div class="aat-rule"><span class="k">Acceptance Trigger</span><span class="v">{{ @$aatTerms->acceptance_trigger ?: 'Before Candidate Submission' }}</span></div>
+          <div class="aat-rule"><span class="k">Submission Before Acceptance</span><span class="v {{ (@$aatTerms->submission_before_acceptance ?? 0) ? 'aat-yes' : 'aat-no' }}">{{ (@$aatTerms->submission_before_acceptance ?? 0) ? 'Yes' : 'No' }}</span></div>
+          <div class="aat-rule"><span class="k">Effective From</span><span class="v">{{ @$aatTerms->effective_from ?: 'Agency Acceptance Date' }}</span></div>
+          <div class="aat-rule"><span class="k">Agreement Duration</span><span class="v">{{ (int) (@$aatTerms->agreement_duration_months ?? 12) }} Months</span></div>
+          <div class="aat-rule"><span class="k">Auto Renewal</span><span class="v aat-yes">{{ (@$aatTerms->auto_renewal ?? 1) ? 'Yes' : 'No' }}</span></div>
+          <div class="aat-rule"><span class="k">Agency Can Reject</span><span class="v aat-yes">{{ (@$aatTerms->agency_can_reject ?? 1) ? 'Yes' : 'No' }}</span></div>
+        </div>
+      </div>
+      <div class="aat-card">
+        <div class="aat-sec-head"><div class="aat-sec-title"><span class="aat-sec-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/></svg></span><div><div class="aat-sec-t">3. Acceptance Workflow</div><div class="aat-sec-s">How this agreement flows in the system.</div></div></div></div>
+        <div class="aat-flow">
+          <div class="aat-flow-step"><span class="aat-flow-icon"><svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="15" rx="2"/><path d="M8 6V4h8v2"/></svg></span><div class="aat-flow-n">1</div><div class="aat-flow-t">Job Assigned</div><div class="aat-flow-s">Job is assigned to the agency.</div></div>
+          <div class="aat-flow-step"><span class="aat-flow-icon"><svg viewBox="0 0 24 24"><path d="M6 3h9l3 3v15H6z"/><path d="M9 13h6M9 17h4"/></svg></span><div class="aat-flow-n">2</div><div class="aat-flow-t">T&amp;C Shared</div><div class="aat-flow-s">Agreement is shared with agency.</div></div>
+          <div class="aat-flow-step"><span class="aat-flow-icon"><svg viewBox="0 0 24 24"><path d="M12 3l8 4v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V7z"/><path d="m9 12 2 2 4-4"/></svg></span><div class="aat-flow-n">3</div><div class="aat-flow-t">Agency Accepts</div><div class="aat-flow-s">Agency reviews and accepts the agreement.</div></div>
+          <div class="aat-flow-step"><span class="aat-flow-icon"><svg viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-8 0v2"/><circle cx="12" cy="7" r="4"/><path d="M20 8v6M23 11h-6"/></svg></span><div class="aat-flow-n">4</div><div class="aat-flow-t">Submission Enabled</div><div class="aat-flow-s">Candidate submission is enabled.</div></div>
+        </div>
+        <div class="aat-note orange">Agencies cannot submit candidates until applicable Terms &amp; Conditions are accepted.</div>
+      </div>
+    </div>
+
+    <div class="aat-card">
+      <div class="aat-sec-head"><div class="aat-sec-title"><span class="aat-sec-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16v16H4z"/><path d="M8 8h8M8 12h5"/></svg></span><div><div class="aat-sec-t">4. Dynamic Variables</div><div class="aat-sec-s">These variables are automatically replaced with actual values.</div></div></div></div>
+      <div class="aat-vars">
+        @foreach($atcVars as $code => $desc)
+          <div class="aat-var"><code>{{ $code }}</code><span>{{ $desc }}</span></div>
+        @endforeach
+      </div>
+    </div>
+
+    <div class="aat-card aat-editor-card">
+      <div class="aat-editor-toolbar">
+        <div class="aat-sec-title"><span class="aat-sec-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 3h12v18H6z"/><path d="M9 8h6M9 12h6M9 16h4"/></svg></span><div><div class="aat-sec-t">5. Agreement Content</div><div class="aat-sec-s">Edit the terms and conditions that will be shared with agencies.</div></div></div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;"><a href="javascript:;" id="setToDefaultCompanyTermsTop" class="aat-btn setToDefaultCompanyTermsTop">Load Default</a><a href="javascript:;" id="updateCompanyTermsTop" class="aat-btn primary updateCompanyTermsTop">Save Agreement</a></div>
+      </div>
+      <form id="terms_content" name="terms_content" class="form fv-plugins-bootstrap5 fv-plugins-framework" novalidate="novalidate" method="post">
+        <meta name="csrf-token" content="{{ csrf_token() }}" />
+        <input type="hidden" name="pageterms" id="pageterms" value="terms" />
+        @csrf
+        @method('POST')
+        <div class="atc-editor view-terms" id="viewTerms"> {!! (@$account->terms) ? @$account->terms :  $global_settings->terms !!} </div>
+        <div class="edit-terms" id="editTerms" style="display:none;">
+          <textarea id="kt_docs_tinymce_hidden" name="kt_docs_tinymce_hidden" class="tox-target">{!! (@$account->terms) ? @$account->terms :  $global_settings->terms !!}</textarea>
+          <div class="card-footer d-flex justify-content-center py-6 px-9 bg-white d-none">
+            <button class="btn btn-primary me-2 updateCompanyTerms" type="button" id="updateCompanyTerms">Save Changes</button>
+            <button class="btn btn-primary me-2 setToDefaultCompanyTerms" type="button" id="setToDefaultCompanyTerms">Set to Default</button>
+          </div>
+        </div>
+      </form>
+    </div>
+
+    <div class="aat-important"><b>Important:</b> Existing agencies who have already accepted a previous version will continue to be governed by the version they accepted until they accept a newer version.</div>
   </div>
-  <!--end::Template Content-->
 </div>
 <!--end::Terms & Canditions Content-->
 
@@ -4141,6 +4218,52 @@ new Tagify(input)
 <script>
 
 $(document).ready(function(){
+        // Intent: persist agency-facing commercial terms separately from client Services/Commercials.
+        $('body').on('click', '#toggleAgencyCommercialTerms', function(){
+            $('#agency_commercial_terms_form').toggleClass('open');
+        });
+        $('body').on('click', '#cancelAgencyCommercialTerms', function(){
+            $('#agency_commercial_terms_form').removeClass('open');
+        });
+        $('body').on('click', '#saveAgencyCommercialTerms', function(){
+            var $button = $(this);
+            var form = document.getElementById('agency_commercial_terms_form');
+            if (!form || $button.prop('disabled')) return;
+
+            var data = new FormData(form);
+            $.ajax({
+                url: '{{route('service_company.account.update', @$account->id)}}',
+                headers: {'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')},
+                method: 'POST',
+                processData: false,
+                contentType: false,
+                data: data,
+                beforeSend: function () {
+                    $button.prop('disabled', true).text('Saving...');
+                },
+                success: function (response) {
+                    if (response.status === 'success') {
+                        Swal.fire('Success', response.message || 'Agency commercial terms saved successfully.', 'success');
+                        $('#agency_commercial_terms_form').removeClass('open');
+                        window.location.reload();
+                    } else {
+                        Swal.fire('Notice', response.message || 'Agency commercial terms could not be saved.', 'warning');
+                    }
+                },
+                error: function () {
+                    Swal.fire('Error', 'Agency commercial terms could not be saved. Please try again.', 'error');
+                },
+                complete: function () {
+                    $button.prop('disabled', false).text('Save Commercial Terms');
+                }
+            });
+        });
+        $('body').on('click', '#agencyAgreementPreview', function(){
+            $('#viewTerms').show();
+            $('#editTerms').hide();
+            $('html, body').animate({scrollTop: $('#viewTerms').offset().top - 120}, 250);
+        });
+
         // Intent: enhance the four existing local selects with searchable, keyboard-friendly enterprise menus; no remote data is requested.
         if ($.fn.select2) {
             $('#language, #timezone, #currency, #time_format').each(function(){
