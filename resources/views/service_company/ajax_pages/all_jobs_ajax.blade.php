@@ -130,12 +130,27 @@
             $min_sal_mode = $max_sal_mode = $min_salary_currency = $max_salary_currency = $max_salary = $min_salary =
                 '';
             // Full suffix (/Annum, /Month, /Hour) instead of a single letter — clearer at a glance.
+            // $min_sal_mode = ['/Annum', '/Month', '/Hour'][$row->min_sal_mode] ?? '';
+            // $max_sal_mode = strtoupper(mb_substr($salaryMode[$row->max_sal_mode], 0, 1));
+            // $min_salary_currency = $currencySymbole[@$row->min_salary_currency];
+            // $max_salary_currency = $currencySymbole[@$row->max_salary_currency];
+            // $max_salary = GeneralMethod::thousandsCurrencyFormat($row->max_salary);
+            // $min_salary = GeneralMethod::thousandsCurrencyFormat($row->min_salary);
+            // $max_salary = GeneralMethod::formatAmount($max_salary);
+            // $min_salary = GeneralMethod::formatAmount($min_salary);
+
             $min_sal_mode = ['/Annum', '/Month', '/Hour'][$row->min_sal_mode] ?? '';
-            $max_sal_mode = strtoupper(mb_substr($salaryMode[$row->max_sal_mode], 0, 1));
-            $min_salary_currency = $currencySymbole[@$row->min_salary_currency];
-            $max_salary_currency = $currencySymbole[@$row->max_salary_currency];
-            $max_salary = GeneralMethod::thousandsCurrencyFormat($row->max_salary);
-            $min_salary = GeneralMethod::thousandsCurrencyFormat($row->min_salary);
+
+            $max_sal_mode = isset($salaryMode[$row->max_sal_mode])
+                ? strtoupper(mb_substr($salaryMode[$row->max_sal_mode], 0, 1))
+                : '';
+
+            $min_salary_currency = $currencySymbole[$row->min_salary_currency] ?? '';
+            $max_salary_currency = $currencySymbole[$row->max_salary_currency] ?? '';
+
+            $max_salary = GeneralMethod::thousandsCurrencyFormat($row->max_salary ?? 0);
+            $min_salary = GeneralMethod::thousandsCurrencyFormat($row->min_salary ?? 0);
+
             $max_salary = GeneralMethod::formatAmount($max_salary);
             $min_salary = GeneralMethod::formatAmount($min_salary);
 

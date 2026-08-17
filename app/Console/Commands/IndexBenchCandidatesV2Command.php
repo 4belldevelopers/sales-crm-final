@@ -3,9 +3,9 @@
 namespace App\Console\Commands;
 
 use App\Services\ElasticService;
+use Carbon\Carbon;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
-use Carbon\Carbon;
 
 /**
  * INTENT: Re-index bench candidates into Elasticsearch (ELASTIC_CANDIDATES_BENCH) using V2 mapping.
@@ -46,7 +46,7 @@ class IndexBenchCandidatesV2Command extends Command
             $this->info("Created fresh V2 index: {$indexName}");
         }
 
-        if (!$elastic->indexExists($indexName)) {
+        if (! $elastic->indexExists($indexName)) {
             $this->createV2IndexMapping($elastic, $indexName);
             $this->info("Created index: {$indexName}");
         }
@@ -56,7 +56,8 @@ class IndexBenchCandidatesV2Command extends Command
         // TENANCY NOTE: Raw DB query without global scopes to ensure full administrative re-index across all marketplace candidate entities.
         $totalCandidates = DB::table('bench_applications')->count();
         if ($totalCandidates === 0) {
-            $this->warn("No candidate records found in bench_applications.");
+            $this->warn('No candidate records found in bench_applications.');
+
             return 0;
         }
 
@@ -92,7 +93,7 @@ class IndexBenchCandidatesV2Command extends Command
                         'index' => [
                             '_index' => $indexName,
                             '_id' => $candidate->id,
-                        ]
+                        ],
                     ];
                     $bulkParams['body'][] = $doc;
                 }
@@ -102,13 +103,13 @@ class IndexBenchCandidatesV2Command extends Command
                     $progressBar->advance(count($candidates));
                 } catch (\Exception $e) {
                     $this->line('');
-                    $this->error("Bulk indexing batch failed: " . $e->getMessage());
+                    $this->error('Bulk indexing batch failed: '.$e->getMessage());
                 }
             });
 
         $progressBar->finish();
         $this->line('');
-        $this->info("V2 Bench candidate indexing completed successfully!");
+        $this->info('V2 Bench candidate indexing completed successfully!');
 
         return 0;
     }
@@ -128,10 +129,10 @@ class IndexBenchCandidatesV2Command extends Command
                             'type' => 'custom',
                             'tokenizer' => 'pattern',
                             'pattern' => '\\s*,\\s*',
-                            'filter' => ['lowercase', 'trim']
-                        ]
-                    ]
-                ]
+                            'filter' => ['lowercase', 'trim'],
+                        ],
+                    ],
+                ],
             ],
             'mappings' => [
                 'properties' => [
@@ -168,13 +169,24 @@ class IndexBenchCandidatesV2Command extends Command
                             'skill_key' => ['type' => 'keyword'],
                             'rating' => ['type' => 'integer'],
                             'total_months' => ['type' => 'integer'],
-                        ]
+                        ],
+                    ],
+                    'skill_experiences' => [
+                        'type' => 'nested',
+                        'properties' => [
+                            'skill_key' => ['type' => 'keyword'],
+                            'rating' => ['type' => 'integer'],
+                            'total_months' => ['type' => 'integer'],
+                        ],
                     ],
                     'ads_switch_order' => ['type' => 'integer'], // 0 for Yes, 1 for No
+                    'ads_switch_rank' => ['type' => 'integer'],  // 0 for Yes, 1 for No
                     'np_epoch_day' => ['type' => 'long'], // Integer epoch day for painless-free sorting
                     'np_is_immediate' => ['type' => 'boolean'], // true for Immediate joiners
-                ]
-            ]
+                    'notice_period_days' => ['type' => 'integer'],
+                    'np_days' => ['type' => 'integer'],
+                ],
+            ],
         ];
 
         $elastic->createIndex($indexName, $mappingConfig);
@@ -188,6 +200,17 @@ class IndexBenchCandidatesV2Command extends Command
         $adsSwitchOrder = strtolower($candidate->ads_switch ?? 'no') === 'yes' ? 0 : 1;
         $npEpochDay = $this->calculateNpEpochDay($candidate->np_id ?? '');
         $npIsImmediate = strtolower(trim($candidate->np_id ?? '')) === 'immediate';
+
+        $noticePeriodDays = 0;
+        $modeNp = (int) ($candidate->serving_notice_period_mode ?? 0);
+        if ($modeNp == 0) {
+            $noticePeriodDays = (int) ($candidate->np_id ?? 0);
+        } elseif ($modeNp == 1 && ! empty($candidate->np_id)) {
+            $lwdTime = strtotime($candidate->np_id);
+            if ($lwdTime && $lwdTime > time()) {
+                $noticePeriodDays = (int) ceil(($lwdTime - time()) / 86400);
+            }
+        }
 
         return [
             'id' => $candidate->id,
@@ -206,7 +229,7 @@ class IndexBenchCandidatesV2Command extends Command
             'bill_rate_mode' => (int) ($candidate->bill_rate_mode ?? 0),
             'ectc_yearly' => (float) ($candidate->bill_rate_amount ?? 0),
             'np_id' => $candidate->np_id ?? '',
-            'serving_notice_period_mode' => (int) ($candidate->serving_notice_period_mode ?? 0),
+            'serving_notice_period_mode' => $modeNp,
             'city_name' => $candidate->city ?? '',
             'country_name' => $candidate->country ?? '',
             'qualification' => (int) ($candidate->qualification ?? 0),
@@ -214,9 +237,13 @@ class IndexBenchCandidatesV2Command extends Command
 
             // V2 Pre-computed sorting & nested skills fields
             'candidate_skills' => $skills,
+            'skill_experiences' => $skills,
             'ads_switch_order' => $adsSwitchOrder,
+            'ads_switch_rank' => $adsSwitchOrder,
             'np_epoch_day' => $npEpochDay,
             'np_is_immediate' => $npIsImmediate,
+            'notice_period_days' => $noticePeriodDays,
+            'np_days' => $noticePeriodDays,
         ];
     }
 
@@ -226,8 +253,12 @@ class IndexBenchCandidatesV2Command extends Command
     protected function calculateNpEpochDay(string $npId): int
     {
         $v = trim($npId);
-        if (empty($v)) return 999999999;
-        if (strtolower($v) === 'immediate') return -999999998;
+        if (empty($v)) {
+            return 999999999;
+        }
+        if (strtolower($v) === 'immediate') {
+            return -999999998;
+        }
 
         if (($comma = strpos($v, ',')) !== false) {
             $v = trim(substr($v, 0, $comma));

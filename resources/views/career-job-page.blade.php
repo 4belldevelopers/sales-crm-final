@@ -5,8 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ @$account->company_name ?? 'Company' }} – Careers</title>
     @php
-        use Illuminate\Support\Facades\DB as HeadDB;
-        try { $headCS = HeadDB::table('company_career_settings')->where('company_id', $company_id)->first(); } catch(\Exception $e){ $headCS = null; }
+        $headCS = $careerSettings ?? null;
     @endphp
     <link rel="shortcut icon" type="image/x-icon" href="{{ !empty($headCS->td_favicon_path) ? asset($headCS->td_favicon_path) : asset('img/favicon.svg') }}">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Poppins:300,400,500,600,700,800,900" />
@@ -25,8 +24,7 @@
     $job_status      = GeneralMethod::job_status();
 
     /* ── Template Design settings ── */
-    try { $cS = DB::table('company_career_settings')->where('company_id', $company_id)->first(); }
-    catch (\Exception $e) { $cS = null; }
+    $cS = $careerSettings ?? null;
     $cpP        = $cS->td_color_primary   ?? '#2563EB';
     $cpS        = $cS->td_color_secondary ?? '#1F2937';
     $cpA        = $cS->td_color_accent    ?? '#10B981';
@@ -623,8 +621,7 @@ a{text-decoration:none;}
             <div class="jobs-sort">
                 <span class="jobs-sort-lbl">Sort by:</span>
                 <form method="GET" action="" id="sortForm">
-                    <input type="hidden" name="custom_search" value="{{ request('custom_search') }}">
-                    <select name="custom_hiringtype" onchange="document.getElementById('sortForm').submit()">
+                    <select name="custom_hiringtype" onchange="var ff=document.getElementById('filterForm'); if(ff){ var ht=ff.querySelector('input[name=custom_hiringtype]'); if(ht){ ht.value=this.value; } ff.submit(); } else { this.form.submit(); }">
                         <option value="All" {{ request('custom_hiringtype','All')==='All'?'selected':'' }}>Newest First</option>
                         <option value="2"   {{ request('custom_hiringtype')==='2'?'selected':'' }}>Oldest First</option>
                         <option value="3"   {{ request('custom_hiringtype')==='3'?'selected':'' }}>Salary: Low to High</option>
@@ -659,12 +656,8 @@ a{text-decoration:none;}
                     ? ucwords(mb_substr(@$row->company_name, 0, 50))
                     : ucwords(mb_substr(@$account->company_name, 0, 50));
 
-                /* skills */
-                $skills = DB::table('job_metronics_skills')
-                    ->select('skill_name')
-                    ->where('job_id', $row->id)
-                    ->where('company_id', $row->comId)
-                    ->limit(8)->get();
+                /* skills — eager loaded */
+                $skills = array_slice($jobSkillsMap[$row->id] ?? [], 0, 8);
 
                 /* salary */
                 $minSalMode = strtoupper(mb_substr($salaryMode[$row->min_sal_mode], 0, 1));
@@ -674,19 +667,16 @@ a{text-decoration:none;}
                 $minSal     = GeneralMethod::thousandsCurrencyFormat($row->min_salary);
                 $maxSal     = GeneralMethod::thousandsCurrencyFormat($row->max_salary);
 
-                /* location */
+                /* location — eager loaded */
                 $locLabel = 'Remote';
                 if ($row->work_type !== 'yes') {
-                    $multiCount = DB::table('client_city_jobs')->where('job_id', $row->id)->count();
-                    if ($multiCount > 1) {
+                    $locs = $jobLocationsMap[$row->id] ?? [];
+                    if (count($locs) > 1) {
                         $locLabel = 'Multiple';
+                    } elseif (count($locs) === 1) {
+                        $locLabel = $locs[0];
                     } else {
-                        $cityRow  = DB::table('client_city_jobs')
-                            ->leftJoin('city_list','city_list.city_id','=','client_city_jobs.city_id')
-                            ->select('city_list.city as cn')
-                            ->where('client_city_jobs.job_id', $row->id)
-                            ->first();
-                        $locLabel = ucwords(mb_substr(@$cityRow->cn, 0, 18)) ?: 'N/A';
+                        $locLabel = 'N/A';
                     }
                 }
                 $workMode   = ($row->work_type === 'yes') ? 'Remote' : 'Hybrid';
@@ -710,8 +700,8 @@ a{text-decoration:none;}
 
                 $timeAgo    = Carbon::parse($row->created_at)->diffForHumans(['parts'=>1]);
 
-                /* company logo */
-                $logoPath   = GeneralMethod::openCompanyDetails($row->id, $company_id);
+                /* company logo — eager loaded */
+                $logoPath   = $jobLogosMap[$row->id] ?? '';
 
                 /* hiring manager */
                 $hmName = collect($row->job_assign)->first(function($item) use ($company_id){
@@ -779,10 +769,10 @@ a{text-decoration:none;}
                 {{-- BOTTOM ROW: Skills label + chips | action buttons --}}
                 <div class="jc-bottom">
                     <div class="jc-skills-row">
-                        @if($skills->count())
+                        @if(!empty($skills))
                         <span class="jc-skills-lbl">Skills:</span>
                         @foreach($skills as $sk)
-                        <span class="jc-skill">{{ ucfirst($sk->skill_name) }}</span>
+                        <span class="jc-skill">{{ ucfirst(is_object($sk) ? $sk->skill_name : $sk) }}</span>
                         @endforeach
                         @endif
                     </div>
@@ -803,12 +793,13 @@ a{text-decoration:none;}
 
         {{-- ── PAGINATION ── --}}
         @php
-            $tPages = $last_page;
-            $cPage  = $current_page;
-            $side   = 2;
-            $pStart = max(1, $cPage - $side);
-            $pEnd   = min($tPages, $cPage + $side);
-            $qs     = '&custom_search='.urlencode(request('custom_search','')).'&custom_hiringtype='.urlencode(request('custom_hiringtype','All'));
+            $tPages    = $last_page;
+            $cPage     = $current_page;
+            $side      = 2;
+            $pStart    = max(1, $cPage - $side);
+            $pEnd      = min($tPages, $cPage + $side);
+            $queryVars = request()->except('page');
+            $qs        = !empty($queryVars) ? '&' . http_build_query($queryVars) : '';
         @endphp
         @if($tPages > 1)
         <div class="pag">
@@ -916,7 +907,12 @@ function showMoreSkills(btn){
 }
 
 /* iframe height reporting */
-function sendHeight(){ window.parent.postMessage({frameHeight:document.body.scrollHeight},'*'); }
+function sendHeight(){
+    window.parent.postMessage({frameHeight: document.body.scrollHeight}, '*');
+    setTimeout(function(){
+        window.parent.postMessage({frameHeight: document.body.scrollHeight}, '*');
+    }, 150);
+}
 window.onload = sendHeight;
 window.onresize = sendHeight;
 </script>
