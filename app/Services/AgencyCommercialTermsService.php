@@ -29,7 +29,13 @@ class AgencyCommercialTermsService
                 ->where('company_id', $companyId)
                 ->first();
 
-            return (object) array_merge($defaults, (array) $terms);
+            $termsArray = (array) $terms;
+            $settings = [];
+            if (! empty($termsArray['settings_json'])) {
+                $settings = json_decode((string) $termsArray['settings_json'], true) ?: [];
+            }
+
+            return (object) array_merge($defaults, $termsArray, $settings);
         });
     }
 
@@ -37,6 +43,9 @@ class AgencyCommercialTermsService
     {
         if (! Schema::hasTable('agency_commercial_terms')) {
             return;
+        }
+        if (! Schema::hasColumn('agency_commercial_terms', 'settings_json')) {
+            unset($payload['settings_json']);
         }
 
         $payload['updated_at'] = now();
@@ -78,6 +87,24 @@ class AgencyCommercialTermsService
             'contract_payment_terms_days' => 30,
             'contract_min_duration_months' => 3,
             'contract_replacement_policy' => 'As per Contract Terms',
+            'fulltime_fee_cap_currency' => 4,
+            'fulltime_fee_cap_amount' => null,
+            'fulltime_payment_timeline_from' => 'From invoice date',
+            'fulltime_replacement_from' => 'From candidate joining date',
+            'fulltime_notice_period' => 'As per client notice period',
+            'fulltime_basis' => 'Annual Fixed CTC',
+            'fulltime_invoice_raising' => 'After candidate joins',
+            'contract_agency_rate_type' => 'Fixed Rate',
+            'contract_billing_cycle' => 'Monthly in Advance',
+            'contract_overtime_policy' => 'As per client terms',
+            'contract_early_termination' => 'As per contract terms',
+            'contract_invoice_raising' => 'Monthly in Advance',
+            'contract_escalation_policy' => 'As per contract terms',
+            'payment_modes_allowed' => ['bank_transfer', 'neft', 'rtgs'],
+            'general_currency' => 4,
+            'tax_handling' => 'GST Extra',
+            'tds_deduction' => 'As per applicable law',
+            'round_off' => 'To Nearest Rupee',
             'applies_to' => 'All Agencies',
             'acceptance_required' => 1,
             'acceptance_trigger' => 'Before Candidate Submission',
