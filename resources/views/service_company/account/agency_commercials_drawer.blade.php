@@ -28,33 +28,7 @@
   <div class="aat-drawer-body">
     <div class="aat-edit-alert"><span data-agency-alert-text>These commercial terms define how agencies will be paid for successful placements. They populate the agreement and can be overridden at job level if required.</span><button type="button" class="aat-drawer-close" style="width:28px;height:28px;font-size:18px;">&times;</button></div>
 
-    @php
-      $aatFulltimeDefaultRate = (float) (@$aatTerms->fulltime_success_fee_percentage ?? 8.33);
-      $aatFixedRate = (float) (@$aatTerms->fulltime_fixed_fee_amount ?? 0);
-      $aatExperienceBands = \Illuminate\Support\Facades\Cache::get('commercial_experience_bands:v1');
-      if (!collect($aatExperienceBands)->isEmpty()) {
-          $aatExperienceBands = collect($aatExperienceBands)->map(function ($band) {
-              return [
-                  'label' => (string) $band->label,
-                  'indexes' => range((int) $band->min_experience, (int) $band->max_experience),
-              ];
-          })->values()->all();
-      } else {
-          $aatExperienceBands = [
-              ['label' => '0 - 2 Years', 'indexes' => range(0, 2)],
-              ['label' => '3 - 5 Years', 'indexes' => range(3, 5)],
-              ['label' => '6 - 8 Years', 'indexes' => range(6, 8)],
-              ['label' => '9+ Years', 'indexes' => range(9, 30)],
-          ];
-      }
-      $aatFixedFeeCurrency = (int) (@$aatTerms->fulltime_fixed_fee_currency ?? 4);
-      $aatGeneralCurrency = (int) (@$aatTerms->general_currency ?? 4);
-      $aatPaymentTerms = (int) (@$aatTerms->fulltime_payment_terms_days ?? 30);
-      $aatReplacementPeriodDays = (int) (@$aatTerms->fulltime_replacement_period_days ?? 90);
-      $aatFulltimePaymentTermsDays = (int) (@$aatTerms->fulltime_payment_terms_days ?? 30);
-      $aatContractPaymentTermsDays = (int) (@$aatTerms->contract_payment_terms_days ?? 30);
-      $aatContractMinDuration = (int) (@$aatTerms->contract_min_duration_months ?? 3);
-    @endphp
+    {{-- Defaults that the include site (account/index.blade.php) computes and passes in via $aatPartialVars. --}}
 
     <input type="hidden" name="fulltime_fee_model" id="aatFulltimeFeeModelHidden" value="{{ $aatFulltimeFeeModel }}">
 

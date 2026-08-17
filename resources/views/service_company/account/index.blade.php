@@ -1683,6 +1683,33 @@ input[type="radio"]:checked {
       </div>
       <div class="aat-drawer-overlay" id="agencyCommercialDrawerOverlay"></div>
       @php
+        // Derived defaults — kept here at the include site so the partial stays pure
+        // (the previous inline drawer body computed these inline; the agency_commercials_drawer
+        // partial expects them as already-resolved values).
+        $aatFixedFeeCurrency = (int) (@$aatTerms->fulltime_fixed_fee_currency ?? 4);
+        $aatGeneralCurrency = (int) (@$aatTerms->general_currency ?? 4);
+        $aatPaymentTerms = (int) (@$aatTerms->fulltime_payment_terms_days ?? 30);
+        $aatReplacementPeriodDays = (int) (@$aatTerms->fulltime_replacement_period_days ?? 90);
+        $aatFulltimePaymentTermsDays = (int) (@$aatTerms->fulltime_payment_terms_days ?? 30);
+        $aatContractPaymentTermsDays = (int) (@$aatTerms->contract_payment_terms_days ?? 30);
+        $aatContractMinDuration = (int) (@$aatTerms->contract_min_duration_months ?? 3);
+        $aatFixedRate = (float) (@$aatTerms->fulltime_fixed_fee_amount ?? 0);
+        $aatExperienceBands = \Illuminate\Support\Facades\Cache::get('commercial_experience_bands:v1');
+        if (!collect($aatExperienceBands)->isEmpty()) {
+            $aatExperienceBands = collect($aatExperienceBands)->map(function ($band) {
+                return [
+                    'label' => (string) $band->label,
+                    'indexes' => range((int) $band->min_experience, (int) $band->max_experience),
+                ];
+            })->values()->all();
+        } else {
+            $aatExperienceBands = [
+                ['label' => '0 - 2 Years', 'indexes' => range(0, 2)],
+                ['label' => '3 - 5 Years', 'indexes' => range(3, 5)],
+                ['label' => '6 - 8 Years', 'indexes' => range(6, 8)],
+                ['label' => '9+ Years', 'indexes' => range(9, 30)],
+            ];
+        }
         $aatPartialVars = [
           'aatTerms' => $aatTerms,
           'aatActive' => $aatActive,
@@ -1704,8 +1731,8 @@ input[type="radio"]:checked {
           'aatFulltimePaymentTermsDays' => $aatFulltimePaymentTermsDays,
           'aatContractPaymentTermsDays' => $aatContractPaymentTermsDays,
           'aatContractMinDuration' => $aatContractMinDuration,
-          'aatFixedRate' => $aatFixedRate ?? null,
-          'aatExperienceBands' => $aatExperienceBands ?? null,
+          'aatFixedRate' => $aatFixedRate,
+          'aatExperienceBands' => $aatExperienceBands,
         ];
       @endphp
       {{-- Agency commercials drawer body lives in its own partial so client commercials and agency commercials stay separate. Saved through AgencyCommercialTermsService into the dedicated agency_commercial_terms table (one row per company_id). --}}
