@@ -96,6 +96,7 @@ class AccountSettingsService
     public function flushAccountCache(int $companyId): void
     {
         $this->accountRepository->flushCompanyCache($companyId);
+        app(AgencyCommercialTermsService::class)->flush($companyId);
         \Illuminate\Support\Facades\Cache::forget("account_notifications:company:{$companyId}");
     }
 
