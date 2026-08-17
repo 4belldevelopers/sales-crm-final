@@ -15,10 +15,11 @@
                 <div class="col-6">
                     <div class="mb-4">
                         <label class="cps-label">Job Display Style</label>
+                        @php $jsStyle = $careerSettings->js_display_style ?? ($careerSettings->jobs_display ?? 'card'); @endphp
                         <select class="js-select" name="js_display_style">
-                            <option value="card" selected>Card View</option>
-                            <option value="list">List View</option>
-                            <option value="compact">Compact View</option>
+                            <option value="card" {{ $jsStyle === 'card' ? 'selected' : '' }}>Card View</option>
+                            <option value="list" {{ $jsStyle === 'list' ? 'selected' : '' }}>List View</option>
+                            <option value="compact" {{ $jsStyle === 'compact' ? 'selected' : '' }}>Compact View</option>
                         </select>
                         <div class="js-hint">Choose how job openings are displayed on your career page.</div>
                     </div>
@@ -26,18 +27,19 @@
                         <label class="cps-label">Jobs Per Page</label>
                         <select class="js-select" name="js_per_page">
                             @foreach([6,9,12,15,20] as $n)
-                            <option value="{{ $n }}" {{ $n==12?'selected':'' }}>{{ $n }} Jobs</option>
+                            <option value="{{ $n }}" {{ ($careerSettings->js_per_page ?? 12) == $n ? 'selected' : '' }}>{{ $n }} Jobs</option>
                             @endforeach
                         </select>
                         <div class="js-hint">Number of jobs to display per page.</div>
                     </div>
                     <div>
                         <label class="cps-label">Default Job Sort By</label>
+                        @php $jsSort = $careerSettings->js_sort_by ?? 'newest'; @endphp
                         <select class="js-select" name="js_sort_by">
-                            <option value="newest" selected>Newest First</option>
-                            <option value="oldest">Oldest First</option>
-                            <option value="relevant">Most Relevant</option>
-                            <option value="salary">Highest Salary</option>
+                            <option value="newest" {{ $jsSort === 'newest' ? 'selected' : '' }}>Newest First</option>
+                            <option value="oldest" {{ $jsSort === 'oldest' ? 'selected' : '' }}>Oldest First</option>
+                            <option value="relevant" {{ $jsSort === 'relevant' ? 'selected' : '' }}>Most Relevant</option>
+                            <option value="salary" {{ $jsSort === 'salary' ? 'selected' : '' }}>Highest Salary</option>
                         </select>
                         <div class="js-hint">Choose the default sorting for job listings.</div>
                     </div>
@@ -47,10 +49,10 @@
                 <div class="col-6" style="display:flex;flex-direction:column;gap:20px;">
                     @php
                     $jsToggles = [
-                        ['name'=>'js_show_posted_date',  'label'=>'Show Job Posted Date',       'desc'=>'Display the job posted date on job cards.',      'checked'=>true],
-                        ['name'=>'js_show_experience',   'label'=>'Show Experience on Job Card', 'desc'=>'Display experience required on job cards.',      'checked'=>true],
-                        ['name'=>'js_show_salary',       'label'=>'Show Salary on Job Card',     'desc'=>'Display salary or salary range on job cards.',   'checked'=>true],
-                        ['name'=>'js_show_tags',         'label'=>'Show Job Tags / Skills',      'desc'=>'Display skills and tags on job cards.',          'checked'=>true],
+                        ['name'=>'js_show_posted_date',  'label'=>'Show Job Posted Date',       'desc'=>'Display the job posted date on job cards.',      'checked'=> !isset($careerSettings->js_show_posted_date) || !empty($careerSettings->js_show_posted_date)],
+                        ['name'=>'js_show_experience',   'label'=>'Show Experience on Job Card', 'desc'=>'Display experience required on job cards.',      'checked'=> !isset($careerSettings->js_show_experience) || !empty($careerSettings->js_show_experience)],
+                        ['name'=>'js_show_salary',       'label'=>'Show Salary on Job Card',     'desc'=>'Display salary or salary range on job cards.',   'checked'=> !isset($careerSettings->js_show_salary) || !empty($careerSettings->js_show_salary)],
+                        ['name'=>'js_show_tags',         'label'=>'Show Job Tags / Skills',      'desc'=>'Display skills and tags on job cards.',          'checked'=> !isset($careerSettings->js_show_tags) || !empty($careerSettings->js_show_tags)],
                     ];
                     @endphp
                     @foreach($jsToggles as $jt)

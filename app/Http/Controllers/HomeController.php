@@ -1551,22 +1551,10 @@ class HomeController extends Controller
         // dd($jobId);
         $pageTitle = __('Add Candidate');
 
-        $eventId = 4;
-        $coinsRequ = 1;
-        /* Intent: Scope coin validation check to route company_id for strict multi-tenant billing enforcement */
-        $companyId = (int) ($company_id ?? 2);
-        $packageStatus = GeneralMethod::coinsValidationsAllcompany($companyId, $eventId, $coinsRequ);
-        if ($packageStatus->status) {
-            session()->flash('packageStatus', $packageStatus->message); // or false depending on your condition
-            $url = url('service_company/apptracker/'.@$jobId.'/all');
-
-            return redirect($url);
-        }
-
         $account = DB::table('companies')->select('*')->where('id', $company_id)->first();
         $client = Client::select('clients.id', 'clients.tags')->where('clients.company_id', '=', $company_id)->where('clients.self_company', '=', 1)->first();
         $industries_name = '';
-        if ($account && $account->industries > 0) {
+        if ($account && ! empty($account->industries) && $account->industries > 0) {
             $industries = DB::table('td_industries')
                 ->select('td_industries.ind_id', 'td_industries.ind_name')
                 ->where('td_industries.ind_id', '=', @$account->industries)
@@ -1581,7 +1569,7 @@ class HomeController extends Controller
         $gender = ['male' => __('modules.front.male'), 'female' => __('modules.front.female'), 'others' => __('modules.front.others')];
 
         /* Intent: Tenant-scoped active jobs selection query for job apply page dropdown */
-        $jobs = Job::select('jobs.id', 'jobs.title', 'jobs.min_salary', 'jobs.max_salary', 'jobs.created_at', 'clients.name as client_name', 'client_location.city', 'client_location.postcode', 'client_location.city as location_city')->join('clients', 'clients.id', 'jobs.client_id')->leftJoin('client_location_jobs', 'client_location_jobs.job_id', '=', 'jobs.id')->leftJoin('client_location', 'client_location.id', '=', 'client_location_jobs.client_location_id')->where('jobs.status', '=', 'active')->where('jobs.company_id', '=', $company_id)->groupBy('jobs.id')->get();
+        $jobs = Job::select('jobs.id', 'jobs.title', 'jobs.min_salary', 'jobs.max_salary', 'jobs.created_at', 'clients.name as client_name', 'client_location.city', 'client_location.postcode', 'client_location.city as location_city')->leftJoin('clients', 'clients.id', 'jobs.client_id')->leftJoin('client_location_jobs', 'client_location_jobs.job_id', '=', 'jobs.id')->leftJoin('client_location', 'client_location.id', '=', 'client_location_jobs.client_location_id')->where('jobs.status', '=', 'active')->where('jobs.company_id', '=', $company_id)->groupBy('jobs.id')->get();
 
         /* Intent: Cache static qualification master reference data for 24h to avoid DB query load */
         $qualification = Cache::remember('qualification_master_list', 86400, function () {
@@ -1592,7 +1580,7 @@ class HomeController extends Controller
 
         $jobDetail = Job::select('jobs.id', 'jobs.company_id', 'jobs.title', 'jobs.min_salary', 'jobs.max_salary', 'jobs.created_at', 'jobs.min_exp', 'jobs.max_exp', 'jobs.status', 'jobs.total_positions', 'clients.name as client_name', 'client_location.city', 'client_location.postcode', 'client_location.city as location_city', 'jobs.min_sal_mode', 'jobs.max_sal_mode', 'jobs.min_salary_currency', 'jobs.max_salary_currency')
             // ->join('job_assign', 'job_assign.job_id', 'jobs.id')
-            ->join('clients', 'clients.id', 'jobs.client_id')
+            ->leftJoin('clients', 'clients.id', 'jobs.client_id')
             ->leftJoin('client_location_jobs', 'client_location_jobs.job_id', '=', 'jobs.id')
             ->leftJoin('client_location', 'client_location.id', '=', 'client_location_jobs.client_location_id')
             ->where('jobs.id', '=', $jobId)
@@ -1600,6 +1588,7 @@ class HomeController extends Controller
 
         $page_event = 'ADD';
         $currency = GeneralMethod::currency();
+        $salaryMode = GeneralMethod::salaryMode();
         /* Intent: Cache static interview mode reference master data for 24h */
         $interview_mode = Cache::remember('interview_mode_master_list', 86400, function () {
             return DB::table('interview_mode')->select('*')->orderBy('interview_mode.id', 'ASC')->get();
@@ -1658,13 +1647,13 @@ class HomeController extends Controller
         $account = DB::table('companies')->select('*')->where('id', $company_id)->first();
         $client = Client::select('clients.id', 'clients.tags')->where('clients.company_id', '=', $company_id)->where('clients.self_company', '=', 1)->first();
         $industries_name = '';
-        if ($account->industries > 0) {
+        if ($account && ! empty($account->industries) && $account->industries > 0) {
             $industries = DB::table('td_industries')
                 ->select('td_industries.ind_id', 'td_industries.ind_name')
                 ->where('td_industries.ind_id', '=', @$account->industries)
                 ->orderBy('td_industries.ind_name', 'ASC')
                 ->first();
-            $industries_name = $industries->ind_name;
+            $industries_name = $industries->ind_name ?? '';
         }
 
         $salaryMode = GeneralMethod::salaryMode();
@@ -1713,11 +1702,16 @@ class HomeController extends Controller
             'job_categories.name as cat_name',
             'qualification_master.name as qualification_name'
         )
-            ->join('clients', 'clients.id', '=', 'jobs.client_id')
-            ->join('companies', 'companies.id', '=', 'jobs.company_id')
+            ->leftJoin('clients', 'clients.id', '=', 'jobs.client_id')
+            ->leftJoin('companies', 'companies.id', '=', 'jobs.company_id')
             ->leftJoin('job_categories', 'job_categories.id', '=', 'jobs.category_id')
             ->leftJoin('qualification_master', 'qualification_master.id', '=', 'jobs.qualification')
-            ->findOrFail($id);
+            ->where('jobs.id', $id)
+            ->first();
+
+        if (! $job) {
+            abort(404, 'Job opening not found or no longer active.');
+        }
 
         $skillArr = DB::table('job_metronics_skills')->select('*')->where('job_id', $job->id)->get();
 
@@ -1850,20 +1844,8 @@ class HomeController extends Controller
         $recommendedDataList = $recommendedDataList->groupBy('companies.id');
         $recommendedDataList = $recommendedDataList->get();
 
-        // dd($fullTimeStatus,$contractStatus,$fullTimeStatusRate, $contractStatusRate);
         $currencySymbole = GeneralMethod::currencySymbole();
         $salary_mode = ['Monthly/Annual', 'Monthly', 'Hourly', 'Annual', 'Hourly/Annual'];
-
-        $eventId = 4;
-        $coinsRequ = 1;
-        $companyId = 2;
-        $packageStatus = GeneralMethod::coinsValidationsAllcompany($companyId, $eventId, $coinsRequ);
-        if ($packageStatus->status) {
-            session()->flash('packageStatus', $packageStatus->message); // or false depending on your condition
-            $url = url('service_company/apptracker/'.@$jobId.'/all');
-
-            return redirect($url);
-        }
 
         $appId = null;
 
