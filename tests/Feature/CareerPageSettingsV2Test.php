@@ -197,4 +197,132 @@ class CareerPageSettingsV2Test extends TestCase
             );
         }
     }
+
+    /**
+     * Test 8: Verify public career jobs page renders dynamic colors, typography, and fallbacks.
+     */
+    public function test_public_career_page_dynamic_colors_and_fallbacks(): void
+    {
+        $testCompanyId = 2;
+        $companyName = '4Bell-Technology';
+
+        // Clear cache prior to request
+        app(AccountSettingsService::class)->flushCareerCache($testCompanyId);
+
+        // 1. Set custom primary color, font, and status in DB
+        CompanyCareerSetting::updateOrCreate(
+            ['company_id' => $testCompanyId],
+            [
+                'primary_color' => '#7C3AED',
+                'td_color_primary' => '#7C3AED',
+                'font_family' => 'Inter',
+                'career_page_status' => 1,
+            ]
+        );
+        app(AccountSettingsService::class)->flushCareerCache($testCompanyId);
+
+        $response = $this->get("/career-jobs/{$companyName}/{$testCompanyId}");
+        $response->assertStatus(200);
+        $response->assertSee('--p:  #7C3AED', false);
+        $response->assertSee("font-family:'Inter'", false);
+
+        // 2. Test fallbacks when settings colors are empty
+        CompanyCareerSetting::updateOrCreate(
+            ['company_id' => $testCompanyId],
+            [
+                'primary_color' => null,
+                'td_color_primary' => null,
+                'font_family' => null,
+                'career_page_status' => 1,
+            ]
+        );
+        app(AccountSettingsService::class)->flushCareerCache($testCompanyId);
+
+        $responseFallback = $this->get("/career-jobs/{$companyName}/{$testCompanyId}");
+        $responseFallback->assertStatus(200);
+        $responseFallback->assertSee('--p:  #2563EB', false);
+        $responseFallback->assertSee("font-family:'Poppins'", false);
+
+        // 3. Test offline status when career_page_status is 0
+        CompanyCareerSetting::updateOrCreate(
+            ['company_id' => $testCompanyId],
+            [
+                'career_page_status' => 0,
+            ]
+        );
+        app(AccountSettingsService::class)->flushCareerCache($testCompanyId);
+
+        $responseOffline = $this->get("/career-jobs/{$companyName}/{$testCompanyId}");
+        $responseOffline->assertStatus(200);
+        $responseOffline->assertSee('Our career portal is currently offline', false);
+
+        // Reset status to online after test
+        CompanyCareerSetting::updateOrCreate(
+            ['company_id' => $testCompanyId],
+            ['career_page_status' => 1]
+        );
+        app(AccountSettingsService::class)->flushCareerCache($testCompanyId);
+    }
+
+    /**
+     * Test 9: Verify hero section settings (badge, heading, description, CTAs) dynamically render on public page.
+     */
+    public function test_hero_section_dynamic_settings(): void
+    {
+        $testCompanyId = 2;
+        $companyName = '4Bell-Technology';
+
+        CompanyCareerSetting::updateOrCreate(
+            ['company_id' => $testCompanyId],
+            [
+                'career_page_status' => 1,
+                'hero_badge' => '🚀 Hiring Top Talent',
+                'hero_heading' => 'Shape the Future of ATS',
+                'hero_description' => 'Join our global team of engineering pioneers.',
+                'hero_cta1_text' => 'Browse Jobs',
+                'hero_cta1_link' => '#jobs',
+                'hero_cta2_text' => 'Learn More',
+                'hero_cta2_link' => 'https://example.com/about',
+            ]
+        );
+        app(AccountSettingsService::class)->flushCareerCache($testCompanyId);
+
+        $response = $this->get("/career-jobs/{$companyName}/{$testCompanyId}");
+        $response->assertStatus(200);
+        $response->assertSee('🚀 Hiring Top Talent');
+        $response->assertSee('Shape the Future of ATS');
+        $response->assertSee('Join our global team of engineering pioneers.');
+        $response->assertSee('Browse Jobs');
+        $response->assertSee('Learn More');
+    }
+
+    /**
+     * Test 10: Verify settings from all 9 tabs (Company Info, Benefits, SEO, Social, Advanced) render dynamically.
+     */
+    public function test_all_tabs_dynamic_settings(): void
+    {
+        $testCompanyId = 2;
+        $companyName = '4Bell-Technology';
+
+        CompanyCareerSetting::updateOrCreate(
+            ['company_id' => $testCompanyId],
+            [
+                'career_page_status' => 1,
+                'ci_company_name' => 'Acme Global Corp',
+                'ci_tagline' => 'Transforming Innovation Daily',
+                'seo_meta_title' => 'Acme Global Careers & Openings',
+                'seo_meta_desc' => 'Explore premier opportunities at Acme Global Corp.',
+                'seo_linkedin' => 'https://linkedin.com/company/acme-global',
+                'adv_maintenance' => false,
+            ]
+        );
+        app(AccountSettingsService::class)->flushCareerCache($testCompanyId);
+
+        $response = $this->get("/career-jobs/{$companyName}/{$testCompanyId}");
+        $response->assertStatus(200);
+        $response->assertSee('Acme Global Corp');
+        $response->assertSee('Acme Global Careers & Openings');
+        $response->assertSee('Explore premier opportunities at Acme Global Corp.');
+        $response->assertSee('https://linkedin.com/company/acme-global');
+    }
 }

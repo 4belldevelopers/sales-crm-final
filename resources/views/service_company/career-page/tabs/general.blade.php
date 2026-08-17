@@ -20,7 +20,7 @@
                     <div class="cps-url-wrap">
                         <input type="text" class="cps-input" id="careerPageUrl"
                                value="{{ $careerUrl }}" readonly>
-                        <button type="button" class="cps-copy-btn" onclick="copyCareerUrl()">Edit</button>
+                        <button type="button" class="cps-copy-btn" onclick="copyCareerUrl()"><i class="ti ti-copy" style="font-size:13px;margin-right:3px;"></i> Copy</button>
                     </div>
                     <div class="cps-url-ok">
                         <i class="ti ti-circle-check-filled" style="font-size:12px;"></i>

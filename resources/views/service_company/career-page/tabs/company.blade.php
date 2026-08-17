@@ -38,7 +38,7 @@
                     <select class="ci-select" name="ci_industry">
                         <option value="">Select Industry</option>
                         @foreach(['Information Technology & Services','Software Development','Staffing & Recruiting','Human Resources','Financial Services','Healthcare','Education','E-Commerce','Manufacturing','Consulting'] as $ind)
-                        <option value="{{ $ind }}">{{ $ind }}</option>
+                        <option value="{{ $ind }}" {{ ($careerSettings->ci_industry ?? '') === $ind ? 'selected' : '' }}>{{ $ind }}</option>
                         @endforeach
                     </select>
                 </div>
@@ -48,13 +48,14 @@
             <div class="mb-3">
                 <label class="cps-label">Company Name <span style="color:#EF4444;">*</span></label>
                 <input type="text" class="ci-input" name="ci_company_name"
-                       value="{{ $companyName }}" placeholder="Enter company name">
+                       value="{{ $careerSettings->ci_company_name ?? $companyName }}" placeholder="Enter company name">
             </div>
 
             {{-- Headquarters --}}
             <div class="mb-3">
                 <label class="cps-label">Headquarters</label>
                 <input type="text" class="ci-input" name="ci_headquarters"
+                       value="{{ $careerSettings->ci_headquarters ?? '' }}"
                        placeholder="e.g. Gurugram, Haryana, India">
             </div>
 
@@ -63,9 +64,9 @@
                 <label class="cps-label">Tagline / Short Description <span style="color:#EF4444;">*</span></label>
                 <textarea class="ci-textarea" name="ci_tagline" maxlength="100" rows="2"
                           id="ciTagline" placeholder="e.g. Building the future of recruitment with technology and trust."
-                          oninput="document.getElementById('ciTaglineCount').textContent=this.value.length+'/100';"></textarea>
+                          oninput="document.getElementById('ciTaglineCount').textContent=this.value.length+'/100';">{{ $careerSettings->ci_tagline ?? '' }}</textarea>
                 <div style="display:flex;justify-content:flex-end;">
-                    <span class="ci-char-count" id="ciTaglineCount">0/100</span>
+                    <span class="ci-char-count" id="ciTaglineCount">{{ strlen($careerSettings->ci_tagline ?? '') }}/100</span>
                 </div>
             </div>
 
@@ -75,7 +76,7 @@
                     <label class="cps-label">Company Website</label>
                     <div class="ci-input-icon">
                         <i class="ti ti-link ci-icon"></i>
-                        <input type="url" class="ci-input" name="ci_website" placeholder="https://www.yoursite.com">
+                        <input type="url" class="ci-input" name="ci_website" value="{{ $careerSettings->ci_website ?? '' }}" placeholder="https://www.yoursite.com">
                         <i class="ti ti-external-link ci-icon-right" style="font-size:13px;"></i>
                     </div>
                 </div>
@@ -83,7 +84,7 @@
                     <label class="cps-label">LinkedIn Page</label>
                     <div class="ci-input-icon">
                         <i class="ti ti-brand-linkedin ci-icon" style="color:#0077B5;"></i>
-                        <input type="url" class="ci-input" name="ci_linkedin" placeholder="https://linkedin.com/company/...">
+                        <input type="url" class="ci-input" name="ci_linkedin" value="{{ $careerSettings->ci_linkedin ?? '' }}" placeholder="https://linkedin.com/company/...">
                         <i class="ti ti-brand-linkedin ci-icon-right" style="color:#0077B5;font-size:13px;"></i>
                     </div>
                 </div>
@@ -94,13 +95,14 @@
                 <div class="col-6">
                     <label class="cps-label">Founded Year</label>
                     <input type="number" class="ci-input" name="ci_founded_year"
+                           value="{{ $careerSettings->ci_founded_year ?? '' }}"
                            min="1900" max="2099" placeholder="e.g. 2016">
                 </div>
                 <div class="col-6">
                     <label class="cps-label">Company Size</label>
                     <select class="ci-select" name="ci_company_size">
                         @foreach(['1 - 10 Employees','11 - 50 Employees','51 - 200 Employees','201 - 500 Employees','501 - 1000 Employees','1001 - 5000 Employees','5001+ Employees'] as $sz)
-                        <option value="{{ $sz }}">{{ $sz }}</option>
+                        <option value="{{ $sz }}" {{ ($careerSettings->ci_company_size ?? '') === $sz ? 'selected' : '' }}>{{ $sz }}</option>
                         @endforeach
                     </select>
                 </div>
@@ -111,7 +113,7 @@
                 <label class="cps-label">X (Twitter) Handle <span style="font-size:10px;color:#94A3B8;font-weight:400;">(Optional)</span></label>
                 <div class="ci-input-icon">
                     <i class="ti ti-brand-x ci-icon"></i>
-                    <input type="url" class="ci-input" name="ci_twitter" placeholder="https://x.com/yourhandle">
+                    <input type="url" class="ci-input" name="ci_twitter" value="{{ $careerSettings->ci_twitter ?? '' }}" placeholder="https://x.com/yourhandle">
                     <i class="ti ti-brand-x ci-icon-right" style="font-size:13px;"></i>
                 </div>
             </div>
@@ -152,9 +154,9 @@
                 </div>
                 <textarea class="ci-rich-textarea" name="ci_about" maxlength="2000" id="ciAbout"
                           oninput="document.getElementById('ciAboutCount').textContent=this.value.length+'/2000';"
-                          placeholder="Describe your company..."></textarea>
+                          placeholder="Describe your company...">{{ $careerSettings->ci_about ?? '' }}</textarea>
                 <div style="display:flex;justify-content:flex-end;">
-                    <span class="ci-char-count" id="ciAboutCount">0/2000</span>
+                    <span class="ci-char-count" id="ciAboutCount">{{ strlen($careerSettings->ci_about ?? '') }}/2000</span>
                 </div>
             </div>
 
@@ -164,18 +166,18 @@
                     <label class="cps-label">Mission</label>
                     <textarea class="ci-textarea" name="ci_mission" maxlength="200" id="ciMission" rows="3"
                               placeholder="e.g. To simplify recruitment and empower organizations to build great teams."
-                              oninput="document.getElementById('ciMissionCount').textContent=this.value.length+'/200';"></textarea>
+                              oninput="document.getElementById('ciMissionCount').textContent=this.value.length+'/200';">{{ $careerSettings->ci_mission ?? '' }}</textarea>
                     <div style="display:flex;justify-content:flex-end;">
-                        <span class="ci-char-count" id="ciMissionCount">0/200</span>
+                        <span class="ci-char-count" id="ciMissionCount">{{ strlen($careerSettings->ci_mission ?? '') }}/200</span>
                     </div>
                 </div>
                 <div class="col-6">
                     <label class="cps-label">Vision</label>
                     <textarea class="ci-textarea" name="ci_vision" maxlength="200" id="ciVision" rows="3"
                               placeholder="e.g. To be the world's most trusted recruitment technology platform."
-                              oninput="document.getElementById('ciVisionCount').textContent=this.value.length+'/200';"></textarea>
+                              oninput="document.getElementById('ciVisionCount').textContent=this.value.length+'/200';">{{ $careerSettings->ci_vision ?? '' }}</textarea>
                     <div style="display:flex;justify-content:flex-end;">
-                        <span class="ci-char-count" id="ciVisionCount">0/200</span>
+                        <span class="ci-char-count" id="ciVisionCount">{{ strlen($careerSettings->ci_vision ?? '') }}/200</span>
                     </div>
                 </div>
             </div>

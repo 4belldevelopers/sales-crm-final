@@ -1022,9 +1022,54 @@ function updatePreview(){
 /* ── Hero layout card ── */
 function selectHeroLayout(key, el){
     document.querySelectorAll('.hs-layout-card').forEach(c => c.classList.remove('selected'));
-    el.classList.add('selected');
-    document.getElementById('heroLayoutInput').value = key;
+    if(el) el.classList.add('selected');
+    var input = document.getElementById('heroLayoutInput');
+    if(input) input.value = key;
+    var prevHero = document.getElementById('hsHeroPreview');
+    if(prevHero){
+        prevHero.dataset.layout = key;
+    }
 }
+
+/* ── Live preview real-time sync ── */
+document.addEventListener('DOMContentLoaded', function(){
+    var heroBadge = document.getElementById('heroBadge');
+    var heroHeading = document.getElementById('heroHeading');
+    var heroDesc = document.getElementById('heroDesc');
+    var cta1 = document.querySelector('input[name="hero_cta1_text"]');
+    var cta2 = document.querySelector('input[name="hero_cta2_text"]');
+
+    if(heroBadge){
+        heroBadge.addEventListener('input', function(){
+            var el = document.querySelector('#hsPreviewBadge span');
+            if(el) el.textContent = this.value || '🚀 Hiring Top Talent';
+        });
+    }
+    if(heroHeading){
+        heroHeading.addEventListener('input', function(){
+            var el = document.getElementById('hsPreviewHeading');
+            if(el) el.innerHTML = this.value || 'Build the Future';
+        });
+    }
+    if(heroDesc){
+        heroDesc.addEventListener('input', function(){
+            var el = document.getElementById('hsPreviewDesc');
+            if(el) el.textContent = this.value || 'Join our team of innovators and help shape the future of technology.';
+        });
+    }
+    if(cta1){
+        cta1.addEventListener('input', function(){
+            var el = document.getElementById('hsPreviewCta1');
+            if(el) el.textContent = this.value || 'Explore Roles';
+        });
+    }
+    if(cta2){
+        cta2.addEventListener('input', function(){
+            var el = document.getElementById('hsPreviewCta2');
+            if(el) el.textContent = this.value || 'Learn More';
+        });
+    }
+});
 
 /* ── Gradient swatch ── */
 function selectGradient(el, val){

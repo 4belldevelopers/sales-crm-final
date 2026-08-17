@@ -18,18 +18,19 @@
                             <div class="adv-toggle-desc">Cache career page content for faster load times.</div>
                         </div>
                         <label class="cps-switch" style="flex-shrink:0;">
-                            <input type="checkbox" name="adv_caching" value="1" checked>
+                            <input type="checkbox" name="adv_caching" value="1" {{ !isset($careerSettings->adv_caching) || !empty($careerSettings->adv_caching) ? 'checked' : '' }}>
                             <span class="cps-slider"></span>
                         </label>
                     </div>
                     <div style="padding:12px 0 12px;">
                         <div class="adv-toggle-label" style="margin-bottom:4px;">Cache Duration (TTL)</div>
                         <div class="adv-hint" style="margin-bottom:4px;">Select how long cached content should be stored.</div>
+                        @php $advTtl = $careerSettings->adv_cache_ttl ?? 86400; @endphp
                         <select class="adv-select" name="adv_cache_ttl">
-                            <option value="30m">30 Minutes</option>
-                            <option value="1h" selected>1 Hour</option>
-                            <option value="6h">6 Hours</option>
-                            <option value="24h">24 Hours</option>
+                            <option value="1800" {{ $advTtl == 1800 ? 'selected' : '' }}>30 Minutes</option>
+                            <option value="3600" {{ $advTtl == 3600 ? 'selected' : '' }}>1 Hour</option>
+                            <option value="21600" {{ $advTtl == 21600 ? 'selected' : '' }}>6 Hours</option>
+                            <option value="86400" {{ $advTtl == 86400 ? 'selected' : '' }}>24 Hours</option>
                         </select>
                     </div>
                     <div class="adv-toggle-row">
@@ -38,7 +39,7 @@
                             <div class="adv-toggle-desc">Serve career page assets (images, CSS, JS) via CDN.</div>
                         </div>
                         <label class="cps-switch" style="flex-shrink:0;">
-                            <input type="checkbox" name="adv_cdn" value="1" checked>
+                            <input type="checkbox" name="adv_cdn" value="1" {{ !isset($careerSettings->adv_cdn) || !empty($careerSettings->adv_cdn) ? 'checked' : '' }}>
                             <span class="cps-slider"></span>
                         </label>
                     </div>
@@ -48,7 +49,7 @@
                             <div class="adv-toggle-desc">Automatically compress and optimize images.</div>
                         </div>
                         <label class="cps-switch" style="flex-shrink:0;">
-                            <input type="checkbox" name="adv_img_opt" value="1" checked>
+                            <input type="checkbox" name="adv_img_opt" value="1" {{ !isset($careerSettings->adv_img_opt) || !empty($careerSettings->adv_img_opt) ? 'checked' : '' }}>
                             <span class="cps-slider"></span>
                         </label>
                     </div>
@@ -146,16 +147,16 @@
                         </div>
                     </div>
                     <label class="cps-switch" style="flex-shrink:0;margin-top:4px;">
-                        <input type="checkbox" name="adv_maintenance" value="1">
+                        <input type="checkbox" name="adv_maintenance" value="1" {{ !empty($careerSettings->adv_maintenance) ? 'checked' : '' }}>
                         <span class="cps-slider"></span>
                     </label>
                 </div>
                 <label class="cps-label">Maintenance Message</label>
                 <textarea class="adv-maint-textarea" name="adv_maintenance_msg" id="advMaintMsg" maxlength="200"
                           oninput="document.getElementById('advMaintCount').textContent=this.value.length+'/200';"
-                          rows="3">We're making some updates to serve you better. Please check back shortly!</textarea>
+                          rows="3">{{ $careerSettings->adv_maintenance_msg ?? "We're making some updates to serve you better. Please check back shortly!" }}</textarea>
                 <div style="display:flex;justify-content:flex-end;margin-top:3px;">
-                    <span style="font-size:11px;color:#94A3B8;" id="advMaintCount">66/200</span>
+                    <span style="font-size:11px;color:#94A3B8;" id="advMaintCount">{{ strlen($careerSettings->adv_maintenance_msg ?? "We're making some updates to serve you better. Please check back shortly!") }}/200</span>
                 </div>
             </div>
         </div>
@@ -220,22 +221,22 @@
                 <div class="col-7" style="padding-right:12px;">
                     <div class="adv-track-label">Google Analytics 4 Measurement ID</div>
                     <div class="adv-track-input-wrap">
-                        <input type="text" class="adv-track-input" name="adv_ga4_id" placeholder="G-XXXXXXXXX" value="G-XXXXXXXXX">
-                        <span class="adv-track-badge">Connected</span>
+                        <input type="text" class="adv-track-input" name="adv_ga4_id" placeholder="G-XXXXXXXXX" value="{{ $careerSettings->adv_ga4_id ?? '' }}">
+                        <span class="adv-track-badge">{{ !empty($careerSettings->adv_ga4_id) ? 'Connected' : 'Not Connected' }}</span>
                     </div>
                     <div class="adv-track-label">Facebook Pixel ID <span style="font-weight:400;color:#94A3B8;">(Optional)</span></div>
                     <div class="adv-track-input-wrap">
-                        <input type="text" class="adv-track-input" name="adv_fb_pixel" placeholder="Pixel ID" value="123456789012345">
-                        <span class="adv-track-badge">Connected</span>
+                        <input type="text" class="adv-track-input" name="adv_fb_pixel" placeholder="Pixel ID" value="{{ $careerSettings->adv_fb_pixel ?? '' }}">
+                        <span class="adv-track-badge">{{ !empty($careerSettings->adv_fb_pixel) ? 'Connected' : 'Not Connected' }}</span>
                     </div>
                     <div class="adv-track-label">LinkedIn Insight Tag ID <span style="font-weight:400;color:#94A3B8;">(Optional)</span></div>
                     <div class="adv-track-input-wrap">
-                        <input type="text" class="adv-track-input" name="adv_linkedin_tag" placeholder="Tag ID" value="abcdef12-3456-7890-abcd-ef1234567890">
-                        <span class="adv-track-badge">Connected</span>
+                        <input type="text" class="adv-track-input" name="adv_linkedin_tag" placeholder="Tag ID" value="{{ $careerSettings->adv_linkedin_tag ?? '' }}">
+                        <span class="adv-track-badge">{{ !empty($careerSettings->adv_linkedin_tag) ? 'Connected' : 'Not Connected' }}</span>
                     </div>
                     <div class="adv-track-label">Hotjar Site ID <span style="font-weight:400;color:#94A3B8;">(Optional)</span></div>
                     <div class="adv-track-input-wrap">
-                        <input type="text" class="adv-track-input" name="adv_hotjar_id" placeholder="Site ID" value="1234567">
+                        <input type="text" class="adv-track-input" name="adv_hotjar_id" placeholder="Site ID" value="{{ $careerSettings->adv_hotjar_id ?? '' }}">
                         <button type="button" class="adv-verify-btn">Verify Connection</button>
                     </div>
                 </div>

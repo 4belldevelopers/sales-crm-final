@@ -15,24 +15,20 @@
                 <div class="col-6">
                     <label class="cps-label">Meta Title</label>
                     <input type="text" class="seo-input" name="seo_meta_title" id="seoMetaTitle"
-                           maxlength="60" value="Careers at 4Bell Technology | Join Our Team"
+                           maxlength="60" value="{{ $careerSettings->seo_meta_title ?? ('Careers at ' . $companyName . ' | Join Our Team') }}"
                            oninput="document.getElementById('seoTitleCount').textContent=this.value.length+'/60';">
-                    <div style="display:flex;justify-content:space-between;align-items:center;margin-top:3px;">
+                    <div style="display:flex;justify-space-between;align-items:center;margin-top:3px;">
                         <span class="seo-hint">This will appear as the title in search engine results.</span>
-                        <span class="seo-char" id="seoTitleCount">45/60</span>
+                        <span class="seo-char" id="seoTitleCount">{{ strlen($careerSettings->seo_meta_title ?? ('Careers at ' . $companyName . ' | Join Our Team')) }}/60</span>
                     </div>
                 </div>
 
                 {{-- Meta Keywords --}}
                 <div class="col-6">
                     <label class="cps-label">Meta Keywords <span style="font-size:10px;color:#94A3B8;font-weight:400;">(Optional)</span></label>
-                    <div class="seo-tags-wrap" id="seoKeywordsWrap" onclick="document.getElementById('seoKwInput').focus()">
-                        @foreach(['careers','jobs','hiring','work with us','join our team','4bell technology'] as $kw)
-                        <span class="seo-tag">{{ $kw }} <span class="seo-tag-del" onclick="this.parentElement.remove()">×</span></span>
-                        @endforeach
-                        <input type="text" class="seo-tag-input" id="seoKwInput"
-                               placeholder="Add keyword..." onkeydown="seoAddKw(event)">
-                    </div>
+                    <input type="text" class="seo-input" name="seo_keywords" id="seoKeywords"
+                           value="{{ $careerSettings->seo_keywords ?? 'careers, jobs, hiring, work with us, join our team' }}"
+                           placeholder="careers, jobs, hiring">
                     <div class="seo-hint" style="margin-top:5px;">Add relevant keywords separated by commas.</div>
                 </div>
 
@@ -41,21 +37,22 @@
                     <label class="cps-label">Meta Description</label>
                     <textarea class="seo-textarea" name="seo_meta_desc" id="seoMetaDesc" maxlength="160"
                               oninput="document.getElementById('seoDescCount').textContent=this.value.length+'/160';"
-                              rows="4">Explore exciting career opportunities at 4Bell Technology. Join our mission to build innovative solutions and grow your career with a talented team.</textarea>
+                              rows="4">{{ $careerSettings->seo_meta_desc ?? ('Explore exciting career opportunities at ' . $companyName . '. Join our mission to build innovative solutions and grow your career with a talented team.') }}</textarea>
                     <div style="display:flex;justify-content:space-between;align-items:center;margin-top:3px;">
                         <span class="seo-hint">This will appear as the description in search engine results.</span>
-                        <span class="seo-char" id="seoDescCount">146/160</span>
+                        <span class="seo-char" id="seoDescCount">{{ strlen($careerSettings->seo_meta_desc ?? ('Explore exciting career opportunities at ' . $companyName . '. Join our mission to build innovative solutions and grow your career with a talented team.')) }}/160</span>
                     </div>
                 </div>
 
                 {{-- Robots Meta Tag --}}
                 <div class="col-6">
                     <label class="cps-label">Robots Meta Tag</label>
+                    @php $seoRobots = $careerSettings->seo_robots ?? 'index,follow'; @endphp
                     <select class="seo-select" name="seo_robots" style="margin-top:2px;">
-                        <option value="index,follow" selected>Index, Follow</option>
-                        <option value="noindex,follow">No Index, Follow</option>
-                        <option value="index,nofollow">Index, No Follow</option>
-                        <option value="noindex,nofollow">No Index, No Follow</option>
+                        <option value="index,follow" {{ $seoRobots === 'index,follow' ? 'selected' : '' }}>Index, Follow</option>
+                        <option value="noindex,follow" {{ $seoRobots === 'noindex,follow' ? 'selected' : '' }}>No Index, Follow</option>
+                        <option value="index,nofollow" {{ $seoRobots === 'index,nofollow' ? 'selected' : '' }}>Index, No Follow</option>
+                        <option value="noindex,nofollow" {{ $seoRobots === 'noindex,nofollow' ? 'selected' : '' }}>No Index, No Follow</option>
                     </select>
                     <div class="seo-hint">Choose how search engines should index your page.</div>
                 </div>
@@ -78,7 +75,7 @@
                 <div class="col-6">
                     <label class="cps-label">Canonical URL <span style="font-size:10px;color:#94A3B8;font-weight:400;">(Optional)</span></label>
                     <input type="url" class="seo-input" name="seo_canonical"
-                           placeholder="https://www.yoursite.com/careers" value="{{ $careerUrl }}">
+                           placeholder="https://www.yoursite.com/careers" value="{{ $careerSettings->seo_canonical ?? $careerUrl }}">
                     <div class="seo-hint">Use canonical URL to prevent duplicate content issues.</div>
                 </div>
             </div>
@@ -91,11 +88,11 @@
 
             @php
             $seoSocials = [
-                ['icon'=>'ti-brand-linkedin','bg'=>'#EFF6FF','ic'=>'#0077B5','label'=>'LinkedIn',    'name'=>'seo_linkedin',   'url'=>'https://www.linkedin.com/company/4bell','checked'=>true],
-                ['icon'=>'ti-brand-x',       'bg'=>'#F8FAFC', 'ic'=>'#0F172A','label'=>'X (Twitter)', 'name'=>'seo_twitter',    'url'=>'https://twitter.com/4bell_tech',        'checked'=>true],
-                ['icon'=>'ti-brand-facebook','bg'=>'#EFF6FF','ic'=>'#1877F2','label'=>'Facebook',    'name'=>'seo_facebook',   'url'=>'https://www.facebook.com/4belltechnology','checked'=>true],
-                ['icon'=>'ti-brand-instagram','bg'=>'#FFF1F2','ic'=>'#E1306C','label'=>'Instagram',  'name'=>'seo_instagram',  'url'=>'https://www.instagram.com/4bell_tech',  'checked'=>true],
-                ['icon'=>'ti-brand-youtube', 'bg'=>'#FFF1F2','ic'=>'#FF0000','label'=>'YouTube',     'name'=>'seo_youtube',    'url'=>'https://www.youtube.com/@4belltech',     'checked'=>true],
+                ['icon'=>'ti-brand-linkedin','bg'=>'#EFF6FF','ic'=>'#0077B5','label'=>'LinkedIn',    'name'=>'seo_linkedin',   'url'=>$careerSettings->seo_linkedin ?? 'https://www.linkedin.com/company/4bell','checked'=>true],
+                ['icon'=>'ti-brand-x',       'bg'=>'#F8FAFC', 'ic'=>'#0F172A','label'=>'X (Twitter)', 'name'=>'seo_twitter',    'url'=>$careerSettings->seo_twitter ?? 'https://twitter.com/4bell_tech','checked'=>true],
+                ['icon'=>'ti-brand-facebook','bg'=>'#EFF6FF','ic'=>'#1877F2','label'=>'Facebook',    'name'=>'seo_facebook',   'url'=>$careerSettings->seo_facebook ?? 'https://www.facebook.com/4belltechnology','checked'=>true],
+                ['icon'=>'ti-brand-instagram','bg'=>'#FFF1F2','ic'=>'#E1306C','label'=>'Instagram',  'name'=>'seo_instagram',  'url'=>$careerSettings->seo_instagram ?? 'https://www.instagram.com/4bell_tech','checked'=>true],
+                ['icon'=>'ti-brand-youtube', 'bg'=>'#FFF1F2','ic'=>'#FF0000','label'=>'YouTube',     'name'=>'seo_youtube',    'url'=>$careerSettings->seo_youtube ?? 'https://www.youtube.com/@4belltech','checked'=>true],
             ];
             @endphp
 
