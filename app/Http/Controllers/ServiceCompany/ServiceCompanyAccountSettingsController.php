@@ -20,6 +20,7 @@ use App\Models\JobCategory;
 use App\Services\AccountSettingsService;
 use App\Services\ElasticService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Schema;
@@ -1236,91 +1237,39 @@ class ServiceCompanyAccountSettingsController extends ServiceCompanyBaseControll
     }
 
     /* Career Page Settings */
+    /**
+     * Career Page Settings V2
+     *
+     * Intent: Delegates career page settings retrieval to AccountSettingsService with 24-hour Redis caching.
+     * Removed all runtime DDL operations (CREATE TABLE / ALTER TABLE / SHOW COLUMNS) for 10K+ concurrency.
+     *
+     * Tenancy: Scoped strictly by auth()->user()->company_id.
+     *
+     * Author: Antigravity AI
+     * Date: August 17, 2026
+     */
     public function careerPageSettings()
     {
         $company_id = auth()->user()->company_id;
-        $this->company = DB::table('companies')->where('id', $company_id)->first();
-        $this->global = DB::table('global_settings')->first();
-        try {
-            $this->careerSettings = DB::table('company_career_settings')->where('company_id', $company_id)->first();
-        } catch (\Exception $e) {
-            $this->careerSettings = null;
-        }
-        /* Ensure table + all Template Design columns exist */
-        DB::statement("CREATE TABLE IF NOT EXISTS `company_career_settings` (
-				`id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT,
-				`company_id` bigint(20) UNSIGNED NOT NULL,
-				`primary_color` varchar(20) DEFAULT '#2563EB',
-				`secondary_color` varchar(20) DEFAULT '#10B981',
-				`font_family` varchar(50) DEFAULT 'Poppins',
-				`default_language` varchar(10) DEFAULT 'en',
-				`currency` varchar(10) DEFAULT 'INR',
-				`page_layout` varchar(20) DEFAULT 'modern',
-				`jobs_display` varchar(20) DEFAULT 'card',
-				`career_page_status` tinyint(1) DEFAULT 1,
-				`td_template` varchar(30) DEFAULT 'modern',
-				`td_color_primary` varchar(20) DEFAULT '#2563EB',
-				`td_color_secondary` varchar(20) DEFAULT '#1F2937',
-				`td_color_accent` varchar(20) DEFAULT '#10B981',
-				`td_color_bg` varchar(20) DEFAULT '#FFFFFF',
-				`td_theme_mode` varchar(10) DEFAULT 'light',
-				`td_layout` varchar(20) DEFAULT 'wide',
-				`td_logo_path` varchar(500) DEFAULT NULL,
-				`td_favicon_path` varchar(500) DEFAULT NULL,
-				`td_hero_img1_path` varchar(500) DEFAULT NULL,
-				`td_hero_img2_path` varchar(500) DEFAULT NULL,
-				`td_opt_life` tinyint(1) DEFAULT 1,
-				`td_opt_testi` tinyint(1) DEFAULT 1,
-				`td_opt_animation` tinyint(1) DEFAULT 1,
-				`td_custom_css` text DEFAULT NULL,
-				`stat_departments` int DEFAULT 15,
-				`stat_countries` int DEFAULT 5,
-				`stat_employees` varchar(20) DEFAULT '220+',
-				`stat_retention` varchar(20) DEFAULT '95%',
-				`created_at` timestamp NULL DEFAULT NULL,
-				`updated_at` timestamp NULL DEFAULT NULL,
-				PRIMARY KEY (`id`),
-				UNIQUE KEY `company_career_settings_company_id_unique` (`company_id`)
-			) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;");
-        /* Add columns if table existed before Template Design was introduced */
-        $tdColumns = [
-            'td_template' => "ALTER TABLE `company_career_settings` ADD COLUMN `td_template` varchar(30) DEFAULT 'modern'",
-            'td_color_primary' => "ALTER TABLE `company_career_settings` ADD COLUMN `td_color_primary` varchar(20) DEFAULT '#2563EB'",
-            'td_color_secondary' => "ALTER TABLE `company_career_settings` ADD COLUMN `td_color_secondary` varchar(20) DEFAULT '#1F2937'",
-            'td_color_accent' => "ALTER TABLE `company_career_settings` ADD COLUMN `td_color_accent` varchar(20) DEFAULT '#10B981'",
-            'td_color_bg' => "ALTER TABLE `company_career_settings` ADD COLUMN `td_color_bg` varchar(20) DEFAULT '#FFFFFF'",
-            'td_theme_mode' => "ALTER TABLE `company_career_settings` ADD COLUMN `td_theme_mode` varchar(10) DEFAULT 'light'",
-            'td_layout' => "ALTER TABLE `company_career_settings` ADD COLUMN `td_layout` varchar(20) DEFAULT 'wide'",
-            'td_logo_path' => 'ALTER TABLE `company_career_settings` ADD COLUMN `td_logo_path` varchar(500) DEFAULT NULL',
-            'td_favicon_path' => 'ALTER TABLE `company_career_settings` ADD COLUMN `td_favicon_path` varchar(500) DEFAULT NULL',
-            'td_hero_img1_path' => 'ALTER TABLE `company_career_settings` ADD COLUMN `td_hero_img1_path` varchar(500) DEFAULT NULL',
-            'td_hero_img2_path' => 'ALTER TABLE `company_career_settings` ADD COLUMN `td_hero_img2_path` varchar(500) DEFAULT NULL',
-            'td_opt_life' => 'ALTER TABLE `company_career_settings` ADD COLUMN `td_opt_life` tinyint(1) DEFAULT 1',
-            'td_opt_testi' => 'ALTER TABLE `company_career_settings` ADD COLUMN `td_opt_testi` tinyint(1) DEFAULT 1',
-            'td_opt_animation' => 'ALTER TABLE `company_career_settings` ADD COLUMN `td_opt_animation` tinyint(1) DEFAULT 1',
-            'td_custom_css' => 'ALTER TABLE `company_career_settings` ADD COLUMN `td_custom_css` text DEFAULT NULL',
-            'stat_departments' => 'ALTER TABLE `company_career_settings` ADD COLUMN `stat_departments` int DEFAULT 15',
-            'stat_countries' => 'ALTER TABLE `company_career_settings` ADD COLUMN `stat_countries` int DEFAULT 5',
-            'stat_employees' => "ALTER TABLE `company_career_settings` ADD COLUMN `stat_employees` varchar(20) DEFAULT '220+'",
-            'stat_retention' => "ALTER TABLE `company_career_settings` ADD COLUMN `stat_retention` varchar(20) DEFAULT '95%'",
-        ];
-        $existing = DB::select('SHOW COLUMNS FROM `company_career_settings`');
-        $existingCols = array_column($existing, 'Field');
-        foreach ($tdColumns as $col => $sql) {
-            if (! in_array($col, $existingCols)) {
-                try {
-                    DB::statement($sql);
-                } catch (\Exception $ex) {
-                }
-            }
-        }
-        if (! $this->careerSettings) {
-            $this->careerSettings = DB::table('company_career_settings')->where('company_id', $company_id)->first();
+        $careerData = $this->accountSettingsService->getCareerPageData($company_id);
+
+        foreach ($careerData as $key => $value) {
+            $this->{$key} = $value;
         }
 
         return view('service_company.career-page.settings', $this->data);
     }
 
+    /**
+     * Save Career Page Settings V2
+     *
+     * Intent: Updates tenant career page settings and invalidates Redis cache via AccountSettingsService.
+     *
+     * Tenancy: Scoped strictly by auth()->user()->company_id.
+     *
+     * Author: Antigravity AI
+     * Date: August 17, 2026
+     */
     public function careerPageSettingsSave(Request $request)
     {
         $company_id = auth()->user()->company_id;
@@ -1349,11 +1298,16 @@ class ServiceCompanyAccountSettingsController extends ServiceCompanyBaseControll
             'updated_at' => now(),
         ];
 
-        /* Handle logo upload */
-        if ($request->hasFile('td_logo') && $request->file('td_logo')->isValid()) {
-            $logo = $request->file('td_logo');
-            $logoName = 'career_logo_'.$company_id.'_'.time().'.'.$logo->getClientOriginalExtension();
-            $logo->move(public_path('uploads/career'), $logoName);
+        /* Ensure upload directory exists */
+        if (! is_dir(public_path('uploads/career'))) {
+            mkdir(public_path('uploads/career'), 0755, true);
+        }
+
+        /* Handle logo upload (supports td_logo, career_logo, ci_logo) */
+        $logoFile = $request->file('td_logo') ?? $request->file('career_logo') ?? $request->file('ci_logo');
+        if ($logoFile && $logoFile->isValid()) {
+            $logoName = 'career_logo_'.$company_id.'_'.time().'.'.$logoFile->getClientOriginalExtension();
+            $logoFile->move(public_path('uploads/career'), $logoName);
             $data['td_logo_path'] = 'uploads/career/'.$logoName;
         }
 
@@ -1365,37 +1319,29 @@ class ServiceCompanyAccountSettingsController extends ServiceCompanyBaseControll
             $data['td_favicon_path'] = 'uploads/career/'.$favName;
         }
 
-        /* Handle hero image 1 upload */
-        if ($request->hasFile('td_hero_img1') && $request->file('td_hero_img1')->isValid()) {
-            $img1 = $request->file('td_hero_img1');
-            $img1Name = 'hero1_'.$company_id.'_'.time().'.'.$img1->getClientOriginalExtension();
-            if (! is_dir(base_path('img/images'))) {
-                mkdir(base_path('img/images'), 0755, true);
-            }
-            $img1->move(base_path('img/images'), $img1Name);
-            $data['td_hero_img1_path'] = 'img/images/'.$img1Name;
+        /* Handle hero image 1 upload (supports td_hero_img1 or hero_illustration) */
+        $hero1File = $request->file('td_hero_img1') ?? $request->file('hero_illustration');
+        if ($hero1File && $hero1File->isValid()) {
+            $img1Name = 'hero1_'.$company_id.'_'.time().'.'.$hero1File->getClientOriginalExtension();
+            $hero1File->move(public_path('uploads/career'), $img1Name);
+            $data['td_hero_img1_path'] = 'uploads/career/'.$img1Name;
         }
 
         /* Handle hero image 2 upload */
         if ($request->hasFile('td_hero_img2') && $request->file('td_hero_img2')->isValid()) {
             $img2 = $request->file('td_hero_img2');
             $img2Name = 'hero2_'.$company_id.'_'.time().'.'.$img2->getClientOriginalExtension();
-            if (! is_dir(base_path('img/images'))) {
-                mkdir(base_path('img/images'), 0755, true);
-            }
-            $img2->move(base_path('img/images'), $img2Name);
-            $data['td_hero_img2_path'] = 'img/images/'.$img2Name;
+            $img2->move(public_path('uploads/career'), $img2Name);
+            $data['td_hero_img2_path'] = 'uploads/career/'.$img2Name;
         }
 
-        DB::table('company_career_settings')->updateOrInsert(
+        CompanyCareerSetting::updateOrCreate(
             ['company_id' => $company_id],
-            array_merge($data, ['company_id' => $company_id, 'created_at' => now()])
+            $data
         );
 
-        /* Ensure upload directory exists */
-        if (! is_dir(public_path('uploads/career'))) {
-            mkdir(public_path('uploads/career'), 0755, true);
-        }
+        /* Intent: Invalidate tenant career metadata and settings Redis caches when updated */
+        $this->accountSettingsService->flushCareerCache($company_id);
 
         return Reply::success('Career page settings saved successfully.');
     }
