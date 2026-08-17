@@ -537,28 +537,6 @@ a{text-decoration:none;}
 </div>
 @else
 
-{{-- ════ NAVBAR ════ --}}
-<header class="nav">
-    <div class="nav-logo">
-        @if(!empty($cpLogoPath))
-            <img src="{{ asset($cpLogoPath) }}" alt="{{ $companyBrand }}" style="max-height:38px;object-fit:contain;">
-        @elseif(!empty($account->logo))
-            <img src="{{ asset($account->logo) }}" alt="{{ $companyBrand }}" style="max-height:38px;object-fit:contain;">
-        @else
-            <div class="nav-logo-mark">{{ $companyInitials }}</div>
-            <div class="nav-logo-name">{{ $companyBrand }}</div>
-        @endif
-    </div>
-    <div class="nav-links">
-        <a href="#jobs" class="nav-link active">Open Jobs</a>
-        <a href="#about" class="nav-link">About Us</a>
-        <a href="#benefits" class="nav-link">Benefits</a>
-    </div>
-    <div class="nav-actions">
-        <a href="#jobs" class="btn-pri">View {{ $total }} Jobs</a>
-    </div>
-</header>
-
 {{-- ════ HERO ════ --}}
 <section class="hero hero-layout-{{ $heroLayout }}" @if($heroBgStyle === 'gradient' && !empty($heroBgGradient)) style="background:{{ $heroBgGradient }};" @endif>
 <div class="container">
@@ -994,34 +972,6 @@ a{text-decoration:none;}
 </section>
 @endif
 
-{{-- ════ FOOTER ════ --}}
-<footer class="footer">
-    <div class="footer-left">
-        <div class="footer-logo">
-            @if(!empty($cpLogoPath))
-                <img src="{{ asset($cpLogoPath) }}" alt="{{ $companyBrand }}" style="max-height:28px;object-fit:contain;">
-            @elseif(!empty($account->logo))
-                <img src="{{ asset($account->logo) }}" alt="{{ $companyBrand }}" style="max-height:28px;object-fit:contain;">
-            @else
-                <div class="footer-logo-mark">{{ $companyInitials }}</div>
-                <span>{{ $companyBrand }}</span>
-            @endif
-        </div>
-        <div class="footer-copy">&copy; {{ date('Y') }} {{ $companyBrand }}. All rights reserved.</div>
-    </div>
-    <div class="footer-links">
-        <a href="#jobs" class="footer-link">Jobs</a>
-        @if($benefitsEnabled)<a href="#benefits" class="footer-link">Benefits</a>@endif
-        @if($socWebsite)<a href="{{ $socWebsite }}" target="_blank" class="footer-link">Website</a>@endif
-    </div>
-    <div class="footer-socials">
-        @if($socLinkedin)<a href="{{ $socLinkedin }}" target="_blank" class="footer-social" title="LinkedIn"><i class="fa-brands fa-linkedin-in"></i></a>@endif
-        @if($socTwitter)<a href="{{ $socTwitter }}" target="_blank" class="footer-social" title="Twitter"><i class="fa-brands fa-x-twitter"></i></a>@endif
-        @if($socFacebook)<a href="{{ $socFacebook }}" target="_blank" class="footer-social" title="Facebook"><i class="fa-brands fa-facebook-f"></i></a>@endif
-        @if($socInstagram)<a href="{{ $socInstagram }}" target="_blank" class="footer-social" title="Instagram"><i class="fa-brands fa-instagram"></i></a>@endif
-        @if($socYoutube)<a href="{{ $socYoutube }}" target="_blank" class="footer-social" title="YouTube"><i class="fa-brands fa-youtube"></i></a>@endif
-    </div>
-</footer>
 @endif
 
 <script src="{{ asset('demo/plugins/global/plugins.bundle.js') }}{{ TM_VERSION }}"></script>
