@@ -39,6 +39,7 @@ Generated to optimize this repo for AI coding agents (Claude Code, Cursor, Winds
 - [adr/](adr/) — architecture decision records
 
 ## Per-feature audits & implementation plans
+- [V2_Zcode/](V2_Zcode/) — **codebase-wide audit (GLM, 2026-08-17)**: multi-tenancy security (6,025 unscoped raw `DB::` queries, IDOR endpoints, 6 disabled model scopes), backend debt (god controllers, debug routes, env() violations), UI findings (inline CSS, font conflict, card-system adoption) + GOD-level 3-track remediation plan (A: 20-step tenancy audit · B: backend upgrade · C: UI standardization). Start with [GLM_FIX_Audit.md](V2_Zcode/GLM_FIX_Audit.md) → [GOD_LEVEL_IMPLEMENTATION_PLAN.md](V2_Zcode/GOD_LEVEL_IMPLEMENTATION_PLAN.md)
 - [V2_Apptracker/](V2_Apptracker/) — `service_company/apptracker` GOD-level audit + 13-step roll-out plan (Service+Admin scoped, Aug 2026)
 - [V2_ServiceCompanyAppTrackerController/](V2_ServiceCompanyAppTrackerController/) — controller-only audit: 33-method ledger, hidden shared-state machine, duplication matrix, 6-phase slice refactor
 - [Add-Edit-Submit-Audit.md](V2_Add-Edit-Submit/Add-Edit-Submit-Audit.md) — unified CRUD + transitions sweep (196 routes, 55 entity rows, 46 transition-mapped entities, 13 hotspots, 7-phase refactor plan ~31 dev-days) across Service Co / Super Admin / Admin / Front scope (2026-08-15). Evidence: [evidence/_Add-Edit-Submit-Audit-evidence.md](V2_Add-Edit-Submit/evidence/_Add-Edit-Submit-Audit-evidence.md)
