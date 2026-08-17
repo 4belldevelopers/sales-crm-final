@@ -405,6 +405,7 @@ input[type="radio"]:checked {
 .candidate-config-card-head>.card-title:not(.candidate-config-actions){display:block!important;min-width:0}.candidate-config-card-head .candidate-config-subtitle{display:block!important;clear:both}
 .candidate-config-link i svg,.candidate-action-icon svg{width:13px;height:13px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}.candidate-action-icon{display:inline-flex;align-items:center;justify-content:center;margin-right:6px;color:currentColor;line-height:1}
 .aat-input-group.aat-fixed-fee-group{grid-template-columns:82px minmax(0,1fr)}.aat-calc-row.simple{grid-template-columns:minmax(0,1fr) 28px minmax(0,1fr)}
+.jero-btn-loading{position:relative;pointer-events:none;opacity:.82}.jero-btn-loading:before{content:'';display:inline-block;width:13px;height:13px;margin-right:7px;border:2px solid currentColor;border-right-color:transparent;border-radius:50%;vertical-align:-2px;animation:jero-btn-spin .65s linear infinite}.jero-btn-loading.btn-icon:before,.jero-btn-loading.aat-drawer-close:before,.jero-btn-loading.aga-close:before{margin-right:0}@keyframes jero-btn-spin{to{transform:rotate(360deg)}}
 .aat-edit-pill{border:0;cursor:pointer}.aat-drawer.agency-commercial-mode{background:#f6f8fc;color:#111b3d}.aat-drawer.agency-commercial-mode .aat-drawer-head{min-height:72px;padding:12px 18px}.aat-drawer.agency-commercial-mode .aat-drawer-title{gap:11px}.aat-drawer.agency-commercial-mode .aat-hero-icon{width:38px;height:38px;border-radius:8px;background:#eef2ff;color:#4f46e5}.aat-drawer.agency-commercial-mode .aat-hero-icon svg{width:20px;height:20px}.aat-drawer.agency-commercial-mode .aat-drawer-title h3{font-size:16.5px!important}.aat-drawer.agency-commercial-mode .aat-drawer-title p{font-size:11px;line-height:1.45}.aat-drawer.agency-commercial-mode .aat-drawer-body{padding:14px 14px 82px}.aat-drawer.agency-commercial-mode .aat-drawer-tabs{display:none}.aat-drawer.agency-commercial-mode .aat-edit-alert{margin-bottom:12px;padding:10px 12px;border-color:#d6e3ff;background:#f4f8ff;color:#405781;font-size:10.5px}.aat-drawer.agency-commercial-mode .aat-edit-section{margin-bottom:12px;border-color:#dbe3ef;border-radius:10px;box-shadow:0 1px 3px rgba(15,23,42,.045)}.aat-drawer.agency-commercial-mode .aat-edit-section-head{padding:14px 16px}.aat-drawer.agency-commercial-mode .aat-edit-section-title h4{font-size:13px!important}.aat-drawer.agency-commercial-mode .aat-edit-section-title p{font-size:10.5px}.aat-drawer.agency-commercial-mode .aat-edit-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;padding:16px;background:linear-gradient(135deg,#fbfcff,#f8f7ff)}.aat-drawer.agency-commercial-mode .aat-field label{font-size:10.5px}.aat-drawer.agency-commercial-mode .aat-field select,.aat-drawer.agency-commercial-mode .aat-field input,.aat-drawer.agency-commercial-mode .aat-control{height:36px;font-size:11px}.aat-drawer.agency-commercial-mode .aat-calc{padding:12px}.aat-drawer.agency-commercial-mode .aat-drawer-footer{padding:10px 14px}.aat-drawer.agency-commercial-mode .aat-btn.save{min-width:140px}.aat-exp-table{grid-column:1/-1;overflow:hidden;border:1px solid #dce4ef;border-radius:8px;background:#fff}.aat-exp-head,.aat-exp-row{display:grid;grid-template-columns:minmax(160px,1fr) minmax(120px,.75fr) minmax(130px,.8fr);align-items:center;gap:10px}.aat-exp-head{min-height:34px;padding:7px 10px;color:#657395;background:#f7f9fc;border-bottom:1px solid #dfe6ef;font-size:9.8px;font-weight:600}.aat-exp-row{min-height:48px;padding:7px 10px;border-bottom:1px solid #e8edf4}.aat-exp-row:last-child{border-bottom:0}.aat-exp-row input{height:32px!important}.aat-exp-basis{color:#53617f;font-size:10.5px}.aat-drawer.agency-commercial-fulltime [data-agency-section="contract"],.aat-drawer.agency-commercial-contract [data-agency-section="fulltime"]{display:none}.aat-drawer.agency-commercial-fulltime [data-agency-section="general"],.aat-drawer.agency-commercial-contract [data-agency-section="general"]{display:block}@media(max-width:1200px){.aat-drawer.agency-commercial-mode .aat-edit-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.aat-drawer.agency-commercial-mode{width:calc(100vw - 220px);max-width:calc(100vw - 220px)}}@media(max-width:768px){.aat-drawer-overlay{left:0}.aat-drawer.agency-commercial-mode{width:100vw;max-width:100vw}.aat-drawer.agency-commercial-mode .aat-edit-grid{grid-template-columns:1fr}.aat-drawer.agency-commercial-mode .aat-drawer-head{align-items:flex-start;flex-direction:column}.aat-drawer.agency-commercial-mode .aat-drawer-meta{justify-content:flex-start}.aat-exp-head,.aat-exp-row{grid-template-columns:1fr}.aat-exp-head{display:none}}
 </style>
 
@@ -1445,6 +1446,19 @@ input[type="radio"]:checked {
       ['label' => '6 - 8 Years', 'rate' => $aatContractRateDisplay],
       ['label' => '9+ Years', 'rate' => $aatContractRateDisplay],
     ])->values();
+    $aatBuildExperienceRows = function ($rows, $basis) {
+      return collect($rows)->map(function ($row) use ($basis) {
+        return '<tr><td>'.e(data_get($row, 'label')).'</td><td>'.e(data_get($row, 'rate')).'</td><td>'.e($basis).'</td></tr>';
+      })->implode('');
+    };
+    $aatTableStyle = 'style="width:100%;border-collapse:collapse;margin:10px 0 16px;font-size:12px;"';
+    $aatCellStyle = 'style="border:1px solid #dfe6f1;padding:8px 10px;text-align:left;"';
+    $aatHeadCellStyle = 'style="border:1px solid #dfe6f1;padding:8px 10px;text-align:left;background:#f7f9fc;font-weight:600;"';
+    $aatFulltimeExperienceHtml = '<table '.$aatTableStyle.'><thead><tr><th '.$aatHeadCellStyle.'>Experience Band</th><th '.$aatHeadCellStyle.'>Agency Rate</th><th '.$aatHeadCellStyle.'>Basis</th></tr></thead><tbody>'.$aatBuildExperienceRows($aatFulltimeExperiencePricing, $aatFulltimeFeeModel === 'fixed' ? $aatFulltimeFixedUnit : 'of Annual CTC').'</tbody></table>';
+    $aatContractExperienceHtml = '<table '.$aatTableStyle.'><thead><tr><th '.$aatHeadCellStyle.'>Experience Band</th><th '.$aatHeadCellStyle.'>Agency Rate</th><th '.$aatHeadCellStyle.'>Basis</th></tr></thead><tbody>'.$aatBuildExperienceRows($aatContractExperiencePricing, ucfirst(@$aatTerms->contract_billing_model ?: 'monthly').' billing').'</tbody></table>';
+    $aatFulltimeCommercialHtml = '<table '.$aatTableStyle.'><tbody><tr><th '.$aatHeadCellStyle.'>Success Fee</th><td '.$aatCellStyle.'>'.e($aatFulltimeFeeLabel).'</td></tr><tr><th '.$aatHeadCellStyle.'>Payment Timeline</th><td '.$aatCellStyle.'>'.e((int) (@$aatTerms->fulltime_payment_terms_days ?? 30).' Days from Invoice').'</td></tr><tr><th '.$aatHeadCellStyle.'>Replacement Period</th><td '.$aatCellStyle.'>'.e((int) (@$aatTerms->fulltime_replacement_period_days ?? 90).' Days').'</td></tr><tr><th '.$aatHeadCellStyle.'>Basis</th><td '.$aatCellStyle.'>Annual Fixed CTC</td></tr></tbody></table>';
+    $aatContractCommercialHtml = '<table '.$aatTableStyle.'><tbody><tr><th '.$aatHeadCellStyle.'>Agency Rate</th><td '.$aatCellStyle.'>'.e($aatContractRateDisplay).'</td></tr><tr><th '.$aatHeadCellStyle.'>Billing Cycle</th><td '.$aatCellStyle.'>'.e(@$aatTerms->contract_billing_cycle ?: 'Monthly in Advance').'</td></tr><tr><th '.$aatHeadCellStyle.'>Minimum Duration</th><td '.$aatCellStyle.'>'.e((int) (@$aatTerms->contract_min_duration_months ?? 3).' Months').'</td></tr><tr><th '.$aatHeadCellStyle.'>Replacement Policy</th><td '.$aatCellStyle.'>'.e(@$aatTerms->contract_replacement_policy ?: 'As per Contract Terms').'</td></tr></tbody></table>';
+    $aatAgencyCommercialSummaryHtml = '<div class="agency-commercial-summary"><h3>Agency Commercial Terms</h3><h4>Full-Time Hiring</h4>'.$aatFulltimeCommercialHtml.'<h4>Full-Time Experience-Based Pricing</h4>'.$aatFulltimeExperienceHtml.'<h4>Contract Hiring</h4>'.$aatContractCommercialHtml.'<h4>Contract Experience-Based Pricing</h4>'.$aatContractExperienceHtml.'</div>';
     $aatUpdated = @$aatTerms->updated_at ?: $atcUpdated;
     $aatUpdatedBy = @$aatTerms->updated_by_name ?: (optional(auth()->user())->name ?: 'System');
     $aatVersion = @$aatTerms->version ?: '1.0';
@@ -1460,6 +1474,11 @@ input[type="radio"]:checked {
       '{CONTRACT_RATE}'    => 'Contract Agency Rate',
       '{PAYMENT_TERMS}'    => 'Payment Terms',
       '{REPLACEMENT_DAYS}' => 'Replacement Period',
+      '{AGENCY_COMMERCIAL_SUMMARY}' => 'Agency Commercial Summary',
+      '{FULLTIME_COMMERCIAL_TABLE}' => 'Full-Time Commercial Table',
+      '{FULLTIME_EXPERIENCE_PRICING}' => 'Full-Time Experience Pricing',
+      '{CONTRACT_COMMERCIAL_TABLE}' => 'Contract Commercial Table',
+      '{CONTRACT_EXPERIENCE_PRICING}' => 'Contract Experience Pricing',
     ];
     $agencyPreviewCompanyAddress = trim(ucwords($company_city_name).(($company_city_name && $company_country_name) ? ', ' : '').ucwords($company_country_name), ', ');
     $agencyPreviewCompanyAddress = $agencyPreviewCompanyAddress ?: (@$account->address ?: 'Tower A, 4th Floor, Sector-135, Noida, UP 201301');
@@ -1482,8 +1501,14 @@ input[type="radio"]:checked {
       ['code' => '{FULLTIME_FEE}', 'desc' => 'Full-Time Success Fee', 'category' => 'Commercial Terms', 'source' => 'Commercial Setup', 'example' => $aatFulltimeFeeLabel, 'status' => 'Active'],
       ['code' => '{FULLTIME_PAYMENT_DAYS}', 'desc' => 'Full-Time Payment Timeline', 'category' => 'Commercial Terms', 'source' => 'Commercial Setup', 'example' => (int) (@$aatTerms->fulltime_payment_terms_days ?? 30).' Days from Invoice', 'status' => 'Active'],
       ['code' => '{FULLTIME_REPLACEMENT_DAYS}', 'desc' => 'Full-Time Replacement Period', 'category' => 'Commercial Terms', 'source' => 'Commercial Setup', 'example' => (int) (@$aatTerms->fulltime_replacement_period_days ?? 90).' Days', 'status' => 'Active'],
+      ['code' => '{FULLTIME_COMMERCIAL_TABLE}', 'desc' => 'Full-Time Commercial Table', 'category' => 'Commercial Terms', 'source' => 'Commercial Setup', 'example' => $aatFulltimeCommercialHtml, 'status' => 'Active'],
+      ['code' => '{FULLTIME_EXPERIENCE_PRICING}', 'desc' => 'Full-Time Experience Pricing', 'category' => 'Commercial Terms', 'source' => 'Commercial Setup', 'example' => $aatFulltimeExperienceHtml, 'status' => 'Active'],
       ['code' => '{CONTRACT_RATE}', 'desc' => 'Contract Agency Rate', 'category' => 'Commercial Terms', 'source' => 'Commercial Setup', 'example' => $aatContractRateDisplay, 'status' => 'Active'],
       ['code' => '{CONTRACT_MIN_DURATION}', 'desc' => 'Minimum Contract Duration', 'category' => 'Commercial Terms', 'source' => 'Commercial Setup', 'example' => (int) (@$aatTerms->contract_min_duration_months ?? 3).' Months', 'status' => 'Active'],
+      ['code' => '{CONTRACT_PAYMENT_DAYS}', 'desc' => 'Contract Payment Timeline', 'category' => 'Commercial Terms', 'source' => 'Commercial Setup', 'example' => (int) (@$aatTerms->contract_payment_terms_days ?? 30).' Days from Invoice', 'status' => 'Active'],
+      ['code' => '{CONTRACT_COMMERCIAL_TABLE}', 'desc' => 'Contract Commercial Table', 'category' => 'Commercial Terms', 'source' => 'Commercial Setup', 'example' => $aatContractCommercialHtml, 'status' => 'Active'],
+      ['code' => '{CONTRACT_EXPERIENCE_PRICING}', 'desc' => 'Contract Experience Pricing', 'category' => 'Commercial Terms', 'source' => 'Commercial Setup', 'example' => $aatContractExperienceHtml, 'status' => 'Active'],
+      ['code' => '{AGENCY_COMMERCIAL_SUMMARY}', 'desc' => 'Complete Agency Commercial Summary', 'category' => 'Commercial Terms', 'source' => 'Commercial Setup', 'example' => $aatAgencyCommercialSummaryHtml, 'status' => 'Active'],
       ['code' => '{TODAY_DATE}', 'desc' => "Today's Date", 'category' => 'Agreement System', 'source' => 'System', 'example' => date('d M Y'), 'status' => 'Active'],
       ['code' => '{AGREEMENT_VERSION}', 'desc' => 'Agreement Version', 'category' => 'Agreement System', 'source' => 'System', 'example' => 'Version '.$aatVersion, 'status' => 'Active'],
       ['code' => '{EFFECTIVE_DATE}', 'desc' => 'Effective Date', 'category' => 'Agreement System', 'source' => 'System', 'example' => date('d M Y', strtotime(@$aatUpdated ?: now())), 'status' => 'Active'],
@@ -1780,12 +1805,12 @@ input[type="radio"]:checked {
                     @php
                       $categoryClass = str_contains($variableRow['category'], 'Agency') ? 'agency' : (str_contains($variableRow['category'], 'Company') ? 'company' : (str_contains($variableRow['category'], 'Job') ? 'job' : (str_contains($variableRow['category'], 'Commercial') ? 'commercial' : 'system')));
                     @endphp
-                    <tr data-avd-row data-code="{{ $variableRow['code'] }}" data-desc="{{ strtolower($variableRow['desc'].' '.$variableRow['code'].' '.$variableRow['example']) }}" data-category="{{ $variableRow['category'] }}" data-source="{{ $variableRow['source'] }}">
+                    <tr data-avd-row data-code="{{ $variableRow['code'] }}" data-desc="{{ strtolower($variableRow['desc'].' '.$variableRow['code'].' '.strip_tags((string) $variableRow['example'])) }}" data-category="{{ $variableRow['category'] }}" data-source="{{ $variableRow['source'] }}">
                       <td><span class="avd-code">{{ $variableRow['code'] }}</span></td>
                       <td>{{ $variableRow['desc'] }}</td>
                       <td><span class="avd-badge {{ $categoryClass }}">{{ $variableRow['category'] }}</span></td>
                       <td>{{ $variableRow['source'] }}</td>
-                      <td>{{ $variableRow['example'] }}</td>
+                      <td>{{ \Illuminate\Support\Str::limit(strip_tags((string) $variableRow['example']), 90) }}</td>
                       <td><span class="avd-status">{{ $variableRow['status'] }}</span></td>
                       <td><span class="avd-row-actions"><button type="button" class="avd-copy" title="Copy variable">⧉</button><button type="button" class="avd-insert" title="Insert in agreement">✎</button></span></td>
                     </tr>
@@ -1831,16 +1856,6 @@ input[type="radio"]:checked {
           </div>
           <div class="aga-shell">
             <main class="aga-main">
-              <div class="aga-tabs">
-                <div class="aga-tabs-left">
-                  <button type="button" class="aga-tab active">Edit</button>
-                  <button type="button" class="aga-tab">Compare with v{{ $aatVersion }}</button>
-                </div>
-                <div class="aga-tools">
-                  <button type="button" class="aat-btn">Templates</button>
-                  <button type="button" class="aat-btn">Insert Variable</button>
-                </div>
-              </div>
               <div class="aga-toolbar">
                 <select><option>Heading 2</option><option>Paragraph</option></select>
                 <select><option>Poppins</option></select>
@@ -4596,6 +4611,24 @@ new Tagify(input)
 <script>
 
 $(document).ready(function(){
+        // Intent: give every real account-page action immediate loading feedback without changing the underlying AJAX or submit business logic.
+        var buttonSpinnerSelector = 'button, a.btn, .aat-btn, .cv2-edit, .candidate-action-icon';
+        var buttonSpinnerExclude = '.aat-drawer-close, .aga-close, .avd-close, .apv-close, .btn-icon, .nav-link, [data-toggle="tab"], .aga-tab, .aat-drawer-tab, .co-var-chip, .aga-var-item, .avd-row-actions button, [data-no-spinner]';
+        function setButtonLoading($button) {
+            if (!$button.length || $button.is(buttonSpinnerExclude) || $button.hasClass('jero-btn-loading')) {
+                return;
+            }
+            $button.addClass('jero-btn-loading').attr('aria-busy', 'true');
+            window.setTimeout(function () {
+                $button.removeClass('jero-btn-loading').removeAttr('aria-busy');
+            }, 12000);
+        }
+        $('body').on('click', buttonSpinnerSelector, function () {
+            setButtonLoading($(this));
+        });
+        $(document).ajaxStop(function () {
+            $('.jero-btn-loading').removeClass('jero-btn-loading').removeAttr('aria-busy');
+        });
         // Intent: persist agency-facing commercial terms separately from client Services/Commercials.
         function openAgencyCommercialDrawer(mode) {
             var commercialMode = mode === 'contract' ? 'contract' : 'fulltime';
@@ -5048,10 +5081,57 @@ $(document).ready(function(){
         });
 
 
+            var agencyAgreementConflictConfirmed = false;
+            function getAgencyCommercialConflictMessages(content) {
+                var messages = [];
+                var commercialVariables = ['{AGENCY_COMMERCIAL_SUMMARY}', '{FULLTIME_COMMERCIAL_TABLE}', '{FULLTIME_EXPERIENCE_PRICING}', '{CONTRACT_COMMERCIAL_TABLE}', '{CONTRACT_EXPERIENCE_PRICING}', '{FULLTIME_FEE}', '{CONTRACT_RATE}'];
+                commercialVariables.forEach(function(variableCode) {
+                    var occurrences = (content.match(new RegExp(variableCode.replace(/[{}]/g, '\\$&'), 'g')) || []).length;
+                    if (occurrences > 1) {
+                        messages.push(variableCode + ' is used ' + occurrences + ' times.');
+                    }
+                });
+                var hasCommercialVariable = commercialVariables.some(function(variableCode) { return content.indexOf(variableCode) !== -1; });
+                var plainText = $('<div>').html(content).text().toLowerCase();
+                if (hasCommercialVariable && /(success fee|agency rate|commercial terms|replacement period|payment timeline|monthly rate)/i.test(plainText)) {
+                    messages.push('Manual commercial wording is present along with dynamic commercial variables.');
+                }
+
+                return messages;
+            }
+            function confirmAgencyCommercialConflicts(content, continueCallback) {
+                var messages = getAgencyCommercialConflictMessages(content);
+                if (!messages.length || agencyAgreementConflictConfirmed) {
+                    agencyAgreementConflictConfirmed = false;
+                    continueCallback();
+                    return;
+                }
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Commercial terms may conflict',
+                    html: '<div style="text-align:left;font-size:13px;">' + messages.map(function(message) { return '• ' + $('<div>').text(message).html(); }).join('<br>') + '<br><br>Please review before saving.</div>',
+                    showCancelButton: true,
+                    confirmButtonText: 'Save Anyway',
+                    cancelButtonText: 'Review'
+                }).then(function(result) {
+                    if (result.isConfirmed) {
+                        agencyAgreementConflictConfirmed = true;
+                        continueCallback();
+                    }
+                });
+            }
             $('body').on('click', '#updateCompanyTerms', function(){
                     $("#updateCompanyTermsTop").text("Please wait...");
                     var data 				=	new FormData();
                     var kt_docs_tinymce_hidden = CKEDITOR.instances.kt_docs_tinymce_hidden.getData();	
+                    if (!agencyAgreementConflictConfirmed) {
+                        $("#updateCompanyTermsTop").text("Save Agreement");
+                        confirmAgencyCommercialConflicts(kt_docs_tinymce_hidden, function(){
+                            $('#updateCompanyTerms').trigger('click');
+                        });
+                        return;
+                    }
+                    agencyAgreementConflictConfirmed = false;
                     data.append("description", kt_docs_tinymce_hidden);
                     var form_data 			=	$('#terms_content').serializeArray();
                     $.each(form_data, function (key, input) {

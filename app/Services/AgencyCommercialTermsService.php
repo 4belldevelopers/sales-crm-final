@@ -20,9 +20,10 @@ class AgencyCommercialTermsService
     {
         return Cache::remember($this->cacheKey($companyId), self::CACHE_TTL, function () use ($companyId) {
             $defaults = $this->defaults($companyId);
+            $globalDefaults = $this->globalDefaults();
 
             if (! Schema::hasTable('agency_commercial_terms')) {
-                return (object) $defaults;
+                return (object) array_merge($defaults, $globalDefaults);
             }
 
             $terms = DB::table('agency_commercial_terms')
@@ -35,8 +36,13 @@ class AgencyCommercialTermsService
                 $settings = json_decode((string) $termsArray['settings_json'], true) ?: [];
             }
 
-            return (object) array_merge($defaults, $termsArray, $settings);
+            return (object) array_merge($defaults, $globalDefaults, $termsArray, $settings);
         });
+    }
+
+    public function getGlobalDefault(): object
+    {
+        return (object) array_merge($this->defaults(0), $this->globalDefaults());
     }
 
     public function upsertForCompany(int $companyId, array $payload): void
@@ -61,6 +67,13 @@ class AgencyCommercialTermsService
         $this->flush($companyId);
     }
 
+    public function upsertGlobalDefault(array $payload): void
+    {
+        $this->upsertForCompany(0, $payload);
+        Cache::forever($this->globalVersionKey(), ((int) Cache::get($this->globalVersionKey(), 1)) + 1);
+        Cache::forget($this->cacheKey(0));
+    }
+
     public function flush(int $companyId): void
     {
         Cache::forget($this->cacheKey($companyId));
@@ -68,7 +81,36 @@ class AgencyCommercialTermsService
 
     private function cacheKey(int $companyId): string
     {
-        return "agency_commercial_terms:company:{$companyId}";
+        $globalVersion = Cache::get($this->globalVersionKey(), 1);
+
+        return "agency_commercial_terms:v{$globalVersion}:company:{$companyId}";
+    }
+
+    private function globalVersionKey(): string
+    {
+        return 'agency_commercial_terms:global_version';
+    }
+
+    private function globalDefaults(): array
+    {
+        if (! Schema::hasTable('agency_commercial_terms')) {
+            return [];
+        }
+
+        $terms = DB::table('agency_commercial_terms')->where('company_id', 0)->first();
+        if (! $terms) {
+            return [];
+        }
+
+        $termsArray = (array) $terms;
+        $settings = [];
+        if (! empty($termsArray['settings_json'])) {
+            $settings = json_decode((string) $termsArray['settings_json'], true) ?: [];
+        }
+
+        unset($termsArray['id'], $termsArray['company_id'], $termsArray['created_at'], $termsArray['updated_at']);
+
+        return array_merge($termsArray, $settings);
     }
 
     private function defaults(int $companyId): array
