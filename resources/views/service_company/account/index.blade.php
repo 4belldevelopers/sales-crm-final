@@ -405,6 +405,7 @@ input[type="radio"]:checked {
 .candidate-config-card-head>.card-title:not(.candidate-config-actions){display:block!important;min-width:0}.candidate-config-card-head .candidate-config-subtitle{display:block!important;clear:both}
 .candidate-config-link i svg,.candidate-action-icon svg{width:13px;height:13px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}.candidate-action-icon{display:inline-flex;align-items:center;justify-content:center;margin-right:6px;color:currentColor;line-height:1}
 .aat-input-group.aat-fixed-fee-group{grid-template-columns:82px minmax(0,1fr)}.aat-calc-row.simple{grid-template-columns:minmax(0,1fr) 28px minmax(0,1fr)}
+.aat-edit-pill{border:0;cursor:pointer}.aat-drawer.agency-commercial-mode{background:#f6f8fc;color:#111b3d}.aat-drawer.agency-commercial-mode .aat-drawer-head{min-height:72px;padding:12px 18px}.aat-drawer.agency-commercial-mode .aat-drawer-title{gap:11px}.aat-drawer.agency-commercial-mode .aat-hero-icon{width:38px;height:38px;border-radius:8px;background:#eef2ff;color:#4f46e5}.aat-drawer.agency-commercial-mode .aat-hero-icon svg{width:20px;height:20px}.aat-drawer.agency-commercial-mode .aat-drawer-title h3{font-size:16.5px!important}.aat-drawer.agency-commercial-mode .aat-drawer-title p{font-size:11px;line-height:1.45}.aat-drawer.agency-commercial-mode .aat-drawer-body{padding:14px 14px 82px}.aat-drawer.agency-commercial-mode .aat-drawer-tabs{display:none}.aat-drawer.agency-commercial-mode .aat-edit-alert{margin-bottom:12px;padding:10px 12px;border-color:#d6e3ff;background:#f4f8ff;color:#405781;font-size:10.5px}.aat-drawer.agency-commercial-mode .aat-edit-section{margin-bottom:12px;border-color:#dbe3ef;border-radius:10px;box-shadow:0 1px 3px rgba(15,23,42,.045)}.aat-drawer.agency-commercial-mode .aat-edit-section-head{padding:14px 16px}.aat-drawer.agency-commercial-mode .aat-edit-section-title h4{font-size:13px!important}.aat-drawer.agency-commercial-mode .aat-edit-section-title p{font-size:10.5px}.aat-drawer.agency-commercial-mode .aat-edit-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;padding:16px;background:linear-gradient(135deg,#fbfcff,#f8f7ff)}.aat-drawer.agency-commercial-mode .aat-field label{font-size:10.5px}.aat-drawer.agency-commercial-mode .aat-field select,.aat-drawer.agency-commercial-mode .aat-field input,.aat-drawer.agency-commercial-mode .aat-control{height:36px;font-size:11px}.aat-drawer.agency-commercial-mode .aat-calc{padding:12px}.aat-drawer.agency-commercial-mode .aat-drawer-footer{padding:10px 14px}.aat-drawer.agency-commercial-mode .aat-btn.save{min-width:140px}.aat-exp-table{grid-column:1/-1;overflow:hidden;border:1px solid #dce4ef;border-radius:8px;background:#fff}.aat-exp-head,.aat-exp-row{display:grid;grid-template-columns:minmax(160px,1fr) minmax(120px,.75fr) minmax(130px,.8fr);align-items:center;gap:10px}.aat-exp-head{min-height:34px;padding:7px 10px;color:#657395;background:#f7f9fc;border-bottom:1px solid #dfe6ef;font-size:9.8px;font-weight:600}.aat-exp-row{min-height:48px;padding:7px 10px;border-bottom:1px solid #e8edf4}.aat-exp-row:last-child{border-bottom:0}.aat-exp-row input{height:32px!important}.aat-exp-basis{color:#53617f;font-size:10.5px}.aat-drawer.agency-commercial-fulltime [data-agency-section="contract"],.aat-drawer.agency-commercial-contract [data-agency-section="fulltime"]{display:none}.aat-drawer.agency-commercial-fulltime [data-agency-section="general"],.aat-drawer.agency-commercial-contract [data-agency-section="general"]{display:block}@media(max-width:1200px){.aat-drawer.agency-commercial-mode .aat-edit-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.aat-drawer.agency-commercial-mode{width:calc(100vw - 220px);max-width:calc(100vw - 220px)}}@media(max-width:768px){.aat-drawer-overlay{left:0}.aat-drawer.agency-commercial-mode{width:100vw;max-width:100vw}.aat-drawer.agency-commercial-mode .aat-edit-grid{grid-template-columns:1fr}.aat-drawer.agency-commercial-mode .aat-drawer-head{align-items:flex-start;flex-direction:column}.aat-drawer.agency-commercial-mode .aat-drawer-meta{justify-content:flex-start}.aat-exp-head,.aat-exp-row{grid-template-columns:1fr}.aat-exp-head{display:none}}
 </style>
 
 @section('content')
@@ -1431,6 +1432,19 @@ input[type="radio"]:checked {
     $aatFulltimePercentageLabel = number_format((float) (@$aatTerms->fulltime_success_fee_percentage ?? 8.33), 2).'% of Annual CTC';
     $aatFulltimeFeeLabel = $aatFulltimeFeeModel === 'fixed' ? $aatFulltimeFixedLabel : $aatFulltimePercentageLabel;
     $aatContractRateDisplay = @$aatTerms->contract_rate_display ?: 'Depend upon job requirements';
+    $aatDefaultExperiencePricing = [
+      ['label' => '0 - 2 Years', 'rate' => $aatFulltimeFeeModel === 'fixed' ? ($aatFulltimeFixedAmount ?? '') : (@$aatTerms->fulltime_success_fee_percentage ?? 8.33)],
+      ['label' => '3 - 5 Years', 'rate' => $aatFulltimeFeeModel === 'fixed' ? ($aatFulltimeFixedAmount ?? '') : (@$aatTerms->fulltime_success_fee_percentage ?? 8.33)],
+      ['label' => '6 - 8 Years', 'rate' => $aatFulltimeFeeModel === 'fixed' ? ($aatFulltimeFixedAmount ?? '') : (@$aatTerms->fulltime_success_fee_percentage ?? 8.33)],
+      ['label' => '9+ Years', 'rate' => $aatFulltimeFeeModel === 'fixed' ? ($aatFulltimeFixedAmount ?? '') : (@$aatTerms->fulltime_success_fee_percentage ?? 8.33)],
+    ];
+    $aatFulltimeExperiencePricing = collect(@$aatTerms->fulltime_experience_pricing ?: $aatDefaultExperiencePricing)->values();
+    $aatContractExperiencePricing = collect(@$aatTerms->contract_experience_pricing ?: [
+      ['label' => '0 - 2 Years', 'rate' => $aatContractRateDisplay],
+      ['label' => '3 - 5 Years', 'rate' => $aatContractRateDisplay],
+      ['label' => '6 - 8 Years', 'rate' => $aatContractRateDisplay],
+      ['label' => '9+ Years', 'rate' => $aatContractRateDisplay],
+    ])->values();
     $aatUpdated = @$aatTerms->updated_at ?: $atcUpdated;
     $aatUpdatedBy = @$aatTerms->updated_by_name ?: (optional(auth()->user())->name ?: 'System');
     $aatVersion = @$aatTerms->version ?: '1.0';
@@ -1563,11 +1577,11 @@ input[type="radio"]:checked {
     <div class="aat-card">
       <div class="aat-sec-head">
         <div class="aat-sec-title"><span class="aat-sec-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v18M17 7H9.5a3.5 3.5 0 0 0 0 7H14a3.5 3.5 0 0 1 0 7H6"/></svg></span><div><div class="aat-sec-t">1. Commercial Terms for Agencies</div><div class="aat-sec-s">Default agency commercial structure reflected in the agreement and marketplace job terms.</div></div></div>
-        <a href="javascript:;" class="aat-btn" id="toggleAgencyCommercialTerms"><svg viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>Edit Commercial Terms</a>
+        <span></span>
       </div>
       <div class="aat-commercial-grid">
         <div class="aat-commercial purple">
-          <div class="aat-service-head"><div class="aat-service-title"><span class="aat-avatar"><svg viewBox="0 0 24 24"><circle cx="12" cy="7" r="4"/><path d="M4 21v-2a8 8 0 0 1 16 0v2"/></svg></span>Full-Time Hiring</div><span class="aat-tag">{{ $aatFulltimeFeeModel === 'fixed' ? 'Fixed Fee' : 'Percentage Based' }}</span></div>
+          <div class="aat-service-head"><div class="aat-service-title"><span class="aat-avatar"><svg viewBox="0 0 24 24"><circle cx="12" cy="7" r="4"/><path d="M4 21v-2a8 8 0 0 1 16 0v2"/></svg></span>Full-Time Hiring</div><button type="button" class="aat-tag aat-edit-pill" data-agency-commercial-open="fulltime">Edit Fulltime Commercials</button></div>
           <div class="aat-rows">
             <div class="aat-row"><span class="label">Success Fee</span><span class="value">{{ $aatFulltimeFeeLabel }}</span></div>
             <div class="aat-row"><span class="label">Payment Timeline</span><span class="value">{{ (int) (@$aatTerms->fulltime_payment_terms_days ?? 30) }} Days from Invoice</span></div>
@@ -1577,7 +1591,7 @@ input[type="radio"]:checked {
           <div class="aat-note">Fee is applicable on confirmed joiners only.</div>
         </div>
         <div class="aat-commercial orange">
-          <div class="aat-service-head"><div class="aat-service-title orange"><span class="aat-avatar orange"><svg viewBox="0 0 24 24"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></span>Contract Hiring</div><span class="aat-tag orange">{{ ucfirst(@$aatTerms->contract_billing_model ?: 'monthly') }} Billing</span></div>
+          <div class="aat-service-head"><div class="aat-service-title orange"><span class="aat-avatar orange"><svg viewBox="0 0 24 24"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></span>Contract Hiring</div><button type="button" class="aat-tag orange aat-edit-pill" data-agency-commercial-open="contract">Edit Contract Commercials</button></div>
           <div class="aat-rows">
             <div class="aat-row"><span class="label">Billing Model</span><span class="value">{{ ucfirst(@$aatTerms->contract_billing_model ?: 'monthly') }} Rate</span></div>
             <div class="aat-row"><span class="label">Agency Rate</span><span class="value">{{ $aatContractRateDisplay }}</span></div>
@@ -1601,7 +1615,7 @@ input[type="radio"]:checked {
         <div class="aat-drawer-head">
           <div class="aat-drawer-title">
             <span class="aat-hero-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 3h9l3 3v15H6z"/><path d="M14 3v4h4M9 12h6M9 16h4"/></svg></span>
-            <div><h3>Edit Commercial Terms</h3><p>Configure the commercial structure for agencies. These terms reflect in agreements and job assignments.</p></div>
+            <div><h3 data-agency-commercial-title>Edit Commercial Terms</h3><p data-agency-commercial-subtitle>Configure the commercial structure for agencies. These terms reflect in agreements and job assignments.</p></div>
           </div>
           <div class="aat-drawer-meta">
             <button type="button" class="aat-drawer-close" id="closeAgencyCommercialDrawer" aria-label="Close">&times;</button>
@@ -1614,7 +1628,7 @@ input[type="radio"]:checked {
           </div>
           <div class="aat-edit-alert"><span>These commercial terms define how agencies will be paid for successful placements. They populate the agreement and can be overridden at job level if required.</span><button type="button" class="aat-drawer-close" style="width:28px;height:28px;font-size:18px;">&times;</button></div>
 
-          <section class="aat-edit-section">
+          <section class="aat-edit-section" data-agency-section="fulltime">
             <div class="aat-edit-section-head">
               <div class="aat-edit-section-title"><span class="aat-avatar"><svg viewBox="0 0 24 24"><circle cx="12" cy="7" r="4"/><path d="M4 21v-2a8 8 0 0 1 16 0v2"/></svg></span><div><h4>Full-Time Hiring Commercial Terms</h4><p>Configure terms applicable for full-time / permanent placements.</p></div></div>
             </div>
@@ -1633,7 +1647,25 @@ input[type="radio"]:checked {
             </div>
           </section>
 
-          <section class="aat-edit-section">
+          <section class="aat-edit-section" data-agency-section="fulltime">
+            <div class="aat-edit-section-head">
+              <div class="aat-edit-section-title"><span class="aat-sec-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19V5"/><path d="M4 19h16"/><path d="m8 15 3-4 3 2 4-6"/></svg></span><div><h4>Experience-Based Pricing</h4><p>Define agency payout by experience band. These values are saved with agency terms only.</p></div></div>
+            </div>
+            <div class="aat-edit-grid">
+              <div class="aat-exp-table">
+                <div class="aat-exp-head"><span>Experience Band</span><span>Agency Rate</span><span>Basis</span></div>
+                @foreach($aatFulltimeExperiencePricing as $experienceRow)
+                  <div class="aat-exp-row">
+                    <input type="text" name="fulltime_experience_label[]" value="{{ data_get($experienceRow, 'label') }}" placeholder="Experience band">
+                    <input type="text" name="fulltime_experience_rate[]" value="{{ data_get($experienceRow, 'rate') }}" placeholder="{{ $aatFulltimeFeeModel === 'fixed' ? 'Fixed fee amount' : 'Percentage' }}">
+                    <span class="aat-exp-basis">{{ $aatFulltimeFeeModel === 'fixed' ? $aatFulltimeFixedUnit : 'of Annual CTC' }}</span>
+                  </div>
+                @endforeach
+              </div>
+            </div>
+          </section>
+
+          <section class="aat-edit-section" data-agency-section="contract">
             <div class="aat-edit-section-head">
               <div class="aat-edit-section-title"><span class="aat-avatar orange"><svg viewBox="0 0 24 24"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></span><div><h4>Contract Hiring Commercial Terms</h4><p>Configure terms applicable for contract / temporary staffing.</p></div></div>
             </div>
@@ -1653,7 +1685,25 @@ input[type="radio"]:checked {
             </div>
           </section>
 
-          <section class="aat-edit-section">
+          <section class="aat-edit-section" data-agency-section="contract">
+            <div class="aat-edit-section-head">
+              <div class="aat-edit-section-title"><span class="aat-sec-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19V5"/><path d="M4 19h16"/><path d="m8 15 3-4 3 2 4-6"/></svg></span><div><h4>Experience-Based Pricing</h4><p>Define contract agency commercial notes or rates by experience band. Country coverage is intentionally not included.</p></div></div>
+            </div>
+            <div class="aat-edit-grid">
+              <div class="aat-exp-table">
+                <div class="aat-exp-head"><span>Experience Band</span><span>Agency Rate</span><span>Basis</span></div>
+                @foreach($aatContractExperiencePricing as $experienceRow)
+                  <div class="aat-exp-row">
+                    <input type="text" name="contract_experience_label[]" value="{{ data_get($experienceRow, 'label') }}" placeholder="Experience band">
+                    <input type="text" name="contract_experience_rate[]" value="{{ data_get($experienceRow, 'rate') }}" placeholder="Depend upon job requirements">
+                    <span class="aat-exp-basis">{{ ucfirst(@$aatTerms->contract_billing_model ?: 'monthly') }} billing</span>
+                  </div>
+                @endforeach
+              </div>
+            </div>
+          </section>
+
+          <section class="aat-edit-section" data-agency-section="general">
             <div class="aat-edit-section-head"><div class="aat-edit-section-title"><span class="aat-sec-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1-2.8 2.8-.1-.1a1.7 1.7 0 0 0-1.9-.3"/></svg></span><div><h4>General Commercial Settings</h4><p>Settings applicable to both full-time and contract hiring.</p></div></div></div>
             <div class="aat-general-grid">
               <div class="aat-field"><label>Currency <span class="req">*</span></label><select name="general_currency"><option value="4" {{ (@$aatTerms->general_currency ?? 4) == 4 ? 'selected' : '' }}>INR (₹)</option><option value="1" {{ @$aatTerms->general_currency == 1 ? 'selected' : '' }}>EUR (€)</option><option value="3" {{ @$aatTerms->general_currency == 3 ? 'selected' : '' }}>GBP (£)</option></select></div>
@@ -4547,19 +4597,29 @@ new Tagify(input)
 
 $(document).ready(function(){
         // Intent: persist agency-facing commercial terms separately from client Services/Commercials.
-        function openAgencyCommercialDrawer() {
+        function openAgencyCommercialDrawer(mode) {
+            var commercialMode = mode === 'contract' ? 'contract' : 'fulltime';
+            var title = commercialMode === 'contract' ? 'Edit Contract Commercials' : 'Edit Fulltime Commercials';
+            var subtitle = commercialMode === 'contract'
+                ? 'Configure contract hiring agency commercials, experience pricing, replacement and payment terms.'
+                : 'Configure full-time agency commercials, experience pricing, replacement and payment terms.';
             $('#agencyCommercialDrawerOverlay').addClass('show');
-            $('#agency_commercial_terms_form').addClass('open').attr('aria-hidden', 'false');
+            $('#agency_commercial_terms_form')
+                .removeClass('agency-commercial-fulltime agency-commercial-contract')
+                .addClass('open agency-commercial-mode agency-commercial-' + commercialMode)
+                .attr('aria-hidden', 'false');
+            $('[data-agency-commercial-title]').text(title);
+            $('[data-agency-commercial-subtitle]').text(subtitle);
             $('body').addClass('modal-open');
             syncFulltimeFeeModelFields();
         }
         function closeAgencyCommercialDrawer() {
             $('#agencyCommercialDrawerOverlay').removeClass('show');
-            $('#agency_commercial_terms_form').removeClass('open').attr('aria-hidden', 'true');
+            $('#agency_commercial_terms_form').removeClass('open agency-commercial-fulltime agency-commercial-contract').attr('aria-hidden', 'true');
             $('body').removeClass('modal-open');
         }
-        $('body').on('click', '#toggleAgencyCommercialTerms', function(){
-            openAgencyCommercialDrawer();
+        $('body').on('click', '[data-agency-commercial-open], #toggleAgencyCommercialTerms', function(){
+            openAgencyCommercialDrawer($(this).data('agency-commercial-open') || 'fulltime');
         });
         $('body').on('click', '#cancelAgencyCommercialTerms, #closeAgencyCommercialDrawer, #agencyCommercialDrawerOverlay, .aat-edit-alert .aat-drawer-close', function(){
             closeAgencyCommercialDrawer();
