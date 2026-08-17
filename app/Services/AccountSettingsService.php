@@ -98,4 +98,25 @@ class AccountSettingsService
         $this->accountRepository->flushCompanyCache($companyId);
         \Illuminate\Support\Facades\Cache::forget("account_notifications:company:{$companyId}");
     }
+
+    /**
+     * Fetch cached career page data for tenant.
+     *
+     * Tenancy: Scoped strictly by $companyId.
+     *
+     * Author: Antigravity AI
+     * Date: August 17, 2026
+     */
+    public function getCareerPageData(int $companyId): array
+    {
+        return $this->accountRepository->getCompanyCareerSettings($companyId);
+    }
+
+    /**
+     * Flush tenant career settings cache keys.
+     */
+    public function flushCareerCache(int $companyId): void
+    {
+        $this->accountRepository->flushCompanyCareerCache($companyId);
+    }
 }

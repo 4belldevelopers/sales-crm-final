@@ -276,4 +276,38 @@ class AccountRepository
     {
         Cache::forget("account_settings:company:{$companyId}");
     }
+
+    /**
+     * Fetch tenant career page settings data wrapped in Redis cache.
+     *
+     * Tenancy: Strictly filtered by $companyId.
+     *
+     * Author: Antigravity AI
+     * Date: August 17, 2026
+     */
+    public function getCompanyCareerSettings(int $companyId): array
+    {
+        $cacheKey = "company_career_settings:{$companyId}";
+
+        return Cache::remember($cacheKey, 86400, function () use ($companyId) {
+            $company = DB::table('companies')->where('id', $companyId)->first();
+            $global = DB::table('global_settings')->first();
+            $careerSettings = DB::table('company_career_settings')->where('company_id', $companyId)->first();
+
+            return [
+                'company' => $company,
+                'global' => $global,
+                'careerSettings' => $careerSettings,
+            ];
+        });
+    }
+
+    /**
+     * Flush tenant career settings cache key.
+     */
+    public function flushCompanyCareerCache(int $companyId): void
+    {
+        Cache::forget("company_career_settings:{$companyId}");
+        Cache::forget("tenant_career_meta:{$companyId}");
+    }
 }

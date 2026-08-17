@@ -288,15 +288,8 @@
     if(!empty(@$account->logo) && strlen(@$account->logo)>10){ $logo_path = @$account->logo; }
     $initLetter = strtoupper(substr(trim(@$account->company_name),0,1));
 
-    $recommendateRow = DB::table('recommendation_relation')
-        ->select('id','from_company_id','from_status','to_status','final_status')
-        ->where(function($q) use($company_id,$to_company_id){
-            $q->where(function($q2) use($company_id,$to_company_id){
-                $q2->where('from_company_id',$company_id)->where('to_company_id',$to_company_id);
-            })->orWhere(function($q2) use($company_id,$to_company_id){
-                $q2->where('from_company_id',$to_company_id)->where('to_company_id',$company_id);
-            });
-        })->first();
+    /* Received pre-fetched $recommendateRow from controller to eliminate Blade header DB query leak */
+    $recommendateRow = $recommendateRow ?? null;
 
     /* Avatar colour by first letter */
     $avatarColors = ['#10B981','#3B82F6','#8B5CF6','#F59E0B','#EF4444','#06B6D4','#EC4899'];
@@ -555,9 +548,22 @@
                         else                                 { $bgTextDecore = 'fs-3 bg-light-secondary text-dark'; }
                         $profile_sidebar_css = 'pbench_show_application_detail';
 
-                        /* Skills badges (bottom of talent cell) */
-                        $skillExperiences = DB::table('bench_candidate_skill_experience')
-                            ->where('candidate_id', $row->id)->get();
+                        /* Skills badges (bottom of talent cell) - Intent: Load pre-fetched candidate skill ratings from ES document payload to eliminate Blade N+1 queries */
+                        $rawSkills = $row->skill_experiences ?? $row->candidate_skills ?? null;
+                        if (!empty($rawSkills) && (is_array($rawSkills) || $rawSkills instanceof \Illuminate\Support\Collection)) {
+                            $skillExperiences = collect($rawSkills)->map(function ($item) {
+                                return (object) [
+                                    'skill_key' => is_array($item) ? ($item['skill_key'] ?? '') : ($item->skill_key ?? ''),
+                                    'rating' => (int) (is_array($item) ? ($item['rating'] ?? 0) : ($item->rating ?? 0)),
+                                    'year' => (int) (is_array($item) ? ($item['year'] ?? 0) : ($item->year ?? 0)),
+                                    'month' => (int) (is_array($item) ? ($item['month'] ?? 0) : ($item->month ?? 0)),
+                                    'total_months' => (int) (is_array($item) ? ($item['total_months'] ?? 0) : ($item->total_months ?? 0)),
+                                ];
+                            });
+                        } else {
+                            $skillExperiences = DB::table('bench_candidate_skill_experience')
+                                ->where('candidate_id', $row->id)->get();
+                        }
                         $skillArr = explode(',', @$row->skills);
                         $skilltag = '';
                         $viewMore = 0;

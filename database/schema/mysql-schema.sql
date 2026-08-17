@@ -630,7 +630,9 @@ CREATE TABLE `client_city_jobs` (
   `country_id` int DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL,
-  PRIMARY KEY (`id`)
+  PRIMARY KEY (`id`),
+  KEY `idx_client_city_jobs_job_id` (`job_id`),
+  KEY `idx_client_city_jobs_company_id` (`company_id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=2726 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ============================================================
@@ -943,7 +945,8 @@ CREATE TABLE `commericial_details` (
   `rate` double DEFAULT NULL,
   `company_id` int DEFAULT NULL,
   `commtype` int DEFAULT NULL,
-  PRIMARY KEY (`id`)
+  PRIMARY KEY (`id`),
+  KEY `idx_cd_company_comm` (`company_id`,`commtype`)
 ) ENGINE=InnoDB AUTO_INCREMENT=13586 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- ============================================================
@@ -2184,7 +2187,8 @@ CREATE TABLE `job_metronics_skills` (
   PRIMARY KEY (`id`),
   KEY `job_skills_job_id_foreign` (`job_id`),
   KEY `job_skills_company_id_foreign` (`company_id`),
-  KEY `idx_job_metronics_skills_company_id` (`company_id`)
+  KEY `idx_job_metronics_skills_company_id` (`company_id`),
+  KEY `idx_jms_job_company` (`job_id`,`company_id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=10238 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ============================================================
@@ -4446,3 +4450,43 @@ CREATE TABLE `zoomsettings` (
   `status` int DEFAULT NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- ============================================================
+-- TABLE: company_career_settings
+-- ============================================================
+CREATE TABLE `company_career_settings` (
+  `id` bigint unsigned NOT NULL AUTO_INCREMENT,
+  `company_id` bigint unsigned NOT NULL,
+  `primary_color` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT '#2563EB',
+  `secondary_color` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT '#10B981',
+  `font_family` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT 'Poppins',
+  `default_language` varchar(10) COLLATE utf8mb4_unicode_ci DEFAULT 'en',
+  `currency` varchar(10) COLLATE utf8mb4_unicode_ci DEFAULT 'INR',
+  `page_layout` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT 'modern',
+  `jobs_display` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT 'card',
+  `career_page_status` tinyint(1) DEFAULT '1',
+  `td_template` varchar(30) COLLATE utf8mb4_unicode_ci DEFAULT 'modern',
+  `td_color_primary` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT '#2563EB',
+  `td_color_secondary` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT '#1F2937',
+  `td_color_accent` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT '#10B981',
+  `td_color_bg` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT '#FFFFFF',
+  `td_theme_mode` varchar(10) COLLATE utf8mb4_unicode_ci DEFAULT 'light',
+  `td_layout` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT 'wide',
+  `td_logo_path` varchar(500) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `td_favicon_path` varchar(500) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `td_hero_img1_path` varchar(500) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `td_hero_img2_path` varchar(500) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `td_opt_life` tinyint(1) DEFAULT '1',
+  `td_opt_testi` tinyint(1) DEFAULT '1',
+  `td_opt_animation` tinyint(1) DEFAULT '1',
+  `td_custom_css` text COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `stat_departments` int DEFAULT '15',
+  `stat_countries` int DEFAULT '5',
+  `stat_employees` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT '220+',
+  `stat_retention` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT '95%',
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `company_career_settings_company_id_unique` (`company_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
