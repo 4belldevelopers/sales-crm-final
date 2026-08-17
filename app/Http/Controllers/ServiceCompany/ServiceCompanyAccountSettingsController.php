@@ -633,6 +633,26 @@ class ServiceCompanyAccountSettingsController extends ServiceCompanyBaseControll
                 'updated_by' => auth()->id(),
                 'updated_by_name' => auth()->user()->name ?? null,
             ];
+            $agencyTermsPayload['settings_json'] = json_encode([
+                'fulltime_fee_cap_currency' => (int) $request->input('fulltime_fee_cap_currency', 4),
+                'fulltime_fee_cap_amount' => $request->filled('fulltime_fee_cap_amount') ? (float) $request->input('fulltime_fee_cap_amount') : null,
+                'fulltime_payment_timeline_from' => $request->input('fulltime_payment_timeline_from', 'From invoice date'),
+                'fulltime_replacement_from' => $request->input('fulltime_replacement_from', 'From candidate joining date'),
+                'fulltime_notice_period' => $request->input('fulltime_notice_period', 'As per client notice period'),
+                'fulltime_basis' => $request->input('fulltime_basis', 'Annual Fixed CTC'),
+                'fulltime_invoice_raising' => $request->input('fulltime_invoice_raising', 'After candidate joins'),
+                'contract_agency_rate_type' => $request->input('contract_agency_rate_type', 'Fixed Rate'),
+                'contract_billing_cycle' => $request->input('contract_billing_cycle', 'Monthly in Advance'),
+                'contract_overtime_policy' => $request->input('contract_overtime_policy', 'As per client terms'),
+                'contract_early_termination' => $request->input('contract_early_termination', 'As per contract terms'),
+                'contract_invoice_raising' => $request->input('contract_invoice_raising', 'Monthly in Advance'),
+                'contract_escalation_policy' => $request->input('contract_escalation_policy', 'As per contract terms'),
+                'payment_modes_allowed' => array_values(array_unique((array) $request->input('payment_modes_allowed', ['bank_transfer', 'neft', 'rtgs']))),
+                'general_currency' => (int) $request->input('general_currency', 4),
+                'tax_handling' => $request->input('tax_handling', 'GST Extra'),
+                'tds_deduction' => $request->input('tds_deduction', 'As per applicable law'),
+                'round_off' => $request->input('round_off', 'To Nearest Rupee'),
+            ]);
 
             app(AgencyCommercialTermsService::class)->upsertForCompany($company_id, $agencyTermsPayload);
             $this->accountSettingsService->flushAccountCache($company_id);
