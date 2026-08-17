@@ -378,6 +378,12 @@ input[type="radio"]:checked {
 @media (max-width:1200px){.aat-commercial-grid,.aat-two-col{grid-template-columns:1fr}.aat-vars{grid-template-columns:repeat(3,1fr)}.aat-form-grid{grid-template-columns:repeat(2,1fr)}}
 @media (max-width:768px){ .atc-vars { grid-template-columns:1fr 1fr; } .atc-meta .atc-btn { margin-left:0; } .aat-hero{display:block}.aat-actions{margin-top:12px;min-width:0}.aat-flow,.aat-vars,.aat-form-grid{grid-template-columns:1fr}.aat-row,.aat-rule{grid-template-columns:1fr}.aat-flow-step:after{display:none}.aga-drawer-overlay,.avd-overlay,.apv-overlay{left:0}.aga-drawer,.avd-drawer,.apv-drawer{width:96vw;max-width:96vw}.aga-shell{grid-template-columns:1fr;padding:12px}.aga-side{order:2}.aga-right{order:3}.aga-toolbar{overflow:auto}.aga-info{margin-left:12px;margin-right:12px}.avd-body{grid-template-columns:1fr;padding:12px}.avd-filter{grid-template-columns:1fr}.avd-table-wrap{overflow:auto}.avd-head,.avd-info{margin-left:12px;margin-right:12px}.avd-head{padding:16px 12px}.apv-body{grid-template-columns:1fr;padding:12px}.apv-head,.apv-info{margin-left:12px;margin-right:12px}.apv-head{padding:16px 12px}.apv-document{padding:20px;max-height:560px}.apv-document .apv-party-grid{grid-template-columns:1fr} }
 
+/* Agency variables drawer: single-column layout with client-side paging for laptop-sized screens. */
+.avd-body{grid-template-columns:minmax(0,1fr)!important;padding:12px 18px 18px!important;gap:12px!important}.avd-filter{grid-template-columns:minmax(220px,1fr) 158px 142px 170px;gap:10px;padding:13px}.avd-table-wrap{max-height:calc(100vh - 292px);overflow:auto}.avd-table{min-width:920px;table-layout:fixed}.avd-table th,.avd-table td{padding:9px 10px;word-break:break-word}.avd-table th:nth-child(1),.avd-table td:nth-child(1){width:170px}.avd-table th:nth-child(2),.avd-table td:nth-child(2){width:150px}.avd-table th:nth-child(3),.avd-table td:nth-child(3){width:150px}.avd-table th:nth-child(4),.avd-table td:nth-child(4){width:120px}.avd-table th:nth-child(5),.avd-table td:nth-child(5){width:260px}.avd-table th:nth-child(6),.avd-table td:nth-child(6){width:86px}.avd-table th:nth-child(7),.avd-table td:nth-child(7){width:74px}.avd-foot{position:sticky;bottom:0;background:#fff}.avd-pages button{min-width:30px;height:30px;border:1px solid #dce3ee;border-radius:7px;background:#fff;color:#34405f;font-size:11px;font-weight:600}.avd-pages button.active{border-color:#6338e8;background:#6338e8;color:#fff}.avd-pages button:disabled{opacity:.45;cursor:not-allowed}@media(max-width:1200px){.avd-filter{grid-template-columns:minmax(190px,1fr) 145px 132px}.avd-check{grid-column:1/-1}.avd-table-wrap{max-height:calc(100vh - 325px)}}@media(max-width:768px){.avd-body{padding:10px!important}.avd-title h3{font-size:18px!important}.avd-title p{font-size:11px}.avd-filter{grid-template-columns:1fr}.avd-table{min-width:850px}.avd-table-wrap{max-height:calc(100vh - 345px)}.avd-foot{align-items:flex-start;flex-direction:column;gap:8px}}
+
+/* Agency preview drawer: keep the document readable while fitting 15-16 inch and smaller screens. */
+.apv-head{padding:14px 18px!important}.apv-title h3{font-size:19px!important}.apv-body{grid-template-columns:minmax(0,1fr) 255px!important;gap:12px!important;padding:12px 18px 16px!important}.apv-toolbar{min-height:48px;padding:0 12px}.apv-tabs{gap:12px}.apv-tab{min-height:46px;font-size:11px}.apv-tools{gap:7px}.apv-tools .aat-btn{min-height:32px;padding:7px 10px}.apv-alert{margin:12px;padding:10px 12px}.apv-document{margin:0 12px 12px!important;padding:22px 32px!important;max-height:calc(100vh - 210px)!important;font-size:12px!important;line-height:1.65!important}.apv-document h1,.apv-document h2,.apv-document h3{font-size:16px!important}.apv-card h4{font-size:13px!important}.apv-pad{padding:13px!important}.apv-summary-list{gap:10px}.apv-commercial{margin-top:12px;padding:12px}.apv-info{margin:0 18px 16px!important;padding:11px 13px!important}@media(max-width:1200px){.apv-body{grid-template-columns:minmax(0,1fr) 230px!important;padding:10px 14px 14px!important}.apv-document{padding:20px 24px!important;max-height:calc(100vh - 225px)!important}.apv-tools .apv-select{width:96px!important}.apv-summary-row{display:block}.apv-summary-row b{display:block;margin-top:3px}}@media(max-width:991px){.apv-body{grid-template-columns:1fr!important}.apv-body>aside:last-child{grid-column:auto!important}.apv-document{max-height:560px!important}.apv-toolbar{align-items:flex-start;flex-direction:column;padding:10px 12px}.apv-tools{width:100%;justify-content:flex-start;flex-wrap:wrap}}@media(max-width:768px){.apv-head{padding:14px 12px!important}.apv-title h3{font-size:18px!important}.apv-body{padding:10px!important}.apv-document{padding:18px!important}.apv-info{margin:0 10px 12px!important}}
+
 /* Commercials tab: presentation-only layer. It reuses the cached account payload and existing service actions. */
 .commercials-v2,.commercials-v2 *{box-sizing:border-box;font-family:'Poppins',sans-serif!important}.commercials-v2{color:#111b3d;font-size:12px;font-weight:500;padding:2px 0 8px}.commercials-v2 .cv2-head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:18px}.commercials-v2 .cv2-title{margin:0;color:#101735;font-size:16px!important;font-weight:600!important;line-height:1.25}.commercials-v2 .cv2-sub{max-width:600px;margin:6px 0 0;color:#52638b;font-size:12px;font-weight:500;line-height:1.5}.commercials-v2 .cv2-stat-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin-bottom:18px}.commercials-v2 .cv2-stat{display:flex;align-items:center;min-width:0;gap:13px;padding:16px;border:1px solid #e5eaf4;border-radius:11px;background:#fff;box-shadow:0 1px 3px rgba(15,23,66,.03)}.commercials-v2 .cv2-stat-icon,.commercials-v2 .cv2-service-icon{display:flex;flex:0 0 auto;align-items:center;justify-content:center;border-radius:11px}.commercials-v2 .cv2-stat-icon{width:46px;height:46px}.commercials-v2 .cv2-stat-icon svg{width:23px;height:23px}.commercials-v2 .cv2-service-icon{width:48px;height:48px}.commercials-v2 .cv2-service-icon svg{width:25px;height:25px}.commercials-v2 .blue{color:#1d3dff;background:#eaf1ff}.commercials-v2 .green{color:#08ac58;background:#e8f9ee}.commercials-v2 .amber{color:#f58911;background:#fff1e5}.commercials-v2 .cv2-stat-copy{min-width:0}.commercials-v2 .cv2-label{color:#52638b;font-size:11px;font-weight:500;line-height:1.35}.commercials-v2 .cv2-value{margin-top:3px;color:#101735;font-size:16px;font-weight:600;line-height:1.2;font-variant-numeric:tabular-nums}.commercials-v2 .cv2-hint{margin-top:5px;color:#08a851;font-size:10.5px;font-weight:500;line-height:1.25}.commercials-v2 .cv2-section-title{margin:0;color:#111b3d;font-size:14px;font-weight:600;line-height:1.35}.commercials-v2 .cv2-section-sub{margin:3px 0 12px;color:#52638b;font-size:11px;font-weight:500}.commercials-v2 .cv2-services{display:grid;gap:16px}.commercials-v2 .cv2-service{padding:16px 18px;border:1px solid #e2e8f3;border-radius:11px;background:#fff;box-shadow:0 1px 3px rgba(15,23,66,.025)}.commercials-v2 .cv2-service-top{display:flex;align-items:flex-start;justify-content:space-between;gap:16px}.commercials-v2 .cv2-service-name{display:flex;align-items:center;gap:13px;min-width:0}.commercials-v2 .cv2-service-name h4{margin:0;color:#101735;font-size:14px!important;font-weight:600!important;line-height:1.35}.commercials-v2 .cv2-service-desc{margin:3px 0 0;color:#52638b;font-size:11px;font-weight:500;line-height:1.4}.commercials-v2 .cv2-badge{display:inline-flex;align-items:center;margin-left:7px;padding:3px 8px;border-radius:5px;background:#e8f8ed;color:#08a851;font-size:10px;font-weight:600;vertical-align:2px}.commercials-v2 .cv2-badge.is-off{color:#c2410c;background:#fff2e8}.commercials-v2 .cv2-switch{display:inline-flex;align-items:center;gap:8px;flex:0 0 auto}.commercials-v2 .form-switch{margin:0}.commercials-v2 .form-check-input{width:38px!important;height:21px!important;margin:0!important;cursor:pointer}.commercials-v2 .cv2-switch-text{color:#52638b;font-size:10.5px;font-weight:600}.commercials-v2 .cv2-service-main{display:grid;grid-template-columns:minmax(0,1fr) 230px;gap:18px;margin-top:14px;padding-top:14px;border-top:1px solid #edf0f6}.commercials-v2 .cv2-disabled{opacity:.45}.commercials-v2 .cv2-facts{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:0}.commercials-v2 .cv2-fact{min-width:0;padding:0 14px;border-right:1px solid #e8ecf3}.commercials-v2 .cv2-fact:first-child{padding-left:0}.commercials-v2 .cv2-fact:last-child{border:0}.commercials-v2 .cv2-fact-label{color:#52638b;font-size:10px;font-weight:500;line-height:1.3}.commercials-v2 .cv2-fact-value{margin-top:5px;color:#111b3d;font-size:11px;font-weight:600;line-height:1.3;word-break:break-word}.commercials-v2 .cv2-fact-value.rate{color:#0a9f57}.commercials-v2 .cv2-side{display:grid;gap:8px;align-content:start;padding-left:18px;border-left:1px solid #e8ecf3}.commercials-v2 .cv2-side-row{display:flex;justify-content:space-between;gap:8px;color:#52638b;font-size:10px;font-weight:500}.commercials-v2 .cv2-side-row b{color:#111b3d;font-size:10.5px;font-weight:600;text-align:right;font-variant-numeric:tabular-nums}.commercials-v2 .cv2-bottom{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;margin-top:14px}.commercials-v2 .cv2-country-label{margin:0 0 8px;color:#111b3d;font-size:11px;font-weight:600}.commercials-v2 .cv2-country-chip{display:inline-flex;align-items:center;gap:8px;min-height:38px;padding:7px 12px;color:#33466f;background:#f8faff;border:1px solid #e1e7f2;border-radius:7px;font-size:10.5px;font-weight:500}.commercials-v2 .cv2-country-chip svg{width:15px;height:15px;color:#2764ff}.commercials-v2 .cv2-country-chip b{color:#101735;font-weight:600}.commercials-v2 .cv2-edit{display:inline-flex!important;align-items:center;gap:8px;padding:9px 13px!important;color:#173af5!important;background:#fff!important;border:1px solid #b9c4ff!important;border-radius:7px!important;font-size:11px!important;font-weight:600!important;white-space:nowrap}.commercials-v2 .cv2-edit:hover{background:#f5f7ff!important}.commercials-v2 .cv2-edit svg{width:15px;height:15px}.commercials-v2 .cv2-note{display:flex;align-items:center;gap:14px;margin-top:16px;padding:13px 16px;border:1px solid #cfead8;border-radius:9px;background:#f7fdf8;color:#40547e}.commercials-v2 .cv2-note-icon{display:flex;flex:0 0 auto;align-items:center;justify-content:center;width:34px;height:34px;color:#08a851;background:#e7f8ec;border-radius:50%}.commercials-v2 .cv2-note-icon svg{width:21px;height:21px}.commercials-v2 .cv2-note p{margin:0;font-size:10.5px;font-weight:500;line-height:1.5}.commercials-v2 .cv2-note b{color:#111b3d;font-weight:600}@media(max-width:1199px){.commercials-v2 .cv2-stat-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.commercials-v2 .cv2-service-main{grid-template-columns:1fr}.commercials-v2 .cv2-side{grid-template-columns:repeat(3,minmax(0,1fr));padding:12px 0 0;border-top:1px solid #e8ecf3;border-left:0}.commercials-v2 .cv2-side-row{display:block}.commercials-v2 .cv2-side-row b{display:block;margin-top:3px;text-align:left}}@media(max-width:767px){.commercials-v2 .cv2-head,.commercials-v2 .cv2-service-top,.commercials-v2 .cv2-bottom{display:block}.commercials-v2 .cv2-switch{margin-top:12px}.commercials-v2 .cv2-stat-grid{grid-template-columns:1fr}.commercials-v2 .cv2-facts{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.commercials-v2 .cv2-fact:nth-child(2){border-right:0}.commercials-v2 .cv2-fact:nth-child(n+3){padding-left:0}.commercials-v2 .cv2-side{grid-template-columns:1fr 1fr}.commercials-v2 .cv2-edit{margin-top:12px}.commercials-v2 .cv2-note{align-items:flex-start}}
 
@@ -1482,45 +1488,12 @@ input[type="radio"]:checked {
           <span class="aat-hero-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h4"/><path d="M2 12s4-5 10-5 10 5 10 5-4 5-10 5S2 12 2 12Z"/></svg></span>
           <div><h3>Preview Agreement as Agency</h3><p>This is how the agreement will look for the agency after variables are populated.</p></div>
         </div>
-        <div class="apv-meta">
-          <span><span class="aat-pill {{ $aatActive ? 'ok' : 'v' }}">{{ $aatActive ? 'Active' : 'Inactive' }}</span> <span class="aat-pill v">Version {{ $aatVersion }}</span></span>
-          @if($aatUpdated)<span>Last updated: <b>{{ date('d M Y, h:i A', strtotime($aatUpdated)) }}</b></span>@endif
-          <span>Updated by: <b>{{ $aatUpdatedBy }}</b></span>
-        </div>
         <div class="apv-actions">
-          <button type="button" class="aat-btn" id="agencyPreviewEditAgreement"><svg viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>Edit Agreement</button>
-          <button type="button" class="aat-btn" id="agencyPreviewBackEditor"><svg viewBox="0 0 24 24"><path d="M19 12H5"/><path d="m12 19-7-7 7-7"/></svg>Back to Editor</button>
           <button type="button" class="aat-btn primary" id="agencyPreviewDownloadPdf"><svg viewBox="0 0 24 24"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg>Download PDF</button>
           <button type="button" class="aga-close" id="closeAgencyPreviewDrawer" aria-label="Close preview">&times;</button>
         </div>
       </div>
       <div class="apv-body">
-        <aside>
-          <div class="apv-card apv-pad">
-            <h4>Preview As Agency</h4>
-            <p>Select an agency to see the populated agreement.</p>
-            <select class="apv-select"><option>TalentVerse Solutions Pvt. Ltd.</option></select>
-          </div>
-          <div class="apv-card apv-pad" style="margin-top:14px;">
-            <h4>Agency Details Used <span class="aat-pill ok" style="float:right;">Auto-filled</span></h4>
-            <div class="apv-detail">
-              <div class="apv-detail-row"><span>▣</span><div><b>Agency Name</b>TalentVerse Solutions Pvt. Ltd.</div></div>
-              <div class="apv-detail-row"><span>⌖</span><div><b>Address</b>B-403, 4th Floor, Skyline Tech Park, Sector-62, Noida, Uttar Pradesh - 201309</div></div>
-              <div class="apv-detail-row"><span>♙</span><div><b>Contact Person</b>Rahul Sharma</div></div>
-              <div class="apv-detail-row"><span>✉</span><div><b>Email</b>rahul.sharma@talentverse.in</div></div>
-              <div class="apv-detail-row"><span>☎</span><div><b>Phone</b>+91 98765 43210</div></div>
-              <div class="apv-detail-row"><span>▦</span><div><b>GST Number</b>09AAECT1234F1Z5</div></div>
-              <div class="apv-detail-row"><span>▤</span><div><b>PAN Number</b>AAECT1234F</div></div>
-            </div>
-            <div class="apv-other">
-              <h4>Other Details</h4>
-              <div class="apv-other-row"><span>Today's Date</span><b>{{ date('d M Y') }}</b></div>
-              <div class="apv-other-row"><span>Company Name</span><b>{{ $agencyPreviewValues['{COMPANY_NAME}'] }}</b></div>
-              <div class="apv-other-row"><span>Company Address</span><b>{{ $agencyPreviewValues['{COMPANY_ADDRESS}'] }}</b></div>
-            </div>
-            <button type="button" class="aat-btn" id="agencyPreviewChangeAgency" style="width:100%;margin-top:14px;">Change Agency</button>
-          </div>
-        </aside>
         <main class="apv-card apv-main">
           <div class="apv-toolbar">
             <div class="apv-tabs"><button type="button" class="apv-tab active" data-apv-view="document">Document Preview</button><button type="button" class="apv-tab" data-apv-view="plain">Plain Text View</button></div>
@@ -1534,7 +1507,6 @@ input[type="radio"]:checked {
           <div class="apv-card apv-pad">
             <h4>Agreement Summary</h4>
             <div class="apv-summary-list">
-              <div class="apv-summary-row"><span>Version</span><b>{{ $aatVersion }} ({{ $aatActive ? 'Active' : 'Inactive' }})</b></div>
               <div class="apv-summary-row"><span>Type</span><b>Master Agreement</b></div>
               <div class="apv-summary-row"><span>Effective From</span><b>{{ date('d M Y') }}</b></div>
               <div class="apv-summary-row"><span>Agreement Duration</span><b>{{ (int) (@$aatTerms->agreement_duration_months ?? 12) }} Months</b></div>
@@ -1547,10 +1519,9 @@ input[type="radio"]:checked {
             <div class="apv-commercial"><h5>Full-Time Hiring</h5><div class="apv-summary-list"><div class="apv-summary-row"><span>Success Fee</span><b>{{ $agencyPreviewValues['{FULLTIME_FEE}'] }}</b></div><div class="apv-summary-row"><span>Payment Timeline</span><b>{{ $agencyPreviewValues['{FULLTIME_PAYMENT_DAYS}'] }}</b></div><div class="apv-summary-row"><span>Replacement Period</span><b>{{ $agencyPreviewValues['{FULLTIME_REPLACEMENT_DAYS}'] }}</b></div><div class="apv-summary-row"><span>Basis</span><b>Annual Fixed CTC</b></div></div></div>
             <div class="apv-commercial orange"><h5>Contract Hiring</h5><div class="apv-summary-list"><div class="apv-summary-row"><span>Agency Rate</span><b>{{ $agencyPreviewValues['{CONTRACT_RATE}'] }}</b></div><div class="apv-summary-row"><span>Billing Cycle</span><b>{{ @$aatTerms->contract_billing_cycle ?: 'Monthly in Advance' }}</b></div><div class="apv-summary-row"><span>Minimum Duration</span><b>{{ $agencyPreviewValues['{CONTRACT_MIN_DURATION}'] }}</b></div><div class="apv-summary-row"><span>Replacement</span><b>{{ @$aatTerms->contract_replacement_policy ?: 'As per Contract Terms' }}</b></div></div></div>
           </div>
-          <div class="apv-readonly">This is a read-only preview.<br>To make changes, click Edit Agreement.</div>
         </aside>
       </div>
-      <div class="apv-info"><span>This is how the agreement will be presented to the agency. Agencies must accept this agreement before they can submit candidates.</span><button type="button" class="aat-btn" id="agencyPreviewShareLink">Share Preview Link</button></div>
+      <div class="apv-info"><span>This is how the agreement will be presented to the agency. Agencies must accept this agreement before they can submit candidates.</span></div>
     </div>
 
     <div class="aat-card">
@@ -1706,24 +1677,6 @@ input[type="radio"]:checked {
           </div>
         </div>
         <div class="avd-body">
-          <aside>
-            <div class="avd-card avd-pad">
-              <h4>Variable Categories</h4>
-              <div class="avd-cat" id="agencyVariableCategories">
-                <button type="button" class="active" data-avd-category="all"><span>All Variables</span><b>{{ count($agencyVariableCatalog) }}</b></button>
-                @foreach($agencyVariableCategories as $categoryName => $categoryCount)
-                  <button type="button" data-avd-category="{{ $categoryName }}"><span>{{ $categoryName }}</span><b>{{ $categoryCount }}</b></button>
-                @endforeach
-              </div>
-            </div>
-            <div class="avd-card avd-help">
-              <h4>About Variables</h4>
-              <div class="avd-help-item"><span>↻</span><div><b>Auto-filled</b>Values come from agency, company or job data</div></div>
-              <div class="avd-help-item"><span>◇</span><div><b>Consistent</b>Same variable always shows the same value</div></div>
-              <div class="avd-help-item"><span>▣</span><div><b>Safe</b>Variables are validated before publishing</div></div>
-              <div class="avd-help-item"><span>✣</span><div><b>Flexible</b>Add custom variables as per your needs</div></div>
-            </div>
-          </aside>
           <main class="avd-card">
             <div class="avd-filter">
               <input type="text" class="avd-input" id="agencyVariableSearch" placeholder="Search variables by name or description...">
@@ -1753,7 +1706,7 @@ input[type="radio"]:checked {
               </table>
               <div class="avd-empty" id="agencyVariablesEmpty">No variables matched your filters.</div>
             </div>
-            <div class="avd-foot"><span id="agencyVariablesShowing">Showing 1 to {{ count($agencyVariableCatalog) }} of {{ count($agencyVariableCatalog) }} variables</span><div class="avd-pages"><span>‹</span><span class="active">1</span><span>2</span><span>›</span></div></div>
+            <div class="avd-foot"><span id="agencyVariablesShowing">Showing 1 to {{ min(8, count($agencyVariableCatalog)) }} of {{ count($agencyVariableCatalog) }} variables</span><div class="avd-pages" id="agencyVariablesPagination"></div></div>
           </main>
         </div>
         <div class="avd-info"><div><b>How Variables Work</b><br>Variables are placeholders enclosed in { } braces. They are automatically replaced with actual values when the agreement is shown to agencies.<br>Example: <b>{AGENCY_NAME}</b> will be shown as “TalentVerse Solutions Pvt. Ltd.”</div><button type="button" class="aga-close" id="closeAgencyVariablesInfo" aria-label="Hide info">&times;</button></div>
@@ -4669,30 +4622,54 @@ $(document).ready(function(){
             $('#agencyVariablesDrawerOverlay').addClass('show');
             $('#agencyVariablesDrawer').addClass('open').attr('aria-hidden', 'false');
             $('body').addClass('modal-open');
+            agencyVariablesCurrentPage = 1;
+            filterAgencyVariables();
         }
         function closeAgencyVariablesDrawer() {
             $('#agencyVariablesDrawerOverlay').removeClass('show');
             $('#agencyVariablesDrawer').removeClass('open').attr('aria-hidden', 'true');
             $('body').removeClass('modal-open');
         }
-        function filterAgencyVariables() {
+        var agencyVariablesCurrentPage = 1;
+        var agencyVariablesPageSize = 8;
+        function getFilteredAgencyVariableRows() {
             var searchText = ($('#agencyVariableSearch').val() || '').toLowerCase().trim();
             var categoryValue = $('#agencyVariableCategoryFilter').val() || 'all';
             var sourceValue = $('#agencyVariableSourceFilter').val() || 'all';
             var showSystem = $('#agencyVariableSystemFilter').is(':checked');
-            var visibleCount = 0;
-            $('[data-avd-row]').each(function(){
+            return $('[data-avd-row]').filter(function(){
                 var $row = $(this);
                 var matchesSearch = !searchText || ($row.data('desc') || '').indexOf(searchText) !== -1;
                 var matchesCategory = categoryValue === 'all' || $row.data('category') === categoryValue;
                 var matchesSource = sourceValue === 'all' || $row.data('source') === sourceValue;
                 var matchesSystem = showSystem || $row.data('category') !== 'Agreement System';
-                var visible = matchesSearch && matchesCategory && matchesSource && matchesSystem;
-                $row.toggle(visible);
-                if (visible) visibleCount++;
+                return matchesSearch && matchesCategory && matchesSource && matchesSystem;
             });
-            $('#agencyVariablesEmpty').toggle(visibleCount === 0);
-            $('#agencyVariablesShowing').text('Showing ' + (visibleCount ? 1 : 0) + ' to ' + visibleCount + ' of ' + $('[data-avd-row]').length + ' variables');
+        }
+        function renderAgencyVariablesPagination(totalRows) {
+            var totalPages = Math.max(1, Math.ceil(totalRows / agencyVariablesPageSize));
+            agencyVariablesCurrentPage = Math.min(Math.max(agencyVariablesCurrentPage, 1), totalPages);
+            var paginationHtml = '<button type="button" data-avd-page="prev" ' + (agencyVariablesCurrentPage === 1 ? 'disabled' : '') + '>‹</button>';
+            for (var pageNumber = 1; pageNumber <= totalPages; pageNumber++) {
+                paginationHtml += '<button type="button" data-avd-page="' + pageNumber + '" class="' + (pageNumber === agencyVariablesCurrentPage ? 'active' : '') + '">' + pageNumber + '</button>';
+            }
+            paginationHtml += '<button type="button" data-avd-page="next" ' + (agencyVariablesCurrentPage === totalPages ? 'disabled' : '') + '>›</button>';
+            $('#agencyVariablesPagination').html(paginationHtml);
+        }
+        function filterAgencyVariables() {
+            var $allRows = $('[data-avd-row]');
+            var $filteredRows = getFilteredAgencyVariableRows();
+            var totalFilteredRows = $filteredRows.length;
+            var startIndex = (agencyVariablesCurrentPage - 1) * agencyVariablesPageSize;
+            var endIndex = startIndex + agencyVariablesPageSize;
+
+            renderAgencyVariablesPagination(totalFilteredRows);
+            startIndex = (agencyVariablesCurrentPage - 1) * agencyVariablesPageSize;
+            endIndex = startIndex + agencyVariablesPageSize;
+            $allRows.hide();
+            $filteredRows.slice(startIndex, endIndex).show();
+            $('#agencyVariablesEmpty').toggle(totalFilteredRows === 0);
+            $('#agencyVariablesShowing').text('Showing ' + (totalFilteredRows ? startIndex + 1 : 0) + ' to ' + Math.min(endIndex, totalFilteredRows) + ' of ' + totalFilteredRows + ' variables');
         }
         function insertAgencyVariable(variableCode) {
             closeAgencyVariablesDrawer();
@@ -4705,13 +4682,20 @@ $(document).ready(function(){
         }
         $('body').on('click', '#openAgencyVariablesDrawer', openAgencyVariablesDrawer);
         $('body').on('click', '#agencyVariablesDrawerOverlay, #closeAgencyVariablesDrawer', closeAgencyVariablesDrawer);
-        $('body').on('click', '#agencyVariableCategories button', function(){
-            $('#agencyVariableCategories button').removeClass('active');
-            $(this).addClass('active');
-            $('#agencyVariableCategoryFilter').val($(this).data('avd-category'));
+        $('body').on('input change', '#agencyVariableSearch, #agencyVariableCategoryFilter, #agencyVariableSourceFilter, #agencyVariableSystemFilter', function(){
+            agencyVariablesCurrentPage = 1;
             filterAgencyVariables();
         });
-        $('body').on('input change', '#agencyVariableSearch, #agencyVariableCategoryFilter, #agencyVariableSourceFilter, #agencyVariableSystemFilter', filterAgencyVariables);
+        $('body').on('click', '#agencyVariablesPagination [data-avd-page]', function(){
+            if ($(this).is(':disabled')) return;
+            var requestedPage = $(this).data('avd-page');
+            var totalPages = Math.max(1, Math.ceil(getFilteredAgencyVariableRows().length / agencyVariablesPageSize));
+            if (requestedPage === 'prev') agencyVariablesCurrentPage--;
+            if (requestedPage === 'next') agencyVariablesCurrentPage++;
+            if (!isNaN(parseInt(requestedPage, 10))) agencyVariablesCurrentPage = parseInt(requestedPage, 10);
+            agencyVariablesCurrentPage = Math.min(Math.max(agencyVariablesCurrentPage, 1), totalPages);
+            filterAgencyVariables();
+        });
         $('body').on('click', '.avd-copy', function(){
             var variableCode = $(this).closest('[data-avd-row]').data('code');
             if (navigator.clipboard) {
@@ -4756,10 +4740,6 @@ $(document).ready(function(){
             $('body').removeClass('modal-open');
         }
         $('body').on('click', '#agencyPreviewDrawerOverlay, #closeAgencyPreviewDrawer', closeAgencyPreviewDrawer);
-        $('body').on('click', '#agencyPreviewEditAgreement, #agencyPreviewBackEditor', function(){
-            closeAgencyPreviewDrawer();
-            if (typeof openAgencyAgreementDrawer === 'function') openAgencyAgreementDrawer();
-        });
         $('body').on('click', '[data-apv-view]', function(){
             $('[data-apv-view]').removeClass('active');
             $(this).addClass('active');
@@ -4770,15 +4750,6 @@ $(document).ready(function(){
         $('body').on('click', '#agencyPreviewDownloadPdf, #agencyPreviewPrint', function(){
             refreshAgencyPreview();
             window.print();
-        });
-        $('body').on('click', '#agencyPreviewChangeAgency', function(){
-            Swal.fire('Preview agency', 'Agency switching can be connected once a persisted agency selector/list is available. Current preview uses the sample agency values from the dynamic variable map.', 'info');
-        });
-        $('body').on('click', '#agencyPreviewShareLink', function(){
-            if (navigator.clipboard) {
-                navigator.clipboard.writeText(window.location.href + '#terms');
-            }
-            Swal.fire('Copied', 'Preview page link copied.', 'success');
         });
 
         // Intent: enhance the four existing local selects with searchable, keyboard-friendly enterprise menus; no remote data is requested.
