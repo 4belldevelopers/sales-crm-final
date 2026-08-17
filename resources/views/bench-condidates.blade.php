@@ -258,6 +258,8 @@
         @media only screen and (min-width:1440px) and (max-width:2560px) { #kt_activitiesCopy{width:1200px;} }
         @media only screen and (min-width:1024px) and (max-width:1440px) { #kt_activitiesBenchApplication{width:1025px;} }
         @media only screen and (min-width:1440px) and (max-width:2560px) { #kt_activitiesBenchApplication{width:1200px;} }
+        #kt_activitiesBenchApplication { overflow-y: auto !important; overflow-x: hidden !important; max-height: 100vh !important; height: 100vh !important; }
+        #bench_application_show_right_bar { min-height: 100%; height: auto !important; overflow: visible !important; }
 
         /* Star-rated skills (find-talent design) */
         .skill-item { display:flex;align-items:center;gap:6px;margin-bottom:3px; }
