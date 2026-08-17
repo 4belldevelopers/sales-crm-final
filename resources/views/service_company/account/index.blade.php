@@ -383,6 +383,7 @@ input[type="radio"]:checked {
 
 /* Agency preview drawer: keep the document readable while fitting 15-16 inch and smaller screens. */
 .apv-head{padding:14px 18px!important}.apv-title h3{font-size:19px!important}.apv-body{grid-template-columns:minmax(0,1fr) 255px!important;gap:12px!important;padding:12px 18px 16px!important}.apv-toolbar{min-height:48px;padding:0 12px}.apv-tabs{gap:12px}.apv-tab{min-height:46px;font-size:11px}.apv-tools{gap:7px}.apv-tools .aat-btn{min-height:32px;padding:7px 10px}.apv-alert{margin:12px;padding:10px 12px}.apv-document{margin:0 12px 12px!important;padding:22px 32px!important;max-height:calc(100vh - 210px)!important;font-size:12px!important;line-height:1.65!important}.apv-document h1,.apv-document h2,.apv-document h3{font-size:16px!important}.apv-card h4{font-size:13px!important}.apv-pad{padding:13px!important}.apv-summary-list{gap:10px}.apv-commercial{margin-top:12px;padding:12px}.apv-info{margin:0 18px 16px!important;padding:11px 13px!important}@media(max-width:1200px){.apv-body{grid-template-columns:minmax(0,1fr) 230px!important;padding:10px 14px 14px!important}.apv-document{padding:20px 24px!important;max-height:calc(100vh - 225px)!important}.apv-tools .apv-select{width:96px!important}.apv-summary-row{display:block}.apv-summary-row b{display:block;margin-top:3px}}@media(max-width:991px){.apv-body{grid-template-columns:1fr!important}.apv-body>aside:last-child{grid-column:auto!important}.apv-document{max-height:560px!important}.apv-toolbar{align-items:flex-start;flex-direction:column;padding:10px 12px}.apv-tools{width:100%;justify-content:flex-start;flex-wrap:wrap}}@media(max-width:768px){.apv-head{padding:14px 12px!important}.apv-title h3{font-size:18px!important}.apv-body{padding:10px!important}.apv-document{padding:18px!important}.apv-info{margin:0 10px 12px!important}}
+.apv-party-intro{max-width:760px;margin:0 auto 28px;padding:0 0 20px;border-bottom:1px solid #dfe6f1;text-align:center;color:#101833}.apv-party-intro h2{margin:0 0 16px!important;color:#101833!important;font-size:16px!important;font-weight:700!important;letter-spacing:.02em;text-align:center!important}.apv-party-intro .apv-effective{margin:0 0 20px;color:#101833;font-size:11px;line-height:1.5}.apv-party-intro .apv-effective b{font-weight:700}.apv-party-grid{display:grid;grid-template-columns:minmax(0,1fr) 58px minmax(0,1fr);gap:18px;align-items:start}.apv-party-box{text-align:center}.apv-party-name{margin-bottom:6px;color:#4f2bd5;font-size:13px;font-weight:700;line-height:1.35}.apv-party-address{max-width:250px;margin:0 auto;color:#101833;font-size:10.5px;line-height:1.45}.apv-party-role{margin-top:7px;color:#101833;font-size:10.5px;line-height:1.45}.apv-party-role b{font-weight:700}.apv-party-and{align-self:center;color:#53617f;font-size:11px;font-weight:700}.apv-party-closing{max-width:580px;margin:17px auto 0;color:#101833;font-size:10.5px;line-height:1.55}.apv-party-closing b{font-weight:700}@media(max-width:768px){.apv-party-grid{grid-template-columns:1fr;gap:12px}.apv-party-and{padding:2px 0}.apv-party-intro{margin-bottom:20px}.apv-party-intro h2{font-size:15px!important}}
 
 /* Commercials tab: presentation-only layer. It reuses the cached account payload and existing service actions. */
 .commercials-v2,.commercials-v2 *{box-sizing:border-box;font-family:'Poppins',sans-serif!important}.commercials-v2{color:#111b3d;font-size:12px;font-weight:500;padding:2px 0 8px}.commercials-v2 .cv2-head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:18px}.commercials-v2 .cv2-title{margin:0;color:#101735;font-size:16px!important;font-weight:600!important;line-height:1.25}.commercials-v2 .cv2-sub{max-width:600px;margin:6px 0 0;color:#52638b;font-size:12px;font-weight:500;line-height:1.5}.commercials-v2 .cv2-stat-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin-bottom:18px}.commercials-v2 .cv2-stat{display:flex;align-items:center;min-width:0;gap:13px;padding:16px;border:1px solid #e5eaf4;border-radius:11px;background:#fff;box-shadow:0 1px 3px rgba(15,23,66,.03)}.commercials-v2 .cv2-stat-icon,.commercials-v2 .cv2-service-icon{display:flex;flex:0 0 auto;align-items:center;justify-content:center;border-radius:11px}.commercials-v2 .cv2-stat-icon{width:46px;height:46px}.commercials-v2 .cv2-stat-icon svg{width:23px;height:23px}.commercials-v2 .cv2-service-icon{width:48px;height:48px}.commercials-v2 .cv2-service-icon svg{width:25px;height:25px}.commercials-v2 .blue{color:#1d3dff;background:#eaf1ff}.commercials-v2 .green{color:#08ac58;background:#e8f9ee}.commercials-v2 .amber{color:#f58911;background:#fff1e5}.commercials-v2 .cv2-stat-copy{min-width:0}.commercials-v2 .cv2-label{color:#52638b;font-size:11px;font-weight:500;line-height:1.35}.commercials-v2 .cv2-value{margin-top:3px;color:#101735;font-size:16px;font-weight:600;line-height:1.2;font-variant-numeric:tabular-nums}.commercials-v2 .cv2-hint{margin-top:5px;color:#08a851;font-size:10.5px;font-weight:500;line-height:1.25}.commercials-v2 .cv2-section-title{margin:0;color:#111b3d;font-size:14px;font-weight:600;line-height:1.35}.commercials-v2 .cv2-section-sub{margin:3px 0 12px;color:#52638b;font-size:11px;font-weight:500}.commercials-v2 .cv2-services{display:grid;gap:16px}.commercials-v2 .cv2-service{padding:16px 18px;border:1px solid #e2e8f3;border-radius:11px;background:#fff;box-shadow:0 1px 3px rgba(15,23,66,.025)}.commercials-v2 .cv2-service-top{display:flex;align-items:flex-start;justify-content:space-between;gap:16px}.commercials-v2 .cv2-service-name{display:flex;align-items:center;gap:13px;min-width:0}.commercials-v2 .cv2-service-name h4{margin:0;color:#101735;font-size:14px!important;font-weight:600!important;line-height:1.35}.commercials-v2 .cv2-service-desc{margin:3px 0 0;color:#52638b;font-size:11px;font-weight:500;line-height:1.4}.commercials-v2 .cv2-badge{display:inline-flex;align-items:center;margin-left:7px;padding:3px 8px;border-radius:5px;background:#e8f8ed;color:#08a851;font-size:10px;font-weight:600;vertical-align:2px}.commercials-v2 .cv2-badge.is-off{color:#c2410c;background:#fff2e8}.commercials-v2 .cv2-switch{display:inline-flex;align-items:center;gap:8px;flex:0 0 auto}.commercials-v2 .form-switch{margin:0}.commercials-v2 .form-check-input{width:38px!important;height:21px!important;margin:0!important;cursor:pointer}.commercials-v2 .cv2-switch-text{color:#52638b;font-size:10.5px;font-weight:600}.commercials-v2 .cv2-service-main{display:grid;grid-template-columns:minmax(0,1fr) 230px;gap:18px;margin-top:14px;padding-top:14px;border-top:1px solid #edf0f6}.commercials-v2 .cv2-disabled{opacity:.45}.commercials-v2 .cv2-facts{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:0}.commercials-v2 .cv2-fact{min-width:0;padding:0 14px;border-right:1px solid #e8ecf3}.commercials-v2 .cv2-fact:first-child{padding-left:0}.commercials-v2 .cv2-fact:last-child{border:0}.commercials-v2 .cv2-fact-label{color:#52638b;font-size:10px;font-weight:500;line-height:1.3}.commercials-v2 .cv2-fact-value{margin-top:5px;color:#111b3d;font-size:11px;font-weight:600;line-height:1.3;word-break:break-word}.commercials-v2 .cv2-fact-value.rate{color:#0a9f57}.commercials-v2 .cv2-side{display:grid;gap:8px;align-content:start;padding-left:18px;border-left:1px solid #e8ecf3}.commercials-v2 .cv2-side-row{display:flex;justify-content:space-between;gap:8px;color:#52638b;font-size:10px;font-weight:500}.commercials-v2 .cv2-side-row b{color:#111b3d;font-size:10.5px;font-weight:600;text-align:right;font-variant-numeric:tabular-nums}.commercials-v2 .cv2-bottom{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;margin-top:14px}.commercials-v2 .cv2-country-label{margin:0 0 8px;color:#111b3d;font-size:11px;font-weight:600}.commercials-v2 .cv2-country-chip{display:inline-flex;align-items:center;gap:8px;min-height:38px;padding:7px 12px;color:#33466f;background:#f8faff;border:1px solid #e1e7f2;border-radius:7px;font-size:10.5px;font-weight:500}.commercials-v2 .cv2-country-chip svg{width:15px;height:15px;color:#2764ff}.commercials-v2 .cv2-country-chip b{color:#101735;font-weight:600}.commercials-v2 .cv2-edit{display:inline-flex!important;align-items:center;gap:8px;padding:9px 13px!important;color:#173af5!important;background:#fff!important;border:1px solid #b9c4ff!important;border-radius:7px!important;font-size:11px!important;font-weight:600!important;white-space:nowrap}.commercials-v2 .cv2-edit:hover{background:#f5f7ff!important}.commercials-v2 .cv2-edit svg{width:15px;height:15px}.commercials-v2 .cv2-note{display:flex;align-items:center;gap:14px;margin-top:16px;padding:13px 16px;border:1px solid #cfead8;border-radius:9px;background:#f7fdf8;color:#40547e}.commercials-v2 .cv2-note-icon{display:flex;flex:0 0 auto;align-items:center;justify-content:center;width:34px;height:34px;color:#08a851;background:#e7f8ec;border-radius:50%}.commercials-v2 .cv2-note-icon svg{width:21px;height:21px}.commercials-v2 .cv2-note p{margin:0;font-size:10.5px;font-weight:500;line-height:1.5}.commercials-v2 .cv2-note b{color:#111b3d;font-weight:600}@media(max-width:1199px){.commercials-v2 .cv2-stat-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.commercials-v2 .cv2-service-main{grid-template-columns:1fr}.commercials-v2 .cv2-side{grid-template-columns:repeat(3,minmax(0,1fr));padding:12px 0 0;border-top:1px solid #e8ecf3;border-left:0}.commercials-v2 .cv2-side-row{display:block}.commercials-v2 .cv2-side-row b{display:block;margin-top:3px;text-align:left}}@media(max-width:767px){.commercials-v2 .cv2-head,.commercials-v2 .cv2-service-top,.commercials-v2 .cv2-bottom{display:block}.commercials-v2 .cv2-switch{margin-top:12px}.commercials-v2 .cv2-stat-grid{grid-template-columns:1fr}.commercials-v2 .cv2-facts{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.commercials-v2 .cv2-fact:nth-child(2){border-right:0}.commercials-v2 .cv2-fact:nth-child(n+3){padding-left:0}.commercials-v2 .cv2-side{grid-template-columns:1fr 1fr}.commercials-v2 .cv2-edit{margin-top:12px}.commercials-v2 .cv2-note{align-items:flex-start}}
@@ -1500,7 +1501,27 @@ input[type="radio"]:checked {
             <div class="apv-tools"><select class="apv-select" style="width:110px;"><option>Fit Width</option><option>100%</option></select><button type="button" class="aat-btn" id="agencyPreviewPrint">Print</button><button type="button" class="aat-btn">⛶</button></div>
           </div>
           <div class="apv-alert">This preview shows exactly how the agreement will appear to the selected agency.</div>
-          <div class="apv-document" id="agencyPreviewDocument">{!! $agencyPreviewAgreementHtml !!}</div>
+          <div class="apv-document" id="agencyPreviewDocument">
+            <div class="apv-party-intro">
+              <h2>AGENCY TERMS &amp; CONDITIONS</h2>
+              <p class="apv-effective">This Agreement is made and executed on <b>{{ $agencyPreviewValues['{TODAY_DATE}'] }}</b> (<b>“Effective Date”</b>) by and between:</p>
+              <div class="apv-party-grid">
+                <div class="apv-party-box">
+                  <div class="apv-party-name">{{ $agencyPreviewValues['{COMPANY_NAME}'] }}</div>
+                  <div class="apv-party-address">{{ $agencyPreviewValues['{COMPANY_ADDRESS}'] }}</div>
+                  <div class="apv-party-role">(hereinafter referred to as the <b>“Client”</b>)</div>
+                </div>
+                <div class="apv-party-and">AND</div>
+                <div class="apv-party-box">
+                  <div class="apv-party-name">{{ $agencyPreviewValues['{AGENCY_NAME}'] }}</div>
+                  <div class="apv-party-address">{{ $agencyPreviewValues['{AGENCY_ADDRESS}'] }}</div>
+                  <div class="apv-party-role">(hereinafter referred to as the <b>“Agency”</b>)</div>
+                </div>
+              </div>
+              <p class="apv-party-closing">The Client and the Agency are hereinafter collectively referred to as the <b>“Parties”</b> and individually as a <b>“Party”</b>.</p>
+            </div>
+            {!! $agencyPreviewAgreementHtml !!}
+          </div>
           <pre class="apv-document apv-plain" id="agencyPreviewPlain">{{ trim(strip_tags($agencyPreviewAgreementHtml)) }}</pre>
         </main>
         <aside>
@@ -4710,6 +4731,27 @@ $(document).ready(function(){
             $(this).closest('.avd-info').hide();
         });
         var agencyPreviewValues = @json($agencyPreviewValues);
+        function escapeAgencyPreviewText(value) {
+            return $('<div>').text(value || '').html();
+        }
+        function buildAgencyPreviewIntroHtml() {
+            var todayDate = escapeAgencyPreviewText(agencyPreviewValues['{TODAY_DATE}']);
+            var companyName = escapeAgencyPreviewText(agencyPreviewValues['{COMPANY_NAME}']);
+            var companyAddress = escapeAgencyPreviewText(agencyPreviewValues['{COMPANY_ADDRESS}']);
+            var agencyName = escapeAgencyPreviewText(agencyPreviewValues['{AGENCY_NAME}']);
+            var agencyAddress = escapeAgencyPreviewText(agencyPreviewValues['{AGENCY_ADDRESS}']);
+
+            return '<div class="apv-party-intro">'
+                + '<h2>AGENCY TERMS &amp; CONDITIONS</h2>'
+                + '<p class="apv-effective">This Agreement is made and executed on <b>' + todayDate + '</b> (<b>“Effective Date”</b>) by and between:</p>'
+                + '<div class="apv-party-grid">'
+                + '<div class="apv-party-box"><div class="apv-party-name">' + companyName + '</div><div class="apv-party-address">' + companyAddress + '</div><div class="apv-party-role">(hereinafter referred to as the <b>“Client”</b>)</div></div>'
+                + '<div class="apv-party-and">AND</div>'
+                + '<div class="apv-party-box"><div class="apv-party-name">' + agencyName + '</div><div class="apv-party-address">' + agencyAddress + '</div><div class="apv-party-role">(hereinafter referred to as the <b>“Agency”</b>)</div></div>'
+                + '</div>'
+                + '<p class="apv-party-closing">The Client and the Agency are hereinafter collectively referred to as the <b>“Parties”</b> and individually as a <b>“Party”</b>.</p>'
+                + '</div>';
+        }
         function populateAgencyPreviewHtml(sourceHtml) {
             var populatedHtml = sourceHtml || '';
             Object.keys(agencyPreviewValues).forEach(function(variableCode){
@@ -4723,8 +4765,9 @@ $(document).ready(function(){
                 sourceHtml = CKEDITOR.instances.kt_docs_tinymce_hidden.getData();
             }
             var populatedHtml = populateAgencyPreviewHtml(sourceHtml);
-            $('#agencyPreviewDocument').html(populatedHtml);
-            $('#agencyPreviewPlain').text($('<div>').html(populatedHtml).text().replace(/\n{3,}/g, "\n\n").trim());
+            var previewHtml = buildAgencyPreviewIntroHtml() + populatedHtml;
+            $('#agencyPreviewDocument').html(previewHtml);
+            $('#agencyPreviewPlain').text($('<div>').html(previewHtml).text().replace(/\n{3,}/g, "\n\n").trim());
         }
         function openAgencyPreviewDrawer() {
             refreshAgencyPreview();
