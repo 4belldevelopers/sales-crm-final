@@ -37,7 +37,7 @@ body { color: var(--jw-navy); background: var(--jw-soft); }
         linear-gradient(135deg, #ffffff 0%, #f8faff 48%, #fbf9ff 100%);
 }
 .jw-auth-inner {
-    width: min(1500px, calc(100% - 72px));
+    width: min(1500px, calc(100% - 64px));
     min-height: 100vh;
     margin: 0 auto;
     display: grid;
@@ -102,17 +102,17 @@ body { color: var(--jw-navy); background: var(--jw-soft); }
 }
 .jw-auth-main {
     display: grid;
-    grid-template-columns: minmax(0, 1.04fr) minmax(460px, .96fr);
+    grid-template-columns: minmax(0, 1.08fr) minmax(430px, .92fr);
     align-items: center;
-    gap: clamp(34px, 5vw, 72px);
+    gap: clamp(30px, 4.2vw, 62px);
     min-height: 0;
 }
 .jw-hero { display: flex; flex-direction: column; min-width: 0; }
-.jw-hero-copy { max-width: 620px; margin-left: 6px; }
+.jw-hero-copy { max-width: 700px; margin-left: 6px; }
 .jw-hero-copy h1 {
     margin: 0;
     color: var(--jw-navy);
-    font-size: clamp(38px, 3.35vw, 50px) !important;
+    font-size: clamp(34px, 2.95vw, 44px) !important;
     font-weight: 800;
     line-height: 1.14;
     letter-spacing: 0;
@@ -126,17 +126,18 @@ body { color: var(--jw-navy); background: var(--jw-soft); }
     -webkit-text-fill-color: transparent;
 }
 .jw-hero-copy p {
-    margin: 14px 0 0;
+    margin: 12px 0 0;
     color: #5f6b86;
-    font-size: 15px;
-    line-height: 1.7;
+    font-size: 14px;
+    line-height: 1.55;
     font-weight: 500;
+    white-space: nowrap;
 }
 .jw-ecosystem {
     position: relative;
-    width: min(640px, 100%);
-    aspect-ratio: 1.1 / .82;
-    margin: 20px auto 16px;
+    width: min(720px, 100%);
+    aspect-ratio: 1.16 / .82;
+    margin: 14px auto 12px;
 }
 .jw-eco-lines {
     position: absolute;
@@ -148,10 +149,10 @@ body { color: var(--jw-navy); background: var(--jw-soft); }
 }
 .jw-eco-orbit { fill: none; stroke: #cfdbf7; stroke-width: 1.25; stroke-dasharray: 5 8; }
 .jw-eco-path { fill: none; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; opacity: .78; }
-.jw-eco-node { position: absolute; z-index: 2; width: 168px; text-align: center; }
+.jw-eco-node { position: absolute; z-index: 2; width: 190px; text-align: center; }
 .jw-eco-node.top { left: 50%; top: 0; transform: translateX(-50%); }
-.jw-eco-node.left { left: 2%; bottom: 7%; }
-.jw-eco-node.right { right: 0; bottom: 7%; }
+.jw-eco-node.left { left: 0; bottom: 5%; }
+.jw-eco-node.right { right: 0; bottom: 5%; }
 .jw-node-icon {
     width: 86px;
     height: 86px;
@@ -176,6 +177,12 @@ body { color: var(--jw-navy); background: var(--jw-soft); }
     z-index: -1;
 }
 .jw-node-icon svg { width: 42px; height: 42px; }
+.jw-node-copy {
+    width: 100%;
+    padding: 6px 10px 7px;
+    background: rgba(255, 255, 255, .82);
+    border-radius: 12px;
+}
 .jw-eco-node strong {
     display: block;
     color: var(--node-color);
@@ -185,7 +192,7 @@ body { color: var(--jw-navy); background: var(--jw-soft); }
 }
 .jw-eco-node span {
     display: block;
-    margin-top: 6px;
+    margin-top: 5px;
     color: #17233f;
     font-size: 11.5px;
     font-weight: 500;
@@ -196,8 +203,8 @@ body { color: var(--jw-navy); background: var(--jw-soft); }
     z-index: 3;
     left: 50%;
     top: 55%;
-    width: 172px;
-    height: 172px;
+    width: 178px;
+    height: 178px;
     transform: translate(-50%, -50%);
     display: flex;
     flex-direction: column;
@@ -217,13 +224,13 @@ body { color: var(--jw-navy); background: var(--jw-soft); }
     background: radial-gradient(circle, rgba(255, 107, 26, .12), transparent 66%);
     z-index: -1;
 }
-.jw-hub .brand-mark { font-size: 29px; line-height: 1; }
+.jw-hub .brand-mark { font-size: 31px; line-height: 1; color: #75540a; }
 .jw-hub strong {
     display: block;
-    margin-top: 4px;
+    margin-top: 5px;
     color: #111827;
-    font-size: 25px;
-    font-weight: 700;
+    font-size: 27px;
+    font-weight: 800;
 }
 .jw-hub span {
     margin-top: 7px;
@@ -299,7 +306,7 @@ body { color: var(--jw-navy); background: var(--jw-soft); }
 .jw-card-form {
     width: min(570px, 100%);
     margin: 0 auto;
-    padding: clamp(34px, 4.2vw, 54px) clamp(32px, 4vw, 46px);
+    padding: clamp(28px, 3vw, 42px) clamp(30px, 3.5vw, 44px);
     background: rgba(255, 255, 255, .96);
     border: 1px solid rgba(228, 231, 236, .92);
     border-radius: 24px;
@@ -314,7 +321,7 @@ body { color: var(--jw-navy); background: var(--jw-soft); }
     text-align: center;
 }
 .jw-card-form .sub {
-    margin: 12px 0 42px;
+    margin: 8px 0 28px;
     color: #66708e;
     font-size: 14px;
     line-height: 1.5;
@@ -332,7 +339,7 @@ body { color: var(--jw-navy); background: var(--jw-soft); }
     line-height: 1.5;
 }
 .jw-alert-ok { color: #166534; background: #f0fdf4; border-color: #bbf7d0; }
-.jw-field { margin-bottom: 24px; }
+.jw-field { margin-bottom: 18px; }
 .jw-field-row {
     display: flex;
     align-items: center;
@@ -368,7 +375,7 @@ body { color: var(--jw-navy); background: var(--jw-soft); }
 .jw-iw .ok-mark { right: 16px; pointer-events: none; }
 .jw-inp {
     width: 100%;
-    height: 59px;
+    height: 54px;
     padding: 0 48px;
     color: var(--jw-navy);
     background: #fff;
@@ -392,8 +399,8 @@ body { color: var(--jw-navy); background: var(--jw-soft); }
     line-height: 1.45;
 }
 .jw-sec {
-    margin: 0 0 26px;
-    padding: 15px;
+    margin: 0 0 20px;
+    padding: 13px;
     background: #fbfcff;
     border: 1px solid #eef1f8;
     border-radius: 12px;
@@ -500,7 +507,7 @@ body { color: var(--jw-navy); background: var(--jw-soft); }
     display: flex;
     align-items: center;
     justify-content: center;
-    margin: 34px 0 28px;
+    margin: 22px 0 18px;
 }
 .jw-card-divider::before,
 .jw-card-divider::after { content: ''; height: 1px; flex: 1; background: #eef1f8; }
@@ -518,7 +525,7 @@ body { color: var(--jw-navy); background: var(--jw-soft); }
     display: flex;
     align-items: center;
     gap: 18px;
-    padding: 22px;
+    padding: 16px;
     background: linear-gradient(90deg, #f3f1ff 0%, #f7f8ff 100%);
     border: 1px solid #edf0fb;
     border-radius: 12px;
@@ -601,47 +608,54 @@ body { color: var(--jw-navy); background: var(--jw-soft); }
     cursor: pointer;
 }
 @media (max-width: 1366px) {
-    .jw-auth-inner { width: min(1230px, calc(100% - 42px)); gap: 10px; }
-    .jw-auth-top { padding-top: 20px; }
-    .jw-auth-main { grid-template-columns: minmax(0, 1fr) minmax(440px, .92fr); gap: 36px; }
-    .jw-logo img { height: 42px; }
-    .jw-logo span { margin-left: 50px; font-size: 12px; }
-    .jw-hero-copy h1 { font-size: 38px !important; line-height: 1.14; }
-    .jw-hero-copy p { font-size: 13px; line-height: 1.6; margin-top: 10px; }
-    .jw-ecosystem { width: min(560px, 100%); margin-top: 12px; margin-bottom: 10px; }
-    .jw-node-icon { width: 72px; height: 72px; }
-    .jw-node-icon svg { width: 35px; height: 35px; }
-    .jw-node-icon::before { width: 84px; height: 84px; }
-    .jw-eco-node { width: 150px; }
+    .jw-auth-inner { width: min(1234px, calc(100% - 42px)); gap: 8px; }
+    .jw-auth-top { padding-top: 18px; }
+    .jw-auth-main { grid-template-columns: minmax(0, 1.06fr) minmax(420px, .94fr); gap: 34px; }
+    .jw-logo img { height: 40px; }
+    .jw-logo span { margin-left: 48px; font-size: 11.5px; }
+    .jw-hero-copy h1 { font-size: 34px !important; line-height: 1.12; }
+    .jw-hero-copy p { font-size: 12.5px; line-height: 1.45; margin-top: 8px; }
+    .jw-ecosystem { width: min(625px, 100%); margin-top: 6px; margin-bottom: 8px; }
+    .jw-node-icon { width: 78px; height: 78px; margin-bottom: 5px; }
+    .jw-node-icon svg { width: 37px; height: 37px; }
+    .jw-node-icon::before { width: 88px; height: 88px; }
+    .jw-eco-node { width: 172px; }
+    .jw-eco-node.left { left: -1%; bottom: 3%; }
+    .jw-eco-node.right { right: -1%; bottom: 3%; }
+    .jw-node-copy { padding: 5px 11px 6px; }
     .jw-eco-node strong { font-size: 12px; }
-    .jw-eco-node span { font-size: 10.5px; line-height: 1.45; }
-    .jw-hub { width: 146px; height: 146px; }
-    .jw-hub strong { font-size: 21px; }
+    .jw-eco-node span { font-size: 10.5px; line-height: 1.42; }
+    .jw-hub { width: 158px; height: 158px; }
+    .jw-hub strong { font-size: 23px; }
     .jw-hub span { font-size: 10.5px; }
-    .jw-metrics { padding: 14px 12px; }
+    .jw-metrics { padding: 12px 12px; }
     .jw-metric { gap: 9px; padding: 0 9px; }
     .jw-metric-icon { width: 36px; height: 36px; flex-basis: 36px; }
     .jw-metric-icon svg { width: 20px; height: 20px; }
     .jw-metric strong { font-size: 13.5px; }
-    .jw-card-form { width: min(520px, 100%); padding: 30px 34px; }
-    .jw-card-form h2 { font-size: 26px !important; }
-    .jw-card-form .sub { margin-bottom: 26px; font-size: 13px; }
-    .jw-field { margin-bottom: 17px; }
-    .jw-inp { height: 50px; font-size: 13px; }
+    .jw-card-form { width: min(520px, 100%); padding: 22px 34px; }
+    .jw-card-form h2 { font-size: 25px !important; }
+    .jw-card-form .sub { margin-bottom: 18px; font-size: 12.5px; }
+    .jw-field { margin-bottom: 12px; }
+    .jw-inp { height: 46px; font-size: 13px; }
     .jw-cap-row { grid-template-columns: minmax(136px, 36%) 40px minmax(0, 1fr); }
-    .jw-sec { margin-bottom: 18px; padding: 12px; }
+    .jw-sec { margin-bottom: 14px; padding: 12px; }
     .jw-cap-box,
-    .jw-cap-inp { height: 46px; }
-    .jw-cap-code-img { height: 42px; }
-    .jw-cap-refresh-btn { width: 40px; height: 40px; }
-    .jw-btn { height: 52px; font-size: 18px; }
-    .jw-card-divider { margin: 22px 0 18px; }
-    .jw-card-trust { padding: 16px; }
-    .jw-footer { padding: 14px 0 12px; }
-    .jw-privacy-note { margin-top: 14px; }
+    .jw-cap-inp { height: 42px; }
+    .jw-cap-code-img { height: 38px; }
+    .jw-cap-refresh-btn { width: 38px; height: 38px; }
+    .jw-btn { height: 48px; font-size: 17px; }
+    .jw-card-divider { margin: 14px 0 12px; }
+    .jw-card-trust { padding: 13px 15px; }
+    .jw-trust-icon { width: 44px; height: 44px; flex-basis: 44px; }
+    .jw-card-trust strong { font-size: 13px; }
+    .jw-card-trust span { font-size: 11.5px; line-height: 1.45; }
+    .jw-footer { padding: 12px 0 10px; }
+    .jw-privacy-note { margin-top: 10px; }
 }
 @media (max-width: 1120px) {
     .jw-auth-main { grid-template-columns: minmax(0, .88fr) minmax(420px, 1fr); gap: 24px; }
+    .jw-hero-copy p { white-space: normal; }
     .jw-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); row-gap: 14px; }
     .jw-metric:nth-child(3)::before { display: none; }
 }
@@ -675,7 +689,7 @@ body { color: var(--jw-navy); background: var(--jw-soft); }
     .jw-card-trust { align-items: flex-start; padding: 14px; }
     .jw-trust-icon { width: 42px; height: 42px; flex-basis: 42px; }
     .jw-hero-copy h1 { font-size: 30px !important; }
-    .jw-hero-copy p { font-size: 12px; }
+    .jw-hero-copy p { font-size: 12px; white-space: normal; }
     .jw-ecosystem { aspect-ratio: .92 / .94; margin-top: 16px; }
     .jw-eco-node { width: 124px; }
     .jw-eco-node.top { top: 0; }
@@ -733,7 +747,7 @@ if (session('status')) {
             <section class="jw-hero" aria-label="Jero.works hiring ecosystem">
                 <div class="jw-hero-copy">
                     <h1>One Platform.<br>One Ecosystem.<br><span class="jw-gradient-text">Limitless Opportunities.</span></h1>
-                    <p>Jero.works connects Companies, Agencies and<br>Bench Talents to build the future of hiring.</p>
+                    <p>Jero.works connects Companies, Agencies and Bench Talents to build the future of hiring.</p>
                 </div>
 
                 <div class="jw-ecosystem">
@@ -747,22 +761,22 @@ if (session('status')) {
                             <marker id="jwArrowMulti" markerWidth="8" markerHeight="8" refX="4" refY="4" orient="auto" markerUnits="strokeWidth"><path d="M0 0L8 4L0 8Z" fill="#16b364"/></marker>
                         </defs>
                         <ellipse class="jw-eco-orbit" cx="320" cy="254" rx="235" ry="195"/>
-                        <path class="jw-eco-path" d="M255 96C206 164 162 240 120 335" stroke="url(#jwLineBluePurple)" marker-end="url(#jwArrowBluePurple)"/>
-                        <path class="jw-eco-path" d="M385 96C436 165 481 241 522 335" stroke="url(#jwLineBlueGreen)" marker-end="url(#jwArrowBlueGreen)"/>
-                        <path class="jw-eco-path" d="M134 368C240 438 404 438 508 368" stroke="url(#jwLineBenchAgency)" marker-end="url(#jwArrowMulti)"/>
-                        <circle cx="255" cy="96" r="3.5" fill="#2563eb"/><circle cx="385" cy="96" r="3.5" fill="#2563eb"/><circle cx="134" cy="368" r="3.5" fill="#7c3aed"/>
+                        <path class="jw-eco-path" d="M248 128C190 186 146 260 122 329" stroke="url(#jwLineBluePurple)" marker-end="url(#jwArrowBluePurple)"/>
+                        <path class="jw-eco-path" d="M392 128C450 187 494 260 518 329" stroke="url(#jwLineBlueGreen)" marker-end="url(#jwArrowBlueGreen)"/>
+                        <path class="jw-eco-path" d="M146 352C252 416 390 416 494 352" stroke="url(#jwLineBenchAgency)" marker-end="url(#jwArrowMulti)"/>
+                        <circle cx="248" cy="128" r="3.5" fill="#2563eb"/><circle cx="392" cy="128" r="3.5" fill="#2563eb"/><circle cx="146" cy="352" r="3.5" fill="#7c3aed"/>
                     </svg>
                     <div class="jw-eco-node top" style="--node-color:#2563eb;--node-glow:rgba(37,99,235,.16);">
                         <div class="jw-node-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M4 21V5a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v16" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/><path d="M17 9h1a2 2 0 0 1 2 2v10M3 21h18M8 7h2M12 7h2M8 11h2M12 11h2M8 15h2M12 15h2" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
-                        <strong>For Companies</strong><span>Find the right talent,<br>faster and smarter.</span>
+                        <div class="jw-node-copy"><strong>For Companies</strong><span>Find the right talent,<br>faster and smarter.</span></div>
                     </div>
                     <div class="jw-eco-node left" style="--node-color:#7c3aed;--node-glow:rgba(124,58,237,.16);">
                         <div class="jw-node-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M4 20c0-3.3 2.7-6 6-6h1" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/><circle cx="10" cy="8" r="4" stroke="currentColor" stroke-width="1.9"/><path d="M17.8 13.1l1.05 2.12 2.34.34-1.7 1.66.4 2.33-2.09-1.1-2.09 1.1.4-2.33-1.7-1.66 2.35-.34 1.04-2.12Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg></div>
-                        <strong>For Bench Talents</strong><span>Discover opportunities<br>that match your skills<br>and grow your career.</span>
+                        <div class="jw-node-copy"><strong>For Bench Talents</strong><span>Discover opportunities<br>that match your skills<br>and grow your career.</span></div>
                     </div>
                     <div class="jw-eco-node right" style="--node-color:#16b364;--node-glow:rgba(22,179,100,.16);">
                         <div class="jw-node-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M3.5 20c0-3.05 2.45-5.5 5.5-5.5h1.2" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/><circle cx="9" cy="8.2" r="3.7" stroke="currentColor" stroke-width="1.9"/><path d="M17.6 12.8l.96 1.95 2.15.31-1.55 1.51.36 2.13-1.92-1.01-1.92 1.01.37-2.13-1.55-1.51 2.14-.31.96-1.95Z" stroke="currentColor" stroke-width="1.55" stroke-linejoin="round"/><path d="M15 7h4M17 5v4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></div>
-                        <strong>For Agencies</strong><span>Build stronger networks<br>and create more<br>placements.</span>
+                        <div class="jw-node-copy"><strong>For Agencies</strong><span>Build stronger networks<br>and create more<br>placements.</span></div>
                     </div>
                     <div class="jw-hub"><div class="brand-mark" aria-hidden="true">☂</div><strong>Jero.works</strong><span>One Connected<br>Hiring Ecosystem</span><i aria-hidden="true"></i></div>
                 </div>
@@ -771,7 +785,7 @@ if (session('status')) {
                     <div class="jw-metric" style="--metric-color:#7c3aed;--metric-bg:#f1e8ff;"><div class="jw-metric-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M4 20c0-3.3 2.7-6 6-6h1" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="10" cy="8" r="3.5" stroke="currentColor" stroke-width="2"/><path d="M18 13l.9 1.8 2 .3-1.45 1.4.35 2-1.8-.95-1.8.95.35-2-1.45-1.4 2-.3L18 13Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg></div><div><strong>25K+</strong><span>Active Jobs</span></div></div>
                     <div class="jw-metric" style="--metric-color:#16b364;--metric-bg:#e4f8ed;"><div class="jw-metric-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><circle cx="9" cy="8" r="3.4" stroke="currentColor" stroke-width="2"/><path d="M3.5 20c0-3 2.5-5.5 5.5-5.5h1.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M17 13l.9 1.8 2 .3-1.45 1.4.35 2-1.8-.95-1.8.95.35-2-1.45-1.4 2-.3L17 13Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg></div><div><strong>250K+</strong><span>Verified Talents</span></div></div>
                     <div class="jw-metric" style="--metric-color:#ff6b1a;--metric-bg:#fff0e7;"><div class="jw-metric-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M4 21V5a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v16M17 9h1a2 2 0 0 1 2 2v10M3 21h18M8 8h2M12 8h2M8 12h2M12 12h2M8 16h2M12 16h2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></div><div><strong>20K+</strong><span>Agencies</span></div></div>
-                    <div class="jw-metric" style="--metric-color:#2563eb;--metric-bg:#e8f0ff;"><div class="jw-metric-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M12 3l8 4v5c0 5-3.5 9-8 10-4.5-1-8-5-8-10V7l8-4Z" stroke="currentColor" stroke-width="2"/><path d="M9 12l2 2 4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div><strong>Secure &amp; Trusted</strong><span>AI Powered Platform</span></div></div>
+                    <div class="jw-metric" style="--metric-color:#2563eb;--metric-bg:#e8f0ff;"><div class="jw-metric-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M12 3l8 4v5c0 5-3.5 9-8 10-4.5-1-8-5-8-10V7l8-4Z" stroke="currentColor" stroke-width="2"/><path d="M9 12l2 2 4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div><strong>15K+</strong><span>Companies</span></div></div>
                 </div>
                 <div class="jw-privacy-note"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 3l8 4v5c0 5-3.5 9-8 10-4.5-1-8-5-8-10V7l8-4Z" stroke="currentColor" stroke-width="2"/><path d="M9 12l2 2 4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Built with privacy by design and enterprise-grade security.</span></div>
             </section>
