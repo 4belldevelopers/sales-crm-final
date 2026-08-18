@@ -1400,9 +1400,17 @@ $(document).on('click', '#changetextupdate', function (){
 
     $(document).on('click', '.client-terms-listing-find-job', function (e){
         e.preventDefault();
+        var $btn = $(this);
+        var id = $btn.data('row-id') || $btn.attr('data-row-id');
+        var recommendation_relation_id = $btn.data('row-recommendation_relation_id') || $btn.attr('data-row-recommendation_relation_id') || '';
+        if (!id) {
+            id = $btn.closest('[data-row-id]').attr('data-row-id');
+        }
         showKtDrawer('#kt_activitiesTermsFindjob', '#kt_activitiesTermsFindjob_toggle');
-        var id = $(this).data('row-id');
-        var recommendation_relation_id = $(this).data('row-recommendation_relation_id') || '';
+        if (!id) {
+            $('#kt_activitiesTermsFindJob_body').html('<div class="alert alert-danger m-4">Unable to find job requirement ID.</div>');
+            return;
+        }
         var url = "{{ route('service_company.jobs.termshmlisting',':id') }}";
         url = url.replace(':id', id) + "?id=" + id;
         var baseurl = "{{ asset('assets/images/Loading2.gif') }}";
@@ -1416,10 +1424,20 @@ $(document).on('click', '#changetextupdate', function (){
                 $('#kt_activitiesTermsFindJob_body').html('<div class="text-center py-10"><img src="'+baseurl+'" height="35px"></div>');
             },
             success: function (response) {
-                $('#kt_activitiesTermsFindJob_body').html(response.terms || response.view || '');
+                if (response && (response.terms || response.view)) {
+                    $('#kt_activitiesTermsFindJob_body').html(response.terms || response.view);
+                } else if (response && response.message) {
+                    $('#kt_activitiesTermsFindJob_body').html('<div class="alert alert-danger m-4">' + response.message + '</div>');
+                } else {
+                    $('#kt_activitiesTermsFindJob_body').html('<div class="alert alert-danger m-4">No terms & conditions found.</div>');
+                }
             },
             error: function(xhr) {
-                $('#kt_activitiesTermsFindJob_body').html('<div class="alert alert-danger m-4">Failed to load terms & conditions.</div>');
+                var errorMsg = 'Failed to load terms & conditions (' + xhr.status + ').';
+                if (xhr.responseJSON && xhr.responseJSON.message) {
+                    errorMsg += ' ' + xhr.responseJSON.message;
+                }
+                $('#kt_activitiesTermsFindJob_body').html('<div class="alert alert-danger m-4">' + errorMsg + '</div>');
             }
         });
     });
