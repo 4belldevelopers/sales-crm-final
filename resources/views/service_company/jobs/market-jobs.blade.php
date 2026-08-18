@@ -318,44 +318,6 @@
     }
     .mjh-more-btn:hover { background: #E5E7EB; }
 
-    /* Popular searches */
-    .mjh-popular {
-        display: flex;
-        align-items: center;
-        flex-wrap: wrap;
-        gap: 8px;
-        padding: 8px 0 4px;
-        margin-bottom: 14px;
-        font-size: 12.5px;
-    }
-    .mjh-popular-label { color: #6B7280; font-weight: 500; flex-shrink: 0; }
-    .mjh-tag {
-        display: inline-flex;
-        align-items: center;
-        gap: 4px;
-        background: #F3F4F6;
-        color: #374151;
-        border: 1px solid #E5E7EB;
-        border-radius: 20px;
-        padding: 4px 12px;
-        font-size: 12px;
-        font-weight: 500;
-        cursor: pointer;
-        transition: background 0.12s, border-color 0.12s;
-    }
-    .mjh-tag:hover { background: #EFF6FF; border-color: #BFDBFE; color: #2563EB; }
-    .mjh-tag.pop-added { background: #DBEAFE; border-color: #93C5FD; color: #1d4ed8; }
-    .mjh-tag-hot { color: #92400E; background: #FFFBEB; border-color: #FDE68A; }
-    .mjh-tag-hot:hover { background: #FEF3C7; }
-    .mjh-clear-all {
-        margin-left: auto;
-        color: #2563EB;
-        font-size: 12.5px;
-        font-weight: 600;
-        cursor: pointer;
-        text-decoration: none;
-    }
-    .mjh-clear-all:hover { text-decoration: underline; }
 </style>
 
 <link href="{{ asset('demo/css/find-market-jobs.css') }}?v={{ time() }}" rel="stylesheet" type="text/css" />
@@ -520,21 +482,8 @@
                         <div class="simf-applied-chips" id="simf_applied_chips"></div>
                     </div>
 
-                    {{-- ── Popular Searches ── --}}
-                    <div class="mjh-popular">
-                        <span class="mjh-popular-label">Popular Searches:</span>
-                        <span class="mjh-tag" onclick="addFromPopular(this)" data-value="React">React</span>
-                        <span class="mjh-tag" onclick="addFromPopular(this)" data-value="Java Developer">Java Developer</span>
-                        <span class="mjh-tag" onclick="addFromPopular(this)" data-value="Python">Python</span>
-                        <span class="mjh-tag" onclick="addFromPopular(this)" data-value=".NET">.NET</span>
-                        <span class="mjh-tag" onclick="addFromPopular(this)" data-value="UI/UX">UI/UX</span>
-                        <span class="mjh-tag" onclick="addFromPopular(this)" data-value="AWS">AWS</span>
-                        <span class="mjh-tag" onclick="addFromPopular(this)" data-value="DevOps">DevOps</span>
-                        <span class="mjh-tag" onclick="addFromPopular(this)" data-value="Data Analyst">Data Analyst</span>
-                        <span class="mjh-clear-all" onclick="clearAllTags()">Clear All</span>
-                        <!-- ACTIVE FILTER TAGS -->
-                        <div class="active-filters" id="selectedFilters" style="display:none;"></div>
-                    </div>{{-- ← closes mjh-popular --}}
+                    <!-- ACTIVE FILTER TAGS -->
+                    <div class="active-filters" id="selectedFilters" style="display:none;"></div>
 
                     {{-- ── Horizontal Filter Tabs ── --}}
                     <div class="mjh-tabs-bar">
