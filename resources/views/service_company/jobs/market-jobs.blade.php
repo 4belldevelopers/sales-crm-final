@@ -1622,17 +1622,11 @@ $(document).on('click', '.client-show-detail', function (){
             // ── Salary display ──
             let salaryDisplay = `${row.salary_currency}${row.min_salary} – ${row.max_salary} / ${row.salary_mode_short}`;
 
-            // ── Location display ──
-            let locationText = row.work_type === 'Remote' ? 'Remote' : (row.industry_name ? row.industry_name : 'Noida, India');
-            if (row.work_type === 'Hybrid' || row.work_type === 'Work From Office') {
-                locationText = row.industry_name ? `${row.industry_name}, India` : 'Noida, India';
-            }
+            // ── Location display (dynamically resolved from ES nested client_city_jobs) ──
+            let locationText = row.location_display || (row.work_type === 'Remote' ? 'Remote' : (row.industry_name || row.work_type || '—'));
 
-            // ── Posted date display ──
-            let postedDate = row.created_at_formatted ? row.created_at_formatted.split(' (')[0] : '21 Apr 2026';
-
-            // ── Subtitle text (no company name) ──
-            let subText = `Verified Client · ${row.department ? row.department : 'Direct Requirement'}`;
+            // ── Posted date display (dynamically resolved from created_at_date) ──
+            let postedDate = row.created_at_date || (row.created_at_formatted ? row.created_at_formatted.split(' (')[0] : '—');
 
             return `
             <div class="job-card">
@@ -1648,12 +1642,7 @@ $(document).on('click', '.client-show-detail', function (){
                     </div>
 
                     <h2 class="jc-job-title" title="${row.title}">${row.title_short || row.title}</h2>
-                    
-                    <div class="jc-job-sub">
-                        <i class="fa-regular fa-building jc-sub-icon"></i>
-                        <span>${subText}</span>
-                    </div>
-
+                    <div class="jc-job-dept" title="${row.department || ''}">${row.department || '—'}</div>
                     <div class="skills-row">${skillTagsHtml}</div>
                 </div>
 
