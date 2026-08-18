@@ -1520,11 +1520,11 @@ $(document).on('click', '.client-show-detail', function (){
 
           fetchCandidates();
 
-          $(document).on('click', '#pagination .page-link', function(e) {
+          $(document).on('click', '#pagination .pagi-page, #pagination .pagi-arrow', function(e) {
               e.preventDefault();
 
               const page = $(this).data('page');
-              if (!page || $(this).hasClass('disabled')) return;
+              if (!page || $(this).hasClass('pagi-disabled') || $(this).hasClass('pagi-active-disabled')) return;
 
               // Disable the clicked pagination link
               $(this).addClass('disabled');
@@ -1532,11 +1532,19 @@ $(document).on('click', '.client-show-detail', function (){
               // Fetch data
               fetchCandidates(page, $('#search').val()).then(() => {
                   // Re-enable the links after successful data fetch
-                  $('#pagination .page-link').removeClass('disabled');
+                  $('#pagination .pagi-page, #pagination .pagi-arrow').removeClass('disabled');
               }).catch(() => {
                   // Re-enable the links even if there's an error
-                  $('#pagination .page-link').removeClass('disabled');
+                  $('#pagination .pagi-page, #pagination .pagi-arrow').removeClass('disabled');
               });
+          });
+
+          $(document).on('change', '#pagination .pagi-perpage', function(e) {
+              const selectedPerPage = $(this).val();
+              if (selectedPerPage) {
+                  localStorage.setItem('candidatePerPage', selectedPerPage);
+                  fetchCandidates(1, $('#search').val());
+              }
           });
 
         });
@@ -1760,7 +1768,8 @@ $(document).on('click', '.client-show-detail', function (){
 
         function fetchCandidates(page = 1, search = '') {
             $('.loadingMessage').css({ display: 'block' });
-            $.ajax({
+            var perPage = localStorage.getItem('candidatePerPage') || 10;
+            return $.ajax({
                 url: `{!! route('service_company.jobs.marketJobListV2_ajax') !!}?page=${page}`,
                 type: 'GET',
                 data: {
@@ -1777,7 +1786,9 @@ $(document).on('click', '.client-show-detail', function (){
                   min_salary_currency: $('#min_salary_currency').val(),
                   sal_mode:$('#sal_mode').val(),
                   app_int_activity:$('[name="app_int_activity"]:checked').val(),
-                  app_int_outsource:$('[name="app_int_outsource"]:checked').val()
+                  app_int_outsource:$('[name="app_int_outsource"]:checked').val(),
+                  per_page: perPage,
+                  size: perPage
                 },
                 success: function(response) {
                     $('.loadingMessage').css({ display: 'none' });

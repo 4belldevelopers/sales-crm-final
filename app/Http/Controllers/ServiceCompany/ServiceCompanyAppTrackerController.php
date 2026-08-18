@@ -10422,7 +10422,7 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
         $country = '';
         $searchQuery = $request->input('q');
         $page = max((int) $request->input('page', 1), 1);
-        $size = (int) $request->input('size', $request->input('per_page', 10)); // Default 10 results per page
+        $size = (int) ($request->input('per_page') ?? $request->input('size') ?? $request->input('limit') ?? 10); // Default 10 results per page
         $from = ($page - 1) * $size;
         $requiredSkills = array_map('strtolower', $requiredSkills);
 

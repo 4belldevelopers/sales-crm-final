@@ -2589,11 +2589,11 @@ table{
             }, 200);
             
             
-            $(document).on('click', '#paginationcandidate .page-link', function(e) {
+            $(document).on('click', '#paginationcandidate .pagi-page, #paginationcandidate .pagi-arrow', function(e) {
                 e.preventDefault();
 
                 const page = $(this).data('page');
-                if (!page || $(this).hasClass('disabled')) return;
+                if (!page || $(this).hasClass('pagi-disabled') || $(this).hasClass('pagi-active-disabled')) return;
 
                 // Disable the clicked pagination link
                 $(this).addClass('disabled');
@@ -2601,11 +2601,19 @@ table{
                 // Fetch data
                 fetchCandidates(page, $('#search').val()).then(() => {
                     // Re-enable the links after successful data fetch
-                    $('#paginationcandidate .page-link').removeClass('disabled');
+                    $('#paginationcandidate .pagi-page, #paginationcandidate .pagi-arrow').removeClass('disabled');
                 }).catch(() => {
                     // Re-enable the links even if there's an error
-                    $('#paginationcandidate .page-link').removeClass('disabled');
+                    $('#paginationcandidate .pagi-page, #paginationcandidate .pagi-arrow').removeClass('disabled');
                 });
+            });
+
+            $(document).on('change', '#paginationcandidate .pagi-perpage', function(e) {
+                const selectedPerPage = $(this).val();
+                if (selectedPerPage) {
+                    localStorage.setItem('candidatePerPage', selectedPerPage);
+                    fetchCandidates(1, $('#search').val());
+                }
             });
 
 
@@ -2613,6 +2621,7 @@ table{
 
 
         function fetchCandidates(page = 1, search = '') {
+            var perPage = localStorage.getItem('candidatePerPage') || 10;
             var jobid = '0';
             var inputSearch = $('#inputSearch').val();
             var sortingfilter = $('#sortingfilter').val();
@@ -2654,7 +2663,9 @@ table{
                 kt_tagify_company:kt_tagify_company,
                 app_int_notice:app_int_notice, 
                 sal_mode:sal_mode,
-                app_int_outsource:app_int_outsource
+                app_int_outsource:app_int_outsource,
+                per_page:perPage,
+                size:perPage
                 },
                 success: function(response) {
                     $('.loadingMessage').css({ display: 'none' });
