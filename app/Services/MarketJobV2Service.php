@@ -146,20 +146,30 @@ class MarketJobV2Service
             $filter[] = ['term' => ['public_market_status' => 2]];
         }
 
-        // App Int Outsource / Market Type filter (if explicitly passed)
-        $marketType = $request->input('app_int_outsource');
-        if ($marketType !== null && $marketType !== '' && $marketType !== 'All') {
-            if ((int) $marketType === 2) {
-                $filter[] = ['term' => ['public_market_status' => 2]];
-            } elseif ((int) $marketType === 1) {
-                $mustNot[] = ['term' => ['public_market_status' => 2]];
-            }
+        // Drawer Hiring Type filter (0 = Fulltime, 1 = Contract)
+        $hiringTypeDrawer = $request->input('app_int_outsource');
+        if ($hiringTypeDrawer !== null && $hiringTypeDrawer !== '' && $hiringTypeDrawer !== 'All') {
+            $filter[] = ['term' => ['employment_type' => (int) $hiringTypeDrawer]];
         }
 
-        // Employment Type / Hiring Type
-        $customHiringType = $request->input('app_int_outsource');
-        if ($customHiringType !== null && $customHiringType !== '' && $customHiringType !== 'All') {
-            $filter[] = ['term' => ['employment_type' => (int) $customHiringType]];
+        // Free-text Search (Job Title & Skills)
+        $textSearch = trim($request->input('custom_search') ?? $request->input('search') ?? $request->input('inputJobSearch') ?? '');
+        if (! empty($textSearch)) {
+            $must[] = [
+                'bool' => [
+                    'should' => [
+                        ['match_phrase_prefix' => ['job_title' => $textSearch]],
+                        ['match' => ['job_title' => $textSearch]],
+                        ['nested' => [
+                            'path' => 'job_metronics_skills',
+                            'query' => [
+                                'match' => ['job_metronics_skills.skill_name' => $textSearch],
+                            ],
+                        ]],
+                    ],
+                    'minimum_should_match' => 1,
+                ],
+            ];
         }
 
         // Tenancy Condition: Exclude current company's own jobs
