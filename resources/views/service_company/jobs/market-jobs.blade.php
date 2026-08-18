@@ -1289,8 +1289,6 @@
 
           });
 
-    </script>
-
   function filtersdata() {
       if (typeof updateAppliedFiltersBar === 'function') {
           updateAppliedFiltersBar();
