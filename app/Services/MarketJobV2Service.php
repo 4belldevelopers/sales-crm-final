@@ -62,8 +62,13 @@ class MarketJobV2Service
         // Parse salary parameters and mode conversions
         $salMode = (int) ($request->input('sal_mode') ?? 0);
         $minSalaryCurrency = (int) ($request->input('min_salary_currency') ?? 0);
-        $minExp = $request->input('min_exp') !== null ? (int) $request->input('min_exp') : 0;
-        $maxExp = $request->input('max_exp') !== null ? (int) $request->input('max_exp') : null;
+
+        // Only apply experience filter when user explicitly set a value (not empty/null/zero)
+        $minExpRaw = $request->input('min_exp');
+        $maxExpRaw = $request->input('max_exp');
+        $minExp = ($minExpRaw !== null && $minExpRaw !== '' && (int) $minExpRaw > 0) ? (int) $minExpRaw : null;
+        $maxExp = ($maxExpRaw !== null && $maxExpRaw !== '' && (int) $maxExpRaw > 0) ? (int) $maxExpRaw : null;
+
         $minSalaryRaw = $request->input('min_sal');
         $maxSalaryRaw = $request->input('max_sal');
 
@@ -80,6 +85,7 @@ class MarketJobV2Service
             $convertedMaxSal = GeneralMethod::convertToINR($convertedMaxSal, $currencyCode);
         }
 
+        // Null-safe: salaryDividedByMode may return null when no salary is set
         $minCtcDivided = $convertedMinSal !== null ? GeneralMethod::salaryDividedByMode($salMode, $convertedMinSal) : null;
         $maxCtcDivided = $convertedMaxSal !== null ? GeneralMethod::salaryDividedByMode($salMode, $convertedMaxSal) : null;
 
@@ -87,14 +93,14 @@ class MarketJobV2Service
         $maxSalary = null;
 
         if ($salMode === 2) {
-            $minSalary = $minCtcDivided->hourly ?? null;
-            $maxSalary = $maxCtcDivided->hourly ?? null;
+            $minSalary = is_object($minCtcDivided) ? ($minCtcDivided->hourly ?? null) : null;
+            $maxSalary = is_object($maxCtcDivided) ? ($maxCtcDivided->hourly ?? null) : null;
         } elseif ($salMode === 1) {
-            $minSalary = $minCtcDivided->monthly ?? null;
-            $maxSalary = $maxCtcDivided->monthly ?? null;
+            $minSalary = is_object($minCtcDivided) ? ($minCtcDivided->monthly ?? null) : null;
+            $maxSalary = is_object($maxCtcDivided) ? ($maxCtcDivided->monthly ?? null) : null;
         } else {
-            $minSalary = $minCtcDivided->yearly ?? null;
-            $maxSalary = $maxCtcDivided->yearly ?? null;
+            $minSalary = is_object($minCtcDivided) ? ($minCtcDivided->yearly ?? null) : null;
+            $maxSalary = is_object($maxCtcDivided) ? ($maxCtcDivided->yearly ?? null) : null;
         }
 
         // Build Elasticsearch Query Structure
@@ -133,7 +139,7 @@ class MarketJobV2Service
                 $sort[] = ['id' => ['order' => 'desc']];
         }
 
-        // Status Filter
+        // Status Filter — allow active, hold, inactive (all visible marketplace statuses)
         $filter[] = ['terms' => ['status' => ['active', 'hold', 'inactive', '2']]];
 
         // Tab Filtering (All Agencies Jobs / Fulltime / Contract / Agency Requests)
@@ -172,13 +178,8 @@ class MarketJobV2Service
             ];
         }
 
-        // Tenancy Condition: Exclude current company's own jobs
-        $must[] = [
-            'bool' => [
-                'must' => [['term' => ['status' => 'active']]],
-                'must_not' => [['term' => ['comId' => $companyId]]],
-            ],
-        ];
+        // Tenancy Condition: Exclude current company's own jobs (status filter is in $filter above)
+        $mustNot[] = ['term' => ['comId' => $companyId]];
 
         // Required Skills Filter (Nested ES Query)
         if (! empty($requiredSkills)) {
@@ -197,12 +198,12 @@ class MarketJobV2Service
             ];
         }
 
-        // Experience Filters
+        // Experience Filters — only applied when user explicitly sets a value > 0
         if ($minExp !== null) {
-            $must[] = ['range' => ['max_exp' => ['gte' => $minExp]]];
+            $filter[] = ['range' => ['max_exp' => ['gte' => $minExp]]];
         }
-        if ($maxExp !== null && $maxExp > 0) {
-            $must[] = ['range' => ['max_exp' => ['lte' => $maxExp]]];
+        if ($maxExp !== null) {
+            $filter[] = ['range' => ['max_exp' => ['lte' => $maxExp]]];
         }
 
         // Salary Range Filters
@@ -213,10 +214,10 @@ class MarketJobV2Service
         };
 
         if ($minSalary !== null) {
-            $must[] = ['range' => [$salaryField => ['gte' => (float) $minSalary]]];
+            $filter[] = ['range' => [$salaryField => ['gte' => (float) $minSalary]]];
         }
         if ($maxSalary !== null && $maxSalary > 0) {
-            $must[] = ['range' => [$salaryField => ['lte' => (float) $maxSalary]]];
+            $filter[] = ['range' => [$salaryField => ['lte' => (float) $maxSalary]]];
         }
 
         // Execute Primary Elasticsearch Query

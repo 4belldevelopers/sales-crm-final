@@ -1961,18 +1961,37 @@ $(document).on('click', '.client-show-detail', function (){
                 },
                 success: function(response) {
                     $('.loadingMessage').css({ display: 'none' });
-                    if (response.items && Array.isArray(response.items)) {
-                        if (response.items.length > 0) {
-                            let html = response.items.map(item => renderMarketJobCard(item)).join('');
+                    var items = response.items;
+                    // Handle both plain array [] and ResourceCollection {data:[]} wrapping
+                    if (items && !Array.isArray(items) && Array.isArray(items.data)) {
+                        items = items.data;
+                    }
+                    if (items && Array.isArray(items)) {
+                        if (items.length > 0) {
+                            let html = items.map(item => renderMarketJobCard(item)).join('');
                             $('#marketJobLists').html(html);
                         } else {
-                            $('#marketJobLists').html('No data available in table');
+                            $('#marketJobLists').html('<div class="text-center py-5 text-muted">No job listings found matching your criteria.</div>');
                         }
                     } else if (response.html) {
                         $('#marketJobLists').html(response.html);
+                    } else {
+                        $('#marketJobLists').html('<div class="text-center py-5 text-muted">No job listings found.</div>');
                     }
                     $('#span_jobMarket').html(response.total);
                     $('#pagination').html(response.pagination);
+                },
+                error: function(xhr, status, error) {
+                    $('.loadingMessage').css({ display: 'none' });
+                    var msg = 'Error loading jobs.';
+                    try {
+                        var resp = JSON.parse(xhr.responseText);
+                        msg = resp.message || resp.error || msg;
+                    } catch(e) {
+                        msg = xhr.status + ' ' + error;
+                    }
+                    $('#marketJobLists').html('<div class="alert alert-danger m-4">Failed to load jobs: ' + msg + '</div>');
+                    console.error('[MarketJobs AJAX Error]', xhr.status, error, xhr.responseText);
                 }
             });
         }
