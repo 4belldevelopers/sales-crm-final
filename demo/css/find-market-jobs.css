@@ -43,22 +43,27 @@
 .mjh-tabs-bar {
     display: flex;
     align-items: center;
-    gap: 24px;
+    gap: 14px;
     background: #FFFFFF;
     border: 1px solid var(--jc-border);
     border-radius: 10px;
-    padding: 0 16px;
+    padding: 0 12px;
     margin-bottom: 12px;
     overflow-x: auto;
     box-sizing: border-box;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+.mjh-tabs-bar::-webkit-scrollbar {
+    display: none;
 }
 
 .mjh-tab-item {
     display: flex;
     align-items: center;
-    gap: 8px;
-    padding: 12px 4px;
-    font-size: 13px;
+    gap: 6px;
+    padding: 10px 2px;
+    font-size: 12.5px;
     font-weight: 500;
     color: var(--jc-text-muted);
     cursor: pointer;
@@ -68,6 +73,7 @@
     user-select: none;
     font-family: 'Poppins', sans-serif;
     text-decoration: none;
+    flex-shrink: 0;
 }
 
 .mjh-tab-item:hover {
@@ -81,14 +87,14 @@
 }
 
 .mjh-tab-icon {
-    font-size: 12.5px;
+    font-size: 12px;
     opacity: 0.85;
 }
 
 .mjh-tab-badge {
-    font-size: 10.5px;
+    font-size: 10px;
     font-weight: 600;
-    padding: 2px 7px;
+    padding: 1.5px 6px;
     border-radius: 12px;
     line-height: 1.2;
 }
@@ -104,7 +110,7 @@
 #marketJobLists {
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 10px;
     width: 100%;
 }
 
@@ -114,11 +120,11 @@
     border: 1px solid var(--jc-border);
     border-left: 4px solid #10B981;
     border-radius: 12px;
-    padding: 14px 16px;
+    padding: 12px 14px;
     display: grid;
-    /* 6 Columns: Title(1.8fr) | Meta(1fr) | Dates(1fr) | Bench(1.05fr) | Commercial(1.25fr) | Actions(1.15fr) */
-    grid-template-columns: minmax(190px, 1.8fr) minmax(110px, 0.95fr) minmax(110px, 0.95fr) minmax(115px, 1.05fr) minmax(140px, 1.25fr) minmax(130px, 1.15fr);
-    gap: 12px;
+    /* 6 Columns tuned to fit 1366x768 laptop screens perfectly without horizontal scroll */
+    grid-template-columns: minmax(170px, 1.7fr) minmax(105px, 0.9fr) minmax(105px, 0.9fr) minmax(105px, 1fr) minmax(130px, 1.2fr) minmax(115px, 1.1fr);
+    gap: 10px;
     align-items: stretch;
     transition: box-shadow 0.2s ease, border-color 0.2s ease;
     font-family: 'Poppins', sans-serif;
