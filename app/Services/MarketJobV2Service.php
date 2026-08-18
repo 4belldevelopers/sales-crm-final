@@ -41,7 +41,7 @@ class MarketJobV2Service
     public function fetchMarketJobs(Request $request, int $companyId): array
     {
         $page = max((int) $request->input('page', 1), 1);
-        $size = (int) $request->input('size', 10);
+        $size = (int) ($request->input('per_page') ?? $request->input('size') ?? $request->input('limit') ?? 10);
         $from = ($page - 1) * $size;
 
         $searchTerms = $request->input('cus_search');
@@ -272,7 +272,7 @@ class MarketJobV2Service
 
         $payload = [
             'page' => (int) $request->input('page', 1),
-            'size' => (int) $request->input('size', 10),
+            'size' => (int) ($request->input('per_page') ?? $request->input('size') ?? $request->input('limit') ?? 10),
             'q' => $request->input('q'),
             'cus_search' => $request->input('cus_search'),
             'custom_hiringtype' => $request->input('custom_hiringtype'),

@@ -287,7 +287,7 @@ class ServiceCompanyCompanyController extends ServiceCompanyBaseController
 		// dd($skillsList);
 		$searchQuery = $request->input('q');
 		$page = max((int) $request->input('page', 1), 1);
-		$size = (int) $request->input('size', 10); // Default 20 results per page
+		$size = (int) ($request->input('per_page') ?? $request->input('size') ?? $request->input('limit') ?? 10); // Default 10 results per page
 		$from = ($page - 1) * $size;
 
 		$cachePayload = [
@@ -1034,6 +1034,7 @@ class ServiceCompanyCompanyController extends ServiceCompanyBaseController
 		$pagination = [
 			'total' => $total,
 			'current_page' => $page,
+			'per_page' => $size,
 			'last_page' =>ceil($total / $size),
 			'listType' => 'allcandidate',
 		];

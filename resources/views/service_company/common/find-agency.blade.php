@@ -1,4 +1,4 @@
-﻿@extends('layouts.service_company_layout')
+@extends('layouts.service_company_layout')
 @push('head-script')
     <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta2/js/all.min.js" type="text/javascript">
     </script>
@@ -1324,11 +1324,11 @@ function filtersdataget() {
             }, 200);
             
             
-            $(document).on('click', '#paginationfindagency .page-link', function(e) {
+            $(document).on('click', '#paginationfindagency .pagi-page, #paginationfindagency .pagi-arrow', function(e) {
                 e.preventDefault();
 
                 const page = $(this).data('page');
-                if (!page || $(this).hasClass('disabled')) return;
+                if (!page || $(this).hasClass('pagi-disabled') || $(this).hasClass('pagi-active-disabled')) return;
 
                 // Disable the clicked pagination link
                 $(this).addClass('disabled');
@@ -1336,11 +1336,19 @@ function filtersdataget() {
                 // Fetch data
                 fetchClientConpanyAgency(page, $('#search').val()).then(() => {
                     // Re-enable the links after successful data fetch
-                    $('#paginationfindagency .page-link').removeClass('disabled');
+                    $('#paginationfindagency .pagi-page, #paginationfindagency .pagi-arrow').removeClass('disabled');
                 }).catch(() => {
                     // Re-enable the links even if there's an error
-                    $('#paginationfindagency .page-link').removeClass('disabled');
+                    $('#paginationfindagency .pagi-page, #paginationfindagency .pagi-arrow').removeClass('disabled');
                 });
+            });
+
+            $(document).on('change', '#paginationfindagency .pagi-perpage', function(e) {
+                const selectedPerPage = $(this).val();
+                if (selectedPerPage) {
+                    localStorage.setItem('candidatePerPage', selectedPerPage);
+                    fetchClientConpanyAgency(1, $('#search').val());
+                }
             });
 
 
@@ -1348,6 +1356,7 @@ function filtersdataget() {
 
 
         function fetchClientConpanyAgency(page = 1, search = '') {
+            var perPage = localStorage.getItem('candidatePerPage') || 10;
             var jobid = '0';
             
             var cus_search = $('#kt_tagify_users').val();
@@ -1359,7 +1368,7 @@ function filtersdataget() {
             
             $('.loadingMessage').css({ display: 'block' });
             
-            $.ajax({
+            return $.ajax({
                 url: `{!! route('service_company.find.findAgencyData') !!}?page=${page}`,
                 type: 'GET',
                 data: {
@@ -1369,7 +1378,9 @@ function filtersdataget() {
                 kt_tagify_location:kt_tagify_location, 
                 experience:experience,
                 industry:industry,
-                app_int_outsource:app_int_outsource
+                app_int_outsource:app_int_outsource,
+                per_page:perPage,
+                size:perPage
                 },
                 success: function(response) {
                     updateSelectedFilters();
