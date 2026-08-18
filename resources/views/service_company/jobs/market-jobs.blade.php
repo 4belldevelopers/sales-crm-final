@@ -1789,6 +1789,64 @@ $(document).on('click', '#changetextupdate', function (){
             </div>`;
         }
 
+        function renderEnterpriseEmptyState(tabKey) {
+            let icon = 'fa-briefcase';
+            let title = 'No Opportunities Found';
+            let desc = 'There are currently no active job requisitions matching your search criteria or selected filters.';
+
+            if (tabKey === 'agency_request') {
+                icon = 'fa-handshake';
+                title = 'No Agency Requests at this time';
+                desc = 'You currently have no incoming direct client requests or bench matchmaking demands from other companies.';
+            } else if (tabKey === 'fulltime') {
+                icon = 'fa-user-tie';
+                title = 'No Full-Time Positions Found';
+                desc = 'There are no open full-time permanent hiring positions available under this filter.';
+            } else if (tabKey === 'contract') {
+                icon = 'fa-file-contract';
+                title = 'No Contract Positions Found';
+                desc = 'There are no open contract or temporary staffing opportunities available right now.';
+            } else if (tabKey === 'freelance') {
+                icon = 'fa-laptop-code';
+                title = 'No Freelance Projects Found';
+                desc = 'There are no active freelance or gig project requirements matching your selection.';
+            } else if (tabKey === 'parttime') {
+                icon = 'fa-business-time';
+                title = 'No Part-Time Openings Found';
+                desc = 'There are no active part-time requisitions available under this category.';
+            }
+
+            let primaryBtn = '';
+            if (tabKey !== 'all') {
+                primaryBtn = `
+                    <button type="button" class="mjh-empty-btn-primary" onclick="resetTabToAll()">
+                        <i class="fa-solid fa-briefcase"></i> View All Open Jobs
+                    </button>`;
+            }
+
+            return `
+            <div class="mjh-empty-state">
+                <div class="mjh-empty-icon-wrap">
+                    <i class="fa-solid ${icon}"></i>
+                </div>
+                <h3 class="mjh-empty-title">${title}</h3>
+                <p class="mjh-empty-desc">${desc}</p>
+                <div class="mjh-empty-actions">
+                    ${primaryBtn}
+                    <button type="button" class="mjh-empty-btn-secondary" onclick="clearAllTags()">
+                        <i class="fa-solid fa-rotate-left"></i> Reset Search &amp; Filters
+                    </button>
+                </div>
+            </div>`;
+        }
+
+        function resetTabToAll() {
+            $('.mjh-tab-item').removeClass('active');
+            $('.mjh-tab-item[data-tab="all"]').addClass('active');
+            currentActiveTab = 'all';
+            fetchCandidates(1);
+        }
+
         let currentActiveTab = 'all';
 
         // ── Custom Sort dropdown (Apptracker style) ──
@@ -1959,12 +2017,12 @@ $(document).on('click', '#changetextupdate', function (){
                                 $('#marketJobLists').html('<div class="alert alert-danger m-4">Render error: ' + renderErr.message + '</div>');
                             }
                         } else {
-                            $('#marketJobLists').html('<div class="text-center py-5 text-muted">No job listings found matching your criteria.</div>');
+                            $('#marketJobLists').html(renderEnterpriseEmptyState(currentActiveTab));
                         }
                     } else if (response.html) {
                         $('#marketJobLists').html(response.html);
                     } else {
-                        $('#marketJobLists').html('<div class="text-center py-5 text-muted">No job listings found.</div>');
+                        $('#marketJobLists').html(renderEnterpriseEmptyState(currentActiveTab));
                     }
                     $('#span_jobMarket').html(response.total);
                     $('#pagination').html(response.pagination);
