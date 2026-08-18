@@ -7,17 +7,6 @@ use Illuminate\Database\Eloquent\Builder;
 
 class ApplicationStatus extends Model
 {
-    protected static function boot()
-    {
-        parent::boot();
-
-       /* static::addGlobalScope('company', function (Builder $builder) {
-            if (auth()->check()) {
-                $builder->where('application_status.company_id', user()->company_id);
-            }
-        });*/
-    }
-
     protected $table = 'master_status';
 
    /* public function applications()
