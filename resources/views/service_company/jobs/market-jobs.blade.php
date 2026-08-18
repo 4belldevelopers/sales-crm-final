@@ -1543,6 +1543,10 @@ $(document).on('click', '#changetextupdate', function (){
             let typeLabel = row.employment_type_badge || row.employment_type || 'Full-Time';
             if (typeLabel === 'Contract') {
                 typeBadgeClass = 'jc-badge-ct';
+            } else if (typeLabel === 'Freelance') {
+                typeBadgeClass = 'jc-badge-fl';
+            } else if (typeLabel === 'Part-Time' || typeLabel === 'Part Time') {
+                typeBadgeClass = 'jc-badge-pt';
             } else if (typeLabel === 'Bench Talent' || row.public_market_status === 2) {
                 typeBadgeClass = 'jc-badge-bench';
             }
@@ -1581,17 +1585,34 @@ $(document).on('click', '#changetextupdate', function (){
             const ct = row.commercial_terms;
 
             if (typeLabel === 'Contract') {
-                let billingRate = (ct && ct.billing_rate) ? `₹${(ct.billing_rate/1000).toFixed(0)}K – ₹1.2L / Month` : '₹80K – ₹1.2L / Month';
+                let billingRateVal = (ct && ct.billing_rate) ? Number(ct.billing_rate) : null;
+                let billingRate = billingRateVal 
+                    ? `₹${billingRateVal.toLocaleString('en-IN')} / ${ct.billing_model || 'Month'}` 
+                    : (row.min_salary && row.max_salary ? `${row.salary_currency}${row.min_salary} – ${row.max_salary} / ${row.salary_mode_short}` : 'As per Client Terms');
                 let billingModel = (ct && ct.billing_model) ? ct.billing_model : 'Monthly';
                 let payTerms = (ct && ct.payment_days) ? `${ct.payment_days} Days` : '30 Days';
                 termsRows = `
                     <div class="jc-ct-row"><span class="jc-ct-label">Billing Model</span><span class="jc-ct-val">${billingModel}</span></div>
                     <div class="jc-ct-row"><span class="jc-ct-label">Billing Rate</span><span class="jc-ct-val">${billingRate}</span></div>
                     <div class="jc-ct-row"><span class="jc-ct-label">Payment Terms</span><span class="jc-ct-val">${payTerms}</span></div>`;
+            } else if (typeLabel === 'Part-Time' || typeLabel === 'Part Time') {
+                let hiringFee = (ct && ct.hiring_fee_pct) ? `${ct.hiring_fee_pct}% of CTC` : '8.33% of CTC';
+                let payTerms = (ct && ct.payment_days) ? `${ct.payment_days} Days` : '30 Days';
+                termsRows = `
+                    <div class="jc-ct-row"><span class="jc-ct-label">Engagement</span><span class="jc-ct-val">Part-Time</span></div>
+                    <div class="jc-ct-row"><span class="jc-ct-label">Hiring Fee</span><span class="jc-ct-val">${hiringFee}</span></div>
+                    <div class="jc-ct-row"><span class="jc-ct-label">Payment Terms</span><span class="jc-ct-val">${payTerms}</span></div>`;
+            } else if (typeLabel === 'Freelance') {
+                let billingModel = (ct && ct.billing_model) ? ct.billing_model : 'Milestone / Hourly';
+                let payTerms = (ct && ct.payment_days) ? `${ct.payment_days} Days` : '30 Days';
+                termsRows = `
+                    <div class="jc-ct-row"><span class="jc-ct-label">Engagement</span><span class="jc-ct-val">Freelance</span></div>
+                    <div class="jc-ct-row"><span class="jc-ct-label">Model</span><span class="jc-ct-val">${billingModel}</span></div>
+                    <div class="jc-ct-row"><span class="jc-ct-label">Payment Terms</span><span class="jc-ct-val">${payTerms}</span></div>`;
             } else if (typeLabel === 'Bench Talent' || row.public_market_status === 2) {
                 termsTitle = 'Requirement Details';
                 termsRows = `
-                    <div class="jc-ct-row"><span class="jc-ct-label">Deployment Type</span><span class="jc-ct-val">Bench</span></div>
+                    <div class="jc-ct-row"><span class="jc-ct-label">Deployment</span><span class="jc-ct-val">Bench</span></div>
                     <div class="jc-ct-row"><span class="jc-ct-label">Work Mode</span><span class="jc-ct-val">${row.work_type || 'Remote'}</span></div>
                     <div class="jc-ct-row"><span class="jc-ct-label">Availability</span><span class="jc-ct-val">Immediate</span></div>`;
             } else {
