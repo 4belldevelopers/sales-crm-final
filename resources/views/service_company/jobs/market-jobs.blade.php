@@ -1581,6 +1581,9 @@ $(document).on('click', '.client-show-detail', function (){
                     <div class="jc-ct-row"><span class="jc-ct-label">Payment Terms</span><span class="jc-ct-val">${payTerms}</span></div>`;
             }
 
+            // ── Posted Date display ──
+            let postedDate = row.created_at_formatted || row.created_at_date || 'Recently';
+
             // ── Salary display ──
             let salaryDisplay = `${row.salary_currency}${row.min_salary} – ${row.max_salary} / ${row.salary_mode_short}`;
 
