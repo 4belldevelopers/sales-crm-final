@@ -6,7 +6,7 @@ class ChatGptService
 {
     public function parseResume($resumeText)
     {
-        $apiKey = env('CHATGPT_API_KEY');
+        $apiKey = config('services.openai.api_key', env('CHATGPT_API_KEY'));
         $url = 'https://api.openai.com/v1/chat/completions';
 
         // Prepare the cURL request

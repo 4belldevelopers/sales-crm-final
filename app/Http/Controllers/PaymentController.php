@@ -117,25 +117,25 @@ class PaymentController extends Controller
 
            if($razorpay_subscription_type=='yes'){
             $company_coins = DB::table('company_coins')->where('event_type','=',$topUptype)->where('company_id','=',$company_id)->first();
-            $actual_coins = DB::table('cart_transaction_history')->where('payment_orderId','=',$razorpay_order_id)->first();
+            $actual_coins = DB::table('cart_transaction_history')->where('payment_orderId','=',$razorpay_order_id)->where('company_id','=',$company_id)->first();
             // $actual_coins = $update_coins-$company_coins->coins;
-            DB::table('company_coins')->where('event_type','=',$topUptype)->where('company_id','=',$company_id)->update(['coins'=>$update_coins,'actual_coins'=>$actual_coins->credit,'start_date'=>$razorpay_start_date,'end_date'=>$razorpay_end_date,'coin_order_id'=>$razorpay_coin_order_id,'updated_at'=>date("Y-m-d H:i:s")]);
+            DB::table('company_coins')->where('event_type','=',$topUptype)->where('company_id','=',$company_id)->update(['coins'=>$update_coins,'actual_coins'=>$actual_coins->credit ?? 0,'start_date'=>$razorpay_start_date,'end_date'=>$razorpay_end_date,'coin_order_id'=>$razorpay_coin_order_id,'updated_at'=>date("Y-m-d H:i:s")]);
 
-            DB::table('coin_transection_logs')->where('payment_orderId','=',$razorpay_order_id)->update(['payment_Id'=>$paymentId,'cart_id'=>$razorpay_cart_id,'coins'=>$update_coins,'remain_coins'=>0,'actual_coins'=>$actual_coins->credit]);
+            DB::table('coin_transection_logs')->where('payment_orderId','=',$razorpay_order_id)->where('company_id','=',$company_id)->update(['payment_Id'=>$paymentId,'cart_id'=>$razorpay_cart_id,'coins'=>$update_coins,'remain_coins'=>0,'actual_coins'=>$actual_coins->credit ?? 0]);
             DB::table('coin_orders')->where('payment_orderId','=',$razorpay_order_id)->update(['payment_Id'=>$paymentId,'status'=>1,'cart_id'=>$razorpay_cart_id]);
            }else{
-            $actual_coins = DB::table('cart_transaction_history')->where('payment_orderId','=',$razorpay_order_id)->first();
+            $actual_coins = DB::table('cart_transaction_history')->where('payment_orderId','=',$razorpay_order_id)->where('company_id','=',$company_id)->first();
             DB::table('company_coins')->where('event_type','=',$topUptype)->where('company_id','=',$company_id)->update(['coins'=>$update_coins,'updated_at'=>date("Y-m-d H:i:s")]);
 
-            DB::table('coin_transection_logs')->where('payment_orderId','=',$razorpay_order_id)->update(['payment_Id'=>$paymentId,'cart_id'=>$razorpay_cart_id,'coins'=>$update_coins,'remain_coins'=>0,'actual_coins'=>$actual_coins->credit]);
+            DB::table('coin_transection_logs')->where('payment_orderId','=',$razorpay_order_id)->where('company_id','=',$company_id)->update(['payment_Id'=>$paymentId,'cart_id'=>$razorpay_cart_id,'coins'=>$update_coins,'remain_coins'=>0,'actual_coins'=>$actual_coins->credit ?? 0]);
 
             DB::table('top_up_logs')->where('payment_orderId','=',$razorpay_order_id)->update(['payment_Id'=>$paymentId,'status'=>1,'cart_id'=>$razorpay_cart_id]);
             
            }
 
-           DB::table('cart_transaction_history')->where('payment_orderId','=',$razorpay_order_id)->update(['payment_Id'=>$paymentId,'status'=>$captureResponse['status'],'method'=>$captureResponse['method'],'bank'=>$captureResponse['bank'],'international'=>$captureResponse['international'],'updated_at'=>date("Y-m-d h:i:s"),'cart_id'=>$razorpay_cart_id,'invoice_date'=>date("Y-m-d H:i:s")]);
+           DB::table('cart_transaction_history')->where('payment_orderId','=',$razorpay_order_id)->where('company_id','=',$company_id)->update(['payment_Id'=>$paymentId,'status'=>$captureResponse['status'],'method'=>$captureResponse['method'],'bank'=>$captureResponse['bank'],'international'=>$captureResponse['international'],'updated_at'=>date("Y-m-d h:i:s"),'cart_id'=>$razorpay_cart_id,'invoice_date'=>date("Y-m-d H:i:s")]);
 
-             DB::table('carts')->where('id','=',$razorpay_cart_id)->update(['status'=>1,'updated_at'=>date("Y-m-d H:i:s")]);
+             DB::table('carts')->where('id','=',$razorpay_cart_id)->where('company_id','=',$company_id)->update(['status'=>1,'updated_at'=>date("Y-m-d H:i:s")]);
             return response()->json(['status' => 'captured']);
 
         }elseif($captureResponse['status']=="authorized") {
