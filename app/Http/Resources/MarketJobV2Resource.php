@@ -178,8 +178,8 @@ class MarketJobV2Resource extends JsonResource
 
         return [
             'id' => (int) $row->id,
-            'title' => $row->title ?? '',
-            'title_short' => ucwords(mb_substr($row->title ?? '', 0, 25)),
+            'title' => $row->job_title ?? $row->title ?? '',
+            'title_short' => ucwords(mb_substr($row->job_title ?? $row->title ?? '', 0, 25)),
             'department' => $department,
             'company_id' => (int) ($row->comId ?? 0),
             // client_name intentionally omitted — hidden from all agency-facing views (Q4)
