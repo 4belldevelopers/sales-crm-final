@@ -556,8 +556,9 @@
                         <span class="mjh-tag" onclick="addFromPopular(this)" data-value="DevOps">DevOps</span>
                         <span class="mjh-tag" onclick="addFromPopular(this)" data-value="Data Analyst">Data Analyst</span>
                         <span class="mjh-clear-all" onclick="clearAllTags()">Clear All</span>
-                    <!-- ACTIVE FILTER TAGS -->
-                    <div class="active-filters" id="selectedFilters" style="display:none;"></div>    
+                        <!-- ACTIVE FILTER TAGS -->
+                        <div class="active-filters" id="selectedFilters" style="display:none;"></div>
+                    </div>{{-- ← closes mjh-popular --}}
 
                     {{-- ── Horizontal Filter Tabs ── --}}
                     <div class="mjh-tabs-bar">
@@ -588,7 +589,7 @@
                 <div class="job-list" id="marketJobLists"></div>
 
             </div>
-            
+
             <div id="pagination"></div>
         </main>
 
@@ -990,234 +991,128 @@
     <script src="{{ asset('demo/js/plugins.bundle.js') }}{{ TM_VERSION }}"></script>
     <script>
         const inputElm = document.querySelector('#kt_tagify_users');
-        const inputJobSearch = document.querySelector('#kt_tagify_2');
+        let tagify = null;
 
-        const tagify = new Tagify(inputElm, {
-            templates: {
-                tag: function(tagData) {
-                    tagData = tagData || {};
-                    const value = tagData.value || '';
-                    const isChecked = tagData.checked ? 'checked' : '';
-                    return `
-                <tag title="${value}" contenteditable='false' spellcheck="false" class="tagify__tag ${tagData.class ? tagData.class : ""}" ${this.getAttributes(tagData)}>
-                    <div>
-                        <span class="star ${isChecked}">🟌</span>
-                        <span class="tagify__tag-text">${value}</span>
-                        <span style="width: 16px; height: 16px; border-radius: 50%; background: #A5B4FC !important; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 11px; color: #3730A3; line-height: 1; flex-shrink: 0; transition: background 0.12s;"><x title='' class="tagify__tag__removeBtn" role="button" aria-label="remove tag"></x><span>
-                    </div>
-                </tag>
-            `;
-                }
-            },
-            transformTag: function(tagData) {
-                tagData.checked = tagData.checked || false;
-                return tagData;
-            }
-        });
-
-        // Add event listener for star click
-        document.addEventListener('click', function(e) {
-            if (e.target.classList.contains('star')) {
-                const tagElm = e.target.closest('.tagify__tag');
-                const value = tagElm.querySelector('.tagify__tag-text').textContent;
-
-                e.target.classList.toggle('checked');
-
-                // Update the tag data
-                const tagData = tagify.value.find(tag => tag.value === value);
-                if (tagData) {
-                    setTimeout(() => {
-                        tagData.checked = e.target.classList.contains('checked');
-                        tagify.updateValueByDOMTags();
-                    }, 500);
-
-                }
-            }
-        });
-
-        
-        const tagify2 = new Tagify(inputJobSearch, {
-            maxTags: 300,
-            templates: {
-                tag: function(tagData) {
-                    tagData = tagData || {};
-                    const value = tagData.value || '';
-                    const isChecked = tagData.checked ? 'checked' : '';
-                    return `
-                <tag title="${value}" contenteditable='false' spellcheck="false" class="tagify__tag ${tagData.class ? tagData.class : ""}" ${this.getAttributes(tagData)}>
-                    <div style="padding: 2px 6px;">
-                        <span class="tagify__tag-text">${value}</span>
-                        <span style="width: 16px; height: 16px; border-radius: 50%; background: #A5B4FC !important; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 11px; color: #3730A3; line-height: 1; flex-shrink: 0; transition: background 0.12s;"><x title='' class="tagify__tag__removeBtn" role="button" aria-label="remove tag"></x><span>
-                    </div>
-                </tag>
-            `;
-                }
-            },
-            transformTag: function(tagData) {
-                tagData.checked = tagData.checked || false;
-                return tagData;
-            }
-        });
-
-        // Prevent infinite loop
-        let isSyncing = false;
-
-        // Sync tagify -> tagify2
-        function syncToTagify2() {
-
-            if (isSyncing) return;
-
-            isSyncing = true;
-
-            const tags = tagify.value.map(tag => ({
-                value: tag.value
-            }));
-
-            tagify2.removeAllTags();
-            tagify2.addTags(tags);
-
-            isSyncing = false;
-        }
-
-        function syncToTagify1() {
-
-            if (isSyncing) return;
-
-            isSyncing = true;
-
-            const tags = tagify2.value.map(tag => ({
-                value: tag.value
-            }));
-
-            tagify.removeAllTags();
-            tagify.addTags(tags);
-            isSyncing = false;
-        }
-
-
-
-        // Function to update inputJobSearch based on tagify's value
-        function updateInputJobSearch() {
-            const tags = tagify.value.map(tag => tag.value).join(',');
-            inputJobSearch.value = tags;
-            syncToTagify2();
-        }
-
-        function updateTagifyUsers() {
-            const newTags = inputJobSearch.value.split(',').map(tag => ({
-                value: tag.trim()
-            }));
-            syncToTagify1();
-            // tagify.removeAllTags();
-            // tagify.addTags(newTags);
-            
-
-        }
-        // Listen for tag removal
-        tagify.on('add', updateInputJobSearch);
-        tagify.on('remove', updateInputJobSearch);
-        inputJobSearch.addEventListener('change', updateTagifyUsers);
-
-        // Initial sync
-        updateInputJobSearch();
-
-        // Sync tagify_users with inputJobSearch
-        inputJobSearch.addEventListener('change', function() {
-            const newTags = inputJobSearch.value.split(',').map(tag => ({
-                value: tag.trim()
-            }));
-            tagify.loadOriginalValues(newTags);
-        });
-
-
-
-
-        function debounceskill(func, delay) {
-            let timeoutskill;
-            return function(...args) {
-                clearTimeout(timeoutskill);
-                timeoutskill = setTimeout(() => func.apply(this, args), delay);
-            };
-        }
-
-        const fetchSuggestionsSkills = debounceskill(function(query) {
-            $.ajax({
-                url: "{{ url('/') }}" + "/skill-suggestions?q=" + query,
-                method: 'GET',
-                success: function(data) {
-                    console.warn("Fetched Skill: ", data);
-
-                    if (Array.isArray(data)) {
-                        tagify.settings.whitelist = data; // Update whitelist
-                        // tagify.dropdown.show(query); // Show suggestions
-                        tagify.dropdown.show.call(tagify);
-                    } else {
-                        console.error("Invalid API response format: Expected array.");
+        if (inputElm) {
+            tagify = new Tagify(inputElm, {
+                templates: {
+                    tag: function(tagData) {
+                        tagData = tagData || {};
+                        const value = tagData.value || '';
+                        const isChecked = tagData.checked ? 'checked' : '';
+                        return `
+                    <tag title="${value}" contenteditable='false' spellcheck="false" class="tagify__tag ${tagData.class ? tagData.class : ""}" ${this.getAttributes(tagData)}>
+                        <div>
+                            <span class="star ${isChecked}">🟌</span>
+                            <span class="tagify__tag-text">${value}</span>
+                            <span style="width: 16px; height: 16px; border-radius: 50%; background: #A5B4FC !important; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 11px; color: #3730A3; line-height: 1; flex-shrink: 0; transition: background 0.12s;"><x title='' class="tagify__tag__removeBtn" role="button" aria-label="remove tag"></x><span>
+                        </div>
+                    </tag>
+                `;
                     }
                 },
-                error: function(err) {
-                    console.error("Error fetching Skill:", err);
+                transformTag: function(tagData) {
+                    tagData.checked = tagData.checked || false;
+                    return tagData;
                 }
             });
-        }, 200); 
 
-        // Listen for user input to trigger API call
-        tagify.on('input', function(e) {
-            var query = e.detail.value.trim();
-            if (query.length < 1) return;
-            fetchSuggestionsSkills(query);
-        });
+            // Add event listener for star click
+            document.addEventListener('click', function(e) {
+                if (e.target.classList.contains('star') && tagify && Array.isArray(tagify.value)) {
+                    const tagElm = e.target.closest('.tagify__tag');
+                    if (!tagElm) return;
+                    const value = tagElm.querySelector('.tagify__tag-text')?.textContent;
 
-        document.addEventListener('click', function (e) {
+                    e.target.classList.toggle('checked');
 
-            // remove button clicked
-            if (e.target.classList.contains('tagify__tag__removeBtn')) {
+                    const tagData = tagify.value.find(tag => tag.value === value);
+                    if (tagData) {
+                        setTimeout(() => {
+                            tagData.checked = e.target.classList.contains('checked');
+                            tagify.updateValueByDOMTags();
+                        }, 500);
+                    }
+                }
+            });
 
-                // get tag element
-                const tagElm = e.target.closest('.tagify__tag');
-
-                // remove tag from tagify
-                tagify.removeTags(tagElm);
-                tagify2.removeTags(tagElm);
-
+            function debounceskill(func, delay) {
+                let timeoutskill;
+                return function(...args) {
+                    clearTimeout(timeoutskill);
+                    timeoutskill = setTimeout(() => func.apply(this, args), delay);
+                };
             }
 
+            const fetchSuggestionsSkills = debounceskill(function(query) {
+                $.ajax({
+                    url: "{{ url('/') }}" + "/skill-suggestions?q=" + query,
+                    method: 'GET',
+                    success: function(data) {
+                        if (Array.isArray(data) && tagify) {
+                            tagify.settings.whitelist = data;
+                            tagify.dropdown.show.call(tagify);
+                        }
+                    },
+                    error: function(err) {
+                        console.error("Error fetching Skill:", err);
+                    }
+                });
+            }, 200);
+
+            tagify.on('input', function(e) {
+                var query = (e.detail.value || '').trim();
+                if (query.length < 1) return;
+                fetchSuggestionsSkills(query);
+            });
+
+            tagify.on('change', function() {
+                if (typeof filtersdata === 'function') {
+                    filtersdata();
+                }
+            });
+        }
+
+        document.addEventListener('click', function (e) {
+            if (e.target.classList.contains('tagify__tag__removeBtn')) {
+                const tagElm = e.target.closest('.tagify__tag');
+                if (tagElm && tagify) {
+                    tagify.removeTags(tagElm);
+                }
+            }
         });
 
-        /* ── Add from popular row ── */
+        /* ── Add from popular searches row ── */
         function addFromPopular(el) {
-                let value = el.getAttribute('data-value');
-                /*
-                |--------------------------------------------------------------------------
-                | CHECK EXISTING TAG
-                |--------------------------------------------------------------------------
-                */
+            let value = el.getAttribute('data-value') || '';
+            let $search = $('#kt_tagify_2');
+            let current = $search.val().trim();
+
+            if (current.toLowerCase() === value.toLowerCase()) {
+                $search.val('');
+                el.classList.remove('pop-added');
+            } else {
+                $search.val(value);
+                document.querySelectorAll('.mjh-popular .mjh-tag').forEach(t => t.classList.remove('pop-added'));
+                el.classList.add('pop-added');
+            }
+
+            if (tagify && Array.isArray(tagify.value)) {
                 let existing = tagify.value.find(
                     tag => tag.value.toLowerCase() === value.toLowerCase()
                 );
-                /*
-                |--------------------------------------------------------------------------
-                | REMOVE TAG
-                |--------------------------------------------------------------------------
-                */
                 if (existing) {
-
                     tagify.removeTags(value);
-
-                    el.classList.remove('pop-added');
-                }
-                /*
-                |--------------------------------------------------------------------------
-                | ADD TAG
-                |--------------------------------------------------------------------------
-                */
-                else {
-
+                } else {
                     tagify.addTags([value]);
-
-                    el.classList.add('pop-added');
                 }
-                inputElm.focus();
+            }
+
+            if (typeof filtersdata === 'function') {
+                filtersdata();
+            } else if (typeof fetchCandidates === 'function') {
+                fetchCandidates(1);
+            }
         }
     </script>
 
@@ -1961,6 +1856,10 @@ $(document).on('click', '.client-show-detail', function (){
                 },
                 success: function(response) {
                     $('.loadingMessage').css({ display: 'none' });
+                    console.log('[MarketJobs] AJAX success. status=' + response.status + ' total=' + response.total);
+                    console.log('[MarketJobs] items type=' + typeof response.items + ' isArray=' + Array.isArray(response.items));
+                    if (response.items) { console.log('[MarketJobs] items length=' + (response.items.length || 'N/A (not array)')); console.log('[MarketJobs] first item:', response.items[0] || response.items.data && response.items.data[0]); }
+
                     var items = response.items;
                     // Handle both plain array [] and ResourceCollection {data:[]} wrapping
                     if (items && !Array.isArray(items) && Array.isArray(items.data)) {
@@ -1968,8 +1867,22 @@ $(document).on('click', '.client-show-detail', function (){
                     }
                     if (items && Array.isArray(items)) {
                         if (items.length > 0) {
-                            let html = items.map(item => renderMarketJobCard(item)).join('');
-                            $('#marketJobLists').html(html);
+                            try {
+                                let html = items.map(function(item, idx) {
+                                    try {
+                                        return renderMarketJobCard(item);
+                                    } catch(cardErr) {
+                                        console.error('[MarketJobs] renderMarketJobCard failed for item #' + idx, cardErr, item);
+                                        return '<div class="alert alert-warning m-2">Card render error: ' + cardErr.message + '</div>';
+                                    }
+                                }).join('');
+                                console.log('[MarketJobs] Rendered HTML length=' + html.length);
+                                $('#marketJobLists').html(html);
+                                $('#marketJobLists').css({ display: 'block', minHeight: '100px' });
+                            } catch(renderErr) {
+                                console.error('[MarketJobs] Render pipeline error:', renderErr);
+                                $('#marketJobLists').html('<div class="alert alert-danger m-4">Render error: ' + renderErr.message + '</div>');
+                            }
                         } else {
                             $('#marketJobLists').html('<div class="text-center py-5 text-muted">No job listings found matching your criteria.</div>');
                         }
