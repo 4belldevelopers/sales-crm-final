@@ -27,9 +27,11 @@ class PackageController extends SuperAdminBaseController
             // dd($this->packageData);
         return view('super-admin.packages.index', $this->data);
     }
-    public function package_feature()
+    public function package_feature(Request $request)
     {
-        $this->packageFeature = PackageFeature::paginate(10);
+        $perPage = (int) $request->input('per_page', $request->input('size', $request->input('limit', 10)));
+        $perPage = min(max($perPage, 1), 100);
+        $this->packageFeature = PackageFeature::paginate($perPage)->appends($request->query());
         return view('super-admin.packages.package_feature', $this->data);
     }
     public function add_edit_package_feature(Request $request,$id){

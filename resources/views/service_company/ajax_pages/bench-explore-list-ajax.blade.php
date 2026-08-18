@@ -30,7 +30,7 @@
     $row->companyidcount     = $jobDetails->comId;
     $row->clients_name       = $jobDetails->client_name;
 
-    $job_assign  = $jobDetails->job_assign;
+    $job_assign  = $jobDetails->job_assign ?? [];
     $jobAssign   = collect($job_assign);
 
     /* ── Company logo / initials ─────────────────── */

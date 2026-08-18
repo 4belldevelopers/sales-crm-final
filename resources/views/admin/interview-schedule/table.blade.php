@@ -210,9 +210,8 @@
 											processing  	: true,
 											serverSide  	: true,
 											destroy   		: true,
-											ordering		: false, //disable ordering
-											 
-											"bLengthChange" : false, //thought this line could hide the LengthMenu
+											"bLengthChange" : true,
+											"lengthMenu"    : [[10, 25, 50, 100], [10, 25, 50, 100]],
 											sDom			: 'lrtip',
                      
 											oLanguage : {

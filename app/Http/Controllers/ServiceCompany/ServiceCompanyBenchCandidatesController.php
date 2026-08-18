@@ -403,7 +403,7 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
         $country = '';
         $searchQuery = $request->input('q');
         $page = max((int) $request->input('page', 1), 1);
-        $size = (int) $request->input('size', 10); // Default 20 results per page
+        $size = (int) ($request->input('per_page') ?? $request->input('size') ?? $request->input('limit') ?? 10);
         $from = ($page - 1) * $size;
         $requiredSkills = [];
         $searchTerms = request('cus_search');
@@ -577,6 +577,7 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
         $pagination = [
             'total' => $total,
             'current_page' => $page,
+            'per_page' => $size,
             'last_page' => ceil($total / $size),
             'listType' => 'allcandidate',
         ];
@@ -4284,7 +4285,7 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
         $searchQuery = $request->input('q');
         $valCheck = $request->input('sortingfilter');
         $page = max((int) $request->input('page', 1), 1);
-        $size = (int) $request->input('size', 10); // Default 20 results per page
+        $size = (int) ($request->input('per_page') ?? $request->input('size') ?? $request->input('limit') ?? 10);
         $from = ($page - 1) * $size;
         $sort = [];
 
@@ -4479,7 +4480,7 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
         $searchQuery = $request->input('q');
         $valCheck = $request->input('sortingfilter');
         $page = max((int) $request->input('page', 1), 1);
-        $size = (int) $request->input('size', 10);
+        $size = (int) ($request->input('per_page') ?? $request->input('size') ?? $request->input('limit') ?? 10);
         $from = ($page - 1) * $size;
         $custom_search = $request->input('cus_search');
 
@@ -4988,7 +4989,7 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
         $stage = $request->input('stage');
 
         $page = max((int) $request->input('page', 1), 1);
-        $size = (int) $request->input('size', 10); // Default 20 results per page
+        $size = (int) ($request->input('per_page') ?? $request->input('size') ?? $request->input('limit') ?? 10);
         $from = ($page - 1) * $size;
 
         // The toolbar search box actually sends 'cus_search' (see
@@ -5216,6 +5217,7 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
         $pagination = [
             'total' => $total,
             'current_page' => $page,
+            'per_page' => $size,
             'last_page' => ceil($total / $size),
             'listType' => 'allcandidate',
         ];
@@ -6077,7 +6079,7 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
 
         $searchQuery = $request->input('q');
         $page = max((int) $request->input('page', 1), 1);
-        $size = (int) $request->input('size', 10); // Default 20 results per page
+        $size = (int) ($request->input('per_page') ?? $request->input('size') ?? $request->input('limit') ?? 10);
         $from = ($page - 1) * $size;
 
         $custom_status = request('custom_status');
@@ -6403,6 +6405,7 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
         $pagination = [
             'total' => $total,
             'current_page' => $page,
+            'per_page' => $size,
             'last_page' => ceil($total / $size),
             'listType' => 'allcandidate',
         ];
@@ -6554,7 +6557,7 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
 
         $searchQuery = $request->input('q');
         $page = max((int) $request->input('page', 1), 1);
-        $size = (int) $request->input('size', 10); // Default 20 results per page
+        $size = (int) ($request->input('per_page') ?? $request->input('size') ?? $request->input('limit') ?? 10);
         $from = ($page - 1) * $size;
 
         $custom_status = request('custom_status');
@@ -6867,6 +6870,7 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
         $pagination = [
             'total' => $total,
             'current_page' => $page,
+            'per_page' => $size,
             'last_page' => ceil($total / $size),
             'listType' => 'allcandidate',
         ];

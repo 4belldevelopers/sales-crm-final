@@ -390,12 +390,15 @@ $(document).on('hidden.bs.modal', '#interview_feedback', function() {
 // ---- Data fetch ----
 function fetchBenchInterviewScheduleCandidateList(page = 1) {
     $('.loadingMessagebenchCandidateInterviewScheduleAjax').addClass('show');
+    var perPage = localStorage.getItem('candidatePerPage') || 10;
     return $.ajax({
         url: `{!! route('service_company.bench-candidates.benchinterviewdata_ajax') !!}?page=${page}`,
         type: 'GET',
         data: {
             custom_search: $('#kt_tagify_2').val(),
-            custom_hiringtype: $('#sortingfilter').val()
+            custom_hiringtype: $('#sortingfilter').val(),
+            per_page: perPage,
+            size: perPage
         },
         success: function(response) {
             $('.loadingMessagebenchCandidateInterviewScheduleAjax').removeClass('show');
@@ -430,11 +433,19 @@ $(document).ready(function() {
         }, 300);
     });
 
-    $(document).on('click', '#paginationbenchCandidateInterviewSchedule .page-link, #paginationbenchCandidateInterviewSchedule [data-page]', function(e) {
+    $(document).on('click', '#paginationbenchCandidateInterviewSchedule .pagi-page, #paginationbenchCandidateInterviewSchedule .pagi-arrow, #paginationbenchCandidateInterviewSchedule [data-page]', function(e) {
         e.preventDefault();
         var page = $(this).data('page') || 1;
-        if (!page || $(this).hasClass('disabled')) return;
+        if (!page || $(this).hasClass('disabled') || $(this).hasClass('pagi-disabled') || $(this).hasClass('pagi-active-disabled')) return;
         fetchBenchInterviewScheduleCandidateList(page);
+    });
+
+    $(document).on('change', '#paginationbenchCandidateInterviewSchedule .pagi-perpage', function(e) {
+        var selectedPerPage = $(this).val();
+        if (selectedPerPage) {
+            localStorage.setItem('candidatePerPage', selectedPerPage);
+            fetchBenchInterviewScheduleCandidateList(1);
+        }
     });
 });
 

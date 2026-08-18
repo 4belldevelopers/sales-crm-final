@@ -909,9 +909,17 @@ $(document).ready(function(){
             .then(function(){ bxrPaginationLoading = false; })
             .catch(function(){ bxrPaginationLoading = false; });
     });
+    $(document).on('change','#paginationbenchCandidateExploreJob .pagi-perpage',function(e){
+        var selectedPerPage = $(this).val();
+        if (selectedPerPage) {
+            localStorage.setItem('candidatePerPage', selectedPerPage);
+            fetchBenchExploreJobCandidateList(1);
+        }
+    });
 });
 function fetchBenchExploreJobCandidateList(page){
     page=page||1;
+    var perPage=localStorage.getItem('candidatePerPage')||10;
     var bid=$('#bench_id').val(),stage=$('#stage').val(),
         sort=$('#hiringtype').val(),cs=$('#kt_tagify_2').val(),
         st=$('[name="bxr_status"]:checked').val()||'active',
@@ -926,7 +934,8 @@ function fetchBenchExploreJobCandidateList(page){
         data:{
             bench_id:bid,stage:stage,cus_search:cs,statusfilter:st,sortingfilter:sort,
             bxr_company:company,bxr_location:location,
-            bxr_min_sal:minSal,bxr_max_sal:maxSal,bxr_activity:activity
+            bxr_min_sal:minSal,bxr_max_sal:maxSal,bxr_activity:activity,
+            per_page:perPage,size:perPage
         },
         success:function(r){
             $('.loadingMessagebenchCandidateExploreJobAjax').css({display:'none'});

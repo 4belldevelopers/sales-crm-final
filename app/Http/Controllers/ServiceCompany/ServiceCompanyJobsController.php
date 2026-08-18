@@ -2618,7 +2618,10 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
 
         $searchQuery = $request->input('q');
         $page = max((int) $request->input('page', 1), 1);
-        $size = (int) $request->input('size', 10);
+        $size = (int) $request->input('per_page', $request->input('size', $request->input('limit', 10)));
+        if ($size <= 0) {
+            $size = 10;
+        }
         $custom_status = request('custom_status');
         $custom_hiringtype = request('custom_hiringtype');
         $employment_type = request('employment_type');
@@ -2965,7 +2968,10 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
 
         $searchQuery = $request->input('q');
         $page = max((int) $request->input('page', 1), 1);
-        $size = (int) $request->input('size', 10); // Default 20 results per page
+        $size = (int) $request->input('per_page', $request->input('size', $request->input('limit', 10)));
+        if ($size <= 0) {
+            $size = 10;
+        }
         $from = ($page - 1) * $size;
 
         $custom_status = request('custom_status');
@@ -3280,7 +3286,10 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
 
         $searchQuery = $request->input('q');
         $page = max((int) $request->input('page', 1), 1);
-        $size = (int) $request->input('size', 10); // Default 20 results per page
+        $size = (int) $request->input('per_page', $request->input('size', $request->input('limit', 10)));
+        if ($size <= 0) {
+            $size = 10;
+        }
         $from = ($page - 1) * $size;
 
         $custom_status = request('custom_status');

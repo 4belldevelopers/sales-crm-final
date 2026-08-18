@@ -2618,12 +2618,21 @@ $(document).ready(function() {
 
               fetchstaffingpartner(page, $('#search').val());
           });
+
+          $(document).on('change', '#paginationstaffingpartner .pagi-perpage', function(e) {
+              const selectedPerPage = $(this).val();
+              if (selectedPerPage) {
+                  localStorage.setItem('candidatePerPage', selectedPerPage);
+                  fetchstaffingpartner(1, $('#search').val());
+              }
+          });
 			});
 			
 
 			function fetchstaffingpartner(page = 1, search = '') {
 				$('.loadingMessagestaffingpartnerajax').css({ display: 'block' });
                 // $('.page-loader').css('display', 'flex');
+                var perPage = localStorage.getItem('candidatePerPage') || 10;
 				$.ajax({
 					url: `{!! route('service_company.consultancy.data_ajax') !!}?page=${page}`,
 					type: 'GET',
@@ -2631,7 +2640,9 @@ $(document).ready(function() {
 						search: $('#inputSearch').val(),
 						cus_search: $('#kt_tagify_2').val(),
 						country: $('#country').val(),
-						sortingfilter: $('#sortingfilter').val()
+						sortingfilter: $('#sortingfilter').val(),
+						per_page: perPage,
+						size: perPage
 					},
 					success: function(response) {
 						$('.loadingMessagestaffingpartnerajax').css({ display: 'none' });

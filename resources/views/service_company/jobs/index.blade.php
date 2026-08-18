@@ -887,18 +887,26 @@ $(document).on('click', '.client-hm-listing', function ()
                 fetchCandidates(page, $('#search').val());
             });
 
+            $(document).on('change', '#pagination .pagi-perpage', function() {
+                var selectedPerPage = $(this).val();
+                localStorage.setItem('candidatePerPage', selectedPerPage);
+                localStorage.setItem('currentPageJobs', 1);
+                page_no = 1;
+                fetchCandidates(1);
+            });
+
         });
 
-          var page_no = localStorage.getItem('currentPageJobs');
-                if (!page_no) {
-                    page_no = 1;
-                }
-          localStorage.removeItem('jobsPageSize'); // stale value from before page size was fixed at 10
-          var pageSize = 10;
+        var page_no = localStorage.getItem('currentPageJobs') || 1;
 
+        function fetchCandidates(page, search = '') {
+            var targetPage = page || page_no || 1;
+            page_no = targetPage;
+            localStorage.setItem('currentPageJobs', targetPage);
 
-        function fetchCandidates(page = page_no, search = '', size = pageSize) {
+            var perPage = $('#pagination .pagi-perpage').val() || localStorage.getItem('candidatePerPage') || 10;
             var clientid = '1';
+
             if($('.inputJobSearch').val()!=''){
                 // $('.loadingMessage').css({ display: 'block' });
                 $('.loader_search').css({ display: 'block' });
@@ -907,7 +915,7 @@ $(document).on('click', '.client-hm-listing', function ()
                 $('.page-loader').css('display', 'flex');
             }
             return $.ajax({
-                url: `{!! route('service_company.jobs.all_data_ajax') !!}?page=${page}`,
+                url: `{!! route('service_company.jobs.all_data_ajax') !!}?page=${targetPage}`,
                 type: 'GET',
                 data: {
                   custom_status : $('#status').val(),
@@ -915,13 +923,14 @@ $(document).on('click', '.client-hm-listing', function ()
                   custom_hiringtype : $('#hiringtype').val(),
                   employment_type : $('#employment_type').val(),
                   custom_search : $('.inputJobSearch').val(),
-                  size : size
+                  size : perPage,
+                  per_page : perPage
                 },
                 success: function(response) {
                     $('.loadingMessage').css({ display: 'none' });
                     $('.loader_search').css({ display: 'none' });
                     $('.page-loader').css('display', 'none');
-                    localStorage.setItem('currentPageJobs', page);
+                    localStorage.setItem('currentPageJobs', targetPage);
                     $('#allJobList').html(response.html);
                     $('#all_jobs_count').html(response.total);
                     $('#pagination').html(response.pagination);
