@@ -12925,11 +12925,16 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
 
     public function btlisting(Request $request, $id)
     {
-        // dd( $userPermissions);
         $this->currentJobId = $id;
         $this->recruiter = [];
-        $company_id = auth()->user()->company_id;
-        $clientCompanyId = DB::table('jobs')->select('jobs.company_id')->where('jobs.id', '=', $this->currentJobId)->first();
+        $company_id = auth()->user()->company_id ?? 0;
+        
+        $this->job = Job::withoutGlobalScopes()->find($id);
+        if (! $this->job) {
+            return Reply::error('Job requirement not found.');
+        }
+        $targetCompanyId = $this->job->company_id;
+
         $this->team = DB::table('users')
             ->join('job_assign', 'job_assign.user_id', '=', 'users.id')
             ->leftJoin('users_profile', 'users_profile.user_id', '=', 'users.id')
@@ -12948,12 +12953,10 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
                 'recommendation_relation.from_user_id',
                 'users_profile.designation'
             )
-            ->where('users.company_id', $clientCompanyId->company_id)
+            ->where('users.company_id', $targetCompanyId)
             ->where('job_assign.job_id', $this->currentJobId)
             ->groupBy('users.id')
             ->get();
-
-        $this->job = Job::find($id);
 
         $this->jobCitySelected = DB::table('client_city_jobs')
             ->where('client_city_jobs.company_id', $this->job->company_id)
@@ -12964,21 +12967,19 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
         $this->default_loc = GeneralMethod::allCitiesSelected($this->jobCitySelected);
 
         $gdFilterData = GeneralMethod::gdFilterData($this->job->id);
-        // dd($gdFilterData);
-        $this->min_exp = ($gdFilterData->min_exp >= 1) ? $gdFilterData->min_exp - 1 : $gdFilterData->min_exp;
-        $this->max_exp = $gdFilterData->max_exp + 1;
+        $this->min_exp = ($gdFilterData && $gdFilterData->min_exp >= 1) ? $gdFilterData->min_exp - 1 : ($gdFilterData->min_exp ?? 0);
+        $this->max_exp = ($gdFilterData->max_exp ?? 0) + 1;
         $this->min_salary_currency = $request->cur;
-        $this->min_salary = $gdFilterData->min_salary;
-        $this->max_salary = $gdFilterData->max_salary;
+        $this->min_salary = $gdFilterData->min_salary ?? 0;
+        $this->max_salary = $gdFilterData->max_salary ?? 0;
         $this->min_sal_mode = $request->mod;
-        $this->default_skill = $gdFilterData->default_skill;
+        $this->default_skill = $gdFilterData->default_skill ?? '';
 
         $company_or_client = GeneralMethod::companyDetailsByClient($this->currentJobId);
-        $this->client_types = DB::table('clients')->where('company_id', $clientCompanyId->company_id)->first();
+        $this->client_types = DB::table('clients')->where('company_id', $targetCompanyId)->first();
         $this->logo = $this->client_types->logo ?? null;
         $this->cities = GeneralMethod::allCities();
-        // dd($this->cities);
-        // dd($this->company_or_client);
+
         $view = view('service_company.cvtracker.bench-talents', $this->data)->render();
 
         return Reply::dataOnly(['status' => 'success', 'view' => $view, 'company_or_client' => $company_or_client, 'logo' => $this->logo]);
