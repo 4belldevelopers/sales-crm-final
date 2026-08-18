@@ -173,24 +173,24 @@
     .mjh-stats { display: flex; gap: 14px; }
     .mjh-card {
         display: flex;
-        align-items: flex-start;
+        align-items: center;
         gap: 14px;
         flex: 1;
         background: #fff;
         border: 1px solid #E5E7EB;
         border-radius: 12px;
-        padding: 16px 18px;
+        padding: 14px 18px;
         transition: box-shadow 0.15s, transform 0.15s;
         min-width: 0;
     }
     .mjh-card:hover { box-shadow: 0 4px 14px rgba(0,0,0,0.08); transform: translateY(-1px); }
     .mjh-icon {
-        width: 52px; height: 52px;
-        border-radius: 14px;
+        width: 48px; height: 48px;
+        border-radius: 12px;
         display: flex; align-items: center; justify-content: center;
         flex-shrink: 0;
     }
-    .mjh-icon svg { width: 24px; height: 24px; }
+    .mjh-icon svg { width: 22px; height: 22px; }
     .mjh-icon-blue   { background: #EFF6FF; color: #2563EB; }
     .mjh-icon-green  { background: #DCFCE7; color: #16A34A; }
     .mjh-icon-purple { background: #F3F0FF; color: #7C3AED; }
@@ -202,26 +202,10 @@
         margin-bottom: 2px;
     }
     .mjh-card-num {
-        font-size: 18px;
-        font-weight: 600;
+        font-size: 20px;
+        font-weight: 700;
         color: #111827;
         line-height: 1.2;
-    }
-    .mjh-card-sub {
-        font-size: 12px;
-        font-weight: 400;
-        color: #6B7280;
-        margin-top: 2px;
-    }
-    .mjh-trend {
-        font-size: 11px;
-        font-weight: 500;
-        color: #16A34A;
-        margin-top: 3px;
-        display: flex;
-        align-items: center;
-        gap: 3px;
-        white-space: nowrap;
     }
 
     /* Filter bar */
@@ -432,8 +416,6 @@
                                 <div class="mjh-card-body">
                                     <div class="mjh-card-label">All Opportunities</div>
                                     <div class="mjh-card-num">{{ number_format($all_jobs ?? 0) }}</div>
-                                    <div class="mjh-card-sub">Active requirements</div>
-                                    <div class="mjh-trend"><i class="fa-solid fa-arrow-up" style="font-size:9px;"></i> {{ $all_jobs_new ?? 0 }} new this week</div>
                                 </div>
                             </div>
 
@@ -448,8 +430,6 @@
                                 <div class="mjh-card-body">
                                     <div class="mjh-card-label">Full-Time Hiring</div>
                                     <div class="mjh-card-num">{{ number_format($fulltime_jobs ?? 0) }}</div>
-                                    <div class="mjh-card-sub">Client requirements</div>
-                                    <div class="mjh-trend"><i class="fa-solid fa-arrow-up" style="font-size:9px;"></i> {{ $fulltime_new ?? 0 }} new this week</div>
                                 </div>
                             </div>
 
@@ -464,8 +444,6 @@
                                 <div class="mjh-card-body">
                                     <div class="mjh-card-label">Contract Hiring</div>
                                     <div class="mjh-card-num">{{ number_format($contract_jobs ?? 0) }}</div>
-                                    <div class="mjh-card-sub">Contract opportunities</div>
-                                    <div class="mjh-trend"><i class="fa-solid fa-arrow-up" style="font-size:9px;"></i> {{ $contract_new ?? 0 }} new this week</div>
                                 </div>
                             </div>
 
@@ -481,8 +459,6 @@
                                 <div class="mjh-card-body">
                                     <div class="mjh-card-label">Bench Talent Requests</div>
                                     <div class="mjh-card-num">{{ number_format($agency_requests ?? 0) }}</div>
-                                    <div class="mjh-card-sub">Clients seeking bench talent</div>
-                                    <div class="mjh-trend"><i class="fa-solid fa-arrow-up" style="font-size:9px;"></i> {{ $agency_new ?? 0 }} new this week</div>
                                 </div>
                             </div>
                         </div>
@@ -1277,96 +1253,122 @@ $(document).on('click', '#changetextupdate', function (){
 // 									{data: 'Status', name: 'Status', searchable : false, orderable : false},
 // 									{data: 'Date', name: 'Date',  searchable : false, orderable : false},
 // 									// {data: 'HM', name: 'HM', orderable: false},
-//                   {data: 'Terms', name: 'Terms', orderable: false},
-// 									{data: 'Action', name: 'Action', orderable: false}
-								
-// 							 ]         
-// 		 }); 
-// 		 new $.fn.dataTable.FixedHeader(table);
-	   
-// 	   } 
+        function showKtDrawer(drawerSelector, toggleSelector) {
+        var drawerEl = document.querySelector(drawerSelector);
+        if (drawerEl && typeof KTDrawer !== 'undefined') {
+            var drawer = KTDrawer.getInstance(drawerEl);
+            if (!drawer && typeof KTDrawer === 'function') {
+                drawer = new KTDrawer(drawerEl);
+            }
+            if (drawer && typeof drawer.show === 'function') {
+                drawer.show();
+                return;
+            }
+        }
+        if (toggleSelector) {
+            var toggleEl = document.querySelector(toggleSelector);
+            if (toggleEl) {
+                toggleEl.click();
+            }
+        }
+    }
 
-$(document).on('click', '.client-show-detail', function (){
-			$('#kt_activitiesClientjob_toggle').trigger('click');
-			var id    		=	$(this).data('row-id');
-      // var url   		=	"{{ route('service_company.jobs.clientviewmore',':id') }}";
-			var url   		=	"{{ route('service_company.jobs.viewmore',':id') }}?jobfindhide=1";
-			url     		=	url.replace(':id', id);
-			var baseurl    	=	"{{ asset('assets/images/Loading2.gif') }}";
-			$.ajax({
-							type  		: 'GET',
-							url   		: url,
-							 beforeSend	: function() {
-										 $('#kt_activitiesclientjob_body').html('<img src="'+baseurl+'" height="35px" width="100%">');
-							},
-							success 	: function (response) {
-									$('#kt_activitiesclientjob_body').html(response.view);
-							}
-					});
-   		});
+    $(document).on('click', '.client-show-detail', function (e){
+        e.preventDefault();
+        showKtDrawer('#kt_activitiesClientjob', '#kt_activitiesClientjob_toggle');
+        var id = $(this).data('row-id');
+        var url = "{{ route('service_company.jobs.viewmore',':id') }}?jobfindhide=1";
+        url = url.replace(':id', id);
+        var baseurl = "{{ asset('assets/images/Loading2.gif') }}";
+        $.ajax({
+            type: 'GET',
+            url: url,
+            beforeSend: function() {
+                $('#kt_activitiesclientjob_body').html('<div class="text-center py-10"><img src="'+baseurl+'" height="35px"></div>');
+            },
+            success: function (response) {
+                $('#kt_activitiesclientjob_body').html(response.view);
+            },
+            error: function(xhr) {
+                $('#kt_activitiesclientjob_body').html('<div class="alert alert-danger m-4">Failed to load details.</div>');
+            }
+        });
+    });
 
-	// Market-jobs "View Requirement" — same drawer but hides hiring-manager, action-buttons and pipeline sections
-	$(document).on('click', '.market-show-detail', function (){
-			$('#kt_activitiesClientjob_toggle').trigger('click');
-			var id      = $(this).data('row-id');
-			var url     = "{{ route('service_company.jobs.viewmore',':id') }}?jobfindhide=1&hideMarketSections=1";
-			url         = url.replace(':id', id);
-			var baseurl = "{{ asset('assets/images/Loading2.gif') }}";
-			$.ajax({
-				type     : 'GET',
-				url      : url,
-				beforeSend: function() {
-					$('#kt_activitiesclientjob_body').html('<img src="'+baseurl+'" height="35px" width="100%">');
-				},
-				success  : function (response) {
-					$('#kt_activitiesclientjob_body').html(response.view);
-				}
-			});
-	});
+    // Market-jobs "View Requirement" — same drawer but hides hiring-manager, action-buttons and pipeline sections
+    $(document).on('click', '.market-show-detail', function (e){
+        e.preventDefault();
+        showKtDrawer('#kt_activitiesClientjob', '#kt_activitiesClientjob_toggle');
+        var id = $(this).data('row-id');
+        var url = "{{ route('service_company.jobs.viewmore',':id') }}?jobfindhide=1&hideMarketSections=1";
+        url = url.replace(':id', id);
+        var baseurl = "{{ asset('assets/images/Loading2.gif') }}";
+        $.ajax({
+            type: 'GET',
+            url: url,
+            beforeSend: function() {
+                $('#kt_activitiesclientjob_body').html('<div class="text-center py-10"><img src="'+baseurl+'" height="35px"></div>');
+            },
+            success: function (response) {
+                $('#kt_activitiesclientjob_body').html(response.view);
+            },
+            error: function(xhr) {
+                $('#kt_activitiesclientjob_body').html('<div class="alert alert-danger m-4">Failed to load requirement details.</div>');
+            }
+        });
+    });
 
-       $(document).on('click', '.client-hm-listing', function (){
-   		$('#kt_activitiesHM_toggle').trigger('click');		
-   		var id    		= $(this).data('row-id');
-   		var url   		= "{{ route('service_company.jobs.clienthmlisting',':id') }}";
-   		url     		= url.replace(':id', id);
-   		 var baseurl    = "{{ asset('assets/images/Loading2.gif') }}"; 
-   		$.ajax({
-   						type  		: 'GET',
-   						url   		: url,
-   						 beforeSend	: function() {
-                                     $('#kt_activitiesHM_body').html('<img src="'+baseurl+'" height="35px" width="100%">');
-                       	},
-   						success 	: function (response) {
-   				$('#kt_activitiesHM_body').html(response.view);
-               $('#company_or_client').text(response.company_or_client);			
-   						}
-   	  			});
-   	});
-
-    $(document).on('click', '.open-bench-talents', function (){
-   		$('#kt_activitiesBT_toggle').trigger('click');		
-   		var id    		= $(this).data('row-id');
-      var mod    		= $(this).data('mod');
-      var cur    		= $(this).data('cur');
-   		var url   		= "{{ route('service_company.jobs.btlisting',':id') }}";
-   		url     		= url.replace(':id', id);
-   		 var baseurl    = "{{ asset('assets/images/Loading2.gif') }}"; 
-   		$.ajax({
-   						type  		: 'GET',
-   						url   		: url,
-              data: {
-                mod:mod,
-                cur:cur
-              },
-   						 beforeSend	: function() {
-                                     $('#kt_activitiesBT_body').html('<img src="'+baseurl+'" height="35px" width="100%">');
-                       	},
-   						success 	: function (response) {
-   				$('#kt_activitiesBT_body').html(response.view);
+    $(document).on('click', '.client-hm-listing', function (e){
+        e.preventDefault();
+        showKtDrawer('#kt_activitiesHM', '#kt_activitiesHM_toggle');
+        var id = $(this).data('row-id');
+        var url = "{{ route('service_company.jobs.clienthmlisting',':id') }}";
+        url = url.replace(':id', id);
+        var baseurl = "{{ asset('assets/images/Loading2.gif') }}";
+        $.ajax({
+            type: 'GET',
+            url: url,
+            beforeSend: function() {
+                $('#kt_activitiesHM_body').html('<div class="text-center py-10"><img src="'+baseurl+'" height="35px"></div>');
+            },
+            success: function (response) {
+                $('#kt_activitiesHM_body').html(response.view);
                 $('#company_or_client').text(response.company_or_client);
-   						}
-   	  			});
-   	});
+            },
+            error: function(xhr) {
+                $('#kt_activitiesHM_body').html('<div class="alert alert-danger m-4">Failed to load hiring manager info.</div>');
+            }
+        });
+    });
+
+    $(document).on('click', '.open-bench-talents', function (e){
+        e.preventDefault();
+        showKtDrawer('#kt_activitiesBT', '#kt_activitiesBT_toggle');
+        var id = $(this).data('row-id');
+        var mod = $(this).data('mod') || '';
+        var cur = $(this).data('cur') || '';
+        var url = "{{ route('service_company.jobs.btlisting',':id') }}";
+        url = url.replace(':id', id);
+        var baseurl = "{{ asset('assets/images/Loading2.gif') }}";
+        $.ajax({
+            type: 'GET',
+            url: url,
+            data: {
+                mod: mod,
+                cur: cur
+            },
+            beforeSend: function() {
+                $('#kt_activitiesBT_body').html('<div class="text-center py-10"><img src="'+baseurl+'" height="35px"></div>');
+            },
+            success: function (response) {
+                $('#kt_activitiesBT_body').html(response.view);
+                $('#company_or_client').text(response.company_or_client);
+            },
+            error: function(xhr) {
+                $('#kt_activitiesBT_body').html('<div class="alert alert-danger m-4">Failed to load bench candidates.</div>');
+            }
+        });
+    });
 
     // Keyboard accessibility for the clickable "Your Bench Match" box (role="button")
     $(document).on('keydown', '.open-bench-talents[role="button"]', function (e){
@@ -1376,30 +1378,31 @@ $(document).on('click', '.client-show-detail', function (){
         }
     });
 
-
-     $(document).on('click', '.client-terms-listing-find-job', function (){
-   		$('#kt_activitiesTermsFindjob_toggle').trigger('click');		
-   		  var id    		= $(this).data('row-id');
-        var recommendation_relation_id    		= $(this).data('row-recommendation_relation_id');
-        var url   		= "{{ route('service_company.jobs.termshmlisting',':id') }}";
-        url     		= url.replace(':id', id)+"?id="+id;
-   		  var baseurl    = "{{ asset('assets/images/Loading2.gif') }}"; 
+    $(document).on('click', '.client-terms-listing-find-job', function (e){
+        e.preventDefault();
+        showKtDrawer('#kt_activitiesTermsFindjob', '#kt_activitiesTermsFindjob_toggle');
+        var id = $(this).data('row-id');
+        var recommendation_relation_id = $(this).data('row-recommendation_relation_id') || '';
+        var url = "{{ route('service_company.jobs.termshmlisting',':id') }}";
+        url = url.replace(':id', id) + "?id=" + id;
+        var baseurl = "{{ asset('assets/images/Loading2.gif') }}";
         $.ajax({
-   						type  		: 'GET',
-   						url   		: url,
-              data: {
-                recommendation_relation_id:recommendation_relation_id
-              },
-   						 beforeSend	: function() {
-                                     $('#kt_activitiesTermsFindJob_body').html('<img src="'+baseurl+'" height="35px" width="100%">');
-                       	},
-   						success 	: function (response) {
-   				       // $('#kt_activitiesTermsFindJob_body').html(response.view);
-               $('#kt_activitiesTermsFindJob_body').html(response.terms);			
-   						}
-   	  			});
-            
-   	});
+            type: 'GET',
+            url: url,
+            data: {
+                recommendation_relation_id: recommendation_relation_id
+            },
+            beforeSend: function() {
+                $('#kt_activitiesTermsFindJob_body').html('<div class="text-center py-10"><img src="'+baseurl+'" height="35px"></div>');
+            },
+            success: function (response) {
+                $('#kt_activitiesTermsFindJob_body').html(response.terms || response.view || '');
+            },
+            error: function(xhr) {
+                $('#kt_activitiesTermsFindJob_body').html('<div class="alert alert-danger m-4">Failed to load terms & conditions.</div>');
+            }
+        });
+    });
 
 
 

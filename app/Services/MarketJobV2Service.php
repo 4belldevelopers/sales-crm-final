@@ -264,10 +264,15 @@ class MarketJobV2Service
         $uniqueComIds = array_values(array_unique(array_filter(array_column($rawHits, 'comId'))));
         $commercialTermsMap = self::getCommercialTermsBulk($uniqueComIds);
 
+        // SINGLE-PASS BULK FETCH: Bulk load Category / Department Names for all jobs on current page (cached in Redis)
+        $uniqueCategoryIds = array_values(array_unique(array_filter(array_column($rawHits, 'category_id'))));
+        $categoryNamesMap = self::getCategoryNamesBulk($uniqueCategoryIds);
+
         // Pre-attach Bulk Data onto Job Hit Objects
-        $processedData = array_map(function ($hit) use ($relationsMap, $benchCountsMap, $commercialTermsMap) {
+        $processedData = array_map(function ($hit) use ($relationsMap, $benchCountsMap, $commercialTermsMap, $categoryNamesMap) {
             $jobId = $hit['id'] ?? null;
             $hitComId = (int) ($hit['comId'] ?? 0);
+            $catId = (int) ($hit['category_id'] ?? 0);
             $relation = $relationsMap[$jobId] ?? (object) [];
 
             $hit['v2_relation'] = $relation;
@@ -277,6 +282,7 @@ class MarketJobV2Service
             $hit['v2_to_company_id'] = $relation->to_company_id ?? null;
             $hit['v2_bench_match_count'] = $benchCountsMap[$jobId] ?? 0;
             $hit['v2_commercial_terms'] = $commercialTermsMap[$hitComId] ?? null;
+            $hit['v2_category_name'] = $categoryNamesMap[$catId] ?? '';
 
             return $hit;
         }, $rawHits);
@@ -500,5 +506,55 @@ class MarketJobV2Service
         }
 
         return $map;
+    }
+
+    /**
+     * Bulk fetch category/department names for an array of category IDs.
+     * Cached in Redis (24hr TTL) to ensure zero DB queries on warm cache.
+     *
+     * @param  int[]  $categoryIds  Array of unique category IDs from current page hits
+     * @return array Map of [category_id => category_name]
+     */
+    public static function getCategoryNamesBulk(array $categoryIds): array
+    {
+        if (empty($categoryIds)) {
+            return [];
+        }
+
+        $result = [];
+        $missingIds = [];
+
+        foreach ($categoryIds as $catId) {
+            $catId = (int) $catId;
+            if ($catId <= 0) {
+                continue;
+            }
+            $cacheKey = "ats:category_name:{$catId}";
+            $cached = cache()->get($cacheKey);
+            if ($cached !== null) {
+                $result[$catId] = $cached;
+            } else {
+                $missingIds[] = $catId;
+            }
+        }
+
+        if (! empty($missingIds)) {
+            try {
+                $dbCategories = \Illuminate\Support\Facades\DB::table('job_categories')
+                    ->whereIn('id', $missingIds)
+                    ->pluck('name', 'id')
+                    ->toArray();
+
+                foreach ($missingIds as $catId) {
+                    $name = $dbCategories[$catId] ?? '';
+                    $result[$catId] = $name;
+                    cache()->put("ats:category_name:{$catId}", $name, now()->addHours(24));
+                }
+            } catch (\Throwable $e) {
+                \Log::warning('getCategoryNamesBulk: DB fetch failed: '.$e->getMessage());
+            }
+        }
+
+        return $result;
     }
 }
