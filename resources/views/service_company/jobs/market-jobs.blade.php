@@ -1597,35 +1597,37 @@ $(document).on('click', '#changetextupdate', function (){
                 actionBtnHtml = `<button data-row-id="${row.id}" data-mod="${row.mod}" data-cur="${row.cur}" class="btn-cta-primary open-bench-talents">Submit Candidates</button>`;
             }
 
+            // ── Salary display ──
+            let salaryDisplay = (row.min_salary && row.max_salary)
+                ? `${row.salary_currency}${row.min_salary} – ${row.max_salary} / ${row.salary_mode_short}`
+                : 'As per Market Norms';
+
             // ── Commercial Terms subcard (Col 5) ──
             let termsTitle = 'Commercial Terms';
             let termsRows = '';
             const ct = row.commercial_terms;
 
             if (typeLabel === 'Contract') {
-                let billingRateVal = (ct && ct.billing_rate) ? Number(ct.billing_rate) : null;
-                let billingRate = billingRateVal 
-                    ? `₹${billingRateVal.toLocaleString('en-IN')} / ${ct.billing_model || 'Month'}` 
-                    : (row.min_salary && row.max_salary ? `${row.salary_currency}${row.min_salary} – ${row.max_salary} / ${row.salary_mode_short}` : 'As per Client Terms');
+                let billingRate = (ct && ct.resolved_rate) ? ct.resolved_rate : salaryDisplay;
                 let billingModel = (ct && ct.billing_model) ? ct.billing_model : 'Monthly';
-                let payTerms = (ct && ct.payment_days) ? `${ct.payment_days} Days` : '30 Days';
+                let payTerms = (ct && (ct.contract_payment_days || ct.payment_days)) ? `${ct.contract_payment_days || ct.payment_days} Days` : '30 Days';
                 termsRows = `
                     <div class="jc-ct-row"><span class="jc-ct-label">Billing Model</span><span class="jc-ct-val">${billingModel}</span></div>
                     <div class="jc-ct-row"><span class="jc-ct-label">Billing Rate</span><span class="jc-ct-val">${billingRate}</span></div>
                     <div class="jc-ct-row"><span class="jc-ct-label">Payment Terms</span><span class="jc-ct-val">${payTerms}</span></div>`;
             } else if (typeLabel === 'Part-Time' || typeLabel === 'Part Time') {
-                let hiringFee = (ct && ct.hiring_fee_pct) ? `${ct.hiring_fee_pct}% of CTC` : '8.33% of CTC';
-                let payTerms = (ct && ct.payment_days) ? `${ct.payment_days} Days` : '30 Days';
+                let resolvedRate = (ct && ct.resolved_rate) ? ct.resolved_rate : salaryDisplay;
+                let payTerms = (ct && (ct.contract_payment_days || ct.payment_days)) ? `${ct.contract_payment_days || ct.payment_days} Days` : '30 Days';
                 termsRows = `
                     <div class="jc-ct-row"><span class="jc-ct-label">Engagement</span><span class="jc-ct-val">Part-Time</span></div>
-                    <div class="jc-ct-row"><span class="jc-ct-label">Hiring Fee</span><span class="jc-ct-val">${hiringFee}</span></div>
+                    <div class="jc-ct-row"><span class="jc-ct-label">Rate / Budget</span><span class="jc-ct-val">${resolvedRate}</span></div>
                     <div class="jc-ct-row"><span class="jc-ct-label">Payment Terms</span><span class="jc-ct-val">${payTerms}</span></div>`;
             } else if (typeLabel === 'Freelance') {
-                let billingModel = (ct && ct.billing_model) ? ct.billing_model : 'Milestone / Hourly';
-                let payTerms = (ct && ct.payment_days) ? `${ct.payment_days} Days` : '30 Days';
+                let resolvedRate = (ct && ct.resolved_rate) ? ct.resolved_rate : salaryDisplay;
+                let payTerms = (ct && (ct.contract_payment_days || ct.payment_days)) ? `${ct.contract_payment_days || ct.payment_days} Days` : '30 Days';
                 termsRows = `
                     <div class="jc-ct-row"><span class="jc-ct-label">Engagement</span><span class="jc-ct-val">Freelance</span></div>
-                    <div class="jc-ct-row"><span class="jc-ct-label">Model</span><span class="jc-ct-val">${billingModel}</span></div>
+                    <div class="jc-ct-row"><span class="jc-ct-label">Rate / Budget</span><span class="jc-ct-val">${resolvedRate}</span></div>
                     <div class="jc-ct-row"><span class="jc-ct-label">Payment Terms</span><span class="jc-ct-val">${payTerms}</span></div>`;
             } else if (typeLabel === 'Bench Talent' || row.public_market_status === 2) {
                 termsTitle = 'Requirement Details';
@@ -1634,11 +1636,12 @@ $(document).on('click', '#changetextupdate', function (){
                     <div class="jc-ct-row"><span class="jc-ct-label">Work Mode</span><span class="jc-ct-val">${row.work_type || 'Remote'}</span></div>
                     <div class="jc-ct-row"><span class="jc-ct-label">Availability</span><span class="jc-ct-val">Immediate</span></div>`;
             } else {
-                let hiringFee = (ct && ct.hiring_fee_pct) ? `${ct.hiring_fee_pct}% of CTC` : '8.33% of CTC';
+                let feeLabel = (ct && ct.fulltime_fee_label) ? ct.fulltime_fee_label : 'Hiring Fee';
+                let hiringFee = (ct && ct.resolved_fulltime_fee) ? ct.resolved_fulltime_fee : ((ct && ct.hiring_fee_pct) ? `${ct.hiring_fee_pct}% of CTC` : '8.33% of CTC');
                 let replacement = (ct && ct.replacement_days) ? `${ct.replacement_days} Days` : '90 Days';
                 let payTerms = (ct && ct.payment_days) ? `${ct.payment_days} Days` : '30 Days';
                 termsRows = `
-                    <div class="jc-ct-row"><span class="jc-ct-label">Hiring Fee</span><span class="jc-ct-val">${hiringFee}</span></div>
+                    <div class="jc-ct-row"><span class="jc-ct-label">${feeLabel}</span><span class="jc-ct-val">${hiringFee}</span></div>
                     <div class="jc-ct-row"><span class="jc-ct-label">Replacement</span><span class="jc-ct-val">${replacement}</span></div>
                     <div class="jc-ct-row"><span class="jc-ct-label">Payment Terms</span><span class="jc-ct-val">${payTerms}</span></div>`;
             }

@@ -186,6 +186,101 @@ class MarketJobV2Resource extends JsonResource
         // attached as v2_commercial_terms. Fallback to null if not available (drawer still works).
         $commercialTerms = $row->v2_commercial_terms ?? null;
 
+        // Resolve dynamic experience-based commercial rate linked with the posting company
+        $jobMinExp = (int) ($row->min_exp ?? 0);
+        $contractSlabs = (array) ($commercialTerms['contract_experience_pricing'] ?? []);
+        $matchedContractRate = null;
+        $parsedContractSlabs = [];
+
+        foreach ($contractSlabs as $slab) {
+            $label = $slab['label'] ?? '';
+            $rate = trim((string) ($slab['rate'] ?? ''));
+            if ($rate === '' || strcasecmp($rate, 'Depend upon job requirements') === 0) {
+                continue;
+            }
+            if (preg_match('/(\d+)\s*-\s*(\d+)/', $label, $m)) {
+                $parsedContractSlabs[] = ['min' => (int) $m[1], 'max' => (int) $m[2], 'rate' => $rate];
+            } elseif (preg_match('/(\d+)\s*\+/', $label, $m)) {
+                $parsedContractSlabs[] = ['min' => (int) $m[1], 'max' => 999, 'rate' => $rate];
+            }
+        }
+
+        foreach ($parsedContractSlabs as $slab) {
+            if ($jobMinExp == $slab['min']) {
+                $matchedContractRate = $slab['rate'];
+                break;
+            }
+        }
+        if (! $matchedContractRate) {
+            foreach ($parsedContractSlabs as $slab) {
+                if ($jobMinExp >= $slab['min'] && $jobMinExp <= $slab['max']) {
+                    $matchedContractRate = $slab['rate'];
+                    break;
+                }
+            }
+        }
+
+        $contractRateType = $commercialTerms['contract_agency_rate_type'] ?? 'Fixed Rate';
+        $contractBillingModel = $commercialTerms['billing_model'] ?? 'Month';
+
+        if ($matchedContractRate !== null && $matchedContractRate !== '') {
+            if (str_contains($matchedContractRate, '%')) {
+                $formattedCommercialRate = $matchedContractRate.(strcasecmp($contractRateType, 'Markup') === 0 ? ' Markup' : ' of Pay');
+            } elseif (is_numeric($matchedContractRate)) {
+                if (strcasecmp($contractRateType, 'Markup') === 0) {
+                    $formattedCommercialRate = $matchedContractRate.'% Markup';
+                } else {
+                    $formattedCommercialRate = '₹'.number_format((float) $matchedContractRate).' / '.$contractBillingModel;
+                }
+            } else {
+                $formattedCommercialRate = $matchedContractRate.' / '.$contractBillingModel;
+            }
+        } else {
+            // Fall back to job salary offering range
+            $formattedCommercialRate = "{$currencySymbol}{$minSalFormatted} – {$maxSalFormatted} / {$salModeShort}";
+        }
+
+        // Resolve Full-Time hiring fee (Fixed Fee vs Percentage) linked with posting company
+        $ftFeeModel = $commercialTerms['fulltime_fee_model'] ?? 'percentage';
+        $ftFixedAmount = $commercialTerms['fixed_fee_amount'] ?? null;
+        $ftFixedUnit = $commercialTerms['fixed_fee_unit'] ?? 'Per Hire';
+
+        if (in_array($ftFeeModel, ['fixed', 'fixed_fee']) && ! empty($ftFixedAmount)) {
+            $formattedFulltimeFee = '₹'.number_format((float) $ftFixedAmount).' / '.$ftFixedUnit;
+            $fulltimeFeeLabel = 'Fixed Fee';
+        } else {
+            // Check experience-based fulltime pricing slabs if set
+            $ftSlabs = (array) ($commercialTerms['fulltime_experience_pricing'] ?? []);
+            $matchedFtPct = null;
+            foreach ($ftSlabs as $slab) {
+                $label = $slab['label'] ?? '';
+                $rate = trim((string) ($slab['rate'] ?? ''));
+                if ($rate === '' || strcasecmp($rate, 'Depend upon job requirements') === 0) {
+                    continue;
+                }
+                if (preg_match('/(\d+)\s*-\s*(\d+)/', $label, $m)) {
+                    if ($jobMinExp >= (int) $m[1] && $jobMinExp <= (int) $m[2]) {
+                        $matchedFtPct = $rate;
+                        break;
+                    }
+                } elseif (preg_match('/(\d+)\s*\+/', $label, $m)) {
+                    if ($jobMinExp >= (int) $m[1]) {
+                        $matchedFtPct = $rate;
+                        break;
+                    }
+                }
+            }
+            $pctVal = $matchedFtPct ?: ($commercialTerms['hiring_fee_pct'] ?? 8.33);
+            $formattedFulltimeFee = $pctVal.'% of CTC';
+            $fulltimeFeeLabel = 'Hiring Fee';
+        }
+
+        if ($commercialTerms !== null) {
+            $commercialTerms['resolved_rate'] = $formattedCommercialRate;
+            $commercialTerms['resolved_fulltime_fee'] = $formattedFulltimeFee;
+            $commercialTerms['fulltime_fee_label'] = $fulltimeFeeLabel;
+        }
+
         // ── END NEW FIELDS ──────────────────────────────────────────────────────────────
 
         return [

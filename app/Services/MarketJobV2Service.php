@@ -496,13 +496,19 @@ class MarketJobV2Service
             }
             try {
                 $terms = $termsService->getForCompany($comId);
-                // Return only the 5 fields the card UI needs — keep payload minimal
                 $map[$comId] = [
+                    'fulltime_fee_model' => $terms->fulltime_fee_model ?? 'percentage',
                     'hiring_fee_pct' => $terms->fulltime_success_fee_percentage ?? 8.33,
+                    'fixed_fee_amount' => $terms->fulltime_fixed_fee_amount ?? null,
+                    'fixed_fee_unit' => $terms->fulltime_fixed_fee_unit ?? 'Per Hire',
                     'replacement_days' => $terms->fulltime_replacement_period_days ?? 90,
                     'payment_days' => $terms->fulltime_payment_terms_days ?? 30,
+                    'contract_payment_days' => $terms->contract_payment_terms_days ?? 30,
+                    'contract_agency_rate_type' => $terms->contract_agency_rate_type ?? 'Fixed Rate',
                     'billing_model' => ucfirst($terms->contract_billing_model ?? 'monthly'),
                     'billing_rate' => $terms->contract_rate_amount ?? null,
+                    'contract_experience_pricing' => $terms->contract_experience_pricing ?? [],
+                    'fulltime_experience_pricing' => $terms->fulltime_experience_pricing ?? [],
                 ];
             } catch (\Throwable $e) {
                 \Log::warning("getCommercialTermsBulk: failed for comId={$comId}: ".$e->getMessage());
