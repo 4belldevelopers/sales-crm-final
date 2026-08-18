@@ -1343,10 +1343,18 @@ $(document).on('click', '#changetextupdate', function (){
 
     $(document).on('click', '.open-bench-talents', function (e){
         e.preventDefault();
+        var $btn = $(this);
+        var id = $btn.data('row-id') || $btn.attr('data-row-id');
+        var mod = $btn.data('mod') || $btn.attr('data-mod') || '';
+        var cur = $btn.data('cur') || $btn.attr('data-cur') || '';
+        if (!id) {
+            id = $btn.closest('[data-row-id]').attr('data-row-id');
+        }
         showKtDrawer('#kt_activitiesBT', '#kt_activitiesBT_toggle');
-        var id = $(this).data('row-id');
-        var mod = $(this).data('mod') || '';
-        var cur = $(this).data('cur') || '';
+        if (!id) {
+            $('#kt_activitiesBT_body').html('<div class="alert alert-danger m-4">Unable to find job requirement ID.</div>');
+            return;
+        }
         var url = "{{ route('service_company.jobs.btlisting',':id') }}";
         url = url.replace(':id', id);
         var baseurl = "{{ asset('assets/images/Loading2.gif') }}";
@@ -1361,11 +1369,23 @@ $(document).on('click', '#changetextupdate', function (){
                 $('#kt_activitiesBT_body').html('<div class="text-center py-10"><img src="'+baseurl+'" height="35px"></div>');
             },
             success: function (response) {
-                $('#kt_activitiesBT_body').html(response.view);
-                $('#company_or_client').text(response.company_or_client);
+                if (response && response.view) {
+                    $('#kt_activitiesBT_body').html(response.view);
+                    if (response.company_or_client) {
+                        $('#company_or_client').text(response.company_or_client);
+                    }
+                } else if (response && response.message) {
+                    $('#kt_activitiesBT_body').html('<div class="alert alert-danger m-4">' + response.message + '</div>');
+                } else {
+                    $('#kt_activitiesBT_body').html('<div class="alert alert-danger m-4">Unable to load bench candidates for this requirement.</div>');
+                }
             },
             error: function(xhr) {
-                $('#kt_activitiesBT_body').html('<div class="alert alert-danger m-4">Failed to load bench candidates.</div>');
+                var errorMsg = 'Failed to load bench candidates (' + xhr.status + ').';
+                if (xhr.responseJSON && xhr.responseJSON.message) {
+                    errorMsg += ' ' + xhr.responseJSON.message;
+                }
+                $('#kt_activitiesBT_body').html('<div class="alert alert-danger m-4">' + errorMsg + '</div>');
             }
         });
     });

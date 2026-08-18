@@ -3896,8 +3896,8 @@ END:VCALENDAR";
 
     public static function gdFilterData($jobId)
     {
-        $company_id = auth()->user()->company_id;
-        $job = Job::findOrFail($jobId);
+        $company_id = auth()->user()->company_id ?? 0;
+        $job = Job::withoutGlobalScopes()->findOrFail($jobId);
         $jobid = $job->id;
         $title = $job->title;
         $min_exp = $job->min_exp;
