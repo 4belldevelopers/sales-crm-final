@@ -133,13 +133,11 @@
     text-overflow: ellipsis;
 }
 
-.jc-job-sub {
-    display: flex;
-    align-items: center;
-    gap: 5px;
-    font-size: 11px;
-    color: var(--jc-text-muted);
-    font-weight: 400;
+.jc-job-dept {
+    font-size: 11.5px;
+    color: var(--jc-primary);
+    font-weight: 500;
+    margin: 1px 0 2px 0;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;

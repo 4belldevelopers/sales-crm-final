@@ -67,6 +67,18 @@ class MarketJobV2Resource extends JsonResource
             default => 'Work From Office',
         };
 
+        // Location display (dynamically resolved from nested client_city_jobs in Elasticsearch)
+        $clientCityJobs = $row->client_city_jobs ?? [];
+        $locationDisplay = $workType;
+        if (($row->work_type ?? '') !== 'yes' && is_array($clientCityJobs) && count($clientCityJobs) > 0) {
+            $firstCity = $clientCityJobs[0] ?? [];
+            $cityName = is_array($firstCity) ? ($firstCity['city_name'] ?? null) : ($firstCity->city_name ?? null);
+            $countryName = is_array($firstCity) ? ($firstCity['country_name'] ?? null) : ($firstCity->country_name ?? null);
+            if (! empty($cityName)) {
+                $locationDisplay = trim(ucwords(mb_substr($cityName, 0, 16)).($countryName ? ', '.mb_substr($countryName, 0, 12) : ''), ', ');
+            }
+        }
+
         // Skill tags extraction
         $rawSkills = $row->job_metronics_skills ?? [];
         $skillNames = [];
@@ -178,9 +190,11 @@ class MarketJobV2Resource extends JsonResource
             'max_exp' => (int) ($row->max_exp ?? 0),
             'total_positions' => (int) ($row->total_positions ?? 1),
             'work_type' => $workType,
+            'location_display' => $locationDisplay,
             'employment_type' => $employmentTypeBadge,
             'public_market_status' => $publicMarketStatus,
             'created_at_formatted' => "{$formattedDate} ({$daysAgo})",
+            'created_at_date' => $formattedDate,
             'salary_currency' => $currencySymbol,
             'min_salary' => $minSalFormatted,
             'max_salary' => $maxSalFormatted,

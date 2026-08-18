@@ -152,11 +152,7 @@
                 </div>
 
                 <h2 class="jc-job-title" title="{{ $row->title }}">{{ ucwords(mb_substr(@$row->title, 0, 28)) }}</h2>
-
-                <div class="jc-job-sub">
-                    <i class="fa-regular fa-building jc-sub-icon"></i>
-                    <span>Verified Client · {{ $deptName ? $deptName . ' Requirement' : 'Direct Requirement' }}</span>
-                </div>
+                <div class="jc-job-dept" title="{{ $deptName }}">{{ $deptName ?: '—' }}</div>
 
                 <div class="skills-row">
                     {!! $skilltag !!}
