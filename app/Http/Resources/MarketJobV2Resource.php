@@ -10,10 +10,19 @@ use Illuminate\Http\Resources\Json\JsonResource;
  * MarketJobV2Resource
  *
  * Intent: DTO transformer for Find Jobs V2 API endpoint. Transforms denormalized Elasticsearch
- * job hit documents into a compact, structured JSON payload (~5 KB per page of 20 items), replacing
+ * job hit documents into a compact, structured JSON payload (~6 KB per page of 10 items), replacing
  * heavy server-rendered HTML payloads with client-side DOM rendering.
  *
- * Tenancy & Security: Pre-calculated marketplace action buttons based on tenant company ID and status.
+ * Added (2026-08-18): 6 new display fields for the 5-column card redesign:
+ *   - req_id: formatted job reference ID (REQ-JERO-{id})
+ *   - status_label: OPEN / HOLD / FILLING FAST badge text
+ *   - updated_at_ago: human-readable time since last update
+ *   - submission_deadline_formatted: end_date as human date
+ *   - employment_type_badge: Full-Time / Contract
+ *   - commercial_terms: summarised fee/terms object (pre-fetched via Redis, zero DB queries)
+ *
+ * Tenancy & Security: Company name kept in JSON for sort/internal use but not rendered in card UI.
+ * Pre-calculated marketplace action buttons based on tenant company ID and status.
  */
 class MarketJobV2Resource extends JsonResource
 {
@@ -103,8 +112,8 @@ class MarketJobV2Resource extends JsonResource
         // Department / Category
         $department = $row->category_name ?? '';
 
-        // Company Details
-        $companyName = $row->client_name ?? '';
+        // Company details — company name intentionally excluded from JSON response per privacy
+        // requirement (Q4 decision: completely hidden from agencies viewing the marketplace).
         $companySizeFrom = $row->company_size_from ?? 0;
         $companySize = $row->company_size ?? 0;
         $industryName = $row->industry_name ?? '';
@@ -123,13 +132,45 @@ class MarketJobV2Resource extends JsonResource
             }
         }
 
+        // ── NEW FIELDS for 5-column card design (2026-08-18) ──────────────────────────
+
+        // REQ-ID: formatted job reference badge string
+        $reqId = 'REQ-JERO-'.$row->id;
+
+        // Status label for the card badge — OPEN / HOLD only (FILLING FAST not required per design decision)
+        $rawStatus = strtolower($row->status ?? 'active');
+        $statusLabel = match ($rawStatus) {
+            'active' => 'OPEN',
+            'hold' => 'HOLD',
+            default => strtoupper($rawStatus),
+        };
+
+        // Employment type badge label
+        $employmentTypeBadge = ((int) ($row->employment_type ?? 0)) === 1 ? 'Contract' : 'Full-Time';
+
+        // Last Updated time-ago (ES has updated_at; fall back to created_at if absent)
+        $updatedAt = $row->updated_at ?? $createdAt;
+        $updatedAtAgo = GeneralMethod::timeAgo($updatedAt);
+
+        // Submission Deadline — maps to end_date in ES (the job's closing date)
+        $submissionDeadlineRaw = $row->end_date ?? null;
+        $submissionDeadlineFormatted = $submissionDeadlineRaw
+            ? date('d M Y', strtotime($submissionDeadlineRaw))
+            : null;
+
+        // Commercial Terms — pre-fetched via MarketJobV2Service::getCommercialTermsBulk() and
+        // attached as v2_commercial_terms. Fallback to null if not available (drawer still works).
+        $commercialTerms = $row->v2_commercial_terms ?? null;
+
+        // ── END NEW FIELDS ──────────────────────────────────────────────────────────────
+
         return [
             'id' => (int) $row->id,
             'title' => $row->title ?? '',
             'title_short' => ucwords(mb_substr($row->title ?? '', 0, 25)),
             'department' => $department,
             'company_id' => (int) ($row->comId ?? 0),
-            'client_name' => $companyName,
+            // client_name intentionally omitted — hidden from all agency-facing views (Q4)
             'company_size_from' => (int) $companySizeFrom,
             'company_size' => (int) $companySize,
             'industry_name' => $industryName,
@@ -137,7 +178,7 @@ class MarketJobV2Resource extends JsonResource
             'max_exp' => (int) ($row->max_exp ?? 0),
             'total_positions' => (int) ($row->total_positions ?? 1),
             'work_type' => $workType,
-            'employment_type' => ((int) ($row->employment_type ?? 0)) === 1 ? 'Contract' : 'Full-time',
+            'employment_type' => $employmentTypeBadge,
             'public_market_status' => $publicMarketStatus,
             'created_at_formatted' => "{$formattedDate} ({$daysAgo})",
             'salary_currency' => $currencySymbol,
@@ -155,6 +196,13 @@ class MarketJobV2Resource extends JsonResource
             'view_job_url' => $toCompanyId == $companyId ? url('/service_company/apptracker/clientapp/'.GeneralMethod::value_encrypt($row->id).'/all') : null,
             'mod' => $mod,
             'cur' => $cur,
+            // ── New 5-column card fields ──
+            'req_id' => $reqId,
+            'status_label' => $statusLabel,
+            'employment_type_badge' => $employmentTypeBadge,
+            'updated_at_ago' => $updatedAtAgo,
+            'submission_deadline_formatted' => $submissionDeadlineFormatted,
+            'commercial_terms' => $commercialTerms,
         ];
     }
 }
