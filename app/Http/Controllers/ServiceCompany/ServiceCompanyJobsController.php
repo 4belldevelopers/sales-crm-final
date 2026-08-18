@@ -1334,10 +1334,10 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
         $dataCnt['allRequisition'] = 0;
         $dataCnt['clientRequisition'] = 0;
         $dataCnt['customRequisition'] = 0;
-        $dataCnt['findJobs'] = 0;
-        $chkAdminRole = $this->user->hasRole('admin');
-        // $chkAdminRole = DB::table('roles')->select('roles.id')->where('id', $this->user->role->role_id)->where('name', 'admin')->count();
-        if (($chkAdminRole > 0) && (in_array('all_requisition', $this->userPermissions) && in_array('view_jobs', $this->userPermissions))) {
+        $currentUser = $this->user ?? auth()->user();
+        $chkAdminRole = ($currentUser && method_exists($currentUser, 'hasRole')) ? $currentUser->hasRole('admin') : false;
+        $userPerms = (array) ($this->userPermissions ?? []);
+        if (($chkAdminRole) && (in_array('all_requisition', $userPerms) && in_array('view_jobs', $userPerms))) {
             // All Jobs (ES Aggregation)
             $filter[] = ['term' => ['status' => 'active']];
             // 1. COMPANY ACCESS CONDITIONS
@@ -1503,12 +1503,13 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
             // dd("djddf");
         } else {
             //    dd("djd");
+            $userId = $this->user->id ?? auth()->id() ?? 0;
             // All Jobs
             $this->jobsAll = DB::table('jobs')->select('jobs.id');
-            $this->jobsAll = $this->jobsAll->join('job_assign', function ($join) {
+            $this->jobsAll = $this->jobsAll->join('job_assign', function ($join) use ($userId) {
                 $join->on('job_assign.job_id', '=', 'jobs.id');
                 $join->on('job_assign.company_id', '=', DB::raw("'".auth()->user()->company_id."'"));
-                $join->on('job_assign.user_id', '=', DB::raw("'".$this->user->id."'"));
+                $join->on('job_assign.user_id', '=', DB::raw("'".$userId."'"));
             });
             $this->jobsAll = $this->jobsAll->leftJoin('recommendation_relation', function ($join) use ($company_id) {
                 $join->on('recommendation_relation.job_id', '=', 'jobs.id');
@@ -1534,10 +1535,10 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
 
             // BUG-10: grouped closure prevents orWhere from leaking cross-tenant rows
             $clientRequisition = DB::table('recommendation_relation')
-                ->join('job_assign', function ($join) {
+                ->join('job_assign', function ($join) use ($userId) {
                     $join->on('job_assign.job_id', '=', 'recommendation_relation.job_id');
                     $join->on('job_assign.company_id', '=', DB::raw("'".auth()->user()->company_id."'"));
-                    $join->on('job_assign.user_id', '=', DB::raw("'".$this->user->id."'"));
+                    $join->on('job_assign.user_id', '=', DB::raw("'".$userId."'"));
                 })
                 ->join('jobs', 'jobs.id', '=', 'recommendation_relation.job_id')
                 ->select('recommendation_relation.id')
@@ -1557,10 +1558,10 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
 
             // Custom Client
             $customRequisition = DB::table('jobs')
-                ->join('job_assign', function ($join) {
+                ->join('job_assign', function ($join) use ($userId) {
                     $join->on('job_assign.job_id', '=', 'jobs.id');
                     $join->on('job_assign.company_id', '=', DB::raw("'".auth()->user()->company_id."'"));
-                    $join->on('job_assign.user_id', '=', DB::raw("'".$this->user->id."'"));
+                    $join->on('job_assign.user_id', '=', DB::raw("'".$userId."'"));
                 })
                 ->select('jobs.id')
                 ->where('jobs.company_id', '=', $company_id)->where('jobs.status', '=', 'active')
@@ -1617,7 +1618,7 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
                 'minimum_should_match' => 1,
             ],
         ];
-        if (! (($chkAdminRole > 0) && in_array('all_requisition', $this->userPermissions) && in_array('view_jobs', $this->userPermissions))) {
+        if (! (($chkAdminRole) && in_array('all_requisition', $userPerms) && in_array('view_jobs', $userPerms))) {
             $tabMust[] = [
                 'nested' => [
                     'path' => 'job_assign',
