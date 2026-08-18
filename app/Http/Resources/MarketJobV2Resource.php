@@ -121,8 +121,14 @@ class MarketJobV2Resource extends JsonResource
         $formattedDate = date('d M, Y', strtotime($createdAt));
         $daysAgo = GeneralMethod::timeAgo($createdAt);
 
-        // Department / Category
-        $department = $row->category_name ?? '';
+        // Department / Category (dynamic from job_categories)
+        $department = $row->v2_category_name ?? ($row->category_name ?? '');
+        if (empty($department) && ! empty($row->category_id)) {
+            $catId = (int) $row->category_id;
+            $department = cache()->remember("ats:category_name:{$catId}", 86400, function () use ($catId) {
+                return \Illuminate\Support\Facades\DB::table('job_categories')->where('id', $catId)->value('name') ?? '';
+            });
+        }
 
         // Company details — company name intentionally excluded from JSON response per privacy
         // requirement (Q4 decision: completely hidden from agencies viewing the marketplace).

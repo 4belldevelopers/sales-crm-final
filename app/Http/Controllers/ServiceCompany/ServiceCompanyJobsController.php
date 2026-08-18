@@ -3596,46 +3596,6 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
                             ],
                         ],
                     ],
-                    'all_jobs_new' => [
-                        'filter' => [
-                            'range' => [
-                                'created_at' => [
-                                    'gte' => 'now-7d/d',
-                                    'lte' => 'now',
-                                ],
-                            ],
-                        ],
-                    ],
-                    'fulltime_new' => [
-                        'filter' => [
-                            'bool' => [
-                                'must' => [
-                                    ['term' => ['employment_type' => 0]],
-                                    ['range' => ['created_at' => ['gte' => 'now-7d/d', 'lte' => 'now']]],
-                                ],
-                            ],
-                        ],
-                    ],
-                    'contract_new' => [
-                        'filter' => [
-                            'bool' => [
-                                'must' => [
-                                    ['term' => ['employment_type' => 1]],
-                                    ['range' => ['created_at' => ['gte' => 'now-7d/d', 'lte' => 'now']]],
-                                ],
-                            ],
-                        ],
-                    ],
-                    'agency_new' => [
-                        'filter' => [
-                            'bool' => [
-                                'must' => [
-                                    ['term' => ['public_market_status' => 2]],
-                                    ['range' => ['created_at' => ['gte' => 'now-7d/d', 'lte' => 'now']]],
-                                ],
-                            ],
-                        ],
-                    ],
                 ],
             ],
         ];
@@ -3647,14 +3607,8 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
         $this->contract_jobs = $aggs['contract_jobs']['doc_count'] ?? 0;
         $this->agency_requests = $aggs['agency_requests']['doc_count'] ?? 0;
 
-        $this->all_jobs_new = $aggs['all_jobs_new']['doc_count'] ?? 0;
-        $this->fulltime_new = $aggs['fulltime_new']['doc_count'] ?? 0;
-        $this->contract_new = $aggs['contract_new']['doc_count'] ?? 0;
-        $this->agency_new = $aggs['agency_new']['doc_count'] ?? 0;
-
-        // Legacy compatibility aliases
+        // Legacy compatibility alias
         $this->market_place = $this->agency_requests;
-        $this->newly_add = $this->all_jobs_new;
 
         return view('service_company.jobs.market-jobs', $this->data);
     }
