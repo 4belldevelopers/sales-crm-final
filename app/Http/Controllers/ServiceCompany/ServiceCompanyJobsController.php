@@ -3742,12 +3742,16 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
             'listType' => 'allcandidate',
         ];
 
+        // Resolve ResourceCollection to a plain PHP array so that when encoded as JSON,
+        // `response.items` is a flat JSON array [] — not the {data:[]} wrapper that
+        // ResourceCollection adds by default (which breaks Array.isArray() check in JS).
         $itemsResource = \App\Http\Resources\MarketJobV2Resource::collection($data);
+        $itemsArray = $itemsResource->resolve();
 
         $responseData = [
             'status' => 'success',
-            'items' => $itemsResource,
-            'total' => $total,
+            'items'  => $itemsArray,
+            'total'  => $total,
             'pagination' => view('service_company.ajax_pages.pagination', compact('pagination'))->render(),
         ];
 
