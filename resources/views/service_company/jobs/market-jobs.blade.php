@@ -358,7 +358,7 @@
     .mjh-clear-all:hover { text-decoration: underline; }
 </style>
 
-<link href="{{ asset('demo/css/find-market-jobs.css') }}{{ TM_VERSION }}" rel="stylesheet" type="text/css" />
+<link href="{{ asset('demo/css/find-market-jobs.css') }}?v={{ time() }}" rel="stylesheet" type="text/css" />
 <link href="{{ asset('demo/css/filterStyle.css') }}{{ TM_VERSION }}" rel="stylesheet" type="text/css" />
 <link href="{{ asset('demo/css/topCard.css') }}{{ TM_VERSION }}" rel="stylesheet" type="text/css" />
 
