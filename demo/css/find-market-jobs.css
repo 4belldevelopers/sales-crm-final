@@ -43,11 +43,11 @@
 .mjh-tabs-bar {
     display: flex;
     align-items: center;
-    gap: 14px;
+    gap: 8px;
     background: #FFFFFF;
     border: 1px solid var(--jc-border);
     border-radius: 10px;
-    padding: 0 12px;
+    padding: 0 10px;
     margin-bottom: 12px;
     overflow-x: auto;
     box-sizing: border-box;
@@ -62,8 +62,8 @@
     display: flex;
     align-items: center;
     gap: 6px;
-    padding: 10px 2px;
-    font-size: 12.5px;
+    padding: 10px 6px;
+    font-size: 12px;
     font-weight: 500;
     color: var(--jc-text-muted);
     cursor: pointer;
