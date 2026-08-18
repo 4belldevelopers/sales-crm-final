@@ -103,8 +103,8 @@ class MarketJobV2Service
         $mustNot = [];
         $sort = [];
 
-        $valCheck = $request->input('custom_hiringtype');
-        switch ($valCheck) {
+        $sortOrder = $request->input('custom_sort') ?? $request->input('custom_hiringtype') ?? 1;
+        switch ((int) $sortOrder) {
             case 1:
                 $sort[] = ['id' => ['order' => 'desc']];
                 break;
@@ -123,6 +123,12 @@ class MarketJobV2Service
             case 6:
                 $sort[] = ['client_name' => ['order' => 'desc']];
                 break;
+            case 7:
+                $sort[] = ['max_exp' => ['order' => 'desc']];
+                break;
+            case 8:
+                $sort[] = ['max_exp' => ['order' => 'asc']];
+                break;
             default:
                 $sort[] = ['id' => ['order' => 'desc']];
         }
@@ -140,10 +146,12 @@ class MarketJobV2Service
             $filter[] = ['term' => ['public_market_status' => 2]];
         }
 
-        if ($valCheck !== null && $valCheck !== '' && $valCheck !== 'All') {
-            if ((int) $valCheck === 2) {
+        // App Int Outsource / Market Type filter (if explicitly passed)
+        $marketType = $request->input('app_int_outsource');
+        if ($marketType !== null && $marketType !== '' && $marketType !== 'All') {
+            if ((int) $marketType === 2) {
                 $filter[] = ['term' => ['public_market_status' => 2]];
-            } elseif ((int) $valCheck === 1) {
+            } elseif ((int) $marketType === 1) {
                 $mustNot[] = ['term' => ['public_market_status' => 2]];
             }
         }
