@@ -264,9 +264,14 @@ class MarketJobV2Service
         $uniqueComIds = array_values(array_unique(array_filter(array_column($rawHits, 'comId'))));
         $commercialTermsMap = self::getCommercialTermsBulk($uniqueComIds);
 
-        // SINGLE-PASS BULK FETCH: Bulk load Category / Department Names for all jobs on current page (cached in Redis)
-        $uniqueCategoryIds = array_values(array_unique(array_filter(array_column($rawHits, 'category_id'))));
-        $categoryNamesMap = self::getCategoryNamesBulk($uniqueCategoryIds);
+        // BULK RESOLVE: Only lookup category/department names from Redis/DB if not already in the ES doc
+        $missingCategoryIds = [];
+        foreach ($rawHits as $hit) {
+            if (empty($hit['category_name']) && ! empty($hit['category_id'])) {
+                $missingCategoryIds[] = (int) $hit['category_id'];
+            }
+        }
+        $categoryNamesMap = ! empty($missingCategoryIds) ? self::getCategoryNamesBulk(array_unique($missingCategoryIds)) : [];
 
         // Pre-attach Bulk Data onto Job Hit Objects
         $processedData = array_map(function ($hit) use ($relationsMap, $benchCountsMap, $commercialTermsMap, $categoryNamesMap) {
@@ -282,7 +287,8 @@ class MarketJobV2Service
             $hit['v2_to_company_id'] = $relation->to_company_id ?? null;
             $hit['v2_bench_match_count'] = $benchCountsMap[$jobId] ?? 0;
             $hit['v2_commercial_terms'] = $commercialTermsMap[$hitComId] ?? null;
-            $hit['v2_category_name'] = $categoryNamesMap[$catId] ?? '';
+            $hit['category_name'] = ! empty($hit['category_name']) ? $hit['category_name'] : ($categoryNamesMap[$catId] ?? '');
+            $hit['v2_category_name'] = $hit['category_name'];
 
             return $hit;
         }, $rawHits);
