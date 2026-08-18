@@ -203,7 +203,7 @@ class ShortlistBenchCandidateListingService
         $searchQuery = $requestData['q'] ?? null;
         $valCheck = $requestData['sortingfilter'] ?? null;
         $page = max((int) ($requestData['page'] ?? 1), 1);
-        $size = (int) ($requestData['size'] ?? 10);
+        $size = (int) ($requestData['per_page'] ?? $requestData['size'] ?? $requestData['limit'] ?? 10);
         $from = ($page - 1) * $size;
         $sort = [];
 
@@ -392,6 +392,7 @@ class ShortlistBenchCandidateListingService
         $pagination = [
             'total' => $total,
             'current_page' => $page,
+            'per_page' => $size,
             'last_page' => ceil($total / $size),
             'listType' => 'allcandidate',
         ];

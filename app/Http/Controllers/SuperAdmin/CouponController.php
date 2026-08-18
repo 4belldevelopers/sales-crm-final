@@ -14,9 +14,11 @@ class CouponController extends SuperAdminBaseController
         $this->pageTitle = 'Coupons';
     }
 
-    public function index()
+    public function index(Request $request)
     {
-        $this->coupons = Coupon::orderByDesc('id')->paginate(20);
+        $perPage = (int) $request->input('per_page', $request->input('size', $request->input('limit', 20)));
+        $perPage = min(max($perPage, 1), 100);
+        $this->coupons = Coupon::orderByDesc('id')->paginate($perPage)->appends($request->query());
 
         return view('super-admin.coupons.index', $this->data);
     }

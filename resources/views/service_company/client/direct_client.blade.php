@@ -144,8 +144,17 @@
                 fetchCandidates(page, $('#search').val());
             });
 
+            $(document).on('change', '#pagination .pagi-perpage', function() {
+                var selectedPerPage = $(this).val();
+                localStorage.setItem('candidatePerPage', selectedPerPage);
+                localStorage.setItem('currentPageDirectClients', 1);
+                page_no = 1;
+                fetchCandidates(1);
+            });
+
       });
 
+      var page_no = localStorage.getItem('currentPageDirectClients') || 1;
 
       var hiringFilter = 0;
 
@@ -160,14 +169,20 @@
           fetchCandidates(1);
       }
 
-      function fetchCandidates(page = 1, search = '') {
+      function fetchCandidates(page, search = '') {
+            var targetPage = page || page_no || 1;
+            page_no = targetPage;
+            localStorage.setItem('currentPageDirectClients', targetPage);
+
+            var perPage = $('#pagination .pagi-perpage').val() || localStorage.getItem('candidatePerPage') || 10;
+
             if($('#kt_tagify_2').val()!=''){
                 $('.loader_search').css({ display: 'block' });
             }else{
                 $('.page-loader').css('display', 'flex');
             }
             $.ajax({
-                url: `{!! route('service_company.clients.client_direct_data_ajax') !!}?page=${page}`,
+                url: `{!! route('service_company.clients.client_direct_data_ajax') !!}?page=${targetPage}`,
                 type: 'GET',
                 data: {
                   custom_status : $('#status').val(),
@@ -175,12 +190,15 @@
                   sortingfilter : $('#sortingfilter').val(),
                   cus_search : $('#kt_tagify_2').val(),
                   country:$('#country').val(),
-                  hiring: hiringFilter
+                  hiring: hiringFilter,
+                  size: perPage,
+                  per_page: perPage
                 },
                 success: function(response) {
                     $('.loadingMessage').css({ display: 'none' });
                     $('.loader_search').css({ display: 'none' });
                     $('.page-loader').css('display', 'none');
+                    localStorage.setItem('currentPageDirectClients', targetPage);
                     $('#allClients').html(response.html);
                     $('#direct_client_count').html(response.total);
                     $('#pagination').html(response.pagination);

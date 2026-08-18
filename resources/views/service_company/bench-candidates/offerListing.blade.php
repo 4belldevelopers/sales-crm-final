@@ -944,21 +944,30 @@
 
         $(document).ready(function() {
             fetchBenchBenchCandidatesCandidateList();
-            $(document).on('click', '#paginationbenchCandidateOffer .page-link', function(e) {
+            $(document).on('click', '#paginationbenchCandidateOffer .pagi-page, #paginationbenchCandidateOffer .pagi-arrow', function(e) {
                 e.preventDefault();
                 const page = $(this).data('page');
-                if (!page || $(this).hasClass('disabled')) return;
+                if (!page || $(this).hasClass('pagi-disabled') || $(this).hasClass('pagi-active-disabled')) return;
 
                 $(this).addClass('disabled');
 
                 fetchBenchBenchCandidatesCandidateList(page).always(function() {
-                    $('#paginationbenchCandidateOffer .page-link').removeClass('disabled');
+                    $('#paginationbenchCandidateOffer .pagi-page, #paginationbenchCandidateOffer .pagi-arrow').removeClass('disabled');
                 });
+            });
+
+            $(document).on('change', '#paginationbenchCandidateOffer .pagi-perpage', function(e) {
+                const selectedPerPage = $(this).val();
+                if (selectedPerPage) {
+                    localStorage.setItem('candidatePerPage', selectedPerPage);
+                    fetchBenchBenchCandidatesCandidateList(1);
+                }
             });
         });
 
         function fetchBenchBenchCandidatesCandidateList(page = 1) {
             $('.loadingMessagebenchCandidateOfferAjax').css({ display: 'block' });
+            var perPage = localStorage.getItem('candidatePerPage') || 10;
             return $.ajax({
                 url: `{!! route('service_company.bench-candidates.offerListingData_ajax') !!}?page=${page}`,
                 type: 'GET',
@@ -967,7 +976,9 @@
                     cus_search: $('#kt_tagify_2').val(),
                     country: $('#country').val(),
                     sortingfilter: $('#sortingfilter').val(),
-                    tab: $('#tabFilter').val()
+                    tab: $('#tabFilter').val(),
+                    per_page: perPage,
+                    size: perPage
                 },
                 success: function(response) {
                     $('.loadingMessagebenchCandidateOfferAjax').css({ display: 'none' });

@@ -91,7 +91,10 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
 
         $searchQuery = $request->input('q');
         $page = max((int) $request->input('page', 1), 1);
-        $size = (int) $request->input('size', 10); // Default 20 results per page
+        $size = (int) $request->input('per_page', $request->input('size', $request->input('limit', 10)));
+        if ($size <= 0) {
+            $size = 10;
+        }
         $from = ($page - 1) * $size;
         $sort = [];
         $customSearch = trim($custom_search);
@@ -292,7 +295,8 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
         $pagination = [
             'total' => $total,
             'current_page' => $page,
-            'last_page' => ceil($total / $size),
+            'last_page' => (int) ceil($total / max($size, 1)),
+            'per_page' => $size,
             'listType' => 'allcandidate',
         ];
 
@@ -363,7 +367,10 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
 
         $searchQuery = $request->input('q');
         $page = max((int) $request->input('page', 1), 1);
-        $size = (int) $request->input('size', 10); // Default 20 results per page
+        $size = (int) $request->input('per_page', $request->input('size', $request->input('limit', 10)));
+        if ($size <= 0) {
+            $size = 10;
+        }
         $from = ($page - 1) * $size;
         $sort = [];
         $customSearch = trim($custom_search);
@@ -561,7 +568,8 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
         $pagination = [
             'total' => $total,
             'current_page' => $page,
-            'last_page' => ceil($total / max($size, 1)),
+            'last_page' => (int) ceil($total / max($size, 1)),
+            'per_page' => $size,
             'listType' => 'allcandidate',
         ];
 
@@ -633,7 +641,10 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
 
         $searchQuery = $request->input('q');
         $page = max((int) $request->input('page', 1), 1);
-        $size = (int) $request->input('size', 10); // Default 20 results per page
+        $size = (int) $request->input('per_page', $request->input('size', $request->input('limit', 10)));
+        if ($size <= 0) {
+            $size = 10;
+        }
         $from = ($page - 1) * $size;
         $sort = [];
         $customSearch = trim($custom_search);
@@ -802,7 +813,8 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
         $pagination = [
             'total' => $total,
             'current_page' => $page,
-            'last_page' => ceil($total / max($size, 1)),
+            'last_page' => (int) ceil($total / max($size, 1)),
+            'per_page' => $size,
             'listType' => 'allcandidate',
         ];
 

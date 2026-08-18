@@ -29,7 +29,7 @@
     $row->companyidcount = $row->comId;
     $row->clients_name = $row->client_name;
 
-    $job_assign = $row->job_assign;
+    $job_assign = $row->job_assign ?? [];
     $jobAssign = collect($job_assign);
 
     $clients_name = '';
@@ -317,7 +317,7 @@
             } else {
                 $jobId = $row->id;
                 $agencyCount = GeneralMethod::agencyCount(auth()->user()->company_id,$jobId,1);
-                $recommendation_relation = $row->recommendation_relation;
+                $recommendation_relation = $row->recommendation_relation ?? [];
                 $recommendationRelation = collect($recommendation_relation);
                 $recommendedDataListCnt = count($agencyCount);
                 $matchNumber = random_int(10, 20);

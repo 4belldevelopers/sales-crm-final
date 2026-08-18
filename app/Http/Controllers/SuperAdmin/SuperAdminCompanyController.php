@@ -3905,8 +3905,10 @@ if (!$this->elasticService->indexExists(ELASTIC_COMPANIES_INDEX)) {
     }
     public function meetingScheduleList(Request $request){
 
+        $perPage = (int) $request->input('per_page', $request->input('size', $request->input('limit', 50)));
+        $perPage = min(max($perPage, 1), 100);
         $this->totalMeetingSchedules = MeetingSchedule::all()->count();
-        $this->MeetingSchedule =   MeetingSchedule::with('comments','toCompany','fromCompany','users_main')->orderBy('id', 'desc')->paginate(50);
+        $this->MeetingSchedule =   MeetingSchedule::with('comments','toCompany','fromCompany','users_main')->orderBy('id', 'desc')->paginate($perPage)->appends($request->query());
         
        return view('super-admin.company.meeting-list', $this->data);
 

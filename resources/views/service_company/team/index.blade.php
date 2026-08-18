@@ -2028,7 +2028,7 @@
 
 			// Active status tab + rows-per-page for the redesigned list.
 			var teamStatusTab = 'all';
-			var teamPageSize = 10;
+			var teamPageSize = parseInt(localStorage.getItem('teamPageSize')) || 10;
 
 			function fetchTeams(page = page_no, search = '') {
 				$('.loadingMessageteamsListajax').css({ display: 'block' });
@@ -2041,7 +2041,8 @@
 						country: $('#country').val(),
 						sortingfilter: $('#sortingfilter').val(),
 						statusTab: teamStatusTab,
-						size: teamPageSize
+						size: teamPageSize,
+						per_page: teamPageSize
 					},
 					success: function(response) {
 						$('.loadingMessageteamsListajax').css({ display: 'none' });
@@ -2064,6 +2065,7 @@
 			// Rows-per-page selector in the footer
 			function changeTeamPageSize(val) {
 				teamPageSize = parseInt(val) || 10;
+				localStorage.setItem('teamPageSize', teamPageSize);
 				fetchTeams(1);
 			}
 

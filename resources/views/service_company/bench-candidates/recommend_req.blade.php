@@ -1334,6 +1334,7 @@ $(document).on('click', '.hm-listing', function () {
 <script>
 function fetchBenchRecommendedReqCandidateList(page = 1, search = '') {
     $('.loadingMessagebenchCandidateRecommendedReqAjax').css({ display: 'flex' });
+    var perPage = localStorage.getItem('candidatePerPage') || 10;
     var workModeVal = $('.rrj_work_mode:checked').map(function(){ return $(this).val(); }).get().join(',');
     /* return the jqXHR so pagination's .then()/.catch() work — without it
        they were called on undefined and threw a TypeError on every click */
@@ -1356,7 +1357,9 @@ function fetchBenchRecommendedReqCandidateList(page = 1, search = '') {
             sal_mode: $('#sal_mode').val(),
             work_mode: workModeVal,
             app_int_activity: $('[name="app_int_activity"]:checked').val(),
-            app_int_outsource: $('[name="app_int_outsource"]:checked').val()
+            app_int_outsource: $('[name="app_int_outsource"]:checked').val(),
+            per_page: perPage,
+            size: perPage
         },
         success: function(response) {
             $('.loadingMessagebenchCandidateRecommendedReqAjax').css({ display: 'none' });
@@ -1390,6 +1393,13 @@ $(document).ready(function() {
         fetchBenchRecommendedReqCandidateList(page)
             .then(function(){ rrjPaginationLoading = false; })
             .catch(function(){ rrjPaginationLoading = false; });
+    });
+    $(document).on('change', '#paginationbenchCandidateRecommendedReq .pagi-perpage', function(e) {
+        var selectedPerPage = $(this).val();
+        if (selectedPerPage) {
+            localStorage.setItem('candidatePerPage', selectedPerPage);
+            fetchBenchRecommendedReqCandidateList(1);
+        }
     });
 });
 </script>
