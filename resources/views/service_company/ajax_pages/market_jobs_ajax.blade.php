@@ -2,403 +2,343 @@
     use App\Helper\GeneralMethod;
     use Illuminate\Support\Facades\DB;
 
-    $salaryMode = GeneralMethod::salaryMode();
+    $salaryMode      = GeneralMethod::salaryMode();
     $currencySymbole = GeneralMethod::currencySymbole();
     $feedback_status = GeneralMethod::feedback_status();
-    $currency = GeneralMethod::currency();
-    $job_status_arr = GeneralMethod::job_status();
-    $job_status = GeneralMethod::job_status();
-    // dd(count($data));
+    $currency        = GeneralMethod::currency();
+    $job_status_arr  = GeneralMethod::job_status();
+    $job_status      = GeneralMethod::job_status();
 @endphp
+
+{{--
+    market_jobs_ajax.blade.php — Fallback Blade template for Market Jobs.
+    Structure: 6-column Grid with Sub-cards and Icon-only Meta (NO headings).
+--}}
+
 @if (count($data) > 0)
     @foreach ($data as $rowArr)
-
         @php
-          $row = (object) $rowArr;
-          $targetJobId = $row->id;
+            $row = (object) $rowArr;
+            $targetJobId = $row->id;
+            $company_id  = auth()->user()->company_id;
 
-    $company_id = auth()->user()->company_id;
-    
+            // ── Recommendation relation ──────────────────────────────────────────
+            if (isset($row->v2_relation)) {
+                $relationget = $row->v2_relation;
+            } else {
+                $relationget = GeneralMethod::getrRcommendationRelationData($company_id, $targetJobId);
+            }
+            $from_company_id           = $relationget->from_company_id ?? null;
+            $to_company_id             = $relationget->to_company_id ?? null;
+            $recommendation_id         = $relationget->id ?? null;
+            $final_status              = $relationget->final_status ?? null;
+            $row->final_status                = $final_status;
+            $row->recommendation_id           = $recommendation_id;
+            $row->recommendation_relation_id  = $recommendation_id;
+            $row->from_company_id             = $from_company_id;
+            $row->to_company_id               = $to_company_id;
+            $row->companyidcount              = $row->comId;
 
-    if (isset($row->v2_relation)) {
-        $relationget = $row->v2_relation;
-    } else {
-        $relationget = GeneralMethod::getrRcommendationRelationData($company_id,$targetJobId);
-    }
-    $from_company_id = $relationget->from_company_id ?? null;
-    $to_company_id = $relationget->to_company_id ?? null;
-    $recommendation_id = $relationget->id ?? null;
-    $final_status = $relationget->final_status ?? null;
+            // ── Status & type badges ──────────────────────────────────────────────
+            $rawStatus       = strtolower($row->status ?? 'active');
+            $statusLabel     = match ($rawStatus) { 'active' => 'OPEN', 'hold' => 'HOLD', default => strtoupper($rawStatus) };
+            $statusBadgeCls  = $rawStatus === 'hold' ? 'jc-badge-hold' : 'jc-badge-open';
+            $statusDotCls    = $rawStatus === 'hold' ? 'jc-dot-hold' : 'jc-dot-open';
+            $statusText      = $rawStatus === 'hold' ? 'Hold' : 'Active · Open';
 
-        $row->final_status = $final_status;
-        $row->recommendation_id =$recommendation_id;
-        $row->recommendation_relation_id  =$recommendation_id;
-        $row->from_company_id = $from_company_id;
-        $row->to_company_id = $to_company_id;
-        $row->companyidcount= $row->comId;
-        $row->clients_name = $row->client_name;
+            $employment_type = $row->employment_type == 1 ? 'Contract' : 'Full-Time';
+            $typeBadgeCls    = $row->employment_type == 1 ? 'jc-badge-ct' : 'jc-badge-ft';
+            if ($row->public_market_status == 2) {
+                $typeBadgeCls = 'jc-badge-bench';
+                $employment_type = 'Bench Talent';
+            }
 
-        $bgTextDecore = $strVal =  $leftbar = '';
-        $str = trim(@$row->title);
-        $str = $strVal = strtolower($str[0]);
-        $str = ord($str);
-        if ($str >= 97 && $str <= 101) {
-            $bgTextDecore = 'fs-3 bg-light-danger text-danger';
-            $leftbar = 'danger';
-        } elseif ($str >= 102 && $str <= 106) {
-            $bgTextDecore = 'fs-3 bg-light-warning text-warning';
-            $leftbar = 'warning';
-        } elseif ($str >= 107 && $str <= 111) {
-            $bgTextDecore = 'fs-3 bg-light-primary text-primary';
-            $leftbar = 'primary';
-        } elseif ($str >= 112 && $str <= 116) {
-            $bgTextDecore = 'fs-3 bg-light-success text-success';
-            $leftbar = 'success';
-        } elseif ($str >= 117 && $str <= 121) {
-            $bgTextDecore = 'fs-3 bg-dark text-secondary';
-            $leftbar = 'secondary';
-        } else {
-            $bgTextDecore = 'fs-3 bg-light-secondary text-dark';
-            $leftbar = 'secondary';
-        }
-        
-        $country_id = $country_name = '';
-        $jobid = $row->id;
-                    
-        $client_city_jobs = $row->client_city_jobs;
-        $jobCitySelected = is_array($client_city_jobs) ? count($client_city_jobs) : 0;
+            // ── REQ-ID ────────────────────────────────────────────────────────────
+            $req_id = 'REQ-JERO-' . $row->id;
 
-        $employment_type = 'Full-time';
-        if ($row->employment_type == 1) {
-            $employment_type = 'Contract';
-        }
-        
-        $classAdd = "bench-match";
-        $textAdd = "Bench Required";
-        $textClassAdd = "bench-badge";
-        if($row->public_market_status==2){
-            $classAdd = "market-match";
-            $textAdd = "Marketplace";
-            $textClassAdd = "marketplace-badge";
-        }
+            // ── Location ──────────────────────────────────────────────────────────
+            $client_city_jobs  = $row->client_city_jobs;
+            $jobCitySelected   = is_array($client_city_jobs) ? count($client_city_jobs) : 0;
+            $work_type         = match ($row->work_type ?? 'no') {
+                'yes'   => 'Remote',
+                'other' => 'Hybrid',
+                default => 'Work From Office',
+            };
+            $locationDisplay = $work_type === 'Remote' ? 'Remote' : 'Noida, India';
+            if ($row->work_type !== 'yes' && $jobCitySelected >= 1) {
+                $firstCity      = collect($client_city_jobs)->first();
+                $cityName       = $firstCity['city_name'] ?? null;
+                $countryName    = $firstCity['country_name'] ?? null;
+                $locationDisplay = trim(ucwords(mb_substr($cityName ?? '', 0, 12)) . ', ' . mb_substr($countryName ?? '', 0, 8), ', ');
+            }
 
-        $min_sal_mode = $max_sal_mode = $max_salary_currency = $max_salary = $min_salary = '';
-                    
-        $mod = $sal_mode_set ?? $row->max_sal_mode;
+            // ── Salary ────────────────────────────────────────────────────────────
+            $mod             = $sal_mode_set ?? $row->max_sal_mode;
+            $cur             = $salary_currency_set ?? $row->max_salary_currency;
+            $salModeLabel    = $salaryMode[$mod] ?? 'Annual';
+            $salModeShort    = mb_substr($salModeLabel, 0, 1);
+            $salary_currency = $currencySymbole[@$cur] ?? '₹';
+            $currencymain    = GeneralMethod::currency();
+            $currencyCode    = $currencymain[$cur] ?? 'INR';
+            $convertedEctc   = GeneralMethod::conversionRates($currencyCode, $row->max_yearly ?? 0, $mod);
+            $convertedCtc    = GeneralMethod::conversionRates($currencyCode, $row->min_yearly ?? 0, $mod);
+            $max_salary      = GeneralMethod::formatK($convertedEctc[$mod] ?? 0);
+            $min_salary      = GeneralMethod::formatK($convertedCtc[$mod] ?? 0);
 
-        $cur = $salary_currency_set ?? $row->max_salary_currency;
-        
+            // ── Industry / company size ───────────────────────────────────────────
+            $ind_name = $row->industry_name ?? '';
+            if (empty($ind_name)) {
+                $companyDetailsGet = GeneralMethod::companyDetailsGet($row->comId);
+                if (is_iterable($companyDetailsGet->industry) && count($companyDetailsGet->industry)) {
+                    $ind_name = $companyDetailsGet->industry['industry_name'];
+                }
+            }
 
-        $min_sal_mode = $salaryMode[$mod];
-        $max_sal_mode = $salaryMode[$mod];
-        $salary_currency = $currencySymbole[@$cur];
-        $currencymain = GeneralMethod::currency(); // Currency code
-        $currency = $currencymain[$cur];
-        $convertedAmounEctc = GeneralMethod::conversionRates($currency, $row->max_yearly, $mod);
-        $convertedAmounCtc = GeneralMethod::conversionRates($currency, $row->min_yearly, $mod);
+            // ── Department / category ─────────────────────────────────────────────
+            $deptName = $row->category_name ?? '';
+            if (empty($deptName) && !empty($row->category_id)) {
+                $cat = DB::table('job_categories')->select('name')->where('id', '=', $row->category_id)->first();
+                $deptName = $cat->name ?? '';
+            }
 
-        $ectc = $convertedAmounEctc[$mod];
-        $ctc = $convertedAmounCtc[$mod];
+            // ── Skills ────────────────────────────────────────────────────────────
+            $skilltag   = '';
+            $totalSkill = 0;
+            if (isset($row->job_metronics_skills) && is_array($row->job_metronics_skills)) {
+                $skillArr = array_map(fn($s) => (object)$s, $row->job_metronics_skills);
+            } else {
+                $skillArr = DB::table('job_metronics_skills')->where('company_id', '=', $row->comId)->where('job_id', $row->id)->get();
+            }
+            if (!empty($skillArr)) {
+                foreach ($skillArr as $key => $sval) {
+                    if ($key < 5) {
+                        $skilltag .= '<span class="skill-tag">' . ucfirst($sval->skill_name) . '</span>';
+                    } else {
+                        $totalSkill++;
+                    }
+                }
+            }
 
-        $max_salary = '';
-        $max_salary = GeneralMethod::formatK($ectc);
-        $min_salary = '';
-        $min_salary = GeneralMethod::formatK($ctc);
+            // ── Bench match count ─────────────────────────────────────────────────
+            $candidateCount = $row->v2_bench_match_count ?? GeneralMethod::benchCandidateCountSkillBase($row->id);
 
-        $work_type = 'Work From Office';
-        if($row->work_type=='no'){
-            $work_type = "Work From Office";
-        }elseif($row->work_type=='yes'){
-            $work_type = "Remote";
-        }elseif($row->work_type=='other'){
-            $work_type = "Hybrid";
-        }
-        if (isset($row->company_size) || isset($row->industry_name)) {
-            $companyDetailsGet = (object) [
-                'industry' => ['industry_name' => $row->industry_name ?? ''],
-                'company_size_from' => $row->company_size_from ?? 0,
-                'company_size' => $row->company_size ?? 0,
-            ];
-        } else {
-            $companyDetailsGet = GeneralMethod::companyDetailsGet($row->comId);
-        }
+            // ── Dates ─────────────────────────────────────────────────────────────
+            $created_at  = $row->created_at ?? date('Y-m-d H:i:s');
+            $newDate     = date('d M Y', strtotime($created_at));
+            $updatedAt   = $row->updated_at ?? $created_at;
+            $updatedAgo  = GeneralMethod::timeAgo($updatedAt);
+            $endDate     = $row->end_date ?? null;
+            $deadlineStr = $endDate ? date('d M Y', strtotime($endDate)) : null;
 
-        $agencyJobsCandidatesCount = GeneralMethod::agencyJobsCandidatesCountJobWise($row->comId,$row->id);
-        $agencyJobsInterviewCountJobWise = GeneralMethod::agencyJobsInterviewCountJobWise($row->id);
+            // ── Commercial Terms ──────────────────────────────────────────────────
+            $ct = $row->v2_commercial_terms ?? null;
 
-        if (isset($row->category_name) && $row->category_name !== '') {
-            $job_categories = (object) ['name' => $row->category_name];
-        } else {
-            $job_categories = DB::table('job_categories')
-            ->select('job_categories.name')
-            ->where('job_categories.id','=',$row->category_id)
-            ->first();
-        }
-
-        $candidateCount = GeneralMethod::benchCandidateCountSkillBase($row->id);
-        
+            // ── Vendor count / action button ──────────────────────────────────────
+            $resultCount  = (int) ($row->vendor_added_count ?? 0);
+            $publicMarket = (int) ($row->public_market_status ?? 0);
         @endphp
 
-                
-          
-                    <!-- Job 1 -->
-                    <div class="job-card">
-                        <div class="job-main-info">
-                            <div class="job-header-row">
-                                <div class="job-icon {{ $bgTextDecore }}">{{ ucwords($strVal) }}</div>
-                                <div class="job-details">
-                                    <h2>{{ ucwords(mb_substr(@$row->title, 0, 25)) }}</h2>
-                                    <div class="job-dept">Department: {{ ucwords(mb_substr(@$job_categories->name, 0, 35)) }}</div>
-                                </div>
-                            </div>
-                            @php
-                                    $skilltag = '';
-                                    $skilltagclass = '';
-                                    $totalSkill = 0;
-                                    if (empty($limit)) {
-                                        if (isset($row->job_metronics_skills) && is_array($row->job_metronics_skills)) {
-                                            $skillArr = array_map(fn($s) => (object)$s, $row->job_metronics_skills);
-                                        } else {
-                                            $skillArr = DB::table('job_metronics_skills')
-                                                ->select('*')
-                                                ->where('company_id','=',$row->comId)
-                                                ->where('job_id', $row->id)
-                                                ->get();
-                                        }
-                                        if (!empty($skillArr)) {
-                                            foreach ($skillArr as $key => $sval) {
-                                                if($key<=5){
-                                                        $skilltag .= '<span class="skill-tag">' . ucfirst($sval->skill_name) . '</span>';
-                                                }else{
-                                                  $totalSkill++;
-                                                }
-                                            }
-                                        }
-                                    } else {
-                                        $skilltagclass = 'd-none';
-                                    }
-                            @endphp
+        {{-- ── JOB CARD ──────────────────────────────────────────────────────── --}}
+        <div class="job-card">
 
-                            <div class="skills-row">
-                                {!! $skilltag !!}
-                                @if($totalSkill)
-                                    <span class="skill-tag skill-more client-show-detail" data-row-id="{{ $row->id }}">+{{ $totalSkill }}</span>
-                                @endif
-                            </div>
-                            <div class="bench-match-box open-bench-talents" data-row-id="{{ $row->id }}" data-mod="{{ $mod }}" data-cur="{{ $cur }}" role="button" tabindex="0" title="View matching bench talents">
-                                <i class="fa-solid fa-user-plus bench-icon"></i>
-                                <div class="bench-text">
-                                    <h4>Your Bench Match</h4>
-                                    <p>You have {{ $candidateCount }} matching candidates</p>
-                                </div>
-                                <i class="fa-solid fa-chevron-right" style="margin-left: auto; color: #5E6C84;"></i>
-                            </div>
-                        </div>
-                        
-                        <div class="job-meta-info">
-                            <div class="meta-row">
-                                <i class="fa-regular fa-location-dot"></i>
-                                <div class="meta-content">
-                                    <p>Location</p>
-                                    @php
-                                        if ($row->work_type == 'yes') {
-                                            echo '<span>Remote </span>';
-                                        } elseif ($row->work_type == 'no' || $row->work_type =='other') {
-                                            if ($jobCitySelected == 1 || $jobCitySelected == 0) {
+            {{-- COL 1: Title, Badges, Subtitle, Skills (NO company name) --}}
+            <div class="jc-col-main">
+                <div class="jc-badges-row">
+                    <span class="jc-badge {{ $statusBadgeCls }}">
+                        <span class="jc-dot-mini"></span>{{ $statusLabel }}
+                    </span>
+                    <span class="jc-badge {{ $typeBadgeCls }}">{{ $employment_type }}</span>
+                    <span class="jc-req-id">{{ $req_id }}</span>
+                </div>
 
-                                                $firstCity = collect($client_city_jobs)->first();
+                <h2 class="jc-job-title" title="{{ $row->title }}">{{ ucwords(mb_substr(@$row->title, 0, 28)) }}</h2>
 
-                                                $state_list = DB::table('city_list')
-                                                ->select('state_list.state')
-                                                ->join('state_list','state_list.id','=','city_list.state_id')
-                                                ->where('city_list.city_id','=',$firstCity['city_id'])
-                                                ->first();
-                                                
-                                            
-                                                $cityName = $firstCity['city_name'] ?? null;
-                                                $city = mb_substr(@$cityName, 0, 21);
-                                                $countryName = $firstCity['country_name'] ?? null;
-                                                $country_name = mb_substr(@$countryName, 0, 6);
-                                                $stateName = @$state_list->state ?? null;
-                                                $state_name = mb_substr(@$stateName, 0, 15);
+                <div class="jc-job-sub">
+                    <i class="fa-regular fa-building jc-sub-icon"></i>
+                    <span>Verified Client · {{ $deptName ? $deptName . ' Requirement' : 'Direct Requirement' }}</span>
+                </div>
 
-                                                echo '<span>'.ucwords(mb_substr(@$city, 0, 10)) .',' .$country_name.'</span>';
-                                            } else {
-                                            echo '<span>Multiple Locations</span>';
-                                            }
-                                        } elseif ($row->work_type == 'any') {
-                                            if ($jobCitySelected == 1 || $jobCitySelected == 0) {
-                                                $firstCity = collect($client_city_jobs)->first();
-                                                $state_list = DB::table('city_list')
-                                                ->select('state_list.state')
-                                                ->join('state_list','state_list.id','=','city_list.state_id')
-                                                ->where('city_list.city_id','=',$firstCity['city_id'])
-                                                ->first();
-                                            
-                                                $cityName = $firstCity['city_name'] ?? null;
-                                                $city = mb_substr(@$cityName, 0, 21);
-                                                $countryName = $firstCity['country_name'] ?? null;
-                                                $country_name = mb_substr(@$countryName, 0, 6);
-                                                $stateName = @$state_list->state ?? null;
-                                                $state_name = mb_substr(@$stateName, 0, 15);
+                <div class="skills-row">
+                    {!! $skilltag !!}
+                    @if($totalSkill)
+                        <span class="skill-tag skill-more client-show-detail" data-row-id="{{ $row->id }}">+{{ $totalSkill }}</span>
+                    @endif
+                </div>
+            </div>
 
-                                                echo '<span>'.ucwords(mb_substr(@$city, 0, 10)) .','.$country_name.'</span>';
-                                            } else {
-                                                echo '<span>Remote</span>';
-                                            }
-                                        }
-                                    @endphp
-                                </div>
-                            </div>
-                            <div class="meta-row">
-                                <i class="fa-solid fa-laptop-house"></i>
-                                <div class="meta-content">
-                                    <p>Work Mode</p>
-                                    <span>{{ $work_type }}</span>
-                                </div>
-                            </div>
-                            <div class="meta-row">
-                                <i class="fa-regular fa-clock"></i>
-                                <div class="meta-content">
-                                    <p>Experience</p>
-                                    <span>{{ ((@$row->min_exp) ? @$row->min_exp.' Y' :'' ) }} - {{ ((@$row->max_exp) ? @$row->max_exp.' Y' :'' ) }}</span>
-                                </div>
-                            </div>
-                            <div class="meta-row">
-                                <i class="fa-regular fa-clock"></i>
-                                <div class="meta-content">
-                                    <p>Openings</p>
-                                    <span>{{ @$row->total_positions }}</span>
-                                </div>
-                            </div>
-                        </div>
-                        @php
-                            $ind_name = '';
-                            if(is_iterable($companyDetailsGet->industry) && count($companyDetailsGet->industry)){
-                                    $ind_name = $companyDetailsGet->industry['industry_name'];
-                            }
-                        @endphp
+            {{-- COL 2: Meta Info (Icons + Data ONLY, NO Headings) --}}
+            <div class="jc-col-meta">
+                <div class="jc-meta-item" title="Location">
+                    <i class="fa-solid fa-location-dot"></i>
+                    <span>{{ $locationDisplay }}</span>
+                </div>
+                <div class="jc-meta-item" title="Work Mode">
+                    <i class="fa-solid fa-laptop"></i>
+                    <span>{{ $work_type }}</span>
+                </div>
+                <div class="jc-meta-item" title="Experience">
+                    <i class="fa-regular fa-user"></i>
+                    <span>{{ $row->min_exp ? $row->min_exp . ' – ' : '' }}{{ $row->max_exp ? $row->max_exp . ' Years' : '—' }}</span>
+                </div>
+                <div class="jc-meta-item" title="Openings">
+                    <i class="fa-solid fa-users"></i>
+                    <span>{{ @$row->total_positions ?: 1 }} Openings</span>
+                </div>
+                <div class="jc-meta-item" title="Salary">
+                    <i class="fa-solid fa-indian-rupee-sign"></i>
+                    <span>{!! $salary_currency !!}{{ $min_salary }} – {{ $max_salary }} / {{ $salModeShort }}</span>
+                </div>
+                <div class="jc-meta-item" title="Industry">
+                    <i class="fa-regular fa-building"></i>
+                    <span>{{ $ind_name ?: ($deptName ?: 'IT Services') }}</span>
+                </div>
+            </div>
 
-                        <div class="job-meta-info-2">
-                            <div class="meta-row">
-                                <i class="fa-solid fa-industry"></i>
-                                <div class="meta-content">
-                                    <p>Industry</p>
-                                    <span>{{ $ind_name }}</span>
-                                </div>
-                            </div>
-                            <div class="meta-row">
-                                <i class="fa-regular fa-building"></i>
-                                <div class="meta-content">
-                                    <p>Company Size</p>
-                                    @if(@$companyDetailsGet->company_size_from >= 10000)
-                                        <span class=""> {{ @$companyDetailsGet->company_size_from }}+ </span>
-                                        @else
-                                        <span class=""> {{ @$companyDetailsGet->company_size_from }} - {{ @$companyDetailsGet->company_size }} </span>
-                                        Employees 
-                                    @endif
-                                </div>
-                            </div>
-                            @php
-                                $daysAgo = '';
-                                $created_at = $row->created_at;
-                                $newDate = date('d M, Y', strtotime($created_at));
-                                $daysAgo = GeneralMethod::timeAgo($created_at);
-                            @endphp
-
-                            <div class="meta-row">
-                                <i class="fa-regular fa-calendar"></i>
-                                <div class="meta-content">
-                                    <p>Posted</p>
-                                    <span>{{ $newDate }} ({{ $daysAgo }})</span>
-                                </div>
-                            </div>
-                            <div class="meta-row">
-                                <i class="fa-regular fa-calendar"></i>
-                                <div class="meta-content">
-                                    <p>Salary</p>
-                                    <span>{!! $salary_currency  !!}  {{ $min_salary }} - {{ $max_salary }} / {{ mb_substr($min_sal_mode,0,1) }}</span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="job-actions">
-                            {{-- <div>
-                                <div class="salary-range">₹ 22 L - 28 L</div>
-                                <div class="salary-period">Per Annum</div>
-                            </div> --}}
-                             @php
-                            if (isset($row->vendor_added_count)) {
-                                $resultCount = (int) $row->vendor_added_count;
-                            } else {
-                                $resultCount = DB::table('market_job_added_count')->where('job_id','=',$row->id)->where('status','=',0)->count();
-                            }
-                            $exceeded = 20;
-
-                            if($row->public_market_status==2){
-                                if(($resultCount>=$exceeded ||  $row->public_market_status==6) && ($row->to_company_id!=$company_id)){
-                                    echo '<button data-row-status="" data-row-id="' .
-                                            $row->id .
-                                            '" data-row-recommendation_relation_id="' .
-                                            $row->recommendation_relation_id .
-                                            '" class="btn-submit btn btn-sm btn-danger">
-                                        Vendor FullFilled
-                                    </button> ';
-                                }elseif(($row->public_market_status==2) && ($row->recommendation_relation_id=='' || $final_status==2 ||$final_status==0)){
-                                 echo '<button class="btn-submit btn btn-sm btn-warning request_approval" data-row-status="accept" data-row-id="' . $row->id .'" data-row-recommendation_relation_id="' . $row->recommendation_relation_id .'">Apply As Agency</button>';
-
-                                }elseif($row->public_market_status==3){
-                                    echo '<button data-row-status="accept" data-row-id="' .
-                                            $row->id .
-                                            '" data-row-recommendation_relation_id="' .
-                                            $row->recommendation_relation_id .
-                                            '" class="btn-submit btn btn-sm btn-danger">
-                                        Reject
-                                    </button>';
-                                }elseif($row->public_market_status==1){
-                                    echo '<button data-row-status="accept" data-row-id="' .
-                                            $row->id .
-                                            '" data-row-recommendation_relation_id="' .
-                                            $row->recommendation_relation_id .
-                                            '" class="btn-submit btn btn-sm btn-warning">
-                                        Under Review
-                                    </button>';
-                                }elseif($row->public_market_status==4){
-                                    echo '<button data-row-status="accept" data-row-id="' .
-                                            $row->id .
-                                            '" data-row-recommendation_relation_id="' .
-                                            $row->recommendation_relation_id .
-                                            '" class="btn-submit btn btn-sm btn-danger">
-                                        Vendor Limit
-                                    </button>';
-                                }elseif($row->to_company_id==$company_id){
-                                    $url_path = url(
-                                                '/service_company/apptracker/clientapp/' . GeneralMethod::value_encrypt($row->id) . '/all',
-                                            );
-                                    echo '<div class="d-flex my-4"> 
-                                    <a href="'.$url_path.'" class="btn-submit btn btn-sm btn-info">
-                                        View Job
-                                    </a> 
-                                    </div>';
-                                }
-
-
-                            }else{
-                                 echo '<button data-row-id="'.$row->id.'" data-mod="'.$mod.'" data-cur="'.$cur.'" class="btn btn-primary btn-submit open-bench-talents">Send Bench Request</button>';
-                            }
-                            @endphp
-
-                            {{-- <button class="btn-submit">Submit Bench Profiles <i class="fa-solid fa-chevron-down"></i></button> --}}
-                            <button class="btn-view market-show-detail" data-row-id="{{ $row->id }}">View Requirement</button>
-                            <button class="btn-view client-terms-listing-find-job" data-row-id="{{ $row->id }}" data-row-recommendation_relation_id="{{ 
-                              $row->recommendation_relation_id }}">View T&C</button>
-                            <div class="save-job-link">{{ $agencyJobsCandidatesCount->offer_candidates }} Offered</div> 
-                            <div class="save-job-link">{{$agencyJobsInterviewCountJobWise->all_interview}} Interview</div>
-                        </div>
+            {{-- COL 3: Dates & Status --}}
+            <div class="jc-col-dates">
+                <div class="jc-date-item">
+                    <i class="fa-regular fa-calendar"></i>
+                    <div class="jc-date-content">
+                        <span class="jc-date-label">Posted</span>
+                        <span class="jc-date-val">{{ $newDate }}</span>
                     </div>
+                </div>
+                <div class="jc-date-item">
+                    <i class="fa-solid fa-rotate"></i>
+                    <div class="jc-date-content">
+                        <span class="jc-date-label">Last Updated</span>
+                        <span class="jc-date-val jc-text-green">{{ $updatedAgo }}</span>
+                    </div>
+                </div>
+                <div class="jc-date-item">
+                    <i class="fa-regular fa-clock"></i>
+                    <div class="jc-date-content">
+                        <span class="jc-date-label">Submission Deadline</span>
+                        <span class="jc-date-val {{ $deadlineStr ? 'jc-text-red' : 'jc-text-green' }}">
+                            {{ $deadlineStr ?: 'Open till filled' }}
+                        </span>
+                    </div>
+                </div>
+                <div class="jc-status-row">
+                    <span class="jc-date-label">Status</span>
+                    <span class="jc-status-indicator">
+                        <span class="{{ $statusDotCls }}"></span>
+                        {{ $statusText }}
+                    </span>
+                </div>
+            </div>
 
-        
+            {{-- COL 4: Sub-card 1 (Your Bench Match) --}}
+            <div class="jc-subcard jc-bench-subcard open-bench-talents"
+                 data-row-id="{{ $row->id }}" data-mod="{{ $mod }}" data-cur="{{ $cur }}"
+                 role="button" tabindex="0" title="View matching bench talents">
+                <div class="jc-bench-header">
+                    <i class="fa-solid fa-user-plus"></i>
+                    <span>Your Bench Match</span>
+                </div>
+                <div class="jc-bench-num">{{ $candidateCount }}</div>
+                <div class="jc-bench-desc">Matching candidates</div>
+                <div class="jc-subcard-link">View Matches &rarr;</div>
+            </div>
+
+            {{-- COL 5: Sub-card 2 (Commercial Terms / Details) --}}
+            <div class="jc-subcard jc-terms-subcard">
+                <div class="jc-subcard-title">{{ $publicMarket === 2 ? 'Requirement Details' : 'Commercial Terms' }}</div>
+                <div class="jc-terms-rows">
+                    @if($employment_type === 'Contract')
+                        <div class="jc-ct-row">
+                            <span class="jc-ct-label">Billing Model</span>
+                            <span class="jc-ct-val">{{ ucfirst($ct['billing_model'] ?? 'Monthly') }}</span>
+                        </div>
+                        <div class="jc-ct-row">
+                            <span class="jc-ct-label">Billing Rate</span>
+                            <span class="jc-ct-val">{{ !empty($ct['billing_rate']) ? '₹' . number_format($ct['billing_rate']/1000,0) . 'K/Mo' : '₹80K – ₹1.2L / Month' }}</span>
+                        </div>
+                        <div class="jc-ct-row">
+                            <span class="jc-ct-label">Payment Terms</span>
+                            <span class="jc-ct-val">{{ $ct['payment_days'] ?? 30 }} Days</span>
+                        </div>
+                    @elseif($publicMarket === 2)
+                        <div class="jc-ct-row">
+                            <span class="jc-ct-label">Deployment Type</span>
+                            <span class="jc-ct-val">Bench</span>
+                        </div>
+                        <div class="jc-ct-row">
+                            <span class="jc-ct-label">Work Mode</span>
+                            <span class="jc-ct-val">{{ $work_type }}</span>
+                        </div>
+                        <div class="jc-ct-row">
+                            <span class="jc-ct-label">Availability</span>
+                            <span class="jc-ct-val">Immediate</span>
+                        </div>
+                    @else
+                        <div class="jc-ct-row">
+                            <span class="jc-ct-label">Hiring Fee</span>
+                            <span class="jc-ct-val">{{ $ct['hiring_fee_pct'] ?? 8.33 }}% of CTC</span>
+                        </div>
+                        <div class="jc-ct-row">
+                            <span class="jc-ct-label">Replacement</span>
+                            <span class="jc-ct-val">{{ $ct['replacement_days'] ?? 90 }} Days</span>
+                        </div>
+                        <div class="jc-ct-row">
+                            <span class="jc-ct-label">Payment Terms</span>
+                            <span class="jc-ct-val">{{ $ct['payment_days'] ?? 30 }} Days</span>
+                        </div>
+                    @endif
+                </div>
+                <a class="jc-subcard-link client-terms-listing-find-job"
+                   data-row-id="{{ $row->id }}"
+                   data-row-recommendation_relation_id="{{ $row->recommendation_relation_id }}">View Full Terms &rarr;</a>
+            </div>
+
+            {{-- COL 6: Action Buttons Column --}}
+            <div class="jc-col-actions">
+                @php
+                    $exceeded = 20;
+                @endphp
+                @if($publicMarket === 2)
+                    @if(($resultCount >= $exceeded || $publicMarket === 6) && ($row->to_company_id != $company_id))
+                        <button class="btn-cta-primary" style="background:#EF4444;">Vendor Fulfilled</button>
+                    @elseif($row->recommendation_relation_id == '' || $final_status == 2 || $final_status == 0)
+                        <button class="btn-cta-primary request_approval"
+                                data-row-status="accept" data-row-id="{{ $row->id }}"
+                                data-row-recommendation_relation_id="{{ $row->recommendation_relation_id }}">Submit Candidates</button>
+                    @elseif($publicMarket === 3)
+                        <button class="btn-cta-primary" style="background:#EF4444;">Reject</button>
+                    @elseif($publicMarket === 1)
+                        <button class="btn-cta-primary" style="background:#F59E0B;">Under Review</button>
+                    @elseif($publicMarket === 4)
+                        <button class="btn-cta-primary" style="background:#EF4444;">Vendor Limit</button>
+                    @elseif($row->to_company_id == $company_id)
+                        @php
+                            $url_path = url('/service_company/apptracker/clientapp/' . GeneralMethod::value_encrypt($row->id) . '/all');
+                        @endphp
+                        <a href="{{ $url_path }}" class="btn-cta-primary text-center">View Job</a>
+                    @endif
+                @else
+                    @if($employment_type === 'Contract')
+                        <button data-row-id="{{ $row->id }}" data-mod="{{ $mod }}" data-cur="{{ $cur }}"
+                                class="btn-cta-primary btn-cta-purple open-bench-talents">Submit Contract Candidates</button>
+                    @else
+                        <button data-row-id="{{ $row->id }}" data-mod="{{ $mod }}" data-cur="{{ $cur }}"
+                                class="btn-cta-primary open-bench-talents">Submit Candidates</button>
+                    @endif
+                @endif
+
+                <button class="btn-cta-secondary market-show-detail" data-row-id="{{ $row->id }}">View Requirement</button>
+                <button class="btn-cta-secondary client-terms-listing-find-job"
+                        data-row-id="{{ $row->id }}"
+                        data-row-recommendation_relation_id="{{ $row->recommendation_relation_id }}">View Terms</button>
+
+                <div class="jc-actions-footer">
+                    <i class="fa-regular fa-bookmark jc-icon-btn" title="Save Job"></i>
+                    <i class="fa-solid fa-ellipsis-vertical jc-icon-btn" title="More Options"></i>
+                </div>
+            </div>
+
+        </div>{{-- /job-card --}}
+
     @endforeach
 @else
-    No data available in table
+    <div class="text-center py-5 text-muted" style="font-size:13px;">No jobs available matching your criteria.</div>
 @endif
