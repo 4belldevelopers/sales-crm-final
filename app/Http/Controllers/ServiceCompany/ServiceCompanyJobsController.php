@@ -3720,45 +3720,75 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
     public function marketJobListV2_ajax(Request $request)
     {
         $company_id = auth()->user()->company_id;
-        $v2Service = app(\App\Services\MarketJobV2Service::class);
-        $cacheKey = $v2Service->getCacheKey($request, $company_id).':v2json';
 
-        if (cache()->has($cacheKey)) {
-            return response()->json(cache()->get($cacheKey));
+        // ── TEMPORARY DEBUG: bypass cache, log everything ──
+        \Illuminate\Support\Facades\Log::info('[MarketJobV2] ajax called', [
+            'company_id'  => $company_id,
+            'all_params'  => $request->all(),
+        ]);
+
+        try {
+            $v2Service = app(\App\Services\MarketJobV2Service::class);
+
+            $v2Result = $v2Service->fetchMarketJobs($request, $company_id);
+
+            \Illuminate\Support\Facades\Log::info('[MarketJobV2] fetchMarketJobs result', [
+                'total'      => $v2Result['total'],
+                'data_count' => count($v2Result['data']),
+                'page'       => $v2Result['page'],
+            ]);
+
+            $data  = $v2Result['data'];
+            $total = $v2Result['total'];
+            $page  = $v2Result['page'];
+            $size  = $v2Result['size'];
+
+            $pagination = [
+                'total'        => $total,
+                'current_page' => $page,
+                'last_page'    => ceil($total / max($size, 1)),
+                'per_page'     => $size,
+                'listType'     => 'allcandidate',
+            ];
+
+            // Transform each ES hit via the Resource DTO — use toArray() per item to
+            // guarantee a plain PHP array (avoids ResourceCollection {data:[]} wrapping).
+            $req = $request;
+            $itemsArray = array_map(
+                fn($item) => (new \App\Http\Resources\MarketJobV2Resource($item))->toArray($req),
+                $data
+            );
+
+            \Illuminate\Support\Facades\Log::info('[MarketJobV2] items built', [
+                'items_count' => count($itemsArray),
+                'first_item'  => $itemsArray[0] ?? null,
+            ]);
+
+            $responseData = [
+                'status'     => 'success',
+                'items'      => $itemsArray,
+                'total'      => $total,
+                'pagination' => view('service_company.ajax_pages.pagination', compact('pagination'))->render(),
+            ];
+
+            return response()->json($responseData);
+
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error('[MarketJobV2] EXCEPTION', [
+                'message' => $e->getMessage(),
+                'file'    => $e->getFile(),
+                'line'    => $e->getLine(),
+                'trace'   => $e->getTraceAsString(),
+            ]);
+
+            return response()->json([
+                'status'  => 'error',
+                'message' => $e->getMessage(),
+                'items'   => [],
+                'total'   => 0,
+                'pagination' => '',
+            ], 500);
         }
-
-        $v2Result = $v2Service->fetchMarketJobs($request, $company_id);
-
-        $data = $v2Result['data'];
-        $total = $v2Result['total'];
-        $page = $v2Result['page'];
-        $size = $v2Result['size'];
-
-        $pagination = [
-            'total' => $total,
-            'current_page' => $page,
-            'last_page' => ceil($total / max($size, 1)),
-            'per_page' => $size,
-            'listType' => 'allcandidate',
-        ];
-
-        // Resolve ResourceCollection to a plain PHP array so that when encoded as JSON,
-        // `response.items` is a flat JSON array [] — not the {data:[]} wrapper that
-        // ResourceCollection adds by default (which breaks Array.isArray() check in JS).
-        $itemsResource = \App\Http\Resources\MarketJobV2Resource::collection($data);
-        $itemsArray = $itemsResource->resolve();
-
-        $responseData = [
-            'status' => 'success',
-            'items'  => $itemsArray,
-            'total'  => $total,
-            'pagination' => view('service_company.ajax_pages.pagination', compact('pagination'))->render(),
-        ];
-
-        $cacheTtlMinutes = (int) config('constants.ALL_MARKET_JOBS_TIME', 15);
-        cache()->put($cacheKey, $responseData, now()->addMinutes($cacheTtlMinutes));
-
-        return response()->json($responseData);
     }
 
     public function marketrequestaadded(Request $request)
