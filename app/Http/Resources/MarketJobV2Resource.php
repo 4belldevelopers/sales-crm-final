@@ -163,8 +163,14 @@ class MarketJobV2Resource extends JsonResource
             default => strtoupper($rawStatus),
         };
 
-        // Employment type badge label
-        $employmentTypeBadge = ((int) ($row->employment_type ?? 0)) === 1 ? 'Contract' : 'Full-Time';
+        // Employment type badge label (0: Full-Time, 1: Contract, 2: Freelance, 3: Part-Time)
+        $empTypeInt = (int) ($row->employment_type ?? 0);
+        $employmentTypeBadge = match ($empTypeInt) {
+            1 => 'Contract',
+            2 => 'Freelance',
+            3 => 'Part-Time',
+            default => 'Full-Time',
+        };
 
         // Last Updated time-ago (ES has updated_at; fall back to created_at if absent)
         $updatedAt = $row->updated_at ?? $createdAt;
