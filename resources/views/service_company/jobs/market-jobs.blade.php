@@ -1659,9 +1659,6 @@ $(document).on('click', '#changetextupdate', function (){
             // ── Posted Date display ──
             let postedDate = row.created_at_formatted || row.created_at_date || 'Recently';
 
-            // ── Salary display ──
-            let salaryDisplay = `${row.salary_currency}${row.min_salary} – ${row.max_salary} / ${row.salary_mode_short}`;
-
             // ── Location display (dynamically resolved from ES nested client_city_jobs) ──
             let locationText = row.location_display || (row.work_type === 'Remote' ? 'Remote' : (row.industry_name || row.work_type || '—'));
 
