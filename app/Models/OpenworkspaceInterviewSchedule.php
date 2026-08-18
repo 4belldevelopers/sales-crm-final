@@ -2,24 +2,16 @@
 
 namespace App\Models;
 
+use App\Traits\BelongsToTenant;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Builder;
 
 class OpenworkspaceInterviewSchedule extends Model
 {
+    use BelongsToTenant;
 
 	protected $table 	= 'interview_schedules';
     protected $dates 	= ['schedule_date','created_at'];
-
-    protected static function boot()
-    {
-        parent::boot();
-
-        /*static::addGlobalScope('company', function (Builder $builder) {
-            $builder->where('interview_schedules.company_id', user()->company_id);
-        });*/
-		
-    }
 
     // Relation with job application
     public function jobApplication(){

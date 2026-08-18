@@ -29,8 +29,8 @@ class ZoomService
         $response = $client->post('https://zoom.us/oauth/token', [
             'form_params' => [
                 'grant_type' => 'client_credentials',
-                'client_id' => env('ZOOM_API_KEY'),
-                'client_secret' => env('ZOOM_API_SECRET'),
+                'client_id' => config('services.zoom.client_id', env('ZOOM_API_KEY')),
+                'client_secret' => config('services.zoom.client_secret', env('ZOOM_API_SECRET')),
             ],
         ]);
 

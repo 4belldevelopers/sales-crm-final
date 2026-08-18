@@ -37,71 +37,47 @@ Route::post('/whatsapp/restart', [HomeController::class, 'restart']);
 Route::post('/whatsapp/send', [HomeController::class, 'send']);
 Route::post('/whatsapp/delete', [HomeController::class, 'delete']);
 
-Route::get('/mail-test', function () {
+if (app()->environment('local')) {
+    Route::get('/mail-test', function () {
+        $filePath = 'https://file.jero.works/Companies/4bell_technology_2/Resumes/2026/02/JERO_699c43f99f495.pdf';
+        $attachments[] = [
+            'path' => $filePath,
+            'filename' => 'djfkjdfsd',
+            'options' => [],
+        ];
+        Mail::raw('Laravel mail working ✅', function ($msg) use ($filePath) {
+            $msg->to('4belldevelopers@gmail.com')
+                ->subject('Test Mail From Laravel')
+                ->attach($filePath, [
+                    'as' => 'Custom_File_Name.pdf',
+                    'mime' => 'application/pdf',
+                ]);
+        });
 
-    $filePath = 'https://file.jero.works/Companies/4bell_technology_2/Resumes/2026/02/JERO_699c43f99f495.pdf'; // full path
-    $attachments[] = [
-        'path' => $filePath,
-        'filename' => 'djfkjdfsd',
-        'options' => [],
-    ];
-    // dd($attachments);
-    Mail::raw('Laravel mail working ✅', function ($msg) use ($filePath) {
-        $msg->to('4belldevelopers@gmail.com')
-            ->subject('Test Mail From Laravel')
-            ->attach($filePath, [
-                'as' => 'Custom_File_Name.pdf',   // 👈 Custom attachment name
-                'mime' => 'application/pdf',
-            ]);
+        return 'Mail Sent with Attachment';
     });
 
-    return 'Mail Sent with Attachment';
-});
+    Route::get('/redis-test', function () {
+        cache()->tags(['ats'])->put('x', 'dragonfly', 60);
 
-// Route::get('/mail-test', function(){
+        return cache()->tags(['ats'])->get('x');
+    });
 
-//     Mail::raw('Laravel mail working ✅', function($msg){
-//         $msg->to('4belldevelopers@gmail.com')
-//             ->subject('Test Mail From Laravel');
-//     });
+    Route::get('/r2test', function () {
+        Storage::disk('r2')->put(
+            'test.txt',
+            'HELLO R2'
+        );
 
-//     return 'Mail Sent';
-// });
+        return 'uploaded';
+    });
 
-Route::get('/redis-test', function () {
-    cache()->tags(['ats'])->put('x', 'dragonfly', 60);
+    Route::get('/test-es', function () {
+        $client = app(\App\Services\ElasticService::class)->getClient();
 
-    return cache()->tags(['ats'])->get('x');
-});
-
-Route::get('/r2test', function () {
-
-    Storage::disk('r2')->put(
-        'test.txt',
-        'HELLO R2'
-    );
-
-    return 'uploaded';
-});
-
-Route::get('/send-interview-mail', [HomeController::class, 'sendInterviewMail']);
-Route::get('/send-meeting', [App\Http\Controllers\MeetingController::class, 'send']);
-
-Route::get('/wewwewewewewew', function () {
-    return view('welcome');
-});
-
-Route::get('/send', function () {
-    broadcast(new MessageSent('Hello from Laravel Reverb!'));
-
-    return 'Message sent';
-});
-
-Route::get('/test-es', function () {
-    $client = app(\App\Services\ElasticService::class)->getClient();
-
-    return $client->ping();
-});
+        return $client->ping();
+    });
+}
 
 // web.php
 Route::post('/notifications/read/{id}', function ($id) {

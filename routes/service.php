@@ -85,7 +85,6 @@ Route::group(['middleware' => 'auth'], function () {
                 Route::get('/search-cities', function (Request $request) {
                     $query = $request->input('q');
                     $cities = DB::table('city_list')->where('city', 'LIKE', "%$query%")->limit(10)->get(['id', 'city']);
-                    dd($cities);
 
                     return response()->json($cities);
                 });

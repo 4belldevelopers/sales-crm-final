@@ -9,10 +9,10 @@ class PhonePePaymentController extends Controller
 {
     public function createPayment(Request $request)
     {
-        $merchantId = env('PHONEPE_MERCHANT_ID');
-        $apiKey = env('PHONEPE_API_KEY');
-        $keyIndex = env('PHONEPE_API_KEY_INDEX');
-        $hostUrl = env('PHONEPE_HOST_URL');
+        $merchantId = config('services.phonepe.merchant_id');
+        $apiKey = config('services.phonepe.api_key');
+        $keyIndex = config('services.phonepe.key_index');
+        $hostUrl = config('services.phonepe.host_url');
 
         // Payment request data
         $amount = $request->input('amount') * 100; // PhonePe expects amount in paise (1 INR = 100 paise)

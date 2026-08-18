@@ -193,6 +193,14 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
             $MonthskillId = $request->input('MonthskillId');
             $ratingId = $request->input('rating');
             // dd($YearskillId,$MonthskillId);
+            // TENANCY NOTE: Verify candidate application belongs to current tenant before deleting skill exp
+            $appCheck = DB::table('job_applications')->where('id', $appId);
+            if (auth()->check() && ! auth()->user()->is_superadmin && auth()->user()->company_id) {
+                $appCheck->where('company_id', auth()->user()->company_id);
+            }
+            if (! $appCheck->exists()) {
+                return response()->json(['status' => false, 'message' => 'Unauthorized or application not found.'], 403);
+            }
             DB::table('candidate_job_skill_exp')->where('candidate_id', $appId)->where('job_id', $job_id)->delete();
             $this->elasticService->getClient()->deleteByQuery([
                 'index' => ELASTIC_CANDIDATE_SKILLS_EXP,
@@ -355,6 +363,14 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
         $appId = $request->appId;
         $job_id = $request->job_id;
         $html = '';
+        // TENANCY NOTE: Verify application belongs to current tenant before deleting application details
+        $appCheck = DB::table('job_applications')->where('id', $appId);
+        if (auth()->check() && ! auth()->user()->is_superadmin && auth()->user()->company_id) {
+            $appCheck->where('company_id', auth()->user()->company_id);
+        }
+        if (! $appCheck->exists()) {
+            return response()->json(['status' => false, 'message' => 'Unauthorized or application not found.'], 403);
+        }
         DB::table('application_additional_detail')->where('application_id', $appId)->where('job_id', $job_id)->delete();
         $this->elasticService->getClient()->deleteByQuery([
             'index' => ELASTIC_CANDIDATE_JOB_QUESTION,
@@ -542,7 +558,7 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
             $interview_timezone = @$data->interview_timezone ?? 'IST';
             $wiseId = $addJobWiseCondidate_id;
 
-            $scheduleDateArr = DB::table('interview_schedules')->where('interview_job_wise_con_id', $addJobWiseCondidate_id)->pluck('schedule_date')->toArray();
+            $scheduleDateArr = tenant_table('interview_schedules')->where('interview_job_wise_con_id', $addJobWiseCondidate_id)->pluck('schedule_date')->toArray();
             $book1 = 'Book Now';
             $book2 = 'Book Now';
             $book3 = 'Book Now';
@@ -1486,7 +1502,12 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
      */
     public function resumeAsPdf($id)
     {
-        $app = DB::table('job_applications')->where('id', $id)->first();
+        // TENANCY NOTE: Guard candidate application fetch with company_id to prevent cross-tenant IDOR
+        $query = DB::table('job_applications')->where('id', $id);
+        if (auth()->check() && ! auth()->user()->is_superadmin && auth()->user()->company_id) {
+            $query->where('company_id', auth()->user()->company_id);
+        }
+        $app = $query->first();
         if (! $app || empty($app->resume)) {
             abort(404);
         }
@@ -2389,7 +2410,7 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
             ->leftJoin('recommendation_relation', 'recommendation_relation.job_id', '=', 'jobs.id')
             ->where('add_job_wise_condidates.id', '=', $lastInsertedId)->where('add_job_wise_condidates.job_id', '=', $jobId)->first();
 
-        $partnersData = DB::table('job_assign')->join('users', 'users.id', '=', 'job_assign.user_id')->where('job_assign.job_id', '=', $jobId)->pluck('users.email')->toArray();
+        $partnersData = tenant_table('job_assign')->join('users', 'users.id', '=', 'job_assign.user_id')->where('job_assign.job_id', '=', $jobId)->pluck('users.email')->toArray();
 
         $recommendedDataList = DB::table('recommendation_relation');
         $recommendedDataList = $recommendedDataList->join('companies', 'companies.id', 'recommendation_relation.to_company_id');
