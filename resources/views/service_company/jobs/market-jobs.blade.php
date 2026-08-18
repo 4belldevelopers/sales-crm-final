@@ -488,56 +488,60 @@
                         </div>
                     </div>
 
-                    {{-- ── Filter Bar ── --}}
-                    <div class="mjh-filter-bar">
-                        <div class="mjh-search-wrap">
-                            <svg class="mjh-search-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
-                            </svg>
-                            <input class="mjh-search-input" name="inputJobSearch" id="kt_tagify_2" value="" type="text" placeholder="Search by job title, skills, company, or job ID..."/>
-                        </div>
-                        <button class="mjh-search-btn" onclick="filtersdataget()">Search</button>
-
-                        <div class="mjh-filter-dropdowns">
-                            <div class="mjh-drop-wrap">
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-                                <select class="mjh-drop" id="defaultCurrency" data-kt-select2="false" data-select2-id="false" onchange="filtersdata()">
-                                    <option value="">Currency</option>
-                                    <option value="0">INR</option><option value="1">EUR</option>
-                                    <option value="2">JPY</option><option value="3">GBP</option>
-                                    <option value="4">USD</option><option value="5">AED</option>
-                                </select>
-                                <svg class="mjh-caret" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+                    {{-- ── Apptracker Search / Sort / Filter Toolbar ── --}}
+                    <div class="simf-toolbar-card">
+                        <div class="simf-toolbar-row">
+                            {{-- Search Input --}}
+                            <div class="simf-search-wrap">
+                                <span class="simf-search-icon">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.35-4.35"/></svg>
+                                </span>
+                                <input type="text" class="simf-search-input" name="inputJobSearch" id="kt_tagify_2"
+                                    placeholder="Search by job title, skills, requirement ID or client..." autocomplete="off" />
                             </div>
 
-                            <div class="mjh-drop-wrap">
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
-                                <select class="mjh-drop" id="hiringtype" data-kt-select2="false" data-select2-id="false" onchange="filtersdata()">
-                                    <option value="All">Work Mode</option>
-                                    <option value="2">Agency Jobs</option>
-                                    <option value="1">Bench Talent Jobs</option>
+                            {{-- Sort Dropdown Control --}}
+                            <div class="simf-sort-wrap" id="simf_sort_wrap">
+                                <span class="simf-sort-icon">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5h10M11 9h7M11 13h4M3 17l3 3 3-3M6 18V4"/></svg>
+                                </span>
+                                <button type="button" class="simf-sort-btn" id="simf_sort_btn">
+                                    <span id="simf_sort_label">Newest to Oldest</span>
+                                    <svg class="chevron" xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+                                </button>
+                                <select id="hiringtype" style="display:none;" onchange="filtersdata()">
+                                    <option value="1" selected>Newest to Oldest</option>
+                                    <option value="2">Oldest to Newest</option>
+                                    <option value="3">Low to High (Salary)</option>
+                                    <option value="4">High to Low (Salary)</option>
+                                    <option value="7">High to Low (Experience)</option>
+                                    <option value="8">Low to High (Experience)</option>
                                 </select>
-                                <svg class="mjh-caret" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+                                <div class="simf-sort-panel d-none" id="simf_sort_panel"></div>
                             </div>
 
-                            <div class="mjh-drop-wrap">
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>
-                                <select class="mjh-drop" id="defaultMode" data-kt-select2="false" data-select2-id="false" onchange="filtersdata()">
-                                    <option value="">Salary</option>
-                                    <option value="0">Annual</option>
-                                    <option value="1">Monthly</option>
-                                    <option value="2">Hourly</option>
-                                </select>
-                                <svg class="mjh-caret" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
-                            </div>
-
-                            <button class="mjh-more-btn" onclick="fdOpen()">
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                    <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/>
-                                </svg>
-                                More Filters
+                            {{-- Filter Button --}}
+                            <button type="button" class="simf-filter-btn" onclick="fdOpen()">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3Z"/></svg>
+                                <span>Filters</span>
+                                <span class="badge simf-count-badge d-none" id="simf_count_badge">0</span>
                             </button>
                         </div>
+                    </div>
+
+                    {{-- ── Applied Filters Summary Card (Appears when filters applied) ── --}}
+                    <div class="simf-applied-card d-none" id="simf_applied_card">
+                        <div class="simf-applied-head">
+                            <span class="simf-applied-title">
+                                Active Filters
+                                <span class="simf-applied-count" id="simf_applied_count">0</span>
+                            </span>
+                            <a href="javascript:void(0);" class="simf-applied-clearall" id="simf_applied_clear_all" onclick="clearAllAppliedFilters()">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2m3 0-1 14a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1L4 6"/></svg>
+                                Clear All
+                            </a>
+                        </div>
+                        <div class="simf-applied-chips" id="simf_applied_chips"></div>
                     </div>
 
                     {{-- ── Popular Searches ── --}}
@@ -1287,10 +1291,18 @@
 
     </script>
 
-<script>
-  
-  function filtersdata(){
-         fetchCandidates();
+  function filtersdata() {
+      if (typeof updateAppliedFiltersBar === 'function') {
+          updateAppliedFiltersBar();
+      }
+      fetchCandidates();
+  }
+
+  function filtersdataget() {
+      if (typeof updateAppliedFiltersBar === 'function') {
+          updateAppliedFiltersBar();
+      }
+      fetchCandidates();
   }
 
   // Prevent Metronic/Select2 from hijacking the filter bar selects
@@ -1820,6 +1832,112 @@ $(document).on('click', '.client-show-detail', function (){
         }
 
         let currentActiveTab = 'all';
+
+        // ── Custom Sort dropdown (Apptracker style) ──
+        function simfRenderSortPanel() {
+            var $panel = $('#simf_sort_panel').empty();
+            var current = $('#hiringtype').val();
+            $('#hiringtype option').each(function() {
+                var $opt = $(this);
+                var val = $opt.attr('value');
+                var label = $opt.text();
+                $('<div class="simf-sort-item"></div>').text(label)
+                    .toggleClass('active', val === current)
+                    .on('click', function() {
+                        $('#hiringtype').val(val);
+                        $('#simf_sort_label').text(label);
+                        simfCloseSortPanel();
+                        filtersdata();
+                    })
+                    .appendTo($panel);
+            });
+        }
+        function simfOpenSortPanel() {
+            simfRenderSortPanel();
+            $('#simf_sort_panel').removeClass('d-none');
+            $('#simf_sort_btn').addClass('open');
+        }
+        function simfCloseSortPanel() {
+            $('#simf_sort_panel').addClass('d-none');
+            $('#simf_sort_btn').removeClass('open');
+        }
+        $(document).on('click', '#simf_sort_btn', function(e) {
+            e.stopPropagation();
+            if ($('#simf_sort_panel').hasClass('d-none')) simfOpenSortPanel();
+            else simfCloseSortPanel();
+        });
+        $(document).on('click', function(e) {
+            if (!$(e.target).closest('#simf_sort_wrap').length) simfCloseSortPanel();
+        });
+
+        // ── Live Search with Debounce (Apptracker style) ──
+        let searchDebounceTimer;
+        $(document).on('keyup input', '#kt_tagify_2', function(e) {
+            clearTimeout(searchDebounceTimer);
+            if (e.keyCode === 13) {
+                filtersdataget();
+                return;
+            }
+            searchDebounceTimer = setTimeout(function() {
+                filtersdataget();
+            }, 350);
+        });
+
+        // ── Active Filters Summary Bar ──
+        function updateAppliedFiltersBar() {
+            let activeFilters = [];
+            let searchVal = $('#kt_tagify_2').val();
+            if (searchVal && searchVal.trim()) {
+                activeFilters.push({ key: 'search', label: `Search: "${searchVal.trim()}"`, clear: function() { $('#kt_tagify_2').val(''); } });
+            }
+            let minExp = $('#min_exp').val();
+            let maxExp = $('#max_exp').val();
+            if (minExp || maxExp) {
+                activeFilters.push({ key: 'exp', label: `Experience: ${minExp || 0} – ${maxExp || '+'} Yrs`, clear: function() { $('#min_exp').val(''); $('#max_exp').val(''); } });
+            }
+            let minSal = $('#min_sal').val();
+            let maxSal = $('#max_sal').val();
+            if (minSal || maxSal) {
+                activeFilters.push({ key: 'sal', label: `Salary: ₹${minSal || 0} – ₹${maxSal || '+'}`, clear: function() { $('#min_sal').val(''); $('#max_sal').val(''); } });
+            }
+            let locVal = $('#kt_tagify_location').val();
+            if (locVal) {
+                activeFilters.push({ key: 'loc', label: `Location: ${locVal}`, clear: function() { $('#kt_tagify_location').val(''); } });
+            }
+
+            let $card = $('#simf_applied_card');
+            let $chips = $('#simf_applied_chips').empty();
+            if (activeFilters.length > 0) {
+                $('#simf_applied_count').text(activeFilters.length);
+                $('#simf_count_badge').text(activeFilters.length).removeClass('d-none');
+                activeFilters.forEach(function(f) {
+                    $(`<div class="simf-applied-chip"><span>${f.label}</span><span class="simf-applied-chip-remove">&times;</span></div>`)
+                        .find('.simf-applied-chip-remove')
+                        .on('click', function() {
+                            f.clear();
+                            updateAppliedFiltersBar();
+                            filtersdata();
+                        })
+                        .end()
+                        .appendTo($chips);
+                });
+                $card.removeClass('d-none');
+            } else {
+                $('#simf_count_badge').text('0').addClass('d-none');
+                $card.addClass('d-none');
+            }
+        }
+
+        function clearAllAppliedFilters() {
+            $('#kt_tagify_2').val('');
+            $('#min_exp').val('');
+            $('#max_exp').val('');
+            $('#min_sal').val('');
+            $('#max_sal').val('');
+            $('#kt_tagify_location').val('');
+            updateAppliedFiltersBar();
+            filtersdata();
+        }
 
         $(document).on('click', '.mjh-tab-item', function() {
             $('.mjh-tab-item').removeClass('active');
