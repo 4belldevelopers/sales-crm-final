@@ -136,10 +136,18 @@
             // ── Vendor count / action button ──────────────────────────────────────
             $resultCount  = (int) ($row->vendor_added_count ?? 0);
             $publicMarket = (int) ($row->public_market_status ?? 0);
+
+            // ── Card left border highlight accent (Green / Yellow) ──
+            $cardAccentCls = 'jc-accent-green';
+            if ($rawStatus === 'hold' || $employment_type === 'Contract') {
+                $cardAccentCls = 'jc-accent-yellow';
+            } elseif ($publicMarket === 2 || $employment_type === 'Bench Talent') {
+                $cardAccentCls = 'jc-accent-green';
+            }
         @endphp
 
         {{-- ── JOB CARD ──────────────────────────────────────────────────────── --}}
-        <div class="job-card">
+        <div class="job-card {{ $cardAccentCls }}">
 
             {{-- COL 1: Title, Badges, Subtitle, Skills (NO company name) --}}
             <div class="jc-col-main">

@@ -115,15 +115,40 @@
         margin-bottom: 5px;
         line-height: 1.25;
     }
-    .mjh-sub {
+    .mjh-sub-desc {
         font-size: 13px;
         font-weight: 400;
         color: #6B7280;
-        max-width: 640px;
+        max-width: 680px;
         line-height: 1.45;
-        text-align: right;
-        flex: 1;
-        white-space: nowrap;
+        margin-bottom: 8px;
+    }
+    .mjh-header-pills {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
+        margin-top: 6px;
+    }
+    .mjh-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        font-size: 11px;
+        font-weight: 600;
+        padding: 3px 9px;
+        border-radius: 6px;
+        font-family: 'Poppins', sans-serif;
+    }
+    .mjh-pill-green { background: #DCFCE7; color: #15803D; }
+    .mjh-pill-green-dot { background: #DCFCE7; color: #15803D; }
+    .mjh-pill-purple { background: #F3F0FF; color: #6D28D9; }
+    .mjh-dot-live {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: #16A34A;
+        display: inline-block;
     }
     .mjh-btn-post {
         display: inline-flex;
@@ -188,7 +213,16 @@
         color: #6B7280;
         margin-top: 2px;
     }
-    .mjh-trend { display: none; }
+    .mjh-trend {
+        font-size: 11px;
+        font-weight: 500;
+        color: #16A34A;
+        margin-top: 3px;
+        display: flex;
+        align-items: center;
+        gap: 3px;
+        white-space: nowrap;
+    }
 
     /* Filter bar */
     .mjh-filter-bar {
@@ -370,18 +404,23 @@
                         <div class="mjh-top">
                             <div class="mjh-title-block">
                                 <div class="mjh-title">
-                                    Job Marketplace for Agencies
-                                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#16A34A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                    Agency Job Marketplace
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#16A34A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
                                         <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
                                         <path d="m9 12 2 2 4-4"/>
                                     </svg>
                                 </div>
-                                <div class="mjh-sub">Access verified hiring opportunities from trusted clients across full-time, contract, and bench hiring.</div>
+                                <div class="mjh-sub-desc">Verified hiring requirements shared directly by client companies. Find opportunities, review terms, and submit qualified candidates.</div>
+                                <div class="mjh-header-pills">
+                                    <span class="mjh-pill mjh-pill-green"><i class="fa-solid fa-circle-check"></i> Verified Clients</span>
+                                    <span class="mjh-pill mjh-pill-green-dot"><span class="mjh-dot-live"></span> Active Requirements</span>
+                                    <span class="mjh-pill mjh-purple" style="background:#F3F0FF;color:#6D28D9;"><i class="fa-solid fa-users"></i> Agency Eligible</span>
+                                </div>
                             </div>
                         </div>
 
                         <div class="mjh-stats">
-                            {{-- All Jobs --}}
+                            {{-- All Jobs / All Opportunities --}}
                             <div class="mjh-card">
                                 <div class="mjh-icon mjh-icon-blue">
                                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -391,49 +430,46 @@
                                     </svg>
                                 </div>
                                 <div class="mjh-card-body">
-                                    <div class="mjh-card-label">All Jobs</div>
-                                    <div class="mjh-card-num">{{ number_format($all_jobs) }}</div>
-                                    <div class="mjh-card-sub">Live Opportunities</div>
+                                    <div class="mjh-card-label">All Opportunities</div>
+                                    <div class="mjh-card-num">{{ number_format($all_jobs ?? 0) }}</div>
+                                    <div class="mjh-card-sub">Active requirements</div>
+                                    <div class="mjh-trend"><i class="fa-solid fa-arrow-up" style="font-size:9px;"></i> {{ $all_jobs_new ?? 0 }} new this week</div>
                                 </div>
                             </div>
 
-                            {{-- Agency Jobs (Full-Time / Direct) --}}
+                            {{-- Fulltime Jobs / Full-Time Hiring --}}
                             <div class="mjh-card">
                                 <div class="mjh-icon mjh-icon-green">
                                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                        <rect x="2" y="3" width="20" height="14" rx="2"/>
-                                        <line x1="8" y1="21" x2="16" y2="21"/>
-                                        <line x1="12" y1="17" x2="12" y2="21"/>
-                                        <line x1="6" y1="8" x2="6" y2="13"/>
-                                        <line x1="10" y1="8" x2="10" y2="13"/>
-                                        <line x1="14" y1="8" x2="14" y2="13"/>
-                                        <line x1="18" y1="8" x2="18" y2="13"/>
+                                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                                        <circle cx="12" cy="7" r="4"/>
                                     </svg>
                                 </div>
                                 <div class="mjh-card-body">
-                                    <div class="mjh-card-label">Agency Jobs</div>
-                                    <div class="mjh-card-num">{{ number_format($all_jobs - $market_place) }}</div>
-                                    <div class="mjh-card-sub">Direct Roles</div>
+                                    <div class="mjh-card-label">Full-Time Hiring</div>
+                                    <div class="mjh-card-num">{{ number_format($fulltime_jobs ?? 0) }}</div>
+                                    <div class="mjh-card-sub">Client requirements</div>
+                                    <div class="mjh-trend"><i class="fa-solid fa-arrow-up" style="font-size:9px;"></i> {{ $fulltime_new ?? 0 }} new this week</div>
                                 </div>
                             </div>
 
-                            {{-- Bench Talent Jobs --}}
+                            {{-- Contract Jobs / Contract Hiring --}}
                             <div class="mjh-card">
                                 <div class="mjh-icon mjh-icon-purple">
                                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                        <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
-                                        <polyline points="3.27 6.96 12 12.01 20.73 6.96"/>
-                                        <line x1="12" y1="22.08" x2="12" y2="12"/>
+                                        <circle cx="12" cy="12" r="10"/>
+                                        <polyline points="12 6 12 12 16 14"/>
                                     </svg>
                                 </div>
                                 <div class="mjh-card-body">
-                                    <div class="mjh-card-label">Bench Talent Jobs</div>
-                                    <div class="mjh-card-num">{{ number_format($market_place) }}</div>
-                                    <div class="mjh-card-sub">Contract Roles</div>
+                                    <div class="mjh-card-label">Contract Hiring</div>
+                                    <div class="mjh-card-num">{{ number_format($contract_jobs ?? 0) }}</div>
+                                    <div class="mjh-card-sub">Contract opportunities</div>
+                                    <div class="mjh-trend"><i class="fa-solid fa-arrow-up" style="font-size:9px;"></i> {{ $contract_new ?? 0 }} new this week</div>
                                 </div>
                             </div>
 
-                            {{-- Newly Added --}}
+                            {{-- Agency Request / Bench Talent Requests --}}
                             <div class="mjh-card">
                                 <div class="mjh-icon mjh-icon-orange">
                                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -443,9 +479,10 @@
                                     </svg>
                                 </div>
                                 <div class="mjh-card-body">
-                                    <div class="mjh-card-label">Newly Added</div>
-                                    <div class="mjh-card-num">{{ number_format($newly_add) }}</div>
-                                    <div class="mjh-card-sub">Ready to Submit</div>
+                                    <div class="mjh-card-label">Bench Talent Requests</div>
+                                    <div class="mjh-card-num">{{ number_format($agency_requests ?? 0) }}</div>
+                                    <div class="mjh-card-sub">Clients seeking bench talent</div>
+                                    <div class="mjh-trend"><i class="fa-solid fa-arrow-up" style="font-size:9px;"></i> {{ $agency_new ?? 0 }} new this week</div>
                                 </div>
                             </div>
                         </div>
@@ -515,10 +552,32 @@
                         <span class="mjh-tag" onclick="addFromPopular(this)" data-value="DevOps">DevOps</span>
                         <span class="mjh-tag" onclick="addFromPopular(this)" data-value="Data Analyst">Data Analyst</span>
                         <span class="mjh-clear-all" onclick="clearAllTags()">Clear All</span>
-                    </div>
-
                     <!-- ACTIVE FILTER TAGS -->
                     <div class="active-filters" id="selectedFilters" style="display:none;"></div>    
+
+                    {{-- ── Horizontal Filter Tabs ── --}}
+                    <div class="mjh-tabs-bar">
+                        <div class="mjh-tab-item active" data-tab="all">
+                            <i class="fa-solid fa-briefcase mjh-tab-icon"></i>
+                            <span>All Agencies Jobs</span>
+                            <span class="mjh-tab-badge mjh-badge-blue">{{ number_format($all_jobs ?? 0) }}</span>
+                        </div>
+                        <div class="mjh-tab-item" data-tab="fulltime">
+                            <i class="fa-solid fa-user-tie mjh-tab-icon"></i>
+                            <span>Fulltime Hiring Jobs</span>
+                            <span class="mjh-tab-badge mjh-badge-green">{{ number_format($fulltime_jobs ?? 0) }}</span>
+                        </div>
+                        <div class="mjh-tab-item" data-tab="contract">
+                            <i class="fa-solid fa-clock mjh-tab-icon"></i>
+                            <span>Contract Hiring Jobs</span>
+                            <span class="mjh-tab-badge mjh-badge-purple">{{ number_format($contract_jobs ?? 0) }}</span>
+                        </div>
+                        <div class="mjh-tab-item" data-tab="agency_request">
+                            <i class="fa-solid fa-handshake mjh-tab-icon"></i>
+                            <span>Agency Requests</span>
+                            <span class="mjh-tab-badge mjh-badge-orange">{{ number_format($agency_requests ?? 0) }}</span>
+                        </div>
+                    </div>
 
                 <!-- Job List -->
                 <div class="loadingMessage" style="display: none; position: absolute;">Processing...</div>
@@ -1625,11 +1684,16 @@ $(document).on('click', '.client-show-detail', function (){
             // ── Location display (dynamically resolved from ES nested client_city_jobs) ──
             let locationText = row.location_display || (row.work_type === 'Remote' ? 'Remote' : (row.industry_name || row.work_type || '—'));
 
-            // ── Posted date display (dynamically resolved from created_at_date) ──
-            let postedDate = row.created_at_date || (row.created_at_formatted ? row.created_at_formatted.split(' (')[0] : '—');
+            // ── Card left border highlight accent (Green / Yellow / Orange) ──
+            let cardAccentClass = 'jc-accent-green';
+            if (row.status_label === 'HOLD' || typeLabel === 'Contract') {
+                cardAccentClass = 'jc-accent-yellow';
+            } else if (typeLabel === 'Bench Talent' || row.public_market_status === 2) {
+                cardAccentClass = 'jc-accent-green';
+            }
 
             return `
-            <div class="job-card">
+            <div class="job-card ${cardAccentClass}">
 
                 <!-- ── COL 1: Title, Badges, Subtitle, Skills ── -->
                 <div class="jc-col-main">
@@ -1747,12 +1811,22 @@ $(document).on('click', '.client-show-detail', function (){
             </div>`;
         }
 
+        let currentActiveTab = 'all';
+
+        $(document).on('click', '.mjh-tab-item', function() {
+            $('.mjh-tab-item').removeClass('active');
+            $(this).addClass('active');
+            currentActiveTab = $(this).data('tab') || 'all';
+            fetchCandidates(1);
+        });
+
         function fetchCandidates(page = 1, search = '') {
             $('.loadingMessage').css({ display: 'block' });
             $.ajax({
                 url: `{!! route('service_company.jobs.marketJobListV2_ajax') !!}?page=${page}`,
                 type: 'GET',
                 data: {
+                  custom_tab: currentActiveTab,
                   search:$('#inputSearch').val(),
                   custom_search:$('#kt_tagify_2').val(),
                   custom_status:'active',

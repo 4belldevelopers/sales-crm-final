@@ -3570,39 +3570,91 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
                 ],
 
                 'aggs' => [
-
                     'all_jobs' => [
                         'value_count' => [
                             'field' => 'id',
                         ],
                     ],
-
-                    'market_place' => [
+                    'fulltime_jobs' => [
+                        'filter' => [
+                            'term' => [
+                                'employment_type' => 0,
+                            ],
+                        ],
+                    ],
+                    'contract_jobs' => [
+                        'filter' => [
+                            'term' => [
+                                'employment_type' => 1,
+                            ],
+                        ],
+                    ],
+                    'agency_requests' => [
                         'filter' => [
                             'term' => [
                                 'public_market_status' => 2,
                             ],
                         ],
                     ],
-
-                    'newly_add' => [
+                    'all_jobs_new' => [
                         'filter' => [
                             'range' => [
                                 'created_at' => [
-                                    'gte' => 'now-5d/d',
+                                    'gte' => 'now-7d/d',
                                     'lte' => 'now',
                                 ],
                             ],
                         ],
                     ],
-
+                    'fulltime_new' => [
+                        'filter' => [
+                            'bool' => [
+                                'must' => [
+                                    ['term' => ['employment_type' => 0]],
+                                    ['range' => ['created_at' => ['gte' => 'now-7d/d', 'lte' => 'now']]],
+                                ],
+                            ],
+                        ],
+                    ],
+                    'contract_new' => [
+                        'filter' => [
+                            'bool' => [
+                                'must' => [
+                                    ['term' => ['employment_type' => 1]],
+                                    ['range' => ['created_at' => ['gte' => 'now-7d/d', 'lte' => 'now']]],
+                                ],
+                            ],
+                        ],
+                    ],
+                    'agency_new' => [
+                        'filter' => [
+                            'bool' => [
+                                'must' => [
+                                    ['term' => ['public_market_status' => 2]],
+                                    ['range' => ['created_at' => ['gte' => 'now-7d/d', 'lte' => 'now']]],
+                                ],
+                            ],
+                        ],
+                    ],
                 ],
             ],
         ];
         $response = $this->elasticService->getClient()->search($params);
-        $this->all_jobs = $response['aggregations']['all_jobs']['value'] ?? 0;
-        $this->market_place = $response['aggregations']['market_place']['doc_count'] ?? 0;
-        $this->newly_add = $response['aggregations']['newly_add']['doc_count'] ?? 0;
+        $aggs = $response['aggregations'] ?? [];
+
+        $this->all_jobs = $aggs['all_jobs']['value'] ?? 0;
+        $this->fulltime_jobs = $aggs['fulltime_jobs']['doc_count'] ?? 0;
+        $this->contract_jobs = $aggs['contract_jobs']['doc_count'] ?? 0;
+        $this->agency_requests = $aggs['agency_requests']['doc_count'] ?? 0;
+
+        $this->all_jobs_new = $aggs['all_jobs_new']['doc_count'] ?? 0;
+        $this->fulltime_new = $aggs['fulltime_new']['doc_count'] ?? 0;
+        $this->contract_new = $aggs['contract_new']['doc_count'] ?? 0;
+        $this->agency_new = $aggs['agency_new']['doc_count'] ?? 0;
+
+        // Legacy compatibility aliases
+        $this->market_place = $this->agency_requests;
+        $this->newly_add = $this->all_jobs_new;
 
         return view('service_company.jobs.market-jobs', $this->data);
     }

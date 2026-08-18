@@ -130,6 +130,16 @@ class MarketJobV2Service
         // Status Filter
         $filter[] = ['terms' => ['status' => ['active', 'hold', 'inactive', '2']]];
 
+        // Tab Filtering (All Agencies Jobs / Fulltime / Contract / Agency Requests)
+        $customTab = $request->input('custom_tab');
+        if ($customTab === 'fulltime') {
+            $filter[] = ['term' => ['employment_type' => 0]];
+        } elseif ($customTab === 'contract') {
+            $filter[] = ['term' => ['employment_type' => 1]];
+        } elseif ($customTab === 'agency_request') {
+            $filter[] = ['term' => ['public_market_status' => 2]];
+        }
+
         if ($valCheck !== null && $valCheck !== '' && $valCheck !== 'All') {
             if ((int) $valCheck === 2) {
                 $filter[] = ['term' => ['public_market_status' => 2]];
@@ -275,6 +285,7 @@ class MarketJobV2Service
             'size' => (int) $request->input('size', 10),
             'q' => $request->input('q'),
             'cus_search' => $request->input('cus_search'),
+            'custom_tab' => $request->input('custom_tab'),
             'custom_hiringtype' => $request->input('custom_hiringtype'),
             'app_int_outsource' => $request->input('app_int_outsource'),
             'min_exp' => $request->input('min_exp'),
