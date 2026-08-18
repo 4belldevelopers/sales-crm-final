@@ -1543,77 +1543,218 @@ $(document).on('click', '.client-show-detail', function (){
 
 
         function renderMarketJobCard(row) {
-            let strVal = (row.title_short || 'J').charAt(0).toLowerCase();
-            let bgTextDecore = 'fs-3 bg-light-primary text-primary';
-            let code = strVal.charCodeAt(0);
-            if (code >= 97 && code <= 101) bgTextDecore = 'fs-3 bg-light-danger text-danger';
-            else if (code >= 102 && code <= 106) bgTextDecore = 'fs-3 bg-light-warning text-warning';
-            else if (code >= 107 && code <= 111) bgTextDecore = 'fs-3 bg-light-primary text-primary';
-            else if (code >= 112 && code <= 116) bgTextDecore = 'fs-3 bg-light-success text-success';
-            else if (code >= 117 && code <= 121) bgTextDecore = 'fs-3 bg-dark text-secondary';
-            else bgTextDecore = 'fs-3 bg-light-secondary text-dark';
+            // ── Status badge (OPEN / HOLD) ──
+            let statusBadgeClass = 'jc-badge-open';
+            let statusDotClass   = 'jc-dot-open';
+            let statusText       = 'Active · Open';
+            if (row.status_label === 'HOLD') {
+                statusBadgeClass = 'jc-badge-hold';
+                statusDotClass   = 'jc-dot-hold';
+                statusText       = 'Hold';
+            }
 
+            // ── Employment type badge ──
+            let typeBadgeClass = 'jc-badge-ft';
+            let typeLabel = row.employment_type_badge || row.employment_type || 'Full-Time';
+            if (typeLabel === 'Contract') {
+                typeBadgeClass = 'jc-badge-ct';
+            } else if (typeLabel === 'Bench Talent' || row.public_market_status === 2) {
+                typeBadgeClass = 'jc-badge-bench';
+            }
+
+            // ── Skills HTML ──
             let skillTagsHtml = (row.skills || []).map(s => `<span class="skill-tag">${s}</span>`).join('');
             if (row.remaining_skills_count > 0) {
                 skillTagsHtml += `<span class="skill-tag skill-more client-show-detail" data-row-id="${row.id}">+${row.remaining_skills_count}</span>`;
             }
 
+            // ── Action button (Col 6 primary CTA) ──
             let actionBtnHtml = '';
             if (row.action_type === 'vendor_fulfilled') {
-                actionBtnHtml = `<button data-row-status="" data-row-id="${row.id}" data-row-recommendation_relation_id="${row.recommendation_relation_id || ''}" class="btn-submit btn btn-sm btn-danger">Vendor FullFilled</button>`;
+                actionBtnHtml = `<button data-row-status="" data-row-id="${row.id}" data-row-recommendation_relation_id="${row.recommendation_relation_id || ''}" class="btn-cta-primary" style="background:#EF4444;">Vendor Fulfilled</button>`;
             } else if (row.action_type === 'apply_agency') {
-                actionBtnHtml = `<button class="btn-submit btn btn-sm btn-warning request_approval" data-row-status="accept" data-row-id="${row.id}" data-row-recommendation_relation_id="${row.recommendation_relation_id || ''}">Apply As Agency</button>`;
+                actionBtnHtml = `<button class="btn-cta-primary request_approval" data-row-status="accept" data-row-id="${row.id}" data-row-recommendation_relation_id="${row.recommendation_relation_id || ''}">Submit Candidates</button>`;
             } else if (row.action_type === 'reject') {
-                actionBtnHtml = `<button data-row-status="accept" data-row-id="${row.id}" data-row-recommendation_relation_id="${row.recommendation_relation_id || ''}" class="btn-submit btn btn-sm btn-danger">Reject</button>`;
+                actionBtnHtml = `<button data-row-status="accept" data-row-id="${row.id}" data-row-recommendation_relation_id="${row.recommendation_relation_id || ''}" class="btn-cta-primary" style="background:#EF4444;">Reject</button>`;
             } else if (row.action_type === 'under_review') {
-                actionBtnHtml = `<button data-row-status="accept" data-row-id="${row.id}" data-row-recommendation_relation_id="${row.recommendation_relation_id || ''}" class="btn-submit btn btn-sm btn-warning">Under Review</button>`;
+                actionBtnHtml = `<button data-row-status="accept" data-row-id="${row.id}" data-row-recommendation_relation_id="${row.recommendation_relation_id || ''}" class="btn-cta-primary" style="background:#F59E0B;">Under Review</button>`;
             } else if (row.action_type === 'vendor_limit') {
-                actionBtnHtml = `<button data-row-status="accept" data-row-id="${row.id}" data-row-recommendation_relation_id="${row.recommendation_relation_id || ''}" class="btn-submit btn btn-sm btn-danger">Vendor Limit</button>`;
+                actionBtnHtml = `<button data-row-status="accept" data-row-id="${row.id}" data-row-recommendation_relation_id="${row.recommendation_relation_id || ''}" class="btn-cta-primary" style="background:#EF4444;">Vendor Limit</button>`;
             } else if (row.action_type === 'view_job' && row.view_job_url) {
-                actionBtnHtml = `<div class="d-flex my-4"><a href="${row.view_job_url}" class="btn-submit btn btn-sm btn-info">View Job</a></div>`;
+                actionBtnHtml = `<a href="${row.view_job_url}" class="btn-cta-primary text-center">View Job</a>`;
+            } else if (typeLabel === 'Contract') {
+                actionBtnHtml = `<button data-row-id="${row.id}" data-mod="${row.mod}" data-cur="${row.cur}" class="btn-cta-primary btn-cta-purple open-bench-talents">Submit Contract Candidates</button>`;
+            } else if (typeLabel === 'Bench Talent' || row.public_market_status === 2) {
+                actionBtnHtml = `<button data-row-id="${row.id}" data-mod="${row.mod}" data-cur="${row.cur}" class="btn-cta-primary btn-cta-orange open-bench-talents">Match from Your Bench</button>`;
             } else {
-                actionBtnHtml = `<button data-row-id="${row.id}" data-mod="${row.mod}" data-cur="${row.cur}" class="btn btn-primary btn-submit open-bench-talents">Send Bench Request</button>`;
+                actionBtnHtml = `<button data-row-id="${row.id}" data-mod="${row.mod}" data-cur="${row.cur}" class="btn-cta-primary open-bench-talents">Submit Candidates</button>`;
             }
 
-            let companySizeText = (row.company_size_from >= 10000) ? `${row.company_size_from}+ Employees` : `${row.company_size_from} - ${row.company_size} Employees`;
+            // ── Commercial Terms subcard (Col 5) ──
+            let termsTitle = 'Commercial Terms';
+            let termsRows = '';
+            const ct = row.commercial_terms;
+
+            if (typeLabel === 'Contract') {
+                let billingRate = (ct && ct.billing_rate) ? `₹${(ct.billing_rate/1000).toFixed(0)}K – ₹1.2L / Month` : '₹80K – ₹1.2L / Month';
+                let billingModel = (ct && ct.billing_model) ? ct.billing_model : 'Monthly';
+                let payTerms = (ct && ct.payment_days) ? `${ct.payment_days} Days` : '30 Days';
+                termsRows = `
+                    <div class="jc-ct-row"><span class="jc-ct-label">Billing Model</span><span class="jc-ct-val">${billingModel}</span></div>
+                    <div class="jc-ct-row"><span class="jc-ct-label">Billing Rate</span><span class="jc-ct-val">${billingRate}</span></div>
+                    <div class="jc-ct-row"><span class="jc-ct-label">Payment Terms</span><span class="jc-ct-val">${payTerms}</span></div>`;
+            } else if (typeLabel === 'Bench Talent' || row.public_market_status === 2) {
+                termsTitle = 'Requirement Details';
+                termsRows = `
+                    <div class="jc-ct-row"><span class="jc-ct-label">Deployment Type</span><span class="jc-ct-val">Bench</span></div>
+                    <div class="jc-ct-row"><span class="jc-ct-label">Work Mode</span><span class="jc-ct-val">${row.work_type || 'Remote'}</span></div>
+                    <div class="jc-ct-row"><span class="jc-ct-label">Availability</span><span class="jc-ct-val">Immediate</span></div>`;
+            } else {
+                let hiringFee = (ct && ct.hiring_fee_pct) ? `${ct.hiring_fee_pct}% of CTC` : '8.33% of CTC';
+                let replacement = (ct && ct.replacement_days) ? `${ct.replacement_days} Days` : '90 Days';
+                let payTerms = (ct && ct.payment_days) ? `${ct.payment_days} Days` : '30 Days';
+                termsRows = `
+                    <div class="jc-ct-row"><span class="jc-ct-label">Hiring Fee</span><span class="jc-ct-val">${hiringFee}</span></div>
+                    <div class="jc-ct-row"><span class="jc-ct-label">Replacement</span><span class="jc-ct-val">${replacement}</span></div>
+                    <div class="jc-ct-row"><span class="jc-ct-label">Payment Terms</span><span class="jc-ct-val">${payTerms}</span></div>`;
+            }
+
+            // ── Salary display ──
+            let salaryDisplay = `${row.salary_currency}${row.min_salary} – ${row.max_salary} / ${row.salary_mode_short}`;
+
+            // ── Location display ──
+            let locationText = row.work_type === 'Remote' ? 'Remote' : (row.industry_name ? row.industry_name : 'Noida, India');
+            if (row.work_type === 'Hybrid' || row.work_type === 'Work From Office') {
+                locationText = row.industry_name ? `${row.industry_name}, India` : 'Noida, India';
+            }
+
+            // ── Posted date display ──
+            let postedDate = row.created_at_formatted ? row.created_at_formatted.split(' (')[0] : '21 Apr 2026';
+
+            // ── Subtitle text (no company name) ──
+            let subText = `Verified Client · ${row.department ? row.department : 'Direct Requirement'}`;
 
             return `
             <div class="job-card">
-                <div class="job-main-info">
-                    <div class="job-header-row">
-                        <div class="job-icon ${bgTextDecore}">${strVal.toUpperCase()}</div>
-                        <div class="job-details">
-                            <h2>${row.title_short}</h2>
-                            <div class="job-dept">Department: ${row.department}</div>
-                        </div>
+
+                <!-- ── COL 1: Title, Badges, Subtitle, Skills ── -->
+                <div class="jc-col-main">
+                    <div class="jc-badges-row">
+                        <span class="jc-badge ${statusBadgeClass}">
+                            <span class="jc-dot-mini"></span>${row.status_label || 'OPEN'}
+                        </span>
+                        <span class="jc-badge ${typeBadgeClass}">${typeLabel}</span>
+                        <span class="jc-req-id">${row.req_id}</span>
                     </div>
+
+                    <h2 class="jc-job-title" title="${row.title}">${row.title_short || row.title}</h2>
+                    
+                    <div class="jc-job-sub">
+                        <i class="fa-regular fa-building jc-sub-icon"></i>
+                        <span>${subText}</span>
+                    </div>
+
                     <div class="skills-row">${skillTagsHtml}</div>
-                    <div class="bench-match-box open-bench-talents" data-row-id="${row.id}" data-mod="${row.mod}" data-cur="${row.cur}" role="button" tabindex="0" title="View matching bench talents">
-                        <i class="fa-solid fa-user-plus bench-icon"></i>
-                        <div class="bench-text">
-                            <h4>Your Bench Match</h4>
-                            <p>You have ${row.bench_match_count} matching candidates</p>
-                        </div>
-                        <i class="fa-solid fa-chevron-right" style="margin-left: auto; color: #5E6C84;"></i>
+                </div>
+
+                <!-- ── COL 2: Meta Info (Icons + Data ONLY, NO Headings) ── -->
+                <div class="jc-col-meta">
+                    <div class="jc-meta-item" title="Location">
+                        <i class="fa-solid fa-location-dot"></i>
+                        <span>${locationText}</span>
+                    </div>
+                    <div class="jc-meta-item" title="Work Mode">
+                        <i class="fa-solid fa-laptop"></i>
+                        <span>${row.work_type}</span>
+                    </div>
+                    <div class="jc-meta-item" title="Experience">
+                        <i class="fa-regular fa-user"></i>
+                        <span>${row.min_exp} – ${row.max_exp} Years</span>
+                    </div>
+                    <div class="jc-meta-item" title="Openings">
+                        <i class="fa-solid fa-users"></i>
+                        <span>${row.total_positions} Openings</span>
+                    </div>
+                    <div class="jc-meta-item" title="Salary">
+                        <i class="fa-solid fa-indian-rupee-sign"></i>
+                        <span>${salaryDisplay}</span>
+                    </div>
+                    <div class="jc-meta-item" title="Industry">
+                        <i class="fa-regular fa-building"></i>
+                        <span>${row.industry_name || row.department || 'IT Services'}</span>
                     </div>
                 </div>
-                <div class="job-meta-info">
-                    <div class="meta-row"><i class="fa-regular fa-location-dot"></i><div class="meta-content"><p>Location</p><span>${row.work_type}</span></div></div>
-                    <div class="meta-row"><i class="fa-solid fa-laptop-house"></i><div class="meta-content"><p>Work Mode</p><span>${row.work_type}</span></div></div>
-                    <div class="meta-row"><i class="fa-regular fa-clock"></i><div class="meta-content"><p>Experience</p><span>${row.min_exp} Y - ${row.max_exp} Y</span></div></div>
-                    <div class="meta-row"><i class="fa-regular fa-clock"></i><div class="meta-content"><p>Openings</p><span>${row.total_positions}</span></div></div>
+
+                <!-- ── COL 3: Dates & Status ── -->
+                <div class="jc-col-dates">
+                    <div class="jc-date-item">
+                        <i class="fa-regular fa-calendar"></i>
+                        <div class="jc-date-content">
+                            <span class="jc-date-label">Posted</span>
+                            <span class="jc-date-val">${postedDate}</span>
+                        </div>
+                    </div>
+                    <div class="jc-date-item">
+                        <i class="fa-solid fa-rotate"></i>
+                        <div class="jc-date-content">
+                            <span class="jc-date-label">Last Updated</span>
+                            <span class="jc-date-val jc-text-green">${row.updated_at_ago || 'Recently'}</span>
+                        </div>
+                    </div>
+                    <div class="jc-date-item">
+                        <i class="fa-regular fa-clock"></i>
+                        <div class="jc-date-content">
+                            <span class="jc-date-label">Submission Deadline</span>
+                            <span class="jc-date-val ${row.submission_deadline_formatted ? 'jc-text-red' : 'jc-text-green'}">
+                                ${row.submission_deadline_formatted || 'Open till filled'}
+                            </span>
+                        </div>
+                    </div>
+                    <div class="jc-status-row">
+                        <span class="jc-date-label">Status</span>
+                        <span class="jc-status-indicator">
+                            <span class="${statusDotClass}"></span>
+                            ${statusText}
+                        </span>
+                    </div>
                 </div>
-                <div class="job-meta-info-2">
-                    <div class="meta-row"><i class="fa-solid fa-industry"></i><div class="meta-content"><p>Industry</p><span>${row.industry_name || ''}</span></div></div>
-                    <div class="meta-row"><i class="fa-regular fa-building"></i><div class="meta-content"><p>Company Size</p><span>${companySizeText}</span></div></div>
-                    <div class="meta-row"><i class="fa-regular fa-calendar"></i><div class="meta-content"><p>Posted</p><span>${row.created_at_formatted}</span></div></div>
-                    <div class="meta-row"><i class="fa-regular fa-calendar"></i><div class="meta-content"><p>Salary</p><span>${row.salary_currency} ${row.min_salary} - ${row.max_salary} / ${row.salary_mode_short}</span></div></div>
+
+                <!-- ── COL 4: Sub-card 1 (Your Bench Match) ── -->
+                <div class="jc-subcard jc-bench-subcard open-bench-talents"
+                     data-row-id="${row.id}" data-mod="${row.mod}" data-cur="${row.cur}"
+                     role="button" tabindex="0" title="View matching bench talents">
+                    <div class="jc-bench-header">
+                        <i class="fa-solid fa-user-plus"></i>
+                        <span>Your Bench Match</span>
+                    </div>
+                    <div class="jc-bench-num">${row.bench_match_count || 0}</div>
+                    <div class="jc-bench-desc">Matching candidates</div>
+                    <div class="jc-subcard-link">View Matches &rarr;</div>
                 </div>
-                <div class="job-actions">
+
+                <!-- ── COL 5: Sub-card 2 (Commercial Terms / Details) ── -->
+                <div class="jc-subcard jc-terms-subcard">
+                    <div class="jc-subcard-title">${termsTitle}</div>
+                    <div class="jc-terms-rows">
+                        ${termsRows}
+                    </div>
+                    <a class="jc-subcard-link client-terms-listing-find-job"
+                       data-row-id="${row.id}" data-row-recommendation_relation_id="${row.recommendation_relation_id || ''}">
+                       View Full Terms &rarr;
+                    </a>
+                </div>
+
+                <!-- ── COL 6: Action Buttons Column ── -->
+                <div class="jc-col-actions">
                     ${actionBtnHtml}
-                    <button class="btn-view market-show-detail" data-row-id="${row.id}">View Requirement</button>
-                    <button class="btn-view client-terms-listing-find-job" data-row-id="${row.id}" data-row-recommendation_relation_id="${row.recommendation_relation_id || ''}">View T&C</button>
+                    <button class="btn-cta-secondary market-show-detail" data-row-id="${row.id}">View Requirement</button>
+                    <button class="btn-cta-secondary client-terms-listing-find-job" data-row-id="${row.id}" data-row-recommendation_relation_id="${row.recommendation_relation_id || ''}">View Terms</button>
+                    <div class="jc-actions-footer">
+                        <i class="fa-regular fa-bookmark jc-icon-btn" title="Save Job"></i>
+                        <i class="fa-solid fa-ellipsis-vertical jc-icon-btn" title="More Options"></i>
+                    </div>
                 </div>
+
             </div>`;
         }
 
