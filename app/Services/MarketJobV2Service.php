@@ -142,12 +142,16 @@ class MarketJobV2Service
         // Status Filter — only active jobs in marketplace
         $filter[] = ['term' => ['status' => 'active']];
 
-        // Tab Filtering (All Agencies Jobs / Fulltime / Contract / Agency Requests)
+        // Tab Filtering (All Agencies Jobs / Fulltime / Contract / Freelance / Part-Time / Agency Requests)
         $customTab = $request->input('custom_tab');
         if ($customTab === 'fulltime') {
             $filter[] = ['term' => ['employment_type' => 0]];
         } elseif ($customTab === 'contract') {
             $filter[] = ['term' => ['employment_type' => 1]];
+        } elseif ($customTab === 'freelance') {
+            $filter[] = ['term' => ['employment_type' => 2]];
+        } elseif ($customTab === 'parttime') {
+            $filter[] = ['term' => ['employment_type' => 3]];
         } elseif ($customTab === 'agency_request') {
             $filter[] = ['term' => ['public_market_status' => 2]];
         }

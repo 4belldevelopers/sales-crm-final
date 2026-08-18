@@ -95,7 +95,9 @@
 
 .mjh-badge-blue   { background: var(--jc-blue-bg); color: var(--jc-blue-text); }
 .mjh-badge-green  { background: var(--jc-green-bg); color: var(--jc-green-text); }
+.mjh-badge-amber  { background: #FEF3C7; color: #D97706; }
 .mjh-badge-purple { background: var(--jc-purple-bg); color: var(--jc-purple-text); }
+.mjh-badge-indigo { background: #E0E7FF; color: #4338CA; }
 .mjh-badge-orange { background: var(--jc-orange-bg); color: var(--jc-orange-text); }
 
 /* ── Container ────────────────────────────────── */
@@ -184,10 +186,10 @@
 .jc-badge-open    { background: var(--jc-green-bg); color: var(--jc-green-text); }
 .jc-badge-hold    { background: var(--jc-yellow-bg); color: var(--jc-yellow-text); }
 .jc-badge-ft      { background: var(--jc-blue-bg); color: var(--jc-blue-text); }
-.jc-badge-ct      { background: var(--jc-purple-bg); color: var(--jc-purple-text); }
-.jc-badge-bench   { background: var(--jc-orange-bg); color: var(--jc-orange-text); }
-.jc-badge-fl      { background: #FEF3C7; color: #D97706; }
+.jc-badge-ct      { background: #FEF3C7; color: #D97706; }
+.jc-badge-fl      { background: var(--jc-purple-bg); color: var(--jc-purple-text); }
 .jc-badge-pt      { background: #E0E7FF; color: #4338CA; }
+.jc-badge-bench   { background: var(--jc-orange-bg); color: var(--jc-orange-text); }
 
 .jc-req-id {
     font-size: 10px;

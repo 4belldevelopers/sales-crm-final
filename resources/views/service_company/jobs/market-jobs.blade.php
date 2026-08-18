@@ -549,9 +549,19 @@
                             <span class="mjh-tab-badge mjh-badge-green">{{ number_format($fulltime_jobs ?? 0) }}</span>
                         </div>
                         <div class="mjh-tab-item" data-tab="contract">
-                            <i class="fa-solid fa-clock mjh-tab-icon"></i>
+                            <i class="fa-solid fa-file-contract mjh-tab-icon"></i>
                             <span>Contract Hiring Jobs</span>
-                            <span class="mjh-tab-badge mjh-badge-purple">{{ number_format($contract_jobs ?? 0) }}</span>
+                            <span class="mjh-tab-badge mjh-badge-amber">{{ number_format($contract_jobs ?? 0) }}</span>
+                        </div>
+                        <div class="mjh-tab-item" data-tab="freelance">
+                            <i class="fa-solid fa-laptop-code mjh-tab-icon"></i>
+                            <span>Freelance Jobs</span>
+                            <span class="mjh-tab-badge mjh-badge-purple">{{ number_format($freelance_jobs ?? 0) }}</span>
+                        </div>
+                        <div class="mjh-tab-item" data-tab="parttime">
+                            <i class="fa-solid fa-business-time mjh-tab-icon"></i>
+                            <span>Part-time Jobs</span>
+                            <span class="mjh-tab-badge mjh-badge-indigo">{{ number_format($parttime_jobs ?? 0) }}</span>
                         </div>
                         <div class="mjh-tab-item" data-tab="agency_request">
                             <i class="fa-solid fa-handshake mjh-tab-icon"></i>

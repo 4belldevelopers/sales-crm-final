@@ -3589,6 +3589,20 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
                             ],
                         ],
                     ],
+                    'freelance_jobs' => [
+                        'filter' => [
+                            'term' => [
+                                'employment_type' => 2,
+                            ],
+                        ],
+                    ],
+                    'parttime_jobs' => [
+                        'filter' => [
+                            'term' => [
+                                'employment_type' => 3,
+                            ],
+                        ],
+                    ],
                     'agency_requests' => [
                         'filter' => [
                             'term' => [
@@ -3605,6 +3619,8 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
         $this->all_jobs = $aggs['all_jobs']['value'] ?? 0;
         $this->fulltime_jobs = $aggs['fulltime_jobs']['doc_count'] ?? 0;
         $this->contract_jobs = $aggs['contract_jobs']['doc_count'] ?? 0;
+        $this->freelance_jobs = $aggs['freelance_jobs']['doc_count'] ?? 0;
+        $this->parttime_jobs = $aggs['parttime_jobs']['doc_count'] ?? 0;
         $this->agency_requests = $aggs['agency_requests']['doc_count'] ?? 0;
 
         // Legacy compatibility alias
