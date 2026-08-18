@@ -3748,14 +3748,14 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
     public function marketrequestaadded(Request $request)
     {
         // dd($request->all());
-        $this->job = Job::find($request->jobId);
+        $this->job = Job::withoutGlobalScopes()->find($request->jobId);
         $from_company_id = $this->job->company_id;
         $from_user_id = $this->user->id;
         $to_company_id = auth()->user()->company_id;
 
         $current_company_id = $to_company_id;
         $jobid = $request->jobId;
-        $jobRow = Job::find($request->jobId);
+        $jobRow = Job::withoutGlobalScopes()->find($request->jobId);
 
         // dd($from_company_id,$to_company_id );
 
@@ -3771,7 +3771,7 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
         $resultCount = DB::table('market_job_added_count')->where('job_id', '=', $jobidGet)->where('status', '=', 0)->count();
         $exceeded = 20;
         if ($resultCount > $exceeded) {
-            $jobsave = Job::find($jobidGet);
+            $jobsave = Job::withoutGlobalScopes()->find($jobidGet);
             $jobsave->public_market_status = 4;
             $jobsave->save();
 
@@ -4063,7 +4063,7 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
             $relationId = DB::getPdo()->lastInsertId();
 
             $rec_relation_id = (int) $relationId;
-            $jobTerms = Job::findOrFail($jobid);
+            $jobTerms = Job::withoutGlobalScopes()->find($jobid);
             $companyTerms = Company::withoutGlobalScope('company')->findOrFail($jobTerms->company_id);
             $global_settings = DB::table('global_settings')->first();
             $companiesDetails = DB::table('recommendation_relation')
@@ -4098,7 +4098,7 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
                 ->where('job_id', $jobid)
                 ->first();
 
-            $jobTerms = Job::findOrFail($jobid);
+            $jobTerms = Job::withoutGlobalScopes()->find($jobid);
             $companyTerms = Company::withoutGlobalScope('company')->findOrFail($jobTerms->company_id);
             $global_settings = DB::table('global_settings')->first();
             $companiesDetails = DB::table('recommendation_relation')
@@ -4275,7 +4275,7 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
         $resultCount = DB::table('market_job_added_count')->where('job_id', '=', $jobidGet)->where('status', '=', 0)->count();
         $exceeded = 20;
         if ($resultCount == $exceeded) {
-            $jobsavefinal = Job::find($jobidGet);
+            $jobsavefinal = Job::withoutGlobalScopes()->find($jobidGet);
             $jobsavefinal->public_market_status = 4;
             $jobsavefinal->save();
         }
@@ -5043,7 +5043,7 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
 
     public function show($id)
     {
-        $this->job = Job::find($id);
+        $this->job = Job::withoutGlobalScopes()->find($id);
 
         return $this->job;
     }
@@ -6847,7 +6847,7 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
         $id = encrypt($currentJobId);
         $oprnlink = url('/service_company/mail_jobs_ajax/'.$id.'/');
 
-        $job = Job::find($currentJobId);
+        $job = Job::withoutGlobalScopes()->find($currentJobId);
         $employmentType = GeneralMethod::employmentType();
         $employment_type = (int) $job->employment_type;
         $employment_type = $employmentType[$employment_type];
@@ -12049,7 +12049,7 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
 
         $rec_relation_id = (int) request()->rec_relation_id;
         $id = auth()->user()->company_id;
-        $jobTerms = Job::findOrFail($jobId);
+        $jobTerms = Job::withoutGlobalScopes()->find($jobId);
         $companyTerms = Company::withoutGlobalScope('company')->findOrFail($jobTerms->company_id);
         // dd($companyTerms,$jobTerms->company_id);
         $global_settings = DB::table('global_settings')->first();
@@ -12256,7 +12256,7 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
 
             $job_metronics_skills = DB::table('job_metronics_skills')->select('job_metronics_skills.skill_name')->where('job_id', '=', $jobId)->where('company_id', '=', $from_company_id)->get();
             if ($job_metronics_skills) {
-                $job = Job::findOrFail($jobId);
+                $job = Job::withoutGlobalScopes()->find($jobId);
                 foreach ($job_metronics_skills as $skills) {
                     $insertArr = ['company_id' => $current_company_id, 'job_id' => $jobId, 'skill_name' => $skills->skill_name];
                     if (! DB::table('job_metronics_skills')->where('company_id', '=', $current_company_id)->where('skill_name', '=', $skills->skill_name)->where('job_id', '=', $jobId)->exists()) {
@@ -12732,7 +12732,7 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
                 DB::table('job_assign')->insert($values);
 
                 /** Start send mail add job accept request */
-                $job = Job::find($jobId);
+                $job = Job::withoutGlobalScopes()->find($jobId);
                 $employmentType = GeneralMethod::employmentType();
                 $employment_type = (int) $job->employment_type;
                 $employment_type = $employmentType[$employment_type];
@@ -12989,7 +12989,7 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
     {
         $recommendation_relation_id = (int) request()->recommendation_relation_id;
         $this->currentJobId = $id;
-        $jobTerms = Job::findOrFail($id);
+        $jobTerms = Job::withoutGlobalScopes()->find($id); 
         $companyTerms = Company::withoutGlobalScope('company')->findOrFail($jobTerms->company_id);
         $global_settings = DB::table('global_settings')->first();
         $companiesDetails = DB::table('recommendation_relation')
@@ -13092,7 +13092,7 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
 
         if ($global_settings) {
 
-            $job = Job::findOrFail($jobidGet);
+            $job = Job::withoutGlobalScopes()->find($jobidGet);
 
             if ($job->status == 'inactive' || $job->status == 'hold') {
                 $msg = "Please update the job status from 'Closed/Hold' to 'Hiring' to enable posting for agency partners";
@@ -13428,7 +13428,7 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
 
         $data['status'] = $status;
 
-        $job = Job::find($job_id);
+        $job = Job::withoutGlobalScopes()->find($job_id);
 
         // A job posted by another company and merely recommended/assigned to
         // this agency (a "Direct Client" job on the Client Jobs tab) is not
@@ -13614,7 +13614,7 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
             $currentJobId = $job_id;
             $currentUserId = auth()->user()->id;
             $max_salary = $min_salary = $max_sal_mode = $min_sal_mode = '';
-            $job = Job::find($currentJobId);
+            $job = Job::withoutGlobalScopes()->find($currentJobId);
             $employmentType = GeneralMethod::employmentType();
             $employment_type = (int) $job->employment_type;
             $employment_type = $employmentType[$employment_type];
@@ -14077,7 +14077,7 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
 
         // dd($jobs); company_id 	submitted_by
 
-        $jobRow = Job::findOrFail($jobId);
+        $jobRow = Job::withoutGlobalScopes()->find($jobId);
         if ((int) $jobs->company_id != (int) $company_id) {
             $insertArr = ['job_id' => $jobId, 'job_application_id' => $condidateId, 'rec_candidate_assign_id' => $recomndedId, 'status_id' => 2, 'master_status_id' => $master_status_id, 'thirdparty_company_id' => $jobs->company_id, 'child_status_id' => 0, 'company_id' => $company_id, 'submitted_by' => $user_id];
         } else {
