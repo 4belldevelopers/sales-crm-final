@@ -3518,6 +3518,8 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
 
     public function marketJobs($id = null)
     {
+        $this->user = $this->user ?? auth()->user();
+        $this->userPermissions = $this->userPermissions ?? ($this->user && method_exists($this->user, 'permissionList') ? $this->user->permissionList() : []);
         $company_id = auth()->user()->company_id;
         $this->pageTitle = __('Market Jobs');
         // Distinct key: this stores strings (plucked names), not objects — avoids collision with global_countries_list which stores full rows.
