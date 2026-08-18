@@ -39,6 +39,65 @@
     --jc-yellow-text: #A16207;
 }
 
+/* ── Horizontal Tabs Bar ──────────────────────── */
+.mjh-tabs-bar {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    background: #FFFFFF;
+    border: 1px solid var(--jc-border);
+    border-radius: 10px;
+    padding: 0 16px;
+    margin-bottom: 12px;
+    overflow-x: auto;
+    box-sizing: border-box;
+}
+
+.mjh-tab-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 4px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--jc-text-muted);
+    cursor: pointer;
+    border-bottom: 2.5px solid transparent;
+    transition: all 0.15s ease;
+    white-space: nowrap;
+    user-select: none;
+    font-family: 'Poppins', sans-serif;
+    text-decoration: none;
+}
+
+.mjh-tab-item:hover {
+    color: var(--jc-text-main);
+}
+
+.mjh-tab-item.active {
+    color: var(--jc-primary);
+    font-weight: 600;
+    border-bottom-color: var(--jc-primary);
+}
+
+.mjh-tab-icon {
+    font-size: 12.5px;
+    opacity: 0.85;
+}
+
+.mjh-tab-badge {
+    font-size: 10.5px;
+    font-weight: 600;
+    padding: 2px 7px;
+    border-radius: 12px;
+    line-height: 1.2;
+}
+
+.mjh-badge-blue   { background: var(--jc-blue-bg); color: var(--jc-blue-text); }
+.mjh-badge-green  { background: var(--jc-green-bg); color: var(--jc-green-text); }
+.mjh-badge-purple { background: var(--jc-purple-bg); color: var(--jc-purple-text); }
+.mjh-badge-orange { background: var(--jc-orange-bg); color: var(--jc-orange-text); }
+
 /* ── Container ────────────────────────────────── */
 #marketJobLists {
     display: flex;
@@ -51,6 +110,7 @@
 .job-card {
     background: var(--jc-bg);
     border: 1px solid var(--jc-border);
+    border-left: 4px solid #10B981;
     border-radius: 12px;
     padding: 14px 16px;
     display: grid;
@@ -62,6 +122,22 @@
     font-family: 'Poppins', sans-serif;
     box-sizing: border-box;
     width: 100%;
+}
+
+.job-card.jc-accent-green {
+    border-left: 4px solid #10B981;
+}
+
+.job-card.jc-accent-yellow {
+    border-left: 4px solid #F59E0B;
+}
+
+.job-card.jc-accent-orange {
+    border-left: 4px solid #EA580C;
+}
+
+.job-card.jc-accent-blue {
+    border-left: 4px solid #2563EB;
 }
 
 .job-card:hover {
