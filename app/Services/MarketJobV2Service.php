@@ -12,6 +12,9 @@ use Illuminate\Http\Request;
  * high-performance Elasticsearch queries, handling single-pass bulk fetching of relation data,
  * and preparing denormalized job items for listing display without runtime N+1 database queries.
  *
+ * Updated (2026-08-18): Added getCommercialTermsBulk() single-pass Redis fetch for the new
+ * 5-column card design's inline Commercial Terms column. Zero DB queries on warm Redis cache.
+ *
  * Tenancy Note: Tenant isolation is enforced via Elasticsearch `must_not` term filter on `comId`
  * ($companyId), ensuring recruiters never view or apply to their own company's job postings.
  */
@@ -226,9 +229,16 @@ class MarketJobV2Service
         // SINGLE-PASS BULK FETCH: Bulk load Bench Candidate Match Counts for all jobs on current page (0 DB queries)
         $benchCountsMap = self::getBenchCandidateCountsBulk($companyId, $rawHits);
 
+        // SINGLE-PASS BULK FETCH: Bulk load Commercial Terms for all unique client companies on
+        // current page. Reads from Redis (AgencyCommercialTermsService, 1hr TTL) — zero DB queries
+        // on warm cache. Used by the new 5-column card's inline Commercial Terms column.
+        $uniqueComIds = array_values(array_unique(array_filter(array_column($rawHits, 'comId'))));
+        $commercialTermsMap = self::getCommercialTermsBulk($uniqueComIds);
+
         // Pre-attach Bulk Data onto Job Hit Objects
-        $processedData = array_map(function ($hit) use ($relationsMap, $benchCountsMap) {
+        $processedData = array_map(function ($hit) use ($relationsMap, $benchCountsMap, $commercialTermsMap) {
             $jobId = $hit['id'] ?? null;
+            $hitComId = (int) ($hit['comId'] ?? 0);
             $relation = $relationsMap[$jobId] ?? (object) [];
 
             $hit['v2_relation'] = $relation;
@@ -237,6 +247,7 @@ class MarketJobV2Service
             $hit['v2_from_company_id'] = $relation->from_company_id ?? null;
             $hit['v2_to_company_id'] = $relation->to_company_id ?? null;
             $hit['v2_bench_match_count'] = $benchCountsMap[$jobId] ?? 0;
+            $hit['v2_commercial_terms'] = $commercialTermsMap[$hitComId] ?? null;
 
             return $hit;
         }, $rawHits);
@@ -306,8 +317,8 @@ class MarketJobV2Service
      * match counts for all jobs on the current page in 1 round trip with ZERO MySQL queries.
      * Tenancy Note: Filtered by tenant $companyId, `condidate_type` = 'bench_condidate', status = 2.
      *
-     * @param int $companyId Tenant company ID
-     * @param array $rawHits Raw job hits from ats_jobs search
+     * @param  int  $companyId  Tenant company ID
+     * @param  array  $rawHits  Raw job hits from ats_jobs search
      * @return array Map of [job_id => match_count]
      */
     public static function getBenchCandidateCountsBulk(int $companyId, array $rawHits): array
@@ -407,6 +418,55 @@ class MarketJobV2Service
             }
         } catch (\Throwable $e) {
             \Log::error('getBenchCandidateCountsBulk failed: '.$e->getMessage());
+        }
+
+        return $map;
+    }
+
+    /**
+     * getCommercialTermsBulk
+     *
+     * Intent: Bulk-fetch commercial terms for a set of client company IDs using the
+     * AgencyCommercialTermsService which reads from Redis cache (1hr TTL). Returns a
+     * simplified summary object per company containing only the 5 fields needed by
+     * the card UI inline Commercial Terms column. Zero DB queries on cache hit.
+     *
+     * Tenancy Note: Terms are scoped to each individual client company (comId), not the
+     * viewing agency. The viewing agency sees the posting company's fee structure.
+     *
+     * @param  int[]  $comIds  Array of unique client company IDs from the current page hits
+     * @return array Map of [comId => simplified_terms_array]
+     */
+    public static function getCommercialTermsBulk(array $comIds): array
+    {
+        if (empty($comIds)) {
+            return [];
+        }
+
+        /** @var \App\Services\AgencyCommercialTermsService $termsService */
+        $termsService = app(\App\Services\AgencyCommercialTermsService::class);
+        $map = [];
+
+        foreach ($comIds as $comId) {
+            $comId = (int) $comId;
+            if ($comId <= 0) {
+                continue;
+            }
+            try {
+                $terms = $termsService->getForCompany($comId);
+                // Return only the 5 fields the card UI needs — keep payload minimal
+                $map[$comId] = [
+                    'hiring_fee_pct' => $terms->fulltime_success_fee_percentage ?? 8.33,
+                    'replacement_days' => $terms->fulltime_replacement_period_days ?? 90,
+                    'payment_days' => $terms->fulltime_payment_terms_days ?? 30,
+                    'billing_model' => ucfirst($terms->contract_billing_model ?? 'monthly'),
+                    'billing_rate' => $terms->contract_rate_amount ?? null,
+                ];
+            } catch (\Throwable $e) {
+                \Log::warning("getCommercialTermsBulk: failed for comId={$comId}: ".$e->getMessage());
+                // Graceful fallback — card will show "View Full Terms" link only
+                $map[$comId] = null;
+            }
         }
 
         return $map;
