@@ -139,8 +139,8 @@ class MarketJobV2Service
                 $sort[] = ['id' => ['order' => 'desc']];
         }
 
-        // Status Filter — allow active, hold, inactive (all visible marketplace statuses)
-        $filter[] = ['terms' => ['status' => ['active', 'hold', 'inactive', '2']]];
+        // Status Filter — only active jobs in marketplace
+        $filter[] = ['term' => ['status' => 'active']];
 
         // Tab Filtering (All Agencies Jobs / Fulltime / Contract / Agency Requests)
         $customTab = $request->input('custom_tab');
