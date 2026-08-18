@@ -12989,8 +12989,11 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
     {
         $recommendation_relation_id = (int) request()->recommendation_relation_id;
         $this->currentJobId = $id;
-        $jobTerms = Job::findOrFail($id);
-        $companyTerms = Company::withoutGlobalScope('company')->findOrFail($jobTerms->company_id);
+        $jobTerms = Job::withoutGlobalScopes()->find($id);
+        if (! $jobTerms) {
+            return Reply::error('Job requirement not found.');
+        }
+        $companyTerms = Company::withoutGlobalScope('company')->find($jobTerms->company_id);
         $global_settings = DB::table('global_settings')->first();
         $companiesDetails = DB::table('recommendation_relation')
             ->select('vendor_company.company_name as vendor_company_name', 'client_company.company_name as client_company_name', 'recommendation_relation.accepterms')
@@ -12998,20 +13001,20 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
             ->join('companies as client_company', 'recommendation_relation.from_company_id', '=', 'client_company.id')
             ->where('recommendation_relation.id', '=', $recommendation_relation_id)
             ->first();
-        // dd($companiesDetails);
+
         $terms = '';
-        // dd(count($companiesDetails));
         if ($companiesDetails) {
-            // dd("d");
             $terms .= "By clicking the accept button, {$companiesDetails->vendor_company_name} will accept the rates, terms, and conditions outlined below for the job requirements of {$companiesDetails->client_company_name}.";
-            $companyTerms->terms = $companiesDetails->accepterms ?? null;
+            if ($companyTerms) {
+                $companyTerms->terms = $companiesDetails->accepterms ?? null;
+            }
         }
 
         $terms .= '<p>&nbsp;</p>';
-        $terms .= ($companyTerms->terms) ? $companyTerms->terms : $global_settings->terms;
+        $clientTerms = $companyTerms->terms ?? null;
+        $terms .= ($clientTerms) ? $clientTerms : ($global_settings->terms ?? '');
 
         return Reply::dataOnly(['status' => 'success', 'terms' => $terms]);
-        // dd($jobTerms->company_id,$companyTerms->terms);
     }
 
     public function termshmlistingaccept($id)
