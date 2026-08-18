@@ -224,7 +224,7 @@ class HomeController extends Controller
 
         // $userId = auth()->user()->id;
         $userId = (int) $request->userid;
-        $user = DB::table('users')->select('company_id', 'name')->where('id', $userId)->first();
+        $user = tenant_table('users')->select('company_id', 'name')->where('id', $userId)->first();
 
         $companyId = $user->company_id;
         $username = Str::slug($user->name, '_'); // clean name
@@ -557,7 +557,12 @@ class HomeController extends Controller
 
         if ($request->deleteChk == 'Yes') {
 
-            $deleted = DB::table('interview_questions')->where('id', (int) $request->questionsId)->delete();
+            // TENANCY NOTE: Guard delete query with company_id to prevent cross-tenant deletion
+            $query = DB::table('interview_questions')->where('id', (int) $request->questionsId);
+            if (auth()->check() && ! auth()->user()->is_superadmin && auth()->user()->company_id) {
+                $query->where('company_id', auth()->user()->company_id);
+            }
+            $deleted = $query->delete();
 
             $cachekeys = [
                 'jobDetails_version_user_'.auth()->user()->id,
@@ -784,7 +789,12 @@ class HomeController extends Controller
         $s3Path = str_replace('https://file.jero.works/', '', $resumeUrl);
 
         // Derive candidate name from job_applications (fall back to file basename if not found)
-        $job_application = DB::table('job_applications')->where('id', $id)->first();
+        // TENANCY NOTE: Enforce company_id guard for authenticated tenant users to prevent cross-tenant IDOR
+        $appQuery = DB::table('job_applications')->where('id', $id);
+        if (auth()->check() && ! auth()->user()->is_superadmin && auth()->user()->company_id) {
+            $appQuery->where('company_id', auth()->user()->company_id);
+        }
+        $job_application = $appQuery->first();
         $candidateName = $job_application
             ? 'JERO_'.str_replace(' ', '_', $job_application->full_name)
             : 'JERO_'.pathinfo($s3Path, PATHINFO_FILENAME);
@@ -3659,7 +3669,7 @@ class HomeController extends Controller
             $response = $this->elasticService->getClient()->indices()->create($params);
         }
 
-        $teams = DB::table('users')
+        $teams = tenant_table('users')
             ->leftjoin('role_user', 'role_user.user_id', 'users.id')
             ->leftjoin('roles', 'roles.id', 'role_user.role_id')
             ->leftJoin('users_profile', 'users_profile.user_id', '=', 'users.id')
@@ -5581,7 +5591,7 @@ class HomeController extends Controller
     public function candidateIndexElastic(Request $request)
     {
 
-        $add_job_wise_condidates = DB::table('add_job_wise_condidates')->select('id', 'job_id')->orderByDesc(column: 'created_at')->limit(50)->get();
+        $add_job_wise_condidates = tenant_table('add_job_wise_condidates')->select('id', 'job_id')->orderByDesc(column: 'created_at')->limit(50)->get();
 
         foreach ($add_job_wise_condidates as $add_job_wise) {
             GeneralMethod::JobApplicationsAddEditUpload($add_job_wise->id);

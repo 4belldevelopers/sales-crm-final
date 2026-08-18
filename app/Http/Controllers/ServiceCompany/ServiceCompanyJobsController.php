@@ -84,7 +84,7 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
         $search = $request->input('search');
 
         // Fetch job titles from the database that match the query
-        $jobTitles = DB::table('jd_details')
+        $jobTitles = tenant_table('jd_details')
             ->where('title', 'LIKE', '%'.$search.'%')
             ->where('status', '=', 1)
             ->pluck('title')->toArray(); // Assuming your table is 'jobs' and column is 'title'
@@ -1268,7 +1268,7 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
         }
 
         $search = $request->title;
-        $jobTitles = DB::table('jd_details')
+        $jobTitles = tenant_table('jd_details')
             ->where('title', '=', $search)->where('status', '=', 1)->first();
 
         return Reply::dataOnly(['status' => 'success', 'jd' => @$jobTitles->jd, 'minimum_exp' => round(@$jobTitles->minimum_exp), 'maxmum_exp' => round(@$jobTitles->maxmum_exp), 'skills' => @$jobTitles->skills]);

@@ -136,3 +136,10 @@ if (!function_exists('recruit_plugins')) {
         return session('recruit_plugins');
     }
 }
+
+if (! function_exists('tenant_table')) {
+    function tenant_table(string $table): \Illuminate\Database\Query\Builder
+    {
+        return \App\Helper\TenantDB::table($table);
+    }
+}

@@ -45,4 +45,21 @@ return [
         'secret_key' => env('TURNSTILE_SECRET_KEY', ''),
     ],
 
+    'phonepe' => [
+        'merchant_id' => env('PHONEPE_MERCHANT_ID'),
+        'api_key'     => env('PHONEPE_API_KEY'),
+        'key_index'   => env('PHONEPE_API_KEY_INDEX'),
+        'host_url'    => env('PHONEPE_HOST_URL'),
+    ],
+
+    'openai' => [
+        'api_key' => env('OPENAI_API_KEY'),
+    ],
+
+    'zoom' => [
+        'account_id'    => env('ZOOM_ACCOUNT_ID'),
+        'client_id'     => env('ZOOM_CLIENT_ID'),
+        'client_secret' => env('ZOOM_CLIENT_SECRET'),
+    ],
+
 ];
