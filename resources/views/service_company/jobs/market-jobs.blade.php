@@ -540,27 +540,27 @@
                     <div class="mjh-tabs-bar">
                         <div class="mjh-tab-item active" data-tab="all">
                             <i class="fa-solid fa-briefcase mjh-tab-icon"></i>
-                            <span>All Agencies Jobs</span>
+                            <span>All Jobs</span>
                             <span class="mjh-tab-badge mjh-badge-blue">{{ number_format($all_jobs ?? 0) }}</span>
                         </div>
                         <div class="mjh-tab-item" data-tab="fulltime">
                             <i class="fa-solid fa-user-tie mjh-tab-icon"></i>
-                            <span>Fulltime Hiring Jobs</span>
+                            <span>Full-Time</span>
                             <span class="mjh-tab-badge mjh-badge-green">{{ number_format($fulltime_jobs ?? 0) }}</span>
                         </div>
                         <div class="mjh-tab-item" data-tab="contract">
                             <i class="fa-solid fa-file-contract mjh-tab-icon"></i>
-                            <span>Contract Hiring Jobs</span>
+                            <span>Contract</span>
                             <span class="mjh-tab-badge mjh-badge-amber">{{ number_format($contract_jobs ?? 0) }}</span>
                         </div>
                         <div class="mjh-tab-item" data-tab="freelance">
                             <i class="fa-solid fa-laptop-code mjh-tab-icon"></i>
-                            <span>Freelance Jobs</span>
+                            <span>Freelance</span>
                             <span class="mjh-tab-badge mjh-badge-purple">{{ number_format($freelance_jobs ?? 0) }}</span>
                         </div>
                         <div class="mjh-tab-item" data-tab="parttime">
                             <i class="fa-solid fa-business-time mjh-tab-icon"></i>
-                            <span>Part-time Jobs</span>
+                            <span>Part-Time</span>
                             <span class="mjh-tab-badge mjh-badge-indigo">{{ number_format($parttime_jobs ?? 0) }}</span>
                         </div>
                         <div class="mjh-tab-item" data-tab="agency_request">
