@@ -12989,16 +12989,11 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
     {
         $recommendation_relation_id = (int) request()->recommendation_relation_id;
         $this->currentJobId = $id;
-<<<<<<< HEAD
-        $jobTerms = Job::withoutGlobalScopes()->find($id); 
-        $companyTerms = Company::withoutGlobalScope('company')->findOrFail($jobTerms->company_id);
-=======
         $jobTerms = Job::withoutGlobalScopes()->find($id);
         if (! $jobTerms) {
             return Reply::error('Job requirement not found.');
         }
         $companyTerms = Company::withoutGlobalScope('company')->find($jobTerms->company_id);
->>>>>>> 5952503898baa0e76a03e31b35680dc8fb68eb65
         $global_settings = DB::table('global_settings')->first();
         $companiesDetails = DB::table('recommendation_relation')
             ->select('vendor_company.company_name as vendor_company_name', 'client_company.company_name as client_company_name', 'recommendation_relation.accepterms')
