@@ -1117,7 +1117,7 @@
    			oLanguage 		: {
    									sLengthMenu: "_MENU_",
    								},
-           	"pageLength": 25,
+           	"pageLength": 10,
    			colReorder		: true,
       		ajax			: {'url' : '{!! route('staffing_company.jobs.data') !!}',
 								"data"			: function ( d )

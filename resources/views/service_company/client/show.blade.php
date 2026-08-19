@@ -2540,7 +2540,7 @@ use Carbon\Carbon;
     //     oLanguage: {
     //         sLengthMenu: "_MENU_",
     //     },
-    //     "pageLength": 25,
+    //     "pageLength": 10,
     //     colReorder: true,
     //     ajax: {
     //         'url': '{!! route('service_company.jobs.data') !!}',

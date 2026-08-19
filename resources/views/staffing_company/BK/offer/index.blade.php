@@ -346,7 +346,7 @@ $( document ).ready(function() {
                 destroy: true,
                 stateSave: true, 
                 "bInfo": false,
-               "bLengthChange": true,
+               "bLengthChange": false,
                oLanguage: {
                    sLengthMenu: "_MENU_",
                 },

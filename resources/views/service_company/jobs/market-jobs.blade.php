@@ -56,36 +56,27 @@
     }
     #fd-overlay.fd-open { opacity: 1; pointer-events: auto; }
 
-    #apptrackerfilter {
+    /* ══════════════════════════════════════════
+       Market Jobs Filter Drawer  (simf-* reused, mktf-* for scoping)
+    ══════════════════════════════════════════ */
+    #kt_market_filter_drawer.simf-drawer {
         position: fixed !important;
-        top: 0 !important;
-        right: 0 !important;
-        width: 80% !important;
-        height: 100vh !important;
-        z-index: 1050 !important;
-        background: #fff !important;
-        display: flex !important;
-        flex-direction: column !important;
-        box-shadow: -4px 0 24px rgba(0,0,0,.13) !important;
-        transform: translateX(100%);
-        transition: transform .3s cubic-bezier(.4,0,.2,1);
+        top: 0 !important; right: 0 !important; bottom: 0 !important; left: auto !important;
+        height: 100vh !important; max-height: 100vh !important;
+        overflow: hidden !important; z-index: 1200;
     }
-    #apptrackerfilter.fd-open { transform: translateX(0); }
-
-    #apptrackerfilter .modal-header.flex-stack {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        padding: 16px 20px;
-        border-bottom: 1px solid #f1f3f8;
-        flex-shrink: 0;
+    #mktf_card.simf-card {
+        display: flex !important; flex-direction: column !important;
+        font-family: 'Poppins', sans-serif;
+        position: relative !important;
+        height: 100vh !important; max-height: 100vh !important; overflow: hidden !important;
     }
-    #apptrackerfilter .apptrackerfilter_body_content { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
-    #apptrackerfilter .modal-body { flex: 1; overflow-y: auto; padding: 20px !important; }
-    #apptrackerfilter .modal-footer { flex-shrink: 0; padding: 14px 20px; border-top: 1px solid #f1f3f8; }
-
-    @media (max-width: 768px) { #apptrackerfilter { width: 380px !important; } }
-    @media (max-width: 480px) { #apptrackerfilter { width: 100% !important; } }
+    #mktf_card .simf-body {
+        flex: 1 1 auto !important; min-height: 0 !important;
+        overflow-y: auto !important; overflow-x: hidden !important;
+        padding: 4px 20px 16px;
+    }
+    #mktf_card .simf-header, #mktf_card .simf-footer { flex-shrink: 0 !important; }
 
     /* ══════════════════════════════════════════
        Market Jobs Hero  (mjh-*)
@@ -458,11 +449,11 @@
                                 <div class="simf-sort-panel d-none" id="simf_sort_panel"></div>
                             </div>
 
-                            {{-- Filter Button --}}
-                            <button type="button" class="simf-filter-btn" onclick="fdOpen()">
+                            {{-- Filter Button — KTDrawer toggle --}}
+                            <button type="button" id="kt_market_filter_toggle" class="simf-filter-btn position-relative">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3Z"/></svg>
-                                <span>Filters</span>
-                                <span class="badge simf-count-badge d-none" id="simf_count_badge">0</span>
+                                <span>Filter<span id="mktf_filter_count_text"></span></span>
+                                <span class="badge badge-circle badge-primary simf-count-badge d-none" id="simf_count_badge" style="position:absolute;top:-6px;right:-6px;font-size:10px;">0</span>
                             </button>
                         </div>
                     </div>
@@ -528,243 +519,236 @@
             <div id="pagination"></div>
         </main>
 
-        <!--Start Filter Drawer-->
-        <div id="fd-overlay" onclick="fdClose()"></div>
-        <div id="apptrackerfilter" tabindex="-1">
-                <div class="modal-header flex-stack">
-                    <h2>Filter</h2>
-                    <div class="btn btn-sm btn-icon btn-active-color-primary" onclick="fdClose()" id="apptrackerfilter_close">
-                        <span class="svg-icon svg-icon-1">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none">
-                            <rect opacity="0.5" x="6" y="17.3137" width="16" height="2" rx="1" transform="rotate(-45 6 17.3137)" fill="black"></rect>
-                            <rect x="7.41422" y="6" width="16" height="2" rx="1" transform="rotate(45 7.41422 6)" fill="black"></rect>
-                            </svg>
+        <!--Start Filter Drawer — KTDrawer enterprise design (mirrors similar_candidates)-->
+        <div id="kt_market_filter_drawer" class="bg-body simf-drawer" data-kt-drawer="true" data-kt-drawer-name="market-filter"
+            data-kt-drawer-activate="true" data-kt-drawer-overlay="true"
+            data-kt-drawer-width="{default:'92%', 'sm': '80%'}" data-kt-drawer-direction="end"
+            data-kt-drawer-toggle="#kt_market_filter_toggle" data-kt-drawer-close="#mktf_close_x">
+            <div id="mktf_card" class="card shadow-none rounded-0 w-100 h-100 simf-card">
+
+                <!--begin::Header-->
+                <div class="simf-header">
+                    <div class="d-flex align-items-center gap-3">
+                        <span class="simf-header-icon">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3Z"/></svg>
                         </span>
-                    </div>
-                </div>
-                <div class="apptrackerfilter_body_content" id="">
-                    <div class="modal-body" style="padding: 2em;">
-                        <form id="createSchedule" class="ajax-form" method="post">
-                            <div class="section">
-                                        <p class="section-label">1. Search Skills / Keywords</span></p> 
-                                        {{-- <span class="required"></span> --}}
-
-                                            <div class="suggestions-wrap search-input-wrap">
-                                            <input class="search-input" name="kt_tagify_users" value="" placeholder="Search by skills..." id="kt_tagify_users" />
-                                            </div>
-
-                                            <p class="input-hint">Press <span>Enter</span> or <span>,</span> to add a keyword &nbsp;·&nbsp; Press <span>Backspace</span> to remove last</p>
-
-                                            <div class="tags-row" id="popularTagsRow">
-                                                <span class="label">Popular searches:</span>
-                                                <span class="pop-tag" onclick="addFromPopular(this)" data-value="Java Developer">Java Developer</span>
-                                                <span class="pop-tag" onclick="addFromPopular(this)" data-value=".NET Developers">.NET Developers</span>
-                                                <span class="pop-tag" onclick="addFromPopular(this)" data-value="SAP Consultants">SAP Consultants</span>
-                                                <span class="pop-tag" onclick="addFromPopular(this)" data-value="AWS">AWS</span>
-                                                <span class="pop-tag" onclick="addFromPopular(this)" data-value="React Developers">React Developers</span>
-                                                <span class="pop-tag" onclick="addFromPopular(this)" data-value="Node.js">Node.js</span>
-                                                <span class="pop-tag" onclick="addFromPopular(this)" data-value="Python Developer">Python Developer</span>
-                                                <span class="pop-tag" onclick="addFromPopular(this)" data-value="DevOps Engineer">DevOps Engineer</span>
-                                                <span class="pop-tag more">+ More</span>
-                                            </div>
+                        <div>
+                            <div class="d-flex align-items-center gap-2">
+                                <h3 class="simf-title">Filter Jobs</h3>
+                                <span class="simf-count-pill" id="mktf_header_count">0</span>
                             </div>
-
-
-                            <div class="section">
-                                <p class="section-label">2. Select the Country</p>
-                                <div class="search-input-wrap">
-                                    <input class="search-input" value="{{ @$default_loc }}" id="kt_tagify_location" placeholder="Enter your Location..."/>
-                                </div>
-                            </div>
-                                
-                            <div class="section">
-                                <p class="section-label">3. Experience</p>
-                                <div class="form-group row fv-row mb-10 fv-plugins-icon-container">
-                                    <div class="col-lg-6">
-                                        <label class="form-label required">Minimum years:</label>
-                                        <select class="form-select form-select-solid" name="min_exp" id="min_exp">
-                                        <option value="" selected="">Select Experience</option>
-                                        <option value="0" {{ (0==$min_exp) ? 'selected' : '' }}>Freshers</option>
-                                        @for($i=1; $i<=30; $i++)
-                                        <option value="{{ $i }}" {{ ($i==$min_exp) ? 'selected' : '' }}>{{ $i }} &nbsp; Year{{ ($i>=1) ? 's' : '' }}</option>
-                                        @endfor                    
-                                        </select>
-                                        <div class="fv-plugins-message-container"></div>
-                                    </div>
-                                    <div class="col-lg-6">
-                                        <label class="form-label required">Maximum years:</label>
-                                        <select class="form-select form-select-solid" name="max_exp" id="max_exp">
-                                        <option value="" selected="">Select Experience</option>
-                                        <option value="0" {{ (0==$max_exp) ? '' : '' }}>Freshers</option>
-                                        @for($i=1; $i<=30; $i++)
-                                        <option value="{{ $i }}" {{ ($i==$max_exp) ? 'selected' : '' }}>{{ $i }} &nbsp; Year{{ ($i>=1) ? 's' : '' }}</option>
-                                        @endfor                                
-                                        </select>
-                                        <div class="fv-plugins-message-container" id="experience_error" style="color: red !important;text-align: center;"></div>
-                                    </div>
-                                </div> 
-                            </div>   
-                                
-                            <div class="section">
-                                <p class="section-label">4. Salary</p>
-                                <div class="form-group row fv-row mb-10 fv-plugins-icon-container">
-                                    <div class="col-lg-12">
-                                        <div class="row">
-
-                                                        <div class="col-lg-4">
-                                                            <div class="row">
-                                                            <div class="col-lg-6">
-                                                                <label class="form-label required">Currency</label>
-                                                                    <select class="form-select form-select-solid" arial-label="Select Currency" name="min_salary_currency" id="min_salary_currency">
-                                                                    <option value="">Select currency</option>
-                                                                    <option value="0" {{ (0==$min_salary_currency) ? 'selected' : '' }}>INR</option>
-                                                                    <option value="1" {{ (1==$min_salary_currency) ? 'selected' : '' }}>EUR</option>
-                                                                    <option value="2" {{ (2==$min_salary_currency) ? 'selected' : '' }}>JPY</option>
-                                                                    <option value="3" {{ (3==$min_salary_currency) ? 'selected' : '' }}>GBP</option>
-                                                                    <option value="4" {{ (4==$min_salary_currency) ? 'selected' : '' }}>USD</option>
-                                                                    <option value="5" {{ (5==$min_salary_currency) ? 'selected' : '' }}>AED</option>
-                                                                    </select>
-                                                                </div>
-                                                                <div class="col-lg-6">
-                                                                <label class="form-label required">Mode</label>
-                                                                    <select class="form-select form-select-solid" arial-label="Select Currency" name="sal_mode" id="sal_mode">
-                                                                    <option value="">Select Mode</option>
-                                                                    <option value="0" {{ (0==$min_sal_mode) ? 'selected' : '' }}>Annual</option>
-                                                                    <option value="1" {{ (1==$min_sal_mode) ? 'selected' : '' }}>Monthly</option>
-                                                                    <option value="2" {{ (2==$min_sal_mode) ? 'selected' : '' }}>Hourly</option>
-                                                                    </select>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                        <div class="col-lg-8">
-                                                            <div class="row"> 
-                                                            <div class="col-lg-6">
-                                                                <label class="form-label required">Minimum Salary:</label>
-                                                                <input type="number" class="form-control form-control-lg form-control-solid" name="min_sal" id="min_sal" placeholder="Enter min salary" value="{{ $min_salary }}">
-                                                                <div class="fv-plugins-message-container"></div>
-                                                                <span class="form-text text-muted minimum_salary_word"></span>
-                                                            </div>
-                                                            <div class="col-lg-6">
-                                                                <label class="form-label required">Maximum Salary:</label>
-                                                                <input type="number" class="form-control form-control-lg form-control-solid" name="max_sal" id="max_sal" placeholder="Enter max salary" value="{{ $max_salary }}">
-                                                            <div class="fv-plugins-message-container"></div>
-                                                            <span class="form-text text-muted maximum_salary_word"></span>
-                                                            </div> 
-                                                                <span class="form-text text-muted" id="salary_error" style="    color: red !important;text-align: center;"></span>                                                             
-                                                            </div>
-                                                        </div>
-
-                                            
-                                            
-
-                                            
-
-
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <div class="section">
-                                <p class="section-label">5. Hiring type</p>
-                                <div class="d-flex flex-column mb-8">
-                                <div class="row py-5 mb-3">
-                                    <div class="col-lg-2">
-                                        <input type="radio" class="btn-check app_int_outsource" name="app_int_outsource" value="" id="app_int_outsource1" checked="&quot;checked&quot;">
-                                        <label class="btn btn-outline btn-outline-dashed btn-outline-default p-3 d-flex align-items-center justify-content-center" for="app_int_outsource1"> 
-                                        <span class="d-block fw-bold text-start"> 
-                                        <span class="text-dark-800 fw-bolder d-block fs-5">All</span> 
-                                        </span> 
-                                        </label>
-                                    </div>
-                                    <div class="col-lg-5">
-                                        <input type="radio" class="btn-check app_int_outsource" name="app_int_outsource" value="0" id="app_int_outsource2">
-                                        <label class="btn btn-outline btn-outline-dashed btn-outline-default p-3 d-flex align-items-center justify-content-center" for="app_int_outsource2"> 
-                                        <span class="d-block fw-bold text-start"> 
-                                        <span class="text-dark-800 fw-bolder d-block fs-5">Fulltime </span> 
-                                        </span> 
-                                        </label>
-                                    </div>
-                                    <div class="col-lg-5">
-                                        <input type="radio" class="btn-check app_int_outsource" name="app_int_outsource" value="1" id="app_int_outsource3">
-                                        <label class="btn btn-outline btn-outline-dashed btn-outline-default p-3 d-flex align-items-center justify-content-center" for="app_int_outsource3"> 
-                                        <span class="d-block fw-bold text-start"> 
-                                        <span class="text-dark-800 fw-bolder d-block fs-5">Contract</span> 
-                                        </span> 
-                                        </label>
-                                    </div>
-                                </div>
-                                </div>
-                            </div>
-
-
-                            <div class="d-flex flex-column mb-8 d-none">
-                                <label class="form-label required">Activity</label>
-                                <div class="row py-5 mb-3">
-                                    <div class="col-lg-2">
-                                    <input type="radio" class="btn-check app_int_activity" name="app_int_activity" value="1" id="app_int_activity1" checked="&quot;checked&quot;">
-                                    <label class="btn btn-outline btn-outline-dashed btn-outline-default p-3 d-flex align-items-center justify-content-center" for="app_int_activity1"> 
-                                    <span class="d-block fw-bold text-start"> 
-                                    <span class="text-dark-800 fw-bolder d-block fs-5">All</span> 
-                                    </span> 
-                                    </label>
-                                    </div>
-                                    <div class="col-lg-2">
-                                    <input type="radio" class="btn-check app_int_activity" name="app_int_activity" value="2" id="app_int_activity2">
-                                    <label class="btn btn-outline btn-outline-dashed btn-outline-default p-3 d-flex align-items-center justify-content-center" for="app_int_activity2"> 
-                                    <span class="d-block fw-bold text-start"> 
-                                    <span class="text-dark-800 fw-bolder d-block fs-5">30 Days</span> 
-                                    </span> 
-                                    </label>
-                                    </div>
-                                    <div class="col-lg-2">
-                                    <input type="radio" class="btn-check app_int_activity" name="app_int_activity" value="3" id="app_int_activity3">
-                                    <label class="btn btn-outline btn-outline-dashed btn-outline-default p-3 d-flex align-items-center justify-content-center" for="app_int_activity3"> 
-                                    <span class="d-block fw-bold text-start"> 
-                                    <span class="text-dark-800 fw-bolder d-block fs-5">60 Days</span> 
-                                    </span> 
-                                    </label>
-                                    </div>
-                                    <div class="col-lg-2">
-                                    <input type="radio" class="btn-check app_int_activity" name="app_int_activity" value="4" id="app_int_activity4">
-                                    <label class="btn btn-outline btn-outline-dashed btn-outline-default p-3 d-flex align-items-center justify-content-center" for="app_int_activity4"> 
-                                    <span class="d-block fw-bold text-start"> 
-                                    <span class="text-dark-800 fw-bolder d-block fs-5">90 Days</span> 
-                                    </span> 
-                                    </label>
-                                    </div>
-                                    <div class="col-lg-2">
-                                    <input type="radio" class="btn-check app_int_activity" name="app_int_activity" value="5" id="app_int_activity5">
-                                    <label class="btn btn-outline btn-outline-dashed btn-outline-default p-3 d-flex align-items-center justify-content-center" for="app_int_activity5"> 
-                                    <span class="d-block fw-bold text-start"> 
-                                    <span class="text-dark-800 fw-bolder d-block fs-5">180 Days</span> 
-                                    </span> 
-                                    </label>
-                                    </div>
-                                    <div class="col-lg-2">
-                                    <input type="radio" class="btn-check app_int_activity" name="app_int_activity" value="6" id="app_int_activity6">
-                                    <label class="btn btn-outline btn-outline-dashed btn-outline-default p-3 d-flex align-items-center justify-content-center" for="app_int_activity6"> 
-                                    <span class="d-block fw-bold text-start"> 
-                                    <span class="text-dark-800 fw-bolder d-block fs-5">1 Year</span> 
-                                    </span> 
-                                    </label>
-                                    </div>
-                                </div>
-                            </div>
-
-                        </form>
-                    </div>
-                    <div class="modal-footer flex-center">
-                        <div class="div1">
-                            <button type="button" id="" class="btn btn-secondary me-3" onclick="fdClose()">Close</button>
-                            <button type="button" id="changetextupdate" class="btn btn-primary changetextupdate">
-                            <span class="indicator-label">Submit</span></button>
+                            <p class="simf-subtitle">Refine your search and find the best opportunities</p>
                         </div>
                     </div>
-                    <script src="https://servicetesting.4bell.com/assets/node_modules/moment/moment.js?ver=1553620716" type="text/javascript"></script>
-                    <script src="https://servicetesting.4bell.com/assets/node_modules/multiselect/js/jquery.multi-select.js?ver=1553620716"></script>
-                    <script src="https://servicetesting.4bell.com/assets/node_modules/bootstrap-material-datetimepicker/js/bootstrap-material-datetimepicker.js?ver=1553620716" type="text/javascript"></script>
+                    <button type="button" class="simf-close" id="mktf_close_x" title="Close">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+                    </button>
                 </div>
+                <!--end::Header-->
+
+                <!--begin::Body-->
+                <div class="simf-body">
+                    <form id="mktf_form">
+
+                        <!--begin::Active filters bar — live draft preview inside drawer-->
+                        <div class="simf-activebar d-none" id="mktf_active_bar">
+                            <div class="simf-activebar-head">
+                                <span class="simf-activebar-label">Active Filters <span id="mktf_active_count">(0)</span></span>
+                                <a href="javascript:void(0);" class="simf-clearall" id="mktf_clear_all">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2m3 0-1 14a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1L4 6"/></svg>
+                                    Clear All
+                                </a>
+                            </div>
+                            <div class="simf-chips" id="mktf_active_chips"></div>
+                        </div>
+                        <!--end::Active filters bar-->
+
+                        <!--begin::Skills-->
+                        <div class="simf-section">
+                            <div class="simf-section-head">
+                                <span class="simf-icon simf-icon-blue">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m8 6-6 6 6 6M16 6l6 6-6 6"/></svg>
+                                </span>
+                                <div>
+                                    <div class="simf-section-title">Skills <span class="simf-badge-primary">Primary</span></div>
+                                    <div class="simf-section-desc">Add skills to find relevant jobs &mdash; click &#9733; to make a skill mandatory</div>
+                                </div>
+                            </div>
+                            <div class="simf-section-body">
+                                <input class="form-control form-control-solid" name="kt_tagify_users" value="" placeholder="" id="kt_tagify_users" />
+                            </div>
+                        </div>
+                        <!--end::Skills-->
+
+                        <!--begin::Location-->
+                        <div class="simf-section">
+                            <div class="simf-section-head">
+                                <span class="simf-icon simf-icon-green">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+                                </span>
+                                <div>
+                                    <div class="simf-section-title">Preferred Location</div>
+                                    <div class="simf-section-desc">Preferred cities or work locations</div>
+                                </div>
+                            </div>
+                            <div class="simf-section-body">
+                                <div class="simf-loc-inputwrap" id="mktf_loc_inputwrap">
+                                    <input class="form-control form-control-solid" value="{{ @$default_loc }}" id="kt_tagify_location" placeholder="Search location (e.g. Bangalore, Pune, Remote)" />
+                                    <button type="button" class="simf-loc-chevron" id="mktf_loc_chevron" title="Show suggestions">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+                                    </button>
+                                </div>
+                                <div class="simf-loc-suggestions d-none" id="mktf_loc_panel">
+                                    <div class="simf-loc-label">Popular Locations</div>
+                                    <div class="simf-loc-chip-row">
+                                        <button type="button" class="simf-loc-chip" data-city="Bangalore">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+                                            Bangalore
+                                        </button>
+                                        <button type="button" class="simf-loc-chip" data-city="Hyderabad">Hyderabad</button>
+                                        <button type="button" class="simf-loc-chip" data-city="Pune">Pune</button>
+                                        <button type="button" class="simf-loc-chip" data-city="Mumbai">Mumbai</button>
+                                        <button type="button" class="simf-loc-chip" data-city="Chennai">Chennai</button>
+                                        <button type="button" class="simf-loc-chip" data-city="Remote">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.55a11 11 0 0 1 14.08 0M1.42 9a16 16 0 0 1 21.16 0M8.53 16.11a6 6 0 0 1 6.95 0M12 20h.01"/></svg>
+                                            Remote
+                                        </button>
+                                    </div>
+                                    <div class="simf-loc-label mt-2">Other Suggestions</div>
+                                    <div class="simf-loc-chip-row">
+                                        <button type="button" class="simf-loc-chip" data-city="Noida">Noida</button>
+                                        <button type="button" class="simf-loc-chip" data-city="Gurgaon">Gurgaon</button>
+                                        <button type="button" class="simf-loc-chip" data-city="Kolkata">Kolkata</button>
+                                        <button type="button" class="simf-loc-chip" data-city="Ahmedabad">Ahmedabad</button>
+                                        <button type="button" class="simf-loc-chip" data-city="Chandigarh">Chandigarh</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <!--end::Location-->
+
+                        <!--begin::Experience-->
+                        <div class="simf-section">
+                            <div class="simf-section-head">
+                                <span class="simf-icon simf-icon-green">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+                                </span>
+                                <div>
+                                    <div class="simf-section-title">Experience (Years)</div>
+                                    <div class="simf-section-desc">Total work experience required</div>
+                                </div>
+                            </div>
+                            <div class="simf-section-body">
+                                <div class="row g-2">
+                                    <div class="col-6">
+                                        <label class="simf-mini-label">Minimum Experience</label>
+                                        <select class="form-select form-select-solid" name="min_exp" id="min_exp">
+                                            <option value="" selected="">Min Experience</option>
+                                            <option value="0" {{ 0 == $min_exp ? 'selected' : '' }}>Freshers</option>
+                                            @for($i=1; $i<=30; $i++)
+                                            <option value="{{ $i }}" {{ $i == $min_exp ? 'selected' : '' }}>{{ $i }} Year{{ $i >= 1 ? 's' : '' }}</option>
+                                            @endfor
+                                        </select>
+                                    </div>
+                                    <div class="col-6">
+                                        <label class="simf-mini-label">Maximum Experience</label>
+                                        <select class="form-select form-select-solid" name="max_exp" id="max_exp">
+                                            <option value="" selected="">Max Experience</option>
+                                            <option value="0" {{ 0 == $max_exp ? 'selected' : '' }}>Freshers</option>
+                                            @for($i=1; $i<=30; $i++)
+                                            <option value="{{ $i }}" {{ $i == $max_exp ? 'selected' : '' }}>{{ $i }} Year{{ $i >= 1 ? 's' : '' }}</option>
+                                            @endfor
+                                        </select>
+                                        <div class="fv-plugins-message-container" id="experience_error" style="color:red !important;text-align:center;"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <!--end::Experience-->
+
+                        <!--begin::Salary-->
+                        <div class="simf-section simf-section-last">
+                            <div class="simf-section-head">
+                                <span class="simf-icon simf-icon-amber">
+                                    <span style="font-size:15px;font-weight:700;line-height:1;">&#8377;</span>
+                                </span>
+                                <div>
+                                    <div class="simf-section-title">Salary (CTC)</div>
+                                    <div class="simf-section-desc">Salary range with currency &amp; mode</div>
+                                </div>
+                            </div>
+                            <div class="simf-section-body">
+                                <div class="row g-2 simf-salary-row">
+                                    <div class="col-3">
+                                        <label class="simf-mini-label">Currency</label>
+                                        <select class="form-select form-select-solid" name="min_salary_currency" id="min_salary_currency">
+                                            <option value="">Select currency</option>
+                                            <option value="0" {{ 0 == $min_salary_currency ? 'selected' : '' }}>INR (&#8377;)</option>
+                                            <option value="1" {{ 1 == $min_salary_currency ? 'selected' : '' }}>EUR</option>
+                                            <option value="2" {{ 2 == $min_salary_currency ? 'selected' : '' }}>JPY</option>
+                                            <option value="3" {{ 3 == $min_salary_currency ? 'selected' : '' }}>GBP</option>
+                                            <option value="4" {{ 4 == $min_salary_currency ? 'selected' : '' }}>USD</option>
+                                            <option value="5" {{ 5 == $min_salary_currency ? 'selected' : '' }}>AED</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-3">
+                                        <label class="simf-mini-label">Mode</label>
+                                        <select class="form-select form-select-solid" name="sal_mode" id="sal_mode">
+                                            <option value="">Select Mode</option>
+                                            <option value="0" {{ 0 == $min_sal_mode ? 'selected' : '' }}>Annual</option>
+                                            <option value="1" {{ 1 == $min_sal_mode ? 'selected' : '' }}>Monthly</option>
+                                            <option value="2" {{ 2 == $min_sal_mode ? 'selected' : '' }}>Hourly</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-3">
+                                        <label class="simf-mini-label">Min Salary</label>
+                                        <input type="number" class="form-control form-control-solid" name="min_sal" id="min_sal" placeholder="Any" value="{{ $min_salary }}">
+                                        <span class="form-text text-muted minimum_salary_word"></span>
+                                    </div>
+                                    <div class="col-3">
+                                        <label class="simf-mini-label">Max Salary</label>
+                                        <input type="number" class="form-control form-control-solid" name="max_sal" id="max_sal" placeholder="Any" value="{{ $max_salary }}">
+                                        <span class="form-text text-muted maximum_salary_word"></span>
+                                    </div>
+                                    <span class="form-text text-muted" id="salary_error" style="color:red !important;text-align:center;"></span>
+                                </div>
+                            </div>
+                        </div>
+                        <!--end::Salary-->
+
+                    </form>
+                </div>
+                <!--end::Body-->
+
+                <!--begin::Footer-->
+                <div class="simf-footer">
+                    <div class="simf-footer-count">
+                        <span class="simf-footer-icon">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+                        </span>
+                        <div>
+                            <div class="simf-footer-number" id="mktf_footer_number">—</div>
+                            <div class="simf-footer-label">Jobs Match <span class="simf-footer-hint" title="Updates after Apply">&#9432;</span></div>
+                        </div>
+                    </div>
+                    <div class="simf-footer-actions">
+                        <button type="button" class="btn btn-sm btn-light" id="mktf_close_btn">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+                            Close
+                        </button>
+                        <button type="button" class="btn btn-sm btn-light" id="mktf_reset_btn">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg>
+                            Reset
+                        </button>
+                        <button type="button" class="btn btn-sm btn-primary" id="mktf_apply_btn">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3Z"/></svg>
+                            Apply Filters
+                        </button>
+                    </div>
+                </div>
+                <!--end::Footer-->
+
+            </div>
         </div>
         <!--End Filter Drawer-->
 
@@ -948,25 +932,39 @@
                 },
                 transformTag: function(tagData) {
                     tagData.checked = tagData.checked || false;
+                    tagData.checked = tagData.checked || false;
                     return tagData;
                 }
             });
 
-            // Add event listener for star click
+            // Toggle mandatory (star) on click of EITHER the star itself OR the keyword text
             document.addEventListener('click', function(e) {
-                if (e.target.classList.contains('star') && tagify && Array.isArray(tagify.value)) {
-                    const tagElm = e.target.closest('.tagify__tag');
+                const toggleTarget = e.target.closest('.star, .tagify__tag-text');
+                if (toggleTarget) {
+                    const tagElm = toggleTarget.closest('.tagify__tag');
                     if (!tagElm) return;
-                    const value = tagElm.querySelector('.tagify__tag-text')?.textContent;
+                    const starEl = tagElm.querySelector('.star');
+                    const textEl = tagElm.querySelector('.tagify__tag-text');
+                    if (!starEl || !textEl) return;
+                    const value = textEl.textContent;
 
-                    e.target.classList.toggle('checked');
+                    starEl.classList.toggle('checked');
+                    const nowChecked = starEl.classList.contains('checked');
+
+                    starEl.innerHTML = nowChecked ? '&#9733;' : '&#9734;';
+                    starEl.style.color = nowChecked ? '#eab308' : '#94a3b8';
+                    tagElm.style.background = nowChecked ? '#dbeafe' : '#eef2ff';
+                    tagElm.style.borderColor = nowChecked ? '#bfdbfe' : '#e0e7ff';
+                    textEl.style.color = nowChecked ? '#1d4ed8' : '#3730a3';
+                    tagElm.classList.toggle('simf-mandatory-tag', nowChecked);
 
                     const tagData = tagify.value.find(tag => tag.value === value);
                     if (tagData) {
                         setTimeout(() => {
-                            tagData.checked = e.target.classList.contains('checked');
+                            tagData.checked = nowChecked;
                             tagify.updateValueByDOMTags();
-                        }, 500);
+                            if (typeof mktfUpdateActiveFiltersUI === 'function') mktfUpdateActiveFiltersUI();
+                        }, 300);
                     }
                 }
             });
@@ -1001,170 +999,142 @@
                 fetchSuggestionsSkills(query);
             });
 
-            tagify.on('change', function() {
-                if (typeof filtersdata === 'function') {
-                    filtersdata();
-                }
+            tagify.on('add', function() {
+                if (typeof mktfUpdateActiveFiltersUI === 'function') mktfUpdateActiveFiltersUI();
+            });
+            tagify.on('remove', function() {
+                if (typeof mktfUpdateActiveFiltersUI === 'function') mktfUpdateActiveFiltersUI();
             });
         }
 
-        document.addEventListener('click', function (e) {
-            if (e.target.classList.contains('tagify__tag__removeBtn')) {
-                const tagElm = e.target.closest('.tagify__tag');
-                if (tagElm && tagify) {
-                    tagify.removeTags(tagElm);
-                }
-            }
-        });
-
-        /* ── Add from popular searches row ── */
-        function addFromPopular(el) {
-            let value = el.getAttribute('data-value') || '';
-            let $search = $('#kt_tagify_2');
-            let current = $search.val().trim();
-
-            if (current.toLowerCase() === value.toLowerCase()) {
-                $search.val('');
-                el.classList.remove('pop-added');
-            } else {
-                $search.val(value);
-                document.querySelectorAll('.mjh-popular .mjh-tag').forEach(t => t.classList.remove('pop-added'));
-                el.classList.add('pop-added');
-            }
-
-            if (tagify && Array.isArray(tagify.value)) {
-                let existing = tagify.value.find(
-                    tag => tag.value.toLowerCase() === value.toLowerCase()
-                );
-                if (existing) {
-                    tagify.removeTags(value);
-                } else {
-                    tagify.addTags([value]);
-                }
-            }
-
-            if (typeof filtersdata === 'function') {
-                filtersdata();
-            } else if (typeof fetchCandidates === 'function') {
-                fetchCandidates(1);
-            }
-        }
-    </script>
-
-    <script>
-        // The DOM elements you wish to replace with Tagify
+        /* ── Location Tagify Initialization ── */
         var inputloc = document.querySelector("#kt_tagify_location");
-        var cities = @json($cities);
-        
-        // Initialize Tagify script on the above inputs
-        const tagifylocation = new Tagify(inputloc, {
-            whitelist: cities,
-            maxTags: 1,
-            dropdown: {
-                maxItems: 200,
-                classname: "",
-                enabled: 0,
-                closeOnSelect: true
-            },
-            templates: {
-                tag: function(tagData) {
-                    tagData = tagData || {};
-                    const value = tagData.value || '';
-                    return `
-                        <tag title="${value}" contenteditable='false' spellcheck="false"
-                            class="tagify__tag ${tagData.class ? tagData.class : ""}"
-                            ${this.getAttributes(tagData)}>
-                            <div style="padding:2px 6px; display:flex; align-items:center; gap:6px;">
-                                <span class="tagify__tag-text">${value}</span>
-                                <span style="width:16px;height:16px;border-radius:50%;background:#A5B4FC; border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:11px;color:#3730A3;line-height:1;flex-shrink:0;">
-                                    <x title="" class="tagify__tag__removeBtn"role="button" aria-label="remove tag"></x>
-                                </span>
-                            </div>
-                        </tag>
-                    `;
+        var cities = @json($cities ?? []);
+        var tagifylocation = null;
+
+        if (inputloc) {
+            tagifylocation = new Tagify(inputloc, {
+                whitelist: cities,
+                maxTags: 10,
+                templates: {
+                    tag: function(tagData) {
+                        const value = tagData.value || '';
+                        return `
+                            <tag title="${value}" contenteditable='false' spellcheck="false"
+                                class="tagify__tag ${tagData.class ? tagData.class : ""}"
+                                ${this.getAttributes(tagData)}
+                                style="display:inline-flex;align-items:center;gap:6px;background:#eef2ff;border:1px solid #e0e7ff;border-radius:8px;padding:5px 7px 5px 10px;margin:4px 6px 4px 0;vertical-align:middle;">
+                                <span class="tagify__tag-text" style="font-size:11.5px;font-weight:500;color:#3730a3;line-height:1;white-space:nowrap;">${value}</span>
+                                <x title='Remove' class="tagify__tag__removeBtn" role="button" aria-label="remove tag"
+                                    style="display:inline-flex;align-items:center;justify-content:center;width:15px;height:15px;border-radius:50%;background:rgba(37,99,235,.14);color:#2563eb;flex-shrink:0;font-size:12px;font-weight:700;line-height:1;cursor:pointer;padding:0;">&times;</x>
+                            </tag>
+                        `;
+                    }
+                },
+                dropdown: {
+                    maxItems: 20,
+                    classname: "",
+                    enabled: 0,
+                    closeOnSelect: true,
+                    appendTarget: document.body
                 }
-            },
+            });
 
-            transformTag: function(tagData) {
-                tagData.checked = tagData.checked || false;
-                return tagData;
+            function mktfCloseLocPanel() {
+                $('#mktf_loc_panel').addClass('d-none');
+                $('#mktf_loc_chevron').removeClass('open');
             }
+
+            $(document).on('click', '#mktf_loc_chevron', function(e) {
+                e.stopPropagation();
+                $('#mktf_loc_panel').toggleClass('d-none');
+                $(this).toggleClass('open');
+            });
+
+            $(document).on('click', '.simf-loc-chip', function() {
+                var city = $(this).data('city');
+                if (city && tagifylocation) {
+                    tagifylocation.addTags([city]);
+                    mktfCloseLocPanel();
+                }
+            });
+
+            $(document).on('click', function(e) {
+                if (!$(e.target).closest('#mktf_loc_inputwrap, #mktf_loc_panel').length) {
+                    mktfCloseLocPanel();
+                }
+            });
+
+            tagifylocation.on('dropdown:select', function(e) {
+                tagifylocation.addTags([e.detail.data.value]);
+                mktfCloseLocPanel();
+            });
+            tagifylocation.on('add', function() {
+                if (typeof mktfUpdateActiveFiltersUI === 'function') mktfUpdateActiveFiltersUI();
+                mktfCloseLocPanel();
+            });
+            tagifylocation.on('remove', function() {
+                if (typeof mktfUpdateActiveFiltersUI === 'function') mktfUpdateActiveFiltersUI();
+            });
+
+            function debounceloc(func, delay) {
+                let timer;
+                return function (...args) {
+                    clearTimeout(timer);
+                    timer = setTimeout(() => func.apply(this, args), delay);
+                };
+            }
+
+            const fetchSuggestionsLocation = debounceloc(function(query) {
+                $.ajax({
+                    url: "{{ url('/') }}" + "/city-job-suggestions?q=" + encodeURIComponent(query),
+                    method: 'GET',
+                    success: function(data) {
+                        if (Array.isArray(data)) {
+                            tagifylocation.settings.whitelist = data;
+                            mktfCloseLocPanel();
+                            tagifylocation.dropdown.show.call(tagifylocation, query);
+                        }
+                    },
+                    error: function(err) {
+                        console.error("Error fetching cities:", err);
+                    }
+                });
+            }, 200);
+
+            tagifylocation.on('input', function(e) {
+                var query = (e.detail.value || '').trim();
+                if (query.length < 2) return;
+                mktfCloseLocPanel();
+                fetchSuggestionsLocation(query);
+            });
+        }
+
+        function filtersdata() {
+            if (typeof renderAppliedFiltersCard === 'function') {
+                renderAppliedFiltersCard();
+            }
+            fetchCandidates();
+        }
+
+        function filtersdataget() {
+            if (typeof renderAppliedFiltersCard === 'function') {
+                renderAppliedFiltersCard();
+            }
+            fetchCandidates();
+        }
+
+        function clearAllTags() {
+            if (typeof tagify !== 'undefined' && tagify) { tagify.removeAllTags(); }
+            if (typeof tagifylocation !== 'undefined' && tagifylocation) { tagifylocation.removeAllTags(); }
+            fetchCandidates();
+        }
+
+        $(document).ready(function() {
+            $(document).on('keyup', '#inputSearch', function () {
+                fetchCandidates();
+            });
         });
-
-        // Prevent creating tags on "Enter" key
-          inputloc.addEventListener('keydown', function(e) {
-              if (e.key === "Enter") {
-                  e.preventDefault(); // Prevents the default behavior of adding a tag
-              }
-          });
-
-          // Prevent creating tags on blur or enter key
-          tagifylocation.on('input', function(e) {
-              tagifylocation.dropdown.show(); // Show the dropdown immediately
-          });
-
-          // Create tags only on select
-          tagifylocation.on('dropdown:select', function(e) {
-              tagifylocation.addTags([e.detail.data.value]);
-          });
-
-          document.addEventListener('click', function (e) {
-            // remove button clicked
-            if (e.target.classList.contains('tagify__tag__removeBtn')) {
-                // get tag element
-                const tagElm = e.target.closest('.tagify__tag');
-                // remove tag from tagify
-                tagifylocation.removeTags(tagElm);
-            }
-
-          });
-
-  function filtersdata() {
-      if (typeof updateAppliedFiltersBar === 'function') {
-          updateAppliedFiltersBar();
-      }
-      fetchCandidates();
-  }
-
-  function filtersdataget() {
-      if (typeof updateAppliedFiltersBar === 'function') {
-          updateAppliedFiltersBar();
-      }
-      fetchCandidates();
-  }
-
-  function clearAllTags() {
-      if (typeof tagify !== 'undefined') { tagify.removeAllTags(); }
-      if (typeof tagify2 !== 'undefined') { tagify2.removeAllTags(); }
-      document.querySelectorAll('.mjh-tag.pop-added').forEach(el => el.classList.remove('pop-added'));
-      fetchCandidates();
-  }
-
-$(document).ready(function() {	
-
-
-   
-
-  
-
-  $(document).on('keyup', '#inputSearch', function (){
-					   	//  tableLoad('load');  
-               fetchCandidates();    
-		   		});
-   });
-   
-var table;
-// setTimeout(() => {
-  // tableLoad('load'); 
-// }, 500);
-     
-
-$(document).on('click', '#changetextupdate', function (){
-  fetchCandidates();
-  $('.changetextupdate').text('Searching....!');
-  fdClose();
-  setTimeout(() => { $('.changetextupdate').text('Submit'); }, 500);
-});
 
 
 
@@ -1848,61 +1818,271 @@ $(document).on('click', '#changetextupdate', function (){
             }, 350);
         });
 
-        // ── Active Filters Summary Bar ──
-        function updateAppliedFiltersBar() {
-            let activeFilters = [];
-            let searchVal = $('#kt_tagify_2').val();
-            if (searchVal && searchVal.trim()) {
-                activeFilters.push({ key: 'search', label: `Search: "${searchVal.trim()}"`, clear: function() { $('#kt_tagify_2').val(''); } });
-            }
-            let minExp = $('#min_exp').val();
-            let maxExp = $('#max_exp').val();
-            if (minExp || maxExp) {
-                activeFilters.push({ key: 'exp', label: `Experience: ${minExp || 0} – ${maxExp || '+'} Yrs`, clear: function() { $('#min_exp').val(''); $('#max_exp').val(''); } });
-            }
-            let minSal = $('#min_sal').val();
-            let maxSal = $('#max_sal').val();
-            if (minSal || maxSal) {
-                activeFilters.push({ key: 'sal', label: `Salary: ₹${minSal || 0} – ₹${maxSal || '+'}`, clear: function() { $('#min_sal').val(''); $('#max_sal').val(''); } });
-            }
-            let locVal = $('#kt_tagify_location').val();
-            if (locVal) {
-                activeFilters.push({ key: 'loc', label: `Location: ${locVal}`, clear: function() { $('#kt_tagify_location').val(''); } });
-            }
+        /* ══════════════════════════════════════════════════════════════════
+           Active Filters (Drawer Preview & Main Page Summary Card)
+           ══════════════════════════════════════════════════════════════════ */
+        function mktfUpdateActiveFiltersUI() {
+            var chips = [];
 
-            let $card = $('#simf_applied_card');
-            let $chips = $('#simf_applied_chips').empty();
-            if (activeFilters.length > 0) {
-                $('#simf_applied_count').text(activeFilters.length);
-                $('#simf_count_badge').text(activeFilters.length).removeClass('d-none');
-                activeFilters.forEach(function(f) {
-                    $(`<div class="simf-applied-chip"><span>${f.label}</span><span class="simf-applied-chip-remove">&times;</span></div>`)
-                        .find('.simf-applied-chip-remove')
-                        .on('click', function() {
-                            f.clear();
-                            updateAppliedFiltersBar();
-                            filtersdata();
-                        })
-                        .end()
-                        .appendTo($chips);
+            // Skills (starred = mandatory)
+            if (typeof tagify !== 'undefined' && tagify && Array.isArray(tagify.value)) {
+                tagify.value.forEach(function(tag) {
+                    chips.push({
+                        label: tag.value,
+                        mandatory: !!tag.checked,
+                        clear: function() { tagify.removeTags(tag.value); }
+                    });
                 });
-                $card.removeClass('d-none');
-            } else {
-                $('#simf_count_badge').text('0').addClass('d-none');
-                $card.addClass('d-none');
             }
+
+            // Location
+            if (typeof tagifylocation !== 'undefined' && tagifylocation && Array.isArray(tagifylocation.value)) {
+                tagifylocation.value.forEach(function(tag) {
+                    chips.push({
+                        label: tag.value,
+                        clear: function() { tagifylocation.removeTags(tag.value); }
+                    });
+                });
+            }
+
+            // Experience range
+            var minExp = $('#min_exp').val(), maxExp = $('#max_exp').val();
+            if (minExp || maxExp) {
+                chips.push({
+                    label: (minExp || '0') + '-' + (maxExp || 'Any') + ' Yrs',
+                    clear: function() { $('#min_exp').val(''); $('#max_exp').val(''); }
+                });
+            }
+
+            // Salary range
+            var minSal = $('#min_sal').val(), maxSal = $('#max_sal').val();
+            if (minSal || maxSal) {
+                chips.push({
+                    label: (minSal || '0') + '-' + (maxSal || 'Any'),
+                    clear: function() { $('#min_sal').val(''); $('#max_sal').val(''); }
+                });
+            }
+
+            var $chips = $('#mktf_active_chips').empty();
+            chips.forEach(function(c) {
+                var $chip = $('<span class="simf-chip"></span>').toggleClass('mandatory', !!c.mandatory);
+                if (c.mandatory) {
+                    $chip.append($('<span style="color:#eab308;"></span>').html('&#9733; ')).append($('<span></span>').text(c.label));
+                } else {
+                    $chip.append($('<span></span>').text(c.label));
+                }
+                $chip.append($('<span class="simf-chip-remove">&times;</span>').on('click', function() {
+                    c.clear();
+                    mktfUpdateActiveFiltersUI();
+                }));
+                $chips.append($chip);
+            });
+
+            var n = chips.length;
+            $('#mktf_active_bar').toggleClass('d-none', n === 0);
+            $('#mktf_active_count').text('(' + n + ')');
+            $('#mktf_header_count').text(n);
+            $('#simf_count_badge').toggleClass('d-none', n === 0).text(n);
+            $('#mktf_filter_count_text').text(n > 0 ? ' (' + n + ')' : '');
         }
 
-        function clearAllAppliedFilters() {
-            $('#kt_tagify_2').val('');
-            $('#min_exp').val('');
-            $('#max_exp').val('');
-            $('#min_sal').val('');
-            $('#max_sal').val('');
-            $('#kt_tagify_location').val('');
-            updateAppliedFiltersBar();
-            filtersdata();
+        /* ── Applied Filters Summary Card on Main Page ── */
+        var MKTF_APPLIED_VISIBLE_CAP = 8;
+        var mktfAppliedExpanded = false;
+
+        function mktfCategoryIcon(cat) {
+            var paths = {
+                skill: '<path d="m8 6-6 6 6 6M16 6l6 6-6 6"/>',
+                location: '<path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/>',
+                experience: '<rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>',
+                search: '<circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>'
+            };
+            if (cat === 'salary') {
+                return '<span style="font-size:11px;font-weight:700;line-height:1;">&#8377;</span>';
+            }
+            return '<svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">' + (paths[cat] || '') + '</svg>';
         }
+
+        function mktfBuildAppliedItems() {
+            var items = [];
+
+            var searchVal = $('#kt_tagify_2').val();
+            if (searchVal && searchVal.trim()) {
+                items.push({
+                    cat: 'search', label: searchVal.trim(),
+                    clear: function() { $('#kt_tagify_2').val(''); }
+                });
+            }
+
+            if (typeof tagify !== 'undefined' && tagify && Array.isArray(tagify.value)) {
+                tagify.value.forEach(function(tag) {
+                    items.push({
+                        cat: 'skill', label: tag.value, mandatory: !!tag.checked,
+                        clear: function() { tagify.removeTags(tag.value); }
+                    });
+                });
+            }
+            if (typeof tagifylocation !== 'undefined' && tagifylocation && Array.isArray(tagifylocation.value)) {
+                tagifylocation.value.forEach(function(tag) {
+                    items.push({ cat: 'location', label: tag.value, clear: function() { tagifylocation.removeTags(tag.value); } });
+                });
+            }
+            var minExp = $('#min_exp').val(), maxExp = $('#max_exp').val();
+            if (minExp || maxExp) {
+                items.push({
+                    cat: 'experience', label: (minExp || '0') + '-' + (maxExp || 'Any') + ' Yrs',
+                    clear: function() { $('#min_exp').val(''); $('#max_exp').val(''); }
+                });
+            }
+            var minSal = $('#min_sal').val(), maxSal = $('#max_sal').val();
+            if (minSal || maxSal) {
+                items.push({
+                    cat: 'salary', label: (minSal || '0') + '-' + (maxSal || 'Any'),
+                    clear: function() { $('#min_sal').val(''); $('#max_sal').val(''); }
+                });
+            }
+            return items;
+        }
+
+        function renderAppliedFiltersCard() {
+            var items = mktfBuildAppliedItems();
+            var $chips = $('#simf_applied_chips').empty();
+            var visible = mktfAppliedExpanded ? items : items.slice(0, MKTF_APPLIED_VISIBLE_CAP);
+
+            visible.forEach(function(it) {
+                var $chip = $('<span class="simf-applied-chip"></span>').addClass('cat-' + it.cat);
+                $chip.append('<span class="ic">' + mktfCategoryIcon(it.cat) + '</span>');
+                if (it.mandatory) {
+                    $chip.append($('<span class="star"></span>').html('&#9733;'));
+                }
+                $chip.append($('<span></span>').text(it.label));
+                $chip.append(
+                    $('<span class="simf-applied-chip-remove">&times;</span>').on('click', function() {
+                        it.clear();
+                        fetchCandidates(1);
+                        mktfUpdateActiveFiltersUI();
+                        mktfCaptureSnapshot();
+                        renderAppliedFiltersCard();
+                    })
+                );
+                $chips.append($chip);
+            });
+
+            if (!mktfAppliedExpanded && items.length > MKTF_APPLIED_VISIBLE_CAP) {
+                var remaining = items.length - MKTF_APPLIED_VISIBLE_CAP;
+                $chips.append(
+                    $('<span class="simf-applied-more"></span>').text('+' + remaining + ' More').on('click', function() {
+                        mktfAppliedExpanded = true;
+                        renderAppliedFiltersCard();
+                    })
+                );
+            }
+
+            $('#simf_applied_card').toggleClass('d-none', items.length === 0);
+            $('#simf_applied_count').text(items.length);
+            $('#simf_count_badge').toggleClass('d-none', items.length === 0).text(items.length);
+        }
+
+        /* ── Draft-until-Apply Lifecycle (Snapshot / Restore) ── */
+        var mktfSnapshot = null;
+        var mktfApplying = false;
+
+        function mktfCaptureSnapshot() {
+            mktfSnapshot = {
+                skills: (typeof tagify !== 'undefined' && tagify && Array.isArray(tagify.value))
+                    ? tagify.value.map(function(t) { return { value: t.value, checked: !!t.checked }; }) : [],
+                locations: (typeof tagifylocation !== 'undefined' && tagifylocation && Array.isArray(tagifylocation.value))
+                    ? tagifylocation.value.map(function(t) { return t.value; }) : [],
+                min_exp: $('#min_exp').val(), max_exp: $('#max_exp').val(),
+                min_sal: $('#min_sal').val(), max_sal: $('#max_sal').val(),
+                min_salary_currency: $('#min_salary_currency').val(), sal_mode: $('#sal_mode').val()
+            };
+        }
+
+        function mktfRestoreSnapshot() {
+            if (!mktfSnapshot) return;
+            if (typeof tagify !== 'undefined' && tagify) {
+                tagify.removeAllTags();
+                if (mktfSnapshot.skills && mktfSnapshot.skills.length) tagify.addTags(mktfSnapshot.skills);
+            }
+            if (typeof tagifylocation !== 'undefined' && tagifylocation) {
+                tagifylocation.removeAllTags();
+                if (mktfSnapshot.locations && mktfSnapshot.locations.length) tagifylocation.addTags(mktfSnapshot.locations);
+            }
+            $('#min_exp').val(mktfSnapshot.min_exp);
+            $('#max_exp').val(mktfSnapshot.max_exp);
+            $('#min_sal').val(mktfSnapshot.min_sal);
+            $('#max_sal').val(mktfSnapshot.max_sal);
+            $('#min_salary_currency').val(mktfSnapshot.min_salary_currency);
+            $('#sal_mode').val(mktfSnapshot.sal_mode);
+            $('.minimum_salary_word, .maximum_salary_word').text('');
+            mktfUpdateActiveFiltersUI();
+        }
+
+        function mktfBindDrawerLifecycle() {
+            var el = document.getElementById('kt_market_filter_drawer');
+            if (!el || typeof KTDrawer === 'undefined' || !KTDrawer.getInstance) {
+                return setTimeout(mktfBindDrawerLifecycle, 300);
+            }
+            var inst = KTDrawer.getInstance(el);
+            if (!inst && typeof KTDrawer === 'function') {
+                inst = new KTDrawer(el);
+            }
+            if (!inst) { return setTimeout(mktfBindDrawerLifecycle, 300); }
+            inst.on('kt.drawer.shown', function() {
+                mktfApplying = false;
+                mktfCaptureSnapshot();
+            });
+            inst.on('kt.drawer.after.hidden', function() {
+                if (!mktfApplying) mktfRestoreSnapshot();
+                mktfApplying = false;
+            });
+        }
+        $(document).ready(mktfBindDrawerLifecycle);
+
+        $(document).on('change keyup', '#min_exp, #max_exp, #min_sal, #max_sal', mktfUpdateActiveFiltersUI);
+
+        $(document).on('click', '#mktf_clear_all', function() {
+            if (typeof tagify !== 'undefined' && tagify) tagify.removeAllTags();
+            if (typeof tagifylocation !== 'undefined' && tagifylocation) tagifylocation.removeAllTags();
+            $('#min_exp, #max_exp, #max_sal, #min_salary_currency, #sal_mode').val('');
+            $('#min_sal').val(0);
+            mktfUpdateActiveFiltersUI();
+        });
+
+        $(document).on('click', '#mktf_reset_btn', function() {
+            $('#mktf_clear_all').trigger('click');
+            fetchCandidates(1);
+            mktfCaptureSnapshot();
+            mktfAppliedExpanded = false;
+            renderAppliedFiltersCard();
+        });
+
+        $(document).on('click', '#mktf_close_btn', function() {
+            $('#mktf_close_x').trigger('click');
+        });
+
+        $(document).on('click', '#mktf_apply_btn', function() {
+            mktfApplying = true;
+            fetchCandidates(1);
+            mktfAppliedExpanded = false;
+            renderAppliedFiltersCard();
+            $('#mktf_close_x').trigger('click');
+        });
+
+        $(document).on('click', '#simf_applied_clear_all', function() {
+            $('#mktf_clear_all').trigger('click');
+            fetchCandidates(1);
+            mktfCaptureSnapshot();
+            mktfAppliedExpanded = false;
+            renderAppliedFiltersCard();
+        });
+
+        $(document).ready(function() {
+            setTimeout(mktfUpdateActiveFiltersUI, 600);
+            setTimeout(mktfCaptureSnapshot, 800);
+            setTimeout(renderAppliedFiltersCard, 700);
+        });
 
         $(document).on('click', '.mjh-tab-item', function() {
             $('.mjh-tab-item').removeClass('active');
@@ -1974,6 +2154,7 @@ $(document).on('click', '#changetextupdate', function (){
                         $('#marketJobLists').html(renderEnterpriseEmptyState(currentActiveTab));
                     }
                     $('#span_jobMarket').html(response.total);
+                    $('#mktf_footer_number').text(response.total || 0);
                     $('#pagination').html(response.pagination);
                 },
                 error: function(xhr, status, error) {
@@ -2048,19 +2229,6 @@ $(document).on('click', '#changetextupdate', function (){
                 }
             });
         });
-
-    /* ── Filter Drawer open/close ── */
-    function fdOpen() {
-        document.getElementById('apptrackerfilter').classList.add('fd-open');
-        document.getElementById('fd-overlay').classList.add('fd-open');
-        document.body.style.overflowY = 'hidden';
-    }
-    function fdClose() {
-        document.getElementById('apptrackerfilter').classList.remove('fd-open');
-        document.getElementById('fd-overlay').classList.remove('fd-open');
-        document.body.style.overflowY = '';
-    }
-    document.addEventListener('keydown', function(e){ if(e.key==='Escape') fdClose(); });
 </script>
 @endpush
 

@@ -2216,7 +2216,7 @@ body
 
   $(document).ready(function () {
        $('#myTable_jmyRank').DataTable({
-            pageLength: 12,          // Default number of rows per page
+            pageLength: 10,          // Default number of rows per page
             lengthChange: false,     // 🔒 disables the lengthMenu dropdown
             ordering: false,
             paging: true,

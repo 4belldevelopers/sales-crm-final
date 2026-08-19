@@ -2414,14 +2414,14 @@ if(block > 0)
            "bFilter"       : false,// to disabled search bar
            stateSave       : true,
            "bInfo"         : true,
-           "bLengthChange" : true,// to disabled table indexing
+           "bLengthChange" : false,// to disabled table indexing
            oLanguage:
            {
              sLengthMenu: "_MENU_",
            },
    
            "lengthMenu": [[10, 25, 50, 100, -1], [10, 25, 50, 100, "All"]], 
-           "pageLength": 25,
+           "pageLength": 10,
    		
    		
    		

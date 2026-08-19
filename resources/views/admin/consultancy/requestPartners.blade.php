@@ -637,14 +637,14 @@ $(document).ready(function() {
         "bFilter"       : false,
         stateSave       : true,
         "bInfo"         : true,
-        "bLengthChange" : true,
+        "bLengthChange" : false,
         oLanguage:
         {
           sLengthMenu: "_MENU_",
         },
 
         "lengthMenu": [[10, 25, 50, 100, -1], [10, 25, 50, 100, "All"]], 
-        "pageLength": 25,
+        "pageLength": 10,
 
         "columnDefs":
         [ 
@@ -677,7 +677,7 @@ $(document).ready(function() {
 			responsive  	: true,
 			processing  	: true,
 			serverSide  	: true,
-			"bLengthChange" : true,
+			"bLengthChange" : false,
 			"lengthMenu"    : [[10, 25, 50, 100], [10, 25, 50, 100]],
 			sDom			: 'lrtip',
 			oLanguage 		: {

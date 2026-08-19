@@ -226,7 +226,7 @@ $userPermissions = array('add_team','view_team');
 											"bLengthChange" :	true,
 											oLanguage		:	{ sLengthMenu: "_MENU_", },   
    											"lengthMenu"	:	[[10, 25, 50, 100, -1], [10, 25, 50, 100, "All"]], 
-   											"pageLength"	:	25,   	
+   											"pageLength"	:	10,   	
 											ajax			: 	{'url' : '{!! route('superadmin.team.data') !!}', "data": function ( d ) {d.search = $('#inputSearch').val()} },
 											"columnDefs"	: 	[
 																	{ "width": "3%", "targets": 0 },

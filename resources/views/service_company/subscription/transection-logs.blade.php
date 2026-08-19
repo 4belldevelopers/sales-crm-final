@@ -427,16 +427,6 @@
                         </select>
                     </div>
 
-                    {{-- Per Page --}}
-                    <div class="txlog-filter-group">
-                        <span class="txlog-filter-label">Per Page</span>
-                        <select id="txlog-per-page" class="form-select" style="width:84px;">
-                            <option value="10">10</option>
-                            <option value="20" selected>20</option>
-                            <option value="50">50</option>
-                            <option value="100">100</option>
-                        </select>
-                    </div>
 
                     {{-- Reset --}}
                     <div class="txlog-filter-group" style="justify-content:flex-end;">
@@ -524,7 +514,7 @@
         date_from       : range.from,
         date_to         : range.to,
         transection_type: '',
-        per_page        : 20,
+        per_page        : 10,
         page            : 1,
     };
     var debounceTimer = null;
@@ -792,12 +782,12 @@
         elDateFrom.value = r.from;
         elDateTo.value   = r.to;
         elType.value     = '';
-        elPerPage.value  = '20';
+        if (elPerPage) elPerPage.value  = '10';
         state.search     = '';
         state.date_from  = r.from;
         state.date_to    = r.to;
         state.transection_type = '';
-        state.per_page   = 20;
+        state.per_page   = 10;
         document.querySelectorAll('.txlog-chip').forEach(function(c) {
             c.classList.toggle('active-chip', c.getAttribute('data-preset') === 'this_month');
         });

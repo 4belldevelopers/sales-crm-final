@@ -33,10 +33,8 @@ class SendInterviewReminders extends Command
     {
         $now = Carbon::now();
         $targetTime = $now->copy()->addMinutes(60);
-        // dd("djdj");
+        
         $interviews = InterviewSchedule::whereBetween('schedule_date', [$now, $targetTime])->get();
-
-        // dd(  $now, $targetTime,$interviews);
 
         
         if($interviews){
