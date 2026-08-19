@@ -8,8 +8,36 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<link href="{{ asset('demo/css/plugins.bundle.css') }}{{ TM_VERSION }}" rel="stylesheet" type="text/css" />
 
 <style>
+    .tagify {
+        --tags-border-color: #E4E6EF;
+        --tags-hover-border-color: #B5B5C3;
+        --tags-focus-border-color: #3E97FF;
+        border-radius: 8px;
+        font-family: 'Poppins', sans-serif;
+    }
+    .tagify__tag .star {
+        cursor: pointer;
+    }
+    .tagify__tag .star.checked {
+        color: #eab308 !important;
+    }
+    .tagify__tag__removeBtn,
+    .tagify__tag__removeBtn::before,
+    .tagify__tag__removeBtn::after {
+        mask-image: none !important;
+        -webkit-mask-image: none !important;
+        content: none !important;
+    }
+    .tagify__tag__removeBtn:hover {
+        background: rgba(37,99,235,.28) !important;
+        color: #1d4ed8 !important;
+    }
+    body > .tagify__dropdown {
+        z-index: 1400 !important;
+    }
     @media only screen and (min-width: 900px) and (max-width: 2560px){
         .table td, .table th, .table tr
         {width: max-content!important;}
@@ -968,10 +996,12 @@
     <link href="{{ asset('demo/css/plugins.bundle.css') }}{{ TM_VERSION }}" rel="stylesheet" type="text/css" />
     <script src="{{ asset('demo/js/plugins.bundle.js') }}{{ TM_VERSION }}"></script>
     <script>
-        const inputElm = document.querySelector('#kt_tagify_users');
-        let tagify = null;
+        /* ── Skills Tagify Initialization ── */
+        var inputElm = document.querySelector('#kt_tagify_users');
+        window.tagify = null;
 
         if (inputElm) {
+<<<<<<< HEAD
             tagify = new Tagify(inputElm, {
                 enforceWhitelist: false,
                 dropdown: {
@@ -980,25 +1010,44 @@
                     closeOnSelect: true,
                     appendTarget: document.body
                 },
+=======
+            window.tagify = new Tagify(inputElm, {
+                whitelist: [],
+>>>>>>> 557ee10dcc4207d9dac0e24c633fa4f491f3cfaf
                 templates: {
                     tag: function(tagData) {
                         tagData = tagData || {};
                         const value = tagData.value || '';
                         const isChecked = tagData.checked ? 'checked' : '';
+                        const mandatoryClass = tagData.checked ? 'simf-mandatory-tag' : '';
+                        const starGlyph = tagData.checked ? '&#9733;' : '&#9734;';
+                        const chipBg    = tagData.checked ? '#dbeafe' : '#eef2ff';
+                        const chipBdr   = tagData.checked ? '#bfdbfe' : '#e0e7ff';
+                        const starColor = tagData.checked ? '#eab308' : '#94a3b8';
+                        const textColor = tagData.checked ? '#1d4ed8' : '#3730a3';
                         return `
-                    <tag title="${value}" contenteditable='false' spellcheck="false" class="tagify__tag ${tagData.class ? tagData.class : ""}" ${this.getAttributes(tagData)}>
-                        <div>
-                            <span class="star ${isChecked}">🟌</span>
-                            <span class="tagify__tag-text">${value}</span>
-                            <span style="width: 16px; height: 16px; border-radius: 50%; background: #A5B4FC !important; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 11px; color: #3730A3; line-height: 1; flex-shrink: 0; transition: background 0.12s;"><x title='' class="tagify__tag__removeBtn" role="button" aria-label="remove tag"></x><span>
-                        </div>
-                    </tag>
-                `;
+                            <tag title="${value}" contenteditable='false' spellcheck="false"
+                                class="tagify__tag ${mandatoryClass} ${tagData.class ? tagData.class : ""}"
+                                ${this.getAttributes(tagData)}
+                                style="display:inline-flex;align-items:center;gap:6px;background:${chipBg};border:1px solid ${chipBdr};border-radius:8px;padding:5px 7px 5px 10px;margin:4px 6px 4px 0;vertical-align:middle;">
+                                <span class="star ${isChecked}" style="cursor:pointer;font-size:15px;line-height:1;color:${starColor};flex-shrink:0;margin: 1px 3px 0px 3px;">${starGlyph}</span>
+                                <span class="tagify__tag-text" style="cursor:pointer;font-size:11.5px;font-weight:500;color:${textColor};line-height:1;white-space:nowrap;padding: 0px 0px 0px 6px;">${value}</span>
+                                <x title='Remove' class="tagify__tag__removeBtn" role="button" aria-label="remove tag"
+                                    style="display:inline-flex;align-items:center;justify-content:center;width:15px;height:15px;border-radius:50%;background:rgba(37,99,235,.14);color:#2563eb;flex-shrink:0;font-size:12px;font-weight:700;line-height:1;cursor:pointer;padding:0;">&times;</x>
+                            </tag>
+                        `;
                     }
                 },
                 transformTag: function(tagData) {
                     tagData.checked = tagData.checked || false;
                     return tagData;
+                },
+                dropdown: {
+                    maxItems: 20,
+                    classname: "",
+                    enabled: 0,
+                    closeOnSelect: true,
+                    appendTarget: document.body
                 }
             });
 
@@ -1011,7 +1060,7 @@
             // Toggle mandatory (star) on click of EITHER the star itself OR the keyword text
             document.addEventListener('click', function(e) {
                 const toggleTarget = e.target.closest('.star, .tagify__tag-text');
-                if (toggleTarget) {
+                if (toggleTarget && window.tagify) {
                     const tagElm = toggleTarget.closest('.tagify__tag');
                     if (!tagElm) return;
                     const starEl = tagElm.querySelector('.star');
@@ -1029,13 +1078,15 @@
                     textEl.style.color = nowChecked ? '#1d4ed8' : '#3730a3';
                     tagElm.classList.toggle('simf-mandatory-tag', nowChecked);
 
-                    const tagData = tagify.value.find(tag => tag.value === value);
-                    if (tagData) {
-                        setTimeout(() => {
-                            tagData.checked = nowChecked;
-                            tagify.updateValueByDOMTags();
-                            if (typeof mktfUpdateActiveFiltersUI === 'function') mktfUpdateActiveFiltersUI();
-                        }, 300);
+                    if (Array.isArray(window.tagify.value)) {
+                        const tagData = window.tagify.value.find(tag => tag.value === value);
+                        if (tagData) {
+                            setTimeout(() => {
+                                tagData.checked = nowChecked;
+                                window.tagify.updateValueByDOMTags();
+                                if (typeof mktfUpdateActiveFiltersUI === 'function') mktfUpdateActiveFiltersUI();
+                            }, 300);
+                        }
                     }
                 }
             });
@@ -1050,12 +1101,12 @@
 
             const fetchSuggestionsSkills = debounceskill(function(query) {
                 $.ajax({
-                    url: "{{ url('/') }}" + "/skill-suggestions?q=" + query,
+                    url: "{{ url('/') }}" + "/skill-suggestions?q=" + encodeURIComponent(query),
                     method: 'GET',
                     success: function(data) {
-                        if (Array.isArray(data) && tagify) {
-                            tagify.settings.whitelist = data;
-                            tagify.dropdown.show.call(tagify);
+                        if (Array.isArray(data) && window.tagify) {
+                            window.tagify.settings.whitelist = data;
+                            window.tagify.dropdown.show.call(window.tagify, query);
                         }
                     },
                     error: function(err) {
@@ -1064,12 +1115,13 @@
                 });
             }, 200);
 
-            tagify.on('input', function(e) {
+            window.tagify.on('input', function(e) {
                 var query = (e.detail.value || '').trim();
                 if (query.length < 1) return;
                 fetchSuggestionsSkills(query);
             });
 
+<<<<<<< HEAD
             $(document).on('click', '.simf-skill-chip', function() {
                 var skill = $(this).data('skill');
                 if (skill && tagify) {
@@ -1079,22 +1131,29 @@
             });
 
             tagify.on('add', function() {
+=======
+            window.tagify.on('add', function() {
+>>>>>>> 557ee10dcc4207d9dac0e24c633fa4f491f3cfaf
                 if (typeof mktfUpdateActiveFiltersUI === 'function') mktfUpdateActiveFiltersUI();
             });
-            tagify.on('remove', function() {
+            window.tagify.on('remove', function() {
                 if (typeof mktfUpdateActiveFiltersUI === 'function') mktfUpdateActiveFiltersUI();
             });
         }
 
         /* ── Location Tagify Initialization ── */
         var inputloc = document.querySelector("#kt_tagify_location");
-        var cities = @json($cities ?? []);
-        var tagifylocation = null;
+        window.tagifylocation = null;
 
         if (inputloc) {
+<<<<<<< HEAD
             tagifylocation = new Tagify(inputloc, {
                 whitelist: cities,
                 enforceWhitelist: false,
+=======
+            window.tagifylocation = new Tagify(inputloc, {
+                whitelist: [],
+>>>>>>> 557ee10dcc4207d9dac0e24c633fa4f491f3cfaf
                 maxTags: 10,
                 templates: {
                     tag: function(tagData) {
@@ -1139,10 +1198,31 @@
 
             $(document).on('click', '.simf-loc-chip', function() {
                 var city = $(this).data('city');
-                if (city && tagifylocation) {
-                    tagifylocation.addTags([city]);
-                    mktfCloseLocPanel();
-                }
+                var $btn = $(this);
+                if (!city || !window.tagifylocation) return;
+                $btn.prop('disabled', true);
+                $.ajax({
+                    url: "{{ url('/') }}" + "/city-job-suggestions?q=" + encodeURIComponent(city),
+                    method: 'GET',
+                    success: function(data) {
+                        $btn.prop('disabled', false);
+                        if (Array.isArray(data) && data.length > 0) {
+                            var match = data.find(function(item) {
+                                return String(item).toLowerCase().indexOf(city.toLowerCase()) === 0;
+                            }) || data[0];
+                            window.tagifylocation.addTags([match]);
+                            mktfCloseLocPanel();
+                        } else {
+                            window.tagifylocation.addTags([city]);
+                            mktfCloseLocPanel();
+                        }
+                    },
+                    error: function() {
+                        $btn.prop('disabled', false);
+                        window.tagifylocation.addTags([city]);
+                        mktfCloseLocPanel();
+                    }
+                });
             });
 
             $(document).on('click', function(e) {
@@ -1151,15 +1231,15 @@
                 }
             });
 
-            tagifylocation.on('dropdown:select', function(e) {
-                tagifylocation.addTags([e.detail.data.value]);
+            window.tagifylocation.on('dropdown:select', function(e) {
+                window.tagifylocation.addTags([e.detail.data.value]);
                 mktfCloseLocPanel();
             });
-            tagifylocation.on('add', function() {
+            window.tagifylocation.on('add', function() {
                 if (typeof mktfUpdateActiveFiltersUI === 'function') mktfUpdateActiveFiltersUI();
                 mktfCloseLocPanel();
             });
-            tagifylocation.on('remove', function() {
+            window.tagifylocation.on('remove', function() {
                 if (typeof mktfUpdateActiveFiltersUI === 'function') mktfUpdateActiveFiltersUI();
             });
 
@@ -1176,10 +1256,10 @@
                     url: "{{ url('/') }}" + "/city-job-suggestions?q=" + encodeURIComponent(query),
                     method: 'GET',
                     success: function(data) {
-                        if (Array.isArray(data)) {
-                            tagifylocation.settings.whitelist = data;
+                        if (Array.isArray(data) && window.tagifylocation) {
+                            window.tagifylocation.settings.whitelist = data;
                             mktfCloseLocPanel();
-                            tagifylocation.dropdown.show.call(tagifylocation, query);
+                            window.tagifylocation.dropdown.show.call(window.tagifylocation, query);
                         }
                     },
                     error: function(err) {
@@ -1188,13 +1268,60 @@
                 });
             }, 200);
 
-            tagifylocation.on('input', function(e) {
+            window.tagifylocation.on('input', function(e) {
                 var query = (e.detail.value || '').trim();
                 if (query.length < 2) return;
                 mktfCloseLocPanel();
                 fetchSuggestionsLocation(query);
             });
         }
+
+        /* ── Enforce Drawer Layout (Fix Vertical Scroller & Pin Header/Footer) ── */
+        function simfEnforceDrawerLayout() {
+            var drawerEl = document.getElementById('kt_market_filter_drawer');
+            var cardEl = document.getElementById('mktf_card');
+            var bodyEl = cardEl ? cardEl.querySelector('.simf-body') : null;
+            var headerEl = cardEl ? cardEl.querySelector('.simf-header') : null;
+            var footerEl = cardEl ? cardEl.querySelector('.simf-footer') : null;
+            if (drawerEl) {
+                drawerEl.style.setProperty('overflow', 'hidden', 'important');
+                drawerEl.style.setProperty('position', 'fixed', 'important');
+                drawerEl.style.setProperty('top', '0', 'important');
+                drawerEl.style.setProperty('bottom', '0', 'important');
+                drawerEl.style.setProperty('height', '100vh', 'important');
+            }
+            if (cardEl) {
+                cardEl.style.setProperty('display', 'block', 'important');
+                cardEl.style.setProperty('position', 'relative', 'important');
+                cardEl.style.setProperty('overflow', 'hidden', 'important');
+                cardEl.style.setProperty('height', '100vh', 'important');
+                cardEl.style.setProperty('max-height', '100vh', 'important');
+            }
+            if (bodyEl) {
+                var headerH = headerEl ? headerEl.offsetHeight : 0;
+                var footerH = footerEl ? footerEl.offsetHeight : 0;
+                var available = Math.max(window.innerHeight - headerH - footerH, 100);
+                bodyEl.style.setProperty('position', 'absolute', 'important');
+                bodyEl.style.setProperty('left', '0', 'important');
+                bodyEl.style.setProperty('right', '0', 'important');
+                bodyEl.style.setProperty('top', headerH + 'px', 'important');
+                bodyEl.style.setProperty('height', available + 'px', 'important');
+                bodyEl.style.setProperty('max-height', available + 'px', 'important');
+                bodyEl.style.setProperty('overflow-y', 'auto', 'important');
+                bodyEl.style.setProperty('overflow-x', 'hidden', 'important');
+            }
+            if (footerEl) {
+                footerEl.style.setProperty('position', 'absolute', 'important');
+                footerEl.style.setProperty('left', '0', 'important');
+                footerEl.style.setProperty('right', '0', 'important');
+                footerEl.style.setProperty('bottom', '0', 'important');
+            }
+        }
+        $(document).ready(simfEnforceDrawerLayout);
+        $(window).on('resize', simfEnforceDrawerLayout);
+        $(document).on('click', '#kt_market_filter_toggle, #mktf_close_x, #mktf_close_btn', function() {
+            setTimeout(simfEnforceDrawerLayout, 50);
+        });
 
         function filtersdata() {
             if (typeof renderAppliedFiltersCard === 'function') {
@@ -2144,6 +2271,10 @@
             inst.on('kt.drawer.shown', function() {
                 mktfApplying = false;
                 mktfCaptureSnapshot();
+                if (typeof simfEnforceDrawerLayout === 'function') {
+                    simfEnforceDrawerLayout();
+                    setTimeout(simfEnforceDrawerLayout, 50);
+                }
             });
             inst.on('kt.drawer.after.hidden', function() {
                 if (!mktfApplying) mktfRestoreSnapshot();
