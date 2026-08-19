@@ -178,7 +178,7 @@ $(function ()
         "scrollY"       : 300,
         scrollX         : false,
         scrollCollapse  : true,
-        "bLengthChange" : true,
+        "bLengthChange" : false,
         "lengthMenu"    : [[10, 25, 50, 100], [10, 25, 50, 100]],
         columnDefs: [
             { data: 'job_applications', name: 'job_applications', searchable : false, orderable : false , "width": "2%", "targets": 0 },

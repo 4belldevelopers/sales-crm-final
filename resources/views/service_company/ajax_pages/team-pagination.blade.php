@@ -37,13 +37,5 @@
             </button>
         </div>
 
-        <div class="team-pagination-rows">
-            <span>Rows per page</span>
-            <select id="teamRowsPerPage" onchange="changeTeamPageSize(this.value)">
-                @foreach ([10, 25, 50, 100] as $opt)
-                    <option value="{{ $opt }}" {{ $perPage == $opt ? 'selected' : '' }}>{{ $opt }}</option>
-                @endforeach
-            </select>
-        </div>
     </div>
 @endif

@@ -2314,7 +2314,7 @@ $current_job_id = @$job_id;
                 '&max_exp=' + max_exp + '&kt_tagify_location=' + kt_tagify_location + '&min_sal=' + min_sal +
                 '&max_sal=' + max_sal + '&min_salary_currency=' + min_salary_currency + '&sal_mode=' +
                 sal_mode + '&app_int_outsource=' + app_int_outsource,
-            pageLength: 25,
+            pageLength: 10,
             lengthMenu: [[25, 50, 100], [25, 50, 100]],
             "fnDrawCallback": function(oSettings) {
                 $("body").tooltip({

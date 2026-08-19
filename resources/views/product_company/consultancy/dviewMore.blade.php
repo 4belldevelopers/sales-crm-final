@@ -591,7 +591,7 @@
    			oLanguage 		: {
    									sLengthMenu: "_MENU_",
    								},
-           	"pageLength": 25,
+           	"pageLength": 10,
    			colReorder		: true,
       		ajax			: {			
 											'url' : '{!! route('product_company.consultancy.staffing_contact_list') !!}/'+{{$directClientDetail->current_company_id}},
@@ -647,7 +647,7 @@
    			oLanguage 		: {
    									sLengthMenu: "_MENU_",
    								},
-           	"pageLength": 25,
+           	"pageLength": 10,
    			colReorder		: true,
       		ajax			: {			
 											'url' : '{!! route('product_company.consultancy.allreq') !!}/'+{{$directClientDetail->current_company_id}},

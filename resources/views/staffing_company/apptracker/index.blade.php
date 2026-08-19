@@ -606,7 +606,7 @@
 	   			responsive     	: true, 
       			processing      : true,
 				ordering		: false, //disable ordering      			
-      			"bLengthChange"   : true,   
+      			"bLengthChange"   : false,   
       			"lengthMenu"      : [[10, 25, 50, 100], [10, 25, 50, 100]],
 				sDom			: 'lrtip',       
 				          

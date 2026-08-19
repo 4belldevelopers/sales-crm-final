@@ -1597,7 +1597,7 @@ $to_company_id   = ($match['from_company_id'] ?? null) == $company_id ? $match['
         oLanguage: {
             sLengthMenu: "_MENU_",
         },
-        "pageLength": 25,
+        "pageLength": 10,
         colReorder: true,
         ajax: {
             'url': '{!! route('service_company.consultancy.staffing_contact_list') !!}/' + {{ $directClientDetail->company_id }},
@@ -1691,7 +1691,7 @@ $to_company_id   = ($match['from_company_id'] ?? null) == $company_id ? $match['
     //     oLanguage: {
     //         sLengthMenu: "_MENU_",
     //     },
-    //     "pageLength": 25,
+    //     "pageLength": 10,
     //     colReorder: true,
     //     ajax: {
     //         'url': '{!! route('service_company.consultancy.allreq') !!}/' + {{ $directClientDetail->company_id }},
