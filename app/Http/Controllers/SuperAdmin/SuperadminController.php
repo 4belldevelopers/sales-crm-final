@@ -94,7 +94,7 @@ class SuperadminController extends SuperAdminBaseController
         if($this->user->id == $id){
             abort(403);
         }
-        $this->superadminUser = User::findOrFail($id);
+        $this->superadminUser = User::withoutGlobalScopes()->findOrFail($id);
 
         return view('super-admin.superadmin.edit', $this->data);
     }
@@ -109,7 +109,7 @@ class SuperadminController extends SuperAdminBaseController
             abort(403);
         }
 
-        $user = User::findOrFail($id);
+        $user = User::withoutGlobalScopes()->findOrFail($id);
 
         $user->email         = $request->email;
         $user->name          = $request->name;

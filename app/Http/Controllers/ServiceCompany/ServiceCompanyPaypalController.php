@@ -134,7 +134,7 @@ class ServiceCompanyPaypalController extends ServiceCompanyBaseController
                 return Redirect::route('service_company.subscribe.index');
             }
         }
-        $company = Company::findOrFail(company()->id);
+        $company = Company::withoutGlobalScopes()->findOrFail(company()->id);
 
         // Calculating next billing date
         $today = Carbon::now()->addDays(1); //payment will deduct after 1 day
@@ -383,7 +383,7 @@ class ServiceCompanyPaypalController extends ServiceCompanyBaseController
     public function paypalInvoiceDownload($id)
     {
         // ,header('Content-type: application/pdf');
-        $this->invoice = PaypalInvoice::with(['company', 'currency', 'package'])->findOrFail($id);
+        $this->invoice = PaypalInvoice::with(['company', 'currency', 'package'])->withoutGlobalScopes()->findOrFail($id);
         $this->settings = $this->invoice->company;
         $this->company = $this->invoice->company;
         $this->superSettings = GlobalSetting::first();

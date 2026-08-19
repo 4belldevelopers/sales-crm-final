@@ -556,7 +556,7 @@ class ServiceCompanyConsultancyController extends ServiceCompanyBaseController
                         ];
                         DB::table('staffing_company_invitation')->insert($staffing_company_invitation);
                         $invitationId = DB::getPdo()->lastInsertId();
-                        $Companies = Company::find(auth()->user()->company_id);
+                        $Companies = Company::withoutGlobalScopes()->find(auth()->user()->company_id);
 
                         GeneralMethod::clientRequestIndexElastic($invitationId);
 
@@ -633,7 +633,7 @@ class ServiceCompanyConsultancyController extends ServiceCompanyBaseController
                 'to_status' => 0,
                 // 'job_id'			=>
             ];
-            $Companies = Company::find(auth()->user()->company_id);
+            $Companies = Company::withoutGlobalScopes()->find(auth()->user()->company_id);
 
             DB::table('staffing_company_invitation')->insert($staffing_company_invitation);
             $invitationId = DB::getPdo()->lastInsertId();

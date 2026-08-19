@@ -23,7 +23,7 @@ class LinkedInSettingController extends SuperAdminBaseController
     }
     public function update(Request $request, $id){
         /*dd($request->all());*/
-        $setting = LinkedInSetting::findOrFail($id);
+        $setting = LinkedInSetting::withoutGlobalScopes()->findOrFail($id);
         $setting->client_id = $request->input('client_id');
         $setting->client_secret = $request->input('client_secret');
         $setting->callback_url = $request->input('callback_url');
@@ -34,7 +34,7 @@ class LinkedInSettingController extends SuperAdminBaseController
         return Reply::redirect(route('superadmin.linkedin-settings.index'), __('menu.settings').' '.__('messages.updatedSuccessfully'));
     }
     public function updateStatus($id){
-        $setting = LinkedInSetting::findOrFail($id);
+        $setting = LinkedInSetting::withoutGlobalScopes()->findOrFail($id);
         $setting->status = 'disable';
 
         $setting->save();

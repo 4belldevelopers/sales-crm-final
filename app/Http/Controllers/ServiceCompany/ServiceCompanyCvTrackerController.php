@@ -3452,7 +3452,7 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
         if (@$client_loc->country_id == 101) {
             $city = @$client_loc->city_name;
         }
-        $jobs = Job::find($jobid);
+        $jobs = Job::withoutGlobalScopes()->find($jobid);
 
         $this->jobid = $jobid;
 
@@ -3729,7 +3729,7 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
         if (@$client_loc->country_id == 101) {
             $city = @$client_loc->city_name;
         }
-        $jobs = Job::find($jobid);
+        $jobs = Job::withoutGlobalScopes()->find($jobid);
 
         $this->jobid = $jobid;
 
@@ -4457,7 +4457,7 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
             // if (@$client_loc->country_id == 101) {
             // 	$city = substr(@$client_loc->city_name, 0, 30);
             // }
-            $jobs = Job::find($jobid);
+            $jobs = Job::withoutGlobalScopes()->find($jobid);
 
             $companyOrClientName = GeneralMethod::companyOrClientName($jobs->client_id);
 
@@ -5876,7 +5876,7 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
                     $send_approved_date_time = null;
 
                     // if($result){
-                    $Offertimelime = OfferJobApplication::find($offerId);
+                    $Offertimelime = OfferJobApplication::withoutGlobalScopes()->find($offerId);
                     $exists = $this->elasticService->getClient()->exists([
                         'index' => ELASTIC_CANDIDATES,
                         'id' => $Offertimelime->joined,
@@ -5934,7 +5934,7 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
 
                     // $coinsDeductions = GeneralMethod::coinsDeductions((int) auth()->user()->company_id,$eventId,auth()->user()->id, auth()->user()->company_id,'','');
 
-                    $Offertimelime = OfferJobApplication::find($offerId);
+                    $Offertimelime = OfferJobApplication::withoutGlobalScopes()->find($offerId);
 
                     $option_currency_val = @$request->current_ctc_cur;
                     $joined_date = @$request->dob ? date('Y-m-d H:i:s', strtotime(@$request->dob)) : 'NULL';
@@ -5961,7 +5961,7 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
                         'update_at' => @$date ? @$date : null,
 
                     ];
-                    $jobApplication = AddJobWiseCondidate::find($Offertimelime->joined);
+                    $jobApplication = AddJobWiseCondidate::withoutGlobalScopes()->find($Offertimelime->joined);
                     if (@$jobApplication->master_status_id > 0) {
                         $masterStatus = DB::table('master_status')->select('master_status.name')->where('id', $jobApplication->master_status_id)->first();
                         $values['master_process_name'] = @$masterStatus->name;

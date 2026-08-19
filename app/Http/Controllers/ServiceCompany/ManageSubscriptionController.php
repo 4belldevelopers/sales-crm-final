@@ -584,7 +584,7 @@ class ManageSubscriptionController extends ServiceCompanyBaseController
         $token = $request->payment_method;
         $email = $request->stripeEmail;
 
-        $plan = Package::find($request->plan_id);
+        $plan = Package::withoutGlobalScopes()->find($request->plan_id);
 
         $stripe = DB::table("stripe_invoices")
             ->join('packages', 'packages.id', 'stripe_invoices.package_id')
@@ -696,7 +696,7 @@ class ManageSubscriptionController extends ServiceCompanyBaseController
 
     public function paypalInvoiceDownload($id)
     {
-        $this->invoice = PaypalInvoice::with(['company','currency','package'])->findOrFail($id);
+        $this->invoice = PaypalInvoice::with(['company','currency','package'])->withoutGlobalScopes()->findOrFail($id);
 
         $this->company = company();
         $this->superSettings =  GlobalSetting::first();
@@ -708,7 +708,7 @@ class ManageSubscriptionController extends ServiceCompanyBaseController
 
     public function invoiceDownload($id)
     {
-        $this->invoice = CompanyPackage::with(['company','package'])->findOrFail($id);
+        $this->invoice = CompanyPackage::with(['company','package'])->withoutGlobalScopes()->findOrFail($id);
         $this->amount = 0;
 
         if($this->invoice->package_type == 'monthly'){
@@ -877,7 +877,7 @@ class ManageSubscriptionController extends ServiceCompanyBaseController
     public function selectPackage(Request $request, $packageID) 
 	{
         $this->setStripConfigs();
-        $this->package = Package::findOrFail($packageID);
+        $this->package = Package::withoutGlobalScopes()->findOrFail($packageID);
         $this->company = company();
         $this->type    = $request->type;
         $this->stripeSettings = PaymentSetting::first();
@@ -1003,7 +1003,7 @@ class ManageSubscriptionController extends ServiceCompanyBaseController
 
         $api = new Api($apiKey, $secretKey);
 
-        $plan = Package::find($request->plan_id);
+        $plan = Package::withoutGlobalScopes()->find($request->plan_id);
         $type = $request->type;
 
         $expectedSignature = hash_hmac('sha256', $paymentId . '|' . $subscriptionId, $secretKey);
@@ -1056,7 +1056,7 @@ class ManageSubscriptionController extends ServiceCompanyBaseController
 	{
         	$credential = PaymentSetting::first();
 
-			$plan = Package::find($request->plan_id);
+			$plan = Package::withoutGlobalScopes()->find($request->plan_id);
 			$type =  $request->type;
 
         	$planID = ($type == 'annual') ? $plan->razorpay_annual_plan_id : $plan->razorpay_monthly_plan_id;
@@ -1073,7 +1073,7 @@ class ManageSubscriptionController extends ServiceCompanyBaseController
     public function razorpayInvoiceDownload($id)
     {
         $this->company = company();
-        $this->invoice = RazorpayInvoice::with(['company','currency','package'])->findOrFail($id);
+        $this->invoice = RazorpayInvoice::with(['company','currency','package'])->withoutGlobalScopes()->findOrFail($id);
         $pdf = app('dompdf.wrapper');
         $pdf->loadView('razorpay-invoice.invoice-1', $this->data);
         $filename = $this->invoice->pay_date->format("dS M Y").'-'.$this->invoice->next_pay_date->format($this->global->date_format);

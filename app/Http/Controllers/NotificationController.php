@@ -11,7 +11,7 @@ class NotificationController extends Controller
     public function send(Request $request)
     {
         // Example: Send to user with ID 1
-        $user = User::find(3);
+        $user = User::withoutGlobalScopes()->find(3);
 
         if ($user) {
             // Mock data for broadcast

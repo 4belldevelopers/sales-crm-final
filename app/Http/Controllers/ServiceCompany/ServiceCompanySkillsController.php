@@ -74,14 +74,14 @@ class ServiceCompanySkillsController extends ServiceCompanyBaseController
         abort_if(Gate::denies('edit_skills'), 403);
 
         $this->categories = JobCategory::all();
-        $this->skill = Skill::find($id);
+        $this->skill = Skill::withoutGlobalScopes()->find($id);
         return view('service_company.skills.edit', $this->data);
     }
     public function update(Request $request, $id)
     {
         abort_if(Gate::denies('edit_skills'), 403);
 
-        $skill = Skill::find($id);
+        $skill = Skill::withoutGlobalScopes()->find($id);
         $skill->name = $request->name;
         //$skill->category_id = $request->category_id;
         $skill->save();

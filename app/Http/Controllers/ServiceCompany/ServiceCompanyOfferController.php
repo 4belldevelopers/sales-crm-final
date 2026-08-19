@@ -471,7 +471,7 @@ class ServiceCompanyOfferController extends ServiceCompanyBaseController
 		$candidate_id	=	$request->candidate_id;
 		if($candidate_id > 0)
 		{
-			 $jobApplication 								= JobApplication::find($candidate_id);	
+			 $jobApplication 								= JobApplication::withoutGlobalScopes()->find($candidate_id);	
 			 
 			 if($request->process == 1){												//		proposed_ctc
 					$jobApplication->proposed_ctc 			= $request->cvalue;
