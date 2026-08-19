@@ -29,4 +29,4 @@ core rules below; full detail in docs/AI_RULES.md and docs/README.md.
     See docs/CODE_DOCUMENTATION_STANDARD.md.
 
 ## Known issues (don't replicate): active dd() + debug routes, commented-out tenant scope
-(leak risk), 1227 unescaped {!! !!} (XSS), secrets in .env. See docs/BUG_REPORT.md & docs/SECURITY.md.
+(leak risk), 1227 unescaped {!! !!} (XSS), secrets in .env. See docs/V2_BugsReport and Implementation/BUG_REPORT.md & docs/SECURITY.md.

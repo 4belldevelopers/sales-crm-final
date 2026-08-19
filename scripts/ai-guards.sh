@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ai-guards.sh — fast, dependency-free guards that block NEW rule violations.
-# Enforces a subset of docs/AI_RULES.md & docs/BUG_REPORT.md so they can't be skipped.
+# Enforces a subset of docs/AI_RULES.md & docs/V2_BugsReport and Implementation/BUG_REPORT.md so they can't be skipped.
 # Designed to check only CHANGED files (not legacy), so it won't drown in existing debt.
 #
 # Usage:

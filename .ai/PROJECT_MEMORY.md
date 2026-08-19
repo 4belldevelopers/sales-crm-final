@@ -96,7 +96,7 @@ Last updated: 2026-08-06 (V2_login audit + planning slices complete).
 - [ ] **V2_login product sign-off Q2:** `block_log.reason` free-text vs. typed categories only?
       Defaults to free-text nullable. See Appendix A.
 - [ ] Tenant isolation: is `JobApplication`'s commented-out `company_id` scope intentional,
-      or a bug? (Blocks safe marketplace work.) — see [BUG-03](../docs/BUG_REPORT.md).
+      or a bug? (Blocks safe marketplace work.) — see [BUG-03](../docs/V2_BugsReport%20and%20Implementation/BUG_REPORT.md).
 - [x] ~~`job_metronics_skills` — "metrics" or theme-related?~~ **RESOLVED 2026-06-27:**
       Metronic UI theme; not a typo; do not rename. (See decision log.)
 - [ ] Which is the **canonical** resume uploader: `UploadResumeToS3` vs `…TestS3` vs
