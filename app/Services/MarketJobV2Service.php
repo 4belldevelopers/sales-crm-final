@@ -44,18 +44,36 @@ class MarketJobV2Service
         $size = (int) ($request->input('per_page') ?? $request->input('size') ?? $request->input('limit') ?? 10);
         $from = ($page - 1) * $size;
 
+        // Parse Skills input (cus_search can be Tagify JSON string or plain text/comma-separated)
         $searchTerms = $request->input('cus_search');
-        $customSearch = json_decode($searchTerms, true);
         $requiredSkills = [];
 
-        if (! empty($searchTerms) && is_array($customSearch)) {
-            $checkedSkills = array_filter($customSearch, fn ($s) => ($s['checked'] ?? false) == true);
-            $uncheckedSkills = array_filter($customSearch, fn ($s) => ($s['checked'] ?? false) == false);
+        if (! empty($searchTerms)) {
+            $customSearch = json_decode($searchTerms, true);
+            if (is_array($customSearch)) {
+                $checkedSkills = array_filter($customSearch, fn ($s) => ($s['checked'] ?? false) == true);
+                $uncheckedSkills = array_filter($customSearch, fn ($s) => ($s['checked'] ?? false) == false);
 
-            if (! empty($checkedSkills)) {
-                $requiredSkills = array_column($checkedSkills, 'value');
-            } else {
-                $requiredSkills = array_column($uncheckedSkills, 'value');
+                if (! empty($checkedSkills)) {
+                    $requiredSkills = array_column($checkedSkills, 'value');
+                } else {
+                    $requiredSkills = array_column($uncheckedSkills, 'value');
+                }
+            } elseif (is_string($searchTerms)) {
+                $requiredSkills = array_filter(array_map('trim', explode(',', $searchTerms)));
+            }
+        }
+
+        // Parse Preferred Location input (kt_tagify_location can be Tagify JSON string or plain text/comma-separated)
+        $locationTerms = $request->input('kt_tagify_location');
+        $requiredLocations = [];
+
+        if (! empty($locationTerms)) {
+            $customLoc = json_decode($locationTerms, true);
+            if (is_array($customLoc)) {
+                $requiredLocations = array_filter(array_column($customLoc, 'value'));
+            } elseif (is_string($locationTerms)) {
+                $requiredLocations = array_filter(array_map('trim', explode(',', $locationTerms)));
             }
         }
 
@@ -185,21 +203,69 @@ class MarketJobV2Service
         // Tenancy Condition: Exclude current company's own jobs (status filter is in $filter above)
         $mustNot[] = ['term' => ['comId' => $companyId]];
 
-        // Required Skills Filter (Nested ES Query)
+        // Required Skills Filter (Intent: matches nested job_metronics_skills as well as job title/description/requirement for high recall)
         if (! empty($requiredSkills)) {
-            $must[] = [
-                'nested' => [
-                    'path' => 'job_metronics_skills',
-                    'query' => [
-                        'bool' => [
-                            'should' => array_map(fn ($skill) => [
-                                'match' => ['job_metronics_skills.skill_name' => $skill],
-                            ], $requiredSkills),
-                            'minimum_should_match' => 1,
+            $skillQueries = [];
+            foreach ($requiredSkills as $skill) {
+                $skillClean = trim($skill);
+                if (empty($skillClean)) {
+                    continue;
+                }
+
+                $skillQueries[] = [
+                    'bool' => [
+                        'should' => [
+                            ['nested' => [
+                                'path' => 'job_metronics_skills',
+                                'query' => [
+                                    'match' => ['job_metronics_skills.skill_name' => $skillClean],
+                                ],
+                            ]],
+                            ['match_phrase' => ['title' => $skillClean]],
+                            ['match_phrase' => ['job_description' => $skillClean]],
+                            ['match_phrase' => ['job_requirement' => $skillClean]],
                         ],
+                        'minimum_should_match' => 1,
                     ],
-                ],
-            ];
+                ];
+            }
+
+            if (! empty($skillQueries)) {
+                foreach ($skillQueries as $sQuery) {
+                    $must[] = $sQuery;
+                }
+            }
+        }
+
+        // Preferred Location Filter (Intent: matches client_city_jobs.city_name/country_name, client_location.address, or text match on description/title)
+        if (! empty($requiredLocations)) {
+            $locationQueries = [];
+            foreach ($requiredLocations as $loc) {
+                $locClean = strtolower(trim($loc));
+                if (empty($locClean)) {
+                    continue;
+                }
+
+                $locationQueries[] = [
+                    'bool' => [
+                        'should' => [
+                            ['match' => ['client_city_jobs.city_name' => $locClean]],
+                            ['match' => ['client_city_jobs.country_name' => $locClean]],
+                            ['wildcard' => ['client_city_jobs.city_name' => '*'.$locClean.'*']],
+                            ['match' => ['client_location.address' => $locClean]],
+                            ['match_phrase' => ['job_description' => $locClean]],
+                            ['match_phrase' => ['title' => $locClean]],
+                        ],
+                        'minimum_should_match' => 1,
+                    ],
+                ];
+            }
+
+            if (! empty($locationQueries)) {
+                foreach ($locationQueries as $lQuery) {
+                    $must[] = $lQuery;
+                }
+            }
         }
 
         // Experience Filters — only applied when user explicitly sets a value > 0

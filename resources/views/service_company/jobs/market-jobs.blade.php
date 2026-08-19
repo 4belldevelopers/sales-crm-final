@@ -63,6 +63,7 @@
         position: fixed !important;
         top: 0 !important; right: 0 !important; bottom: 0 !important; left: auto !important;
         height: 100vh !important; max-height: 100vh !important;
+        width: 80% !important; max-width: 80% !important;
         overflow: hidden !important; z-index: 1200;
     }
     #mktf_card.simf-card {
@@ -70,13 +71,53 @@
         font-family: 'Poppins', sans-serif;
         position: relative !important;
         height: 100vh !important; max-height: 100vh !important; overflow: hidden !important;
+        background: #fff;
     }
     #mktf_card .simf-body {
         flex: 1 1 auto !important; min-height: 0 !important;
         overflow-y: auto !important; overflow-x: hidden !important;
-        padding: 4px 20px 16px;
+        padding: 8px 24px 24px !important;
+    }
+    #mktf_card #mktf_form {
+        margin: 0;
+        padding: 0;
+    }
+    #mktf_card .simf-section {
+        padding: 18px 0;
+        border-bottom: 1px solid #f1f5f9;
+    }
+    #mktf_card .simf-section-last {
+        border-bottom: none;
+        padding-bottom: 8px;
     }
     #mktf_card .simf-header, #mktf_card .simf-footer { flex-shrink: 0 !important; }
+
+    .simf-skill-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        background: #F8FAFC;
+        border: 1px solid #E2E8F0;
+        border-radius: 20px;
+        padding: 4px 12px;
+        font-size: 12px;
+        font-weight: 500;
+        color: #475569;
+        cursor: pointer;
+        transition: all 0.15s ease;
+        line-height: 1.2;
+    }
+    .simf-skill-chip:hover {
+        background: #EEF2FF;
+        border-color: #C7D2FE;
+        color: #4F46E5;
+    }
+    .simf-skill-chip.active {
+        background: #EEF2FF;
+        border-color: #818CF8;
+        color: #3730A3;
+        font-weight: 600;
+    }
 
     /* ══════════════════════════════════════════
        Market Jobs Hero  (mjh-*)
@@ -425,7 +466,7 @@
                                 <span class="simf-search-icon">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.35-4.35"/></svg>
                                 </span>
-                                <input type="text" class="simf-search-input" name="inputJobSearch" id="kt_tagify_2"
+                                <input type="text" class="simf-search-input search-input" name="inputJobSearch" id="kt_tagify_2"
                                     placeholder="Search by job title, skills, requirement ID or client..." autocomplete="off" />
                             </div>
 
@@ -570,12 +611,26 @@
                                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m8 6-6 6 6 6M16 6l6 6-6 6"/></svg>
                                 </span>
                                 <div>
-                                    <div class="simf-section-title">Skills <span class="simf-badge-primary">Primary</span></div>
+                                    <div class="simf-section-title">Skills / Keywords <span class="simf-badge-primary">Primary</span></div>
                                     <div class="simf-section-desc">Add skills to find relevant jobs &mdash; click &#9733; to make a skill mandatory</div>
                                 </div>
                             </div>
                             <div class="simf-section-body">
-                                <input class="form-control form-control-solid" name="kt_tagify_users" value="" placeholder="" id="kt_tagify_users" />
+                                <input class="form-control form-control-solid search-input" name="kt_tagify_users" value="" placeholder="Search by skills..." id="kt_tagify_users" />
+                                <div class="simf-subtext" style="font-size:11.5px;color:#94a3b8;margin-top:6px;">
+                                    Press <strong style="color:#6366f1;">Enter</strong> or <strong style="color:#6366f1;">,</strong> to add a keyword &middot; Press <strong style="color:#6366f1;">Backspace</strong> to remove last
+                                </div>
+                                <div class="simf-popular-searches" style="margin-top:10px;display:flex;flex-wrap:wrap;align-items:center;gap:6px;">
+                                    <span style="font-size:12px;font-weight:500;color:#64748b;">Popular searches:</span>
+                                    <button type="button" class="simf-skill-chip" data-skill="Java Developer">Java Developer</button>
+                                    <button type="button" class="simf-skill-chip" data-skill=".NET Developers">.NET Developers</button>
+                                    <button type="button" class="simf-skill-chip" data-skill="SAP Consultants">SAP Consultants</button>
+                                    <button type="button" class="simf-skill-chip" data-skill="AWS">AWS</button>
+                                    <button type="button" class="simf-skill-chip" data-skill="React Developers">React Developers</button>
+                                    <button type="button" class="simf-skill-chip" data-skill="Node.js">Node.js</button>
+                                    <button type="button" class="simf-skill-chip" data-skill="Python Developer">Python Developer</button>
+                                    <button type="button" class="simf-skill-chip" data-skill="DevOps Engineer">DevOps Engineer</button>
+                                </div>
                             </div>
                         </div>
                         <!--end::Skills-->
@@ -593,14 +648,18 @@
                             </div>
                             <div class="simf-section-body">
                                 <div class="simf-loc-inputwrap" id="mktf_loc_inputwrap">
-                                    <input class="form-control form-control-solid" value="{{ @$default_loc }}" id="kt_tagify_location" placeholder="Search location (e.g. Bangalore, Pune, Remote)" />
+                                    <input class="form-control form-control-solid search-input" value="{{ @$default_loc }}" id="kt_tagify_location" placeholder="Enter your Location..." />
                                     <button type="button" class="simf-loc-chevron" id="mktf_loc_chevron" title="Show suggestions">
                                         <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
                                     </button>
                                 </div>
+                                <div class="simf-subtext" style="font-size:11.5px;color:#94a3b8;margin-top:6px;">
+                                    Press <strong style="color:#6366f1;">Enter</strong> or <strong style="color:#6366f1;">,</strong> to add a location &middot; Press <strong style="color:#6366f1;">Backspace</strong> to remove last
+                                </div>
                                 <div class="simf-loc-suggestions d-none" id="mktf_loc_panel">
                                     <div class="simf-loc-label">Popular Locations</div>
                                     <div class="simf-loc-chip-row">
+                                        <button type="button" class="simf-loc-chip" data-city="India">India</button>
                                         <button type="button" class="simf-loc-chip" data-city="Bangalore">
                                             <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
                                             Bangalore
@@ -914,6 +973,13 @@
 
         if (inputElm) {
             tagify = new Tagify(inputElm, {
+                enforceWhitelist: false,
+                dropdown: {
+                    enabled: 1,
+                    maxItems: 20,
+                    closeOnSelect: true,
+                    appendTarget: document.body
+                },
                 templates: {
                     tag: function(tagData) {
                         tagData = tagData || {};
@@ -932,8 +998,13 @@
                 },
                 transformTag: function(tagData) {
                     tagData.checked = tagData.checked || false;
-                    tagData.checked = tagData.checked || false;
                     return tagData;
+                }
+            });
+
+            tagify.on('blur', function() {
+                if (typeof mktfSyncPendingInputs === 'function') {
+                    mktfSyncPendingInputs();
                 }
             });
 
@@ -999,6 +1070,14 @@
                 fetchSuggestionsSkills(query);
             });
 
+            $(document).on('click', '.simf-skill-chip', function() {
+                var skill = $(this).data('skill');
+                if (skill && tagify) {
+                    tagify.addTags([skill]);
+                    $(this).addClass('active');
+                }
+            });
+
             tagify.on('add', function() {
                 if (typeof mktfUpdateActiveFiltersUI === 'function') mktfUpdateActiveFiltersUI();
             });
@@ -1015,6 +1094,7 @@
         if (inputloc) {
             tagifylocation = new Tagify(inputloc, {
                 whitelist: cities,
+                enforceWhitelist: false,
                 maxTags: 10,
                 templates: {
                     tag: function(tagData) {
@@ -1037,6 +1117,12 @@
                     enabled: 0,
                     closeOnSelect: true,
                     appendTarget: document.body
+                }
+            });
+
+            tagifylocation.on('blur', function() {
+                if (typeof mktfSyncPendingInputs === 'function') {
+                    mktfSyncPendingInputs();
                 }
             });
 
@@ -1821,7 +1907,33 @@
         /* ══════════════════════════════════════════════════════════════════
            Active Filters (Drawer Preview & Main Page Summary Card)
            ══════════════════════════════════════════════════════════════════ */
+        function mktfSyncPendingInputs() {
+            function commitInst(inst) {
+                if (!inst) return;
+                var val = '';
+                if (inst.DOM && inst.DOM.input) {
+                    val = (inst.DOM.input.textContent || inst.DOM.input.innerText || '').trim();
+                }
+                if (!val && inst.state && inst.state.inputText) {
+                    val = inst.state.inputText.trim();
+                }
+                var placeholder = (inst.settings && inst.settings.placeholder) ? inst.settings.placeholder.trim() : '';
+                if (val && val !== placeholder) {
+                    inst.addTags([val]);
+                    if (inst.DOM && inst.DOM.input) {
+                        inst.DOM.input.textContent = '';
+                    }
+                    if (inst.state) {
+                        inst.state.inputText = '';
+                    }
+                }
+            }
+            if (typeof tagify !== 'undefined') commitInst(tagify);
+            if (typeof tagifylocation !== 'undefined') commitInst(tagifylocation);
+        }
+
         function mktfUpdateActiveFiltersUI() {
+            mktfSyncPendingInputs();
             var chips = [];
 
             // Skills (starred = mandatory)
@@ -2063,6 +2175,7 @@
         });
 
         $(document).on('click', '#mktf_apply_btn', function() {
+            mktfSyncPendingInputs();
             mktfApplying = true;
             fetchCandidates(1);
             mktfAppliedExpanded = false;
@@ -2092,6 +2205,9 @@
         });
 
         function fetchCandidates(page = 1, search = '') {
+            if (typeof mktfSyncPendingInputs === 'function') {
+                mktfSyncPendingInputs();
+            }
             $('.loadingMessage').css({ display: 'block' });
             var perPage = localStorage.getItem('candidatePerPage') || 10;
             return $.ajax({
