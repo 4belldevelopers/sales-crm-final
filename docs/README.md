@@ -45,6 +45,7 @@ Generated to optimize this repo for AI coding agents (Claude Code, Cursor, Winds
 - [V2_Apptracker/](V2_Apptracker/) — `service_company/apptracker` GOD-level audit + 13-step roll-out plan (Service+Admin scoped, Aug 2026)
 - [V2_ServiceCompanyAppTrackerController/](V2_ServiceCompanyAppTrackerController/) — controller-only audit: 33-method ledger, hidden shared-state machine, duplication matrix, 6-phase slice refactor
 - [Add-Edit-Submit-Audit.md](V2_Add-Edit-Submit/Add-Edit-Submit-Audit.md) — unified CRUD + transitions sweep (196 routes, 55 entity rows, 46 transition-mapped entities, 13 hotspots, 7-phase refactor plan ~31 dev-days) across Service Co / Super Admin / Admin / Front scope (2026-08-15). Evidence: [evidence/_Add-Edit-Submit-Audit-evidence.md](V2_Add-Edit-Submit/evidence/_Add-Edit-Submit-Audit-evidence.md)
+- [Perf-10K-Plan.md](V2_Perf-10K/Perf-10K-Plan.md) — Add/Edit/Submit perf plan for 10K-concurrent on 3×32 GB VMs (write-path / read-path / per-screen / infra buckets, ~38 dev-days, 8 phases). Budget: [perf-budget.json](V2_Perf-10K/perf-budget.json). Load harness: [tests/load/k6/perf-10k.js](../tests/load/k6/perf-10k.js). Tightens [PERFORMANCE_BUDGET.md](PERFORMANCE_BUDGET.md) targets; complements [SCALABILITY.md](SCALABILITY.md) long-horizon.
 - [PERSONA_SCOPE.md](PERSONA_SCOPE.md) — **scope rule: ignore Product Co and Staffing Co** for all audits, plans, refactors. Read first.
 
 ## Product & engineering strategy (architect-level)
