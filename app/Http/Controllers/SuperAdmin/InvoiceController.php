@@ -132,7 +132,7 @@ class InvoiceController extends SuperAdminBaseController
      */
     public function paypalInvoiceDownload($id)
     {
-        $this->invoice = PaypalInvoice::with(['company','currency','package'])->findOrFail($id);
+        $this->invoice = PaypalInvoice::with(['company','currency','package'])->withoutGlobalScopes()->findOrFail($id);
 
         $this->company = $this->invoice->company;
         $this->superSettings =  GlobalSetting::first();
@@ -165,7 +165,7 @@ class InvoiceController extends SuperAdminBaseController
      */
     public function razorpayInvoiceDownload($id)
     {
-        $this->invoice 			=	RazorpayInvoice::with(['company','currency','package'])->findOrFail($id);
+        $this->invoice 			=	RazorpayInvoice::with(['company','currency','package'])->withoutGlobalScopes()->findOrFail($id);
         $this->company 			=	$this->invoice->company;
         $this->superSettings 	=	GlobalSetting::with('currency')->first();
         $pdf 					=	app('dompdf.wrapper');

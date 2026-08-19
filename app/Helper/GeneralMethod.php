@@ -3953,7 +3953,7 @@ END:VCALENDAR";
     public static function canGgdFilterData($CandId)
     {
         $company_id = auth()->user()->company_id;
-        $candidateDetaiks = JobApplication::findOrFail($CandId);
+        $candidateDetaiks = JobApplication::withoutGlobalScopes()->findOrFail($CandId);
         $qualification_master = DB::table('qualification_master')->select('name')->where('id', $candidateDetaiks->qualification)->first();
 
         $loc_data = DB::table('job_applications')
@@ -4348,7 +4348,7 @@ END:VCALENDAR";
 
     public static function candidateValidation($id)
     {
-        $jobApplication = JobApplication::find($id);
+        $jobApplication = JobApplication::withoutGlobalScopes()->find($id);
 
         //   if($jobApplication->condidate_type=='bench_condidate'){
         // 	dd("bench candidate");
@@ -4484,7 +4484,7 @@ END:VCALENDAR";
 
     public static function BenchcandidateValidation($id)
     {
-        $jobApplication = JobApplication::find($id);
+        $jobApplication = JobApplication::withoutGlobalScopes()->find($id);
 
         //   if($jobApplication->condidate_type=='bench_condidate'){
         // 	dd("bench candidate");
@@ -5740,7 +5740,7 @@ END:VCALENDAR";
 
         $coin_order_events = DB::table('coin_order_events')->where('company_id', $companyid)->where('coin_event_id', $eventId)->where('event_type', $coin_events->event_type)->where('coin_order_id', $company_coins->coin_order_id)->first();
 
-        $Company = Company::find($companyid);
+        $Company = Company::withoutGlobalScopes()->find($companyid);
 
         $balance_coin_limit = '';
         if ($company_coins->event_type == 'operational') {
@@ -6063,7 +6063,7 @@ END:VCALENDAR";
 
         // dd($coin_order_events);
 
-        $Company = Company::find($companyid);
+        $Company = Company::withoutGlobalScopes()->find($companyid);
         if ($coin_events && $company_coins && $coin_order_events) {
 
             $coinsValid = (@$coin_order_events->deductions) ? $coin_order_events->deductions * $coinsRequ : 0;

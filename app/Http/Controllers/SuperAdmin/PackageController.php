@@ -41,7 +41,7 @@ class PackageController extends SuperAdminBaseController
             // dd($request->all() , $request->token_id);
             if(!empty($request->token_id)){
                 // dd("dkj");
-                $PackageFeature = PackageFeature::findOrFail($request->token_id);
+                $PackageFeature = PackageFeature::withoutGlobalScopes()->findOrFail($request->token_id);
                 $message = 'Updated successfully';
             }else{
                 
@@ -67,7 +67,7 @@ class PackageController extends SuperAdminBaseController
         }
 
         if($id > 0){
-            $this->Packagefeature = PackageFeature::findOrfail($id);
+            $this->Packagefeature = PackageFeature::withoutGlobalScopes()->findOrfail($id);
             $this->update= true;
         }else{
             $this->Packagefeature = array(); 
@@ -193,7 +193,7 @@ class PackageController extends SuperAdminBaseController
         $this->package_features_operations = PackageFeature::where('features_type', '=', '1')->get();
         $this->package_features_salse = PackageFeature::where('features_type', '=', '2')->get();
         // dd( $this->data);
-        $this->package = Package::findOrfail($id);
+        $this->package = Package::withoutGlobalScopes()->findOrfail($id);
         // dd($this->package);
         $this->paymentSetting = PaymentSetting::first();
         return view('super-admin.packages.edit', $this->data);
@@ -205,7 +205,7 @@ class PackageController extends SuperAdminBaseController
         DB::beginTransaction();
 
         try {
-            $package = Package::findOrFail($id);
+            $package = Package::withoutGlobalScopes()->findOrFail($id);
             $package->name = $request->name;
             $package->description = $request->description;
             $package->monthly_price = 0;//$request->monthly_price; unuse fields

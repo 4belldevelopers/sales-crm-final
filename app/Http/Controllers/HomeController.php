@@ -10364,7 +10364,7 @@ class HomeController extends Controller
                             ->pluck('skill_name')
                             ->toArray();
 
-                        $job = Job::findOrFail($jobid);
+                        $job = Job::withoutGlobalScopes()->findOrFail($jobid);
                         $job_title = $job->title;
 
                         $min_exp = ($job->min_exp >= 1) ? $job->min_exp - 1 : $job->min_exp;
@@ -10849,7 +10849,7 @@ class HomeController extends Controller
                             ->pluck('skill_name')
                             ->toArray();
 
-                        $job = Job::findOrFail($jobid);
+                        $job = Job::withoutGlobalScopes()->findOrFail($jobid);
                         $job_title = $job->title;
 
                         $min_exp = ($job->min_exp >= 1) ? $job->min_exp - 1 : $job->min_exp;
@@ -13157,7 +13157,7 @@ class HomeController extends Controller
                 $checkMailPermision = GeneralMethod::mailPermission($m_n_id);
 
                 if ($checkMailPermision && $m_n_id > 0) {
-                    $job = Job::find($jobid);
+                    $job = Job::withoutGlobalScopes()->find($jobid);
                     $main_user = DB::table('users')->where('users.root_user', 1)->where('company_id', $job->company_id)->first();
 
                     $senderName = ($main_user) ? $main_user->name : '';
@@ -13209,7 +13209,7 @@ class HomeController extends Controller
                         ->leftJoin('clients', 'clients.id', '=', 'jobs.client_id')
                         ->leftJoin('job_categories', 'job_categories.id', '=', 'jobs.category_id')
                         ->leftJoin('qualification_master', 'qualification_master.id', '=', 'jobs.qualification')
-                        ->find($jobid);
+                        ->withoutGlobalScopes()->find($jobid);
 
                     // dd($jobAdditional,$job->id);
 
@@ -13823,7 +13823,7 @@ class HomeController extends Controller
                 $text_ap = 'Not Interested';
             }
 
-            $AddJobWiseCondidate = AddJobWiseCondidate::find($wise_condidateId);
+            $AddJobWiseCondidate = AddJobWiseCondidate::withoutGlobalScopes()->find($wise_condidateId);
             $params = [
                 'index' => ELASTIC_CANDIDATES,
                 'id' => $wise_condidateId,
@@ -13833,7 +13833,7 @@ class HomeController extends Controller
             $data = (object) $response['_source'];
 
             $jobid = $AddJobWiseCondidate->job_id;
-            $jobs = Job::find($jobid);
+            $jobs = Job::withoutGlobalScopes()->find($jobid);
 
             $companyOrClientName = GeneralMethod::companyOrClientName($jobs->client_id);
 
@@ -14280,7 +14280,7 @@ class HomeController extends Controller
 
         }
 
-        $Offertimelime = OfferJobApplication::find($offerId);
+        $Offertimelime = OfferJobApplication::withoutGlobalScopes()->find($offerId);
 
         $option_currency_val = @$request->current_ctc_cur;
         $joined_date = @$request->dob ? date('Y-m-d H:i:s', strtotime(@$request->dob)) : 'NULL';
@@ -14312,7 +14312,7 @@ class HomeController extends Controller
             'update_at' => @$date ? @$date : null,
 
         ];
-        $jobApplication = AddJobWiseCondidate::find($Offertimelime->joined);
+        $jobApplication = AddJobWiseCondidate::withoutGlobalScopes()->find($Offertimelime->joined);
         if (@$jobApplication->master_status_id > 0) {
             $masterStatus = DB::table('master_status')->select('master_status.name')->where('id', $jobApplication->master_status_id)->first();
             $values['master_process_name'] = @$masterStatus->name;

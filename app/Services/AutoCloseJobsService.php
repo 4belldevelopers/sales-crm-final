@@ -108,7 +108,7 @@ class AutoCloseJobsService
                         $checkMailPermision = GeneralMethod::mailPermission($m_n_id);
     
                         if($checkMailPermision && $m_n_id >0){ 
-                                $job = Job::find($jobid);
+                                $job = Job::withoutGlobalScopes()->find($jobid);
                                 $main_user = DB::table('users')->where('users.root_user', 1)->where('company_id', $job->company_id)->first();  
 
                                 $senderName = ($main_user) ? $main_user->name : '';
@@ -160,11 +160,11 @@ class AutoCloseJobsService
                             // dd($strAdded);
                             
 
-                            $jobAdditional = Job::Select('clients.name as client_name','clients.description as client_description','clients.logo_logical_path','job_categories.name as cat_name','qualification_master.name as qualification_name')
+                            $jobAdditional = Job::Select('jobs.id','clients.name as client_name','clients.description as client_description','clients.logo_logical_path','job_categories.name as cat_name','qualification_master.name as qualification_name')
                                     ->leftJoin('clients', 'clients.id', '=', 'jobs.client_id')
                                     ->leftJoin('job_categories', 'job_categories.id', '=', 'jobs.category_id')
                                     ->leftJoin('qualification_master', 'qualification_master.id', '=', 'jobs.qualification')
-                                    ->find($jobid);
+                                    ->withoutGlobalScopes()->find($jobid);
 
                                     // dd($jobAdditional,$job->id);
 

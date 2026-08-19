@@ -122,7 +122,7 @@ class SuperAdminFrontCmsController extends SuperAdminBaseController
     }
     public function updatefeatures(UpdateImageFeature $request, $id)
     {
-        $headerData = FrontImageFeature::findOrFail($id);
+        $headerData = FrontImageFeature::withoutGlobalScopes()->findOrFail($id);
         $headerData->title = $request->title;
         $headerData->description = $request->description;
         $headerData->language_settings_id = $request->language;
@@ -144,7 +144,7 @@ class SuperAdminFrontCmsController extends SuperAdminBaseController
     }
     public function deleteFeature(Request $request, $id)
     {
-        $feature = FrontImageFeature::findorFail($id);
+        $feature = FrontImageFeature::withoutGlobalScopes()->findOrFail($id);
         Files::deleteFile($feature->image, 'front-features');
         $feature->delete();
         return Reply::success(__('messages.recordDeleted'));

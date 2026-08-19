@@ -1603,7 +1603,7 @@ class ServiceCompanyProfileController extends ServiceCompanyBaseController
 	{
 			//echo '<pre>'; print_r($_REQUEST); exit; 
 			
-        $user 						= User::find($this->user->id);
+        $user 						= User::withoutGlobalScopes()->find($this->user->id);
         $user->name 				= $request->name;
         $user->email 				= $request->email;
 		
@@ -1652,7 +1652,7 @@ class ServiceCompanyProfileController extends ServiceCompanyBaseController
 			}
 
 			
-			$user 				= User::find($id);
+			$user 				= User::withoutGlobalScopes()->find($id);
         	$user->name 		= $request->name;
 			$user->mobile       = $request->mobile;
 			$user->whatsapp_number       = $request->whatsapp_number;

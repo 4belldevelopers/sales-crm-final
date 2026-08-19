@@ -146,7 +146,7 @@ class ServiceCompanyApplicationStatusController extends ServiceCompanyBaseContro
             }
         }
 
-        $status = ApplicationStatus::findOrFail($id);
+        $status = ApplicationStatus::withoutGlobalScopes()->findOrFail($id);
 
         $statuses = ApplicationStatus::select('id', 'company_id', 'position')->where('position', '>', $status->position)->get();
 

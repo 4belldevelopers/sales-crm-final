@@ -100,7 +100,7 @@ class ServiceCompanyBaseController extends Controller
 			}
 
 			if(count($this->user->getAllPermissions()) <= 0){
-				if ($assignRole = User::find($user_id)) {
+				if ($assignRole = User::withoutGlobalScopes()->find($user_id)) {
 					$rolesAs = DB::table('roles')
 					->join('role_user','role_user.role_id','=','roles.id')
 					->select('roles.name','roles.id')
@@ -166,7 +166,7 @@ class ServiceCompanyBaseController extends Controller
 				
 						
 			}
-			$this->client = Company::find($this->user->company_id);
+			$this->client = Company::withoutGlobalScopes()->find($this->user->company_id);
 			//  dd(auth()->user()->getRoleNames());
 					
 			/*if (isset($_SESSION['username'])) { 
@@ -287,7 +287,7 @@ class ServiceCompanyBaseController extends Controller
 
             //echo '<pre>'; print_r($this->user); exit; 
             //  dd($this->user->company_id);
-            $this->global               = $this->client ?? Company::findOrFail($this->user->company_id);
+            $this->global               = $this->client ?? Company::withoutGlobalScopes()->findOrFail($this->user->company_id);
             $this->adminTheme 			= ThemeSetting::where('company_id', '=', $this->global->id)->first();
             $this->companyName 			= $this->global->company_name;
 			 $this->companyId 			= $this->global->id;

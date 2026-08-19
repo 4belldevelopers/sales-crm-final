@@ -56,7 +56,7 @@ class ApptrackerPageData
      */
     public static function forJob(int $jobId): static
     {
-        $job = Job::findOrFail($jobId);
+        $job = Job::withoutGlobalScopes()->findOrFail($jobId);
         return new static($job);
     }
 

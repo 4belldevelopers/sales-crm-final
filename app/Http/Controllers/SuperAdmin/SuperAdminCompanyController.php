@@ -2635,7 +2635,7 @@ if (!$this->elasticService->indexExists(ELASTIC_COMPANIES_INDEX)) {
         $this->countryArr = GeneralMethod::getAllCountryList();
         $this->statelist = GeneralMethod::statelist(101);
        
-        $this->client = Company::find($id);
+        $this->client = Company::withoutGlobalScopes()->find($id);
         // dd(auth()->user()->getRoleNames());
         // $this->client = DB::table('companies')->where('id','=',$id)->first();
 
@@ -4221,7 +4221,7 @@ if (!$this->elasticService->indexExists(ELASTIC_COMPANIES_INDEX)) {
         // dd($id,$request);
             $company_logo_path					=	'';
             $company_id      					=	$id;
-            $company 							=	Company::findOrFail($company_id);
+            $company 							=	Company::withoutGlobalScopes()->findOrFail($company_id);
 
             // dd($request->all());
             if(!empty(@$request->company_name)){
@@ -4412,7 +4412,7 @@ if (!$this->elasticService->indexExists(ELASTIC_COMPANIES_INDEX)) {
 		// dd($this->company_id);
 		$this->interview_detail = array();
 		
-        $this->company = Company::find($id);
+        $this->company = Company::withoutGlobalScopes()->find($id);
 
 
         $this->company_location = DB::table('client_location')
@@ -4446,7 +4446,7 @@ if (!$this->elasticService->indexExists(ELASTIC_COMPANIES_INDEX)) {
 		// dd($company_id,$id);
 		$Data = DB::table('interview_mode_lavel')->select('*')->where('interview_mode_id', $id)->get();
 
-        $companyData= Company::find($company_id);
+        $companyData= Company::withoutGlobalScopes()->find($company_id);
 
 		// dd($companyData);
 
@@ -6380,7 +6380,7 @@ if (!$this->elasticService->indexExists(ELASTIC_COMPANIES_INDEX)) {
 				if (@$client_loc->country_id == 101) {
 					$city = substr(@$client_loc->city_name, 0, 6);
 				}
-				 $jobs = Job::find($jobid);
+				 $jobs = Job::withoutGlobalScopes()->find($jobid);
 				 
 				
 				
@@ -9972,7 +9972,7 @@ if (!$this->elasticService->indexExists(ELASTIC_COMPANIES_INDEX)) {
 
 		$this->currency = GeneralMethod::currency();
 		$this->salaryMode = GeneralMethod::salaryMode();
-		$AddJobWiseCondidate = AddJobWiseCondidate::find($id);
+		$AddJobWiseCondidate = AddJobWiseCondidate::withoutGlobalScopes()->find($id);
 		$jobId = @$AddJobWiseCondidate->job_id;
 		// dd($id,$jobId,$AddJobWiseCondidate);
 		$this->intModeArr = GeneralMethod::interview_mode();

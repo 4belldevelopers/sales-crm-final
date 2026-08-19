@@ -6927,7 +6927,9 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
             }
         }
 
-        $jobAdditional = Job::Select('clients.name as client_name',
+        $jobAdditional = Job::Select(
+            'jobs.id',
+            'clients.name as client_name',
             'clients.description as client_description',
             'clients.logo_logical_path',
             'job_categories.name as cat_name',
@@ -6935,7 +6937,7 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
             ->join('clients', 'clients.id', '=', 'jobs.client_id')
             ->leftJoin('job_categories', 'job_categories.id', '=', 'jobs.category_id')
             ->leftJoin('qualification_master', 'qualification_master.id', '=', 'jobs.qualification')
-            ->findOrFail(@$currentJobId);
+            ->withoutGlobalScopes()->findOrFail(@$currentJobId);
 
         $cc = [];
 
@@ -7203,7 +7205,7 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
             ->leftJoin('job_categories', 'job_categories.id', '=', 'jobs.category_id')
             ->leftJoin('qualification_master', 'qualification_master.id', '=', 'jobs.qualification')
             ->leftJoin('recommendation_relation', 'recommendation_relation.job_id', '=', 'jobs.id')
-            ->findOrFail($id);
+            ->withoutGlobalScopes()->findOrFail($id);
 
         // dd($this->job);
 
@@ -13211,7 +13213,7 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
         $this->company_name = @$userCompanyProfile->company_name;
 
         // 2. Primary Job Model load
-        $this->job = Job::where('company_id', $company_id)->findOrFail($id);
+        $this->job = Job::where('company_id', $company_id)->withoutGlobalScopes()->findOrFail($id);
 
         // 3. Tenant-scoped categories and clients — cached 5 min
         $this->categories = Cache::remember('tenant:'.$company_id.':categories', 300, function () use ($company_id) {
@@ -13370,7 +13372,7 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
         abort_if(Gate::denies('edit_jobs'), 403);
 
         $company_id = auth()->user()->company_id;
-        $job = Job::where('company_id', $company_id)->findOrFail($id);
+        $job = Job::where('company_id', $company_id)->withoutGlobalScopes()->findOrFail($id);
 
         try {
             $jobService->updateJob($job, $request->all(), auth()->user());
@@ -13558,7 +13560,7 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
             ->where('client_location_jobs.job_id', @$job_id)
             ->first();
 
-        $Company = Company::find(auth()->user()->company_id);
+        $Company = Company::withoutGlobalScopes()->find(auth()->user()->company_id);
 
         $companyOrClientName = GeneralMethod::companyOrClientName($job->client_id);
 
@@ -13670,11 +13672,11 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
 
             }
 
-            $jobAdditional = Job::Select('clients.name as client_name', 'clients.description as client_description', 'clients.logo_logical_path', 'job_categories.name as cat_name', 'qualification_master.name as qualification_name')
+            $jobAdditional = Job::Select('jobs.id','clients.name as client_name', 'clients.description as client_description', 'clients.logo_logical_path', 'job_categories.name as cat_name', 'qualification_master.name as qualification_name')
                 ->join('clients', 'clients.id', '=', 'jobs.client_id')
                 ->leftJoin('job_categories', 'job_categories.id', '=', 'jobs.category_id')
                 ->leftJoin('qualification_master', 'qualification_master.id', '=', 'jobs.qualification')
-                ->findOrFail($job->id);
+                ->withoutGlobalScopes()->findOrFail($job->id);
 
             $oprnlink = url('/service_company/apptracker/clientapp/'.GeneralMethod::value_encrypt($job->id).'/all');
 

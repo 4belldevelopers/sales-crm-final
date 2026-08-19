@@ -468,7 +468,7 @@ class DefaultPackageController extends SuperAdminBaseController
     }
     public function edit($id) 
 	{
-        $this->package = Package::findOrfail($id);
+        $this->package = Package::withoutGlobalScopes()->findOrfail($id);
         $this->paymentSetting = PaymentSetting::first();
         return view('super-admin.packages.edit', $this->data);
     }
