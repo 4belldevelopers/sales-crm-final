@@ -6119,7 +6119,7 @@ END:VCALENDAR";
         return encrypt($data);
         // $customKey = bin2hex(random_bytes(32)); // 32 bytes key for AES-256-CBC
         $cipherMethod = 'AES-256-CBC';
-        $key = env('CUSTOM_ENCRYPTION_KEY');
+        $key = config('services.custom_encryption_key');
         $iv = openssl_random_pseudo_bytes(openssl_cipher_iv_length($cipherMethod));
         $encryptedData = openssl_encrypt($data, $cipherMethod, $key, 0, $iv);
 

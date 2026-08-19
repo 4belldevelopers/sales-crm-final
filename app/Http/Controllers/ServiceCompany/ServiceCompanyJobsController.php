@@ -3696,8 +3696,8 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
 
         // ── TEMPORARY DEBUG: bypass cache, log everything ──
         \Illuminate\Support\Facades\Log::info('[MarketJobV2] ajax called', [
-            'company_id'  => $company_id,
-            'all_params'  => $request->all(),
+            'company_id' => $company_id,
+            'all_params' => $request->all(),
         ]);
 
         try {
@@ -3706,41 +3706,41 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
             $v2Result = $v2Service->fetchMarketJobs($request, $company_id);
 
             \Illuminate\Support\Facades\Log::info('[MarketJobV2] fetchMarketJobs result', [
-                'total'      => $v2Result['total'],
+                'total' => $v2Result['total'],
                 'data_count' => count($v2Result['data']),
-                'page'       => $v2Result['page'],
+                'page' => $v2Result['page'],
             ]);
 
-            $data  = $v2Result['data'];
+            $data = $v2Result['data'];
             $total = $v2Result['total'];
-            $page  = $v2Result['page'];
-            $size  = $v2Result['size'];
+            $page = $v2Result['page'];
+            $size = $v2Result['size'];
 
             $pagination = [
-                'total'        => $total,
+                'total' => $total,
                 'current_page' => $page,
-                'last_page'    => ceil($total / max($size, 1)),
-                'per_page'     => $size,
-                'listType'     => 'allcandidate',
+                'last_page' => ceil($total / max($size, 1)),
+                'per_page' => $size,
+                'listType' => 'allcandidate',
             ];
 
             // Transform each ES hit via the Resource DTO — use toArray() per item to
             // guarantee a plain PHP array (avoids ResourceCollection {data:[]} wrapping).
             $req = $request;
             $itemsArray = array_map(
-                fn($item) => (new \App\Http\Resources\MarketJobV2Resource($item))->toArray($req),
+                fn ($item) => (new \App\Http\Resources\MarketJobV2Resource($item))->toArray($req),
                 $data
             );
 
             \Illuminate\Support\Facades\Log::info('[MarketJobV2] items built', [
                 'items_count' => count($itemsArray),
-                'first_item'  => $itemsArray[0] ?? null,
+                'first_item' => $itemsArray[0] ?? null,
             ]);
 
             $responseData = [
-                'status'     => 'success',
-                'items'      => $itemsArray,
-                'total'      => $total,
+                'status' => 'success',
+                'items' => $itemsArray,
+                'total' => $total,
                 'pagination' => view('service_company.ajax_pages.pagination', compact('pagination'))->render(),
             ];
 
@@ -3749,16 +3749,16 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
         } catch (\Throwable $e) {
             \Illuminate\Support\Facades\Log::error('[MarketJobV2] EXCEPTION', [
                 'message' => $e->getMessage(),
-                'file'    => $e->getFile(),
-                'line'    => $e->getLine(),
-                'trace'   => $e->getTraceAsString(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'trace' => $e->getTraceAsString(),
             ]);
 
             return response()->json([
-                'status'  => 'error',
+                'status' => 'error',
                 'message' => $e->getMessage(),
-                'items'   => [],
-                'total'   => 0,
+                'items' => [],
+                'total' => 0,
                 'pagination' => '',
             ], 500);
         }
@@ -5534,7 +5534,6 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
 
             return Reply::redirect(route('service_company.jobs.index'), __('menu.jobs').' '.__('messages.createdSuccessfully'));
         } catch (\Throwable $e) {
-            dd($e->getMessage(), $e);
             \Log::error('jobs store() transaction failed: '.$e->getMessage(), ['exception' => $e]);
 
             return Reply::dataOnly(['status' => 'error', 'msgType' => 'danger', 'message' => 'Submission failed. Please try again.']);
@@ -12949,7 +12948,7 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
         $this->currentJobId = $id;
         $this->recruiter = [];
         $company_id = auth()->user()->company_id ?? 0;
-        
+
         $this->job = Job::withoutGlobalScopes()->find($id);
         if (! $this->job) {
             return Reply::error('Job requirement not found.');
@@ -13672,7 +13671,7 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
 
             }
 
-            $jobAdditional = Job::Select('jobs.id','clients.name as client_name', 'clients.description as client_description', 'clients.logo_logical_path', 'job_categories.name as cat_name', 'qualification_master.name as qualification_name')
+            $jobAdditional = Job::Select('jobs.id', 'clients.name as client_name', 'clients.description as client_description', 'clients.logo_logical_path', 'job_categories.name as cat_name', 'qualification_master.name as qualification_name')
                 ->join('clients', 'clients.id', '=', 'jobs.client_id')
                 ->leftJoin('job_categories', 'job_categories.id', '=', 'jobs.category_id')
                 ->leftJoin('qualification_master', 'qualification_master.id', '=', 'jobs.qualification')

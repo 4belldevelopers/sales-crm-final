@@ -6,7 +6,7 @@ class ChatGptService
 {
     public function parseResume($resumeText)
     {
-        $apiKey = config('services.openai.api_key', env('CHATGPT_API_KEY'));
+        $apiKey = config('services.openai.api_key');
         $url = 'https://api.openai.com/v1/chat/completions';
 
         // Prepare the cURL request
@@ -20,7 +20,7 @@ class ChatGptService
         ]);
 
         curl_setopt($ch, CURLOPT_HTTPHEADER, [
-            'Authorization: Bearer ' . $apiKey,
+            'Authorization: Bearer '.$apiKey,
             'Content-Type: application/json',
         ]);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
@@ -34,4 +34,3 @@ class ChatGptService
         return json_decode($response, true);
     }
 }
-

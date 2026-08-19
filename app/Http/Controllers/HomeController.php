@@ -229,9 +229,9 @@ class HomeController extends Controller
         $companyId = $user->company_id;
         $username = Str::slug($user->name, '_'); // clean name
 
-        $instanceName = env('EVOLUTION_INSTANCE_PRE').$companyId.'_'.$username.'_'.$userId;
+        $instanceName = config('services.evolution.instance_pre').$companyId.'_'.$username.'_'.$userId;
 
-        // $instanceName = env('EVOLUTION_INSTANCE_PRE').$userId;
+        // $instanceName = config('services.evolution.instance_pre').$userId;
 
         // dd($instanceName);
 
@@ -646,7 +646,6 @@ class HomeController extends Controller
         } catch (\Exception $e) {
 
             DB::rollBack();
-            dd($e->getMessage());
 
             return response()->json([
                 'status' => false,
@@ -2715,10 +2714,6 @@ class HomeController extends Controller
             return $hit['_source'];
         }, $response['hits']['hits']);
 
-        dd($total, $data);
-
-        dd($staffing_company_relation);
-
         $params = [
             'index' => ELASTIC_CLIENT_LIST,
             'id' => 63205,
@@ -2728,8 +2723,6 @@ class HomeController extends Controller
         $company_job = (object) $response['_source'];
 
         // GeneralMethod::clientStaffingPartner(63205);
-
-        dd($company_job);
 
         $clientRequestDataList = DB::table('companies')
             ->select(
@@ -2837,8 +2830,6 @@ class HomeController extends Controller
         $data = array_map(function ($hit) {
             return $hit['_source'];
         }, $response['hits']['hits']);
-
-        dd($ik, $total, $data);
 
     }
 
@@ -3061,8 +3052,6 @@ class HomeController extends Controller
         $data = array_map(function ($hit) {
             return $hit['_source'];
         }, $response['hits']['hits']);
-
-        dd($ik, $total, $data);
 
     }
 
@@ -3300,8 +3289,6 @@ class HomeController extends Controller
         $data = array_map(function ($hit) {
             return $hit['_source'];
         }, $response['hits']['hits']);
-
-        dd($ik, $total, $data);
 
     }
 
@@ -3559,8 +3546,6 @@ class HomeController extends Controller
             return $hit['_source'];
         }, $response['hits']['hits']);
 
-        dd($total, $data);
-
     }
 
     public function usersIndexElastic(Request $request)
@@ -3784,8 +3769,6 @@ class HomeController extends Controller
         $data = array_map(function ($hit) {
             return $hit['_source'];
         }, $response['hits']['hits']);
-
-        dd($total, $data);
 
     }
 
@@ -4247,8 +4230,6 @@ class HomeController extends Controller
             return $hit['_source'];
         }, $response['hits']['hits']);
 
-        dd($total, $data);
-
         // dd( $clients);
 
     }
@@ -4660,8 +4641,6 @@ class HomeController extends Controller
             'body' => $bulkData,
         ]);
 
-        dd($interviewShedule);
-
     }
 
     public function jobIndexElastic(Request $request)
@@ -4743,8 +4722,6 @@ class HomeController extends Controller
             $this->elasticService->getClient()->update($updateParams);
 
         }
-
-        dd($total, $data);
 
         if (! $this->elasticService->indexExists(ELASTIC_JOBS)) {
             $params = [
@@ -5191,8 +5168,6 @@ class HomeController extends Controller
             return $hit['_source'];
         }, $response['hits']['hits']);
 
-        dd($total, $data);
-
         // dd($applications);
 
     }
@@ -5584,8 +5559,6 @@ class HomeController extends Controller
             return $hit['_source'];
         }, $response['hits']['hits']);
 
-        dd($ik, $total, $data);
-
     }
 
     public function candidateIndexElastic(Request $request)
@@ -5600,7 +5573,6 @@ class HomeController extends Controller
         $mapping = $this->elasticService->getClient()->indices()->getMapping([
             'index' => ELASTIC_CANDIDATES,
         ]);
-        dd($mapping);
 
         // $job_wise =  DB::table('add_job_wise_condidates')
         //     ->whereIn('master_status_id',[5,6])
@@ -6205,8 +6177,6 @@ class HomeController extends Controller
             return $hit['_source'];
         }, $response['hits']['hits']);
 
-        dd($total, $data);
-
     }
 
     public function candidateCareerApplyIndexElastic(Request $request)
@@ -6318,8 +6288,6 @@ class HomeController extends Controller
             return $hit['_source'];
         }, $response['hits']['hits']);
 
-        dd($total, $data);
-
     }
 
     public function companyIndexElastic(Request $request)
@@ -6366,10 +6334,7 @@ class HomeController extends Controller
         $response = $this->elasticService->getClient()->get($params);
         $company_job = (object) $response['_source'];
 
-        dd($company_job);
-
         $CompanyAddEditUpload = GeneralMethod::CompanyAddEditUpload(2);
-        dd($CompanyAddEditUpload);
 
         $params = [
             'index' => ELASTIC_COMPANIES_INDEX,
@@ -6380,8 +6345,6 @@ class HomeController extends Controller
             ],
         ];
         $response = $this->elasticService->getClient()->indices()->putMapping($params);
-
-        dd($response);
 
         if (! $this->elasticService->indexExists(ELASTIC_COMPANIES_INDEX)) {
             $params = [
@@ -6813,8 +6776,6 @@ class HomeController extends Controller
             return $hit['_source'];
         }, $response['hits']['hits']);
 
-        dd($total, $data);
-
     }
 
     public function locationIndexElastic(Request $request)
@@ -7100,8 +7061,6 @@ class HomeController extends Controller
             return $hit['_source'];
         }, $response['hits']['hits']);
 
-        dd($total, $data);
-
     }
 
     public function skillskElastic(Request $request)
@@ -7227,8 +7186,6 @@ class HomeController extends Controller
             );
         }, $response['hits']['hits']);
 
-        dd($total, $data);
-
     }
 
     public function candidateSkillskExpElastic(Request $request)
@@ -7346,8 +7303,6 @@ class HomeController extends Controller
             );
         }, $response['hits']['hits']);
 
-        dd($total, $data);
-
     }
 
     public function candidateJobQuestionElastic(Request $request)
@@ -7460,8 +7415,6 @@ class HomeController extends Controller
                 $hit['_source']
             );
         }, $response['hits']['hits']);
-
-        dd($total, $data);
 
     }
 
@@ -7582,8 +7535,6 @@ class HomeController extends Controller
         $data = array_map(function ($hit) {
             return $hit['_source'];
         }, $response['hits']['hits']);
-
-        dd($total, $data);
 
     }
 
@@ -7726,8 +7677,6 @@ class HomeController extends Controller
         $data = array_map(function ($hit) {
             return $hit['_source'];
         }, $response['hits']['hits']);
-
-        dd($total, $data);
 
     }
 
@@ -7876,8 +7825,6 @@ class HomeController extends Controller
             return $hit['_source'];
         }, $response['hits']['hits']);
 
-        dd($total, $data);
-
     }
 
     public function coinOrderEventsElastic(Request $request)
@@ -7999,8 +7946,6 @@ class HomeController extends Controller
         $data = array_map(function ($hit) {
             return $hit['_source'];
         }, $response['hits']['hits']);
-
-        dd($total, $data);
 
     }
 
@@ -8140,8 +8085,6 @@ class HomeController extends Controller
         $data = array_map(function ($hit) {
             return $hit['_source'];
         }, $response['hits']['hits']);
-
-        dd($total, $data);
 
     }
 
@@ -8302,8 +8245,6 @@ class HomeController extends Controller
             return $hit['_source'];
         }, $response['hits']['hits']);
 
-        dd($total, $data);
-
     }
 
     public function coinPackageTypesElastic(Request $request)
@@ -8422,8 +8363,6 @@ class HomeController extends Controller
         $data = array_map(function ($hit) {
             return $hit['_source'];
         }, $response['hits']['hits']);
-
-        dd($total, $data);
 
     }
 
@@ -8676,8 +8615,6 @@ class HomeController extends Controller
             return $hit['_source'];
         }, $response['hits']['hits']);
 
-        dd($total, $data);
-
     }
 
     public function benchAssignElastic(Request $request)
@@ -8814,8 +8751,6 @@ class HomeController extends Controller
             return $hit['_source'];
         }, $response['hits']['hits']);
 
-        dd($total, $data);
-
     }
 
     public function benchAdditionalDetailElastic(Request $request)
@@ -8935,8 +8870,6 @@ class HomeController extends Controller
         $data = array_map(function ($hit) {
             return $hit['_source'];
         }, $response['hits']['hits']);
-
-        dd($total, $data);
 
     }
 
@@ -9082,8 +9015,6 @@ class HomeController extends Controller
             return $hit['_source'];
         }, $response['hits']['hits']);
 
-        dd($total, $data);
-
     }
 
     public function jobCategoriesElastic(Request $request)
@@ -9111,8 +9042,6 @@ class HomeController extends Controller
     }, $response['hits']['hits']);
 
         // $intRow =  isset($response['hits']['hits'][0]) ? (object) $response['hits']['hits'][0]['_source'] : null;
-
-        dd($intRow);
 
         if (! $this->elasticService->indexExists(ELASTIC_JOB_CATEGORIES)) {
             $params = [
@@ -9225,8 +9154,6 @@ class HomeController extends Controller
         $data = array_map(function ($hit) {
             return $hit['_source'];
         }, $response['hits']['hits']);
-
-        dd($total, $data);
 
     }
 
@@ -9378,8 +9305,6 @@ class HomeController extends Controller
             return $hit['_source'];
         }, $response['hits']['hits']);
 
-        dd($total, $data);
-
     }
 
     public function mailPermissionsElastic(Request $request)
@@ -9493,8 +9418,6 @@ class HomeController extends Controller
             return $hit['_source'];
         }, $response['hits']['hits']);
 
-        dd($total, $data);
-
     }
 
     public function masterNotificationsElastic(Request $request)
@@ -9525,7 +9448,6 @@ class HomeController extends Controller
             ->map(function ($hit) {
                 return (object) $hit['_source'];
             });
-        dd($th_email_template, $templateData);
 
         //  $company_id = 2;
         //  $type = "Recuitment";
@@ -9668,8 +9590,6 @@ class HomeController extends Controller
         $data = array_map(function ($hit) {
             return $hit['_source'];
         }, $response['hits']['hits']);
-
-        dd($total, $data);
 
     }
 
@@ -9827,8 +9747,6 @@ class HomeController extends Controller
         $data = array_map(function ($hit) {
             return $hit['_source'];
         }, $response['hits']['hits']);
-
-        dd($total, $data);
 
     }
 
@@ -10070,8 +9988,6 @@ class HomeController extends Controller
             return $hit['_source'];
         }, $response['hits']['hits']);
 
-        dd($total, $data);
-
     }
 
     public function companySkillselastic(Request $request)
@@ -10196,8 +10112,6 @@ class HomeController extends Controller
         $data = array_map(function ($hit) {
             return $hit['_source'];
         }, $response['hits']['hits']);
-
-        dd($total, $data);
 
     }
 
@@ -14914,8 +14828,6 @@ class HomeController extends Controller
 
         $event = $calendarService->events->insert('primary', $event, ['conferenceDataVersion' => 1]);
 
-        dd($event);
-
         return $event->getHangoutLink();
     }
 
@@ -14927,8 +14839,6 @@ class HomeController extends Controller
                 $cityIdArray = $request->cityId;
             }
         }
-
-        dd($cityIdArray);
 
         $countryId = (explode(',', $id));
         $Rawcitylist = DB::table('city_list')
