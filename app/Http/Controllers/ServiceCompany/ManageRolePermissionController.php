@@ -89,7 +89,7 @@ class ManageRolePermissionController extends ServiceCompanyBaseController
         $roleId = $request->roleId;
         $permissions = Permission::all();
 
-        $role = Role::findOrFail($roleId);
+        $role = Role::withoutGlobalScopes()->findOrFail($roleId);
         // Spatie: syncPermissions() replaces all existing permissions atomically.
         // (entrust: perms()->sync([]) + attachPermissions() is no longer valid)
         $role->syncPermissions($permissions);
@@ -100,7 +100,7 @@ class ManageRolePermissionController extends ServiceCompanyBaseController
     {
         $roleId = $request->roleId;
 
-        $role = Role::findOrFail($roleId);
+        $role = Role::withoutGlobalScopes()->findOrFail($roleId);
         // Spatie: syncPermissions([]) detaches all permissions.
         // (entrust: perms()->sync([]) is no longer valid)
         $role->syncPermissions([]);
@@ -110,7 +110,7 @@ class ManageRolePermissionController extends ServiceCompanyBaseController
 
     public function showMembers($id)
     {
-        $this->role = Role::find($id);
+        $this->role = Role::withoutGlobalScopes()->find($id);
         $this->employees = User::doesntHave('role', 'and', function ($query) use ($id) {
             $query->where('role_user.role_id', $id);
         })
@@ -133,7 +133,7 @@ class ManageRolePermissionController extends ServiceCompanyBaseController
     public function update(StoreRole $request, $id)
     {
 			// dd("kfjfj");
-        $roleUser = Role::findOrFail($id);
+        $roleUser = Role::withoutGlobalScopes()->findOrFail($id);
         $roleUser->name = $request->name;
         $roleUser->display_name = ucwords($request->name);
         $roleUser->save();
@@ -152,7 +152,7 @@ class ManageRolePermissionController extends ServiceCompanyBaseController
     }
     public function detachRole(Request $request)
     {
-        $user = User::find($request->userId);
+        $user = User::withoutGlobalScopes()->find($request->userId);
         $user->detachRole($request->roleId);
         return Reply::dataOnly(['status' => 'success']);
     }
@@ -169,7 +169,7 @@ class ManageRolePermissionController extends ServiceCompanyBaseController
 	}
     public function edit($id)
     {
-        $this->role = Role::findOrFail($id);
+        $this->role = Role::withoutGlobalScopes()->findOrFail($id);
         return view('service_company.role-permission.edit', $this->data);
     }
 	public function loadRole ($id)

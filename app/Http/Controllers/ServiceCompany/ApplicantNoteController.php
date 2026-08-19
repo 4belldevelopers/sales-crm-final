@@ -85,7 +85,7 @@ class ApplicantNoteController extends ServiceCompanyBaseController
 
     public function update(StoreNote $request, $id)
     {
-        $note = ApplicantNote::find($id);
+        $note = ApplicantNote::withoutGlobalScopes()->find($id);
         $note->note_text = $request->note;
         $note->user_id = auth()->user()->id;
         $note->save();
@@ -106,7 +106,7 @@ class ApplicantNoteController extends ServiceCompanyBaseController
 
     public function destroy($id)
     	{
-        $note = ApplicantNote::find($id);
+        $note = ApplicantNote::withoutGlobalScopes()->find($id);
         ApplicantNote::destroy($id);
 
         $this->elasticService->getClient()->deleteByQuery([

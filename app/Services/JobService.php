@@ -441,10 +441,10 @@ class JobService
                     $workType = 'Hybrid';
                 }
 
-                $jobAdditional = Job::select('job_categories.name as cat_name', 'qualification_master.name as qualification_name')
+                $jobAdditional = Job::select('jobs.id','job_categories.name as cat_name', 'qualification_master.name as qualification_name')
                     ->leftJoin('job_categories', 'job_categories.id', '=', 'jobs.category_id')
                     ->leftJoin('qualification_master', 'qualification_master.id', '=', 'jobs.qualification')
-                    ->find($job->id);
+                    ->withoutGlobalScopes()->find($job->id);
 
                 $templateDescription = str_replace(
                     [

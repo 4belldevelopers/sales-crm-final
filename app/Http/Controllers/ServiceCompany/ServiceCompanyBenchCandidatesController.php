@@ -1138,7 +1138,7 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
         $company_id = '';
         $company_id = auth()->user()->company_id;
         if ($request->edit_token != '') {
-            $benchApplication = JobApplication::find((int) $request->edit_token);
+            $benchApplication = JobApplication::withoutGlobalScopes()->find((int) $request->edit_token);
             $added = false;
         } else {
             $benchApplication = new JobApplication;
@@ -1928,7 +1928,7 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
         // Phase 2 Optimization: Consolidate duplicate DB queries, scope job selection, and cache static master lookups
         if (config('feature.talents_v2_enabled')) {
             $this->statuses = Cache::remember('application_statuses', 86400, fn () => ApplicationStatus::all());
-            $this->application = JobApplication::with('job')->find($id);
+            $this->application = JobApplication::with('job')->withoutGlobalScopes()->find($id);
             $this->jobQuestion = @$this->application->job->questions;
 
             $this->jobs = Job::where('company_id', $company_id)
@@ -1959,7 +1959,7 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
             $this->application_additional_detail = $this->application_add_detail;
         } else {
             $this->statuses = ApplicationStatus::all();
-            $this->application = JobApplication::find($id);
+            $this->application = JobApplication::withoutGlobalScopes()->find($id);
             $this->jobQuestion = @$this->application->job->questions;
 
             $this->jobs = Job::select('id', 'title', 'location_id', 'status', 'start_date', 'end_date', 'section_visibility')->get();
@@ -3658,7 +3658,7 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
                 $bench_application_id = $bench_master_status = '';
                 $bench_application_id = @$request->bench_application_id;
                 $bench_master_status = @$request->bench_master_status;
-                $BenchApplication = JobApplication::find($bench_application_id);
+                $BenchApplication = JobApplication::withoutGlobalScopes()->find($bench_application_id);
                 $BenchApplication->status = @$bench_master_status;
                 $bench_status = DB::table('global_settings')->select('bench_status')->first();
                 $superadminstatus = 0;
@@ -3943,7 +3943,7 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
             $bench_application_id = $bench_master_status = '';
             $bench_application_id = @$request->bench_application_id;
             $bench_master_status = @$request->bench_master_status;
-            $BenchApplication = JobApplication::find($bench_application_id);
+            $BenchApplication = JobApplication::withoutGlobalScopes()->find($bench_application_id);
             $BenchApplication->status = @$bench_master_status;
             $BenchApplication->save();
 
@@ -4945,7 +4945,7 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
             ->join('countries', 'countries.id', '=', 'job_applications.country')
             ->join('state_list', 'state_list.id', '=', 'job_applications.state')
             ->join('city_list', 'city_list.city_id', '=', 'job_applications.city_id')
-            ->findOrFail($this->bench_id);
+            ->withoutGlobalScopes()->findOrFail($this->bench_id);
 
         return view('service_company.bench-candidates.bench_explore', $this->data);
     }
@@ -5753,7 +5753,7 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
             ->join('countries', 'countries.id', '=', 'job_applications.country')
             ->join('state_list', 'state_list.id', '=', 'job_applications.state')
             ->join('city_list', 'city_list.city_id', '=', 'job_applications.city_id')
-            ->findOrFail($this->bench_id);
+            ->withoutGlobalScopes()->findOrFail($this->bench_id);
         $this->recomCount = $this->benchjobAndRecomCount($request->id);
         $this->heroKpis = $this->benchHeroKpis($this->bench_id);
         $gdFilterData = GeneralMethod::canGgdFilterData($this->bench_id);
@@ -5791,7 +5791,7 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
             ->join('countries', 'countries.id', '=', 'job_applications.country')
             ->join('state_list', 'state_list.id', '=', 'job_applications.state')
             ->join('city_list', 'city_list.city_id', '=', 'job_applications.city_id')
-            ->findOrFail($this->bench_id);
+            ->withoutGlobalScopes()->findOrFail($this->bench_id);
         $this->recomCount = $this->benchjobAndRecomCount($request->id);
         $this->heroKpis = $this->benchHeroKpis($this->bench_id);
         $gdFilterData = GeneralMethod::canGgdFilterData($this->bench_id);
@@ -5954,7 +5954,7 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
     {
         // dd($request->condidate_id); skills city_id city pay_rate_amount
         // dd("l");
-        $currentRowJob = JobApplication::find($request->condidate_id);
+        $currentRowJob = JobApplication::withoutGlobalScopes()->find($request->condidate_id);
         $condidate_id = (int) $request->condidate_id;
         $currentJobSkill = explode(',', $currentRowJob->skills);
 
@@ -6429,7 +6429,7 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
     {
         // dd($request->condidate_id); skills city_id city pay_rate_amount
         // dd("l");
-        $currentRowJob = JobApplication::find($request->condidate_id);
+        $currentRowJob = JobApplication::withoutGlobalScopes()->find($request->condidate_id);
         $condidate_id = (int) $request->condidate_id;
         $currentJobSkill = explode(',', $currentRowJob->skills);
 
@@ -6895,7 +6895,7 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
 
         $company_id = auth()->user()->company_id;
 
-        $job = Job::findOrFail($request->jobId);
+        $job = Job::withoutGlobalScopes()->findOrFail($request->jobId);
 
         //   $detailsVendorSide = GeneralMethod::companyAsVendor($job->company_id,$company_id);
         //   $mailTypeSubject = GeneralMethod::mailTypeSubject(21,1);
@@ -7019,7 +7019,7 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
 
         $company_id = auth()->user()->company_id;
 
-        $job = Job::findOrFail($request->jobId);
+        $job = Job::withoutGlobalScopes()->findOrFail($request->jobId);
 
         $user_id = auth()->user()->id;
         $jobId = $request->jobId;
@@ -7238,7 +7238,7 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
         //   dd($id);
         $company_id = auth()->user()->company_id;
 
-        $currentRowJob = JobApplication::find($id);
+        $currentRowJob = JobApplication::withoutGlobalScopes()->find($id);
         $condidate_id = (int) $id;
         $currentJobSkill = explode(',', $currentRowJob->skills);
 

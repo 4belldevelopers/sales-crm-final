@@ -240,7 +240,7 @@ class ServiceCompanyMyapplicationlistController extends ServiceCompanyBaseContro
        // abort_if(Gate::denies('edit_category'), 403);
 
 		
-		$this->client 		= Client::find($id);
+		$this->client 		= Client::withoutGlobalScopes()->find($id);
 		$this->client_file 	= DB::table('client_file')->select('*')->where('client_id', $id)->get();
 		 
 		 $this->countries = Country::all();
@@ -259,7 +259,7 @@ class ServiceCompanyMyapplicationlistController extends ServiceCompanyBaseContro
     public function update1(StoreJobCategory $request, $id)
     {
 		   // abort_if(Gate::denies('edit_category'), 403);	
-			$category 			= JobCategory::find($id);
+			$category 			= JobCategory::withoutGlobalScopes()->find($id);
 			$category->name 	= $request->name;
 			$category->save();
 			return Reply::redirect(route('service_company.client.index'), __('menu.jobCategories').' '.__('messages.updatedSuccessfully'));
@@ -268,7 +268,7 @@ class ServiceCompanyMyapplicationlistController extends ServiceCompanyBaseContro
     {
         //abort_if(Gate::denies('edit_skills'), 403);
 
-        $client 				= Client::find($id);
+        $client 				= Client::withoutGlobalScopes()->find($id);
 		
 		if(!empty($request->name)){
 			$client->name 		= $request->name;

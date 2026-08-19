@@ -87,16 +87,16 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
             $this->clients = Client::all();
             // $this->users 					=	User::company()->get();
             $this->noticeperiod = Cache::remember('notice_periods', 86400, fn () => NoticePeriod::orderBy('np_id')->get());
-            $this->job = Job::findOrFail($id);
+            $this->job = Job::withoutGlobalScopes()->findOrFail($id);
             // echo '<pre>'; print_r($this->job); exit;
             if ($mstatus_id != 'all') {
-                $this->statusArr = ApplicationStatus::findOrFail($mstatus_id);
+                $this->statusArr = ApplicationStatus::withoutGlobalScopes()->findOrFail($mstatus_id);
                 $this->candStatusClass = GeneralMethod::candidateStatusColorCode($this->statusArr->name);
             } else {
                 $this->candStatusClass = GeneralMethod::candidateStatusColorCode('all');
             }
             if ($this->job->client_id > 0) {
-                $this->jobclient = Client::findOrFail($this->job->client_id);
+                $this->jobclient = Client::withoutGlobalScopes()->findOrFail($this->job->client_id);
                 $contactHtml = '';
                 $this->client_loc_arr = DB::table('client_location_jobs')->join('client_location', 'client_location.id', '=', 'client_location_jobs.client_location_id')->join('countries', 'countries.id', '=', 'client_location.country_id')->select('client_location.address', 'client_location.city', 'client_location.postcode', 'countries.country_name')
                     ->where('client_location_jobs.job_id', $id)->get();
@@ -118,7 +118,7 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 
         $this->pageTitle = __('Candidates Recommended');
         $company_id = auth()->user()->company_id;
-        $this->job = Job::findOrFail($id);
+        $this->job = Job::withoutGlobalScopes()->findOrFail($id);
 
         $this->custome_count = $this->custome_count($id);
 
@@ -133,7 +133,7 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
         // dd($this->custome_count);
         session()->put('job_id', $id);
 
-        $this->jobclient = Client::findOrFail($this->job->client_id);
+        $this->jobclient = Client::withoutGlobalScopes()->findOrFail($this->job->client_id);
 
         return view('service_company.apptracker.index', $this->data);
     }
@@ -968,7 +968,7 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 
         $this->pageTitle = __('Candidates Recommended');
         $company_id = auth()->user()->company_id;
-        $this->job = Job::findOrFail($id);
+        $this->job = Job::withoutGlobalScopes()->findOrFail($id);
 
         $this->custome_count = $this->custome_count($id);
         $return_data = GeneralMethod::custome_count_all($id);
@@ -1100,7 +1100,7 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
         $education = request('kt_tagify_education');
         $custom_education = json_decode($education, true);
 
-        $job = Job::findOrFail($jobid);
+        $job = Job::withoutGlobalScopes()->findOrFail($jobid);
         $title = $job->title;
 
         $current_date = date('Y-m-d H:i:s');
@@ -2253,7 +2253,7 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
         $this->candStatusClass = [];
 
         if ($mstatus_id != 'all') {
-            $this->statusArr = ApplicationStatus::findOrFail($mstatus_id);
+            $this->statusArr = ApplicationStatus::withoutGlobalScopes()->findOrFail($mstatus_id);
             $this->candStatusClass = GeneralMethod::candidateStatusColorCode($this->statusArr->name);
         } else {
             $this->candStatusClass = GeneralMethod::candidateStatusColorCode('all');
@@ -4070,7 +4070,7 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
         $mstatus_id = $request->mstatus_id;
         $jobid = (int) session()->get('job_id');
 
-        $job = Job::findOrFail($jobid);
+        $job = Job::withoutGlobalScopes()->findOrFail($jobid);
 
         $interviewStatus = [];
         $interviewStatus = DB::table('master_status')->select('*')->orderBy('priority', 'ASC')->get();
@@ -4776,8 +4776,8 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
     {
 
         $company_id = auth()->user()->company_id;
-        $this->job = Job::findOrFail($id);
-        $this->jobclient = Client::find($this->job->client_id);
+        $this->job = Job::withoutGlobalScopes()->findOrFail($id);
+        $this->jobclient = Client::withoutGlobalScopes()->find($this->job->client_id);
         // $this->jobclient = Client::findOrFail($this->job->client_id);
 
     }
@@ -4804,7 +4804,7 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
         $currencySymbole = GeneralMethod::currencySymbole();
         $chkAdminRole = $this->user->hasRole('admin');
         // $chkAdminRole = DB::table('roles')->select('*')->where('id', $this->user->role->role_id)->where('name', 'admin')->count();
-        $this->job = Job::findOrFail($id);
+        $this->job = Job::withoutGlobalScopes()->findOrFail($id);
         $gdFilterData = GeneralMethod::gdFilterData($id);
         $this->default_loc = GeneralMethod::JobcitiesTags($id);
         $this->qualification = GeneralMethod::allQualificationSelected($id);
@@ -4858,7 +4858,7 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 
         $this->pageTitle = __('Candidates Recommended');
         $company_id = auth()->user()->company_id;
-        $this->job = Job::findOrFail($id);
+        $this->job = Job::withoutGlobalScopes()->findOrFail($id);
 
         // ES-only shared source (see GeneralMethod::jobDefaultsFromEs()) —
         // same one similar_candidates() and custome_count_all() (the header
@@ -4911,7 +4911,7 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
         }
 
         $jobid = $request->jobid;
-        $job = Job::findOrFail($jobid);
+        $job = Job::withoutGlobalScopes()->findOrFail($jobid);
 
         $title = $job->title;
 
@@ -5893,7 +5893,7 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 
         $this->pageTitle = __('Candidates Recommended');
         $company_id = auth()->user()->company_id;
-        $this->job = Job::findOrFail($id);
+        $this->job = Job::withoutGlobalScopes()->findOrFail($id);
 
         // ES-only shared source (see GeneralMethod::jobDefaultsFromEs()) —
         // same one similar_candidates() and custome_count_all() (the header
@@ -5946,7 +5946,7 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
         }
 
         $jobid = $request->jobid;
-        $job = Job::findOrFail($jobid);
+        $job = Job::withoutGlobalScopes()->findOrFail($jobid);
 
         $location = request('kt_tagify_location');
         $custom_location = json_decode($location, true);
@@ -6869,7 +6869,7 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
         $id = GeneralMethod::value_decrypt($id);
         $this->pageTitle = __('Candidates Recommended');
         $company_id = auth()->user()->company_id;
-        $this->job = Job::findOrFail($id);
+        $this->job = Job::withoutGlobalScopes()->findOrFail($id);
 
         $this->custome_count = $this->custome_count($id);
         $return_data = GeneralMethod::custome_count_all($id);
@@ -6921,7 +6921,7 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
         }
 
         $jobid = $request->jobid;
-        $job = Job::findOrFail($jobid);
+        $job = Job::withoutGlobalScopes()->findOrFail($jobid);
 
         $title = $job->title;
 
@@ -10294,7 +10294,7 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
                 ->with('error', __('No active requisition found. Please create a job first.'));
         }
         $this->pageTitle = __('Candidates Recommended');
-        $this->job = Job::findOrFail($id);
+        $this->job = Job::withoutGlobalScopes()->findOrFail($id);
         $this->custome_count = 0;
 
         session()->put('job_id', $id);

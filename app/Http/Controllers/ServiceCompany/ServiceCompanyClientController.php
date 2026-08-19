@@ -2935,7 +2935,7 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
 
                     if (move_uploaded_file($temp, $target_file)) {
 
-                        $client = Client::find($client_id);
+                        $client = Client::withoutGlobalScopes()->find($client_id);
                         $client->logo = @$altfilename;
                         $client->logo_physical_path = @$target_file;
                         $client->logo_logical_path = @$fileUrl;
@@ -3288,7 +3288,7 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
             $maxsize = 5242880;
             $directoryPath = GeneralMethod::document_manage_directory($company_id);
 
-            $comp = Company::find($company_id);
+            $comp = Company::withoutGlobalScopes()->find($company_id);
             $added_in_com_user = Company::where('companies.id', $company_id)->join('users', 'users.company_id', '=', 'companies.id')->first();
 
             $data = [
@@ -3364,7 +3364,7 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
                     // $fileUrl = Storage::disk('s3')->url($filePath);
                     if (move_uploaded_file($temp, $target_file)) {
 
-                        $client = Client::find($client_id);
+                        $client = Client::withoutGlobalScopes()->find($client_id);
                         $client->logo = @$altfilename;
                         $client->logo_physical_path = @$target_file;
                         $client->logo_logical_path = @$fileUrl;
@@ -3565,7 +3565,7 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
             $relationId = DB::getPdo()->lastInsertId();
             GeneralMethod::appendClientNestedData($relationId);
 
-            $job = Job::find($invitationRow->job_id);
+            $job = Job::withoutGlobalScopes()->find($invitationRow->job_id);
             if ($job) {
 
                 $detailsVendorSide = GeneralMethod::companyAsVendor($from_company_id, $to_company_id);

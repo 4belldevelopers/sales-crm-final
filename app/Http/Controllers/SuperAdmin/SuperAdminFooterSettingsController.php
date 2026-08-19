@@ -130,7 +130,7 @@ class SuperAdminFooterSettingsController extends SuperAdminBaseController
     }
     public function updateFooterMenu(UpdateMenuRequest $request, $id)
     {
-        $footer = FooterMenu::findOrFail($id);
+        $footer = FooterMenu::withoutGlobalScopes()->findOrFail($id);
         $footer->language_settings_id = $request->language;
         $footer->name = $request->title;
         $footer->slug = Str::slug($request->title);
@@ -150,7 +150,7 @@ class SuperAdminFooterSettingsController extends SuperAdminBaseController
     }
     public function destroy(Request $request, $id)
     {
-        $footerMenu = FooterMenu::findOrFail($id);
+        $footerMenu = FooterMenu::withoutGlobalScopes()->findOrFail($id);
 
         $footerMenu->delete();
 

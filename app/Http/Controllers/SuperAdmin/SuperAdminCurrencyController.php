@@ -73,7 +73,7 @@ class SuperAdminCurrencyController extends SuperAdminBaseController
      */
     public function edit($id)
     {
-        $this->currency = Currency::findOrFail($id);
+        $this->currency = Currency::withoutGlobalScopes()->findOrFail($id);
         return view('super-admin.currencies.edit', $this->data);
     }
     /**
@@ -85,7 +85,7 @@ class SuperAdminCurrencyController extends SuperAdminBaseController
      */
     public function update(StoreCurrency $request, $id)
     {
-        $currency = Currency::findOrFail($id);
+        $currency = Currency::withoutGlobalScopes()->findOrFail($id);
         $currency->currency_symbol = $request->currency_symbol;
         $currency->currency_code = $request->currency_code;
         $currency->currency_name = $request->currency_name;

@@ -2239,7 +2239,7 @@ class InterviewScheduleController extends ServiceCompanyBaseController
                 }
             }
 
-            $AddJobWiseCondidate = AddJobWiseCondidate::find($interviewSum_rank->wiseId);
+            $AddJobWiseCondidate = AddJobWiseCondidate::withoutGlobalScopes()->find($interviewSum_rank->wiseId);
 
             $spok_user_id_rows = DB::table('job_assign')
                 ->where('job_id', $interviewSum_rank->interview_job_id)
@@ -2379,7 +2379,7 @@ class InterviewScheduleController extends ServiceCompanyBaseController
                     $interviewNoShow = 0;
                 }
 
-                $AddJobWiseCondidate = AddJobWiseCondidate::find($interviewSum_rank->wiseId);
+                $AddJobWiseCondidate = AddJobWiseCondidate::withoutGlobalScopes()->find($interviewSum_rank->wiseId);
 
                 $spok_user_id_rows = DB::table('job_assign')
                     ->where('job_id', $interviewSum_rank->interview_job_id)

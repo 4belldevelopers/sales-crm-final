@@ -561,7 +561,7 @@ class ServiceCompanyAccountSettingsController extends ServiceCompanyBaseControll
 
         } elseif ($request->pageterms == 'terms') {
             $company_id = auth()->user()->company_id;
-            $company = Company::findOrFail($company_id);
+            $company = Company::withoutGlobalScopes()->findOrFail($company_id);
             $company->terms = @$request->description;
             $company->save();
             $this->accountSettingsService->flushAccountCache($company_id);
@@ -569,7 +569,7 @@ class ServiceCompanyAccountSettingsController extends ServiceCompanyBaseControll
             return Reply::dataOnly(['status' => 'success', 'terms' => $company->terms]);
         } elseif ($request->pageterms == 'termsoffer') {
             $company_id = auth()->user()->company_id;
-            $company = Company::findOrFail($company_id);
+            $company = Company::withoutGlobalScopes()->findOrFail($company_id);
             // Intent: save the currently selected candidate offer template without affecting other templates.
             $offerTemplateFields = ['offer_terms', 'internship_offer_terms', 'contract_offer_terms', 'agency_offer_terms'];
             $templateField = in_array($request->descriptiontype, $offerTemplateFields, true) ? $request->descriptiontype : 'offer_terms';
@@ -586,7 +586,7 @@ class ServiceCompanyAccountSettingsController extends ServiceCompanyBaseControll
             return Reply::dataOnly(['status' => 'success', 'terms' => $company->{$templateField}, 'template_field' => $templateField]);
         } elseif ($request->pageterms == 'termsagencyoffer') {
             $company_id = auth()->user()->company_id;
-            $company = Company::findOrFail($company_id);
+            $company = Company::withoutGlobalScopes()->findOrFail($company_id);
             if (! Schema::hasColumn('companies', 'agency_offer_terms')) {
                 return Reply::dataOnly([
                     'status' => 'warning',
@@ -685,7 +685,7 @@ class ServiceCompanyAccountSettingsController extends ServiceCompanyBaseControll
 
         $company_logo_path = '';
         $company_id = auth()->user()->company_id;
-        $company = Company::findOrFail($company_id);
+        $company = Company::withoutGlobalScopes()->findOrFail($company_id);
         if (! empty(@$request->company_name)) {
             $company->company_name = @$request->company_name;
         }
@@ -822,7 +822,7 @@ class ServiceCompanyAccountSettingsController extends ServiceCompanyBaseControll
 
         $client_data = GeneralMethod::getClientIdCompany($company_id);
         // dd($client_data,$company_id);
-        $client = Client::findOrFail($client_data->client_id);
+        $client = Client::withoutGlobalScopes()->findOrFail($client_data->client_id);
         if (! empty(@$request->name)) {
             $client->name = @$request->company_name;
         }
@@ -1233,7 +1233,7 @@ class ServiceCompanyAccountSettingsController extends ServiceCompanyBaseControll
                             $src = $_SERVER['DOCUMENT_ROOT'].'/public/user-uploads/company-logo/'.$company_logo_path;      // "/home/www/example.com/source/folders/123456";
                             $dest = $target_file;   																			// destination folder or file
                             copy($src, $dest);
-                            $client = Client::find($client_id);
+                            $client = Client::withoutGlobalScopes()->find($client_id);
                             $client->logo = @$altfilename;
                             $client->logo_physical_path = @$target_file;
                             $client->logo_logical_path = @$logicalpath;

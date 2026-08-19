@@ -260,8 +260,8 @@ class ServiceCompanyApplicationOfferController extends ServiceCompanyBaseControl
 		$option_currency_val = @$request->option_currency_val;
 		$offerId = @$request->offerId;
 
-		$jobApplication = JobApplication::find($option_currency_id);
-		$OfferJobApplication = OfferJobApplication::find($offerId);
+		$jobApplication = JobApplication::withoutGlobalScopes()->find($option_currency_id);
+		$OfferJobApplication = OfferJobApplication::withoutGlobalScopes()->find($offerId);
 		// dd($OfferJobApplication);
 
 		$date = date('Y-m-d H:i:s');
@@ -320,7 +320,7 @@ class ServiceCompanyApplicationOfferController extends ServiceCompanyBaseControl
 
 			$values['joined_date'] = @$joined_date;
 		}
-		$Offertimelime = OfferJobApplication::find($offerId);
+		$Offertimelime = OfferJobApplication::withoutGlobalScopes()->find($offerId);
 
 		$Offertimelime->offer_currency=  @$request->currency ? @$request->currency : 'NULL'; 
 		$Offertimelime->offer_mode=  @$request->salarymode ? @$request->salarymode : 'NULL';

@@ -70,8 +70,8 @@ class UploadResumeToTestS3 implements ShouldQueue
             // dd($fileUrl);
 
             // Save to DB
-            $jobApplication = JobApplication::find($this->jobApplicationId);
-            $jobApp = JobApplication::find($this->jobApplicationId);
+            $jobApplication = JobApplication::withoutGlobalScopes()->find($this->jobApplicationId);
+            $jobApp = JobApplication::withoutGlobalScopes()->find($this->jobApplicationId);
             if ($jobApplication) {
                 $jobApp->resume = $fileUrl;
                 $jobApp->save();
