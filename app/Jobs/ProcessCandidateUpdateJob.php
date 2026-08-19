@@ -108,7 +108,7 @@ class ProcessCandidateUpdateJob implements ShouldQueue
             }
 
             // 2. application_additional_detail — delete + ES delete, reinsert
-            $jobApplication = JobApplication::find($appId);
+            $jobApplication = JobApplication::withoutGlobalScopes()->find($appId);
             if (!$jobApplication) {
                 Log::warning("ProcessCandidateUpdateJob: JobApplication #{$appId} not found");
                 return;

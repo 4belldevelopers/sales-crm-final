@@ -257,7 +257,7 @@ class CustomPackageController extends SuperAdminBaseController
 		
 		$view = view('super-admin.custompackages.viewmorepackagefeature', $this->data)->render();
 
-		$this->package = Package::findOrfail($request->package_id);
+		$this->package = Package::withoutGlobalScopes()->findOrfail($request->package_id);
 		$check = false;
 		if($this->package){
 			$check = true;
@@ -1581,7 +1581,7 @@ class CustomPackageController extends SuperAdminBaseController
 
     public function edit($id) 
 	{
-        $this->package = Package::findOrfail($id);
+        $this->package = Package::withoutGlobalScopes()->findOrfail($id);
         $this->paymentSetting = PaymentSetting::first();
         return view('super-admin.packages.edit', $this->data);
     }

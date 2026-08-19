@@ -99,8 +99,8 @@ class RazorpayWebhookController extends Controller
         $type      = $requestData['payload']['payment']['entity']['notes']['package_type'];
         $companyID = $requestData['payload']['payment']['entity']['notes']['company_id'];
 
-        $plan = Package::find($packageId);
-        $company = Company::findOrFail($companyID);
+        $plan = Package::withoutGlobalScopes()->find($packageId);
+        $company = Company::withoutGlobalScopes()->findOrFail($companyID);
 
         // If it is already marked as paid, ignore the event
         $razorpayPaymentId = $requestData['payload']['payment']['entity']['id'];

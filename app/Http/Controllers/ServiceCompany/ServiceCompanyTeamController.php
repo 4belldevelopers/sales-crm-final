@@ -2174,8 +2174,8 @@ class ServiceCompanyTeamController extends ServiceCompanyBaseController
     public function reSendmail(Request $request)
     {
 
-        $user = User::find($request->userId);
-        $Companies = Company::find($user->company_id);
+        $user = User::withoutGlobalScopes()->find($request->userId);
+        $Companies = Company::withoutGlobalScopes()->find($user->company_id);
         $company_id = $user->company_id;
 
         $Url = url('/teamReg/'.base64_encode($company_id).'/'.base64_encode($user->id));
@@ -2286,7 +2286,7 @@ class ServiceCompanyTeamController extends ServiceCompanyBaseController
 
                         $Url = url('/teamReg/'.base64_encode($company_id).'/'.base64_encode($user->id));
                         $to = $request->email;
-                        $Companies = Company::find(auth()->user()->company_id);
+                        $Companies = Company::withoutGlobalScopes()->find(auth()->user()->company_id);
                         $data = [
                             'to' => $request->email,
                             'name' => $request->name,
@@ -2474,7 +2474,7 @@ class ServiceCompanyTeamController extends ServiceCompanyBaseController
                     ->where('role_user.user_id', '=', $cuser_id)
                     ->first();
                 if ($rolesAs) {
-                    $user = User::find($cuser_id);
+                    $user = User::withoutGlobalScopes()->find($cuser_id);
                     if ($user) {
                         $user->assignRole($rolesAs->name);
                     }

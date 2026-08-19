@@ -1630,7 +1630,7 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
         $this->appId = $appId;
 
         if (! empty($appId) && (int) $appId !== 0) {
-            $this->application = JobApplication::find($appId);
+            $this->application = JobApplication::withoutGlobalScopes()->find($appId);
         }
 
         $this->jobDetail = Job::select('jobs.id', 'jobs.company_id', 'jobs.title', 'jobs.min_salary', 'jobs.max_salary', 'jobs.created_at', 'jobs.min_exp', 'jobs.max_exp', 'jobs.status', 'jobs.total_positions', 'clients.name as client_name', 'client_location.city', 'client_location.postcode', 'client_location.city as location_city', 'jobs.min_sal_mode', 'jobs.max_sal_mode', 'jobs.min_salary_currency', 'jobs.max_salary_currency')
@@ -2663,7 +2663,7 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
         $this->CaptainCompanyid = auth()->user()->company_id;
         $this->currency = GeneralMethod::currency();
         $this->salaryMode = GeneralMethod::salaryMode();
-        $AddJobWiseCondidate = AddJobWiseCondidate::find($id);
+        $AddJobWiseCondidate = AddJobWiseCondidate::withoutGlobalScopes()->find($id);
         $jobId = @$AddJobWiseCondidate->job_id;
         // dd($id,$jobId,$AddJobWiseCondidate);
         $this->intModeArr = GeneralMethod::interview_mode();
@@ -2933,7 +2933,7 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
         $job_id = $jobId;
         $this->job_id = $job_id;
 
-        $job_details = Job::find($this->job_id);
+        $job_details = Job::withoutGlobalScopes()->find($this->job_id);
 
         $params = [
             'index' => ELASTIC_CANDIDATE_SKILLS_EXP,
@@ -3208,7 +3208,7 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
         $this->CaptainCompanyid = auth()->user()->company_id;
         $this->currency = GeneralMethod::currency();
         $this->salaryMode = GeneralMethod::salaryMode();
-        $AddJobWiseCondidate = JobApplication::find($id);
+        $AddJobWiseCondidate = JobApplication::withoutGlobalScopes()->find($id);
         $jobId = @$AddJobWiseCondidate->job_id;
         $this->editComman = false;
         $this->intModeArr = GeneralMethod::interview_mode();
@@ -3440,7 +3440,7 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
         // ->where('candidate_job_skill_exp.job_id','=', $this->job_id)
         // ->where('candidate_job_skill_exp.candidate_id','=', $this->application->id)
         // ->get();
-        $job_details = Job::find($this->job_id);
+        $job_details = Job::withoutGlobalScopes()->find($this->job_id);
 
         $this->jobSkill = DB::table('job_metronics_skills')
             ->leftJoin('candidate_job_skill_exp', function ($join) {
@@ -3867,11 +3867,11 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
             return redirect()->back()->with('candidate_edit_denied', "You are not authorized to edit this candidate's profile. Only the assigned Captain or the submitting user can edit it");
         }
 
-        $AddJobWiseCondidate = AddJobWiseCondidate::find($id);
+        $AddJobWiseCondidate = AddJobWiseCondidate::withoutGlobalScopes()->find($id);
         $this->AddJobWiseCondidateRankRow = $id;
         // dd($AddJobWiseCondidate->job_id);
         $this->statuses = ReferenceDataCache::applicationStatuses();
-        $this->application = JobApplication::find($AddJobWiseCondidate->job_application_id);
+        $this->application = JobApplication::withoutGlobalScopes()->find($AddJobWiseCondidate->job_application_id);
         $this->jobQuestion = $this->application->job->questions;
         $this->jobs = Job::select('id', 'title', 'location_id', 'status', 'start_date', 'end_date', 'section_visibility')->where('company_id', $this->user->company_id)->get();
         $this->noticeperiod = \Illuminate\Support\Facades\Cache::remember('notice_periods', 86400, fn () => \App\Models\NoticePeriod::orderBy('np_id')->get());
@@ -4095,12 +4095,12 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
         $company_id = '';
         $company_id = auth()->user()->company_id;
         // dd(auth()->user());
-        $OfferJobApplication = OfferJobApplication::find($id);
+        $OfferJobApplication = OfferJobApplication::withoutGlobalScopes()->find($id);
         // dd($OfferJobApplication);
         $this->offer_id = ($id) ? $id : '';
         $this->currency = GeneralMethod::currency();
         $this->salaryMode = GeneralMethod::salaryMode();
-        $AddJobWiseCondidate = AddJobWiseCondidate::find($OfferJobApplication->joined);
+        $AddJobWiseCondidate = AddJobWiseCondidate::withoutGlobalScopes()->find($OfferJobApplication->joined);
         $id = $OfferJobApplication->joined;
         $jobId = @$AddJobWiseCondidate->job_id;
         // dd($id,$jobId,$AddJobWiseCondidate);
@@ -4782,7 +4782,7 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
                     ->select('joined as wiseId')
                     ->where('id', $offer_id)
                     ->first();
-                $AddJobWiseCondidate = AddJobWiseCondidate::find($offer_job_applications->wiseId);
+                $AddJobWiseCondidate = AddJobWiseCondidate::withoutGlobalScopes()->find($offer_job_applications->wiseId);
 
                 $spok_user_id_rows = DB::table('job_assign')
                     ->where('job_id', $AddJobWiseCondidate->job_id)
@@ -5053,7 +5053,7 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
 
             }
 
-            $Offertimelime = OfferJobApplication::find($offer_id);
+            $Offertimelime = OfferJobApplication::withoutGlobalScopes()->find($offer_id);
 
             $option_currency_val = @$request->current_ctc_cur;
             $joined_date = @$request->dob ? date('Y-m-d H:i:s', strtotime(@$request->dob)) : 'NULL';
@@ -5121,7 +5121,7 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
                 'create_at' => @$date ? @$date : null,
                 'update_at' => @$date ? @$date : null,
             ];
-            $jobApplication = AddJobWiseCondidate::find($Offertimelime->joined);
+            $jobApplication = AddJobWiseCondidate::withoutGlobalScopes()->find($Offertimelime->joined);
             if (@$jobApplication->master_status_id > 0) {
                 $masterStatus = DB::table('master_status')->select('master_status.name')->where('id', $jobApplication->master_status_id)->first();
                 $values['master_process_name'] = @$masterStatus->name;
@@ -5334,7 +5334,7 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
 
         abort_if(Gate::denies('edit_job_applications'), 403);
 
-        $jobApplication = JobApplication::with(['documents'])->findOrFail($id);
+        $jobApplication = JobApplication::with(['documents'])->withoutGlobalScopes()->find($id);
         // dd($jobApplication,$id);
         $jobApplication->full_name = ucwords(strtolower($request->full_name));
         if (! empty($request->current_designation)) {
@@ -6286,7 +6286,7 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
 
         $interview_questions = DB::table('interview_questions')->select('*')->where('job_id', $job_id)->get();
 
-        $job = Job::find($request->jobId);
+        $job = Job::withoutGlobalScopes()->find($request->jobId);
 
         $companyOrClientName = GeneralMethod::companyOrClientName($job_applications->client_id);
 
@@ -6891,7 +6891,7 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
 
         // echo '<pre>'; print_r($_REQUEST); exit;
         // dd(json_encode(@$request->cc_email));
-        $AddJobWiseCondidate = AddJobWiseCondidate::find($request->wiseId);
+        $AddJobWiseCondidate = AddJobWiseCondidate::withoutGlobalScopes()->find($request->wiseId);
         // dd($AddJobWiseCondidate->master_status_id);
         // $client = new GoogleClient();
         // $client->setClientId(config('google.client_id'));
@@ -7030,16 +7030,16 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
             // Notification::send($jobApplication, new CandidateScheduleInterview($jobApplication, $interviewSchedule));
         }
 
-        $jobApplication = JobApplication::find($request->application_id);
+        $jobApplication = JobApplication::withoutGlobalScopes()->find($request->application_id);
 
-        $AddJobWiseCondidate = AddJobWiseCondidate::find($request->wiseId);
+        $AddJobWiseCondidate = AddJobWiseCondidate::withoutGlobalScopes()->find($request->wiseId);
 
         $date = date('Y-m-d H:i:s');
         $insert_type = $request->interview_type;
 
         // dd($request->master_status_id);
 
-        $statusRow = ApplicationStatus::find($request->master_status_id);
+        $statusRow = ApplicationStatus::withoutGlobalScopes()->find($request->master_status_id);
 
         $interview_mode_lavel = '';
         $interview_mode_lavel = @$request->interview_mode;
@@ -7276,7 +7276,7 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
     {
         // dd($request->all());
 
-        $job = Job::find($request->jobId);
+        $job = Job::withoutGlobalScopes()->find($request->jobId);
         $companyOrClientName = GeneralMethod::companyOrClientName($job->client_id);
         $subject = @$request->subject;
 
@@ -7468,10 +7468,10 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
             // Notification::send($jobApplication, new CandidateScheduleInterview($jobApplication, $interviewSchedule));
 
         }
-        $jobApplication = JobApplication::find($request->application_id);
+        $jobApplication = JobApplication::withoutGlobalScopes()->find($request->application_id);
         $date = date('Y-m-d H:i:s');
         $insert_type = $request->interview_type;
-        $statusRow = ApplicationStatus::findOrFail($request->master_status_id);
+        $statusRow = ApplicationStatus::withoutGlobalScopes()->findOrFail($request->master_status_id);
         $values = [
             'owner_id' => auth()->user()->id,
             'application_id' => @$request->application_id,
@@ -7979,7 +7979,7 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
         // 		dd('Okay');
         // }
 
-        $addJobWiseCondidate = AddJobWiseCondidate::find($addJobWiseCondidate_id);
+        $addJobWiseCondidate = AddJobWiseCondidate::withoutGlobalScopes()->find($addJobWiseCondidate_id);
         $offer_id = null;
         $exists = $this->elasticService->getClient()->exists([
             'index' => ELASTIC_CANDIDATES,
@@ -8000,7 +8000,7 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
                 if ($status_row) {
                     if (@$status_row->name == 'Onboarded') {
 
-                        $AddJobWiseCondidate = AddJobWiseCondidate::find($addJobWiseCondidate_id);
+                        $AddJobWiseCondidate = AddJobWiseCondidate::withoutGlobalScopes()->find($addJobWiseCondidate_id);
 
                         $spok_user_id_rows = DB::table('job_assign')
                             ->where('job_id', $AddJobWiseCondidate->job_id)
@@ -8302,7 +8302,7 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
             }
         }
 
-        $jobApplication = JobApplication::find($application_id);
+        $jobApplication = JobApplication::withoutGlobalScopes()->find($application_id);
 
         if ($master_status != 7) {
 
@@ -8841,7 +8841,7 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
                 ->where('id', @$offer_id)
                 ->first();
 
-            $AddJobWiseCondidate = AddJobWiseCondidate::find($offer_job_applications->wiseId);
+            $AddJobWiseCondidate = AddJobWiseCondidate::withoutGlobalScopes()->find($offer_job_applications->wiseId);
 
             $spok_user_id_rows = DB::table('job_assign')
                 ->where('job_id', $AddJobWiseCondidate->job_id)
@@ -9655,7 +9655,7 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
             // ─────────────────────────────────────────────────────────────────────────────
 
             // $jobApplication->save();
-            $jobApplicationGet = JobApplication::find($application_id);
+            $jobApplicationGet = JobApplication::withoutGlobalScopes()->find($application_id);
 
             $skillArr = explode(',', $jobApplicationGet->skills);
             $percentage = GeneralMethod::skill_match_percentage($request->job_id, $skillArr);
@@ -9770,7 +9770,7 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
 
         $this->currency = GeneralMethod::currency();
         $this->salaryMode = GeneralMethod::salaryMode();
-        $AddJobWiseCondidate = AddJobWiseCondidate::find($id);
+        $AddJobWiseCondidate = AddJobWiseCondidate::withoutGlobalScopes()->find($id);
         $jobId = $AddJobWiseCondidate->job_id;
         // dd($id,$jobId);
         $this->intModeArr = GeneralMethod::interview_mode();
@@ -10160,7 +10160,7 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
         $resumeData = DB::table('documents')->select('*')->where('documentable_id', $id)->where('name', '=', 'Resume')->orderBy('created_at', 'desc')->first();
         $resume = $resumeData->hashname;
         $company = user()->company_id;
-        $jobApplication = JobApplication::findOrFail($id);
+        $jobApplication = JobApplication::withoutGlobalScopes()->findOrFail($id);
         $path = public_path().'/user-uploads/documents/'.$jobApplication->id.'/'.$resume;
 
         // dd($path);
@@ -10709,7 +10709,7 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
             ]);
         }
 
-        $addJobWiseCondidate = AddJobWiseCondidate::find($addJobWiseCondidate_id);
+        $addJobWiseCondidate = AddJobWiseCondidate::withoutGlobalScopes()->find($addJobWiseCondidate_id);
 
         if ($master_status == 1) {
             // dd($addJobWiseCondidate->thirdparty_company_id);
@@ -10717,7 +10717,7 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
             $coinsValidations = GeneralMethod::coinsValidations((int) $addJobWiseCondidate->thirdparty_company_id, $eventId, auth()->user()->id, $addJobWiseCondidate->thirdparty_company_id, '', '');
             // dd($coinsValidations);
             if ($coinsValidations->status) {
-                $Company = Company::find($addJobWiseCondidate->thirdparty_company_id);
+                $Company = Company::withoutGlobalScopes()->find($addJobWiseCondidate->thirdparty_company_id);
 
                 return Reply::dataOnly(['status' => 'coinCheck', 'message' => '"'.$Company->company_name.'" does not have sufficient coins to receive your profile at this time', 'company_coins' => $coinsValidations->company_coins]);
             }

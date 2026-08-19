@@ -43,7 +43,7 @@ class SendInterviewReminders extends Command
 
             foreach ($interviews as $interview) {
 
-                $user = User::find(3);
+                $user = User::withoutGlobalScopes()->find(3);
                     if ($user) {
                         $user->notify(new InterviewReminderNotification($interview));
                         $this->info("✅ Notification sent to: {$user->name}");

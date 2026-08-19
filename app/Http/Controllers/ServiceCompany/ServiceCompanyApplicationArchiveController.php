@@ -78,7 +78,7 @@ class ServiceCompanyApplicationArchiveController extends ServiceCompanyBaseContr
     {
         abort_if(Gate::denies('delete_job_applications'), 403);
 
-        $jobApplication = JobApplication::findOrFail($id);
+        $jobApplication = JobApplication::withoutGlobalScopes()->findOrFail($id);
 
         if ($jobApplication->photo) {
             Storage::delete('candidate-photos/'.$jobApplication->photo);
@@ -91,7 +91,7 @@ class ServiceCompanyApplicationArchiveController extends ServiceCompanyBaseContr
 
     public function show($id)
     {
-        $this->application = JobApplication::with(['schedule','notes','onboard', 'status', 'schedule.employee', 'schedule.comments.user'])->withTrashed()->find($id);
+        $this->application = JobApplication::with(['schedule','notes','onboard', 'status', 'schedule.employee', 'schedule.comments.user'])->withTrashed()->withoutGlobalScopes()->find($id);
 
         $this->skills = Skill::select('id', 'name')->get();
 
