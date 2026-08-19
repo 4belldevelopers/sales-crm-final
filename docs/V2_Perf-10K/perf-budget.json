@@ -1,0 +1,315 @@
+{
+  "$schema": "https://jero.works/schemas/perf-budget/v1",
+  "version": "1.0.0",
+  "date": "2026-08-16",
+  "scope": "in-scope personas only (Service Co, Super Admin, Admin, Front/SaasFront/Auth). Product Co + Staffing Co are dormant.",
+  "global_targets": {
+    "page_ttfb_p95_ms": 200,
+    "add_edit_submit_post_p95_ms": 100,
+    "datatables_ajax_p95_ms": 250,
+    "elasticsearch_query_p95_ms": 100,
+    "mysql_point_lookup_p95_ms": 5,
+    "webhook_ack_p95_ms": 50,
+    "cache_hit_rate_pct": 90,
+    "pct_requests_never_touch_mysql": 90,
+    "server_cpu_pct_sustained": 60
+  },
+  "queues": {
+    "indexing": { "workers": 8, "timeout_s": 300, "backoff_s": 5, "tries": 3 },
+    "mail": { "workers": 4, "timeout_s": 600, "backoff_s": 10, "tries": 5 },
+    "uploads": { "workers": 4, "timeout_s": 1800, "backoff_s": 30, "tries": 2 },
+    "webhooks": { "workers": 4, "timeout_s": 60, "backoff_s": 5, "tries": 5 },
+    "default": { "workers": 8, "timeout_s": 300, "backoff_s": 5, "tries": 3 }
+  },
+  "infra": {
+    "mysql": {
+      "buffer_pool_gb": 24,
+      "max_connections": 2000,
+      "proxysql_effective_server_connections": 250,
+      "innodb_log_file_size_gb": 4,
+      "slow_log_threshold_ms": 50
+    },
+    "elasticsearch": {
+      "jvm_heap_gb": 16,
+      "memory_lock": true,
+      "shard_target_size_gb_min": 20,
+      "shard_target_size_gb_max": 50,
+      "ilm_policies": ["hot", "warm", "cold", "delete"]
+    },
+    "app": {
+      "octane_server": "frankenphp",
+      "octane_workers": "nproc - 1",
+      "per_worker_memory_cap_gb": 2,
+      "max_requests_per_worker": 5000,
+      "composer_preload": true,
+      "caches": ["config", "routes", "views"]
+    },
+    "redis": {
+      "purpose": "cache + session + queue",
+      "isolation": "sessions and cache MUST live on separate instances or use key prefixes to prevent eviction storm from killing sessions",
+      "session_driver": "redis",
+      "cache_store": "redis"
+    },
+    "cdn": {
+      "provider": "cloudflare",
+      "public_surface_swr_seconds": 60,
+      "static_assets_max_age_seconds": 31536000
+    }
+  },
+  "routes": {
+    "service_apptracker_index": {
+      "method": "GET",
+      "uri": "service-company/apptracker",
+      "page_ttfb_p95_ms": 300,
+      "datatables_ajax_p95_ms": 250,
+      "max_queries": 3,
+      "cache": { "driver": "redis", "tags": ["tenant:{id}", "apptracker:filters"], "ttl_s": 60 },
+      "phase": 5
+    },
+    "service_apptracker_ajax": {
+      "method": "GET",
+      "uri": "service-company/apptracker/_ajax",
+      "datatables_ajax_p95_ms": 250,
+      "max_queries": 1,
+      "cache": { "driver": "redis", "tags": ["tenant:{id}", "apptracker:list"], "ttl_s": 60 },
+      "phase": 3
+    },
+    "service_cvtracker_index": {
+      "method": "GET",
+      "uri": "service-company/cvtracker",
+      "page_ttfb_p95_ms": 250,
+      "datatables_ajax_p95_ms": 250,
+      "max_queries": 3,
+      "cache": { "driver": "redis", "tags": ["tenant:{id}", "cvtracker:filters"], "ttl_s": 60 },
+      "phase": 5
+    },
+    "service_cvtracker_ajax": {
+      "method": "GET",
+      "uri": "service-company/cvtracker/_ajax",
+      "datatables_ajax_p95_ms": 250,
+      "max_queries": 1,
+      "cache": { "driver": "redis", "tags": ["tenant:{id}", "cvtracker:list"], "ttl_s": 60 },
+      "phase": 3
+    },
+    "service_bench_candidates_index": {
+      "method": "GET",
+      "uri": "service-company/bench-candidates",
+      "page_ttfb_p95_ms": 200,
+      "datatables_ajax_p95_ms": 200,
+      "max_queries": 3,
+      "cache": { "driver": "redis", "tags": ["tenant:{id}", "bench:list"], "ttl_s": 60 },
+      "phase": 5
+    },
+    "service_job_edit": {
+      "method": "GET",
+      "uri": "service-company/jobs/{id}/edit",
+      "page_ttfb_p95_ms": 200,
+      "max_queries": 1,
+      "cache": { "driver": "redis", "key": "job:{id}", "ttl_s": 600 },
+      "phase": 5
+    },
+    "service_job_update": {
+      "method": "POST",
+      "uri": "service-company/jobs/update/{id}",
+      "post_p95_ms": 100,
+      "max_queries": 1,
+      "side_effects": ["queue:indexing", "queue:mail"],
+      "phase": 2
+    },
+    "service_job_application_edit": {
+      "method": "GET",
+      "uri": "service-company/job-applications/edit/{id}",
+      "page_ttfb_p95_ms": 400,
+      "max_queries": 1,
+      "cache": { "driver": "redis", "key": "app:{id}", "ttl_s": 300 },
+      "phase": 5
+    },
+    "service_job_application_stage_submit": {
+      "method": "POST",
+      "uri": "service-company/job-applications/stage_submit",
+      "post_p95_ms": 100,
+      "max_queries": 1,
+      "side_effects": ["queue:indexing", "broadcast:reverb"],
+      "phase": 2
+    },
+    "service_job_application_status_update": {
+      "method": "POST",
+      "uri": "service-company/job-applications/statusupdate",
+      "post_p95_ms": 100,
+      "max_queries": 1,
+      "side_effects": ["queue:indexing", "broadcast:reverb"],
+      "phase": 2
+    },
+    "service_apptracker_store_bulk": {
+      "method": "POST",
+      "uri": "service-company/apptracker/store",
+      "post_p95_ms": 200,
+      "max_queries": 1,
+      "side_effects": ["queue:indexing (bulk)"],
+      "bulk_insert": true,
+      "phase": 2
+    },
+    "service_team_store": {
+      "method": "POST",
+      "uri": "service-company/team/store",
+      "post_p95_ms": 100,
+      "max_queries": 1,
+      "transaction": true,
+      "side_effects": ["queue:mail"],
+      "phase": 1
+    },
+    "service_role_save": {
+      "method": "POST",
+      "uri": "service-company/role-permission/saveRole",
+      "post_p95_ms": 100,
+      "max_queries": 1,
+      "side_effects": ["cache:invalidate:role_user"],
+      "phase": 1
+    },
+    "superadmin_company_list_ajax": {
+      "method": "GET",
+      "uri": "super-admin/company/_ajax",
+      "datatables_ajax_p95_ms": 200,
+      "max_queries": 1,
+      "cache": { "driver": "redis", "tags": ["companies:list"], "ttl_s": 60 },
+      "phase": 3
+    },
+    "superadmin_company_edit": {
+      "method": "GET",
+      "uri": "super-admin/company/edit/{id}",
+      "page_ttfb_p95_ms": 200,
+      "max_queries": 1,
+      "cache": { "driver": "redis", "key": "company_settings:{id}", "ttl_s": 600 },
+      "phase": 3
+    },
+    "superadmin_coupon_add_edit": {
+      "method": "GET",
+      "uri": "super-admin/coupons/add-edit/{id}",
+      "page_ttfb_p95_ms": 150,
+      "max_queries": 1,
+      "phase": 3
+    },
+    "auth_login": {
+      "method": "POST",
+      "uri": "login",
+      "post_p95_ms": 150,
+      "max_queries": 1,
+      "max_query_target": "bulk fetch (user + roles + permissions + company) in 1 round-trip via eager load + session cache",
+      "phase": 5
+    },
+    "webhook_paypal_ipn": {
+      "method": "POST",
+      "uri": "verify-billing-ipn",
+      "post_p95_ms": 50,
+      "max_queries": 0,
+      "side_effects": ["queue:webhooks (verify + write)"],
+      "idempotency": "24h",
+      "phase": 4
+    },
+    "webhook_stripe": {
+      "method": "POST",
+      "uri": "save-invoices",
+      "post_p95_ms": 50,
+      "max_queries": 0,
+      "side_effects": ["queue:webhooks"],
+      "idempotency": "24h",
+      "phase": 4
+    },
+    "webhook_razorpay": {
+      "method": "POST",
+      "uri": "save-razorpay-invoices",
+      "post_p95_ms": 50,
+      "max_queries": 0,
+      "side_effects": ["queue:webhooks"],
+      "idempotency": "24h",
+      "phase": 4
+    },
+    "webhook_phonepe_callback": {
+      "method": "POST",
+      "uri": "payment-callback",
+      "post_p95_ms": 50,
+      "max_queries": 0,
+      "side_effects": ["queue:webhooks"],
+      "idempotency": "24h",
+      "phase": 4
+    },
+    "public_login_otp_send": {
+      "method": "POST",
+      "uri": "send-otp-code",
+      "post_p95_ms": 200,
+      "max_queries": 1,
+      "side_effects": ["queue:mail"],
+      "phase": 5
+    },
+    "public_career_apply": {
+      "method": "POST",
+      "uri": "job/saveApplication",
+      "post_p95_ms": 200,
+      "max_queries": 1,
+      "transaction": true,
+      "side_effects": ["queue:indexing", "queue:mail"],
+      "phase": 5
+    },
+    "public_save_offer": {
+      "method": "POST",
+      "uri": "save-offer",
+      "post_p95_ms": 200,
+      "max_queries": 1,
+      "transaction": true,
+      "phase": 5
+    },
+    "public_company_register": {
+      "method": "POST",
+      "uri": "company-register",
+      "post_p95_ms": 300,
+      "max_queries": 1,
+      "transaction": true,
+      "side_effects": ["queue:indexing (bulk)", "queue:mail"],
+      "phase": 7
+    }
+  },
+  "per_action_query_budget": {
+    "open_apptracker_initial": { "current": 30, "target": 3 },
+    "apply_apptracker_filter": { "current": 5, "target": 1 },
+    "move_stage_stage_submit": { "current": 4, "target": 1 },
+    "save_job": { "current": 6, "target": 1 },
+    "bulk_save_apptracker_store": { "current": "N creates", "target": "1 bulk insert + 1 bulk ES" },
+    "add_team_member": { "current": 4, "target": 1 },
+    "login": { "current": 5, "target": 1 },
+    "register_company": { "current": 70, "target": 1 }
+  },
+  "client_side_patterns": {
+    "optimistic_ui": ["stage_submit", "status_update", "recruiter reassign"],
+    "debounced_autosave_ms": 1000,
+    "virtualized_rows_trigger": 200,
+    "local_filter_cache_combos": 50,
+    "fetch_on_mount_tabs": ["job-applications/edit (Overview/Stage/Offer/Resume/Interview)"]
+  },
+  "load_test_targets": {
+    "ramp_to_rps": 10000,
+    "sustained_minutes": 10,
+    "top_endpoints_count": 30,
+    "p95_budget_overrun_alert_pct": 20,
+    "error_rate_alert_pct": 1
+  },
+  "alerts": {
+    "p95_over_target_5min": "page on-call",
+    "horizon_queue_depth_indexing_or_default": 100,
+    "horizon_queue_depth_mail": 1000,
+    "horizon_queue_depth_webhooks": 50,
+    "es_drift_pct": 0.5,
+    "mysql_slow_log_threshold_ms": 50,
+    "server_cpu_pct": 60
+  },
+  "phase_estimates_dev_days": {
+    "phase_1_foundation": 3,
+    "phase_2_decouple_es_mail_reverb": 5,
+    "phase_3_read_path": 6,
+    "phase_4_webhook_hardening": 2,
+    "phase_5_per_screen_client_side": 8,
+    "phase_6_slice_refactors": 10,
+    "phase_7_public_surface_infra_polish": 4,
+    "phase_8_verify": 3,
+    "total": 38
+  }
+}

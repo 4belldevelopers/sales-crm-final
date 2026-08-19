@@ -6,7 +6,7 @@
 > decision, finish a phase, or learn something non-obvious, append it here (newest on top
 > in each section) and, if it's an architecture decision, also add an ADR.
 
-Last updated: 2026-08-06 (V2_login audit + planning slices complete).
+Last updated: 2026-08-16 (V2_Perf-10K plan written; V2_Add-Edit-Submit consolidated into single master + evidence).
 
 ---
 
@@ -16,11 +16,12 @@ Last updated: 2026-08-06 (V2_login audit + planning slices complete).
   Redis/Horizon · Octane/FrankenPHP · Reverb · S3 · Stripe/Razorpay/PhonePe/PayPal/Paddle · AI (OpenAI).
 - **Scale goal:** 10,000 companies, 100M+ records/year. See [docs/SCALABILITY.md](../docs/SCALABILITY.md).
 - **Active code folder:** `testing.jero.works` (NOT `hire.jero.works`).
-- **Current focus:** V2_login slice fully designed (audit + plan + comparison + ADR), **awaiting** `app/` implementation per [docs/V2_login/IMPLEMENTATION_PLAN.md](../docs/V2_login/IMPLEMENTATION_PLAN.md) Phase 3.3–3.8 + 6.4/6.5. 2 product sign-off questions still open.
+- **Current focus:** V2_Perf-10K plan written (2026-08-16) — Add/Edit/Submit perf plan for 10K-concurrent on 3×32 GB VMs. See [docs/V2_Perf-10K/Perf-10K-Plan.md](../docs/V2_Perf-10K/Perf-10K-Plan.md) + [perf-budget.json](../docs/V2_Perf-10K/perf-budget.json) + [tests/load/k6/perf-10k.js](../tests/load/k6/perf-10k.js). Tightens [PERFORMANCE_BUDGET.md](../docs/PERFORMANCE_BUDGET.md) targets; complements [SCALABILITY.md](../docs/SCALABILITY.md) long-horizon. V2_Add-Edit-Submit consolidated (Aug 2026) to a single master + single evidence file. V2_login slice fully designed (audit + plan + comparison + ADR), **awaiting** `app/` implementation per [docs/V2_login/IMPLEMENTATION_PLAN.md](../docs/V2_login/IMPLEMENTATION_PLAN.md) Phase 3.3–3.8 + 6.4/6.5. 2 product sign-off questions still open.
 - **Test coverage:** essentially none (default Breeze scaffolding only) — high regression risk.
 - **V2_login blocking-scenarios architecture:** session-epoch pattern + Reverb `UserAccountSuspended` event + `SyncUserStatusAction` (cross-tenant-safe) + `BlockCompanyAction` (static bulk helper) + `block_log` audit table + drop all 20 `refresh:true` ES sites + grep-lint guard. See [docs/V2_login/BLOCKING_SCENARIOS_AUDIT.md](../docs/V2_login/BLOCKING_SCENARIOS_AUDIT.md), [ADR 0007](../docs/adr/0007-blocking-scenarios-architecture.md). Code not yet landed.
 
 ## 2. Decision log (append-only; newest first)
+- *2026-08-16* — **V2_Perf-10K plan committed** ([docs/V2_Perf-10K/Perf-10K-Plan.md](../docs/V2_Perf-10K/Perf-10K-Plan.md)). Single unified doc covering Add/Edit/Submit perf for 10K concurrent on 3×32 GB VMs (app / MySQL / ES). 4 buckets (write-path / read-path / per-screen / infra & observability) × 8 phases × ~38 dev-days. Tightens PERFORMANCE_BUDGET SLOs (POST p95 < 100 ms, page TTFB p95 < 200 ms, % requests never touching MySQL > 90%). Per-action query budgets: Apptracker 30→3, stage_submit 4→1, register 70→1 ack + 1 bulk ES. Artifacts: [`perf-budget.json`](../docs/V2_Perf-10K/perf-budget.json) (machine-readable SLOs per route) + [`tests/load/k6/perf-10k.js`](../tests/load/k6/perf-10k.js) (load harness, top 30 endpoints, ramp to 10K RPS). Honest gap: 3 explore agents failed 429 — per-controller line targets are **to be confirmed by reading source before coding**, not verified.
 - *2026-08-18* — **Code Review & Multi-Tenancy Security Audit Remediation Complete (Phases 0–5)**:
   1. **Canonical Tenancy Engine** — `TenantScope` and `BelongsToTenant` trait (`app/Scopes/TenantScope.php`, `app/Traits/BelongsToTenant.php`) established as the single standard for Eloquent model tenancy. Re-enabled 6 disabled model scopes (`Job`, `ApplicationStatus`, `NoticePeriod`, `Role`, `OpenworkspaceJob`, `OpenworkspaceInterviewSchedule`).
   2. **Raw Query Scoping Helper** — `tenant_table('<table_name>')` helper (`app/Helper/TenantDB.php`) auto-applies `company_id` filter across 93 verified tenant tables without live schema reflection overhead.
