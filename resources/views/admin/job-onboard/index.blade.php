@@ -265,7 +265,7 @@
 							responsive  	:	true,
 							processing  	:	true,
 							serverSide  	:	true,
-							"bLengthChange" :	true,
+							"bLengthChange" :	false,
 							"lengthMenu"    :   [[10, 25, 50, 100], [10, 25, 50, 100]],
 							sDom			:	'lrtip',
 							oLanguage 		:	{sLengthMenu: "_MENU_",},

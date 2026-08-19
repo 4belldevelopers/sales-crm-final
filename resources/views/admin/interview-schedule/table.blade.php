@@ -210,7 +210,7 @@
 											processing  	: true,
 											serverSide  	: true,
 											destroy   		: true,
-											"bLengthChange" : true,
+											"bLengthChange" : false,
 											"lengthMenu"    : [[10, 25, 50, 100], [10, 25, 50, 100]],
 											sDom			: 'lrtip',
                      

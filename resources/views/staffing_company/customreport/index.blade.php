@@ -673,7 +673,7 @@ $("#report_frm").validate({
 
       "paging":   true,
       "ordering": true,
-			"bLengthChange"	: true,        
+			"bLengthChange"	: false,        
       
       "fixedHeader":
        {
@@ -750,7 +750,7 @@ $("#report_frm").validate({
 												 "bFilter"		: false,
 												 stateSave		: true,
                          "bInfo": false,
-												"bLengthChange"	: true,
+												"bLengthChange"	: false,
 												 oLanguage		: {sLengthMenu: "_MENU_",},
 												 lengthMenu		: [[10, 25, 50, 100,150,200,250,300], [10, 25, 50, 100,150, 200, 250, 300]],
 			   

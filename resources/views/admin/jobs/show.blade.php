@@ -540,7 +540,7 @@ $(document).ready(function() {
 			serverSide  	: true,
 			destroy   		: true,
 			ordering		: false, //disable ordering			
-			"bLengthChange" : true,
+			"bLengthChange" : false,
 			"lengthMenu"    : [[10, 25, 50, 100], [10, 25, 50, 100]],
 			sDom			: 'lrtip',
 			oLanguage 		: {sLengthMenu: "_MENU_", },
@@ -831,7 +831,7 @@ $(document).ready(function() {
 														responsive  	: true,
 														processing  	: true,
 														serverSide  	: true,
-														"bLengthChange" : true,
+														"bLengthChange" : false,
 														"lengthMenu"    : [[10, 25, 50, 100], [10, 25, 50, 100]],
 														sDom			: 'lrtip',
 														oLanguage 		: {

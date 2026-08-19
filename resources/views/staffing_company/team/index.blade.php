@@ -225,14 +225,14 @@ body
    		"bFilter"       : false,
    		stateSave       : true,
    		"bInfo"         : true, // Showing table records
-   		"bLengthChange" : true,
+   		"bLengthChange" : false,
    		oLanguage:
    		{
    		  sLengthMenu: "_MENU_",
    		},
    
    		"lengthMenu": [[10, 25, 50, 100, -1], [10, 25, 50, 100, "All"]], 
-   		"pageLength": 25,
+   		"pageLength": 10,
    						      
              /*responsive: true,
              // processing: true, 
@@ -410,14 +410,14 @@ body
            "bFilter"       : false,// to disabled search bar
            stateSave       : true,
            "bInfo"         : true,
-           "bLengthChange" : true,// to disabled table indexing
+           "bLengthChange" : false,// to disabled table indexing
            oLanguage:
            {
              sLengthMenu: "_MENU_",
            },
    
            "lengthMenu": [[10, 25, 50, 100, -1], [10, 25, 50, 100, "All"]], 
-           "pageLength": 25,*/
+           "pageLength": 10,*/
    		
    			responsive  	: true,
    			processing  	: true,
@@ -553,14 +553,14 @@ body
         "bFilter"       : false,// to disabled search bar
         stateSave       : true,
         "bInfo"         : true,
-        "bLengthChange" : true,// to disabled table indexing
+        "bLengthChange" : false,// to disabled table indexing
         oLanguage:
         {
           sLengthMenu: "_MENU_",
         },
 
         "lengthMenu": [[10, 25, 50, 100, -1], [10, 25, 50, 100, "All"]], 
-        "pageLength": 25,
+        "pageLength": 10,
 		
 		ajax: {'url' : '{!! route('staffing_company.team.data') !!}',
 		"data": function ( d )

@@ -476,7 +476,7 @@ function tableLoad(type)
       			processing      : true,
 				ordering		: false, //disable ordering      			
       			destroy       	: true,   
-      			"bLengthChange" : true,   
+      			"bLengthChange" : false,   
       			"lengthMenu"    : [[10, 25, 50, 100], [10, 25, 50, 100]],
 				sDom			: 'lrtip',       
 				          
