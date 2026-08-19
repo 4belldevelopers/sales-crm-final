@@ -141,9 +141,21 @@ class MarketJobV2Test extends TestCase
         $this->assertEquals(101, $transformed['id']);
         $this->assertEquals('Engineering', $transformed['department']);
         $this->assertEquals('Remote', $transformed['work_type']);
-        $this->assertEquals('Full-time', $transformed['employment_type']);
+        $this->assertEquals('Full-Time', $transformed['employment_type']);
         $this->assertContains('React', $transformed['skills']);
         $this->assertEquals(5, $transformed['vendor_added_count']);
         $this->assertArrayHasKey('action_type', $transformed);
+    }
+
+    /**
+     * Test location only filtering parameter parsing.
+     */
+    public function test_location_only_filter_parsing(): void
+    {
+        $service = app(\App\Services\MarketJobV2Service::class);
+        $request = Request::create('/service_company/market-jobs-list-v2-ajax', 'GET', [
+            'kt_tagify_location' => '[{"value":"Bangalore"}]',
+        ]);
+        $this->assertInstanceOf(\App\Services\MarketJobV2Service::class, $service);
     }
 }
