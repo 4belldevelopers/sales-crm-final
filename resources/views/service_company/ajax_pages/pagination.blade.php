@@ -98,13 +98,6 @@
             <i class="ti ti-chevron-right"></i>
         </button>
 
-        {{-- Rows per page selector — changing this triggers page size update in JS --}}
-        <select class="pagi-perpage" data-perpage="1" style="cursor:pointer;padding:0 28px 0 10px;appearance:auto;"
-                title="Rows per page">
-            @foreach([10, 20, 25, 50, 100] as $opt)
-                <option value="{{ $opt }}" {{ $perPage == $opt ? 'selected' : '' }}>{{ $opt }} / page</option>
-            @endforeach
-        </select>
     </div>
 </div>
 @endif

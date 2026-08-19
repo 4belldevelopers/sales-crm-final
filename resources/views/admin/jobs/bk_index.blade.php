@@ -688,7 +688,7 @@ var table = $('#myTable').dataTable({
       colReorder      : true,     
       scrollCollapse    : true,       
       "bFilter"     : true, 
-      "bLengthChange"   : true,          
+      "bLengthChange"   : false,          
       "fixedHeader":
        {
         "header": false,
@@ -696,14 +696,14 @@ var table = $('#myTable').dataTable({
        }, 
    
        "bInfo"     : false,
-       "bLengthChange" : true,
+       "bLengthChange" : false,
        oLanguage:
        {
          sLengthMenu: "_MENU_",
        },		
 		
 		"lengthMenu": [[10, 25, 50, 100, -1], [10, 25, 50, 100, "All"]],  
-		"pageLength": 25,	
+		"pageLength": 10,	
 		// bFilter: false, bInfo: false,
 			 
    /* lengthMenu: [
@@ -718,7 +718,7 @@ var table = $('#myTable').dataTable({
     // "bFilter": true,
 		//"paging":   true,      
 		//lengthMenu: [[10, 25, 50, 100,150,200,250,300], [10, 25, 50, 100,150, 200, 250, 300]], 
-    // "bLengthChange": true,
+    // "bLengthChange": false,
   	/*oLanguage:
     {
       sLengthMenu: "_MENU_", 

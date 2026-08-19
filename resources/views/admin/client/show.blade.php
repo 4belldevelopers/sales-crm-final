@@ -1098,7 +1098,7 @@
 			serverSide  	: true,
 			destroy   		: true,
 			ordering		: false, 							//disable ordering			
-			"bLengthChange" : true,
+			"bLengthChange" : false,
 			"lengthMenu"    : [[10, 25, 50, 100], [10, 25, 50, 100]],
 			sDom			: 'lrtip',
 			oLanguage 		: {
@@ -1143,13 +1143,13 @@
    			destroy   		: true,
    			ordering		: false, //disable ordering
    			
-   			"bLengthChange" : true,
+   			"bLengthChange" : false,
    			"lengthMenu"    : [[10, 25, 50, 100], [10, 25, 50, 100]],
    			sDom			: 'lrtip',
    			oLanguage 		: {
    									sLengthMenu: "_MENU_",
    								},
-           	"pageLength": 25,
+           	"pageLength": 10,
    			colReorder		: true,
       		ajax			: {'url' : '{!! route('admin.jobs.data') !!}',
 								"data"			: function ( d )

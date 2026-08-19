@@ -298,7 +298,7 @@ $(document).ready(function() {
 			processing  	: true,
 			serverSide  	: true,
 			destroy   		: true,
-			"bLengthChange" : true,
+			"bLengthChange" : false,
 			"lengthMenu"    : [[10, 25, 50, 100], [10, 25, 50, 100]],
 			sDom			: 'lrtip',
 			oLanguage 		: {
@@ -311,7 +311,7 @@ $(document).ready(function() {
         "bFilter"       : false,
         stateSave       : true,
         "bInfo"         : true,
-        "bLengthChange" : true,
+        "bLengthChange" : false,
 		ordering		: false, //disable ordering
 		
         oLanguage:
@@ -319,7 +319,7 @@ $(document).ready(function() {
           sLengthMenu: "_MENU_",
         },
         "lengthMenu": [[10, 25, 50, 100, -1], [10, 25, 50, 100, "All"]], 
-        "pageLength": 25,*/
+        "pageLength": 10,*/
 	
 		ajax: {'url' : '{!! route('admin.clients.data') !!}',
 		"data": function ( d )

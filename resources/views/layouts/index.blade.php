@@ -1760,7 +1760,7 @@ function exportExcel_interview()
       colReorder      : true,     
       scrollCollapse    : true,       
       "bFilter"     : true, 
-      "bLengthChange"   : true,          
+      "bLengthChange"   : false,          
       "fixedHeader":
        {
         "header": false,
@@ -1768,14 +1768,14 @@ function exportExcel_interview()
        }, 
    
        "bInfo"     : false,
-       "bLengthChange" : true,
+       "bLengthChange" : false,
        oLanguage:
        {
          sLengthMenu: "_MENU_",
        },
 
             "lengthMenu": [[10, 25, 50, 100, -1], [10, 25, 50, 100, "All"]],
-            "pageLength": 25,  
+            "pageLength": 10,  
             bFilter: false, bInfo: true,					
 
 			   ajax: '{!! route('admin.customreport.data') !!}?custom_text='+custom_text+'&start_date='+start_date+'&end_date='+end_date+'&clients='+clients+'&jobs='+jobs+'&source='+source+'&master_status_id='+master_status_id+'&interview_process='+interview_process,

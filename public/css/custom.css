@@ -2983,3 +2983,14 @@ ul.wysihtml5-toolbar a.btn
 
 
 /*Add New CSS End*/
+
+/* Hide pagination page-size dropdowns project-wide */
+.dataTables_length,
+div.dataTables_wrapper div.dataTables_length,
+.dataTables_lengthSelect,
+.pagi-perpage,
+#teamRowsPerPage,
+.team-pagination-rows,
+#txlog-per-page {
+    display: none !important;
+}
