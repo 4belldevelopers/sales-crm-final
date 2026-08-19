@@ -1532,7 +1532,7 @@ class SaasFrontController extends SaasFrontBaseController
      */
     private function syncRegistrationCommercialCountries(Company $company, array $countryIds): void
     {
-        if (!in_array((int) $company->company_type, [1, 2], true) || $countryIds === []) {
+        if (! in_array((int) $company->company_type, [1, 2], true) || $countryIds === []) {
             return;
         }
 
@@ -3381,7 +3381,7 @@ class SaasFrontController extends SaasFrontBaseController
             return Reply::error('Please contact administrator to set SMTP details to add company', 'smtp_error');
         } catch (\Exception $e) {
             DB::rollback();
-            dd($e->getMessage());
+            Log::error('Error inserting company data in SaasFrontController: '.$e->getMessage(), ['exception' => $e]);
 
             return Reply::error('Some error occurred when inserting the data. Please try again or contact support');
         }

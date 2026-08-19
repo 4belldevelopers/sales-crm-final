@@ -15,7 +15,7 @@ class ZoomService
         $this->client = new Client([
             'base_uri' => 'https://api.zoom.us/v2/',
             'headers' => [
-                'Authorization' => 'Bearer ' . $this->getAccessToken(),
+                'Authorization' => 'Bearer '.$this->getAccessToken(),
                 'Content-Type' => 'application/json',
             ],
         ]);
@@ -23,14 +23,13 @@ class ZoomService
 
     protected function getAccessToken()
     {
-        $client = new Client();
-
+        $client = new Client;
 
         $response = $client->post('https://zoom.us/oauth/token', [
             'form_params' => [
                 'grant_type' => 'client_credentials',
-                'client_id' => config('services.zoom.client_id', env('ZOOM_API_KEY')),
-                'client_secret' => config('services.zoom.client_secret', env('ZOOM_API_SECRET')),
+                'client_id' => config('services.zoom.client_id', config('services.zoom.api_key')),
+                'client_secret' => config('services.zoom.client_secret', config('services.zoom.api_secret')),
             ],
         ]);
 
@@ -47,6 +46,7 @@ class ZoomService
         $response = $this->client->post('users/me/meetings', [
             'json' => $data,
         ]);
+
         // dd($response);
         return json_decode($response->getBody()->getContents(), true);
     }

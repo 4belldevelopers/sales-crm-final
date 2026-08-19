@@ -1,6 +1,5 @@
 <?php
 
-use App\Events\MessageSent;
 use App\Http\Controllers\Admin\AdminJobApplicationController;
 use App\Http\Controllers\Admin\CompanyDashboardController;
 use App\Http\Controllers\Auth\ForgotPasswordController;
@@ -26,18 +25,17 @@ use App\Http\Controllers\ZoomController;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/whatsapp/connect', function () {
-    return view('connect');
-});
-
-Route::post('/whatsapp/create', [HomeController::class, 'create']);
-Route::get('/whatsapp/qr', [HomeController::class, 'qr']);
-Route::get('/whatsapp/status', [HomeController::class, 'status']);
-Route::post('/whatsapp/restart', [HomeController::class, 'restart']);
-Route::post('/whatsapp/send', [HomeController::class, 'send']);
-Route::post('/whatsapp/delete', [HomeController::class, 'delete']);
-
 if (app()->environment('local')) {
+    Route::get('/whatsapp/connect', function () {
+        return view('whatsapp.connect');
+    });
+    Route::post('/whatsapp/create', [HomeController::class, 'create']);
+    Route::get('/whatsapp/qr', [HomeController::class, 'qr']);
+    Route::get('/whatsapp/status', [HomeController::class, 'status']);
+    Route::post('/whatsapp/restart', [HomeController::class, 'restart']);
+    Route::post('/whatsapp/send', [HomeController::class, 'send']);
+    Route::post('/whatsapp/delete', [HomeController::class, 'delete']);
+
     Route::get('/mail-test', function () {
         $filePath = 'https://file.jero.works/Companies/4bell_technology_2/Resumes/2026/02/JERO_699c43f99f495.pdf';
         $attachments[] = [
@@ -330,7 +328,7 @@ Route::get('help/{slug?}', [SaasFrontController::class, 'help'])->name('help');
 // Front routes start
 // Route::prefix('Front')->group(function () {
 
-    Route::group(['namespace' => 'Front'], function () {
+Route::group(['namespace' => 'Front'], function () {
 
     Route::get('/careers/{slug}', 'FrontJobsController@jobOpenings')->name('jobOpenings');
     Route::get('/careers/{slug}/job-listing', 'FrontJobsController@jobListing')->name('job-listing');
