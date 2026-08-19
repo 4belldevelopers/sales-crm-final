@@ -2,21 +2,18 @@
 
 namespace App\Http\Controllers\Front;
 
-use Illuminate\Http\Request;
-use Laravel\Socialite\Facades\Socialite;
-use Laravel\Socialite\Contracts\Provider;
 use App\Models\User;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Laravel\Socialite\Contracts\Provider;
+use Laravel\Socialite\Facades\Socialite;
 
 class SocialAuthController extends FrontBaseController
 {
-
     public function callback($provider)
     {
-
         $user = $this->createOrGetUser(Socialite::driver($provider));
-        dd($user);
-        /*auth()->login($user);*/
+        auth()->login($user);
 
         return redirect()->to('/');
     }
@@ -29,29 +26,28 @@ class SocialAuthController extends FrontBaseController
     private function createOrGetUser(Provider $provider)
     {
         $providerUser = $provider->user();
-        return $providerUser;
-        /*dd($providerUser);*/
-
         $providerName = class_basename($provider);
 
         $user = User::whereProvider($providerName)
             ->whereProviderId($providerUser->getId())
             ->first();
 
-        if (!$user) {
+        if (! $user) {
             $user = User::create([
                 'email' => $providerUser->getEmail(),
                 'name' => $providerUser->getName(),
                 'provider_id' => $providerUser->getId(),
-                'provider' => $providerName
+                'provider' => $providerName,
             ]);
         }
 
         return $user;
     }
 
-    public function logout(Request $request) {
+    public function logout(Request $request)
+    {
         Auth::logout();
+
         return redirect('/');
     }
 }

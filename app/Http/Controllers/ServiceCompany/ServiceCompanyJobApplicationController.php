@@ -21,14 +21,12 @@ use App\Helper\Google;
 use App\Helper\Reply;
 use App\Helper\Zoom;
 use App\Imports\JobApplicationImport;
-use App\Jobs\ElasticCandidateIndex;
 use App\Jobs\ProcessCandidateSubmissionJob;
 use App\Jobs\ProcessCandidateUpdateJob;
 use App\Jobs\QueueCandidateNotificationJob;
 use App\Jobs\QueueMailService;
 use App\Jobs\QueueNotificationMailService;
 use App\Jobs\UploadResumeToTestRTwo;
-use App\Services\ReferenceDataCache;
 use App\Mail\AddCandidateMail;
 use App\Mail\ChangeStatusMail;
 use App\Mail\InterviewTrackerMail;
@@ -36,7 +34,6 @@ use App\Mail\JoinedUsTodayMail;
 use App\Mail\OfferMail;
 use App\Mail\RejectedMail;
 use App\Models\AddJobWiseCondidate;
-use App\Models\ApplicationSetting;
 use App\Models\ApplicationStatus;
 use App\Models\Company;
 use App\Models\Country;
@@ -44,7 +41,6 @@ use App\Models\InterviewSchedule;
 use App\Models\Job;
 use App\Models\JobApplication;
 use App\Models\JobApplicationAnswer;
-use App\Models\NoticePeriod;
 use App\Models\OfferJobApplication;
 use App\Models\ResumeUpload;
 use App\Models\Skill;
@@ -56,6 +52,7 @@ use App\Services\GoogleSheetServiceCandidate;
 use App\Services\MailService;
 use App\Services\MassMailService;
 use App\Services\NotificationMailService;
+use App\Services\ReferenceDataCache;
 use Barryvdh\DomPDF\Facade as PDF;
 use Carbon\Carbon;
 use Google_Client;
@@ -1482,7 +1479,7 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
     private function sofficeBinary()
     {
         $candidates = [
-            env('SOFFICE_PATH'),
+            config('services.soffice.path'),
             'C:\\Program Files\\LibreOffice\\program\\soffice.exe',
             'C:\\Program Files (x86)\\LibreOffice\\program\\soffice.exe',
             '/usr/bin/soffice', '/usr/bin/libreoffice', '/opt/libreoffice/program/soffice',
@@ -12078,7 +12075,7 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
 
         // ////////////////////////
 
-        // $apiKey = env('OPENAI_API_KEY'); // Ensure the key is set correctly
+        // $apiKey = config('services.openai.api_key'); // Ensure the key is set correctly
         // $openAiUrl = 'https://api.openai.com/v1/chat/completions'; // Change to chat completions
 
         // // Prepare the data structure for the chat model

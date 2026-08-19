@@ -3133,8 +3133,6 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
             ->addIndexColumn()
             ->make(true);
 
-        dd($benchAppOnJob);
-
         $salaryMode = GeneralMethod::salaryMode();
         $currencySymbole = GeneralMethod::currencySymbole();
         $job_status = GeneralMethod::job_status();
