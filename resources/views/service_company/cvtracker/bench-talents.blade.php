@@ -549,199 +549,308 @@
           </div>
         </div>
 
-		 <div class="d-flex align-items-center position-relative my-1 me-3"> <span class="svg-icon svg-icon-1 position-absolute ms-6">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none">
-                    <rect opacity="0.5" x="17.0365" y="15.1223" width="8.15546" height="2" rx="1" transform="rotate(45 17.0365 15.1223)" fill="black"></rect>
-                    <path d="M11 19C6.55556 19 3 15.4444 3 11C3 6.55556 6.55556 3 11 3C15.4444 3 19 6.55556 19 11C19 15.4444 15.4444 19 11 19ZM11 5C7.53333 5 5 7.53333 5 11C5 14.4667 7.53333 17 11 17C14.4667 17 17 14.4667 17 11C17 7.53333 14.4667 5 11 5Z" fill="black"></path>
-                  </svg>
-                  </span>
-                  <input type="text" id="inputCopySearch" name="inputCopySearch" data-kt-user-table-filter="search" class="form-control form-control-solid ps-14" style="padding: .8rem 1rem;" placeholder="Search...">
+<style>
+.bench-filter-drawer-overlay {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    z-index: 10000 !important;
+    display: none;
+}
+.bench-filter-drawer-overlay.active {
+    display: block !important;
+}
+.bench-filter-drawer-backdrop {
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    background: rgba(15, 23, 42, 0.45) !important;
+    backdrop-filter: blur(2px) !important;
+    opacity: 0 !important;
+    transition: opacity 0.25s ease-in-out !important;
+}
+.bench-filter-drawer-overlay.active .bench-filter-drawer-backdrop {
+    opacity: 1 !important;
+}
+.bench-filter-drawer-container {
+    position: absolute !important;
+    top: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    width: 70vw !important;
+    max-width: 70% !important;
+    height: 100vh !important;
+    background: #ffffff !important;
+    box-shadow: -10px 0 35px rgba(0, 0, 0, 0.25) !important;
+    display: flex !important;
+    flex-direction: column !important;
+    transform: translateX(100%) !important;
+    transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
+    z-index: 10001 !important;
+    font-family: 'Poppins', sans-serif !important;
+}
+.bench-filter-drawer-overlay.active .bench-filter-drawer-container {
+    transform: translateX(0) !important;
+}
+@media (max-width: 991px) {
+    .bench-filter-drawer-container {
+        width: 88vw;
+        max-width: 88%;
+    }
+}
+.bench-filter-drawer-header {
+    padding: 16px 24px;
+    border-bottom: 1px solid #e2e8f0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: #ffffff;
+    flex-shrink: 0;
+}
+.bench-filter-drawer-icon {
+    width: 38px;
+    height: 38px;
+    border-radius: 10px;
+    background: #EEF2FF;
+    color: #4F46E5;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+.bench-filter-drawer-body {
+    padding: 20px 24px;
+    overflow-y: auto;
+    flex: 1;
+}
+.bench-filter-drawer-footer {
+    padding: 16px 24px;
+    border-top: 1px solid #e2e8f0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: #fafbfc;
+    flex-shrink: 0;
+}
+.bench-filter-section {
+    padding-bottom: 20px;
+    margin-bottom: 20px;
+    border-bottom: 1px solid #f1f5f9;
+}
+.bench-filter-section:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+    padding-bottom: 0;
+}
+.bench-filter-label {
+    font-size: 13px;
+    font-weight: 600;
+    text-transform: uppercase;
+    color: #475569;
+    letter-spacing: 0.5px;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+</style>
 
-                    <div class="col-lg-2 d-flex align-items-center px-2" style="width: 15%;">
-                        <button type="button" class="btn btn-sm btn-flex btn-light btn-active-primary fw-bolder w-100 py-4" data-kt-menu-trigger="click" data-kt-menu-placement="bottom-end" data-kt-menu-flip="top-end" data-toggle="modal" data-target="#apptrackerfilterBench">
-                            <span class="svg-icon svg-icon-2">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none">
-                                    <path d="M19.0759 3H4.72777C3.95892 3 3.47768 3.83148 3.86067 4.49814L8.56967 12.6949C9.17923 13.7559 9.5 14.9582 9.5 16.1819V19.5072C9.5 20.2189 10.2223 20.7028 10.8805 20.432L13.8805 19.1977C14.2553 19.0435 14.5 18.6783 14.5 18.273V13.8372C14.5 12.8089 14.8171 11.8056 15.408 10.964L19.8943 4.57465C20.3596 3.912 19.8856 3 19.0759 3Z" fill="black">
-                                    </path>
-                                </svg>
-                            </span> Filter
-                        </button>
-                    </div>
+        <!-- Full-Width Search Input Bar & Right-Shifted Filter Button -->
+        <div class="d-flex align-items-center justify-content-between gap-3 mb-4 mt-2 px-1 w-100">
+            <!-- Search Input Field (Full Width) -->
+            <div class="d-flex align-items-center position-relative flex-grow-1">
+                <span class="svg-icon svg-icon-1 position-absolute ms-4 text-gray-400">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none">
+                        <rect opacity="0.5" x="17.0365" y="15.1223" width="8.15546" height="2" rx="1" transform="rotate(45 17.0365 15.1223)" fill="currentColor"></rect>
+                        <path d="M11 19C6.55556 19 3 15.4444 3 11C3 6.55556 6.55556 3 11 3C15.4444 3 19 6.55556 19 11C19 15.4444 15.4444 19 11 19ZM11 5C7.53333 5 5 7.53333 5 11C5 14.4667 7.53333 17 11 17C14.4667 17 17 14.4667 17 11C17 7.53333 14.4667 5 11 5Z" fill="currentColor"></path>
+                    </svg>
+                </span>
+                <input type="text" id="inputCopySearch" name="inputCopySearch" data-kt-user-table-filter="search" class="form-control form-control-solid ps-12 fs-6 w-100" style="padding: 0.75rem 1.25rem; border-radius: 8px;" placeholder="Search talents by name, skills, title, location..." />
+            </div>
+
+            <!-- Filter Button (Shifted Right) -->
+            <div class="d-flex align-items-center flex-shrink-0">
+                <button type="button" class="btn btn-light-primary fw-bolder px-5 py-3 d-inline-flex align-items-center gap-2" style="border-radius: 8px;" id="open_apptrackerfilterBench_btn">
+                    <span class="svg-icon svg-icon-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none">
+                            <path d="M19.0759 3H4.72777C3.95892 3 3.47768 3.83148 3.86067 4.49814L8.56967 12.6949C9.17923 13.7559 9.5 14.9582 9.5 16.1819V19.5072C9.5 20.2189 10.2223 20.7028 10.8805 20.432L13.8805 19.1977C14.2553 19.0435 14.5 18.6783 14.5 18.273V13.8372C14.5 12.8089 14.8171 11.8056 15.408 10.964L19.8943 4.57465C20.3596 3.912 19.8856 3 19.0759 3Z" fill="currentColor"></path>
+                        </svg>
+                    </span>
+                    <span>Filter</span>
+                </button>
+            </div>
         </div>
 
+        <!--Start Side Drawer Filter (70% Width - Market Jobs Filter Design)-->
+        <div id="apptrackerfilterBench" class="bench-filter-drawer-overlay" tabindex="-1">
+            <div class="bench-filter-drawer-backdrop" id="apptrackerfilterBench_backdrop"></div>
+            <div class="bench-filter-drawer-container">
+                <!-- Header -->
+                <div class="bench-filter-drawer-header">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="bench-filter-drawer-icon">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3Z"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <h3 class="fw-bolder m-0 text-gray-900 fs-4" style="font-family: 'Poppins', sans-serif;">Filter Bench Talents</h3>
+                            <p class="text-muted m-0 fs-7" style="color: #64748B;">Filter AI recommended candidate pool by skills, city, experience, bill rates & type</p>
+                        </div>
+                    </div>
+                    <button type="button" class="btn btn-sm btn-icon btn-active-light-danger" id="apptrackerfilterBench_close" title="Close">
+                        <span class="svg-icon svg-icon-1">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M18 6 6 18M6 6l12 12"/>
+                            </svg>
+                        </span>
+                    </button>
+                </div>
 
-        
-            <!--Start Popup-->
-            <div class="modal fade show" id="apptrackerfilterBench" tabindex="-1" style="">
-                <div class="modal-dialog modal-dialog-centered modal-lg">
-                    <div class="modal-content">
-                        <div class="modal-header flex-stack">
-                            <h2>Filter (Search Bench Talents)</h2>
-                            <div class="btn btn-sm btn-icon btn-active-light-danger close" data-dismiss="modal" id="apptrackerfilterBench_close">
-                                <span class="svg-icon svg-icon-1">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
-                                        <rect opacity="0.5" x="6" y="17.3137" width="16" height="2" rx="1" transform="rotate(-45 6 17.3137)"></rect>
-                                        <rect x="7.41422" y="6" width="16" height="2" rx="1" transform="rotate(45 7.41422 6)"></rect>
-                                    </svg>
-                                </span>
+                <!-- Body -->
+                <div class="bench-filter-drawer-body">
+                    <form id="createSchedule" class="ajax-form" method="post">
+                        <!-- 1. Search Skills / Keywords -->
+                        <div class="bench-filter-section">
+                            <label class="bench-filter-label">1. Search Skills / Keywords</label> 
+                            <div class="search-input-wrap">
+                                <input class="search-input form-control form-control-solid" name="kt_tagify_skills" value="{{ @$default_skill }}" placeholder="Enter Skills to search Bench Talents..." id="kt_tagify_skills" />
                             </div>
                         </div>
-                        <div class="apptrackerfilterBench_body_content" id="">
-                            <div class="modal-body" style="padding: 2em;">
-                                <form id="createSchedule" class="ajax-form" method="post">
-                                    <div class="section">
-                                        <p class="section-label">1. Search Skills / Keywords</span></p> 
-                                        <div class="search-input-wrap">
-                                            <input class="search-input" name="kt_tagify_skills" value="{{ @$default_skill }}" placeholder="Enter Skills" id="kt_tagify_skills" />
-                                        </div>
-                                    </div>
 
-                                    <div class="section">
-                                        <p class="section-label">2. Select the City</span></p> 
-                                        <div class="search-input-wrap">
-                                            <input class="search-input" value="" id="kt_tagify_location_bench" placeholder="Search City" />
-                                        </div>
-                                    </div>
+                        <!-- 2. Select the City -->
+                        <div class="bench-filter-section">
+                            <label class="bench-filter-label">2. Select the City</label> 
+                            <div class="search-input-wrap">
+                                <input class="search-input form-control form-control-solid" value="" id="kt_tagify_location_bench" placeholder="Search City..." />
+                            </div>
+                        </div>
 
-                                    <div class="section form-group row fv-row mb-10 fv-plugins-icon-container">
-                                        <p class="section-label">3. Experience</span></p> 
-                                        <div class="col-lg-6">
-                                            <label class="form-label required">Minimum years:</label>
-                                            <select class="form-select form-select-solid" name="min_exp_bench" id="min_exp_bench">
-                                            <option value="" selected="">Select Experience</option>
-                                            <option value="0">Freshers</option>
-                                            @for($i=1; $i<=30; $i++)
-                                            <option value="{{ $i }}">{{ $i }} &nbsp; Year{{ ($i>=1) ? 's' : '' }}</option>
-                                            @endfor                    
-                                            </select>
-                                            <div class="fv-plugins-message-container"></div>
-                                        </div>
-                                        <div class="col-lg-6">
-                                            <label class="form-label required">Maximum years:</label>
-                                            <select class="form-select form-select-solid" name="max_exp_bench" id="max_exp_bench">
-                                            <option value="" selected="">Select Experience</option>
-                                            <option value="0">Freshers</option>
-                                            @for($i=1; $i<=30; $i++)
-                                            <option value="{{ $i }}">{{ $i }} &nbsp; Year{{ ($i>=1) ? 's' : '' }}</option>
-                                            @endfor                                
-                                            </select>
-                                            <div class="fv-plugins-message-container" id="experience_bench_error" style="color: red !important;text-align: center;"></div>
-                                        </div>
-                                    </div> 
-
-
-                                    <div class="section form-group row fv-row mb-10 fv-plugins-icon-container">
-                                        <p class="section-label">4. Bill Rates</span></p> 
-                                        <div class="col-lg-12">
-                                            <div class="row">
-                                                    
-                                                    <div class="col-lg-4">
-                                                        <div class="row">
-                                                            <div class="col-lg-6">
-                                                                <label class="form-label required">Currency</label>
-                                                                <select class="form-select form-select-solid" arial-label="Select Currency" name="min_salary_currency_bench" id="min_salary_currency_bench">
-                                                                    <option value="">Select currency</option>
-                                                                        <option value="0" {{ $min_salary_currency==0 ? 'selected' : '' }}>INR</option>
-                                                                        <option value="1" {{ $min_salary_currency==1 ? 'selected' : '' }}>EUR</option>
-                                                                        <option value="2" {{ $min_salary_currency==2 ? 'selected' : '' }}>JPY</option>
-                                                                        <option value="3" {{ $min_salary_currency==3 ? 'selected' : '' }}>GBP</option>
-                                                                        <option value="4" {{ $min_salary_currency==4 ? 'selected' : '' }}>USD</option>
-                                                                        <option value="5" {{ $min_salary_currency==5 ? 'selected' : '' }}>AED</option>
-                                                                </select>
-                                                            </div>
-                                                            <div class="col-lg-6">
-                                                                <label class="form-label required">Mode</label>
-                                                                <select class="form-select form-select-solid" arial-label="Select Currency" name="sal_mode_bench" id="sal_mode_bench">
-                                                                    <option value="">Select Mode</option>
-                                                                    <option value="0" {{ $min_sal_mode==0 ? 'selected' : '' }}>Annual</option>
-                                                                    <option value="1" {{ $min_sal_mode==1 ? 'selected' : '' }}>Monthly</option>
-                                                                    <option value="2" {{ $min_sal_mode==2 ? 'selected' : '' }}>Hourly</option>
-                                                                </select>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                    <div class="col-lg-8">
-                                                        <div class="row">
-                                                            <div class="col-lg-6">
-                                                                <label class="form-label required">Minimum Bill Rates:</label>
-                                                                @php
-                                                                    $min_salary = [
-                                                                        0 => @$job->min_yearly,
-                                                                        1 => @$job->min_monthly,
-                                                                        2 => @$job->min_hourly
-                                                                    ][@$job->min_sal_mode] ?? '';
-                                                                @endphp
-
-                                                                <input type="number" class="form-control form-control-lg form-control-solid" name="min_sal_bench" id="min_sal_bench" placeholder="Enter min salary" value="">
-                                                                <div class="fv-plugins-message-container"></div>
-                                                                <span class="form-text text-muted minimum_salary_word"></span>
-                                                            </div>
-                                                            <div class="col-lg-6">
-                                                                    <label class="form-label required">Maximum Bill Rates:</label>
-                                                                    @php
-                                                                        $max_salary = [
-                                                                            0 => @$job->max_yearly,
-                                                                            1 => @$job->max_monthly,
-                                                                            2 => @$job->max_hourly
-                                                                        ][@$job->max_sal_mode] ?? '';
-                                                                    @endphp
-                                                                    <input type="number" class="form-control form-control-lg form-control-solid" name="max_sal_bench" id="max_sal_bench" placeholder="Enter max salary" value="">
-                                                                    <div class="fv-plugins-message-container"></div>
-                                                                    <span class="form-text text-muted maximum_salary_word"></span>
-                                                            </div>  
-                                                            <span class="form-text text-muted" id="salary_bench_error" style="    color: red !important;text-align: center;"></span>                                                             
-                                                        </div>
-                                                    </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="section d-flex flex-column mb-8">
-                                        <p class="section-label">5. Outsource type</span></p> 
-                                        <div class="row py-5 mb-3">
-                                            <div class="col-lg-4">
-                                                <input type="radio" class="btn-check app_int_outsource" name="app_int_outsource_bench" value="0" id="app_int_outsource_bench0" checked>
-                                                <label class="btn btn-outline btn-outline-dashed btn-outline-default p-3 d-flex align-items-center justify-content-center" for="app_int_outsource_bench0">
-                                                    <span class="d-block fw-bold text-start">
-                                                        <span class="text-dark-800 fw-bolder d-block fs-5">All</span>
-                                                    </span>
-                                                </label>
-                                            </div>
-                                            <div class="col-lg-4">
-                                                <input type="radio" class="btn-check app_int_outsource" name="app_int_outsource_bench" value="1" id="app_int_outsource_bench2">
-                                                <label class="btn btn-outline btn-outline-dashed btn-outline-default p-3 d-flex align-items-center justify-content-center" for="app_int_outsource_bench2">
-                                                    <span class="d-block fw-bold text-start">
-                                                        <span class="text-dark-800 fw-bolder d-block fs-5">Fulltime Hiring</span>
-                                                    </span>
-                                                </label>
-                                            </div>
-                                            <div class="col-lg-4">
-                                                <input type="radio" class="btn-check app_int_outsource" name="app_int_outsource_bench" value="2" id="app_int_outsource_bench3">
-                                                <label class="btn btn-outline btn-outline-dashed btn-outline-default p-3 d-flex align-items-center justify-content-center" for="app_int_outsource_bench3">
-                                                    <span class="d-block fw-bold text-start">
-                                                        <span class="text-dark-800 fw-bolder d-block fs-5">Contract Hiring</span>
-                                                    </span>
-                                                </label>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </form>
+                        <!-- 3. Experience -->
+                        <div class="bench-filter-section">
+                            <label class="bench-filter-label">3. Experience</label> 
+                            <div class="row g-3">
+                                <div class="col-lg-6">
+                                    <label class="form-label required fs-7 text-muted fw-bold">Minimum years:</label>
+                                    <select class="form-select form-select-solid" name="min_exp_bench" id="min_exp_bench">
+                                        <option value="" selected="">Select Experience</option>
+                                        <option value="0">Freshers</option>
+                                        @for($i=1; $i<=30; $i++)
+                                        <option value="{{ $i }}">{{ $i }} &nbsp; Year{{ ($i>=1) ? 's' : '' }}</option>
+                                        @endfor                    
+                                    </select>
                                 </div>
-                                <div class="modal-footer flex-center">
-                                <div class="div1">
-                                    <button type="button" id="" class="btn btn-secondary me-3" data-dismiss="modal">Close</button>
-                                    <button type="button" id="changetextupdatebench" class="btn btn-primary">
-                                        <span class="indicator-label changetextupdatebench">Submit</span>
-                                    </button>
+                                <div class="col-lg-6">
+                                    <label class="form-label required fs-7 text-muted fw-bold">Maximum years:</label>
+                                    <select class="form-select form-select-solid" name="max_exp_bench" id="max_exp_bench">
+                                        <option value="" selected="">Select Experience</option>
+                                        <option value="0">Freshers</option>
+                                        @for($i=1; $i<=30; $i++)
+                                        <option value="{{ $i }}">{{ $i }} &nbsp; Year{{ ($i>=1) ? 's' : '' }}</option>
+                                        @endfor                                
+                                    </select>
+                                    <div id="experience_bench_error" style="color: red !important; text-align: center;" class="mt-1 fs-7"></div>
+                                </div>
+                            </div> 
+                        </div>
+
+                        <!-- 4. Bill Rates -->
+                        <div class="bench-filter-section">
+                            <label class="bench-filter-label">4. Bill Rates</label> 
+                            <div class="row g-3 mb-3">
+                                <div class="col-lg-6">
+                                    <label class="form-label required fs-7 text-muted fw-bold">Currency</label>
+                                    <select class="form-select form-select-solid" name="min_salary_currency_bench" id="min_salary_currency_bench">
+                                        <option value="">Select currency</option>
+                                        <option value="0" {{ $min_salary_currency==0 ? 'selected' : '' }}>INR</option>
+                                        <option value="1" {{ $min_salary_currency==1 ? 'selected' : '' }}>EUR</option>
+                                        <option value="2" {{ $min_salary_currency==2 ? 'selected' : '' }}>JPY</option>
+                                        <option value="3" {{ $min_salary_currency==3 ? 'selected' : '' }}>GBP</option>
+                                        <option value="4" {{ $min_salary_currency==4 ? 'selected' : '' }}>USD</option>
+                                        <option value="5" {{ $min_salary_currency==5 ? 'selected' : '' }}>AED</option>
+                                    </select>
+                                </div>
+                                <div class="col-lg-6">
+                                    <label class="form-label required fs-7 text-muted fw-bold">Mode</label>
+                                    <select class="form-select form-select-solid" name="sal_mode_bench" id="sal_mode_bench">
+                                        <option value="">Select Mode</option>
+                                        <option value="0" {{ $min_sal_mode==0 ? 'selected' : '' }}>Annual</option>
+                                        <option value="1" {{ $min_sal_mode==1 ? 'selected' : '' }}>Monthly</option>
+                                        <option value="2" {{ $min_sal_mode==2 ? 'selected' : '' }}>Hourly</option>
+                                    </select>
                                 </div>
                             </div>
-                            <script src="https://servicetesting.4bell.com/assets/node_modules/moment/moment.js?ver=1553620716" type="text/javascript"></script>
-                            <script src="https://servicetesting.4bell.com/assets/node_modules/multiselect/js/jquery.multi-select.js?ver=1553620716"></script>
-                            <script src="https://servicetesting.4bell.com/assets/node_modules/bootstrap-material-datetimepicker/js/bootstrap-material-datetimepicker.js?ver=1553620716" type="text/javascript"></script>
+                            <div class="row g-3">
+                                <div class="col-lg-6">
+                                    <label class="form-label required fs-7 text-muted fw-bold">Minimum Bill Rates:</label>
+                                    <input type="number" class="form-control form-control-solid" name="min_sal_bench" id="min_sal_bench" placeholder="Enter min salary" value="">
+                                    <span class="form-text text-muted minimum_salary_word"></span>
+                                </div>
+                                <div class="col-lg-6">
+                                    <label class="form-label required fs-7 text-muted fw-bold">Maximum Bill Rates:</label>
+                                    <input type="number" class="form-control form-control-solid" name="max_sal_bench" id="max_sal_bench" placeholder="Enter max salary" value="">
+                                    <span class="form-text text-muted maximum_salary_word"></span>
+                                </div>  
+                                <span class="form-text text-muted" id="salary_bench_error" style="color: red !important; text-align: center;"></span>                                                             
+                            </div>
                         </div>
+
+                        <!-- 5. Outsource Type -->
+                        <div class="bench-filter-section">
+                            <label class="bench-filter-label">5. Outsource type</label> 
+                            <div class="row g-3 py-2">
+                                <div class="col-lg-4">
+                                    <input type="radio" class="btn-check app_int_outsource" name="app_int_outsource_bench" value="0" id="app_int_outsource_bench0" checked>
+                                    <label class="btn btn-outline btn-outline-dashed btn-outline-default p-3 w-100 d-flex align-items-center justify-content-center" for="app_int_outsource_bench0">
+                                        <span class="d-block fw-bold text-start">
+                                            <span class="text-dark-800 fw-bolder d-block fs-6">All</span>
+                                        </span>
+                                    </label>
+                                </div>
+                                <div class="col-lg-4">
+                                    <input type="radio" class="btn-check app_int_outsource" name="app_int_outsource_bench" value="1" id="app_int_outsource_bench2">
+                                    <label class="btn btn-outline btn-outline-dashed btn-outline-default p-3 w-100 d-flex align-items-center justify-content-center" for="app_int_outsource_bench2">
+                                        <span class="d-block fw-bold text-start">
+                                            <span class="text-dark-800 fw-bolder d-block fs-6">Fulltime Hiring</span>
+                                        </span>
+                                    </label>
+                                </div>
+                                <div class="col-lg-4">
+                                    <input type="radio" class="btn-check app_int_outsource" name="app_int_outsource_bench" value="2" id="app_int_outsource_bench3">
+                                    <label class="btn btn-outline btn-outline-dashed btn-outline-default p-3 w-100 d-flex align-items-center justify-content-center" for="app_int_outsource_bench3">
+                                        <span class="d-block fw-bold text-start">
+                                            <span class="text-dark-800 fw-bolder d-block fs-6">Contract Hiring</span>
+                                        </span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Footer -->
+                <div class="bench-filter-drawer-footer">
+                    <div class="d-flex align-items-center gap-2 text-muted fs-7">
+                        <span>Refine your candidate pool</span>
+                    </div>
+                    <div class="d-flex align-items-center gap-3">
+                        <button type="button" class="btn btn-light btn-sm px-4" id="apptrackerfilterBench_cancel">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-1"><path d="M18 6 6 18M6 6l12 12"/></svg>
+                            Close
+                        </button>
+                        <button type="button" id="changetextupdatebench" class="btn btn-primary btn-sm px-5" style="background-color: #4F46E5; border-color: #4F46E5;">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-1"><path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3Z"/></svg>
+                            <span class="indicator-label changetextupdatebench">Apply Filters</span>
+                        </button>
                     </div>
                 </div>
             </div>
-            <!--End Popup-->
+        </div>
+        <!--End Side Drawer Filter-->
 
 
         
@@ -925,20 +1034,31 @@
             });
         });
 
-       $(document).on("click",".changetextupdatebench", function(e){
-        e.preventDefault();
-        $('.changetextupdatebench').text('Searching....!')
-           fetchCandidatesbench();
-        var $this = $('#apptrackerfilterBench');
-        // $this.fadeOut(2000, function() {
-        $this.modal('hide');
-        // });
-        setTimeout(() => {
-            $('#apptrackerfilterBench_close').click();
-            $('.changetextupdatebench').text('Submit')
-            
-        }, 1500);
-      });
+        $(document).on("click", "#open_apptrackerfilterBench_btn", function(e){
+            e.preventDefault();
+            e.stopPropagation();
+            if ($('#apptrackerfilterBench').length && $('#apptrackerfilterBench').parent()[0] !== document.body) {
+                $('body').append($('#apptrackerfilterBench'));
+            }
+            $('#apptrackerfilterBench').addClass('active');
+        });
+
+        $(document).on("click", "#apptrackerfilterBench_close, #apptrackerfilterBench_cancel, #apptrackerfilterBench_backdrop", function(e){
+            e.preventDefault();
+            e.stopPropagation();
+            $('#apptrackerfilterBench').removeClass('active');
+        });
+
+        $(document).on("click",".changetextupdatebench", function(e){
+            e.preventDefault();
+            e.stopPropagation();
+            $('.changetextupdatebench').text('Searching....!');
+            fetchCandidatesbench();
+            $('#apptrackerfilterBench').removeClass('active');
+            setTimeout(() => {
+                $('.changetextupdatebench').text('Submit');
+            }, 1000);
+        });
 
 
 
