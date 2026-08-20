@@ -70,6 +70,21 @@ for f in "${files[@]}"; do
     grep -nE "'refresh'\s*=>\s*true" "$f" | grep -vE ':\s*(//|\*|#)' | sed 's/^/    /'
     note "remove 'refresh' => true — ES eventual consistency is fine; sync flush blocks workers (V2_login Phase 3.7)"
   fi
+
+  # GUARD 4 (V2_Perf-10K §12.1): also block 'refresh' => 'wait_for' in the HTTP path
+  # unless the file is in the explicit allowlist (BlockCompanyAction, BulkReindexCommand).
+  # 'wait_for' blocks the worker until the next refresh — same damage as refresh:true.
+  case "$f" in
+    app/Actions/Admin/BlockCompanyAction.php|app/Console/Commands/BulkReindexCommand.php)
+      : ;; # allowlisted exceptions
+    *)
+      if grep -nE "'refresh'\s*=>\s*['\"]wait_for['\"]" "$f" | grep -vE ':\s*(//|\*|#)' >/dev/null; then
+        echo "[$f] 'refresh' => 'wait_for' in HTTP-path ES call (not in allowlist):"
+        grep -nE "'refresh'\s*=>\s*['\"]wait_for['\"]" "$f" | grep -vE ':\s*(//|\*|#)' | sed 's/^/    /'
+        note "remove 'refresh' => 'wait_for' — blocks worker until next refresh. Allowlist: BlockCompanyAction, BulkReindexCommand only (V2_Perf-10K §12.1)"
+      fi
+      ;;
+  esac
 done
 
 echo ""
