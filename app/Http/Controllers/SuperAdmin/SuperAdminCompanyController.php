@@ -11094,7 +11094,7 @@ class SuperAdminCompanyController extends SuperAdminBaseController
                     ],
                 ],
             ],
-            'refresh' => true, // Optional: make changes visible immediately
+            'refresh' => false, // Eventual consistency for 10K concurrent scale
         ];
         // Elastic Execute the bulk update
         if ($this->elasticService->indexExists(ELASTIC_JOB_REQUEST)) {

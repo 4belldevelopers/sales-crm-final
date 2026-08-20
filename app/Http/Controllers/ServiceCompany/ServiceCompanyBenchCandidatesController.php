@@ -1832,7 +1832,7 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
                                 ],
                                 'doc_as_upsert' => false, // Changed to false since we verified existence
                             ],
-                            'refresh' => true, // Force immediate refresh
+                            'refresh' => false, // Eventual consistency for 10K concurrent scale
                         ];
 
                         $this->elasticService->getClient()->update($updateParams);
@@ -3810,7 +3810,7 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
                             ],
                             'doc_as_upsert' => false, // Changed to false since we verified existence
                         ],
-                        'refresh' => true, // Force immediate refresh
+                        'refresh' => false, // Eventual consistency for 10K concurrent scale
                     ];
 
                     $this->elasticService->getClient()->update($updateParams);
@@ -3831,7 +3831,7 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
                                 ],
                             ],
                         ],
-                        'refresh' => true,
+                        'refresh' => false,
                     ];
 
                     $this->elasticService->getClient()->updateByQuery($updateParamsCandidate);
@@ -3854,7 +3854,7 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
                                 ],
                                 'doc_as_upsert' => false, // Changed to false since we verified existence
                             ],
-                            'refresh' => true, // Force immediate refresh
+                            'refresh' => false, // Eventual consistency for 10K concurrent scale
                         ];
 
                         $this->elasticService->getClient()->update($updateParamsCandidate);
@@ -4157,7 +4157,7 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
                         ],
                         'doc_as_upsert' => false, // Changed to false since we verified existence
                     ],
-                    'refresh' => true, // Force immediate refresh
+                    'refresh' => false, // Eventual consistency for 10K concurrent scale
                 ];
 
                 $this->elasticService->getClient()->update($updateParams);
@@ -4178,7 +4178,7 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
                             ],
                         ],
                     ],
-                    'refresh' => true,
+                    'refresh' => false,
                 ];
 
                 $this->elasticService->getClient()->updateByQuery($updateParamsCandidate);
@@ -4200,7 +4200,7 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
                             ],
                             'doc_as_upsert' => false, // Changed to false since we verified existence
                         ],
-                        'refresh' => true, // Force immediate refresh
+                        'refresh' => false, // Eventual consistency for 10K concurrent scale
                     ];
 
                     $this->elasticService->getClient()->update($updateParamsCandidate);

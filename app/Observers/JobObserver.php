@@ -44,12 +44,16 @@ class JobObserver
      */
     protected function syncElasticsearch(Job $job): void
     {
+        if ($job->company_id) {
+            \App\Support\Cache\TenantCache::invalidateTenant($job->company_id);
+        }
+
         if (class_exists(GeneralMethod::class) && method_exists(GeneralMethod::class, 'JobAddEditUpload')) {
             try {
                 GeneralMethod::JobAddEditUpload($job->id);
             } catch (\Throwable $e) {
                 // Log observer ES sync exception silently to prevent blocking MySQL write transaction
-                logger()->error('JobObserver ES sync failed for Job ID ' . $job->id . ': ' . $e->getMessage());
+                logger()->error('JobObserver ES sync failed for Job ID '.$job->id.': '.$e->getMessage());
             }
         }
     }

@@ -9,8 +9,8 @@ namespace App\Jobs;
 
 use App\Helper\GeneralMethod;
 use App\Models\JobApplication;
-use App\Models\JobApplicationAnswer;
 use App\Services\ElasticService;
+use Carbon\Carbon;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -18,48 +18,56 @@ use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use Carbon\Carbon;
 
 class ProcessCandidateUpdateJob implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
     public int $tries = 3;
+
     public int $backoff = 30;
+
     public int $timeout = 120;
 
+    /**
+     * Dispatch queue job only after database transaction has committed.
+     */
+    public bool $afterCommit = true;
+
     public function __construct(
-        private readonly int   $jobApplicationId,
-        private readonly int   $addJobWiseCandidateId,
-        private readonly int   $jobId,
-        private readonly int   $companyId,
+        private readonly int $jobApplicationId,
+        private readonly int $addJobWiseCandidateId,
+        private readonly int $jobId,
+        private readonly int $companyId,
         private readonly array $requestData,
-    ) {}
+    ) {
+        $this->onQueue('indexing');
+    }
 
     public function handle(): void
     {
         try {
             $elasticService = app(ElasticService::class);
-            $client         = $elasticService->getClient();
-            $appId          = $this->jobApplicationId;
-            $jobId          = $this->jobId;
-            $data           = $this->requestData;
+            $client = $elasticService->getClient();
+            $appId = $this->jobApplicationId;
+            $jobId = $this->jobId;
+            $data = $this->requestData;
 
             // 1. YearskillId — delete old rows + ES docs, reinsert
-            $yearSkillId  = $data['YearskillId'] ?? [];
+            $yearSkillId = $data['YearskillId'] ?? [];
             $monthSkillId = $data['MonthskillId'] ?? [];
-            $ratingArr    = $data['rating'] ?? [];
+            $ratingArr = $data['rating'] ?? [];
 
-            if (!empty($yearSkillId) && is_array($yearSkillId)) {
+            if (! empty($yearSkillId) && is_array($yearSkillId)) {
                 DB::table('candidate_job_skill_exp')
                     ->where('candidate_id', $appId)
                     ->where('job_id', $jobId)
                     ->delete();
 
                 $client->deleteByQuery([
-                    'index'     => ELASTIC_CANDIDATE_SKILLS_EXP,
+                    'index' => ELASTIC_CANDIDATE_SKILLS_EXP,
                     'conflicts' => 'proceed',
-                    'body'      => [
+                    'body' => [
                         'query' => [
                             'bool' => [
                                 'must' => [
@@ -72,16 +80,16 @@ class ProcessCandidateUpdateJob implements ShouldQueue
                 ]);
 
                 foreach ($yearSkillId as $skillId => $value) {
-                    $ss        = $value >= 1 ? 'Years' : 'Year';
-                    $valMonth  = $monthSkillId[$skillId] ?? 0;
-                    $skillValue = $value . '.' . $valMonth . ' ' . $ss;
-                    $rating     = (int)($ratingArr[$skillId] ?? 0);
+                    $ss = $value >= 1 ? 'Years' : 'Year';
+                    $valMonth = $monthSkillId[$skillId] ?? 0;
+                    $skillValue = $value.'.'.$valMonth.' '.$ss;
+                    $rating = (int) ($ratingArr[$skillId] ?? 0);
 
                     $expId = DB::table('candidate_job_skill_exp')->insertGetId([
                         'job_skill_id' => $skillId,
-                        'skill_value'  => $skillValue,
-                        'job_id'       => $jobId,
-                        'rating'       => $rating,
+                        'skill_value' => $skillValue,
+                        'job_id' => $jobId,
+                        'rating' => $rating,
                         'candidate_id' => $appId,
                     ]);
 
@@ -92,16 +100,16 @@ class ProcessCandidateUpdateJob implements ShouldQueue
 
                     $client->index([
                         'index' => ELASTIC_CANDIDATE_SKILLS_EXP,
-                        'id'    => $expId,
-                        'body'  => [
-                            'skill_name'   => $skillRow->skill_name ?? '',
+                        'id' => $expId,
+                        'body' => [
+                            'skill_name' => $skillRow->skill_name ?? '',
                             'job_skill_id' => $skillId,
-                            'skill_value'  => $skillValue,
-                            'job_id'       => $jobId,
-                            'rating'       => $rating,
+                            'skill_value' => $skillValue,
+                            'job_id' => $jobId,
+                            'rating' => $rating,
                             'candidate_id' => $appId,
-                            'created_at'   => now()->toIso8601String(),
-                            'updated_at'   => now()->toIso8601String(),
+                            'created_at' => now()->toIso8601String(),
+                            'updated_at' => now()->toIso8601String(),
                         ],
                     ]);
                 }
@@ -109,8 +117,9 @@ class ProcessCandidateUpdateJob implements ShouldQueue
 
             // 2. application_additional_detail — delete + ES delete, reinsert
             $jobApplication = JobApplication::withoutGlobalScopes()->find($appId);
-            if (!$jobApplication) {
+            if (! $jobApplication) {
                 Log::warning("ProcessCandidateUpdateJob: JobApplication #{$appId} not found");
+
                 return;
             }
 
@@ -120,9 +129,9 @@ class ProcessCandidateUpdateJob implements ShouldQueue
                 ->delete();
 
             $client->deleteByQuery([
-                'index'     => ELASTIC_CANDIDATE_JOB_QUESTION,
+                'index' => ELASTIC_CANDIDATE_JOB_QUESTION,
                 'conflicts' => 'proceed',
-                'body'      => [
+                'body' => [
                     'query' => [
                         'bool' => [
                             'must' => [
@@ -140,27 +149,27 @@ class ProcessCandidateUpdateJob implements ShouldQueue
                 ->get();
 
             $additionalInput = $data['additional_detail'] ?? [];
-            $inc             = 0;
+            $inc = 0;
             foreach ($additionalDetails as $jd) {
                 $expId = DB::table('application_additional_detail')->insertGetId([
-                    'job_id'                   => $jobApplication->job_id,
-                    'question_id'              => $jd->id,
-                    'application_id'           => $appId,
-                    'job_detail_value'         => $jd->detail_value,
+                    'job_id' => $jobApplication->job_id,
+                    'question_id' => $jd->id,
+                    'application_id' => $appId,
+                    'job_detail_value' => $jd->detail_value,
                     'application_detail_value' => $additionalInput[$inc] ?? null,
                 ]);
                 $client->update([
                     'index' => ELASTIC_CANDIDATE_JOB_QUESTION,
-                    'id'    => $expId,
-                    'body'  => [
+                    'id' => $expId,
+                    'body' => [
                         'doc' => [
-                            'job_id'                   => $jobApplication->job_id,
-                            'question_id'              => $jd->id,
-                            'application_id'           => $appId,
-                            'job_detail_value'         => $jd->detail_value,
+                            'job_id' => $jobApplication->job_id,
+                            'question_id' => $jd->id,
+                            'application_id' => $appId,
+                            'job_detail_value' => $jd->detail_value,
                             'application_detail_value' => $additionalInput[$inc] ?? null,
-                            'created_at'               => now()->toIso8601String(),
-                            'updated_at'               => now()->toIso8601String(),
+                            'created_at' => now()->toIso8601String(),
+                            'updated_at' => now()->toIso8601String(),
                         ],
                         'doc_as_upsert' => true,
                     ],
@@ -174,7 +183,7 @@ class ProcessCandidateUpdateJob implements ShouldQueue
 
                 $exists = $client->exists([
                     'index' => ELASTIC_CANDIDATES,
-                    'id'    => $addJobWiseCandidateId,
+                    'id' => $addJobWiseCandidateId,
                 ]);
 
                 if ($exists) {
@@ -206,15 +215,15 @@ class ProcessCandidateUpdateJob implements ShouldQueue
 
                         foreach ($jobSkill as $sval) {
                             $skillValue = str_replace(['Years', 'Year', ' '], '', $sval->skill_value);
-                            if (!is_null($skillValue) && !empty($skillValue) && $skillValue !== '0.') {
-                                if (!DB::table('job_application_skills')
+                            if (! is_null($skillValue) && ! empty($skillValue) && $skillValue !== '0.') {
+                                if (! DB::table('job_application_skills')
                                     ->where('job_application_id', $appId)
-                                    ->where('skills', 'LIKE', '%' . $sval->skill_name . '%')
+                                    ->where('skills', 'LIKE', '%'.$sval->skill_name.'%')
                                     ->exists()
                                 ) {
                                     DB::table('job_application_skills')->insert([
                                         'job_application_id' => $appId,
-                                        'skills'             => $sval->skill_name,
+                                        'skills' => $sval->skill_name,
                                     ]);
                                 }
                             }
@@ -223,122 +232,123 @@ class ProcessCandidateUpdateJob implements ShouldQueue
                         $job_application_skills = DB::table('job_application_skills')
                             ->where('job_application_id', $appId)
                             ->get()
-                            ->map(fn($s) => [
-                                'id'                 => $s->id,
+                            ->map(fn ($s) => [
+                                'id' => $s->id,
                                 'job_application_id' => $s->id,
-                                'skills'             => strtolower($s->skills),
+                                'skills' => strtolower($s->skills),
                             ])
                             ->toArray();
 
                         $application_skills = DB::table('job_application_skills')
                             ->where('job_application_id', $appId)
                             ->pluck('skills')
-                            ->map(fn($skill) => strtolower($skill))
+                            ->map(fn ($skill) => strtolower($skill))
                             ->implode(',');
 
                         // Format interview dates
                         $defaultTimeFormat = GeneralMethod::defaultTimeFormat($this->companyId);
-                        $formatDt = function ($date, $time) use ($defaultTimeFormat) {
+                        $formatDt = function ($date, $time) {
                             if (empty($date) || empty($time)) {
                                 return null;
                             }
-                            return date('Y-m-d H:i:s', strtotime($date . ' ' . $time));
+
+                            return date('Y-m-d H:i:s', strtotime($date.' '.$time));
                         };
 
-                        $interviewDateOne   = $formatDt($data['interviewDateOne'] ?? null, $data['interviewTimeOne'] ?? null);
-                        $interviewDateTwo   = $formatDt($data['interviewDateTwo'] ?? null, $data['interviewTimeTwo'] ?? null);
+                        $interviewDateOne = $formatDt($data['interviewDateOne'] ?? null, $data['interviewTimeOne'] ?? null);
+                        $interviewDateTwo = $formatDt($data['interviewDateTwo'] ?? null, $data['interviewTimeTwo'] ?? null);
                         $interviewDateThree = $formatDt($data['interviewDateThree'] ?? null, $data['interviewTimeThree'] ?? null);
-                        $interviewDateFour  = $formatDt($data['interviewDateFour'] ?? null, $data['interviewTimeFour'] ?? null);
-                        $interviewDateFive  = $formatDt($data['interviewDateFive'] ?? null, $data['interviewTimeFive'] ?? null);
-                        $interviewDateSix   = $formatDt($data['interviewDateSix'] ?? null, $data['interviewTimeSix'] ?? null);
+                        $interviewDateFour = $formatDt($data['interviewDateFour'] ?? null, $data['interviewTimeFour'] ?? null);
+                        $interviewDateFive = $formatDt($data['interviewDateFive'] ?? null, $data['interviewTimeFive'] ?? null);
+                        $interviewDateSix = $formatDt($data['interviewDateSix'] ?? null, $data['interviewTimeSix'] ?? null);
 
                         $updateParams = [
-                            'index'            => ELASTIC_CANDIDATES,
-                            'id'               => $addJobWiseCandidateId,
+                            'index' => ELASTIC_CANDIDATES,
+                            'id' => $addJobWiseCandidateId,
                             'retry_on_conflict' => 5,
-                            'body'             => [
+                            'body' => [
                                 'doc' => [
-                                    'thirdparty_company_id'    => $applications_up->thirdparty_company_id,
-                                    'full_name'                => $applications_up->full_name,
-                                    'email'                    => $applications_up->email,
-                                    'phone'                    => $applications_up->phone,
-                                    'np_id'                    => $applications_up->np_id,
+                                    'thirdparty_company_id' => $applications_up->thirdparty_company_id,
+                                    'full_name' => $applications_up->full_name,
+                                    'email' => $applications_up->email,
+                                    'phone' => $applications_up->phone,
+                                    'np_id' => $applications_up->np_id,
                                     'serving_notice_period_mode' => $applications_up->serving_notice_period_mode,
-                                    'country'                  => $applications_up->country,
-                                    'state'                    => $applications_up->state,
-                                    'gender'                   => $applications_up->gender,
-                                    'city'                     => $applications_up->city,
-                                    'city_id'                  => $applications_up->city_id,
-                                    'skills'                   => $application_skills,
-                                    'photo'                    => $applications_up->photo,
-                                    'pincode'                  => $applications_up->pincode,
-                                    'total_exp'                => $applications_up->total_exp,
-                                    'rel_exp'                  => $applications_up->rel_exp,
-                                    'careersummary'            => $applications_up->careersummary,
-                                    'nationality'              => $applications_up->nationality,
-                                    'wm'                       => $applications_up->wm,
-                                    'employmentType'           => $applications_up->employmentType,
-                                    'oh'                       => $applications_up->oh,
-                                    'visastatu'                => $applications_up->visastatu,
-                                    'referencename'            => $applications_up->referencename,
-                                    'reason_for_job_change'    => $applications_up->reason_for_job_change,
-                                    'ctc'                      => $applications_up->ctc,
-                                    'job_application_skills'   => $job_application_skills,
-                                    'current_ctc_cur'          => $applications_up->current_ctc_cur,
-                                    'current_ctc_mode'         => $applications_up->current_ctc_mode,
-                                    'current_designation'      => $applications_up->current_designation,
-                                    'ectc'                     => $applications_up->ectc,
-                                    'current_ectc_cur'         => $applications_up->current_ectc_cur,
-                                    'current_ectc_mode'        => $applications_up->current_ectc_mode,
-                                    'current_company'          => $applications_up->current_company,
-                                    'ctc_hourly'               => $applications_up->ctc_hourly,
-                                    'ctc_monthly'              => $applications_up->ctc_monthly,
-                                    'ctc_yearly'               => $applications_up->ctc_yearly,
-                                    'ectc_hourly'              => $applications_up->ectc_hourly,
-                                    'ectc_monthly'             => $applications_up->ectc_monthly,
-                                    'ectc_yearly'              => $applications_up->ectc_yearly,
-                                    'status'                   => $applications_up->status,
-                                    'duplicate'                => $applications_up->duplicate,
-                                    'bill_rate_currency'       => $applications_up->bill_rate_currency,
-                                    'bill_rate_amount'         => $applications_up->bill_rate_amount,
-                                    'bill_rate_mode'           => $applications_up->bill_rate_mode,
-                                    'condidate_type'           => $applications_up->condidate_type,
-                                    'master_status_id'         => $applications_up->master_status_id,
-                                    'is_viewed'                => $applications_up->is_viewed,
-                                    'column_priority'          => $applications_up->column_priority,
-                                    'phone_code'               => $applications_up->phone_code,
-                                    'second_phone_code'        => $applications_up->second_phone_code,
-                                    'secondary_mobile'         => $applications_up->secondary_mobile,
-                                    'resume'                   => $applications_up->resume,
-                                    'qualification_name'       => $applications_up->qualification_name,
-                                    'qualification'            => $applications_up->qualification,
-                                    'country_name'             => $applications_up->country_name,
-                                    'state_name'               => $applications_up->state_name,
-                                    'city_name'                => $applications_up->city_name,
-                                    'dob'                      => $applications_up->dob,
-                                    'percentage_hike'          => $applications_up->percentage_hike,
-                                    'linkedin'                 => $data['linkedin'] ?? null,
-                                    'github'                   => $data['github'] ?? null,
-                                    'behance'                  => $data['behance'] ?? null,
-                                    'otherLink'                => $data['otherLink'] ?? null,
-                                    'interviewDateOne'    => $interviewDateOne ? Carbon::parse($interviewDateOne)->toIso8601String() : null,
-                                    'interview_mode_one'  => $data['interview_mode_one'] ?? null,
-                                    'interviewDateTwo'    => $interviewDateTwo ? Carbon::parse($interviewDateTwo)->toIso8601String() : null,
-                                    'interview_mode_two'  => $data['interview_mode_two'] ?? null,
-                                    'interviewDateThree'  => $interviewDateThree ? Carbon::parse($interviewDateThree)->toIso8601String() : null,
+                                    'country' => $applications_up->country,
+                                    'state' => $applications_up->state,
+                                    'gender' => $applications_up->gender,
+                                    'city' => $applications_up->city,
+                                    'city_id' => $applications_up->city_id,
+                                    'skills' => $application_skills,
+                                    'photo' => $applications_up->photo,
+                                    'pincode' => $applications_up->pincode,
+                                    'total_exp' => $applications_up->total_exp,
+                                    'rel_exp' => $applications_up->rel_exp,
+                                    'careersummary' => $applications_up->careersummary,
+                                    'nationality' => $applications_up->nationality,
+                                    'wm' => $applications_up->wm,
+                                    'employmentType' => $applications_up->employmentType,
+                                    'oh' => $applications_up->oh,
+                                    'visastatu' => $applications_up->visastatu,
+                                    'referencename' => $applications_up->referencename,
+                                    'reason_for_job_change' => $applications_up->reason_for_job_change,
+                                    'ctc' => $applications_up->ctc,
+                                    'job_application_skills' => $job_application_skills,
+                                    'current_ctc_cur' => $applications_up->current_ctc_cur,
+                                    'current_ctc_mode' => $applications_up->current_ctc_mode,
+                                    'current_designation' => $applications_up->current_designation,
+                                    'ectc' => $applications_up->ectc,
+                                    'current_ectc_cur' => $applications_up->current_ectc_cur,
+                                    'current_ectc_mode' => $applications_up->current_ectc_mode,
+                                    'current_company' => $applications_up->current_company,
+                                    'ctc_hourly' => $applications_up->ctc_hourly,
+                                    'ctc_monthly' => $applications_up->ctc_monthly,
+                                    'ctc_yearly' => $applications_up->ctc_yearly,
+                                    'ectc_hourly' => $applications_up->ectc_hourly,
+                                    'ectc_monthly' => $applications_up->ectc_monthly,
+                                    'ectc_yearly' => $applications_up->ectc_yearly,
+                                    'status' => $applications_up->status,
+                                    'duplicate' => $applications_up->duplicate,
+                                    'bill_rate_currency' => $applications_up->bill_rate_currency,
+                                    'bill_rate_amount' => $applications_up->bill_rate_amount,
+                                    'bill_rate_mode' => $applications_up->bill_rate_mode,
+                                    'condidate_type' => $applications_up->condidate_type,
+                                    'master_status_id' => $applications_up->master_status_id,
+                                    'is_viewed' => $applications_up->is_viewed,
+                                    'column_priority' => $applications_up->column_priority,
+                                    'phone_code' => $applications_up->phone_code,
+                                    'second_phone_code' => $applications_up->second_phone_code,
+                                    'secondary_mobile' => $applications_up->secondary_mobile,
+                                    'resume' => $applications_up->resume,
+                                    'qualification_name' => $applications_up->qualification_name,
+                                    'qualification' => $applications_up->qualification,
+                                    'country_name' => $applications_up->country_name,
+                                    'state_name' => $applications_up->state_name,
+                                    'city_name' => $applications_up->city_name,
+                                    'dob' => $applications_up->dob,
+                                    'percentage_hike' => $applications_up->percentage_hike,
+                                    'linkedin' => $data['linkedin'] ?? null,
+                                    'github' => $data['github'] ?? null,
+                                    'behance' => $data['behance'] ?? null,
+                                    'otherLink' => $data['otherLink'] ?? null,
+                                    'interviewDateOne' => $interviewDateOne ? Carbon::parse($interviewDateOne)->toIso8601String() : null,
+                                    'interview_mode_one' => $data['interview_mode_one'] ?? null,
+                                    'interviewDateTwo' => $interviewDateTwo ? Carbon::parse($interviewDateTwo)->toIso8601String() : null,
+                                    'interview_mode_two' => $data['interview_mode_two'] ?? null,
+                                    'interviewDateThree' => $interviewDateThree ? Carbon::parse($interviewDateThree)->toIso8601String() : null,
                                     'interview_mode_three' => $data['interview_mode_three'] ?? null,
-                                    'interviewDateFour'   => $interviewDateFour ? Carbon::parse($interviewDateFour)->toIso8601String() : null,
+                                    'interviewDateFour' => $interviewDateFour ? Carbon::parse($interviewDateFour)->toIso8601String() : null,
                                     'interview_mode_four' => $data['interview_mode_four'] ?? null,
-                                    'interviewDateFive'   => $interviewDateFive ? Carbon::parse($interviewDateFive)->toIso8601String() : null,
+                                    'interviewDateFive' => $interviewDateFive ? Carbon::parse($interviewDateFive)->toIso8601String() : null,
                                     'interview_mode_five' => $data['interview_mode_five'] ?? null,
-                                    'interviewDateSix'    => $interviewDateSix ? Carbon::parse($interviewDateSix)->toIso8601String() : null,
-                                    'interview_mode_six'  => $data['interview_mode_six'] ?? null,
-                                    'comment'             => $applications_up->comment,
+                                    'interviewDateSix' => $interviewDateSix ? Carbon::parse($interviewDateSix)->toIso8601String() : null,
+                                    'interview_mode_six' => $data['interview_mode_six'] ?? null,
+                                    'comment' => $applications_up->comment,
                                 ],
                                 'doc_as_upsert' => true,
-                                'detect_noop'   => false,
+                                'detect_noop' => false,
                             ],
-                            'refresh' => true,
+                            'refresh' => false,
                         ];
 
                         $client->update($updateParams);
@@ -352,10 +362,10 @@ class ProcessCandidateUpdateJob implements ShouldQueue
 
         } catch (\Throwable $e) {
             Log::error('ProcessCandidateUpdateJob failed', [
-                'job_application_id'      => $this->jobApplicationId,
+                'job_application_id' => $this->jobApplicationId,
                 'add_job_wise_candidate_id' => $this->addJobWiseCandidateId,
-                'error'                   => $e->getMessage(),
-                'trace'                   => $e->getTraceAsString(),
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
             ]);
             throw $e;
         }
