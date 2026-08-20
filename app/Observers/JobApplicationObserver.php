@@ -4,10 +4,10 @@ namespace App\Observers;
 
 use App\Events\StageMoved;
 use App\Helper\Files;
-use App\Jobs\UpdateApplicationCountersJob;
-use App\Jobs\UpdatePipelineCountersJob;
 use App\Jobs\DecrementApplicationCountersJob;
 use App\Jobs\DecrementPipelineCountersJob;
+use App\Jobs\UpdateApplicationCountersJob;
+use App\Jobs\UpdatePipelineCountersJob;
 use App\Models\JobApplication;
 use Illuminate\Support\Facades\Cache;
 
@@ -35,6 +35,10 @@ class JobApplicationObserver
 
         UpdatePipelineCountersJob::dispatch($app->id)->onQueue('counters');
         UpdateApplicationCountersJob::dispatch($app->id)->onQueue('counters');
+
+        if ($app->company_id) {
+            \App\Support\Cache\TenantCache::invalidateTenant($app->company_id);
+        }
 
         // Broadcast stage move over Reverb so all open Apptracker tabs refresh
         // their counter badges in real time without a page reload.

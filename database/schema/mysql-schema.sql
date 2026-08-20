@@ -4683,3 +4683,8 @@ INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (173,'2026_08_07_00
 INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (174,'2026_08_17_000002_create_company_career_settings_table',18);
 INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (175,'2026_08_17_000003_add_hero_settings_to_company_career_settings_table',19);
 INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (176,'2026_08_17_000004_add_all_tabs_settings_to_company_career_settings_table',20);
+
+-- V2_Perf-10K Plan: Composite covering indexes for high-concurrency candidate stage listings
+ALTER TABLE `job_applications` ADD INDEX `idx_japp_tenant_job_status` (`company_id`, `job_id`, `master_status_id`, `deleted_at`);
+ALTER TABLE `add_job_wise_condidates` ADD INDEX `idx_ajwc_tenant_job_status` (`company_id`, `job_id`, `master_status_id`);
+ALTER TABLE `add_job_wise_condidates` ADD INDEX `idx_ajwc_thirdparty_job_status` (`thirdparty_company_id`, `job_id`, `master_status_id`);

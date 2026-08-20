@@ -15,7 +15,6 @@ use App\Events\CompanyRegistered;
 use App\Listeners\IndexNewCompany;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\RateLimiter;
@@ -51,7 +50,7 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         foreach (config('constants') as $key => $value) {
-            if (!defined($key)) {
+            if (! defined($key)) {
                 define($key, $value);
             }
         }
@@ -60,6 +59,9 @@ class AppServiceProvider extends ServiceProvider
         $this->registerObservers();
         // Sprint 5.8 — event → listener wiring (no EventServiceProvider in L11 default scaffold).
         Event::listen(CompanyRegistered::class, IndexNewCompany::class);
+
+        // V2_Perf-10K Phase 3 — Enforce N+1 query discipline in development/testing environments
+        \Illuminate\Database\Eloquent\Model::preventLazyLoading(! app()->isProduction());
     }
 
     private function registerObservers(): void
@@ -85,22 +87,20 @@ class AppServiceProvider extends ServiceProvider
     {
         // Registration submit: 10 attempts per hour per IP.
         // Prevents bot farms from hammering the 80-insert / 30-ES-write companyRegister() path.
-        RateLimiter::for('register-submit', fn (Request $request) =>
-            Limit::perHour(10)->by('register-submit:' . $request->ip())
+        RateLimiter::for('register-submit', fn (Request $request) => Limit::perHour(10)->by('register-submit:'.$request->ip())
         );
 
         // Registration keystroke probes (email / phone / domain checks): 60 per minute per IP.
         // Prevents customer-enumeration at scale while allowing normal typing-speed usage.
-        RateLimiter::for('register-form', fn (Request $request) =>
-            Limit::perMinute(60)->by('register-form:' . $request->ip())
+        RateLimiter::for('register-form', fn (Request $request) => Limit::perMinute(60)->by('register-form:'.$request->ip())
         );
 
         // Verification resend: 3/hr per user-id + 10/hr per IP (audit H1 / Sprint 2.10).
         // Dual limits: per-user prevents targeting a specific account; per-IP caps bot farms.
         // Token is rotated on every resend so 3-attempt cap is acceptable.
         RateLimiter::for('register-resend', fn (Request $request) => [
-            Limit::perHour(3)->by('register-resend:uid:' . $request->route('id')),
-            Limit::perHour(10)->by('register-resend:ip:' . $request->ip()),
+            Limit::perHour(3)->by('register-resend:uid:'.$request->route('id')),
+            Limit::perHour(10)->by('register-resend:ip:'.$request->ip()),
         ]);
 
         // Presign endpoint: 3/min per recruiter only — no company-level cap.
@@ -110,18 +110,18 @@ class AppServiceProvider extends ServiceProvider
                 $userId = optional($request->user())->id ?? 'anon';
 
                 return Limit::perMinute(config('resumes.rate_limits.presign_per_user', 3))
-                            ->by('resume-presign:user:' . $userId)
-                            ->response(fn () => response()->json([
-                                'error'       => 'rate_limit_exceeded',
-                                'message'     => 'You may upload up to ' . config('resumes.rate_limits.presign_per_user', 3) . ' resumes per minute. Please wait.',
-                                'retry_after' => 60,
-                            ], 429));
+                    ->by('resume-presign:user:'.$userId)
+                    ->response(fn () => response()->json([
+                        'error' => 'rate_limit_exceeded',
+                        'message' => 'You may upload up to '.config('resumes.rate_limits.presign_per_user', 3).' resumes per minute. Please wait.',
+                        'retry_after' => 60,
+                    ], 429));
             } catch (\Throwable $e) {
                 // Redis is down — allow through, never block recruiters for infra issues
                 Log::warning('jobs.resume.ratelimit_fails_open', [
-                    'limiter'   => 'resume-presign',
+                    'limiter' => 'resume-presign',
                     'exception' => $e::class,
-                    'user_id'   => optional($request->user())->id,
+                    'user_id' => optional($request->user())->id,
                 ]);
 
                 return Limit::none();
@@ -131,21 +131,22 @@ class AppServiceProvider extends ServiceProvider
         // Finalize: one per upload, generous for retries
         RateLimiter::for('resume-finalize', function (Request $request) {
             $userId = optional($request->user())->id ?? 'anon';
+
             return Limit::perMinute(config('resumes.rate_limits.finalize_per_user', 10))
-                        ->by('resume-finalize:user:' . $userId);
+                ->by('resume-finalize:user:'.$userId);
         });
 
         // Status reads: polling is expected; very generous
         RateLimiter::for('resume-status', function (Request $request) {
             $userId = optional($request->user())->id ?? 'anon';
+
             return Limit::perMinute(config('resumes.rate_limits.status_per_user', 60))
-                        ->by('resume-status:user:' . $userId);
+                ->by('resume-status:user:'.$userId);
         });
 
         // Phase 3.8: super-admin bulk-ops (block/unblock company, toggle user status).
         // 10 per minute per super-admin prevents accidental or scripted mass-toggle.
-        RateLimiter::for('superadmin-bulk-ops', fn (Request $request) =>
-            Limit::perMinute(10)->by('superadmin-bulk-ops:' . (optional($request->user())->id ?? 'anon'))
+        RateLimiter::for('superadmin-bulk-ops', fn (Request $request) => Limit::perMinute(10)->by('superadmin-bulk-ops:'.(optional($request->user())->id ?? 'anon'))
         );
     }
 }

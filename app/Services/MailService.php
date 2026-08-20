@@ -17,10 +17,14 @@ class MailService
         $mail = new PHPMailer(true);
         $fromAddress_reply = $fromAddress;
         $fromName_reply = $fromName;
-        $smtp = EmailSetting::where('status', '=', 0)->where('id', 12)->orderByDesc('id')->first();
-        if (! $smtp) {
-            $smtp = EmailSetting::where('status', '=', 0)->orderByDesc('id')->first() ?: EmailSetting::first();
-        }
+        $smtp = \Illuminate\Support\Facades\Cache::remember('smtp_settings:default', 3600, function () {
+            $record = EmailSetting::where('status', '=', 0)->where('id', 12)->orderByDesc('id')->first();
+            if (! $record) {
+                $record = EmailSetting::where('status', '=', 0)->orderByDesc('id')->first() ?: EmailSetting::first();
+            }
+
+            return $record;
+        });
         if ($smtp && ! empty($smtp->mail_from_email)) {
             $fromAddress = $smtp->mail_from_email;
         }

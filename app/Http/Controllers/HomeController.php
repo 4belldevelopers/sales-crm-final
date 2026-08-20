@@ -12894,7 +12894,7 @@ class HomeController extends Controller
                                     ],
                                     'doc_as_upsert' => false, // Changed to false since we verified existence
                                 ],
-                                'refresh' => true, // Force immediate refresh
+                                'refresh' => false, // Eventual consistency for 10K concurrent scale
                             ];
                             $this->elasticService->getClient()->update($updateParams);
                         }
@@ -12940,7 +12940,7 @@ class HomeController extends Controller
                                     ],
                                     'doc_as_upsert' => false, // Changed to false since we verified existence
                                 ],
-                                'refresh' => true, // Force immediate refresh
+                                'refresh' => false, // Eventual consistency for 10K concurrent scale
                             ];
                             $this->elasticService->getClient()->update($updateParams);
                         }
@@ -12988,7 +12988,7 @@ class HomeController extends Controller
                                     ],
                                     'doc_as_upsert' => false, // Changed to false since we verified existence
                                 ],
-                                'refresh' => true, // Force immediate refresh
+                                'refresh' => false, // Eventual consistency for 10K concurrent scale
                             ];
                             $this->elasticService->getClient()->update($updateParams);
                         }
@@ -13190,7 +13190,7 @@ class HomeController extends Controller
                             ],
                             'doc_as_upsert' => false, // Changed to false since we verified existence
                         ],
-                        'refresh' => true, // Force immediate refresh
+                        'refresh' => false, // Eventual consistency for 10K concurrent scale
                     ];
                     $this->elasticService->getClient()->update($updateParams);
 
@@ -13224,7 +13224,7 @@ class HomeController extends Controller
                     $deleteParams = [
                         'index' => ELASTIC_USERS_LIST,
                         'id' => $row->id,
-                        'refresh' => true, // Optional: force immediate visibility of deletion
+                        'refresh' => false, // Eventual consistency for 10K concurrent scale
                     ];
                     $this->elasticService->getClient()->delete($deleteParams);
                 }
@@ -14100,7 +14100,7 @@ class HomeController extends Controller
                         ],
                         'doc_as_upsert' => false, // Changed to false since we verified existence
                     ],
-                    'refresh' => true, // Force immediate refresh
+                    'refresh' => false, // Eventual consistency for 10K concurrent scale
                 ];
 
                 $this->elasticService->getClient()->update($updateParams);
@@ -14154,7 +14154,7 @@ class HomeController extends Controller
                         ],
                         'doc_as_upsert' => false, // Changed to false since we verified existence
                     ],
-                    'refresh' => true, // Force immediate refresh
+                    'refresh' => false, // Eventual consistency for 10K concurrent scale
                 ];
 
                 $this->elasticService->getClient()->update($updateParams);

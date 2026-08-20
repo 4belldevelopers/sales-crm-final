@@ -12167,7 +12167,7 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
                         ],
                         'doc_as_upsert' => false, // Changed to false since we verified existence
                     ],
-                    'refresh' => true, // Force immediate refresh
+                    'refresh' => false, // Eventual consistency for 10K concurrent scale
                 ];
                 $this->elasticService->getClient()->update($updateParams);
 
@@ -12406,7 +12406,7 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
                         ],
                         'doc_as_upsert' => false, // Changed to false since we verified existence
                     ],
-                    'refresh' => true, // Force immediate refresh
+                    'refresh' => false, // Eventual consistency for 10K concurrent scale
                 ];
                 $this->elasticService->getClient()->update($updateParams);
 
@@ -14169,7 +14169,7 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
                     ],
                     'doc_as_upsert' => false, // Changed to false since we verified existence
                 ],
-                'refresh' => true, // Force immediate refresh
+                'refresh' => false, // Eventual consistency for 10K concurrent scale
             ];
 
             $this->elasticService->getClient()->update($updateParams);

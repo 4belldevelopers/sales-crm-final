@@ -47,6 +47,11 @@ class QueueMailService implements ShouldQueue
     public $backoff = 60;
 
     /**
+     * Dispatch queue job only after database transaction has committed.
+     */
+    public bool $afterCommit = true;
+
+    /**
      * Create a new job instance.
      *
      * @param  string  $email  Recipient email
@@ -63,6 +68,7 @@ class QueueMailService implements ShouldQueue
      */
     public function __construct($email, $subject, $view, $data, $attachments, $fromAddress, $senderName, $cc, $company_id, $replyTo = [])
     {
+        $this->onQueue('mail');
         $this->email = $email;
         $this->subject = $subject;
         $this->view = $view;

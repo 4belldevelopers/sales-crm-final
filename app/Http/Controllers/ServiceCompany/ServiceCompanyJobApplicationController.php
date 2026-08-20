@@ -533,7 +533,7 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
                     ],
                     'doc_as_upsert' => false, // Changed to false since we verified existence
                 ],
-                'refresh' => true, // Force immediate refresh
+                'refresh' => false, // Eventual consistency for 10K concurrent scale
             ];
 
             $dsrs = $this->elasticService->getClient()->update($updateParams);
@@ -662,7 +662,7 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
                     'doc' => ['recruiter_note' => $recruiterNote],
                     'doc_as_upsert' => false,
                 ],
-                'refresh' => true,
+                'refresh' => false,
             ]);
 
             // Keep MySQL write-store in sync (tenant-scoped via company_id)
@@ -5090,7 +5090,7 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
                         ],
                         'doc_as_upsert' => false, // Changed to false since we verified existence
                     ],
-                    'refresh' => true, // Force immediate refresh
+                    'refresh' => false, // Eventual consistency for 10K concurrent scale
                 ];
                 // dd($updateParams);
 
@@ -7008,7 +7008,7 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
                 'doc_as_upsert' => true,
                 'detect_noop' => false,
             ],
-            'refresh' => true, // Force immediate refresh
+            'refresh' => false, // Eventual consistency for 10K concurrent scale
         ];
 
         $this->elasticService->getClient()->update($updateParams);
@@ -8736,7 +8736,7 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
                         ],
                         'doc_as_upsert' => false, // Changed to false since we verified existence
                     ],
-                    'refresh' => true, // Force immediate refresh
+                    'refresh' => false, // Eventual consistency for 10K concurrent scale
                 ];
                 // dd($updateParams);
                 $redudds = $this->elasticService->getClient()->update($updateParams_e);
@@ -9092,7 +9092,7 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
                     ],
                     'doc_as_upsert' => false, // Changed to false since we verified existence
                 ],
-                'refresh' => true, // Force immediate refresh
+                'refresh' => false, // Eventual consistency for 10K concurrent scale
             ];
             // dd($updateParams);
             $redud = $this->elasticService->getClient()->update($updateParams);
@@ -10673,7 +10673,7 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
                         ],
                         'doc_as_upsert' => false,
                     ],
-                    'refresh' => true,
+                    'refresh' => false,
                 ];
 
                 $this->elasticService->getClient()->update($updateParams);
@@ -11095,7 +11095,7 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
                     ],
                     'doc_as_upsert' => false, // Changed to false since we verified existence
                 ],
-                'refresh' => true, // Force immediate refresh
+                'refresh' => false, // Eventual consistency for 10K concurrent scale
             ];
 
             $this->elasticService->getClient()->update($updateParams);

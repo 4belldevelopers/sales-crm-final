@@ -34,12 +34,17 @@ class SyncCandidateToElasticJob implements ShouldQueue
     public int $timeout = 60;
 
     /**
+     * Dispatch queue job only after database transaction has committed.
+     */
+    public bool $afterCommit = true;
+
+    /**
      * Create a new job instance.
      */
     public function __construct(
         public int $candidateId
     ) {
-        $this->onQueue('elasticsearch');
+        $this->onQueue('indexing');
     }
 
     /**
