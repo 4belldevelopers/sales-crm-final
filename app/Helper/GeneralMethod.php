@@ -10297,15 +10297,15 @@ END:VCALENDAR";
         ->exists();
 
         $chkAdminRole = auth()->user()->hasRole('admin');
-         
+           return $userAllow || $chkAdminRole;
         // $chkAdminRole = DB::table('roles')->select('*')->where('id', $role_id)->where('name', 'admin')->count();
 
-        $allow = false;
-        if ($userAllow == 1 || $chkAdminRole == 1) {
-            $allow = true;
-        }
+        // $allow = false;
+        // if ($userAllow == 1 || $chkAdminRole == 1) {
+        //     $allow = true;
+        // }
 
-        return $allow;
+        // return $allow;
     }
 
     public static function getTeamRankData($company_id, $loggedInUserId, $startDate, $endDate, $isInternal = true, $returnFull = false)
