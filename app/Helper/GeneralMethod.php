@@ -10285,12 +10285,16 @@ END:VCALENDAR";
     {
         $userId = auth()->user()->id;
         //    $role_id = auth()->user()->role->role_id;
-        $userAllow = DB::table('users')
-            ->join('job_assign', 'job_assign.user_id', 'users.id')
-            ->select('users.id')
-            ->where('job_assign.job_id', $jobId)
-            ->where('job_assign.user_id', $userId)
-            ->count();
+        // $userAllow = DB::table('users')
+        //     ->join('job_assign', 'job_assign.user_id', 'users.id')
+        //     ->select('users.id')
+        //     ->where('job_assign.job_id', $jobId)
+        //     ->where('job_assign.user_id', $userId)
+        //     ->count();
+        $userAllow = DB::table('job_assign')
+        ->where('job_id', $jobId)
+        ->where('user_id', $userId)
+        ->exists();
 
         $chkAdminRole = auth()->user()->hasRole('admin');
          
