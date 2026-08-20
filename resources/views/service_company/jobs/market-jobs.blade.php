@@ -18,6 +18,9 @@
         border-radius: 8px;
         font-family: 'Poppins', sans-serif;
     }
+    #mktf_loc_inputwrap .tagify {
+        padding-right: 32px !important;
+    }
     .tagify__tag .star {
         cursor: pointer;
     }
@@ -1001,19 +1004,31 @@
         window.tagify = null;
 
         if (inputElm) {
-<<<<<<< HEAD
-            tagify = new Tagify(inputElm, {
+            window.tagify = new Tagify(inputElm, {
+                whitelist: [],
                 enforceWhitelist: false,
+                delimiters: ",|\\n",
+                trim: true,
                 dropdown: {
-                    enabled: 1,
                     maxItems: 20,
+                    classname: "",
+                    enabled: 1,
+                    fuzzySearch: true,
                     closeOnSelect: true,
                     appendTarget: document.body
                 },
-=======
-            window.tagify = new Tagify(inputElm, {
-                whitelist: [],
->>>>>>> 557ee10dcc4207d9dac0e24c633fa4f491f3cfaf
+                hooks: {
+                    beforeBeforeAddTag: function(tagData) {
+                        return new Promise((resolve, reject) => {
+                            if (!tagData || !tagData.value || !tagData.value.trim()) return reject();
+                            tagData.value = tagData.value.trim();
+                            var existing = (window.tagify && window.tagify.value) || [];
+                            var isDuplicate = existing.some(t => t.value.toLowerCase() === tagData.value.toLowerCase());
+                            if (isDuplicate) return reject();
+                            resolve(tagData);
+                        });
+                    }
+                },
                 templates: {
                     tag: function(tagData) {
                         tagData = tagData || {};
@@ -1030,36 +1045,32 @@
                                 class="tagify__tag ${mandatoryClass} ${tagData.class ? tagData.class : ""}"
                                 ${this.getAttributes(tagData)}
                                 style="display:inline-flex;align-items:center;gap:6px;background:${chipBg};border:1px solid ${chipBdr};border-radius:8px;padding:5px 7px 5px 10px;margin:4px 6px 4px 0;vertical-align:middle;">
-                                <span class="star ${isChecked}" style="cursor:pointer;font-size:15px;line-height:1;color:${starColor};flex-shrink:0;margin: 1px 3px 0px 3px;">${starGlyph}</span>
-                                <span class="tagify__tag-text" style="cursor:pointer;font-size:11.5px;font-weight:500;color:${textColor};line-height:1;white-space:nowrap;padding: 0px 0px 0px 6px;">${value}</span>
                                 <x title='Remove' class="tagify__tag__removeBtn" role="button" aria-label="remove tag"
                                     style="display:inline-flex;align-items:center;justify-content:center;width:15px;height:15px;border-radius:50%;background:rgba(37,99,235,.14);color:#2563eb;flex-shrink:0;font-size:12px;font-weight:700;line-height:1;cursor:pointer;padding:0;">&times;</x>
+                                <div style="display:inline-flex;align-items:center;gap:4px;">
+                                    <span class="star ${isChecked}" style="cursor:pointer;font-size:15px;line-height:1;color:${starColor};flex-shrink:0;margin: 1px 3px 0px 3px;">${starGlyph}</span>
+                                    <span class="tagify__tag-text" style="cursor:pointer;font-size:11.5px;font-weight:500;color:${textColor};line-height:1;white-space:nowrap;padding: 0px 0px 0px 2px;">${value}</span>
+                                </div>
                             </tag>
                         `;
                     }
                 },
                 transformTag: function(tagData) {
                     tagData.checked = tagData.checked || false;
+                    if (tagData.value) tagData.value = tagData.value.trim();
                     return tagData;
-                },
-                dropdown: {
-                    maxItems: 20,
-                    classname: "",
-                    enabled: 0,
-                    closeOnSelect: true,
-                    appendTarget: document.body
                 }
             });
 
-            tagify.on('blur', function() {
+            window.tagify.on('blur', function() {
                 if (typeof mktfSyncPendingInputs === 'function') {
                     mktfSyncPendingInputs();
                 }
             });
 
-            // Toggle mandatory (star) on click of EITHER the star itself OR the keyword text
+            // Toggle mandatory (star) on click of the star element inside skill tag
             document.addEventListener('click', function(e) {
-                const toggleTarget = e.target.closest('.star, .tagify__tag-text');
+                const toggleTarget = e.target.closest('.star');
                 if (toggleTarget && window.tagify) {
                     const tagElm = toggleTarget.closest('.tagify__tag');
                     if (!tagElm) return;
@@ -1121,19 +1132,15 @@
                 fetchSuggestionsSkills(query);
             });
 
-<<<<<<< HEAD
             $(document).on('click', '.simf-skill-chip', function() {
                 var skill = $(this).data('skill');
-                if (skill && tagify) {
-                    tagify.addTags([skill]);
+                if (skill && window.tagify) {
+                    window.tagify.addTags([skill]);
                     $(this).addClass('active');
                 }
             });
 
-            tagify.on('add', function() {
-=======
             window.tagify.on('add', function() {
->>>>>>> 557ee10dcc4207d9dac0e24c633fa4f491f3cfaf
                 if (typeof mktfUpdateActiveFiltersUI === 'function') mktfUpdateActiveFiltersUI();
             });
             window.tagify.on('remove', function() {
@@ -1146,15 +1153,32 @@
         window.tagifylocation = null;
 
         if (inputloc) {
-<<<<<<< HEAD
-            tagifylocation = new Tagify(inputloc, {
-                whitelist: cities,
-                enforceWhitelist: false,
-=======
             window.tagifylocation = new Tagify(inputloc, {
                 whitelist: [],
->>>>>>> 557ee10dcc4207d9dac0e24c633fa4f491f3cfaf
+                enforceWhitelist: false,
+                delimiters: ",|\\n",
+                trim: true,
                 maxTags: 10,
+                dropdown: {
+                    maxItems: 20,
+                    classname: "",
+                    enabled: 1,
+                    fuzzySearch: true,
+                    closeOnSelect: true,
+                    appendTarget: document.body
+                },
+                hooks: {
+                    beforeBeforeAddTag: function(tagData) {
+                        return new Promise((resolve, reject) => {
+                            if (!tagData || !tagData.value || !tagData.value.trim()) return reject();
+                            tagData.value = tagData.value.trim();
+                            var existing = (window.tagifylocation && window.tagifylocation.value) || [];
+                            var isDuplicate = existing.some(t => t.value.toLowerCase() === tagData.value.toLowerCase());
+                            if (isDuplicate) return reject();
+                            resolve(tagData);
+                        });
+                    }
+                },
                 templates: {
                     tag: function(tagData) {
                         const value = tagData.value || '';
@@ -1163,23 +1187,18 @@
                                 class="tagify__tag ${tagData.class ? tagData.class : ""}"
                                 ${this.getAttributes(tagData)}
                                 style="display:inline-flex;align-items:center;gap:6px;background:#eef2ff;border:1px solid #e0e7ff;border-radius:8px;padding:5px 7px 5px 10px;margin:4px 6px 4px 0;vertical-align:middle;">
-                                <span class="tagify__tag-text" style="font-size:11.5px;font-weight:500;color:#3730a3;line-height:1;white-space:nowrap;">${value}</span>
                                 <x title='Remove' class="tagify__tag__removeBtn" role="button" aria-label="remove tag"
                                     style="display:inline-flex;align-items:center;justify-content:center;width:15px;height:15px;border-radius:50%;background:rgba(37,99,235,.14);color:#2563eb;flex-shrink:0;font-size:12px;font-weight:700;line-height:1;cursor:pointer;padding:0;">&times;</x>
+                                <div>
+                                    <span class="tagify__tag-text" style="font-size:11.5px;font-weight:500;color:#3730a3;line-height:1;white-space:nowrap;">${value}</span>
+                                </div>
                             </tag>
                         `;
                     }
-                },
-                dropdown: {
-                    maxItems: 20,
-                    classname: "",
-                    enabled: 0,
-                    closeOnSelect: true,
-                    appendTarget: document.body
                 }
             });
 
-            tagifylocation.on('blur', function() {
+            window.tagifylocation.on('blur', function() {
                 if (typeof mktfSyncPendingInputs === 'function') {
                     mktfSyncPendingInputs();
                 }
@@ -1232,8 +1251,21 @@
             });
 
             window.tagifylocation.on('dropdown:select', function(e) {
-                window.tagifylocation.addTags([e.detail.data.value]);
                 mktfCloseLocPanel();
+            });
+            window.tagifylocation.on('invalid', function(e) {
+                if (e.detail && e.detail.tag) {
+                    setTimeout(function() {
+                        if (window.tagifylocation) window.tagifylocation.removeTags(e.detail.tag);
+                    }, 50);
+                }
+            });
+            window.tagify.on('invalid', function(e) {
+                if (e.detail && e.detail.tag) {
+                    setTimeout(function() {
+                        if (window.tagify) window.tagify.removeTags(e.detail.tag);
+                    }, 50);
+                }
             });
             window.tagifylocation.on('add', function() {
                 if (typeof mktfUpdateActiveFiltersUI === 'function') mktfUpdateActiveFiltersUI();
@@ -1338,8 +1370,8 @@
         }
 
         function clearAllTags() {
-            if (typeof tagify !== 'undefined' && tagify) { tagify.removeAllTags(); }
-            if (typeof tagifylocation !== 'undefined' && tagifylocation) { tagifylocation.removeAllTags(); }
+            if (typeof window.tagify !== 'undefined' && window.tagify) { window.tagify.removeAllTags(); }
+            if (typeof window.tagifylocation !== 'undefined' && window.tagifylocation) { window.tagifylocation.removeAllTags(); }
             fetchCandidates();
         }
 
@@ -2034,52 +2066,48 @@
         /* ══════════════════════════════════════════════════════════════════
            Active Filters (Drawer Preview & Main Page Summary Card)
            ══════════════════════════════════════════════════════════════════ */
+        var mktfIsSyncing = false;
         function mktfSyncPendingInputs() {
-            function commitInst(inst) {
-                if (!inst) return;
-                var val = '';
-                if (inst.DOM && inst.DOM.input) {
-                    val = (inst.DOM.input.textContent || inst.DOM.input.innerText || '').trim();
-                }
-                if (!val && inst.state && inst.state.inputText) {
-                    val = inst.state.inputText.trim();
-                }
-                var placeholder = (inst.settings && inst.settings.placeholder) ? inst.settings.placeholder.trim() : '';
-                if (val && val !== placeholder) {
-                    inst.addTags([val]);
-                    if (inst.DOM && inst.DOM.input) {
+            if (mktfIsSyncing) return;
+            mktfIsSyncing = true;
+            try {
+                function commitInst(inst) {
+                    if (!inst || !inst.DOM || !inst.DOM.input) return;
+                    var val = (inst.DOM.input.textContent || inst.DOM.input.innerText || '').trim();
+                    var placeholder = (inst.settings && inst.settings.placeholder) ? inst.settings.placeholder.trim() : '';
+                    if (val && val !== placeholder) {
                         inst.DOM.input.textContent = '';
-                    }
-                    if (inst.state) {
-                        inst.state.inputText = '';
+                        if (inst.state) inst.state.inputText = '';
+                        inst.addTags([val]);
                     }
                 }
+                if (typeof window.tagify !== 'undefined' && window.tagify) commitInst(window.tagify);
+                if (typeof window.tagifylocation !== 'undefined' && window.tagifylocation) commitInst(window.tagifylocation);
+            } finally {
+                mktfIsSyncing = false;
             }
-            if (typeof tagify !== 'undefined') commitInst(tagify);
-            if (typeof tagifylocation !== 'undefined') commitInst(tagifylocation);
         }
 
         function mktfUpdateActiveFiltersUI() {
-            mktfSyncPendingInputs();
             var chips = [];
 
             // Skills (starred = mandatory)
-            if (typeof tagify !== 'undefined' && tagify && Array.isArray(tagify.value)) {
-                tagify.value.forEach(function(tag) {
+            if (typeof window.tagify !== 'undefined' && window.tagify && Array.isArray(window.tagify.value)) {
+                window.tagify.value.forEach(function(tag) {
                     chips.push({
                         label: tag.value,
                         mandatory: !!tag.checked,
-                        clear: function() { tagify.removeTags(tag.value); }
+                        clear: function() { window.tagify.removeTags(tag.value); }
                     });
                 });
             }
 
             // Location
-            if (typeof tagifylocation !== 'undefined' && tagifylocation && Array.isArray(tagifylocation.value)) {
-                tagifylocation.value.forEach(function(tag) {
+            if (typeof window.tagifylocation !== 'undefined' && window.tagifylocation && Array.isArray(window.tagifylocation.value)) {
+                window.tagifylocation.value.forEach(function(tag) {
                     chips.push({
                         label: tag.value,
-                        clear: function() { tagifylocation.removeTags(tag.value); }
+                        clear: function() { window.tagifylocation.removeTags(tag.value); }
                     });
                 });
             }
@@ -2153,17 +2181,17 @@
                 });
             }
 
-            if (typeof tagify !== 'undefined' && tagify && Array.isArray(tagify.value)) {
-                tagify.value.forEach(function(tag) {
+            if (typeof window.tagify !== 'undefined' && window.tagify && Array.isArray(window.tagify.value)) {
+                window.tagify.value.forEach(function(tag) {
                     items.push({
                         cat: 'skill', label: tag.value, mandatory: !!tag.checked,
-                        clear: function() { tagify.removeTags(tag.value); }
+                        clear: function() { window.tagify.removeTags(tag.value); }
                     });
                 });
             }
-            if (typeof tagifylocation !== 'undefined' && tagifylocation && Array.isArray(tagifylocation.value)) {
-                tagifylocation.value.forEach(function(tag) {
-                    items.push({ cat: 'location', label: tag.value, clear: function() { tagifylocation.removeTags(tag.value); } });
+            if (typeof window.tagifylocation !== 'undefined' && window.tagifylocation && Array.isArray(window.tagifylocation.value)) {
+                window.tagifylocation.value.forEach(function(tag) {
+                    items.push({ cat: 'location', label: tag.value, clear: function() { window.tagifylocation.removeTags(tag.value); } });
                 });
             }
             var minExp = $('#min_exp').val(), maxExp = $('#max_exp').val();
@@ -2228,10 +2256,10 @@
 
         function mktfCaptureSnapshot() {
             mktfSnapshot = {
-                skills: (typeof tagify !== 'undefined' && tagify && Array.isArray(tagify.value))
-                    ? tagify.value.map(function(t) { return { value: t.value, checked: !!t.checked }; }) : [],
-                locations: (typeof tagifylocation !== 'undefined' && tagifylocation && Array.isArray(tagifylocation.value))
-                    ? tagifylocation.value.map(function(t) { return t.value; }) : [],
+                skills: (typeof window.tagify !== 'undefined' && window.tagify && Array.isArray(window.tagify.value))
+                    ? window.tagify.value.map(function(t) { return { value: t.value, checked: !!t.checked }; }) : [],
+                locations: (typeof window.tagifylocation !== 'undefined' && window.tagifylocation && Array.isArray(window.tagifylocation.value))
+                    ? window.tagifylocation.value.map(function(t) { return t.value; }) : [],
                 min_exp: $('#min_exp').val(), max_exp: $('#max_exp').val(),
                 min_sal: $('#min_sal').val(), max_sal: $('#max_sal').val(),
                 min_salary_currency: $('#min_salary_currency').val(), sal_mode: $('#sal_mode').val()
@@ -2240,13 +2268,13 @@
 
         function mktfRestoreSnapshot() {
             if (!mktfSnapshot) return;
-            if (typeof tagify !== 'undefined' && tagify) {
-                tagify.removeAllTags();
-                if (mktfSnapshot.skills && mktfSnapshot.skills.length) tagify.addTags(mktfSnapshot.skills);
+            if (typeof window.tagify !== 'undefined' && window.tagify) {
+                window.tagify.removeAllTags();
+                if (mktfSnapshot.skills && mktfSnapshot.skills.length) window.tagify.addTags(mktfSnapshot.skills);
             }
-            if (typeof tagifylocation !== 'undefined' && tagifylocation) {
-                tagifylocation.removeAllTags();
-                if (mktfSnapshot.locations && mktfSnapshot.locations.length) tagifylocation.addTags(mktfSnapshot.locations);
+            if (typeof window.tagifylocation !== 'undefined' && window.tagifylocation) {
+                window.tagifylocation.removeAllTags();
+                if (mktfSnapshot.locations && mktfSnapshot.locations.length) window.tagifylocation.addTags(mktfSnapshot.locations);
             }
             $('#min_exp').val(mktfSnapshot.min_exp);
             $('#max_exp').val(mktfSnapshot.max_exp);
@@ -2286,8 +2314,8 @@
         $(document).on('change keyup', '#min_exp, #max_exp, #min_sal, #max_sal', mktfUpdateActiveFiltersUI);
 
         $(document).on('click', '#mktf_clear_all', function() {
-            if (typeof tagify !== 'undefined' && tagify) tagify.removeAllTags();
-            if (typeof tagifylocation !== 'undefined' && tagifylocation) tagifylocation.removeAllTags();
+            if (typeof window.tagify !== 'undefined' && window.tagify) window.tagify.removeAllTags();
+            if (typeof window.tagifylocation !== 'undefined' && window.tagifylocation) window.tagifylocation.removeAllTags();
             $('#min_exp, #max_exp, #max_sal, #min_salary_currency, #sal_mode').val('');
             $('#min_sal').val(0);
             mktfUpdateActiveFiltersUI();
