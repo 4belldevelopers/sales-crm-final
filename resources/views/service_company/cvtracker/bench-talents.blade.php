@@ -581,9 +581,10 @@
     top: 0 !important;
     right: 0 !important;
     bottom: 0 !important;
-    width: 70vw !important;
-    max-width: 70% !important;
+    width: 80vw !important;
+    max-width: 80% !important;
     height: 100vh !important;
+    max-height: 100vh !important;
     background: #ffffff !important;
     box-shadow: -10px 0 35px rgba(0, 0, 0, 0.25) !important;
     display: flex !important;
@@ -592,70 +593,83 @@
     transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
     z-index: 10001 !important;
     font-family: 'Poppins', sans-serif !important;
+    overflow: hidden !important;
 }
 .bench-filter-drawer-overlay.active .bench-filter-drawer-container {
     transform: translateX(0) !important;
 }
+.bench-filter-drawer-container .simf-card {
+    display: flex !important;
+    flex-direction: column !important;
+    height: 100vh !important;
+    max-height: 100vh !important;
+    overflow: hidden !important;
+    background: #ffffff !important;
+}
+.bench-filter-drawer-container .simf-header {
+    padding: 20px 32px 16px !important;
+    border-bottom: 1px solid #eef0f4 !important;
+    flex-shrink: 0 !important;
+    background: #ffffff !important;
+}
+.bench-filter-drawer-container .simf-body {
+    flex: 1 1 auto !important;
+    min-height: 0 !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    padding: 16px 32px 28px !important;
+}
+.bench-filter-drawer-container .simf-footer {
+    padding: 16px 32px !important;
+    border-top: 1px solid #eef0f4 !important;
+    background: #ffffff !important;
+    flex-shrink: 0 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    z-index: 10 !important;
+}
+.bench-filter-drawer-container .simf-section {
+    padding: 18px 0 !important;
+    border-bottom: 1px solid #f1f5f9 !important;
+}
+.bench-filter-drawer-container .simf-section-last {
+    border-bottom: none !important;
+    padding-bottom: 12px !important;
+}
+.bench-city-suggestions-list {
+    background: #ffffff;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 6px 0;
+}
+.bench-city-suggestion-item {
+    font-size: 13px;
+    font-weight: 500;
+    color: #475569;
+    cursor: pointer;
+    padding: 6px 8px;
+    border-radius: 6px;
+    transition: all 0.15s ease;
+    font-family: 'Poppins', sans-serif;
+}
+.bench-city-suggestion-item:hover {
+    background: #f1f5f9;
+    color: #0f172a;
+    font-weight: 600;
+}
 @media (max-width: 991px) {
     .bench-filter-drawer-container {
-        width: 88vw;
-        max-width: 88%;
+        width: 92vw !important;
+        max-width: 92% !important;
     }
-}
-.bench-filter-drawer-header {
-    padding: 16px 24px;
-    border-bottom: 1px solid #e2e8f0;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    background: #ffffff;
-    flex-shrink: 0;
-}
-.bench-filter-drawer-icon {
-    width: 38px;
-    height: 38px;
-    border-radius: 10px;
-    background: #EEF2FF;
-    color: #4F46E5;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-}
-.bench-filter-drawer-body {
-    padding: 20px 24px;
-    overflow-y: auto;
-    flex: 1;
-}
-.bench-filter-drawer-footer {
-    padding: 16px 24px;
-    border-top: 1px solid #e2e8f0;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    background: #fafbfc;
-    flex-shrink: 0;
-}
-.bench-filter-section {
-    padding-bottom: 20px;
-    margin-bottom: 20px;
-    border-bottom: 1px solid #f1f5f9;
-}
-.bench-filter-section:last-child {
-    border-bottom: none;
-    margin-bottom: 0;
-    padding-bottom: 0;
-}
-.bench-filter-label {
-    font-size: 13px;
-    font-weight: 600;
-    text-transform: uppercase;
-    color: #475569;
-    letter-spacing: 0.5px;
-    margin-bottom: 8px;
-    display: flex;
-    align-items: center;
-    gap: 6px;
+    .bench-filter-drawer-container .simf-header,
+    .bench-filter-drawer-container .simf-body,
+    .bench-filter-drawer-container .simf-footer {
+        padding-left: 20px !important;
+        padding-right: 20px !important;
+    }
 }
 </style>
 
@@ -685,168 +699,218 @@
             </div>
         </div>
 
-        <!--Start Side Drawer Filter (70% Width - Market Jobs Filter Design)-->
+        <!--Start Side Drawer Filter (80% Width - Exact Market Jobs Filter Design)-->
         <div id="apptrackerfilterBench" class="bench-filter-drawer-overlay" tabindex="-1">
             <div class="bench-filter-drawer-backdrop" id="apptrackerfilterBench_backdrop"></div>
             <div class="bench-filter-drawer-container">
-                <!-- Header -->
-                <div class="bench-filter-drawer-header">
-                    <div class="d-flex align-items-center gap-3">
-                        <div class="bench-filter-drawer-icon">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3Z"/>
-                            </svg>
-                        </div>
-                        <div>
-                            <h3 class="fw-bolder m-0 text-gray-900 fs-4" style="font-family: 'Poppins', sans-serif;">Filter Bench Talents</h3>
-                            <p class="text-muted m-0 fs-7" style="color: #64748B;">Filter AI recommended candidate pool by skills, city, experience, bill rates & type</p>
-                        </div>
-                    </div>
-                    <button type="button" class="btn btn-sm btn-icon btn-active-light-danger" id="apptrackerfilterBench_close" title="Close">
-                        <span class="svg-icon svg-icon-1">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <path d="M18 6 6 18M6 6l12 12"/>
-                            </svg>
-                        </span>
-                    </button>
-                </div>
-
-                <!-- Body -->
-                <div class="bench-filter-drawer-body">
-                    <form id="createSchedule" class="ajax-form" method="post">
-                        <!-- 1. Search Skills / Keywords -->
-                        <div class="bench-filter-section">
-                            <label class="bench-filter-label">1. Search Skills / Keywords</label> 
-                            <div class="search-input-wrap">
-                                <input class="search-input form-control form-control-solid" name="kt_tagify_skills" value="{{ @$default_skill }}" placeholder="Enter Skills to search Bench Talents..." id="kt_tagify_skills" />
+                <div class="card shadow-none rounded-0 w-100 h-100 simf-card">
+                    
+                    <!--begin::Header-->
+                    <div class="simf-header">
+                        <div class="d-flex align-items-center gap-3">
+                            <span class="simf-header-icon">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3Z"/></svg>
+                            </span>
+                            <div>
+                                <div class="d-flex align-items-center gap-2">
+                                    <h3 class="simf-title">Filter Bench Talents</h3>
+                                </div>
+                                <p class="simf-subtitle">Refine your AI recommended candidate pool by skills, location, experience, and rates</p>
                             </div>
                         </div>
-
-                        <!-- 2. Select the City -->
-                        <div class="bench-filter-section">
-                            <label class="bench-filter-label">2. Select the City</label> 
-                            <div class="search-input-wrap">
-                                <input class="search-input form-control form-control-solid" value="" id="kt_tagify_location_bench" placeholder="Search City..." />
-                            </div>
-                        </div>
-
-                        <!-- 3. Experience -->
-                        <div class="bench-filter-section">
-                            <label class="bench-filter-label">3. Experience</label> 
-                            <div class="row g-3">
-                                <div class="col-lg-6">
-                                    <label class="form-label required fs-7 text-muted fw-bold">Minimum years:</label>
-                                    <select class="form-select form-select-solid" name="min_exp_bench" id="min_exp_bench">
-                                        <option value="" selected="">Select Experience</option>
-                                        <option value="0">Freshers</option>
-                                        @for($i=1; $i<=30; $i++)
-                                        <option value="{{ $i }}">{{ $i }} &nbsp; Year{{ ($i>=1) ? 's' : '' }}</option>
-                                        @endfor                    
-                                    </select>
-                                </div>
-                                <div class="col-lg-6">
-                                    <label class="form-label required fs-7 text-muted fw-bold">Maximum years:</label>
-                                    <select class="form-select form-select-solid" name="max_exp_bench" id="max_exp_bench">
-                                        <option value="" selected="">Select Experience</option>
-                                        <option value="0">Freshers</option>
-                                        @for($i=1; $i<=30; $i++)
-                                        <option value="{{ $i }}">{{ $i }} &nbsp; Year{{ ($i>=1) ? 's' : '' }}</option>
-                                        @endfor                                
-                                    </select>
-                                    <div id="experience_bench_error" style="color: red !important; text-align: center;" class="mt-1 fs-7"></div>
-                                </div>
-                            </div> 
-                        </div>
-
-                        <!-- 4. Bill Rates -->
-                        <div class="bench-filter-section">
-                            <label class="bench-filter-label">4. Bill Rates</label> 
-                            <div class="row g-3 mb-3">
-                                <div class="col-lg-6">
-                                    <label class="form-label required fs-7 text-muted fw-bold">Currency</label>
-                                    <select class="form-select form-select-solid" name="min_salary_currency_bench" id="min_salary_currency_bench">
-                                        <option value="">Select currency</option>
-                                        <option value="0" {{ $min_salary_currency==0 ? 'selected' : '' }}>INR</option>
-                                        <option value="1" {{ $min_salary_currency==1 ? 'selected' : '' }}>EUR</option>
-                                        <option value="2" {{ $min_salary_currency==2 ? 'selected' : '' }}>JPY</option>
-                                        <option value="3" {{ $min_salary_currency==3 ? 'selected' : '' }}>GBP</option>
-                                        <option value="4" {{ $min_salary_currency==4 ? 'selected' : '' }}>USD</option>
-                                        <option value="5" {{ $min_salary_currency==5 ? 'selected' : '' }}>AED</option>
-                                    </select>
-                                </div>
-                                <div class="col-lg-6">
-                                    <label class="form-label required fs-7 text-muted fw-bold">Mode</label>
-                                    <select class="form-select form-select-solid" name="sal_mode_bench" id="sal_mode_bench">
-                                        <option value="">Select Mode</option>
-                                        <option value="0" {{ $min_sal_mode==0 ? 'selected' : '' }}>Annual</option>
-                                        <option value="1" {{ $min_sal_mode==1 ? 'selected' : '' }}>Monthly</option>
-                                        <option value="2" {{ $min_sal_mode==2 ? 'selected' : '' }}>Hourly</option>
-                                    </select>
-                                </div>
-                            </div>
-                            <div class="row g-3">
-                                <div class="col-lg-6">
-                                    <label class="form-label required fs-7 text-muted fw-bold">Minimum Bill Rates:</label>
-                                    <input type="number" class="form-control form-control-solid" name="min_sal_bench" id="min_sal_bench" placeholder="Enter min salary" value="">
-                                    <span class="form-text text-muted minimum_salary_word"></span>
-                                </div>
-                                <div class="col-lg-6">
-                                    <label class="form-label required fs-7 text-muted fw-bold">Maximum Bill Rates:</label>
-                                    <input type="number" class="form-control form-control-solid" name="max_sal_bench" id="max_sal_bench" placeholder="Enter max salary" value="">
-                                    <span class="form-text text-muted maximum_salary_word"></span>
-                                </div>  
-                                <span class="form-text text-muted" id="salary_bench_error" style="color: red !important; text-align: center;"></span>                                                             
-                            </div>
-                        </div>
-
-                        <!-- 5. Outsource Type -->
-                        <div class="bench-filter-section">
-                            <label class="bench-filter-label">5. Outsource type</label> 
-                            <div class="row g-3 py-2">
-                                <div class="col-lg-4">
-                                    <input type="radio" class="btn-check app_int_outsource" name="app_int_outsource_bench" value="0" id="app_int_outsource_bench0" checked>
-                                    <label class="btn btn-outline btn-outline-dashed btn-outline-default p-3 w-100 d-flex align-items-center justify-content-center" for="app_int_outsource_bench0">
-                                        <span class="d-block fw-bold text-start">
-                                            <span class="text-dark-800 fw-bolder d-block fs-6">All</span>
-                                        </span>
-                                    </label>
-                                </div>
-                                <div class="col-lg-4">
-                                    <input type="radio" class="btn-check app_int_outsource" name="app_int_outsource_bench" value="1" id="app_int_outsource_bench2">
-                                    <label class="btn btn-outline btn-outline-dashed btn-outline-default p-3 w-100 d-flex align-items-center justify-content-center" for="app_int_outsource_bench2">
-                                        <span class="d-block fw-bold text-start">
-                                            <span class="text-dark-800 fw-bolder d-block fs-6">Fulltime Hiring</span>
-                                        </span>
-                                    </label>
-                                </div>
-                                <div class="col-lg-4">
-                                    <input type="radio" class="btn-check app_int_outsource" name="app_int_outsource_bench" value="2" id="app_int_outsource_bench3">
-                                    <label class="btn btn-outline btn-outline-dashed btn-outline-default p-3 w-100 d-flex align-items-center justify-content-center" for="app_int_outsource_bench3">
-                                        <span class="d-block fw-bold text-start">
-                                            <span class="text-dark-800 fw-bolder d-block fs-6">Contract Hiring</span>
-                                        </span>
-                                    </label>
-                                </div>
-                            </div>
-                        </div>
-                    </form>
-                </div>
-
-                <!-- Footer -->
-                <div class="bench-filter-drawer-footer">
-                    <div class="d-flex align-items-center gap-2 text-muted fs-7">
-                        <span>Refine your candidate pool</span>
-                    </div>
-                    <div class="d-flex align-items-center gap-3">
-                        <button type="button" class="btn btn-light btn-sm px-4" id="apptrackerfilterBench_cancel">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-1"><path d="M18 6 6 18M6 6l12 12"/></svg>
-                            Close
-                        </button>
-                        <button type="button" id="changetextupdatebench" class="btn btn-primary btn-sm px-5" style="background-color: #4F46E5; border-color: #4F46E5;">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-1"><path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3Z"/></svg>
-                            <span class="indicator-label changetextupdatebench">Apply Filters</span>
+                        <button type="button" class="simf-close" id="apptrackerfilterBench_close" title="Close">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
                         </button>
                     </div>
+                    <!--end::Header-->
+
+                    <!--begin::Body-->
+                    <div class="simf-body">
+                        <form id="createSchedule" class="ajax-form" method="post">
+                            
+                            <!--1. Skills-->
+                            <div class="simf-section">
+                                <div class="simf-section-head">
+                                    <span class="simf-icon simf-icon-blue">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m8 6-6 6 6 6M16 6l6 6-6 6"/></svg>
+                                    </span>
+                                    <div>
+                                        <div class="simf-section-title">1. Search Skills / Keywords</div>
+                                        <div class="simf-section-desc">Search candidates matching mandatory or optional skills</div>
+                                    </div>
+                                </div>
+                                <div class="simf-section-body">
+                                    <input class="form-control form-control-solid search-input" name="kt_tagify_skills" value="{{ @$default_skill }}" placeholder="Enter Skills to search Bench Talents..." id="kt_tagify_skills" />
+                                </div>
+                            </div>
+
+                            <!--2. City-->
+                            <div class="simf-section">
+                                <div class="simf-section-head">
+                                    <span class="simf-icon simf-icon-green">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+                                    </span>
+                                    <div>
+                                        <div class="simf-section-title">2. Select the City</div>
+                                        <div class="simf-section-desc">Target candidates by city or location</div>
+                                    </div>
+                                </div>
+                                <div class="simf-section-body position-relative">
+                                    <input type="text" class="form-control form-control-solid search-input" value="" id="kt_tagify_location_bench" placeholder="Search City..." autocomplete="off" />
+                                    <div id="bench_city_suggestions" class="bench-city-suggestions-list d-none mt-2"></div>
+                                </div>
+                            </div>
+
+                            <!--3. Experience-->
+                            <div class="simf-section">
+                                <div class="simf-section-head">
+                                    <span class="simf-icon simf-icon-purple">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                                    </span>
+                                    <div>
+                                        <div class="simf-section-title">3. Experience</div>
+                                        <div class="simf-section-desc">Specify minimum and maximum work experience range</div>
+                                    </div>
+                                </div>
+                                <div class="simf-section-body">
+                                    <div class="row g-3">
+                                        <div class="col-lg-6">
+                                            <label class="simf-mini-label required">Minimum years:</label>
+                                            <select class="form-select form-select-solid" name="min_exp_bench" id="min_exp_bench">
+                                                <option value="" selected="">Select Experience</option>
+                                                <option value="0">Freshers</option>
+                                                @for($i=1; $i<=30; $i++)
+                                                <option value="{{ $i }}">{{ $i }} &nbsp; Year{{ ($i>=1) ? 's' : '' }}</option>
+                                                @endfor                    
+                                            </select>
+                                        </div>
+                                        <div class="col-lg-6">
+                                            <label class="simf-mini-label required">Maximum years:</label>
+                                            <select class="form-select form-select-solid" name="max_exp_bench" id="max_exp_bench">
+                                                <option value="" selected="">Select Experience</option>
+                                                <option value="0">Freshers</option>
+                                                @for($i=1; $i<=30; $i++)
+                                                <option value="{{ $i }}">{{ $i }} &nbsp; Year{{ ($i>=1) ? 's' : '' }}</option>
+                                                @endfor                                
+                                            </select>
+                                            <div id="experience_bench_error" style="color: red !important; text-align: center;" class="mt-1 fs-7"></div>
+                                        </div>
+                                    </div> 
+                                </div>
+                            </div>
+
+                            <!--4. Bill Rates-->
+                            <div class="simf-section">
+                                <div class="simf-section-head">
+                                    <span class="simf-icon simf-icon-teal">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                                    </span>
+                                    <div>
+                                        <div class="simf-section-title">4. Bill Rates</div>
+                                        <div class="simf-section-desc">Filter candidates by billing rate range, currency, and pay mode</div>
+                                    </div>
+                                </div>
+                                <div class="simf-section-body">
+                                    <div class="row g-3 mb-3 simf-salary-row">
+                                        <div class="col-lg-6">
+                                            <label class="simf-mini-label required">Currency</label>
+                                            <select class="form-select form-select-solid" name="min_salary_currency_bench" id="min_salary_currency_bench">
+                                                <option value="">Select currency</option>
+                                                <option value="0" {{ $min_salary_currency==0 ? 'selected' : '' }}>INR</option>
+                                                <option value="1" {{ $min_salary_currency==1 ? 'selected' : '' }}>EUR</option>
+                                                <option value="2" {{ $min_salary_currency==2 ? 'selected' : '' }}>JPY</option>
+                                                <option value="3" {{ $min_salary_currency==3 ? 'selected' : '' }}>GBP</option>
+                                                <option value="4" {{ $min_salary_currency==4 ? 'selected' : '' }}>USD</option>
+                                                <option value="5" {{ $min_salary_currency==5 ? 'selected' : '' }}>AED</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-lg-6">
+                                            <label class="simf-mini-label required">Mode</label>
+                                            <select class="form-select form-select-solid" name="sal_mode_bench" id="sal_mode_bench">
+                                                <option value="">Select Mode</option>
+                                                <option value="0" {{ $min_sal_mode==0 ? 'selected' : '' }}>Annual</option>
+                                                <option value="1" {{ $min_sal_mode==1 ? 'selected' : '' }}>Monthly</option>
+                                                <option value="2" {{ $min_sal_mode==2 ? 'selected' : '' }}>Hourly</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="row g-3">
+                                        <div class="col-lg-6">
+                                            <label class="simf-mini-label required">Minimum Bill Rates:</label>
+                                            <input type="number" class="form-control form-control-solid" name="min_sal_bench" id="min_sal_bench" placeholder="Enter min salary" value="">
+                                        </div>
+                                        <div class="col-lg-6">
+                                            <label class="simf-mini-label required">Maximum Bill Rates:</label>
+                                            <input type="number" class="form-control form-control-solid" name="max_sal_bench" id="max_sal_bench" placeholder="Enter max salary" value="">
+                                        </div>  
+                                        <span class="form-text text-muted" id="salary_bench_error" style="color: red !important; text-align: center;"></span>                                                             
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!--5. Outsource type-->
+                            <div class="simf-section simf-section-last">
+                                <div class="simf-section-head">
+                                    <span class="simf-icon simf-icon-amber">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+                                    </span>
+                                    <div>
+                                        <div class="simf-section-title">5. Outsource Type</div>
+                                        <div class="simf-section-desc">Select contract vs fulltime hiring preference</div>
+                                    </div>
+                                </div>
+                                <div class="simf-section-body">
+                                    <div class="row g-3 py-2">
+                                        <div class="col-lg-4">
+                                            <input type="radio" class="btn-check app_int_outsource" name="app_int_outsource_bench" value="0" id="app_int_outsource_bench0" checked>
+                                            <label class="btn btn-outline btn-outline-dashed btn-outline-default p-3 w-100 d-flex align-items-center justify-content-center" for="app_int_outsource_bench0">
+                                                <span class="d-block fw-bold text-start">
+                                                    <span class="text-dark-800 fw-bolder d-block fs-6">All</span>
+                                                </span>
+                                            </label>
+                                        </div>
+                                        <div class="col-lg-4">
+                                            <input type="radio" class="btn-check app_int_outsource" name="app_int_outsource_bench" value="1" id="app_int_outsource_bench2">
+                                            <label class="btn btn-outline btn-outline-dashed btn-outline-default p-3 w-100 d-flex align-items-center justify-content-center" for="app_int_outsource_bench2">
+                                                <span class="d-block fw-bold text-start">
+                                                    <span class="text-dark-800 fw-bolder d-block fs-6">Fulltime Hiring</span>
+                                                </span>
+                                            </label>
+                                        </div>
+                                        <div class="col-lg-4">
+                                            <input type="radio" class="btn-check app_int_outsource" name="app_int_outsource_bench" value="2" id="app_int_outsource_bench3">
+                                            <label class="btn btn-outline btn-outline-dashed btn-outline-default p-3 w-100 d-flex align-items-center justify-content-center" for="app_int_outsource_bench3">
+                                                <span class="d-block fw-bold text-start">
+                                                    <span class="text-dark-800 fw-bolder d-block fs-6">Contract Hiring</span>
+                                                </span>
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </form>
+                    </div>
+                    <!--end::Body-->
+
+                    <!--begin::Footer-->
+                    <div class="simf-footer" style="padding: 16px 24px; border-top: 1px solid #eef0f4; display: flex; align-items: center; justify-content: space-between; background: #fafbfc; flex-shrink: 0;">
+                        <div class="simf-footer-count">
+                            <span class="simf-footer-label" style="font-size: 12px; color: #64748b;">Refine your candidates pool</span>
+                        </div>
+                        <div class="simf-footer-actions" style="display: flex; align-items: center; gap: 8px;">
+                            <button type="button" class="btn btn-sm btn-light" id="apptrackerfilterBench_cancel">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+                                Close
+                            </button>
+                            <button type="button" class="btn btn-sm btn-primary" id="changetextupdatebench" style="background-color: #4F46E5; border-color: #4F46E5;">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3Z"/></svg>
+                                <span class="indicator-label changetextupdatebench">Apply Filters</span>
+                            </button>
+                        </div>
+                    </div>
+                    <!--end::Footer-->
+
                 </div>
             </div>
         </div>
@@ -1034,6 +1098,11 @@
             });
         });
 
+        // Ensure filter drawer container is appended directly to body BEFORE initializing Tagify
+        if ($('#apptrackerfilterBench').length && $('#apptrackerfilterBench').parent()[0] !== document.body) {
+            $('body').append($('#apptrackerfilterBench'));
+        }
+
         $(document).on("click", "#open_apptrackerfilterBench_btn", function(e){
             e.preventDefault();
             e.stopPropagation();
@@ -1097,114 +1166,143 @@
     });
 
 
-    var inputloc = document.querySelector("#kt_tagify_location_bench");
-    var cities = @json(@$cities);
-    // Initialize Tagify script on the above inputs
-    var tagifylocation = new Tagify(inputloc, {
-        whitelist: cities,
-        // enforceWhitelist: true, // Prevents users from adding custom values
-        maxTags: 1,
-        dropdown: {
-            maxItems: 200, // <- mixumum allowed rendered suggestions
-            classname: "", // <- custom classname for this dropdown, so it could be targeted
-            enabled: 0, // <- show suggestions on focus
-            closeOnSelect: true, // <- do not hide the suggestions dropdown once an item has been selected
-            highlightFirst: true // First suggestion active
-        },
-        templates: {
-            tag: function(tagData) {
-                tagData = tagData || {};
-                var value = tagData.value || '';
-                return `
-                    <tag title="${value}" contenteditable='false' spellcheck="false"
-                        class="tagify__tag ${tagData.class ? tagData.class : ""}"
-                        ${this.getAttributes(tagData)}>
-                        <div style="padding:2px 6px; display:flex; align-items:center; gap:6px;">
-                            <span class="tagify__tag-text">${value}</span>
-                            <span style="width:16px;height:16px;border-radius:50%;background:#A5B4FC; border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:11px;color:#3730A3;line-height:1;flex-shrink:0;">
-                                <x title="" class="tagify__tag__removeBtn"role="button" aria-label="remove tag"></x>
-                            </span>
-                        </div>
-                    </tag>
-                `;
+    /* ── Tagify Location Initialization + Inline Suggestions ── */
+    var inputlocBench = document.querySelector("#kt_tagify_location_bench");
+    window.tagifylocation_bench = null;
+
+    if (inputlocBench) {
+        window.tagifylocation_bench = new Tagify(inputlocBench, {
+            whitelist: [],
+            enforceWhitelist: false,
+            delimiters: ",|\\n",
+            trim: true,
+            maxTags: 10,
+            dropdown: {
+                enabled: false
+            },
+            hooks: {
+                beforeBeforeAddTag: function(tagData) {
+                    return new Promise((resolve, reject) => {
+                        if (!tagData || !tagData.value || !tagData.value.trim()) return reject();
+                        tagData.value = tagData.value.trim();
+                        var existing = (window.tagifylocation_bench && window.tagifylocation_bench.value) || [];
+                        var isDuplicate = existing.some(t => t.value.toLowerCase() === tagData.value.toLowerCase());
+                        if (isDuplicate) return reject();
+                        resolve(tagData);
+                    });
+                }
+            },
+            templates: {
+                tag: function(tagData) {
+                    const value = tagData.value || '';
+                    return `
+                        <tag title="${value}" contenteditable='false' spellcheck="false"
+                            class="tagify__tag ${tagData.class ? tagData.class : ""}"
+                            ${this.getAttributes(tagData)}
+                            style="display:inline-flex;align-items:center;gap:6px;background:#eef2ff;border:1px solid #e0e7ff;border-radius:8px;padding:5px 7px 5px 10px;margin:4px 6px 4px 0;vertical-align:middle;">
+                            <x title='Remove' class="tagify__tag__removeBtn" role="button" aria-label="remove tag"
+                                style="display:inline-flex;align-items:center;justify-content:center;width:15px;height:15px;border-radius:50%;background:rgba(37,99,235,.14);color:#2563eb;flex-shrink:0;font-size:12px;font-weight:700;line-height:1;cursor:pointer;padding:0;">&times;</x>
+                            <div>
+                                <span class="tagify__tag-text" style="font-size:11.5px;font-weight:500;color:#3730a3;line-height:1;white-space:nowrap;">${value}</span>
+                            </div>
+                        </tag>
+                    `;
+                }
             }
-        },
+        });
 
-        transformTag: function(tagData) {
-            tagData.checked = tagData.checked || false;
-            return tagData;
-        }
-    });
-    // Prevent creating tags on blur or enter key
-    tagifylocation.on('input', function(e) {
-        tagifylocation.dropdown.show(); // show the dropdown immediately
-    });
-    // Create tags only on select
-    tagifylocation.on('dropdown:select', function(e) {
-        tagifylocation.addTags([e.detail.data.value]);
-    });
-    
-    tagifylocation.on('add', function(e) {
-        // alert(cities);
-        // Remove the tag if it wasn't selected from the dropdown
-        // if (!cities.includes(e.detail.data.value)) {
-        //     setTimeout(() => {
-        //         tagifylocation.removeTag(e.detail.data.value);
-        //     }, 500);
+        window.tagifylocation_bench.on('invalid', function(e) {
+            if (e.detail && e.detail.tag) {
+                setTimeout(function() {
+                    if (window.tagifylocation_bench) window.tagifylocation_bench.removeTags(e.detail.tag);
+                }, 50);
+            }
+        });
 
-        // }
-    });
-
-    function debounce(func, delay) {
+        function debounceCityBench(func, delay) {
             let timer;
             return function (...args) {
                 clearTimeout(timer);
                 timer = setTimeout(() => func.apply(this, args), delay);
             };
         }
-        // Debounced function to fetch suggestions
-        const fetchSuggestions_bench = debounce(function(query) {
+
+        const fetchCitySuggestionsBench = debounceCityBench(function(query) {
+            if (!query || query.length < 2) {
+                $('#bench_city_suggestions').addClass('d-none').empty();
+                return;
+            }
             $.ajax({
-                url: "{{ url('/') }}" + "/city-job-suggestions?q=" + query,
+                url: "{{ url('/') }}" + "/city-job-suggestions?q=" + encodeURIComponent(query),
                 method: 'GET',
                 success: function(data) {
-                    console.warn("Fetched Cities: ", data);
-
-                    if (Array.isArray(data)) {
-                        tagifylocation.settings.whitelist = data; // Update whitelist
-                        // tagifylocation.dropdown.show(query); // Show suggestions
-                        tagifylocation.dropdown.show.call(tagifylocation);
+                    if (Array.isArray(data) && data.length > 0) {
+                        var html = '';
+                        data.forEach(function(item) {
+                            var safeItem = $('<div>').text(item).html();
+                            html += '<div class="bench-city-suggestion-item" data-val="' + safeItem + '">' + safeItem + '</div>';
+                        });
+                        $('#bench_city_suggestions').html(html).removeClass('d-none');
                     } else {
-                        console.error("Invalid API response format: Expected array.");
+                        $('#bench_city_suggestions').addClass('d-none').empty();
                     }
                 },
-                error: function(err) {
-                    console.error("Error fetching cities:", err);
+                error: function() {
+                    $('#bench_city_suggestions').addClass('d-none').empty();
                 }
             });
-        }, 200); // 300ms delay
+        }, 150);
 
-         // Listen for user input to trigger API call
-    tagifylocation.on('input', function(e) {
-        var query = e.detail.value.trim();
-        if (query.length < 2) return;
-        fetchSuggestions_bench(query);
-    });
+        window.tagifylocation_bench.on('input', function(e) {
+            var query = (e.detail.value || e.detail.textContent || (e.detail.inputElm ? e.detail.inputElm.textContent : '') || '').trim();
+            fetchCitySuggestionsBench(query);
+        });
 
-    setTimeout(() => {
-      var city = ""; //{{ @$default_loc }}
-      if(city !=''){
-        var cityName = city.split(" | ")[0]; // Get the first part (Ballia)
-        fetchSuggestions_bench(cityName);
-      }
-    }, 100);
-    setTimeout(() => {
-        var defaultLocation = ''; // {!! json_encode(@$default_loc) !!} Ensure proper Blade syntax for JavaScript
-        if (defaultLocation) {
-            tagifylocation.addTags([defaultLocation]); // Add the default location as a tag
-            tagifylocation.dropdown.hide();
-        }
-    }, 2000); // 3 seconds delay
+        window.tagifylocation_bench.on('add', function() {
+            $('#bench_city_suggestions').addClass('d-none').empty();
+        });
+
+        // Click/Mousedown suggestion item -> Add COMPLETE full location tag (e.g. "Noida | Uttar Pradesh | India")
+        $(document).on('mousedown click', '.bench-city-suggestion-item', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            var val = $(this).attr('data-val') || $(this).data('val') || $(this).text();
+            val = val ? val.trim() : '';
+            if (val && window.tagifylocation_bench) {
+                window.tagifylocation_bench.addTags([val]);
+                if (window.tagifylocation_bench.DOM && window.tagifylocation_bench.DOM.input) {
+                    window.tagifylocation_bench.DOM.input.textContent = '';
+                }
+            }
+            $('#bench_city_suggestions').addClass('d-none').empty();
+        });
+
+        // Intercept Enter key when suggestions list is open to select top complete location match
+        $(document).on('keydown', '#kt_tagify_location_bench, .tagify__input', function(e) {
+            if (e.key === 'Enter') {
+                var $visibleItems = $('#bench_city_suggestions .bench-city-suggestion-item');
+                if ($visibleItems.length > 0 && !$('#bench_city_suggestions').hasClass('d-none')) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    var topMatch = $visibleItems.first().attr('data-val') || $visibleItems.first().text();
+                    topMatch = topMatch ? topMatch.trim() : '';
+                    if (topMatch && window.tagifylocation_bench) {
+                        window.tagifylocation_bench.addTags([topMatch]);
+                        if (window.tagifylocation_bench.DOM && window.tagifylocation_bench.DOM.input) {
+                            window.tagifylocation_bench.DOM.input.textContent = '';
+                        }
+                    }
+                    $('#bench_city_suggestions').addClass('d-none').empty();
+                }
+            }
+        });
+
+        $(document).on('mousedown click', function(e) {
+            if (!$(e.target).closest('#kt_tagify_location_bench, #bench_city_suggestions, .tagify').length) {
+                $('#bench_city_suggestions').addClass('d-none');
+            }
+        });
+    }
 
 
 
