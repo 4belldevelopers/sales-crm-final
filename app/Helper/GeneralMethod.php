@@ -10293,7 +10293,7 @@ END:VCALENDAR";
             ->count();
 
         $chkAdminRole = auth()->user()->hasRole('admin');
-
+         
         // $chkAdminRole = DB::table('roles')->select('*')->where('id', $role_id)->where('name', 'admin')->count();
 
         $allow = false;
