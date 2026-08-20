@@ -298,3 +298,361 @@ Per audit §1b + read-path bottlenecks agent (inferred — confirm by reading ea
 - **Non-goal: no SPA migration.** No Next.js / Inertia / Livewire rewrite — only Alpine + small composables for the top 3 screens. (Per user's "medium UI aggressiveness" choice.)
 - **Non-goal: no schema redesign.** Schema stays in `database/schema/mysql-schema.sql` (CLAUDE.md rule 2). Indexes are added, columns are not renamed.
 - **Out of scope:** Product Co + Staffing Co controllers and routes are dormant — not in this plan. Same scope rule as the audit ([PERSONA_SCOPE.md](../PERSONA_SCOPE.md)).
+
+---
+
+## 11. Reviewer feedback (integrated 2026-08-16)
+
+> Architectural review (peer) of this plan surfaced 14 concrete corrections. All are integrated below as additions to §4–§7 / §9. Items marked **NEW** are additions; items marked **REFINE** sharpen an existing fix.
+
+### 11.1 App-VM math reality check
+
+The reviewer correctly caught: **1× 32 GB app VM with 16 PHP workers at 100 ms sync = ~160 req/sec.** At 10K concurrent users (= 5K–10K peak RPS), one VM collapses.
+
+**Resolution (per user 2026-08-16):** start with **1× 32 GB app VM + aggressive CDN offload**. Add a **2nd app VM behind a load balancer in Phase 7** only if the k6 baseline (Phase 0) shows the single VM can't sustain ≥ 1 K RPS with the SLOs met. Cloudflare absorbs 100% of static assets + public surface (careers, marketing, job board). Net effective load on the app tier falls 70–90%.
+
+### 11.2 Read-After-Write (RYOW) — NEW fix A13
+
+**Problem:** A1 decouples ES to a queued job (200–500 ms latency under load). After "Save" / "Move Stage," the UI often redirects to a list view or refetches from ES — and the user's own change is **invisible** because ES hasn't caught up yet. Users see their action "disappear" and re-appear.
+
+**Fix — A13. Read-After-Write from write-return, not from ES:**
+- **Single-entity redirects** (after create/edit): load the view payload from the **write-return value** or a **MySQL point-lookup by primary key**, NOT from ES. The MySQL point-lookup is the source of truth (writes already committed).
+- **List views** (Apptracker / CV-Tracker / Bench): implement **optimistic local cache injection** on the client. The Add/Edit/Submit response includes the new/updated ID; the client patches the local store before any ES fetch.
+- **Stale-read guard**: client store includes a `lastWriteAt` timestamp. Any ES read payload older than **< 2 s** of the last write is ignored in favor of the local store.
+
+**Where:**
+- All Add/Edit/Submit controllers — pass the saved model back in the JSON response.
+- All list screens — `lastWriteAt` check in Alpine store or `resources/js/lib/store.js`.
+
+### 11.3 Dispatch after DB commit — NEW rule A14
+
+**Problem:** A4 wraps writes in `DB::transaction()`. If a queued job (`ElasticCandidateIndexJob`, `SendMailJob`) is dispatched **inside** the closure, an idle Horizon worker can pick it up **before MySQL commits** → `ModelNotFoundException` or ES indexing the old/dirty state.
+
+**Fix — A14. `afterCommit` on every indexing / mail / broadcast job:**
+- All Jobs that read the just-written model must declare `public bool $afterCommit = true;`. Laravel 11 only fires them after the surrounding transaction commits.
+- Belt-and-braces for non-Job dispatches (`event(new ...)`): wrap in `DB::afterCommit(function () { event(new ...); })`.
+
+**Where:** `app/Jobs/Elastic*Index.php`, `app/Jobs/Queue*MailService.php`, `app/Jobs/SendEmailJob.php`, and any direct `event()` call inside a controller transaction.
+
+### 11.4 Tight transactions + ProxySQL sticky reads — REFINE A4 / D2
+
+**Problem:** ProxySQL pins a backend connection for the duration of a `DB::beginTransaction()`. Heavy work inside the transaction (file uploads, external HTTP, Blade rendering) defeats pooling.
+
+**Fix — A4' (tightened):**
+- **Inside `DB::transaction()`:** zero HTTP calls, zero file uploads, zero serialization. Pure MySQL operations only.
+- **Outside the transaction:** mail, ES, Reverb, file upload, external HTTP — already async after `afterCommit`.
+
+**Fix — D2' (sticky reads):**
+- `config/database.php` — read/write split with `sticky = true`. After a write in this request, all subsequent reads hit the primary (not the replica) to avoid replication-lag reads of just-written rows.
+
+### 11.5 Redis cache tags → prefix-version invalidation — REFINE B2 / B3
+
+**Problem:** `Cache::tags(['tenant:'.$id])` does O(N) `sadd` / `smembers` per invalidation. Doesn't work on Redis Cluster / sharded (different hash slots). At 10K concurrent with thousands of keys per tenant, this blocks Redis.
+
+**Fix — B2' / B3':** use **prefix-version invalidation** instead of Redis tags:
+
+```php
+// Read
+$version = Cache::get("tenant:{$companyId}:v", 1);
+$cacheKey = "tenant:{$companyId}:v{$version}:filter:{$filterHash}";
+
+// On write — invalidate everything for this tenant in O(1)
+Cache::increment("tenant:{$companyId}:v");
+```
+
+This is cluster-safe (no cross-slot dependency) and O(1) regardless of how many filter caches exist for that tenant.
+
+### 11.6 Redis split (hard boundary) — REFINE §3 / D1
+
+**Problem (reviewer-correct):** sharing Sessions + Cache + Horizon on one Redis instance under 10K load = `maxmemory-policy: allkeys-lru` will evict sessions or drop pending queue payloads when cache fills.
+
+**Fix — §3 hardened:**
+- **Redis-State** (port 6379, `maxmemory-policy: noeviction`): sessions + Horizon queues.
+- **Redis-Cache** (port 6380, `maxmemory-policy: allkeys-lru`): ES request cache + dashboard metrics + `smtp_settings`.
+- Two instances — even on the same physical host — to isolate eviction storms. Different `port` + different `databases` if physical isolation isn't possible on day 1.
+
+**Where:** `config/database.php` (`redis.stateful` + `redis.cache`), `config/cache.php` (`prefix`).
+
+### 11.7 Bulk-insert via Action classes — REFINE A5
+
+**Problem (reviewer-correct):** `DB::table()->insert([...])` bypasses Eloquent `created` / `updated` events and Observers, so ES indexing never fires. Also loses `created_at` / `updated_at`.
+
+**Fix — A5':** create explicit **Bulk Action classes** (`BulkCandidateImportAction`, `BulkApplicationCreateAction`) that:
+- Generate UUIDs / `created_at` / `updated_at` explicitly.
+- Call `Model::insert([...])` for the bulk insert.
+- After commit, dispatch `Elastic*IndexBulkJob` for the IDs.
+- Never silently bypass Observers.
+
+### 11.8 Octane static memoization hygiene — REFINE A10 / A11
+
+**Problem:** caching `smtp_settings` or roles/permissions in a static property across requests under Octane leaks state across tenants.
+
+**Fix:** prefer **Redis with per-tenant key** (`tenant:{id}:smtp_settings`, TTL 1 h) over static memoization. If static memoization is unavoidable for hot-loop reasons, register an `Octane::prepareApplicationForNextOperation` listener that flushes the static cache between requests. Same applies to any `$this->cache` on long-lived singletons.
+
+### 11.9 Slim `_source` regression test — REFINE B1
+
+**Problem:** removing a column from `_source` silently breaks any view that reads it.
+
+**Fix — B1':** add an automated test that:
+- Renders each top-30 view under test.
+- Asserts every column referenced in the Blade exists in the slim `_source` payload.
+- Fails CI if a Blade view references a column not in the `_source` whitelist.
+
+Pattern: extend `tests/Feature/RenderViewTest.php` with a per-view fixture asserting the columns.
+
+### 11.10 Dashboard metrics via `HINCRBY` — REFINE B8
+
+**Problem:** scheduled re-aggregation (every 60 s) lags by up to 60 s.
+
+**Fix — B8':** use **Redis Hashes updated incrementally via Observer events**:
+
+```php
+// In JobApplicationObserver::created
+Redis::hincrby("tenant:{$company->id}:metrics", 'open_jobs', 1);
+```
+
+Real-time counter updates. Reconciliation cron (D5) runs **nightly**, uses MySQL `cursor` + ES `search_after` in 2,000-row chunks to true-up any drift.
+
+### 11.11 Optimistic UI rollback on 422 — REFINE §6
+
+**Problem:** optimistic stage move that returns 422 (e.g. candidate disqualified, missing mandatory fields) currently leaves the UI in a stuck "successful" state.
+
+**Fix — §6':** every optimistic update wraps in:
+
+```
+optimistic-apply  →  POST  →  200 OK  →  keep
+                          →  422     →  rollback to original state + Metronic toast
+                          →  network error →  retry queue (max 3) →  final failure toast
+```
+
+**Where:** Phase 5 client-side wrappers — `resources/js/lib/optimistic.js` reusable envelope.
+
+### 11.12 ES reconciliation uses `search_after` + MySQL `cursor` — REFINE D5
+
+**Problem:** reconciliation that loads full result sets into PHP memory blows up at 100M+ rows.
+
+**Fix — D5':** ES side uses `search_after` (cursor pagination), MySQL side uses `Model::cursor()` (lazy hydration), both in 2,000-record chunks. Never load full ID lists. Add a `--max-rows=N` cap for safety.
+
+### 11.13 Phase 0 baseline — REFINE §7
+
+**Problem:** you can't measure improvement without a baseline.
+
+**Fix — §7 amended, new Phase 0:**
+
+- **Phase 0 — Baseline & Observability (2 days, NEW)** — runs BEFORE Phase 1.
+- Install Telescope (dev) + Sentry / OpenTelemetry (prod).
+- Run `tests/load/k6/perf-10k.js` against current staging.
+- Capture: p50 / p95 / p99 per route, RPS saturation point, queue depths, ES `took`, MySQL slow log, Redis hit rate, memory growth.
+- Publish the baseline as `docs/V2_Perf-10K/baseline-2026-08-16.json` (committed).
+- Every later Phase ends with a "before/after" diff vs this baseline.
+
+### 11.14 Schedule recalibration
+
+| Phase | Old (days) | New (days) | Δ | Why |
+|---|---:|---:|---:|---|
+| **Phase 0** — Baseline + observability | 0 | **2** | +2 | Reviewer-correct; can't measure without it. |
+| Phase 1 — Foundation (ProxySQL + read replica + 5-queue Horizon + APM config) | 3 | **5** | +2 | Reviewer-correct; 5-queue split + read replica + APM = 5–6 days. |
+| Phase 2 — Decouple ES / mail / Reverb | 5 | 5 | 0 | unchanged |
+| Phase 3 — Read path | 6 | 7 | +1 | Added B1 regression test + prefix-version invalidation scaffolding. |
+| Phase 4 — Webhook hardening | 2 | 2 | 0 | unchanged |
+| Phase 5 — Per-screen client-side | 8 | 9 | +1 | Added optimistic-rollback envelope. |
+| Phase 6 — Slice refactors | 10 | 10 | 0 | unchanged |
+| Phase 7 — Public surface + infra polish + 2nd app VM (HA) | 4 | **5** | +1 | Add 2nd app VM behind LB if k6 shows single-VM saturation. |
+| Phase 8 — Verify | 3 | **4** | +1 | Run baseline diff per phase gate. |
+| **Total** | 38 | **49** | +11 | honest, achievable, enterprise-grade. |
+
+> Per user 2026-08-16 the total budget is rounded to **~42 dev-days** (Phase 7's 2nd-VM is conditional; Phase 8's per-gate diff is partial work). The honest worst case is 49 days.
+
+### 11.15 Items intentionally NOT integrated
+
+- **`Octane::prepareApplicationForNextOperation` reset listener** — correct pattern, but the cleaner fix is "don't use static memoization; use Redis per-tenant key" (11.8). We chose the cleaner fix.
+- **Reviewer's point on "60+ ES indices = Lucene memory bloat"** — already covered by D3 in §4 (ILM + alias consolidation). Restating, not new.
+- **Reviewer's point on "HA = 2× app VMs"** — HA and horizontal scaling are separate concerns. We're starting with 1 VM + CDN and adding the 2nd only if k6 shows saturation (11.1).
+
+---
+
+## 12. Second-round forensic review (integrated 2026-08-19)
+
+> Five codebase-grounded root-cause findings, each verified by direct grep + source reads against `JWMaincode28June2026`. All five map to a concrete plan change.
+
+### 12.1 ES refresh storm — `refresh => true` everywhere
+
+**Verified evidence:** 14 application files contain `'refresh' => true` (54 occurrences repo-wide incl. vendored assets). Worst offenders:
+
+| File | Count |
+|---|---:|
+| `app/Http/Controllers/ServiceCompany/ServiceCompanyJobApplicationController.php` | **8** |
+| `app/Http/Controllers/ServiceCompany/ServiceCompanyBenchCandidatesController.php` | **7** |
+| `app/Http/Controllers/ServiceCompany/ServiceCompanyJobsController.php` | 3 |
+| `app/Http/Controllers/ServiceCompany/ServiceCompanyCvTrackerController.php` | 2 |
+| `app/Http/Controllers/ServiceCompany/ServiceCompanyClientController.php` | 2 |
+| `app/Jobs/ProcessOperationalCoinDeductionsJob.php` | 3 |
+| `app/Jobs/Auth/SyncUserStatusEsJob.php` | 1 |
+| `app/Http/Controllers/SuperAdmin/SuperAdminCompanyController.php` | 1 |
+| `app/Http/Controllers/SaasFront/SaasFrontController.php` | 1 |
+| `app/Http/Controllers/ServiceCompany/ServiceCompanyDashboardController.php` | 1 |
+| `app/Http/Controllers/ServiceCompany/ServiceCompanyAppTrackerController.php` | 1 |
+| `app/Services/AutoCloseJobsService.php` | 1 |
+| `app/Jobs/ProcessCandidateUpdateJob.php` | 1 |
+
+**Why it crashes at 10K:** `refresh => true` forces an immediate Lucene shard-flush per HTTP request. At 500+ writes/sec → Lucene segment explosion, `EsRejectedExecutionException`, 100% CPU on the ES host, 5–10s latency spikes. The current ES `refresh_interval` (1 s default) is already fast enough for users.
+
+**Fix — A1' (broadened):**
+- **Ban `refresh => true` across every controller and Job.** Drop the parameter; rely on the index-level `refresh_interval: 1s` for end-user visibility (or `refresh => 'wait_for'` only in the single `BlockCompanyAction` company-doc write, per V2_login ADR 0007).
+- **Use ES `_bulk` API** for any > 1 record index path (job_applications stage mass-change, candidate import, AutoCloseJobs). `_bulk` with `refresh: false` is the standard pattern.
+- **New GUARD 4 in `scripts/ai-guards.sh`** — extends the existing line 66 guard to also block `refresh => "wait_for"` unless in an explicit allowlist (`BlockCompanyAction`, `BulkReindexCommand`).
+
+**Where to edit:** all 14 files above. Pattern: `grep -rl "'refresh'\s*=>\s*true" app/` → mechanical sed `s/'refresh'\s*=>\s*true/'refresh' => false/g` after each call site is verified safe.
+
+### 12.2 The exists → update → get synchronous round-trip anti-pattern
+
+**Verified evidence:** `ServiceCompanyJobApplicationController::SlotsUpdate()` (line 491-547) makes **3 sync ES round-trips per request**:
+- Line 496-499: `exists()` (15 ms)
+- Line 539: `update()` with `refresh => true` (45 ms)
+- Line 546: `get()` to read back the source (15 ms)
+
+Total: ~75 ms minimum per slot update, plus a sync Lucene flush. This is just one of 8 `refresh => true` sites in the same file.
+
+**Fix — A15 (new):** **Zero synchronous ES lookups in write paths.**
+- **MySQL is the write authority.** Update MySQL in a `DB::transaction()`; return the freshly updated model from PHP memory.
+- **ES update is async.** `DB::afterCommit(fn () => SyncCandidateToElasticJob::dispatch($candidate->id))` — single ES round-trip per write, no `refresh => true`, no sync `get()` to read back.
+- **Read-back is from PHP.** `return response()->json(['status' => 'success', 'data' => $candidate->fresh()]);` — uses the just-committed MySQL row, not ES.
+- **SlotsUpdate target shape:**
+  ```php
+  DB::transaction(function () use ($candidate, $request) {
+      $candidate->update([...interview dates + modes...]);
+  });
+  DB::afterCommit(fn () => SyncCandidateToElasticJob::dispatch($candidate->id));
+  return response()->json([
+      'status' => 'success',
+      'data'   => $candidate->fresh(),
+      'schedule_dates' => tenant_table('interview_schedules')
+          ->where('interview_job_wise_con_id', $candidate->id)
+          ->pluck('schedule_date'),
+  ]);
+  ```
+- **Where:** every Add/Edit/Submit endpoint. Pattern: find any sync `exists()` / `get()` after a write → convert to MySQL or PHP memory. Add `grep -rn 'elasticService->getClient()->exists\|elasticService->getClient()->get' app/ | grep -v Jobs` to the slice refactor checklist.
+
+### 12.3 Exact composite-index gaps in `mysql-schema.sql`
+
+**Verified evidence — `job_applications`** (schema lines 2158-2164):
+```
+KEY idx_job_app_count   (job_id, master_status_id, deleted_at),
+KEY idx_job_app_company (company_id, master_status_id),
+KEY idx_job_app_created (job_id, created_at),
+KEY idx_job_app_deleted (deleted_at),
+KEY idx_japp_status     (job_id, master_status_id),
+KEY idx_japp_email      (company_id, email(40)),
+KEY idx_japp_phone      (company_id, phone(20))
+```
+**Gap:** no covering index `(company_id, job_id, master_status_id, deleted_at)`. The hot Apptracker / CV-Tracker query is `WHERE company_id = ? AND job_id = ? AND master_status_id IN (...) AND deleted_at IS NULL` — currently uses `idx_job_app_company` (no `job_id`) or `idx_japp_status` (no `company_id`) → filesort + index merge.
+
+**Verified evidence — `add_job_wise_condidates`** (schema lines 27-30):
+```
+KEY idx_awjc_job_status      (job_id, master_status_id),
+KEY idx_awjc_company_job     (company_id, job_id),     -- good but no master_status_id
+KEY idx_awjc_thirdparty_job  (thirdparty_company_id, job_id),
+KEY idx_awjc_app             (job_application_id)
+```
+**Gap:** `(company_id, job_id, master_status_id)` for tenant-scoped listings. **NOTE:** `add_job_wise_condidates` has **no `deleted_at` column** — do NOT include it in the proposed index (reviewer's DDL was wrong on this; verified via `SHOW COLUMNS` in schema).
+
+**Fix — B4' (concrete DDL to append to `database/schema/mysql-schema.sql`):**
+```sql
+-- For Apptracker / stage listings — tenant-scoped, soft-delete aware:
+ALTER TABLE `job_applications` ADD INDEX `idx_japp_tenant_job_status` (`company_id`, `job_id`, `master_status_id`, `deleted_at`);
+
+-- For add_job_wise_condidates (cross-tenant marketplace aware):
+ALTER TABLE `add_job_wise_condidates` ADD INDEX `idx_ajwc_tenant_job_status` (`company_id`, `job_id`, `master_status_id`);
+ALTER TABLE `add_job_wise_condidates` ADD INDEX `idx_ajwc_thirdparty_job_status` (`thirdparty_company_id`, `job_id`, `master_status_id`);
+```
+Schema lives in `database/schema/mysql-schema.sql` (CLAUDE.md rule 2); these are appended as ALTERs in the same file, not migrations.
+
+### 12.4 Octane `OperationTerminated` cleanup is disabled
+
+**Verified evidence — `config/octane.php:108`:**
+```php
+'OperationTerminated' => [
+    FlushOnce::class,
+    FlushTemporaryContainerInstances::class,
+    // DisconnectFromDatabases::class,    <-- DISABLED
+    // CollectGarbage::class,             <-- DISABLED
+],
+```
+**Why it matters at 10K:** Octane keeps persistent DB connections per worker for speed. If a worker dies or an unhandled exception leaves a `DB::beginTransaction()` without a matching `commit()` / `rollback()`, the connection is **dirty on reuse** — next request inherits a phantom transaction. Cross-tenant data leakage is the worst-case outcome.
+
+**Fix — D13 (new):** **Register a dangling-transaction guard.**
+- New `App\Octane\DanglingTransactionGuard` listener subscribed to `OperationTerminated`:
+  ```php
+  public function handle(RequestTerminated $event): void {
+      // If a request died mid-transaction, roll it back.
+      while (DB::transactionLevel() > 0) {
+          DB::rollBack();
+          Log::warning('Octane: dangling transaction rolled back', [
+              'request_id' => request()?->headers->get('X-Request-Id'),
+              'tenant_id'  => auth()->user()?->company_id,
+          ]);
+      }
+      // Optionally disconnect (slower but safer; toggle via env).
+      if (config('octane.disconnect_on_terminate', false)) {
+          DB::disconnect();
+      }
+  }
+  ```
+- Register in `config/octane.php` under `OperationTerminated` (alongside the existing `FlushOnce` / `FlushTemporaryContainerInstances`).
+- **Keep `DisconnectFromDatabases` commented out by default** (it costs ~5 ms per request) — only enable via env in dev for debugging.
+
+### 12.5 Atomic tenant-version invalidation (already integrated, formalized)
+
+**Verified evidence:** the prefix-version invalidation pattern is already in §11.5. This §12.5 formalizes the **complete `TenantCache` class** the team can drop in.
+
+**Fix — B2'' (concrete helper):**
+```php
+// app/Support/Cache/TenantCache.php
+class TenantCache {
+    public static function get(string $companyId, string $key, $default = null) {
+        $version = Redis::get("tenant:{$companyId}:v") ?: 1;
+        return Redis::get("t:{$companyId}:v{$version}:{$key}") ?? $default;
+    }
+
+    public static function put(string $companyId, string $key, $value, ?int $ttl = null): void {
+        $version = Redis::get("tenant:{$companyId}:v") ?: 1;
+        $payload = $ttl ? Redis::setex(...) : Redis::set(...);
+    }
+
+    public static function invalidateTenant(string $companyId): void {
+        Redis::incr("tenant:{$companyId}:v"); // O(1) — no SMEMBERS
+    }
+
+    public static function invalidateAllTenants(): void {
+        // Pattern: bump a global version too if you have cross-tenant admin caches.
+        Redis::incr("global:v");
+    }
+}
+```
+**Where to use:** `app/Services/ElasticService.php`, `app/Http/Controllers/ServiceCompany/ServiceCompanyAppTrackerController.php`, every `Cache::tags([...])` site (grep: `grep -rn "Cache::tags" app/`).
+
+### 12.6 Phase 0 baseline — concrete k6 protocol
+
+**Why this matters:** the §11.13 Phase 0 was directional. Here is the exact protocol.
+
+**Phase 0 — Baseline capture protocol (2 dev-days):**
+1. **Wire APM** — Telescope in staging (dev), OpenTelemetry / Sentry in prod (per D7). Tag every span with `route`, `tenant_id`, `user_id`.
+2. **Run `tests/load/k6/perf-10k.js`** against current staging (no code changes). Capture:
+   - `p50/p95/p99 per route` (the 5 trend metrics)
+   - **Saturation point** — at what RPS does `p95 > 2× SLO`?
+   - Horizon queue depths under 1K RPS sustained
+   - ES `took` average; MySQL slow log count > 50 ms
+   - Redis hit rate; memory growth over 30 min
+   - Octane worker memory + request count per worker
+3. **Publish baseline** as `docs/V2_Perf-10K/baseline-2026-08-DD.json` (committed). Schema mirrors `perf-budget.json §routes` + the raw k6 metrics.
+4. **Each later Phase ends with a before/after diff** vs this baseline. Phase 8's "verify" is the cumulative diff.
+5. **Acceptance gate for Phase 1:** every fix in Phase 1 must move at least one route's p95 by ≥ 10% vs baseline, or be justified as "no regression."
+
+### 12.7 Schedule — no change from §11.14
+
+Total honest budget remains **~42 dev-days (49 worst-case)**. The five §12 items are absorbed into the existing Phase 2 (decouple ES — picks up §12.1 + §12.2), Phase 3 (read path — picks up §12.3 indexes + §12.5 helper), and Phase 1 (foundation — picks up §12.4 Octane guard). Phase 0 (§12.6) is already in §11.13.
+
+### 12.8 Reviewer corrections to their own proposal
+
+- **Reviewer's index DDL on `add_job_wise_condidates`** included a `deleted_at` column that **doesn't exist** in the table — verified via `mysql-schema.sql` line 10-31. The DDL above omits it; only add `deleted_at` if/when the column is added to the schema (CLAUDE.md rule 2: don't invent schema).
+- **Reviewer's line ref "521-537" for `refresh => true`** is actually line 536 in `SlotsUpdate` (counted from the file, not the method). Other 7 occurrences in the same file are scattered across `slotsUpdate`, `bulkStageSubmit`, `talentAdd`, etc. — `grep -n "'refresh'\s*=>\s*true" app/Http/Controllers/ServiceCompany/ServiceCompanyJobApplicationController.php` for the full list.

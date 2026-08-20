@@ -1,7 +1,7 @@
 {
   "$schema": "https://jero.works/schemas/perf-budget/v1",
-  "version": "1.0.0",
-  "date": "2026-08-16",
+  "version": "1.2.0",
+  "date": "2026-08-19",
   "scope": "in-scope personas only (Service Co, Super Admin, Admin, Front/SaasFront/Auth). Product Co + Staffing Co are dormant.",
   "global_targets": {
     "page_ttfb_p95_ms": 200,
@@ -27,7 +27,9 @@
       "max_connections": 2000,
       "proxysql_effective_server_connections": 250,
       "innodb_log_file_size_gb": 4,
-      "slow_log_threshold_ms": 50
+      "slow_log_threshold_ms": 50,
+      "sticky_reads_after_writes": true,
+      "note": "config/database.php read/write split with sticky=true — after a write in the same request, all subsequent reads hit primary to avoid replica lag reading just-written rows."
     },
     "elasticsearch": {
       "jvm_heap_gb": 16,
@@ -37,18 +39,31 @@
       "ilm_policies": ["hot", "warm", "cold", "delete"]
     },
     "app": {
+      "topology": "1× 32 GB VM start; add 2nd VM behind load balancer in Phase 7 only if k6 baseline shows saturation",
+      "vms_to_throughput_math": "1× 32 GB VM ≈ 16 workers @ 100 ms sync ≈ 160 req/sec on its own; CDN absorbs 70–90% of public traffic so effective app-tier load at 10K concurrent is much lower than raw 10K RPS",
       "octane_server": "frankenphp",
       "octane_workers": "nproc - 1",
       "per_worker_memory_cap_gb": 2,
       "max_requests_per_worker": 5000,
       "composer_preload": true,
-      "caches": ["config", "routes", "views"]
+      "caches": ["config", "routes", "views"],
+      "static_memoization": "forbidden — use Redis per-tenant key (tenant:{id}:key) instead; if unavoidable, register Octane::prepareApplicationForNextOperation to flush between requests"
     },
     "redis": {
-      "purpose": "cache + session + queue",
-      "isolation": "sessions and cache MUST live on separate instances or use key prefixes to prevent eviction storm from killing sessions",
-      "session_driver": "redis",
-      "cache_store": "redis"
+      "topology": "two-instances (different ports), even on same host",
+      "redis_stateful": {
+        "port": 6379,
+        "purpose": "sessions + Horizon queues",
+        "maxmemory_policy": "noeviction",
+        "session_driver": "redis"
+      },
+      "redis_cache": {
+        "port": 6380,
+        "purpose": "ES request cache + dashboard metrics + smtp_settings + tenant_config",
+        "maxmemory_policy": "allkeys-lru",
+        "cache_store": "redis",
+        "invalidation_strategy": "prefix-version (tenant:{id}:v{n} + Cache::increment on write). NOT Redis tags (cluster-unsafe, O(N))."
+      }
     },
     "cdn": {
       "provider": "cloudflare",
@@ -63,7 +78,7 @@
       "page_ttfb_p95_ms": 300,
       "datatables_ajax_p95_ms": 250,
       "max_queries": 3,
-      "cache": { "driver": "redis", "tags": ["tenant:{id}", "apptracker:filters"], "ttl_s": 60 },
+      "cache": { "driver": "redis", "key_prefix": "tenant:{id}:v{version}:apptracker:filters", "invalidation": "prefix-version (Cache::increment tenant:{id}:v on write)", "ttl_s": 60 },
       "phase": 5
     },
     "service_apptracker_ajax": {
@@ -71,7 +86,7 @@
       "uri": "service-company/apptracker/_ajax",
       "datatables_ajax_p95_ms": 250,
       "max_queries": 1,
-      "cache": { "driver": "redis", "tags": ["tenant:{id}", "apptracker:list"], "ttl_s": 60 },
+      "cache": { "driver": "redis", "key_prefix": "tenant:{id}:v{version}:apptracker:list", "invalidation": "prefix-version", "ttl_s": 60 },
       "phase": 3
     },
     "service_cvtracker_index": {
@@ -80,7 +95,7 @@
       "page_ttfb_p95_ms": 250,
       "datatables_ajax_p95_ms": 250,
       "max_queries": 3,
-      "cache": { "driver": "redis", "tags": ["tenant:{id}", "cvtracker:filters"], "ttl_s": 60 },
+      "cache": { "driver": "redis", "key_prefix": "tenant:{id}:v{version}:cvtracker:filters", "invalidation": "prefix-version", "ttl_s": 60 },
       "phase": 5
     },
     "service_cvtracker_ajax": {
@@ -88,7 +103,7 @@
       "uri": "service-company/cvtracker/_ajax",
       "datatables_ajax_p95_ms": 250,
       "max_queries": 1,
-      "cache": { "driver": "redis", "tags": ["tenant:{id}", "cvtracker:list"], "ttl_s": 60 },
+      "cache": { "driver": "redis", "key_prefix": "tenant:{id}:v{version}:cvtracker:list", "invalidation": "prefix-version", "ttl_s": 60 },
       "phase": 3
     },
     "service_bench_candidates_index": {
@@ -97,7 +112,7 @@
       "page_ttfb_p95_ms": 200,
       "datatables_ajax_p95_ms": 200,
       "max_queries": 3,
-      "cache": { "driver": "redis", "tags": ["tenant:{id}", "bench:list"], "ttl_s": 60 },
+      "cache": { "driver": "redis", "key_prefix": "tenant:{id}:v{version}:bench:list", "invalidation": "prefix-version", "ttl_s": 60 },
       "phase": 5
     },
     "service_job_edit": {
@@ -113,7 +128,7 @@
       "uri": "service-company/jobs/update/{id}",
       "post_p95_ms": 100,
       "max_queries": 1,
-      "side_effects": ["queue:indexing", "queue:mail"],
+      "side_effects": ["queue:indexing (after_commit=true)", "queue:mail (after_commit=true)"],
       "phase": 2
     },
     "service_job_application_edit": {
@@ -129,7 +144,8 @@
       "uri": "service-company/job-applications/stage_submit",
       "post_p95_ms": 100,
       "max_queries": 1,
-      "side_effects": ["queue:indexing", "broadcast:reverb"],
+      "side_effects": ["queue:indexing (after_commit=true)", "broadcast:reverb (after_commit=true)"],
+      "read_after_write": "client uses optimistic local cache injection; ES read with lastWriteAt < 2s guard prefers local store",
       "phase": 2
     },
     "service_job_application_status_update": {
@@ -137,7 +153,8 @@
       "uri": "service-company/job-applications/statusupdate",
       "post_p95_ms": 100,
       "max_queries": 1,
-      "side_effects": ["queue:indexing", "broadcast:reverb"],
+      "side_effects": ["queue:indexing (after_commit=true)", "broadcast:reverb (after_commit=true)"],
+      "read_after_write": "optimistic local cache injection + 422 rollback via Metronic toast",
       "phase": 2
     },
     "service_apptracker_store_bulk": {
@@ -145,8 +162,8 @@
       "uri": "service-company/apptracker/store",
       "post_p95_ms": 200,
       "max_queries": 1,
-      "side_effects": ["queue:indexing (bulk)"],
-      "bulk_insert": true,
+      "side_effects": ["queue:indexing (bulk, after_commit=true)"],
+      "bulk_insert": "explicit Bulk Action class (BulkCandidateImportAction) generates UUIDs + timestamps, Model::insert(), then dispatches Elastic*IndexBulkJob. Never bypasses Observers via DB::table()->insert().",
       "phase": 2
     },
     "service_team_store": {
@@ -155,7 +172,7 @@
       "post_p95_ms": 100,
       "max_queries": 1,
       "transaction": true,
-      "side_effects": ["queue:mail"],
+      "side_effects": ["queue:mail (after_commit=true)"],
       "phase": 1
     },
     "service_role_save": {
@@ -163,7 +180,7 @@
       "uri": "service-company/role-permission/saveRole",
       "post_p95_ms": 100,
       "max_queries": 1,
-      "side_effects": ["cache:invalidate:role_user"],
+      "side_effects": ["cache:invalidate:role_user (prefix-version increment tenant:{id}:v)"],
       "phase": 1
     },
     "superadmin_company_list_ajax": {
@@ -171,7 +188,7 @@
       "uri": "super-admin/company/_ajax",
       "datatables_ajax_p95_ms": 200,
       "max_queries": 1,
-      "cache": { "driver": "redis", "tags": ["companies:list"], "ttl_s": 60 },
+      "cache": { "driver": "redis", "key_prefix": "global:v{version}:companies:list", "invalidation": "prefix-version (global scope, increment on any company write)", "ttl_s": 60 },
       "phase": 3
     },
     "superadmin_company_edit": {
@@ -202,7 +219,7 @@
       "uri": "verify-billing-ipn",
       "post_p95_ms": 50,
       "max_queries": 0,
-      "side_effects": ["queue:webhooks (verify + write)"],
+      "side_effects": ["queue:webhooks (verify + write, after_commit=true)"],
       "idempotency": "24h",
       "phase": 4
     },
@@ -211,7 +228,7 @@
       "uri": "save-invoices",
       "post_p95_ms": 50,
       "max_queries": 0,
-      "side_effects": ["queue:webhooks"],
+      "side_effects": ["queue:webhooks (after_commit=true)"],
       "idempotency": "24h",
       "phase": 4
     },
@@ -220,7 +237,7 @@
       "uri": "save-razorpay-invoices",
       "post_p95_ms": 50,
       "max_queries": 0,
-      "side_effects": ["queue:webhooks"],
+      "side_effects": ["queue:webhooks (after_commit=true)"],
       "idempotency": "24h",
       "phase": 4
     },
@@ -229,7 +246,7 @@
       "uri": "payment-callback",
       "post_p95_ms": 50,
       "max_queries": 0,
-      "side_effects": ["queue:webhooks"],
+      "side_effects": ["queue:webhooks (after_commit=true)"],
       "idempotency": "24h",
       "phase": 4
     },
@@ -238,7 +255,7 @@
       "uri": "send-otp-code",
       "post_p95_ms": 200,
       "max_queries": 1,
-      "side_effects": ["queue:mail"],
+      "side_effects": ["queue:mail (after_commit=true)"],
       "phase": 5
     },
     "public_career_apply": {
@@ -247,7 +264,7 @@
       "post_p95_ms": 200,
       "max_queries": 1,
       "transaction": true,
-      "side_effects": ["queue:indexing", "queue:mail"],
+      "side_effects": ["queue:indexing (after_commit=true)", "queue:mail (after_commit=true)"],
       "phase": 5
     },
     "public_save_offer": {
@@ -264,7 +281,7 @@
       "post_p95_ms": 300,
       "max_queries": 1,
       "transaction": true,
-      "side_effects": ["queue:indexing (bulk)", "queue:mail"],
+      "side_effects": ["queue:indexing (bulk, after_commit=true)", "queue:mail (after_commit=true)"],
       "phase": 7
     }
   },
@@ -280,10 +297,77 @@
   },
   "client_side_patterns": {
     "optimistic_ui": ["stage_submit", "status_update", "recruiter reassign"],
+    "optimistic_rollback_envelope": "every optimistic write wraps in optimistic-apply → POST → 200 keep / 422 rollback + Metronic toast / network-error retry-queue (max 3) → final failure toast. Implemented in resources/js/lib/optimistic.js.",
+    "last_write_at_guard_ms": 2000,
     "debounced_autosave_ms": 1000,
     "virtualized_rows_trigger": 200,
     "local_filter_cache_combos": 50,
     "fetch_on_mount_tabs": ["job-applications/edit (Overview/Stage/Offer/Resume/Interview)"]
+  },
+  "read_after_write_strategy": {
+    "single_entity_redirects": "load view payload from write-return value or MySQL point-lookup by primary key (source of truth). NOT from ES.",
+    "list_views": "optimistic local cache injection — Add/Edit/Submit response includes new/updated ID; client patches local store before any ES fetch.",
+    "stale_read_guard": "client store tracks lastWriteAt; any ES read payload older than < 2s of last write is ignored in favor of local store."
+  },
+  "queue_dispatch_rules": {
+    "after_commit": "all indexing/mail/broadcast jobs dispatched inside DB::transaction() MUST declare `public bool $afterCommit = true;`. Direct event() calls inside transactions MUST be wrapped in DB::afterCommit()."
+  },
+  "dashboard_counters": {
+    "pattern": "Redis HINCRBY via Observer events (e.g. JobApplicationObserver::created → HINCRBY tenant:{id}:metrics open_jobs 1).",
+    "reconciliation": "nightly command uses ES search_after + MySQL Model::cursor() in 2000-row chunks to true-up drift; never load full ID lists."
+  },
+  "regression_tests": {
+    "slim_source_guard": "tests/Feature/RenderViewTest.php renders each top-30 view and asserts every column referenced in Blade exists in the slim _source payload. Fails CI if a view references a column not in the whitelist."
+  },
+  "es_refresh_discipline": {
+    "ban_refresh_true_in_http_path": true,
+    "ban_refresh_wait_for_in_http_path": "unless explicitly allowlisted (BlockCompanyAction, BulkReindexCommand)",
+    "bulk_api_threshold": "any > 1 record index path uses _bulk API",
+    "lint_guard": "scripts/ai-guards.sh GUARD 4 — broadened to ban both 'refresh' => true AND 'refresh' => 'wait_for' outside allowlist",
+    "default_refresh_interval": "1s (index-level, not per-call)",
+    "current_violation_count_app_files": 14
+  },
+  "es_zero_sync_lookup_in_write_paths": {
+    "rule": "no sync elasticService->getClient()->exists() or ->get() in the request path of a write endpoint. MySQL is write authority; ES update is async (after_commit dispatch); read-back is from PHP memory or MySQL point-lookup.",
+    "verified_violations": [
+      "app/Http/Controllers/ServiceCompany/ServiceCompanyJobApplicationController.php::SlotsUpdate (3 sync roundtrips: exists → update with refresh:true → get)"
+    ]
+  },
+  "covering_indexes_ddl": {
+    "note": "schema lives in database/schema/mysql-schema.sql (CLAUDE.md rule 2); these ALTERs are appended there, not as migrations.",
+    "add_to_job_applications": "ALTER TABLE `job_applications` ADD INDEX `idx_japp_tenant_job_status` (`company_id`, `job_id`, `master_status_id`, `deleted_at`);",
+    "add_to_add_job_wise_condidates": [
+      "ALTER TABLE `add_job_wise_condidates` ADD INDEX `idx_ajwc_tenant_job_status` (`company_id`, `job_id`, `master_status_id`);",
+      "ALTER TABLE `add_job_wise_condidates` ADD INDEX `idx_ajwc_thirdparty_job_status` (`thirdparty_company_id`, `job_id`, `master_status_id`);"
+    ],
+    "note_add_job_wise_condidates_has_no_deleted_at_column": "verified — reviewer's DDL omitted this; do NOT include deleted_at in the index"
+  },
+  "octane_dangling_transaction_guard": {
+    "rule": "register App\\Octane\\DanglingTransactionGuard listener on OperationTerminated event. If DB::transactionLevel() > 0 at request end, issue DB::rollBack() per level + log warning with tenant_id.",
+    "config_octane_current_state": "config/octane.php:108 — DisconnectFromDatabases + CollectGarbage are commented out. DanglingTransactionGuard added alongside existing FlushOnce + FlushTemporaryContainerInstances.",
+    "disconnect_on_terminate_default": false,
+    "tenant_data_leak_risk_if_unguarded": "high at 10K concurrent — dirty connection reuse can leak across tenants"
+  },
+  "tenant_cache_helper": {
+    "class": "app/Support/Cache/TenantCache.php",
+    "methods": ["get($companyId, $key)", "put($companyId, $key, $value, $ttl)", "invalidateTenant($companyId) — Redis::incr O(1)", "invalidateAllTenants() — global:v bump"],
+    "replaces": "Cache::tags(['tenant:'.$id]) usage everywhere (grep -rn 'Cache::tags' app/)",
+    "cluster_safe": true,
+    "complexity": "O(1) on invalidation regardless of cache size"
+  },
+  "phase_0_baseline_protocol": {
+    "wire_apm": "Telescope (staging/dev) + OpenTelemetry/Sentry (prod)",
+    "run_k6": "tests/load/k6/perf-10k.js against current staging with no code changes",
+    "capture_metrics": [
+      "p50/p95/p99 per route (5 trend metrics)",
+      "saturation point (RPS at which p95 > 2× SLO)",
+      "Horizon queue depths under 1K RPS sustained",
+      "ES took avg + MySQL slow log count > 50 ms",
+      "Redis hit rate + memory growth over 30 min",
+      "Octane worker memory + request count per worker"
+    ],
+    "publish_baseline": "docs/V2_Perf-10K/baseline-2026-08-DD.json (committed)",
+    "acceptance_gate_for_phase_1": "every Phase 1 fix must move at least one route's p95 by ≥ 10% vs baseline, or be justified as 'no regression'"
   },
   "load_test_targets": {
     "ramp_to_rps": 10000,
@@ -302,14 +386,17 @@
     "server_cpu_pct": 60
   },
   "phase_estimates_dev_days": {
-    "phase_1_foundation": 3,
+    "phase_0_baseline_observability": 2,
+    "phase_1_foundation": 5,
     "phase_2_decouple_es_mail_reverb": 5,
-    "phase_3_read_path": 6,
+    "phase_3_read_path": 7,
     "phase_4_webhook_hardening": 2,
-    "phase_5_per_screen_client_side": 8,
+    "phase_5_per_screen_client_side": 9,
     "phase_6_slice_refactors": 10,
-    "phase_7_public_surface_infra_polish": 4,
-    "phase_8_verify": 3,
-    "total": 38
+    "phase_7_public_surface_infra_polish": 5,
+    "phase_8_verify": 4,
+    "total_planned": 49,
+    "total_with_conditional_skip": 42,
+    "notes": "Phase 0 is NEW (baseline + APM + k6 baseline capture — runs BEFORE Phase 1). Phase 1 grew from 3→5 (5-queue split + read replica + APM config + ProxySQL is 5–6 days). Phase 7 conditional: 2nd app VM only if Phase 0 baseline shows single-VM saturation. Worst case 49 days; honest budget 42 days."
   }
 }
