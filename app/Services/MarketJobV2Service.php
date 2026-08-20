@@ -237,25 +237,62 @@ class MarketJobV2Service
             }
         }
 
-        // Preferred Location Filter (Intent: matches client_city_jobs.city_name/country_name, client_location.address, or text match on description/title)
+        // Preferred Location Filter (Intent: matches nested client_city_jobs.city_name/country_name, client_location.address, or text match on description/title)
         if (! empty($requiredLocations)) {
             $locationQueries = [];
             foreach ($requiredLocations as $loc) {
-                $locClean = strtolower(trim($loc));
-                if (empty($locClean)) {
+                $rawLoc = trim($loc);
+                if (empty($rawLoc)) {
                     continue;
+                }
+
+                // Extract primary city search term (e.g. "Noida" from "Noida | Uttar Pradesh | India" or "Noida, India")
+                $cityTerm = $rawLoc;
+                if (str_contains($rawLoc, '|')) {
+                    $parts = array_filter(array_map('trim', explode('|', $rawLoc)));
+                    $cityTerm = reset($parts) ?: $rawLoc;
+                } elseif (str_contains($rawLoc, ',')) {
+                    $parts = array_filter(array_map('trim', explode(',', $rawLoc)));
+                    $cityTerm = reset($parts) ?: $rawLoc;
+                }
+                $cityClean = strtolower(trim($cityTerm));
+
+                if (empty($cityClean)) {
+                    continue;
+                }
+
+                $shouldClauses = [
+                    // 1. Nested match on client_city_jobs (exact city or country match)
+                    [
+                        'nested' => [
+                            'path' => 'client_city_jobs',
+                            'query' => [
+                                'bool' => [
+                                    'should' => [
+                                        ['term' => ['client_city_jobs.city_name' => $cityClean]],
+                                        ['match_phrase' => ['client_city_jobs.city_name' => $cityClean]],
+                                        ['term' => ['client_city_jobs.country_name' => $cityClean]],
+                                        ['match_phrase' => ['client_city_jobs.country_name' => $cityClean]],
+                                    ],
+                                    'minimum_should_match' => 1,
+                                ],
+                            ],
+                        ],
+                    ],
+                    // 2. Direct address match on client_location address
+                    ['match_phrase' => ['client_location.address' => $cityClean]],
+                    // 3. Fallback text matches on title or job description
+                    ['match_phrase' => ['job_description' => $cityClean]],
+                    ['match_phrase' => ['title' => $cityClean]],
+                ];
+
+                if ($cityClean === 'remote') {
+                    $shouldClauses[] = ['term' => ['work_type' => 'yes']];
                 }
 
                 $locationQueries[] = [
                     'bool' => [
-                        'should' => [
-                            ['match' => ['client_city_jobs.city_name' => $locClean]],
-                            ['match' => ['client_city_jobs.country_name' => $locClean]],
-                            ['wildcard' => ['client_city_jobs.city_name' => '*'.$locClean.'*']],
-                            ['match' => ['client_location.address' => $locClean]],
-                            ['match_phrase' => ['job_description' => $locClean]],
-                            ['match_phrase' => ['title' => $locClean]],
-                        ],
+                        'should' => $shouldClauses,
                         'minimum_should_match' => 1,
                     ],
                 ];
