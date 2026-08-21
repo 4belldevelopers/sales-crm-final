@@ -746,8 +746,11 @@ class JobService
 
             // Recruiters
             if (! empty($requestData['recruiter']) && ! empty($requestData['recruiter_id'])) {
-                DB::table('job_assign')->where('job_id', $job->id)->where('company_id', $user->company_id)->delete();
+                                
                 $recruiterArr = array_map('trim', explode(',', $requestData['recruiter_id']));
+                // DB::table('job_assign')->where('job_id', $job->id)->where('company_id', $user->company_id)->delete();
+                DB::table('job_assign')->where('job_id', $job->id)->where('company_id', $user->company_id)->whereNotIn('user_id', $recruiterArr)->delete();
+
                 $recUsers = DB::table('users')
                     ->select('id')
                     ->where('company_id', $user->company_id)
@@ -758,15 +761,31 @@ class JobService
 
                 $batchRecInsert = [];
                 foreach ($recruiterArr as $key => $recId) {
+
                     $recRow = $recUsers->get($recId);
-                    if ($recRow) {
+
+                    if (!$recRow) {
+                        continue;
+                    }
+
+                    $exists = DB::table('job_assign')
+                        ->where('job_id', $job->id)
+                        ->where('company_id', $user->company_id)
+                        ->where('user_id', $recRow->id)
+                        ->exists();
+
+                    if (!$exists) {
+
                         $batchRecInsert[] = [
-                            'company_id' => $user->company_id,
-                            'user_id' => $recRow->id,
+                            'company_id'   => $user->company_id,
+                            'user_id'      => $recRow->id,
                             'spok_user_id' => ($key === 0) ? $recRow->id : null,
-                            'job_id' => $job->id,
+                            'job_id'       => $job->id,
                         ];
-                        GeneralMethod::cacheClean('alljobslist_version_user_'.$recRow->id);
+
+                        GeneralMethod::cacheClean(
+                            'alljobslist_version_user_' . $recRow->id
+                        );
                     }
                 }
                 if (count($batchRecInsert) > 0) {
