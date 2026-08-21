@@ -199,14 +199,14 @@
                 $employment_type = 'Contract';
                 $badgeemploymenttype = "badge-contract";
             }
-            $created_at = $row->created_at;
+            $created_at = $row->created_at ?? null;
             $newDate = GeneralMethod::ymdTodmyNotTime($created_at);
             $skillArrFinal =[];
             $skillArr = [];
             $skilltag = '';
             $skilltagclass = '';
-            if(collect($row->job_metronics_skills)->isNotEmpty()) {
-                $skillArr = $row->job_metronics_skills;
+            if(collect($row->job_metronics_skills ?? [])->isNotEmpty()) {
+                $skillArr = $row->job_metronics_skills ?? [];
             }
            if (!empty($skillArr)) {
                 foreach ($skillArr as $sval) {
@@ -220,7 +220,8 @@
             $country_id = $country_name = '';
             $jobid = $row->id;
             
-            $client_city_jobs = $row->client_city_jobs;
+            // Safely retrieve client_city_jobs using null coalescing operator
+            $client_city_jobs = $row->client_city_jobs ?? [];
             $jobCitySelected = is_array($client_city_jobs) ? count($client_city_jobs) : 0;
             $firstCity = collect($client_city_jobs)->first();
                            
@@ -230,13 +231,13 @@
             $country_name = mb_substr(@$countryName, 0, 6);
 
             $total_positions = '';
-            $total_positions = number_format($row->total_positions);
+            $total_positions = number_format($row->total_positions ?? 0);
             $hiringManager = $hiringManagerdesignation = $hiringManagerCompany = '--------';
-            if(count($row->client_contact_info_jobs)>0){
+            if(count($row->client_contact_info_jobs ?? [])>0){
                 $hiringManager = @$row->client_contact_info_jobs[0]['contact_person_name'];
                 $hiringManagerdesignation = @$row->client_contact_info_jobs[0]['contact_person_designation'];
                 $companyId = @$row->client_contact_info_jobs[0]['company_id'];
-                $hiringManagerCompany = DB::table('companies')->where('id',$companyId)->first()->company_name;
+                $hiringManagerCompany = DB::table('companies')->where('id',$companyId)->first()->company_name ?? '--------';
             }
             
             $recommendation_id = $row->recommendation_id;
@@ -447,7 +448,7 @@
                         $agencyCount = GeneralMethod::agencyCount(auth()->user()->company_id,$jobId,1);
                         $jobId = '';
                         $jobId = $row->id;
-                        $recommendation_relation = $row->recommendation_relation;
+                        $recommendation_relation = $row->recommendation_relation ?? [];
                         $recommendationRelation = collect($recommendation_relation);
                         // dd($recommendationRelation);
                         $recommendedDataListCnt = $recommendationRelation->where('from_company_id', $company_id)->where('job_id', $jobId)->where('from_status', 1)->count();
