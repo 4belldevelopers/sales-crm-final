@@ -93,7 +93,7 @@ class IndexCompaniesToElasticsearch extends Command
          $indexConfig = [
              'settings' => [
                  'number_of_shards' => 1,
-                 'number_of_replicas' => 0,
+                 'number_of_replicas' => 1,
                  'analysis' => [
                      'analyzer' => [
                          'comma_analyzer' => [
@@ -118,6 +118,18 @@ class IndexCompaniesToElasticsearch extends Command
                  ]
              ],
              'mappings' => [
+                 '_source' => [
+                     'excludes' => [
+                         'zoom_api_secret',
+                         'zoom_access_token',
+                         'google_access_token',
+                         'google_refresh_token',
+                         'microsoft_api_secret',
+                         'stripe_id',
+                         'card_brand',
+                         'card_last_four',
+                     ]
+                 ],
                  'properties' => [
                      'id' => ['type' => 'integer'],
                      'sub_domain' => [

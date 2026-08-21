@@ -127,7 +127,8 @@ Route::post('password/emailsend', [ResetPasswordController::class, 'sendResetLin
 // ====================== PROTECTED ROUTE ======================
 
 Route::post('/delete-template', [HomeController::class, 'deleteTemplate'])->name('delete.template');
-Route::get('/bench-condidates/{companyName}/{companyId}', [HomeController::class, 'benchCandidates'])->name('get.benchCandidates');
+/* Intent: Rate limit public bench listing route to 300 rpm per IP to prevent bot floods and resource exhaustion */
+Route::get('/bench-condidates/{companyName}/{companyId}', [HomeController::class, 'benchCandidates'])->middleware('throttle:bench-public')->name('get.benchCandidates');
 Route::get('/career-jobs/{companyName}/{companyId}', [HomeController::class, 'careerJobPage'])->name('get.careerJobPage');
 Route::get('/api/v2/career-jobs/{companyId}', [HomeController::class, 'careerJobApi'])->name('get.careerJobApi');
 Route::get('/job-apply/{jobId}/{companyId}', [HomeController::class, 'jobApply'])->name('get.jobApply');

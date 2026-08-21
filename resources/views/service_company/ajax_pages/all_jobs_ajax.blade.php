@@ -47,10 +47,11 @@
     $row->recommendation_id =$recommendation_id;
     $row->to_company_id = $recommendation_id;
     $row->from_company_id = $from_company_id;
-    $row->companyidcount= $row->comId;
-    $row->clients_name = $row->client_name;
+    $row->companyidcount= $row->comId ?? null;
+    $row->clients_name = $row->client_name ?? null;
     
-    $job_assign = $row->job_assign;
+    // Safely assign job_assign collection using null coalescing operator in case property is missing from Elasticsearch hit
+    $job_assign = $row->job_assign ?? [];
     $jobAssign = collect($job_assign);
 
     // $final_status_two = collect($row->recommendation_relation)->first(fn($item) => $item['to_company_id'] == 2)['final_status'] ?? null;

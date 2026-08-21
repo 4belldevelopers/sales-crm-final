@@ -75,6 +75,9 @@ class AppServiceProvider extends ServiceProvider
         \App\Models\JobSkill::observe(\App\Observers\JobSkillObserver::class);
         \App\Models\JobCategory::observe(\App\Observers\JobCategoryObserver::class);
         \App\Models\Client::observe(\App\Observers\ClientObserver::class);
+        if (class_exists(\App\Models\InterviewSchedule::class)) {
+            \App\Models\InterviewSchedule::observe(\App\Observers\InterviewTrackerObserver::class);
+        }
     }
 
     /**
@@ -147,6 +150,10 @@ class AppServiceProvider extends ServiceProvider
         // Phase 3.8: super-admin bulk-ops (block/unblock company, toggle user status).
         // 10 per minute per super-admin prevents accidental or scripted mass-toggle.
         RateLimiter::for('superadmin-bulk-ops', fn (Request $request) => Limit::perMinute(10)->by('superadmin-bulk-ops:'.(optional($request->user())->id ?? 'anon'))
+        );
+
+        /* Intent: Rate limit public bench candidate listing route to 300 requests/minute per IP to prevent bot floods and DDoS attacks */
+        RateLimiter::for('bench-public', fn (Request $request) => Limit::perMinute(300)->by('bench-public:'.$request->ip())
         );
     }
 }

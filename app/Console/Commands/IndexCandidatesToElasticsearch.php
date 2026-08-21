@@ -74,7 +74,7 @@ class IndexCandidatesToElasticsearch extends Command
         $indexConfig = [
             'settings' => [
                 'number_of_shards' => 1,
-                'number_of_replicas' => 0,
+                'number_of_replicas' => 1,
                 'analysis' => [
                     'analyzer' => [
                         'comma_analyzer' => [
@@ -210,7 +210,7 @@ class IndexCandidatesToElasticsearch extends Command
                     'employment_type' => ['type' => 'integer'],
                     'client_name' => ['type' => 'keyword', 'ignore_above' => 256],
                     'client_company_name' => ['type' => 'keyword', 'ignore_above' => 256],
-                    'job_master_status_id' => ['type' => 'integer'],
+                    'job_master_status_id' => ['type' => 'keyword'],
                     'childStatus' => ['type' => 'integer'],
                     'master_status_id' => ['type' => 'integer'],
                     'child_status_id' => ['type' => 'integer'],

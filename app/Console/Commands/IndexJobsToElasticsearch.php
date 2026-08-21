@@ -92,7 +92,7 @@ class IndexJobsToElasticsearch extends Command
          $indexConfig = [
              'settings' => [
                  'number_of_shards' => 1,
-                 'number_of_replicas' => 0,
+                 'number_of_replicas' => 1,
                  'analysis' => [
                      'analyzer' => [
                          'comma_analyzer' => [
@@ -272,6 +272,15 @@ class IndexJobsToElasticsearch extends Command
                                     'keyword' => ['type' => 'keyword', 'ignore_above' => 256]
                                 ]
                             ]
+                        ]
+                     ],
+                     'recommendation_relation' => [
+                        'type' => 'nested',
+                        'properties' => [
+                            'from_company_id' => ['type' => 'integer'],
+                            'to_company_id'   => ['type' => 'integer'],
+                            'final_status'    => ['type' => 'integer'],
+                            'created_at'      => ['type' => 'date'],
                         ]
                      ]
                  ]

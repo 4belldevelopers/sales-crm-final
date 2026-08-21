@@ -2161,7 +2161,9 @@ CREATE TABLE `job_applications` (
   KEY `idx_job_app_deleted` (`deleted_at`),
   KEY `idx_japp_status` (`job_id`,`master_status_id`),
   KEY `idx_japp_email` (`company_id`,`email`(40)),
-  KEY `idx_japp_phone` (`company_id`,`phone`(20))
+  KEY `idx_japp_phone` (`company_id`,`phone`(20)),
+  KEY `idx_thirdparty_created` (`thirdparty_company_id`,`created_at`),
+  KEY `idx_company_created` (`company_id`,`created_at`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 DROP TABLE IF EXISTS `job_assign`;
@@ -3958,7 +3960,9 @@ CREATE TABLE `staffing_company_invitation` (
   `to_status` int(11) DEFAULT NULL COMMENT 'Registration status 0:For newly invitation, 1:Already Register  ',
   `job_id` int(11) DEFAULT NULL,
   `to_invitation_status` int(11) NOT NULL DEFAULT 0 COMMENT '0 : Pending , 1	: accept ,  -1 : ignore',
-  PRIMARY KEY (`id`)
+  PRIMARY KEY (`id`),
+  KEY `idx_from_invstatus` (`from_company_id`,`to_invitation_status`),
+  KEY `idx_to_email` (`to_email`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 DROP TABLE IF EXISTS `staffing_company_relation`;
@@ -3979,7 +3983,10 @@ CREATE TABLE `staffing_company_relation` (
   `final_status` int(11) DEFAULT 0,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   `updated_at` timestamp NOT NULL DEFAULT current_timestamp(),
-  PRIMARY KEY (`id`)
+  PRIMARY KEY (`id`),
+  KEY `idx_from_final` (`from_company_id`,`final_status`),
+  KEY `idx_to_final` (`to_company_id`,`final_status`),
+  KEY `idx_pair` (`from_company_id`,`to_company_id`,`final_status`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 DROP TABLE IF EXISTS `stage_point_tb`;
