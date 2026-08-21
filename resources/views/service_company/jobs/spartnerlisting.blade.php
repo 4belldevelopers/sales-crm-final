@@ -309,9 +309,7 @@ $current_job_id = @$job_id;
                                         ucwords($strVal) .
                                         '</div>
                                     </a>
-                                </div>';
-
-                               $logo_path = GeneralMethod::companyDetails($job->id);
+                                                           $logo_path = GeneralMethod::companyDetails($job->id);
 
                                 if (!empty($logo_path)) {
                                     $icon =
@@ -326,20 +324,20 @@ $current_job_id = @$job_id;
                                                         </div>
                                                     </a>
                                                 </div>';
-                                    $skilltag = '';
-                                    $skilltagclass = '';
-                                    if (empty($limit)) {
-                                        $skillArrList = $skillArr ?? [];
-                                        if (!empty($skillArrList)) {
-                                            foreach ($skillArrList as $sval) {
-                                                $skilltag .=
-                                                    '<span class="badge badge-light my-1">' . ucfirst($sval->skill_name) . '</span>  ';
-                                            }
-                                        }
-                                    } else {
-                                        $skilltagclass = 'd-none';
-                                    }
                                 }
+                                $skilltag = '';
+                                $skilltagclass = '';
+                                if (empty($limit)) {
+                                    $skillArrList = $skillArr ?? [];
+                                    if (!empty($skillArrList)) {
+                                        foreach ($skillArrList as $sval) {
+                                            $skilltag .=
+                                                '<span class="badge badge-light my-1">' . ucfirst($sval->skill_name) . '</span>  ';
+                                        }
+                                    }
+                                } else {
+                                    $skilltagclass = 'd-none';
+                                }              }
 
                                     echo ' <div class=" d-flex align-items-center border-0" >
                                             
