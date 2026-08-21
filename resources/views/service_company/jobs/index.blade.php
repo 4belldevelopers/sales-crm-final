@@ -462,33 +462,25 @@ data-kt-drawer-toggle="#kt_activitiesJob_toggle" data-kt-drawer-close="#kt_activ
 
 
     $('body').on('click', '#AddjobSection', function(){
-
-      var url      = "{{ route('service_company.auth-custom-package.validatePackage') }}";
-      var token    = "{{ csrf_token() }}";
-      var eventId  = 2;
+			
+      var url 				=	"{{ route('service_company.auth-custom-package.validatePackage') }}";
+      var token 				=	"{{ csrf_token() }}";							
+      var baseurl    			=	"{{ asset('assets/images/Loading2.gif') }}"; 
+      var eventId 			=	2; 
       $.ajax({
-            type      : 'POST',
-            url       : url,
-            headers   : { 'X-CSRF-TOKEN': token },
-            beforeSend: function(){ },
-            data      : {'_token': token, 'event':'CVACCESS','eventId':eventId},
-            success   : function (response){
-                          if (response.status == "success"){
-                              var url = "{{url('service_company/jobs/create')}}";
-                              window.location = url;
-                          } else if (response.status == "info"){
-                              sweetAlert("Fail!", response.message, "error");
-                          }
-                        },
-            error     : function (xhr) {
-                          if (xhr.status === 419) {
-                              Swal.fire({ icon: 'warning', title: 'Session Expired', text: 'Your session has expired. Please reload the page and try again.', confirmButtonText: 'Reload', confirmButtonColor: '#3e97ff' }).then(function(){ location.reload(); });
-                          } else {
-                              Swal.fire({ icon: 'error', title: 'Error', text: 'Something went wrong. Please try again.' });
-                          }
-                        }
+            type		: 'POST',
+            url			: url,
+            beforeSend	: function(){ },
+            data		: {'_token': token, 'event':'CVACCESS','eventId':eventId},
+            success		: function (response){
+                                  if (response.status == "success"){  																					  																												                                                                                            	var url   			=	"{{url('service_company/jobs/create')}}";
+                                        window.location 	=	url;
+                                     }else if (response.status == "info"){   
+                                      sweetAlert("Fail!", response.message, "error");	
+                                     }										 
+                            }
           });
-
+  
 });
 
 
@@ -887,26 +879,18 @@ $(document).on('click', '.client-hm-listing', function ()
                 fetchCandidates(page, $('#search').val());
             });
 
-            $(document).on('change', '#pagination .pagi-perpage', function() {
-                var selectedPerPage = $(this).val();
-                localStorage.setItem('candidatePerPage', selectedPerPage);
-                localStorage.setItem('currentPageJobs', 1);
-                page_no = 1;
-                fetchCandidates(1);
-            });
-
         });
 
-        var page_no = localStorage.getItem('currentPageJobs') || 1;
+          var page_no = localStorage.getItem('currentPageJobs');
+                if (!page_no) {
+                    page_no = 1;
+                }
+          localStorage.removeItem('jobsPageSize'); // stale value from before page size was fixed at 10
+          var pageSize = 10;
 
-        function fetchCandidates(page, search = '') {
-            var targetPage = page || page_no || 1;
-            page_no = targetPage;
-            localStorage.setItem('currentPageJobs', targetPage);
 
-            var perPage = $('#pagination .pagi-perpage').val() || localStorage.getItem('candidatePerPage') || 10;
+        function fetchCandidates(page = page_no, search = '', size = pageSize) {
             var clientid = '1';
-
             if($('.inputJobSearch').val()!=''){
                 // $('.loadingMessage').css({ display: 'block' });
                 $('.loader_search').css({ display: 'block' });
@@ -915,7 +899,7 @@ $(document).on('click', '.client-hm-listing', function ()
                 $('.page-loader').css('display', 'flex');
             }
             return $.ajax({
-                url: `{!! route('service_company.jobs.all_data_ajax') !!}?page=${targetPage}`,
+                url: `{!! route('service_company.jobs.all_data_ajax') !!}?page=${page}`,
                 type: 'GET',
                 data: {
                   custom_status : $('#status').val(),
@@ -923,14 +907,13 @@ $(document).on('click', '.client-hm-listing', function ()
                   custom_hiringtype : $('#hiringtype').val(),
                   employment_type : $('#employment_type').val(),
                   custom_search : $('.inputJobSearch').val(),
-                  size : perPage,
-                  per_page : perPage
+                  size : size
                 },
                 success: function(response) {
                     $('.loadingMessage').css({ display: 'none' });
                     $('.loader_search').css({ display: 'none' });
                     $('.page-loader').css('display', 'none');
-                    localStorage.setItem('currentPageJobs', targetPage);
+                    localStorage.setItem('currentPageJobs', page);
                     $('#allJobList').html(response.html);
                     $('#all_jobs_count').html(response.total);
                     $('#pagination').html(response.pagination);
