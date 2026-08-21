@@ -137,7 +137,11 @@ Route::post('/uploadresume', [HomeController::class, 'uploadresume'])->name('get
 Route::post('/extract-resume-applications', action: [HomeController::class, 'resumExtract'])->name('get.extract-resume-job-applications');
 /* Intent: Rate limit public candidate submission route to 30 requests/minute to prevent bot spam and DDoS attacks */
 Route::post('/careerStore', [HomeController::class, 'careerStore'])->middleware('throttle:30,1')->name('get.careerStore');
-Route::get('benchCandidateDetails/public_show/{id?}', [HomeController::class, 'benchCandidateDetails'])->name('get.benchCandidateDetails');
+// INTENT: throttle bench drawer AJAX endpoint to 60 rpm per IP. Public endpoint
+// with no auth — without throttle, a single bot can trigger cache rebuilds
+// and starve legitimate recruiters. Cache lock reduces rebuild cost; throttle
+// reduces request volume in the first place.
+Route::get('benchCandidateDetails/public_show/{id?}', [HomeController::class, 'benchCandidateDetails'])->middleware('throttle:60,1')->name('get.benchCandidateDetails');
 // ** Cron start here */
 Route::get('/company-wise-jobs', [HomeController::class, 'companyWiseJobs'])->name('get.companyWiseJobs');
 Route::get('/market-company-wise-jobs', [HomeController::class, 'marketcompanyWiseJobs'])->name('get.marketcompanyWiseJobs');
