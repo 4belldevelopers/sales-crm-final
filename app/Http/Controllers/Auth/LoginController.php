@@ -26,7 +26,7 @@ class LoginController extends Controller
     ) {
         parent::__construct();
         $this->middleware('guest')->except('logout');
-        App::setLocale($this->global->locale);
+        App::setLocale($this->global?->locale ?? config('app.locale', 'en'));
     }
 
     public function showLoginForm()

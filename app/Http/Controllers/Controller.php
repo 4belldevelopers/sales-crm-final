@@ -24,7 +24,7 @@ class Controller extends BaseController
         $this->smsSettings = SmsSetting::first();
         $this->adminTheme = ThemeSetting::whereNull('company_id')->first();
         
-        config(['app.name' => $this->global->company_name]);
+        config(['app.name' => $this->global?->company_name ?? config('app.name')]);
         config(['app.url' => url('/')]);
         view()->share('smsSettings', $this->smsSettings);
         
