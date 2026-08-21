@@ -294,9 +294,7 @@ $current_job_id = @$job_id;
                                             $logo_path = @$job->logo;
                                         }
                                     }
-                                    
-
-                                    $icon =
+                                                           $icon =
                                         '<div data-row-id="' .
                                         $job->id .
                                         '" class="symbol symbol-circle symbol-40px overflow-hidden me-2 border-radius-5 " style="float:left">
@@ -309,7 +307,9 @@ $current_job_id = @$job_id;
                                         ucwords($strVal) .
                                         '</div>
                                     </a>
-                                                           $logo_path = GeneralMethod::companyDetails($job->id);
+                                </div>';
+
+                                $logo_path = GeneralMethod::companyDetails($job->id);
 
                                 if (!empty($logo_path)) {
                                     $icon =
@@ -337,7 +337,7 @@ $current_job_id = @$job_id;
                                     }
                                 } else {
                                     $skilltagclass = 'd-none';
-                                }              }
+                                }
 
                                     echo ' <div class=" d-flex align-items-center border-0" >
                                             

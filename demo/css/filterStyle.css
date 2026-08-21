@@ -264,7 +264,7 @@ cursor: default;
 /* Tagify Container */
 .tagify {
     width: 100%;
-    min-height: 54px;
+    min-height: 40px;
     padding: 8px 10px;
     border: 1px solid #d9dce7;
     border-radius: 10px;

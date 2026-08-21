@@ -60,7 +60,7 @@
                             $skilltag .
                             '</span></div>';
                     }
-                    if(is_iterable($row->industry) && count($row->industry)){
+                    if(is_iterable($row->industry ?? null) && count($row->industry ?? [])){
                         $ind_name = $row->industry['industry_name'];
                     }
 					$str = trim(@$row->company_name);
@@ -123,11 +123,11 @@
                         // dd($companies_id,$alldatalist,$currentJobSkill);
 
                     $Profiles = 0; //0;
-                    $benchCount = collect($row->candidates)->where('profile_type', 'bench_condidate')->count();
-                    $otherCount = collect($row->candidates)->where('profile_type', 'other')->count();
-                    $activeJobs = collect($row->jobs)->where('status', 'active')->count();
+                    $benchCount = collect($row->candidates ?? [])->where('profile_type', 'bench_condidate')->count();
+                    $otherCount = collect($row->candidates ?? [])->where('profile_type', 'other')->count();
+                    $activeJobs = collect($row->jobs ?? [])->where('status', 'active')->count();
                     $titleffc = 'Profiles';
-                    $SimilarReq = count($row->jobs);//0;
+                    $SimilarReq = count($row->jobs ?? []);//0;
                     if ($hiringtype === '1') {
                         if ($benchCount > 0) {
                             $Profiles = $benchCount;
