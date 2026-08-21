@@ -41,6 +41,22 @@
         position: unset !important;
     }
 
+    /* ── Skill-tag remove button: white × on the purple circle ── */
+    .tagify__tag__removeBtn {
+        -webkit-mask-image: none !important;
+        mask-image: none !important;
+        background-image: none !important;
+        color: #fff !important;
+        font-size: 13px !important;
+        font-weight: 700 !important;
+        line-height: 1 !important;
+    }
+    .tagify__tag__removeBtn::before,
+    .tagify__tag__removeBtn::after {
+        display: none !important;
+        content: none !important;
+    }
+
     #kt_activitiesStaffing_close svg{
         color: red;
     }
@@ -207,39 +223,7 @@
 <link href="{{ asset('demo/css/topCard.css') }}{{ TM_VERSION }}" rel="stylesheet" type="text/css" />
     
 
-<script>
-    var stringifyObject = require('stringify-object')
-    var createKeyframe = require('create-keyframe')
-    var insertCSS = require('insert-styles')
 
-    function generateKeyframe() {
-
-        var shakeDistance = Number(
-            (Math.random() * 70).toFixed(0)
-        ) + 30
-
-        var cssKeyframe
-        cssKeyframe = {
-            0: {
-                transform: 0 + 'deg'
-            },
-            100: {
-                transform: 30 + 'deg'
-            }
-        }
-        var keyframeObj = createKeyframe(cssKeyframe)
-        insertCSS(keyframeObj.css, {
-            id: 'animaton-tutorial-keyframe'
-        })
-
-        jsonDisplay.innerHTML = `@keyframe ${keyframeObj.name} ` +
-            stringifyObject(cssKeyframe, {
-                indent: '  '
-            })
-        userMessage.style.animation = keyframeObj.name + ' ease 3s infinite'
-    }
-    generateKeyframe();
-</script>
 <link rel="stylesheet" href="//cdn.datatables.net/responsive/2.2.3/css/responsive.bootstrap.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta2/js/all.min.js" type="text/javascript">
 </script>
@@ -1729,8 +1713,6 @@ $current_job_id = @$job_id;
 
 
 <script src="{{ asset('demo/cdn/js/dataTables.fixedHeader.min.js') }}<?php echo TM_VERSION; ?>"></script>
-<link href="{{ asset('demo/css/plugins.bundle.css') }}{{ TM_VERSION }}" rel="stylesheet" type="text/css" />
-<script src="{{ asset('demo/js/plugins.bundle.js') }}{{ TM_VERSION }}"></script>
 <script>
 
         function initTagifySection() {
@@ -1773,18 +1755,18 @@ $current_job_id = @$job_id;
                         const value = tagData.value || '';
 
                         return `
-                            <tag title="${value}" 
-                                contenteditable='false' 
-                                spellcheck="false" 
-                                class="tagify__tag ${tagData.class ? tagData.class : ""}" 
-                                ${this.getAttributes(tagData)}>
+                            <tag title="${value}"
+                                contenteditable='false'
+                                spellcheck="false"
+                                class="tagify__tag ${tagData.class ? tagData.class : ""}"
+                                ${this.getAttributes(tagData)}
+                                >
 
                                 <div style="padding: 2px 6px; display:flex; align-items:center; gap:5px;">
 
                                     <span class="tagify__tag-text">${value}</span>
 
-                                    <span 
-                                        style="
+                                    <span style="
                                             width:16px;
                                             height:16px;
                                             border-radius:50%;
@@ -1793,14 +1775,9 @@ $current_job_id = @$job_id;
                                             align-items:center;
                                             justify-content:center;
                                             cursor:pointer;
-                                        ">
-
-                                        <x class="tagify__tag__removeBtn"></x>
-
-                                    </span>
+                                        "><x class="tagify__tag__removeBtn">×</x></span>
 
                                 </div>
-
                             </tag>
                         `;
                     }
@@ -1831,18 +1808,18 @@ $current_job_id = @$job_id;
                         const value = tagData.value || '';
 
                         return `
-                            <tag title="${value}" 
-                                contenteditable='false' 
-                                spellcheck="false" 
-                                class="tagify__tag ${tagData.class ? tagData.class : ""}" 
-                                ${this.getAttributes(tagData)}>
+                            <tag title="${value}"
+                                contenteditable='false'
+                                spellcheck="false"
+                                class="tagify__tag ${tagData.class ? tagData.class : ""}"
+                                ${this.getAttributes(tagData)}
+                                >
 
                                 <div style="padding: 2px 6px; display:flex; align-items:center; gap:5px;">
 
                                     <span class="tagify__tag-text">${value}</span>
 
-                                    <span 
-                                        style="
+                                    <span style="
                                             width:16px;
                                             height:16px;
                                             border-radius:50%;
@@ -1851,14 +1828,9 @@ $current_job_id = @$job_id;
                                             align-items:center;
                                             justify-content:center;
                                             cursor:pointer;
-                                        ">
-
-                                        <x class="tagify__tag__removeBtn"></x>
-
-                                    </span>
+                                        "><x class="tagify__tag__removeBtn">×</x></span>
 
                                 </div>
-
                             </tag>
                         `;
                     }
@@ -2072,11 +2044,7 @@ $current_job_id = @$job_id;
         // INITIAL LOAD
         // ===================================
 
-        $(document).ready(function () {
-
-            initTagifySection();
-
-        });
+        initTagifySection();
 
 
         // ===================================
@@ -2142,13 +2110,10 @@ $current_job_id = @$job_id;
 
 
 
-    var boostlisting;
-    boostlisting('load');
-
     function boostlisting(type) {
-
+        if ($('#boostlisting').length === 0) return;
         var jobid = $('#current_job_id').val();
-        table = $('#boostlisting').dataTable({
+        var boostTable = $('#boostlisting').dataTable({
             pageLength: 3,
             iDisplayLength: 3,
             responsive: true,
@@ -2219,39 +2184,41 @@ $current_job_id = @$job_id;
             ]
 
         });
-        new $.fn.dataTable.FixedHeader(boostlisting);
-
+        if ($.fn.dataTable && $.fn.dataTable.FixedHeader) {
+            new $.fn.dataTable.FixedHeader(boostTable);
+        }
 
         var tbodyrecommendedlist = document.getElementById("recommendedlist");
         var tbodyboostlisting = document.getElementById("boostlisting");
-        if (tbodyrecommendedlist.innerHTML.trim() !== "" || tbodyboostlisting.innerHTML.trim() !== "") {
-            console.log("Tbody is empty");
-            setTimeout(() => {
-                $(".dataTables_empty").attr("style", "display: none !important;")
-                $(".dataTables_empty").hide();
-            }, 1500);
-
+        if (tbodyrecommendedlist && tbodyboostlisting) {
+            if (tbodyrecommendedlist.innerHTML.trim() !== "" || tbodyboostlisting.innerHTML.trim() !== "") {
+                setTimeout(() => {
+                    $(".dataTables_empty").attr("style", "display: none !important;");
+                    $(".dataTables_empty").hide();
+                }, 1500);
+            }
         }
-
-
-
+    }
+    if ($('#boostlisting').length > 0) {
+        boostlisting('load');
     }
 </script>
 <script>
     function filtersdata() {
         tableLoad('load');
     }
-    var table;
-    setTimeout(() => {
+    function loadAllDrawerLists() {
         tableLoad('load');
         staffingPartnersRegister('load');
-        recommendedAssignList(1,'');
-    }, 100);
+        recommendedAssignList(1, '');
+    }
+    loadAllDrawerLists();
+    setTimeout(loadAllDrawerLists, 200);
 
     function tableLoad(type) {
        var page = 1;
        $('.page-loader').css('display', 'flex');
-        $.ajax({
+        return $.ajax({
                 url: `{!! route('service_company.jobs.recommendedData') !!}?page=${page}`,
                 type: 'GET',
                 data: {
@@ -2276,83 +2243,8 @@ $current_job_id = @$job_id;
                     $('.page-loader').css('display', 'none');
                     $('#recommendedlistBody').html(response.html);
                     $('#recommendedTotal').html('('+response.total+')');
-                    // $('#total_record').html(response.total);
                 }
             });
-
-            return false;
-
-        var jobid = $('#current_job_id').val();
-        var hiringtype = $('#workhiringtype').val();
-        var country = $('#country').val();
-
-        var cus_search = $('#kt_tagify_users').val();
-        var min_exp = $('#min_exp').val();
-        var max_exp = $('#max_exp').val();
-        var kt_tagify_location = $('#kt_tagify_location').val();
-        var min_sal = $('#min_sal').val();
-        var max_sal = $('#max_sal').val();
-        var min_salary_currency = $('#min_salary_currency').val();
-        var sal_mode = $('#sal_mode').val();
-        var app_int_outsource = $('[name="app_int_outsource"]:checked').val();
-
-
-        table = $('#recommendedlist').dataTable({
-            responsive: true,
-            processing: true,
-            serverSide: true,
-            ordering: true, //disable ordering      			
-            destroy: true,
-            stateSave: true,
-            "stateSaveParams": function (settings, data) {
-                data.length = 25; // Force saved state to use your length
-            },
-            "bLengthChange": false,
-            sDom: 'lrtip',
-            ajax: '{!! route('service_company.jobs.recommendedData') !!}?jobid=' + jobid + '&hiringtype=' + hiringtype + '&country=' +
-                country + '&cus_search=' + encodeURIComponent(cus_search) + '&min_exp=' + min_exp +
-                '&max_exp=' + max_exp + '&kt_tagify_location=' + kt_tagify_location + '&min_sal=' + min_sal +
-                '&max_sal=' + max_sal + '&min_salary_currency=' + min_salary_currency + '&sal_mode=' +
-                sal_mode + '&app_int_outsource=' + app_int_outsource,
-            pageLength: 10,
-            lengthMenu: [[25, 50, 100], [25, 50, 100]],
-            "fnDrawCallback": function(oSettings) {
-                $("body").tooltip({
-                    selector: '[data-toggle="tooltip"]'
-                });
-            },
-            "initComplete": function(settings, json) {},
-            columns: [
-                // {data: 'chkbox',name: 'chkbox', orderable: false,searchable: false,width: '5%'},
-                {data: 'Name',name: 'Name',orderable: false,searchable: false,width: '15%'},
-                // {data: 'Match', name: 'Match', searchable : false, orderable : false, width: '15%'},
-                { data: 'SimilarReq',name: 'SimilarReq',searchable: false,orderable: false,width: '10%'},
-                {data: 'RatesCal',name: 'RatesCal',searchable: false,orderable: false,width: '15%'},
-                // { data: 'SuccessCus',name: 'SuccessCus',searchable: false,orderable: false, width: '15%'},
-                // {data: 'Profiles', name: 'Profiles',  searchable : false, orderable : false,  width: '10%'},
-                // {data: 'HiringType', name: 'HiringType', searchable : false, orderable : false},
-                {data: 'Sizecount', name: 'Sizecount',searchable: false,orderable: false},
-                {data: 'Location', name: 'Location', searchable : false, orderable : false},
-                {data: 'LoginTime', name: 'LoginTime', searchable : false, orderable : false},
-                {data: 'Action',name: 'Action',orderable: false}
-
-            ]
-
-        });
-        new $.fn.dataTable.FixedHeader(table);
-
-        var tbodyrecommendedlist = document.getElementById("recommendedlist");
-        var tbodyboostlisting = document.getElementById("boostlisting");
-        if (tbodyrecommendedlist.innerHTML.trim() !== "" || tbodyboostlisting.innerHTML.trim() !== "") {
-            console.log("Tbody is empty");
-            setTimeout(() => {
-                $(".dataTables_empty").attr("style", "display: none !important;")
-                $(".dataTables_empty").hide();
-            }, 1500);
-
-        }
-
-
     }
 
 
@@ -2402,13 +2294,14 @@ $current_job_id = @$job_id;
 
 
     function recommendedAssignList(page = 1, search = '') {
+        if (page === 'load' || !page) { page = 1; }
 
         var jobid = $('#current_job_id').val();
         var hiringtype = '';//$('#hiringtype5').val();
         var country = '';//$('#country5').val();
         var cus_search = $('#kt_tagify_5').val();
 
-            $.ajax({
+            return $.ajax({
                 url: `{!! route('service_company.jobs.recommendedAssignList') !!}?page=${page}`,
                 type: 'GET',
                 data: {
@@ -2425,71 +2318,6 @@ $current_job_id = @$job_id;
                     $('#paginationAssignListagency').html(response.pagination);
                 }
             });
-
-            return false;
-        table = $('#recommendedAssignListNotAjax').dataTable({
-
-            responsive: true,
-            processing: true,
-            ordering: false, //disable ordering      			
-            destroy: true,
-            stateSave: true,
-            "bLengthChange": false,
-            sDom: 'lrtip',
-
-            ajax: '{!! route('service_company.jobs.recommendedAssignList') !!}?jobid=' + jobid + '&hiringtype=' + hiringtype + '&country=' +
-                country + '&cus_search=' + cus_search,
-            "fnDrawCallback": function(oSettings) {
-                $("body").tooltip({
-                    selector: '[data-toggle="tooltip"]'
-                });
-            },
-            "initComplete": function(settings, json) {},
-            columns: [
-                {
-                    data: 'Name',
-                    name: 'Name',
-                    orderable: false,
-                    searchable: false,
-                    width: '15%'
-                },
-                {
-                    data: 'ContactPerson',
-                    name: 'ContactPerson',
-                    searchable: false,
-                    orderable: false,
-                    width: '15%'
-                },
-                {
-                    data: 'UploadProfile',
-                    name: 'UploadProfile',
-                    searchable: false,
-                    orderable: false,
-                    width: '5%'
-                },
-                {
-                    data: 'Interview',
-                    name: 'Interview',
-                    searchable: false,
-                    orderable: false,
-                    width: '10%'
-                },
-                {
-                    data: 'Joinings',
-                    name: 'Joinings',
-                    searchable: false,
-                    orderable: false
-                },
-                {
-                    data: 'Action',
-                    name: 'Action',
-                    searchable: false,
-                    orderable: false
-                },
-            ]
-
-        });
-        new $.fn.dataTable.FixedHeader(table);
     }
 
     function filtersdatatwo() {
@@ -2519,6 +2347,7 @@ $current_job_id = @$job_id;
     });
 
     function staffingPartnersRegister(page = 1, search = '') {
+        if (page === 'load' || !page) { page = 1; }
 
         if($('#kt_tagify_4').val()!=''){
                 $('.loader_search').css({ display: 'block' });
@@ -2529,7 +2358,7 @@ $current_job_id = @$job_id;
         var hiringtype = $('#hiringtype4').val();
         var country = $('#country4').val();
         var cus_search = $('#kt_tagify_4').val();
-            $.ajax({
+            return $.ajax({
                 url: `{!! route('service_company.jobs.staffingPartnersRegister') !!}?page=${page}`,
                 type: 'GET',
                 data: {
@@ -2546,40 +2375,8 @@ $current_job_id = @$job_id;
                     $('#paginationregisteragency').html(response.pagination);
                 }
             });
-
-           return false;
-           
-        table = $('#staffingPartnersRegister').dataTable({
-
-            responsive: true,
-            processing: true,
-            ordering: false, //disable ordering      			
-            destroy: true,
-            stateSave: true,
-            "bLengthChange": false,
-            sDom: 'lrtip',
-            ajax: '{!! route('service_company.jobs.staffingPartnersRegister') !!}?jobid=' + jobid + '&hiringtype=' + hiringtype + '&country=' + country + '&cus_search=' + cus_search,
-            "fnDrawCallback": function(oSettings) {
-                $("body").tooltip({
-                    selector: '[data-toggle="tooltip"]'
-                });
-            },
-            "initComplete": function(settings, json) {},
-            columns: [
-                {data: 'Name', name: 'Name',orderable: false,searchable: false,width: '15%'},
-                {data: 'SimilarReq',name: 'SimilarReq',searchable: false,orderable: false,width: '15%'},
-                {data: 'RatesCal',name: 'RatesCal',searchable: false,orderable: false},
-                {data: 'Sizecount',name: 'Sizecount',searchable: false,orderable: false},
-                {data: 'Location',name: 'Location',searchable: false,orderable: false},
-                {data: 'LoginTime',name: 'LoginTime',searchable: false,orderable: false},
-                {data: 'Action',name: 'Action',orderable: false}
-            ]
-
-        });
-        new $.fn.dataTable.FixedHeader(table);
-
-
     }
+           
 
     $('body').off('click', '.send_only_job_invitation').on('click', '.send_only_job_invitation', function(event) {
     // $('body').on('click', '.send_only_job_invitation', function(event) {
@@ -2995,36 +2792,36 @@ $current_job_id = @$job_id;
 <script>
     // The DOM elements you wish to replace with Tagify
     var inputloc = document.querySelector("#kt_tagify_location");
-    var cities = @json(@$cities);
-    // Initialize Tagify script on the above inputs
-    var tagifylocation = new Tagify(inputloc, {
-        whitelist: cities,
-        maxTags: 1,
-        dropdown: {
-            maxItems: 200, // <- mixumum allowed rendered suggestions
-            classname: "", // <- custom classname for this dropdown, so it could be targeted
-            enabled: 0, // <- show suggestions on focus
-            closeOnSelect: true // <- do not hide the suggestions dropdown once an item has been selected
-        }
-    });
-    // Prevent creating tags on blur or enter key
-    tagifylocation.on('input', function(e) {
-        tagifylocation.dropdown.show(); // show the dropdown immediately
-    });
-    // Create tags only on select
-    tagifylocation.on('dropdown:select', function(e) {
-        tagifylocation.addTags([e.detail.data.value]);
-    });
-    tagifylocation.on('add', function(e) {
-        // alert(cities);
-        // Remove the tag if it wasn't selected from the dropdown
-        if (!cities.includes(e.detail.data.value)) {
-            setTimeout(() => {
-                tagifylocation.removeTag(e.detail.data.value);
-            }, 500);
-
-        }
-    });
+    if (inputloc) {
+        var cities = @json(@$cities);
+        // Initialize Tagify script on the above inputs
+        var tagifylocation = new Tagify(inputloc, {
+            whitelist: cities,
+            maxTags: 1,
+            dropdown: {
+                maxItems: 200, // <- mixumum allowed rendered suggestions
+                classname: "", // <- custom classname for this dropdown, so it could be targeted
+                enabled: 0, // <- show suggestions on focus
+                closeOnSelect: true // <- do not hide the suggestions dropdown once an item has been selected
+            }
+        });
+        // Prevent creating tags on blur or enter key
+        tagifylocation.on('input', function(e) {
+            tagifylocation.dropdown.show(); // show the dropdown immediately
+        });
+        // Create tags only on select
+        tagifylocation.on('dropdown:select', function(e) {
+            tagifylocation.addTags([e.detail.data.value]);
+        });
+        tagifylocation.on('add', function(e) {
+            // Remove the tag if it wasn't selected from the dropdown
+            if (!cities.includes(e.detail.data.value)) {
+                setTimeout(() => {
+                    tagifylocation.removeTag(e.detail.data.value);
+                }, 500);
+            }
+        });
+    }
 
     /* ── Assigned Agency tab: three-dot dropdown ─────────────────── */
     $(document).on('click', '.aa-dots-btn', function(e) {
