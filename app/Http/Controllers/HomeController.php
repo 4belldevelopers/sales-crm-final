@@ -837,36 +837,8 @@ class HomeController extends Controller
 
         // 1. Sort: ads_switch 'Yes' on top (pre-computed integer field: 0 for Yes, 1 for No)
         $sort[] = ['ads_switch_rank' => ['order' => 'asc', 'unmapped_type' => 'integer']];
-        $sort[] = ['ads_switch_order' => ['order' => 'asc', 'unmapped_type' => 'integer']];
 
-        // 2. Sort: skill match count (highest first if required skills provided)
-        if (! empty($requiredSkills)) {
-            $sort[] = [
-                '_script' => [
-                    'type' => 'number',
-                    'script' => [
-                        'lang' => 'painless',
-                        'source' => "
-							int matchCount = 0;
-							if (doc.containsKey('job_application_skills.skills.keyword')) {
-								for (s in params.skills) {
-									if (doc['job_application_skills.skills.keyword'].contains(s)) {
-										matchCount += 1;
-									}
-								}
-							}
-							return matchCount;
-						",
-                        'params' => [
-                            'skills' => array_values($requiredSkills),
-                        ],
-                    ],
-                    'order' => 'desc',
-                ],
-            ];
-        }
-
-        // 3. Sort: based on selected filter value (uses pre-computed numeric fields for notice period)
+        // 2. Sort: based on selected filter value (uses pre-computed numeric fields for notice period)
         switch ($valCheck) {
             case 1:
                 $sort[] = ['updated_at' => ['order' => 'desc']];
@@ -882,11 +854,9 @@ class HomeController extends Controller
                 break;
             case 5:
                 $sort[] = ['notice_period_days' => ['order' => 'asc', 'unmapped_type' => 'integer']];
-                $sort[] = ['np_days' => ['order' => 'asc', 'unmapped_type' => 'integer']];
                 break;
             case 6:
                 $sort[] = ['notice_period_days' => ['order' => 'desc', 'unmapped_type' => 'integer']];
-                $sort[] = ['np_days' => ['order' => 'desc', 'unmapped_type' => 'integer']];
                 break;
             case 7:
                 $sort[] = ['total_exp' => ['order' => 'desc', 'unmapped_type' => 'float']];
@@ -896,7 +866,6 @@ class HomeController extends Controller
                 break;
             case 9:
                 $sort[] = ['notice_period_days' => ['order' => 'asc', 'unmapped_type' => 'integer']];
-                $sort[] = ['np_days' => ['order' => 'asc', 'unmapped_type' => 'integer']];
                 break;
             default:
                 $sort[] = ['id' => ['order' => 'desc', 'unmapped_type' => 'long']];
@@ -1067,17 +1036,21 @@ class HomeController extends Controller
         //    }
         //    dd($account,$data);
 
-        /* Intent: Pre-fetch agency recommendation relation status to pass to view and eliminate Blade header DB query leak */
-        /* Tenancy: Scoped by company_id and to_company_id */
-        $recommendateRow = DB::table('recommendation_relation')
-            ->select('id', 'from_company_id', 'from_status', 'to_status', 'final_status')
-            ->where(function ($q) use ($company_id, $to_company_id) {
-                $q->where(function ($q2) use ($company_id, $to_company_id) {
-                    $q2->where('from_company_id', $company_id)->where('to_company_id', $to_company_id);
-                })->orWhere(function ($q2) use ($company_id, $to_company_id) {
-                    $q2->where('from_company_id', $to_company_id)->where('to_company_id', $company_id);
-                });
-            })->first();
+        /* Intent: Pre-fetch agency recommendation relation status with pair-symmetric 30-min Redis caching to eliminate hot-path MySQL read on public bench listing */
+        /* Tenancy: Scoped by normalized pair key (company_id and to_company_id) */
+        [$compA, $compB] = [(int) $company_id, (int) $to_company_id];
+        $pairKey = $compA < $compB ? "{$compA}:{$compB}" : "{$compB}:{$compA}";
+        $recommendateRow = Cache::remember("bench:recom:{$pairKey}", 1800, function () use ($company_id, $to_company_id) {
+            return DB::table('recommendation_relation')
+                ->select('id', 'from_company_id', 'from_status', 'to_status', 'final_status')
+                ->where(function ($q) use ($company_id, $to_company_id) {
+                    $q->where(function ($q2) use ($company_id, $to_company_id) {
+                        $q2->where('from_company_id', $company_id)->where('to_company_id', $to_company_id);
+                    })->orWhere(function ($q2) use ($company_id, $to_company_id) {
+                        $q2->where('from_company_id', $to_company_id)->where('to_company_id', $company_id);
+                    });
+                })->first();
+        });
 
         $pagination = [
             'total' => $total,
@@ -15921,10 +15894,10 @@ class HomeController extends Controller
         }
 
         // INTENT: Single ->get() round-trip; derive count from the same
-        // collection — eliminates the redundant ->count() DB call.
+        // collection — eliminates the redundant ->count() DB call. Always fallback to a Collection.
         $skillExperiences = DB::table('bench_candidate_skill_experience')
             ->where('candidate_id', @$benchApplication->id)
-            ->get();
+            ->get() ?? collect();
         $skillExperiencesCount = $skillExperiences->count();
 
         $data = [

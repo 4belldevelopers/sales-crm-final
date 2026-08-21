@@ -252,208 +252,6 @@ class ServiceCompanyConsultancyController extends ServiceCompanyBaseController
         return response()->json($responseData);
     }
 
-    public function spartnerDataCnt()
-    {
-
-        $company_id = auth()->user()->company_id;
-        $spartnerCounter = [];
-
-        // All Clients
-        $spartnerCounter['clientAll'] = 0;
-        $this->clientAll = DB::table('companies')->select('companies.id');
-        $this->clientAll = $this->clientAll->leftJoin('staffing_company_relation', 'staffing_company_relation.to_company_id', '=', 'companies.id');
-        $this->clientAll = $this->clientAll->leftJoin('clients', 'clients.company_id', '=', 'staffing_company_relation.to_company_id');
-        //    $this->clientAll = $this->clientAll->where('clients.self_company', '=', 1);
-        $this->clientAll = $this->clientAll->where('staffing_company_relation.final_status', '=', 1);
-        $this->clientAll = $this->clientAll->where('staffing_company_relation.from_company_id', '=', $company_id);
-        $this->clientAll = $this->clientAll->groupBy('staffing_company_relation.to_company_id');
-        $clientAll = $this->clientAll->get();
-        $spartnerCounter['spartnerAll'] = count($clientAll);
-
-        // SENT REQUEST INVITATION
-        $spartnerCounter['sentRequest'] = 0;
-        $sentRequest = DB::table('staffing_company_invitation')
-            ->select('staffing_company_invitation.id')
-            ->where('staffing_company_invitation.from_company_id', '=', $company_id)
-            ->where('staffing_company_invitation.to_invitation_status', '!=', 1)
-            ->count();
-        $spartnerCounter['sentRequest'] = $sentRequest;
-
-        // Direct Client
-        $spartnerCounter['clientDirect'] = 0;
-        $clientDirect = DB::table('staffing_company_relation')
-            ->select('staffing_company_relation.id')
-            ->where('staffing_company_relation.to_company_id', '=', $company_id)
-            ->where('staffing_company_relation.final_status', '=', 1)
-            ->count();
-        $spartnerCounter['clientDirect'] = $clientDirect;
-
-        // Custom Client
-        $spartnerCounter['clientCustom'] = 0;
-        $clientCustom = Client::select('clients.id')->where('clients.self_company', '!=', 1)->where('clients.company_id', '=', $company_id)->count();
-        $spartnerCounter['clientCustom'] = $clientCustom;
-
-        // Agencies added this month (trend for All Agencies card)
-        $spartnerCounter['spartnerThisMonth'] = DB::table('staffing_company_relation')
-            ->where('from_company_id', $company_id)
-            ->where('final_status', 1)
-            ->whereYear('created_at', now()->year)
-            ->whereMonth('created_at', now()->month)
-            ->count();
-
-        // Newly Onboarded — agencies whose relation was created in the last 7 days
-        $spartnerCounter['newlyOnboarded'] = DB::table('staffing_company_relation')
-            ->where('from_company_id', $company_id)
-            ->where('final_status', 1)
-            ->where('created_at', '>=', now()->subDays(7))
-            ->count();
-
-        // Connected agency IDs for this company
-        $connectedAgencyIds = DB::table('staffing_company_relation')
-            ->where('from_company_id', $company_id)
-            ->where('final_status', 1)
-            ->pluck('to_company_id')
-            ->toArray();
-
-        if (empty($connectedAgencyIds)) {
-            $spartnerCounter['workingOnJobs'] = 0;
-            $spartnerCounter['workingOnJobsThisMonth'] = 0;
-        } else {
-            // Working on Jobs — distinct agencies that have at least one active job (ES, same source as list view)
-            $esJobs = $this->elasticService->getClient()->search([
-                'index' => ELASTIC_JOBS,
-                'body' => [
-                    'size' => 0,
-                    'query' => [
-                        'bool' => [
-                            'must' => [
-                                ['term' => ['status' => 'active']],
-                                ['nested' => [
-                                    'path' => 'recommendation_relation',
-                                    'query' => [
-                                        'bool' => [
-                                            'must' => [
-                                                ['term' => ['recommendation_relation.from_company_id' => $company_id]],
-                                                ['term' => ['recommendation_relation.final_status' => 1]],
-                                                ['terms' => ['recommendation_relation.to_company_id' => $connectedAgencyIds]],
-                                            ],
-                                        ],
-                                    ],
-                                ]],
-                            ],
-                        ],
-                    ],
-                    'aggs' => [
-                        'agencies' => [
-                            'nested' => ['path' => 'recommendation_relation'],
-                            'aggs' => [
-                                'filtered' => [
-                                    'filter' => [
-                                        'bool' => [
-                                            'must' => [
-                                                ['term' => ['recommendation_relation.from_company_id' => $company_id]],
-                                                ['term' => ['recommendation_relation.final_status' => 1]],
-                                                ['terms' => ['recommendation_relation.to_company_id' => $connectedAgencyIds]],
-                                            ],
-                                        ],
-                                    ],
-                                    'aggs' => [
-                                        'distinct_agencies' => [
-                                            'cardinality' => ['field' => 'recommendation_relation.to_company_id'],
-                                        ],
-                                    ],
-                                ],
-                            ],
-                        ],
-                    ],
-                ],
-            ]);
-            $spartnerCounter['workingOnJobs'] = $esJobs['aggregations']['agencies']['filtered']['distinct_agencies']['value'] ?? 0;
-
-            // Agencies assigned to jobs this month (trend for Working on Jobs)
-            $startOfMonth = now()->startOfMonth()->toIso8601String();
-            $endOfMonth = now()->endOfMonth()->toIso8601String();
-            $esJobsMonth = $this->elasticService->getClient()->search([
-                'index' => ELASTIC_JOBS,
-                'body' => [
-                    'size' => 0,
-                    'query' => [
-                        'bool' => [
-                            'must' => [
-                                ['nested' => [
-                                    'path' => 'recommendation_relation',
-                                    'query' => [
-                                        'bool' => [
-                                            'must' => [
-                                                ['term' => ['recommendation_relation.from_company_id' => $company_id]],
-                                                ['term' => ['recommendation_relation.final_status' => 1]],
-                                                ['terms' => ['recommendation_relation.to_company_id' => $connectedAgencyIds]],
-                                                ['range' => ['recommendation_relation.created_at' => ['gte' => $startOfMonth, 'lte' => $endOfMonth]]],
-                                            ],
-                                        ],
-                                    ],
-                                ]],
-                            ],
-                        ],
-                    ],
-                    'aggs' => [
-                        'agencies' => [
-                            'nested' => ['path' => 'recommendation_relation'],
-                            'aggs' => [
-                                'filtered' => [
-                                    'filter' => [
-                                        'bool' => [
-                                            'must' => [
-                                                ['term' => ['recommendation_relation.from_company_id' => $company_id]],
-                                                ['term' => ['recommendation_relation.final_status' => 1]],
-                                                ['terms' => ['recommendation_relation.to_company_id' => $connectedAgencyIds]],
-                                                ['range' => ['recommendation_relation.created_at' => ['gte' => $startOfMonth, 'lte' => $endOfMonth]]],
-                                            ],
-                                        ],
-                                    ],
-                                    'aggs' => [
-                                        'distinct_agencies' => [
-                                            'cardinality' => ['field' => 'recommendation_relation.to_company_id'],
-                                        ],
-                                    ],
-                                ],
-                            ],
-                        ],
-                    ],
-                ],
-            ]);
-            $spartnerCounter['workingOnJobsThisMonth'] = $esJobsMonth['aggregations']['agencies']['filtered']['distinct_agencies']['value'] ?? 0;
-        }
-
-        // Actively Submitting — agencies that submitted at least one candidate in last 30 days
-        $spartnerCounter['activelySubmitting'] = DB::table('job_applications')
-            ->join('staffing_company_relation', function ($join) use ($company_id) {
-                $join->on('staffing_company_relation.to_company_id', '=', 'job_applications.thirdparty_company_id')
-                    ->where('staffing_company_relation.from_company_id', $company_id)
-                    ->where('staffing_company_relation.final_status', 1);
-            })
-            ->join('jobs', 'jobs.id', '=', 'job_applications.job_id')
-            ->where('jobs.company_id', $company_id)
-            ->where('job_applications.created_at', '>=', now()->subDays(30))
-            ->distinct('job_applications.thirdparty_company_id')
-            ->count('job_applications.thirdparty_company_id');
-
-        // Actively Submitting today
-        $spartnerCounter['activelySubmittingToday'] = DB::table('job_applications')
-            ->join('staffing_company_relation', function ($join) use ($company_id) {
-                $join->on('staffing_company_relation.to_company_id', '=', 'job_applications.thirdparty_company_id')
-                    ->where('staffing_company_relation.from_company_id', $company_id)
-                    ->where('staffing_company_relation.final_status', 1);
-            })
-            ->join('jobs', 'jobs.id', '=', 'job_applications.job_id')
-            ->where('jobs.company_id', $company_id)
-            ->whereDate('job_applications.created_at', now()->toDateString())
-            ->distinct('job_applications.thirdparty_company_id')
-            ->count('job_applications.thirdparty_company_id');
-
-        return $spartnerCounter;
-    }
-
     public function staffing_invitation(Request $request, $id)
     {
 
@@ -556,7 +354,9 @@ class ServiceCompanyConsultancyController extends ServiceCompanyBaseController
                         ];
                         DB::table('staffing_company_invitation')->insert($staffing_company_invitation);
                         $invitationId = DB::getPdo()->lastInsertId();
-                        $Companies = Company::withoutGlobalScopes()->find(auth()->user()->company_id);
+                        $this->agencyListingService->clearCompanyStatsCache($company_id);
+                        $this->agencyListingService->clearUserConsultancyCache($userId);
+                        $Companies = Company::find(auth()->user()->company_id);
 
                         GeneralMethod::clientRequestIndexElastic($invitationId);
 
@@ -613,8 +413,8 @@ class ServiceCompanyConsultancyController extends ServiceCompanyBaseController
 						<li> Register on Jero.works, or </li>
 						<li>If already registered, accept the request from the <b>Client Request tab</b> </li>
 						</ul><br>
-						After completing these steps, they will be able to start collaborating with your organization..';
-                    $spartnerDataCnt = $this->spartnerDataCnt();
+						After completing these steps, they will be able to start collaborating with your organization.';
+                    $spartnerDataCnt = $this->agencyListingService->getSummaryCounters($company_id);
 
                     return Reply::dataOnly(['status' => 'success', 'message' => $message, 'spartnerDataCnt' => $spartnerDataCnt]);
                 }
@@ -633,10 +433,12 @@ class ServiceCompanyConsultancyController extends ServiceCompanyBaseController
                 'to_status' => 0,
                 // 'job_id'			=>
             ];
-            $Companies = Company::withoutGlobalScopes()->find(auth()->user()->company_id);
+            $Companies = Company::find(auth()->user()->company_id);
 
             DB::table('staffing_company_invitation')->insert($staffing_company_invitation);
             $invitationId = DB::getPdo()->lastInsertId();
+            $this->agencyListingService->clearCompanyStatsCache($company_id);
+            $this->agencyListingService->clearUserConsultancyCache($userId);
 
             GeneralMethod::clientRequestIndexElastic($invitationId);
 
@@ -701,7 +503,7 @@ class ServiceCompanyConsultancyController extends ServiceCompanyBaseController
 
             $message = 'Invitation request has been sent on email !';
 
-            $spartnerDataCnt = $this->spartnerDataCnt();
+            $spartnerDataCnt = $this->agencyListingService->getSummaryCounters($company_id);
 
             return Reply::dataOnly(['status' => 'success', 'message' => $message, 'spartnerDataCnt' => $spartnerDataCnt]);
 
@@ -713,7 +515,7 @@ class ServiceCompanyConsultancyController extends ServiceCompanyBaseController
     {
         $this->pageTitle = __('Request Partners');
         $company_id = auth()->user()->company_id;
-        $this->spartnerDataCnt = $this->spartnerDataCnt();
+        $this->spartnerDataCnt = $this->agencyListingService->getSummaryCounters($company_id);
 
         return view('service_company.consultancy.requestPartners', $this->data);
     }
@@ -730,9 +532,28 @@ class ServiceCompanyConsultancyController extends ServiceCompanyBaseController
         $unclearedDataList = $unclearedDataList->where('staffing_company_invitation.from_company_id', '=', $company_id);
         $unclearedDataList = $unclearedDataList->where('staffing_company_invitation.to_invitation_status', '!=', 1);
 
-        // $unclearedDataList 	= $unclearedDataList->get();
-        return DataTables::of($unclearedDataList)
-            ->editColumn('chkbox', function ($row) {
+        $dataList = $unclearedDataList->get();
+        $toCompanyIds = array_filter(array_unique($dataList->pluck('to_company_id')->toArray()));
+
+        $companyTagsGrouped = [];
+        $clientsGrouped = [];
+
+        if (!empty($toCompanyIds)) {
+            $companyTagsGrouped = DB::table('company_tags')
+                ->whereIn('company_id', $toCompanyIds)
+                ->get()
+                ->groupBy('company_id');
+
+            $clientsGrouped = DB::table('clients')
+                ->select('clients.id', 'clients.company_id', 'clients.tags')
+                ->whereIn('clients.company_id', $toCompanyIds)
+                ->where('clients.self_company', 1)
+                ->get()
+                ->keyBy('company_id');
+        }
+
+        return DataTables::of($dataList)
+            ->editColumn('chkbox', function ($row) use ($companyTagsGrouped, $clientsGrouped) {
 
                 $cname = $btn = $to_company_id = $to_invitation_status = $tags_html = '';
 
@@ -778,21 +599,19 @@ class ServiceCompanyConsultancyController extends ServiceCompanyBaseController
 
                 $to_company_id = $tags_html = '';
                 if ($row->to_company_id > 0) {
-                    $company_tags = DB::table('company_tags')->select('*')->where('company_id', $row->to_company_id)->get();
-                    foreach ($company_tags as $val) {
-                        $tags_html .= '<span class="badge badge-light my-1">'.$val->tag_name.'</span> ';
+                    if (isset($companyTagsGrouped[$row->to_company_id])) {
+                        foreach ($companyTagsGrouped[$row->to_company_id] as $val) {
+                            $tags_html .= '<span class="badge badge-light my-1">'.$val->tag_name.'</span> ';
+                        }
                     }
-                }
 
-                // dd($row->to_company_id);
-                if ($row->to_company_id > 0) {
-                    $clientArr = DB::table('clients')->select('clients.id', 'clients.tags')->where('clients.company_id', '=', $row->to_company_id)->where('clients.self_company', '=', 1)->first();
-                    // dd($clientArr);
-                    $tags = @$clientArr->tags;
-                    if (! empty($tags)) {
-                        $tagsArr = explode(',', $tags);
-                        foreach ($tagsArr as $key => $val) {
-                            $tags_html .= '<span class="badge badge-light my-1 me-2">'.$val.'</span>';
+                    if (isset($clientsGrouped[$row->to_company_id])) {
+                        $tags = $clientsGrouped[$row->to_company_id]->tags;
+                        if (!empty($tags)) {
+                            $tagsArr = explode(',', $tags);
+                            foreach ($tagsArr as $val) {
+                                $tags_html .= '<span class="badge badge-light my-1 me-2">'.$val.'</span>';
+                            }
                         }
                     }
                 }
@@ -874,7 +693,7 @@ class ServiceCompanyConsultancyController extends ServiceCompanyBaseController
     public function suggestedPartners($id)
     {
         $company_id = auth()->user()->company_id;
-        $this->spartnerDataCnt = $this->spartnerDataCnt();
+        $this->spartnerDataCnt = $this->agencyListingService->getSummaryCounters($company_id);
         $this->pageTitle = __('Suggested Partners');
 
         return view('service_company.consultancy.suggestedPartners', $this->data);
@@ -882,6 +701,28 @@ class ServiceCompanyConsultancyController extends ServiceCompanyBaseController
 
     public function dviewMore($id)
     {
+        $company_id = auth()->user()->company_id;
+
+        // Step A: Tenant Ownership Guard — resolve client -> company ID
+        $partnerCompanyId = DB::table('clients')
+            ->where('id', $id)
+            ->value('company_id');
+
+        if (!$partnerCompanyId) {
+            abort(404, 'Partner not found.');
+        }
+
+        // Step B: verify the auth'd tenant has an accepted relation with this company
+        $isAuthorizedPartner = DB::table('staffing_company_relation')
+            ->where(function ($query) use ($company_id, $partnerCompanyId) {
+                $query->where('from_company_id', $company_id)->where('to_company_id', $partnerCompanyId);
+            })->orWhere(function ($query) use ($company_id, $partnerCompanyId) {
+                $query->where('from_company_id', $partnerCompanyId)->where('to_company_id', $company_id);
+            })
+            ->where('final_status', 1)
+            ->exists();
+
+        abort_unless($isAuthorizedPartner, 404, 'Partner not found or unauthorized.');
 
         $previousUrl = url()->previous();
         $this->all_tab_show = false;
@@ -889,10 +730,9 @@ class ServiceCompanyConsultancyController extends ServiceCompanyBaseController
             $this->all_tab_show = true;
         }
 
-        $company_id = auth()->user()->company_id;
         $this->company_id = $company_id;
         $cachePayload = [
-            'consultanncyId' => $id,
+            'id' => $id,
             'company' => $company_id,
             'user_id' => $this->user->id,
         ];
@@ -901,13 +741,11 @@ class ServiceCompanyConsultancyController extends ServiceCompanyBaseController
         $version = cache()->get($versionKey, 1);
         $cacheKeySet = 'consultancyviewmore:'.$this->user->id.':'.$version.':'.md5(json_encode($cachePayload));
         /* ----------------------------
-        ⚡ Check DragonflyDB first
+        ⚡ Check DragonflyDB / Redis first (Quick Win Step 4)
         ----------------------------- */
         if (cache()->has($cacheKeySet)) {
-            // return response()->json(cache()->get($cacheKeySet));
+            return response()->json(cache()->get($cacheKeySet));
         }
-
-        // dd("kf");
 
         $this->countries = Country::all();
         $this->categories = JobCategory::all();
@@ -953,11 +791,8 @@ class ServiceCompanyConsultancyController extends ServiceCompanyBaseController
             }
         }
 
-        $this->active_requisition = DB::table('jobs')->select('jobs.id')->where('jobs.client_id', $id)->where('jobs.status', 'active')->count();
-
-        $this->active_requisition = DB::table('jobs')->leftJoin('recommendation_relation', 'recommendation_relation.job_id', '=', 'jobs.id')->select('jobs.id')->where('recommendation_relation.to_company_id', $company_id)->where('jobs.status', 'active')->count();
-
-        // dd($this->directClientDetail->from_company_id);
+        // Quick Win Step 5b: Queries 1 & 2 deleted; Query 3 below provides exact final value
+        $this->active_requisition = 0;
 
         $requisitionRow = '';
         $requisitionRow = DB::table('recommendation_relation')
@@ -975,9 +810,6 @@ class ServiceCompanyConsultancyController extends ServiceCompanyBaseController
         if ($requisitionRow->active > 0) {
             $this->active_requisition = $requisitionRow->active;
         }
-        // dd($this->active_requisition);
-
-        // dd($this->directClientDetail->to_company_id,$this->directClientDetail->from_company_id, $company_id);
 
         $this->client_contact_info = DB::table('roles')
             ->select('users.*')

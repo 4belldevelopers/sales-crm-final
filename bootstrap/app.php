@@ -57,6 +57,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'role_or_permission' => \Spatie\Permission\Middleware\RoleOrPermissionMiddleware::class,
             'recruiter.throttle' => \App\Http\Middleware\RecruiterThrottle::class,
             'recruiter.sliding' => \App\Http\Middleware\RecruiterSlidingWindowThrottle::class,
+            'consultancy.etag' => \App\Http\Middleware\ConsultancyETag::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

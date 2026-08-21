@@ -46,6 +46,7 @@ class JobObserver
     {
         if ($job->company_id) {
             \App\Support\Cache\TenantCache::invalidateTenant($job->company_id);
+            \Illuminate\Support\Facades\Cache::forget("ats:spartner_summary_cnt:comp_{$job->company_id}");
         }
 
         if (class_exists(GeneralMethod::class) && method_exists(GeneralMethod::class, 'JobAddEditUpload')) {

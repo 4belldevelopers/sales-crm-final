@@ -84,6 +84,7 @@ class ElasticBenchCandidatesIndex
                 'job_applications.percentage_hike',
                 'job_applications.comment',
                 'job_applications.countforadd',
+                'job_applications.bench_id',
                 'job_applications.superadminstatus',
                 'job_applications.updated_at',
                 'job_applications.updated_at',
@@ -209,6 +210,7 @@ class ElasticBenchCandidatesIndex
 
                 $bulkData[] = [
                     'id' => $application->id,
+                    'bench_id' => $application->id,
                     'thirdparty_company_id' => $application->thirdparty_company_id,
                     'full_name' => $application->full_name,
                     'company_id' => $application->company_id,

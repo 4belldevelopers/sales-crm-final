@@ -76,12 +76,6 @@
 
     @endphp
 
-    <link
-      rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
-      crossorigin="anonymous"
-      referrerpolicy="no-referrer"
-    />
     <style>
       /* ── Jobs tab: card/grid layout (scoped to #tab-jobs) ── */
       #tab-jobs {
@@ -1847,7 +1841,7 @@
                             ? @$directClientDetail->description
                             : @$directClientDetail->companies_description;
                     @endphp
-                    {!! $description !!}
+                    {{ $description }}
                   </div>
                 </div>
               </div>
@@ -1986,7 +1980,7 @@
                       <div class="commercial-title">
                         Contract Hiring Services
                       </div>
-                      <div class="commercial-desc">{!! $current_cur !!} {{ $minimumContractRates }} / {{ $current_mode }}</div>
+                      <div class="commercial-desc">{{ $current_cur }} {{ $minimumContractRates }} / {{ $current_mode }}</div>
                     </div>
                   </div>
                 </div>
