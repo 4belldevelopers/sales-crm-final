@@ -360,9 +360,7 @@ $current_job_id = @$job_id;
                                                 </a> 
                                             </div> 
                                         </div> 
-                                        <div class="' .
-                                        $skilltagclass .
-                                        '" style="position: absolute; bottom: 0; white-space: nowrap;width: 100%;overflow: hidden;">
+                                        <div class="' .@$skilltagclass .'" style="position: absolute; bottom: 0; white-space: nowrap;width: 100%;overflow: hidden;">
                                                     <span class="badge badge-light-success my-1">Skills:</span>
                                                 
                                                 ' .
