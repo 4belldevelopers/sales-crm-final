@@ -1046,10 +1046,24 @@ function sendContactMail(email) {
                                             company_id : company_id   // ✅ PASS HERE
                                         },
 										beforeSend	:	function() {
-													  				$('#bench_application_show_right_bar').html('<img src="'+baseurl+'" height="35px" width="100%">');
+													  				// INTENT: detach drawer body before inject to evict
+													  				// orphaned jQuery handlers / intlTelInput instances from
+													  				// prior candidate, then reinit Metronic drawer widgets
+													  				// (drawer plugins re-scan on .empty() + DOM rebuild).
+													  				var $bar = $('#bench_application_show_right_bar');
+													  				$bar.empty();
+													  				$bar.html('<img src="'+baseurl+'" height="35px" width="100%">');
 														},
 										success 	:	function (response) {
-																			$('#bench_application_show_right_bar').html(response.view);
+																			var $bar = $('#bench_application_show_right_bar');
+																			// .empty() before .html() drops prior handlers & nodes
+																			// so intlTelInput (rendered inside benchshowdetail)
+																			// doesn't accumulate per drawer open.
+																			$bar.empty().html(response.view);
+																			// Re-init any drawer-scoped JS bound by benchshowdetail
+																			if (typeof KTDrawer !== 'undefined') {
+																				KTDrawer.createInstances();
+																			}
 														}
 								});
 		});

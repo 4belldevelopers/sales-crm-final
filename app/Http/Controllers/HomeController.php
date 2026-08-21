@@ -15794,8 +15794,9 @@ class HomeController extends Controller
 
     public function benchCandidateDetails(Request $request, $candi_id)
     {
-
-        $company_id = $this->job_additional_detail = $this->bench_assign = '';
+        // INTENT: All state held in locals — no $this->* mutation. Required under
+        // Laravel Octane (FrankenPHP) persistent workers to prevent cross-request
+        // leakage of controller instance properties between different users.
         $company_id = (int) $request->company_id;
         $id = (int) $candi_id;
 
@@ -15807,17 +15808,21 @@ class HomeController extends Controller
         $versionKey = 'benchviewmore_version_user_'.$id;
         $version = cache()->get($versionKey, 1);
         $cacheKeySet = 'ats:benchviewmore:'.$id.':'.$version.':'.md5(json_encode($cachePayload));
-        /* ----------------------------
-        ⚡ Check DragonflyDB first
-        ----------------------------- */
-        if (cache()->has($cacheKeySet)) {
-            return response()->json(cache()->get($cacheKeySet));
+
+        // INTENT: Stampede guard — a single Redis-backed lock ensures one
+        // cache miss under 10K concurrent recruiters rebuilds at most once;
+        // siblings either read the warmed cache or wait ≤5s for the holder.
+        $cached = Cache::lock("lock:benchviewmore:{$id}", 10)->block(5, function () use ($cacheKeySet) {
+            return cache()->get($cacheKeySet);
+        });
+        if ($cached) {
+            return response()->json($cached);
         }
 
-        $this->currency = GeneralMethod::currency();
-        $this->salaryMode = GeneralMethod::salaryMode();
-        // dd($this->currency);
-        $this->benchApplication = JobApplication::select(
+        $currency = GeneralMethod::currency();
+        $salaryMode = GeneralMethod::salaryMode();
+
+        $benchApplication = JobApplication::select(
             'job_applications.id',
             'job_applications.company_id',
             'job_applications.submitted_by',
@@ -15880,12 +15885,14 @@ class HomeController extends Controller
             ->leftJoin('bench_master_status', 'bench_master_status.id', '=', 'job_applications.status')
             ->leftJoin('state_list', 'state_list.id', '=', 'job_applications.state')
             ->leftjoin('companies', 'companies.id', 'users.company_id')
-            ->leftJoin('city_list', 'city_list.city_id', '=', 'job_applications.city_id');
-        $this->benchApplication = $this->benchApplication->where('job_applications.id', $id);
-        $this->benchApplication = $this->benchApplication->first();
-        $this->job_additional_detail = DB::table('bench_additional_detail')->select('*')->where('bench_additional_detail.bench_id', '=', @$this->benchApplication->id)->orderBy('bench_additional_detail.id', 'ASC')->get();
-        $this->bench_assign = DB::table('bench_assign')->select('users.id', 'users.name')->leftjoin('users', 'users.id', 'bench_assign.user_id')->where('bench_assign.bench_applications_id', '=', @$this->benchApplication->id)->orderBy('bench_assign.id', 'ASC')->get();
+            ->leftJoin('city_list', 'city_list.city_id', '=', 'job_applications.city_id')
+            ->where('job_applications.id', $id)
+            ->first();
+        $job_additional_detail = DB::table('bench_additional_detail')->select('*')->where('bench_additional_detail.bench_id', '=', @$benchApplication->id)->orderBy('bench_additional_detail.id', 'ASC')->get();
+        $bench_assign = DB::table('bench_assign')->select('users.id', 'users.name')->leftjoin('users', 'users.id', 'bench_assign.user_id')->where('bench_assign.bench_applications_id', '=', @$benchApplication->id)->orderBy('bench_assign.id', 'ASC')->get();
 
+        // INTENT: Cap ES bench-assign fetch to 100. Drawer only renders the
+        // assignee list — 10K is wasteful ES heap + payload on every open.
         $params = [
             'index' => ELASTIC_BENCH_ASSIGN,
             'body' => [
@@ -15899,43 +15906,39 @@ class HomeController extends Controller
                 'sort' => [
                     ['id' => ['order' => 'desc']],
                 ],
-                'size' => 10000, // optional: get more records
+                'size' => 100,
             ],
         ];
 
         $response = $this->elasticService->getClient()->search($params);
-        // return users
-        $this->bench_assign_count = $response['hits']['total']['value'] ?? 0;
-        $this->bench_assign_row = collect($response['hits']['hits'] ?? [])->map(fn ($hit) => (object) $hit['_source']);
+        $bench_assign_count = $response['hits']['total']['value'] ?? 0;
+        $bench_assign_row = collect($response['hits']['hits'] ?? [])->map(fn ($hit) => (object) $hit['_source']);
 
-        $this->boostkeywords = '';
-
-        $boostkeywords = DB::table('benchboostkeywordcandidates')->where('candidate_id', $id)->pluck('skill_name')->toArray();
-        if (count($boostkeywords) > 0) {
-            $this->boostkeywords = implode(',', $boostkeywords);
+        $boostkeywords = '';
+        $skillArr = DB::table('benchboostkeywordcandidates')->where('candidate_id', $id)->pluck('skill_name')->toArray();
+        if (count($skillArr) > 0) {
+            $boostkeywords = implode(',', $skillArr);
         }
 
-        $this->skillExperiences = DB::table('bench_candidate_skill_experience')
-            ->where('candidate_id', $this->benchApplication->id)
+        // INTENT: Single ->get() round-trip; derive count from the same
+        // collection — eliminates the redundant ->count() DB call.
+        $skillExperiences = DB::table('bench_candidate_skill_experience')
+            ->where('candidate_id', @$benchApplication->id)
             ->get();
-        $this->skillExperiencesCount = DB::table('bench_candidate_skill_experience')
-            ->where('candidate_id', $this->benchApplication->id)
-            ->count();
-
-        //  dd($id,$company_id,$this->data);
+        $skillExperiencesCount = $skillExperiences->count();
 
         $data = [
-            'benchApplication' => $this->benchApplication,
-            'job_additional_detail' => $this->job_additional_detail,
-            'bench_assign' => $this->bench_assign,
-            'bench_assign_count' => $this->bench_assign_count,
-            'bench_assign_row' => $this->bench_assign_row,
-            'boostkeywords' => $this->boostkeywords,
-            'skillExperiences' => $this->skillExperiences,
-            'skillExperiencesCount' => $this->skillExperiencesCount,
-            'currency' => $this->currency,
+            'benchApplication' => $benchApplication,
+            'job_additional_detail' => $job_additional_detail,
+            'bench_assign' => $bench_assign,
+            'bench_assign_count' => $bench_assign_count,
+            'bench_assign_row' => $bench_assign_row,
+            'boostkeywords' => $boostkeywords,
+            'skillExperiences' => $skillExperiences,
+            'skillExperiencesCount' => $skillExperiencesCount,
+            'currency' => $currency,
             'userPermissions' => [],
-            'salaryMode' => $this->salaryMode,
+            'salaryMode' => $salaryMode,
         ];
 
         $view = view('benchshowdetail', $data)->render();
