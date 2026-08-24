@@ -8756,6 +8756,8 @@ END:VCALENDAR";
                         'interview_job_id' => $row->interview_job_id,
                         'interview_job_wise_con_id' => $row->interview_job_wise_con_id,
                         'email_template' => $row->email_template,
+                        'has_feedback' => !empty($row->feedback) ? 1 : 0,
+                        'client_title_name' => $row->client_name ?: $row->company_name,
                         'recommendation_relation' => $recommendation_relation ?? [],
                         'job_assign' => $job_assign ?? [],
                     ],

@@ -396,8 +396,9 @@ Route::group(['middleware' => 'auth'], function () {
                 Route::post('boostkeywordadd', [ServiceCompanyBenchCandidatesController::class, 'boostkeywordadd'])->name('bench-candidates.boostkeywordadd');
                 Route::post('bench-switch', [ServiceCompanyBenchCandidatesController::class, 'benchSwitch'])->name('bench-candidates.benchSwitch');
                 Route::get('interview-view/bench-candidates', [InterviewScheduleController::class, 'benchinterviewtable'])->name('bench-candidates.bench-table-view');
-                Route::get('bench-data/bench-candidates', [InterviewScheduleController::class, 'benchinterviewdata'])->name('bench-candidates.bench-data');
+                // Route::get('bench-data/bench-candidates', [InterviewScheduleController::class, 'benchinterviewdata'])->name('bench-candidates.bench-data'); // Deactivated: legacy broken endpoint (§3.4 audit)
                 Route::get('bench-dataInterview_ajax/bench-candidates', [InterviewScheduleController::class, 'benchinterviewdata_ajax'])->name('bench-candidates.benchinterviewdata_ajax');
+                Route::get('bench-candidates_ajax/v2/benchinterviewdata', [InterviewScheduleController::class, 'benchinterviewdata_v2'])->name('bench-candidates.benchinterviewdata_v2');
                 Route::get('bench-candidates/hmlistingupdate/{id?}', [ServiceCompanyBenchCandidatesController::class, 'hmlistingupdate'])->name('bench-candidates.hmlistingupdate');
                 Route::get('bench-candidates/talent_pool', [ServiceCompanyBenchCandidatesController::class, 'talent_pool'])->name('bench-candidates.talent_pool');
                 Route::get('bench-candidates/benchListingPoolData', [ServiceCompanyBenchCandidatesController::class, 'benchListingPoolData'])->name('bench-candidates.benchListingPoolData');
