@@ -975,10 +975,27 @@ $(document).on('click', '.client-hm-listing', function ()
       }, 200);
        
     }
-   
 
-
-
+    $(document).on('click', '.jd-drawer-close-btn, #kt_activitiesJob_close', function(e) {
+        e.preventDefault();
+        var drawerEl = this.closest('[data-kt-drawer="true"]') || document.getElementById('kt_activitiesJob');
+        if (drawerEl) {
+            if (typeof KTDrawer !== 'undefined') {
+                var inst = KTDrawer.getInstance(drawerEl);
+                if (!inst && typeof KTDrawer === 'function') {
+                    inst = new KTDrawer(drawerEl);
+                }
+                if (inst && typeof inst.hide === 'function') {
+                    inst.hide();
+                    return;
+                }
+            }
+            drawerEl.classList.remove('drawer-on');
+            document.querySelectorAll('.drawer-overlay').forEach(function(el) { el.remove(); });
+            document.body.removeAttribute('data-kt-drawer-activities');
+            document.body.style.overflow = '';
+        }
+    });
 
 </script>
 

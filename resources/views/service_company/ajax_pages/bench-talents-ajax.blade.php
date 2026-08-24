@@ -44,14 +44,7 @@
 
     @endphp
         <tr style="height: 84px; position: relative;">
-            {{-- Col 1: Checkbox --}}
-            <td class="align-middle px-3">
-                <div class="form-check form-check-sm form-check-custom form-check-solid">
-                    <input class="form-check-input select-bench-candidate" type="checkbox" value="{{ $row->id }}" />
-                </div>
-            </td>
-
-            {{-- Col 2: TALENT --}}
+            {{-- Col 1: TALENT --}}
             <td class="align-middle" style="position: relative; padding-bottom: 24px !important;">
                 @php
                     $bgTextDecore = $strVal = '';
@@ -309,7 +302,7 @@
 @else
     <tr style="height: 102px; position: relative; background: #fffcfc7a;">
 
-        <td colspan="10" style="text-align:center; color:black;">
+        <td colspan="8" style="text-align:center; color:black;">
             <div class="" style="display:flex; justify-content:center; align-items:center; width:100%;">
                 <a href="{{ url('/service_company/bench-candidates/create') }}"  class="btn btn-sm btn-primary">Add Inhouse Talent</a>
             </div>

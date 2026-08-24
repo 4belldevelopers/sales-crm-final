@@ -1237,35 +1237,15 @@ $end_date   =	date('d-M-Y', $date);
             }
         }
     }
+ @endphp
 
 
 
-
-@endphp
-
-
-
-    @if(empty($hideMarketSections))
-    <div class="card-toolbar">
-        <button type="button" class="btn btn-sm btn-icon page-close btn-active-light-danger me-n5" id="kt_activitiesJob_close"> 
-            <span class="svg-icon svg-icon-1">
-                <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="24px" height="24px" viewBox="0 0 24 24" version="1.1">
-                <g transform="translate(12.000000, 12.000000) rotate(-45.000000) translate(-12.000000, -12.000000) translate(4.000000, 4.000000)" fill="currentColor">
-                    <rect x="0" y="7" width="16" height="2" rx="1" />
-                    <rect opacity="0.5" transform="translate(8.000000, 8.000000) rotate(-270.000000) translate(-8.000000, -8.000000)" x="0" y="7" width="16" height="2" rx="1" />
-                </g>
-                </svg>
-            </span> 
-        </button>
-    </div>
-    @endif {{-- hideMarketSections: kt_activitiesJob_close --}}
 
     <div class="app-container jd-wrap">
 
         <main class="main-content" id="mainContent">
 
-            {{-- @if($benchshowtab)
-               @if(@$jobfindhide!=false) --}}
                     <?php
                        $public_bench_path = url('/service_company/apptracker/public_bench/' . GeneralMethod::value_encrypt(@$job->id));
                         if(($job->comId ?? $job->company_id ?? null)==auth()->user()->company_id){
@@ -1278,7 +1258,14 @@ $end_date   =	date('d-M-Y', $date);
                     ?>
 
                     @if(empty($hideMarketSections))
-                    <div class="top-actions">
+                    <div class="top-actions" style="position: relative; padding-right: 70px;">
+                        <!-- Close button positioned at top-right of drawer for /service_company/jobs -->
+                        <button type="button" class="btn btn-sm btn-icon btn-active-light-danger jd-drawer-close-btn" onclick="(function(btn){var d=btn.closest('[data-kt-drawer=\&quot;true\&quot;]')||document.getElementById('kt_activitiesJob');if(d){if(typeof KTDrawer!=='undefined'){var inst=KTDrawer.getInstance(d);if(!inst&&typeof KTDrawer==='function')inst=new KTDrawer(d);if(inst&&typeof inst.hide==='function'){inst.hide();return;}}d.classList.remove('drawer-on');document.querySelectorAll('.drawer-overlay').forEach(function(e){e.remove();});document.body.removeAttribute('data-kt-drawer-activities');document.body.style.overflow='';}})(this);" style="cursor: pointer; position: absolute; top: 14px; right: 20px; z-index: 20; width: 34px; height: 34px; border-radius: 8px; border: 1px solid #E2E8F0; background: #FFFFFF; display: flex; align-items: center; justify-content: center; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04); transition: all 0.15s ease;" title="Close"> 
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#64748B" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                <line x1="18" y1="6" x2="6" y2="18"></line>
+                                <line x1="6" y1="6" x2="18" y2="18"></line>
+                            </svg>
+                        </button>
                         @if($benchshowtab)
                             @if($jobfindhide)
                                 <a href="{{ $url }}" class="">
@@ -1292,10 +1279,6 @@ $end_date   =	date('d-M-Y', $date);
                                     </button>
                                 </a>
                                 <script>
-                                    // Hold/Closed jobs: block the direct navigation and explain why,
-                                    // same popup as the apptracker page's Add Candidate button. Bound
-                                    // directly (not delegated) since this fragment is re-injected fresh
-                                    // each time the job drawer opens.
                                     $('.job-drawer-add-candidate').off('click').on('click', function(e) {
                                         var jobStatus = $(this).data('job-status');
                                         if (jobStatus === 'hold' || jobStatus === 'inactive') {
@@ -1335,8 +1318,6 @@ $end_date   =	date('d-M-Y', $date);
                                 @if($viewmore)
                                     @if($agencyView)
                                     @php
-                                        // Same Direct Client check used on the jobs list — a job recommended to
-                                        // this agency isn't this agency's to change the status of.
                                         $isDirectClientJob = $recommendation_id > 0 && @$to_company_id == auth()->user()->company_id;
                                     @endphp
                                     <button class="action-btn status_stage" data-row-id="{{ @$job->id }}" data-direct-client="{{ $isDirectClientJob ? '1' : '0' }}">
@@ -1350,11 +1331,18 @@ $end_date   =	date('d-M-Y', $date);
 
                     </div>
                     @endif {{-- hideMarketSections: top-actions --}}
-                {{-- @endif          
-            @endif --}}
 
             <div class="content-area">
-                <div class="job-header-card fade-in-up">
+                <div class="job-header-card fade-in-up" style="position: relative;">
+                    @if(!empty($hideMarketSections))
+                    <!-- Close button positioned at top-right corner inside job header card (market-jobs/0 preserved position) -->
+                    <button type="button" class="btn btn-sm btn-icon btn-active-light-danger jd-drawer-close-btn" onclick="(function(btn){var d=btn.closest('[data-kt-drawer=\&quot;true\&quot;]')||document.getElementById('kt_activitiesClientjob');if(d){if(typeof KTDrawer!=='undefined'){var inst=KTDrawer.getInstance(d);if(!inst&&typeof KTDrawer==='function')inst=new KTDrawer(d);if(inst&&typeof inst.hide==='function'){inst.hide();return;}}d.classList.remove('drawer-on');document.querySelectorAll('.drawer-overlay').forEach(function(e){e.remove();});document.body.removeAttribute('data-kt-drawer-activities');document.body.style.overflow='';}})(this);" style="cursor: pointer; position: absolute; top: 20px; right: 24px; z-index: 20; width: 34px; height: 34px; border-radius: 8px; border: 1px solid #E2E8F0; background: #FFFFFF; display: flex; align-items: center; justify-content: center; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04); transition: all 0.15s ease;" title="Close"> 
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#64748B" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="18" y1="6" x2="6" y2="18"></line>
+                            <line x1="6" y1="6" x2="18" y2="18"></line>
+                        </svg>
+                    </button>
+                    @endif
                     <div class="job-header-top">
                         <div class="job-header-left">
                             <?php
@@ -1631,7 +1619,6 @@ $end_date   =	date('d-M-Y', $date);
                                     <div class="info-row"><span class="info-label">Pay Type</span><span class="info-value">
                                     {{ $salaryMode[@$job->max_sal_mode ?? 0] }}</span></div>
                                     <div class="info-row"><span class="info-label">Currency</span><span class="info-value">{{ $currencyArr[@$job->min_salary_currency ?? 0] }}</span></div>
-                                    <div class="info-row"><span class="info-label">Hiring Manager</span><span class="info-value">{{ $hiringManager }}</span></div>
                                     <div class="info-row"><span class="info-label">Hiring HR</span><span class="info-value">{{ @$hrManager }}</span></div>
                                 </div>
                             </div>
@@ -3268,7 +3255,6 @@ $end_date   =	date('d-M-Y', $date);
                             ${row('Max Salary',     '{{ addslashes($salaryMax) }}')}
                             ${row('Pay Type',       '{{ addslashes($payType) }}')}
                             ${row('Currency',       '{{ addslashes($currText) }}')}
-                            ${row('Hiring Manager', '{{ addslashes($hiringManager ?? "") }}')}
                             ${row('Hiring HR',      '{{ addslashes($hrManager ?? "") }}')}
                         `)
                     )}

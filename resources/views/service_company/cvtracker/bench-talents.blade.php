@@ -228,7 +228,7 @@
 /* Match Summary Cards Grid */
 .btr-summary-grid {
     display: grid;
-    grid-template-columns: repeat(5, 1fr);
+    grid-template-columns: repeat(4, 1fr);
     gap: 12px;
 }
 
@@ -459,17 +459,10 @@
                   <div class="btr-hero-stat-value">{{ $bHeroNoticeStr }}</div>
                 </div>
               </div>
-
-              <div class="btr-hero-divider"></div>
-
-              <!-- View Job Details Action -->
-              <button type="button" class="btn btr-hero-btn-details client-show-detail" data-row-id="{{ $bHeroJobId }}">
-                View Job Details
-              </button>
             </div>
           </div>
 
-          <!-- 5 Match Summary Cards Row (Zero static initial numbers) -->
+          <!-- 4 Match Summary Cards Row (Zero static initial numbers) -->
           <div class="btr-summary-grid">
             <!-- 1. Total Matches -->
             <div class="btr-summary-card btr-card-blue">
@@ -528,21 +521,6 @@
               <div class="btr-card-icon-badge btr-badge-orange">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
-                </svg>
-              </div>
-            </div>
-
-            <!-- 5. Premium Agencies -->
-            <div class="btr-summary-card btr-card-purple">
-              <div>
-                <div class="btr-card-num btr-num-purple" id="bHeroPremiumAgencies">—</div>
-                <div class="btr-card-label">Premium Agencies</div>
-                <div class="btr-card-sub">Gold & Verified</div>
-              </div>
-              <div class="btr-card-icon-badge btr-badge-purple">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="m2 4 3 12h14l3-12-6 7-4-5-4 5-6-7z"></path>
-                  <path d="M5 20h14"></path>
                 </svg>
               </div>
             </div>
@@ -922,11 +900,6 @@
         <table class="table align-middle table-row-dashed fs-6">
           <thead>
             <tr class="fw-bolder text-muted text-uppercase fs-8">
-              <th class="w-25px pe-2">
-                <div class="form-check form-check-sm form-check-custom form-check-solid me-3">
-                  <input class="form-check-input" type="checkbox" data-kt-check="true" data-kt-check-target="#copyJobTable .form-check-input" value="1" />
-                </div>
-              </th>
               <th class="min-w-200px">TALENT</th>
               <th class="min-w-100px">EXPERIENCE</th>
               <th class="min-w-110px">AVAILABILITY</th>
@@ -1025,7 +998,7 @@
                     $('.loadingMessage').css({ display: 'none' });
                     $('.loader_search').css({ display: 'none' });
                     $('.page-loader').css('display', 'none');
-                    $('#copyJobTable').html('<tr><td colspan="10" class="text-center text-muted py-4">Failed to load data. Please refresh and try again.</td></tr>');
+                    $('#copyJobTable').html('<tr><td colspan="8" class="text-center text-muted py-4">Failed to load data. Please refresh and try again.</td></tr>');
                 }
             });
     }
