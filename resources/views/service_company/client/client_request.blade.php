@@ -72,11 +72,12 @@
         <h3 class="card-title fw-bolder text-dark">Direct Client</h3>
         <span class="h-20px border-gray-200 border-start mx-4 d-none"></span> </div>
       <div class="card-toolbar">
-        <button type="button" class="btn btn-sm btn-icon btn-active-light-primary me-n5" id="kt_activitiesDirectClient_close"> <span class="svg-icon svg-icon-1">
+        {{-- Intent: Direct Client details right-side drawer close button matching direct_client.blade.php UI --}}
+        <button type="button" class="btn btn-sm btn-icon btn-active-light-danger me-n5" id="kt_activitiesDirectClient_close"> <span class="svg-icon svg-icon-1">
         <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="24px" height="24px" viewBox="0 0 24 24" version="1.1">
-          <g transform="translate(12.000000, 12.000000) rotate(-45.000000) translate(-12.000000, -12.000000) translate(4.000000, 4.000000)" fill="#000000">
-            <rect fill="#000000" x="0" y="7" width="16" height="2" rx="1" />
-            <rect fill="#000000" opacity="0.5" transform="translate(8.000000, 8.000000) rotate(-270.000000) translate(-8.000000, -8.000000)" x="0" y="7" width="16" height="2" rx="1" />
+          <g transform="translate(12.000000, 12.000000) rotate(-45.000000) translate(-12.000000, -12.000000) translate(4.000000, 4.000000)" fill="currentColor">
+            <rect x="0" y="7" width="16" height="2" rx="1" />
+            <rect opacity="0.5" transform="translate(8.000000, 8.000000) rotate(-270.000000) translate(-8.000000, -8.000000)" x="0" y="7" width="16" height="2" rx="1" />
           </g>
         </svg>
         </span> </button>
