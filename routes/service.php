@@ -385,6 +385,7 @@ Route::group(['middleware' => 'auth'], function () {
                 Route::get('consultancy/staffing_contact_list/{id?}', [ServiceCompanyConsultancyController::class, 'staffingContactList'])->name('consultancy.staffing_contact_list');
                 Route::get('consultancy_ajax/allreq/{id?}', [ServiceCompanyConsultancyController::class, 'allreq_ajax'])->name('consultancy.allreq_ajax');
                 Route::get('consultancy/uncleared_request_data', [ServiceCompanyConsultancyController::class, 'uncleared_request_data'])->name('consultancy.uncleared_request_data');
+                Route::get('consultancy/export/{start}/{length}', [ServiceCompanyConsultancyController::class, 'export'])->name('consultancy.export');
                 Route::resource('consultancy', ServiceCompanyConsultancyController::class);
 
                 // END

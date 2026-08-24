@@ -1975,7 +1975,7 @@ $(document).ready(function() {
         //         sLengthMenu: "_MENU_",
         //     },
         //     ajax: {
-        //         'url': '{!! route('service_company.consultancy.data') !!}',
+        //         'url': '{!! route('service_company.consultancy.data_ajax') !!}',
         //         "data": function(d) {
         //             d.search = $('#inputSearch').val(), d.sortingfilter = $('#sortingfilter').val(), d.country =
         //                 $('#country').val(), d.cus_search = $('#kt_tagify_2').val()
