@@ -29,11 +29,6 @@ class ProcessCandidateUpdateJob implements ShouldQueue
 
     public int $timeout = 120;
 
-    /**
-     * Dispatch queue job only after database transaction has committed.
-     */
-    public bool $afterCommit = true;
-
     public function __construct(
         private readonly int $jobApplicationId,
         private readonly int $addJobWiseCandidateId,
@@ -41,6 +36,7 @@ class ProcessCandidateUpdateJob implements ShouldQueue
         private readonly int $companyId,
         private readonly array $requestData,
     ) {
+        $this->afterCommit = true;
         $this->onQueue('indexing');
     }
 

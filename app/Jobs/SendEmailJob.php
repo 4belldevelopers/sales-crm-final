@@ -32,18 +32,9 @@ class SendEmailJob implements ShouldQueue
 
     protected $massMailService;
 
-    /**
-     * Dispatch queue job only after database transaction has committed.
-     */
-    public bool $afterCommit = true;
-
-    /**
-     * Create a new job instance.
-     *
-     * @return void
-     */
     public function __construct($email, $subject, $view, $data, $attachments, $fromAddress, $senderName, $cc)
     {
+        $this->afterCommit = true;
         $this->onQueue('mail');
         $this->email = $email;
         $this->subject = $subject;

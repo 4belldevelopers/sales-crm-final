@@ -17,6 +17,9 @@ use App\Jobs\ElasticCompanyIndex;
 
 class CompanyObserver
 {
+    /** Defer observer execution until database transaction commit success. */
+    public bool $afterCommit = true;
+
     /** Invalidate TenantLookup caches whenever a company record is saved. */
     public function updated(Company $company): void
     {

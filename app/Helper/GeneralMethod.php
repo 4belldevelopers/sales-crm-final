@@ -1247,11 +1247,11 @@ END:VCALENDAR";
 
         $status_details = null;
 
-        if (! empty($interview_details?->stage)) {
+        if (! empty($interview_details->stage ?? null)) {
             try {
                 $response = $elasticService->getClient()->get([
                     'index' => ELASTIC_MASTER_STATUS,
-                    'id' => $interview_details?->stage,
+                    'id' => $interview_details->stage ?? null,
                 ]);
 
                 $status_details = isset($response['_source'])
@@ -1348,13 +1348,13 @@ END:VCALENDAR";
                     'name' => $user_details->name ?? null,
                     'image' => $user_details->image ?? null,
                     'client_name' => $client_details->client_name ?? null,
-                    'available_status' => $interview_details?->stage,
-                    'reschedule' => ! empty($interview_details->reschedule) ? Carbon::parse($interview_details->reschedule)->toIso8601String() : null,
-                    'feedback' => $interview_details?->feedback,
-                    'stage' => $interview_details?->stage,
-                    'status_name' => $status_details?->name,
+                    'available_status' => $interview_details->stage ?? null,
+                    'reschedule' => ! empty($interview_details->reschedule ?? null) ? Carbon::parse($interview_details->reschedule)->toIso8601String() : null,
+                    'feedback' => $interview_details->feedback ?? null,
+                    'stage' => $interview_details->stage ?? null,
+                    'status_name' => $status_details->name ?? null,
                     'cur_companyname' => $company_details->company_name ?? null,
-                    'css_style' => $status_details?->css_style,
+                    'css_style' => $status_details->css_style ?? null,
                     'updated_at' => now()->toIso8601String(),
                     'created_at' => now()->toIso8601String(),
                 ],

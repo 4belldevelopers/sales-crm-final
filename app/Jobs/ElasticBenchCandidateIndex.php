@@ -16,20 +16,17 @@ class ElasticBenchCandidateIndex implements ShouldQueue
 
     public $comid;
 
-    public $tries = 3;
+    public int $tries = 5;
 
-    public $backoff = [5, 15, 60];
+    public array $backoff = [10, 30, 60, 120, 300];
 
-    protected $elasticCandidateIndex;
+    public int $timeout = 60;
 
-    /**
-     * Create a new job instance.
-     *
-     * @return void
-     */
     public function __construct($comid)
     {
         $this->comid = $comid;
+        $this->onQueue('es-index');
+        $this->afterCommit = true;
         if (empty($this->uuid)) {
             $this->uuid = (string) Str::uuid();
         }

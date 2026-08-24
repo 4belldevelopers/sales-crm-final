@@ -23,14 +23,10 @@ class ElasticCandidateIndexJob implements ShouldQueue
 
     public int $timeout = 60;
 
-    /**
-     * Dispatch queue job only after database transaction has committed.
-     */
-    public bool $afterCommit = true;
-
     public function __construct(public int $candidateId)
     {
-        $this->onQueue('indexing');
+        $this->onQueue('es-index');
+        $this->afterCommit = true;
     }
 
     public function handle(): void

@@ -46,28 +46,9 @@ class QueueMailService implements ShouldQueue
 
     public $backoff = 60;
 
-    /**
-     * Dispatch queue job only after database transaction has committed.
-     */
-    public bool $afterCommit = true;
-
-    /**
-     * Create a new job instance.
-     *
-     * @param  string  $email  Recipient email
-     * @param  string  $subject  Email subject
-     * @param  string  $view  Blade template view path
-     * @param  object|array  $data  Data passed to view
-     * @param  array  $attachments  Email attachments array
-     * @param  string  $fromAddress  Sender email address
-     * @param  string  $senderName  Sender name
-     * @param  array  $cc  CC recipient emails
-     * @param  int|string  $company_id  Company ID scope
-     * @param  array|string  $replyTo  Reply-To recipient emails
-     * @return void
-     */
     public function __construct($email, $subject, $view, $data, $attachments, $fromAddress, $senderName, $cc, $company_id, $replyTo = [])
     {
+        $this->afterCommit = true;
         $this->onQueue('mail');
         $this->email = $email;
         $this->subject = $subject;

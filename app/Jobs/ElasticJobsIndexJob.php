@@ -27,6 +27,7 @@ class ElasticJobsIndexJob implements ShouldQueue
         public bool $isDelete = false,
     ) {
         $this->onQueue('es-index');
+        $this->afterCommit = true;
     }
 
     public function handle(): void

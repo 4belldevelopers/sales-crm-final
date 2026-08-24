@@ -20,13 +20,11 @@ class ElasticCompanyIndex implements ShouldQueue
     public $backoff = 60;              // wait 60s between retries
     public $timeout = 600;             // job can run 10 mins max
     public $failOnTimeout = false;     // timeout won't hard fail job
-
-    public $comid;
-    public $uuid;
-
     public function __construct($comid)
     {
         $this->comid = $comid;
+        $this->onQueue('es-index');
+        $this->afterCommit = true;
         $this->uuid = (string) Str::uuid(); // force fresh job UUID
     }
 
