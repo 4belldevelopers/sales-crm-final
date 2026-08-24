@@ -55,7 +55,10 @@
 .table > :not(caption) > * > *{padding: 0rem 0.4rem;}
 
 /* ── Bench Talents drawer — matches Inhouse Talents design language ── */
-.bench-bt, .bench-bt * { font-family: 'Poppins', sans-serif !important; font-size: 13px; }
+.bench-bt, .bench-bt * {
+    font-family: 'Poppins', sans-serif !important;
+    font-size: 11px;
+}
 .bench-bt .table thead tr th {
     font-size: 11px !important; font-weight: 600; text-transform: uppercase;
     letter-spacing: 0.4px; color: #a1a5b7; padding: 8px 6px !important;
