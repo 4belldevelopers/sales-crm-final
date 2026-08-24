@@ -855,7 +855,7 @@
 <div id="kt_activitiesClientjob" class="bg-body" data-kt-drawer="true" data-kt-drawer-name="activities" data-kt-drawer-activate="true" data-kt-drawer-overlay="true" data-kt-drawer-width="{default:'500px', 'lg': '1200px'}" data-kt-drawer-direction="end" data-kt-drawer-toggle="#kt_activitiesClientjob_toggle" data-kt-drawer-close="#kt_activitiesClientjob_close">
   <div class="card shadow-none rounded-0 w-100">
    
-    <div class="card-header px-5 py-0" id="kt_activities_header">
+    <div class="card-header px-5 py-0 d-none" id="kt_activities_header">
       <div class="d-flex align-items-center py-1">
         <h3 class="card-title fw-bolder text-dark">Direct Client Jobs</h3>
         
@@ -2503,6 +2503,27 @@
                     ele.prop('disabled', false).text('Send Bench Request');
                 }
             });
+        });
+
+        $(document).on('click', '.jd-drawer-close-btn, #kt_activitiesClientjob_close', function(e) {
+            e.preventDefault();
+            var drawerEl = this.closest('[data-kt-drawer="true"]') || document.getElementById('kt_activitiesClientjob');
+            if (drawerEl) {
+                if (typeof KTDrawer !== 'undefined') {
+                    var inst = KTDrawer.getInstance(drawerEl);
+                    if (!inst && typeof KTDrawer === 'function') {
+                        inst = new KTDrawer(drawerEl);
+                    }
+                    if (inst && typeof inst.hide === 'function') {
+                        inst.hide();
+                        return;
+                    }
+                }
+                drawerEl.classList.remove('drawer-on');
+                document.querySelectorAll('.drawer-overlay').forEach(function(el) { el.remove(); });
+                document.body.removeAttribute('data-kt-drawer-activities');
+                document.body.style.overflow = '';
+            }
         });
 </script>
 @endpush
