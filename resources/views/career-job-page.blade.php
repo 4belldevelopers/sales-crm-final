@@ -773,33 +773,36 @@ a{text-decoration:none;}
                 $titleStr    = trim(@$row->title ?? 'J');
                 $firstLetter = strtoupper($titleStr[0] ?? 'J');
 
-                /* recommendation logic */
-                $match = collect($row->recommendation_relation)->first(function($item) use ($company_id){
-                    return ($item['from_company_id'] ?? null) == $company_id
-                        || ($item['to_company_id']   ?? null) == $company_id;
+                /* Intent: Safely handle recommendation_relation which may be null or missing on ES job document */
+                $match = collect($row->recommendation_relation ?? [])->first(function($item) use ($company_id){
+                    $fromCo = is_array($item) ? ($item['from_company_id'] ?? null) : ($item->from_company_id ?? null);
+                    $toCo   = is_array($item) ? ($item['to_company_id'] ?? null)   : ($item->to_company_id   ?? null);
+                    return $fromCo == $company_id || $toCo == $company_id;
                 });
-                $recId        = ($match['to_company_id'] ?? null) == $company_id ? $match['to_company_id'] : null;
-                $row->final_status = ($match['to_company_id'] ?? null) == $company_id ? $match['final_status'] : null;
-                $isRec        = ($recId > 0 && @$row->to_company_id == @$company_id);
-                $displayCo    = $isRec
+                $matchToCo        = is_array($match) ? ($match['to_company_id'] ?? null) : ($match->to_company_id ?? null);
+                $matchFinalStatus = is_array($match) ? ($match['final_status'] ?? null) : ($match->final_status ?? null);
+                $recId             = $matchToCo == $company_id ? $matchToCo : null;
+                $row->final_status = $matchToCo == $company_id ? $matchFinalStatus : null;
+                $isRec             = ($recId > 0 && @$row->to_company_id == @$company_id);
+                $displayCo         = $isRec
                     ? ucwords(mb_substr(@$row->company_name, 0, 50))
                     : ucwords(mb_substr(@$account->company_name, 0, 50));
 
                 /* skills — eager loaded */
-                $skills = array_slice($jobSkillsMap[$row->id] ?? [], 0, 8);
+                $skills = array_slice($jobSkillsMap[$row->id ?? 0] ?? [], 0, 8);
 
                 /* salary */
-                $minSalMode = strtoupper(mb_substr($salaryMode[$row->min_sal_mode], 0, 1));
-                $maxSalMode = strtoupper(mb_substr($salaryMode[$row->max_sal_mode], 0, 1));
+                $minSalMode = strtoupper(mb_substr($salaryMode[$row->min_sal_mode ?? 0] ?? '', 0, 1));
+                $maxSalMode = strtoupper(mb_substr($salaryMode[$row->max_sal_mode ?? 0] ?? '', 0, 1));
                 $minCur     = strip_tags($currencySymbole[@$row->min_salary_currency] ?? '₹');
                 $maxCur     = strip_tags($currencySymbole[@$row->max_salary_currency] ?? '₹');
-                $minSal     = GeneralMethod::thousandsCurrencyFormat($row->min_salary);
-                $maxSal     = GeneralMethod::thousandsCurrencyFormat($row->max_salary);
+                $minSal     = GeneralMethod::thousandsCurrencyFormat($row->min_salary ?? 0);
+                $maxSal     = GeneralMethod::thousandsCurrencyFormat($row->max_salary ?? 0);
 
                 /* location — eager loaded */
                 $locLabel = 'Remote';
-                if ($row->work_type !== 'yes') {
-                    $locs = $jobLocationsMap[$row->id] ?? [];
+                if (($row->work_type ?? '') !== 'yes') {
+                    $locs = $jobLocationsMap[$row->id ?? 0] ?? [];
                     if (count($locs) > 1) {
                         $locLabel = 'Multiple';
                     } elseif (count($locs) === 1) {
@@ -808,15 +811,15 @@ a{text-decoration:none;}
                         $locLabel = 'N/A';
                     }
                 }
-                $workMode   = ($row->work_type === 'yes') ? 'Remote' : 'Hybrid';
-                $empType    = ($row->employment_type == 1) ? 'Contract' : 'Full-time';
+                $workMode   = (($row->work_type ?? '') === 'yes') ? 'Remote' : 'Hybrid';
+                $empType    = (($row->employment_type ?? 0) == 1) ? 'Contract' : 'Full-time';
 
                 /* status badge */
-                $statusText = ucwords($row->status);
+                $statusText = ucwords($row->status ?? 'active');
                 if ($statusText === 'Inactive') $statusText = 'Closed';
-                if (($row->final_status == 2 || $row->final_status == 3) && @$row->to_company_id == @$company_id)
+                if ((($row->final_status ?? 0) == 2 || ($row->final_status ?? 0) == 3) && @$row->to_company_id == @$company_id)
                     $statusText = 'Removed';
-                $daysDiff   = (int)Carbon::parse($row->created_at)->diffInDays(now());
+                $daysDiff   = (int)Carbon::parse($row->created_at ?? now())->diffInDays(now());
                 $badgeLabel = ($statusText === 'Active')
                     ? ($daysDiff <= 3 ? 'New' : 'Hiring')
                     : $statusText;
@@ -827,16 +830,19 @@ a{text-decoration:none;}
                     default             => 'badge-hold',
                 };
 
-                $timeAgo    = Carbon::parse($row->created_at)->diffForHumans(['parts'=>1]);
+                $timeAgo    = Carbon::parse($row->created_at ?? now())->diffForHumans(['parts'=>1]);
 
                 /* company logo — eager loaded */
-                $logoPath   = $jobLogosMap[$row->id] ?? '';
+                $logoPath   = $jobLogosMap[$row->id ?? 0] ?? '';
 
                 /* hiring manager */
-                $hmName = collect($row->job_assign)->first(function($item) use ($company_id){
-                    return ($item['company_id'] ?? null) == $company_id
-                        && (int)($item['spok_user_id'] ?? 0) === (int)($item['user_id'] ?? -1);
-                })['user_name'] ?? null;
+                $hmName = collect($row->job_assign ?? [])->first(function($item) use ($company_id){
+                    $coId = is_array($item) ? ($item['company_id'] ?? null) : ($item->company_id ?? null);
+                    $spokId = is_array($item) ? (int)($item['spok_user_id'] ?? 0) : (int)($item->spok_user_id ?? 0);
+                    $usrId = is_array($item) ? (int)($item['user_id'] ?? -1) : (int)($item->user_id ?? -1);
+                    return $coId == $company_id && $spokId === $usrId;
+                });
+                $hmNameStr = is_array($hmName) ? ($hmName['user_name'] ?? null) : ($hmName->user_name ?? null);
             @endphp
 
             <div class="job-card">
@@ -882,7 +888,7 @@ a{text-decoration:none;}
                         @endif
                         <div class="jc-mi"><i class="fa-solid fa-house"></i> {{ $workMode }}</div>
 
-                        <div class="jc-mi jid"><i class="fa-solid fa-tag"></i> Job ID: {{ $row->id }}</div>
+                        <div class="jc-mi jid"><i class="fa-solid fa-tag"></i> Job ID: {{ $row->id ?? '' }}</div>
                     </div>
 
                     {{-- Badge + bookmark on same row, time below --}}
