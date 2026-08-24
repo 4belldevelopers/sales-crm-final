@@ -341,7 +341,7 @@ class InterviewScheduleController extends ServiceCompanyBaseController
             ],
         ];
 
-        if (! $chkAdminRole > 0) {
+        if (! $chkAdminRole) {
             $accessShould = [
                 ['nested' => ['path' => 'job_assign', 'query' => ['term' => ['job_assign.user_id' => auth()->user()->id]]]],
             ];
@@ -549,7 +549,20 @@ class InterviewScheduleController extends ServiceCompanyBaseController
 
         $chkAdminRole = $this->user->hasRole('admin');
 
-        $searchTerm = trim(request('custom_search') ?? $request->input('q'));
+        $searchTermRaw = trim(request('custom_search') ?? $request->input('q') ?? '');
+        $searchTerm = $searchTermRaw;
+        // Normalize Tagify JSON blobs if search term is JSON (§5.2 audit)
+        if (! empty($searchTermRaw) && (str_starts_with($searchTermRaw, '[') || str_starts_with($searchTermRaw, '{'))) {
+            $decoded = json_decode($searchTermRaw, true);
+            if (is_array($decoded)) {
+                $values = array_filter(array_map(function ($item) {
+                    return is_array($item) ? ($item['value'] ?? $item['name'] ?? '') : (string) $item;
+                }, $decoded));
+                sort($values);
+                $searchTerm = implode(' ', $values);
+            }
+        }
+
         $page = max((int) $request->input('page', 1), 1);
         $size = (int) ($request->input('per_page') ?? $request->input('size') ?? $request->input('limit') ?? 10);
         $from = ($page - 1) * $size;
@@ -557,21 +570,21 @@ class InterviewScheduleController extends ServiceCompanyBaseController
         $cachePayload = [
             'page' => $page,
             'size' => $size,
-            'searchTerm' => $searchTerm,
+            'searchTerm' => strtolower($searchTerm),
             'company' => $company_id,
             'user_id' => $this->user->id,
             'valCheck_date' => $valCheck_date,
-            'country' => request('country'),
         ];
 
         $versionKey = 'allinterviewbenchcandidates_version_user_'.$this->user->id;
         $version = cache()->get($versionKey, 1);
         $cacheKeySet = 'ats:allinterviewbenchcandidates:'.$this->user->id.':'.$version.':'.md5(json_encode($cachePayload));
         /* ----------------------------
-        ⚡ Check DragonflyDB first
+        ⚡ Single Redis GET look-up (§4.5 audit)
         ----------------------------- */
-        if (cache()->has($cacheKeySet)) {
-            return response()->json(cache()->get($cacheKeySet));
+        $cachedData = cache()->get($cacheKeySet);
+        if ($cachedData !== null) {
+            return response()->json($cachedData);
         }
 
         $must = [];
@@ -599,16 +612,9 @@ class InterviewScheduleController extends ServiceCompanyBaseController
         // 2. Feedback pending first (nulls first)
 
         if ($valCheck == 'Feedback Pending') {
-            // 1. Sort by feedback pending (feedback is null)
+            // 1. Sort by indexed has_feedback boolean (0 first) to unlock ES request caching (§4.1 audit)
             array_unshift($sort, [
-                '_script' => [
-                    'type' => 'number',
-                    'script' => [
-                        'source' => "doc['feedback'].size() == 0 ? 0 : 1",
-                        'lang' => 'painless',
-                    ],
-                    'order' => 'asc',
-                ],
+                'has_feedback' => ['order' => 'asc'],
             ]);
             $filter[] = [
                 'range' => [
@@ -620,7 +626,7 @@ class InterviewScheduleController extends ServiceCompanyBaseController
             ];
         }
 
-        // Custom search logic
+        // Custom search logic (using bounded match_phrase_prefix with max_expansions: 20 to eliminate wildcard O(n) overhead)
         if (! empty($searchTerm)) {
             $must[] = [
                 'bool' => [
@@ -630,14 +636,14 @@ class InterviewScheduleController extends ServiceCompanyBaseController
                                 'should' => [
                                     ['term' => ['phone' => $searchTerm]],
                                     ['term' => ['email' => $searchTerm]],
-                                    ['match_phrase_prefix' => ['job_title' => $searchTerm]],
-                                    ['match_phrase_prefix' => ['client_name' => $searchTerm]],
-                                    ['match_phrase_prefix' => ['full_name' => $searchTerm]],
-                                    ['wildcard' => ['city_name' => strtolower($searchTerm).'*']],
-                                    ['wildcard' => ['country_name' => strtolower($searchTerm).'*']],
-                                    ['wildcard' => ['state_name' => strtolower($searchTerm).'*']],
-                                    ['wildcard' => ['posted_by' => strtolower($searchTerm).'*']],
-                                    ['match_phrase_prefix' => ['company_name' => $searchTerm]],
+                                    ['match_phrase_prefix' => ['job_title' => ['query' => $searchTerm, 'max_expansions' => 20]]],
+                                    ['match_phrase_prefix' => ['client_name' => ['query' => $searchTerm, 'max_expansions' => 20]]],
+                                    ['match_phrase_prefix' => ['full_name' => ['query' => $searchTerm, 'max_expansions' => 20]]],
+                                    ['match_phrase_prefix' => ['city_name' => ['query' => strtolower($searchTerm), 'max_expansions' => 20]]],
+                                    ['match_phrase_prefix' => ['country_name' => ['query' => strtolower($searchTerm), 'max_expansions' => 20]]],
+                                    ['match_phrase_prefix' => ['state_name' => ['query' => strtolower($searchTerm), 'max_expansions' => 20]]],
+                                    ['match_phrase_prefix' => ['posted_by' => ['query' => strtolower($searchTerm), 'max_expansions' => 20]]],
+                                    ['match_phrase_prefix' => ['company_name' => ['query' => $searchTerm, 'max_expansions' => 20]]],
                                 ],
                                 'minimum_should_match' => 1,
                             ],
@@ -676,7 +682,7 @@ class InterviewScheduleController extends ServiceCompanyBaseController
 
         // 5. RESTRICT TO ASSIGNED USERS (if not admin) — but ALSO let anyone who is named as an
         // interviewer on the schedule see that interview, regardless of role or job assignment.
-        if (! $chkAdminRole > 0) {
+        if (! $chkAdminRole) {
             $accessShould = [
                 ['nested' => ['path' => 'job_assign', 'query' => ['term' => ['job_assign.user_id' => auth()->user()->id]]]],
             ];
@@ -778,10 +784,259 @@ class InterviewScheduleController extends ServiceCompanyBaseController
         ];
 
         $userPermissions = $this->userPermissions;
+        // Compute dashboard stats so top hero cards reflect live counts (§3.5 audit fix)
+        $stats = $this->dashboardStats($company_id, $chkAdminRole, $page);
         $responseData = [
             'html' => view('service_company.ajax_pages.bench-candidate-interview-schedule-ajax', compact('data', 'userPermissions', 'company_id', 'available_status'))->render(),
             'total' => $total,
             'pagination' => view('service_company.ajax_pages.pagination', compact('pagination'))->render(),
+            'stats' => $stats,
+        ];
+
+        cache()->put($cacheKeySet, $responseData, now()->addMinutes(ALL_INTERVIEW_BENCH_CANDIDATES_TIME));
+
+        return response()->json($responseData);
+    }
+
+    /**
+     * JSON-first v2 endpoint for Talent Bench Candidates interview schedule.
+     *
+     * Intent: Returns lightweight raw JSON (~2.2 KB) instead of server-rendered Blade HTML (~85 KB)
+     * to support high concurrency (10K+ users) and zero-latency client-side rendering (§3.7 audit).
+     * Tenancy: Query is strictly scoped by company_id in ES filter and DB batch hydration.
+     */
+    public function benchinterviewdata_v2(Request $request)
+    {
+        abort_if(Gate::denies('view_schedule'), 403);
+
+        $company_id = auth()->user()->company_id;
+        $valCheck_date = request('sortingfilter');
+        $chkAdminRole = $this->user->hasRole('admin');
+
+        $searchTermRaw = trim(request('custom_search') ?? $request->input('q') ?? '');
+        $searchTerm = $searchTermRaw;
+        // Normalize Tagify JSON blobs if search term is JSON (§5.2 audit)
+        if (! empty($searchTermRaw) && (str_starts_with($searchTermRaw, '[') || str_starts_with($searchTermRaw, '{'))) {
+            $decoded = json_decode($searchTermRaw, true);
+            if (is_array($decoded)) {
+                $values = array_filter(array_map(function ($item) {
+                    return is_array($item) ? ($item['value'] ?? $item['name'] ?? '') : (string) $item;
+                }, $decoded));
+                sort($values);
+                $searchTerm = implode(' ', $values);
+            }
+        }
+
+        $page = max((int) $request->input('page', 1), 1);
+        $size = (int) ($request->input('per_page') ?? $request->input('size') ?? $request->input('limit') ?? 10);
+        $from = ($page - 1) * $size;
+
+        $cachePayload = [
+            'page' => $page,
+            'size' => $size,
+            'searchTerm' => strtolower($searchTerm),
+            'company' => $company_id,
+            'user_id' => $this->user->id,
+            'valCheck_date' => $valCheck_date,
+        ];
+
+        $versionKey = 'allinterviewbenchcandidates_version_user_'.$this->user->id;
+        $version = cache()->get($versionKey, 1);
+        $cacheKeySet = 'ats:allinterviewbenchcandidates_v2:'.$this->user->id.':'.$version.':'.md5(json_encode($cachePayload));
+
+        $cachedData = cache()->get($cacheKeySet);
+        if ($cachedData !== null) {
+            return response()->json($cachedData);
+        }
+
+        $must = [];
+        $filter = [];
+        $sort = [];
+
+        $valCheck = request('custom_hiringtype');
+        switch ($valCheck) {
+            case 1:
+                $sort[] = ['id' => ['order' => 'desc']];
+                break;
+            case 2:
+                $sort[] = ['created_at' => ['order' => 'asc']];
+                break;
+            case 3:
+                $sort[] = ['schedule_date' => ['order' => 'desc']];
+                break;
+            case 4:
+                $sort[] = ['schedule_date' => ['order' => 'asc']];
+                break;
+            default:
+                $sort[] = ['id' => ['order' => 'desc']];
+        }
+
+        if ($valCheck == 'Feedback Pending') {
+            array_unshift($sort, [
+                'has_feedback' => ['order' => 'asc'],
+            ]);
+            $filter[] = [
+                'range' => [
+                    'schedule_date' => [
+                        'lt' => Carbon::now()->subHour()->toIso8601String(),
+                        'format' => 'strict_date_optional_time',
+                    ],
+                ],
+            ];
+        }
+
+        if (! empty($searchTerm)) {
+            $must[] = [
+                'bool' => [
+                    'must' => [
+                        [
+                            'bool' => [
+                                'should' => [
+                                    ['term' => ['phone' => $searchTerm]],
+                                    ['term' => ['email' => $searchTerm]],
+                                    ['match_phrase_prefix' => ['job_title' => ['query' => $searchTerm, 'max_expansions' => 20]]],
+                                    ['match_phrase_prefix' => ['client_name' => ['query' => $searchTerm, 'max_expansions' => 20]]],
+                                    ['match_phrase_prefix' => ['full_name' => ['query' => $searchTerm, 'max_expansions' => 20]]],
+                                    ['match_phrase_prefix' => ['city_name' => ['query' => strtolower($searchTerm), 'max_expansions' => 20]]],
+                                    ['match_phrase_prefix' => ['country_name' => ['query' => strtolower($searchTerm), 'max_expansions' => 20]]],
+                                    ['match_phrase_prefix' => ['state_name' => ['query' => strtolower($searchTerm), 'max_expansions' => 20]]],
+                                    ['match_phrase_prefix' => ['posted_by' => ['query' => strtolower($searchTerm), 'max_expansions' => 20]]],
+                                    ['match_phrase_prefix' => ['company_name' => ['query' => $searchTerm, 'max_expansions' => 20]]],
+                                ],
+                                'minimum_should_match' => 1,
+                            ],
+                        ],
+                    ],
+                ],
+            ];
+        }
+
+        $must[] = [
+            'bool' => [
+                'should' => [
+                    [
+                        'bool' => [
+                            'must' => [
+                                ['term' => ['company_id' => $company_id]],
+                                ['term' => ['candidate_type' => 'bench_condidate']],
+                            ],
+                        ],
+                    ],
+                    [
+                        'bool' => [
+                            'must' => [
+                                ['term' => ['recommendation_relation.from_company_id' => $company_id]],
+                                ['term' => ['ClientComID' => $company_id]],
+                            ],
+                        ],
+                    ],
+                ],
+                'minimum_should_match' => 1,
+            ],
+        ];
+
+        if (! $chkAdminRole) {
+            $accessShould = [
+                ['nested' => ['path' => 'job_assign', 'query' => ['term' => ['job_assign.user_id' => auth()->user()->id]]]],
+            ];
+            $myName = trim(auth()->user()->name ?? '');
+            if ($myName !== '') {
+                $accessShould[] = ['match_phrase' => ['interviewers' => $myName]];
+            }
+            $myEmail = strtolower(trim(auth()->user()->email ?? ''));
+            if ($myEmail !== '') {
+                $accessShould[] = ['match_phrase' => ['other_email' => $myEmail]];
+            }
+            $must[] = ['bool' => ['should' => $accessShould, 'minimum_should_match' => 1]];
+        }
+
+        if ($valCheck_date == 1) {
+            $startOfDay = Carbon::now()->startOfDay()->toDateTimeString();
+            $endOfDay = Carbon::now()->endOfDay()->toDateTimeString();
+            $filter[] = [
+                'range' => [
+                    'schedule_date' => [
+                        'gte' => Carbon::parse($startOfDay)->startOfDay()->toIso8601String(),
+                        'lte' => Carbon::parse($endOfDay)->endOfDay()->toIso8601String(),
+                        'format' => 'strict_date_optional_time',
+                    ],
+                ],
+            ];
+        }
+
+        $params = [
+            'index' => ELASTIC_INERTVIEW_TRACKER,
+            'request_cache' => true,
+            'body' => [
+                'from' => $from,
+                'size' => $size,
+                'sort' => $sort,
+                'query' => [
+                    'bool' => [
+                        'must' => $must,
+                        'filter' => $filter,
+                    ],
+                ],
+            ],
+        ];
+
+        if (! $this->elasticService->indexExists(ELASTIC_INERTVIEW_TRACKER)) {
+            $total = 0;
+            $data = [];
+        } else {
+            $response = $this->elasticService->getClient()->search($params);
+            $total = $response['hits']['total']['value'] ?? 0;
+            $data = array_map(function ($hit) {
+                return $hit['_source'];
+            }, $response['hits']['hits'] ?? []);
+        }
+
+        if (! empty($data)) {
+            $jobIds = array_values(array_unique(array_filter(array_column($data, 'job_id'))));
+            $clientMap = [];
+            if (! empty($jobIds)) {
+                $clientMap = DB::table('jobs')
+                    ->leftJoin('clients', 'clients.id', '=', 'jobs.client_id')
+                    ->leftJoin('companies', 'companies.id', '=', 'jobs.company_id')
+                    ->whereIn('jobs.id', $jobIds)
+                    ->select('jobs.id as job_id', DB::raw("COALESCE(clients.name, companies.company_name, '') as client_title"))
+                    ->pluck('client_title', 'job_id')
+                    ->all();
+            }
+
+            $interviewIds = array_values(array_unique(array_filter(array_column($data, 'id'))));
+            $feedbackMap = [];
+            if (! empty($interviewIds)) {
+                $feedbackRows = DB::table('interview_feedback')
+                    ->whereIn('interview_id', $interviewIds)
+                    ->orderBy('id', 'desc')
+                    ->get();
+                foreach ($feedbackRows as $fb) {
+                    if (! isset($feedbackMap[$fb->interview_id])) {
+                        $feedbackMap[$fb->interview_id] = $fb;
+                    }
+                }
+            }
+
+            foreach ($data as &$row) {
+                $jobId = $row['job_id'] ?? null;
+                $row['client_title_name_enriched'] = $clientMap[$jobId] ?? ($row['client_name'] ?? $row['company_name'] ?? '');
+                $intId = $row['id'] ?? null;
+                $row['latest_feedback_enriched'] = $feedbackMap[$intId] ?? null;
+            }
+            unset($row);
+        }
+
+        $stats = $this->dashboardStats($company_id, $chkAdminRole, $page);
+
+        $responseData = [
+            'status' => 'success',
+            'data' => $data,
+            'total' => (int) $total,
+            'current_page' => (int) $page,
+            'per_page' => (int) $size,
+            'last_page' => (int) ceil($total / max($size, 1)),
+            'stats' => $stats,
         ];
 
         cache()->put($cacheKeySet, $responseData, now()->addMinutes(ALL_INTERVIEW_BENCH_CANDIDATES_TIME));
@@ -1959,7 +2214,7 @@ class InterviewScheduleController extends ServiceCompanyBaseController
                     ['bool' => ['must' => [['term' => ['ClientComID' => $company_id]], ['term' => ['candidate_type' => 'other']]]]],
                 ], 'minimum_should_match' => 1]],
             ];
-            if (! $chkAdminRole > 0) {
+            if (! $chkAdminRole) {
                 // Assigned to the job OR named as an interviewer on the schedule
                 $statsShould = [['nested' => ['path' => 'job_assign', 'query' => ['term' => ['job_assign.user_id' => auth()->user()->id]]]]];
                 $statsMyName = trim(auth()->user()->name ?? '');
