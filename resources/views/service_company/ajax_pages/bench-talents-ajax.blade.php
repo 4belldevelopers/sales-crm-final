@@ -65,22 +65,41 @@
                         $bgTextDecore = 'fs-3 bg-light-secondary text-dark';
                     }
 
-                    /* Skills */
-                    $skillArr = array_values(array_filter(array_map('trim', explode(',', (string) ($row->skills ?? '')))));
-                    $skilltag = '';
-                    foreach ($skillArr as $sval) {
+                    /* Skills & Matched Skill Highlighting */
+                    $matchedSkillsArr = array_map('strtolower', array_map('trim', explode(',', (string) ($row->matched_skills ?? ''))));
+                    $candidateSkills = array_values(array_filter(array_map('trim', explode(',', (string) ($row->skills ?? '')))));
+                    
+                    $matchedChips = [];
+                    $otherChips = [];
+                    foreach ($candidateSkills as $sval) {
                         if ($sval === '') { continue; }
-                        $skilltag .= '<span class="badge badge-light my-1 skill" style="font-weight:400; font-size:10px;">' . e(ucfirst($sval)) . '</span> ';
+                        $svalLower = strtolower($sval);
+                        $isMatched = false;
+                        foreach ($matchedSkillsArr as $ms) {
+                            if ($ms !== '' && (strpos($svalLower, $ms) !== false || strpos($ms, $svalLower) !== false)) {
+                                $isMatched = true;
+                                break;
+                            }
+                        }
+                        if ($isMatched) {
+                            $matchedChips[] = '<span class="badge my-1 skill me-1" style="background:#dcfce7;color:#15803d;font-weight:600;border:1px solid #bbf7d0;" title="Matches a required skill">' . e(ucfirst($sval)) . '</span>';
+                        } else {
+                            $otherChips[] = '<span class="badge badge-light my-1 skill me-1" style="font-weight:300;">' . e(ucfirst($sval)) . '</span>';
+                        }
                     }
+                    $skilltag = implode(' ', array_merge($matchedChips, $otherChips));
 
                     /* Match % badge */
-                    $matchBadge = (!empty($row->skill_match_percent))
-                        ? '<span class="badge badge-light-info my-0" style="font-size:10px;">' . (int)$row->skill_match_percent . '%</span> '
-                        : '';
+                    $matchPercentVal = (float) ($row->skill_match_percent ?? 0);
+                    if ($matchPercentVal > 0) {
+                        $matchBadge = '<span class="badge my-1 me-1" style="background:#dcfce7;color:#15803d;font-weight:600;">Match ' . (int)$matchPercentVal . '%</span> ';
+                    } else {
+                        $matchBadge = '<span class="badge my-1 me-1" style="background:#fee2e2;color:#dc2626;font-weight:600;">Match 0%</span> ';
+                    }
 
                     /* Ads switch tag */
                     $adsBadge = (isset($row->ads_switch_order) && $row->ads_switch_order == 0)
-                        ? '<span class="badge badge-light-danger my-0 fw-bold" style="font-size:10px; color:#EF4444;">Ads</span> '
+                        ? '<span class="badge badge-light-danger my-0 fw-bold me-1" style="font-size:10px; color:#EF4444;">Ads</span> '
                         : '';
 
                     /* View / Download counts */
@@ -112,7 +131,7 @@
 
                 {{-- Skills & Tags footer strip --}}
                 @if($adsBadge || $matchBadge || $skilltag)
-                <div class="mt-1" style="white-space: nowrap; max-width: 95%; overflow: hidden;">
+                <div class="mt-1" style="position: absolute; bottom: 0; white-space: nowrap; width: 100%;">
                     {!! $adsBadge !!}{!! $matchBadge !!}{!! $skilltag !!}
                 </div>
                 @endif

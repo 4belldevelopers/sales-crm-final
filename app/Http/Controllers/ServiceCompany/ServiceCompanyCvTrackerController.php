@@ -2079,6 +2079,22 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
 
         }
 
+        // If skill filter is empty but currentJobId is present, fetch job's required skills for matching
+        if (empty($skillArr) && !empty($currentJobId)) {
+            try {
+                $jSkills = DB::table('job_skills')
+                    ->join('skills', 'skills.id', '=', 'job_skills.skill_id')
+                    ->where('job_skills.job_id', $currentJobId)
+                    ->pluck('skills.name')
+                    ->toArray();
+                if (!empty($jSkills)) {
+                    $skillArr = array_values(array_unique(array_map(fn ($s) => strtolower(trim($s)), $jSkills)));
+                }
+            } catch (\Exception $e) {
+                // fallback
+            }
+        }
+
         $location = request('kt_tagify_location');
         $custom_location = json_decode($location, true);
 
@@ -2340,7 +2356,7 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
 
                 $skillMatchPercent = (!empty($skillArr) && count($skillArr) > 0)
                     ? (int) round(($matchedCount / count($skillArr)) * 100)
-                    : 85;
+                    : 0;
 
                 $source['skill_match_percent'] = $skillMatchPercent;
 
@@ -2365,6 +2381,18 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
 
                 $data[] = (object) $source;
             }
+
+            // Arrange candidates with matched skills / highest match percentage FIRST
+            usort($data, function ($a, $b) {
+                $pA = (int) ($a->skill_match_percent ?? 0);
+                $pB = (int) ($b->skill_match_percent ?? 0);
+                if ($pA === $pB) {
+                    $sA = (int) ($a->skill_match_score ?? 0);
+                    $sB = (int) ($b->skill_match_score ?? 0);
+                    return $sB <=> $sA;
+                }
+                return $pB <=> $pA;
+            });
 
             $agenciesCount = count($agenciesMap);
             $premiumAgenciesCount = $agenciesCount > 0 ? (int) round($agenciesCount * 0.32) : 0;
