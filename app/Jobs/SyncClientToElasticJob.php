@@ -35,6 +35,7 @@ class SyncClientToElasticJob implements ShouldQueue
         public int $clientId
     ) {
         $this->onQueue('es-index');
+        $this->afterCommit = true;
     }
 
     /**

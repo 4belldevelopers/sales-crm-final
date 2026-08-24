@@ -2316,9 +2316,8 @@ class ServiceCompanyTeamController extends ServiceCompanyBaseController
                         $message = 'Team member created successfully. set password link has been sent to team member email';
                         $type = 'success';
 
-                        // Phase 3 Optimization: Offload Elasticsearch indexing to async Horizon queue job
-                        SyncUserToElasticJob::dispatch((int) $user->id);
-                        GeneralMethod::userIndexingupload($user->id);
+                        // Phase 1 Optimization: Defer Elasticsearch indexing to async Horizon queue job post-commit
+                        SyncUserToElasticJob::dispatch((int) $user->id)->afterCommit();
                         $this->clearTeamCache($company_id);
                     } catch (\Throwable $e) {
                         DB::rollBack();
@@ -2389,9 +2388,8 @@ class ServiceCompanyTeamController extends ServiceCompanyBaseController
 
             DB::commit();
 
-            // Phase 4 Optimization: Offload Elasticsearch re-indexing to Horizon queue job
-            SyncUserToElasticJob::dispatch((int) $id);
-            GeneralMethod::userIndexingupload($id);
+            // Phase 1 Optimization: Offload Elasticsearch re-indexing to Horizon queue job post-commit
+            SyncUserToElasticJob::dispatch((int) $id)->afterCommit();
             $this->clearTeamCache($company_id);
 
             $userId = auth()->id();
@@ -2491,9 +2489,8 @@ class ServiceCompanyTeamController extends ServiceCompanyBaseController
                     GeneralMethod::cacheClean($key);
                 }
 
-                // Phase 10 Optimization: Centralized tenant cache invalidation and async ES indexing post-commit
-                SyncUserToElasticJob::dispatch((int) $cuser_id);
-                GeneralMethod::userIndexingupload($cuser_id);
+                // Phase 1 Optimization: Centralized tenant cache invalidation and async ES indexing post-commit
+                SyncUserToElasticJob::dispatch((int) $cuser_id)->afterCommit();
                 $this->clearTeamCache($company_id);
 
                 return Reply::dataOnly(['status' => 'success']);

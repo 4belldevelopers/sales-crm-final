@@ -13,6 +13,11 @@ use Illuminate\Support\Facades\Cache;
 
 class JobApplicationObserver
 {
+    /**
+     * Defer observer executions until active database transaction has committed.
+     */
+    public bool $afterCommit = true;
+
     public function saving(JobApplication $jobApplication): void
     {
         if (company()) {
@@ -33,8 +38,13 @@ class JobApplicationObserver
         // Bust the ES counter cache — key format must match GeneralMethod::custome_count_all().
         Cache::forget("custome_count_all:{$app->company_id}:{$app->job_id}");
 
-        UpdatePipelineCountersJob::dispatch($app->id)->onQueue('counters');
-        UpdateApplicationCountersJob::dispatch($app->id)->onQueue('counters');
+        UpdatePipelineCountersJob::dispatch($app->id)->onQueue('counters')->afterCommit();
+        UpdateApplicationCountersJob::dispatch($app->id)->onQueue('counters')->afterCommit();
+
+        // Sync candidate state to Elasticsearch read model post-commit
+        if (class_exists(\App\Jobs\SyncCandidateToElasticJob::class)) {
+            \App\Jobs\SyncCandidateToElasticJob::dispatch($app->id)->afterCommit();
+        }
 
         if ($app->company_id) {
             \App\Support\Cache\TenantCache::invalidateTenant($app->company_id);

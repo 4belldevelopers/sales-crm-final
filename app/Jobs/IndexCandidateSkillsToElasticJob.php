@@ -34,15 +34,11 @@ class IndexCandidateSkillsToElasticJob implements ShouldQueue
 
     public int $timeout = 60;
 
-    /**
-     * Create a new job instance.
-     *
-     * @param  array<int, array{exp_id: int, skill_id: int, skill_value: string, job_id: int, candidate_id: int, rating: int}>  $skillRecords
-     */
     public function __construct(
         public array $skillRecords
     ) {
-        $this->onQueue('elasticsearch');
+        $this->onQueue('es-index');
+        $this->afterCommit = true;
     }
 
     /**
@@ -56,13 +52,14 @@ class IndexCandidateSkillsToElasticJob implements ShouldQueue
 
         try {
             foreach ($this->skillRecords as $record) {
-                $expId = $record['exp_id'];
-                $skillId = $record['skill_id'];
+                $expId = $record['exp_id'] ?? null;
+                $skillId = $record['skill_id'] ?? null;
                 $skills = DB::table('job_metronics_skills')->select('skill_name')->where('id', '=', $skillId)->first();
+                $docId = ! empty($expId) ? (string) $expId : "cand_{$record['candidate_id']}_skill_{$skillId}";
 
                 $elasticService->getClient()->index([
                     'index' => ELASTIC_CANDIDATE_SKILLS_EXP,
-                    'id' => $expId,
+                    'id' => $docId,
                     'body' => [
                         'skill_name' => $skills->skill_name ?? '',
                         'job_skill_id' => $skillId,

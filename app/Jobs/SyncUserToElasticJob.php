@@ -28,13 +28,11 @@ class SyncUserToElasticJob implements ShouldQueue
 
     public int $timeout = 60;
 
-    /**
-     * Create a new job instance.
-     */
     public function __construct(
         public int $userId
     ) {
         $this->onQueue('es-index');
+        $this->afterCommit = true;
     }
 
     /**

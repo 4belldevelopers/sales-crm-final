@@ -16,6 +16,11 @@ use App\Services\GeneralMethod;
 class JobObserver
 {
     /**
+     * Defer observer executions until active database transaction has committed.
+     */
+    public bool $afterCommit = true;
+
+    /**
      * Handle the Job "created" event.
      */
     public function created(Job $job): void
@@ -51,7 +56,9 @@ class JobObserver
 
         if (class_exists(GeneralMethod::class) && method_exists(GeneralMethod::class, 'JobAddEditUpload')) {
             try {
-                GeneralMethod::JobAddEditUpload($job->id);
+                \Illuminate\Support\Facades\DB::afterCommit(function () use ($job) {
+                    GeneralMethod::JobAddEditUpload($job->id);
+                });
             } catch (\Throwable $e) {
                 // Log observer ES sync exception silently to prevent blocking MySQL write transaction
                 logger()->error('JobObserver ES sync failed for Job ID '.$job->id.': '.$e->getMessage());
