@@ -10,6 +10,7 @@ Date			:	05-April-2021
 
 namespace App\Http\Controllers\ServiceCompany;
 
+use App\Exports\ConsultancyExport;
 use App\Helper\GeneralMethod;
 use App\Helper\Reply;
 use App\Jobs\QueueNotificationMailService;
@@ -25,6 +26,8 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
+use Maatwebsite\Excel\Excel as ExcelExcel;
+use Maatwebsite\Excel\Facades\Excel;
 use Yajra\DataTables\Facades\DataTables;
 
 class ServiceCompanyConsultancyController extends ServiceCompanyBaseController
@@ -538,7 +541,7 @@ class ServiceCompanyConsultancyController extends ServiceCompanyBaseController
         $companyTagsGrouped = [];
         $clientsGrouped = [];
 
-        if (!empty($toCompanyIds)) {
+        if (! empty($toCompanyIds)) {
             $companyTagsGrouped = DB::table('company_tags')
                 ->whereIn('company_id', $toCompanyIds)
                 ->get()
@@ -607,7 +610,7 @@ class ServiceCompanyConsultancyController extends ServiceCompanyBaseController
 
                     if (isset($clientsGrouped[$row->to_company_id])) {
                         $tags = $clientsGrouped[$row->to_company_id]->tags;
-                        if (!empty($tags)) {
+                        if (! empty($tags)) {
                             $tagsArr = explode(',', $tags);
                             foreach ($tagsArr as $val) {
                                 $tags_html .= '<span class="badge badge-light my-1 me-2">'.$val.'</span>';
@@ -708,7 +711,7 @@ class ServiceCompanyConsultancyController extends ServiceCompanyBaseController
             ->where('id', $id)
             ->value('company_id');
 
-        if (!$partnerCompanyId) {
+        if (! $partnerCompanyId) {
             abort(404, 'Partner not found.');
         }
 
@@ -1755,5 +1758,26 @@ class ServiceCompanyConsultancyController extends ServiceCompanyBaseController
             'pagination' => view('service_company.ajax_pages.pagination', compact('pagination'))->render(),
         ]);
 
+    }
+
+    /**
+     * Export staffing partners / consultancy data to Excel spreadsheet.
+     *
+     * @param  int|string  $start
+     * @param  int|string  $length
+     * @return \Symfony\Component\HttpFoundation\BinaryFileResponse
+     */
+    public function export($start, $length)
+    {
+        $filters = [
+            'start' => $start,
+            'length' => $length,
+            'loginUserId' => $this->user->id,
+            'loginUserRole' => $this->user->role->role_id ?? null,
+            'company_id' => auth()->user()->company_id,
+        ];
+        $data = ['company' => $this->user->name];
+
+        return Excel::download(new ConsultancyExport($filters, $data), 'ConsultancyExport.xlsx', ExcelExcel::XLSX);
     }
 }
