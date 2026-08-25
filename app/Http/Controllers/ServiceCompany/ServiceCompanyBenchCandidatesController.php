@@ -6939,7 +6939,12 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
             $event_table_id = @$source_jobid;
             $query = DB::table('rec_candidate_assign')->insert($values);
             $rec_id = DB::getPdo()->lastInsertId();
-            GeneralMethod::candidateRequestIndexElastic($rec_id);
+
+            /**
+             * Intent: Asynchronously offload Elasticsearch candidate request indexing to Horizon queue (es-index queue).
+             * Tenancy Note: Tenant-scoped by rec_candidate_assign_id.
+             */
+            \App\Jobs\SyncCandidateRequestToElasticJob::dispatch((int) $rec_id);
             \App\Services\MarketJobV2Service::invalidateCacheForCompany((int) $source_from_company_id);
 
         }
@@ -6988,10 +6993,23 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
                 $notificationemail = GeneralMethod::notification($source_company_id, 'Recuitment'); // Recuitment Sales
                 $defailsEmail = DB::table('companies')->where('id', $source_company_id)->first()->company_email;
                 $to_Mail_Id = $notificationemail->email ?? $defailsEmail ?? '';
-                //    dd($to_Mail_Id);
-                $datamail = [
-                    'message' => $message,
-                ];
+
+                if (! empty($to_Mail_Id)) {
+                    /**
+                     * Intent: Asynchronously offload email dispatch to Horizon queue (mail queue).
+                     * Tenancy Note: Multi-tenant safe, scoped by tenant notification recipient.
+                     */
+                    \App\Jobs\SendEmailJob::dispatch(
+                        $to_Mail_Id,
+                        $subject,
+                        'email.common.index',
+                        ['message' => $message],
+                        $attachments,
+                        $fromAddress,
+                        $senderName,
+                        $cc
+                    );
+                }
 
             }
 
