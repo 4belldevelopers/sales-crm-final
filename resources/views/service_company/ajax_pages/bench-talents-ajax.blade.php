@@ -278,20 +278,26 @@
             {{-- Col 8: RELATIONSHIP MANAGER --}}
             <td class="align-middle">
                 @php
-                    $hmCount = DB::table('bench_assign')
-                        ->join('users', 'users.id', '=', 'bench_assign.user_id')
-                        ->where('bench_assign.bench_applications_id', $row->id)
-                        ->where('bench_assign.company_id', $company_id)
-                        ->where('users.company_id', $company_id)
-                        ->count();
-                    $hmData = DB::table('bench_assign')
-                        ->join('users', 'users.id', '=', 'bench_assign.user_id')
-                        ->select('users.name', 'users.image')
-                        ->where('bench_assign.bench_applications_id', $row->id)
-                        ->where('bench_assign.company_id', $company_id)
-                        ->where('users.company_id', $company_id)
-                        ->orderBy('users.name', 'ASC')->take(1)->first();
-                    $managerFullName = @$hmData->name ? ucwords($hmData->name) : 'Unassigned';
+                    $hmInfo = $benchManagersMap[$row->id] ?? null;
+                    if ($hmInfo) {
+                        $hmCount = $hmInfo['count'];
+                        $managerFullName = !empty($hmInfo['name']) ? ucwords($hmInfo['name']) : 'Unassigned';
+                    } else {
+                        $hmCount = DB::table('bench_assign')
+                            ->join('users', 'users.id', '=', 'bench_assign.user_id')
+                            ->where('bench_assign.bench_applications_id', $row->id)
+                            ->where('bench_assign.company_id', $company_id)
+                            ->where('users.company_id', $company_id)
+                            ->count();
+                        $hmData = DB::table('bench_assign')
+                            ->join('users', 'users.id', '=', 'bench_assign.user_id')
+                            ->select('users.name', 'users.image')
+                            ->where('bench_assign.bench_applications_id', $row->id)
+                            ->where('bench_assign.company_id', $company_id)
+                            ->where('users.company_id', $company_id)
+                            ->orderBy('users.name', 'ASC')->take(1)->first();
+                        $managerFullName = @$hmData->name ? ucwords($hmData->name) : 'Unassigned';
+                    }
                     $managerFirstName = ucfirst(explode(' ', trim($managerFullName))[0]);
                     $extra = $hmCount > 1 ? ' +' . ($hmCount - 1) : '';
                 @endphp
@@ -303,7 +309,11 @@
             {{-- Col 9: ACTION --}}
             <td class="align-middle text-end">
                 @php
-                    $benchRequestCheck = GeneralMethod::benchRequestCheck($row->id, $currentJobId);
+                    if (isset($benchRequestsMap)) {
+                        $benchRequestCheck = $benchRequestsMap[$row->id] ?? null;
+                    } else {
+                        $benchRequestCheck = GeneralMethod::benchRequestCheck($row->id, $currentJobId);
+                    }
                     $btnStyle = 'white-space:nowrap;font-size:12px;font-weight:600;padding:6px 14px;border-radius:6px;';
                     if ($benchRequestCheck == null) {
                         echo '<a href="javascript:void(0);" data-jobId="' . $currentJobId . '" data-conId="' . $row->id . '" class="btn btn-sm btn-primary request-send" style="' . $btnStyle . '">Send Bench Request</a>';
