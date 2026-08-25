@@ -5539,10 +5539,7 @@ function rsEnsurePdfMake(){
   rsPdfReady=rsTryList(core,0,function(){ return !!window.pdfMake; })
     .then(function(){ return rsTryList(vfs,0,function(){ return !!(window.pdfMake.vfs && window.pdfMake.vfs['Roboto-Regular.ttf']); }); })
     .then(function(){
-      window.pdfMake.fonts={
-        Poppins:{normal:'/fonts/poppins/Poppins-Regular.ttf',bold:'/fonts/poppins/Poppins-SemiBold.ttf',italics:'/fonts/poppins/Poppins-Regular.ttf',bolditalics:'/fonts/poppins/Poppins-SemiBold.ttf'},
-        Roboto:{normal:'Roboto-Regular.ttf',bold:'Roboto-Medium.ttf',italics:'Roboto-Italic.ttf',bolditalics:'Roboto-MediumItalic.ttf'}
-      };
+      window.pdfMake.fonts={Roboto:{normal:'Roboto-Regular.ttf',bold:'Roboto-Medium.ttf',italics:'Roboto-Italic.ttf',bolditalics:'Roboto-MediumItalic.ttf'}};
     });
   return rsPdfReady;
 }
@@ -5716,7 +5713,7 @@ function buildDefinition(data){
   return {
     pageSize:'A4',
     pageMargins:[30,26,30,24],
-    defaultStyle:{font:'Poppins',fontSize:8,color:'#1f2937',lineHeight:1.22},
+    defaultStyle:{font:'Roboto',fontSize:8,color:'#1f2937',lineHeight:1.22},
     styles:{
       title:{fontSize:13.8,bold:true,color:'#ffffff',alignment:'right'},
       eyebrow:{fontSize:5.9,color:'#cbd5e1',alignment:'right'},
