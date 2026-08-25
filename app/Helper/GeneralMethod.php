@@ -507,36 +507,23 @@ END:VCALENDAR";
 
     public static function available_status()
     {
-        // $array 	=	array(1=> 'Available', 2=> 'Not Available', 3=> 'Cancel', 4=> 'Not Intrested');
+        return cache()->rememberForever('ref:interview_status:all', function () {
+            $interview_status = DB::table('interview_status')
+                ->where('interview_status.status', 1)
+                ->get();
 
-        $interview_status = DB::table('interview_status')
-            ->where('interview_status.status', 1)
-            ->get();
+            $array = [];
 
-        $array = [];
+            foreach ($interview_status as $index => $status) {
+                $array[$status->id] = [
+                    'id' => $status->id,
+                    'name' => $status->name,
+                    'classname' => ($status->classname), // Assign classname dynamically
+                ];
+            }
 
-        foreach ($interview_status as $index => $status) {
-            $array[$status->id] = [
-                'id' => $status->id,
-                'name' => $status->name,
-                'classname' => ($status->classname), // Assign classname dynamically
-            ];
-        }
-
-        // dd($array);
-        return $array;
-
-        // $array 	=	array(
-        // 					0	=>	array('name'=>'Status', 'classname' => 'bg-whites'),
-        // 					1	=>	array('name'=>'Available', 'classname' => 'available-bg'),
-        // 					2	=>	array('name' =>'Not Available', 'classname' => 'not-available-bg'),
-        // 					3	=>	array( 'name'=>'Not Respond', 'classname' => 'cancel-bg'),
-        // 					4	=>	array('name'=>'Not Intrested', 'classname' => 'not-intrested'),
-        // 					5	=>	array('name'=>'Cancel Interview', 'classname' => 'not-intrested'),
-        // 					6	=>	array('name'=>'Other Reason', 'classname' => 'not-intrested')
-        // 				);
-
-        // return $array;
+            return $array;
+        });
     }
 
     public static function interview_status()
@@ -551,32 +538,23 @@ END:VCALENDAR";
 
     public static function feedback_status()
     {
+        return cache()->rememberForever('ref:interview_sub_status:all', function () {
+            $interview_status = DB::table('interview_sub_status')
+                ->where('interview_sub_status.status', 1)
+                ->get();
 
-        $interview_status = DB::table('interview_sub_status')
-            ->where('interview_sub_status.status', 1)
-            ->get();
+            $array = [];
 
-        $array = [];
+            foreach ($interview_status as $index => $status) {
+                $array[$status->id] = [
+                    'id' => $status->id,
+                    'name' => $status->name,
+                    'classname' => ($status->classname), // Assign classname dynamically
+                ];
+            }
 
-        foreach ($interview_status as $index => $status) {
-            $array[$status->id] = [
-                'id' => $status->id,
-                'name' => $status->name,
-                'classname' => ($status->classname), // Assign classname dynamically
-            ];
-        }
-
-        return $array;
-
-        // $array 			=	array(
-        // 							0	=>	array('name'=>'Shortlisted', 'classname' => 'shortlisted-bg'),
-        // 							1	=>	array('name'=>'Hold', 'classname' => 'rescheduled-bg'),
-        // 							2	=>	array('name' =>'Rejected', 'classname' => 'rejected-bg'),
-        // 							3	=>	array( 'name'=>'Reschedule', 'classname' => 'feedback-bg'),
-        // 							4	=>	array('name'=>'Feedback Pending', 'classname' => 'pending-bg'),
-        // 							5	=>	array('name'=>'Other Feedback', 'classname' => 'rescheduled-bg')
-        // 						);
-        // return $array;
+            return $array;
+        });
     }
 
     public static function conversation_status()
@@ -4317,32 +4295,34 @@ END:VCALENDAR";
 
     public static function currencyConverter()
     {
-        $currencies = DB::table('currencies')->get();
+        return cache()->remember('ref:currencies:all', 86400, function () {
+            $currencies = DB::table('currencies')->get();
 
-        $exchangeRates = [];
-        $rates = [];
-        $symbolsValue = [];
-        $symbols = [];
-        $getKey = [];
+            $exchangeRates = [];
+            $rates = [];
+            $symbolsValue = [];
+            $symbols = [];
+            $getKey = [];
 
-        foreach ($currencies as $row) {
-            // INR based (your first array)
-            $exchangeRates[$row->currency_code] = (float) $row->inr_based_rates;
+            foreach ($currencies as $row) {
+                // INR based (your first array)
+                $exchangeRates[$row->currency_code] = (float) $row->inr_based_rates;
 
-            // Second rates (example: you can use another column or same)
-            $rates[$row->currency_code] = (float) $row->usd_based_rates;
-            $symbolsValue[$row->currency_code] = $row->getKey;
-            $symbols[$row->currency_code] = $row->currency_symbol;
-            $getKey[$row->getKey] = $row->currency_code;
-        }
+                // Second rates (example: you can use another column or same)
+                $rates[$row->currency_code] = (float) $row->usd_based_rates;
+                $symbolsValue[$row->currency_code] = $row->getKey;
+                $symbols[$row->currency_code] = $row->currency_symbol;
+                $getKey[$row->getKey] = $row->currency_code;
+            }
 
-        return [
-            'inr_based_rates' => $exchangeRates,
-            'usd_based_rates' => $rates,
-            'symbolsValue' => $symbolsValue,
-            'symbols' => $symbols,
-            'getKey' => $getKey,
-        ];
+            return [
+                'inr_based_rates' => $exchangeRates,
+                'usd_based_rates' => $rates,
+                'symbolsValue' => $symbolsValue,
+                'symbols' => $symbols,
+                'getKey' => $getKey,
+            ];
+        });
 
     }
 
