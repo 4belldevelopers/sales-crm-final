@@ -148,12 +148,16 @@
 
 /* ── Shared CSS Grid — header + data rows share the same columns ─────────── */
 /*   icon | date | event | actor | amount | balance                           */
-/*   50px   130px  1fr    170px   115px    100px                               */
+/*   40px   130px  2fr     1fr     110px    95px                              */
 .txlog-grid {
     display: grid;
-    grid-template-columns: 50px 130px 1fr 170px 115px 100px;
+    grid-template-columns: 40px 130px minmax(200px, 2fr) minmax(160px, 1fr) 110px 95px;
+    gap: 12px;
     align-items: center;
     padding: 0 20px;
+}
+.txlog-grid > div {
+    min-width: 0;
 }
 
 /* ── Table-style Timeline Header ─────────────────────────────────────────── */
@@ -201,15 +205,16 @@
 .ri-debit  { background: #fff5f8; }
 .ri-settle { background: #fff8dd; }
 
-/* Data cells — right-align amount and balance */
-.tx-col-event  { padding-right: 16px; min-width: 0; }
-.tx-col-amount { text-align: right; padding-right: 4px; }
-.tx-col-bal    { text-align: right; }
+/* Data cells — column margins & padding */
+.tx-col-datetime { padding-right: 16px; }
+.tx-col-event    { padding-right: 16px; min-width: 0; }
+.tx-col-amount   { padding-right: 16px; text-align: left; }
+.tx-col-bal      { padding-right: 16px; text-align: left; }
 
 /* Cell typography */
 .cell-main { font-size: 13px; font-weight: 600; color: #181c32; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .cell-sub  { font-size: 11px; color: #b5b5c3; margin-top: 1px; }
-.tx-col-event .cell-main { white-space: normal; overflow: visible; text-overflow: unset; }
+.tx-col-event .cell-main { white-space: normal; overflow: visible; text-overflow: unset; word-break: break-word; }
 
 /* Badges */
 .tx-badge {
@@ -442,11 +447,11 @@
                 {{-- Table Column Headers --}}
                 <div class="txlog-table-header txlog-grid" id="txlog-table-header">
                     <div></div>
-                    <div class="th">Date &amp; Time</div>
-                    <div class="th">Event Description</div>
+                    <div class="th tx-col-datetime">Date &amp; Time</div>
+                    <div class="th tx-col-event">Event Description</div>
                     <div class="th">Initiated By</div>
-                    <div class="th" style="text-align:right;">Amount</div>
-                    <div class="th" style="text-align:right;">Balance</div>
+                    <div class="th tx-col-amount">Amount</div>
+                    <div class="th tx-col-bal">Balance</div>
                 </div>
 
                 {{-- Timeline Content --}}
@@ -517,7 +522,8 @@
         per_page        : 10,
         page            : 1,
     };
-    var debounceTimer = null;
+    var debounceTimer     = null;
+    var currentController = null; // Controller to abort pending AJAX requests and prevent duplicate/racing responses
 
     // ── DOM refs ──────────────────────────────────────────────────────────────
     var elContent    = document.getElementById('txlog-content');
@@ -533,13 +539,83 @@
     var elStatDebit  = document.getElementById('stat-debit');
     var elStatTotal  = document.getElementById('stat-total');
 
-    // Set default dates on inputs
-    elDateFrom.value = state.date_from;
-    elDateTo.value   = state.date_to;
+    // ── Parse URL search parameters for direct deep-linking / page refresh ────
+    /**
+     * Parse query string parameters (pagetype, page, search, date_from, date_to, transection_type, per_page)
+     * so direct URL loads retain active state and UI controls synchronize immediately.
+     */
+    var urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.has('pagetype')) {
+        var pt = urlParams.get('pagetype');
+        if (pt === 'salestab' || pt === 'operationaltab') {
+            state.pagetype = pt;
+        }
+    }
+    if (urlParams.has('page')) {
+        var pg = parseInt(urlParams.get('page'), 10);
+        if (!isNaN(pg) && pg > 0) state.page = pg;
+    }
+    if (urlParams.has('search')) {
+        state.search = urlParams.get('search');
+    }
+    if (urlParams.has('date_from')) {
+        state.date_from = urlParams.get('date_from');
+    }
+    if (urlParams.has('date_to')) {
+        state.date_to = urlParams.get('date_to');
+    }
+    if (urlParams.has('transection_type')) {
+        state.transection_type = urlParams.get('transection_type');
+    }
+    if (urlParams.has('per_page')) {
+        var pp = parseInt(urlParams.get('per_page'), 10);
+        if (!isNaN(pp) && pp > 0) state.per_page = pp;
+    }
+
+    // ── Sync UI inputs & active states with initial state ─────────────────────
+    document.querySelectorAll('.txlog-tab').forEach(function(t) {
+        t.classList.toggle('active', t.getAttribute('data-pagetype') === state.pagetype);
+    });
+    if (elSearch) elSearch.value = state.search;
+    if (elDateFrom) elDateFrom.value = state.date_from;
+    if (elDateTo) elDateTo.value = state.date_to;
+    if (elType) elType.value = state.transection_type;
+    if (elPerPage) elPerPage.value = state.per_page;
+
+    // Highlight active preset chip if dates match standard range
+    var isThisMonth = state.date_from === range.from && state.date_to === range.to;
+    var lastM       = lastMonthRange();
+    var isLastMonth = state.date_from === lastM.from && state.date_to === lastM.to;
+    var l7          = last7Range();
+    var isLast7     = state.date_from === l7.from && state.date_to === l7.to;
+    var isAll       = state.date_from === '' && state.date_to === '';
+
+    document.querySelectorAll('.txlog-chip').forEach(function(c) {
+        var p = c.getAttribute('data-preset');
+        var act = (p === 'this_month' && isThisMonth) ||
+                  (p === 'last_month' && isLastMonth) ||
+                  (p === 'last_7' && isLast7) ||
+                  (p === 'all' && isAll);
+        c.classList.toggle('active-chip', act);
+    });
 
     // ── Fetch ─────────────────────────────────────────────────────────────────
+    /**
+     * Primary AJAX request executor for transaction logs.
+     * Reused for initial page load, tab switches, search, filters, pagination, and resets.
+     * Cancels any pending request in-flight to prevent duplicate/stale responses.
+     */
     function fetchData() {
         showLoader();
+
+        // Abort previous in-flight request if present
+        if (currentController) {
+            currentController.abort();
+        }
+        if (typeof AbortController !== 'undefined') {
+            currentController = new AbortController();
+        }
+
         var params = new URLSearchParams({
             pagetype         : state.pagetype,
             search           : state.search,
@@ -550,10 +626,20 @@
             page             : state.page,
         });
 
-        fetch(dataUrl + '?' + params.toString(), {
+        var fetchOptions = {
             headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' }
+        };
+        if (currentController) {
+            fetchOptions.signal = currentController.signal;
+        }
+
+        fetch(dataUrl + '?' + params.toString(), fetchOptions)
+        .then(function(r) {
+            if (!r.ok) {
+                throw new Error('HTTP status ' + r.status);
+            }
+            return r.json();
         })
-        .then(function(r) { return r.json(); })
         .then(function(json) {
             if (json.success) {
                 renderItems(json.data);
@@ -563,7 +649,10 @@
                 showError('Unable to load transactions. Please try again.');
             }
         })
-        .catch(function() {
+        .catch(function(err) {
+            if (err.name === 'AbortError') {
+                return; // Suppress UI error for aborted redundant request
+            }
             showError('A network error occurred. Please refresh the page.');
         });
     }
@@ -617,7 +706,7 @@
                 '<div class="txlog-ic-col">' +
                     '<div class="txlog-row-icon '+iconClass+'">' + iconSvg + '</div>' +
                 '</div>' +
-                '<div>' +
+                '<div class="tx-col-datetime">' +
                     '<div class="cell-main">' + esc(dateStr) + '</div>' +
                     '<div class="cell-sub">' + esc(timeStr) + '</div>' +
                 '</div>' +
@@ -677,7 +766,7 @@
             el.addEventListener('click', function(e) {
                 e.preventDefault();
                 if (el.classList.contains('disabled') || el.classList.contains('active')) return;
-                state.page = parseInt(el.getAttribute('data-pg'));
+                state.page = parseInt(el.getAttribute('data-pg'), 10);
                 fetchData();
             });
         });
@@ -699,8 +788,8 @@
         else if (preset === 'last_7')  r = last7Range();
         else { r = { from: '', to: '' }; }   // all time
 
-        elDateFrom.value = r.from;
-        elDateTo.value   = r.to;
+        if (elDateFrom) elDateFrom.value = r.from;
+        if (elDateTo) elDateTo.value   = r.to;
         state.date_from  = r.from;
         state.date_to    = r.to;
         state.page = 1;
@@ -736,77 +825,80 @@
     document.querySelectorAll('.txlog-tab').forEach(function(tab) {
         tab.addEventListener('click', function(e) {
             e.preventDefault();
+            var targetType = tab.getAttribute('data-pagetype');
+            if (state.pagetype === targetType && tab.classList.contains('active')) {
+                return; // Ignore redundant clicks on currently active tab
+            }
             document.querySelectorAll('.txlog-tab').forEach(function(t) { t.classList.remove('active'); });
             tab.classList.add('active');
-            state.pagetype = tab.getAttribute('data-pagetype');
+            state.pagetype = targetType;
             resetPage();
             fetchData();
         });
     });
 
-    elSearch.addEventListener('input', function() {
-        clearTimeout(debounceTimer);
-        debounceTimer = setTimeout(function() {
-            state.search = elSearch.value.trim();
-            // Clear preset highlight on manual date change
-            document.querySelectorAll('.txlog-chip').forEach(function(c) { c.classList.remove('active-chip'); });
-            resetPage(); fetchData();
-        }, 450);
-    });
-
-    elDateFrom.addEventListener('change', function() {
-        state.date_from = elDateFrom.value;
-        document.querySelectorAll('.txlog-chip').forEach(function(c) { c.classList.remove('active-chip'); });
-        resetPage(); fetchData();
-    });
-
-    elDateTo.addEventListener('change', function() {
-        state.date_to = elDateTo.value;
-        document.querySelectorAll('.txlog-chip').forEach(function(c) { c.classList.remove('active-chip'); });
-        resetPage(); fetchData();
-    });
-
-    elType.addEventListener('change', function() {
-        state.transection_type = elType.value;
-        resetPage(); fetchData();
-    });
-
-    elPerPage.addEventListener('change', function() {
-        state.per_page = parseInt(elPerPage.value);
-        resetPage(); fetchData();
-    });
-
-    elReset.addEventListener('click', function() {
-        var r        = thisMonthRange();
-        elSearch.value   = '';
-        elDateFrom.value = r.from;
-        elDateTo.value   = r.to;
-        elType.value     = '';
-        if (elPerPage) elPerPage.value  = '10';
-        state.search     = '';
-        state.date_from  = r.from;
-        state.date_to    = r.to;
-        state.transection_type = '';
-        state.per_page   = 10;
-        document.querySelectorAll('.txlog-chip').forEach(function(c) {
-            c.classList.toggle('active-chip', c.getAttribute('data-preset') === 'this_month');
+    if (elSearch) {
+        elSearch.addEventListener('input', function() {
+            clearTimeout(debounceTimer);
+            debounceTimer = setTimeout(function() {
+                state.search = elSearch.value.trim();
+                // Clear preset highlight on manual search / filter change if dates modified
+                resetPage(); fetchData();
+            }, 450);
         });
-        resetPage(); fetchData();
-    });
-
-    // ── Backward-compat: ?pagetype= in URL ───────────────────────────────────
-    var urlParams = new URLSearchParams(window.location.search);
-    if (urlParams.has('pagetype')) {
-        var pt = urlParams.get('pagetype');
-        if (pt === 'salestab' || pt === 'operationaltab') {
-            state.pagetype = pt;
-            document.querySelectorAll('.txlog-tab').forEach(function(t) {
-                t.classList.toggle('active', t.getAttribute('data-pagetype') === pt);
-            });
-        }
     }
 
-    // ── Initial load with current month default ───────────────────────────────
+    if (elDateFrom) {
+        elDateFrom.addEventListener('change', function() {
+            state.date_from = elDateFrom.value;
+            document.querySelectorAll('.txlog-chip').forEach(function(c) { c.classList.remove('active-chip'); });
+            resetPage(); fetchData();
+        });
+    }
+
+    if (elDateTo) {
+        elDateTo.addEventListener('change', function() {
+            state.date_to = elDateTo.value;
+            document.querySelectorAll('.txlog-chip').forEach(function(c) { c.classList.remove('active-chip'); });
+            resetPage(); fetchData();
+        });
+    }
+
+    if (elType) {
+        elType.addEventListener('change', function() {
+            state.transection_type = elType.value;
+            resetPage(); fetchData();
+        });
+    }
+
+    if (elPerPage) {
+        elPerPage.addEventListener('change', function() {
+            state.per_page = parseInt(elPerPage.value, 10);
+            resetPage(); fetchData();
+        });
+    }
+
+    if (elReset) {
+        elReset.addEventListener('click', function() {
+            var r        = thisMonthRange();
+            if (elSearch) elSearch.value   = '';
+            if (elDateFrom) elDateFrom.value = r.from;
+            if (elDateTo) elDateTo.value   = r.to;
+            if (elType) elType.value     = '';
+            if (elPerPage) elPerPage.value  = '10';
+            state.search     = '';
+            state.date_from  = r.from;
+            state.date_to    = r.to;
+            state.transection_type = '';
+            state.per_page   = 10;
+            document.querySelectorAll('.txlog-chip').forEach(function(c) {
+                c.classList.toggle('active-chip', c.getAttribute('data-preset') === 'this_month');
+            });
+            resetPage(); fetchData();
+        });
+    }
+
+    // ── Initial load ──────────────────────────────────────────────────────────
     fetchData();
 
 })();
