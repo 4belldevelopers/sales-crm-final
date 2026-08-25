@@ -2924,7 +2924,7 @@ $( document ).ready(function() {
             }
             //  flatpickrfunDefine();
 
-        var currentPage = $('.custom-pagination .page-link.active').data('page');
+        var currentPage = $('.custom-pagination .page-link.active').data('page') || 1;
   
 				$('#kt_activitiesApplication_toggle').trigger('click');
 				var id    		=	$(this).data('row-id');
@@ -2961,7 +2961,7 @@ $( document ).ready(function() {
             }
             //  flatpickrfunDefine();
 
-        var currentPage = $('.custom-pagination .page-link.active').data('page');
+        var currentPage = $('.custom-pagination .page-link.active').data('page') || 1;
   
 				$('#kt_activitiesApplication_toggle').trigger('click');
 				var id    		=	$(this).data('row-id');
@@ -2998,7 +2998,7 @@ $( document ).ready(function() {
                   return; // ⛔ STOP EXECUTION
             }
       //  flatpickrfunDefine();
-       var currentPage = $('.custom-pagination .page-link.active').data('page');
+       var currentPage = $('.custom-pagination .page-link.active').data('page') || 1;
 				$('#kt_client_activitiesApplication_toggle').trigger('click');
 				var id    		=	$(this).data('row-id');
 				var url 		=	"{{ route('service_company.job-applications.clientshow',':id') }}?currentPage="+currentPage;

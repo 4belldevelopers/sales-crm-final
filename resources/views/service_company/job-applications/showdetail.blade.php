@@ -408,7 +408,7 @@
 @php 
       
     $jobId = $application->jobId ?? $application->job_id;
-    $jobData = DB::table('jobs')->select('max_sal_mode as jobMode','max_salary_currency as jobCurrency')->where('id','=',$jobId)->first();
+    $jobData = $jobData ?? (empty($jobId) ? null : DB::table('jobs')->select('max_sal_mode as jobMode','max_salary_currency as jobCurrency')->where('id','=',$jobId)->first());
     $jobMode = $jobData->jobMode ?? @$application->current_ctc_mode;
     $jobCurrency = $jobData->jobCurrency ?? @$application->current_ctc_cur;
     $symbols = $symbolsValue[$jobCurrency] ?? "INR";
@@ -445,7 +445,7 @@
       $posted_by_image			=	$posted_by			=	'';
 
       if($CaptainCompanyid != $application->ClientComID && $application->ClientComID != 0 && $application->ClientComID > 0){
-            $spokperson = DB::table('job_assign')->select('users.name')->leftjoin('users', 'users.id', 'job_assign.spok_user_id')->where('job_assign.job_id', $jobId)->where('job_assign.company_id', $application->ClientComID)->first();
+            $spokperson = $hdrSpokperson ?? DB::table('job_assign')->select('users.name')->leftjoin('users', 'users.id', 'job_assign.spok_user_id')->where('job_assign.job_id', $jobId)->where('job_assign.company_id', $application->ClientComID)->first();
             $posted_by = (@$spokperson->name) ? @$spokperson->name : @$application->posted_by;
         }else{
           // dd($application->posted_by);
@@ -1025,7 +1025,7 @@
         $rcvCompanyName = '';
         $__rcvCid = auth()->user()->company_id ?? 0;
         if($__rcvCid){
-            $__rcvC = DB::table('companies')->select('logo','company_name')->where('id', $__rcvCid)->first();
+            $__rcvC = $rcvCompany ?? DB::table('companies')->select('logo','company_name')->where('id', $__rcvCid)->first();
             $rcvCompanyName = ucwords((string) (@$__rcvC->company_name ?? ''));
             $__rcvLogo = $__rcvC->logo ?? '';
             if(!empty($__rcvLogo) && strlen($__rcvLogo) > 5){
@@ -2493,7 +2493,7 @@
                   Company Name 
                 </span>
                 @php
-                $companies = DB::table('companies')->select('companies.company_name')->join('users','users.company_id','companies.id')->where('users.id', $application->submitted_by)->first();
+                $companies = $submittedByCompany ?? (!empty($application->submitted_by) ? DB::table('companies')->select('companies.company_name')->join('users','users.company_id','companies.id')->where('users.id', $application->submitted_by)->first() : null);
                 @endphp
                 <span class="own-value">{{ ucwords(strtolower(@$companies->company_name ?? '')) }}</span>
               </div>
@@ -3232,7 +3232,7 @@
                       foreach($updateTimeLine as $tdata){
                         $tdata = (object) $tdata;
                         $tdata->update_at =   $tdata->updated_at;
-                        $company_or_client = GeneralMethod::companyDetailsByClient($tdata->job_id);
+                        $company_or_client = isset($companyOrClientMap[$tdata->job_id]) ? $companyOrClientMap[$tdata->job_id] : GeneralMethod::companyDetailsByClient($tdata->job_id);
                         $create_at	=	$newDate	=	$newTime	= $prev_tiles_bg	=	$timeline_type = $current_tiles_bg =  "";
                         $create_at	=	$tdata->created_at;
                         $newDate 							=	date("d-M-Y", strtotime($create_at));
@@ -3265,12 +3265,12 @@
                         if($tdata->candidate_status==1){                          
                          
                           $offer_status = 'Offer Released';
-                          $allow =  GeneralMethod::confidentialAmontShow($tdata->job_id); 
+                          $allow = isset($confidentialAllowedJobsMap[$tdata->job_id]) ? $confidentialAllowedJobsMap[$tdata->job_id] : GeneralMethod::confidentialAmontShow($tdata->job_id); 
                           if($allow){
                              $downloadOffer = '<i  data-jobId="'.@$application->jobId.'" data-candidate="'.@$application->candidate_id.'" data-mtype="3" data-offerId="'.@$application->offer_id.'" class="fa fa-download download_offer"  data-wizard-type="action-next" style="width: 100%;cursor: pointer;"></i>';
                           }else{
-                            $offer_job_applications = DB::table('offer_job_applications')->where('id','=',@$application->offer_id)->first();
-                            if($offer_job_applications->submitted_by != auth()->user()->id){
+                            $offer_job_applications = isset($offerJobApplicationsMap[@$application->offer_id]) ? $offerJobApplicationsMap[@$application->offer_id] : (!empty(@$application->offer_id) ? DB::table('offer_job_applications')->where('id','=',@$application->offer_id)->first() : null);
+                            if($offer_job_applications && $offer_job_applications->submitted_by != auth()->user()->id){
                                 $downloadOffer = '<i  data-jobId="'.@$application->jobId.'" data-candidate="'.@$application->candidate_id.'" data-mtype="3" data-offerId="'.@$application->offer_id.'" class="fa fa-download ConfidentialClass"  data-wizard-type="action-next" style="width: 100%;cursor: pointer;"></i>';
                             }else{
                              $downloadOffer = '<i  data-jobId="'.@$application->jobId.'" data-candidate="'.@$application->candidate_id.'" data-mtype="3" data-offerId="'.@$application->offer_id.'" class="fa fa-download download_offer"  data-wizard-type="action-next" style="width: 100%;cursor: pointer;"></i>';
@@ -3294,8 +3294,8 @@
                         }elseif($tdata->management_status==3){
                           $management_status = 'Not Approved';
                         }
-                        $feedback_status = GeneralMethod::feedback_status();
-                        $available_status = GeneralMethod::available_status();
+                        $feedback_status = $feedback_status ?? GeneralMethod::feedback_status();
+                        $available_status = $available_status ?? GeneralMethod::available_status();
                         $available_status_name = '';
                         if ($tdata->available_status > 0) {
                           $available_status_name = @$available_status[@$tdata->available_status]['name'];
@@ -3305,11 +3305,16 @@
                                 $rowpostedby = $tdata->name;
                         }else{
                             $rowpostedby = $tdata->name;
-                            $userC = DB::table('users')->select('company_id')->where('id',$tdata->event_by_user_id)->first();
-                            if($CaptainCompanyid==$userC->company_id){
+                            $userCCompanyId = isset($userCompanyMap[$tdata->event_by_user_id]) ? $userCompanyMap[$tdata->event_by_user_id] : null;
+                            if(!$userCCompanyId){
+                                $userC = DB::table('users')->select('company_id')->where('id',$tdata->event_by_user_id)->first();
+                                $userCCompanyId = @$userC->company_id;
+                            }
+                            if($CaptainCompanyid==$userCCompanyId){
                                     $rowpostedby = $tdata->name;
                               }else{
-                                $spokperson = DB::table('job_assign')->select('users.name','job_assign.company_id')->leftjoin('users', 'users.id', 'job_assign.spok_user_id')->where('job_assign.job_id', $tdata->job_id)->where('job_assign.company_id', $tdata->event_by_company_id)->first();
+                                $spokKey = $tdata->job_id . '_' . $tdata->event_by_company_id;
+                                $spokperson = isset($spokpersonMap[$spokKey]) ? $spokpersonMap[$spokKey] : DB::table('job_assign')->select('users.name','job_assign.company_id')->leftjoin('users', 'users.id', 'job_assign.spok_user_id')->where('job_assign.job_id', $tdata->job_id)->where('job_assign.company_id', $tdata->event_by_company_id)->first();
                                 if($spokperson){
                                     if(!empty($spokperson->name)){
                                       if($CaptainCompanyid !=$spokperson->company_id){
@@ -3592,15 +3597,18 @@
                                 </table>
                                 <!--end::Table-->
                           @php 
-                          //interview_feedback  application_id    interview_schedules_id    
-                                $interview_feedback 	= DB::table('interview_feedback')
-                                ->select('interview_feedback.created_at', 'interview_feedback.message', 'interview_feedback.star_ratings','users.name', 'users.image')
-                                ->join('users', 'users.id', '=', 'interview_feedback.update_by')
-                                ->where('interview_feedback.application_id', @$tdata->application_id)
-                                ->where('interview_feedback.interview_id', @$tdata->interview_schedules_id)
-                                ->get(); 
+                                $interview_feedback = isset($interviewFeedbackMap[$tdata->interview_schedules_id]) 
+                                    ? (is_array($interviewFeedbackMap[$tdata->interview_schedules_id]) ? array_map(fn($f) => (object)$f, $interviewFeedbackMap[$tdata->interview_schedules_id]) : $interviewFeedbackMap[$tdata->interview_schedules_id])
+                                    : DB::table('interview_feedback')
+                                        ->select('interview_feedback.created_at', 'interview_feedback.message', 'interview_feedback.star_ratings','users.name', 'users.image')
+                                        ->join('users', 'users.id', '=', 'interview_feedback.update_by')
+                                        ->where('interview_feedback.application_id', @$tdata->application_id)
+                                        ->where('interview_feedback.interview_id', @$tdata->interview_schedules_id)
+                                        ->get(); 
                                 $feedbackdataView ='';
-                                $feedbackdata = DB::table('interview_skills_feedback')->where('interview_id',$tdata->interview_schedules_id)->orderByDesc('feedback_id')->count();
+                                $feedbackdata = isset($interviewSkillsFeedbackCountMap[$tdata->interview_schedules_id]) 
+                                    ? $interviewSkillsFeedbackCountMap[$tdata->interview_schedules_id] 
+                                    : DB::table('interview_skills_feedback')->where('interview_id',$tdata->interview_schedules_id)->orderByDesc('feedback_id')->count();
                                 if($feedbackdata>0){
                                     $feedbackdataView = '<div class="overflow-auto pb-5">
                                       <div class="d-flex align-items-center border border-dashed border-gray-300 rounded min-w-700px p-5">
@@ -5364,11 +5372,11 @@ setTimeout(() => {
         }
     }
 
-    $(document).on('click', '.sendmaimodal', function() {
+    $(document).off('click.sdMailModal').on('click.sdMailModal', '.sendmaimodal', function() {
         showSendMailOverlay();
     });
 
-    $(document).on('click', '#kt_send_mail_showdetail_close', function() {
+    $(document).off('click.sdMailClose').on('click.sdMailClose', '#kt_send_mail_showdetail_close', function() {
         hideSendMailDrawer();
     });
 })();
@@ -5409,11 +5417,11 @@ setTimeout(() => {
         }
     }
 
-    $(document).on('click', '.sendwhatsappmodal', function() {
+    $(document).off('click.sdWaModal').on('click.sdWaModal', '.sendwhatsappmodal', function() {
         showWhatsappOverlay();
     });
 
-    $(document).on('click', '#kt_send_whatsapp_showdetail_close', function() {
+    $(document).off('click.sdWaClose').on('click.sdWaClose', '#kt_send_whatsapp_showdetail_close', function() {
         hideWhatsappDrawer();
     });
 })();
@@ -5974,9 +5982,6 @@ window.__buildRS=buildRecruiterSummary;
     drawer.setAttribute('aria-hidden','false');
     drawer.focus();
     document.addEventListener('keydown', onEsc);
-    /* preload jsPDF + html2canvas so they're ready when the user clicks download */
-    if(!window.jspdf){ var ps=document.createElement('script'); ps.src='https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js'; ps.async=true; document.head.appendChild(ps); }
-    if(!window.html2canvas){ var hs=document.createElement('script'); hs.src='https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js'; hs.async=true; document.head.appendChild(hs); }
   }
 
   function closeRdc(){

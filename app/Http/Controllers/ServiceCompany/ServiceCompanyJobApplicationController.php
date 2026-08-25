@@ -2652,7 +2652,24 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
         if (isset($_GET['slug'])) {
             $currentSlug = $_GET['slug'];
         }
-        // $path = parse_url(url()->current(), PHP_URL_PATH);
+
+        $cachePayload = [
+            'candidate_show' => $id,
+            'currentSlug' => $currentSlug,
+            'user_id' => $userId,
+        ];
+
+        $versionKey = 'candidateDetails_version_user_'.$userId;
+        $version = cache()->get($versionKey, 1);
+        $cacheKeySet = 'ats:candidateDetails:'.$userId.':'.$version.':'.md5(json_encode($cachePayload));
+
+        /* ----------------------------
+        ⚡ Check DragonflyDB first
+        ----------------------------- */
+        $cachedResponse = cache()->get($cacheKeySet);
+        if ($cachedResponse !== null) {
+            return response()->json($cachedResponse);
+        }
 
         $this->notVisiableBench = true;
 
@@ -2826,21 +2843,7 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
             }
         }
 
-        $cachePayload = [
-            'candidate_show' => $id,
-            'currentSlug' => $currentSlug,
-            'user_id' => $this->user->id,
-        ];
 
-        $versionKey = 'candidateDetails_version_user_'.$this->user->id;
-        $version = cache()->get($versionKey, 1);
-        $cacheKeySet = 'ats:candidateDetails:'.$this->user->id.':'.$version.':'.md5(json_encode($cachePayload));
-        /* ----------------------------
-        ⚡ Check DragonflyDB first
-        ----------------------------- */
-        if (cache()->has($cacheKeySet)) {
-            return response()->json(cache()->get($cacheKeySet));
-        }
 
         $this->client_contuser_arr = ($this->job->client_contact_info_jobs);
         $this->clientjobAssignListCaptain = '';
@@ -2884,7 +2887,7 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
                 'sort' => [
                     ['id' => ['order' => 'desc']],
                 ],
-                'size' => 10000, // optional: get more records
+                'size' => 100, // optimized size limit
             ],
         ];
 
@@ -2908,7 +2911,7 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
                 'sort' => [
                     ['id' => ['order' => 'asc']],
                 ],
-                'size' => 10000, // optional: get more records
+                'size' => 100, // optimized size limit
             ],
         ];
 
@@ -2932,28 +2935,7 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
 
         $job_details = Job::withoutGlobalScopes()->find($this->job_id);
 
-        $params = [
-            'index' => ELASTIC_CANDIDATE_SKILLS_EXP,
-            'body' => [
-                'query' => [
-                    'bool' => [
-                        'must' => [
-                            ['term' => ['candidate_id' => $this->application->id]],
-                            ['term' => ['job_id' => $this->job_id]],
-                        ],
-                    ],
-                ],
-                'sort' => [
-                    ['id' => ['order' => 'desc']],
-                ],
-                'size' => 10000, // optional: get more records
-            ],
-        ];
 
-        $response = $this->elasticService->getClient()->search($params);
-        // return users
-        $this->jobSkill = empty($response['hits']['hits']) ? null : array_map(fn ($hit) => $hit['_source'], $response['hits']['hits']);
-        // dd($this->jobSkill);
 
         $this->jobSkill = DB::table('job_metronics_skills')
             ->leftJoin('candidate_job_skill_exp', function ($join) {
@@ -2988,7 +2970,7 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
                 'sort' => [
                     ['id' => ['order' => 'desc']],
                 ],
-                'size' => 10000, // optional: get more records
+                'size' => 100, // optimized size limit
             ],
         ];
 
@@ -3014,13 +2996,126 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
                 'sort' => [
                     ['id' => ['order' => 'desc']],
                 ],
-                'size' => 10000, // optional: get more records
+                'size' => 200, // optimized size limit
             ],
         ];
 
         $response = $this->elasticService->getClient()->search($params);
         // return users
         $this->updateTimeLine = empty($response['hits']['hits']) ? null : array_map(fn ($hit) => $hit['_source'], $response['hits']['hits']);
+
+        // Bulk loading for Timeline N+1 optimization (P0-1)
+        $companyOrClientMap = [];
+        $confidentialAllowedJobsMap = [];
+        $offerJobApplicationsMap = [];
+        $userCompanyMap = [];
+        $spokpersonMap = [];
+        $interviewFeedbackMap = [];
+        $interviewSkillsFeedbackCountMap = [];
+
+        if (! empty($this->updateTimeLine)) {
+            $timelineItems = collect($this->updateTimeLine);
+
+            $jobIds = $timelineItems->pluck('job_id')->filter()->unique()->values()->toArray();
+            $eventUserIds = $timelineItems->pluck('event_by_user_id')->filter()->unique()->values()->toArray();
+            $eventCompanyIds = $timelineItems->pluck('event_by_company_id')->filter()->unique()->values()->toArray();
+            $interviewScheduleIds = $timelineItems->pluck('interview_schedules_id')->filter()->unique()->values()->toArray();
+
+            // 1. Bulk company/client details per job_id
+            if (! empty($jobIds)) {
+                $rawCompanyClientRows = DB::table('jobs')
+                    ->select(
+                        'jobs.id',
+                        'jobs.company_id',
+                        'clients.name as clients_name',
+                        'companies.company_name'
+                    )
+                    ->join('companies', 'companies.id', '=', 'jobs.company_id')
+                    ->join('clients', 'clients.id', '=', 'jobs.client_id')
+                    ->whereIn('jobs.id', $jobIds)
+                    ->get();
+
+                $userCompanyId = auth()->user()->company_id ?? 0;
+                foreach ($rawCompanyClientRows as $rRow) {
+                    $cName = ($rRow->company_id != $userCompanyId) ? $rRow->company_name : $rRow->clients_name;
+                    $companyOrClientMap[$rRow->id] = ucwords(substr((string) $cName, 0, 30));
+                }
+            }
+
+            // 2. Bulk confidential amount permission check per job_id
+            $chkAdminRole = auth()->user()->hasRole('admin');
+            if ($chkAdminRole) {
+                foreach ($jobIds as $jId) {
+                    $confidentialAllowedJobsMap[$jId] = true;
+                }
+            } elseif (! empty($jobIds)) {
+                $assignedJobIds = DB::table('job_assign')
+                    ->whereIn('job_id', $jobIds)
+                    ->where('user_id', auth()->user()->id)
+                    ->pluck('job_id')
+                    ->toArray();
+                foreach ($jobIds as $jId) {
+                    $confidentialAllowedJobsMap[$jId] = in_array($jId, $assignedJobIds);
+                }
+            }
+
+            // 3. Offer job applications lookup
+            if (! empty($this->application->offer_id)) {
+                $offerJobApplicationsMap[$this->application->offer_id] = DB::table('offer_job_applications')
+                    ->where('id', '=', $this->application->offer_id)
+                    ->first();
+            }
+
+            // 4. Bulk user company lookup
+            if (! empty($eventUserIds)) {
+                $userCompanyMap = DB::table('users')
+                    ->whereIn('id', $eventUserIds)
+                    ->pluck('company_id', 'id')
+                    ->toArray();
+            }
+
+            // 5. Bulk spokesperson lookup
+            if (! empty($jobIds) && ! empty($eventCompanyIds)) {
+                $spokespersons = DB::table('job_assign')
+                    ->select('users.name', 'job_assign.company_id', 'job_assign.job_id')
+                    ->leftJoin('users', 'users.id', '=', 'job_assign.spok_user_id')
+                    ->whereIn('job_assign.job_id', $jobIds)
+                    ->whereIn('job_assign.company_id', $eventCompanyIds)
+                    ->get();
+                foreach ($spokespersons as $sp) {
+                    $spokpersonMap[$sp->job_id.'_'.$sp->company_id] = $sp;
+                }
+            }
+
+            // 6. Bulk interview feedback lookup
+            if (! empty($interviewScheduleIds)) {
+                $feedbacks = DB::table('interview_feedback')
+                    ->select('interview_feedback.created_at', 'interview_feedback.message', 'interview_feedback.star_ratings', 'interview_feedback.interview_id', 'interview_feedback.application_id', 'users.name', 'users.image')
+                    ->join('users', 'users.id', '=', 'interview_feedback.update_by')
+                    ->whereIn('interview_feedback.interview_id', $interviewScheduleIds)
+                    ->get();
+                foreach ($feedbacks as $fb) {
+                    $interviewFeedbackMap[$fb->interview_id][] = $fb;
+                }
+
+                // 7. Bulk interview skills feedback count lookup
+                $counts = DB::table('interview_skills_feedback')
+                    ->select('interview_id', DB::raw('COUNT(*) as total'))
+                    ->whereIn('interview_id', $interviewScheduleIds)
+                    ->groupBy('interview_id')
+                    ->pluck('total', 'interview_id')
+                    ->toArray();
+                $interviewSkillsFeedbackCountMap = $counts;
+            }
+        }
+
+        $this->companyOrClientMap = $companyOrClientMap;
+        $this->confidentialAllowedJobsMap = $confidentialAllowedJobsMap;
+        $this->offerJobApplicationsMap = $offerJobApplicationsMap;
+        $this->userCompanyMap = $userCompanyMap;
+        $this->spokpersonMap = $spokpersonMap;
+        $this->interviewFeedbackMap = $interviewFeedbackMap;
+        $this->interviewSkillsFeedbackCountMap = $interviewSkillsFeedbackCountMap;
 
         $sel_app_id = $id;
         $sel_job_id = $job_id;
@@ -3093,7 +3188,7 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
                 'sort' => [
                     ['id' => ['order' => 'desc']],
                 ],
-                'size' => 10000, // optional: get more records
+                'size' => 100, // optimized size limit
             ],
         ];
 
@@ -3115,7 +3210,7 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
                 'sort' => [
                     ['id' => ['order' => 'asc']],
                 ],
-                'size' => 10000, // optional: get more records
+                'size' => 100, // optimized size limit
             ],
         ];
 
@@ -3132,10 +3227,7 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
                 ->where('candidate_id', $this->application->candidate_id)
                 ->orderBy('skill_key')
                 ->get();
-            $this->skillExperiencesCount = DB::table('bench_candidate_skill_experience')
-                ->where('candidate_id', $this->application->candidate_id)
-                ->orderBy('skill_key')
-                ->count();
+            $this->skillExperiencesCount = count($this->skillExperiences);
         }
 
         // $this->bench_assign_row = DB::table('bench_assign')->select('users.id', 'users.name', 'users.email', 'users.mobile','users_profile.designation')->join('users', 'users.id', '=', 'bench_assign.user_id')
@@ -3161,7 +3253,7 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
         $this->currentPage = 1;
         if (isset($_GET['currentPage'])) {
             $currentPage = $_GET['currentPage'];
-            $this->currentPage = $currentPage;
+            $this->currentPage = filter_var($currentPage, FILTER_VALIDATE_INT) ?: 1;
         }
         $path = url()->previous();
         // $path = parse_url(url()->current(), PHP_URL_PATH);
@@ -3185,6 +3277,21 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
         }
 
         $this->interview_mode = DB::table('interview_mode')->select('*')->orderBy('interview_mode.id', 'ASC')->get();
+
+        // Pre-query variables for Blade view to eliminate embedded queries (P1-1)
+        $effectiveJobId = $this->application->jobId ?? $this->application->job_id ?? $jobId;
+        $this->jobData = !empty($effectiveJobId) ? DB::table('jobs')->select('max_sal_mode as jobMode', 'max_salary_currency as jobCurrency')->where('id', '=', $effectiveJobId)->first() : null;
+
+        $clientComId = $this->application->ClientComID ?? 0;
+        $this->hdrSpokperson = ($company_id != $clientComId && $clientComId > 0 && !empty($effectiveJobId))
+            ? DB::table('job_assign')->select('users.name')->leftJoin('users', 'users.id', '=', 'job_assign.spok_user_id')->where('job_assign.job_id', $effectiveJobId)->where('job_assign.company_id', $clientComId)->first()
+            : null;
+
+        $this->rcvCompany = !empty($company_id) ? DB::table('companies')->select('logo', 'company_name')->where('id', $company_id)->first() : null;
+
+        $submittedBy = $this->application->submitted_by ?? null;
+        $this->submittedByCompany = !empty($submittedBy) ? DB::table('companies')->select('companies.company_name')->join('users', 'users.company_id', '=', 'companies.id')->where('users.id', $submittedBy)->first() : null;
+
         // $view = view('service_company.job-applications.show', $this->data)->render();
         // dd("jd");
         $view = view('service_company.job-applications.showdetail', $this->data)->render();
