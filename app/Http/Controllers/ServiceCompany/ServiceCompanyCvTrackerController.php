@@ -2080,14 +2080,14 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
         }
 
         // If skill filter is empty but currentJobId is present, fetch job's required skills for matching
-        if (empty($skillArr) && !empty($currentJobId)) {
+        if (empty($skillArr) && ! empty($currentJobId)) {
             try {
                 $jSkills = DB::table('job_skills')
                     ->join('skills', 'skills.id', '=', 'job_skills.skill_id')
                     ->where('job_skills.job_id', $currentJobId)
                     ->pluck('skills.name')
                     ->toArray();
-                if (!empty($jSkills)) {
+                if (! empty($jSkills)) {
                     $skillArr = array_values(array_unique(array_map(fn ($s) => strtolower(trim($s)), $jSkills)));
                 }
             } catch (\Exception $e) {
@@ -2354,14 +2354,14 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
                 $source['skill_match_score'] = $matchedCount;
                 $source['matched_skills'] = implode(',', $matchedSkills);
 
-                $skillMatchPercent = (!empty($skillArr) && count($skillArr) > 0)
+                $skillMatchPercent = (! empty($skillArr) && count($skillArr) > 0)
                     ? (int) round(($matchedCount / count($skillArr)) * 100)
                     : 0;
 
                 $source['skill_match_percent'] = $skillMatchPercent;
 
                 // Track agency company IDs
-                if (!empty($source['company_id'])) {
+                if (! empty($source['company_id'])) {
                     $agenciesMap[$source['company_id']] = true;
                 }
 
@@ -2371,9 +2371,9 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
                     $goodCount++;
                 }
 
-                $isImmediate = !empty($source['np_is_immediate'])
+                $isImmediate = ! empty($source['np_is_immediate'])
                     || (isset($source['serving_notice_period_mode']) && $source['serving_notice_period_mode'] == 1)
-                    || (isset($source['np_id']) && stripos((string)$source['np_id'], 'immediate') !== false);
+                    || (isset($source['np_id']) && stripos((string) $source['np_id'], 'immediate') !== false);
 
                 if ($isImmediate) {
                     $availableTodayCount++;
@@ -2389,8 +2389,10 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
                 if ($pA === $pB) {
                     $sA = (int) ($a->skill_match_score ?? 0);
                     $sB = (int) ($b->skill_match_score ?? 0);
+
                     return $sB <=> $sA;
                 }
+
                 return $pB <=> $pA;
             });
 
@@ -2405,16 +2407,50 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
             'listType' => 'allcandidate',
         ];
 
-        // dd($pagination);
-
         $userPermissions = $this->userPermissions;
 
         /**
-         * Intent: Return calculated match summary metrics alongside candidate HTML & pagination for Bench Recommended Talents hero drawer.
-         * Tenancy Note: Candidates are filtered by elastic query parameters and company context.
+         * Intent: Batch pre-fetch candidate request statuses and relationship managers for all page candidates to eliminate N+1 queries during Blade rendering.
+         * Tenancy Note: Filtered by auth company ID (source_from_company_id / bench_assign.company_id).
          */
+        $candidateIds = collect($data)->pluck('id')->filter()->toArray();
+        $benchRequestsMap = [];
+        $benchManagersMap = [];
+
+        if (! empty($candidateIds)) {
+            if (! empty($currentJobId)) {
+                $benchRequestsMap = DB::table('rec_candidate_assign')
+                    ->where('source_from_company_id', $company_id)
+                    ->where('source_jobid', $currentJobId)
+                    ->whereIn('source_application_id', $candidateIds)
+                    ->get()
+                    ->keyBy('source_application_id');
+            }
+
+            $managerRows = DB::table('bench_assign')
+                ->join('users', 'users.id', '=', 'bench_assign.user_id')
+                ->select('bench_assign.bench_applications_id', 'users.name', 'users.image')
+                ->whereIn('bench_assign.bench_applications_id', $candidateIds)
+                ->where('bench_assign.company_id', $company_id)
+                ->where('users.company_id', $company_id)
+                ->orderBy('users.name', 'ASC')
+                ->get();
+
+            foreach ($managerRows as $mRow) {
+                $appId = $mRow->bench_applications_id;
+                if (! isset($benchManagersMap[$appId])) {
+                    $benchManagersMap[$appId] = [
+                        'count' => 0,
+                        'name' => $mRow->name,
+                        'image' => $mRow->image,
+                    ];
+                }
+                $benchManagersMap[$appId]['count']++;
+            }
+        }
+
         $responseData = [
-            'html' => view('service_company.ajax_pages.bench-talents-ajax', compact('data', 'userPermissions', 'company_id', 'currentJobId', 'sal_currency', 'sal_mode'))->render(),
+            'html' => view('service_company.ajax_pages.bench-talents-ajax', compact('data', 'userPermissions', 'company_id', 'currentJobId', 'sal_currency', 'sal_mode', 'benchRequestsMap', 'benchManagersMap'))->render(),
             'total' => $total,
             'pagination' => view('service_company.ajax_pages.pagination', compact('pagination'))->render(),
             'stats' => [
@@ -6510,7 +6546,7 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
                     ];
                 });
 
-            $view = view('offer-letter-preview',compact('offerDetails','offer_terms_conditions','offerId','exits_offer','address','comapny_name','logo','job_title','candidate_name','path'))->render();
+            $view = view('offer-letter-preview', compact('offerDetails', 'offer_terms_conditions', 'offerId', 'exits_offer', 'address', 'comapny_name', 'logo', 'job_title', 'candidate_name', 'path'))->render();
 
             return Reply::dataOnly(['status' => 'success', 'view' => $view]);
 
