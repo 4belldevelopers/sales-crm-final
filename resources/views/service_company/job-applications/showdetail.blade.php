@@ -5462,15 +5462,19 @@ setTimeout(() => {
   $rsWm=strtolower(trim((string)(@$application->wm??'')));
   $rsWorkMode=$rsWm==='remote'?'Remote':($rsWm==='hybrid'?'Hybrid / Remote':($rsWm==='office'?'On-site':($rsWm!==''?ucfirst($rsWm):'—')));
   $rsNpMode=(int)(@$application->serving_notice_period_mode??-1);
-  if($rsNpMode===0||$rsNpMode===1){ $rsNotice='Available '.date('d M Y',strtotime((string)@$application->np_id)); }
-  else { $rsNotice=trim((string)@$application->np_id); }
-  if($rsNotice===''||$rsNotice==='Available ') $rsNotice='--';
-  $rsIsImmediate=($rsNpMode===2||strtolower(trim((string)@$application->np_id))==='immediate');
+  $rsNpRaw=trim((string)@$application->np_id);
+  $rsNpTs=$rsNpRaw!=='' ? strtotime($rsNpRaw) : false;
+  if($rsNpMode===2||strtolower($rsNpRaw)==='immediate'){ $rsNotice='Immediate'; }
+  elseif(($rsNpMode===0||$rsNpMode===1)&&$rsNpTs!==false&&(int)date('Y',$rsNpTs)>1970){ $rsNotice='Available '.date('d M Y',$rsNpTs); }
+  else { $rsNotice=$rsNpRaw; }
+  if($rsNotice===''||$rsNotice==='Available '||str_contains($rsNotice,'01 Jan 1970')) $rsNotice='--';
+  $rsIsImmediate=($rsNpMode===2||strtolower($rsNpRaw)==='immediate');
   $rsLoc=trim(trim($city_name??'',', ').' '.trim($state_name??'',', '));
   if($rsLoc==='') $rsLoc=trim($country_name??'');
   if($rsLoc==='') $rsLoc='--';
   $rsTotalExp=trim((string)(@$application->total_exp??''));
-  $rsExpStr=$rsTotalExp!==''?$rsTotalExp.' Years':'--';
+  $rsTotalExp=trim($rsTotalExp," \t\n\r\0\x0B.");
+  $rsExpStr=$rsTotalExp!==''?$rsTotalExp.' Year'.((float)$rsTotalExp==1.0?'':'s'):'--';
   $rsValidation=[];
   if(!empty($application->linkedin)) $rsValidation[]=['label'=>'LinkedIn Verified','status'=>'Verified'];
   if(!empty($application->resume))   $rsValidation[]=['label'=>'Resume Verified','status'=>'Verified'];
@@ -5535,7 +5539,10 @@ function rsEnsurePdfMake(){
   rsPdfReady=rsTryList(core,0,function(){ return !!window.pdfMake; })
     .then(function(){ return rsTryList(vfs,0,function(){ return !!(window.pdfMake.vfs && window.pdfMake.vfs['Roboto-Regular.ttf']); }); })
     .then(function(){
-      window.pdfMake.fonts={Roboto:{normal:'Roboto-Regular.ttf',bold:'Roboto-Medium.ttf',italics:'Roboto-Italic.ttf',bolditalics:'Roboto-MediumItalic.ttf'}};
+      window.pdfMake.fonts={
+        Poppins:{normal:'/fonts/poppins/Poppins-Regular.ttf',bold:'/fonts/poppins/Poppins-SemiBold.ttf',italics:'/fonts/poppins/Poppins-Regular.ttf',bolditalics:'/fonts/poppins/Poppins-SemiBold.ttf'},
+        Roboto:{normal:'Roboto-Regular.ttf',bold:'Roboto-Medium.ttf',italics:'Roboto-Italic.ttf',bolditalics:'Roboto-MediumItalic.ttf'}
+      };
     });
   return rsPdfReady;
 }
@@ -5585,60 +5592,83 @@ function readData(){
     validation:gj('data-validation')
   };
 }
-function matchTone(score){
-  if(score>=80) return {label:'Excellent Match',priority:'HIGH',color:'#0f9f6e',fill:'#ecfdf5',border:'#a7f3d0'};
-  if(score>=60) return {label:'Strong Match',priority:'HIGH',color:'#2563eb',fill:'#eff6ff',border:'#bfdbfe'};
-  if(score>=40) return {label:'Moderate Match',priority:'MEDIUM',color:'#d97706',fill:'#fff7ed',border:'#fed7aa'};
-  return {label:'Low Match',priority:'REVIEW',color:'#dc2626',fill:'#fef2f2',border:'#fecaca'};
+function isGap(value){
+  value=clean(value,'');
+  return !value || value==='--' || value==='-' || /^available 01 jan 1970$/i.test(value);
 }
-function panel(stack,margin,fill){
+function titleCase(value){
+  value=clean(value,'');
+  if(!value) return '--';
+  return value.toLowerCase().replace(/\b([a-z])/g,function(m){ return m.toUpperCase(); });
+}
+function matchTone(score,completeness){
+  if(completeness<45) return {label:'Data Review',priority:'REVIEW',decision:'DATA REVIEW REQUIRED',round:'Recruiter Validation',color:'#7c3aed',fill:'#f5f3ff',border:'#ddd6fe'};
+  if(score>=80) return {label:'Excellent Fit',priority:'HIGH',decision:'RECOMMENDED FOR INTERVIEW',round:'Technical L1',color:'#047857',fill:'#ecfdf5',border:'#a7f3d0'};
+  if(score>=60) return {label:'Strong Fit',priority:'HIGH',decision:'RECOMMENDED FOR INTERVIEW',round:'Technical L1',color:'#1d4ed8',fill:'#eff6ff',border:'#bfdbfe'};
+  if(score>=40) return {label:'Needs Review',priority:'MEDIUM',decision:'RECRUITER REVIEW REQUIRED',round:'Recruiter Review',color:'#b45309',fill:'#fffbeb',border:'#fde68a'};
+  return {label:'Insufficient Match Evidence',priority:'REVIEW',decision:'REVIEW BEFORE DECISION',round:'Recruiter Validation',color:'#be123c',fill:'#fff1f2',border:'#fecdd3'};
+}
+function panel(stack,margin,fill,border){
   return {
-    margin:margin||[0,0,0,8],
-    table:{widths:['*'],body:[[ {stack:Array.isArray(stack)?stack:[stack],margin:[11,9,11,9],fillColor:fill||'#ffffff'} ]]},
+    margin:margin||[0,0,0,7],
+    table:{widths:['*'],body:[[ {stack:Array.isArray(stack)?stack:[stack],margin:[10,8,10,8],fillColor:fill||'#ffffff'} ]]},
     layout:{
-      hLineWidth:function(){return 0.7;}, vLineWidth:function(){return 0.7;},
-      hLineColor:function(){return '#dbe3ef';}, vLineColor:function(){return '#dbe3ef';},
+      hLineWidth:function(){return 0.55;}, vLineWidth:function(){return 0.55;},
+      hLineColor:function(){return border||'#dbe3ef';}, vLineColor:function(){return border||'#dbe3ef';},
       paddingLeft:function(){return 0;}, paddingRight:function(){return 0;},
       paddingTop:function(){return 0;}, paddingBottom:function(){return 0;}
     }
   };
 }
-function sectionTitle(title){
-  return {text:title,style:'sectionTitle',margin:[0,0,0,7]};
+function sectionTitle(title,subtle){
+  return {text:title,style:subtle?'sectionTitleMuted':'sectionTitle',margin:[0,0,0,6]};
 }
-function metaCell(label,value){
+function metaCell(label,value,align){
   return {stack:[
-    {text:label,style:'metaLabel',alignment:'center'},
-    {text:clean(value),style:'metaValue',alignment:'center',margin:[0,2,0,0]}
-  ],margin:[2,6,2,6]};
+    {text:label,style:'metaLabel',alignment:align||'left'},
+    {text:clean(value),style:'metaValue',alignment:align||'left',margin:[0,2,0,0]}
+  ],margin:[0,4,0,4]};
 }
 function metricCell(label,value){
   return {stack:[
     {text:label,style:'metricLabel',alignment:'center'},
-    {text:clean(value),style:'metricValue',alignment:'center',margin:[0,4,0,0]}
-  ],margin:[4,7,4,7],fillColor:'#f8fafc'};
+    {text:clean(value),style:'metricValue',alignment:'center',margin:[0,3,0,0]}
+  ],margin:[4,6,4,6],fillColor:'#f8fafc'};
+}
+function dataCompleteness(data){
+  var checks=[
+    data.name,data.designation||data.jobTitle,data.experience,data.company,data.location,
+    data.education,data.notice,data.workMode,data.careerSummary
+  ];
+  var score=checks.filter(function(v){ return !isGap(v); }).length;
+  if((data.skills||[]).length) score+=1;
+  if((data.validation||[]).length) score+=1;
+  if(!isGap(data.recruiterNote)) score+=1;
+  return Math.round(score/12*100);
 }
 function buildSkillRows(skills){
   var rows=[
     [
-      {text:'Skill',style:'tableHead'},
-      {text:'Experience',style:'tableHead'},
+      {text:'Skill Signal',style:'tableHead'},
+      {text:'Evidence',style:'tableHead'},
       {text:'Rating',style:'tableHead',alignment:'center'},
-      {text:'Status',style:'tableHead',alignment:'center'}
+      {text:'Readiness',style:'tableHead',alignment:'center'}
     ]
   ];
-  skills=(skills||[]).filter(function(skill){ return clean(skill.name,'')!==''; }).slice(0,8);
+  skills=(skills||[]).filter(function(skill){ return clean(skill.name,'')!==''; }).slice(0,7);
   if(!skills.length){
-    rows.push([{text:'No skill intelligence available in current candidate data.',colSpan:4,style:'muted',margin:[0,7,0,7]},{},{},{}]);
+    rows.push([{text:'No skill intelligence available in current candidate data.',colSpan:4,style:'muted',margin:[0,6,0,6]},{},{},{}]);
     return rows;
   }
   skills.forEach(function(skill){
     var rating=safeNumber(skill.rating,0,5);
+    var exp=Number(skill.exp||0);
+    var hasEvidence=rating>0 || exp>0;
     rows.push([
-      {text:clean(skill.name),style:'tableCellBold'},
-      {text:skill.exp?skill.exp+' Year'+(Number(skill.exp)>1?'s':''):'--',style:'tableCell'},
-      {text:rating ? rating+' / 5' : '--',style:'tableCell',alignment:'center',color:rating>=4?'#0f9f6e':'#d97706'},
-      {text:'Captured',style:'tableCell',alignment:'center',color:'#0f9f6e'}
+      {text:titleCase(skill.name),style:'tableCellBold'},
+      {text:exp>0 ? exp+' Year'+(exp>1?'s':'') : 'Evidence pending',style:'tableCell',color:exp>0?'#334155':'#b45309'},
+      {text:rating>0 ? rating+' / 5' : 'Not rated',style:'tableCell',alignment:'center',color:rating>0?'#334155':'#b45309'},
+      {text:hasEvidence?'Matched Signal':'Needs Evidence',style:'tableCell',alignment:'center',color:hasEvidence?'#047857':'#b45309'}
     ]);
   });
   return rows;
@@ -5646,7 +5676,7 @@ function buildSkillRows(skills){
 function buildValidationRows(validation){
   validation=(validation||[]).filter(function(row){ return clean(row.label,'')!==''; }).slice(0,6);
   if(!validation.length){
-    return [[{text:'No verification signals captured in current candidate data.',style:'muted',colSpan:3,margin:[0,6,0,6]},{},{}]];
+    return [[{text:'No verification signals captured in current candidate data.',style:'muted',colSpan:3,margin:[0,5,0,5]},{},{}]];
   }
   var cells=validation.map(function(row){
     return {text:clean(row.label)+' - '+clean(row.status,'Captured'),style:'verifyItem',margin:[0,3,0,3]};
@@ -5656,114 +5686,133 @@ function buildValidationRows(validation){
   for(var i=0;i<cells.length;i+=3) rows.push([cells[i],cells[i+1],cells[i+2]]);
   return rows;
 }
+function buildGapRows(data){
+  var gaps=[];
+  if(isGap(data.location)) gaps.push('Location not captured');
+  if(isGap(data.notice)) gaps.push('Notice period not validated');
+  if(isGap(data.recruiterNote)) gaps.push('Recruiter comments missing');
+  if(!(data.skills||[]).some(function(skill){ return Number(skill.rating||0)>0 || Number(skill.exp||0)>0; })) gaps.push('Skill evidence needs enrichment');
+  if(!gaps.length) gaps.push('No major data gaps identified');
+  while(gaps.length<4) gaps.push('');
+  return [[
+    {text:gaps[0],style:gaps[0].indexOf('No major')===0?'gapOk':'gapItem'},
+    {text:gaps[1],style:'gapItem'},
+    {text:gaps[2],style:'gapItem'},
+    {text:gaps[3],style:'gapItem'}
+  ]];
+}
 function buildDefinition(data){
   var score=safeNumber(data.match,0,100);
-  var tone=matchTone(score);
-  var summary=limitText(data.careerSummary,620,'No professional summary captured in current candidate data.');
-  var note=limitText(data.recruiterNote,520,'No recruiter comments captured in current candidate data.');
-  var recommendation=score>=60?'RECOMMENDED FOR INTERVIEW':(score>=40?'RECRUITER REVIEW REQUIRED':'NOT RECOMMENDED YET');
-  var recommendedRound=score>=60?'Technical L1':'Recruiter Review';
+  var completeness=dataCompleteness(data);
+  var tone=matchTone(score,completeness);
+  var summary=limitText(data.careerSummary,560,'No professional summary captured in current candidate data.');
+  var note=isGap(data.recruiterNote)
+    ? 'Recruiter note is not available. Treat this as a screening brief based on captured profile, skill, and verification signals only.'
+    : limitText(data.recruiterNote,420,'');
   var joining=data.isImmediate?'Immediate':clean(data.notice,'--');
+  var compactMeta=data.reportId+' | '+data.reportDate+' | '+clean(data.recruiterName,'JERO Recruiter');
+  var gapRows=buildGapRows(data);
 
   return {
     pageSize:'A4',
-    pageMargins:[26,24,26,22],
-    defaultStyle:{font:'Roboto',fontSize:8.4,color:'#1f2937',lineHeight:1.22},
+    pageMargins:[30,26,30,24],
+    defaultStyle:{font:'Poppins',fontSize:8,color:'#1f2937',lineHeight:1.22},
     styles:{
-      title:{fontSize:12.8,bold:true,color:'#111827',alignment:'center'},
-      eyebrow:{fontSize:5.7,color:'#64748b',alignment:'center'},
-      metaLabel:{fontSize:5.8,color:'#64748b'},
-      metaValue:{fontSize:7.2,bold:true,color:'#111827'},
-      candidateName:{fontSize:15.2,bold:true,color:'#111827'},
-      designation:{fontSize:8.8,bold:true,color:'#2563eb'},
+      title:{fontSize:13.8,bold:true,color:'#ffffff',alignment:'right'},
+      eyebrow:{fontSize:5.9,color:'#cbd5e1',alignment:'right'},
+      metaLabel:{fontSize:5.7,color:'#64748b'},
+      metaValue:{fontSize:7.1,bold:true,color:'#111827'},
+      candidateName:{fontSize:16.4,bold:true,color:'#0f172a'},
+      designation:{fontSize:8.6,bold:true,color:'#1d4ed8'},
       small:{fontSize:7.1,color:'#64748b'},
-      sectionTitle:{fontSize:8.2,bold:true,color:'#2563eb'},
-      tableHead:{fontSize:6.9,bold:true,color:'#2563eb',fillColor:'#f8fafc',margin:[0,5,0,5]},
-      tableCell:{fontSize:7.2,color:'#334155',margin:[0,5,0,5]},
-      tableCellBold:{fontSize:7.2,bold:true,color:'#111827',margin:[0,5,0,5]},
+      sectionTitle:{fontSize:7.7,bold:true,color:'#1d4ed8'},
+      sectionTitleMuted:{fontSize:7.4,bold:true,color:'#334155'},
+      tableHead:{fontSize:6.6,bold:true,color:'#334155',fillColor:'#f8fafc',margin:[0,5,0,5]},
+      tableCell:{fontSize:7,color:'#334155',margin:[0,5,0,5]},
+      tableCellBold:{fontSize:7,bold:true,color:'#0f172a',margin:[0,5,0,5]},
       metricLabel:{fontSize:5.8,color:'#64748b'},
-      metricValue:{fontSize:6.8,bold:true,color:'#111827'},
-      muted:{fontSize:7.1,color:'#64748b'},
-      body:{fontSize:7.35,color:'#1f2937',lineHeight:1.24},
-      verifyItem:{fontSize:6.7,bold:true,color:'#0f9f6e'},
-      footer:{fontSize:5.9,color:'#64748b'}
+      metricValue:{fontSize:6.8,bold:true,color:'#0f172a'},
+      muted:{fontSize:6.9,color:'#64748b'},
+      body:{fontSize:7.15,color:'#1f2937',lineHeight:1.24},
+      verifyItem:{fontSize:6.5,bold:true,color:'#047857'},
+      gapItem:{fontSize:6.6,bold:true,color:'#b45309',margin:[0,5,0,5]},
+      gapOk:{fontSize:6.6,bold:true,color:'#047857',margin:[0,5,0,5]},
+      footer:{fontSize:5.8,color:'#64748b'}
     },
     content:[
       {
-        margin:[0,0,0,7],
-        table:{widths:[92,'*',74],body:[[
-          {stack:[{text:'JERO AI',fontSize:10.5,bold:true,color:'#2563eb'},{text:'RECRUITMENT INTELLIGENCE',fontSize:4.9,color:'#64748b',margin:[0,1,0,0]}],border:[false,false,false,false]},
-          {stack:[{text:'PRE-SCREENED CANDIDATE REPORT',style:'title'},{text:'AI Powered | Intelligent | Data Driven',style:'eyebrow',margin:[0,2,0,0]}],border:[false,false,false,false]},
-          {text:'CONFIDENTIAL',fontSize:5.8,bold:true,color:'#0f9f6e',alignment:'center',margin:[0,4,0,0],fillColor:'#ecfdf5',border:[true,true,true,true]}
+        margin:[0,0,0,8],
+        table:{widths:[138,'*'],body:[[
+          {stack:[{text:'JERO AI',fontSize:13,bold:true,color:'#ffffff'},{text:'RECRUITMENT INTELLIGENCE',fontSize:5.6,color:'#bfdbfe',margin:[0,2,0,0]},{text:'CONFIDENTIAL BRIEF',fontSize:5.7,bold:true,color:'#d1fae5',margin:[0,10,0,0]}],fillColor:'#0f172a',margin:[12,10,12,10],border:[false,false,false,false]},
+          {stack:[{text:'PRE-SCREENED CANDIDATE REPORT',style:'title'},{text:'Candidate Intelligence Brief | AI Assisted | Human Recruiter Review',style:'eyebrow',margin:[0,3,0,0]},{text:compactMeta,fontSize:5.8,color:'#cbd5e1',alignment:'right',margin:[0,12,0,0]}],fillColor:'#172554',margin:[12,10,12,10],border:[false,false,false,false]}
         ]]},
-        layout:{hLineColor:function(){return '#bbf7d0';},vLineColor:function(){return '#bbf7d0';},hLineWidth:function(){return 0.6;},vLineWidth:function(){return 0.6;}}
+        layout:'noBorders'
       },
-      panel({
-        table:{widths:['*','*','*','*'],body:[[
-          metaCell('Report ID',data.reportId),
-          metaCell('Report Date',data.reportDate),
-          metaCell('AI Source',data.aiVersion),
-          metaCell('Recruiter',data.recruiterName)
-        ]]},
-        layout:'lightHorizontalLines'
-      },[0,0,0,8]),
-      panel([
-        {
-          table:{widths:[55,'*',96],body:[[
-            {text:initials(data.name),fontSize:18,bold:true,color:'#1d4ed8',alignment:'center',margin:[0,17,0,17],fillColor:'#eef2ff'},
-            {stack:[
-              {text:clean(data.name,'Candidate'),style:'candidateName'},
-              {text:clean(data.designation||data.jobTitle,'--'),style:'designation',margin:[0,2,0,5]},
-              {text:'Experience: '+clean(data.experience,'--'),style:'small',margin:[0,1,0,0]},
-              {text:'Company: '+clean(data.company,'--'),style:'small',margin:[0,1,0,0]},
-              {text:'Location: '+clean(data.location,'--'),style:'small',margin:[0,1,0,0]}
-            ],margin:[10,4,0,2]},
-            {stack:[
-              {text:'OVERALL MATCH',fontSize:5.9,bold:true,color:'#64748b',alignment:'center'},
-              {text:score+'%',fontSize:22,bold:true,color:tone.color,alignment:'center',margin:[0,2,0,0]},
-              {text:tone.label,fontSize:7.2,bold:true,color:tone.color,alignment:'center'},
-              {text:'PRIORITY: '+tone.priority,fontSize:5.8,bold:true,color:tone.color,alignment:'center',margin:[0,4,0,0],fillColor:tone.fill}
-            ],margin:[0,3,0,0]}
-          ]]},
-          layout:{hLineWidth:function(i){return i===0||i===1?0:0;},vLineWidth:function(i){return i===1||i===2?0.6:0;},hLineColor:function(){return '#e5e7eb';},vLineColor:function(){return '#e5e7eb';}}
-        }
-      ],[0,0,0,8]),
+      {
+        columns:[
+          panel([
+            {table:{widths:[44,'*'],body:[[
+              {text:initials(data.name),fontSize:16,bold:true,color:'#1d4ed8',alignment:'center',margin:[0,12,0,12],fillColor:'#eef2ff'},
+              {stack:[
+                {text:clean(data.name,'Candidate'),style:'candidateName'},
+                {text:clean(data.designation||data.jobTitle,'--'),style:'designation',margin:[0,2,0,5]},
+                {text:'Experience: '+clean(data.experience,'--')+'   |   Company: '+clean(data.company,'--'),style:'small'},
+                {text:'Location: '+clean(data.location,'--')+'   |   Work Mode: '+clean(data.workMode,'--'),style:'small',margin:[0,2,0,0]}
+              ],margin:[8,0,0,0]}
+            ]]},layout:'noBorders'}
+          ],[0,0,7,8],'#ffffff','#cbd5e1'),
+          panel([
+            {text:'MATCH CONFIDENCE',fontSize:5.9,bold:true,color:'#64748b',alignment:'center'},
+            {text:score+'%',fontSize:24,bold:true,color:tone.color,alignment:'center',margin:[0,1,0,0]},
+            {text:tone.label,fontSize:7.1,bold:true,color:tone.color,alignment:'center'},
+            {text:'Data Completeness: '+completeness+'%',fontSize:6.3,color:'#64748b',alignment:'center',margin:[0,5,0,0]}
+          ],[7,0,0,8],tone.fill,tone.border)
+        ],
+        columnGap:0
+      },
       {
         margin:[0,0,0,8],
         table:{widths:['*','*','*','*','*'],body:[[
           metricCell('Preferred Role',data.designation||data.jobTitle),
-          metricCell('Highest Education',data.education),
-          metricCell('Notice Period',data.notice),
-          metricCell('Location',data.location),
-          metricCell('Work Mode',data.workMode)
+          metricCell('Education',data.education),
+          metricCell('Notice Period',joining),
+          metricCell('Report Source',data.aiVersion),
+          metricCell('Priority',tone.priority)
         ]]},
-        layout:{hLineWidth:function(){return 0.7;},vLineWidth:function(){return 0.7;},hLineColor:function(){return '#dbe3ef';},vLineColor:function(){return '#dbe3ef';}}
+        layout:{hLineWidth:function(){return 0.55;},vLineWidth:function(){return 0.55;},hLineColor:function(){return '#dbe3ef';},vLineColor:function(){return '#dbe3ef';}}
       },
-      panel([
-        sectionTitle('SKILLS INTELLIGENCE'),
-        {table:{widths:['*',92,70,70],body:buildSkillRows(data.skills)},layout:'lightHorizontalLines'}
-      ],[0,0,0,8]),
       {
         columns:[
-          panel([sectionTitle('PROFESSIONAL SUMMARY'),{text:summary,style:'body'}],[0,0,5,8]),
-          panel([sectionTitle('RECRUITER COMMENTS'),{text:note,style:'body'},{text:'Recruiter: '+clean(data.recruiterName,'--')+'   Date: '+clean(data.reportDate,'--'),style:'muted',margin:[0,8,0,0]}],[5,0,0,8])
+          panel([sectionTitle('EXECUTIVE SUMMARY'),{text:summary,style:'body'}],[0,0,6,8]),
+          panel([sectionTitle('RECRUITER NOTE'),{text:note,style:'body'},{text:'Owner: '+clean(data.recruiterName,'--'),style:'muted',margin:[0,8,0,0]}],[6,0,0,8])
         ],
         columnGap:0
       },
       panel([
-        sectionTitle('VERIFICATION STATUS'),
-        {table:{widths:['*','*','*'],body:buildValidationRows(data.validation)},layout:'noBorders'}
+        sectionTitle('SKILL INTELLIGENCE'),
+        {table:{widths:['*',90,68,86],body:buildSkillRows(data.skills)},layout:{
+          hLineWidth:function(i){return i===1?0.75:0.45;},
+          vLineWidth:function(){return 0;},
+          hLineColor:function(i){return i===1?'#94a3b8':'#e2e8f0';}
+        }}
       ],[0,0,0,8]),
       {
+        columns:[
+          panel([sectionTitle('VERIFICATION SIGNALS',true),{table:{widths:['*','*','*'],body:buildValidationRows(data.validation)},layout:'noBorders'}],[0,0,6,8],'#fbfdff'),
+          panel([sectionTitle('DATA GAPS',true),{table:{widths:['*','*'],body:[[gapRows[0][0],gapRows[0][1]],[gapRows[0][2],gapRows[0][3]]]},layout:'noBorders'}],[6,0,0,8],'#fffbeb','#fde68a')
+        ],
+        columnGap:0
+      },
+      {
         margin:[0,0,0,8],
-        table:{widths:['*',72,74,58,70],body:[[
-          {text:recommendation,fontSize:7.6,bold:true,color:tone.color,margin:[10,8,0,8],fillColor:tone.fill},
+        table:{widths:['*',74,84,70,82],body:[[
+          {text:tone.decision,fontSize:7.4,bold:true,color:tone.color,margin:[10,8,0,8],fillColor:tone.fill},
           {stack:[{text:'Confidence',style:'metricLabel',alignment:'center'},{text:score+'%',style:'metricValue',alignment:'center'}],margin:[0,6,0,6],fillColor:tone.fill},
-          {stack:[{text:'Round',style:'metricLabel',alignment:'center'},{text:recommendedRound,style:'metricValue',alignment:'center'}],margin:[0,6,0,6],fillColor:tone.fill},
+          {stack:[{text:'Next Step',style:'metricLabel',alignment:'center'},{text:tone.round,style:'metricValue',alignment:'center'}],margin:[0,6,0,6],fillColor:tone.fill},
           {stack:[{text:'Priority',style:'metricLabel',alignment:'center'},{text:tone.priority,style:'metricValue',alignment:'center'}],margin:[0,6,0,6],fillColor:tone.fill},
           {stack:[{text:'Joining',style:'metricLabel',alignment:'center'},{text:joining,style:'metricValue',alignment:'center'}],margin:[0,6,0,6],fillColor:tone.fill}
         ]]},
-        layout:{hLineWidth:function(){return 0.7;},vLineWidth:function(){return 0.7;},hLineColor:function(){return tone.border;},vLineColor:function(){return tone.border;}}
+        layout:{hLineWidth:function(){return 0.65;},vLineWidth:function(){return 0.65;},hLineColor:function(){return tone.border;},vLineColor:function(){return tone.border;}}
       },
       {
         table:{widths:['*','auto','auto'],body:[[
