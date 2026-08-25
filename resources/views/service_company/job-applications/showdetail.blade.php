@@ -5482,6 +5482,17 @@ setTimeout(() => {
   if(!empty($application->current_designation)||!empty($application->current_company)) $rsValidation[]=['label'=>'Job Description Acknowledged','status'=>'Confirmed'];
   if((float)(@$application->ctc_yearly??0)>0||(float)(@$application->ectc_yearly??0)>0||(float)(@$application->percentage_hike??0)>0) $rsValidation[]=['label'=>'Compensation Discussed','status'=>'Discussed'];
   $rsCareerSummary=trim(strip_tags(html_entity_decode((string)(@$application->careersummary??''),ENT_QUOTES,'UTF-8')));
+  $rsCaptainName = trim((string)($clientjobAssignListCaptain ?? ''));
+  if($rsCaptainName === '' && !empty($client_contuser_arr)){
+    $rsCaptainNames = [];
+    foreach($client_contuser_arr as $cpn){
+      $cpn = (object)$cpn;
+      $name = trim((string)($cpn->contact_person_name ?? ''));
+      if($name !== '') $rsCaptainNames[] = ucwords(strtolower($name));
+    }
+    $rsCaptainName = implode(', ', $rsCaptainNames);
+  }
+  if($rsCaptainName === '') $rsCaptainName = trim((string)(auth()->user()->name ?? 'JERO Recruiter'));
 @endphp
 <div id="rsData" hidden
   data-name="{{ ucwords(@$application->full_name) }}"
@@ -5494,7 +5505,7 @@ setTimeout(() => {
   data-work-mode="{{ $rsWorkMode }}"
   data-report-id="JR{{ now()->format('Ymd') }}{{ str_pad((string)@$application->id, 6, '0', STR_PAD_LEFT) }}"
   data-report-date="{{ now()->format('d M Y') }}"
-  data-recruiter-name="{{ trim((string)($clientjobAssignListCaptain ?? auth()->user()->name ?? 'JERO Recruiter')) }}"
+  data-recruiter-name="{{ $rsCaptainName }}"
   data-report-company-name="{{ $rcvCompanyName ?? '' }}"
   data-report-company-logo="{{ $rcvCompanyLogo ?? '' }}"
   data-ai-version="Live Intelligence"
@@ -5516,6 +5527,8 @@ setTimeout(() => {
 'use strict';
 
 var rsPdfReady=null;
+var rsStarGold='<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path fill="#f59e0b" d="M12 2.6l2.85 5.78 6.38.93-4.62 4.5 1.09 6.35L12 17.16l-5.7 3 1.09-6.35-4.62-4.5 6.38-.93L12 2.6z"/></svg>';
+var rsStarMuted='<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path fill="#cbd5e1" d="M12 2.6l2.85 5.78 6.38.93-4.62 4.5 1.09 6.35L12 17.16l-5.7 3 1.09-6.35-4.62-4.5 6.38-.93L12 2.6z"/></svg>';
 function rsLoadScript(src){
   return new Promise(function(resolve,reject){
     var existing=document.querySelector('script[src="'+src+'"]');
@@ -5651,7 +5664,7 @@ function fixedPanel(stack,margin,fill,border,minHeight){
     }
   };
 }
-function headerCard(companyName,logoCell,compactMeta){
+function headerCard(companyName,logoCell,reportDate,captainName){
   return {
     margin:[0,0,0,10],
     stack:[
@@ -5670,7 +5683,14 @@ function headerCard(companyName,logoCell,compactMeta){
           {
             stack:[
               {text:'PRE-SCREENED CANDIDATE REPORT',style:'title',margin:[0,3,0,0]},
-              {text:compactMeta,fontSize:5.9,color:'#64748b',alignment:'right',margin:[0,14,0,0]}
+              {
+                margin:[0,14,0,0],
+                table:{widths:['*','auto'],body:[[
+                  {text:clean(reportDate,'--'),fontSize:5.9,color:'#64748b',alignment:'right',border:[false,false,false,false],margin:[0,0,10,0]},
+                  {text:'Captain: '+clean(captainName,'--'),fontSize:5.9,color:'#64748b',alignment:'right',border:[true,false,false,false],margin:[10,0,0,0]}
+                ]]},
+                layout:{hLineWidth:function(){return 0;},vLineWidth:function(i){return i===1?0.5:0;},vLineColor:function(){return '#cbd5e1';},paddingLeft:function(){return 0;},paddingRight:function(){return 0;},paddingTop:function(){return 0;},paddingBottom:function(){return 0;}}
+              }
             ],
             margin:[10,13,14,10],
             border:[false,false,false,false]
@@ -5679,6 +5699,23 @@ function headerCard(companyName,logoCell,compactMeta){
         layout:'noBorders'
       }
     ]
+  };
+}
+function pairedCardRow(leftStack,rightStack,leftFill,rightFill,rightBorder){
+  return {
+    margin:[0,0,0,8],
+    table:{widths:['*','*'],body:[[
+      {stack:Array.isArray(leftStack)?leftStack:[leftStack],margin:[10,10,10,10],fillColor:leftFill||'#ffffff'},
+      {stack:Array.isArray(rightStack)?rightStack:[rightStack],margin:[10,10,10,10],fillColor:rightFill||'#ffffff'}
+    ]]},
+    layout:{
+      hLineWidth:function(){return 0.55;},
+      vLineWidth:function(){return 0.55;},
+      hLineColor:function(){return '#cbd5e1';},
+      vLineColor:function(i){return i===1?'#ffffff':(rightBorder||'#cbd5e1');},
+      paddingLeft:function(){return 0;}, paddingRight:function(){return 0;},
+      paddingTop:function(){return 0;}, paddingBottom:function(){return 0;}
+    }
   };
 }
 function sectionTitle(title,subtle){
@@ -5723,10 +5760,12 @@ function buildSkillRows(skills){
   skills.forEach(function(skill){
     var rating=safeNumber(skill.rating,0,5);
     var exp=Number(skill.exp||0);
+    var stars=[];
+    for(var i=1;i<=5;i++) stars.push({svg:i<=rating?rsStarGold:rsStarMuted,width:6.4,margin:[0,0.5,1.2,0]});
     rows.push([
       {text:titleCase(skill.name),style:'tableCellBold'},
       {text:exp>0 ? exp+' Year'+(exp>1?'s':'') : '--',style:'tableCell',color:'#334155'},
-      {text:rating>0 ? rating+' / 5' : '--',style:'tableCell',alignment:'center',color:'#334155'}
+      {columns:stars,columnGap:0,alignment:'center',margin:[20,5,0,5]}
     ]);
   });
   return rows;
@@ -5761,7 +5800,6 @@ function buildDefinition(data,logoUri){
     ? 'Recruiter note is not available. This client-ready brief is prepared from the candidate profile, skill intelligence, and verification signals currently captured.'
     : limitText(data.recruiterNote,420,'');
   var joining=data.isImmediate?'Immediate':clean(data.notice,'--');
-  var compactMeta=data.reportDate+' | Captain: '+clean(data.recruiterName,'JERO Recruiter');
   var companyName=clean(data.reportCompanyName,'Hiring Partner');
   var logoCell=logoUri
     ? {image:logoUri,fit:[42,28],alignment:'center',margin:[0,0,12,0],border:[false,false,false,false]}
@@ -5791,26 +5829,16 @@ function buildDefinition(data,logoUri){
       footer:{fontSize:5.8,color:'#64748b'}
     },
     content:[
-      headerCard(companyName,logoCell,compactMeta),
-      {
-        columns:[
-          fixedPanel([
-            {table:{widths:['*'],body:[[
-              {stack:[
-                {text:clean(data.name,'Candidate'),style:'candidateName'},
-                {text:clean(data.designation||data.jobTitle,'--'),style:'designation',margin:[0,2,0,5]},
-                {text:'Experience: '+clean(data.experience,'--'),style:'small'},
-                {text:'Current Company: '+clean(data.company,'--'),style:'small',margin:[0,2,0,0]}
-              ],margin:[0,0,0,0]}
-            ]]},layout:'noBorders'}
-          ],[0,0,7,8],'#ffffff','#cbd5e1',74),
-          fixedPanel([
-            {text:'MATCH CONFIDENCE',fontSize:5.9,bold:true,color:'#64748b',alignment:'center',margin:[0,8,0,0]},
-            {text:score+'%',fontSize:24,bold:true,color:tone.color,alignment:'center',margin:[0,7,0,0]}
-          ],[7,0,0,8],tone.fill,tone.border,74)
-        ],
-        columnGap:0
-      },
+      headerCard(companyName,logoCell,data.reportDate,data.recruiterName),
+      pairedCardRow([
+        {text:clean(data.name,'Candidate'),style:'candidateName'},
+        {text:clean(data.designation||data.jobTitle,'--'),style:'designation',margin:[0,2,0,5]},
+        {text:'Experience: '+clean(data.experience,'--'),style:'small'},
+        {text:'Current Company: '+clean(data.company,'--'),style:'small',margin:[0,2,0,0]}
+      ],[
+        {text:'MATCH CONFIDENCE',fontSize:5.9,bold:true,color:'#64748b',alignment:'center',margin:[0,14,0,0]},
+        {text:score+'%',fontSize:24,bold:true,color:tone.color,alignment:'center',margin:[0,7,0,0]}
+      ],'#ffffff',tone.fill,tone.border),
       {
         margin:[0,0,0,8],
         table:{widths:['*','*','*','*','*'],body:[[
@@ -5825,7 +5853,7 @@ function buildDefinition(data,logoUri){
       {
         columns:[
           fixedPanel([sectionTitle('EXECUTIVE SUMMARY'),{text:summary,style:'body'}],[0,0,6,8],'#ffffff','#dbe3ef',86),
-          fixedPanel([sectionTitle('RECRUITER NOTE'),{text:note,style:'body'},{text:'Captain: '+clean(data.recruiterName,'--'),style:'muted',margin:[0,8,0,0]}],[6,0,0,8],'#ffffff','#dbe3ef',86)
+          fixedPanel([sectionTitle('RECRUITER NOTE'),{text:note,style:'body'}],[6,0,0,8],'#ffffff','#dbe3ef',86)
         ],
         columnGap:0
       },
