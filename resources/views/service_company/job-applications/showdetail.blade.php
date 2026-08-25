@@ -5495,6 +5495,8 @@ setTimeout(() => {
   data-report-id="JR{{ now()->format('Ymd') }}{{ str_pad((string)@$application->id, 6, '0', STR_PAD_LEFT) }}"
   data-report-date="{{ now()->format('d M Y') }}"
   data-recruiter-name="{{ trim((string)(auth()->user()->name ?? 'JERO Recruiter')) }}"
+  data-report-company-name="{{ $rcvCompanyName ?? '' }}"
+  data-report-company-logo="{{ $rcvCompanyLogo ?? '' }}"
   data-ai-version="Live Intelligence"
   data-match="{{ $rsMatchPct }}"
   data-is-immediate="{{ $rsIsImmediate ? '1' : '0' }}"
@@ -5543,6 +5545,24 @@ function rsEnsurePdfMake(){
     });
   return rsPdfReady;
 }
+function rsLogoDataUri(rawUrl){
+  if(window.__rcvLogo && window.__rcvLogo.__dataUri) return Promise.resolve(window.__rcvLogo.__dataUri);
+  rawUrl=clean(rawUrl,'');
+  if(!rawUrl || rawUrl==='--') return Promise.resolve(null);
+  if(/^data:image\//i.test(rawUrl)) return Promise.resolve(rawUrl);
+  return fetch(rawUrl,{credentials:'include'})
+    .then(function(response){ return response.ok ? response.blob() : null; })
+    .then(function(blob){
+      if(!blob) return null;
+      return new Promise(function(resolve){
+        var reader=new FileReader();
+        reader.onload=function(){ resolve(reader.result); };
+        reader.onerror=function(){ resolve(null); };
+        reader.readAsDataURL(blob);
+      });
+    })
+    .catch(function(){ return null; });
+}
 function clean(value,fallback){
   value=String(value==null?'':value).replace(/\s+/g,' ').trim();
   return value || fallback || '--';
@@ -5579,6 +5599,8 @@ function readData(){
     reportId:g('data-report-id'),
     reportDate:g('data-report-date'),
     recruiterName:g('data-recruiter-name'),
+    reportCompanyName:g('data-report-company-name'),
+    reportCompanyLogo:g('data-report-company-logo'),
     aiVersion:g('data-ai-version'),
     match:safeNumber(g('data-match'),0,100),
     isImmediate:g('data-is-immediate')==='1',
@@ -5647,25 +5669,22 @@ function buildSkillRows(skills){
   var rows=[
     [
       {text:'Skill Signal',style:'tableHead'},
-      {text:'Evidence',style:'tableHead'},
-      {text:'Rating',style:'tableHead',alignment:'center'},
-      {text:'Readiness',style:'tableHead',alignment:'center'}
+      {text:'Experience',style:'tableHead'},
+      {text:'Rating',style:'tableHead',alignment:'center'}
     ]
   ];
   skills=(skills||[]).filter(function(skill){ return clean(skill.name,'')!==''; }).slice(0,7);
   if(!skills.length){
-    rows.push([{text:'No skill intelligence available in current candidate data.',colSpan:4,style:'muted',margin:[0,6,0,6]},{},{},{}]);
+    rows.push([{text:'No skill intelligence available in current candidate data.',colSpan:3,style:'muted',margin:[0,6,0,6]},{},{}]);
     return rows;
   }
   skills.forEach(function(skill){
     var rating=safeNumber(skill.rating,0,5);
     var exp=Number(skill.exp||0);
-    var hasEvidence=rating>0 || exp>0;
     rows.push([
       {text:titleCase(skill.name),style:'tableCellBold'},
-      {text:exp>0 ? exp+' Year'+(exp>1?'s':'') : 'Evidence pending',style:'tableCell',color:exp>0?'#334155':'#b45309'},
-      {text:rating>0 ? rating+' / 5' : 'Not rated',style:'tableCell',alignment:'center',color:rating>0?'#334155':'#b45309'},
-      {text:hasEvidence?'Matched Signal':'Needs Evidence',style:'tableCell',alignment:'center',color:hasEvidence?'#047857':'#b45309'}
+      {text:exp>0 ? exp+' Year'+(exp>1?'s':'') : '--',style:'tableCell',color:'#334155'},
+      {text:rating>0 ? rating+' / 5' : '--',style:'tableCell',alignment:'center',color:'#334155'}
     ]);
   });
   return rows;
@@ -5683,40 +5702,28 @@ function buildValidationRows(validation){
   for(var i=0;i<cells.length;i+=3) rows.push([cells[i],cells[i+1],cells[i+2]]);
   return rows;
 }
-function buildGapRows(data){
-  var gaps=[];
-  if(isGap(data.location)) gaps.push('Location not captured');
-  if(isGap(data.notice)) gaps.push('Notice period not validated');
-  if(isGap(data.recruiterNote)) gaps.push('Recruiter comments missing');
-  if(!(data.skills||[]).some(function(skill){ return Number(skill.rating||0)>0 || Number(skill.exp||0)>0; })) gaps.push('Skill evidence needs enrichment');
-  if(!gaps.length) gaps.push('No major data gaps identified');
-  while(gaps.length<4) gaps.push('');
-  return [[
-    {text:gaps[0],style:gaps[0].indexOf('No major')===0?'gapOk':'gapItem'},
-    {text:gaps[1],style:'gapItem'},
-    {text:gaps[2],style:'gapItem'},
-    {text:gaps[3],style:'gapItem'}
-  ]];
-}
-function buildDefinition(data){
+function buildDefinition(data,logoUri){
   var score=safeNumber(data.match,0,100);
   var completeness=dataCompleteness(data);
   var tone=matchTone(score,completeness);
   var summary=limitText(data.careerSummary,560,'No professional summary captured in current candidate data.');
   var note=isGap(data.recruiterNote)
-    ? 'Recruiter note is not available. Treat this as a screening brief based on captured profile, skill, and verification signals only.'
+    ? 'Recruiter note is not available. This client-ready brief is prepared from the candidate profile, skill intelligence, and verification signals currently captured.'
     : limitText(data.recruiterNote,420,'');
   var joining=data.isImmediate?'Immediate':clean(data.notice,'--');
   var compactMeta=data.reportId+' | '+data.reportDate+' | '+clean(data.recruiterName,'JERO Recruiter');
-  var gapRows=buildGapRows(data);
+  var companyName=clean(data.reportCompanyName,'Hiring Partner');
+  var logoCell=logoUri
+    ? {image:logoUri,fit:[54,28],margin:[0,1,8,0],border:[false,false,false,false]}
+    : {text:companyName.charAt(0).toUpperCase(),fontSize:14,bold:true,color:'#1d4ed8',alignment:'center',margin:[0,6,8,5],fillColor:'#eef2ff',border:[false,false,false,false]};
 
   return {
     pageSize:'A4',
     pageMargins:[30,26,30,24],
     defaultStyle:{font:'Roboto',fontSize:8,color:'#1f2937',lineHeight:1.22},
     styles:{
-      title:{fontSize:13.8,bold:true,color:'#ffffff',alignment:'right'},
-      eyebrow:{fontSize:5.9,color:'#cbd5e1',alignment:'right'},
+      title:{fontSize:13.2,bold:true,color:'#ffffff',alignment:'right'},
+      eyebrow:{fontSize:5.9,color:'#dbeafe',alignment:'right'},
       metaLabel:{fontSize:5.7,color:'#64748b'},
       metaValue:{fontSize:7.1,bold:true,color:'#111827'},
       candidateName:{fontSize:16.4,bold:true,color:'#0f172a'},
@@ -5732,30 +5739,27 @@ function buildDefinition(data){
       muted:{fontSize:6.9,color:'#64748b'},
       body:{fontSize:7.15,color:'#1f2937',lineHeight:1.24},
       verifyItem:{fontSize:6.5,bold:true,color:'#047857'},
-      gapItem:{fontSize:6.6,bold:true,color:'#b45309',margin:[0,5,0,5]},
-      gapOk:{fontSize:6.6,bold:true,color:'#047857',margin:[0,5,0,5]},
       footer:{fontSize:5.8,color:'#64748b'}
     },
     content:[
       {
         margin:[0,0,0,8],
-        table:{widths:[138,'*'],body:[[
-          {stack:[{text:'JERO AI',fontSize:13,bold:true,color:'#ffffff'},{text:'RECRUITMENT INTELLIGENCE',fontSize:5.6,color:'#bfdbfe',margin:[0,2,0,0]},{text:'CONFIDENTIAL BRIEF',fontSize:5.7,bold:true,color:'#d1fae5',margin:[0,10,0,0]}],fillColor:'#0f172a',margin:[12,10,12,10],border:[false,false,false,false]},
-          {stack:[{text:'PRE-SCREENED CANDIDATE REPORT',style:'title'},{text:'Candidate Intelligence Brief | AI Assisted | Human Recruiter Review',style:'eyebrow',margin:[0,3,0,0]},{text:compactMeta,fontSize:5.8,color:'#cbd5e1',alignment:'right',margin:[0,12,0,0]}],fillColor:'#172554',margin:[12,10,12,10],border:[false,false,false,false]}
+        table:{widths:[210,'*'],body:[[
+          {table:{widths:['auto','*'],body:[[logoCell,{stack:[{text:companyName,fontSize:10.5,bold:true,color:'#ffffff'},{text:'Candidate report prepared for client review',fontSize:5.9,color:'#bfdbfe',margin:[0,2,0,0]}],border:[false,false,false,false]}]]},layout:'noBorders',fillColor:'#0f172a',margin:[12,10,12,10],border:[false,false,false,false]},
+          {stack:[{text:'PRE-SCREENED CANDIDATE REPORT',style:'title'},{text:'Client Presentation Brief | Profile, Skills and Verification',style:'eyebrow',margin:[0,3,0,0]},{text:compactMeta,fontSize:5.8,color:'#cbd5e1',alignment:'right',margin:[0,12,0,0]}],fillColor:'#172554',margin:[12,10,12,10],border:[false,false,false,false]}
         ]]},
         layout:'noBorders'
       },
       {
         columns:[
           panel([
-            {table:{widths:[44,'*'],body:[[
-              {text:initials(data.name),fontSize:16,bold:true,color:'#1d4ed8',alignment:'center',margin:[0,12,0,12],fillColor:'#eef2ff'},
+            {table:{widths:['*'],body:[[
               {stack:[
                 {text:clean(data.name,'Candidate'),style:'candidateName'},
                 {text:clean(data.designation||data.jobTitle,'--'),style:'designation',margin:[0,2,0,5]},
                 {text:'Experience: '+clean(data.experience,'--')+'   |   Company: '+clean(data.company,'--'),style:'small'},
                 {text:'Location: '+clean(data.location,'--')+'   |   Work Mode: '+clean(data.workMode,'--'),style:'small',margin:[0,2,0,0]}
-              ],margin:[8,0,0,0]}
+              ],margin:[0,0,0,0]}
             ]]},layout:'noBorders'}
           ],[0,0,7,8],'#ffffff','#cbd5e1'),
           panel([
@@ -5773,8 +5777,8 @@ function buildDefinition(data){
           metricCell('Preferred Role',data.designation||data.jobTitle),
           metricCell('Education',data.education),
           metricCell('Notice Period',joining),
-          metricCell('Report Source',data.aiVersion),
-          metricCell('Priority',tone.priority)
+          metricCell('Location',data.location),
+          metricCell('Work Mode',data.workMode)
         ]]},
         layout:{hLineWidth:function(){return 0.55;},vLineWidth:function(){return 0.55;},hLineColor:function(){return '#dbe3ef';},vLineColor:function(){return '#dbe3ef';}}
       },
@@ -5787,33 +5791,30 @@ function buildDefinition(data){
       },
       panel([
         sectionTitle('SKILL INTELLIGENCE'),
-        {table:{widths:['*',90,68,86],body:buildSkillRows(data.skills)},layout:{
+        {table:{widths:['*',100,78],body:buildSkillRows(data.skills)},layout:{
           hLineWidth:function(i){return i===1?0.75:0.45;},
           vLineWidth:function(){return 0;},
           hLineColor:function(i){return i===1?'#94a3b8':'#e2e8f0';}
         }}
       ],[0,0,0,8]),
       {
-        columns:[
-          panel([sectionTitle('VERIFICATION SIGNALS',true),{table:{widths:['*','*','*'],body:buildValidationRows(data.validation)},layout:'noBorders'}],[0,0,6,8],'#fbfdff'),
-          panel([sectionTitle('DATA GAPS',true),{table:{widths:['*','*'],body:[[gapRows[0][0],gapRows[0][1]],[gapRows[0][2],gapRows[0][3]]]},layout:'noBorders'}],[6,0,0,8],'#fffbeb','#fde68a')
-        ],
-        columnGap:0
+        margin:[0,0,0,8],
+        table:{widths:['*'],body:[[{stack:[sectionTitle('VERIFICATION SIGNALS',true),{table:{widths:['*','*','*'],body:buildValidationRows(data.validation)},layout:'noBorders'}],margin:[10,8,10,8],fillColor:'#fbfdff'}]]},
+        layout:{hLineWidth:function(){return 0.55;},vLineWidth:function(){return 0.55;},hLineColor:function(){return '#dbe3ef';},vLineColor:function(){return '#dbe3ef';},paddingLeft:function(){return 0;},paddingRight:function(){return 0;},paddingTop:function(){return 0;},paddingBottom:function(){return 0;}}
       },
       {
         margin:[0,0,0,8],
-        table:{widths:['*',74,84,70,82],body:[[
+        table:{widths:['*',74,84,82],body:[[
           {text:tone.decision,fontSize:7.4,bold:true,color:tone.color,margin:[10,8,0,8],fillColor:tone.fill},
           {stack:[{text:'Confidence',style:'metricLabel',alignment:'center'},{text:score+'%',style:'metricValue',alignment:'center'}],margin:[0,6,0,6],fillColor:tone.fill},
           {stack:[{text:'Next Step',style:'metricLabel',alignment:'center'},{text:tone.round,style:'metricValue',alignment:'center'}],margin:[0,6,0,6],fillColor:tone.fill},
-          {stack:[{text:'Priority',style:'metricLabel',alignment:'center'},{text:tone.priority,style:'metricValue',alignment:'center'}],margin:[0,6,0,6],fillColor:tone.fill},
           {stack:[{text:'Joining',style:'metricLabel',alignment:'center'},{text:joining,style:'metricValue',alignment:'center'}],margin:[0,6,0,6],fillColor:tone.fill}
         ]]},
         layout:{hLineWidth:function(){return 0.65;},vLineWidth:function(){return 0.65;},hLineColor:function(){return tone.border;},vLineColor:function(){return tone.border;}}
       },
       {
         table:{widths:['*','auto','auto'],body:[[
-          {text:'Generated using Jero AI Recruitment Intelligence',style:'footer',border:[false,true,false,false],margin:[0,5,0,0]},
+          {text:'Prepared by '+companyName+' for client hiring review',style:'footer',border:[false,true,false,false],margin:[0,5,0,0]},
           {text:'www.jero.works',style:'footer',border:[false,true,false,false],margin:[0,5,0,0]},
           {text:'2026 Jero. All rights reserved.',style:'footer',border:[false,true,false,false],margin:[12,5,0,0]}
         ]]},
@@ -5826,8 +5827,8 @@ async function buildRecruiterSummary(){
   window.__rsBusy=true;
   try{
     var data=readData();
-    await rsEnsurePdfMake();
-    window.pdfMake.createPdf(buildDefinition(data)).download('recruiter_summary_'+slug(data.name)+'.pdf');
+    var ready=await Promise.all([rsEnsurePdfMake(),rsLogoDataUri(data.reportCompanyLogo)]);
+    window.pdfMake.createPdf(buildDefinition(data,ready[1])).download('recruiter_summary_'+slug(data.name)+'.pdf');
   }catch(err){
     console.error('Recruiter Summary error:',err);
     alert('Could not generate the Recruiter Summary. Please try again.');
