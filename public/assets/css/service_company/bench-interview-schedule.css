@@ -136,14 +136,18 @@
 .it-feedback-btn-outline-orange{border-color:var(--it-orange);color:var(--it-orange);background:transparent}
 .it-feedback-btn-outline-orange:hover{background:var(--it-orange-light)}
 
-/* Footer */
-.it-table-footer{display:flex;justify-content:space-between;align-items:center;padding:10px 14px;border-top:1px solid var(--it-border-light);font-size:10px;color:var(--it-text-muted)}
-.it-pagination{display:flex;align-items:center;gap:3px}
-.it-page-btn{min-width:26px;height:26px;display:flex;align-items:center;justify-content:center;border-radius:var(--it-radius);border:none;background:transparent;color:var(--it-text-muted);font-size:11px;font-family:'Poppins',sans-serif;font-weight:500;cursor:pointer;transition:var(--it-transition);padding:0 6px}
-.it-page-btn:hover{background:var(--it-bg-main);color:var(--it-text-main)}
-.it-page-btn.active{background:var(--it-primary);color:white}
-.it-page-btn:disabled{opacity:.4;cursor:not-allowed}
-.it-page-btn svg{width:14px;height:14px}
+/* Footer & Pagination (offerListing reference style) */
+.pagi-bar{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;padding:12px 20px;border-top:1px solid #F0F2F5;background:#fff;font-family:'Poppins',sans-serif;width:100%}
+.pagi-info{font-size:13px;font-weight:500;color:#64748B}
+.pagi-right{display:flex;align-items:center;gap:6px}
+.pagi-arrow{width:32px;height:32px;border:1.5px solid #E5E9F0;border-radius:8px;background:#fff;color:#64748B;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:14px;transition:all .15s;outline:none}
+.pagi-arrow:hover:not(.pagi-disabled){background:#2563EB;color:#fff;border-color:#2563EB}
+.pagi-arrow.pagi-disabled{opacity:.35;pointer-events:none;cursor:not-allowed}
+.pagi-page{min-width:32px;height:32px;padding:0 8px;border:1.5px solid #E5E9F0;border-radius:8px;background:#fff;color:#374151;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px;font-weight:600;transition:all .15s;font-family:'Poppins',sans-serif;outline:none}
+.pagi-page:hover:not(.pagi-active-disabled){background:#F5F8FF}
+.pagi-page.pagi-active{background:#2563EB;color:#fff;border-color:#2563EB;pointer-events:none}
+.pagi-page.pagi-active-disabled{pointer-events:none}
+.pagi-dots{font-size:13px;color:#94A3B8;padding:0 4px;display:flex;align-items:center}
 
 .it-loading{display:none;padding:30px;text-align:center;color:var(--it-text-muted);font-size:12px}
 .it-loading.show{display:block}

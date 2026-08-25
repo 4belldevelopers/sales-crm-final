@@ -131,13 +131,17 @@
 .it-feedback-btn-outline-orange{border-color:var(--it-orange);color:var(--it-orange);background:transparent}
 .it-feedback-btn-outline-orange:hover{background:var(--it-orange-light)}
 
-.it-table-footer{display:flex;justify-content:space-between;align-items:center;padding:10px 14px;border-top:1px solid var(--it-border-light);font-size:10px;color:var(--it-text-muted)}
-.it-pagination{display:flex;align-items:center;gap:3px}
-.it-page-btn{min-width:26px;height:26px;display:flex;align-items:center;justify-content:center;border-radius:var(--it-radius);border:none;background:transparent;color:var(--it-text-muted);font-size:11px;font-family:'Poppins',sans-serif;font-weight:500;cursor:pointer;transition:var(--it-transition);padding:0 6px}
-.it-page-btn:hover{background:var(--it-bg-main);color:var(--it-text-main)}
-.it-page-btn.active{background:var(--it-primary);color:white}
-.it-page-btn:disabled{opacity:.4;cursor:not-allowed}
-.it-page-btn svg{width:14px!important;height:14px!important;max-width:14px!important;max-height:14px!important}
+.pagi-bar{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;padding:12px 20px;border-top:1px solid #F0F2F5;background:#fff;font-family:'Poppins',sans-serif;width:100%}
+.pagi-info{font-size:13px;font-weight:500;color:#64748B}
+.pagi-right{display:flex;align-items:center;gap:6px}
+.pagi-arrow{width:32px;height:32px;border:1.5px solid #E5E9F0;border-radius:8px;background:#fff;color:#64748B;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:14px;transition:all .15s;outline:none}
+.pagi-arrow:hover:not(.pagi-disabled){background:#2563EB;color:#fff;border-color:#2563EB}
+.pagi-arrow.pagi-disabled{opacity:.35;pointer-events:none;cursor:not-allowed}
+.pagi-page{min-width:32px;height:32px;padding:0 8px;border:1.5px solid #E5E9F0;border-radius:8px;background:#fff;color:#374151;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px;font-weight:600;transition:all .15s;font-family:'Poppins',sans-serif;outline:none}
+.pagi-page:hover:not(.pagi-active-disabled){background:#F5F8FF}
+.pagi-page.pagi-active{background:#2563EB;color:#fff;border-color:#2563EB;pointer-events:none}
+.pagi-page.pagi-active-disabled{pointer-events:none}
+.pagi-dots{font-size:13px;color:#94A3B8;padding:0 4px;display:flex;align-items:center}
 
 .it-loading{display:none;padding:30px;text-align:center;color:var(--it-text-muted);font-size:12px}
 .it-loading.show{display:block}
@@ -294,12 +298,7 @@
               <tbody id="benchInterviewRows"></tbody>
             </table>
           </div>
-          <div class="it-table-footer">
-            <div id="showingText">Loading...</div>
-            <div style="display:flex;align-items:center;gap:14px;">
-              <div class="it-pagination" id="paginationbenchCandidateInterviewSchedule"></div>
-            </div>
-          </div>
+          <div id="paginationbenchCandidateInterviewSchedule"></div>
         </div>
         @else
         <div class="it-table-container" style="margin-top:10px;">
@@ -599,23 +598,27 @@ function renderBenchInterviewPagination(response) {
     var to = Math.min(curPage * perPage, total);
 
     var html = '<div class="pagi-bar">';
-    html += '<div class="pagi-info">Showing ' + from + ' to ' + to + ' of ' + total + ' companies</div>';
+    html += '<div class="pagi-info">Showing ' + from + ' to ' + to + ' of ' + total + ' records</div>';
     html += '<div class="pagi-right">';
 
     var prevDisabled = curPage <= 1 ? 'pagi-disabled' : '';
-    html += '<button class="pagi-arrow ' + prevDisabled + '" data-page="' + (curPage - 1) + '" data-listtype="allcandidate"><i class="ti ti-chevron-left"></i></button>';
+    html += '<button class="pagi-arrow ' + prevDisabled + '" data-page="' + (curPage - 1) + '" data-listtype="allcandidate" type="button">' +
+        '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>' +
+        '</button>';
 
     for (var i = 1; i <= totalPages; i++) {
         if (i === 1 || i === totalPages || (i >= curPage - 2 && i <= curPage + 2)) {
             var activeClass = i === curPage ? 'pagi-active pagi-active-disabled' : '';
-            html += '<button class="pagi-page ' + activeClass + '" data-page="' + i + '" data-listtype="allcandidate">' + i + '</button>';
+            html += '<button class="pagi-page ' + activeClass + '" data-page="' + i + '" data-listtype="allcandidate" type="button">' + i + '</button>';
         } else if (i === curPage - 3 || i === curPage + 3) {
-            html += '<span class="pagi-dots">…</span>';
+            html += '<span class="pagi-dots">&hellip;</span>';
         }
     }
 
     var nextDisabled = curPage >= totalPages ? 'pagi-disabled' : '';
-    html += '<button class="pagi-arrow ' + nextDisabled + '" data-page="' + (curPage + 1) + '" data-listtype="allcandidate"><i class="ti ti-chevron-right"></i></button>';
+    html += '<button class="pagi-arrow ' + nextDisabled + '" data-page="' + (curPage + 1) + '" data-listtype="allcandidate" type="button">' +
+        '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>' +
+        '</button>';
 
     html += '</div></div>';
     return html;
@@ -642,7 +645,6 @@ function fetchBenchInterviewScheduleCandidateList(page = 1) {
         var cached = clientBenchCache.get(cacheKey);
         $('#benchInterviewRows').html(renderBenchInterviewRows(cached.data, currentCompanyId));
         $('#paginationbenchCandidateInterviewSchedule').html(renderBenchInterviewPagination(cached));
-        $('#showingText').text('Showing ' + cached.total + ' entries');
         updateStatsUI(cached.stats);
         return;
     }
@@ -677,17 +679,11 @@ function fetchBenchInterviewScheduleCandidateList(page = 1) {
 
                 $('#benchInterviewRows').html(renderBenchInterviewRows(response.data, currentCompanyId));
                 $('#paginationbenchCandidateInterviewSchedule').html(renderBenchInterviewPagination(response));
-                if (response.total !== undefined) {
-                    $('#showingText').text('Showing ' + response.total + ' entries');
-                }
                 updateStatsUI(response.stats);
             } else if (response.html !== undefined) {
                 // Fallback for HTML response if ever redirected to v1
                 $('#benchInterviewRows').html(response.html);
                 $('#paginationbenchCandidateInterviewSchedule').html(response.pagination);
-                if (response.total !== undefined) {
-                    $('#showingText').text('Showing ' + response.total + ' entries');
-                }
                 updateStatsUI(response.stats);
             }
         },
@@ -710,10 +706,10 @@ $(document).ready(function() {
         }, 300);
     });
 
-    $(document).on('click', '#paginationbenchCandidateInterviewSchedule .pagi-page, #paginationbenchCandidateInterviewSchedule .pagi-arrow, #paginationbenchCandidateInterviewSchedule [data-page]', function(e) {
+    $(document).on('click', '#paginationbenchCandidateInterviewSchedule .pagi-page, #paginationbenchCandidateInterviewSchedule .pagi-arrow', function(e) {
         e.preventDefault();
         var page = $(this).data('page') || 1;
-        if (!page || $(this).hasClass('disabled') || $(this).hasClass('pagi-disabled') || $(this).hasClass('pagi-active-disabled')) return;
+        if ($(this).hasClass('pagi-disabled') || $(this).hasClass('pagi-active-disabled')) return;
         fetchBenchInterviewScheduleCandidateList(page);
     });
 
