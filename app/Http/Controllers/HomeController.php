@@ -2697,16 +2697,12 @@ class HomeController extends Controller
 
         // GeneralMethod::clientStaffingPartner(63205);
 
-        $clientRequestDataList = DB::table('companies')
+        // Intent: Fetch client requests starting from staffing_company_invitation, joining sender from_company_id (and matching from_client_id) details for listing.
+        // Tenancy: Filtered via staffing_company_invitation.from_company_id and to_company_id.
+        $clientRequestDataList = DB::table('staffing_company_invitation')
             ->select(
-                'companies.id',
-                'companies.company_name',
-                'companies.logo',
-                'companies.industries',
-                'clients.id as client_id',
-                'clients.tags',
-                'td_industries.ind_name',
                 'staffing_company_invitation.id as staffing_company_invitation_id',
+                'staffing_company_invitation.id',
                 'staffing_company_invitation.from_company_id',
                 'staffing_company_invitation.from_client_id',
                 'staffing_company_invitation.from_user_id',
@@ -2716,34 +2712,47 @@ class HomeController extends Controller
                 'staffing_company_invitation.to_email',
                 'staffing_company_invitation.to_status',
                 'staffing_company_invitation.job_id',
-                'staffing_company_invitation.to_invitation_status'
-
+                'staffing_company_invitation.to_invitation_status',
+                'companies.id as company_id',
+                'companies.company_name',
+                'companies.logo as company_logo',
+                'companies.industries',
+                'clients.id as client_id',
+                'clients.name as client_name',
+                'clients.logo as client_logo',
+                'clients.logo_logical_path as client_logo_logical_path',
+                'clients.tags',
+                'clients.industry as client_industry',
+                'td_industries.ind_name as company_ind_name',
+                'client_ind.ind_name as client_ind_name'
             )
-
-            ->join('staffing_company_invitation', 'staffing_company_invitation.from_company_id', '=', 'companies.id')
-            ->join('clients', 'clients.company_id', '=', 'companies.id')
-            ->leftJoin('td_industries', 'td_industries.ind_id', '=', 'companies.industries');
-        // dd($company_id);
-        $clientRequestDataList = $clientRequestDataList->where('clients.self_company', '=', 1);
-        // $clientRequestDataList = $clientRequestDataList->where('staffing_company_invitation.id', '=',141);
-        $clientRequestDataList = $clientRequestDataList->get();
+            ->join('companies', 'companies.id', '=', 'staffing_company_invitation.from_company_id')
+            ->leftJoin('clients', function ($join) {
+                $join->on('clients.id', '=', DB::raw('COALESCE(NULLIF(staffing_company_invitation.from_client_id, 0), (SELECT c2.id FROM clients c2 WHERE c2.company_id = staffing_company_invitation.from_company_id AND c2.self_company = 1 LIMIT 1))'));
+            })
+            ->leftJoin('td_industries', 'td_industries.ind_id', '=', 'companies.industries')
+            ->leftJoin('td_industries as client_ind', 'client_ind.ind_id', '=', 'clients.industry')
+            ->get();
 
         $bulkData = [];
         $ik = 1;
         foreach ($clientRequestDataList as $row) {
             $client_id = $row->client_id;
-            $locInfo = DB::table('client_location')
-                ->select('client_location.id', 'client_location.city', 'client_location.address', 'client_location.postcode', 'client_location.country_id', 'city_list.city as city_name', 'countries.country_name')
-                ->leftJoin('city_list', 'city_list.city_id', '=', 'client_location.city_id')
-                ->leftJoin('countries', 'countries.id', '=', 'client_location.country_id')
-                ->where('client_id', $client_id)
-                ->first();
-            $country_name = '';
-            $city_name = '';
-            if ($locInfo) {
-                $country_name = $locInfo->country_name;
-                $city_name = $locInfo->city_name;
+            $locInfo = null;
+            if ($client_id) {
+                $locInfo = DB::table('client_location')
+                    ->select('client_location.id', 'client_location.city', 'client_location.address', 'client_location.postcode', 'client_location.country_id', 'city_list.city as city_name', 'countries.country_name')
+                    ->leftJoin('city_list', 'city_list.city_id', '=', 'client_location.city_id')
+                    ->leftJoin('countries', 'countries.id', '=', 'client_location.country_id')
+                    ->where('client_id', $client_id)
+                    ->first();
             }
+            $country_name = $locInfo->country_name ?? '';
+            $city_name = $locInfo->city_name ?? '';
+
+            $nameToUse = !empty($row->client_name) ? $row->client_name : $row->company_name;
+            $logoToUse = !empty($row->client_logo_logical_path) ? url('public/' . $row->client_logo_logical_path) : (!empty($row->client_logo) ? $row->client_logo : $row->company_logo);
+            $indNameToUse = !empty($row->client_ind_name) ? $row->client_ind_name : $row->company_ind_name;
 
             $bulkData[] = [
                 'index' => [
@@ -2754,19 +2763,19 @@ class HomeController extends Controller
             $updateTime = now()->toIso8601String();
             $bulkData[] = [
                 'id' => $row->staffing_company_invitation_id,
-                'company_id' => $row->id,
-                'company_name' => $row->company_name,
-                'logo' => $row->logo,
+                'company_id' => $row->company_id,
+                'company_name' => $nameToUse,
+                'logo' => $logoToUse,
                 'industries' => $row->industries,
                 'client_id' => $row->client_id,
                 'tags' => $row->tags,
-                'ind_name' => $row->ind_name,
+                'ind_name' => $indNameToUse,
                 'country_name' => $country_name,
                 'staffing_company_invitation_id' => $row->staffing_company_invitation_id,
                 'from_company_id' => $row->from_company_id,
                 'from_created_at' => ($row->from_created_at) ? Carbon::parse($row->from_created_at)->toIso8601String() : null,
                 'updated_at' => $updateTime,
-                'created_at' => $updateTime,
+                'created_at' => ($row->from_created_at) ? Carbon::parse($row->from_created_at)->toIso8601String() : $updateTime,
                 'from_client_id' => $row->from_client_id,
                 'from_user_id' => $row->from_user_id,
                 'from_status' => $row->from_status,
