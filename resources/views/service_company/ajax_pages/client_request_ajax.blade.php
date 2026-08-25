@@ -107,11 +107,9 @@
 			</td>
             <td>
 				@php
-				
-                        $created_at = $row->created_at;
-                        $newDate = date('d M, Y', strtotime($created_at));
-                        $daysAgo = GeneralMethod::timeAgo($row->created_at);
-
+						$created_at = !empty($row->from_created_at) ? $row->from_created_at : $row->created_at;
+						$newDate = date('d M, Y', strtotime($created_at));
+						$daysAgo = GeneralMethod::timeAgo($created_at);
 				@endphp
                 <div class="d-flex flex-column">
                     <a href="javascript:void(0);" class="text-dark fw-bolder text-hover-primary fs-6">{{ $newDate }}</a>
