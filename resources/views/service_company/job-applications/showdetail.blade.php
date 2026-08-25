@@ -5529,6 +5529,15 @@ setTimeout(() => {
 var rsPdfReady=null;
 var rsStarGold='<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path fill="#f59e0b" d="M12 2.6l2.85 5.78 6.38.93-4.62 4.5 1.09 6.35L12 17.16l-5.7 3 1.09-6.35-4.62-4.5 6.38-.93L12 2.6z"/></svg>';
 var rsStarMuted='<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path fill="#cbd5e1" d="M12 2.6l2.85 5.78 6.38.93-4.62 4.5 1.09 6.35L12 17.16l-5.7 3 1.09-6.35-4.62-4.5 6.38-.93L12 2.6z"/></svg>';
+var rsIconBriefcase='<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path fill="#2563eb" d="M9 6V5a3 3 0 0 1 3-3h0a3 3 0 0 1 3 3v1h3.5A2.5 2.5 0 0 1 21 8.5v9A2.5 2.5 0 0 1 18.5 20h-13A2.5 2.5 0 0 1 3 17.5v-9A2.5 2.5 0 0 1 5.5 6H9zm2 0h2V5a1 1 0 0 0-2 0v1z"/></svg>';
+var rsIconCalendar='<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path fill="#64748b" d="M7 2h2v2h6V2h2v2h1.5A2.5 2.5 0 0 1 21 6.5v12A2.5 2.5 0 0 1 18.5 21h-13A2.5 2.5 0 0 1 3 18.5v-12A2.5 2.5 0 0 1 5.5 4H7V2zm12 8H5v8.5c0 .28.22.5.5.5h13a.5.5 0 0 0 .5-.5V10z"/></svg>';
+var rsIconCaptain='<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path fill="#64748b" d="M12 12a5 5 0 1 0 0-10 5 5 0 0 0 0 10zm-8 9a8 8 0 0 1 16 0v1H4v-1z"/></svg>';
+var rsIconCompany='<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path fill="#64748b" d="M4 21V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v17h3v-9h-2v-2h3a1 1 0 0 1 1 1v10H4zm4-14h2V5H8v2zm4 0h2V5h-2v2zM8 11h2V9H8v2zm4 0h2V9h-2v2zm-4 4h2v-2H8v2zm4 0h2v-2h-2v2z"/></svg>';
+var rsIconExperience='<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path fill="#64748b" d="M12 2a10 10 0 1 0 10 10A10.01 10.01 0 0 0 12 2zm1 11h5v-2h-4V6h-2v7z"/></svg>';
+var rsIconSummary='<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path fill="#2563eb" d="M5 3h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2zm3 5h8V6H8v2zm0 5h8v-2H8v2zm0 5h5v-2H8v2z"/></svg>';
+var rsIconNote='<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path fill="#2563eb" d="M4 4a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H9l-5 5V4zm4 3v2h8V7H8zm0 4v2h6v-2H8z"/></svg>';
+var rsIconSkill='<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path fill="#2563eb" d="M12 2l2.3 5.4 5.7.5-4.3 3.8 1.3 5.6-5-3-5 3 1.3-5.6L4 7.9l5.7-.5L12 2z"/></svg>';
+var rsIconShield='<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path fill="#2563eb" d="M12 2l8 3v6c0 5-3.4 9.6-8 11-4.6-1.4-8-6-8-11V5l8-3zm-1 13.2l6-6-1.4-1.4L11 12.4 8.4 9.8 7 11.2l4 4z"/></svg>';
 function rsLoadScript(src){
   return new Promise(function(resolve,reject){
     var existing=document.querySelector('script[src="'+src+'"]');
@@ -5674,7 +5683,7 @@ function headerCard(companyName,logoCell,reportDate,captainName){
           {
             table:{widths:['auto','*'],body:[[logoCell,{stack:[
               {text:companyName,fontSize:10.6,bold:true,color:'#0f172a',margin:[0,2,0,0]},
-              {text:'Prepared for client hiring review',fontSize:5.9,color:'#64748b',margin:[0,3,0,0]}
+              {stack:[iconLine(rsIconBriefcase,'Prepared for client hiring review',null,'#64748b',6)],margin:[0,3,0,0]}
             ],border:[false,false,false,false]}]]},
             layout:'noBorders',
             margin:[14,13,10,10],
@@ -5686,8 +5695,8 @@ function headerCard(companyName,logoCell,reportDate,captainName){
               {
                 margin:[0,14,0,0],
                 table:{widths:['*','auto'],body:[[
-                  {text:clean(reportDate,'--'),fontSize:5.9,color:'#64748b',alignment:'right',border:[false,false,false,false],margin:[0,0,10,0]},
-                  {text:'Captain: '+clean(captainName,'--'),fontSize:5.9,color:'#64748b',alignment:'right',border:[true,false,false,false],margin:[10,0,0,0]}
+                  {columns:[{text:'',width:'*'},{svg:rsIconCalendar,width:6,margin:[0,0.5,3,0]},{text:clean(reportDate,'--'),fontSize:5.9,color:'#64748b'}],columnGap:0,border:[false,false,false,false],margin:[0,0,10,0]},
+                  {columns:[{svg:rsIconCaptain,width:6,margin:[0,0.5,3,0]},{text:'Captain: '+clean(captainName,'--'),fontSize:5.9,color:'#64748b'}],columnGap:0,border:[true,false,false,false],margin:[10,0,0,0]}
                 ]]},
                 layout:{hLineWidth:function(){return 0;},vLineWidth:function(i){return i===1?0.5:0;},vLineColor:function(){return '#cbd5e1';},paddingLeft:function(){return 0;},paddingRight:function(){return 0;},paddingTop:function(){return 0;},paddingBottom:function(){return 0;}}
               }
@@ -5718,8 +5727,25 @@ function pairedCardRow(leftStack,rightStack,leftFill,rightFill,rightBorder){
     }
   };
 }
-function sectionTitle(title,subtle){
-  return {text:title,style:subtle?'sectionTitleMuted':'sectionTitle',margin:[0,0,0,6]};
+function iconLine(icon,text,style,color,iconWidth){
+  return {
+    columns:[
+      {svg:icon,width:iconWidth||7,margin:[0,1,4,0]},
+      {text:text,style:style||'small',color:color||undefined}
+    ],
+    columnGap:0
+  };
+}
+function sectionTitle(title,subtle,icon){
+  if(!icon) return {text:title,style:subtle?'sectionTitleMuted':'sectionTitle',margin:[0,0,0,6]};
+  return {
+    columns:[
+      {svg:icon,width:8,margin:[0,0.5,4,0]},
+      {text:title,style:subtle?'sectionTitleMuted':'sectionTitle'}
+    ],
+    columnGap:0,
+    margin:[0,0,0,6]
+  };
 }
 function metaCell(label,value,align){
   return {stack:[
@@ -5833,8 +5859,8 @@ function buildDefinition(data,logoUri){
       pairedCardRow([
         {text:clean(data.name,'Candidate'),style:'candidateName'},
         {text:clean(data.designation||data.jobTitle,'--'),style:'designation',margin:[0,2,0,5]},
-        {text:'Experience: '+clean(data.experience,'--'),style:'small'},
-        {text:'Current Company: '+clean(data.company,'--'),style:'small',margin:[0,2,0,0]}
+        iconLine(rsIconExperience,'Experience: '+clean(data.experience,'--'),'small','#64748b',6.5),
+        {stack:[iconLine(rsIconCompany,'Current Company: '+clean(data.company,'--'),'small','#64748b',6.5)],margin:[0,2,0,0]}
       ],[
         {text:'MATCH CONFIDENCE',fontSize:5.9,bold:true,color:'#64748b',alignment:'center',margin:[0,14,0,0]},
         {text:score+'%',fontSize:24,bold:true,color:tone.color,alignment:'center',margin:[0,7,0,0]}
@@ -5852,13 +5878,13 @@ function buildDefinition(data,logoUri){
       },
       {
         columns:[
-          fixedPanel([sectionTitle('EXECUTIVE SUMMARY'),{text:summary,style:'body'}],[0,0,6,8],'#ffffff','#dbe3ef',86),
-          fixedPanel([sectionTitle('RECRUITER NOTE'),{text:note,style:'body'}],[6,0,0,8],'#ffffff','#dbe3ef',86)
+          fixedPanel([sectionTitle('EXECUTIVE SUMMARY',false,rsIconSummary),{text:summary,style:'body'}],[0,0,6,8],'#ffffff','#dbe3ef',86),
+          fixedPanel([sectionTitle('RECRUITER NOTE',false,rsIconNote),{text:note,style:'body'}],[6,0,0,8],'#ffffff','#dbe3ef',86)
         ],
         columnGap:0
       },
       panel([
-        sectionTitle('SKILL INTELLIGENCE'),
+        sectionTitle('SKILL INTELLIGENCE',false,rsIconSkill),
         {table:{widths:['*',100,78],body:buildSkillRows(data.skills)},layout:{
           hLineWidth:function(i){return i===1?0.75:0.45;},
           vLineWidth:function(){return 0;},
@@ -5868,7 +5894,7 @@ function buildDefinition(data,logoUri){
       {
         margin:[0,0,0,8],
         table:{widths:['*'],body:[[{stack:[
-          {text:'VERIFICATION STATUS',fontSize:8.4,bold:true,color:'#2563eb',margin:[0,0,0,7]},
+          sectionTitle('VERIFICATION STATUS',false,rsIconShield),
           {table:{widths:['*','*','*'],body:buildValidationRows(data.validation)},layout:{
             hLineWidth:function(){return 0;},
             vLineWidth:function(i){return i>0&&i<3?0.55:0;},
