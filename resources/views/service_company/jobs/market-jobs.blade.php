@@ -2476,33 +2476,77 @@
 
 
 								
-        /* ── Send Bench Request — bound once here to prevent duplicate calls when drawer reloads ── */
-        $(document).on("click", ".request-send", function () {
+        /* ── Send Bench Request — bound once globally with confirmation ── */
+        $(document).off("click.requestSend").on("click.requestSend", ".request-send", function (e) {
+            e.preventDefault();
             var ele   = $(this);
             var jobId = ele.attr('data-jobId');
             var conId = ele.attr('data-conId');
-            ele.prop('disabled', true).text('Sending…');
-            var url = "{{ route('service_company.jobs.recommandedrequestcondidate', ':id') }}";
-            url = url.replace(':id', jobId) + "?conId=" + conId;
-            $.ajax({
-                type: 'GET',
-                url: url,
-                success: function (response) {
-                    if (response.status == 'success') {
-                        showToastr('success', 'Bench request sent successfully!', 'Success');
-                    } else {
-                        showToastr('error', response.message || 'Request failed.', 'Error');
+
+            if (!jobId || !conId || ele.prop('disabled')) {
+                return;
+            }
+
+            var executeSubmit = function () {
+                ele.prop('disabled', true).text('Sending…');
+                var url = "{{ route('service_company.jobs.recommandedrequestcondidate', ':id') }}";
+                url = url.replace(':id', jobId) + "?conId=" + conId;
+
+                $.ajax({
+                    type: 'GET',
+                    url: url,
+                    success: function (response) {
+                        if (response.status == 'success') {
+                            if (typeof swal === 'function') {
+                                swal("Recommend!", "Bench request sent successfully!", "success");
+                            } else if (typeof showToastr === 'function') {
+                                showToastr('success', 'Bench request sent successfully!', 'Success');
+                            }
+                        } else {
+                            if (typeof swal === 'function') {
+                                swal("Recommend Failed", response.message || 'Request failed.', "warning");
+                            } else if (typeof showToastr === 'function') {
+                                showToastr('error', response.message || 'Request failed.', 'Error');
+                            }
+                            ele.prop('disabled', false).text('Send Bench Request');
+                        }
+                        if (window.CandidateDrawerState && typeof window.CandidateDrawerState.clear === 'function') {
+                            window.CandidateDrawerState.clear();
+                        }
+                        if (typeof window.fetchCandidatesbench === 'function') {
+                            window.fetchCandidatesbench(1, '', true);
+                        }
+                    },
+                    error: function () {
+                        if (typeof swal === 'function') {
+                            swal("Error", "Something went wrong while sending request.", "error");
+                        } else if (typeof showToastr === 'function') {
+                            showToastr('error', 'Something went wrong.', 'Error');
+                        }
                         ele.prop('disabled', false).text('Send Bench Request');
                     }
-                    if (typeof window.fetchCandidatesbench === 'function') {
-                        window.fetchCandidatesbench();
+                });
+            };
+
+            if (typeof swal === 'function') {
+                swal({
+                    title: "Are you sure?",
+                    text: "Do you want to Submit Candidate request on this Job?",
+                    type: "warning",
+                    showCancelButton: true,
+                    confirmButtonColor: '#DD6B55',
+                    confirmButtonText: 'Yes, I am sure!',
+                    cancelButtonText: "No, cancel it!",
+                    closeOnConfirm: false,
+                    closeOnCancel: true
+                }, function(isConfirm) {
+                    if (isConfirm) {
+                        executeSubmit();
                     }
-                },
-                error: function () {
-                    showToastr('error', 'Something went wrong.', 'Error');
-                    ele.prop('disabled', false).text('Send Bench Request');
-                }
-            });
+                });
+            } else {
+                executeSubmit();
+            }
         });
 
         $(document).on('click', '.jd-drawer-close-btn, #kt_activitiesClientjob_close', function(e) {

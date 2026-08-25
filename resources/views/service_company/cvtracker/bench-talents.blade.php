@@ -952,59 +952,102 @@
                 });
     });
 
-	function fetchCandidatesbench(page = 1, search = '') {
-            var clientid = '1';
-            if($('#kt_tagify_2').val()!=''){
-                // $('.loadingMessage').css({ display: 'block' });
-                $('.loader_search').css({ display: 'block' });
-            }else{
-                $('.page-loader').css('display', 'flex');
-            }
-            $.ajax({
-                url: `{!! route('service_company.bench.copybenchtable') !!}?page=${page}`,
-                type: 'GET',
-                data: {
-                  search : $('#inputCopySearch').val(),
-                  cus_search : $('#kt_tagify_skills').val(),
-                  kt_tagify_location : $('#kt_tagify_location_bench').val(),
-                  min_exp : $('#min_exp_bench').val(),
-                  max_exp : $('#max_exp_bench').val(),
-                  min_sal : $('#min_sal_bench').val(),
-                  max_sal : $('#max_sal_bench').val(),
-                  min_salary_currency : $('#min_salary_currency_bench').val(),
-                  app_int_outsource : $('[name="app_int_outsource_bench"]:checked').val(),
-                  sal_mode : $('#sal_mode_bench').val(),
-				  currentJobId : '{{ @$currentJobId }}',
-                  findTalentAdd : '{{ @$findTalentAdd }}'
-                },
-                success: function(response) {
-                    $('.loadingMessage').css({ display: 'none' });
-                    $('.loader_search').css({ display: 'none' });
-                    $('.page-loader').css('display', 'none');
-                    if (response && response.html !== undefined) {
-                        $('#copyJobTable').html(response.html);
-                        $('#paginationcopy').html(response.pagination);
-                        if (response.stats) {
-                            $('#bHeroTotalMatches').text(response.stats.total_matches);
-                            if (response.stats.agencies_count) {
-                                $('#bHeroAgenciesSub').text('Across ' + response.stats.agencies_count + ' Agencies');
-                            }
-                            $('#bHeroExcellentMatches').text(response.stats.excellent_matches);
-                            $('#bHeroGoodMatches').text(response.stats.good_matches);
-                            $('#bHeroAvailableToday').text(response.stats.available_today);
-                            $('#bHeroPremiumAgencies').text(response.stats.premium_agencies);
-                        }
-                    }
-                    $('#apptrackerfilterBench_close').click();
-                },
-                error: function(xhr) {
-                    $('.loadingMessage').css({ display: 'none' });
-                    $('.loader_search').css({ display: 'none' });
-                    $('.page-loader').css('display', 'none');
-                    $('#copyJobTable').html('<tr><td colspan="8" class="text-center text-muted py-4">Failed to load data. Please refresh and try again.</td></tr>');
-                }
-            });
-    }
+	window.CandidateDrawerState = window.CandidateDrawerState || {
+		cache: new Map(),
+		currentJobId: '{{ @$currentJobId }}',
+		getCacheKey: function(page, payload) {
+			return (payload.currentJobId || '') + '_' + page + '_' + JSON.stringify(payload);
+		},
+		get: function(key) { return this.cache.get(key); },
+		set: function(key, val) { this.cache.set(key, val); },
+		clear: function() { this.cache.clear(); }
+	};
+
+	function rebindUIComponents(container) {
+		container = container || '#copyJobTable';
+		if (window.KTApp && typeof window.KTApp.initBootstrapTooltips === 'function') {
+			window.KTApp.initBootstrapTooltips();
+		} else if (typeof $.fn.tooltip === 'function') {
+			$(container).find('[data-bs-toggle="tooltip"], [data-toggle="tooltip"]').tooltip({ trigger: 'hover' });
+		}
+	}
+
+	function fetchCandidatesbench(page = 1, search = '', forceRefresh = false) {
+		return new Promise(function(resolve, reject) {
+			var payload = {
+				search: $('#inputCopySearch').val(),
+				cus_search: $('#kt_tagify_skills').val(),
+				kt_tagify_location: $('#kt_tagify_location_bench').val(),
+				min_exp: $('#min_exp_bench').val(),
+				max_exp: $('#max_exp_bench').val(),
+				min_sal: $('#min_sal_bench').val(),
+				max_sal: $('#max_sal_bench').val(),
+				min_salary_currency: $('#min_salary_currency_bench').val(),
+				app_int_outsource: $('[name="app_int_outsource_bench"]:checked').val(),
+				sal_mode: $('#sal_mode_bench').val(),
+				currentJobId: '{{ @$currentJobId }}',
+				findTalentAdd: '{{ @$findTalentAdd }}'
+			};
+
+			var cacheKey = window.CandidateDrawerState.getCacheKey(page, payload);
+
+			function renderResponse(response) {
+				$('.loadingMessage').css({ display: 'none' });
+				$('.loader_search').css({ display: 'none' });
+				$('.page-loader').css('display', 'none');
+
+				if (response && response.html !== undefined) {
+					$('#copyJobTable').html(response.html);
+					$('#paginationcopy').html(response.pagination);
+					if (response.stats) {
+						$('#bHeroTotalMatches').text(response.stats.total_matches);
+						if (response.stats.agencies_count) {
+							$('#bHeroAgenciesSub').text('Across ' + response.stats.agencies_count + ' Agencies');
+						}
+						$('#bHeroExcellentMatches').text(response.stats.excellent_matches);
+						$('#bHeroGoodMatches').text(response.stats.good_matches);
+						$('#bHeroAvailableToday').text(response.stats.available_today);
+						$('#bHeroPremiumAgencies').text(response.stats.premium_agencies);
+					}
+					rebindUIComponents('#copyJobTable');
+				}
+				$('#apptrackerfilterBench_close').click();
+				resolve(response);
+			}
+
+			// Sub-2ms instant navigation from client-side memory cache
+			if (!forceRefresh) {
+				var cachedData = window.CandidateDrawerState.get(cacheKey);
+				if (cachedData) {
+					renderResponse(cachedData);
+					return;
+				}
+			}
+
+			if ($('#kt_tagify_2').val() != '') {
+				$('.loader_search').css({ display: 'block' });
+			} else {
+				$('.page-loader').css('display', 'flex');
+			}
+
+			$.ajax({
+				url: `{!! route('service_company.bench.copybenchtable') !!}?page=${page}`,
+				type: 'GET',
+				data: payload,
+				success: function(response) {
+					window.CandidateDrawerState.set(cacheKey, response);
+					renderResponse(response);
+				},
+				error: function(xhr) {
+					$('.loadingMessage').css({ display: 'none' });
+					$('.loader_search').css({ display: 'none' });
+					$('.page-loader').css('display', 'none');
+					$('#copyJobTable').html('<tr><td colspan="8" class="text-center text-muted py-4">Failed to load data. Please refresh and try again.</td></tr>');
+					reject(xhr);
+				}
+			});
+		});
+	}
 
 </script>
 <script>	
@@ -1021,58 +1064,7 @@
 
         });
 
-        $(document).on("click",".request-send", function(){
-           
-            var ele = $(this);
-            var jobId  = $(this).attr('data-jobId');
-            var conId  = $(this).attr('data-conId');
-            var elm = $(this);
-            
-            swal({
-                title: "Are you sure?",
-                text: " Do you want to Submit Candidate request on this Job?",
-                type: "warning",
-                showCancelButton: true,
-                confirmButtonColor: '#DD6B55',
-                confirmButtonText: 'Yes, I am sure!',
-                cancelButtonText: "No, cancel it!",
-                closeOnConfirm: false,
-                closeOnCancel: false
-            },
-            function(isConfirm){
-                if (isConfirm){
-                    var url   		=	"{{ route('service_company.jobs.recommandedrequestcondidate',':id') }}";
-                    url     		=	url.replace(':id', jobId)+"?conId="+conId;
-                    var baseurl    	=	"{{ asset('assets/images/Loading2.gif') }}"; 
-                    $.ajax({
-                                type  		: 'GET',
-                                url   		: url,
-                                success 	: function (response) {
-                                    if(response.status=='success'){
-                                    swal("Recommend!", "Candidates are successfully Recommend!", "success");
-                                    var jobId  = ele.attr('data-jobId');
-                                    var conId  = ele.attr('data-conId');
-                                    var matlaccess = 1;
-                                    var url   		=	"{{ route('service_company.jobs.mailrecommandedrequestcondidate',':id') }}";
-                                    url     		=	url.replace(':id', jobId)+"?conId="+conId+"?matlaccess="+matlaccess;                  
-                                    // tableLoad('load');
-                                    fetchCandidatesbench()
-                                    }else{
-                                    fetchCandidatesbench();
-                                    swal("Recommend Failed", response.message, "warning").then(function(){
-                                        fetchCandidatesbench();
-                                    });
-                                    }
-                                }
-                        });
-
-                } else {
-
-                    swal("Cancelled", "", "error");
-
-                }
-            });
-        });
+        /* Note: .request-send click handler is consolidated in parent market-jobs.blade.php to prevent duplicate AJAX submissions */
 
         // Ensure filter drawer container is appended directly to body BEFORE initializing Tagify
         if ($('#apptrackerfilterBench').length && $('#apptrackerfilterBench').parent()[0] !== document.body) {
