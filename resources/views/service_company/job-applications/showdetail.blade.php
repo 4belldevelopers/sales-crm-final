@@ -715,8 +715,7 @@
           }
           </script>
         @else
-          <a target="_blank" class="cdr-action-btn cdr-btn-secondary downloadCount {{ $dnone }}"
-             href="{{ route('service_company.job-applications.edit', [ GeneralMethod::value_encrypt($jobWiseCanId)]) }}?currentPage={{ GeneralMethod::value_encrypt($currentPage) }}&currentSlug={{ GeneralMethod::value_encrypt($currentSlug) }}" title="Download resume">
+          <a href="javascript:void(0);" class="cdr-action-btn cdr-btn-secondary downloadCount {{ $dnone }}" id="hdrDlToggleApp" role="button" aria-haspopup="true" aria-expanded="false" title="Download resume">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
             Download Resume
           </a>
@@ -5436,8 +5435,20 @@ setTimeout(() => {
 ═══════════════════════════════════════════════════════════════════ --}}
 
 {{-- Data bridge: PHP values injected once, read by JS — zero extra queries --}}
+@php
+  $rdcDownloadUrl = '';
+  if(!empty($application->resume)){
+    if($resumeAwsPath || strpos((string)$application->resume, 'file.jero.works') !== false){
+      $rdcDownloadUrl = route('download.resume', ['id' => $application->id, 'path' => rtrim(strtr(base64_encode($application->resume), '+/', '-_'), '=')]);
+    } elseif(filter_var((string)$application->resume, FILTER_VALIDATE_URL)){
+      $rdcDownloadUrl = (string)$application->resume;
+    } else {
+      $rdcDownloadUrl = url((string)$application->resume);
+    }
+  }
+@endphp
 <div id="rdcData" hidden
-     data-dl-url="{{ $resumeAwsPath ? route('download.resume', ['id' => $application->id, 'path' => rtrim(strtr(base64_encode($application->resume), '+/', '-_'), '=')]) : '' }}"
+     data-dl-url="{{ $rdcDownloadUrl }}"
      data-has-aws="{{ $resumeAwsPath ? 'true' : 'false' }}"
      data-file-ext="{{ strtoupper(pathinfo((string)@$application->resume, PATHINFO_EXTENSION) ?: 'FILE') }}"></div>
 
@@ -6148,7 +6159,9 @@ window.__buildRS=buildRecruiterSummary;
     var newBtn = origBtn.cloneNode(true);
     origBtn.parentNode.replaceChild(newBtn, origBtn);
     newBtn.addEventListener('click', function(e){
+      e.preventDefault();
       e.stopPropagation();
+      newBtn.setAttribute('aria-expanded','true');
       openRdc();
     });
   }
