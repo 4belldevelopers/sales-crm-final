@@ -5639,6 +5639,48 @@ function panel(stack,margin,fill,border){
     }
   };
 }
+function fixedPanel(stack,margin,fill,border,minHeight){
+  return {
+    margin:margin||[0,0,0,7],
+    table:{widths:['*'],heights:function(){return minHeight||72;},body:[[ {stack:Array.isArray(stack)?stack:[stack],margin:[10,8,10,8],fillColor:fill||'#ffffff'} ]]},
+    layout:{
+      hLineWidth:function(){return 0.55;}, vLineWidth:function(){return 0.55;},
+      hLineColor:function(){return border||'#dbe3ef';}, vLineColor:function(){return border||'#dbe3ef';},
+      paddingLeft:function(){return 0;}, paddingRight:function(){return 0;},
+      paddingTop:function(){return 0;}, paddingBottom:function(){return 0;}
+    }
+  };
+}
+function headerCard(companyName,logoCell,compactMeta){
+  return {
+    margin:[0,0,0,10],
+    stack:[
+      {canvas:[{type:'rect',x:0,y:0,w:535,h:58,r:8,lineWidth:0.7,lineColor:'#dbe3ef',color:'#ffffff'}],margin:[0,0,0,-58]},
+      {
+        table:{widths:[220,'*'],body:[[
+          {
+            table:{widths:['auto','*'],body:[[logoCell,{stack:[
+              {text:companyName,fontSize:10.6,bold:true,color:'#0f172a',margin:[0,2,0,0]},
+              {text:'Prepared for client hiring review',fontSize:5.9,color:'#64748b',margin:[0,3,0,0]}
+            ],border:[false,false,false,false]}]]},
+            layout:'noBorders',
+            margin:[14,13,10,10],
+            border:[false,false,false,false]
+          },
+          {
+            stack:[
+              {text:'PRE-SCREENED CANDIDATE REPORT',style:'title',margin:[0,3,0,0]},
+              {text:compactMeta,fontSize:5.9,color:'#64748b',alignment:'right',margin:[0,14,0,0]}
+            ],
+            margin:[10,13,14,10],
+            border:[false,false,false,false]
+          }
+        ]]},
+        layout:'noBorders'
+      }
+    ]
+  };
+}
 function sectionTitle(title,subtle){
   return {text:title,style:subtle?'sectionTitleMuted':'sectionTitle',margin:[0,0,0,6]};
 }
@@ -5722,8 +5764,8 @@ function buildDefinition(data,logoUri){
   var compactMeta=data.reportDate+' | Captain: '+clean(data.recruiterName,'JERO Recruiter');
   var companyName=clean(data.reportCompanyName,'Hiring Partner');
   var logoCell=logoUri
-    ? {image:logoUri,fit:[62,30],margin:[0,1,10,0],border:[false,false,false,false]}
-    : {text:companyName.charAt(0).toUpperCase(),fontSize:14,bold:true,color:'#1d4ed8',alignment:'center',margin:[0,6,10,5],fillColor:'#eef2ff',border:[false,false,false,false]};
+    ? {image:logoUri,fit:[42,28],alignment:'center',margin:[0,0,12,0],border:[false,false,false,false]}
+    : {text:companyName.charAt(0).toUpperCase(),fontSize:13,bold:true,color:'#1d4ed8',alignment:'center',margin:[0,5,12,4],fillColor:'#eef2ff',border:[false,false,false,false]};
 
   return {
     pageSize:'A4',
@@ -5749,17 +5791,10 @@ function buildDefinition(data,logoUri){
       footer:{fontSize:5.8,color:'#64748b'}
     },
     content:[
-      {
-        margin:[0,0,0,9],
-        table:{widths:[210,'*'],body:[[
-          {table:{widths:['auto','*'],body:[[logoCell,{stack:[{text:companyName,fontSize:10.5,bold:true,color:'#0f172a'}],border:[false,false,false,false]}]]},layout:'noBorders',fillColor:'#ffffff',margin:[12,10,12,10],border:[true,true,false,true]},
-          {stack:[{text:'PRE-SCREENED CANDIDATE REPORT',style:'title'},{text:compactMeta,fontSize:5.8,color:'#64748b',alignment:'right',margin:[0,13,0,0]}],fillColor:'#ffffff',margin:[12,10,12,10],border:[false,true,true,true]}
-        ]]},
-        layout:{hLineWidth:function(){return 0.55;},vLineWidth:function(){return 0;},hLineColor:function(){return '#e2e8f0';}}
-      },
+      headerCard(companyName,logoCell,compactMeta),
       {
         columns:[
-          panel([
+          fixedPanel([
             {table:{widths:['*'],body:[[
               {stack:[
                 {text:clean(data.name,'Candidate'),style:'candidateName'},
@@ -5768,11 +5803,11 @@ function buildDefinition(data,logoUri){
                 {text:'Current Company: '+clean(data.company,'--'),style:'small',margin:[0,2,0,0]}
               ],margin:[0,0,0,0]}
             ]]},layout:'noBorders'}
-          ],[0,0,7,8],'#ffffff','#cbd5e1'),
-          panel([
-            {text:'MATCH CONFIDENCE',fontSize:5.9,bold:true,color:'#64748b',alignment:'center'},
-            {text:score+'%',fontSize:24,bold:true,color:tone.color,alignment:'center',margin:[0,5,0,0]}
-          ],[7,0,0,8],tone.fill,tone.border)
+          ],[0,0,7,8],'#ffffff','#cbd5e1',74),
+          fixedPanel([
+            {text:'MATCH CONFIDENCE',fontSize:5.9,bold:true,color:'#64748b',alignment:'center',margin:[0,8,0,0]},
+            {text:score+'%',fontSize:24,bold:true,color:tone.color,alignment:'center',margin:[0,7,0,0]}
+          ],[7,0,0,8],tone.fill,tone.border,74)
         ],
         columnGap:0
       },
@@ -5789,8 +5824,8 @@ function buildDefinition(data,logoUri){
       },
       {
         columns:[
-          panel([sectionTitle('EXECUTIVE SUMMARY'),{text:summary,style:'body'}],[0,0,6,8]),
-          panel([sectionTitle('RECRUITER NOTE'),{text:note,style:'body'},{text:clean(data.recruiterName,'--'),style:'muted',margin:[0,8,0,0]}],[6,0,0,8])
+          fixedPanel([sectionTitle('EXECUTIVE SUMMARY'),{text:summary,style:'body'}],[0,0,6,8],'#ffffff','#dbe3ef',86),
+          fixedPanel([sectionTitle('RECRUITER NOTE'),{text:note,style:'body'},{text:'Captain: '+clean(data.recruiterName,'--'),style:'muted',margin:[0,8,0,0]}],[6,0,0,8],'#ffffff','#dbe3ef',86)
         ],
         columnGap:0
       },
@@ -5817,16 +5852,6 @@ function buildDefinition(data,logoUri){
           }}
         ],margin:[10,8,10,8],fillColor:'#ffffff'}]]},
         layout:{hLineWidth:function(){return 0.55;},vLineWidth:function(){return 0.55;},hLineColor:function(){return '#dbe3ef';},vLineColor:function(){return '#dbe3ef';},paddingLeft:function(){return 0;},paddingRight:function(){return 0;},paddingTop:function(){return 0;},paddingBottom:function(){return 0;}}
-      },
-      {
-        margin:[0,0,0,8],
-        table:{widths:['*',74,84,82],body:[[
-          {text:tone.decision,fontSize:7.4,bold:true,color:tone.color,margin:[10,8,0,8],fillColor:tone.fill},
-          {stack:[{text:'Confidence',style:'metricLabel',alignment:'center'},{text:score+'%',style:'metricValue',alignment:'center'}],margin:[0,6,0,6],fillColor:tone.fill},
-          {stack:[{text:'Next Step',style:'metricLabel',alignment:'center'},{text:tone.round,style:'metricValue',alignment:'center'}],margin:[0,6,0,6],fillColor:tone.fill},
-          {stack:[{text:'Joining',style:'metricLabel',alignment:'center'},{text:joining,style:'metricValue',alignment:'center'}],margin:[0,6,0,6],fillColor:tone.fill}
-        ]]},
-        layout:{hLineWidth:function(){return 0.65;},vLineWidth:function(){return 0.65;},hLineColor:function(){return tone.border;},vLineColor:function(){return tone.border;}}
       },
       {
         table:{widths:['*','auto','auto'],body:[[
