@@ -887,7 +887,8 @@ CREATE TABLE `coin_transection_logs` (
   `cart_id` int(11) DEFAULT NULL,
   `payment_link_id` varchar(255) DEFAULT NULL,
   PRIMARY KEY (`id`),
-  KEY `idx_comp_event_created` (`company_id`,`event_type`,`created_at`)
+  KEY `idx_comp_event_created` (`company_id`,`event_type`,`created_at`),
+  KEY `idx_company_event_type_id` (`company_id`,`event_type`,`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 DROP TABLE IF EXISTS `comments`;

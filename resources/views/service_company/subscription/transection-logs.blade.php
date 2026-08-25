@@ -644,7 +644,7 @@
             if (json.success) {
                 renderItems(json.data);
                 renderPagination(json);
-                updateStats(json.data);
+                updateStats(json);
             } else {
                 showError('Unable to load transactions. Please try again.');
             }
@@ -658,15 +658,20 @@
     }
 
     // ── Stats mini-update ─────────────────────────────────────────────────────
-    function updateStats(items) {
-        var credit = 0, debit = 0;
-        (items || []).forEach(function(row) {
-            if (row.transection_type === 'credit') credit += parseFloat(row.display_coins) || 0;
-            else debit += parseFloat(row.display_coins) || 0;
-        });
-        elStatCredit.textContent = credit.toFixed(0) + ' C';
-        elStatDebit.textContent  = debit.toFixed(0)  + ' C';
-        elStatTotal.textContent  = (items ? items.length : 0) + ' rows';
+    function updateStats(json) {
+        var credit = 0, debit = 0, total = json.total || 0;
+        if (json.stats) {
+            credit = parseFloat(json.stats.total_credits || 0);
+            debit  = parseFloat(json.stats.total_debits  || 0);
+        } else {
+            (json.data || []).forEach(function(row) {
+                if (row.transection_type === 'credit') credit += parseFloat(row.display_coins) || 0;
+                else debit += parseFloat(row.display_coins) || 0;
+            });
+        }
+        if (elStatCredit) elStatCredit.textContent = credit.toLocaleString(undefined, {minimumFractionDigits: 0, maximumFractionDigits: 2}) + ' C';
+        if (elStatDebit)  elStatDebit.textContent  = debit.toLocaleString(undefined, {minimumFractionDigits: 0, maximumFractionDigits: 2})  + ' C';
+        if (elStatTotal)  elStatTotal.textContent  = total + ' rows';
     }
 
     // ── Render rows ───────────────────────────────────────────────────────────

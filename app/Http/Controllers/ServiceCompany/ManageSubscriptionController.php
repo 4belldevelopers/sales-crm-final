@@ -287,26 +287,38 @@ class ManageSubscriptionController extends ServiceCompanyBaseController
             ->where('coin_transection_logs.coins', '>', 0)
             ->orderByDesc('coin_transection_logs.id');
 
-        // Optional: keyword search on event description or user name
+        // Optional: keyword search on event description or user name (escaped for LIKE wildcards)
         if ($search !== '') {
-            $query->where(function ($q) use ($search) {
-                $q->where('coin_transection_logs.event', 'like', '%'.$search.'%')
-                    ->orWhere('users.name', 'like', '%'.$search.'%');
+            $escapedSearch = addcslashes($search, '%_\\');
+            $query->where(function ($q) use ($escapedSearch) {
+                $q->where('coin_transection_logs.event', 'like', '%'.$escapedSearch.'%')
+                    ->orWhere('users.name', 'like', '%'.$escapedSearch.'%');
             });
         }
 
-        // Optional: date range filter
+        // Optional: date range filter (direct timestamp comparison allows MySQL to utilize idx_comp_event_created index)
         if ($date_from) {
-            $query->whereDate('coin_transection_logs.created_at', '>=', $date_from);
+            $query->where('coin_transection_logs.created_at', '>=', $date_from.' 00:00:00');
         }
         if ($date_to) {
-            $query->whereDate('coin_transection_logs.created_at', '<=', $date_to);
+            $query->where('coin_transection_logs.created_at', '<=', $date_to.' 23:59:59');
         }
 
         // Optional: credit/debit filter
         if ($transection_type && in_array($transection_type, ['credit', 'debit'])) {
             $query->where('coin_transection_logs.transection_type', $transection_type);
         }
+
+        // Intent: Calculate aggregate period totals (credits & debits) for active filters before pagination limit.
+        // Tenancy: $query is strictly scoped to auth user's company_id above.
+        $statsQuery = (clone $query);
+        $totalCredits = (float) (clone $statsQuery)
+            ->where('coin_transection_logs.transection_type', 'credit')
+            ->sum(DB::raw('COALESCE(coin_transection_logs.actual_coins, coin_transection_logs.coins)'));
+
+        $totalDebits = (float) (clone $statsQuery)
+            ->where('coin_transection_logs.transection_type', 'debit')
+            ->sum('coin_transection_logs.coins');
 
         // Paginate — standard Laravel paginate (no double-offset bug)
         $paginator = $query->paginate($perPage, ['*'], 'page', $page);
@@ -343,6 +355,10 @@ class ManageSubscriptionController extends ServiceCompanyBaseController
             'last_page' => $paginator->lastPage(),
             'from' => $paginator->firstItem(),
             'to' => $paginator->lastItem(),
+            'stats' => [
+                'total_credits' => $totalCredits,
+                'total_debits' => $totalDebits,
+            ],
         ]);
     }
 
