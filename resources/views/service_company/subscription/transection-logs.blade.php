@@ -147,12 +147,12 @@
 .btn-txreset svg { width: 13px; height: 13px; }
 
 /* ── Shared CSS Grid — header + data rows share the same columns ─────────── */
-/*   icon | date | event | actor | amount | balance                           */
-/*   40px   130px  2fr     1fr     110px    95px                              */
+/*   icon | date  | event  | actor  | amount | balance                        */
+/*   36px | 20%   | 25%    | 20%    | 15%    | 20%                            */
 .txlog-grid {
     display: grid;
-    grid-template-columns: 40px 130px minmax(200px, 2fr) minmax(160px, 1fr) 110px 95px;
-    gap: 12px;
+    grid-template-columns: 36px 20fr 25fr 20fr 15fr 20fr;
+    gap: 16px;
     align-items: center;
     padding: 0 20px;
 }
@@ -206,10 +206,11 @@
 .ri-settle { background: #fff8dd; }
 
 /* Data cells — column margins & padding */
-.tx-col-datetime { padding-right: 16px; }
-.tx-col-event    { padding-right: 16px; min-width: 0; }
-.tx-col-amount   { padding-right: 16px; text-align: left; }
-.tx-col-bal      { padding-right: 16px; text-align: left; }
+.tx-col-datetime { padding-right: 12px; min-width: 0; }
+.tx-col-event    { padding-right: 12px; min-width: 0; }
+.tx-col-actor    { padding-right: 12px; min-width: 0; }
+.tx-col-amount   { padding-right: 12px; text-align: left; min-width: 0; }
+.tx-col-bal      { padding-right: 12px; text-align: left; min-width: 0; }
 
 /* Cell typography */
 .cell-main { font-size: 13px; font-weight: 600; color: #181c32; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -449,7 +450,7 @@
                     <div></div>
                     <div class="th tx-col-datetime">Date &amp; Time</div>
                     <div class="th tx-col-event">Event Description</div>
-                    <div class="th">Initiated By</div>
+                    <div class="th tx-col-actor">Initiated By</div>
                     <div class="th tx-col-amount">Amount</div>
                     <div class="th tx-col-bal">Balance</div>
                 </div>
@@ -719,7 +720,7 @@
                     '<div class="cell-main" style="font-size:12px;">' + esc(row.event || '—') + '</div>' +
                     '<div class="cell-sub" style="margin-top:3px;">' + typeBadge + settleBdg + '</div>' +
                 '</div>' +
-                '<div>' +
+                '<div class="tx-col-actor">' +
                     '<div class="cell-main">' + esc(row.actor_name) + '</div>' +
                     '<div class="cell-sub">' + esc(row.actor_company) + '</div>' +
                 '</div>' +
