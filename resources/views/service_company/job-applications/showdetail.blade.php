@@ -5455,17 +5455,37 @@ setTimeout(() => {
 {{-- Recruiter Summary data bridge — zero extra DB queries; all PHP vars already in scope --}}
 @php
   $rsSkills = [];
-  if(!empty($jobSkill)){
+  if(!empty($skillExperiencesCount) && !empty($skillExperiences)){
+    foreach($skillExperiences as $exp){
+      $exp=(object)$exp;
+      $sn=trim((string)($exp->skill_key??'')); if(!$sn) continue;
+      $year=(string)($exp->year ?? '0');
+      $month=(string)($exp->month ?? '0');
+      $expText=trim($year.'.'.$month.' Year');
+      $rsSkills[]=[
+        'name'=>$sn,
+        'expText'=>$expText,
+        'exp'=>(float)($year.'.'.$month),
+        'rating'=>max(0,min(5,(int)($exp->rating??0)))
+      ];
+    }
+  }
+  if(empty($rsSkills)&&!empty($jobSkill)){
     foreach($jobSkill as $sv){
       $sv=(object)$sv; $sn=trim((string)($sv->skill_name??'')); if(!$sn) continue;
       $expStr=trim(str_replace(['Years','Year',' '],'',(string)($sv->skill_value??'')));
-      $expYears=($expStr!=='')?(int)explode('.',$expStr)[0]:0;
-      $rsSkills[]=['name'=>$sn,'exp'=>$expYears,'rating'=>max(0,min(5,(int)($sv->rating??0)))];
+      $expYears=($expStr!=='')?(float)$expStr:0;
+      $rsSkills[]=[
+        'name'=>$sn,
+        'expText'=>trim((string)($sv->skill_value??'')),
+        'exp'=>$expYears,
+        'rating'=>max(0,min(5,(int)($sv->rating??0)))
+      ];
     }
   }
   if(empty($rsSkills)&&!empty($application->skills)){
     foreach(array_slice(array_values(array_filter(array_map('trim',explode(',', $application->skills)))),0,12) as $sn){
-      if($sn) $rsSkills[]=['name'=>$sn,'exp'=>0,'rating'=>0];
+      if($sn) $rsSkills[]=['name'=>$sn,'expText'=>'--','exp'=>0,'rating'=>0];
     }
   }
   $rsMatchPct=(int)round((float)(@$application->skill_match??0));
@@ -5773,11 +5793,12 @@ function buildSkillRows(skills){
   skills.forEach(function(skill){
     var rating=safeNumber(skill.rating,0,5);
     var exp=Number(skill.exp||0);
+    var expText=clean(skill.expText,'');
     var stars=[];
     for(var i=1;i<=5;i++) stars.push({svg:i<=rating?rsStarGold:rsStarMuted,width:6.4,margin:[0,0.5,1.2,0]});
     rows.push([
       {text:titleCase(skill.name),style:'tableCellBold'},
-      {text:exp>0 ? exp+' Year'+(exp>1?'s':'') : '--',style:'tableCell',color:'#334155'},
+      {text:expText!=='' && expText!=='--' ? expText : (exp>0 ? exp+' Year'+(exp>1?'s':'') : '--'),style:'tableCell',color:'#334155'},
       {columns:stars,columnGap:0,alignment:'center',margin:[20,5,0,5]}
     ]);
   });
