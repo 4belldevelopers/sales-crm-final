@@ -5631,6 +5631,11 @@ var rsIconSummary='<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><
 var rsIconNote='<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path fill="#2563eb" d="M4 4a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H9l-5 5V4zm4 4v2h8V8H8zm0 4v2h6v-2H8z"/></svg>';
 var rsIconSkill='<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path fill="#2563eb" d="M12 2l2.4 5.4 5.9.6-4.4 3.9 1.3 5.8-5.2-3-5.2 3 1.3-5.8L3.7 8l5.9-.6L12 2z"/></svg>';
 var rsIconShield='<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path fill="#2563eb" d="M12 2l8 3v6c0 5-3.4 9.6-8 11-4.6-1.4-8-6-8-11V5l8-3zm-1 13.2l6-6-1.4-1.4L11 12.4 8.4 9.8 7 11.2l4 4z"/></svg>';
+var rsIconResume='<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path fill="#2563eb" d="M6 2h8l5 5v15H6V2zm7 1.8V8h4.2L13 3.8zM8 12h8v-1.7H8V12zm0 4h8v-1.7H8V16zm0 4h6v-1.7H8V20z"/></svg>';
+var rsIconEmail='<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path fill="#2563eb" d="M4 5h16a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2zm8 7.2L4.7 7H4v.7l8 5.7 8-5.7V7h-.7L12 12.2z"/></svg>';
+var rsIconPhone='<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path fill="#2563eb" d="M7.2 2.8l3 3a2 2 0 0 1 .4 2.2l-.9 2.1a13.5 13.5 0 0 0 4.2 4.2l2.1-.9a2 2 0 0 1 2.2.4l3 3a2 2 0 0 1 0 2.8l-1.4 1.4c-.8.8-2 .9-3 .5A25.2 25.2 0 0 1 2.5 7.2c-.4-1-.3-2.2.5-3l1.4-1.4a2 2 0 0 1 2.8 0z"/></svg>';
+var rsIconLinkedin='<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path fill="#2563eb" d="M5 3h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2zm3.4 15V9.6H6V18h2.4zM7.2 8.5a1.4 1.4 0 1 0 0-2.8 1.4 1.4 0 0 0 0 2.8zM18 18v-4.8c0-2.5-1.3-3.8-3.2-3.8-1.4 0-2.1.8-2.5 1.4V9.6H10V18h2.4v-4.2c0-1.1.2-2.2 1.6-2.2s1.5 1.3 1.5 2.3V18H18z"/></svg>';
+var rsIconJobDescription='<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path fill="#2563eb" d="M8 2h8a2 2 0 0 1 2 2v2h2v16H4V6h2V4a2 2 0 0 1 2-2zm0 4h8V4H8v2zm-1 6h10v-1.8H7V12zm0 4h10v-1.8H7V16zm0 4h7v-1.8H7V20z"/></svg>';
 function rsLoadScript(src){
   return new Promise(function(resolve,reject){
     var existing=document.querySelector('script[src="'+src+'"]');
@@ -5823,7 +5828,7 @@ function iconLine(icon,text,style,color,iconWidth){
 }
 function sectionTitle(title,subtle,icon){
   if(!icon) return {text:title,style:subtle?'sectionTitleMuted':'sectionTitle',margin:[0,0,0,8]};
-  return {columns:[{svg:icon,width:8,margin:[0,0.5,4,0]},{text:title,style:subtle?'sectionTitleMuted':'sectionTitle'}],columnGap:0,margin:[0,0,0,8]};
+  return {columns:[{svg:icon,width:10,margin:[0,0,5,0]},{text:title,style:subtle?'sectionTitleMuted':'sectionTitle',margin:[0,0.5,0,0]}],columnGap:0,margin:[0,0,0,8]};
 }
 function metaCell(label,value,align){
   return {stack:[
@@ -5887,19 +5892,24 @@ function buildValidationRows(validation){
     if(key) map[key]=clean(row.status,'');
   });
   var slots=[
-    {label:'RESUME',key:'resume',fallbackKey:'resume verified'},
-    {label:'EMAIL ID',key:'email id',fallbackKey:'email verified'},
-    {label:'PHONE NUMBER',key:'phone number',fallbackKey:'phone verified'},
-    {label:'LINKEDIN ID',key:'linkedin id',fallbackKey:'linkedin verified'},
-    {label:'JOB DESCRIPTION',key:'job description',fallbackKey:'job description acknowledged'}
+    {label:'RESUME',key:'resume',fallbackKey:'resume verified',icon:rsIconResume},
+    {label:'EMAIL ID',key:'email id',fallbackKey:'email verified',icon:rsIconEmail},
+    {label:'PHONE NUMBER',key:'phone number',fallbackKey:'phone verified',icon:rsIconPhone},
+    {label:'LINKEDIN ID',key:'linkedin id',fallbackKey:'linkedin verified',icon:rsIconLinkedin},
+    {label:'JOB DESCRIPTION',key:'job description',fallbackKey:'job description acknowledged',icon:rsIconJobDescription}
   ];
   var cells=slots.map(function(row){
     var status=map[row.key] || map[row.fallbackKey] || '--';
     var verified=/verified|confirmed|completed|discussed|shared/i.test(status);
     return {stack:[
-      {text:row.label.toUpperCase(),fontSize:6.7,bold:true,color:'#0f172a',alignment:'center',margin:[0,0,0,1]},
-      {text:status,fontSize:6.6,bold:true,color:verified?'#16a34a':'#b45309',alignment:'center',margin:[0,3,0,0]}
-    ],margin:[2,8,2,8]};
+      {columns:[
+        {text:'',width:'*'},
+        {svg:row.icon,width:9.5,margin:[0,0,4,0]},
+        {text:row.label.toUpperCase(),fontSize:6.6,bold:true,color:'#0f172a',width:'auto',margin:[0,1.5,0,0]},
+        {text:'',width:'*'}
+      ],columnGap:0,margin:[0,0,0,6]},
+      {text:status,fontSize:6.5,bold:true,color:verified?'#16a34a':'#b45309',alignment:'center',margin:[0,0,0,0]}
+    ],margin:[2,7,2,7]};
   });
   return [cells];
 }
@@ -5949,7 +5959,7 @@ function buildDefinition(data,logoUri){
         iconLine(rsIconExperience,'EXPERIENCE: '+clean(data.experience,'--').toUpperCase(),'small','#64748b',6.5),
         {stack:[iconLine(rsIconCompany,'CURRENT COMPANY: '+clean(data.company,'--').toUpperCase(),'small','#64748b',6.5)],margin:[0,3,0,0]}
       ],[
-        {text:'MATCH CONFIDENCE',fontSize:6.2,bold:true,color:'#64748b',alignment:'center',margin:[0,11,0,0]},
+        {text:'HIRING CONFIDENCE',fontSize:6.2,bold:true,color:'#64748b',alignment:'center',margin:[0,11,0,0]},
         {text:score+'%',fontSize:30,bold:true,color:'#1d4ed8',alignment:'center',margin:[0,7,0,0]}
       ],'#ffffff','#f8fbff','#cfe0ff'),
       roundedFullCard([
