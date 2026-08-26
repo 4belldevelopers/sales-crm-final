@@ -5618,6 +5618,7 @@ setTimeout(() => {
 
 var rsPdfReady=null;
 var rsPdfLibReady=null;
+var rsJsZipReady=null;
 var rsDocxReady=null;
 var rsHtml2CanvasReady=null;
 var rsJsPdfReady=null;
@@ -5691,10 +5692,18 @@ function rsEnsurePdfLib(){
   rsPdfLibReady=rsTryList(sources,0,function(){ return !!(window.PDFLib && window.PDFLib.PDFDocument); });
   return rsPdfLibReady;
 }
+function rsEnsureJsZip(){
+  if(rsJsZipReady && window.JSZip) return rsJsZipReady;
+  var sources=['/js/jszip.min.js','https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js'];
+  rsJsZipReady=rsTryList(sources,0,function(){ return !!window.JSZip; });
+  return rsJsZipReady;
+}
 function rsEnsureDocxPreview(){
   if(rsDocxReady && window.docx && typeof window.docx.renderAsync==='function') return rsDocxReady;
   var sources=['/js/docx-preview.min.js','https://cdn.jsdelivr.net/npm/docx-preview@0.3.7/dist/docx-preview.min.js'];
-  rsDocxReady=rsTryList(sources,0,function(){ return !!(window.docx && typeof window.docx.renderAsync==='function'); });
+  rsDocxReady=rsEnsureJsZip().then(function(){
+    return rsTryList(sources,0,function(){ return !!(window.docx && typeof window.docx.renderAsync==='function'); });
+  });
   return rsDocxReady;
 }
 function rsEnsureHtml2Canvas(){
@@ -5829,6 +5838,9 @@ async function convertDocxResumeToPdfBlob(resumeUrl){
       pdf.addImage(img,'JPEG',(pageW-drawW)/2,0,drawW,drawH,undefined,'FAST');
     }
     return pdf.output('blob');
+  }catch(err){
+    console.error('Browser DOCX resume conversion error:',err);
+    throw err;
   }finally{
     removeNode(host);
   }
