@@ -5572,10 +5572,12 @@ setTimeout(() => {
   $rsTotalExp=trim($rsTotalExp," \t\n\r\0\x0B.");
   $rsExpStr=$rsTotalExp!==''?$rsTotalExp.' Year'.((float)$rsTotalExp==1.0?'':'s'):'--';
   $rsValidation=[];
-  if(!empty($application->linkedin)) $rsValidation[]=['label'=>'LinkedIn Verified','status'=>'Verified'];
-  if(!empty($application->resume))   $rsValidation[]=['label'=>'Resume Verified','status'=>'Verified'];
+  if(!empty($application->resume))   $rsValidation[]=['label'=>'RESUME','status'=>'Verified'];
+  if(!empty($application->email)||!empty($application->secondrary_email)) $rsValidation[]=['label'=>'EMAIL ID','status'=>'Verified'];
+  if(!empty($application->phone)||!empty($application->secondary_mobile)) $rsValidation[]=['label'=>'PHONE NUMBER','status'=>'Verified'];
+  if(!empty($application->linkedin)) $rsValidation[]=['label'=>'LINKEDIN ID','status'=>'Verified'];
   if(!empty($application->recruiter_note)) $rsValidation[]=['label'=>'Recruiter Screened','status'=>'Completed'];
-  if(!empty($application->current_designation)||!empty($application->current_company)) $rsValidation[]=['label'=>'Job Description Acknowledged','status'=>'Confirmed'];
+  if(!empty($application->current_designation)||!empty($application->current_company)) $rsValidation[]=['label'=>'JOB DESCRIPTION','status'=>'Shared with candidate'];
   if((float)(@$application->ctc_yearly??0)>0||(float)(@$application->ectc_yearly??0)>0||(float)(@$application->percentage_hike??0)>0) $rsValidation[]=['label'=>'Compensation Discussed','status'=>'Discussed'];
   $rsCareerSummary=trim(strip_tags(html_entity_decode((string)(@$application->careersummary??''),ENT_QUOTES,'UTF-8')));
   $rsCaptainName = trim((string)($clientjobAssignListCaptain ?? ''));
@@ -5619,6 +5621,7 @@ var rsStarMuted='<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><pa
 var rsIconUser='<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path fill="#64748b" d="M12 12a5 5 0 1 0-5-5 5 5 0 0 0 5 5zm0 2c-4.42 0-8 2.24-8 5v1h16v-1c0-2.76-3.58-5-8-5z"/></svg>';
 var rsIconCalendar='<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path fill="#64748b" d="M7 2h2v2h6V2h2v2h2a2 2 0 0 1 2 2v13a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2V2zm12 8H5v9h14v-9z"/></svg>';
 var rsIconBriefcase='<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path fill="#2563eb" d="M9 6V5a3 3 0 0 1 6 0v1h4a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4zm2 0h2V5a1 1 0 0 0-2 0v1z"/></svg>';
+var rsIconExperience='<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path fill="#64748b" d="M12 2l2.2 4.5 5 .7-3.6 3.5.8 5-4.4-2.4-4.4 2.4.8-5L4.8 7.2l5-.7L12 2zm-6 17h12v2H6v-2z"/></svg>';
 var rsIconClock='<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path fill="#64748b" d="M12 2a10 10 0 1 0 10 10A10.01 10.01 0 0 0 12 2zm1 11h5v-2h-4V6h-2v7z"/></svg>';
 var rsIconCompany='<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path fill="#64748b" d="M4 21V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v17h3v-9h-2v-2h3a1 1 0 0 1 1 1v10H4zm4-14h2V5H8v2zm4 0h2V5h-2v2zm-4 4h2V9H8v2zm4 0h2V9h-2v2zm-4 4h2v-2H8v2zm4 0h2v-2h-2v2z"/></svg>';
 var rsIconEducation='<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path fill="#64748b" d="M12 3L1.5 8.5 12 14l8-4.2V16h2V8.5L12 3zm-6 9.1V16c0 1.7 2.7 4 6 4s6-2.3 6-4v-3.9L12 15.2l-6-3.1z"/></svg>';
@@ -5778,8 +5781,7 @@ function headerCard(companyName,logoCell,reportDate,captainName){
         table:{widths:[220,'*'],body:[[
           {
             table:{widths:['auto','*'],body:[[logoCell,{stack:[
-              {text:companyName,fontSize:11.2,bold:true,color:'#0f172a',margin:[0,1,0,0]},
-              {stack:[iconLine(rsIconBriefcase,'Prepared for client hiring review',null,'#64748b',6)],margin:[0,4,0,0]}
+              {text:companyName,fontSize:11.2,bold:true,color:'#0f172a',margin:[0,6,0,0]}
             ],border:[false,false,false,false]}]]},
             layout:'noBorders',
             margin:[14,13,10,10],
@@ -5812,7 +5814,11 @@ function pairedCardRow(leftStack,rightStack,leftFill,rightFill,rightBorder){
   };
 }
 function iconLine(icon,text,style,color,iconWidth){
-  return {columns:[{svg:icon,width:iconWidth||7,margin:[0,1,7,0]},{text:text,style:style||'small',color:color||undefined}],columnGap:0};
+  var width=iconWidth||7;
+  return {columns:[
+    {svg:icon,width:width,margin:[0,1,0,0],alignment:'left'},
+    {text:text,style:style||'small',color:color||undefined,margin:[3,0,0,0]}
+  ],columnGap:0};
 }
 function sectionTitle(title,subtle,icon){
   if(!icon) return {text:title,style:subtle?'sectionTitleMuted':'sectionTitle',margin:[0,0,0,8]};
@@ -5826,10 +5832,14 @@ function metaCell(label,value,align){
 }
 function metricCell(label,value,icon){
   return {stack:[
-    {svg:icon,width:7,alignment:'center',margin:[0,0,0,3]},
-    {text:clean(label).toUpperCase(),style:'metricLabel',color:'#64748b',alignment:'center'},
-    {text:clean(value),style:'metricValue',alignment:'center',margin:[0,6,0,0]}
-  ],margin:[4,6,4,7]};
+    {columns:[
+      {text:'',width:'*'},
+      {svg:icon,width:6.8,margin:[0,0.6,4,0]},
+      {text:clean(label).toUpperCase(),style:'metricLabel',color:'#64748b',width:'auto'},
+      {text:'',width:'*'}
+    ],columnGap:0,margin:[0,0,0,6]},
+    {text:clean(value),style:'metricValue',alignment:'center'}
+  ],margin:[4,9,4,8]};
 }
 function dataCompleteness(data){
   var checks=[
@@ -5845,9 +5855,9 @@ function dataCompleteness(data){
 function buildSkillRows(skills){
   var rows=[
     [
-      {text:'Skill Signal',style:'tableHead'},
-      {text:'Experience',style:'tableHead'},
-      {text:'Rating',style:'tableHead',alignment:'center'}
+      {text:'SKILLS',style:'tableHead'},
+      {text:'EXPERIENCE',style:'tableHead'},
+      {text:'RATING',style:'tableHead',alignment:'center'}
     ]
   ];
   skills=(skills||[]).filter(function(skill){ return clean(skill.name,'')!==''; }).slice(0,7);
@@ -5876,17 +5886,19 @@ function buildValidationRows(validation){
     if(key) map[key]=clean(row.status,'');
   });
   var slots=[
-    {label:'LinkedIn Verified',key:'linkedin verified'},
-    {label:'Resume Verified',key:'resume verified'},
-    {label:'Job Description Acknowledged',key:'job description acknowledged'}
+    {label:'RESUME',key:'resume',fallbackKey:'resume verified'},
+    {label:'EMAIL ID',key:'email id',fallbackKey:'email verified'},
+    {label:'PHONE NUMBER',key:'phone number',fallbackKey:'phone verified'},
+    {label:'LINKEDIN ID',key:'linkedin id',fallbackKey:'linkedin verified'},
+    {label:'JOB DESCRIPTION',key:'job description',fallbackKey:'job description acknowledged'}
   ];
   var cells=slots.map(function(row){
-    var status=map[row.key] || '--';
-    var verified=/verified|confirmed|completed|discussed/i.test(status);
+    var status=map[row.key] || map[row.fallbackKey] || '--';
+    var verified=/verified|confirmed|completed|discussed|shared/i.test(status);
     return {stack:[
-      {text:row.label,fontSize:6.8,bold:true,color:'#0f172a',alignment:'center'},
+      {text:row.label.toUpperCase(),fontSize:6.7,bold:true,color:'#0f172a',alignment:'center',margin:[0,0,0,1]},
       {text:status,fontSize:6.6,bold:true,color:verified?'#16a34a':'#b45309',alignment:'center',margin:[0,3,0,0]}
-    ],margin:[0,8,0,8]};
+    ],margin:[2,8,2,8]};
   });
   return [cells];
 }
@@ -5933,8 +5945,8 @@ function buildDefinition(data,logoUri){
       pairedCardRow([
         {text:clean(data.name,'Candidate'),style:'candidateName'},
         {text:clean(data.designation||data.jobTitle,'--'),style:'designation',margin:[0,3,0,8]},
-        iconLine(rsIconClock,'Experience: '+clean(data.experience,'--'),'small','#64748b',6.5),
-        {stack:[iconLine(rsIconCompany,'Current Company: '+clean(data.company,'--'),'small','#64748b',6.5)],margin:[0,3,0,0]}
+        iconLine(rsIconExperience,'EXPERIENCE: '+clean(data.experience,'--').toUpperCase(),'small','#64748b',6.5),
+        {stack:[iconLine(rsIconCompany,'CURRENT COMPANY: '+clean(data.company,'--').toUpperCase(),'small','#64748b',6.5)],margin:[0,3,0,0]}
       ],[
         {text:'MATCH CONFIDENCE',fontSize:6.2,bold:true,color:'#64748b',alignment:'center',margin:[0,11,0,0]},
         {text:score+'%',fontSize:30,bold:true,color:'#1d4ed8',alignment:'center',margin:[0,7,0,0]}
@@ -5942,7 +5954,7 @@ function buildDefinition(data,logoUri){
       roundedFullCard([
         {table:{widths:['*','*','*','*'],body:[[
           metricCell('Education',data.education,rsIconEducation),
-          metricCell('Notice Period',joining,rsIconClock),
+          metricCell('Notice Period',joining,rsIconCalendar),
           metricCell('Location',data.location,rsIconLocation),
           metricCell('Work Mode',data.workMode,rsIconLaptop)
         ]]},
@@ -5973,9 +5985,9 @@ function buildDefinition(data,logoUri){
       ],[0,0,0,8],skillCardHeight,'#ffffff','#dbe3ef'),
       roundedFullCard([
           sectionTitle('VERIFICATION STATUS',false,rsIconShield),
-          {table:{widths:['*','*','*'],body:buildValidationRows(data.validation)},layout:{
+          {table:{widths:['*','*','*','*','*'],body:buildValidationRows(data.validation)},layout:{
             hLineWidth:function(){return 0;},
-            vLineWidth:function(i){return i>0&&i<3?0.55:0;},
+            vLineWidth:function(i){return i>0&&i<5?0.55:0;},
             vLineColor:function(){return '#cbd5e1';},
             paddingLeft:function(){return 0;},
             paddingRight:function(){return 0;},
