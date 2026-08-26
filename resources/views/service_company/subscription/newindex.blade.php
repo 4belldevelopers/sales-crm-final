@@ -286,11 +286,16 @@
         .wallet-tab-nav {
             list-style: none; display: flex; flex-wrap: wrap; gap: 4px; margin: 0;
             padding: 0; border-bottom: 1px solid #e4e6ef;
+            position: relative; z-index: 25;
+        }
+        .wallet-tab-nav li {
+            position: relative; z-index: 25; display: inline-block;
         }
         .wallet-tab-link {
-            display: inline-flex; align-items: center; gap: 6px; padding: 10px 14px;
-            font-size: 12px; font-weight: 600; color: #7e8299; border-bottom: 2px solid transparent;
-            text-decoration: none; cursor: pointer;
+            display: inline-flex; align-items: center; gap: 6px; padding: 12px 18px;
+            font-size: 13px; font-weight: 600; color: #7e8299; border-bottom: 3px solid transparent;
+            text-decoration: none; cursor: pointer; position: relative; z-index: 25;
+            margin-bottom: -1px; pointer-events: auto; user-select: none;
         }
         .wallet-tab-link:hover { color: #4c1d95; text-decoration: none; }
         /* Named wt-active, not active — this codebase has a pre-existing
@@ -1397,6 +1402,7 @@
             // Overview-specific content lives in #overview-only-section inside it.
             // All other panes (transactions, packages…) are also inside that wrapper.
             // So we hide/show #overview-only-section and the target pane, not the wrapper.
+            var txAjaxUrl = "{{ route('service_company.transactions.subscriptionAjax') }}";
             var txTabLoaded = false;
             window.switchWalletCenterTab = function(tab, noScroll) {
                 // Hide all inner panes (packages, transactions, etc.) but NOT the outer overview wrapper
@@ -1416,7 +1422,8 @@
                             type: 'GET',
                             data: { page: 1 },
                             success: function (res) {
-                                $('#wallet-pane-transactions').html(res.html).css('opacity', '1');
+                                var htmlContent = (res && res.html) ? res.html : res;
+                                $('#wallet-pane-transactions').html(htmlContent).css('opacity', '1');
                             },
                             error: function () {
                                 $('#wallet-pane-transactions').css('opacity', '1');
@@ -1437,6 +1444,15 @@
                     }
                 }
             };
+
+            $(document).on('click', '.wallet-tab-link', function (e) {
+                e.preventDefault();
+                var tab = $(this).attr('data-tab');
+                if (tab) {
+                    window.location.hash = 'tab=' + tab;
+                    switchWalletCenterTab(tab);
+                }
+            });
 
             // On load: switch to hash tab if valid, otherwise default to overview.
             function applyHashTab(fromHashChange) {
@@ -1641,8 +1657,6 @@
             // Intercepts clicks on any pagination link inside the transactions pane,
             // calls the subscriptionAjax endpoint with the correct ?page= param,
             // and swaps the pane content in-place — no full page reload.
-            var txAjaxUrl = "{{ route('service_company.transactions.subscriptionAjax') }}";
-
             $(document).on('click', '#wallet-pane-transactions .pagination a.page-link', function (e) {
                 e.preventDefault();
                 var href = $(this).attr('href');
@@ -1658,7 +1672,8 @@
                     type: 'GET',
                     data: { page: page },
                     success: function (res) {
-                        $pane.html(res.html).css('opacity', '1');
+                        var htmlContent = (res && res.html) ? res.html : res;
+                        $pane.html(htmlContent).css('opacity', '1');
                     },
                     error: function () {
                         $pane.css('opacity', '1');

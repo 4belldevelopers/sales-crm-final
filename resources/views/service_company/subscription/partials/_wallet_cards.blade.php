@@ -28,24 +28,24 @@
             @endif
             <div class="d-flex align-items-end justify-content-between mt-3">
                 <div>
-                    <div class="wallet-card-balance">{{ number_format($remain_coins) }}</div>
+                    <div class="wallet-card-balance">{{ number_format($remain_coins ?? 0) }}</div>
                     <div class="wallet-card-balance-label">Coins Available</div>
                 </div>
-                <div class="wallet-ring" style="background: conic-gradient(#6d28d9 {{ $op_used_pct * 3.6 }}deg, #e4e6ef 0deg);">
-                    <span class="wallet-ring-label"><span class="wallet-ring-pct">{{ $op_used_pct }}%</span><span class="wallet-ring-sub">Used</span></span>
+                <div class="wallet-ring" style="background: conic-gradient(#6d28d9 {{ ($op_used_pct ?? 0) * 3.6 }}deg, #e4e6ef 0deg);">
+                    <span class="wallet-ring-label"><span class="wallet-ring-pct">{{ $op_used_pct ?? 0 }}%</span><span class="wallet-ring-sub">Used</span></span>
                 </div>
             </div>
             <div class="row text-center wallet-card-stats">
                 <div class="col-4">
-                    <div class="fw-bold fs-6">{{ number_format($op_coins_used) }}</div>
+                    <div class="fw-bold fs-6">{{ number_format($op_coins_used ?? 0) }}</div>
                     <div class="wallet-card-stat-label">Used Coins</div>
                 </div>
                 <div class="col-4">
-                    <div class="fw-bold fs-6">{{ number_format($op_total_purchased) }}</div>
+                    <div class="fw-bold fs-6">{{ number_format($op_total_purchased ?? 0) }}</div>
                     <div class="wallet-card-stat-label">Purchased</div>
                 </div>
                 <div class="col-4">
-                    <div class="fw-bold fs-6">{{ $op_days_left }}</div>
+                    <div class="fw-bold fs-6">{{ $op_days_left ?? 0 }}</div>
                     <div class="wallet-card-stat-label">Days Validity</div>
                 </div>
             </div>
@@ -79,24 +79,24 @@
             @endif
             <div class="d-flex align-items-end justify-content-between mt-3">
                 <div>
-                    <div class="wallet-card-balance">{{ number_format($remain_coins_sales) }}</div>
+                    <div class="wallet-card-balance">{{ number_format($remain_coins_sales ?? 0) }}</div>
                     <div class="wallet-card-balance-label">Coins Available</div>
                 </div>
-                <div class="wallet-ring" style="background: conic-gradient(#10a34a {{ $sal_used_pct * 3.6 }}deg, #e4e6ef 0deg);">
-                    <span class="wallet-ring-label"><span class="wallet-ring-pct">{{ $sal_used_pct }}%</span><span class="wallet-ring-sub">Used</span></span>
+                <div class="wallet-ring" style="background: conic-gradient(#10a34a {{ ($sal_used_pct ?? 0) * 3.6 }}deg, #e4e6ef 0deg);">
+                    <span class="wallet-ring-label"><span class="wallet-ring-pct">{{ $sal_used_pct ?? 0 }}%</span><span class="wallet-ring-sub">Used</span></span>
                 </div>
             </div>
             <div class="row text-center wallet-card-stats">
                 <div class="col-4">
-                    <div class="fw-bold fs-6">{{ number_format($sal_coins_used) }}</div>
+                    <div class="fw-bold fs-6">{{ number_format($sal_coins_used ?? 0) }}</div>
                     <div class="wallet-card-stat-label">Used Coins</div>
                 </div>
                 <div class="col-4">
-                    <div class="fw-bold fs-6">{{ number_format($sal_total_purchased) }}</div>
+                    <div class="fw-bold fs-6">{{ number_format($sal_total_purchased ?? 0) }}</div>
                     <div class="wallet-card-stat-label">Purchased</div>
                 </div>
                 <div class="col-4">
-                    <div class="fw-bold fs-6">{{ $sal_days_left }}</div>
+                    <div class="fw-bold fs-6">{{ $sal_days_left ?? 0 }}</div>
                     <div class="wallet-card-stat-label">Days Validity</div>
                 </div>
             </div>

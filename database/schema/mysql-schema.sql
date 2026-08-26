@@ -535,7 +535,9 @@ CREATE TABLE `cart_transaction_history` (
   `invoice_approval` enum('Yes','No') NOT NULL DEFAULT 'No',
   `approval_invoice_no` text DEFAULT NULL,
   `approval_invoice_date` datetime DEFAULT NULL,
-  PRIMARY KEY (`id`)
+  PRIMARY KEY (`id`),
+  KEY `idx_company_id_id` (`company_id`,`id`),
+  KEY `idx_company_gateway_payment` (`company_id`,`payment_gateway`,`payment_Id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 DROP TABLE IF EXISTS `carts`;
@@ -562,7 +564,8 @@ CREATE TABLE `carts` (
   `status` int(11) NOT NULL DEFAULT 0,
   `created_at` timestamp NULL DEFAULT current_timestamp(),
   `updated_at` timestamp NULL DEFAULT current_timestamp(),
-  PRIMARY KEY (`id`)
+  PRIMARY KEY (`id`),
+  KEY `idx_company_status` (`company_id`,`status`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 DROP TABLE IF EXISTS `ccustom_queue_jobs`;
@@ -1169,7 +1172,8 @@ CREATE TABLE `company_coins` (
   `auto_job_coins` date DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL,
-  PRIMARY KEY (`id`)
+  PRIMARY KEY (`id`),
+  KEY `idx_company_event` (`company_id`,`event_type`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 DROP TABLE IF EXISTS `company_packages`;
@@ -3059,7 +3063,8 @@ CREATE TABLE `package_active` (
   `packages_status` int(11) DEFAULT 0 COMMENT '0-inactive,1-active',
   `payment_status` int(11) DEFAULT 0 COMMENT '0-pending,1-paid',
   `package_id` int(11) DEFAULT NULL,
-  PRIMARY KEY (`id`)
+  PRIMARY KEY (`id`),
+  KEY `idx_company_id` (`company_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 DROP TABLE IF EXISTS `package_default`;
@@ -4345,7 +4350,8 @@ CREATE TABLE `top_up_logs` (
   `payment_Id` text DEFAULT NULL,
   `cart_id` int(11) DEFAULT NULL,
   `payment_link_id` text DEFAULT NULL,
-  PRIMARY KEY (`id`)
+  PRIMARY KEY (`id`),
+  KEY `idx_company_event` (`company_id`,`event_type`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 DROP TABLE IF EXISTS `updatetimeline`;

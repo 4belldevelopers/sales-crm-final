@@ -13487,9 +13487,11 @@ class HomeController extends Controller
     {
         $countryId = $request->query('country');
 
-        $states = DB::table('state_list')->where('country_id', $countryId)->get(['id', 'state as name']);
+        // Performance Note: Cache static states per country in Redis to prevent DB read load under 10K+ concurrency.
+        $states = Cache::remember("static_states_country_{$countryId}", 86400, function () use ($countryId) {
+            return DB::table('state_list')->where('country_id', $countryId)->get(['id', 'state as name']);
+        });
 
-        // dd( $states);
         return response()->json($states);
     }
 
@@ -13529,6 +13531,9 @@ class HomeController extends Controller
                 'gstin' => $request->gstin,
             ]);
         }
+
+        // Invalidate tenant billing address cache upon submission
+        Cache::forget("company_billing_address_{$request->company_id}");
 
         return response()->json([
             'message' => 'Form submitted successfully!',
