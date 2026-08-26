@@ -59,6 +59,10 @@ class AppServiceProvider extends ServiceProvider
         $this->registerObservers();
         // Sprint 5.8 — event → listener wiring (no EventServiceProvider in L11 default scaffold).
         Event::listen(CompanyRegistered::class, IndexNewCompany::class);
+        Event::listen(
+            \App\Events\TenantEntityDeactivatedDueToCoins::class,
+            \App\Listeners\SyncElasticStatusOnCoinDeactivationListener::class
+        );
 
         // V2_Perf-10K Phase 3 — Enforce N+1 query discipline in development/testing environments
         \Illuminate\Database\Eloquent\Model::preventLazyLoading(! app()->isProduction());
