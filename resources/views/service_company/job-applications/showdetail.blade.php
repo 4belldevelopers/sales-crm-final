@@ -5767,6 +5767,15 @@ function titleCase(value){
   if(!value) return '--';
   return value.toLowerCase().replace(/\b([a-z])/g,function(m){ return m.toUpperCase(); });
 }
+function cityOnly(value){
+  value=clean(value,'--');
+  if(isGap(value)) return '--';
+  var commaParts=value.split(',').map(function(part){ return clean(part,''); }).filter(Boolean);
+  if(commaParts.length>1) return commaParts[0];
+  var states='andhra pradesh|arunachal pradesh|assam|bihar|chhattisgarh|goa|gujarat|haryana|himachal pradesh|jharkhand|karnataka|kerala|madhya pradesh|maharashtra|manipur|meghalaya|mizoram|nagaland|odisha|punjab|rajasthan|sikkim|tamil nadu|telangana|tripura|uttar pradesh|uttarakhand|west bengal|delhi|jammu and kashmir|ladakh|puducherry|chandigarh|dadra and nagar haveli|daman and diu|andaman and nicobar islands|lakshadweep';
+  var pattern=new RegExp('\\s+('+states+')$','i');
+  return clean(value.replace(pattern,''),'--');
+}
 function matchTone(score,completeness){
   if(completeness<45) return {label:'Profile Review',priority:'REVIEW',decision:'DATA REVIEW REQUIRED',round:'Recruiter Validation',color:'#7c3aed',fill:'#f5f3ff',border:'#ddd6fe'};
   if(score>=80) return {label:'Excellent Fit',priority:'HIGH',decision:'RECOMMENDED FOR INTERVIEW',round:'Technical L1',color:'#047857',fill:'#ecfdf5',border:'#a7f3d0'};
@@ -5957,9 +5966,9 @@ function buildDefinition(data,logoUri){
   var score=safeNumber(data.match,0,100);
   var completeness=dataCompleteness(data);
   var tone=matchTone(score,completeness);
-  var summary=limitText(data.careerSummary,560,'No professional summary captured in current candidate data.');
+  var summary=limitText(data.careerSummary,560,'No professional summary available.');
   var noteMissing=isGap(data.recruiterNote);
-  var note=noteMissing ? 'No recruiter note available.' : limitText(data.recruiterNote,420,'');
+  var note=noteMissing ? 'No recruiter comments available.' : limitText(data.recruiterNote,420,'');
   var joining=data.isImmediate?'Immediate':clean(data.notice,'--');
   var companyName=clean(data.reportCompanyName,'Hiring Partner');
   var skillCount=Math.max(1,Math.min(7,(data.skills||[]).filter(function(skill){ return clean(skill.name,'')!==''; }).length));
@@ -6003,10 +6012,10 @@ function buildDefinition(data,logoUri){
         {text:score+'%',fontSize:30,bold:true,color:'#1d4ed8',alignment:'center',margin:[0,7,0,0]}
       ],'#ffffff','#f8fbff','#cfe0ff'),
       roundedFullCard([
-        {table:{widths:['*','*','*','*'],body:[[
+        {table:{widths:[116,116,164,116],body:[[
           metricCell('Education',data.education,rsIconEducation),
           metricCell('Notice Period',joining,rsIconCalendar),
-          metricCell('Location',data.location,rsIconLocation),
+          metricCell('Location',cityOnly(data.location),rsIconLocation),
           metricCell('Work Mode',data.workMode,rsIconLaptop)
         ]]},
         layout:{
@@ -6022,7 +6031,7 @@ function buildDefinition(data,logoUri){
       {
         columns:[
           fixedPanel([sectionTitle('EXECUTIVE SUMMARY',false,rsIconSummary),{text:summary,style:'body'}],[0,0,6,8],'#ffffff','#dbe3ef',148),
-          fixedPanel([sectionTitle('RECRUITER NOTE',false,rsIconNote),{text:note,style:'body',color:noteMissing?'#64748b':'#1f2937',italics:noteMissing}],[6,0,0,8],'#ffffff','#dbe3ef',148)
+          fixedPanel([sectionTitle('RECRUITER COMMENTS',false,rsIconNote),{text:note,style:'body',color:noteMissing?'#64748b':'#1f2937',italics:noteMissing}],[6,0,0,8],'#ffffff','#dbe3ef',148)
         ],
         columnGap:0
       },
