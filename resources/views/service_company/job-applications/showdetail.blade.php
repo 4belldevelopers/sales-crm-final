@@ -5616,6 +5616,7 @@ setTimeout(() => {
 'use strict';
 
 var rsPdfReady=null;
+var rsLogoCache={};
 var rsStarGold='<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path fill="#f59e0b" d="M12 2.6l2.85 5.78 6.38.93-4.62 4.5 1.09 6.35L12 17.16l-5.7 3 1.09-6.35-4.62-4.5 6.38-.93L12 2.6z"/></svg>';
 var rsStarMuted='<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path fill="#cbd5e1" d="M12 2.6l2.85 5.78 6.38.93-4.62 4.5 1.09 6.35L12 17.16l-5.7 3 1.09-6.35-4.62-4.5 6.38-.93L12 2.6z"/></svg>';
 var rsIconUser='<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path fill="#64748b" d="M12 12a5 5 0 1 0-5-5 5 5 0 0 0 5 5zm0 2c-4.42 0-8 2.24-8 5v1h16v-1c0-2.76-3.58-5-8-5z"/></svg>';
@@ -5656,8 +5657,8 @@ function rsTryList(list,index,test){
 }
 function rsEnsurePdfMake(){
   if(rsPdfReady && window.pdfMake && window.pdfMake.vfs && window.pdfMake.vfs['Roboto-Regular.ttf']) return rsPdfReady;
-  var core=['/js/pdfmake.min.js','https://cdn.jsdelivr.net/npm/pdfmake@0.2.7/build/pdfmake.min.js','https://unpkg.com/pdfmake@0.2.7/build/pdfmake.min.js','https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/pdfmake.min.js'];
-  var vfs=['/js/vfs_fonts.min.js','https://cdn.jsdelivr.net/npm/pdfmake@0.2.7/build/vfs_fonts.min.js','https://unpkg.com/pdfmake@0.2.7/build/vfs_fonts.min.js','https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/vfs_fonts.min.js'];
+  var core=['/js/pdfmake.min.js'];
+  var vfs=['/js/vfs_fonts.min.js'];
   rsPdfReady=rsTryList(core,0,function(){ return !!window.pdfMake; })
     .then(function(){ return rsTryList(vfs,0,function(){ return !!(window.pdfMake.vfs && window.pdfMake.vfs['Roboto-Regular.ttf']); }); })
     .then(function(){
@@ -5666,11 +5667,11 @@ function rsEnsurePdfMake(){
   return rsPdfReady;
 }
 function rsLogoDataUri(rawUrl){
-  if(window.__rcvLogo && window.__rcvLogo.__dataUri) return Promise.resolve(window.__rcvLogo.__dataUri);
   rawUrl=clean(rawUrl,'');
   if(!rawUrl || rawUrl==='--') return Promise.resolve(null);
   if(/^data:image\//i.test(rawUrl)) return Promise.resolve(rawUrl);
-  return fetch(rawUrl,{credentials:'include'})
+  if(rsLogoCache[rawUrl]) return rsLogoCache[rawUrl];
+  rsLogoCache[rawUrl]=fetch(rawUrl,{credentials:'include',cache:'force-cache'})
     .then(function(response){ return response.ok ? response.blob() : null; })
     .then(function(blob){
       if(!blob) return null;
@@ -5682,6 +5683,19 @@ function rsLogoDataUri(rawUrl){
       });
     })
     .catch(function(){ return null; });
+  return rsLogoCache[rawUrl];
+}
+function preloadRecruiterSummaryAssets(){
+  var data=null;
+  try{ data=readData(); }catch(ex){}
+  var tasks=[rsEnsurePdfMake()];
+  if(data && clean(data.reportCompanyLogo,'') && clean(data.reportCompanyLogo,'')!=='--'){
+    tasks.push(rsLogoDataUri(data.reportCompanyLogo));
+  }
+  return Promise.all(tasks).catch(function(err){
+    console.warn('Recruiter Summary preload skipped:',err);
+    return null;
+  });
 }
 function clean(value,fallback){
   value=String(value==null?'':value).replace(/\s+/g,' ').trim();
@@ -6030,18 +6044,33 @@ function buildDefinition(data,logoUri){
   };
 }
 async function buildRecruiterSummary(){
+  if(window.__rsBusy) return Promise.resolve(false);
   window.__rsBusy=true;
   try{
     var data=readData();
     var ready=await Promise.all([rsEnsurePdfMake(),rsLogoDataUri(data.reportCompanyLogo)]);
-    window.pdfMake.createPdf(buildDefinition(data,ready[1])).download('recruiter_summary_'+slug(data.name)+'.pdf');
+    await new Promise(function(resolve,reject){
+      try{
+        var settled=false;
+        var done=function(){
+          if(settled) return;
+          settled=true;
+          resolve();
+        };
+        window.pdfMake.createPdf(buildDefinition(data,ready[1])).download('recruiter_summary_'+slug(data.name)+'.pdf',done);
+        setTimeout(done,3000);
+      }catch(ex){ reject(ex); }
+    });
+    return true;
   }catch(err){
     console.error('Recruiter Summary error:',err);
     alert('Could not generate the Recruiter Summary. Please try again.');
+    return false;
   }finally{
     window.__rsBusy=false;
   }
 }
+window.__preloadRS=preloadRecruiterSummaryAssets;
 window.__buildRS=buildRecruiterSummary;
 })();
 </script>
@@ -6266,6 +6295,7 @@ window.__buildRS=buildRecruiterSummary;
     overlay.setAttribute('aria-hidden','false');
     drawer.setAttribute('aria-hidden','false');
     drawer.focus();
+    if(typeof window.__preloadRS === 'function') window.__preloadRS();
     document.addEventListener('keydown', onEsc);
   }
 
@@ -6316,6 +6346,7 @@ window.__buildRS=buildRecruiterSummary;
     var m = optMeta[n] || {cost:0, label:'Download'};
     if(coinEl) coinEl.textContent = m.cost === 1 ? '1 Coin' : m.cost + ' Coins';
     if(btnLbl) btnLbl.textContent = m.label;
+    if(m.dlKey === 'rs' && typeof window.__preloadRS === 'function') window.__preloadRS();
   }
 
   var toastTimer = null;
@@ -6366,19 +6397,17 @@ window.__buildRS=buildRecruiterSummary;
 
       } else if(m.dlKey === 'rs'){
         /* Option 5: Recruiter Summary — fully client-side vector PDF */
-        if(typeof window.__buildRS !== 'function'){
+        if(window.__rsBusy || typeof window.__buildRS !== 'function'){
           showToast('Please wait a moment and try again.', 'warn');
           resetBtn(); return;
         }
-        window.__rsBusy = true;
-        window.__buildRS();
-        var rsTicks = 0;
-        var rsDone = setInterval(function(){
-          if(!window.__rsBusy || ++rsTicks > 600){
-            clearInterval(rsDone);
-            closeRdc(); resetBtn();
-          }
-        }, 100);
+        window.__buildRS().then(function(){
+          closeRdc();
+        }).catch(function(){
+          showToast('Could not generate Recruiter Summary. Please try again.', 'warn');
+        }).finally(function(){
+          resetBtn();
+        });
 
       } else if(m.dlKey === 'pdf'){
         /* Option 7: Export Candidate Profile PDF */
