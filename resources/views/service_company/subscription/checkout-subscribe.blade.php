@@ -2,14 +2,127 @@
 @push('head-script')
     <style>
         /* ===== SECURE CHECKOUT ===== */
-        /* Loader */
+        /* ===== PROFESSIONAL PAYMENT PROCESSING OVERLAY & MODAL ===== */
         .loader-overlay {
-            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(255,255,255,.88); z-index: 9999;
-            justify-content: center; align-items: center; flex-direction: column;
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(15, 23, 42, 0.72);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            z-index: 999999;
+            justify-content: center;
+            align-items: center;
         }
-        .loader { border: 5px solid #f0f0f0; border-top: 5px solid #5b59e8; border-radius: 50%; width: 50px; height: 50px; animation: co-spin 1s linear infinite; }
-        .loader-text { margin-top: 14px; font-size: 14px; color: #374151; font-weight: 600; }
+
+        .loader-modal-card {
+            background: #ffffff;
+            border-radius: 20px;
+            padding: 40px 36px 30px;
+            width: 90%;
+            max-width: 440px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.35), 0 0 0 1px rgba(255, 255, 255, 0.1);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            animation: loaderModalFadeIn 0.3s ease-out forwards;
+        }
+
+        @keyframes loaderModalFadeIn {
+            from { opacity: 0; transform: scale(0.92) translateY(10px); }
+            to { opacity: 1; transform: scale(1) translateY(0); }
+        }
+
+        .loader-spinner-wrapper {
+            position: relative;
+            width: 80px;
+            height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 24px;
+        }
+
+        .loader-spinner {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border: 4px solid #e2e8f0;
+            border-top: 4px solid #6366f1;
+            border-right: 4px solid #818cf8;
+            border-radius: 50%;
+            animation: co-spin 0.9s cubic-bezier(0.68, -0.55, 0.27, 1.55) infinite;
+        }
+
+        .loader-icon-center {
+            font-size: 26px;
+            color: #6366f1;
+            animation: pulseIcon 1.8s ease-in-out infinite;
+        }
+
+        @keyframes pulseIcon {
+            0%, 100% { transform: scale(1); opacity: 0.9; }
+            50% { transform: scale(1.12); opacity: 1; color: #4f46e5; }
+        }
+
+        .loader-title {
+            font-size: 22px;
+            font-weight: 700;
+            color: #0f172a;
+            margin: 0 0 8px 0;
+            font-family: 'Poppins', sans-serif;
+            letter-spacing: -0.3px;
+        }
+
+        .loader-subtitle {
+            font-size: 13px;
+            line-height: 1.6;
+            color: #64748b;
+            margin: 0 0 20px 0;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        .loader-dots {
+            display: flex;
+            gap: 6px;
+            margin-bottom: 24px;
+        }
+
+        .loader-dots span {
+            width: 8px;
+            height: 8px;
+            background-color: #6366f1;
+            border-radius: 50%;
+            display: inline-block;
+            animation: dotsBounce 1.4s infinite ease-in-out both;
+        }
+
+        .loader-dots span:nth-child(1) { animation-delay: -0.32s; }
+        .loader-dots span:nth-child(2) { animation-delay: -0.16s; }
+
+        @keyframes dotsBounce {
+            0%, 80%, 100% { transform: scale(0); opacity: 0.3; }
+            40% { transform: scale(1); opacity: 1; }
+        }
+
+        .loader-footer {
+            width: 100%;
+            padding-top: 16px;
+            border-top: 1px solid #f1f5f9;
+            font-size: 12px;
+            font-weight: 600;
+            color: #10b981;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+        }
         @keyframes co-spin { 0%{transform:rotate(0deg)} 100%{transform:rotate(360deg)} }
 
         /* Page header */
@@ -194,13 +307,25 @@
 
 @endphp
 
-<div id="loaderOverlay" class="loader-overlay">
-    <div class="loader"></div>
-    <div class="loader-text">Processing payment...</div>
-</div>
-
-
 @section('content')
+<div id="loaderOverlay" class="loader-overlay" style="display: none;">
+    <div class="loader-modal-card">
+        <div class="loader-spinner-wrapper">
+            <div class="loader-spinner"></div>
+            <div class="loader-icon-center">
+                <i class="fa fa-shield-alt"></i>
+            </div>
+        </div>
+        <h3 class="loader-title">Processing Payment</h3>
+        <p class="loader-subtitle">Please wait while we securely process your transaction.<br><span class="text-danger font-weight-semibold">Do not refresh or leave this page.</span></p>
+        <div class="loader-dots">
+            <span></span><span></span><span></span>
+        </div>
+        <div class="loader-footer">
+            <i class="fa fa-lock me-1"></i> 256-bit SSL Encrypted Transaction
+        </div>
+    </div>
+</div>
     <!--begin::Content-->
     <div class="content d-flex flex-column flex-column-fluid pt-2 pb-8" id="kt_content">
         <div class="container-xxl" id="kt_content_container">
