@@ -5986,7 +5986,7 @@ function buildDefinition(data,logoUri){
         labeledIconLine(rsIconExperience,'EXPERIENCE:',clean(data.experience,'--').toUpperCase(),'small','#64748b',6.5),
         {stack:[labeledIconLine(rsIconCompany,'CURRENT COMPANY:',clean(data.company,'--').toUpperCase(),'small','#64748b',6.5)],margin:[0,3,0,0]}
       ],[
-        {text:'HIRING CONFIDENCE',fontSize:6.2,bold:true,color:'#64748b',alignment:'center',margin:[0,11,0,0]},
+        {text:'HIRING CONFIDENCE',fontSize:12.4,bold:true,color:'#64748b',alignment:'center',margin:[0,8,0,0]},
         {text:score+'%',fontSize:30,bold:true,color:'#1d4ed8',alignment:'center',margin:[0,7,0,0]}
       ],'#ffffff','#f8fbff','#cfe0ff'),
       roundedFullCard([
