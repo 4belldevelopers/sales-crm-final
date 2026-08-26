@@ -5449,6 +5449,7 @@ setTimeout(() => {
 @endphp
 <div id="rdcData" hidden
      data-dl-url="{{ $rdcDownloadUrl }}"
+     data-resume-pdf-url="{{ !empty($application->resume) ? route('service_company.job-applications.resume-convert', ['token' => GeneralMethod::value_encrypt((string) $application->resume)]) : '' }}"
      data-has-aws="{{ $resumeAwsPath ? 'true' : 'false' }}"
      data-file-ext="{{ strtoupper(pathinfo((string)@$application->resume, PATHINFO_EXTENSION) ?: 'FILE') }}"></div>
 
@@ -5616,6 +5617,7 @@ setTimeout(() => {
 'use strict';
 
 var rsPdfReady=null;
+var rsPdfLibReady=null;
 var rsLogoCache={};
 var rsStarGold='<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path fill="#f59e0b" d="M12 2.6l2.85 5.78 6.38.93-4.62 4.5 1.09 6.35L12 17.16l-5.7 3 1.09-6.35-4.62-4.5 6.38-.93L12 2.6z"/></svg>';
 var rsStarMuted='<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path fill="#cbd5e1" d="M12 2.6l2.85 5.78 6.38.93-4.62 4.5 1.09 6.35L12 17.16l-5.7 3 1.09-6.35-4.62-4.5 6.38-.93L12 2.6z"/></svg>';
@@ -5679,6 +5681,12 @@ function rsEnsurePdfMake(){
     });
   return rsPdfReady;
 }
+function rsEnsurePdfLib(){
+  if(rsPdfLibReady && window.PDFLib && window.PDFLib.PDFDocument) return rsPdfLibReady;
+  var sources=['/js/pdf-lib.min.js','https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js'];
+  rsPdfLibReady=rsTryList(sources,0,function(){ return !!(window.PDFLib && window.PDFLib.PDFDocument); });
+  return rsPdfLibReady;
+}
 function rsLogoDataUri(rawUrl){
   rawUrl=clean(rawUrl,'');
   if(!rawUrl || rawUrl==='--') return Promise.resolve(null);
@@ -5709,6 +5717,24 @@ function preloadRecruiterSummaryAssets(){
     console.warn('Recruiter Summary preload skipped:',err);
     return null;
   });
+}
+function preloadCombinedReportAssets(){
+  return Promise.all([preloadRecruiterSummaryAssets(),rsEnsurePdfLib()]).catch(function(err){
+    console.warn('Combined Pre-Screened Report preload skipped:',err);
+    return null;
+  });
+}
+function downloadBlob(blob,fileName){
+  var url=URL.createObjectURL(blob);
+  var a=document.createElement('a');
+  a.href=url;
+  a.download=fileName;
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(function(){
+    URL.revokeObjectURL(url);
+    if(a.parentNode) a.parentNode.removeChild(a);
+  },1200);
 }
 function clean(value,fallback){
   value=String(value==null?'':value).replace(/\s+/g,' ').trim();
@@ -6070,19 +6096,8 @@ async function buildRecruiterSummary(){
   window.__rsBusy=true;
   try{
     var data=readData();
-    var ready=await Promise.all([rsEnsurePdfMake(),rsLogoDataUri(data.reportCompanyLogo)]);
-    await new Promise(function(resolve,reject){
-      try{
-        var settled=false;
-        var done=function(){
-          if(settled) return;
-          settled=true;
-          resolve();
-        };
-        window.pdfMake.createPdf(buildDefinition(data,ready[1])).download('recruiter_summary_'+slug(data.name)+'.pdf',done);
-        setTimeout(done,3000);
-      }catch(ex){ reject(ex); }
-    });
+    var blob=await buildRecruiterSummaryBlob(data);
+    downloadBlob(blob,'recruiter_summary_'+slug(data.name)+'.pdf');
     return true;
   }catch(err){
     console.error('Recruiter Summary error:',err);
@@ -6092,8 +6107,54 @@ async function buildRecruiterSummary(){
     window.__rsBusy=false;
   }
 }
+async function buildRecruiterSummaryBlob(data){
+  data=data||readData();
+  var ready=await Promise.all([rsEnsurePdfMake(),rsLogoDataUri(data.reportCompanyLogo)]);
+  return new Promise(function(resolve,reject){
+    try{
+      window.pdfMake.createPdf(buildDefinition(data,ready[1])).getBlob(function(blob){
+        if(blob && blob.size>200) resolve(blob);
+        else reject(new Error('Recruiter Summary PDF output was empty'));
+      });
+    }catch(ex){ reject(ex); }
+  });
+}
+async function buildCombinedPreScreenedResume(resumePdfUrl){
+  if(window.__rsBusy) return Promise.resolve(false);
+  window.__rsBusy=true;
+  try{
+    resumePdfUrl=clean(resumePdfUrl,'');
+    if(!resumePdfUrl) throw new Error('Resume PDF URL not available');
+    var data=readData();
+    var reportBlob=await buildRecruiterSummaryBlob(data);
+    await rsEnsurePdfLib();
+    var response=await fetch(resumePdfUrl,{credentials:'include',cache:'no-store'});
+    if(!response.ok) throw new Error('Resume PDF request failed with HTTP '+response.status);
+    var resumeBytes=await response.arrayBuffer();
+    var reportBytes=await reportBlob.arrayBuffer();
+    var merged=await window.PDFLib.PDFDocument.create();
+    var reportDoc=await window.PDFLib.PDFDocument.load(reportBytes);
+    var resumeDoc=await window.PDFLib.PDFDocument.load(resumeBytes);
+    var reportPages=await merged.copyPages(reportDoc,reportDoc.getPageIndices());
+    reportPages.forEach(function(page){ merged.addPage(page); });
+    var resumePages=await merged.copyPages(resumeDoc,resumeDoc.getPageIndices());
+    resumePages.forEach(function(page){ merged.addPage(page); });
+    var mergedBytes=await merged.save();
+    downloadBlob(new Blob([mergedBytes],{type:'application/pdf'}),'pre_screened_report_original_resume_'+slug(data.name)+'.pdf');
+    return true;
+  }catch(err){
+    console.error('Combined Pre-Screened Report error:',err);
+    alert('Could not generate the combined Pre-Screened Report. Please try again.');
+    return false;
+  }finally{
+    window.__rsBusy=false;
+  }
+}
 window.__preloadRS=preloadRecruiterSummaryAssets;
+window.__preloadRSCombined=preloadCombinedReportAssets;
+window.__buildRSBlob=buildRecruiterSummaryBlob;
 window.__buildRS=buildRecruiterSummary;
+window.__buildCombinedRSResume=buildCombinedPreScreenedResume;
 })();
 </script>
 
@@ -6198,7 +6259,7 @@ window.__buildRS=buildRecruiterSummary;
         <span class="rdc-ocirc" aria-hidden="true"></span>
       </label>
 
-      {{-- 5: Recruiter Summary --}}
+      {{-- 5: Pre-Screened Report --}}
       <label class="rdc-opt" data-opt="5" data-coins="7">
         <input class="rdc-rinput" type="radio" name="rdcFormat" value="5">
         <span class="rdc-onum">5</span>
@@ -6206,8 +6267,8 @@ window.__buildRS=buildRecruiterSummary;
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
         </span>
         <span class="rdc-obody">
-          <span class="rdc-otitle">Recruiter Summary <span class="rdc-p2-badge">Phase 2</span></span>
-          <span class="rdc-odesc">1-page AI-generated summary formatted for recruiter handoffs</span>
+          <span class="rdc-otitle">Pre-Screened Report <span class="rdc-p2-badge">Phase 2</span></span>
+          <span class="rdc-odesc">Client-ready AI report with hiring confidence, skills and verification status</span>
         </span>
         <span class="rdc-ometa">
           <span class="rdc-ocost">7 Coins</span>
@@ -6248,6 +6309,24 @@ window.__buildRS=buildRecruiterSummary;
         <span class="rdc-ometa">
           <span class="rdc-ocost" style="color:#16a34a;font-weight:700;">Free</span>
           <span class="rdc-otime">~2 sec</span>
+        </span>
+        <span class="rdc-ocirc" aria-hidden="true"></span>
+      </label>
+
+      {{-- 8: Pre-Screened Report + Original Resume --}}
+      <label class="rdc-opt" data-opt="8" data-coins="8">
+        <input class="rdc-rinput" type="radio" name="rdcFormat" value="8">
+        <span class="rdc-onum">8</span>
+        <span class="rdc-oi rdc-ic-green" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h10l6 6v10a2 2 0 0 1-2 2H4V4z"/><path d="M14 4v6h6"/><path d="M8 13h8"/><path d="M8 17h8"/><path d="M8 9h2"/></svg>
+        </span>
+        <span class="rdc-obody">
+          <span class="rdc-otitle">Pre-Screened Report + Original Resume <span class="rdc-p2-badge">Phase 1</span></span>
+          <span class="rdc-odesc">One combined PDF: report on page 1, original resume after it</span>
+        </span>
+        <span class="rdc-ometa">
+          <span class="rdc-ocost">8 Coins</span>
+          <span class="rdc-otime">~20 sec</span>
         </span>
         <span class="rdc-ocirc" aria-hidden="true"></span>
       </label>
@@ -6297,15 +6376,18 @@ window.__buildRS=buildRecruiterSummary;
   var rdcData  = document.getElementById('rdcData');
 
   var dlUrl  = rdcData ? rdcData.getAttribute('data-dl-url')  : '';
+  var resumePdfUrl = rdcData ? rdcData.getAttribute('data-resume-pdf-url') : '';
+  var resumeExt = rdcData ? (rdcData.getAttribute('data-file-ext') || '').toUpperCase() : '';
 
   var optMeta = {
     1: {cost:1, label:'Download Original Resume',       avail:true,  dlKey:null},
     2: {cost:2, label:'Download Branded Resume',        avail:true,  dlKey:'logo'},
     3: {cost:4, label:'Download ATS Highlighted Resume',avail:true,  dlKey:'hl'},
     4: {cost:6, label:'Download Branded + Highlighted', avail:true,  dlKey:'both'},
-    5: {cost:7, label:'Download Recruiter Summary',     avail:true,  dlKey:'rs'},
+    5: {cost:7, label:'Download Pre-Screened Report',   avail:true,  dlKey:'rs'},
     6: {cost:8, label:'Download Client Presentation',   avail:false, dlKey:null},
-    7: {cost:0, label:'Export Candidate Profile PDF',   avail:true,  dlKey:'pdf'}
+    7: {cost:0, label:'Export Candidate Profile PDF',   avail:true,  dlKey:'pdf'},
+    8: {cost:8, label:'Download Combined Report',       avail:true,  dlKey:'rs-combined'}
   };
 
   var selectedOpt = 1;
@@ -6369,6 +6451,7 @@ window.__buildRS=buildRecruiterSummary;
     if(coinEl) coinEl.textContent = m.cost === 1 ? '1 Coin' : m.cost + ' Coins';
     if(btnLbl) btnLbl.textContent = m.label;
     if(m.dlKey === 'rs' && typeof window.__preloadRS === 'function') window.__preloadRS();
+    if(m.dlKey === 'rs-combined' && typeof window.__preloadRSCombined === 'function') window.__preloadRSCombined();
   }
 
   var toastTimer = null;
@@ -6427,6 +6510,26 @@ window.__buildRS=buildRecruiterSummary;
           if(ok) closeRdc();
         }).catch(function(){
           showToast('Could not generate Recruiter Summary. Please try again.', 'warn');
+        }).finally(function(){
+          resetBtn();
+        });
+
+      } else if(m.dlKey === 'rs-combined'){
+        /* Option 8: Pre-Screened Report + Original Resume.
+           Report + merge run client-side; DOC/DOCX uses existing cached resume-to-PDF endpoint first. */
+        if(window.__rsBusy || typeof window.__buildCombinedRSResume !== 'function'){
+          showToast('Please wait a moment and try again.', 'warn');
+          resetBtn(); return;
+        }
+        if(!resumePdfUrl || ['PDF','DOC','DOCX'].indexOf(resumeExt) === -1){
+          showToast('Combined report is available for PDF, DOC and DOCX resumes.', 'warn');
+          resetBtn(); return;
+        }
+        dlBtn.innerHTML = '<span class="rdc-spin"></span><span>' + (resumeExt === 'PDF' ? 'Merging PDF...' : 'Converting and merging...') + '</span>';
+        window.__buildCombinedRSResume(resumePdfUrl).then(function(ok){
+          if(ok) closeRdc();
+        }).catch(function(){
+          showToast('Could not generate combined report. Please try again.', 'warn');
         }).finally(function(){
           resetBtn();
         });
