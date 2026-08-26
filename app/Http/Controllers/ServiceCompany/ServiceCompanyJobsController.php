@@ -1275,418 +1275,403 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
 
     }
 
-	public function index()
-	{
-		// Step 9b: ETag derived from user+company+permissions. Unchanged page load → 304, zero DB hit.
-		$etagSource = $this->user->id . ':' . $this->user->company_id . ':' . implode(',', $this->userPermissions ?? []);
-		$etag = '"' . hash('sha256', $etagSource) . '"';
-		if (request()->header('If-None-Match') === $etag) {
-			return response()->noContent(304)->header('ETag', $etag);
-		}
+    public function index()
+    {
+        // Step 9b: ETag derived from user+company+permissions. Unchanged page load → 304, zero DB hit.
+        $etagSource = $this->user->id.':'.$this->user->company_id.':'.implode(',', $this->userPermissions ?? []);
+        $etag = '"'.hash('sha256', $etagSource).'"';
+        if (request()->header('If-None-Match') === $etag) {
+            return response()->noContent(304)->header('ETag', $etag);
+        }
 
-		// BUG-03: was Company::all() — full table scan every request. Now single-tenant lookup with 1h cache.
-		$this->company = Cache::remember('company:' . $this->user->company_id, 3600, fn() => Company::find($this->user->company_id));
-		$this->totalJobs = Job::where('id', '>', '0')->count();
-		$this->activeJobs = Job::where('status', 'active')->count();
-		$this->inactiveJobs = Job::where('status', 'inactive')->count();
+        // BUG-03: was Company::all() — full table scan every request. Now single-tenant lookup with 1h cache.
+        $this->company = Cache::remember('company:'.$this->user->company_id, 3600, fn () => Company::find($this->user->company_id));
+        $this->totalJobs = Job::where('id', '>', '0')->count();
+        $this->activeJobs = Job::where('status', 'active')->count();
+        $this->inactiveJobs = Job::where('status', 'inactive')->count();
 
-		$chkAdminRole = $this->user->hasRole('admin');
-		
-		// $chkAdminRole = DB::table('roles')->select('roles.id')->where('id', $this->user->role->role_id)->where('name', 'admin')->count();
-		if ($chkAdminRole > 0) {
-			$this->totalJobs = Job::where('id', '>', '0')->count();
-			$this->activeJobs = Job::where('status', 'active')->count();
-			$this->inactiveJobs = Job::where('status', 'inactive')->count();
-			$this->holdJobs = Job::where('status', 'hold')->count();
+        $chkAdminRole = $this->user->hasRole('admin');
 
-		} else {
-            
-			$this->totalJobs = Job::join('job_assign', 'job_assign.job_id', 'jobs.id')->where('jobs.id', '>', '0')->where('job_assign.user_id', '=', $this->user->id)->count();
-			$this->activeJobs = Job::join('job_assign', 'job_assign.job_id', 'jobs.id')->where('jobs.status', 'active')->where('job_assign.user_id', '=', $this->user->id)->count();
-			$this->inactiveJobs = Job::join('job_assign', 'job_assign.job_id', 'jobs.id')->where('jobs.status', 'inactive')->where('job_assign.user_id', '=', $this->user->id)->count();
-			$this->holdJobs = Job::join('job_assign', 'job_assign.job_id', 'jobs.id')->where('jobs.status', 'hold')->where('job_assign.user_id', '=', $this->user->id)->count();
-			
-			
-		}
-		$this->dataCnt = $this->dataCnt();
+        // $chkAdminRole = DB::table('roles')->select('roles.id')->where('id', $this->user->role->role_id)->where('name', 'admin')->count();
+        if ($chkAdminRole > 0) {
+            $this->totalJobs = Job::where('id', '>', '0')->count();
+            $this->activeJobs = Job::where('status', 'active')->count();
+            $this->inactiveJobs = Job::where('status', 'inactive')->count();
+            $this->holdJobs = Job::where('status', 'hold')->count();
 
-		if (session()->has('UrlMailJobId')) {
-			$this->UrlMailJobId = session('UrlMailJobId'); 
-		}else{
-			$this->UrlMailJobId = '';
-		}
-		// GeneralMethod::elasticJobsAddEditUpdateIndex(482);
-		
-		// dd("djdw");
-		
-		
-		return response()
-			->view('service_company.jobs.index', $this->data)
-			->header('ETag', $etag)
-			->header('Cache-Control', 'private, must-revalidate');
-	}
+        } else {
 
-	public function dataCnt()
-	{
+            $this->totalJobs = Job::join('job_assign', 'job_assign.job_id', 'jobs.id')->where('jobs.id', '>', '0')->where('job_assign.user_id', '=', $this->user->id)->count();
+            $this->activeJobs = Job::join('job_assign', 'job_assign.job_id', 'jobs.id')->where('jobs.status', 'active')->where('job_assign.user_id', '=', $this->user->id)->count();
+            $this->inactiveJobs = Job::join('job_assign', 'job_assign.job_id', 'jobs.id')->where('jobs.status', 'inactive')->where('job_assign.user_id', '=', $this->user->id)->count();
+            $this->holdJobs = Job::join('job_assign', 'job_assign.job_id', 'jobs.id')->where('jobs.status', 'hold')->where('job_assign.user_id', '=', $this->user->id)->count();
 
-       
-		$company_id = auth()->user()->company_id;
+        }
+        $this->dataCnt = $this->dataCnt();
 
-		$dataCnt = array();
+        if (session()->has('UrlMailJobId')) {
+            $this->UrlMailJobId = session('UrlMailJobId');
+        } else {
+            $this->UrlMailJobId = '';
+        }
+        // GeneralMethod::elasticJobsAddEditUpdateIndex(482);
 
+        // dd("djdw");
 
-		$dataCnt['allRequisition'] = 0;
-		$dataCnt['clientRequisition'] = 0;
-		$dataCnt['customRequisition'] = 0;
-		$dataCnt['findJobs'] = 0;
-		$chkAdminRole = $this->user->hasRole('admin');
-		// $chkAdminRole = DB::table('roles')->select('roles.id')->where('id', $this->user->role->role_id)->where('name', 'admin')->count();
-		if (($chkAdminRole > 0) && (in_array("all_requisition", $this->userPermissions) && in_array("view_jobs", $this->userPermissions))) {
-			//All Jobs			
-			$this->jobsAll = DB::table('jobs')->select('jobs.id');
-			$this->jobsAll = $this->jobsAll->leftJoin('recommendation_relation', function ($join) use ($company_id) {
-				$join->on('recommendation_relation.job_id', '=', 'jobs.id');
-				$join->on('recommendation_relation.to_company_id', '=', DB::raw("'" . $company_id . "'"));
-			});
-			
-			$this->jobsAll = $this->jobsAll->where('jobs.company_id', '=', $company_id);
-			$this->jobsAll = $this->jobsAll->where('jobs.status','=', 'active');
-			$this->jobsAll = $this->jobsAll->orWhere(function ($query) use ($company_id) {
-				return
-					$query->where('recommendation_relation.final_status', '=', 1)
-						->where('recommendation_relation.to_company_id', '=', $company_id)
-						->where('jobs.status','=', 'active');
-			});
-			$this->jobsAll = $this->jobsAll->orWhere(function ($query) use ($company_id) {
-				return
-					$query->where('recommendation_relation.final_status', '=', 2)
-						->where('recommendation_relation.to_company_id', '=', $company_id)
-						->where('jobs.status','=', 'active');
-			});
-			// $this->jobsAll = $this->jobsAll->count();
+        return response()
+            ->view('service_company.jobs.index', $this->data)
+            ->header('ETag', $etag)
+            ->header('Cache-Control', 'private, must-revalidate');
+    }
 
+    public function dataCnt()
+    {
 
-			$filter[] = ['term' => ['status' => 'active']];
-			// 1. COMPANY ACCESS CONDITIONS
-			$must[] = [
-				'bool' => [
-					'should' => [
-						[
-							'term' => [
-								'comId' => $company_id
-							]
-						],
+        $company_id = auth()->user()->company_id;
 
-						[
-							'nested' => [
-								'path' => 'recommendation_relation',
-								'query' => [
-									'bool' => [
-										'must' => [
-											[
-												'term' => [
-													'recommendation_relation.to_company_id' => $company_id
-												]
-											],
-											[
-												'terms' => [
-													'recommendation_relation.final_status' => [1, 2]
-												]
-											]
-										]
-									]
-								]
-							]
-						]
-					],
-					'minimum_should_match' => 1
-				]
-			];
-			// 2. RESTRICT TO ASSIGNED USERS (if not admin)
-			if (!(($chkAdminRole > 0) && in_array("all_requisition", $this->userPermissions) && in_array("view_jobs", $this->userPermissions))) {
-				$must[] = [
-					'nested' => [
-						'path' => 'job_assign',
-						'query' => [
-							'term' => ['job_assign.user_id' => auth()->user()->id],
-						],
-					],
-				];
-			}
-			// FINAL ELASTIC PARAMS
-			$params = [
-				'index' => ELASTIC_JOBS,
-				'body' => [
-					'query' => [
-						'bool' => [
-							'must' => $must,
-							'filter' => $filter,
-						],
-					],
-				],
-			];
+        $dataCnt = [];
+
+        $dataCnt['allRequisition'] = 0;
+        $dataCnt['clientRequisition'] = 0;
+        $dataCnt['customRequisition'] = 0;
+        $dataCnt['findJobs'] = 0;
+        $chkAdminRole = $this->user->hasRole('admin');
+        // $chkAdminRole = DB::table('roles')->select('roles.id')->where('id', $this->user->role->role_id)->where('name', 'admin')->count();
+        if (($chkAdminRole > 0) && (in_array('all_requisition', $this->userPermissions) && in_array('view_jobs', $this->userPermissions))) {
+            // All Jobs
+            $this->jobsAll = DB::table('jobs')->select('jobs.id');
+            $this->jobsAll = $this->jobsAll->leftJoin('recommendation_relation', function ($join) use ($company_id) {
+                $join->on('recommendation_relation.job_id', '=', 'jobs.id');
+                $join->on('recommendation_relation.to_company_id', '=', DB::raw("'".$company_id."'"));
+            });
+
+            $this->jobsAll = $this->jobsAll->where('jobs.company_id', '=', $company_id);
+            $this->jobsAll = $this->jobsAll->where('jobs.status', '=', 'active');
+            $this->jobsAll = $this->jobsAll->orWhere(function ($query) use ($company_id) {
+                return
+                    $query->where('recommendation_relation.final_status', '=', 1)
+                        ->where('recommendation_relation.to_company_id', '=', $company_id)
+                        ->where('jobs.status', '=', 'active');
+            });
+            $this->jobsAll = $this->jobsAll->orWhere(function ($query) use ($company_id) {
+                return
+                    $query->where('recommendation_relation.final_status', '=', 2)
+                        ->where('recommendation_relation.to_company_id', '=', $company_id)
+                        ->where('jobs.status', '=', 'active');
+            });
+            // $this->jobsAll = $this->jobsAll->count();
+
+            $filter[] = ['term' => ['status' => 'active']];
+            // 1. COMPANY ACCESS CONDITIONS
+            $must[] = [
+                'bool' => [
+                    'should' => [
+                        [
+                            'term' => [
+                                'comId' => $company_id,
+                            ],
+                        ],
+
+                        [
+                            'nested' => [
+                                'path' => 'recommendation_relation',
+                                'query' => [
+                                    'bool' => [
+                                        'must' => [
+                                            [
+                                                'term' => [
+                                                    'recommendation_relation.to_company_id' => $company_id,
+                                                ],
+                                            ],
+                                            [
+                                                'terms' => [
+                                                    'recommendation_relation.final_status' => [1, 2],
+                                                ],
+                                            ],
+                                        ],
+                                    ],
+                                ],
+                            ],
+                        ],
+                    ],
+                    'minimum_should_match' => 1,
+                ],
+            ];
+            // 2. RESTRICT TO ASSIGNED USERS (if not admin)
+            if (! (($chkAdminRole > 0) && in_array('all_requisition', $this->userPermissions) && in_array('view_jobs', $this->userPermissions))) {
+                $must[] = [
+                    'nested' => [
+                        'path' => 'job_assign',
+                        'query' => [
+                            'term' => ['job_assign.user_id' => auth()->user()->id],
+                        ],
+                    ],
+                ];
+            }
+            // FINAL ELASTIC PARAMS
+            $params = [
+                'index' => ELASTIC_JOBS,
+                'body' => [
+                    'query' => [
+                        'bool' => [
+                            'must' => $must,
+                            'filter' => $filter,
+                        ],
+                    ],
+                ],
+            ];
             $response = $this->elasticService->getClient()->count($params);
             $total = $response['count'] ?? 0;
-			$dataCnt['allRequisition'] = $total;//$this->jobsAll;
+            $dataCnt['allRequisition'] = $total; // $this->jobsAll;
 
-			
+            // BUG-08: dead SQL $clientRequisition count removed — overwritten by ES count below anyway.
 
-			// BUG-08: dead SQL $clientRequisition count removed — overwritten by ES count below anyway.
-
-				$filter_client[] = ['term' => ['status' => 'active']];
-			// 1. COMPANY ACCESS CONDITIONS
-			$must_client[] = [
-				'bool' => [
-					'should' => [
-						[
-							'nested' => [
-								'path' => 'recommendation_relation',
-								'query' => [
-									'bool' => [
-										'must' => [
-											[
-												'term' => [
-													'recommendation_relation.to_company_id' => $company_id
-												]
-											],
-											[
-												'terms' => [
-													'recommendation_relation.final_status' => [1, 2]
-												]
-											]
-										]
-									]
-								]
-							]
-						]
-					],
-					'minimum_should_match' => 1,
-				],
-			];
-			// 2. RESTRICT TO ASSIGNED USERS (if not admin)
-			if (!(($chkAdminRole > 0) && in_array("all_requisition", $this->userPermissions) && in_array("view_jobs", $this->userPermissions))) {
-				$must_client[] = [
-					'nested' => [
-						'path' => 'job_assign',
-						'query' => [
-							'term' => ['job_assign.user_id' => auth()->user()->id],
-						],
-					],
-				];
-			}
-			// FINAL ELASTIC PARAMS
-			$params_client = [
-				'index' => ELASTIC_JOBS,
-				'body' => [
-					'query' => [
-						'bool' => [
-							'must' => $must_client,
-							'filter' => $filter_client,
-						],
-					],
-				],
-			];
+            $filter_client[] = ['term' => ['status' => 'active']];
+            // 1. COMPANY ACCESS CONDITIONS
+            $must_client[] = [
+                'bool' => [
+                    'should' => [
+                        [
+                            'nested' => [
+                                'path' => 'recommendation_relation',
+                                'query' => [
+                                    'bool' => [
+                                        'must' => [
+                                            [
+                                                'term' => [
+                                                    'recommendation_relation.to_company_id' => $company_id,
+                                                ],
+                                            ],
+                                            [
+                                                'terms' => [
+                                                    'recommendation_relation.final_status' => [1, 2],
+                                                ],
+                                            ],
+                                        ],
+                                    ],
+                                ],
+                            ],
+                        ],
+                    ],
+                    'minimum_should_match' => 1,
+                ],
+            ];
+            // 2. RESTRICT TO ASSIGNED USERS (if not admin)
+            if (! (($chkAdminRole > 0) && in_array('all_requisition', $this->userPermissions) && in_array('view_jobs', $this->userPermissions))) {
+                $must_client[] = [
+                    'nested' => [
+                        'path' => 'job_assign',
+                        'query' => [
+                            'term' => ['job_assign.user_id' => auth()->user()->id],
+                        ],
+                    ],
+                ];
+            }
+            // FINAL ELASTIC PARAMS
+            $params_client = [
+                'index' => ELASTIC_JOBS,
+                'body' => [
+                    'query' => [
+                        'bool' => [
+                            'must' => $must_client,
+                            'filter' => $filter_client,
+                        ],
+                    ],
+                ],
+            ];
             $response = $this->elasticService->getClient()->count($params_client);
             $total = $response['count'] ?? 0;
-			$dataCnt['clientRequisition'] = $total;//$clientRequisition;
+            $dataCnt['clientRequisition'] = $total; // $clientRequisition;
 
-			// BUG-08: dead SQL $customRequisition count removed — overwritten by ES count below anyway.
+            // BUG-08: dead SQL $customRequisition count removed — overwritten by ES count below anyway.
 
-			$filter_internal[] = ['term' => ['status' => 'active']];
-			// 1. COMPANY ACCESS CONDITIONS
-			$must_internal[] = [
-				'bool' => [
-					'should' => [
-						['term' => ['comId' => $company_id]],
-					],
-					'minimum_should_match' => 1,
-				],
-			];
-			// 2. RESTRICT TO ASSIGNED USERS (if not admin)
-			if (!(($chkAdminRole > 0) && in_array("all_requisition", $this->userPermissions) && in_array("view_jobs", $this->userPermissions))) {
-				$must_internal[] = [
-					'nested' => [
-						'path' => 'job_assign',
-						'query' => [
-							'term' => ['job_assign.user_id' => auth()->user()->id],
-						],
-					],
-				];
-			}
-			// FINAL ELASTIC PARAMS
-			$params_internal = [
-				'index' => ELASTIC_JOBS,
-				'body' => [
-					'query' => [
-						'bool' => [
-							'must' => $must_internal,
-							'filter' => $filter_internal,
-						],
-					],
-				],
-			];
+            $filter_internal[] = ['term' => ['status' => 'active']];
+            // 1. COMPANY ACCESS CONDITIONS
+            $must_internal[] = [
+                'bool' => [
+                    'should' => [
+                        ['term' => ['comId' => $company_id]],
+                    ],
+                    'minimum_should_match' => 1,
+                ],
+            ];
+            // 2. RESTRICT TO ASSIGNED USERS (if not admin)
+            if (! (($chkAdminRole > 0) && in_array('all_requisition', $this->userPermissions) && in_array('view_jobs', $this->userPermissions))) {
+                $must_internal[] = [
+                    'nested' => [
+                        'path' => 'job_assign',
+                        'query' => [
+                            'term' => ['job_assign.user_id' => auth()->user()->id],
+                        ],
+                    ],
+                ];
+            }
+            // FINAL ELASTIC PARAMS
+            $params_internal = [
+                'index' => ELASTIC_JOBS,
+                'body' => [
+                    'query' => [
+                        'bool' => [
+                            'must' => $must_internal,
+                            'filter' => $filter_internal,
+                        ],
+                    ],
+                ],
+            ];
             $response = $this->elasticService->getClient()->count($params_internal);
             $total_internal = $response['count'] ?? 0;
-			$dataCnt['customRequisition'] = $total_internal;//$customRequisition;
+            $dataCnt['customRequisition'] = $total_internal; // $customRequisition;
 
-			
-			
+            // dd("djddf");
+        } else {
+            //    dd("djd");
+            // All Jobs
+            $this->jobsAll = DB::table('jobs')->select('jobs.id');
+            $this->jobsAll = $this->jobsAll->join('job_assign', function ($join) {
+                $join->on('job_assign.job_id', '=', 'jobs.id');
+                $join->on('job_assign.company_id', '=', DB::raw("'".auth()->user()->company_id."'"));
+                $join->on('job_assign.user_id', '=', DB::raw("'".$this->user->id."'"));
+            });
+            $this->jobsAll = $this->jobsAll->leftJoin('recommendation_relation', function ($join) use ($company_id) {
+                $join->on('recommendation_relation.job_id', '=', 'jobs.id');
+                $join->on('recommendation_relation.to_company_id', '=', DB::raw("'".$company_id."'"));
+            });
 
-			// dd("djddf");
-		} else {
-          //    dd("djd");
-			//All Jobs			
-			$this->jobsAll = DB::table('jobs')->select('jobs.id');
-			$this->jobsAll = $this->jobsAll->join('job_assign', function ($join) {
-				$join->on('job_assign.job_id', '=', 'jobs.id');
-				$join->on('job_assign.company_id', '=', DB::raw("'" . auth()->user()->company_id . "'"));
-				$join->on('job_assign.user_id', '=', DB::raw("'" . $this->user->id . "'"));
-			});
-			$this->jobsAll = $this->jobsAll->leftJoin('recommendation_relation', function ($join) use ($company_id) {
-				$join->on('recommendation_relation.job_id', '=', 'jobs.id');
-				$join->on('recommendation_relation.to_company_id', '=', DB::raw("'" . $company_id . "'"));
-			});
+            // BUG-10: grouped closure prevents orWhere from leaking cross-tenant rows
+            $this->jobsAll = $this->jobsAll->where(function ($query) use ($company_id) {
+                $query->where(function ($inner) use ($company_id) {
+                    $inner->where('jobs.company_id', '=', $company_id)->where('jobs.status', '=', 'active');
+                })->orWhere(function ($inner) use ($company_id) {
+                    $inner->where('recommendation_relation.final_status', '=', 1)
+                        ->where('recommendation_relation.to_company_id', '=', $company_id)
+                        ->where('jobs.status', '=', 'active');
+                })->orWhere(function ($inner) use ($company_id) {
+                    $inner->where('recommendation_relation.final_status', '=', 2)
+                        ->where('recommendation_relation.to_company_id', '=', $company_id)
+                        ->where('jobs.status', '=', 'active');
+                });
+            });
+            $this->jobsAll = $this->jobsAll->count();
+            $dataCnt['allRequisition'] = $this->jobsAll;
 
-			// BUG-10: grouped closure prevents orWhere from leaking cross-tenant rows
-			$this->jobsAll = $this->jobsAll->where(function ($query) use ($company_id) {
-				$query->where(function ($inner) use ($company_id) {
-					$inner->where('jobs.company_id', '=', $company_id)->where('jobs.status', '=', 'active');
-				})->orWhere(function ($inner) use ($company_id) {
-					$inner->where('recommendation_relation.final_status', '=', 1)
-						->where('recommendation_relation.to_company_id', '=', $company_id)
-						->where('jobs.status', '=', 'active');
-				})->orWhere(function ($inner) use ($company_id) {
-					$inner->where('recommendation_relation.final_status', '=', 2)
-						->where('recommendation_relation.to_company_id', '=', $company_id)
-						->where('jobs.status', '=', 'active');
-				});
-			});
-			$this->jobsAll = $this->jobsAll->count();
-			$dataCnt['allRequisition'] = $this->jobsAll;
+            // BUG-10: grouped closure prevents orWhere from leaking cross-tenant rows
+            $clientRequisition = DB::table('recommendation_relation')
+                ->join('job_assign', function ($join) {
+                    $join->on('job_assign.job_id', '=', 'recommendation_relation.job_id');
+                    $join->on('job_assign.company_id', '=', DB::raw("'".auth()->user()->company_id."'"));
+                    $join->on('job_assign.user_id', '=', DB::raw("'".$this->user->id."'"));
+                })
+                ->join('jobs', 'jobs.id', '=', 'recommendation_relation.job_id')
+                ->select('recommendation_relation.id')
+                ->where(function ($query) use ($company_id) {
+                    $query->where(function ($inner) use ($company_id) {
+                        $inner->where('recommendation_relation.final_status', '=', 1)
+                            ->where('recommendation_relation.to_company_id', '=', $company_id)
+                            ->where('jobs.status', '=', 'active');
+                    })->orWhere(function ($inner) use ($company_id) {
+                        $inner->where('recommendation_relation.final_status', '=', 2)
+                            ->where('recommendation_relation.to_company_id', '=', $company_id)
+                            ->where('jobs.status', '=', 'active');
+                    });
+                })
+                ->count();
+            $dataCnt['clientRequisition'] = $clientRequisition;
 
+            // Custom Client
+            $customRequisition = DB::table('jobs')
+                ->join('job_assign', function ($join) {
+                    $join->on('job_assign.job_id', '=', 'jobs.id');
+                    $join->on('job_assign.company_id', '=', DB::raw("'".auth()->user()->company_id."'"));
+                    $join->on('job_assign.user_id', '=', DB::raw("'".$this->user->id."'"));
+                })
+                ->select('jobs.id')
+                ->where('jobs.company_id', '=', $company_id)->where('jobs.status', '=', 'active')
+                ->count();
+            $dataCnt['customRequisition'] = $customRequisition;
 
-			// BUG-10: grouped closure prevents orWhere from leaking cross-tenant rows
-			$clientRequisition = DB::table('recommendation_relation')
-				->join('job_assign', function ($join) {
-					$join->on('job_assign.job_id', '=', 'recommendation_relation.job_id');
-					$join->on('job_assign.company_id', '=', DB::raw("'" . auth()->user()->company_id . "'"));
-					$join->on('job_assign.user_id', '=', DB::raw("'" . $this->user->id . "'"));
-				})
-				->join('jobs', 'jobs.id', '=', 'recommendation_relation.job_id')
-				->select('recommendation_relation.id')
-				->where(function ($query) use ($company_id) {
-					$query->where(function ($inner) use ($company_id) {
-						$inner->where('recommendation_relation.final_status', '=', 1)
-							->where('recommendation_relation.to_company_id', '=', $company_id)
-							->where('jobs.status', '=', 'active');
-					})->orWhere(function ($inner) use ($company_id) {
-						$inner->where('recommendation_relation.final_status', '=', 2)
-							->where('recommendation_relation.to_company_id', '=', $company_id)
-							->where('jobs.status', '=', 'active');
-					});
-				})
-				->count();
-			$dataCnt['clientRequisition'] = $clientRequisition;
+        }
 
-			//Custom Client
-			$customRequisition = DB::table('jobs')
-				->join('job_assign', function ($join) {
-					$join->on('job_assign.job_id', '=', 'jobs.id');
-					$join->on('job_assign.company_id', '=', DB::raw("'" . auth()->user()->company_id . "'"));
-					$join->on('job_assign.user_id', '=', DB::raw("'" . $this->user->id . "'"));
-				})
-				->select('jobs.id')
-				->where('jobs.company_id', '=', $company_id)->where('jobs.status','=', 'active')
-				->count();
-			$dataCnt['customRequisition'] = $customRequisition;
+        // BUG-09 + BUG-18: replaced materialized pluck+PHP count() with a single DB count using
+        // whereNotExists subquery — eliminates the 100k-ID IN-list and the full collection fetch.
+        $dataCnt['findJobs'] = DB::table('jobs')
+            ->where('jobs.company_id', '!=', $company_id)
+            ->where('jobs.public_market_status', '=', 2)
+            ->where('jobs.status', '=', 'active')
+            ->whereNotExists(function ($query) use ($company_id) {
+                $query->select(DB::raw(1))
+                    ->from('recommendation_relation')
+                    ->whereColumn('recommendation_relation.job_id', 'jobs.id')
+                    ->where('recommendation_relation.to_company_id', '=', $company_id);
+            })
+            ->distinct()
+            ->count('jobs.id');
 
-			
+        // sent request
+        $dataCnt['jobRequest'] = 0;
+        $jobRequest = DB::table('recommendation_relation')
+            ->select('recommendation_relation.id')
+            ->where('recommendation_relation.to_company_id', '=', $company_id)
+            ->whereIn('recommendation_relation.final_status', [0, 3])
+            ->count();
 
+        $dataCnt['jobRequest'] = $jobRequest;
 
-		}
+        // Tab counts — same access conditions as all_data_ajax, filtered by status
+        $tabMust = [];
+        $tabMust[] = [
+            'bool' => [
+                'should' => [
+                    ['term' => ['comId' => $company_id]],
+                    [
+                        'nested' => [
+                            'path' => 'recommendation_relation',
+                            'query' => [
+                                'bool' => [
+                                    'must' => [
+                                        ['term' => ['recommendation_relation.to_company_id' => $company_id]],
+                                        ['terms' => ['recommendation_relation.final_status' => [1, 2]]],
+                                    ],
+                                ],
+                            ],
+                        ],
+                    ],
+                ],
+                'minimum_should_match' => 1,
+            ],
+        ];
+        if (! (($chkAdminRole > 0) && in_array('all_requisition', $this->userPermissions) && in_array('view_jobs', $this->userPermissions))) {
+            $tabMust[] = [
+                'nested' => [
+                    'path' => 'job_assign',
+                    'query' => ['term' => ['job_assign.user_id' => auth()->user()->id]],
+                ],
+            ];
+        }
+        $tabStatusCounts = ['active' => 0, 'hold' => 0, 'inactive' => 0];
+        if ($this->elasticService->indexExists(ELASTIC_JOBS)) {
+            foreach ($tabStatusCounts as $status => $val) {
+                $res = $this->elasticService->getClient()->count([
+                    'index' => ELASTIC_JOBS,
+                    'body' => [
+                        'query' => [
+                            'bool' => [
+                                'must' => $tabMust,
+                                'filter' => [['term' => ['status' => $status]]],
+                            ],
+                        ],
+                    ],
+                ]);
+                $tabStatusCounts[$status] = $res['count'] ?? 0;
+            }
+        }
+        $dataCnt['hiringCount'] = $tabStatusCounts['active'];
+        $dataCnt['holdCount'] = $tabStatusCounts['hold'];
+        $dataCnt['closedCount'] = $tabStatusCounts['inactive'];
+        $dataCnt['allTabCount'] = $tabStatusCounts['active'] + $tabStatusCounts['hold'] + $tabStatusCounts['inactive'];
 
-		// BUG-09 + BUG-18: replaced materialized pluck+PHP count() with a single DB count using
-		// whereNotExists subquery — eliminates the 100k-ID IN-list and the full collection fetch.
-		$dataCnt['findJobs'] = DB::table('jobs')
-			->where('jobs.company_id', '!=', $company_id)
-			->where('jobs.public_market_status', '=', 2)
-			->where('jobs.status', '=', 'active')
-			->whereNotExists(function ($query) use ($company_id) {
-				$query->select(DB::raw(1))
-					->from('recommendation_relation')
-					->whereColumn('recommendation_relation.job_id', 'jobs.id')
-					->where('recommendation_relation.to_company_id', '=', $company_id);
-			})
-			->distinct()
-			->count('jobs.id');
+        return $dataCnt;
 
-
-		//sent request
-		$dataCnt['jobRequest'] = 0;
-		$jobRequest = DB::table('recommendation_relation')
-			->select('recommendation_relation.id')
-			->where('recommendation_relation.to_company_id', '=', $company_id)
-			->whereIn('recommendation_relation.final_status', [0, 3])
-			->count();
-
-		$dataCnt['jobRequest'] = $jobRequest;
-
-		// Tab counts — same access conditions as all_data_ajax, filtered by status
-		$tabMust = [];
-		$tabMust[] = [
-			'bool' => [
-				'should' => [
-					['term' => ['comId' => $company_id]],
-					[
-						'nested' => [
-							'path' => 'recommendation_relation',
-							'query' => [
-								'bool' => [
-									'must' => [
-										['term' => ['recommendation_relation.to_company_id' => $company_id]],
-										['terms' => ['recommendation_relation.final_status' => [1, 2]]],
-									],
-								],
-							],
-						],
-					],
-				],
-				'minimum_should_match' => 1,
-			],
-		];
-		if (!(($chkAdminRole > 0) && in_array('all_requisition', $this->userPermissions) && in_array('view_jobs', $this->userPermissions))) {
-			$tabMust[] = [
-				'nested' => [
-					'path' => 'job_assign',
-					'query' => ['term' => ['job_assign.user_id' => auth()->user()->id]],
-				],
-			];
-		}
-		$tabStatusCounts = ['active' => 0, 'hold' => 0, 'inactive' => 0];
-		if ($this->elasticService->indexExists(ELASTIC_JOBS)) {
-			foreach ($tabStatusCounts as $status => $val) {
-				$res = $this->elasticService->getClient()->count([
-					'index' => ELASTIC_JOBS,
-					'body'  => [
-						'query' => [
-							'bool' => [
-								'must'   => $tabMust,
-								'filter' => [['term' => ['status' => $status]]],
-							],
-						],
-					],
-				]);
-				$tabStatusCounts[$status] = $res['count'] ?? 0;
-			}
-		}
-		$dataCnt['hiringCount'] = $tabStatusCounts['active'];
-		$dataCnt['holdCount']   = $tabStatusCounts['hold'];
-		$dataCnt['closedCount'] = $tabStatusCounts['inactive'];
-		$dataCnt['allTabCount'] = $tabStatusCounts['active'] + $tabStatusCounts['hold'] + $tabStatusCounts['inactive'];
-
-		return $dataCnt;
-
-	}
+    }
 
     public function client_job_data_ajax(Request $request)
     {
@@ -2636,340 +2621,330 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
         return redirect('/service_company/jobs');
     }
 
-	public function all_data_ajax(Request $request)
-	{
-		
-		abort_if(Gate::denies('view_jobs'), 403);
-		
+    public function all_data_ajax(Request $request)
+    {
 
-		$company_id = auth()->user()->company_id;
-		$limit = '';
-		$userId = $this->user->id;
+        abort_if(Gate::denies('view_jobs'), 403);
 
-		$chkAdminRole = $this->user->hasRole('admin');
+        $company_id = auth()->user()->company_id;
+        $limit = '';
+        $userId = $this->user->id;
 
-		// $chkAdminRole = DB::table('roles')->select('roles.id')->where('id', $this->user->role->role_id)->where('name', 'admin')->count();
+        $chkAdminRole = $this->user->hasRole('admin');
 
-		$job_status = GeneralMethod::job_status();
-		$salaryMode = GeneralMethod::salaryMode();
-		$currencySymbole = GeneralMethod::currencySymbole();
+        // $chkAdminRole = DB::table('roles')->select('roles.id')->where('id', $this->user->role->role_id)->where('name', 'admin')->count();
 
+        $job_status = GeneralMethod::job_status();
+        $salaryMode = GeneralMethod::salaryMode();
+        $currencySymbole = GeneralMethod::currencySymbole();
 
-		$searchQuery    = $request->input('q');
-		$page           = max((int) $request->input('page', 1), 1);
-		$size           = (int) $request->input('size', 10);
-		$custom_status  = request('custom_status');
-		$custom_hiringtype = request('custom_hiringtype');
-		$employment_type   = request('employment_type');
-		$custom_search  = trim(request('custom_search'));
+        $searchQuery = $request->input('q');
+        $page = max((int) $request->input('page', 1), 1);
+        $size = (int) $request->input('size', 10);
+        $custom_status = request('custom_status');
+        $custom_hiringtype = request('custom_hiringtype');
+        $employment_type = request('employment_type');
+        $custom_search = trim(request('custom_search'));
 
-		// Step 7b: persist non-empty search terms per-user in a Redis sorted set (score = unix time).
-		// zrevrange("user:searches:{$userId}", 0, 4) returns the 5 most-recent unique terms
-		// which the front-end can show as "recent searches" in the search dropdown.
-		if ($custom_search !== '') {
-			$rk = 'user:searches:' . $userId;
-			Redis::zadd($rk, time(), $custom_search);
-			Redis::zremrangebyrank($rk, 0, -6); // keep only the 5 newest
-			Redis::expire($rk, 86400);           // auto-expire the set after 24 h
-		}
+        // Step 7b: persist non-empty search terms per-user in a Redis sorted set (score = unix time).
+        // zrevrange("user:searches:{$userId}", 0, 4) returns the 5 most-recent unique terms
+        // which the front-end can show as "recent searches" in the search dropdown.
+        if ($custom_search !== '') {
+            $rk = 'user:searches:'.$userId;
+            Redis::zadd($rk, time(), $custom_search);
+            Redis::zremrangebyrank($rk, 0, -6); // keep only the 5 newest
+            Redis::expire($rk, 86400);           // auto-expire the set after 24 h
+        }
 
-		// Step 9a: cursor (keyset) pagination — ?after_id=N eliminates OFFSET cost on deep pages.
-		// Falls back to OFFSET when after_id is absent so existing callers keep working.
-		$afterId = (int) $request->input('after_id', 0);
-		$from    = $afterId > 0 ? 0 : ($page - 1) * $size;
+        // Step 9a: cursor (keyset) pagination — ?after_id=N eliminates OFFSET cost on deep pages.
+        // Falls back to OFFSET when after_id is absent so existing callers keep working.
+        $afterId = (int) $request->input('after_id', 0);
+        $from = $afterId > 0 ? 0 : ($page - 1) * $size;
 
+        $cachePayload = [
+            'company' => $company_id,
+            'page' => $page,
+            'size' => $size,
+            'q' => $searchQuery,
+            'custom_status' => $custom_status,
+            'custom_hiringtype' => $custom_hiringtype,
+            'employment_type' => $employment_type,
+            'user_id' => $this->user->id,
+            'custom_search' => $custom_search,
+        ];
 
-		
+        // Two-axis version key: user (personal filter changes) + company (job creates/updates by any team member).
+        // JobObserver::saved bumps alljobslist_version_company_{id} so all team members see fresh data immediately.
+        $userVersionKey = 'alljobslist_version_user_'.$this->user->id;
+        $companyVersionKey = 'alljobslist_version_company_'.$company_id;
+        $version = cache()->get($userVersionKey, 1).'_'.cache()->get($companyVersionKey, 1);
+        $cacheKeySet = 'ats:alljobslist:'.$this->user->id.':'.$version.':'.md5(json_encode($cachePayload));
+        /* ----------------------------
+        ⚡ Check DragonflyDB first
+        ----------------------------- */
+        if (cache()->has($cacheKeySet)) {
+            return response()->json(cache()->get($cacheKeySet));
+        }
 
-		$cachePayload = [
-			'company' => $company_id,
-			'page' => $page,
-			'size' => $size,
-			'q' => $searchQuery,
-			'custom_status' => $custom_status,
-			'custom_hiringtype' => $custom_hiringtype,
-			'employment_type' => $employment_type,
-			'user_id' => $this->user->id,
-			'custom_search' => $custom_search,
-		];
+        $final_status = [1, 2];
+        if ($custom_status === 'removed') {
+            $final_status = [2];
+        }
+        $rcommendationIds = $this->elasticService->getClient()->search([
+            'index' => ELASTIC_JOB_REQUEST,
+            'body' => [
+                'size' => 10000,
+                'query' => [
+                    'bool' => [
+                        'must' => [
+                            ['term' => ['to_company_id' => $company_id]],
+                            ['terms' => ['final_status' => $final_status]],
+                        ],
+                    ],
+                ],
+                '_source' => ['job_id'],
+            ],
+        ]);
 
-		
-		// Two-axis version key: user (personal filter changes) + company (job creates/updates by any team member).
-		// JobObserver::saved bumps alljobslist_version_company_{id} so all team members see fresh data immediately.
-		$userVersionKey    = 'alljobslist_version_user_'.$this->user->id;
-		$companyVersionKey = 'alljobslist_version_company_'.$company_id;
-		$version    = cache()->get($userVersionKey, 1) . '_' . cache()->get($companyVersionKey, 1);
-		$cacheKeySet = 'ats:alljobslist:' . $this->user->id . ':' . $version . ':' . md5(json_encode($cachePayload));
-		/* ----------------------------
-		⚡ Check DragonflyDB first
-		----------------------------- */
-		if (cache()->has($cacheKeySet)) {
-			return response()->json(cache()->get($cacheKeySet));
-		}
+        // Extract company IDs
+        $jobIds = collect($rcommendationIds['hits']['hits'])
+            ->pluck('_source.job_id')
+            ->unique()
+            ->values()
+            ->toArray();
 
-		$final_status = [1,2];
-		if($custom_status === 'removed') {
-			$final_status = [2];
-		}
-		$rcommendationIds = $this->elasticService->getClient()->search([
-		'index' => ELASTIC_JOB_REQUEST,
-			'body' => [
-				'size' => 10000,
-				'query' => [
-					'bool' => [
-						'must' => [
-							['term' => ['to_company_id' => $company_id]],
-							['terms' => ['final_status' => $final_status]],
-						]
-					]
-				],
-				'_source' => ['job_id']
-			]
-		]);
+        // dd($jobIds);
 
-		// Extract company IDs
-		$jobIds = collect($rcommendationIds['hits']['hits'])
-			->pluck('_source.job_id')
-			->unique()
-			->values()
-			->toArray();
+        $statusArr = ['active', 'hold', 'inactive', '2'];
+        $must = [];
+        $should = [];
+        $filter = [];
+        $sort = [];
+        $valCheck = request('custom_hiringtype');
+        switch ($valCheck) {
+            case 1:
+                $sort[] = ['id' => ['order' => 'desc']];
+                break;
+            case 2:
+                $sort[] = ['id' => ['order' => 'asc']];
+                break;
+            case 3:
+                $sort[] = ['max_salary' => ['order' => 'asc']];
+                break;
+            case 4:
+                $sort[] = ['max_salary' => ['order' => 'desc']];
+                break;
+            case 5:
+                $sort[] = ['client_name' => ['order' => 'asc']];
+                break;
+            case 6:
+                $sort[] = ['client_name' => ['order' => 'desc']];
+                break;
+            default:
+                $sort[] = ['id' => ['order' => 'desc']];
+        }
 
-		
-		// dd($jobIds);
+        // Always show active jobs first, then hold, then inactive/closed
+        if ($custom_status === '' || $custom_status === 'all') {
+            array_unshift($sort, [
+                '_script' => [
+                    'type' => 'number',
+                    'order' => 'asc',
+                    'script' => [
+                        'lang' => 'painless',
+                        'source' => "def s = doc['status'].size() > 0 ? doc['status'].value : ''; if (s == 'active') return 0; if (s == 'hold') return 1; return 2;",
+                    ],
+                ],
+            ]);
+        }
 
-		$statusArr = ['active', 'hold', 'inactive', '2'];
-		$must = [];
-		$should = [];
-		$filter = [];
-		$sort = [];
-		$valCheck = request('custom_hiringtype');
-		switch ($valCheck) {
-			case 1:
-				$sort[] = ['id' => ['order' => 'desc']];
-				break;
-			case 2:
-				$sort[] = ['id' => ['order' => 'asc']];
-				break;
-			case 3:
-				$sort[] = ['max_salary' => ['order' => 'asc']];
-				break;
-			case 4:
-				$sort[] = ['max_salary' => ['order' => 'desc']];
-				break;
-			case 5:
-				$sort[] = ['client_name' => ['order' => 'asc']];
-				break;
-			case 6:
-				$sort[] = ['client_name' => ['order' => 'desc']];
-				break;
-			default:
-				$sort[] = ['id' => ['order' => 'desc']];
-		}
+        // 1. STATUS FILTERING
+        // if (!session()->has('UrlMailJobId')) {
+        if ($custom_status !== '' && $custom_status !== 'all') {
+            if (in_array($custom_status, ['active', 'hold', 'inactive'])) {
+                $statusArr = [$custom_status];
+            } elseif ($custom_status === 'removed') {
+                $statusArr = [];
+                // $must[] = [
+                // 	'nested' => [
+                // 		'path' => 'recommendation_relation',
+                // 		'query' => [
+                // 			'term' => ['recommendation_relation.final_status' => 2],
+                // 		],
+                // 	],
+                // ];
 
-		// Always show active jobs first, then hold, then inactive/closed
-		if ($custom_status === '' || $custom_status === 'all') {
-			array_unshift($sort, [
-				'_script' => [
-					'type'   => 'number',
-					'order'  => 'asc',
-					'script' => [
-						'lang'   => 'painless',
-						'source' => "def s = doc['status'].size() > 0 ? doc['status'].value : ''; if (s == 'active') return 0; if (s == 'hold') return 1; return 2;",
-					],
-				],
-			]);
-		}
+            }
+        }
 
+        // }
+        $filter[] = ['terms' => ['status' => $statusArr]];
 
-		// 1. STATUS FILTERING
-		// if (!session()->has('UrlMailJobId')) {
-			if ($custom_status !== "" && $custom_status !== 'all') {
-				if (in_array($custom_status, ['active', 'hold', 'inactive'])) {
-					$statusArr = [$custom_status];
-				} elseif ($custom_status === 'removed') {
-					$statusArr = [];
-					// $must[] = [
-					// 	'nested' => [
-					// 		'path' => 'recommendation_relation',
-					// 		'query' => [
-					// 			'term' => ['recommendation_relation.final_status' => 2],
-					// 		],
-					// 	],
-					// ];
-					
-				}
-			}
+        // 2. HIRING TYPE
+        if ($employment_type != '' && $employment_type != 'all') {
+            $filter[] = ['term' => ['employment_type' => (int) $employment_type]];
+        }
 
-			
-		// }
-		 $filter[] = ['terms' => ['status' => $statusArr]];
+        // 3. SEARCH CONDITIONS
+        // Step 7a: multi_match replaces the old broken match_phrase+wildcard pattern.
+        // match_phrase does not support wildcard patterns — '*query*' was treated as a literal
+        // string. multi_match with fuzziness covers title/description/skills in one ES round-trip.
+        // Nested wildcard clauses for user_name, city etc. are kept for exact sub-field matching.
+        if (! empty($custom_search)) {
+            // Store the last 5 searches per user in a Redis sorted set (score = epoch, so ZREVRANGE gives newest-first)
+            try {
+                \Illuminate\Support\Facades\Redis::zadd("user:searches:{$userId}", time(), $custom_search);
+                \Illuminate\Support\Facades\Redis::zremrangebyrank("user:searches:{$userId}", 0, -6); // keep only 5
+            } catch (\Throwable) {
+                // Redis unavailable — non-fatal
+            }
 
-		// 2. HIRING TYPE
-		if ($employment_type != "" && $employment_type != "all") {
-			$filter[] = ['term' => ['employment_type' => (int)$employment_type]];
-		}
-		
-		// 3. SEARCH CONDITIONS
-		// Step 7a: multi_match replaces the old broken match_phrase+wildcard pattern.
-		// match_phrase does not support wildcard patterns — '*query*' was treated as a literal
-		// string. multi_match with fuzziness covers title/description/skills in one ES round-trip.
-		// Nested wildcard clauses for user_name, city etc. are kept for exact sub-field matching.
-		if (!empty($custom_search)) {
-			// Store the last 5 searches per user in a Redis sorted set (score = epoch, so ZREVRANGE gives newest-first)
-			try {
-				\Illuminate\Support\Facades\Redis::zadd("user:searches:{$userId}", time(), $custom_search);
-				\Illuminate\Support\Facades\Redis::zremrangebyrank("user:searches:{$userId}", 0, -6); // keep only 5
-			} catch (\Throwable) {
-				// Redis unavailable — non-fatal
-			}
+            $lowerSearch = strtolower($custom_search);
+            $must[] = [
+                'bool' => [
+                    'should' => [
+                        // Primary: full-text across title (boosted), job_description, skills with fuzziness
+                        ['multi_match' => [
+                            'query' => $custom_search,
+                            'fields' => ['title^3', 'job_description', 'skills'],
+                            'fuzziness' => 'AUTO',
+                            'operator' => 'or',
+                        ]],
+                        // Exact ID match
+                        ['term' => ['id' => (int) $custom_search]],
+                        // Prefix-anchored wildcard for company/client name (cheaper than leading-wildcard)
+                        ['wildcard' => ['client_name' => $lowerSearch.'*']],
+                        ['wildcard' => ['company_name' => $lowerSearch.'*']],
+                        // Nested sub-field wildcards (accept leading wildcard cost — fields are small)
+                        ['nested' => ['path' => 'job_assign',              'query' => ['wildcard' => ['job_assign.user_name' => '*'.$lowerSearch.'*']]]],
+                        ['nested' => ['path' => 'client_contact_info_jobs', 'query' => ['wildcard' => ['client_contact_info_jobs.contact_person_name' => '*'.$lowerSearch.'*']]]],
+                        ['nested' => ['path' => 'client_city_jobs',         'query' => ['wildcard' => ['client_city_jobs.city_name' => '*'.$lowerSearch.'*']]]],
+                        ['nested' => ['path' => 'client_city_jobs',         'query' => ['wildcard' => ['client_city_jobs.country_name' => '*'.$lowerSearch.'*']]]],
+                    ],
+                    'minimum_should_match' => 1,
+                ],
+            ];
+        }
 
-			$lowerSearch = strtolower($custom_search);
-			$must[] = [
-				'bool' => [
-					'should' => [
-						// Primary: full-text across title (boosted), job_description, skills with fuzziness
-						['multi_match' => [
-							'query'     => $custom_search,
-							'fields'    => ['title^3', 'job_description', 'skills'],
-							'fuzziness' => 'AUTO',
-							'operator'  => 'or',
-						]],
-						// Exact ID match
-						['term' => ['id' => (int) $custom_search]],
-						// Prefix-anchored wildcard for company/client name (cheaper than leading-wildcard)
-						['wildcard' => ['client_name'   => $lowerSearch . '*']],
-						['wildcard' => ['company_name'  => $lowerSearch . '*']],
-						// Nested sub-field wildcards (accept leading wildcard cost — fields are small)
-						['nested' => ['path' => 'job_assign',              'query' => ['wildcard' => ['job_assign.user_name' => '*' . $lowerSearch . '*']]]],
-						['nested' => ['path' => 'client_contact_info_jobs','query' => ['wildcard' => ['client_contact_info_jobs.contact_person_name' => '*' . $lowerSearch . '*']]]],
-						['nested' => ['path' => 'client_city_jobs',         'query' => ['wildcard' => ['client_city_jobs.city_name'    => '*' . $lowerSearch . '*']]]],
-						['nested' => ['path' => 'client_city_jobs',         'query' => ['wildcard' => ['client_city_jobs.country_name' => '*' . $lowerSearch . '*']]]],
-					],
-					'minimum_should_match' => 1,
-				],
-			];
-		}
+        // 4. COMPANY ACCESS CONDITIONS
 
-		// 4. COMPANY ACCESS CONDITIONS
+        // if (session()->has('UrlMailJobId')) {
+        // 	$UrlMailJobId = session('UrlMailJobId');
+        // 		$must[] = [
+        // 		'bool' => [
+        // 			'should' => [
+        // 				['term' => ['id' => $UrlMailJobId]]
+        // 			],
+        // 			'minimum_should_match' => 1,
+        // 		],
+        // 	];
 
-		// if (session()->has('UrlMailJobId')) {
-		// 	$UrlMailJobId = session('UrlMailJobId'); 
-		// 		$must[] = [
-		// 		'bool' => [
-		// 			'should' => [
-		// 				['term' => ['id' => $UrlMailJobId]]
-		// 			],
-		// 			'minimum_should_match' => 1,
-		// 		],
-		// 	];
+        // }else{
+        $must[] = [
+            'bool' => [
+                'should' => [
+                    [
+                        'term' => [
+                            'comId' => $company_id,
+                        ],
+                    ],
+                    [
+                        'nested' => [
+                            'path' => 'recommendation_relation',
+                            'query' => [
+                                'bool' => [
+                                    'must' => [
+                                        [
+                                            'term' => [
+                                                'recommendation_relation.to_company_id' => $company_id,
+                                            ],
+                                        ],
+                                        [
+                                            'terms' => [
+                                                'recommendation_relation.final_status' => $final_status,
+                                            ],
+                                        ],
+                                    ],
+                                ],
+                            ],
+                        ],
+                    ],
+                ],
+                'minimum_should_match' => 1,
+            ],
+        ];
+        // }
 
-		// }else{
-			$must[] = [
-			'bool' => [
-				'should' => [
-					[
-						'term' => [
-							'comId' => $company_id
-						]
-					],
-					[
-						'nested' => [
-							'path' => 'recommendation_relation',
-							'query' => [
-								'bool' => [
-									'must' => [
-										[
-											'term' => [
-												'recommendation_relation.to_company_id' => $company_id
-											]
-										],
-										[
-											'terms' => [
-												'recommendation_relation.final_status' => $final_status
-											]
-										]
-									]
-								]
-							]
-						]
-					]
-				],
-				'minimum_should_match' => 1
-			]
-		];
-		// }
+        // 5. RESTRICT TO ASSIGNED USERS (if not admin)
+        if (! (($chkAdminRole > 0) && in_array('all_requisition', $this->userPermissions) && in_array('view_jobs', $this->userPermissions))) {
+            $must[] = [
+                'nested' => [
+                    'path' => 'job_assign',
+                    'query' => [
+                        'term' => ['job_assign.user_id' => auth()->user()->id],
+                    ],
+                ],
+            ];
+        }
 
-		// 5. RESTRICT TO ASSIGNED USERS (if not admin)
-		if (!(($chkAdminRole > 0) && in_array("all_requisition", $this->userPermissions) && in_array("view_jobs", $this->userPermissions))) {
-			$must[] = [
-				'nested' => [
-					'path' => 'job_assign',
-					'query' => [
-						'term' => ['job_assign.user_id' => auth()->user()->id],
-					],
-				],
-			];
-		}
+        // FINAL ELASTIC PARAMS
+        $params = [
+            'index' => ELASTIC_JOBS,
+            'request_cache' => true,
+            'body' => [
+                'from' => $from,
+                'size' => $size,
+                'sort' => $sort,
+                'track_total_hits' => true,
+                'query' => [
+                    'bool' => [
+                        'must' => $must,
+                        'filter' => $filter,
+                    ],
+                ],
+            ],
+        ];
 
-		// FINAL ELASTIC PARAMS
-		$params = [
-			'index' => ELASTIC_JOBS,
-			'request_cache' => true,
-			'body' => [
-				'from' => $from,
-				'size' => $size,
-				'sort' => $sort,
-				'track_total_hits' => true,
-				'query' => [
-					'bool' => [
-						'must' => $must,
-						'filter' => $filter,
-					],
-				],
-			],
-		];
-		
+        // Step 9a: inject search_after when cursor mode requested (search_after + from are mutually exclusive)
+        if ($afterId > 0) {
+            $params['body']['search_after'] = [$afterId];
+            unset($params['body']['from']);
+        }
 
-		// Step 9a: inject search_after when cursor mode requested (search_after + from are mutually exclusive)
-		if ($afterId > 0) {
-			$params['body']['search_after'] = [$afterId];
-			unset($params['body']['from']);
-		}
+        if (! $this->elasticService->indexExists(ELASTIC_JOBS)) {
+            $total = 0;
+            $data = [];
+            $nextCursor = null;
+        } else {
+            $response = $this->elasticService->getClient()->search($params);
+            $total = $response['hits']['total']['value'] ?? 0;
+            $hits = $response['hits']['hits'] ?? [];
+            $data = array_map(fn ($hit) => $hit['_source'], $hits);
+            $lastHit = end($hits);
+            $nextCursor = $lastHit ? ($lastHit['sort'][0] ?? null) : null;
+        }
 
-		if (!$this->elasticService->indexExists(ELASTIC_JOBS)) {
-			$total      = 0;
-			$data       = [];
-			$nextCursor = null;
-		} else {
-			$response = $this->elasticService->getClient()->search($params);
-			$total    = $response['hits']['total']['value'] ?? 0;
-			$hits     = $response['hits']['hits'] ?? [];
-			$data     = array_map(fn($hit) => $hit['_source'], $hits);
-			$lastHit    = end($hits);
-			$nextCursor = $lastHit ? ($lastHit['sort'][0] ?? null) : null;
-		}
-
-		$pagination = [
-			'total'        => $total,
-			'current_page' => $page,
-			'last_page'    => ceil($total / $size),
-			'per_page'     => $size,
-			'listType'     => 'allcandidate',
-			'next_cursor'  => $nextCursor,
-		];
+        $pagination = [
+            'total' => $total,
+            'current_page' => $page,
+            'last_page' => ceil($total / $size),
+            'per_page' => $size,
+            'listType' => 'allcandidate',
+            'next_cursor' => $nextCursor,
+        ];
 
         session()->forget('UrlMailJobId');
-		$userPermissions = $this->userPermissions;
-		$responseData = [
-			'html'        => view('service_company.ajax_pages.all_jobs_ajax', compact('data', 'userPermissions', 'company_id'))->render(),
-			'total'       => $total,
-			'pagination'  => view('service_company.ajax_pages.pagination', compact('pagination'))->render(),
-			'next_cursor' => $nextCursor,
-		];
-		cache()->put($cacheKeySet, $responseData, now()->addMinutes(ALL_JOBS_LIST_TIME));
+        $userPermissions = $this->userPermissions;
+        $responseData = [
+            'html' => view('service_company.ajax_pages.all_jobs_ajax', compact('data', 'userPermissions', 'company_id'))->render(),
+            'total' => $total,
+            'pagination' => view('service_company.ajax_pages.pagination', compact('pagination'))->render(),
+            'next_cursor' => $nextCursor,
+        ];
+        cache()->put($cacheKeySet, $responseData, now()->addMinutes(ALL_JOBS_LIST_TIME));
 
-		return response()->json($responseData);
-	}
+        return response()->json($responseData);
+    }
 
     public function client_requisition($id)
     {
@@ -7185,11 +7160,18 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
         $versionKey = 'allsendinvitationtoagency_version_user_'.$this->user->id;
         $version = cache()->get($versionKey, 1);
         $cacheKeySet = 'ats:allsendinvitationtoagency:'.$this->user->id.':'.$version.':'.md5(json_encode($cachePayload));
+        $etag = '"v2:spartner:'.md5($cacheKeySet).'"';
+        if (request()->header('If-None-Match') === $etag) {
+            return response(null, 304)->header('ETag', $etag);
+        }
+
         /* ----------------------------
         ⚡ Check DragonflyDB first
         ----------------------------- */
         if (cache()->has($cacheKeySet)) {
-            return response()->json(cache()->get($cacheKeySet));
+            return response()->json(cache()->get($cacheKeySet))
+                ->header('ETag', $etag)
+                ->header('Cache-Control', 'private, max-age=0, must-revalidate');
         }
 
         $this->salaryMode = GeneralMethod::salaryMode();
@@ -7310,14 +7292,7 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
         // dd($countries);
         $this->countries = $countries;
 
-        $cities = DB::table('countries')
-            ->select('countries.country_name')
-            ->where('countries.country_name', '!=', '')
-            ->orderBy('countries.country_name')
-            ->get()
-            ->map(function ($city) {
-                return $city->country_name;
-            });
+        $cities = $countries->pluck('country_name')->filter()->sort()->values();
         $this->cities = $cities;
         $gdFilterData = GeneralMethod::gdFilterData($id);
         // dd($gdFilterData);
@@ -7428,13 +7403,37 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
         $this->activeCompanies = $activeCompanies;
 
         $this->td_industries = DB::table('td_industries')->select('ind_id as id', 'ind_name as name')->get();
-        $view = view('service_company.jobs.spartnerlisting', $this->data)->render();
-        // dd($view);
-        $responseData = Reply::dataOnly(['status' => 'success', 'view' => $view]);
 
-        cache()->put($cacheKeySet, $responseData, now()->addMinutes(3));
+        if (request()->wantsJson() || request()->header('Accept') === 'application/json') {
+            $responseData = Reply::dataOnly([
+                'status' => 'success',
+                'job' => $this->job,
+                'skillArr' => $this->skillArr,
+                'company_name' => $this->company_name,
+                'ind_name' => $this->ind_name,
+                'jobLocation' => $this->jobLocation,
+                'jobLocationCount' => $this->jobLocationCount,
+                'assignTeam' => $this->assignTeam,
+                'assignTeamCount' => $this->assignTeamCount,
+                'min_exp' => $this->min_exp,
+                'max_exp' => $this->max_exp,
+                'min_salary' => $this->min_salary,
+                'max_salary' => $this->max_salary,
+                'default_loc' => $this->default_loc,
+                'vendor_limit' => $this->vendor_limit,
+                'allCompanies' => $this->allCompanies,
+                'activeCompanies' => $this->activeCompanies,
+            ]);
+        } else {
+            $view = view('service_company.jobs.spartnerlisting', $this->data)->render();
+            $responseData = Reply::dataOnly(['status' => 'success', 'view' => $view]);
+        }
 
-        return $responseData;
+        cache()->put($cacheKeySet, $responseData, now()->addMinutes(60));
+
+        return response()->json($responseData)
+            ->header('ETag', $etag)
+            ->header('Cache-Control', 'private, max-age=0, must-revalidate');
 
     }
 
@@ -8074,7 +8073,7 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
 
                 'body' => [
 
-                    'size' => 10000,
+                    'size' => 1000,
 
                     '_source' => [
                         'company_id',
@@ -8499,14 +8498,25 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
                 $agencyJobsMap = GeneralMethod::batchAgencyJobsCount($agencyIds);
                 $agencyCandidatesMap = GeneralMethod::batchAgencyJobsCandidatesCount($agencyIds);
 
+                // Batch 6: Match found status on staffing_company_relation
+                $matchFoundMap = GeneralMethod::batchGetMatchFoundMap($company_id, $agencyIds);
+
+                // Batch 7: Commercial minimum rate and rate type per agency
+                $commtypeParam = (request('app_int_outsource', $currentRowJob->employment_type ?? 0) == 1) ? 1 : 2;
+                $commercialsMap = GeneralMethod::batchGetCommercialsData($agencyIds, $commtypeParam);
+
                 // Pre-bind batch properties onto $data array objects to eliminate Blade N+1
                 foreach ($data as &$source) {
                     $cId = $source['id'] ?? null;
                     $source['_client_info'] = $clientsMap[$cId] ?? null;
                     $source['_relation_info'] = $relationsMap[$cId] ?? null;
+                    $source['_match_found'] = $matchFoundMap[$cId] ?? 0;
                     $source['_user_size_count'] = $userSizeCounts[$cId] ?? 0;
                     $source['_agency_jobs_count'] = $agencyJobsMap[$cId] ?? (object) ['all_jobs' => 0];
                     $source['_agency_candidates_count'] = $agencyCandidatesMap[$cId] ?? (object) ['all_candidates' => 0, 'all_candidate_bench' => 0];
+                    $commData = $commercialsMap[$cId] ?? null;
+                    $source['_minimum_rate'] = $commData->minimum_rate ?? null;
+                    $source['_minimum_rate_type'] = $commData->minimum_rate_type ?? null;
                 }
                 unset($source);
             }
@@ -10001,20 +10011,15 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
         /* ----------------------------
         ⚡ Check DragonflyDB first
         ----------------------------- */
-        if (config('feature.use_three_drawers_v3')) {
-            // V3 Step 7: ETag check — 304 skips Redis lookup + ES search + view render entirely.
-            // ETag changes whenever the version key bumps (i.e. after any team-assignment write).
-            $etag = '"v3:team:'.md5($cacheKeySet).'"';
-            if (request()->header('If-None-Match') === $etag) {
-                return response(null, 304)->header('ETag', $etag);
-            }
+        $etag = '"v3:team:'.md5($cacheKeySet).'"';
+        if (request()->header('If-None-Match') === $etag) {
+            return response(null, 304)->header('ETag', $etag);
+        }
 
-            // V3 Step 3: Redis cache guard — skip ES search + view render on cache hit.
-            if (cache()->has($cacheKeySet)) {
-                return response()->json(cache()->get($cacheKeySet))
-                    ->header('ETag', $etag)
-                    ->header('Cache-Control', 'private, max-age=0, must-revalidate');
-            }
+        if (cache()->has($cacheKeySet)) {
+            return response()->json(cache()->get($cacheKeySet))
+                ->header('ETag', $etag)
+                ->header('Cache-Control', 'private, max-age=0, must-revalidate');
         }
 
         $contHtml = '<div class="symbol-group symbol-hover" style="float:left">';
@@ -10170,18 +10175,11 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
         // V3 Step 3 / V2 Agency Step 5: TTL extended from 3 min → 60 min. Assigned agency
         // list changes only when an agency is added/removed (write path purges the key).
         // N+1 DB queries inside the view are eliminated on any warm cache hit.
-        if (config('feature.use_three_drawers_v3')) {
-            cache()->put($cacheKeySet, $responseData, 3600);
-        }
+        cache()->put($cacheKeySet, $responseData, 3600);
 
-        // V3 Step 7: attach ETag to 200 so browser can revalidate on the next open.
-        if (config('feature.use_three_drawers_v3') && isset($etag)) {
-            return response()->json($responseData)
-                ->header('ETag', $etag)
-                ->header('Cache-Control', 'private, max-age=0, must-revalidate');
-        }
-
-        return response()->json($responseData);
+        return response()->json($responseData)
+            ->header('ETag', $etag)
+            ->header('Cache-Control', 'private, max-age=0, must-revalidate');
 
         $responseData = DataTables::of($recommendedDataList)
             ->editColumn('Name', function ($row) {
@@ -10369,31 +10367,22 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
         $versionKey = 'allregisteredagency_version_user_'.$this->user->id;
         $version = cache()->get($versionKey, 1);
         $cacheKeySet = 'ats:allregisteredagency:'.$this->user->id.':'.$version.':'.md5(json_encode($cachePayload));
-        /* ----------------------------
-        ⚡ Check DragonflyDB first
-        ----------------------------- */
-        // V3 Step 7: ETag check first — 304 skips Redis + ES relation scan + agency search + render.
-        // ETag changes when version key bumps after any agency-assignment write.
+
         $etag = '"v3:agency:'.md5($cacheKeySet).'"';
-        if (config('feature.use_three_drawers_v3') && request()->header('If-None-Match') === $etag) {
+        if (request()->header('If-None-Match') === $etag) {
             return response(null, 304)->header('ETag', $etag);
         }
 
         if (cache()->has($cacheKeySet)) {
-            $cachedResponse = response()->json(cache()->get($cacheKeySet));
-            if (config('feature.use_three_drawers_v3')) {
-                $cachedResponse = $cachedResponse
-                    ->header('ETag', $etag)
-                    ->header('Cache-Control', 'private, max-age=0, must-revalidate');
-            }
-
-            return $cachedResponse;
+            return response()->json(cache()->get($cacheKeySet))
+                ->header('ETag', $etag)
+                ->header('Cache-Control', 'private, max-age=0, must-revalidate');
         }
 
         // V3 Step 4: cap from 10,000 → 500. At 10k concurrent users the unrestricted scan
         // consumes ~200 MB of ES heap per request. 500 covers all real-world companies;
         // a Log::warning fires if a tenant actually exceeds this so operators can review.
-        $relationScanSize = config('feature.use_three_drawers_v3') ? 500 : 10000;
+        $relationScanSize = 500;
 
         $relationIds = $this->elasticService->getClient()->search([
             'index' => ELASTIC_CLIENT_AND_AGENCY_RELATION_INDEX,
@@ -10541,13 +10530,8 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
             ],
         ];
 
-        // V3 Step 4: the 4 nested aggregations (job_skill_match_count, candidate_skill_match_count,
-        // bench_candidates, other_candidates) are computed but their results are never referenced
-        // in $responseData — $response['aggregations'] is never read below. Dropping them saves
-        // significant ES heap and computation time on every cache-miss search.
-        if (config('feature.use_three_drawers_v3')) {
-            unset($params['body']['aggs']);
-        }
+        // Drop unreferenced aggregations to save ES heap and computation time
+        unset($params['body']['aggs']);
 
         if (! $this->elasticService->indexExists(ELASTIC_COMPANIES_INDEX)) {
             $total = 0;
@@ -10604,14 +10588,25 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
                 $agencyJobsMap = GeneralMethod::batchAgencyJobsCount($agencyIds);
                 $agencyCandidatesMap = GeneralMethod::batchAgencyJobsCandidatesCount($agencyIds);
 
+                // Batch 6: Match found status on staffing_company_relation
+                $matchFoundMap = GeneralMethod::batchGetMatchFoundMap($company_id, $agencyIds);
+
+                // Batch 7: Commercial minimum rate and rate type per agency
+                $commtypeParam = (request('hiringtype', $parent_employment_type ?? 0) == 1) ? 1 : 2;
+                $commercialsMap = GeneralMethod::batchGetCommercialsData($agencyIds, $commtypeParam);
+
                 // Pre-bind batch properties onto $data array objects to eliminate Blade N+1
                 foreach ($data as &$source) {
                     $cId = $source['id'] ?? null;
                     $source['_client_info'] = $clientsMap[$cId] ?? null;
                     $source['_relation_info'] = $relationsMap[$cId] ?? null;
+                    $source['_match_found'] = $matchFoundMap[$cId] ?? 0;
                     $source['_user_size_count'] = $userSizeCounts[$cId] ?? 0;
                     $source['_agency_jobs_count'] = $agencyJobsMap[$cId] ?? (object) ['all_jobs' => 0];
                     $source['_agency_candidates_count'] = $agencyCandidatesMap[$cId] ?? (object) ['all_candidates' => 0, 'all_candidate_bench' => 0];
+                    $commData = $commercialsMap[$cId] ?? null;
+                    $source['_minimum_rate'] = $commData->minimum_rate ?? null;
+                    $source['_minimum_rate_type'] = $commData->minimum_rate_type ?? null;
                 }
                 unset($source);
             }
@@ -10651,14 +10646,9 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
         // 3-min TTL caused constant cache churn with no benefit.
         cache()->put($cacheKeySet, $responseData, 3600);
 
-        // V3 Step 7: attach ETag to 200 so browser can revalidate on the next open.
-        if (config('feature.use_three_drawers_v3')) {
-            return response()->json($responseData)
-                ->header('ETag', $etag)
-                ->header('Cache-Control', 'private, max-age=0, must-revalidate');
-        }
-
-        return response()->json($responseData);
+        return response()->json($responseData)
+            ->header('ETag', $etag)
+            ->header('Cache-Control', 'private, max-age=0, must-revalidate');
 
         // 1. Precompute: SimilarReq jobs count
         $similarReqSub = DB::table('jobs as j')
@@ -13427,58 +13417,59 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
         }
     }
 
-	public function editJobStatus($id)
-	{
-		$this->id = $id;
-		if ($this->id) {
-			if (config('feature.use_three_drawers_v3')) {
-				// V3 Step 2: job query cached; view rendered fresh so CSRF token is never stale.
-				$this->job = Cache::remember("v3:status_job:{$id}", 3600, function () use ($id) {
-					return DB::table('jobs')->where('jobs.id', '=', $id)->first();
-				});
+    public function editJobStatus($id)
+    {
+        $this->id = $id;
+        if ($this->id) {
+            if (config('feature.use_three_drawers_v3')) {
+                // V3 Step 2: job query cached; view rendered fresh so CSRF token is never stale.
+                $this->job = Cache::remember("v3:status_job:{$id}", 3600, function () use ($id) {
+                    return DB::table('jobs')->where('jobs.id', '=', $id)->first();
+                });
 
-				// V3 Step 7: ETag from job status+updated_at.
-				// 304 skips the lastStatusChange lookup + view render entirely.
-				// ETag auto-changes when newUpdateJobstatus busts the v3:status_job:{id} cache key.
-				if ($this->job) {
-					$etag = '"v3:status:' . $id . ':' . md5($this->job->status . $this->job->updated_at) . '"';
-					if (request()->header('If-None-Match') === $etag) {
-						return response(null, 304)->header('ETag', $etag);
-					}
-				}
+                // V3 Step 7: ETag from job status+updated_at.
+                // 304 skips the lastStatusChange lookup + view render entirely.
+                // ETag auto-changes when newUpdateJobstatus busts the v3:status_job:{id} cache key.
+                if ($this->job) {
+                    $etag = '"v3:status:'.$id.':'.md5($this->job->status.$this->job->updated_at).'"';
+                    if (request()->header('If-None-Match') === $etag) {
+                        return response(null, 304)->header('ETag', $etag);
+                    }
+                }
 
-				$this->lastStatusChange = Cache::remember("v3:status_log:{$id}", 3600, function () use ($id) {
-					return DB::table('job_status_logs')
-						->leftJoin('users', 'users.id', '=', 'job_status_logs.changed_by')
-						->select('job_status_logs.created_at', 'users.name as changed_by_name')
-						->where('job_status_logs.job_id', $id)
-						->orderByDesc('job_status_logs.created_at')
-						->first();
-				});
-			} else {
-				$this->job = DB::table('jobs')
-					->where('jobs.id', '=', $this->id)
-					->first();
+                $this->lastStatusChange = Cache::remember("v3:status_log:{$id}", 3600, function () use ($id) {
+                    return DB::table('job_status_logs')
+                        ->leftJoin('users', 'users.id', '=', 'job_status_logs.changed_by')
+                        ->select('job_status_logs.created_at', 'users.name as changed_by_name')
+                        ->where('job_status_logs.job_id', $id)
+                        ->orderByDesc('job_status_logs.created_at')
+                        ->first();
+                });
+            } else {
+                $this->job = DB::table('jobs')
+                    ->where('jobs.id', '=', $this->id)
+                    ->first();
 
-				// "Last updated by" footer — most recent status change of any kind, for attribution only.
-				$this->lastStatusChange = DB::table('job_status_logs')
-					->leftJoin('users', 'users.id', '=', 'job_status_logs.changed_by')
-					->select('job_status_logs.created_at', 'users.name as changed_by_name')
-					->where('job_status_logs.job_id', $this->id)
-					->orderByDesc('job_status_logs.created_at')
-					->first();
-			}
-		}
-		$view = view('service_company.jobs.status', $this->data)->render();
-		// dd($view);
-		// V3 Step 7: attach ETag to 200 so the browser can validate on the next open.
-		if (config('feature.use_three_drawers_v3') && isset($etag)) {
-			return response()->json(['status' => 'success', 'view' => $view])
-				->header('ETag', $etag)
-				->header('Cache-Control', 'private, max-age=0, must-revalidate');
-		}
-		return Reply::dataOnly(['status' => 'success', 'view' => $view]);
-	}
+                // "Last updated by" footer — most recent status change of any kind, for attribution only.
+                $this->lastStatusChange = DB::table('job_status_logs')
+                    ->leftJoin('users', 'users.id', '=', 'job_status_logs.changed_by')
+                    ->select('job_status_logs.created_at', 'users.name as changed_by_name')
+                    ->where('job_status_logs.job_id', $this->id)
+                    ->orderByDesc('job_status_logs.created_at')
+                    ->first();
+            }
+        }
+        $view = view('service_company.jobs.status', $this->data)->render();
+        // dd($view);
+        // V3 Step 7: attach ETag to 200 so the browser can validate on the next open.
+        if (config('feature.use_three_drawers_v3') && isset($etag)) {
+            return response()->json(['status' => 'success', 'view' => $view])
+                ->header('ETag', $etag)
+                ->header('Cache-Control', 'private, max-age=0, must-revalidate');
+        }
+
+        return Reply::dataOnly(['status' => 'success', 'view' => $view]);
+    }
 
     public function newUpdateJobstatus(Request $request)
     {
@@ -13780,175 +13771,173 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
 
     }
 
-	public function clientviewmore($id)
-	{
+    public function clientviewmore($id)
+    {
 
-		abort_if(Gate::denies('view_jobs'), 403);
+        abort_if(Gate::denies('view_jobs'), 403);
 
-		$company_id = auth()->user()->company_id;
-		$this->salaryMode = GeneralMethod::salaryMode();
-		$this->employmentType = GeneralMethod::employmentType();
-		$this->job = DB::table('jobs')
-			->Select(
-				'jobs.id',
-				'jobs.title',
-				'jobs.work_type',
-				'jobs.slug',
-				'jobs.company_id',
-				'jobs.job_description',
-				'jobs.job_requirement',
-				'jobs.total_positions',
-				'jobs.work_shifts',
-				'jobs.location_id',
-				'jobs.category_id',
-				'jobs.start_date',
-				'jobs.end_date',
-				'jobs.status',
-				'jobs.required_columns',
-				'jobs.meta_details',
-				'jobs.section_visibility',
-				'jobs.created_at',
-				'jobs.updated_at',
-				'jobs.priority',
-				'jobs.client_id',
-				'jobs.min_exp',
-				'jobs.max_exp',
-				'jobs.min_salary',
-				'jobs.max_salary',
-				'jobs.qualification',
-				'jobs.employment_type',
-				'jobs.min_salary_currency',
-				'jobs.max_salary_currency',
-				'jobs.min_sal_mode',
-				'jobs.max_sal_mode',
-				'jobs.carrier_website',
-				'clients.name as client_name',
-				'clients.description as client_description',
-				'clients.logo_logical_path',
-				'job_categories.name as cat_name',
-				'qualification_master.name as qualification_name'
-			)
-			->join('clients', 'clients.id', '=', 'jobs.client_id')
-			->leftJoin('job_categories', 'job_categories.id', '=', 'jobs.category_id')
-			->leftJoin('qualification_master', 'qualification_master.id', '=', 'jobs.qualification')
-			->where('jobs.id', '=', $id)
-			->first();
+        $company_id = auth()->user()->company_id;
+        $this->salaryMode = GeneralMethod::salaryMode();
+        $this->employmentType = GeneralMethod::employmentType();
+        $this->job = DB::table('jobs')
+            ->Select(
+                'jobs.id',
+                'jobs.title',
+                'jobs.work_type',
+                'jobs.slug',
+                'jobs.company_id',
+                'jobs.job_description',
+                'jobs.job_requirement',
+                'jobs.total_positions',
+                'jobs.work_shifts',
+                'jobs.location_id',
+                'jobs.category_id',
+                'jobs.start_date',
+                'jobs.end_date',
+                'jobs.status',
+                'jobs.required_columns',
+                'jobs.meta_details',
+                'jobs.section_visibility',
+                'jobs.created_at',
+                'jobs.updated_at',
+                'jobs.priority',
+                'jobs.client_id',
+                'jobs.min_exp',
+                'jobs.max_exp',
+                'jobs.min_salary',
+                'jobs.max_salary',
+                'jobs.qualification',
+                'jobs.employment_type',
+                'jobs.min_salary_currency',
+                'jobs.max_salary_currency',
+                'jobs.min_sal_mode',
+                'jobs.max_sal_mode',
+                'jobs.carrier_website',
+                'clients.name as client_name',
+                'clients.description as client_description',
+                'clients.logo_logical_path',
+                'job_categories.name as cat_name',
+                'qualification_master.name as qualification_name'
+            )
+            ->join('clients', 'clients.id', '=', 'jobs.client_id')
+            ->leftJoin('job_categories', 'job_categories.id', '=', 'jobs.category_id')
+            ->leftJoin('qualification_master', 'qualification_master.id', '=', 'jobs.qualification')
+            ->where('jobs.id', '=', $id)
+            ->first();
 
-		$this->skillArr = DB::table('job_metronics_skills')->select('*')->where('job_id', $this->job->id)->get();
-		// Company Data 
-		$company_arr = DB::table('companies')->select('*')->where('id', $this->job->company_id)->first();
-		$this->company_name = @$company_arr->company_name;
-		$this->logo_path = url('img/client-default.png');
-		if (!empty(@$company_arr->logo) && strlen(@$company_arr->logo) > 10) {
-			$this->logo_path = url('public/user-uploads/company-logo/' . @$company_arr->logo);
-		}
-		$this->category_name = 'N/A';
-		$this->jobLocation = '';
+        $this->skillArr = DB::table('job_metronics_skills')->select('*')->where('job_id', $this->job->id)->get();
+        // Company Data
+        $company_arr = DB::table('companies')->select('*')->where('id', $this->job->company_id)->first();
+        $this->company_name = @$company_arr->company_name;
+        $this->logo_path = url('img/client-default.png');
+        if (! empty(@$company_arr->logo) && strlen(@$company_arr->logo) > 10) {
+            $this->logo_path = url('public/user-uploads/company-logo/'.@$company_arr->logo);
+        }
+        $this->category_name = 'N/A';
+        $this->jobLocation = '';
 
-		if ($this->job->id > 0) {
+        if ($this->job->id > 0) {
 
-			$this->jobLocation = DB::table('client_location_jobs')
-				->join('client_location', 'client_location.id', '=', 'client_location_jobs.client_location_id')
-				->leftJoin('city_list', 'city_list.city_id', '=', 'client_location.city_id')
-				//->join('countries', 'countries.id', '=', 'client_location.country_id')
-				->select('client_location.city', 'client_location.address', 'client_location.postcode', 'client_location.country_id', 'city_list.city as city_name')
-				->where('client_location_jobs.job_id', $this->job->id)
-				->orderBy('client_location_jobs.id', 'DESC')
-				->first();
+            $this->jobLocation = DB::table('client_location_jobs')
+                ->join('client_location', 'client_location.id', '=', 'client_location_jobs.client_location_id')
+                ->leftJoin('city_list', 'city_list.city_id', '=', 'client_location.city_id')
+                // ->join('countries', 'countries.id', '=', 'client_location.country_id')
+                ->select('client_location.city', 'client_location.address', 'client_location.postcode', 'client_location.country_id', 'city_list.city as city_name')
+                ->where('client_location_jobs.job_id', $this->job->id)
+                ->orderBy('client_location_jobs.id', 'DESC')
+                ->first();
 
-			$this->jobLocationCount = DB::table('client_location_jobs')
-				->join('client_location', 'client_location.id', '=', 'client_location_jobs.client_location_id')
-				->join('countries', 'countries.id', '=', 'client_location.country_id')
-				->select('client_location.city', 'client_location.address', 'client_location.postcode', 'countries.country_name')
-				->where('client_location_jobs.job_id', $this->job->id)
-				->orderBy('client_location_jobs.id', 'DESC')
-				->count();
+            $this->jobLocationCount = DB::table('client_location_jobs')
+                ->join('client_location', 'client_location.id', '=', 'client_location_jobs.client_location_id')
+                ->join('countries', 'countries.id', '=', 'client_location.country_id')
+                ->select('client_location.city', 'client_location.address', 'client_location.postcode', 'countries.country_name')
+                ->where('client_location_jobs.job_id', $this->job->id)
+                ->orderBy('client_location_jobs.id', 'DESC')
+                ->count();
 
+            $this->clientContactPersonListing = DB::table('client_contact_info_jobs')
+                ->join('client_contact_info', 'client_contact_info.id', '=', 'client_contact_info_jobs.client_contact_info_id')
+                ->select('client_contact_info.contact_person_name')
+                ->where('client_contact_info_jobs.job_id', $this->job->id)
+                ->get();
 
-			$this->clientContactPersonListing = DB::table('client_contact_info_jobs')
-				->join('client_contact_info', 'client_contact_info.id', '=', 'client_contact_info_jobs.client_contact_info_id')
-				->select('client_contact_info.contact_person_name')
-				->where('client_contact_info_jobs.job_id', $this->job->id)
-				->get();
+        }
 
-		}
+        $this->assignTeamCount = DB::table('job_assign')
+            ->join('users', 'users.id', '=', 'job_assign.user_id')
+            ->select('users.id', 'users.name', 'users.email')
+            ->where('job_assign.job_id', $this->job->id)
+            ->orderBy('users.name', 'DESC')
+            ->count();
 
-		$this->assignTeamCount = DB::table('job_assign')
-			->join('users', 'users.id', '=', 'job_assign.user_id')
-			->select('users.id', 'users.name', 'users.email')
-			->where('job_assign.job_id', $this->job->id)
-			->orderBy('users.name', 'DESC')
-			->count();
+        // RECRUITER LIST
+        $this->recruiterlist = DB::table('job_assign')
+            ->join('users', 'users.id', '=', 'job_assign.user_id')
+            ->join('role_user', 'role_user.user_id', 'users.id')
+            ->join('roles', 'roles.id', 'role_user.role_id')
+            ->leftJoin('add_job_wise_condidates', function ($join) {
+                $join->on('add_job_wise_condidates.job_id', '=', 'job_assign.job_id')
+                    ->on('add_job_wise_condidates.submitted_by', '=', 'users.id');
+            })
+            ->select(
+                'users.id',
+                'users.name',
+                'users.email',
+                'users.image',
+                'users.mobile',
+                'roles.display_name',
+                DB::raw('count(add_job_wise_condidates.id) as allCandidate'),
+                DB::raw('SUM(CASE WHEN add_job_wise_condidates.master_status_id = 3 THEN 1 ELSE 0 END) AS Interview'),
+                DB::raw('SUM(CASE WHEN add_job_wise_condidates.master_status_id = 6 THEN 1 ELSE 0 END) AS Joined')
+            )
+            ->where('users.company_id', $company_id)
+            ->where('job_assign.job_id', $this->job->id)
+            ->where('users.type', '=', 0)
+            ->groupBy('users.id')
+            ->orderBy('users.name', 'DESC')
+            ->get();
+        // dd($this->recruiterlist);
 
-		// RECRUITER LIST 
-		$this->recruiterlist = DB::table('job_assign')
-			->join('users', 'users.id', '=', 'job_assign.user_id')
-			->join('role_user', 'role_user.user_id', 'users.id')
-			->join('roles', 'roles.id', 'role_user.role_id')
-			->leftJoin("add_job_wise_condidates", function ($join) {
-				$join->on("add_job_wise_condidates.job_id", "=", "job_assign.job_id")
-					->on("add_job_wise_condidates.submitted_by", "=", "users.id");
-			})
-			->select(
-				'users.id',
-				'users.name',
-				'users.email',
-				'users.image',
-				'users.mobile',
-				'roles.display_name',
-				DB::raw("count(add_job_wise_condidates.id) as allCandidate"),
-				DB::raw("SUM(CASE WHEN add_job_wise_condidates.master_status_id = 3 THEN 1 ELSE 0 END) AS Interview"),
-				DB::raw("SUM(CASE WHEN add_job_wise_condidates.master_status_id = 6 THEN 1 ELSE 0 END) AS Joined")
-			)
-			->where('users.company_id', $company_id)
-			->where('job_assign.job_id', $this->job->id)
-			->where('users.type', '=', 0)
-			->groupBy('users.id')
-			->orderBy('users.name', 'DESC')
-			->get();
-		// dd($this->recruiterlist);
+        $companiesDetails = DB::table('recommendation_relation')
+            ->select('recommendation_relation.accepterms')
+            ->where('recommendation_relation.to_company_id', auth()->user()->company_id)
+            ->where('recommendation_relation.job_id', '=', $this->job->id)
+            ->first();
+        // dd($companiesDetails);
+        $this->terms = ($companiesDetails) ? $companiesDetails->accepterms : '';
 
-		$companiesDetails = DB::table('recommendation_relation')
-		->select('recommendation_relation.accepterms')
-		->where('recommendation_relation.to_company_id', auth()->user()->company_id)
-		->where('recommendation_relation.job_id', '=', $this->job->id)
-		->first();
-		// dd($companiesDetails);
-		$this->terms=($companiesDetails) ? $companiesDetails->accepterms : '';
-		
+        $this->conactPersonListing = DB::table('job_assign')
+            ->join('jobs', 'jobs.id', '=', 'job_assign.job_id')
+            ->join('users', function ($join) {
+                $join->on('users.id', '=', 'job_assign.user_id')
+                    ->on('users.company_id', '=', 'jobs.company_id');
+            })
+            ->select('users.id', 'users.name', 'users.email')
+            ->where('job_assign.job_id', $this->job->id)
+            ->orderBy('users.name', 'DESC')
+            ->get();
 
-		$this->conactPersonListing = DB::table('job_assign')
-			->join('jobs', 'jobs.id', '=', 'job_assign.job_id')
-			->join("users", function ($join) {
-				$join->on("users.id", "=", "job_assign.user_id")
-					->on("users.company_id", "=", "jobs.company_id");
-			})
-			->select('users.id', 'users.name', 'users.email')
-			->where('job_assign.job_id', $this->job->id)
-			->orderBy('users.name', 'DESC')
-			->get();
+        $this->jobCitySel = DB::table('client_city_jobs')
+            ->join('city_list', 'city_list.city_id', '=', 'client_city_jobs.city_id')
+            ->where('client_city_jobs.job_id', $this->job->id)
+            ->pluck('city_list.city')
+            ->toArray();
 
+        if ($this->job->work_type == 'yes') {
+            $this->jobCitySelected = 'Remote';
+        } elseif ($this->job->work_type == 'no') {
+            $this->jobCitySelected = implode(',', $this->jobCitySel);
+        } elseif ($this->job->work_type == 'any') {
+            $this->jobCitySelected = 'Remote/'.implode(',', $this->jobCitySel);
+        } elseif ($this->job->work_type == 'other') {
+            $this->jobCitySelected = ''.implode(',', $this->jobCitySel);
+        }
 
-		$this->jobCitySel = DB::table('client_city_jobs')
-			->join('city_list', 'city_list.city_id', '=', 'client_city_jobs.city_id')
-			->where('client_city_jobs.job_id', $this->job->id)
-			->pluck('city_list.city')
-			->toArray();
+        $view = view('service_company.jobs.clientviewmore', $this->data)->render();
 
-		if ($this->job->work_type == 'yes') {
-			$this->jobCitySelected = 'Remote';
-		} elseif ($this->job->work_type == 'no') {
-			$this->jobCitySelected = implode(",", $this->jobCitySel);
-		} elseif ($this->job->work_type == 'any') {
-			$this->jobCitySelected = 'Remote/' . implode(",", $this->jobCitySel);
-		}elseif($this->job->work_type=='other'){
-			$this->jobCitySelected = '' . implode(",", $this->jobCitySel);
-		}
+        return Reply::dataOnly(['status' => 'success', 'view' => $view]);
 
-		$view = view('service_company.jobs.clientviewmore', $this->data)->render();
-		return Reply::dataOnly(['status' => 'success', 'view' => $view]);
-
-	}
+    }
 
     // Full-page job details for market-jobs "View Requirement" link.
     // Same data as clientviewmore() but returns a full Blade page instead of JSON.

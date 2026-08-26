@@ -214,7 +214,7 @@
 
 /* Cell typography */
 .cell-main { font-size: 13px; font-weight: 600; color: #181c32; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.cell-sub  { font-size: 11px; color: #b5b5c3; margin-top: 1px; }
+.cell-sub  { font-size: 11px; color: #b5b5c3; margin-top: 1px; white-space: nowrap; }
 .tx-col-event .cell-main { white-space: normal; overflow: visible; text-overflow: unset; word-break: break-word; }
 
 /* Badges */
@@ -686,9 +686,19 @@
 
         var html = '';
         items.forEach(function(row) {
-            var d         = new Date(row.created_at);
-            var dateStr   = d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
-            var timeStr   = d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', hour12: true });
+            var dateStr   = row.formatted_date || '';
+            var timeStr   = row.formatted_time || '';
+
+            if (!dateStr && row.created_at) {
+                var cleanIso = String(row.created_at).replace(' ', 'T');
+                var d = new Date(cleanIso);
+                if (!isNaN(d.getTime())) {
+                    dateStr = d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+                    timeStr = d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', hour12: true }).toUpperCase();
+                } else {
+                    dateStr = row.created_at;
+                }
+            }
             var isCredit  = row.transection_type === 'credit';
             var isSettle  = row.settlement_coins && parseFloat(row.settlement_coins) > 0;
 

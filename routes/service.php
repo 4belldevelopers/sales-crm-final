@@ -27,6 +27,7 @@ use App\Http\Controllers\ServiceCompany\ServiceCompanyJobsController;
 use App\Http\Controllers\ServiceCompany\ServiceCompanyJobTrackerController;
 use App\Http\Controllers\ServiceCompany\ServiceCompanyLinkedInSettingsController;
 use App\Http\Controllers\ServiceCompany\ServiceCompanyProfileController;
+use App\Http\Controllers\ServiceCompany\ServiceCompanyProfileV2ApiController;
 use App\Http\Controllers\ServiceCompany\ServiceCompanyReportController;
 use App\Http\Controllers\ServiceCompany\ServiceCompanyRolesPermissionController;
 use App\Http\Controllers\ServiceCompany\ServiceCompanyStickyNotesController;
@@ -74,6 +75,16 @@ Route::group(['middleware' => 'auth'], function () {
                 Route::get('leaderboards', [ServiceCompanyDashboardApiController::class, 'leaderboards'])->name('leaderboards');
                 Route::get('interviews', [ServiceCompanyDashboardApiController::class, 'interviews'])->name('interviews');
                 Route::post('cache/invalidate', [ServiceCompanyDashboardApiController::class, 'invalidateCache'])->name('cache.invalidate');
+            });
+
+            // ─── V2 Profile JSON API — high performance cached recruiter profile endpoints ─
+            Route::prefix('api/v2/service-company/profile')->name('api.v2.profile.')->group(function () {
+                Route::get('kpis', [ServiceCompanyProfileV2ApiController::class, 'kpis'])->name('kpis');
+                Route::get('leaderboard', [ServiceCompanyProfileV2ApiController::class, 'leaderboard'])->name('leaderboard');
+                Route::get('ranks', [ServiceCompanyProfileV2ApiController::class, 'ranks'])->name('ranks');
+                Route::get('graphs', [ServiceCompanyProfileV2ApiController::class, 'graphs'])->name('graphs');
+                Route::get('list-items', [ServiceCompanyProfileV2ApiController::class, 'listItems'])->name('list-items');
+                Route::post('cache/invalidate', [ServiceCompanyProfileV2ApiController::class, 'invalidateCache'])->name('cache.invalidate');
             });
             // ─────────────────────────────────────────────────────────────────────────
 

@@ -229,7 +229,7 @@ return [
         // ES indexing — network-bound, isolated supervisor
         'supervisor-indexing' => [
             'connection' => 'redis',
-            'queue' => ['indexing', 'es-index'],
+            'queue' => ['indexing', 'es-index', 'elasticsearch'],
             'balance' => 'simple',
             'maxProcesses' => 8,
             'minProcesses' => 2,
@@ -239,6 +239,21 @@ return [
             'tries' => 3,
             'timeout' => 300,
             'nice' => 10,
+        ],
+        // V2 Coins Engine daily deductions supervisor
+        'supervisor-coins' => [
+            'connection' => 'redis',
+            'queue' => ['coins'],
+            'balance' => 'auto',
+            'autoScalingStrategy' => 'size',
+            'maxProcesses' => 10,
+            'minProcesses' => 2,
+            'maxTime' => 0,
+            'maxJobs' => 0,
+            'memory' => 128,
+            'tries' => 3,
+            'timeout' => 60,
+            'nice' => 0,
         ],
         // Transactional & batch mail — isolated supervisor
         'supervisor-mail' => [
