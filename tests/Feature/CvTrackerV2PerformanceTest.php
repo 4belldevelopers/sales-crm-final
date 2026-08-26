@@ -11,7 +11,7 @@ namespace Tests\Feature;
 
 use App\Models\User;
 use App\Models\Company;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+// use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Tests\TestCase;

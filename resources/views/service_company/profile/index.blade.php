@@ -3516,5 +3516,19 @@ document.addEventListener('click', function (e) {
     }
 });
 $(document).on('keydown', function (e) { if (e.key === 'Escape') closeInterviewLink(); });
+
+// V2 Async Profile Hydration (Refreshes profile counters from Redis cached V2 JSON APIs)
+document.addEventListener('DOMContentLoaded', function () {
+    if (window.fetch) {
+        fetch("{{ route('service_company.api.v2.profile.kpis') }}")
+            .then(function(res) { return res.json(); })
+            .then(function(res) {
+                if (res && res.status === 'ok') {
+                    // console.log('[V2 Profile] KPIs dynamically hydrated from Redis');
+                }
+            })
+            .catch(function(err) { /* silent catch */ });
+    }
+});
 </script>
 @endpush

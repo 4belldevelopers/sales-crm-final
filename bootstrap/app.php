@@ -58,6 +58,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'recruiter.throttle' => \App\Http\Middleware\RecruiterThrottle::class,
             'recruiter.sliding' => \App\Http\Middleware\RecruiterSlidingWindowThrottle::class,
             'consultancy.etag' => \App\Http\Middleware\ConsultancyETag::class,
+            'idempotency' => \App\Http\Middleware\EnsureIdempotency::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

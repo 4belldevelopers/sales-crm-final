@@ -4979,507 +4979,32 @@ END:VCALENDAR";
 
     public static function coinsDeductions($companyid, $eventId, $userId, $from_company_id, $jobId = null, $teamId = null)
     {
-
-        $coin_events = DB::table('coin_events')->where('id', $eventId)->first();
-        $company_coins = DB::table('company_coins')->where('company_id', $companyid)->where('event_type', $coin_events->event_type)->first();
-        $end_date = $company_coins->end_date;
-        $current_date = date('Y-m-d');
-        $end_date_timestamp = strtotime($end_date);
-        $current_date_timestamp = strtotime($current_date);
-
-        $coin_transection_logs = '';
-
-        $free_update_date = Carbon::parse($company_coins->free_update_date);
-        $today = Carbon::today();
-        $diffInDays = abs($today->diffInDays($free_update_date));
-        $currentMonth = $today->month;
-        $currentYear = $today->year;
-        $specificDay = $free_update_date->day;
-
-        $company_coins_free = DB::table('coin_packages')
-            ->where('coin_packages.custome_pck', 2)
-            ->where('event_type', '=', $coin_events->event_type)
-            ->select('coin_packages.*')
-            ->get()
-            ->map(function ($coinOrder) {
-                $coinOrder->coin_order_events = DB::table('coin_events')
-                    ->where('event_type', $coinOrder->event_type)
-                    ->select('coin_events.*')
-                    ->where('status', '=', 1)
-                    ->get()
-                    ->toArray();
-
-                return (array) $coinOrder;
-            })
-            ->toArray();
-        if ($diffInDays >= 30 && $company_coins->free_pack_status == 'active' && $company_coins->coins <= 0) {
-
-            if (@$company_coins_free) {
-
-                foreach ($company_coins_free as $package_sales) {
-
-                    $newDate = date('Y-m-d');
-                    $currentDate = Carbon::create($currentYear, $currentMonth, $specificDay);
-                    $newDate = date('Y-m-d', strtotime($currentDate.' +'.$package_sales['days'].' days'));
-                    // dd($currentDate,$newDate);
-
-                    $coin_orders = [
-                        'coin_package_id' => $package_sales['id'],
-                        'price' => $package_sales['price'],
-                        'coins' => $package_sales['coins'],
-                        'days' => $package_sales['days'],
-                        'event_type' => $package_sales['event_type'],
-                        'company_id' => $companyid,
-                        'discount' => $package_sales['discount'],
-                        'status' => 1,
-                        'created_at' => date('Y-m-d H:i:s'),
-                        'updated_at' => date('Y-m-d H:i:s'),
-                    ];
-
-                    $coin_order_id = DB::table('coin_orders')->insertGetId($coin_orders);
-                    foreach ($package_sales['coin_order_events'] as $package_value) {
-                        $coin_order_events = [
-                            'company_id' => $companyid,
-                            'coin_event_id' => $package_value->id,
-                            'deductions' => $package_value->default_rate,
-                            'deduction_type' => $package_value->deduction_type,
-                            'coin_order_id' => $coin_order_id,
-                            'required_coin' => $package_value->minimum_required,
-                            'event_type' => $package_value->event_type,
-                        ];
-                        // dd($coin_order_events);
-                        DB::table('coin_order_events')->insertGetId($coin_order_events);
-                    }
-
-                    $company_coins_check = DB::table('company_coins')->where('company_id', $companyid)->where('event_type', $coin_events->event_type)->first();
-
-                    if ($company_coins_check) {
-
-                        $total_coins_comp = $package_sales['coins'] - $company_coins_check->balance_coin;
-
-                        if ($total_coins_comp > 0) {
-                            // The value is positive.
-                            $balance_coin = 0;
-                            $total_coins = $total_coins_comp;
-                        } elseif ($total_coins_comp < 0) {
-                            // The value is negative.
-                            $balance_coin = abs($total_coins_comp);
-                            $total_coins = 0;
-                        } else {
-                            // The value is zero.
-                            $balance_coin = 0;
-                            $total_coins = 0;
-                        }
-                        $settlement_coins = $company_coins_check->balance_coin - $balance_coin;
-
-                        // dd($settlement_coins,$balance_coin,$total_coins);
-
-                        $coin_transection_logs = [
-                            'coin_order_id' => $coin_order_id,
-                            'from_company_id' => $from_company_id,
-                            'company_id' => $companyid,
-                            'event_by' => $userId,
-                            'event' => 'Coins Settlement',
-                            'amount' => $package_sales['price'],
-                            'discount' => $package_sales['discount'],
-                            'coins' => $package_sales['coins'],
-                            'transection_type' => 'Debit',
-                            'remain_coins' => $total_coins,
-                            'actual_coins' => $package_sales['coins'],
-                            'settlement_coins' => $settlement_coins,
-                            'event_type' => $coin_events->event_type,
-                            'team_id' => $teamId,
-                            'job_id' => $jobId,
-                            'start_date' => $currentDate,
-                            'end_date' => $newDate,
-                            'created_at' => date('Y-m-d H:i:s'),
-                            'updated_at' => date('Y-m-d H:i:s'),
-                        ];
-
-                        if ($settlement_coins > 0) {
-                            DB::table('coin_transection_logs')->insertGetId($coin_transection_logs);
-                        }
-
-                    } else {
-                        $balance_coin = 0;
-                        $settlement_coins = 0;
-                        $total_coins = $package_sales['coins'];
-                    }
-
-                    $company_coins_value = [
-                        'coin_order_id' => $coin_order_id,
-                        'company_id' => $companyid,
-                        'event_type' => $package_sales['event_type'],
-                        'amount' => $package_sales['price'],
-                        'discount' => $package_sales['discount'],
-                        'coins' => $total_coins,
-                        'balance_coin' => $balance_coin,
-                        'actual_coins' => $package_sales['coins'],
-                        'status' => 'valid',
-                        'free_pack_status' => 'active',
-                        'start_date' => $currentDate,
-                        'end_date' => $newDate,
-                        'free_update_date' => $currentDate,
-                        'updated_at' => date('Y-m-d H:i:s'),
-
-                    ];
-
-                    DB::table('company_coins')->where('company_id', $companyid)->where('event_type', $package_sales['event_type'])->update($company_coins_value);
-
-                    self::addUpdateCompanyCoins($companyid);
-
-                    $coinEvents = DB::table('coin_orders')
-                        ->join('coin_packages', 'coin_packages.id', '=', 'coin_orders.coin_package_id')
-                        ->join('coin_package_types', 'coin_package_types.id', '=', 'coin_packages.coin_package_type_id')
-                        ->where('coin_orders.id', $coin_order_id)
-                        ->select('coin_package_types.title')->first();
-                    $coinEventspackage = ($coinEvents) ? $coinEvents->title : '';
-
-                    $coin_transection_logs = [
-                        'coin_order_id' => $coin_order_id,
-                        'from_company_id' => $from_company_id,
-                        'company_id' => $companyid,
-                        'event_by' => $userId,
-                        'event' => 'Package Auto Activated',
-                        'amount' => $package_sales['price'],
-                        'discount' => $package_sales['discount'],
-                        'coins' => $package_sales['coins'],
-                        'transection_type' => 'credit',
-                        'remain_coins' => $total_coins,
-                        'actual_coins' => $package_sales['coins'],
-                        'settlement_coins' => 0,
-                        'event_type' => $package_sales['event_type'],
-                        'team_id' => $teamId,
-                        'job_id' => $jobId,
-                        'start_date' => $currentDate,
-                        'end_date' => $newDate,
-                        'created_at' => date('Y-m-d H:i:s'),
-                        'updated_at' => date('Y-m-d H:i:s'),
-                    ];
-
-                    DB::table('coin_transection_logs')->insertGetId($coin_transection_logs);
-
-                }
-                $company_coins = DB::table('company_coins')->where('company_id', $companyid)->where('event_type', $coin_events->event_type)->first();
-            }
-
-            // || $current_date_timestamp > $end_date_timestamp
-        } elseif ($company_coins->coins < 0) {
-
-            $coin_orders = DB::table('coin_orders')->where('company_id', $companyid)->where('event_type', $coin_events->event_type)->where('status', 2)->first();
-            if ($coin_orders) {
-                $newDate = date('Y-m-d');
-                $currentDate = Carbon::create($newDate);
-                $newDate = date('Y-m-d', strtotime($currentDate.' +'.$coin_orders->days.' days'));
-
-                $company_coins_check = DB::table('company_coins')->where('company_id', $companyid)->where('event_type', $coin_events->event_type)->first();
-
-                if ($company_coins_check) {
-
-                    $total_coins_comp = $coin_orders->coins - $company_coins_check->balance_coin;
-
-                    if ($total_coins_comp > 0) {
-                        // The value is positive.
-                        $balance_coin = 0;
-                        $total_coins = $total_coins_comp;
-                    } elseif ($total_coins_comp < 0) {
-                        // The value is negative.
-                        $balance_coin = abs($total_coins_comp);
-                        $total_coins = 0;
-                    } else {
-                        // The value is zero.
-                        $balance_coin = 0;
-                        $total_coins = 0;
-                    }
-                    $settlement_coins = $company_coins_check->balance_coin - $balance_coin;
-
-                    // dd($settlement_coins,$balance_coin,$total_coins);
-
-                    $coin_transection_logs = [
-                        'coin_order_id' => $coin_orders->id,
-                        'from_company_id' => $from_company_id,
-                        'company_id' => $companyid,
-                        'event_by' => $userId,
-                        'event' => 'Coins Settlement',
-                        'amount' => $coin_orders->price,
-                        'discount' => $coin_orders->discount,
-                        'coins' => $coin_orders->coins,
-                        'transection_type' => 'Debit',
-                        'settlement_coins' => $settlement_coins,
-                        'event_type' => $coin_events->event_type,
-                        'remain_coins' => $total_coins,
-                        'actual_coins' => $coin_orders->coins,
-                        'team_id' => $teamId,
-                        'job_id' => $jobId,
-                        'start_date' => $currentDate,
-                        'end_date' => $newDate,
-                        'created_at' => date('Y-m-d H:i:s'),
-                        'updated_at' => date('Y-m-d H:i:s'),
-                    ];
-
-                    if ($settlement_coins > 0) {
-                        DB::table('coin_transection_logs')->insertGetId($coin_transection_logs);
-                    }
-
-                } else {
-                    $balance_coin = 0;
-                    $settlement_coins = 0;
-                    $total_coins = $coin_orders->coins;
-                }
-
-                $company_coins_value = [
-                    'coin_order_id' => $coin_orders->id,
-                    'amount' => $coin_orders->price,
-                    'discount' => $coin_orders->discount,
-                    'coins' => $total_coins,
-                    'balance_coin' => $balance_coin,
-                    'status' => 'valid',
-                    'actual_coins' => $total_coins,
-                    'free_pack_status' => 'active',
-                    'start_date' => $currentDate,
-                    'end_date' => $newDate,
-                    'created_at' => date('Y-m-d H:i:s'),
-                    'updated_at' => date('Y-m-d H:i:s'),
-                ];
-
-                $coin_transection_logs = [
-                    'coin_order_id' => $coin_orders->id,
-                    'from_company_id' => $from_company_id,
-                    'company_id' => $companyid,
-                    'event_by' => $userId,
-                    'event' => 'Package Auto Activated',
-                    'amount' => $coin_orders->price,
-                    'discount' => $coin_orders->discount,
-                    'coins' => $coin_orders->coins,
-                    'transection_type' => 'credit',
-                    'remain_coins' => $total_coins,
-                    'actual_coins' => $coin_orders->coins,
-                    'settlement_coins' => 0,
-                    'event_type' => $coin_orders->event_type,
-                    'team_id' => $teamId,
-                    'job_id' => $jobId,
-                    'start_date' => $currentDate,
-                    'end_date' => $newDate,
-                    'created_at' => date('Y-m-d H:i:s'),
-                    'updated_at' => date('Y-m-d H:i:s'),
-                ];
-
-                DB::table('coin_transection_logs')->insertGetId($coin_transection_logs);
-
-                DB::table('company_coins')->where('company_id', $companyid)->where('event_type', $coin_orders->event_type)->update($company_coins_value);
-
-                self::addUpdateCompanyCoins($companyid);
-
-                DB::table('coin_orders')->where('id', $companyid)->update(['status' => 1]);
-
-                $company_coins = DB::table('company_coins')->where('company_id', $companyid)->where('event_type', $coin_events->event_type)->first();
-            }
-
-        }
-
-        $coin_order_events = DB::table('coin_order_events')->where('company_id', $companyid)->where('coin_event_id', $eventId)->where('event_type', $coin_events->event_type)->where('coin_order_id', $company_coins->coin_order_id)->first();
-        $balance_coin_limit = '';
-        if ($company_coins->event_type == 'operational') {
-            $balance_coin_limit = 20;
-        } else {
-            $balance_coin_limit = 1000;
-        }
-
-        // dd($coin_events , $company_coins , $coin_order_events);
-
-        if ($coin_events && $company_coins && $coin_order_events) {
-
-            // balance_coin_limit > $company_coins->balance_coin  =  $company_coins->coins == 0
-            // && $current_date_timestamp <= $end_date_timestamp
-            if ($company_coins->coins > 0) {
-
-                // $data = [
-                // 	'status'=>true,
-                // 	'message'=>'Packages have expired or package coins are low',
-                // 	'company_coins' => @$company_coins->coins
-                // ];
-
-                // && $current_date_timestamp <= $end_date_timestamp
-                // dd($company_coins->coins,$coin_order_events->deductions);
-                if ($company_coins->coins >= $coin_order_events->deductions) {
-                    $deductions = $company_coins->coins - $coin_order_events->deductions;
-                    $total_coins = $deductions;
-                    $updateCoin = [
-                        'coins' => $deductions,
-                    ];
-                    $deductions = $coin_order_events->deductions;
-                    $deductions = $coin_order_events->deductions;
-                    $balance_coins = 0;
-
-                    $company_coinsupdate = DB::table('company_coins')->where('company_id', $companyid)->where('event_type', $coin_events->event_type)->update($updateCoin);
-
-                    self::addUpdateCompanyCoins($companyid);
-
-                    $coin_transection_logs = [
-                        'coin_order_id' => $company_coins->coin_order_id,
-                        'from_company_id' => $from_company_id,
-                        'company_id' => $companyid,
-                        'event_by' => $userId,
-                        'event' => ($teamId == '0') ? ' Working Status changed' : $coin_events->title,
-                        'amount' => '',
-                        'discount' => '',
-                        'coins' => $deductions,
-                        'transection_type' => 'Debit',
-                        'settlement_coins' => '',
-                        'balance_coins' => $balance_coins,
-                        'remain_coins' => $total_coins,
-                        'actual_coins' => $company_coins->coins,
-                        'event_type' => $coin_events->event_type,
-                        'team_id' => $teamId,
-                        'job_id' => $jobId,
-                        'start_date' => '',
-                        'end_date' => '',
-                        'created_at' => date('Y-m-d H:i:s'),
-                        'updated_at' => date('Y-m-d H:i:s'),
-                    ];
-                    $coin_transection_logs = DB::table('coin_transection_logs')->insertGetId($coin_transection_logs);
-
-                    $data = [
-                        'status' => false,
-                        'message' => 'Success',
-                        'company_coins' => @$total_coins,
-                    ];
-
-                } else {
-                    $data = [
-                        'status' => true,
-                        'message' => 'does not have sufficient coins, minimum required coins',
-                        'company_coins' => @$company_coins->coins,
-                    ];
-
-                    // $updateCoin['balance_coin'] = abs($company_coins->balance_coin+$coin_order_events->deductions);
-                    // $deductions = $coin_order_events->deductions;
-                    // $balance_coins = $coin_order_events->deductions;
-                    // $total_coins  = 0;
-                }
-
-            } else {
-                $data = [
-                    'status' => true,
-                    'message' => 'Packages have expired or package coins are low',
-                    'company_coins' => @$company_coins->coins,
-                ];
-
-            }
-
-        } else {
-
-            $data = [
-                'status' => true,
-                'message' => 'Packages have expired or package coins are low',
-                'company_coins' => @$company_coins->coins,
-            ];
-        }
-
-        // dd("dd");
-        if (auth()->check()) {
-            $main_Company_id = auth()->user()->company_id;
-            $company_coins_maim = DB::table('company_coins')->where('company_id', $main_Company_id)->where('event_type', 'operational')->first();
-            $usersData = DB::table('users')->where('company_id', $main_Company_id)->where('status', '=', 'active')->get();
-            // dd($usersCount);
-            $balance_coin_limit = 20;
-            // dd($balance_coin_limit);
-            if ($company_coins_maim) {
-                // dd($val_coins);
-                $eventId = 1;
-                $coin_order_events = DB::table('coin_order_events')->where('company_id', $main_Company_id)->where('coin_event_id', $eventId)->where('event_type', $company_coins_maim->event_type)->where('coin_order_id', $company_coins_maim->coin_order_id)->first();
-
-                $today = Carbon::today();
-                $autoPayment = false;
-                $deductionsCoinsCount = 0;
-                foreach ($usersData as $userVal) {
-                    $free_update_date = Carbon::parse($userVal->auto_date_team);
-                    $diffInDays = abs($today->diffInDays($free_update_date));
-                    $diffInDays = ceil($diffInDays);    // 0.65 => 1
-                    if ($diffInDays > 0) {
-                        $company_coins_check = DB::table('company_coins')->where('company_id', $main_Company_id)->where('event_type', 'operational')->first();
-                        if ($company_coins_check->coins > 0) {
-                            $end_date = $company_coins_check->end_date;
-                            $current_date = date('Y-m-d');
-                            $end_date_timestamp = strtotime($end_date);
-                            $current_date_timestamp = strtotime($current_date);
-                            $deductionsCoins = $diffInDays * 1 * $coin_order_events->deductions;
-                            // dd($deductionsCoins,$diffInDays);
-                            // && $current_date_timestamp <= $end_date_timestamp
-                            if ($company_coins_check->coins > $deductionsCoins) {
-                                $deductions = $company_coins_check->coins - $deductionsCoins;
-                                $total_coins = $deductions;
-                                $updateCoin = [
-                                    'coins' => $deductions,
-                                ];
-                                $updateCoin['auto_team_coins'] = Carbon::today();
-                                $deductions = $deductionsCoins;
-                                $deductions = $deductionsCoins;
-                                $balance_coins = 0;
-
-                                $company_coinsupdate = DB::table('company_coins')->where('company_id', $main_Company_id)->where('event_type', 'operational')->update($updateCoin);
-
-                                self::addUpdateCompanyCoins($main_Company_id);
-
-                                $autoPayment = DB::table('users')->where('id', $userVal->id)->update(['working_status' => 1, 'auto_date_team' => Carbon::today()]);
-                                $deductionsCoinsCount += $deductionsCoins;
-
-                            } else {
-                                DB::table('users')->where('id', $userVal->id)->where('root_user', '!=', 1)->update(['working_status' => 0]);
-                                // $updateCoin['balance_coin'] = abs($company_coins_check->balance_coin + $deductionsCoins);
-                                // $deductions = $deductionsCoins;
-                                // $balance_coins = $deductionsCoins;
-                                // $updateCoin['auto_team_coins'] = Carbon::today();
-                                // $total_coins = 0;
-                            }
-                            // dd($updateCoin);
-
-                            // dd($company_coins->coin_order_id,);
-
-                        } else {
-                            DB::table('users')->where('id', $userVal->id)->where('root_user', '!=', 1)->update(['working_status' => 0]);
-                        }
-
-                    }
-
-                }
-                // dd($deductionsCoinsCount);
-                if ($autoPayment) {
-                    $coin_transection_logs = [
-                        'coin_order_id' => $company_coins_maim->coin_order_id,
-                        'from_company_id' => $main_Company_id,
-                        'company_id' => $main_Company_id,
-                        'event_by' => auth()->user()->id,
-                        'event' => 'Team Manage Auto Deductions',
-                        'amount' => '',
-                        'discount' => '',
-                        'coins' => $deductionsCoinsCount,
-                        'remain_coins' => $total_coins,
-                        'transection_type' => 'Debit',
-                        'settlement_coins' => '',
-                        'balance_coins' => $balance_coins,
-                        'actual_coins' => $company_coins_maim->coins,
-                        'event_type' => 'operational',
-                        'team_id' => '',
-                        'job_id' => '',
-                        'start_date' => '',
-                        'end_date' => '',
-                        'created_at' => date('Y-m-d H:i:s'),
-                        'updated_at' => date('Y-m-d H:i:s'),
-                    ];
-                    // dd($coin_transection_logs);
-                    DB::table('coin_transection_logs')->insertGetId($coin_transection_logs);
-                }
-
-            }
-        }
-
-        return (object) $data;
+        /** @var \App\Services\CoinService $coinService */
+        $coinService = app(\App\Services\CoinService::class);
+
+        return $coinService->deductCoinsAtomic(
+            (int) $companyid,
+            (int) $eventId,
+            (int) $userId,
+            (int) $from_company_id,
+            $jobId,
+            $teamId
+        );
     }
 
     public static function coinsValidations($companyid, $eventId, $userId, $from_company_id, $jobId = null, $teamId = null)
     {
+        /** @var \App\Services\CoinService $coinService */
+        $coinService = app(\App\Services\CoinService::class);
 
+        return $coinService->validateCoinsAtomic(
+            (int) $companyid,
+            (int) $eventId,
+            (int) $userId,
+            (int) $from_company_id,
+            $jobId,
+            $teamId
+        );
         $coin_events = DB::table('coin_events')->where('id', $eventId)->first();
         // dd($companyid,$eventId,$userId);
         $company_coins = DB::table('company_coins')->where('company_id', $companyid)->where('event_type', $coin_events->event_type)->first();
@@ -8736,7 +8261,7 @@ END:VCALENDAR";
                         'interview_job_id' => $row->interview_job_id,
                         'interview_job_wise_con_id' => $row->interview_job_wise_con_id,
                         'email_template' => $row->email_template,
-                        'has_feedback' => !empty($row->feedback) ? 1 : 0,
+                        'has_feedback' => ! empty($row->feedback) ? 1 : 0,
                         'client_title_name' => $row->client_name ?: $row->company_name,
                         'recommendation_relation' => $recommendation_relation ?? [],
                         'job_assign' => $job_assign ?? [],
@@ -9772,9 +9297,9 @@ END:VCALENDAR";
             $country_name = $locInfo->country_name ?? '';
             $city_name = $locInfo->city_name ?? '';
 
-            $nameToUse = !empty($row->client_name) ? $row->client_name : $row->company_name;
-            $logoToUse = !empty($row->client_logo_logical_path) ? url('public/' . $row->client_logo_logical_path) : (!empty($row->client_logo) ? $row->client_logo : $row->company_logo);
-            $indNameToUse = !empty($row->client_ind_name) ? $row->client_ind_name : $row->company_ind_name;
+            $nameToUse = ! empty($row->client_name) ? $row->client_name : $row->company_name;
+            $logoToUse = ! empty($row->client_logo_logical_path) ? url('public/'.$row->client_logo_logical_path) : (! empty($row->client_logo) ? $row->client_logo : $row->company_logo);
+            $indNameToUse = ! empty($row->client_ind_name) ? $row->client_ind_name : $row->company_ind_name;
 
             $updateTime = now()->toIso8601String();
             $response = $elasticService->getClient()->update([
@@ -10289,12 +9814,13 @@ END:VCALENDAR";
         //     ->where('job_assign.user_id', $userId)
         //     ->count();
         $userAllow = DB::table('job_assign')
-        ->where('job_id', $jobId)
-        ->where('user_id', $userId)
-        ->exists();
+            ->where('job_id', $jobId)
+            ->where('user_id', $userId)
+            ->exists();
 
         $chkAdminRole = auth()->user()->hasRole('admin');
-           return $userAllow || $chkAdminRole;
+
+        return $userAllow || $chkAdminRole;
         // $chkAdminRole = DB::table('roles')->select('*')->where('id', $role_id)->where('name', 'admin')->count();
 
         // $allow = false;
@@ -13115,6 +12641,113 @@ END:VCALENDAR";
         }
 
         return $resultMap;
+    }
+
+    /**
+     * Batch fetch commercial minimum rate & type for multiple agency company IDs.
+     * Replaces N+1 per-agency queries in recommended & registered agency views.
+     *
+     * Intent: Batch fetch minimum commercial rates for agencies in single query.
+     * Tenancy: Filtered by company_id IN ($companyIds).
+     *
+     * @param  array  $companyIds  List of agency company IDs
+     * @param  int  $commtype  Commercial type (1: Contract, 2: Full-time)
+     * @return array Map of company_id => (object)['minimum_rate' => rate, 'minimum_rate_type' => object]
+     */
+    public static function batchGetCommercialsData(array $companyIds, $commtype)
+    {
+        if (empty($companyIds)) {
+            return [];
+        }
+
+        $commTypeMap = DB::table('commericials')
+            ->select('commericials.*')
+            ->whereIn('commericials.company_id', $companyIds)
+            ->where('commericials.commtype', '=', $commtype)
+            ->get()
+            ->keyBy('company_id');
+
+        $minRates = DB::table('commericials')
+            ->join('commericial_details', 'commericial_details.commericial_id', '=', 'commericials.id')
+            ->select('commericials.company_id', DB::raw('MIN(commericial_details.rate) as min_rate'))
+            ->whereIn('commericials.company_id', $companyIds)
+            ->where('commericials.commtype', '=', $commtype)
+            ->whereExists(function ($experienceBands) {
+                $experienceBands->selectRaw('1')
+                    ->from('commercial_experience_bands as experience_bands')
+                    ->where('experience_bands.is_active', 1)
+                    ->whereColumn('commericial_details.exp', '>=', 'experience_bands.min_experience')
+                    ->whereColumn('commericial_details.exp', '<=', 'experience_bands.max_experience');
+            })
+            ->groupBy('commericials.company_id')
+            ->pluck('min_rate', 'company_id');
+
+        $resultMap = [];
+        foreach ($companyIds as $cid) {
+            $resultMap[$cid] = (object) [
+                'minimum_rate' => $minRates[$cid] ?? null,
+                'minimum_rate_type' => $commTypeMap[$cid] ?? null,
+            ];
+        }
+
+        return $resultMap;
+    }
+
+    /**
+     * Batch fetch match found status on staffing_company_relation for multiple agencies.
+     * Replaces N+1 per-agency queries in agency marketplace views.
+     *
+     * Intent: Batch fetch active relation counts between employer and multiple agencies.
+     * Tenancy: Filtered by from_company_id and to_company_id IN ($toCompanyIds).
+     *
+     * @param  int  $fromCompanyId  Employer company ID
+     * @param  array  $toCompanyIds  List of agency company IDs
+     * @return array Map of company_id => count
+     */
+    public static function batchGetMatchFoundMap($fromCompanyId, array $toCompanyIds)
+    {
+        if (empty($toCompanyIds)) {
+            return [];
+        }
+
+        return DB::table('staffing_company_relation')
+            ->select('to_company_id', DB::raw('count(*) as total'))
+            ->where('from_company_id', $fromCompanyId)
+            ->whereIn('to_company_id', $toCompanyIds)
+            ->where('final_status', 1)
+            ->groupBy('to_company_id')
+            ->pluck('total', 'to_company_id')
+            ->toArray();
+    }
+
+    /**
+     * Invalidate all agency marketplace cache version keys for a given user ID.
+     * Bumps version keys for all agency drawers (send invitation, recommended, registered, assigned).
+     *
+     * Intent: Clean agency marketplace cache on write actions.
+     * Tenancy: Scoped to user_id.
+     *
+     * @param  int  $userId  User ID whose agency marketplace cache should be cleaned
+     * @return bool
+     */
+    public static function invalidateSpartnerlistingCache($userId)
+    {
+        if (! $userId) {
+            return false;
+        }
+
+        $keys = [
+            'allsendinvitationtoagency_version_user_'.$userId,
+            'allrecommendedagency_version_user_'.$userId,
+            'allregisteredagency_version_user_'.$userId,
+            'allassignedagency_version_user_'.$userId,
+        ];
+
+        foreach ($keys as $k) {
+            self::cacheClean($k);
+        }
+
+        return true;
     }
 
     public static function bench_explore_listing_counter($bench_id)
