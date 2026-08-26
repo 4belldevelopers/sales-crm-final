@@ -5776,23 +5776,24 @@ function headerCard(companyName,logoCell,reportDate,captainName){
   return {
     margin:[0,0,0,10],
     stack:[
-      {canvas:[{type:'rect',x:0,y:0,w:535,h:62,r:6,lineWidth:0.55,lineColor:'#dbe3ef',color:'#ffffff'}],margin:[0,0,0,-62]},
+      {canvas:[{type:'rect',x:0,y:0,w:535,h:64,r:6,lineWidth:0.55,lineColor:'#dbe3ef',color:'#ffffff'}],margin:[0,0,0,-64]},
       {
         table:{widths:[220,'*'],body:[[
           {
             table:{widths:['auto','*'],body:[[logoCell,{stack:[
-              {text:companyName,fontSize:11.2,bold:true,color:'#0f172a',margin:[0,6,0,0]}
+              {text:'SHARED BY',fontSize:6,bold:true,color:'#64748b',margin:[0,1,0,3]},
+              {text:companyName,fontSize:11.2,bold:true,color:'#0f172a',margin:[0,0,0,0]}
             ],border:[false,false,false,false]}]]},
             layout:'noBorders',
-            margin:[14,13,10,10],
+            margin:[14,12,10,10],
             border:[false,false,false,false]
           },
           {
             stack:[
               {text:'PRE-SCREENED CANDIDATE REPORT',style:'title',margin:[0,2,0,0]},
-              {text:clean(reportDate,'--')+' · Confidential',style:'eyebrow',margin:[0,8,0,0]}
+              {text:(clean(reportDate,'--')+' · Confidential').toUpperCase(),style:'eyebrow',margin:[0,4,0,0]}
             ],
-            margin:[10,15,14,10],
+            margin:[10,14,14,10],
             border:[false,false,false,false]
           }
         ]]},
@@ -5834,12 +5835,12 @@ function metricCell(label,value,icon){
   return {stack:[
     {columns:[
       {text:'',width:'*'},
-      {svg:icon,width:6.8,margin:[0,0.6,4,0]},
+      {svg:icon,width:6.8,margin:[0,0.6,0,0]},
       {text:clean(label).toUpperCase(),style:'metricLabel',color:'#64748b',width:'auto'},
       {text:'',width:'*'}
-    ],columnGap:0,margin:[0,0,0,6]},
+    ],columnGap:3,margin:[0,0,0,7]},
     {text:clean(value),style:'metricValue',alignment:'center'}
-  ],margin:[4,9,4,8]};
+  ],margin:[4,8,4,8]};
 }
 function dataCompleteness(data){
   var checks=[
