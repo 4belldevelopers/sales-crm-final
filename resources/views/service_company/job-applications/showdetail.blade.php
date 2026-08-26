@@ -5828,7 +5828,11 @@ function iconLine(icon,text,style,color,iconWidth){
 }
 function sectionTitle(title,subtle,icon){
   if(!icon) return {text:title,style:subtle?'sectionTitleMuted':'sectionTitle',margin:[0,0,0,8]};
-  return {columns:[{svg:icon,width:10,margin:[0,0,5,0]},{text:title,style:subtle?'sectionTitleMuted':'sectionTitle',margin:[0,0.5,0,0]}],columnGap:0,margin:[0,0,0,8]};
+  return {columns:[
+    {svg:icon,width:10,margin:[0,0,0,0]},
+    {text:'',width:5},
+    {text:title,style:subtle?'sectionTitleMuted':'sectionTitle',margin:[0,0.5,0,0]}
+  ],columnGap:0,margin:[0,0,0,8]};
 }
 function metaCell(label,value,align){
   return {stack:[
@@ -5840,8 +5844,9 @@ function metricCell(label,value,icon){
   return {stack:[
     {columns:[
       {text:'',width:'*'},
-      {svg:icon,width:10,margin:[0,0,6,0]},
-      {text:clean(label).toUpperCase(),style:'metricLabel',color:'#64748b',width:'auto',margin:[0,1.7,0,0]},
+      {svg:icon,width:10.5,margin:[0,0.2,0,0]},
+      {text:'',width:6},
+      {text:clean(label).toUpperCase(),style:'metricLabel',color:'#64748b',width:'auto',margin:[0,1.9,0,0]},
       {text:'',width:'*'}
     ],columnGap:0,margin:[0,0,0,8]},
     {text:clean(value),style:'metricValue',alignment:'center'}
@@ -5904,10 +5909,11 @@ function buildValidationRows(validation){
     return {stack:[
       {columns:[
         {text:'',width:'*'},
-        {svg:row.icon,width:9.5,margin:[0,0,4,0]},
-        {text:row.label.toUpperCase(),fontSize:6.6,bold:true,color:'#0f172a',width:'auto',margin:[0,1.5,0,0]},
+        {svg:row.icon,width:9.8,margin:[0,0.2,0,0]},
+        {text:'',width:5},
+        {text:row.label.toUpperCase(),fontSize:6.6,bold:true,color:'#0f172a',width:'auto',margin:[0,1.7,0,0]},
         {text:'',width:'*'}
-      ],columnGap:0,margin:[0,0,0,6]},
+      ],columnGap:0,margin:[0,0,0,7]},
       {text:status,fontSize:6.5,bold:true,color:verified?'#16a34a':'#b45309',alignment:'center',margin:[0,0,0,0]}
     ],margin:[2,7,2,7]};
   });
