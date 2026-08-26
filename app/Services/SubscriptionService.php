@@ -21,11 +21,24 @@ class SubscriptionService
 {
     /**
      * Fetch complete Wallet Center dataset for a tenant company.
-     *
-     * @param int $companyId
-     * @return array
      */
     public function getWalletCenterData(int $companyId): array
+    {
+        $cacheKey = "tenant_{$companyId}_wallet_center_data";
+
+        try {
+            return Cache::remember($cacheKey, 900, function () use ($companyId) {
+                return $this->buildWalletCenterData($companyId);
+            });
+        } catch (\Throwable $e) {
+            return $this->buildWalletCenterData($companyId);
+        }
+    }
+
+    /**
+     * Internal data builder for Wallet Center dataset.
+     */
+    private function buildWalletCenterData(int $companyId): array
     {
         $packageActive = DB::table('package_active')
             ->select('package_active.*')
@@ -92,7 +105,7 @@ class SubscriptionService
 
         $opCoinOrderIds = $rawOpCoins->pluck('coin_order_id')->filter()->unique()->toArray();
         $opOrderEventsGrouped = collect();
-        if (!empty($opCoinOrderIds)) {
+        if (! empty($opCoinOrderIds)) {
             $opOrderEventsGrouped = DB::table('coin_order_events')
                 ->join('coin_events', 'coin_events.id', '=', 'coin_order_events.coin_event_id')
                 ->whereIn('coin_order_id', $opCoinOrderIds)
@@ -106,6 +119,7 @@ class SubscriptionService
             $coinOrder->coin_order_events = isset($opOrderEventsGrouped[$coinOrderId])
                 ? $opOrderEventsGrouped[$coinOrderId]->toArray()
                 : [];
+
             return (array) $coinOrder;
         })->toArray();
 
@@ -122,7 +136,7 @@ class SubscriptionService
 
         $salCoinOrderIds = $rawSalCoins->pluck('coin_order_id')->filter()->unique()->toArray();
         $salOrderEventsGrouped = collect();
-        if (!empty($salCoinOrderIds)) {
+        if (! empty($salCoinOrderIds)) {
             $salOrderEventsGrouped = DB::table('coin_order_events')
                 ->join('coin_events', 'coin_events.id', '=', 'coin_order_events.coin_event_id')
                 ->whereIn('coin_order_id', $salCoinOrderIds)
@@ -136,6 +150,7 @@ class SubscriptionService
             $coinOrder->coin_order_events = isset($salOrderEventsGrouped[$coinOrderId])
                 ? $salOrderEventsGrouped[$coinOrderId]->toArray()
                 : [];
+
             return (array) $coinOrder;
         })->toArray();
 
@@ -151,15 +166,15 @@ class SubscriptionService
             $rawSalPackages = DB::table('coin_packages')
                 ->join('coin_package_types', 'coin_package_types.id', '=', 'coin_packages.coin_package_type_id')
                 ->select('coin_packages.*', 'coin_package_types.title', DB::raw('
-                (SELECT COUNT(*) FROM coin_events 
-                 WHERE coin_events.event_type = coin_packages.event_type) as event_count'))
+                    (SELECT COUNT(*) FROM coin_events 
+                     WHERE coin_events.event_type = coin_packages.event_type) as event_count'))
                 ->where('coin_packages.custome_pck', '!=', 1)
                 ->where('coin_packages.event_type', '=', 'sales')
                 ->get();
 
             $allPkgIds = $rawOpPackages->pluck('id')->merge($rawSalPackages->pluck('id'))->filter()->unique()->toArray();
             $pkgPointsGrouped = collect();
-            if (!empty($allPkgIds)) {
+            if (! empty($allPkgIds)) {
                 $pkgPointsGrouped = DB::table('coin_package_points')
                     ->whereIn('coin_package_points.coin_package_id', $allPkgIds)
                     ->select('coin_package_points.*')
@@ -171,6 +186,7 @@ class SubscriptionService
                 $row->features = isset($pkgPointsGrouped[$row->id])
                     ? $pkgPointsGrouped[$row->id]->toArray()
                     : [];
+
                 return (array) $row;
             });
 
@@ -178,18 +194,19 @@ class SubscriptionService
                 $row->features = isset($pkgPointsGrouped[$row->id])
                     ? $pkgPointsGrouped[$row->id]->toArray()
                     : [];
+
                 return (array) $row;
             });
 
             return [
                 'operational_package' => $opPackages,
-                'sales_package'       => $salPackages,
+                'sales_package' => $salPackages,
             ];
         });
 
         $operationalPackage = $masterPackagesCached['operational_package'];
-        $salesPackage       = $masterPackagesCached['sales_package'];
-        $username           = auth()->user()->name ?? '';
+        $salesPackage = $masterPackagesCached['sales_package'];
+        $username = auth()->user()->name ?? '';
 
         $actualCount = DB::table('coin_transection_logs')
             ->select('coin_transection_logs.coins')
@@ -216,11 +233,11 @@ class SubscriptionService
             ->sum('coins');
 
         $opTotalPurchased = $opTotalCredited;
-        $opTotalSpend     = collect($currentCoinsOperational)->sum('order_price');
-        $opCoinsUsed      = max(0, $opTotalPurchased - (int) $remainCoinsVal);
-        $opExpiry         = collect($currentCoinsOperational)->pluck('end_date')->filter()->max();
-        $opPlanExpiry     = $opExpiry ? Carbon::parse($opExpiry) : null;
-        $opDaysLeft       = $opPlanExpiry ? max(0, (int) now()->diffInDays($opPlanExpiry, false)) : 0;
+        $opTotalSpend = collect($currentCoinsOperational)->sum('order_price');
+        $opCoinsUsed = max(0, $opTotalPurchased - (int) $remainCoinsVal);
+        $opExpiry = collect($currentCoinsOperational)->pluck('end_date')->filter()->max();
+        $opPlanExpiry = $opExpiry ? Carbon::parse($opExpiry) : null;
+        $opDaysLeft = $opPlanExpiry ? max(0, (int) now()->diffInDays($opPlanExpiry, false)) : 0;
 
         $actualCountSales = DB::table('coin_transection_logs')
             ->select('coin_transection_logs.coins')
@@ -247,50 +264,58 @@ class SubscriptionService
             ->sum('coins');
 
         $salTotalPurchased = $salTotalCredited;
-        $salTotalSpend     = collect($currentCoinsSales)->sum('order_price');
-        $salCoinsUsed      = max(0, $salTotalPurchased - (int) $remainCoinsSalesVal);
-        $salExpiry         = collect($currentCoinsSales)->pluck('end_date')->filter()->max();
-        $salPlanExpiry     = $salExpiry ? Carbon::parse($salExpiry) : null;
-        $salDaysLeft       = $salPlanExpiry ? max(0, (int) now()->diffInDays($salPlanExpiry, false)) : 0;
+        $salTotalSpend = collect($currentCoinsSales)->sum('order_price');
+        $salCoinsUsed = max(0, $salTotalPurchased - (int) $remainCoinsSalesVal);
+        $salExpiry = collect($currentCoinsSales)->pluck('end_date')->filter()->max();
+        $salPlanExpiry = $salExpiry ? Carbon::parse($salExpiry) : null;
+        $salDaysLeft = $salPlanExpiry ? max(0, (int) now()->diffInDays($salPlanExpiry, false)) : 0;
 
-        $opUsedPct  = $opTotalPurchased > 0 ? min(100, round(($opCoinsUsed / $opTotalPurchased) * 100)) : 0;
+        $opUsedPct = $opTotalPurchased > 0 ? min(100, round(($opCoinsUsed / $opTotalPurchased) * 100)) : 0;
         $salUsedPct = $salTotalPurchased > 0 ? min(100, round(($salCoinsUsed / $salTotalPurchased) * 100)) : 0;
 
         return [
-            'package_active'             => $packageActive,
-            'carts_count'                => $cartsCount,
-            'top_up_coin_packages_op'    => $topUpCoinPackagesOp,
-            'top_up_coin_packages_sal'   => $topUpCoinPackagesSal,
-            'company'                    => $company,
-            'companyPackage'             => $companyPackage,
-            'company_id'                 => $companyId,
-            'top_up_logs_op'             => $topUpLogsOp,
-            'top_up_logs_sal'            => $topUpLogsSal,
-            'cart_transaction_history'   => null, // Lazy-loaded via AJAX when opening Transactions tab
-            'account'                    => $account,
-            'package_active_all'         => $packageActiveAll,
-            'package_active_details'     => $packageActiveDetails,
-            'current_coins_operational'  => $currentCoinsOperational,
-            'current_coins_sales'        => $currentCoinsSales,
-            'operational_package'        => $operationalPackage,
-            'sales_package'              => $salesPackage,
-            'username'                   => $username,
-            'actual_count'               => $actualCountVal,
-            'remain_coins'               => $remainCoinsVal,
-            'op_total_purchased'         => $opTotalPurchased,
-            'op_total_spend'             => $opTotalSpend,
-            'op_coins_used'              => $opCoinsUsed,
-            'op_plan_expiry'             => $opPlanExpiry,
-            'op_days_left'               => $opDaysLeft,
-            'actual_count_sales'         => $actualCountSalesVal,
-            'remain_coins_sales'         => $remainCoinsSalesVal,
-            'sal_total_purchased'        => $salTotalPurchased,
-            'sal_total_spend'            => $salTotalSpend,
-            'sal_coins_used'             => $salCoinsUsed,
-            'sal_plan_expiry'            => $salPlanExpiry,
-            'sal_days_left'              => $salDaysLeft,
-            'op_used_pct'                => $opUsedPct,
-            'sal_used_pct'               => $salUsedPct,
+            'package_active' => $packageActive,
+            'carts_count' => $cartsCount,
+            'top_up_coin_packages_op' => $topUpCoinPackagesOp,
+            'top_up_coin_packages_sal' => $topUpCoinPackagesSal,
+            'company' => $company,
+            'companyPackage' => $companyPackage,
+            'company_id' => $companyId,
+            'top_up_logs_op' => $topUpLogsOp,
+            'top_up_logs_sal' => $topUpLogsSal,
+            'cart_transaction_history' => null, // Lazy-loaded via AJAX when opening Transactions tab
+            'account' => $account,
+            'package_active_all' => $packageActiveAll,
+            'package_active_details' => $packageActiveDetails,
+            'current_coins_operational' => $currentCoinsOperational,
+            'current_coins_sales' => $currentCoinsSales,
+            'operational_package' => $operationalPackage,
+            'sales_package' => $salesPackage,
+            'username' => $username,
+            'actual_count' => $actualCountVal,
+            'remain_coins' => $remainCoinsVal,
+            'op_total_purchased' => $opTotalPurchased,
+            'op_total_spend' => $opTotalSpend,
+            'op_coins_used' => $opCoinsUsed,
+            'op_plan_expiry' => $opPlanExpiry,
+            'op_days_left' => $opDaysLeft,
+            'actual_count_sales' => $actualCountSalesVal,
+            'remain_coins_sales' => $remainCoinsSalesVal,
+            'sal_total_purchased' => $salTotalPurchased,
+            'sal_total_spend' => $salTotalSpend,
+            'sal_coins_used' => $salCoinsUsed,
+            'sal_plan_expiry' => $salPlanExpiry,
+            'sal_days_left' => $salDaysLeft,
+            'op_used_pct' => $opUsedPct,
+            'sal_used_pct' => $salUsedPct,
         ];
+    }
+
+    /**
+     * Invalidate tenant wallet center Redis cache upon payment/subscription events.
+     */
+    public static function clearTenantWalletCache(int $companyId): bool
+    {
+        return Cache::forget("tenant_{$companyId}_wallet_center_data");
     }
 }

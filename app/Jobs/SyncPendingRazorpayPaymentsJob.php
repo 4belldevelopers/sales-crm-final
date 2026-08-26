@@ -25,14 +25,14 @@ class SyncPendingRazorpayPaymentsJob implements ShouldQueue
 
     public int $companyId;
 
-    public int $tries   = 3;
+    public int $tries = 3;
+
     public int $backoff = 30;
+
     public int $timeout = 60;
 
     /**
      * Create a new job instance.
-     *
-     * @param int $companyId
      */
     public function __construct(int $companyId)
     {
@@ -44,13 +44,14 @@ class SyncPendingRazorpayPaymentsJob implements ShouldQueue
      */
     public function handle(): void
     {
+        // Tenancy: Filtered by company_id utilizing idx_company_gateway_payment index
         $transactionHistory = DB::table('cart_transaction_history')
-            ->select('cart_transaction_history.*')
+            ->select(['id', 'company_id', 'payment_orderId', 'payment_Id', 'payment_gateway', 'cart_id'])
             ->where('company_id', $this->companyId)
             ->where('payment_gateway', 'razorpay')
             ->where(function ($query) {
                 $query->whereNull('payment_Id')
-                      ->orWhere('payment_Id', '=', '');
+                    ->orWhere('payment_Id', '=', '');
             })
             ->orderByDesc('id')
             ->limit(5)
@@ -61,16 +62,17 @@ class SyncPendingRazorpayPaymentsJob implements ShouldQueue
         }
 
         $paymentSettings = DB::table('payment_settings')->select('payment_settings.*')->first();
-        if (!$paymentSettings || empty($paymentSettings->razorpay_key) || empty($paymentSettings->razorpay_secret)) {
+        if (! $paymentSettings || empty($paymentSettings->razorpay_key) || empty($paymentSettings->razorpay_secret)) {
             Log::warning('SyncPendingRazorpayPaymentsJob: Missing Razorpay credentials in payment_settings');
+
             return;
         }
 
-        $key    = $paymentSettings->razorpay_key;
+        $key = $paymentSettings->razorpay_key;
         $secret = $paymentSettings->razorpay_secret;
 
         foreach ($transactionHistory as $trVal) {
-            if (!empty($trVal->payment_orderId) && $trVal->payment_gateway === 'razorpay') {
+            if (! empty($trVal->payment_orderId) && $trVal->payment_gateway === 'razorpay') {
                 $orderID = $trVal->payment_orderId;
 
                 try {
@@ -81,9 +83,9 @@ class SyncPendingRazorpayPaymentsJob implements ShouldQueue
                     curl_setopt($ch, CURLOPT_TIMEOUT, 10);
 
                     $response = curl_exec($ch);
-                    if (!curl_errno($ch)) {
+                    if (! curl_errno($ch)) {
                         $payments = json_decode($response, true);
-                        if (!empty($payments['items'])) {
+                        if (! empty($payments['items'])) {
                             foreach ($payments['items'] as $payment) {
                                 if (isset($payment['status'])) {
                                     DB::table('cart_transaction_history')
@@ -95,15 +97,15 @@ class SyncPendingRazorpayPaymentsJob implements ShouldQueue
                     } else {
                         Log::error('SyncPendingRazorpayPaymentsJob: cURL error', [
                             'order_id' => $orderID,
-                            'error'    => curl_error($ch),
+                            'error' => curl_error($ch),
                         ]);
                     }
                     curl_close($ch);
                 } catch (\Throwable $e) {
                     Log::error('SyncPendingRazorpayPaymentsJob execution exception', [
                         'company_id' => $this->companyId,
-                        'order_id'   => $orderID,
-                        'error'      => $e->getMessage(),
+                        'order_id' => $orderID,
+                        'error' => $e->getMessage(),
                     ]);
                 }
             }
