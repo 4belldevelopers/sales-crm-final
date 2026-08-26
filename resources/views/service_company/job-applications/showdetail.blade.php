@@ -5455,31 +5455,96 @@ setTimeout(() => {
 {{-- Recruiter Summary data bridge — zero extra DB queries; all PHP vars already in scope --}}
 @php
   $rsSkills = [];
+  $rsSkillRatingMap = [];
+  $rsSkillNormalize = function($value) {
+    return mb_strtolower(trim((string) $value));
+  };
+  $rsSkillSources = [@$application->candidate_skills ?? [], @$application->skill_experiences ?? [], $jobSkill ?? []];
+  foreach($rsSkillSources as $rsSkillSource){
+    if(is_string($rsSkillSource)){
+      $decoded = json_decode($rsSkillSource);
+      $rsSkillSource = is_array($decoded) ? $decoded : [];
+    }
+    if(!is_iterable($rsSkillSource)) continue;
+    foreach($rsSkillSource as $rsSkillRow){
+      $rsSkillRow = (object) $rsSkillRow;
+      $rsSkillName = trim((string)($rsSkillRow->skill_key ?? $rsSkillRow->skill_name ?? $rsSkillRow->name ?? $rsSkillRow->skill ?? ''));
+      $rsSkillRating = $rsSkillRow->rating ?? $rsSkillRow->self_rating ?? $rsSkillRow->skill_rating ?? $rsSkillRow->candidate_rating ?? null;
+      if($rsSkillName !== '' && !is_null($rsSkillRating) && (is_numeric($rsSkillRating) || preg_match('/\d+/', (string)$rsSkillRating, $rsRatingMatch))){
+        $rsSkillRatingMap[$rsSkillNormalize($rsSkillName)] = max(0,min(5,(int)(is_numeric($rsSkillRating) ? $rsSkillRating : $rsRatingMatch[0])));
+      }
+    }
+  }
+  $rsResolveSkillRating = function($row, $name) use ($rsSkillRatingMap, $rsSkillNormalize) {
+    $row = (object) $row;
+    $rating = $row->rating ?? $row->self_rating ?? $row->skill_rating ?? $row->candidate_rating ?? null;
+    if(!is_null($rating) && (is_numeric($rating) || preg_match('/\d+/', (string)$rating, $ratingMatch))){
+      return max(0,min(5,(int)(is_numeric($rating) ? $rating : $ratingMatch[0])));
+    }
+    $key = $rsSkillNormalize($name);
+    return $rsSkillRatingMap[$key] ?? 0;
+  };
+  $rsFormatSkillExperience = function($years, $months, $hasValue = true) {
+    if(!$hasValue) return '--';
+    $years = max(0, (int) $years);
+    $months = max(0, (int) $months);
+    if($months >= 12){
+      $years += intdiv($months, 12);
+      $months = $months % 12;
+    }
+    if($years === 0 && $months === 0) return '0 Years';
+    $parts = [];
+    if($years > 0) $parts[] = $years.' Year'.($years > 1 ? 's' : '');
+    if($months > 0) $parts[] = $months.' Month'.($months > 1 ? 's' : '');
+    return implode(' ', $parts);
+  };
+  $rsParseSkillExperience = function($value) use ($rsFormatSkillExperience) {
+    $raw = trim((string) $value);
+    if($raw === '') return ['text'=>'--','value'=>0];
+    if(preg_match('/(\d+)\s*(?:years?|yrs?)?\s+(\d+)\s*(?:months?|mos?)/i', $raw, $match)){
+      $years = (int) $match[1];
+      $months = (int) $match[2];
+      return ['text'=>$rsFormatSkillExperience($years, $months, true),'value'=>$years + ($months / 12)];
+    }
+    if(preg_match('/(\d+)\s*[.]\s*(\d*)/', $raw, $match)){
+      $years = (int) $match[1];
+      $months = $match[2] === '' ? 0 : (int) $match[2];
+      return ['text'=>$rsFormatSkillExperience($years, $months, true),'value'=>$years + ($months / 12)];
+    }
+    if(preg_match('/(\d+)/', $raw, $match)){
+      $years = (int) $match[1];
+      return ['text'=>$rsFormatSkillExperience($years, 0, true),'value'=>$years];
+    }
+    return ['text'=>$raw,'value'=>0];
+  };
   if(!empty($skillExperiencesCount) && !empty($skillExperiences)){
     foreach($skillExperiences as $exp){
       $exp=(object)$exp;
       $sn=trim((string)($exp->skill_key??'')); if(!$sn) continue;
-      $year=(string)($exp->year ?? '0');
-      $month=(string)($exp->month ?? '0');
-      $expText=trim($year.'.'.$month.' Year');
+      $year=(int)($exp->year ?? 0);
+      $month=(int)($exp->month ?? 0);
+      if(isset($exp->total_months) && is_numeric($exp->total_months) && (int)$exp->total_months > 0){
+        $year = intdiv((int)$exp->total_months, 12);
+        $month = (int)$exp->total_months % 12;
+      }
+      $expText=$rsFormatSkillExperience($year,$month,true);
       $rsSkills[]=[
         'name'=>$sn,
         'expText'=>$expText,
-        'exp'=>(float)($year.'.'.$month),
-        'rating'=>max(0,min(5,(int)($exp->rating??0)))
+        'exp'=>$year + ($month / 12),
+        'rating'=>$rsResolveSkillRating($exp,$sn)
       ];
     }
   }
   if(empty($rsSkills)&&!empty($jobSkill)){
     foreach($jobSkill as $sv){
       $sv=(object)$sv; $sn=trim((string)($sv->skill_name??'')); if(!$sn) continue;
-      $expStr=trim(str_replace(['Years','Year',' '],'',(string)($sv->skill_value??'')));
-      $expYears=($expStr!=='')?(float)$expStr:0;
+      $expData=$rsParseSkillExperience($sv->skill_value??'');
       $rsSkills[]=[
         'name'=>$sn,
-        'expText'=>trim((string)($sv->skill_value??'')),
-        'exp'=>$expYears,
-        'rating'=>max(0,min(5,(int)($sv->rating??0)))
+        'expText'=>$expData['text'],
+        'exp'=>$expData['value'],
+        'rating'=>$rsResolveSkillRating($sv,$sn)
       ];
     }
   }
@@ -5747,7 +5812,7 @@ function pairedCardRow(leftStack,rightStack,leftFill,rightFill,rightBorder){
   };
 }
 function iconLine(icon,text,style,color,iconWidth){
-  return {columns:[{svg:icon,width:iconWidth||7,margin:[0,1,4,0]},{text:text,style:style||'small',color:color||undefined}],columnGap:0};
+  return {columns:[{svg:icon,width:iconWidth||7,margin:[0,1,7,0]},{text:text,style:style||'small',color:color||undefined}],columnGap:0};
 }
 function sectionTitle(title,subtle,icon){
   if(!icon) return {text:title,style:subtle?'sectionTitleMuted':'sectionTitle',margin:[0,0,0,8]};
@@ -5797,7 +5862,7 @@ function buildSkillRows(skills){
     var stars=[];
     for(var i=1;i<=5;i++) stars.push({svg:i<=rating?rsStarGold:rsStarMuted,width:6.4,margin:[0,0.5,1.2,0]});
     rows.push([
-      {text:titleCase(skill.name),style:'tableCellBold'},
+      {text:clean(skill.name).toUpperCase(),style:'tableCellBold',alignment:'left'},
       {text:expText!=='' && expText!=='--' ? expText : (exp>0 ? exp+' Year'+(exp>1?'s':'') : '--'),style:'tableCell',color:'#334155'},
       {columns:stars,columnGap:0,alignment:'center',margin:[20,5,0,5]}
     ]);
@@ -5875,8 +5940,7 @@ function buildDefinition(data,logoUri){
         {text:score+'%',fontSize:30,bold:true,color:'#1d4ed8',alignment:'center',margin:[0,7,0,0]}
       ],'#ffffff','#f8fbff','#cfe0ff'),
       roundedFullCard([
-        {table:{widths:['*','*','*','*','*'],body:[[
-          metricCell('Preferred Role',data.designation||data.jobTitle,rsIconBriefcase),
+        {table:{widths:['*','*','*','*'],body:[[
           metricCell('Education',data.education,rsIconEducation),
           metricCell('Notice Period',joining,rsIconClock),
           metricCell('Location',data.location,rsIconLocation),
@@ -5884,7 +5948,7 @@ function buildDefinition(data,logoUri){
         ]]},
         layout:{
           hLineWidth:function(){return 0;},
-          vLineWidth:function(i){return i>0&&i<5?0.45:0;},
+          vLineWidth:function(i){return i>0&&i<4?0.45:0;},
           vLineColor:function(){return '#dbe3ef';},
           paddingLeft:function(){return 0;},
           paddingRight:function(){return 0;},
@@ -5920,10 +5984,9 @@ function buildDefinition(data,logoUri){
           }}
       ],[0,0,0,8],74,'#ffffff','#dbe3ef'),
       {
-        table:{widths:['*','auto','auto'],body:[[
-          {text:'Prepared by '+companyName+' for client hiring review',style:'footer',border:[false,true,false,false],margin:[0,5,0,0]},
-          {text:'www.jero.works',style:'footer',border:[false,true,false,false],margin:[0,5,0,0]},
-          {text:'2026 Jero. All rights reserved.',style:'footer',border:[false,true,false,false],margin:[12,5,0,0]}
+        table:{widths:['*','auto'],body:[[
+          {text:'This report is generated by AI hiring platform jero.works',style:'footer',border:[false,true,false,false],margin:[0,5,0,0]},
+          {text:'www.jero.works',style:'footer',border:[false,true,false,false],margin:[0,5,0,0]}
         ]]},
         layout:{hLineColor:function(){return '#e5e7eb';},hLineWidth:function(){return 0.6;},vLineWidth:function(){return 0;}}
       }
@@ -6873,7 +6936,7 @@ function buildDef(d){
         {
           stack: [
             {text:'www.jero.works',bold:true,fontSize:7,color:'#FFFFFF',alignment:'right'},
-            {text:'© 2026 Jero AI. All rights reserved.',fontSize:4.5,color:'#6B7280',alignment:'right',margin:[0,1,0,0]}
+            {text:'',fontSize:4.5,color:'#6B7280',alignment:'right',margin:[0,1,0,0]}
           ],
           width: 110
         }
