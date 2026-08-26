@@ -70,6 +70,7 @@ use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Storage;
 use Maatwebsite\Excel\Facades\Excel;
+use Symfony\Component\Process\Process;
 use Validator;
 
 class ServiceCompanyJobApplicationController extends ServiceCompanyBaseController
@@ -1431,10 +1432,7 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
                 abort(503, 'Document converter unavailable');
             }
             $profile = 'file:///'.str_replace('\\', '/', $cacheDir.DIRECTORY_SEPARATOR.'lo_'.$hash);
-            $cmd = '"'.$soffice.'" --headless --norestore --nofirststartwizard'
-                .' -env:UserInstallation='.$profile
-                .' --convert-to pdf --outdir "'.$cacheDir.'" "'.$srcFile.'"';
-            @exec($cmd.' 2>&1', $out, $code);
+            $this->runResumePdfConversion($soffice, $profile, $cacheDir, $srcFile);
             @unlink($srcFile);
             if (! file_exists($pdfCache) || filesize($pdfCache) < 100) {
                 abort(500, 'Conversion failed');
@@ -1491,6 +1489,34 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
         }
 
         return null;
+    }
+
+    /**
+     * Intent: convert one uploaded Word resume to PDF with a bounded LibreOffice
+     * process so a malformed DOC/DOCX cannot pin a web worker indefinitely.
+     */
+    private function runResumePdfConversion($soffice, $profile, $cacheDir, $srcFile)
+    {
+        $process = new Process([
+            $soffice,
+            '--headless',
+            '--norestore',
+            '--nofirststartwizard',
+            '-env:UserInstallation='.$profile,
+            '--convert-to',
+            'pdf',
+            '--outdir',
+            $cacheDir,
+            $srcFile,
+        ]);
+        $process->setTimeout(45);
+        try {
+            $process->run();
+        } catch (\Throwable $e) {
+            Log::warning('Resume PDF conversion process failed', [
+                'message' => $e->getMessage(),
+            ]);
+        }
     }
 
     /**
@@ -1559,10 +1585,7 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
             }
 
             $profile = 'file:///'.str_replace('\\', '/', $cacheDir.DIRECTORY_SEPARATOR.'lo_'.$hash);
-            $cmd = '"'.$soffice.'" --headless --norestore --nofirststartwizard'
-                .' -env:UserInstallation='.$profile
-                .' --convert-to pdf --outdir "'.$cacheDir.'" "'.$srcFile.'"';
-            @exec($cmd.' 2>&1', $out, $code);
+            $this->runResumePdfConversion($soffice, $profile, $cacheDir, $srcFile);
             @unlink($srcFile);
 
             if (! file_exists($pdfCache) || filesize($pdfCache) < 100) {
