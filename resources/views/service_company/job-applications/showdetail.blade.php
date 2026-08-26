@@ -5536,6 +5536,9 @@ var rsIconCalendar='<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
 var rsIconBriefcase='<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path fill="#2563eb" d="M9 6V5a3 3 0 0 1 6 0v1h4a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4zm2 0h2V5a1 1 0 0 0-2 0v1z"/></svg>';
 var rsIconClock='<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path fill="#64748b" d="M12 2a10 10 0 1 0 10 10A10.01 10.01 0 0 0 12 2zm1 11h5v-2h-4V6h-2v7z"/></svg>';
 var rsIconCompany='<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path fill="#64748b" d="M4 21V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v17h3v-9h-2v-2h3a1 1 0 0 1 1 1v10H4zm4-14h2V5H8v2zm4 0h2V5h-2v2zm-4 4h2V9H8v2zm4 0h2V9h-2v2zm-4 4h2v-2H8v2zm4 0h2v-2h-2v2z"/></svg>';
+var rsIconEducation='<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path fill="#64748b" d="M12 3L1.5 8.5 12 14l8-4.2V16h2V8.5L12 3zm-6 9.1V16c0 1.7 2.7 4 6 4s6-2.3 6-4v-3.9L12 15.2l-6-3.1z"/></svg>';
+var rsIconLocation='<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path fill="#64748b" d="M12 2a7 7 0 0 0-7 7c0 5.2 7 13 7 13s7-7.8 7-13a7 7 0 0 0-7-7zm0 9.5A2.5 2.5 0 1 1 12 6a2.5 2.5 0 0 1 0 5.5z"/></svg>';
+var rsIconLaptop='<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path fill="#64748b" d="M4 4h16a2 2 0 0 1 2 2v10H2V6a2 2 0 0 1 2-2zm0 2v8h16V6H4zm-2 12h20v2H2v-2z"/></svg>';
 var rsIconSummary='<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path fill="#2563eb" d="M5 3h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2zm3 5h8V6H8v2zm0 5h8v-2H8v2zm0 5h5v-2H8v2z"/></svg>';
 var rsIconNote='<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path fill="#2563eb" d="M4 4a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H9l-5 5V4zm4 4v2h8V8H8zm0 4v2h6v-2H8z"/></svg>';
 var rsIconSkill='<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path fill="#2563eb" d="M12 2l2.4 5.4 5.9.6-4.4 3.9 1.3 5.8-5.2-3-5.2 3 1.3-5.8L3.7 8l5.9-.6L12 2z"/></svg>';
@@ -5685,7 +5688,7 @@ function headerCard(companyName,logoCell,reportDate,captainName){
   return {
     margin:[0,0,0,10],
     stack:[
-      {canvas:[{type:'rect',x:0,y:0,w:535,h:62,r:6,lineWidth:0.55,lineColor:'#dbe3ef',color:'#ffffff'}],margin:[0,0,0,-62]},
+      {canvas:[{type:'rect',x:0,y:0,w:535,h:66,r:6,lineWidth:0.55,lineColor:'#dbe3ef',color:'#ffffff'}],margin:[0,0,0,-66]},
       {
         table:{widths:[220,'*'],body:[[
           {
@@ -5701,7 +5704,7 @@ function headerCard(companyName,logoCell,reportDate,captainName){
             stack:[
               {text:'PRE-SCREENED CANDIDATE REPORT',style:'title',margin:[0,2,0,0]},
               {
-                margin:[0,15,0,0],
+                margin:[0,8,0,0],
                 table:{widths:['*','auto'],body:[[
                   {columns:[{text:'',width:'*'},{svg:rsIconCalendar,width:6,margin:[0,0.5,3,0]},{text:clean(reportDate,'--'),fontSize:5.9,color:'#64748b',noWrap:true}],columnGap:0,border:[false,false,false,false],margin:[0,0,12,0]},
                   {columns:[{svg:rsIconUser,width:6,margin:[0,0.5,3,0]},{text:'Captain: '+clean(captainName,'--'),fontSize:5.9,color:'#64748b',noWrap:true}],columnGap:0,border:[true,false,false,false],margin:[12,0,0,0]}
@@ -5709,7 +5712,7 @@ function headerCard(companyName,logoCell,reportDate,captainName){
                 layout:{hLineWidth:function(){return 0;},vLineWidth:function(i){return i===1?0.5:0;},vLineColor:function(){return '#cbd5e1';},paddingLeft:function(){return 0;},paddingRight:function(){return 0;},paddingTop:function(){return 0;},paddingBottom:function(){return 0;}}
               }
             ],
-            margin:[10,15,14,12],
+            margin:[10,16,14,12],
             border:[false,false,false,false]
           }
         ]]},
@@ -5743,11 +5746,12 @@ function metaCell(label,value,align){
     {text:clean(value),style:'metaValue',alignment:align||'left',margin:[0,2,0,0]}
   ],margin:[0,4,0,4]};
 }
-function metricCell(label,value){
+function metricCell(label,value,icon){
   return {stack:[
-    {text:label,style:'metricLabel',alignment:'center'},
-    {text:clean(value),style:'metricValue',alignment:'center',margin:[0,3,0,0]}
-  ],margin:[4,6,4,6],fillColor:'#f8fafc'};
+    {svg:icon,width:7,alignment:'center',margin:[0,0,0,3]},
+    {text:label,style:'metricLabel',color:'#64748b',alignment:'center'},
+    {text:clean(value),style:'metricValue',alignment:'center',margin:[0,6,0,0]}
+  ],margin:[4,6,4,7]};
 }
 function dataCompleteness(data){
   var checks=[
@@ -5856,17 +5860,25 @@ function buildDefinition(data,logoUri){
       ],[
         {text:'MATCH CONFIDENCE',fontSize:6.2,bold:true,color:'#64748b',alignment:'center',margin:[0,13,0,0]},
         {text:score+'%',fontSize:30,bold:true,color:'#1d4ed8',alignment:'center',margin:[0,7,0,0]}
-      ],'#ffffff',tone.fill,tone.border),
+      ],'#ffffff','#f8fbff','#cfe0ff'),
       roundedFullCard([
         {table:{widths:['*','*','*','*','*'],body:[[
-          metricCell('Preferred Role',data.designation||data.jobTitle),
-          metricCell('Education',data.education),
-          metricCell('Notice Period',joining),
-          metricCell('Location',data.location),
-          metricCell('Work Mode',data.workMode)
+          metricCell('Preferred Role',data.designation||data.jobTitle,rsIconBriefcase),
+          metricCell('Education',data.education,rsIconEducation),
+          metricCell('Notice Period',joining,rsIconClock),
+          metricCell('Location',data.location,rsIconLocation),
+          metricCell('Work Mode',data.workMode,rsIconLaptop)
         ]]},
-        layout:{hLineWidth:function(){return 0.55;},vLineWidth:function(){return 0.55;},hLineColor:function(){return '#dbe3ef';},vLineColor:function(){return '#dbe3ef';}}
-      }],[0,0,0,8],42,'#ffffff','#dbe3ef'),
+        layout:{
+          hLineWidth:function(){return 0;},
+          vLineWidth:function(i){return i>0&&i<5?0.45:0;},
+          vLineColor:function(){return '#dbe3ef';},
+          paddingLeft:function(){return 0;},
+          paddingRight:function(){return 0;},
+          paddingTop:function(){return 0;},
+          paddingBottom:function(){return 0;}
+        }}
+      ],[0,0,0,8],58,'#ffffff','#dbe3ef'),
       {
         columns:[
           fixedPanel([sectionTitle('EXECUTIVE SUMMARY',false,rsIconSummary),{text:summary,style:'body'}],[0,0,6,8],'#ffffff','#dbe3ef',124),
