@@ -31,8 +31,10 @@ class ProcessOperationalCoinDeductionsJob implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
-    public int $tries   = 3;
+    public int $tries = 3;
+
     public int $backoff = 60;
+
     public int $timeout = 300;
 
     public function handle(ElasticService $elasticService): void
@@ -49,7 +51,7 @@ class ProcessOperationalCoinDeductionsJob implements ShouldQueue
             } catch (\Throwable $e) {
                 Log::error('ProcessOperationalCoinDeductionsJob: company failed', [
                     'company_id' => $companyId,
-                    'error'      => $e->getMessage(),
+                    'error' => $e->getMessage(),
                 ]);
             }
         }
@@ -58,202 +60,210 @@ class ProcessOperationalCoinDeductionsJob implements ShouldQueue
     /** Pass 1: deduct daily coins per active team member. */
     private function deductTeamCoins(int $companyId, ElasticService $elasticService): void
     {
-        $companyCoin = DB::table('company_coins')
-            ->where('company_id', $companyId)
-            ->where('event_type', 'operational')
-            ->first();
-
-        if (!$companyCoin) {
-            return;
-        }
-
-        $coinOrderEvent = DB::table('coin_order_events')
-            ->where('company_id', $companyId)
-            ->where('coin_event_id', 1)
-            ->where('deduction_type', 'daily')
-            ->where('event_type', $companyCoin->event_type)
-            ->where('coin_order_id', $companyCoin->coin_order_id)
-            ->first();
-
-        if (!$coinOrderEvent) {
-            return;
-        }
-
-        $today        = Carbon::today();
-        $usersData    = DB::table('users')->where('company_id', $companyId)->where('status', 'active')->get();
-        $deductedSum  = 0;
-        $didDeduct    = false;
-        $remainCoins  = 0;
-
-        foreach ($usersData as $user) {
-            $diffInDays = (int) ceil(abs($today->diffInDays(Carbon::parse($user->auto_date_team))));
-            if ($diffInDays <= 0) {
-                continue;
-            }
-
-            // Re-fetch inside the loop so balance is always current.
-            $fresh = DB::table('company_coins')
+        DB::transaction(function () use ($companyId, $elasticService) {
+            $companyCoin = DB::table('company_coins')
                 ->where('company_id', $companyId)
                 ->where('event_type', 'operational')
+                ->lockForUpdate()
                 ->first();
 
-            $deduction = $diffInDays * $coinOrderEvent->deductions;
+            if (! $companyCoin) {
+                return;
+            }
 
-            if ($fresh->coins >= $deduction) {
-                $newBalance = $fresh->coins - $deduction;
+            $coinOrderEvent = DB::table('coin_order_events')
+                ->where('company_id', $companyId)
+                ->where('coin_event_id', 1)
+                ->where('deduction_type', 'daily')
+                ->where('event_type', $companyCoin->event_type)
+                ->where('coin_order_id', $companyCoin->coin_order_id)
+                ->first();
 
+            if (! $coinOrderEvent) {
+                return;
+            }
+
+            $today = Carbon::today();
+            $usersData = DB::table('users')->where('company_id', $companyId)->where('status', 'active')->get();
+
+            $activeUserIdsToUpdate = [];
+            $inactiveUserIdsToUpdate = [];
+            $totalDeductionRequired = 0;
+            $currentBalance = (float) $companyCoin->coins;
+
+            foreach ($usersData as $user) {
+                $diffInDays = (int) ceil(abs($today->diffInDays(Carbon::parse($user->auto_date_team))));
+                if ($diffInDays <= 0) {
+                    continue;
+                }
+
+                $deduction = $diffInDays * $coinOrderEvent->deductions;
+
+                if ($currentBalance >= $deduction) {
+                    $currentBalance -= $deduction;
+                    $totalDeductionRequired += $deduction;
+                    $activeUserIdsToUpdate[] = $user->id;
+                } else {
+                    if ((int) $user->root_user !== 1) {
+                        $inactiveUserIdsToUpdate[] = $user->id;
+                    }
+                }
+            }
+
+            if (! empty($activeUserIdsToUpdate)) {
                 DB::table('company_coins')
                     ->where('company_id', $companyId)
                     ->where('event_type', 'operational')
-                    ->update(['coins' => $newBalance, 'auto_team_coins' => $today]);
+                    ->update(['coins' => $currentBalance, 'auto_team_coins' => $today, 'updated_at' => now()]);
 
                 DB::table('users')
-                    ->where('id', $user->id)
+                    ->whereIn('id', $activeUserIdsToUpdate)
                     ->update(['working_status' => 1, 'auto_date_team' => $today]);
 
-                $deductedSum += $deduction;
-                $remainCoins  = $newBalance;
-                $didDeduct    = true;
-            } else {
+                DB::table('coin_transection_logs')->insert([
+                    'coin_order_id' => $companyCoin->coin_order_id,
+                    'from_company_id' => $companyId,
+                    'company_id' => $companyId,
+                    'event_by' => 0,
+                    'event' => 'Team Manage Auto Deductions',
+                    'amount' => '',
+                    'discount' => '',
+                    'coins' => $totalDeductionRequired,
+                    'remain_coins' => $currentBalance,
+                    'transection_type' => 'Debit',
+                    'settlement_coins' => 0,
+                    'balance_coins' => 0,
+                    'actual_coins' => $companyCoin->coins,
+                    'event_type' => 'operational',
+                    'team_id' => '',
+                    'job_id' => '',
+                    'start_date' => null,
+                    'end_date' => null,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+            }
+
+            if (! empty($inactiveUserIdsToUpdate)) {
                 DB::table('users')
-                    ->where('id', $user->id)
-                    ->where('root_user', '!=', 1)
+                    ->whereIn('id', $inactiveUserIdsToUpdate)
                     ->update(['working_status' => 0]);
 
-                $this->updateElasticUserStatus((int) $user->id, 0, $elasticService);
+                foreach ($inactiveUserIdsToUpdate as $deactivatedUserId) {
+                    $this->updateElasticUserStatus((int) $deactivatedUserId, 0, $elasticService);
+                }
             }
-        }
-
-        if ($didDeduct) {
-            DB::table('coin_transection_logs')->insert([
-                'coin_order_id'    => $companyCoin->coin_order_id,
-                'from_company_id'  => $companyId,
-                'company_id'       => $companyId,
-                'event_by'         => null,
-                'event'            => 'Team Manage Auto Deductions',
-                'amount'           => '',
-                'discount'         => '',
-                'coins'            => $deductedSum,
-                'remain_coins'     => $remainCoins,
-                'transection_type' => 'Debit',
-                'settlement_coins' => '',
-                'balance_coins'    => 0,
-                'actual_coins'     => $companyCoin->coins,
-                'event_type'       => 'operational',
-                'team_id'          => '',
-                'job_id'           => '',
-                'start_date'       => '',
-                'end_date'         => '',
-                'created_at'       => now(),
-                'updated_at'       => now(),
-            ]);
-        }
+        });
     }
 
     /** Pass 2: deduct daily coins per active job posting. */
     private function deductJobCoins(int $companyId, ElasticService $elasticService): void
     {
-        $companyCoin = DB::table('company_coins')
-            ->where('company_id', $companyId)
-            ->where('event_type', 'operational')
-            ->first();
-
-        if (!$companyCoin) {
-            return;
-        }
-
-        $coinOrderEvent = DB::table('coin_order_events')
-            ->where('deduction_type', 'daily')
-            ->where('company_id', $companyId)
-            ->where('coin_event_id', 2)
-            ->where('event_type', $companyCoin->event_type)
-            ->where('coin_order_id', $companyCoin->coin_order_id)
-            ->first();
-
-        if (!$coinOrderEvent) {
-            return;
-        }
-
-        $today       = Carbon::today();
-        $jobsData    = DB::table('jobs')->where('company_id', $companyId)->where('status', 'active')->get();
-        $deductedSum = 0;
-        $didDeduct   = false;
-        $remainCoins = 0;
-
-        foreach ($jobsData as $job) {
-            $diffInDays = (int) ceil(abs($today->diffInDays(Carbon::parse($job->auto_date_job))));
-            if ($diffInDays <= 0) {
-                continue;
-            }
-
-            $fresh     = DB::table('company_coins')
+        DB::transaction(function () use ($companyId, $elasticService) {
+            $companyCoin = DB::table('company_coins')
                 ->where('company_id', $companyId)
                 ->where('event_type', 'operational')
+                ->lockForUpdate()
                 ->first();
 
-            $deduction = $diffInDays * $coinOrderEvent->deductions;
+            if (! $companyCoin) {
+                return;
+            }
 
-            if ($fresh->coins >= $deduction) {
-                $newBalance = $fresh->coins - $deduction;
+            $coinOrderEvent = DB::table('coin_order_events')
+                ->where('deduction_type', 'daily')
+                ->where('company_id', $companyId)
+                ->where('coin_event_id', 2)
+                ->where('event_type', $companyCoin->event_type)
+                ->where('coin_order_id', $companyCoin->coin_order_id)
+                ->first();
 
+            if (! $coinOrderEvent) {
+                return;
+            }
+
+            $today = Carbon::today();
+            $jobsData = DB::table('jobs')->where('company_id', $companyId)->where('status', 'active')->get();
+
+            $activeJobIdsToUpdate = [];
+            $inactiveJobIdsToUpdate = [];
+            $totalDeductionRequired = 0;
+            $currentBalance = (float) $companyCoin->coins;
+
+            foreach ($jobsData as $job) {
+                $diffInDays = (int) ceil(abs($today->diffInDays(Carbon::parse($job->auto_date_job))));
+                if ($diffInDays <= 0) {
+                    continue;
+                }
+
+                $deduction = $diffInDays * $coinOrderEvent->deductions;
+
+                if ($currentBalance >= $deduction) {
+                    $currentBalance -= $deduction;
+                    $totalDeductionRequired += $deduction;
+                    $activeJobIdsToUpdate[] = $job->id;
+                } else {
+                    $inactiveJobIdsToUpdate[] = $job->id;
+                }
+            }
+
+            if (! empty($activeJobIdsToUpdate)) {
                 DB::table('company_coins')
                     ->where('company_id', $companyId)
                     ->where('event_type', 'operational')
-                    ->update(['coins' => $newBalance, 'auto_job_coins' => $today]);
+                    ->update(['coins' => $currentBalance, 'auto_job_coins' => $today, 'updated_at' => now()]);
 
                 DB::table('jobs')
-                    ->where('id', $job->id)
+                    ->whereIn('id', $activeJobIdsToUpdate)
                     ->update(['auto_date_job' => $today]);
 
-                $deductedSum += $deduction;
-                $remainCoins  = $newBalance;
-                $didDeduct    = true;
-            } else {
+                DB::table('coin_transection_logs')->insert([
+                    'coin_order_id' => $companyCoin->coin_order_id,
+                    'from_company_id' => $companyId,
+                    'company_id' => $companyId,
+                    'event_by' => 0,
+                    'event' => 'Jobs Manage Auto Deductions',
+                    'amount' => '',
+                    'discount' => '',
+                    'remain_coins' => $currentBalance,
+                    'coins' => $totalDeductionRequired,
+                    'transection_type' => 'Debit',
+                    'settlement_coins' => 0,
+                    'balance_coins' => 0,
+                    'actual_coins' => $companyCoin->coins,
+                    'event_type' => 'operational',
+                    'team_id' => '',
+                    'job_id' => '',
+                    'start_date' => null,
+                    'end_date' => null,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+            }
+
+            if (! empty($inactiveJobIdsToUpdate)) {
                 DB::table('jobs')
-                    ->where('id', $job->id)
+                    ->whereIn('id', $inactiveJobIdsToUpdate)
                     ->update(['status' => 'inactive']);
 
-                $this->updateElasticJobStatus((int) $job->id, 'inactive', $elasticService);
+                foreach ($inactiveJobIdsToUpdate as $deactivatedJobId) {
+                    $this->updateElasticJobStatus((int) $deactivatedJobId, 'inactive', $elasticService);
+                }
             }
-        }
-
-        if ($didDeduct) {
-            DB::table('coin_transection_logs')->insert([
-                'coin_order_id'    => $companyCoin->coin_order_id,
-                'from_company_id'  => $companyId,
-                'company_id'       => $companyId,
-                'event_by'         => null,
-                'event'            => 'Jobs Manage Auto Deductions',
-                'amount'           => '',
-                'discount'         => '',
-                'remain_coins'     => $remainCoins,
-                'coins'            => $deductedSum,
-                'transection_type' => 'Debit',
-                'settlement_coins' => '',
-                'balance_coins'    => 0,
-                'actual_coins'     => $companyCoin->coins,
-                'event_type'       => 'operational',
-                'team_id'          => '',
-                'job_id'           => '',
-                'start_date'       => '',
-                'end_date'         => '',
-                'created_at'       => now(),
-                'updated_at'       => now(),
-            ]);
-        }
+        });
     }
 
     private function updateElasticUserStatus(int $userId, int $status, ElasticService $elasticService): void
     {
         try {
-            if (!$elasticService->getClient()->exists(['index' => ELASTIC_USERS_LIST, 'id' => $userId])) {
+            if (! $elasticService->getClient()->exists(['index' => ELASTIC_USERS_LIST, 'id' => $userId])) {
                 return;
             }
             $elasticService->getClient()->update([
                 'index' => ELASTIC_USERS_LIST,
-                'id'    => $userId,
-                'body'  => [
-                    'doc'           => ['working_status' => $status],
+                'id' => $userId,
+                'body' => [
+                    'doc' => ['working_status' => $status],
                     'doc_as_upsert' => false,
                 ],
                 // No 'refresh' => true — natural 1-second ES refresh is sufficient.
@@ -261,7 +271,7 @@ class ProcessOperationalCoinDeductionsJob implements ShouldQueue
         } catch (\Throwable $e) {
             Log::warning('ProcessOperationalCoinDeductionsJob: ES user update failed', [
                 'user_id' => $userId,
-                'error'   => $e->getMessage(),
+                'error' => $e->getMessage(),
             ]);
         }
     }
@@ -269,14 +279,14 @@ class ProcessOperationalCoinDeductionsJob implements ShouldQueue
     private function updateElasticJobStatus(int $jobId, string $status, ElasticService $elasticService): void
     {
         try {
-            if (!$elasticService->getClient()->exists(['index' => ELASTIC_JOBS, 'id' => $jobId])) {
+            if (! $elasticService->getClient()->exists(['index' => ELASTIC_JOBS, 'id' => $jobId])) {
                 return;
             }
             $elasticService->getClient()->update([
                 'index' => ELASTIC_JOBS,
-                'id'    => $jobId,
-                'body'  => [
-                    'doc'           => ['status' => $status],
+                'id' => $jobId,
+                'body' => [
+                    'doc' => ['status' => $status],
                     'doc_as_upsert' => false,
                 ],
                 // No 'refresh' => true — natural 1-second ES refresh is sufficient.
@@ -284,7 +294,7 @@ class ProcessOperationalCoinDeductionsJob implements ShouldQueue
         } catch (\Throwable $e) {
             Log::warning('ProcessOperationalCoinDeductionsJob: ES job update failed', [
                 'job_id' => $jobId,
-                'error'  => $e->getMessage(),
+                'error' => $e->getMessage(),
             ]);
         }
     }

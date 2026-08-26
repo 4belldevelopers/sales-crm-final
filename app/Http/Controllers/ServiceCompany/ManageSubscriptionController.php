@@ -331,7 +331,7 @@ class ManageSubscriptionController extends ServiceCompanyBaseController
         // Paginate — standard Laravel paginate (no double-offset bug)
         $paginator = $query->paginate($perPage, ['*'], 'page', $page);
 
-        // Transform rows for JSON response
+        // Transform rows for JSON response with server-side Carbon date & time formatting
         $items = $paginator->map(function ($row) {
             $displayCoins = ($row->transection_type === 'credit')
                 ? (($row->actual_coins) ? $row->actual_coins : $row->coins)
@@ -340,9 +340,13 @@ class ManageSubscriptionController extends ServiceCompanyBaseController
             $actorName = ($row->event_by != 1) ? ($row->name ?? 'System') : 'Free';
             $actorCompany = ($row->event_by != 1) ? ($row->company_name ?? 'Default') : 'Default';
 
+            $carbonDate = $row->created_at ? \Carbon\Carbon::parse($row->created_at) : null;
+
             return [
                 'id' => $row->id,
                 'created_at' => $row->created_at,
+                'formatted_date' => $carbonDate ? $carbonDate->format('d M Y') : '—',
+                'formatted_time' => $carbonDate ? $carbonDate->format('h:i A') : '',
                 'event' => $row->event,
                 'event_type' => $row->event_type,
                 'transection_type' => $row->transection_type,

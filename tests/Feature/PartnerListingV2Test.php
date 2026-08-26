@@ -17,8 +17,6 @@ class PartnerListingV2Test extends TestCase
 {
     /**
      * Test that GeneralMethod::batchGetClientIdCompany returns empty array for empty inputs.
-     *
-     * @return void
      */
     public function test_batch_get_client_id_company_handles_empty_input(): void
     {
@@ -29,8 +27,6 @@ class PartnerListingV2Test extends TestCase
 
     /**
      * Test that GeneralMethod::batchAgencyCandidatesCount returns structured zeroed metrics for empty inputs.
-     *
-     * @return void
      */
     public function test_batch_agency_candidates_count_handles_empty_input(): void
     {
@@ -41,8 +37,6 @@ class PartnerListingV2Test extends TestCase
 
     /**
      * Test that GeneralMethod::batchAgencyCandidatesCount returns initialized objects for company IDs.
-     *
-     * @return void
      */
     public function test_batch_agency_candidates_count_returns_initialized_map(): void
     {
@@ -59,8 +53,6 @@ class PartnerListingV2Test extends TestCase
 
     /**
      * Test that GeneralMethod::batchGetAgencyRelationData returns empty array for empty inputs.
-     *
-     * @return void
      */
     public function test_batch_get_agency_relation_data_handles_empty_input(): void
     {
@@ -71,8 +63,6 @@ class PartnerListingV2Test extends TestCase
 
     /**
      * Test that GeneralMethod::batchAgencyJobsCount returns initialized map for company IDs.
-     *
-     * @return void
      */
     public function test_batch_agency_jobs_count_returns_initialized_map(): void
     {
@@ -87,8 +77,6 @@ class PartnerListingV2Test extends TestCase
 
     /**
      * Test that GeneralMethod::batchAgencyJobsCandidatesCount returns initialized candidate metrics.
-     *
-     * @return void
      */
     public function test_batch_agency_jobs_candidates_count_returns_initialized_map(): void
     {
@@ -100,5 +88,40 @@ class PartnerListingV2Test extends TestCase
         $this->assertArrayHasKey(9999992, $result);
         $this->assertEquals(0, $result[9999991]->all_candidates);
         $this->assertEquals(0, $result[9999991]->all_candidate_bench);
+    }
+
+    /**
+     * Test that GeneralMethod::batchGetCommercialsData returns initialized map for company IDs.
+     */
+    public function test_batch_get_commercials_data_handles_empty_input(): void
+    {
+        $result = GeneralMethod::batchGetCommercialsData([], 1);
+        $this->assertIsArray($result);
+        $this->assertEmpty($result);
+
+        $agencyIds = [9999991, 9999992];
+        $resultMap = GeneralMethod::batchGetCommercialsData($agencyIds, 1);
+        $this->assertIsArray($resultMap);
+        $this->assertArrayHasKey(9999991, $resultMap);
+        $this->assertNull($resultMap[9999991]->minimum_rate);
+    }
+
+    /**
+     * Test that GeneralMethod::batchGetMatchFoundMap handles empty input cleanly.
+     */
+    public function test_batch_get_match_found_map_handles_empty_input(): void
+    {
+        $result = GeneralMethod::batchGetMatchFoundMap(1, []);
+        $this->assertIsArray($result);
+        $this->assertEmpty($result);
+    }
+
+    /**
+     * Test that GeneralMethod::invalidateSpartnerlistingCache cleans user cache version keys.
+     */
+    public function test_invalidate_spartnerlisting_cache_bumps_version_keys(): void
+    {
+        $this->assertFalse(GeneralMethod::invalidateSpartnerlistingCache(0));
+        $this->assertTrue(GeneralMethod::invalidateSpartnerlistingCache(99999));
     }
 }

@@ -73,6 +73,14 @@ return [
             'replace_placeholders' => true,
         ],
 
+        'coins_performance' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/coins_performance.log'),
+            'level' => 'info',
+            'days' => 14,
+            'replace_placeholders' => true,
+        ],
+
         'slack' => [
             'driver' => 'slack',
             'url' => env('LOG_SLACK_WEBHOOK_URL'),
@@ -155,10 +163,10 @@ return [
         'login_attempts' => env('LOG_LOGIN_CHANNEL', 'null') === 'null'
             ? ['driver' => 'monolog', 'handler' => NullHandler::class]
             : [
-                'driver'    => 'daily',
-                'path'      => storage_path('logs/login_attempts.log'),
-                'level'     => 'info',
-                'days'      => 30,
+                'driver' => 'daily',
+                'path' => storage_path('logs/login_attempts.log'),
+                'level' => 'info',
+                'days' => 30,
                 'formatter' => Monolog\Formatter\JsonFormatter::class,
             ],
 
