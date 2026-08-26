@@ -5642,10 +5642,23 @@ function rsLoadScript(src){
     var existing=document.querySelector('script[src="'+src+'"]');
     if(existing && existing.getAttribute('data-ready')==='1'){ resolve(); return; }
     var s=existing||document.createElement('script');
+    var done=false;
+    var finish=function(ok){
+      if(done) return;
+      done=true;
+      if(ok){
+        s.setAttribute('data-ready','1');
+        resolve();
+      }else{
+        reject(new Error('Load failed: '+src));
+      }
+    };
     s.src=src; s.async=true;
-    s.onload=function(){ s.setAttribute('data-ready','1'); resolve(); };
-    s.onerror=function(){ reject(new Error('Load failed: '+src)); };
+    s.onload=function(){ finish(true); };
+    s.onerror=function(){ finish(false); };
     if(!existing) document.head.appendChild(s);
+    if(existing) setTimeout(function(){ finish(true); },100);
+    setTimeout(function(){ finish(false); },8000);
   });
 }
 function rsTryList(list,index,test){
@@ -5657,8 +5670,8 @@ function rsTryList(list,index,test){
 }
 function rsEnsurePdfMake(){
   if(rsPdfReady && window.pdfMake && window.pdfMake.vfs && window.pdfMake.vfs['Roboto-Regular.ttf']) return rsPdfReady;
-  var core=['/js/pdfmake.min.js'];
-  var vfs=['/js/vfs_fonts.min.js'];
+  var core=['/js/pdfmake.min.js','https://cdn.jsdelivr.net/npm/pdfmake@0.2.7/build/pdfmake.min.js'];
+  var vfs=['/js/vfs_fonts.min.js','https://cdn.jsdelivr.net/npm/pdfmake@0.2.7/build/vfs_fonts.min.js'];
   rsPdfReady=rsTryList(core,0,function(){ return !!window.pdfMake; })
     .then(function(){ return rsTryList(vfs,0,function(){ return !!(window.pdfMake.vfs && window.pdfMake.vfs['Roboto-Regular.ttf']); }); })
     .then(function(){
@@ -6401,8 +6414,8 @@ window.__buildRS=buildRecruiterSummary;
           showToast('Please wait a moment and try again.', 'warn');
           resetBtn(); return;
         }
-        window.__buildRS().then(function(){
-          closeRdc();
+        window.__buildRS().then(function(ok){
+          if(ok) closeRdc();
         }).catch(function(){
           showToast('Could not generate Recruiter Summary. Please try again.', 'warn');
         }).finally(function(){
