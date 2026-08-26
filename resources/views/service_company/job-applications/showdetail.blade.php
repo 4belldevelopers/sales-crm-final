@@ -5826,6 +5826,13 @@ function iconLine(icon,text,style,color,iconWidth){
     {text:text,style:style||'small',color:color||undefined,margin:[3,0,0,0]}
   ],columnGap:0};
 }
+function labeledIconLine(icon,label,value,style,color,iconWidth){
+  var width=iconWidth||7;
+  return {columns:[
+    {svg:icon,width:width,margin:[0,1,0,0],alignment:'left'},
+    {text:[{text:label,bold:true},' '+value],style:style||'small',color:color||undefined,margin:[3,0,0,0]}
+  ],columnGap:0};
+}
 function sectionTitle(title,subtle,icon){
   if(!icon) return {text:title,style:subtle?'sectionTitleMuted':'sectionTitle',margin:[0,0,0,8]};
   return {columns:[
@@ -5962,8 +5969,8 @@ function buildDefinition(data,logoUri){
       pairedCardRow([
         {text:clean(data.name,'Candidate'),style:'candidateName'},
         {text:clean(data.designation||data.jobTitle,'--'),style:'designation',margin:[0,3,0,8]},
-        iconLine(rsIconExperience,'EXPERIENCE: '+clean(data.experience,'--').toUpperCase(),'small','#64748b',6.5),
-        {stack:[iconLine(rsIconCompany,'CURRENT COMPANY: '+clean(data.company,'--').toUpperCase(),'small','#64748b',6.5)],margin:[0,3,0,0]}
+        labeledIconLine(rsIconExperience,'EXPERIENCE:',clean(data.experience,'--').toUpperCase(),'small','#64748b',6.5),
+        {stack:[labeledIconLine(rsIconCompany,'CURRENT COMPANY:',clean(data.company,'--').toUpperCase(),'small','#64748b',6.5)],margin:[0,3,0,0]}
       ],[
         {text:'HIRING CONFIDENCE',fontSize:6.2,bold:true,color:'#64748b',alignment:'center',margin:[0,11,0,0]},
         {text:score+'%',fontSize:30,bold:true,color:'#1d4ed8',alignment:'center',margin:[0,7,0,0]}
