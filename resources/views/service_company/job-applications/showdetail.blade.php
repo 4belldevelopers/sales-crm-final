@@ -5688,7 +5688,7 @@ function headerCard(companyName,logoCell,reportDate,captainName){
   return {
     margin:[0,0,0,10],
     stack:[
-      {canvas:[{type:'rect',x:0,y:0,w:535,h:66,r:6,lineWidth:0.55,lineColor:'#dbe3ef',color:'#ffffff'}],margin:[0,0,0,-66]},
+      {canvas:[{type:'rect',x:0,y:0,w:535,h:62,r:6,lineWidth:0.55,lineColor:'#dbe3ef',color:'#ffffff'}],margin:[0,0,0,-62]},
       {
         table:{widths:[220,'*'],body:[[
           {
@@ -5697,22 +5697,15 @@ function headerCard(companyName,logoCell,reportDate,captainName){
               {stack:[iconLine(rsIconBriefcase,'Prepared for client hiring review',null,'#64748b',6)],margin:[0,4,0,0]}
             ],border:[false,false,false,false]}]]},
             layout:'noBorders',
-            margin:[14,15,10,12],
+            margin:[14,13,10,10],
             border:[false,false,false,false]
           },
           {
             stack:[
               {text:'PRE-SCREENED CANDIDATE REPORT',style:'title',margin:[0,2,0,0]},
-              {
-                margin:[0,8,0,0],
-                table:{widths:['*','auto'],body:[[
-                  {columns:[{text:'',width:'*'},{svg:rsIconCalendar,width:6,margin:[0,0.5,3,0]},{text:clean(reportDate,'--'),fontSize:5.9,color:'#64748b',noWrap:true}],columnGap:0,border:[false,false,false,false],margin:[0,0,12,0]},
-                  {columns:[{svg:rsIconUser,width:6,margin:[0,0.5,3,0]},{text:'Captain: '+clean(captainName,'--'),fontSize:5.9,color:'#64748b',noWrap:true}],columnGap:0,border:[true,false,false,false],margin:[12,0,0,0]}
-                ]]},
-                layout:{hLineWidth:function(){return 0;},vLineWidth:function(i){return i===1?0.5:0;},vLineColor:function(){return '#cbd5e1';},paddingLeft:function(){return 0;},paddingRight:function(){return 0;},paddingTop:function(){return 0;},paddingBottom:function(){return 0;}}
-              }
+              {text:clean(reportDate,'--')+' · Confidential',style:'eyebrow',margin:[0,8,0,0]}
             ],
-            margin:[10,16,14,12],
+            margin:[10,15,14,10],
             border:[false,false,false,false]
           }
         ]]},
@@ -5725,10 +5718,10 @@ function pairedCardRow(leftStack,rightStack,leftFill,rightFill,rightBorder){
   return {
     margin:[0,0,0,8],
     stack:[
-      {canvas:[{type:'rect',x:0,y:0,w:264,h:92,r:6,lineWidth:0.55,lineColor:'#cbd5e1',color:leftFill||'#ffffff'},{type:'rect',x:271,y:0,w:264,h:92,r:6,lineWidth:0.55,lineColor:rightBorder||'#cbd5e1',color:rightFill||'#ffffff'}],margin:[0,0,0,-92]},
+      {canvas:[{type:'rect',x:0,y:0,w:264,h:88,r:6,lineWidth:0.55,lineColor:'#cbd5e1',color:leftFill||'#ffffff'},{type:'rect',x:271,y:0,w:264,h:88,r:6,lineWidth:0.55,lineColor:rightBorder||'#cbd5e1',color:rightFill||'#ffffff'}],margin:[0,0,0,-88]},
       {columns:[
-        {stack:Array.isArray(leftStack)?leftStack:[leftStack],width:264,margin:[12,12,12,12]},
-        {stack:Array.isArray(rightStack)?rightStack:[rightStack],width:264,margin:[12,12,12,12]}
+        {stack:Array.isArray(leftStack)?leftStack:[leftStack],width:264,margin:[12,10,12,10]},
+        {stack:Array.isArray(rightStack)?rightStack:[rightStack],width:264,margin:[12,10,12,10]}
       ],columnGap:7}
     ]
   };
@@ -5749,7 +5742,7 @@ function metaCell(label,value,align){
 function metricCell(label,value,icon){
   return {stack:[
     {svg:icon,width:7,alignment:'center',margin:[0,0,0,3]},
-    {text:label,style:'metricLabel',color:'#64748b',alignment:'center'},
+    {text:clean(label).toUpperCase(),style:'metricLabel',color:'#64748b',alignment:'center'},
     {text:clean(value),style:'metricValue',alignment:'center',margin:[0,6,0,0]}
   ],margin:[4,6,4,7]};
 }
@@ -5816,13 +5809,12 @@ function buildDefinition(data,logoUri){
   var completeness=dataCompleteness(data);
   var tone=matchTone(score,completeness);
   var summary=limitText(data.careerSummary,560,'No professional summary captured in current candidate data.');
-  var note=isGap(data.recruiterNote)
-    ? 'Recruiter note is not available. This client-ready brief is prepared from the candidate profile, skill intelligence, and verification signals currently captured.'
-    : limitText(data.recruiterNote,420,'');
+  var noteMissing=isGap(data.recruiterNote);
+  var note=noteMissing ? 'No recruiter note available.' : limitText(data.recruiterNote,420,'');
   var joining=data.isImmediate?'Immediate':clean(data.notice,'--');
   var companyName=clean(data.reportCompanyName,'Hiring Partner');
   var skillCount=Math.max(1,Math.min(7,(data.skills||[]).filter(function(skill){ return clean(skill.name,'')!==''; }).length));
-  var skillCardHeight=70+(skillCount*27);
+  var skillCardHeight=90+(skillCount*31);
   var logoCell=logoUri
     ? {image:logoUri,fit:[42,28],alignment:'center',margin:[0,0,12,0],border:[false,false,false,false]}
     : {text:companyName.charAt(0).toUpperCase(),fontSize:13,bold:true,color:'#1d4ed8',alignment:'center',margin:[0,5,12,4],fillColor:'#eef2ff',border:[false,false,false,false]};
@@ -5858,7 +5850,7 @@ function buildDefinition(data,logoUri){
         iconLine(rsIconClock,'Experience: '+clean(data.experience,'--'),'small','#64748b',6.5),
         {stack:[iconLine(rsIconCompany,'Current Company: '+clean(data.company,'--'),'small','#64748b',6.5)],margin:[0,3,0,0]}
       ],[
-        {text:'MATCH CONFIDENCE',fontSize:6.2,bold:true,color:'#64748b',alignment:'center',margin:[0,13,0,0]},
+        {text:'MATCH CONFIDENCE',fontSize:6.2,bold:true,color:'#64748b',alignment:'center',margin:[0,11,0,0]},
         {text:score+'%',fontSize:30,bold:true,color:'#1d4ed8',alignment:'center',margin:[0,7,0,0]}
       ],'#ffffff','#f8fbff','#cfe0ff'),
       roundedFullCard([
@@ -5881,8 +5873,8 @@ function buildDefinition(data,logoUri){
       ],[0,0,0,8],58,'#ffffff','#dbe3ef'),
       {
         columns:[
-          fixedPanel([sectionTitle('EXECUTIVE SUMMARY',false,rsIconSummary),{text:summary,style:'body'}],[0,0,6,8],'#ffffff','#dbe3ef',124),
-          fixedPanel([sectionTitle('RECRUITER NOTE',false,rsIconNote),{text:note,style:'body'}],[6,0,0,8],'#ffffff','#dbe3ef',124)
+          fixedPanel([sectionTitle('EXECUTIVE SUMMARY',false,rsIconSummary),{text:summary,style:'body'}],[0,0,6,8],'#ffffff','#dbe3ef',148),
+          fixedPanel([sectionTitle('RECRUITER NOTE',false,rsIconNote),{text:note,style:'body',color:noteMissing?'#64748b':'#1f2937',italics:noteMissing}],[6,0,0,8],'#ffffff','#dbe3ef',148)
         ],
         columnGap:0
       },
@@ -5905,7 +5897,7 @@ function buildDefinition(data,logoUri){
             paddingTop:function(){return 0;},
             paddingBottom:function(){return 0;}
           }}
-      ],[0,0,0,8],76,'#ffffff','#dbe3ef'),
+      ],[0,0,0,8],74,'#ffffff','#dbe3ef'),
       {
         table:{widths:['*','auto','auto'],body:[[
           {text:'Prepared by '+companyName+' for client hiring review',style:'footer',border:[false,true,false,false],margin:[0,5,0,0]},
