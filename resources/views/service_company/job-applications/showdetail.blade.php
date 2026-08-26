@@ -5778,6 +5778,21 @@ function downloadBlob(blob,fileName){
 function removeNode(node){
   if(node && node.parentNode) node.parentNode.removeChild(node);
 }
+function waitForRenderedAssets(root){
+  var waits=[];
+  if(document.fonts && document.fonts.ready) waits.push(document.fonts.ready.catch(function(){ return null; }));
+  Array.prototype.slice.call(root.querySelectorAll('img')).forEach(function(img){
+    if(img.complete) return;
+    waits.push(new Promise(function(resolve){
+      img.onload=resolve;
+      img.onerror=resolve;
+      setTimeout(resolve,2500);
+    }));
+  });
+  return Promise.all(waits).then(function(){
+    return new Promise(function(resolve){ requestAnimationFrame(function(){ requestAnimationFrame(resolve); }); });
+  });
+}
 async function fetchResumeBytes(resumeUrl){
   resumeUrl=clean(resumeUrl,'');
   if(!resumeUrl) throw new Error('Resume URL not available');
@@ -5794,7 +5809,7 @@ async function convertDocxResumeToPdfBlob(resumeUrl){
   var bytes=await fetchResumeBytes(resumeUrl);
   var host=document.createElement('div');
   host.setAttribute('aria-hidden','true');
-  host.style.cssText='position:fixed;left:-10000px;top:0;width:794px;min-height:1123px;background:#fff;z-index:-1;overflow:hidden;';
+  host.style.cssText='position:fixed;left:-12000px;top:0;width:auto;min-width:794px;min-height:1123px;background:#fff;overflow:visible;pointer-events:none;';
   document.body.appendChild(host);
   try{
     await window.docx.renderAsync(bytes,host,null,{
@@ -5809,9 +5824,18 @@ async function convertDocxResumeToPdfBlob(resumeUrl){
       renderEndnotes:true,
       useBase64URL:true
     });
-    await new Promise(function(resolve){ requestAnimationFrame(function(){ requestAnimationFrame(resolve); }); });
-    var pages=Array.prototype.slice.call(host.querySelectorAll('.docx-wrapper > section.docx'));
-    if(!pages.length) pages=Array.prototype.slice.call(host.querySelectorAll('section.docx'));
+    var qualityStyle=document.createElement('style');
+    qualityStyle.textContent=[
+      '.rs-docx-preview-wrapper{background:#fff!important;padding:0!important;display:block!important;}',
+      '.rs-docx-preview-wrapper>section.rs-docx-preview,section.rs-docx-preview{background:#fff!important;box-shadow:none!important;margin:0 0 18px 0!important;overflow:hidden!important;}',
+      '.rs-docx-preview{color:#111!important;-webkit-font-smoothing:antialiased;text-rendering:geometricPrecision;}',
+      '.rs-docx-preview *{box-sizing:border-box;}',
+      '.rs-docx-preview img{max-width:100%;}'
+    ].join('');
+    host.insertBefore(qualityStyle,host.firstChild);
+    await waitForRenderedAssets(host);
+    var pages=Array.prototype.slice.call(host.querySelectorAll('.rs-docx-preview-wrapper > section.rs-docx-preview, section.rs-docx-preview'));
+    if(!pages.length) pages=Array.prototype.slice.call(host.querySelectorAll('.docx-wrapper > section.docx, section.docx'));
     if(!pages.length) pages=[host];
     var JsPDF=window.jspdf.jsPDF;
     var pdf=new JsPDF({orientation:'portrait',unit:'pt',format:'a4',compress:true});
@@ -5822,20 +5846,22 @@ async function convertDocxResumeToPdfBlob(resumeUrl){
       var page=pages[i];
       page.style.margin='0';
       page.style.boxShadow='none';
+      page.style.background='#ffffff';
       var canvas=await window.html2canvas(page,{
         backgroundColor:'#ffffff',
-        scale:Math.min(2,window.devicePixelRatio||1.5),
+        scale:Math.max(2.5,Math.min(3,window.devicePixelRatio||2.5)),
         useCORS:true,
         allowTaint:false,
         logging:false,
-        windowWidth:page.scrollWidth||794,
-        windowHeight:page.scrollHeight||1123
+        removeContainer:true,
+        windowWidth:Math.ceil(page.scrollWidth||page.getBoundingClientRect().width||794),
+        windowHeight:Math.ceil(page.scrollHeight||page.getBoundingClientRect().height||1123)
       });
-      var img=canvas.toDataURL('image/jpeg',0.92);
+      var img=canvas.toDataURL('image/png');
       var ratio=Math.min(pageW/canvas.width,pageH/canvas.height);
       var drawW=canvas.width*ratio;
       var drawH=canvas.height*ratio;
-      pdf.addImage(img,'JPEG',(pageW-drawW)/2,0,drawW,drawH,undefined,'FAST');
+      pdf.addImage(img,'PNG',(pageW-drawW)/2,0,drawW,drawH,undefined,'SLOW');
     }
     return pdf.output('blob');
   }catch(err){
