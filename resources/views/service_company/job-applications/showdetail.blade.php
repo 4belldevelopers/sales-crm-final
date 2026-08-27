@@ -5762,6 +5762,12 @@ function preloadCombinedReportAssets(){
     return null;
   });
 }
+function preloadBrowserDocxConversionAssets(){
+  return rsEnsureDocxConversion().catch(function(err){
+    console.warn('Browser DOCX conversion preload skipped:',err);
+    return null;
+  });
+}
 function downloadBlob(blob,fileName){
   var url=URL.createObjectURL(blob);
   var a=document.createElement('a');
@@ -6069,6 +6075,31 @@ async function convertResumeToPdfOnly(resumeUrl,resumePdfUrl,resumeExt){
       alert('Enterprise Word-to-PDF converter is not available on the server. Please enable LibreOffice/Gotenberg or upload a PDF resume.');
     }else{
       alert('Could not convert the resume to PDF. Please try again.');
+    }
+    return false;
+  }finally{
+    window.__rsBusy=false;
+  }
+}
+async function convertResumeToPdfBrowserOnly(resumeUrl,resumeExt){
+  if(window.__rsBusy) return Promise.resolve(false);
+  window.__rsBusy=true;
+  try{
+    resumeExt=clean(resumeExt,'').toUpperCase();
+    resumeUrl=clean(resumeUrl,'');
+    if(resumeExt!=='DOCX') throw new Error('Browser conversion is available for DOCX resumes only');
+    if(!resumeUrl) throw new Error('DOCX resume URL not available');
+    var data=readData();
+    var blob=await convertDocxResumeToPdfBlob(resumeUrl);
+    downloadBlob(blob,'browser_docx_pdf_conversion_'+slug(data.name)+'.pdf');
+    return true;
+  }catch(err){
+    console.error('Browser DOCX PDF conversion only error:',err);
+    var message=err && err.message ? err.message : '';
+    if(/larger than the browser conversion limit/i.test(message)){
+      alert('This DOCX resume is larger than the 10 MB browser conversion limit. Please use option 10 or upload a smaller DOCX.');
+    }else{
+      alert('Browser DOCX conversion could not produce a clean PDF for this resume. Please use option 10 for enterprise-quality conversion.');
     }
     return false;
   }finally{
@@ -6523,10 +6554,12 @@ async function buildCombinedPreScreenedResume(resumePdfUrl,options){
 }
 window.__preloadRS=preloadRecruiterSummaryAssets;
 window.__preloadRSCombined=preloadCombinedReportAssets;
+window.__preloadBrowserDocxConversion=preloadBrowserDocxConversionAssets;
 window.__buildRSBlob=buildRecruiterSummaryBlob;
 window.__buildRS=buildRecruiterSummary;
 window.__buildCombinedRSResume=buildCombinedPreScreenedResume;
 window.__convertResumeToPdfOnly=convertResumeToPdfOnly;
+window.__convertResumeToPdfBrowserOnly=convertResumeToPdfBrowserOnly;
 })();
 </script>
 
@@ -6739,6 +6772,24 @@ window.__convertResumeToPdfOnly=convertResumeToPdfOnly;
         <span class="rdc-ocirc" aria-hidden="true"></span>
       </label>
 
+      {{-- 11: Browser-only DOCX conversion experiment --}}
+      <label class="rdc-opt" data-opt="11" data-coins="0">
+        <input class="rdc-rinput" type="radio" name="rdcFormat" value="11">
+        <span class="rdc-onum">11</span>
+        <span class="rdc-oi" style="background:#ecfeff;color:#0891b2;" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M8 13h8"/><path d="M8 17h8"/><path d="M12 11v8"/><path d="M9 16l3 3 3-3"/></svg>
+        </span>
+        <span class="rdc-obody">
+          <span class="rdc-otitle">Browser DOCX PDF Conversion <span style="background:#ecfeff;color:#0891b2;font-size:8.5px;font-weight:700;padding:1px 6px;border-radius:4px;vertical-align:middle;margin-left:4px;">Zero Server</span></span>
+          <span class="rdc-odesc">Experimental DOCX-only conversion using browser rendering to reduce converter load where templates are compatible</span>
+        </span>
+        <span class="rdc-ometa">
+          <span class="rdc-ocost" style="color:#16a34a;font-weight:700;">Free</span>
+          <span class="rdc-otime">~20 sec</span>
+        </span>
+        <span class="rdc-ocirc" aria-hidden="true"></span>
+      </label>
+
     </div>{{-- /.rdc-opts-list --}}
 
     {{-- Coin info summary --}}
@@ -6797,7 +6848,8 @@ window.__convertResumeToPdfOnly=convertResumeToPdfOnly;
     7: {cost:0, label:'Export Candidate Profile PDF',   avail:true,  dlKey:'pdf'},
     8: {cost:8, label:'Download Combined Report',       avail:true,  dlKey:'rs-combined'},
     9: {cost:8, label:'Download Combined Report Without Branding', avail:true, dlKey:'rs-combined-nobrand'},
-    10:{cost:0, label:'Convert Resume to PDF',           avail:true,  dlKey:'resume-pdf-conversion'}
+    10:{cost:0, label:'Convert Resume to PDF',           avail:true,  dlKey:'resume-pdf-conversion'},
+    11:{cost:0, label:'Browser DOCX PDF Conversion',     avail:(resumeExt === 'DOCX'),  dlKey:'browser-docx-pdf-conversion', unavailableMsg:'Browser conversion is available only for DOCX resumes. Use option 10 for PDF/DOC files.'}
   };
 
   var selectedOpt = 1;
@@ -6864,6 +6916,7 @@ window.__convertResumeToPdfOnly=convertResumeToPdfOnly;
     if(m.dlKey === 'rs-combined' && typeof window.__preloadRSCombined === 'function') window.__preloadRSCombined();
     if(m.dlKey === 'rs-combined-nobrand' && typeof window.__preloadRSCombined === 'function') window.__preloadRSCombined();
     if(m.dlKey === 'resume-pdf-conversion' && typeof window.__preloadRSCombined === 'function') window.__preloadRSCombined();
+    if(m.dlKey === 'browser-docx-pdf-conversion' && typeof window.__preloadBrowserDocxConversion === 'function') window.__preloadBrowserDocxConversion();
   }
 
   var toastTimer = null;
@@ -6894,7 +6947,7 @@ window.__convertResumeToPdfOnly=convertResumeToPdfOnly;
       if(!m) return;
 
       if(!m.avail){
-        showToast('This format is coming in Phase 2 — stay tuned!', 'info');
+        showToast(m.unavailableMsg || 'This format is coming in Phase 2 — stay tuned!', 'info');
         return;
       }
 
@@ -6980,6 +7033,25 @@ window.__convertResumeToPdfOnly=convertResumeToPdfOnly;
           if(ok) closeRdc();
         }).catch(function(){
           showToast('Could not convert resume to PDF. Please try again.', 'warn');
+        }).finally(function(){
+          resetBtn();
+        });
+
+      } else if(m.dlKey === 'browser-docx-pdf-conversion'){
+        /* Option 11: experimental browser-only DOCX conversion for low-load compatible templates. */
+        if(window.__rsBusy || typeof window.__convertResumeToPdfBrowserOnly !== 'function'){
+          showToast('Please wait a moment and try again.', 'warn');
+          resetBtn(); return;
+        }
+        if(resumeExt !== 'DOCX' || !dlUrl){
+          showToast('Browser conversion is available only for DOCX resumes. Use option 10 for PDF/DOC files.', 'warn');
+          resetBtn(); return;
+        }
+        dlBtn.innerHTML = '<span class="rdc-spin"></span><span>Converting DOCX in browser...</span>';
+        window.__convertResumeToPdfBrowserOnly(dlUrl,resumeExt).then(function(ok){
+          if(ok) closeRdc();
+        }).catch(function(){
+          showToast('Browser DOCX conversion failed. Please use option 10.', 'warn');
         }).finally(function(){
           resetBtn();
         });
