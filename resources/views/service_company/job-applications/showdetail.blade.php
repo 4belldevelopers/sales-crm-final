@@ -5757,7 +5757,6 @@ function preloadCombinedReportAssets(){
   var dataEl=document.getElementById('rdcData');
   if(dataEl) ext=(dataEl.getAttribute('data-file-ext')||'').toUpperCase();
   var tasks=[preloadRecruiterSummaryAssets(),rsEnsurePdfLib()];
-  if(ext==='DOCX') tasks.push(rsEnsureDocxConversion());
   return Promise.all(tasks).catch(function(err){
     console.warn('Combined Pre-Screened Report preload skipped:',err);
     return null;
@@ -6057,21 +6056,17 @@ async function convertResumeToPdfOnly(resumeUrl,resumePdfUrl,resumeExt){
     resumeExt=clean(resumeExt,'').toUpperCase();
     resumeUrl=clean(resumeUrl,'');
     resumePdfUrl=clean(resumePdfUrl,'');
-    if(resumeExt==='DOC') throw new Error('Legacy DOC files are not supported by browser-only conversion');
-    if(resumeExt==='DOCX' && !resumeUrl) throw new Error('DOCX resume URL not available');
-    if(resumeExt==='PDF' && !resumePdfUrl) throw new Error('Resume PDF URL not available');
-    if(['PDF','DOCX'].indexOf(resumeExt)===-1) throw new Error('Resume PDF conversion is available for PDF and DOCX resumes only');
+    if(['PDF','DOC','DOCX'].indexOf(resumeExt)===-1) throw new Error('Resume PDF conversion is available for PDF, DOC and DOCX resumes only');
+    if(!resumePdfUrl) throw new Error('Resume PDF URL not available');
     var data=readData();
-    var blob=resumeExt==='DOCX' ? await convertDocxResumeToPdfBlob(resumeUrl) : await fetchPdfResumeBlob(resumePdfUrl);
+    var blob=await fetchPdfResumeBlob(resumePdfUrl);
     downloadBlob(blob,'resume_pdf_conversion_'+slug(data.name)+'.pdf');
     return true;
   }catch(err){
     console.error('Resume PDF conversion only error:',err);
     var message=err && err.message ? err.message : '';
-    if(/larger than the browser conversion limit/i.test(message)){
-      alert('This DOCX resume is larger than the 10 MB browser conversion limit. Please upload a smaller DOCX or PDF resume.');
-    }else if(/Legacy DOC/i.test(message)){
-      alert('Legacy DOC is not supported for browser-only conversion. Please upload DOCX or PDF.');
+    if(/HTTP 503|converter unavailable|Document converter unavailable/i.test(message)){
+      alert('Enterprise Word-to-PDF converter is not available on the server. Please enable LibreOffice/Gotenberg or upload a PDF resume.');
     }else{
       alert('Could not convert the resume to PDF. Please try again.');
     }
@@ -6495,15 +6490,12 @@ async function buildCombinedPreScreenedResume(resumePdfUrl,options){
     var resumeUrl=clean(options.resumeUrl||'','');
     var resumeExt=clean(options.resumeExt||'','').toUpperCase();
     resumePdfUrl=clean(resumePdfUrl,'');
-    if(resumeExt==='DOC') throw new Error('Legacy DOC files are not supported by browser-only conversion');
-    if(resumeExt==='DOCX' && !resumeUrl) throw new Error('DOCX resume URL not available');
-    if(resumeExt!=='DOCX' && !resumePdfUrl) throw new Error('Resume PDF URL not available');
+    if(['PDF','DOC','DOCX'].indexOf(resumeExt)===-1) throw new Error('Combined report is available for PDF, DOC and DOCX resumes');
+    if(!resumePdfUrl) throw new Error('Resume PDF URL not available');
     var data=readData();
     var reportBlob=await buildRecruiterSummaryBlob(data,options);
     await rsEnsurePdfLib();
-    var resumeBlob=resumeExt==='DOCX'
-      ? await convertDocxResumeToPdfBlob(resumeUrl)
-      : await fetchPdfResumeBlob(resumePdfUrl);
+    var resumeBlob=await fetchPdfResumeBlob(resumePdfUrl);
     var resumeBytes=await resumeBlob.arrayBuffer();
     var reportBytes=await reportBlob.arrayBuffer();
     var merged=await window.PDFLib.PDFDocument.create();
@@ -6519,10 +6511,8 @@ async function buildCombinedPreScreenedResume(resumePdfUrl,options){
   }catch(err){
     console.error('Combined Pre-Screened Report error:',err);
     var message=err && err.message ? err.message : 'Could not generate the combined Pre-Screened Report. Please try again.';
-    if(/larger than the browser conversion limit/i.test(message)){
-      alert('This DOCX resume is larger than the 10 MB browser conversion limit. Please upload a smaller DOCX or PDF resume.');
-    }else if(/Legacy DOC/i.test(message)){
-      alert('Legacy DOC is not supported for browser-only conversion. Please upload DOCX or PDF.');
+    if(/HTTP 503|converter unavailable|Document converter unavailable/i.test(message)){
+      alert('Enterprise Word-to-PDF converter is not available on the server. Please enable LibreOffice/Gotenberg or upload a PDF resume.');
     }else{
       alert('Could not generate the combined Pre-Screened Report. Please try again.');
     }
@@ -6938,20 +6928,16 @@ window.__convertResumeToPdfOnly=convertResumeToPdfOnly;
 
       } else if(m.dlKey === 'rs-combined'){
         /* Option 8: Pre-Screened Report + Original Resume.
-           Report + merge run client-side; DOCX renders in-browser to avoid server conversion load. */
+           Report + merge run client-side; Word resumes use the cached enterprise PDF converter first. */
         if(window.__rsBusy || typeof window.__buildCombinedRSResume !== 'function'){
           showToast('Please wait a moment and try again.', 'warn');
           resetBtn(); return;
         }
-        if(resumeExt === 'DOC'){
-          showToast('Legacy DOC is not supported for browser-only conversion. Please upload DOCX or PDF.', 'warn');
+        if(!resumePdfUrl || ['PDF','DOC','DOCX'].indexOf(resumeExt) === -1){
+          showToast('Combined report is available for PDF, DOC and DOCX resumes.', 'warn');
           resetBtn(); return;
         }
-        if((resumeExt === 'PDF' && !resumePdfUrl) || (resumeExt === 'DOCX' && !dlUrl) || ['PDF','DOCX'].indexOf(resumeExt) === -1){
-          showToast('Combined report is available for PDF and DOCX resumes.', 'warn');
-          resetBtn(); return;
-        }
-        dlBtn.innerHTML = '<span class="rdc-spin"></span><span>' + (resumeExt === 'DOCX' ? 'Preparing DOCX resume...' : 'Merging PDF...') + '</span>';
+        dlBtn.innerHTML = '<span class="rdc-spin"></span><span>' + (resumeExt === 'PDF' ? 'Merging PDF...' : 'Converting Word resume...') + '</span>';
         window.__buildCombinedRSResume(resumePdfUrl,{resumeUrl:dlUrl,resumeExt:resumeExt}).then(function(ok){
           if(ok) closeRdc();
         }).catch(function(){
@@ -6961,20 +6947,16 @@ window.__convertResumeToPdfOnly=convertResumeToPdfOnly;
         });
 
       } else if(m.dlKey === 'rs-combined-nobrand'){
-        /* Option 9: combined report with company branding removed from the report page; DOCX remains browser-only. */
+        /* Option 9: combined report with company branding removed from the report page; Word conversion remains cached. */
         if(window.__rsBusy || typeof window.__buildCombinedRSResume !== 'function'){
           showToast('Please wait a moment and try again.', 'warn');
           resetBtn(); return;
         }
-        if(resumeExt === 'DOC'){
-          showToast('Legacy DOC is not supported for browser-only conversion. Please upload DOCX or PDF.', 'warn');
+        if(!resumePdfUrl || ['PDF','DOC','DOCX'].indexOf(resumeExt) === -1){
+          showToast('Combined report is available for PDF, DOC and DOCX resumes.', 'warn');
           resetBtn(); return;
         }
-        if((resumeExt === 'PDF' && !resumePdfUrl) || (resumeExt === 'DOCX' && !dlUrl) || ['PDF','DOCX'].indexOf(resumeExt) === -1){
-          showToast('Combined report is available for PDF and DOCX resumes.', 'warn');
-          resetBtn(); return;
-        }
-        dlBtn.innerHTML = '<span class="rdc-spin"></span><span>' + (resumeExt === 'DOCX' ? 'Preparing DOCX resume...' : 'Merging PDF...') + '</span>';
+        dlBtn.innerHTML = '<span class="rdc-spin"></span><span>' + (resumeExt === 'PDF' ? 'Merging PDF...' : 'Converting Word resume...') + '</span>';
         window.__buildCombinedRSResume(resumePdfUrl,{noBranding:true,resumeUrl:dlUrl,resumeExt:resumeExt}).then(function(ok){
           if(ok) closeRdc();
         }).catch(function(){
@@ -6984,20 +6966,16 @@ window.__convertResumeToPdfOnly=convertResumeToPdfOnly;
         });
 
       } else if(m.dlKey === 'resume-pdf-conversion'){
-        /* Option 10: isolated resume-to-PDF quality gate before enabling DOCX merge as a client-ready flow. */
+        /* Option 10: isolated resume-to-PDF quality gate before enabling merge as a client-ready flow. */
         if(window.__rsBusy || typeof window.__convertResumeToPdfOnly !== 'function'){
           showToast('Please wait a moment and try again.', 'warn');
           resetBtn(); return;
         }
-        if(resumeExt === 'DOC'){
-          showToast('Legacy DOC is not supported for browser-only conversion. Please upload DOCX or PDF.', 'warn');
+        if(!resumePdfUrl || ['PDF','DOC','DOCX'].indexOf(resumeExt) === -1){
+          showToast('Resume PDF conversion is available for PDF, DOC and DOCX resumes.', 'warn');
           resetBtn(); return;
         }
-        if((resumeExt === 'PDF' && !resumePdfUrl) || (resumeExt === 'DOCX' && !dlUrl) || ['PDF','DOCX'].indexOf(resumeExt) === -1){
-          showToast('Resume PDF conversion is available for PDF and DOCX resumes.', 'warn');
-          resetBtn(); return;
-        }
-        dlBtn.innerHTML = '<span class="rdc-spin"></span><span>' + (resumeExt === 'DOCX' ? 'Converting DOCX to PDF...' : 'Preparing PDF...') + '</span>';
+        dlBtn.innerHTML = '<span class="rdc-spin"></span><span>' + (resumeExt === 'PDF' ? 'Preparing PDF...' : 'Converting Word to PDF...') + '</span>';
         window.__convertResumeToPdfOnly(dlUrl,resumePdfUrl,resumeExt).then(function(ok){
           if(ok) closeRdc();
         }).catch(function(){
