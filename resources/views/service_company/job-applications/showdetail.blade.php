@@ -5813,6 +5813,23 @@ function xmlTextContent(node){
   });
   return parts.join('').replace(/[ \t]+\n/g,'\n').replace(/\n[ \t]+/g,'\n').replace(/[ \t]{2,}/g,' ').trim();
 }
+function xmlParagraphTexts(node){
+  var paragraphs=Array.prototype.slice.call((node||{}).getElementsByTagName ? node.getElementsByTagName('*') : []).filter(function(child){
+    return (child.localName||'').toLowerCase()==='p';
+  }).map(function(p){
+    return xmlTextContent(p);
+  }).filter(function(text){
+    return !!text;
+  });
+  return paragraphs.length ? paragraphs : [xmlTextContent(node)].filter(function(text){ return !!text; });
+}
+function normalizeReadableDocxText(text){
+  return clean(text,'')
+    .replace(/\b(Contact|Phone|Email|Linkedin|LinkedIn|Education|Experience|Key Skills|Professional Summary|Professional Profile|Project|Client|Role|Environment|Description|Roles and Responsibilities)\s*:/g,'$1: ')
+    .replace(/([.;])(?=[A-Z][a-z])/g,'$1 ')
+    .replace(/\s{2,}/g,' ')
+    .trim();
+}
 function escapeHtml(value){
   return String(value==null?'':value).replace(/[&<>"']/g,function(ch){
     return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch];
@@ -5846,7 +5863,7 @@ function readableDocxHtmlFromXml(xmlText){
     if(node.nodeType!==1) return;
     var name=(node.localName||'').toLowerCase();
     if(name==='p'){
-      var text=xmlTextContent(node);
+      var text=normalizeReadableDocxText(xmlTextContent(node));
       if(!text){
         blocks.push('<div class="docx-space"></div>');
         return;
@@ -5855,15 +5872,15 @@ function readableDocxHtmlFromXml(xmlText){
       var cls=classifyDocxLine(text,lineIndex,isBold);
       lineIndex++;
       blocks.push('<p class="'+cls+'">'+escapeHtml(text).replace(/\n/g,'<br>')+'</p>');
-    }else if(name==='tbl'){
+      }else if(name==='tbl'){
       var rows=[];
       Array.prototype.slice.call(node.childNodes||[]).forEach(function(row){
         if(row.nodeType!==1 || (row.localName||'').toLowerCase()!=='tr') return;
         var cells=[];
         Array.prototype.slice.call(row.childNodes||[]).forEach(function(cell){
           if(cell.nodeType!==1 || (cell.localName||'').toLowerCase()!=='tc') return;
-          var text=xmlTextContent(cell);
-          cells.push('<td>'+escapeHtml(text).replace(/\n/g,'<br>')+'</td>');
+          var cellText=xmlParagraphTexts(cell).map(normalizeReadableDocxText).join('\n');
+          cells.push('<td>'+escapeHtml(cellText).replace(/\n/g,'<br>')+'</td>');
         });
         if(cells.length) rows.push('<tr>'+cells.join('')+'</tr>');
       });
@@ -5892,8 +5909,8 @@ async function renderReadableDocxResume(bytes,host){
     '.rs-readable-resume .docx-label{font-size:14px;line-height:1.35;font-weight:700;margin-top:8px;color:#111827;}',
     '.rs-readable-resume .docx-body{font-size:13.5px;line-height:1.48;color:#111827;}',
     '.rs-readable-resume .docx-space{height:7px;}',
-    '.rs-readable-resume .docx-table{width:100%;border-collapse:collapse;margin:8px 0 12px;font-size:13px;line-height:1.35;}',
-    '.rs-readable-resume .docx-table td{border:1px solid #e2e8f0;padding:5px 7px;vertical-align:top;}',
+    '.rs-readable-resume .docx-table{width:100%;border-collapse:collapse;table-layout:fixed;margin:8px 0 12px;font-size:13px;line-height:1.4;}',
+    '.rs-readable-resume .docx-table td{border:1px solid #e2e8f0;padding:6px 8px;vertical-align:top;overflow-wrap:anywhere;word-break:normal;}',
     '</style>',
     readableDocxHtmlFromXml(xmlText)
   ].join('');
@@ -5931,6 +5948,34 @@ function normalizeOriginalDocxLayout(pages){
     }
   });
 }
+function hasDocxLayoutCollisions(pages){
+  var collisionCount=0;
+  var checked=0;
+  Array.prototype.slice.call(pages||[]).some(function(page){
+    var nodes=Array.prototype.slice.call(page.querySelectorAll('p,li,td,th,div')).filter(function(el){
+      var text=(el.textContent||'').replace(/\s+/g,' ').trim();
+      if(text.length<8) return false;
+      var rect=el.getBoundingClientRect();
+      if(!rect.width || !rect.height || rect.height<4) return false;
+      var cs=window.getComputedStyle(el);
+      if(cs.position==='absolute' && rect.height<10) return false;
+      return true;
+    }).slice(0,260);
+    for(var i=1;i<nodes.length;i++){
+      var prev=nodes[i-1].getBoundingClientRect();
+      var curr=nodes[i].getBoundingClientRect();
+      checked++;
+      var sameColumn=curr.left<prev.right-8 && curr.right>prev.left+8;
+      var verticalOverlap=curr.top<prev.bottom-3;
+      if(sameColumn && verticalOverlap){
+        collisionCount++;
+        if(collisionCount>=3) return true;
+      }
+    }
+    return false;
+  });
+  return checked>8 && collisionCount>=3;
+}
 async function renderOriginalDocxResume(bytes,host){
   await rsEnsureDocxPreview();
   await window.docx.renderAsync(bytes,host,null,{
@@ -5965,6 +6010,7 @@ async function renderOriginalDocxResume(bytes,host){
   if(!pages.length) throw new Error('DOCX original render produced no pages');
   normalizeOriginalDocxLayout(pages);
   await waitForRenderedAssets(host);
+  if(hasDocxLayoutCollisions(pages)) throw new Error('DOCX original render has overlapping text');
   return pages;
 }
 async function fetchResumeBytes(resumeUrl){
@@ -6780,8 +6826,8 @@ window.__convertResumeToPdfBrowserOnly=convertResumeToPdfBrowserOnly;
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M8 13h8"/><path d="M8 17h8"/><path d="M12 11v8"/><path d="M9 16l3 3 3-3"/></svg>
         </span>
         <span class="rdc-obody">
-          <span class="rdc-otitle">Browser DOCX PDF Conversion <span style="background:#ecfeff;color:#0891b2;font-size:8.5px;font-weight:700;padding:1px 6px;border-radius:4px;vertical-align:middle;margin-left:4px;">Zero Server</span></span>
-          <span class="rdc-odesc">Experimental DOCX-only conversion using browser rendering to reduce converter load where templates are compatible</span>
+          <span class="rdc-otitle">Browser DOCX Conversion Beta <span style="background:#ecfeff;color:#0891b2;font-size:8.5px;font-weight:700;padding:1px 6px;border-radius:4px;vertical-align:middle;margin-left:4px;">Zero Server</span></span>
+          <span class="rdc-odesc">DOCX-only browser conversion with clean readable fallback for compatible resume templates</span>
         </span>
         <span class="rdc-ometa">
           <span class="rdc-ocost" style="color:#16a34a;font-weight:700;">Free</span>
@@ -6849,7 +6895,7 @@ window.__convertResumeToPdfBrowserOnly=convertResumeToPdfBrowserOnly;
     8: {cost:8, label:'Download Combined Report',       avail:true,  dlKey:'rs-combined'},
     9: {cost:8, label:'Download Combined Report Without Branding', avail:true, dlKey:'rs-combined-nobrand'},
     10:{cost:0, label:'Convert Resume to PDF',           avail:true,  dlKey:'resume-pdf-conversion'},
-    11:{cost:0, label:'Browser DOCX PDF Conversion',     avail:(resumeExt === 'DOCX'),  dlKey:'browser-docx-pdf-conversion', unavailableMsg:'Browser conversion is available only for DOCX resumes. Use option 10 for PDF/DOC files.'}
+    11:{cost:0, label:'Browser DOCX Conversion Beta',    avail:(resumeExt === 'DOCX'),  dlKey:'browser-docx-pdf-conversion', unavailableMsg:'Browser conversion is available only for DOCX resumes. Use option 10 for PDF/DOC files.'}
   };
 
   var selectedOpt = 1;
