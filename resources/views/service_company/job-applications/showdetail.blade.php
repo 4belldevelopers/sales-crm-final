@@ -5878,6 +5878,36 @@ async function fetchPdfResumeBlob(resumePdfUrl){
   if(!response.ok) throw new Error('Resume PDF request failed with HTTP '+response.status);
   return response.blob();
 }
+async function convertResumeToPdfOnly(resumeUrl,resumePdfUrl,resumeExt){
+  if(window.__rsBusy) return Promise.resolve(false);
+  window.__rsBusy=true;
+  try{
+    resumeExt=clean(resumeExt,'').toUpperCase();
+    resumeUrl=clean(resumeUrl,'');
+    resumePdfUrl=clean(resumePdfUrl,'');
+    if(resumeExt==='DOC') throw new Error('Legacy DOC files are not supported by browser-only conversion');
+    if(resumeExt==='DOCX' && !resumeUrl) throw new Error('DOCX resume URL not available');
+    if(resumeExt==='PDF' && !resumePdfUrl) throw new Error('Resume PDF URL not available');
+    if(['PDF','DOCX'].indexOf(resumeExt)===-1) throw new Error('Resume PDF conversion is available for PDF and DOCX resumes only');
+    var data=readData();
+    var blob=resumeExt==='DOCX' ? await convertDocxResumeToPdfBlob(resumeUrl) : await fetchPdfResumeBlob(resumePdfUrl);
+    downloadBlob(blob,'resume_pdf_conversion_'+slug(data.name)+'.pdf');
+    return true;
+  }catch(err){
+    console.error('Resume PDF conversion only error:',err);
+    var message=err && err.message ? err.message : '';
+    if(/larger than the browser conversion limit/i.test(message)){
+      alert('This DOCX resume is larger than the 10 MB browser conversion limit. Please upload a smaller DOCX or PDF resume.');
+    }else if(/Legacy DOC/i.test(message)){
+      alert('Legacy DOC is not supported for browser-only conversion. Please upload DOCX or PDF.');
+    }else{
+      alert('Could not convert the resume to PDF. Please try again.');
+    }
+    return false;
+  }finally{
+    window.__rsBusy=false;
+  }
+}
 function clean(value,fallback){
   value=String(value==null?'':value).replace(/\s+/g,' ').trim();
   return value || fallback || '--';
@@ -6334,6 +6364,7 @@ window.__preloadRSCombined=preloadCombinedReportAssets;
 window.__buildRSBlob=buildRecruiterSummaryBlob;
 window.__buildRS=buildRecruiterSummary;
 window.__buildCombinedRSResume=buildCombinedPreScreenedResume;
+window.__convertResumeToPdfOnly=convertResumeToPdfOnly;
 })();
 </script>
 
@@ -6528,6 +6559,24 @@ window.__buildCombinedRSResume=buildCombinedPreScreenedResume;
         <span class="rdc-ocirc" aria-hidden="true"></span>
       </label>
 
+      {{-- 10: Resume PDF Conversion quality gate --}}
+      <label class="rdc-opt" data-opt="10" data-coins="0">
+        <input class="rdc-rinput" type="radio" name="rdcFormat" value="10">
+        <span class="rdc-onum">10</span>
+        <span class="rdc-oi" style="background:#eef2ff;color:#2563eb;" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M8 13h8"/><path d="M8 17h5"/><path d="M16 17l2 2 4-4"/></svg>
+        </span>
+        <span class="rdc-obody">
+          <span class="rdc-otitle">Resume PDF Conversion <span style="background:#eef2ff;color:#2563eb;font-size:8.5px;font-weight:700;padding:1px 6px;border-radius:4px;vertical-align:middle;margin-left:4px;">QA</span></span>
+          <span class="rdc-odesc">Convert only the original resume to PDF first, so Word quality can be approved before merge</span>
+        </span>
+        <span class="rdc-ometa">
+          <span class="rdc-ocost" style="color:#16a34a;font-weight:700;">Free</span>
+          <span class="rdc-otime">~15 sec</span>
+        </span>
+        <span class="rdc-ocirc" aria-hidden="true"></span>
+      </label>
+
     </div>{{-- /.rdc-opts-list --}}
 
     {{-- Coin info summary --}}
@@ -6585,7 +6634,8 @@ window.__buildCombinedRSResume=buildCombinedPreScreenedResume;
     6: {cost:8, label:'Download Client Presentation',   avail:false, dlKey:null},
     7: {cost:0, label:'Export Candidate Profile PDF',   avail:true,  dlKey:'pdf'},
     8: {cost:8, label:'Download Combined Report',       avail:true,  dlKey:'rs-combined'},
-    9: {cost:8, label:'Download Combined Report Without Branding', avail:true, dlKey:'rs-combined-nobrand'}
+    9: {cost:8, label:'Download Combined Report Without Branding', avail:true, dlKey:'rs-combined-nobrand'},
+    10:{cost:0, label:'Convert Resume to PDF',           avail:true,  dlKey:'resume-pdf-conversion'}
   };
 
   var selectedOpt = 1;
@@ -6651,6 +6701,7 @@ window.__buildCombinedRSResume=buildCombinedPreScreenedResume;
     if(m.dlKey === 'rs' && typeof window.__preloadRS === 'function') window.__preloadRS();
     if(m.dlKey === 'rs-combined' && typeof window.__preloadRSCombined === 'function') window.__preloadRSCombined();
     if(m.dlKey === 'rs-combined-nobrand' && typeof window.__preloadRSCombined === 'function') window.__preloadRSCombined();
+    if(m.dlKey === 'resume-pdf-conversion' && typeof window.__preloadRSCombined === 'function') window.__preloadRSCombined();
   }
 
   var toastTimer = null;
@@ -6756,6 +6807,29 @@ window.__buildCombinedRSResume=buildCombinedPreScreenedResume;
           if(ok) closeRdc();
         }).catch(function(){
           showToast('Could not generate combined report. Please try again.', 'warn');
+        }).finally(function(){
+          resetBtn();
+        });
+
+      } else if(m.dlKey === 'resume-pdf-conversion'){
+        /* Option 10: isolated resume-to-PDF quality gate before enabling DOCX merge as a client-ready flow. */
+        if(window.__rsBusy || typeof window.__convertResumeToPdfOnly !== 'function'){
+          showToast('Please wait a moment and try again.', 'warn');
+          resetBtn(); return;
+        }
+        if(resumeExt === 'DOC'){
+          showToast('Legacy DOC is not supported for browser-only conversion. Please upload DOCX or PDF.', 'warn');
+          resetBtn(); return;
+        }
+        if((resumeExt === 'PDF' && !resumePdfUrl) || (resumeExt === 'DOCX' && !dlUrl) || ['PDF','DOCX'].indexOf(resumeExt) === -1){
+          showToast('Resume PDF conversion is available for PDF and DOCX resumes.', 'warn');
+          resetBtn(); return;
+        }
+        dlBtn.innerHTML = '<span class="rdc-spin"></span><span>' + (resumeExt === 'DOCX' ? 'Converting DOCX to PDF...' : 'Preparing PDF...') + '</span>';
+        window.__convertResumeToPdfOnly(dlUrl,resumePdfUrl,resumeExt).then(function(ok){
+          if(ok) closeRdc();
+        }).catch(function(){
+          showToast('Could not convert resume to PDF. Please try again.', 'warn');
         }).finally(function(){
           resetBtn();
         });
