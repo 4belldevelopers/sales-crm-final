@@ -5826,11 +5826,15 @@ async function convertDocxResumeToPdfBlob(resumeUrl){
     });
     var qualityStyle=document.createElement('style');
     qualityStyle.textContent=[
-      '.rs-docx-preview-wrapper{background:#fff!important;padding:0!important;display:block!important;}',
-      '.rs-docx-preview-wrapper>section.rs-docx-preview,section.rs-docx-preview{background:#fff!important;box-shadow:none!important;margin:0 0 18px 0!important;overflow:hidden!important;}',
-      '.rs-docx-preview{color:#111!important;-webkit-font-smoothing:antialiased;text-rendering:geometricPrecision;}',
-      '.rs-docx-preview *{box-sizing:border-box;}',
-      '.rs-docx-preview img{max-width:100%;}'
+      '.rs-docx-preview-wrapper{background:#fff!important;padding:0!important;display:block!important;align-items:initial!important;}',
+      '.rs-docx-preview-wrapper>section.rs-docx-preview,section.rs-docx-preview{background:#fff!important;box-shadow:none!important;margin:0 0 18px 0!important;overflow:hidden!important;transform:none!important;}',
+      '.rs-docx-preview{color:#111!important;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;}',
+      '.rs-docx-preview article{overflow:visible!important;}',
+      '.rs-docx-preview p{min-height:1.12em!important;line-height:normal!important;}',
+      '.rs-docx-preview span{white-space:pre-wrap!important;overflow-wrap:normal!important;word-break:normal!important;}',
+      '.rs-docx-preview table{border-collapse:collapse!important;table-layout:auto!important;}',
+      '.rs-docx-preview td,.rs-docx-preview th{vertical-align:top!important;line-height:normal!important;}',
+      '.rs-docx-preview img{max-width:100%;height:auto;}'
     ].join('');
     host.insertBefore(qualityStyle,host.firstChild);
     await waitForRenderedAssets(host);
@@ -5844,9 +5848,14 @@ async function convertDocxResumeToPdfBlob(resumeUrl){
     for(var i=0;i<pages.length;i++){
       if(i>0) pdf.addPage('a4','portrait');
       var page=pages[i];
+      var rect=page.getBoundingClientRect();
+      if(!rect.width || rect.width<500 || rect.width>1100){
+        page.style.width='794px';
+      }
       page.style.margin='0';
       page.style.boxShadow='none';
       page.style.background='#ffffff';
+      page.style.maxWidth='none';
       var canvas=await window.html2canvas(page,{
         backgroundColor:'#ffffff',
         scale:Math.max(2.5,Math.min(3,window.devicePixelRatio||2.5)),
@@ -5854,6 +5863,8 @@ async function convertDocxResumeToPdfBlob(resumeUrl){
         allowTaint:false,
         logging:false,
         removeContainer:true,
+        scrollX:0,
+        scrollY:0,
         windowWidth:Math.ceil(page.scrollWidth||page.getBoundingClientRect().width||794),
         windowHeight:Math.ceil(page.scrollHeight||page.getBoundingClientRect().height||1123)
       });
