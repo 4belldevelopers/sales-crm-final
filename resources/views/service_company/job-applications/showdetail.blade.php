@@ -5719,7 +5719,7 @@ function rsEnsureJsPdf(){
   return rsJsPdfReady;
 }
 function rsEnsureDocxConversion(){
-  return Promise.all([rsEnsureJsZip(),rsEnsureHtml2Canvas(),rsEnsureJsPdf()]);
+  return Promise.all([rsEnsureDocxPreview(),rsEnsureHtml2Canvas(),rsEnsureJsPdf()]);
 }
 function rsLogoDataUri(rawUrl){
   rawUrl=clean(rawUrl,'');
@@ -5895,6 +5895,73 @@ async function renderReadableDocxResume(bytes,host){
   await waitForRenderedAssets(host);
   return [host.querySelector('.rs-readable-resume')||host];
 }
+function normalizeOriginalDocxLayout(pages){
+  pages.forEach(function(page){
+    Array.prototype.slice.call(page.querySelectorAll('p,li,td,th')).forEach(function(el){
+      var cs=window.getComputedStyle(el);
+      var fs=parseFloat(cs.fontSize)||12;
+      var lh=parseFloat(cs.lineHeight);
+      if(!lh || lh<fs*1.22) el.style.lineHeight='1.32';
+      if(el.scrollHeight && el.clientHeight && el.scrollHeight>el.clientHeight+2){
+        el.style.height='auto';
+        el.style.minHeight=(el.scrollHeight+4)+'px';
+        el.style.overflow='visible';
+      }
+    });
+    for(var pass=0;pass<2;pass++){
+      Array.prototype.slice.call(page.querySelectorAll('article,td,th,body,section')).forEach(function(parent){
+        var prev=null;
+        Array.prototype.slice.call(parent.children||[]).forEach(function(child){
+          if(!child.textContent || !child.textContent.trim()) return;
+          var rect=child.getBoundingClientRect();
+          if(!rect.height) return;
+          if(prev && rect.top<prev.bottom-1){
+            var current=parseFloat(child.style.marginTop||window.getComputedStyle(child).marginTop)||0;
+            child.style.marginTop=(current+(prev.bottom-rect.top)+6)+'px';
+            rect=child.getBoundingClientRect();
+          }
+          prev=rect;
+        });
+      });
+    }
+  });
+}
+async function renderOriginalDocxResume(bytes,host){
+  await rsEnsureDocxPreview();
+  await window.docx.renderAsync(bytes,host,null,{
+    className:'rs-docx-preview',
+    inWrapper:true,
+    ignoreWidth:false,
+    ignoreHeight:true,
+    breakPages:true,
+    renderHeaders:true,
+    renderFooters:true,
+    renderFootnotes:true,
+    renderEndnotes:true,
+    experimental:true,
+    useBase64URL:true
+  });
+  var style=document.createElement('style');
+  style.textContent=[
+    '.rs-docx-preview-wrapper{background:#fff!important;padding:0!important;display:block!important;align-items:initial!important;}',
+    '.rs-docx-preview-wrapper>section.rs-docx-preview,section.rs-docx-preview{background:#fff!important;box-shadow:none!important;margin:0 0 18px 0!important;overflow:visible!important;transform:none!important;}',
+    '.rs-docx-preview{color:#111!important;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;}',
+    '.rs-docx-preview article{overflow:visible!important;}',
+    '.rs-docx-preview p{line-height:1.32!important;min-height:1.32em!important;margin-bottom:4px!important;overflow:visible!important;}',
+    '.rs-docx-preview span{line-height:inherit!important;white-space:pre-wrap!important;overflow-wrap:break-word!important;word-break:normal!important;vertical-align:baseline!important;}',
+    '.rs-docx-preview table{border-collapse:collapse!important;table-layout:auto!important;}',
+    '.rs-docx-preview td,.rs-docx-preview th{vertical-align:top!important;line-height:1.32!important;height:auto!important;min-height:1.32em!important;overflow:visible!important;}',
+    '.rs-docx-preview img{max-width:100%;height:auto;}'
+  ].join('');
+  host.insertBefore(style,host.firstChild);
+  await waitForRenderedAssets(host);
+  var pages=Array.prototype.slice.call(host.querySelectorAll('.rs-docx-preview-wrapper > section.rs-docx-preview, section.rs-docx-preview'));
+  if(!pages.length) pages=Array.prototype.slice.call(host.querySelectorAll('.docx-wrapper > section.docx, section.docx'));
+  if(!pages.length) throw new Error('DOCX original render produced no pages');
+  normalizeOriginalDocxLayout(pages);
+  await waitForRenderedAssets(host);
+  return pages;
+}
 async function fetchResumeBytes(resumeUrl){
   resumeUrl=clean(resumeUrl,'');
   if(!resumeUrl) throw new Error('Resume URL not available');
@@ -5914,7 +5981,14 @@ async function convertDocxResumeToPdfBlob(resumeUrl){
   host.style.cssText='position:fixed;left:-12000px;top:0;width:auto;min-width:794px;min-height:1123px;background:#fff;overflow:visible;pointer-events:none;';
   document.body.appendChild(host);
   try{
-    var pages=await renderReadableDocxResume(bytes,host);
+    var pages;
+    try{
+      pages=await renderOriginalDocxResume(bytes,host);
+    }catch(renderErr){
+      console.warn('DOCX original-format render failed, using readable fallback:',renderErr);
+      host.innerHTML='';
+      pages=await renderReadableDocxResume(bytes,host);
+    }
     var JsPDF=window.jspdf.jsPDF;
     var pdf=new JsPDF({orientation:'portrait',unit:'pt',format:'a4',compress:true});
     var pageW=pdf.internal.pageSize.getWidth();
