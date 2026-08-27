@@ -5719,7 +5719,7 @@ function rsEnsureJsPdf(){
   return rsJsPdfReady;
 }
 function rsEnsureDocxConversion(){
-  return Promise.all([rsEnsureDocxPreview(),rsEnsureHtml2Canvas(),rsEnsureJsPdf()]);
+  return Promise.all([rsEnsureJsZip(),rsEnsureHtml2Canvas(),rsEnsureJsPdf()]);
 }
 function rsLogoDataUri(rawUrl){
   rawUrl=clean(rawUrl,'');
@@ -5793,6 +5793,108 @@ function waitForRenderedAssets(root){
     return new Promise(function(resolve){ requestAnimationFrame(function(){ requestAnimationFrame(resolve); }); });
   });
 }
+function xmlTextContent(node){
+  if(!node) return '';
+  var parts=[];
+  Array.prototype.slice.call(node.childNodes||[]).forEach(function(child){
+    if(child.nodeType===3){
+      parts.push(child.nodeValue||'');
+    }else if(child.nodeType===1){
+      var name=(child.localName||child.nodeName||'').toLowerCase();
+      if(name==='tab') parts.push(' ');
+      else if(name==='br'||name==='cr') parts.push('\n');
+      else parts.push(xmlTextContent(child));
+    }
+  });
+  return parts.join('').replace(/[ \t]+\n/g,'\n').replace(/\n[ \t]+/g,'\n').replace(/[ \t]{2,}/g,' ').trim();
+}
+function escapeHtml(value){
+  return String(value==null?'':value).replace(/[&<>"']/g,function(ch){
+    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch];
+  });
+}
+function docxNodeHas(node,localName){
+  return !!Array.prototype.slice.call(node.getElementsByTagName('*')).some(function(child){
+    return (child.localName||'').toLowerCase()===localName;
+  });
+}
+function classifyDocxLine(text,index,isBold){
+  var raw=clean(text,'');
+  var compact=raw.replace(/[:\-–—\s]+$/,'');
+  var upperRatio=compact ? compact.replace(/[^A-Z]/g,'').length/Math.max(1,compact.replace(/[^A-Za-z]/g,'').length) : 0;
+  if(index===0 && raw.length<=80) return 'docx-name';
+  if(index<=2 && raw.length<=100) return 'docx-role';
+  if((isBold || upperRatio>0.7) && raw.length<=45) return 'docx-section';
+  if(/^(project|client|role|environment|description|responsibilities|roles and responsibilities|education|experience|certification|key skills)\b/i.test(raw)) return 'docx-label';
+  return 'docx-body';
+}
+function readableDocxHtmlFromXml(xmlText){
+  var parser=new DOMParser();
+  var xml=parser.parseFromString(xmlText,'application/xml');
+  if(xml.getElementsByTagName('parsererror').length) throw new Error('DOCX XML parse failed');
+  var body=Array.prototype.slice.call(xml.getElementsByTagName('*')).filter(function(node){
+    return (node.localName||'').toLowerCase()==='body';
+  })[0] || xml;
+  var blocks=[];
+  var lineIndex=0;
+  Array.prototype.slice.call(body.childNodes||[]).forEach(function(node){
+    if(node.nodeType!==1) return;
+    var name=(node.localName||'').toLowerCase();
+    if(name==='p'){
+      var text=xmlTextContent(node);
+      if(!text){
+        blocks.push('<div class="docx-space"></div>');
+        return;
+      }
+      var isBold=docxNodeHas(node,'b');
+      var cls=classifyDocxLine(text,lineIndex,isBold);
+      lineIndex++;
+      blocks.push('<p class="'+cls+'">'+escapeHtml(text).replace(/\n/g,'<br>')+'</p>');
+    }else if(name==='tbl'){
+      var rows=[];
+      Array.prototype.slice.call(node.childNodes||[]).forEach(function(row){
+        if(row.nodeType!==1 || (row.localName||'').toLowerCase()!=='tr') return;
+        var cells=[];
+        Array.prototype.slice.call(row.childNodes||[]).forEach(function(cell){
+          if(cell.nodeType!==1 || (cell.localName||'').toLowerCase()!=='tc') return;
+          var text=xmlTextContent(cell);
+          cells.push('<td>'+escapeHtml(text).replace(/\n/g,'<br>')+'</td>');
+        });
+        if(cells.length) rows.push('<tr>'+cells.join('')+'</tr>');
+      });
+      if(rows.length) blocks.push('<table class="docx-table">'+rows.join('')+'</table>');
+    }
+  });
+  return [
+    '<div class="rs-readable-resume">',
+    blocks.join(''),
+    '</div>'
+  ].join('');
+}
+async function renderReadableDocxResume(bytes,host){
+  await rsEnsureJsZip();
+  var zip=await window.JSZip.loadAsync(bytes);
+  var documentFile=zip.file('word/document.xml');
+  if(!documentFile) throw new Error('DOCX document.xml not found');
+  var xmlText=await documentFile.async('string');
+  host.innerHTML=[
+    '<style>',
+    '.rs-readable-resume{width:794px;min-height:1123px;background:#fff;color:#111827;font-family:Arial,Helvetica,sans-serif;font-size:14px;line-height:1.45;padding:56px 62px;box-sizing:border-box;}',
+    '.rs-readable-resume p{margin:0 0 8px 0;white-space:normal;overflow-wrap:break-word;word-break:normal;}',
+    '.rs-readable-resume .docx-name{font-size:25px;line-height:1.16;font-weight:700;text-align:center;margin-bottom:4px;color:#111827;}',
+    '.rs-readable-resume .docx-role{font-size:16px;line-height:1.28;font-weight:700;text-align:center;margin-bottom:12px;color:#1f2937;}',
+    '.rs-readable-resume .docx-section{font-size:14px;line-height:1.25;font-weight:700;text-transform:uppercase;border-top:1px solid #cbd5e1;border-bottom:1px solid #cbd5e1;background:#f8fafc;text-align:left;padding:5px 8px;margin:14px 0 8px;color:#0f172a;}',
+    '.rs-readable-resume .docx-label{font-size:14px;line-height:1.35;font-weight:700;margin-top:8px;color:#111827;}',
+    '.rs-readable-resume .docx-body{font-size:13.5px;line-height:1.48;color:#111827;}',
+    '.rs-readable-resume .docx-space{height:7px;}',
+    '.rs-readable-resume .docx-table{width:100%;border-collapse:collapse;margin:8px 0 12px;font-size:13px;line-height:1.35;}',
+    '.rs-readable-resume .docx-table td{border:1px solid #e2e8f0;padding:5px 7px;vertical-align:top;}',
+    '</style>',
+    readableDocxHtmlFromXml(xmlText)
+  ].join('');
+  await waitForRenderedAssets(host);
+  return [host.querySelector('.rs-readable-resume')||host];
+}
 async function fetchResumeBytes(resumeUrl){
   resumeUrl=clean(resumeUrl,'');
   if(!resumeUrl) throw new Error('Resume URL not available');
@@ -5812,35 +5914,7 @@ async function convertDocxResumeToPdfBlob(resumeUrl){
   host.style.cssText='position:fixed;left:-12000px;top:0;width:auto;min-width:794px;min-height:1123px;background:#fff;overflow:visible;pointer-events:none;';
   document.body.appendChild(host);
   try{
-    await window.docx.renderAsync(bytes,host,null,{
-      className:'rs-docx-preview',
-      inWrapper:true,
-      ignoreWidth:false,
-      ignoreHeight:false,
-      breakPages:true,
-      renderHeaders:true,
-      renderFooters:true,
-      renderFootnotes:true,
-      renderEndnotes:true,
-      useBase64URL:true
-    });
-    var qualityStyle=document.createElement('style');
-    qualityStyle.textContent=[
-      '.rs-docx-preview-wrapper{background:#fff!important;padding:0!important;display:block!important;align-items:initial!important;}',
-      '.rs-docx-preview-wrapper>section.rs-docx-preview,section.rs-docx-preview{background:#fff!important;box-shadow:none!important;margin:0 0 18px 0!important;overflow:hidden!important;transform:none!important;}',
-      '.rs-docx-preview{color:#111!important;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;}',
-      '.rs-docx-preview article{overflow:visible!important;}',
-      '.rs-docx-preview p{min-height:1.12em!important;line-height:normal!important;}',
-      '.rs-docx-preview span{white-space:pre-wrap!important;overflow-wrap:normal!important;word-break:normal!important;}',
-      '.rs-docx-preview table{border-collapse:collapse!important;table-layout:auto!important;}',
-      '.rs-docx-preview td,.rs-docx-preview th{vertical-align:top!important;line-height:normal!important;}',
-      '.rs-docx-preview img{max-width:100%;height:auto;}'
-    ].join('');
-    host.insertBefore(qualityStyle,host.firstChild);
-    await waitForRenderedAssets(host);
-    var pages=Array.prototype.slice.call(host.querySelectorAll('.rs-docx-preview-wrapper > section.rs-docx-preview, section.rs-docx-preview'));
-    if(!pages.length) pages=Array.prototype.slice.call(host.querySelectorAll('.docx-wrapper > section.docx, section.docx'));
-    if(!pages.length) pages=[host];
+    var pages=await renderReadableDocxResume(bytes,host);
     var JsPDF=window.jspdf.jsPDF;
     var pdf=new JsPDF({orientation:'portrait',unit:'pt',format:'a4',compress:true});
     var pageW=pdf.internal.pageSize.getWidth();
