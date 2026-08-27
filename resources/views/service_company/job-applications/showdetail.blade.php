@@ -5846,7 +5846,6 @@ async function convertDocxResumeToPdfBlob(resumeUrl){
     var pageW=pdf.internal.pageSize.getWidth();
     var pageH=pdf.internal.pageSize.getHeight();
     for(var i=0;i<pages.length;i++){
-      if(i>0) pdf.addPage('a4','portrait');
       var page=pages[i];
       var rect=page.getBoundingClientRect();
       if(!rect.width || rect.width<500 || rect.width>1100){
@@ -5868,11 +5867,25 @@ async function convertDocxResumeToPdfBlob(resumeUrl){
         windowWidth:Math.ceil(page.scrollWidth||page.getBoundingClientRect().width||794),
         windowHeight:Math.ceil(page.scrollHeight||page.getBoundingClientRect().height||1123)
       });
-      var img=canvas.toDataURL('image/png');
-      var ratio=Math.min(pageW/canvas.width,pageH/canvas.height);
-      var drawW=canvas.width*ratio;
-      var drawH=canvas.height*ratio;
-      pdf.addImage(img,'PNG',(pageW-drawW)/2,0,drawW,drawH,undefined,'SLOW');
+      var sliceHeight=Math.max(1,Math.floor(canvas.width*(pageH/pageW)));
+      var offsetY=0;
+      var isFirstSlice=true;
+      while(offsetY<canvas.height){
+        if(i>0 || !isFirstSlice) pdf.addPage('a4','portrait');
+        var currentHeight=Math.min(sliceHeight,canvas.height-offsetY);
+        var slice=document.createElement('canvas');
+        slice.width=canvas.width;
+        slice.height=currentHeight;
+        var ctx=slice.getContext('2d');
+        ctx.fillStyle='#ffffff';
+        ctx.fillRect(0,0,slice.width,slice.height);
+        ctx.drawImage(canvas,0,offsetY,canvas.width,currentHeight,0,0,canvas.width,currentHeight);
+        var img=slice.toDataURL('image/png');
+        var drawH=currentHeight*(pageW/canvas.width);
+        pdf.addImage(img,'PNG',0,0,pageW,drawH,undefined,'SLOW');
+        offsetY+=currentHeight;
+        isFirstSlice=false;
+      }
     }
     return pdf.output('blob');
   }catch(err){
