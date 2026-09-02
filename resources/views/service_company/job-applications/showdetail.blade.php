@@ -6245,71 +6245,72 @@ function openDocNativePdfBlob(doc){
   }
   return null;
 }
+async function convertResumeWithOpenDocLabBlob(resumeUrl,resumeExt){
+  resumeExt=clean(resumeExt,'').toUpperCase();
+  resumeUrl=clean(resumeUrl,'');
+  if(resumeUrl==='--') resumeUrl='';
+  if(resumeExt!=='DOCX') throw new Error('OpenDoc lab is available for DOCX resumes only');
+  if(!resumeUrl) throw new Error('DOCX resume URL not available');
+  var openDoc=await rsEnsureOpenDocLab();
+  await rsEnsureJsPdf();
+  var bytes=await fetchResumeBytes(resumeUrl);
+  var doc=null;
+  try{
+    var docBytes=new Uint8Array(bytes);
+    try{
+      doc=(typeof openDoc.openAs==='function') ? openDoc.openAs(docBytes,'docx') : openDoc.open(docBytes);
+    }catch(openAsErr){
+      doc=openDoc.open(docBytes);
+    }
+    var pageCount=parseInt(doc && doc.pageCount ? doc.pageCount : 0,10);
+    if(!pageCount && doc && typeof doc.documentStats==='function'){
+      var stats=doc.documentStats();
+      pageCount=parseInt(stats && stats.pages ? stats.pages : 0,10);
+      if(stats && typeof stats.free==='function') stats.free();
+    }
+    if(!pageCount || pageCount<1) throw new Error('OpenDoc produced no pages');
+    if(pageCount>30) throw new Error('OpenDoc lab page limit exceeded');
+    var nativePdfBlob=openDocNativePdfBlob(doc);
+    if(nativePdfBlob) return nativePdfBlob;
+    var renderDpi=openDocRenderDpi(pageCount);
+    var JsPDF=window.jspdf.jsPDF;
+    var firstSize=openDocPagePoints(doc,0);
+    var pdf=new JsPDF({
+      orientation:firstSize[0]>firstSize[1]?'landscape':'portrait',
+      unit:'pt',
+      format:firstSize,
+      compress:true
+    });
+    for(var i=0;i<pageCount;i++){
+      var pageSize=openDocPagePoints(doc,i);
+      if(i>0) pdf.addPage(pageSize,pageSize[0]>pageSize[1]?'landscape':'portrait');
+      var bitmap=null;
+      var canvas=null;
+      try{
+        bitmap=doc.renderPage(i,renderDpi);
+        canvas=openDocCanvasFromBitmap(bitmap);
+        pdf.addImage(canvas.toDataURL('image/png'),'PNG',0,0,pageSize[0],pageSize[1],undefined,'SLOW');
+      }finally{
+        if(bitmap && typeof bitmap.free==='function') bitmap.free();
+        if(canvas){
+          canvas.width=0;
+          canvas.height=0;
+        }
+      }
+    }
+    return pdf.output('blob');
+  }finally{
+    if(doc && typeof doc.free==='function') doc.free();
+  }
+}
 async function convertResumeWithOpenDocLab(resumeUrl,resumeExt){
   if(window.__rsBusy) return Promise.resolve(false);
   window.__rsBusy=true;
   try{
-    resumeExt=clean(resumeExt,'').toUpperCase();
-    resumeUrl=clean(resumeUrl,'');
-    if(resumeExt!=='DOCX') throw new Error('OpenDoc lab is available for DOCX resumes only');
-    if(!resumeUrl) throw new Error('DOCX resume URL not available');
-    var openDoc=await rsEnsureOpenDocLab();
-    await rsEnsureJsPdf();
-    var bytes=await fetchResumeBytes(resumeUrl);
-    var doc=null;
-    try{
-      var docBytes=new Uint8Array(bytes);
-      try{
-        doc=(typeof openDoc.openAs==='function') ? openDoc.openAs(docBytes,'docx') : openDoc.open(docBytes);
-      }catch(openAsErr){
-        doc=openDoc.open(docBytes);
-      }
-      var pageCount=parseInt(doc && doc.pageCount ? doc.pageCount : 0,10);
-      if(!pageCount && doc && typeof doc.documentStats==='function'){
-        var stats=doc.documentStats();
-        pageCount=parseInt(stats && stats.pages ? stats.pages : 0,10);
-        if(stats && typeof stats.free==='function') stats.free();
-      }
-      if(!pageCount || pageCount<1) throw new Error('OpenDoc produced no pages');
-      if(pageCount>30) throw new Error('OpenDoc lab page limit exceeded');
-      var nativePdfBlob=openDocNativePdfBlob(doc);
-      if(nativePdfBlob){
-        var nativeData=readData();
-        downloadBlob(nativePdfBlob,'opendoc_native_conversion_'+slug(nativeData.name)+'.pdf');
-        return true;
-      }
-      var renderDpi=openDocRenderDpi(pageCount);
-      var JsPDF=window.jspdf.jsPDF;
-      var firstSize=openDocPagePoints(doc,0);
-      var pdf=new JsPDF({
-        orientation:firstSize[0]>firstSize[1]?'landscape':'portrait',
-        unit:'pt',
-        format:firstSize,
-        compress:true
-      });
-      for(var i=0;i<pageCount;i++){
-        var pageSize=openDocPagePoints(doc,i);
-        if(i>0) pdf.addPage(pageSize,pageSize[0]>pageSize[1]?'landscape':'portrait');
-        var bitmap=null;
-        var canvas=null;
-        try{
-          bitmap=doc.renderPage(i,renderDpi);
-          canvas=openDocCanvasFromBitmap(bitmap);
-          pdf.addImage(canvas.toDataURL('image/png'),'PNG',0,0,pageSize[0],pageSize[1],undefined,'SLOW');
-        }finally{
-          if(bitmap && typeof bitmap.free==='function') bitmap.free();
-          if(canvas){
-            canvas.width=0;
-            canvas.height=0;
-          }
-        }
-      }
-      var data=readData();
-      downloadBlob(pdf.output('blob'),'opendoc_preview_conversion_'+slug(data.name)+'.pdf');
-      return true;
-    }finally{
-      if(doc && typeof doc.free==='function') doc.free();
-    }
+    var data=readData();
+    var blob=await convertResumeWithOpenDocLabBlob(resumeUrl,resumeExt);
+    downloadBlob(blob,'opendoc_preview_conversion_'+slug(data.name)+'.pdf');
+    return true;
   }catch(err){
     console.error('OpenDoc Preview Conversion Lab error:',err);
     var message=err && err.message ? err.message : '';
@@ -6732,6 +6733,20 @@ async function buildRecruiterSummaryBlob(data,options){
     }catch(ex){ reject(ex); }
   });
 }
+async function mergePreScreenedReportAndResume(reportBlob,resumeBlob,fileName){
+  await rsEnsurePdfLib();
+  var resumeBytes=await resumeBlob.arrayBuffer();
+  var reportBytes=await reportBlob.arrayBuffer();
+  var merged=await window.PDFLib.PDFDocument.create();
+  var reportDoc=await window.PDFLib.PDFDocument.load(reportBytes);
+  var resumeDoc=await window.PDFLib.PDFDocument.load(resumeBytes);
+  var reportPages=await merged.copyPages(reportDoc,reportDoc.getPageIndices());
+  reportPages.forEach(function(page){ merged.addPage(page); });
+  var resumePages=await merged.copyPages(resumeDoc,resumeDoc.getPageIndices());
+  resumePages.forEach(function(page){ merged.addPage(page); });
+  var mergedBytes=await merged.save();
+  downloadBlob(new Blob([mergedBytes],{type:'application/pdf'}),fileName);
+}
 async function buildCombinedPreScreenedResume(resumePdfUrl,options){
   if(window.__rsBusy) return Promise.resolve(false);
   window.__rsBusy=true;
@@ -6740,23 +6755,14 @@ async function buildCombinedPreScreenedResume(resumePdfUrl,options){
     var resumeUrl=clean(options.resumeUrl||'','');
     var resumeExt=clean(options.resumeExt||'','').toUpperCase();
     resumePdfUrl=clean(resumePdfUrl,'');
+    if(resumeUrl==='--') resumeUrl='';
+    if(resumePdfUrl==='--') resumePdfUrl='';
     if(['PDF','DOC','DOCX'].indexOf(resumeExt)===-1) throw new Error('Combined report is available for PDF, DOC and DOCX resumes');
     if(!resumePdfUrl) throw new Error('Resume PDF URL not available');
     var data=readData();
     var reportBlob=await buildRecruiterSummaryBlob(data,options);
-    await rsEnsurePdfLib();
     var resumeBlob=await fetchPdfResumeBlob(resumePdfUrl);
-    var resumeBytes=await resumeBlob.arrayBuffer();
-    var reportBytes=await reportBlob.arrayBuffer();
-    var merged=await window.PDFLib.PDFDocument.create();
-    var reportDoc=await window.PDFLib.PDFDocument.load(reportBytes);
-    var resumeDoc=await window.PDFLib.PDFDocument.load(resumeBytes);
-    var reportPages=await merged.copyPages(reportDoc,reportDoc.getPageIndices());
-    reportPages.forEach(function(page){ merged.addPage(page); });
-    var resumePages=await merged.copyPages(resumeDoc,resumeDoc.getPageIndices());
-    resumePages.forEach(function(page){ merged.addPage(page); });
-    var mergedBytes=await merged.save();
-    downloadBlob(new Blob([mergedBytes],{type:'application/pdf'}),'pre_screened_report_original_resume_'+(options.noBranding?'without_branding_':'')+slug(data.name)+'.pdf');
+    await mergePreScreenedReportAndResume(reportBlob,resumeBlob,'pre_screened_report_original_resume_'+(options.noBranding?'without_branding_':'')+slug(data.name)+'.pdf');
     return true;
   }catch(err){
     console.error('Combined Pre-Screened Report error:',err);
@@ -6771,6 +6777,51 @@ async function buildCombinedPreScreenedResume(resumePdfUrl,options){
     window.__rsBusy=false;
   }
 }
+async function buildWordPreScreenedResume(resumePdfUrl,options){
+  if(window.__rsBusy) return Promise.resolve(false);
+  window.__rsBusy=true;
+  try{
+    options=options||{};
+    var resumeUrl=clean(options.resumeUrl||'','');
+    var resumeExt=clean(options.resumeExt||'','').toUpperCase();
+    resumePdfUrl=clean(resumePdfUrl,'');
+    if(['DOC','DOCX'].indexOf(resumeExt)===-1) throw new Error('Word Pre-Screened Report is available for DOC and DOCX resumes only');
+    if(!resumePdfUrl && !(resumeExt==='DOCX' && resumeUrl)) throw new Error('Resume PDF URL not available');
+    var data=readData();
+    var reportBlob=await buildRecruiterSummaryBlob(data,options);
+    var resumeBlob=null;
+    var converterErr=null;
+    if(resumePdfUrl){
+      try{
+        resumeBlob=await fetchPdfResumeBlob(resumePdfUrl);
+      }catch(err){
+        converterErr=err;
+      }
+    }
+    if(!resumeBlob && resumeExt==='DOCX' && resumeUrl){
+      try{
+        resumeBlob=await convertResumeWithOpenDocLabBlob(resumeUrl,resumeExt);
+      }catch(openDocErr){
+        console.warn('Option 13 OpenDoc fallback failed:',openDocErr);
+        resumeBlob=await convertDocxResumeToPdfBlob(resumeUrl);
+      }
+    }
+    if(!resumeBlob) throw (converterErr || new Error('Converted resume PDF not available'));
+    await mergePreScreenedReportAndResume(reportBlob,resumeBlob,'pre_screened_report_word_resume_'+slug(data.name)+'.pdf');
+    return true;
+  }catch(err){
+    console.error('Word Pre-Screened Report merge error:',err);
+    var message=err && err.message ? err.message : '';
+    if(/HTTP 503|converter unavailable|Document converter unavailable|Converted resume PDF not available/i.test(message)){
+      alert('Word resume conversion is not available right now. For DOC files, please enable the enterprise converter or upload a PDF resume. For DOCX, the browser fallback was also unable to produce a clean PDF.');
+    }else{
+      alert('Could not generate the Word Pre-Screened Report package. Please try option 10 first, then retry option 13.');
+    }
+    return false;
+  }finally{
+    window.__rsBusy=false;
+  }
+}
 window.__preloadRS=preloadRecruiterSummaryAssets;
 window.__preloadRSCombined=preloadCombinedReportAssets;
 window.__preloadBrowserDocxConversion=preloadBrowserDocxConversionAssets;
@@ -6778,6 +6829,7 @@ window.__preloadOpenDocLab=preloadOpenDocLabAssets;
 window.__buildRSBlob=buildRecruiterSummaryBlob;
 window.__buildRS=buildRecruiterSummary;
 window.__buildCombinedRSResume=buildCombinedPreScreenedResume;
+window.__buildWordPreScreenedResume=buildWordPreScreenedResume;
 window.__convertResumeToPdfOnly=convertResumeToPdfOnly;
 window.__convertResumeToPdfBrowserOnly=convertResumeToPdfBrowserOnly;
 window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
@@ -7029,6 +7081,24 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
         <span class="rdc-ocirc" aria-hidden="true"></span>
       </label>
 
+      {{-- 13: Word resume conversion + Pre-Screened Report package --}}
+      <label class="rdc-opt" data-opt="13" data-coins="8">
+        <input class="rdc-rinput" type="radio" name="rdcFormat" value="13">
+        <span class="rdc-onum">13</span>
+        <span class="rdc-oi" style="background:#eef2ff;color:#4f46e5;" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h10l6 6v10a2 2 0 0 1-2 2H4V4z"/><path d="M14 4v6h6"/><path d="M7 13h10"/><path d="M7 17h7"/><path d="M9 8l1.5 8L12 10l1.5 6L15 8"/></svg>
+        </span>
+        <span class="rdc-obody">
+          <span class="rdc-otitle">Word Resume + Pre-Screened Report <span style="background:#eef2ff;color:#4f46e5;font-size:8.5px;font-weight:700;padding:1px 6px;border-radius:4px;vertical-align:middle;margin-left:4px;">DOC/DOCX</span></span>
+          <span class="rdc-odesc">Converts Word resume to PDF first, then adds the Pre-Screened Report on page 1</span>
+        </span>
+        <span class="rdc-ometa">
+          <span class="rdc-ocost">8 Coins</span>
+          <span class="rdc-otime">~20 sec</span>
+        </span>
+        <span class="rdc-ocirc" aria-hidden="true"></span>
+      </label>
+
     </div>{{-- /.rdc-opts-list --}}
 
     {{-- Coin info summary --}}
@@ -7089,7 +7159,8 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
     9: {cost:8, label:'Download Combined Report Without Branding', avail:true, dlKey:'rs-combined-nobrand'},
     10:{cost:0, label:'Convert Resume to PDF',           avail:true,  dlKey:'resume-pdf-conversion'},
     11:{cost:0, label:'Browser DOCX Conversion Beta',    avail:(resumeExt === 'DOCX'),  dlKey:'browser-docx-pdf-conversion', unavailableMsg:'Browser conversion is available only for DOCX resumes. Use option 10 for PDF/DOC files.'},
-    12:{cost:0, label:'OpenDoc Preview Conversion Lab',  avail:(resumeExt === 'DOCX'),  dlKey:'opendoc-preview-lab', unavailableMsg:'OpenDoc lab is available only for DOCX resumes.'}
+    12:{cost:0, label:'OpenDoc Preview Conversion Lab',  avail:(resumeExt === 'DOCX'),  dlKey:'opendoc-preview-lab', unavailableMsg:'OpenDoc lab is available only for DOCX resumes.'},
+    13:{cost:8, label:'Word Resume + Pre-Screened Report', avail:(['DOC','DOCX'].indexOf(resumeExt) !== -1), dlKey:'word-prescreened-package', unavailableMsg:'This option is available only for DOC and DOCX resumes.'}
   };
 
   var selectedOpt = 1;
@@ -7158,6 +7229,7 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
     if(m.dlKey === 'resume-pdf-conversion' && typeof window.__preloadRSCombined === 'function') window.__preloadRSCombined();
     if(m.dlKey === 'browser-docx-pdf-conversion' && typeof window.__preloadBrowserDocxConversion === 'function') window.__preloadBrowserDocxConversion();
     if(m.dlKey === 'opendoc-preview-lab' && typeof window.__preloadOpenDocLab === 'function') window.__preloadOpenDocLab();
+    if(m.dlKey === 'word-prescreened-package' && typeof window.__preloadRSCombined === 'function') window.__preloadRSCombined();
   }
 
   var toastTimer = null;
@@ -7312,6 +7384,26 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
           if(ok) closeRdc();
         }).catch(function(){
           showToast('OpenDoc lab could not run. Please use option 10.', 'warn');
+        }).finally(function(){
+          resetBtn();
+        });
+
+      } else if(m.dlKey === 'word-prescreened-package'){
+        /* Option 13: DOC/DOCX-only package.
+           Enterprise converter is primary; DOCX can fall back to browser conversion before merge. */
+        if(window.__rsBusy || typeof window.__buildWordPreScreenedResume !== 'function'){
+          showToast('Please wait a moment and try again.', 'warn');
+          resetBtn(); return;
+        }
+        if(['DOC','DOCX'].indexOf(resumeExt) === -1 || (!resumePdfUrl && !(resumeExt === 'DOCX' && dlUrl))){
+          showToast('This option is available only for DOC and DOCX resumes.', 'warn');
+          resetBtn(); return;
+        }
+        dlBtn.innerHTML = '<span class="rdc-spin"></span><span>Converting Word resume and adding report...</span>';
+        window.__buildWordPreScreenedResume(resumePdfUrl,{resumeUrl:dlUrl,resumeExt:resumeExt}).then(function(ok){
+          if(ok) closeRdc();
+        }).catch(function(){
+          showToast('Could not generate Word report package. Please try option 10 first.', 'warn');
         }).finally(function(){
           resetBtn();
         });
