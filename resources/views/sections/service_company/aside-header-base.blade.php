@@ -300,15 +300,6 @@ $productAllowCompany = GeneralMethod::companiesType();
                             </div>
                             <!--end::Bench list-->
 
-                            <!--begin::Staffing Dashboard-->
-                            <div class="menu-item">
-                                <a href="{{ route('service_company.bench-candidates.staffingDashboard') }}"
-                                    class="menu-link {{ request()->is('service_company/bench-candidates/staffing-dashboard') ? 'active' : '' }}">
-                                    <span class="menu-bullet"> <span class="bullet bullet-dot"></span> </span> <span
-                                        class="menu-title">Staffing Dashboard</span>
-                                </a>
-                            </div>
-                            <!--end::Staffing Dashboard-->
 
                             <div class="menu-item"> 
                                 <a href="{{ route('service_company.bench-candidates.bench-table-view') }}"
