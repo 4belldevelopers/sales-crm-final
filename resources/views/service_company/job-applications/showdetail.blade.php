@@ -4212,6 +4212,7 @@ setTimeout(() => {
 @php
   $rdcDownloadUrl = '';
   $rdcR2DirectUrl = '';
+  $rdcR2PublicUrl = '';
   $rdcResumeRaw = (string)(@$application->resume ?? '');
   if($rdcResumeRaw !== ''){
     if($resumeAwsPath || strpos($rdcResumeRaw, 'file.jero.works') !== false){
@@ -4226,8 +4227,10 @@ setTimeout(() => {
     $rdcR2Key = '';
     if(strpos($rdcResumeRaw, 'https://file.jero.works/') === 0){
       $rdcR2Key = ltrim((string)parse_url($rdcResumeRaw, PHP_URL_PATH), '/');
+      $rdcR2PublicUrl = $rdcResumeRaw;
     } elseif($resumeAwsPath && !filter_var($rdcResumeRaw, FILTER_VALIDATE_URL)){
       $rdcR2Key = ltrim($rdcResumeRaw, '/');
+      $rdcR2PublicUrl = 'https://file.jero.works/'.$rdcR2Key;
     }
     if($rdcR2Key !== ''){
       try{
@@ -4242,12 +4245,14 @@ setTimeout(() => {
       }
     } elseif(filter_var($rdcResumeRaw, FILTER_VALIDATE_URL) && strpos($rdcResumeRaw, request()->getSchemeAndHttpHost()) !== 0) {
       $rdcR2DirectUrl = $rdcResumeRaw;
+      $rdcR2PublicUrl = $rdcResumeRaw;
     }
   }
 @endphp
 <div id="rdcData" hidden
      data-dl-url="{{ $rdcDownloadUrl }}"
      data-r2-direct-url="{{ $rdcR2DirectUrl }}"
+     data-r2-public-url="{{ $rdcR2PublicUrl }}"
      data-resume-pdf-url="{{ !empty($application->resume) ? route('service_company.job-applications.resume-convert', ['token' => GeneralMethod::value_encrypt((string) $application->resume)]) : '' }}"
      data-has-aws="{{ $resumeAwsPath ? 'true' : 'false' }}"
      data-file-ext="{{ strtoupper(pathinfo((string)@$application->resume, PATHINFO_EXTENSION) ?: 'FILE') }}"></div>
@@ -4889,6 +4894,24 @@ async function fetchResumeBytes(resumeUrl){
   if(bytes.byteLength>rsDocxMaxBytes) throw new Error('DOCX resume is larger than the browser conversion limit');
   return bytes;
 }
+async function fetchResumeBytesFromSources(resumeUrls){
+  var sources=(Array.isArray(resumeUrls) ? resumeUrls : [resumeUrls]).map(function(url){
+    return clean(url,'');
+  }).filter(function(url,index,self){
+    return url && url!=='--' && self.indexOf(url)===index;
+  });
+  if(!sources.length) throw new Error('Direct R2 resume URL not available');
+  var lastErr=null;
+  for(var i=0;i<sources.length;i++){
+    try{
+      return await fetchResumeBytes(sources[i]);
+    }catch(err){
+      lastErr=err;
+      console.warn('Direct R2 resume fetch failed:',sources[i],err);
+    }
+  }
+  throw (lastErr || new Error('Direct R2 resume fetch failed'));
+}
 async function convertDocxResumeToPdfBlob(resumeUrl){
   await rsEnsureDocxConversion();
   var bytes=await fetchResumeBytes(resumeUrl);
@@ -5081,13 +5104,13 @@ function openDocNativePdfBlob(doc){
 }
 async function convertResumeWithOpenDocLabBlob(resumeUrl,resumeExt,allowExternalFallback){
   resumeExt=clean(resumeExt,'').toUpperCase();
-  resumeUrl=clean(resumeUrl,'');
-  if(resumeUrl==='--') resumeUrl='';
+  var resumeSources=Array.isArray(resumeUrl) ? resumeUrl : [resumeUrl];
+  resumeUrl=clean(resumeSources[0]||'','');
   if(resumeExt!=='DOCX') throw new Error('OpenDoc lab is available for DOCX resumes only');
-  if(!resumeUrl) throw new Error('DOCX resume URL not available');
+  if(!resumeUrl || resumeUrl==='--') throw new Error('DOCX resume URL not available');
   var openDoc=await rsEnsureOpenDocLab(allowExternalFallback===true);
   await rsEnsureJsPdf();
-  var bytes=await fetchResumeBytes(resumeUrl);
+  var bytes=await fetchResumeBytesFromSources(resumeSources);
   var doc=null;
   try{
     var docBytes=new Uint8Array(bytes);
@@ -5661,19 +5684,20 @@ async function buildHybridWordPreScreenedResume(resumePdfUrl,options){
   window.__rsBusy=true;
   try{
     options=options||{};
-    var resumeUrl=clean(options.resumeUrl||'','');
+    var resumeSources=Array.isArray(options.resumeUrl) ? options.resumeUrl : [options.resumeUrl||''];
+    var resumeUrl=clean(resumeSources[0]||'','');
     var resumeExt=clean(options.resumeExt||'','').toUpperCase();
     if(resumeUrl==='--') resumeUrl='';
     if(resumeExt!=='DOCX') throw new Error('Client-scale package is available for DOCX resumes only');
     if(!resumeUrl) throw new Error('DOCX resume URL not available');
     var data=readData();
     var reportBlob=await buildRecruiterSummaryBlob(data,options);
-    var resumeBlob=await convertResumeWithOpenDocLabBlob(resumeUrl,resumeExt,false);
+    var resumeBlob=await convertResumeWithOpenDocLabBlob(resumeSources,resumeExt,false);
     await mergePreScreenedReportAndResume(reportBlob,resumeBlob,'pre_screened_report_hybrid_word_resume_'+slug(data.name)+'.pdf');
     return true;
   }catch(err){
     console.error('Hybrid Word Pre-Screened Report merge error:',err);
-    alert('Could not generate the client-side DOCX Pre-Screened Report package. This option does not use server conversion to protect high-concurrency load. Please use option 13 or option 10 for enterprise converter mode.');
+    alert('Could not generate the client-side DOCX Pre-Screened Report package.\n\nReason: '+(err && err.message ? err.message : 'Unknown browser conversion error')+'\n\nThis option does not use server conversion. Please use option 13 or option 10 for enterprise converter mode.');
     return false;
   }finally{
     window.__rsBusy=false;
@@ -6022,6 +6046,7 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
 
   var dlUrl  = rdcData ? rdcData.getAttribute('data-dl-url')  : '';
   var r2DirectUrl = rdcData ? rdcData.getAttribute('data-r2-direct-url') : '';
+  var r2PublicUrl = rdcData ? rdcData.getAttribute('data-r2-public-url') : '';
   var resumePdfUrl = rdcData ? rdcData.getAttribute('data-resume-pdf-url') : '';
   var resumeExt = rdcData ? (rdcData.getAttribute('data-file-ext') || '').toUpperCase() : '';
 
@@ -6301,7 +6326,7 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
           resetBtn(); return;
         }
         dlBtn.innerHTML = '<span class="rdc-spin"></span><span>Fetching DOCX from R2 and merging in browser...</span>';
-        window.__buildHybridWordPreScreenedResume('',{resumeUrl:r2DirectUrl,resumeExt:resumeExt}).then(function(ok){
+        window.__buildHybridWordPreScreenedResume('',{resumeUrl:[r2DirectUrl,r2PublicUrl],resumeExt:resumeExt}).then(function(ok){
           if(ok) closeRdc();
         }).catch(function(){
           showToast('Could not generate hybrid Word report package. Please try option 13.', 'warn');
