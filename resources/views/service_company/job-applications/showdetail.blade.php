@@ -4211,18 +4211,43 @@ setTimeout(() => {
 {{-- Data bridge: PHP values injected once, read by JS — zero extra queries --}}
 @php
   $rdcDownloadUrl = '';
-  if(!empty($application->resume)){
-    if($resumeAwsPath || strpos((string)$application->resume, 'file.jero.works') !== false){
-      $rdcDownloadUrl = route('download.resume', ['id' => $application->id, 'path' => rtrim(strtr(base64_encode($application->resume), '+/', '-_'), '=')]);
-    } elseif(filter_var((string)$application->resume, FILTER_VALIDATE_URL)){
-      $rdcDownloadUrl = (string)$application->resume;
+  $rdcR2DirectUrl = '';
+  $rdcResumeRaw = (string)(@$application->resume ?? '');
+  if($rdcResumeRaw !== ''){
+    if($resumeAwsPath || strpos($rdcResumeRaw, 'file.jero.works') !== false){
+      $rdcDownloadUrl = route('download.resume', ['id' => $application->id, 'path' => rtrim(strtr(base64_encode($rdcResumeRaw), '+/', '-_'), '=')]);
+    } elseif(filter_var($rdcResumeRaw, FILTER_VALIDATE_URL)){
+      $rdcDownloadUrl = $rdcResumeRaw;
     } else {
-      $rdcDownloadUrl = url((string)$application->resume);
+      $rdcDownloadUrl = url($rdcResumeRaw);
+    }
+
+    // Option 14 uses this signed URL so the browser fetches DOCX from R2 instead of Laravel streaming it.
+    $rdcR2Key = '';
+    if(strpos($rdcResumeRaw, 'https://file.jero.works/') === 0){
+      $rdcR2Key = ltrim((string)parse_url($rdcResumeRaw, PHP_URL_PATH), '/');
+    } elseif($resumeAwsPath && !filter_var($rdcResumeRaw, FILTER_VALIDATE_URL)){
+      $rdcR2Key = ltrim($rdcResumeRaw, '/');
+    }
+    if($rdcR2Key !== ''){
+      try{
+        $rdcR2DownloadName = str_replace('"', '', basename($rdcR2Key));
+        $rdcR2DirectUrl = \Illuminate\Support\Facades\Storage::disk('r2')->temporaryUrl(
+          $rdcR2Key,
+          now()->addMinutes(15),
+          ['ResponseContentDisposition' => 'attachment; filename="'.$rdcR2DownloadName.'"']
+        );
+      } catch(\Throwable $e) {
+        $rdcR2DirectUrl = strpos($rdcResumeRaw, 'https://file.jero.works/') === 0 ? $rdcResumeRaw : '';
+      }
+    } elseif(filter_var($rdcResumeRaw, FILTER_VALIDATE_URL) && strpos($rdcResumeRaw, request()->getSchemeAndHttpHost()) !== 0) {
+      $rdcR2DirectUrl = $rdcResumeRaw;
     }
   }
 @endphp
 <div id="rdcData" hidden
      data-dl-url="{{ $rdcDownloadUrl }}"
+     data-r2-direct-url="{{ $rdcR2DirectUrl }}"
      data-resume-pdf-url="{{ !empty($application->resume) ? route('service_company.job-applications.resume-convert', ['token' => GeneralMethod::value_encrypt((string) $application->resume)]) : '' }}"
      data-has-aws="{{ $resumeAwsPath ? 'true' : 'false' }}"
      data-file-ext="{{ strtoupper(pathinfo((string)@$application->resume, PATHINFO_EXTENSION) ?: 'FILE') }}"></div>
@@ -4840,8 +4865,17 @@ async function renderOriginalDocxResume(bytes,host){
 }
 async function fetchResumeBytes(resumeUrl){
   resumeUrl=clean(resumeUrl,'');
+  if(resumeUrl==='--') resumeUrl='';
   if(!resumeUrl) throw new Error('Resume URL not available');
-  var response=await fetch(resumeUrl,{credentials:'include',cache:'force-cache'});
+  var fetchOptions={cache:'no-store'};
+  try{
+    var resumeOrigin=(new URL(resumeUrl,window.location.href)).origin;
+    if(resumeOrigin===window.location.origin) fetchOptions.credentials='include';
+    else fetchOptions.mode='cors';
+  }catch(err){
+    fetchOptions.credentials='include';
+  }
+  var response=await fetch(resumeUrl,fetchOptions);
   if(!response.ok) throw new Error('Resume request failed with HTTP '+response.status);
   var size=parseInt(response.headers.get('content-length')||'0',10);
   if(size && size>rsDocxMaxBytes) throw new Error('DOCX resume is larger than the browser conversion limit');
@@ -5981,6 +6015,7 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
   var rdcData  = document.getElementById('rdcData');
 
   var dlUrl  = rdcData ? rdcData.getAttribute('data-dl-url')  : '';
+  var r2DirectUrl = rdcData ? rdcData.getAttribute('data-r2-direct-url') : '';
   var resumePdfUrl = rdcData ? rdcData.getAttribute('data-resume-pdf-url') : '';
   var resumeExt = rdcData ? (rdcData.getAttribute('data-file-ext') || '').toUpperCase() : '';
 
@@ -5998,7 +6033,7 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
     11:{cost:0, label:'Browser DOCX Conversion Beta',    avail:(resumeExt === 'DOCX'),  dlKey:'browser-docx-pdf-conversion', unavailableMsg:'Browser conversion is available only for DOCX resumes. Use option 10 for PDF/DOC files.'},
     12:{cost:0, label:'OpenDoc Preview Conversion Lab',  avail:(resumeExt === 'DOCX'),  dlKey:'opendoc-preview-lab', unavailableMsg:'OpenDoc lab is available only for DOCX resumes.'},
     13:{cost:8, label:'Word Resume + Pre-Screened Report', avail:(['DOC','DOCX'].indexOf(resumeExt) !== -1), dlKey:'word-prescreened-package', unavailableMsg:'This option is available only for DOC and DOCX resumes.'},
-    14:{cost:8, label:'Client-Side DOCX Report Package', avail:(resumeExt === 'DOCX'), dlKey:'hybrid-word-prescreened-package', unavailableMsg:'Client-side package is available only for DOCX resumes. Use option 13 for legacy DOC files.'}
+    14:{cost:8, label:'Client-Side DOCX Report Package', avail:(resumeExt === 'DOCX' && !!r2DirectUrl), dlKey:'hybrid-word-prescreened-package', unavailableMsg:'Client-side package needs a direct R2 DOCX URL. Use option 13 for DOC files or server converter mode.'}
   };
 
   var selectedOpt = 1;
@@ -6255,12 +6290,12 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
           showToast('Please wait a moment and try again.', 'warn');
           resetBtn(); return;
         }
-        if(resumeExt !== 'DOCX' || !dlUrl){
-          showToast('Client-side package is available only for DOCX resumes. Use option 13 for DOC files.', 'warn');
+        if(resumeExt !== 'DOCX' || !r2DirectUrl){
+          showToast('Direct R2 DOCX URL is not available. Use option 13 for server converter mode.', 'warn');
           resetBtn(); return;
         }
-        dlBtn.innerHTML = '<span class="rdc-spin"></span><span>Converting DOCX in browser and adding report...</span>';
-        window.__buildHybridWordPreScreenedResume('',{resumeUrl:dlUrl,resumeExt:resumeExt}).then(function(ok){
+        dlBtn.innerHTML = '<span class="rdc-spin"></span><span>Fetching DOCX from R2 and merging in browser...</span>';
+        window.__buildHybridWordPreScreenedResume('',{resumeUrl:r2DirectUrl,resumeExt:resumeExt}).then(function(ok){
           if(ok) closeRdc();
         }).catch(function(){
           showToast('Could not generate hybrid Word report package. Please try option 13.', 'warn');
