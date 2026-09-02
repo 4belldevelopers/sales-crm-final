@@ -4582,9 +4582,15 @@ function rsEnsureOpenDocLab(allowExternalFallback){
     var module=await import(moduleUrl);
     if(typeof module.default==='function'){
       try{
-        await module.default({module_or_path:wasmUrl});
-      }catch(firstErr){
-        await module.default();
+        var wasmResponse=await fetch(wasmUrl);
+        if(!wasmResponse.ok) throw new Error('OpenDoc WASM request failed with HTTP '+wasmResponse.status);
+        await module.default({module_or_path:await wasmResponse.arrayBuffer()});
+      }catch(byteInitErr){
+        try{
+          await module.default({module_or_path:wasmUrl});
+        }catch(urlInitErr){
+          await module.default();
+        }
       }
     }
     if(typeof module.open!=='function') throw new Error('OpenDoc open API missing');
