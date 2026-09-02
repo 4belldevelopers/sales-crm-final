@@ -5771,17 +5771,23 @@ function preloadBrowserDocxConversionAssets(){
 }
 function rsEnsureOpenDocLab(){
   if(rsOpenDocReady) return rsOpenDocReady;
-  rsOpenDocReady=import('/js/opendoc/casual_doc_wasm.js').then(async function(module){
+  async function loadOpenDocModule(moduleUrl,wasmUrl){
+    var module=await import(moduleUrl);
     if(typeof module.default==='function'){
       try{
-        await module.default({module_or_path:'/js/opendoc/casual_doc_wasm_bg.wasm'});
+        await module.default({module_or_path:wasmUrl});
       }catch(firstErr){
         await module.default();
       }
     }
     if(typeof module.open!=='function') throw new Error('OpenDoc open API missing');
     return module;
-  }).catch(function(err){
+  }
+  rsOpenDocReady=loadOpenDocModule('/js/opendoc/casual_doc_wasm.js','/js/opendoc/casual_doc_wasm_bg.wasm')
+    .catch(function(localErr){
+      console.warn('Local OpenDoc module unavailable, using lab fallback:',localErr);
+      return loadOpenDocModule('https://opendoc.casualoffice.org/pkg/casual_doc_wasm.js','https://opendoc.casualoffice.org/pkg/casual_doc_wasm_bg.wasm');
+    }).catch(function(err){
     rsOpenDocReady=null;
     throw err;
   });
