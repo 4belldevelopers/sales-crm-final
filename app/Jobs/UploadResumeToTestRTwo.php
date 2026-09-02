@@ -70,17 +70,20 @@ class UploadResumeToTestRTwo implements ShouldQueue
 
     $extension = pathinfo($tempPath, PATHINFO_EXTENSION);
 
-        // ⭐ YEAR / MONTH
+    // ⭐ YEAR / MONTH
     $year  = $this->year;
     $month = $this->month;
 
-    $finalName = $this->full_name;
     $company = $this->company_name;
 
-        // ⭐ FINAL R2 PATH
-    $r2Path = "Companies/{$company}/Resumes/{$year}/{$month}/{$finalName}";
-    // $r2Path = 'Resumes/'.$finalName;
-    // $dbSave = Storage::disk('r2')->url($r2Path);
+    // Intent: Prevent R2 object key overwrites when different candidates upload files with identical filenames.
+    $baseName = pathinfo($this->full_name, PATHINFO_FILENAME);
+    $safeBaseName = preg_replace('/[^a-zA-Z0-9_\-]/', '_', $baseName);
+    $uuidSuffix = !empty($this->uuid) ? $this->uuid : Str::random(8);
+    $uniqueFileName = "{$this->jobApplicationId}_{$safeBaseName}_{$uuidSuffix}.{$extension}";
+
+    // ⭐ FINAL R2 PATH (Collision-proof)
+    $r2Path = "Companies/{$company}/Resumes/{$year}/{$month}/{$uniqueFileName}";
     $dbSave = "https://file.jero.works/".$r2Path;
 
     // ✅ MOVE FILE INSIDE R2
@@ -90,6 +93,6 @@ class UploadResumeToTestRTwo implements ShouldQueue
         ->where('id',$this->jobApplicationId)
         ->update(['resume'=>$dbSave]);
 
-    \Log::info("R2 temp moved to Resumes");
+    \Log::info("R2 temp moved to Resumes with unique key", ['r2Path' => $r2Path]);
 }
 }

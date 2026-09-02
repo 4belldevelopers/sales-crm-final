@@ -210,7 +210,8 @@ CREATE TABLE `bench_assign` (
   `bench_applications_id` int(10) unsigned DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT current_timestamp(),
   `updated_at` timestamp NULL DEFAULT current_timestamp(),
-  PRIMARY KEY (`id`)
+  PRIMARY KEY (`id`),
+  KEY `idx_bench_assign_app` (`bench_applications_id`,`user_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 DROP TABLE IF EXISTS `bench_candidate_skill_experience`;
@@ -296,7 +297,8 @@ CREATE TABLE `benchboostkeywordcandidates` (
   `candidate_id` int(11) NOT NULL,
   `skill_name` text DEFAULT NULL,
   `status` int(11) NOT NULL DEFAULT 1,
-  PRIMARY KEY (`id`)
+  PRIMARY KEY (`id`),
+  KEY `idx_boost_cand` (`candidate_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 DROP TABLE IF EXISTS `billing_address_by_orders`;
@@ -707,7 +709,8 @@ CREATE TABLE `client_location` (
   `state` int(11) DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT current_timestamp(),
   `updated_at` timestamp NULL DEFAULT current_timestamp(),
-  PRIMARY KEY (`id`)
+  PRIMARY KEY (`id`),
+  KEY `idx_client_loc_client` (`client_id`,`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 DROP TABLE IF EXISTS `client_location_jobs`;
@@ -948,7 +951,8 @@ CREATE TABLE `commericial_details` (
   `rate` double DEFAULT NULL,
   `company_id` int(11) DEFAULT NULL,
   `commtype` int(11) DEFAULT NULL,
-  PRIMARY KEY (`id`)
+  PRIMARY KEY (`id`),
+  KEY `idx_comm_details_comp_type` (`company_id`,`commtype`,`rate`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 DROP TABLE IF EXISTS `commericials`;
@@ -968,7 +972,8 @@ CREATE TABLE `commericials` (
   `billing_frequency` varchar(24) DEFAULT NULL,
   `billing_trigger` varchar(32) DEFAULT NULL,
   `payment_terms_days` smallint(6) DEFAULT NULL,
-  PRIMARY KEY (`id`) USING BTREE
+  PRIMARY KEY (`id`) USING BTREE,
+  KEY `idx_comm_comp_type` (`company_id`,`commtype`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 DROP TABLE IF EXISTS `companies`;
@@ -3772,6 +3777,7 @@ CREATE TABLE `recommendation_relation` (
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   `updated_at` timestamp NOT NULL DEFAULT current_timestamp(),
   PRIMARY KEY (`id`),
+  KEY `idx_rec_from_to` (`from_company_id`,`to_company_id`,`final_status`),
   KEY `idx_rec_to_company_final` (`to_company_id`,`final_status`),
   KEY `idx_rec_job_user` (`job_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

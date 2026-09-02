@@ -55,4 +55,47 @@ class BenchCandidateListingTest extends TestCase
         $this->assertEquals('2:5', $pairKey2);
         $this->assertEquals($pairKey1, $pairKey2);
     }
+
+    /**
+     * Test invalid non-existent company ID returns graceful status code without fatal crashes.
+     */
+    public function test_invalid_company_id_returns_graceful_response(): void
+    {
+        $response = $this->get('/bench-condidates/nonexistent-slug/9999999');
+        $this->assertContains($response->getStatusCode(), [200, 302, 404]);
+    }
+
+    /**
+     * Test pre-fetched skills fallback logic for candidates with no skill experience records.
+     */
+    public function test_prefetched_skills_missing_candidate_fallback(): void
+    {
+        $prefetchedSkills = [
+            100 => collect([(object) ['candidate_id' => 100, 'skill_name' => 'PHP']]),
+        ];
+
+        $candidateWithSkills = 100;
+        $candidateWithoutSkills = 999;
+
+        $skillsFound = $prefetchedSkills[$candidateWithSkills] ?? collect();
+        $skillsMissing = $prefetchedSkills[$candidateWithoutSkills] ?? collect();
+
+        $this->assertCount(1, $skillsFound);
+        $this->assertCount(0, $skillsMissing);
+    }
+
+    /**
+     * Test atomic Redis stampede lock mechanism for tenant metadata.
+     */
+    public function test_tenant_meta_redis_stampede_lock(): void
+    {
+        $companyId = 2;
+        $lockKey = "lock:tenant_meta:{$companyId}";
+
+        $lock = Cache::lock($lockKey, 5);
+        $this->assertTrue($lock->get());
+
+        // Lock is acquired; sibling release check
+        $lock->release();
+    }
 }

@@ -39,6 +39,7 @@ use App\Services\NotificationMailService;
 use Carbon\Carbon;
 use Illuminate\Contracts\Validation\Rule;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Http;
@@ -5263,15 +5264,12 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
 
     public function send_mail_for_candidate(Request $request)
     {
-
-        // dd($request->all());
         $template = $from = $to = $cc = $subject = $attached_cv = $message = $arr = '';
         $this->status = false;
 
         $template = $request->template;
         $from = $request->from_email;
         $to = $request->to_email;
-        $cc = $request->cc_email;
         $jobid = @$request->jobid;
         $applicationDataId = @$request->applicationDataId;
 
@@ -5283,100 +5281,122 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
         $decodedFrom = json_decode($from, true);
         if (is_array($decodedFrom)) {
             $from = implode(',', array_column($decodedFrom, 'value'));
-        } // else $from is already a plain email string
+        }
         $decodedTo = json_decode($to, true);
         if (is_array($decodedTo)) {
             $to = implode(',', array_column($decodedTo, 'value'));
-        } // else $to is already a plain comma-separated string
+        }
 
+        /* Intent: Normalize and deduplicate CC email list */
         $cc = [];
         if (! empty($request->cc_email)) {
             $emails = explode(',', $request->cc_email);
-            // 			dd($emails);
+            foreach ($emails as $email) {
+                $trimmed = strtolower(trim($email));
+                if (! empty($trimmed) && filter_var($trimmed, FILTER_VALIDATE_EMAIL)) {
+                    $cc[] = $trimmed;
+                }
+            }
+            $cc = array_values(array_unique($cc));
+        }
 
-            foreach ($emails as $keymail => $email) {
-                array_push($cc, str_replace(' ', '', $email));
+        /* Intent: Normalize and deduplicate candidate recipient email list */
+        $rawMailto = explode(',', (string) $to);
+        $mailto = [];
+        foreach ($rawMailto as $email) {
+            $trimmed = strtolower(trim($email));
+            if (! empty($trimmed) && filter_var($trimmed, FILTER_VALIDATE_EMAIL)) {
+                $mailto[] = $trimmed;
             }
         }
-        // 		dd($cc);
+        $mailto = array_values(array_unique($mailto));
+
+        if (empty($mailto)) {
+            return Reply::dataOnly(['status' => 'error', 'message' => 'No valid candidate recipient email provided.']);
+        }
+
         $attachments = [];
-        if ($attached_cv == 1) {
+        if ($attached_cv == 1 && ! empty($arr)) {
             $resumeRowCount = DB::table('documents')->select('*')->whereIn('documents.documentable_id', $arr)->count();
             $resumeRow = DB::table('documents')->select('*')->whereIn('documents.documentable_id', $arr)->get();
-            // 			dd($resumeRowCount,$resumeRow);
-            $raw_filename = [];
             if ($resumeRowCount) {
                 foreach ($resumeRow as $key => $rval) {
-                    $hashname = $documentable_id = '';
-                    $hashname = $rval->hashname;
-                    $documentable_id = $rval->documentable_id;
-
-                    $raw_filename[] = $hashname;
-                    // 	$attachmentPath = base_path() . '/public/user-uploads/documents/' . $documentable_id . '/' . $hashname;
-
-                    // 	if (file_exists($attachmentPath)) {
                     $attachments[] = [
-                        'path' => $hashname,
+                        'path' => $rval->hashname,
                         'options' => [],
                     ];
-                    // 	}
-
                 }
             }
         }
 
-        $path = base_path().'/public/user-uploads/documents/';
-        $mailto = explode(',', $to);
-        $from_mail = $from;
-        $from_name = 'testing';
-        $replyto = $from;
-        // $bcc = $cc;
-
-        // 	dd($mailto,$bcc,$attachments);
-
-        $company_id = auth()->user()->company_id;
+        $company_id = (int) auth()->user()->company_id;
         $company_name = DB::table('companies')->select('companies.company_name')->where('id', '=', $company_id)->first();
 
-        // dd($attachments);
-        $senderName = auth()->user()->name;
+        /* Intent: Idempotency lock & deduplication guard to prevent duplicate emails, coin deductions, and queue dispatches from concurrent or repeated requests */
+        /* Tenancy: Scoped by company_id, application_id, job_id, recipient, and subject */
+        $appId = ! empty($applicationDataId) ? (int) $applicationDataId : (! empty($arr) && is_array($arr) ? (int) $arr[0] : 0);
+        $jobIdVal = ! empty($jobid) ? (int) $jobid : 0;
+        $toHash = md5(implode(',', $mailto));
+        $subjectHash = md5(trim((string) $subject));
+        $idempotencyKey = "send_candidate_mail_lock:{$company_id}:{$appId}:{$jobIdVal}:{$toHash}:{$subjectHash}";
+        $recentSendKey = "send_candidate_mail_recent:{$company_id}:{$appId}:{$jobIdVal}:{$toHash}:{$subjectHash}";
+
+        if (Cache::has($recentSendKey)) {
+            \Log::info('Idempotency guard: skipped recent duplicate candidate email request', [
+                'company_id' => $company_id,
+                'application_id' => $appId,
+                'job_id' => $jobIdVal,
+                'recipient' => implode(',', $mailto),
+            ]);
+            $view = view('service_company.cvtracker.fwd_resume_message', $this->data)->render();
+
+            return Reply::dataOnly(['status' => 'success', 'view' => $view]);
+        }
+
+        $lock = Cache::lock($idempotencyKey, 15);
+        if (! $lock->get()) {
+            \Log::info('Idempotency guard: blocked concurrent duplicate candidate email request', [
+                'company_id' => $company_id,
+                'application_id' => $appId,
+                'job_id' => $jobIdVal,
+                'recipient' => implode(',', $mailto),
+            ]);
+            $view = view('service_company.cvtracker.fwd_resume_message', $this->data)->render();
+
+            return Reply::dataOnly(['status' => 'success', 'view' => $view]);
+        }
+
+        Cache::put($recentSendKey, true, 15);
 
         $eventId = 7;
         $coinsRequ = count($mailto);
         $companyId = (int) auth()->user()->company_id;
         $coinsDeductions = GeneralMethod::coinsValidationsAllcompany($companyId, $eventId, $coinsRequ);
         if ($coinsDeductions->status) {
+            Cache::forget($recentSendKey);
+            $lock->release();
+
             return Reply::dataOnly(['status' => 'coinCheck', 'message' => $coinsDeductions->message, 'company_coins' => $coinsDeductions->company_coins]);
         }
 
-        // 	dd(count($mailto));
         if (count($mailto) > 0) {
             foreach ($mailto as $email) {
                 $eventId = 7;
-                // $coinsDeductions = GeneralMethod::coinsDeductions((int) auth()->user()->company_id,$eventId,auth()->user()->id, auth()->user()->company_id,'','');
-                // if($coinsDeductions->status){
-                // 	return Reply::dataOnly(['status' => 'coinCheck', 'message' => $coinsDeductions->message,'company_coins'=> $coinsDeductions->company_coins]);
-                // }
-
                 $condi = JobApplication::where('job_applications.email', '=', $email)->first();
                 $name = ($condi) ? $condi->full_name : '';
-                $data = ['message' => $message, 'subject' => $subject, 'company_name' => $company_name->company_name, 'consultant_name' => '4Bell Technology', 'position' => 'PHP', 'condidate_name' => $name];
+                $data = ['message' => $message, 'subject' => $subject, 'company_name' => $company_name->company_name ?? '', 'consultant_name' => '4Bell Technology', 'position' => 'PHP', 'condidate_name' => $name];
 
-                $validMail = true; // DB::table('package_active')->where('company_id', '=', $company_id)->where('emails_balance', '>', 0)->where('startdate', '<=', now())->where('enddate', '>=', now())->where('packages_status', 1)->first();
+                $validMail = true;
 
                 if ($validMail) {
-
                     $mail = Mail::to(auth()->user()->email);
                     if (! empty($cc)) {
                         $mail->cc($cc);
                     }
-                    // dd(count($cc));
                     $senderName = auth()->user()->name;
                     $fromAddress = auth()->user()->email;
                     $checkMailPermision = GeneralMethod::mailPermission(15);
                     if ($checkMailPermision) {
-
-                        // SendEmailJob::dispatch($email, $subject, 'email.resume-forward.sendmail', $data, $attachments, $fromAddress, $senderName, $cc);
-                        // QueueMailService
                         QueueCandidatesMailAndResumeForwardMailService::dispatch(
                             $email,
                             $subject,
@@ -5389,9 +5409,6 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
                             $company_id
                         )->onConnection('emails');
 
-                        // $result = $this->massMailService->sendEmail($email, $subject,'email.resume-forward.sendmail', $data, $attachments, $fromAddress, $senderName,$cc);
-                        //  $this->massMailService->sendEmail($fromAddress, $subject,'email.resume-forward.sendmail', $data, $attachments, $fromAddress, $senderName,$cc);
-                        // if($result){
                         $coinsDeductions = GeneralMethod::coinsDeductions((int) auth()->user()->company_id, $eventId, auth()->user()->id, auth()->user()->company_id, '', '');
 
                         $timelineArr = [
@@ -5399,8 +5416,6 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
                             'event_by_company_id' => auth()->user()->company_id,
                             'event_by_user_id' => auth()->user()->id,
                             'master_process_name' => 'SendMail',
-                            // 'child_process_name'	=>
-
                             'application_id' => $applicationDataId,
                             'application_email' => $email,
                             'job_id' => @$jobid,
@@ -5408,38 +5423,14 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
                             'note' => 'Send Mail',
                         ];
                         GeneralMethod::UpdateTimeline($timelineArr);
-
-                        // }
                     }
-
-                    //   $mail->send(new MassMailingMail((object) $data,$attachments,$senderName,$fromAddress));
-
-                    //   dd("");
-
-                    // 	Mail::to($email)->send(new MassMailingMail((object) $data, $attachments,$senderName));
-                    $event_name = 'emails';
-                    $event_table_name = 'Mass Mail';
-                    $event_table_id = @$company_id;
-
-                    // GeneralMethod::clientPackageRedeem($event_name, $event_table_name, $event_table_id, $company_id);
-
                 }
-
             }
         }
-
-        // dd("kf");
-
-        // $this->status = GeneralMethod::mail_attachment($filename, $path, $mailto, $from_mail, $from_name, $replyto, $bcc, $subject, $message);
-
-        // 		} else {
-        // 			// $this->status = GeneralMethod::sentEmailUsingSMTP($to, $cc, $subject, $message, $from);
-        // 		}
 
         $view = view('service_company.cvtracker.fwd_resume_message', $this->data)->render();
 
         return Reply::dataOnly(['status' => 'success', 'view' => $view]);
-
     }
 
     public function send_mail_send(Request $request)

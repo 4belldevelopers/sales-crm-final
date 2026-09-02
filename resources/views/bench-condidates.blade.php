@@ -10,13 +10,9 @@
     <link rel="canonical" href="" />
     <link rel="shortcut icon" type="image/x-icon"  href="{{ asset('img/favicon.svg')}}">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Poppins:300,400,500,600,700" />
-    <link href="{{ asset('demo/plugins/custom/fullcalendar/fullcalendar.bundle.css') }}{{ TM_VERSION }}" rel="stylesheet" type="text/css" />
-    <link href="{{ asset('demo/plugins/custom/datatables/datatables.bundle.css') }}" rel="stylesheet" type="text/css" />
     <link href="{{ asset('demo/plugins/global/plugins.bundle.css') }}{{ TM_VERSION }}" rel="stylesheet" type="text/css" />
     <link href="{{ asset('demo/css/style.bundle.css') }}{{ TM_VERSION }}" rel="stylesheet" type="text/css" />
     <link href="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.17/css/intlTelInput.css" rel="stylesheet"/>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.11.338/pdf.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.5.0/mammoth.browser.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 
     <style>
@@ -563,8 +559,8 @@
                                 ];
                             });
                         } else {
-                            $skillExperiences = DB::table('bench_candidate_skill_experience')
-                                ->where('candidate_id', $row->id)->get();
+                            /* Intent: Use controller pre-fetched skills array to eliminate Blade N+1 database queries */
+                            $skillExperiences = collect($prefetchedSkills[$row->id] ?? []);
                         }
                         $skillArr = explode(',', @$row->skills);
                         $skilltag = '';
@@ -918,13 +914,10 @@ function sendContactMail(email) {
 
     <script src="{{ asset('demo/plugins/global/plugins.bundle.js') }}{{ TM_VERSION }}"></script>
 <script src="{{ asset('demo/js/scripts.bundle.js') }}{{ TM_VERSION }}"></script>
-<script src="{{ asset('demo/plugins/custom/fullcalendar/fullcalendar.bundle.js') }}{{ TM_VERSION }}"></script>
 <script src="{{ asset('demo/js/custom/widgets.js') }}{{ TM_VERSION }}"></script>
 <script src="{{ asset('demo/js/custom/apps/chat/chat.js') }}{{ TM_VERSION }}"></script>
 <script src="{{ asset('assets/plugins/jquery/jquery.min.js') }}{{ TM_VERSION }}"></script>
 <script src="{{ asset('assets/plugins/bootstrap/js/bootstrap.bundle.min.js') }}{{ TM_VERSION }}"></script>
-<script src="{{ asset('assets/plugins/datatables/jquery.dataTables.js') }}{{ TM_VERSION }}"></script>
-<script src="{{ asset('assets/plugins/datatables/dataTables.bootstrap4.js') }}{{ TM_VERSION }}"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.17/js/intlTelInput.min.js"></script>
 <script src="{{ asset('front/assets/js/number-to-words.js') }}"></script>
 <script src="{{ asset('front/assets/js/countryDialCodes.js') }}"></script>
