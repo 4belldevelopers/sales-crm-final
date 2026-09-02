@@ -1420,6 +1420,20 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
         }
         $hash = md5($resume);
         $pdfCache = $cacheDir.DIRECTORY_SEPARATOR.$hash.'.pdf';
+        $r2CacheKey = 'Resumes/converted_'.$hash.'.pdf';
+
+        if (! file_exists($pdfCache) || filesize($pdfCache) < 100) {
+            try {
+                if (Storage::disk('r2')->exists($r2CacheKey)) {
+                    $r2Bytes = Storage::disk('r2')->get($r2CacheKey);
+                    if ($r2Bytes && strlen($r2Bytes) > 100) {
+                        file_put_contents($pdfCache, $r2Bytes);
+                    }
+                }
+            } catch (\Throwable $e) {
+                // Ignore R2 cache error
+            }
+        }
 
         if (! file_exists($pdfCache) || filesize($pdfCache) < 100) {
             $srcFile = $cacheDir.DIRECTORY_SEPARATOR.$hash.'.'.$ext;
@@ -1434,6 +1448,11 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
             @unlink($srcFile);
             if (! file_exists($pdfCache) || filesize($pdfCache) < 100) {
                 abort(500, 'Conversion failed');
+            }
+            try {
+                Storage::disk('r2')->put($r2CacheKey, file_get_contents($pdfCache));
+            } catch (\Throwable $e) {
+                Log::warning('R2 converted PDF cache store error', ['error' => $e->getMessage()]);
             }
         }
 
@@ -1544,6 +1563,20 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
         }
         $hash = md5($id.'|'.$resume);
         $pdfCache = $cacheDir.DIRECTORY_SEPARATOR.$hash.'.pdf';
+        $r2CacheKey = 'Resumes/converted_'.$hash.'.pdf';
+
+        if (! file_exists($pdfCache) || filesize($pdfCache) < 100) {
+            try {
+                if (Storage::disk('r2')->exists($r2CacheKey)) {
+                    $r2Bytes = Storage::disk('r2')->get($r2CacheKey);
+                    if ($r2Bytes && strlen($r2Bytes) > 100) {
+                        file_put_contents($pdfCache, $r2Bytes);
+                    }
+                }
+            } catch (\Throwable $e) {
+                // Ignore R2 cache error
+            }
+        }
 
         if (! file_exists($pdfCache) || filesize($pdfCache) < 100) {
             $bytes = null;
@@ -1588,6 +1621,12 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
 
             if (! file_exists($pdfCache) || filesize($pdfCache) < 100) {
                 abort(500, 'Conversion failed');
+            }
+
+            try {
+                Storage::disk('r2')->put($r2CacheKey, file_get_contents($pdfCache));
+            } catch (\Throwable $e) {
+                Log::warning('R2 converted PDF cache store error', ['error' => $e->getMessage()]);
             }
         }
 
@@ -2667,6 +2706,7 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
 
     public function show($id)
     {
+        $startTime = microtime(true);
         // $currentSlug = request()->segment(4);
 
         $company_id = '';
@@ -2679,19 +2719,10 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
             $currentSlug = $_GET['slug'];
         }
 
-        $cachePayload = [
-            'candidate_show' => $id,
-            'currentSlug' => $currentSlug,
-            'user_id' => $userId,
-        ];
+        // Intent: Phase 7 Tenant-isolated cache key pattern (FINDING-PERF-04 - P1)
+        $tenantId = (int) ($company_id ?: 0);
+        $cacheKeySet = 'tenant:'.$tenantId.':candidate_details:'.$id.':'.md5($currentSlug);
 
-        $versionKey = 'candidateDetails_version_user_'.$userId;
-        $version = cache()->get($versionKey, 1);
-        $cacheKeySet = 'ats:candidateDetails:'.$userId.':'.$version.':'.md5(json_encode($cachePayload));
-
-        /* ----------------------------
-        ⚡ Check DragonflyDB first
-        ----------------------------- */
         $cachedResponse = cache()->get($cacheKeySet);
         if ($cachedResponse !== null) {
             return response()->json($cachedResponse);
@@ -2704,6 +2735,17 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
         $this->currency = GeneralMethod::currency();
         $this->salaryMode = GeneralMethod::salaryMode();
         $AddJobWiseCondidate = AddJobWiseCondidate::withoutGlobalScopes()->find($id);
+
+        // Intent: Verify candidate record belongs to the user's company or authorized thirdparty company (FINDING-SEC-02 - P0).
+        if ($AddJobWiseCondidate) {
+            $tenantCompanyId = (int) auth()->user()->company_id;
+            $candCompanyId = (int) ($AddJobWiseCondidate->company_id ?? 0);
+            $thirdPartyCompId = (int) ($AddJobWiseCondidate->thirdparty_company_id ?? 0);
+            if ($tenantCompanyId > 0 && $candCompanyId !== $tenantCompanyId && $thirdPartyCompId !== $tenantCompanyId && !auth()->user()->hasRole('admin')) {
+                return Reply::dataOnly(['status' => 'error', 'message' => 'Unauthorized candidate details access.']);
+            }
+        }
+
         $jobId = @$AddJobWiseCondidate->job_id;
         // dd($id,$jobId,$AddJobWiseCondidate);
         $this->intModeArr = GeneralMethod::interview_mode();
@@ -2900,25 +2942,8 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
         }
 
         $this->job_additional_detail = '';
-        $params = [
-            'index' => ELASTIC_APPLICANT_NOTES,
-            'body' => [
-                'query' => [
-                    'bool' => [
-                        'must' => [
-                            ['term' => ['add_job_wise_condidates_id' => (int) $id]],
-                        ],
-                    ],
-                ],
-                'sort' => [
-                    ['id' => ['order' => 'desc']],
-                ],
-                'size' => 100, // optimized size limit
-            ],
-        ];
-
-        $response = $this->elasticService->getClient()->search($params);
-        $this->notesArr = collect($response['hits']['hits'] ?? [])->map(fn ($hit) => (object) $hit['_source']);
+        // Intent: Defer heavy 100-item ES notes query for lightweight initial drawer shell (Phase 1). Notes are lazy-loaded via API on tab click (Phase 2).
+        $this->notesArr = collect([]);
 
         // dd($this->notesArr);
 
@@ -3008,29 +3033,8 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
 
         $this->created_at = GeneralMethod::ymdTodmy($this->application->created_at);
 
-        $params = [
-            'index' => ELASTIC_CANDIDATE_TIMELINE,
-            'body' => [
-                'query' => [
-                    'bool' => [
-                        'must' => [
-                            ['term' => ['application_id' => $application_id]],
-                            ['term' => ['job_id' => @$jobId]],
-                        ],
-                    ],
-                ],
-                'sort' => [
-                    ['id' => ['order' => 'desc']],
-                ],
-                'size' => 200, // optimized size limit
-            ],
-        ];
-
-        $response = $this->elasticService->getClient()->search($params);
-        // return users
-        $this->updateTimeLine = empty($response['hits']['hits']) ? null : array_map(fn ($hit) => $hit['_source'], $response['hits']['hits']);
-
-        // Bulk loading for Timeline N+1 optimization (P0-1)
+        // Intent: Defer heavy 200-item ES timeline search & 7 bulk map DB queries for fast initial drawer shell (Phase 1). Timeline is lazy-loaded via API on tab click (Phase 3).
+        $this->updateTimeLine = [];
         $companyOrClientMap = [];
         $confidentialAllowedJobsMap = [];
         $offerJobApplicationsMap = [];
@@ -3038,102 +3042,6 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
         $spokpersonMap = [];
         $interviewFeedbackMap = [];
         $interviewSkillsFeedbackCountMap = [];
-
-        if (! empty($this->updateTimeLine)) {
-            $timelineItems = collect($this->updateTimeLine);
-
-            $jobIds = $timelineItems->pluck('job_id')->filter()->unique()->values()->toArray();
-            $eventUserIds = $timelineItems->pluck('event_by_user_id')->filter()->unique()->values()->toArray();
-            $eventCompanyIds = $timelineItems->pluck('event_by_company_id')->filter()->unique()->values()->toArray();
-            $interviewScheduleIds = $timelineItems->pluck('interview_schedules_id')->filter()->unique()->values()->toArray();
-
-            // 1. Bulk company/client details per job_id
-            if (! empty($jobIds)) {
-                $rawCompanyClientRows = DB::table('jobs')
-                    ->select(
-                        'jobs.id',
-                        'jobs.company_id',
-                        'clients.name as clients_name',
-                        'companies.company_name'
-                    )
-                    ->join('companies', 'companies.id', '=', 'jobs.company_id')
-                    ->join('clients', 'clients.id', '=', 'jobs.client_id')
-                    ->whereIn('jobs.id', $jobIds)
-                    ->get();
-
-                $userCompanyId = auth()->user()->company_id ?? 0;
-                foreach ($rawCompanyClientRows as $rRow) {
-                    $cName = ($rRow->company_id != $userCompanyId) ? $rRow->company_name : $rRow->clients_name;
-                    $companyOrClientMap[$rRow->id] = ucwords(substr((string) $cName, 0, 30));
-                }
-            }
-
-            // 2. Bulk confidential amount permission check per job_id
-            $chkAdminRole = auth()->user()->hasRole('admin');
-            if ($chkAdminRole) {
-                foreach ($jobIds as $jId) {
-                    $confidentialAllowedJobsMap[$jId] = true;
-                }
-            } elseif (! empty($jobIds)) {
-                $assignedJobIds = DB::table('job_assign')
-                    ->whereIn('job_id', $jobIds)
-                    ->where('user_id', auth()->user()->id)
-                    ->pluck('job_id')
-                    ->toArray();
-                foreach ($jobIds as $jId) {
-                    $confidentialAllowedJobsMap[$jId] = in_array($jId, $assignedJobIds);
-                }
-            }
-
-            // 3. Offer job applications lookup
-            if (! empty($this->application->offer_id)) {
-                $offerJobApplicationsMap[$this->application->offer_id] = DB::table('offer_job_applications')
-                    ->where('id', '=', $this->application->offer_id)
-                    ->first();
-            }
-
-            // 4. Bulk user company lookup
-            if (! empty($eventUserIds)) {
-                $userCompanyMap = DB::table('users')
-                    ->whereIn('id', $eventUserIds)
-                    ->pluck('company_id', 'id')
-                    ->toArray();
-            }
-
-            // 5. Bulk spokesperson lookup
-            if (! empty($jobIds) && ! empty($eventCompanyIds)) {
-                $spokespersons = DB::table('job_assign')
-                    ->select('users.name', 'job_assign.company_id', 'job_assign.job_id')
-                    ->leftJoin('users', 'users.id', '=', 'job_assign.spok_user_id')
-                    ->whereIn('job_assign.job_id', $jobIds)
-                    ->whereIn('job_assign.company_id', $eventCompanyIds)
-                    ->get();
-                foreach ($spokespersons as $sp) {
-                    $spokpersonMap[$sp->job_id.'_'.$sp->company_id] = $sp;
-                }
-            }
-
-            // 6. Bulk interview feedback lookup
-            if (! empty($interviewScheduleIds)) {
-                $feedbacks = DB::table('interview_feedback')
-                    ->select('interview_feedback.created_at', 'interview_feedback.message', 'interview_feedback.star_ratings', 'interview_feedback.interview_id', 'interview_feedback.application_id', 'users.name', 'users.image')
-                    ->join('users', 'users.id', '=', 'interview_feedback.update_by')
-                    ->whereIn('interview_feedback.interview_id', $interviewScheduleIds)
-                    ->get();
-                foreach ($feedbacks as $fb) {
-                    $interviewFeedbackMap[$fb->interview_id][] = $fb;
-                }
-
-                // 7. Bulk interview skills feedback count lookup
-                $counts = DB::table('interview_skills_feedback')
-                    ->select('interview_id', DB::raw('COUNT(*) as total'))
-                    ->whereIn('interview_id', $interviewScheduleIds)
-                    ->groupBy('interview_id')
-                    ->pluck('total', 'interview_id')
-                    ->toArray();
-                $interviewSkillsFeedbackCountMap = $counts;
-            }
-        }
 
         $this->companyOrClientMap = $companyOrClientMap;
         $this->confidentialAllowedJobsMap = $confidentialAllowedJobsMap;
@@ -3290,17 +3198,8 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
             $this->notVisiableBench = false;
         }
 
-        $this->resumeAwsPath = false;
-        if (! empty($this->application->resume)) {
-            $info = pathinfo($this->application->resume);
-            $path = str_replace('https://file.jero.works/', '', $this->application->resume);
-            // dd($info);
-            $s3Path = 'Resumes/'.$info['basename'];
-
-            if (Storage::disk('r2')->exists($path)) {
-                $this->resumeAwsPath = true;
-            }
-        }
+        // Intent: Defer R2 storage check to getResumeMeta API endpoint for fast initial drawer shell (Phase 4).
+        $this->resumeAwsPath = ! empty($this->application->resume);
 
         $this->interview_mode = DB::table('interview_mode')->select('*')->orderBy('interview_mode.id', 'ASC')->get();
 
@@ -3324,8 +3223,257 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
         $responseData = Reply::dataOnly(['status' => 'success', 'view' => $view]);
         cache()->put($cacheKeySet, $responseData, now()->addMinutes(CANDIDATE_DETAILS_TIME));
 
+        // Phase 0 Telemetry: Log candidate drawer rendering metrics
+        $durationMs = round((microtime(true) - $startTime) * 1000, 2);
+        $payloadBytes = strlen(json_encode($responseData));
+        \Log::info('candidate_details_shell_rendered', [
+            'company_id' => $company_id,
+            'user_id' => $userId,
+            'candidate_id' => $id,
+            'duration_ms' => $durationMs,
+            'payload_bytes' => $payloadBytes,
+        ]);
+
         return $responseData;
 
+    }
+
+    public function getTimeline($id, \Illuminate\Http\Request $request)
+    {
+        $companyId = auth()->user()->company_id;
+
+        // Intent: Verify candidate application belongs to user's company or authorized thirdparty company (FINDING-SEC-02)
+        $AddJobWiseCondidate = AddJobWiseCondidate::withoutGlobalScopes()->find($id);
+        if ($AddJobWiseCondidate) {
+            $candCompanyId = (int) ($AddJobWiseCondidate->company_id ?? 0);
+            $thirdPartyCompId = (int) ($AddJobWiseCondidate->thirdparty_company_id ?? 0);
+            if ($companyId > 0 && $candCompanyId !== (int) $companyId && $thirdPartyCompId !== (int) $companyId && ! auth()->user()->hasRole('admin')) {
+                return Reply::dataOnly(['status' => 'error', 'message' => 'Unauthorized timeline access.']);
+            }
+            $application_id = $AddJobWiseCondidate->job_application_id ?? $AddJobWiseCondidate->id;
+            $jobId = $AddJobWiseCondidate->job_id;
+        } else {
+            $application_id = $id;
+            $jobId = $request->input('job_id', 0);
+        }
+
+        $page = (int) $request->input('page', 1);
+        $perPage = 15;
+        $from = ($page - 1) * $perPage;
+
+        $mustConditions = [
+            ['term' => ['application_id' => (int) $application_id]],
+        ];
+
+        if (! empty($jobId) && (int) $jobId > 0) {
+            $mustConditions[] = [
+                'bool' => [
+                    'should' => [
+                        ['term' => ['job_id' => (int) $jobId]],
+                        ['term' => ['job_id' => 0]],
+                    ],
+                    'minimum_should_match' => 1,
+                ],
+            ];
+        }
+
+        $params = [
+            'index' => ELASTIC_CANDIDATE_TIMELINE,
+            'body' => [
+                'query' => [
+                    'bool' => [
+                        'must' => $mustConditions,
+                    ],
+                ],
+                'sort' => [
+                    ['id' => ['order' => 'desc']],
+                ],
+                'from' => $from,
+                'size' => $perPage,
+            ],
+        ];
+
+        try {
+            $response = $this->elasticService->getClient()->search($params);
+            $totalHits = $response['hits']['total']['value'] ?? 0;
+            $updateTimeLine = empty($response['hits']['hits']) ? [] : array_map(fn ($hit) => $hit['_source'], $response['hits']['hits']);
+        } catch (\Throwable $e) {
+            \Log::warning('Elasticsearch timeline query exception', ['error' => $e->getMessage()]);
+            $totalHits = 0;
+            $updateTimeLine = [];
+        }
+
+        $lastPage = (int) max(1, ceil($totalHits / $perPage));
+
+        // Scoped bulk loading for only the 15 timeline items on this page (P0/P1 optimization)
+        $companyOrClientMap = [];
+        $confidentialAllowedJobsMap = [];
+        $offerJobApplicationsMap = [];
+        $userCompanyMap = [];
+        $spokpersonMap = [];
+        $interviewFeedbackMap = [];
+        $interviewSkillsFeedbackCountMap = [];
+
+        if (! empty($updateTimeLine)) {
+            $timelineItems = collect($updateTimeLine);
+
+            $jobIds = $timelineItems->pluck('job_id')->filter()->unique()->values()->toArray();
+            $eventUserIds = $timelineItems->pluck('event_by_user_id')->filter()->unique()->values()->toArray();
+            $eventCompanyIds = $timelineItems->pluck('event_by_company_id')->filter()->unique()->values()->toArray();
+            $interviewScheduleIds = $timelineItems->pluck('interview_schedules_id')->filter()->unique()->values()->toArray();
+
+            if (! empty($jobIds)) {
+                $rawCompanyClientRows = DB::table('jobs')
+                    ->select('jobs.id', 'jobs.company_id', 'clients.name as clients_name', 'companies.company_name')
+                    ->join('companies', 'companies.id', '=', 'jobs.company_id')
+                    ->join('clients', 'clients.id', '=', 'jobs.client_id')
+                    ->whereIn('jobs.id', $jobIds)
+                    ->get();
+
+                foreach ($rawCompanyClientRows as $rRow) {
+                    $cName = ($rRow->company_id != $companyId) ? $rRow->company_name : $rRow->clients_name;
+                    $companyOrClientMap[$rRow->id] = ucwords(substr((string) $cName, 0, 30));
+                }
+            }
+
+            $chkAdminRole = auth()->user()->hasRole('admin');
+            if ($chkAdminRole) {
+                foreach ($jobIds as $jId) {
+                    $confidentialAllowedJobsMap[$jId] = true;
+                }
+            } elseif (! empty($jobIds)) {
+                $assignedJobIds = DB::table('job_assign')
+                    ->whereIn('job_id', $jobIds)
+                    ->where('user_id', auth()->user()->id)
+                    ->pluck('job_id')
+                    ->toArray();
+                foreach ($jobIds as $jId) {
+                    $confidentialAllowedJobsMap[$jId] = in_array($jId, $assignedJobIds);
+                }
+            }
+
+            if (! empty($eventUserIds)) {
+                $userCompanyMap = DB::table('users')
+                    ->whereIn('id', $eventUserIds)
+                    ->pluck('company_id', 'id')
+                    ->toArray();
+            }
+
+            if (! empty($jobIds) && ! empty($eventCompanyIds)) {
+                $spokespersons = DB::table('job_assign')
+                    ->select('users.name', 'job_assign.company_id', 'job_assign.job_id')
+                    ->leftJoin('users', 'users.id', '=', 'job_assign.spok_user_id')
+                    ->whereIn('job_assign.job_id', $jobIds)
+                    ->whereIn('job_assign.company_id', $eventCompanyIds)
+                    ->get();
+                foreach ($spokespersons as $sp) {
+                    $spokpersonMap[$sp->job_id.'_'.$sp->company_id] = $sp;
+                }
+            }
+
+            if (! empty($interviewScheduleIds)) {
+                $feedbacks = DB::table('interview_feedback')
+                    ->select('interview_feedback.created_at', 'interview_feedback.message', 'interview_feedback.star_ratings', 'interview_feedback.interview_id', 'interview_feedback.application_id', 'users.name', 'users.image')
+                    ->join('users', 'users.id', '=', 'interview_feedback.update_by')
+                    ->whereIn('interview_feedback.interview_id', $interviewScheduleIds)
+                    ->get();
+                foreach ($feedbacks as $fb) {
+                    $interviewFeedbackMap[$fb->interview_id][] = $fb;
+                }
+
+                $counts = DB::table('interview_skills_feedback')
+                    ->select('interview_id', DB::raw('COUNT(*) as total'))
+                    ->whereIn('interview_id', $interviewScheduleIds)
+                    ->groupBy('interview_id')
+                    ->pluck('total', 'interview_id')
+                    ->toArray();
+                $interviewSkillsFeedbackCountMap = $counts;
+            }
+        }
+
+        $this->updateTimeLine = $updateTimeLine;
+        $this->companyOrClientMap = $companyOrClientMap;
+        $this->confidentialAllowedJobsMap = $confidentialAllowedJobsMap;
+        $this->offerJobApplicationsMap = $offerJobApplicationsMap;
+        $this->userCompanyMap = $userCompanyMap;
+        $this->spokpersonMap = $spokpersonMap;
+        $this->interviewFeedbackMap = $interviewFeedbackMap;
+        $this->CaptainCompanyid = auth()->user()->company_id;
+        $view = view('service_company.job-applications.timeline_partial', $this->data)->render();
+        //  dd($updateTimeLine);
+        return Reply::dataOnly([
+            'status' => 'success',
+            'view' => $view,
+            'timeline' => $updateTimeLine,
+            'current_page' => $page,
+            'last_page' => $lastPage,
+            'total' => $totalHits,
+        ]);
+    }
+
+    public function getResumeMeta($id, \Illuminate\Http\Request $request)
+    {
+        $companyId = auth()->user()->company_id;
+
+        // Intent: Security check — verify candidate application belongs to user's company or authorized thirdparty company (FINDING-SEC-02)
+        $AddJobWiseCondidate = AddJobWiseCondidate::withoutGlobalScopes()->find($id);
+        if ($AddJobWiseCondidate) {
+            $candCompanyId = (int) ($AddJobWiseCondidate->company_id ?? 0);
+            $thirdPartyCompId = (int) ($AddJobWiseCondidate->thirdparty_company_id ?? 0);
+            if ($companyId > 0 && $candCompanyId !== (int) $companyId && $thirdPartyCompId !== (int) $companyId && ! auth()->user()->hasRole('admin')) {
+                return Reply::dataOnly(['status' => 'error', 'message' => 'Unauthorized resume access.']);
+            }
+            $appId = $AddJobWiseCondidate->id;
+        } else {
+            $appId = $id;
+        }
+
+        $app = JobApplication::withoutGlobalScopes()->find($appId);
+        if (! $app) {
+            return Reply::dataOnly(['status' => 'error', 'message' => 'Candidate application not found.']);
+        }
+
+        $resumeFilename = $app->hashname ?: $app->resume;
+        if (empty($resumeFilename)) {
+            return Reply::dataOnly(['status' => 'error', 'message' => 'No resume uploaded for candidate.']);
+        }
+
+        $cacheKey = 'tenant:'.$companyId.':resume_meta:'.$appId;
+        $meta = cache()->remember($cacheKey, now()->addMinutes(15), function () use ($app, $resumeFilename) {
+            $path = str_replace('https://file.jero.works/', '', $resumeFilename);
+            $info = pathinfo($path);
+            $extension = strtolower($info['extension'] ?? '');
+
+            $exists = false;
+            try {
+                $exists = Storage::disk('r2')->exists($path);
+            } catch (\Throwable $e) {
+                \Log::warning('R2 storage check error', ['path' => $path, 'error' => $e->getMessage()]);
+            }
+
+            $signedUrl = '';
+            if ($exists) {
+                try {
+                    $signedUrl = Storage::disk('r2')->temporaryUrl($path, now()->addMinutes(30));
+                } catch (\Throwable $e) {
+                    $signedUrl = url('/public/user-uploads/resumes/'.$resumeFilename);
+                }
+            } else {
+                $signedUrl = url('/public/user-uploads/resumes/'.$resumeFilename);
+            }
+
+            return [
+                'exists' => $exists,
+                'signed_url' => $signedUrl,
+                'filename' => $resumeFilename,
+                'extension' => $extension,
+            ];
+        });
+
+        return Reply::dataOnly([
+            'status' => 'success',
+            'resume' => $meta,
+        ]);
     }
 
     public function websiteShow($id)

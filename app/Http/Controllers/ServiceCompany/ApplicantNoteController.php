@@ -30,20 +30,56 @@ class ApplicantNoteController extends ServiceCompanyBaseController
         
     }
 
+    public function index(\Illuminate\Http\Request $request)
+    {
+        $applicationId = $request->input('application_id') ?: $request->input('id');
+        $companyId = auth()->user()->company_id;
+
+        // Intent: Verify application belongs to user's company or authorized thirdparty company
+        $app = \DB::table('job_applications')
+            ->where('id', $applicationId)
+            ->where(function ($q) use ($companyId) {
+                $q->where('company_id', $companyId)
+                  ->orWhere('thirdparty_company_id', $companyId);
+            })->first();
+
+        if (! $app && ! auth()->user()->hasRole('admin')) {
+            return Reply::dataOnly(['status' => 'error', 'message' => 'Unauthorized notes access.']);
+        }
+
+        $page = (int) $request->input('page', 1);
+        $perPage = 15;
+
+        $notesQuery = ApplicantNote::with('user')
+            ->where('job_application_id', $applicationId)
+            ->orderBy('id', 'desc');
+
+        $notesPaginator = $notesQuery->paginate($perPage, ['*'], 'page', $page);
+        $this->notes = $notesPaginator->items();
+
+        $view = view('service_company.applicant_notes.show', $this->data)->render();
+
+        return Reply::dataOnly([
+            'status' => 'success',
+            'view' => $view,
+            'current_page' => $notesPaginator->currentPage(),
+            'last_page' => $notesPaginator->lastPage(),
+            'total' => $notesPaginator->total(),
+        ]);
+    }
+
     public function store(StoreNote $request)
     {
-
+        $wiseId 	= $request->wiseId;
       
-        
-            $wiseId 	= $request->wiseId;
-          
-			$note 						= new ApplicantNote();
-			$note->note_text 			= $request->note;
-			$note->user_id 				=auth()->user()->id;
-			$note->job_application_id 	= $request->id;
-			$note->save();
- 
-            $response = $this->elasticService->getClient()->update([
+        $note 						= new ApplicantNote();
+        $note->note_text 			= $request->note;
+        $note->user_id 				= auth()->user()->id;
+        $note->job_application_id 	= $request->id;
+        $note->save();
+
+        try {
+            $this->elasticService->getClient()->update([
                 'index' => ELASTIC_APPLICANT_NOTES,
                 'id'    => $note->id,
                 'retry_on_conflict' => 5,
@@ -63,83 +99,90 @@ class ApplicantNoteController extends ServiceCompanyBaseController
                     'detect_noop' => false
                 ],
             ]);
+        } catch (\Throwable $e) {
+            \Log::warning('Elasticsearch note store exception', ['error' => $e->getMessage()]);
+        }
 
+        $this->notes = ApplicantNote::with('user')->where('job_application_id', $request->id)->orderBy('id', 'desc')->take(15)->get();
 
-            $this->job_additional_detail = "";
-			
-            // $this->notes = ApplicantNote::where('job_application_id',  $request->id)->get();
-            $this->notes = ApplicantNote::with('user')->where('job_application_id', $request->id)->get();
+        $companyId = auth()->user()->company_id ?? 0;
+        cache()->forget('tenant:'.$companyId.':candidate_details:'.$request->id);
 
-           
-            $cachekeys = [
-                'candidateDetails_version_user_'.auth()->user()->id,
-            ];
-            foreach ($cachekeys as $key) {
-                GeneralMethod::cacheClean($key);
-            }
-		     
-						
         $view = view('service_company.applicant_notes.show', $this->data)->render();
         return Reply::successWithData(__('messages.noteAddSuccess'), ['view' => $view]);
     }
 
     public function update(StoreNote $request, $id)
     {
-        $note = ApplicantNote::withoutGlobalScopes()->find($id);
+        // Intent: Security fix — remove withoutGlobalScopes() and enforce tenant ownership validation (FINDING-SEC-01 - P0).
+        $companyId = auth()->user()->company_id;
+        $note = ApplicantNote::where('id', $id)->first();
+
+        if (! $note) {
+            return Reply::dataOnly(['status' => 'error', 'message' => 'Note not found or unauthorized.']);
+        }
+
+        $appCompany = \DB::table('job_applications')->where('id', $note->job_application_id)->value('company_id');
+        if ($note->user_id !== auth()->id() && $appCompany !== $companyId && ! auth()->user()->hasRole('admin')) {
+            return Reply::dataOnly(['status' => 'error', 'message' => 'Unauthorized note update.']);
+        }
+
         $note->note_text = $request->note;
-        $note->user_id = auth()->user()->id;
         $note->save();
 
-        // $this->notes = ApplicantNote::where('job_application_id', $note->job_application_id)->get();
-        $this->notes = ApplicantNote::with('user')->where('job_application_id', $note->job_application_id)->get();
-        
-        $cachekeys = [
-            'candidateDetails_version_user_'.auth()->user()->id,
-        ];
-        foreach ($cachekeys as $key) {
-            GeneralMethod::cacheClean($key);
-        }
+        $this->notes = ApplicantNote::with('user')->where('job_application_id', $note->job_application_id)->orderBy('id', 'desc')->take(15)->get();
+
+        cache()->forget('tenant:'.$companyId.':candidate_details:'.$note->job_application_id);
 
         $view = view('service_company.applicant_notes.show', $this->data)->render();
         return Reply::successWithData(__('messages.noteAddSuccess'), ['view' => $view]);
     }
 
     public function destroy($id)
-    	{
-        $note = ApplicantNote::withoutGlobalScopes()->find($id);
+    {
+        // Intent: Security fix — remove withoutGlobalScopes() and enforce tenant ownership validation (FINDING-SEC-01 - P0).
+        $companyId = auth()->user()->company_id;
+        $note = ApplicantNote::where('id', $id)->first();
+
+        if (! $note) {
+            return Reply::dataOnly(['status' => 'error', 'message' => 'Note not found or unauthorized.']);
+        }
+
+        $appCompany = \DB::table('job_applications')->where('id', $note->job_application_id)->value('company_id');
+        if ($note->user_id !== auth()->id() && $appCompany !== $companyId && ! auth()->user()->hasRole('admin')) {
+            return Reply::dataOnly(['status' => 'error', 'message' => 'Unauthorized note deletion.']);
+        }
+
         ApplicantNote::destroy($id);
 
-        $this->elasticService->getClient()->deleteByQuery([
-				'index' => ELASTIC_APPLICANT_NOTES,
-                'conflicts' => 'proceed',   // ⭐ THIS LINE FIXES YOUR ERROR
-				'body'  => [
-					'query' => [
-						'bool' => [
-							'must' => [
-								['term' => ['id' => $id]]
-							],
-						],
-					],
-				],
-			]);
+        try {
+            $this->elasticService->getClient()->deleteByQuery([
+                'index' => ELASTIC_APPLICANT_NOTES,
+                'conflicts' => 'proceed',
+                'body'  => [
+                    'query' => [
+                        'bool' => [
+                            'must' => [
+                                ['term' => ['id' => (int) $id]]
+                            ],
+                        ],
+                    ],
+                ],
+            ]);
+        } catch (\Throwable $e) {
+            \Log::warning('Elasticsearch note delete exception', ['error' => $e->getMessage()]);
+        }
 
-        if($note){
-        //  $this->notes = ApplicantNote::where('job_application_id', $note->job_application_id)->get();
-        $this->notes = ApplicantNote::with('user')->where('job_application_id', $note->job_application_id)->get();
-        }else{
+        if ($note) {
+            $this->notes = ApplicantNote::with('user')->where('job_application_id', $note->job_application_id)->orderBy('id', 'desc')->take(15)->get();
+        } else {
             $this->notes = collect();
         }
 
-         $cachekeys = [
-            'candidateDetails_version_user_'.auth()->user()->id,
-        ];
-        foreach ($cachekeys as $key) {
-            GeneralMethod::cacheClean($key);
-        }
+        cache()->forget('tenant:'.$companyId.':candidate_details:'.$note->job_application_id);
 
         $view = view('service_company.applicant_notes.show', $this->data)->render();
         return Reply::successWithData(__('messages.recordDeleted'), ['view' => $view]);
-        
     }
 
 
