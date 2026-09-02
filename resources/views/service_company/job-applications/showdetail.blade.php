@@ -4256,8 +4256,8 @@ setTimeout(() => {
      data-resume-pdf-url="{{ !empty($application->resume) ? route('service_company.job-applications.resume-convert', ['token' => GeneralMethod::value_encrypt((string) $application->resume)]) : '' }}"
      data-has-aws="{{ $resumeAwsPath ? 'true' : 'false' }}"
      data-file-ext="{{ strtoupper(pathinfo((string)@$application->resume, PATHINFO_EXTENSION) ?: 'FILE') }}"></div>
-<link rel="modulepreload" href="/opendoc-runtime/casual_doc_wasm.js">
-<link rel="preload" href="/opendoc-runtime/casual_doc_wasm_bg.wasm" as="fetch" type="application/wasm" crossorigin>
+<link rel="modulepreload" href="/opendoc-runtime/module">
+<link rel="preload" href="/opendoc-runtime/wasm" as="fetch" type="application/wasm" crossorigin>
 <link rel="preload" href="/js/pdf-lib.min.js" as="script">
 <link rel="preload" href="/js/jspdf.umd.min.js" as="script">
 <link rel="preload" href="/js/pdfmake.min.js" as="script">
@@ -4601,7 +4601,7 @@ function rsEnsureOpenDocLab(allowExternalFallback){
     if(typeof module.open!=='function') throw new Error('OpenDoc open API missing');
     return module;
   }
-  rsOpenDocLocalReady=loadOpenDocModule('/opendoc-runtime/casual_doc_wasm.js','/opendoc-runtime/casual_doc_wasm_bg.wasm')
+  rsOpenDocLocalReady=loadOpenDocModule('/opendoc-runtime/module','/opendoc-runtime/wasm')
     .catch(function(localErr){
       rsOpenDocLocalReady=null;
       if(!allowExternalFallback) throw localErr;

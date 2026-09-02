@@ -821,24 +821,30 @@ class HomeController extends Controller
      * Intent: keep DOCX browser conversion working behind FrankenPHP/proxies that may
      * serve module JS/WASM with a generic content type. This never serves resume data.
      */
-    public function openDocRuntimeAsset(string $file)
+    public function openDocRuntimeAsset(string $asset)
     {
         $allowed = [
-            'casual_doc_wasm.js' => 'application/javascript; charset=utf-8',
-            'casual_doc_wasm_bg.wasm' => 'application/wasm',
+            'module' => [
+                'file' => 'casual_doc_wasm.js',
+                'type' => 'application/javascript; charset=utf-8',
+            ],
+            'wasm' => [
+                'file' => 'casual_doc_wasm_bg.wasm',
+                'type' => 'application/wasm',
+            ],
         ];
 
-        if (! array_key_exists($file, $allowed)) {
+        if (! array_key_exists($asset, $allowed)) {
             abort(404);
         }
 
-        $path = public_path('js/opendoc/'.$file);
+        $path = public_path('js/opendoc/'.$allowed[$asset]['file']);
         if (! is_file($path)) {
             abort(404);
         }
 
         return response()->file($path, [
-            'Content-Type' => $allowed[$file],
+            'Content-Type' => $allowed[$asset]['type'],
             'Cache-Control' => 'public, max-age=86400',
             'X-Content-Type-Options' => 'nosniff',
         ]);
