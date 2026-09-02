@@ -238,9 +238,16 @@ class ResumeUploadSession
 
         $year     = now()->format('Y');
         $month    = now()->format('m');
-        $filename = $session->original_filename ?? ($session->uuid . '.pdf');
         $srcPath  = 'resumes/' . $session->uuid;
-        $destPath = "Companies/{$companyFolder}/Resumes/{$year}/{$month}/{$filename}";
+
+        // Intent: Prevent R2 object key collisions when candidates upload files with identical original names.
+        $origName = $session->original_filename ?? 'resume.pdf';
+        $ext = pathinfo($origName, PATHINFO_EXTENSION) ?: 'pdf';
+        $baseName = pathinfo($origName, PATHINFO_FILENAME);
+        $safeBaseName = preg_replace('/[^a-zA-Z0-9_\-]/', '_', $baseName);
+        $candidatePrefix = $session->linked_candidate_id ?? $session->candidate_id ?? '0';
+        $safeFilename = "{$candidatePrefix}_{$safeBaseName}_{$session->uuid}.{$ext}";
+        $destPath = "Companies/{$companyFolder}/Resumes/{$year}/{$month}/{$safeFilename}";
 
         try {
             Storage::disk('r2')->copy($srcPath, $destPath);

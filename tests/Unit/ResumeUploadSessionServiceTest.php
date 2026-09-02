@@ -87,6 +87,13 @@ class ResumeUploadSessionServiceTest extends TestCase
                 updated_at        TEXT
             )
         ');
+        DB::connection('sqlite')->statement('
+            CREATE TABLE companies (
+                id           INTEGER PRIMARY KEY AUTOINCREMENT,
+                company_name TEXT
+            )
+        ');
+        DB::connection('sqlite')->table('companies')->insert(['id' => 1, 'company_name' => 'Acme Corp']);
 
         // ── 2. Storage: mock r2 disk so temporaryUploadUrl() works ──────────
         // FakeStorage / LocalAdapter throws on temporaryUploadUrl — no callback hook
@@ -96,6 +103,7 @@ class ResumeUploadSessionServiceTest extends TestCase
                  ->andReturnUsing(fn ($path) => 'https://fake.r2.dev/' . $path);
         $mockDisk->shouldReceive('exists')->andReturn(false);
         $mockDisk->shouldReceive('delete')->andReturn(true);
+        $mockDisk->shouldReceive('copy')->andReturn(true);
 
         Storage::shouldReceive('disk')
                ->with('r2')
@@ -285,6 +293,16 @@ class ResumeUploadSessionServiceTest extends TestCase
         );
 
         $this->assertSame('Pending', $result['status']);
+    }
+
+    public function test_move_to_company_path_generates_collision_proof_key(): void
+    {
+        $result = $this->presignHelper();
+        $session = ResumeUpload::where('uuid', $result['uuid'])->first();
+        $session->linked_candidate_id = 99;
+
+        $url = $this->service->moveToCompanyPath($session);
+        $this->assertStringContainsString('99_resume_' . $session->uuid . '.pdf', $url);
     }
 
     // ─── Helpers ──────────────────────────────────────────────────────────────

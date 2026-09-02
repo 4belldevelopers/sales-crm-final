@@ -106,6 +106,13 @@ class JobApplyService
                     'message' => 'Resume upload is not yet complete. Please wait for the upload to finish and try again.',
                 ]);
             }
+            if ($resumeSession->linked_candidate_id) {
+                return Reply::dataOnly([
+                    'status' => 'error',
+                    'msgType' => 'warning',
+                    'message' => 'Resume upload session has already been associated with another application. Please upload the resume again.',
+                ]);
+            }
         }
 
         /* Intent: Prepare JobApplication model state prior to DB transaction start */
@@ -441,15 +448,14 @@ class JobApplyService
                 $companyNameR2 = preg_replace('/[^a-z0-9_-]/i', '_', $companyNameR2);
                 $companyNameRTwo = $companyNameR2.'_'.$company_id;
 
-                $tempPath = $request->input('uploaded_file_path') ?: session('resume_temp_path');
-                $full_name = $request->input('resume_original_name') ?: session('resume_original_name');
+                $tempPath = $request->input('uploaded_file_path');
+                $full_name = $request->input('resume_original_name');
                 if ($tempPath && $full_name) {
                     UploadResumeToTestRTwo::dispatch($tempPath, $full_name, $jobApplication->id, $companyNameRTwo, date('Y'), date('m'))
                         ->onConnection('emails');
                     DB::table('job_applications')
                         ->where('id', $jobApplication->id)
                         ->update(['resume' => 'https://file.jero.works/'.$full_name]);
-                    session()->forget(['resume_temp_path', 'resume_original_name']);
                 }
             }
 

@@ -1081,9 +1081,17 @@ $(document).ready(function () {
         });
     }
 
+    // Build a unique contextKey for this company + job + application context
+    function getUpContextKey() {
+        var companyId = @json(auth()->user()->company_id ?? 0);
+        var jobId = $('#job_id').val() || '0';
+        var appId = $('#appId').val() || '0';
+        return 'comp' + companyId + '_job' + jobId + '_app' + appId;
+    }
+
     // ── v2 Phase 6: recover a previous upload session after page refresh ──────
     if (RESUMES_FEATURE_BROWSER_UPLOAD) {
-        window.ResumePresign.recover().then(function (session) {
+        window.ResumePresign.recover(getUpContextKey()).then(function (session) {
             if (session) {
                 $('#upWrap').show();
                 $('#upBar').css('width', '100%');
@@ -1132,7 +1140,7 @@ $(document).ready(function () {
         if (_parseStatusInterval) { clearInterval(_parseStatusInterval); _parseStatusInterval = null; }
         // Cancel v2 upload if in progress (aborts R2 XHR + clears session UUID)
         if (RESUMES_FEATURE_BROWSER_UPLOAD) {
-            window.ResumePresign.cancelUpload();
+            window.ResumePresign.cancelUpload(getUpContextKey());
         }
         resetProgress();
         $('#upInfo').removeClass('show');
@@ -1191,7 +1199,7 @@ $(document).ready(function () {
         }, 4000);
     }
 
-    function processFile(file, event) {
+    function processFile(file, event = null) {
         if (!file) return;
 
         const ext = file.name.split('.').pop().toLowerCase();
@@ -1218,7 +1226,7 @@ $(document).ready(function () {
         window.__upXhrChannelClaimed = true;
         if (RESUMES_FEATURE_BROWSER_UPLOAD) {
             // v2 path: direct browser → R2, zero PHP bytes.
-            window.ResumePresign.startUpload(file).catch(function () {
+            window.ResumePresign.startUpload(file, getUpContextKey()).catch(function () {
                 // error already surfaced via onStateChange 'failed'
             });
         } else if (typeof uploadWithProgress === 'function') {
@@ -1256,6 +1264,7 @@ $(document).ready(function () {
         upXhr.setRequestHeader('X-File-Name', encodeURIComponent(file.name));
         upXhr.setRequestHeader('X-File-Size', file.size);
         upXhr.setRequestHeader('X-Candidate-Id', $('#appId').val() || '');
+        upXhr.setRequestHeader('X-Job-Id', $('#job_id').val() || '');
 
         upXhr.upload.onprogress = function (e) {
             if (!e.lengthComputable) return;

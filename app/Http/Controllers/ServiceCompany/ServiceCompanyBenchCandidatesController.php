@@ -1363,6 +1363,10 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
                 return Reply::dataOnly(['status' => 'error', 'msgType' => 'warning',
                     'message' => 'Resume upload is not yet complete. Please wait for the upload to finish and try again.']);
             }
+            if ($resumeSession->linked_candidate_id && (int) $resumeSession->linked_candidate_id !== (int) $benchApplication->id) {
+                return Reply::dataOnly(['status' => 'error', 'msgType' => 'warning',
+                    'message' => 'Resume upload session has already been associated with another application. Please upload the resume again.']);
+            }
         }
         // ─────────────────────────────────────────────────────────────────────────────
 
@@ -1561,15 +1565,14 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
                     $year = date('Y');
                     $month = date('m');
 
-                    $tempPath = $request->input('uploaded_file_path') ?: session('resume_temp_path');
-                    $full_name = $request->input('resume_original_name') ?: session('resume_original_name');
+                    $tempPath = $request->input('uploaded_file_path');
+                    $full_name = $request->input('resume_original_name');
                     if ($tempPath && $full_name) {
                         UploadResumeToTestRTwo::dispatch($tempPath, $full_name, $benchApplication->id, $companyNameRTwo, $year, $month)->onConnection('emails');
                         $fileUrl = "https://file.jero.works/Companies/{$companyNameRTwo}/Resumes/{$year}/{$month}/{$full_name}";
                         DB::table('job_applications')
                             ->where('id', $benchApplication->id)
                             ->update(['resume' => $fileUrl]);
-                        session()->forget(['resume_temp_path', 'resume_original_name']);
                     } else {
                         \Log::warning('v1 upload (edit): missing tempPath or filename', ['id' => $benchApplication->id]);
                     }
@@ -1592,15 +1595,14 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
                     $year = date('Y');
                     $month = date('m');
 
-                    $tempPath = $request->input('uploaded_file_path') ?: session('resume_temp_path');
-                    $full_name = $request->input('resume_original_name') ?: session('resume_original_name');
+                    $tempPath = $request->input('uploaded_file_path');
+                    $full_name = $request->input('resume_original_name');
                     if ($tempPath && $full_name) {
                         UploadResumeToTestRTwo::dispatch($tempPath, $full_name, $benchApplication->id, $companyNameRTwo, $year, $month)->onConnection('emails');
                         $fileUrl = "https://file.jero.works/Companies/{$companyNameRTwo}/Resumes/{$year}/{$month}/{$full_name}";
                         DB::table('job_applications')
                             ->where('id', $benchApplication->id)
                             ->update(['resume' => $fileUrl]);
-                        session()->forget(['resume_temp_path', 'resume_original_name']);
                     } else {
                         \Log::warning('v1 upload (add): missing tempPath or filename', ['id' => $benchApplication->id]);
                     }

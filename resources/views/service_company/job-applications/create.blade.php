@@ -1399,12 +1399,19 @@ $(document).ready(function () {
     }
     // ─────────────────────────────────────────────────────────────────────────
 
+    // Build a unique contextKey for this company + job + application context
+    function getUpContextKey() {
+        var companyId = @json(auth()->user()->company_id ?? 0);
+        var jobId = $('#job_id').val() || '0';
+        var appId = $('#appId').val() || '0';
+        return 'comp' + companyId + '_job' + jobId + '_app' + appId;
+    }
+
     // ── v2 Phase 6: recover a previous upload session after page refresh ──────
     // recover() reads localStorage UUID → pings status endpoint → restores
-    // UPLOADED state if the file is still in R2, so the user can submit without
-    // re-uploading. Silent no-op when nothing is stored or the session expired.
+    // UPLOADED state if the file is still in R2 and context matches.
     if (RESUMES_FEATURE_BROWSER_UPLOAD) {
-        window.ResumePresign.recover().then(function (session) {
+        window.ResumePresign.recover(getUpContextKey()).then(function (session) {
             if (session) {
                 // Session recovered — populate the upInfo card (outside #uploadBox)
                 // and hide the dropzone. Showing things inside #uploadBox then hiding
@@ -1464,7 +1471,7 @@ $(document).ready(function () {
         if (RESUMES_FEATURE_BROWSER_UPLOAD) {
             // v2 path: direct browser → R2, zero PHP bytes.
             // startUpload() is async; state changes drive the UI via onStateChange.
-            window.ResumePresign.startUpload(file).catch(function () {
+            window.ResumePresign.startUpload(file, getUpContextKey()).catch(function () {
                 // error already surfaced via onStateChange 'failed'
             });
         } else if (typeof uploadWithProgress === 'function') {
@@ -1520,7 +1527,7 @@ $(document).ready(function () {
         resetProgress();
         // Cancel v2 upload if in progress (aborts R2 XHR + clears session UUID)
         if (RESUMES_FEATURE_BROWSER_UPLOAD) {
-            window.ResumePresign.cancelUpload();
+            window.ResumePresign.cancelUpload(getUpContextKey());
         }
         $('#upInfo').removeClass('show');
         $('#uploadBox').show();
@@ -1644,6 +1651,7 @@ $(document).ready(function () {
         upXhr.setRequestHeader('X-File-Name', encodeURIComponent(file.name));
         upXhr.setRequestHeader('X-File-Size', file.size);
         upXhr.setRequestHeader('X-Candidate-Id', $('#appId').val() || '');
+        upXhr.setRequestHeader('X-Job-Id', $('#job_id').val() || '');
 
         upXhr.upload.onprogress = function (e) {
             if (!e.lengthComputable) return;

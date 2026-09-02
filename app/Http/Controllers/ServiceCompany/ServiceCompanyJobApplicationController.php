@@ -125,10 +125,8 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
         $full_name = uniqid('JERO_');
         $uniqueName = GeneralMethod::getUniqueCvName($full_name, $ext);
 
-        session([
-            'resume_temp_path' => $objectKey,
-            'resume_original_name' => $originalName,
-        ]);
+        // Intent: Do NOT store temp path in global PHP session — prevents cross-tab / cross-job session leakage.
+        // The file_path and original_name are returned in JSON response to the client for explicit form submission.
 
         // Create metadata record and dispatch ParseResumeJob
         $resumeUploadId = null;
@@ -2037,6 +2035,12 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
                     'message' => 'Resume upload is not yet complete. Please wait for the upload to finish and try again.']);
             }
 
+            // Ownership check: session must belong to this tenant and not be linked to another candidate/application
+            if ($resumeSession->linked_candidate_id && (int) $resumeSession->linked_candidate_id !== (int) $jobApplication->id) {
+                return Reply::dataOnly(['status' => 'error', 'msgType' => 'warning',
+                    'message' => 'Resume upload session has already been associated with another application. Please upload the resume again.']);
+            }
+
             // ── R2 pre-flight: verify file exists BEFORE opening the DB transaction ──
             // Eliminates network I/O from inside the DB row lock (V2 Step 5).
             // Race window (file disappears post-check, pre-claim) is negligible for R2.
@@ -2147,15 +2151,14 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
                 $year = date('Y');
                 $month = date('m');
 
-                $tempPath = $request->input('uploaded_file_path') ?: session('resume_temp_path');
-                $full_name = $request->input('resume_original_name') ?: session('resume_original_name');
+                $tempPath = $request->input('uploaded_file_path');
+                $full_name = $request->input('resume_original_name');
                 if ($tempPath && $full_name) {
                     UploadResumeToTestRTwo::dispatch($tempPath, $full_name, $jobApplication->id, $companyNameRTwo, $year, $month)->onConnection('emails');
                     $fileUrl = "https://file.jero.works/Companies/{$companyNameRTwo}/Resumes/{$year}/{$month}/{$full_name}";
                     DB::table('job_applications')
                         ->where('id', $jobApplication->id)
                         ->update(['resume' => $fileUrl]);
-                    session()->forget(['resume_temp_path', 'resume_original_name']);
                 } else {
                     \Log::warning('v1 upload: missing tempPath or filename on form submit — resume not saved', [
                         'company_id' => auth()->user()->company_id,
@@ -5698,6 +5701,10 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
                 return Reply::dataOnly(['status' => 'error', 'msgType' => 'warning',
                     'message' => 'Resume upload is not yet complete. Please wait for the upload to finish and try again.']);
             }
+            if ($resumeSession->linked_candidate_id && (int) $resumeSession->linked_candidate_id !== (int) $jobApplication->id) {
+                return Reply::dataOnly(['status' => 'error', 'msgType' => 'warning',
+                    'message' => 'Resume upload session has already been associated with another application. Please upload the resume again.']);
+            }
         }
         // ─────────────────────────────────────────────────────────────────────────────
 
@@ -5768,15 +5775,14 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
                 $year = date('Y');
                 $month = date('m');
 
-                $tempPath = $request->input('uploaded_file_path') ?: session('resume_temp_path');
-                $full_name = $request->input('resume_original_name') ?: session('resume_original_name');
+                $tempPath = $request->input('uploaded_file_path');
+                $full_name = $request->input('resume_original_name');
                 if ($tempPath && $full_name) {
                     UploadResumeToTestRTwo::dispatch($tempPath, $full_name, $jobApplication->id, $companyNameRTwo, $year, $month)->onConnection('emails');
                     $fileUrl = "https://file.jero.works/Companies/{$companyNameRTwo}/Resumes/{$year}/{$month}/{$full_name}";
                     DB::table('job_applications')
                         ->where('id', $jobApplication->id)
                         ->update(['resume' => $fileUrl]);
-                    session()->forget(['resume_temp_path', 'resume_original_name']);
                 } else {
                     \Log::warning('v1 upload: missing tempPath or filename on form submit — resume not saved', [
                         'company_id' => auth()->user()->company_id,

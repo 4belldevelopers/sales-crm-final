@@ -943,76 +943,82 @@ class HomeController extends Controller
             }, $response['hits']['hits']);
         }
 
-        /* Intent: Cache tenant bench candidate portal metadata in Redis (TTL 1 Hour) to eliminate per-request database queries on public bench portal */
+        /* Intent: Cache tenant bench candidate portal metadata in Redis (TTL 1 Hour) with atomic stampede guard to eliminate per-request DB queries */
         /* Tenancy: Scoped by company_id */
-        $tenantMeta = Cache::remember("tenant_bench_meta:{$company_id}", 3600, function () use ($company_id) {
-            $account = DB::table('companies')->select('*')->where('id', $company_id)->first();
-            $client = Client::select('clients.id', 'clients.tags')
-                ->where('clients.company_id', '=', $company_id)
-                ->where('clients.self_company', '=', 1)
-                ->first();
-
-            $industries_name = '';
-            if ($account && $account->industries > 0) {
-                $industries = DB::table('td_industries')
-                    ->select('td_industries.ind_id', 'td_industries.ind_name')
-                    ->where('td_industries.ind_id', '=', $account->industries)
-                    ->orderBy('td_industries.ind_name', 'ASC')
+        $tenantMeta = Cache::lock("lock:tenant_meta:{$company_id}", 5)->block(3, function () use ($company_id) {
+            return Cache::remember("tenant_bench_meta:{$company_id}", 3600, function () use ($company_id) {
+                /* Intent: Explicit column selection to eliminate SELECT * memory over-fetching */
+                $account = DB::table('companies')
+                    ->select('id', 'company_name', 'logo', 'description', 'founded', 'website', 'company_email', 'company_phone', 'industries')
+                    ->where('id', $company_id)
                     ->first();
-                $industries_name = $industries->ind_name ?? '';
-            }
-
-            $company_city_name = '';
-            $company_country_name = '';
-
-            if ($client) {
-                $client_location = DB::table('client_location')
-                    ->select('client_location.city', 'client_location.city_id', 'client_location.address', 'client_location.postcode', 'client_location.country_id')
-                    ->where('client_location.client_id', $client->id)
-                    ->orderBy('client_location.id', 'ASC')
+                $client = Client::select('clients.id', 'clients.tags')
+                    ->where('clients.company_id', '=', $company_id)
+                    ->where('clients.self_company', '=', 1)
                     ->first();
 
-                if ($client_location) {
-                    if ($client_location->country_id == 101 && $client_location->city_id) {
-                        $city_obj = DB::table('city_list')->select('city_list.city')->where('city_list.city_id', $client_location->city_id)->first();
-                        $company_city_name = ucwords($city_obj->city ?? '');
-                    } else {
-                        $company_city_name = ucwords($client_location->city ?? '');
-                    }
+                $industries_name = '';
+                if ($account && $account->industries > 0) {
+                    $industries = DB::table('td_industries')
+                        ->select('td_industries.ind_id', 'td_industries.ind_name')
+                        ->where('td_industries.ind_id', '=', $account->industries)
+                        ->orderBy('td_industries.ind_name', 'ASC')
+                        ->first();
+                    $industries_name = $industries->ind_name ?? '';
+                }
 
-                    if ($client_location->country_id > 0) {
-                        $country_name = GeneralMethod::getCountryName($client_location->country_id);
-                        foreach ($country_name as $cval) {
-                            $company_country_name = ucwords($cval['name'] ?? '');
+                $company_city_name = '';
+                $company_country_name = '';
+
+                if ($client) {
+                    $client_location = DB::table('client_location')
+                        ->select('client_location.city', 'client_location.city_id', 'client_location.address', 'client_location.postcode', 'client_location.country_id')
+                        ->where('client_location.client_id', $client->id)
+                        ->orderBy('client_location.id', 'ASC')
+                        ->first();
+
+                    if ($client_location) {
+                        if ($client_location->country_id == 101 && $client_location->city_id) {
+                            $city_obj = DB::table('city_list')->select('city_list.city')->where('city_list.city_id', $client_location->city_id)->first();
+                            $company_city_name = ucwords($city_obj->city ?? '');
+                        } else {
+                            $company_city_name = ucwords($client_location->city ?? '');
+                        }
+
+                        if ($client_location->country_id > 0) {
+                            $country_name = GeneralMethod::getCountryName($client_location->country_id);
+                            foreach ($country_name as $cval) {
+                                $company_country_name = ucwords($cval['name'] ?? '');
+                            }
                         }
                     }
                 }
-            }
 
-            $fullTimeStatusRate = DB::table('commericial_details')
-                ->where('company_id', $company_id)
-                ->where('commtype', 2)
-                ->min('rate');
+                $fullTimeStatusRate = DB::table('commericial_details')
+                    ->where('company_id', $company_id)
+                    ->where('commtype', 2)
+                    ->min('rate');
 
-            $contractStatusRate = DB::table('commericial_details')
-                ->where('company_id', $company_id)
-                ->where('commtype', 1)
-                ->min('rate');
+                $contractStatusRate = DB::table('commericial_details')
+                    ->where('company_id', $company_id)
+                    ->where('commtype', 1)
+                    ->min('rate');
 
-            $fullTimeStatus = DB::table('commericials')->where('company_id', $company_id)->where('commtype', 2)->first();
-            $contractStatus = DB::table('commericials')->where('company_id', $company_id)->where('commtype', 1)->first();
+                $fullTimeStatus = DB::table('commericials')->where('company_id', $company_id)->where('commtype', 2)->first();
+                $contractStatus = DB::table('commericials')->where('company_id', $company_id)->where('commtype', 1)->first();
 
-            return [
-                'account' => $account,
-                'client' => $client,
-                'industries_name' => $industries_name,
-                'company_city_name' => $company_city_name,
-                'company_country_name' => $company_country_name,
-                'fullTimeStatusRate' => $fullTimeStatusRate,
-                'contractStatusRate' => $contractStatusRate,
-                'fullTimeStatus' => $fullTimeStatus,
-                'contractStatus' => $contractStatus,
-            ];
+                return [
+                    'account' => $account,
+                    'client' => $client,
+                    'industries_name' => $industries_name,
+                    'company_city_name' => $company_city_name,
+                    'company_country_name' => $company_country_name,
+                    'fullTimeStatusRate' => $fullTimeStatusRate,
+                    'contractStatusRate' => $contractStatusRate,
+                    'fullTimeStatus' => $fullTimeStatus,
+                    'contractStatus' => $contractStatus,
+                ];
+            });
         });
 
         $account = $tenantMeta['account'];
@@ -1035,6 +1041,22 @@ class HomeController extends Controller
         //     $data = [];
         //    }
         //    dd($account,$data);
+
+        /* Intent: Single batch query to pre-fetch candidate skills for ES hits lacking embedded skill_experiences array, eliminating Blade N+1 queries */
+        $missingSkillCandIds = collect($data)->filter(function ($item) {
+            $rawSkills = $item['skill_experiences'] ?? $item['candidate_skills'] ?? null;
+
+            return empty($rawSkills);
+        })->pluck('id')->filter()->all();
+
+        $prefetchedSkills = [];
+        if (! empty($missingSkillCandIds)) {
+            $prefetchedSkills = DB::table('bench_candidate_skill_experience')
+                ->whereIn('candidate_id', $missingSkillCandIds)
+                ->get()
+                ->groupBy('candidate_id')
+                ->toArray();
+        }
 
         /* Intent: Pre-fetch agency recommendation relation status with pair-symmetric 30-min Redis caching to eliminate hot-path MySQL read on public bench listing */
         /* Tenancy: Scoped by normalized pair key (company_id and to_company_id) */
@@ -1071,6 +1093,7 @@ class HomeController extends Controller
             'company_id' => $company_id,
             'searchTerms' => $searchTerms,
             'data' => $data,
+            'prefetchedSkills' => $prefetchedSkills,
             'recommendateRow' => $recommendateRow,
             'last_page' => ceil($total / $size),
             'listType' => 'allcandidate',
@@ -2373,34 +2396,27 @@ class HomeController extends Controller
     {
         $conditions = [];
 
-        // Apply custom search if it's not empty (Intent: High-performance ES prefix search eliminating unindexed leading wildcards)
+        /* Intent: High-performance ES multi_match phrase_prefix query to reduce Lucene state expansions across search fields */
         if (! empty($custom_search)) {
             $searchTerm = strtolower(trim($custom_search));
             $conditions[] = [
                 'bool' => [
                     'should' => [
                         [
-                            'match_phrase_prefix' => [
-                                'full_name' => [
-                                    'query' => $searchTerm,
-                                    'max_expansions' => 10,
+                            'multi_match' => [
+                                'query' => $searchTerm,
+                                'type' => 'phrase_prefix',
+                                'fields' => [
+                                    'full_name^3',
+                                    'current_designation^2',
+                                    'skills^2',
+                                    'country_name',
+                                    'qualification_name',
+                                    'state_name',
+                                    'city_name',
+                                    'posted_by',
                                 ],
-                            ],
-                        ],
-                        [
-                            'match_phrase_prefix' => [
-                                'current_designation' => [
-                                    'query' => $searchTerm,
-                                    'max_expansions' => 10,
-                                ],
-                            ],
-                        ],
-                        [
-                            'match_phrase_prefix' => [
-                                'skills' => [
-                                    'query' => $searchTerm,
-                                    'max_expansions' => 10,
-                                ],
+                                'max_expansions' => 10,
                             ],
                         ],
                         [
@@ -2408,46 +2424,6 @@ class HomeController extends Controller
                         ],
                         [
                             'term' => ['phone' => $searchTerm],
-                        ],
-                        [
-                            'match_phrase_prefix' => [
-                                'country_name' => [
-                                    'query' => $searchTerm,
-                                    'max_expansions' => 5,
-                                ],
-                            ],
-                        ],
-                        [
-                            'match_phrase_prefix' => [
-                                'qualification_name' => [
-                                    'query' => $searchTerm,
-                                    'max_expansions' => 5,
-                                ],
-                            ],
-                        ],
-                        [
-                            'match_phrase_prefix' => [
-                                'state_name' => [
-                                    'query' => $searchTerm,
-                                    'max_expansions' => 5,
-                                ],
-                            ],
-                        ],
-                        [
-                            'match_phrase_prefix' => [
-                                'city_name' => [
-                                    'query' => $searchTerm,
-                                    'max_expansions' => 5,
-                                ],
-                            ],
-                        ],
-                        [
-                            'match_phrase_prefix' => [
-                                'posted_by' => [
-                                    'query' => $searchTerm,
-                                    'max_expansions' => 5,
-                                ],
-                            ],
                         ],
                     ],
                     'minimum_should_match' => 1,
@@ -2750,9 +2726,9 @@ class HomeController extends Controller
             $country_name = $locInfo->country_name ?? '';
             $city_name = $locInfo->city_name ?? '';
 
-            $nameToUse = !empty($row->client_name) ? $row->client_name : $row->company_name;
-            $logoToUse = !empty($row->client_logo_logical_path) ? url('public/' . $row->client_logo_logical_path) : (!empty($row->client_logo) ? $row->client_logo : $row->company_logo);
-            $indNameToUse = !empty($row->client_ind_name) ? $row->client_ind_name : $row->company_ind_name;
+            $nameToUse = ! empty($row->client_name) ? $row->client_name : $row->company_name;
+            $logoToUse = ! empty($row->client_logo_logical_path) ? url('public/'.$row->client_logo_logical_path) : (! empty($row->client_logo) ? $row->client_logo : $row->company_logo);
+            $indNameToUse = ! empty($row->client_ind_name) ? $row->client_ind_name : $row->company_ind_name;
 
             $bulkData[] = [
                 'index' => [
@@ -15803,7 +15779,8 @@ class HomeController extends Controller
             return cache()->get($cacheKeySet);
         });
         if ($cached) {
-            return response()->json($cached);
+            /* Intent: Set private HTTP cache headers to eliminate duplicate drawer network requests for repeated profile clicks */
+            return response()->json($cached)->header('Cache-Control', 'private, max-age=60');
         }
 
         $currency = GeneralMethod::currency();
@@ -15933,7 +15910,7 @@ class HomeController extends Controller
 
         cache()->put($cacheKeySet, $responseData, now()->addMinutes(BENCH_VIEWMORE));
 
-        return $responseData;
+        return response()->json($responseData)->header('Cache-Control', 'private, max-age=60');
 
     }
 
