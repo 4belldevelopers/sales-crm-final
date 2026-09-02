@@ -93,6 +93,9 @@ Route::get('/download-resume/{id}/{path}', [HomeController::class, 'downloadResu
     ->where('path', '[A-Za-z0-9\-_]+')
     ->name('download.resume');
 
+Route::get('/opendoc-runtime/{file}', [HomeController::class, 'openDocRuntimeAsset'])
+    ->where('file', 'casual_doc_wasm(?:_bg)?\.(?:js|wasm)');
+
 Route::get('/captcha', [\App\Http\Controllers\Auth\CaptchaController::class, 'generate'])->name('captcha.generate');
 
 // Route::get('/', [LoginController::class, 'showLoginForm']);
