@@ -4213,8 +4213,6 @@ setTimeout(() => {
   $rdcDownloadUrl = '';
   $rdcR2DirectUrl = '';
   $rdcR2PublicUrl = '';
-  $rdcOpenDocJsUrl = route('opendoc.runtime', ['file' => 'casual_doc_wasm.js']);
-  $rdcOpenDocWasmUrl = route('opendoc.runtime', ['file' => 'casual_doc_wasm_bg.wasm']);
   $rdcResumeRaw = (string)(@$application->resume ?? '');
   if($rdcResumeRaw !== ''){
     if($resumeAwsPath || strpos($rdcResumeRaw, 'file.jero.works') !== false){
@@ -4255,13 +4253,11 @@ setTimeout(() => {
      data-dl-url="{{ $rdcDownloadUrl }}"
      data-r2-direct-url="{{ $rdcR2DirectUrl }}"
      data-r2-public-url="{{ $rdcR2PublicUrl }}"
-     data-opendoc-js-url="{{ $rdcOpenDocJsUrl }}"
-     data-opendoc-wasm-url="{{ $rdcOpenDocWasmUrl }}"
      data-resume-pdf-url="{{ !empty($application->resume) ? route('service_company.job-applications.resume-convert', ['token' => GeneralMethod::value_encrypt((string) $application->resume)]) : '' }}"
      data-has-aws="{{ $resumeAwsPath ? 'true' : 'false' }}"
      data-file-ext="{{ strtoupper(pathinfo((string)@$application->resume, PATHINFO_EXTENSION) ?: 'FILE') }}"></div>
-<link rel="modulepreload" href="{{ $rdcOpenDocJsUrl }}">
-<link rel="preload" href="{{ $rdcOpenDocWasmUrl }}" as="fetch" type="application/wasm" crossorigin>
+<link rel="modulepreload" href="/js/opendoc/casual_doc_wasm.js">
+<link rel="preload" href="/js/opendoc/casual_doc_wasm_bg.wasm" as="fetch" type="application/wasm" crossorigin>
 <link rel="preload" href="/js/pdf-lib.min.js" as="script">
 <link rel="preload" href="/js/jspdf.umd.min.js" as="script">
 <link rel="preload" href="/js/pdfmake.min.js" as="script">
@@ -4587,10 +4583,6 @@ function preloadBrowserDocxConversionAssets(){
 function rsEnsureOpenDocLab(allowExternalFallback){
   allowExternalFallback=allowExternalFallback===true;
   if(rsOpenDocLocalReady) return rsOpenDocLocalReady;
-  function openDocAssetUrl(attr,fallback){
-    var el=document.getElementById('rdcData');
-    return clean(el ? el.getAttribute(attr) : '', fallback) || fallback;
-  }
   async function loadOpenDocModule(moduleUrl,wasmUrl){
     var module=await import(moduleUrl);
     if(typeof module.default==='function'){
@@ -4609,7 +4601,7 @@ function rsEnsureOpenDocLab(allowExternalFallback){
     if(typeof module.open!=='function') throw new Error('OpenDoc open API missing');
     return module;
   }
-  rsOpenDocLocalReady=loadOpenDocModule(openDocAssetUrl('data-opendoc-js-url','/opendoc-runtime/casual_doc_wasm.js'),openDocAssetUrl('data-opendoc-wasm-url','/opendoc-runtime/casual_doc_wasm_bg.wasm'))
+  rsOpenDocLocalReady=loadOpenDocModule('/js/opendoc/casual_doc_wasm.js','/js/opendoc/casual_doc_wasm_bg.wasm')
     .catch(function(localErr){
       rsOpenDocLocalReady=null;
       if(!allowExternalFallback) throw localErr;
