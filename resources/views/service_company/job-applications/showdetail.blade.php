@@ -4545,16 +4545,25 @@ function preloadBrowserDocxConversionAssets(){
 }
 function rsEnsureOpenDocLab(){
   if(rsOpenDocReady) return rsOpenDocReady;
-  rsOpenDocReady=import('/js/opendoc/casual_doc_wasm.js').then(async function(module){
+  async function loadOpenDocModule(moduleUrl,wasmUrl){
+    var module=await import(moduleUrl);
     if(typeof module.default==='function'){
       try{
-        await module.default('/js/opendoc/casual_doc_wasm_bg.wasm');
+        await module.default({module_or_path:wasmUrl});
       }catch(firstErr){
         await module.default();
       }
     }
     if(typeof module.open!=='function') throw new Error('OpenDoc open API missing');
     return module;
+  }
+  rsOpenDocReady=loadOpenDocModule('/js/opendoc/casual_doc_wasm.js','/js/opendoc/casual_doc_wasm_bg.wasm')
+    .catch(function(localErr){
+      console.warn('Local OpenDoc module unavailable, using lab fallback:',localErr);
+      return loadOpenDocModule('https://opendoc.casualoffice.org/pkg/casual_doc_wasm.js','https://opendoc.casualoffice.org/pkg/casual_doc_wasm_bg.wasm');
+    }).catch(function(err){
+    rsOpenDocReady=null;
+    throw err;
   });
   return rsOpenDocReady;
 }
@@ -4975,6 +4984,41 @@ function openDocCanvasFromBitmap(bitmap){
   ctx.putImageData(new ImageData(rgba,width,height),0,0);
   return canvas;
 }
+function openDocRenderDpi(pageCount){
+  pageCount=parseInt(pageCount,10)||1;
+  if(pageCount<=6) return 216;
+  if(pageCount<=15) return 180;
+  return 160;
+}
+function openDocNativePdfBlob(doc){
+  if(!doc || typeof doc.availableExportFormats!=='function' || typeof doc.exportAs!=='function') return null;
+  var formats=[];
+  try{
+    formats=doc.availableExportFormats() || [];
+  }catch(formatErr){
+    console.warn('OpenDoc export formats unavailable:',formatErr);
+    return null;
+  }
+  var hasPdf=formats.some(function(format){
+    return String(format||'').toLowerCase()==='pdf';
+  });
+  if(!hasPdf) return null;
+  var modes=['exact_if_unchanged','preserve_when_safe','semantic'];
+  for(var i=0;i<modes.length;i++){
+    var artifact=null;
+    try{
+      artifact=doc.exportAs('pdf',modes[i]);
+      var bytes=artifact && artifact.bytes ? artifact.bytes : null;
+      var mime=artifact && artifact.mimeType ? artifact.mimeType : 'application/pdf';
+      if(bytes && bytes.length) return new Blob([bytes],{type:mime || 'application/pdf'});
+    }catch(exportErr){
+      console.warn('OpenDoc native PDF export failed for '+modes[i]+':',exportErr);
+    }finally{
+      if(artifact && typeof artifact.free==='function') artifact.free();
+    }
+  }
+  return null;
+}
 async function convertResumeWithOpenDocLab(resumeUrl,resumeExt){
   if(window.__rsBusy) return Promise.resolve(false);
   window.__rsBusy=true;
@@ -4988,7 +5032,12 @@ async function convertResumeWithOpenDocLab(resumeUrl,resumeExt){
     var bytes=await fetchResumeBytes(resumeUrl);
     var doc=null;
     try{
-      doc=openDoc.open(new Uint8Array(bytes));
+      var docBytes=new Uint8Array(bytes);
+      try{
+        doc=(typeof openDoc.openAs==='function') ? openDoc.openAs(docBytes,'docx') : openDoc.open(docBytes);
+      }catch(openAsErr){
+        doc=openDoc.open(docBytes);
+      }
       var pageCount=parseInt(doc && doc.pageCount ? doc.pageCount : 0,10);
       if(!pageCount && doc && typeof doc.documentStats==='function'){
         var stats=doc.documentStats();
@@ -4997,6 +5046,13 @@ async function convertResumeWithOpenDocLab(resumeUrl,resumeExt){
       }
       if(!pageCount || pageCount<1) throw new Error('OpenDoc produced no pages');
       if(pageCount>30) throw new Error('OpenDoc lab page limit exceeded');
+      var nativePdfBlob=openDocNativePdfBlob(doc);
+      if(nativePdfBlob){
+        var nativeData=readData();
+        downloadBlob(nativePdfBlob,'opendoc_native_conversion_'+slug(nativeData.name)+'.pdf');
+        return true;
+      }
+      var renderDpi=openDocRenderDpi(pageCount);
       var JsPDF=window.jspdf.jsPDF;
       var firstSize=openDocPagePoints(doc,0);
       var pdf=new JsPDF({
@@ -5011,9 +5067,9 @@ async function convertResumeWithOpenDocLab(resumeUrl,resumeExt){
         var bitmap=null;
         var canvas=null;
         try{
-          bitmap=doc.renderPage(i,144);
+          bitmap=doc.renderPage(i,renderDpi);
           canvas=openDocCanvasFromBitmap(bitmap);
-          pdf.addImage(canvas.toDataURL('image/png'),'PNG',0,0,pageSize[0],pageSize[1],undefined,'FAST');
+          pdf.addImage(canvas.toDataURL('image/png'),'PNG',0,0,pageSize[0],pageSize[1],undefined,'SLOW');
         }finally{
           if(bitmap && typeof bitmap.free==='function') bitmap.free();
           if(canvas){
@@ -5036,7 +5092,7 @@ async function convertResumeWithOpenDocLab(resumeUrl,resumeExt){
     }else if(/page limit exceeded/i.test(message)){
       alert('This DOCX resume has more than 30 pages. Please use option 10 for enterprise-quality conversion.');
     }else{
-      alert('OpenDoc Preview Conversion Lab could not produce a clean PDF for this resume. Please use option 10 for enterprise-quality conversion.');
+      alert('OpenDoc Preview Conversion Lab could not produce a clean PDF for this resume. Technical reason: '+(message || 'Unknown browser conversion error')+'. Please use option 10 for enterprise-quality conversion.');
     }
     return false;
   }finally{
