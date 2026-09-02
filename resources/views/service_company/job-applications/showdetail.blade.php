@@ -6210,6 +6210,41 @@ function openDocCanvasFromBitmap(bitmap){
   ctx.putImageData(new ImageData(rgba,width,height),0,0);
   return canvas;
 }
+function openDocRenderDpi(pageCount){
+  pageCount=parseInt(pageCount,10)||1;
+  if(pageCount<=6) return 216;
+  if(pageCount<=15) return 180;
+  return 160;
+}
+function openDocNativePdfBlob(doc){
+  if(!doc || typeof doc.availableExportFormats!=='function' || typeof doc.exportAs!=='function') return null;
+  var formats=[];
+  try{
+    formats=doc.availableExportFormats() || [];
+  }catch(formatErr){
+    console.warn('OpenDoc export formats unavailable:',formatErr);
+    return null;
+  }
+  var hasPdf=formats.some(function(format){
+    return String(format||'').toLowerCase()==='pdf';
+  });
+  if(!hasPdf) return null;
+  var modes=['exact_if_unchanged','preserve_when_safe','semantic'];
+  for(var i=0;i<modes.length;i++){
+    var artifact=null;
+    try{
+      artifact=doc.exportAs('pdf',modes[i]);
+      var bytes=artifact && artifact.bytes ? artifact.bytes : null;
+      var mime=artifact && artifact.mimeType ? artifact.mimeType : 'application/pdf';
+      if(bytes && bytes.length) return new Blob([bytes],{type:mime || 'application/pdf'});
+    }catch(exportErr){
+      console.warn('OpenDoc native PDF export failed for '+modes[i]+':',exportErr);
+    }finally{
+      if(artifact && typeof artifact.free==='function') artifact.free();
+    }
+  }
+  return null;
+}
 async function convertResumeWithOpenDocLab(resumeUrl,resumeExt){
   if(window.__rsBusy) return Promise.resolve(false);
   window.__rsBusy=true;
@@ -6237,6 +6272,13 @@ async function convertResumeWithOpenDocLab(resumeUrl,resumeExt){
       }
       if(!pageCount || pageCount<1) throw new Error('OpenDoc produced no pages');
       if(pageCount>30) throw new Error('OpenDoc lab page limit exceeded');
+      var nativePdfBlob=openDocNativePdfBlob(doc);
+      if(nativePdfBlob){
+        var nativeData=readData();
+        downloadBlob(nativePdfBlob,'opendoc_native_conversion_'+slug(nativeData.name)+'.pdf');
+        return true;
+      }
+      var renderDpi=openDocRenderDpi(pageCount);
       var JsPDF=window.jspdf.jsPDF;
       var firstSize=openDocPagePoints(doc,0);
       var pdf=new JsPDF({
@@ -6251,9 +6293,9 @@ async function convertResumeWithOpenDocLab(resumeUrl,resumeExt){
         var bitmap=null;
         var canvas=null;
         try{
-          bitmap=doc.renderPage(i,144);
+          bitmap=doc.renderPage(i,renderDpi);
           canvas=openDocCanvasFromBitmap(bitmap);
-          pdf.addImage(canvas.toDataURL('image/png'),'PNG',0,0,pageSize[0],pageSize[1],undefined,'FAST');
+          pdf.addImage(canvas.toDataURL('image/png'),'PNG',0,0,pageSize[0],pageSize[1],undefined,'SLOW');
         }finally{
           if(bitmap && typeof bitmap.free==='function') bitmap.free();
           if(canvas){
