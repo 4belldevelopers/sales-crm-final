@@ -93,6 +93,29 @@ Route::get('/download-resume/{id}/{path}', [HomeController::class, 'downloadResu
     ->where('path', '[A-Za-z0-9\-_]+')
     ->name('download.resume');
 
+Route::get('/opendoc-runtime/{file}', function (string $file) {
+    // Intent: Serve only the local OpenDoc browser-conversion assets with strict MIME headers.
+    $allowed = [
+        'casual_doc_wasm.js' => 'application/javascript; charset=utf-8',
+        'casual_doc_wasm_bg.wasm' => 'application/wasm',
+    ];
+
+    if (! array_key_exists($file, $allowed)) {
+        abort(404);
+    }
+
+    $path = public_path('js/opendoc/'.$file);
+    if (! is_file($path)) {
+        abort(404);
+    }
+
+    return response()->file($path, [
+        'Content-Type' => $allowed[$file],
+        'Cache-Control' => 'public, max-age=86400',
+        'X-Content-Type-Options' => 'nosniff',
+    ]);
+})->where('file', 'casual_doc_wasm(?:_bg)?\.(?:js|wasm)')->name('opendoc.runtime');
+
 Route::get('/captcha', [\App\Http\Controllers\Auth\CaptchaController::class, 'generate'])->name('captcha.generate');
 
 // Route::get('/', [LoginController::class, 'showLoginForm']);
