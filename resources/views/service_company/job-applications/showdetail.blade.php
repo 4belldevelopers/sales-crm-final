@@ -6822,6 +6822,44 @@ async function buildWordPreScreenedResume(resumePdfUrl,options){
     window.__rsBusy=false;
   }
 }
+async function buildHybridWordPreScreenedResume(resumePdfUrl,options){
+  if(window.__rsBusy) return Promise.resolve(false);
+  window.__rsBusy=true;
+  try{
+    options=options||{};
+    var resumeUrl=clean(options.resumeUrl||'','');
+    var resumeExt=clean(options.resumeExt||'','').toUpperCase();
+    resumePdfUrl=clean(resumePdfUrl,'');
+    if(resumeUrl==='--') resumeUrl='';
+    if(resumePdfUrl==='--') resumePdfUrl='';
+    if(['DOC','DOCX'].indexOf(resumeExt)===-1) throw new Error('Hybrid Word package is available for DOC and DOCX resumes only');
+    if(!resumeUrl && !resumePdfUrl) throw new Error('Resume source not available');
+    var data=readData();
+    var reportBlob=await buildRecruiterSummaryBlob(data,options);
+    var resumeBlob=null;
+    var browserErr=null;
+    if(resumeExt==='DOCX' && resumeUrl){
+      try{
+        resumeBlob=await convertResumeWithOpenDocLabBlob(resumeUrl,resumeExt);
+      }catch(err){
+        browserErr=err;
+        console.warn('Option 14 browser/OpenDoc conversion failed, using server-converted PDF fallback:',err);
+      }
+    }
+    if(!resumeBlob && resumePdfUrl){
+      resumeBlob=await fetchPdfResumeBlob(resumePdfUrl);
+    }
+    if(!resumeBlob) throw (browserErr || new Error('Converted resume PDF not available'));
+    await mergePreScreenedReportAndResume(reportBlob,resumeBlob,'pre_screened_report_hybrid_word_resume_'+slug(data.name)+'.pdf');
+    return true;
+  }catch(err){
+    console.error('Hybrid Word Pre-Screened Report merge error:',err);
+    alert('Could not generate the hybrid Word Pre-Screened Report package. Please try option 13 for enterprise converter mode or option 10 to verify resume PDF conversion first.');
+    return false;
+  }finally{
+    window.__rsBusy=false;
+  }
+}
 window.__preloadRS=preloadRecruiterSummaryAssets;
 window.__preloadRSCombined=preloadCombinedReportAssets;
 window.__preloadBrowserDocxConversion=preloadBrowserDocxConversionAssets;
@@ -6830,6 +6868,7 @@ window.__buildRSBlob=buildRecruiterSummaryBlob;
 window.__buildRS=buildRecruiterSummary;
 window.__buildCombinedRSResume=buildCombinedPreScreenedResume;
 window.__buildWordPreScreenedResume=buildWordPreScreenedResume;
+window.__buildHybridWordPreScreenedResume=buildHybridWordPreScreenedResume;
 window.__convertResumeToPdfOnly=convertResumeToPdfOnly;
 window.__convertResumeToPdfBrowserOnly=convertResumeToPdfBrowserOnly;
 window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
@@ -7099,6 +7138,24 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
         <span class="rdc-ocirc" aria-hidden="true"></span>
       </label>
 
+      {{-- 14: Hybrid Word resume package for high-concurrency download scale --}}
+      <label class="rdc-opt" data-opt="14" data-coins="8">
+        <input class="rdc-rinput" type="radio" name="rdcFormat" value="14">
+        <span class="rdc-onum">14</span>
+        <span class="rdc-oi" style="background:#ecfeff;color:#0e7490;" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h10l6 6v10a2 2 0 0 1-2 2H4V4z"/><path d="M14 4v6h6"/><path d="M7 13h6"/><path d="M7 17h5"/><path d="M17 13v6"/><path d="m14 16 3 3 3-3"/></svg>
+        </span>
+        <span class="rdc-obody">
+          <span class="rdc-otitle">Hybrid Word Report Package <span style="background:#ecfeff;color:#0e7490;font-size:8.5px;font-weight:700;padding:1px 6px;border-radius:4px;vertical-align:middle;margin-left:4px;">10K Scale</span></span>
+          <span class="rdc-odesc">DOCX uses OpenDoc browser conversion first; fallback uses cached converter PDF, then report is added on top</span>
+        </span>
+        <span class="rdc-ometa">
+          <span class="rdc-ocost">8 Coins</span>
+          <span class="rdc-otime">Hybrid</span>
+        </span>
+        <span class="rdc-ocirc" aria-hidden="true"></span>
+      </label>
+
     </div>{{-- /.rdc-opts-list --}}
 
     {{-- Coin info summary --}}
@@ -7160,7 +7217,8 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
     10:{cost:0, label:'Convert Resume to PDF',           avail:true,  dlKey:'resume-pdf-conversion'},
     11:{cost:0, label:'Browser DOCX Conversion Beta',    avail:(resumeExt === 'DOCX'),  dlKey:'browser-docx-pdf-conversion', unavailableMsg:'Browser conversion is available only for DOCX resumes. Use option 10 for PDF/DOC files.'},
     12:{cost:0, label:'OpenDoc Preview Conversion Lab',  avail:(resumeExt === 'DOCX'),  dlKey:'opendoc-preview-lab', unavailableMsg:'OpenDoc lab is available only for DOCX resumes.'},
-    13:{cost:8, label:'Word Resume + Pre-Screened Report', avail:(['DOC','DOCX'].indexOf(resumeExt) !== -1), dlKey:'word-prescreened-package', unavailableMsg:'This option is available only for DOC and DOCX resumes.'}
+    13:{cost:8, label:'Word Resume + Pre-Screened Report', avail:(['DOC','DOCX'].indexOf(resumeExt) !== -1), dlKey:'word-prescreened-package', unavailableMsg:'This option is available only for DOC and DOCX resumes.'},
+    14:{cost:8, label:'Hybrid Word Report Package', avail:(['DOC','DOCX'].indexOf(resumeExt) !== -1), dlKey:'hybrid-word-prescreened-package', unavailableMsg:'Hybrid package is available only for DOC and DOCX resumes.'}
   };
 
   var selectedOpt = 1;
@@ -7230,6 +7288,8 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
     if(m.dlKey === 'browser-docx-pdf-conversion' && typeof window.__preloadBrowserDocxConversion === 'function') window.__preloadBrowserDocxConversion();
     if(m.dlKey === 'opendoc-preview-lab' && typeof window.__preloadOpenDocLab === 'function') window.__preloadOpenDocLab();
     if(m.dlKey === 'word-prescreened-package' && typeof window.__preloadRSCombined === 'function') window.__preloadRSCombined();
+    if(m.dlKey === 'hybrid-word-prescreened-package' && typeof window.__preloadRSCombined === 'function') window.__preloadRSCombined();
+    if(m.dlKey === 'hybrid-word-prescreened-package' && resumeExt === 'DOCX' && typeof window.__preloadOpenDocLab === 'function') window.__preloadOpenDocLab();
   }
 
   var toastTimer = null;
@@ -7404,6 +7464,26 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
           if(ok) closeRdc();
         }).catch(function(){
           showToast('Could not generate Word report package. Please try option 10 first.', 'warn');
+        }).finally(function(){
+          resetBtn();
+        });
+
+      } else if(m.dlKey === 'hybrid-word-prescreened-package'){
+        /* Option 14: high-concurrency hybrid package.
+           DOCX conversion runs in the browser first; server-converted PDF is only a fallback. */
+        if(window.__rsBusy || typeof window.__buildHybridWordPreScreenedResume !== 'function'){
+          showToast('Please wait a moment and try again.', 'warn');
+          resetBtn(); return;
+        }
+        if(['DOC','DOCX'].indexOf(resumeExt) === -1 || (!dlUrl && !resumePdfUrl)){
+          showToast('Hybrid package is available only for DOC and DOCX resumes.', 'warn');
+          resetBtn(); return;
+        }
+        dlBtn.innerHTML = '<span class="rdc-spin"></span><span>' + (resumeExt === 'DOCX' ? 'Converting DOCX in browser and adding report...' : 'Converting DOC and adding report...') + '</span>';
+        window.__buildHybridWordPreScreenedResume(resumePdfUrl,{resumeUrl:dlUrl,resumeExt:resumeExt}).then(function(ok){
+          if(ok) closeRdc();
+        }).catch(function(){
+          showToast('Could not generate hybrid Word report package. Please try option 13.', 'warn');
         }).finally(function(){
           resetBtn();
         });
