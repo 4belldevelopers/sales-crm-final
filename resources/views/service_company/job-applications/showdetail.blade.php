@@ -4256,7 +4256,7 @@ setTimeout(() => {
      data-resume-pdf-url="{{ !empty($application->resume) ? route('service_company.job-applications.resume-convert', ['token' => GeneralMethod::value_encrypt((string) $application->resume)]) : '' }}"
      data-has-aws="{{ $resumeAwsPath ? 'true' : 'false' }}"
      data-file-ext="{{ strtoupper(pathinfo((string)@$application->resume, PATHINFO_EXTENSION) ?: 'FILE') }}"></div>
-<link rel="modulepreload" href="https://file.jero.works/js/opendoc/casual_doc_wasm.js">
+<link rel="modulepreload" href="https://file.jero.works/js/opendoc/casual_doc_wasm.js" crossorigin>
 <link rel="preload" href="https://file.jero.works/js/opendoc/casual_doc_wasm_bg.wasm" as="fetch" type="application/wasm" crossorigin>
 <link rel="preload" href="/js/pdf-lib.min.js" as="script">
 <link rel="preload" href="/js/jspdf.umd.min.js" as="script">
@@ -4584,7 +4584,16 @@ function rsEnsureOpenDocLab(allowExternalFallback){
   allowExternalFallback=allowExternalFallback===true;
   if(rsOpenDocLocalReady) return rsOpenDocLocalReady;
   async function loadOpenDocModule(moduleUrl,wasmUrl){
-    var module=await import(moduleUrl);
+    var blobUrl='';
+    var module=null;
+    try{
+      module=await import(moduleUrl);
+    }catch(importErr){
+      var moduleResponse=await fetch(moduleUrl,{mode:'cors',cache:'no-store'});
+      if(!moduleResponse.ok) throw new Error('OpenDoc module request failed with HTTP '+moduleResponse.status);
+      blobUrl=URL.createObjectURL(new Blob([await moduleResponse.text()],{type:'application/javascript'}));
+      module=await import(blobUrl);
+    }
     if(typeof module.default==='function'){
       try{
         var wasmResponse=await fetch(wasmUrl);
@@ -4598,6 +4607,7 @@ function rsEnsureOpenDocLab(allowExternalFallback){
         }
       }
     }
+    if(blobUrl) setTimeout(function(){ URL.revokeObjectURL(blobUrl); }, 30000);
     if(typeof module.open!=='function') throw new Error('OpenDoc open API missing');
     return module;
   }
