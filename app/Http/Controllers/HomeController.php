@@ -815,41 +815,6 @@ class HomeController extends Controller
         return Storage::disk('r2')->download($s3Path, $customName);
     }
 
-    /**
-     * Serve the local OpenDoc browser-conversion runtime with explicit MIME headers.
-     *
-     * Intent: keep DOCX browser conversion working behind FrankenPHP/proxies that may
-     * serve module JS/WASM with a generic content type. This never serves resume data.
-     */
-    public function openDocRuntimeAsset(string $asset)
-    {
-        $allowed = [
-            'module' => [
-                'file' => 'casual_doc_wasm.js',
-                'type' => 'application/javascript; charset=utf-8',
-            ],
-            'wasm' => [
-                'file' => 'casual_doc_wasm_bg.wasm',
-                'type' => 'application/wasm',
-            ],
-        ];
-
-        if (! array_key_exists($asset, $allowed)) {
-            abort(404);
-        }
-
-        $path = public_path('js/opendoc/'.$allowed[$asset]['file']);
-        if (! is_file($path)) {
-            abort(404);
-        }
-
-        return response()->file($path, [
-            'Content-Type' => $allowed[$asset]['type'],
-            'Cache-Control' => 'public, max-age=86400',
-            'X-Content-Type-Options' => 'nosniff',
-        ]);
-    }
-
     public function benchCandidates(Request $request, $companyName, $companyId)
     {
         // dd($id);
