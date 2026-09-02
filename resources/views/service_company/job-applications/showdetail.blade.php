@@ -5774,13 +5774,16 @@ function rsEnsureOpenDocLab(){
   rsOpenDocReady=import('/js/opendoc/casual_doc_wasm.js').then(async function(module){
     if(typeof module.default==='function'){
       try{
-        await module.default('/js/opendoc/casual_doc_wasm_bg.wasm');
+        await module.default({module_or_path:'/js/opendoc/casual_doc_wasm_bg.wasm'});
       }catch(firstErr){
         await module.default();
       }
     }
     if(typeof module.open!=='function') throw new Error('OpenDoc open API missing');
     return module;
+  }).catch(function(err){
+    rsOpenDocReady=null;
+    throw err;
   });
   return rsOpenDocReady;
 }
@@ -6214,7 +6217,12 @@ async function convertResumeWithOpenDocLab(resumeUrl,resumeExt){
     var bytes=await fetchResumeBytes(resumeUrl);
     var doc=null;
     try{
-      doc=openDoc.open(new Uint8Array(bytes));
+      var docBytes=new Uint8Array(bytes);
+      try{
+        doc=(typeof openDoc.openAs==='function') ? openDoc.openAs(docBytes,'docx') : openDoc.open(docBytes);
+      }catch(openAsErr){
+        doc=openDoc.open(docBytes);
+      }
       var pageCount=parseInt(doc && doc.pageCount ? doc.pageCount : 0,10);
       if(!pageCount && doc && typeof doc.documentStats==='function'){
         var stats=doc.documentStats();
@@ -6262,7 +6270,7 @@ async function convertResumeWithOpenDocLab(resumeUrl,resumeExt){
     }else if(/page limit exceeded/i.test(message)){
       alert('This DOCX resume has more than 30 pages. Please use option 10 for enterprise-quality conversion.');
     }else{
-      alert('OpenDoc Preview Conversion Lab could not produce a clean PDF for this resume. Please use option 10 for enterprise-quality conversion.');
+      alert('OpenDoc Preview Conversion Lab could not produce a clean PDF for this resume. Technical reason: '+(message || 'Unknown browser conversion error')+'. Please use option 10 for enterprise-quality conversion.');
     }
     return false;
   }finally{
