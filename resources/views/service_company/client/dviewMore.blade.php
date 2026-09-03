@@ -93,18 +93,102 @@
           .cd-hero .kpi-number { font-size:28px; font-weight:700; color:#181c32; line-height:1; }
           @media (max-width:1200px){ .cd-hero .kpi-row { grid-template-columns:repeat(3,1fr); } }
           @media (max-width:768px){ .cd-hero .kpi-row { grid-template-columns:repeat(2,1fr); } .cd-hero .profile-top { flex-direction:column; } }
+
+          /* ── Jobs card list (.jobx) ── */
+          .jobx, .jobx * { font-family:'Poppins',sans-serif; box-sizing:border-box; }
+          .jobx .table-card { background:#fff; border-radius:12px; box-shadow:0 2px 8px rgba(0,0,0,.05); border:1px solid #e4e6ef; overflow:hidden; }
+          .jobx .table-header, .jobx .job-row { display:grid; grid-template-columns:2.5fr 1fr 1.1fr 1.2fr .9fr .9fr 2.6fr; align-items:start; column-gap:12px; }
+          .jobx .table-header { padding:9px 12px; background:#f7f8fc; border-bottom:1.5px solid #e4e6ef; align-items:center; }
+          .jobx .th { font-size:10.5px; font-weight:600; color:#6d7284; text-transform:uppercase; letter-spacing:.4px; display:flex; align-items:center; gap:4px; }
+          .jobx .job-row { padding:12px; border-bottom:1px solid #e4e6ef; transition:background .12s; }
+          .jobx .job-row:last-of-type { border-bottom:none; }
+          .jobx .job-row:hover { background:#fafbff; }
+          .jobx .col-job { display:flex; gap:9px; align-items:flex-start; }
+          .jobx .drag-col { display:flex; align-items:center; padding-top:14px; flex-shrink:0; color:#a1a5b7; cursor:grab; }
+          .jobx .job-logo { width:46px; height:46px; border-radius:10px; flex-shrink:0; display:flex; align-items:center; justify-content:center; font-size:17px; font-weight:800; color:#fff; overflow:hidden; }
+          .jobx .job-logo img { width:100%; height:100%; object-fit:cover; }
+          .jobx .job-info { flex:1; min-width:0; }
+          .jobx .job-title a { font-size:12.5px; font-weight:700; color:#181c32; text-decoration:none; display:block; line-height:1.35; }
+          .jobx .job-title a:hover { color:#3b55e6; }
+          .jobx .job-dept { font-size:11px; color:#6d7284; margin-top:1px; }
+          .jobx .job-client { font-size:11px; color:#6d7284; font-weight:500; margin-top:1px; margin-bottom:5px; }
+          .jobx .job-meta-line { display:flex; align-items:center; flex-wrap:wrap; gap:4px; font-size:10.5px; }
+          .jobx .it-job-id { font-size:10px; color:#6a6b70; font-weight:500; }
+          .jobx .it-dot-separator { width:3px; height:3px; border-radius:50%; background:#a1a5b7; }
+          .jobx .badge-type { display:inline-flex; align-items:center; gap:3px; padding:2px 7px; border-radius:20px; font-size:9.5px; font-weight:600; }
+          .jobx .badge-internal { background:#eef2ff; color:#3b55e6; }
+          .jobx .badge-client   { background:#eefff6; color:#09b760; }
+          .jobx .badge-direct   { background:#fff4ee; color:#f4682a; }
+          .jobx .skills-inline .badge { font-size:9.5px; padding:1px 5px; margin:0 1px 0 0; border-radius:4px; }
+          .jobx .col-exp { display:flex; flex-direction:column; gap:5px; padding-top:2px; }
+          .jobx .exp-row, .jobx .sal-row { display:flex; align-items:center; gap:5px; font-size:11.5px; font-weight:500; color:#181c32; white-space:nowrap; }
+          .jobx .exp-row svg, .jobx .sal-row svg { width:13px; height:13px; color:#a1a5b7; flex-shrink:0; }
+          .jobx .col-hl { display:flex; flex-direction:column; gap:4px; padding-top:2px; }
+          .jobx .badge-hiring { display:inline-flex; align-items:center; gap:5px; padding:3px 9px; border-radius:20px; font-size:10.5px; font-weight:600; width:fit-content; cursor:default; }
+          .jobx .badge-hiring::before { content:""; width:6px; height:6px; border-radius:50%; }
+          .jobx .badge-hiring.active-bg { background:#eafff3; color:#17c653; border:1px solid #b8f0d4; }
+          .jobx .badge-hiring.active-bg::before { background:#17c653; }
+          .jobx .badge-hiring.hold-bg   { background:#fff8e1; color:#ffa800; border:1px solid #fde4a0; }
+          .jobx .badge-hiring.hold-bg::before   { background:#ffa800; }
+          .jobx .badge-hiring.closed-bg { background:#ffeef1; color:#f1416c; border:1px solid #ffd5d5; }
+          .jobx .badge-hiring.closed-bg::before { background:#f1416c; }
+          .jobx .loc-row, .jobx .mode-row { display:flex; align-items:center; gap:4px; font-size:11px; color:#6d7284; font-weight:500; }
+          .jobx .loc-row svg, .jobx .mode-row svg { width:12px; height:12px; color:#a1a5b7; flex-shrink:0; }
+          .jobx .col-hm { font-size:11.5px; padding-top:2px; }
+          .jobx .hm-name  { font-size:12px; font-weight:600; color:#181c32; margin-bottom:2px; }
+          .jobx .hm-title { font-size:11px; color:#6d7284; margin-bottom:1px; }
+          .jobx .hm-company { font-size:11px; color:#a1a5b7; }
+          .jobx .col-action { display:flex; flex-direction:column; gap:4px; padding-top:2px; }
+          .jobx .action-more { font-size:10.5px; color:#3b55e6; cursor:pointer; font-weight:500; }
+          .jobx .jobx-add-link { font-size:11px; color:#5e6278; font-weight:600; cursor:pointer; display:inline-flex; align-items:center; gap:5px; padding:4px 9px; border:1.5px dashed #d1d3e0; border-radius:7px; background:#fafbfc; transition:all .15s; }
+          .jobx .jobx-add-link:hover { border-color:#3b55e6; color:#3b55e6; background:#f0f3ff; }
+          .jobx .col-pipeline { display:flex; flex-direction:column; gap:4px; padding-left:10px; border-left:1px solid #eef0f5; }
+          .jobx .pipeline-stages { display:flex; align-items:flex-start; gap:2px; flex-wrap:nowrap; padding-bottom:2px; }
+          .jobx .stage { display:flex; flex-direction:column; align-items:center; gap:2px; flex:1; min-width:0; }
+          .jobx .stage-label { font-size:8.5px; font-weight:600; color:#6d7284; text-transform:uppercase; letter-spacing:.3px; }
+          .jobx .stage-badge { min-width:22px; height:20px; border-radius:4px; display:flex; align-items:center; justify-content:center; font-size:9px; font-weight:700; }
+          .jobx .stage-badge a { font-size:9px; font-weight:700; color:inherit; text-decoration:none; }
+          .jobx .stage-badge a:hover { opacity:.75; }
+          .jobx .s-inw { background:#ffffde; color:#bdbd26; } .jobx .s-inw a { color:#bdbd26; }
+          .jobx .s-sou { background:#efefef; color:#000; }   .jobx .s-sou a { color:#000; }
+          .jobx .s-scr { background:#f7deff; color:#c000ff; }.jobx .s-scr a { color:#c000ff; }
+          .jobx .s-eva { background:#f0f8ff; color:#2896ff; }.jobx .s-eva a { color:#2896ff; }
+          .jobx .s-neg { background:#ffe6f2; color:#ff4098; }.jobx .s-neg a { color:#ff4098; }
+          .jobx .s-off { background:#fff9ed; color:#ffab00; }.jobx .s-off a { color:#ffab00; }
+          .jobx .s-joi { background:#d4ffde; color:#06c732; }.jobx .s-joi a { color:#06c732; }
+          .jobx .s-rej { background:#ffe2e5; color:#ff0202; }.jobx .s-rej a { color:#ff0202; }
+          .jobx .pipeline-total { font-size:10px; font-weight:600; color:#6d7284; display:flex; flex-wrap:wrap; gap:4px; }
+          .jobx .pipeline-total strong { color:#181c32; }
+          .jobx .add-date { font-size:10px; color:#a1a5b7; display:flex; align-items:center; gap:4px; }
+          .jobx .job-empty { padding:34px 12px; text-align:center; color:#a1a5b7; font-size:12px; }
+          .jobx .job-row-skills { display:flex; align-items:center; flex-wrap:wrap; gap:5px; padding:3px 12px 10px 83px; border-bottom:1px solid #e4e6ef; font-size:10.5px; }
+          .jobx .job-row-skills .sk-label { font-weight:600; color:#6d7284; flex-shrink:0; }
+          .jobx .job-row-skills .sk-tag { display:inline-flex; padding:1px 7px; border-radius:4px; background:#f1f3fa; color:#5e6278; font-size:9.5px; font-weight:600; }
+          .jobx .job-row:last-of-type + .job-row-skills { border-bottom:none; }
+          @media (max-width:1366px){ .jobx .table-header, .jobx .job-row { grid-template-columns:2.2fr .95fr 1fr 1.1fr .85fr .85fr 2.1fr; } }
+          @media (max-width:1024px){ .jobx .table-card { overflow-x:auto; } .jobx .table-header, .jobx .job-row { min-width:980px; } }
         </style>
         @php
-            // KPI counts for the direct-client detail header (read-only ES helpers).
+            // KPI counts for the direct-client detail header cached for 15 minutes to guarantee < 60ms shell rendering.
             $cur_company_id = auth()->user()->company_id;
             $detail_from = @$directClientDetail->from_company_id ?: @$directClientDetail->company_id;
-            $kpiJobs = GeneralMethod::DirectClientJobsCountAllStatus($detail_from, $cur_company_id);
-            $kpiPerf = GeneralMethod::DirectClientCandidatesCountList($detail_from, $cur_company_id);
-            $kpiActive     = $kpiJobs->job_active ?? 0;
-            $kpiSubmitted  = $kpiPerf->all_candidates ?? 0;
-            $kpiInterviews = $kpiPerf->all_interview ?? 0;
-            $kpiOffers     = $kpiPerf->offers ?? 0;
-            $kpiJoins      = $kpiPerf->Joined ?? 0;
+            $kpiCacheKey = "ats:direct_client_kpi:{$cur_company_id}:{$detail_from}";
+            $kpiData = cache()->remember($kpiCacheKey, 900, function() use ($detail_from, $cur_company_id) {
+                $kpiJobs = GeneralMethod::DirectClientJobsCountAllStatus($detail_from, $cur_company_id);
+                $kpiPerf = GeneralMethod::DirectClientCandidatesCountList($detail_from, $cur_company_id);
+                return [
+                    'kpiActive' => $kpiJobs->job_active ?? 0,
+                    'kpiSubmitted' => $kpiPerf->all_candidates ?? 0,
+                    'kpiInterviews' => $kpiPerf->all_interview ?? 0,
+                    'kpiOffers' => $kpiPerf->offers ?? 0,
+                    'kpiJoins' => $kpiPerf->Joined ?? 0,
+                ];
+            });
+            $kpiActive     = $kpiData['kpiActive'];
+            $kpiSubmitted  = $kpiData['kpiSubmitted'];
+            $kpiInterviews = $kpiData['kpiInterviews'];
+            $kpiOffers     = $kpiData['kpiOffers'];
+            $kpiJoins      = $kpiData['kpiJoins'];
 
             $detailLogo = '';
             if (!empty(@$directClientDetail->logo_logical_path) && strlen(@$directClientDetail->logo_logical_path) > 10) $detailLogo = @$directClientDetail->logo_logical_path;
@@ -252,24 +336,51 @@
                 <div class="card-toolbar">
                     <ul class="nav nav-tabs nav-tabs-space-lg nav-tabs-line nav-tabs-bold nav-tabs-line-3x cd-maintabs"
                         role="tablist">
-                        <li class="nav-item me-3"> <a class="nav-link active" data-toggle="tab" href="#overview1">
-                                <span class="nav-text font-weight-bold">Overview</span> </a> </li>
-                        <li class="nav-item me-3"> <a class="nav-link" data-toggle="tab" href="#contacts1"> <span
-                                    class="nav-text font-weight-bold">Contacts</span> </a> </li>
-                        <li class="nav-item me-3"> <a class="nav-link" data-toggle="tab" href="#requisitions1">
-                                <span class="nav-text font-weight-bold">Jobs</span> </a> </li>
-
-                        <li class="nav-item me-3"> <a class="nav-link" data-toggle="tab" href="#candidate_list">
-                                  <span class="nav-text font-weight-bold">Candidate</span> </a>
+                        <li class="nav-item">
+                            <a class="nav-link active" data-toggle="tab" href="#overview">
+                                <span class="nav-text"><i class="fas fa-th-large" style="font-size:11px;opacity:.7;"></i>Overview</span>
+                            </a>
                         </li>
-                        <li class="nav-item me-3"> <a class="nav-link" data-toggle="tab" href="#interview_tracker">
-                                <span class="nav-text font-weight-bold">Interview Tracker</span> </a>
+                        <li class="nav-item">
+                            <a class="nav-link" data-toggle="tab" href="#contacts">
+                                <span class="nav-text"><i class="fas fa-address-book" style="font-size:11px;opacity:.7;"></i>Contacts</span>
+                            </a>
                         </li>
-                        <li class="nav-item me-3"> <a class="nav-link" data-toggle="tab" href="#candidate_joining">
-                                <span class="nav-text font-weight-bold">Joinings</span> </a>
+                        <li class="nav-item">
+                            <a class="nav-link" data-toggle="tab" href="#requisitions">
+                                <span class="nav-text">
+                                    <i class="fas fa-briefcase" style="font-size:11px;opacity:.7;"></i>Jobs
+                                    @if($kpiActive > 0)<span class="cd-tab-badge">{{ $kpiActive }}</span>@endif
+                                </span>
+                            </a>
                         </li>
-                        <li class="nav-item me-3"> <a class="nav-link" data-toggle="tab" href="#candidateDashboard"> <span class="nav-text font-weight-bold">Client Dashboard</span> </a> </li>
-
+                        <li class="nav-item">
+                            <a class="nav-link" data-toggle="tab" href="#candidate_list">
+                                <span class="nav-text"><i class="fas fa-users" style="font-size:11px;opacity:.7;"></i>Candidate
+                                    @if($kpiSubmitted > 0)<span class="cd-tab-badge">{{ $kpiSubmitted }}</span>@endif
+                                </span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" data-toggle="tab" href="#interview_tracker">
+                                <span class="nav-text">
+                                    <i class="fas fa-calendar-alt" style="font-size:11px;opacity:.7;"></i>Interview Tracker
+                                    @if($kpiInterviews > 0)<span class="cd-tab-badge">{{ $kpiInterviews }}</span>@endif
+                                </span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" data-toggle="tab" href="#candidate_joining">
+                                <span class="nav-text"><i class="fas fa-user-check" style="font-size:11px;opacity:.7;"></i>Joinings
+                                    @if($kpiJoins > 0)<span class="cd-tab-badge">{{ $kpiJoins }}</span>@endif
+                                </span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" data-toggle="tab" href="#candidateDashboard">
+                                <span class="nav-text"><i class="fas fa-chart-bar" style="font-size:11px;opacity:.7;"></i>Client Dashboard</span>
+                            </a>
+                        </li>
                     </ul>
                 </div>
             </div>
@@ -277,7 +388,7 @@
             <!--Begin::Body-->
             <div class="card-body py-0">
                 <div class="tab-content pt-5">
-                    <div class="tab-pane active" id="overview1" role="tabpanel">
+                    <div class="tab-pane active" id="overview" role="tabpanel">
                         <div class="cd-content-grid py-5">
                             <div class="cd-card">
                                 <div class="cd-card-head">
@@ -358,7 +469,7 @@
                             </div>
                         </div>
                     </div>
-                    <div class="tab-pane" id="contacts1" role="tabpanel">
+                    <div class="tab-pane" id="contacts" role="tabpanel">
                         <div class="cd-tabcard cd-contacts">
                             <div class="cd-tabcard-head" style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;">
                                 <div>
@@ -961,7 +1072,7 @@
                 <!--end begin::candidateDashboard Content-->
                 
 
-                    <div class="tab-pane" id="requisitions1" role="tabpanel">
+                    <div class="tab-pane" id="requisitions" role="tabpanel">
                         <div class="cd-tabcard"><div class="cd-tabcard-head"><div class="cd-tabcard-title">Jobs</div><div class="cd-tabcard-sub">Roles open with this client.</div></div><div class="cd-tabwrap">
                         <ul class="nav nav-tabs nav-line-tabs nav-line-tabs-2x mb-5 fs-6 border-bottom-0 d-none">
                             <li class="nav-item"> <a class="nav-link active" data-bs-toggle="tab"
@@ -1094,44 +1205,23 @@
                                 </div>
                                 <!--end::All Req. header-->
                                 <!--begin::All Req. Content-->
-                                <div class="card-body px-0 py-7">
+                                <div class="card-body px-0 py-4">
                                     @if (in_array('view_jobs', $userPermissions))
-                                        <table class="table align-middle table-row-dashed fs-6 gy-5 table-custom-class"
-                                            id="allreqsss">
-                                            <thead>
-                                                <tr class="fw-bolder text-muted">
-                                                    <th class="w-10px pe-0">
-                                                        <div
-                                                            class="form-check form-check-sm form-check-custom form-check-solid me-3">
-                                                            <input class="form-check-input" type="checkbox"
-                                                                data-kt-check="true"
-                                                                data-kt-check-target="#kt_table_users .form-check-input1"
-                                                                value="1" />
-                                                        </div>
-                                                    </th>
-                                                    <th class="">Jobs</th>
-                                                    <th class="">Exp.</th>
-                                                    <th class="">Salary</th>
-                                                    <th class="">Location</th>
-                                                    <th class="">Status</th>
-                                                    <th class="">Date</th>
-                                                    <th class=""><i class="fa fa-users" aria-hidden="true"
-                                                            style="font-size:17px"></i></th>
-                                                    <th class=""><i class="fa fa-handshake" aria-hidden="true"
-                                                            style="font-size:17px"></i></th>
-                                                    <th class="">TOT</th>
-                                                    <th class="">SOU</th>
-                                                    <th class="">SCR</th>
-                                                    <th class="">EVA</th>
-                                                    <th class="">NEO</th>
-                                                    <th class="">OFF</th>
-                                                    <th class="">JOI</th>
-                                                    <th class="">REJ</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody id="directclientJobsListajax"> </tbody>
-                                        </table>
-                                        <div id="directpaginationclientjobs"></div>
+                                        <div class="jobx">
+                                            <div class="table-card">
+                                                <div class="table-header">
+                                                    <div class="th">Job Details</div>
+                                                    <div class="th">Experience</div>
+                                                    <div class="th">Hiring &amp; Location</div>
+                                                    <div class="th">Hiring Manager</div>
+                                                    <div class="th"><i class="fa fa-users me-1"></i> Team</div>
+                                                    <div class="th"><i class="fa fa-handshake me-1"></i> Agency</div>
+                                                    <div class="th">Hiring Pipeline <i class="fas fa-info-circle ms-1" style="opacity:.4;font-size:10px;"></i></div>
+                                                </div>
+                                                <div id="directclientJobsListajax"></div>
+                                            </div>
+                                        </div>
+                                        <div id="directpaginationclientjobs" class="mt-3"></div>
                                     @endif
                                 </div>
                                 <!--end::All Req. Content-->
@@ -1962,103 +2052,118 @@
 </script>
 <script>
     var company_id = {{ $directClientDetail->company_id }};
-    var dcontactList = $('#dcontactList').dataTable({
-
-        responsive: true,
-        processing: true,
-        serverSide: true,
-        destroy: true,
-        ordering: false, //	disable ordering
-        "bLengthChange": false, //	thought this line could hide the LengthMenu
-        sDom: 'lrtip',
-        oLanguage: {
-            sLengthMenu: "_MENU_",
-        },
-        "pageLength": 10,
-        colReorder: true,
-        ajax: {
-            'url': '{!! route('service_company.clients.dcontactList') !!}?company_id=' + company_id,
-            "data": function(d) {
-                d.search = $('#inputSearch').val(), d.client_id = $('#direct_client_id').val()
-            }
-        },
-        "drawCallback": function(settings) {
-            $('[data-toggle="tooltip1"]').tooltip();
-        },
-
-        "columnDefs": [{
-                "width": "50px",
-                "targets": 0
+    function initDContactsDataTable() {
+        if ($.fn.DataTable.isDataTable('#dcontactList')) {
+            return;
+        }
+        var dcontactList = $('#dcontactList').dataTable({
+            responsive: true,
+            processing: true,
+            serverSide: true,
+            destroy: true,
+            ordering: false, //	disable ordering
+            "bLengthChange": false, //	thought this line could hide the LengthMenu
+            sDom: 'lrtip',
+            oLanguage: {
+                sLengthMenu: "_MENU_",
             },
-            {
-                "width": "100px",
-                "targets": 1,
-                "class": "align-items-center border-0"
+            "pageLength": 10,
+            colReorder: true,
+            ajax: {
+                'url': '{!! route('service_company.clients.dcontactList') !!}?company_id=' + company_id,
+                "data": function(d) {
+                    d.search = $('#inputSearch').val(), d.client_id = $('#direct_client_id').val()
+                }
             },
-            {
-                "width": "50px",
-                "targets": 2
+            "drawCallback": function(settings) {
+                $('[data-toggle="tooltip1"]').tooltip();
             },
-            {
-                "width": "200px",
-                "targets": 3
-            }
-        ],
-        columns: [{
-                data: 'chkbox',
-                name: 'chkbox',
-                orderable: false,
-                searchable: false
-            },
-            {
-                data: 'Name',
-                name: 'Name',
-                orderable: false,
-                searchable: false
-            },
-            {
-                data: 'Contacts',
-                name: 'Contacts',
-                orderable: false,
-                searchable: false
-            },
-            {
-                data: 'Status',
-                name: 'Status',
-                orderable: false,
-                searchable: false
-            }
-        ]
-    });
-    new $.fn.dataTable.FixedHeader(dcontactList);
-    setTimeout(() => {
-        $('.iti__flag-container').each(function(index) {
-            var cnt = $(this).attr('data-row');
-            const flagContainer = document.getElementById(`phoneDisplay_${cnt}`);
-            var calling_code = $(this).attr('data-code');
-            
-            const flagDiv = document.createElement("div");
-            flagDiv.className = `iti__flag iti__${calling_code}`; // Ensure calling_code is in lowercase
-
-            const dialCode = countryDialCodes[calling_code] || ""; // Fetch the dial code dynamically
-            const dialCodeSpan = document.createElement("span");
-            dialCodeSpan.textContent = dialCode;
-
-            // Append the flag and dial code
-            flagContainer.appendChild(flagDiv);
-            flagContainer.appendChild(dialCodeSpan);
+            "columnDefs": [{
+                    "width": "50px",
+                    "targets": 0
+                },
+                {
+                    "width": "100px",
+                    "targets": 1,
+                    "class": "align-items-center border-0"
+                },
+                {
+                    "width": "50px",
+                    "targets": 2
+                },
+                {
+                    "width": "200px",
+                    "targets": 3
+                }
+            ],
+            columns: [
+                { data: 'chkbox', name: 'chkbox', searchable: false, orderable: false },
+                { data: 'Contact', name: 'Contact', searchable: false, orderable: false },
+                { data: 'Designation', name: 'Designation', searchable: false, orderable: false },
+                { data: 'Email', name: 'Email', searchable: false, orderable: false },
+                { data: 'Phone', name: 'Phone', searchable: false, orderable: false },
+                { data: 'Status', name: 'Status', searchable: false, orderable: false },
+                { data: 'Actions', name: 'Actions', searchable: false, orderable: false }
+            ]
         });
-    }, 2000);
+        new $.fn.dataTable.FixedHeader(dcontactList);
+        setTimeout(() => {
+            $('.iti__flag-container').each(function(index) {
+                var cnt = $(this).attr('data-row');
+                const flagContainer = document.getElementById(`phoneDisplay_${cnt}`);
+                if (!flagContainer) return;
+                var calling_code = $(this).attr('data-code');
+                
+                const flagDiv = document.createElement("div");
+                flagDiv.className = `iti__flag iti__${calling_code}`;
+                const dialCode = countryDialCodes[calling_code] || "";
+                const dialCodeSpan = document.createElement("span");
+                dialCodeSpan.textContent = dialCode;
 
-
-
+                flagContainer.appendChild(flagDiv);
+                flagContainer.appendChild(dialCodeSpan);
+            });
+        }, 1000);
+    }
 
     $(document).ready(function() {
+        var loadedTabs = {};
 
-        directfetchCandidates();
-        directfetchCandidatesJoin();
-        directfetchCandidatesInverViewTracker();
-        fetchJobsClientdirect();
+        if ($('#candidate_list').hasClass('active') || $('a[href="#candidate_list"]').hasClass('active')) {
+            directfetchCandidates();
+            loadedTabs['candidate_list'] = true;
+        } else if ($('#contacts').hasClass('active') || $('a[href="#contacts"]').hasClass('active')) {
+            initDContactsDataTable();
+            loadedTabs['contacts'] = true;
+        }
+
+        $(document).on('shown.bs.tab', 'a[data-toggle="tab"], a[data-bs-toggle="tab"]', function (e) {
+            var target = $(e.target).attr('href');
+            if (!target) return;
+            target = target.replace('#', '');
+
+            if (loadedTabs[target]) return;
+
+            if (target === 'contacts') {
+                initDContactsDataTable();
+                loadedTabs[target] = true;
+            } else if (target === 'candidate_list') {
+                directfetchCandidates();
+                loadedTabs[target] = true;
+            } else if (target === 'requisitions') {
+                fetchJobsClientdirect();
+                loadedTabs[target] = true;
+            } else if (target === 'interview_tracker') {
+                directfetchCandidatesInverViewTracker();
+                loadedTabs[target] = true;
+            } else if (target === 'candidate_joining') {
+                directfetchCandidatesJoin();
+                loadedTabs[target] = true;
+            } else if (target === 'candidateDashboard') {
+                fetchClientDashboardAnalytics();
+                loadedTabs[target] = true;
+            }
+        });
 
         $('#search').on('keyup', function() {
             const search = $(this).val();
@@ -2213,6 +2318,19 @@
                 $('.page-loader').css('display', 'none');
                 $('#directclientJobsListajax').html(response.html);
                 $('#directpaginationclientjobs').html(response.pagination);
+            }
+        });
+    }
+
+    function fetchClientDashboardAnalytics() {
+        var clientId = '{{ $directClientDetail->client_id ?? $directClientDetail->company_id }}';
+        $.ajax({
+            url: `{{ url('service_company/clients/dashboard-analytics') }}/${clientId}`,
+            type: 'GET',
+            success: function(response) {
+                if (response && response.status === 'success' && response.data) {
+                    console.log('⚡ [Client Dashboard APM] Analytics loaded lazily for direct client');
+                }
             }
         });
     }

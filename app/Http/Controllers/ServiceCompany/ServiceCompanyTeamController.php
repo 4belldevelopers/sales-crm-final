@@ -1751,6 +1751,8 @@ class ServiceCompanyTeamController extends ServiceCompanyBaseController
     // -------------jobdata function in un-use code
     public function jobdata_ajax(Request $request)
     {
+        // Phase 0 Performance Telemetry: Baseline timing start
+        $startTime = microtime(true);
         // abort_if(!$this->user->can('view_jobs'), 403);
         abort_if(Gate::denies('view_jobs'), 403);
 
@@ -1939,6 +1941,13 @@ class ServiceCompanyTeamController extends ServiceCompanyBaseController
             'index' => ELASTIC_JOBS,
             'request_cache' => true,
             'body' => [
+                '_source' => [
+                    'id', 'title', 'status', 'created_at', 'min_salary', 'max_salary', 
+                    'min_sal_mode', 'max_sal_mode', 'min_salary_currency', 'max_salary_currency',
+                    'comId', 'client_name', 'company_name', 'category_id', 'job_assign', 
+                    'logo_logical_path', 'logo', 'self_company', 'recommendation_relation', 'employment_type',
+                    'work_type', 'job_metronics_skills', 'client_city_jobs', 'total_positions', 'client_contact_info_jobs'
+                ],
                 'from' => $from,
                 'size' => $size,
                 'sort' => $sort,
@@ -1972,12 +1981,14 @@ class ServiceCompanyTeamController extends ServiceCompanyBaseController
 
         $userPermissions = $this->userPermissions;
 
+        $durMs = round((microtime(true) - $startTime) * 1000, 2);
+
         return response()->json([
             'html' => view('service_company.ajax_pages.team-jobs-ajax', compact('data', 'userPermissions', 'company_id', 'limit', 'salaryMode', 'currencySymbole'))->render(),
             'total' => $total,
             'pagination' => view('service_company.ajax_pages.pagination', compact('pagination'))->render(),
-        ]);
-
+            '_telemetry' => ['dur_ms' => $durMs, 'endpoint' => 'team.jobdata_ajax'],
+        ])->header('Server-Timing', "team_jobdata;dur={$durMs};desc=\"Team Job Data AJAX\"");
     }
 
     public function edit($id)
@@ -2550,6 +2561,8 @@ class ServiceCompanyTeamController extends ServiceCompanyBaseController
     // ----------appdata function in un-use code
     public function appdata_ajax(Request $request)
     {
+        // Phase 0 Performance Telemetry: Baseline timing start
+        $startTime = microtime(true);
 
         $userId = $mstatus_id = $feedback_status = '';
         $userId = $request->userId;
@@ -2558,10 +2571,15 @@ class ServiceCompanyTeamController extends ServiceCompanyBaseController
         $currencySymbole = GeneralMethod::currencySymbole();
 
         $mstatus_id = $request->mstatus_id;
-        $interviewStatus = [];
-        $interviewStatus = DB::table('master_status')->select('*')->orderBy('priority', 'ASC')->get();
+        $interviewStatus = Cache::remember('ref:master_status_list', 86400, function() {
+            return DB::table('master_status')->select('*')->orderBy('priority', 'ASC')->get();
+        });
 
-        $chkAdminRole = DB::table('users')->select('*')->where('id', $userId)->where('root_user', 1)->count();
+        $chkAdminRole = ($this->user->id == $userId && isset($this->user->root_user)) 
+            ? (int) $this->user->root_user 
+            : Cache::remember("ref:user_root:{$userId}", 3600, function() use ($userId) {
+                return DB::table('users')->where('id', $userId)->where('root_user', 1)->count();
+            });
         $feedback_status = GeneralMethod::feedback_status();
         $company_id = auth()->user()->company_id;
 
@@ -2884,12 +2902,14 @@ class ServiceCompanyTeamController extends ServiceCompanyBaseController
 
         $userPermissions = $this->userPermissions;
 
+        $durMs = round((microtime(true) - $startTime) * 1000, 2);
+
         return response()->json([
             'html' => view('service_company.ajax_pages.team_candidate_ajax', compact('data', 'userPermissions', 'salaryMode', 'currencySymbole'))->render(),
             'total' => $total,
             'pagination' => view('service_company.ajax_pages.pagination', compact('pagination'))->render(),
-        ]);
-
+            '_telemetry' => ['dur_ms' => $durMs, 'endpoint' => 'team.appdata_ajax'],
+        ])->header('Server-Timing', "team_appdata;dur={$durMs};desc=\"Team Candidate Data AJAX\"");
     }
 
     protected function getSearchConditions($custom_search, $country)
@@ -3284,6 +3304,8 @@ class ServiceCompanyTeamController extends ServiceCompanyBaseController
 
     public function intdata_ajax(Request $request)
     {
+        // Phase 0 Performance Telemetry: Baseline timing start
+        $startTime = microtime(true);
 
         $userId = $available_status = $feedback_status = $interview_mode_arr = '';
         $userId = $request->userId;
@@ -3420,6 +3442,16 @@ class ServiceCompanyTeamController extends ServiceCompanyBaseController
             'index' => ELASTIC_INERTVIEW_TRACKER,
             'request_cache' => true,
             'body' => [
+                '_source' => [
+                    'id', 'wiseID', 'job_application_id', 'jobId', 'job_id', 'client_name', 'recommendation_id', 
+                    'to_company_id', 'thirdparty_company_id', 'full_name', 'current_designation', 'job_title', 'company_name', 
+                    'interview_mode', 'interview_mention_link', 'schedule_date', 'schedule_to_time', 
+                    'timezone_abbreviation', 'mode_name', 'mode_lavel_name', 'interviewers', 
+                    'current_company_id', 'feedback', 'master_status_id', 'master_status_name', 
+                    'css_style', 'child_status_id', 'child_status_name', 'posted_by', 'ClientComID', 
+                    'uc_company_name', 'rec_candidate_assign_id', 'average_star_rating',
+                    'phone', 'email', 'city_name', 'country_name', 'state_name'
+                ],
                 'from' => $from,
                 'size' => $size,
                 'sort' => $sort,
@@ -3456,12 +3488,14 @@ class ServiceCompanyTeamController extends ServiceCompanyBaseController
         $company_id = $this->user->company_id;
         $chkAdminRole = $this->user->hasRole('admin');
 
+        $durMs = round((microtime(true) - $startTime) * 1000, 2);
+
         return response()->json([
             'html' => view('service_company.ajax_pages.team-interview-tracker-ajax', compact('data', 'userPermissions', 'feedback_status', 'available_status', 'company_id', 'chkAdminRole'))->render(),
             'total' => $total,
             'pagination' => view('service_company.ajax_pages.pagination', compact('pagination'))->render(),
-        ]);
-
+            '_telemetry' => ['dur_ms' => $durMs, 'endpoint' => 'team.intdata_ajax'],
+        ])->header('Server-Timing', "team_intdata;dur={$durMs};desc=\"Team Interview Data AJAX\"");
     }
 
     public function intdata(Request $request)
@@ -3683,6 +3717,8 @@ class ServiceCompanyTeamController extends ServiceCompanyBaseController
 
     public function joiningdata_ajax(Request $request)
     {
+        // Phase 0 Performance Telemetry: Baseline timing start
+        $startTime = microtime(true);
         $currency = GeneralMethod::currency();
         $salaryMode = GeneralMethod::salaryMode();
         $userId = '';
@@ -4012,12 +4048,14 @@ class ServiceCompanyTeamController extends ServiceCompanyBaseController
 
         $userPermissions = $this->userPermissions;
 
+        $durMs = round((microtime(true) - $startTime) * 1000, 2);
+
         return response()->json([
             'html' => view('service_company.ajax_pages.team-candidate-join-ajax', compact('data', 'userPermissions', 'company_id', 'currency', 'salaryMode', 'job_status'))->render(),
             'total' => $total,
             'pagination' => view('service_company.ajax_pages.pagination', compact('pagination'))->render(),
-        ]);
-
+            '_telemetry' => ['dur_ms' => $durMs, 'endpoint' => 'team.joiningdata_ajax'],
+        ])->header('Server-Timing', "team_joiningdata;dur={$durMs};desc=\"Team Joining Data AJAX\"");
     }
 
     public function joiningdata(Request $request)

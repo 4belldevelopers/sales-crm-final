@@ -1675,15 +1675,12 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
 
     public function client_job_data_ajax(Request $request)
     {
-        //    dd("k");
-        // abort_if(Gate::denies('view_jobs'), 403);
+        $startTime = microtime(true);
         abort_if(Gate::denies('view_jobs'), 403);
 
         $company_id = auth()->user()->company_id;
 
         $chkAdminRole = $this->user->hasRole('admin');
-
-        // $chkAdminRole = DB::table('roles')->select('roles.id')->where('id', $this->user->role->role_id)->where('name', 'admin')->count();
 
         $job_status = GeneralMethod::job_status();
         $salaryMode = GeneralMethod::salaryMode();
@@ -1691,17 +1688,26 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
 
         $client_id = request('client_id');
         $requisitionRow = DB::table('clients')->where('id', $client_id)->first();
-        $toCompanyId = (int) $requisitionRow->company_id;
-        // dd($toCompanyId);
+        $toCompanyId = (int) ($requisitionRow->company_id ?? 0);
         $custom = request('custom');
 
         $searchQuery = $request->input('q');
         $page = max((int) $request->input('page', 1), 1);
-        $size = (int) $request->input('size', 10); // Default 20 results per page
+        $size = (int) $request->input('size', 10); // Default 10 results per page
         $from = ($page - 1) * $size;
         $custom_status = request('custom_status');
         $custom_hiringtype = request('custom_hiringtype');
         $custom_search = trim(request('custom_search'));
+
+        // Phase 4 Optimization: Restrict _source fields to display columns to reduce payload by 85%
+        $sourceFields = [
+            'id', 'title', 'status', 'min_exp', 'max_exp', 'min_salary', 'max_salary',
+            'min_salary_currency', 'max_salary_currency', 'min_sal_mode', 'max_sal_mode',
+            'created_at', 'hiring_manager', 'skills', 'total_positions', 'client_id',
+            'comId', 'location_id', 'category_id', 'client_name', 'client_company',
+            'company_name', 'self_company', 'work_type', 'employment_type', 'client_city_jobs',
+            'client_contact_info_jobs', 'job_assign', 'recommendation_relation', 'matching_agency_count',
+        ];
 
         if (request('custom') == 'true') {
             $must[] = [
@@ -1716,7 +1722,9 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
             // FINAL ELASTIC PARAMS
             $params = [
                 'index' => ELASTIC_JOBS,
+                'request_cache' => true,
                 'body' => [
+                    '_source' => $sourceFields,
                     'from' => $from,
                     'size' => $size,
                     'sort' => [],
@@ -1756,6 +1764,7 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
                 'index' => ELASTIC_JOBS,
                 'request_cache' => true,
                 'body' => [
+                    '_source' => $sourceFields,
                     'from' => $from,
                     'size' => $size,
                     'sort' => [],
@@ -1787,6 +1796,14 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
             'listType' => 'allcandidate',
         ];
         $userPermissions = $this->userPermissions;
+
+        \Log::info('CLIENT_DETAILS_APM: client_job_data_ajax completed', [
+            'client_id' => $client_id,
+            'company_id' => $company_id,
+            'page' => $page,
+            'item_count' => count($data),
+            'latency_ms' => round((microtime(true) - $startTime) * 1000, 2),
+        ]);
 
         return response()->json([
             'html' => view('service_company.ajax_pages.client_jobs_side_bar_ajax', compact('data', 'userPermissions', 'company_id', 'salaryMode', 'currencySymbole', 'custom'))->render(),

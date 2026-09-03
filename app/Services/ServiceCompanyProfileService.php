@@ -69,11 +69,11 @@ class ServiceCompanyProfileService
     /**
      * Get KPI counters & pipeline status counts for recruiter profile.
      *
-     * Cached 10 mins in Redis per recruiter.
+     * Cached 30 mins in Redis per recruiter.
      */
     public function getKpiMetrics(int $userId, int $companyId): array
     {
-        return Cache::remember("profile:kpis:u{$userId}", 600, function () use ($userId, $companyId) {
+        return Cache::remember("profile:kpis:u{$userId}", 1800, function () use ($userId, $companyId) {
             $startOfMonth = Carbon::now()->startOfMonth()->subMonths(3);
             $endOfMonth = Carbon::now()->endOfMonth();
 
@@ -403,7 +403,7 @@ class ServiceCompanyProfileService
      */
     public function getLeaderboard(int $companyId, int $userId): array
     {
-        return Cache::remember("profile:leaderboard:c{$companyId}:u{$userId}", 900, function () use ($companyId, $userId) {
+        return Cache::remember("profile:leaderboard:c{$companyId}:u{$userId}", 1800, function () use ($companyId, $userId) {
             $lm = Carbon::now()->startOfMonth();
             $lbStart = $lm->copy()->startOfMonth()->toIso8601String();
             $lbEnd = $lm->copy()->endOfMonth()->toIso8601String();
@@ -483,7 +483,7 @@ class ServiceCompanyProfileService
      */
     public function getGraphData(int $userId, int $companyId): array
     {
-        return Cache::remember("profile:graphs:u{$userId}", 900, function () use ($userId, $companyId) {
+        return Cache::remember("profile:graphs:u{$userId}", 1800, function () use ($userId, $companyId) {
             $endDate = Carbon::today()->endOfDay();
             $startDate = Carbon::today()->subDays(6)->startOfDay();
 
@@ -596,7 +596,7 @@ class ServiceCompanyProfileService
      */
     public function getListItemsData(int $userId, int $companyId): array
     {
-        return Cache::remember("profile:list_items:u{$userId}", 300, function () use ($userId, $companyId) {
+        return Cache::remember("profile:list_items:u{$userId}", 1800, function () use ($userId, $companyId) {
             $data_list = [];
             $total_candidates_join = 0;
             $upcomingData = [];
