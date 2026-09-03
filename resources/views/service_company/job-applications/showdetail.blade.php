@@ -5128,10 +5128,37 @@ function rsKeywordRegex(list){
     return value.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
   }).join('|'),'gi');
 }
-function rsSpanHasKeyword(text,re){
-  if(!re || !text) return false;
-  re.lastIndex=0;
-  return re.test(text);
+function rsMarkKeywordMatches(root,re){
+  if(!root || !re) return;
+  var walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,{
+    acceptNode:function(node){
+      if(!node.nodeValue || !node.nodeValue.trim()) return NodeFilter.FILTER_REJECT;
+      var parent=node.parentNode;
+      if(!parent || /^(script|style|mark)$/i.test(parent.nodeName)) return NodeFilter.FILTER_REJECT;
+      return NodeFilter.FILTER_ACCEPT;
+    }
+  });
+  var nodes=[];
+  while(walker.nextNode()) nodes.push(walker.currentNode);
+  nodes.forEach(function(node){
+    var text=node.nodeValue;
+    re.lastIndex=0;
+    if(!re.test(text)){ re.lastIndex=0; return; }
+    re.lastIndex=0;
+    var frag=document.createDocumentFragment();
+    var last=0,match;
+    while((match=re.exec(text))!==null){
+      if(match.index>last) frag.appendChild(document.createTextNode(text.slice(last,match.index)));
+      var mark=document.createElement('mark');
+      mark.className='rcv-hit rdc-smart-hit';
+      mark.textContent=match[0];
+      frag.appendChild(mark);
+      last=match.index+match[0].length;
+      if(match.index===re.lastIndex) re.lastIndex++;
+    }
+    if(last<text.length) frag.appendChild(document.createTextNode(text.slice(last)));
+    node.parentNode.replaceChild(frag,node);
+  });
 }
 async function renderHighlightedPdfBlob(pdfBlob,keywords){
   await Promise.all([rsEnsurePdfJs(),rsEnsureJsPdf()]);
@@ -5175,10 +5202,10 @@ async function renderHighlightedPdfBlob(pdfBlob,keywords){
       }catch(err){}
       var pr=pageWrap.getBoundingClientRect();
       if(keywordRe){
+        rsMarkKeywordMatches(textLayer,keywordRe);
         ctx.fillStyle='rgba(255,214,10,0.42)';
-        Array.prototype.slice.call(textLayer.querySelectorAll('span')).forEach(function(sp){
-          if(!rsSpanHasKeyword(sp.textContent,keywordRe)) return;
-          var r=sp.getBoundingClientRect();
+        Array.prototype.slice.call(textLayer.querySelectorAll('mark.rdc-smart-hit')).forEach(function(mk){
+          var r=mk.getBoundingClientRect();
           if(!r.width || !r.height || !pr.width || !pr.height) return;
           ctx.fillRect((r.left-pr.left)/pr.width*canvas.width,(r.top-pr.top)/pr.height*canvas.height,r.width/pr.width*canvas.width,Math.max(r.height/pr.height*canvas.height,6));
         });
