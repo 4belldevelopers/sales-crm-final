@@ -5992,24 +5992,6 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
         <span class="rdc-ocirc" aria-hidden="true"></span>
       </label>
 
-      {{-- 2: Branded Resume --}}
-      <label class="rdc-opt" data-opt="2" data-coins="2">
-        <input class="rdc-rinput" type="radio" name="rdcFormat" value="2">
-        <span class="rdc-onum">2</span>
-        <span class="rdc-oi rdc-ic-purple" aria-hidden="true">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>
-        </span>
-        <span class="rdc-obody">
-          <span class="rdc-otitle">Branded Resume</span>
-          <span class="rdc-odesc">Resume with your company logo and branding overlay</span>
-        </span>
-        <span class="rdc-ometa">
-          <span class="rdc-ocost">2 Coins</span>
-          <span class="rdc-otime">~5 sec</span>
-        </span>
-        <span class="rdc-ocirc" aria-hidden="true"></span>
-      </label>
-
       {{-- 3: ATS Highlighted --}}
       <label class="rdc-opt" data-opt="3" data-coins="4">
         <input class="rdc-rinput" type="radio" name="rdcFormat" value="3">
@@ -6170,7 +6152,6 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
 
   var optMeta = {
     1: {cost:1, label:'Download Original Resume',       avail:true,  dlKey:null},
-    2: {cost:2, label:'Download Branded Resume',        avail:true,  dlKey:'logo'},
     3: {cost:4, label:'Download ATS Highlighted Resume',avail:true,  dlKey:'hl'},
     4: {cost:6, label:'Download Branded + Highlighted', avail:true,  dlKey:'both'},
     5: {cost:7, label:'Download Pre-Screened Report',   avail:true,  dlKey:'rs'},
@@ -6539,7 +6520,7 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
           showToast('DOC resumes need the enterprise converter before branding.', 'warn');
           resetBtn(); return;
         }
-        runSmartCountdown('Generating Report, Kindly wait.', 60);
+        runSmartCountdown('Downloading Resume...', 60);
         setTimeout(function(){
           window.__buildSmartBrandedResume(resumePdfUrl,{
             resumeUrl:[r2DirectUrl,r2PublicUrl],
