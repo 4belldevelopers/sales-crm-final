@@ -5759,7 +5759,7 @@ async function buildSmartBrandedResume(resumePdfUrl,options){
     if(['PDF','DOC','DOCX'].indexOf(resumeExt)===-1) throw new Error('Smart branded resume is available for PDF, DOC and DOCX resumes only');
     var resumeBlob=null;
     if(resumeExt==='PDF'){
-      resumeBlob=await fetchPdfBlobFromSources(resumeSources);
+      resumeBlob=await fetchPdfBlobFromSources(resumeSources.concat([resumePdfUrl]));
     }else if(resumeExt==='DOCX'){
       try{
         resumeBlob=await convertResumeWithOpenDocLabBlob(resumeSources,resumeExt,false);
@@ -5903,7 +5903,7 @@ async function buildSmartPreScreenedResume(resumePdfUrl,options){
     var reportBlob=await buildRecruiterSummaryBlob(data,options);
     var resumeBlob=null;
     if(resumeExt==='PDF'){
-      resumeBlob=await fetchPdfBlobFromSources(resumeSources);
+      resumeBlob=await fetchPdfBlobFromSources(resumeSources.concat([resumePdfUrl]));
     }else if(resumeExt==='DOCX'){
       try{
         resumeBlob=await convertResumeWithOpenDocLabBlob(resumeSources,resumeExt,false);
@@ -6054,7 +6054,7 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h10l6 6v10a2 2 0 0 1-2 2H4V4z"/><path d="M14 4v6h6"/><path d="M8 13h8"/><path d="M8 17h5"/><path d="M3 7h18"/></svg>
         </span>
         <span class="rdc-obody">
-          <span class="rdc-otitle">Resume + Company Brading <span style="background:#ecfeff;color:#0e7490;font-size:8.5px;font-weight:700;padding:1px 6px;border-radius:4px;vertical-align:middle;margin-left:4px;">R2 Fast</span></span>
+          <span class="rdc-otitle">Resume + Company Branding <span style="background:#ecfeff;color:#0e7490;font-size:8.5px;font-weight:700;padding:1px 6px;border-radius:4px;vertical-align:middle;margin-left:4px;">R2 Fast</span></span>
           <span class="rdc-odesc">Adds the shared-by company name and logo header above the resume without hiding resume data</span>
         </span>
         <span class="rdc-ometa">
@@ -6155,7 +6155,7 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
     3: {cost:4, label:'Download ATS Highlighted Resume',avail:true,  dlKey:'hl'},
     4: {cost:6, label:'Download Branded + Highlighted', avail:true,  dlKey:'both'},
     5: {cost:7, label:'Download Pre-Screened Report',   avail:true,  dlKey:'rs'},
-    6: {cost:2, label:'Resume + Company Brading', avail:(['PDF','DOC','DOCX'].indexOf(resumeExt) !== -1), dlKey:'smart-branded-resume', unavailableMsg:'Branded resume is available for PDF, DOC and DOCX resumes only.'},
+    6: {cost:2, label:'Resume + Company Branding', avail:(['PDF','DOC','DOCX'].indexOf(resumeExt) !== -1), dlKey:'smart-branded-resume', unavailableMsg:'Branded resume is available for PDF, DOC and DOCX resumes only.'},
     15:{cost:8, label:'Pre-Screened Report + Resume + Company Branding', avail:(['PDF','DOC','DOCX'].indexOf(resumeExt) !== -1), dlKey:'smart-prescreened-package', unavailableMsg:'Final package is available for PDF, DOC and DOCX resumes only.'},
     16:{cost:8, label:'Pre-Screened Report + Resume without Company Branding', avail:(['PDF','DOC','DOCX'].indexOf(resumeExt) !== -1), dlKey:'smart-prescreened-package-nobrand', unavailableMsg:'Final package is available for PDF, DOC and DOCX resumes only.'}
   };
@@ -6508,12 +6508,12 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
           showToast('Branded resume is available for PDF, DOC and DOCX resumes only.', 'warn');
           resetBtn(); return;
         }
-        if(resumeExt === 'PDF' && !r2DirectUrl && !r2PublicUrl){
-          showToast('Direct PDF resume URL is not available.', 'warn');
+        if(resumeExt === 'PDF' && !r2DirectUrl && !r2PublicUrl && !dlUrl && !resumePdfUrl){
+          showToast('PDF resume URL is not available.', 'warn');
           resetBtn(); return;
         }
-        if(resumeExt === 'DOCX' && !r2DirectUrl && !r2PublicUrl && !resumePdfUrl){
-          showToast('Direct DOCX resume URL is not available.', 'warn');
+        if(resumeExt === 'DOCX' && !r2DirectUrl && !r2PublicUrl && !dlUrl && !resumePdfUrl){
+          showToast('DOCX resume URL is not available.', 'warn');
           resetBtn(); return;
         }
         if(resumeExt === 'DOC' && !resumePdfUrl){
@@ -6523,7 +6523,7 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
         runSmartCountdown('Downloading Resume...', 60);
         setTimeout(function(){
           window.__buildSmartBrandedResume(resumePdfUrl,{
-            resumeUrl:[r2DirectUrl,r2PublicUrl],
+            resumeUrl:[r2DirectUrl,r2PublicUrl,dlUrl],
             resumeExt:resumeExt
           }).then(function(ok){
             if(ok) closeRdc();
@@ -6545,12 +6545,12 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
           showToast('Final package is available for PDF, DOC and DOCX resumes only.', 'warn');
           resetBtn(); return;
         }
-        if(resumeExt === 'PDF' && !r2DirectUrl && !r2PublicUrl){
-          showToast('Direct PDF resume URL is not available.', 'warn');
+        if(resumeExt === 'PDF' && !r2DirectUrl && !r2PublicUrl && !dlUrl && !resumePdfUrl){
+          showToast('PDF resume URL is not available.', 'warn');
           resetBtn(); return;
         }
-        if(resumeExt === 'DOCX' && !r2DirectUrl && !r2PublicUrl && !resumePdfUrl){
-          showToast('Direct DOCX resume URL is not available.', 'warn');
+        if(resumeExt === 'DOCX' && !r2DirectUrl && !r2PublicUrl && !dlUrl && !resumePdfUrl){
+          showToast('DOCX resume URL is not available.', 'warn');
           resetBtn(); return;
         }
         if(resumeExt === 'DOC' && !resumePdfUrl){
@@ -6561,7 +6561,7 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
         setTimeout(function(){
           window.__buildSmartPreScreenedResume(resumePdfUrl,{
             noBranding:(m.dlKey === 'smart-prescreened-package-nobrand'),
-            resumeUrl:[r2DirectUrl,r2PublicUrl],
+            resumeUrl:[r2DirectUrl,r2PublicUrl,dlUrl],
             resumeExt:resumeExt
           }).then(function(ok){
             if(ok) closeRdc();
