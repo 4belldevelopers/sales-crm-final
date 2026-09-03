@@ -14,6 +14,13 @@
         5	=>	"AED"
      ];
 
+    $jobIds = collect($data)->pluck('jobId')->filter()->unique()->toArray();
+    $cityIds = collect($data)->pluck('city_id')->filter()->unique()->toArray();
+    $childStatusIds = collect($data)->pluck('child_status_id')->filter()->unique()->toArray();
+
+    $jobsMap = !empty($jobIds) ? DB::table('jobs')->select('id', 'max_sal_mode as jobMode', 'max_salary_currency as jobCurrency')->whereIn('id', $jobIds)->get()->keyBy('id') : collect();
+    $citiesMap = !empty($cityIds) ? DB::table('city_list')->select('city_id', 'city')->whereIn('city_id', $cityIds)->get()->keyBy('city_id') : collect();
+    $childStatusMap = !empty($childStatusIds) ? DB::table('candidate_status')->select('id', 'name')->whereIn('id', $childStatusIds)->get()->keyBy('id') : collect();
 @endphp
 @if (count($data) > 0)
     @foreach ($data as $rowArr)
@@ -21,7 +28,7 @@
     $row = (object) $rowArr;
     $row->thirdparty_company_id = $row->ClientComID;
 
-    $jobData = DB::table('jobs')->select('max_sal_mode as jobMode','max_salary_currency as jobCurrency')->where('id','=',$row->jobId)->first();
+    $jobData = $jobsMap->get($row->jobId);
     $jobMode = $jobData->jobMode ?? @$row->current_ctc_mode;
     $jobCurrency = $jobData->jobCurrency ?? @$row->current_ctc_cur;
     $symbols = $symbolsValue[$jobCurrency] ?? "INR";
@@ -333,10 +340,7 @@
                     $row_city_name = '';
 
                     if (@$row->country == 101) {
-                        $row_city = DB::table('city_list')
-                            ->select('*')
-                            ->where('city_id', @$row->city_id)
-                            ->first();
+                        $row_city = $citiesMap->get(@$row->city_id);
                         $row_city_name = @$row_city->city;
                     } else {
                         $row_city_name = @$row->city;
@@ -459,11 +463,7 @@
                     }
 
                     if (!empty(@$row->child_status_id) && @$row->child_status_id > 0) {
-                        $childStatus = '';
-                        $childStatus = DB::table('candidate_status')
-                            ->select('*')
-                            ->where('id', $row->child_status_id)
-                            ->first();
+                        $childStatus = $childStatusMap->get($row->child_status_id);
                         if (!empty($childStatus)) {
                             $name = @$childStatus->name;
                         }

@@ -115,6 +115,7 @@ Route::group(['middleware' => 'auth'], function () {
                 Route::resource('clients', ServiceCompanyClientController::class);
                 Route::get('clients/viewmore/{id?}', [ServiceCompanyClientController::class, 'viewMore'])->name('clients.viewmore');
                 Route::get('clients/dviewmore/{id?}', [ServiceCompanyClientController::class, 'dviewMore'])->name('clients.dviewmore');
+                Route::get('clients/dashboard-analytics/{id?}', [ServiceCompanyClientController::class, 'dashboardAnalytics'])->name('clients.dashboard-analytics');
                 Route::get('clients/addresslist/{cid?}', [ServiceCompanyClientController::class, 'addresslist'])->name('clients.addresslist');
                 Route::get('clients/citylist/{state_id?}', [ServiceCompanyClientController::class, 'citylist'])->name('clients.citylist');
                 Route::get('clients/custom_client/{id?}', [ServiceCompanyClientController::class, 'custom_client'])->name('clients.custom_client');
@@ -397,6 +398,7 @@ Route::group(['middleware' => 'auth'], function () {
                 Route::get('consultancy/dviewmore/{id?}', [ServiceCompanyConsultancyController::class, 'dviewMore'])->middleware(['throttle:120,1', 'consultancy.etag'])->name('consultancy.dviewmore');
                 Route::get('consultancy/staffing_contact_list/{id?}', [ServiceCompanyConsultancyController::class, 'staffingContactList'])->name('consultancy.staffing_contact_list');
                 Route::get('consultancy_ajax/allreq/{id?}', [ServiceCompanyConsultancyController::class, 'allreq_ajax'])->name('consultancy.allreq_ajax');
+                Route::get('consultancy_ajax/dashboard/{id?}', [ServiceCompanyConsultancyController::class, 'dashboard_ajax'])->name('consultancy.dashboard_ajax');
                 Route::get('consultancy/uncleared_request_data', [ServiceCompanyConsultancyController::class, 'uncleared_request_data'])->name('consultancy.uncleared_request_data');
                 Route::get('consultancy/export/{start}/{length}', [ServiceCompanyConsultancyController::class, 'export'])->name('consultancy.export');
                 Route::resource('consultancy', ServiceCompanyConsultancyController::class);

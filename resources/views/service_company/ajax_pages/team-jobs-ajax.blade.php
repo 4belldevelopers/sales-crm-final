@@ -85,8 +85,13 @@
     }
 
     $logo_path = GeneralMethod::companyDetails($row->id);
-    $departmentRow = DB::table('job_categories')->where('id','=',$row->category_id)->first();
-    $department = $departmentRow->name ?? '';
+    static $jobCategoriesMap = null;
+    if ($jobCategoriesMap === null) {
+        $jobCategoriesMap = \Illuminate\Support\Facades\Cache::remember('ats:job_categories_map', 86400, function() {
+            return DB::table('job_categories')->pluck('name', 'id')->toArray();
+        });
+    }
+    $department = $jobCategoriesMap[$row->category_id] ?? '';
 
     $min_sal_mode = $max_sal_mode = $min_salary_currency = $max_salary_currency = $max_salary = $min_salary = '';
     // Full suffix (/Annum, /Month, /Hour) instead of a single letter — clearer at a glance.
@@ -136,24 +141,27 @@
     }
 
     $work_type = 'Office';
-    if($row->work_type=='no'){ $work_type = "Office"; }
-    elseif($row->work_type=='yes'){ $work_type = "Remote"; }
-    elseif($row->work_type=='other'){ $work_type = "Hybrid"; }
+    $rawWorkType = $row->work_type ?? null;
+    if($rawWorkType=='no'){ $work_type = "Office"; }
+    elseif($rawWorkType=='yes'){ $work_type = "Remote"; }
+    elseif($rawWorkType=='other'){ $work_type = "Hybrid"; }
 
     $employment_type = 'Full-time';
     $badgeemploymenttype = "badge-fulltime";
-    if ($row->employment_type == 1) {
+    $rawEmpType = $row->employment_type ?? null;
+    if ($rawEmpType == 1) {
         $employment_type = 'Contract';
         $badgeemploymenttype = "badge-contract";
     }
-    $created_at = $row->created_at;
+    $created_at = $row->created_at ?? null;
     $newDate = GeneralMethod::ymdTodmyNotTime($created_at);
 
     $skillArrFinal = [];
     $skillArr = [];
     $skilltag = '';
-    if(collect($row->job_metronics_skills)->isNotEmpty()) {
-        $skillArr = $row->job_metronics_skills;
+    $rawSkills = $row->job_metronics_skills ?? [];
+    if(collect($rawSkills)->isNotEmpty()) {
+        $skillArr = $rawSkills;
     }
     if (!empty($skillArr)) {
         foreach ($skillArr as $sval) {
@@ -164,7 +172,7 @@
     }
 
     $country_id = $country_name = '';
-    $client_city_jobs = $row->client_city_jobs;
+    $client_city_jobs = $row->client_city_jobs ?? [];
     $jobCitySelected = is_array($client_city_jobs) ? count($client_city_jobs) : 0;
     $firstCity = collect($client_city_jobs)->first();
     $cityName = $firstCity['city_name'] ?? null;
@@ -172,12 +180,13 @@
     $countryName = $firstCity['country_name'] ?? null;
     $country_name = mb_substr(@$countryName, 0, 6);
 
-    $total_positions = number_format($row->total_positions);
+    $total_positions = number_format($row->total_positions ?? 0);
     $hiringManager = $hiringManagerdesignation = $hiringManagerCompany = '--------';
-    if(count($row->client_contact_info_jobs)>0){
-        $hiringManager = @$row->client_contact_info_jobs[0]['contact_person_name'];
-        $hiringManagerdesignation = @$row->client_contact_info_jobs[0]['contact_person_designation'];
-        $companyId = @$row->client_contact_info_jobs[0]['company_id'];
+    $contactInfoJobs = $row->client_contact_info_jobs ?? [];
+    if(is_array($contactInfoJobs) && count($contactInfoJobs)>0){
+        $hiringManager = @$contactInfoJobs[0]['contact_person_name'];
+        $hiringManagerdesignation = @$contactInfoJobs[0]['contact_person_designation'];
+        $companyId = @$contactInfoJobs[0]['company_id'];
         $hiringManagerCompany = optional(DB::table('companies')->where('id',$companyId)->first())->company_name;
     }
 

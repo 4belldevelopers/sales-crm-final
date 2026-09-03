@@ -682,8 +682,7 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
 
     public function clientCandidateList(Request $request)
     {
-        // $candidates = JobApplication::query();
-
+        $startTime = microtime(true);
         $company_id = (int) auth()->user()->company_id;
         $searchQuery = $request->input('q');
         $page = max((int) $request->input('page', 1), 1);
@@ -729,6 +728,48 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
             }, $response['hits']['hits']);
         }
 
+        // Phase 5 & 10 Optimization: Pre-batch relational lookup maps to eliminate N+1 queries in Blade loop
+        $jobIds = array_filter(array_column($data, 'jobId'));
+        $cityIds = array_filter(array_column($data, 'city_id'));
+
+        $jobsMap = [];
+        if (! empty($jobIds)) {
+            $jobsMap = DB::table('jobs')
+                ->select('id', 'max_sal_mode as jobMode', 'max_salary_currency as jobCurrency')
+                ->whereIn('id', array_unique($jobIds))
+                ->get()
+                ->keyBy('id')
+                ->toArray();
+        }
+
+        $citiesMap = [];
+        if (! empty($cityIds)) {
+            $citiesMap = DB::table('city_list')
+                ->whereIn('city_id', array_unique($cityIds))
+                ->pluck('city', 'city_id')
+                ->toArray();
+        }
+
+        $statusMap = cache()->remember('global_candidate_status_name_map', 86400, function () {
+            return DB::table('candidate_status')->pluck('name', 'id')->toArray();
+        });
+
+        $jobAssignMap = [];
+        foreach ($data as $candidateRow) {
+            $cObj = (object) $candidateRow;
+            if ($company_id != @$cObj->ClientComID && @$cObj->ClientComID > 0) {
+                $spok = DB::table('job_assign')
+                    ->select('job_assign.job_id', 'job_assign.company_id', 'users.name')
+                    ->join('users', 'users.id', '=', 'job_assign.spok_user_id')
+                    ->where('job_assign.job_id', @$cObj->jobId)
+                    ->where('job_assign.company_id', @$cObj->ClientComID)
+                    ->first();
+                if ($spok) {
+                    $jobAssignMap[$cObj->jobId.'_'.$cObj->ClientComID] = $spok->name;
+                }
+            }
+        }
+
         $pagination = [
             'total' => $total,
             'current_page' => $page,
@@ -736,8 +777,16 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
             'listType' => 'allcandidate',
         ];
 
+        \Log::info('CLIENT_DETAILS_APM: clientCandidateList completed', [
+            'client_id' => $request->clientid,
+            'company_id' => $company_id,
+            'page' => $page,
+            'item_count' => count($data),
+            'latency_ms' => round((microtime(true) - $startTime) * 1000, 2),
+        ]);
+
         return response()->json([
-            'html' => view('service_company.ajax_pages.custom_client_candidates', compact('data', 'company_id'))->render(),
+            'html' => view('service_company.ajax_pages.custom_client_candidates', compact('data', 'company_id', 'jobsMap', 'citiesMap', 'statusMap', 'jobAssignMap'))->render(),
             'pagination' => view('service_company.ajax_pages.pagination', compact('pagination'))->render(),
         ]);
 
@@ -790,6 +839,48 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
             }, $response['hits']['hits']);
         }
 
+        // Phase 5 & 10 Optimization: Pre-batch relational lookup maps to eliminate N+1 queries in Blade loop
+        $jobIds = array_filter(array_column($data, 'jobId'));
+        $cityIds = array_filter(array_column($data, 'city_id'));
+
+        $jobsMap = [];
+        if (! empty($jobIds)) {
+            $jobsMap = DB::table('jobs')
+                ->select('id', 'max_sal_mode as jobMode', 'max_salary_currency as jobCurrency')
+                ->whereIn('id', array_unique($jobIds))
+                ->get()
+                ->keyBy('id')
+                ->toArray();
+        }
+
+        $citiesMap = [];
+        if (! empty($cityIds)) {
+            $citiesMap = DB::table('city_list')
+                ->whereIn('city_id', array_unique($cityIds))
+                ->pluck('city', 'city_id')
+                ->toArray();
+        }
+
+        $statusMap = cache()->remember('global_candidate_status_name_map', 86400, function () {
+            return DB::table('candidate_status')->pluck('name', 'id')->toArray();
+        });
+
+        $jobAssignMap = [];
+        foreach ($data as $candidateRow) {
+            $cObj = (object) $candidateRow;
+            if ($company_id != @$cObj->ClientComID && @$cObj->ClientComID > 0) {
+                $spok = DB::table('job_assign')
+                    ->select('job_assign.job_id', 'job_assign.company_id', 'users.name')
+                    ->join('users', 'users.id', '=', 'job_assign.spok_user_id')
+                    ->where('job_assign.job_id', @$cObj->jobId)
+                    ->where('job_assign.company_id', @$cObj->ClientComID)
+                    ->first();
+                if ($spok) {
+                    $jobAssignMap[$cObj->jobId.'_'.$cObj->ClientComID] = $spok->name;
+                }
+            }
+        }
+
         $pagination = [
             'total' => $total,
             'current_page' => $page,
@@ -798,7 +889,7 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
         ];
 
         return response()->json([
-            'html' => view('service_company.ajax_pages.custom_client_candidates', compact('data', 'company_id'))->render(),
+            'html' => view('service_company.ajax_pages.custom_client_candidates', compact('data', 'company_id', 'jobsMap', 'citiesMap', 'statusMap', 'jobAssignMap'))->render(),
             'pagination' => view('service_company.ajax_pages.pagination', compact('pagination'))->render(),
         ]);
 
@@ -806,20 +897,18 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
 
     public function clientCandidateInterviewTracker(Request $request)
     {
-        // $candidates = JobApplication::query();
+        $startTime = microtime(true);
         $company_id = (int) auth()->user()->company_id;
 
         $page = max((int) $request->input('page', 1), 1);
-        $size = (int) $request->input('size', 10); // Default 20 results per page
+        $size = (int) $request->input('size', 10); // Default 10 results per page
         $from = ($page - 1) * $size;
-        // dd($request->clientid);
 
         $sort[] = ['schedule_date' => ['order' => 'desc']];
         $sort[] = ['id' => ['order' => 'desc']];
         $boolQuery = [
             'bool' => [
                 'should' => [
-                    // First condition
                     [
                         'bool' => [
                             'must' => array_merge([
@@ -829,14 +918,25 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
                     ],
                 ],
                 'minimum_should_match' => 1,
-                'filter' => [], // We'll add all filters here
+                'filter' => [],
             ],
+        ];
+
+        // Phase 6 Optimization: Restrict _source fields to payload attributes required for Interview Tracker view
+        $sourceFields = [
+            'id', 'full_name', 'current_designation', 'candidate_id', 'jobId', 'job_id', 'job_title', 'client_id', 'comId',
+            'company_id', 'job_company_id', 'company_name', 'client_name', 'recommendation_id', 'to_company_id', 'from_company_id',
+            'schedule_date', 'schedule_time', 'schedule_to_time', 'timezone_abbreviation', 'end_time', 'interviewer_name',
+            'interviewers', 'mode', 'mode_name', 'mode_lavel_name', 'meeting_link', 'status', 'available_status', 'feedback',
+            'source', 'round_name', 'comments', 'master_status_id', 'master_status_name', 'child_status_id', 'css_style',
+            'average_star_rating', 'created_at',
         ];
 
         $params = [
             'index' => ELASTIC_INERTVIEW_TRACKER,
             'request_cache' => true,
             'body' => [
+                '_source' => $sourceFields,
                 'from' => $from,
                 'size' => $size,
                 'sort' => $sort,
@@ -861,7 +961,14 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
             'listType' => 'allcandidate',
         ];
 
-        // dd($pagination);
+        \Log::info('CLIENT_DETAILS_APM: clientCandidateInterviewTracker completed', [
+            'client_id' => $request->clientid,
+            'company_id' => $company_id,
+            'page' => $page,
+            'item_count' => count($data),
+            'latency_ms' => round((microtime(true) - $startTime) * 1000, 2),
+        ]);
+
         return response()->json([
             'html' => view('service_company.ajax_pages.custom_client_candidates_interview_tracker', compact('data', 'company_id'))->render(),
             'pagination' => view('service_company.ajax_pages.pagination', compact('pagination'))->render(),
@@ -2751,7 +2858,7 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
             $tenantCompanyId = (int) auth()->user()->company_id;
             $candCompanyId = (int) ($AddJobWiseCondidate->company_id ?? 0);
             $thirdPartyCompId = (int) ($AddJobWiseCondidate->thirdparty_company_id ?? 0);
-            if ($tenantCompanyId > 0 && $candCompanyId !== $tenantCompanyId && $thirdPartyCompId !== $tenantCompanyId && !auth()->user()->hasRole('admin')) {
+            if ($tenantCompanyId > 0 && $candCompanyId !== $tenantCompanyId && $thirdPartyCompId !== $tenantCompanyId && ! auth()->user()->hasRole('admin')) {
                 return Reply::dataOnly(['status' => 'error', 'message' => 'Unauthorized candidate details access.']);
             }
         }
@@ -2921,8 +3028,6 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
             }
         }
 
-
-
         $this->client_contuser_arr = ($this->job->client_contact_info_jobs);
         $this->clientjobAssignListCaptain = '';
         if ($this->job->comId != $company_id) {
@@ -2995,8 +3100,6 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
         $this->job_id = $job_id;
 
         $job_details = Job::withoutGlobalScopes()->find($this->job_id);
-
-
 
         $this->jobSkill = DB::table('job_metronics_skills')
             ->leftJoin('candidate_job_skill_exp', function ($join) {
@@ -3215,17 +3318,17 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
 
         // Pre-query variables for Blade view to eliminate embedded queries (P1-1)
         $effectiveJobId = $this->application->jobId ?? $this->application->job_id ?? $jobId;
-        $this->jobData = !empty($effectiveJobId) ? DB::table('jobs')->select('max_sal_mode as jobMode', 'max_salary_currency as jobCurrency')->where('id', '=', $effectiveJobId)->first() : null;
+        $this->jobData = ! empty($effectiveJobId) ? DB::table('jobs')->select('max_sal_mode as jobMode', 'max_salary_currency as jobCurrency')->where('id', '=', $effectiveJobId)->first() : null;
 
         $clientComId = $this->application->ClientComID ?? 0;
-        $this->hdrSpokperson = ($company_id != $clientComId && $clientComId > 0 && !empty($effectiveJobId))
+        $this->hdrSpokperson = ($company_id != $clientComId && $clientComId > 0 && ! empty($effectiveJobId))
             ? DB::table('job_assign')->select('users.name')->leftJoin('users', 'users.id', '=', 'job_assign.spok_user_id')->where('job_assign.job_id', $effectiveJobId)->where('job_assign.company_id', $clientComId)->first()
             : null;
 
-        $this->rcvCompany = !empty($company_id) ? DB::table('companies')->select('logo', 'company_name')->where('id', $company_id)->first() : null;
+        $this->rcvCompany = ! empty($company_id) ? DB::table('companies')->select('logo', 'company_name')->where('id', $company_id)->first() : null;
 
         $submittedBy = $this->application->submitted_by ?? null;
-        $this->submittedByCompany = !empty($submittedBy) ? DB::table('companies')->select('companies.company_name')->join('users', 'users.company_id', '=', 'companies.id')->where('users.id', $submittedBy)->first() : null;
+        $this->submittedByCompany = ! empty($submittedBy) ? DB::table('companies')->select('companies.company_name')->join('users', 'users.company_id', '=', 'companies.id')->where('users.id', $submittedBy)->first() : null;
 
         // $view = view('service_company.job-applications.show', $this->data)->render();
         // dd("jd");
@@ -3410,6 +3513,7 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
         $this->interviewFeedbackMap = $interviewFeedbackMap;
         $this->CaptainCompanyid = auth()->user()->company_id;
         $view = view('service_company.job-applications.timeline_partial', $this->data)->render();
+
         //  dd($updateTimeLine);
         return Reply::dataOnly([
             'status' => 'success',
@@ -3449,7 +3553,7 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
         }
 
         $cacheKey = 'tenant:'.$companyId.':resume_meta:'.$appId;
-        $meta = cache()->remember($cacheKey, now()->addMinutes(15), function () use ($app, $resumeFilename) {
+        $meta = cache()->remember($cacheKey, now()->addMinutes(15), function () use ($resumeFilename) {
             $path = str_replace('https://file.jero.works/', '', $resumeFilename);
             $info = pathinfo($path);
             $extension = strtolower($info['extension'] ?? '');

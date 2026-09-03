@@ -34,8 +34,8 @@
         $row->recommendation_id = $recommendation_id;
         $row->to_company_id     = $recommendation_id;
         $row->from_company_id   = $from_company_id;
-        $row->companyidcount    = $row->comId;
-        $row->clients_name      = $row->client_name;
+        $row->companyidcount    = $row->comId ?? 0;
+        $row->clients_name      = $row->client_name ?? '';
 
         $job_assign = $row->job_assign ?? [];
         $jobAssign  = collect($job_assign);

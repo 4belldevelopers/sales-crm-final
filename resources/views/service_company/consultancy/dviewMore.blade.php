@@ -3006,541 +3006,488 @@
       </div>
     </div>
     <script>
-      function openAgencyModal() {
-        document.getElementById("agencyModal").classList.add("show");
-        document.body.style.overflow = "hidden";
-      }
-      function closeAgencyModal() {
-        document.getElementById("agencyModal").classList.remove("show");
-        document.body.style.overflow = "";
-      }
-      function switchTab(tab, tabName) {
-        document
-          .querySelectorAll(".tab")
-          .forEach((t) => t.classList.remove("active"));
-        tab.classList.add("active");
-        document
-          .querySelectorAll(".tab-content")
-          .forEach((c) => c.classList.remove("active"));
-        if (tabName === "overview") {
-          document.getElementById("tab-overview").classList.add("active");
-        } else if (tabName === "contacts") {
-          document.getElementById("tab-contacts").classList.add("active");
-        } else if (tabName === "jobs") {
-          document.getElementById("tab-jobs").classList.add("active");
-        } else if (tabName === "candidates") {
-          document.getElementById("tab-candidates").classList.add("active");
-        } else if (tabName === "interviews") {
-          document.getElementById("tab-interviews").classList.add("active");
-        } else if (tabName === "joinings") {
-          document.getElementById("tab-joinings").classList.add("active");
-        } else if (tabName === "reports") {
-          document.getElementById("tab-reports").classList.add("active");
-        }
-        showToast(
-          tabName.charAt(0).toUpperCase() + tabName.slice(1),
-          "Switched to " + tabName + " tab",
-        );
-      }
-      function toggleTags() {
-        const t1 = document.getElementById("tag1"),
-          t2 = document.getElementById("tag2"),
-          btn = document.getElementById("tagBtn");
-        if (t1.classList.contains("hidden")) {
-          t1.classList.remove("hidden");
-          t2.classList.remove("hidden");
-          btn.textContent = "- 2 less";
-        } else {
-          t1.classList.add("hidden");
-          t2.classList.add("hidden");
-          btn.textContent = "+ 2 more";
-        }
-      }
-      function toggleReadMore() {
-        const text = document.getElementById("aboutText"),
-          btn = document.getElementById("readMoreBtn");
-        text.style.maxHeight =
-          text.style.maxHeight === "none" ? "200px" : "none";
-        btn.classList.toggle("expanded");
-        btn.innerHTML = btn.classList.contains("expanded")
-          ? 'Read Less <i class="fas fa-chevron-down"></i>'
-          : 'Read More <i class="fas fa-chevron-down"></i>';
-      }
-      function openPopup(type, value, name) {
-        const bd = document.getElementById("popupBackdrop"),
-          icon = document.getElementById("popupIcon"),
-          title = document.getElementById("popupTitle"),
-          desc = document.getElementById("popupDesc"),
-          val = document.getElementById("popupValue"),
-          link = document.getElementById("popupLink");
-        if (type === "email") {
-          icon.className = "fas fa-envelope";
-          title.textContent = "Send Email to " + name;
-          desc.textContent = "Click below to open your email client";
-          link.href = "mailto:" + value;
-          link.innerHTML = '<i class="fas fa-external-link-alt"></i>Open Email';
-        } else {
-          icon.className = "fas fa-phone";
-          title.textContent = "Call " + name;
-          desc.textContent = "Click below to initiate the call";
-          link.href = "tel:" + value.replace(/\s/g, "");
-          link.innerHTML = '<i class="fas fa-phone"></i>Call Now';
-        }
-        val.textContent = value;
-        bd.classList.add("show");
-        document.body.style.overflow = "hidden";
-      }
-      function closePopup() {
-        document.getElementById("popupBackdrop").classList.remove("show");
-        document.body.style.overflow = "";
-      }
-      document
-        .getElementById("popupBackdrop")
-        .addEventListener("click", (e) => {
-          if (e.target === e.currentTarget) closePopup();
-        });
-      document.addEventListener("keydown", (e) => {
-        if (e.key === "Escape") {
-          closePopup();
-          closeAgencyModal();
-        }
-      });
-      async function copyToClipboard(btn, text) {
-        try {
-          await navigator.clipboard.writeText(text);
-        } catch (e) {
-          const ta = document.createElement("textarea");
-          ta.value = text;
-          document.body.appendChild(ta);
-          ta.select();
-          document.execCommand("copy");
-          document.body.removeChild(ta);
-        }
-        btn.classList.add("copied");
-        btn.innerHTML = '<i class="fas fa-check"></i>';
-        showToast("Copied!", text + " copied to clipboard");
-        setTimeout(() => {
-          btn.classList.remove("copied");
-          btn.innerHTML = '<i class="fas fa-copy"></i>';
-        }, 2000);
-      }
-      function showToast(title, message) {
-        const stack = document.getElementById("toastStack");
-        const toast = document.createElement("div");
-        toast.className = "toast-item";
-        toast.innerHTML =
-          '<div class="toast-icon-wrap"><i class="fas fa-check"></i></div><div class="toast-body"><strong>' +
-          title +
-          "</strong><span>" +
-          message +
-          '</span></div><button class="toast-close-btn" onclick="this.parentElement.remove()"><i class="fas fa-times"></i></button>';
-        stack.appendChild(toast);
-        setTimeout(() => {
-          toast.style.opacity = "0";
-          toast.style.transform = "translateX(40px)";
-          setTimeout(() => toast.remove(), 300);
-        }, 4000);
-      }
-      function navClick(el, name) {
-        document
-          .querySelectorAll(".nav-item")
-          .forEach((n) => n.classList.remove("active"));
-        el.classList.add("active");
-        showToast(name, "Navigating to " + name);
-      }
-    </script>
+        var myChartId = "<?php echo @$directClientDetail->client_id; ?>";
+        var dashboardCharts = {};
 
-    <!--begin::Candidate Dashboard charts-->
-    <script>
-            var myChartId = "<?php echo @$directClientDetail->client_id; ?>";
-
-            var showDataLabels = {
-                          id: 'showDataLabels',
-                          afterDatasetsDraw(chart) {
-                              const { ctx } = chart;
-                              chart.data.datasets.forEach((dataset, i) => {
-                                  const meta = chart.getDatasetMeta(i);
-                                  meta.data.forEach((bar, index) => {
-                                      const value = dataset.data[index];
-                                      ctx.save();
-                                      ctx.fillStyle = 'black';
-                                      ctx.font = 'bold 12px sans-serif';
-                                      ctx.textAlign = 'center';
-                                      ctx.fillText(value, bar.x, bar.y - 1.5);
-                                      ctx.restore();
-                                  });
-                              });
-                          }
-            };
-
-            var showDataLabelsvertical = {
-                id: 'showDataLabelsvertical',
-                afterDatasetsDraw(chart) {
-                    var { ctx } = chart;
-                    chart.data.datasets.forEach((dataset, i) => {
-                        var meta = chart.getDatasetMeta(i);
-                        meta.data.forEach((bar, index) => {
-                            var value = dataset.data[index];
-                            ctx.save();
-                            ctx.fillStyle = 'black';
-                            ctx.font = 'bold 12px sans-serif';
-                            ctx.textAlign = 'left';
-                            ctx.textBaseline = 'middle';
-                            ctx.fillText(value, bar.x + 1, bar.y);
-                            ctx.restore();
-                        });
-                    });
-                }
-            };
-
-            function loadCountryChart() {
-            var ctx = document.getElementById(`myChart_${myChartId}`).getContext('2d');
-                var countryChart = new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: ['In Review','Sourcing', 'Screening', 'Evaluation', 'Negotiation', 'Offer','Joined','Rejected'],
-                    datasets: [{
-                        label: 'Users',
-                        data: ["{{$inreview_count}}", "{{$sourcing_count}}", "{{$screening_count}}", "{{$evaluation_count}}", "{{$negotiation_count}}", "{{$offer_count}}", "{{$joined_count}}","{{$Rejected_count}}"],
-                        backgroundColor: [
-                            '#bdbd26',
-                            '#000000',
-                            '#c000ff',
-                            '#2896ff',
-                            '#ff4098',
-                            '#ffab00',
-                            '#06c732',
-                            '#ff0202'
-                        ],
-                        borderRadius: 10,
-                        barThickness: 30
-                    }]
-                },
-                options: {
-                    indexAxis: 'y',
-                    plugins: {
-                        legend: { display: false },
-                        tooltip: {
-                            callbacks: {
-                                label: ctx => ctx.parsed.x.toLocaleString()
-                            }
-                        }
-                    },
-                    scales: {
-                        x: {
-                            beginAtZero: true,
-                            ticks: {
-                                callback: function (value) {
-                                    if (value <= 10) return value;
-                                    else if (value % 100 === 0) return value.toLocaleString();
-                                    else return '';
-                                }
-                            }
-                        },
-                        y: {
-                            ticks: {
-                                font: {
-                                    weight: 'bold'
-                                }
-                            }
-                        }
-                    }
-                },
-                plugins: [showDataLabelsvertical]
-            });
-               }
-
-                setTimeout(() => {
-                  loadCountryChart();
-             }, 300);
-
-            var ctx_job_div = document.getElementById(`allJobGrapg_${myChartId}`).getContext('2d');
-            var allJobGrapg = new Chart(ctx_job_div, {
-                type: 'doughnut',
-                data: {
-                    labels: ['Active Jobs', 'Hold Jobs', 'Closed Jobs'],
-                    datasets: [{
-                        label: 'Total',
-                        data: ['{{ $active_count }}', '{{ $hold_count }}', '{{ $inactive_count }}'],
-                        backgroundColor: [
-                            '#22c55e',
-                            '#ffab00',
-                            '#ff0202'
-                        ],
-                        hoverOffset: 4
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            display: false
-                        }
-                    },
-                    cutout: '70%'
-                }
-            });
-
-            var candidates_left_chart = document.getElementById(`candidates_left_chart_${myChartId}`).getContext('2d');
-            var allJobGraphBar = new Chart(candidates_left_chart, {
-                type: 'bar',
-                data: {
-                    labels: {!! json_encode($labels) !!},
-                    datasets: [{
-                        label: 'Total Candidates',
-                        data: {!! json_encode($candidateValues) !!},
-                        backgroundColor: [
-                            '#2196f3','#2196f3','#2196f3','#2196f3','#2196f3','#2196f3','#2196f3'
-                        ],
-                        borderRadius: 5,
-                        borderSkipped: false,
-                        barThickness: 30
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: { legend: { display: false } },
-                    scales: { y: { beginAtZero: true, ticks: { precision: 0 } } }
-                },
-                plugins: [showDataLabels]
-            });
-
-            var candidates_offer_chart = document.getElementById(`candidates_offer_chart_${myChartId}`).getContext('2d');
-            var allofferGraphBar = new Chart(candidates_offer_chart, {
-                type: 'bar',
-                data: {
-                    labels: {!! json_encode($labelsCommoffer) !!},
-                    datasets: [{
-                        label: 'Total Candidates',
-                        data: {!! json_encode($candidateValuesCommoffer) !!},
-                        backgroundColor: ['#ffab00','#ffab00','#ffab00','#ffab00','#ffab00','#ffab00'],
-                        borderRadius: 5,
-                        borderSkipped: false,
-                        barThickness: 30
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: { legend: { display: false } },
-                    scales: { y: { beginAtZero: true, ticks: { precision: 0 } } }
-                },
-                plugins: [showDataLabels]
-            });
-
-            var candidates_join_chart = document.getElementById(`candidates_join_chart_${myChartId}`).getContext('2d');
-            var alljoinGraphBar = new Chart(candidates_join_chart, {
-                type: 'bar',
-                data: {
-                    labels: {!! json_encode($labelsCommjoin) !!},
-                    datasets: [{
-                        label: 'Total Candidates',
-                        data: {!! json_encode($candidateValuesCommjoin) !!},
-                        backgroundColor: ['#06c732','#06c732','#06c732','#06c732','#06c732','#06c732'],
-                        borderRadius: 5,
-                        borderSkipped: false,
-                        barThickness: 30
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: { legend: { display: false } },
-                    scales: { y: { beginAtZero: true, ticks: { precision: 0 } } }
-                },
-                plugins: [showDataLabels]
-            });
-
-            var inetview_recent_chart_month = document.getElementById(`inetview_recent_chart_month_${myChartId}`).getContext('2d');
-            var netview_recentGraphBarMonth = new Chart(inetview_recent_chart_month, {
-                type: 'bar',
-                data: {
-                    labels: {!! json_encode($interviewlabelsMonth) !!},
-                    datasets: [{
-                        label: 'Total Interviews',
-                        data: {!! json_encode($interviewValuesMonth) !!},
-                        backgroundColor: ['#2196f3','#2196f3','#2196f3','#2196f3','#2196f3','#2196f3','#2196f3'],
-                        borderRadius: 5,
-                        borderSkipped: false,
-                        barThickness: 30
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: { legend: { display: false } },
-                    scales: { y: { beginAtZero: true, ticks: { precision: 0 } } }
-                },
-                plugins: [showDataLabels]
-            });
-
-            var inetview_recent_chart = document.getElementById(`inetview_recent_chart_${myChartId}`).getContext('2d');
-            var netview_recentGraphBar = new Chart(inetview_recent_chart, {
-                type: 'bar',
-                data: {
-                    labels: {!! json_encode($interviewlabels) !!},
-                    datasets: [{
-                        label: 'Total Interviews',
-                        data: {!! json_encode($interviewValues) !!},
-                        backgroundColor: ['#2196f3','#2196f3','#2196f3','#2196f3','#2196f3','#2196f3','#2196f3'],
-                        borderRadius: 5,
-                        borderSkipped: false,
-                        barThickness: 30
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: { legend: { display: false } },
-                    scales: { y: { beginAtZero: true, ticks: { precision: 0 } } }
-                },
-                plugins: [showDataLabels]
-            });
-
-            function filtersdatagetmonth(valSelected){
-                if(valSelected==1){
-                      $(`.inetview_recent_chart_month_${myChartId}`).removeClass('d-none');
-                      $(`.inetview_recent_chart_${myChartId}`).addClass('d-none');
-                }else{
-                      $(`.inetview_recent_chart_month_${myChartId}`).addClass('d-none');
-                      $(`.inetview_recent_chart_${myChartId}`).removeClass('d-none');
-                }
-            }
-    </script>
-    <!--end::Candidate Dashboard charts-->
-
-    <!--begin::Tab AJAX loaders-->
-    <script>
-        $(document).ready(function() {
-
-            fetchCandidates();
-            fetchCandidatesJoin();
-            fetchCandidatesInverViewTracker();
-            fetchstaffingpartnerJobs();
-
-            $('#search').on('keyup', function() {
-                const search = $(this).val();
-                fetchCandidates(1, search);
-            });
-
-            $(document).on('click', '#paginationcandidate .page-link', function(e) {
-                e.preventDefault();
-                const page = $(this).data('page');
-                if (!page || $(this).hasClass('disabled')) return;
-                $(this).addClass('disabled');
-                fetchCandidates(page, $('#search').val()).then(() => {
-                    $('#paginationcandidate .page-link').removeClass('disabled');
-                }).catch(() => {
-                    $('#paginationcandidate .page-link').removeClass('disabled');
-                });
-            });
-
-            $(document).on('click', '#paginationcandidatejoin .page-link', function(e) {
-                e.preventDefault();
-                const page = $(this).data('page');
-                if (!page || $(this).hasClass('disabled')) return;
-                $(this).addClass('disabled');
-                fetchCandidatesJoin(page, $('#search').val()).then(() => {
-                    $('#paginationcandidatejoin .page-link').removeClass('disabled');
-                }).catch(() => {
-                    $('#paginationcandidatejoin .page-link').removeClass('disabled');
-                });
-            });
-
-            $(document).on('click', '#paginationcandidateinterviewtracker .page-link', function(e) {
-                e.preventDefault();
-                const page = $(this).data('page');
-                if (!page || $(this).hasClass('disabled')) return;
-                $(this).addClass('disabled');
-                fetchCandidatesInverViewTracker(page, $('#search').val()).then(() => {
-                    $('#paginationcandidateinterviewtracker .page-link').removeClass('disabled');
-                }).catch(() => {
-                    $('#paginationcandidateinterviewtracker .page-link').removeClass('disabled');
-                });
-            });
-
-            $(document).on('click', '#paginationstaffingpartnerjob .page-link', function(e) {
-                e.preventDefault();
-                const page = $(this).data('page');
-                if (!page || $(this).hasClass('disabled')) return;
-                $(this).addClass('disabled');
-                fetchstaffingpartnerJobs(page, $('#search').val()).then(() => {
-                    $('#paginationstaffingpartnerjob .page-link').removeClass('disabled');
-                }).catch(() => {
-                    $('#paginationstaffingpartnerjob .page-link').removeClass('disabled');
-                });
-            });
-
-        });
-
-        function fetchCandidates(page = 1, search = '') {
+        function fetchCandidates(page = 1, search = '', signal, seq) {
             $('.loadingMessagecandidatetList').css({ display: 'block' });
             var clientid = '{{ $directClientDetail->company_id }}';
             return $.ajax({
                 url: `{{ url('service_company/staffing-client-candidate-list') }}?page=${page}`,
                 type: 'GET',
                 data: { search: search, clientid: clientid },
+                signal: signal,
                 success: function(response) {
+                    if (seq && seq !== AgencyDetailTabManager.requestSequence['candidates']) return;
                     $('.loadingMessagecandidatetList').css({ display: 'none' });
                     $('#candidatetList').html(response.html);
                     $('#paginationcandidate').html(response.pagination);
                     if (response.total !== undefined) $('#tabCountCandidates').text(response.total);
+                    AgencyDetailTabManager.initializedTabs['candidates'] = true;
+                },
+                error: function(xhr, status) {
+                    if (status !== 'abort') {
+                        $('.loadingMessagecandidatetList').css({ display: 'none' });
+                    }
                 }
             });
         }
 
-        function fetchCandidatesJoin(page = 1, search = '') {
+        function fetchCandidatesJoin(page = 1, search = '', signal, seq) {
             $('.loadingMessagecandidatetListJoin').css({ display: 'block' });
             var clientid = '{{ $directClientDetail->company_id }}';
             return $.ajax({
                 url: `{{ url('service_company/staffing-client-candidate-join-list') }}?page=${page}`,
                 type: 'GET',
                 data: { search: search, clientid: clientid },
+                signal: signal,
                 success: function(response) {
+                    if (seq && seq !== AgencyDetailTabManager.requestSequence['joinings']) return;
                     $('.loadingMessagecandidatetListJoin').css({ display: 'none' });
                     $('#candidatetListJoin').html(response.html);
                     $('#paginationcandidatejoin').html(response.pagination);
                     if (response.total !== undefined) $('#tabCountJoinings').text(response.total);
+                    AgencyDetailTabManager.initializedTabs['joinings'] = true;
+                },
+                error: function(xhr, status) {
+                    if (status !== 'abort') {
+                        $('.loadingMessagecandidatetListJoin').css({ display: 'none' });
+                    }
                 }
             });
         }
 
-        function fetchCandidatesInverViewTracker(page = 1, search = '') {
+        function fetchCandidatesInverViewTracker(page = 1, search = '', signal, seq) {
             $('.loadingMessagecandidatetListinterviewtracker').css({ display: 'block' });
             var clientid = '{{ $directClientDetail->company_id }}';
             return $.ajax({
                 url: `{{ url('service_company/staffing-client-candidate-interview-tracker') }}?page=${page}`,
                 type: 'GET',
                 data: { search: search, clientid: clientid },
+                signal: signal,
                 success: function(response) {
+                    if (seq && seq !== AgencyDetailTabManager.requestSequence['interviews']) return;
                     $('.loadingMessagecandidatetListinterviewtracker').css({ display: 'none' });
                     $('#candidatetListinterviewtracker').html(response.html);
                     $('#paginationcandidateinterviewtracker').html(response.pagination);
                     if (response.total !== undefined) $('#tabCountInterviews').text(response.total);
+                    AgencyDetailTabManager.initializedTabs['interviews'] = true;
+                },
+                error: function(xhr, status) {
+                    if (status !== 'abort') {
+                        $('.loadingMessagecandidatetListinterviewtracker').css({ display: 'none' });
+                    }
                 }
             });
         }
 
-        function fetchstaffingpartnerJobs(page = 1, search = '') {
+        function fetchstaffingpartnerJobs(page = 1, search = '', signal, seq) {
             $('.loadingMessagestaffingpartnerjob').css({ display: 'block' });
             var clientid = '{{ $directClientDetail->company_id }}';
             return $.ajax({
                 url: `{{ route('service_company.consultancy.allreq_ajax') }}?page=${page}`,
                 type: 'GET',
                 data: {
-                    search: $('#inputSearch').val(),
-                    client_id: $('#hid_client_id').val(),
+                    search: search,
+                    client_id: clientid,
                     id: clientid
                 },
+                signal: signal,
                 success: function(response) {
+                    if (seq && seq !== AgencyDetailTabManager.requestSequence['jobs']) return;
                     $('.loadingMessagestaffingpartnerjob').css({ display: 'none' });
                     $('#staffingpartnerjob').html(response.html);
                     $('#paginationstaffingpartnerjob').html(response.pagination);
                     if (response.total !== undefined) $('#tabCountJobs').text(response.total);
+                    AgencyDetailTabManager.initializedTabs['jobs'] = true;
+                },
+                error: function(xhr, status) {
+                    if (status !== 'abort') {
+                        $('.loadingMessagestaffingpartnerjob').css({ display: 'none' });
+                    }
                 }
             });
         }
+
+        function initOrUpdateChart(canvasId, type, dataObj, optionsObj) {
+            var canvas = document.getElementById(canvasId);
+            if (!canvas) return;
+            if (dashboardCharts[canvasId]) {
+                dashboardCharts[canvasId].data = dataObj;
+                dashboardCharts[canvasId].update();
+            } else {
+                dashboardCharts[canvasId] = new Chart(canvas.getContext('2d'), {
+                    type: type,
+                    data: dataObj,
+                    options: optionsObj || {}
+                });
+            }
+        }
+
+        function fetchDashboardData(signal, seq) {
+            var clientid = myChartId;
+            return $.ajax({
+                url: `{{ url('service_company_ajax/dashboard') }}/${clientid}`,
+                type: 'GET',
+                signal: signal,
+                success: function(res) {
+                    if (seq && seq !== AgencyDetailTabManager.requestSequence['reports']) return;
+                    if (res.status === 'success' && res.data) {
+                        var d = res.data;
+
+                        $('#tab-reports .dash-num:eq(0)').text(d.alljobs_count);
+                        $('#tab-reports .leg-val:eq(0)').text(d.active_count);
+                        $('#tab-reports .leg-val:eq(1)').text(d.hold_count);
+                        $('#tab-reports .leg-val:eq(2)').text(d.inactive_count);
+
+                        $('#tab-reports .dash-num:eq(1)').text(d.candidateValuesTotal);
+                        $('#tab-reports .dash-num:eq(2)').text(d.total_candidates);
+                        $('#tab-reports .dash-num:eq(3)').text(d.candidateValuesTotaloffer);
+                        $('#tab-reports .dash-num:eq(4)').text(d.candidateValuesTotaljoin);
+
+                        initOrUpdateChart('myChart_' + clientid, 'bar', {
+                            labels: ['In Review','Sourcing', 'Screening', 'Evaluation', 'Negotiation', 'Offer','Joined','Rejected'],
+                            datasets: [{
+                                label: 'Users',
+                                data: [d.inreview_count, d.sourcing_count, d.screening_count, d.evaluation_count, d.negotiation_count, d.offer_count, d.joined_count, d.Rejected_count],
+                                backgroundColor: ['#bdbd26','#000000','#c000ff','#2896ff','#ff4098','#ffab00','#06c732','#ff0202'],
+                                borderRadius: 10,
+                                barThickness: 30
+                            }]
+                        }, { indexAxis: 'y', plugins: { legend: { display: false } } });
+
+                        initOrUpdateChart('allJobGrapg_' + clientid, 'doughnut', {
+                            labels: ['Active Jobs', 'Hold Jobs', 'Closed Jobs'],
+                            datasets: [{
+                                label: 'Total',
+                                data: [d.active_count, d.hold_count, d.inactive_count],
+                                backgroundColor: ['#22c55e','#ffab00','#ff0202'],
+                                hoverOffset: 4
+                            }]
+                        }, { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, cutout: '70%' });
+
+                        initOrUpdateChart('candidates_left_chart_' + clientid, 'bar', {
+                            labels: d.labels,
+                            datasets: [{
+                                label: 'Total Candidates',
+                                data: d.candidateValues,
+                                backgroundColor: ['#2196f3','#2196f3','#2196f3','#2196f3','#2196f3','#2196f3','#2196f3'],
+                                borderRadius: 5, barThickness: 30
+                            }]
+                        }, { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } });
+
+                        initOrUpdateChart('candidates_offer_chart_' + clientid, 'bar', {
+                            labels: d.labelsCommoffer,
+                            datasets: [{
+                                label: 'Total Candidates',
+                                data: d.candidateValuesCommoffer,
+                                backgroundColor: ['#ffab00','#ffab00','#ffab00','#ffab00','#ffab00','#ffab00'],
+                                borderRadius: 5, barThickness: 30
+                            }]
+                        }, { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } });
+
+                        initOrUpdateChart('candidates_join_chart_' + clientid, 'bar', {
+                            labels: d.labelsCommjoin,
+                            datasets: [{
+                                label: 'Total Candidates',
+                                data: d.candidateValuesCommjoin,
+                                backgroundColor: ['#06c732','#06c732','#06c732','#06c732','#06c732','#06c732'],
+                                borderRadius: 5, barThickness: 30
+                            }]
+                        }, { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } });
+
+                        initOrUpdateChart('inetview_recent_chart_month_' + clientid, 'bar', {
+                            labels: d.interviewlabelsMonth,
+                            datasets: [{
+                                label: 'Total Interviews',
+                                data: d.interviewValuesMonth,
+                                backgroundColor: ['#2196f3','#2196f3','#2196f3','#2196f3','#2196f3','#2196f3','#2196f3'],
+                                borderRadius: 5, barThickness: 30
+                            }]
+                        }, { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } });
+
+                        initOrUpdateChart('inetview_recent_chart_' + clientid, 'bar', {
+                            labels: d.interviewlabels,
+                            datasets: [{
+                                label: 'Total Interviews',
+                                data: d.interviewValues,
+                                backgroundColor: ['#2196f3','#2196f3','#2196f3','#2196f3','#2196f3','#2196f3','#2196f3'],
+                                borderRadius: 5, barThickness: 30
+                            }]
+                        }, { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } });
+
+                        AgencyDetailTabManager.initializedTabs['reports'] = true;
+                    }
+                }
+            });
+        }
+
+        var AgencyDetailTabManager = {
+            currentAgencyId: '{{ $directClientDetail->company_id }}',
+            activeTab: 'overview',
+            initializedTabs: {
+                overview: true,
+                contacts: true,
+                jobs: false,
+                candidates: false,
+                interviews: false,
+                joinings: false,
+                reports: false
+            },
+            activeControllers: {},
+            requestSequence: {},
+
+            resetState: function() {
+                this.initializedTabs = {
+                    overview: true,
+                    contacts: true,
+                    jobs: false,
+                    candidates: false,
+                    interviews: false,
+                    joinings: false,
+                    reports: false
+                };
+                this.activeControllers = {};
+                this.requestSequence = {};
+            },
+
+            switchTab: function(tabElement, tabName) {
+                var $scope = tabElement ? $(tabElement).closest('.tabs-bar, .drawer-content, .card, body') : $(document);
+                $scope.find('.tab').removeClass('active');
+                if (tabElement) $(tabElement).addClass('active');
+
+                var $contentScope = tabElement ? $(tabElement).closest('.drawer-content, .card, body') : $(document);
+                $contentScope.find('.tab-content').removeClass('active');
+                var targetContainer = document.getElementById("tab-" + tabName);
+                if (targetContainer) targetContainer.classList.add("active");
+
+                this.activeTab = tabName;
+
+                if (!this.initializedTabs[tabName]) {
+                    this.loadTabData(tabName, 1, $('#search').val());
+                }
+
+                showToast(
+                    tabName.charAt(0).toUpperCase() + tabName.slice(1),
+                    "Switched to " + tabName + " tab"
+                );
+            },
+
+            loadTabData: function(tabName, page, search) {
+                page = page || 1;
+                search = (search !== undefined) ? search : $('#search').val();
+
+                if (this.activeControllers[tabName]) {
+                    try { this.activeControllers[tabName].abort(); } catch(e) {}
+                }
+
+                var controller = new AbortController();
+                this.activeControllers[tabName] = controller;
+
+                var seq = (this.requestSequence[tabName] || 0) + 1;
+                this.requestSequence[tabName] = seq;
+
+                if (tabName === 'jobs') {
+                    fetchstaffingpartnerJobs(page, search, controller.signal, seq);
+                } else if (tabName === 'candidates') {
+                    fetchCandidates(page, search, controller.signal, seq);
+                } else if (tabName === 'interviews') {
+                    fetchCandidatesInverViewTracker(page, search, controller.signal, seq);
+                } else if (tabName === 'joinings') {
+                    fetchCandidatesJoin(page, search, controller.signal, seq);
+                } else if (tabName === 'reports') {
+                    fetchDashboardData(controller.signal, seq);
+                }
+            }
+        };
+
+        function switchTab(tab, tabName) {
+            AgencyDetailTabManager.switchTab(tab, tabName);
+        }
+
+        function openAgencyModal() {
+            var modal = document.getElementById("agencyModal");
+            if (modal) modal.classList.add("show");
+            document.body.style.overflow = "hidden";
+        }
+
+        function closeAgencyModal() {
+            var modal = document.getElementById("agencyModal");
+            if (modal) modal.classList.remove("show");
+            document.body.style.overflow = "";
+        }
+
+        function toggleTags() {
+            const t1 = document.getElementById("tag1"),
+                t2 = document.getElementById("tag2"),
+                btn = document.getElementById("tagBtn");
+            if (t1 && t2 && btn) {
+                if (t1.classList.contains("hidden")) {
+                    t1.classList.remove("hidden");
+                    t2.classList.remove("hidden");
+                    btn.textContent = "- 2 less";
+                } else {
+                    t1.classList.add("hidden");
+                    t2.classList.add("hidden");
+                    btn.textContent = "+ 2 more";
+                }
+            }
+        }
+
+        function toggleReadMore() {
+            const text = document.getElementById("aboutText"),
+                btn = document.getElementById("readMoreBtn");
+            if (text && btn) {
+                text.style.maxHeight = text.style.maxHeight === "none" ? "200px" : "none";
+                btn.classList.toggle("expanded");
+                btn.innerHTML = btn.classList.contains("expanded")
+                    ? 'Read Less <i class="fas fa-chevron-down"></i>'
+                    : 'Read More <i class="fas fa-chevron-down"></i>';
+            }
+        }
+
+        function openPopup(type, value, name) {
+            const bd = document.getElementById("popupBackdrop"),
+                icon = document.getElementById("popupIcon"),
+                title = document.getElementById("popupTitle"),
+                desc = document.getElementById("popupDesc"),
+                val = document.getElementById("popupValue"),
+                link = document.getElementById("popupLink");
+            if (!bd || !icon || !title || !desc || !val || !link) return;
+            if (type === "email") {
+                icon.className = "fas fa-envelope";
+                title.textContent = "Send Email to " + name;
+                desc.textContent = "Click below to open your email client";
+                link.href = "mailto:" + value;
+                link.innerHTML = '<i class="fas fa-external-link-alt"></i>Open Email';
+            } else {
+                icon.className = "fas fa-phone";
+                title.textContent = "Call " + name;
+                desc.textContent = "Click below to initiate the call";
+                link.href = "tel:" + value.replace(/\s/g, "");
+                link.innerHTML = '<i class="fas fa-phone"></i>Call Now';
+            }
+            val.textContent = value;
+            bd.classList.add("show");
+            document.body.style.overflow = "hidden";
+        }
+
+        function closePopup() {
+            var bd = document.getElementById("popupBackdrop");
+            if (bd) bd.classList.remove("show");
+            document.body.style.overflow = "";
+        }
+
+        var popupBackdrop = document.getElementById("popupBackdrop");
+        if (popupBackdrop) {
+            popupBackdrop.addEventListener("click", (e) => {
+                if (e.target === e.currentTarget) closePopup();
+            });
+        }
+
+        document.addEventListener("keydown", (e) => {
+            if (e.key === "Escape") {
+                closePopup();
+                closeAgencyModal();
+            }
+        });
+
+        async function copyToClipboard(btn, text) {
+            try {
+                await navigator.clipboard.writeText(text);
+            } catch (e) {
+                const ta = document.createElement("textarea");
+                ta.value = text;
+                document.body.appendChild(ta);
+                ta.select();
+                document.execCommand("copy");
+                document.body.removeChild(ta);
+            }
+            if (btn) {
+                btn.classList.add("copied");
+                btn.innerHTML = '<i class="fas fa-check"></i>';
+                showToast("Copied!", text + " copied to clipboard");
+                setTimeout(() => {
+                    btn.classList.remove("copied");
+                    btn.innerHTML = '<i class="fas fa-copy"></i>';
+                }, 2000);
+            }
+        }
+
+        function showToast(title, message) {
+            const stack = document.getElementById("toastStack");
+            if (!stack) return;
+            const toast = document.createElement("div");
+            toast.className = "toast-item";
+            toast.innerHTML =
+                '<div class="toast-icon-wrap"><i class="fas fa-check"></i></div><div class="toast-body"><strong>' +
+                title +
+                "</strong><span>" +
+                message +
+                '</span></div><button class="toast-close-btn" onclick="this.parentElement.remove()"><i class="fas fa-times"></i></button>';
+            stack.appendChild(toast);
+            setTimeout(() => {
+                toast.style.opacity = "0";
+                toast.style.transform = "translateX(40px)";
+                setTimeout(() => toast.remove(), 300);
+            }, 4000);
+        }
+
+        function filtersdatagetmonth(valSelected) {
+            if (valSelected == 1) {
+                $(`.inetview_recent_chart_month_${myChartId}`).removeClass('d-none');
+                $(`.inetview_recent_chart_${myChartId}`).addClass('d-none');
+            } else {
+                $(`.inetview_recent_chart_month_${myChartId}`).addClass('d-none');
+                $(`.inetview_recent_chart_${myChartId}`).removeClass('d-none');
+            }
+        }
+
+        var searchDebounceTimer = null;
+
+        $(document).ready(function() {
+            AgencyDetailTabManager.resetState();
+
+            $('#search').on('keyup', function() {
+                clearTimeout(searchDebounceTimer);
+                var searchVal = $(this).val();
+                searchDebounceTimer = setTimeout(function() {
+                    var activeTab = AgencyDetailTabManager.activeTab;
+                    if (activeTab === 'jobs' || activeTab === 'candidates' || activeTab === 'interviews' || activeTab === 'joinings') {
+                        AgencyDetailTabManager.loadTabData(activeTab, 1, searchVal);
+                    } else {
+                        AgencyDetailTabManager.switchTab(null, 'candidates');
+                    }
+                }, 300);
+            });
+
+            $(document).on('click', '#paginationcandidate .page-link', function(e) {
+                e.preventDefault();
+                const page = $(this).data('page');
+                if (!page || $(this).hasClass('disabled')) return;
+                AgencyDetailTabManager.loadTabData('candidates', page, $('#search').val());
+            });
+
+            $(document).on('click', '#paginationcandidatejoin .page-link', function(e) {
+                e.preventDefault();
+                const page = $(this).data('page');
+                if (!page || $(this).hasClass('disabled')) return;
+                AgencyDetailTabManager.loadTabData('joinings', page, $('#search').val());
+            });
+
+            $(document).on('click', '#paginationcandidateinterviewtracker .page-link', function(e) {
+                e.preventDefault();
+                const page = $(this).data('page');
+                if (!page || $(this).hasClass('disabled')) return;
+                AgencyDetailTabManager.loadTabData('interviews', page, $('#search').val());
+            });
+
+            $(document).on('click', '#paginationstaffingpartnerjob .page-link', function(e) {
+                e.preventDefault();
+                const page = $(this).data('page');
+                if (!page || $(this).hasClass('disabled')) return;
+                AgencyDetailTabManager.loadTabData('jobs', page, $('#search').val());
+            });
+        });
     </script>
     <!--end::Tab AJAX loaders-->

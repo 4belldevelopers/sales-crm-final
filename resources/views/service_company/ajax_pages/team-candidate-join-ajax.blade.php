@@ -75,27 +75,24 @@
             </td>
             <td>
                 @php
-                    $jobtitle = $row->title;
-                    $jobtitle = mb_substr($jobtitle, 0, 15);
-                    $client_name = $row->client_name;
-                    $client_name = mb_substr($client_name, 0, 15);
+                    $rawTitle = $row->title ?? $row->job_title ?? '';
+                    $jobtitle = mb_substr($rawTitle, 0, 15);
+                    $rawClientName = $row->client_name ?? '';
+                    $client_name = mb_substr($rawClientName, 0, 15);
 
-                    $recommendation_id = $row->recommendation_id;
+                    $recommendation_id = $row->recommendation_id ?? $row->to_company_id ?? 0;
                     if ($recommendation_id > 0 && @$row->to_company_id == auth()->user()->company_id) {
                         $client_name = ucwords(mb_substr(@$row->company_name, 0, 30));
                     }
 
-                    // title="'.$row->client_name.'">'.$client_name.'</a>
-                    // title="'.$row->job_company_name.'">'.$row->job_company_name.'</a>
-
                     echo '<div class="d-flex flex-column">
                     <a href="javascript:void(0);" class="text-dark fw-bolder text-hover-primary fs-6" data-toggle="tooltip" title="' .
-                        $row->title .
+                        $rawTitle .
                         '">' .
                         $jobtitle .
                         '</a> 
                     <a href="javascript:void(0);" class="text-muted fw-bold d-block fs-7 text-hover-primary" data-toggle="tooltip" title="' .
-                        $row->client_name .
+                        $rawClientName .
                         '">' .
                         $client_name .
                         '</a>
