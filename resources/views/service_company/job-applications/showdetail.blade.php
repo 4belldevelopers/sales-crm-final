@@ -4464,6 +4464,7 @@ setTimeout(() => {
 
 var rsPdfReady=null;
 var rsPdfLibReady=null;
+var rsPdfJsReady=null;
 var rsJsZipReady=null;
 var rsDocxReady=null;
 var rsHtml2CanvasReady=null;
@@ -4473,6 +4474,7 @@ var rsOpenDocExternalReady=null;
 var rsLogoCache={};
 var rsDocxMaxBytes=10*1024*1024;
 var rsPdfMaxBytes=30*1024*1024;
+var rsAtsHighlightKeywords=@json($rcvJobSkills ?? []);
 var rsStarGold='<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path fill="#f59e0b" d="M12 2.6l2.85 5.78 6.38.93-4.62 4.5 1.09 6.35L12 17.16l-5.7 3 1.09-6.35-4.62-4.5 6.38-.93L12 2.6z"/></svg>';
 var rsStarMuted='<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path fill="#cbd5e1" d="M12 2.6l2.85 5.78 6.38.93-4.62 4.5 1.09 6.35L12 17.16l-5.7 3 1.09-6.35-4.62-4.5 6.38-.93L12 2.6z"/></svg>';
 var rsIconUser='<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path fill="#64748b" d="M12 12a5 5 0 1 0-5-5 5 5 0 0 0 5 5zm0 2c-4.42 0-8 2.24-8 5v1h16v-1c0-2.76-3.58-5-8-5z"/></svg>';
@@ -4566,6 +4568,17 @@ function rsEnsureJsPdf(){
   var sources=['/js/jspdf.umd.min.js','https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js'];
   rsJsPdfReady=rsTryList(sources,0,function(){ return !!(window.jspdf && typeof window.jspdf.jsPDF==='function'); });
   return rsJsPdfReady;
+}
+function rsEnsurePdfJs(){
+  if(rsPdfJsReady && window.pdfjsLib && typeof window.pdfjsLib.getDocument==='function') return rsPdfJsReady;
+  var sources=['https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.11.338/pdf.min.js'];
+  rsPdfJsReady=rsTryList(sources,0,function(){ return !!(window.pdfjsLib && typeof window.pdfjsLib.getDocument==='function'); }).then(function(){
+    try{
+      var ver=window.pdfjsLib.version || '2.11.338';
+      window.pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/'+ver+'/pdf.worker.min.js';
+    }catch(err){}
+  });
+  return rsPdfJsReady;
 }
 function rsEnsureDocxConversion(){
   return Promise.all([rsEnsureDocxPreview(),rsEnsureHtml2Canvas(),rsEnsureJsPdf()]);
@@ -5097,6 +5110,128 @@ async function convertDocxResumeToPdfBlobFromSources(resumeUrls){
     }
   }
   throw new Error('DOCX browser fallback failed across all resume sources. '+(lastErr && lastErr.message ? lastErr.message : ''));
+}
+function rsKeywordRegex(list){
+  var seen={};
+  var cleaned=(Array.isArray(list) ? list : []).map(function(item){
+    if(typeof item === 'string') return item.trim();
+    return clean(item && (item.skill_name || item.skill_key || item.name || item.skill),'').trim();
+  }).filter(function(value){
+    var key=value.toLowerCase();
+    if(value.length<2 || seen[key]) return false;
+    seen[key]=true;
+    return true;
+  });
+  if(!cleaned.length) return null;
+  cleaned.sort(function(a,b){ return b.length-a.length; });
+  return new RegExp(cleaned.map(function(value){
+    return value.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
+  }).join('|'),'gi');
+}
+function rsSpanHasKeyword(text,re){
+  if(!re || !text) return false;
+  re.lastIndex=0;
+  return re.test(text);
+}
+async function renderHighlightedPdfBlob(pdfBlob,keywords){
+  await Promise.all([rsEnsurePdfJs(),rsEnsurePdfLib()]);
+  var sourceBytes=await pdfBlob.arrayBuffer();
+  var bytes=new Uint8Array(sourceBytes.slice(0));
+  var sig=String.fromCharCode.apply(null,bytes.subarray(0,5));
+  if(sig.indexOf('%PDF')===-1) throw new Error('Resume source is not a valid PDF after browser conversion');
+  var doc=await window.pdfjsLib.getDocument({data:bytes}).promise;
+  var PDFLib=window.PDFLib;
+  var sourceDoc=await PDFLib.PDFDocument.load(sourceBytes);
+  var outDoc=await PDFLib.PDFDocument.create();
+  var copiedPages=await outDoc.copyPages(sourceDoc,sourceDoc.getPageIndices());
+  var keywordRe=rsKeywordRegex(keywords);
+  var host=document.createElement('div');
+  host.setAttribute('aria-hidden','true');
+  host.style.cssText='position:fixed;left:-14000px;top:0;width:900px;background:#fff;pointer-events:none;opacity:0;';
+  document.body.appendChild(host);
+  try{
+    for(var p=1;p<=doc.numPages;p++){
+      var pdfJsPage=await doc.getPage(p);
+      var outputPage=copiedPages[p-1];
+      outDoc.addPage(outputPage);
+      var pageW=outputPage.getWidth();
+      var pageH=outputPage.getHeight();
+      var base=pdfJsPage.getViewport({scale:1});
+      var cssScale=Math.min(1.35,820/base.width);
+      var cssViewport=pdfJsPage.getViewport({scale:cssScale});
+      var pageWrap=document.createElement('div');
+      pageWrap.style.cssText='position:relative;width:'+Math.floor(cssViewport.width)+'px;height:'+Math.floor(cssViewport.height)+'px;background:#fff;';
+      var textLayer=document.createElement('div');
+      textLayer.style.cssText='position:absolute;left:0;top:0;width:'+Math.floor(cssViewport.width)+'px;height:'+Math.floor(cssViewport.height)+'px;';
+      pageWrap.appendChild(textLayer);
+      host.appendChild(pageWrap);
+      var tc=await pdfJsPage.getTextContent();
+      try{
+        var task=window.pdfjsLib.renderTextLayer({textContent:tc,container:textLayer,viewport:cssViewport,textDivs:[]});
+        if(task && task.promise) await task.promise;
+      }catch(err){}
+      var pr=pageWrap.getBoundingClientRect();
+      if(keywordRe){
+        Array.prototype.slice.call(textLayer.querySelectorAll('span')).forEach(function(sp){
+          if(!rsSpanHasKeyword(sp.textContent,keywordRe)) return;
+          var r=sp.getBoundingClientRect();
+          if(!r.width || !r.height || !pr.width || !pr.height) return;
+          var x=((r.left-pr.left)/pr.width)*pageW;
+          var h=Math.max((r.height/pr.height)*pageH,4);
+          var y=pageH-(((r.top-pr.top)/pr.height)*pageH)-h;
+          var w=(r.width/pr.width)*pageW;
+          outputPage.drawRectangle({
+            x:Math.max(0,x),
+            y:Math.max(0,y),
+            width:Math.min(w,pageW-Math.max(0,x)),
+            height:Math.min(h,pageH-Math.max(0,y)),
+            color:PDFLib.rgb(1,0.84,0.04),
+            opacity:0.42
+          });
+        });
+      }
+      host.removeChild(pageWrap);
+    }
+    var highlightedBytes=await outDoc.save();
+    return new Blob([highlightedBytes],{type:'application/pdf'});
+  }finally{
+    host.remove();
+  }
+}
+async function buildSmartHighlightedResume(options){
+  if(window.__rsBusy) return Promise.resolve(false);
+  window.__rsBusy=true;
+  try{
+    options=options||{};
+    var resumeSources=(Array.isArray(options.resumeUrl) ? options.resumeUrl : [options.resumeUrl||'']).map(function(url){
+      return clean(url,'');
+    }).filter(function(url,index,self){
+      return url && url!=='--' && self.indexOf(url)===index;
+    });
+    var resumeExt=clean(options.resumeExt||'','').toUpperCase();
+    if(['PDF','DOCX'].indexOf(resumeExt)===-1) throw new Error('Client-side highlighted resume is available for PDF and DOCX resumes only');
+    var resumeBlob=null;
+    if(resumeExt==='PDF'){
+      resumeBlob=await fetchPdfBlobFromSources(resumeSources);
+    }else{
+      try{
+        resumeBlob=await convertResumeWithOpenDocLabBlob(resumeSources,resumeExt,false);
+      }catch(openDocErr){
+        console.warn('OpenDoc highlighted conversion failed; trying legacy DOCX renderer:',openDocErr);
+        resumeBlob=await convertDocxResumeToPdfBlobFromSources(resumeSources);
+      }
+    }
+    var data=readData();
+    var highlightedBlob=await renderHighlightedPdfBlob(resumeBlob,rsAtsHighlightKeywords);
+    downloadBlob(highlightedBlob,'JEROWORKS_'+fileSafeName(data.name,'Candidate')+'_Highlighted.pdf');
+    return true;
+  }catch(err){
+    console.error('Smart Highlighted Resume error:',err);
+    alert('Could not generate the highlighted resume.\n\nReason: '+(err && err.message ? err.message : 'Unknown highlight error')+'\n\nThis option runs in the browser and supports PDF/DOCX resumes only.');
+    return false;
+  }finally{
+    window.__rsBusy=false;
+  }
 }
 async function fetchPdfResumeBlob(resumePdfUrl){
   resumePdfUrl=clean(resumePdfUrl,'');
@@ -5995,6 +6130,7 @@ window.__buildWordPreScreenedResume=buildWordPreScreenedResume;
 window.__buildHybridWordPreScreenedResume=buildHybridWordPreScreenedResume;
 window.__buildSmartPreScreenedResume=buildSmartPreScreenedResume;
 window.__buildSmartBrandedResume=buildSmartBrandedResume;
+window.__buildSmartHighlightedResume=buildSmartHighlightedResume;
 window.__convertResumeToPdfOnly=convertResumeToPdfOnly;
 window.__convertResumeToPdfBrowserOnly=convertResumeToPdfBrowserOnly;
 window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
@@ -6062,6 +6198,24 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
         <span class="rdc-ometa">
           <span class="rdc-ocost">4 Coins</span>
           <span class="rdc-otime">~10 sec</span>
+        </span>
+        <span class="rdc-ocirc" aria-hidden="true"></span>
+      </label>
+
+      {{-- 7: R2/browser highlighted keywords package --}}
+      <label class="rdc-opt" data-opt="7" data-coins="4">
+        <input class="rdc-rinput" type="radio" name="rdcFormat" value="7">
+        <span class="rdc-onum">7</span>
+        <span class="rdc-oi rdc-ic-amber" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h16"/><path d="m7 16 8.5-8.5 3 3L10 19H7v-3z"/><path d="m14 9 3 3"/></svg>
+        </span>
+        <span class="rdc-obody">
+          <span class="rdc-otitle">Resume + Highlighted Keywords <span style="background:#fffbeb;color:#b45309;font-size:8.5px;font-weight:700;padding:1px 6px;border-radius:4px;vertical-align:middle;margin-left:4px;">Client</span></span>
+          <span class="rdc-odesc">Fetches from R2 and highlights job keywords in the browser without opening the Resume/CV tab</span>
+        </span>
+        <span class="rdc-ometa">
+          <span class="rdc-ocost">4 Coins</span>
+          <span class="rdc-otime">Smart</span>
         </span>
         <span class="rdc-ocirc" aria-hidden="true"></span>
       </label>
@@ -6213,6 +6367,7 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
     4: {cost:6, label:'Download Branded + Highlighted', avail:true,  dlKey:'both'},
     5: {cost:7, label:'Download Pre-Screened Report',   avail:true,  dlKey:'rs'},
     6: {cost:2, label:'Resume + Company Branding', avail:(['PDF','DOC','DOCX'].indexOf(resumeExt) !== -1), dlKey:'smart-branded-resume', unavailableMsg:'Branded resume is available for PDF, DOC and DOCX resumes only.'},
+    7: {cost:4, label:'Resume + Highlighted Keywords', avail:(['PDF','DOCX'].indexOf(resumeExt) !== -1), dlKey:'smart-highlighted-resume', unavailableMsg:'Client-side highlighted resume is available for PDF and DOCX resumes only.'},
     15:{cost:8, label:'Pre-Screened Report + Resume + Company Branding', avail:(['PDF','DOC','DOCX'].indexOf(resumeExt) !== -1), dlKey:'smart-prescreened-package', unavailableMsg:'Final package is available for PDF, DOC and DOCX resumes only.'},
     16:{cost:8, label:'Pre-Screened Report + Resume without Company Branding', avail:(['PDF','DOC','DOCX'].indexOf(resumeExt) !== -1), dlKey:'smart-prescreened-package-nobrand', unavailableMsg:'Final package is available for PDF, DOC and DOCX resumes only.'}
   };
@@ -6301,6 +6456,8 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
     if(coinEl) coinEl.textContent = m.cost === 1 ? '1 Coin' : m.cost + ' Coins';
     if(btnLbl) btnLbl.textContent = m.label;
     if(m.dlKey === 'rs' && typeof window.__preloadRS === 'function') window.__preloadRS();
+    if(m.dlKey === 'smart-highlighted-resume' && typeof window.__preloadRSCombined === 'function') window.__preloadRSCombined();
+    if(m.dlKey === 'smart-highlighted-resume' && resumeExt === 'DOCX' && typeof window.__preloadOpenDocLocal === 'function') window.__preloadOpenDocLocal();
     if(m.dlKey === 'smart-branded-resume' && typeof window.__preloadRSCombined === 'function') window.__preloadRSCombined();
     if(m.dlKey === 'smart-branded-resume' && resumeExt === 'DOCX' && typeof window.__preloadOpenDocLocal === 'function') window.__preloadOpenDocLocal();
     if(m.dlKey === 'rs-combined' && typeof window.__preloadRSCombined === 'function') window.__preloadRSCombined();
@@ -6577,6 +6734,34 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
         }).finally(function(){
           resetBtn();
         });
+
+      } else if(m.dlKey === 'smart-highlighted-resume'){
+        /* New highlighted resume: direct R2/browser flow, independent of the Resume/CV tab. */
+        if(window.__rsBusy || typeof window.__buildSmartHighlightedResume !== 'function'){
+          showToast('Please wait a moment and try again.', 'warn');
+          resetBtn(); return;
+        }
+        if(['PDF','DOCX'].indexOf(resumeExt) === -1){
+          showToast('Client-side highlighted resume is available for PDF and DOCX resumes only.', 'warn');
+          resetBtn(); return;
+        }
+        if(!r2DirectUrl && !r2PublicUrl && !dlUrl){
+          showToast('Resume URL is not available.', 'warn');
+          resetBtn(); return;
+        }
+        runSmartCountdown('Downloading Resume...', 60);
+        setTimeout(function(){
+          window.__buildSmartHighlightedResume({
+            resumeUrl:[r2DirectUrl,r2PublicUrl,dlUrl],
+            resumeExt:resumeExt
+          }).then(function(ok){
+            if(ok) closeRdc();
+          }).catch(function(){
+            showToast('Could not generate highlighted resume. Please try the original ATS option.', 'warn');
+          }).finally(function(){
+            resetBtn();
+          });
+        }, 250);
 
       } else if(m.dlKey === 'smart-branded-resume'){
         /* New branded resume: direct R2/browser flow with only the shared-by company header added above resume content. */
