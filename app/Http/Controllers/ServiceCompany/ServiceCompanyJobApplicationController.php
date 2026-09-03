@@ -1398,6 +1398,14 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
     {
         $resume = GeneralMethod::value_decrypt($token);
         if (empty($resume)) {
+            $safeToken = strtr((string) $token, '-_', '+/');
+            $safeToken .= str_repeat('=', (4 - strlen($safeToken) % 4) % 4);
+            $decodedToken = base64_decode($safeToken, true);
+            if (is_string($decodedToken) && $decodedToken !== '') {
+                $resume = GeneralMethod::value_decrypt($decodedToken);
+            }
+        }
+        if (empty($resume)) {
             abort(404);
         }
         $ext = strtolower(pathinfo(parse_url($resume, PHP_URL_PATH) ?: $resume, PATHINFO_EXTENSION));
