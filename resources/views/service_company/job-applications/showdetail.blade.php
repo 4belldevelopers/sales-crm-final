@@ -5125,8 +5125,20 @@ function rsKeywordRegex(list){
   if(!cleaned.length) return null;
   cleaned.sort(function(a,b){ return b.length-a.length; });
   return new RegExp(cleaned.map(function(value){
+    var tokens=value.split(/[\s\/_\-]+/).filter(Boolean);
+    if(tokens.length>1){
+      return tokens.map(function(token){ return token.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'); }).join('[\\s\\/_\\-.]*');
+    }
     return value.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
   }).join('|'),'gi');
+}
+function rsDrawerHighlightedKeywords(){
+  var values=[];
+  Array.prototype.slice.call(document.querySelectorAll('#kt_activitiesApplication .cdr-skill-tag.cdr-skill-match:not(.cdr-skill-more), .cdr-skill-tag.cdr-skill-match:not(.cdr-skill-more)')).forEach(function(el){
+    var text=(el.textContent || '').replace(/\+\d+\s*More/gi,'').replace(/\s+/g,' ').trim();
+    if(text) values.push(text);
+  });
+  return values.length ? values : rsAtsHighlightKeywords;
 }
 function rsMarkKeywordMatches(root,re){
   if(!root || !re) return;
@@ -5249,7 +5261,7 @@ async function buildSmartHighlightedResume(options){
       }
     }
     var data=readData();
-    var highlightedBlob=await renderHighlightedPdfBlob(resumeBlob,rsAtsHighlightKeywords);
+    var highlightedBlob=await renderHighlightedPdfBlob(resumeBlob,rsDrawerHighlightedKeywords());
     downloadBlob(highlightedBlob,'JEROWORKS_'+fileSafeName(data.name,'Candidate')+'_Highlighted.pdf');
     return true;
   }catch(err){
