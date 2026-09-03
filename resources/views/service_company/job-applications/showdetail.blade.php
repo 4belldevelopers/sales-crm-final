@@ -5237,9 +5237,29 @@ async function buildHeadlessOption3SkillsHighlightedResume(options){
     }).filter(function(url,index,self){
       return url && url!=='--' && self.indexOf(url)===index;
     });
-    if(clean(options.resumeExt||'','').toUpperCase() !== 'PDF') throw new Error('Resume + Skills Highlighted is available for PDF resumes only');
+    var resumeExt=clean(options.resumeExt||'','').toUpperCase();
+    var resumePdfUrl=clean(options.resumePdfUrl||'','');
+    if(['PDF','DOC','DOCX'].indexOf(resumeExt) === -1) throw new Error('Resume + Skills Highlighted is available for PDF, DOC and DOCX resumes only');
     await Promise.all([rsEnsurePdfJs(),rsEnsureJsPdf()]);
-    var pdfBlob=await fetchPdfBlobFromSources(resumeSources);
+    var pdfBlob=null;
+    if(resumeExt==='PDF'){
+      pdfBlob=await fetchPdfBlobFromSources(resumeSources);
+    }else if(resumeExt==='DOCX'){
+      try{
+        pdfBlob=await convertDocxResumeToHighlightedPdfBlobFromSources(resumeSources,rsDrawerHighlightedKeywords());
+      }catch(browserDocxErr){
+        console.warn('Option 8 DOCX browser highlight conversion failed; using enterprise converter PDF if available:',browserDocxErr);
+        try{
+          if(!resumePdfUrl) throw browserDocxErr;
+          pdfBlob=await fetchPdfResumeBlob(resumePdfUrl);
+        }catch(converterErr){
+          throw converterErr;
+        }
+      }
+    }else{
+      if(!resumePdfUrl) throw new Error('DOC resume needs enterprise converter PDF URL');
+      pdfBlob=await fetchPdfResumeBlob(resumePdfUrl);
+    }
     var sourceBytes=await pdfBlob.arrayBuffer();
     var bytes=new Uint8Array(sourceBytes);
     var sig=String.fromCharCode.apply(null,bytes.subarray(0,5));
@@ -5345,7 +5365,7 @@ async function buildHeadlessOption3SkillsHighlightedResume(options){
     }
   }catch(err){
     console.error('Headless option 3 highlighted resume error:',err);
-    alert('Could not generate Resume + Skills Highlighted.\n\nReason: '+(err && err.message ? err.message : 'Unknown highlight error')+'\n\nThis option uses signed R2 direct PDF fetch and browser-only option 3 style highlighting.');
+    alert('Could not generate Resume + Skills Highlighted.\n\nReason: '+(err && err.message ? err.message : 'Unknown highlight error')+'\n\nPDF uses signed R2 direct fetch. DOCX uses browser conversion first. DOC uses enterprise converter fallback.');
     return false;
   }finally{
     window.__rsBusy=false;
@@ -6526,7 +6546,7 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
         <span class="rdc-ocirc" aria-hidden="true"></span>
       </label>
 
-      {{-- 8: Headless option 3 style highlighted skills from signed R2 PDF --}}
+      {{-- 8: Headless option 3 style highlighted skills from direct/converted PDF --}}
       <label class="rdc-opt" data-opt="8" data-coins="4">
         <input class="rdc-rinput" type="radio" name="rdcFormat" value="8">
         <span class="rdc-onum">8</span>
@@ -6534,8 +6554,8 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/><path d="M7 15h7"/></svg>
         </span>
         <span class="rdc-obody">
-          <span class="rdc-otitle">Resume + Skills Highlighted <span style="background:#ecfeff;color:#0e7490;font-size:8.5px;font-weight:700;padding:1px 6px;border-radius:4px;vertical-align:middle;margin-left:4px;">PDF Fast</span></span>
-          <span class="rdc-odesc">Uses signed R2 direct PDF fetch and option 3 style browser highlighting without opening the Resume/CV tab</span>
+          <span class="rdc-otitle">Resume + Skills Highlighted <span style="background:#ecfeff;color:#0e7490;font-size:8.5px;font-weight:700;padding:1px 6px;border-radius:4px;vertical-align:middle;margin-left:4px;">Smart</span></span>
+          <span class="rdc-odesc">PDF uses signed R2 direct fetch; DOCX converts in browser first, then highlights and downloads</span>
         </span>
         <span class="rdc-ometa">
           <span class="rdc-ocost">4 Coins</span>
@@ -6692,7 +6712,7 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
     5: {cost:7, label:'Download Pre-Screened Report',   avail:true,  dlKey:'rs'},
     6: {cost:2, label:'Resume + Company Branding', avail:(['PDF','DOC','DOCX'].indexOf(resumeExt) !== -1), dlKey:'smart-branded-resume', unavailableMsg:'Branded resume is available for PDF, DOC and DOCX resumes only.'},
     7: {cost:4, label:'Resume + Highlighted Keywords', avail:(['PDF','DOCX'].indexOf(resumeExt) !== -1), dlKey:'smart-highlighted-resume', unavailableMsg:'Client-side highlighted resume is available for PDF and DOCX resumes only.'},
-    8: {cost:4, label:'Resume + Skills Highlighted', avail:(resumeExt === 'PDF'), dlKey:'headless-option3-skills-highlighted', unavailableMsg:'Resume + Skills Highlighted is available for PDF resumes only.'},
+    8: {cost:4, label:'Resume + Skills Highlighted', avail:(['PDF','DOC','DOCX'].indexOf(resumeExt) !== -1), dlKey:'headless-option3-skills-highlighted', unavailableMsg:'Resume + Skills Highlighted is available for PDF, DOC and DOCX resumes only.'},
     15:{cost:8, label:'Pre-Screened Report + Resume + Company Branding', avail:(['PDF','DOC','DOCX'].indexOf(resumeExt) !== -1), dlKey:'smart-prescreened-package', unavailableMsg:'Final package is available for PDF, DOC and DOCX resumes only.'},
     16:{cost:8, label:'Pre-Screened Report + Resume without Company Branding', avail:(['PDF','DOC','DOCX'].indexOf(resumeExt) !== -1), dlKey:'smart-prescreened-package-nobrand', unavailableMsg:'Final package is available for PDF, DOC and DOCX resumes only.'}
   };
@@ -6784,6 +6804,7 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
     if(m.dlKey === 'smart-highlighted-resume' && typeof window.__preloadRSCombined === 'function') window.__preloadRSCombined();
     if(m.dlKey === 'smart-highlighted-resume' && resumeExt === 'DOCX' && typeof window.__preloadOpenDocLocal === 'function') window.__preloadOpenDocLocal();
     if(m.dlKey === 'headless-option3-skills-highlighted' && typeof window.__preloadRSCombined === 'function') window.__preloadRSCombined();
+    if(m.dlKey === 'headless-option3-skills-highlighted' && resumeExt === 'DOCX' && typeof window.__preloadOpenDocLocal === 'function') window.__preloadOpenDocLocal();
     if(m.dlKey === 'smart-branded-resume' && typeof window.__preloadRSCombined === 'function') window.__preloadRSCombined();
     if(m.dlKey === 'smart-branded-resume' && resumeExt === 'DOCX' && typeof window.__preloadOpenDocLocal === 'function') window.__preloadOpenDocLocal();
     if(m.dlKey === 'rs-combined' && typeof window.__preloadRSCombined === 'function') window.__preloadRSCombined();
@@ -7062,24 +7083,29 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
         });
 
       } else if(m.dlKey === 'headless-option3-skills-highlighted'){
-        /* Headless option 3: direct R2 PDF fetch, hidden PDF.js viewer, option-3-style skill detection, browser download. */
+        /* Headless option 3: direct/converted PDF, hidden PDF.js viewer, option-3-style skill detection, browser download. */
         if(window.__rsBusy || typeof window.__buildHeadlessOption3SkillsHighlightedResume !== 'function'){
           showToast('Please wait a moment and try again.', 'warn');
           resetBtn(); return;
         }
-        if(resumeExt !== 'PDF'){
-          showToast('Resume + Skills Highlighted is available for PDF resumes only.', 'warn');
+        if(['PDF','DOC','DOCX'].indexOf(resumeExt) === -1){
+          showToast('Resume + Skills Highlighted is available for PDF, DOC and DOCX resumes only.', 'warn');
           resetBtn(); return;
         }
-        if(!r2DirectUrl && !r2PublicUrl && !dlUrl){
-          showToast('PDF resume URL is not available.', 'warn');
+        if(['PDF','DOCX'].indexOf(resumeExt) !== -1 && !r2DirectUrl && !r2PublicUrl && !dlUrl && !resumePdfUrl){
+          showToast('Resume URL is not available.', 'warn');
+          resetBtn(); return;
+        }
+        if(resumeExt === 'DOC' && !resumePdfUrl){
+          showToast('DOC resume needs enterprise converter PDF URL.', 'warn');
           resetBtn(); return;
         }
         runSmartCountdown('Downloading Resume...', 60);
         setTimeout(function(){
           window.__buildHeadlessOption3SkillsHighlightedResume({
             resumeUrl:[r2DirectUrl,r2PublicUrl,dlUrl],
-            resumeExt:resumeExt
+            resumeExt:resumeExt,
+            resumePdfUrl:resumePdfUrl
           }).then(function(ok){
             if(ok) closeRdc();
           }).catch(function(){
