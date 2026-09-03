@@ -6299,24 +6299,46 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
     toastTimer = setTimeout(function(){ toastEl.classList.remove('rdc-tshow'); }, 3500);
   }
 
-  function stopSmartCountdown(){
+  var smartCountdownResolve = null;
+
+  function clearSmartCountdownTimer(){
     if(smartCountdownTimer){
       clearInterval(smartCountdownTimer);
       smartCountdownTimer = null;
     }
   }
 
-  function startSmartCountdown(prefix){
+  function stopSmartCountdown(){
+    clearSmartCountdownTimer();
+    if(smartCountdownResolve){
+      smartCountdownResolve(false);
+      smartCountdownResolve = null;
+    }
+  }
+
+  function runSmartCountdown(prefix,totalSeconds){
     stopSmartCountdown();
-    var countdownEndsAt = Date.now() + 60000;
+    totalSeconds = totalSeconds || 60;
+    var countdownEndsAt = Date.now() + (totalSeconds * 1000);
+    return new Promise(function(resolve){
+      smartCountdownResolve = resolve;
+      function finish(shouldContinue){
+        clearSmartCountdownTimer();
+        if(smartCountdownResolve){
+          smartCountdownResolve = null;
+          resolve(shouldContinue);
+        }
+      }
     function render(){
       if(!dlBtn) return;
       var remaining = Math.max(0, Math.ceil((countdownEndsAt - Date.now()) / 1000));
       var label = remaining > 0 ? prefix + ' ' + remaining + 's' : prefix + ' Finalizing...';
       dlBtn.innerHTML = '<span class="rdc-spin"></span><span>' + label + '</span>';
+      if(remaining <= 0) finish(true);
     }
     render();
     smartCountdownTimer = setInterval(render, 1000);
+    });
   }
 
   function resetBtn(){
@@ -6530,7 +6552,7 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
           showToast('DOC resumes need the enterprise converter before final package generation.', 'warn');
           resetBtn(); return;
         }
-        startSmartCountdown('Generating Report, Kindly wait.');
+        runSmartCountdown('Generating Report, Kindly wait.', 60);
         setTimeout(function(){
           window.__buildSmartPreScreenedResume(resumePdfUrl,{
             noBranding:(m.dlKey === 'smart-prescreened-package-nobrand'),
