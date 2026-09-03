@@ -6492,7 +6492,7 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
           showToast('Final package is available for PDF, DOC and DOCX resumes only.', 'warn');
           resetBtn(); return;
         }
-        if(resumeExt === 'PDF' && !r2DirectUrl && !r2PublicUrl && !resumePdfUrl){
+        if(resumeExt === 'PDF' && !r2DirectUrl && !r2PublicUrl){
           showToast('Direct PDF resume URL is not available.', 'warn');
           resetBtn(); return;
         }
