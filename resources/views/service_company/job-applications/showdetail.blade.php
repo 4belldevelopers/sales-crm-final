@@ -6229,9 +6229,10 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
       dlBtn.innerHTML = '<span class="rdc-spin"></span><span>Preparing download…</span>';
 
       if(selectedOpt === 1){
-        /* Original: open download URL, keep spinner visible 2 sec then close */
-        if(dlUrl){
-          window.open(dlUrl, '_blank');
+        /* Original resume: prefer direct R2 so Laravel/FrankenPHP does not stream the file. */
+        var originalResumeUrl = r2DirectUrl || r2PublicUrl || dlUrl;
+        if(originalResumeUrl){
+          window.open(originalResumeUrl, '_blank');
         } else {
           showToast('Resume file URL not available.', 'warn');
         }
