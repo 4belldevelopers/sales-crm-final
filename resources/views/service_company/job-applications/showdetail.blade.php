@@ -5191,6 +5191,166 @@ function rsMarkKeywordMatches(root,re){
     node.parentNode.replaceChild(frag,node);
   });
 }
+function rsOption3EscRe(value){
+  return String(value==null?'':value).replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
+}
+function rsOption3KeywordsFromResumeText(resumeText){
+  var source=Array.isArray(rsAtsHighlightKeywords) ? rsAtsHighlightKeywords : [];
+  var found=[];
+  var seen={};
+  source.forEach(function(item){
+    var name=typeof item === 'string' ? item : clean(item && (item.skill_name || item.skill || item.name || item.skill_key),'');
+    name=(name || '').replace(/\s+/g,' ').trim();
+    if(!name || seen[name.toLowerCase()]) return;
+    var re=new RegExp(rsOption3EscRe(name),'gi');
+    if((resumeText || '').match(re)){
+      seen[name.toLowerCase()]=true;
+      found.push(name);
+    }
+  });
+  return found;
+}
+function rsOption3BuildRegex(activeSkills){
+  var act=(Array.isArray(activeSkills) ? activeSkills : []).filter(Boolean);
+  if(!act.length) return null;
+  var pat=act.map(rsOption3EscRe).sort(function(a,b){ return b.length-a.length; }).join('|');
+  return new RegExp('('+pat+')','gi');
+}
+function rsOption3HighlightTextLayer(textLayer,re){
+  if(!textLayer || !re) return;
+  Array.prototype.slice.call(textLayer.querySelectorAll('span')).forEach(function(sp){
+    if(sp.dataset.orig === undefined) sp.dataset.orig = sp.textContent || '';
+    var t=sp.dataset.orig;
+    re.lastIndex=0;
+    if(!re.test(t)){ sp.textContent=t; re.lastIndex=0; return; }
+    re.lastIndex=0;
+    sp.innerHTML=escapeHtml(t).replace(re,'<mark class="rcv-hit">$1</mark>');
+  });
+}
+async function buildHeadlessOption3SkillsHighlightedResume(options){
+  if(window.__rsBusy) return Promise.resolve(false);
+  window.__rsBusy=true;
+  try{
+    options=options||{};
+    var resumeSources=(Array.isArray(options.resumeUrl) ? options.resumeUrl : [options.resumeUrl||'']).map(function(url){
+      return clean(url,'');
+    }).filter(function(url,index,self){
+      return url && url!=='--' && self.indexOf(url)===index;
+    });
+    if(clean(options.resumeExt||'','').toUpperCase() !== 'PDF') throw new Error('Resume + Skills Highlighted is available for PDF resumes only');
+    await Promise.all([rsEnsurePdfJs(),rsEnsureJsPdf()]);
+    var pdfBlob=await fetchPdfBlobFromSources(resumeSources);
+    var sourceBytes=await pdfBlob.arrayBuffer();
+    var bytes=new Uint8Array(sourceBytes);
+    var sig=String.fromCharCode.apply(null,bytes.subarray(0,5));
+    if(sig.indexOf('%PDF')===-1) throw new Error('Resume source is not a valid PDF');
+    var doc=await window.pdfjsLib.getDocument({data:bytes}).promise;
+    var host=document.createElement('div');
+    host.setAttribute('aria-hidden','true');
+    host.style.cssText='position:fixed;left:-14000px;top:0;width:900px;background:#525659;pointer-events:none;z-index:-1;';
+    var style=document.createElement('style');
+    style.textContent=[
+      '.rdc-headless-rcv-page{position:relative;background:#fff;box-shadow:none;margin:0 0 14px 0;}',
+      '.rdc-headless-rcv-page canvas{display:block;}',
+      '.rdc-headless-rcv-textlayer{position:absolute;left:0;top:0;right:0;bottom:0;overflow:hidden;line-height:1;opacity:1;}',
+      '.rdc-headless-rcv-textlayer span{position:absolute;white-space:pre;color:transparent;transform-origin:0% 0%;}',
+      '.rdc-headless-rcv-textlayer mark.rcv-hit{background:rgba(251,191,36,.45);color:transparent;border-radius:2px;}'
+    ].join('');
+    host.appendChild(style);
+    document.body.appendChild(host);
+    var JsPDF=window.jspdf.jsPDF;
+    var resumeText='';
+    var pages=[];
+    try{
+      for(var p=1;p<=doc.numPages;p++){
+        var page=await doc.getPage(p);
+        var base=page.getViewport({scale:1});
+        var cssScale=Math.min(1.35,820/base.width);
+        var viewport=page.getViewport({scale:cssScale});
+        var wrap=document.createElement('div');
+        wrap.className='rdc-headless-rcv-page';
+        wrap.style.width=Math.floor(viewport.width)+'px';
+        wrap.style.height=Math.floor(viewport.height)+'px';
+        var canvas=document.createElement('canvas');
+        canvas.width=Math.floor(viewport.width);
+        canvas.height=Math.floor(viewport.height);
+        canvas.style.width=Math.floor(viewport.width)+'px';
+        canvas.style.height=Math.floor(viewport.height)+'px';
+        wrap.appendChild(canvas);
+        var tl=document.createElement('div');
+        tl.className='rdc-headless-rcv-textlayer';
+        tl.style.width=Math.floor(viewport.width)+'px';
+        tl.style.height=Math.floor(viewport.height)+'px';
+        wrap.appendChild(tl);
+        host.appendChild(wrap);
+        await page.render({canvasContext:canvas.getContext('2d',{willReadFrequently:true}),viewport:viewport}).promise;
+        var tc=await page.getTextContent();
+        resumeText += tc.items.map(function(i){ return i.str; }).join(' ') + '\n';
+        try{
+          var task=window.pdfjsLib.renderTextLayer({textContent:tc,container:tl,viewport:viewport,textDivs:[]});
+          if(task && task.promise) await task.promise;
+        }catch(textLayerErr){
+          console.warn('Headless option 3 text layer failed:',textLayerErr);
+        }
+        pages.push({page:page,wrap:wrap,viewport:viewport});
+      }
+      var activeSkills=rsOption3KeywordsFromResumeText(resumeText);
+      var re=rsOption3BuildRegex(activeSkills);
+      if(re){
+        pages.forEach(function(pageInfo){ rsOption3HighlightTextLayer(pageInfo.wrap.querySelector('.rdc-headless-rcv-textlayer'),re); });
+      }
+      var QUALITY=3.0, MAXW=2800;
+      var rendered=await Promise.all(pages.map(function(pageInfo){
+        return (async function(){
+          var page=pageInfo.page;
+          var wrap=pageInfo.wrap;
+          var cssW=wrap.clientWidth || Math.floor(pageInfo.viewport.width);
+          var cssH=wrap.clientHeight || Math.floor(pageInfo.viewport.height);
+          var base=page.getViewport({scale:1});
+          var renderW=Math.min(cssW*QUALITY,MAXW);
+          var vp=page.getViewport({scale:renderW/base.width});
+          var hi=document.createElement('canvas');
+          hi.width=Math.floor(vp.width);
+          hi.height=Math.floor(vp.height);
+          await page.render({canvasContext:hi.getContext('2d',{willReadFrequently:true}),viewport:vp}).promise;
+          var ctx=hi.getContext('2d',{willReadFrequently:true});
+          var pr=wrap.getBoundingClientRect();
+          if(re){
+            ctx.fillStyle='rgba(255,210,0,0.4)';
+            Array.prototype.slice.call(wrap.querySelectorAll('mark.rcv-hit')).forEach(function(mk){
+              var r=mk.getBoundingClientRect();
+              if(!r.width || !r.height || !pr.width || !pr.height) return;
+              ctx.fillRect((r.left-pr.left)/pr.width*hi.width,(r.top-pr.top)/pr.height*hi.height,r.width/pr.width*hi.width,Math.max(r.height/pr.height*hi.height,6));
+            });
+          }
+          return {imgData:hi.toDataURL('image/jpeg',0.88),cssW:cssW,cssH:cssH};
+        })();
+      }));
+      var pdf=null;
+      for(var i=0;i<rendered.length;i++){
+        var out=rendered[i];
+        var pw=Math.round(out.cssW), ph=Math.round(out.cssH);
+        var orient=pw>ph?'l':'p';
+        if(!pdf) pdf=new JsPDF({orientation:orient,unit:'px',format:[pw,ph]});
+        else pdf.addPage([pw,ph],orient);
+        pdf.addImage(out.imgData,'JPEG',0,0,pw,ph,undefined,'FAST');
+      }
+      if(!pdf) throw new Error('No resume pages were rendered');
+      if(!activeSkills.length) console.warn('Resume + Skills Highlighted found no matching job skills in resume text.');
+      var data=readData();
+      downloadBlob(pdf.output('blob'),'JEROWORKS_'+fileSafeName(data.name,'Candidate')+'_Skills_Highlighted.pdf');
+      return true;
+    }finally{
+      removeNode(host);
+    }
+  }catch(err){
+    console.error('Headless option 3 highlighted resume error:',err);
+    alert('Could not generate Resume + Skills Highlighted.\n\nReason: '+(err && err.message ? err.message : 'Unknown highlight error')+'\n\nThis option uses signed R2 direct PDF fetch and browser-only option 3 style highlighting.');
+    return false;
+  }finally{
+    window.__rsBusy=false;
+  }
+}
 function rsTextItemRect(item,viewport){
   if(!item || !viewport || !(window.pdfjsLib && window.pdfjsLib.Util)) return null;
   var tx=window.pdfjsLib.Util.transform(viewport.transform,item.transform);
@@ -6276,6 +6436,7 @@ window.__buildHybridWordPreScreenedResume=buildHybridWordPreScreenedResume;
 window.__buildSmartPreScreenedResume=buildSmartPreScreenedResume;
 window.__buildSmartBrandedResume=buildSmartBrandedResume;
 window.__buildSmartHighlightedResume=buildSmartHighlightedResume;
+window.__buildHeadlessOption3SkillsHighlightedResume=buildHeadlessOption3SkillsHighlightedResume;
 window.__convertResumeToPdfOnly=convertResumeToPdfOnly;
 window.__convertResumeToPdfBrowserOnly=convertResumeToPdfBrowserOnly;
 window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
@@ -6357,6 +6518,24 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
         <span class="rdc-obody">
           <span class="rdc-otitle">Resume + Highlighted Keywords <span style="background:#fffbeb;color:#b45309;font-size:8.5px;font-weight:700;padding:1px 6px;border-radius:4px;vertical-align:middle;margin-left:4px;">Client</span></span>
           <span class="rdc-odesc">Fetches from R2 and highlights job keywords in the browser without opening the Resume/CV tab</span>
+        </span>
+        <span class="rdc-ometa">
+          <span class="rdc-ocost">4 Coins</span>
+          <span class="rdc-otime">Smart</span>
+        </span>
+        <span class="rdc-ocirc" aria-hidden="true"></span>
+      </label>
+
+      {{-- 8: Headless option 3 style highlighted skills from signed R2 PDF --}}
+      <label class="rdc-opt" data-opt="8" data-coins="4">
+        <input class="rdc-rinput" type="radio" name="rdcFormat" value="8">
+        <span class="rdc-onum">8</span>
+        <span class="rdc-oi rdc-ic-amber" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/><path d="M7 15h7"/></svg>
+        </span>
+        <span class="rdc-obody">
+          <span class="rdc-otitle">Resume + Skills Highlighted <span style="background:#ecfeff;color:#0e7490;font-size:8.5px;font-weight:700;padding:1px 6px;border-radius:4px;vertical-align:middle;margin-left:4px;">PDF Fast</span></span>
+          <span class="rdc-odesc">Uses signed R2 direct PDF fetch and option 3 style browser highlighting without opening the Resume/CV tab</span>
         </span>
         <span class="rdc-ometa">
           <span class="rdc-ocost">4 Coins</span>
@@ -6513,6 +6692,7 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
     5: {cost:7, label:'Download Pre-Screened Report',   avail:true,  dlKey:'rs'},
     6: {cost:2, label:'Resume + Company Branding', avail:(['PDF','DOC','DOCX'].indexOf(resumeExt) !== -1), dlKey:'smart-branded-resume', unavailableMsg:'Branded resume is available for PDF, DOC and DOCX resumes only.'},
     7: {cost:4, label:'Resume + Highlighted Keywords', avail:(['PDF','DOCX'].indexOf(resumeExt) !== -1), dlKey:'smart-highlighted-resume', unavailableMsg:'Client-side highlighted resume is available for PDF and DOCX resumes only.'},
+    8: {cost:4, label:'Resume + Skills Highlighted', avail:(resumeExt === 'PDF'), dlKey:'headless-option3-skills-highlighted', unavailableMsg:'Resume + Skills Highlighted is available for PDF resumes only.'},
     15:{cost:8, label:'Pre-Screened Report + Resume + Company Branding', avail:(['PDF','DOC','DOCX'].indexOf(resumeExt) !== -1), dlKey:'smart-prescreened-package', unavailableMsg:'Final package is available for PDF, DOC and DOCX resumes only.'},
     16:{cost:8, label:'Pre-Screened Report + Resume without Company Branding', avail:(['PDF','DOC','DOCX'].indexOf(resumeExt) !== -1), dlKey:'smart-prescreened-package-nobrand', unavailableMsg:'Final package is available for PDF, DOC and DOCX resumes only.'}
   };
@@ -6603,6 +6783,7 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
     if(m.dlKey === 'rs' && typeof window.__preloadRS === 'function') window.__preloadRS();
     if(m.dlKey === 'smart-highlighted-resume' && typeof window.__preloadRSCombined === 'function') window.__preloadRSCombined();
     if(m.dlKey === 'smart-highlighted-resume' && resumeExt === 'DOCX' && typeof window.__preloadOpenDocLocal === 'function') window.__preloadOpenDocLocal();
+    if(m.dlKey === 'headless-option3-skills-highlighted' && typeof window.__preloadRSCombined === 'function') window.__preloadRSCombined();
     if(m.dlKey === 'smart-branded-resume' && typeof window.__preloadRSCombined === 'function') window.__preloadRSCombined();
     if(m.dlKey === 'smart-branded-resume' && resumeExt === 'DOCX' && typeof window.__preloadOpenDocLocal === 'function') window.__preloadOpenDocLocal();
     if(m.dlKey === 'rs-combined' && typeof window.__preloadRSCombined === 'function') window.__preloadRSCombined();
@@ -6879,6 +7060,34 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
         }).finally(function(){
           resetBtn();
         });
+
+      } else if(m.dlKey === 'headless-option3-skills-highlighted'){
+        /* Headless option 3: direct R2 PDF fetch, hidden PDF.js viewer, option-3-style skill detection, browser download. */
+        if(window.__rsBusy || typeof window.__buildHeadlessOption3SkillsHighlightedResume !== 'function'){
+          showToast('Please wait a moment and try again.', 'warn');
+          resetBtn(); return;
+        }
+        if(resumeExt !== 'PDF'){
+          showToast('Resume + Skills Highlighted is available for PDF resumes only.', 'warn');
+          resetBtn(); return;
+        }
+        if(!r2DirectUrl && !r2PublicUrl && !dlUrl){
+          showToast('PDF resume URL is not available.', 'warn');
+          resetBtn(); return;
+        }
+        runSmartCountdown('Downloading Resume...', 60);
+        setTimeout(function(){
+          window.__buildHeadlessOption3SkillsHighlightedResume({
+            resumeUrl:[r2DirectUrl,r2PublicUrl,dlUrl],
+            resumeExt:resumeExt
+          }).then(function(ok){
+            if(ok) closeRdc();
+          }).catch(function(){
+            showToast('Could not generate Resume + Skills Highlighted. Please try option 3.', 'warn');
+          }).finally(function(){
+            resetBtn();
+          });
+        }, 250);
 
       } else if(m.dlKey === 'smart-highlighted-resume'){
         /* New highlighted resume: direct R2/browser flow, independent of the Resume/CV tab. */
