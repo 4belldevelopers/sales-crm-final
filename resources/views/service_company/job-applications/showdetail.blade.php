@@ -547,8 +547,12 @@
           }
       }
       $__hdrMatchedCount = 0;
+      $__hdrMatchedSkillNames = [];
       foreach ($__hdrSkillsArr as $__cs) {
-          if (isset($__hdrJobSkills[mb_strtolower($__cs)])) { $__hdrMatchedCount++; }
+          if (isset($__hdrJobSkills[mb_strtolower($__cs)])) {
+              $__hdrMatchedCount++;
+              $__hdrMatchedSkillNames[] = $__cs;
+          }
       }
       $__hdrJobTotal   = count($__hdrJobSkills);
       $__hdrNotMatched = max(0, $__hdrJobTotal - $__hdrMatchedCount);
@@ -4475,6 +4479,7 @@ var rsLogoCache={};
 var rsDocxMaxBytes=10*1024*1024;
 var rsPdfMaxBytes=30*1024*1024;
 var rsAtsHighlightKeywords=@json($rcvJobSkills ?? []);
+var rsDrawerMatchedKeywords=@json($__hdrMatchedSkillNames ?? []);
 var rsStarGold='<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path fill="#f59e0b" d="M12 2.6l2.85 5.78 6.38.93-4.62 4.5 1.09 6.35L12 17.16l-5.7 3 1.09-6.35-4.62-4.5 6.38-.93L12 2.6z"/></svg>';
 var rsStarMuted='<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path fill="#cbd5e1" d="M12 2.6l2.85 5.78 6.38.93-4.62 4.5 1.09 6.35L12 17.16l-5.7 3 1.09-6.35-4.62-4.5 6.38-.93L12 2.6z"/></svg>';
 var rsIconUser='<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path fill="#64748b" d="M12 12a5 5 0 1 0-5-5 5 5 0 0 0 5 5zm0 2c-4.42 0-8 2.24-8 5v1h16v-1c0-2.76-3.58-5-8-5z"/></svg>';
@@ -5117,6 +5122,7 @@ function rsKeywordRegex(list){
     if(typeof item === 'string') return item.trim();
     return clean(item && (item.skill_name || item.skill_key || item.name || item.skill),'').trim();
   }).filter(function(value){
+    value=value.replace(/\s+/g,' ').trim();
     var key=value.toLowerCase();
     if(value.length<2 || seen[key]) return false;
     seen[key]=true;
@@ -5125,18 +5131,29 @@ function rsKeywordRegex(list){
   if(!cleaned.length) return null;
   cleaned.sort(function(a,b){ return b.length-a.length; });
   return new RegExp(cleaned.map(function(value){
-    var tokens=value.split(/[\s\/_\-]+/).filter(Boolean);
+    var tokens=value.split(/[\s\/_\-.]+/).filter(Boolean);
+    var left=/^[A-Za-z0-9]/.test(value) ? '\\b' : '';
+    var right=/[A-Za-z0-9]$/.test(value) ? '\\b' : '';
     if(tokens.length>1){
-      return tokens.map(function(token){ return token.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'); }).join('[\\s\\/_\\-.]*');
+      return left+tokens.map(function(token){ return token.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'); }).join('[\\s\\/_\\-.]*')+right;
     }
-    return value.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
+    return left+value.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+right;
   }).join('|'),'gi');
 }
 function rsDrawerHighlightedKeywords(){
   var values=[];
+  var seen={};
+  function addKeyword(value){
+    value=(value || '').replace(/\+\d+\s*More/gi,'').replace(/\s+/g,' ').trim();
+    if(!value) return;
+    var key=value.toLowerCase();
+    if(seen[key]) return;
+    seen[key]=true;
+    values.push(value);
+  }
+  (Array.isArray(rsDrawerMatchedKeywords) ? rsDrawerMatchedKeywords : []).forEach(addKeyword);
   Array.prototype.slice.call(document.querySelectorAll('#kt_activitiesApplication .cdr-skill-tag.cdr-skill-match:not(.cdr-skill-more), .cdr-skill-tag.cdr-skill-match:not(.cdr-skill-more)')).forEach(function(el){
-    var text=(el.textContent || '').replace(/\+\d+\s*More/gi,'').replace(/\s+/g,' ').trim();
-    if(text) values.push(text);
+    addKeyword(el.textContent || '');
   });
   return values.length ? values : rsAtsHighlightKeywords;
 }
