@@ -5809,7 +5809,7 @@ async function buildSmartPreScreenedResume(resumePdfUrl,options){
       if(!resumePdfUrl) throw new Error('DOC resume needs enterprise converter PDF URL');
       resumeBlob=await fetchPdfResumeBlob(resumePdfUrl);
     }
-    var reportFileName=fileSafeName(data.name,'Candidate')+'.pdf';
+    var reportFileName='JEROWORKS_'+fileSafeName(data.name,'Candidate')+'.pdf';
     await mergePreScreenedReportAndResume(reportBlob,resumeBlob,reportFileName);
     return true;
   }catch(err){
