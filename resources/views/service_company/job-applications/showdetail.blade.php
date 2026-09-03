@@ -4583,13 +4583,30 @@ function preloadBrowserDocxConversionAssets(){
 function rsEnsureOpenDocLab(allowExternalFallback){
   allowExternalFallback=allowExternalFallback===true;
   if(rsOpenDocLocalReady) return rsOpenDocLocalReady;
+  var openDocSources=[
+    {
+      label:'Cloudflare OpenDoc runtime',
+      moduleUrl:'https://file.jero.works/js/opendoc/casual_doc_wasm.js?v=opendoc-20260903',
+      wasmUrl:'https://file.jero.works/js/opendoc/casual_doc_wasm_bg.wasm?v=opendoc-20260903'
+    },
+    {
+      label:'Local OpenDoc runtime',
+      moduleUrl:'/js/opendoc/casual_doc_wasm.js',
+      wasmUrl:'/js/opendoc/casual_doc_wasm_bg.wasm'
+    }
+  ];
   async function loadOpenDocModule(moduleUrl,wasmUrl){
     var blobUrl='';
     var module=null;
     try{
       module=await import(moduleUrl);
     }catch(importErr){
-      var moduleResponse=await fetch(moduleUrl,{mode:'cors',cache:'no-store'});
+      var moduleResponse=null;
+      try{
+        moduleResponse=await fetch(moduleUrl,{mode:'cors',cache:'no-store'});
+      }catch(moduleFetchErr){
+        throw new Error('OpenDoc module fetch failed for '+moduleUrl+': '+(moduleFetchErr && moduleFetchErr.message ? moduleFetchErr.message : 'network blocked'));
+      }
       if(!moduleResponse.ok) throw new Error('OpenDoc module request failed with HTTP '+moduleResponse.status);
       var moduleCode=await moduleResponse.text();
       moduleCode=moduleCode.replace(/new URL\(['"]casual_doc_wasm_bg\.wasm['"],\s*import\.meta\.url\)/g, JSON.stringify(wasmUrl));
@@ -4597,7 +4614,12 @@ function rsEnsureOpenDocLab(allowExternalFallback){
       module=await import(blobUrl);
     }
     if(typeof module.default==='function'){
-      var wasmResponse=await fetch(wasmUrl,{mode:'cors',cache:'force-cache'});
+      var wasmResponse=null;
+      try{
+        wasmResponse=await fetch(wasmUrl,{mode:'cors',cache:'force-cache'});
+      }catch(wasmFetchErr){
+        throw new Error('OpenDoc WASM fetch failed for '+wasmUrl+': '+(wasmFetchErr && wasmFetchErr.message ? wasmFetchErr.message : 'network blocked'));
+      }
       if(!wasmResponse.ok) throw new Error('OpenDoc WASM request failed with HTTP '+wasmResponse.status);
       await module.default({module_or_path:await wasmResponse.arrayBuffer()});
     }
@@ -4605,11 +4627,17 @@ function rsEnsureOpenDocLab(allowExternalFallback){
     if(typeof module.open!=='function') throw new Error('OpenDoc open API missing');
     return module;
   }
-  rsOpenDocLocalReady=loadOpenDocModule('https://file.jero.works/js/opendoc/casual_doc_wasm.js?v=opendoc-20260903','https://file.jero.works/js/opendoc/casual_doc_wasm_bg.wasm?v=opendoc-20260903')
-    .catch(function(localErr){
-      rsOpenDocLocalReady=null;
-      if(!allowExternalFallback) throw localErr;
-      console.warn('Local OpenDoc module unavailable, using lab fallback:',localErr);
+  rsOpenDocLocalReady=(async function(){
+    var lastErr=null;
+    for(var i=0;i<openDocSources.length;i++){
+      try{
+        return await loadOpenDocModule(openDocSources[i].moduleUrl,openDocSources[i].wasmUrl);
+      }catch(err){
+        lastErr=err;
+        console.warn(openDocSources[i].label+' unavailable:',err);
+      }
+    }
+    if(allowExternalFallback){
       if(!rsOpenDocExternalReady){
         rsOpenDocExternalReady=loadOpenDocModule('https://opendoc.casualoffice.org/pkg/casual_doc_wasm.js','https://opendoc.casualoffice.org/pkg/casual_doc_wasm_bg.wasm')
           .catch(function(err){
@@ -4618,7 +4646,12 @@ function rsEnsureOpenDocLab(allowExternalFallback){
           });
       }
       return rsOpenDocExternalReady;
-    });
+    }
+    throw (lastErr || new Error('OpenDoc runtime unavailable'));
+  })().catch(function(err){
+    rsOpenDocLocalReady=null;
+    throw err;
+  });
   return rsOpenDocLocalReady;
 }
 function preloadOpenDocLabAssets(){
