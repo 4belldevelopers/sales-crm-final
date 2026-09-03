@@ -356,7 +356,7 @@
 .rdc-countdown-reel{width:28px;height:16px;line-height:16px;overflow:hidden;display:inline-block;text-align:right;font-variant-numeric:tabular-nums;font-feature-settings:"tnum" 1;flex-shrink:0;}
 .rdc-countdown-track{display:flex;flex-direction:column;will-change:transform;animation:rdcCountdownReel var(--rdc-count-duration,60s) steps(var(--rdc-count-steps,60), end) forwards;}
 .rdc-countdown-track span{height:16px;line-height:16px;display:block;}
-.rdc-countdown-unit{flex-shrink:0;}
+.rdc-countdown-unit{min-width:50px;text-align:left;flex-shrink:0;}
 /* Toast */
 .rdc-toast{position:fixed;bottom:20px;right:20px;background:#1e293b;color:#fff;padding:10px 15px;border-radius:8px;font-size:11.5px;font-family:'Poppins',sans-serif;z-index:1300000;opacity:0;transform:translateY(6px);transition:all .22s ease;pointer-events:none;max-width:280px;line-height:1.4;}
 .rdc-toast.rdc-tshow{opacity:1;transform:translateY(0);}
@@ -6349,7 +6349,7 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
           '<span class="rdc-countdown-reel" aria-hidden="true">' +
             '<span class="rdc-countdown-track" style="--rdc-count-duration:'+totalSeconds+'s;--rdc-count-steps:'+totalSeconds+';--rdc-count-shift:-'+(totalSeconds * itemHeight)+'px;">'+buildCountdownReel(totalSeconds)+'</span>' +
           '</span>' +
-          '<span class="rdc-countdown-unit">s</span>' +
+          '<span class="rdc-countdown-unit">seconds</span>' +
         '</span>';
     }
     return new Promise(function(resolve){
