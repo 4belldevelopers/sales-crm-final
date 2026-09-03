@@ -42,6 +42,9 @@ class ServiceCompanyProfileController extends ServiceCompanyBaseController
 
 	public function index()
 	{
+		// Phase 0 Performance Telemetry: Baseline timing start
+		$startTime = microtime(true);
+
 		$this->countryName	= '';
 		$company_id			= $this->user->company_id;
 		$this->user_id 		= $this->user->id;
@@ -119,7 +122,12 @@ class ServiceCompanyProfileController extends ServiceCompanyBaseController
 		$this->startOfMonth = Carbon::now()->startOfMonth()->subMonths(3);
 		$this->endOfMonth = Carbon::now()->endOfMonth();
 
-		return view('service_company.profile.index', $this->data);
+		// Phase 0 Performance Telemetry: Attach timing metrics to response
+		$this->profileIndexDurMs = round((microtime(true) - $startTime) * 1000, 2);
+
+		$response = response()->view('service_company.profile.index', $this->data);
+		$response->header('Server-Timing', "profile_index;dur={$this->profileIndexDurMs};desc=\"Profile Index Shell\"");
+		return $response;
 	}
 
 	private function getRankData($company_id, $loggedInUserId, $startDate, $endDate, $isInternal = true)

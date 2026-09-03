@@ -13070,38 +13070,45 @@ END:VCALENDAR";
      */
     public static function InternalClientJobsCountAllStatus($company_id, $client_id)
     {
+        $cacheKey = "ats:kpi:internal_client_jobs:{$company_id}:{$client_id}";
 
-        $elasticService = app(ElasticService::class);
+        return cache()->remember($cacheKey, 900, function () use ($company_id, $client_id) {
+            $elasticService = app(ElasticService::class);
+            if (! $elasticService->indexExists(ELASTIC_JOBS)) {
+                return (object) ['all_jobs' => 0, 'job_active' => 0, 'job_inactive' => 0, 'job_hold' => 0];
+            }
 
-        $params = [
-            'index' => ELASTIC_JOBS,
-            'body' => [
-                'size' => 0,
-                'query' => [
-                    'bool' => [
-                        'must' => [
-                            ['term' => ['comId' => (int) $company_id]],
-                            ['term' => ['client_id' => (int) $client_id]],
+            $params = [
+                'index' => ELASTIC_JOBS,
+                'request_cache' => true,
+                'body' => [
+                    'size' => 0,
+                    'query' => [
+                        'bool' => [
+                            'must' => [
+                                ['term' => ['comId' => (int) $company_id]],
+                                ['term' => ['client_id' => (int) $client_id]],
+                            ],
                         ],
                     ],
+                    'aggs' => [
+                        'all_jobs' => ['value_count' => ['field' => 'id']],
+                        'job_active' => ['filter' => ['term' => ['status' => 'active']]],
+                        'job_inactive' => ['filter' => ['term' => ['status' => 'inactive']]],
+                        'job_hold' => ['filter' => ['term' => ['status' => 'hold']]],
+                    ],
                 ],
-                'aggs' => [
-                    'all_jobs' => ['value_count' => ['field' => 'id']],
-                    'job_active' => ['filter' => ['term' => ['status' => 'active']]],
-                    'job_inactive' => ['filter' => ['term' => ['status' => 'inactive']]],
-                    'job_hold' => ['filter' => ['term' => ['status' => 'hold']]],
-                ],
-            ],
-        ];
+            ];
 
-        $response = $elasticService->getClient()->search($params);
+            $response = $elasticService->getClient()->search($params);
 
-        return (object) [
-            'all_jobs' => $response['aggregations']['all_jobs']['value'] ?? 0,
-            'job_active' => $response['aggregations']['job_active']['doc_count'] ?? 0,
-            'job_inactive' => $response['aggregations']['job_inactive']['doc_count'] ?? 0,
-            'job_hold' => $response['aggregations']['job_hold']['doc_count'] ?? 0,
-        ];
+            return (object) [
+                'all_jobs' => $response['aggregations']['all_jobs']['value'] ?? 0,
+                'job_active' => $response['aggregations']['job_active']['doc_count'] ?? 0,
+                'job_inactive' => $response['aggregations']['job_inactive']['doc_count'] ?? 0,
+                'job_hold' => $response['aggregations']['job_hold']['doc_count'] ?? 0,
+            ];
+        });
     }
 
     /**
@@ -13112,61 +13119,81 @@ END:VCALENDAR";
      */
     public static function InternalClientCandidatesCountList($client_id)
     {
+        $cacheKey = "ats:kpi:internal_client_cand:{$client_id}";
 
-        $elasticService = app(ElasticService::class);
+        return cache()->remember($cacheKey, 900, function () use ($client_id) {
+            $elasticService = app(ElasticService::class);
+            $allCandidates = 0;
+            $joined = 0;
+            $sourced = 0;
+            $evaluated = 0;
+            $offers = 0;
+            $allInterview = 0;
 
-        $params = [
-            'index' => ELASTIC_CANDIDATES,
-            'body' => [
-                'size' => 0,
-                'query' => [
-                    'bool' => [
-                        'must' => [
-                            ['term' => ['client_id' => $client_id]],
+            if ($elasticService->indexExists(ELASTIC_CANDIDATES)) {
+                $params = [
+                    'index' => ELASTIC_CANDIDATES,
+                    'request_cache' => true,
+                    'body' => [
+                        'size' => 0,
+                        'query' => [
+                            'bool' => [
+                                'must' => [
+                                    ['term' => ['client_id' => $client_id]],
+                                ],
+                                'must_not' => [
+                                    ['terms' => ['job_master_status_id' => [8, 9]]],
+                                ],
+                            ],
                         ],
-                        'must_not' => [
-                            ['terms' => ['job_master_status_id' => [8, 9]]],
-                        ],
-                    ],
-                ],
-                'aggs' => [
-                    'all_candidates' => ['value_count' => ['field' => 'id']],
-                    'joined' => ['filter' => ['term' => ['job_master_status_id' => 6]]],
-                    'sourced' => ['filter' => ['term' => ['job_master_status_id' => 1]]],
-                    'evaluated' => ['filter' => ['term' => ['job_master_status_id' => 3]]],
-                    'offers' => ['filter' => ['exists' => ['field' => 'of_created_date']]],
-                ],
-            ],
-        ];
-
-        $response = $elasticService->getClient()->search($params);
-
-        $params = [
-            'index' => ELASTIC_INERTVIEW_TRACKER,
-            'body' => [
-                'size' => 0,
-                'query' => [
-                    'bool' => [
-                        'must' => [
-                            ['term' => ['client_id' => $client_id]],
+                        'aggs' => [
+                            'all_candidates' => ['value_count' => ['field' => 'id']],
+                            'joined' => ['filter' => ['term' => ['job_master_status_id' => 6]]],
+                            'sourced' => ['filter' => ['term' => ['job_master_status_id' => 1]]],
+                            'evaluated' => ['filter' => ['term' => ['job_master_status_id' => 3]]],
+                            'offers' => ['filter' => ['exists' => ['field' => 'of_created_date']]],
                         ],
                     ],
-                ],
-                'aggs' => [
-                    'all_interview' => ['value_count' => ['field' => 'id']],
-                ],
-            ],
-        ];
-        $responseInterview = $elasticService->getClient()->search($params);
+                ];
+                $response = $elasticService->getClient()->search($params);
+                $allCandidates = $response['aggregations']['all_candidates']['value'] ?? 0;
+                $joined = $response['aggregations']['joined']['doc_count'] ?? 0;
+                $sourced = $response['aggregations']['sourced']['doc_count'] ?? 0;
+                $evaluated = $response['aggregations']['evaluated']['doc_count'] ?? 0;
+                $offers = $response['aggregations']['offers']['doc_count'] ?? 0;
+            }
 
-        return (object) [
-            'all_candidates' => $response['aggregations']['all_candidates']['value'] ?? 0,
-            'Joined' => $response['aggregations']['joined']['doc_count'] ?? 0,
-            'sourced' => $response['aggregations']['sourced']['doc_count'] ?? 0,
-            'evaluated' => $response['aggregations']['evaluated']['doc_count'] ?? 0,
-            'offers' => $response['aggregations']['offers']['doc_count'] ?? 0,
-            'all_interview' => $responseInterview['aggregations']['all_interview']['value'] ?? 0,
-        ];
+            if ($elasticService->indexExists(ELASTIC_INERTVIEW_TRACKER)) {
+                $paramsInterview = [
+                    'index' => ELASTIC_INERTVIEW_TRACKER,
+                    'request_cache' => true,
+                    'body' => [
+                        'size' => 0,
+                        'query' => [
+                            'bool' => [
+                                'must' => [
+                                    ['term' => ['client_id' => $client_id]],
+                                ],
+                            ],
+                        ],
+                        'aggs' => [
+                            'all_interview' => ['value_count' => ['field' => 'id']],
+                        ],
+                    ],
+                ];
+                $responseInterview = $elasticService->getClient()->search($paramsInterview);
+                $allInterview = $responseInterview['aggregations']['all_interview']['value'] ?? 0;
+            }
+
+            return (object) [
+                'all_candidates' => $allCandidates,
+                'Joined' => $joined,
+                'sourced' => $sourced,
+                'evaluated' => $evaluated,
+                'offers' => $offers,
+                'all_interview' => $allInterview,
+            ];
+        });
     }
 
     /**
@@ -13176,51 +13203,58 @@ END:VCALENDAR";
      */
     public static function DirectClientJobsCountAllStatus($from_company_id, $toCompanyId)
     {
+        $cacheKey = "ats:kpi:direct_client_jobs:{$from_company_id}:{$toCompanyId}";
 
-        $elasticService = app(ElasticService::class);
+        return cache()->remember($cacheKey, 900, function () use ($from_company_id, $toCompanyId) {
+            $elasticService = app(ElasticService::class);
+            if (! $elasticService->indexExists(ELASTIC_JOBS)) {
+                return (object) ['all_jobs' => 0, 'job_active' => 0, 'job_inactive' => 0, 'job_hold' => 0];
+            }
 
-        $must = [];
-        $must[] = [
-            'nested' => [
-                'path' => 'recommendation_relation',
-                'query' => [
-                    'bool' => [
-                        'must' => [
-                            ['term' => ['recommendation_relation.to_company_id' => (int) $toCompanyId]],
-                            ['term' => ['recommendation_relation.from_company_id' => (int) $from_company_id]],
-                            ['term' => ['recommendation_relation.final_status' => (int) 1]],
+            $must = [];
+            $must[] = [
+                'nested' => [
+                    'path' => 'recommendation_relation',
+                    'query' => [
+                        'bool' => [
+                            'must' => [
+                                ['term' => ['recommendation_relation.to_company_id' => (int) $toCompanyId]],
+                                ['term' => ['recommendation_relation.from_company_id' => (int) $from_company_id]],
+                                ['term' => ['recommendation_relation.final_status' => (int) 1]],
+                            ],
                         ],
                     ],
                 ],
-            ],
-        ];
+            ];
 
-        $params = [
-            'index' => ELASTIC_JOBS,
-            'body' => [
-                'size' => 0,
-                'query' => [
-                    'bool' => [
-                        'must' => $must,
+            $params = [
+                'index' => ELASTIC_JOBS,
+                'request_cache' => true,
+                'body' => [
+                    'size' => 0,
+                    'query' => [
+                        'bool' => [
+                            'must' => $must,
+                        ],
+                    ],
+                    'aggs' => [
+                        'all_jobs' => ['value_count' => ['field' => 'id']],
+                        'job_active' => ['filter' => ['term' => ['status' => 'active']]],
+                        'job_inactive' => ['filter' => ['term' => ['status' => 'inactive']]],
+                        'job_hold' => ['filter' => ['term' => ['status' => 'hold']]],
                     ],
                 ],
-                'aggs' => [
-                    'all_jobs' => ['value_count' => ['field' => 'id']],
-                    'job_active' => ['filter' => ['term' => ['status' => 'active']]],
-                    'job_inactive' => ['filter' => ['term' => ['status' => 'inactive']]],
-                    'job_hold' => ['filter' => ['term' => ['status' => 'hold']]],
-                ],
-            ],
-        ];
+            ];
 
-        $response = $elasticService->getClient()->search($params);
+            $response = $elasticService->getClient()->search($params);
 
-        return (object) [
-            'all_jobs' => $response['aggregations']['all_jobs']['value'] ?? 0,
-            'job_active' => $response['aggregations']['job_active']['doc_count'] ?? 0,
-            'job_inactive' => $response['aggregations']['job_inactive']['doc_count'] ?? 0,
-            'job_hold' => $response['aggregations']['job_hold']['doc_count'] ?? 0,
-        ];
+            return (object) [
+                'all_jobs' => $response['aggregations']['all_jobs']['value'] ?? 0,
+                'job_active' => $response['aggregations']['job_active']['doc_count'] ?? 0,
+                'job_inactive' => $response['aggregations']['job_inactive']['doc_count'] ?? 0,
+                'job_hold' => $response['aggregations']['job_hold']['doc_count'] ?? 0,
+            ];
+        });
     }
 
     /**
@@ -13230,65 +13264,87 @@ END:VCALENDAR";
      */
     public static function DirectClientCandidatesCountList($from_company_id, $to_company_id)
     {
+        $cacheKey = "ats:kpi:direct_client_cand:{$from_company_id}:{$to_company_id}";
 
-        $elasticService = app(ElasticService::class);
+        return cache()->remember($cacheKey, 900, function () use ($from_company_id, $to_company_id) {
+            $elasticService = app(ElasticService::class);
+            $allCandidates = 0;
+            $joined = 0;
+            $sourced = 0;
+            $evaluated = 0;
+            $offers = 0;
+            $allInterview = 0;
 
-        $params = [
-            'index' => ELASTIC_CANDIDATES,
-            'body' => [
-                'size' => 0,
-                'query' => [
-                    'bool' => [
-                        'must' => [
-                            ['term' => ['from_company_id' => $from_company_id]],
-                            ['term' => ['to_company_id' => $to_company_id]],
-                            ['term' => ['ClientComID' => $to_company_id]],
-                            ['term' => ['final_status' => 1]],
+            if ($elasticService->indexExists(ELASTIC_CANDIDATES)) {
+                $params = [
+                    'index' => ELASTIC_CANDIDATES,
+                    'request_cache' => true,
+                    'body' => [
+                        'size' => 0,
+                        'query' => [
+                            'bool' => [
+                                'must' => [
+                                    ['term' => ['from_company_id' => $from_company_id]],
+                                    ['term' => ['to_company_id' => $to_company_id]],
+                                    ['term' => ['ClientComID' => $to_company_id]],
+                                    ['term' => ['final_status' => 1]],
+                                ],
+                                'must_not' => [
+                                    ['terms' => ['job_master_status_id' => [8, 9]]],
+                                ],
+                            ],
                         ],
-                        'must_not' => [
-                            ['terms' => ['job_master_status_id' => [8, 9]]],
-                        ],
-                    ],
-                ],
-                'aggs' => [
-                    'all_candidates' => ['value_count' => ['field' => 'id']],
-                    'joined' => ['filter' => ['term' => ['job_master_status_id' => 6]]],
-                    'sourced' => ['filter' => ['term' => ['job_master_status_id' => 1]]],
-                    'evaluated' => ['filter' => ['term' => ['job_master_status_id' => 3]]],
-                    'offers' => ['filter' => ['exists' => ['field' => 'of_created_date']]],
-                ],
-            ],
-        ];
-
-        $response = $elasticService->getClient()->search($params);
-
-        $params = [
-            'index' => ELASTIC_INERTVIEW_TRACKER,
-            'body' => [
-                'size' => 0,
-                'query' => [
-                    'bool' => [
-                        'must' => [
-                            ['term' => ['from_company_id' => $from_company_id]],
-                            ['term' => ['ClientComID' => $to_company_id]],
+                        'aggs' => [
+                            'all_candidates' => ['value_count' => ['field' => 'id']],
+                            'joined' => ['filter' => ['term' => ['job_master_status_id' => 6]]],
+                            'sourced' => ['filter' => ['term' => ['job_master_status_id' => 1]]],
+                            'evaluated' => ['filter' => ['term' => ['job_master_status_id' => 3]]],
+                            'offers' => ['filter' => ['exists' => ['field' => 'of_created_date']]],
                         ],
                     ],
-                ],
-                'aggs' => [
-                    'all_interview' => ['value_count' => ['field' => 'id']],
-                ],
-            ],
-        ];
-        $responseInterview = $elasticService->getClient()->search($params);
+                ];
 
-        return (object) [
-            'all_candidates' => $response['aggregations']['all_candidates']['value'] ?? 0,
-            'Joined' => $response['aggregations']['joined']['doc_count'] ?? 0,
-            'sourced' => $response['aggregations']['sourced']['doc_count'] ?? 0,
-            'evaluated' => $response['aggregations']['evaluated']['doc_count'] ?? 0,
-            'offers' => $response['aggregations']['offers']['doc_count'] ?? 0,
-            'all_interview' => $responseInterview['aggregations']['all_interview']['value'] ?? 0,
-        ];
+                $response = $elasticService->getClient()->search($params);
+                $allCandidates = $response['aggregations']['all_candidates']['value'] ?? 0;
+                $joined = $response['aggregations']['joined']['doc_count'] ?? 0;
+                $sourced = $response['aggregations']['sourced']['doc_count'] ?? 0;
+                $evaluated = $response['aggregations']['evaluated']['doc_count'] ?? 0;
+                $offers = $response['aggregations']['offers']['doc_count'] ?? 0;
+            }
+
+            if ($elasticService->indexExists(ELASTIC_INERTVIEW_TRACKER)) {
+                $paramsInterview = [
+                    'index' => ELASTIC_INERTVIEW_TRACKER,
+                    'request_cache' => true,
+                    'body' => [
+                        'size' => 0,
+                        'query' => [
+                            'bool' => [
+                                'must' => [
+                                    ['term' => ['from_company_id' => $from_company_id]],
+                                    ['term' => ['to_company_id' => $to_company_id]],
+                                ],
+                            ],
+                        ],
+                        'aggs' => [
+                            'all_interview' => ['value_count' => ['field' => 'id']],
+                        ],
+                    ],
+                ];
+
+                $responseInterview = $elasticService->getClient()->search($paramsInterview);
+                $allInterview = $responseInterview['aggregations']['all_interview']['value'] ?? 0;
+            }
+
+            return (object) [
+                'all_candidates' => $allCandidates,
+                'Joined' => $joined,
+                'sourced' => $sourced,
+                'evaluated' => $evaluated,
+                'offers' => $offers,
+                'all_interview' => $allInterview,
+            ];
+        });
     }
 
     public static function agencyJobsCount($company_id)

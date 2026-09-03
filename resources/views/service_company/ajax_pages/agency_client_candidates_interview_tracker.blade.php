@@ -6,6 +6,8 @@
     $feedback_status = GeneralMethod::feedback_status();
     $available_status = GeneralMethod::available_status();
 
+    $childStatusIds = collect($data)->pluck('child_status_id')->filter()->unique()->toArray();
+    $childStatusMap = !empty($childStatusIds) ? DB::table('candidate_status')->select('id', 'name')->whereIn('id', $childStatusIds)->get()->keyBy('id') : collect();
 @endphp
 @if (count($data) > 0)
     @foreach ($data as $rowArr)
@@ -266,11 +268,7 @@
                         $name = 'Private';
                     }
                     if (!empty(@$row->child_status_id) && @$row->child_status_id > 0) {
-                        $childStatus = '';
-                        $childStatus = DB::table('candidate_status')
-                            ->select('*')
-                            ->where('id', $row->child_status_id)
-                            ->first();
+                        $childStatus = $childStatusMap->get($row->child_status_id);
                         if (!empty($childStatus)) {
                             $name = @$childStatus->name;
                         }
