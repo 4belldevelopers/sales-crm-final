@@ -4221,26 +4221,56 @@ setTimeout(() => {
   $rdcDownloadUrl = '';
   $rdcR2DirectUrl = '';
   $rdcR2PublicUrl = '';
+  $rdcResumePdfUrl = '';
+  $rdcResumeAvailable = false;
   $rdcResumeRaw = (string)(@$application->resume ?? '');
   if($rdcResumeRaw !== ''){
-    if($resumeAwsPath || strpos($rdcResumeRaw, 'file.jero.works') !== false){
-      $rdcDownloadUrl = route('download.resume', ['id' => $application->id, 'path' => rtrim(strtr(base64_encode($rdcResumeRaw), '+/', '-_'), '=')]);
-    } elseif(filter_var($rdcResumeRaw, FILTER_VALIDATE_URL)){
-      $rdcDownloadUrl = $rdcResumeRaw;
-    } else {
-      $rdcDownloadUrl = url($rdcResumeRaw);
-    }
-
     // Option 14 uses this signed URL so the browser fetches DOCX from R2 instead of Laravel streaming it.
     $rdcR2Key = '';
     if(strpos($rdcResumeRaw, 'https://file.jero.works/') === 0){
       $rdcR2Key = ltrim((string)parse_url($rdcResumeRaw, PHP_URL_PATH), '/');
-      $rdcR2PublicUrl = $rdcResumeRaw;
     } elseif($resumeAwsPath && !filter_var($rdcResumeRaw, FILTER_VALIDATE_URL)){
       $rdcR2Key = ltrim($rdcResumeRaw, '/');
-      $rdcR2PublicUrl = 'https://file.jero.works/'.$rdcR2Key;
     }
+
     if($rdcR2Key !== ''){
+      try{
+        $rdcR2ResolvedKey = $rdcR2Key;
+        if(!\Illuminate\Support\Facades\Storage::disk('r2')->exists($rdcR2ResolvedKey)){
+          $rdcR2FallbackKey = preg_replace('/\.[^.\/]+$/', '.pdf', $rdcR2ResolvedKey);
+          if($rdcR2FallbackKey !== $rdcR2ResolvedKey && \Illuminate\Support\Facades\Storage::disk('r2')->exists($rdcR2FallbackKey)){
+            $rdcR2ResolvedKey = $rdcR2FallbackKey;
+          } else {
+            $rdcR2ResolvedKey = '';
+          }
+        }
+        if($rdcR2ResolvedKey !== ''){
+          $rdcResumeAvailable = true;
+          $rdcR2Key = $rdcR2ResolvedKey;
+          $rdcDownloadUrl = route('download.resume', ['id' => $application->id, 'path' => rtrim(strtr(base64_encode($rdcR2Key), '+/', '-_'), '=')]);
+          $rdcR2PublicUrl = 'https://file.jero.works/'.$rdcR2Key;
+        }
+      } catch(\Throwable $e) {
+        $rdcResumeAvailable = false;
+        $rdcDownloadUrl = '';
+        $rdcR2PublicUrl = '';
+      }
+    } elseif(filter_var($rdcResumeRaw, FILTER_VALIDATE_URL)) {
+      $rdcResumeAvailable = true;
+      $rdcDownloadUrl = $rdcResumeRaw;
+      $rdcR2DirectUrl = strpos($rdcResumeRaw, request()->getSchemeAndHttpHost()) !== 0 ? $rdcResumeRaw : '';
+      $rdcR2PublicUrl = $rdcR2DirectUrl;
+    } else {
+      $rdcResumeAvailable = true;
+      $rdcDownloadUrl = url($rdcResumeRaw);
+    }
+
+    if($rdcResumeAvailable){
+      $rdcResumeConvertToken = rtrim(strtr(base64_encode(GeneralMethod::value_encrypt((string) $rdcResumeRaw)), '+/', '-_'), '=');
+      $rdcResumePdfUrl = route('service_company.job-applications.resume-convert', ['token' => $rdcResumeConvertToken]);
+    }
+
+    if($rdcR2Key !== '' && $rdcResumeAvailable){
       try{
         $rdcR2DownloadName = str_replace('"', '', basename($rdcR2Key));
         $rdcR2DirectUrl = \Illuminate\Support\Facades\Storage::disk('r2')->temporaryUrl(
@@ -4249,11 +4279,8 @@ setTimeout(() => {
           ['ResponseContentDisposition' => 'attachment; filename="'.$rdcR2DownloadName.'"']
         );
       } catch(\Throwable $e) {
-        $rdcR2DirectUrl = strpos($rdcResumeRaw, 'https://file.jero.works/') === 0 ? $rdcResumeRaw : '';
+        $rdcR2DirectUrl = $rdcR2PublicUrl;
       }
-    } elseif(filter_var($rdcResumeRaw, FILTER_VALIDATE_URL) && strpos($rdcResumeRaw, request()->getSchemeAndHttpHost()) !== 0) {
-      $rdcR2DirectUrl = $rdcResumeRaw;
-      $rdcR2PublicUrl = $rdcResumeRaw;
     }
   }
 @endphp
@@ -4261,7 +4288,8 @@ setTimeout(() => {
      data-dl-url="{{ $rdcDownloadUrl }}"
      data-r2-direct-url="{{ $rdcR2DirectUrl }}"
      data-r2-public-url="{{ $rdcR2PublicUrl }}"
-     data-resume-pdf-url="{{ !empty($application->resume) ? route('service_company.job-applications.resume-convert', ['token' => GeneralMethod::value_encrypt((string) $application->resume)]) : '' }}"
+     data-resume-pdf-url="{{ $rdcResumePdfUrl }}"
+     data-has-resume="{{ $rdcResumeAvailable ? 'true' : 'false' }}"
      data-has-aws="{{ $resumeAwsPath ? 'true' : 'false' }}"
      data-file-ext="{{ strtoupper(pathinfo((string)@$application->resume, PATHINFO_EXTENSION) ?: 'FILE') }}"></div>
 <link rel="modulepreload" href="https://file.jero.works/js/opendoc/casual_doc_wasm.js?v=opendoc-20260903" crossorigin>
@@ -5052,6 +5080,24 @@ async function convertDocxResumeToPdfBlob(resumeUrl){
     removeNode(host);
   }
 }
+async function convertDocxResumeToPdfBlobFromSources(resumeUrls){
+  var sources=(Array.isArray(resumeUrls) ? resumeUrls : [resumeUrls]).map(function(url){
+    return clean(url,'');
+  }).filter(function(url,index,self){
+    return url && url!=='--' && self.indexOf(url)===index;
+  });
+  if(!sources.length) throw new Error('DOCX resume URL not available for browser fallback');
+  var lastErr=null;
+  for(var i=0;i<sources.length;i++){
+    try{
+      return await convertDocxResumeToPdfBlob(sources[i]);
+    }catch(err){
+      lastErr=err;
+      console.warn('Legacy browser DOCX conversion failed:',sources[i],err);
+    }
+  }
+  throw new Error('DOCX browser fallback failed across all resume sources. '+(lastErr && lastErr.message ? lastErr.message : ''));
+}
 async function fetchPdfResumeBlob(resumePdfUrl){
   resumePdfUrl=clean(resumePdfUrl,'');
   if(!resumePdfUrl) throw new Error('Resume PDF URL not available');
@@ -5759,14 +5805,19 @@ async function buildSmartBrandedResume(resumePdfUrl,options){
     if(['PDF','DOC','DOCX'].indexOf(resumeExt)===-1) throw new Error('Smart branded resume is available for PDF, DOC and DOCX resumes only');
     var resumeBlob=null;
     if(resumeExt==='PDF'){
-      resumeBlob=await fetchPdfBlobFromSources(resumeSources.concat([resumePdfUrl]));
+      resumeBlob=await fetchPdfBlobFromSources(resumeSources);
     }else if(resumeExt==='DOCX'){
       try{
         resumeBlob=await convertResumeWithOpenDocLabBlob(resumeSources,resumeExt,false);
       }catch(browserDocxErr){
-        console.warn('Browser DOCX branding conversion failed; using converter PDF URL if available:',browserDocxErr);
-        if(!resumePdfUrl) throw browserDocxErr;
-        resumeBlob=await fetchPdfResumeBlob(resumePdfUrl);
+        console.warn('OpenDoc DOCX branding conversion failed; trying legacy browser renderer:',browserDocxErr);
+        try{
+          resumeBlob=await convertDocxResumeToPdfBlobFromSources(resumeSources);
+        }catch(legacyDocxErr){
+          console.warn('Legacy DOCX branding conversion failed; using converter PDF URL if available:',legacyDocxErr);
+          if(!resumePdfUrl) throw legacyDocxErr;
+          resumeBlob=await fetchPdfResumeBlob(resumePdfUrl);
+        }
       }
     }else{
       if(!resumePdfUrl) throw new Error('DOC resume needs enterprise converter PDF URL');
@@ -5903,14 +5954,19 @@ async function buildSmartPreScreenedResume(resumePdfUrl,options){
     var reportBlob=await buildRecruiterSummaryBlob(data,options);
     var resumeBlob=null;
     if(resumeExt==='PDF'){
-      resumeBlob=await fetchPdfBlobFromSources(resumeSources.concat([resumePdfUrl]));
+      resumeBlob=await fetchPdfBlobFromSources(resumeSources);
     }else if(resumeExt==='DOCX'){
       try{
         resumeBlob=await convertResumeWithOpenDocLabBlob(resumeSources,resumeExt,false);
       }catch(browserDocxErr){
-        console.warn('Browser DOCX conversion failed; using converter PDF URL if available:',browserDocxErr);
-        if(!resumePdfUrl) throw browserDocxErr;
-        resumeBlob=await fetchPdfResumeBlob(resumePdfUrl);
+        console.warn('OpenDoc DOCX conversion failed; trying legacy browser renderer:',browserDocxErr);
+        try{
+          resumeBlob=await convertDocxResumeToPdfBlobFromSources(resumeSources);
+        }catch(legacyDocxErr){
+          console.warn('Legacy DOCX conversion failed; using converter PDF URL if available:',legacyDocxErr);
+          if(!resumePdfUrl) throw legacyDocxErr;
+          resumeBlob=await fetchPdfResumeBlob(resumePdfUrl);
+        }
       }
     }else{
       if(!resumePdfUrl) throw new Error('DOC resume needs enterprise converter PDF URL');
@@ -6149,6 +6205,7 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
   var r2PublicUrl = rdcData ? rdcData.getAttribute('data-r2-public-url') : '';
   var resumePdfUrl = rdcData ? rdcData.getAttribute('data-resume-pdf-url') : '';
   var resumeExt = rdcData ? (rdcData.getAttribute('data-file-ext') || '').toUpperCase() : '';
+  var hasResume = rdcData ? rdcData.getAttribute('data-has-resume') === 'true' : false;
 
   var optMeta = {
     1: {cost:1, label:'Download Original Resume',       avail:true,  dlKey:null},
@@ -6163,7 +6220,19 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
   var selectedOpt = 1;
   var isLoading   = false;
 
+  function hasDownloadableResume(){
+    return hasResume && !!(dlUrl || r2DirectUrl || r2PublicUrl || resumePdfUrl);
+  }
+
+  function showNoResumeMessage(){
+    showToast('No resume uploaded for this candidate. Please upload the resume first.', 'warn');
+  }
+
   function openRdc(){
+    if(!hasDownloadableResume()){
+      showNoResumeMessage();
+      return;
+    }
     overlay.classList.add('rdc-open');
     drawer.classList.add('rdc-open');
     overlay.setAttribute('aria-hidden','false');
@@ -6188,9 +6257,20 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
   if(origBtn){
     var newBtn = origBtn.cloneNode(true);
     origBtn.parentNode.replaceChild(newBtn, origBtn);
+    if(!hasDownloadableResume()){
+      newBtn.setAttribute('aria-disabled','true');
+      newBtn.setAttribute('title','No resume uploaded for this candidate');
+      newBtn.style.opacity = '0.55';
+      newBtn.style.cursor = 'not-allowed';
+    }
     newBtn.addEventListener('click', function(e){
       e.preventDefault();
       e.stopPropagation();
+      if(!hasDownloadableResume()){
+        newBtn.setAttribute('aria-expanded','false');
+        showNoResumeMessage();
+        return;
+      }
       newBtn.setAttribute('aria-expanded','true');
       openRdc();
     });
@@ -6508,7 +6588,7 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
           showToast('Branded resume is available for PDF, DOC and DOCX resumes only.', 'warn');
           resetBtn(); return;
         }
-        if(resumeExt === 'PDF' && !r2DirectUrl && !r2PublicUrl && !dlUrl && !resumePdfUrl){
+        if(resumeExt === 'PDF' && !r2DirectUrl && !r2PublicUrl && !dlUrl){
           showToast('PDF resume URL is not available.', 'warn');
           resetBtn(); return;
         }
@@ -6545,7 +6625,7 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
           showToast('Final package is available for PDF, DOC and DOCX resumes only.', 'warn');
           resetBtn(); return;
         }
-        if(resumeExt === 'PDF' && !r2DirectUrl && !r2PublicUrl && !dlUrl && !resumePdfUrl){
+        if(resumeExt === 'PDF' && !r2DirectUrl && !r2PublicUrl && !dlUrl){
           showToast('PDF resume URL is not available.', 'warn');
           resetBtn(); return;
         }
