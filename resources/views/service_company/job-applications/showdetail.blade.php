@@ -4603,7 +4603,7 @@ function rsEnsureOpenDocLab(allowExternalFallback){
     }catch(importErr){
       var moduleResponse=null;
       try{
-        moduleResponse=await fetch(moduleUrl,{mode:'cors',cache:'no-store'});
+        moduleResponse=await fetch(moduleUrl,{mode:'cors',cache:'force-cache'});
       }catch(moduleFetchErr){
         throw new Error('OpenDoc module fetch failed for '+moduleUrl+': '+(moduleFetchErr && moduleFetchErr.message ? moduleFetchErr.message : 'network blocked'));
       }
@@ -5721,7 +5721,11 @@ async function buildHybridWordPreScreenedResume(resumePdfUrl,options){
   window.__rsBusy=true;
   try{
     options=options||{};
-    var resumeSources=Array.isArray(options.resumeUrl) ? options.resumeUrl : [options.resumeUrl||''];
+    var resumeSources=(Array.isArray(options.resumeUrl) ? options.resumeUrl : [options.resumeUrl||'']).map(function(url){
+      return clean(url,'');
+    }).filter(function(url,index,self){
+      return url && url!=='--' && self.indexOf(url)===index;
+    });
     var resumeUrl=clean(resumeSources[0]||'','');
     var resumeExt=clean(options.resumeExt||'','').toUpperCase();
     if(resumeUrl==='--') resumeUrl='';
@@ -6101,7 +6105,7 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
     11:{cost:0, label:'Browser DOCX Conversion Beta',    avail:(resumeExt === 'DOCX'),  dlKey:'browser-docx-pdf-conversion', unavailableMsg:'Browser conversion is available only for DOCX resumes. Use option 10 for PDF/DOC files.'},
     12:{cost:0, label:'OpenDoc Preview Conversion Lab',  avail:(resumeExt === 'DOCX'),  dlKey:'opendoc-preview-lab', unavailableMsg:'OpenDoc lab is available only for DOCX resumes.'},
     13:{cost:8, label:'Word Resume + Pre-Screened Report', avail:(['DOC','DOCX'].indexOf(resumeExt) !== -1), dlKey:'word-prescreened-package', unavailableMsg:'This option is available only for DOC and DOCX resumes.'},
-    14:{cost:8, label:'Client-Side DOCX Report Package', avail:(resumeExt === 'DOCX' && !!r2DirectUrl), dlKey:'hybrid-word-prescreened-package', unavailableMsg:'Client-side package needs a direct R2 DOCX URL. Use option 13 for DOC files or server converter mode.'}
+    14:{cost:8, label:'Client-Side DOCX Report Package', avail:(resumeExt === 'DOCX' && (!!r2DirectUrl || !!r2PublicUrl)), dlKey:'hybrid-word-prescreened-package', unavailableMsg:'Client-side package needs a direct R2 DOCX URL. Use option 13 for DOC files or server converter mode.'}
   };
 
   var selectedOpt = 1;
@@ -6358,7 +6362,7 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
           showToast('Please wait a moment and try again.', 'warn');
           resetBtn(); return;
         }
-        if(resumeExt !== 'DOCX' || !r2DirectUrl){
+        if(resumeExt !== 'DOCX' || (!r2DirectUrl && !r2PublicUrl)){
           showToast('Direct R2 DOCX URL is not available. Use option 13 for server converter mode.', 'warn');
           resetBtn(); return;
         }
