@@ -6308,12 +6308,12 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
 
   function startSmartCountdown(prefix){
     stopSmartCountdown();
-    var remaining = 60;
+    var countdownEndsAt = Date.now() + 60000;
     function render(){
       if(!dlBtn) return;
+      var remaining = Math.max(0, Math.ceil((countdownEndsAt - Date.now()) / 1000));
       var label = remaining > 0 ? prefix + ' ' + remaining + 's' : prefix + ' Finalizing...';
       dlBtn.innerHTML = '<span class="rdc-spin"></span><span>' + label + '</span>';
-      remaining--;
     }
     render();
     smartCountdownTimer = setInterval(render, 1000);
@@ -6531,17 +6531,19 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
           resetBtn(); return;
         }
         startSmartCountdown('Generating Report, Kindly wait.');
-        window.__buildSmartPreScreenedResume(resumePdfUrl,{
-          noBranding:(m.dlKey === 'smart-prescreened-package-nobrand'),
-          resumeUrl:[r2DirectUrl,r2PublicUrl],
-          resumeExt:resumeExt
-        }).then(function(ok){
-          if(ok) closeRdc();
-        }).catch(function(){
-          showToast('Could not generate final package. Please try option 13 or option 10.', 'warn');
-        }).finally(function(){
-          resetBtn();
-        });
+        setTimeout(function(){
+          window.__buildSmartPreScreenedResume(resumePdfUrl,{
+            noBranding:(m.dlKey === 'smart-prescreened-package-nobrand'),
+            resumeUrl:[r2DirectUrl,r2PublicUrl],
+            resumeExt:resumeExt
+          }).then(function(ok){
+            if(ok) closeRdc();
+          }).catch(function(){
+            showToast('Could not generate final package. Please try option 13 or option 10.', 'warn');
+          }).finally(function(){
+            resetBtn();
+          });
+        }, 250);
 
       } else if(m.dlKey === 'pdf'){
         /* Option 7: Export Candidate Profile PDF */
