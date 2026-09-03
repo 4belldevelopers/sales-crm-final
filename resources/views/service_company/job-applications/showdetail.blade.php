@@ -5246,14 +5246,15 @@ async function buildHeadlessOption3SkillsHighlightedResume(options){
       pdfBlob=await fetchPdfBlobFromSources(resumeSources);
     }else if(resumeExt==='DOCX'){
       try{
-        pdfBlob=await convertDocxResumeToHighlightedPdfBlobFromSources(resumeSources,rsDrawerHighlightedKeywords());
+        pdfBlob=await convertResumeWithOpenDocLabBlob(resumeSources,resumeExt,false);
       }catch(browserDocxErr){
-        console.warn('Option 8 DOCX browser highlight conversion failed; using enterprise converter PDF if available:',browserDocxErr);
+        console.warn('Option 8 DOCX OpenDoc conversion failed; trying option 15 legacy browser renderer:',browserDocxErr);
         try{
-          if(!resumePdfUrl) throw browserDocxErr;
+          pdfBlob=await convertDocxResumeToPdfBlobFromSources(resumeSources);
+        }catch(legacyDocxErr){
+          console.warn('Option 8 DOCX legacy browser conversion failed; using converter PDF URL if available:',legacyDocxErr);
+          if(!resumePdfUrl) throw legacyDocxErr;
           pdfBlob=await fetchPdfResumeBlob(resumePdfUrl);
-        }catch(converterErr){
-          throw converterErr;
         }
       }
     }else{
@@ -6555,7 +6556,7 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
         </span>
         <span class="rdc-obody">
           <span class="rdc-otitle">Resume + Skills Highlighted <span style="background:#ecfeff;color:#0e7490;font-size:8.5px;font-weight:700;padding:1px 6px;border-radius:4px;vertical-align:middle;margin-left:4px;">Smart</span></span>
-          <span class="rdc-odesc">PDF uses signed R2 direct fetch; DOCX converts in browser first, then highlights and downloads</span>
+          <span class="rdc-odesc">PDF uses signed R2 direct fetch; DOCX uses the option 15 converter chain, then highlights and downloads</span>
         </span>
         <span class="rdc-ometa">
           <span class="rdc-ocost">4 Coins</span>
