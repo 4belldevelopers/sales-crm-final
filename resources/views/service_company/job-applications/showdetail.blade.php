@@ -5131,7 +5131,8 @@ function rsKeywordRegex(list){
   if(!cleaned.length) return null;
   cleaned.sort(function(a,b){ return b.length-a.length; });
   return new RegExp(cleaned.map(function(value){
-    var tokens=value.split(/[\s\/_\-.]+/).filter(Boolean);
+    var expanded=value.replace(/([a-z])([A-Z])/g,'$1 $2').replace(/([A-Za-z])(\d)/g,'$1 $2').replace(/(\d)([A-Za-z])/g,'$1 $2');
+    var tokens=expanded.split(/[\s\/_\-.]+/).filter(Boolean);
     var left=/^[A-Za-z0-9]/.test(value) ? '\\b' : '';
     var right=/[A-Za-z0-9]$/.test(value) ? '\\b' : '';
     if(tokens.length>1){
@@ -5155,6 +5156,7 @@ function rsDrawerHighlightedKeywords(){
   Array.prototype.slice.call(document.querySelectorAll('#kt_activitiesApplication .cdr-skill-tag.cdr-skill-match:not(.cdr-skill-more), .cdr-skill-tag.cdr-skill-match:not(.cdr-skill-more)')).forEach(function(el){
     addKeyword(el.textContent || '');
   });
+  (Array.isArray(rsAtsHighlightKeywords) ? rsAtsHighlightKeywords : []).forEach(addKeyword);
   return values.length ? values : rsAtsHighlightKeywords;
 }
 function rsMarkKeywordMatches(root,re){
@@ -5189,6 +5191,120 @@ function rsMarkKeywordMatches(root,re){
     node.parentNode.replaceChild(frag,node);
   });
 }
+function rsTextItemRect(item,viewport){
+  if(!item || !viewport || !(window.pdfjsLib && window.pdfjsLib.Util)) return null;
+  var tx=window.pdfjsLib.Util.transform(viewport.transform,item.transform);
+  var h=Math.max(Math.abs((item.height||0)*viewport.scale),Math.abs(tx[3]||0),6);
+  var w=Math.max(Math.abs((item.width||0)*viewport.scale),2);
+  return {x:tx[4],y:tx[5]-h,w:w,h:h};
+}
+function rsPageTextRuns(textContent){
+  var text='';
+  var runs=[];
+  (textContent && Array.isArray(textContent.items) ? textContent.items : []).forEach(function(item){
+    var value=(item && item.str ? String(item.str) : '');
+    if(!value.trim()) return;
+    if(text.length) text+=' ';
+    var start=text.length;
+    text+=value;
+    runs.push({item:item,start:start,end:text.length});
+  });
+  return {text:text,runs:runs};
+}
+function rsDrawKeywordHitsFromTextItems(ctx,textContent,viewport,keywordRe){
+  if(!ctx || !textContent || !viewport || !keywordRe) return 0;
+  var page=rsPageTextRuns(textContent);
+  if(!page.text || !page.runs.length) return 0;
+  keywordRe.lastIndex=0;
+  var count=0,match;
+  ctx.fillStyle='rgba(255,214,10,0.42)';
+  while((match=keywordRe.exec(page.text))!==null){
+    var start=match.index;
+    var end=start+match[0].length;
+    page.runs.forEach(function(run){
+      if(run.end<=start || run.start>=end) return;
+      var rect=rsTextItemRect(run.item,viewport);
+      if(!rect) return;
+      ctx.fillRect(rect.x,rect.y,rect.w,Math.max(rect.h,6));
+      count++;
+    });
+    if(match.index===keywordRe.lastIndex) keywordRe.lastIndex++;
+  }
+  return count;
+}
+async function convertDocxResumeToHighlightedPdfBlobFromSources(resumeUrls,keywords){
+  await rsEnsureDocxConversion();
+  var bytes=await fetchResumeBytesFromSources(resumeUrls);
+  var keywordRe=rsKeywordRegex(keywords);
+  var host=document.createElement('div');
+  host.setAttribute('aria-hidden','true');
+  host.style.cssText='position:fixed;left:-12000px;top:0;width:auto;min-width:794px;min-height:1123px;background:#fff;overflow:visible;pointer-events:none;';
+  document.body.appendChild(host);
+  try{
+    var pages;
+    try{
+      pages=await renderOriginalDocxResume(bytes,host);
+    }catch(renderErr){
+      console.warn('DOCX original-format render failed for highlights, using readable fallback:',renderErr);
+      host.innerHTML='';
+      pages=await renderReadableDocxResume(bytes,host);
+    }
+    if(keywordRe){
+      pages.forEach(function(page){ rsMarkKeywordMatches(page,keywordRe); });
+    }
+    var style=document.createElement('style');
+    style.textContent='.rdc-smart-hit{background:rgba(255,214,10,.46)!important;color:inherit!important;border-radius:2px;padding:0 1px;}';
+    host.insertBefore(style,host.firstChild);
+    await waitForRenderedAssets(host);
+    var JsPDF=window.jspdf.jsPDF;
+    var pdf=new JsPDF({orientation:'portrait',unit:'pt',format:'a4',compress:true});
+    var pageW=pdf.internal.pageSize.getWidth();
+    var pageH=pdf.internal.pageSize.getHeight();
+    for(var i=0;i<pages.length;i++){
+      var pageEl=pages[i];
+      var rect=pageEl.getBoundingClientRect();
+      if(!rect.width || rect.width<500 || rect.width>1100) pageEl.style.width='794px';
+      pageEl.style.margin='0';
+      pageEl.style.boxShadow='none';
+      pageEl.style.background='#ffffff';
+      pageEl.style.maxWidth='none';
+      var canvas=await window.html2canvas(pageEl,{
+        backgroundColor:'#ffffff',
+        scale:Math.max(2.5,Math.min(3,window.devicePixelRatio||2.5)),
+        useCORS:true,
+        allowTaint:false,
+        logging:false,
+        removeContainer:true,
+        scrollX:0,
+        scrollY:0,
+        windowWidth:Math.ceil(pageEl.scrollWidth||pageEl.getBoundingClientRect().width||794),
+        windowHeight:Math.ceil(pageEl.scrollHeight||pageEl.getBoundingClientRect().height||1123)
+      });
+      var sliceHeight=Math.max(1,Math.floor(canvas.width*(pageH/pageW)));
+      var offsetY=0;
+      var isFirstSlice=true;
+      while(offsetY<canvas.height){
+        if(i>0 || !isFirstSlice) pdf.addPage('a4','portrait');
+        var currentHeight=Math.min(sliceHeight,canvas.height-offsetY);
+        var slice=document.createElement('canvas');
+        slice.width=canvas.width;
+        slice.height=currentHeight;
+        var sctx=slice.getContext('2d');
+        sctx.fillStyle='#ffffff';
+        sctx.fillRect(0,0,slice.width,slice.height);
+        sctx.drawImage(canvas,0,offsetY,canvas.width,currentHeight,0,0,canvas.width,currentHeight);
+        var img=slice.toDataURL('image/jpeg',0.92);
+        var renderH=(currentHeight/canvas.width)*pageW;
+        pdf.addImage(img,'JPEG',0,0,pageW,Math.min(renderH,pageH),undefined,'FAST');
+        offsetY+=currentHeight;
+        isFirstSlice=false;
+      }
+    }
+    return pdf.output('blob');
+  }finally{
+    removeNode(host);
+  }
+}
 async function renderHighlightedPdfBlob(pdfBlob,keywords){
   await Promise.all([rsEnsurePdfJs(),rsEnsureJsPdf()]);
   var sourceBytes=await pdfBlob.arrayBuffer();
@@ -5198,10 +5314,6 @@ async function renderHighlightedPdfBlob(pdfBlob,keywords){
   var doc=await window.pdfjsLib.getDocument({data:bytes}).promise;
   var JsPDF=window.jspdf.jsPDF;
   var keywordRe=rsKeywordRegex(keywords);
-  var host=document.createElement('div');
-  host.setAttribute('aria-hidden','true');
-  host.style.cssText='position:fixed;left:-14000px;top:0;width:900px;background:#fff;pointer-events:none;opacity:0;';
-  document.body.appendChild(host);
   var outPdf=null;
   try{
     for(var p=1;p<=doc.numPages;p++){
@@ -5211,12 +5323,6 @@ async function renderHighlightedPdfBlob(pdfBlob,keywords){
       var cssViewport=pdfJsPage.getViewport({scale:cssScale});
       var renderScale=Math.min(3,2800/base.width);
       var renderViewport=pdfJsPage.getViewport({scale:renderScale});
-      var pageWrap=document.createElement('div');
-      pageWrap.style.cssText='position:relative;width:'+Math.floor(cssViewport.width)+'px;height:'+Math.floor(cssViewport.height)+'px;background:#fff;';
-      var textLayer=document.createElement('div');
-      textLayer.style.cssText='position:absolute;left:0;top:0;width:'+Math.floor(cssViewport.width)+'px;height:'+Math.floor(cssViewport.height)+'px;';
-      pageWrap.appendChild(textLayer);
-      host.appendChild(pageWrap);
       var canvas=document.createElement('canvas');
       canvas.width=Math.floor(renderViewport.width);
       canvas.height=Math.floor(renderViewport.height);
@@ -5225,19 +5331,8 @@ async function renderHighlightedPdfBlob(pdfBlob,keywords){
       ctx.fillRect(0,0,canvas.width,canvas.height);
       await pdfJsPage.render({canvasContext:ctx,viewport:renderViewport}).promise;
       var tc=await pdfJsPage.getTextContent();
-      try{
-        var task=window.pdfjsLib.renderTextLayer({textContent:tc,container:textLayer,viewport:cssViewport,textDivs:[]});
-        if(task && task.promise) await task.promise;
-      }catch(err){}
-      var pr=pageWrap.getBoundingClientRect();
       if(keywordRe){
-        rsMarkKeywordMatches(textLayer,keywordRe);
-        ctx.fillStyle='rgba(255,214,10,0.42)';
-        Array.prototype.slice.call(textLayer.querySelectorAll('mark.rdc-smart-hit')).forEach(function(mk){
-          var r=mk.getBoundingClientRect();
-          if(!r.width || !r.height || !pr.width || !pr.height) return;
-          ctx.fillRect((r.left-pr.left)/pr.width*canvas.width,(r.top-pr.top)/pr.height*canvas.height,r.width/pr.width*canvas.width,Math.max(r.height/pr.height*canvas.height,6));
-        });
+        rsDrawKeywordHitsFromTextItems(ctx,tc,renderViewport,keywordRe);
       }
       var imgData=canvas.toDataURL('image/jpeg',0.9);
       var pageW=Math.round(cssViewport.width);
@@ -5246,12 +5341,11 @@ async function renderHighlightedPdfBlob(pdfBlob,keywords){
       if(!outPdf) outPdf=new JsPDF({orientation:orient,unit:'px',format:[pageW,pageH]});
       else outPdf.addPage([pageW,pageH],orient);
       outPdf.addImage(imgData,'JPEG',0,0,pageW,pageH,undefined,'FAST');
-      host.removeChild(pageWrap);
     }
     if(!outPdf) throw new Error('No resume pages were rendered');
     return outPdf.output('blob');
   }finally{
-    host.remove();
+    // No DOM cleanup is needed here; PDF highlighting is coordinate-based.
   }
 }
 async function buildSmartHighlightedResume(options){
@@ -5269,17 +5363,12 @@ async function buildSmartHighlightedResume(options){
     var resumeBlob=null;
     if(resumeExt==='PDF'){
       resumeBlob=await fetchPdfBlobFromSources(resumeSources);
+      resumeBlob=await renderHighlightedPdfBlob(resumeBlob,rsDrawerHighlightedKeywords());
     }else{
-      try{
-        resumeBlob=await convertResumeWithOpenDocLabBlob(resumeSources,resumeExt,false);
-      }catch(openDocErr){
-        console.warn('OpenDoc highlighted conversion failed; trying legacy DOCX renderer:',openDocErr);
-        resumeBlob=await convertDocxResumeToPdfBlobFromSources(resumeSources);
-      }
+      resumeBlob=await convertDocxResumeToHighlightedPdfBlobFromSources(resumeSources,rsDrawerHighlightedKeywords());
     }
     var data=readData();
-    var highlightedBlob=await renderHighlightedPdfBlob(resumeBlob,rsDrawerHighlightedKeywords());
-    downloadBlob(highlightedBlob,'JEROWORKS_'+fileSafeName(data.name,'Candidate')+'_Highlighted.pdf');
+    downloadBlob(resumeBlob,'JEROWORKS_'+fileSafeName(data.name,'Candidate')+'_Highlighted.pdf');
     return true;
   }catch(err){
     console.error('Smart Highlighted Resume error:',err);
