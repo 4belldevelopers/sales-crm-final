@@ -523,7 +523,6 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
 
         $params = [
             'index' => ELASTIC_CANDIDATES_BENCH,
-            'request_cache' => true,
             'body' => [
                 'from' => $from,
                 'size' => $size,
@@ -712,7 +711,6 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
 
             $params = [
                 'index' => ELASTIC_CANDIDATES_BENCH,
-                'request_cache' => true,
                 'body' => [
                     'from' => $from,
                     'size' => $size,
@@ -4426,7 +4424,6 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
         ];
         $params = [
             'index' => ELASTIC_CANDIDATES,
-            'request_cache' => true,
             'body' => [
                 'from' => $from,
                 'size' => $size,
@@ -4606,7 +4603,6 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
 
         $params = [
             'index' => ELASTIC_CANDIDATES,
-            'request_cache' => true,
             'body' => [
                 'from' => $from,
                 'size' => $size,
@@ -5748,13 +5744,15 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
     {
         // dd($request->id);
         $this->bench_id = $request->id;
-        $this->bench_detail = JobApplication::select('job_applications.id', 'job_applications.full_name', 'job_applications.current_designation', 'job_applications.skills', 'bench_master_status.name', 'job_applications.status as statusCheck', 'countries.country_name', 'state_list.state as state_name', 'city_list.city as city_name', 'job_applications.total_exp', 'job_applications.rel_exp', 'job_applications.pay_rate_amount', 'job_applications.bill_rate_amount', 'job_applications.bill_rate_currency', 'job_applications.bill_rate_mode', 'job_applications.ectc_yearly', 'job_applications.created_at')
-            ->join('bench_master_status', 'bench_master_status.id', '=', 'job_applications.status')
-            ->join('countries', 'countries.id', '=', 'job_applications.country')
-            ->join('state_list', 'state_list.id', '=', 'job_applications.state')
-            ->join('city_list', 'city_list.city_id', '=', 'job_applications.city_id')
-            ->withoutGlobalScopes()->findOrFail($this->bench_id);
-        $this->recomCount = $this->benchjobAndRecomCount($request->id);
+        $this->bench_detail = cache()->remember('ats:bench_candidate_detail:'.$this->bench_id, 300, function () {
+            return JobApplication::select('job_applications.id', 'job_applications.full_name', 'job_applications.current_designation', 'job_applications.skills', 'bench_master_status.name', 'job_applications.status as statusCheck', 'countries.country_name', 'state_list.state as state_name', 'city_list.city as city_name', 'job_applications.total_exp', 'job_applications.rel_exp', 'job_applications.pay_rate_amount', 'job_applications.bill_rate_amount', 'job_applications.bill_rate_currency', 'job_applications.bill_rate_mode', 'job_applications.ectc_yearly', 'job_applications.created_at')
+                ->join('bench_master_status', 'bench_master_status.id', '=', 'job_applications.status')
+                ->join('countries', 'countries.id', '=', 'job_applications.country')
+                ->join('state_list', 'state_list.id', '=', 'job_applications.state')
+                ->join('city_list', 'city_list.city_id', '=', 'job_applications.city_id')
+                ->withoutGlobalScopes()->findOrFail($this->bench_id);
+        });
+        $this->recomCount = $this->benchjobAndRecomCount($request->id, $this->bench_detail);
         $this->heroKpis = $this->benchHeroKpis($this->bench_id);
         $gdFilterData = GeneralMethod::canGgdFilterData($this->bench_id);
         // Filter drawer defaults — deliberately NEUTRAL for experience,
@@ -5773,8 +5771,7 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
         $this->max_salary = '';
         $this->min_sal_mode = $gdFilterData->min_sal_mode;
         $this->default_skill = $gdFilterData->default_skill;
-        $cities = DB::table('city_list')->pluck('city')->toArray();
-        $this->cities = $cities;
+        $this->cities = [];
 
         $this->segment = ($request->segment(4)) ? $request->segment(4) : '';
         $this->pageTitle = __('Recommended Requisition');
@@ -5786,13 +5783,15 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
     {
         // dd($request->id);
         $this->bench_id = $request->id;
-        $this->bench_detail = JobApplication::select('job_applications.id', 'job_applications.full_name', 'job_applications.current_designation', 'job_applications.skills', 'bench_master_status.name', 'job_applications.status as statusCheck', 'countries.country_name', 'state_list.state as state_name', 'city_list.city as city_name', 'job_applications.total_exp', 'job_applications.rel_exp', 'job_applications.pay_rate_amount', 'job_applications.bill_rate_amount', 'job_applications.bill_rate_currency', 'job_applications.bill_rate_mode', 'job_applications.ectc_yearly', 'job_applications.created_at')
-            ->join('bench_master_status', 'bench_master_status.id', '=', 'job_applications.status')
-            ->join('countries', 'countries.id', '=', 'job_applications.country')
-            ->join('state_list', 'state_list.id', '=', 'job_applications.state')
-            ->join('city_list', 'city_list.city_id', '=', 'job_applications.city_id')
-            ->withoutGlobalScopes()->findOrFail($this->bench_id);
-        $this->recomCount = $this->benchjobAndRecomCount($request->id);
+        $this->bench_detail = cache()->remember('ats:bench_candidate_detail:'.$this->bench_id, 300, function () {
+            return JobApplication::select('job_applications.id', 'job_applications.full_name', 'job_applications.current_designation', 'job_applications.skills', 'bench_master_status.name', 'job_applications.status as statusCheck', 'countries.country_name', 'state_list.state as state_name', 'city_list.city as city_name', 'job_applications.total_exp', 'job_applications.rel_exp', 'job_applications.pay_rate_amount', 'job_applications.bill_rate_amount', 'job_applications.bill_rate_currency', 'job_applications.bill_rate_mode', 'job_applications.ectc_yearly', 'job_applications.created_at')
+                ->join('bench_master_status', 'bench_master_status.id', '=', 'job_applications.status')
+                ->join('countries', 'countries.id', '=', 'job_applications.country')
+                ->join('state_list', 'state_list.id', '=', 'job_applications.state')
+                ->join('city_list', 'city_list.city_id', '=', 'job_applications.city_id')
+                ->withoutGlobalScopes()->findOrFail($this->bench_id);
+        });
+        $this->recomCount = $this->benchjobAndRecomCount($request->id, $this->bench_detail);
         $this->heroKpis = $this->benchHeroKpis($this->bench_id);
         $gdFilterData = GeneralMethod::canGgdFilterData($this->bench_id);
         // Filter drawer defaults — deliberately NEUTRAL (see the identical
@@ -5807,8 +5806,7 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
         $this->max_salary = '';
         $this->min_sal_mode = $gdFilterData->min_sal_mode;
         $this->default_skill = $gdFilterData->default_skill;
-        $cities = DB::table('city_list')->pluck('city')->toArray();
-        $this->cities = $cities;
+        $this->cities = [];
 
         $this->segment = ($request->segment(4)) ? $request->segment(4) : '';
         $this->pageTitle = __('Recommended Requisition');
@@ -6012,24 +6010,33 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
         // dd($max_salary ,$min_salary,$ectcdivided,$ctcdivided);
 
         $location = [];
-        if (\request('kt_tagify_location') != '') {
-            foreach ($custom_location as $sval) {
-                $loc_datas = DB::table('countries')
-                    ->select('city_list.city_id')
-                    ->where('countries.country_name', 'LIKE', "%{$sval['value']}%")
-                    ->orWhere('state_list.state', 'LIKE', "%{$sval['value']}%")
-                    ->orWhere('city_list.city', 'LIKE', "%{$sval['value']}%")
-                    ->join('state_list', 'state_list.country_id', '=', 'countries.id')
-                    ->join('city_list', 'city_list.state_id', '=', 'state_list.id')
-                    ->get();
-
-                // $loc_data = DB::table('city_list')->where('city_list.city_id', '=', $sval['value'])->first();
-                if ($loc_datas) {
-                    foreach ($loc_datas as $loc_data) {
-                        array_push($location, $loc_data->city_id);
+        $rawLocationReq = \request('kt_tagify_location');
+        if (! empty($rawLocationReq)) {
+            $locCacheKey = 'ats:loc_tagify_ids:'.md5($rawLocationReq);
+            $location = cache()->remember($locCacheKey, 3600, function () use ($custom_location) {
+                $resolvedIds = [];
+                if (is_array($custom_location)) {
+                    foreach ($custom_location as $sval) {
+                        $val = trim($sval['value'] ?? '');
+                        if ($val === '') {
+                            continue;
+                        }
+                        if (is_numeric($val)) {
+                            $resolvedIds[] = (int) $val;
+                        } else {
+                            $cityIds = DB::table('city_list')
+                                ->where('city', 'LIKE', "{$val}%")
+                                ->pluck('city_id')
+                                ->toArray();
+                            foreach ($cityIds as $cid) {
+                                $resolvedIds[] = (int) $cid;
+                            }
+                        }
                     }
                 }
-            }
+
+                return array_values(array_unique($resolvedIds));
+            });
         }
         // dd($location);
         $set_skill = [];
@@ -6119,11 +6126,17 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
         $versionKey = 'allbenchrecommendreq_version_user_'.$this->user->id;
         $version = cache()->get($versionKey, 1);
         $cacheKeySet = 'ats:allbenchrecommendreq:'.$this->user->id.':'.$version.':'.md5(json_encode($cachePayload));
+        $eTag = '"'.md5($cacheKeySet).'"';
+
         /* ----------------------------
-        ⚡ Check DragonflyDB first
+        ⚡ Check DragonflyDB first with HTTP 304 revalidation
         ----------------------------- */
+        if ($request->hasHeader('If-None-Match') && trim($request->header('If-None-Match'), '"') === trim($eTag, '"')) {
+            return response('', 304)->header('ETag', $eTag);
+        }
+
         if (cache()->has($cacheKeySet)) {
-            return response()->json(cache()->get($cacheKeySet));
+            return response()->json(cache()->get($cacheKeySet))->header('ETag', $eTag);
         }
 
         $statusArr = ['active', 'hold', 'inactive', '2'];
@@ -6227,8 +6240,8 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
             }
         }
 
-        // 4. COMPANY ACCESS CONDITIONS
-        $must[] = [
+        // 4. COMPANY ACCESS CONDITIONS — in filter context for node query cache
+        $filter[] = [
             'bool' => [
                 'must_not' => [
                     [
@@ -6276,7 +6289,7 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
         }
 
         if (! empty($location)) {
-            $must[] = [
+            $filter[] = [
                 'nested' => [
                     'path' => 'client_city_jobs',
                     'query' => [
@@ -6289,7 +6302,7 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
         }
 
         if ($min_exp !== null) {
-            $must[] = [
+            $filter[] = [
                 'range' => [
                     'max_exp' => [
                         'gte' => (int) $min_exp,
@@ -6299,7 +6312,7 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
         }
         if ($max_exp !== null) {
 
-            $must[] = [
+            $filter[] = [
                 'range' => [
                     'max_exp' => [
                         'lte' => (int) $max_exp,
@@ -6326,7 +6339,7 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
 
         if ($min_salary !== null && $salary_field) {
             // dd($min_salary,$max_salary);
-            $must[] = [
+            $filter[] = [
                 'range' => [
                     $salary_field => [
                         'gte' => (float) $min_salary,
@@ -6336,7 +6349,7 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
         }
         if ($max_salary > 0 && $salary_field) {
             // dd($min_salary,$max_salary);
-            $must[] = [
+            $filter[] = [
                 'range' => [
                     $salary_field => [
                         'lte' => (float) $max_salary,
@@ -6372,7 +6385,6 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
         }
         $params = [
             'index' => ELASTIC_JOBS,
-            'request_cache' => true,
             'body' => [
                 'from' => $from,
                 'size' => $size,
@@ -6837,7 +6849,6 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
         }
         $params = [
             'index' => ELASTIC_JOBS,
-            'request_cache' => true,
             'body' => [
                 'from' => $from,
                 'size' => $size,
@@ -7244,250 +7255,225 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
      */
     private function benchHeroKpis($id)
     {
-        return [
-            'views' => DB::table('bench_count_view_download')->where('type', 1)->where('status', 0)->where('candidate_id', $id)->count(),
-            'downloads' => DB::table('bench_count_view_download')->where('type', 2)->where('status', 0)->where('candidate_id', $id)->count(),
-            'interviews' => DB::table('interview_schedules')->where('job_application_id', $id)->count(),
-        ];
+        $cacheKey = "ats:bench_candidate_hero_kpis:{$id}";
+
+        return cache()->remember($cacheKey, 120, function () use ($id) {
+            $stats = DB::table('bench_count_view_download')
+                ->selectRaw('
+                    SUM(CASE WHEN type = 1 THEN 1 ELSE 0 END) as views,
+                    SUM(CASE WHEN type = 2 THEN 1 ELSE 0 END) as downloads
+                ')
+                ->where('status', 0)
+                ->where('candidate_id', $id)
+                ->first();
+
+            $interviews = DB::table('interview_schedules')
+                ->where('job_application_id', $id)
+                ->count();
+
+            return [
+                'views' => (int) ($stats->views ?? 0),
+                'downloads' => (int) ($stats->downloads ?? 0),
+                'interviews' => $interviews,
+            ];
+        });
     }
 
-    private function benchjobAndRecomCount($id)
+    private function benchjobAndRecomCount($id, $currentRowJob = null)
     {
-        //   dd($id);
         $company_id = auth()->user()->company_id;
-
-        $currentRowJob = JobApplication::withoutGlobalScopes()->find($id);
         $condidate_id = (int) $id;
-        $currentJobSkill = explode(',', $currentRowJob->skills);
 
-        $set_skill = [];
-        if ($currentJobSkill > 0) {
-            foreach ($currentJobSkill as $val) {
-                array_push($set_skill, trim($val));
-            }
+        if (! $currentRowJob) {
+            $currentRowJob = JobApplication::withoutGlobalScopes()->find($id);
         }
-        $skill = DB::table('job_metronics_skills')->whereIn('skill_name', $set_skill)->pluck('job_id')->toArray();
+        if (! $currentRowJob) {
+            return [
+                'bench_explore_counter' => 0,
+                'recommend_req_counter' => 0,
+                'recommend_internal_req_counter' => 0,
+            ];
+        }
 
-        $gdFilterData = GeneralMethod::canGgdFilterData($id);
+        $skillsHash = md5($currentRowJob->skills ?? '');
+        $cacheKey = "ats:bench_recommend_counts:{$condidate_id}:{$company_id}:{$skillsHash}";
 
-        $default_loc = $gdFilterData->default_loc;
-        $qualification = $gdFilterData->qualification;
-        $min_exp = ($gdFilterData->min_exp >= 1) ? $gdFilterData->min_exp - 1 : $gdFilterData->min_exp;
-        $max_exp = $gdFilterData->max_exp + 1;
-        $min_salary_currency = $gdFilterData->min_salary_currency;
-        $min_salary = ''; // $gdFilterData->min_salary;
-        $max_salary = $gdFilterData->max_salary;
-        $sal_mode = $gdFilterData->min_sal_mode;
-        $default_skill = $gdFilterData->default_skill;
-        // $max_exp = floor($max_exp / 10) * 10;
-        //  dd($this->max_salary,($this->max_exp));
-        $cities = DB::table('city_list')->pluck('city')->toArray();
-        $location = [$gdFilterData->city_id];
-        // dd($location);
-        $statusArr = ['active', 'hold', 'inactive', '2'];
-        $must = [];
-        $sort = [];
-        $should = [];
-        $filter = [];
-        $filter[] = ['term' => ['status' => 'active']];
+        return cache()->remember($cacheKey, 180, function () use ($id, $company_id, $currentRowJob) {
+            $currentJobSkill = explode(',', $currentRowJob->skills);
 
-        // 4. COMPANY ACCESS CONDITIONS
-        $must[] = [
-            'bool' => [
-                'must_not' => [
-                    [
-                        'term' => [
-                            'comId' => $company_id,
+            $set_skill = [];
+            if (count($currentJobSkill) > 0) {
+                foreach ($currentJobSkill as $val) {
+                    $clean = trim($val);
+                    if ($clean !== '') {
+                        array_push($set_skill, $clean);
+                    }
+                }
+            }
+
+            $gdFilterData = GeneralMethod::canGgdFilterData($id);
+
+            $sal_mode = $gdFilterData->min_sal_mode;
+            $statusArr = ['active', 'hold', 'inactive', '2'];
+            $must = [];
+            $filter = [];
+            $filter[] = ['term' => ['status' => 'active']];
+
+            // 4. COMPANY ACCESS CONDITIONS
+            $must[] = [
+                'bool' => [
+                    'must_not' => [
+                        [
+                            'term' => [
+                                'comId' => $company_id,
+                            ],
                         ],
                     ],
                 ],
-            ],
-        ];
+            ];
 
-        if (! empty($set_skill)) {
+            if (! empty($set_skill)) {
+                $should = [];
+                foreach ($set_skill as $skill) {
+                    $cleanSkill = strtolower(preg_replace('/\s+/', ' ', trim($skill)));
+                    if ($cleanSkill !== '') {
+                        $should[] = [
+                            'match' => [
+                                'job_metronics_skills.skill_name' => [
+                                    'query' => $cleanSkill,
+                                    'operator' => 'and',   // ensures all words must match
+                                ],
+                            ],
+                        ];
+                    }
+                }
 
-            $should = [];
-
-            foreach ($set_skill as $skill) {
-
-                $cleanSkill = strtolower(preg_replace('/\s+/', ' ', trim($skill)));
-
-                if ($cleanSkill !== '') {
-                    $should[] = [
-                        'match' => [
-                            'job_metronics_skills.skill_name' => [
-                                'query' => $cleanSkill,
-                                'operator' => 'and',   // ensures all words must match
+                if (! empty($should)) {
+                    $filter[] = [
+                        'nested' => [
+                            'path' => 'job_metronics_skills',
+                            'query' => [
+                                'bool' => [
+                                    'should' => $should,
+                                    'minimum_should_match' => 1,
+                                ],
                             ],
                         ],
                     ];
                 }
             }
 
-            if (! empty($should)) {
-                $filter[] = [
-                    'nested' => [
-                        'path' => 'job_metronics_skills',
-                        'query' => [
-                            'bool' => [
-                                'should' => $should,
-                                'minimum_should_match' => 1,
+            $salaryFieldByMode = [0 => 'max_yearly', 1 => 'max_monthly', 2 => 'max_hourly'];
+            $countSalaryField = $salaryFieldByMode[(int) $sal_mode] ?? 'max_yearly';
+            $must[] = ['range' => ['max_exp' => ['gte' => 0]]];
+            $must[] = ['range' => [$countSalaryField => ['gte' => 0]]];
+
+            $params = [
+                'index' => ELASTIC_JOBS,
+                'body' => [
+                    'query' => [
+                        'bool' => [
+                            'must' => $must,
+                            'filter' => $filter,
+                        ],
+                    ],
+                ],
+            ];
+
+            if (! $this->elasticService->indexExists(ELASTIC_JOBS)) {
+                $total = 0;
+            } else {
+                $response = $this->elasticService->getClient()->count($params);
+                $total = $response['count'] ?? 0;
+            }
+
+            $paramsBench = [
+                'index' => ELASTIC_CANDIDATES_BENCH,
+                'id' => $id,
+            ];
+
+            $jobIds = [];
+            try {
+                $responseBench = $this->elasticService->getClient()->get($paramsBench);
+                $jobIds = array_column(((object) $responseBench['_source'])->jobs ?? [], 'job_id');
+            } catch (\Throwable $benchDocMissing) {
+                \Log::warning('benchjobAndRecomCount: bench doc missing for candidate '.$id);
+            }
+
+            $mustInternal = [
+                [
+                    'bool' => [
+                        'must' => [
+                            [
+                                'term' => [
+                                    'comId' => $company_id,
+                                ],
                             ],
                         ],
                     ],
-                ];
-            }
-        }
-
-        $page = 1;
-        $size = 10000; // Default 20 results per page
-        $from = ($page - 1) * $size;
-
-        // Mirror the two range clauses all_data_ajax()/all_internal_data_ajax()
-        // ALWAYS apply, even in the filter drawer's neutral default state
-        // (min_exp is forced to 0 server-side there → max_exp >= 0; the drawer
-        // always posts a salary mode with min salary 0 → {mode field} >= 0).
-        // Without these, this card count can include job documents the list
-        // query can never return (docs missing max_exp / salary fields), which
-        // showed up as "card says 12, list shows 10". Single source of truth:
-        // this count must be the list's default query, exactly.
-        $salaryFieldByMode = [0 => 'max_yearly', 1 => 'max_monthly', 2 => 'max_hourly'];
-        $countSalaryField = $salaryFieldByMode[(int) $sal_mode] ?? 'max_yearly';
-        $must[] = ['range' => ['max_exp' => ['gte' => 0]]];
-        $must[] = ['range' => [$countSalaryField => ['gte' => 0]]];
-
-        $params = [
-            'index' => ELASTIC_JOBS,
-            'body' => [
-                'query' => [
-                    'bool' => [
-                        'must' => $must,
-                        'filter' => $filter,
-                    ],
                 ],
-            ],
-        ];
+            ];
 
-        // dd($location);
+            $filterInternal = [['term' => ['status' => 'active']]];
 
-        if (! $this->elasticService->indexExists(ELASTIC_JOBS)) {
-            $total = 0;
-            $data = [];
-        } else {
+            if (! empty($set_skill)) {
+                $shouldInternal = [];
+                foreach ($set_skill as $skill) {
+                    $cleanSkill = strtolower(preg_replace('/\s+/', ' ', trim($skill)));
+                    if ($cleanSkill !== '') {
+                        $shouldInternal[] = [
+                            'match' => [
+                                'job_metronics_skills.skill_name' => [
+                                    'query' => $cleanSkill,
+                                    'operator' => 'and',   // ensures all words must match
+                                ],
+                            ],
+                        ];
+                    }
+                }
 
-            $response = $this->elasticService->getClient()->count($params);
-            $total = $response['count'] ?? 0;
-        }
-
-        $params = [
-            'index' => ELASTIC_CANDIDATES_BENCH,
-            'id' => $id,
-        ];
-
-        // get() throws Missing404Exception when the candidate has no bench
-        // document yet (new/never-indexed candidates) — that used to 500 the
-        // entire page. A missing doc just means zero pool jobs.
-        $jobIds = [];
-        try {
-            $response = $this->elasticService->getClient()->get($params);
-            $jobIds = array_column(((object) $response['_source'])->jobs ?? [], 'job_id');
-        } catch (\Throwable $benchDocMissing) {
-            \Log::warning('benchjobAndRecomCount: bench doc missing for candidate '.$id);
-        }
-
-        // dd(count($jobIds));
-
-        // 4. COMPANY ACCESS CONDITIONS
-
-        $must = [];
-        $should = [];
-        $filter = [];
-        $sort = [];
-        $filter[] = ['term' => ['status' => 'active']];
-
-        $must[] = [
-            'bool' => [
-                'must' => [
-                    [
-                        'term' => [
-                            'comId' => $company_id,
-                        ],
-                    ],
-                ],
-            ],
-        ];
-
-        if (! empty($set_skill)) {
-
-            $should = [];
-
-            foreach ($set_skill as $skill) {
-
-                $cleanSkill = strtolower(preg_replace('/\s+/', ' ', trim($skill)));
-
-                if ($cleanSkill !== '') {
-                    $should[] = [
-                        'match' => [
-                            'job_metronics_skills.skill_name' => [
-                                'query' => $cleanSkill,
-                                'operator' => 'and',   // ensures all words must match
+                if (! empty($shouldInternal)) {
+                    $filterInternal[] = [
+                        'nested' => [
+                            'path' => 'job_metronics_skills',
+                            'query' => [
+                                'bool' => [
+                                    'should' => $shouldInternal,
+                                    'minimum_should_match' => 1,
+                                ],
                             ],
                         ],
                     ];
                 }
             }
 
-            if (! empty($should)) {
-                $filter[] = [
-                    'nested' => [
-                        'path' => 'job_metronics_skills',
-                        'query' => [
-                            'bool' => [
-                                'should' => $should,
-                                'minimum_should_match' => 1,
-                            ],
+            $mustInternal[] = ['range' => ['max_exp' => ['gte' => 0]]];
+            $mustInternal[] = ['range' => [$countSalaryField => ['gte' => 0]]];
+
+            $paramsInternal = [
+                'index' => ELASTIC_JOBS,
+                'body' => [
+                    'query' => [
+                        'bool' => [
+                            'must' => $mustInternal,
+                            'filter' => $filterInternal,
                         ],
                     ],
-                ];
-            }
-        }
-
-        $page = 1;
-        $size = 10000; // Default 20 results per page
-        $from = ($page - 1) * $size;
-
-        // Same default-query mirror as the client-jobs count above —
-        // $countSalaryField was computed there from the candidate's salary mode.
-        $must[] = ['range' => ['max_exp' => ['gte' => 0]]];
-        $must[] = ['range' => [$countSalaryField => ['gte' => 0]]];
-
-        $paramsInternal = [
-            'index' => ELASTIC_JOBS,
-            'body' => [
-                'query' => [
-                    'bool' => [
-                        'must' => $must,
-                        'filter' => $filter,
-                    ],
                 ],
-            ],
-        ];
+            ];
 
-        // dd($location);
+            if (! $this->elasticService->indexExists(ELASTIC_JOBS)) {
+                $totalInternal = 0;
+            } else {
+                $responseInternal = $this->elasticService->getClient()->count($paramsInternal);
+                $totalInternal = $responseInternal['count'] ?? 0;
+            }
 
-        if (! $this->elasticService->indexExists(ELASTIC_JOBS)) {
-            $totalInternal = 0;
-            $data = [];
-        } else {
-            $response = $this->elasticService->getClient()->count($paramsInternal);
-            $totalInternal = $response['count'] ?? 0;
-        }
-
-        return $result = [
-            'bench_explore_counter' => count($jobIds),
-            'recommend_req_counter' => $total,
-            'recommend_internal_req_counter' => $totalInternal,
-        ];
-
+            return [
+                'bench_explore_counter' => count($jobIds),
+                'recommend_req_counter' => $total,
+                'recommend_internal_req_counter' => $totalInternal,
+            ];
+        });
     }
 }
