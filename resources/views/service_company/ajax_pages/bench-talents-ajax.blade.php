@@ -316,7 +316,7 @@
                     }
                     $btnStyle = 'white-space:nowrap;font-size:12px;font-weight:600;padding:6px 14px;border-radius:6px;';
                     if ($benchRequestCheck == null) {
-                        echo '<a href="javascript:void(0);" data-jobId="' . $currentJobId . '" data-conId="' . $row->id . '" class="btn btn-sm btn-primary request-send" style="' . $btnStyle . '">Send Bench Request</a>';
+                        echo '<a href="javascript:void(0);" data-jobId="' . $currentJobId . '" data-conId="' . $row->id . '" class="btn btn-sm btn-primary request-send" style="' . $btnStyle . '">Submit Candidate</a>';
                     } else if ($benchRequestCheck->ac_status == 0) {
                         echo '<a href="javascript:void(0);" class="btn btn-sm btn-success" style="' . $btnStyle . 'background:#10B981;border-color:#10B981;color:#fff;">Request sent</a>';
                     } else if ($benchRequestCheck->ac_status == 1) {

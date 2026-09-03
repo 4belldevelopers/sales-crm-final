@@ -158,6 +158,273 @@ a.bxr-sum-link{ color:inherit; cursor:pointer; }
 .rrj-footer-icon{ width:36px; height:36px; border-radius:8px; background:#dbeafe; color:#2563eb; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
 .rrj-footer-number{ font-size:15px; font-weight:700; color:#181c32; line-height:1.2; }
 .rrj-footer-label{ font-size:10.5px; color:#7e8299; }
+
+/* ═══════════════════════════════════════════════
+   JERO V2 JOB CARD DESIGN — MATCHING ATTACHMENT
+   ═══════════════════════════════════════════════ */
+.jero-job-card-v2 {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-left: 4px solid #10b981;
+    border-radius: 8px;
+    padding: 16px 20px;
+    margin-bottom: 12px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+    display: grid;
+    grid-template-columns: 1.3fr 1.1fr 1.1fr 1fr 1.1fr 170px;
+    gap: 16px;
+    align-items: center;
+    transition: box-shadow 0.2s ease, border-color 0.2s ease;
+}
+.jero-job-card-v2:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    border-color: #cbd5e1;
+}
+.jero-col-header .tag-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 6px;
+    flex-wrap: wrap;
+}
+.jero-tag-open {
+    background: #ecfdf5;
+    color: #10b981;
+    border: 1px solid #a7f3d0;
+    font-size: 10px;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 12px;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+.jero-tag-open::before {
+    content: '';
+    width: 6px;
+    height: 6px;
+    background: #10b981;
+    border-radius: 50%;
+}
+.jero-tag-type {
+    background: #eff6ff;
+    color: #2563eb;
+    border: 1px solid #bfdbfe;
+    font-size: 10px;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 12px;
+}
+.jero-tag-req {
+    background: #f8fafc;
+    color: #64748b;
+    border: 1px solid #e2e8f0;
+    font-size: 10px;
+    font-weight: 500;
+    padding: 2px 8px;
+    border-radius: 12px;
+}
+.jero-job-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: #0f172a;
+    margin: 0 0 2px 0;
+    cursor: pointer;
+    line-height: 1.3;
+}
+.jero-job-title:hover { color: #2563eb; }
+.jero-job-dept {
+    font-size: 12px;
+    font-weight: 500;
+    color: #2563eb;
+    margin-bottom: 8px;
+}
+.jero-skill-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+}
+.jero-skill-pill {
+    background: #f1f5f9;
+    color: #475569;
+    font-size: 11px;
+    font-weight: 500;
+    padding: 2px 8px;
+    border-radius: 4px;
+}
+.jero-skill-pill.matched {
+    background: #e0e7ff;
+    color: #3730a3;
+    font-weight: 600;
+}
+.jero-specs-list {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    font-size: 12px;
+    color: #334155;
+}
+.jero-spec-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+.jero-spec-item i {
+    color: #64748b;
+    font-size: 14px;
+    width: 16px;
+}
+.jero-time-list {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    font-size: 11.5px;
+}
+.jero-time-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: #475569;
+}
+.jero-time-item i {
+    color: #64748b;
+    font-size: 13px;
+}
+.jero-text-success { color: #16a34a !important; font-weight: 600; }
+.jero-text-danger { color: #dc2626 !important; font-weight: 700; }
+.jero-match-card {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 12px 14px;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+.jero-match-head {
+    font-size: 12px;
+    font-weight: 700;
+    color: #0f172a;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+.jero-match-num {
+    font-size: 22px;
+    font-weight: 800;
+    color: #0f172a;
+    line-height: 1.1;
+    margin: 4px 0 2px;
+}
+.jero-match-sub {
+    font-size: 11px;
+    color: #64748b;
+}
+.jero-match-link {
+    font-size: 11.5px;
+    font-weight: 700;
+    color: #2563eb;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    margin-top: 6px;
+}
+.jero-match-link:hover { text-decoration: underline; }
+.jero-terms-card {
+    background: #ffffff;
+    padding: 4px 6px;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+.jero-terms-head {
+    font-size: 12px;
+    font-weight: 700;
+    color: #0f172a;
+    margin-bottom: 6px;
+}
+.jero-terms-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 11px;
+    margin-bottom: 3px;
+}
+.jero-terms-label { color: #64748b; }
+.jero-terms-val { font-weight: 700; color: #0f172a; }
+.jero-terms-link {
+    font-size: 11.5px;
+    font-weight: 700;
+    color: #2563eb;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    margin-top: 6px;
+    cursor: pointer;
+}
+.jero-actions-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+.jero-btn-submit {
+    background: #0066ff !important;
+    color: #ffffff !important;
+    font-weight: 700 !important;
+    font-size: 12px !important;
+    border-radius: 6px !important;
+    padding: 8px 12px !important;
+    border: none !important;
+    text-align: center;
+    text-decoration: none;
+    box-shadow: 0 2px 4px rgba(0, 102, 255, 0.2);
+}
+.jero-btn-submit:hover {
+    background: #0052cc !important;
+    color: #ffffff !important;
+}
+.jero-btn-outline {
+    background: #ffffff !important;
+    color: #334155 !important;
+    border: 1px solid #cbd5e1 !important;
+    font-weight: 600 !important;
+    font-size: 11.5px !important;
+    border-radius: 6px !important;
+    padding: 6px 12px !important;
+    text-align: center;
+    cursor: pointer;
+    text-decoration: none;
+}
+.jero-btn-outline:hover {
+    background: #f8fafc !important;
+    border-color: #94a3b8 !important;
+    color: #0f172a !important;
+}
+.jero-action-tools {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 2px 4px;
+    color: #94a3b8;
+}
+.jero-action-tools i {
+    cursor: pointer;
+    font-size: 16px;
+}
+.jero-action-tools i:hover { color: #334155; }
+@media (max-width: 1200px) {
+    .jero-job-card-v2 {
+        grid-template-columns: 1fr 1fr;
+    }
+}
+@media (max-width: 768px) {
+    .jero-job-card-v2 {
+        grid-template-columns: 1fr;
+    }
+}
 .rrj-footer-actions{ display:flex; gap:6px; }
 .rrj-footer-actions .btn{ font-size:11.5px; padding:6px 10px; display:inline-flex; align-items:center; gap:5px; }
 @media (max-width:576px){ .rrj-footer{ flex-direction:column; align-items:stretch; } .rrj-footer-actions{ justify-content:stretch; } .rrj-footer-actions .btn{ flex:1 1 auto; justify-content:center; } }
@@ -873,14 +1140,6 @@ body > .tagify__dropdown{ z-index:1400 !important; }
   </div>
 
   <div class="rrj-results-wrap">
-    <div class="jc-table-header">
-      <div class="jc-th">Job Details</div>
-      <div class="jc-th">Experience</div>
-      <div class="jc-th">Hiring &amp; Location</div>
-      <div class="jc-th">Hiring Manager</div>
-      <div class="jc-th">Status</div>
-      <div class="jc-th">Actions</div>
-    </div>
     <div class="agencies-list" id="benchCandidateRecommendedReqAjax"></div>
     <div id="paginationbenchCandidateRecommendedReq"></div>
   </div>
@@ -928,11 +1187,38 @@ body > .tagify__dropdown{ z-index:1400 !important; }
   </div>
 </div>
 
+<div id="kt_activitiesTermsFindjob_toggle" style="display:none;"></div>
+<div id="kt_activitiesTermsFindjob" class="bg-body" data-kt-drawer="true" data-kt-drawer-name="activities"
+     data-kt-drawer-activate="true" data-kt-drawer-overlay="true"
+     data-kt-drawer-width="{default:'95%', 'sm':'90%', 'lg':'800px'}"
+     data-kt-drawer-direction="end" data-kt-drawer-toggle="#kt_activitiesTermsFindjob_toggle" data-kt-drawer-close="#kt_activitiesTermsFindJob_close">
+  <div class="card shadow-none rounded-0 w-100">
+    <div class="card-header px-5 py-0" id="kt_activities_header">
+      <div class="d-flex align-items-center py-1">
+        <h3 class="card-title fw-bolder text-dark">Terms &amp; Conditions</h3>
+      </div>
+      <div class="card-toolbar">
+        <button type="button" class="btn btn-sm btn-icon btn-active-light-primary me-n5" id="kt_activitiesTermsFindJob_close">
+          <span class="svg-icon svg-icon-1">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" viewBox="0 0 24 24" version="1.1">
+              <g transform="translate(12.000000, 12.000000) rotate(-45.000000) translate(-12.000000, -12.000000) translate(4.000000, 4.000000)" fill="#000000">
+                <rect fill="#000000" x="0" y="7" width="16" height="2" rx="1"></rect>
+                <rect fill="#000000" opacity="0.5" transform="translate(8.000000, 8.000000) rotate(-270.000000) translate(-8.000000, -8.000000)" x="0" y="7" width="16" height="2" rx="1"></rect>
+              </g>
+            </svg>
+          </span>
+        </button>
+      </div>
+    </div>
+    <div class="card-body position-relative px-5 py-5" id="kt_activitiesTermsFindJob_body"></div>
+  </div>
+</div>
+
 @endsection
 @push('footer-script')
 <script src="{{ asset('demo/cdn/js/dataTables.fixedHeader.min.js') }}{{ TM_VERSION }}"></script>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/sweetalert/1.1.3/sweetalert.min.css">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/sweetalert/1.1.3/sweetalert.min.js"></script>
+<link rel="stylesheet" href="{{ asset('assets/node_modules/sweetalert/sweetalert.css') }}{{ TM_VERSION }}">
+<script src="{{ asset('assets/node_modules/sweetalert/sweetalert.min.js') }}{{ TM_VERSION }}"></script>
 
 {{-- ── Skills Tagify — exact template/behavior ported from
      apptracker/similar_candidates.blade.php (star toggles mandatory,
@@ -1202,15 +1488,15 @@ $(document).ready(function(){ setTimeout(rrjUpdateActiveFiltersUI, 600); setTime
 <script>
 $(document).ready(function() {
     $(document).on("click",".checkrequestsend", function(){
-        swal("Recommendation Alert", 'Please move the candidate to Bench status before sending the request', "warning");
+        swal("Bench Request Alert", 'Please move the candidate to Bench status before sending bench request', "warning");
     });
     $(document).on("click",".request-send", function(){
         var ele = $(this);
         var jobId  = $(this).attr('data-jobId');
         var conId  = $(this).attr('data-conId');
         swal({
-            title: "Are you sure?", text: " Do you want to Submit Candidate request on this Job?", type: "warning",
-            showCancelButton: true, confirmButtonColor: '#DD6B55', confirmButtonText: 'Yes, I am sure!',
+            title: "Are you sure?", text: "Do you want to Send Bench Request on this Job?", type: "warning",
+            showCancelButton: true, confirmButtonColor: '#0066ff', confirmButtonText: 'Yes, Send Bench Request!',
             cancelButtonText: "No, cancel it!", closeOnConfirm: false, closeOnCancel: false
         },
         function(isConfirm){
@@ -1221,7 +1507,7 @@ $(document).ready(function() {
                     type: 'GET', url: url,
                     success: function (response) {
                         if(response.status=='success'){
-                            swal("Recommend!", "Candidates are successfully Recommend!", "success");
+                            swal("Request Sent!", "Bench request successfully sent for this job requirement!", "success");
                             var jobId  = ele.attr('data-jobId');
                             var conId  = ele.attr('data-conId');
                             var matlaccess = 1;
@@ -1231,7 +1517,7 @@ $(document).ready(function() {
                             $.ajax({ type: 'GET', url: url, success: function (response) {} });
                         }else{
                             fetchBenchRecommendedReqCandidateList();
-                            swal("Recommend Failed", response.message, "warning").then(function(){ fetchBenchRecommendedReqCandidateList(); });
+                            swal("Request Failed", response.message, "warning").then(function(){ fetchBenchRecommendedReqCandidateList(); });
                         }
                     }
                 });
@@ -1319,6 +1605,59 @@ $(document).on('click', '.hm-listing', function () {
     url = url.replace(':id', id);
     var baseurl = "{{ asset('assets/images/Loading2.gif') }}";
     $.ajax({ type: 'GET', url: url, beforeSend: function() { $('#kt_activitiesHM_body').html('<img src="'+baseurl+'" height="35px" width="100%">'); }, success: function (response) { $('#kt_activitiesHM_body').html(response.view); } });
+});
+</script>
+<script>
+$(document).on('click', '.client-terms-listing-find-job', function (e){
+    e.preventDefault();
+    var $btn = $(this);
+    var id = $btn.data('row-id') || $btn.attr('data-row-id');
+    var recommendation_relation_id = $btn.data('row-recommendation_relation_id') || $btn.attr('data-row-recommendation_relation_id') || '';
+    if (!id) {
+        id = $btn.closest('[data-row-id]').attr('data-row-id');
+    }
+
+    var drawerElement = document.querySelector('#kt_activitiesTermsFindjob');
+    if (drawerElement && typeof KTDrawer !== 'undefined') {
+        var drawer = KTDrawer.getInstance(drawerElement) || new KTDrawer(drawerElement);
+        if (drawer) { drawer.show(); } else { $('#kt_activitiesTermsFindjob_toggle').trigger('click'); }
+    } else {
+        $('#kt_activitiesTermsFindjob_toggle').trigger('click');
+    }
+
+    if (!id) {
+        $('#kt_activitiesTermsFindJob_body').html('<div class="alert alert-danger m-4">Unable to find job requirement ID.</div>');
+        return;
+    }
+    var url = "{{ route('service_company.jobs.termshmlisting',':id') }}";
+    url = url.replace(':id', id) + "?id=" + id;
+    var baseurl = "{{ asset('assets/images/Loading2.gif') }}";
+    $.ajax({
+        type: 'GET',
+        url: url,
+        data: {
+            recommendation_relation_id: recommendation_relation_id
+        },
+        beforeSend: function() {
+            $('#kt_activitiesTermsFindJob_body').html('<div class="text-center py-10"><img src="'+baseurl+'" height="35px"></div>');
+        },
+        success: function (response) {
+            if (response && (response.terms || response.view)) {
+                $('#kt_activitiesTermsFindJob_body').html(response.terms || response.view);
+            } else if (response && response.message) {
+                $('#kt_activitiesTermsFindJob_body').html('<div class="alert alert-danger m-4">' + response.message + '</div>');
+            } else {
+                $('#kt_activitiesTermsFindJob_body').html('<div class="alert alert-danger m-4">No terms & conditions found.</div>');
+            }
+        },
+        error: function(xhr) {
+            var errorMsg = 'Failed to load terms & conditions (' + xhr.status + ').';
+            if (xhr.responseJSON && xhr.responseJSON.message) {
+                errorMsg += ' ' + xhr.responseJSON.message;
+            }
+            $('#kt_activitiesTermsFindJob_body').html('<div class="alert alert-danger m-4">' + errorMsg + '</div>');
+        }
+    });
 });
 </script>
 
