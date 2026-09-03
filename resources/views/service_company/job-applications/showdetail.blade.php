@@ -5246,15 +5246,15 @@ async function buildHeadlessOption3SkillsHighlightedResume(options){
       pdfBlob=await fetchPdfBlobFromSources(resumeSources);
     }else if(resumeExt==='DOCX'){
       try{
-        pdfBlob=await convertResumeWithOpenDocLabBlob(resumeSources,resumeExt,false);
-      }catch(browserDocxErr){
-        console.warn('Option 8 DOCX OpenDoc conversion failed; trying option 15 legacy browser renderer:',browserDocxErr);
+        if(!resumePdfUrl) throw new Error('Enterprise converter PDF URL not available');
+        pdfBlob=await fetchPdfResumeBlob(resumePdfUrl);
+      }catch(converterErr){
+        console.warn('Option 8 DOCX enterprise converter PDF failed; trying browser conversion fallback:',converterErr);
         try{
+          pdfBlob=await convertResumeWithOpenDocLabBlob(resumeSources,resumeExt,false);
+        }catch(openDocErr){
+          console.warn('Option 8 DOCX OpenDoc conversion failed; trying legacy browser renderer:',openDocErr);
           pdfBlob=await convertDocxResumeToPdfBlobFromSources(resumeSources);
-        }catch(legacyDocxErr){
-          console.warn('Option 8 DOCX legacy browser conversion failed; using converter PDF URL if available:',legacyDocxErr);
-          if(!resumePdfUrl) throw legacyDocxErr;
-          pdfBlob=await fetchPdfResumeBlob(resumePdfUrl);
         }
       }
     }else{
@@ -5366,7 +5366,7 @@ async function buildHeadlessOption3SkillsHighlightedResume(options){
     }
   }catch(err){
     console.error('Headless option 3 highlighted resume error:',err);
-    alert('Could not generate Resume + Skills Highlighted.\n\nReason: '+(err && err.message ? err.message : 'Unknown highlight error')+'\n\nPDF uses signed R2 direct fetch. DOCX uses browser conversion first. DOC uses enterprise converter fallback.');
+    alert('Could not generate Resume + Skills Highlighted.\n\nReason: '+(err && err.message ? err.message : 'Unknown highlight error')+'\n\nPDF uses signed R2 direct fetch. DOCX and DOC use enterprise converter PDF first to preserve layout.');
     return false;
   }finally{
     window.__rsBusy=false;
@@ -6556,7 +6556,7 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
         </span>
         <span class="rdc-obody">
           <span class="rdc-otitle">Resume + Skills Highlighted <span style="background:#ecfeff;color:#0e7490;font-size:8.5px;font-weight:700;padding:1px 6px;border-radius:4px;vertical-align:middle;margin-left:4px;">Smart</span></span>
-          <span class="rdc-odesc">PDF uses signed R2 direct fetch; DOCX uses the option 15 converter chain, then highlights and downloads</span>
+          <span class="rdc-odesc">PDF uses signed R2 direct fetch; DOCX/DOC use enterprise PDF conversion first, then highlights and downloads</span>
         </span>
         <span class="rdc-ometa">
           <span class="rdc-ocost">4 Coins</span>
