@@ -842,19 +842,94 @@ class ServiceCompanyConsultancyController extends ServiceCompanyBaseController
         $startOfMonthcomman = Carbon::now()->startOfMonth()->subMonths(6);
         $endOfMonthcomman = Carbon::now()->endOfMonth();
 
-        // dd($startOfMonth,$endOfMonth); $company_id
+        // Fallback default values for initial shell rendering (Dashboard loads lazily via dashboard_ajax)
+        $this->joined_count = 0;
+        $this->sourcing_count = 0;
+        $this->screening_count = 0;
+        $this->evaluation_count = 0;
+        $this->negotiation_count = 0;
+        $this->offer_count = 0;
+        $this->Rejected_count = 0;
+        $this->inreview_count = 0;
+        $this->total_candidates = 0;
 
-        $to_company_id = $this->directClientDetail->company_id;
+        $this->counts = collect([]);
+        $this->labels = [];
+        $this->candidateValues = [];
+        $this->candidateValuesTotal = 0;
 
-        $must = [];
-        $should = [];
-        $filter = [];
-        $sort = [];
+        $this->labelsCommoffer = [];
+        $this->candidateValuesCommoffer = [];
+        $this->candidateValuesTotaloffer = 0;
 
+        $this->labelsCommjoin = [];
+        $this->candidateValuesCommjoin = [];
+        $this->candidateValuesTotaljoin = 0;
+
+        $this->upcomingData = [];
+        $this->recentData = [];
+        $this->interviewlabels = [];
+        $this->interviewValues = [];
+        $this->interviewValuesTotal = 0;
+
+        $this->recentDataMonth = [];
+        $this->interviewlabelsMonth = [];
+        $this->interviewValuesMonth = [];
+        $this->interviewValuesTotalMonth = 0;
+
+        $this->startOfMonth = $startOfMonth;
+        $this->endOfMonth = $endOfMonth;
+        $this->startOfMonthcomman = $startOfMonthcomman;
+        $this->endOfMonthcomman = $endOfMonthcomman;
+
+        $view = view('service_company.consultancy.dviewMore', $this->data)->render();
+        $responseData = Reply::dataOnly(['status' => 'success', 'view' => $view]);
+
+        cache()->put($cacheKeySet, $responseData, now()->addMinutes(CONSULTANCY_VIEWMORE_TIME));
+
+        return $responseData;
+
+    }
+
+    /**
+     * Lazy-loaded AJAX endpoint for Candidate Dashboard tab metrics & charts.
+     */
+    public function dashboard_ajax(Request $request, $id = null)
+    {
+        $company_id = auth()->user()->company_id;
+
+        $partnerCompanyId = DB::table('clients')
+            ->where('id', $id)
+            ->value('company_id');
+
+        if (! $partnerCompanyId) {
+            return response()->json(['status' => 'fail', 'message' => 'Partner not found.'], 404);
+        }
+
+        $isAuthorizedPartner = DB::table('staffing_company_relation')
+            ->where(function ($query) use ($company_id, $partnerCompanyId) {
+                $query->where('from_company_id', $company_id)->where('to_company_id', $partnerCompanyId);
+            })->orWhere(function ($query) use ($company_id, $partnerCompanyId) {
+                $query->where('from_company_id', $partnerCompanyId)->where('to_company_id', $company_id);
+            })
+            ->where('final_status', 1)
+            ->exists();
+
+        if (! $isAuthorizedPartner) {
+            return response()->json(['status' => 'fail', 'message' => 'Unauthorized partner.'], 403);
+        }
+
+        $to_company_id = $partnerCompanyId;
+
+        $startOfMonth = Carbon::now()->startOfMonth()->subMonths(3);
+        $endOfMonth = Carbon::now()->endOfMonth();
+        $startOfMonthcomman = Carbon::now()->startOfMonth()->subMonths(6);
+        $endOfMonthcomman = Carbon::now()->endOfMonth();
+
+        // 1. Candidate pipeline status breakdown
         $boolQuery = [
             'bool' => [
                 'must' => [
-                    // First required condition
                     [
                         'bool' => [
                             'must' => [
@@ -867,7 +942,6 @@ class ServiceCompanyConsultancyController extends ServiceCompanyBaseController
                             ],
                         ],
                     ],
-                    // Second required condition
                     [
                         'range' => [
                             'updated_at' => [
@@ -876,60 +950,10 @@ class ServiceCompanyConsultancyController extends ServiceCompanyBaseController
                             ],
                         ],
                     ],
-
                 ],
             ],
         ];
 
-        // $boolQuery = [
-        // 		'bool' => [
-        // 			'should' => [
-        // 				// First condition
-        // 				[
-        // 					'bool' => [
-        // 						'must' => array_merge([
-        // 							['term' => ['to_company_id' => $to_company_id]],
-        // 				            ['term' => ['from_company_id' => $company_id]],
-        // 						])
-        // 					]
-        // 				],
-        // 				// Second condition
-        // 				[
-        // 					'bool' => [
-        // 						'must' => array_merge([
-        // 							['term' => ['to_company_id' => $to_company_id]],
-        // 				            ['term' => ['from_company_id' => $company_id]],
-        // 							['range' => ['jobId' => ['gt' => 0]]],
-        // 						], [
-        // 							['bool' => [
-        // 								'must_not' => [
-        // 									['term' => ['job_master_status_id' => 8]]
-        // 								]
-        // 							]]
-        // 						])
-        // 					]
-        // 				],
-        // 			],
-        // 			'minimum_should_match' => 1,
-        // 			'filter' => [
-        // 				[
-        // 					'bool' => [
-        // 						'should' => [
-        // 							[
-        // 								'range' => [
-        // 									'updated_at' => [
-        // 										'gte' => $startOfMonth,
-        // 										'lte' => $endOfMonth,
-        // 									],
-        // 								],
-        // 							],
-        // 						],
-        // 						'minimum_should_match' => 1,
-        // 					],
-        // 				],
-        // 			],
-        // 		]
-        // ];
         $params = [
             'index' => ELASTIC_CANDIDATES,
             'request_cache' => true,
@@ -940,80 +964,55 @@ class ServiceCompanyConsultancyController extends ServiceCompanyBaseController
                 'aggs' => [
                     'status_counts' => [
                         'terms' => [
-                            'field' => 'job_master_status_id', // Use `.keyword` for exact match
-                            'size' => 10, // Increase if you have more unique statuses
+                            'field' => 'job_master_status_id',
+                            'size' => 10,
                         ],
                     ],
                 ],
             ],
         ];
 
-        $response = $this->elasticService->getClient()->search($params);
-        $bucketData = $response['aggregations']['status_counts']['buckets'] ?? [];
-        $this->result = collect($bucketData)->mapWithKeys(function ($item) {
-            return [$item['key'] => $item['doc_count']];
-        });
+        $resultData = collect([]);
+        if ($this->elasticService->indexExists(ELASTIC_CANDIDATES)) {
+            $response = $this->elasticService->getClient()->search($params);
+            $bucketData = $response['aggregations']['status_counts']['buckets'] ?? [];
+            $resultData = collect($bucketData)->mapWithKeys(function ($item) {
+                return [$item['key'] => $item['doc_count']];
+            });
+        }
 
-        $this->joined_count = $this->result->get('6', 0);
-        $this->sourcing_count = $this->result->get('1', 0);
-        $this->screening_count = $this->result->get('2', 0);
-        $this->evaluation_count = $this->result->get('3', 0);
-        $this->negotiation_count = $this->result->get('4', 0);
-        $this->offer_count = $this->result->get('5', 0);
-        $this->Rejected_count = $this->result->get('7', 0);
-        $this->inreview_count = $this->result->get('8', 0);
+        $joined_count = $resultData->get('6', 0);
+        $sourcing_count = $resultData->get('1', 0);
+        $screening_count = $resultData->get('2', 0);
+        $evaluation_count = $resultData->get('3', 0);
+        $negotiation_count = $resultData->get('4', 0);
+        $offer_count = $resultData->get('5', 0);
+        $Rejected_count = $resultData->get('7', 0);
+        $inreview_count = $resultData->get('8', 0);
+        $total_candidates = $inreview_count + $sourcing_count + $screening_count + $evaluation_count + $negotiation_count + $offer_count + $joined_count + $Rejected_count;
 
-        $this->total_candidates = $this->inreview_count + $this->sourcing_count + $this->screening_count + $this->evaluation_count + $this->negotiation_count + $this->offer_count + $this->joined_count + $this->Rejected_count;
-
-        $this->startOfMonth = $startOfMonth;
-        $this->endOfMonth = $endOfMonth;
-
-        // dd($this->total_candidates,$this->inreview_count,$this->sourcing_count,$this->screening_count,$this->evaluation_count,$this->negotiation_count,$this->offer_count,$this->joined_count,$this->Rejected_count);
-
-        /** Start Jobs Count Graph */
+        // 2. Jobs doughnut graph
         $must = [];
-        $filter = [];
         $must[] = [
             'bool' => [
                 'should' => [
-                    /*
-                    OPTION 1
-                    */
                     [
                         'nested' => [
                             'path' => 'recommendation_relation',
                             'query' => [
                                 'bool' => [
                                     'must' => [
-                                        [
-                                            'term' => [
-                                                'recommendation_relation.from_company_id' => $company_id,
-                                            ],
-                                        ],
-                                        [
-                                            'term' => [
-                                                'recommendation_relation.to_company_id' => $to_company_id,
-                                            ],
-                                        ],
+                                        ['term' => ['recommendation_relation.from_company_id' => $company_id]],
+                                        ['term' => ['recommendation_relation.to_company_id' => $to_company_id]],
                                     ],
                                 ],
                             ],
                         ],
                     ],
-
                 ],
                 'minimum_should_match' => 1,
             ],
         ];
-
-        // $must[] = [
-        // 		'bool' => [
-        // 			'should' => [
-        // 				['term' => ['client_id' => $id]],
-        // 			],
-        // 			'minimum_should_match' => 1,
-        // 		],
-        // ];
 
         $params = [
             'index' => ELASTIC_JOBS,
@@ -1021,35 +1020,34 @@ class ServiceCompanyConsultancyController extends ServiceCompanyBaseController
             'body' => [
                 'track_total_hits' => true,
                 'size' => 0,
-                'query' => [
-                    'bool' => [
-                        'must' => $must,
-                        'filter' => $filter,
-                    ],
-                ],
+                'query' => ['bool' => ['must' => $must]],
                 'aggs' => [
                     'status_counts' => [
                         'terms' => [
-                            'field' => 'status', // Use `.keyword` for exact match
-                            'size' => 10, // Increase if you have more unique statuses
+                            'field' => 'status',
+                            'size' => 10,
                         ],
                     ],
                 ],
             ],
         ];
 
-        $response = $this->elasticService->getClient()->search($params);
-        $bucketData = $response['aggregations']['status_counts']['buckets'] ?? [];
-        $this->counts = collect($bucketData)->mapWithKeys(function ($item) {
-            return [$item['key'] => $item['doc_count']];
-        });
+        $counts = collect([]);
+        if ($this->elasticService->indexExists(ELASTIC_JOBS)) {
+            $response = $this->elasticService->getClient()->search($params);
+            $bucketData = $response['aggregations']['status_counts']['buckets'] ?? [];
+            $counts = collect($bucketData)->mapWithKeys(function ($item) {
+                return [$item['key'] => $item['doc_count']];
+            });
+        }
+        $active_count = $counts->get('active', 0);
+        $hold_count = $counts->get('hold', 0);
+        $inactive_count = $counts->get('inactive', 0);
+        $alljobs_count = $active_count + $hold_count + $inactive_count;
 
-        /** End Jobs Count Graph */
-
-        /** Start Candidate last 7 days */
+        // 3. Candidate last 7 days
         $endDate = Carbon::today()->endOfDay();
         $startDate = Carbon::today()->subDays(6)->startOfDay();
-        // dd($startDate,$endDate);
         $paramsCandidates = [
             'index' => ELASTIC_CANDIDATES,
             'request_cache' => true,
@@ -1059,7 +1057,6 @@ class ServiceCompanyConsultancyController extends ServiceCompanyBaseController
                 'query' => [
                     'bool' => [
                         'must' => [
-                            // First required condition
                             [
                                 'bool' => [
                                     'must' => [
@@ -1072,7 +1069,6 @@ class ServiceCompanyConsultancyController extends ServiceCompanyBaseController
                                     ],
                                 ],
                             ],
-                            // Second required condition
                             [
                                 'range' => [
                                     'updated_at' => [
@@ -1101,95 +1097,46 @@ class ServiceCompanyConsultancyController extends ServiceCompanyBaseController
             ],
         ];
 
-        $responseCandidates = $this->elasticService->getClient()->search($paramsCandidates);
-        $candidateBuckets = $responseCandidates['aggregations']['uploads_over_time']['buckets'] ?? [];
+        $candidateBuckets = [];
+        if ($this->elasticService->indexExists(ELASTIC_CANDIDATES)) {
+            $responseCandidates = $this->elasticService->getClient()->search($paramsCandidates);
+            $candidateBuckets = $responseCandidates['aggregations']['uploads_over_time']['buckets'] ?? [];
+        }
 
         $labels = [];
         $candidateValues = [];
-
         for ($i = 0; $i < 7; $i++) {
             $date = $startDate->copy()->addDays($i);
-            $formatted = $date->format('M d'); // e.g., 'Jul 16'
-            $labels[] = $formatted;
-            // Find matching doc_count from candidates
+            $labels[] = $date->format('M d');
             $candidateBucket = collect($candidateBuckets)->firstWhere('key_as_string', $date->format('Y-m-d'));
-
             $candidateValues[] = $candidateBucket['doc_count'] ?? 0;
         }
-        // dd($labels,$candidateValues);
-        $this->labels = $labels;
-        $this->candidateValues = $candidateValues;
-        $this->candidateValuesTotal = array_sum($candidateValues);
+        $candidateValuesTotal = array_sum($candidateValues);
 
-        /** End Candidate last 7 days */
-
-        /** Start Offer Count Graph */
-        $boolQuery = [
-            'bool' => [
-                'must' => [
-                    [
-                        'term' => ['from_company_id' => $company_id],
-                    ],
-                    [
-                        'term' => ['to_company_id' => $to_company_id],
-                    ],
-                    [
-                        'term' => ['final_status' => 1],
-                    ],
-                    [
-                        'range' => [
-                            'of_created_date' => [
-                                'gte' => $startOfMonthcomman->toDateString(),
-                                'lte' => $endOfMonthcomman->toDateString(),
-                            ],
-                        ],
-                    ],
-                ],
-            ],
-        ];
-
-        // $boolQuery = [
-        // 	'bool' => [
-        // 		'should' => [
-        // 			// First condition
-        // 			[
-        // 				'bool' => [
-        // 					'must' => array_merge([
-        // 						['term' => ['to_company_id' => $to_company_id]],
-        // 						['term' => ['from_company_id' => $company_id]],
-        // 						['term' => ['job_master_status_id' => 6]],
-        // 					])
-        // 				]
-        // 			],
-        // 		],
-        // 		'minimum_should_match' => 1,
-        // 		'filter' => [
-        // 			[
-        // 				'bool' => [
-        // 					'should' => [
-        // 						[
-        // 							'range' => [
-        // 								'of_created_date' => [
-        // 									'gte' => $startOfMonthcomman->toDateString(),
-        // 									'lte' => $endOfMonthcomman->toDateString(),
-        // 								],
-        // 							],
-        // 						],
-        // 					],
-        // 					'minimum_should_match' => 1,
-        // 				],
-        // 			],
-        // 		],
-        // 	]
-        // ];
-
-        $params = [
+        // 4. Offer count graph
+        $paramsOffer = [
             'index' => ELASTIC_CANDIDATES,
             'request_cache' => true,
             'body' => [
                 'track_total_hits' => true,
                 'size' => 0,
-                'query' => $boolQuery,
+                'query' => [
+                    'bool' => [
+                        'must' => [
+                            ['term' => ['from_company_id' => $company_id]],
+                            ['term' => ['to_company_id' => $to_company_id]],
+                            ['term' => ['final_status' => 1]],
+                            [
+                                'range' => [
+                                    'of_created_date' => [
+                                        'gte' => $startOfMonthcomman->toDateString(),
+                                        'lte' => $endOfMonthcomman->toDateString(),
+                                    ],
+                                ],
+                            ],
+                        ],
+                    ],
+                ],
                 'aggs' => [
                     'of_offer_count' => [
                         'date_histogram' => [
@@ -1206,106 +1153,47 @@ class ServiceCompanyConsultancyController extends ServiceCompanyBaseController
                 ],
             ],
         ];
-        $response = $this->elasticService->getClient()->search($params);
-        $candidateBucketsoffer = $response['aggregations']['of_offer_count']['buckets'] ?? [];
-
+        $candidateBucketsoffer = [];
+        if ($this->elasticService->indexExists(ELASTIC_CANDIDATES)) {
+            $responseOffer = $this->elasticService->getClient()->search($paramsOffer);
+            $candidateBucketsoffer = $responseOffer['aggregations']['of_offer_count']['buckets'] ?? [];
+        }
         $candidateValuesCommoffer = [];
         $labelsCommoffer = [];
         $startDateComm = Carbon::now();
         for ($i = 5; $i >= 0; $i--) {
-            $startDate = $startDateComm->copy()->startOfMonth()->subMonths($i);
-            $endDate = $startDate->copy()->endOfMonth();
-            // dd($startDate,$endDate);
-            $formattedComm = $startDate->format('M Y'); // e.g., 'Jul 16'
-            $labelsCommoffer[] = $formattedComm;
-            $candidateBucketoffer = collect($candidateBucketsoffer)->firstWhere('key_as_string', $startDate->format('Y-m'));
-            $candidateValuesCommoffer[] = $candidateBucketoffer['doc_count'] ?? 0;
-
+            $sDate = $startDateComm->copy()->startOfMonth()->subMonths($i);
+            $labelsCommoffer[] = $sDate->format('M Y');
+            $cBucket = collect($candidateBucketsoffer)->firstWhere('key_as_string', $sDate->format('Y-m'));
+            $candidateValuesCommoffer[] = $cBucket['doc_count'] ?? 0;
         }
-        $this->labelsCommoffer = $labelsCommoffer;
-        $this->candidateValuesCommoffer = $candidateValuesCommoffer;
-        //  dd($this->candidateValuesCommoffer,$this->labelsCommoffer);
-        $this->candidateValuesTotaloffer = array_sum($candidateValuesCommoffer);
+        $candidateValuesTotaloffer = array_sum($candidateValuesCommoffer);
 
-        /** End Offer count Graph */
-
-        /** Start Candidate list joined*/
-        $startOfMonthcomman = Carbon::now()->startOfMonth()->subMonths(6);
-        $endOfMonthcomman = Carbon::now()->endOfMonth();
-
-        $must = [];
-        $should = [];
-        $filter = [];
-        $sort = [];
-
-        $boolQuery = [
-            'bool' => [
-                'must' => [
-                    [
-                        'term' => ['from_company_id' => $company_id],
-                    ],
-                    [
-                        'term' => ['to_company_id' => $to_company_id],
-                    ],
-                    [
-                        'term' => ['final_status' => 1],
-                    ],
-                    [
-                        'range' => [
-                            'of_joined_date' => [
-                                'gte' => $startOfMonthcomman->toDateString(),
-                                'lte' => $endOfMonthcomman->toDateString(),
-                            ],
-                        ],
-                    ],
-                ],
-            ],
-        ];
-
-        // $boolQuery = [
-        // 	'bool' => [
-        // 		'should' => [
-        // 			// First condition
-        // 			[
-        // 				'bool' => [
-        // 					'must' => array_merge([
-        // 						['term' => ['to_company_id' => $to_company_id]],
-        // 						['term' => ['from_company_id' => $company_id]],
-        // 						['term' => ['job_master_status_id' => 6]],
-        // 					])
-        // 				]
-        // 			],
-        // 		],
-        // 		'minimum_should_match' => 1,
-        // 		'filter' => [
-        // 			[
-        // 				'bool' => [
-        // 					'should' => [
-        // 						[
-        // 							'range' => [
-        // 								'of_joined_date' => [
-        // 									'gte' => $startOfMonthcomman->toDateString(),
-        // 									'lte' => $endOfMonthcomman->toDateString(),
-        // 								],
-        // 							],
-        // 						],
-        // 					],
-        // 					'minimum_should_match' => 1,
-        // 				],
-        // 			],
-        // 		],
-        // 	]
-        // ];
-
-        $sort[] = ['of_joined_date' => ['order' => 'desc']];
-        $params = [
+        // 5. Candidate list joined
+        $paramsJoin = [
             'index' => ELASTIC_CANDIDATES,
             'request_cache' => true,
             'body' => [
                 'track_total_hits' => true,
                 'size' => 6,
-                'sort' => $sort,
-                'query' => $boolQuery,
+                'sort' => [['of_joined_date' => ['order' => 'desc']]],
+                'query' => [
+                    'bool' => [
+                        'must' => [
+                            ['term' => ['from_company_id' => $company_id]],
+                            ['term' => ['to_company_id' => $to_company_id]],
+                            ['term' => ['final_status' => 1]],
+                            [
+                                'range' => [
+                                    'of_joined_date' => [
+                                        'gte' => $startOfMonthcomman->toDateString(),
+                                        'lte' => $endOfMonthcomman->toDateString(),
+                                    ],
+                                ],
+                            ],
+                        ],
+                    ],
+                ],
                 'aggs' => [
                     'of_joined_count' => [
                         'date_histogram' => [
@@ -1322,77 +1210,37 @@ class ServiceCompanyConsultancyController extends ServiceCompanyBaseController
                 ],
             ],
         ];
-        $response = $this->elasticService->getClient()->search($params);
-        $this->total_candidates_join = $response['hits']['total']['value'] ?? 0;
-        $data = array_map(function ($hit) {
-            return $hit['_source'];
-        }, $response['hits']['hits']);
-        $this->data_list = $data;
-        $candidateBucketsjoin = $response['aggregations']['of_joined_count']['buckets'] ?? [];
 
+        $candidateBucketsjoin = [];
+        if ($this->elasticService->indexExists(ELASTIC_CANDIDATES)) {
+            $responseJoin = $this->elasticService->getClient()->search($paramsJoin);
+            $candidateBucketsjoin = $responseJoin['aggregations']['of_joined_count']['buckets'] ?? [];
+        }
         $candidateValuesCommjoin = [];
         $labelsCommjoin = [];
-        $startDateComm = Carbon::now();
         for ($i = 5; $i >= 0; $i--) {
-            $startDate = $startDateComm->copy()->startOfMonth()->subMonths($i);
-            $endDate = $startDate->copy()->endOfMonth();
-            // dd($startDate,$endDate);
-            $formattedComm = $startDate->format('M Y'); // e.g., 'Jul 16'
-            $labelsCommjoin[] = $formattedComm;
-            $candidateBucketjoin = collect($candidateBucketsjoin)->firstWhere('key_as_string', $startDate->format('Y-m'));
-            $candidateValuesCommjoin[] = $candidateBucketjoin['doc_count'] ?? 0;
-
+            $sDate = $startDateComm->copy()->startOfMonth()->subMonths($i);
+            $labelsCommjoin[] = $sDate->format('M Y');
+            $cBucket = collect($candidateBucketsjoin)->firstWhere('key_as_string', $sDate->format('Y-m'));
+            $candidateValuesCommjoin[] = $cBucket['doc_count'] ?? 0;
         }
-        $this->labelsCommjoin = $labelsCommjoin;
-        $this->candidateValuesCommjoin = $candidateValuesCommjoin;
-        //  dd($this->candidateValuesCommjoin,$this->labelsCommjoin);
-        $this->candidateValuesTotaljoin = array_sum($candidateValuesCommjoin);
+        $candidateValuesTotaljoin = array_sum($candidateValuesCommjoin);
 
-        /** End Candidate list joined*/
-
-        /** Start Interview Section */
-        $page = 1;
-        $size = 5; // Default 20 results per page
-        $from = ($page - 1) * $size;
-        $must = [];
-        $should = [];
-        $filter = [];
+        // 6. Upcoming Interviews
         $nowMinus1Hour = now()->subHour()->toIso8601String();
-
-        $must[] = [
-            'bool' => [
-                'must' => [
-                    [
-                        'term' => ['from_company_id' => $company_id],
-                    ],
-                    [
-                        'term' => ['to_company_id' => $to_company_id],
-                    ],
-                ],
-            ],
-        ];
-
-        // $must[] = [
-        // 	'bool' => [
-        // 		'should' => [
-        // 			['term' => ['client_id' => $id]],
-        // 		],
-        // 		'minimum_should_match' => 1,
-        // 	]
-        // ];
-
         $upcomingParams = [
             'index' => ELASTIC_INERTVIEW_TRACKER,
             'request_cache' => true,
             'body' => [
-                'from' => $from,
-                'size' => $size,
-                'sort' => [
-                    ['schedule_date' => ['order' => 'asc']],
-                ],
+                'from' => 0,
+                'size' => 5,
+                'sort' => [['schedule_date' => ['order' => 'asc']]],
                 'query' => [
                     'bool' => [
-                        'must' => $must,
+                        'must' => [
+                            ['term' => ['from_company_id' => $company_id]],
+                            ['term' => ['to_company_id' => $to_company_id]],
+                        ],
                         'filter' => [
                             [
                                 'range' => [
@@ -1409,30 +1257,25 @@ class ServiceCompanyConsultancyController extends ServiceCompanyBaseController
         ];
 
         $upcomingData = [];
-        $upcomingTotal = 0;
-
         if ($this->elasticService->indexExists(ELASTIC_INERTVIEW_TRACKER)) {
-            $response = $this->elasticService->getClient()->search($upcomingParams);
-            $upcomingTotal = $response['hits']['total']['value'] ?? 0;
-            $upcomingData = array_map(fn ($hit) => $hit['_source'], $response['hits']['hits']);
+            $responseUp = $this->elasticService->getClient()->search($upcomingParams);
+            $upcomingData = array_map(fn ($hit) => $hit['_source'], $responseUp['hits']['hits']);
         }
-        $this->upcomingData = $upcomingData;
 
-        // ////////////////////////////////// last 7 days
-        $endDate = Carbon::today()->endOfDay();
-        $startDate = Carbon::today()->subDays(6)->startOfDay();
+        // 7. Recent Interviews (last 7 days)
         $recentParams = [
             'index' => ELASTIC_INERTVIEW_TRACKER,
             'request_cache' => true,
             'body' => [
-                'from' => $from,
-                'size' => $size,
-                'sort' => [
-                    ['schedule_date' => ['order' => 'desc']],
-                ],
+                'from' => 0,
+                'size' => 5,
+                'sort' => [['schedule_date' => ['order' => 'desc']]],
                 'query' => [
                     'bool' => [
-                        'must' => $must,
+                        'must' => [
+                            ['term' => ['from_company_id' => $company_id]],
+                            ['term' => ['to_company_id' => $to_company_id]],
+                        ],
                         'filter' => [
                             [
                                 'range' => [
@@ -1462,57 +1305,42 @@ class ServiceCompanyConsultancyController extends ServiceCompanyBaseController
             ],
         ];
 
-        $recentData = [];
-        $recentTotal = 0;
-
+        $interviewBuckets = [];
         if ($this->elasticService->indexExists(ELASTIC_INERTVIEW_TRACKER)) {
-            $response = $this->elasticService->getClient()->search($recentParams);
-            $interviewBuckets = $response['aggregations']['uploads_over_time']['buckets'] ?? [];
-            $recentTotal = $response['hits']['total']['value'] ?? 0;
-            $recentData = array_map(fn ($hit) => $hit['_source'], $response['hits']['hits']);
+            $responseRec = $this->elasticService->getClient()->search($recentParams);
+            $interviewBuckets = $responseRec['aggregations']['uploads_over_time']['buckets'] ?? [];
         }
-        $this->recentData = $recentData;
 
         $interviewlabels = [];
         $interviewValues = [];
-
         for ($i = 0; $i < 7; $i++) {
-            // dd($date->format('Y-m-d'));
             $date = $startDate->copy()->addDays($i);
-            $formatted = $date->format('M d'); // e.g., 'Jul 16'
-            $interviewlabels[] = $formatted;
-            // Find matching doc_count from candidates
-            $interviewBucket = collect($interviewBuckets)->firstWhere('key_as_string', $date->format('Y-m-d'));
-
-            $interviewValues[] = $interviewBucket['doc_count'] ?? 0;
+            $interviewlabels[] = $date->format('M d');
+            $iBucket = collect($interviewBuckets)->firstWhere('key_as_string', $date->format('Y-m-d'));
+            $interviewValues[] = $iBucket['doc_count'] ?? 0;
         }
-        $this->interviewlabels = $interviewlabels;
-        $this->interviewValues = $interviewValues;
-        // dd($this->interviewlabels);
-        $this->interviewValuesTotal = array_sum($interviewValues);
 
-        // ////////////////////////////////// last 6 months
-        $startDateComm = Carbon::now();
-        $startDate = $startDateComm->copy()->startOfMonth()->subMonths(5);
-        $endDate = $startDateComm;
+        // 8. Recent Interviews (last 6 months)
+        $sDate6 = $startDateComm->copy()->startOfMonth()->subMonths(5);
         $recentParamsMonth = [
             'index' => ELASTIC_INERTVIEW_TRACKER,
             'request_cache' => true,
             'body' => [
-                'from' => $from,
-                'size' => $size,
-                'sort' => [
-                    ['schedule_date' => ['order' => 'desc']],
-                ],
+                'from' => 0,
+                'size' => 5,
+                'sort' => [['schedule_date' => ['order' => 'desc']]],
                 'query' => [
                     'bool' => [
-                        'must' => $must,
+                        'must' => [
+                            ['term' => ['from_company_id' => $company_id]],
+                            ['term' => ['to_company_id' => $to_company_id]],
+                        ],
                         'filter' => [
                             [
                                 'range' => [
                                     'schedule_date' => [
-                                        'gte' => $startDate->toDateString(),
-                                        'lte' => $endDate->toDateString(),
+                                        'gte' => $sDate6->toDateString(),
+                                        'lte' => $startDateComm->toDateString(),
                                     ],
                                 ],
                             ],
@@ -1527,8 +1355,8 @@ class ServiceCompanyConsultancyController extends ServiceCompanyBaseController
                             'format' => 'yyyy-MM-dd',
                             'min_doc_count' => 0,
                             'extended_bounds' => [
-                                'min' => $startDate->toDateString(),
-                                'max' => $endDate->toDateString(),
+                                'min' => $sDate6->toDateString(),
+                                'max' => $startDateComm->toDateString(),
                             ],
                         ],
                     ],
@@ -1536,44 +1364,57 @@ class ServiceCompanyConsultancyController extends ServiceCompanyBaseController
             ],
         ];
 
-        $recentDataMonth = [];
-        $recentTotalMonth = 0;
-
+        $interviewBucketsMonth = [];
         if ($this->elasticService->indexExists(ELASTIC_INERTVIEW_TRACKER)) {
             $responseMonth = $this->elasticService->getClient()->search($recentParamsMonth);
             $interviewBucketsMonth = $responseMonth['aggregations']['uploads_over_time']['buckets'] ?? [];
-            $recentTotalMonth = $responseMonth['hits']['total']['value'] ?? 0;
-            $recentDataMonth = array_map(fn ($hit) => $hit['_source'], $responseMonth['hits']['hits']);
         }
-        $this->recentDataMonth = $recentDataMonth;
-
-        // dd($this->recentDataMonth);
 
         $interviewlabelsMonth = [];
         $interviewValuesMonth = [];
-
         for ($i = 5; $i >= 0; $i--) {
-            $startDate = $startDateComm->copy()->startOfMonth()->subMonths($i);
-            // dd($startDate->format('Y-m'),$this->recentDataMonth);
-            $formatted = $startDate->format('M Y'); // e.g., 'Jul 16'
-            $interviewlabelsMonth[] = $formatted;
-            $interviewBucket = collect($interviewBucketsMonth)->firstWhere('key_as_string', $startDate->format('Y-m-01'));
-            // collect($interviewBucketsMonth)->firstWhere('key_as_string', $startDate->format('Y-m'));
-
-            $interviewValuesMonth[] = $interviewBucket['doc_count'] ?? 0;
+            $sDate = $startDateComm->copy()->startOfMonth()->subMonths($i);
+            $interviewlabelsMonth[] = $sDate->format('M Y');
+            $iBucket = collect($interviewBucketsMonth)->firstWhere('key_as_string', $sDate->format('Y-m-01'));
+            $interviewValuesMonth[] = $iBucket['doc_count'] ?? 0;
         }
-        $this->interviewlabelsMonth = $interviewlabelsMonth;
-        $this->interviewValuesMonth = $interviewValuesMonth;
-        $this->interviewValuesTotalMonth = array_sum($interviewValuesMonth);
 
-        /** End Interview Section */
-        $view = view('service_company.consultancy.dviewMore', $this->data)->render();
-        $responseData = Reply::dataOnly(['status' => 'success', 'view' => $view]);
-
-        cache()->put($cacheKeySet, $responseData, now()->addMinutes(CONSULTANCY_VIEWMORE_TIME));
-
-        return $responseData;
-
+        return response()->json([
+            'status' => 'success',
+            'data' => [
+                'joined_count' => $joined_count,
+                'sourcing_count' => $sourcing_count,
+                'screening_count' => $screening_count,
+                'evaluation_count' => $evaluation_count,
+                'negotiation_count' => $negotiation_count,
+                'offer_count' => $offer_count,
+                'Rejected_count' => $Rejected_count,
+                'inreview_count' => $inreview_count,
+                'total_candidates' => $total_candidates,
+                'active_count' => $active_count,
+                'hold_count' => $hold_count,
+                'inactive_count' => $inactive_count,
+                'alljobs_count' => $alljobs_count,
+                'candidateValuesTotal' => $candidateValuesTotal,
+                'labels' => $labels,
+                'candidateValues' => $candidateValues,
+                'candidateValuesTotaloffer' => $candidateValuesTotaloffer,
+                'labelsCommoffer' => $labelsCommoffer,
+                'candidateValuesCommoffer' => $candidateValuesCommoffer,
+                'candidateValuesTotaljoin' => $candidateValuesTotaljoin,
+                'labelsCommjoin' => $labelsCommjoin,
+                'candidateValuesCommjoin' => $candidateValuesCommjoin,
+                'upcomingData' => $upcomingData,
+                'interviewlabels' => $interviewlabels,
+                'interviewValues' => $interviewValues,
+                'interviewlabelsMonth' => $interviewlabelsMonth,
+                'interviewValuesMonth' => $interviewValuesMonth,
+                'startOfMonth' => $startOfMonth->format('d M y'),
+                'endOfMonth' => $endOfMonth->format('d M y'),
+                'startOfMonthcomman' => $startOfMonthcomman->format('M Y'),
+                'endOfMonthcomman' => $endOfMonthcomman->format('M Y'),
+            ],
+        ]);
     }
 
     public function staffingContactList($id)

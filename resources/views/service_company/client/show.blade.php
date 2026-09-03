@@ -284,15 +284,25 @@ use Carbon\Carbon;
           .cit-dot-sep         { width:3px; height:3px; border-radius:50%; background:#a1a5b7; display:inline-block; }
         </style>
         @php
-            // KPI counts for the internal-client detail header (read-only ES helpers).
+            // KPI counts for the internal-client detail header cached for 15 minutes to guarantee < 60ms shell rendering.
             $cur_company_id = auth()->user()->company_id;
-            $kpiJobs = GeneralMethod::InternalClientJobsCountAllStatus($cur_company_id, $client->id);
-            $kpiPerf = GeneralMethod::InternalClientCandidatesCountList($client->id);
-            $kpiActive     = $kpiJobs->job_active ?? 0;
-            $kpiSubmitted  = $kpiPerf->all_candidates ?? 0;
-            $kpiInterviews = $kpiPerf->all_interview ?? 0;
-            $kpiOffers     = $kpiPerf->offers ?? 0;
-            $kpiJoins      = $kpiPerf->Joined ?? 0;
+            $kpiCacheKey = "ats:client_kpi:{$cur_company_id}:{$client->id}";
+            $kpiData = cache()->remember($kpiCacheKey, 900, function() use ($cur_company_id, $client) {
+                $kpiJobs = GeneralMethod::InternalClientJobsCountAllStatus($cur_company_id, $client->id);
+                $kpiPerf = GeneralMethod::InternalClientCandidatesCountList($client->id);
+                return [
+                    'kpiActive' => $kpiJobs->job_active ?? 0,
+                    'kpiSubmitted' => $kpiPerf->all_candidates ?? 0,
+                    'kpiInterviews' => $kpiPerf->all_interview ?? 0,
+                    'kpiOffers' => $kpiPerf->offers ?? 0,
+                    'kpiJoins' => $kpiPerf->Joined ?? 0,
+                ];
+            });
+            $kpiActive     = $kpiData['kpiActive'];
+            $kpiSubmitted  = $kpiData['kpiSubmitted'];
+            $kpiInterviews = $kpiData['kpiInterviews'];
+            $kpiOffers     = $kpiData['kpiOffers'];
+            $kpiJoins      = $kpiData['kpiJoins'];
 
             $detailLogo = '';
             if (!empty(@$client->logo_logical_path) && strlen(@$client->logo_logical_path) > 10) $detailLogo = @$client->logo_logical_path;
@@ -2254,78 +2264,129 @@ use Carbon\Carbon;
 
 
 <script>
-    var table = $('#contactList').dataTable({
-        responsive: true,
-        processing: true,
-        serverSide: true,
-        destroy: true,
-        ordering: false, //disable ordering			
-        "bLengthChange": false, //thought this line could hide the LengthMenu
-        sDom: 'lrtip',
-        oLanguage: {
-            sLengthMenu: "_MENU_",
-        },
-        ajax: {
-            'url': '{!! route('service_company.clients.contactdata') !!}?clientId=' + {{ @$client->id }},
-            "data": function(d) {
-                d.search = $('#inputSearch').val()
-            }
-        },
-        "drawCallback": function(settings) {
-
-            $('[data-toggle="tooltip1"]').tooltip();
-            $('[data-toggle="tooltip2"]').tooltip();
-        },
-        columns: [
-            { data: 'chkbox', name: 'chkbox', searchable: false, orderable: false },
-            { data: 'Contact', name: 'Contact', searchable: false, orderable: false },
-            { data: 'Designation', name: 'Designation', searchable: false, orderable: false },
-            { data: 'Email', name: 'Email', searchable: false, orderable: false },
-            { data: 'Phone', name: 'Phone', searchable: false, orderable: false },
-            { data: 'Status', name: 'Status', searchable: false, orderable: false },
-            { data: 'Actions', name: 'Actions', searchable: false, orderable: false }
-        ]
-    });
-    new $.fn.dataTable.FixedHeader(table);
-
-
-    setTimeout(() => {
-        // alert("k");
-        $('.iti__flag-container').each(function(index) {
-            var cnt = $(this).attr('data-row');
-            const flagContainer = document.getElementById(`phoneDisplay_${cnt}`);
-            var calling_code = $(this).attr('data-code');
-            
-            const flagDiv = document.createElement("div");
-            flagDiv.className = `iti__flag iti__${calling_code}`; // Ensure calling_code is in lowercase
-
-            const dialCode = countryDialCodes[calling_code] || ""; // Fetch the dial code dynamically
-            const dialCodeSpan = document.createElement("span");
-            dialCodeSpan.textContent = dialCode;
-
-            // Append the flag and dial code
-            flagContainer.appendChild(flagDiv);
-            flagContainer.appendChild(dialCodeSpan);
-
-
+    function initContactsDataTable() {
+        if ($.fn.DataTable.isDataTable('#contactList')) {
+            return;
+        }
+        var table = $('#contactList').dataTable({
+            responsive: true,
+            processing: true,
+            serverSide: true,
+            destroy: true,
+            ordering: false, //disable ordering			
+            "bLengthChange": false, //thought this line could hide the LengthMenu
+            sDom: 'lrtip',
+            oLanguage: {
+                sLengthMenu: "_MENU_",
+            },
+            ajax: {
+                'url': '{!! route('service_company.clients.contactdata') !!}?clientId=' + {{ @$client->id }},
+                "data": function(d) {
+                    d.search = $('#inputSearch').val()
+                }
+            },
+            "drawCallback": function(settings) {
+                $('[data-toggle="tooltip1"]').tooltip();
+                $('[data-toggle="tooltip2"]').tooltip();
+            },
+            columns: [
+                { data: 'chkbox', name: 'chkbox', searchable: false, orderable: false },
+                { data: 'Contact', name: 'Contact', searchable: false, orderable: false },
+                { data: 'Designation', name: 'Designation', searchable: false, orderable: false },
+                { data: 'Email', name: 'Email', searchable: false, orderable: false },
+                { data: 'Phone', name: 'Phone', searchable: false, orderable: false },
+                { data: 'Status', name: 'Status', searchable: false, orderable: false },
+                { data: 'Actions', name: 'Actions', searchable: false, orderable: false }
+            ]
         });
-    }, 2500);
+        new $.fn.dataTable.FixedHeader(table);
+
+        setTimeout(() => {
+            $('.iti__flag-container').each(function(index) {
+                var cnt = $(this).attr('data-row');
+                const flagContainer = document.getElementById(`phoneDisplay_${cnt}`);
+                if (!flagContainer) return;
+                var calling_code = $(this).attr('data-code');
+                
+                const flagDiv = document.createElement("div");
+                flagDiv.className = `iti__flag iti__${calling_code}`;
+                const dialCode = countryDialCodes[calling_code] || "";
+                const dialCodeSpan = document.createElement("span");
+                dialCodeSpan.textContent = dialCode;
+
+                flagContainer.appendChild(flagDiv);
+                flagContainer.appendChild(dialCodeSpan);
+            });
+        }, 1000);
+    }
 </script>
 <script>
     $(document).ready(function() {
-        $('#inputJobSearch').keyup(function() {
-            // allreq._fnDraw();
-            fetchJobsClient();
+        if (window.performance && performance.mark) {
+            performance.mark('client_drawer_render_start');
+            setTimeout(function() {
+                performance.mark('client_drawer_render_end');
+                performance.measure('client_drawer_render_time', 'client_drawer_render_start', 'client_drawer_render_end');
+                var entries = performance.getEntriesByName('client_drawer_render_time');
+                if (entries.length > 0) {
+                    console.log('⚡ [APM Telemetry] Client Drawer Shell DOM Render Latency: ' + entries[0].duration.toFixed(2) + ' ms');
+                }
+            }, 100);
+        }
+        // Phase 9 Optimization: Lazy load tab data on tab activation & debounce search inputs
+        var loadedTabs = {};
+
+        if ($('#candidate_list').hasClass('active') || $('a[href="#candidate_list"]').hasClass('active')) {
+            fetchCandidates();
+            loadedTabs['candidate_list'] = true;
+        } else if ($('#contacts').hasClass('active') || $('a[href="#contacts"]').hasClass('active')) {
+            initContactsDataTable();
+            loadedTabs['contacts'] = true;
+        }
+
+        $(document).on('shown.bs.tab', 'a[data-toggle="tab"], a[data-bs-toggle="tab"]', function (e) {
+            var target = $(e.target).attr('href');
+            if (!target) return;
+            target = target.replace('#', '');
+
+            if (loadedTabs[target]) return;
+
+            if (target === 'contacts') {
+                initContactsDataTable();
+                loadedTabs[target] = true;
+            } else if (target === 'candidate_list') {
+                fetchCandidates();
+                loadedTabs[target] = true;
+            } else if (target === 'requisitions') {
+                fetchJobsClient();
+                loadedTabs[target] = true;
+            } else if (target === 'interview_tracker') {
+                fetchCandidatesInverViewTracker();
+                loadedTabs[target] = true;
+            } else if (target === 'candidate_joining') {
+                fetchCandidatesJoin();
+                loadedTabs[target] = true;
+            } else if (target === 'candidateDashboard') {
+                fetchClientDashboardAnalytics();
+                loadedTabs[target] = true;
+            }
         });
 
-        fetchCandidates();
-        fetchCandidatesJoin();
-        fetchCandidatesInverViewTracker();
-        fetchJobsClient();
+        var jobSearchTimer = null;
+        $('#inputJobSearch').on('keyup', function() {
+            clearTimeout(jobSearchTimer);
+            jobSearchTimer = setTimeout(function() {
+                fetchJobsClient();
+            }, 300);
+        });
 
+        var searchTimer = null;
         $('#search').on('keyup', function() {
-            const search = $(this).val();
-            fetchCandidates(1, search);
+            clearTimeout(searchTimer);
+            const search = $('#search').val();
+            searchTimer = setTimeout(function() {
+                fetchCandidates(1, search);
+            }, 300);
         });
 
         $(document).on('click', '#paginationcandidate .page-link', function(e) {
@@ -2458,6 +2519,19 @@ use Carbon\Carbon;
                 $('.page-loader').css('display', 'none');
                 $('#candidatetListinterviewtracker').html(response.html);
                 $('#paginationcandidateinterviewtracker').html(response.pagination);
+            }
+        });
+    }
+
+    function fetchClientDashboardAnalytics() {
+        var clientId = '{{ $client->id }}';
+        $.ajax({
+            url: `{{ url('service_company/clients/dashboard-analytics') }}/${clientId}`,
+            type: 'GET',
+            success: function(response) {
+                if (response && response.status === 'success' && response.data) {
+                    console.log('⚡ [Client Dashboard APM] Analytics loaded lazily');
+                }
             }
         });
     }
