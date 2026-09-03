@@ -5717,22 +5717,26 @@ async function addCompanyHeaderToResume(resumeBlob,data,fileName){
   var topY=pageSize.height;
   newFirst.drawRectangle({x:0,y:topY,width:pageSize.width,height:headerH,color:PDFLib.rgb(1,1,1),borderColor:PDFLib.rgb(0.86,0.89,0.94),borderWidth:0.8});
   newFirst.drawRectangle({x:0,y:topY+headerH-4,width:pageSize.width,height:4,color:PDFLib.rgb(0.12,0.23,0.54)});
+  newFirst.drawRectangle({x:0,y:topY,width:pageSize.width,height:1.1,color:PDFLib.rgb(0.88,0.91,0.95)});
   var companyName=clean(data.reportCompanyName,'Hiring Partner');
   var logoBox=headerH-26;
   var logoX=22;
   var logoY=topY+14;
+  var logoAreaW=70;
   if(logoImage){
     var dims=logoImage.scaleToFit(logoBox*1.8,logoBox);
     newFirst.drawImage(logoImage,{x:logoX,y:logoY+(logoBox-dims.height)/2,width:dims.width,height:dims.height});
+    logoAreaW=Math.max(56,Math.min(74,dims.width));
   }else{
     newFirst.drawRectangle({x:logoX,y:logoY,width:logoBox,height:logoBox,color:PDFLib.rgb(0.93,0.95,1),borderColor:PDFLib.rgb(0.75,0.82,0.98),borderWidth:0.8});
     newFirst.drawText(companyName.charAt(0).toUpperCase(),{x:logoX+(logoBox/2)-5,y:logoY+(logoBox/2)-5,size:16,font:boldFont,color:PDFLib.rgb(0.12,0.23,0.54)});
+    logoAreaW=logoBox;
   }
-  var textX=logoX+(logoImage?96:logoBox+14);
+  var textX=logoX+logoAreaW+12;
   newFirst.drawText('SHARED BY',{x:textX,y:topY+headerH-27,size:7,font:boldFont,color:PDFLib.rgb(0.39,0.45,0.55)});
   newFirst.drawText(limitText(companyName,42,companyName),{x:textX,y:topY+headerH-45,size:12,font:boldFont,color:PDFLib.rgb(0.06,0.09,0.16)});
   newFirst.drawText('CONFIDENTIAL RESUME',{x:pageSize.width-190,y:topY+headerH-29,size:14,font:boldFont,color:PDFLib.rgb(0.06,0.09,0.16)});
-  newFirst.drawText((clean(data.reportDate,'') || (new Date()).toLocaleDateString())+' · Confidential',{x:pageSize.width-190,y:topY+headerH-45,size:7,font:regularFont,color:PDFLib.rgb(0.39,0.45,0.55)});
+  newFirst.drawText(clean(data.reportDate,'') || (new Date()).toLocaleDateString(),{x:pageSize.width-190,y:topY+headerH-45,size:8.4,font:regularFont,color:PDFLib.rgb(0.39,0.45,0.55)});
   if(sourcePages.length>1){
     var rest=await targetDoc.copyPages(sourceDoc,sourceDoc.getPageIndices().slice(1));
     rest.forEach(function(page){ targetDoc.addPage(page); });
@@ -6068,7 +6072,7 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h10l6 6v10a2 2 0 0 1-2 2H4V4z"/><path d="M14 4v6h6"/><path d="M8 13h8"/><path d="M8 17h5"/><path d="M3 7h18"/></svg>
         </span>
         <span class="rdc-obody">
-          <span class="rdc-otitle">Branded Resume with Company Header <span style="background:#ecfeff;color:#0e7490;font-size:8.5px;font-weight:700;padding:1px 6px;border-radius:4px;vertical-align:middle;margin-left:4px;">R2 Fast</span></span>
+          <span class="rdc-otitle">Resume + Company Brading <span style="background:#ecfeff;color:#0e7490;font-size:8.5px;font-weight:700;padding:1px 6px;border-radius:4px;vertical-align:middle;margin-left:4px;">R2 Fast</span></span>
           <span class="rdc-odesc">Adds the shared-by company name and logo header above the resume without hiding resume data</span>
         </span>
         <span class="rdc-ometa">
@@ -6170,7 +6174,7 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
     3: {cost:4, label:'Download ATS Highlighted Resume',avail:true,  dlKey:'hl'},
     4: {cost:6, label:'Download Branded + Highlighted', avail:true,  dlKey:'both'},
     5: {cost:7, label:'Download Pre-Screened Report',   avail:true,  dlKey:'rs'},
-    6: {cost:2, label:'Branded Resume with Company Header', avail:(['PDF','DOC','DOCX'].indexOf(resumeExt) !== -1), dlKey:'smart-branded-resume', unavailableMsg:'Branded resume is available for PDF, DOC and DOCX resumes only.'},
+    6: {cost:2, label:'Resume + Company Brading', avail:(['PDF','DOC','DOCX'].indexOf(resumeExt) !== -1), dlKey:'smart-branded-resume', unavailableMsg:'Branded resume is available for PDF, DOC and DOCX resumes only.'},
     15:{cost:8, label:'Pre-Screened Report + Resume + Company Branding', avail:(['PDF','DOC','DOCX'].indexOf(resumeExt) !== -1), dlKey:'smart-prescreened-package', unavailableMsg:'Final package is available for PDF, DOC and DOCX resumes only.'},
     16:{cost:8, label:'Pre-Screened Report + Resume without Company Branding', avail:(['PDF','DOC','DOCX'].indexOf(resumeExt) !== -1), dlKey:'smart-prescreened-package-nobrand', unavailableMsg:'Final package is available for PDF, DOC and DOCX resumes only.'}
   };
