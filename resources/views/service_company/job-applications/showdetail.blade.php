@@ -4591,21 +4591,15 @@ function rsEnsureOpenDocLab(allowExternalFallback){
     }catch(importErr){
       var moduleResponse=await fetch(moduleUrl,{mode:'cors',cache:'no-store'});
       if(!moduleResponse.ok) throw new Error('OpenDoc module request failed with HTTP '+moduleResponse.status);
-      blobUrl=URL.createObjectURL(new Blob([await moduleResponse.text()],{type:'application/javascript'}));
+      var moduleCode=await moduleResponse.text();
+      moduleCode=moduleCode.replace(/new URL\(['"]casual_doc_wasm_bg\.wasm['"],\s*import\.meta\.url\)/g, JSON.stringify(wasmUrl));
+      blobUrl=URL.createObjectURL(new Blob([moduleCode],{type:'application/javascript'}));
       module=await import(blobUrl);
     }
     if(typeof module.default==='function'){
-      try{
-        var wasmResponse=await fetch(wasmUrl);
-        if(!wasmResponse.ok) throw new Error('OpenDoc WASM request failed with HTTP '+wasmResponse.status);
-        await module.default({module_or_path:await wasmResponse.arrayBuffer()});
-      }catch(byteInitErr){
-        try{
-          await module.default({module_or_path:wasmUrl});
-        }catch(urlInitErr){
-          await module.default();
-        }
-      }
+      var wasmResponse=await fetch(wasmUrl,{mode:'cors',cache:'force-cache'});
+      if(!wasmResponse.ok) throw new Error('OpenDoc WASM request failed with HTTP '+wasmResponse.status);
+      await module.default({module_or_path:await wasmResponse.arrayBuffer()});
     }
     if(blobUrl) setTimeout(function(){ URL.revokeObjectURL(blobUrl); }, 30000);
     if(typeof module.open!=='function') throw new Error('OpenDoc open API missing');
