@@ -356,7 +356,7 @@
 .rdc-countdown-reel{width:28px;height:16px;line-height:16px;overflow:hidden;display:inline-block;text-align:right;font-variant-numeric:tabular-nums;font-feature-settings:"tnum" 1;flex-shrink:0;}
 .rdc-countdown-track{display:flex;flex-direction:column;will-change:transform;animation:rdcCountdownReel var(--rdc-count-duration,60s) steps(var(--rdc-count-steps,60), end) forwards;}
 .rdc-countdown-track span{height:16px;line-height:16px;display:block;}
-.rdc-countdown-unit{flex-shrink:0;}
+.rdc-countdown-unit{min-width:50px;text-align:left;flex-shrink:0;}
 /* Toast */
 .rdc-toast{position:fixed;bottom:20px;right:20px;background:#1e293b;color:#fff;padding:10px 15px;border-radius:8px;font-size:11.5px;font-family:'Poppins',sans-serif;z-index:1300000;opacity:0;transform:translateY(6px);transition:all .22s ease;pointer-events:none;max-width:280px;line-height:1.4;}
 .rdc-toast.rdc-tshow{opacity:1;transform:translateY(0);}
@@ -4208,10 +4208,11 @@ setTimeout(() => {
 </script>
 
 {{-- ═══════════════════════════════════════════════════════════════════
-     DOWNLOAD RESUME CENTER (RDC) — Phase 1 UI Shell
-     Overlay + right-slide drawer; 6 format cards displayed.
-     Option 1 (Original) & Option 2 (Branded) wired to existing logic.
-     Options 3–6 are Phase 2 placeholders (toast notification shown).
+     DOWNLOAD RESUME CENTER (RDC)
+     Overlay + right-slide drawer for original, branded, highlighted, report,
+     and final report/resume package downloads.
+     Option 6 is the newer R2/browser branded-resume header flow; the original
+     option 2 remains wired to the existing Resume/CV viewer engine.
      No new MySQL queries. No extra server-side logic.
 ═══════════════════════════════════════════════════════════════════ --}}
 
@@ -4220,26 +4221,56 @@ setTimeout(() => {
   $rdcDownloadUrl = '';
   $rdcR2DirectUrl = '';
   $rdcR2PublicUrl = '';
+  $rdcResumePdfUrl = '';
+  $rdcResumeAvailable = false;
   $rdcResumeRaw = (string)(@$application->resume ?? '');
   if($rdcResumeRaw !== ''){
-    if($resumeAwsPath || strpos($rdcResumeRaw, 'file.jero.works') !== false){
-      $rdcDownloadUrl = route('download.resume', ['id' => $application->id, 'path' => rtrim(strtr(base64_encode($rdcResumeRaw), '+/', '-_'), '=')]);
-    } elseif(filter_var($rdcResumeRaw, FILTER_VALIDATE_URL)){
-      $rdcDownloadUrl = $rdcResumeRaw;
-    } else {
-      $rdcDownloadUrl = url($rdcResumeRaw);
-    }
-
     // Option 14 uses this signed URL so the browser fetches DOCX from R2 instead of Laravel streaming it.
     $rdcR2Key = '';
     if(strpos($rdcResumeRaw, 'https://file.jero.works/') === 0){
       $rdcR2Key = ltrim((string)parse_url($rdcResumeRaw, PHP_URL_PATH), '/');
-      $rdcR2PublicUrl = $rdcResumeRaw;
     } elseif($resumeAwsPath && !filter_var($rdcResumeRaw, FILTER_VALIDATE_URL)){
       $rdcR2Key = ltrim($rdcResumeRaw, '/');
-      $rdcR2PublicUrl = 'https://file.jero.works/'.$rdcR2Key;
     }
+
     if($rdcR2Key !== ''){
+      try{
+        $rdcR2ResolvedKey = $rdcR2Key;
+        if(!\Illuminate\Support\Facades\Storage::disk('r2')->exists($rdcR2ResolvedKey)){
+          $rdcR2FallbackKey = preg_replace('/\.[^.\/]+$/', '.pdf', $rdcR2ResolvedKey);
+          if($rdcR2FallbackKey !== $rdcR2ResolvedKey && \Illuminate\Support\Facades\Storage::disk('r2')->exists($rdcR2FallbackKey)){
+            $rdcR2ResolvedKey = $rdcR2FallbackKey;
+          } else {
+            $rdcR2ResolvedKey = '';
+          }
+        }
+        if($rdcR2ResolvedKey !== ''){
+          $rdcResumeAvailable = true;
+          $rdcR2Key = $rdcR2ResolvedKey;
+          $rdcDownloadUrl = route('download.resume', ['id' => $application->id, 'path' => rtrim(strtr(base64_encode($rdcR2Key), '+/', '-_'), '=')]);
+          $rdcR2PublicUrl = 'https://file.jero.works/'.$rdcR2Key;
+        }
+      } catch(\Throwable $e) {
+        $rdcResumeAvailable = false;
+        $rdcDownloadUrl = '';
+        $rdcR2PublicUrl = '';
+      }
+    } elseif(filter_var($rdcResumeRaw, FILTER_VALIDATE_URL)) {
+      $rdcResumeAvailable = true;
+      $rdcDownloadUrl = $rdcResumeRaw;
+      $rdcR2DirectUrl = strpos($rdcResumeRaw, request()->getSchemeAndHttpHost()) !== 0 ? $rdcResumeRaw : '';
+      $rdcR2PublicUrl = $rdcR2DirectUrl;
+    } else {
+      $rdcResumeAvailable = true;
+      $rdcDownloadUrl = url($rdcResumeRaw);
+    }
+
+    if($rdcResumeAvailable){
+      $rdcResumeConvertToken = rtrim(strtr(base64_encode(GeneralMethod::value_encrypt((string) $rdcResumeRaw)), '+/', '-_'), '=');
+      $rdcResumePdfUrl = route('service_company.job-applications.resume-convert', ['token' => $rdcResumeConvertToken]);
+    }
+
+    if($rdcR2Key !== '' && $rdcResumeAvailable){
       try{
         $rdcR2DownloadName = str_replace('"', '', basename($rdcR2Key));
         $rdcR2DirectUrl = \Illuminate\Support\Facades\Storage::disk('r2')->temporaryUrl(
@@ -4248,11 +4279,8 @@ setTimeout(() => {
           ['ResponseContentDisposition' => 'attachment; filename="'.$rdcR2DownloadName.'"']
         );
       } catch(\Throwable $e) {
-        $rdcR2DirectUrl = strpos($rdcResumeRaw, 'https://file.jero.works/') === 0 ? $rdcResumeRaw : '';
+        $rdcR2DirectUrl = $rdcR2PublicUrl;
       }
-    } elseif(filter_var($rdcResumeRaw, FILTER_VALIDATE_URL) && strpos($rdcResumeRaw, request()->getSchemeAndHttpHost()) !== 0) {
-      $rdcR2DirectUrl = $rdcResumeRaw;
-      $rdcR2PublicUrl = $rdcResumeRaw;
     }
   }
 @endphp
@@ -4260,7 +4288,8 @@ setTimeout(() => {
      data-dl-url="{{ $rdcDownloadUrl }}"
      data-r2-direct-url="{{ $rdcR2DirectUrl }}"
      data-r2-public-url="{{ $rdcR2PublicUrl }}"
-     data-resume-pdf-url="{{ !empty($application->resume) ? route('service_company.job-applications.resume-convert', ['token' => GeneralMethod::value_encrypt((string) $application->resume)]) : '' }}"
+     data-resume-pdf-url="{{ $rdcResumePdfUrl }}"
+     data-has-resume="{{ $rdcResumeAvailable ? 'true' : 'false' }}"
      data-has-aws="{{ $resumeAwsPath ? 'true' : 'false' }}"
      data-file-ext="{{ strtoupper(pathinfo((string)@$application->resume, PATHINFO_EXTENSION) ?: 'FILE') }}"></div>
 <link rel="modulepreload" href="https://file.jero.works/js/opendoc/casual_doc_wasm.js?v=opendoc-20260903" crossorigin>
@@ -5051,6 +5080,24 @@ async function convertDocxResumeToPdfBlob(resumeUrl){
     removeNode(host);
   }
 }
+async function convertDocxResumeToPdfBlobFromSources(resumeUrls){
+  var sources=(Array.isArray(resumeUrls) ? resumeUrls : [resumeUrls]).map(function(url){
+    return clean(url,'');
+  }).filter(function(url,index,self){
+    return url && url!=='--' && self.indexOf(url)===index;
+  });
+  if(!sources.length) throw new Error('DOCX resume URL not available for browser fallback');
+  var lastErr=null;
+  for(var i=0;i<sources.length;i++){
+    try{
+      return await convertDocxResumeToPdfBlob(sources[i]);
+    }catch(err){
+      lastErr=err;
+      console.warn('Legacy browser DOCX conversion failed:',sources[i],err);
+    }
+  }
+  throw new Error('DOCX browser fallback failed across all resume sources. '+(lastErr && lastErr.message ? lastErr.message : ''));
+}
 async function fetchPdfResumeBlob(resumePdfUrl){
   resumePdfUrl=clean(resumePdfUrl,'');
   if(!resumePdfUrl) throw new Error('Resume PDF URL not available');
@@ -5676,6 +5723,117 @@ async function mergePreScreenedReportAndResume(reportBlob,resumeBlob,fileName){
   var mergedBytes=await merged.save();
   downloadBlob(new Blob([mergedBytes],{type:'application/pdf'}),fileName);
 }
+function dataUriBytes(dataUri){
+  var match=String(dataUri||'').match(/^data:([^;]+);base64,(.+)$/i);
+  if(!match) return null;
+  var raw=atob(match[2]);
+  var bytes=new Uint8Array(raw.length);
+  for(var i=0;i<raw.length;i++) bytes[i]=raw.charCodeAt(i);
+  return {mime:match[1].toLowerCase(),bytes:bytes};
+}
+async function addCompanyHeaderToResume(resumeBlob,data,fileName){
+  await rsEnsurePdfLib();
+  data=data||readData();
+  var PDFLib=window.PDFLib;
+  var resumeBytes=await resumeBlob.arrayBuffer();
+  var sourceDoc=await PDFLib.PDFDocument.load(resumeBytes);
+  var targetDoc=await PDFLib.PDFDocument.create();
+  var regularFont=await targetDoc.embedFont(PDFLib.StandardFonts.Helvetica);
+  var boldFont=await targetDoc.embedFont(PDFLib.StandardFonts.HelveticaBold);
+  var logoUri=await rsLogoDataUri(data.reportCompanyLogo);
+  var logoImage=null;
+  var logoData=dataUriBytes(logoUri);
+  if(logoData){
+    try{
+      if(logoData.mime.indexOf('png')!==-1) logoImage=await targetDoc.embedPng(logoData.bytes);
+      else if(logoData.mime.indexOf('jpeg')!==-1 || logoData.mime.indexOf('jpg')!==-1) logoImage=await targetDoc.embedJpg(logoData.bytes);
+    }catch(err){
+      console.warn('Branded resume logo embed skipped:',err);
+      logoImage=null;
+    }
+  }
+  var sourcePages=sourceDoc.getPages();
+  if(!sourcePages.length) throw new Error('Resume PDF has no pages');
+  var firstPage=sourcePages[0];
+  var pageSize=firstPage.getSize();
+  var headerH=Math.max(66,Math.min(82,pageSize.width*0.105));
+  var newFirst=targetDoc.addPage([pageSize.width,pageSize.height+headerH]);
+  var embeddedFirst=await targetDoc.embedPage(firstPage);
+  newFirst.drawPage(embeddedFirst,{x:0,y:0,width:pageSize.width,height:pageSize.height});
+  var topY=pageSize.height;
+  newFirst.drawRectangle({x:0,y:topY,width:pageSize.width,height:headerH,color:PDFLib.rgb(1,1,1),borderColor:PDFLib.rgb(0.86,0.89,0.94),borderWidth:0.8});
+  newFirst.drawRectangle({x:0,y:topY+headerH-4,width:pageSize.width,height:4,color:PDFLib.rgb(0.12,0.23,0.54)});
+  newFirst.drawRectangle({x:0,y:topY,width:pageSize.width,height:1.1,color:PDFLib.rgb(0.88,0.91,0.95)});
+  var companyName=clean(data.reportCompanyName,'Hiring Partner');
+  var logoBox=headerH-26;
+  var logoX=22;
+  var logoY=topY+14;
+  var logoAreaW=70;
+  if(logoImage){
+    var dims=logoImage.scaleToFit(logoBox*1.8,logoBox);
+    newFirst.drawImage(logoImage,{x:logoX,y:logoY+(logoBox-dims.height)/2,width:dims.width,height:dims.height});
+    logoAreaW=Math.max(56,Math.min(74,dims.width));
+  }else{
+    newFirst.drawRectangle({x:logoX,y:logoY,width:logoBox,height:logoBox,color:PDFLib.rgb(0.93,0.95,1),borderColor:PDFLib.rgb(0.75,0.82,0.98),borderWidth:0.8});
+    newFirst.drawText(companyName.charAt(0).toUpperCase(),{x:logoX+(logoBox/2)-5,y:logoY+(logoBox/2)-5,size:16,font:boldFont,color:PDFLib.rgb(0.12,0.23,0.54)});
+    logoAreaW=logoBox;
+  }
+  var textX=logoX+logoAreaW+12;
+  newFirst.drawText('SHARED BY',{x:textX,y:topY+headerH-27,size:7,font:boldFont,color:PDFLib.rgb(0.39,0.45,0.55)});
+  newFirst.drawText(limitText(companyName,42,companyName),{x:textX,y:topY+headerH-45,size:12,font:boldFont,color:PDFLib.rgb(0.06,0.09,0.16)});
+  newFirst.drawText('CONFIDENTIAL RESUME',{x:pageSize.width-190,y:topY+headerH-29,size:14,font:boldFont,color:PDFLib.rgb(0.06,0.09,0.16)});
+  newFirst.drawText(clean(data.reportDate,'') || (new Date()).toLocaleDateString(),{x:pageSize.width-190,y:topY+headerH-45,size:8.4,font:regularFont,color:PDFLib.rgb(0.39,0.45,0.55)});
+  if(sourcePages.length>1){
+    var rest=await targetDoc.copyPages(sourceDoc,sourceDoc.getPageIndices().slice(1));
+    rest.forEach(function(page){ targetDoc.addPage(page); });
+  }
+  var brandedBytes=await targetDoc.save();
+  downloadBlob(new Blob([brandedBytes],{type:'application/pdf'}),fileName);
+}
+async function buildSmartBrandedResume(resumePdfUrl,options){
+  if(window.__rsBusy) return Promise.resolve(false);
+  window.__rsBusy=true;
+  try{
+    options=options||{};
+    var resumeSources=(Array.isArray(options.resumeUrl) ? options.resumeUrl : [options.resumeUrl||'']).map(function(url){
+      return clean(url,'');
+    }).filter(function(url,index,self){
+      return url && url!=='--' && self.indexOf(url)===index;
+    });
+    var resumeExt=clean(options.resumeExt||'','').toUpperCase();
+    resumePdfUrl=clean(resumePdfUrl,'');
+    if(['PDF','DOC','DOCX'].indexOf(resumeExt)===-1) throw new Error('Smart branded resume is available for PDF, DOC and DOCX resumes only');
+    var resumeBlob=null;
+    if(resumeExt==='PDF'){
+      resumeBlob=await fetchPdfBlobFromSources(resumeSources);
+    }else if(resumeExt==='DOCX'){
+      try{
+        resumeBlob=await convertResumeWithOpenDocLabBlob(resumeSources,resumeExt,false);
+      }catch(browserDocxErr){
+        console.warn('OpenDoc DOCX branding conversion failed; trying legacy browser renderer:',browserDocxErr);
+        try{
+          resumeBlob=await convertDocxResumeToPdfBlobFromSources(resumeSources);
+        }catch(legacyDocxErr){
+          console.warn('Legacy DOCX branding conversion failed; using converter PDF URL if available:',legacyDocxErr);
+          if(!resumePdfUrl) throw legacyDocxErr;
+          resumeBlob=await fetchPdfResumeBlob(resumePdfUrl);
+        }
+      }
+    }else{
+      if(!resumePdfUrl) throw new Error('DOC resume needs enterprise converter PDF URL');
+      resumeBlob=await fetchPdfResumeBlob(resumePdfUrl);
+    }
+    var data=readData();
+    await addCompanyHeaderToResume(resumeBlob,data,'JEROWORKS_'+fileSafeName(data.name,'Candidate')+'.pdf');
+    return true;
+  }catch(err){
+    console.error('Smart Branded Resume error:',err);
+    alert('Could not generate the branded resume.\n\nReason: '+(err && err.message ? err.message : 'Unknown branding error')+'\n\nThis option keeps resume data visible and adds only the shared-by company header.');
+    return false;
+  }finally{
+    window.__rsBusy=false;
+  }
+}
 async function buildCombinedPreScreenedResume(resumePdfUrl,options){
   if(window.__rsBusy) return Promise.resolve(false);
   window.__rsBusy=true;
@@ -5801,15 +5959,20 @@ async function buildSmartPreScreenedResume(resumePdfUrl,options){
       try{
         resumeBlob=await convertResumeWithOpenDocLabBlob(resumeSources,resumeExt,false);
       }catch(browserDocxErr){
-        console.warn('Browser DOCX conversion failed; using converter PDF URL if available:',browserDocxErr);
-        if(!resumePdfUrl) throw browserDocxErr;
-        resumeBlob=await fetchPdfResumeBlob(resumePdfUrl);
+        console.warn('OpenDoc DOCX conversion failed; trying legacy browser renderer:',browserDocxErr);
+        try{
+          resumeBlob=await convertDocxResumeToPdfBlobFromSources(resumeSources);
+        }catch(legacyDocxErr){
+          console.warn('Legacy DOCX conversion failed; using converter PDF URL if available:',legacyDocxErr);
+          if(!resumePdfUrl) throw legacyDocxErr;
+          resumeBlob=await fetchPdfResumeBlob(resumePdfUrl);
+        }
       }
     }else{
       if(!resumePdfUrl) throw new Error('DOC resume needs enterprise converter PDF URL');
       resumeBlob=await fetchPdfResumeBlob(resumePdfUrl);
     }
-    var reportFileName=fileSafeName(data.name,'Candidate')+'.pdf';
+    var reportFileName='JEROWORKS_'+fileSafeName(data.name,'Candidate')+'.pdf';
     await mergePreScreenedReportAndResume(reportBlob,resumeBlob,reportFileName);
     return true;
   }catch(err){
@@ -5831,6 +5994,7 @@ window.__buildCombinedRSResume=buildCombinedPreScreenedResume;
 window.__buildWordPreScreenedResume=buildWordPreScreenedResume;
 window.__buildHybridWordPreScreenedResume=buildHybridWordPreScreenedResume;
 window.__buildSmartPreScreenedResume=buildSmartPreScreenedResume;
+window.__buildSmartBrandedResume=buildSmartBrandedResume;
 window.__convertResumeToPdfOnly=convertResumeToPdfOnly;
 window.__convertResumeToPdfBrowserOnly=convertResumeToPdfBrowserOnly;
 window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
@@ -5880,24 +6044,6 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
         <span class="rdc-ometa">
           <span class="rdc-ocost">1 Coin</span>
           <span class="rdc-otime">Instant</span>
-        </span>
-        <span class="rdc-ocirc" aria-hidden="true"></span>
-      </label>
-
-      {{-- 2: Branded Resume --}}
-      <label class="rdc-opt" data-opt="2" data-coins="2">
-        <input class="rdc-rinput" type="radio" name="rdcFormat" value="2">
-        <span class="rdc-onum">2</span>
-        <span class="rdc-oi rdc-ic-purple" aria-hidden="true">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>
-        </span>
-        <span class="rdc-obody">
-          <span class="rdc-otitle">Branded Resume</span>
-          <span class="rdc-odesc">Resume with your company logo and branding overlay</span>
-        </span>
-        <span class="rdc-ometa">
-          <span class="rdc-ocost">2 Coins</span>
-          <span class="rdc-otime">~5 sec</span>
         </span>
         <span class="rdc-ocirc" aria-hidden="true"></span>
       </label>
@@ -5956,164 +6102,20 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
         <span class="rdc-ocirc" aria-hidden="true"></span>
       </label>
 
-      {{-- 6: Client Presentation --}}
-      <label class="rdc-opt" data-opt="6" data-coins="8">
+      {{-- 6: New R2/browser branded resume header package --}}
+      <label class="rdc-opt" data-opt="6" data-coins="2">
         <input class="rdc-rinput" type="radio" name="rdcFormat" value="6">
         <span class="rdc-onum">6</span>
-        <span class="rdc-oi rdc-ic-teal" aria-hidden="true">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
-        </span>
-        <span class="rdc-obody">
-          <span class="rdc-otitle">Client Presentation <span class="rdc-p2-badge">Phase 2</span></span>
-          <span class="rdc-odesc">Polished client-ready profile deck with candidate highlights</span>
-        </span>
-        <span class="rdc-ometa">
-          <span class="rdc-ocost">8 Coins</span>
-          <span class="rdc-otime">~30 sec</span>
-        </span>
-        <span class="rdc-ocirc" aria-hidden="true"></span>
-      </label>
-
-      {{-- 7: Export Candidate Profile PDF --}}
-      <label class="rdc-opt" data-opt="7" data-coins="0" style="cursor:pointer;">
-        <input class="rdc-rinput" type="radio" name="rdcFormat" value="7">
-        <span class="rdc-onum">7</span>
-        <span class="rdc-oi" style="background:#fef2f2;color:#dc2626;" aria-hidden="true">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><path d="M12 18v-6"/><path d="M9 15l3 3 3-3"/></svg>
-        </span>
-        <span class="rdc-obody">
-          <span class="rdc-otitle">Export Candidate Profile <span style="background:#fef2f2;color:#dc2626;font-size:8.5px;font-weight:700;padding:1px 6px;border-radius:4px;vertical-align:middle;margin-left:4px;">PDF</span></span>
-          <span class="rdc-odesc">Hero section, skills, summary, recruiter notes &amp; employer branding — 100% client-side, instant</span>
-        </span>
-        <span class="rdc-ometa">
-          <span class="rdc-ocost" style="color:#16a34a;font-weight:700;">Free</span>
-          <span class="rdc-otime">~2 sec</span>
-        </span>
-        <span class="rdc-ocirc" aria-hidden="true"></span>
-      </label>
-
-      {{-- 8: Pre-Screened Report + Original Resume --}}
-      <label class="rdc-opt" data-opt="8" data-coins="8">
-        <input class="rdc-rinput" type="radio" name="rdcFormat" value="8">
-        <span class="rdc-onum">8</span>
-        <span class="rdc-oi rdc-ic-green" aria-hidden="true">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h10l6 6v10a2 2 0 0 1-2 2H4V4z"/><path d="M14 4v6h6"/><path d="M8 13h8"/><path d="M8 17h8"/><path d="M8 9h2"/></svg>
-        </span>
-        <span class="rdc-obody">
-          <span class="rdc-otitle">Pre-Screened Report + Original Resume <span class="rdc-p2-badge">Phase 1</span></span>
-          <span class="rdc-odesc">One combined PDF: report on page 1, original resume after it</span>
-        </span>
-        <span class="rdc-ometa">
-          <span class="rdc-ocost">8 Coins</span>
-          <span class="rdc-otime">~20 sec</span>
-        </span>
-        <span class="rdc-ocirc" aria-hidden="true"></span>
-      </label>
-
-      {{-- 9: Pre-Screened Report + Original Resume without company branding --}}
-      <label class="rdc-opt" data-opt="9" data-coins="8">
-        <input class="rdc-rinput" type="radio" name="rdcFormat" value="9">
-        <span class="rdc-onum">9</span>
-        <span class="rdc-oi rdc-ic-teal" aria-hidden="true">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M9 13h6"/><path d="M9 17h6"/><path d="M4 4l16 16"/></svg>
-        </span>
-        <span class="rdc-obody">
-          <span class="rdc-otitle">Pre-Screened Report + Original Resume - Without Company Branding <span class="rdc-p2-badge">Phase 1</span></span>
-          <span class="rdc-odesc">One combined PDF without the downloading company logo or company name on the report page</span>
-        </span>
-        <span class="rdc-ometa">
-          <span class="rdc-ocost">8 Coins</span>
-          <span class="rdc-otime">~20 sec</span>
-        </span>
-        <span class="rdc-ocirc" aria-hidden="true"></span>
-      </label>
-
-      {{-- 10: Resume PDF Conversion quality gate --}}
-      <label class="rdc-opt" data-opt="10" data-coins="0">
-        <input class="rdc-rinput" type="radio" name="rdcFormat" value="10">
-        <span class="rdc-onum">10</span>
-        <span class="rdc-oi" style="background:#eef2ff;color:#2563eb;" aria-hidden="true">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M8 13h8"/><path d="M8 17h5"/><path d="M16 17l2 2 4-4"/></svg>
-        </span>
-        <span class="rdc-obody">
-          <span class="rdc-otitle">Resume PDF Conversion <span style="background:#eef2ff;color:#2563eb;font-size:8.5px;font-weight:700;padding:1px 6px;border-radius:4px;vertical-align:middle;margin-left:4px;">QA</span></span>
-          <span class="rdc-odesc">Convert only the original resume to PDF first, so Word quality can be approved before merge</span>
-        </span>
-        <span class="rdc-ometa">
-          <span class="rdc-ocost" style="color:#16a34a;font-weight:700;">Free</span>
-          <span class="rdc-otime">~15 sec</span>
-        </span>
-        <span class="rdc-ocirc" aria-hidden="true"></span>
-      </label>
-
-      {{-- 11: Browser-only DOCX conversion experiment --}}
-      <label class="rdc-opt" data-opt="11" data-coins="0">
-        <input class="rdc-rinput" type="radio" name="rdcFormat" value="11">
-        <span class="rdc-onum">11</span>
-        <span class="rdc-oi" style="background:#ecfeff;color:#0891b2;" aria-hidden="true">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M8 13h8"/><path d="M8 17h8"/><path d="M12 11v8"/><path d="M9 16l3 3 3-3"/></svg>
-        </span>
-        <span class="rdc-obody">
-          <span class="rdc-otitle">Browser DOCX Conversion Beta <span style="background:#ecfeff;color:#0891b2;font-size:8.5px;font-weight:700;padding:1px 6px;border-radius:4px;vertical-align:middle;margin-left:4px;">Zero Server</span></span>
-          <span class="rdc-odesc">DOCX-only browser conversion with clean readable fallback for compatible resume templates</span>
-        </span>
-        <span class="rdc-ometa">
-          <span class="rdc-ocost" style="color:#16a34a;font-weight:700;">Free</span>
-          <span class="rdc-otime">~20 sec</span>
-        </span>
-        <span class="rdc-ocirc" aria-hidden="true"></span>
-      </label>
-
-      {{-- 12: OpenDoc WASM preview conversion lab --}}
-      <label class="rdc-opt" data-opt="12" data-coins="0">
-        <input class="rdc-rinput" type="radio" name="rdcFormat" value="12">
-        <span class="rdc-onum">12</span>
-        <span class="rdc-oi" style="background:#f5f3ff;color:#7c3aed;" aria-hidden="true">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v4"/><path d="M12 18v4"/><path d="m4.93 4.93 2.83 2.83"/><path d="m16.24 16.24 2.83 2.83"/><path d="M2 12h4"/><path d="M18 12h4"/><path d="m4.93 19.07 2.83-2.83"/><path d="m16.24 7.76 2.83-2.83"/><rect x="8" y="8" width="8" height="8" rx="2"/></svg>
-        </span>
-        <span class="rdc-obody">
-          <span class="rdc-otitle">OpenDoc Preview Conversion Lab <span style="background:#f5f3ff;color:#7c3aed;font-size:8.5px;font-weight:700;padding:1px 6px;border-radius:4px;vertical-align:middle;margin-left:4px;">Lab</span></span>
-          <span class="rdc-odesc">DOCX-only WASM rendering experiment for higher-fidelity browser conversion testing</span>
-        </span>
-        <span class="rdc-ometa">
-          <span class="rdc-ocost" style="color:#16a34a;font-weight:700;">Free</span>
-          <span class="rdc-otime">Lab</span>
-        </span>
-        <span class="rdc-ocirc" aria-hidden="true"></span>
-      </label>
-
-      {{-- 13: Word resume conversion + Pre-Screened Report package --}}
-      <label class="rdc-opt" data-opt="13" data-coins="8">
-        <input class="rdc-rinput" type="radio" name="rdcFormat" value="13">
-        <span class="rdc-onum">13</span>
-        <span class="rdc-oi" style="background:#eef2ff;color:#4f46e5;" aria-hidden="true">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h10l6 6v10a2 2 0 0 1-2 2H4V4z"/><path d="M14 4v6h6"/><path d="M7 13h10"/><path d="M7 17h7"/><path d="M9 8l1.5 8L12 10l1.5 6L15 8"/></svg>
-        </span>
-        <span class="rdc-obody">
-          <span class="rdc-otitle">Word Resume + Pre-Screened Report <span style="background:#eef2ff;color:#4f46e5;font-size:8.5px;font-weight:700;padding:1px 6px;border-radius:4px;vertical-align:middle;margin-left:4px;">DOC/DOCX</span></span>
-          <span class="rdc-odesc">Converts Word resume to PDF first, then adds the Pre-Screened Report on page 1</span>
-        </span>
-        <span class="rdc-ometa">
-          <span class="rdc-ocost">8 Coins</span>
-          <span class="rdc-otime">~20 sec</span>
-        </span>
-        <span class="rdc-ocirc" aria-hidden="true"></span>
-      </label>
-
-      {{-- 14: Client-side DOCX report package for high-concurrency download scale --}}
-      <label class="rdc-opt" data-opt="14" data-coins="8">
-        <input class="rdc-rinput" type="radio" name="rdcFormat" value="14">
-        <span class="rdc-onum">14</span>
         <span class="rdc-oi" style="background:#ecfeff;color:#0e7490;" aria-hidden="true">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h10l6 6v10a2 2 0 0 1-2 2H4V4z"/><path d="M14 4v6h6"/><path d="M7 13h6"/><path d="M7 17h5"/><path d="M17 13v6"/><path d="m14 16 3 3 3-3"/></svg>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h10l6 6v10a2 2 0 0 1-2 2H4V4z"/><path d="M14 4v6h6"/><path d="M8 13h8"/><path d="M8 17h5"/><path d="M3 7h18"/></svg>
         </span>
         <span class="rdc-obody">
-          <span class="rdc-otitle">Client-Side DOCX Report Package <span style="background:#ecfeff;color:#0e7490;font-size:8.5px;font-weight:700;padding:1px 6px;border-radius:4px;vertical-align:middle;margin-left:4px;">10K Scale</span></span>
-          <span class="rdc-odesc">DOCX converts with OpenDoc in the browser, then the Pre-Screened Report is added on top</span>
+          <span class="rdc-otitle">Resume + Company Branding <span style="background:#ecfeff;color:#0e7490;font-size:8.5px;font-weight:700;padding:1px 6px;border-radius:4px;vertical-align:middle;margin-left:4px;">R2 Fast</span></span>
+          <span class="rdc-odesc">Adds the shared-by company name and logo header above the resume without hiding resume data</span>
         </span>
         <span class="rdc-ometa">
-          <span class="rdc-ocost">8 Coins</span>
-          <span class="rdc-otime">Hybrid</span>
+          <span class="rdc-ocost">2 Coins</span>
+          <span class="rdc-otime">Smart</span>
         </span>
         <span class="rdc-ocirc" aria-hidden="true"></span>
       </label>
@@ -6203,22 +6205,14 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
   var r2PublicUrl = rdcData ? rdcData.getAttribute('data-r2-public-url') : '';
   var resumePdfUrl = rdcData ? rdcData.getAttribute('data-resume-pdf-url') : '';
   var resumeExt = rdcData ? (rdcData.getAttribute('data-file-ext') || '').toUpperCase() : '';
+  var hasResume = rdcData ? rdcData.getAttribute('data-has-resume') === 'true' : false;
 
   var optMeta = {
     1: {cost:1, label:'Download Original Resume',       avail:true,  dlKey:null},
-    2: {cost:2, label:'Download Branded Resume',        avail:true,  dlKey:'logo'},
     3: {cost:4, label:'Download ATS Highlighted Resume',avail:true,  dlKey:'hl'},
     4: {cost:6, label:'Download Branded + Highlighted', avail:true,  dlKey:'both'},
     5: {cost:7, label:'Download Pre-Screened Report',   avail:true,  dlKey:'rs'},
-    6: {cost:8, label:'Download Client Presentation',   avail:false, dlKey:null},
-    7: {cost:0, label:'Export Candidate Profile PDF',   avail:true,  dlKey:'pdf'},
-    8: {cost:8, label:'Download Combined Report',       avail:true,  dlKey:'rs-combined'},
-    9: {cost:8, label:'Download Combined Report Without Branding', avail:true, dlKey:'rs-combined-nobrand'},
-    10:{cost:0, label:'Convert Resume to PDF',           avail:true,  dlKey:'resume-pdf-conversion'},
-    11:{cost:0, label:'Browser DOCX Conversion Beta',    avail:(resumeExt === 'DOCX'),  dlKey:'browser-docx-pdf-conversion', unavailableMsg:'Browser conversion is available only for DOCX resumes. Use option 10 for PDF/DOC files.'},
-    12:{cost:0, label:'OpenDoc Preview Conversion Lab',  avail:(resumeExt === 'DOCX'),  dlKey:'opendoc-preview-lab', unavailableMsg:'OpenDoc lab is available only for DOCX resumes.'},
-    13:{cost:8, label:'Word Resume + Pre-Screened Report', avail:(['DOC','DOCX'].indexOf(resumeExt) !== -1), dlKey:'word-prescreened-package', unavailableMsg:'This option is available only for DOC and DOCX resumes.'},
-    14:{cost:8, label:'Client-Side DOCX Report Package', avail:(resumeExt === 'DOCX' && (!!r2DirectUrl || !!r2PublicUrl)), dlKey:'hybrid-word-prescreened-package', unavailableMsg:'Client-side package needs a direct R2 DOCX URL. Use option 13 for DOC files or server converter mode.'},
+    6: {cost:2, label:'Resume + Company Branding', avail:(['PDF','DOC','DOCX'].indexOf(resumeExt) !== -1), dlKey:'smart-branded-resume', unavailableMsg:'Branded resume is available for PDF, DOC and DOCX resumes only.'},
     15:{cost:8, label:'Pre-Screened Report + Resume + Company Branding', avail:(['PDF','DOC','DOCX'].indexOf(resumeExt) !== -1), dlKey:'smart-prescreened-package', unavailableMsg:'Final package is available for PDF, DOC and DOCX resumes only.'},
     16:{cost:8, label:'Pre-Screened Report + Resume without Company Branding', avail:(['PDF','DOC','DOCX'].indexOf(resumeExt) !== -1), dlKey:'smart-prescreened-package-nobrand', unavailableMsg:'Final package is available for PDF, DOC and DOCX resumes only.'}
   };
@@ -6226,7 +6220,19 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
   var selectedOpt = 1;
   var isLoading   = false;
 
+  function hasDownloadableResume(){
+    return hasResume && !!(dlUrl || r2DirectUrl || r2PublicUrl || resumePdfUrl);
+  }
+
+  function showNoResumeMessage(){
+    showToast('No resume uploaded for this candidate. Please upload the resume first.', 'warn');
+  }
+
   function openRdc(){
+    if(!hasDownloadableResume()){
+      showNoResumeMessage();
+      return;
+    }
     overlay.classList.add('rdc-open');
     drawer.classList.add('rdc-open');
     overlay.setAttribute('aria-hidden','false');
@@ -6251,9 +6257,20 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
   if(origBtn){
     var newBtn = origBtn.cloneNode(true);
     origBtn.parentNode.replaceChild(newBtn, origBtn);
+    if(!hasDownloadableResume()){
+      newBtn.setAttribute('aria-disabled','true');
+      newBtn.setAttribute('title','No resume uploaded for this candidate');
+      newBtn.style.opacity = '0.55';
+      newBtn.style.cursor = 'not-allowed';
+    }
     newBtn.addEventListener('click', function(e){
       e.preventDefault();
       e.stopPropagation();
+      if(!hasDownloadableResume()){
+        newBtn.setAttribute('aria-expanded','false');
+        showNoResumeMessage();
+        return;
+      }
       newBtn.setAttribute('aria-expanded','true');
       openRdc();
     });
@@ -6284,6 +6301,8 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
     if(coinEl) coinEl.textContent = m.cost === 1 ? '1 Coin' : m.cost + ' Coins';
     if(btnLbl) btnLbl.textContent = m.label;
     if(m.dlKey === 'rs' && typeof window.__preloadRS === 'function') window.__preloadRS();
+    if(m.dlKey === 'smart-branded-resume' && typeof window.__preloadRSCombined === 'function') window.__preloadRSCombined();
+    if(m.dlKey === 'smart-branded-resume' && resumeExt === 'DOCX' && typeof window.__preloadOpenDocLocal === 'function') window.__preloadOpenDocLocal();
     if(m.dlKey === 'rs-combined' && typeof window.__preloadRSCombined === 'function') window.__preloadRSCombined();
     if(m.dlKey === 'rs-combined-nobrand' && typeof window.__preloadRSCombined === 'function') window.__preloadRSCombined();
     if(m.dlKey === 'resume-pdf-conversion' && typeof window.__preloadRSCombined === 'function') window.__preloadRSCombined();
@@ -6349,7 +6368,7 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
           '<span class="rdc-countdown-reel" aria-hidden="true">' +
             '<span class="rdc-countdown-track" style="--rdc-count-duration:'+totalSeconds+'s;--rdc-count-steps:'+totalSeconds+';--rdc-count-shift:-'+(totalSeconds * itemHeight)+'px;">'+buildCountdownReel(totalSeconds)+'</span>' +
           '</span>' +
-          '<span class="rdc-countdown-unit">s</span>' +
+          '<span class="rdc-countdown-unit">seconds</span>' +
         '</span>';
     }
     return new Promise(function(resolve){
@@ -6400,9 +6419,10 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
       dlBtn.innerHTML = '<span class="rdc-spin"></span><span>Preparing download…</span>';
 
       if(selectedOpt === 1){
-        /* Original: open download URL, keep spinner visible 2 sec then close */
-        if(dlUrl){
-          window.open(dlUrl, '_blank');
+        /* Original resume: prefer direct R2 so Laravel/FrankenPHP does not stream the file. */
+        var originalResumeUrl = r2DirectUrl || r2PublicUrl || dlUrl;
+        if(originalResumeUrl){
+          window.open(originalResumeUrl, '_blank');
         } else {
           showToast('Resume file URL not available.', 'warn');
         }
@@ -6558,6 +6578,42 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
           resetBtn();
         });
 
+      } else if(m.dlKey === 'smart-branded-resume'){
+        /* New branded resume: direct R2/browser flow with only the shared-by company header added above resume content. */
+        if(window.__rsBusy || typeof window.__buildSmartBrandedResume !== 'function'){
+          showToast('Please wait a moment and try again.', 'warn');
+          resetBtn(); return;
+        }
+        if(['PDF','DOC','DOCX'].indexOf(resumeExt) === -1){
+          showToast('Branded resume is available for PDF, DOC and DOCX resumes only.', 'warn');
+          resetBtn(); return;
+        }
+        if(resumeExt === 'PDF' && !r2DirectUrl && !r2PublicUrl && !dlUrl){
+          showToast('PDF resume URL is not available.', 'warn');
+          resetBtn(); return;
+        }
+        if(resumeExt === 'DOCX' && !r2DirectUrl && !r2PublicUrl && !dlUrl && !resumePdfUrl){
+          showToast('DOCX resume URL is not available.', 'warn');
+          resetBtn(); return;
+        }
+        if(resumeExt === 'DOC' && !resumePdfUrl){
+          showToast('DOC resumes need the enterprise converter before branding.', 'warn');
+          resetBtn(); return;
+        }
+        runSmartCountdown('Downloading Resume...', 60);
+        setTimeout(function(){
+          window.__buildSmartBrandedResume(resumePdfUrl,{
+            resumeUrl:[r2DirectUrl,r2PublicUrl,dlUrl],
+            resumeExt:resumeExt
+          }).then(function(ok){
+            if(ok) closeRdc();
+          }).catch(function(){
+            showToast('Could not generate branded resume. Please try original download.', 'warn');
+          }).finally(function(){
+            resetBtn();
+          });
+        }, 250);
+
       } else if(m.dlKey === 'smart-prescreened-package' || m.dlKey === 'smart-prescreened-package-nobrand'){
         /* Options 15/16: final smart package.
            PDF resumes fetch directly from R2; DOCX converts in browser; DOC uses enterprise converter fallback. */
@@ -6569,12 +6625,12 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
           showToast('Final package is available for PDF, DOC and DOCX resumes only.', 'warn');
           resetBtn(); return;
         }
-        if(resumeExt === 'PDF' && !r2DirectUrl && !r2PublicUrl){
-          showToast('Direct PDF resume URL is not available.', 'warn');
+        if(resumeExt === 'PDF' && !r2DirectUrl && !r2PublicUrl && !dlUrl){
+          showToast('PDF resume URL is not available.', 'warn');
           resetBtn(); return;
         }
-        if(resumeExt === 'DOCX' && !r2DirectUrl && !r2PublicUrl && !resumePdfUrl){
-          showToast('Direct DOCX resume URL is not available.', 'warn');
+        if(resumeExt === 'DOCX' && !r2DirectUrl && !r2PublicUrl && !dlUrl && !resumePdfUrl){
+          showToast('DOCX resume URL is not available.', 'warn');
           resetBtn(); return;
         }
         if(resumeExt === 'DOC' && !resumePdfUrl){
@@ -6585,7 +6641,7 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
         setTimeout(function(){
           window.__buildSmartPreScreenedResume(resumePdfUrl,{
             noBranding:(m.dlKey === 'smart-prescreened-package-nobrand'),
-            resumeUrl:[r2DirectUrl,r2PublicUrl],
+            resumeUrl:[r2DirectUrl,r2PublicUrl,dlUrl],
             resumeExt:resumeExt
           }).then(function(ok){
             if(ok) closeRdc();
