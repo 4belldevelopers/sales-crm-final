@@ -4208,10 +4208,11 @@ setTimeout(() => {
 </script>
 
 {{-- ═══════════════════════════════════════════════════════════════════
-     DOWNLOAD RESUME CENTER (RDC) — Phase 1 UI Shell
-     Overlay + right-slide drawer; 6 format cards displayed.
-     Option 1 (Original) & Option 2 (Branded) wired to existing logic.
-     Options 3–6 are Phase 2 placeholders (toast notification shown).
+     DOWNLOAD RESUME CENTER (RDC)
+     Overlay + right-slide drawer for original, branded, highlighted, report,
+     and final report/resume package downloads.
+     Option 6 is the newer R2/browser branded-resume header flow; the original
+     option 2 remains wired to the existing Resume/CV viewer engine.
      No new MySQL queries. No extra server-side logic.
 ═══════════════════════════════════════════════════════════════════ --}}
 
@@ -5676,6 +5677,108 @@ async function mergePreScreenedReportAndResume(reportBlob,resumeBlob,fileName){
   var mergedBytes=await merged.save();
   downloadBlob(new Blob([mergedBytes],{type:'application/pdf'}),fileName);
 }
+function dataUriBytes(dataUri){
+  var match=String(dataUri||'').match(/^data:([^;]+);base64,(.+)$/i);
+  if(!match) return null;
+  var raw=atob(match[2]);
+  var bytes=new Uint8Array(raw.length);
+  for(var i=0;i<raw.length;i++) bytes[i]=raw.charCodeAt(i);
+  return {mime:match[1].toLowerCase(),bytes:bytes};
+}
+async function addCompanyHeaderToResume(resumeBlob,data,fileName){
+  await rsEnsurePdfLib();
+  data=data||readData();
+  var PDFLib=window.PDFLib;
+  var resumeBytes=await resumeBlob.arrayBuffer();
+  var sourceDoc=await PDFLib.PDFDocument.load(resumeBytes);
+  var targetDoc=await PDFLib.PDFDocument.create();
+  var regularFont=await targetDoc.embedFont(PDFLib.StandardFonts.Helvetica);
+  var boldFont=await targetDoc.embedFont(PDFLib.StandardFonts.HelveticaBold);
+  var logoUri=await rsLogoDataUri(data.reportCompanyLogo);
+  var logoImage=null;
+  var logoData=dataUriBytes(logoUri);
+  if(logoData){
+    try{
+      if(logoData.mime.indexOf('png')!==-1) logoImage=await targetDoc.embedPng(logoData.bytes);
+      else if(logoData.mime.indexOf('jpeg')!==-1 || logoData.mime.indexOf('jpg')!==-1) logoImage=await targetDoc.embedJpg(logoData.bytes);
+    }catch(err){
+      console.warn('Branded resume logo embed skipped:',err);
+      logoImage=null;
+    }
+  }
+  var sourcePages=sourceDoc.getPages();
+  if(!sourcePages.length) throw new Error('Resume PDF has no pages');
+  var firstPage=sourcePages[0];
+  var pageSize=firstPage.getSize();
+  var headerH=Math.max(66,Math.min(82,pageSize.width*0.105));
+  var newFirst=targetDoc.addPage([pageSize.width,pageSize.height+headerH]);
+  var embeddedFirst=await targetDoc.embedPage(firstPage);
+  newFirst.drawPage(embeddedFirst,{x:0,y:0,width:pageSize.width,height:pageSize.height});
+  var topY=pageSize.height;
+  newFirst.drawRectangle({x:0,y:topY,width:pageSize.width,height:headerH,color:PDFLib.rgb(1,1,1),borderColor:PDFLib.rgb(0.86,0.89,0.94),borderWidth:0.8});
+  newFirst.drawRectangle({x:0,y:topY+headerH-4,width:pageSize.width,height:4,color:PDFLib.rgb(0.12,0.23,0.54)});
+  var companyName=clean(data.reportCompanyName,'Hiring Partner');
+  var logoBox=headerH-26;
+  var logoX=22;
+  var logoY=topY+14;
+  if(logoImage){
+    var dims=logoImage.scaleToFit(logoBox*1.8,logoBox);
+    newFirst.drawImage(logoImage,{x:logoX,y:logoY+(logoBox-dims.height)/2,width:dims.width,height:dims.height});
+  }else{
+    newFirst.drawRectangle({x:logoX,y:logoY,width:logoBox,height:logoBox,color:PDFLib.rgb(0.93,0.95,1),borderColor:PDFLib.rgb(0.75,0.82,0.98),borderWidth:0.8});
+    newFirst.drawText(companyName.charAt(0).toUpperCase(),{x:logoX+(logoBox/2)-5,y:logoY+(logoBox/2)-5,size:16,font:boldFont,color:PDFLib.rgb(0.12,0.23,0.54)});
+  }
+  var textX=logoX+(logoImage?96:logoBox+14);
+  newFirst.drawText('SHARED BY',{x:textX,y:topY+headerH-27,size:7,font:boldFont,color:PDFLib.rgb(0.39,0.45,0.55)});
+  newFirst.drawText(limitText(companyName,42,companyName),{x:textX,y:topY+headerH-45,size:12,font:boldFont,color:PDFLib.rgb(0.06,0.09,0.16)});
+  newFirst.drawText('CONFIDENTIAL RESUME',{x:pageSize.width-190,y:topY+headerH-29,size:14,font:boldFont,color:PDFLib.rgb(0.06,0.09,0.16)});
+  newFirst.drawText((clean(data.reportDate,'') || (new Date()).toLocaleDateString())+' · Confidential',{x:pageSize.width-190,y:topY+headerH-45,size:7,font:regularFont,color:PDFLib.rgb(0.39,0.45,0.55)});
+  if(sourcePages.length>1){
+    var rest=await targetDoc.copyPages(sourceDoc,sourceDoc.getPageIndices().slice(1));
+    rest.forEach(function(page){ targetDoc.addPage(page); });
+  }
+  var brandedBytes=await targetDoc.save();
+  downloadBlob(new Blob([brandedBytes],{type:'application/pdf'}),fileName);
+}
+async function buildSmartBrandedResume(resumePdfUrl,options){
+  if(window.__rsBusy) return Promise.resolve(false);
+  window.__rsBusy=true;
+  try{
+    options=options||{};
+    var resumeSources=(Array.isArray(options.resumeUrl) ? options.resumeUrl : [options.resumeUrl||'']).map(function(url){
+      return clean(url,'');
+    }).filter(function(url,index,self){
+      return url && url!=='--' && self.indexOf(url)===index;
+    });
+    var resumeExt=clean(options.resumeExt||'','').toUpperCase();
+    resumePdfUrl=clean(resumePdfUrl,'');
+    if(['PDF','DOC','DOCX'].indexOf(resumeExt)===-1) throw new Error('Smart branded resume is available for PDF, DOC and DOCX resumes only');
+    var resumeBlob=null;
+    if(resumeExt==='PDF'){
+      resumeBlob=await fetchPdfBlobFromSources(resumeSources);
+    }else if(resumeExt==='DOCX'){
+      try{
+        resumeBlob=await convertResumeWithOpenDocLabBlob(resumeSources,resumeExt,false);
+      }catch(browserDocxErr){
+        console.warn('Browser DOCX branding conversion failed; using converter PDF URL if available:',browserDocxErr);
+        if(!resumePdfUrl) throw browserDocxErr;
+        resumeBlob=await fetchPdfResumeBlob(resumePdfUrl);
+      }
+    }else{
+      if(!resumePdfUrl) throw new Error('DOC resume needs enterprise converter PDF URL');
+      resumeBlob=await fetchPdfResumeBlob(resumePdfUrl);
+    }
+    var data=readData();
+    await addCompanyHeaderToResume(resumeBlob,data,'JEROWORKS_'+fileSafeName(data.name,'Candidate')+'.pdf');
+    return true;
+  }catch(err){
+    console.error('Smart Branded Resume error:',err);
+    alert('Could not generate the branded resume.\n\nReason: '+(err && err.message ? err.message : 'Unknown branding error')+'\n\nThis option keeps resume data visible and adds only the shared-by company header.');
+    return false;
+  }finally{
+    window.__rsBusy=false;
+  }
+}
 async function buildCombinedPreScreenedResume(resumePdfUrl,options){
   if(window.__rsBusy) return Promise.resolve(false);
   window.__rsBusy=true;
@@ -5831,6 +5934,7 @@ window.__buildCombinedRSResume=buildCombinedPreScreenedResume;
 window.__buildWordPreScreenedResume=buildWordPreScreenedResume;
 window.__buildHybridWordPreScreenedResume=buildHybridWordPreScreenedResume;
 window.__buildSmartPreScreenedResume=buildSmartPreScreenedResume;
+window.__buildSmartBrandedResume=buildSmartBrandedResume;
 window.__convertResumeToPdfOnly=convertResumeToPdfOnly;
 window.__convertResumeToPdfBrowserOnly=convertResumeToPdfBrowserOnly;
 window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
@@ -5956,6 +6060,24 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
         <span class="rdc-ocirc" aria-hidden="true"></span>
       </label>
 
+      {{-- 6: New R2/browser branded resume header package --}}
+      <label class="rdc-opt" data-opt="6" data-coins="2">
+        <input class="rdc-rinput" type="radio" name="rdcFormat" value="6">
+        <span class="rdc-onum">6</span>
+        <span class="rdc-oi" style="background:#ecfeff;color:#0e7490;" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h10l6 6v10a2 2 0 0 1-2 2H4V4z"/><path d="M14 4v6h6"/><path d="M8 13h8"/><path d="M8 17h5"/><path d="M3 7h18"/></svg>
+        </span>
+        <span class="rdc-obody">
+          <span class="rdc-otitle">Branded Resume with Company Header <span style="background:#ecfeff;color:#0e7490;font-size:8.5px;font-weight:700;padding:1px 6px;border-radius:4px;vertical-align:middle;margin-left:4px;">R2 Fast</span></span>
+          <span class="rdc-odesc">Adds the shared-by company name and logo header above the resume without hiding resume data</span>
+        </span>
+        <span class="rdc-ometa">
+          <span class="rdc-ocost">2 Coins</span>
+          <span class="rdc-otime">Smart</span>
+        </span>
+        <span class="rdc-ocirc" aria-hidden="true"></span>
+      </label>
+
       {{-- 15: Smart final package with company branding --}}
       <label class="rdc-opt" data-opt="15" data-coins="8">
         <input class="rdc-rinput" type="radio" name="rdcFormat" value="15">
@@ -6048,6 +6170,7 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
     3: {cost:4, label:'Download ATS Highlighted Resume',avail:true,  dlKey:'hl'},
     4: {cost:6, label:'Download Branded + Highlighted', avail:true,  dlKey:'both'},
     5: {cost:7, label:'Download Pre-Screened Report',   avail:true,  dlKey:'rs'},
+    6: {cost:2, label:'Branded Resume with Company Header', avail:(['PDF','DOC','DOCX'].indexOf(resumeExt) !== -1), dlKey:'smart-branded-resume', unavailableMsg:'Branded resume is available for PDF, DOC and DOCX resumes only.'},
     15:{cost:8, label:'Pre-Screened Report + Resume + Company Branding', avail:(['PDF','DOC','DOCX'].indexOf(resumeExt) !== -1), dlKey:'smart-prescreened-package', unavailableMsg:'Final package is available for PDF, DOC and DOCX resumes only.'},
     16:{cost:8, label:'Pre-Screened Report + Resume without Company Branding', avail:(['PDF','DOC','DOCX'].indexOf(resumeExt) !== -1), dlKey:'smart-prescreened-package-nobrand', unavailableMsg:'Final package is available for PDF, DOC and DOCX resumes only.'}
   };
@@ -6113,6 +6236,8 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
     if(coinEl) coinEl.textContent = m.cost === 1 ? '1 Coin' : m.cost + ' Coins';
     if(btnLbl) btnLbl.textContent = m.label;
     if(m.dlKey === 'rs' && typeof window.__preloadRS === 'function') window.__preloadRS();
+    if(m.dlKey === 'smart-branded-resume' && typeof window.__preloadRSCombined === 'function') window.__preloadRSCombined();
+    if(m.dlKey === 'smart-branded-resume' && resumeExt === 'DOCX' && typeof window.__preloadOpenDocLocal === 'function') window.__preloadOpenDocLocal();
     if(m.dlKey === 'rs-combined' && typeof window.__preloadRSCombined === 'function') window.__preloadRSCombined();
     if(m.dlKey === 'rs-combined-nobrand' && typeof window.__preloadRSCombined === 'function') window.__preloadRSCombined();
     if(m.dlKey === 'resume-pdf-conversion' && typeof window.__preloadRSCombined === 'function') window.__preloadRSCombined();
@@ -6387,6 +6512,42 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
         }).finally(function(){
           resetBtn();
         });
+
+      } else if(m.dlKey === 'smart-branded-resume'){
+        /* New branded resume: direct R2/browser flow with only the shared-by company header added above resume content. */
+        if(window.__rsBusy || typeof window.__buildSmartBrandedResume !== 'function'){
+          showToast('Please wait a moment and try again.', 'warn');
+          resetBtn(); return;
+        }
+        if(['PDF','DOC','DOCX'].indexOf(resumeExt) === -1){
+          showToast('Branded resume is available for PDF, DOC and DOCX resumes only.', 'warn');
+          resetBtn(); return;
+        }
+        if(resumeExt === 'PDF' && !r2DirectUrl && !r2PublicUrl){
+          showToast('Direct PDF resume URL is not available.', 'warn');
+          resetBtn(); return;
+        }
+        if(resumeExt === 'DOCX' && !r2DirectUrl && !r2PublicUrl && !resumePdfUrl){
+          showToast('Direct DOCX resume URL is not available.', 'warn');
+          resetBtn(); return;
+        }
+        if(resumeExt === 'DOC' && !resumePdfUrl){
+          showToast('DOC resumes need the enterprise converter before branding.', 'warn');
+          resetBtn(); return;
+        }
+        runSmartCountdown('Generating Report, Kindly wait.', 60);
+        setTimeout(function(){
+          window.__buildSmartBrandedResume(resumePdfUrl,{
+            resumeUrl:[r2DirectUrl,r2PublicUrl],
+            resumeExt:resumeExt
+          }).then(function(ok){
+            if(ok) closeRdc();
+          }).catch(function(){
+            showToast('Could not generate branded resume. Please try original download.', 'warn');
+          }).finally(function(){
+            resetBtn();
+          });
+        }, 250);
 
       } else if(m.dlKey === 'smart-prescreened-package' || m.dlKey === 'smart-prescreened-package-nobrand'){
         /* Options 15/16: final smart package.
