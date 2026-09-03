@@ -4436,6 +4436,7 @@ var rsOpenDocLocalReady=null;
 var rsOpenDocExternalReady=null;
 var rsLogoCache={};
 var rsDocxMaxBytes=10*1024*1024;
+var rsPdfMaxBytes=30*1024*1024;
 var rsStarGold='<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path fill="#f59e0b" d="M12 2.6l2.85 5.78 6.38.93-4.62 4.5 1.09 6.35L12 17.16l-5.7 3 1.09-6.35-4.62-4.5 6.38-.93L12 2.6z"/></svg>';
 var rsStarMuted='<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path fill="#cbd5e1" d="M12 2.6l2.85 5.78 6.38.93-4.62 4.5 1.09 6.35L12 17.16l-5.7 3 1.09-6.35-4.62-4.5 6.38-.93L12 2.6z"/></svg>';
 var rsIconUser='<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path fill="#64748b" d="M12 12a5 5 0 1 0-5-5 5 5 0 0 0 5 5zm0 2c-4.42 0-8 2.24-8 5v1h16v-1c0-2.76-3.58-5-8-5z"/></svg>';
@@ -4948,6 +4949,30 @@ async function fetchResumeBytesFromSources(resumeUrls){
     }
   }
   throw (lastErr || new Error('Direct R2 resume fetch failed'));
+}
+async function fetchPdfBlobFromSources(resumeUrls){
+  var sources=(Array.isArray(resumeUrls) ? resumeUrls : [resumeUrls]).map(function(url){
+    return clean(url,'');
+  }).filter(function(url,index,self){
+    return url && url!=='--' && self.indexOf(url)===index;
+  });
+  if(!sources.length) throw new Error('Direct R2 PDF URL not available');
+  var lastErr=null;
+  for(var i=0;i<sources.length;i++){
+    try{
+      var response=await fetch(sources[i],{mode:'cors',cache:'no-store'});
+      if(!response.ok) throw new Error('PDF request failed with HTTP '+response.status);
+      var size=parseInt(response.headers.get('content-length')||'0',10);
+      if(size && size>rsPdfMaxBytes) throw new Error('PDF resume is larger than the browser merge limit');
+      var blob=await response.blob();
+      if(blob.size>rsPdfMaxBytes) throw new Error('PDF resume is larger than the browser merge limit');
+      return blob;
+    }catch(err){
+      lastErr=err;
+      console.warn('Direct R2 PDF fetch failed:',sources[i],err);
+    }
+  }
+  throw (lastErr || new Error('Direct R2 PDF fetch failed'));
 }
 async function convertDocxResumeToPdfBlob(resumeUrl){
   await rsEnsureDocxConversion();
@@ -5744,6 +5769,46 @@ async function buildHybridWordPreScreenedResume(resumePdfUrl,options){
     window.__rsBusy=false;
   }
 }
+async function buildSmartPreScreenedResume(resumePdfUrl,options){
+  if(window.__rsBusy) return Promise.resolve(false);
+  window.__rsBusy=true;
+  try{
+    options=options||{};
+    var resumeSources=(Array.isArray(options.resumeUrl) ? options.resumeUrl : [options.resumeUrl||'']).map(function(url){
+      return clean(url,'');
+    }).filter(function(url,index,self){
+      return url && url!=='--' && self.indexOf(url)===index;
+    });
+    var resumeExt=clean(options.resumeExt||'','').toUpperCase();
+    resumePdfUrl=clean(resumePdfUrl,'');
+    if(['PDF','DOC','DOCX'].indexOf(resumeExt)===-1) throw new Error('Smart Pre-Screened package is available for PDF, DOC and DOCX resumes only');
+    var data=readData();
+    var reportBlob=await buildRecruiterSummaryBlob(data,options);
+    var resumeBlob=null;
+    if(resumeExt==='PDF'){
+      resumeBlob=await fetchPdfBlobFromSources(resumeSources);
+    }else if(resumeExt==='DOCX'){
+      try{
+        resumeBlob=await convertResumeWithOpenDocLabBlob(resumeSources,resumeExt,false);
+      }catch(browserDocxErr){
+        console.warn('Browser DOCX conversion failed; using converter PDF URL if available:',browserDocxErr);
+        if(!resumePdfUrl) throw browserDocxErr;
+        resumeBlob=await fetchPdfResumeBlob(resumePdfUrl);
+      }
+    }else{
+      if(!resumePdfUrl) throw new Error('DOC resume needs enterprise converter PDF URL');
+      resumeBlob=await fetchPdfResumeBlob(resumePdfUrl);
+    }
+    await mergePreScreenedReportAndResume(reportBlob,resumeBlob,'pre_screened_report_resume_'+(options.noBranding?'without_branding_':'')+slug(data.name)+'.pdf');
+    return true;
+  }catch(err){
+    console.error('Smart Pre-Screened Report package error:',err);
+    alert('Could not generate the final Pre-Screened Report + Resume package.\n\nReason: '+(err && err.message ? err.message : 'Unknown package error')+'\n\nPDF and DOCX use direct R2/browser processing first. DOC files require enterprise converter fallback.');
+    return false;
+  }finally{
+    window.__rsBusy=false;
+  }
+}
 window.__preloadRS=preloadRecruiterSummaryAssets;
 window.__preloadRSCombined=preloadCombinedReportAssets;
 window.__preloadBrowserDocxConversion=preloadBrowserDocxConversionAssets;
@@ -5754,6 +5819,7 @@ window.__buildRS=buildRecruiterSummary;
 window.__buildCombinedRSResume=buildCombinedPreScreenedResume;
 window.__buildWordPreScreenedResume=buildWordPreScreenedResume;
 window.__buildHybridWordPreScreenedResume=buildHybridWordPreScreenedResume;
+window.__buildSmartPreScreenedResume=buildSmartPreScreenedResume;
 window.__convertResumeToPdfOnly=convertResumeToPdfOnly;
 window.__convertResumeToPdfBrowserOnly=convertResumeToPdfBrowserOnly;
 window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
@@ -6041,6 +6107,42 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
         <span class="rdc-ocirc" aria-hidden="true"></span>
       </label>
 
+      {{-- 15: Smart final package with company branding --}}
+      <label class="rdc-opt" data-opt="15" data-coins="8">
+        <input class="rdc-rinput" type="radio" name="rdcFormat" value="15">
+        <span class="rdc-onum">15</span>
+        <span class="rdc-oi" style="background:#ecfdf5;color:#059669;" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M8 13h8"/><path d="M8 17h5"/><path d="m15 18 2 2 4-4"/></svg>
+        </span>
+        <span class="rdc-obody">
+          <span class="rdc-otitle">Final Report + Resume <span style="background:#ecfdf5;color:#059669;font-size:8.5px;font-weight:700;padding:1px 6px;border-radius:4px;vertical-align:middle;margin-left:4px;">Auto</span></span>
+          <span class="rdc-odesc">PDF merges directly from R2; DOCX converts in browser, then the Pre-Screened Report is added on top</span>
+        </span>
+        <span class="rdc-ometa">
+          <span class="rdc-ocost">8 Coins</span>
+          <span class="rdc-otime">Smart</span>
+        </span>
+        <span class="rdc-ocirc" aria-hidden="true"></span>
+      </label>
+
+      {{-- 16: Smart final package without company branding --}}
+      <label class="rdc-opt" data-opt="16" data-coins="8">
+        <input class="rdc-rinput" type="radio" name="rdcFormat" value="16">
+        <span class="rdc-onum">16</span>
+        <span class="rdc-oi" style="background:#f8fafc;color:#475569;" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M9 13h6"/><path d="M9 17h4"/><path d="m4 4 16 16"/></svg>
+        </span>
+        <span class="rdc-obody">
+          <span class="rdc-otitle">Final Report + Resume Without Branding <span style="background:#f1f5f9;color:#475569;font-size:8.5px;font-weight:700;padding:1px 6px;border-radius:4px;vertical-align:middle;margin-left:4px;">No Logo</span></span>
+          <span class="rdc-odesc">Same smart PDF/DOCX flow, with company logo and company name removed from the report page</span>
+        </span>
+        <span class="rdc-ometa">
+          <span class="rdc-ocost">8 Coins</span>
+          <span class="rdc-otime">Smart</span>
+        </span>
+        <span class="rdc-ocirc" aria-hidden="true"></span>
+      </label>
+
     </div>{{-- /.rdc-opts-list --}}
 
     {{-- Coin info summary --}}
@@ -6105,7 +6207,9 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
     11:{cost:0, label:'Browser DOCX Conversion Beta',    avail:(resumeExt === 'DOCX'),  dlKey:'browser-docx-pdf-conversion', unavailableMsg:'Browser conversion is available only for DOCX resumes. Use option 10 for PDF/DOC files.'},
     12:{cost:0, label:'OpenDoc Preview Conversion Lab',  avail:(resumeExt === 'DOCX'),  dlKey:'opendoc-preview-lab', unavailableMsg:'OpenDoc lab is available only for DOCX resumes.'},
     13:{cost:8, label:'Word Resume + Pre-Screened Report', avail:(['DOC','DOCX'].indexOf(resumeExt) !== -1), dlKey:'word-prescreened-package', unavailableMsg:'This option is available only for DOC and DOCX resumes.'},
-    14:{cost:8, label:'Client-Side DOCX Report Package', avail:(resumeExt === 'DOCX' && (!!r2DirectUrl || !!r2PublicUrl)), dlKey:'hybrid-word-prescreened-package', unavailableMsg:'Client-side package needs a direct R2 DOCX URL. Use option 13 for DOC files or server converter mode.'}
+    14:{cost:8, label:'Client-Side DOCX Report Package', avail:(resumeExt === 'DOCX' && (!!r2DirectUrl || !!r2PublicUrl)), dlKey:'hybrid-word-prescreened-package', unavailableMsg:'Client-side package needs a direct R2 DOCX URL. Use option 13 for DOC files or server converter mode.'},
+    15:{cost:8, label:'Final Report + Resume', avail:(['PDF','DOC','DOCX'].indexOf(resumeExt) !== -1), dlKey:'smart-prescreened-package', unavailableMsg:'Final package is available for PDF, DOC and DOCX resumes only.'},
+    16:{cost:8, label:'Final Report + Resume Without Branding', avail:(['PDF','DOC','DOCX'].indexOf(resumeExt) !== -1), dlKey:'smart-prescreened-package-nobrand', unavailableMsg:'Final package is available for PDF, DOC and DOCX resumes only.'}
   };
 
   var selectedOpt = 1;
@@ -6177,6 +6281,8 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
     if(m.dlKey === 'word-prescreened-package' && typeof window.__preloadRSCombined === 'function') window.__preloadRSCombined();
     if(m.dlKey === 'hybrid-word-prescreened-package' && typeof window.__preloadRSCombined === 'function') window.__preloadRSCombined();
     if(m.dlKey === 'hybrid-word-prescreened-package' && resumeExt === 'DOCX' && typeof window.__preloadOpenDocLocal === 'function') window.__preloadOpenDocLocal();
+    if((m.dlKey === 'smart-prescreened-package' || m.dlKey === 'smart-prescreened-package-nobrand') && typeof window.__preloadRSCombined === 'function') window.__preloadRSCombined();
+    if((m.dlKey === 'smart-prescreened-package' || m.dlKey === 'smart-prescreened-package-nobrand') && resumeExt === 'DOCX' && typeof window.__preloadOpenDocLocal === 'function') window.__preloadOpenDocLocal();
   }
 
   var toastTimer = null;
@@ -6371,6 +6477,42 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
           if(ok) closeRdc();
         }).catch(function(){
           showToast('Could not generate hybrid Word report package. Please try option 13.', 'warn');
+        }).finally(function(){
+          resetBtn();
+        });
+
+      } else if(m.dlKey === 'smart-prescreened-package' || m.dlKey === 'smart-prescreened-package-nobrand'){
+        /* Options 15/16: final smart package.
+           PDF resumes fetch directly from R2; DOCX converts in browser; DOC uses enterprise converter fallback. */
+        if(window.__rsBusy || typeof window.__buildSmartPreScreenedResume !== 'function'){
+          showToast('Please wait a moment and try again.', 'warn');
+          resetBtn(); return;
+        }
+        if(['PDF','DOC','DOCX'].indexOf(resumeExt) === -1){
+          showToast('Final package is available for PDF, DOC and DOCX resumes only.', 'warn');
+          resetBtn(); return;
+        }
+        if(resumeExt === 'PDF' && !r2DirectUrl && !r2PublicUrl && !resumePdfUrl){
+          showToast('Direct PDF resume URL is not available.', 'warn');
+          resetBtn(); return;
+        }
+        if(resumeExt === 'DOCX' && !r2DirectUrl && !r2PublicUrl && !resumePdfUrl){
+          showToast('Direct DOCX resume URL is not available.', 'warn');
+          resetBtn(); return;
+        }
+        if(resumeExt === 'DOC' && !resumePdfUrl){
+          showToast('DOC resumes need the enterprise converter before final package generation.', 'warn');
+          resetBtn(); return;
+        }
+        dlBtn.innerHTML = '<span class="rdc-spin"></span><span>' + (resumeExt === 'PDF' ? 'Merging PDF from R2...' : (resumeExt === 'DOCX' ? 'Converting DOCX and merging...' : 'Converting DOC and merging...')) + '</span>';
+        window.__buildSmartPreScreenedResume(resumePdfUrl,{
+          noBranding:(m.dlKey === 'smart-prescreened-package-nobrand'),
+          resumeUrl:[r2DirectUrl,r2PublicUrl],
+          resumeExt:resumeExt
+        }).then(function(ok){
+          if(ok) closeRdc();
+        }).catch(function(){
+          showToast('Could not generate final package. Please try option 13 or option 10.', 'warn');
         }).finally(function(){
           resetBtn();
         });
