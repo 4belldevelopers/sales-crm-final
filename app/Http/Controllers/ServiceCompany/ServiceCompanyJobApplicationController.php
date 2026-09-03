@@ -2721,7 +2721,9 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
 
         // Intent: Phase 7 Tenant-isolated cache key pattern (FINDING-PERF-04 - P1)
         $tenantId = (int) ($company_id ?: 0);
-        $cacheKeySet = 'tenant:'.$tenantId.':candidate_details:'.$id.':'.md5($currentSlug);
+        // Intent: Auto-bust cached drawer HTML when showdetail Blade changes, so UI fixes reflect without flushing all app cache.
+        $drawerViewVersion = @filemtime(resource_path('views/service_company/job-applications/showdetail.blade.php')) ?: 0;
+        $cacheKeySet = 'tenant:'.$tenantId.':candidate_details:'.$id.':'.md5($currentSlug).':view:'.$drawerViewVersion;
 
         $cachedResponse = cache()->get($cacheKeySet);
         if ($cachedResponse !== null) {
