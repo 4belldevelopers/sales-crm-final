@@ -5134,37 +5134,40 @@ function rsSpanHasKeyword(text,re){
   return re.test(text);
 }
 async function renderHighlightedPdfBlob(pdfBlob,keywords){
-  await Promise.all([rsEnsurePdfJs(),rsEnsurePdfLib()]);
+  await Promise.all([rsEnsurePdfJs(),rsEnsureJsPdf()]);
   var sourceBytes=await pdfBlob.arrayBuffer();
-  var bytes=new Uint8Array(sourceBytes.slice(0));
+  var bytes=new Uint8Array(sourceBytes);
   var sig=String.fromCharCode.apply(null,bytes.subarray(0,5));
   if(sig.indexOf('%PDF')===-1) throw new Error('Resume source is not a valid PDF after browser conversion');
   var doc=await window.pdfjsLib.getDocument({data:bytes}).promise;
-  var PDFLib=window.PDFLib;
-  var sourceDoc=await PDFLib.PDFDocument.load(sourceBytes);
-  var outDoc=await PDFLib.PDFDocument.create();
-  var copiedPages=await outDoc.copyPages(sourceDoc,sourceDoc.getPageIndices());
+  var JsPDF=window.jspdf.jsPDF;
   var keywordRe=rsKeywordRegex(keywords);
   var host=document.createElement('div');
   host.setAttribute('aria-hidden','true');
   host.style.cssText='position:fixed;left:-14000px;top:0;width:900px;background:#fff;pointer-events:none;opacity:0;';
   document.body.appendChild(host);
+  var outPdf=null;
   try{
     for(var p=1;p<=doc.numPages;p++){
       var pdfJsPage=await doc.getPage(p);
-      var outputPage=copiedPages[p-1];
-      outDoc.addPage(outputPage);
-      var pageW=outputPage.getWidth();
-      var pageH=outputPage.getHeight();
       var base=pdfJsPage.getViewport({scale:1});
       var cssScale=Math.min(1.35,820/base.width);
       var cssViewport=pdfJsPage.getViewport({scale:cssScale});
+      var renderScale=Math.min(3,2800/base.width);
+      var renderViewport=pdfJsPage.getViewport({scale:renderScale});
       var pageWrap=document.createElement('div');
       pageWrap.style.cssText='position:relative;width:'+Math.floor(cssViewport.width)+'px;height:'+Math.floor(cssViewport.height)+'px;background:#fff;';
       var textLayer=document.createElement('div');
       textLayer.style.cssText='position:absolute;left:0;top:0;width:'+Math.floor(cssViewport.width)+'px;height:'+Math.floor(cssViewport.height)+'px;';
       pageWrap.appendChild(textLayer);
       host.appendChild(pageWrap);
+      var canvas=document.createElement('canvas');
+      canvas.width=Math.floor(renderViewport.width);
+      canvas.height=Math.floor(renderViewport.height);
+      var ctx=canvas.getContext('2d',{willReadFrequently:true});
+      ctx.fillStyle='#ffffff';
+      ctx.fillRect(0,0,canvas.width,canvas.height);
+      await pdfJsPage.render({canvasContext:ctx,viewport:renderViewport}).promise;
       var tc=await pdfJsPage.getTextContent();
       try{
         var task=window.pdfjsLib.renderTextLayer({textContent:tc,container:textLayer,viewport:cssViewport,textDivs:[]});
@@ -5172,28 +5175,25 @@ async function renderHighlightedPdfBlob(pdfBlob,keywords){
       }catch(err){}
       var pr=pageWrap.getBoundingClientRect();
       if(keywordRe){
+        ctx.fillStyle='rgba(255,214,10,0.42)';
         Array.prototype.slice.call(textLayer.querySelectorAll('span')).forEach(function(sp){
           if(!rsSpanHasKeyword(sp.textContent,keywordRe)) return;
           var r=sp.getBoundingClientRect();
           if(!r.width || !r.height || !pr.width || !pr.height) return;
-          var x=((r.left-pr.left)/pr.width)*pageW;
-          var h=Math.max((r.height/pr.height)*pageH,4);
-          var y=pageH-(((r.top-pr.top)/pr.height)*pageH)-h;
-          var w=(r.width/pr.width)*pageW;
-          outputPage.drawRectangle({
-            x:Math.max(0,x),
-            y:Math.max(0,y),
-            width:Math.min(w,pageW-Math.max(0,x)),
-            height:Math.min(h,pageH-Math.max(0,y)),
-            color:PDFLib.rgb(1,0.84,0.04),
-            opacity:0.42
-          });
+          ctx.fillRect((r.left-pr.left)/pr.width*canvas.width,(r.top-pr.top)/pr.height*canvas.height,r.width/pr.width*canvas.width,Math.max(r.height/pr.height*canvas.height,6));
         });
       }
+      var imgData=canvas.toDataURL('image/jpeg',0.9);
+      var pageW=Math.round(cssViewport.width);
+      var pageH=Math.round(cssViewport.height);
+      var orient=pageW>pageH?'l':'p';
+      if(!outPdf) outPdf=new JsPDF({orientation:orient,unit:'px',format:[pageW,pageH]});
+      else outPdf.addPage([pageW,pageH],orient);
+      outPdf.addImage(imgData,'JPEG',0,0,pageW,pageH,undefined,'FAST');
       host.removeChild(pageWrap);
     }
-    var highlightedBytes=await outDoc.save();
-    return new Blob([highlightedBytes],{type:'application/pdf'});
+    if(!outPdf) throw new Error('No resume pages were rendered');
+    return outPdf.output('blob');
   }finally{
     host.remove();
   }
