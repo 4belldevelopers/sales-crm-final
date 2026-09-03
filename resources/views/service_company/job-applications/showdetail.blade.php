@@ -350,6 +350,13 @@
 /* Spinner */
 @keyframes rdcSpin{to{transform:rotate(360deg);}}
 .rdc-spin{display:inline-block;width:13px;height:13px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:rdcSpin .65s linear infinite;flex-shrink:0;}
+@keyframes rdcCountdownReel{from{transform:translateY(0);}to{transform:translateY(var(--rdc-count-shift));}}
+.rdc-countdown{display:inline-flex;align-items:center;justify-content:center;gap:5px;min-width:0;}
+.rdc-countdown-text{min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.rdc-countdown-reel{width:28px;height:16px;line-height:16px;overflow:hidden;display:inline-block;text-align:right;font-variant-numeric:tabular-nums;font-feature-settings:"tnum" 1;flex-shrink:0;}
+.rdc-countdown-track{display:flex;flex-direction:column;will-change:transform;animation:rdcCountdownReel var(--rdc-count-duration,60s) steps(var(--rdc-count-steps,60), end) forwards;}
+.rdc-countdown-track span{height:16px;line-height:16px;display:block;}
+.rdc-countdown-unit{flex-shrink:0;}
 /* Toast */
 .rdc-toast{position:fixed;bottom:20px;right:20px;background:#1e293b;color:#fff;padding:10px 15px;border-radius:8px;font-size:11.5px;font-family:'Poppins',sans-serif;z-index:1300000;opacity:0;transform:translateY(6px);transition:all .22s ease;pointer-events:none;max-width:280px;line-height:1.4;}
 .rdc-toast.rdc-tshow{opacity:1;transform:translateY(0);}
@@ -6316,10 +6323,35 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
     }
   }
 
+  function escapeCountdownText(value){
+    return String(value || '').replace(/[&<>"']/g,function(ch){
+      return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch];
+    });
+  }
+
+  function buildCountdownReel(totalSeconds){
+    var parts=[];
+    for(var i=totalSeconds;i>=0;i--){
+      parts.push('<span>'+i+'</span>');
+    }
+    return parts.join('');
+  }
+
   function runSmartCountdown(prefix,totalSeconds){
     stopSmartCountdown();
     totalSeconds = totalSeconds || 60;
-    var countdownEndsAt = Date.now() + (totalSeconds * 1000);
+    if(dlBtn){
+      var itemHeight=16;
+      dlBtn.innerHTML =
+        '<span class="rdc-spin"></span>' +
+        '<span class="rdc-countdown">' +
+          '<span class="rdc-countdown-text">'+escapeCountdownText(prefix)+'</span>' +
+          '<span class="rdc-countdown-reel" aria-hidden="true">' +
+            '<span class="rdc-countdown-track" style="--rdc-count-duration:'+totalSeconds+'s;--rdc-count-steps:'+totalSeconds+';--rdc-count-shift:-'+(totalSeconds * itemHeight)+'px;">'+buildCountdownReel(totalSeconds)+'</span>' +
+          '</span>' +
+          '<span class="rdc-countdown-unit">s</span>' +
+        '</span>';
+    }
     return new Promise(function(resolve){
       smartCountdownResolve = resolve;
       function finish(shouldContinue){
@@ -6329,15 +6361,12 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
           resolve(shouldContinue);
         }
       }
-    function render(){
-      if(!dlBtn) return;
-      var remaining = Math.max(0, Math.ceil((countdownEndsAt - Date.now()) / 1000));
-      var label = remaining > 0 ? prefix + ' ' + remaining + 's' : prefix + ' Finalizing...';
-      dlBtn.innerHTML = '<span class="rdc-spin"></span><span>' + label + '</span>';
-      if(remaining <= 0) finish(true);
-    }
-    render();
-    smartCountdownTimer = setInterval(render, 1000);
+      smartCountdownTimer = setTimeout(function(){
+        if(dlBtn){
+          dlBtn.innerHTML = '<span class="rdc-spin"></span><span>'+escapeCountdownText(prefix)+' Finalizing...</span>';
+        }
+        finish(true);
+      }, totalSeconds * 1000);
     });
   }
 
