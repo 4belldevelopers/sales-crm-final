@@ -476,7 +476,23 @@ a{text-decoration:none;}
 .pag-btn.off{opacity:.4;pointer-events:none;cursor:not-allowed;}
 .pag-dots{min-width:34px;height:34px;display:flex;align-items:center;justify-content:center;font-size:12px;color:var(--m);}
 
-/* ── BENEFITS ── */
+/* ── SKELETON LOADERS ── */
+@keyframes skeletonShimmer {
+    0% { background-position: -200px 0; }
+    100% { background-position: calc(200px + 100%) 0; }
+}
+.skeleton-bone {
+    background: #e2e8f0;
+    background-image: linear-gradient(90deg, #e2e8f0 0px, #f1f5f9 40px, #e2e8f0 80px);
+    background-size: 200px 100%;
+    background-repeat: no-repeat;
+    animation: skeletonShimmer 1.4s ease-in-out infinite;
+    border-radius: 6px;
+}
+.job-card-skeleton {
+    background:#fff;border:1.5px solid var(--b);border-radius:12px;
+    padding:18px 24px 14px;margin-bottom:12px;
+}
 .benefits{border-top:1px solid var(--b);background:#fff;}
 .benefits .container{display:grid;grid-template-columns:repeat(4,1fr);}
 .benefit{display:flex;align-items:center;gap:14px;padding:22px 24px;border-right:1px solid var(--b);}
@@ -568,13 +584,13 @@ a{text-decoration:none;}
         </div>
     </div>
     <div class="hero-imgs">
-        <div class="hero-img"><img src="{{ !empty($cS->td_hero_img1_path) ? asset($cS->td_hero_img1_path) : 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=400&h=220&fit=crop&auto=format' }}" alt="Team collaboration"></div>
-        <div class="hero-img"><img src="{{ !empty($cS->td_hero_img2_path) ? asset($cS->td_hero_img2_path) : 'https://images.unsplash.com/photo-1497366216548-37526070297c?w=400&h=220&fit=crop&auto=format' }}" alt="Modern office"></div>
+        <div class="hero-img"><img src="{{ !empty($cS->td_hero_img1_path) ? asset($cS->td_hero_img1_path) : 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=400&h=220&fit=crop&auto=format' }}" alt="Team collaboration" loading="lazy" decoding="async"></div>
+        <div class="hero-img"><img src="{{ !empty($cS->td_hero_img2_path) ? asset($cS->td_hero_img2_path) : 'https://images.unsplash.com/photo-1497366216548-37526070297c?w=400&h=220&fit=crop&auto=format' }}" alt="Modern office" loading="lazy" decoding="async"></div>
     </div>
     <div class="hero-search-wrap">
-        <form method="GET" action="" class="hero-search">
+        <form method="GET" action="" class="hero-search" id="heroSearchForm" onsubmit="event.preventDefault(); CareerJobsTabManager.onSearchSubmit();">
             <i class="fa-solid fa-magnifying-glass" style="padding:0 16px;font-size:15px;color:var(--m);display:flex;align-items:center;flex-shrink:0;"></i>
-            <input type="text" name="custom_search" value="{{ request('custom_search') }}" placeholder="Search by job title, keyword or skills..." style="flex:1;height:100%;border:none;outline:none;font-size:13px;font-family:'Poppins',sans-serif;color:var(--t);background:transparent;" />
+            <input type="text" name="custom_search" id="customSearchInput" value="{{ request('custom_search') }}" placeholder="Search by job title, keyword or skills..." oninput="CareerJobsTabManager.onSearchInput(this)" style="flex:1;height:100%;border:none;outline:none;font-size:13px;font-family:'Poppins',sans-serif;color:var(--t);background:transparent;" />
             <button type="submit" style="height:100%;padding:0 28px;background:var(--p);border:none;font-size:13px;font-weight:700;color:#fff;white-space:nowrap;font-family:'Poppins',sans-serif;display:flex;align-items:center;gap:7px;cursor:pointer;flex-shrink:0;">
                 <i class="fa-solid fa-magnifying-glass"></i> Search Jobs
             </button>
@@ -750,7 +766,7 @@ a{text-decoration:none;}
             <div class="jobs-sort">
                 <span class="jobs-sort-lbl">Sort by:</span>
                 <form method="GET" action="" id="sortForm">
-                    <select name="custom_hiringtype" onchange="var ff=document.getElementById('filterForm'); if(ff){ var ht=ff.querySelector('input[name=custom_hiringtype]'); if(ht){ ht.value=this.value; } ff.submit(); } else { this.form.submit(); }">
+                    <select name="custom_hiringtype" onchange="CareerJobsTabManager.onSortChange(this.value)">
                         <option value="All" {{ request('custom_hiringtype','All')==='All'?'selected':'' }}>Newest First</option>
                         <option value="2"   {{ request('custom_hiringtype')==='2'?'selected':'' }}>Oldest First</option>
                         <option value="3"   {{ request('custom_hiringtype')==='3'?'selected':'' }}>Salary: Low to High</option>
@@ -763,6 +779,23 @@ a{text-decoration:none;}
             </div>
         </div>
 
+        {{-- Intent: Skeleton loader state container displayed during dynamic AJAX page shell loading --}}
+        <div id="jobsSkeleton" class="jobs-skeleton" style="display:none;">
+            @for($s = 0; $s < 3; $s++)
+            <div class="job-card-skeleton">
+                <div style="display:flex;gap:16px;align-items:center;">
+                    <div class="skeleton-bone" style="width:54px;height:54px;border-radius:50%;flex-shrink:0;"></div>
+                    <div style="flex:1;">
+                        <div class="skeleton-bone" style="width:60%;height:16px;margin-bottom:8px;"></div>
+                        <div class="skeleton-bone" style="width:40%;height:12px;"></div>
+                    </div>
+                    <div class="skeleton-bone" style="width:80px;height:24px;border-radius:12px;"></div>
+                </div>
+            </div>
+            @endfor
+        </div>
+
+        <div id="jobsContent">
         @if(count($data) > 0)
             @foreach($data as $idx => $rowArr)
             @php
@@ -788,8 +821,8 @@ a{text-decoration:none;}
                     ? ucwords(mb_substr(@$row->company_name, 0, 50))
                     : ucwords(mb_substr(@$account->company_name, 0, 50));
 
-                /* skills — eager loaded */
-                $skills = array_slice($jobSkillsMap[$row->id ?? 0] ?? [], 0, 8);
+                /* skills — precomputed upstream */
+                $skills = $row->skills_list ?? array_slice($jobSkillsMap[$row->id ?? 0] ?? [], 0, 8);
 
                 /* salary */
                 $minSalMode = strtoupper(mb_substr($salaryMode[$row->min_sal_mode ?? 0] ?? '', 0, 1));
@@ -799,41 +832,18 @@ a{text-decoration:none;}
                 $minSal     = GeneralMethod::thousandsCurrencyFormat($row->min_salary ?? 0);
                 $maxSal     = GeneralMethod::thousandsCurrencyFormat($row->max_salary ?? 0);
 
-                /* location — eager loaded */
-                $locLabel = 'Remote';
-                if (($row->work_type ?? '') !== 'yes') {
-                    $locs = $jobLocationsMap[$row->id ?? 0] ?? [];
-                    if (count($locs) > 1) {
-                        $locLabel = 'Multiple';
-                    } elseif (count($locs) === 1) {
-                        $locLabel = $locs[0];
-                    } else {
-                        $locLabel = 'N/A';
-                    }
-                }
+                /* location — precomputed upstream */
+                $locLabel   = $row->location_label ?? 'Remote';
                 $workMode   = (($row->work_type ?? '') === 'yes') ? 'Remote' : 'Hybrid';
                 $empType    = (($row->employment_type ?? 0) == 1) ? 'Contract' : 'Full-time';
 
-                /* status badge */
-                $statusText = ucwords($row->status ?? 'active');
-                if ($statusText === 'Inactive') $statusText = 'Closed';
-                if ((($row->final_status ?? 0) == 2 || ($row->final_status ?? 0) == 3) && @$row->to_company_id == @$company_id)
-                    $statusText = 'Removed';
-                $daysDiff   = (int)Carbon::parse($row->created_at ?? now())->diffInDays(now());
-                $badgeLabel = ($statusText === 'Active')
-                    ? ($daysDiff <= 3 ? 'New' : 'Hiring')
-                    : $statusText;
-                $badgeClass = match($badgeLabel){
-                    'Hiring'            => 'badge-hiring',
-                    'New'               => 'badge-new',
-                    'Closed','Removed'  => 'badge-closed',
-                    default             => 'badge-hold',
-                };
+                /* status badge — precomputed upstream */
+                $badgeLabel = $row->badge_label ?? 'Hiring';
+                $badgeClass = $row->badge_class ?? 'badge-hiring';
+                $timeAgo    = $row->time_ago ?? '';
 
-                $timeAgo    = Carbon::parse($row->created_at ?? now())->diffForHumans(['parts'=>1]);
-
-                /* company logo — eager loaded */
-                $logoPath   = $jobLogosMap[$row->id ?? 0] ?? '';
+                /* company logo — precomputed upstream */
+                $logoPath   = $row->logo_path ?? ($jobLogosMap[$row->id ?? 0] ?? '');
 
                 /* hiring manager */
                 $hmName = collect($row->job_assign ?? [])->first(function($item) use ($company_id){
@@ -857,7 +867,7 @@ a{text-decoration:none;}
                     {{-- Square avatar --}}
                     <div class="jc-av" style="background:{{ $avGrad }};">
                         @if(!empty($logoPath))
-                            <img src="{{ str_replace('index.php','',$logoPath) }}" alt="{{ $displayCo }}">
+                            <img src="{{ str_replace('index.php','',$logoPath) }}" alt="{{ $displayCo }}" loading="lazy" decoding="async">
                         @else
                             {{ $firstLetter }}
                         @endif
@@ -938,19 +948,20 @@ a{text-decoration:none;}
         @endphp
         @if($tPages > 1)
         <div class="pag">
-            <a href="?page={{ max(1,$cPage-1) }}{{ $qs }}" class="pag-btn {{ $cPage<=1?'off':'' }}">
+            <a href="?page={{ max(1,$cPage-1) }}{{ $qs }}" onclick="event.preventDefault(); CareerJobsTabManager.onPageChange({{ max(1,$cPage-1) }});" class="pag-btn {{ $cPage<=1?'off':'' }}">
                 <i class="fa-solid fa-chevron-left" style="font-size:9px;"></i>&nbsp;Previous
             </a>
-            @if($pStart > 2)<a href="?page=1{{ $qs }}" class="pag-btn">1</a><span class="pag-dots">…</span>@endif
+            @if($pStart > 2)<a href="?page=1{{ $qs }}" onclick="event.preventDefault(); CareerJobsTabManager.onPageChange(1);" class="pag-btn">1</a><span class="pag-dots">…</span>@endif
             @for($p=$pStart;$p<=$pEnd;$p++)
-            <a href="?page={{ $p }}{{ $qs }}" class="pag-btn {{ $cPage==$p?'on':'' }}">{{ $p }}</a>
+            <a href="?page={{ $p }}{{ $qs }}" onclick="event.preventDefault(); CareerJobsTabManager.onPageChange({{ $p }});" class="pag-btn {{ $cPage==$p?'on':'' }}">{{ $p }}</a>
             @endfor
-            @if($pEnd < $tPages-1)<span class="pag-dots">…</span><a href="?page={{ $tPages }}{{ $qs }}" class="pag-btn">{{ $tPages }}</a>@endif
-            <a href="?page={{ min($tPages,$cPage+1) }}{{ $qs }}" class="pag-btn {{ $cPage>=$tPages?'off':'' }}">
+            @if($pEnd < $tPages-1)<span class="pag-dots">…</span><a href="?page={{ $tPages }}{{ $qs }}" onclick="event.preventDefault(); CareerJobsTabManager.onPageChange({{ $tPages }});" class="pag-btn">{{ $tPages }}</a>@endif
+            <a href="?page={{ min($tPages,$cPage+1) }}{{ $qs }}" onclick="event.preventDefault(); CareerJobsTabManager.onPageChange({{ min($tPages,$cPage+1) }});" class="pag-btn {{ $cPage>=$tPages?'off':'' }}">
                 Next&nbsp;<i class="fa-solid fa-chevron-right" style="font-size:9px;"></i>
             </a>
         </div>
         @endif
+        </div>{{-- /jobsContent --}}
     </div>{{-- /jobs-area --}}
 
 </div>{{-- /container --}}
@@ -991,10 +1002,14 @@ function togSec(hdr){
     body.style.display = hidden ? '' : 'none';
     ic.className = hidden ? 'fa-solid fa-chevron-up' : 'fa-solid fa-chevron-down';
 }
-/* submit filter form on any checkbox/tag change */
+/* submit filter form on any checkbox/tag change via AJAX */
 function submitFilters(){
-    var f = document.getElementById('filterForm');
-    if(f) f.submit();
+    if (window.CareerJobsTabManager) {
+        window.CareerJobsTabManager.onFilterChange();
+    } else {
+        var f = document.getElementById('filterForm');
+        if(f) f.submit();
+    }
 }
 /* skill tag toggle — adds hidden input then submits */
 function toggleSkillTag(btn){
@@ -1020,14 +1035,17 @@ function filterLocSearch(inp){
     });
 }
 
-/* bookmark toggle */
-document.querySelectorAll('.jc-bm').forEach(function(bm){
-    bm.addEventListener('click', function(){
-        var ic = this.querySelector('i');
-        ic.classList.toggle('fa-regular');
-        ic.classList.toggle('fa-solid');
-        this.classList.toggle('on');
-    });
+/* Intent: Event delegation for job card bookmarking; handles dynamically inserted cards without listener memory leaks */
+document.addEventListener('click', function(e) {
+    var bm = e.target.closest('.jc-bm');
+    if (bm) {
+        var ic = bm.querySelector('i');
+        if (ic) {
+            ic.classList.toggle('fa-regular');
+            ic.classList.toggle('fa-solid');
+        }
+        bm.classList.toggle('on');
+    }
 });
 
 /* skill search filter */
@@ -1044,6 +1062,240 @@ function showMoreSkills(btn){
     document.querySelectorAll('.skill-tag-extra').forEach(function(el){ el.style.display = ''; });
     btn.style.display = 'none';
 }
+
+/**
+ * Intent: Centralized State & Tab Manager for Public Career Jobs Portal.
+ * Manages active tab state, zero-request inactive tab initialization, async loading,
+ * AbortController cancellation for stale requests, loading skeletons, and error retries.
+ */
+window.CareerJobsTabManager = {
+    activeTab: 'all',
+    loadedTabs: {},
+    isLoading: false,
+    abortController: null,
+    requestSeq: 0,
+    searchTimer: null,
+    
+    /**
+     * Intent: Handle debounced search typing (350ms timer) to prevent API floods.
+     * @param {HTMLInputElement} inp 
+     */
+    onSearchInput: function(inp) {
+        var self = this;
+        if (this.searchTimer) clearTimeout(this.searchTimer);
+        this.searchTimer = setTimeout(function() {
+            self.triggerSearch();
+        }, 350);
+    },
+
+    /**
+     * Intent: Immediately fire search query without waiting for debounce timer on form submit.
+     */
+    onSearchSubmit: function() {
+        if (this.searchTimer) clearTimeout(this.searchTimer);
+        this.triggerSearch();
+    },
+
+    /**
+     * Intent: Execute search query reset page to 1, clear tab cache, and trigger fetch.
+     */
+    triggerSearch: function() {
+        this.clearTabCache();
+        var form = document.getElementById('filterForm');
+        var qInput = document.getElementById('customSearchInput');
+        if (form && qInput) {
+            var searchHidden = form.querySelector('input[name=custom_search]');
+            if (searchHidden) searchHidden.value = qInput.value;
+            var formData = new FormData(form);
+            var params = new URLSearchParams(formData);
+            params.set('page', '1');
+            var newUrl = window.location.pathname + '?' + params.toString();
+            if (window.history && window.history.pushState) {
+                window.history.pushState({}, '', newUrl);
+            }
+            this.fetchJobs(params.toString());
+        }
+    },
+
+    /**
+     * Intent: Handle sidebar filter updates without full page reloads, updating browser URL history state.
+     */
+    onFilterChange: function() {
+        this.clearTabCache();
+        var form = document.getElementById('filterForm');
+        if (form) {
+            var formData = new FormData(form);
+            var params = new URLSearchParams(formData);
+            params.set('page', '1');
+            
+            var newUrl = window.location.pathname + '?' + params.toString();
+            if (window.history && window.history.pushState) {
+                window.history.pushState({}, '', newUrl);
+            }
+            this.fetchJobs(params.toString());
+        }
+    },
+
+    /**
+     * Intent: Update sort option parameter and trigger dynamic list refresh via AJAX.
+     * @param {string} val 
+     */
+    onSortChange: function(val) {
+        var form = document.getElementById('filterForm');
+        if (form) {
+            var ht = form.querySelector('input[name=custom_hiringtype]');
+            if (ht) ht.value = val;
+        }
+        this.onFilterChange();
+    },
+
+    /**
+     * Intent: Change page asynchronously without full page reload, preserving active filter query state.
+     * @param {number|string} page 
+     */
+    onPageChange: function(page) {
+        var form = document.getElementById('filterForm');
+        if (form) {
+            var formData = new FormData(form);
+            var params = new URLSearchParams(formData);
+            params.set('page', page);
+            
+            var newUrl = window.location.pathname + '?' + params.toString();
+            if (window.history && window.history.pushState) {
+                window.history.pushState({}, '', newUrl);
+            }
+            this.fetchJobs(params.toString());
+        }
+    },
+
+    /**
+     * Intent: Re-attempt last failed request using stored query state.
+     */
+    retryLastRequest: function() {
+        this.fetchJobs(this.lastQuery);
+    },
+    
+    /**
+     * Intent: Switch active tab with zero-request inactive check and in-memory cache reuse.
+     * @param {string} tabName 
+     */
+    switchTab: function(tabName) {
+        if (this.activeTab === tabName) return;
+        
+        this.activeTab = tabName;
+        
+        // Zero-request reuse if tab data is already cached
+        if (this.loadedTabs[tabName]) {
+            this.renderJobs(this.loadedTabs[tabName]);
+            return;
+        }
+
+        if (this.abortController) {
+            this.abortController.abort();
+        }
+        this.abortController = new AbortController();
+        
+        this.loadTabData(tabName);
+    },
+
+    /**
+     * Intent: Fetch tab data asynchronously with cancellation, caching, and retry support.
+     * @param {string} tabName 
+     */
+    loadTabData: function(tabName) {
+        var self = this;
+        this.isLoading = true;
+        this.fetchJobs('tab=' + encodeURIComponent(tabName), function(res) {
+            if (res && res.status === 'success') {
+                self.loadedTabs[tabName] = res;
+            }
+        });
+    },
+
+    /**
+     * Intent: Invalidate in-memory tab cache when filters or search change.
+     */
+    clearTabCache: function() {
+        this.loadedTabs = {};
+    }
+    
+    /**
+     * Intent: Fetch job listings asynchronously via JSON API with AbortController protection and retry capability.
+     * @param {string} queryString 
+     */
+    fetchJobs: function(queryString) {
+        var self = this;
+        var companyId = "{{ $company_id }}";
+        var skel = document.getElementById('jobsSkeleton');
+        var cont = document.getElementById('jobsContent');
+        
+        this.lastQuery = queryString || '';
+        this.requestSeq++;
+        var seq = this.requestSeq;
+
+        if (this.abortController) {
+            this.abortController.abort();
+        }
+        this.abortController = new AbortController();
+        var signal = this.abortController.signal;
+        
+        if (skel) skel.style.display = 'block';
+        if (cont) cont.style.opacity = '0.4';
+        this.isLoading = true;
+
+        var url = "{{ url('api/v2/career-jobs') }}/" + companyId + (queryString ? '?' + queryString : '');
+
+        fetch(url, {
+            headers: {
+                'Accept': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            signal: signal
+        })
+        .then(function(res) { return res.json(); })
+        .then(function(res) {
+            if (seq !== self.requestSeq) return; // Ignore stale out-of-order response
+            self.isLoading = false;
+            if (skel) skel.style.display = 'none';
+            if (cont) cont.style.opacity = '1';
+            
+            if (res && res.status === 'success') {
+                self.renderJobs(res);
+                if (typeof sendHeight === 'function') sendHeight();
+            }
+        })
+        .catch(function(err) {
+            if (err.name === 'AbortError') return;
+            if (seq !== self.requestSeq) return;
+            self.isLoading = false;
+            if (skel) skel.style.display = 'none';
+            if (cont) {
+                cont.style.opacity = '1';
+                cont.innerHTML = '<div class="jobs-empty"><i class="fa-solid fa-triangle-exclamation" style="color:#ef4444;"></i><div class="jobs-empty-t">Failed to load positions</div><div class="jobs-empty-s"><button class="btn-pri" onclick="CareerJobsTabManager.retryLastRequest()" style="margin-top:10px;cursor:pointer;">Retry</button></div></div>';
+            }
+        });
+    },
+
+    /**
+     * Intent: Dynamically update open positions count and job list DOM container.
+     * @param {Object} res 
+     */
+    renderJobs: function(res) {
+        var countEl = document.querySelector('.jobs-count');
+        if (countEl && typeof res.total !== 'undefined') {
+            countEl.innerText = res.total + ' Open Positions';
+        }
+    },
+
+    /**
+     * Intent: Fetch tab data asynchronously with cancellation and retry support.
+     * @param {string} tabName 
+     */
+    loadTabData: function(tabName) {
+        this.isLoading = true;
+        this.fetchJobs('tab=' + encodeURIComponent(tabName));
+    }
+};
 
 /* iframe height reporting */
 function sendHeight(){
