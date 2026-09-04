@@ -7174,10 +7174,10 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
             'user_id' => $this->user->id,
         ];
 
-        $versionKey = 'allsendinvitationtoagency_version_user_'.$this->user->id;
+        $versionKey = 'allsendinvitationtoagency_v5_version_user_'.$this->user->id;
         $version = cache()->get($versionKey, 1);
-        $cacheKeySet = 'ats:allsendinvitationtoagency:'.$this->user->id.':'.$version.':'.md5(json_encode($cachePayload));
-        $etag = '"v2:spartner:'.md5($cacheKeySet).'"';
+        $cacheKeySet = 'ats:v5:allsendinvitationtoagency:'.$this->user->id.':'.$version.':'.md5(json_encode($cachePayload));
+        $etag = '"v5:spartner:'.md5($cacheKeySet).'"';
         if (request()->header('If-None-Match') === $etag) {
             return response(null, 304)->header('ETag', $etag);
         }
@@ -7421,6 +7421,18 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
 
         $this->td_industries = DB::table('td_industries')->select('ind_id as id', 'ind_name as name')->get();
 
+        // Pre-calculate lightweight total counts for tab header display without loading heavy datasets
+        $this->registeredTotalCount = DB::table('staffing_company_relation')
+            ->where('from_company_id', $company_id)
+            ->where('final_status', 1)
+            ->count();
+
+        $this->assignedTotalCount = DB::table('recommendation_relation')
+            ->where('from_company_id', $company_id)
+            ->where('job_id', $id)
+            ->where('final_status', 1)
+            ->count();
+
         if (request()->wantsJson() || request()->header('Accept') === 'application/json') {
             $responseData = Reply::dataOnly([
                 'status' => 'success',
@@ -7440,6 +7452,8 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
                 'vendor_limit' => $this->vendor_limit,
                 'allCompanies' => $this->allCompanies,
                 'activeCompanies' => $this->activeCompanies,
+                'registeredTotalCount' => $this->registeredTotalCount,
+                'assignedTotalCount' => $this->assignedTotalCount,
             ]);
         } else {
             $view = view('service_company.jobs.spartnerlisting', $this->data)->render();
@@ -7845,6 +7859,13 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
         )
             ->where('id', $request->jobid)
             ->first();
+
+        if (! $currentRowJob) {
+            return response()->json([
+                'html' => '<tr class="odd"><td colspan="6" class="text-center text-muted p-4">Job requisition not found or access denied.</td></tr>',
+                'total' => 0,
+            ]);
+        }
 
         if (\request('app_int_outsource') != '') {
             $parent_employment_type = request('app_int_outsource');
@@ -10013,12 +10034,15 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
         $employmentType = GeneralMethod::employmentType();
         $searchTerms = request('cus_search');
         $custom_search = $searchTerms; // json_decode($searchTerms, true);
+        $page = max((int) $request->input('page', 1), 1);
+        $size = (int) $request->input('size', 10);
 
         $cachePayload = [
+            'page' => $page,
+            'size' => $size,
             'custom_search' => $custom_search,
             'company' => $company_id,
             'user_id' => $this->user->id,
-            'custom_search' => $custom_search,
             'jobid' => $request->jobid,
         ];
 
@@ -10320,6 +10344,15 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
         )
             ->where('id', $request->jobid)
             ->first();
+
+        if (! $currentRowJob) {
+            return response()->json([
+                'html' => '<tr class="odd"><td colspan="7" class="text-center text-muted p-4">Job requisition not found or access denied.</td></tr>',
+                'total' => 0,
+                'pagination' => '',
+            ]);
+        }
+
         $parent_employment_type = $currentRowJob->employment_type;
 
         $jobMinExp = $currentRowJob->min_exp;
@@ -10633,6 +10666,7 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
             'total' => $total,
             'current_page' => $page,
             'last_page' => ceil($total / $size),
+            'per_page' => $size,
             'listType' => 'allcandidate',
         ];
 
