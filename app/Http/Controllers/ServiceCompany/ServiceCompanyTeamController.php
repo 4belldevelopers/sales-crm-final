@@ -635,8 +635,36 @@ class ServiceCompanyTeamController extends ServiceCompanyBaseController
             'globalRanks' => [],
         ];
 
-        $this->result = collect();
-        $this->counts = collect();
+        // Intent: Fetch exact team member header stat card counts (Active Jobs, Candidates Added, Interviews, Joinings, Rank) with 5-minute Redis cache.
+        // Tenancy: Filtered by company_id and target team member user ID.
+        $companyId = $this->user->company_id;
+        $headerStats = Cache::remember("ats:team_header_stats:comp_{$companyId}:user_{$id}", 300, function () use ($id, $companyId) {
+            $profileService = app(\App\Services\ServiceCompanyProfileService::class);
+            $kpis = $profileService->getKpiMetrics($id, $companyId);
+            $ranks = $profileService->getMonthlyRanks($id, $companyId);
+
+            $curM = Carbon::now()->format('Y-m');
+            $rankVal = $ranks['internalRanks'][$curM]['rank'] ?? '-';
+            $scoreVal = $ranks['internalRanks'][$curM]['score'] ?? 0;
+
+            return [
+                'active_count' => (int) ($kpis['counts']->get('active', 0)),
+                'total_candidates' => (int) ($kpis['scpCandidatesTotal'] ?? 0),
+                'interviewsTrackerTotal' => (int) ($kpis['scpInterviewsTotal'] ?? 0),
+                'total_candidates_join' => (int) ($kpis['scpJoiningsTotal'] ?? 0),
+                'curMonthStr' => $curM,
+                'rankVal' => $rankVal,
+                'scoreVal' => $scoreVal,
+            ];
+        });
+
+        $curM = $headerStats['curMonthStr'] ?? Carbon::now()->format('Y-m');
+        $this->rankings = [
+            'months' => collect([$curM]),
+            'internalRanks' => [$curM => ['rank' => $headerStats['rankVal'] ?? '-', 'score' => $headerStats['scoreVal'] ?? 0]],
+            'globalRanks' => [],
+        ];
+
         $this->joined_count = 0;
         $this->sourcing_count = 0;
         $this->screening_count = 0;
@@ -645,8 +673,8 @@ class ServiceCompanyTeamController extends ServiceCompanyBaseController
         $this->offer_count = 0;
         $this->Rejected_count = 0;
         $this->inreview_count = 0;
-        $this->total_candidates = 0;
-        $this->active_count = 0;
+        $this->total_candidates = $headerStats['total_candidates'] ?? 0;
+        $this->active_count = $headerStats['active_count'] ?? 0;
         $this->hold_count = 0;
         $this->inactive_count = 0;
 
@@ -658,14 +686,14 @@ class ServiceCompanyTeamController extends ServiceCompanyBaseController
         $this->candidateValuesCommoffer = [];
         $this->candidateValuesTotaloffer = 0;
 
-        $this->total_candidates_join = 0;
+        $this->total_candidates_join = $headerStats['total_candidates_join'] ?? 0;
         $this->data_list = [];
         $this->labelsCommjoin = [];
         $this->candidateValuesCommjoin = [];
         $this->candidateValuesTotaljoin = 0;
 
         $this->upcomingData = [];
-        $this->interviewsTrackerTotal = 0;
+        $this->interviewsTrackerTotal = $headerStats['interviewsTrackerTotal'] ?? 0;
         $this->scpOffersTotal = 0;
 
         $this->interviewlabelsMonth = [];
@@ -1981,7 +2009,7 @@ class ServiceCompanyTeamController extends ServiceCompanyBaseController
                 '_source' => [
                     'id', 'wiseId', 'full_name', 'email', 'phone', 'current_designation', 'ctc', 'ectc',
                     'notice_period', 'np_id', 'created_at', 'jobId', 'title', 'client_name', 'posted_by',
-                    'company_name', 'job_master_status_id', 'master_status_name', 'child_status_id',
+                    'company_name', 'job_master_status_id', 'name', 'master_status_name', 'child_status_id',
                     'css_style', 'country', 'state', 'city', 'city_id', 'thirdparty_company_id',
                     'client_comapny_id', 'qualification_name', 'skills', 'total_exp', 'rel_exp',
                     'condidate_type', 'ctc_yearly', 'ectc_yearly', 'serving_notice_period_mode',
@@ -3148,7 +3176,7 @@ class ServiceCompanyTeamController extends ServiceCompanyBaseController
                 '_source' => [
                     'id', 'wiseId', 'full_name', 'email', 'phone', 'current_designation', 'ctc', 'ectc',
                     'notice_period', 'np_id', 'created_at', 'jobId', 'title', 'client_name', 'posted_by',
-                    'company_name', 'job_master_status_id', 'master_status_id', 'master_status_name', 'child_status_id',
+                    'company_name', 'job_master_status_id', 'name', 'master_status_id', 'master_status_name', 'child_status_id',
                     'css_style', 'country', 'state', 'city', 'city_id', 'thirdparty_company_id',
                     'client_comapny_id', 'of_joined_date', 'of_offer_amount', 'of_currency', 'of_mode', 'employment_type',
 
@@ -3721,106 +3749,26 @@ class ServiceCompanyTeamController extends ServiceCompanyBaseController
                 }
             }
 
-            // Intent: Fetch job status breakdown (active, hold, inactive) for company.
-            // Tenancy: Filtered by company_id.
-            $jobCounts = DB::table('jobs')
-                ->where('company_id', $company_id)
-                ->selectRaw('status, count(*) as count')
-                ->groupBy('status')
-                ->pluck('count', 'status');
+            // Intent: Fetch recruiter-scoped KPI metrics & pipeline status counts using ServiceCompanyProfileService.
+            // Tenancy: Filtered by company_id and target team member user ID.
+            $profileService = app(\App\Services\ServiceCompanyProfileService::class);
+            $kpis = $profileService->getKpiMetrics($userId, $company_id);
 
-            $counts = collect([
-                'active' => $jobCounts->get('active', 0),
-                'hold' => $jobCounts->get('hold', 0),
-                'inactive' => $jobCounts->get('inactive', 0) + $jobCounts->get('closed', 0),
-            ]);
-            $scp_active = (int) ($counts->get('active', 0));
+            $scp_active = (int) ($kpis['counts']->get('active', 0));
+            $counts = $kpis['counts'];
 
-            // Candidate Pipeline Status Counts & Overall Totals from ElasticSearch
-            $inreview_count = 0;
-            $sourcing_count = 0;
-            $screening_count = 0;
-            $evaluation_count = 0;
-            $negotiation_count = 0;
-            $offer_count = 0;
-            $joined_count = 0;
-            $Rejected_count = 0;
-            $total_candidates = 0;
+            $total_candidates = (int) ($kpis['scpCandidatesTotal'] ?? 0);
+            $interviewsTrackerTotal = (int) ($kpis['scpInterviewsTotal'] ?? 0);
+            $joined_count = (int) ($kpis['scpJoiningsTotal'] ?? $kpis['joined_count'] ?? 0);
+            $scpOffersTotal = (int) ($kpis['scpOffersTotal'] ?? $kpis['offer_count'] ?? 0);
 
-            $scpOffersTotal = 0;
-            $interviewsTrackerTotal = 0;
-
-            if ($this->elasticService->indexExists(ELASTIC_CANDIDATES)) {
-                try {
-                    // Intent: Consolidate candidate pipeline status breakdown, offers count, and interview count into 1 single ES request.
-                    // Tenancy: Strict tenant isolation via company_id and submitted_by filters.
-                    $statusAggResp = $this->elasticService->getClient()->search([
-                        'index' => ELASTIC_CANDIDATES,
-                        'request_cache' => true,
-                        'body' => [
-                            'size' => 0,
-                            'track_total_hits' => true,
-                            'query' => [
-                                'bool' => [
-                                    'must' => [
-                                        ['term' => ['company_id' => $company_id]],
-                                        ['term' => ['submitted_by' => $userId]],
-                                    ],
-                                ],
-                            ],
-                            'aggs' => [
-                                'status_counts' => [
-                                    'terms' => [
-                                        'field' => 'job_master_status_id',
-                                        'size' => 20,
-                                    ],
-                                ],
-                                'offers_total' => [
-                                    'filter' => [
-                                        'exists' => ['field' => 'of_created_date'],
-                                    ],
-                                ],
-                                'interviews_total' => [
-                                    'filter' => [
-                                        'exists' => ['field' => 'interview_schedule_id'],
-                                    ],
-                                ],
-                            ],
-                        ],
-                    ]);
-
-                    $total_candidates = $statusAggResp['hits']['total']['value'] ?? 0;
-                    $buckets = collect($statusAggResp['aggregations']['status_counts']['buckets'] ?? []);
-
-                    foreach ($buckets as $b) {
-                        $stKey = (int) $b['key'];
-                        $stCount = (int) $b['doc_count'];
-                        switch ($stKey) {
-                            case 1: $sourcing_count = $stCount;
-                                break;
-                            case 2: $screening_count = $stCount;
-                                break;
-                            case 3: $evaluation_count = $stCount;
-                                break;
-                            case 4: $negotiation_count = $stCount;
-                                break;
-                            case 5: $offer_count = $stCount;
-                                break;
-                            case 6: $joined_count = $stCount;
-                                break;
-                            case 7: $Rejected_count = $stCount;
-                                break;
-                            default: $inreview_count += $stCount;
-                                break;
-                        }
-                    }
-
-                    $scpOffersTotal = $statusAggResp['aggregations']['offers_total']['doc_count'] ?? $offer_count;
-                    $interviewsTrackerTotal = $statusAggResp['aggregations']['interviews_total']['doc_count'] ?? 0;
-                } catch (\Throwable $e) {
-                    \Log::warning('TEAM_VIEWMORE_DASHBOARD: ES status agg failed', ['error' => $e->getMessage()]);
-                }
-            }
+            $sourcing_count = (int) ($kpis['sourcing_count'] ?? 0);
+            $screening_count = (int) ($kpis['screening_count'] ?? 0);
+            $evaluation_count = (int) ($kpis['evaluation_count'] ?? 0);
+            $negotiation_count = (int) ($kpis['negotiation_count'] ?? 0);
+            $offer_count = (int) ($kpis['offer_count'] ?? 0);
+            $Rejected_count = (int) ($kpis['Rejected_count'] ?? 0);
+            $inreview_count = (int) ($kpis['inreview_count'] ?? 0);
 
             // 3. Last 7 Days Candidate Uploads Trend
             $labels = [];

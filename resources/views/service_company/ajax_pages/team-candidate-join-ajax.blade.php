@@ -251,12 +251,12 @@
                     if (
                         $row->thirdparty_company_id > 0 &&
                         $row->thirdparty_company_id == $company_id &&
-                        $row->master_status_id != 8
+                        $row->job_master_status_id != 8
                     ) {
                         $stage_default_css = '';
                     }
                     $name = '';
-                    if ($row->master_status_id == 8) {
+                    if ($row->job_master_status_id == 8) {
                         $name = '';
                     }
                     if (!empty(@$row->childStatus) && @$row->childStatus > 0) {

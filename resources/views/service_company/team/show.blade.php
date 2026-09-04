@@ -175,7 +175,7 @@ use Carbon\Carbon;
         'Profile Image'       => (!empty(@$users->image) && strlen(@$users->image)>10),
       ];
       $scp_pct = count($scp_pc) ? round(count(array_filter($scp_pc))/count($scp_pc)*100) : 0;
-      $scp_active = isset($counts) ? (int) $counts->get('active',0) : 0;
+      $scp_active = (int) (@$active_count ?? (isset($counts) ? $counts->get('active', 0) : 0));
       $scp_cand   = (int) (@$total_candidates ?? 0);
       $scp_intv   = (int) (@$interviewsTrackerTotal ?? 0);
       $scp_join   = (int) (@$total_candidates_join ?? 0);

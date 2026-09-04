@@ -171,7 +171,7 @@ a.bxr-sum-link{ color:inherit; cursor:pointer; }
     margin-bottom: 12px;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
     display: grid;
-    grid-template-columns: 1.3fr 1.1fr 1.1fr 1fr 1.1fr 170px;
+    grid-template-columns: 1.4fr 1.1fr 1.1fr 1.2fr 170px;
     gap: 16px;
     align-items: center;
     transition: box-shadow 0.2s ease, border-color 0.2s ease;

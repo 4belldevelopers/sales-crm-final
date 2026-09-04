@@ -262,21 +262,6 @@
                         </div>
                     </div>
 
-                    <!-- COL 4: Bench Match Box -->
-                    <div class="jero-match-card">
-                        <div>
-                            <div class="jero-match-head">
-                                <i class="ri-user-add-line text-primary"></i> Your Bench Match
-                            </div>
-                            <div class="jero-match-num">
-                                {{ count($matchedSkillsArr) > 0 ? count($matchedSkillsArr) : ( ($row->id % 4) + 3 ) }}
-                            </div>
-                            <div class="jero-match-sub">Matching candidates</div>
-                        </div>
-                        <a href="javascript:void(0);" class="jero-match-link client-show-detail" data-row-id="{{ $row->id }}" title="View matching bench talents">
-                            View Matches &rarr;
-                        </a>
-                    </div>
 
                     <!-- COL 5: Commercial Terms Box -->
                     <div class="jero-terms-card">
@@ -313,9 +298,7 @@
                                 <span class="btn btn-sm btn-light-warning fw-bold text-warning w-100 py-2"><i class="ri-time-line"></i> Request sent</span>
                             @endif
                         @endif
-                        <button class="jero-btn-outline client-show-detail" data-row-id="{{ $row->id }}">
-                            View Requirement
-                        </button>
+
                         <button class="jero-btn-outline client-terms-listing-find-job" data-row-id="{{ $row->id }}" data-row-recommendation_relation_id="{{ $row->recommendation_relation_id }}">
                             View Terms
                         </button>
