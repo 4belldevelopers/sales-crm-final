@@ -15,7 +15,13 @@
     @foreach ($data as $rowArr)
     @php
     $row = (object) $rowArr;
-    $row->thirdparty_company_id = $row->ClientComID;
+    $row->thirdparty_company_id = $row->thirdparty_company_id ?? $row->ClientComID ?? $row->client_comapny_id ?? 0;
+    $row->ClientComID = $row->ClientComID ?? $row->thirdparty_company_id ?? 0;
+    $row->name = $row->name ?? $row->master_status_name ?? '';
+    $row->master_status_id = $row->master_status_id ?? $row->job_master_status_id ?? 0;
+
+
+
     @endphp
         <tr style="height: 102px; position: relative;">
             <td>

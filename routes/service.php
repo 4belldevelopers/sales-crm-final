@@ -494,6 +494,8 @@ Route::group(['middleware' => 'auth'], function () {
                 Route::get('team/add_team_member_form/{id?}', [ServiceCompanyAccountSettingsController::class, 'add_team_member_form'])->name('team.add_team_member_form');
                 Route::get('team/jobdata', [ServiceCompanyTeamController::class, 'jobdata'])->name('team.jobdata');
                 Route::get('team_ajax/jobdata', [ServiceCompanyTeamController::class, 'jobdata_ajax'])->name('team.jobdata_ajax');
+                Route::get('team_ajax/rankdata', [ServiceCompanyTeamController::class, 'rankdata_ajax'])->name('team.rankdata_ajax');
+                Route::get('team_ajax/dashboarddata', [ServiceCompanyTeamController::class, 'dashboarddata_ajax'])->name('team.dashboarddata_ajax');
                 Route::get('team/assigndata', [ServiceCompanyTeamController::class, 'assigndata'])->name('team.assigndata');
                 Route::get('team/scoreboard', [ServiceCompanyTeamController::class, 'teamScoreboard'])->name('team.scoreboard');
                 Route::resource('team', ServiceCompanyTeamController::class)->except(['show']);

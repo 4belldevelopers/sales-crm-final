@@ -52,4 +52,16 @@ return [
     */
     'talents_v2_enabled' => (bool) env('FEATURE_TALENTS_V2_ENABLED', false),
 
+    /*
+    |--------------------------------------------------------------------------
+    | Team View More Module V2 Engine
+    |
+    | Intent: Controls feature activation for Team View More V2 optimizations, including
+    | True Tab-Level Lazy Loading, lightweight initial shell, server-side tenant scoping,
+    | Redis Cache::lock stampede protection, and request debouncing.
+    | Defaults to true.
+    |--------------------------------------------------------------------------
+    */
+    'team_viewmore_v2_enabled' => (bool) env('FEATURE_TEAM_VIEWMORE_V2_ENABLED', true),
+
 ];
