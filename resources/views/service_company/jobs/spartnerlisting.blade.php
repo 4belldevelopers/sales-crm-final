@@ -1426,9 +1426,9 @@ $current_job_id = @$job_id;
                                         <li class="nav-item me-3"> <a class="nav-link active show" data-toggle="tab" href="#recommended">
                                                 <span class="nav-text font-weight-bold">Recommended {{__('messages.Agency')}}</span> <span id="recommendedTotal"></span> </a> </li>
                                         <li class="nav-item me-3 register_tab"> <a class="nav-link" data-toggle="tab" href="#registered"> <span
-                                                    class="nav-text font-weight-bold">My {{__('messages.Agency')}}</span> <span id="registeredTotal"></span> </a> </li>
+                                                    class="nav-text font-weight-bold">My {{__('messages.Agency')}}</span> <span id="registeredTotal">({{ @$registeredTotalCount ?? 0 }})</span> </a> </li>
                                         <li class="nav-item me-3 assigned_tab"> <a class="nav-link" data-toggle="tab" href="#assigned"> <span
-                                                    class="nav-text font-weight-bold">Assigned {{__('messages.Agency')}}</span> <span id="assignedTotal"></span> </a> </li>
+                                                    class="nav-text font-weight-bold">Assigned {{__('messages.Agency')}}</span> <span id="assignedTotal">({{ @$assignedTotalCount ?? 0 }})</span> </a> </li>
                                     </ul>
                                 </div>
                             </div>
@@ -2200,177 +2200,261 @@ $current_job_id = @$job_id;
     }
 </script>
 <script>
-    function filtersdata() {
-        tableLoad('load');
-    }
-    function loadAllDrawerLists() {
-        tableLoad('load');
-        staffingPartnersRegister('load');
-        recommendedAssignList(1, '');
-    }
-    loadAllDrawerLists();
-    setTimeout(loadAllDrawerLists, 200);
+    /**
+     * AgencyMarketplaceTabManager
+     * True Tab-Level Lazy Loading, Request Deduplication, Debouncing & XHR Cancellation.
+     * Matches Profile Tabs V2 architecture (ProfileTabManager).
+     */
+    window.AgencyMarketplaceTabManager = {
+        initializedTabs: {
+            recommended: true
+        },
+        activeRequests: {},
+        searchTimers: {},
 
-    function tableLoad(type) {
-       var page = 1;
-       $('.page-loader').css('display', 'flex');
-        return $.ajax({
-                url: `{!! route('service_company.jobs.recommendedData') !!}?page=${page}`,
-                type: 'GET',
-                data: {
-                    jobid: $('#current_job_id').val(),
-                    hiringtype : $('#workhiringtype').val(),
-                    country : $('#country').val(),
-                    cus_search : $('#kt_tagify_users').val(),
-                    min_exp : $('#min_exp').val(),
-                    max_exp : $('#max_exp').val(),
-                    kt_tagify_location : $('#country').val(),
-                    app_int_outsource : $('#hiring_type').val(),
-                    experience : $('#experience').val(),
-                    industry : $('#industry').val(),
-                    min_sal : $('#min_sal').val(),
-                    max_sal : $('#max_sal').val(),
-                    min_salary_currency : $('#min_salary_currency').val(),
-                    sal_mode : $('#sal_mode').val()
-                },
-                success: function(response) {
-                    $('.loadingMessage').css({ display: 'none' });
-                    $('.loader_search').css({ display: 'none' });
-                    $('.page-loader').css('display', 'none');
-                    $('#recommendedlistBody').html(response.html);
-                    $('#recommendedTotal').html('('+response.total+')');
-                }
+        init: function() {
+            var self = this;
+
+            // Listen for Metronic / Bootstrap shown.bs.tab event
+            $(document).on('shown.bs.tab', 'a[data-toggle="tab"]', function (e) {
+                var targetTab = $(e.target).attr('href');
+                if (!targetTab) return;
+                var tabKey = targetTab.replace('#', '');
+                self.onTabActivated(tabKey);
             });
+
+            // Direct click handler fallback
+            $(document).on('click', '.nav-tabs a[data-toggle="tab"]', function (e) {
+                var targetTab = $(this).attr('href');
+                if (!targetTab) return;
+                var tabKey = targetTab.replace('#', '');
+                self.onTabActivated(tabKey);
+            });
+
+            // 300ms Search Debounce for My Agency search input
+            $(document).off('keyup input', '#kt_tagify_4').on('keyup input', '#kt_tagify_4', function() {
+                self.debounceSearch('registered', function() {
+                    staffingPartnersRegister(1, '');
+                });
+            });
+
+            // 300ms Search Debounce for Assigned Agency search input
+            $(document).off('keyup input', '#kt_tagify_5').on('keyup input', '#kt_tagify_5', function() {
+                self.debounceSearch('assigned', function() {
+                    recommendedAssignList(1, '');
+                });
+            });
+        },
+
+        onTabActivated: function(tabKey) {
+            if (this.initializedTabs[tabKey]) {
+                return;
+            }
+            this.initializedTabs[tabKey] = true;
+
+            if (tabKey === 'registered') {
+                staffingPartnersRegister(1, '');
+            } else if (tabKey === 'assigned') {
+                recommendedAssignList(1, '');
+            } else if (tabKey === 'recommended') {
+                tableLoad(1);
+            }
+        },
+
+        debounceSearch: function(tabKey, callback) {
+            if (this.searchTimers[tabKey]) {
+                clearTimeout(this.searchTimers[tabKey]);
+            }
+            this.searchTimers[tabKey] = setTimeout(function() {
+                callback();
+            }, 300);
+        },
+
+        cancelRequest: function(tabKey) {
+            if (this.activeRequests[tabKey] && typeof this.activeRequests[tabKey].abort === 'function') {
+                try { this.activeRequests[tabKey].abort(); } catch(e) {}
+                delete this.activeRequests[tabKey];
+            }
+        },
+
+        registerRequest: function(tabKey, jqXHR) {
+            this.cancelRequest(tabKey);
+            this.activeRequests[tabKey] = jqXHR;
+        },
+
+        clearRequest: function(tabKey) {
+            delete this.activeRequests[tabKey];
+        },
+
+        invalidateTab: function(tabKey) {
+            delete this.initializedTabs[tabKey];
+        }
+    };
+
+    $(document).ready(function() {
+        AgencyMarketplaceTabManager.init();
+        // Load initial tab (Recommended Agency) ONCE on page launch
+        tableLoad(1);
+    });
+
+    function filtersdata() {
+        tableLoad(1);
     }
 
+    function tableLoad(page) {
+        if (page === 'load' || !page) { page = 1; }
+
+        $('.loader_search').css({ display: 'block' });
+
+        var jqXHR = $.ajax({
+            url: `{!! route('service_company.jobs.recommendedData') !!}?page=${page}`,
+            type: 'GET',
+            data: {
+                jobid: $('#current_job_id').val(),
+                hiringtype : $('#workhiringtype').val(),
+                country : $('#country').val(),
+                cus_search : $('#kt_tagify_users').val(),
+                min_exp : $('#min_exp').val(),
+                max_exp : $('#max_exp').val(),
+                kt_tagify_location : $('#country').val(),
+                app_int_outsource : $('#hiring_type').val(),
+                experience : $('#experience').val(),
+                industry : $('#industry').val(),
+                min_sal : $('#min_sal').val(),
+                max_sal : $('#max_sal').val(),
+                min_salary_currency : $('#min_salary_currency').val(),
+                sal_mode : $('#sal_mode').val()
+            },
+            success: function(response) {
+                $('.loadingMessage').css({ display: 'none' });
+                $('.loader_search').css({ display: 'none' });
+                $('.page-loader').css('display', 'none');
+                $('#recommendedlistBody').html(response.html);
+                $('#recommendedTotal').html('('+response.total+')');
+            },
+            complete: function() {
+                AgencyMarketplaceTabManager.clearRequest('recommended');
+            }
+        });
+        AgencyMarketplaceTabManager.registerRequest('recommended', jqXHR);
+        return jqXHR;
+    }
 
     function newUpdateJobstatus() {
-        $('.changetextupdate').text('Searching....!')
-        tableLoad('load');
+        $('.changetextupdate').text('Searching....!');
+        tableLoad(1);
         var $this = $('#apptrackerfilter');
-        // $this.fadeOut(2000, function() {
         $this.modal('hide');
-        // });
         setTimeout(() => {
             $('#apptrackerfilter_close').click();
-            $('.changetextupdate').text('Submit')
+            $('.changetextupdate').text('Submit');
         }, 1500);
     }
-    $(document).on("keyup","#kt_tagify_4",function(){
-        staffingPartnersRegister('load');
-    });
-    $(document).on("keyup","#kt_tagify_5",function(){
-        recommendedAssignList(1,'');
-    });
+
     function filtersdatathree() {
-        recommendedAssignList(1,'');
+        recommendedAssignList(1, '');
     }
-    $(document).off('click', '.assigned_tab').on('click', '.assigned_tab', function() {
-        recommendedAssignList(1,'');
+
+    $(document).on('click', '#paginationAssignListagency .pagi-page, #paginationAssignListagency .pagi-arrow', function(e) {
+        e.preventDefault();
+        const page = $(this).attr('data-page') || $(this).data('page');
+        if (!page || $(this).hasClass('disabled') || $(this).hasClass('pagi-disabled') || $(this).hasClass('pagi-active') || $(this).hasClass('pagi-active-disabled')) return;
+
+        $(this).addClass('disabled');
+        recommendedAssignList(page).then(() => {
+            $('#paginationAssignListagency .pagi-page, #paginationAssignListagency .pagi-arrow').removeClass('disabled');
+        }).catch(() => {
+            $('#paginationAssignListagency .pagi-page, #paginationAssignListagency .pagi-arrow').removeClass('disabled');
+        });
     });
-
-     $(document).on('click', '#paginationAssignListagency .page-link', function(e) {
-            e.preventDefault();
-
-            const page = $(this).data('page');
-            if (!page || $(this).hasClass('disabled')) return;
-
-            // Disable the clicked pagination link
-            $(this).addClass('disabled');
-
-            // Fetch data
-            recommendedAssignList(page, $('#search').val()).then(() => {
-                // Re-enable the links after successful data fetch
-                $('#paginationAssignListagency .page-link').removeClass('disabled');
-            }).catch(() => {
-                // Re-enable the links even if there's an error
-                $('#paginationAssignListagency .page-link').removeClass('disabled');
-            });
-    });
-
 
     function recommendedAssignList(page = 1, search = '') {
         if (page === 'load' || !page) { page = 1; }
 
         var jobid = $('#current_job_id').val();
-        var hiringtype = '';//$('#hiringtype5').val();
-        var country = '';//$('#country5').val();
+        var hiringtype = '';
+        var country = '';
         var cus_search = $('#kt_tagify_5').val();
 
-            return $.ajax({
-                url: `{!! route('service_company.jobs.recommendedAssignList') !!}?page=${page}`,
-                type: 'GET',
-                data: {
-                    jobid : jobid,
-                    hiringtype : hiringtype,
-                    country : country,
-                    cus_search : cus_search
-                },
-                success: function(response) {
-                    $('.loader_search').css({ display: 'none' });
-                    $('.page-loader').css('display', 'none');
-                    $('#allAssignListagency').html(response.html);
-                    $('#assignedTotal').html('('+response.total+')');
-                    $('#paginationAssignListagency').html(response.pagination);
-                }
-            });
+        var jqXHR = $.ajax({
+            url: `{!! route('service_company.jobs.recommendedAssignList') !!}?page=${page}`,
+            type: 'GET',
+            data: {
+                page : page,
+                jobid : jobid,
+                hiringtype : hiringtype,
+                country : country,
+                cus_search : cus_search
+            },
+            success: function(response) {
+                $('.loader_search').css({ display: 'none' });
+                $('.page-loader').css('display', 'none');
+                $('#allAssignListagency').html(response.html);
+                $('#assignedTotal').html('('+response.total+')');
+                $('#paginationAssignListagency').html(response.pagination);
+            },
+            complete: function() {
+                AgencyMarketplaceTabManager.clearRequest('assigned');
+            }
+        });
+        AgencyMarketplaceTabManager.registerRequest('assigned', jqXHR);
+        return jqXHR;
     }
 
     function filtersdatatwo() {
-        staffingPartnersRegister('load');
+        staffingPartnersRegister(1, '');
     }
-    $(document).off('click', '.register_tab').on('click', '.register_tab', function() {
-        staffingPartnersRegister('load');
-    });
-    
-    $(document).on('click', '#paginationregisteragency .page-link', function(e) {
-            e.preventDefault();
 
-            const page = $(this).data('page');
-            if (!page || $(this).hasClass('disabled')) return;
+    $(document).on('click', '#paginationregisteragency .pagi-page, #paginationregisteragency .pagi-arrow', function(e) {
+        e.preventDefault();
+        const page = $(this).attr('data-page') || $(this).data('page');
+        if (!page || $(this).hasClass('disabled') || $(this).hasClass('pagi-disabled') || $(this).hasClass('pagi-active') || $(this).hasClass('pagi-active-disabled')) return;
 
-            // Disable the clicked pagination link
-            $(this).addClass('disabled');
-
-            // Fetch data
-            staffingPartnersRegister(page, $('#search').val()).then(() => {
-                // Re-enable the links after successful data fetch
-                $('#paginationregisteragency .page-link').removeClass('disabled');
-            }).catch(() => {
-                // Re-enable the links even if there's an error
-                $('#paginationregisteragency .page-link').removeClass('disabled');
-            });
+        $(this).addClass('disabled');
+        staffingPartnersRegister(page).then(() => {
+            $('#paginationregisteragency .pagi-page, #paginationregisteragency .pagi-arrow').removeClass('disabled');
+        }).catch(() => {
+            $('#paginationregisteragency .pagi-page, #paginationregisteragency .pagi-arrow').removeClass('disabled');
+        });
     });
 
     function staffingPartnersRegister(page = 1, search = '') {
         if (page === 'load' || !page) { page = 1; }
 
-        if($('#kt_tagify_4').val()!=''){
-                $('.loader_search').css({ display: 'block' });
-        }else{
-                $('.page-loader').css('display', 'flex');
+        if ($('#kt_tagify_4').val() !== '') {
+            $('.loader_search').css({ display: 'block' });
+        } else {
+            $('.loader_search').css({ display: 'block' });
         }
+
         var jobid = $('#current_job_id').val();
         var hiringtype = $('#hiringtype4').val();
         var country = $('#country4').val();
         var cus_search = $('#kt_tagify_4').val();
-            return $.ajax({
-                url: `{!! route('service_company.jobs.staffingPartnersRegister') !!}?page=${page}`,
-                type: 'GET',
-                data: {
-                    jobid : jobid,
-                    hiringtype : hiringtype,
-                    country : country,
-                    cus_search : cus_search
-                },
-                success: function(response) {
-                    $('.loader_search').css({ display: 'none' });
-                    $('.page-loader').css('display', 'none');
-                    $('#allregisteragency').html(response.html);
-                    $('#registeredTotal').html('('+response.total+')');
-                    $('#paginationregisteragency').html(response.pagination);
-                }
-            });
+
+        var jqXHR = $.ajax({
+            url: `{!! route('service_company.jobs.staffingPartnersRegister') !!}?page=${page}`,
+            type: 'GET',
+            data: {
+                page : page,
+                jobid : jobid,
+                hiringtype : hiringtype,
+                country : country,
+                cus_search : cus_search
+            },
+            success: function(response) {
+                $('.loader_search').css({ display: 'none' });
+                $('.page-loader').css('display', 'none');
+                $('#allregisteragency').html(response.html);
+                $('#registeredTotal').html('('+response.total+')');
+                $('#paginationregisteragency').html(response.pagination);
+            },
+            complete: function() {
+                AgencyMarketplaceTabManager.clearRequest('registered');
+            }
+        });
+        AgencyMarketplaceTabManager.registerRequest('registered', jqXHR);
+        return jqXHR;
     }
            
 
