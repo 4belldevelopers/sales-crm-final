@@ -5312,7 +5312,7 @@ async function buildVectorHighlightedPdfBlob(pdfBlob){
         var end=start+match[0].length;
         runs.runs.forEach(function(run){
           if(run.end<=start || run.start>=end) return;
-          var rect=rsTextItemRect(run.item,viewport);
+          var rect=rsMatchedTextItemRect(run,start,end,viewport);
           if(!rect || rect.w<1 || rect.h<1) return;
           libPage.drawRectangle({
             x:rect.x,
@@ -5426,6 +5426,25 @@ function rsTextItemRect(item,viewport){
   var w=Math.max(Math.abs((item.width||0)*viewport.scale),2);
   return {x:tx[4],y:tx[5]-h,w:w,h:h};
 }
+function rsMatchedTextItemRect(run,matchStart,matchEnd,viewport){
+  /* Purpose: highlight only the matched keyword substring instead of the full PDF text item/cell. */
+  if(!run || !run.item) return null;
+  var rect=rsTextItemRect(run.item,viewport);
+  var raw=String(run.item.str || '');
+  if(!rect || !raw.length) return rect;
+  var localStart=Math.max(0,Math.min(raw.length,matchStart-run.start));
+  var localEnd=Math.max(localStart,Math.min(raw.length,matchEnd-run.start));
+  if(localEnd<=localStart) return null;
+  var startRatio=localStart/raw.length;
+  var endRatio=localEnd/raw.length;
+  var pad=Math.min(1.5,rect.w*0.02);
+  return {
+    x:rect.x+(rect.w*startRatio)-pad,
+    y:rect.y,
+    w:Math.max(2,(rect.w*(endRatio-startRatio))+(pad*2)),
+    h:rect.h
+  };
+}
 function rsPageTextRuns(textContent){
   var text='';
   var runs=[];
@@ -5451,7 +5470,7 @@ function rsDrawKeywordHitsFromTextItems(ctx,textContent,viewport,keywordRe){
     var end=start+match[0].length;
     page.runs.forEach(function(run){
       if(run.end<=start || run.start>=end) return;
-      var rect=rsTextItemRect(run.item,viewport);
+      var rect=rsMatchedTextItemRect(run,start,end,viewport);
       if(!rect) return;
       ctx.fillRect(rect.x,rect.y,rect.w,Math.max(rect.h,6));
       count++;
