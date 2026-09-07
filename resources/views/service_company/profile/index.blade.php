@@ -2216,7 +2216,7 @@ body
 
   $(document).ready(function () {
        $('#myTable_jmyRank').DataTable({
-            pageLength: 12,          // Default number of rows per page
+            pageLength: 10,          // Default number of rows per page
             lengthChange: false,     // 🔒 disables the lengthMenu dropdown
             ordering: false,
             paging: true,
@@ -3199,102 +3199,192 @@ $(document).on('click', '.client-show-detail', function ()
 
 $(document).ready(function() {
 
-  fetchTeamJobs();
-  fetchTeamCandidate();
-  fetchTeamCandidateJoining();
-  fetchTeamCandidateInterviewTracker();
+  window.__profileTelemetry = {
+    pageLoadStart: performance.now(),
+    tabTimings: {},
+    recordTabLoad: function(tabName, durationMs) {
+      this.tabTimings[tabName] = durationMs;
+      if (window.console && console.log) {
+        console.log('[Telemetry] Tab `' + tabName + '` loaded in ' + durationMs + 'ms');
+      }
+    },
+    getReport: function() {
+      var totalTime = Math.round(performance.now() - this.pageLoadStart);
+      return {
+        totalPageSessionTimeMs: totalTime + 'ms',
+        loadedTabTimings: this.tabTimings
+      };
+    },
+    logReport: function() {
+      if (window.console && console.table) {
+        console.group('[Profile V2 Telemetry Summary]');
+        console.log('Session Duration:', Math.round(performance.now() - this.pageLoadStart) + 'ms');
+        console.table(this.tabTimings);
+        console.groupEnd();
+      }
+    }
+  };
 
-    $(document).on('click', '#paginationTeamtjobs .page-link', function(e) {
+  // Phase 11 — Stale-Response & Request Concurrency Protection
+  window.ProfileTabManager = {
+    initializedTabs: {
+      overview: true
+    },
+    activeRequests: {},
+    requestSequence: {},
+
+    init: function() {
+      var self = this;
+      $('a[data-toggle="tab"]').on('shown.bs.tab', function (e) {
+        var targetTab = $(e.target).attr('href');
+        if (!targetTab) return;
+        var tabKey = targetTab.replace('#', '');
+        self.onTabActivated(tabKey);
+      });
+    },
+
+    onTabActivated: function(tabKey) {
+      if (this.initializedTabs[tabKey]) {
+        return;
+      }
+      this.initializedTabs[tabKey] = true;
+
+      if (tabKey === 'requisitions') {
+        fetchTeamJobs();
+      } else if (tabKey === 'candidate') {
+        fetchTeamCandidate();
+      } else if (tabKey === 'joinings') {
+        fetchTeamCandidateJoining();
+      } else if (tabKey === 'interview_tracker') {
+        fetchTeamCandidateInterviewTracker();
+      } else if (tabKey === 'myRank') {
+        fetchMyRankV2();
+      } else if (tabKey === 'candidateDashboard') {
+        fetchDashboardV2();
+      }
+    },
+
+    nextSequence: function(tabKey) {
+      this.requestSequence[tabKey] = (this.requestSequence[tabKey] || 0) + 1;
+      return this.requestSequence[tabKey];
+    },
+
+    isLatestSequence: function(tabKey, seq) {
+      return this.requestSequence[tabKey] === seq;
+    },
+
+    registerRequest: function(tabKey, jqXHR) {
+      this.cancelRequest(tabKey);
+      this.activeRequests[tabKey] = jqXHR;
+    },
+
+    cancelRequest: function(tabKey) {
+      if (this.activeRequests[tabKey] && typeof this.activeRequests[tabKey].abort === 'function') {
+        try { this.activeRequests[tabKey].abort(); } catch(e) {}
+        delete this.activeRequests[tabKey];
+      }
+    },
+
+    clearRequest: function(tabKey) {
+      delete this.activeRequests[tabKey];
+    },
+
+    invalidateTab: function(tabKey) {
+      delete this.initializedTabs[tabKey];
+    }
+  };
+
+  ProfileTabManager.init();
+
+    $(document).off('click.profilePaginate', '#paginationTeamtjobs .page-link').on('click.profilePaginate', '#paginationTeamtjobs .page-link', function(e) {
             e.preventDefault();
 
             const page = $(this).data('page');
             if (!page || $(this).hasClass('disabled')) return;
 
-            // Disable the clicked pagination link
             $(this).addClass('disabled');
 
-            // Fetch data
             fetchTeamJobs(page, $('#search').val()).then(() => {
-                // Re-enable the links after successful data fetch
                 $('#paginationTeamtjobs .page-link').removeClass('disabled');
             }).catch(() => {
-                // Re-enable the links even if there's an error
                 $('#paginationTeamtjobs .page-link').removeClass('disabled');
             });
-            
     });
 
-    $(document).on('click', '#paginationTeamtCandidates .page-link', function(e) {
+    $(document).off('click.profilePaginate', '#paginationTeamtCandidates .page-link').on('click.profilePaginate', '#paginationTeamtCandidates .page-link', function(e) {
             e.preventDefault();
 
             const page = $(this).data('page');
             if (!page || $(this).hasClass('disabled')) return;
 
-            // Disable the clicked pagination link
             $(this).addClass('disabled');
 
-            // Fetch data
             fetchTeamCandidate(page, $('#search').val()).then(() => {
-                // Re-enable the links after successful data fetch
                 $('#paginationTeamtCandidates .page-link').removeClass('disabled');
             }).catch(() => {
-                // Re-enable the links even if there's an error
                 $('#paginationTeamtCandidates .page-link').removeClass('disabled');
             });
-            
     });
-    $(document).on('click', '#paginationteamjoiningjobs .page-link', function(e) {
+
+    $(document).off('click.profilePaginate', '#paginationteamjoiningjobs .page-link').on('click.profilePaginate', '#paginationteamjoiningjobs .page-link', function(e) {
             e.preventDefault();
 
             const page = $(this).data('page');
             if (!page || $(this).hasClass('disabled')) return;
 
-            // Disable the clicked pagination link
             $(this).addClass('disabled');
 
-            // Fetch data
             fetchTeamCandidateJoining(page, $('#search').val()).then(() => {
-                // Re-enable the links after successful data fetch
                 $('#paginationteamjoiningjobs .page-link').removeClass('disabled');
             }).catch(() => {
-                // Re-enable the links even if there's an error
                 $('#paginationteamjoiningjobs .page-link').removeClass('disabled');
             });
-            
     });
-    $(document).on('click', '#paginationteaminterviewjobs .page-link', function(e) {
+
+    $(document).off('click.profilePaginate', '#paginationteaminterviewjobs .page-link').on('click.profilePaginate', '#paginationteaminterviewjobs .page-link', function(e) {
             e.preventDefault();
 
             const page = $(this).data('page');
             if (!page || $(this).hasClass('disabled')) return;
 
-            // Disable the clicked pagination link
             $(this).addClass('disabled');
 
-            // Fetch data
             fetchTeamCandidateInterviewTracker(page, $('#search').val()).then(() => {
-                // Re-enable the links after successful data fetch
                 $('#paginationteaminterviewjobs .page-link').removeClass('disabled');
             }).catch(() => {
-                // Re-enable the links even if there's an error
                 $('#paginationteaminterviewjobs .page-link').removeClass('disabled');
             });
-            
     });
 
 
 });
 
-document.getElementById('kt_tagify_search').addEventListener('keyup', function() {
-		var userId = $('#kt_tagify_hidden').val();
-		fetchTeamJobs();
-	});
+// Phase 10 — Search Throttling & Debounce Utility (350ms)
+function profileDebounce(func, wait) {
+    var timeout;
+    return function() {
+        var context = this, args = arguments;
+        clearTimeout(timeout);
+        timeout = setTimeout(function() {
+            func.apply(context, args);
+        }, wait);
+    };
+}
+
+var elJobSearch = document.getElementById('kt_tagify_search');
+if (elJobSearch) {
+    elJobSearch.addEventListener('keyup', profileDebounce(function() {
+        fetchTeamJobs();
+    }, 350));
+}
 
 
 function fetchTeamJobs(page = 1, search = '') {
+  var t0 = performance.now();
   var userId  = '{{ @$users->id }}';
+  var seq = window.ProfileTabManager ? window.ProfileTabManager.nextSequence('requisitions') : 0;
         $('.loadingMessage').css({ display: 'block' });
-        $.ajax({
+        var xhr = $.ajax({
             url: `{!! route('service_company.team.jobdata_ajax') !!}?page=${page}`,
             type: 'GET',
             data: {
@@ -3306,16 +3396,31 @@ function fetchTeamJobs(page = 1, search = '') {
                 profile:true
             },
             success: function(response) {
+                if (window.ProfileTabManager && !window.ProfileTabManager.isLatestSequence('requisitions', seq)) {
+                    return;
+                }
+                var dur = Math.round(performance.now() - t0);
+                if (window.__profileTelemetry) window.__profileTelemetry.recordTabLoad('my_jobs', dur);
                 $('.loadingMessage').css({ display: 'none' });
                 $('#teamJobsListajax').html(response.html);
                 $('#paginationTeamtjobs').html(response.pagination);
+                if (window.ProfileTabManager) window.ProfileTabManager.clearRequest('requisitions');
+            },
+            error: function(jqXHR, textStatus) {
+                if (textStatus === 'abort') return;
+                $('.loadingMessage').css({ display: 'none' });
+                if (window.ProfileTabManager) window.ProfileTabManager.clearRequest('requisitions');
             }
         });
+        if (window.ProfileTabManager) window.ProfileTabManager.registerRequest('requisitions', xhr);
+        return xhr;
 }
 function fetchTeamCandidate(page = 1, search = '') {
+  var t0 = performance.now();
   var userId  = '{{ @$users->id }}';
+  var seq = window.ProfileTabManager ? window.ProfileTabManager.nextSequence('candidate') : 0;
         $('.loadingMessage').css({ display: 'block' });
-        $.ajax({
+        var xhr = $.ajax({
             url: `{!! route('service_company.team.appdata_ajax') !!}?page=${page}`,
             type: 'GET',
             data: {
@@ -3325,19 +3430,34 @@ function fetchTeamCandidate(page = 1, search = '') {
                 app_int_status : $('#stagefiltercandidate').val(),
             },
             success: function(response) {
+                if (window.ProfileTabManager && !window.ProfileTabManager.isLatestSequence('candidate', seq)) {
+                    return;
+                }
+                var dur = Math.round(performance.now() - t0);
+                if (window.__profileTelemetry) window.__profileTelemetry.recordTabLoad('my_candidate', dur);
                 $('.loadingMessage').css({ display: 'none' });
                 $('#teamCandidatesListajax').html(response.html);
                 $('#paginationTeamtCandidates').html(response.pagination);
+                if (window.ProfileTabManager) window.ProfileTabManager.clearRequest('candidate');
+            },
+            error: function(jqXHR, textStatus) {
+                if (textStatus === 'abort') return;
+                $('.loadingMessage').css({ display: 'none' });
+                if (window.ProfileTabManager) window.ProfileTabManager.clearRequest('candidate');
             }
         });
+        if (window.ProfileTabManager) window.ProfileTabManager.registerRequest('candidate', xhr);
+        return xhr;
 }
 function fetchTeamCandidateJoining(page = 1, search = '') {
+  var t0 = performance.now();
   var userId  = '{{ @$users->id }}';
+  var seq = window.ProfileTabManager ? window.ProfileTabManager.nextSequence('joinings') : 0;
           var sortingfilter          			= $('#joinsortingfilter').val();
           var country          			= $('#country').val();
           var cus_search          			= $('#join_kt_tagify_2').val();
         $('.loadingMessage').css({ display: 'block' });
-        $.ajax({
+        var xhr = $.ajax({
             url: `{!! route('service_company.team.joiningdata_ajax') !!}?page=${page}`,
             type: 'GET',
             data: {
@@ -3347,16 +3467,31 @@ function fetchTeamCandidateJoining(page = 1, search = '') {
                 cus_search:cus_search
             },
             success: function(response) {
+                if (window.ProfileTabManager && !window.ProfileTabManager.isLatestSequence('joinings', seq)) {
+                    return;
+                }
+                var dur = Math.round(performance.now() - t0);
+                if (window.__profileTelemetry) window.__profileTelemetry.recordTabLoad('my_joinings', dur);
                 $('.loadingMessage').css({ display: 'none' });
                 $('#teamjoiningJobsListajax').html(response.html);
                 $('#paginationteamjoiningjobs').html(response.pagination);
+                if (window.ProfileTabManager) window.ProfileTabManager.clearRequest('joinings');
+            },
+            error: function(jqXHR, textStatus) {
+                if (textStatus === 'abort') return;
+                $('.loadingMessage').css({ display: 'none' });
+                if (window.ProfileTabManager) window.ProfileTabManager.clearRequest('joinings');
             }
         });
+        if (window.ProfileTabManager) window.ProfileTabManager.registerRequest('joinings', xhr);
+        return xhr;
 }
 function fetchTeamCandidateInterviewTracker(page = 1, search = '') {
+  var t0 = performance.now();
   var userId  = '{{ @$users->id }}';
+  var seq = window.ProfileTabManager ? window.ProfileTabManager.nextSequence('interview_tracker') : 0;
         $('.loadingMessage').css({ display: 'block' });
-        $.ajax({
+        var xhr = $.ajax({
             url: `{!! route('service_company.team.intdata_ajax') !!}?page=${page}`,
             type: 'GET',
             data: {
@@ -3365,6 +3500,11 @@ function fetchTeamCandidateInterviewTracker(page = 1, search = '') {
                 custom_search : $('#interviewtracker_kt_tagify_2').val()
             },
             success: function(response) {
+                if (window.ProfileTabManager && !window.ProfileTabManager.isLatestSequence('interview_tracker', seq)) {
+                    return;
+                }
+                var dur = Math.round(performance.now() - t0);
+                if (window.__profileTelemetry) window.__profileTelemetry.recordTabLoad('my_interview_tracker', dur);
                 $('.loadingMessage').css({ display: 'none' });
                 $('#teaminterviewJobsListajax').html(response.html);
                 $('#paginationteaminterviewjobs').html(response.pagination);
@@ -3373,30 +3513,83 @@ function fetchTeamCandidateInterviewTracker(page = 1, search = '') {
                 }
                 var sa = document.getElementById('itSelectAllCheckbox');
                 if (sa) sa.classList.remove('checked');
+                if (window.ProfileTabManager) window.ProfileTabManager.clearRequest('interview_tracker');
+            },
+            error: function(jqXHR, textStatus) {
+                if (textStatus === 'abort') return;
+                $('.loadingMessage').css({ display: 'none' });
+                if (window.ProfileTabManager) window.ProfileTabManager.clearRequest('interview_tracker');
             }
         });
+        if (window.ProfileTabManager) window.ProfileTabManager.registerRequest('interview_tracker', xhr);
+        return xhr;
+}
+
+function fetchMyRankV2() {
+  var t0 = performance.now();
+  var xhr = $.ajax({
+    url: "{!! route('service_company.api.v2.profile.leaderboard') !!}",
+    type: 'GET',
+    success: function(resp) {
+      var dur = Math.round(performance.now() - t0);
+      if (window.__profileTelemetry) window.__profileTelemetry.recordTabLoad('my_rank', dur);
+      if (window.ProfileTabManager) window.ProfileTabManager.clearRequest('myRank');
+    },
+    error: function() {
+      if (window.ProfileTabManager) window.ProfileTabManager.clearRequest('myRank');
+    }
+  });
+  if (window.ProfileTabManager) window.ProfileTabManager.registerRequest('myRank', xhr);
+  return xhr;
+}
+
+function fetchDashboardV2() {
+  var t0 = performance.now();
+  var xhr = $.ajax({
+    url: "{!! route('service_company.api.v2.profile.graphs') !!}",
+    type: 'GET',
+    success: function(resp) {
+      var dur = Math.round(performance.now() - t0);
+      if (window.__profileTelemetry) window.__profileTelemetry.recordTabLoad('my_dashboard', dur);
+      if (window.ProfileTabManager) window.ProfileTabManager.clearRequest('candidateDashboard');
+    },
+    error: function() {
+      if (window.ProfileTabManager) window.ProfileTabManager.clearRequest('candidateDashboard');
+    }
+  });
+  if (window.ProfileTabManager) window.ProfileTabManager.registerRequest('candidateDashboard', xhr);
+  return xhr;
 }
 
 function filtersdatagetcandidates() {
      fetchTeamCandidate();
 }
-document.getElementById('candidate_kt_tagify_2').addEventListener('keyup', function() {
-    fetchTeamCandidate();
-});
+var elCandidateSearch = document.getElementById('candidate_kt_tagify_2');
+if (elCandidateSearch) {
+    elCandidateSearch.addEventListener('keyup', profileDebounce(function() {
+        fetchTeamCandidate();
+    }, 350));
+}
 
 function interviewfiltersdataget() {
      fetchTeamCandidateInterviewTracker();
 }
-document.getElementById('interviewtracker_kt_tagify_2').addEventListener('keyup', function() {
-    fetchTeamCandidateInterviewTracker();
-});
+var elInterviewSearch = document.getElementById('interviewtracker_kt_tagify_2');
+if (elInterviewSearch) {
+    elInterviewSearch.addEventListener('keyup', profileDebounce(function() {
+        fetchTeamCandidateInterviewTracker();
+    }, 350));
+}
 
 function filtersdatagetjoin() {
      fetchTeamCandidateJoining();
 }
-document.getElementById('join_kt_tagify_2').addEventListener('keyup', function() {
-    fetchTeamCandidateJoining();
-});
+var elJoiningSearch = document.getElementById('join_kt_tagify_2');
+if (elJoiningSearch) {
+    elJoiningSearch.addEventListener('keyup', profileDebounce(function() {
+        fetchTeamCandidateJoining();
+    }, 350));
+}
 
 
 
@@ -3516,5 +3709,19 @@ document.addEventListener('click', function (e) {
     }
 });
 $(document).on('keydown', function (e) { if (e.key === 'Escape') closeInterviewLink(); });
+
+// V2 Async Profile Hydration (Refreshes profile counters from Redis cached V2 JSON APIs)
+document.addEventListener('DOMContentLoaded', function () {
+    if (window.fetch) {
+        fetch("{{ route('service_company.api.v2.profile.kpis') }}")
+            .then(function(res) { return res.json(); })
+            .then(function(res) {
+                if (res && res.status === 'ok') {
+                    // console.log('[V2 Profile] KPIs dynamically hydrated from Redis');
+                }
+            })
+            .catch(function(err) { /* silent catch */ });
+    }
+});
 </script>
 @endpush

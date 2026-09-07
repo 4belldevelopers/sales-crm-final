@@ -226,7 +226,7 @@ $userPermissions = array('add_team','view_team');
 											"bLengthChange" :	true,
 											oLanguage		:	{ sLengthMenu: "_MENU_", },   
    											"lengthMenu"	:	[[10, 25, 50, 100, -1], [10, 25, 50, 100, "All"]], 
-   											"pageLength"	:	25,   	
+   											"pageLength"	:	10,   	
 											ajax			: 	{'url' : '{!! route('superadmin.team.data') !!}', "data": function ( d ) {d.search = $('#inputSearch').val()} },
 											"columnDefs"	: 	[
 																	{ "width": "3%", "targets": 0 },
@@ -274,9 +274,8 @@ $userPermissions = array('add_team','view_team');
 														responsive  	:	true,
 														processing  	:	true,
 														serverSide  	:	true,
-														destroy   		:	true,
-														ordering		:	false, //disable ordering   			
-														"bLengthChange" :	false, //thought this line could hide the LengthMenu
+														"bLengthChange" :	true,
+														"lengthMenu"    :   [[10, 25, 50, 100], [10, 25, 50, 100]],
 														sDom			:	'lrtip',
 														oLanguage 		:	{sLengthMenu: "_MENU_",},   
 														ajax			:	{'url' : '{!! route('superadmin.team.jobdata') !!}?userId='+userId, "data": function ( d ) { d.search = $('#inputSearch').val(),
@@ -341,10 +340,8 @@ $userPermissions = array('add_team','view_team');
       								
 									  responsive     		:	true, 
 									  processing      		:	true,
-									  ordering				:	false, //disable ordering
-									  destroy       		:	true,   
-									  stateSave     		:	true,
-									  "bLengthChange"   	:	false,   
+									  "bLengthChange"   	:	true,   
+									  "lengthMenu"          :   [[10, 25, 50, 100], [10, 25, 50, 100]],
 									  sDom					:	'lrtip',       
 										ajax					:	'{!! route('superadmin.team.appdata') !!}?userId='+userId,             
 									  "initComplete"		:	function( settings, json){ 
@@ -397,9 +394,8 @@ $userPermissions = array('add_team','view_team');
 													responsive  	:	true,
 													processing  	:	true,
 													serverSide  	:	true,
-													destroy   		:	true,
-													ordering		:	false, //disable ordering
-   													"bLengthChange" :	false, //thought this line could hide the LengthMenu
+   													"bLengthChange" :	true,
+   													"lengthMenu"    :   [[10, 25, 50, 100], [10, 25, 50, 100]],
 		   											sDom			:	'lrtip',
 		   											oLanguage 		:	{sLengthMenu: "_MENU_",},
            											ajax			:	'{!! route('superadmin.team.joiningdata') !!}?userId='+userId,       
@@ -421,9 +417,8 @@ $userPermissions = array('add_team','view_team');
 													responsive  	:	true,
 													processing  	:	true,
 													serverSide  	:	true,
-													destroy   		:	true,
-													ordering		:	false, //disable ordering
-													"bLengthChange" :	false, //thought this line could hide the LengthMenu
+													"bLengthChange" :	true,
+													"lengthMenu"    :   [[10, 25, 50, 100], [10, 25, 50, 100]],
 													sDom			:	'lrtip',
 													oLanguage 		:	{sLengthMenu: "_MENU_",},
 													ajax    		:	'{!! route('superadmin.team.intdata') !!}?userId=' + userId, 

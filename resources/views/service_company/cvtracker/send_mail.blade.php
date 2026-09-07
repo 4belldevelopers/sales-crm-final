@@ -110,7 +110,7 @@
     </style>
 
     <div class="mm-wrap">
-    <form id="form1">
+    <form id="form1" onsubmit="return false;">
       <div class="mm-form-body">
 
         {{-- Hidden fields --}}
@@ -128,7 +128,7 @@
           </div>
           <div class="mm-field-col" style="display:flex;gap:12px;align-items:center;">
             <select class="mm-select" name="from_email_mass_mail" id="from_email_mass_mail" style="flex:1;min-width:0;">
-              <option value="{{ $userdata->email }}">{{ $userdata->name ?? $userdata->email }} &lt;{{ $userdata->email }}&gt;</option>
+              <option value="notify@jeroworks.com">{{ $userdata->name ?? $userdata->email }} &lt;notify@jeroworks.com&gt;</option>
             </select>
             <div style="display:flex;align-items:center;gap:6px;flex-shrink:0;font-size:12.5px;font-weight:600;color:#374151;">
               <span class="mm-label-icon mm-ic-purple" style="width:24px;height:24px;border-radius:6px;display:inline-flex;align-items:center;justify-content:center;">
@@ -496,108 +496,110 @@
     });
 
 
-    document.getElementById("btnSubmitSendMail").addEventListener("click", () => {
+    /* Intent: Scoped event handler binding, Enter-key submission prevention, & submission lock state to prevent duplicate email sends from repeated drawer loads or rapid clicks */
+    (function() {
+        var isSendingEmail = false;
 
+        $('#form1').off('submit keydown keypress').on('submit keydown keypress', function(e) {
+            if (e.type === 'submit' || e.which === 13 || e.keyCode === 13) {
+                e.preventDefault();
+                return false;
+            }
+        });
 
+        $('#form1').off('click', '#btnSubmitSendMail').on('click', '#btnSubmitSendMail', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
 
-        const swalWithBootstrapButtons = Swal.mixin({
-            customClass: {
-                confirmButton: 'btn btn-success',
-                cancelButton: 'btn btn-danger'
-            },
-            buttonsStyling: false
-        })
-        
-           
+            var $btn = $(this);
 
-                var id = 1;
-                var url = "{{ route('service_company.cvtracker.send_mail_for_candidate', ':id') }}";
-                url = url.replace(':id', id);
-                var baseurl = "{{ asset('assets/images/Loading2.gif') }}";
-                var token = "{{ csrf_token() }}";
+            if (isSendingEmail || $btn.data('sending') === true || $btn.is(':disabled')) {
+                return false;
+            }
 
-                var jqueryarray = <?php echo json_encode($applicationData); ?>;
+            isSendingEmail = true;
+            $btn.data('sending', true);
+            $btn.prop('disabled', true).addClass('disabled');
 
-                var sid = jqueryarray[0]['id'];
+            const swalWithBootstrapButtons = Swal.mixin({
+                customClass: {
+                    confirmButton: 'btn btn-success',
+                    cancelButton: 'btn btn-danger'
+                },
+                buttonsStyling: false
+            });
 
-                var arr = [sid];
-                // 	$('.chk_list_item:checked').each(function () {
-                // 			arr.push($(this).val());
-                // 	});
-                // 	alert(sid);
-                var template = $('#templatemassmail').val();
-                var from_email = $('#from_email_mass_mail').val();
-                var to_email = $('#to_email_mass_mail').val();
-                var cc_email = $('#sendmail_panel').val();
-                var subject = $('#subject_mass_mail').val();
-                var jobid = $('#jobid').val();
-                var applicationDataId = $('#applicationDataId').val();
-                var attached_cv = 0;
-                var editor1mass = CKEDITOR.instances.editor1mass.getData(); //$('#editor1mass').val();
+            var id = 1;
+            var url = "{{ route('service_company.cvtracker.send_mail_for_candidate', ':id') }}";
+            url = url.replace(':id', id);
+            var token = "{{ csrf_token() }}";
 
-                // alert(editor1mass);
+            var jqueryarray = <?php echo json_encode($applicationData); ?>;
+            var sid = jqueryarray[0]['id'];
+            var arr = [sid];
 
-                // $('#attached_cv:checkbox:checked').each(function(){
-                // 	attached_cv	=	1;
-                // });
+            var template = $('#templatemassmail').val();
+            var from_email = $('#from_email_mass_mail').val();
+            var to_email = $('#to_email_mass_mail').val();
+            var cc_email = $('#sendmail_panel').val();
+            var subject = $('#subject_mass_mail').val();
+            var jobid = $('#jobid').val();
+            var applicationDataId = $('#applicationDataId').val();
+            var attached_cv = 0;
+            var editor1mass = (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances && CKEDITOR.instances.editor1mass) ? CKEDITOR.instances.editor1mass.getData() : $('#editor1mass').val();
 
-                $('.indicator-label').hide();
-                $('.indicator-progress').show();
+            $('.indicator-label', $btn).hide();
+            $('.indicator-progress', $btn).show();
 
-                $.ajax({
-                    type: 'POST',
-                    url: url,
-                    data: {
-                        '_token': token,
-                        '_method': 'POST',
-                        'template': template,
-                        'from_email': from_email,
-                        'to_email': to_email,
-                        'cc_email': cc_email,
-                        'subject': subject,
-                        'attached_cv': attached_cv,
-                        'editor1': editor1mass,
-                        'jobid': jobid,
-                        'applicationDataId': applicationDataId,
-                        'arr': arr
-                    },
-                    beforeSend: function() {
-                        // $('#main_container').html('<img src="'+baseurl+'" height="35px" width="100%">');
-                    },
-                    success: function(response) {
-                        $('.indicator-label').show();
-                        $('.indicator-progress').hide();
-
-                        if (response.status == 'coinCheck') {
-
-                            Swal.fire("Failed", ` ${response.message}`, "warning").then(
-                                function() {
-                                    $(".btn-active-light-danger").click();
-                                });
-                            return false;
-                        }
-
-                        if (response.status == "success") {
-
-                            //   $('#main_container').html(response.view);
-                            swalWithBootstrapButtons.fire(
-                                'Success!',
-                                'Email has been sent.',
-                                'success'
-                            )
-                            $(".btn-active-light-danger").click();
-                            // location.reload();
-
-                        }
-
-
+            $.ajax({
+                type: 'POST',
+                url: url,
+                data: {
+                    '_token': token,
+                    '_method': 'POST',
+                    'template': template,
+                    'from_email': from_email,
+                    'to_email': to_email,
+                    'cc_email': cc_email,
+                    'subject': subject,
+                    'attached_cv': attached_cv,
+                    'editor1': editor1mass,
+                    'jobid': jobid,
+                    'applicationDataId': applicationDataId,
+                    'arr': arr
+                },
+                success: function(response) {
+                    if (response.status == 'coinCheck') {
+                        Swal.fire("Failed", ` ${response.message}`, "warning").then(
+                            function() {
+                                $(".btn-active-light-danger").click();
+                            });
+                        return false;
                     }
-                });
-        
 
-
-
-    });
+                    if (response.status == "success") {
+                        swalWithBootstrapButtons.fire(
+                            'Success!',
+                            'Email has been sent.',
+                            'success'
+                        );
+                        $(".btn-active-light-danger").click();
+                    }
+                },
+                error: function(xhr, status, error) {
+                    Swal.fire("Error", "An error occurred while sending email. Please try again.", "error");
+                },
+                complete: function() {
+                    /* Intent: Restore button state only after the AJAX request completely resolves */
+                    isSendingEmail = false;
+                    $btn.data('sending', false);
+                    $btn.prop('disabled', false).removeClass('disabled');
+                    $('.indicator-label', $btn).show();
+                    $('.indicator-progress', $btn).hide();
+                }
+            });
+        });
+    })();
 
     $(document).on('click','.sendmail_select', function(e){
 

@@ -17,6 +17,11 @@ Redis/Horizon queues, Octane/FrankenPHP runtime, Reverb websockets, and multiple
 gateways. Goal: scale to **10,000 companies / 100M+ records per year** without failing.
 Full concept: [docs/PRODUCT_VISION.md](docs/PRODUCT_VISION.md).
 
+> **Persona scope (2026-08-15 directive):** **Build/audit/refactor only the four in-scope personas**
+> (Service Company, Super Admin, Admin, public Front). **Product Company and Staffing Company are
+> DORMANT — ignore them.** Do not enumerate, fix, refactor, or feature-add in those paths. Full rule:
+> [docs/PERSONA_SCOPE.md](docs/PERSONA_SCOPE.md).
+
 ## Where the code lives ⚠️
 **All work happens in this folder — `JWMaincode28June2026` (the `testing.jero.works`
 codebase)** and **only** here. **Never make changes in any other folder** (e.g.
@@ -32,6 +37,8 @@ be made inside this folder.
 4. [docs/AI_RULES.md](docs/AI_RULES.md) — hard rules
 5. [docs/GLOSSARY.md](docs/GLOSSARY.md) — domain vocabulary (what "bench", "requisition", "coins"… mean)
 6. The relevant [`.ai/tasks/*.md`](.ai/tasks/) playbook + [`.ai/summaries/*`](.ai/summaries/)
+
+> **Active slice:** [docs/V2_login/](docs/V2_login/) — login + session-lifecycle + blocking-scenarios. Audit + plan + comparison + ADR complete; `app/` code not yet landed. See [V2_login README](docs/V2_login/README.md) for entry order.
 
 ## The full knowledge base ([docs/README.md](docs/README.md) is the index)
 - **Understand the code:** ARCHITECTURE · MODULE_MAP · DB_SCHEMA · API_CONTRACTS · DATA_FLOW · DEPENDENCY_GRAPH

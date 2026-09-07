@@ -913,7 +913,7 @@ class ServiceCompanyCustomreportController extends ServiceCompanyBaseController
     public function edit($id)
     {
         abort_if(! $this->user->can('edit_skills'), 403);
-        $this->client 				= Client::find($id);
+        $this->client 				= Client::withoutGlobalScopes()->find($id);
 		$this->client_file 			= DB::table('client_file')->select('*')->where('client_id', $id)->get();
 		$this->countries 			= Country::all();
 		$this->client_location 		= DB::table('client_location')
@@ -940,7 +940,7 @@ class ServiceCompanyCustomreportController extends ServiceCompanyBaseController
 
 
 
-        $client 				= Client::find($id);
+        $client 				= Client::withoutGlobalScopes()->find($id);
 
 
 

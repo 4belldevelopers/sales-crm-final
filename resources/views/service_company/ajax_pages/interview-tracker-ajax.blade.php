@@ -9,14 +9,8 @@
     $currency = GeneralMethod::currency();
     $job_status_arr = GeneralMethod::job_status();
 
-    // Follow-up statuses for this page (one query; resilient if the column isn't migrated yet)
-    $followupMap = collect();
-    if (\Illuminate\Support\Facades\Schema::hasColumn('interview_schedules', 'followup_status')) {
-        $followupMap = DB::table('interview_schedules')
-            ->whereIn('id', collect($data)->pluck('id')->all())
-            ->get(['id', 'followup_status', 'followup_status_at'])
-            ->keyBy('id');
-    }
+    // Follow-up statuses pre-fetched from controller batch hydration
+    $followupMap = $followupMap ?? collect();
 @endphp
 
 @if (count($data) > 0)
@@ -159,16 +153,8 @@
             {{-- Job Requisitions: Title + Company + Type + JobID --}}
             <td>
                 @php
-                    $client_name = '';
-                    $client_title_name = '';
-                    $client_name_com = GeneralMethod::companyDetailsByClient($row->job_id);
-                    if (!empty($client_name_com)) {
-                        $client_title_name = $client_name_com;
-                        $client_name = ucwords(mb_substr($client_title_name, 0, 15));
-                    } else {
-                        $client_title_name = $row->client_name;
-                        $client_name = ucwords(mb_substr($client_title_name, 0, 15));
-                    }
+                    $client_title_name = $clientCompanyMap[$row->job_id] ?? ($row->client_name ?? '');
+                    $client_name = ucwords(mb_substr($client_title_name, 0, 15));
 
                     // Job type / recommendation
                     $recommendation_text = __('messages.internal_tag');
@@ -311,8 +297,8 @@
             <td>
                 @php
                     if($company_id != $row->ClientComID && $row->ClientComID != 0 && $row->ClientComID > 0){
-                        $spokperson = DB::table('job_assign')->select('users.name')->join('users', 'users.id', 'job_assign.spok_user_id')->where('job_assign.job_id', $row->jobId)->where('job_assign.company_id', $row->ClientComID)->first();
-                        $rowpostedby = (@$spokperson) ? @$spokperson->name : $row->posted_by;
+                        $spokName = $spokpersonMap->get($row->jobId . '_' . $row->ClientComID) ?? null;
+                        $rowpostedby = $spokName ? $spokName : $row->posted_by;
                         $rowpostedby = @$row->rec_candidate_assign_id ? $row->posted_by : $rowpostedby;
                     } else {
                         $rowpostedby = $row->posted_by;
@@ -374,10 +360,8 @@
             {{-- Feedback --}}
             <td>
                 @php
-                    // Latest feedback row for this interview. A row is created on EVERY submit
-                    // (attended or not), so its existence = "feedback recorded".
-                    // @ keeps this resilient before the compensation migration is run.
-                    $latestFb = DB::table('interview_feedback')->where('interview_id', $row->id)->orderByDesc('id')->first();
+                    // Latest feedback row for this interview from pre-hydrated feedbackMap
+                    $latestFb = $feedbackMap->get($row->id) ?? null;
                     $hasAnyFeedback = !empty($latestFb);
                     $attId = (int) (@$latestFb->available_status ?? 0); // 1=Attended
 
@@ -409,12 +393,12 @@
                     $attended = ($attId === 1);
                     $notAttended = ($hasAnyFeedback && $attId > 0 && $attId !== 1);
 
-                    // Permissions (unchanged)
+                    // Permissions (pre-hydrated check)
                     $canAddFeedback = true;
                     $customHtml = 'show-feedback';
                     if ($row->thirdparty_company_id == $company_id) { $customHtml = ''; $canAddFeedback = false; }
                     if ($row->to_company_id == $company_id) { $customHtml = ''; $canAddFeedback = false; }
-                    $allowChk = DB::table('job_assign')->select('users.name')->join('users', 'users.id', 'job_assign.spok_user_id')->where('job_assign.job_id', $row->jobId)->where('job_assign.spok_user_id', auth()->user()->id)->count();
+                    $allowChk = isset($userCaptainJobIds[$row->jobId]) ? 1 : 0;
                     // Anyone named as an interviewer on this schedule may add feedback too (not just the captain)
                     $isInterviewerOnRow = false;
                     $myNameChk = strtolower(trim(auth()->user()->name ?? ''));

@@ -286,11 +286,16 @@
         .wallet-tab-nav {
             list-style: none; display: flex; flex-wrap: wrap; gap: 4px; margin: 0;
             padding: 0; border-bottom: 1px solid #e4e6ef;
+            position: relative; z-index: 25;
+        }
+        .wallet-tab-nav li {
+            position: relative; z-index: 25; display: inline-block;
         }
         .wallet-tab-link {
-            display: inline-flex; align-items: center; gap: 6px; padding: 10px 14px;
-            font-size: 12px; font-weight: 600; color: #7e8299; border-bottom: 2px solid transparent;
-            text-decoration: none; cursor: pointer;
+            display: inline-flex; align-items: center; gap: 6px; padding: 12px 18px;
+            font-size: 13px; font-weight: 600; color: #7e8299; border-bottom: 3px solid transparent;
+            text-decoration: none; cursor: pointer; position: relative; z-index: 25;
+            margin-bottom: -1px; pointer-events: auto; user-select: none;
         }
         .wallet-tab-link:hover { color: #4c1d95; text-decoration: none; }
         /* Named wt-active, not active — this codebase has a pre-existing
@@ -428,110 +433,7 @@
                         </div>
 
                         <!--begin::Wallet cards-->
-                        <div class="row g-4 mb-5">
-                            <div class="col-md-6">
-                                <div class="wallet-card wallet-card-operational package-switch opra-tab-plan wallet-card-active"
-                                    data-kt-plan="operational">
-                                    <div class="d-flex align-items-start justify-content-between">
-                                        <div class="d-flex align-items-center">
-                                            <span class="wallet-card-icon"><i class="fa fa-cog"></i></span>
-                                            <div class="ms-3">
-                                                <div class="fw-bold fs-6 text-gray-900">Operational Wallet</div>
-                                                @if(!empty($current_coins_operational))
-                                                    <span class="badge badge-light-success fs-9">ACTIVE</span>
-                                                @else
-                                                    <span class="badge badge-light-danger fs-9">NO ACTIVE PLAN</span>
-                                                @endif
-                                            </div>
-                                        </div>
-                                        <span class="wallet-card-check"><i class="fa fa-check-circle"></i></span>
-                                    </div>
-                                    @if(!empty($current_coins_operational))
-                                    <div class="wallet-active-pkg-row mt-2">
-                                        <i class="fa fa-tag me-1"></i>
-                                        <span class="fw-bold">{{ $current_coins_operational[0]['title'] ?? '—' }}</span>
-                                        @if(!empty($current_coins_operational[0]['end_date']))
-                                            <span class="text-muted ms-2 fs-9">· Expires {{ date('d M Y', strtotime($current_coins_operational[0]['end_date'])) }}</span>
-                                        @endif
-                                    </div>
-                                    @endif
-                                    <div class="d-flex align-items-end justify-content-between mt-3">
-                                        <div>
-                                            <div class="wallet-card-balance">{{ number_format($remain_coins) }}</div>
-                                            <div class="wallet-card-balance-label">Coins Available</div>
-                                        </div>
-                                        <div class="wallet-ring" style="background: conic-gradient(#6d28d9 {{ $op_used_pct * 3.6 }}deg, #e4e6ef 0deg);">
-                                            <span class="wallet-ring-label"><span class="wallet-ring-pct">{{ $op_used_pct }}%</span><span class="wallet-ring-sub">Used</span></span>
-                                        </div>
-                                    </div>
-                                    <div class="row text-center wallet-card-stats">
-                                        <div class="col-4">
-                                            <div class="fw-bold fs-6">{{ number_format($op_coins_used) }}</div>
-                                            <div class="wallet-card-stat-label">Used Coins</div>
-                                        </div>
-                                        <div class="col-4">
-                                            <div class="fw-bold fs-6">{{ number_format($op_total_purchased) }}</div>
-                                            <div class="wallet-card-stat-label">Purchased</div>
-                                        </div>
-                                        <div class="col-4">
-                                            <div class="fw-bold fs-6">{{ $op_days_left }}</div>
-                                            <div class="wallet-card-stat-label">Days Validity</div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="wallet-card wallet-card-sales package-switch"
-                                    data-kt-plan="sales">
-                                    <div class="d-flex align-items-start justify-content-between">
-                                        <div class="d-flex align-items-center">
-                                            <span class="wallet-card-icon"><i class="fa fa-briefcase"></i></span>
-                                            <div class="ms-3">
-                                                <div class="fw-bold fs-6 text-gray-900">Sales Wallet</div>
-                                                @if(!empty($current_coins_sales))
-                                                    <span class="badge badge-light-success fs-9">ACTIVE</span>
-                                                @else
-                                                    <span class="badge badge-light-danger fs-9">NO ACTIVE PLAN</span>
-                                                @endif
-                                            </div>
-                                        </div>
-                                        <span class="wallet-card-check"><i class="fa fa-check-circle"></i></span>
-                                    </div>
-                                    @if(!empty($current_coins_sales))
-                                    <div class="wallet-active-pkg-row mt-2">
-                                        <i class="fa fa-tag me-1"></i>
-                                        <span class="fw-bold">{{ $current_coins_sales[0]['title'] ?? '—' }}</span>
-                                        @if(!empty($current_coins_sales[0]['end_date']))
-                                            <span class="text-muted ms-2 fs-9">· Expires {{ date('d M Y', strtotime($current_coins_sales[0]['end_date'])) }}</span>
-                                        @endif
-                                    </div>
-                                    @endif
-                                    <div class="d-flex align-items-end justify-content-between mt-3">
-                                        <div>
-                                            <div class="wallet-card-balance">{{ number_format($remain_coins_sales) }}</div>
-                                            <div class="wallet-card-balance-label">Coins Available</div>
-                                        </div>
-                                        <div class="wallet-ring" style="background: conic-gradient(#10a34a {{ $sal_used_pct * 3.6 }}deg, #e4e6ef 0deg);">
-                                            <span class="wallet-ring-label"><span class="wallet-ring-pct">{{ $sal_used_pct }}%</span><span class="wallet-ring-sub">Used</span></span>
-                                        </div>
-                                    </div>
-                                    <div class="row text-center wallet-card-stats">
-                                        <div class="col-4">
-                                            <div class="fw-bold fs-6">{{ number_format($sal_coins_used) }}</div>
-                                            <div class="wallet-card-stat-label">Used Coins</div>
-                                        </div>
-                                        <div class="col-4">
-                                            <div class="fw-bold fs-6">{{ number_format($sal_total_purchased) }}</div>
-                                            <div class="wallet-card-stat-label">Purchased</div>
-                                        </div>
-                                        <div class="col-4">
-                                            <div class="fw-bold fs-6">{{ $sal_days_left }}</div>
-                                            <div class="wallet-card-stat-label">Days Validity</div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+                        @include('service_company.subscription.partials._wallet_cards')
                         <!--end::Wallet cards-->
 
                         <!--begin::Info banner-->
@@ -1389,7 +1291,11 @@
 
                                 <!--begin::wallet-pane-transactions-->
                                 <div id="wallet-pane-transactions" class="wallet-tab-pane" style="display:none">
-                                    @include('service_company.ajax_pages.subscription_transactions', ['cart_transaction_history' => $cart_transaction_history])
+                                    @if(!empty($cart_transaction_history))
+                                        @include('service_company.ajax_pages.subscription_transactions', ['cart_transaction_history' => $cart_transaction_history])
+                                    @else
+                                        <div class="text-center py-10"><div class="spinner-border text-primary" role="status"></div><div class="mt-2 text-muted fs-7">Loading transactions...</div></div>
+                                    @endif
                                 </div>
                                 <!--end::wallet-pane-transactions-->
 
@@ -1496,6 +1402,8 @@
             // Overview-specific content lives in #overview-only-section inside it.
             // All other panes (transactions, packages…) are also inside that wrapper.
             // So we hide/show #overview-only-section and the target pane, not the wrapper.
+            var txAjaxUrl = "{{ route('service_company.transactions.subscriptionAjax') }}";
+            var txTabLoaded = false;
             window.switchWalletCenterTab = function(tab, noScroll) {
                 // Hide all inner panes (packages, transactions, etc.) but NOT the outer overview wrapper
                 $('.wallet-tab-pane:not(#wallet-pane-overview)').hide();
@@ -1505,6 +1413,23 @@
                 } else {
                     $('#overview-only-section').hide();
                     $('#wallet-pane-' + tab).show();
+
+                    if (tab === 'transactions' && (!txTabLoaded || $('#wallet-pane-transactions .table-responsive').length === 0)) {
+                        txTabLoaded = true;
+                        $('#wallet-pane-transactions').css('opacity', '0.5');
+                        $.ajax({
+                            url: txAjaxUrl,
+                            type: 'GET',
+                            data: { page: 1 },
+                            success: function (res) {
+                                var htmlContent = (res && res.html) ? res.html : res;
+                                $('#wallet-pane-transactions').html(htmlContent).css('opacity', '1');
+                            },
+                            error: function () {
+                                $('#wallet-pane-transactions').css('opacity', '1');
+                            }
+                        });
+                    }
                 }
 
                 $('.wallet-tab-link').removeClass('wt-active');
@@ -1519,6 +1444,15 @@
                     }
                 }
             };
+
+            $(document).on('click', '.wallet-tab-link', function (e) {
+                e.preventDefault();
+                var tab = $(this).attr('data-tab');
+                if (tab) {
+                    window.location.hash = 'tab=' + tab;
+                    switchWalletCenterTab(tab);
+                }
+            });
 
             // On load: switch to hash tab if valid, otherwise default to overview.
             function applyHashTab(fromHashChange) {
@@ -1723,8 +1657,6 @@
             // Intercepts clicks on any pagination link inside the transactions pane,
             // calls the subscriptionAjax endpoint with the correct ?page= param,
             // and swaps the pane content in-place — no full page reload.
-            var txAjaxUrl = "{{ route('service_company.transactions.subscriptionAjax') }}";
-
             $(document).on('click', '#wallet-pane-transactions .pagination a.page-link', function (e) {
                 e.preventDefault();
                 var href = $(this).attr('href');
@@ -1740,7 +1672,8 @@
                     type: 'GET',
                     data: { page: page },
                     success: function (res) {
-                        $pane.html(res.html).css('opacity', '1');
+                        var htmlContent = (res && res.html) ? res.html : res;
+                        $pane.html(htmlContent).css('opacity', '1');
                     },
                     error: function () {
                         $pane.css('opacity', '1');

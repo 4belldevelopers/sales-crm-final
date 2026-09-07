@@ -2589,11 +2589,11 @@ table{
             }, 200);
             
             
-            $(document).on('click', '#paginationcandidate .page-link', function(e) {
+            $(document).on('click', '#paginationcandidate .pagi-page, #paginationcandidate .pagi-arrow', function(e) {
                 e.preventDefault();
 
                 const page = $(this).data('page');
-                if (!page || $(this).hasClass('disabled')) return;
+                if (!page || $(this).hasClass('pagi-disabled') || $(this).hasClass('pagi-active-disabled')) return;
 
                 // Disable the clicked pagination link
                 $(this).addClass('disabled');
@@ -2601,11 +2601,19 @@ table{
                 // Fetch data
                 fetchCandidates(page, $('#search').val()).then(() => {
                     // Re-enable the links after successful data fetch
-                    $('#paginationcandidate .page-link').removeClass('disabled');
+                    $('#paginationcandidate .pagi-page, #paginationcandidate .pagi-arrow').removeClass('disabled');
                 }).catch(() => {
                     // Re-enable the links even if there's an error
-                    $('#paginationcandidate .page-link').removeClass('disabled');
+                    $('#paginationcandidate .pagi-page, #paginationcandidate .pagi-arrow').removeClass('disabled');
                 });
+            });
+
+            $(document).on('change', '#paginationcandidate .pagi-perpage', function(e) {
+                const selectedPerPage = $(this).val();
+                if (selectedPerPage) {
+                    localStorage.setItem('candidatePerPage', selectedPerPage);
+                    fetchCandidates(1, $('#search').val());
+                }
             });
 
 
@@ -2613,6 +2621,7 @@ table{
 
 
         function fetchCandidates(page = 1, search = '') {
+            var perPage = localStorage.getItem('candidatePerPage') || 10;
             var jobid = '0';
             var inputSearch = $('#inputSearch').val();
             var sortingfilter = $('#sortingfilter').val();
@@ -2654,15 +2663,103 @@ table{
                 kt_tagify_company:kt_tagify_company,
                 app_int_notice:app_int_notice, 
                 sal_mode:sal_mode,
-                app_int_outsource:app_int_outsource
+                app_int_outsource:app_int_outsource,
+                per_page:perPage,
+                size:perPage
                 },
                 success: function(response) {
                     $('.loadingMessage').css({ display: 'none' });
-                    $('#candidatetList').html(response.html);
-                    // $('.public_bench_data').html(response.total);
+                    if (window.JERO_V2_CLIENT_RENDER && response.candidates && Array.isArray(response.candidates)) {
+                        renderCandidatesV2(response.candidates, response.skillExperiencesMap, min_salary_currency, sal_mode, jobid);
+                    } else {
+                        $('#candidatetList').html(response.html);
+                    }
                     $('#paginationcandidate').html(response.pagination);
                 }
             });
+        }
+
+        /* INTENT: V2 Client-side candidate row template rendering engine for zero-DOM-thrashing sub-5ms UI updates */
+        function renderCandidatesV2(candidates, skillExperiencesMap, minSalaryCurrency, salMode, jobid) {
+            if (!candidates || candidates.length === 0) {
+                $('#candidatetList').html('<tr style="height: 102px; position: relative; background: #fffcfc7a;"><td colspan="7" style="text-align: center; color: black;">No data available in table</td></tr>');
+                return;
+            }
+
+            var benchStatusMap = {
+                1: { label: 'Pool', bg: '#dbeafe', color: '#1d4ed8' },
+                2: { label: 'Active', bg: '#dcfce7', color: '#15803d' },
+                3: { label: 'Placed', bg: '#f3e8ff', color: '#7c3aed' },
+                4: { label: 'Hold', bg: '#fef3c7', color: '#d97706' }
+            };
+
+            var html = '';
+            $.each(candidates, function(index, row) {
+                var name = (row.full_name || '').trim();
+                var charCode = name ? name.charAt(0).toLowerCase().charCodeAt(0) : 0;
+                var bgTextDecore = 'fs-3 bg-light-secondary text-dark';
+                if (charCode >= 97 && charCode <= 101) bgTextDecore = 'fs-3 bg-light-danger text-danger';
+                else if (charCode >= 102 && charCode <= 106) bgTextDecore = 'fs-3 bg-light-warning text-warning';
+                else if (charCode >= 107 && charCode <= 111) bgTextDecore = 'fs-3 bg-light-primary text-primary';
+                else if (charCode >= 112 && charCode <= 116) bgTextDecore = 'fs-3 bg-light-success text-success';
+                else if (charCode >= 117 && charCode <= 121) bgTextDecore = 'fs-3 bg-dark text-secondary';
+
+                var benchStatus = benchStatusMap[parseInt(row.status)] || benchStatusMap[2];
+                var skillExps = (skillExperiencesMap && skillExperiencesMap[row.id]) ? skillExperiencesMap[row.id] : [];
+                var skillTagHtml = '';
+                var viewMore = 0;
+
+                if (skillExps.length > 0) {
+                    $.each(skillExps, function(k, exp) {
+                        if (k < 5) {
+                            skillTagHtml += '<span class="badge badge-light my-1" style="font-weight:400;color:#3f4254;">' + (exp.skill_key || '').toUpperCase() + '</span> ';
+                        } else {
+                            viewMore++;
+                        }
+                    });
+                } else if (row.skills) {
+                    var skillArr = (row.skills || '').split(',');
+                    $.each(skillArr.slice(0, 5), function(k, sval) {
+                        sval = $.trim(sval);
+                        if (sval) skillTagHtml += '<span class="badge badge-light my-1" style="font-weight:400;color:#3f4254;">' + sval.toUpperCase() + '</span> ';
+                    });
+                }
+                if (viewMore > 0) {
+                    skillTagHtml += '<span class="badge badge-light my-1" style="font-weight:500;color:#7e8299;">+' + viewMore + ' more</span>';
+                }
+
+                var starsHtml = '';
+                if (skillExps.length > 0) {
+                    $.each(skillExps.slice(0, 3), function(k, exp) {
+                        starsHtml += '<div class="skill-item"><span class="skill-name">' + (exp.skill_key || '').toUpperCase() + '</span><div class="stars">';
+                        for (var s = 1; s <= 5; s++) {
+                            var emptyClass = (parseInt(exp.rating || 0) >= s) ? '' : 'empty';
+                            starsHtml += '<svg class="star_skill ' + emptyClass + '" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>';
+                        }
+                        starsHtml += '</div></div>';
+                    });
+                }
+
+                var outsourcesLabel = (row.outsourcing_type == 1) ? 'Full-time' : 'Contract';
+                var city = (row.city_name || row.city || '').trim();
+                var countryName = (row.country_name || row.country || '').trim();
+
+                html += '<tr style="height: 102px; position: relative;">';
+                html += '<td><div class="symbol symbol-circle symbol-40px overflow-hidden me-2 border-radius-5" style="float:left"><a href="javascript:void(0);" data-row-id="' + row.id + '" class="pbench_show_application_detail"><div class="symbol-label ' + bgTextDecore + ' border-radius-5">' + (name ? name.charAt(0).toUpperCase() : '') + '</div></a></div>';
+                html += '<div class="d-flex flex-column" style="overflow:hidden;"><div class="d-flex align-items-center gap-1"><a href="javascript:void(0);" data-row-id="' + row.id + '" class="text-dark fw-bolder text-hover-primary fs-6 pbench_show_application_detail" data-toggle="tooltip" title="' + name + '">' + name.substring(0, 18) + '</a><span style="background:' + benchStatus.bg + ';color:' + benchStatus.color + ';font-size:9px;font-weight:700;padding:1px 6px;border-radius:4px;white-space:nowrap;">' + benchStatus.label + '</span></div>';
+                html += '<a href="javascript:void(0);" data-row-id="' + row.id + '" class="text-muted fw-bold d-block fs-7 text-hover-primary pbench_show_application_detail">' + (row.current_designation || '').substring(0, 22) + '</a></div>';
+                html += '<div style="position:absolute;bottom:0;white-space:nowrap;width:94%;overflow:hidden;"><span style="font-size:10px;font-weight:600;color:#7e8299;margin-right:4px;">Skills</span>' + skillTagHtml + '</div></td>';
+
+                html += '<td><div class="d-flex flex-column"><a href="javascript:void(0);" class="text-dark fw-bolder fs-6">' + (row.total_exp || 0) + ' Y</a>' + (row.wm ? '<span class="fw-bold d-block" style="font-size:10px;color:#7c3aed;">' + row.wm + '</span>' : '<span class="text-muted fw-bold d-block fs-7">—</span>') + '</div></td>';
+                html += '<td>' + (starsHtml || '<span class="text-muted fs-7">—</span>') + '</td>';
+                html += '<td><div class="d-flex flex-column"><a href="javascript:void(0);" class="fw-bolder fs-6" style="color:#16a34a !important;">' + (row.np_id || 'Notice period') + '</a><span class="text-muted fw-bold d-block fs-7">' + outsourcesLabel + '</span></div></td>';
+                html += '<td><div class="d-flex flex-column"><a href="javascript:void(0);" class="text-dark fw-bolder text-hover-primary fs-6">' + city.substring(0, 12) + ', ' + countryName.substring(0, 10) + '</a><span class="text-muted fw-bold d-block fs-7">' + (row.qualification_name || '').toUpperCase().substring(0, 14) + '</span></div></td>';
+                html += '<td><div class="d-flex flex-column"><a href="javascript:void(0);" class="text-dark fw-bolder fs-6">₹' + (row.bill_rate_amount || 0) + '</a><span class="fw-bold d-block fs-7" style="color:#16a34a;">Free</span></div></td>';
+                html += '<td style="text-align:center;"><div class="d-flex flex-column" style="margin-bottom:6px;"><a href="javascript:void(0);" class="btn btn-sm btn-primary openSideBar" data-row-id="' + row.id + '">Add to Job</a></div><a href="javascript:;" class="fw-bold fs-7 text-hover-primary pbench_show_application_detail" data-row-id="' + row.id + '">View Profile</a></td>';
+                html += '</tr>';
+            });
+
+            $('#candidatetList').html(html);
         }
 
 

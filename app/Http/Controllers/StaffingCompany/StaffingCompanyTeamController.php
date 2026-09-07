@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 
 /*** ########################################################
 Controller    	: 	AdminTeamcontroller
@@ -28,6 +28,7 @@ use App\Exports\TeamExport;
 use Maatwebsite\Excel\Excel as ExcelExcel;
 use Maatwebsite\Excel\Facades\Excel;
 
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use App\Helper\GeneralMethod;
 
@@ -1773,6 +1774,8 @@ class StaffingCompanyTeamController extends StaffingCompanyBaseController
 				   	 ->limit(1) 
 				  	 ->update(array('status' => 'inactive'));   
 					 
+			// Phase 3.4: bump epoch so active sessions are kicked on next request.
+			Cache::put('user:epoch:' . (int) $userId, now()->timestamp, 7 * 24 * 3600);
 		}
 		 
 					 

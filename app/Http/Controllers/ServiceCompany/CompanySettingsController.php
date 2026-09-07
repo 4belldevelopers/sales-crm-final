@@ -32,7 +32,7 @@ class CompanySettingsController extends ServiceCompanyBaseController
         abort_if(Gate::denies('manage_settings'), 403);
 
         $this->timezones = \DateTimeZone::listIdentifiers(\DateTimeZone::ALL);
-        $setting = Company::findOrFail(company()->id);
+        $setting = Company::withoutGlobalScopes()->findOrFail(company()->id);
 
         if(!$setting){
             abort(404);
@@ -45,7 +45,7 @@ class CompanySettingsController extends ServiceCompanyBaseController
     {
         abort_if(Gate::denies('manage_settings'), 403);
 
-        $setting = Company::findOrFail(company()->id);
+        $setting = Company::withoutGlobalScopes()->findOrFail(company()->id);
 
         if(!$setting){
             abort(404);
@@ -58,7 +58,7 @@ class CompanySettingsController extends ServiceCompanyBaseController
     {
         abort_if(Gate::denies('manage_settings'), 403);
 
-        $setting = Company::findOrFail($this->global->id);
+        $setting = Company::withoutGlobalScopes()->findOrFail($this->global->id);
 
         if($this->superSettings->delete_account_hour_day = 'day' && !is_null($this->superSettings->delete_account_in) && $this->superSettings->delete_account_in > 0)
         {
@@ -110,7 +110,7 @@ class CompanySettingsController extends ServiceCompanyBaseController
     {
         abort_if(Gate::denies('manage_settings'), 403);
 
-        $setting = Company::findOrFail($id);
+        $setting = Company::withoutGlobalScopes()->findOrFail($id);
         $setting->company_name      = $request->input('company_name');
         $setting->company_email     = $request->input('company_email');
         $setting->company_phone     = $request->input('company_phone');

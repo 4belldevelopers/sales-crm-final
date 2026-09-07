@@ -663,97 +663,11 @@ body { overflow-x: hidden; font-family: 'Poppins', sans-serif !important; }
 @section('content')
 
 <?php
-/* ── Real permission display names (name -> display_name), fetched once for the drawer's Permissions tab ── */
-$permDisplayMap = DB::table('permissions')->pluck('display_name', 'name');
-
-/* ── Permission Coverage buckets: maps the 19 real permission group_names onto 4 display
-   categories (approximation agreed with product owner — DB has no such grouping natively) ── */
-$coverageBuckets = [
-    'Recruitment'        => ['Jobs', 'Job Applications', 'Offer', 'Joining', 'Schedule', 'Requisition', 'Team On Requisition'],
-    'Talent Marketplace' => ['Bench', 'Staffing Partners'],
-    'Sales & CRM'        => ['Clients', 'Team', 'Reports'],
-    'Admin & Security'   => ['Roles & Permissions', 'Manage Settings', 'Settings', 'Website', 'Subscription', 'Salary', 'Salary Break'],
-];
-$bucketColors = [
-    'Recruitment'        => '#27ae60',
-    'Talent Marketplace' => '#1a73e8',
-    'Sales & CRM'        => '#5e72e4',
-    'Admin & Security'   => '#c0392b',
-];
-
-/* ── Total assignable permissions per group_name, company-wide (permissions table is global, not tenant-scoped) ── */
-$excludedPermIds = [58, 59, 14, 15, 16, 17];
-$groupTotals = DB::table('permissions')
-    ->where('status', 1)
-    ->whereNotIn('id', $excludedPermIds)
-    ->select('group_name', DB::raw('count(*) as cnt'))
-    ->groupBy('group_name')
-    ->pluck('cnt', 'group_name');
-
-/* ── Pre-compute stats ── */
-$totalRolesCount    = !empty($roles) ? count($roles) : 0;
-$customRolesCount   = 0;
-$systemRolesCount   = 0;
-$totalAssignedUsers = 0;
-$totalPermGroups    = 0;
-$allRoleStats       = [];
-
-if (!empty($roles)) {
-    foreach ($roles as $rlist) {
-        $roleId = $rlist->id;
-
-        $roleUsers = DB::table('role_user')
-            ->join('users', 'users.id', '=', 'role_user.user_id')
-            ->where('role_user.role_id', $roleId)
-            ->where('users.type', 0)
-            ->select('users.id', 'users.name', 'users.email')
-            ->get();
-        $uCount = $roleUsers->count();
-
-        $totalAssignedUsers += $uCount;
-        $grpAllForStats = $rlist->grouped_permissions ?? [];
-        $grpCount = count($grpAllForStats);
-        $totalPermGroups += $grpCount;
-
-        $totalAssignedPerms = 0;
-        foreach ($grpAllForStats as $permNames) {
-            $totalAssignedPerms += count($permNames);
-        }
-
-        $coverage = [];
-        foreach ($coverageBuckets as $bucketName => $groupNames) {
-            $assigned = 0;
-            $total = 0;
-            foreach ($groupNames as $gn) {
-                $assigned += isset($grpAllForStats[$gn]) ? count($grpAllForStats[$gn]) : 0;
-                $total += $groupTotals[$gn] ?? 0;
-            }
-            $coverage[$bucketName] = [
-                'assigned' => $assigned,
-                'total'    => $total,
-                'pct'      => $total > 0 ? round(($assigned / $total) * 100) : 0,
-                'color'    => $bucketColors[$bucketName],
-            ];
-        }
-
-        if ($rlist->manual_add) {
-            $customRolesCount++;
-        } else {
-            $systemRolesCount++;
-        }
-
-        $allRoleStats[$roleId] = [
-            'userCount'          => $uCount,
-            'users'              => $roleUsers,
-            'grpCount'           => $grpCount,
-            'totalAssignedPerms' => $totalAssignedPerms,
-            'coverage'           => $coverage,
-        ];
-    }
-}
+/* ── Role Permission Listing V2 — Data pre-computed in RolePermissionService ── */
+/* ── ZERO database queries executed inside Blade view template ── */
 
 /* ── Icon & color palette for cards ── */
-$cardPalette = [
+$cardPalette = $cardPalette ?? [
     ['bg' => '#eef0fb', 'stroke' => '#5e72e4', 'icon' => 'shield-check'],
     ['bg' => '#e3f1ff', 'stroke' => '#1a73e8', 'icon' => 'users'],
     ['bg' => '#e8f8f0', 'stroke' => '#27ae60', 'icon' => 'user'],
@@ -774,20 +688,20 @@ if (!function_exists('rpAccessLevel')) {
 }
 
 /* Avatar bg colors for stack */
-$avColors = ['#5e72e4','#1a73e8','#27ae60','#e74c3c','#f39c12','#9b59b6','#1abc9c','#e91e8c'];
+$avColors = $avColors ?? ['#5e72e4','#1a73e8','#27ae60','#e74c3c','#f39c12','#9b59b6','#1abc9c','#e91e8c'];
 
 /* Card SVG icons (inline, keyed by name) */
 if (!function_exists('rpCardIcon')) {
     function rpCardIcon($name, $stroke) {
         $icons = [
-        'shield-check' => '<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/>',
-        'users'        => '<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>',
-        'user'         => '<path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>',
-        'message'      => '<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>',
-        'currency'     => '<line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>',
-        'shield'       => '<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>',
-        'settings'     => '<circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/>',
-    ];
+            'shield-check' => '<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/>',
+            'users'        => '<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>',
+            'user'         => '<path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>',
+            'message'      => '<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>',
+            'currency'     => '<line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>',
+            'shield'       => '<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>',
+            'settings'     => '<circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/>',
+        ];
         $d = $icons[$name] ?? $icons['settings'];
         return '<svg viewBox="0 0 24 24" fill="none" stroke="'.$stroke.'" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'.$d.'</svg>';
     }
@@ -826,252 +740,19 @@ if (!function_exists('rpCardIcon')) {
     </div>
 
     {{-- ── Stats Row ── --}}
-    <div class="rp-stats">
-        <div class="rp-stat-card">
-            <div class="rp-stat-icon" style="background:#eef0fb;">
-                <svg viewBox="0 0 24 24" fill="none" stroke="#5e72e4" stroke-width="2" stroke-linecap="round">
-                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
-                    <path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
-                </svg>
-            </div>
-            <div>
-                <div class="rp-stat-val">{{ $totalRolesCount }}</div>
-                <div class="rp-stat-lbl">Total Roles</div>
-                <div class="rp-stat-sub" style="color:#5e72e4;">All roles in system</div>
-            </div>
-        </div>
-        <div class="rp-stat-card">
-            <div class="rp-stat-icon" style="background:#e8f8f0;">
-                <svg viewBox="0 0 24 24" fill="none" stroke="#27ae60" stroke-width="2" stroke-linecap="round">
-                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
-                    <path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
-                </svg>
-            </div>
-            <div>
-                <div class="rp-stat-val">{{ $systemRolesCount }}</div>
-                <div class="rp-stat-lbl">System Roles</div>
-                <div class="rp-stat-sub" style="color:#27ae60;">Built-in roles</div>
-            </div>
-        </div>
-        <div class="rp-stat-card">
-            <div class="rp-stat-icon" style="background:#fff8e6;">
-                <svg viewBox="0 0 24 24" fill="none" stroke="#f39c12" stroke-width="2" stroke-linecap="round">
-                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
-                    <path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
-                </svg>
-            </div>
-            <div>
-                <div class="rp-stat-val">{{ $customRolesCount }}</div>
-                <div class="rp-stat-lbl">Custom Roles</div>
-                <div class="rp-stat-sub" style="color:#f39c12;">User-defined</div>
-            </div>
-        </div>
-        <div class="rp-stat-card">
-            <div class="rp-stat-icon" style="background:#eef0fb;">
-                <svg viewBox="0 0 24 24" fill="none" stroke="#5e72e4" stroke-width="2" stroke-linecap="round">
-                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-                </svg>
-            </div>
-            <div>
-                <div class="rp-stat-val">{{ $totalAssignedUsers }}</div>
-                <div class="rp-stat-lbl">Assigned Users</div>
-                <div class="rp-stat-sub" style="color:#5e72e4;">Across all roles</div>
-            </div>
-        </div>
-        <div class="rp-stat-card">
-            <div class="rp-stat-icon" style="background:#eef0fb;">
-                <svg viewBox="0 0 24 24" fill="none" stroke="#5e72e4" stroke-width="2" stroke-linecap="round">
-                    <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
-                    <rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>
-                </svg>
-            </div>
-            <div>
-                <div class="rp-stat-val">{{ $totalPermGroups }}</div>
-                <div class="rp-stat-lbl">Permission Groups</div>
-                <div class="rp-stat-sub" style="color:#5e72e4;">System groups</div>
-            </div>
-        </div>
-    </div>
+    @include('service_company.role-permission.components.role_stat_cards')
 
     {{-- ── Filter Card ── --}}
-    <div class="rp-filter-card">
-        <div class="rp-filter-row">
-            <div class="rp-search-box">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-                    <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
-                </svg>
-                <input type="text" id="roleSearch" placeholder="Search roles by name...">
-            </div>
-            <select class="rp-filter-select" id="filterRoleType">
-                <option value="">Role Type</option>
-                <option value="system">System Role</option>
-                <option value="custom">Custom Role</option>
-            </select>
-            <select class="rp-filter-select" id="filterAccessLevel">
-                <option value="">Access Level</option>
-                <option value="badge-high">High Access</option>
-                <option value="badge-medium">Medium Access</option>
-                <option value="badge-low">Low Access</option>
-            </select>
-            <span class="rp-filter-clear" id="clearFilters">Clear Filters</span>
-            <span class="rp-sort-label">Sort by:</span>
-            <select class="rp-sort-select" id="sortRoles">
-                <option value="users">Most Users</option>
-                <option value="name">Name A–Z</option>
-                <option value="perms">Permissions</option>
-            </select>
-        </div>
-    </div>
+    @include('service_company.role-permission.components.role_filter_bar')
 
     {{-- ── Role Cards ── --}}
     <div class="rp-cards-grid" id="rolesGrid">
 
-                @if(!empty($roles))
-                    <?php $cardIndex = 0; ?>
-                    @foreach($roles as $rlist)
-                    <?php
-                        $roleId      = $rlist->id;
-                        $uCount      = $allRoleStats[$roleId]['userCount'] ?? 0;
-                        $roleUsers   = $allRoleStats[$roleId]['users'] ?? collect();
-                        $grpCount    = $allRoleStats[$roleId]['grpCount']  ?? 0;
-                        $totalAssignedPerms = $allRoleStats[$roleId]['totalAssignedPerms'] ?? 0;
-                        $coverage    = $allRoleStats[$roleId]['coverage'] ?? [];
-                        $palette     = $cardPalette[$cardIndex % count($cardPalette)];
-                        $access      = rpAccessLevel($grpCount, $rlist->name ?? '');
-                        $isCustom    = $rlist->manual_add;
-                        $roleType    = $isCustom ? 'custom' : 'system';
-                        $grpAll      = $rlist->grouped_permissions ?? [];
-                        /* grouped_permissions is a Collection — use its real group-name keys, not a
-                           (array) cast (which would expose the Collection's internal *items props) */
-                        $grpKeys     = $grpAll instanceof \Illuminate\Support\Collection ? $grpAll->keys()->all() : array_keys((array) $grpAll);
-                        $grpShown    = array_slice($grpKeys, 0, 3);
-                        $grpExtra    = count($grpKeys) > 3 ? count($grpKeys) - 3 : 0;
-                        $canEdit     = in_array("edit_roles_permission", $userPermissions) && ($rlist->priority != 0) && ($rlist->name != 'admin');
-                        $canDelete   = (bool) $rlist->manual_add;
-                        $roleCode    = ($isCustom ? 'CUS-' : 'SYS-') . str_pad($roleId, 2, '0', STR_PAD_LEFT);
-
-                        /* Flatten assigned permissions grouped by real group_name, with display names, for the drawer's Permissions tab */
-                        $permissionsFlat = [];
-                        foreach ($grpAll as $gn => $permNames) {
-                            $items = [];
-                            foreach ($permNames as $permName) {
-                                $items[] = $permDisplayMap[$permName] ?? ucwords(str_replace(['_', '-'], ' ', $permName));
-                            }
-                            $permissionsFlat[] = ['group' => $gn, 'items' => $items];
-                        }
-
-                        /* Build JSON for the detail drawer (all data embedded up-front — no AJAX needed to open it) */
-                        $detailJson = json_encode([
-                            'id'          => $roleId,
-                            'name'        => ucwords($rlist->display_name),
-                            'roleCode'    => $roleCode,
-                            'isCustom'    => $isCustom,
-                            'grpCount'    => $grpCount,
-                            'totalPerms'  => $totalAssignedPerms,
-                            'userCount'   => $uCount,
-                            'access'      => $access,
-                            'coverage'    => $coverage,
-                            'permissions' => $permissionsFlat,
-                            'users'       => $roleUsers->map(fn($u) => ['name' => $u->name, 'email' => $u->email])->values(),
-                            'createdOn'   => $rlist->created_at ? \Carbon\Carbon::parse($rlist->created_at)->format('d M, Y') : null,
-                            'updatedOn'   => $rlist->updated_at ? \Carbon\Carbon::parse($rlist->updated_at)->format('d M, Y') : null,
-                            'palette'     => $palette,
-                            'canEdit'     => $canEdit,
-                            'canDelete'   => $canDelete,
-                        ]);
-                        $cardIndex++;
-                    ?>
-                    <div class="rp-role-card"
-                         data-role-type="{{ $roleType }}"
-                         data-role-name="{{ strtolower(ucwords($rlist->display_name)) }}"
-                         data-user-count="{{ $uCount }}"
-                         data-grp-count="{{ $grpCount }}"
-                         data-access-level="{{ $access['class'] }}"
-                         data-role-id="{{ $roleId }}"
-                         data-role-detail='{{ $detailJson }}'
-                         onclick="openRoleFormFromCard(this)">
-
-                        <div class="rp-card-top">
-                            <div class="rp-card-icon-wrap">
-                                <div class="rp-card-icon" style="background:{{ $palette['bg'] }};">
-                                    {!! rpCardIcon($palette['icon'], $palette['stroke']) !!}
-                                </div>
-                                <div>
-                                    <div class="rp-card-role-name">{{ ucwords($rlist->display_name) }}</div>
-                                    <div class="rp-card-role-type {{ $isCustom ? 'custom' : '' }}">
-                                        {{ $isCustom ? 'Custom Role' : 'System Role' }}
-                                    </div>
-                                </div>
-                            </div>
-                            <span class="access-badge {{ $access['class'] }}">{{ $access['label'] }}</span>
-                        </div>
-
-                        <div class="rp-card-counts">
-                            <div>
-                                <div class="rp-count-val">{{ $grpCount }}</div>
-                                <div class="rp-count-lbl">Permission Groups</div>
-                            </div>
-                            <div>
-                                <div class="rp-count-val">{{ $uCount }}</div>
-                                <div class="rp-count-lbl">{{ $uCount == 1 ? 'User' : 'Users' }}</div>
-                            </div>
-                        </div>
-
-                        @if(count($grpShown) > 0)
-                        <div class="rp-perm-label">Permission Groups</div>
-                        <div class="rp-perm-tags">
-                            @foreach($grpShown as $gk)
-                            <span class="rp-perm-tag">{{ \App\Helper\GeneralMethod::roleGroupLabel($gk) }}</span>
-                            @endforeach
-                            @if($grpExtra > 0)
-                            <span class="rp-perm-tag">+{{ $grpExtra }} more</span>
-                            @endif
-                        </div>
-                        @endif
-
-                        <div class="rp-users-row">
-                            <span class="rp-users-label">Users</span>
-                            @if($uCount > 0)
-                            <div class="rp-avatars-stack">
-                                @for($ai = 0; $ai < min($uCount, 4); $ai++)
-                                <div class="rp-mini-av" style="background:{{ $avColors[$ai % count($avColors)] }};">
-                                    {{ chr(65 + $ai) }}
-                                </div>
-                                @endfor
-                            </div>
-                            @if($uCount > 4)
-                            <span class="rp-more-users">+{{ $uCount - 4 }} more</span>
-                            @endif
-                            @else
-                            <span style="font-size:12px;color:#b0bbd8;">No users assigned</span>
-                            @endif
-                        </div>
-
-                        <div class="rp-card-actions" onclick="event.stopPropagation()">
-                            <div class="rp-action-group">
-                                <button type="button" class="rp-edit-btn" onclick="event.stopPropagation(); openRoleFormFromCard(this.closest('.rp-role-card'));">
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
-                                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
-                                    </svg>
-                                    Edit
-                                </button>
-                                @if($rlist->manual_add)
-                                <button class="rp-del-btn role_delete" data-id="{{ $roleId }}" onclick="event.stopPropagation()">
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                        <polyline points="3 6 5 6 21 6"/>
-                                        <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
-                                        <path d="M10 11v6"/><path d="M14 11v6"/>
-                                        <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
-                                    </svg>
-                                    Delete
-                                </button>
-                                @endif
-                            </div>
-                        </div>
-                    </div>
-                    @endforeach
-                @endif
+        @if(!empty($roles))
+            @foreach($roles as $rlist)
+                @include('service_company.role-permission.components.role_card_item', ['rlist' => $rlist, 'loop' => $loop])
+            @endforeach
+        @endif
 
                 {{-- Add New Role card --}}
                 @if(in_array("add_roles_permission", $userPermissions))

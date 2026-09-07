@@ -2,21 +2,38 @@
 
 namespace App\Observers;
 
+use App\Jobs\ElasticBenchCandidateIndex;
 use App\Jobs\UpdateBenchCountersJob;
 use App\Models\BenchApplication;
 
 /**
- * Keeps job_agency_counter.bench_total accurate after any bench application change.
+ * Keeps job_agency_counter.bench_total accurate and syncs Elasticsearch bench index asynchronously.
  */
 class BenchApplicationObserver
 {
+    /**
+     * Defer observer executions until active database transaction has committed.
+     */
+    public bool $afterCommit = true;
+
     public function saved(BenchApplication $bench): void
     {
-        UpdateBenchCountersJob::dispatch($bench->job_id, $bench->company_id);
+        UpdateBenchCountersJob::dispatch($bench->job_id, $bench->company_id)->afterCommit();
+        
+        // INTENT: Asynchronously sync updated candidate to Elasticsearch bench index via background queue worker
+        if ($bench->company_id) {
+            cache()->increment('allbenchcandidates_version_company_' . $bench->company_id);
+            ElasticBenchCandidateIndex::dispatch($bench->company_id)->afterCommit();
+        }
     }
 
     public function deleted(BenchApplication $bench): void
     {
-        UpdateBenchCountersJob::dispatch($bench->job_id, $bench->company_id);
+        UpdateBenchCountersJob::dispatch($bench->job_id, $bench->company_id)->afterCommit();
+        
+        if ($bench->company_id) {
+            cache()->increment('allbenchcandidates_version_company_' . $bench->company_id);
+            ElasticBenchCandidateIndex::dispatch($bench->company_id)->afterCommit();
+        }
     }
 }

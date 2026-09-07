@@ -26,20 +26,17 @@
             }
           
             $from_company = $company_id = auth()->user()->company_id;
-           //dd(($row));
-           $client_data = GeneralMethod::getClientIdCompany($row->id);
+           $client_data = $row->_client_info ?? GeneralMethod::getClientIdCompany($row->id);
            $row->client_id =  $client_data->client_id ?? null;
 
-           $relationget =  GeneralMethod::getAgencyRelationData($from_company,$row->id);
-
-          // dd($relationget);
+           $relationget =  $row->_relation_info ?? GeneralMethod::getAgencyRelationData($from_company,$row->id);
 
            $from_company_id = $relationget->from_company_id ?? null;
            $recommendation_id = $relationget->to_company_id ?? null;
            $to_company_id = $relationget->to_company_id ?? null;
            $final_status = $relationget->to_invitation_status ?? null;
 
-           $matchFound = DB::table('staffing_company_relation')->where('from_company_id', $from_company_id)->where('to_company_id', $row->id)->where('final_status',1)->count();
+           $matchFound = $row->_match_found ?? DB::table('staffing_company_relation')->where('from_company_id', $from_company_id)->where('to_company_id', $row->id)->where('final_status',1)->count();
 
 
                    
@@ -100,10 +97,10 @@
                 }
             }
 
-            $Sizecount = DB::table('users')->where('company_id', $row->id)->count();
-            $agencyJobsCount =  GeneralMethod::agencyJobsCount($row->id);
+            $Sizecount = $row->_user_size_count ?? DB::table('users')->where('company_id', $row->id)->count();
+            $agencyJobsCount =  $row->_agency_jobs_count ?? GeneralMethod::agencyJobsCount($row->id);
             $activeJobs = $agencyJobsCount->all_jobs ?? 0;
-            $agencyCandidatesCount =  GeneralMethod::agencyJobsCandidatesCount($row->id);
+            $agencyCandidatesCount =  $row->_agency_candidates_count ?? GeneralMethod::agencyJobsCandidatesCount($row->id);
             $all_candidates = $agencyCandidatesCount->all_candidates ?? 0;
             $all_candidate_bench = $agencyCandidatesCount->all_candidate_bench ?? 0;
 
@@ -160,14 +157,22 @@
                     $currency = GeneralMethod::currency();
                     $salaryMode = GeneralMethod::salaryMode();
                     $currencySymbole = GeneralMethod::currencySymbole();
-                    $minimumRate = DB::table('commericials')
+                    $minimumRate = $row->_minimum_rate ?? DB::table('commericials')
                         ->join('commericial_details', 'commericial_details.commericial_id', '=', 'commericials.id')
                         ->where('commericials.commtype', '=', $commtype)
                         ->where('commericials.company_id', '=', $row->id)
+                        // Intent: exclude detail indexes that are not covered by an active global experience band.
+                        ->whereExists(function ($experienceBands) {
+                            $experienceBands->selectRaw('1')
+                                ->from('commercial_experience_bands as experience_bands')
+                                ->where('experience_bands.is_active', 1)
+                                ->whereColumn('commericial_details.exp', '>=', 'experience_bands.min_experience')
+                                ->whereColumn('commericial_details.exp', '<=', 'experience_bands.max_experience');
+                        })
                         ->min('commericial_details.rate');
                         $minimumRateGet = $minimumRate;
 
-                    $minimumRateType = DB::table('commericials')
+                    $minimumRateType = $row->_minimum_rate_type ?? DB::table('commericials')
                         ->select('commericials.*')
                         ->where('commericials.commtype', '=', $commtype)
                         ->where('commericials.company_id', '=', $row->id)
@@ -291,28 +296,30 @@
             <div class="loc-cell">
 
                 @php
-                    $clients = DB::table('clients')
-                        ->where('company_id', '=', $row->id)
-                        ->where('self_company', '=', 1)
-                        ->first();
-                    $locInfo = '';
-                    if ($clients) {
-                        $locInfo = DB::table('client_location')
-                            ->leftJoin('countries', 'countries.id', '=', 'client_location.country_id')
-                            ->leftJoin('city_list', 'city_list.city_id', '=', 'client_location.city_id')
-                            ->leftJoin('state_list', 'state_list.id', '=', 'client_location.state')
-                            ->select(
-                                'client_location.id',
-                                'client_location.city',
-                                'client_location.address',
-                                'client_location.postcode',
-                                'client_location.country_id',
-                                'city_list.city as city_name',
-                                'state_list.state as state_name',
-                                'countries.country_name',
-                            )
-                            ->where('client_id', $clients->id)
+                    $locInfo = $row->_client_info ?? null;
+                    if (!$locInfo) {
+                        $clients = DB::table('clients')
+                            ->where('company_id', '=', $row->id)
+                            ->where('self_company', '=', 1)
                             ->first();
+                        if ($clients) {
+                            $locInfo = DB::table('client_location')
+                                ->leftJoin('countries', 'countries.id', '=', 'client_location.country_id')
+                                ->leftJoin('city_list', 'city_list.city_id', '=', 'client_location.city_id')
+                                ->leftJoin('state_list', 'state_list.id', '=', 'client_location.state')
+                                ->select(
+                                    'client_location.id',
+                                    'client_location.city',
+                                    'client_location.address',
+                                    'client_location.postcode',
+                                    'client_location.country_id',
+                                    'city_list.city as city_name',
+                                    'state_list.state as state_name',
+                                    'countries.country_name',
+                                )
+                                ->where('client_id', $clients->id)
+                                ->first();
+                        }
                     }
                 @endphp
 

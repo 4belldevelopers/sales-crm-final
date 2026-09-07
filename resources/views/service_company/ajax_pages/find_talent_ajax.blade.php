@@ -32,9 +32,14 @@
         $profile_sidebar_css = 'pbench_show_application_detail';
 
         /* ── Skills (from bench_candidate_skill_experience — star-rated) ── */
-        $skillExperiences = DB::table('bench_candidate_skill_experience')
-            ->where('candidate_id', $row->id)
-            ->get();
+        /* INTENT: Use pre-fetched skillExperiencesMap from controller to eliminate N+1 queries. Fall back to DB lookup if map not set. */
+        if (isset($skillExperiencesMap) && is_array($skillExperiencesMap)) {
+            $skillExperiences = collect($skillExperiencesMap[$row->id] ?? []);
+        } else {
+            $skillExperiences = DB::table('bench_candidate_skill_experience')
+                ->where('candidate_id', $row->id)
+                ->get();
+        }
         $skillArr = explode(',', $row->skills);
         $skilltag = '';
         $viewMore = 0;

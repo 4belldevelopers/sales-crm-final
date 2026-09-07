@@ -178,9 +178,8 @@ $(function ()
         "scrollY"       : 300,
         scrollX         : false,
         scrollCollapse  : true,
-        paging          : true,
-        "bFilter"       : false,
         "bLengthChange" : false,
+        "lengthMenu"    : [[10, 25, 50, 100], [10, 25, 50, 100]],
         columnDefs: [
             { data: 'job_applications', name: 'job_applications', searchable : false, orderable : false , "width": "2%", "targets": 0 },
             { data: 'client_name', name: 'client_name', searchable : false, orderable : false , "width": "5%", "targets": 1 },

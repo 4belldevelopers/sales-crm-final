@@ -742,7 +742,8 @@ echo @$package_active->newjobrequest_status == 1 ? '<label class="badge text-suc
 				ordering			: false, //disable ordering       			
       			destroy       		: true,   
       			stateSave     		: true,      
-      			"bLengthChange"   	: false,   
+      			"bLengthChange"   	: true,   
+      			"lengthMenu"        : [[10, 25, 50, 100], [10, 25, 50, 100]],
 				sDom				: 'lrtip',
 				
 				
@@ -815,9 +816,8 @@ echo @$package_active->newjobrequest_status == 1 ? '<label class="badge text-suc
 				responsive     		: true, 
       			processing      	: true,
 				ordering			: false, //disable ordering       			
-      			destroy       		: true,   
-      			stateSave     		: true,      
-      			"bLengthChange"   	: false,   
+      			"bLengthChange"   	: true,   
+      			"lengthMenu"        : [[10, 25, 50, 100], [10, 25, 50, 100]],
 				sDom				: 'lrtip',
 				//responsive		: true,
             	// processing		: true,				

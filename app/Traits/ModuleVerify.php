@@ -9,21 +9,19 @@ use Illuminate\Support\Facades\File;
 
 trait ModuleVerify
 {
-
     private $appSetting;
-    private $reply;
 
+    private $reply;
 
     private function setSetting($module)
     {
-        $setting = config($module . '.setting');
+        $setting = config($module.'.setting');
         $this->appSetting = (new $setting)::first();
     }
 
     /**
-     * @param $module
      * @return bool
-     * Check if Purchase code is stored in settings table and is verified
+     *              Check if Purchase code is stored in settings table and is verified
      */
     public function isModuleLegal($module)
     {
@@ -61,13 +59,13 @@ trait ModuleVerify
         }
 
         return false;*/
-		
-		return true;
+
+        return true;
     }
 
     /**
      * @return \Illuminate\Contracts\View\Factory|\Illuminate\View\View
-     * Show verify page for verification
+     *                                                                  Show verify page for verification
      */
     public function verifyModulePurchase($module)
     {
@@ -75,25 +73,21 @@ trait ModuleVerify
     }
 
     /**
-     * @param Request $request
+     * @param  Request  $request
      * @return array
-     * Send request on froiden envato server to validate
+     *               Send request on froiden envato server to validate
      */
     public function modulePurchaseVerified($module, $purchaseCode = null)
     {
         $this->setSetting($module);
 
-        if (!is_null($purchaseCode)) {
+        if (! is_null($purchaseCode)) {
             return $this->getServerData($purchaseCode, $module);
         }
 
         return $this->getServerData($this->appSetting->purchase_code, $module, false);
     }
 
-
-    /**
-     * @param $purchaseCode
-     */
     public function saveToModuleSettings($purchaseCode, $module)
     {
         $this->setSetting($module);
@@ -112,47 +106,45 @@ trait ModuleVerify
     }
 
     /**
-     * @param $postData
      * @return mixed
-     * Curl post to the server
+     *               Curl post to the server
      */
     public function curl($postData)
     {
         // Verify purchase
 
-       /* try {
-            $ch = curl_init();
-            curl_setopt($ch, CURLOPT_URL, config('froiden_envato.verify_url'));
+        /* try {
+             $ch = curl_init();
+             curl_setopt($ch, CURLOPT_URL, config('froiden_envato.verify_url'));
 
-            curl_setopt($ch, CURLOPT_POST, 1);
-            curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($postData));
+             curl_setopt($ch, CURLOPT_POST, 1);
+             curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($postData));
 
-            curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
-            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+             curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
+             curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
 
-            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-            $server_output = curl_exec($ch);
-            $response = json_decode($server_output, true);
-            curl_close($ch);
+             curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+             $server_output = curl_exec($ch);
+             $response = json_decode($server_output, true);
+             curl_close($ch);
 
-            return $response;
-        } catch (\Exception $e) {
+             return $response;
+         } catch (\Exception $e) {
 
-            return [
-                'status' => 'success',
-                'messages' => 'Your purchase code is successfully verified'
-            ];
-        }*/
-		
-		 return [
-                'status' => 'success',
-                'messages' => 'Your purchase code is successfully verified'
-            ];
+             return [
+                 'status' => 'success',
+                 'messages' => 'Your purchase code is successfully verified'
+             ];
+         }*/
+
+        return [
+            'status' => 'success',
+            'messages' => 'Your purchase code is successfully verified',
+        ];
     }
 
     /**
-     * @param $purchaseCode
-     * @param bool $savePurchaseCode
+     * @param  bool  $savePurchaseCode
      * @return mixed
      */
     private function getServerData($purchaseCode, $module, $savePurchaseCode = true)
@@ -162,7 +154,7 @@ trait ModuleVerify
         $postData = [
             'purchaseCode' => $purchaseCode,
             'domain' => \request()->getHost(),
-            'itemId' => config($module . '.envato_item_id'),
+            'itemId' => config($module.'.envato_item_id'),
             'appUrl' => urlencode(url()->full()),
             'version' => $version,
         ];
@@ -178,7 +170,7 @@ trait ModuleVerify
                 $this->saveToModuleSettings($purchaseCode, $module);
             }
 
-            return Reply::successWithData($response['message'] . ' <a href="">Click to go back</a>', ['server' => $response]);
+            return Reply::successWithData($response['message'].' <a href="">Click to go back</a>', ['server' => $response]);
         }
 
         return Reply::error($response['message'], null, ['server' => $response]);
@@ -189,8 +181,7 @@ trait ModuleVerify
         try {
             DB::connection()->getPdo();
         } catch (\Exception $e) {
-            echo view('vendor.froiden-envato.install_message');
-            exit(1);
+            throw new \Illuminate\Http\Exceptions\HttpResponseException(response(view('vendor.froiden-envato.install_message')));
         }
     }
 }

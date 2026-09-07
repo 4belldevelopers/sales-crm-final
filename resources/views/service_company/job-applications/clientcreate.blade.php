@@ -1243,7 +1243,7 @@ body {overflow-x:hidden; }
 $(document).ready(function () {
 
     // ── v2 upload: presign URL injected from PHP; flag computed at runtime ──────
-    @if(config('resumes.features.browser_upload'))
+    @if(config('resumes.features.browser_upload') && \Illuminate\Support\Facades\Schema::hasTable('resume_uploads'))
     window.RESUME_PRESIGN_URL = @json(route('service_company.resume.v2.sessions.store'));
     @endif
     var RESUMES_FEATURE_BROWSER_UPLOAD = !!(window.ResumePresign && window.RESUME_PRESIGN_URL);
@@ -1283,9 +1283,17 @@ $(document).ready(function () {
         });
     }
 
+    // Build a unique contextKey for this company + job + application context
+    function getUpContextKey() {
+        var companyId = @json(auth()->user()->company_id ?? 0);
+        var jobId = $('#job_id').val() || '0';
+        var appId = $('#appId').val() || '0';
+        return 'comp' + companyId + '_job' + jobId + '_app' + appId;
+    }
+
     // ── v2 Phase 6: recover a previous upload session after page refresh ──────
     if (RESUMES_FEATURE_BROWSER_UPLOAD) {
-        window.ResumePresign.recover().then(function (session) {
+        window.ResumePresign.recover(getUpContextKey()).then(function (session) {
             if (session) {
                 $('#upWrap').show();
                 $('#upBar').css('width', '100%');
@@ -1408,6 +1416,7 @@ $(document).ready(function () {
 
         $('#upWrap').show();
         $('#upStats').text('0% &middot; ' + fmtKB(0) + ' / ' + fmtKB(file.size));
+        window.__upLoc = { file: file };
 
         var mimeMap = { pdf:'application/pdf', doc:'application/msword', docx:'application/vnd.openxmlformats-officedocument.wordprocessingml.document' };
         var ext         = (file.name.split('.').pop()||'').toLowerCase();
@@ -1420,6 +1429,7 @@ $(document).ready(function () {
         upXhr.setRequestHeader('X-File-Name', encodeURIComponent(file.name));
         upXhr.setRequestHeader('X-File-Size', file.size);
         upXhr.setRequestHeader('X-Candidate-Id', $('#appId').val() || '');
+        upXhr.setRequestHeader('X-Job-Id', $('#job_id').val() || '');
 
         upXhr.upload.onprogress = function (e) {
             if (!e.lengthComputable) return;
@@ -1461,7 +1471,7 @@ $(document).ready(function () {
     // ==========================
     // Common file handler
     // ==========================
-    function processFile(file, event) {
+    function processFile(file, event = null) {
 
         if (!file) return;
 
@@ -1489,7 +1499,7 @@ $(document).ready(function () {
         window.__upXhrChannelClaimed = true;
         if (RESUMES_FEATURE_BROWSER_UPLOAD) {
             // v2 path: direct browser → R2, zero PHP bytes.
-            window.ResumePresign.startUpload(file).catch(function () {
+            window.ResumePresign.startUpload(file, getUpContextKey()).catch(function () {
                 // error already surfaced via onStateChange 'failed'
             });
         } else if (typeof uploadWithProgress === 'function') {

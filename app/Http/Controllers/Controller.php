@@ -11,7 +11,6 @@ use App\Models\GlobalSetting;
 use App\Models\SmsSetting;
 use App\Models\ThemeSetting;
 use Illuminate\Support\Arr;
-use Illuminate\Support\Facades\Artisan;
 
 class Controller extends BaseController
 {
@@ -20,14 +19,12 @@ class Controller extends BaseController
     public function __construct()
     {
         $this->showInstall();
-        
 
-        $this->checkMigrateStatus();
         $this->global = GlobalSetting::first();
         $this->smsSettings = SmsSetting::first();
         $this->adminTheme = ThemeSetting::whereNull('company_id')->first();
         
-        config(['app.name' => $this->global->company_name]);
+        config(['app.name' => $this->global?->company_name ?? config('app.name')]);
         config(['app.url' => url('/')]);
         view()->share('smsSettings', $this->smsSettings);
         
@@ -42,19 +39,6 @@ class Controller extends BaseController
         
         
     }
-    public function checkMigrateStatus()
-    {
-        $status = Artisan::call('migrate:check');
-
-        if ($status && !request()->ajax()) {
-            Artisan::call('migrate', array('--force' => true)); //migrate database
-            Artisan::call('config:clear');
-            Artisan::call('route:clear');
-            Artisan::call('view:clear');
-            Artisan::call('cache:clear');
-        }
-    }
-
     public function getCallingCodes()
     {
         $codes = [];

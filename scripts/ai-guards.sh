@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ai-guards.sh — fast, dependency-free guards that block NEW rule violations.
-# Enforces a subset of docs/AI_RULES.md & docs/BUG_REPORT.md so they can't be skipped.
+# Enforces a subset of docs/AI_RULES.md & docs/V2_BugsReport and Implementation/BUG_REPORT.md so they can't be skipped.
 # Designed to check only CHANGED files (not legacy), so it won't drown in existing debt.
 #
 # Usage:
@@ -17,9 +17,9 @@ cd "$(dirname "$0")/.." || exit 2
 mode="${1:-staged}"
 files=()
 
-collect_php_app_files() { # filter a newline list to existing app/*.php
+collect_php_app_files() { # filter a newline list to existing app/**/*.php
   while IFS= read -r f; do
-    [ -n "$f" ] && [[ "$f" == app/*.php ]] && [ -f "$f" ] && files+=("$f")
+    [ -n "$f" ] && [[ "$f" == app/*.php || "$f" == app/*/*.php || "$f" == app/*/*/*.php || "$f" == app/*/*/*/*.php ]] && [ -f "$f" ] && files+=("$f")
   done
 }
 
@@ -63,6 +63,28 @@ for f in "${files[@]}"; do
     grep -nE '(^|[^_[:alnum:]])env[[:space:]]*\(' "$f" | sed 's/^/    /'
     note "move to config/*.php and read via config() (AI_RULES #5, BUG-02)"
   fi
+  # GUARD 3: new 'refresh' => true in ES calls forces a shard sync in the HTTP response path,
+  # adding ~50-200 ms per call and blocking Octane worker threads. Remove it.
+  if grep -nE "'refresh'\s*=>\s*true" "$f" | grep -vE ':\s*(//|\*|#)' >/dev/null; then
+    echo "[$f] 'refresh' => true in ES call:"
+    grep -nE "'refresh'\s*=>\s*true" "$f" | grep -vE ':\s*(//|\*|#)' | sed 's/^/    /'
+    note "remove 'refresh' => true — ES eventual consistency is fine; sync flush blocks workers (V2_login Phase 3.7)"
+  fi
+
+  # GUARD 4 (V2_Perf-10K §12.1): also block 'refresh' => 'wait_for' in the HTTP path
+  # unless the file is in the explicit allowlist (BlockCompanyAction, BulkReindexCommand).
+  # 'wait_for' blocks the worker until the next refresh — same damage as refresh:true.
+  case "$f" in
+    app/Actions/Admin/BlockCompanyAction.php|app/Console/Commands/BulkReindexCommand.php)
+      : ;; # allowlisted exceptions
+    *)
+      if grep -nE "'refresh'\s*=>\s*['\"]wait_for['\"]" "$f" | grep -vE ':\s*(//|\*|#)' >/dev/null; then
+        echo "[$f] 'refresh' => 'wait_for' in HTTP-path ES call (not in allowlist):"
+        grep -nE "'refresh'\s*=>\s*['\"]wait_for['\"]" "$f" | grep -vE ':\s*(//|\*|#)' | sed 's/^/    /'
+        note "remove 'refresh' => 'wait_for' — blocks worker until next refresh. Allowlist: BlockCompanyAction, BulkReindexCommand only (V2_Perf-10K §12.1)"
+      fi
+      ;;
+  esac
 done
 
 echo ""

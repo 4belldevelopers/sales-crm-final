@@ -2343,7 +2343,7 @@ KTUtil.onDOMContentLoaded(function () {
    			bJQueryUI		: true,
    			"bFilter"		: false,
    			"bInfo"			: true,
-   			"bLengthChange"	: true,
+   			"bLengthChange"	: false,
    			oLanguage		: {
    								sLengthMenu: "_MENU_",
    							   },
@@ -2362,9 +2362,8 @@ KTUtil.onDOMContentLoaded(function () {
    			processing  	: true,
    			serverSide  	: false,
    			destroy   		: true,
-   			ordering		: false, //disable ordering
-   			
-   			"bLengthChange" : false, //thought this line could hide the LengthMenu
+   			"bLengthChange" : false,
+   			"lengthMenu"    : [[10, 25, 50, 100], [10, 25, 50, 100]],
    			sDom			: 'lrtip',
    			oLanguage 		: {
    								sLengthMenu: "_MENU_",

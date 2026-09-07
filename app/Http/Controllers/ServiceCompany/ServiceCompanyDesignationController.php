@@ -54,7 +54,7 @@ class ServiceCompanyDesignationController extends ServiceCompanyBaseController
 
     public function update(StoreRequest $request, $id)
     	{
-        $designation = Designation::findOrFail($id);
+        $designation = Designation::withoutGlobalScopes()->findOrFail($id);
         $designation->name = $request->name;
         $designation->save();
 

@@ -197,7 +197,7 @@ return [
     */
 
     'defaults' => [
-        // Default business jobs (mail, notifications, general)
+        // Default business jobs (general)
         'supervisor-default' => [
             'connection' => 'redis',
             'queue' => ['default'],
@@ -212,7 +212,7 @@ return [
             'timeout' => 90,
             'nice' => 0,
         ],
-        // Counter update jobs — high throughput, short runtime, isolated so ES writes don't stall counts
+        // Counter update jobs — high throughput, short runtime
         'supervisor-counters' => [
             'connection' => 'redis',
             'queue' => ['counters'],
@@ -226,10 +226,68 @@ return [
             'timeout' => 30,
             'nice' => 5,
         ],
-        // ES indexing — network-bound, keep separate so slow ES never backs up business queues
-        'supervisor-es-index' => [
+        // ES indexing — network-bound, isolated supervisor
+        'supervisor-indexing' => [
             'connection' => 'redis',
-            'queue' => ['es-index'],
+            'queue' => ['indexing', 'es-index', 'elasticsearch'],
+            'balance' => 'simple',
+            'maxProcesses' => 8,
+            'minProcesses' => 2,
+            'maxTime' => 0,
+            'maxJobs' => 0,
+            'memory' => 128,
+            'tries' => 3,
+            'timeout' => 300,
+            'nice' => 10,
+        ],
+        // V2 Coins Engine daily deductions supervisor
+        'supervisor-coins' => [
+            'connection' => 'redis',
+            'queue' => ['coins'],
+            'balance' => 'auto',
+            'autoScalingStrategy' => 'size',
+            'maxProcesses' => 10,
+            'minProcesses' => 2,
+            'maxTime' => 0,
+            'maxJobs' => 0,
+            'memory' => 128,
+            'tries' => 3,
+            'timeout' => 60,
+            'nice' => 0,
+        ],
+        // Transactional & batch mail — isolated supervisor
+        'supervisor-mail' => [
+            'connection' => 'redis',
+            'queue' => ['mail', 'mails'],
+            'balance' => 'auto',
+            'autoScalingStrategy' => 'size',
+            'maxProcesses' => 4,
+            'minProcesses' => 1,
+            'maxTime' => 0,
+            'maxJobs' => 0,
+            'memory' => 128,
+            'tries' => 5,
+            'timeout' => 600,
+            'nice' => 0,
+        ],
+        // File processing & resume parsing uploads supervisor
+        'supervisor-uploads' => [
+            'connection' => 'redis',
+            'queue' => ['uploads'],
+            'balance' => 'simple',
+            'maxProcesses' => 4,
+            'minProcesses' => 1,
+            'maxTime' => 0,
+            'maxJobs' => 0,
+            'memory' => 256,
+            'tries' => 2,
+            'timeout' => 1800,
+            'nice' => 0,
+        ],
+        // Payment & third-party gateway webhooks supervisor
+        'supervisor-webhooks' => [
+            'connection' => 'redis',
+            'queue' => ['webhooks'],
             'balance' => 'simple',
             'maxProcesses' => 4,
             'minProcesses' => 1,
@@ -238,21 +296,6 @@ return [
             'memory' => 128,
             'tries' => 5,
             'timeout' => 60,
-            'nice' => 10,
-        ],
-        // Transactional mail — isolated so large mail blasts don't delay counter jobs
-        'supervisor-mails' => [
-            'connection' => 'redis',
-            'queue' => ['mails'],
-            'balance' => 'auto',
-            'autoScalingStrategy' => 'size',
-            'maxProcesses' => 4,
-            'minProcesses' => 1,
-            'maxTime' => 0,
-            'maxJobs' => 0,
-            'memory' => 128,
-            'tries' => 3,
-            'timeout' => 120,
             'nice' => 0,
         ],
     ],
@@ -260,7 +303,7 @@ return [
     'environments' => [
         'production' => [
             'supervisor-default' => [
-                'maxProcesses' => 32,
+                'maxProcesses' => 16,
                 'minProcesses' => 4,
                 'balanceMaxShift' => 4,
                 'balanceCooldown' => 3,
@@ -269,15 +312,21 @@ return [
                 'maxProcesses' => 8,
                 'minProcesses' => 2,
             ],
-            'supervisor-es-index' => [
+            'supervisor-indexing' => [
+                'maxProcesses' => 8,
+                'minProcesses' => 2,
+            ],
+            'supervisor-mail' => [
                 'maxProcesses' => 4,
                 'minProcesses' => 1,
             ],
-            'supervisor-mails' => [
+            'supervisor-uploads' => [
                 'maxProcesses' => 4,
                 'minProcesses' => 1,
-                'balanceMaxShift' => 2,
-                'balanceCooldown' => 5,
+            ],
+            'supervisor-webhooks' => [
+                'maxProcesses' => 4,
+                'minProcesses' => 1,
             ],
         ],
 
@@ -288,10 +337,16 @@ return [
             'supervisor-counters' => [
                 'maxProcesses' => 2,
             ],
-            'supervisor-es-index' => [
+            'supervisor-indexing' => [
+                'maxProcesses' => 2,
+            ],
+            'supervisor-mail' => [
                 'maxProcesses' => 1,
             ],
-            'supervisor-mails' => [
+            'supervisor-uploads' => [
+                'maxProcesses' => 1,
+            ],
+            'supervisor-webhooks' => [
                 'maxProcesses' => 1,
             ],
         ],

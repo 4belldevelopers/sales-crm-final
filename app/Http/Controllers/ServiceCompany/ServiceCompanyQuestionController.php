@@ -58,14 +58,14 @@ class ServiceCompanyQuestionController extends ServiceCompanyBaseController
     	{
         abort_if(Gate::denies('edit_question'), 403);
 
-        $this->question = Question::find($id);
+        $this->question = Question::withoutGlobalScopes()->find($id);
         return view('service_company.question.edit', $this->data);
     }
     
     public function update(UpdateRequest $request, $id)
     	{
         abort_if(Gate::denies('edit_question'), 403);
-        $question = Question::find($id);
+        $question = Question::withoutGlobalScopes()->find($id);
         $question->question = $request->question;
         $question->required = $request->required;
         $question->save();

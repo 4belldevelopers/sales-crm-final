@@ -10,8 +10,11 @@
     $chkAdminRole = $chkAdminRole ?? (auth()->check() ? auth()->user()->hasRole('admin') : 0);
 
     // Follow-up statuses for this page (one query; resilient if the column isn't migrated yet)
+    $hasFollowupCol = \Illuminate\Support\Facades\Cache::remember('ats:has_followup_col', 86400, function() {
+        return \Illuminate\Support\Facades\Schema::hasColumn('interview_schedules', 'followup_status');
+    });
     $followupMap = collect();
-    if (count($data) > 0 && \Illuminate\Support\Facades\Schema::hasColumn('interview_schedules', 'followup_status')) {
+    if (count($data) > 0 && $hasFollowupCol) {
         $followupMap = DB::table('interview_schedules')
             ->whereIn('id', collect($data)->pluck('id')->all())
             ->get(['id', 'followup_status', 'followup_status_at'])
@@ -120,22 +123,26 @@
                 @php
                     $client_name = '';
                     $client_title_name = '';
-                    $client_name_com = GeneralMethod::companyDetailsByClient($row->jobId);
+                    $targetJobId = $row->jobId ?? $row->job_id ?? 0;
+                    $client_name_com = $targetJobId > 0 ? GeneralMethod::companyDetailsByClient($targetJobId) : null;
                     if (!empty($client_name_com)) {
                         $client_title_name = $client_name_com;
                     } else {
-                        $client_title_name = $row->client_name;
+                        $client_title_name = $row->client_name ?? '';
                     }
                     $client_name = ucwords(mb_substr((string) $client_title_name, 0, 15));
 
                     // Job type / recommendation
                     $jobTypeLabel = 'Internal';
-                    if ($row->recommendation_id > 0 && @$row->to_company_id == $company_id) {
+                    $recId = $row->recommendation_id ?? 0;
+                    $toCompId = $row->to_company_id ?? 0;
+                    if ($recId > 0 && $toCompId == $company_id) {
                         $jobTypeLabel = 'Client';
                     }
+                    $jobTitleText = $row->job_title ?? '';
                 @endphp
-                <div class="it-job-title" data-toggle="tooltip" title="{{ ucwords($row->job_title) }}">
-                    {{ ucwords(mb_substr($row->job_title, 0, 18)) }}
+                <div class="it-job-title" data-toggle="tooltip" title="{{ ucwords($jobTitleText) }}">
+                    {{ ucwords(mb_substr($jobTitleText, 0, 18)) }}
                 </div>
                 <div class="it-job-company" data-toggle="tooltip" title="{{ ucwords($client_title_name) }}">
                     {{ ucwords(mb_substr($client_name, 0, 14)) }}
@@ -143,17 +150,18 @@
                 <div class="it-job-tags">
                     <span class="it-job-type">{{ $jobTypeLabel }}</span>
                     <span class="it-dot-separator"></span>
-                    <a href="javascript:void(0);" class="it-job-id">{{ @$row->jobId }}</a>
+                    <a href="javascript:void(0);" class="it-job-id">{{ $targetJobId }}</a>
                 </div>
             </td>
 
             {{-- Interview Date & Time + Mode + Link --}}
             <td>
                 @php
-                    if ($row->interview_mode == 1) {
+                    $intMode = $row->interview_mode ?? 0;
+                    if ($intMode == 1) {
                         // Telecon / Phone
                         $modeIcon = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>';
-                    } elseif ($row->interview_mode == 2) {
+                    } elseif ($intMode == 2) {
                         // Video Call
                         $modeIcon = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>';
                     } else {
@@ -164,28 +172,31 @@
                     $mLink = trim((string) @$row->interview_mention_link);
                     $isUrl = (bool) preg_match('#^https?://#i', $mLink);
                     $ilType = null; $ilLabel = '';
-                    if ($row->interview_mode == 3 && $mLink !== '') {
+                    if ($intMode == 3 && $mLink !== '') {
                         $ilType = 'address'; $ilLabel = 'View Address';
                     } elseif ($isUrl) {
                         $ilType = 'link'; $ilLabel = 'Interview Link';
                     }
+                    $schedTime = $row->schedule_to_time ?? '';
+                    $tzAbbr = $row->timezone_abbreviation ?? '';
+                    $modeNameText = $row->mode_name ?? '';
                 @endphp
                 <div class="it-date-cell">
                     <div class="it-date-row">
                         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
                         </svg>
-                        {{ Carbon::parse($row->schedule_date)->format('d M, Y') }}
+                        {{ Carbon::parse($row->schedule_date ?? 'now')->format('d M, Y') }}
                     </div>
                     <div class="it-date-row">
                         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+                            <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 16 14"/>
                         </svg>
-                        {{ $row->schedule_to_time }}{{ $row->timezone_abbreviation ? ' (' . $row->timezone_abbreviation . ')' : '' }}
+                        {{ $schedTime }}{{ $tzAbbr ? ' (' . $tzAbbr . ')' : '' }}
                     </div>
                     <div class="it-date-row it-mode-row">
                         {!! $modeIcon !!}
-                        <span class="it-mode">{{ ucwords(mb_substr((string) $row->mode_name, 0, 13)) }}</span>
+                        <span class="it-mode">{{ ucwords(mb_substr((string) $modeNameText, 0, 13)) }}</span>
                     </div>
                     @if($ilType)
                         <a href="javascript:void(0);" class="it-date-row open-interview-link"
@@ -234,12 +245,14 @@
             {{-- Source (Owner) --}}
             <td>
                 @php
-                    if($company_id != $row->ClientComID && $row->ClientComID != 0 && $row->ClientComID > 0){
-                        $spokperson = DB::table('job_assign')->select('users.name')->join('users', 'users.id', 'job_assign.spok_user_id')->where('job_assign.job_id', $row->jobId)->where('job_assign.company_id', $row->ClientComID)->first();
-                        $rowpostedby = (@$spokperson) ? @$spokperson->name : $row->posted_by;
-                        $rowpostedby = @$row->rec_candidate_assign_id ? $row->posted_by : $rowpostedby;
+                    $clientComID = $row->ClientComID ?? 0;
+                    $postedByText = $row->posted_by ?? '';
+                    if($company_id != $clientComID && $clientComID != 0 && $clientComID > 0){
+                        $spokperson = DB::table('job_assign')->select('users.name')->join('users', 'users.id', 'job_assign.spok_user_id')->where('job_assign.job_id', $targetJobId)->where('job_assign.company_id', $clientComID)->first();
+                        $rowpostedby = (@$spokperson) ? @$spokperson->name : $postedByText;
+                        $rowpostedby = @$row->rec_candidate_assign_id ? $postedByText : $rowpostedby;
                     } else {
-                        $rowpostedby = $row->posted_by;
+                        $rowpostedby = $postedByText;
                     }
                 @endphp
                 <div class="it-person-cell">
@@ -256,7 +269,8 @@
             <td>
                 @php
                     $name = '';
-                    if ($row->master_status_id == 8) {
+                    $masterStatusId = $row->master_status_id ?? 0;
+                    if ($masterStatusId == 8) {
                         $name = 'Private';
                     }
                     if (!empty(@$row->child_status_id) && @$row->child_status_id > 0) {
@@ -278,7 +292,8 @@
 
                     $stageStatusClass = 'pending';
                     $stageStatusText = 'Pending';
-                    if (!empty($row->feedback) || $row->average_star_rating > 0) {
+                    $avgStarRating = $row->average_star_rating ?? 0;
+                    if (!empty($row->feedback) || $avgStarRating > 0) {
                         $stageStatusClass = 'confirmed';
                         $stageStatusText = 'Feedback';
                     }
@@ -335,9 +350,11 @@
                     // Permissions
                     $canAddFeedback = true;
                     $customHtml = 'show-feedback';
-                    if ($row->thirdparty_company_id == $company_id) { $customHtml = ''; $canAddFeedback = false; }
-                    if ($row->to_company_id == $company_id) { $customHtml = ''; $canAddFeedback = false; }
-                    $allowChk = DB::table('job_assign')->join('users', 'users.id', 'job_assign.spok_user_id')->where('job_assign.job_id', $row->jobId)->where('job_assign.spok_user_id', auth()->user()->id)->count();
+                    $thirdpartyCompId = $row->thirdparty_company_id ?? $row->ClientComID ?? 0;
+                    $toCompanyId = $row->to_company_id ?? 0;
+                    if ($thirdpartyCompId == $company_id) { $customHtml = ''; $canAddFeedback = false; }
+                    if ($toCompanyId == $company_id) { $customHtml = ''; $canAddFeedback = false; }
+                    $allowChk = DB::table('job_assign')->join('users', 'users.id', 'job_assign.spok_user_id')->where('job_assign.job_id', $targetJobId)->where('job_assign.spok_user_id', auth()->user()->id)->count();
                     $isInterviewerOnRow = false;
                     $myNameChk = strtolower(trim(auth()->user()->name ?? ''));
                     if ($myNameChk !== '' && !empty($row->interviewers)) {

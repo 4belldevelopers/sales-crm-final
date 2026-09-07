@@ -38,7 +38,7 @@ return [
     |
     */
 
-       'server' => env('OCTANE_SERVER', 'frankenphp'),
+    'server' => env('OCTANE_SERVER', 'frankenphp'),
 
     /*
     |--------------------------------------------------------------------------
@@ -82,6 +82,7 @@ return [
 
         RequestTerminated::class => [
             // FlushUploadedFiles::class,
+            \App\Octane\Listeners\DanglingTransactionGuard::class,
         ],
 
         TaskReceived::class => [
@@ -105,8 +106,8 @@ return [
         OperationTerminated::class => [
             FlushOnce::class,
             FlushTemporaryContainerInstances::class,
-            // DisconnectFromDatabases::class,
-            // CollectGarbage::class,
+            \App\Octane\Listeners\DanglingTransactionGuard::class,
+            CollectGarbage::class,
         ],
 
         WorkerErrorOccurred::class => [

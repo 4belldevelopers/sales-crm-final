@@ -11,18 +11,19 @@ use Illuminate\Support\Facades\Log;
 class ResumeParserService
 {
     private string $apiKey;
+
     private string $model = 'gpt-4o-mini'; // cost-efficient, fast
 
     public function __construct()
     {
-        $this->apiKey = config('services.openai.key', env('OPENAI_API_KEY', ''));
+        $this->apiKey = config('services.openai.key', config('services.openai.api_key', ''));
     }
 
     /**
      * Parse resume text into structured fields.
      *
-     * @param  string $text  Raw text extracted from the resume file
-     * @return array         Structured candidate data
+     * @param  string  $text  Raw text extracted from the resume file
+     * @return array Structured candidate data
      */
     public function parse(string $text): array
     {
@@ -33,7 +34,7 @@ class ResumeParserService
         // Truncate to ~12 000 chars to stay within token limits
         $truncated = mb_substr($text, 0, 12000);
 
-        if (!empty($this->apiKey)) {
+        if (! empty($this->apiKey)) {
             try {
                 return $this->parseWithOpenAI($truncated);
             } catch (\Throwable $e) {
@@ -70,22 +71,22 @@ class ResumeParserService
         PROMPT;
 
         $payload = json_encode([
-            'model'       => $this->model,
-            'messages'    => [
+            'model' => $this->model,
+            'messages' => [
                 ['role' => 'system', 'content' => 'You are a precise resume parser. Return only valid JSON.'],
                 ['role' => 'user',   'content' => $prompt],
             ],
             'temperature' => 0,
-            'max_tokens'  => 1500,
+            'max_tokens' => 1500,
         ]);
 
         $ch = curl_init('https://api.openai.com/v1/chat/completions');
         curl_setopt_array($ch, [
-            CURLOPT_HTTPHEADER     => ['Authorization: Bearer ' . $this->apiKey, 'Content-Type: application/json'],
+            CURLOPT_HTTPHEADER => ['Authorization: Bearer '.$this->apiKey, 'Content-Type: application/json'],
             CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_POST           => true,
-            CURLOPT_POSTFIELDS     => $payload,
-            CURLOPT_TIMEOUT        => 60,
+            CURLOPT_POST => true,
+            CURLOPT_POSTFIELDS => $payload,
+            CURLOPT_TIMEOUT => 60,
         ]);
         $response = curl_exec($ch);
         $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
@@ -97,9 +98,9 @@ class ResumeParserService
 
         $decoded = json_decode($response, true);
         $content = $decoded['choices'][0]['message']['content'] ?? '';
-        $parsed  = json_decode($content, true);
+        $parsed = json_decode($content, true);
 
-        if (!is_array($parsed)) {
+        if (! is_array($parsed)) {
             throw new \RuntimeException('OpenAI returned non-JSON content');
         }
 
@@ -126,8 +127,8 @@ class ResumeParserService
         }
 
         return array_merge($this->emptyResult(), [
-            'email'  => $email,
-            'phone'  => $phone,
+            'email' => $email,
+            'phone' => $phone,
             'source' => 'regex',
         ]);
     }
@@ -135,22 +136,22 @@ class ResumeParserService
     private function emptyResult(string $error = ''): array
     {
         return [
-            'full_name'               => '',
-            'email'                   => '',
-            'phone'                   => '',
-            'skills'                  => [],
-            'total_experience_years'  => 0,
-            'current_company'         => '',
-            'current_designation'     => '',
-            'notice_period'           => '',
-            'expected_salary'         => '',
-            'location'                => '',
-            'education'               => [],
-            'languages'               => [],
-            'certifications'          => [],
-            'career_summary'          => '',
-            'source'                  => 'none',
-            'parse_error'             => $error,
+            'full_name' => '',
+            'email' => '',
+            'phone' => '',
+            'skills' => [],
+            'total_experience_years' => 0,
+            'current_company' => '',
+            'current_designation' => '',
+            'notice_period' => '',
+            'expected_salary' => '',
+            'location' => '',
+            'education' => [],
+            'languages' => [],
+            'certifications' => [],
+            'career_summary' => '',
+            'source' => 'none',
+            'parse_error' => $error,
         ];
     }
 }

@@ -1,14 +1,5 @@
 @php
     use App\Helper\GeneralMethod;
-    use Illuminate\Support\Facades\DB;
-
-    $salaryMode = GeneralMethod::salaryMode();
-    $currencySymbole = GeneralMethod::currencySymbole();
-    $feedback_status = GeneralMethod::feedback_status();
-    $currency = GeneralMethod::currency();
-    $job_status_arr = GeneralMethod::job_status();
-    $job_status = GeneralMethod::job_status();
-    // dd(count($data));
 @endphp
 @if (count($data) > 0)
     @foreach ($data as $rowArr)
@@ -116,11 +107,9 @@
 			</td>
             <td>
 				@php
-				
-                        $created_at = $row->created_at;
-                        $newDate = date('d M, Y', strtotime($created_at));
-                        $daysAgo = GeneralMethod::timeAgo($row->created_at);
-
+						$created_at = !empty($row->from_created_at) ? $row->from_created_at : $row->created_at;
+						$newDate = date('d M, Y', strtotime($created_at));
+						$daysAgo = GeneralMethod::timeAgo($created_at);
 				@endphp
                 <div class="d-flex flex-column">
                     <a href="javascript:void(0);" class="text-dark fw-bolder text-hover-primary fs-6">{{ $newDate }}</a>

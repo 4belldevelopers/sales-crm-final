@@ -74,20 +74,12 @@
             {{-- Job Requisitions: Title + Company + Type + JobID --}}
             <td>
                 @php
-                    $client_name = '';
-                    $client_title_name = '';
-                    $client_name_com = GeneralMethod::companyDetailsByClient($row->job_id);
-                    if (!empty($client_name_com)) {
-                        $client_title_name = $client_name_com;
-                        $client_name = ucwords(mb_substr($client_title_name, 0, 15));
-                    } else {
-                        $client_title_name = $row->client_name ?? $row->company_name ?? '';
-                        $client_name = ucwords(mb_substr($client_title_name, 0, 15));
-                    }
+                    $client_title_name = $row->client_title_name_enriched ?? $row->client_name ?? $row->company_name ?? '';
+                    $client_name = ucwords(mb_substr($client_title_name, 0, 15));
 
                     $jobTypeLabel = 'Internal Client';
                     $jobTypeClass = 'it-job-type-internal';
-                    if ($row->recommendation_id > 0 && @$row->to_company_id == auth()->user()->company_id) {
+                    if (($row->recommendation_id ?? 0) > 0 && (@$row->to_company_id == auth()->user()->company_id)) {
                         $jobTypeLabel = 'Direct Client';
                         $jobTypeClass = 'it-job-type-direct';
                     }
@@ -244,7 +236,7 @@
             {{-- Feedback (view-only — no Add Feedback for bench candidates) --}}
             <td>
                 @php
-                    $latestFb = DB::table('interview_feedback')->where('interview_id', $row->id)->orderByDesc('id')->first();
+                    $latestFb = $row->latest_feedback_enriched ?? null;
                     $hasAnyFeedback = !empty($latestFb);
                     $attId = (int) (@$latestFb->available_status ?? 0);
 

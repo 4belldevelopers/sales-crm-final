@@ -1975,7 +1975,7 @@ $(document).ready(function() {
         //         sLengthMenu: "_MENU_",
         //     },
         //     ajax: {
-        //         'url': '{!! route('service_company.consultancy.data') !!}',
+        //         'url': '{!! route('service_company.consultancy.data_ajax') !!}',
         //         "data": function(d) {
         //             d.search = $('#inputSearch').val(), d.sortingfilter = $('#sortingfilter').val(), d.country =
         //                 $('#country').val(), d.cus_search = $('#kt_tagify_2').val()
@@ -2027,32 +2027,6 @@ $(document).ready(function() {
         // });
         // new $.fn.dataTable.FixedHeader(table);
     </script>
-
-    <!--<script src="{{ asset('js/dataTables.fixedHeader.min.js') }}<?php echo TM_VERSION; ?>"></script>
-    <script src="{{ asset('js/responsive.bootstrap.min.js') }}<?php echo TM_VERSION; ?>"></script>
-    <script src="{{ asset('js/dataTables.colReorder.min.js') }}<?php echo TM_VERSION; ?>"></script>
-    <script src="{{ asset('js/dataTables.buttons.min.js') }}<?php echo TM_VERSION; ?>"></script>
-    <script src="{{ asset('js/buttons.colVis.min.js') }}<?php echo TM_VERSION; ?>"></script>
-    <script src="{{ asset('assets/node_modules/select2/dist/js/select2.full.min.js') }}<?php echo TM_VERSION; ?>"
-        type="text/javascript"></script>
-    <script src="{{ asset('assets/node_modules/bootstrap-select/bootstrap-select.min.js') }}<?php echo TM_VERSION; ?>"
-        type="text/javascript"></script>
-    <script src="//cdn.datatables.net/buttons/1.6.1/js/dataTables.buttons.min.js"></script>
-    <script src="{{ asset('assets/node_modules/moment/moment.js') }}<?php echo TM_VERSION; ?>" type="text/javascript"></script>
-    <script src="{{ asset('assets/node_modules/multiselect/js/jquery.multi-select.js') }}<?php echo TM_VERSION; ?>"></script>
-    <script src="{{ asset('assets/plugins/iCheck/icheck.min.js') }}<?php echo TM_VERSION; ?>"></script>
-    <script src="{{ asset('assets/node_modules/bootstrap-datepicker/bootstrap-datepicker.min.js') }}<?php echo TM_VERSION; ?>"
-        type="text/javascript"></script>
-    <script src="{{ asset('assets/node_modules/select2/dist/js/select2.full.min.js') }}<?php echo TM_VERSION; ?>"
-        type="text/javascript"></script>
-    <script src="{{ asset('assets/node_modules/bootstrap-select/bootstrap-select.min.js') }}<?php echo TM_VERSION; ?>"
-        type="text/javascript"></script>
-    <script src="{{ asset('assets/node_modules/moment/moment.js') }}<?php echo TM_VERSION; ?>" type="text/javascript"></script>
-    <script src="{{ asset('assets/plugins/calendar/dist/fullcalendar.min.js') }}<?php echo TM_VERSION; ?>"></script>
-    <script src="{{ asset('assets/plugins/calendar/dist/jquery.fullcalendar.js') }}<?php echo TM_VERSION; ?>"></script>
-    <script src="{{ asset('assets/plugins/calendar/dist/locale-all.js') }}<?php echo TM_VERSION; ?>"></script>
-    <script src="{{ asset('js/schedule-calendar.js') }}<?php echo TM_VERSION; ?>"></script>-->
-
 
     <script>
         $(document).ready(function() {
@@ -2618,12 +2592,21 @@ $(document).ready(function() {
 
               fetchstaffingpartner(page, $('#search').val());
           });
+
+          $(document).on('change', '#paginationstaffingpartner .pagi-perpage', function(e) {
+              const selectedPerPage = $(this).val();
+              if (selectedPerPage) {
+                  localStorage.setItem('candidatePerPage', selectedPerPage);
+                  fetchstaffingpartner(1, $('#search').val());
+              }
+          });
 			});
 			
 
 			function fetchstaffingpartner(page = 1, search = '') {
 				$('.loadingMessagestaffingpartnerajax').css({ display: 'block' });
                 // $('.page-loader').css('display', 'flex');
+                var perPage = localStorage.getItem('candidatePerPage') || 10;
 				$.ajax({
 					url: `{!! route('service_company.consultancy.data_ajax') !!}?page=${page}`,
 					type: 'GET',
@@ -2631,7 +2614,9 @@ $(document).ready(function() {
 						search: $('#inputSearch').val(),
 						cus_search: $('#kt_tagify_2').val(),
 						country: $('#country').val(),
-						sortingfilter: $('#sortingfilter').val()
+						sortingfilter: $('#sortingfilter').val(),
+						per_page: perPage,
+						size: perPage
 					},
 					success: function(response) {
 						$('.loadingMessagestaffingpartnerajax').css({ display: 'none' });

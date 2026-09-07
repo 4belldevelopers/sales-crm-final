@@ -13,12 +13,17 @@
     @php
     $row = (object) $rowArr;
 
-    $relationget =  GeneralMethod::getRelationData($company_id, $row->company_id);
-    $from_company_id = $relationget->from_company_id;
-    $recommendation_id = $relationget->id;
-    $to_company_id = $relationget->to_company_id;
-    $final_status = $relationget->final_status;
-    $from_created_at = $relationget->from_created_at;
+    if (isset($relationMap) && isset($relationMap[$row->company_id])) {
+        $relationget = $relationMap[$row->company_id];
+    } else {
+        $relationget = GeneralMethod::getRelationData($company_id, $row->company_id);
+    }
+
+    $from_company_id = $relationget->from_company_id ?? null;
+    $recommendation_id = $relationget->id ?? null;
+    $to_company_id = $relationget->to_company_id ?? null;
+    $final_status = $relationget->final_status ?? null;
+    $from_created_at = $relationget->from_created_at ?? null;
 
     $row->final_status = $final_status;
     $row->staffing_company_relation_id = $recommendation_id;
@@ -69,13 +74,15 @@
     }
 
     /* ── jobs (active / closed / hold) ── */
-    $jobsCount = GeneralMethod::DirectClientJobsCountAllStatus($row->from_company_id, $row->to_company_id);
+    $jKey = 'direct_' . ($from_company_id ?? 0) . '_' . ($to_company_id ?? 0);
+    $jobsCount = $jobsCountsMap[$jKey] ?? GeneralMethod::DirectClientJobsCountAllStatus($row->from_company_id, $row->to_company_id);
     $job_active = $jobsCount->job_active ?? 0;
     $job_closed = $jobsCount->job_inactive ?? 0;
     $job_hold   = $jobsCount->job_hold ?? 0;
 
     /* ── performance funnel ── */
-    $perf = GeneralMethod::DirectClientCandidatesCountList($row->from_company_id, $row->to_company_id);
+    $pKey = 'direct_' . ($from_company_id ?? 0) . '_' . ($to_company_id ?? 0);
+    $perf = $candidateCountsMap[$pKey] ?? GeneralMethod::DirectClientCandidatesCountList($row->from_company_id, $row->to_company_id);
     $sourced    = $perf->sourced ?? 0;
     $evaluated  = $perf->evaluated ?? 0;
     $interviews = $perf->all_interview ?? 0;

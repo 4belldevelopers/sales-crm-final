@@ -14,135 +14,90 @@
     @foreach ($data as $rowArr)
     @php
     $row = (object) $rowArr;
-    $relationget =  GeneralMethod::getRelationData($row->company_id,$company_id);
-
-    $from_company_id = $relationget->from_company_id ?? null;
-    $recommendation_id = $relationget->to_company_id ?? null;
-    $final_status = $relationget->final_status ?? null;
-    $to_created_at = $relationget->to_created_at ?? null;
-    $created_at = $relationget->created_at ?? null;
-
     
-    // $match = collect($row->staffing_company_relation)->first(function ($item) use ($company_id) {
-    //     return ($item['from_company_id'] ?? null) == $company_id
-    //         || ($item['to_company_id'] ?? null) == $company_id;
-    // });
+    // Batch pre-hydrated relation lookup or fallback
+    $relationget = isset($batchRelations[$row->company_id]) 
+        ? $batchRelations[$row->company_id] 
+        : GeneralMethod::getRelationData($row->company_id, $company_id);
 
-    // $from_company_id = ($match['from_company_id'] ?? null) == $company_id ? $match['from_company_id'] : null;
-    // $recommendation_id   = ($match['to_company_id'] ?? null) == $company_id ? $match['to_company_id'] : null;
-
-    // $final_status = collect($row->staffing_company_relation)->first(function ($item) use ($company_id) {
-    //     return $item['from_company_id'] == $company_id;
-    // })['final_status'] ?? null;
-
-
-    // $to_created_at = collect($row->staffing_company)->first(function ($item) use ($company_id) {
-    //     return $item['from_company_id'] == $company_id;
-    // })['to_created_at'] ?? null;
-
-    // $created_at = collect($row->staffing_company)->first(function ($item) use ($company_id) {
-    //     return $item['from_company_id'] == $company_id;
-    // })['created_at'] ?? null;
-
+    $from_company_id   = $relationget->from_company_id ?? null;
+    $recommendation_id = $relationget->to_company_id ?? null;
+    $final_status      = $relationget->final_status ?? null;
+    $to_created_at     = $relationget->to_created_at ?? null;
+    $created_at        = $relationget->created_at ?? null;
 
     $row->final_status = $final_status;
-    $row->staffing_company_relation_id =$recommendation_id;
+    $row->staffing_company_relation_id = $recommendation_id;
     $row->to_company_id = $recommendation_id;
     $row->from_company_id = $from_company_id;
     $row->to_created_at = ($to_created_at) ? $to_created_at : $created_at;
-    $td_industries = DB::table('td_industries')->where('ind_id','=',$row->industries)->first();
 
-    $logo_path = ''; //url('img/client-default.png');
+    // Batch pre-hydrated industry lookup or fallback
+    $td_industries = isset($batchIndustries[$row->industries]) 
+        ? (object) $batchIndustries[$row->industries] 
+        : DB::table('td_industries')->where('ind_id', '=', $row->industries)->first();
 
-
+    $logo_path = '';
     if (!empty(@$row->website) && empty(@$row->logo)){
-            $domainGet = GeneralMethod::getDomain($row->website);
-            $googleIcon = "https://www.google.com/s2/favicons?domain={$domainGet}&sz=256";    
-            $google = GeneralMethod::getDomainIcon($googleIcon,$row->id,true);
-            $logo_path  = ($google) ? $googleIcon : '';
+        $domainGet = GeneralMethod::getDomain($row->website);
+        $googleIcon = "https://www.google.com/s2/favicons?domain={$domainGet}&sz=256";    
+        $google = GeneralMethod::getDomainIcon($googleIcon, $row->id, true);
+        $logo_path  = ($google) ? $googleIcon : '';
     }
     if (!empty(@$row->logo) && strlen(@$row->logo) > 10) {
         $logo_path = @$row->logo;
     }
 
-    $company_name = $ind_name = '';
     $company_name = ucwords($row->company_name);
-
-    if($td_industries){
-        $ind_name = $td_industries->ind_name;
-    }
+    $ind_name = $td_industries ? $td_industries->ind_name : '';
     $client_type_css = 'show-detail-direct';
         
     $bgTextDecore = GeneralMethod::icoinText($row->company_name);
-    $initials = strtoupper( implode('', array_map(fn($word) => mb_substr($word, 0, 1), explode(' ', trim($row->company_name)))));
+    $initials = strtoupper(implode('', array_map(fn($word) => mb_substr($word, 0, 1), explode(' ', trim($row->company_name)))));
 
-            $locationHtml = $locationHtml = $country_name = $address = '';
+    $client_id = $row->client_id;
+    
+    // Batch pre-hydrated location lookup or fallback
+    $locInfo = isset($batchLocations[$client_id]) 
+        ? $batchLocations[$client_id] 
+        : DB::table('client_location')
+            ->select(
+                'client_location.id',
+                'client_location.city',
+                'client_location.address',
+                'client_location.postcode',
+                'client_location.country_id',
+                'city_list.city as city_name',
+                'state_list.state'
+            )
+            ->leftJoin('city_list', 'city_list.city_id', '=', 'client_location.city_id')
+            ->leftJoin('state_list', 'state_list.id', '=', 'client_location.state')
+            ->where('client_id', $client_id)
+            ->first();
 
-            $client_id = $row->client_id;
-            $locInfo = DB::table('client_location')
-                ->select(
-                    'client_location.id',
-                    'client_location.city',
-                    'client_location.address',
-                    'client_location.postcode',
-                    'client_location.country_id',
-                    'city_list.city as city_name',
-                    'state_list.state',
-                )
-                ->leftJoin('city_list', 'city_list.city_id', '=', 'client_location.city_id')
-                ->leftJoin('state_list', 'state_list.id', '=', 'client_location.state')
-                ->where('client_id', $client_id)
-                ->first();
-            $country_name = '';
-            $locInfostate = '';
-            if($locInfo){
-                if (@$locInfo->country_id > 0) {
-                    $countryArr = GeneralMethod::getCountryName($locInfo->country_id);
-                    if (is_array($countryArr)) {
-                        if (count($countryArr) > 0) {
-                            foreach ($countryArr as $cval) {
-                                $country_name = ucwords($cval['name']);
-                            }
-
-                            if ($locInfo->state) {
-                                $locInfostate = $locInfo->state;
-                            }
-                        }
-                    }
+    $country_name = '';
+    $locInfostate = '';
+    if ($locInfo) {
+        if (@$locInfo->country_id > 0) {
+            $countryArr = GeneralMethod::getCountryName($locInfo->country_id);
+            if (is_array($countryArr) && count($countryArr) > 0) {
+                foreach ($countryArr as $cval) {
+                    $country_name = ucwords($cval['name']);
+                }
+                if (isset($locInfo->state_name)) {
+                    $locInfostate = $locInfo->state_name;
+                } elseif (isset($locInfo->state)) {
+                    $locInfostate = $locInfo->state;
                 }
             }
+        }
+    }
 
-            $city = @$locInfo->city;
-            // if (@$locInfo->country_id == 101) {
-                $city = @$locInfo->city_name;
-            // }
-            $locationHtml = ucwords(mb_substr(@$city, 0, 10)) . '&nbsp;' . @$country_name;
-            $address = ''; //@$locInfo->address;
+    $city = @$locInfo->city_name ?: @$locInfo->city;
 
-            $requisitionRow = DB::table('recommendation_relation')
-                        ->join('jobs', 'jobs.id', '=', 'recommendation_relation.job_id')
-                        ->join('add_job_wise_condidates', 'add_job_wise_condidates.job_id', '=', 'jobs.id')
-                        ->select(
-                            DB::raw('COUNT(add_job_wise_condidates.job_id) AS job_id_count'),
-                            DB::raw('COUNT(DISTINCT add_job_wise_condidates.job_id) AS unique_job_id_count'),
-                            DB::raw('COUNT(add_job_wise_condidates.job_application_id) AS job_application_id_count'),
-                            DB::raw(
-                                'COUNT(CASE WHEN add_job_wise_condidates.master_status_id != 8 THEN add_job_wise_condidates.job_application_id ELSE NULL END) AS all_application'),
-                            DB::raw(
-                                'COUNT(CASE WHEN add_job_wise_condidates.master_status_id = 6 THEN add_job_wise_condidates.job_application_id ELSE NULL END) AS join_application'),
-                        )
-                        ->where('recommendation_relation.from_company_id', '=', $company_id)
-                        ->where('recommendation_relation.to_company_id', '=', $row->company_id)
-                        ->where('add_job_wise_condidates.thirdparty_company_id', '=', $row->company_id)
-                        ->where('recommendation_relation.final_status', '=', 1)
-                        ->first();
-
-                        $newDate = $timeAgo = '';
-                        $to_created_at = $row->to_created_at;
-                        $newDate = date('d M, Y', strtotime($to_created_at));
-                        $timeAgo = GeneralMethod::timeAgo($to_created_at);
-
-
+    $to_created_at = $row->to_created_at;
+    $newDate = $to_created_at ? date('d M, Y', strtotime($to_created_at)) : '';
+    $timeAgo = $to_created_at ? GeneralMethod::timeAgo($to_created_at) : '';
 
     @endphp
        
@@ -169,10 +124,13 @@
 </div>
 <div class="tbl-j">
     @php
-        $Active = $Hold = $Closed = 0;
-        $RowJobs = GeneralMethod:: agencyJobsCountAllstatus($row->company_id,$company_id);
+        // Batch pre-hydrated job stats lookup or fallback
+        $RowJobs = isset($batchAgencyStats[$row->company_id])
+            ? $batchAgencyStats[$row->company_id]
+            : GeneralMethod::agencyJobsCountAllstatus($row->company_id, $company_id);
+
         $Active = $RowJobs->job_active ?? 0;
-        $Hold = $RowJobs->job_hold ?? 0;
+        $Hold   = $RowJobs->job_hold ?? 0;
         $Closed = $RowJobs->job_inactive ?? 0;
     @endphp
 <div class="tbl-jr"><span class="tbl-jn">{{ $Active }}</span><span class="tbl-js a">Active</span></div>
@@ -181,14 +139,17 @@
 </div>
 <div class="tbl-p">
     @php
-        $all_candidates = $Joined = $offers = $all_interview = 0;
-        $candidatesProfiles = GeneralMethod:: agencyCandidatesCountList($row->company_id,$company_id);
+        // Batch pre-hydrated candidate stats lookup or fallback
+        $candidatesProfiles = isset($batchAgencyStats[$row->company_id])
+            ? $batchAgencyStats[$row->company_id]
+            : GeneralMethod::agencyCandidatesCountList($row->company_id, $company_id);
+
         $all_candidates = $candidatesProfiles->all_candidates ?? 0;
-        $Joined = $candidatesProfiles->Joined ?? 0;
-        $offers = $candidatesProfiles->offers ?? 0;
-        $sourced = $candidatesProfiles->sourced ?? 0;
-        $evaluated = $candidatesProfiles->evaluated ?? 0;
-        $all_interview = $candidatesProfiles->all_interview ?? 0;
+        $Joined         = $candidatesProfiles->Joined ?? 0;
+        $offers         = $candidatesProfiles->offers ?? 0;
+        $sourced        = $candidatesProfiles->sourced ?? 0;
+        $evaluated      = $candidatesProfiles->evaluated ?? 0;
+        $all_interview  = $candidatesProfiles->all_interview ?? 0;
     @endphp
 
 <div class="tbl-pi"><div class="tbl-pv">{{ @$sourced}}</div><div class="tbl-pl">Sourced</div></div>

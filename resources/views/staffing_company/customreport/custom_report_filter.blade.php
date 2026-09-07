@@ -360,7 +360,7 @@ $("#report_frm").validate({
 												"bFilter"			: false,
 												"bDestroy"			: true,
 												stateSave			: true,"bInfo": false,
-											   "bLengthChange"		: true,
+											   "bLengthChange"		: false,
 												oLanguage			: {sLengthMenu: "_MENU_",},
 												lengthMenu			: [[10, 25, 50, 100,150,200,250,300], [10, 25, 50, 100,150, 200, 250, 300]],					
 			   
@@ -426,7 +426,7 @@ $("#report_frm").validate({
 												 serverSide		: true,
 												 "bFilter"		: false,
 												 stateSave		: true,"bInfo": false,
-												"bLengthChange"	: true,
+												"bLengthChange"	: false,
 												 oLanguage		: {sLengthMenu: "_MENU_",},
 												 lengthMenu		: [[10, 25, 50, 100,150,200,250,300], [10, 25, 50, 100,150, 200, 250, 300]],
 			   

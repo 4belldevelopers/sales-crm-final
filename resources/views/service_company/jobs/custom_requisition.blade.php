@@ -463,47 +463,55 @@
      	});
 
 
-      $(document).ready(function() {
+       $(document).ready(function() {
             // $.noConflict();
 
             fetchCandidates();
             
-            $(document).on('click', '#pagination .page-link', function(e) {
+            $(document).on('click', '#pagination .pagi-page, #pagination .pagi-arrow', function(e) {
                 e.preventDefault();
 
                 const page = $(this).data('page');
-                if (!page || $(this).hasClass('disabled')) return;
+                if (!page || $(this).hasClass('pagi-disabled') || $(this).hasClass('pagi-active-disabled')) return;
 
-                // Disable the clicked pagination link
-                $(this).addClass('disabled');
-
-                // Fetch data
-                fetchCandidates(page, $('#search').val()).then(() => {
-                    // Re-enable the links after successful data fetch
-                    $('#pagination .page-link').removeClass('disabled');
-                }).catch(() => {
-                    // Re-enable the links even if there's an error
-                    $('#pagination .page-link').removeClass('disabled');
-                });
+                fetchCandidates(page, $('#search').val());
             });
 
-      });
+            $(document).on('change', '#pagination .pagi-perpage', function() {
+                var selectedPerPage = $(this).val();
+                localStorage.setItem('candidatePerPage', selectedPerPage);
+                localStorage.setItem('currentPageCustomReq', 1);
+                page_no = 1;
+                fetchCandidates(1);
+            });
 
-      function fetchCandidates(page = 1, search = '') {
+       });
+
+      var page_no = localStorage.getItem('currentPageCustomReq') || 1;
+
+      function fetchCandidates(page, search = '') {
+            var targetPage = page || page_no || 1;
+            page_no = targetPage;
+            localStorage.setItem('currentPageCustomReq', targetPage);
+
+            var perPage = $('#pagination .pagi-perpage').val() || localStorage.getItem('candidatePerPage') || 10;
             var clientid = '1';
+
             $('.loadingMessage').css({ display: 'block' });
             $.ajax({
-                url: `{!! route('service_company.jobs.custom_requisition_data_ajax') !!}?page=${page}`,
+                url: `{!! route('service_company.jobs.custom_requisition_data_ajax') !!}?page=${targetPage}`,
                 type: 'GET',
                 data: {
                   custom_status : $('#status').val(),
                   search : $('#inputSearch').val(),
                   custom_hiringtype : $('#hiringtype').val(),
-                  custom_search : $('#kt_tagify_2').val()
+                  custom_search : $('#kt_tagify_2').val(),
+                  size: perPage,
+                  per_page: perPage
                 },
                 success: function(response) {
                     $('.loadingMessage').css({ display: 'none' });
-                  //   alert(response.total);
+                    localStorage.setItem('currentPageCustomReq', targetPage);
                     $('#customJobLists').html(response.html);
                     $('#custom_jobs_count').html(response.total);
                     $('#pagination').html(response.pagination);

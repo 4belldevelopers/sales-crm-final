@@ -2385,12 +2385,16 @@
                 });
             });
 
+            $(document).on('change', '#paginationcandidate .pagi-perpage', function() {
+                var selectedPerPage = $(this).val();
+                localStorage.setItem('candidatePerPage', selectedPerPage);
+                localStorage.setItem('currentPage', 1);
+                page_no = 1;
+                fetchCandidates(1);
+            });
+
         });
-        var page_no = localStorage.getItem('currentPage');
-        if (!page_no) {
-            page_no = 1;
-            localStorage.setItem('currentPage', page_no);
-        }
+        var page_no = localStorage.getItem('currentPage') || 1;
         var activeStageTab = 'all';
         function setCvTabsCardBorder(color) {
             $('#cvh_tabs_card').css('border-color', color || '#e4e6ef');
@@ -2403,7 +2407,12 @@
             fetchCandidates();
         });
         setCvTabsCardBorder($('.cvh-tab.active').attr('data-color'));
-        function fetchCandidates(page = page_no, search = '') {
+        function fetchCandidates(page, search = '') {
+            var targetPage = page || page_no || 1;
+            page_no = targetPage;
+            localStorage.setItem('currentPage', targetPage);
+
+            var perPage = $('#paginationcandidate .pagi-perpage').val() || localStorage.getItem('candidatePerPage') || 10;
             var clientid = '1';
 
             $('.loadingMessage').css({ display: 'flex' });
@@ -2415,7 +2424,7 @@
 
             // document.getElementById("loader_search").classList.remove("hidden");
             return $.ajax({
-                url: `{!! route('service_company.cvtracker.allcandidates') !!}?page=${page}`,
+                url: `{!! route('service_company.cvtracker.allcandidates') !!}?page=${targetPage}`,
                 type: 'GET',
                 data: {
                     search: search,
@@ -2435,7 +2444,9 @@
                     app_int_status : $('[name="app_int_status"]:checked').val(),
                     app_int_activity : $('[name="app_int_activity"]:checked').val(),
                     app_int_notice : $('[name="app_int_notice"]:checked').val(),
-                    stage_tab : activeStageTab === 'all' ? '' : activeStageTab
+                    stage_tab : activeStageTab === 'all' ? '' : activeStageTab,
+                    size : perPage,
+                    per_page : perPage
                 },
                 success: function(response) {
                     $('.loadingMessage').css({ display: 'none' });
@@ -2444,7 +2455,7 @@
                     $('#cvh_table_card').show();
                     $('#total_record').html(response.total);
                     $('#candidatetList').html(response.html);
-                    localStorage.setItem('currentPage', 1);
+                    localStorage.setItem('currentPage', targetPage);
                     $('#paginationcandidate').html(response.pagination);
                     updateCvHeroStats(response.candidateStats);
                 },

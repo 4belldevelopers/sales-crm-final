@@ -60,7 +60,7 @@
                             $skilltag .
                             '</span></div>';
                     }
-                    if(is_iterable($row->industry) && count($row->industry)){
+                    if(is_iterable($row->industry ?? null) && count($row->industry ?? [])){
                         $ind_name = $row->industry['industry_name'];
                     }
 					$str = trim(@$row->company_name);
@@ -123,11 +123,11 @@
                         // dd($companies_id,$alldatalist,$currentJobSkill);
 
                     $Profiles = 0; //0;
-                    $benchCount = collect($row->candidates)->where('profile_type', 'bench_condidate')->count();
-                    $otherCount = collect($row->candidates)->where('profile_type', 'other')->count();
-                    $activeJobs = collect($row->jobs)->where('status', 'active')->count();
+                    $benchCount = collect($row->candidates ?? [])->where('profile_type', 'bench_condidate')->count();
+                    $otherCount = collect($row->candidates ?? [])->where('profile_type', 'other')->count();
+                    $activeJobs = collect($row->jobs ?? [])->where('status', 'active')->count();
                     $titleffc = 'Profiles';
-                    $SimilarReq = count($row->jobs);//0;
+                    $SimilarReq = count($row->jobs ?? []);//0;
                     if ($hiringtype === '1') {
                         if ($benchCount > 0) {
                             $Profiles = $benchCount;
@@ -176,7 +176,16 @@
 					->join('commericial_details','commericial_details.commericial_id','=','commericials.id')
 					->where('commericials.commtype','=', $commtype)
 					->where('commericials.company_id','=',$row->id)
-					->whereBetween('commericial_details.exp', [$jobMinExp, $jobMaxExp])
+					// Intent: rate cards use the active global experience-band source configured in Commercials settings.
+					->whereExists(function ($experienceBands) use ($jobMinExp, $jobMaxExp) {
+						$experienceBands->selectRaw('1')
+							->from('commercial_experience_bands as experience_bands')
+							->where('experience_bands.is_active', 1)
+							->whereColumn('commericial_details.exp', '>=', 'experience_bands.min_experience')
+							->whereColumn('commericial_details.exp', '<=', 'experience_bands.max_experience')
+							->where('experience_bands.max_experience', '>=', $jobMinExp)
+							->where('experience_bands.min_experience', '<=', $jobMaxExp);
+					})
 					->min('commericial_details.rate');
 
 					$minimumRateType   =  DB::table('commericials')

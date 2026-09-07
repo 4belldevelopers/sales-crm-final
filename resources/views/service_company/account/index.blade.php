@@ -41,6 +41,158 @@ input[type="radio"]:checked {
     background-color: currentColor;
 }
 
+/* Company settings: visual-only enterprise card system; existing form contracts stay intact. */
+.company-settings-v2,.company-settings-v2 *{font-family:'Poppins',-apple-system,BlinkMacSystemFont,sans-serif!important;box-sizing:border-box}
+.company-settings-v2{color:#101e4e;font-size:12px;font-weight:500;padding:0 0 2px}
+.company-settings-v2 .csv2-heading{margin:0 0 18px}
+.company-settings-v2 .csv2-heading h2{margin:0;color:#0e1b4d;font-size:16px;font-weight:600;line-height:1.3}
+.company-settings-v2 .csv2-heading p,.company-settings-v2 .csv2-section-sub{margin:4px 0 0;color:#52638b;font-size:11px;font-weight:500;line-height:1.45}
+.company-settings-v2 .card{display:block!important;height:auto!important;min-height:0!important;margin:0!important;background:transparent!important;border:0!important;border-radius:0!important;box-shadow:none!important;position:relative!important;flex:none!important}
+.company-settings-v2>.card{overflow:hidden;background:#fff!important;border:1px solid #cfd8e8!important;border-radius:10px!important;box-shadow:0 3px 14px rgba(16,30,78,.07)!important}
+.company-settings-v2 .card.d-none,.company-settings-v2 .settings-email-notifications{display:none!important}
+.company-settings-v2 .settings-general-card,.company-settings-v2 .settings-duplicate-card,.company-settings-v2 .settings-department-card{margin:14px!important;background:#fff!important;border:1px solid #d3dcea!important;border-radius:9px!important;box-shadow:0 2px 7px rgba(16,30,78,.055)!important}
+.company-settings-v2 .card-header{min-height:0!important;padding:20px 20px 9px!important;border:0!important;background:#fff!important}
+.company-settings-v2 .card-title h3{margin:0;color:#101e4e;font-size:13px!important;font-weight:600!important}
+.company-settings-v2 .settings-section-content,.company-settings-v2>.card>.card-body{display:block!important;height:auto!important;visibility:visible!important;opacity:1!important}
+.company-settings-v2 #setting_one>.card-body{display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;padding:12px 20px 22px!important;border:0!important}
+.company-settings-v2 #setting_one .row{display:grid!important;grid-template-columns:48px minmax(0,1fr);grid-template-rows:auto auto;column-gap:12px;align-items:center;min-width:0;min-height:82px;margin:0!important;padding:12px!important;background:#fff;border:1px solid #ccd7e8;border-radius:8px;box-shadow:0 1px 3px rgba(16,30,78,.035);transition:border-color .15s,box-shadow .15s}
+.company-settings-v2 #setting_one .row:hover,.company-settings-v2 #setting_one .row:focus-within{border-color:#8eaae0;box-shadow:0 4px 14px rgba(25,68,150,.10)}
+.company-settings-v2 #setting_one .row.d-none{display:none!important}
+.company-settings-v2 #setting_one .row>label{grid-column:2;grid-row:1;width:auto;max-width:none;margin:0!important;padding:0;color:#13224f;font-size:11px!important;font-weight:600!important;line-height:1.35}
+.company-settings-v2 #setting_one .row>.fv-row{grid-column:2;grid-row:2;width:auto;max-width:none;min-width:0;padding:0}
+.company-settings-v2 .csv2-field-icon{grid-column:1;grid-row:1/3;display:flex;width:42px;height:42px;align-items:center;justify-content:center;border-radius:10px}
+.company-settings-v2 .csv2-field-icon svg{width:23px;height:23px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.company-settings-v2 .csv2-blue{color:#1764ef;background:#edf4ff}.company-settings-v2 .csv2-purple{color:#7638eb;background:#f3edff}.company-settings-v2 .csv2-green{color:#159957;background:#ebf9f0}.company-settings-v2 .csv2-orange{color:#f46a22;background:#fff1e8}
+.company-settings-v2 #setting_one .form-select{width:100%;min-height:30px;padding:3px 29px 3px 0!important;color:#334873;font-size:11px;font-weight:500;border:0!important;border-radius:0!important;background-color:transparent!important;box-shadow:none!important;cursor:pointer;text-overflow:ellipsis}
+.company-settings-v2 #setting_one .form-select:focus{color:#172a58;outline:0}
+.company-settings-v2 #setting_one .form-select option,.company-settings-v2 #setting_one .form-select optgroup{color:#354a76;font-family:'Poppins',sans-serif;font-size:11px;font-weight:500;background:#fff}
+.company-settings-v2 #setting_one .select2-container{width:100%!important;min-width:0}
+.company-settings-v2 #setting_one .select2-container .select2-selection--single{height:30px!important;padding:0!important;background:transparent!important;border:0!important;border-radius:0!important;box-shadow:none!important}
+.company-settings-v2 #setting_one .select2-container .select2-selection__rendered{height:30px!important;padding:5px 28px 4px 0!important;color:#334873!important;font-size:11px!important;font-weight:500!important;line-height:21px!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.company-settings-v2 #setting_one .select2-container .select2-selection__arrow{right:0!important;top:2px!important;width:22px!important;height:26px!important}
+.company-settings-v2 #setting_one .select2-container--focus .select2-selection--single{outline:0!important}
+.select2-dropdown.csv2-enterprise-dropdown,.csv2-enterprise-select .select2-dropdown{z-index:1065;margin-top:7px;padding:8px;background:#fff;border:1px solid #dce3ef!important;border-radius:9px!important;box-shadow:0 16px 38px rgba(16,30,78,.18)!important;font-family:'Poppins',sans-serif;overflow:hidden}
+.select2-dropdown.csv2-enterprise-dropdown.csv2-timezone-dropdown{width:min(390px,calc(100vw - 24px))!important;min-width:min(390px,calc(100vw - 24px))!important}
+.select2-dropdown.csv2-enterprise-dropdown.csv2-timeformat-dropdown{width:min(290px,calc(100vw - 24px))!important;min-width:min(290px,calc(100vw - 24px))!important}
+.select2-dropdown.csv2-enterprise-dropdown .select2-search--dropdown{padding:3px 3px 8px}
+.select2-dropdown.csv2-enterprise-dropdown .select2-search--dropdown::before{content:'Search';display:block;margin:0 0 5px 2px;color:#263a68;font-size:10px;font-weight:500;letter-spacing:.1px}
+.select2-dropdown.csv2-enterprise-dropdown .select2-search__field{height:36px;padding:7px 11px;color:#263a68;font-family:'Poppins',sans-serif;font-size:11px;font-weight:500;border:1px solid #cdd8e7!important;border-radius:6px!important;outline:0}
+.select2-dropdown.csv2-enterprise-dropdown .select2-search__field:focus{border-color:#1764ef!important;box-shadow:0 0 0 3px rgba(23,100,239,.08)}
+.select2-dropdown.csv2-enterprise-dropdown .select2-results__options{max-height:260px!important;padding:2px;scrollbar-width:thin;scrollbar-color:#cbd5e1 transparent}
+.select2-dropdown.csv2-enterprise-dropdown .select2-results__group{padding:9px 10px 5px;color:#172957;font-size:10px;font-weight:500;letter-spacing:.2px;text-transform:uppercase}
+.select2-dropdown.csv2-enterprise-dropdown .select2-results__option{min-height:36px;margin:2px 0;padding:8px 10px;color:#354a76;font-size:11px;font-weight:500;line-height:19px;border-radius:6px}
+.select2-dropdown.csv2-enterprise-dropdown.csv2-timezone-dropdown .select2-results__option{white-space:normal;overflow-wrap:anywhere}
+.select2-dropdown.csv2-enterprise-dropdown.csv2-timeformat-dropdown .select2-results__option{display:flex;align-items:center;min-height:42px;padding:9px 11px;white-space:normal}
+.select2-dropdown.csv2-enterprise-dropdown .select2-results__option--highlighted[aria-selected]{color:#154dbb!important;background:#edf4ff!important}
+.select2-dropdown.csv2-enterprise-dropdown .select2-results__option[aria-selected=true]{position:relative;padding-right:34px;color:#0f49bd!important;font-weight:600;background:#e8f1ff!important}
+.select2-dropdown.csv2-enterprise-dropdown .select2-results__option[aria-selected=true]::after{content:'✓';position:absolute;right:11px;top:50%;transform:translateY(-50%);display:flex;width:18px;height:18px;align-items:center;justify-content:center;color:#fff;font-size:10px;background:#1764ef;border-radius:50%}
+.select2-dropdown.csv2-enterprise-dropdown.select2-dropdown--above{margin-top:-7px;margin-bottom:7px}
+.company-settings-v2 #setting_one .form-text{display:none}
+.company-settings-v2 #application_duplicate_settings>.card-body{padding:12px 20px 22px!important;border:0!important}
+.company-settings-v2 #application_duplicate_settings .row{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin:0!important}
+.company-settings-v2 #application_duplicate_settings .col-lg-4{width:auto;max-width:none;padding:0}
+.company-settings-v2 #application_duplicate_settings label.option{display:grid!important;grid-template-columns:26px minmax(0,1fr);height:130px;margin:0;padding:15px;background:#fff;border:1px solid #ccd7e8;border-radius:8px;box-shadow:0 1px 3px rgba(16,30,78,.035);cursor:pointer;transition:border-color .15s,box-shadow .15s}
+.company-settings-v2 #application_duplicate_settings label.option:hover{border-color:#b8c8ed}
+.company-settings-v2 #application_duplicate_settings label.option:has(input:checked){border-color:#1764ff;box-shadow:0 0 0 1px #1764ff inset}
+.company-settings-v2 #application_duplicate_settings .option-control{grid-column:1;margin:1px 0 0}
+.company-settings-v2 #application_duplicate_settings .option-label{grid-column:2;min-width:0}
+.company-settings-v2 #application_duplicate_settings .option-head{display:flex!important;align-items:flex-start;justify-content:space-between;gap:8px;min-height:34px}
+.company-settings-v2 #application_duplicate_settings .option-title{color:#142453;font-size:11px!important;font-weight:600!important;line-height:1.4}
+.company-settings-v2 #application_duplicate_settings .option-body{display:block;color:#56678f;font-size:10px;font-weight:500;line-height:1.5}
+.company-settings-v2 #application_duplicate_settings input[type=radio]{width:17px;height:17px;margin:0;accent-color:#1764ff}
+.company-settings-v2 .csv2-days-row{display:flex;align-items:center;gap:10px;margin-top:15px;color:#56678f;font-size:10px;font-weight:500}
+.company-settings-v2 #application_duplicate_settings input[type=number]{width:74px!important;height:32px;flex:0 0 74px;margin:0;padding:5px 9px;color:#172957;font-size:11px;font-weight:600;background:#fff;border:1px solid #ccd7e8;border-radius:6px!important;outline:0}
+.company-settings-v2 #application_duplicate_settings input[type=number]:focus{border-color:#1764ff;box-shadow:0 0 0 3px rgba(23,100,255,.09)}
+.company-settings-v2 .settings-department-card .card-header{display:flex;align-items:center;justify-content:space-between;padding-top:20px!important}
+.company-settings-v2 .settings-department-card .card-header>.card-title:last-child{margin-left:auto!important}
+.company-settings-v2 .settings-department-card .btn-primary{display:inline-flex;align-items:center;gap:6px;padding:8px 14px;color:#fff;font-size:11px;font-weight:600;background:#1457e8;border:1px solid #1457e8;border-radius:5px;box-shadow:0 3px 8px rgba(20,87,232,.16)}
+.company-settings-v2 .settings-department-card .btn-primary::before{content:'+';font-size:14px;line-height:1}
+.company-settings-v2 .dept_content{display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr));gap:11px;padding:10px 20px 22px!important;border:0!important}
+.company-settings-v2 .dept_content .form-group,.company-settings-v2 .dept_content .row{display:contents!important}
+.company-settings-v2 .dept_content .form-check,.company-settings-v2 .dept_content .form-text{display:none!important}
+.company-settings-v2 .dept_content .col-lg-4{width:auto;max-width:none;padding:0}
+.company-settings-v2 .dept_content .badge{position:relative;width:100%;min-height:44px;padding:8px 34px 8px 55px!important;color:#40517b;font-weight:500;background:#fff!important;border:1px solid #ccd7e8;border-radius:7px;box-shadow:0 1px 3px rgba(16,30,78,.035);overflow:hidden}
+.company-settings-v2 .dept_content .badge::before{content:'';position:absolute;left:12px;top:9px;width:26px;height:26px;border-radius:6px;background:#edf4ff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%231764ef' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2'/%3E%3Ccircle cx='9' cy='7' r='4'/%3E%3Cpath d='M22 21v-2a4 4 0 0 0-3-3.87'/%3E%3C/svg%3E") center/14px no-repeat}
+.company-settings-v2 .dept_content .col-lg-4:nth-of-type(4n+2) .badge::before{background-color:#f3edff;filter:hue-rotate(35deg)}
+.company-settings-v2 .dept_content .col-lg-4:nth-of-type(4n+3) .badge::before{background-color:#ebf9f0;filter:hue-rotate(105deg)}
+.company-settings-v2 .dept_content .col-lg-4:nth-of-type(4n+4) .badge::before{background-color:#fff1e8;filter:hue-rotate(185deg)}
+.company-settings-v2 .dept_content .badge .fs-4{width:100%;font-size:11px!important;font-weight:500!important;text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.company-settings-v2 .dept_content .edit_delete{position:absolute;right:10px;top:50%;transform:translateY(-50%)}
+.company-settings-v2 .dept_content .dept_delete{display:flex;width:24px;height:24px;align-items:center;justify-content:center;color:#64759b!important}
+.company-settings-v2 .dept_content .dept_delete:hover{color:#e11d48!important}
+.company-settings-v2 .dept_content .dept_delete .svg-icon{display:none!important}
+.company-settings-v2 .dept_content .dept_delete::before{content:'×';font-size:17px;font-weight:400;line-height:1}
+.csv2-tab-icon{display:inline-flex;width:16px;height:16px;margin-right:6px;vertical-align:-3px;color:#1764ef}
+.csv2-tab-icon svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.nav-link[href="#settings"] .nav-text{font-family:'Poppins',sans-serif!important;font-weight:600!important}
+.csv2-account-tabs-header{min-height:0!important;padding:4px 0!important;border-bottom:1px solid #e7edf5!important}
+.csv2-account-tabs-wrap{width:100%;min-width:0;overflow:visible}
+.csv2-account-tabs{display:flex!important;flex-wrap:nowrap!important;align-items:stretch;width:100%;min-width:0;margin:0!important;padding:0!important;gap:0;overflow:visible;font-family:'Poppins',sans-serif!important}
+.csv2-account-tabs::-webkit-scrollbar{display:none}
+.csv2-account-tabs .nav-item{display:flex;flex:1 1 0;min-width:0;margin:0!important}
+.csv2-account-tabs .csv2-account-tab{position:relative;display:flex!important;width:100%;min-width:0;align-items:center;justify-content:center;gap:5px;min-height:58px;margin:0!important;padding:11px 6px!important;color:#64748b!important;font-family:'Poppins',sans-serif!important;border:0!important;border-right:1px solid #e9eef5!important;border-radius:0!important;background:transparent!important;white-space:nowrap;transition:color .15s,background-color .15s}
+.csv2-account-tabs .nav-item:last-child .csv2-account-tab{border-right:0!important}
+.csv2-account-tabs .csv2-account-tab::after{content:'';position:absolute;right:8px;bottom:0;left:8px;height:2px;background:transparent;border-radius:2px 2px 0 0}
+.csv2-account-tabs .csv2-account-tab:hover,.csv2-account-tabs .csv2-account-tab:focus{color:#2456ad!important;background:#f8fafc!important;outline:0}
+.csv2-account-tabs .csv2-account-tab.active{color:#2563eb!important;background:rgba(37,99,235,.10)!important}
+.csv2-account-tabs .csv2-account-tab.active::after{background:#2563eb}
+.csv2-account-tabs .csv2-account-tab-icon{display:flex;width:14px;height:14px;flex:0 0 14px;align-items:center;justify-content:center;color:currentColor}
+.csv2-account-tabs .csv2-account-tab-icon svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.csv2-account-tabs .csv2-account-tab-copy{display:flex;flex-direction:column;justify-content:center;min-width:0;overflow:hidden;line-height:1.25}
+.csv2-account-tabs .csv2-account-tab-title{display:block;max-width:100%;overflow:hidden;color:currentColor;font-size:11px;font-weight:500;line-height:1.15;text-overflow:ellipsis}
+.csv2-account-tabs .csv2-account-tab-sub{display:block;max-width:100%;margin-top:3px;overflow:hidden;color:#7b89aa;font-size:9px;font-weight:500;line-height:1.15;text-align:left;text-overflow:ellipsis}
+.csv2-account-tabs .csv2-account-tab.active .csv2-account-tab-title{font-weight:600}
+.csv2-account-tabs .csv2-account-tab.active .csv2-account-tab-sub{color:#5578c3}
+@media(min-width:1440px){.csv2-account-tabs .csv2-account-tab{gap:6px;padding-right:8px!important;padding-left:8px!important}.csv2-account-tabs .csv2-account-tab-icon{width:15px;height:15px;flex-basis:15px}.csv2-account-tabs .csv2-account-tab-icon svg{width:15px;height:15px}.csv2-account-tabs .csv2-account-tab-title{font-size:11.5px}.csv2-account-tabs .csv2-account-tab-sub{font-size:9.5px}}
+@media(max-width:900px){.csv2-account-tabs-wrap{overflow-x:auto;scrollbar-width:none}.csv2-account-tabs{width:max-content;min-width:100%;overflow:visible}.csv2-account-tabs .nav-item{flex:0 0 auto}.csv2-account-tabs .csv2-account-tab{width:auto;min-width:112px;padding-right:10px!important;padding-left:10px!important}.csv2-account-tabs .csv2-account-tab-title{font-size:11px}.csv2-account-tabs .csv2-account-tab-sub{font-size:9px}}
+.company-settings-v2 .card-footer{display:flex!important;align-items:center;margin:0 12px 12px;padding:13px 16px!important;background:#fbfcff!important;border:1px solid #edf0f6!important;border-radius:7px;justify-content:flex-end!important}
+.company-settings-v2 .card-footer .btn{min-width:130px;padding:9px 14px;font-size:11px;font-weight:600;border-radius:5px}
+.company-settings-v2 .card-footer .btn-primary{color:#fff;background:#1457e8;border-color:#1457e8}
+.company-settings-v2 .csv2-save-spinner{display:none;width:15px;height:15px;margin-right:7px;vertical-align:-3px;border:2px solid rgba(255,255,255,.42);border-top-color:#fff;border-radius:50%;animation:csv2-save-spin .7s linear infinite}
+.company-settings-v2 #updateCompanyProfile.is-loading .csv2-save-spinner{display:inline-block}
+.company-settings-v2 #updateCompanyProfile:disabled{cursor:not-allowed;opacity:.78}
+@keyframes csv2-save-spin{to{transform:rotate(360deg)}}
+@media(prefers-reduced-motion:reduce){.company-settings-v2 .csv2-save-spinner{animation-duration:1.4s}}
+@media(max-width:1199px){.company-settings-v2 #setting_one>.card-body{grid-template-columns:repeat(2,minmax(0,1fr))}.company-settings-v2 .dept_content{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:767px){.company-settings-v2 #setting_one>.card-body,.company-settings-v2 #application_duplicate_settings .row{grid-template-columns:1fr}.company-settings-v2 .dept_content{grid-template-columns:repeat(2,minmax(0,1fr))}.company-settings-v2 .card-footer{flex-wrap:wrap;gap:8px}}
+
+/* Notifications tab: uses the existing tenant email-routing backend in a dense two-column layout. */
+.csn,.csn *{font-family:'Poppins',-apple-system,BlinkMacSystemFont,sans-serif!important;box-sizing:border-box}
+.csn{color:#13224f;padding:0 2px 14px}
+.csn-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.csn-card{min-width:0;background:#fff;border:1px solid #d3dcea;border-radius:10px;box-shadow:0 2px 7px rgba(16,30,78,.055);overflow:hidden}
+.csn-card-head{display:flex;align-items:center;gap:12px;padding:15px 16px 10px}
+.csn-head-icon{display:flex;width:38px;height:38px;flex:0 0 38px;align-items:center;justify-content:center;border-radius:8px}
+.csn-head-icon svg,.csn-item-icon svg,.csn-email-icon svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.csn-purple{color:#6338ed;background:#f1ebff}.csn-green{color:#0d9c55;background:#e7f9ef}
+.csn-card-title{color:#111f4d;font-size:12px;font-weight:600;line-height:1.35}
+.csn-card-sub{margin-top:3px;color:#5c6d94;font-size:10px;font-weight:500;line-height:1.4}
+.csn-card-body{padding:7px 16px 14px}
+.csn-label{display:block;margin:0 0 6px;color:#172957;font-size:10.5px;font-weight:600}
+.csn-email-wrap{position:relative;margin-bottom:12px}
+.csn-email{width:100%;height:36px;padding:7px 38px 7px 11px;color:#2e426f;font-size:11px;font-weight:500;background:#fff;border:1px solid #ccd7e8;border-radius:6px;outline:0;transition:border-color .15s,box-shadow .15s}
+.csn-email:focus{border-color:#7456ee;box-shadow:0 0 0 3px rgba(99,56,237,.08)}
+.csn-email-icon{position:absolute;right:10px;top:50%;display:flex;width:18px;height:18px;align-items:center;justify-content:center;color:#5b6e99;transform:translateY(-50%);pointer-events:none}
+.csn-category-label{margin:0 0 7px;color:#172957;font-size:10.5px;font-weight:600}
+.csn-list{display:grid;gap:0;border:1px solid #e1e7f0;border-radius:8px;overflow:hidden}
+.csn-item{display:grid;grid-template-columns:28px minmax(0,1fr) 14px;align-items:center;gap:9px;min-height:50px;padding:7px 10px;background:#fff;border-bottom:1px solid #e9edf4}
+.csn-item:last-child{border-bottom:0}
+.csn-item-icon{display:flex;width:27px;height:27px;align-items:center;justify-content:center;border-radius:6px}
+.csn-item-icon svg{width:14px;height:14px}
+.csn-item-title{color:#172957;font-size:10.5px;font-weight:600;line-height:1.3}
+.csn-item-desc{margin-top:2px;color:#61719a;font-size:9px;font-weight:500;line-height:1.35}
+.csn-item-arrow{color:#41577f;font-size:15px;font-weight:500;text-align:center}
+.csn-sales .csn-item-title{color:#087343}
+.csn-actions{display:flex;align-items:center;justify-content:flex-end;gap:10px;margin-top:14px;padding:12px 14px;background:#fff;border:1px solid #d3dcea;border-radius:9px;box-shadow:0 2px 7px rgba(16,30,78,.045)}
+.csn-actions .btn{min-width:128px;padding:9px 14px;font-size:11px;font-weight:600;border-radius:5px}
+.csn-actions .btn-primary{background:#6338ed;border-color:#6338ed}
+.csn-save-spinner{display:none;width:15px;height:15px;margin-right:7px;vertical-align:-3px;border:2px solid rgba(255,255,255,.42);border-top-color:#fff;border-radius:50%;animation:csv2-save-spin .7s linear infinite}
+#saveNotificationSettings.is-loading .csn-save-spinner{display:inline-block}
+#saveNotificationSettings:disabled{cursor:not-allowed;opacity:.78}
+@media(max-width:1100px){.csn-item{min-height:50px}.csn-item-desc{font-size:8.5px}}
+@media(max-height:800px) and (min-width:901px){.csn-card-head{padding:11px 14px 7px}.csn-head-icon{width:34px;height:34px}.csn-card-body{padding:6px 14px 11px}.csn-email-wrap{margin-top:5px}.csn-email{height:34px}.csn-category-label{margin:9px 0 6px}.csn-item{min-height:43px;padding:5px 9px}.csn-item-icon{width:27px;height:27px}.csn-item-desc{font-size:8px;line-height:1.25}.csn-actions{margin-top:10px;padding:10px 12px}}
+@media(max-width:900px){.csn-grid{grid-template-columns:1fr}.csn-actions{position:sticky;bottom:0;z-index:2}.csn-actions .btn{flex:1;min-width:0}}
+
 /* ===== Company Dashboard redesign (scoped .cad) — Poppins, <=14px, Metronic-friendly ===== */
 .cad, .cad * { font-family:'Poppins',-apple-system,BlinkMacSystemFont,sans-serif; box-sizing:border-box; }
 .cad { font-size:13px; color:#1f2937; }
@@ -214,9 +366,101 @@ input[type="radio"]:checked {
 .atc-editor { border:1px solid #eef0f5; border-radius:11px; padding:16px 18px; max-height:520px; overflow:auto; background:#fff; }
 .atc-editor, .atc-editor * { font-size:13px; line-height:1.6; color:#334155; }
 .atc-editor h1,.atc-editor h2,.atc-editor h3 { font-size:14px !important; }
+.agency-agreement,.agency-agreement *{box-sizing:border-box;font-family:'Poppins',sans-serif!important}.agency-agreement{color:#151b3b;font-size:12px}.aat-hero{display:flex;align-items:flex-start;justify-content:space-between;gap:18px;margin:0 2px 16px}.aat-title-wrap{display:flex;gap:14px;min-width:0}.aat-hero-icon,.aat-sec-icon,.aat-flow-icon{display:inline-flex;align-items:center;justify-content:center;color:#6c3ff2;background:#f1ecff;border-radius:10px;flex:0 0 auto}.aat-hero-icon{width:50px;height:50px}.aat-hero-icon svg{width:27px;height:27px}.aat-title{margin:0;color:#111733;font-size:20px!important;font-weight:600!important;line-height:1.25}.aat-sub{max-width:650px;margin:6px 0 0;color:#53617f;font-size:12px;line-height:1.55}.aat-actions{display:grid;grid-template-columns:1fr 1fr;gap:9px;min-width:245px}.aat-status-row{display:flex;align-items:center;gap:8px;color:#53617f;font-size:11px;grid-column:1/-1}.aat-pill{display:inline-flex;align-items:center;gap:6px;padding:5px 9px;border-radius:7px;font-size:11px;font-weight:600}.aat-pill.ok{color:#0c8f52;background:#e8f9ef}.aat-pill.v{color:#6941c6;background:#f0e9ff}.aat-card{margin:0 2px 16px;padding:18px;background:#fff;border:1px solid #e8edf5;border-radius:14px;box-shadow:0 2px 6px rgba(15,23,42,.035)}.aat-sec-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:16px}.aat-sec-title{display:flex;gap:12px;align-items:flex-start}.aat-sec-icon{width:34px;height:34px}.aat-sec-icon svg{width:18px;height:18px}.aat-sec-t{font-size:14px;font-weight:600;color:#111733}.aat-sec-s{margin-top:2px;color:#73809a;font-size:11px}.aat-btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;min-height:34px;padding:8px 14px;border:1px solid #d8c9ff;border-radius:7px;background:#fff;color:#6941c6;font-size:11px;font-weight:600;text-decoration:none}.aat-btn.primary{background:linear-gradient(135deg,#7c4dff,#673ab7);border-color:#673ab7;color:#fff}.aat-btn svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2}.aat-commercial-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}.aat-commercial{padding:18px;border:1px solid #e5ebf3;border-radius:12px;background:#fff}.aat-commercial.purple{background:linear-gradient(135deg,#fff,#fbf8ff)}.aat-commercial.orange{background:linear-gradient(135deg,#fff,#fff9f1)}.aat-service-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:14px}.aat-service-title{display:flex;align-items:center;gap:12px;color:#5f3bd5;font-size:13px;font-weight:600}.aat-service-title.orange{color:#d56a00}.aat-avatar{width:48px;height:48px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;background:#f1ecff;color:#6c3ff2}.aat-avatar.orange{background:#fff0de;color:#d56a00}.aat-avatar svg{width:23px;height:23px;fill:none;stroke:currentColor;stroke-width:2}.aat-tag{padding:6px 9px;border-radius:7px;background:#f1ecff;color:#6c3ff2;font-size:10px;font-weight:600}.aat-tag.orange{background:#fff0de;color:#d56a00}.aat-rows{display:grid;gap:0}.aat-row{display:grid;grid-template-columns:190px 1fr;gap:12px;align-items:center;min-height:36px;border-bottom:1px solid #edf1f6;color:#24304d;font-size:11.5px}.aat-row:last-child{border-bottom:0}.aat-row .label{display:flex;align-items:center;gap:9px;color:#53617f}.aat-row .label svg{width:14px;height:14px;color:#7c4dff;fill:none;stroke:currentColor;stroke-width:2}.aat-row .value{font-weight:600;color:#1b2440}.aat-note{margin-top:14px;padding:10px 12px;border:1px solid #ddd1ff;border-radius:7px;background:#fbf9ff;color:#5f3bd5;font-size:11px}.aat-note.orange{border-color:#ffd9a8;background:#fffaf2;color:#c45f00}.aat-two-col{display:grid;grid-template-columns:minmax(0,.95fr) minmax(0,1.35fr);gap:16px}.aat-rule-grid{display:grid;gap:10px}.aat-rule{display:grid;grid-template-columns:190px 1fr;gap:12px;font-size:11.5px}.aat-rule .k{color:#53617f}.aat-rule .v{font-weight:600;color:#1b2440}.aat-yes{color:#12935a}.aat-no{color:#dc3545}.aat-flow{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;align-items:start;text-align:center}.aat-flow-step{position:relative}.aat-flow-step:not(:last-child):after{content:'→';position:absolute;right:-12px;top:27px;color:#a293d6;font-weight:600}.aat-flow-icon{width:56px;height:56px;margin:0 auto 10px;border:1px solid #dcd2ff;border-radius:50%;background:#fbf9ff}.aat-flow-icon svg{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:1.9}.aat-flow-n{font-size:13px;font-weight:700;color:#111733}.aat-flow-t{margin-top:5px;color:#111733;font-size:11.5px;font-weight:600}.aat-flow-s{margin-top:3px;color:#65718d;font-size:10.5px;line-height:1.45}.aat-vars{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px}.aat-var{padding:12px;border:1px solid #e8edf5;border-radius:9px;background:#fff}.aat-var code{display:block;color:#6941c6;font-size:10.5px;font-weight:700;background:transparent}.aat-var span{display:block;margin-top:5px;color:#65718d;font-size:10.5px}.aat-editor-card .atc-editor{border-radius:0 0 10px 10px;max-height:410px}.aat-editor-toolbar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:-4px 0 12px}.aat-important{display:flex;gap:10px;margin:0 2px 18px;padding:14px 16px;border:1px solid #ddd1ff;border-radius:10px;background:#fbf9ff;color:#4d3a91;font-size:11.5px;line-height:1.5}.aat-form{display:none;margin-top:12px;padding:14px;border:1px dashed #d8c9ff;border-radius:10px;background:#fbf9ff}.aat-form.open{display:block}.aat-form-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}.aat-form label{display:block;color:#34405f;font-size:10.5px;font-weight:600}.aat-form input,.aat-form select{width:100%;height:34px;margin-top:5px;padding:6px 9px;border:1px solid #dbe3ee;border-radius:7px;background:#fff;color:#17203a;font-size:11px}
+.aat-drawer-overlay{position:fixed;top:0;right:0;bottom:0;left:220px;background:rgba(15,23,42,.34);opacity:0;visibility:hidden;z-index:1060;transition:opacity .18s ease}.aat-drawer-overlay.show{opacity:1;visibility:visible}.aat-drawer{position:fixed;top:0;right:0;bottom:0;width:min(1260px,calc((100vw - 220px)*.9));max-width:calc(100vw - 220px);background:#f8fafc;box-shadow:-18px 0 42px rgba(15,23,42,.18);z-index:1061;transform:translateX(105%);transition:transform .22s ease;overflow:auto;font-family:'Poppins',sans-serif}.aat-drawer.open{transform:translateX(0)}.aat-drawer-head{position:sticky;top:0;z-index:2;display:flex;align-items:center;justify-content:space-between;gap:16px;padding:18px 22px;background:#fff;border-bottom:1px solid #e6ebf3}.aat-drawer-title{display:flex;gap:14px;align-items:center}.aat-drawer-title h3{margin:0;color:#111733;font-size:20px!important;font-weight:600!important}.aat-drawer-title p{margin:5px 0 0;color:#53617f;font-size:12px}.aat-drawer-close{width:34px;height:34px;border:1px solid #dce3ee;border-radius:8px;background:#fff;color:#64748b;font-size:22px;line-height:1}.aat-drawer-meta{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;color:#53617f;font-size:11px}.aat-drawer-body{padding:18px 22px 86px}.aat-drawer-tabs{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px;padding:0 6px;border-bottom:1px solid #e6ebf3;background:#fff;border-radius:12px 12px 0 0}.aat-drawer-tab{min-height:52px;padding:0 18px;border:0;border-bottom:3px solid transparent;background:transparent;color:#31405f;font-size:13px;font-weight:600}.aat-drawer-tab.active{color:#6938ef;border-color:#6938ef}.aat-edit-alert{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px;padding:13px 16px;border:1px solid #b9c7ff;border-radius:8px;background:#f6f8ff;color:#53617f;font-size:12px}.aat-edit-section{margin-bottom:16px;border:1px solid #e5ebf3;border-radius:12px;background:#fff;overflow:hidden}.aat-edit-section-head{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:18px;border-bottom:1px solid #eef2f7}.aat-edit-section-title{display:flex;align-items:center;gap:12px}.aat-edit-section-title h4{margin:0;color:#111733;font-size:16px!important;font-weight:600!important}.aat-edit-section-title p{margin:3px 0 0;color:#697797;font-size:11px}.aat-edit-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px 28px;padding:18px}.aat-field label{display:flex;align-items:center;gap:6px;margin:0 0 8px;color:#1f2a44;font-size:11px;font-weight:600}.aat-field label .req{color:#f04438}.aat-control,.aat-field select,.aat-field input{width:100%;height:42px;padding:9px 12px;border:1px solid #dce3ee;border-radius:7px;background:#fff;color:#24304d;font-size:12px;font-weight:500}.aat-input-group{display:grid;grid-template-columns:82px minmax(0,1fr);align-items:center}.aat-input-group select,.aat-input-group input{border-radius:0}.aat-input-group select:first-child,.aat-input-group input:first-child{border-radius:7px 0 0 7px}.aat-input-group select:last-child,.aat-input-group input:last-child{border-radius:0 7px 7px 0;border-left:0}.aat-input-suffix{display:grid;grid-template-columns:minmax(0,1fr) 62px}.aat-input-suffix input{border-radius:7px 0 0 7px}.aat-input-suffix span{display:flex;align-items:center;justify-content:center;border:1px solid #dce3ee;border-left:0;border-radius:0 7px 7px 0;color:#53617f;background:#fff;font-size:12px}.aat-checks{display:flex;align-items:center;gap:10px;flex-wrap:wrap;min-height:42px}.aat-checks label{display:inline-flex;align-items:center;gap:6px;margin:0;padding:8px 9px;border:1px solid #e5ebf3;border-radius:7px;color:#5138b8;background:#fff;font-size:11px}.aat-checks input{width:14px;height:14px;accent-color:#6d3df2}.aat-calc{grid-column:1/-1;margin-top:4px;padding:14px;border:1px solid #e3d7ff;border-radius:8px;background:#fbf8ff}.aat-calc.orange{border-color:#ffd59c;background:#fffaf2}.aat-calc h5{margin:0 0 12px;color:#6d3df2;font-size:13px;font-weight:600}.aat-calc.orange h5{color:#e16b00}.aat-calc-row{display:grid;grid-template-columns:1fr 28px 1fr 28px 1fr;align-items:center;gap:10px;max-width:980px;margin:0 auto;padding:12px;border:1px solid #eee7ff;border-radius:8px;background:#fff}.aat-calc-cell{color:#53617f;font-size:11px}.aat-calc-cell b{display:block;margin-top:4px;color:#111733;font-size:14px}.aat-general-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:18px;padding:18px}.aat-drawer-footer{position:sticky;bottom:0;z-index:3;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 22px;background:#fff;border-top:1px solid #e5ebf3}.aat-footer-actions{display:flex;gap:10px}.aat-btn.ghost{border-color:#dce3ee;color:#34405f}.aat-btn.save{min-width:150px}
+.aga-drawer-overlay{position:fixed;top:0;right:0;bottom:0;left:220px;background:rgba(15,23,42,.35);opacity:0;visibility:hidden;z-index:1070;transition:opacity .18s ease}.aga-drawer-overlay.show{opacity:1;visibility:visible}.aga-drawer{position:fixed;top:0;right:0;bottom:0;width:min(1380px,calc((100vw - 220px)*.9));max-width:calc(100vw - 220px);background:#f8fafc;box-shadow:-18px 0 46px rgba(15,23,42,.2);z-index:1071;transform:translateX(105%);transition:transform .22s ease;overflow:auto;font-family:'Poppins',sans-serif;color:#101833}.aga-drawer.open{transform:translateX(0)}.aga-head{position:sticky;top:0;z-index:4;display:flex;align-items:center;justify-content:space-between;gap:16px;padding:18px 22px;background:#fff;border-bottom:1px solid #e6ebf3}.aga-title-wrap{display:flex;align-items:center;gap:14px}.aga-title-wrap h3{margin:0;font-size:20px!important;font-weight:600!important;color:#101833}.aga-title-wrap p{margin:5px 0 0;color:#53617f;font-size:12px}.aga-head-actions{display:flex;align-items:center;gap:9px;flex-wrap:wrap;justify-content:flex-end}.aga-meta{display:grid;gap:4px;margin-right:12px;color:#52607b;font-size:11px}.aga-info{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:14px 22px 0;padding:12px 14px;border:1px solid #d8d3ff;border-radius:8px;background:#fbfaff;color:#4d35b0;font-size:12px}.aga-shell{display:grid;grid-template-columns:230px minmax(0,1fr) 245px;gap:14px;padding:14px 22px 22px}.aga-side,.aga-main,.aga-right{background:#fff;border:1px solid #e5ebf3;border-radius:12px}.aga-side{padding:14px}.aga-side h4,.aga-right h4{margin:0 0 12px;font-size:13px!important;font-weight:600!important;color:#101833}.aga-search{width:100%;height:35px;margin-bottom:10px;padding:8px 10px;border:1px solid #dce3ee;border-radius:7px;color:#53617f;font-size:11px}.aga-outline{display:grid;gap:2px;margin:0;padding:0;list-style:none}.aga-outline li{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 7px;border-radius:7px;color:#101833;font-size:11px;font-weight:600}.aga-outline li.active{background:#f1ecff;color:#6338e8;border-left:3px solid #6338e8}.aga-sublist{margin:3px 0 9px 14px;padding:0;list-style:none;color:#53617f;font-size:10.5px}.aga-sublist li{padding:4px 0}.aga-add-section{width:100%;margin:12px 0;padding:9px;border:1px solid #d8c9ff;border-radius:7px;background:#fff;color:#6338e8;font-size:11px;font-weight:600}.aga-settings{margin-top:12px;padding-top:12px;border-top:1px solid #edf1f6}.aga-settings label{display:block;margin:9px 0 5px;color:#53617f;font-size:10.5px}.aga-settings select{width:100%;height:34px;border:1px solid #dce3ee;border-radius:7px;background:#fff;color:#24304d;font-size:11px}.aga-main{overflow:hidden}.aga-tabs{display:flex;align-items:center;justify-content:space-between;padding:0 14px;border-bottom:1px solid #eef2f7}.aga-tabs-left{display:flex;gap:18px}.aga-tab{display:inline-flex;align-items:center;gap:7px;min-height:48px;border:0;border-bottom:3px solid transparent;background:transparent;color:#31405f;font-size:12px;font-weight:600}.aga-tab.active{color:#6338e8;border-color:#6338e8}.aga-tools{display:flex;gap:8px;flex-wrap:wrap}.aga-toolbar{display:flex;align-items:center;gap:7px;padding:12px 14px;border-bottom:1px solid #eef2f7;background:#fff}.aga-toolbar select,.aga-toolbar button{height:34px;border:1px solid #dce3ee;border-radius:6px;background:#fff;color:#24304d;font-size:11px}.aga-toolbar select{padding:0 10px}.aga-toolbar button{min-width:34px;font-weight:700}.aga-editor-wrap{padding:12px 14px}.aga-editor-card{border:1px solid #e5ebf3;border-radius:10px;overflow:hidden;background:#fff}.aga-editor-card textarea{min-height:560px}.aga-editor-card .cke{border:0!important}.aga-editor-card .cke_contents{min-height:560px!important}.aga-editor-foot{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border-top:1px solid #eef2f7;color:#53617f;font-size:10.5px}.aga-right{padding:14px}.aga-var-tabs{display:grid;grid-template-columns:1fr 1fr;margin-bottom:10px;border-bottom:1px solid #e5ebf3}.aga-var-tabs span{padding:8px;text-align:center;color:#53617f;font-size:11px;font-weight:600}.aga-var-tabs .active{color:#6338e8;border-bottom:3px solid #6338e8}.aga-var-list{display:grid;gap:7px;max-height:285px;overflow:auto;padding-right:4px}.aga-var-item{display:flex;align-items:center;justify-content:space-between;gap:8px}.aga-var-item code{padding:4px 7px;border:1px solid #ded6ff;border-radius:5px;background:#fbf9ff;color:#6338e8;font-size:10px}.aga-var-item span{color:#53617f;font-size:10px}.aga-card{margin-top:12px;padding:13px;border:1px solid #e5ebf3;border-radius:10px;background:#fff}.aga-meta-list{display:grid;gap:9px}.aga-meta-row{display:flex;justify-content:space-between;gap:10px;color:#53617f;font-size:11px}.aga-meta-row b{color:#17203a;font-weight:600}.aga-tips{border-color:#ffd9a8;background:#fffaf2;color:#9a4f00}.aga-tips ul{margin:0;padding-left:18px}.aga-tips li{margin:6px 0;font-size:11px}.aga-close{width:34px;height:34px;border:1px solid #dce3ee;border-radius:8px;background:#fff;color:#64748b;font-size:22px;line-height:1}
+.avd-overlay{position:fixed;top:0;right:0;bottom:0;left:220px;background:rgba(15,23,42,.34);opacity:0;visibility:hidden;z-index:1080;transition:opacity .18s ease}.avd-overlay.show{opacity:1;visibility:visible}.avd-drawer{position:fixed;top:0;right:0;bottom:0;width:min(1380px,calc((100vw - 220px)*.9));max-width:calc(100vw - 220px);background:#f8fafc;box-shadow:-18px 0 46px rgba(15,23,42,.2);z-index:1081;transform:translateX(105%);transition:transform .22s ease;overflow:auto;font-family:'Poppins',sans-serif;color:#101833}.avd-drawer.open{transform:translateX(0)}.avd-head{display:flex;align-items:center;justify-content:space-between;gap:18px;padding:20px 22px;background:#fff;border-bottom:1px solid #e6ebf3}.avd-title{display:flex;align-items:center;gap:14px}.avd-title h3{margin:0;color:#101833;font-size:22px!important;font-weight:600!important}.avd-title p{margin:6px 0 0;color:#53617f;font-size:12px;line-height:1.5}.avd-actions{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-left:auto}.avd-body{display:grid;grid-template-columns:235px minmax(0,1fr);gap:14px;padding:14px 22px 22px}.avd-card{background:#fff;border:1px solid #e5ebf3;border-radius:12px;box-shadow:0 2px 6px rgba(15,23,42,.025)}.avd-pad{padding:16px}.avd-card h4{margin:0 0 14px;color:#101833;font-size:14px!important;font-weight:600!important}.avd-cat{display:grid;gap:5px}.avd-cat button{display:flex;align-items:center;justify-content:space-between;gap:8px;width:100%;min-height:40px;padding:9px 10px;border:0;border-radius:8px;background:transparent;color:#20304f;font-size:12px;font-weight:500;text-align:left}.avd-cat button.active{background:#f2ecff;color:#6338e8;font-weight:600}.avd-cat span{display:inline-flex;align-items:center;gap:8px}.avd-help{display:grid;gap:16px;margin-top:14px;padding:16px;background:linear-gradient(180deg,#fff,#fbfaff)}.avd-help-item{display:flex;gap:10px;color:#53617f;font-size:11px;line-height:1.45}.avd-help-item b{display:block;color:#101833;font-size:12px}.avd-filter{display:grid;grid-template-columns:minmax(0,1fr) 160px 145px 190px;gap:12px;padding:14px;border-bottom:1px solid #edf1f6}.avd-input,.avd-select{height:38px;border:1px solid #dce3ee;border-radius:7px;background:#fff;color:#34405f;font-size:11px;padding:8px 10px}.avd-check{display:flex;align-items:center;gap:8px;color:#34405f;font-size:11px}.avd-table{width:100%;border-collapse:collapse}.avd-table th{padding:11px 12px;background:#f8fafc;border-bottom:1px solid #e5ebf3;color:#52617e;font-size:10px;font-weight:700;text-align:left}.avd-table td{padding:11px 12px;border-bottom:1px solid #edf1f6;color:#17203a;font-size:11.5px;vertical-align:middle}.avd-code{display:inline-flex;padding:4px 7px;border:1px solid #ded6ff;border-radius:5px;background:#fbf9ff;color:#6338e8;font-size:10px;font-weight:700}.avd-badge{display:inline-flex;padding:4px 8px;border-radius:6px;font-size:10px;font-weight:600}.avd-badge.agency{background:#f1ecff;color:#6338e8}.avd-badge.company{background:#eaf3ff;color:#0b6ff0}.avd-badge.job{background:#fff0de;color:#c75d00}.avd-badge.commercial{background:#e7f8f1;color:#07895c}.avd-badge.system{background:#fff7d6;color:#a36c00}.avd-status{display:inline-flex;align-items:center;gap:5px;padding:4px 8px;border-radius:6px;background:#e9f8f1;color:#068752;font-size:10px;font-weight:600}.avd-status:before{content:'';width:5px;height:5px;border-radius:50%;background:#09a76f}.avd-row-actions{display:flex;gap:9px;color:#34405f}.avd-row-actions button{border:0;background:transparent;color:#34405f;font-size:15px}.avd-foot{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;color:#52617e;font-size:11px}.avd-pages{display:flex;gap:6px}.avd-pages span{display:inline-flex;align-items:center;justify-content:center;min-width:28px;height:28px;border:1px solid #e5ebf3;border-radius:6px;background:#fff;color:#34405f}.avd-pages .active{background:#6338e8;color:#fff}.avd-info{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin:4px 22px 22px;padding:14px 16px;border:1px solid #ddd1ff;border-radius:10px;background:#fbf9ff;color:#4d3a91;font-size:11.5px;line-height:1.5}.avd-empty{display:none;padding:24px;text-align:center;color:#53617f;font-size:12px}
+.apv-overlay{position:fixed;top:0;right:0;bottom:0;left:220px;background:rgba(15,23,42,.34);opacity:0;visibility:hidden;z-index:1090;transition:opacity .18s ease}.apv-overlay.show{opacity:1;visibility:visible}.apv-drawer{position:fixed;top:0;right:0;bottom:0;width:min(1380px,calc((100vw - 220px)*.9));max-width:calc(100vw - 220px);background:#f8fafc;box-shadow:-18px 0 46px rgba(15,23,42,.2);z-index:1091;transform:translateX(105%);transition:transform .22s ease;overflow:auto;font-family:'Poppins',sans-serif;color:#101833}.apv-drawer.open{transform:translateX(0)}.apv-head{display:flex;align-items:center;justify-content:space-between;gap:18px;padding:20px 22px;background:#fff;border-bottom:1px solid #e6ebf3}.apv-title{display:flex;align-items:center;gap:14px}.apv-title h3{margin:0;color:#101833;font-size:22px!important;font-weight:600!important}.apv-title p{margin:6px 0 0;color:#53617f;font-size:12px;line-height:1.5}.apv-meta{display:grid;gap:6px;margin-left:auto;color:#53617f;font-size:11px}.apv-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.apv-body{display:grid;grid-template-columns:270px minmax(0,1fr) 270px;gap:14px;padding:14px 22px 22px}.apv-card{background:#fff;border:1px solid #e5ebf3;border-radius:12px;box-shadow:0 2px 6px rgba(15,23,42,.025)}.apv-pad{padding:16px}.apv-card h4{margin:0 0 12px;color:#101833;font-size:14px!important;font-weight:600!important}.apv-card p{color:#53617f;font-size:11px;line-height:1.45}.apv-select{width:100%;height:38px;border:1px solid #dce3ee;border-radius:7px;background:#fff;color:#24304d;font-size:11px;padding:8px 10px}.apv-detail{display:grid;gap:14px}.apv-detail-row{display:flex;gap:10px;color:#101833;font-size:11.5px;line-height:1.45}.apv-detail-row span:first-child{width:24px;height:24px;border-radius:7px;background:#f2ecff;color:#6338e8;display:inline-flex;align-items:center;justify-content:center;flex:0 0 auto}.apv-detail-row b{display:block;margin-bottom:3px;color:#53617f;font-size:10.5px;font-weight:500}.apv-other{margin-top:16px;padding-top:14px;border-top:1px solid #edf1f6}.apv-other-row{display:flex;justify-content:space-between;gap:12px;margin:9px 0;color:#53617f;font-size:11px}.apv-other-row b{color:#101833;font-weight:600}.apv-main{overflow:hidden}.apv-toolbar{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:0 16px;border-bottom:1px solid #eef2f7}.apv-tabs{display:flex;gap:18px}.apv-tab{min-height:50px;border:0;border-bottom:3px solid transparent;background:transparent;color:#31405f;font-size:12px;font-weight:600}.apv-tab.active{color:#6338e8;border-color:#6338e8}.apv-tools{display:flex;gap:9px;align-items:center}.apv-alert{margin:16px;padding:11px 13px;border:1px solid #bed0ff;border-radius:7px;background:#f6f9ff;color:#3155c9;font-size:11.5px}.apv-document{margin:0 16px 16px;padding:28px 46px;max-height:610px;overflow:auto;border:1px solid #dfe6f1;border-radius:8px;background:#fff;color:#111733;font-size:13px;line-height:1.75}.apv-document h1,.apv-document h2,.apv-document h3{text-align:center;color:#111733;font-size:18px!important;font-weight:700!important}.apv-document .apv-party-grid{display:grid;grid-template-columns:1fr 80px 1fr;gap:18px;align-items:center;text-align:center;margin:24px 0}.apv-document .apv-party-name{color:#4f2bd5;font-size:15px;font-weight:700}.apv-document hr{border:0;border-top:1px solid #dfe6f1;margin:24px 0}.apv-summary-list{display:grid;gap:13px}.apv-summary-row{display:flex;justify-content:space-between;gap:12px;color:#53617f;font-size:11px}.apv-summary-row b{color:#101833}.apv-commercial{margin-top:14px;padding:15px;border-radius:10px;background:#fbfaff}.apv-commercial.orange{background:#fffaf2}.apv-commercial h5{margin:0 0 12px;color:#6338e8;font-size:13px;font-weight:600}.apv-commercial.orange h5{color:#d56a00}.apv-readonly{margin-top:14px;padding:14px;border:1px solid #ddd1ff;border-radius:10px;background:#fbf9ff;color:#4d3a91;font-size:11.5px;line-height:1.5}.apv-info{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0 22px 22px;padding:14px 16px;border:1px solid #ddd1ff;border-radius:10px;background:#fbf9ff;color:#4d3a91;font-size:11.5px}.apv-plain{display:none;white-space:pre-wrap;font-family:'Poppins',sans-serif}
 @media (max-width:1200px){ .atc-vars { grid-template-columns:repeat(3,1fr); } }
-@media (max-width:768px){ .atc-vars { grid-template-columns:1fr 1fr; } .atc-meta .atc-btn { margin-left:0; } }
+@media (max-width:1200px){.aga-shell{grid-template-columns:210px minmax(0,1fr)}.aga-right{grid-column:1/-1}.aga-head{align-items:flex-start;flex-direction:column}.aga-head-actions{justify-content:flex-start}.aga-drawer{width:calc(100vw - 220px)}}
+@media (max-width:1200px){.avd-body{grid-template-columns:220px minmax(0,1fr)}.avd-right{grid-column:1/-1}.avd-filter{grid-template-columns:1fr 150px 140px}.avd-check{grid-column:1/-1}.avd-head{align-items:flex-start;flex-direction:column}.avd-drawer{width:calc(100vw - 220px)}}
+@media (max-width:1200px){.apv-body{grid-template-columns:250px minmax(0,1fr)}.apv-body>aside:last-child{grid-column:1/-1}.apv-head{align-items:flex-start;flex-direction:column}.apv-meta{margin-left:0}.apv-drawer{width:calc(100vw - 220px)}}
+@media (max-width:1200px){.aat-commercial-grid,.aat-two-col{grid-template-columns:1fr}.aat-vars{grid-template-columns:repeat(3,1fr)}.aat-form-grid{grid-template-columns:repeat(2,1fr)}}
+@media (max-width:768px){ .atc-vars { grid-template-columns:1fr 1fr; } .atc-meta .atc-btn { margin-left:0; } .aat-hero{display:block}.aat-actions{margin-top:12px;min-width:0}.aat-flow,.aat-vars,.aat-form-grid{grid-template-columns:1fr}.aat-row,.aat-rule{grid-template-columns:1fr}.aat-flow-step:after{display:none}.aga-drawer-overlay,.avd-overlay,.apv-overlay{left:0}.aga-drawer,.avd-drawer,.apv-drawer{width:96vw;max-width:96vw}.aga-shell{grid-template-columns:1fr;padding:12px}.aga-side{order:2}.aga-right{order:3}.aga-toolbar{overflow:auto}.aga-info{margin-left:12px;margin-right:12px}.avd-body{grid-template-columns:1fr;padding:12px}.avd-filter{grid-template-columns:1fr}.avd-table-wrap{overflow:auto}.avd-head,.avd-info{margin-left:12px;margin-right:12px}.avd-head{padding:16px 12px}.apv-body{grid-template-columns:1fr;padding:12px}.apv-head,.apv-info{margin-left:12px;margin-right:12px}.apv-head{padding:16px 12px}.apv-document{padding:20px;max-height:560px}.apv-document .apv-party-grid{grid-template-columns:1fr} }
 
+/* Agency variables drawer: single-column layout with client-side paging for laptop-sized screens. */
+.avd-body{grid-template-columns:minmax(0,1fr)!important;padding:12px 18px 18px!important;gap:12px!important}.avd-filter{grid-template-columns:minmax(220px,1fr) 158px 142px 170px;gap:10px;padding:13px}.avd-table-wrap{max-height:calc(100vh - 292px);overflow:auto}.avd-table{min-width:920px;table-layout:fixed}.avd-table th,.avd-table td{padding:9px 10px;word-break:break-word}.avd-table th:nth-child(1),.avd-table td:nth-child(1){width:170px}.avd-table th:nth-child(2),.avd-table td:nth-child(2){width:150px}.avd-table th:nth-child(3),.avd-table td:nth-child(3){width:150px}.avd-table th:nth-child(4),.avd-table td:nth-child(4){width:120px}.avd-table th:nth-child(5),.avd-table td:nth-child(5){width:260px}.avd-table th:nth-child(6),.avd-table td:nth-child(6){width:86px}.avd-table th:nth-child(7),.avd-table td:nth-child(7){width:74px}.avd-foot{position:sticky;bottom:0;background:#fff}.avd-pages button{min-width:30px;height:30px;border:1px solid #dce3ee;border-radius:7px;background:#fff;color:#34405f;font-size:11px;font-weight:600}.avd-pages button.active{border-color:#6338e8;background:#6338e8;color:#fff}.avd-pages button:disabled{opacity:.45;cursor:not-allowed}@media(max-width:1200px){.avd-filter{grid-template-columns:minmax(190px,1fr) 145px 132px}.avd-check{grid-column:1/-1}.avd-table-wrap{max-height:calc(100vh - 325px)}}@media(max-width:768px){.avd-body{padding:10px!important}.avd-title h3{font-size:18px!important}.avd-title p{font-size:11px}.avd-filter{grid-template-columns:1fr}.avd-table{min-width:850px}.avd-table-wrap{max-height:calc(100vh - 345px)}.avd-foot{align-items:flex-start;flex-direction:column;gap:8px}}
+
+/* Agency preview drawer: keep the document readable while fitting 15-16 inch and smaller screens. */
+.apv-head{padding:14px 18px!important}.apv-title h3{font-size:19px!important}.apv-body{grid-template-columns:minmax(0,1fr) 255px!important;gap:12px!important;padding:12px 18px 16px!important}.apv-toolbar{min-height:48px;padding:0 12px}.apv-tabs{gap:12px}.apv-tab{min-height:46px;font-size:11px}.apv-tools{gap:7px}.apv-tools .aat-btn{min-height:32px;padding:7px 10px}.apv-alert{margin:12px;padding:10px 12px}.apv-document{margin:0 12px 12px!important;padding:22px 32px!important;max-height:calc(100vh - 210px)!important;font-size:12px!important;line-height:1.65!important}.apv-document h1,.apv-document h2,.apv-document h3{font-size:16px!important}.apv-card h4{font-size:13px!important}.apv-pad{padding:13px!important}.apv-summary-list{gap:10px}.apv-commercial{margin-top:12px;padding:12px}.apv-info{margin:0 18px 16px!important;padding:11px 13px!important}@media(max-width:1200px){.apv-body{grid-template-columns:minmax(0,1fr) 230px!important;padding:10px 14px 14px!important}.apv-document{padding:20px 24px!important;max-height:calc(100vh - 225px)!important}.apv-tools .apv-select{width:96px!important}.apv-summary-row{display:block}.apv-summary-row b{display:block;margin-top:3px}}@media(max-width:991px){.apv-body{grid-template-columns:1fr!important}.apv-body>aside:last-child{grid-column:auto!important}.apv-document{max-height:560px!important}.apv-toolbar{align-items:flex-start;flex-direction:column;padding:10px 12px}.apv-tools{width:100%;justify-content:flex-start;flex-wrap:wrap}}@media(max-width:768px){.apv-head{padding:14px 12px!important}.apv-title h3{font-size:18px!important}.apv-body{padding:10px!important}.apv-document{padding:18px!important}.apv-info{margin:0 10px 12px!important}}
+.apv-party-intro{max-width:760px;margin:0 auto 28px;padding:0 0 20px;border-bottom:1px solid #dfe6f1;text-align:center;color:#101833}.apv-party-intro h2{margin:0 0 16px!important;color:#101833!important;font-size:16px!important;font-weight:700!important;letter-spacing:.02em;text-align:center!important}.apv-party-intro .apv-effective{margin:0 0 20px;color:#101833;font-size:11px;line-height:1.5}.apv-party-intro .apv-effective b{font-weight:700}.apv-party-grid{display:grid;grid-template-columns:minmax(0,1fr) 58px minmax(0,1fr);gap:18px;align-items:start}.apv-party-box{text-align:center}.apv-party-name{margin-bottom:6px;color:#4f2bd5;font-size:13px;font-weight:700;line-height:1.35}.apv-party-address{max-width:250px;margin:0 auto;color:#101833;font-size:10.5px;line-height:1.45}.apv-party-role{margin-top:7px;color:#101833;font-size:10.5px;line-height:1.45}.apv-party-role b{font-weight:700}.apv-party-and{align-self:center;color:#53617f;font-size:11px;font-weight:700}.apv-party-closing{max-width:580px;margin:17px auto 0;color:#101833;font-size:10.5px;line-height:1.55}.apv-party-closing b{font-weight:700}@media(max-width:768px){.apv-party-grid{grid-template-columns:1fr;gap:12px}.apv-party-and{padding:2px 0}.apv-party-intro{margin-bottom:20px}.apv-party-intro h2{font-size:15px!important}}
+
+/* Edit agreement drawer: compact editor-first layout for 15.6-inch and smaller screens. */
+.aga-head{padding:14px 18px!important}.aga-title-wrap h3{font-size:19px!important}.aga-title-wrap p{font-size:11.5px!important;line-height:1.45}.aga-head-actions{gap:8px}.aga-head-actions .aat-btn{min-height:32px;padding:7px 11px;font-size:10.5px}.aga-shell{grid-template-columns:minmax(0,1fr) 228px!important;gap:12px!important;padding:12px 18px 16px!important}.aga-tabs{min-height:46px;padding:0 12px}.aga-tabs-left{gap:12px}.aga-tab{min-height:44px;font-size:11px}.aga-tools{gap:7px}.aga-tools .aat-btn{min-height:32px;padding:7px 10px}.aga-toolbar{gap:6px;padding:10px 12px;overflow:auto}.aga-toolbar select,.aga-toolbar button{height:32px;font-size:10.5px}.aga-editor-wrap{padding:10px 12px}.aga-editor-card .cke_contents{min-height:calc(100vh - 235px)!important}.aga-editor-foot{padding:8px 12px;font-size:10px}.aga-right{padding:12px!important}.aga-var-tabs{grid-template-columns:1fr!important}.aga-var-list{max-height:calc(100vh - 310px);gap:6px}.aga-var-item{padding:5px 6px;border-radius:7px;cursor:pointer}.aga-var-item:hover{background:#f5f1ff}.aga-var-item code{cursor:pointer}.aga-card{padding:11px!important}.aga-tips{display:none!important}@media(max-width:1200px){.aga-shell{grid-template-columns:minmax(0,1fr) 205px!important;padding:10px 14px 14px!important}.aga-editor-card .cke_contents{min-height:calc(100vh - 255px)!important}.aga-var-list{max-height:calc(100vh - 330px)}.aga-meta-row{display:block}.aga-meta-row b{display:block;margin-top:3px}}@media(max-width:991px){.aga-shell{grid-template-columns:1fr!important}.aga-right{order:2}.aga-main{order:1}.aga-var-list{max-height:220px}.aga-head{align-items:flex-start;flex-direction:column}.aga-head-actions{justify-content:flex-start}.aga-editor-card .cke_contents{min-height:520px!important}}@media(max-width:768px){.aga-head{padding:14px 12px!important}.aga-title-wrap h3{font-size:18px!important}.aga-shell{padding:10px!important}.aga-toolbar{padding:8px}.aga-editor-wrap{padding:8px}.aga-tools{width:100%;justify-content:flex-start}}
+
+/* Commercials tab: presentation-only layer. It reuses the cached account payload and existing service actions. */
+.commercials-v2,.commercials-v2 *{box-sizing:border-box;font-family:'Poppins',sans-serif!important}.commercials-v2{color:#111b3d;font-size:12px;font-weight:500;padding:2px 0 8px}.commercials-v2 .cv2-head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:18px}.commercials-v2 .cv2-title{margin:0;color:#101735;font-size:16px!important;font-weight:600!important;line-height:1.25}.commercials-v2 .cv2-sub{max-width:600px;margin:6px 0 0;color:#52638b;font-size:12px;font-weight:500;line-height:1.5}.commercials-v2 .cv2-stat-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin-bottom:18px}.commercials-v2 .cv2-stat{display:flex;align-items:center;min-width:0;gap:13px;padding:16px;border:1px solid #e5eaf4;border-radius:11px;background:#fff;box-shadow:0 1px 3px rgba(15,23,66,.03)}.commercials-v2 .cv2-stat-icon,.commercials-v2 .cv2-service-icon{display:flex;flex:0 0 auto;align-items:center;justify-content:center;border-radius:11px}.commercials-v2 .cv2-stat-icon{width:46px;height:46px}.commercials-v2 .cv2-stat-icon svg{width:23px;height:23px}.commercials-v2 .cv2-service-icon{width:48px;height:48px}.commercials-v2 .cv2-service-icon svg{width:25px;height:25px}.commercials-v2 .blue{color:#1d3dff;background:#eaf1ff}.commercials-v2 .green{color:#08ac58;background:#e8f9ee}.commercials-v2 .amber{color:#f58911;background:#fff1e5}.commercials-v2 .cv2-stat-copy{min-width:0}.commercials-v2 .cv2-label{color:#52638b;font-size:11px;font-weight:500;line-height:1.35}.commercials-v2 .cv2-value{margin-top:3px;color:#101735;font-size:16px;font-weight:600;line-height:1.2;font-variant-numeric:tabular-nums}.commercials-v2 .cv2-hint{margin-top:5px;color:#08a851;font-size:10.5px;font-weight:500;line-height:1.25}.commercials-v2 .cv2-section-title{margin:0;color:#111b3d;font-size:14px;font-weight:600;line-height:1.35}.commercials-v2 .cv2-section-sub{margin:3px 0 12px;color:#52638b;font-size:11px;font-weight:500}.commercials-v2 .cv2-services{display:grid;gap:16px}.commercials-v2 .cv2-service{padding:16px 18px;border:1px solid #e2e8f3;border-radius:11px;background:#fff;box-shadow:0 1px 3px rgba(15,23,66,.025)}.commercials-v2 .cv2-service-top{display:flex;align-items:flex-start;justify-content:space-between;gap:16px}.commercials-v2 .cv2-service-name{display:flex;align-items:center;gap:13px;min-width:0}.commercials-v2 .cv2-service-name h4{margin:0;color:#101735;font-size:14px!important;font-weight:600!important;line-height:1.35}.commercials-v2 .cv2-service-desc{margin:3px 0 0;color:#52638b;font-size:11px;font-weight:500;line-height:1.4}.commercials-v2 .cv2-badge{display:inline-flex;align-items:center;margin-left:7px;padding:3px 8px;border-radius:5px;background:#e8f8ed;color:#08a851;font-size:10px;font-weight:600;vertical-align:2px}.commercials-v2 .cv2-badge.is-off{color:#c2410c;background:#fff2e8}.commercials-v2 .cv2-switch{display:inline-flex;align-items:center;gap:8px;flex:0 0 auto}.commercials-v2 .form-switch{margin:0}.commercials-v2 .form-check-input{width:38px!important;height:21px!important;margin:0!important;cursor:pointer}.commercials-v2 .cv2-switch-text{color:#52638b;font-size:10.5px;font-weight:600}.commercials-v2 .cv2-service-main{display:grid;grid-template-columns:minmax(0,1fr) 230px;gap:18px;margin-top:14px;padding-top:14px;border-top:1px solid #edf0f6}.commercials-v2 .cv2-disabled{opacity:.45}.commercials-v2 .cv2-facts{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:0}.commercials-v2 .cv2-fact{min-width:0;padding:0 14px;border-right:1px solid #e8ecf3}.commercials-v2 .cv2-fact:first-child{padding-left:0}.commercials-v2 .cv2-fact:last-child{border:0}.commercials-v2 .cv2-fact-label{color:#52638b;font-size:10px;font-weight:500;line-height:1.3}.commercials-v2 .cv2-fact-value{margin-top:5px;color:#111b3d;font-size:11px;font-weight:600;line-height:1.3;word-break:break-word}.commercials-v2 .cv2-fact-value.rate{color:#0a9f57}.commercials-v2 .cv2-side{display:grid;gap:8px;align-content:start;padding-left:18px;border-left:1px solid #e8ecf3}.commercials-v2 .cv2-side-row{display:flex;justify-content:space-between;gap:8px;color:#52638b;font-size:10px;font-weight:500}.commercials-v2 .cv2-side-row b{color:#111b3d;font-size:10.5px;font-weight:600;text-align:right;font-variant-numeric:tabular-nums}.commercials-v2 .cv2-bottom{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;margin-top:14px}.commercials-v2 .cv2-country-label{margin:0 0 8px;color:#111b3d;font-size:11px;font-weight:600}.commercials-v2 .cv2-country-chip{display:inline-flex;align-items:center;gap:8px;min-height:38px;padding:7px 12px;color:#33466f;background:#f8faff;border:1px solid #e1e7f2;border-radius:7px;font-size:10.5px;font-weight:500}.commercials-v2 .cv2-country-chip svg{width:15px;height:15px;color:#2764ff}.commercials-v2 .cv2-country-chip b{color:#101735;font-weight:600}.commercials-v2 .cv2-edit{display:inline-flex!important;align-items:center;gap:8px;padding:9px 13px!important;color:#173af5!important;background:#fff!important;border:1px solid #b9c4ff!important;border-radius:7px!important;font-size:11px!important;font-weight:600!important;white-space:nowrap}.commercials-v2 .cv2-edit:hover{background:#f5f7ff!important}.commercials-v2 .cv2-edit svg{width:15px;height:15px}.commercials-v2 .cv2-note{display:flex;align-items:center;gap:14px;margin-top:16px;padding:13px 16px;border:1px solid #cfead8;border-radius:9px;background:#f7fdf8;color:#40547e}.commercials-v2 .cv2-note-icon{display:flex;flex:0 0 auto;align-items:center;justify-content:center;width:34px;height:34px;color:#08a851;background:#e7f8ec;border-radius:50%}.commercials-v2 .cv2-note-icon svg{width:21px;height:21px}.commercials-v2 .cv2-note p{margin:0;font-size:10.5px;font-weight:500;line-height:1.5}.commercials-v2 .cv2-note b{color:#111b3d;font-weight:600}@media(max-width:1199px){.commercials-v2 .cv2-stat-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.commercials-v2 .cv2-service-main{grid-template-columns:1fr}.commercials-v2 .cv2-side{grid-template-columns:repeat(3,minmax(0,1fr));padding:12px 0 0;border-top:1px solid #e8ecf3;border-left:0}.commercials-v2 .cv2-side-row{display:block}.commercials-v2 .cv2-side-row b{display:block;margin-top:3px;text-align:left}}@media(max-width:767px){.commercials-v2 .cv2-head,.commercials-v2 .cv2-service-top,.commercials-v2 .cv2-bottom{display:block}.commercials-v2 .cv2-switch{margin-top:12px}.commercials-v2 .cv2-stat-grid{grid-template-columns:1fr}.commercials-v2 .cv2-facts{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.commercials-v2 .cv2-fact:nth-child(2){border-right:0}.commercials-v2 .cv2-fact:nth-child(n+3){padding-left:0}.commercials-v2 .cv2-side{grid-template-columns:1fr 1fr}.commercials-v2 .cv2-edit{margin-top:12px}.commercials-v2 .cv2-note{align-items:flex-start}}
+
+/* Compact enterprise service switch: native checkbox state and existing AJAX classes remain unchanged. */
+.commercials-v2 .cv2-switch{min-height:28px;padding:3px;border:1px solid #e2e8f3;border-radius:8px;background:#f8faff}.commercials-v2 .cv2-switch .form-switch{display:flex;align-items:center;min-height:20px}.commercials-v2 .cv2-switch .form-check-input{position:relative;width:36px!important;height:20px!important;margin:0!important;appearance:none!important;-webkit-appearance:none!important;background:#cbd5e1!important;border:0!important;border-radius:999px!important;box-shadow:none!important;outline:0;transition:background-color .16s ease}.commercials-v2 .cv2-switch .form-check-input::after{position:absolute;top:3px;left:3px;width:14px;height:14px;content:'';background:#fff;border-radius:50%;box-shadow:0 1px 2px rgba(15,23,42,.24);transition:transform .16s ease}.commercials-v2 .cv2-switch .form-check-input:checked{background:#2563eb!important}.commercials-v2 .cv2-switch .form-check-input:checked::after{transform:translateX(16px)}.commercials-v2 .cv2-switch .form-check-input:focus-visible{box-shadow:0 0 0 3px rgba(37,99,235,.22)!important}.commercials-v2 .cv2-switch-text{display:none!important}
+.candidate-config-shell{display:grid;grid-template-columns:244px minmax(0,1fr);gap:18px;align-items:start;font-family:'Poppins',sans-serif}.candidate-config-nav{padding:12px;border:1px solid #e5eaf4;border-radius:12px;background:#fff}.candidate-config-nav h4{margin:0 0 12px;padding:4px 6px 12px;border-bottom:1px solid #edf0f6;color:#111b3d;font-size:13px;font-weight:600}.candidate-config-group{margin:14px 6px 6px;color:#8391b1;font-size:10px;font-weight:600;letter-spacing:.04em;text-transform:uppercase}.candidate-config-link{display:flex;align-items:center;gap:10px;margin:4px 0;padding:11px 10px;border-radius:8px;color:#52638b!important;font-size:12px;font-weight:500;text-decoration:none}.candidate-config-link i{width:20px;height:20px;display:inline-flex;align-items:center;justify-content:center;border-radius:6px;background:#f1f4ff;color:#275df6;font-size:11px}.candidate-config-link span{display:block}.candidate-config-link small{display:block;margin-top:2px;color:#8391b1;font-size:10px;font-weight:500}.candidate-config-link.active,.candidate-config-link:hover{background:#eef3ff;color:#1b55f6!important}.candidate-config-link.active i{background:#dce8ff}.candidate-config-panel{min-width:0;padding:2px 0}.candidate-config-panel .card-header{padding-top:0!important}.candidate-config-panel .card-title h3{font-family:'Poppins',sans-serif;font-size:16px;font-weight:600}@media(max-width:991px){.candidate-config-shell{grid-template-columns:1fr}.candidate-config-nav{display:flex;gap:8px;overflow-x:auto}.candidate-config-nav h4,.candidate-config-group{display:none}.candidate-config-link{flex:0 0 auto;margin:0}.candidate-config-link small{display:none}}
+/* Candidate offer-letter editing uses the original editor and persistence handler inside a focused right drawer. */
+.offer-letter-drawer-ov{position:fixed;inset:0;background:rgba(15,23,42,.42);opacity:0;visibility:hidden;transition:opacity .18s ease;z-index:1054}.offer-letter-drawer-ov.show{opacity:1;visibility:visible}.offer-letter-drawer{--offer-drawer-sidebar:220px;position:fixed!important;top:0;right:0;bottom:0;width:min(1180px,calc((100vw - var(--offer-drawer-sidebar))*0.9));max-width:calc(100vw - var(--offer-drawer-sidebar) - 18px);min-width:0;margin:0!important;padding:0!important;background:#f5f8fa;box-shadow:-12px 0 32px rgba(15,23,42,.18);z-index:1055;overflow:auto}.offer-letter-drawer-header{position:sticky;top:0;z-index:2;display:flex;align-items:center;justify-content:space-between;gap:14px;padding:14px 18px;background:#fff;border-bottom:1px solid #e4e9f2}.offer-letter-drawer-title{margin:0;color:#111b3d;font-size:15px;font-weight:600}.offer-letter-drawer-sub{margin:2px 0 0;color:#64748b;font-size:11px;font-weight:500}.offer-letter-drawer-actions{display:flex;align-items:center;gap:8px}.offer-letter-drawer-actions .btn{font-family:'Poppins',sans-serif;font-size:11px;font-weight:600}.offer-letter-drawer-close{width:32px;height:32px;border:1px solid #dce3ef;border-radius:7px;background:#fff;color:#64748b;font-size:20px;line-height:1;cursor:pointer}.offer-letter-drawer-body{padding:16px 18px 24px;background:#f5f8fa}.offer-letter-drawer .cke{width:100%!important;border:1px solid #dce3ef!important;border-radius:8px;overflow:hidden}.offer-letter-drawer .cke_contents{min-height:calc(100vh - 190px)!important}.offer-letter-drawer .card-footer{display:none!important}@media(max-width:1199px){.offer-letter-drawer{--offer-drawer-sidebar:160px;width:calc((100vw - var(--offer-drawer-sidebar))*0.9);max-width:calc(100vw - var(--offer-drawer-sidebar) - 14px)}}@media(max-width:991px){.offer-letter-drawer{--offer-drawer-sidebar:0px;width:92vw;max-width:92vw}.offer-letter-drawer-header{align-items:flex-start;padding:12px}.offer-letter-drawer-actions{flex-wrap:wrap;justify-content:flex-end}.offer-letter-drawer-body{padding:12px}.offer-letter-drawer .cke_contents{min-height:calc(100vh - 210px)!important}}@media(max-width:575px){.offer-letter-drawer{width:94vw;max-width:94vw}.offer-letter-drawer-actions .btn{padding:8px 10px}}
+.settings-offer-template,.settings-offer-template *{box-sizing:border-box;font-family:'Poppins',sans-serif}.settings-offer-template{font-size:12px;color:#181c32}.settings-offer-template .co-tpl-header{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:14px;flex-wrap:wrap}.settings-offer-template .co-tpl-title{margin:0;color:#181c32;font-size:14px!important;font-weight:700!important}.settings-offer-template .co-tpl-sub{margin-top:2px;color:#7e8299;font-size:11px;line-height:1.45}.settings-offer-template .co-tpl-select-wrap{display:flex;align-items:center;gap:8px;flex-shrink:0}.settings-offer-template .co-tpl-select-label{color:#181c32;font-size:12px;font-weight:700;white-space:nowrap}.settings-offer-template .co-tpl-select{height:36px;min-width:220px;padding:4px 10px;border:1px solid #e4e6ef;border-radius:8px;background:#fff;color:#3f4254;font-size:12px!important}.settings-offer-template .co-tpl-layout{display:flex;align-items:flex-start;gap:16px;background:#fff}.settings-offer-template .co-tpl-editor-col{flex:1 1 auto;min-width:0}.settings-offer-template .co-tpl-side{flex:0 0 210px;max-width:210px;display:flex;flex-direction:column}.settings-offer-template .co-tpl-editor-col,.settings-offer-template .co-tpl-side{padding:14px;border:1px solid #eef1f7;border-radius:14px;background:#fff;box-shadow:0 1px 3px rgba(24,28,50,.05)}.settings-offer-template .co-tpl-subcard{margin-bottom:10px;padding:10px 12px;border:1px solid #eef1f7;border-radius:10px;background:#f9fafd}.settings-offer-template .co-tpl-tabs{display:flex;gap:4px;margin-bottom:12px;border-bottom:1px solid #eef1f7}.settings-offer-template .co-tpl-tab{padding:7px 12px;border:0;border-bottom:2px solid transparent;background:none;color:#a1a5b7;font-size:12px!important;font-weight:600;cursor:pointer}.settings-offer-template .co-tpl-tab--active{color:#1b84ff;border-bottom-color:#1b84ff}.settings-offer-template .co-tpl-meta-row{display:flex;align-items:center;gap:16px;flex-wrap:wrap}.settings-offer-template .co-tpl-meta-item{color:#7e8299;font-size:10px}.settings-offer-template .co-tpl-meta-item b{margin-left:4px;color:#181c32;font-weight:600}.settings-offer-template .co-letterhead{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}.settings-offer-template .co-letterhead-logo img{display:block;max-width:150px;max-height:40px;object-fit:contain}.settings-offer-template .co-letterhead-address{max-width:260px;text-align:right;color:#7e8299;font-size:10px;line-height:1.5}.settings-offer-template .co-letterhead-company{color:#181c32;font-size:12px;font-weight:700}.settings-offer-template .co-tpl-side-title{color:#181c32;font-size:12px;font-weight:700}.settings-offer-template .co-tpl-side-sub{margin:3px 0 8px;color:#7e8299;font-size:10px;line-height:1.4}.settings-offer-template .co-var-chips{display:flex;flex-wrap:wrap;gap:5px}.settings-offer-template .co-var-chip{padding:4px 8px;border:1px solid #e0e7ff;border-radius:7px;background:#eef3ff;color:#4f46e5;font-size:10px!important;font-weight:600;white-space:nowrap;cursor:pointer}.settings-offer-template .co-var-chip:hover{background:#e0e7ff}.settings-offer-template .co-tpl-note{color:#7e8299;font-size:10px;line-height:1.5}.settings-offer-template .co-btn-reset{width:100%;height:36px;border:1px solid #f1416c!important;border-radius:8px;background:#fff!important;color:#f1416c!important;font-size:11px!important;font-weight:600!important}.settings-offer-template .co-tpl-preview{min-height:320px;max-height:460px;overflow:auto;padding:18px;border:1px solid #eef1f7;border-radius:10px;background:#fff;color:#334155;font-size:12px;line-height:1.6}.settings-offer-template .offer-letter-editor-shell .cke_contents{min-height:calc(100vh - 360px)!important}@media(max-width:1100px){.settings-offer-template .co-tpl-layout{flex-direction:column}.settings-offer-template .co-tpl-side{width:100%;max-width:none;flex:1 1 auto}.settings-offer-template .co-tpl-header{flex-direction:column;align-items:stretch}.settings-offer-template .co-tpl-select-wrap{width:100%}.settings-offer-template .co-tpl-select{flex:1 1 auto;min-width:0}}@media(max-width:575px){.settings-offer-template .co-letterhead{display:block}.settings-offer-template .co-letterhead-address{max-width:none;margin-top:10px;text-align:left}}
+.settings-offer-template .co-tpl-zoom{display:flex;align-items:center;gap:6px}.settings-offer-template .co-tpl-zoom-btn{width:24px;height:24px;border:1px solid #e4e6ef;border-radius:6px;background:#fff;color:#5e6278;font-size:12px!important;font-weight:700;line-height:1;cursor:pointer}.settings-offer-template .co-tpl-zoom-btn:hover{background:#f5f8fa}.settings-offer-template .co-tpl-zoom-pct{display:inline-block;min-width:30px;text-align:center;color:#7e8299;font-size:10px}.settings-offer-template .co-tpl-download-btn{display:inline-flex;align-items:center;gap:5px;padding:5px 10px;border:0;border-radius:7px;background:#eef3ff;color:#4f46e5;font-size:10px!important;font-weight:600;cursor:pointer}.settings-offer-template .co-tpl-download-btn:hover{background:#e0e7ff}.settings-offer-template .co-tpl-download-btn svg{width:11px;height:11px}.settings-offer-template .co-tpl-toolbar-extra{align-items:center;justify-content:space-between;gap:10px}.settings-offer-template .offer-letter-editor-shell .cke_contents{min-height:calc(100vh - 410px)!important}
+/* Candidate Configuration: card/sub-card layout for 15.6-inch and smaller screens while reusing existing forms and handlers. */
+.candidate-config-shell{grid-template-columns:228px minmax(0,1fr)!important;gap:14px!important;width:100%;min-width:0}.candidate-config-nav{position:sticky;top:78px;padding:12px!important;border:1px solid #dbe4f1!important;border-radius:10px!important;box-shadow:0 3px 12px rgba(15,23,42,.045)!important}.candidate-config-nav h4{font-size:12.5px!important}.candidate-config-link{min-height:54px;padding:10px!important;border:1px solid transparent}.candidate-config-link.active{border-color:#dbe6ff}.candidate-config-link i{width:28px!important;height:28px!important;flex:0 0 28px}.candidate-config-panel{min-width:0!important;padding:0!important}.candidate-config-main-card{min-width:0;padding:15px;border:1px solid #dbe4f1;border-radius:10px;background:#fff;box-shadow:0 3px 12px rgba(15,23,42,.045)}.candidate-config-card-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:14px;padding-bottom:12px;border-bottom:1px solid #edf1f7}.candidate-config-title{margin:0;color:#101735;font-size:15px!important;font-weight:600!important;line-height:1.3}.candidate-config-subtitle{margin:4px 0 0;color:#667594;font-size:11px;font-weight:500;line-height:1.45}.candidate-config-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.candidate-config-actions .btn{display:inline-flex;align-items:center;gap:6px;min-height:34px;padding:8px 13px!important;border-radius:7px!important;font-family:'Poppins',sans-serif!important;font-size:11px!important;font-weight:600!important}.candidate-config-subcard{min-width:0;margin-bottom:12px;padding:13px;border:1px solid #e4eaf3;border-radius:9px;background:#fbfcff}.candidate-config-subcard:last-child{margin-bottom:0}.candidate-config-subcard-head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:10px}.candidate-config-subcard-title{color:#13224f;font-size:12.5px;font-weight:600;line-height:1.35}.candidate-config-subcard-sub{margin-top:2px;color:#7b89a8;font-size:10.5px;font-weight:500;line-height:1.45}.candidate-config-preview{max-height:calc(100vh - 285px);min-height:330px;overflow:auto;padding:14px 16px;border:1px solid #e4eaf3;border-radius:8px;background:#fff;color:#24314d;font-size:12px;font-weight:400;line-height:1.65}.candidate-config-preview *{max-width:100%;font-family:'Poppins',sans-serif!important}.candidate-config-main-card .card-header,.candidate-config-main-card .card-body{padding:0!important;border:0!important;background:transparent!important}.candidate-config-main-card .row{margin-right:0!important;margin-left:0!important}.candidate-config-main-card .col-lg-12{padding-right:0!important;padding-left:0!important}@media(max-width:1199px){.candidate-config-shell{grid-template-columns:214px minmax(0,1fr)!important;gap:12px!important}.candidate-config-main-card{padding:13px}.candidate-config-preview{max-height:none;min-height:300px}}@media(max-width:991px){.candidate-config-shell{grid-template-columns:1fr!important}.candidate-config-nav{position:relative;top:auto;display:flex;gap:8px;overflow-x:auto}.candidate-config-link{flex:0 0 210px}.candidate-config-card-head{align-items:stretch;flex-direction:column}.candidate-config-actions{justify-content:flex-start}}@media(max-width:575px){.candidate-config-main-card{padding:11px;border-radius:8px}.candidate-config-subcard{padding:10px}.candidate-config-link{flex-basis:185px}.candidate-config-preview{padding:12px;min-height:260px}.candidate-config-actions .btn{width:100%;justify-content:center}}
+/* Main Candidate Offer Letter preview mirrors the drawer preview while remaining a read-only card. */
+.settings-offer-template .co-tpl-layout--main-preview{display:block!important;background:transparent!important}.settings-offer-template .co-tpl-layout--main-preview .co-tpl-editor-col{width:100%;max-width:none;box-shadow:none}.settings-offer-template .candidate-offer-main-preview{max-height:calc(100vh - 360px);min-height:360px}.settings-offer-template .candidate-offer-main-preview p{margin-bottom:12px}@media(max-width:991px){.settings-offer-template .candidate-offer-main-preview{max-height:none;min-height:300px}}
+.candidate-config-card-head>.card-title:not(.candidate-config-actions){display:block!important;min-width:0}.candidate-config-card-head .candidate-config-subtitle{display:block!important;clear:both}
+.candidate-config-link i svg,.candidate-action-icon svg{width:13px;height:13px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}.candidate-action-icon{display:inline-flex;align-items:center;justify-content:center;margin-right:6px;color:currentColor;line-height:1}
+.aat-input-group.aat-fixed-fee-group{grid-template-columns:82px minmax(0,1fr)}.aat-calc-row.simple{grid-template-columns:minmax(0,1fr) 28px minmax(0,1fr)}
+.jero-btn-loading{position:relative;pointer-events:none;opacity:.82}.jero-btn-loading:before{content:'';display:inline-block;width:13px;height:13px;margin-right:7px;border:2px solid currentColor;border-right-color:transparent;border-radius:50%;vertical-align:-2px;animation:jero-btn-spin .65s linear infinite}.jero-btn-loading.btn-icon:before,.jero-btn-loading.aat-drawer-close:before,.jero-btn-loading.aga-close:before{margin-right:0}@keyframes jero-btn-spin{to{transform:rotate(360deg)}}
+.aat-edit-pill{border:0;cursor:pointer}.aat-drawer.agency-commercial-mode{background:#f6f8fc;color:#111b3d}.aat-drawer.agency-commercial-mode .aat-drawer-head{min-height:72px;padding:12px 18px}.aat-drawer.agency-commercial-mode .aat-drawer-title{gap:11px}.aat-drawer.agency-commercial-mode .aat-hero-icon{width:38px;height:38px;border-radius:8px;background:#eef2ff;color:#4f46e5}.aat-drawer.agency-commercial-mode .aat-hero-icon svg{width:20px;height:20px}.aat-drawer.agency-commercial-mode .aat-drawer-title h3{font-size:16.5px!important}.aat-drawer.agency-commercial-mode .aat-drawer-title p{font-size:11px;line-height:1.45}.aat-drawer.agency-commercial-mode .aat-drawer-body{padding:14px 14px 82px}.aat-drawer.agency-commercial-mode .aat-drawer-tabs{display:none}.aat-drawer.agency-commercial-mode .aat-edit-alert{margin-bottom:12px;padding:10px 12px;border-color:#d6e3ff;background:#f4f8ff;color:#405781;font-size:10.5px}.aat-drawer.agency-commercial-mode .aat-edit-section{margin-bottom:12px;border-color:#dbe3ef;border-radius:10px;box-shadow:0 1px 3px rgba(15,23,42,.045)}.aat-drawer.agency-commercial-mode .aat-edit-section-head{padding:14px 16px}.aat-drawer.agency-commercial-mode .aat-edit-section-title h4{font-size:13px!important}.aat-drawer.agency-commercial-mode .aat-edit-section-title p{font-size:10.5px}.aat-drawer.agency-commercial-mode .aat-edit-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;padding:16px;background:linear-gradient(135deg,#fbfcff,#f8f7ff)}.aat-drawer.agency-commercial-mode .aat-field label{font-size:10.5px}.aat-drawer.agency-commercial-mode .aat-field select,.aat-drawer.agency-commercial-mode .aat-field input,.aat-drawer.agency-commercial-mode .aat-control{height:36px;font-size:11px}.aat-drawer.agency-commercial-mode .aat-calc{padding:12px}.aat-drawer.agency-commercial-mode .aat-drawer-footer{padding:10px 14px}.aat-drawer.agency-commercial-mode .aat-btn.save{min-width:140px}.aat-exp-table{grid-column:1/-1;overflow:hidden;border:1px solid #dce4ef;border-radius:8px;background:#fff}.aat-exp-head,.aat-exp-row{display:grid;grid-template-columns:minmax(160px,1fr) minmax(120px,.75fr) minmax(130px,.8fr);align-items:center;gap:10px}.aat-exp-head{min-height:34px;padding:7px 10px;color:#657395;background:#f7f9fc;border-bottom:1px solid #dfe6ef;font-size:9.8px;font-weight:600}.aat-exp-row{min-height:48px;padding:7px 10px;border-bottom:1px solid #e8edf4}.aat-exp-row:last-child{border-bottom:0}.aat-exp-row input{height:32px!important}.aat-exp-basis{color:#53617f;font-size:10.5px}.aat-drawer.agency-commercial-fulltime [data-agency-section="contract"],.aat-drawer.agency-commercial-contract [data-agency-section="fulltime"]{display:none}.aat-drawer.agency-commercial-fulltime [data-agency-section="general"],.aat-drawer.agency-commercial-contract [data-agency-section="general"]{display:block}@media(max-width:1200px){.aat-drawer.agency-commercial-mode .aat-edit-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.aat-drawer.agency-commercial-mode{width:calc(100vw - 220px);max-width:calc(100vw - 220px)}}@media(max-width:768px){.aat-drawer-overlay{left:0}.aat-drawer.agency-commercial-mode{width:100vw;max-width:100vw}.aat-drawer.agency-commercial-mode .aat-edit-grid{grid-template-columns:1fr}.aat-drawer.agency-commercial-mode .aat-drawer-head{align-items:flex-start;flex-direction:column}.aat-drawer.agency-commercial-mode .aat-drawer-meta{justify-content:flex-start}.aat-exp-head,.aat-exp-row{grid-template-columns:1fr}.aat-exp-head{display:none}}
+
+/* Intent: cev3-inspired model radios + range table styling inside the agency commercials drawer, mirroring the Edit Services reference. */
+.aat-drawer.agency-commercial-mode .aat-edit-section[data-agency-section="fulltime aat-contract-only"] .aat-edit-grid{display:flex;flex-direction:column;gap:10px}.aat-drawer.agency-commercial-mode .aat-edit-section .aat-edit-grid>.aat-model-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;grid-column:1/-1}
+.aat-model-option{position:relative;display:flex;flex-direction:row;align-items:flex-start;gap:12px;width:100%;min-height:96px;padding:14px;color:#27365a;background:#fff;border:1px solid #dce3ee;border-radius:9px;text-align:left;transition:border-color .16s,box-shadow .16s,background .16s;cursor:pointer;overflow:hidden}
+.aat-model-option:hover{border-color:#aaa5ff;background:#fcfbff}
+.aat-model-option.active{border-color:#6657ff;background:#fcfbff;box-shadow:0 0 0 1px rgba(102,87,255,.12)}
+.aat-model-option>span{display:flex;flex:1 1 auto;flex-direction:column;align-items:flex-start;min-width:0;padding-right:24px}
+.aat-model-option b{display:block;margin:2px 0 7px;color:#111b3d;font-size:12px;font-weight:600;line-height:1.2;word-break:break-word}
+.aat-model-option small{display:block;width:100%;color:#617091;font-size:10.5px;font-weight:500;line-height:1.55;word-break:break-word;overflow-wrap:break-word}
+.aat-model-option i{position:absolute;left:18px;bottom:13px;width:16px;height:16px;border:1.5px solid #cdd5e3;border-radius:50%;flex:0 0 16px}
+.aat-model-option.active i{border:5px solid #5b45f5}
+.aat-model-icon{display:flex;flex:0 0 34px;width:34px;height:34px;align-items:center;justify-content:center;color:#4f46e5;background:#eff0ff;border-radius:8px;font-size:15px;font-weight:600}
+.aat-help-inline{color:#94a3b8;font-weight:500;font-size:9.8px;margin-left:4px}
+.aat-label{display:block;margin:0 0 6px;color:#26365c;font-size:10.5px;font-weight:600}
+.aat-default-pricing-card{padding:16px;background:linear-gradient(135deg,#fbfcff,#f8f7ff)}
+.aat-default-pricing-card,.aat-policy-card,.aat-payment-card{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;padding:16px;background:linear-gradient(135deg,#fbfcff,#f8f7ff);border:1px solid #e3e6f2;border-radius:8px}
+.aat-info{display:flex;align-items:flex-start;gap:8px;grid-column:1/-1;margin-top:6px;padding:9px 10px;color:#386252;background:#f0fbf6;border:1px solid #cceedd;border-radius:7px;font-size:10.5px;line-height:1.45}
+.aat-info svg{flex:0 0 15px;width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:1.8}
+.aat-info.blue{color:#405781;background:#f4f8ff;border-color:#d6e3ff}
+.aat-policy-note{display:flex;grid-column:1/-1;min-height:54px;align-items:center;gap:9px;padding:11px;color:#435783;background:#f6f5ff;border:1px solid #d8d5ff;border-radius:7px;font-size:10px;line-height:1.5}
+.aat-policy-note>span{display:flex;width:22px;height:22px;align-items:center;justify-content:center;flex:0 0 22px;color:#4f46e5;border:1px solid #8d86ff;border-radius:50%;font-weight:600}
+.aat-policy-note b{color:#1d2c5f}
+.aat-range-table{grid-column:1/-1;overflow:hidden;border:1px solid #dce4ef;border-radius:8px;background:#fff}
+.aat-range-head,.aat-range-row{display:grid;grid-template-columns:minmax(150px,1.05fr) minmax(120px,.72fr) minmax(120px,.72fr) minmax(160px,1fr) 34px;align-items:center;gap:10px}
+.aat-range-head{min-height:34px;padding:7px 10px;color:#657395;background:#f7f9fc;border-bottom:1px solid #dfe6ef;font-size:9.8px;font-weight:600}
+.aat-range-row{min-height:48px;padding:7px 10px;border-bottom:1px solid #e8edf4}
+.aat-range-row:last-child{border-bottom:0}
+.aat-range-row .aat-control{height:32px!important;font-size:10.5px;padding:4px 8px}
+.aat-range-label{overflow:hidden;color:#24345a;font-size:10.5px;font-weight:600;text-overflow:ellipsis;white-space:nowrap}
+.aat-rate-wrap{position:relative;display:flex;align-items:center}
+.aat-rate-wrap .aat-control{padding-right:30px;font-variant-numeric:tabular-nums}
+.aat-rate-suffix{position:absolute;right:10px;top:50%;color:#657395;font-size:10px;font-weight:600;transform:translateY(-50%)}
+.aat-range-reset{display:flex;width:30px;height:30px;align-items:center;justify-content:center;color:#4f46e5;background:#f1f3ff;border:1px solid #d9dcff;border-radius:6px;font-size:14px;font-weight:600;cursor:pointer}
+.aat-range-reset:hover{color:#fff;background:#4f46e5}
+.aat-drawer.agency-commercial-mode .aat-help{display:block;margin:5px 0 0;color:#697797;font-size:9.8px;font-weight:500;line-height:1.4}
+/* cev3-inspired fixed-fee dynamic mode within the agency commercials drawer. */
+.aat-drawer.agency-commercial-mode .aat-fixed-only{display:none}
+.aat-drawer.agency-commercial-mode.is-fixed-fee .aat-fixed-only{display:block}
+.aat-drawer.agency-commercial-mode .aat-default-pricing-card{grid-template-columns:repeat(3,minmax(0,1fr))}
+.aat-drawer.agency-commercial-mode.is-fixed-fee .aat-default-pricing-card{grid-template-columns:repeat(5,minmax(0,1fr))}
+.aat-drawer.agency-commercial-mode.is-fixed-fee .aat-default-currency{order:1}
+.aat-drawer.agency-commercial-mode.is-fixed-fee .aat-default-rate{order:2}
+.aat-drawer.agency-commercial-mode.is-fixed-fee .aat-default-applied{order:3}
+.aat-drawer.agency-commercial-mode.is-fixed-fee .aat-fixed-trigger-field{order:4}
+.aat-drawer.agency-commercial-mode.is-fixed-fee .aat-fixed-frequency-field{order:5}
+.aat-drawer.agency-commercial-mode.is-fixed-fee .aat-range-head,.aat-drawer.agency-commercial-mode.is-fixed-fee .aat-range-row{grid-template-columns:minmax(145px,1.05fr) minmax(100px,.7fr) minmax(120px,.82fr) minmax(135px,.9fr) minmax(115px,.78fr) 34px}
+.aat-contract-range-table .aat-range-head,.aat-contract-range-table .aat-range-row{grid-template-columns:minmax(150px,1.05fr) minmax(120px,.72fr) minmax(160px,1fr) 34px}
+.aat-drawer.agency-commercial-mode .aat-standard-pricing-field{display:none}
+.aat-drawer.agency-commercial-mode .aat-range-head .aat-standard-pricing-field,.aat-drawer.agency-commercial-mode .aat-range-row .aat-standard-pricing-field{display:block}
+.aat-drawer.agency-commercial-mode.is-fixed-fee .aat-range-head .aat-percentage-only,.aat-drawer.agency-commercial-mode.is-fixed-fee .aat-range-row .aat-percentage-only{display:none}
+.aat-drawer.agency-commercial-mode:not(.is-fixed-fee) .aat-range-head .aat-fixed-only,.aat-drawer.agency-commercial-mode:not(.is-fixed-fee) .aat-range-row .aat-fixed-only{display:none}
+.aat-drawer.agency-commercial-mode.is-fixed-fee .aat-range-head,.aat-drawer.agency-commercial-mode.is-fixed-fee .aat-range-row{grid-template-columns:minmax(145px,1.05fr) minmax(100px,.7fr) minmax(120px,.82fr) minmax(135px,.9fr) minmax(115px,.78fr) 34px}
+@media(max-width:1199px){.aat-drawer.agency-commercial-mode .aat-default-pricing-card,.aat-drawer.agency-commercial-mode .aat-policy-card,.aat-drawer.agency-commercial-mode .aat-payment-card{grid-template-columns:repeat(2,minmax(0,1fr))}.aat-drawer.agency-commercial-mode.is-fixed-fee .aat-default-pricing-card{grid-template-columns:repeat(2,minmax(0,1fr))}.aat-drawer.agency-commercial-mode .aat-range-head,.aat-drawer.agency-commercial-mode .aat-range-row{grid-template-columns:minmax(135px,1fr) minmax(95px,.6fr) minmax(120px,.7fr) 30px;gap:8px}}
+@media(max-width:767px){.aat-drawer.agency-commercial-mode .aat-range-table,.aat-drawer.agency-commercial-mode .aat-contract-range-table{overflow-x:auto}.aat-drawer.agency-commercial-mode .aat-range-head,.aat-drawer.agency-commercial-mode .aat-range-row{grid-template-columns:140px 95px 120px 30px;min-width:430px}.aat-drawer.agency-commercial-mode.is-fixed-fee .aat-range-head,.aat-drawer.agency-commercial-mode.is-fixed-fee .aat-range-row{grid-template-columns:145px 95px 130px 140px 115px 32px;min-width:660px}.aat-drawer.agency-commercial-mode .aat-edit-section .aat-edit-grid>.aat-model-grid{grid-template-columns:1fr}.aat-drawer.agency-commercial-mode .aat-default-pricing-card,.aat-drawer.agency-commercial-mode .aat-policy-card,.aat-drawer.agency-commercial-mode .aat-payment-card{grid-template-columns:1fr}.aat-drawer.agency-commercial-mode.is-fixed-fee .aat-default-pricing-card{grid-template-columns:1fr}}@media(min-width:768px) and (max-width:1199px){.aat-drawer.agency-commercial-mode .aat-edit-section .aat-edit-grid>.aat-model-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 </style>
 
 @section('content')
@@ -281,9 +525,9 @@ input[type="radio"]:checked {
 <div class="post d-flex flex-column-fluid" id="kt_post">
 <!--begin::Container-->
 <div id="kt_content_container" class="container-fluid px-0">
-<!--begin::Company Dashboard hero (redesigned)-->
+{{-- Keep commercial and advertising workspaces focused; their existing data and handlers are unchanged. --}}
 @php
-  // Profile completion — derived only from already-loaded $account (no extra queries)
+  // Intent: retain overview-only display values even when the commercial or ads workspace hides the dashboard hero.
   $cad_pc = [
     'Basic Information' => (!empty(@$account->company_name) && !empty(@$industries_name)),
     'Company Details'   => (!empty(@$account->company_size) || !empty(@$account->founded)),
@@ -302,6 +546,8 @@ input[type="radio"]:checked {
     $cad_size = (@$account->company_size_from >= 10000) ? $account->company_size_from.'+ employees' : trim($account->company_size_from.' - '.@$account->company_size).' employees';
   }
 @endphp
+@if(request('tab') !== 'services' && request('tab') !== 'ads' && request('ads') !== 'show')
+<!--begin::Company Dashboard hero (redesigned)-->
 <div class="cad">
   <div class="cad-hero">
     <!-- Identity -->
@@ -393,6 +639,7 @@ input[type="radio"]:checked {
   </div>
 </div>
 <!--end::Company Dashboard hero-->
+@endif
 <!--beign::Company Details (legacy, hidden)-->
 <div class="card mb-5 mb-xl-5 mx-2 d-none">
   <div class="card-body pt-5 pb-0 px-5">
@@ -647,52 +894,24 @@ input[type="radio"]:checked {
 <!--begin::Tabs-->
 <div class="card card-custom mx-2">
 <!--Begin::Tabs Header-->
-<div class="card-header card-header-tabs-line">
-  <div class="card-toolbar">
-    <ul class="nav nav-tabs nav-tabs-space-lg nav-tabs-line nav-tabs-bold nav-tabs-line-3x" role="tablist">
-      <li class="nav-item me-3"> <a class="nav-link {{$overview_tab}}" data-toggle="tab" href="#overview"> <span class="nav-text font-weight-bold">Overview</span> </a> </li>
-      <li class="nav-item me-3"> <a class="nav-link" data-toggle="tab" href="#interview_stage"> <span class="nav-text font-weight-bold">Interview Stage</span> </a> </li>
-      <li class="nav-item me-3"> <a class="nav-link" data-toggle="tab" href="#settings"> <span class="nav-text font-weight-bold">Settings</span> </a> </li>
-
-      <li class="nav-item me-3"> <a class="nav-link" data-toggle="tab" href="#offerterms">
-          <span class="nav-text font-weight-bold">Terms & Conditions</span>
-          <span class="fw-bold text-muted d-block fs-7" style=" text-align: center;">(For Candidate Offer Letter)</span>
-           </a>
-      </li>
-
-      <li class="nav-item me-3"> <a class="nav-link" data-toggle="tab" href="#agencyofferterms">
-          <span class="nav-text font-weight-bold">Terms & Conditions</span>
-          <span class="fw-bold text-muted d-block fs-7" style=" text-align: center;">(For Agency Offer Letter)</span>
-           </a>
-      </li>
-
-      <li class="nav-item me-3"> <a class="nav-link" data-toggle="tab" href="#offercomponent"> 
-        <span class="nav-text font-weight-bold">Salary Structure</span>
-        <span class="fw-bold text-muted d-block fs-7" style=" text-align: center;">(For Candidate Offer Letter)</span>
-         </a> 
-    </li>
-
-    <li class="nav-item me-3"> <a class="nav-link" data-toggle="tab" href="#terms" style="display: inline-grid;padding-bottom: 5px;"> <span class="nav-text font-weight-bold">Terms & Conditions</span>
-      <span class="fw-bold text-muted d-block fs-7" style=" text-align: center;">(For {{__('messages.Agency')}})</span> </a> </li>
-
-        @if(@$productAllowCompany)
-         <li class="nav-item me-3"> <a class="nav-link" data-toggle="tab" href="#services"> 
-        <span class="nav-text font-weight-bold">Commericials</span>
-        <span class="fw-bold text-muted d-block fs-7" style=" text-align: center;">(For Clients)</span>
-         </a> </li>
-        
-
-      <li class="nav-item me-3"> <a class="nav-link {{$boostkeyword_tab}}" data-toggle="tab" href="#boostkeyword"> <span
-          class="nav-text font-weight-bold"> Ads Settings  </span> </a> </li> 
-
-      @endif
+@if(!@$hide_account_tabs_header)
+<div class="card-header card-header-tabs-line csv2-account-tabs-header">
+  <div class="card-toolbar csv2-account-tabs-wrap">
+    <ul class="nav nav-tabs csv2-account-tabs" role="tablist">
+      <li class="nav-item"><a class="nav-link csv2-account-tab {{$overview_tab}}" data-toggle="tab" href="#overview"><span class="csv2-account-tab-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="6" height="6" rx="1"/><rect x="14" y="4" width="6" height="6" rx="1"/><rect x="4" y="14" width="6" height="6" rx="1"/><rect x="14" y="14" width="6" height="6" rx="1"/></svg></span><span class="csv2-account-tab-copy"><span class="csv2-account-tab-title">Overview</span></span></a></li>
+      <li class="nav-item"><a class="nav-link csv2-account-tab" data-toggle="tab" href="#interview_stage"><span class="csv2-account-tab-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h10M4 18h7"/><circle cx="18" cy="12" r="2"/><path d="M18 14v5"/></svg></span><span class="csv2-account-tab-copy"><span class="csv2-account-tab-title">Interview Stage</span></span></a></li>
+      <li class="nav-item"><a class="nav-link csv2-account-tab" data-toggle="tab" href="#settings"><span class="csv2-account-tab-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1-2.8 2.8-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.6v.1h-4V21a1.7 1.7 0 0 0-1-1.6 1.7 1.7 0 0 0-1.9.3l-.1.1L4.2 17l.1-.1a1.7 1.7 0 0 0 .3-1.9A1.7 1.7 0 0 0 3 14v-4a1.7 1.7 0 0 0 1.6-1 1.7 1.7 0 0 0-.3-1.9L7 4.2l.1.1a1.7 1.7 0 0 0 1.9.3 1.7 1.7 0 0 0 1-1.6h4a1.7 1.7 0 0 0 1 1.6 1.7 1.7 0 0 0 1.9-.3L19.8 7l-.1.1a1.7 1.7 0 0 0-.3 1.9 1.7 1.7 0 0 0 1.6 1v4a1.7 1.7 0 0 0-1.6 1Z"/></svg></span><span class="csv2-account-tab-copy"><span class="csv2-account-tab-title">General</span></span></a></li>
+      <li class="nav-item"><a class="nav-link csv2-account-tab" data-toggle="tab" href="#notifications"><span class="csv2-account-tab-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/><path d="M10 21h4"/></svg></span><span class="csv2-account-tab-copy"><span class="csv2-account-tab-title">Notifications</span></span></a></li>
+      <li class="nav-item"><a class="nav-link csv2-account-tab candidate-config-main-tab" data-toggle="tab" href="#offerterms"><span class="csv2-account-tab-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M6 3h9l3 3v15H6z"/><path d="M14 3v4h4M9 11h6M9 15h6"/></svg></span><span class="csv2-account-tab-copy"><span class="csv2-account-tab-title">Candidate Configurations</span></span></a></li>
+      <li class="nav-item"><a class="nav-link csv2-account-tab" data-toggle="tab" href="#terms"><span class="csv2-account-tab-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 4h14v16H5z"/><path d="M8 8h8M8 12h8M8 16h5"/></svg></span><span class="csv2-account-tab-copy"><span class="csv2-account-tab-title">Agency Agreement</span></span></a></li>
     </ul>
   </div>
 </div>
+@endif
 <!--end::Tabs Header-->
 <!--Begin::Body-->
 <div class="card-body py-0">
-<div class="tab-content pt-5">
+<div class="tab-content {{ @$hide_account_tabs_header ? 'pt-0' : 'pt-5' }}">
 <!--begin::Overview Content-->
 <div class="tab-pane {{$overview_tab}}" id="overview" role="tabpanel">
   <!--begin::Overview header-->
@@ -746,7 +965,7 @@ input[type="radio"]:checked {
             'Offer letter template set'   => !empty(trim(strip_tags((string)@$account->offer_terms))),
             'Agency terms & conditions'   => !empty(trim(strip_tags((string)@$account->terms))),
             'Salary structure configured' => (!empty(@$offer_points) && count($offer_points) > 0),
-            'Commercials configured'      => ((@$contractStatus->status ?? 0) || (@$fullTimeStatus->status ?? 0)),
+            'Services configured'         => ((@$contractStatus->status ?? 0) || (@$fullTimeStatus->status ?? 0)),
           ];
         @endphp
         <div class="cad-card cad-sec">
@@ -1256,119 +1475,674 @@ input[type="radio"]:checked {
   @php
     $atcCustom  = !empty(trim(strip_tags((string)@$account->terms)));
     $atcUpdated = @$account->updated_at;
+    $aatTerms = @$agencyCommercialTerms ?: (object) [];
+    $aatCurrency = optional($currencyArr->firstWhere('id', @$aatTerms->contract_rate_currency));
+    $aatCurrencyCode = $aatCurrency->code ?: ([0 => 'INR', 1 => 'EUR', 2 => 'JPY', 3 => 'GBP', 4 => 'USD'][@$aatTerms->contract_rate_currency ?? 4] ?? 'USD');
+    $aatFulltimeFeeModel = @$aatTerms->fulltime_fee_model ?: 'percentage';
+    $aatFulltimeFixedCurrency = optional($currencyArr->firstWhere('id', @$aatTerms->fulltime_fixed_fee_currency));
+    $aatFulltimeFixedCurrencyCode = $aatFulltimeFixedCurrency->code ?: ([0 => 'INR', 1 => 'EUR', 2 => 'JPY', 3 => 'GBP', 4 => 'INR'][@$aatTerms->fulltime_fixed_fee_currency ?? 4] ?? 'INR');
+    $aatFulltimeFixedUnit = @$aatTerms->fulltime_fixed_fee_unit ?: 'Per Hire';
+    $aatFulltimeFixedAmount = @$aatTerms->fulltime_fixed_fee_amount;
+    $aatFulltimeFixedLabel = $aatFulltimeFixedCurrencyCode.' '.number_format((float) ($aatFulltimeFixedAmount ?? 0), 2).' / '.$aatFulltimeFixedUnit;
+    $aatFulltimePercentageLabel = number_format((float) (@$aatTerms->fulltime_success_fee_percentage ?? 8.33), 2).'% of Annual CTC';
+    $aatFulltimeFeeLabel = $aatFulltimeFeeModel === 'fixed' ? $aatFulltimeFixedLabel : $aatFulltimePercentageLabel;
+    $aatContractRateDisplay = @$aatTerms->contract_rate_display ?: 'Depend upon job requirements';
+    $aatDefaultExperiencePricing = [
+      ['label' => '0 - 2 Years', 'rate' => $aatFulltimeFeeModel === 'fixed' ? ($aatFulltimeFixedAmount ?? '') : (@$aatTerms->fulltime_success_fee_percentage ?? 8.33)],
+      ['label' => '3 - 5 Years', 'rate' => $aatFulltimeFeeModel === 'fixed' ? ($aatFulltimeFixedAmount ?? '') : (@$aatTerms->fulltime_success_fee_percentage ?? 8.33)],
+      ['label' => '6 - 8 Years', 'rate' => $aatFulltimeFeeModel === 'fixed' ? ($aatFulltimeFixedAmount ?? '') : (@$aatTerms->fulltime_success_fee_percentage ?? 8.33)],
+      ['label' => '9+ Years', 'rate' => $aatFulltimeFeeModel === 'fixed' ? ($aatFulltimeFixedAmount ?? '') : (@$aatTerms->fulltime_success_fee_percentage ?? 8.33)],
+    ];
+    $aatFulltimeExperiencePricing = collect(@$aatTerms->fulltime_experience_pricing ?: $aatDefaultExperiencePricing)->values();
+    $aatContractExperiencePricing = collect(@$aatTerms->contract_experience_pricing ?: [
+      ['label' => '0 - 2 Years', 'rate' => $aatContractRateDisplay],
+      ['label' => '3 - 5 Years', 'rate' => $aatContractRateDisplay],
+      ['label' => '6 - 8 Years', 'rate' => $aatContractRateDisplay],
+      ['label' => '9+ Years', 'rate' => $aatContractRateDisplay],
+    ])->values();
+    $aatBuildExperienceRows = function ($rows, $basis) {
+      return collect($rows)->map(function ($row) use ($basis) {
+        return '<tr><td>'.e(data_get($row, 'label')).'</td><td>'.e(data_get($row, 'rate')).'</td><td>'.e($basis).'</td></tr>';
+      })->implode('');
+    };
+    $aatTableStyle = 'style="width:100%;border-collapse:collapse;margin:10px 0 16px;font-size:12px;"';
+    $aatCellStyle = 'style="border:1px solid #dfe6f1;padding:8px 10px;text-align:left;"';
+    $aatHeadCellStyle = 'style="border:1px solid #dfe6f1;padding:8px 10px;text-align:left;background:#f7f9fc;font-weight:600;"';
+    $aatFulltimeExperienceHtml = '<table '.$aatTableStyle.'><thead><tr><th '.$aatHeadCellStyle.'>Experience Band</th><th '.$aatHeadCellStyle.'>Agency Rate</th><th '.$aatHeadCellStyle.'>Basis</th></tr></thead><tbody>'.$aatBuildExperienceRows($aatFulltimeExperiencePricing, $aatFulltimeFeeModel === 'fixed' ? $aatFulltimeFixedUnit : 'of Annual CTC').'</tbody></table>';
+    $aatContractExperienceHtml = '<table '.$aatTableStyle.'><thead><tr><th '.$aatHeadCellStyle.'>Experience Band</th><th '.$aatHeadCellStyle.'>Agency Rate</th><th '.$aatHeadCellStyle.'>Basis</th></tr></thead><tbody>'.$aatBuildExperienceRows($aatContractExperiencePricing, ucfirst(@$aatTerms->contract_billing_model ?: 'monthly').' billing').'</tbody></table>';
+    $aatFulltimeCommercialHtml = '<table '.$aatTableStyle.'><tbody><tr><th '.$aatHeadCellStyle.'>Success Fee</th><td '.$aatCellStyle.'>'.e($aatFulltimeFeeLabel).'</td></tr><tr><th '.$aatHeadCellStyle.'>Payment Timeline</th><td '.$aatCellStyle.'>'.e((int) (@$aatTerms->fulltime_payment_terms_days ?? 30).' Days from Invoice').'</td></tr><tr><th '.$aatHeadCellStyle.'>Replacement Period</th><td '.$aatCellStyle.'>'.e((int) (@$aatTerms->fulltime_replacement_period_days ?? 90).' Days').'</td></tr><tr><th '.$aatHeadCellStyle.'>Basis</th><td '.$aatCellStyle.'>Annual Fixed CTC</td></tr></tbody></table>';
+    $aatContractCommercialHtml = '<table '.$aatTableStyle.'><tbody><tr><th '.$aatHeadCellStyle.'>Agency Rate</th><td '.$aatCellStyle.'>'.e($aatContractRateDisplay).'</td></tr><tr><th '.$aatHeadCellStyle.'>Billing Cycle</th><td '.$aatCellStyle.'>'.e(@$aatTerms->contract_billing_cycle ?: 'Monthly in Advance').'</td></tr><tr><th '.$aatHeadCellStyle.'>Minimum Duration</th><td '.$aatCellStyle.'>'.e((int) (@$aatTerms->contract_min_duration_months ?? 3).' Months').'</td></tr><tr><th '.$aatHeadCellStyle.'>Replacement Policy</th><td '.$aatCellStyle.'>'.e(@$aatTerms->contract_replacement_policy ?: 'As per Contract Terms').'</td></tr></tbody></table>';
+    $aatAgencyCommercialSummaryHtml = '<div class="agency-commercial-summary"><h3>Agency Commercial Terms</h3><h4>Full-Time Hiring</h4>'.$aatFulltimeCommercialHtml.'<h4>Full-Time Experience-Based Pricing</h4>'.$aatFulltimeExperienceHtml.'<h4>Contract Hiring</h4>'.$aatContractCommercialHtml.'<h4>Contract Experience-Based Pricing</h4>'.$aatContractExperienceHtml.'</div>';
+    $aatUpdated = @$aatTerms->updated_at ?: $atcUpdated;
+    $aatUpdatedBy = @$aatTerms->updated_by_name ?: (optional(auth()->user())->name ?: 'System');
+    $aatVersion = @$aatTerms->version ?: '1.0';
+    $aatActive = (@$aatTerms->status ?: 'active') === 'active';
     $atcVars = [
       '{TODAY_DATE}'       => "Today's Date",
       '{AGENCY_NAME}'      => 'Agency Name',
       '{AGENCY_ADDRESS}'   => 'Agency Address',
       '{COMPANY_NAME}'     => 'Company Name',
       '{COMPANY_ADDRESS}'  => 'Company Address',
+      '{JOB_TITLE}'        => 'Job Title',
+      '{SUCCESS_FEE}'      => 'Agency Success Fee',
+      '{CONTRACT_RATE}'    => 'Contract Agency Rate',
+      '{PAYMENT_TERMS}'    => 'Payment Terms',
+      '{REPLACEMENT_DAYS}' => 'Replacement Period',
+      '{AGENCY_COMMERCIAL_SUMMARY}' => 'Agency Commercial Summary',
+      '{FULLTIME_COMMERCIAL_TABLE}' => 'Full-Time Commercial Table',
+      '{FULLTIME_EXPERIENCE_PRICING}' => 'Full-Time Experience Pricing',
+      '{CONTRACT_COMMERCIAL_TABLE}' => 'Contract Commercial Table',
+      '{CONTRACT_EXPERIENCE_PRICING}' => 'Contract Experience Pricing',
     ];
+    $agencyPreviewCompanyAddress = trim(ucwords($company_city_name).(($company_city_name && $company_country_name) ? ', ' : '').ucwords($company_country_name), ', ');
+    $agencyPreviewCompanyAddress = $agencyPreviewCompanyAddress ?: (@$account->address ?: 'Tower A, 4th Floor, Sector-135, Noida, UP 201301');
+    // Intent: expose a complete agency-agreement variable catalog from data already loaded on this page; no extra page-load queries are introduced.
+    $agencyVariableCatalog = [
+      ['code' => '{AGENCY_NAME}', 'desc' => 'Agency Name', 'category' => 'Agency Information', 'source' => 'Agency Profile', 'example' => 'TalentVerse Solutions Pvt. Ltd.', 'status' => 'Active'],
+      ['code' => '{AGENCY_ADDRESS}', 'desc' => 'Agency Address', 'category' => 'Agency Information', 'source' => 'Agency Profile', 'example' => 'B-403, 4th Floor, Skyline Tech Park, Sector-62, Noida, UP 201309', 'status' => 'Active'],
+      ['code' => '{AGENCY_CONTACT}', 'desc' => 'Primary Contact Person', 'category' => 'Agency Information', 'source' => 'Agency Profile', 'example' => 'Rahul Sharma', 'status' => 'Active'],
+      ['code' => '{AGENCY_EMAIL}', 'desc' => 'Agency Email', 'category' => 'Agency Information', 'source' => 'Agency Profile', 'example' => 'rahul.sharma@talentverse.in', 'status' => 'Active'],
+      ['code' => '{AGENCY_GST}', 'desc' => 'Agency GST Number', 'category' => 'Agency Information', 'source' => 'Agency Profile', 'example' => '09AAECT1234F1Z5', 'status' => 'Active'],
+      ['code' => '{AGENCY_PAN}', 'desc' => 'Agency PAN Number', 'category' => 'Agency Information', 'source' => 'Agency Profile', 'example' => 'AAECT1234F', 'status' => 'Active'],
+      ['code' => '{COMPANY_NAME}', 'desc' => 'Company / Client Name', 'category' => 'Company Information', 'source' => 'Company Profile', 'example' => @$account->company_name ?: @$account->name ?: '4Bell Technology', 'status' => 'Active'],
+      ['code' => '{COMPANY_ADDRESS}', 'desc' => 'Company Address', 'category' => 'Company Information', 'source' => 'Company Profile', 'example' => $agencyPreviewCompanyAddress, 'status' => 'Active'],
+      ['code' => '{COMPANY_CONTACT}', 'desc' => 'Company Contact Person', 'category' => 'Company Information', 'source' => 'Company Profile', 'example' => optional(auth()->user())->name ?: 'Vibhanshu Jaiswal', 'status' => 'Active'],
+      ['code' => '{COMPANY_EMAIL}', 'desc' => 'Company Email', 'category' => 'Company Information', 'source' => 'Company Profile', 'example' => optional(auth()->user())->email ?: 'company@example.com', 'status' => 'Active'],
+      ['code' => '{JOB_TITLE}', 'desc' => 'Job Title', 'category' => 'Job Information', 'source' => 'Job Details', 'example' => 'Senior PHP Developer', 'status' => 'Active'],
+      ['code' => '{JOB_ID}', 'desc' => 'Job ID / Reference', 'category' => 'Job Information', 'source' => 'Job Details', 'example' => 'JW/2026/087', 'status' => 'Active'],
+      ['code' => '{HIRING_TYPE}', 'desc' => 'Hiring Type', 'category' => 'Job Information', 'source' => 'Job Details', 'example' => 'Full-Time', 'status' => 'Active'],
+      ['code' => '{JOINING_DATE}', 'desc' => 'Expected Joining Date', 'category' => 'Job Information', 'source' => 'Job Details', 'example' => '01 Sep 2026', 'status' => 'Active'],
+      ['code' => '{FULLTIME_FEE}', 'desc' => 'Full-Time Success Fee', 'category' => 'Commercial Terms', 'source' => 'Commercial Setup', 'example' => $aatFulltimeFeeLabel, 'status' => 'Active'],
+      ['code' => '{FULLTIME_PAYMENT_DAYS}', 'desc' => 'Full-Time Payment Timeline', 'category' => 'Commercial Terms', 'source' => 'Commercial Setup', 'example' => (int) (@$aatTerms->fulltime_payment_terms_days ?? 30).' Days from Invoice', 'status' => 'Active'],
+      ['code' => '{FULLTIME_REPLACEMENT_DAYS}', 'desc' => 'Full-Time Replacement Period', 'category' => 'Commercial Terms', 'source' => 'Commercial Setup', 'example' => (int) (@$aatTerms->fulltime_replacement_period_days ?? 90).' Days', 'status' => 'Active'],
+      ['code' => '{FULLTIME_COMMERCIAL_TABLE}', 'desc' => 'Full-Time Commercial Table', 'category' => 'Commercial Terms', 'source' => 'Commercial Setup', 'example' => $aatFulltimeCommercialHtml, 'status' => 'Active'],
+      ['code' => '{FULLTIME_EXPERIENCE_PRICING}', 'desc' => 'Full-Time Experience Pricing', 'category' => 'Commercial Terms', 'source' => 'Commercial Setup', 'example' => $aatFulltimeExperienceHtml, 'status' => 'Active'],
+      ['code' => '{CONTRACT_RATE}', 'desc' => 'Contract Agency Rate', 'category' => 'Commercial Terms', 'source' => 'Commercial Setup', 'example' => $aatContractRateDisplay, 'status' => 'Active'],
+      ['code' => '{CONTRACT_MIN_DURATION}', 'desc' => 'Minimum Contract Duration', 'category' => 'Commercial Terms', 'source' => 'Commercial Setup', 'example' => (int) (@$aatTerms->contract_min_duration_months ?? 3).' Months', 'status' => 'Active'],
+      ['code' => '{CONTRACT_PAYMENT_DAYS}', 'desc' => 'Contract Payment Timeline', 'category' => 'Commercial Terms', 'source' => 'Commercial Setup', 'example' => (int) (@$aatTerms->contract_payment_terms_days ?? 30).' Days from Invoice', 'status' => 'Active'],
+      ['code' => '{CONTRACT_COMMERCIAL_TABLE}', 'desc' => 'Contract Commercial Table', 'category' => 'Commercial Terms', 'source' => 'Commercial Setup', 'example' => $aatContractCommercialHtml, 'status' => 'Active'],
+      ['code' => '{CONTRACT_EXPERIENCE_PRICING}', 'desc' => 'Contract Experience Pricing', 'category' => 'Commercial Terms', 'source' => 'Commercial Setup', 'example' => $aatContractExperienceHtml, 'status' => 'Active'],
+      ['code' => '{AGENCY_COMMERCIAL_SUMMARY}', 'desc' => 'Complete Agency Commercial Summary', 'category' => 'Commercial Terms', 'source' => 'Commercial Setup', 'example' => $aatAgencyCommercialSummaryHtml, 'status' => 'Active'],
+      ['code' => '{TODAY_DATE}', 'desc' => "Today's Date", 'category' => 'Agreement System', 'source' => 'System', 'example' => date('d M Y'), 'status' => 'Active'],
+      ['code' => '{AGREEMENT_VERSION}', 'desc' => 'Agreement Version', 'category' => 'Agreement System', 'source' => 'System', 'example' => 'Version '.$aatVersion, 'status' => 'Active'],
+      ['code' => '{EFFECTIVE_DATE}', 'desc' => 'Effective Date', 'category' => 'Agreement System', 'source' => 'System', 'example' => date('d M Y', strtotime(@$aatUpdated ?: now())), 'status' => 'Active'],
+    ];
+    $agencyVariableCategories = collect($agencyVariableCatalog)->groupBy('category')->map->count();
+    $agencyPreviewValues = collect($agencyVariableCatalog)->pluck('example', 'code')->all();
+    $agencyPreviewValues['{SUCCESS_FEE}'] = $agencyPreviewValues['{FULLTIME_FEE}'] ?? '8.33% of Annual CTC';
+    $agencyPreviewValues['{PAYMENT_TERMS}'] = $agencyPreviewValues['{FULLTIME_PAYMENT_DAYS}'] ?? '30 Days from Invoice';
+    $agencyPreviewValues['{REPLACEMENT_DAYS}'] = $agencyPreviewValues['{FULLTIME_REPLACEMENT_DAYS}'] ?? '90 Days';
+    $agencyPreviewAgreementHtml = strtr((string) ((@$account->terms) ? @$account->terms : $global_settings->terms), $agencyPreviewValues);
   @endphp
-  <!--begin::Header-->
-  <div class="atc-head">
-    <div>
-      <div class="atc-title">Agency Terms &amp; Conditions Template</div>
-      <div class="atc-sub">Create and manage the default Terms &amp; Conditions shared with agencies when jobs are assigned. <b>Agencies must accept these terms</b> before working on any position.</div>
-    </div>
-    <div class="atc-head-actions">
-      <a href="javascript:;" id="editBtn" class="atc-btn">Edit</a>
-      <a href="javascript:;" id="updateCompanyTermsTop" class="atc-btn atc-btn-primary updateCompanyTermsTop"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><path d="M17 21v-8H7v8M7 3v5h8"/></svg> Save Template</a>
-    </div>
-  </div>
-  <!--end::Header-->
-  <!--begin::Meta-->
-  <div class="atc-card atc-meta">
-    <div class="atc-meta-id">
-      <span class="atc-meta-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M9 13h6M9 17h4"/></svg></span>
-      <div><div class="atc-meta-lbl">Template Name</div><div class="atc-meta-v">Agency Terms &amp; Conditions</div></div>
-    </div>
-    <div><div class="atc-meta-lbl">Source</div><div class="atc-meta-v">{{ $atcCustom ? 'Custom' : 'Default' }}</div></div>
-    @if($atcUpdated)<div><div class="atc-meta-lbl">Last Updated</div><div class="atc-meta-v">{{ date('d M Y, h:i A', strtotime($atcUpdated)) }}</div></div>@endif
-    <div><div class="atc-meta-lbl">Status</div><div class="atc-meta-v"><span class="atc-status"><span class="dot"></span> Active</span></div></div>
-    <a href="javascript:;" id="setToDefaultCompanyTermsTop" class="atc-btn atc-btn-danger setToDefaultCompanyTermsTop"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 2v6h6"/><path d="M3.5 8a9 9 0 1 0 2.1-3.4L3 8"/></svg> Restore Default</a>
-  </div>
-  <!--end::Meta-->
-  <!--begin::Variables-->
-  <div class="atc-card atc-sec">
-    <div class="atc-sec-h"><div><div class="atc-sec-t">Variables Used in this Template</div><div class="atc-sec-s">These variables are replaced with actual values automatically.</div></div></div>
-    <div class="atc-vars">
-      @foreach($atcVars as $code => $desc)
-        <div class="atc-var"><code>{{ $code }}</code><div class="atc-var-s">{{ $desc }}</div></div>
-      @endforeach
-    </div>
-  </div>
-  <!--end::Variables-->
-  <!--begin::Acceptance Notice-->
-  <div class="atc-notice">
-    <span class="atc-notice-ic">i</span>
-    <div>
-      <div class="atc-notice-t">Agency Acceptance Notice</div>
-      <div class="atc-notice-s">This Terms &amp; Conditions template is automatically shared with agencies whenever jobs are assigned to them. Agencies must review and accept the agreement before they can submit candidates for any position.</div>
-    </div>
-  </div>
-  <!--end::Acceptance Notice-->
-  <!--begin::Template Content-->
-  <div class="atc-card atc-sec">
-    <div class="atc-sec-h"><div><div class="atc-sec-t">Template Content</div><div class="atc-sec-s">Edit the terms and conditions you want to share with agencies.</div></div></div>
-    <form id="terms_content" name="terms_content" class="form fv-plugins-bootstrap5 fv-plugins-framework" novalidate="novalidate" method="post">
-      <meta name="csrf-token" content="{{ csrf_token() }}" />
-      <input type="hidden" name="pageterms" id="pageterms" value="terms" />
-      @csrf
-      @method('POST')
-      <div class="atc-editor view-terms" id="viewTerms"> {!! (@$account->terms) ? @$account->terms :  $global_settings->terms !!} </div>
-      <div class="edit-terms" id="editTerms" style="display:none;">
-        <textarea id="kt_docs_tinymce_hidden" name="kt_docs_tinymce_hidden" class="tox-target">{!! (@$account->terms) ? @$account->terms :  $global_settings->terms !!}</textarea>
-        <div class="card-footer d-flex justify-content-center py-6 px-9 bg-white d-none">
-          <button class="btn btn-primary me-2 updateCompanyTerms" type="button" id="updateCompanyTerms">Save Changes</button>
-          <button class="btn btn-primary me-2 setToDefaultCompanyTerms" type="button" id="setToDefaultCompanyTerms">Set to Default</button>
+  <div class="agency-agreement">
+    <!-- Intent: dynamic agency-facing agreement UI; client Services/Commercials remain separate. -->
+    <div class="aat-hero">
+      <div class="aat-title-wrap">
+        <span class="aat-hero-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 3h9l3 3v15H6z"/><path d="M14 3v4h4M9 12h6M9 16h4"/><path d="m5 8-2 2 2 2"/></svg></span>
+        <div>
+          <h3 class="aat-title">Agency Agreement &amp; Commercial Terms</h3>
+          <p class="aat-sub">Define agency-facing commercial terms and the standard agreement that governs agency participation and candidate submissions.</p>
         </div>
       </div>
-    </form>
+      <div class="aat-actions">
+        <a href="javascript:;" class="aat-btn" id="agencyAgreementPreview"><svg viewBox="0 0 24 24"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg>Preview as Agency</a>
+        <a href="javascript:;" id="editBtn" class="aat-btn primary"><svg viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>Edit Agreement</a>
+      </div>
+    </div>
+    <div class="apv-overlay" id="agencyPreviewDrawerOverlay"></div>
+    <div class="apv-drawer" id="agencyPreviewDrawer" aria-hidden="true">
+      <!-- Intent: render the agency-facing preview from existing agreement HTML and variable values without adding a server-side preview flow. -->
+      <div class="apv-head">
+        <div class="apv-title">
+          <span class="aat-hero-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h4"/><path d="M2 12s4-5 10-5 10 5 10 5-4 5-10 5S2 12 2 12Z"/></svg></span>
+          <div><h3>Preview Agreement as Agency</h3><p>This is how the agreement will look for the agency after variables are populated.</p></div>
+        </div>
+        <div class="apv-actions">
+          <button type="button" class="aat-btn primary" id="agencyPreviewDownloadPdf"><svg viewBox="0 0 24 24"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg>Download PDF</button>
+          <button type="button" class="aga-close" id="closeAgencyPreviewDrawer" aria-label="Close preview">&times;</button>
+        </div>
+      </div>
+      <div class="apv-body">
+        <main class="apv-card apv-main">
+          <div class="apv-toolbar">
+            <div class="apv-tabs"><button type="button" class="apv-tab active" data-apv-view="document">Document Preview</button><button type="button" class="apv-tab" data-apv-view="plain">Plain Text View</button></div>
+            <div class="apv-tools"><select class="apv-select" style="width:110px;"><option>Fit Width</option><option>100%</option></select><button type="button" class="aat-btn" id="agencyPreviewPrint">Print</button><button type="button" class="aat-btn">⛶</button></div>
+          </div>
+          <div class="apv-alert">This preview shows exactly how the agreement will appear to the selected agency.</div>
+          <div class="apv-document" id="agencyPreviewDocument">
+            <div class="apv-party-intro">
+              <h2>AGENCY TERMS &amp; CONDITIONS</h2>
+              <p class="apv-effective">This Agreement is made and executed on <b>{{ $agencyPreviewValues['{TODAY_DATE}'] }}</b> (<b>“Effective Date”</b>) by and between:</p>
+              <div class="apv-party-grid">
+                <div class="apv-party-box">
+                  <div class="apv-party-name">{{ $agencyPreviewValues['{COMPANY_NAME}'] }}</div>
+                  <div class="apv-party-address">{{ $agencyPreviewValues['{COMPANY_ADDRESS}'] }}</div>
+                  <div class="apv-party-role">(hereinafter referred to as the <b>“Client”</b>)</div>
+                </div>
+                <div class="apv-party-and">AND</div>
+                <div class="apv-party-box">
+                  <div class="apv-party-name">{{ $agencyPreviewValues['{AGENCY_NAME}'] }}</div>
+                  <div class="apv-party-address">{{ $agencyPreviewValues['{AGENCY_ADDRESS}'] }}</div>
+                  <div class="apv-party-role">(hereinafter referred to as the <b>“Agency”</b>)</div>
+                </div>
+              </div>
+              <p class="apv-party-closing">The Client and the Agency are hereinafter collectively referred to as the <b>“Parties”</b> and individually as a <b>“Party”</b>.</p>
+            </div>
+            {!! $agencyPreviewAgreementHtml !!}
+          </div>
+          <pre class="apv-document apv-plain" id="agencyPreviewPlain">{{ trim(strip_tags($agencyPreviewAgreementHtml)) }}</pre>
+        </main>
+        <aside>
+          <div class="apv-card apv-pad">
+            <h4>Agreement Summary</h4>
+            <div class="apv-summary-list">
+              <div class="apv-summary-row"><span>Type</span><b>Master Agreement</b></div>
+              <div class="apv-summary-row"><span>Effective From</span><b>{{ date('d M Y') }}</b></div>
+              <div class="apv-summary-row"><span>Agreement Duration</span><b>{{ (int) (@$aatTerms->agreement_duration_months ?? 12) }} Months</b></div>
+              <div class="apv-summary-row"><span>Auto Renewal</span><b>{{ (@$aatTerms->auto_renewal ?? 1) ? 'Yes' : 'No' }}</b></div>
+              <div class="apv-summary-row"><span>Applicable To</span><b>{{ @$aatTerms->applies_to ?: 'All Agencies' }}</b></div>
+            </div>
+          </div>
+          <div class="apv-card apv-pad" style="margin-top:14px;">
+            <h4>Commercial Summary</h4>
+            <div class="apv-commercial"><h5>Full-Time Hiring</h5><div class="apv-summary-list"><div class="apv-summary-row"><span>Success Fee</span><b>{{ $agencyPreviewValues['{FULLTIME_FEE}'] }}</b></div><div class="apv-summary-row"><span>Payment Timeline</span><b>{{ $agencyPreviewValues['{FULLTIME_PAYMENT_DAYS}'] }}</b></div><div class="apv-summary-row"><span>Replacement Period</span><b>{{ $agencyPreviewValues['{FULLTIME_REPLACEMENT_DAYS}'] }}</b></div><div class="apv-summary-row"><span>Basis</span><b>Annual Fixed CTC</b></div></div></div>
+            <div class="apv-commercial orange"><h5>Contract Hiring</h5><div class="apv-summary-list"><div class="apv-summary-row"><span>Agency Rate</span><b>{{ $agencyPreviewValues['{CONTRACT_RATE}'] }}</b></div><div class="apv-summary-row"><span>Billing Cycle</span><b>{{ @$aatTerms->contract_billing_cycle ?: 'Monthly in Advance' }}</b></div><div class="apv-summary-row"><span>Minimum Duration</span><b>{{ $agencyPreviewValues['{CONTRACT_MIN_DURATION}'] }}</b></div><div class="apv-summary-row"><span>Replacement</span><b>{{ @$aatTerms->contract_replacement_policy ?: 'As per Contract Terms' }}</b></div></div></div>
+          </div>
+        </aside>
+      </div>
+      <div class="apv-info"><span>This is how the agreement will be presented to the agency. Agencies must accept this agreement before they can submit candidates.</span></div>
+    </div>
+
+    <div class="aat-card">
+      <div class="aat-sec-head">
+        <div class="aat-sec-title"><span class="aat-sec-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v18M17 7H9.5a3.5 3.5 0 0 0 0 7H14a3.5 3.5 0 0 1 0 7H6"/></svg></span><div><div class="aat-sec-t">1. Commercial Terms for Agencies</div><div class="aat-sec-s">Default agency commercial structure reflected in the agreement and marketplace job terms.</div></div></div>
+        <span></span>
+      </div>
+      <div class="aat-commercial-grid">
+        <div class="aat-commercial purple">
+          <div class="aat-service-head"><div class="aat-service-title"><span class="aat-avatar"><svg viewBox="0 0 24 24"><circle cx="12" cy="7" r="4"/><path d="M4 21v-2a8 8 0 0 1 16 0v2"/></svg></span>Full-Time Hiring</div><button type="button" class="aat-tag aat-edit-pill" data-agency-commercial-open="fulltime">Edit Fulltime Commercials</button></div>
+          <div class="aat-rows">
+            <div class="aat-row"><span class="label">Success Fee</span><span class="value">{{ $aatFulltimeFeeLabel }}</span></div>
+            <div class="aat-row"><span class="label">Payment Timeline</span><span class="value">{{ (int) (@$aatTerms->fulltime_payment_terms_days ?? 30) }} Days from Invoice</span></div>
+            <div class="aat-row"><span class="label">Replacement Period</span><span class="value">{{ (int) (@$aatTerms->fulltime_replacement_period_days ?? 90) }} Days</span></div>
+            <div class="aat-row"><span class="label">Basis</span><span class="value">Annual Fixed CTC</span></div>
+          </div>
+          <div class="aat-note">Fee is applicable on confirmed joiners only.</div>
+        </div>
+        <div class="aat-commercial orange">
+          <div class="aat-service-head"><div class="aat-service-title orange"><span class="aat-avatar orange"><svg viewBox="0 0 24 24"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></span>Contract Hiring</div><button type="button" class="aat-tag orange aat-edit-pill" data-agency-commercial-open="contract">Edit Contract Commercials</button></div>
+          <div class="aat-rows">
+            <div class="aat-row"><span class="label">Billing Model</span><span class="value">{{ ucfirst(@$aatTerms->contract_billing_model ?: 'monthly') }} Rate</span></div>
+            <div class="aat-row"><span class="label">Agency Rate</span><span class="value">{{ $aatContractRateDisplay }}</span></div>
+            <div class="aat-row"><span class="label">Payment Timeline</span><span class="value">{{ (int) (@$aatTerms->contract_payment_terms_days ?? 30) }} Days from Invoice</span></div>
+            <div class="aat-row"><span class="label">Minimum Contract Duration</span><span class="value">{{ (int) (@$aatTerms->contract_min_duration_months ?? 3) }} Months</span></div>
+            <div class="aat-row"><span class="label">Replacement Policy</span><span class="value">{{ @$aatTerms->contract_replacement_policy ?: 'As per Contract Terms' }}</span></div>
+          </div>
+          <div class="aat-note orange">Rates may vary job-wise if custom terms are defined.</div>
+        </div>
+      </div>
+      <div class="aat-drawer-overlay" id="agencyCommercialDrawerOverlay"></div>
+      @php
+        // Derived defaults — kept here at the include site so the partial stays pure
+        // (the previous inline drawer body computed these inline; the agency_commercials_drawer
+        // partial expects them as already-resolved values).
+        $aatFulltimeDefaultRate = (float) (@$aatTerms->fulltime_success_fee_percentage ?? 8.33);
+        $aatFixedFeeCurrency = (int) (@$aatTerms->fulltime_fixed_fee_currency ?? 4);
+        $aatGeneralCurrency = (int) (@$aatTerms->general_currency ?? 4);
+        $aatPaymentTerms = (int) (@$aatTerms->fulltime_payment_terms_days ?? 30);
+        $aatReplacementPeriodDays = (int) (@$aatTerms->fulltime_replacement_period_days ?? 90);
+        $aatFulltimePaymentTermsDays = (int) (@$aatTerms->fulltime_payment_terms_days ?? 30);
+        $aatContractPaymentTermsDays = (int) (@$aatTerms->contract_payment_terms_days ?? 30);
+        $aatContractMinDuration = (int) (@$aatTerms->contract_min_duration_months ?? 3);
+        $aatFixedRate = (float) (@$aatTerms->fulltime_fixed_fee_amount ?? 0);
+        $aatExperienceBands = \Illuminate\Support\Facades\Cache::get('commercial_experience_bands:v1');
+        if (!collect($aatExperienceBands)->isEmpty()) {
+            $aatExperienceBands = collect($aatExperienceBands)->map(function ($band) {
+                return [
+                    'label' => (string) $band->label,
+                    'indexes' => range((int) $band->min_experience, (int) $band->max_experience),
+                ];
+            })->values()->all();
+        } else {
+            $aatExperienceBands = [
+                ['label' => '0 - 2 Years', 'indexes' => range(0, 2)],
+                ['label' => '3 - 5 Years', 'indexes' => range(3, 5)],
+                ['label' => '6 - 8 Years', 'indexes' => range(6, 8)],
+                ['label' => '9+ Years', 'indexes' => range(9, 30)],
+            ];
+        }
+        $aatPartialVars = [
+          'aatTerms' => $aatTerms,
+          'aatActive' => $aatActive,
+          'aatVersion' => $aatVersion,
+          'aatFulltimeFeeModel' => $aatFulltimeFeeModel,
+          'aatFulltimeDefaultRate' => $aatFulltimeDefaultRate,
+          'aatFulltimeFixedUnit' => $aatFulltimeFixedUnit,
+          'aatFulltimeFixedLabel' => $aatFulltimeFixedLabel,
+          'aatFulltimeFixedAmount' => $aatFulltimeFixedAmount,
+          'aatFulltimePercentageLabel' => $aatFulltimePercentageLabel,
+          'aatFulltimeFeeLabel' => $aatFulltimeFeeLabel,
+          'aatFulltimeExperiencePricing' => $aatFulltimeExperiencePricing,
+          'aatContractExperiencePricing' => $aatContractExperiencePricing,
+          'aatContractRateDisplay' => $aatContractRateDisplay,
+          'aatFixedFeeCurrency' => $aatFixedFeeCurrency,
+          'aatGeneralCurrency' => $aatGeneralCurrency,
+          'aatPaymentTerms' => $aatPaymentTerms,
+          'aatReplacementPeriodDays' => $aatReplacementPeriodDays,
+          'aatFulltimePaymentTermsDays' => $aatFulltimePaymentTermsDays,
+          'aatContractPaymentTermsDays' => $aatContractPaymentTermsDays,
+          'aatContractMinDuration' => $aatContractMinDuration,
+          'aatFixedRate' => $aatFixedRate,
+          'aatExperienceBands' => $aatExperienceBands,
+        ];
+      @endphp
+      {{-- Agency commercials drawer body lives in its own partial so client commercials and agency commercials stay separate. Saved through AgencyCommercialTermsService into the dedicated agency_commercial_terms table (one row per company_id). --}}
+      @include('service_company.account.agency_commercials_drawer', $aatPartialVars)
+    </div>
+
+    <div class="aat-two-col">
+      <div class="aat-card">
+        <div class="aat-sec-head"><div class="aat-sec-title"><span class="aat-sec-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3l8 4v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V7z"/></svg></span><div><div class="aat-sec-t">2. Agreement Rules</div><div class="aat-sec-s">Define when and how this agreement applies.</div></div></div></div>
+        <div class="aat-rule-grid">
+          <div class="aat-rule"><span class="k">Applies To</span><span class="v">{{ @$aatTerms->applies_to ?: 'All Agencies' }}</span></div>
+          <div class="aat-rule"><span class="k">Acceptance Required</span><span class="v aat-yes">{{ (@$aatTerms->acceptance_required ?? 1) ? 'Yes' : 'No' }}</span></div>
+          <div class="aat-rule"><span class="k">Acceptance Trigger</span><span class="v">{{ @$aatTerms->acceptance_trigger ?: 'Before Candidate Submission' }}</span></div>
+          <div class="aat-rule"><span class="k">Submission Before Acceptance</span><span class="v {{ (@$aatTerms->submission_before_acceptance ?? 0) ? 'aat-yes' : 'aat-no' }}">{{ (@$aatTerms->submission_before_acceptance ?? 0) ? 'Yes' : 'No' }}</span></div>
+          <div class="aat-rule"><span class="k">Effective From</span><span class="v">{{ @$aatTerms->effective_from ?: 'Agency Acceptance Date' }}</span></div>
+          <div class="aat-rule"><span class="k">Agreement Duration</span><span class="v">{{ (int) (@$aatTerms->agreement_duration_months ?? 12) }} Months</span></div>
+          <div class="aat-rule"><span class="k">Auto Renewal</span><span class="v aat-yes">{{ (@$aatTerms->auto_renewal ?? 1) ? 'Yes' : 'No' }}</span></div>
+          <div class="aat-rule"><span class="k">Agency Can Reject</span><span class="v aat-yes">{{ (@$aatTerms->agency_can_reject ?? 1) ? 'Yes' : 'No' }}</span></div>
+        </div>
+      </div>
+      <div class="aat-card">
+        <div class="aat-sec-head"><div class="aat-sec-title"><span class="aat-sec-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/></svg></span><div><div class="aat-sec-t">3. Acceptance Workflow</div><div class="aat-sec-s">How this agreement flows in the system.</div></div></div></div>
+        <div class="aat-flow">
+          <div class="aat-flow-step"><span class="aat-flow-icon"><svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="15" rx="2"/><path d="M8 6V4h8v2"/></svg></span><div class="aat-flow-n">1</div><div class="aat-flow-t">Job Assigned</div><div class="aat-flow-s">Job is assigned to the agency.</div></div>
+          <div class="aat-flow-step"><span class="aat-flow-icon"><svg viewBox="0 0 24 24"><path d="M6 3h9l3 3v15H6z"/><path d="M9 13h6M9 17h4"/></svg></span><div class="aat-flow-n">2</div><div class="aat-flow-t">T&amp;C Shared</div><div class="aat-flow-s">Agreement is shared with agency.</div></div>
+          <div class="aat-flow-step"><span class="aat-flow-icon"><svg viewBox="0 0 24 24"><path d="M12 3l8 4v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V7z"/><path d="m9 12 2 2 4-4"/></svg></span><div class="aat-flow-n">3</div><div class="aat-flow-t">Agency Accepts</div><div class="aat-flow-s">Agency reviews and accepts the agreement.</div></div>
+          <div class="aat-flow-step"><span class="aat-flow-icon"><svg viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-8 0v2"/><circle cx="12" cy="7" r="4"/><path d="M20 8v6M23 11h-6"/></svg></span><div class="aat-flow-n">4</div><div class="aat-flow-t">Submission Enabled</div><div class="aat-flow-s">Candidate submission is enabled.</div></div>
+        </div>
+        <div class="aat-note orange">Agencies cannot submit candidates until applicable Terms &amp; Conditions are accepted.</div>
+      </div>
+    </div>
+
+    <div class="aat-card">
+      <div class="aat-sec-head"><div class="aat-sec-title"><span class="aat-sec-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16v16H4z"/><path d="M8 8h8M8 12h5"/></svg></span><div><div class="aat-sec-t">4. Dynamic Variables</div><div class="aat-sec-s">These variables are automatically replaced with actual values.</div></div></div><button type="button" class="aat-btn" id="openAgencyVariablesDrawer"><svg viewBox="0 0 24 24"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg>View All Variables</button></div>
+      <div class="aat-vars">
+        @foreach($atcVars as $code => $desc)
+          <div class="aat-var"><code>{{ $code }}</code><span>{{ $desc }}</span></div>
+        @endforeach
+      </div>
+      <div class="avd-overlay" id="agencyVariablesDrawerOverlay"></div>
+      <div class="avd-drawer" id="agencyVariablesDrawer" aria-hidden="true">
+        <!-- Intent: provide a read-only, searchable agency variable management surface without adding write-side business logic. -->
+        <div class="avd-head">
+          <div class="avd-title">
+            <span class="aat-hero-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 3h9l3 3v15H6z"/><path d="M14 3v4h4"/><path d="m9 13 2 2 4-4"/></svg></span>
+            <div><h3>All Variables</h3><p>Manage dynamic variables used in the agreement. These placeholders will be automatically replaced with actual values.</p></div>
+          </div>
+          <div class="avd-actions">
+            <button type="button" class="aga-close" id="closeAgencyVariablesDrawer" aria-label="Close variables drawer">&times;</button>
+          </div>
+        </div>
+        <div class="avd-body">
+          <main class="avd-card">
+            <div class="avd-filter">
+              <input type="text" class="avd-input" id="agencyVariableSearch" placeholder="Search variables by name or description...">
+              <select class="avd-select" id="agencyVariableCategoryFilter"><option value="all">All Categories</option>@foreach($agencyVariableCategories as $categoryName => $categoryCount)<option value="{{ $categoryName }}">{{ $categoryName }}</option>@endforeach</select>
+              <select class="avd-select" id="agencyVariableSourceFilter"><option value="all">All Sources</option><option>Agency Profile</option><option>Company Profile</option><option>Job Details</option><option>Commercial Setup</option><option>System</option></select>
+              <label class="avd-check"><input type="checkbox" id="agencyVariableSystemFilter" checked> Show System Variables</label>
+            </div>
+            <div class="avd-table-wrap">
+              <table class="avd-table" id="agencyVariablesTable">
+                <thead><tr><th>VARIABLE</th><th>DESCRIPTION</th><th>CATEGORY</th><th>SOURCE</th><th>EXAMPLE VALUE</th><th>STATUS</th><th>ACTIONS</th></tr></thead>
+                <tbody>
+                  @foreach($agencyVariableCatalog as $variableRow)
+                    @php
+                      $categoryClass = str_contains($variableRow['category'], 'Agency') ? 'agency' : (str_contains($variableRow['category'], 'Company') ? 'company' : (str_contains($variableRow['category'], 'Job') ? 'job' : (str_contains($variableRow['category'], 'Commercial') ? 'commercial' : 'system')));
+                    @endphp
+                    <tr data-avd-row data-code="{{ $variableRow['code'] }}" data-desc="{{ strtolower($variableRow['desc'].' '.$variableRow['code'].' '.strip_tags((string) $variableRow['example'])) }}" data-category="{{ $variableRow['category'] }}" data-source="{{ $variableRow['source'] }}">
+                      <td><span class="avd-code">{{ $variableRow['code'] }}</span></td>
+                      <td>{{ $variableRow['desc'] }}</td>
+                      <td><span class="avd-badge {{ $categoryClass }}">{{ $variableRow['category'] }}</span></td>
+                      <td>{{ $variableRow['source'] }}</td>
+                      <td>{{ \Illuminate\Support\Str::limit(strip_tags((string) $variableRow['example']), 90) }}</td>
+                      <td><span class="avd-status">{{ $variableRow['status'] }}</span></td>
+                      <td><span class="avd-row-actions"><button type="button" class="avd-copy" title="Copy variable">⧉</button><button type="button" class="avd-insert" title="Insert in agreement">✎</button></span></td>
+                    </tr>
+                  @endforeach
+                </tbody>
+              </table>
+              <div class="avd-empty" id="agencyVariablesEmpty">No variables matched your filters.</div>
+            </div>
+            <div class="avd-foot"><span id="agencyVariablesShowing">Showing 1 to {{ min(8, count($agencyVariableCatalog)) }} of {{ count($agencyVariableCatalog) }} variables</span><div class="avd-pages" id="agencyVariablesPagination"></div></div>
+          </main>
+        </div>
+        <div class="avd-info"><div><b>How Variables Work</b><br>Variables are placeholders enclosed in { } braces. They are automatically replaced with actual values when the agreement is shown to agencies.<br>Example: <b>{AGENCY_NAME}</b> will be shown as “TalentVerse Solutions Pvt. Ltd.”</div><button type="button" class="aga-close" id="closeAgencyVariablesInfo" aria-label="Hide info">&times;</button></div>
+      </div>
+    </div>
+
+    <div class="aat-card aat-editor-card">
+      <div class="aat-editor-toolbar">
+        <div class="aat-sec-title"><span class="aat-sec-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 3h12v18H6z"/><path d="M9 8h6M9 12h6M9 16h4"/></svg></span><div><div class="aat-sec-t">5. Agreement Content</div><div class="aat-sec-s">Edit the terms and conditions that will be shared with agencies.</div></div></div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;"><a href="javascript:;" id="setToDefaultCompanyTermsTop" class="aat-btn setToDefaultCompanyTermsTop">Load Default</a><a href="javascript:;" id="updateCompanyTermsTop" class="aat-btn primary updateCompanyTermsTop">Save Agreement</a></div>
+      </div>
+      <form id="terms_content" name="terms_content" class="form fv-plugins-bootstrap5 fv-plugins-framework" novalidate="novalidate" method="post">
+        <meta name="csrf-token" content="{{ csrf_token() }}" />
+        <input type="hidden" name="pageterms" id="pageterms" value="terms" />
+        @csrf
+        @method('POST')
+        <div class="atc-editor view-terms" id="viewTerms"> {!! (@$account->terms) ? @$account->terms :  $global_settings->terms !!} </div>
+        <div class="aga-drawer-overlay" id="agencyAgreementDrawerOverlay"></div>
+        <div class="edit-terms aga-drawer" id="editTerms" style="display:none;" aria-hidden="true">
+          <!-- Intent: present the existing company terms editor in an agency-focused drawer while reusing the current save/reset business flow. -->
+          <div class="aga-head">
+            <div class="aga-title-wrap">
+              <span class="aat-hero-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 3h9l3 3v15H6z"/><path d="M14 3v4h4M9 12h6M9 16h4"/><path d="m12 18 4-4"/></svg></span>
+              <div>
+                <h3>Edit Agreement</h3>
+                <p>Create and manage the master agreement that will be shared with agencies.</p>
+              </div>
+            </div>
+            <div class="aga-head-actions">
+              <button type="button" class="aat-btn" id="agencyAgreementPreviewDrawer"><svg viewBox="0 0 24 24"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg>Preview as Agency</button>
+              <button type="button" class="aat-btn primary updateCompanyTermsTop"><svg viewBox="0 0 24 24"><path d="m20 6-11 11-5-5"/></svg>Save &amp; Publish</button>
+              <button type="button" class="aga-close" id="closeAgencyAgreementDrawer" aria-label="Close agreement editor">&times;</button>
+            </div>
+          </div>
+          <div class="aga-shell">
+            <main class="aga-main">
+              <div class="aga-toolbar">
+                <select><option>Heading 2</option><option>Paragraph</option></select>
+                <select><option>Poppins</option></select>
+                <select><option>14</option><option>13</option><option>12</option></select>
+                <button type="button">B</button><button type="button"><i>I</i></button><button type="button"><u>U</u></button><button type="button">A</button><button type="button">•</button><button type="button">≡</button><button type="button">☷</button><button type="button">⌁</button><button type="button">↶</button><button type="button">↷</button>
+              </div>
+              <div class="aga-editor-wrap">
+                <div class="aga-editor-card">
+                  <textarea id="kt_docs_tinymce_hidden" name="kt_docs_tinymce_hidden" class="tox-target">{!! (@$account->terms) ? @$account->terms :  $global_settings->terms !!}</textarea>
+                  <div class="aga-editor-foot"><span>Words: <b id="agaWordCount">--</b> &nbsp; Characters: <b id="agaCharCount">--</b></span><span>Saved 2 minutes ago ✓</span></div>
+                </div>
+              </div>
+            </main>
+            <aside class="aga-right">
+              <h4>Insert Variables</h4>
+              <p style="margin:0 0 12px;color:#53617f;font-size:11px;">Click or drag variables to insert in the content.</p>
+              <div class="aga-var-tabs"><span class="active">All Variables</span></div>
+              <input type="text" class="aga-search" placeholder="Search variables...">
+              <div class="aga-var-list">
+                @foreach($atcVars as $code => $desc)
+                  <div class="aga-var-item"><code>{{ $code }}</code><span>{{ str_contains($code, 'AGENCY') ? 'Agency' : (str_contains($code, 'COMPANY') ? 'Company' : 'System') }}</span></div>
+                @endforeach
+              </div>
+              <div class="aga-card">
+                <h4>Agreement Metadata</h4>
+                <div class="aga-meta-list">
+                  <div class="aga-meta-row"><span>Agreement Type</span><b>Master Agreement</b></div>
+                  <div class="aga-meta-row"><span>Effective From</span><b>{{ date('d M Y', strtotime(@$aatUpdated ?: now())) }}</b></div>
+                  <div class="aga-meta-row"><span>Agreement Duration</span><b>{{ (int) (@$aatTerms->agreement_duration_months ?? 12) }} Months</b></div>
+                  <div class="aga-meta-row"><span>Auto Renewal</span><b>{{ (@$aatTerms->auto_renewal ?? 1) ? 'Yes' : 'No' }}</b></div>
+                  <div class="aga-meta-row"><span>Applicable To</span><b>{{ @$aatTerms->applies_to ?: 'All Agencies' }}</b></div>
+                  <div class="aga-meta-row"><span>Acceptance Required</span><b>{{ (@$aatTerms->acceptance_required ?? 1) ? 'Yes' : 'No' }}</b></div>
+                </div>
+              </div>
+              <div class="aga-card aga-tips">
+                <h4>Tips for best results</h4>
+                <ul>
+                  <li>Use variables for dynamic content</li>
+                  <li>Keep clauses clear and precise</li>
+                  <li>Review before publishing</li>
+                </ul>
+              </div>
+            </aside>
+          </div>
+          <div class="card-footer d-flex justify-content-center py-6 px-9 bg-white d-none">
+            <button class="btn btn-primary me-2 updateCompanyTerms" type="button" id="updateCompanyTerms">Save Changes</button>
+            <button class="btn btn-primary me-2 setToDefaultCompanyTerms" type="button" id="setToDefaultCompanyTerms">Set to Default</button>
+          </div>
+        </div>
+      </form>
+    </div>
+
+    <div class="aat-important"><b>Important:</b> Existing agencies who have already accepted a previous version will continue to be governed by the version they accepted until they accept a newer version.</div>
   </div>
-  <!--end::Template Content-->
 </div>
 <!--end::Terms & Canditions Content-->
 
 <!--begin::offerterms Terms & conditions Content-->
 <div class="tab-pane" id="offerterms" role="tabpanel">
+  @php
+    // Intent: define the company-level candidate offer template catalog from existing company columns with global defaults as fallback.
+    $candidateOfferTemplates = [
+      [
+        'field' => 'offer_terms',
+        'label' => 'Fulltime Offer Letter',
+        'type' => 'Full Time',
+        'small' => !empty(trim(strip_tags((string) @$account->offer_terms))) ? 'Configured template' : 'Default template',
+        'content' => (@$account->offer_terms) ? @$account->offer_terms : @$global_settings->offer_terms,
+      ],
+      [
+        'field' => 'internship_offer_terms',
+        'label' => 'Internship Offer Letter',
+        'type' => 'Internship',
+        'small' => !empty(trim(strip_tags((string) @$account->internship_offer_terms))) ? 'Configured template' : 'Default template',
+        'content' => (@$account->internship_offer_terms) ? @$account->internship_offer_terms : (@$global_settings->internship_offer_terms ?: @$global_settings->offer_terms),
+      ],
+      [
+        'field' => 'contract_offer_terms',
+        'label' => 'Contract Offer Letter',
+        'type' => 'Contract',
+        'small' => !empty(trim(strip_tags((string) @$account->contract_offer_terms))) ? 'Configured template' : 'Default template',
+        'content' => (@$account->contract_offer_terms) ? @$account->contract_offer_terms : (@$global_settings->contract_offer_terms ?: @$global_settings->offer_terms),
+      ],
+      [
+        'field' => 'agency_offer_terms',
+        'label' => 'Agency Offer terms',
+        'type' => 'Contract',
+        'small' => !empty(trim(strip_tags((string) @$account->agency_offer_terms))) ? 'Configured template' : 'Default template',
+        'content' => (@$account->agency_offer_terms) ? @$account->agency_offer_terms : (@$global_settings->agency_offer_terms ?: @$global_settings->offer_terms),
+      ],
+    ];
+    $activeCandidateOfferTemplate = $candidateOfferTemplates[0];
+    // Intent: keep candidate configuration icons local to the template UI so they render even when icon fonts are unavailable.
+    $candidateOfferIcon = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h9l3 3v15H6z"/><path d="M14 3v4h4M9 11h6M9 15h5"/></svg>';
+    $candidateEditIcon = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>';
+    $candidateResetIcon = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7v6h6"/><path d="M21 17a9 9 0 0 1-15-6.7L3 13"/></svg>';
+    $candidateSaveIcon = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><path d="M17 21v-8H7v8M7 3v5h8"/></svg>';
+  @endphp
+  <div class="candidate-config-shell">
+    <aside class="candidate-config-nav" aria-label="Candidate configuration sections">
+      <h4>Documents &amp; Templates</h4>
+      <div class="candidate-config-group">Salary Annexures</div>
+      <a class="candidate-config-link" data-toggle="tab" href="#offercomponent"><i class="far fa-money-bill-alt"></i><span>Standard Payroll Structure<small>{{ count($offer_points ?? []) }} salary components</small></span></a>
+      <div class="candidate-config-group">Offer Letter Templates</div>
+      @foreach($candidateOfferTemplates as $candidateOfferTemplate)
+        <a class="candidate-config-link candidate-offer-template-link {{ $loop->first ? 'active' : '' }}" data-toggle="tab" href="#offerterms" data-template-field="{{ $candidateOfferTemplate['field'] }}" data-template-label="{{ $candidateOfferTemplate['label'] }}" data-template-type="{{ $candidateOfferTemplate['type'] }}" data-template-content='@json($candidateOfferTemplate["content"])'><i>{!! $candidateOfferIcon !!}</i><span>{{ $candidateOfferTemplate['label'] }}<small>{{ $candidateOfferTemplate['small'] }}</small></span></a>
+      @endforeach
+    </aside>
+    <div class="candidate-config-panel">
+  <div class="candidate-config-main-card">
   <!--begin::Overview header-->
-  <div class="card-header cursor-pointer px-0">
+  <div class="card-header cursor-pointer px-0 candidate-config-card-head">
     <!--begin::Card title-->
     <div class="card-title m-0">
-      <h3 class="fw-bolder m-0">Terms & Conditions</h3>
+      <h3 class="fw-bolder m-0 candidate-config-title" id="candidateOfferTemplateTitle">{{ $activeCandidateOfferTemplate['label'] }}</h3>
+      <p class="candidate-config-subtitle">Manage the reusable offer letter template used during candidate offer generation.</p>
     </div>
     <!--end::Card title-->
     <!--begin::Action-->
-    <div class="card-title m-0">
-    <a href="javascript:;" class="btn btn-success me-1 align-self-center updateCompanyTermsofferTop" id="updateCompanyTermsofferTop">Save Changes</a>
-    <a href="javascript:;" class="btn btn-warning me-1 align-self-center setToDefaultCompanyTermsofferTop" id="setToDefaultCompanyTermsofferTop">Set to Default</a>
-    <a href="javascript:;" class="btn btn-primary align-self-center" id="editBtnoffer">Edit</a>
+    <div class="card-title m-0 candidate-config-actions">
+    <a href="javascript:;" class="btn btn-success me-1 align-self-center updateCompanyTermsofferTop d-none" id="updateCompanyTermsofferTop">Save Changes</a>
+    <a href="javascript:;" class="btn btn-warning me-1 align-self-center setToDefaultCompanyTermsofferTop d-none" id="setToDefaultCompanyTermsofferTop">Set to Default</a>
+    <button type="button" class="btn btn-primary align-self-center" id="editBtnoffer"><span class="candidate-action-icon">{!! $candidateEditIcon !!}</span>Edit</button>
     </div>
     <!--ensd::Action-->
   </div>
   <!--end::Terms & Canditions header-->
+  @php
+    // Intent: reuse the same dynamic offer-letter preview identity in the main view and edit drawer without changing persistence logic.
+    $settingsOfferLogo = (!empty(@$account->logo) && strlen(@$account->logo) > 10) ? @$account->logo : asset('assets/logo-not-found.png');
+    if (!empty(@$account->website) && empty(@$account->logo)) {
+      $settingsOfferDomain = GeneralMethod::getDomain($account->website);
+      $settingsOfferGoogleIcon = "https://www.google.com/s2/favicons?domain={$settingsOfferDomain}&sz=256";
+      $settingsOfferLogo = GeneralMethod::getDomainIconCompany($settingsOfferGoogleIcon, $account->id, false) ? $settingsOfferGoogleIcon : asset('assets/logo-not-found.png');
+    }
+    $settingsOfferAddress = trim(ucwords($company_city_name).(($company_city_name && $company_country_name) ? ', ' : '').ucwords($company_country_name), ', ');
+    $settingsOfferVariables = [
+      '[CANDIDATE_NAME]'   => 'Candidate Name',
+      '[CANDIDATE_EMAIL]'  => 'Candidate Email',
+      '[CANDIDATE_MOBILE]' => 'Candidate Mobile',
+      '[COMPANY_NAME]'     => 'Company Name',
+      '[JOB_TITLE]'        => 'Job Title',
+      '[JOINING_DATE]'     => 'Joining Date',
+      '[TODAY_DATE]'       => "Today's Date",
+    ];
+  @endphp
   <div class="card-body px-0 py-7"> 
     <!--begin::Terms & Canditions Content-->
     <div class="row">
-      <div class="col-lg-12 mb-7 view-terms" id="viewTermsoffer"> {!! (@$account->offer_terms) ? @$account->offer_terms :  $global_settings->offer_terms !!}</div>
+      <div class="candidate-config-subcard">
+        <div class="candidate-config-subcard-head">
+          <div>
+            <div class="candidate-config-subcard-title">Template Preview</div>
+            <div class="candidate-config-subcard-sub">This content is dynamically merged with candidate, job, and company details in the offer workflow.</div>
+          </div>
+        </div>
+        <div class="settings-offer-template">
+          <div class="co-tpl-layout co-tpl-layout--main-preview">
+            <div class="co-tpl-editor-col">
+              <div class="co-tpl-tabs">
+                <button type="button" class="co-tpl-tab co-tpl-tab--active">Preview</button>
+              </div>
+              <div class="co-tpl-subcard co-tpl-meta-row">
+                <span class="co-tpl-meta-item">Type<b class="candidate-offer-template-type">{{ $activeCandidateOfferTemplate['type'] }}</b></span>
+                <span class="co-tpl-meta-item">Status<b style="color:#0f9463">Active</b></span>
+              </div>
+              <div class="co-tpl-subcard">
+                <div class="co-letterhead">
+                  <div class="co-letterhead-logo">
+                    <img src="{{ $settingsOfferLogo }}" alt="{{ e(@$account->company_name ?: 'Company') }}" onerror="this.src='{{ asset('assets/logo-not-found.png') }}'">
+                  </div>
+                  <div class="co-letterhead-address">
+                    <div class="co-letterhead-company">{{ ucwords(@$account->company_name ?: 'Company Name') }}</div>
+                    @if(!empty($settingsOfferAddress))
+                      <div>{{ $settingsOfferAddress }}</div>
+                    @endif
+                  </div>
+                </div>
+              </div>
+              <div class="col-lg-12 mb-0 view-terms co-tpl-preview candidate-offer-main-preview" id="viewTermsoffer">{!! $activeCandidateOfferTemplate['content'] !!}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="offer-letter-drawer-ov" id="offerLetterDrawerOverlay" onclick="closeOfferLetterDrawer()"></div>
       <form  id="terms_contentoffer" name="terms_contentoffer" class="form fv-plugins-bootstrap5 fv-plugins-framework" novalidate="novalidate" method="post">
           <meta name="csrf-token" content="{{ csrf_token() }}" />
           <input type="hidden" name="pageterms" id="pagetermsoffer" value="termsoffer" />
+          <input type="hidden" name="descriptiontype" id="candidateOfferTemplateField" value="{{ $activeCandidateOfferTemplate['field'] }}" />
           @csrf  
           @method('POST')
         <!--begin::Col-Desc-->
        
 
 
-        <div class="col-lg-12 edit-terms" id="editTermsoffer" style="display:none;">
-        
-            <textarea id="kt_docs_tinymce_hiddenoffer" name="kt_docs_tinymce_hiddenoffer" class="tox-target">{!! (@$account->offer_terms) ? @$account->offer_terms :  $global_settings->offer_terms !!}</textarea>
+        <div class="col-lg-12 edit-terms offer-letter-drawer" id="editTermsoffer" style="display:none;">
+          <div class="offer-letter-drawer-header">
+            <div><h4 class="offer-letter-drawer-title" id="candidateOfferDrawerTitle">Edit {{ $activeCandidateOfferTemplate['label'] }}</h4><p class="offer-letter-drawer-sub">Update the reusable template used when generating candidate offers.</p></div>
+            <div class="offer-letter-drawer-actions">
+              <button type="button" class="btn btn-light-primary setToDefaultCompanyTermsofferTop"><span class="candidate-action-icon">{!! $candidateResetIcon !!}</span>Load Default</button>
+              <button type="button" class="btn btn-primary updateCompanyTermsofferTop"><span class="candidate-action-icon">{!! $candidateSaveIcon !!}</span>Save Changes</button>
+              <button type="button" class="offer-letter-drawer-close" aria-label="Close offer letter editor" onclick="closeOfferLetterDrawer()">&times;</button>
+            </div>
+          </div>
+          <div class="offer-letter-drawer-body">
+            <div class="settings-offer-template">
+              <div class="co-tpl-layout">
+                <div class="co-tpl-editor-col">
+                  <div class="co-tpl-tabs">
+                    <button type="button" class="co-tpl-tab co-tpl-tab--active" data-settings-offer-tab="editor">Template Editor</button>
+                    <button type="button" class="co-tpl-tab" data-settings-offer-tab="preview">Preview</button>
+                  </div>
+
+                  <div class="co-tpl-subcard co-tpl-meta-row">
+                    <span class="co-tpl-meta-item">Type<b class="candidate-offer-template-type">{{ $activeCandidateOfferTemplate['type'] }}</b></span>
+                    <span class="co-tpl-meta-item">Status<b style="color:#0f9463">Active</b></span>
+                  </div>
+
+                  <div class="settings-offer-tabpane" data-settings-offer-pane="editor">
+                    <div class="co-tpl-subcard">
+                      <div class="co-letterhead">
+                        <div class="co-letterhead-logo">
+                          <img src="{{ $settingsOfferLogo }}" alt="{{ e(@$account->company_name ?: 'Company') }}" onerror="this.src='{{ asset('assets/logo-not-found.png') }}'">
+                        </div>
+                        <div class="co-letterhead-address">
+                          <div class="co-letterhead-company">{{ ucwords(@$account->company_name ?: 'Company Name') }}</div>
+                          @if(!empty($settingsOfferAddress))
+                            <div>{{ $settingsOfferAddress }}</div>
+                          @endif
+                        </div>
+                      </div>
+                    </div>
+                    <div class="offer-letter-editor-shell">
+                      <textarea id="kt_docs_tinymce_hiddenoffer" name="kt_docs_tinymce_hiddenoffer" class="tox-target">{!! $activeCandidateOfferTemplate['content'] !!}</textarea>
+                    </div>
+                    <div class="co-tpl-subcard co-tpl-toolbar-extra" style="margin-top:10px;margin-bottom:0;display:flex;">
+                      <div class="co-tpl-zoom">
+                        <button type="button" class="co-tpl-zoom-btn" id="settings_offer_zoom_out" aria-label="Zoom out">&minus;</button>
+                        <span class="co-tpl-zoom-pct" id="settings_offer_zoom_pct">100%</span>
+                        <button type="button" class="co-tpl-zoom-btn" id="settings_offer_zoom_in" aria-label="Zoom in">+</button>
+                      </div>
+                      <button type="button" class="co-tpl-download-btn" id="settings_offer_download_sample">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m0 0-4-4m4 4 4-4M4 19h16"/></svg>
+                        Download Sample
+                      </button>
+                    </div>
+                  </div>
+
+                  <div class="settings-offer-tabpane d-none" data-settings-offer-pane="preview">
+                    <div class="co-tpl-subcard">
+                      <div class="co-letterhead">
+                        <div class="co-letterhead-logo">
+                          <img src="{{ $settingsOfferLogo }}" alt="{{ e(@$account->company_name ?: 'Company') }}" onerror="this.src='{{ asset('assets/logo-not-found.png') }}'">
+                        </div>
+                        <div class="co-letterhead-address">
+                          <div class="co-letterhead-company">{{ ucwords(@$account->company_name ?: 'Company Name') }}</div>
+                          @if(!empty($settingsOfferAddress))
+                            <div>{{ $settingsOfferAddress }}</div>
+                          @endif
+                        </div>
+                      </div>
+                    </div>
+                    <div id="settings_offer_preview_content" class="co-tpl-preview"></div>
+                  </div>
+                </div>
+
+                <div class="co-tpl-side">
+                  <div class="co-tpl-subcard">
+                    <div class="co-tpl-side-title">Insert Variables</div>
+                    <div class="co-tpl-side-sub">Click to insert dynamic candidate and company fields at the cursor.</div>
+                    <div class="co-var-chips">
+                      @foreach($settingsOfferVariables as $token => $label)
+                        <button type="button" class="co-var-chip" data-settings-offer-variable="{{ $token }}">{{ $label }}</button>
+                      @endforeach
+                    </div>
+                  </div>
+                  <div class="co-tpl-subcard" style="margin-bottom:0;">
+                    <div class="co-tpl-side-title">About this template</div>
+                    <div class="co-tpl-note" style="margin-top:6px;">This is your company's default Offer Letter Template. Changes saved here are reused on candidate offer generation pages.</div>
+                  </div>
+                  <button type="button" class="co-btn-reset setToDefaultCompanyTermsofferTop" style="margin-top:10px;">Reset Template</button>
+                </div>
+              </div>
+            </div>
           
         
           <div class="card-footer d-flex justify-content-center py-6 px-9 bg-white d-none">
           
             <button class="btn btn-primary me-2 updateCompanyTermsoffer" type="button" id="updateCompanyTermsoffer">Save Changes</button>
             <button class="btn btn-primary me-2 setToDefaultCompanyTermsoffer" type="button" id="setToDefaultCompanyTermsoffer">Set to Default</button>
+          </div>
           </div>
         </div>
   
@@ -1377,7 +2151,10 @@ input[type="radio"]:checked {
     </div>
 
   </div>
+  </div>
 </div>
+  </div>
+  </div>
 <!--end::offerterms Terms & Canditions Content-->
 
 
@@ -1424,6 +2201,17 @@ input[type="radio"]:checked {
 
 <!--begin::Offer components Content-->
 <div class="tab-pane" id="offercomponent" role="tabpanel">
+  <div class="candidate-config-shell">
+    <aside class="candidate-config-nav" aria-label="Candidate configuration sections">
+      <h4>Documents &amp; Templates</h4>
+      <div class="candidate-config-group">Salary Annexures</div>
+      <a class="candidate-config-link active" data-toggle="tab" href="#offercomponent"><i class="far fa-money-bill-alt"></i><span>Standard Payroll Structure<small>{{ count($offer_points ?? []) }} salary components</small></span></a>
+      <div class="candidate-config-group">Offer Letter Templates</div>
+      @foreach($candidateOfferTemplates as $candidateOfferTemplate)
+        <a class="candidate-config-link candidate-offer-template-link" data-toggle="tab" href="#offerterms" data-template-field="{{ $candidateOfferTemplate['field'] }}" data-template-label="{{ $candidateOfferTemplate['label'] }}" data-template-type="{{ $candidateOfferTemplate['type'] }}" data-template-content='@json($candidateOfferTemplate["content"])'><i>{!! $candidateOfferIcon !!}</i><span>{{ $candidateOfferTemplate['label'] }}<small>{{ $candidateOfferTemplate['small'] }}</small></span></a>
+      @endforeach
+    </aside>
+    <div class="candidate-config-panel">
   @php
     $sstMain  = collect($offer_points ?? []);
     $sstAdd   = collect($offer_point_other ?? []);
@@ -1501,19 +2289,49 @@ input[type="radio"]:checked {
     /* edit drawer */
     .sst-drawer-ov { position:fixed; inset:0; background:rgba(0,0,0,.4); z-index:1090; opacity:0; visibility:hidden; transition:opacity .2s; }
     .sst-drawer-ov.show { opacity:1; visibility:visible; }
-    .sst-drawer { position:fixed; top:0; right:0; height:100vh; width:min(1400px,96vw); background:#fff; z-index:1091; box-shadow:-8px 0 40px rgba(0,0,0,.15); transform:translateX(100%); transition:transform .25s ease; display:flex; flex-direction:column; }
+    .sst-drawer { position:fixed; top:0; right:0; height:100vh; width:min(1600px,calc(95vw - 200px)); min-width:720px; max-width:calc(100vw - 12px); background:#fff; z-index:1091; box-shadow:-8px 0 40px rgba(0,0,0,.15); transform:translateX(100%); transition:transform .25s ease; display:flex; flex-direction:column; }
     .sst-drawer.show { transform:translateX(0); }
-    .sst-drawer-h { display:flex; align-items:center; justify-content:space-between; padding:12px 18px; border-bottom:1px solid var(--b); }
+    .sst-drawer-h { display:flex; align-items:center; justify-content:space-between; gap:14px; padding:12px 18px; border-bottom:1px solid var(--b); }
     .sst-drawer-h .t { font-size:15px; font-weight:700; color:var(--t); }
+    .sst-drawer-actions { display:flex; align-items:center; justify-content:flex-end; gap:8px; margin-left:auto; }
+    .sst-drawer-actions .btn { font-size:12px; font-weight:600; white-space:nowrap; }
     .sst-drawer-x { width:34px; height:34px; border:none; background:var(--bg); border-radius:8px; cursor:pointer; font-size:15px; color:var(--tm); }
     .sst-drawer iframe { flex:1; width:100%; border:none; }
+    /* Read-only compensation view; editing remains in the existing drawer to preserve salary persistence behavior. */
+    .sst-comp-overview { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:12px; margin:16px 0 18px; padding:14px; border:1px solid var(--b); border-radius:10px; background:#fbfcff; }
+    .sst-comp-field { min-width:0; padding-right:12px; border-right:1px solid var(--b); }
+    .sst-comp-field:last-child { padding-right:0; border-right:0; }
+    .sst-comp-label { display:block; margin-bottom:6px; color:var(--tm); font-size:10.5px; font-weight:600; }
+    .sst-comp-value { display:block; overflow:hidden; color:var(--t); font-size:12.5px; font-weight:600; text-overflow:ellipsis; white-space:nowrap; }
+    .salary-compensation { display:grid; gap:14px; }
+    .salary-comp-card { border:1px solid var(--b); border-radius:10px; background:#fff; overflow:hidden; }
+    .salary-comp-heading { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:14px 16px 0; }
+    .salary-comp-heading h4 { margin:0; color:var(--t); font-size:14px; font-weight:600; }
+    .salary-comp-heading p { margin:3px 0 0; color:var(--tm); font-size:11.5px; font-weight:500; }
+    .salary-comp-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px; padding:14px 16px 16px; }
+    .salary-comp-control { min-width:0; }
+    .salary-comp-control label { display:block; margin-bottom:5px; color:var(--t); font-size:11px; font-weight:600; }
+    .salary-comp-control label i { width:14px; margin-right:4px; color:#4d72ff; text-align:center; }
+    .salary-comp-readonly { display:flex; align-items:center; min-height:35px; padding:8px 10px; border:1px solid #d8e0ee; border-radius:6px; color:#34405d; background:#fff; font-size:12px; font-weight:500; }
+    .salary-comp-table-wrap { overflow-x:auto; padding:12px 16px 16px; }
+    .salary-comp-table { width:100%; min-width:760px; border-collapse:separate; border-spacing:0; border:1px solid #e3e8f2; border-radius:7px; overflow:hidden; }
+    .salary-comp-table th { padding:9px 10px; background:#f7f9fc; border-bottom:1px solid #e3e8f2; color:#60708f; font-size:10.5px; font-weight:600; text-align:left; }
+    .salary-comp-table td { padding:9px 10px; border-bottom:1px solid #edf0f5; color:#26334f; font-size:11.5px; font-weight:500; vertical-align:middle; }
+    .salary-comp-table tbody tr:last-child td { border-bottom:0; }
+    .salary-comp-no { color:#7b88a2; font-size:10.5px; font-weight:600; }
+    .salary-comp-total { display:flex; justify-content:space-between; gap:12px; padding:10px 16px; border-top:1px solid #d8e9e0; background:#ecfff3; color:#177245; font-size:11.5px; font-weight:600; }
+    .salary-comp-total.additional { border-top-color:#eadfff; background:#faf7ff; color:#6b3ed1; }
+    .sst-legacy-layout { display:none !important; }
+    @media(max-width:991px){ .sst-comp-overview,.salary-comp-grid { grid-template-columns:repeat(2,minmax(0,1fr)); } .sst-comp-field:nth-child(2){ border-right:0; } }
+    @media(max-width:767px){ .sst-drawer { min-width:0; width:100vw; } .sst-drawer-actions .btn { padding:7px 9px; font-size:11px; } }
+    @media(max-width:575px){ .sst-comp-overview,.salary-comp-grid { grid-template-columns:1fr; } .sst-comp-field{ padding:0 0 10px; border-right:0; border-bottom:1px solid var(--b); } .sst-comp-field:last-child{ padding-bottom:0; border-bottom:0; } }
   </style>
 
-  <div class="sst-wrap">
-    <div class="sst-head">
+  <div class="sst-wrap candidate-config-main-card">
+    <div class="sst-head candidate-config-card-head">
       <div>
-        <div class="sst-title">Standard Payroll Structure <span class="sst-badge"><i class="fas fa-check" style="font-size:8px;"></i>Active</span></div>
-        <div class="sst-sub">Primary template for the candidate offer letter.</div>
+        <div class="sst-title">Salary Annexure <span class="sst-badge"><i class="fas fa-check" style="font-size:8px;"></i>Active</span></div>
+        <div class="sst-sub">Standard Payroll Structure · Primary template for candidate offers.</div>
       </div>
       <button type="button" class="btn btn-primary align-self-center" onclick="openSalaryEditDrawer()"><i class="fas fa-pen me-1" style="font-size:11px;"></i> Edit</button>
     </div>
@@ -1524,7 +2342,104 @@ input[type="radio"]:checked {
       <span class="mi"><i class="far fa-clock"></i>Last Updated: <b>{{ now()->format('d M Y') }}</b></span>
     </div>
 
-    <div class="sst-layout">
+    <div class="sst-comp-overview candidate-config-subcard" aria-label="Compensation details">
+      <div class="sst-comp-field"><span class="sst-comp-label">Compensation Type</span><span class="sst-comp-value">Salary Annexure</span></div>
+      <div class="sst-comp-field"><span class="sst-comp-label">Main Components</span><span class="sst-comp-value">{{ $sstMain->count() }} components · {{ number_format($sstMainTotal, 2) }}%</span></div>
+      <div class="sst-comp-field"><span class="sst-comp-label">Additional Components</span><span class="sst-comp-value">{{ $sstAdd->count() }} components · {{ number_format($sstAddTotal, 2) }}%</span></div>
+      <div class="sst-comp-field"><span class="sst-comp-label">Validation</span><span class="sst-comp-value" style="color:{{ $sstMainValid ? '#1a9c61' : '#d97706' }}">{{ $sstMainValid ? 'Main total is 100%' : 'Main total requires review' }}</span></div>
+    </div>
+
+    <div class="salary-compensation" aria-label="Salary annexure compensation details">
+      <section class="salary-comp-card candidate-config-subcard">
+        <div class="salary-comp-heading">
+          <div><h4>Compensation Details</h4><p>These offer details are captured when an offer is created from this salary annexure.</p></div>
+        </div>
+        <div class="salary-comp-grid">
+          <div class="salary-comp-control"><label><i class="fas fa-wallet"></i>Currency</label><div class="salary-comp-readonly">Selected when creating an offer</div></div>
+          <div class="salary-comp-control"><label><i class="fas fa-wallet"></i>Enter Amount (CTC)</label><div class="salary-comp-readonly">Set when creating an offer</div></div>
+          <div class="salary-comp-control"><label><i class="fas fa-calendar-alt"></i>Salary Format</label><div class="salary-comp-readonly">Selected when creating an offer</div></div>
+          <div class="salary-comp-control"><label><i class="fas fa-briefcase"></i>Offered Designation</label><div class="salary-comp-readonly">Set when creating an offer</div></div>
+          <div class="salary-comp-control"><label><i class="far fa-calendar-alt"></i>Date of Joining (DOJ)</label><div class="salary-comp-readonly">Set when creating an offer</div></div>
+          <div class="salary-comp-control"><label><i class="fas fa-briefcase"></i>Job Type</label><div class="salary-comp-readonly">Selected when creating an offer</div></div>
+        </div>
+      </section>
+
+      <section class="salary-comp-card candidate-config-subcard">
+        <div class="salary-comp-heading">
+          <div><h4>Main Components <span style="color:#7e8299;font-size:11px;font-weight:500;">(must total 100%)</span></h4><p>Core salary components used in the payroll structure.</p></div>
+        </div>
+        <div class="salary-comp-table-wrap">
+          <table class="salary-comp-table">
+            <thead><tr><th>#</th><th>Component Name</th><th>Applicable</th><th>Allocation</th><th>Condition</th><th>Monthly</th><th>Annually</th></tr></thead>
+            <tbody>
+              @forelse ($sstMain as $i => $c)
+                <tr>
+                  <td class="salary-comp-no">{{ $i + 1 }}</td>
+                  <td><strong>{{ $c->points }}</strong></td>
+                  <td>{{ $sstViewLabel[$c->view_type] ?? 'Both' }}</td>
+                  <td>{{ number_format($c->percentage, 2) }}%</td>
+                  <td>{{ $sstCondLabel[$c->condition_check] ?? 'Amount' }}</td>
+                  <td>—</td><td>—</td>
+                </tr>
+              @empty
+                <tr><td colspan="7" style="text-align:center;color:#7e8299;">No main components configured.</td></tr>
+              @endforelse
+            </tbody>
+          </table>
+        </div>
+        <div class="salary-comp-total"><span>Total Main Components</span><span>{{ number_format($sstMainTotal, 2) }}%</span></div>
+      </section>
+
+      <section class="salary-comp-card candidate-config-subcard">
+        <div class="salary-comp-heading">
+          <div><h4>Additional Components <span style="color:#7e8299;font-size:11px;font-weight:500;">(optional)</span></h4><p>Additional allowances applied above the main salary allocation.</p></div>
+        </div>
+        <div class="salary-comp-table-wrap">
+          <table class="salary-comp-table">
+            <thead><tr><th>#</th><th>Component Name</th><th>Applicable</th><th>Allocation</th><th>Condition</th><th>Monthly</th><th>Annually</th></tr></thead>
+            <tbody>
+              @forelse ($sstAdd as $i => $c)
+                <tr>
+                  <td class="salary-comp-no">{{ $i + 1 }}</td>
+                  <td><strong>{{ $c->points }}</strong></td>
+                  <td>{{ $sstViewLabel[$c->view_type] ?? 'Both' }}</td>
+                  <td>{{ number_format($c->percentage, 2) }}%</td>
+                  <td>{{ $sstCondLabel[$c->condition_check] ?? 'Amount' }}</td>
+                  <td>—</td><td>—</td>
+                </tr>
+              @empty
+                <tr><td colspan="7" style="text-align:center;color:#7e8299;">No additional components configured.</td></tr>
+              @endforelse
+            </tbody>
+          </table>
+        </div>
+        <div class="salary-comp-total additional"><span>Total Additional Components</span><span>{{ number_format($sstAddTotal, 2) }}%</span></div>
+      </section>
+
+      {{-- A structure has no candidate CTC of its own; final amounts are calculated from the live offer CTC. --}}
+      <section class="salary-comp-card candidate-config-subcard" aria-label="Final CTC">
+        <div class="salary-comp-heading">
+          <div><h4>Final CTC <span style="color:#7e8299;font-size:11px;font-weight:500;">(Cost to Company)</span></h4><p>Summary of the total cost including main and additional components.</p></div>
+        </div>
+        <div class="salary-comp-table-wrap">
+          <table class="salary-comp-table">
+            <thead><tr><th>Component</th><th>Allocation</th><th>Currency</th><th>Monthly</th><th>Annually</th></tr></thead>
+            <tbody>
+              <tr>
+                <td><strong>Total CTC (Main + Additional)</strong></td>
+                <td>{{ number_format($sstOverall, 2) }}%</td>
+                <td>Selected on offer</td>
+                <td>Calculated on offer</td>
+                <td>Calculated on offer</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </div>
+
+    {{-- Legacy preview remains in markup only to preserve its existing client-side hooks; it is intentionally not rendered. --}}
+    <div class="sst-layout sst-legacy-layout" aria-hidden="true">
       <div class="sst-mainside">
         <!-- Summary cards -->
         <div class="sst-cards">
@@ -1673,6 +2588,10 @@ input[type="radio"]:checked {
   <div class="sst-drawer" id="sstDrawer">
     <div class="sst-drawer-h">
       <span class="t">Edit Salary Template</span>
+      <div class="sst-drawer-actions">
+        <button type="button" id="sstSaveTemplateButton" class="btn btn-primary" onclick="submitSalaryTemplateFromDrawer()"><i class="far fa-save me-1"></i>Save Template</button>
+        <button type="button" id="sstResetTemplateButton" class="btn" style="background:#5b21d6;color:#fff;" onclick="resetSalaryTemplateDrawer()" title="Load the Super Admin default components into this editor"><i class="fas fa-undo me-1"></i>Reset</button>
+      </div>
       <button type="button" class="sst-drawer-x" onclick="closeSalaryEditDrawer()">&times;</button>
     </div>
     <iframe id="sstDrawerFrame" src="about:blank" title="Edit Salary Template"></iframe>
@@ -1711,6 +2630,42 @@ input[type="radio"]:checked {
       document.getElementById('sstDrawerOv').classList.add('show');
       document.body.style.overflow = 'hidden';
     }
+    // Intent: give the existing drawer actions immediate, non-blocking progress feedback while preserving their form and data behavior.
+    function setSalaryDrawerActionLoading(buttonId, isLoading, loadingText){
+      var button = document.getElementById(buttonId);
+      if (!button) return;
+      if (!button.dataset.idleHtml) button.dataset.idleHtml = button.innerHTML;
+      button.disabled = isLoading;
+      button.setAttribute('aria-busy', isLoading ? 'true' : 'false');
+      button.innerHTML = isLoading
+        ? '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>' + loadingText
+        : button.dataset.idleHtml;
+    }
+    // The drawer header submits the existing embedded form, preserving its current validation and save endpoint.
+    function submitSalaryTemplateFromDrawer(){
+      var frame = document.getElementById('sstDrawerFrame');
+      var save = frame && frame.contentWindow && frame.contentWindow.document.getElementById('save-form');
+      if (save) {
+        setSalaryDrawerActionLoading('sstSaveTemplateButton', true, 'Saving…');
+        save.click();
+      }
+    }
+    // Reset intentionally loads the Super Admin master components for review; the company data is unchanged until Save Template submits the existing form.
+    function resetSalaryTemplateDrawer(){
+      var frame = document.getElementById('sstDrawerFrame');
+      if (frame) {
+        setSalaryDrawerActionLoading('sstResetTemplateButton', true, 'Loading defaults…');
+        frame.addEventListener('load', function completeSalaryTemplateReset(){
+          setSalaryDrawerActionLoading('sstResetTemplateButton', false);
+          frame.removeEventListener('load', completeSalaryTemplateReset);
+        });
+        frame.src = "{{ route('service_company.account.offerAmountChange', [encrypt(1)]) }}?embed=1";
+      }
+    }
+    // The embedded editor dispatches this only after its existing AJAX request completes.
+    window.addEventListener('salary-template-save-complete', function(){
+      setSalaryDrawerActionLoading('sstSaveTemplateButton', false);
+    });
     function closeSalaryEditDrawer(){
       document.getElementById('sstDrawer').classList.remove('show');
       document.getElementById('sstDrawerOv').classList.remove('show');
@@ -1718,128 +2673,204 @@ input[type="radio"]:checked {
     }
   </script>
 </div>
+  </div>
+  </div>
 <!--end::Offer components-->
 
+<script>
+  // Intent: switch the existing candidate configuration panes directly because the vertical links are nested inside a Bootstrap tab pane.
+  document.addEventListener('click', function (event) {
+    var link = event.target.closest ? event.target.closest('.candidate-config-link') : null;
+    if (!link) return;
+
+    event.preventDefault();
+    var target = document.querySelector(link.getAttribute('href'));
+    if (!target) return;
+
+    document.querySelectorAll('#offerterms, #offercomponent').forEach(function (pane) {
+      pane.classList.remove('active', 'show');
+    });
+    target.classList.add('active', 'show');
+
+    document.querySelectorAll('.candidate-config-link').forEach(function (item) {
+      item.classList.toggle('active', item === link);
+    });
+    if (link.classList.contains('candidate-offer-template-link') && typeof setCandidateOfferTemplateContent === 'function') {
+      setCandidateOfferTemplateContent(
+        link.getAttribute('data-template-field'),
+        link.getAttribute('data-template-label'),
+        link.getAttribute('data-template-content') || '',
+        true,
+        link.getAttribute('data-template-type')
+      );
+    }
+    document.querySelectorAll('.candidate-config-main-tab').forEach(function (item) {
+      item.classList.add('active');
+    });
+  }, true);
+</script>
 
 
 
-<!--begin::Services Content-->
+
+{{-- Legacy commercial cards are retained in source below for reference while the redesigned presentation is rendered first. --}}
+<div class="tab-pane {{$services_tab}}" id="services" role="tabpanel">
+  @php
+    // Presentation-only values sourced from AccountSettingsService's existing cached account payload.
+    $cv2FulltimeActive = (bool) (@$fullTimeStatus->status);
+    $cv2ContractActive = (bool) (@$contractStatus->status);
+    $cv2Currency = optional($currencyArr->firstWhere('id', @$account->currency));
+    $cv2CurrencyCode = $cv2Currency->code ?: 'USD';
+  @endphp
+  <div class="commercials-v2">
+    <h4 class="cv2-section-title">Your Services</h4>
+    <p class="cv2-section-sub">Manage services for each hiring type and the countries you operate in.</p>
+    <div class="cv2-services">
+      <section class="cv2-service">
+        <div class="cv2-service-top"><div class="cv2-service-name"><span class="cv2-service-icon blue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="7" r="4"/><path d="M4 21v-2a8 8 0 0 1 16 0v2"/></svg></span><div><h4>Fulltime Hiring Services <span id="f_status_badge" class="cv2-badge {{ $cv2FulltimeActive ? '' : 'is-off' }}">{{ $cv2FulltimeActive ? 'Active' : 'Inactive' }}</span></h4><p class="cv2-service-desc">Permanent staffing solutions for your clients</p></div></div><div class="cv2-switch"><label class="form-check form-switch form-check-custom form-check-solid"><input class="form-check-input update_main_status_fulltime" data-row_id="{{ encrypt((@$fullTimeStatus->id)) }}" type="checkbox" value="{{ @$fullTimeStatus->status }}" {{ $cv2FulltimeActive ? 'checked' : '' }} /></label><span id="f_text" class="cv2-switch-text">{{ $cv2FulltimeActive ? 'ON' : 'OFF' }}</span></div></div>
+        <div class="cv2-service-main class_change_fulltime {{ $cv2FulltimeActive ? '' : 'cv2-disabled' }}"><div class="cv2-facts"><div class="cv2-fact"><div class="cv2-fact-label">Commercial Model</div><div class="cv2-fact-value">{{ (@$fullTimeStatus->rateType == 2) ? 'Percentage of CTC' : 'Fixed commercial rate' }}</div></div><div class="cv2-fact"><div class="cv2-fact-label">Default Rate</div><div class="cv2-fact-value rate">Configured</div></div><div class="cv2-fact"><div class="cv2-fact-label">Rate Basis</div><div class="cv2-fact-value">One-time (upon joining)</div></div><div class="cv2-fact"><div class="cv2-fact-label">Currency</div><div class="cv2-fact-value">{{ $cv2CurrencyCode }}</div></div></div><div class="cv2-side"><div class="cv2-side-row"><span>Countries Served</span><b>{{ (int) @$fullTimeCount }}</b></div><div class="cv2-side-row"><span>Service Status</span><b>{{ $cv2FulltimeActive ? 'Active' : 'Inactive' }}</b></div></div></div>
+        <div class="cv2-bottom"><div><p class="cv2-country-label">Country-wise Services</p><span class="cv2-country-chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 5h18v14H3z"/><path d="M7 9h10M7 13h6"/></svg><b>{{ (int) @$fullTimeCount }}</b> configured countries</span></div><a href="javascript:;" class="btn ser_show-detail cv2-edit" data-type="2">Edit Services <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg></a></div>
+      </section>
+      <section class="cv2-service">
+        <div class="cv2-service-top"><div class="cv2-service-name"><span class="cv2-service-icon green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M8 3v4M16 3v4M8 11h8M8 15h5"/></svg></span><div><h4>Contract Hiring Services <span id="c_status_badge" class="cv2-badge {{ $cv2ContractActive ? '' : 'is-off' }}">{{ $cv2ContractActive ? 'Active' : 'Inactive' }}</span></h4><p class="cv2-service-desc">Contract staffing solutions for your clients</p></div></div><div class="cv2-switch"><label class="form-check form-switch form-check-custom form-check-solid"><input class="form-check-input contract_main_status_fulltime" data-row_id="{{ encrypt((@$contractStatus->id)) }}" type="checkbox" value="{{ @$contractStatus->status }}" {{ $cv2ContractActive ? 'checked' : '' }} /></label><span id="c_text" class="cv2-switch-text">{{ $cv2ContractActive ? 'ON' : 'OFF' }}</span></div></div>
+        <div class="cv2-service-main class_change_contract {{ $cv2ContractActive ? '' : 'cv2-disabled' }}"><div class="cv2-facts"><div class="cv2-fact"><div class="cv2-fact-label">Commercial Model</div><div class="cv2-fact-value">{{ (@$contractStatus->rateType == 1) ? 'Markup on Bill Rate' : 'Contract commercial rate' }}</div></div><div class="cv2-fact"><div class="cv2-fact-label">Default Rate</div><div class="cv2-fact-value rate">Configured</div></div><div class="cv2-fact"><div class="cv2-fact-label">Billing</div><div class="cv2-fact-value">{{ [0 => 'Annual', 1 => 'Monthly', 2 => 'Hourly'][@$contractStatus->sal_mode] ?? 'Configured' }}</div></div><div class="cv2-fact"><div class="cv2-fact-label">Currency</div><div class="cv2-fact-value">{{ [0 => 'INR', 1 => 'EUR', 2 => 'JPY', 3 => 'GBP', 4 => 'USD'][@$contractStatus->salary_currency] ?? $cv2CurrencyCode }}</div></div></div><div class="cv2-side"><div class="cv2-side-row"><span>Countries Served</span><b>{{ (int) @$contractCount }}</b></div><div class="cv2-side-row"><span>Service Status</span><b>{{ $cv2ContractActive ? 'Active' : 'Inactive' }}</b></div></div></div>
+        <div class="cv2-bottom"><div><p class="cv2-country-label">Country-wise Services</p><span class="cv2-country-chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 5h18v14H3z"/><path d="M7 9h10M7 13h6"/></svg><b>{{ (int) @$contractCount }}</b> configured countries</span></div><a href="javascript:;" class="btn ser_show-detail cv2-edit" data-type="1">Edit Services <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg></a></div>
+      </section>
+    </div>
+    <div class="cv2-note"><span class="cv2-note-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 10v6M12 7h.01"/></svg></span><p><b>Service recommendations:</b> Keep service rates and country coverage current so clients see accurate service terms when engaging your company.</p></div>
+  </div>
+</div>
+
+{{-- Legacy markup kept only until the next deployment removes this inactive fallback. --}}
+{{-- <!--begin::Services Content-->
 <div class="tab-pane" id="services" role="tabpanel">
   <!--begin::Overview header-->
-  <div class="card-header cursor-pointer px-0">
+  <div class="card-header cursor-pointer px-0 border-0 mb-2">
     <!--begin::Card title-->
     <div class="card-title m-0">
-      <h3 class="fw-bolder m-0">Services</h3>
+      <h3 class="fw-bolder m-0 text-dark fs-3">Services</h3>
     </div>
     <!--end::Card title-->
   </div>
   <!--end::Services header-->
-  <div class="card-body px-0 py-7"> 
-    <!--begin::Services Content-->
-    <div class="row">
-      <div class="content d-flex flex-column flex-column-fluid pt-4" id="kt_content">
-        <!--begin::Post-->
-        <div class="post d-flex flex-column-fluid" id="kt_post">
-          <!--begin::Container-->
-          <div id="kt_content_container" class="container-fluid container-fluid pl-1 pe-2">
-            <!--begin::Row-->
-            <div class="row">
+  <div class="card-body px-0 py-2"> 
+    <!--begin::Services Grid-->
+    <div class="row g-6">
 
-              <div class="col-md-6">
-                <div class="card card-flush h-md-100">
-                  <div class="card-header">
-                    <div class="card-title">
-                      <h1>Fulltime Hiring Services</h1>
-
-                      <a href="javascript:void(0);" class="text-dark fw-bolder fs-6" style="position: absolute; right: 5px;">
-                        <label class="form-check form-switch form-check-custom form-check-solid">
-                            <input class="form-check-input update_main_status_fulltime" data-row_id="{{ encrypt((@$fullTimeStatus->id))}}" type="checkbox" value="{{ @$fullTimeStatus->status }}" {{ (@$fullTimeStatus->status) ? 'checked' : '' }} />
-                            
-                        </label>
-                        <span id="f_text" style="margin-left: 8px;">{{ (@$fullTimeStatus->status) ? 'ON' : 'OFF' }} </span>
-                    </a>
-
-                    </div>
-                  </div>
-
-                  <div class="card-body pt-1">
-                    {{-- <div class="fw-bolder text-gray-600 mb-5 fs-6">Total users with this role: </div> --}}
-                    <div class="d-flex flex-column text-gray-600">
-
-                      <div class="d-flex align-items-center py-2 fs-6 class_change_fulltime" style="{{ @$fullTimeStatus->status ? '' : 'opacity: 0.2 !important' }}">
-                         <span class="bullet bg-primary me-3"></span>
-                         <em>One Time Payment for Service</em>
-                      </div>
-                      <div class="d-flex align-items-center py-2 fs-6 class_change_fulltime" style="{{ @$fullTimeStatus->status ? '' : 'opacity: 0.2 !important' }}">
-                        <span class="bullet bg-primary me-3"></span>
-                        <em>Commercials Added</em>
-                      </div>
-                      <div class="d-flex align-items-center py-2 fs-6 class_change_fulltime" style="{{ @$fullTimeStatus->status ? '' : 'opacity: 0.2 !important' }}">
-                        <span class="bullet bg-primary me-3"></span>
-                        <em><span id="fullTimeCount">{{ @$fullTimeCount }} </span> Countries Selected for Services</em>
-                      </div>
-
-                    </div>
-                  </div>
-                  <div class="card-footer flex-wrap pt-0"> 
-                       <a href="javascript:;" class="btn btn-light btn-active-primary my-1 me-2 ser_show-detail" data-type="2">View/Edit</a>
-                  </div>
-                </div>
+      <!-- Fulltime Hiring Services Card -->
+      <div class="col-md-6 col-xl-6 mb-4">
+        <div class="card card-dashed h-100 p-6" style="border: 1px dashed #E2E8F0; border-radius: 12px; background: #ffffff;">
+          <!-- Header -->
+          <div class="d-flex align-items-center justify-content-between mb-4">
+            <div class="d-flex align-items-center">
+              <div class="symbol me-4" style="width: 44px; height: 44px; border-radius: 10px; background: #E8F3FF; color: #0085FF; font-weight: 700; font-size: 15px; display: flex; align-items: center; justify-content: center;">
+                FT
               </div>
-
-              <div class="col-md-6">
-                <div class="card card-flush h-md-100">
-                  <div class="card-header">
-                    <div class="card-title">
-                      <h1>Contract Hiring Services</h1>
-
-                      <a href="javascript:void(0);" class="text-dark fw-bolder fs-6" style="position: absolute; right: 5px;">
-                        <label class="form-check form-switch form-check-custom form-check-solid">
-                            <input class="form-check-input contract_main_status_fulltime" data-row_id="{{ encrypt((@$contractStatus->id))}}" type="checkbox" value="{{ @$contractStatus->status }}" {{ (@$contractStatus->status) ? 'checked' : '' }} />
-                        </label>
-                        <span id="c_text" style="margin-left: 8px;">{{ (@$contractStatus->status) ? 'ON' : 'OFF' }} </span>
-                    </a>
-
-                    </div>
-                  </div>
-
-                  <div class="card-body pt-1">
-                    {{-- <div class="fw-bolder text-gray-600 mb-5 fs-6">Total users with this role: </div> --}}
-                    <div class="d-flex flex-column text-gray-600">
-
-                      <div class="d-flex align-items-center py-2 fs-6 class_change_contract" style="{{ @$contractStatus->status ? '' : 'opacity: 0.2 !important' }}">
-                        <span class="bullet bg-primary me-3"></span>
-                        <em>Houry / Monthly Payment for Services</em>
-                     </div>
-                     <div class="d-flex align-items-center py-2 fs-6 class_change_contract" style="{{ @$contractStatus->status ? '' : 'opacity: 0.2 !important' }}">
-                       <span class="bullet bg-primary me-3"></span>
-                       <em>Commercials Added</em>
-                     </div>
-                     <div class="d-flex align-items-center py-2 fs-6 class_change_contract" style="{{ @$contractStatus->status ? '' : 'opacity: 0.2 !important' }}">
-                       <span class="bullet bg-primary me-3"></span>
-                       <em><span id="contractCount">{{ @$contractCount }} </span> Countries Selected for Services</em>
-                     </div>
-
-                    </div>
-                  </div>
-                  <div class="card-footer flex-wrap pt-0"> 
-                       <a href="javascript:;" class="btn btn-light btn-active-primary my-1 me-2 ser_show-detail" data-type="1">View/Edit</a>
-                  </div>
-                </div>
+              <div>
+                <h4 class="text-dark fw-bolder fs-5 mb-1" style="color: #1E293B !important;">Fulltime Hiring Services</h4>
+                <span class="text-muted fw-normal fs-7" style="color: #94A3B8 !important;">One Time Placement Fee</span>
               </div>
-
-
             </div>
+            <div class="d-flex align-items-center">
+              <label class="form-check form-switch form-check-custom form-check-solid me-2">
+                <input class="form-check-input update_main_status_fulltime" data-row_id="{{ encrypt((@$fullTimeStatus->id))}}" type="checkbox" value="{{ @$fullTimeStatus->status }}" {{ (@$fullTimeStatus->status) ? 'checked' : '' }} style="width: 40px; height: 22px; cursor: pointer;" />
+              </label>
+              <span id="f_text" class="fw-bold fs-7 ms-1" style="color: #1E293B;">{{ (@$fullTimeStatus->status) ? 'ON' : 'OFF' }}</span>
+            </div>
+          </div>
+
+          <!-- Divider -->
+          <div class="separator separator-dashed my-4" style="border-top: 1px dashed #E2E8F0;"></div>
+
+          <!-- Details List -->
+          <div class="py-2 class_change_fulltime" style="{{ @$fullTimeStatus->status ? '' : 'opacity: 0.4 !important;' }}">
+            <div class="d-flex align-items-center mb-3">
+              <span style="width: 12px; height: 4px; border-radius: 2px; background: #0085FF; display: inline-block; margin-right: 10px;"></span>
+              <span class="fw-semibold fs-6" style="color: #475569;">One Time Payment for Service</span>
+            </div>
+            <div class="d-flex align-items-center mb-3">
+              <span style="width: 12px; height: 4px; border-radius: 2px; background: #0085FF; display: inline-block; margin-right: 10px;"></span>
+              <span class="fw-semibold fs-6" style="color: #475569;">Services Configured</span>
+            </div>
+            <div class="d-flex align-items-center mb-2">
+              <span style="width: 12px; height: 4px; border-radius: 2px; background: #0085FF; display: inline-block; margin-right: 10px;"></span>
+              <span class="fw-semibold fs-6" style="color: #475569;"><span id="fullTimeCount">{{ @$fullTimeCount }}</span> Countries Selected</span>
+            </div>
+          </div>
+
+          <!-- Footer -->
+          <div class="d-flex align-items-center justify-content-between pt-4 mt-auto">
+            <span class="badge py-2 px-3 fw-bold fs-7" style="background: #ECFDF5; color: #10B981; border-radius: 6px;">
+              {{ (@$fullTimeStatus->status) ? 'Active' : 'Inactive' }}
+            </span>
+            <a href="javascript:;" class="btn btn-sm fw-bold ser_show-detail" data-type="2" style="background: #EBF5FF; color: #0085FF; border: none; padding: 7px 14px; border-radius: 8px; font-size: 13px; display: inline-flex; align-items: center; gap: 6px;">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+              View/Edit
+            </a>
           </div>
         </div>
       </div>
 
-      
+      <!-- Contract Hiring Services Card -->
+      <div class="col-md-6 col-xl-6 mb-4">
+        <div class="card card-dashed h-100 p-6" style="border: 1px dashed #E2E8F0; border-radius: 12px; background: #ffffff;">
+          <!-- Header -->
+          <div class="d-flex align-items-center justify-content-between mb-4">
+            <div class="d-flex align-items-center">
+              <div class="symbol me-4" style="width: 44px; height: 44px; border-radius: 10px; background: #F5EEFF; color: #A855F7; font-weight: 700; font-size: 15px; display: flex; align-items: center; justify-content: center;">
+                CT
+              </div>
+              <div>
+                <h4 class="text-dark fw-bolder fs-5 mb-1" style="color: #1E293B !important;">Contract Hiring Services</h4>
+                <span class="text-muted fw-normal fs-7" style="color: #94A3B8 !important;">Hourly / Monthly Staffing</span>
+              </div>
+            </div>
+            <div class="d-flex align-items-center">
+              <label class="form-check form-switch form-check-custom form-check-solid me-2">
+                <input class="form-check-input contract_main_status_fulltime" data-row_id="{{ encrypt((@$contractStatus->id))}}" type="checkbox" value="{{ @$contractStatus->status }}" {{ (@$contractStatus->status) ? 'checked' : '' }} style="width: 40px; height: 22px; cursor: pointer;" />
+              </label>
+              <span id="c_text" class="fw-bold fs-7 ms-1" style="color: #94A3B8;">{{ (@$contractStatus->status) ? 'ON' : 'OFF' }}</span>
+            </div>
+          </div>
+
+          <!-- Divider -->
+          <div class="separator separator-dashed my-4" style="border-top: 1px dashed #E2E8F0;"></div>
+
+          <!-- Details List -->
+          <div class="py-2 class_change_contract" style="{{ @$contractStatus->status ? '' : 'opacity: 0.4 !important;' }}">
+            <div class="d-flex align-items-center mb-3">
+              <span style="width: 12px; height: 4px; border-radius: 2px; background: {{ @$contractStatus->status ? '#A855F7' : '#CBD5E1' }}; display: inline-block; margin-right: 10px;"></span>
+              <span class="fw-semibold fs-6" style="color: {{ @$contractStatus->status ? '#475569' : '#94A3B8' }};">Hourly / Monthly Payment for Services</span>
+            </div>
+            <div class="d-flex align-items-center mb-3">
+              <span style="width: 12px; height: 4px; border-radius: 2px; background: {{ @$contractStatus->status ? '#A855F7' : '#CBD5E1' }}; display: inline-block; margin-right: 10px;"></span>
+              <span class="fw-semibold fs-6" style="color: {{ @$contractStatus->status ? '#475569' : '#94A3B8' }};">Services Configured</span>
+            </div>
+            <div class="d-flex align-items-center mb-2">
+              <span style="width: 12px; height: 4px; border-radius: 2px; background: {{ @$contractStatus->status ? '#A855F7' : '#CBD5E1' }}; display: inline-block; margin-right: 10px;"></span>
+              <span class="fw-semibold fs-6" style="color: {{ @$contractStatus->status ? '#475569' : '#94A3B8' }};"><span id="contractCount">{{ @$contractCount }}</span> Countries Selected</span>
+            </div>
+          </div>
+
+          <!-- Footer -->
+          <div class="d-flex align-items-center justify-content-between pt-4 mt-auto">
+            <span class="badge py-2 px-3 fw-bold fs-7" style="background: {{ (@$contractStatus->status) ? '#ECFDF5' : '#FEF2F2' }}; color: {{ (@$contractStatus->status) ? '#10B981' : '#EF4444' }}; border-radius: 6px;">
+              {{ (@$contractStatus->status) ? 'Active' : 'Inactive' }}
+            </span>
+            <a href="javascript:;" class="btn btn-sm fw-bold ser_show-detail" data-type="1" style="background: #FAF5FF; color: #A855F7; border: none; padding: 7px 14px; border-radius: 8px; font-size: 13px; display: inline-flex; align-items: center; gap: 6px;">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+              View/Edit
+            </a>
+          </div>
+        </div>
+      </div>
+
     </div>
     
   </div>
 </div>
 <!--end::Services Content-->
+--}}
 
 
         <!--begin::boost keyword Content-->
@@ -1967,6 +2998,7 @@ input[type="radio"]:checked {
 <div class="tab-pane" id="settings" role="tabpanel">
 <!--begin::Form-->
 <form  id="setting_content" name="setting_content" class="form fv-plugins-bootstrap5 fv-plugins-framework" novalidate="novalidate" method="post">
+  <div class="company-settings-v2">
   <meta name="csrf-token" content="{{ csrf_token() }}" />
   <input type="hidden" name="pagename" id="pagename" value="settings" />
   @csrf  
@@ -1974,15 +3006,19 @@ input[type="radio"]:checked {
   <!--begin::Main body div-->
   <div class="card mb-3 bg-light mb-xl-3 mx-0 shadow-none rounded-0"> @if(in_array("view_settings", $userPermissions))
     <div class="card-body px-0 pt-0 pb-0">
-      <div class="card mb-3 mb-xl-3 mx-0 shadow-none rounded-0">
-        <div class="card-header border-0 cursor-pointer px-0" role="button" data-bs-toggle="collapse" data-bs-target="#setting_one" aria-expanded="true" aria-controls="kt_account_profile_details">
+      <div class="card mb-3 mb-xl-3 mx-0 shadow-none rounded-0 settings-general-card">
+        <div class="card-header border-0 px-0">
           <div class="card-title m-0">
-            <h3 class="fw-bolder m-0">Settings</h3>
+            <div>
+              <h3 class="fw-bolder m-0">General Settings</h3>
+              <p class="csv2-section-sub">Basic configurations that control your system preferences.</p>
+            </div>
           </div>
         </div>
-        <div id="setting_one" class="collapse show">
+        <div id="setting_one" class="settings-section-content">
           <div class="card-body border-top py-8 px-2">
             <div class="row mb-6">
+              <span class="csv2-field-icon csv2-blue" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a15 15 0 0 1 0 18M12 3a15 15 0 0 0 0 18"/></svg></span>
               <label class="col-lg-3 col-form-label required fw-bold fs-6">Language</label>
               <div class="col-lg-9 fv-row">
                 <select name="language" id="language" aria-label="Select a Language" data-placeholder="Select a language..." class="form-select form-select-solid" tabindex="-1" aria-hidden="true">
@@ -2007,6 +3043,7 @@ input[type="radio"]:checked {
             </div>
             
             <div class="row mb-6">
+              <span class="csv2-field-icon csv2-purple" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></span>
               <label class="col-lg-3 col-form-label required fw-bold fs-6">Time Zone</label>
               <div class="col-lg-9 fv-row">
                 <select name="timezone" id="timezone" aria-label="Select a Time Zone" data-placeholder="Select a time zone..." class="form-select form-select-solid" tabindex="-1" aria-hidden="true">
@@ -2051,6 +3088,7 @@ input[type="radio"]:checked {
               </div>
             </div>
             <div class="row mb-6">
+              <span class="csv2-field-icon csv2-green" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M7 6h10M7 10h10M9 6c5 0 5 7 0 7h-2l8 6"/></svg></span>
               <label class="col-lg-3 col-form-label fw-bold fs-6">Currency</label>
               <div class="col-lg-9 fv-row">
                 <select name="currency" id="currency" aria-label="Select a Currency" data-placeholder="Select a currency..." class="form-select form-select-solid" tabindex="-1" aria-hidden="true">
@@ -2073,8 +3111,8 @@ input[type="radio"]:checked {
             </div>
 
             
-            <div class="row mb-6">
-              <label class="col-lg-3 col-form-label fw-bold fs-6">Bench Show Mode</label>
+            <div class="row mb-6 d-none">
+              <label data-setting-icon="◫" class="col-lg-3 col-form-label fw-bold fs-6">Bench Show Mode</label>
               <div class="col-lg-9 fv-row">
                 @php
                     $modeShow = ["Annual","Monthly","Hourly"];
@@ -2119,6 +3157,7 @@ input[type="radio"]:checked {
 
            
             <div class="row mb-6">
+              <span class="csv2-field-icon csv2-orange" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M8 3v4M16 3v4M4 9h16M9 14l2 2 4-4"/></svg></span>
               <label class="col-lg-3 col-form-label fw-bold fs-6">Time Format</label>
               <div class="col-lg-9 fv-row">
                 <select name="time_format" id="time_format" aria-label="Select a time format" data-placeholder="Select a time format..." class="form-select form-select-solid" tabindex="-1" aria-hidden="true">
@@ -2263,52 +3302,20 @@ input[type="radio"]:checked {
         <!--end::Content-->
       </div>
       <!--end::Connected Accounts-->
-      <!--begin::Notifications-->  
-      <div class="card mb-3 mb-xl-3 mx-0 shadow-none rounded-0">
-        <!--begin::Card header-->
-        <div class="card-header border-0 cursor-pointer px-0" role="button" data-bs-toggle="collapse" data-bs-target="#kt_notification_connected_notification" aria-expanded="true" aria-controls="kt_notification_connected_notification">
-          <div class="card-title m-0">
-            <h3 class="fw-bolder m-0">Email Notifications</h3>
-          </div>
-        </div>
-        <!--end::Card header-->
-        <!--begin::Content-->
-        <div id="kt_notification_connected_notification" class="collapse show">
-          <!--begin::Card body-->
-          <div class="card-body border-top py-8 px-2"><div class="row mb-6">
-            <label class="col-lg-3 col-form-label required fw-bold fs-6">Recuitment</label>
-            <div class="col-lg-9 fv-row">
-              <input type="email" name="recuitment_email" id="recuitment_email" value="{{ (@$notification['Recuitment']->email) ? @$notification['Recuitment']->email : @$account->company_email }}" placeholder="Enter email" class="form-control form-control-solid">
-              <div class="form-text">All recruitment-related communications will be sent exclusively to this email address.</div>
-              <div class="fv-plugins-message-container invalid-feedback"></div>
-            </div>
-          </div>
-            <div class="row mb-6">
-              <label class="col-lg-3 col-form-label required fw-bold fs-6">Sales</label>
-              <div class="col-lg-9 fv-row">
-                <input type="email" name="sales_email" id="sales_email" value="{{ (@$notification['Sales']->email) ? @$notification['Sales']->email : @$account->company_email }}" placeholder="Enter email" class="form-control form-control-solid">
-                <div class="form-text">All Sales-related communications will be sent exclusively to this email address.</div>
-                <div class="fv-plugins-message-container invalid-feedback"></div>
-              </div>
-            </div>
-            
-          </div>
-          <!--end::Card body-->
-        </div>
-        <!--end::Content-->
-      </div>
-      <!--end::Notifications-->
   <!--begin::Application Duplicate Settings-->
-  <div class="card mb-3 mb-xl-3 mx-0 shadow-none rounded-0">
+  <div class="card mb-3 mb-xl-3 mx-0 shadow-none rounded-0 settings-duplicate-card">
     <!--begin::Card header-->
-    <div class="card-header border-0 cursor-pointer px-0" role="button" data-bs-toggle="collapse" data-bs-target="#application_duplicate_settings" aria-expanded="true" aria-controls="application_duplicate_settings">
+    <div class="card-header border-0 px-0">
       <div class="card-title m-0">
-        <h3 class="fw-bolder m-0">Application Duplicate Setting</h3>
+        <div>
+          <h3 class="fw-bolder m-0">Duplicate Rules</h3>
+          <p class="csv2-section-sub">Configure how duplicate candidates are identified in the system.</p>
+        </div>
       </div>
     </div>
     <!--end::Card header-->
     <!--begin::Content-->
-    <div id="application_duplicate_settings" class="collapse show">
+    <div id="application_duplicate_settings" class="settings-section-content">
       <!--begin::Card body-->
       <div class="card-body border-top py-8 px-2">
  
@@ -2326,21 +3333,23 @@ input[type="radio"]:checked {
             <div class="col-lg-4">
               <label class="option"> <span class="option-control"> <span class="radio radio-outline">
               <input type="radio" name="app_duplicate" value="2" @php if($account->app_duplicate == 2){ echo 'checked="checked"'; } @endphp  >
-              <span></span> </span> </span> <span class="option-label"> <span class="option-head"> <span class="option-title fs-4 fw-bolder">Overrall System</span>
-              <input type="number" name="app_duplicate_overroll" id="app_duplicate_overroll" value="{{ @$app_duplicate_overroll_val }}" placeholder="Enter Days" class="w-33 rounded input_style">
-              </span> <span class="option-body">In the overall system, any candidate added to the same or a different job within a specified number of days will be considered a duplicate, and the candidate's status will be marked in red. Duplicate candidates will be detected based on the same phone number and email address only.</span> </span> </label>
+              <span></span> </span> </span> <span class="option-label"> <span class="option-head"> <span class="option-title fs-4 fw-bolder">Global Duplicate Detection</span></span>
+              <span class="option-body">Detect duplicates across all jobs in the system.</span>
+              <span class="csv2-days-row"><span>Check duplicates within</span><input type="number" name="app_duplicate_overroll" id="app_duplicate_overroll" value="{{ @$app_duplicate_overroll_val }}" placeholder="60" class="w-33 rounded input_style"><span>days</span></span>
+              </span> </label>
             </div>
             <div class="col-lg-4">
               <label class="option"> <span class="option-control"> <span class="radio radio-outline">
               <input type="radio" name="app_duplicate" value="1" @php if($account->app_duplicate == 1){ echo 'checked="checked"'; } @endphp  >
-              <span></span> </span> </span> <span class="option-label"> <span class="option-head"> <span class="option-title fs-4 fw-bolder">Job wise</span>
-              <input type="number" name="app_duplicate_requisition_wise" value="{{ @$app_duplicate_requisition_wise_val }}" placeholder="Enter Days" class="w-33 rounded input_style">
-              </span> <span class="option-body">Any candidate added to the same job with the same job ID within a specified number of days will be considered a duplicate, and the candidate's status will be marked in red. Duplicate candidates will be detected based on the same phone number and email address only.</span> <br></span> </label>
+              <span></span> </span> </span> <span class="option-label"> <span class="option-head"> <span class="option-title fs-4 fw-bolder">Job-wise Duplicate Detection</span></span>
+              <span class="option-body">Detect duplicates only within the same job.</span>
+              <span class="csv2-days-row"><span>Check duplicates within</span><input type="number" name="app_duplicate_requisition_wise" value="{{ @$app_duplicate_requisition_wise_val }}" placeholder="60" class="w-33 rounded input_style"><span>days</span></span>
+              </span> </label>
             </div>
             <div class="col-lg-4">
               <label class="option"> <span class="option-control"> <span class="radio radio-outline">
               <input type="radio" name="app_duplicate" value="0" @php if($account->app_duplicate == 0){ echo 'checked="checked"'; } @endphp  >
-              <span></span> </span> </span> <span class="option-label"> <span class="option-head"> <span class="option-title fs-4 fw-bolder">None</span> </span> <span class="option-body">Duplicates candidates will not be detected by the system based on the same phone number and email address.</span><br><br><br> </span> </label>
+              <span></span> </span> </span> <span class="option-label"> <span class="option-head"> <span class="option-title fs-4 fw-bolder">Duplicate Detection Disabled</span> </span> <span class="option-body">Do not detect any duplicate candidates.</span></span> </label>
             </div>
           </div>
           <div class="form-check"></div>
@@ -2388,17 +3397,20 @@ input[type="radio"]:checked {
   </div>
   <!--end::Account Type-->
   <!--begin::Department Type-->
-  <div class="card mb-3 mb-xl-3 mx-0 shadow-none rounded-0">
+  <div class="card mb-3 mb-xl-3 mx-0 shadow-none rounded-0 settings-department-card">
     <!--begin::Card header-->
     <div class="card-header row">
-      <div class="cursor-pointer px-0 card-title m-0 col-lg-9" role="button" data-toggle="collapse" data-target="#department" aria-expanded="true" aria-controls="department">
-        <h3 class="fw-bolder m-0">Department</h3>
+      <div class="px-0 card-title m-0 col-lg-9">
+        <div>
+          <h3 class="fw-bolder m-0">Department Management</h3>
+          <p class="csv2-section-sub">Manage and organize your company departments.</p>
+        </div>
       </div>
       <div class="card-title m-0 col-lg-2 "> @if(in_array("add_settings", $userPermissions)) <a href="javascript:void(0);" class="btn btn-primary align-self-center position-absolute end-0" data-toggle="modal" data-target="#add_department"> Add Department </a> @endif </div>
     </div>
     <!--end::Card header-->
     <!--begin::Content-->
-    <div id="department" class="collapse show">
+    <div id="department" class="settings-section-content">
       <!--begin::Card body-->
       <div class="card-body border-top py-8 px-2 dept_content">
         @php 
@@ -2453,6 +3465,9 @@ input[type="radio"]:checked {
                                     <div class="form-text text-muted"></div>
                                   </div>';
                             }			 
+              }
+              if($cnt > 0 && $cnt % 3 != 0){
+                $dept .= '</div><div class="form-check"></div><div class="form-text text-muted"></div></div>';
               }
               }			 
                   
@@ -2517,18 +3532,108 @@ input[type="radio"]:checked {
   
 @if(in_array("edit_settings", $userPermissions))
   <div class="card-footer d-flex justify-content-center py-6 px-9 bg-white">
-   <a href="{{ route('service_company.account.index') }}" class="btn btn-secondary me-2" >
-    	Cancel
+    <a href="{{ route('service_company.account.index') }}" class="btn btn-secondary me-2" >
+    Discard Changes
 	</a>
-    <button class="btn btn-primary me-2 updateCompanyProfile" type="button" id="updateCompanyProfile">Save Changes</button>
+    <button class="btn btn-primary me-2 updateCompanyProfile" type="button" id="updateCompanyProfile"><span class="csv2-save-spinner" aria-hidden="true"></span><span class="csv2-save-label">Save Changes</span></button>
   </div>
 @endif
+  </div>
   </div>
  
 </form>
 <!--end::Form-->
 </div>
 <!--end::Settings Content-->
+
+<!--begin::Notifications Content-->
+<div class="tab-pane csn" id="notifications" role="tabpanel">
+  @if(in_array("view_settings", $userPermissions))
+    @php
+      // Intent: document the existing recruitment and sales routing coverage without adding new persistence fields.
+      $recruitmentNotificationItems = [
+        ['Candidate Stages', 'Candidate moves across applied, shortlisted, interview, offered and other stages.'],
+        ['Agencies Status', 'Agency performance, submission and status changes.'],
+        ['Offers Update', 'Offer creation, approval, release, acceptance and decline.'],
+        ['Joining Update', 'Candidate joining, postponement and cancellation updates.'],
+        ['Bench Candidate Request', 'Bench candidates requested for a job.'],
+        ['Team Member Status', 'Team invitations, role changes and account status updates.'],
+        ['Bench Notification on Jobs', 'Bench candidates submitted or placed on jobs.'],
+        ['Additional Notifications', 'Notes, comments and other important recruitment actions.'],
+      ];
+      $salesNotificationItems = [
+        ['New Job Request from Direct Client', 'A new job request raised by a direct client.'],
+        ['Bench Added on Client Jobs', 'Bench candidates added or submitted on client jobs.'],
+        ['Subscription Status', 'Subscription activation, renewal, expiry and plan changes.'],
+        ['Client Communication', 'Client messages, feedback and important updates.'],
+        ['Invoice & Payment Status', 'Invoices, payments, due dates and payment failures.'],
+        ['Contract & Agreement Updates', 'Contract creation, renewal, expiry and amendments.'],
+        ['Low Coins / Wallet Alerts', 'Low coin balance and wallet actions requiring attention.'],
+        ['Additional Sales Alerts', 'Other important sales updates and system alerts.'],
+      ];
+    @endphp
+    <form id="notification_content" class="form" method="post" novalidate="novalidate">
+      @csrf
+      <input type="hidden" name="pagename" value="settings">
+      <div class="csn-grid">
+        <section class="csn-card">
+          <div class="csn-card-head">
+            <span class="csn-head-icon csn-purple" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg></span>
+            <div><div class="csn-card-title">Recruitment Notifications</div><div class="csn-card-sub">Manage email routing for all hiring and recruitment activities.</div></div>
+          </div>
+          <div class="csn-card-body">
+            <label class="csn-label" for="recuitment_email">Primary Email</label>
+            <div class="csn-email-wrap">
+              <input type="email" name="recuitment_email" id="recuitment_email" value="{{ (@$notification['Recuitment']->email) ? @$notification['Recuitment']->email : @$account->company_email }}" placeholder="Enter recruitment email" class="csn-email" required>
+              <span class="csn-email-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg></span>
+            </div>
+            <div class="csn-category-label">Notification Categories Covered</div>
+            <div class="csn-list">
+              @foreach($recruitmentNotificationItems as $notificationIndex => $notificationItem)
+                <div class="csn-item">
+                  <span class="csn-item-icon csn-purple" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="5" y="4" width="14" height="16" rx="2"/><path d="M9 4V2h6v2M9 12l2 2 4-4"/></svg></span>
+                  <div><div class="csn-item-title">{{ $notificationIndex + 1 }}. {{ $notificationItem[0] }}</div><div class="csn-item-desc">{{ $notificationItem[1] }}</div></div>
+                  <span class="csn-item-arrow" aria-hidden="true">&rsaquo;</span>
+                </div>
+              @endforeach
+            </div>
+          </div>
+        </section>
+
+        <section class="csn-card csn-sales">
+          <div class="csn-card-head">
+            <span class="csn-head-icon csn-green" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="7"/><path d="M12 7v5l3 2M8 3 5 6M16 3l3 3"/></svg></span>
+            <div><div class="csn-card-title">Sales Notifications</div><div class="csn-card-sub">Manage email routing for sales and client related activities.</div></div>
+          </div>
+          <div class="csn-card-body">
+            <label class="csn-label" for="sales_email">Primary Email</label>
+            <div class="csn-email-wrap">
+              <input type="email" name="sales_email" id="sales_email" value="{{ (@$notification['Sales']->email) ? @$notification['Sales']->email : @$account->company_email }}" placeholder="Enter sales email" class="csn-email" required>
+              <span class="csn-email-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg></span>
+            </div>
+            <div class="csn-category-label">Notification Categories Covered</div>
+            <div class="csn-list">
+              @foreach($salesNotificationItems as $notificationIndex => $notificationItem)
+                <div class="csn-item">
+                  <span class="csn-item-icon csn-green" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 19V9l8-5 8 5v10H4Z"/><path d="M9 19v-5h6v5"/></svg></span>
+                  <div><div class="csn-item-title">{{ $notificationIndex + 1 }}. {{ $notificationItem[0] }}</div><div class="csn-item-desc">{{ $notificationItem[1] }}</div></div>
+                  <span class="csn-item-arrow" aria-hidden="true">&rsaquo;</span>
+                </div>
+              @endforeach
+            </div>
+          </div>
+        </section>
+      </div>
+      @if(in_array("edit_settings", $userPermissions))
+        <div class="csn-actions">
+          <button type="reset" class="btn btn-secondary">Discard Changes</button>
+          <button type="button" class="btn btn-primary" id="saveNotificationSettings"><span class="csn-save-spinner" aria-hidden="true"></span><span class="csn-save-label">Save Changes</span></button>
+        </div>
+      @endif
+    </form>
+  @endif
+</div>
+<!--end::Notifications Content-->
 </div>
 <!--end::Body-->
 </div>
@@ -2973,51 +4078,188 @@ document.getElementById('add_interview_sub_stage_form').addEventListener('keydow
     var editBtn = document.getElementById('editBtn'); 
     var viewTerms = document.getElementById('viewTerms');
     var editTerms = document.getElementById('editTerms');
+    var agreementOverlay = document.getElementById('agencyAgreementDrawerOverlay');
+    var agreementClose = document.getElementById('closeAgencyAgreementDrawer');
     var updateCompanyTermsTop = document.getElementById('updateCompanyTermsTop'); 
     var setToDefaultCompanyTermsTop = document.getElementById('setToDefaultCompanyTermsTop'); 
-    updateCompanyTermsTop.style.display = "none";
-    setToDefaultCompanyTermsTop.style.display = "none";
+    if (updateCompanyTermsTop) updateCompanyTermsTop.style.display = "none";
+    if (setToDefaultCompanyTermsTop) setToDefaultCompanyTermsTop.style.display = "none";
+
+    // Intent: open the existing agency agreement editor inside the new drawer without changing the existing save/reset API.
+    window.openAgencyAgreementDrawer = function() {
+        if (!editTerms || !agreementOverlay) return;
+        if (viewTerms) viewTerms.style.display = "block";
+        editTerms.querySelectorAll('.updateCompanyTermsTop, .setToDefaultCompanyTermsTop').forEach(function(actionButton) {
+            actionButton.style.display = "inline-flex";
+        });
+        editTerms.style.display = "block";
+        editTerms.classList.add('open');
+        editTerms.setAttribute('aria-hidden', 'false');
+        agreementOverlay.classList.add('show');
+        document.body.classList.add('modal-open');
+        setTimeout(function() {
+            if (window.CKEDITOR && CKEDITOR.instances.kt_docs_tinymce_hidden) {
+                var agreementHtml = CKEDITOR.instances.kt_docs_tinymce_hidden.getData() || '';
+                var textOnly = agreementHtml.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+                var words = textOnly ? textOnly.split(' ').length : 0;
+                var wordNode = document.getElementById('agaWordCount');
+                var charNode = document.getElementById('agaCharCount');
+                if (wordNode) wordNode.textContent = words;
+                if (charNode) charNode.textContent = textOnly.length;
+            }
+        }, 100);
+    };
+
+    window.closeAgencyAgreementDrawer = function() {
+        if (!editTerms || !agreementOverlay) return;
+        editTerms.classList.remove('open');
+        editTerms.setAttribute('aria-hidden', 'true');
+        editTerms.style.display = "none";
+        agreementOverlay.classList.remove('show');
+        document.body.classList.remove('modal-open');
+        if (viewTerms) viewTerms.style.display = "block";
+        if (editBtn) editBtn.innerHTML = '<svg viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>Edit Agreement';
+    };
     
-    editBtn.addEventListener('click', function() {
-        if (viewTerms.style.display === "none") {
-            viewTerms.style.display = "block";
-            editTerms.style.display = "none";
-            editBtn.textContent = "Edit";
-            updateCompanyTermsTop.style.display = "none";
-            setToDefaultCompanyTermsTop.style.display = "none";
-        } else {
-            viewTerms.style.display = "none";
-            editTerms.style.display = "block";
-            editBtn.textContent = "View";
-            updateCompanyTermsTop.style.display = "inline-flex";
-            setToDefaultCompanyTermsTop.style.display = "inline-flex";
-        }
+    if (editBtn) editBtn.addEventListener('click', function(event) {
+        event.preventDefault();
+        window.openAgencyAgreementDrawer();
     });
+    if (agreementOverlay) agreementOverlay.addEventListener('click', window.closeAgencyAgreementDrawer);
+    if (agreementClose) agreementClose.addEventListener('click', window.closeAgencyAgreementDrawer);
 });
 
-document.addEventListener('DOMContentLoaded', function() {
-    var editBtn = document.getElementById('editBtnoffer'); 
-    var viewTerms = document.getElementById('viewTermsoffer');
-    var editTerms = document.getElementById('editTermsoffer');
-   var updateCompanyTermsofferTop = document.getElementById('updateCompanyTermsofferTop'); 
-   var setToDefaultCompanyTermsofferTop = document.getElementById('setToDefaultCompanyTermsofferTop'); 
-   updateCompanyTermsofferTop.style.display = "none";
-   setToDefaultCompanyTermsofferTop.style.display = "none";
+// Intent: keep the candidate-offer preview in place while the existing CKEditor and its save flow operate in a focused drawer.
+function openOfferLetterDrawer() {
+    var drawer = document.getElementById('editTermsoffer');
+    var overlay = document.getElementById('offerLetterDrawerOverlay');
+    if (!drawer || !overlay) return;
 
-    editBtn.addEventListener('click', function() {
-        if (viewTerms.style.display === "none") {
-            viewTerms.style.display = "block";
-            editTerms.style.display = "none";
-            editBtn.textContent = "Edit";
-            updateCompanyTermsofferTop.style.display = "none";
-            setToDefaultCompanyTermsofferTop.style.display = "none";
+    drawer.style.display = 'block';
+    overlay.classList.add('show');
+    document.body.style.overflow = 'hidden';
+    window.setTimeout(function () {
+        var editor = window.CKEDITOR && CKEDITOR.instances.kt_docs_tinymce_hiddenoffer;
+        if (editor && editor.resize) editor.resize('100%', Math.max(320, window.innerHeight - 410), true);
+        updateSettingsOfferPreview();
+    }, 60);
+}
+function closeOfferLetterDrawer() {
+    var drawer = document.getElementById('editTermsoffer');
+    var overlay = document.getElementById('offerLetterDrawerOverlay');
+    if (drawer) drawer.style.display = 'none';
+    if (overlay) overlay.classList.remove('show');
+    document.body.style.overflow = '';
+}
+function updateSettingsOfferPreview() {
+    var preview = document.getElementById('settings_offer_preview_content');
+    var editor = window.CKEDITOR && CKEDITOR.instances.kt_docs_tinymce_hiddenoffer;
+    if (preview && editor) preview.innerHTML = editor.getData();
+}
+function getActiveCandidateOfferLink() {
+    return document.querySelector('.candidate-offer-template-link.active') || document.querySelector('.candidate-offer-template-link');
+}
+function decodeCandidateOfferTemplateContent(html) {
+    if (!html) return '';
+    try {
+        return JSON.parse(html);
+    } catch (e) {
+        return html;
+    }
+}
+function setCandidateOfferTemplateContent(field, label, html, syncEditor, type) {
+    var safeHtml = decodeCandidateOfferTemplateContent(html);
+    var fieldInput = document.getElementById('candidateOfferTemplateField');
+    var title = document.getElementById('candidateOfferTemplateTitle');
+    var drawerTitle = document.getElementById('candidateOfferDrawerTitle');
+    var preview = document.getElementById('viewTermsoffer');
+    var templateType = type || 'Full Time';
+    if (fieldInput && field) fieldInput.value = field;
+    if (title && label) title.textContent = label;
+    if (drawerTitle && label) drawerTitle.textContent = 'Edit ' + label;
+    document.querySelectorAll('.candidate-offer-template-type').forEach(function(typeLabel) {
+        typeLabel.textContent = templateType;
+    });
+    if (preview) preview.innerHTML = safeHtml;
+    if (syncEditor) {
+        var editor = window.CKEDITOR && CKEDITOR.instances.kt_docs_tinymce_hiddenoffer;
+        if (editor) {
+            editor.setData(safeHtml, function() { updateSettingsOfferPreview(); });
         } else {
-            viewTerms.style.display = "none";
-            editTerms.style.display = "block";
-            editBtn.textContent = "View";           
-            updateCompanyTermsofferTop.style.display = "block";
-            setToDefaultCompanyTermsofferTop.style.display = "block";
+            var textarea = document.getElementById('kt_docs_tinymce_hiddenoffer');
+            if (textarea) textarea.value = safeHtml;
         }
+    }
+}
+function updateActiveCandidateOfferTemplateCache(html) {
+    var active = getActiveCandidateOfferLink();
+    if (active) active.setAttribute('data-template-content', html || '');
+}
+function setSettingsOfferZoom(delta) {
+    var pct = document.getElementById('settings_offer_zoom_pct');
+    var editor = window.CKEDITOR && CKEDITOR.instances.kt_docs_tinymce_hiddenoffer;
+    window.settingsOfferEditorZoom = Math.max(80, Math.min(130, (window.settingsOfferEditorZoom || 100) + delta));
+    if (pct) pct.textContent = window.settingsOfferEditorZoom + '%';
+    if (editor && editor.document && editor.document.getBody()) {
+        editor.document.getBody().setStyle('zoom', String(window.settingsOfferEditorZoom / 100));
+    }
+}
+function getCandidateEditButtonHtml() {
+    return '<span class="candidate-action-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg></span>Edit';
+}
+document.addEventListener('DOMContentLoaded', function() {
+    var editBtn = document.getElementById('editBtnoffer');
+    if (editBtn) editBtn.addEventListener('click', openOfferLetterDrawer);
+    document.querySelectorAll('.candidate-offer-template-link').forEach(function(templateLink) {
+        templateLink.addEventListener('click', function(event) {
+            event.preventDefault();
+            document.querySelectorAll('.candidate-offer-template-link').forEach(function(link) { link.classList.remove('active'); });
+            templateLink.classList.add('active');
+            setCandidateOfferTemplateContent(
+                templateLink.getAttribute('data-template-field'),
+                templateLink.getAttribute('data-template-label'),
+                templateLink.getAttribute('data-template-content') || '',
+                true,
+                templateLink.getAttribute('data-template-type')
+            );
+        });
+    });
+    document.querySelectorAll('[data-settings-offer-tab]').forEach(function(tabBtn) {
+        tabBtn.addEventListener('click', function() {
+            var target = tabBtn.getAttribute('data-settings-offer-tab');
+            document.querySelectorAll('[data-settings-offer-tab]').forEach(function(btn) { btn.classList.remove('co-tpl-tab--active'); });
+            document.querySelectorAll('[data-settings-offer-pane]').forEach(function(pane) { pane.classList.add('d-none'); });
+            tabBtn.classList.add('co-tpl-tab--active');
+            var pane = document.querySelector('[data-settings-offer-pane="' + target + '"]');
+            if (pane) pane.classList.remove('d-none');
+            if (target === 'preview') updateSettingsOfferPreview();
+        });
+    });
+    document.querySelectorAll('[data-settings-offer-variable]').forEach(function(chip) {
+        chip.addEventListener('click', function() {
+            var token = chip.getAttribute('data-settings-offer-variable');
+            var editor = window.CKEDITOR && CKEDITOR.instances.kt_docs_tinymce_hiddenoffer;
+            if (token && editor) editor.insertText(token);
+        });
+    });
+    var zoomOut = document.getElementById('settings_offer_zoom_out');
+    var zoomIn = document.getElementById('settings_offer_zoom_in');
+    var download = document.getElementById('settings_offer_download_sample');
+    if (zoomOut) zoomOut.addEventListener('click', function() { setSettingsOfferZoom(-10); });
+    if (zoomIn) zoomIn.addEventListener('click', function() { setSettingsOfferZoom(10); });
+    if (download) download.addEventListener('click', function() {
+        updateSettingsOfferPreview();
+        var preview = document.getElementById('settings_offer_preview_content');
+        var letterhead = document.querySelector('[data-settings-offer-pane="preview"] .co-tpl-subcard');
+        var html = '<!doctype html><html><head><meta charset="utf-8"><title>Offer Letter Template</title></head><body>' + (letterhead ? letterhead.innerHTML : '') + (preview ? preview.innerHTML : '') + '</body></html>';
+        var blob = new Blob([html], { type: 'text/html' });
+        var link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = 'candidate-offer-letter-template.html';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        window.setTimeout(function() { URL.revokeObjectURL(link.href); }, 1000);
     });
 });
 
@@ -3365,8 +4607,422 @@ new Tagify(input)
 <script>
 
 $(document).ready(function(){
+        // Intent: give every real account-page action immediate loading feedback without changing the underlying AJAX or submit business logic.
+        var buttonSpinnerSelector = 'button, a.btn, .aat-btn, .cv2-edit, .candidate-action-icon';
+        var buttonSpinnerExclude = '.aat-drawer-close, .aga-close, .avd-close, .apv-close, .btn-icon, .nav-link, [data-toggle="tab"], .aga-tab, .aat-drawer-tab, .co-var-chip, .aga-var-item, .avd-row-actions button, [data-no-spinner]';
+        function setButtonLoading($button) {
+            if (!$button.length || $button.is(buttonSpinnerExclude) || $button.hasClass('jero-btn-loading')) {
+                return;
+            }
+            $button.addClass('jero-btn-loading').attr('aria-busy', 'true');
+            window.setTimeout(function () {
+                $button.removeClass('jero-btn-loading').removeAttr('aria-busy');
+            }, 12000);
+        }
+        $('body').on('click', buttonSpinnerSelector, function () {
+            setButtonLoading($(this));
+        });
+        $(document).ajaxStop(function () {
+            $('.jero-btn-loading').removeClass('jero-btn-loading').removeAttr('aria-busy');
+        });
+        // Intent: persist agency-facing commercial terms separately from client Services/Commercials.
+        function openAgencyCommercialDrawer(mode) {
+            var commercialMode = mode === 'contract' ? 'contract' : 'fulltime';
+            var title = commercialMode === 'contract' ? 'Edit Contract Commercials' : 'Edit Fulltime Commercials';
+            var subtitle = commercialMode === 'contract'
+                ? 'Configure contract hiring agency commercials, experience pricing, replacement and payment terms.'
+                : 'Configure full-time agency commercials, experience pricing, replacement and payment terms.';
+            $('#agencyCommercialDrawerOverlay').addClass('show');
+            $('#agency_commercial_terms_form')
+                .removeClass('agency-commercial-fulltime agency-commercial-contract')
+                .addClass('open agency-commercial-mode agency-commercial-' + commercialMode)
+                .attr('aria-hidden', 'false');
+            $('[data-agency-commercial-title]').text(title);
+            $('[data-agency-commercial-subtitle]').text(subtitle);
+            $('[data-agency-alert-text]').text(commercialMode === 'contract'
+                ? 'Contract hiring commercials govern how agencies are paid for contract / temporary staffing. They populate the agreement.'
+                : 'These commercial terms define how agencies will be paid for successful placements. They populate the agreement and can be overridden at job level if required.');
+            $('body').addClass('modal-open');
+            syncFulltimeFeeModelFields();
+            syncAgencyReplacementSummary();
+            syncAgencyContractReplacementSummary();
+        }
+        function closeAgencyCommercialDrawer() {
+            $('#agencyCommercialDrawerOverlay').removeClass('show');
+            $('#agency_commercial_terms_form').removeClass('open agency-commercial-fulltime agency-commercial-contract').attr('aria-hidden', 'true');
+            $('body').removeClass('modal-open');
+        }
+        $('body').on('click', '[data-agency-commercial-open], #toggleAgencyCommercialTerms', function(){
+            openAgencyCommercialDrawer($(this).data('agency-commercial-open') || 'fulltime');
+        });
+        $('body').on('click', '#cancelAgencyCommercialTerms, #closeAgencyCommercialDrawer, #agencyCommercialDrawerOverlay, .aat-edit-alert .aat-drawer-close', function(){
+            closeAgencyCommercialDrawer();
+        });
+        // Cached selectors so the model-toggle handler stays fast on big DOM trees.
+        var $aatDrawer = $('#agency_commercial_terms_form');
+        var $aatPctOnly = $('[data-aat-percentage-only]');
+        var $aatFixOnly = $('[data-aat-fixed-only]');
+        var $aatRateSuffix = $('[data-aat-rate-suffix]');
+        var $aatRateLabel = $('[data-aat-rate-label]');
+        var $aatRateHelp = $('[data-aat-rate-help]');
+        var $aatRangeRateLabel = $('[data-aat-range-rate-label]');
+        var $aatDefaultPricingCopy = $('[data-aat-default-pricing-copy]');
+        var $aatExperiencePricingCopy = $('[data-aat-experience-pricing-copy]');
+        var $aatDefaultRateInput = $('[data-aat-default-rate-input]');
+        var $aatPctName = 'fulltime_success_fee_percentage';
+        var $aatFixName = 'fulltime_fixed_fee_amount';
+        function syncFulltimeFeeModelFields() {
+            var $feeModel = $('[name="fulltime_fee_model"]');
+            var isFixedFee = $feeModel.val() === 'fixed';
+            $aatDrawer.toggleClass('is-fixed-fee', isFixedFee);
+            $aatPctOnly.toggle(!isFixedFee);
+            $aatFixOnly.toggle(isFixedFee);
+            $aatRateSuffix.text(isFixedFee ? '' : '%');
+            $aatRangeRateLabel.text(isFixedFee ? 'Fixed Fee Amount' : 'Rate / Percentage');
+            $aatRateLabel.text(isFixedFee ? 'Fixed Fee Amount' : 'Rate / Percentage');
+            $aatRateHelp.text(isFixedFee ? 'The default amount used for each successful placement.' : 'Changing this rate updates every experience range.');
+            $aatDefaultPricingCopy.text(isFixedFee ? 'Set the default fixed fee and how it will be charged.' : 'Set the default pricing for all experience ranges.');
+            $aatExperiencePricingCopy.text(isFixedFee ? 'Define different fixed fees for different experience bands.' : 'Define pricing using clear experience ranges.');
+            $aatDefaultRateInput.each(function () {
+                var $input = $(this);
+                var fallback = parseFloat($input.data('aat-fallback-rate')) || 0;
+                var current = parseFloat($input.val());
+                $input.attr('name', isFixedFee ? $aatFixName : $aatPctName);
+                if (isNaN(current) || current === 0) $input.val(fallback);
+            });
+            $('[name="fulltime_success_fee_percentage"]').prop('disabled', isFixedFee);
+            $('[name="fulltime_fixed_fee_amount"]').prop('disabled', !isFixedFee);
+            $('[name="fulltime_fixed_fee_currency"]').prop('disabled', !isFixedFee);
+        }
+        function syncAgencyReplacementSummary() {
+            var periodInput = $('[name="fulltime_replacement_period_days"]');
+            var days = $('#aatReplacementDays');
+            if (days.length) days.text(periodInput.val() || '0');
+            var typeSelect = $('[data-aat-replacement-type]');
+            var label = $('#aatReplacementSummary');
+            if (label.length && typeSelect.length) {
+                var text = typeSelect.find('option:selected').text();
+                label.text(text ? text.toLowerCase() : 'replacement');
+            }
+        }
+        function syncAgencyContractReplacementSummary() {
+            var monthsInput = $('[name="contract_min_duration_months"]');
+            var days = $('#aatContractReplacementDays');
+            if (days.length) days.text(monthsInput.val() || '0');
+            var typeSelect = $('[data-aat-contract-replacement-type]');
+            var label = $('#aatContractReplacementSummary');
+            if (label.length && typeSelect.length) {
+                var text = typeSelect.find('option:selected').text();
+                label.text(text ? text.toLowerCase() : 'replacement');
+            }
+        }
+        $('body').on('click', '[data-aat-commercial-model]', function(){
+            var $option = $(this);
+            var model = $option.data('aat-commercial-model');
+            $('[name="fulltime_fee_model"]').val(model);
+            $('[data-aat-commercial-model]').each(function(){
+                var isActive = $(this).data('aat-commercial-model') === model;
+                $(this).toggleClass('active', isActive).attr('aria-checked', isActive ? 'true' : 'false');
+            });
+            if (model === 'fixed') {
+                $('#aatCommercialModelHelp').text('Billing is calculated from the configured fixed rate for each experience range.');
+            } else {
+                $('#aatCommercialModelHelp').text("Placement fees are calculated as a percentage of the candidate's Cost to Company (CTC).");
+            }
+            syncFulltimeFeeModelFields();
+        });
+        $('body').on('input', '[data-aat-default-rate-input], [name="fulltime_success_fee_percentage"], [name="fulltime_fixed_fee_amount"]', function(){
+            var sourceVal = this.value;
+            $('[data-aat-row-rate-input]').each(function(){
+                $(this).val(sourceVal);
+                var idx = $(this).data('aat-row-index');
+                $('[data-aat-row-rate-hidden-input][data-aat-row-index="' + idx + '"]').val(sourceVal);
+            });
+        });
+        $('body').on('click', '[data-aat-range-reset]', function(){
+            var idx = $(this).data('aat-row-index');
+            var sourceVal = $('[data-aat-default-rate-input]').val();
+            if (!sourceVal) {
+                if ($('[name="fulltime_fee_model"]').val() === 'fixed') {
+                    sourceVal = $('[name="fulltime_fixed_fee_amount"]').val();
+                } else {
+                    sourceVal = $('[name="fulltime_success_fee_percentage"]').val();
+                }
+            }
+            $('[data-aat-row-rate-input][data-aat-row-index="' + idx + '"]').val(sourceVal);
+            $('[data-aat-row-rate-hidden-input][data-aat-row-index="' + idx + '"]').val(sourceVal);
+        });
+        $('body').on('click', '[data-aat-contract-range-reset]', function(){
+            var idx = $(this).data('aat-row-index');
+            var sourceVal = $('[name="contract_rate_display"]').val();
+            var $row = $('[data-aat-contract-row-rate-hidden-input][data-aat-row-index="' + idx + '"]');
+            $row.val(sourceVal);
+            $row.closest('.aat-range-row').find('input[name^="contract_range_rate"]').val(sourceVal);
+        });
+        $('body').on('input', '[data-aat-row-rate-input]', function(){
+            var $input = $(this);
+            var idx = $input.data('aat-row-index');
+            $('[data-aat-row-rate-hidden-input][data-aat-row-index="' + idx + '"]').val($input.val());
+        });
+        $('body').on('input', 'input[name^="contract_range_rate"]', function(){
+            var $input = $(this);
+            var idx = $input.data('aat-row-index');
+            $('[data-aat-contract-row-rate-hidden-input][data-aat-row-index="' + idx + '"]').val($input.val());
+        });
+        $('body').on('input', '[name="fulltime_replacement_period_days"]', syncAgencyReplacementSummary);
+        $('body').on('input', '[name="contract_min_duration_months"]', syncAgencyContractReplacementSummary);
+        $('body').on('change', '[data-aat-replacement-type]', syncAgencyReplacementSummary);
+        $('body').on('change', '[data-aat-contract-replacement-type]', syncAgencyContractReplacementSummary);
+        $('body').on('change', '[data-aat-default-currency]', function () { $('[data-aat-range-currency]').val(this.value); });
+        $('body').on('change', '[data-aat-applied-on]', function () { $('[data-aat-range-applied-on]').val(this.value); });
+        $('body').on('change', '[data-aat-fixed-trigger]', function () { $('[data-aat-range-fixed-trigger]').val(this.value); });
+        $('body').on('change', '[data-aat-fixed-frequency]', function () { $('[data-aat-range-fixed-frequency]').val(this.value); });
+        $('body').on('change', '[data-aat-range-currency]', function () { $('[data-aat-default-currency]').val(this.value); });
+        $('body').on('change', '[data-aat-range-applied-on]', function () { $('[data-aat-applied-on]').val(this.value); });
+        $('body').on('change', '[data-aat-range-fixed-trigger]', function () { $('[data-aat-fixed-trigger]').val(this.value); });
+        $('body').on('change', '[data-aat-range-fixed-frequency]', function () { $('[data-aat-fixed-frequency]').val(this.value); });
+        syncFulltimeFeeModelFields();
+        $('body').on('click', '#saveAgencyCommercialTerms', function(){
+            var $button = $(this);
+            var form = document.getElementById('agency_commercial_terms_form');
+            if (!form || $button.prop('disabled')) return;
+            if ($('#agencyCommercialStatus').val() !== 'draft') {
+                $('#agencyCommercialStatus').val('active');
+            }
+
+            var data = new FormData(form);
+            $.ajax({
+                url: '{{route('service_company.account.update', @$account->id)}}',
+                headers: {'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')},
+                method: 'POST',
+                processData: false,
+                contentType: false,
+                data: data,
+                beforeSend: function () {
+                    $button.prop('disabled', true).text('Saving...');
+                },
+                success: function (response) {
+                    if (response.status === 'success') {
+                        Swal.fire('Success', response.message || 'Agency commercial terms saved successfully.', 'success');
+                        closeAgencyCommercialDrawer();
+                        window.location.reload();
+                    } else {
+                        Swal.fire('Notice', response.message || 'Agency commercial terms could not be saved.', 'warning');
+                    }
+                },
+                error: function () {
+                    Swal.fire('Error', 'Agency commercial terms could not be saved. Please try again.', 'error');
+                },
+                complete: function () {
+                    $button.prop('disabled', false).text('Save & Update');
+                }
+            });
+        });
+        $('body').on('click', '#agencyAgreementPreview', function(){
+            openAgencyPreviewDrawer();
+        });
+        $('body').on('click', '#agencyAgreementPreviewDrawer, #agencyAgreementPreviewTab', function(){
+            openAgencyPreviewDrawer();
+        });
+        $('body').on('click', '.aga-var-item', function(){
+            var variableCode = $(this).find('code').text();
+            if (window.CKEDITOR && CKEDITOR.instances.kt_docs_tinymce_hidden) {
+                CKEDITOR.instances.kt_docs_tinymce_hidden.insertText(variableCode);
+            }
+        });
+        function openAgencyVariablesDrawer() {
+            $('#agencyVariablesDrawerOverlay').addClass('show');
+            $('#agencyVariablesDrawer').addClass('open').attr('aria-hidden', 'false');
+            $('body').addClass('modal-open');
+            agencyVariablesCurrentPage = 1;
+            filterAgencyVariables();
+        }
+        function closeAgencyVariablesDrawer() {
+            $('#agencyVariablesDrawerOverlay').removeClass('show');
+            $('#agencyVariablesDrawer').removeClass('open').attr('aria-hidden', 'true');
+            $('body').removeClass('modal-open');
+        }
+        var agencyVariablesCurrentPage = 1;
+        var agencyVariablesPageSize = 8;
+        function getFilteredAgencyVariableRows() {
+            var searchText = ($('#agencyVariableSearch').val() || '').toLowerCase().trim();
+            var categoryValue = $('#agencyVariableCategoryFilter').val() || 'all';
+            var sourceValue = $('#agencyVariableSourceFilter').val() || 'all';
+            var showSystem = $('#agencyVariableSystemFilter').is(':checked');
+            return $('[data-avd-row]').filter(function(){
+                var $row = $(this);
+                var matchesSearch = !searchText || ($row.data('desc') || '').indexOf(searchText) !== -1;
+                var matchesCategory = categoryValue === 'all' || $row.data('category') === categoryValue;
+                var matchesSource = sourceValue === 'all' || $row.data('source') === sourceValue;
+                var matchesSystem = showSystem || $row.data('category') !== 'Agreement System';
+                return matchesSearch && matchesCategory && matchesSource && matchesSystem;
+            });
+        }
+        function renderAgencyVariablesPagination(totalRows) {
+            var totalPages = Math.max(1, Math.ceil(totalRows / agencyVariablesPageSize));
+            agencyVariablesCurrentPage = Math.min(Math.max(agencyVariablesCurrentPage, 1), totalPages);
+            var paginationHtml = '<button type="button" data-avd-page="prev" ' + (agencyVariablesCurrentPage === 1 ? 'disabled' : '') + '>‹</button>';
+            for (var pageNumber = 1; pageNumber <= totalPages; pageNumber++) {
+                paginationHtml += '<button type="button" data-avd-page="' + pageNumber + '" class="' + (pageNumber === agencyVariablesCurrentPage ? 'active' : '') + '">' + pageNumber + '</button>';
+            }
+            paginationHtml += '<button type="button" data-avd-page="next" ' + (agencyVariablesCurrentPage === totalPages ? 'disabled' : '') + '>›</button>';
+            $('#agencyVariablesPagination').html(paginationHtml);
+        }
+        function filterAgencyVariables() {
+            var $allRows = $('[data-avd-row]');
+            var $filteredRows = getFilteredAgencyVariableRows();
+            var totalFilteredRows = $filteredRows.length;
+            var startIndex = (agencyVariablesCurrentPage - 1) * agencyVariablesPageSize;
+            var endIndex = startIndex + agencyVariablesPageSize;
+
+            renderAgencyVariablesPagination(totalFilteredRows);
+            startIndex = (agencyVariablesCurrentPage - 1) * agencyVariablesPageSize;
+            endIndex = startIndex + agencyVariablesPageSize;
+            $allRows.hide();
+            $filteredRows.slice(startIndex, endIndex).show();
+            $('#agencyVariablesEmpty').toggle(totalFilteredRows === 0);
+            $('#agencyVariablesShowing').text('Showing ' + (totalFilteredRows ? startIndex + 1 : 0) + ' to ' + Math.min(endIndex, totalFilteredRows) + ' of ' + totalFilteredRows + ' variables');
+        }
+        function insertAgencyVariable(variableCode) {
+            closeAgencyVariablesDrawer();
+            if (typeof openAgencyAgreementDrawer === 'function') openAgencyAgreementDrawer();
+            setTimeout(function(){
+                if (window.CKEDITOR && CKEDITOR.instances.kt_docs_tinymce_hidden) {
+                    CKEDITOR.instances.kt_docs_tinymce_hidden.insertText(variableCode);
+                }
+            }, 150);
+        }
+        $('body').on('click', '#openAgencyVariablesDrawer', openAgencyVariablesDrawer);
+        $('body').on('click', '#agencyVariablesDrawerOverlay, #closeAgencyVariablesDrawer', closeAgencyVariablesDrawer);
+        $('body').on('input change', '#agencyVariableSearch, #agencyVariableCategoryFilter, #agencyVariableSourceFilter, #agencyVariableSystemFilter', function(){
+            agencyVariablesCurrentPage = 1;
+            filterAgencyVariables();
+        });
+        $('body').on('click', '#agencyVariablesPagination [data-avd-page]', function(){
+            if ($(this).is(':disabled')) return;
+            var requestedPage = $(this).data('avd-page');
+            var totalPages = Math.max(1, Math.ceil(getFilteredAgencyVariableRows().length / agencyVariablesPageSize));
+            if (requestedPage === 'prev') agencyVariablesCurrentPage--;
+            if (requestedPage === 'next') agencyVariablesCurrentPage++;
+            if (!isNaN(parseInt(requestedPage, 10))) agencyVariablesCurrentPage = parseInt(requestedPage, 10);
+            agencyVariablesCurrentPage = Math.min(Math.max(agencyVariablesCurrentPage, 1), totalPages);
+            filterAgencyVariables();
+        });
+        $('body').on('click', '.avd-copy', function(){
+            var variableCode = $(this).closest('[data-avd-row]').data('code');
+            if (navigator.clipboard) {
+                navigator.clipboard.writeText(variableCode);
+            }
+            Swal.fire('Copied', variableCode + ' copied successfully.', 'success');
+        });
+        $('body').on('click', '.avd-insert', function(){
+            insertAgencyVariable($(this).closest('[data-avd-row]').data('code'));
+        });
+        $('body').on('click', '#closeAgencyVariablesInfo', function(){
+            $(this).closest('.avd-info').hide();
+        });
+        var agencyPreviewValues = @json($agencyPreviewValues);
+        function escapeAgencyPreviewText(value) {
+            return $('<div>').text(value || '').html();
+        }
+        function buildAgencyPreviewIntroHtml() {
+            var todayDate = escapeAgencyPreviewText(agencyPreviewValues['{TODAY_DATE}']);
+            var companyName = escapeAgencyPreviewText(agencyPreviewValues['{COMPANY_NAME}']);
+            var companyAddress = escapeAgencyPreviewText(agencyPreviewValues['{COMPANY_ADDRESS}']);
+            var agencyName = escapeAgencyPreviewText(agencyPreviewValues['{AGENCY_NAME}']);
+            var agencyAddress = escapeAgencyPreviewText(agencyPreviewValues['{AGENCY_ADDRESS}']);
+
+            return '<div class="apv-party-intro">'
+                + '<h2>AGENCY TERMS &amp; CONDITIONS</h2>'
+                + '<p class="apv-effective">This Agreement is made and executed on <b>' + todayDate + '</b> (<b>“Effective Date”</b>) by and between:</p>'
+                + '<div class="apv-party-grid">'
+                + '<div class="apv-party-box"><div class="apv-party-name">' + companyName + '</div><div class="apv-party-address">' + companyAddress + '</div><div class="apv-party-role">(hereinafter referred to as the <b>“Client”</b>)</div></div>'
+                + '<div class="apv-party-and">AND</div>'
+                + '<div class="apv-party-box"><div class="apv-party-name">' + agencyName + '</div><div class="apv-party-address">' + agencyAddress + '</div><div class="apv-party-role">(hereinafter referred to as the <b>“Agency”</b>)</div></div>'
+                + '</div>'
+                + '<p class="apv-party-closing">The Client and the Agency are hereinafter collectively referred to as the <b>“Parties”</b> and individually as a <b>“Party”</b>.</p>'
+                + '</div>';
+        }
+        function populateAgencyPreviewHtml(sourceHtml) {
+            var populatedHtml = sourceHtml || '';
+            Object.keys(agencyPreviewValues).forEach(function(variableCode){
+                populatedHtml = populatedHtml.split(variableCode).join(agencyPreviewValues[variableCode]);
+            });
+            return populatedHtml;
+        }
+        function refreshAgencyPreview() {
+            var sourceHtml = $('#viewTerms').html() || '';
+            if (window.CKEDITOR && CKEDITOR.instances.kt_docs_tinymce_hidden && $('#editTerms').hasClass('open')) {
+                sourceHtml = CKEDITOR.instances.kt_docs_tinymce_hidden.getData();
+            }
+            var populatedHtml = populateAgencyPreviewHtml(sourceHtml);
+            var previewHtml = buildAgencyPreviewIntroHtml() + populatedHtml;
+            $('#agencyPreviewDocument').html(previewHtml);
+            $('#agencyPreviewPlain').text($('<div>').html(previewHtml).text().replace(/\n{3,}/g, "\n\n").trim());
+        }
+        function openAgencyPreviewDrawer() {
+            refreshAgencyPreview();
+            if (typeof closeAgencyAgreementDrawer === 'function') closeAgencyAgreementDrawer();
+            if (typeof closeAgencyVariablesDrawer === 'function') closeAgencyVariablesDrawer();
+            $('#agencyPreviewDrawerOverlay').addClass('show');
+            $('#agencyPreviewDrawer').addClass('open').attr('aria-hidden', 'false');
+            $('body').addClass('modal-open');
+        }
+        function closeAgencyPreviewDrawer() {
+            $('#agencyPreviewDrawerOverlay').removeClass('show');
+            $('#agencyPreviewDrawer').removeClass('open').attr('aria-hidden', 'true');
+            $('body').removeClass('modal-open');
+        }
+        $('body').on('click', '#agencyPreviewDrawerOverlay, #closeAgencyPreviewDrawer', closeAgencyPreviewDrawer);
+        $('body').on('click', '[data-apv-view]', function(){
+            $('[data-apv-view]').removeClass('active');
+            $(this).addClass('active');
+            var viewType = $(this).data('apv-view');
+            $('#agencyPreviewDocument').toggle(viewType === 'document');
+            $('#agencyPreviewPlain').toggle(viewType === 'plain');
+        });
+        $('body').on('click', '#agencyPreviewDownloadPdf, #agencyPreviewPrint', function(){
+            refreshAgencyPreview();
+            window.print();
+        });
+
+        // Intent: enhance the four existing local selects with searchable, keyboard-friendly enterprise menus; no remote data is requested.
+        if ($.fn.select2) {
+            $('#language, #timezone, #currency, #time_format').each(function(){
+                var $settingSelect = $(this);
+                var settingDropdownClass = 'csv2-enterprise-dropdown';
+                if ($settingSelect.is('#timezone')) settingDropdownClass += ' csv2-timezone-dropdown';
+                if ($settingSelect.is('#time_format')) settingDropdownClass += ' csv2-timeformat-dropdown';
+                if (!$settingSelect.hasClass('select2-hidden-accessible')) {
+                    $settingSelect.select2({
+                        width: '100%',
+                        dropdownCssClass: settingDropdownClass,
+                        minimumResultsForSearch: ($settingSelect.is('#timezone, #currency')) ? 8 : Infinity
+                    });
+                }
+            }).on('select2:open', function(){
+                var $openedSelect = $(this);
+                var $settingDropdown = $('.select2-dropdown').last().addClass('csv2-enterprise-dropdown');
+                if ($openedSelect.is('#timezone')) {
+                    $settingDropdown.addClass('csv2-timezone-dropdown');
+                    $settingDropdown.find('.select2-search__field').attr('placeholder', 'Search time zones...');
+                }
+                if ($openedSelect.is('#time_format')) $settingDropdown.addClass('csv2-timeformat-dropdown');
+
+                // Keep wide enterprise menus inside the viewport at laptop and tablet widths.
+                setTimeout(function(){
+                    var dropdownNode = $settingDropdown.get(0);
+                    if (!dropdownNode) return;
+                    var dropdownBounds = dropdownNode.getBoundingClientRect();
+                    var horizontalShift = 0;
+                    if (dropdownBounds.right > window.innerWidth - 12) horizontalShift = (window.innerWidth - 12) - dropdownBounds.right;
+                    if (dropdownBounds.left + horizontalShift < 12) horizontalShift += 12 - (dropdownBounds.left + horizontalShift);
+                    $settingDropdown.css('margin-left', horizontalShift + 'px');
+                }, 0);
+            });
+        }
    
-   			$('.submit_department').click(function(){
+			$('.submit_department').click(function(){
    									var dept_name	=	$('#dept_name').val();								
 									if(dept_name ==''){
 											$('#dept_name').val('');	
@@ -3431,7 +5087,9 @@ $(document).ready(function(){
    			});				
 			
         $('body').on('click', '#updateCompanyProfile', function(){
-                    
+            var $saveSettingsButton = $(this);
+            if ($saveSettingsButton.prop('disabled')) return;
+
             var data 				=	new FormData();
             var form_data 			=	$('#setting_content').serializeArray();
             $.each(form_data, function (key, input) {
@@ -3446,6 +5104,13 @@ $(document).ready(function(){
                     contentType			:	false,
                     data				:	data,
                     redirect			:	true,
+                    beforeSend         : function () {
+                                            $saveSettingsButton
+                                                .prop('disabled', true)
+                                                .attr('aria-busy', 'true')
+                                                .addClass('is-loading');
+                                            $saveSettingsButton.find('.csv2-save-label').text('Saving...');
+                                },
                     success				:	function (data) {
 
                                             if(data.status == 'warning'){
@@ -3462,15 +5127,129 @@ $(document).ready(function(){
                                           if(data.status == 'success'){
                                               Swal.fire("Success", "Account settings update successfully!", "success");	
                                           }
+                                },
+                    complete            : function () {
+                                            $saveSettingsButton
+                                                .prop('disabled', false)
+                                                .removeAttr('aria-busy')
+                                                .removeClass('is-loading');
+                                            $saveSettingsButton.find('.csv2-save-label').text('Save Changes');
                                 }
                   });				
         });	
 
+        // Intent: save the two existing notification-routing fields independently from General settings.
+        $('body').on('click', '#saveNotificationSettings', function(){
+            var $saveNotificationButton = $(this);
+            var notificationForm = document.getElementById('notification_content');
 
+            if ($saveNotificationButton.prop('disabled') || !notificationForm) return;
+            if (!notificationForm.checkValidity()) {
+                notificationForm.reportValidity();
+                return;
+            }
+
+            var data = new FormData(notificationForm);
+            $.ajax({
+                url: '{{route('service_company.account.update', @$account->id)}}',
+                headers: {'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')},
+                method: 'POST',
+                processData: false,
+                contentType: false,
+                data: data,
+                beforeSend: function () {
+                    $saveNotificationButton
+                        .prop('disabled', true)
+                        .attr('aria-busy', 'true')
+                        .addClass('is-loading');
+                    $saveNotificationButton.find('.csn-save-label').text('Saving...');
+                },
+                success: function (response) {
+                    if (response.status === 'warning') {
+                        Swal.fire({
+                            text: response.message,
+                            icon: 'error',
+                            buttonsStyling: false,
+                            confirmButtonText: 'Ok, got it!',
+                            customClass: {confirmButton: 'btn btn-light'}
+                        });
+                        return;
+                    }
+
+                    if (response.status === 'success') {
+                        Swal.fire('Success', 'Notification settings updated successfully!', 'success');
+                        return;
+                    }
+
+                    Swal.fire('Unable to save', response.message || 'Please try again.', 'error');
+                },
+                error: function (xhr) {
+                    var response = xhr.responseJSON || {};
+                    var message = response.message || 'Notification settings could not be saved. Please try again.';
+                    Swal.fire('Unable to save', message, 'error');
+                },
+                complete: function () {
+                    $saveNotificationButton
+                        .prop('disabled', false)
+                        .removeAttr('aria-busy')
+                        .removeClass('is-loading');
+                    $saveNotificationButton.find('.csn-save-label').text('Save Changes');
+                }
+            });
+        });
+
+
+            var agencyAgreementConflictConfirmed = false;
+            function getAgencyCommercialConflictMessages(content) {
+                var messages = [];
+                var commercialVariables = ['{AGENCY_COMMERCIAL_SUMMARY}', '{FULLTIME_COMMERCIAL_TABLE}', '{FULLTIME_EXPERIENCE_PRICING}', '{CONTRACT_COMMERCIAL_TABLE}', '{CONTRACT_EXPERIENCE_PRICING}', '{FULLTIME_FEE}', '{CONTRACT_RATE}'];
+                commercialVariables.forEach(function(variableCode) {
+                    var occurrences = (content.match(new RegExp(variableCode.replace(/[{}]/g, '\\$&'), 'g')) || []).length;
+                    if (occurrences > 1) {
+                        messages.push(variableCode + ' is used ' + occurrences + ' times.');
+                    }
+                });
+                var hasCommercialVariable = commercialVariables.some(function(variableCode) { return content.indexOf(variableCode) !== -1; });
+                var plainText = $('<div>').html(content).text().toLowerCase();
+                if (hasCommercialVariable && /(success fee|agency rate|commercial terms|replacement period|payment timeline|monthly rate)/i.test(plainText)) {
+                    messages.push('Manual commercial wording is present along with dynamic commercial variables.');
+                }
+
+                return messages;
+            }
+            function confirmAgencyCommercialConflicts(content, continueCallback) {
+                var messages = getAgencyCommercialConflictMessages(content);
+                if (!messages.length || agencyAgreementConflictConfirmed) {
+                    agencyAgreementConflictConfirmed = false;
+                    continueCallback();
+                    return;
+                }
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Commercial terms may conflict',
+                    html: '<div style="text-align:left;font-size:13px;">' + messages.map(function(message) { return '• ' + $('<div>').text(message).html(); }).join('<br>') + '<br><br>Please review before saving.</div>',
+                    showCancelButton: true,
+                    confirmButtonText: 'Save Anyway',
+                    cancelButtonText: 'Review'
+                }).then(function(result) {
+                    if (result.isConfirmed) {
+                        agencyAgreementConflictConfirmed = true;
+                        continueCallback();
+                    }
+                });
+            }
             $('body').on('click', '#updateCompanyTerms', function(){
                     $("#updateCompanyTermsTop").text("Please wait...");
                     var data 				=	new FormData();
                     var kt_docs_tinymce_hidden = CKEDITOR.instances.kt_docs_tinymce_hidden.getData();	
+                    if (!agencyAgreementConflictConfirmed) {
+                        $("#updateCompanyTermsTop").text("Save Agreement");
+                        confirmAgencyCommercialConflicts(kt_docs_tinymce_hidden, function(){
+                            $('#updateCompanyTerms').trigger('click');
+                        });
+                        return;
+                    }
+                    agencyAgreementConflictConfirmed = false;
                     data.append("description", kt_docs_tinymce_hidden);
                     var form_data 			=	$('#terms_content').serializeArray();
                     $.each(form_data, function (key, input) {
@@ -3494,7 +5273,8 @@ $(document).ready(function(){
                                                       Swal.fire("Success", "Terms & Condition update successfully!", "success");	
                                                       $('#viewTerms').show();
                                                       $('#editTerms').hide(); 
-                                                      $("#editBtn").text("Edit");
+                                                      if (typeof closeAgencyAgreementDrawer === 'function') closeAgencyAgreementDrawer();
+                                                      $("#editBtn").html('<svg viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>Edit Agreement');
                                                       $('.updateCompanyTermsTop').hide(); 
                                                       $('.setToDefaultCompanyTermsTop').hide(); 
 
@@ -3512,7 +5292,7 @@ $(document).ready(function(){
                     $.each(form_data, function (key, input) {
                         data.append(input.name, input.value);
                     });		
-                    data.append("descriptiontype", "offer_terms");
+                    data.set("descriptiontype", $('#candidateOfferTemplateField').val() || 'offer_terms');
                        
                       $.ajax({
                             url					:	'{{route('service_company.account.update', @$account->id)}}',
@@ -3526,12 +5306,14 @@ $(document).ready(function(){
                                                 $("#updateCompanyTermsofferTop").text("Save Changes");
                                                   if(data.status == 'success'){
                                                     $('#viewTermsoffer').html(data.terms);	
-                                                      Swal.fire("Success", "Terms & Condition update successfully!", "success");	
-                                                      $('#viewTermsoffer').show();
-                                                      $('#editTermsoffer').hide();
-                                                      $("#editBtnoffer").text("Edit");
-                                                      $('.updateCompanyTermsofferTop').hide(); 
-                                                      $('.setToDefaultCompanyTermsofferTop').hide(); 
+                                                    updateActiveCandidateOfferTemplateCache(data.terms);
+                                                       Swal.fire("Success", "Terms & Condition update successfully!", "success");
+                                                       $('#viewTermsoffer').show();
+                                                       $('#editTermsoffer').hide();
+                                                       if (typeof closeOfferLetterDrawer === 'function') closeOfferLetterDrawer();
+                                                       $("#editBtnoffer").html(getCandidateEditButtonHtml());
+                                                       $('#updateCompanyTermsofferTop').hide();
+                                                       $('#setToDefaultCompanyTermsofferTop').hide();
 
                                                   }
                                         }
@@ -3576,13 +5358,12 @@ $(document).ready(function(){
                     var kt_docs_tinymce_hiddenoffer = 'setDefault';	
                     data.append("description", kt_docs_tinymce_hiddenoffer);
                     $("#setToDefaultCompanyTermsofferTop").text("Please wait...");
-                    var form_data 			=	$('#terms_content').serializeArray();
+                    var form_data 			=	$('#terms_contentoffer').serializeArray();
                     $.each(form_data, function (key, input) {
                         data.append(input.name, input.value);
                     });		
-                    CKEDITOR.replace('kt_docs_tinymce_hiddenoffer');
                     data.append("description", kt_docs_tinymce_hiddenoffer);
-                    data.append("descriptiontype", "offer_terms");
+                    data.set("descriptiontype", $('#candidateOfferTemplateField').val() || 'offer_terms');
                        
                       $.ajax({
                             url					:	'{{route('service_company.account.update', @$account->id)}}',
@@ -3595,7 +5376,9 @@ $(document).ready(function(){
                             success				:	function (data) {
                                                     $("#setToDefaultCompanyTermsofferTop").text("Set to Default")
                                                   if(data.status == 'success'){
-                                                    var kt_docs_tinymce_hidden = CKEDITOR.instances.kt_docs_tinymce_hiddenoffer.setData(data.terms);	
+                                                    var kt_docs_tinymce_hidden = CKEDITOR.instances.kt_docs_tinymce_hiddenoffer.setData(data.terms);
+                                                    $('#viewTermsoffer').html(data.terms);
+                                                    updateActiveCandidateOfferTemplateCache(data.terms);
                                                   }
                                         }
                           });
@@ -3706,17 +5489,13 @@ $(document).ready(function(){
         });
 
 
-        $(document).on('click','.update_main_status_fulltime', function(){
+        $(document).on('change','.update_main_status_fulltime', function(){
 
-           var status = $('.update_main_status_fulltime').val();
-           if(status == 1){
-            var changeStatus = 0;
-            $('#f_text').text('OFF');
-           }else{
-            var changeStatus = 1;
-            $('#f_text').text('ON');
-           }
-           var id = $(this).attr('data-row_id');
+           var $toggle = $(this);
+           var changeStatus = $toggle.is(':checked') ? 1 : 0;
+           var previousStatus = changeStatus ? 0 : 1;
+           var id = $toggle.attr('data-row_id');
+           $toggle.prop('disabled', true);
            
            var url       	=	"{{ route('service_company.jobs.updateserviceviewmore',':id') }}";
            var token       =	"{{ csrf_token() }}";
@@ -3726,31 +5505,37 @@ $(document).ready(function(){
                                    data		: {'_token': token, '_method': 'POST', 'id' : id, 'changeStatus':changeStatus},
                                    success 	: function (response) {
                                            if (response.status == "success") {
+                                             $('#f_text').text(changeStatus ? 'ON' : 'OFF');
+                                             $('#f_status_badge').text(changeStatus ? 'Active' : 'Inactive').toggleClass('is-off', !changeStatus);
                                              if(changeStatus==1){
-                                                $('.class_change_fulltime').attr('style','');
+                                                $('.class_change_fulltime').removeClass('cv2-disabled').attr('style','');
                                              }else{
-                                                $('.class_change_fulltime').attr('style','opacity: 0.2 !important;');
+                                                $('.class_change_fulltime').addClass('cv2-disabled').attr('style','opacity: 0.2 !important;');
                                              }
-                                            var status = $('.update_main_status_fulltime').val(changeStatus);
+                                             $toggle.val(changeStatus);
+                                           } else {
+                                             $toggle.prop('checked', previousStatus === 1);
                                            }
-                                     }
+                                     },
+                                   error: function () {
+                                     $toggle.prop('checked', previousStatus === 1);
+                                   },
+                                   complete: function () {
+                                     $toggle.prop('disabled', false);
+                                   }
                            });
                           
 
 
         });
 
-        $(document).on('click','.contract_main_status_fulltime', function(){
+        $(document).on('change','.contract_main_status_fulltime', function(){
 
-        var status = $('.contract_main_status_fulltime').val();
-        if(status == 1){
-        var changeStatus = 0;
-        $('#c_text').text('OFF');
-        }else{
-        var changeStatus = 1;
-        $('#c_text').text('ON');
-        }
-        var id = $(this).attr('data-row_id');
+        var $toggle = $(this);
+        var changeStatus = $toggle.is(':checked') ? 1 : 0;
+        var previousStatus = changeStatus ? 0 : 1;
+        var id = $toggle.attr('data-row_id');
+        $toggle.prop('disabled', true);
 
         var url       	=	"{{ route('service_company.jobs.updateserviceviewmore',':id') }}";
         var token       =	"{{ csrf_token() }}";
@@ -3760,16 +5545,24 @@ $(document).ready(function(){
                                 data		: {'_token': token, '_method': 'POST', 'id' : id, 'changeStatus':changeStatus},
                                 success 	: function (response) {
                                         if (response.status == "success") {
-
+                                          $('#c_text').text(changeStatus ? 'ON' : 'OFF');
+                                          $('#c_status_badge').text(changeStatus ? 'Active' : 'Inactive').toggleClass('is-off', !changeStatus);
                                           if(changeStatus==1){
-                                                $('.class_change_contract').attr('style','');
+                                                $('.class_change_contract').removeClass('cv2-disabled').attr('style','');
                                              }else{
-                                                $('.class_change_contract').attr('style','opacity: 0.2 !important;');
+                                                $('.class_change_contract').addClass('cv2-disabled').attr('style','opacity: 0.2 !important;');
                                              }
-
-                                          var status = $('.contract_main_status_fulltime').val(changeStatus);
+                                          $toggle.val(changeStatus);
+                                        } else {
+                                          $toggle.prop('checked', previousStatus === 1);
                                         }
-                                  }
+                                  },
+                                error: function () {
+                                  $toggle.prop('checked', previousStatus === 1);
+                                },
+                                complete: function () {
+                                  $toggle.prop('disabled', false);
+                                }
                         });
                       
 
@@ -3804,86 +5597,90 @@ $(document).ready(function(){
 
 
 
-        $(document).on('click','#form-submit', function(){					 
-						 
-             const swalWithBootstrapButtons = Swal.mixin({
-                 customClass: {
-                         confirmButton: 'btn btn-success',
-                         cancelButton: 'btn btn-danger'
-                       },
-                  buttonsStyling: false
-             })
-             swalWithBootstrapButtons.fire({
-                               title				: 'Are you sure?',
-                               text				: "You won't be able to revert this!",
-                               icon				: 'warning',
-                               showCancelButton	: true,
-                               confirmButtonText	: 'Yes, update it!',
-                               cancelButtonText	: 'No, cancel!',
-                               reverseButtons	: true 
-                           }).then((result) => {
-               if (result.isConfirmed) {
-                     
-                           var id        	=	1;
-                           var url       	=	"{{ route('service_company.jobs.addUpdateJobServices',':id') }}";
-                           url         	=	url.replace(':id', id);
-                           var baseurl     =	"{{ asset('assets/images/Loading2.gif') }}"; 
-                           var token       =	"{{ csrf_token() }}";
-                           var arrCountry 		=	[];
-                           $('.countries:checked').each(function () {
-                            arrCountry.push($(this).val());
-                           });
-                           var countryCount = arrCountry.length;
-                           var rate_val = $(".rate_val").map(function() {
-                              return this.value;
-                            }).get();
-                            var rateTypeClass = $('.rateTypeClass').val();
-                            var main_status = $('.main_status').val();
-                            var sal_mode = $('select[name="sal_mode"]').val();
-                            var salary_currency = $('select[name="salary_currency"]').val();
-                            var updateId = $('.updateId').val();
-                            var commType = $('.commType').val();
-                            if(commType==2){
-                              sal_mode =null;
-                              salary_currency =null;
+        // Intent: save the complete commercial editor payload immediately while preventing duplicate submissions.
+        $(document).on('click', '#commercial-editor-v3 .copy_current_selected_applicant', function () {
+            var $saveButton = $(this);
+            var $editor = $saveButton.closest('#commercial-editor-v3');
 
-                              rate_val = $(".perecentage_val").map(function() {
-                              return this.value;
-                            }).get();
+            if ($saveButton.prop('disabled')) {
+                return;
+            }
 
+            var id = 1;
+            var url = "{{ route('service_company.jobs.addUpdateJobServices', ':id') }}".replace(':id', id);
+            var token = "{{ csrf_token() }}";
+            var arrCountry = $editor.find('.countries:checked').map(function () {
+                return this.value;
+            }).get();
+            var countryCount = arrCountry.length;
+            var rateVal = $editor.find('.rate_val').map(function () {
+                return this.value;
+            }).get();
+            var rateTypeClass = $editor.find('.rateTypeClass').val();
+            var mainStatus = $editor.find('.main_status').val();
+            var salMode = $editor.find('select[name="sal_mode"]').val();
+            var salaryCurrency = $editor.find('select[name="salary_currency"]').val();
+            var replacementPeriodDays = $editor.find('[data-replacement-period]').val();
+            var replacementType = $editor.find('[data-replacement-type]').val();
+            var replacementEligibility = $editor.find('[data-replacement-eligibility]').val();
+            var billingFrequency = $editor.find('[data-billing-frequency]').val();
+            var billingTrigger = $editor.find('[data-billing-trigger]').val();
+            var paymentTermsDays = $editor.find('[data-payment-terms]').val();
+            var updateId = $editor.find('.updateId').val();
+            var commType = $editor.find('.commType').val();
 
-                            }
-                         				
-                           $.ajax({
-                                   type		: 'POST',
-                                   url			: url,
-                                   data		: {'_token': token, '_method': 'POST', 'arrCountry' : arrCountry, 'rate_val': rate_val,'rateTypeClass':rateTypeClass,'sal_mode':sal_mode,'salary_currency':salary_currency,'updateId':updateId,'commType':commType,'main_status':main_status},
-                                   success 	: function (response) {
-                                           if (response.status == "success") {
-                                            if(rateTypeClass==2){
-                                             $('#fullTimeCount').text(countryCount);
-                                            }
-                                            if(rateTypeClass==1){
-                                              $('#contractCount').text(countryCount);
-                                            }
-                                               swalWithBootstrapButtons.fire(
-                                                                 'Success!',
-                                                                 'Updated Successfully.',
-                                                                 'success'
-                                                               )
-                                           }
-                                     }
-                           });
-                        
-               } 
-               else if (result.dismiss === Swal.DismissReason.cancel) {
-                     swalWithBootstrapButtons.fire(
-                                      'Cancelled',
-                                     'Selected request is safe :)',
-                                     'error'
-                                     )
-               }
-             })	});
+            if (String(commType) === '2') {
+                rateVal = $editor.find('.perecentage_val').map(function () {
+                    return this.value;
+                }).get();
+            }
+
+            $saveButton.prop('disabled', true).addClass('is-saving').attr('aria-busy', 'true');
+
+            $.ajax({
+                type: 'POST',
+                url: url,
+                data: {
+                    '_token': token,
+                    '_method': 'POST',
+                    'arrCountry': arrCountry,
+                    'rate_val': rateVal,
+                    'rateTypeClass': rateTypeClass,
+                    'sal_mode': salMode,
+                    'salary_currency': salaryCurrency,
+                    'replacement_period_days': replacementPeriodDays,
+                    'replacement_type': replacementType,
+                    'replacement_eligibility': replacementEligibility,
+                    'billing_frequency': billingFrequency,
+                    'billing_trigger': billingTrigger,
+                    'payment_terms_days': paymentTermsDays,
+                    'updateId': updateId,
+                    'commType': commType,
+                    'main_status': mainStatus
+                },
+                success: function (response) {
+                    if (response.status === 'success') {
+                        if (String(commType) === '2') {
+                            $('#fullTimeCount').text(countryCount);
+                        }
+                        if (String(commType) === '1') {
+                            $('#contractCount').text(countryCount);
+                        }
+                        $editor.get(0).dispatchEvent(new CustomEvent('commercial:saved'));
+                        Swal.fire({toast: true, position: 'top-end', icon: 'success', title: 'Services saved successfully.', showConfirmButton: false, timer: 2200, timerProgressBar: true});
+                        return;
+                    }
+
+                    Swal.fire({toast: true, position: 'top-end', icon: 'error', title: response.message || 'Services could not be saved.', showConfirmButton: false, timer: 3200});
+                },
+                error: function () {
+                    Swal.fire({toast: true, position: 'top-end', icon: 'error', title: 'Services could not be saved. Please try again.', showConfirmButton: false, timer: 3200});
+                },
+                complete: function () {
+                    $saveButton.prop('disabled', false).removeClass('is-saving').removeAttr('aria-busy');
+                }
+            });
+        });
 
 
 
