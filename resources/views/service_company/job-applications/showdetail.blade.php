@@ -6583,7 +6583,7 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
       </label>
 
       {{-- 3: ATS Highlighted --}}
-      <label class="rdc-opt" data-opt="3" data-coins="4">
+      <label class="rdc-opt" data-opt="3" data-coins="4" style="display:none;" aria-hidden="true">
         <input class="rdc-rinput" type="radio" name="rdcFormat" value="3">
         <span class="rdc-onum">3</span>
         <span class="rdc-oi rdc-ic-amber" aria-hidden="true">
@@ -6601,7 +6601,7 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
       </label>
 
       {{-- 7: R2/browser highlighted keywords package --}}
-      <label class="rdc-opt" data-opt="7" data-coins="4">
+      <label class="rdc-opt" data-opt="7" data-coins="4" style="display:none;" aria-hidden="true">
         <input class="rdc-rinput" type="radio" name="rdcFormat" value="7">
         <span class="rdc-onum">7</span>
         <span class="rdc-oi rdc-ic-amber" aria-hidden="true">
@@ -6691,7 +6691,7 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
       </label>
 
       {{-- 4: Branded + Highlighted --}}
-      <label class="rdc-opt" data-opt="4" data-coins="6">
+      <label class="rdc-opt" data-opt="4" data-coins="6" style="display:none;" aria-hidden="true">
         <input class="rdc-rinput" type="radio" name="rdcFormat" value="4">
         <span class="rdc-onum">4</span>
         <span class="rdc-oi rdc-ic-green" aria-hidden="true">
