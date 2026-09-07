@@ -6171,15 +6171,30 @@ async function buildRecruiterSummaryBlob(data,options){
     }catch(ex){ reject(ex); }
   });
 }
-async function mergePreScreenedReportAndResume(reportBlob,resumeBlob,fileName){
+async function mergePreScreenedReportAndResume(reportBlob,resumeBlob,fileName,mergeOptions){
   await rsEnsurePdfLib();
+  mergeOptions=mergeOptions||{};
   var resumeBytes=await resumeBlob.arrayBuffer();
   var reportBytes=await reportBlob.arrayBuffer();
   var merged=await window.PDFLib.PDFDocument.create();
   var reportDoc=await window.PDFLib.PDFDocument.load(reportBytes);
   var resumeDoc=await window.PDFLib.PDFDocument.load(resumeBytes);
-  var reportPages=await merged.copyPages(reportDoc,reportDoc.getPageIndices());
-  reportPages.forEach(function(page){ merged.addPage(page); });
+  if(mergeOptions.matchReportWidthToResume){
+    var resumeFirstPage=resumeDoc.getPages()[0];
+    if(!resumeFirstPage) throw new Error('Resume PDF has no pages');
+    var resumeWidth=resumeFirstPage.getSize().width;
+    var reportSourcePages=reportDoc.getPages();
+    for(var r=0;r<reportSourcePages.length;r++){
+      var reportSize=reportSourcePages[r].getSize();
+      var reportScale=resumeWidth/reportSize.width;
+      var normalizedPage=merged.addPage([resumeWidth,reportSize.height*reportScale]);
+      var embeddedReport=await merged.embedPage(reportSourcePages[r]);
+      normalizedPage.drawPage(embeddedReport,{x:0,y:0,width:resumeWidth,height:reportSize.height*reportScale});
+    }
+  }else{
+    var reportPages=await merged.copyPages(reportDoc,reportDoc.getPageIndices());
+    reportPages.forEach(function(page){ merged.addPage(page); });
+  }
   var resumePages=await merged.copyPages(resumeDoc,resumeDoc.getPageIndices());
   resumePages.forEach(function(page){ merged.addPage(page); });
   var mergedBytes=await merged.save();
@@ -6339,7 +6354,7 @@ async function buildPreScreenedHighlightedResume(resumePdfUrl,options){
     if(!(reportBlob instanceof Blob)) throw new Error('Pre-Screened Report PDF was not generated');
     if(!(highlightedBlob instanceof Blob)) throw new Error('Highlighted resume PDF was not generated');
     window.__rsBusy=true;
-    await mergePreScreenedReportAndResume(reportBlob,highlightedBlob,'JEROWORKS_'+fileSafeName(data.name,'Candidate')+'_PreScreened_Highlighted.pdf');
+    await mergePreScreenedReportAndResume(reportBlob,highlightedBlob,'JEROWORKS_'+fileSafeName(data.name,'Candidate')+'_PreScreened_Highlighted.pdf',{matchReportWidthToResume:true});
     return true;
   }catch(err){
     console.error('Pre-Screened highlighted resume package error:',err);
