@@ -5216,6 +5216,25 @@ function rsOption3BuildRegex(activeSkills){
   var pat=act.map(rsOption3EscRe).sort(function(a,b){ return b.length-a.length; }).join('|');
   return new RegExp('('+pat+')','gi');
 }
+async function rsExtractPdfTextFromBlob(pdfBlob){
+  await rsEnsurePdfJs();
+  var sourceBytes=await pdfBlob.arrayBuffer();
+  var bytes=new Uint8Array(sourceBytes);
+  var sig=String.fromCharCode.apply(null,bytes.subarray(0,5));
+  if(sig.indexOf('%PDF')===-1) throw new Error('Resume source is not a valid PDF');
+  var doc=await window.pdfjsLib.getDocument({data:bytes}).promise;
+  var text='';
+  try{
+    for(var p=1;p<=doc.numPages;p++){
+      var page=await doc.getPage(p);
+      var tc=await page.getTextContent();
+      text += tc.items.map(function(i){ return i.str; }).join(' ') + '\n';
+    }
+  }finally{
+    try{ if(doc && typeof doc.destroy==='function') doc.destroy(); }catch(ignoreDestroy){}
+  }
+  return text;
+}
 async function buildVectorHighlightedPdfBlob(pdfBlob){
   await Promise.all([rsEnsurePdfJs(),rsEnsurePdfLib()]);
   var sourceBytes=await pdfBlob.arrayBuffer();
@@ -5344,7 +5363,9 @@ async function buildHeadlessOption3SkillsHighlightedResume(options){
       if(!resumePdfUrl) throw new Error('DOC resume needs enterprise converter PDF URL');
       pdfBlob=await fetchPdfResumeBlob(resumePdfUrl);
     }
-    var highlightedBlob=await buildVectorHighlightedPdfBlob(pdfBlob);
+    var resumeText=await rsExtractPdfTextFromBlob(pdfBlob);
+    var activeSkills=rsOption3KeywordsFromResumeText(resumeText);
+    var highlightedBlob=await renderHighlightedPdfBlob(pdfBlob,activeSkills.length ? activeSkills : rsDrawerHighlightedKeywords());
     if(options.returnBlob) return highlightedBlob;
     var data=readData();
     downloadBlob(highlightedBlob,'JEROWORKS_'+fileSafeName(data.name,'Candidate')+'_Skills_Highlighted.pdf');
