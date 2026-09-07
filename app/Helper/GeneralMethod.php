@@ -12867,45 +12867,53 @@ END:VCALENDAR";
         return true;
     }
 
-    public static function bench_explore_listing_counter($bench_id)
+    /**
+     * Calculate pipeline status stage counters for bench explore candidates.
+     * Tenancy Note: Filtered strictly by candidate_id and tenant other_company for 100% data consistency with listing.
+     *
+     * @param int|string $bench_id
+     * @param int|string|null $company_id
+     * @return object
+     */
+    public static function bench_explore_listing_counter($bench_id, $company_id = null)
     {
+        if (empty($company_id) && auth()->check()) {
+            $company_id = auth()->user()->company_id;
+        }
 
         $elasticService = app(ElasticService::class);
 
+        $must = [
+            ['term' => ['candidate_id' => (int) $bench_id]],
+            ['terms' => ['job_status' => ['active', 'hold', 'inactive', '2']]],
+        ];
+        if (!empty($company_id)) {
+            $must[] = ['term' => ['other_company' => (int) $company_id]];
+        }
+
         $boolQuery = [
             'bool' => [
-                'must' => [
-                    // ✅ First condition
-                    [
-                        'bool' => [
-                            'must' => [
-                                ['term' => ['candidate_id' => $bench_id]],
-                            ],
-                        ],
-                    ],
-                ],
+                'must' => $must,
             ],
         ];
 
         $params = [
             'index' => ELASTIC_CANDIDATES,
-            'body' => [   // pagination
-                'size' => 1000,
+            'body' => [
+                'size' => 0,
                 'query' => $boolQuery,
-                // ✅ Aggregation for counts
                 'aggs' => [
                     'status_counts' => [
                         'filters' => [
                             'filters' => [
                                 '1' => ['term' => ['job_master_status_id' => 1]],
                                 '2' => ['term' => ['job_master_status_id' => 2]],
-                                '3' => ['term' => ['job_master_status_id' => 3]],
+                                '3' => ['terms' => ['job_master_status_id' => [3, 8]]],
                                 '4' => ['term' => ['job_master_status_id' => 4]],
                                 '5' => ['term' => ['job_master_status_id' => 5]],
                                 '6' => ['term' => ['job_master_status_id' => 6]],
-                                '7' => ['term' => ['job_master_status_id' => 7]],
-                                '8' => ['term' => ['job_master_status_id' => 8]],
-                                '9' => ['term' => ['job_master_status_id' => 9]],
+                                '7' => ['terms' => ['job_master_status_id' => [7, 9]]],
+                                '8' => ['terms' => ['job_master_status_id' => [3, 8]]],
                             ],
                         ],
                     ],
@@ -12913,37 +12921,44 @@ END:VCALENDAR";
             ],
         ];
 
-        // 🔍 Execute
-        $response = $elasticService->getClient()->search($params);
+        try {
+            $response = $elasticService->getClient()->search($params);
+            $total = $response['hits']['total']['value'] ?? 0;
+            $buckets = $response['aggregations']['status_counts']['buckets'] ?? [];
 
-        // ✅ Hits data
-        $hits = $response['hits']['hits'] ?? [];
-        $data = array_map(fn ($hit) => (object) $hit['_source'], $hits);
+            $applicationCounter = (object) [
+                'allCandidate' => $total,
+                'Sourcing' => $buckets['1']['doc_count'] ?? 0,
+                'Screening' => $buckets['2']['doc_count'] ?? 0,
+                'Evaluation' => $buckets['3']['doc_count'] ?? 0,
+                'Negotiation' => $buckets['4']['doc_count'] ?? 0,
+                'Offered' => $buckets['5']['doc_count'] ?? 0,
+                'Joined' => $buckets['6']['doc_count'] ?? 0,
+                'Rejected' => $buckets['7']['doc_count'] ?? 0,
+                'Interview' => $buckets['8']['doc_count'] ?? 0,
+            ];
 
-        // ✅ Total count (ALL)
-        $total = $response['hits']['total']['value'] ?? 0;
-
-        // ✅ Aggregation (NO LOOP)
-        $buckets = $response['aggregations']['status_counts']['buckets'] ?? [];
-
-        $applicationCounter = (object) [
-            'allCandidate' => $total,
-            'Sourcing' => $buckets['1']['doc_count'] ?? 0,
-            'Screening' => $buckets['2']['doc_count'] ?? 0,
-            'Evaluation' => $buckets['3']['doc_count'] ?? 0,
-            'Negotiation' => $buckets['4']['doc_count'] ?? 0,
-            'Offered' => $buckets['5']['doc_count'] ?? 0,
-            'Joined' => $buckets['6']['doc_count'] ?? 0,
-            'Rejected' => $buckets['7']['doc_count'] ?? 0,
-            'Interview' => $buckets['8']['doc_count'] ?? 0,
-        ];
-
-        $allCounter = $total;
-
-        return (object) [
-            'total' => $total,
-            'applicationCounter' => $applicationCounter,
-        ];
+            return (object) [
+                'total' => $total,
+                'applicationCounter' => $applicationCounter,
+            ];
+        } catch (\Throwable $e) {
+            \Log::warning('bench_explore_listing_counter exception: ' . $e->getMessage());
+            return (object) [
+                'total' => 0,
+                'applicationCounter' => (object) [
+                    'allCandidate' => 0,
+                    'Sourcing' => 0,
+                    'Screening' => 0,
+                    'Evaluation' => 0,
+                    'Negotiation' => 0,
+                    'Offered' => 0,
+                    'Joined' => 0,
+                    'Rejected' => 0,
+                    'Interview' => 0,
+                ],
+            ];
+        }
     }
 
     public static function benchRequestCheck($candidate_id, $job_id)
