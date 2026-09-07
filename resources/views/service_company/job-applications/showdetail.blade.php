@@ -5344,13 +5344,13 @@ async function buildHeadlessOption3SkillsHighlightedResume(options){
               ctx.fillRect((r.left-pr.left)/pr.width*hi.width,(r.top-pr.top)/pr.height*hi.height,r.width/pr.width*hi.width,Math.max(r.height/pr.height*hi.height,6));
             });
           }
-          return {imgData:hi.toDataURL('image/jpeg',0.88),cssW:cssW,cssH:cssH};
+          return {imgData:hi.toDataURL('image/jpeg',0.88),cssW:cssW,cssH:cssH,baseW:base.width,baseH:base.height};
         })();
       }));
       var pdf=null;
       for(var i=0;i<rendered.length;i++){
         var out=rendered[i];
-        var pw=Math.round(out.cssW), ph=Math.round(out.cssH);
+        var pw=Math.round(out.baseW || out.cssW), ph=Math.round(out.baseH || out.cssH);
         var orient=pw>ph?'l':'p';
         if(!pdf) pdf=new JsPDF({orientation:orient,unit:'px',format:[pw,ph]});
         else pdf.addPage([pw,ph],orient);
