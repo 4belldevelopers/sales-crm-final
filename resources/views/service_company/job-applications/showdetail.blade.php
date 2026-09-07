@@ -6323,6 +6323,32 @@ async function buildHighlightedBrandedResume(resumePdfUrl,options){
     window.__rsBusy=false;
   }
 }
+async function buildPreScreenedHighlightedResume(resumePdfUrl,options){
+  /* Purpose: generate the Pre-Screened Report and append the option-8 highlighted resume without adding server conversion work for PDF/DOCX flows. */
+  if(window.__rsBusy) return Promise.resolve(false);
+  try{
+    options=options||{};
+    var data=readData();
+    var reportBlob=await buildRecruiterSummaryBlob(data,options);
+    var highlightedBlob=await buildHeadlessOption3SkillsHighlightedResume({
+      resumeUrl:options.resumeUrl,
+      resumeExt:options.resumeExt,
+      resumePdfUrl:resumePdfUrl,
+      returnBlob:true
+    });
+    if(!(reportBlob instanceof Blob)) throw new Error('Pre-Screened Report PDF was not generated');
+    if(!(highlightedBlob instanceof Blob)) throw new Error('Highlighted resume PDF was not generated');
+    window.__rsBusy=true;
+    await mergePreScreenedReportAndResume(reportBlob,highlightedBlob,'JEROWORKS_'+fileSafeName(data.name,'Candidate')+'_PreScreened_Highlighted.pdf');
+    return true;
+  }catch(err){
+    console.error('Pre-Screened highlighted resume package error:',err);
+    alert('Could not generate the Pre-Screened Report + Resume + Highlighted Keywords package.\n\nReason: '+(err && err.message ? err.message : 'Unknown package error')+'\n\nPDF resumes use direct R2/browser processing first. DOC files require enterprise converter fallback.');
+    return false;
+  }finally{
+    window.__rsBusy=false;
+  }
+}
 async function buildCombinedPreScreenedResume(resumePdfUrl,options){
   if(window.__rsBusy) return Promise.resolve(false);
   window.__rsBusy=true;
@@ -6487,6 +6513,7 @@ window.__buildSmartBrandedResume=buildSmartBrandedResume;
 window.__buildSmartHighlightedResume=buildSmartHighlightedResume;
 window.__buildHeadlessOption3SkillsHighlightedResume=buildHeadlessOption3SkillsHighlightedResume;
 window.__buildHighlightedBrandedResume=buildHighlightedBrandedResume;
+window.__buildPreScreenedHighlightedResume=buildPreScreenedHighlightedResume;
 window.__convertResumeToPdfOnly=convertResumeToPdfOnly;
 window.__convertResumeToPdfBrowserOnly=convertResumeToPdfBrowserOnly;
 window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
@@ -6607,6 +6634,24 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
         </span>
         <span class="rdc-ometa">
           <span class="rdc-ocost">6 Coins</span>
+          <span class="rdc-otime">Smart</span>
+        </span>
+        <span class="rdc-ocirc" aria-hidden="true"></span>
+      </label>
+
+      {{-- 13: Pre-screened report plus highlighted resume package --}}
+      <label class="rdc-opt" data-opt="13" data-coins="8">
+        <input class="rdc-rinput" type="radio" name="rdcFormat" value="13">
+        <span class="rdc-onum">13</span>
+        <span class="rdc-oi" style="background:#f5f3ff;color:#6d28d9;" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M8 13h5"/><path d="M8 17h8"/><path d="m15 13 2 2 4-4"/></svg>
+        </span>
+        <span class="rdc-obody">
+          <span class="rdc-otitle">Pre-Screened Report + Resume + Highlighted Keywords <span style="background:#f5f3ff;color:#6d28d9;font-size:8.5px;font-weight:700;padding:1px 6px;border-radius:4px;vertical-align:middle;margin-left:4px;">Smart</span></span>
+          <span class="rdc-odesc">Generates the report first, then adds the browser-highlighted resume pages after it</span>
+        </span>
+        <span class="rdc-ometa">
+          <span class="rdc-ocost">8 Coins</span>
           <span class="rdc-otime">Smart</span>
         </span>
         <span class="rdc-ocirc" aria-hidden="true"></span>
@@ -6762,6 +6807,7 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
     7: {cost:4, label:'Resume + Highlighted Keywords', avail:(['PDF','DOCX'].indexOf(resumeExt) !== -1), dlKey:'smart-highlighted-resume', unavailableMsg:'Client-side highlighted resume is available for PDF and DOCX resumes only.'},
     8: {cost:4, label:'Resume + Skills Highlighted', avail:(['PDF','DOC','DOCX'].indexOf(resumeExt) !== -1), dlKey:'headless-option3-skills-highlighted', unavailableMsg:'Resume + Skills Highlighted is available for PDF, DOC and DOCX resumes only.'},
     9: {cost:6, label:'Resume + Highlighted + Company Branding', avail:(['PDF','DOC','DOCX'].indexOf(resumeExt) !== -1), dlKey:'highlighted-branded-resume', unavailableMsg:'Resume + Highlighted + Company Branding is available for PDF, DOC and DOCX resumes only.'},
+    13:{cost:8, label:'Pre-Screened Report + Resume + Highlighted Keywords', avail:(['PDF','DOC','DOCX'].indexOf(resumeExt) !== -1), dlKey:'prescreened-highlighted-package', unavailableMsg:'Pre-Screened Report + Resume + Highlighted Keywords is available for PDF, DOC and DOCX resumes only.'},
     15:{cost:8, label:'Pre-Screened Report + Resume + Company Branding', avail:(['PDF','DOC','DOCX'].indexOf(resumeExt) !== -1), dlKey:'smart-prescreened-package', unavailableMsg:'Final package is available for PDF, DOC and DOCX resumes only.'},
     16:{cost:8, label:'Pre-Screened Report + Resume without Company Branding', avail:(['PDF','DOC','DOCX'].indexOf(resumeExt) !== -1), dlKey:'smart-prescreened-package-nobrand', unavailableMsg:'Final package is available for PDF, DOC and DOCX resumes only.'}
   };
@@ -6856,6 +6902,8 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
     if(m.dlKey === 'headless-option3-skills-highlighted' && resumeExt === 'DOCX' && typeof window.__preloadOpenDocLocal === 'function') window.__preloadOpenDocLocal();
     if(m.dlKey === 'highlighted-branded-resume' && typeof window.__preloadRSCombined === 'function') window.__preloadRSCombined();
     if(m.dlKey === 'highlighted-branded-resume' && resumeExt === 'DOCX' && typeof window.__preloadOpenDocLocal === 'function') window.__preloadOpenDocLocal();
+    if(m.dlKey === 'prescreened-highlighted-package' && typeof window.__preloadRSCombined === 'function') window.__preloadRSCombined();
+    if(m.dlKey === 'prescreened-highlighted-package' && resumeExt === 'DOCX' && typeof window.__preloadOpenDocLocal === 'function') window.__preloadOpenDocLocal();
     if(m.dlKey === 'smart-branded-resume' && typeof window.__preloadRSCombined === 'function') window.__preloadRSCombined();
     if(m.dlKey === 'smart-branded-resume' && resumeExt === 'DOCX' && typeof window.__preloadOpenDocLocal === 'function') window.__preloadOpenDocLocal();
     if(m.dlKey === 'rs-combined' && typeof window.__preloadRSCombined === 'function') window.__preloadRSCombined();
@@ -7193,6 +7241,38 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
             if(ok) closeRdc();
           }).catch(function(){
             showToast('Could not generate highlighted branded resume. Please try option 8 or option 6.', 'warn');
+          }).finally(function(){
+            resetBtn();
+          });
+        }, 250);
+
+      } else if(m.dlKey === 'prescreened-highlighted-package'){
+        /* Option 13: Pre-Screened Report first, then browser-highlighted resume pages appended in the final PDF. */
+        if(window.__rsBusy || typeof window.__buildPreScreenedHighlightedResume !== 'function'){
+          showToast('Please wait a moment and try again.', 'warn');
+          resetBtn(); return;
+        }
+        if(['PDF','DOC','DOCX'].indexOf(resumeExt) === -1){
+          showToast('Pre-Screened Report + Resume + Highlighted Keywords is available for PDF, DOC and DOCX resumes only.', 'warn');
+          resetBtn(); return;
+        }
+        if(['PDF','DOCX'].indexOf(resumeExt) !== -1 && !r2DirectUrl && !r2PublicUrl && !dlUrl && !resumePdfUrl){
+          showToast('Resume URL is not available.', 'warn');
+          resetBtn(); return;
+        }
+        if(resumeExt === 'DOC' && !resumePdfUrl){
+          showToast('DOC resumes need the enterprise converter before highlighted report package generation.', 'warn');
+          resetBtn(); return;
+        }
+        runSmartCountdown('Generating Report, Kindly wait.', 60);
+        setTimeout(function(){
+          window.__buildPreScreenedHighlightedResume(resumePdfUrl,{
+            resumeUrl:[r2DirectUrl,r2PublicUrl,dlUrl],
+            resumeExt:resumeExt
+          }).then(function(ok){
+            if(ok) closeRdc();
+          }).catch(function(){
+            showToast('Could not generate Pre-Screened Report + Resume + Highlighted Keywords. Please try option 8 or option 15.', 'warn');
           }).finally(function(){
             resetBtn();
           });
