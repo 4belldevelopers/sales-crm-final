@@ -5681,6 +5681,122 @@ async function renderDomMarkedHighlightedPdfBlob(pdfBlob,keywords){
     try{ if(doc && typeof doc.destroy==='function') doc.destroy(); }catch(ignoreDestroy){}
   }
 }
+async function renderR2Option3CloneHighlightedPdfBlob(pdfBlob,keywords){
+  /* Purpose: option 11 is a PDF-only R2 path that clones option 3's hidden text-layer marking before browser download. */
+  await Promise.all([rsEnsurePdfJs(),rsEnsureJsPdf()]);
+  var sourceBytes=await pdfBlob.arrayBuffer();
+  var bytes=new Uint8Array(sourceBytes);
+  var sig=String.fromCharCode.apply(null,bytes.subarray(0,5));
+  if(sig.indexOf('%PDF')===-1) throw new Error('Resume source is not a valid PDF');
+  var doc=await window.pdfjsLib.getDocument({data:bytes}).promise;
+  var JsPDF=window.jspdf.jsPDF;
+  var keywordRe=rsKeywordRegex(keywords);
+  var host=document.createElement('div');
+  host.setAttribute('aria-hidden','true');
+  host.style.cssText='position:fixed;left:-16000px;top:0;width:900px;background:#525659;padding:16px;pointer-events:none;z-index:-1;';
+  host.innerHTML='<style>.rdc-option3-clone,.rdc-option3-clone *{font-family:Poppins,-apple-system,BlinkMacSystemFont,sans-serif}.rdc-option3-clone .rcv-page{position:relative;background:#fff;box-shadow:none;overflow:hidden}.rdc-option3-clone .rcv-page canvas{display:block}.rdc-option3-clone .rcv-textlayer{position:absolute;left:0;top:0;right:0;bottom:0;overflow:hidden;line-height:1;opacity:1}.rdc-option3-clone .rcv-textlayer span{position:absolute;white-space:pre;color:transparent;transform-origin:0% 0%}.rdc-option3-clone .rcv-textlayer mark.rcv-hit{background:rgba(251,191,36,.45);color:transparent;border-radius:2px;padding:0 1px}</style><div class="rdc-option3-clone"></div>';
+  document.body.appendChild(host);
+  var cloneRoot=host.querySelector('.rdc-option3-clone');
+  var outPdf=null;
+  try{
+    for(var p=1;p<=doc.numPages;p++){
+      var pdfJsPage=await doc.getPage(p);
+      var base=pdfJsPage.getViewport({scale:1});
+      var cssScale=Math.min(1.35,820/base.width);
+      var cssViewport=pdfJsPage.getViewport({scale:cssScale});
+      var renderScale=Math.min(3,2800/base.width);
+      var renderViewport=pdfJsPage.getViewport({scale:renderScale});
+      var pageWrap=document.createElement('div');
+      pageWrap.className='rcv-page';
+      pageWrap.style.width=Math.floor(cssViewport.width)+'px';
+      pageWrap.style.height=Math.floor(cssViewport.height)+'px';
+      var previewCanvas=document.createElement('canvas');
+      previewCanvas.width=Math.floor(cssViewport.width);
+      previewCanvas.height=Math.floor(cssViewport.height);
+      previewCanvas.style.width=Math.floor(cssViewport.width)+'px';
+      previewCanvas.style.height=Math.floor(cssViewport.height)+'px';
+      var textLayer=document.createElement('div');
+      textLayer.className='rcv-textlayer';
+      textLayer.style.width=Math.floor(cssViewport.width)+'px';
+      textLayer.style.height=Math.floor(cssViewport.height)+'px';
+      pageWrap.appendChild(previewCanvas);
+      pageWrap.appendChild(textLayer);
+      cloneRoot.appendChild(pageWrap);
+      var previewCtx=previewCanvas.getContext('2d',{willReadFrequently:true});
+      previewCtx.fillStyle='#ffffff';
+      previewCtx.fillRect(0,0,previewCanvas.width,previewCanvas.height);
+      await pdfJsPage.render({canvasContext:previewCtx,viewport:cssViewport}).promise;
+      var tc=await pdfJsPage.getTextContent();
+      try{
+        var task=window.pdfjsLib.renderTextLayer({textContent:tc,container:textLayer,viewport:cssViewport,textDivs:[]});
+        if(task && task.promise) await task.promise;
+      }catch(textLayerErr){}
+      rsOption3HighlightTextLayer(textLayer,keywordRe);
+      await new Promise(function(resolve){ requestAnimationFrame(function(){ requestAnimationFrame(resolve); }); });
+      var renderCanvas=document.createElement('canvas');
+      renderCanvas.width=Math.floor(renderViewport.width);
+      renderCanvas.height=Math.floor(renderViewport.height);
+      var renderCtx=renderCanvas.getContext('2d',{willReadFrequently:true});
+      renderCtx.fillStyle='#ffffff';
+      renderCtx.fillRect(0,0,renderCanvas.width,renderCanvas.height);
+      await pdfJsPage.render({canvasContext:renderCtx,viewport:renderViewport}).promise;
+      if(keywordRe){
+        var pr=pageWrap.getBoundingClientRect();
+        renderCtx.fillStyle='rgba(255,214,10,0.42)';
+        Array.prototype.slice.call(textLayer.querySelectorAll('mark.rcv-hit')).forEach(function(mk){
+          var r=mk.getBoundingClientRect();
+          var padX=Math.min(3,Math.max(1,r.width*0.06));
+          var padY=Math.min(2,Math.max(1,r.height*0.08));
+          renderCtx.fillRect(((r.left-pr.left-padX)/pr.width)*renderCanvas.width,((r.top-pr.top-padY)/pr.height)*renderCanvas.height,((r.width+(padX*2))/pr.width)*renderCanvas.width,Math.max(((r.height+(padY*2))/pr.height)*renderCanvas.height,6));
+        });
+      }
+      var imgData=renderCanvas.toDataURL('image/jpeg',0.9);
+      var pageW=Math.round(cssViewport.width);
+      var pageH=Math.round(cssViewport.height);
+      var orient=pageW>pageH?'l':'p';
+      if(!outPdf) outPdf=new JsPDF({orientation:orient,unit:'px',format:[pageW,pageH]});
+      else outPdf.addPage([pageW,pageH],orient);
+      outPdf.addImage(imgData,'JPEG',0,0,pageW,pageH,undefined,'FAST');
+      pageWrap.remove();
+      previewCanvas.width=previewCanvas.height=0;
+      renderCanvas.width=renderCanvas.height=0;
+    }
+    if(!outPdf) throw new Error('No resume pages were rendered');
+    return outPdf.output('blob');
+  }finally{
+    removeNode(host);
+    try{ if(doc && typeof doc.destroy==='function') doc.destroy(); }catch(ignoreDestroy){}
+  }
+}
+async function buildR2ExactHighlightedResume(options){
+  /* Purpose: provide an option-3-accuracy PDF resume download that fetches directly from R2 and performs all highlight/export work in the browser. */
+  if(window.__rsBusy) return Promise.resolve(false);
+  window.__rsBusy=true;
+  try{
+    options=options||{};
+    var resumeSources=(Array.isArray(options.resumeUrl) ? options.resumeUrl : [options.resumeUrl||'']).map(function(url){
+      return clean(url,'');
+    }).filter(function(url,index,self){
+      return url && url!=='--' && self.indexOf(url)===index;
+    });
+    var resumeExt=clean(options.resumeExt||'','').toUpperCase();
+    if(resumeExt !== 'PDF') throw new Error('R2 exact highlighted resume is available for PDF resumes only');
+    if(!resumeSources.length) throw new Error('Direct R2 resume URL is not available');
+    var pdfBlob=await fetchPdfBlobFromSources(resumeSources);
+    var resumeText=await rsExtractPdfTextFromBlob(pdfBlob);
+    var keywords=rsBestOption3StyleKeywords(resumeText);
+    var highlightedBlob=await renderR2Option3CloneHighlightedPdfBlob(pdfBlob,keywords);
+    var data=readData();
+    downloadBlob(highlightedBlob,'JEROWORKS_'+fileSafeName(data.name,'Candidate')+'_Exact_Highlighted.pdf');
+    return true;
+  }catch(err){
+    console.error('R2 exact highlighted resume error:',err);
+    alert('Could not generate R2 Exact Highlighted Resume.\n\nReason: '+(err && err.message ? err.message : 'Unknown exact highlight error')+'\n\nThis option uses direct R2 PDF fetch and an internal option-3-style viewer in the browser.');
+    return false;
+  }finally{
+    window.__rsBusy=false;
+  }
+}
 async function buildSmartHighlightedResume(options){
   if(window.__rsBusy) return Promise.resolve(false);
   window.__rsBusy=true;
@@ -6633,6 +6749,7 @@ window.__buildSmartPreScreenedResume=buildSmartPreScreenedResume;
 window.__buildSmartBrandedResume=buildSmartBrandedResume;
 window.__buildSmartHighlightedResume=buildSmartHighlightedResume;
 window.__buildFastVectorSkillsHighlightedResume=buildFastVectorSkillsHighlightedResume;
+window.__buildR2ExactHighlightedResume=buildR2ExactHighlightedResume;
 window.__buildHeadlessOption3SkillsHighlightedResume=buildHeadlessOption3SkillsHighlightedResume;
 window.__buildHighlightedBrandedResume=buildHighlightedBrandedResume;
 window.__convertResumeToPdfOnly=convertResumeToPdfOnly;
@@ -6770,6 +6887,24 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
         <span class="rdc-obody">
           <span class="rdc-otitle">Fast Skills Highlighted Resume <span style="background:#ecfeff;color:#0e7490;font-size:8.5px;font-weight:700;padding:1px 6px;border-radius:4px;vertical-align:middle;margin-left:4px;">PDF Fast</span></span>
           <span class="rdc-odesc">PDF-only test path: direct R2 fetch, vector highlights, browser download with no resume conversion</span>
+        </span>
+        <span class="rdc-ometa">
+          <span class="rdc-ocost">4 Coins</span>
+          <span class="rdc-otime">Fast</span>
+        </span>
+        <span class="rdc-ocirc" aria-hidden="true"></span>
+      </label>
+
+      {{-- 11: R2 exact option-3 clone highlighted PDF --}}
+      <label class="rdc-opt" data-opt="11" data-coins="4">
+        <input class="rdc-rinput" type="radio" name="rdcFormat" value="11">
+        <span class="rdc-onum">11</span>
+        <span class="rdc-oi rdc-ic-amber" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 14l3-3 3 2 5-6"/><path d="M8 20v-4"/><path d="M13 20v-5"/><path d="M18 20v-9"/></svg>
+        </span>
+        <span class="rdc-obody">
+          <span class="rdc-otitle">R2 Exact Highlighted Resume <span style="background:#fef3c7;color:#92400e;font-size:8.5px;font-weight:700;padding:1px 6px;border-radius:4px;vertical-align:middle;margin-left:4px;">Exact</span></span>
+          <span class="rdc-odesc">PDF-only: direct R2 fetch, hidden option-3 viewer, exact keyword marks, browser download</span>
         </span>
         <span class="rdc-ometa">
           <span class="rdc-ocost">4 Coins</span>
@@ -6929,6 +7064,7 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
     8: {cost:4, label:'Resume + Skills Highlighted', avail:(['PDF','DOC','DOCX'].indexOf(resumeExt) !== -1), dlKey:'headless-option3-skills-highlighted', unavailableMsg:'Resume + Skills Highlighted is available for PDF, DOC and DOCX resumes only.'},
     9: {cost:6, label:'Resume + Highlighted + Company Branding', avail:(['PDF','DOC','DOCX'].indexOf(resumeExt) !== -1), dlKey:'highlighted-branded-resume', unavailableMsg:'Resume + Highlighted + Company Branding is available for PDF, DOC and DOCX resumes only.'},
     10:{cost:4, label:'Fast Skills Highlighted Resume', avail:(resumeExt === 'PDF'), dlKey:'fast-vector-skills-highlighted', unavailableMsg:'Fast Skills Highlighted Resume is available for PDF resumes only.'},
+    11:{cost:4, label:'R2 Exact Highlighted Resume', avail:(resumeExt === 'PDF'), dlKey:'r2-exact-highlighted-resume', unavailableMsg:'R2 Exact Highlighted Resume is available for PDF resumes only.'},
     15:{cost:8, label:'Pre-Screened Report + Resume + Company Branding', avail:(['PDF','DOC','DOCX'].indexOf(resumeExt) !== -1), dlKey:'smart-prescreened-package', unavailableMsg:'Final package is available for PDF, DOC and DOCX resumes only.'},
     16:{cost:8, label:'Pre-Screened Report + Resume without Company Branding', avail:(['PDF','DOC','DOCX'].indexOf(resumeExt) !== -1), dlKey:'smart-prescreened-package-nobrand', unavailableMsg:'Final package is available for PDF, DOC and DOCX resumes only.'}
   };
@@ -7020,6 +7156,7 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
     if(m.dlKey === 'smart-highlighted-resume' && typeof window.__preloadRSCombined === 'function') window.__preloadRSCombined();
     if(m.dlKey === 'smart-highlighted-resume' && resumeExt === 'DOCX' && typeof window.__preloadOpenDocLocal === 'function') window.__preloadOpenDocLocal();
     if(m.dlKey === 'fast-vector-skills-highlighted' && typeof window.__preloadRSCombined === 'function') window.__preloadRSCombined();
+    if(m.dlKey === 'r2-exact-highlighted-resume' && typeof window.__preloadRSCombined === 'function') window.__preloadRSCombined();
     if(m.dlKey === 'headless-option3-skills-highlighted' && typeof window.__preloadRSCombined === 'function') window.__preloadRSCombined();
     if(m.dlKey === 'headless-option3-skills-highlighted' && resumeExt === 'DOCX' && typeof window.__preloadOpenDocLocal === 'function') window.__preloadOpenDocLocal();
     if(m.dlKey === 'highlighted-branded-resume' && typeof window.__preloadRSCombined === 'function') window.__preloadRSCombined();
@@ -7324,6 +7461,34 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
             if(ok) closeRdc();
           }).catch(function(){
             showToast('Could not generate Fast Skills Highlighted Resume. Please try option 8.', 'warn');
+          }).finally(function(){
+          resetBtn();
+          });
+        }, 250);
+
+      } else if(m.dlKey === 'r2-exact-highlighted-resume'){
+        /* Option 11: direct R2 PDF, hidden option-3-style viewer, exact DOM mark highlights, browser download. */
+        if(window.__rsBusy || typeof window.__buildR2ExactHighlightedResume !== 'function'){
+          showToast('Please wait a moment and try again.', 'warn');
+          resetBtn(); return;
+        }
+        if(resumeExt !== 'PDF'){
+          showToast('R2 Exact Highlighted Resume is available for PDF resumes only.', 'warn');
+          resetBtn(); return;
+        }
+        if(!r2DirectUrl && !r2PublicUrl && !dlUrl){
+          showToast('Direct R2 resume URL is not available.', 'warn');
+          resetBtn(); return;
+        }
+        runSmartCountdown('Downloading Resume...', 60);
+        setTimeout(function(){
+          window.__buildR2ExactHighlightedResume({
+            resumeUrl:[r2DirectUrl,r2PublicUrl,dlUrl],
+            resumeExt:resumeExt
+          }).then(function(ok){
+            if(ok) closeRdc();
+          }).catch(function(){
+            showToast('Could not generate R2 Exact Highlighted Resume. Please try option 3.', 'warn');
           }).finally(function(){
             resetBtn();
           });
