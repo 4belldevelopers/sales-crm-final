@@ -311,6 +311,18 @@
 /* Options list — grid layout: num | icon | title+desc | cost+time | radio */
 .rdc-opts-list{display:flex;flex-direction:column;gap:8px;padding:0 14px 10px;}
 .rdc-opt{display:grid;grid-template-columns:18px 30px 1fr auto 15px;grid-template-rows:auto auto;column-gap:9px;row-gap:2px;align-items:center;padding:10px 11px;border:1.5px solid #e2e8f0;border-radius:10px;cursor:pointer;transition:border-color .15s,background .15s,box-shadow .15s;background:#fff;position:relative;}
+#rdcOptsList .rdc-opt[data-opt="1"]{order:1;}
+#rdcOptsList .rdc-opt[data-opt="6"]{order:2;}
+#rdcOptsList .rdc-opt[data-opt="8"]{order:3;}
+#rdcOptsList .rdc-opt[data-opt="9"]{order:4;}
+#rdcOptsList .rdc-opt[data-opt="5"]{order:5;}
+#rdcOptsList .rdc-opt[data-opt="15"]{order:6;}
+#rdcOptsList .rdc-opt[data-opt="16"]{order:7;}
+#rdcOptsList .rdc-opt[data-opt="13"]{order:8;}
+#rdcOptsList .rdc-opt[data-opt="14"]{order:9;}
+#rdcOptsList .rdc-opt[data-opt="3"],
+#rdcOptsList .rdc-opt[data-opt="4"],
+#rdcOptsList .rdc-opt[data-opt="7"]{order:99;}
 .rdc-opt:hover{border-color:#c7d2fe;background:#faf8ff;box-shadow:0 2px 10px rgba(124,58,237,.07);}
 .rdc-opt.rdc-opt-sel{border-color:#7c3aed;background:#faf8ff;}
 .rdc-rinput{position:absolute;opacity:0;width:0;height:0;pointer-events:none;}
