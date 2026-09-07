@@ -4711,3 +4711,6 @@ INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (176,'2026_08_17_00
 ALTER TABLE `job_applications` ADD INDEX `idx_japp_tenant_job_status` (`company_id`, `job_id`, `master_status_id`, `deleted_at`);
 ALTER TABLE `add_job_wise_condidates` ADD INDEX `idx_ajwc_tenant_job_status` (`company_id`, `job_id`, `master_status_id`);
 ALTER TABLE `add_job_wise_condidates` ADD INDEX `idx_ajwc_thirdparty_job_status` (`thirdparty_company_id`, `job_id`, `master_status_id`);
+ALTER TABLE `rec_candidate_assign` ADD INDEX `idx_rca_source_from` (`source_from_id`, `source_application_id`);
+ALTER TABLE `rec_candidate_assign` ADD INDEX `idx_rca_source_company` (`source_company_id`);
+ALTER TABLE `job_metronics_skills` ADD INDEX `idx_jms_job_id` (`job_id`, `skill_name`);
