@@ -5358,6 +5358,7 @@ async function buildHeadlessOption3SkillsHighlightedResume(options){
       }
       if(!pdf) throw new Error('No resume pages were rendered');
       if(!activeSkills.length) console.warn('Resume + Skills Highlighted found no matching job skills in resume text.');
+      if(options.returnBlob) return pdf.output('blob');
       var data=readData();
       downloadBlob(pdf.output('blob'),'JEROWORKS_'+fileSafeName(data.name,'Candidate')+'_Skills_Highlighted.pdf');
       return true;
@@ -6295,6 +6296,30 @@ async function buildSmartBrandedResume(resumePdfUrl,options){
     window.__rsBusy=false;
   }
 }
+async function buildHighlightedBrandedResume(resumePdfUrl,options){
+  /* Purpose: combine option 8 highlighting with option 6's exact company branding header without duplicating header design constants. */
+  if(window.__rsBusy) return Promise.resolve(false);
+  try{
+    options=options||{};
+    var data=readData();
+    var highlightedBlob=await buildHeadlessOption3SkillsHighlightedResume({
+      resumeUrl:options.resumeUrl,
+      resumeExt:options.resumeExt,
+      resumePdfUrl:resumePdfUrl,
+      returnBlob:true
+    });
+    if(!(highlightedBlob instanceof Blob)) throw new Error('Highlighted resume PDF was not generated');
+    window.__rsBusy=true;
+    await addCompanyHeaderToResume(highlightedBlob,data,'JEROWORKS_'+fileSafeName(data.name,'Candidate')+'_Highlighted_Branded.pdf');
+    return true;
+  }catch(err){
+    console.error('Highlighted branded resume error:',err);
+    alert('Could not generate Resume + Highlighted + Company Branding.\n\nReason: '+(err && err.message ? err.message : 'Unknown highlighted branding error')+'\n\nThis option highlights first, then applies the exact option 6 company branding header.');
+    return false;
+  }finally{
+    window.__rsBusy=false;
+  }
+}
 async function buildCombinedPreScreenedResume(resumePdfUrl,options){
   if(window.__rsBusy) return Promise.resolve(false);
   window.__rsBusy=true;
@@ -6458,6 +6483,7 @@ window.__buildSmartPreScreenedResume=buildSmartPreScreenedResume;
 window.__buildSmartBrandedResume=buildSmartBrandedResume;
 window.__buildSmartHighlightedResume=buildSmartHighlightedResume;
 window.__buildHeadlessOption3SkillsHighlightedResume=buildHeadlessOption3SkillsHighlightedResume;
+window.__buildHighlightedBrandedResume=buildHighlightedBrandedResume;
 window.__convertResumeToPdfOnly=convertResumeToPdfOnly;
 window.__convertResumeToPdfBrowserOnly=convertResumeToPdfBrowserOnly;
 window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
@@ -6560,6 +6586,24 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
         </span>
         <span class="rdc-ometa">
           <span class="rdc-ocost">4 Coins</span>
+          <span class="rdc-otime">Smart</span>
+        </span>
+        <span class="rdc-ocirc" aria-hidden="true"></span>
+      </label>
+
+      {{-- 9: Option 8 highlighted resume plus exact option 6 company branding --}}
+      <label class="rdc-opt" data-opt="9" data-coins="6">
+        <input class="rdc-rinput" type="radio" name="rdcFormat" value="9">
+        <span class="rdc-onum">9</span>
+        <span class="rdc-oi rdc-ic-green" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h16"/><path d="m7 16 8.5-8.5 3 3L10 19H7v-3z"/><path d="M9 7h6"/><path d="M9 11h4"/></svg>
+        </span>
+        <span class="rdc-obody">
+          <span class="rdc-otitle">Resume + Highlighted + Company Branding <span style="background:#ecfdf5;color:#059669;font-size:8.5px;font-weight:700;padding:1px 6px;border-radius:4px;vertical-align:middle;margin-left:4px;">Smart</span></span>
+          <span class="rdc-odesc">Highlights matched skills first, then adds the exact option 6 company header</span>
+        </span>
+        <span class="rdc-ometa">
+          <span class="rdc-ocost">6 Coins</span>
           <span class="rdc-otime">Smart</span>
         </span>
         <span class="rdc-ocirc" aria-hidden="true"></span>
@@ -6714,6 +6758,7 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
     6: {cost:2, label:'Resume + Company Branding', avail:(['PDF','DOC','DOCX'].indexOf(resumeExt) !== -1), dlKey:'smart-branded-resume', unavailableMsg:'Branded resume is available for PDF, DOC and DOCX resumes only.'},
     7: {cost:4, label:'Resume + Highlighted Keywords', avail:(['PDF','DOCX'].indexOf(resumeExt) !== -1), dlKey:'smart-highlighted-resume', unavailableMsg:'Client-side highlighted resume is available for PDF and DOCX resumes only.'},
     8: {cost:4, label:'Resume + Skills Highlighted', avail:(['PDF','DOC','DOCX'].indexOf(resumeExt) !== -1), dlKey:'headless-option3-skills-highlighted', unavailableMsg:'Resume + Skills Highlighted is available for PDF, DOC and DOCX resumes only.'},
+    9: {cost:6, label:'Resume + Highlighted + Company Branding', avail:(['PDF','DOC','DOCX'].indexOf(resumeExt) !== -1), dlKey:'highlighted-branded-resume', unavailableMsg:'Resume + Highlighted + Company Branding is available for PDF, DOC and DOCX resumes only.'},
     15:{cost:8, label:'Pre-Screened Report + Resume + Company Branding', avail:(['PDF','DOC','DOCX'].indexOf(resumeExt) !== -1), dlKey:'smart-prescreened-package', unavailableMsg:'Final package is available for PDF, DOC and DOCX resumes only.'},
     16:{cost:8, label:'Pre-Screened Report + Resume without Company Branding', avail:(['PDF','DOC','DOCX'].indexOf(resumeExt) !== -1), dlKey:'smart-prescreened-package-nobrand', unavailableMsg:'Final package is available for PDF, DOC and DOCX resumes only.'}
   };
@@ -6806,6 +6851,8 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
     if(m.dlKey === 'smart-highlighted-resume' && resumeExt === 'DOCX' && typeof window.__preloadOpenDocLocal === 'function') window.__preloadOpenDocLocal();
     if(m.dlKey === 'headless-option3-skills-highlighted' && typeof window.__preloadRSCombined === 'function') window.__preloadRSCombined();
     if(m.dlKey === 'headless-option3-skills-highlighted' && resumeExt === 'DOCX' && typeof window.__preloadOpenDocLocal === 'function') window.__preloadOpenDocLocal();
+    if(m.dlKey === 'highlighted-branded-resume' && typeof window.__preloadRSCombined === 'function') window.__preloadRSCombined();
+    if(m.dlKey === 'highlighted-branded-resume' && resumeExt === 'DOCX' && typeof window.__preloadOpenDocLocal === 'function') window.__preloadOpenDocLocal();
     if(m.dlKey === 'smart-branded-resume' && typeof window.__preloadRSCombined === 'function') window.__preloadRSCombined();
     if(m.dlKey === 'smart-branded-resume' && resumeExt === 'DOCX' && typeof window.__preloadOpenDocLocal === 'function') window.__preloadOpenDocLocal();
     if(m.dlKey === 'rs-combined' && typeof window.__preloadRSCombined === 'function') window.__preloadRSCombined();
@@ -7111,6 +7158,38 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
             if(ok) closeRdc();
           }).catch(function(){
             showToast('Could not generate Resume + Skills Highlighted. Please try option 3.', 'warn');
+          }).finally(function(){
+          resetBtn();
+          });
+        }, 250);
+
+      } else if(m.dlKey === 'highlighted-branded-resume'){
+        /* Option 9: option 8 highlighted output followed by option 6's exact company branding header. */
+        if(window.__rsBusy || typeof window.__buildHighlightedBrandedResume !== 'function'){
+          showToast('Please wait a moment and try again.', 'warn');
+          resetBtn(); return;
+        }
+        if(['PDF','DOC','DOCX'].indexOf(resumeExt) === -1){
+          showToast('Resume + Highlighted + Company Branding is available for PDF, DOC and DOCX resumes only.', 'warn');
+          resetBtn(); return;
+        }
+        if(['PDF','DOCX'].indexOf(resumeExt) !== -1 && !r2DirectUrl && !r2PublicUrl && !dlUrl && !resumePdfUrl){
+          showToast('Resume URL is not available.', 'warn');
+          resetBtn(); return;
+        }
+        if(resumeExt === 'DOC' && !resumePdfUrl){
+          showToast('DOC resume needs enterprise converter PDF URL.', 'warn');
+          resetBtn(); return;
+        }
+        runSmartCountdown('Downloading Resume...', 60);
+        setTimeout(function(){
+          window.__buildHighlightedBrandedResume(resumePdfUrl,{
+            resumeUrl:[r2DirectUrl,r2PublicUrl,dlUrl],
+            resumeExt:resumeExt
+          }).then(function(ok){
+            if(ok) closeRdc();
+          }).catch(function(){
+            showToast('Could not generate highlighted branded resume. Please try option 8 or option 6.', 'warn');
           }).finally(function(){
             resetBtn();
           });
