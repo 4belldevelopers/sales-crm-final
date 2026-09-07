@@ -288,38 +288,11 @@
 
     <main class="page-content">
 
-      <div class="tab-pane fade" id="boostkeywords" role="tabpanel">
-             <div class="content-split">
-                <div class="content-main">
-                  <section class="cardshow">
-                    <div class="card-header-sidebar">
-                      <div class="card-icon" style="background: var(--color-purple-50); color: var(--color-purple-500);">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-                          <polyline points="14 2 14 8 20 8"/>
-                          <line x1="16" y1="13" x2="8" y2="13"/>
-                          <line x1="16" y1="17" x2="8" y2="17"/>
-                          <polyline points="10 9 9 9 8 9"/>
-                        </svg>
-                      </div>
-                      <h3 class="card-title">Boostkeywords</h3>
-                    </div>
-                      <div class="form-group">
-                                  <label class="control-label col-sm-8"></label>
-                                    <div class="switchery-demo form-check form-switch form-switch-sm form-check-custom form-check-solid">
-                                        <input type="checkbox" class="js-switch form-check-input checkStatusSales" name="checkStatusSales" value="{{$benchApplication->id}}" @if (@$benchApplication->ads_switch == 'Yes') checked @endif data-color="#99d683" data-size="small"/>
-                                    </div>
-                                    <a href="javascript:void(0);" class="text-muted fw-bold d-block fs-7 checkStatusSales_text">{{ @$benchApplication->ads_switch == 'Yes' ? 'Ads Active' : 'Ads Block' }}</a>
-                                  
-                    </div>
-                      <br>
-
-                      <label class="form-label required fw-bolder">Description</label>
-
-                      <p class="summary-text summary-text-width"></p>
-                  </section>
-                </div>
-            </div>
+      <div class="tab-pane fade" id="boostkeywords" role="tabpanel" data-tab-loaded="0" data-tab-url="{{ route('service_company.bench-candidates.tab.ads', $benchApplication->id) }}">
+          <div class="text-center py-10 ads-tab-loader" style="padding: 40px 0;">
+              <div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading Ads Setting...</span></div>
+              <div class="mt-2 text-gray-600 fs-7 fw-bold">Loading Ads Setting...</div>
+          </div>
       </div>
 
         
@@ -772,121 +745,110 @@
       </div>
 
       @if(!empty($benchApplication->resume) && in_array(strtolower(pathinfo($benchApplication->resume, PATHINFO_EXTENSION)),['pdf','doc','docx']))
-        @php
-            $__cid = auth()->user()->company_id ?? 0;
-            $rcvCompanyLogo = ''; $rcvCompanyName = '';
-            if($__cid){
-                $__c = \DB::table('companies')->select('logo','company_name')->where('id', $__cid)->first();
-                $rcvCompanyName = ucwords((string) (@$__c->company_name ?? ''));
-                $__l = $__c->logo ?? '';
-                if(!empty($__l) && strlen($__l) > 5){ $rcvCompanyLogo = route('service_company.job-applications.company-logo-proxy'); }
-            }
-            // candidate skills — merge comma-string field + bench_candidate_skill_experience rows
-            $rcvSkills = [];
-            if(!empty(@$benchApplication->skills)){
-                foreach(explode(',', $benchApplication->skills) as $s){ $s=trim($s); if($s!=='') $rcvSkills[]=$s; }
-            }
-            if(!empty($skillExperiences)){
-                foreach($skillExperiences as $__se){ $__sk=trim((string)(@$__se->skill_key)); if($__sk!=='') $rcvSkills[]=$__sk; }
-            }
-            $rcvSkills = array_values(array_unique($rcvSkills));
-            $__te = trim((string) @$benchApplication->total_exp);
-            $rcvBExp = $__te !== '' ? $__te.' Years' : '--';
-            if((@$benchApplication->serving_notice_period_mode == 0) || (@$benchApplication->serving_notice_period_mode == 1)){
-                $rcvBNotice = 'Available '.date('d M Y', strtotime(@$benchApplication->np_id));
-            } else { $rcvBNotice = trim((string) @$benchApplication->np_id); }
-            if($rcvBNotice === '') $rcvBNotice = '--';
-            $rcvBLoc = trim((string) @$city_name);
-            if($rcvBLoc === '') $rcvBLoc = trim(ucwords((string) @$country_name));
-            if($rcvBLoc === '') $rcvBLoc = '--';
-            $__cur1 = html_entity_decode(strip_tags((string) @$current_ctc_cur), ENT_QUOTES, 'UTF-8');
-            $__cur2 = html_entity_decode(strip_tags((string) @$current_ectc_cur), ENT_QUOTES, 'UTF-8');
-            $rcvBCctc = trim($__cur1.' '.@$benchApplication->pay_rate_amount); if($rcvBCctc === '') $rcvBCctc = '--';
-            $rcvBEctc = trim($__cur2.' '.@$benchApplication->bill_rate_amount); if($rcvBEctc === '') $rcvBEctc = '--';
-            $rcvBPresented = ucwords((string) (auth()->user()->name ?? '')); if($rcvBPresented === '') $rcvBPresented = '--';
-            $rcvDownloadUrl = route('download.resume', ['id' => $benchApplication->id, 'path' => rtrim(strtr(base64_encode((string)@$benchApplication->resume), '+/', '-_'), '=')]);
-            // own-company candidate -> reveal contact/social; otherwise mask
-            $rcvMaskContact = ((int) @$benchApplication->company_id !== (int) (auth()->user()->company_id ?? 0));
-        @endphp
-        @include('service_company.partials.resume_cv_viewer', [
-            'rcvResume'      => @$benchApplication->resume,
-            'rcvMaskContact' => $rcvMaskContact,
-            'rcvSkills'      => $rcvSkills,
-            'rcvCompanyLogo' => $rcvCompanyLogo,
-            'rcvCompanyName' => $rcvCompanyName,
-            'rcvBExp'        => $rcvBExp,
-            'rcvBCctc'       => $rcvBCctc,
-            'rcvBEctc'       => $rcvBEctc,
-            'rcvBNotice'     => $rcvBNotice,
-            'rcvBLoc'        => $rcvBLoc,
-            'rcvBPresented'  => $rcvBPresented,
-            'rcvDownloadUrl' => $rcvDownloadUrl,
-        ])
+        <div class="tab-pane fade" id="resume_cv" role="tabpanel" data-tab-loaded="0" data-tab-url="{{ route('service_company.bench-candidates.tab.resume', $benchApplication->id) }}">
+            <div class="text-center py-10 rcv-tab-loader" style="padding: 50px 0;">
+                <div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading Resume...</span></div>
+                <div class="mt-2 text-gray-600 fs-7 fw-bold">Loading candidate résumé & viewer...</div>
+            </div>
+        </div>
       @endif
     </main>
   </div>
 
 
 <script>
+    (function() {
+        var activeAbortController = null;
 
-    $('.page-tabs .tab').on('click', function () {
-        $('.page-tabs .tab').removeClass('tab-active').attr('aria-selected', 'false');
+        $('.page-tabs .tab').on('click', function (e) {
+            e.preventDefault();
+            $('.page-tabs .tab').removeClass('tab-active').attr('aria-selected', 'false');
+            $(this).addClass('tab-active').attr('aria-selected', 'true');
 
-        $(this).addClass('tab-active').attr('aria-selected', 'true');
-    });
+            var targetPaneId = $(this).attr('href');
+            $('.tab-pane').removeClass('show active');
+            var $targetPane = $(targetPaneId);
+            $targetPane.addClass('show active');
 
-    var input = document.querySelector('input[name=tags]'); 
-   // initialize Tagify on the above input node reference
-   new Tagify(input)
+            if ($targetPane.length && parseInt($targetPane.attr('data-tab-loaded') || '0', 10) === 0) {
+                var url = $targetPane.attr('data-tab-url');
+                if (url) {
+                    if (activeAbortController) {
+                        activeAbortController.abort();
+                    }
+                    activeAbortController = new AbortController();
 
-   var input_show = document.querySelector('input[name=tags_show]'); 
-   // initialize Tagify on the above input node reference
-   new Tagify(input_show)
+                    fetch(url, {
+                        signal: activeAbortController.signal,
+                        headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                    })
+                    .then(function(r) { return r.json(); })
+                    .then(function(data) {
+                        if (data.status === 'success' && data.view) {
+                            if (targetPaneId === '#resume_cv') {
+                                var $newPane = $(data.view);
+                                $newPane.addClass('show active').attr('data-tab-loaded', '1');
+                                $('#resume_cv').replaceWith($newPane);
+                                if (typeof window.rcvInitResumeViewer === 'function') {
+                                    window.rcvInitResumeViewer();
+                                }
+                            } else {
+                                $targetPane.html(data.view).attr('data-tab-loaded', '1');
+                            }
+                        } else if (data.message) {
+                            $targetPane.html('<div class="text-center py-10 text-danger fw-bold">' + data.message + '</div>');
+                        }
+                    })
+                    .catch(function(err) {
+                        if (err.name !== 'AbortError') {
+                            $targetPane.html('<div class="text-center py-10 text-danger fw-bold">Failed to load tab content. Please try again.</div>');
+                        }
+                    });
+                }
+            } else if (targetPaneId === '#resume_cv' && typeof window.rcvInitResumeViewer === 'function') {
+                window.rcvInitResumeViewer();
+            }
+        });
 
-    $( document ).ready(function() {
- 
-      
-       const firstSavedCountryCode = "{{ @$benchApplication->phone_code }}"; // Example country code (lowercase)
-      
-       const firstPhoneDisplaybenchDiv = document.getElementById("firstPhoneDisplaybench");
- 
-         const flagDiv = document.createElement("div");
-         flagDiv.className = `iti__flag iti__${firstSavedCountryCode}`;
- 
-         // Get the dial code for the selected country code
-         const dialCode = countryDialCodes[firstSavedCountryCode] || ""; // Default to empty string if not found
- 
-         // Create a span to display the dial code
-         const dialCodeSpan = document.createElement("span");
-         dialCodeSpan.textContent = dialCode;
- 
-         // Append the flag and the dial code to the display div
-         firstPhoneDisplaybenchDiv.appendChild(flagDiv);
-         firstPhoneDisplaybenchDiv.appendChild(dialCodeSpan);
+        var input = document.querySelector('input[name=tags]'); 
+        if (input && !input.__tagify) {
+            input.__tagify = new Tagify(input);
+        }
 
+        var input_show = document.querySelector('input[name=tags_show]'); 
+        if (input_show && !input_show.__tagify) {
+            input_show.__tagify = new Tagify(input_show);
+        }
 
-        setTimeout(() => {
-            // alert("k");
-            $('.iti__flag-container').each(function(index) {
-                var cnt = $(this).attr('data-row');
-                const flagContainer = document.getElementById(`phoneDisplayReal_${cnt}`);
-                var calling_code = $(this).attr('data-code');
-                
+        $(document).ready(function() {
+            const firstSavedCountryCode = "{{ @$benchApplication->phone_code }}";
+            const firstPhoneDisplaybenchDiv = document.getElementById("firstPhoneDisplaybench");
+            if (firstPhoneDisplaybenchDiv && firstSavedCountryCode) {
                 const flagDiv = document.createElement("div");
-                flagDiv.className = `iti__flag iti__${calling_code}`; // Ensure calling_code is in lowercase
-
-                const dialCode = countryDialCodes[calling_code] || ""; // Fetch the dial code dynamically
+                flagDiv.className = `iti__flag iti__${firstSavedCountryCode}`;
+                const dialCode = (typeof countryDialCodes !== 'undefined' ? countryDialCodes[firstSavedCountryCode] : "") || "";
                 const dialCodeSpan = document.createElement("span");
                 dialCodeSpan.textContent = dialCode;
+                firstPhoneDisplaybenchDiv.appendChild(flagDiv);
+                firstPhoneDisplaybenchDiv.appendChild(dialCodeSpan);
+            }
 
-                // Append the flag and dial code
-                flagContainer.appendChild(flagDiv);
-                flagContainer.appendChild(dialCodeSpan);
-
-
-            });
-        }, 2000);
-
-
+            setTimeout(() => {
+                $('.iti__flag-container').each(function(index) {
+                    var cnt = $(this).attr('data-row');
+                    const flagContainer = document.getElementById(`phoneDisplayReal_${cnt}`);
+                    var calling_code = $(this).attr('data-code');
+                    if (flagContainer && calling_code && !flagContainer.children.length) {
+                        const flagDiv = document.createElement("div");
+                        flagDiv.className = `iti__flag iti__${calling_code}`;
+                        const dialCode = (typeof countryDialCodes !== 'undefined' ? countryDialCodes[calling_code] : "") || "";
+                        const dialCodeSpan = document.createElement("span");
+                        dialCodeSpan.textContent = dialCode;
+                        flagContainer.appendChild(flagDiv);
+                        flagContainer.appendChild(dialCodeSpan);
+                    }
+                });
+            }, 1000);
         });
+    })();
 </script> 
