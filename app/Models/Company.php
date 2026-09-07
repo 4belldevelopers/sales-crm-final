@@ -3,25 +3,23 @@
 namespace App\Models;
 
 use Carbon\Carbon;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Support\Facades\DB;
-use Laravel\Cashier\Billable;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Notifications\Notifiable;
-use Stripe\Invoice as StripeInvoice;
+use Laravel\Cashier\Billable;
 use Laravel\Cashier\Invoice;
+use Stripe\Invoice as StripeInvoice;
 
 class Company extends Model
 {
-    use Notifiable, Billable;
+    use Billable, Notifiable;
 
     protected $appends = [
         'logo_url',
-        'login_background_image_url'
+        'login_background_image_url',
     ];
 
     protected $dates = ['licence_expire_on', 'featured_start_date', 'featured_end_date'];
-
 
     public function findInvoice($id)
     {
@@ -36,6 +34,7 @@ class Company extends Model
                 ->all(['limit' => 1000]);
 
             $stripeInvoice->date = $stripeInvoice->created;
+
             return new Invoice($this, $stripeInvoice);
         } catch (Exception $e) {
             //
@@ -54,7 +53,8 @@ class Company extends Model
     //     }
     // }
 
-    protected static function booted(){
+    protected static function booted()
+    {
         static::addGlobalScope('company', function (Builder $builder) {
 
             if (app()->runningInConsole()) {
@@ -69,8 +69,6 @@ class Company extends Model
         });
     }
 
-
-
     public function industries_data()
     {
         return $this->hasMany(TdIndustry::class, 'ind_id', 'industries');
@@ -80,12 +78,14 @@ class Company extends Model
     {
         return $this->hasMany(Client::class);
     }
+
     public function getLogoUrlAttribute()
     {
         if (is_null($this->logo)) {
             return asset('assets/logo-not-found.png');
         }
-        return asset_url('company-logo/' . $this->logo);
+
+        return asset_url('company-logo/'.$this->logo);
     }
 
     public function application()
@@ -106,18 +106,21 @@ class Company extends Model
     public function isFeatured()
     {
         $currentDate = Carbon::now($this->timezone)->format('Y-m-d');
+        $startBound = $currentDate.' 23:59:59';
+        $endBound = $currentDate.' 00:00:00';
+
         return Company::where('status', 'active')
-            ->where(function ($query) use ($currentDate) {
+            ->where(function ($query) use ($startBound) {
                 $query->whereNull('featured_start_date')
-                    ->orWhere(DB::raw('DATE(`featured_start_date`)'), '<=', $currentDate);
+                    ->orWhere('featured_start_date', '<=', $startBound);
             })
-            ->where(function ($query) use ($currentDate) {
+            ->where(function ($query) use ($endBound) {
                 $query->whereNull('featured_end_date')
-                    ->orWhere(DB::raw('DATE(`featured_end_date`)'), '>=', $currentDate);
+                    ->orWhere('featured_end_date', '>=', $endBound);
             })
-            ->where(function ($query) use ($currentDate) {
+            ->where(function ($query) use ($endBound) {
                 $query->whereNull('licence_expire_on')
-                    ->orWhere(DB::raw('DATE(`licence_expire_on`)'), '>=', $currentDate);
+                    ->orWhere('licence_expire_on', '>=', $endBound);
             })
             ->where('featured', 1)->where('id', $this->id)->first();
     }
@@ -132,8 +135,10 @@ class Company extends Model
     {
         if (is_null($this->login_background)) {
             $global = GlobalSetting::first();
+
             return $global->login_background_image_url;
         }
-        return asset_url('login-background-image/' . $this->login_background);
+
+        return asset_url('login-background-image/'.$this->login_background);
     }
 }

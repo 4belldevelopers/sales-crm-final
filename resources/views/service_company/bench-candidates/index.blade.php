@@ -900,21 +900,30 @@
             $(document).on('ajaxComplete', function() {
                 $('[title]').tooltip({ trigger: 'hover', placement: 'top' });
             });
-            $(document).on('click', '#paginationbenchCandidateBenchCandidates .page-link', function(e) {
+            $(document).on('click', '#paginationbenchCandidateBenchCandidates .pagi-page, #paginationbenchCandidateBenchCandidates .pagi-arrow', function(e) {
                 e.preventDefault();
                 const page = $(this).data('page');
-                if (!page || $(this).hasClass('disabled')) return;
+                if (!page || $(this).hasClass('pagi-disabled') || $(this).hasClass('pagi-active-disabled')) return;
                 $(this).addClass('disabled');
                 fetchBenchBenchCandidatesCandidateList(page, $('#search').val()).then(() => {
-                    $('#paginationbenchCandidateBenchCandidates .page-link').removeClass('disabled');
+                    $('#paginationbenchCandidateBenchCandidates .pagi-page, #paginationbenchCandidateBenchCandidates .pagi-arrow').removeClass('disabled');
                 }).catch(() => {
-                    $('#paginationbenchCandidateBenchCandidates .page-link').removeClass('disabled');
+                    $('#paginationbenchCandidateBenchCandidates .pagi-page, #paginationbenchCandidateBenchCandidates .pagi-arrow').removeClass('disabled');
                 });
+            });
+
+            $(document).on('change', '#paginationbenchCandidateBenchCandidates .pagi-perpage', function(e) {
+                const selectedPerPage = $(this).val();
+                if (selectedPerPage) {
+                    localStorage.setItem('candidatePerPage', selectedPerPage);
+                    fetchBenchBenchCandidatesCandidateList(1, $('#search').val());
+                }
             });
         });
 
         function fetchBenchBenchCandidatesCandidateList(page = 1, search = '') {
             $('.loadingMessagebenchCandidateBenchCandidatesAjax').css({ display: 'block' });
+            var perPage = localStorage.getItem('candidatePerPage') || 10;
             return $.ajax({
                 url: `{!! route('service_company.bench-candidates.data_ajax') !!}?page=${page}`,
                 type: 'GET',
@@ -924,7 +933,9 @@
                     filter_status: $('#filter_status').val(),
                     country: $('#country').val(),
                     sortingfilter: $('#sortingfilter').val(),
-                    selectedValue: $("input[name='status_manage']:checked").val()
+                    selectedValue: $("input[name='status_manage']:checked").val(),
+                    per_page: perPage,
+                    size: perPage
                 },
                 success: function(response) {
                     $('.loadingMessagebenchCandidateBenchCandidatesAjax').css({ display: 'none' });

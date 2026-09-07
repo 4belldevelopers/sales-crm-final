@@ -41,6 +41,22 @@
         position: unset !important;
     }
 
+    /* ── Skill-tag remove button: white × on the purple circle ── */
+    .tagify__tag__removeBtn {
+        -webkit-mask-image: none !important;
+        mask-image: none !important;
+        background-image: none !important;
+        color: #fff !important;
+        font-size: 13px !important;
+        font-weight: 700 !important;
+        line-height: 1 !important;
+    }
+    .tagify__tag__removeBtn::before,
+    .tagify__tag__removeBtn::after {
+        display: none !important;
+        content: none !important;
+    }
+
     #kt_activitiesStaffing_close svg{
         color: red;
     }
@@ -207,39 +223,7 @@
 <link href="{{ asset('demo/css/topCard.css') }}{{ TM_VERSION }}" rel="stylesheet" type="text/css" />
     
 
-<script>
-    var stringifyObject = require('stringify-object')
-    var createKeyframe = require('create-keyframe')
-    var insertCSS = require('insert-styles')
 
-    function generateKeyframe() {
-
-        var shakeDistance = Number(
-            (Math.random() * 70).toFixed(0)
-        ) + 30
-
-        var cssKeyframe
-        cssKeyframe = {
-            0: {
-                transform: 0 + 'deg'
-            },
-            100: {
-                transform: 30 + 'deg'
-            }
-        }
-        var keyframeObj = createKeyframe(cssKeyframe)
-        insertCSS(keyframeObj.css, {
-            id: 'animaton-tutorial-keyframe'
-        })
-
-        jsonDisplay.innerHTML = `@keyframe ${keyframeObj.name} ` +
-            stringifyObject(cssKeyframe, {
-                indent: '  '
-            })
-        userMessage.style.animation = keyframeObj.name + ' ease 3s infinite'
-    }
-    generateKeyframe();
-</script>
 <link rel="stylesheet" href="//cdn.datatables.net/responsive/2.2.3/css/responsive.bootstrap.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta2/js/all.min.js" type="text/javascript">
 </script>
@@ -310,9 +294,7 @@ $current_job_id = @$job_id;
                                             $logo_path = @$job->logo;
                                         }
                                     }
-                                    
-
-                                    $icon =
+                                                           $icon =
                                         '<div data-row-id="' .
                                         $job->id .
                                         '" class="symbol symbol-circle symbol-40px overflow-hidden me-2 border-radius-5 " style="float:left">
@@ -327,7 +309,7 @@ $current_job_id = @$job_id;
                                     </a>
                                 </div>';
 
-                               $logo_path = GeneralMethod::companyDetails($job->id);
+                                $logo_path = GeneralMethod::companyDetails($job->id);
 
                                 if (!empty($logo_path)) {
                                     $icon =
@@ -343,17 +325,12 @@ $current_job_id = @$job_id;
                                                     </a>
                                                 </div>';
                                 }
-
                                 $skilltag = '';
                                 $skilltagclass = '';
                                 if (empty($limit)) {
-                                    $skillArr = DB::table('job_metronics_skills')
-                                        ->select('*')
-                                        ->where('company_id','=',$company_id = auth()->user()->company_id)
-                                        ->where('job_id', $job->id)
-                                        ->get();
-                                    if (!empty($skillArr)) {
-                                        foreach ($skillArr as $sval) {
+                                    $skillArrList = $skillArr ?? [];
+                                    if (!empty($skillArrList)) {
+                                        foreach ($skillArrList as $sval) {
                                             $skilltag .=
                                                 '<span class="badge badge-light my-1">' . ucfirst($sval->skill_name) . '</span>  ';
                                         }
@@ -383,9 +360,7 @@ $current_job_id = @$job_id;
                                                 </a> 
                                             </div> 
                                         </div> 
-                                        <div class="' .
-                                        $skilltagclass .
-                                        '" style="position: absolute; bottom: 0; white-space: nowrap;width: 100%;overflow: hidden;">
+                                        <div class="' .@$skilltagclass .'" style="position: absolute; bottom: 0; white-space: nowrap;width: 100%;overflow: hidden;">
                                                     <span class="badge badge-light-success my-1">Skills:</span>
                                                 
                                                 ' .
@@ -1030,12 +1005,6 @@ $current_job_id = @$job_id;
                                 padding: 0 10px;
                             }
 
-                            .link-muted {
-                                font-size: 11px;
-                                color: #2563eb;
-                                font-weight: 500;
-                            }
-
                             input[type="radio"]:checked {
                                 border-color: transparent;
                                 background-color: currentColor;
@@ -1219,23 +1188,22 @@ $current_job_id = @$job_id;
                                                         <span class="job-detail-label">Location</span>
 
                                                          @php
-                                                            $country_id = $country_name = '';
-                                                            $jobid = $job->id;
-                                                            $client_loc = DB::table('client_location_jobs')
-                                                                ->join('client_location', 'client_location.id', '=', 'client_location_jobs.client_location_id')
-                                                                ->leftJoin('city_list', 'city_list.city_id', '=', 'client_location.city_id')
-                                                                ->select(
-                                                                    'client_location.address',
-                                                                    'client_location.city',
-                                                                    'client_location.postcode',
-                                                                    'client_location.country_id',
-                                                                    'city_list.city as city_name',
-                                                                )
-                                                                ->where('client_location_jobs.job_id', $jobid)
-                                                                ->first();
-
-                                                                    // dd($client_loc);
-                                            
+                             $client_loc = $jobLocation ?? null;
+                             if (empty($client_loc)) {
+                                 $client_loc = DB::table('client_location_jobs')
+                                     ->join('client_location', 'client_location.id', '=', 'client_location_jobs.client_location_id')
+                                     ->leftJoin('city_list', 'city_list.city_id', '=', 'client_location.city_id')
+                                     ->select(
+                                         'client_location.address',
+                                         'client_location.city',
+                                         'client_location.postcode',
+                                         'client_location.country_id',
+                                         'city_list.city as city_name',
+                                     )
+                                     ->where('client_location_jobs.job_id', $job->id)
+                                     ->first();
+                             }
+        
                                                                 $country_id = @$client_loc->country_id;
                                                                 if (@$country_id > 0) {
                                                                     $country_name = GeneralMethod::getCountryName($country_id);
@@ -1245,15 +1213,9 @@ $current_job_id = @$job_id;
                                                                 }
         
                                                                 $city = mb_substr(@$client_loc->city, 0, 6);
-                                                                // if (@$client_loc->country_id == 101) {
                                                                 $city = mb_substr(@$client_loc->city_name, 0, 6);
-                                                                // }
                                             
-                                                                $jobLocation = DB::table('client_location_jobs')
-                                                                    ->where('client_location_jobs.job_id', $jobid)
-                                                                    ->count();
-                                            
-                                                                $jobCitySelected = DB::table('client_city_jobs')->where('client_city_jobs.job_id', $jobid)->count();
+                                                                $jobCitySelected = DB::table('client_city_jobs')->where('client_city_jobs.job_id', $job->id)->count();
                                             
                                                                 $employment_type = 'Full-time';
                                                                 if ($job->employment_type == 1) {
@@ -1269,7 +1231,7 @@ $current_job_id = @$job_id;
                                                                         ->leftJoin('state_list', 'state_list.id', '=', 'city_list.state_id')
                                                                         ->leftJoin('countries', 'countries.id', '=', 'state_list.country_id')
                                                                         ->select('city_list.city as city_name', 'countries.country_name')
-                                                                        ->where('client_city_jobs.job_id', $jobid)
+                                                                        ->where('client_city_jobs.job_id', $job->id)
                                                                         ->first();
                                                                     $city = mb_substr(@$client_loc->city_name, 0, 21);
                                                                     $country_name = mb_substr(@$client_loc->country_name, 0, 6);
@@ -1285,7 +1247,7 @@ $current_job_id = @$job_id;
                                                                     ->leftJoin('state_list', 'state_list.id', '=', 'city_list.state_id')
                                                                     ->leftJoin('countries', 'countries.id', '=', 'state_list.country_id')
                                                                     ->select('city_list.city as city_name', 'countries.country_name')
-                                                                    ->where('client_city_jobs.job_id', $jobid)
+                                                                    ->where('client_city_jobs.job_id', $job->id)
                                                                     ->first();
                                                                 $city = mb_substr(@$client_loc->city_name, 0, 21);
                                                                 $country_name = mb_substr(@$client_loc->country_name, 0, 6);
@@ -1319,13 +1281,9 @@ $current_job_id = @$job_id;
                                                     $skilltagclass = '';
                                                     $totalSkill = 0;
                                                     if (empty($limit)) {
-                                                        $skillArr = DB::table('job_metronics_skills')
-                                                            ->select('*')
-                                                            ->where('company_id','=',$company_id = auth()->user()->company_id)
-                                                            ->where('job_id', $job->id)
-                                                            ->get();
-                                                        if (!empty($skillArr)) {
-                                                            foreach ($skillArr as $key => $sval) {
+                                                        $skillArrList = $skillArr ?? [];
+                                                        if (!empty($skillArrList)) {
+                                                            foreach ($skillArrList as $key => $sval) {
                                                                 if($key<=2){
                                                                     $skilltag .=
                                                                     '<span class="tag">' . ucfirst($sval->skill_name) . '</span>  ';
@@ -1468,9 +1426,9 @@ $current_job_id = @$job_id;
                                         <li class="nav-item me-3"> <a class="nav-link active show" data-toggle="tab" href="#recommended">
                                                 <span class="nav-text font-weight-bold">Recommended {{__('messages.Agency')}}</span> <span id="recommendedTotal"></span> </a> </li>
                                         <li class="nav-item me-3 register_tab"> <a class="nav-link" data-toggle="tab" href="#registered"> <span
-                                                    class="nav-text font-weight-bold">My {{__('messages.Agency')}}</span> <span id="registeredTotal"></span> </a> </li>
+                                                    class="nav-text font-weight-bold">My {{__('messages.Agency')}}</span> <span id="registeredTotal">({{ @$registeredTotalCount ?? 0 }})</span> </a> </li>
                                         <li class="nav-item me-3 assigned_tab"> <a class="nav-link" data-toggle="tab" href="#assigned"> <span
-                                                    class="nav-text font-weight-bold">Assigned {{__('messages.Agency')}}</span> <span id="assignedTotal"></span> </a> </li>
+                                                    class="nav-text font-weight-bold">Assigned {{__('messages.Agency')}}</span> <span id="assignedTotal">({{ @$assignedTotalCount ?? 0 }})</span> </a> </li>
                                     </ul>
                                 </div>
                             </div>
@@ -1751,8 +1709,6 @@ $current_job_id = @$job_id;
 
 
 <script src="{{ asset('demo/cdn/js/dataTables.fixedHeader.min.js') }}<?php echo TM_VERSION; ?>"></script>
-<link href="{{ asset('demo/css/plugins.bundle.css') }}{{ TM_VERSION }}" rel="stylesheet" type="text/css" />
-<script src="{{ asset('demo/js/plugins.bundle.js') }}{{ TM_VERSION }}"></script>
 <script>
 
         function initTagifySection() {
@@ -1795,18 +1751,18 @@ $current_job_id = @$job_id;
                         const value = tagData.value || '';
 
                         return `
-                            <tag title="${value}" 
-                                contenteditable='false' 
-                                spellcheck="false" 
-                                class="tagify__tag ${tagData.class ? tagData.class : ""}" 
-                                ${this.getAttributes(tagData)}>
+                            <tag title="${value}"
+                                contenteditable='false'
+                                spellcheck="false"
+                                class="tagify__tag ${tagData.class ? tagData.class : ""}"
+                                ${this.getAttributes(tagData)}
+                                >
 
                                 <div style="padding: 2px 6px; display:flex; align-items:center; gap:5px;">
 
                                     <span class="tagify__tag-text">${value}</span>
 
-                                    <span 
-                                        style="
+                                    <span style="
                                             width:16px;
                                             height:16px;
                                             border-radius:50%;
@@ -1815,14 +1771,9 @@ $current_job_id = @$job_id;
                                             align-items:center;
                                             justify-content:center;
                                             cursor:pointer;
-                                        ">
-
-                                        <x class="tagify__tag__removeBtn"></x>
-
-                                    </span>
+                                        "><x class="tagify__tag__removeBtn">×</x></span>
 
                                 </div>
-
                             </tag>
                         `;
                     }
@@ -1853,18 +1804,18 @@ $current_job_id = @$job_id;
                         const value = tagData.value || '';
 
                         return `
-                            <tag title="${value}" 
-                                contenteditable='false' 
-                                spellcheck="false" 
-                                class="tagify__tag ${tagData.class ? tagData.class : ""}" 
-                                ${this.getAttributes(tagData)}>
+                            <tag title="${value}"
+                                contenteditable='false'
+                                spellcheck="false"
+                                class="tagify__tag ${tagData.class ? tagData.class : ""}"
+                                ${this.getAttributes(tagData)}
+                                >
 
                                 <div style="padding: 2px 6px; display:flex; align-items:center; gap:5px;">
 
                                     <span class="tagify__tag-text">${value}</span>
 
-                                    <span 
-                                        style="
+                                    <span style="
                                             width:16px;
                                             height:16px;
                                             border-radius:50%;
@@ -1873,14 +1824,9 @@ $current_job_id = @$job_id;
                                             align-items:center;
                                             justify-content:center;
                                             cursor:pointer;
-                                        ">
-
-                                        <x class="tagify__tag__removeBtn"></x>
-
-                                    </span>
+                                        "><x class="tagify__tag__removeBtn">×</x></span>
 
                                 </div>
-
                             </tag>
                         `;
                     }
@@ -2094,11 +2040,7 @@ $current_job_id = @$job_id;
         // INITIAL LOAD
         // ===================================
 
-        $(document).ready(function () {
-
-            initTagifySection();
-
-        });
+        initTagifySection();
 
 
         // ===================================
@@ -2164,13 +2106,10 @@ $current_job_id = @$job_id;
 
 
 
-    var boostlisting;
-    boostlisting('load');
-
     function boostlisting(type) {
-
+        if ($('#boostlisting').length === 0) return;
         var jobid = $('#current_job_id').val();
-        table = $('#boostlisting').dataTable({
+        var boostTable = $('#boostlisting').dataTable({
             pageLength: 3,
             iDisplayLength: 3,
             responsive: true,
@@ -2241,367 +2180,283 @@ $current_job_id = @$job_id;
             ]
 
         });
-        new $.fn.dataTable.FixedHeader(boostlisting);
-
+        if ($.fn.dataTable && $.fn.dataTable.FixedHeader) {
+            new $.fn.dataTable.FixedHeader(boostTable);
+        }
 
         var tbodyrecommendedlist = document.getElementById("recommendedlist");
         var tbodyboostlisting = document.getElementById("boostlisting");
-        if (tbodyrecommendedlist.innerHTML.trim() !== "" || tbodyboostlisting.innerHTML.trim() !== "") {
-            console.log("Tbody is empty");
-            setTimeout(() => {
-                $(".dataTables_empty").attr("style", "display: none !important;")
-                $(".dataTables_empty").hide();
-            }, 1500);
-
+        if (tbodyrecommendedlist && tbodyboostlisting) {
+            if (tbodyrecommendedlist.innerHTML.trim() !== "" || tbodyboostlisting.innerHTML.trim() !== "") {
+                setTimeout(() => {
+                    $(".dataTables_empty").attr("style", "display: none !important;");
+                    $(".dataTables_empty").hide();
+                }, 1500);
+            }
         }
-
-
-
+    }
+    if ($('#boostlisting').length > 0) {
+        boostlisting('load');
     }
 </script>
 <script>
-    function filtersdata() {
-        tableLoad('load');
-    }
-    var table;
-    setTimeout(() => {
-        tableLoad('load');
-        staffingPartnersRegister('load');
-        recommendedAssignList(1,'');
-    }, 100);
+    /**
+     * AgencyMarketplaceTabManager
+     * True Tab-Level Lazy Loading, Request Deduplication, Debouncing & XHR Cancellation.
+     * Matches Profile Tabs V2 architecture (ProfileTabManager).
+     */
+    window.AgencyMarketplaceTabManager = {
+        initializedTabs: {
+            recommended: true
+        },
+        activeRequests: {},
+        searchTimers: {},
 
-    function tableLoad(type) {
-       var page = 1;
-       $('.page-loader').css('display', 'flex');
-        $.ajax({
-                url: `{!! route('service_company.jobs.recommendedData') !!}?page=${page}`,
-                type: 'GET',
-                data: {
-                    jobid: $('#current_job_id').val(),
-                    hiringtype : $('#workhiringtype').val(),
-                    country : $('#country').val(),
-                    cus_search : $('#kt_tagify_users').val(),
-                    min_exp : $('#min_exp').val(),
-                    max_exp : $('#max_exp').val(),
-                    kt_tagify_location : $('#country').val(),
-                    app_int_outsource : $('#hiring_type').val(),
-                    experience : $('#experience').val(),
-                    industry : $('#industry').val(),
-                    min_sal : $('#min_sal').val(),
-                    max_sal : $('#max_sal').val(),
-                    min_salary_currency : $('#min_salary_currency').val(),
-                    sal_mode : $('#sal_mode').val()
-                },
-                success: function(response) {
-                    $('.loadingMessage').css({ display: 'none' });
-                    $('.loader_search').css({ display: 'none' });
-                    $('.page-loader').css('display', 'none');
-                    $('#recommendedlistBody').html(response.html);
-                    $('#recommendedTotal').html('('+response.total+')');
-                    // $('#total_record').html(response.total);
-                }
+        init: function() {
+            var self = this;
+
+            // Listen for Metronic / Bootstrap shown.bs.tab event
+            $(document).on('shown.bs.tab', 'a[data-toggle="tab"]', function (e) {
+                var targetTab = $(e.target).attr('href');
+                if (!targetTab) return;
+                var tabKey = targetTab.replace('#', '');
+                self.onTabActivated(tabKey);
             });
 
-            return false;
+            // Direct click handler fallback
+            $(document).on('click', '.nav-tabs a[data-toggle="tab"]', function (e) {
+                var targetTab = $(this).attr('href');
+                if (!targetTab) return;
+                var tabKey = targetTab.replace('#', '');
+                self.onTabActivated(tabKey);
+            });
 
-        var jobid = $('#current_job_id').val();
-        var hiringtype = $('#workhiringtype').val();
-        var country = $('#country').val();
-
-        var cus_search = $('#kt_tagify_users').val();
-        var min_exp = $('#min_exp').val();
-        var max_exp = $('#max_exp').val();
-        var kt_tagify_location = $('#kt_tagify_location').val();
-        var min_sal = $('#min_sal').val();
-        var max_sal = $('#max_sal').val();
-        var min_salary_currency = $('#min_salary_currency').val();
-        var sal_mode = $('#sal_mode').val();
-        var app_int_outsource = $('[name="app_int_outsource"]:checked').val();
-
-
-        table = $('#recommendedlist').dataTable({
-            responsive: true,
-            processing: true,
-            serverSide: true,
-            ordering: true, //disable ordering      			
-            destroy: true,
-            stateSave: true,
-            "stateSaveParams": function (settings, data) {
-                data.length = 25; // Force saved state to use your length
-            },
-            "bLengthChange": false,
-            sDom: 'lrtip',
-            ajax: '{!! route('service_company.jobs.recommendedData') !!}?jobid=' + jobid + '&hiringtype=' + hiringtype + '&country=' +
-                country + '&cus_search=' + encodeURIComponent(cus_search) + '&min_exp=' + min_exp +
-                '&max_exp=' + max_exp + '&kt_tagify_location=' + kt_tagify_location + '&min_sal=' + min_sal +
-                '&max_sal=' + max_sal + '&min_salary_currency=' + min_salary_currency + '&sal_mode=' +
-                sal_mode + '&app_int_outsource=' + app_int_outsource,
-            pageLength: 25,
-            lengthMenu: [[25, 50, 100], [25, 50, 100]],
-            "fnDrawCallback": function(oSettings) {
-                $("body").tooltip({
-                    selector: '[data-toggle="tooltip"]'
+            // 300ms Search Debounce for My Agency search input
+            $(document).off('keyup input', '#kt_tagify_4').on('keyup input', '#kt_tagify_4', function() {
+                self.debounceSearch('registered', function() {
+                    staffingPartnersRegister(1, '');
                 });
-            },
-            "initComplete": function(settings, json) {},
-            columns: [
-                // {data: 'chkbox',name: 'chkbox', orderable: false,searchable: false,width: '5%'},
-                {data: 'Name',name: 'Name',orderable: false,searchable: false,width: '15%'},
-                // {data: 'Match', name: 'Match', searchable : false, orderable : false, width: '15%'},
-                { data: 'SimilarReq',name: 'SimilarReq',searchable: false,orderable: false,width: '10%'},
-                {data: 'RatesCal',name: 'RatesCal',searchable: false,orderable: false,width: '15%'},
-                // { data: 'SuccessCus',name: 'SuccessCus',searchable: false,orderable: false, width: '15%'},
-                // {data: 'Profiles', name: 'Profiles',  searchable : false, orderable : false,  width: '10%'},
-                // {data: 'HiringType', name: 'HiringType', searchable : false, orderable : false},
-                {data: 'Sizecount', name: 'Sizecount',searchable: false,orderable: false},
-                {data: 'Location', name: 'Location', searchable : false, orderable : false},
-                {data: 'LoginTime', name: 'LoginTime', searchable : false, orderable : false},
-                {data: 'Action',name: 'Action',orderable: false}
+            });
 
-            ]
+            // 300ms Search Debounce for Assigned Agency search input
+            $(document).off('keyup input', '#kt_tagify_5').on('keyup input', '#kt_tagify_5', function() {
+                self.debounceSearch('assigned', function() {
+                    recommendedAssignList(1, '');
+                });
+            });
+        },
 
-        });
-        new $.fn.dataTable.FixedHeader(table);
+        onTabActivated: function(tabKey) {
+            if (this.initializedTabs[tabKey]) {
+                return;
+            }
+            this.initializedTabs[tabKey] = true;
 
-        var tbodyrecommendedlist = document.getElementById("recommendedlist");
-        var tbodyboostlisting = document.getElementById("boostlisting");
-        if (tbodyrecommendedlist.innerHTML.trim() !== "" || tbodyboostlisting.innerHTML.trim() !== "") {
-            console.log("Tbody is empty");
-            setTimeout(() => {
-                $(".dataTables_empty").attr("style", "display: none !important;")
-                $(".dataTables_empty").hide();
-            }, 1500);
+            if (tabKey === 'registered') {
+                staffingPartnersRegister(1, '');
+            } else if (tabKey === 'assigned') {
+                recommendedAssignList(1, '');
+            } else if (tabKey === 'recommended') {
+                tableLoad(1);
+            }
+        },
 
+        debounceSearch: function(tabKey, callback) {
+            if (this.searchTimers[tabKey]) {
+                clearTimeout(this.searchTimers[tabKey]);
+            }
+            this.searchTimers[tabKey] = setTimeout(function() {
+                callback();
+            }, 300);
+        },
+
+        cancelRequest: function(tabKey) {
+            if (this.activeRequests[tabKey] && typeof this.activeRequests[tabKey].abort === 'function') {
+                try { this.activeRequests[tabKey].abort(); } catch(e) {}
+                delete this.activeRequests[tabKey];
+            }
+        },
+
+        registerRequest: function(tabKey, jqXHR) {
+            this.cancelRequest(tabKey);
+            this.activeRequests[tabKey] = jqXHR;
+        },
+
+        clearRequest: function(tabKey) {
+            delete this.activeRequests[tabKey];
+        },
+
+        invalidateTab: function(tabKey) {
+            delete this.initializedTabs[tabKey];
         }
+    };
 
+    $(document).ready(function() {
+        AgencyMarketplaceTabManager.init();
+        // Load initial tab (Recommended Agency) ONCE on page launch
+        tableLoad(1);
+    });
 
+    function filtersdata() {
+        tableLoad(1);
     }
 
+    function tableLoad(page) {
+        if (page === 'load' || !page) { page = 1; }
+
+        $('.loader_search').css({ display: 'block' });
+
+        var jqXHR = $.ajax({
+            url: `{!! route('service_company.jobs.recommendedData') !!}?page=${page}`,
+            type: 'GET',
+            data: {
+                jobid: $('#current_job_id').val(),
+                hiringtype : $('#workhiringtype').val(),
+                country : $('#country').val(),
+                cus_search : $('#kt_tagify_users').val(),
+                min_exp : $('#min_exp').val(),
+                max_exp : $('#max_exp').val(),
+                kt_tagify_location : $('#country').val(),
+                app_int_outsource : $('#hiring_type').val(),
+                experience : $('#experience').val(),
+                industry : $('#industry').val(),
+                min_sal : $('#min_sal').val(),
+                max_sal : $('#max_sal').val(),
+                min_salary_currency : $('#min_salary_currency').val(),
+                sal_mode : $('#sal_mode').val()
+            },
+            success: function(response) {
+                $('.loadingMessage').css({ display: 'none' });
+                $('.loader_search').css({ display: 'none' });
+                $('.page-loader').css('display', 'none');
+                $('#recommendedlistBody').html(response.html);
+                $('#recommendedTotal').html('('+response.total+')');
+            },
+            complete: function() {
+                AgencyMarketplaceTabManager.clearRequest('recommended');
+            }
+        });
+        AgencyMarketplaceTabManager.registerRequest('recommended', jqXHR);
+        return jqXHR;
+    }
 
     function newUpdateJobstatus() {
-        $('.changetextupdate').text('Searching....!')
-        tableLoad('load');
+        $('.changetextupdate').text('Searching....!');
+        tableLoad(1);
         var $this = $('#apptrackerfilter');
-        // $this.fadeOut(2000, function() {
         $this.modal('hide');
-        // });
         setTimeout(() => {
             $('#apptrackerfilter_close').click();
-            $('.changetextupdate').text('Submit')
+            $('.changetextupdate').text('Submit');
         }, 1500);
     }
-    $(document).on("keyup","#kt_tagify_4",function(){
-        staffingPartnersRegister('load');
-    });
-    $(document).on("keyup","#kt_tagify_5",function(){
-        recommendedAssignList(1,'');
-    });
+
     function filtersdatathree() {
-        recommendedAssignList(1,'');
+        recommendedAssignList(1, '');
     }
-    $(document).off('click', '.assigned_tab').on('click', '.assigned_tab', function() {
-        recommendedAssignList(1,'');
+
+    $(document).on('click', '#paginationAssignListagency .pagi-page, #paginationAssignListagency .pagi-arrow', function(e) {
+        e.preventDefault();
+        const page = $(this).attr('data-page') || $(this).data('page');
+        if (!page || $(this).hasClass('disabled') || $(this).hasClass('pagi-disabled') || $(this).hasClass('pagi-active') || $(this).hasClass('pagi-active-disabled')) return;
+
+        $(this).addClass('disabled');
+        recommendedAssignList(page).then(() => {
+            $('#paginationAssignListagency .pagi-page, #paginationAssignListagency .pagi-arrow').removeClass('disabled');
+        }).catch(() => {
+            $('#paginationAssignListagency .pagi-page, #paginationAssignListagency .pagi-arrow').removeClass('disabled');
+        });
     });
-
-     $(document).on('click', '#paginationAssignListagency .page-link', function(e) {
-            e.preventDefault();
-
-            const page = $(this).data('page');
-            if (!page || $(this).hasClass('disabled')) return;
-
-            // Disable the clicked pagination link
-            $(this).addClass('disabled');
-
-            // Fetch data
-            recommendedAssignList(page, $('#search').val()).then(() => {
-                // Re-enable the links after successful data fetch
-                $('#paginationAssignListagency .page-link').removeClass('disabled');
-            }).catch(() => {
-                // Re-enable the links even if there's an error
-                $('#paginationAssignListagency .page-link').removeClass('disabled');
-            });
-    });
-
 
     function recommendedAssignList(page = 1, search = '') {
+        if (page === 'load' || !page) { page = 1; }
 
         var jobid = $('#current_job_id').val();
-        var hiringtype = '';//$('#hiringtype5').val();
-        var country = '';//$('#country5').val();
+        var hiringtype = '';
+        var country = '';
         var cus_search = $('#kt_tagify_5').val();
 
-            $.ajax({
-                url: `{!! route('service_company.jobs.recommendedAssignList') !!}?page=${page}`,
-                type: 'GET',
-                data: {
-                    jobid : jobid,
-                    hiringtype : hiringtype,
-                    country : country,
-                    cus_search : cus_search
-                },
-                success: function(response) {
-                    $('.loader_search').css({ display: 'none' });
-                    $('.page-loader').css('display', 'none');
-                    $('#allAssignListagency').html(response.html);
-                    $('#assignedTotal').html('('+response.total+')');
-                    $('#paginationAssignListagency').html(response.pagination);
-                }
-            });
-
-            return false;
-        table = $('#recommendedAssignListNotAjax').dataTable({
-
-            responsive: true,
-            processing: true,
-            ordering: false, //disable ordering      			
-            destroy: true,
-            stateSave: true,
-            "bLengthChange": false,
-            sDom: 'lrtip',
-
-            ajax: '{!! route('service_company.jobs.recommendedAssignList') !!}?jobid=' + jobid + '&hiringtype=' + hiringtype + '&country=' +
-                country + '&cus_search=' + cus_search,
-            "fnDrawCallback": function(oSettings) {
-                $("body").tooltip({
-                    selector: '[data-toggle="tooltip"]'
-                });
+        var jqXHR = $.ajax({
+            url: `{!! route('service_company.jobs.recommendedAssignList') !!}?page=${page}`,
+            type: 'GET',
+            data: {
+                page : page,
+                jobid : jobid,
+                hiringtype : hiringtype,
+                country : country,
+                cus_search : cus_search
             },
-            "initComplete": function(settings, json) {},
-            columns: [
-                {
-                    data: 'Name',
-                    name: 'Name',
-                    orderable: false,
-                    searchable: false,
-                    width: '15%'
-                },
-                {
-                    data: 'ContactPerson',
-                    name: 'ContactPerson',
-                    searchable: false,
-                    orderable: false,
-                    width: '15%'
-                },
-                {
-                    data: 'UploadProfile',
-                    name: 'UploadProfile',
-                    searchable: false,
-                    orderable: false,
-                    width: '5%'
-                },
-                {
-                    data: 'Interview',
-                    name: 'Interview',
-                    searchable: false,
-                    orderable: false,
-                    width: '10%'
-                },
-                {
-                    data: 'Joinings',
-                    name: 'Joinings',
-                    searchable: false,
-                    orderable: false
-                },
-                {
-                    data: 'Action',
-                    name: 'Action',
-                    searchable: false,
-                    orderable: false
-                },
-            ]
-
+            success: function(response) {
+                $('.loader_search').css({ display: 'none' });
+                $('.page-loader').css('display', 'none');
+                $('#allAssignListagency').html(response.html);
+                $('#assignedTotal').html('('+response.total+')');
+                $('#paginationAssignListagency').html(response.pagination);
+            },
+            complete: function() {
+                AgencyMarketplaceTabManager.clearRequest('assigned');
+            }
         });
-        new $.fn.dataTable.FixedHeader(table);
+        AgencyMarketplaceTabManager.registerRequest('assigned', jqXHR);
+        return jqXHR;
     }
 
     function filtersdatatwo() {
-        staffingPartnersRegister('load');
+        staffingPartnersRegister(1, '');
     }
-    $(document).off('click', '.register_tab').on('click', '.register_tab', function() {
-        staffingPartnersRegister('load');
-    });
-    
-    $(document).on('click', '#paginationregisteragency .page-link', function(e) {
-            e.preventDefault();
 
-            const page = $(this).data('page');
-            if (!page || $(this).hasClass('disabled')) return;
+    $(document).on('click', '#paginationregisteragency .pagi-page, #paginationregisteragency .pagi-arrow', function(e) {
+        e.preventDefault();
+        const page = $(this).attr('data-page') || $(this).data('page');
+        if (!page || $(this).hasClass('disabled') || $(this).hasClass('pagi-disabled') || $(this).hasClass('pagi-active') || $(this).hasClass('pagi-active-disabled')) return;
 
-            // Disable the clicked pagination link
-            $(this).addClass('disabled');
-
-            // Fetch data
-            staffingPartnersRegister(page, $('#search').val()).then(() => {
-                // Re-enable the links after successful data fetch
-                $('#paginationregisteragency .page-link').removeClass('disabled');
-            }).catch(() => {
-                // Re-enable the links even if there's an error
-                $('#paginationregisteragency .page-link').removeClass('disabled');
-            });
+        $(this).addClass('disabled');
+        staffingPartnersRegister(page).then(() => {
+            $('#paginationregisteragency .pagi-page, #paginationregisteragency .pagi-arrow').removeClass('disabled');
+        }).catch(() => {
+            $('#paginationregisteragency .pagi-page, #paginationregisteragency .pagi-arrow').removeClass('disabled');
+        });
     });
 
     function staffingPartnersRegister(page = 1, search = '') {
+        if (page === 'load' || !page) { page = 1; }
 
-        if($('#kt_tagify_4').val()!=''){
-                $('.loader_search').css({ display: 'block' });
-        }else{
-                $('.page-loader').css('display', 'flex');
+        if ($('#kt_tagify_4').val() !== '') {
+            $('.loader_search').css({ display: 'block' });
+        } else {
+            $('.loader_search').css({ display: 'block' });
         }
+
         var jobid = $('#current_job_id').val();
         var hiringtype = $('#hiringtype4').val();
         var country = $('#country4').val();
         var cus_search = $('#kt_tagify_4').val();
-            $.ajax({
-                url: `{!! route('service_company.jobs.staffingPartnersRegister') !!}?page=${page}`,
-                type: 'GET',
-                data: {
-                    jobid : jobid,
-                    hiringtype : hiringtype,
-                    country : country,
-                    cus_search : cus_search
-                },
-                success: function(response) {
-                    $('.loader_search').css({ display: 'none' });
-                    $('.page-loader').css('display', 'none');
-                    $('#allregisteragency').html(response.html);
-                    $('#registeredTotal').html('('+response.total+')');
-                    $('#paginationregisteragency').html(response.pagination);
-                }
-            });
 
-           return false;
-           
-        table = $('#staffingPartnersRegister').dataTable({
-
-            responsive: true,
-            processing: true,
-            ordering: false, //disable ordering      			
-            destroy: true,
-            stateSave: true,
-            "bLengthChange": false,
-            sDom: 'lrtip',
-            ajax: '{!! route('service_company.jobs.staffingPartnersRegister') !!}?jobid=' + jobid + '&hiringtype=' + hiringtype + '&country=' + country + '&cus_search=' + cus_search,
-            "fnDrawCallback": function(oSettings) {
-                $("body").tooltip({
-                    selector: '[data-toggle="tooltip"]'
-                });
+        var jqXHR = $.ajax({
+            url: `{!! route('service_company.jobs.staffingPartnersRegister') !!}?page=${page}`,
+            type: 'GET',
+            data: {
+                page : page,
+                jobid : jobid,
+                hiringtype : hiringtype,
+                country : country,
+                cus_search : cus_search
             },
-            "initComplete": function(settings, json) {},
-            columns: [
-                {data: 'Name', name: 'Name',orderable: false,searchable: false,width: '15%'},
-                {data: 'SimilarReq',name: 'SimilarReq',searchable: false,orderable: false,width: '15%'},
-                {data: 'RatesCal',name: 'RatesCal',searchable: false,orderable: false},
-                {data: 'Sizecount',name: 'Sizecount',searchable: false,orderable: false},
-                {data: 'Location',name: 'Location',searchable: false,orderable: false},
-                {data: 'LoginTime',name: 'LoginTime',searchable: false,orderable: false},
-                {data: 'Action',name: 'Action',orderable: false}
-            ]
-
+            success: function(response) {
+                $('.loader_search').css({ display: 'none' });
+                $('.page-loader').css('display', 'none');
+                $('#allregisteragency').html(response.html);
+                $('#registeredTotal').html('('+response.total+')');
+                $('#paginationregisteragency').html(response.pagination);
+            },
+            complete: function() {
+                AgencyMarketplaceTabManager.clearRequest('registered');
+            }
         });
-        new $.fn.dataTable.FixedHeader(table);
-
-
+        AgencyMarketplaceTabManager.registerRequest('registered', jqXHR);
+        return jqXHR;
     }
+           
 
     $('body').off('click', '.send_only_job_invitation').on('click', '.send_only_job_invitation', function(event) {
     // $('body').on('click', '.send_only_job_invitation', function(event) {
@@ -3017,36 +2872,36 @@ $current_job_id = @$job_id;
 <script>
     // The DOM elements you wish to replace with Tagify
     var inputloc = document.querySelector("#kt_tagify_location");
-    var cities = @json(@$cities);
-    // Initialize Tagify script on the above inputs
-    var tagifylocation = new Tagify(inputloc, {
-        whitelist: cities,
-        maxTags: 1,
-        dropdown: {
-            maxItems: 200, // <- mixumum allowed rendered suggestions
-            classname: "", // <- custom classname for this dropdown, so it could be targeted
-            enabled: 0, // <- show suggestions on focus
-            closeOnSelect: true // <- do not hide the suggestions dropdown once an item has been selected
-        }
-    });
-    // Prevent creating tags on blur or enter key
-    tagifylocation.on('input', function(e) {
-        tagifylocation.dropdown.show(); // show the dropdown immediately
-    });
-    // Create tags only on select
-    tagifylocation.on('dropdown:select', function(e) {
-        tagifylocation.addTags([e.detail.data.value]);
-    });
-    tagifylocation.on('add', function(e) {
-        // alert(cities);
-        // Remove the tag if it wasn't selected from the dropdown
-        if (!cities.includes(e.detail.data.value)) {
-            setTimeout(() => {
-                tagifylocation.removeTag(e.detail.data.value);
-            }, 500);
-
-        }
-    });
+    if (inputloc) {
+        var cities = @json(@$cities);
+        // Initialize Tagify script on the above inputs
+        var tagifylocation = new Tagify(inputloc, {
+            whitelist: cities,
+            maxTags: 1,
+            dropdown: {
+                maxItems: 200, // <- mixumum allowed rendered suggestions
+                classname: "", // <- custom classname for this dropdown, so it could be targeted
+                enabled: 0, // <- show suggestions on focus
+                closeOnSelect: true // <- do not hide the suggestions dropdown once an item has been selected
+            }
+        });
+        // Prevent creating tags on blur or enter key
+        tagifylocation.on('input', function(e) {
+            tagifylocation.dropdown.show(); // show the dropdown immediately
+        });
+        // Create tags only on select
+        tagifylocation.on('dropdown:select', function(e) {
+            tagifylocation.addTags([e.detail.data.value]);
+        });
+        tagifylocation.on('add', function(e) {
+            // Remove the tag if it wasn't selected from the dropdown
+            if (!cities.includes(e.detail.data.value)) {
+                setTimeout(() => {
+                    tagifylocation.removeTag(e.detail.data.value);
+                }, 500);
+            }
+        });
+    }
 
     /* ── Assigned Agency tab: three-dot dropdown ─────────────────── */
     $(document).on('click', '.aa-dots-btn', function(e) {

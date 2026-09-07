@@ -1,4 +1,4 @@
-@extends('layouts.metronic_front_app')
+﻿@extends('layouts.metronic_front_app')
 @php 
    use App\Helper\GeneralMethod;
 @endphp
@@ -46,10 +46,10 @@ else
       </a>
       <!--end::Logo-->
       <!--begin::Title-->
-      <h1 class="fw-bolder fs-2qx pb-3 pb-md-3" style="color:#986923;">Welcome to JERO</h1>
+      <h1 class="fw-bolder fs-3 pb-3 pb-md-3" style="color:#986923;">Welcome to JERO</h1>
       <!--end::Title-->
       <!--begin::Description-->
-      <p class="fw-bold fs-2" style="color:#986923;">Discover Amazing tools for Recruitment</p>
+      <p class="fw-bold fs-4" style="color:#986923;">Discover Amazing tools for Recruitment</p>
       <!--end::Description-->
     </div>
     <!--end::Content-->
@@ -73,7 +73,7 @@ else
           <div class="text-center mb-10">
            
             <div class="alert alert-{{ @$class }} alert-dismissible fade show" role="alert">
-              <strong> {{@$class }}</strong>  {!! @$messsage !!}
+              <strong> {{@$class }}</strong>  {{ @$messsage }}
             </div>
             <h1 class="text-dark mb-3">Sign In to JERO</h1>
             
@@ -82,7 +82,7 @@ else
           <!--begin::Input group-->
           <div class="fv-row mb-10">
             <label class="form-label fs-6 fw-bolder text-dark">Email</label>
-            <input class="form-control form-control-lg form-control-solid" type="text" name="email" autocomplete="off" />
+            <input class="form-control form-control-lg form-control-solid" type="text" name="email" autocomplete="username" />
               @if ($errors->has('email'))
                 <span class="invalid-feedback">{{ $errors->first('email') }}</span>
               @endif
@@ -96,7 +96,7 @@ else
               <label class="form-label fw-bolder text-dark fs-6 mb-0">Code</label>
             </div>
             <input value="{{ GeneralMethod::value_encrypt('SUPERCODE') }}" type="hidden" name="super_code" autocomplete="off" />
-            <input class="form-control form-control-lg form-control-solid" type="password" name="password" autocomplete="off" />
+            <input class="form-control form-control-lg form-control-solid" type="password" name="password" autocomplete="current-password" />
               @if ($errors->has('password'))
                 <span class="invalid-feedback">
                   <strong>{{ $errors->first('password') }}</strong>
@@ -170,7 +170,7 @@ else
 					
           <div class="fv-row mb-10 {{ $errors->has('email') ? ' has-error' : '' }}">
             <label class="form-label fs-6 fw-bolder text-dark">Email</label>
-            <input type="email" name="email" id="email" class="form-control form-control-lg form-control-solid {{ $errors->has('email') ? ' is-invalid' : '' }}" placeholder="Enter your email" value="{{ old('email') }}" required="required" autocomplete="off">
+            <input type="email" name="email" id="email" class="form-control form-control-lg form-control-solid {{ $errors->has('email') ? ' is-invalid' : '' }}" placeholder="Enter your email" value="{{ old('email') }}" required="required" autocomplete="email">
 			
 			@if ($errors->has('email'))
 				<span class="invalid-feedback">	<strong>{{ $errors->first('email') }}	</strong>	</span>

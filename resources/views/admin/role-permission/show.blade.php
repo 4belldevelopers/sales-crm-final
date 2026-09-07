@@ -476,8 +476,8 @@ function tableLoad(type)
       			processing      : true,
 				ordering		: false, //disable ordering      			
       			destroy       	: true,   
-      			stateSave     	: true,      
       			"bLengthChange" : false,   
+      			"lengthMenu"    : [[10, 25, 50, 100], [10, 25, 50, 100]],
 				sDom			: 'lrtip',       
 				          
           		//ajax			: '{!! route('admin.apptracker.data') !!}?jobid='+jobid+'&mstatus_id='+mstatus_id+'&search='+inputSearch,

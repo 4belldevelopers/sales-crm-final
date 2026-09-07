@@ -419,7 +419,7 @@ Date			:	05-April-2021
         abort_if(Gate::denies('edit_job_applications'), 403);
 
         $this->statuses 		= ApplicationStatus::all();
-        $this->application 		= JobApplication::find($id);
+        $this->application 		= JobApplication::withoutGlobalScopes()->find($id);
         $this->jobQuestion 		= JobQuestion::with(['question'])
             ->where('job_id', $this->application->job_id)->get();
 
@@ -434,7 +434,7 @@ Date			:	05-April-2021
         $this->candidates = JobApplication::all();
         $this->users = User::company()->get();
         $this->scheduleDate = $request->date;
-        $this->currentApplicant = JobApplication::findOrFail($id);
+        $this->currentApplicant = JobApplication::withoutGlobalScopes()->findOrFail($id);
         return view('service_company.advsearch.interview-create', $this->data)->render();
     }
 
@@ -451,7 +451,7 @@ Date			:	05-April-2021
         $interviewSchedule->save();
 
         $interviweColumn = ApplicationStatus::where('status', 'interview')->first();
-        $jobApplication = JobApplication::find($request->candidate);
+        $jobApplication = JobApplication::withoutGlobalScopes()->find($request->candidate);
         $jobApplication->status_id = $interviweColumn->id;
         $jobApplication->save();
 
@@ -463,7 +463,7 @@ Date			:	05-April-2021
                     $scheduleEmployee->interview_schedule_id = $interviewSchedule->id;
                     $scheduleEmployee->save();
 
-                    $user = User::find($employee);
+                    $user = User::withoutGlobalScopes()->find($employee);
                     // Mail to employee for inform interview schedule
                     Notification::send($user, new ScheduleInterview($jobApplication));
                 }
@@ -530,7 +530,7 @@ Date			:	05-April-2021
     {
         abort_if(Gate::denies('edit_job_applications'), 403);
 
-        $jobApplication = JobApplication::find($id);
+        $jobApplication = JobApplication::withoutGlobalScopes()->find($id);
         $jobApplication->full_name = $request->full_name;
         $jobApplication->status_id = $request->status_id;
         $jobApplication->email = $request->email;
@@ -581,7 +581,7 @@ Date			:	05-April-2021
             foreach ($taskIds as $key => $taskId) {
                 if (!is_null($taskId)) {
 
-                    $task = JobApplication::find($taskId);
+                    $task = JobApplication::withoutGlobalScopes()->find($taskId);
                     $task->column_priority = $priorities[$key];
                     $task->status_id = $boardColumnIds[$key];
 
@@ -607,7 +607,7 @@ Date			:	05-April-2021
     {
         abort_if(Gate::deniess('edit_job_applications'), 403);
 
-        $application = JobApplication::findOrFail($id);
+        $application = JobApplication::withoutGlobalScopes()->findOrFail($id);
         $application->rating = $request->rating;
         $application->save();
 
@@ -622,7 +622,7 @@ Date			:	05-April-2021
             return Reply::error(__('modules.subscription.candidatePurchase'));
         }
 
-        $application = JobApplication::findOrFail($request->id);
+        $application = JobApplication::withoutGlobalScopes()->findOrFail($request->id);
         $application->is_viewed = 1;
         $application->save();
 
@@ -636,7 +636,7 @@ Date			:	05-April-2021
 
     public function download($id)
     {
-        $jobApplication = JobApplication::findOrFail($id);
+        $jobApplication = JobApplication::withoutGlobalScopes()->findOrFail($id);
         if(!file_exists('user-uploads/resumes/'.$jobApplication->resume))
         {
             abort(404);
@@ -706,7 +706,7 @@ Date			:	05-April-2021
 
   	public function show($id)
     {
-        $this->application = JobApplication::with(['schedule', 'status', 'schedule.employee', 'schedule.comments.user'])->find($id);
+        $this->application = JobApplication::with(['schedule', 'status', 'schedule.employee', 'schedule.comments.user'])->withoutGlobalScopes()->find($id);
 
 		 $this->processArr 				= InterviewProcess::select('interview_processes.id', 'interview_processes.name')->where('status', "Y")->get();
            
@@ -764,7 +764,7 @@ Date			:	05-April-2021
 	{
 	 	
 		$this->process_id	= $process_id;	
-	 	$this->candidate 	= JobApplication::find($id);
+	 	$this->candidate 	= JobApplication::withoutGlobalScopes()->find($id);
 		
         $this->users 		= User::company()->get();
         $this->scheduleDate = $request->date;
@@ -822,7 +822,7 @@ Date			:	05-April-2021
     {
         abort_if(Gate::denies('edit_job_applications'), 403);
 
-        $jobApplication = JobApplication::find($id);
+        $jobApplication = JobApplication::withoutGlobalScopes()->find($id);
         $jobApplication->full_name = $request->full_name;
         $jobApplication->status_id = $request->status_id;
         $jobApplication->email = $request->email;

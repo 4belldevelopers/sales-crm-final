@@ -1166,19 +1166,23 @@
         $(document).ready(function() {
             fetchBenchBenchCandidatesCandidateList();
 
-            $(document).on('click', '#paginationbenchCandidatePlace .page-link', function(e) {
+            $(document).on('click', '#paginationbenchCandidatePlace .pagi-page, #paginationbenchCandidatePlace .pagi-arrow', function(e) {
                 e.preventDefault();
                 const page = $(this).data('page');
-                if (!page || $(this).hasClass('disabled')) return;
+                if (!page || $(this).hasClass('pagi-disabled') || $(this).hasClass('pagi-active-disabled')) return;
                 $(this).addClass('disabled');
                 fetchBenchBenchCandidatesCandidateList(page).then(() => {
-                    $('#paginationbenchCandidatePlace .page-link').removeClass('disabled');
+                    $('#paginationbenchCandidatePlace .pagi-page, #paginationbenchCandidatePlace .pagi-arrow').removeClass('disabled');
                 }).catch(() => {
-                    $('#paginationbenchCandidatePlace .page-link').removeClass('disabled');
+                    $('#paginationbenchCandidatePlace .pagi-page, #paginationbenchCandidatePlace .pagi-arrow').removeClass('disabled');
                 });
             });
 
-            $(document).on('change', '#paginationbenchCandidatePlace #rowsPerPageSelect', function() {
+            $(document).on('change', '#paginationbenchCandidatePlace .pagi-perpage, #paginationbenchCandidatePlace #rowsPerPageSelect', function() {
+                const selectedPerPage = $(this).val();
+                if (selectedPerPage) {
+                    localStorage.setItem('candidatePerPage', selectedPerPage);
+                }
                 fetchBenchBenchCandidatesCandidateList(1);
             });
         });
@@ -1838,7 +1842,7 @@
             var sortingfilter = $('#sortingfilter').val();
             var country = $('#country').val();
             var cus_search = $('#kt_tagify_2').val();
-            var size = $('#rowsPerPageSelect').val() || 10;
+            var size = localStorage.getItem('candidatePerPage') || $('#rowsPerPageSelect').val() || 10;
 
             $('.loadingMessagebenchCandidatePlaceAjax').css({ display: 'block' });
             return $.ajax({
@@ -1848,7 +1852,8 @@
                     cus_search: cus_search,
                     country: country,
                     sortingfilter: sortingfilter,
-                    size: size
+                    size: size,
+                    per_page: size
                 },
                 success: function(response) {
                     $('.loadingMessagebenchCandidatePlaceAjax').css({ display: 'none' });

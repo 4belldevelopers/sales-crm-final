@@ -54,7 +54,7 @@ class ServiceCompanyDepartmentController extends ServiceCompanyBaseController
 
     public function update(StoreRequest $request, $id)
     {
-        $department = Department::findOrFail($id);
+        $department = Department::withoutGlobalScopes()->findOrFail($id);
         $department->name = $request->name;
         $department->save();
 

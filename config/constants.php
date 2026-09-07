@@ -94,5 +94,5 @@ return [
     'ELASTIC_WHATSAPP_COUNT' => env('ELASTIC_WHATSAPP_COUNT', 'local_whatsapp_count'),
     'ELASTIC_CLIENT_AND_AGENCY_RELATION_INDEX' => env('ELASTIC_CLIENT_AND_AGENCY_RELATION_INDEX', 'local_client_and_agency_relation_index'),
     'ELASTIC_COMPANY_SKILLS' => env('ELASTIC_COMPANY_SKILLS', 'local_company_skills'),
-    
+    'COUNTRY_INDIA_ID' => 101,
 ];

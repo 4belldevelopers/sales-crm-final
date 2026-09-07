@@ -67,7 +67,10 @@
             "Database\\Factories\\": "database/factories/",
             "Database\\Seeders\\": "database/seeders/"
         },
-        "files": ["app/Helper/start.php"]
+        "files": [
+            "app/Helper/start.php",
+            "app/Helper/TenantDB.php"
+        ]
     },
     "autoload-dev": {
         "psr-4": {

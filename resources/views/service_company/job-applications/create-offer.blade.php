@@ -1,4 +1,4 @@
-﻿@php
+@php
     use App\Helper\GeneralMethod;
 @endphp
 <div class="card shadow-none rounded-0 w-100" id="offer_create_show_right_bar">
@@ -701,6 +701,14 @@
 
         /* Form rows: icon label left, field right */
         .co-send-form { display: flex; flex-direction: column; }
+        .co-send-row-grid { display: flex; gap: 20px; border-bottom: 1px solid #f4f4f6; }
+        .co-send-row-grid .co-send-row-col { flex: 1 1 50%; min-width: 0; }
+        .co-send-row-grid .co-send-row { border-bottom: none; }
+        .co-send-row-grid .co-send-row-col:last-child .co-send-label { flex: 0 0 90px; }
+        @media (max-width: 768px) {
+            .co-send-row-grid { flex-direction: column; gap: 0; }
+            .co-send-row-grid .co-send-row-col:first-child .co-send-row { border-bottom: 1px solid #f4f4f6; }
+        }
         .co-send-row { display: flex; align-items: flex-start; gap: 20px; padding: 16px 0; border-bottom: 1px solid #f4f4f6; }
         .co-send-row:last-child { border-bottom: none; }
         .co-send-label { flex: 0 0 170px; font-size: 13px; font-weight: 600; color: #3f4254; display: flex; align-items: center; gap: 8px; padding-top: 10px; }
@@ -769,7 +777,7 @@
            wide enough for the 4-column member table (translateX avoids magic offsets). */
         .co-send-drawer-bd { display: none; position: absolute; inset: 0; background: rgba(24,28,50,.4); z-index: 1000; }
         .co-send-drawer-bd.co-send-drawer-bd--open { display: block; }
-        .co-send-drawer { position: absolute; top: 0; right: 0; bottom: 0; width: 560px; max-width: 96%; background: #fff; box-shadow: -8px 0 30px rgba(24,28,50,.22); z-index: 1001; display: flex; flex-direction: column; transform: translateX(100%); transition: transform .25s ease; visibility: hidden; }
+        .co-send-drawer { position: absolute; top: 0; right: 0; bottom: 0; width: 70%; max-width: 70%; background: #fff; box-shadow: -8px 0 30px rgba(24,28,50,.22); z-index: 1001; display: flex; flex-direction: column; transform: translateX(100%); transition: transform .25s ease; visibility: hidden; }
         .co-send-drawer.co-send-drawer--open { transform: translateX(0); visibility: visible; }
         .co-send-drawer-head { display: flex; align-items: flex-start; justify-content: space-between; padding: 16px 20px; border-bottom: 1px solid #eef1f7; flex-shrink: 0; }
         .co-send-drawer-title { font-size: 14px !important; font-weight: 700; color: #181c32; }
@@ -872,10 +880,10 @@
 
         initSample();
 
-        // Template switcher — swap CKEditor content when the dropdown changes
+        // Template switcher: load the selected saved default template into the editor.
         (function () {
-            var companyTpl = {!! json_encode($company_offer_terms ?? '') !!};
-            var agencyTpl  = {!! json_encode($agency_offer_terms ?? '') !!};
+            var offerTemplates = @json($offer_template_contents ?? []);
+            window.coOfferTemplates = offerTemplates;
 
             function setEditorContent(html) {
                 if (CKEDITOR.instances['editorterms1']) {
@@ -888,11 +896,11 @@
 
             document.addEventListener('change', function (e) {
                 if (e.target && e.target.id === 'co_tpl_select') {
-                    var val = e.target.value;
-                    if (val === 'agency-offer-letter-template') {
-                        setEditorContent(agencyTpl);
-                    } else {
-                        setEditorContent(companyTpl);
+                    setEditorContent(offerTemplates[e.target.value] || '');
+                    var selectedOption = e.target.options[e.target.selectedIndex];
+                    var typeLabel = document.getElementById('co_tpl_type_label');
+                    if (typeLabel && selectedOption) {
+                        typeLabel.textContent = selectedOption.getAttribute('data-template-type') || 'Full Time';
                     }
                 }
             });
@@ -2650,27 +2658,17 @@
 
                             <!-- Step 2 -->
                             <div class="tab-content-section pt-5" id="step2">
-                                @php
-                                    // Same mapping Step 1's Employment Type select uses — shown here purely as a
-                                    // read-only label (this is not an editable "template type" — the backend has
-                                    // exactly one offer-letter template per company, not a multi-template catalog).
-                                    $co_emp_type_label = ['Full Time', 'Contract', null, 'Part Time'][$employment_type ?? 0] ?? 'Full Time';
-                                @endphp
-
                                 <div class="co-tpl-header">
                                     <div>
                                         <h5 class="co-tpl-title">Offer Letter Template</h5>
                                         <div class="co-tpl-sub">Personalize the offer letter before sending it for approval.</div>
                                     </div>
-                                    {{-- Templates: was a whole sidebar card (search + one card) for what is
-                                         always exactly one template (the company's default, set in Settings) —
-                                         collapsed into a dropdown in the heading row so the editor gets that
-                                         width back. Scales fine if a real multi-template catalog is added later. --}}
                                     <div class="co-tpl-select-wrap">
                                         <label class="co-tpl-select-label" for="co_tpl_select">Templates</label>
                                         <select id="co_tpl_select" class="co-tpl-select">
-                                            <option value="company-offer-letter-template" {{ empty($is_bench_candidate) ? 'selected' : '' }}>Company Offer Letter Template</option>
-                                            <option value="agency-offer-letter-template" {{ !empty($is_bench_candidate) ? 'selected' : '' }}>Agency Offer Letter Template</option>
+                                            @foreach($offer_template_options ?? [] as $offerTemplate)
+                                                <option value="{{ $offerTemplate['key'] }}" data-template-field="{{ $offerTemplate['field'] }}" data-template-type="{{ $offerTemplate['type'] }}" {{ !empty($offerTemplate['selected']) ? 'selected' : '' }}>{{ $offerTemplate['label'] }}</option>
+                                            @endforeach
                                         </select>
                                     </div>
                                 </div>
@@ -2702,7 +2700,7 @@
 
                                         {{-- Sub card: template type/status --}}
                                         <div class="co-tpl-subcard co-tpl-meta-row">
-                                            <span class="co-tpl-meta-item">Type<b>{{ $co_emp_type_label }}</b></span>
+                                            <span class="co-tpl-meta-item">Type<b id="co_tpl_type_label">{{ $selected_offer_template_type ?? 'Full Time' }}</b></span>
                                             <span class="co-tpl-meta-item">Status<b style="color:#0f9463">Active</b></span>
                                         </div>
 
@@ -2813,13 +2811,6 @@
                                         </div>
                                     </div>
                                     <div class="co-appr-info-card">
-                                        <span class="co-appr-info-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></span>
-                                        <div>
-                                            <div class="co-appr-info-label">Role</div>
-                                            <div class="co-appr-info-value">{{ @$designation }}</div>
-                                        </div>
-                                    </div>
-                                    <div class="co-appr-info-card">
                                         <span class="co-appr-info-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></span>
                                         <div>
                                             <div class="co-appr-info-label">CTC (Annual)</div>
@@ -2838,13 +2829,6 @@
                                         <div>
                                             <div class="co-appr-info-label">Requested By</div>
                                             <div class="co-appr-info-value">{{ auth()->user()->name ?? '—' }}</div>
-                                        </div>
-                                    </div>
-                                    <div class="co-appr-info-card">
-                                        <span class="co-appr-info-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></span>
-                                        <div>
-                                            <div class="co-appr-info-label">Employment Type</div>
-                                            <div class="co-appr-info-value">{{ $co_emp_type_label }}</div>
                                         </div>
                                     </div>
                                 </div>
@@ -2981,8 +2965,7 @@
                                             <div class="co-appr-side-title">Details &amp; Insights</div>
                                             <div class="co-appr-detail-row"><span class="co-appr-detail-label">Offer ID</span><span class="co-appr-detail-value">{{ $offer_id }}</span></div>
                                             <div class="co-appr-detail-row"><span class="co-appr-detail-label">Template</span><span class="co-appr-detail-value">Company Offer Letter Template</span></div>
-                                            <div class="co-appr-detail-row"><span class="co-appr-detail-label">Employment Type</span><span class="co-appr-detail-value">{{ $co_emp_type_label }}</span></div>
-                                            <div class="co-appr-detail-row"><span class="co-appr-detail-label">Designation</span><span class="co-appr-detail-value">{{ @$designation ?: '—' }}</span></div>
+                                            <div class="co-appr-detail-row"><span class="co-appr-detail-label">Designation</span><span class="co-appr-detail-value" id="co-appr-designation-display">{{ @$designation ?: '—' }}</span></div>
                                             @if(!empty(@$application->phone))
                                             <div class="co-appr-detail-row"><span class="co-appr-detail-label">Candidate Mobile</span><span class="co-appr-detail-value">{{ $application->phone }}</span></div>
                                             @endif
@@ -3043,7 +3026,7 @@
                                     $so_company = @$co_company_name ?: '';
                                     $so_initial = strtoupper(substr(trim($so_name), 0, 1) ?: 'C');
                                     $so_from_name  = auth()->user()->name ?? '';
-                                    $so_from_email = auth()->user()->email ?? '';
+                                    $so_from_email = 'notify@jeroworks.com';
                                     $so_currencyArr = ['INR','EUR','JPY','GBP','USD','AED'];
                                     $so_curr    = $so_currencyArr[(int) @$section_change_value->currency] ?? '';
                                     $so_ctc     = @$yearly_final_gross;
@@ -3087,7 +3070,7 @@
                                                 </div>
                                                 <div class="co-send-hero-ident">
                                                     <div class="co-send-hero-name">{{ ucwords($so_name) }}</div>
-                                                    @if(!empty($so_role))<div class="co-send-hero-role">{{ ucwords($so_role) }}</div>@endif
+                                                    <div class="co-send-hero-role" id="co-send-step5-designation"@if(empty($so_role)) style="display:none"@endif>{{ ucwords($so_role) }}</div>
                                                     <div class="co-send-hero-meta">
                                                         @if(!empty($so_location))<span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>{{ ucwords($so_location) }}</span>@endif
                                                     </div>
@@ -3122,11 +3105,24 @@
                                         <input type="hidden" id="co_send_fromemail" value="{{ $so_from_email }}">
                                         <input type="hidden" id="co_send_candidateemail" value="{{ $so_email }}">
 
-                                        <div class="co-send-row">
-                                            <label class="co-send-label"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg> From Email ID</label>
-                                            <div class="co-send-field">
-                                                <input type="text" class="co-send-input" value="{{ $so_from_name ? $so_from_name.' <'.$so_from_email.'>' : $so_from_email }}" readonly>
-                                                <div class="co-send-hint">This will be the email sender address</div>
+                                        <div class="co-send-row-grid">
+                                            <div class="co-send-row-col">
+                                                <div class="co-send-row">
+                                                    <label class="co-send-label"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg> From Email ID</label>
+                                                    <div class="co-send-field">
+                                                        <input type="text" class="co-send-input" value="{{ $so_from_name ? $so_from_name.' <'.$so_from_email.'>' : $so_from_email }}" readonly>
+                                                        <div class="co-send-hint">This will be the email sender address</div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="co-send-row-col">
+                                                <div class="co-send-row">
+                                                    <label class="co-send-label"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 17 4 12 9 7"/><path d="M20 18v-2a4 4 0 0 0-4-4H4"/></svg> Reply To</label>
+                                                    <div class="co-send-field">
+                                                        <input type="text" class="co-send-input" id="co_send_replyto" value="{{ $so_from_email }}" readonly>
+                                                        <div class="co-send-hint">Direct candidate replies to this address</div>
+                                                    </div>
+                                                </div>
                                             </div>
                                         </div>
 
@@ -3482,8 +3478,15 @@
 
                     $(document).on('click', '#setToDefaultCompanyTerms', function() {
 
+                        var selectedTemplateKey = $('#co_tpl_select').val();
+                        if (window.coOfferTemplates && Object.prototype.hasOwnProperty.call(window.coOfferTemplates, selectedTemplateKey)) {
+                            CKEDITOR.instances.editorterms1.setData(window.coOfferTemplates[selectedTemplateKey] || '');
+                            return false;
+                        }
+
                         var data = new FormData();
                         var kt_docs_tinymce_hidden = 'setDefault';
+                        var selectedTemplateField = $('#co_tpl_select option:selected').data('template-field') || 'offer_terms';
                         data.append("description", kt_docs_tinymce_hidden);
                         var form_data = $('#termConditioncreateForm').serializeArray();
                         $.each(form_data, function(key, input) {
@@ -3491,7 +3494,7 @@
                         });
                         CKEDITOR.replace('kt_docs_tinymce_hidden');
                         data.append("description", kt_docs_tinymce_hidden);
-                        data.append("descriptiontype", "offer_terms_admin");
+                        data.append("descriptiontype", selectedTemplateField);
 
                         $.ajax({
                             url: '{{ route('service_company.account.update', auth()->user()->id) }}',
@@ -3514,8 +3517,7 @@
                     // ── Step 2 (Offer Letter Template) — everything below is client-side only,
                     // no extra server round-trips: tab switching, zoom, insert-variable, and the
                     // sample export all run against the existing CKEditor instance already loaded
-                    // on the page. (The Templates dropdown in the heading row has exactly one real
-                    // option today — no filter/switch logic needed unless a real catalog is added.)
+                    // on the page. The Templates dropdown is hydrated from saved company/global defaults.
 
                     // Template Editor / Preview tabs
                     $(document).on('click', '.co-tpl-tab', function() {
@@ -5844,6 +5846,7 @@
                     });
                     var toArr = coCollectChips('co_to_chips');
                     if (!toArr.length) { Swal.fire('Warning', 'Please add at least one recipient email address.', 'warning'); return; }
+                    var replyTo = $('#co_send_replyto').val() ? $('#co_send_replyto').val().trim() : '';
                     var subject = $('#co_send_subject').val().trim();
                     if (!subject) { Swal.fire('Warning', 'Please enter an email subject.', 'warning'); return; }
                     var body = (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances.co_send_editor) ? CKEDITOR.instances.co_send_editor.getData() : '';
@@ -5854,6 +5857,7 @@
                     formData.append('from_email', JSON.stringify([{ value: fromEmail }]));   // backend json_decodes this
                     formData.append('to_email', toArr.join(','));
                     formData.append('cc_email', coCollectChips('co_cc_chips').join(','));
+                    formData.append('reply_to_email', replyTo);
                     formData.append('subject', subject);
                     formData.append('attached_cv', 0);
                     formData.append('editor1', body);
@@ -6065,5 +6069,13 @@
                     $(document).on('click', '.addRowBtn, .addRowBtnbonus, .remove_points', function () { setTimeout(refreshPreviewPanel, 30); });
                     $(document).ready(function () { setTimeout(refreshPreviewPanel, 200); });
                 })();
+
+                // Sync Step 1 "Offered Designation" → Step 4 & Step 5 "Designation" display in real time.
+                $(document).on('input', '#current_designation', function () {
+                    var val = $(this).val().trim();
+                    $('#co-appr-designation-display').text(val || '—');
+                    var $s5 = $('#co-send-step5-designation');
+                    if (val) { $s5.text(val).show(); } else { $s5.hide(); }
+                });
             </script>
         </div>

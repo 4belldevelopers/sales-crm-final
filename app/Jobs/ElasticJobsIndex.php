@@ -14,16 +14,18 @@ class ElasticJobsIndex implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
     public $comid;
-    protected $elasticJobListIndex;
 
-    /**
-     * Create a new job instance.
-     *
-     * @return void
-     */
+    public int $tries = 5;
+
+    public array $backoff = [10, 30, 60, 120, 300];
+
+    public int $timeout = 60;
+
     public function __construct($comid)
     {
         $this->comid = $comid;
+        $this->onQueue('es-index');
+        $this->afterCommit = true;
         if (empty($this->uuid)) {
             $this->uuid = (string) Str::uuid();
         }

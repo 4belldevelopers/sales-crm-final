@@ -39,6 +39,6 @@ memory is CLAUDE.md and the docs/ + .ai/ knowledge base. ALWAYS consult them bef
     queries; explain business logic and ES-sync points. Keep comments truthful, no dead/debug
     code. Undocumented new code is an incomplete change. See docs/CODE_DOCUMENTATION_STANDARD.md.
 
-## Watch out (known issues — see docs/BUG_REPORT.md, docs/SECURITY.md)
+## Watch out (known issues — see docs/V2_BugsReport and Implementation/BUG_REPORT.md, docs/SECURITY.md)
 - Active dd() calls and debug routes in code; JobApplication tenant scope is commented out
   (leak risk); 1227 unescaped {!! !!} (XSS); secrets in .env. Do not copy these patterns.

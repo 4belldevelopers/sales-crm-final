@@ -19,3 +19,14 @@
     RewriteCond %{REQUEST_FILENAME} !-f
     RewriteRule ^ index.php [L]
 </IfModule>
+
+<IfModule mod_mime.c>
+    AddType application/wasm .wasm
+    AddType application/javascript .js
+</IfModule>
+
+<IfModule mod_headers.c>
+    <FilesMatch "^(casual_doc_wasm|pdf-lib|jspdf\.umd|pdfmake|vfs_fonts|docx-preview|html2canvas|jszip).*\.(js|wasm)$">
+        Header set Cache-Control "public, max-age=31536000, immutable"
+    </FilesMatch>
+</IfModule>

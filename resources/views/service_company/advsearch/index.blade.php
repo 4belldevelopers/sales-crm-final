@@ -276,7 +276,7 @@ $(document).on('click', function (e) {
 				
 				"bFilter"		: false,
 				"bInfo"			: false,
-				"bLengthChange"	: true,
+				"bLengthChange"	: false,
 
 				oLanguage		: {
 									sLengthMenu: "_MENU_",

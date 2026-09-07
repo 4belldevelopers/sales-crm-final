@@ -85,12 +85,126 @@ class ReferenceDataCache
             $result = [];
             foreach ($rows as $row) {
                 $result[$row->id] = [
-                    'id'        => $row->id,
-                    'name'      => $row->name,
+                    'id' => $row->id,
+                    'name' => $row->name,
                     'classname' => $row->classname,
                 ];
             }
+
             return $result;
+        });
+    }
+
+    /**
+     * Master languages, cached 24 h.
+     */
+    public static function masterLanguages(): \Illuminate\Support\Collection
+    {
+        return Cache::remember('global_master_languages', self::TTL_24H, function () {
+            return DB::table('master_languages')->select('*')->orderBy('name', 'ASC')->get();
+        });
+    }
+
+    /**
+     * Master timezones, cached 24 h.
+     */
+    public static function masterTimezones(): \Illuminate\Support\Collection
+    {
+        return Cache::remember('global_master_timezones', self::TTL_24H, function () {
+            return DB::table('master_timezone')->select('*')->orderByDesc('priority')->get();
+        });
+    }
+
+    /**
+     * Master currencies, cached 24 h.
+     */
+    public static function masterCurrencies(): \Illuminate\Support\Collection
+    {
+        return Cache::remember('global_master_currencies', self::TTL_24H, function () {
+            return DB::table('master_currency')->select('*')->orderBy('country', 'ASC')->get();
+        });
+    }
+
+    /**
+     * Master time formats, cached 24 h.
+     */
+    public static function masterTimeFormats(): \Illuminate\Support\Collection
+    {
+        return Cache::remember('global_master_time_formats', self::TTL_24H, function () {
+            return DB::table('master_time_format')->select('*')->orderBy('priority', 'ASC')->get();
+        });
+    }
+
+    /**
+     * Master date formats, cached 24 h.
+     */
+    public static function masterDateFormats(): \Illuminate\Support\Collection
+    {
+        return Cache::remember('global_master_date_formats', self::TTL_24H, function () {
+            return DB::table('master_date_format')->select('*')->orderBy('priority', 'ASC')->get();
+        });
+    }
+
+    /**
+     * Master email preferences, cached 24 h.
+     */
+    public static function masterEmailPreferences(): \Illuminate\Support\Collection
+    {
+        return Cache::remember('global_master_email_preferences', self::TTL_24H, function () {
+            return DB::table('master_email_preferences')->select('*')->orderBy('priority', 'ASC')->get();
+        });
+    }
+
+    /**
+     * All Country models, cached 24 h.
+     */
+    public static function masterCountries(): \Illuminate\Support\Collection
+    {
+        return Cache::remember('global_master_countries', self::TTL_24H, function () {
+            return \App\Models\Country::all();
+        });
+    }
+
+    /**
+     * Master statuses, cached 24 h.
+     */
+    public static function masterStatuses(): \Illuminate\Support\Collection
+    {
+        return Cache::remember('global_master_statuses', self::TTL_24H, function () {
+            return DB::table('master_status')->select('*')->orderBy('priority', 'ASC')->get();
+        });
+    }
+
+    /**
+     * Elastic Master Notifications, cached 24 h.
+     */
+    public static function masterNotificationsElastic(ElasticService $elasticService): \Illuminate\Support\Collection
+    {
+        return Cache::remember('global_master_notifications_elastic', self::TTL_24H, function () use ($elasticService) {
+            try {
+                $params = [
+                    'index' => ELASTIC_MASTER_NOTIFICATIONS,
+                    'body' => ['size' => 10000],
+                ];
+                $response = $elasticService->getClient()->search($params);
+
+                return collect($response['hits']['hits'] ?? [])->map(function ($hit) {
+                    return (object) $hit['_source'];
+                });
+            } catch (\Exception $e) {
+                return collect([]);
+            }
+        });
+    }
+
+    /**
+     * Interview modes, cached 24 h.
+     * Global reference lookup for interview modes.
+     */
+    public static function interviewModes(): \Illuminate\Support\Collection
+    {
+        return Cache::remember('global_interview_modes', self::TTL_24H, function () {
+            return DB::table('interview_mode')->select('*')->orderBy('id', 'ASC')->get();
         });
     }
 
@@ -104,5 +218,15 @@ class ReferenceDataCache
         Cache::forget('global_ticket_statuses');
         Cache::forget('global_qualification_master');
         Cache::forget('global_feedback_status');
+        Cache::forget('global_master_languages');
+        Cache::forget('global_master_timezones');
+        Cache::forget('global_master_currencies');
+        Cache::forget('global_master_time_formats');
+        Cache::forget('global_master_date_formats');
+        Cache::forget('global_master_email_preferences');
+        Cache::forget('global_master_countries');
+        Cache::forget('global_master_statuses');
+        Cache::forget('global_interview_modes');
+        Cache::forget('global_master_notifications_elastic');
     }
 }

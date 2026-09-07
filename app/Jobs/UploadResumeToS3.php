@@ -61,8 +61,8 @@ class UploadResumeToS3 implements ShouldQueue
             $fileUrl = Storage::disk('s3')->url($s3Path);
 
             // Save to DB
-            $jobApplication = JobApplication::find($this->jobApplicationId);
-            $jobApp = JobApplication::find($this->jobApplicationId);
+            $jobApplication = JobApplication::withoutGlobalScopes()->find($this->jobApplicationId);
+            $jobApp = JobApplication::withoutGlobalScopes()->find($this->jobApplicationId);
             if ($jobApplication) {
                 $jobApp->resume = $fileUrl;
                 $jobApp->save();

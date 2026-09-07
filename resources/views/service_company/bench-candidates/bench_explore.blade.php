@@ -847,15 +847,154 @@ $(document).ready(function(){
 });
 </script>
 
-{{-- ── Search / AJAX / counters / drawer ── --}}
+{{-- ── BenchExploreTabManager: Centralized Tab & Lazy Loading Manager ── --}}
 <script>
-// Enter-key re-runs the same fetch the sort dropdown/pagination already use —
-// no separate endpoint, and no auto-apply on every keystroke.
-$(document).on('keydown', '#kt_tagify_2', function(e){
-    if (e.key === 'Enter' || e.keyCode === 13) { e.preventDefault(); fetchBenchExploreJobCandidateList(); }
-});
+var BenchExploreTabManager = (function(){
+    var state = {
+        activeTab: $('#stage').val() || 'all',
+        activePage: 1,
+        searchDebounceTimer: null,
+        activeXHR: null,
+        requestSeqId: 0,
+        cache: {}
+    };
+
+    return {
+        init: function() {
+            var self = this;
+            self.bindEvents();
+            self.loadCurrentTab(1);
+        },
+
+        bindEvents: function() {
+            var self = this;
+
+            // Debounced input typing handler (300ms)
+            $(document).on('input', '#kt_tagify_2', function(){
+                clearTimeout(state.searchDebounceTimer);
+                state.searchDebounceTimer = setTimeout(function(){
+                    self.loadCurrentTab(1);
+                }, 300);
+            });
+
+            // Enter key immediate trigger
+            $(document).on('keydown', '#kt_tagify_2', function(e){
+                if (e.key === 'Enter' || e.keyCode === 13) {
+                    e.preventDefault();
+                    clearTimeout(state.searchDebounceTimer);
+                    self.loadCurrentTab(1);
+                }
+            });
+        },
+
+        getCacheKey: function(page) {
+            var bid = $('#bench_id').val(),
+                stage = $('#stage').val(),
+                sort = $('#hiringtype').val(),
+                cs = $('#kt_tagify_2').val(),
+                st = $('[name="bxr_status"]:checked').val() || 'active',
+                activity = $('[name="bxr_activity"]:checked').val() || '1',
+                company = (typeof bxrTagifyCompany !== 'undefined') ? JSON.stringify(bxrTagifyCompany.value) : '[]',
+                location = (typeof bxrTagifyLocation !== 'undefined') ? JSON.stringify(bxrTagifyLocation.value) : '[]',
+                minSal = $('#bxr_min_sal').val(),
+                maxSal = $('#bxr_max_sal').val(),
+                perPage = localStorage.getItem('candidatePerPage') || 10;
+
+            return [bid, stage, sort, cs, st, activity, company, location, minSal, maxSal, perPage, page].join('|');
+        },
+
+        loadCurrentTab: function(page) {
+            var self = this;
+            page = page || 1;
+            state.activePage = page;
+
+            if (state.activeXHR && state.activeXHR.readyState !== 4) {
+                state.activeXHR.abort();
+            }
+
+            var cacheKey = self.getCacheKey(page);
+            var now = Date.now();
+
+            if (state.cache[cacheKey] && (now - state.cache[cacheKey].timestamp < 30000)) {
+                self.render(state.cache[cacheKey]);
+                return Promise.resolve(state.cache[cacheKey]);
+            }
+
+            state.requestSeqId++;
+            var seqId = state.requestSeqId;
+            $('.loadingMessagebenchCandidateExploreJobAjax').css({display: 'flex'});
+
+            var perPage = localStorage.getItem('candidatePerPage') || 10;
+            var bid = $('#bench_id').val(),
+                stage = $('#stage').val(),
+                sort = $('#hiringtype').val(),
+                cs = $('#kt_tagify_2').val(),
+                st = $('[name="bxr_status"]:checked').val() || 'active',
+                activity = $('[name="bxr_activity"]:checked').val() || '1',
+                company = (typeof bxrTagifyCompany !== 'undefined') ? JSON.stringify(bxrTagifyCompany.value) : '[]',
+                location = (typeof bxrTagifyLocation !== 'undefined') ? JSON.stringify(bxrTagifyLocation.value) : '[]',
+                minSal = $('#bxr_min_sal').val(),
+                maxSal = $('#bxr_max_sal').val();
+
+            state.activeXHR = $.ajax({
+                url: "{!! route('service_company.bench-candidates.bench_explore_listing_job_ajax') !!}?page=" + page,
+                type: 'GET',
+                data: {
+                    bench_id: bid, stage: stage, cus_search: cs, statusfilter: st, sortingfilter: sort,
+                    bxr_company: company, bxr_location: location,
+                    bxr_min_sal: minSal, bxr_max_sal: maxSal, bxr_activity: activity,
+                    per_page: perPage, size: perPage
+                },
+                success: function(r) {
+                    if (seqId !== state.requestSeqId) return;
+                    $('.loadingMessagebenchCandidateExploreJobAjax').css({display: 'none'});
+                    
+                    state.cache[cacheKey] = {
+                        html: r.html,
+                        total: r.total,
+                        pagination: r.pagination,
+                        counters: r.counters,
+                        allCounter: r.allCounter,
+                        timestamp: Date.now()
+                    };
+
+                    self.render(state.cache[cacheKey]);
+                },
+                error: function(xhr, status) {
+                    if (status !== 'abort') {
+                        $('.loadingMessagebenchCandidateExploreJobAjax').css({display: 'none'});
+                    }
+                }
+            });
+
+            return state.activeXHR;
+        },
+
+        render: function(res) {
+            $('#benchCandidateExploreJobAjax').html(res.html);
+            $('#bench_explore_pool_id').html(res.total);
+            $('.bxr-live').html(res.total);
+            $('#bxr_footer_number').text(res.total);
+            $('#paginationbenchCandidateExploreJob').html(res.pagination);
+
+            if (res.counters) {
+                var d = res.counters;
+                $('#bg_1').html(d.Sourcing || 0);   $('#bg_2').html(d.Screening || 0);
+                $('#bg_3').html(d.Evaluation || 0); $('#bg_4').html(d.Negotiation || 0);
+                $('#bg_5').html(d.Offered || 0);    $('#bg_6').html(d.Joined || 0);
+                $('#bg_7').html(d.Rejected || 0);   $('#totalcnt').html(res.allCounter || d.allCandidate || res.total);
+                $('#totalcnt_plain').html(res.allCounter || d.allCandidate || res.total);
+                syncPillCounts();
+            } else {
+                tableLoad();
+            }
+        }
+    };
+})();
+
 var table;
-function filtersdataget(){ fetchBenchExploreJobCandidateList(); }
+function filtersdataget(){ return BenchExploreTabManager.loadCurrentTab(1); }
+function fetchBenchExploreJobCandidateList(page){ return BenchExploreTabManager.loadCurrentTab(page); }
 
 function tableLoad(){
     var bid=$('#bench_id').val(),stage=$('#stage').val(),q=$('#inputSearch').val();
@@ -869,7 +1008,6 @@ function tableLoad(){
             $('#bg_3').html(d.Evaluation); $('#bg_4').html(d.Negotiation);
             $('#bg_5').html(d.Offered);    $('#bg_6').html(d.Joined);
             $('#bg_7').html(d.Rejected);   $('#totalcnt').html(d.allCandidate);
-            /* keep plain count spans in sync too */
             $('#totalcnt_plain').html(d.allCandidate);
             syncPillCounts();
         },100);
@@ -891,13 +1029,10 @@ $(document).on('click','.client-show-detail',function(){
     var gif="{{ asset('assets/images/Loading2.gif') }}";
     $.ajax({type:'GET',url:url,beforeSend:function(){$('#kt_activitiesJob_body').html('<img src="'+gif+'" height="35px" width="100%">');},success:function(r){$('#kt_activitiesJob_body').html(r.view);}});
 });
-// Pagination clicks were dead: the shared pagination partial renders
-// .pagi-page/.pagi-arrow, not the old Bootstrap .page-link this handler used
-// to listen for. A boolean guard replaces the old (nonexistent) .disabled
-// class toggle so rapid clicks can't fire overlapping requests.
+
 var bxrPaginationLoading = false;
 $(document).ready(function(){
-    fetchBenchExploreJobCandidateList();
+    BenchExploreTabManager.init();
     $(document).on('click','#paginationbenchCandidateExploreJob .pagi-page, #paginationbenchCandidateExploreJob .pagi-arrow',function(e){
         e.preventDefault();
         var $btn=$(this);
@@ -905,40 +1040,18 @@ $(document).ready(function(){
         var pg=$btn.data('page');
         if(!pg) return;
         bxrPaginationLoading = true;
-        fetchBenchExploreJobCandidateList(pg)
+        BenchExploreTabManager.loadCurrentTab(pg)
             .then(function(){ bxrPaginationLoading = false; })
             .catch(function(){ bxrPaginationLoading = false; });
     });
-});
-function fetchBenchExploreJobCandidateList(page){
-    page=page||1;
-    var bid=$('#bench_id').val(),stage=$('#stage').val(),
-        sort=$('#hiringtype').val(),cs=$('#kt_tagify_2').val(),
-        st=$('[name="bxr_status"]:checked').val()||'active',
-        activity=$('[name="bxr_activity"]:checked').val()||'1',
-        company=(typeof bxrTagifyCompany!=='undefined')?JSON.stringify(bxrTagifyCompany.value):'[]',
-        location=(typeof bxrTagifyLocation!=='undefined')?JSON.stringify(bxrTagifyLocation.value):'[]',
-        minSal=$('#bxr_min_sal').val(),maxSal=$('#bxr_max_sal').val();
-    $('.loadingMessagebenchCandidateExploreJobAjax').css({display:'flex'});
-    return $.ajax({
-        url:"{!! route('service_company.bench-candidates.bench_explore_listing_job_ajax') !!}?page="+page,
-        type:'GET',
-        data:{
-            bench_id:bid,stage:stage,cus_search:cs,statusfilter:st,sortingfilter:sort,
-            bxr_company:company,bxr_location:location,
-            bxr_min_sal:minSal,bxr_max_sal:maxSal,bxr_activity:activity
-        },
-        success:function(r){
-            $('.loadingMessagebenchCandidateExploreJobAjax').css({display:'none'});
-            $('#benchCandidateExploreJobAjax').html(r.html);
-            $('#bench_explore_pool_id').html(r.total);
-            $('.bxr-live').html(r.total);
-            $('#bxr_footer_number').text(r.total);
-            $('#paginationbenchCandidateExploreJob').html(r.pagination);
-            tableLoad();
+    $(document).on('change','#paginationbenchCandidateExploreJob .pagi-perpage',function(e){
+        var selectedPerPage = $(this).val();
+        if (selectedPerPage) {
+            localStorage.setItem('candidatePerPage', selectedPerPage);
+            BenchExploreTabManager.loadCurrentTab(1);
         }
     });
-}
+});
 </script>
 
 {{-- ── Filter drawer: toast, sort panel, Tagify, active-filter chips ── --}}

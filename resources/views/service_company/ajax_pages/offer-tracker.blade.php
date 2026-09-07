@@ -239,7 +239,7 @@
             @else
                 @if($isOwnJob)
                     <a href="javascript:void(0);" class="create_offer" style="text-decoration:none;color:inherit;" data-row-offerid="{{ $row->offer_id ?? '' }}">
-                        <span class="ot-comp-amount">{{ $compDisplay }}</span>
+                        <span class="ot-comp-amount">{{ $compDisplay }}</span> 
                         <span class="ot-comp-type">{{ $empLabel }}</span>
                         <span class="ot-comp-change">Change</span>
                     </a>

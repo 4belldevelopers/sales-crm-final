@@ -83,7 +83,7 @@ class ServiceCompanyCompanyController extends ServiceCompanyBaseController
     	{
         abort_if(Gate::denies('edit_company'), 403);
 
-        $this->company = Company::find($id);
+        $this->company = Company::withoutGlobalScopes()->find($id);
         return view('service_company.company.edit', $this->data);
     }
     
@@ -91,7 +91,7 @@ class ServiceCompanyCompanyController extends ServiceCompanyBaseController
     {
         abort_if(Gate::denies('edit_company'), 403);
 
-        $setting = Company::findOrFail($id);
+        $setting = Company::withoutGlobalScopes()->findOrFail($id);
         $setting->company_name        = $request->input('company_name');
         $setting->company_email       = $request->input('company_email');
         $setting->company_phone       = $request->input('company_phone');
@@ -170,7 +170,7 @@ class ServiceCompanyCompanyController extends ServiceCompanyBaseController
 		$id = 48;
 		$this->pageTitle = __('Candidates Recommended');
 		$company_id = auth()->user()->company_id;
-		$this->job = Job::findOrFail($id);
+		$this->job = Job::withoutGlobalScopes()->findOrFail($id);
 		$this->custome_count = 0;
        			
 		session()->put('job_id', $id);
@@ -287,7 +287,7 @@ class ServiceCompanyCompanyController extends ServiceCompanyBaseController
 		// dd($skillsList);
 		$searchQuery = $request->input('q');
 		$page = max((int) $request->input('page', 1), 1);
-		$size = (int) $request->input('size', 10); // Default 20 results per page
+		$size = (int) ($request->input('per_page') ?? $request->input('size') ?? $request->input('limit') ?? 10); // Default 10 results per page
 		$from = ($page - 1) * $size;
 
 		$cachePayload = [
@@ -1034,6 +1034,7 @@ class ServiceCompanyCompanyController extends ServiceCompanyBaseController
 		$pagination = [
 			'total' => $total,
 			'current_page' => $page,
+			'per_page' => $size,
 			'last_page' =>ceil($total / $size),
 			'listType' => 'allcandidate',
 		];
@@ -1121,7 +1122,7 @@ class ServiceCompanyCompanyController extends ServiceCompanyBaseController
 				$invitationId 		=	DB::getPdo()->lastInsertId();
 				GeneralMethod::clientRequestIndexElastic($invitationId);
 
-				$Companies = Company::find(auth()->user()->company_id);
+				$Companies = Company::withoutGlobalScopes()->find(auth()->user()->company_id);
 											
 					$encode				=	base64_encode($invitationId);
 					$reqdate = date('d M Y');

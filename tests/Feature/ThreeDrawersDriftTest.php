@@ -23,7 +23,7 @@ use Tests\TestCase;
  */
 class ThreeDrawersDriftTest extends TestCase
 {
-    use RefreshDatabase;
+    // use RefreshDatabase; // Disabled per project rule: never run RefreshDatabase
 
     protected function setUp(): void
     {

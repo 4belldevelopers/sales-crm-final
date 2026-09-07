@@ -46,7 +46,7 @@ class ProcessCandidateRequest implements ShouldQueue
      */
     public function handle()
     {
-        $job = Job::findOrFail($this->jobId);
+        $job = Job::withoutGlobalScopes()->findOrFail($this->jobId);
         $source_from_company_id = $this->companyId;
         $source_from_user_id = $this->userId;
         $source_from_type = 1;

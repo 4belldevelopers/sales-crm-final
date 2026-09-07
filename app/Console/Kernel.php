@@ -4,9 +4,9 @@ namespace App\Console;
 
 use App\Jobs\AutoCloseExpiredJobsJob;
 use App\Jobs\ProcessOfferTimeoutJob;
-use App\Jobs\ProcessOperationalCoinDeductionsJob;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Console\Kernel as ConsoleKernel;
+use Illuminate\Support\Facades\Artisan;
 
 class Kernel extends ConsoleKernel
 {
@@ -30,9 +30,9 @@ class Kernel extends ConsoleKernel
             ->withoutOverlapping(4)
             ->runInBackground();
 
-        // V2 Dashboard Phase 1 — background maintenance decoupled from HTTP GET.
-        // Coin deductions (team + job) run every 5 min; withoutOverlapping prevents double-deduction.
-        $schedule->job(new ProcessOperationalCoinDeductionsJob)
+        // V2 Dashboard Phase 5 — parallelized per-tenant queue processing.
+        // Coin deductions (team + job) run every 5 min via tenant dispatcher job.
+        $schedule->job(new \App\Jobs\DispatchTenantCoinDeductionsJob)
             ->everyFiveMinutes()
             ->withoutOverlapping(4)
             ->runInBackground();
@@ -54,6 +54,32 @@ class Kernel extends ConsoleKernel
         $schedule->command('drawers:verify-drift --heal --hours=1')
             ->everyTenMinutes()
             ->withoutOverlapping(9)
+            ->runInBackground();
+
+        // Moved from Controller::__construct() — was spawning an artisan subprocess on every HTTP request.
+        // Nightly is sufficient; real deployments should run `php artisan migrate --force` explicitly.
+        $schedule->call(function () {
+            if (Artisan::call('migrate:check')) {
+                Artisan::call('migrate', ['--force' => true]);
+                Artisan::call('config:clear');
+                Artisan::call('route:clear');
+                Artisan::call('view:clear');
+                Artisan::call('cache:clear');
+            }
+        })->daily()->withoutOverlapping()->runInBackground();
+
+        // V2_login Phase 6.5 — was not registered; timed-delete and licence-expiry were silently broken.
+        // Runs off-peak IST; withoutOverlapping(50) prevents double-fire on slow runs.
+        $schedule->command('delete-account')
+            ->dailyAt('02:00')
+            ->timezone('Asia/Kolkata')
+            ->withoutOverlapping(50)
+            ->runInBackground();
+
+        $schedule->command('licence-expire')
+            ->dailyAt('03:00')
+            ->timezone('Asia/Kolkata')
+            ->withoutOverlapping(50)
             ->runInBackground();
     }
 

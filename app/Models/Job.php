@@ -2,37 +2,36 @@
 
 namespace App\Models;
 
+use App\Helper\GeneralMethod;
+use App\Traits\BelongsToTenant;
 use Carbon\Carbon;
 use Cviebrock\EloquentSluggable\Sluggable;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Builder;
 
 class Job extends Model
 {
-    use Sluggable;
+    use BelongsToTenant, Sluggable;
+
+    protected static function booted()
+    {
+        static::updated(function ($job) {
+            if (auth()->check()) {
+                GeneralMethod::invalidateSpartnerlistingCache(auth()->user()->id);
+            }
+        });
+    }
 
     protected $dates = ['end_date', 'start_date'];
 
     protected $casts = [
         'required_columns' => 'array',
         'meta_details' => 'array',
-        'section_visibility' => 'array'
+        'section_visibility' => 'array',
     ];
 
     protected $appends = [
-        'active'
+        'active',
     ];
-
-    protected static function boot()
-    {
-        parent::boot();
-
-        static::addGlobalScope('company', function (Builder $builder) {
-            if (auth()->check() && !auth()->user()->is_superadmin) {
-                // $builder->where('jobs.company_id', user()->company_id);
-            }
-        });
-    }
 
     public function applications()
     {
@@ -41,17 +40,17 @@ class Job extends Model
 
     public function category()
     {
-        return $this->belongsTo(JobCategory::class, 'category_id');     			//single 
+        return $this->belongsTo(JobCategory::class, 'category_id');     			// single
     }
 
-  	/*public function location()
+    /*public function location()
     {
-        return $this->belongsTo(JobLocation::class, 'location_id'); 
+        return $this->belongsTo(JobLocation::class, 'location_id');
     }*/
 
     public function skills()
     {
-        return $this->hasMany(JobSkill::class, 'job_id');						// one to many 
+        return $this->hasMany(JobSkill::class, 'job_id');						// one to many
     }
 
     public function company()
@@ -63,8 +62,8 @@ class Job extends Model
     {
         return [
             'slug' => [
-                'source' => ['title', 'location.location']
-            ]
+                'source' => ['title', 'location.location'],
+            ],
         ];
     }
 
@@ -79,9 +78,9 @@ class Job extends Model
     public static function frontActiveJobs($companyId)
     {
         return Job::withoutGlobalScope('company')
-            //->where('status', 'active')
-            //->where('start_date', '<=', Carbon::now()->format('Y-m-d'))
-            //->where('end_date', '>=', Carbon::now()->format('Y-m-d'))
+            // ->where('status', 'active')
+            // ->where('start_date', '<=', Carbon::now()->format('Y-m-d'))
+            // ->where('end_date', '>=', Carbon::now()->format('Y-m-d'))
             ->where('company_id', $companyId)
             ->get();
     }

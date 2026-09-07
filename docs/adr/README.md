@@ -13,5 +13,6 @@ understand *why the code looks the way it does* before changing it.
 | [0004](0004-multi-persona-monolith.md) | Single monolith, per-persona namespaces | Active (observed) |
 | [0005](0005-schema-in-live-db.md) | Schema managed in live DB, not migrations | Active (observed) ⚠️ |
 | [0006](0006-multi-gateway-payments.md) | Multiple payment gateways | Active (observed) |
+| [0007](0007-blocking-scenarios-architecture.md) | Blocking flows: session-epoch + Reverb kick + `SyncUserStatusAction` | Active (proposed; code not yet landed) |
 
 To propose a *new* decision, add `NNNN-title.md` and update this table.

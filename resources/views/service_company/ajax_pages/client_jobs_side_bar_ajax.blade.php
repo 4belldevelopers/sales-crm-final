@@ -34,10 +34,10 @@
         $row->recommendation_id = $recommendation_id;
         $row->to_company_id     = $recommendation_id;
         $row->from_company_id   = $from_company_id;
-        $row->companyidcount    = $row->comId;
-        $row->clients_name      = $row->client_name;
+        $row->companyidcount    = $row->comId ?? 0;
+        $row->clients_name      = $row->client_name ?? '';
 
-        $job_assign = $row->job_assign;
+        $job_assign = $row->job_assign ?? [];
         $jobAssign  = collect($job_assign);
 
         // ── Company display name ──
@@ -142,7 +142,7 @@
         // ── Agency column: add-agency link + matching count ──
         $agencyMatchCnt = 0;
         $agencyAssigned = 0;
-        $recRel = collect($row->recommendation_relation);
+        $recRel = collect($row->recommendation_relation ?? []);
         $agencyAssigned = $recRel->where('from_company_id', $company_id)->where('job_id', $row->id)->where('from_status', 1)->count();
         // Matching count from row field if available
         $agencyMatchCnt = (int)(@$row->matching_agency_count ?? $agencyAssigned);

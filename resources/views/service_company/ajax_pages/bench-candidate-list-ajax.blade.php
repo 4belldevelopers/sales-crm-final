@@ -14,17 +14,28 @@
     @foreach ($data as $rowArr)
         @php
             $row = (object) $rowArr;
-            $bench_explore_listing_counter = GeneralMethod::bench_explore_listing_counter($row->id);
-            $applicationCounter = $bench_explore_listing_counter->applicationCounter;
+            if (isset($row->sourcing_count) || isset($row->interview_count)) {
+                $row->Sourcing = $row->sourcing_count ?? 0;
+                $row->Screening = $row->screening_count ?? 0;
+                $row->Evaluation = $row->evaluation_count ?? 0;
+                $row->Negotiation = $row->negotiation_count ?? 0;
+                $row->Offered = $row->offered_count ?? 0;
+                $row->Joined = $row->joined_count ?? 0;
+                $row->Rejected = $row->rejected_count ?? 0;
+                $row->InReview = $row->interview_count ?? 0;
+            } else {
+                $bench_explore_listing_counter = GeneralMethod::bench_explore_listing_counter($row->id);
+                $applicationCounter = $bench_explore_listing_counter->applicationCounter;
 
-            $row->Sourcing = $applicationCounter->Sourcing ?? 0;
-            $row->Screening = $applicationCounter->Screening ?? 0;
-            $row->Evaluation = $applicationCounter->Evaluation ?? 0;
-            $row->Negotiation = $applicationCounter->Negotiation ?? 0;
-            $row->Offered = $applicationCounter->Offered ?? 0;
-            $row->Joined = $applicationCounter->Joined ?? 0;
-            $row->Rejected = $applicationCounter->Rejected ?? 0;
-            $row->InReview = $applicationCounter->Interview ?? 0;
+                $row->Sourcing = $applicationCounter->Sourcing ?? 0;
+                $row->Screening = $applicationCounter->Screening ?? 0;
+                $row->Evaluation = $applicationCounter->Evaluation ?? 0;
+                $row->Negotiation = $applicationCounter->Negotiation ?? 0;
+                $row->Offered = $applicationCounter->Offered ?? 0;
+                $row->Joined = $applicationCounter->Joined ?? 0;
+                $row->Rejected = $applicationCounter->Rejected ?? 0;
+                $row->InReview = $applicationCounter->Interview ?? 0;
+            }
 
             $exploreBase = url('/service_company/bench-candidates/bench_explore/' . $row->id);
 
@@ -78,11 +89,9 @@
                     }
                     $award = (@$row->ads_switch == 'Yes') ? '<span class="badge badge-light-danger my-0">Ads</span>' : '';
 
-                    /* View / Download counts from bench_count_view_download table */
-                    $viewCount = DB::table('bench_count_view_download')
-                        ->where('type', 1)->where('status', 0)->where('candidate_id', $row->id)->count();
-                    $downloadCount = DB::table('bench_count_view_download')
-                        ->where('type', 2)->where('status', 0)->where('candidate_id', $row->id)->count();
+                    /* View / Download counts pre-fetched in bulk via controller */
+                    $viewCount = $viewCounts[$row->id] ?? $row->viewCount ?? 0;
+                    $downloadCount = $downloadCounts[$row->id] ?? $row->downloadCount ?? 0;
                 @endphp
                 <div class="d-flex align-items-start">
                     <div class="symbol symbol-circle symbol-40px me-2 flex-shrink-0" style="overflow:hidden; border-radius:50%;">
@@ -187,8 +196,8 @@
             {{-- Expected Salary: Salary (1) · Free/Paid service (2) --}}
             <td>
                 @php
-                    $currencyBenchshowMode = GeneralMethod::getCompanyCurrencyBenchshowMode($company_id);
-                    $billFormatViewSalary = GeneralMethod::formatViewSalary($row->ectc_yearly, $currencyBenchshowMode->currency_code, $currencyBenchshowMode->show_mode);
+                    $currencyBenchMode = $companyCurrencyBenchshowMode ?? GeneralMethod::getCompanyCurrencyBenchshowMode($company_id);
+                    $billFormatViewSalary = GeneralMethod::formatViewSalary($row->ectc_yearly, $currencyBenchMode->currency_code, $currencyBenchMode->show_mode);
                     $bill_rate_currency = $currencySymbole[$billFormatViewSalary->currency];
                     $bill_rate_mode = $salaryMode[$billFormatViewSalary->mode];
                     $serviceType = @$row->comission_type == 2 ? 'Paid' : (@$row->comission_type == 1 ? 'Free' : '—');
@@ -235,22 +244,31 @@
             {{-- Relationship Manager (name + Change only — no filler subtitle, no avatar image) --}}
             <td>
                 @php
-                    $hmCount = DB::table('bench_assign')
-                        ->join('users', 'users.id', '=', 'bench_assign.user_id')
-                        ->where('bench_assign.bench_applications_id', $row->id)
-                        ->where('bench_assign.company_id', $company_id)
-                        ->where('users.company_id', $company_id)
-                        ->count();
-                    $hmData = DB::table('bench_assign')
-                        ->join('users', 'users.id', '=', 'bench_assign.user_id')
-                        ->select('users.name', 'users.image')
-                        ->where('bench_assign.bench_applications_id', $row->id)
-                        ->where('bench_assign.company_id', $company_id)
-                        ->where('users.company_id', $company_id)
-                        ->orderBy('users.name', 'ASC')->take(1)->first();
-                    $managerName = @$hmData->name ? ucwords($hmData->name) : 'Unassigned';
-                    $managerImg  = (!empty(@$hmData->image) && strlen(@$hmData->image) > 10) ? $hmData->image : null;
-                    $extra = $hmCount > 1 ? ' +' . ($hmCount - 1) : '';
+                    if (!empty($row->hiring_hr)) {
+                        $hiringHr = (array) $row->hiring_hr;
+                        $hmCount = count($hiringHr);
+                        $firstHr = (object) ($hiringHr[0] ?? []);
+                        $managerName = !empty($firstHr->name) ? ucwords($firstHr->name) : 'Unassigned';
+                        $managerImg  = (!empty($firstHr->image) && strlen($firstHr->image) > 10) ? $firstHr->image : null;
+                        $extra = $hmCount > 1 ? ' +' . ($hmCount - 1) : '';
+                    } else {
+                        $hmCount = DB::table('bench_assign')
+                            ->join('users', 'users.id', '=', 'bench_assign.user_id')
+                            ->where('bench_assign.bench_applications_id', $row->id)
+                            ->where('bench_assign.company_id', $company_id)
+                            ->where('users.company_id', $company_id)
+                            ->count();
+                        $hmData = DB::table('bench_assign')
+                            ->join('users', 'users.id', '=', 'bench_assign.user_id')
+                            ->select('users.name', 'users.image')
+                            ->where('bench_assign.bench_applications_id', $row->id)
+                            ->where('bench_assign.company_id', $company_id)
+                            ->where('users.company_id', $company_id)
+                            ->orderBy('users.name', 'ASC')->take(1)->first();
+                        $managerName = @$hmData->name ? ucwords($hmData->name) : 'Unassigned';
+                        $managerImg  = (!empty(@$hmData->image) && strlen(@$hmData->image) > 10) ? $hmData->image : null;
+                        $extra = $hmCount > 1 ? ' +' . ($hmCount - 1) : '';
+                    }
                 @endphp
                 <div class="d-flex align-items-center gap-2">
                     {{-- Manager avatar --}}

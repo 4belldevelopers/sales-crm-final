@@ -9,14 +9,14 @@ class PhonePePaymentController extends Controller
 {
     public function createPayment(Request $request)
     {
-        $merchantId = env('PHONEPE_MERCHANT_ID');
-        $apiKey = env('PHONEPE_API_KEY');
-        $keyIndex = env('PHONEPE_API_KEY_INDEX');
-        $hostUrl = env('PHONEPE_HOST_URL');
+        $merchantId = config('services.phonepe.merchant_id');
+        $apiKey = config('services.phonepe.api_key');
+        $keyIndex = config('services.phonepe.key_index');
+        $hostUrl = config('services.phonepe.host_url');
 
         // Payment request data
         $amount = $request->input('amount') * 100; // PhonePe expects amount in paise (1 INR = 100 paise)
-        $transactionId = 'TXN_' . time();
+        $transactionId = 'TXN_'.time();
         $callbackUrl = route('phonepe.callback');
 
         // Payment Payload
@@ -25,11 +25,9 @@ class PhonePePaymentController extends Controller
             'transactionId' => $transactionId,
             'amount' => $amount,
             'callbackUrl' => $callbackUrl,
-            'merchantOrderId' => 'ORDER_' . time(),
+            'merchantOrderId' => 'ORDER_'.time(),
             'paymentInstrument' => ['type' => 'UPI'],
         ];
-
-        dd($data);
 
         // Convert to JSON and base64 encode
         $dataJson = json_encode($data);
@@ -41,11 +39,11 @@ class PhonePePaymentController extends Controller
         // Create headers
         $headers = [
             'Content-Type' => 'application/json',
-            'X-VERIFY' => $checksum . '###' . $keyIndex,
+            'X-VERIFY' => $checksum.'###'.$keyIndex,
         ];
 
         // Send request to PhonePe
-        $response = Http::withHeaders($headers)->post($hostUrl . '/pg/v1/pay', [
+        $response = Http::withHeaders($headers)->post($hostUrl.'/pg/v1/pay', [
             'request' => $payload,
         ]);
         // dd($response);
@@ -69,4 +67,3 @@ class PhonePePaymentController extends Controller
         return response()->json($request->all());
     }
 }
-

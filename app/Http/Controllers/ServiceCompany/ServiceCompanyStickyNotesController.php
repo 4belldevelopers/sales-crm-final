@@ -60,7 +60,7 @@ class ServiceCompanyStickyNotesController extends ServiceCompanyBaseController
     public function edit($id)
     {
         $this->iconEdit = 'pencil';
-        $this->noteDetail = StickyNote::findOrFail($id);
+        $this->noteDetail = StickyNote::withoutGlobalScopes()->findOrFail($id);
 
         return view('service_company.sticky-note.create-edit', $this->data);
     }
@@ -68,12 +68,12 @@ class ServiceCompanyStickyNotesController extends ServiceCompanyBaseController
     {
         $this->iconEdit = 'pencil';
         // Call the same create view for edit
-        $this->noteDetail = StickyNote::findOrFail($id);
+        $this->noteDetail = StickyNote::withoutGlobalScopes()->findOrFail($id);
         return view('service_company.sticky-note.create-edit', $this->data);
     }
     public function update(UpdateStickyNote $request,$id)
     {
-        $sticky = StickyNote::findOrFail($id);
+        $sticky = StickyNote::withoutGlobalScopes()->findOrFail($id);
         $sticky->note_text  = $request->get('notetext');
         $sticky->colour     = $request->get('stickyColor');
 

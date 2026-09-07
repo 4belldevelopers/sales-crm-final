@@ -1483,6 +1483,11 @@
 
 <script src="{{ asset('demo/plugins/global/plugins.bundle.js') }}{{ TM_VERSION }}"></script>
 <script src="{{ asset('demo/js/scripts.bundle.js') }}{{ TM_VERSION }}"></script>
+<script>
+// Send the CSRF token as a header on every jQuery AJAX request so endpoints
+// that don't include _token in their POST body are still protected.
+$.ajaxSetup({ headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') } });
+</script>
 <script src="{{ asset('demo/plugins/custom/fullcalendar/fullcalendar.bundle.js') }}{{ TM_VERSION }}"></script>
 <script src="{{ asset('demo/js/custom/widgets.js') }}{{ TM_VERSION }}"></script>
 <script src="{{ asset('demo/js/custom/apps/chat/chat.js') }}{{ TM_VERSION }}"></script>
@@ -2919,7 +2924,7 @@ $( document ).ready(function() {
             }
             //  flatpickrfunDefine();
 
-        var currentPage = $('.custom-pagination .page-link.active').data('page');
+        var currentPage = $('.custom-pagination .page-link.active').data('page') || 1;
   
 				$('#kt_activitiesApplication_toggle').trigger('click');
 				var id    		=	$(this).data('row-id');
@@ -2956,7 +2961,7 @@ $( document ).ready(function() {
             }
             //  flatpickrfunDefine();
 
-        var currentPage = $('.custom-pagination .page-link.active').data('page');
+        var currentPage = $('.custom-pagination .page-link.active').data('page') || 1;
   
 				$('#kt_activitiesApplication_toggle').trigger('click');
 				var id    		=	$(this).data('row-id');
@@ -2993,7 +2998,7 @@ $( document ).ready(function() {
                   return; // ⛔ STOP EXECUTION
             }
       //  flatpickrfunDefine();
-       var currentPage = $('.custom-pagination .page-link.active').data('page');
+       var currentPage = $('.custom-pagination .page-link.active').data('page') || 1;
 				$('#kt_client_activitiesApplication_toggle').trigger('click');
 				var id    		=	$(this).data('row-id');
 				var url 		=	"{{ route('service_company.job-applications.clientshow',':id') }}?currentPage="+currentPage;

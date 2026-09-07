@@ -2,7 +2,7 @@
 ini_set('memory_limit', '2500M'); 
 
 
-if(!file_exists('./.env')){
+if(!file_exists('./.env') && !file_exists(__DIR__.'/../.env')){
     $GLOBALS["error_type"] = "env-missing";
     include('error_install.php');
     exit(1);
@@ -24,7 +24,7 @@ changeEnvironmentVariable();
 function changeEnvironmentVariable()
 {
 
-    $path = './.env';
+    $path = file_exists('./.env') ? './.env' : __DIR__.'/../.env';
     if (file_exists($path)) {
         //Try to read the current content of .env
         $current = file_get_contents($path);

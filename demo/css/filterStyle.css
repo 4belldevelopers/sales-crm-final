@@ -264,7 +264,7 @@ cursor: default;
 /* Tagify Container */
 .tagify {
     width: 100%;
-    min-height: 54px;
+    min-height: 40px;
     padding: 8px 10px;
     border: 1px solid #d9dce7;
     border-radius: 10px;
@@ -395,7 +395,7 @@ cursor: default;
 }
 .tagify:not(.form-control-sm):not(.form-control-lg) .tagify__input {
     padding: 0;
-    margin-top: calc(.75rem - (1.5rem + 2px - .8rem) / 4) !important;
-    margin-bottom: calc(.75rem - (1.5rem + 2px - .8rem) / 0) !important;
+    margin-top: 2px !important;
+    margin-bottom: 2px !important;
     margin-left: 3px !important;
 }

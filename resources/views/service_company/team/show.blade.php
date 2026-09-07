@@ -175,7 +175,7 @@ use Carbon\Carbon;
         'Profile Image'       => (!empty(@$users->image) && strlen(@$users->image)>10),
       ];
       $scp_pct = count($scp_pc) ? round(count(array_filter($scp_pc))/count($scp_pc)*100) : 0;
-      $scp_active = isset($counts) ? (int) $counts->get('active',0) : 0;
+      $scp_active = (int) (@$active_count ?? (isset($counts) ? $counts->get('active', 0) : 0));
       $scp_cand   = (int) (@$total_candidates ?? 0);
       $scp_intv   = (int) (@$interviewsTrackerTotal ?? 0);
       $scp_join   = (int) (@$total_candidates_join ?? 0);
@@ -241,10 +241,10 @@ use Carbon\Carbon;
   <div class="card-toolbar">
         <ul class="nav nav-tabs nav-tabs-space-lg nav-tabs-line nav-tabs-bold nav-tabs-line-3x" role="tablist">
       <li class="nav-item me-3"> <a class="nav-link active show" data-toggle="tab" href="#user_overview"> <span class="nav-text font-weight-bold">Overview</span> </a> </li>
-      <li class="nav-item me-3"  onclick="fetchTeamJobs()"> <a class="nav-link" data-toggle="tab" href="#user_requisitions"> <span class="nav-text font-weight-bold">Jobs</span> </a> </li>
-      <li class="nav-item me-3"  onclick="fetchTeamCandidate()"> <a class="nav-link" data-toggle="tab" href="#user_candidate"> <span class="nav-text font-weight-bold">Candidate</span> </a> </li>
-      <li class="nav-item me-3"  onclick="fetchTeamCandidateInterviewTracker()"> <a class="nav-link" data-toggle="tab" href="#user_interview_tracker"> <span class="nav-text font-weight-bold">Interview Tracker</span> </a> </li>
-      <li class="nav-item me-3"  onclick="fetchTeamCandidateJoining()"> <a class="nav-link" data-toggle="tab" href="#user_joining"> <span class="nav-text font-weight-bold">Joinings</span> </a> </li>
+      <li class="nav-item me-3"> <a class="nav-link" data-toggle="tab" href="#user_requisitions"> <span class="nav-text font-weight-bold">Jobs</span> </a> </li>
+      <li class="nav-item me-3"> <a class="nav-link" data-toggle="tab" href="#user_candidate"> <span class="nav-text font-weight-bold">Candidate</span> </a> </li>
+      <li class="nav-item me-3"> <a class="nav-link" data-toggle="tab" href="#user_interview_tracker"> <span class="nav-text font-weight-bold">Interview Tracker</span> </a> </li>
+      <li class="nav-item me-3"> <a class="nav-link" data-toggle="tab" href="#user_joining"> <span class="nav-text font-weight-bold">Joinings</span> </a> </li>
       <li class="nav-item me-3"> <a class="nav-link" data-toggle="tab" href="#myRank"> <span class="nav-text font-weight-bold">My Rank</span> </a> </li>
        <li class="nav-item me-3"> <a class="nav-link" data-toggle="tab" href="#candidateDashboard"> <span class="nav-text font-weight-bold">My Dashboard</span> </a> </li>
       <li class="nav-item me-3 d-none"> <a class="nav-link" data-toggle="tab" href="#user_settings"> <span class="nav-text font-weight-bold">Settings</span> </a> </li>
@@ -549,9 +549,10 @@ use Carbon\Carbon;
                                 <option value="" selected="selected">Location</option>
                                 @if(@$countries)
                                     @foreach($countries as $val_co)
-                                    <option value="{{ $val_co->id }}">{{ $val_co->country_name }}</option>
+                                    <option value="{{ $val_co->id }}">{{ $val_co->country_name ?? $val_co->name ?? '' }}</option>
                                     @endforeach
                                 @endif
+
                                 
                             </select>
                           </div>
@@ -581,732 +582,28 @@ use Carbon\Carbon;
   </div>
   <!--end::Joinings Content-->
 
-  <!--begin::my rank Content-->
+        <!--begin::my rank Content-->
         <div class="tab-pane" id="myRank" role="tabpanel">
-          @php
-            $rkMonths = collect($rankings['months'] ?? [])->values();
-            $rkCur    = $rkMonths->get(0);
-            $curI  = $rankings['internalRanks'][$rkCur]  ?? ['rank'=>'-','score'=>0];
-            // trend (oldest -> newest, last 12)
-            $rkTrend  = $rkMonths->slice(0,12)->reverse()->values();
-            $rkTLabels = $rkTrend->map(fn($m)=>date('M y', strtotime($m.'-01')))->all();
-            $rkTRanks = $rkTrend->map(fn($m)=> (is_numeric($rankings['internalRanks'][$m]['rank'] ?? null) ? (int)$rankings['internalRanks'][$m]['rank'] : null))->all();
-            $rkValidRanks = array_filter($rkTRanks, fn($v)=>$v!==null);
-            $rkMaxRank = $rkValidRanks ? max($rkValidRanks) : 10;
-            // journey milestones derived from real ranks (oldest first)
-            $asc = $rkMonths->reverse()->values();
-            $mTop1=$mTop5=$mTop10=$mJoin=null;
-            foreach($asc as $m){
-              $r = $rankings['internalRanks'][$m]['rank'] ?? null;
-              if($mJoin===null) $mJoin=$m;
-              if($mTop10===null && is_numeric($r) && $r<=10) $mTop10=$m;
-              if($mTop5===null  && is_numeric($r) && $r<=5)  $mTop5=$m;
-              if($mTop1===null  && is_numeric($r) && $r==1)  $mTop1=$m;
-            }
-            $fmtM = fn($m)=>$m?date('M Y',strtotime($m.'-01')):'—';
-            $lbTop   = collect($leaderboard['top'] ?? []);
-            $lbMe    = $leaderboard['me'] ?? null;
-            // monthly history with rank-change columns (rows newest-first)
-            $mArr=$rkMonths->values()->all(); $hist=[];
-            for($i=0;$i<count($mArr);$i++){
-              $m=$mArr[$i]; $older=$mArr[$i+1]??null;
-              $ir=$rankings['internalRanks'][$m]??['rank'=>'-','score'=>0];
-              $gr=$rankings['globalRanks'][$m]??['rank'=>'-','score'=>0];
-              $oi=$older?($rankings['internalRanks'][$older]??null):null;
-              $og=$older?($rankings['globalRanks'][$older]??null):null;
-              $sc=is_numeric($ir['score'])?$ir['score']:0;
-              $osc=($oi&&is_numeric($oi['score']))?$oi['score']:null;
-              $scoreChg=$osc===null?null:$sc-$osc;
-              $scorePct=($osc&&$osc>0)?round($scoreChg/$osc*100,1):null;
-              $iChg=($oi&&is_numeric($oi['rank'])&&is_numeric($ir['rank']))?($oi['rank']-$ir['rank']):null;
-              $gChg=($og&&is_numeric($og['rank'])&&is_numeric($gr['rank']))?($og['rank']-$gr['rank']):null;
-              $hist[]=compact('m','ir','gr','sc','scoreChg','scorePct','iChg','gChg');
-            }
-            $rkSpark = '<svg viewBox="0 0 80 32" preserveAspectRatio="none"><polyline points="0,26 14,20 28,23 42,12 56,15 70,6 80,9" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
-          @endphp
-          <div class="srk-wrap">
-            <!-- Stat cards -->
-            <div class="srk-stats">
-              <div class="srk-stat"><span class="srk-st-ic ic-ind"><i class="fas fa-users"></i></span><div class="srk-st-body"><div class="srk-st-lbl">Candidates Added</div><div class="srk-st-num">{{ @$total_candidates ?? 0 }}</div></div><span class="srk-spark ind">{!! $rkSpark !!}</span></div>
-              <div class="srk-stat"><span class="srk-st-ic ic-grn"><i class="fas fa-calendar-check"></i></span><div class="srk-st-body"><div class="srk-st-lbl">Interviews Conducted</div><div class="srk-st-num">{{ (int) array_sum((array)(@$interviewValuesMonth ?? [])) }}</div></div><span class="srk-spark grn">{!! $rkSpark !!}</span></div>
-              <div class="srk-stat"><span class="srk-st-ic ic-vio"><i class="fas fa-briefcase"></i></span><div class="srk-st-body"><div class="srk-st-lbl">Offers Made</div><div class="srk-st-num">{{ @$candidateValuesTotaloffer ?? 0 }}</div></div><span class="srk-spark vio">{!! $rkSpark !!}</span></div>
-              <div class="srk-stat"><span class="srk-st-ic ic-amb"><i class="fas fa-handshake"></i></span><div class="srk-st-body"><div class="srk-st-lbl">Joinings</div><div class="srk-st-num">{{ @$candidateValuesTotaljoin ?? 0 }}</div></div><span class="srk-spark amb">{!! $rkSpark !!}</span></div>
-            </div>
-
-            <!-- Leaderboard + Trend + Journey -->
-            <div class="srk-mid3">
-              <!-- Leaderboard -->
-              <div class="srk-card">
-                <div class="srk-head"><span class="srk-head-t">Leaderboard <small>(Top 5)</small></span></div>
-                @php $lbTop5 = $lbTop->take(5); @endphp
-                @if($lbTop5->count())
-                  <div class="srk-lb">
-                    @foreach($lbTop5 as $lrow)
-                      @php $isMe = (int)($lrow['id'] ?? 0) === (int)(@$users->id ?? -1); $rk=$lrow['rank']; @endphp
-                      <div class="srk-lb-row {{ $isMe?'me':'' }}">
-                        <span class="srk-lb-rk {{ $rk==1?'g1':($rk==2?'g2':($rk==3?'g3':'')) }}">{{ $rk<=3 ? '' : $rk }}@if($rk<=3)<i class="fas fa-medal"></i>@endif</span>
-                        @if(!empty($lrow['image']))
-                          <img class="srk-lb-ava" src="{{ $lrow['image'] }}" alt="">
-                        @else
-                          <span class="srk-lb-ava srk-lb-ini">{{ strtoupper(substr($lrow['name'] ?? 'U',0,1)) }}</span>
-                        @endif
-                        <span class="srk-lb-name">{{ $lrow['name'] ?? 'User' }} @if($isMe)<em class="srk-lb-you">You</em>@endif</span>
-                        <span class="srk-lb-score">{{ $lrow['score'] ?? 0 }}</span>
-                      </div>
-                    @endforeach
-                  </div>
-                  @if($lbMe && !$lbTop5->pluck('id')->contains($lbMe['id']))
-                    <div class="srk-lb-row me sep">
-                      <span class="srk-lb-rk">{{ $lbMe['rank'] }}</span>
-                      <span class="srk-lb-ava srk-lb-ini">{{ strtoupper(substr($lbMe['name'] ?? 'U',0,1)) }}</span>
-                      <span class="srk-lb-name">{{ $lbMe['name'] ?? 'You' }} <em class="srk-lb-you">You</em></span>
-                      <span class="srk-lb-score">{{ $lbMe['score'] ?? 0 }}</span>
-                    </div>
-                  @endif
-                @else
-                  <div class="srk-empty">Leaderboard data is not available yet.</div>
-                @endif
-              </div>
-
-              <!-- Rank Trend -->
-              <div class="srk-card">
-                <div class="srk-head"><span class="srk-head-t">Rank Trend</span><span class="srk-head-sub">Internal · {{ count($rkTLabels) }} months</span></div>
-                <div class="srk-chart"><canvas id="srk_trend_chart"></canvas></div>
-                @if($mTop1)
-                  <div class="srk-trend-note"><i class="fas fa-check-circle"></i> You reached #1 internally in {{ $fmtM($mTop1) }}. Keep up the great work!</div>
-                @endif
-              </div>
-
-              <!-- Rank Journey -->
-              <div class="srk-card">
-                <div class="srk-head"><span class="srk-head-t">Rank Journey</span></div>
-                <ul class="srk-journey">
-                  <li class="{{ $mTop1?'done':'todo' }}"><span class="srk-jd ic-amb"><i class="fas fa-crown"></i></span><div><div class="srk-j-t">Reached #1 Internally</div><div class="srk-j-s">{{ $mTop1 ? $fmtM($mTop1).' · top recruiter' : 'Not yet reached' }}</div></div></li>
-                  <li class="{{ $mTop5?'done':'todo' }}"><span class="srk-jd ic-ind"><i class="fas fa-chart-line"></i></span><div><div class="srk-j-t">Entered Top 5</div><div class="srk-j-s">{{ $mTop5 ? $fmtM($mTop5) : 'Not yet reached' }}</div></div></li>
-                  <li class="{{ $mTop10?'done':'todo' }}"><span class="srk-jd ic-vio"><i class="fas fa-star"></i></span><div><div class="srk-j-t">Entered Top 10</div><div class="srk-j-s">{{ $mTop10 ? $fmtM($mTop10) : 'Not yet reached' }}</div></div></li>
-                  <li class="done"><span class="srk-jd ic-grn"><i class="fas fa-flag"></i></span><div><div class="srk-j-t">Joined Leaderboard</div><div class="srk-j-s">{{ $fmtM($mJoin) }} · started your journey</div></div></li>
-                </ul>
-              </div>
-            </div>
-
-            <!-- History -->
-            <div class="srk-card">
-              <div class="srk-head"><span class="srk-head-t">Monthly Performance History</span><span class="srk-head-sub">Track your growth and performance over time</span></div>
-              <div class="srk-table-wrap">
-                <table class="srk-table">
-                  <thead><tr><th>Month</th><th>Score</th><th>Score Change</th><th>Internal Rank</th><th>Rank Change (Int.)</th><th>Global Rank</th><th>Rank Change (Global)</th></tr></thead>
-                  <tbody>
-                    @foreach($hist as $h)
-                      <tr>
-                        <td class="srk-td-m">{{ date('M Y', strtotime($h['m'].'-01')) }}</td>
-                        <td class="srk-td-s">{{ $h['sc'] }}</td>
-                        <td>
-                          @if($h['scoreChg']===null)<span class="srk-flat">—</span>
-                          @elseif($h['scoreChg']>=0)<span class="srk-up"><i class="fas fa-arrow-up"></i> {{ $h['scoreChg'] }}{{ $h['scorePct']!==null?' ('.$h['scorePct'].'%)':'' }}</span>
-                          @else<span class="srk-down"><i class="fas fa-arrow-down"></i> {{ abs($h['scoreChg']) }}{{ $h['scorePct']!==null?' ('.$h['scorePct'].'%)':'' }}</span>@endif
-                        </td>
-                        <td class="srk-td-r">#{{ $h['ir']['rank'] }}</td>
-                        <td>
-                          @if($h['iChg']===null)<span class="srk-flat">—</span>
-                          @elseif($h['iChg']>0)<span class="srk-up"><i class="fas fa-arrow-up"></i> {{ $h['iChg'] }}</span>
-                          @elseif($h['iChg']<0)<span class="srk-down"><i class="fas fa-arrow-down"></i> {{ abs($h['iChg']) }}</span>
-                          @else<span class="srk-flat">—</span>@endif
-                        </td>
-                        <td class="srk-td-r">#{{ $h['gr']['rank'] }}</td>
-                        <td>
-                          @if($h['gChg']===null)<span class="srk-flat">—</span>
-                          @elseif($h['gChg']>0)<span class="srk-up"><i class="fas fa-arrow-up"></i> {{ $h['gChg'] }}</span>
-                          @elseif($h['gChg']<0)<span class="srk-down"><i class="fas fa-arrow-down"></i> {{ abs($h['gChg']) }}</span>
-                          @else<span class="srk-flat">—</span>@endif
-                        </td>
-                      </tr>
-                    @endforeach
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </div>
-          <script>
-            (function(){
-              var done=false;
-              function drawSrk(){
-                if(done || typeof Chart==='undefined') return;
-                var el=document.getElementById('srk_trend_chart'); if(!el) return;
-                if(el.offsetParent===null) return; // tab still hidden
-                done=true;
-                var ctx=el.getContext('2d');
-                var g=ctx.createLinearGradient(0,0,0,220);
-                g.addColorStop(0,'rgba(59,85,230,0.22)'); g.addColorStop(1,'rgba(59,85,230,0.02)');
-                var maxR={{ ($rkMaxRank ?? 10) + 1 }};
-                new Chart(ctx,{type:'line',data:{labels:{!! json_encode($rkTLabels) !!},datasets:[{data:{!! json_encode($rkTRanks) !!},borderColor:'#3b55e6',backgroundColor:g,borderWidth:2,fill:true,tension:0.4,pointRadius:3,pointBackgroundColor:'#3b55e6',spanGaps:true}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:function(c){return 'Rank #'+c.parsed.y;}}}},scales:{x:{grid:{display:false},ticks:{font:{size:11,family:'Poppins'}}},y:{reverse:true,min:1,suggestedMax:maxR,ticks:{stepSize:1,precision:0,font:{size:11,family:'Poppins'},callback:function(v){return '#'+v;}},grid:{color:'#f0f2f7'}}}}});
-              }
-              document.addEventListener('click',function(e){var a=e.target.closest('a[href="#myRank"]');if(a)setTimeout(drawSrk,60);});
-              if(window.jQuery){jQuery(function($){$('a[href="#myRank"]').on('shown.bs.tab',drawSrk);});}
-              setTimeout(drawSrk,400);
-            })();
-          </script>
+          <div class="loadingMessage loadingMessageteamRankajax" style="display: none; position: absolute;">Processing...</div>
+          <div id="teamRankContentAjax"></div>
         </div>
-  <!--end begin::my rank Content-->
+        <!--end begin::my rank Content-->
 
     
 
   <!--begin::candidateDashboard Content-->
         <div class="tab-pane" id="candidateDashboard" role="tabpanel">
-          @php
-            // My Dashboard cards mirror the overall (all-time) header cards, not a date window.
-            $sdbActive=(int)($scp_active ?? $counts->get('active',0) ?? 0); $sdbHold=(int)($counts->get('hold',0)); $sdbClosed=(int)($counts->get('inactive',0));
-            $sdbAdded=(int)($scp_cand ?? @$total_candidates ?? 0);
-            $sdbInReview=(int)(@$inreview_count ?? 0); $sdbSourcing=(int)(@$sourcing_count ?? 0); $sdbScreen=(int)(@$screening_count ?? 0);
-            $sdbEval=(int)(@$evaluation_count ?? 0); $sdbNego=(int)(@$negotiation_count ?? 0);
-            $sdbOffer=(int)($scpOffersTotal ?? @$offer_count ?? 0);
-            $sdbJoined=(int)($scp_join ?? @$joined_count ?? 0); $sdbReject=(int)(@$Rejected_count ?? 0);
-            $sdbInterviews=(int)($scp_intv ?? @$interviewsTrackerTotal ?? 0);
-            $sdbConv=$sdbAdded>0 ? round($sdbJoined/$sdbAdded*100,1) : 0;
-            $sdbWin='';
-            $sdbStages=[['In Review',$sdbInReview,'#bdbd26'],['Sourcing',$sdbSourcing,'#000000'],['Screening',$sdbScreen,'#c000ff'],['Evaluation',$sdbEval,'#2896ff'],['Negotiation',$sdbNego,'#ff4098'],['Offer',$sdbOffer,'#ffab00'],['Joined',$sdbJoined,'#06c732'],['Rejected',$sdbReject,'#ff0202']];
-          @endphp
-          <div class="sdb-wrap">
-            <div class="sdb-top">
-              <div>
-                <div class="sdb-title">My Dashboard <span>&#128075;</span></div>
-                <div class="sdb-sub">Here's what's happening with your recruitment.</div>
-              </div>
-              @if($sdbWin)<span class="sdb-window"><i class="far fa-calendar-alt"></i> {{ $sdbWin }}</span>@endif
-            </div>
-            <div class="sdb-stats">
-              <div class="sdb-stat"><span class="sdb-st-ic ic-ind"><i class="fas fa-briefcase"></i></span><div class="sdb-st-lbl">Active Jobs</div><div class="sdb-st-num">{{ $sdbActive }}</div></div>
-              <div class="sdb-stat"><span class="sdb-st-ic ic-grn"><i class="fas fa-users"></i></span><div class="sdb-st-lbl">Candidates Added</div><div class="sdb-st-num">{{ $sdbAdded }}</div></div>
-              <div class="sdb-stat"><span class="sdb-st-ic ic-blu"><i class="fas fa-calendar-check"></i></span><div class="sdb-st-lbl">Interviews</div><div class="sdb-st-num">{{ $sdbInterviews }}</div></div>
-              <div class="sdb-stat"><span class="sdb-st-ic ic-amb"><i class="fas fa-file-signature"></i></span><div class="sdb-st-lbl">Offers</div><div class="sdb-st-num">{{ $sdbOffer }}</div></div>
-              <div class="sdb-stat"><span class="sdb-st-ic ic-vio"><i class="fas fa-handshake"></i></span><div class="sdb-st-lbl">Joinings</div><div class="sdb-st-num">{{ $sdbJoined }}</div></div>
-              <div class="sdb-stat"><span class="sdb-st-ic ic-rose"><i class="fas fa-chart-line"></i></span><div class="sdb-st-lbl">Joining Rate</div><div class="sdb-st-num">{{ $sdbConv }}%</div></div>
-            </div>
-            <div class="sdb-mid">
-              <div class="sdb-card">
-                <div class="sdb-head">
-                  <span class="sdb-head-t">Recruitment Pipeline</span>
-                  @if($sdbWin)<span class="sdb-head-sub">{{ $sdbWin }}</span>@endif
-                </div>
-                <div class="sdb-funnel">
-                  @foreach($sdbStages as $i => $stg)
-                    @php $w = max(34, 100 - $i*8.5); @endphp
-                    <div class="sdb-fn-row">
-                      <div class="sdb-fn-bar" style="width:{{ $w }}%;background:{{ $stg[2] }};">{{ $stg[1] }}</div>
-                      <div class="sdb-fn-lbl"><span>{{ $stg[0] }}</span><small>Candidates</small></div>
+            <div id="teamDashboardContentAjax">
+                <div class="text-center py-10" id="teamDashboardSpinner">
+                    <div class="spinner-border text-primary" role="status" style="width: 2.5rem; height: 2.5rem;">
+                        <span class="sr-only">Loading Dashboard...</span>
                     </div>
-                  @endforeach
+                    <div class="text-muted mt-3 font-weight-bold">Loading dashboard metrics & performance trends...</div>
                 </div>
-                <div class="sdb-fn-foot">
-                  <div><div class="sdb-ff-lbl">Total Added</div><div class="sdb-ff-num">{{ $sdbAdded }}</div></div>
-                  <div><div class="sdb-ff-lbl">Total Joined</div><div class="sdb-ff-num">{{ $sdbJoined }}</div></div>
-                  <div><div class="sdb-ff-lbl">Conversion Rate</div><div class="sdb-ff-num sdb-green">{{ $sdbConv }}%</div></div>
-                </div>
-              </div>
-              <div class="sdb-card">
-                <div class="sdb-head"><span class="sdb-head-t"><i class="fas fa-bolt sdb-bolt"></i> Action Center</span></div>
-                <div class="sdb-ac">
-                  <div class="sdb-ac-row"><span class="sdb-ac-ic ic-ind"><i class="fas fa-briefcase"></i></span><div class="sdb-ac-body"><div class="sdb-ac-t">Active Jobs</div><div class="sdb-ac-s">Jobs currently open for hiring</div></div><span class="sdb-ac-n">{{ $sdbActive }}</span></div>
-                  <div class="sdb-ac-row"><span class="sdb-ac-ic ic-amb"><i class="fas fa-file-signature"></i></span><div class="sdb-ac-body"><div class="sdb-ac-t">Offer Stage</div><div class="sdb-ac-s">Candidates currently at offer stage</div></div><span class="sdb-ac-n">{{ $sdbOffer }}</span></div>
-                  <div class="sdb-ac-row"><span class="sdb-ac-ic ic-vio"><i class="fas fa-comments-dollar"></i></span><div class="sdb-ac-body"><div class="sdb-ac-t">In Negotiation</div><div class="sdb-ac-s">Candidates in salary negotiation</div></div><span class="sdb-ac-n">{{ $sdbNego }}</span></div>
-                  <div class="sdb-ac-row"><span class="sdb-ac-ic ic-grn"><i class="fas fa-handshake"></i></span><div class="sdb-ac-body"><div class="sdb-ac-t">Joined</div><div class="sdb-ac-s">Candidates who have joined</div></div><span class="sdb-ac-n">{{ $sdbJoined }}</span></div>
-                  <div class="sdb-ac-row"><span class="sdb-ac-ic ic-rose"><i class="fas fa-pause-circle"></i></span><div class="sdb-ac-body"><div class="sdb-ac-t">Jobs on Hold</div><div class="sdb-ac-s">Jobs temporarily paused</div></div><span class="sdb-ac-n">{{ $sdbHold }}</span></div>
-                </div>
-                <a href="#user_requisitions" data-toggle="tab" class="sdb-ac-all">View All Jobs <i class="fas fa-arrow-right"></i></a>
-              </div>
             </div>
-            <div class="sdb-charts">
-              <div class="sdb-card">
-                <div class="sdb-head"><span class="sdb-head-t"><i class="fas fa-file-signature ic-t-amb"></i> Offer Trends</span><span class="sdb-head-sub">Last 6 Months</span></div>
-                <div class="sdb-chart"><canvas id="sdb_offer"></canvas></div>
-              </div>
-              <div class="sdb-card">
-                <div class="sdb-head"><span class="sdb-head-t"><i class="fas fa-handshake ic-t-grn"></i> Joinings Trend</span><span class="sdb-head-sub">Last 6 Months</span></div>
-                <div class="sdb-chart"><canvas id="sdb_join"></canvas></div>
-              </div>
-              <div class="sdb-card">
-                <div class="sdb-head"><span class="sdb-head-t"><i class="fas fa-calendar-check ic-t-vio"></i> Interviews Trend</span><span class="sdb-head-sub">Last 6 Months</span></div>
-                <div class="sdb-chart"><canvas id="sdb_interview"></canvas></div>
-              </div>
-              <div class="sdb-card">
-                <div class="sdb-head"><span class="sdb-head-t"><i class="fas fa-users ic-t-blu"></i> Candidates Added</span><span class="sdb-head-sub">Last 7 Days</span></div>
-                <div class="sdb-chart"><canvas id="sdb_candidates"></canvas></div>
-              </div>
-            </div>
-          </div>
-          <script>
-            (function(){
-              var __sdbDone=false;
-              function sdbArea(ctx,color,labels,data){
-                var g=ctx.createLinearGradient(0,0,0,200);
-                g.addColorStop(0,color+'40'); g.addColorStop(1,color+'05');
-                return new Chart(ctx,{type:'line',data:{labels:labels,datasets:[{data:data,borderColor:color,backgroundColor:g,borderWidth:2,fill:true,tension:0.4,pointRadius:3,pointHoverRadius:5,pointBackgroundColor:color,pointBorderColor:'#fff',pointBorderWidth:1.5}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{font:{size:11,family:'Poppins'}}},y:{beginAtZero:true,ticks:{precision:0,font:{size:11,family:'Poppins'}},grid:{color:'#f0f2f7'}}}}});
-              }
-              function sdbBar(ctx,color,labels,data){
-                return new Chart(ctx,{type:'bar',data:{labels:labels,datasets:[{data:data,backgroundColor:color,borderRadius:6,borderSkipped:false,barThickness:20,maxBarThickness:26}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{font:{size:10,family:'Poppins'}}},y:{beginAtZero:true,ticks:{precision:0,font:{size:11,family:'Poppins'}},grid:{color:'#f0f2f7'}}}}});
-              }
-              function drawSdb(){
-                if(__sdbDone || typeof Chart==='undefined') return;
-                var off=document.getElementById('sdb_offer'); if(!off || off.offsetParent===null) return;
-                __sdbDone=true;
-                sdbArea(off.getContext('2d'),'#f59e0b',{!! json_encode(@$labelsCommoffer ?? []) !!},{!! json_encode(@$candidateValuesCommoffer ?? []) !!});
-                var jn=document.getElementById('sdb_join'); if(jn) sdbArea(jn.getContext('2d'),'#16a34a',{!! json_encode(@$labelsCommjoin ?? []) !!},{!! json_encode(@$candidateValuesCommjoin ?? []) !!});
-                var iv=document.getElementById('sdb_interview'); if(iv) sdbArea(iv.getContext('2d'),'#7c4dff',{!! json_encode(@$interviewlabelsMonth ?? []) !!},{!! json_encode(@$interviewValuesMonth ?? []) !!});
-                var cn=document.getElementById('sdb_candidates'); if(cn) sdbBar(cn.getContext('2d'),'#2196f3',{!! json_encode(@$labels ?? []) !!},{!! json_encode(@$candidateValues ?? []) !!});
-              }
-              document.addEventListener('click',function(e){var a=e.target.closest('a[href="#candidateDashboard"]');if(a)setTimeout(drawSdb,60);});
-              if(window.jQuery){jQuery(function($){$('a[href="#candidateDashboard"]').on('shown.bs.tab',drawSdb);});}
-              setTimeout(drawSdb,400);
-            })();
-          </script>
-          <!-- legacy dashboard markup kept hidden to preserve existing chart bindings -->
-          <div class="d-none" aria-hidden="true">
-            <div class="card mb-3 bg-light mb-xl-3 mx-0 shadow-none rounded-0">
-              <div class="card-body px-0 pt-0 pb-0">
-                <div class="card mb-3 mb-xl-3 mx-0 shadow-none rounded-0">
-
-                   <div class="row gx-5 gx-xl-10 mb-xl-10">
-                      <div class="col-md-6 col-xl-cus-5 col-lg-6 col-xl-5 col-xxl-6 mb-2">
-                        <div class="card card-flush h-md-50 mb-5 mb-xl-10">
-                            @php
-                              $active_count = $counts->get('active', 0);
-                              $hold_count = $counts->get('hold', 0);
-                              $inactive_count = $counts->get('inactive', 0);
-                              $alljobs_count = $active_count + $hold_count + $inactive_count;
-                            @endphp
-                            <!--begin::Header-->
-                            <div class="card-header pt-5">
-                                <!--begin::Title-->
-                                <div class="card-title d-flex flex-column">   
-                                    <!--begin::Info--> 
-                                    <div class="d-flex align-items-center">
-                                        <!--begin::Currency-->
-                                        <span class="fs-4 fw-semibold text-gray-500 me-1 align-self-start"></span>
-                                        <!--end::Currency-->
-
-                                        <!--begin::Amount-->
-                                        <span class="fs-2hx fw-bold text-gray-900 me-2 lh-1 ls-n2">{{ $inactive_count+$active_count+$hold_count }}</span>
-                                        <!--end::Amount-->
-
-                                        <!--begin::Badge-->
-                                        {{-- <span class="badge badge-light-success fs-base">                                
-                                            <i class="ki-outline ki-arrow-up fs-5 text-success ms-n1"></i> 
-                                            2.2%
-                                        </span>             --}}
-                                        <!--end::Badge--> 
-                                    </div>
-                                    <!--end::Info--> 
-
-                                    <!--begin::Subtitle-->
-                                    <span class="text-gray-500 pt-1 fw-semibold fs-6">All Jobs</span>
-                                    <!--end::Subtitle--> 
-                                </div>
-                                <!--end::Title-->      
-                            </div>
-                            <!--end::Header-->
-
-                            <!--begin::Card body-->
-                            <div class="card-body pt-2 pb-4 d-flex align-items-center">
-                                <!--begin::Chart-->
-                                <div class="d-flex flex-center me-5 pt-2">
-                                    <div 
-                                        id="kt_card_widget_4_chart_<?php echo @$users->id; ?>" 
-                                        style="min-width: 170px; min-height: 170px" 
-                                        data-kt-size="170" 
-                                        data-kt-line="11">
-                                        <span></span>
-                                        <canvas id="allJobGrapg_<?php echo @$users->id; ?>" height="70" width="70"></canvas>
-                                    </div>
-                                </div>
-                                <!--end::Chart-->
-                                
-                                <!--begin::Labels-->
-                                <div class="d-flex flex-column content-justify-center w-100">
-                                    <!--begin::Label-->
-                                    <div class="d-flex fs-6 fw-semibold align-items-center">
-                                        <!--begin::Bullet-->
-                                        <div class="bullet w-8px h-6px rounded-2 me-3" style="background-color: #22c55e"></div>
-                                        <!--end::Bullet-->
-
-                                        <!--begin::Label-->
-                                        <div class="text-gray-500 flex-grow-1 me-4">Active Jobs</div>
-                                        <!--end::Label-->
-
-                                        <!--begin::Stats-->
-                                        <div class="fw-bolder text-gray-700 text-xxl-end">{{ $active_count }}</div>
-                                        <!--end::Stats-->
-                                    </div>
-                                    <!--end::Label-->
-
-                                    <!--begin::Label-->
-                                    <div class="d-flex fs-6 fw-semibold align-items-center my-3">
-                                        <!--begin::Bullet-->
-                                        <div class="bullet w-8px h-6px rounded-2 me-3" style="background-color: #ffab00"></div>
-                                        <!--end::Bullet-->
-
-                                        <!--begin::Label-->
-                                        <div class="text-gray-500 flex-grow-1 me-4">Hold Jobs</div>
-                                        <!--end::Label-->
-
-                                        <!--begin::Stats-->
-                                        <div class="fw-bolder text-gray-700 text-xxl-end">{{ $hold_count }}</div>
-                                        <!--end::Stats-->                    
-                                    </div>
-                                    <!--end::Label-->
-
-                                    <!--begin::Label-->
-                                    <div class="d-flex fs-6 fw-semibold align-items-center">
-                                        <!--begin::Bullet-->
-                                        <div class="bullet w-8px h-6px rounded-2 me-3" style="background-color: #ff0202"></div>
-                                        <!--end::Bullet-->
-
-                                        <!--begin::Label-->
-                                        <div class="text-gray-500 flex-grow-1 me-4">Closed Jobs</div>
-                                        <!--end::Label-->
-
-                                        <!--begin::Stats-->
-                                        <div class=" fw-bolder text-gray-700 text-xxl-end">{{ $inactive_count }}</div>
-                                        <!--end::Stats-->                      
-                                    </div>
-                                    <!--end::Label-->
-                                </div>
-                                <!--end::Labels-->
-                            </div>
-                            <!--end::Card body-->
-
-                        </div>                       
-                      </div>
-                      <div class="col-md-6 col-xl-cus-5 col-lg-6 col-xl-5 col-xxl-6 mb-2">
-                        <div class="card card-flush  h-md-50 mb-5 mb-xl-10">
-                          <!--begin::Card widget 6-->
-                          <div class="card card-flush  h-md-50 mb-5 mb-xl-10">
-                              <!--begin::Header-->
-                              <div class="card-header pt-5">
-                                  <!--begin::Title-->
-                                  <div class="card-title d-flex flex-column">   
-                                      <!--begin::Info--> 
-                                      <div class="d-flex align-items-center">
-                                          <!--begin::Currency-->
-                                          <span class="fs-4 fw-semibold text-gray-500 me-1 align-self-start"></span>
-                                          <!--end::Currency-->
-
-                                          <!--begin::Amount-->
-                                          <span class="fs-2hx fw-bold text-gray-900 me-2 lh-1 ls-n2">{{$candidateValuesTotal}}</span>
-                                          <!--end::Amount-->
-
-                                          <!--begin::Badge-->
-                                          {{-- <span class="badge badge-light-success fs-base">                                
-                                              <i class="ki-outline ki-arrow-up fs-5 text-success ms-n1"></i> 
-                                              2.6%
-                                          </span>             --}}
-                                          <!--end::Badge--> 
-                                      </div>
-                                      <!--end::Info--> 
-
-                                      <!--begin::Subtitle-->
-                                      <span class="text-gray-500 pt-1 fw-semibold fs-6">Added in last 7 days</span>
-                                      <!--end::Subtitle--> 
-                                  </div>
-                                  <!--end::Title-->           
-                              </div>
-                              <!--end::Header-->
-
-                              <!--begin::Card body-->
-                              <div class="card-body d-flex align-items-end px-3 pb-10">
-                                  <!--begin::Chart-->
-                                  <div id="kt_card_widget_6_chart_<?php echo @$users->id; ?>" class="w-100" style="height: 200px">
-                                      <div 
-                                          id="kt_card_widget_4_chart_<?php echo @$users->id; ?>" 
-                                          style="min-width: 100%; min-height: 200px">
-                                          <canvas id="candidates_left_chart_<?php echo @$users->id; ?>" height="170"></canvas>
-                                      </div>
-                                  </div>
-                                  <!--end::Chart-->
-                              </div>
-                              <!--end::Card body-->
-                          </div>
-                          <!--end::Card widget 6--> 
-                        </div>
-                      </div>
-                      <div class="col-lg-12 col-xl-cus-12 col-xl-12 col-xxl-12 mb-5 mb-xl-0">
-                          <div class="card card-flush overflow-hidden h-md-100">
-                              <!--begin::Header-->
-                              <div class="card-header py-5">
-                                  <!--begin::Title-->
-                                  <h3 class="card-title align-items-start flex-column">   
-                                      <span class="fs-2hx fw-bold text-gray-900 me-2 lh-1 ls-n2">{{$total_candidates}} </span>         
-                                      <span class="text-gray-500 pt-1 fw-semibold fs-6">Added In {{ date('d M y',strtotime($startOfMonth)) }} To {{ date('d M y',strtotime($endOfMonth)) }}</span>
-                                      {{-- <span class="text-gray-500 mt-1 fw-semibold fs-6">Users from all channels</span> --}}
-                                  </h3>
-                                  <!--end::Title-->
-                              </div>
-                              <!--end::Header-->
-
-                              <!--begin::Card body-->
-                              <div class="card-body d-flex justify-content-between flex-column pb-1 px-0" style="position: relative">  
-                                  <!--begin::Chart-->
-                                  {{-- <div style="position: absolute; bottom: 50px; width: 222px; height: 53px; background: #ffffff; z-index: 99;"> </div> --}}
-                                  <div id="kt_charts_widget_3" class="min-h-auto">
-
-                                      <canvas id="myChart_<?php echo @$users->id; ?>"></canvas>
-
-                                      
-          
-                                      {{-- <div id="chart-container" style="width: 600px; height: 420px; margin: auto;"></div> --}}
-                                  </div><br>
-                                  <!--end::Chart--> 
-                              </div>
-                              <!--end::Card body-->
-                          </div>
-                      </div>
-                   </div>
-                   <div class="row gx-5 gx-xl-10 mb-xl-10">
-                      <div class="col-md-6 col-xl-cus-5 col-lg-6 col-xl-5 col-xxl-6 mb-2">
-                        <div class="card card-flush h-md-50 mb-xl-10">
-                            <!--begin::Header-->
-                            <div class="card-header pt-5">
-                                <!--begin::Title-->
-                                <div class="card-title d-flex flex-column">   
-                                    <!--begin::Info--> 
-                                    <div class="d-flex align-items-center">
-                                        <!--begin::Amount-->
-                                        <span class="fs-2hx fw-bold text-gray-900 me-2 lh-1 ls-n2">{{$candidateValuesTotaloffer}}</span>
-                                        <!--end::Amount-->
-                                        
-                                        <!--begin::Badge-->
-                                        {{-- <span class="badge badge-light-danger fs-base">                                
-                                            <i class="ki-outline ki-arrow-down fs-5 text-danger ms-n1"></i> 
-                                            2.2%
-                                        </span>             --}}
-                                        <!--end::Badge-->                
-                                    </div>
-                                    <!--end::Info--> 
-
-                                    <!--begin::Subtitle-->
-                                    <span class="text-gray-500 pt-1 fw-semibold fs-6">Offers In {{ date("M Y ", strtotime($startOfMonthcomman)) }} To {{ date("M Y ", strtotime($endOfMonthcomman)) }}</span>             
-                                    <!--end::Subtitle--> 
-                                </div>
-                                <!--end::Title-->         
-                            </div>
-                            <!--end::Header-->
-
-                            <!--begin::Card body-->
-                            <div class="card-body d-flex align-items-end pt-0">
-                                <!--begin::Progress-->
-                                
-
-                                <div class="d-flex align-items-center flex-column mt-3 w-100">
-                                    <div 
-                                        id="kt_card_widget_4_chart_<?php echo @$users->id; ?>" 
-                                        style="min-width: 100%; min-height: 200px">
-                                        <canvas id="candidates_offer_chart_<?php echo @$users->id; ?>" height="170"></canvas>
-                                    </div>
-                                </div>
-                                <!--end::Progress-->
-                            </div>
-                            <!--end::Card body-->
-
-                        </div>                        
-                      </div>
-                      <div class="col-md-6 col-xl-cus-5 col-lg-6 col-xl-5 col-xxl-6 mb-2">
-                        <div class="card card-flush h-md-50 mb-xl-10">
-                          
-                            <!--begin::Header-->
-                            <div class="card-header pt-5">
-                                <!--begin::Title-->
-                                <div class="card-title d-flex flex-column">                
-                                    <!--begin::Amount-->
-                                    <span class="fs-2hx fw-bold text-gray-900 me-2 lh-1 ls-n2">{{$candidateValuesTotaljoin}}</span>
-                                    <!--end::Amount-->           
-
-                                    <!--begin::Subtitle-->
-                                    <span class="text-gray-500 pt-1 fw-semibold fs-6">Joined In {{ date("M Y ", strtotime($startOfMonthcomman)) }} To {{ date("M Y ", strtotime($endOfMonthcomman)) }}</span>
-                                    <!--end::Subtitle--> 
-                                </div>
-                                <!--end::Title-->           
-                            </div>
-                            <!--end::Header-->
-
-                            <!--begin::Card body-->
-                            <div class="card-body d-flex flex-column justify-content-end pe-0">
-                                <!--begin::Title-->
-                                <!--end::Title-->
-
-                                <!--begin::Users group-->
-                                <div class="symbol-group symbol-hover flex-nowrap">
-
-                                    <div 
-                                        id="kt_card_widget_4_chart_<?php echo @$users->id; ?>" 
-                                        style="min-width: 100%; min-height: 200px">
-                                        <canvas id="candidates_join_chart_<?php echo @$users->id; ?>" height="170"></canvas>
-                                    </div>
-
-
-                                           
-                                </div>
-                                <!--end::Users group-->
-                            </div>
-                            <!--end::Card body-->
-
-                        </div>
-                      </div>
-
-                   </div>
-
-                <!--Start Interview Section-->
-                    <div class="row gy-5 g-xl-10">
-                        <!--begin::Col-->
-                        <div class="col-xl-4 mb-xl-10">
-                            
-                            <!--begin::List widget 17-->
-                            <div class="card card-flush h-xl-100">
-                                <!--begin::Header-->
-                                <div class="card-header pt-7">
-                                    <!--begin::Title-->
-                                    <h3 class="card-title align-items-start flex-column">
-                                        <span class="card-label fw-bold text-gray-800">Upcoming Interviews</span>
-                                    </h3>
-                                    <!--end::Title-->
-                                    <!--end::Toolbar-->
-                                </div>
-                                <!--end::Header-->
-
-                                <!--begin::Body-->
-                                <div class="card-body pt-0"> 
-                                    
-                                        <!--begin::Content-->                                  
-                                        <div class="d-flex flex-stack my-5">
-                                            <span class="text-gray-500 fs-7 fw-bold"></span>
-                                            
-                                            <span class="text-gray-500 fw-bold fs-7"></span>
-                                        </div>                   
-                                        <!--end::Content-->
-
-                                        @if (count($upcomingData) > 0)
-                                            @foreach ($upcomingData as $rowArr)
-
-                                                @php
-                                                $row = (object) $rowArr;
-                                                $schedule_date = Carbon::parse($row->schedule_date)->format('M d');
-                                                $schedule_date_explode = explode(" ",$schedule_date);
-                                                @endphp
-                                    
-                                                <!--begin::Item-->
-                                                <div class="d-flex flex-stack">                 
-                                                    <!--begin::Wrapper-->                                  
-                                                    <div class="d-flex align-items-center me-3">
-                                                        <!--begin::Icon-->                         
-                                                        <a href="#" class="btn btn-sm btn-icon btn-bg-light btn-active-color-primary w-40px h-40px mr-2 text-center" style="display: inline-grid">
-                                                          <span style="font-size: 12px; font-weight: 600;">{{$schedule_date_explode[0]}}</span><span style="color: #373bed; font-size: 17px; font-weight: 900;">{{$schedule_date_explode[1]}}</span>                
-                                                        </a>                 
-                                                        <!--end::Icon-->
-
-                                                        <!--begin::Section-->                                  
-                                                        <div class="flex-grow-1">
-                                                            <a href="javascript:;" class="text-gray-800 text-hover-primary fs-5 fw-bold lh-0">{{ucwords(mb_substr(@$row->full_name, 0, 20))}}</a>
-                                                            
-                                                            <span class="text-gray-500 fw-semibold d-block fs-7">{{ucwords(mb_substr(@$row->current_designation, 0, 21))}}</span>
-                                                        </div>                   
-                                                        <!--end::Section-->
-                                                    </div>                   
-                                                    <!--end::Wrapper-->                 
-
-                                                    <!--begin::Value-->
-                                                    <span class="text-gray-800 fw-bold fs-6">
-                                                        {{$row->schedule_to_time. ($row->timezone_abbreviation ? ' (' . $row->timezone_abbreviation . ')' : '')}} <br>
-                                                        <span class="text-gray-500 fw-semibold d-block fs-7">
-                                                        {{ucwords(mb_substr($row->mode_name, 0, 13))}} 
-                                                        <span> 
-                                                    </span>
-                                                    <!--end::Value-->               
-                                                </div>
-                                                <!--end::Item-->
-
-                                                <!--begin::Separator-->
-                                                <div class="separator separator-dashed my-4"></div>
-                                                <!--end::Separator-->
-                                            @endforeach
-                                        @else
-                                            <table border="1" width="100%" cellpadding="10">
-                                                <tbody>
-                                                        <tr>
-                                                            <td colspan="4" align="center">No records found</td>
-                                                        </tr>
-                                                </tbody>
-                                            </table>
-                                        @endif                                   
-                                    
-                                </div>
-                                <!--end::Body-->
-                            </div>
-                            <!--end::List widget 17-->     
-                        </div>
-                        <!--end::Col-->      
-
-                        <!--begin::Col-->
-                        <div class="col-xl-8 mb-5 mb-xl-10">
-                            
-                            <!--begin::Table widget 6-->
-                            <div class="card card-flush h-xl-100">
-                                <!--begin::Header-->
-                                <div class="card-header pt-7" style="position: relative">
-                                    <!--begin::Title-->
-                                    <h3 class="card-title align-items-start flex-column">			
-                                        <span class="card-label fw-bold text-gray-800">Candidates Interviews</span>
-                                    </h3>
-                                    <!--end::Title-->
-                                    <span class="" style="position: absolute; right: 14px; top: 26px;"> 
-                                      <select class="form-select form-select-lg form-select-solid" data-hide-search="true" id="sortingfilter" data-dropdown-css-class="w-150px" data-placeholder="Select an option" style="border: 1px solid #ffffff;" onchange="filtersdatagetmonth(this.value)">
-                                            <option value="1">Last 6 Months</option>
-                                            <option value="0">Last 7 Days</option>
-                                        </select>
-                                    </span>
-                                    
-                                </div>
-                                <!--end::Header-->
-
-                                <!--begin::Body-->
-                                <div class="card-body">       
-                                    <!--begin::Tab Content-->
-                                    <div class="tab-content">
-                                            <!--begin::Tap pane-->
-                                            <div class="tab-pane fade active show" id="kt_stats_widget_6_tab_1_<?php echo @$users->id; ?>" role="tabpanel">
-                                                <!--begin::Table container-->
-
-                                                <div id="kt_card_widget_6_chart_<?php echo @$users->id; ?>" class="w-100" style="height: 200px">
-
-                                                    <div class="inetview_recent_chart_<?php echo @$users->id; ?> d-none" id="kt_card_widget_4_chart_<?php echo @$users->id; ?>" 
-                                                        style="min-width: 100%; min-height: 200px">
-                                                        <canvas id="inetview_recent_chart_<?php echo @$users->id; ?>" height="300"></canvas>
-                                                    </div>
-                                                    
-                                                    <div class="inetview_recent_chart_month_<?php echo @$users->id; ?>" id="kt_card_widget_4_chart" 
-                                                            style="min-width: 100%; min-height: 200px">
-                                                            <canvas id="inetview_recent_chart_month_<?php echo @$users->id; ?>" height="230"></canvas>
-                                                    </div>
-
-                                                </div>
-
-                                                      
-                                                <!--end::Table-->
-                                            </div>
-                                            <!--end::Tap pane-->
-                                    </div>
-                                    <!--end::Tab Content-->        
-                                </div>
-                                <!--end: Card Body-->
-                            </div>
-                            <!--end::Table widget 6-->   
-                        </div>
-                        <!--end::Col-->      
-                    </div>
-                <!--End Interview Section-->
-
-
-                </div>
-              </div>
-            </div>
-          </div>
         </div>
+        <!--end::candidateDashboard Content-->
+
   <!--end begin::candidateDashboard Content-->
 
 
@@ -1600,7 +897,8 @@ use Carbon\Carbon;
                     labels: ['Active Jobs', 'Hold Jobs', 'Closed Jobs'], // Labels for the chart
                     datasets: [{
                         label: 'Total',
-                        data: ['{{ $active_count }}', '{{ $hold_count }}', '{{ $inactive_count }}'], // Values for the chart
+                        data: ['{{ $active_count ?? 0 }}', '{{ $hold_count ?? 0 }}', '{{ $inactive_count ?? 0 }}'], // Values for the chart
+
                         backgroundColor: [
                             '#22c55e', // Green for 'Active Jobs'
                             '#ffab00', // Blue for 'Hold Jobs'
@@ -1860,7 +1158,7 @@ use Carbon\Carbon;
 
 
       $('#myTable_jmyRank').DataTable({
-              pageLength: 12,          // Default number of rows per page
+              pageLength: 10,          // Default number of rows per page
               lengthChange: false,     // 🔒 disables the lengthMenu dropdown
               ordering: false,
               paging: true,
@@ -1892,208 +1190,450 @@ use Carbon\Carbon;
 
    
 
+/**
+ * Debounce helper for input search fields.
+ * Prevents firing rapid back-to-back XHR queries on every keystroke (300ms delay).
+ */
+function debounce(func, wait) {
+    var timeout;
+    wait = wait || 300;
+    return function() {
+        var context = this, args = arguments;
+        clearTimeout(timeout);
+        timeout = setTimeout(function() {
+            func.apply(context, args);
+        }, wait);
+    };
+}
+
+window.teamActiveXHRs = {
+    jobs: null,
+    candidate: null,
+    joining: null,
+    interview: null,
+    rank: null,
+    dashboard: null
+};
+
+function cancelInFlightXHR(key) {
+    if (window.teamActiveXHRs[key] && window.teamActiveXHRs[key].readyState !== 4) {
+        window.teamActiveXHRs[key].abort();
+    }
+}
+
+window.destroyAllTeamCharts = function() {
+    if (window.teamCharts) {
+        Object.keys(window.teamCharts).forEach(function(key) {
+            if (window.teamCharts[key] && typeof window.teamCharts[key].destroy === 'function') {
+                try { window.teamCharts[key].destroy(); } catch(e) {}
+                window.teamCharts[key] = null;
+            }
+        });
+    }
+};
+
+window.TeamViewMoreTabManager = {
+    tabs: {
+        'user_overview': { loaded: true, loading: false },
+        'user_requisitions': { loaded: false, loading: false },
+        'user_candidate': { loaded: false, loading: false },
+        'user_interview_tracker': { loaded: false, loading: false },
+        'user_joining': { loaded: false, loading: false },
+        'myRank': { loaded: false, loading: false },
+        'candidateDashboard': { loaded: false, loading: false }
+    },
+    init: function() {
+        var self = this;
+        $(document).on('shown.bs.tab', 'a[data-toggle="tab"], a[data-bs-toggle="tab"]', function(e) {
+            var href = $(this).attr('href');
+            if (!href) return;
+            var target = href.replace('#', '');
+            self.loadTabIfNeeded(target);
+        });
+    },
+
+    loadTabIfNeeded: function(tabKey) {
+        if (!this.tabs[tabKey] || this.tabs[tabKey].loaded || this.tabs[tabKey].loading) {
+            return;
+        }
+
+        this.setLoading(tabKey, true);
+        switch (tabKey) {
+            case 'user_requisitions':
+                fetchTeamJobs();
+                break;
+            case 'user_candidate':
+                fetchTeamCandidate();
+                break;
+            case 'user_interview_tracker':
+                fetchTeamCandidateInterviewTracker();
+                break;
+            case 'user_joining':
+                fetchTeamCandidateJoining();
+                break;
+            case 'myRank':
+                if (typeof fetchTeamRankData === 'function') { fetchTeamRankData(); }
+                break;
+            case 'candidateDashboard':
+                if (typeof fetchTeamDashboardData === 'function') { fetchTeamDashboardData(); }
+                break;
+        }
+    },
+    markLoaded: function(tabKey) {
+        if (this.tabs[tabKey]) {
+            this.tabs[tabKey].loaded = true;
+            this.tabs[tabKey].loading = false;
+        }
+    },
+    setLoading: function(tabKey, isLoading) {
+        if (this.tabs[tabKey]) {
+            this.tabs[tabKey].loading = !!isLoading;
+        }
+    }
+};
+
 $(document).ready(function() {
-    fetchTeamJobs();
-    fetchTeamCandidate();
-    fetchTeamCandidateJoining();
-    fetchTeamCandidateInterviewTracker();
+    TeamViewMoreTabManager.init();
+    var activeTab = $('a[data-toggle="tab"].active, a[data-bs-toggle="tab"].active').attr('href');
+    if (activeTab) {
+        TeamViewMoreTabManager.loadTabIfNeeded(activeTab.replace('#', ''));
+    }
 
-  $(document).on('click', '#paginationTeamtjobs .page-link', function(e) {
+
+  $(document).on('click', '#paginationTeamtjobs .page-link, #paginationTeamtjobs .pagi-page, #paginationTeamtjobs .pagi-arrow, #paginationTeamtjobs .team-page-link', function(e) {
           e.preventDefault();
 
           const page = $(this).data('page');
-          if (!page || $(this).hasClass('disabled')) return;
+          if (!page || $(this).hasClass('disabled') || $(this).hasClass('pagi-disabled') || $(this).hasClass('pagi-active')) return;
 
-          // Disable the clicked pagination link
-          $(this).addClass('disabled');
+          // Disable pagination links during fetch to prevent rapid duplicate clicks
+          $('#paginationTeamtjobs button, #paginationTeamtjobs .page-link, #paginationTeamtjobs .team-page-link').addClass('disabled pagi-disabled');
 
-          // Fetch data
-          fetchTeamJobs(page, $('#search').val()).then(() => {
-              // Re-enable the links after successful data fetch
-              $('#paginationTeamtjobs .page-link').removeClass('disabled');
-          }).catch(() => {
-              // Re-enable the links even if there's an error
-              $('#paginationTeamtjobs .page-link').removeClass('disabled');
-          });
-          
+          // Fetch data and re-enable links on completion
+          var promise = fetchTeamJobs(page, $('#search').val());
+          if (promise && typeof promise.always === 'function') {
+              promise.always(function() {
+                  $('#paginationTeamtjobs button, #paginationTeamtjobs .page-link, #paginationTeamtjobs .team-page-link').removeClass('disabled pagi-disabled');
+              });
+          } else {
+              $('#paginationTeamtjobs button, #paginationTeamtjobs .page-link, #paginationTeamtjobs .team-page-link').removeClass('disabled pagi-disabled');
+          }
   });
 
-  $(document).on('click', '#paginationTeamtCandidates .page-link', function(e) {
+  $(document).on('click', '#paginationTeamtCandidates .page-link, #paginationTeamtCandidates .pagi-page, #paginationTeamtCandidates .pagi-arrow, #paginationTeamtCandidates .team-page-link', function(e) {
           e.preventDefault();
 
           const page = $(this).data('page');
-          if (!page || $(this).hasClass('disabled')) return;
+          if (!page || $(this).hasClass('disabled') || $(this).hasClass('pagi-disabled') || $(this).hasClass('pagi-active')) return;
 
-          // Disable the clicked pagination link
-          $(this).addClass('disabled');
+          // Disable pagination links during fetch to prevent rapid duplicate clicks
+          $('#paginationTeamtCandidates button, #paginationTeamtCandidates .page-link, #paginationTeamtCandidates .team-page-link').addClass('disabled pagi-disabled');
 
-          // Fetch data
-          fetchTeamCandidate(page, $('#search').val()).then(() => {
-              // Re-enable the links after successful data fetch
-              $('#paginationTeamtCandidates .page-link').removeClass('disabled');
-          }).catch(() => {
-              // Re-enable the links even if there's an error
-              $('#paginationTeamtCandidates .page-link').removeClass('disabled');
-          });
-          
+          // Fetch data and re-enable links on completion
+          var promise = fetchTeamCandidate(page, $('#search').val());
+          if (promise && typeof promise.always === 'function') {
+              promise.always(function() {
+                  $('#paginationTeamtCandidates button, #paginationTeamtCandidates .page-link, #paginationTeamtCandidates .team-page-link').removeClass('disabled pagi-disabled');
+              });
+          } else {
+              $('#paginationTeamtCandidates button, #paginationTeamtCandidates .page-link, #paginationTeamtCandidates .team-page-link').removeClass('disabled pagi-disabled');
+          }
   });
-  $(document).on('click', '#paginationteamjoiningjobs .page-link', function(e) {
+
+  $(document).on('click', '#paginationteamjoiningjobs .page-link, #paginationteamjoiningjobs .pagi-page, #paginationteamjoiningjobs .pagi-arrow, #paginationteamjoiningjobs .team-page-link', function(e) {
           e.preventDefault();
 
           const page = $(this).data('page');
-          if (!page || $(this).hasClass('disabled')) return;
+          if (!page || $(this).hasClass('disabled') || $(this).hasClass('pagi-disabled') || $(this).hasClass('pagi-active')) return;
 
-          // Disable the clicked pagination link
-          $(this).addClass('disabled');
+          // Disable pagination links during fetch to prevent rapid duplicate clicks
+          $('#paginationteamjoiningjobs button, #paginationteamjoiningjobs .page-link, #paginationteamjoiningjobs .team-page-link').addClass('disabled pagi-disabled');
 
-          // Fetch data
-          fetchTeamCandidateJoining(page, $('#search').val()).then(() => {
-              // Re-enable the links after successful data fetch
-              $('#paginationteamjoiningjobs .page-link').removeClass('disabled');
-          }).catch(() => {
-              // Re-enable the links even if there's an error
-              $('#paginationteamjoiningjobs .page-link').removeClass('disabled');
-          });
-          
+          // Fetch data and re-enable links on completion
+          var promise = fetchTeamCandidateJoining(page, $('#search').val());
+          if (promise && typeof promise.always === 'function') {
+              promise.always(function() {
+                  $('#paginationteamjoiningjobs button, #paginationteamjoiningjobs .page-link, #paginationteamjoiningjobs .team-page-link').removeClass('disabled pagi-disabled');
+              });
+          } else {
+              $('#paginationteamjoiningjobs button, #paginationteamjoiningjobs .page-link, #paginationteamjoiningjobs .team-page-link').removeClass('disabled pagi-disabled');
+          }
   });
-  $(document).on('click', '#paginationteaminterviewjobs .page-link', function(e) {
+
+  $(document).on('click', '#paginationteaminterviewjobs .page-link, #paginationteaminterviewjobs .pagi-page, #paginationteaminterviewjobs .pagi-arrow, #paginationteaminterviewjobs .team-page-link', function(e) {
           e.preventDefault();
 
           const page = $(this).data('page');
-          if (!page || $(this).hasClass('disabled')) return;
+          if (!page || $(this).hasClass('disabled') || $(this).hasClass('pagi-disabled') || $(this).hasClass('pagi-active')) return;
 
-          // Disable the clicked pagination link
-          $(this).addClass('disabled');
+          // Disable pagination links during fetch to prevent rapid duplicate clicks
+          $('#paginationteaminterviewjobs button, #paginationteaminterviewjobs .page-link, #paginationteaminterviewjobs .team-page-link').addClass('disabled pagi-disabled');
 
-          // Fetch data
-          fetchTeamCandidateInterviewTracker(page, $('#search').val()).then(() => {
-              // Re-enable the links after successful data fetch
-              $('#paginationteaminterviewjobs .page-link').removeClass('disabled');
-          }).catch(() => {
-              // Re-enable the links even if there's an error
-              $('#paginationteaminterviewjobs .page-link').removeClass('disabled');
-          });
-          
+          // Fetch data and re-enable links on completion
+          var promise = fetchTeamCandidateInterviewTracker(page, $('#search').val());
+          if (promise && typeof promise.always === 'function') {
+              promise.always(function() {
+                  $('#paginationteaminterviewjobs button, #paginationteaminterviewjobs .page-link, #paginationteaminterviewjobs .team-page-link').removeClass('disabled pagi-disabled');
+              });
+          } else {
+              $('#paginationteaminterviewjobs button, #paginationteaminterviewjobs .page-link, #paginationteaminterviewjobs .team-page-link').removeClass('disabled pagi-disabled');
+          }
   });
 
-  document.getElementById('kt_tagify_search').addEventListener('keyup', function() {
-		var userId = $('#kt_tagify_hidden').val();
-		fetchTeamJobs();
-	});
-
-
-  // $(document).on('keyup',function(){
-	// 	var userId = $('#kt_tagify_hidden').val();
-	// 	fetchTeamJobs();
-	// });
-
+  var searchEl = document.getElementById('kt_tagify_search');
+  if (searchEl) {
+      searchEl.addEventListener('keyup', debounce(function() {
+          fetchTeamJobs();
+      }, 300));
+  }
 
 });
 
+window.safeInjectHTML = function(selector, htmlString) {
+    if (window.requestAnimationFrame) {
+        window.requestAnimationFrame(function() {
+            var $target = typeof selector === 'string' ? $(selector) : selector;
+            if ($target && $target.length) {
+                $target.html(htmlString);
+            }
+        });
+    } else {
+        var $target = typeof selector === 'string' ? $(selector) : selector;
+        if ($target && $target.length) {
+            $target.html(htmlString);
+        }
+    }
+};
+
+window.renderTeamTabError = function(containerSelector, retryFnName, message) {
+    var msg = message || 'Failed to load tab data. Please check your network connection and try again.';
+    var errorHtml = `
+        <div class="alert alert-custom alert-light-danger fade show m-5 p-5 shadow-sm rounded" role="alert">
+            <div class="alert-icon"><i class="fa-solid fa-triangle-exclamation text-danger fs-3"></i></div>
+            <div class="alert-text font-weight-bolder text-dark ml-2">
+                ${msg}
+            </div>
+            <div class="alert-close ml-4">
+                <button type="button" class="btn btn-sm btn-outline-danger font-weight-bolder px-4" onclick="${retryFnName}()">
+                    <i class="fa-solid fa-rotate-right mr-1"></i> Retry
+                </button>
+            </div>
+        </div>
+    `;
+    safeInjectHTML(containerSelector, errorHtml);
+};
+
 function fetchTeamJobs(page = 1, search = '') {
- var userId  = '{{ @$userId }}';
-      $('.loadingMessageteamJobsListajax').css({ display: 'block' });
-      $.ajax({
-          url: `{!! route('service_company.team.jobdata_ajax') !!}?page=${page}`,
-          type: 'GET',
-          data: {
-              userId: userId,
-              search: $('#inputSearch').val(),
-              custom_search: $('#kt_tagify_search').val(),
-              custom_status: $('#statusjb').val(),
-              custom_hiringtype: $('#hiringtypejob').val(),
-              profile:true
-          },
-          success: function(response) {
-              $('.loadingMessage').css({ display: 'none' });
-              $('#teamJobsListajax').html(response.html);
-              $('#paginationTeamtjobs').html(response.pagination);
-          }
-      });
+    cancelInFlightXHR('jobs');
+    var userId = '{{ @$userId }}';
+    $('.loadingMessageteamJobsListajax').css({ display: 'block' });
+    return window.teamActiveXHRs['jobs'] = $.ajax({
+        url: `{!! route('service_company.team.jobdata_ajax') !!}?page=${page}`,
+        type: 'GET',
+        data: {
+            userId: userId,
+            search: $('#inputSearch').val(),
+            custom_search: $('#kt_tagify_search').val(),
+            custom_status: $('#statusjb').val(),
+            custom_hiringtype: $('#hiringtypejob').val(),
+            profile: true
+        },
+        success: function(response) {
+            $('.loadingMessage').css({ display: 'none' });
+            safeInjectHTML('#teamJobsListajax', response.html);
+            safeInjectHTML('#paginationTeamtjobs', response.pagination);
+            TeamViewMoreTabManager.markLoaded('user_requisitions');
+        },
+        error: function(xhr, status, error) {
+            if (status === 'abort') return;
+            $('.loadingMessage').css({ display: 'none' });
+            TeamViewMoreTabManager.setLoading('user_requisitions', false);
+            renderTeamTabError('#teamJobsListajax', 'fetchTeamJobs');
+        }
+    });
 }
-
-
 
 function fetchTeamCandidate(page = 1, search = '') {
-  var userId  = '{{ @$userId }}';
-      $('.loadingMessageteamCandidatesListajax').css({ display: 'block' });
-      $.ajax({
-          url: `{!! route('service_company.team.appdata_ajax') !!}?page=${page}`,
-          type: 'GET',
-          data: {
-              userId: userId,
-              cus_search : $('#candidate_kt_tagify_2').val(),
-              sortingfilter : $('#candidatesortingfilter').val(),
-              app_int_status : $('#stagefiltercandidate').val(),
-          },
-          success: function(response) {
-              $('.loadingMessage').css({ display: 'none' });
-              $('#teamCandidatesListajax').html(response.html);
-              $('#paginationTeamtCandidates').html(response.pagination);
-          }
-      });
+    cancelInFlightXHR('candidate');
+    var userId = '{{ @$userId }}';
+    $('.loadingMessageteamCandidatesListajax').css({ display: 'block' });
+    return window.teamActiveXHRs['candidate'] = $.ajax({
+        url: `{!! route('service_company.team.appdata_ajax') !!}?page=${page}`,
+        type: 'GET',
+        data: {
+            userId: userId,
+            cus_search: $('#candidate_kt_tagify_2').val(),
+            sortingfilter: $('#candidatesortingfilter').val(),
+            app_int_status: $('#stagefiltercandidate').val(),
+        },
+        success: function(response) {
+            $('.loadingMessage').css({ display: 'none' });
+            safeInjectHTML('#teamCandidatesListajax', response.html);
+            safeInjectHTML('#paginationTeamtCandidates', response.pagination);
+            TeamViewMoreTabManager.markLoaded('user_candidate');
+        },
+        error: function(xhr, status, error) {
+            if (status === 'abort') return;
+            $('.loadingMessage').css({ display: 'none' });
+            TeamViewMoreTabManager.setLoading('user_candidate', false);
+            renderTeamTabError('#teamCandidatesListajax', 'fetchTeamCandidate');
+        }
+    });
 }
+
 function fetchTeamCandidateJoining(page = 1, search = '') {
-  var userId  = '{{ @$userId }}';
-  var sortingfilter          			= $('#joinsortingfilter').val();
-          var country          			= $('#country').val();
-          var cus_search          			= $('#join_kt_tagify_2').val();
-      $('.loadingMessageteamjoiningJobsListajax').css({ display: 'block' });
-      $.ajax({
-          url: `{!! route('service_company.team.joiningdata_ajax') !!}?page=${page}`,
-          type: 'GET',
-          data: {
-              userId: userId,
-              sortingfilter : sortingfilter,
-              country : country,
-              cus_search:cus_search
-          },
-          success: function(response) {
-              $('.loadingMessage').css({ display: 'none' });
-              $('#teamjoiningJobsListajax').html(response.html);
-              $('#paginationteamjoiningjobs').html(response.pagination);
-          }
-      });
+    cancelInFlightXHR('joining');
+    var userId = '{{ @$userId }}';
+    var sortingfilter = $('#joinsortingfilter').val();
+    var country = $('#country').val();
+    var cus_search = $('#join_kt_tagify_2').val();
+    $('.loadingMessageteamjoiningJobsListajax').css({ display: 'block' });
+    return window.teamActiveXHRs['joining'] = $.ajax({
+        url: `{!! route('service_company.team.joiningdata_ajax') !!}?page=${page}`,
+        type: 'GET',
+        data: {
+            userId: userId,
+            sortingfilter: sortingfilter,
+            country: country,
+            cus_search: cus_search
+        },
+        success: function(response) {
+            $('.loadingMessage').css({ display: 'none' });
+            safeInjectHTML('#teamjoiningJobsListajax', response.html);
+            safeInjectHTML('#paginationteamjoiningjobs', response.pagination);
+            TeamViewMoreTabManager.markLoaded('user_joining');
+        },
+        error: function(xhr, status, error) {
+            if (status === 'abort') return;
+            $('.loadingMessage').css({ display: 'none' });
+            TeamViewMoreTabManager.setLoading('user_joining', false);
+            renderTeamTabError('#teamjoiningJobsListajax', 'fetchTeamCandidateJoining');
+        }
+    });
 }
+
 function fetchTeamCandidateInterviewTracker(page = 1, search = '') {
-   var userId  = '{{ @$userId }}';
-      $('.loadingMessageteaminterviewJobsListajax').css({ display: 'block' });
-      $.ajax({
-          url: `{!! route('service_company.team.intdata_ajax') !!}?page=${page}`,
-          type: 'GET',
-          data: {
-              userId: userId,
-              custom_hiringtype : $('#interviewfiltersdataget').val(),
-              custom_search : $('#interviewtracker_kt_tagify_2').val()
-          },
-          success: function(response) {
-              $('.loadingMessage').css({ display: 'none' });
-              $('#teaminterviewJobsListajax').html(response.html);
-              $('#paginationteaminterviewjobs').html(response.pagination);
-          }
-      });
+    cancelInFlightXHR('interview');
+    var userId = '{{ @$userId }}';
+    $('.loadingMessageteaminterviewJobsListajax').css({ display: 'block' });
+    return window.teamActiveXHRs['interview'] = $.ajax({
+        url: `{!! route('service_company.team.intdata_ajax') !!}?page=${page}`,
+        type: 'GET',
+        data: {
+            userId: userId,
+            custom_hiringtype: $('#interviewfiltersdataget').val(),
+            custom_search: $('#interviewtracker_kt_tagify_2').val()
+        },
+        success: function(response) {
+            $('.loadingMessage').css({ display: 'none' });
+            safeInjectHTML('#teaminterviewJobsListajax', response.html);
+            safeInjectHTML('#paginationteaminterviewjobs', response.pagination);
+            TeamViewMoreTabManager.markLoaded('user_interview_tracker');
+        },
+        error: function(xhr, status, error) {
+            if (status === 'abort') return;
+            $('.loadingMessage').css({ display: 'none' });
+            TeamViewMoreTabManager.setLoading('user_interview_tracker', false);
+            renderTeamTabError('#teaminterviewJobsListajax', 'fetchTeamCandidateInterviewTracker');
+        }
+    });
+}
+
+function fetchTeamRankData() {
+    cancelInFlightXHR('rank');
+    if (window.teamCharts && window.teamCharts.rankTrend) {
+        try { window.teamCharts.rankTrend.destroy(); } catch(e) {}
+        window.teamCharts.rankTrend = null;
+    }
+    var userId = '{{ @$userId }}';
+    $('.loadingMessageteamRankajax').css({ display: 'block' });
+    return window.teamActiveXHRs['rank'] = $.ajax({
+        url: `{!! route('service_company.team.rankdata_ajax') !!}`,
+        type: 'GET',
+        data: { userId: userId },
+        success: function(response) {
+            $('.loadingMessage').css({ display: 'none' });
+            safeInjectHTML('#teamRankContentAjax', response.html);
+            TeamViewMoreTabManager.markLoaded('myRank');
+        },
+        error: function(xhr, status, error) {
+            if (status === 'abort') return;
+            $('.loadingMessage').css({ display: 'none' });
+            TeamViewMoreTabManager.setLoading('myRank', false);
+            renderTeamTabError('#teamRankContentAjax', 'fetchTeamRankData');
+        }
+    });
+}
+
+function fetchTeamDashboardData() {
+    cancelInFlightXHR('dashboard');
+    if (window.teamCharts) {
+        ['sdbOffer', 'sdbJoin', 'sdbInterview', 'sdbCandidates'].forEach(function(k) {
+            if (window.teamCharts[k] && typeof window.teamCharts[k].destroy === 'function') {
+                try { window.teamCharts[k].destroy(); } catch(e) {}
+                window.teamCharts[k] = null;
+            }
+        });
+    }
+    var userId = '{{ @$userId }}';
+    safeInjectHTML('#teamDashboardContentAjax', `
+        <div class="text-center py-10" id="teamDashboardSpinner">
+            <div class="spinner-border text-primary" role="status" style="width: 2.5rem; height: 2.5rem;">
+                <span class="sr-only">Loading Dashboard...</span>
+            </div>
+            <div class="text-muted mt-3 font-weight-bold">Loading dashboard metrics & performance trends...</div>
+        </div>
+    `);
+    return window.teamActiveXHRs['dashboard'] = $.ajax({
+        url: `{!! route('service_company.team.dashboarddata_ajax') !!}`,
+        type: 'GET',
+        data: { userId: userId },
+        success: function(response) {
+            if (response && response.html) {
+                safeInjectHTML('#teamDashboardContentAjax', response.html);
+                TeamViewMoreTabManager.markLoaded('candidateDashboard');
+            } else {
+                TeamViewMoreTabManager.setLoading('candidateDashboard', false);
+                renderTeamTabError('#teamDashboardContentAjax', 'fetchTeamDashboardData', 'Failed to load dashboard data.');
+            }
+        },
+        error: function(xhr, status, error) {
+            if (status === 'abort') return;
+            TeamViewMoreTabManager.setLoading('candidateDashboard', false);
+            renderTeamTabError('#teamDashboardContentAjax', 'fetchTeamDashboardData');
+        }
+    });
 }
 
 function filtersdatagetcandidates() {
      fetchTeamCandidate();
 }
-document.getElementById('candidate_kt_tagify_2').addEventListener('keyup', function() {
-    fetchTeamCandidate();
-});
+var candSearchEl = document.getElementById('candidate_kt_tagify_2');
+if (candSearchEl) {
+    candSearchEl.addEventListener('keyup', debounce(function() {
+        fetchTeamCandidate();
+    }, 300));
+}
 
 function interviewfiltersdataget() {
      fetchTeamCandidateInterviewTracker();
 }
-document.getElementById('interviewtracker_kt_tagify_2').addEventListener('keyup', function() {
-    fetchTeamCandidateInterviewTracker();
-});
+var intvSearchEl = document.getElementById('interviewtracker_kt_tagify_2');
+if (intvSearchEl) {
+    intvSearchEl.addEventListener('keyup', debounce(function() {
+        fetchTeamCandidateInterviewTracker();
+    }, 300));
+}
 
 function filtersdatagetjoin() {
      fetchTeamCandidateJoining();
 }
-document.getElementById('join_kt_tagify_2').addEventListener('keyup', function() {
-    fetchTeamCandidateJoining();
-});
+var joinSearchEl = document.getElementById('join_kt_tagify_2');
+if (joinSearchEl) {
+    joinSearchEl.addEventListener('keyup', debounce(function() {
+        fetchTeamCandidateJoining();
+    }, 300));
+}
 
 
    

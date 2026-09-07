@@ -22,11 +22,10 @@ its own controller namespace, route file, dashboard, and feature set:
 | **Admin** | `Admin/` controllers | Tenant-level administration |
 | **SaaS Front / Front** | `SaasFront/`, `Front/` | Public marketing site, careers/job board, public job apply |
 
-Multi-tenancy is enforced by an Eloquent **global scope on `company_id`** (see
-`app/Models/Company.php::booted()`), so most data is implicitly tenant-isolated.
-**[WARNING]** This scoping is applied inconsistently across models (e.g.
-`app/Models/JobApplication.php` has the company scope **commented out**) — see
-[BAD_PATTERNS.md](BAD_PATTERNS.md).
+Multi-tenancy is enforced by the canonical `TenantScope` and `BelongsToTenant` trait
+(`app/Scopes/TenantScope.php`, `app/Traits/BelongsToTenant.php`), automatically scoping
+Eloquent model queries by `company_id`. Raw database queries across the 93 tenant tables use the
+`tenant_table('<table_name>')` helper function (`app/Helper/TenantDB.php`).
 
 ---
 

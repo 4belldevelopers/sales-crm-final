@@ -33,7 +33,7 @@ class ResumeUploadSessionController extends Controller
      */
     public function store(StoreResumeSessionRequest $request): JsonResponse
     {
-        abort_unless(config('resumes.features.presign_endpoint'), 404);
+        abort_unless(config('resumes.features.presign_endpoint') && \Illuminate\Support\Facades\Schema::hasTable('resume_uploads'), 404);
 
         $key = $request->header('Idempotency-Key', '');
         if (empty($key)) {
