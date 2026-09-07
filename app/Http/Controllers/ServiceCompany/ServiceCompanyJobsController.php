@@ -5751,11 +5751,11 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
                 $row = (object) $row;
                 $params = [
                     'index' => ELASTIC_USERS_LIST,
-                    'id' => $row->user_id,
+                    'id' => $row->user_id ?? 0,
                 ];
 
                 $response = $this->elasticService->getClient()->get($params);
-                $user_job = (object) $response['_source'];
+                $user_job = (object) ($response['_source'] ?? []);
 
                 $industryName = $this->job->industry['industry_name'] ?? '';
                 $industryId = $this->job->industry['ind_id'] ?? '';
@@ -5767,7 +5767,7 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
                         'query' => [
                             'bool' => [
                                 'must' => [
-                                    ['term' => ['submitted_by' => $row->user_id]],
+                                    ['term' => ['submitted_by' => $row->user_id ?? 0]],
                                     ['term' => ['jobId' => $id]],
                                 ],
                             ],
@@ -5822,7 +5822,7 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
                         'query' => [
                             'bool' => [
                                 'must' => [
-                                    ['term' => ['submitted_by' => $row->user_id]],
+                                    ['term' => ['submitted_by' => $row->user_id ?? 0]],
                                     ['term' => ['jobId' => $id]],
                                 ],
                             ],
@@ -5840,15 +5840,15 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
                 $allCandidateInterview = $responseIinterview['aggregations']['all_candidate_interview']['value'] ?? 0;
 
                 $recruiterlist[$key] = (object) [
-                    'id' => $user_job->id,
-                    'name' => $user_job->name,
-                    'email' => $user_job->email,
-                    'image' => $user_job->image,
-                    'mobile' => $user_job->mobile,
-                    'created_at' => $row->created_at,
-                    'calling_code' => $user_job->calling_code,
-                    'display_name' => $user_job->display_name,
-                    'designation' => $user_job->designation,
+                    'id' => $user_job->id ?? null,
+                    'name' => $user_job->name ?? null,
+                    'email' => $user_job->email ?? null,
+                    'image' => $user_job->image ?? null,
+                    'mobile' => $user_job->mobile ?? null,
+                    'created_at' => $row->created_at ?? null,
+                    'calling_code' => $user_job->calling_code ?? null,
+                    'display_name' => $user_job->display_name ?? null,
+                    'designation' => $user_job->designation ?? null,
                     'allCandidate' => $allCandidate,
                     'Interview' => $allCandidateInterview,
                     'Joined' => $Joined,
@@ -5901,11 +5901,11 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
 
                 $params = [
                     'index' => ELASTIC_COMPANIES_INDEX,
-                    'id' => $row->to_company_id,
+                    'id' => $row->to_company_id ?? 0,
                 ];
 
                 $response = $this->elasticService->getClient()->get($params);
-                $company_job = (object) $response['_source'];
+                $company_job = (object) ($response['_source'] ?? []);
 
                 // dd($company_job->industry['industry_name']);
 
@@ -5916,7 +5916,7 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
                         'query' => [
                             'bool' => [
                                 'must' => [
-                                    ['term' => ['ClientComID' => $row->to_company_id]],
+                                    ['term' => ['ClientComID' => $row->to_company_id ?? 0]],
                                     ['term' => ['jobId' => $id]],
                                 ],
                                 'must_not' => [
@@ -5978,7 +5978,7 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
                         'query' => [
                             'bool' => [
                                 'must' => [
-                                    ['term' => ['ClientComID' => $row->to_company_id]],
+                                    ['term' => ['ClientComID' => $row->to_company_id ?? 0]],
                                     ['term' => ['jobId' => $id]],
                                 ],
                                 'must_not' => [
@@ -5999,15 +5999,15 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
                 $allCandidateInterview = $responseIinterview['aggregations']['all_candidate_interview']['value'] ?? 0;
 
                 $recommendedDataListArr[$key] = (object) [
-                    'id' => $company_job->id,
-                    'company_name' => $company_job->company_name,
-                    'logo' => $company_job->logo,
-                    'created_at' => $row->created_at,
-                    'status' => $row->final_status,
+                    'id' => $company_job->id ?? null,
+                    'company_name' => $company_job->company_name ?? null,
+                    'logo' => $company_job->logo ?? null,
+                    'created_at' => $row->created_at ?? null,
+                    'status' => $row->final_status ?? null,
                     'industries' => $industryId,
                     'ind_name' => $industryName,
-                    'title' => $this->job->title,
-                    'relation_id' => $row->id,
+                    'title' => $this->job->title ?? null,
+                    'relation_id' => $row->id ?? null,
                     'jobid' => $id,
                     'Upload' => $allCandidate,
                     'Interview' => $allCandidateInterview,
