@@ -320,6 +320,7 @@
 #rdcOptsList .rdc-opt[data-opt="16"]{order:7;}
 #rdcOptsList .rdc-opt[data-opt="13"]{order:8;}
 #rdcOptsList .rdc-opt[data-opt="14"]{order:9;}
+#rdcOptsList .rdc-opt[data-opt="17"]{order:10;}
 #rdcOptsList .rdc-opt[data-opt="3"],
 #rdcOptsList .rdc-opt[data-opt="4"],
 #rdcOptsList .rdc-opt[data-opt="7"]{order:99;}
@@ -5257,16 +5258,31 @@ async function buildHeadlessOption3SkillsHighlightedResume(options){
     if(resumeExt==='PDF'){
       pdfBlob=await fetchPdfBlobFromSources(resumeSources);
     }else if(resumeExt==='DOCX'){
-      try{
-        if(!resumePdfUrl) throw new Error('Enterprise converter PDF URL not available');
-        pdfBlob=await fetchPdfResumeBlob(resumePdfUrl);
-      }catch(converterErr){
-        console.warn('Option 8 DOCX enterprise converter PDF failed; trying browser conversion fallback:',converterErr);
+      if(options.preferClientDocx === true){
         try{
           pdfBlob=await convertResumeWithOpenDocLabBlob(resumeSources,resumeExt,false);
         }catch(openDocErr){
-          console.warn('Option 8 DOCX OpenDoc conversion failed; trying legacy browser renderer:',openDocErr);
-          pdfBlob=await convertDocxResumeToPdfBlobFromSources(resumeSources);
+          console.warn('Client-first DOCX OpenDoc conversion failed; trying legacy browser renderer:',openDocErr);
+          try{
+            pdfBlob=await convertDocxResumeToPdfBlobFromSources(resumeSources);
+          }catch(legacyDocxErr){
+            console.warn('Client-first DOCX legacy renderer failed; using converter PDF URL if available:',legacyDocxErr);
+            if(!resumePdfUrl) throw legacyDocxErr;
+            pdfBlob=await fetchPdfResumeBlob(resumePdfUrl);
+          }
+        }
+      }else{
+        try{
+          if(!resumePdfUrl) throw new Error('Enterprise converter PDF URL not available');
+          pdfBlob=await fetchPdfResumeBlob(resumePdfUrl);
+        }catch(converterErr){
+          console.warn('Option 8 DOCX enterprise converter PDF failed; trying browser conversion fallback:',converterErr);
+          try{
+            pdfBlob=await convertResumeWithOpenDocLabBlob(resumeSources,resumeExt,false);
+          }catch(openDocErr){
+            console.warn('Option 8 DOCX OpenDoc conversion failed; trying legacy browser renderer:',openDocErr);
+            pdfBlob=await convertDocxResumeToPdfBlobFromSources(resumeSources);
+          }
         }
       }
     }else{
@@ -6336,6 +6352,7 @@ async function buildHighlightedBrandedResume(resumePdfUrl,options){
       resumeUrl:options.resumeUrl,
       resumeExt:options.resumeExt,
       resumePdfUrl:resumePdfUrl,
+      preferClientDocx:options.preferClientDocx===true,
       returnBlob:true
     });
     if(!(highlightedBlob instanceof Blob)) throw new Error('Highlighted resume PDF was not generated');
@@ -6792,6 +6809,24 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
         <span class="rdc-ocirc" aria-hidden="true"></span>
       </label>
 
+      {{-- 17: Client-first DOCX pre-screened report plus highlighted resume package --}}
+      <label class="rdc-opt" data-opt="17" data-coins="8">
+        <input class="rdc-rinput" type="radio" name="rdcFormat" value="17">
+        <span class="rdc-onum">17</span>
+        <span class="rdc-oi" style="background:#eef2ff;color:#4338ca;" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18"/><path d="M3 12h18"/><path d="M7 7h10v10H7z"/><path d="m15 9 2 2-2 2"/></svg>
+        </span>
+        <span class="rdc-obody">
+          <span class="rdc-otitle">Pre-Screened Report + Resume + Highlighted Keywords <span style="background:#eef2ff;color:#4338ca;font-size:8.5px;font-weight:700;padding:1px 6px;border-radius:4px;vertical-align:middle;margin-left:4px;">DOCX Client First</span></span>
+          <span class="rdc-odesc">Same option 13 output, but DOCX tries browser conversion before enterprise fallback</span>
+        </span>
+        <span class="rdc-ometa">
+          <span class="rdc-ocost">8 Coins</span>
+          <span class="rdc-otime">Beta</span>
+        </span>
+        <span class="rdc-ocirc" aria-hidden="true"></span>
+      </label>
+
     </div>{{-- /.rdc-opts-list --}}
 
     {{-- Coin info summary --}}
@@ -6855,7 +6890,8 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
     13:{cost:8, label:'Pre-Screened Report + Resume + Highlighted Keywords', avail:(['PDF','DOC','DOCX'].indexOf(resumeExt) !== -1), dlKey:'prescreened-highlighted-package', unavailableMsg:'Pre-Screened Report + Resume + Highlighted Keywords is available for PDF, DOC and DOCX resumes only.'},
     14:{cost:8, label:'Pre-Screened Report + Resume + Highlighted Keywords without Company Branding', avail:(['PDF','DOC','DOCX'].indexOf(resumeExt) !== -1), dlKey:'prescreened-highlighted-package-nobrand', unavailableMsg:'Pre-Screened Report + Resume + Highlighted Keywords without Company Branding is available for PDF, DOC and DOCX resumes only.'},
     15:{cost:8, label:'Pre-Screened Report + Resume + Company Branding', avail:(['PDF','DOC','DOCX'].indexOf(resumeExt) !== -1), dlKey:'smart-prescreened-package', unavailableMsg:'Final package is available for PDF, DOC and DOCX resumes only.'},
-    16:{cost:8, label:'Pre-Screened Report + Resume without Company Branding', avail:(['PDF','DOC','DOCX'].indexOf(resumeExt) !== -1), dlKey:'smart-prescreened-package-nobrand', unavailableMsg:'Final package is available for PDF, DOC and DOCX resumes only.'}
+    16:{cost:8, label:'Pre-Screened Report + Resume without Company Branding', avail:(['PDF','DOC','DOCX'].indexOf(resumeExt) !== -1), dlKey:'smart-prescreened-package-nobrand', unavailableMsg:'Final package is available for PDF, DOC and DOCX resumes only.'},
+    17:{cost:8, label:'Pre-Screened Report + Resume + Highlighted Keywords', avail:(['PDF','DOC','DOCX'].indexOf(resumeExt) !== -1), dlKey:'prescreened-highlighted-package-client-docx', unavailableMsg:'Client-first Pre-Screened Report + Resume + Highlighted Keywords is available for PDF, DOC and DOCX resumes only.'}
   };
 
   var selectedOpt = 1;
@@ -6948,8 +6984,8 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
     if(m.dlKey === 'headless-option3-skills-highlighted' && resumeExt === 'DOCX' && typeof window.__preloadOpenDocLocal === 'function') window.__preloadOpenDocLocal();
     if(m.dlKey === 'highlighted-branded-resume' && typeof window.__preloadRSCombined === 'function') window.__preloadRSCombined();
     if(m.dlKey === 'highlighted-branded-resume' && resumeExt === 'DOCX' && typeof window.__preloadOpenDocLocal === 'function') window.__preloadOpenDocLocal();
-    if((m.dlKey === 'prescreened-highlighted-package' || m.dlKey === 'prescreened-highlighted-package-nobrand') && typeof window.__preloadRSCombined === 'function') window.__preloadRSCombined();
-    if((m.dlKey === 'prescreened-highlighted-package' || m.dlKey === 'prescreened-highlighted-package-nobrand') && resumeExt === 'DOCX' && typeof window.__preloadOpenDocLocal === 'function') window.__preloadOpenDocLocal();
+    if((m.dlKey === 'prescreened-highlighted-package' || m.dlKey === 'prescreened-highlighted-package-nobrand' || m.dlKey === 'prescreened-highlighted-package-client-docx') && typeof window.__preloadRSCombined === 'function') window.__preloadRSCombined();
+    if((m.dlKey === 'prescreened-highlighted-package' || m.dlKey === 'prescreened-highlighted-package-nobrand' || m.dlKey === 'prescreened-highlighted-package-client-docx') && resumeExt === 'DOCX' && typeof window.__preloadOpenDocLocal === 'function') window.__preloadOpenDocLocal();
     if(m.dlKey === 'smart-branded-resume' && typeof window.__preloadRSCombined === 'function') window.__preloadRSCombined();
     if(m.dlKey === 'smart-branded-resume' && resumeExt === 'DOCX' && typeof window.__preloadOpenDocLocal === 'function') window.__preloadOpenDocLocal();
     if(m.dlKey === 'rs-combined' && typeof window.__preloadRSCombined === 'function') window.__preloadRSCombined();
@@ -7292,8 +7328,8 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
           });
         }, 250);
 
-      } else if(m.dlKey === 'prescreened-highlighted-package' || m.dlKey === 'prescreened-highlighted-package-nobrand'){
-        /* Options 13/14: Pre-Screened Report first, then browser-highlighted resume pages appended in the final PDF. */
+      } else if(m.dlKey === 'prescreened-highlighted-package' || m.dlKey === 'prescreened-highlighted-package-nobrand' || m.dlKey === 'prescreened-highlighted-package-client-docx'){
+        /* Options 13/14/17: Pre-Screened Report first, then browser-highlighted resume pages appended in the final PDF. */
         if(window.__rsBusy || typeof window.__buildPreScreenedHighlightedResume !== 'function'){
           showToast('Please wait a moment and try again.', 'warn');
           resetBtn(); return;
@@ -7314,6 +7350,7 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
         setTimeout(function(){
           window.__buildPreScreenedHighlightedResume(resumePdfUrl,{
             noBranding:(m.dlKey === 'prescreened-highlighted-package-nobrand'),
+            preferClientDocx:(m.dlKey === 'prescreened-highlighted-package-client-docx'),
             resumeUrl:[r2DirectUrl,r2PublicUrl,dlUrl],
             resumeExt:resumeExt
           }).then(function(ok){
