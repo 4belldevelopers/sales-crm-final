@@ -7953,8 +7953,9 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
         $salaryMode = GeneralMethod::salaryMode();
         $currencySymbole = GeneralMethod::currencySymbole();
 
-        $this->intModeArr = GeneralMethod::interview_mode();
-        $this->application = JobApplication::select(
+        // Intent: Bypass company global scope so cross-company candidate assignments in add_job_wise_condidates can be fetched for stage updates.
+        // Tenancy: The query joins add_job_wise_condidates by candidate assignment ID ($id).
+        $this->application = JobApplication::withoutGlobalScope('company')->select(
             'job_applications.id',
             'job_applications.submitted_by',
             'job_applications.company_id',
@@ -8043,6 +8044,10 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
 
         $this->application = $this->application->where('add_job_wise_condidates.id', $id);
         $this->application = $this->application->first();
+
+        if (! $this->application) {
+            return Reply::dataOnly(['status' => 'error', 'message' => 'Candidate application not found.']);
+        }
 
         // dd($this->application);
 
