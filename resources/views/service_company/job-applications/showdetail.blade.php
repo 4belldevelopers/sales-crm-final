@@ -1594,6 +1594,14 @@
             setDlBusy(false);
           }
         }
+        window.__rcvExportExactHighlightedFromVisibleViewer = async function(){
+          /* Purpose: let Download Resume Center reuse option 3's actual loaded viewer for pixel-identical highlighted exports. */
+          if(!pdfDoc || !document.querySelector('#rcvPages .rcv-page')){
+            throw new Error('Resume/CV viewer is not loaded');
+          }
+          await buildPdf({ highlights:true, logo:false });
+          return true;
+        };
 
         function wireControls(){
           $id('rcvPrevHit').addEventListener('click', function(){ gotoHit(-1); });
@@ -5774,6 +5782,10 @@ async function buildR2ExactHighlightedResume(options){
   window.__rsBusy=true;
   try{
     options=options||{};
+    if(typeof window.__rcvExportExactHighlightedFromVisibleViewer === 'function' && document.querySelector('#rcvPages mark.rcv-hit')){
+      await window.__rcvExportExactHighlightedFromVisibleViewer();
+      return true;
+    }
     var resumeSources=(Array.isArray(options.resumeUrl) ? options.resumeUrl : [options.resumeUrl||'']).map(function(url){
       return clean(url,'');
     }).filter(function(url,index,self){
