@@ -477,7 +477,7 @@
                                     <div class="cd-tabcard-sub">Manage and view all contacts associated with this client.</div>
                                 </div>
                                 <div class="cd-tabcard-actions">
-                                    <div class="cd-search"><i class="fas fa-search"></i><input type="text" placeholder="Search contacts..." /></div>
+                                    <div class="cd-search"><i class="fas fa-search"></i><input type="text" id="dcontactSearchInput" placeholder="Search contacts..." /></div>
                                 </div>
                             </div>
                             <div style="overflow-x:auto;">
@@ -2072,7 +2072,7 @@
             ajax: {
                 'url': '{!! route('service_company.clients.dcontactList') !!}?company_id=' + company_id,
                 "data": function(d) {
-                    d.search = $('#inputSearch').val(), d.client_id = $('#direct_client_id').val()
+                    d.search = $('#dcontactSearchInput').val() || $('#inputSearch').val(), d.client_id = $('#direct_client_id').val()
                 }
             },
             "drawCallback": function(settings) {
@@ -2165,86 +2165,67 @@
             }
         });
 
+        $(document).on('keyup', '#dcontactSearchInput', function() {
+            if ($.fn.DataTable.isDataTable('#dcontactList')) {
+                $('#dcontactList').DataTable().search($(this).val()).draw();
+            }
+        });
+
         $('#search').on('keyup', function() {
             const search = $(this).val();
-            fetchCandidates(1, search);
+            directfetchCandidates(1, search);
         });
 
-        $(document).on('click', '#paginationcandidate .page-link', function(e) {
+        $(document).off('click', '#paginationcandidate [data-page], #paginationcandidate .page-link, #paginationcandidate .pagi-page, #paginationcandidate .pagi-arrow');
+        $(document).on('click', '#paginationcandidate [data-page], #paginationcandidate .page-link, #paginationcandidate .pagi-page, #paginationcandidate .pagi-arrow', function(e) {
             e.preventDefault();
+            var $btn = $(e.target).closest('[data-page]');
+            if (!$btn.length) return;
 
-            const page = $(this).data('page');
-            if (!page || $(this).hasClass('disabled')) return;
+            var page = parseInt($btn.attr('data-page') || $btn.data('page'), 10);
+            if (!page || page < 1 || $btn.hasClass('disabled') || $btn.hasClass('pagi-disabled') || $btn.hasClass('pagi-active-disabled') || $btn.is(':disabled')) return;
 
-            // Disable the clicked pagination link
-            $(this).addClass('disabled');
-
-            // Fetch data
-            directfetchCandidates(page, $('#search').val()).then(() => {
-                // Re-enable the links after successful data fetch
-                $('#paginationcandidate .page-link').removeClass('disabled');
-            }).catch(() => {
-                // Re-enable the links even if there's an error
-                $('#paginationcandidate .page-link').removeClass('disabled');
-            });
+            var search = $('#inputSearch').val() || '';
+            directfetchCandidates(page, search);
         });
 
-        $(document).on('click', '#paginationcandidatejoin .page-link', function(e) {
+        $(document).off('click', '#paginationcandidatejoin [data-page], #paginationcandidatejoin .page-link, #paginationcandidatejoin .pagi-page, #paginationcandidatejoin .pagi-arrow');
+        $(document).on('click', '#paginationcandidatejoin [data-page], #paginationcandidatejoin .page-link, #paginationcandidatejoin .pagi-page, #paginationcandidatejoin .pagi-arrow', function(e) {
             e.preventDefault();
+            var $btn = $(e.target).closest('[data-page]');
+            if (!$btn.length) return;
 
-            const page = $(this).data('page');
-            if (!page || $(this).hasClass('disabled')) return;
+            var page = parseInt($btn.attr('data-page') || $btn.data('page'), 10);
+            if (!page || page < 1 || $btn.hasClass('disabled') || $btn.hasClass('pagi-disabled') || $btn.hasClass('pagi-active-disabled') || $btn.is(':disabled')) return;
 
-            // Disable the clicked pagination link
-            $(this).addClass('disabled');
-
-            // Fetch data
-            directfetchCandidatesJoin(page, $('#search').val()).then(() => {
-                // Re-enable the links after successful data fetch
-                $('#paginationcandidatejoin .page-link').removeClass('disabled');
-            }).catch(() => {
-                // Re-enable the links even if there's an error
-                $('#paginationcandidatejoin .page-link').removeClass('disabled');
-            });
+            var search = $('#inputSearch').val() || '';
+            directfetchCandidatesJoin(page, search);
         });
 
-        $(document).on('click', '#paginationcandidateinterviewtracker .page-link', function(e) {
+        $(document).off('click', '#paginationcandidateinterviewtracker [data-page], #paginationcandidateinterviewtracker .page-link, #paginationcandidateinterviewtracker .pagi-page, #paginationcandidateinterviewtracker .pagi-arrow');
+        $(document).on('click', '#paginationcandidateinterviewtracker [data-page], #paginationcandidateinterviewtracker .page-link, #paginationcandidateinterviewtracker .pagi-page, #paginationcandidateinterviewtracker .pagi-arrow', function(e) {
             e.preventDefault();
+            var $btn = $(e.target).closest('[data-page]');
+            if (!$btn.length) return;
 
-            const page = $(this).data('page');
-            if (!page || $(this).hasClass('disabled')) return;
+            var page = parseInt($btn.attr('data-page') || $btn.data('page'), 10);
+            if (!page || page < 1 || $btn.hasClass('disabled') || $btn.hasClass('pagi-disabled') || $btn.hasClass('pagi-active-disabled') || $btn.is(':disabled')) return;
 
-            // Disable the clicked pagination link
-            $(this).addClass('disabled');
-
-            // Fetch data
-            directfetchCandidatesInverViewTracker(page, $('#search').val()).then(() => {
-                // Re-enable the links after successful data fetch
-                $('#paginationcandidateinterviewtracker .page-link').removeClass('disabled');
-            }).catch(() => {
-                // Re-enable the links even if there's an error
-                $('#paginationcandidateinterviewtracker .page-link').removeClass('disabled');
-            });
+            var search = $('#inputSearch').val() || '';
+            directfetchCandidatesInverViewTracker(page, search);
         });
 
-        $(document).on('click', '#directpaginationclientjobs .page-link', function(e) {
+        $(document).off('click', '#directpaginationclientjobs [data-page], #directpaginationclientjobs .page-link, #directpaginationclientjobs .pagi-page, #directpaginationclientjobs .pagi-arrow');
+        $(document).on('click', '#directpaginationclientjobs [data-page], #directpaginationclientjobs .page-link, #directpaginationclientjobs .pagi-page, #directpaginationclientjobs .pagi-arrow', function(e) {
             e.preventDefault();
+            var $btn = $(e.target).closest('[data-page]');
+            if (!$btn.length) return;
 
-            const page = $(this).data('page');
-            if (!page || $(this).hasClass('disabled')) return;
+            var page = parseInt($btn.attr('data-page') || $btn.data('page'), 10);
+            if (!page || page < 1 || $btn.hasClass('disabled') || $btn.hasClass('pagi-disabled') || $btn.hasClass('pagi-active-disabled') || $btn.is(':disabled')) return;
 
-            // Disable the clicked pagination link
-            $(this).addClass('disabled');
-
-            // Fetch data
-            fetchJobsClientdirect(page, $('#search').val()).then(() => {
-                // Re-enable the links after successful data fetch
-                $('#directpaginationclientjobs .page-link').removeClass('disabled');
-            }).catch(() => {
-                // Re-enable the links even if there's an error
-                $('#directpaginationclientjobs .page-link').removeClass('disabled');
-            });
-            
+            var search = $('#inputJobSearch').val() || '';
+            fetchJobsClientdirect(page, search);
         });
 
 
@@ -2252,8 +2233,8 @@
 
     function directfetchCandidates(page = 1, search = '') {
         $('.page-loader').css('display', 'flex');
-        var clientid = '{{ $directClientDetail->company_id }}';
-        $.ajax({
+        var clientid = '{{ $directClientDetail->from_company_id ?? $directClientDetail->company_id ?? $directClientDetail->client_id }}';
+        return $.ajax({
             url: `{{ url('service_company/direct-client-candidate-list') }}?page=${page}`,
             type: 'GET',
             data: {
@@ -2270,8 +2251,8 @@
 
     function directfetchCandidatesJoin(page = 1, search = '') {
         $('.page-loader').css('display', 'flex');
-        var clientid = '{{ $directClientDetail->company_id }}';
-        $.ajax({
+        var clientid = '{{ $directClientDetail->from_company_id ?? $directClientDetail->company_id ?? $directClientDetail->client_id }}';
+        return $.ajax({
             url: `{{ url('service_company/direct-client-candidate-join-list') }}?page=${page}`,
             type: 'GET',
             data: {
@@ -2288,8 +2269,8 @@
 
     function directfetchCandidatesInverViewTracker(page = 1, search = '') {
         $('.page-loader').css('display', 'flex');
-        var clientid = '{{ $directClientDetail->company_id }}';
-        $.ajax({
+        var clientid = '{{ $directClientDetail->from_company_id ?? $directClientDetail->company_id ?? $directClientDetail->client_id }}';
+        return $.ajax({
             url: `{{ url('service_company/direct-client-candidate-interview-tracker') }}?page=${page}`,
             type: 'GET',
             data: {
@@ -2306,12 +2287,12 @@
 
     function fetchJobsClientdirect(page = 1, search = '') {
         $('.page-loader').css('display', 'flex');
-        $.ajax({
+        return $.ajax({
             url: `{{ url('service_company/jobs_side_bar_job_ajax/data') }}?page=${page}`,
             type: 'GET',
             data: {
-                search: $('#inputJobSearch').val(),
-                client_id: $('#direct_client_id').val(),
+                search: search || $('#inputJobSearch').val(),
+                client_id: $('#direct_client_id').val() || '{{ $directClientDetail->client_id }}',
                 custom:false
             },
             success: function(response) {
@@ -2324,7 +2305,7 @@
 
     function fetchClientDashboardAnalytics() {
         var clientId = '{{ $directClientDetail->client_id ?? $directClientDetail->company_id }}';
-        $.ajax({
+        return $.ajax({
             url: `{{ url('service_company/clients/dashboard-analytics') }}/${clientId}`,
             type: 'GET',
             success: function(response) {
