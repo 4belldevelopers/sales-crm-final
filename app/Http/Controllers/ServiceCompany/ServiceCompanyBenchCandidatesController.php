@@ -2516,7 +2516,7 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
          * Client Submissions / Bench Duration / Resume Download). Reuses the same helper
          * and counter table already queried per-row on the listing page, so no new query shape.
          */
-        $pipelineCounter = GeneralMethod::bench_explore_listing_counter($id)->applicationCounter;
+        $pipelineCounter = GeneralMethod::bench_explore_listing_counter($id, $this->company_id ?? auth()->user()->company_id)->applicationCounter;
         $this->activeInterviews = $pipelineCounter->Interview ?? 0;
         $this->clientSubmissions = $pipelineCounter->allCandidate ?? 0;
         $this->profileViewCount = DB::table('bench_count_view_download')->where('type', 1)->where('status', 0)->where('candidate_id', $id)->count();
@@ -4964,7 +4964,7 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
         $stage = $request->stage;
         $inputSearch = $request->inputSearch;
 
-        $bench_explore_listing_counter = GeneralMethod::bench_explore_listing_counter($bench_id);
+        $bench_explore_listing_counter = GeneralMethod::bench_explore_listing_counter($bench_id, $company_id);
 
         $allCounter = $bench_explore_listing_counter->total;
         $applicationCounter = $bench_explore_listing_counter->applicationCounter;
@@ -5027,9 +5027,9 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
         ];
 
         $versionKey = 'allbenchexplore_version_user_'.$this->user->id;
-        $version = 1;
+        $version = 3;
         try {
-            $version = cache()->get($versionKey, 1);
+            $version = cache()->get($versionKey, 3);
         } catch (\Throwable $e) {}
 
         /**
@@ -5269,7 +5269,7 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
          * Phase 10: Standardized Consolidated API Payload Structure.
          * Tenancy Note: Scoped to candidate ID and authenticated tenant company.
          */
-        $bench_explore_counter_obj = GeneralMethod::bench_explore_listing_counter($bench_id);
+        $bench_explore_counter_obj = GeneralMethod::bench_explore_listing_counter($bench_id, $company_id);
         $userPermissions = $this->userPermissions;
         $responseData = [
             'status' => 'success',
@@ -5281,7 +5281,7 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
                 'listType' => 'allcandidate',
             ],
             'counters' => $bench_explore_counter_obj->applicationCounter ?? null,
-            'allCounter' => $bench_explore_counter_obj->total ?? 0,
+            'allCounter' => $total,
             'total' => $total,
             'html' => view('service_company.ajax_pages.bench-explore-list-ajax', compact('data', 'userPermissions', 'company_id', 'salaryMode', 'currencySymbole', 'job_status', 'feedback_status', 'bench_id'))->render(),
             'pagination' => view('service_company.ajax_pages.pagination', compact('pagination'))->render(),
