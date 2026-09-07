@@ -3468,24 +3468,24 @@
                 AgencyDetailTabManager.loadTabData('candidates', page, $('#search').val());
             });
 
-            $(document).on('click', '#paginationcandidatejoin .page-link', function(e) {
+            $(document).on('click', '#paginationcandidatejoin .page-link, #paginationcandidatejoin .pagi-page, #paginationcandidatejoin .pagi-arrow', function(e) {
                 e.preventDefault();
                 const page = $(this).data('page');
-                if (!page || $(this).hasClass('disabled')) return;
+                if (!page || $(this).hasClass('disabled') || $(this).hasClass('pagi-disabled') || $(this).hasClass('pagi-active-disabled')) return;
                 AgencyDetailTabManager.loadTabData('joinings', page, $('#search').val());
             });
 
-            $(document).on('click', '#paginationcandidateinterviewtracker .page-link', function(e) {
+            $(document).on('click', '#paginationcandidateinterviewtracker .page-link, #paginationcandidateinterviewtracker .pagi-page, #paginationcandidateinterviewtracker .pagi-arrow', function(e) {
                 e.preventDefault();
                 const page = $(this).data('page');
-                if (!page || $(this).hasClass('disabled')) return;
+                if (!page || $(this).hasClass('disabled') || $(this).hasClass('pagi-disabled') || $(this).hasClass('pagi-active-disabled')) return;
                 AgencyDetailTabManager.loadTabData('interviews', page, $('#search').val());
             });
 
-            $(document).on('click', '#paginationstaffingpartnerjob .page-link', function(e) {
+            $(document).on('click', '#paginationstaffingpartnerjob .page-link, #paginationstaffingpartnerjob .pagi-page, #paginationstaffingpartnerjob .pagi-arrow', function(e) {
                 e.preventDefault();
                 const page = $(this).data('page');
-                if (!page || $(this).hasClass('disabled')) return;
+                if (!page || $(this).hasClass('disabled') || $(this).hasClass('pagi-disabled') || $(this).hasClass('pagi-active-disabled')) return;
                 AgencyDetailTabManager.loadTabData('jobs', page, $('#search').val());
             });
         });
