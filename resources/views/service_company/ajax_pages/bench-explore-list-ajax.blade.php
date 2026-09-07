@@ -11,12 +11,26 @@
 @endphp
 
 @if (count($data) > 0)
+@php
+    /**
+     * Phase 5 N+1 Query Optimization:
+     * Hoist candidate skills lookup outside row loop (bench_id is constant per request).
+     */
+    $bench_skill_list = !empty($bench_id) ? DB::table('job_application_skills')
+        ->where('job_application_id', $bench_id)
+        ->pluck('skills')->toArray() : [];
+    static $bxrChildStatusCache = [];
+    static $bxrUserCache = [];
+    static $bxrJobWiseCandCache = [];
+@endphp
 @foreach ($data as $rowArr)
 @php
     $row = (object) $rowArr;
-    $jobDetails      = GeneralMethod::jobDetails($row->jobId);
+    $jobId = $row->jobId ?? $row->job_id ?? $row->id ?? 0;
+    $row->jobId = $jobId;
+    $jobDetails      = GeneralMethod::jobDetails($jobId);
     $company_id      = auth()->user()->company_id;
-    $relationget     = GeneralMethod::getrRcommendationRelationData($company_id, $row->jobId);
+    $relationget     = GeneralMethod::getrRcommendationRelationData($company_id, $jobId);
 
     $from_company_id   = $relationget->from_company_id ?? null;
     $to_company_id     = $relationget->to_company_id   ?? null;
@@ -27,8 +41,8 @@
     $row->recommendation_id  = $recommendation_id;
     $row->to_company_id      = $to_company_id;
     $row->from_company_id    = $from_company_id;
-    $row->companyidcount     = $jobDetails->comId;
-    $row->clients_name       = $jobDetails->client_name;
+    $row->companyidcount     = $jobDetails->comId ?? null;
+    $row->clients_name       = $jobDetails->client_name ?? null;
 
     $job_assign  = $jobDetails->job_assign ?? [];
     $jobAssign   = collect($job_assign);
@@ -38,9 +52,21 @@
                           ? 'client-show-detail' : 'show-detail';
 
     $logo_path = @$jobDetails->logo ?? '';
-    $company_display_name = ucwords(@$jobDetails->company_name ?? '');
+    $company_display_name = ucwords(@$jobDetails->company_name ?? @$row->other_company ?? @$row->client_name ?? '');
 
-    $str      = strtolower(trim(@$jobDetails->title)[0] ?? 'j');
+    $displayTitle = @$jobDetails->title;
+    if (empty($displayTitle) || str_starts_with($displayTitle, 'Requisition #')) {
+        if (!empty($row->title)) {
+            $displayTitle = $row->title;
+        } elseif (!empty($row->name)) {
+            $displayTitle = $row->name;
+        }
+    }
+    if (empty($displayTitle)) {
+        $displayTitle = 'Requisition #' . $jobId;
+    }
+
+    $str      = strtolower(trim($displayTitle)[0] ?? 'j');
     $ord      = ord($str);
     $initials = strtoupper($str);
     if     ($ord >= 97  && $ord <= 101) { $initBg = '#FEE2E2'; $initClr = '#DC2626'; }
@@ -50,16 +76,11 @@
     elseif ($ord >= 117 && $ord <= 121) { $initBg = '#1E293B'; $initClr = '#94A3B8'; }
     else                                { $initBg = '#F1F5F9'; $initClr = '#475569'; }
 
-    /* ── Skills + Match % — same computation/highlighting as AppTracker's
-       candidate-row Match badge (resources/views/service_company/ajax_pages/all_apptracker.blade.php),
-       just replicated here in the job-perspective direction: this candidate's
-       skills matched against THIS job's required skills. No new queries —
-       job_metronics_skills is already eager-loaded on $jobDetails. ── */
-    $skillArr = DB::table('job_application_skills')
-        ->where('job_application_id', $bench_id)
-        ->pluck('skills')->toArray();
-    $skillArrc_skills = array_column($jobDetails->job_metronics_skills, 'skill_name');
-    $percentage       = GeneralMethod::skill_percentage($jobDetails->id, $skillArr);
+    /* ── Skills + Match % ────────────────────────── */
+    $skillArr = $bench_skill_list;
+    $jobSkillsRaw = $jobDetails->job_metronics_skills ?? [];
+    $skillArrc_skills = is_array($jobSkillsRaw) ? array_column($jobSkillsRaw, 'skill_name') : [];
+    $percentage       = GeneralMethod::skill_percentage($jobDetails->id ?? 0, $skillArr);
 
     $matchNum = (float) rtrim($percentage ?: '0%', '%');
     if ($matchNum == 0) { $matchBg = '#F1F5F9'; $matchColor = '#64748B'; }
@@ -204,14 +225,22 @@
     }
     $childName = '';
     if (!empty(@$row->childStatus) && @$row->childStatus > 0) {
-        $cs = DB::table('candidate_status')->where('id', $row->childStatus)->first();
-        if ($cs) { $childName = $cs->name; }
+        $csId = (int)$row->childStatus;
+        if (!array_key_exists($csId, $bxrChildStatusCache)) {
+            $bxrChildStatusCache[$csId] = DB::table('candidate_status')->where('id', $csId)->value('name') ?? '';
+        }
+        $childName = $bxrChildStatusCache[$csId];
     }
-    $job_wise_condidates = DB::table('add_job_wise_condidates')
-        ->join('master_status','master_status.id','=','add_job_wise_condidates.master_status_id')
-        ->select('add_job_wise_condidates.master_status_id','add_job_wise_condidates.child_status_id','master_status.name','master_status.css_style')
-        ->where('add_job_wise_condidates.job_id', $jobDetails->id)
-        ->where('add_job_wise_condidates.job_application_id', $bench_id)->first();
+
+    $jwKey = $jobDetails->id . '_' . $bench_id;
+    if (!array_key_exists($jwKey, $bxrJobWiseCandCache)) {
+        $bxrJobWiseCandCache[$jwKey] = DB::table('add_job_wise_condidates')
+            ->join('master_status','master_status.id','=','add_job_wise_condidates.master_status_id')
+            ->select('add_job_wise_condidates.master_status_id','add_job_wise_condidates.child_status_id','master_status.name','master_status.css_style')
+            ->where('add_job_wise_condidates.job_id', $jobDetails->id)
+            ->where('add_job_wise_condidates.job_application_id', $bench_id)->first();
+    }
+    $job_wise_condidates = $bxrJobWiseCandCache[$jwKey];
 
     /* ── Added by / date ─────────────────────────── */
     $addedDate  = GeneralMethod::ymdTodmyNotTime($row->created_at ?? '');
@@ -222,8 +251,13 @@
 
     /* ── Added by user ───────────────────────────── */
     $addedByName = '';
-    $addedByUser = DB::table('users')->where('id', $row->submitted_by ?? 0)->select('name')->first();
-    if ($addedByUser) { $addedByName = ucwords($addedByUser->name); }
+    $subUserId = (int)($row->submitted_by ?? 0);
+    if ($subUserId > 0) {
+        if (!array_key_exists($subUserId, $bxrUserCache)) {
+            $bxrUserCache[$subUserId] = DB::table('users')->where('id', $subUserId)->value('name') ?? '';
+        }
+        $addedByName = ucwords($bxrUserCache[$subUserId]);
+    }
 @endphp
 
 <tr>
@@ -243,8 +277,9 @@
                 <div class="bxr-job-title {{ $profile_detail_class }}"
                      data-row-id="{{ $jobDetails->id }}"
                      data-row-job_applications_id="{{ $bench_id }}"
+                     title="{{ ucwords($displayTitle) }}"
                      style="cursor:pointer;">
-                    {{ ucwords(mb_substr(@$jobDetails->title, 0, 22)) }}
+                    {{ ucwords(mb_substr($displayTitle, 0, 22)) }}
                 </div>
                 <div class="bxr-job-co">{{ $company_display_name }}</div>
                 <div class="bxr-skills">

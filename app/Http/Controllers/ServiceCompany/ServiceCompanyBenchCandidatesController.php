@@ -4934,14 +4934,23 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
         $company_id = auth()->user()->company_id;
         $this->stage = $stage;
         $this->bench_id = $id;
-        $this->recomCount = $this->benchjobAndRecomCount($id);
-        $this->heroKpis = $this->benchHeroKpis($this->bench_id);
+
+        /**
+         * Intent: Fetch bench candidate detail for hero stat card.
+         * Tenancy Note: Scoped strictly to auth user's company_id to prevent cross-tenant IDOR access.
+         * Optimization: Use leftJoin for location tables to prevent row dropping on null location IDs.
+         */
         $this->bench_detail = JobApplication::select('job_applications.id', 'job_applications.full_name', 'job_applications.current_designation', 'job_applications.skills', 'bench_master_status.name', 'bench_master_status.css_style', 'job_applications.status as statusCheck', 'countries.country_name', 'state_list.state as state_name', 'city_list.city as city_name', 'job_applications.total_exp', 'job_applications.rel_exp', 'job_applications.pay_rate_amount', 'job_applications.bill_rate_amount', 'job_applications.bill_rate_currency', 'job_applications.bill_rate_mode', 'job_applications.created_at')
-            ->join('bench_master_status', 'bench_master_status.id', '=', 'job_applications.status')
-            ->join('countries', 'countries.id', '=', 'job_applications.country')
-            ->join('state_list', 'state_list.id', '=', 'job_applications.state')
-            ->join('city_list', 'city_list.city_id', '=', 'job_applications.city_id')
-            ->withoutGlobalScopes()->findOrFail($this->bench_id);
+            ->leftJoin('bench_master_status', 'bench_master_status.id', '=', 'job_applications.status')
+            ->leftJoin('countries', 'countries.id', '=', 'job_applications.country')
+            ->leftJoin('state_list', 'state_list.id', '=', 'job_applications.state')
+            ->leftJoin('city_list', 'city_list.city_id', '=', 'job_applications.city_id')
+            ->withoutGlobalScopes()
+            ->where('job_applications.company_id', $company_id)
+            ->findOrFail($this->bench_id);
+
+        $this->recomCount = $this->benchjobAndRecomCount($id, $this->bench_detail);
+        $this->heroKpis = $this->benchHeroKpis($this->bench_id);
 
         return view('service_company.bench-candidates.bench_explore', $this->data);
     }
@@ -4985,7 +4994,8 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
         $stage = $request->input('stage');
 
         $page = max((int) $request->input('page', 1), 1);
-        $size = (int) ($request->input('per_page') ?? $request->input('size') ?? $request->input('limit') ?? 10);
+        $rawSize = (int) ($request->input('per_page') ?? $request->input('size') ?? $request->input('limit') ?? 10);
+        $size = max(5, min($rawSize, 50)); // Bounded pagination: min 5, max 50 to protect memory
         $from = ($page - 1) * $size;
 
         // The toolbar search box actually sends 'cus_search' (see
@@ -5017,13 +5027,24 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
         ];
 
         $versionKey = 'allbenchexplore_version_user_'.$this->user->id;
-        $version = cache()->get($versionKey, 1);
-        $cacheKeySet = 'ats:allbenchexplore:'.$this->user->id.':'.$version.':'.md5(json_encode($cachePayload));
+        $version = 1;
+        try {
+            $version = cache()->get($versionKey, 1);
+        } catch (\Throwable $e) {}
+
+        /**
+         * Phase 9: Multi-Tenant Redis Cache Key — Enforce company_id and user_id scoping with try-catch resilience.
+         */
+        $cacheKeySet = 'ats:allbenchexplore:co_'.$company_id.':usr_'.$this->user->id.':'.$version.':'.md5(json_encode($cachePayload));
         /* ----------------------------
-        ⚡ Check DragonflyDB first
+        ⚡ Check Redis/DragonflyDB first
         ----------------------------- */
-        if (cache()->has($cacheKeySet)) {
-            // return response()->json(cache()->get($cacheKeySet));
+        try {
+            if (cache()->has($cacheKeySet)) {
+                return response()->json(cache()->get($cacheKeySet));
+            }
+        } catch (\Throwable $redisEx) {
+            \Log::warning('bench_explore_listing_job_ajax Redis read exception: '.$redisEx->getMessage());
         }
 
         $statusArr = ['active', 'hold', 'inactive', '2'];
@@ -5043,15 +5064,19 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
                 break;
             case 3:
                 $sort[] = ['max_salary' => ['order' => 'asc']];
+                $sort[] = ['id' => ['order' => 'desc']];
                 break;
             case 4:
                 $sort[] = ['max_salary' => ['order' => 'desc']];
+                $sort[] = ['id' => ['order' => 'desc']];
                 break;
             case 5:
                 $sort[] = ['client_name' => ['order' => 'asc']];
+                $sort[] = ['id' => ['order' => 'desc']];
                 break;
             case 6:
                 $sort[] = ['client_name' => ['order' => 'desc']];
+                $sort[] = ['id' => ['order' => 'desc']];
                 break;
             default:
                 $sort[] = ['id' => ['order' => 'desc']];
@@ -5124,16 +5149,20 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
             $filters[] = ['terms' => ['job_status' => $statusArr]];
         }
 
-        // Free-text search — company name, job title, or the recruiter who
-        // submitted the candidate (matches the toolbar's placeholder text).
+        // Free-text search — company name, job title, or recruiter who submitted candidate.
+        // Hardened with field boosting (title^3, client_name^2) and AND operator for precision.
         if ($custom_search !== '') {
-            $must[] = [
-                'multi_match' => [
-                    'query' => $custom_search,
-                    'fields' => ['client_name', 'title', 'posted_by'],
-                    'fuzziness' => 'AUTO',
-                ],
-            ];
+            $cleanSearch = trim($custom_search);
+            if (mb_strlen($cleanSearch) > 0) {
+                $must[] = [
+                    'multi_match' => [
+                        'query' => $cleanSearch,
+                        'fields' => ['title^3', 'client_name^2', 'posted_by'],
+                        'fuzziness' => 'AUTO',
+                        'operator' => 'and',
+                    ],
+                ];
+            }
         }
 
         // Company / Client Name (Tagify — array of {value: "..."} tags)
@@ -5185,9 +5214,18 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
             }
         }
 
+        /**
+         * Phase 4: Selective _source Projection — Restrict returned ES document fields to required attributes.
+         */
         $params = [
             'index' => ELASTIC_CANDIDATES,
             'body' => [
+                '_source' => [
+                    'id', 'candidate_id', 'job_id', 'job_applications_id', 'other_company',
+                    'job_master_status_id', 'job_status', 'title', 'client_name', 'posted_by',
+                    'name', 'css_style', 'childStatus', 'submitted_by', 'created_at', 'updated_at',
+                    'max_salary', 'min_salary', 'city_name', 'location',
+                ],
                 'from' => $from,
                 'size' => $size,
                 'sort' => $sort,
@@ -5199,15 +5237,24 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
                 ],
             ],
         ];
-        if (! $this->elasticService->indexExists(ELASTIC_CANDIDATES)) {
-            $total = 0;
-            $data = [];
-        } else {
-            $response = $this->elasticService->getClient()->search($params);
-            $total = $response['hits']['total']['value'] ?? 0;
-            $data = array_map(function ($hit) {
-                return $hit['_source'];
-            }, $response['hits']['hits']);
+        /**
+         * Phase 8: Elasticsearch Resilience & Fallback Handling — Protect against cluster outages/timeouts.
+         */
+        $total = 0;
+        $data = [];
+        try {
+            if ($this->elasticService->indexExists(ELASTIC_CANDIDATES)) {
+                $response = $this->elasticService->getClient()->search($params);
+                $total = $response['hits']['total']['value'] ?? 0;
+                $data = array_map(function ($hit) {
+                    return $hit['_source'];
+                }, $response['hits']['hits'] ?? []);
+            }
+        } catch (\Throwable $esException) {
+            \Log::warning('bench_explore_listing_job_ajax ES exception: '.$esException->getMessage(), [
+                'bench_id' => $bench_id,
+                'company_id' => $company_id,
+            ]);
         }
         //    dd($data);
         $pagination = [
@@ -5218,14 +5265,33 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
             'listType' => 'allcandidate',
         ];
 
+        /**
+         * Phase 10: Standardized Consolidated API Payload Structure.
+         * Tenancy Note: Scoped to candidate ID and authenticated tenant company.
+         */
+        $bench_explore_counter_obj = GeneralMethod::bench_explore_listing_counter($bench_id);
         $userPermissions = $this->userPermissions;
         $responseData = [
-            'html' => view('service_company.ajax_pages.bench-explore-list-ajax', compact('data', 'userPermissions', 'company_id', 'salaryMode', 'currencySymbole', 'job_status', 'feedback_status', 'bench_id'))->render(),
+            'status' => 'success',
+            'meta' => [
+                'total' => $total,
+                'current_page' => $page,
+                'per_page' => $size,
+                'last_page' => ceil($total / max(1, $size)),
+                'listType' => 'allcandidate',
+            ],
+            'counters' => $bench_explore_counter_obj->applicationCounter ?? null,
+            'allCounter' => $bench_explore_counter_obj->total ?? 0,
             'total' => $total,
+            'html' => view('service_company.ajax_pages.bench-explore-list-ajax', compact('data', 'userPermissions', 'company_id', 'salaryMode', 'currencySymbole', 'job_status', 'feedback_status', 'bench_id'))->render(),
             'pagination' => view('service_company.ajax_pages.pagination', compact('pagination'))->render(),
         ];
 
-        // cache()->put($cacheKeySet, $responseData, now()->addMinutes(3));
+        try {
+            cache()->put($cacheKeySet, $responseData, now()->addMinutes(3));
+        } catch (\Throwable $redisEx) {
+            \Log::warning('bench_explore_listing_job_ajax Redis write exception: '.$redisEx->getMessage());
+        }
 
         return response()->json($responseData);
     }
@@ -5433,7 +5499,12 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
                 }
 
                 $skilltag = '';
-                $skillArr = DB::table('job_metronics_skills')->select('*')->where('job_id', $row->jobId)->get();
+                static $bxrLegacySkillsCache = [];
+                $jId = (int)$row->jobId;
+                if (!array_key_exists($jId, $bxrLegacySkillsCache)) {
+                    $bxrLegacySkillsCache[$jId] = DB::table('job_metronics_skills')->select('skill_name')->where('job_id', $jId)->get();
+                }
+                $skillArr = $bxrLegacySkillsCache[$jId];
                 if (! empty($skillArr)) {
                     foreach ($skillArr as $sval) {
                         $skilltag .= '<span class="badge badge-light my-1">'.ucfirst($sval->skill_name).'</span>  ';

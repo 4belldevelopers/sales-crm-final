@@ -8571,39 +8571,35 @@ END:VCALENDAR";
 
     public static function getrRcommendationRelationData($company_id, $targetJobId)
     {
-        $elasticService = app(ElasticService::class);
+        $targetJobId = (int) $targetJobId;
+        if ($targetJobId <= 0) {
+            return (object) [];
+        }
 
-        // $params = [
-        // 		'index' => ELASTIC_JOB_REQUEST,
-        // 		'id'    => 157,
-        // ];
-
-        // $response = $elasticService->getClient()->get($params);
-        // $jobs_details = (object) $response['_source'];
-        //  dd($company_id,$targetJobId,$jobs_details);
-
-        // dd($company_id,$targetJobId);
-
-        $response = $elasticService->getClient()->search([
-            'index' => ELASTIC_JOB_REQUEST,
-            'body' => [
-                'size' => 1,
-                'query' => [
-                    'bool' => [
-                        'must' => [
-                            ['term' => ['to_company_id' => (int) $company_id]],
-                            ['term' => ['job_id' => (int) $targetJobId]],
+        try {
+            $elasticService = app(ElasticService::class);
+            $response = $elasticService->getClient()->search([
+                'index' => ELASTIC_JOB_REQUEST,
+                'body' => [
+                    'size' => 1,
+                    'query' => [
+                        'bool' => [
+                            'must' => [
+                                ['term' => ['to_company_id' => (int) $company_id]],
+                                ['term' => ['job_id' => $targetJobId]],
+                            ],
                         ],
                     ],
+                    'sort' => [
+                        ['created_at' => ['order' => 'desc']],
+                    ],
                 ],
-                'sort' => [
-                    ['created_at' => ['order' => 'desc']],
-                ],
-            ],
-        ]);
+            ]);
 
-        return (object) ($response['hits']['hits'][0]['_source'] ?? []);
-
+            return (object) ($response['hits']['hits'][0]['_source'] ?? []);
+        } catch (\Throwable $e) {
+            return (object) [];
+        }
     }
 
     /**
@@ -12123,20 +12119,141 @@ END:VCALENDAR";
         return $key;
     }
 
+    /**
+     * Fetch job details from Elasticsearch index (ELASTIC_JOBS) with MySQL fallback & memoization cache.
+     * Tenancy / Resilience Note: Protects against missing ES documents, ES cluster outages, or invalid IDs.
+     *
+     * @param int|string $id
+     * @return object
+     */
     public static function jobDetails($id)
     {
+        static $jobDetailsCache = [];
 
-        $elasticService = app(ElasticService::class);
-        $params = [
-            'index' => ELASTIC_JOBS,
-            'id' => $id,
+        $jId = (int) $id;
+        if ($jId <= 0) {
+            return (object) [
+                'id' => 0,
+                'title' => 'N/A',
+                'comId' => 0,
+                'client_name' => '',
+                'logo' => '',
+                'company_name' => '',
+                'max_exp' => 0,
+                'min_exp' => 0,
+                'min_salary' => 0,
+                'max_salary' => 0,
+                'min_sal_mode' => 0,
+                'max_sal_mode' => 0,
+                'min_salary_currency' => 0,
+                'max_salary_currency' => 0,
+                'employment_type' => 0,
+                'work_type' => 'no',
+                'status' => 'inactive',
+                'category_id' => 0,
+                'client_city_jobs' => [],
+                'client_contact_info_jobs' => [],
+                'job_assign' => [],
+                'job_metronics_skills' => [],
+            ];
+        }
+
+        if (array_key_exists($jId, $jobDetailsCache)) {
+            return $jobDetailsCache[$jId];
+        }
+
+        try {
+            $elasticService = app(ElasticService::class);
+            $params = [
+                'index' => ELASTIC_JOBS,
+                'id' => $jId,
+            ];
+
+            $response = $elasticService->getClient()->get($params);
+            if (!empty($response['found']) && !empty($response['_source'])) {
+                $jobs_details = (object) $response['_source'];
+                $jobDetailsCache[$jId] = $jobs_details;
+                return $jobs_details;
+            }
+        } catch (\Throwable $e) {
+            // Document not found in ES or ES unreachable — fall through to MySQL DB lookup
+        }
+
+        try {
+            $dbJob = DB::table('jobs')
+                ->leftJoin('companies', 'companies.id', '=', 'jobs.company_id')
+                ->leftJoin('clients', 'clients.id', '=', 'jobs.client_id')
+                ->select(
+                    'jobs.*',
+                    'jobs.id as id',
+                    'jobs.company_id as comId',
+                    'clients.name as client_name',
+                    'companies.company_name',
+                    'companies.logo'
+                )
+                ->where('jobs.id', $jId)
+                ->first();
+
+            if ($dbJob) {
+                $dbJob->client_city_jobs = DB::table('client_city_jobs')
+                    ->leftJoin('city_list', 'city_list.city_id', '=', 'client_city_jobs.city_id')
+                    ->select('city_list.city as city_name')
+                    ->where('client_city_jobs.job_id', $jId)
+                    ->get()
+                    ->toArray();
+
+                $dbJob->client_contact_info_jobs = DB::table('client_contact_info_jobs')
+                    ->where('job_id', $jId)
+                    ->get()
+                    ->toArray();
+
+                $dbJob->job_assign = DB::table('job_assign')
+                    ->leftJoin('users', 'users.id', '=', 'job_assign.user_id')
+                    ->select('job_assign.*', 'users.name as user_name')
+                    ->where('job_assign.job_id', $jId)
+                    ->get()
+                    ->toArray();
+
+                $dbJob->job_metronics_skills = DB::table('job_metronics_skills')
+                    ->select('skill_name')
+                    ->where('job_id', $jId)
+                    ->get()
+                    ->toArray();
+
+                $jobDetailsCache[$jId] = $dbJob;
+                return $dbJob;
+            }
+        } catch (\Throwable $dbEx) {
+            \Log::warning('jobDetails MySQL fallback exception for job_id '.$jId.': '.$dbEx->getMessage());
+        }
+
+        $defaultObj = (object) [
+            'id' => $jId,
+            'title' => 'Requisition #' . $jId,
+            'comId' => 0,
+            'client_name' => '',
+            'logo' => '',
+            'company_name' => '',
+            'max_exp' => 0,
+            'min_exp' => 0,
+            'min_salary' => 0,
+            'max_salary' => 0,
+            'min_sal_mode' => 0,
+            'max_sal_mode' => 0,
+            'min_salary_currency' => 0,
+            'max_salary_currency' => 0,
+            'employment_type' => 0,
+            'work_type' => 'no',
+            'status' => 'inactive',
+            'category_id' => 0,
+            'client_city_jobs' => [],
+            'client_contact_info_jobs' => [],
+            'job_assign' => [],
+            'job_metronics_skills' => [],
         ];
 
-        $response = $elasticService->getClient()->get($params);
-        $jobs_details = (object) $response['_source'];
-
-        return $jobs_details;
-
+        $jobDetailsCache[$jId] = $defaultObj;
+        return $defaultObj;
     }
 
     public static function whatsappConnectCheck($id)
