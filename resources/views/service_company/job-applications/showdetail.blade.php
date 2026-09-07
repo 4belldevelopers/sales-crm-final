@@ -1307,6 +1307,25 @@
           Object.keys(keywords).forEach(function(k){ if(keywords[k].count>0) matched++; else missing++; });
           $id('rcvMatched').textContent = matched;
           $id('rcvMissing').textContent = missing;
+          publishOption3KeywordSnapshot();
+        }
+
+        function publishOption3KeywordSnapshot(){
+          /* Purpose: let Download Resume Center reuse option 3's verified keyword state without changing option 3 rendering. */
+          var list=[];
+          Object.keys(keywords).forEach(function(name){
+            var item=keywords[name] || {};
+            if(item.active && item.count>0){
+              list.push({name:name,type:item.type || 'job',count:item.count});
+            }
+          });
+          window.__rcvOption3KeywordSnapshot={
+            mode:rcvMode,
+            resumeText:resumeText || '',
+            keywords:list,
+            hitCount:hits.length || 0,
+            ready:!!resumeText
+          };
         }
 
         var REDACT_RE = new RegExp(EMAIL_RE.source+'|'+URL_RE.source+'|'+SOCIAL_RE.source+'|'+PHONE_RE.source, 'gi');
@@ -1358,6 +1377,7 @@
           curHit = -1;
           $id('rcvHits').textContent = hits.length;
           $id('rcvHitNav').textContent = hits.length ? ('0/'+hits.length) : '0/0';
+          publishOption3KeywordSnapshot();
         }
 
         function gotoHit(dir){
@@ -5210,6 +5230,27 @@ function rsOption3KeywordsFromResumeText(resumeText){
   });
   return found;
 }
+function rsBestOption3StyleKeywords(resumeText){
+  /* Purpose: keep option 8 aligned with option 3's most accurate active/found keyword state when the Resume/CV viewer has already calculated it. */
+  var snapshot=window.__rcvOption3KeywordSnapshot || null;
+  var values=[];
+  var seen={};
+  function add(value){
+    value=(value || '').replace(/\+\d+\s*More/gi,'').replace(/\s+/g,' ').trim();
+    if(!value) return;
+    var key=value.toLowerCase();
+    if(seen[key]) return;
+    seen[key]=true;
+    values.push(value);
+  }
+  if(snapshot && Array.isArray(snapshot.keywords) && snapshot.keywords.length){
+    snapshot.keywords.forEach(function(item){ add(item && item.name); });
+  }
+  if(values.length) return values;
+  rsOption3KeywordsFromResumeText(resumeText || '').forEach(add);
+  if(values.length) return values;
+  return rsDrawerHighlightedKeywords();
+}
 function rsOption3BuildRegex(activeSkills){
   var act=(Array.isArray(activeSkills) ? activeSkills : []).filter(Boolean);
   if(!act.length) return null;
@@ -5364,8 +5405,8 @@ async function buildHeadlessOption3SkillsHighlightedResume(options){
       pdfBlob=await fetchPdfResumeBlob(resumePdfUrl);
     }
     var resumeText=await rsExtractPdfTextFromBlob(pdfBlob);
-    var activeSkills=rsOption3KeywordsFromResumeText(resumeText);
-    var highlightedBlob=await renderHighlightedPdfBlob(pdfBlob,activeSkills.length ? activeSkills : rsDrawerHighlightedKeywords());
+    var activeSkills=rsBestOption3StyleKeywords(resumeText);
+    var highlightedBlob=await renderHighlightedPdfBlob(pdfBlob,activeSkills);
     if(options.returnBlob) return highlightedBlob;
     var data=readData();
     downloadBlob(highlightedBlob,'JEROWORKS_'+fileSafeName(data.name,'Candidate')+'_Skills_Highlighted.pdf');
