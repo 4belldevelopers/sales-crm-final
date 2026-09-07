@@ -7816,8 +7816,13 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
             ->make(true);
     }
 
-    // new recommented
-
+    /**
+     * Fetch recommended agencies for a job requisition.
+     *
+     * Intent: Ranks eligible partner agencies based on skill relevance score and current lead count (leadCount ASC).
+     * Fallback: If zero skill matches exist (or job has no skills), returns top 20 eligible agencies ordered by lowest lead count.
+     * Tenancy: Excludes current auth company ($company_id) and enforces status, coins, and location filters.
+     */
     public function recommendedData(Request $request)
     {
 
@@ -8048,11 +8053,6 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
                 ->header('Cache-Control', 'private, max-age=0, must-revalidate');
         }
 
-        //  dd("dkjdjdjd");
-
-        $searchSkills = array_filter($currentJobSkill, fn ($s) => $s !== 'skill');
-        $searchSkills = array_map('strtolower', $skillsList);
-
         /*
         |--------------------------------------------------------------------------
         | CLEAN SKILLS
@@ -8061,8 +8061,9 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
 
         $skills = array_map(function ($skill) {
             return strtolower(trim($skill));
-        }, $searchSkills);
-        $skills = array_values(array_unique(array_filter($skills)));
+        }, $currentJobSkill);
+        $skills = array_values(array_unique(array_filter($skills, fn ($s) => ! empty($s) && strtolower($s) !== 'skill')));
+        $searchSkills = $skills;
 
         /*
         |--------------------------------------------------------------------------
@@ -8347,124 +8348,86 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
         }
 
         $globalSearchFilter = [];
-        //  dd($country_id_job);
-        $companySearchParams = [
-
-            'index' => ELASTIC_COMPANIES_INDEX,
-
-            'body' => [
-
-                'from' => $from,
-                'size' => $size,
-                'track_total_hits' => true,
-                'track_scores' => true,
-                'query' => [
-
-                    'function_score' => [
-
-                        'query' => [
-
-                            'bool' => [
-                                'must' => array_merge(
-
-                                    [
-
-                                        /*
-                                        |--------------------------------------------------------------------------
-                                        | ACTIVE COMPANY
-                                        |--------------------------------------------------------------------------
-                                        */
-
-                                        [
-                                            'term' => [
-                                                'status' => 'active',
+        $baseBoolQuery = [
+            'bool' => [
+                'must' => array_merge(
+                    [
+                        [
+                            'term' => [
+                                'status' => 'active',
+                            ],
+                        ],
+                        [
+                            'terms' => [
+                                'company_type' => [1, 2],
+                            ],
+                        ],
+                        [
+                            'term' => [
+                                'commericial_countries.country_id' => $country_id_job,
+                            ],
+                        ],
+                        [
+                            'nested' => [
+                                'path' => 'company_coins',
+                                'query' => [
+                                    'bool' => [
+                                        'must' => [
+                                            [
+                                                'term' => [
+                                                    'company_coins.event_type' => 'sales',
+                                                ],
                                             ],
-                                        ],
-                                        [
-                                            'terms' => [
-                                                'company_type' => [1, 2],
-                                            ],
-                                        ],
-
-                                        [
-                                            'term' => [
-                                                'status' => 'active',
-                                            ],
-                                        ],
-
-                                        [
-                                            'term' => [
-                                                'commericial_countries.country_id' => $country_id_job,
-                                            ],
-                                        ],
-
-                                        /*
-                                        |--------------------------------------------------------------------------
-                                        | COMPANY COINS
-                                        |--------------------------------------------------------------------------
-                                        */
-
-                                        [
-                                            'nested' => [
-
-                                                'path' => 'company_coins',
-
-                                                'query' => [
-
-                                                    'bool' => [
-
-                                                        'must' => [
-
-                                                            [
-                                                                'term' => [
-                                                                    'company_coins.event_type' => 'sales',
-                                                                ],
-                                                            ],
-
-                                                            [
-                                                                'range' => [
-                                                                    'company_coins.coins' => [
-                                                                        'gt' => 0,
-                                                                    ],
-                                                                ],
-                                                            ],
-
-                                                        ],
+                                            [
+                                                'range' => [
+                                                    'company_coins.coins' => [
+                                                        'gt' => 0,
                                                     ],
                                                 ],
                                             ],
-                                        ],
-
-                                    ],
-
-                                    $commercialFilter,
-                                    $experienceFilter,
-                                    $industryFilter,
-                                    $globalSearchFilter
-                                ),
-
-                                // EXCLUDE CURRENT COMPANY
-                                'must_not' => [
-
-                                    [
-                                        'term' => [
-                                            'id' => $company_id,
                                         ],
                                     ],
                                 ],
                             ],
                         ],
-
-                        'functions' => $functions,
-
-                        'score_mode' => 'sum',
-
-                        'boost_mode' => 'sum',
+                    ],
+                    $commercialFilter,
+                    $experienceFilter,
+                    $industryFilter,
+                    $globalSearchFilter
+                ),
+                'must_not' => [
+                    [
+                        'term' => [
+                            'id' => $company_id,
+                        ],
                     ],
                 ],
+            ],
+        ];
+
+        // Intent: Apply skill score weighting if skill matches exist; otherwise fallback to base bool query
+        // Tenancy: Filtered by active status, company_type [1, 2], coins > 0, country, and excluding current company
+        $finalQuery = ! empty($functions) ? [
+            'function_score' => [
+                'query' => $baseBoolQuery,
+                'functions' => $functions,
+                'score_mode' => 'sum',
+                'boost_mode' => 'sum',
+            ],
+        ] : $baseBoolQuery;
+
+        $companySearchParams = [
+            'index' => ELASTIC_COMPANIES_INDEX,
+            'body' => [
+                'from' => $from,
+                'size' => $size,
+                'track_total_hits' => true,
+                'track_scores' => true,
+                'query' => $finalQuery,
                 'sort' => [
                     ['_score' => ['order' => 'desc']],
-                    ['leadCount' => ['order' => 'asc']], // stable sorting
+                    ['leadCount' => ['order' => 'asc', 'missing' => '_last']],
                     ['id' => ['order' => 'desc']],
                 ],
             ],
