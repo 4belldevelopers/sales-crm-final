@@ -1555,7 +1555,14 @@
                   ctx.fillStyle = 'rgba(255,210,0,0.4)';
                   pageWrap.querySelectorAll('mark.rcv-hit').forEach(function(mk){
                     var r = mk.getBoundingClientRect();
-                    ctx.fillRect((r.left-pr.left)/pr.width*w, headerH+(r.top-pr.top)/pr.height*h, r.width/pr.width*w, Math.max(r.height/pr.height*h, 6));
+                    var padX = Math.min(4, Math.max(1.5, r.width * 0.08));
+                    var padY = Math.min(3, Math.max(1.5, r.height * 0.12));
+                    ctx.fillRect(
+                      (r.left - pr.left - padX) / pr.width * w,
+                      headerH + (r.top - pr.top - padY) / pr.height * h,
+                      (r.width + (padX * 2)) / pr.width * w,
+                      Math.max((r.height + (padY * 2)) / pr.height * h, 8)
+                    );
                   });
                 }
                 if(hideContact){
@@ -5668,7 +5675,9 @@ async function renderDomMarkedHighlightedPdfBlob(pdfBlob,keywords){
         renderCtx.fillStyle='rgba(255,214,10,0.42)';
         Array.prototype.slice.call(textLayer.querySelectorAll('mark.rcv-hit')).forEach(function(mk){
           var r=mk.getBoundingClientRect();
-          renderCtx.fillRect((r.left-pr.left)/pr.width*renderCanvas.width,(r.top-pr.top)/pr.height*renderCanvas.height,r.width/pr.width*renderCanvas.width,Math.max(r.height/pr.height*renderCanvas.height,6));
+          var padX=Math.min(4,Math.max(1.5,r.width*0.08));
+          var padY=Math.min(3,Math.max(1.5,r.height*0.12));
+          renderCtx.fillRect(((r.left-pr.left-padX)/pr.width)*renderCanvas.width,((r.top-pr.top-padY)/pr.height)*renderCanvas.height,((r.width+(padX*2))/pr.width)*renderCanvas.width,Math.max(((r.height+(padY*2))/pr.height)*renderCanvas.height,8));
         });
       }
       var imgData=renderCanvas.toDataURL('image/jpeg',0.9);
@@ -5753,9 +5762,9 @@ async function renderR2Option3CloneHighlightedPdfBlob(pdfBlob,keywords){
         renderCtx.fillStyle='rgba(255,214,10,0.42)';
         Array.prototype.slice.call(textLayer.querySelectorAll('mark.rcv-hit')).forEach(function(mk){
           var r=mk.getBoundingClientRect();
-          var padX=Math.min(3,Math.max(1,r.width*0.06));
-          var padY=Math.min(2,Math.max(1,r.height*0.08));
-          renderCtx.fillRect(((r.left-pr.left-padX)/pr.width)*renderCanvas.width,((r.top-pr.top-padY)/pr.height)*renderCanvas.height,((r.width+(padX*2))/pr.width)*renderCanvas.width,Math.max(((r.height+(padY*2))/pr.height)*renderCanvas.height,6));
+          var padX=Math.min(4,Math.max(1.5,r.width*0.08));
+          var padY=Math.min(3,Math.max(1.5,r.height*0.12));
+          renderCtx.fillRect(((r.left-pr.left-padX)/pr.width)*renderCanvas.width,((r.top-pr.top-padY)/pr.height)*renderCanvas.height,((r.width+(padX*2))/pr.width)*renderCanvas.width,Math.max(((r.height+(padY*2))/pr.height)*renderCanvas.height,8));
         });
       }
       var imgData=renderCanvas.toDataURL('image/jpeg',0.9);
