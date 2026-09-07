@@ -5406,7 +5406,7 @@ async function buildHeadlessOption3SkillsHighlightedResume(options){
     }
     var resumeText=await rsExtractPdfTextFromBlob(pdfBlob);
     var activeSkills=rsBestOption3StyleKeywords(resumeText);
-    var highlightedBlob=await renderHighlightedPdfBlob(pdfBlob,activeSkills);
+    var highlightedBlob=await renderDomMarkedHighlightedPdfBlob(pdfBlob,activeSkills);
     if(options.returnBlob) return highlightedBlob;
     var data=readData();
     downloadBlob(highlightedBlob,'JEROWORKS_'+fileSafeName(data.name,'Candidate')+'_Skills_Highlighted.pdf');
@@ -5593,6 +5593,92 @@ async function renderHighlightedPdfBlob(pdfBlob,keywords){
     return outPdf.output('blob');
   }finally{
     // No DOM cleanup is needed here; PDF highlighting is coordinate-based.
+  }
+}
+async function renderDomMarkedHighlightedPdfBlob(pdfBlob,keywords){
+  /* Purpose: option 8 uses the same exact DOM-mark highlight technique as option 3 while staying headless inside Download Resume Center. */
+  await Promise.all([rsEnsurePdfJs(),rsEnsureJsPdf()]);
+  var sourceBytes=await pdfBlob.arrayBuffer();
+  var bytes=new Uint8Array(sourceBytes);
+  var sig=String.fromCharCode.apply(null,bytes.subarray(0,5));
+  if(sig.indexOf('%PDF')===-1) throw new Error('Resume source is not a valid PDF after browser conversion');
+  var doc=await window.pdfjsLib.getDocument({data:bytes}).promise;
+  var JsPDF=window.jspdf.jsPDF;
+  var keywordRe=rsKeywordRegex(keywords);
+  var host=document.createElement('div');
+  host.setAttribute('aria-hidden','true');
+  host.style.cssText='position:fixed;left:-14000px;top:0;width:900px;background:#525659;padding:0;pointer-events:none;z-index:-1;';
+  document.body.appendChild(host);
+  var outPdf=null;
+  try{
+    for(var p=1;p<=doc.numPages;p++){
+      var pdfJsPage=await doc.getPage(p);
+      var base=pdfJsPage.getViewport({scale:1});
+      var cssScale=Math.min(1.35,820/base.width);
+      var cssViewport=pdfJsPage.getViewport({scale:cssScale});
+      var renderScale=Math.min(3,2800/base.width);
+      var renderViewport=pdfJsPage.getViewport({scale:renderScale});
+      var pageWrap=document.createElement('div');
+      pageWrap.className='rcv-page rdc-headless-page';
+      pageWrap.style.cssText='position:relative;background:#fff;margin:0;width:'+Math.floor(cssViewport.width)+'px;height:'+Math.floor(cssViewport.height)+'px;box-shadow:none;overflow:hidden;';
+      var previewCanvas=document.createElement('canvas');
+      previewCanvas.width=Math.floor(cssViewport.width);
+      previewCanvas.height=Math.floor(cssViewport.height);
+      previewCanvas.style.cssText='display:block;width:'+Math.floor(cssViewport.width)+'px;height:'+Math.floor(cssViewport.height)+'px;';
+      var textLayer=document.createElement('div');
+      textLayer.className='rcv-textlayer';
+      textLayer.style.cssText='position:absolute;left:0;top:0;right:0;bottom:0;overflow:hidden;line-height:1;opacity:1;width:'+Math.floor(cssViewport.width)+'px;height:'+Math.floor(cssViewport.height)+'px;';
+      pageWrap.appendChild(previewCanvas);
+      pageWrap.appendChild(textLayer);
+      host.appendChild(pageWrap);
+      var previewCtx=previewCanvas.getContext('2d',{willReadFrequently:true});
+      previewCtx.fillStyle='#ffffff';
+      previewCtx.fillRect(0,0,previewCanvas.width,previewCanvas.height);
+      await pdfJsPage.render({canvasContext:previewCtx,viewport:cssViewport}).promise;
+      var tc=await pdfJsPage.getTextContent();
+      try{
+        var task=window.pdfjsLib.renderTextLayer({textContent:tc,container:textLayer,viewport:cssViewport,textDivs:[]});
+        if(task && task.promise) await task.promise;
+      }catch(textLayerErr){}
+      Array.prototype.slice.call(textLayer.querySelectorAll('span')).forEach(function(sp){
+        if(sp.dataset.orig === undefined) sp.dataset.orig = sp.textContent || '';
+        sp.style.color='transparent';
+        sp.style.position='absolute';
+        sp.style.whiteSpace='pre';
+        sp.style.transformOrigin='0% 0%';
+      });
+      rsOption3HighlightTextLayer(textLayer,keywordRe);
+      var renderCanvas=document.createElement('canvas');
+      renderCanvas.width=Math.floor(renderViewport.width);
+      renderCanvas.height=Math.floor(renderViewport.height);
+      var renderCtx=renderCanvas.getContext('2d',{willReadFrequently:true});
+      renderCtx.fillStyle='#ffffff';
+      renderCtx.fillRect(0,0,renderCanvas.width,renderCanvas.height);
+      await pdfJsPage.render({canvasContext:renderCtx,viewport:renderViewport}).promise;
+      if(keywordRe){
+        var pr=pageWrap.getBoundingClientRect();
+        renderCtx.fillStyle='rgba(255,214,10,0.42)';
+        Array.prototype.slice.call(textLayer.querySelectorAll('mark.rcv-hit')).forEach(function(mk){
+          var r=mk.getBoundingClientRect();
+          renderCtx.fillRect((r.left-pr.left)/pr.width*renderCanvas.width,(r.top-pr.top)/pr.height*renderCanvas.height,r.width/pr.width*renderCanvas.width,Math.max(r.height/pr.height*renderCanvas.height,6));
+        });
+      }
+      var imgData=renderCanvas.toDataURL('image/jpeg',0.9);
+      var pageW=Math.round(cssViewport.width);
+      var pageH=Math.round(cssViewport.height);
+      var orient=pageW>pageH?'l':'p';
+      if(!outPdf) outPdf=new JsPDF({orientation:orient,unit:'px',format:[pageW,pageH]});
+      else outPdf.addPage([pageW,pageH],orient);
+      outPdf.addImage(imgData,'JPEG',0,0,pageW,pageH,undefined,'FAST');
+      pageWrap.remove();
+      previewCanvas.width=previewCanvas.height=0;
+      renderCanvas.width=renderCanvas.height=0;
+    }
+    if(!outPdf) throw new Error('No resume pages were rendered');
+    return outPdf.output('blob');
+  }finally{
+    removeNode(host);
+    try{ if(doc && typeof doc.destroy==='function') doc.destroy(); }catch(ignoreDestroy){}
   }
 }
 async function buildSmartHighlightedResume(options){
