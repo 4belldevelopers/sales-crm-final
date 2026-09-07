@@ -6193,9 +6193,10 @@ function dataUriBytes(dataUri){
   for(var i=0;i<raw.length;i++) bytes[i]=raw.charCodeAt(i);
   return {mime:match[1].toLowerCase(),bytes:bytes};
 }
-async function addCompanyHeaderToResume(resumeBlob,data,fileName){
+async function addCompanyHeaderToResume(resumeBlob,data,fileName,headerOptions){
   await rsEnsurePdfLib();
   data=data||readData();
+  headerOptions=headerOptions||{};
   var PDFLib=window.PDFLib;
   var resumeBytes=await resumeBlob.arrayBuffer();
   var sourceDoc=await PDFLib.PDFDocument.load(resumeBytes);
@@ -6218,33 +6219,35 @@ async function addCompanyHeaderToResume(resumeBlob,data,fileName){
   if(!sourcePages.length) throw new Error('Resume PDF has no pages');
   var firstPage=sourcePages[0];
   var pageSize=firstPage.getSize();
-  var headerH=Math.max(66,Math.min(82,pageSize.width*0.105));
+  var headerScale=headerOptions.matchOption6VisualScale ? Math.max(1,Math.min(1.45,pageSize.width/612)) : 1;
+  var headerH=Math.max(66,Math.min(82,pageSize.width*0.105))*headerScale;
   var newFirst=targetDoc.addPage([pageSize.width,pageSize.height+headerH]);
   var embeddedFirst=await targetDoc.embedPage(firstPage);
   newFirst.drawPage(embeddedFirst,{x:0,y:0,width:pageSize.width,height:pageSize.height});
   var topY=pageSize.height;
   newFirst.drawRectangle({x:0,y:topY,width:pageSize.width,height:headerH,color:PDFLib.rgb(1,1,1),borderColor:PDFLib.rgb(0.86,0.89,0.94),borderWidth:0.8});
-  newFirst.drawRectangle({x:0,y:topY+headerH-4,width:pageSize.width,height:4,color:PDFLib.rgb(0.12,0.23,0.54)});
-  newFirst.drawRectangle({x:0,y:topY,width:pageSize.width,height:1.1,color:PDFLib.rgb(0.88,0.91,0.95)});
+  newFirst.drawRectangle({x:0,y:topY+headerH-(4*headerScale),width:pageSize.width,height:4*headerScale,color:PDFLib.rgb(0.12,0.23,0.54)});
+  newFirst.drawRectangle({x:0,y:topY,width:pageSize.width,height:1.1*headerScale,color:PDFLib.rgb(0.88,0.91,0.95)});
   var companyName=clean(data.reportCompanyName,'Hiring Partner');
-  var logoBox=headerH-26;
-  var logoX=22;
-  var logoY=topY+14;
-  var logoAreaW=70;
+  var logoBox=headerH-(26*headerScale);
+  var logoX=22*headerScale;
+  var logoY=topY+(14*headerScale);
+  var logoAreaW=70*headerScale;
   if(logoImage){
     var dims=logoImage.scaleToFit(logoBox*1.8,logoBox);
     newFirst.drawImage(logoImage,{x:logoX,y:logoY+(logoBox-dims.height)/2,width:dims.width,height:dims.height});
-    logoAreaW=Math.max(56,Math.min(74,dims.width));
+    logoAreaW=Math.max(56*headerScale,Math.min(74*headerScale,dims.width));
   }else{
-    newFirst.drawRectangle({x:logoX,y:logoY,width:logoBox,height:logoBox,color:PDFLib.rgb(0.93,0.95,1),borderColor:PDFLib.rgb(0.75,0.82,0.98),borderWidth:0.8});
-    newFirst.drawText(companyName.charAt(0).toUpperCase(),{x:logoX+(logoBox/2)-5,y:logoY+(logoBox/2)-5,size:16,font:boldFont,color:PDFLib.rgb(0.12,0.23,0.54)});
+    newFirst.drawRectangle({x:logoX,y:logoY,width:logoBox,height:logoBox,color:PDFLib.rgb(0.93,0.95,1),borderColor:PDFLib.rgb(0.75,0.82,0.98),borderWidth:0.8*headerScale});
+    newFirst.drawText(companyName.charAt(0).toUpperCase(),{x:logoX+(logoBox/2)-(5*headerScale),y:logoY+(logoBox/2)-(5*headerScale),size:16*headerScale,font:boldFont,color:PDFLib.rgb(0.12,0.23,0.54)});
     logoAreaW=logoBox;
   }
-  var textX=logoX+logoAreaW+12;
-  newFirst.drawText('SHARED BY',{x:textX,y:topY+headerH-27,size:7,font:boldFont,color:PDFLib.rgb(0.39,0.45,0.55)});
-  newFirst.drawText(limitText(companyName,42,companyName),{x:textX,y:topY+headerH-45,size:12,font:boldFont,color:PDFLib.rgb(0.06,0.09,0.16)});
-  newFirst.drawText('CONFIDENTIAL RESUME',{x:pageSize.width-190,y:topY+headerH-29,size:14,font:boldFont,color:PDFLib.rgb(0.06,0.09,0.16)});
-  newFirst.drawText(clean(data.reportDate,'') || (new Date()).toLocaleDateString(),{x:pageSize.width-190,y:topY+headerH-45,size:8.4,font:regularFont,color:PDFLib.rgb(0.39,0.45,0.55)});
+  var textX=logoX+logoAreaW+(12*headerScale);
+  var rightX=pageSize.width-(190*headerScale);
+  newFirst.drawText('SHARED BY',{x:textX,y:topY+headerH-(27*headerScale),size:7*headerScale,font:boldFont,color:PDFLib.rgb(0.39,0.45,0.55)});
+  newFirst.drawText(limitText(companyName,42,companyName),{x:textX,y:topY+headerH-(45*headerScale),size:12*headerScale,font:boldFont,color:PDFLib.rgb(0.06,0.09,0.16)});
+  newFirst.drawText('CONFIDENTIAL RESUME',{x:rightX,y:topY+headerH-(29*headerScale),size:14*headerScale,font:boldFont,color:PDFLib.rgb(0.06,0.09,0.16)});
+  newFirst.drawText(clean(data.reportDate,'') || (new Date()).toLocaleDateString(),{x:rightX,y:topY+headerH-(45*headerScale),size:8.4*headerScale,font:regularFont,color:PDFLib.rgb(0.39,0.45,0.55)});
   if(sourcePages.length>1){
     var rest=await targetDoc.copyPages(sourceDoc,sourceDoc.getPageIndices().slice(1));
     rest.forEach(function(page){ targetDoc.addPage(page); });
@@ -6310,7 +6313,7 @@ async function buildHighlightedBrandedResume(resumePdfUrl,options){
     });
     if(!(highlightedBlob instanceof Blob)) throw new Error('Highlighted resume PDF was not generated');
     window.__rsBusy=true;
-    await addCompanyHeaderToResume(highlightedBlob,data,'JEROWORKS_'+fileSafeName(data.name,'Candidate')+'_Highlighted_Branded.pdf');
+    await addCompanyHeaderToResume(highlightedBlob,data,'JEROWORKS_'+fileSafeName(data.name,'Candidate')+'_Highlighted_Branded.pdf',{matchOption6VisualScale:true});
     return true;
   }catch(err){
     console.error('Highlighted branded resume error:',err);
