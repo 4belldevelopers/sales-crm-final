@@ -446,7 +446,9 @@ Route::group(['middleware' => 'auth'], function () {
                 Route::get('bench-candidates/download/{id}', [ServiceCompanyBenchCandidatesController::class, 'download'])->name('bench-candidates.download');
                 Route::get('bench-candidates/bench_assign_to_job_listing', [ServiceCompanyBenchCandidatesController::class, 'bench_assign_to_job_listing'])->name('bench-candidates.bench_assign_to_job_listing');
                 Route::get('bench-candidates/recommend_req/{id?}', [ServiceCompanyBenchCandidatesController::class, 'recommend_req'])->name('bench-candidates.recommend_req');
-                Route::get('bench-candidates/recommend_internal_req/{id?}', [ServiceCompanyBenchCandidatesController::class, 'recommend_internal_req'])->name('bench-candidates.recommend_internal_req');
+                // Intent: Lazy-loading tab endpoints for Bench Candidate Detail V2 (Ads Setting & Resume/CV)
+                Route::get('bench-candidates/{id}/tab/ads', [ServiceCompanyBenchCandidatesController::class, 'getAdsTab'])->name('bench-candidates.tab.ads');
+                Route::get('bench-candidates/{id}/tab/resume', [ServiceCompanyBenchCandidatesController::class, 'getResumeTab'])->name('bench-candidates.tab.resume');
 
                 Route::resource('bench-candidates', ServiceCompanyBenchCandidatesController::class);
                 Route::post('bench-candidates/update_placed_end_date', [ServiceCompanyBenchCandidatesController::class, 'update_placed_end_date'])->name('bench-candidates.update_placed_end_date');
