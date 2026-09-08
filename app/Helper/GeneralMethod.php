@@ -7420,15 +7420,15 @@ END:VCALENDAR";
                             );
 
                             if ($returnCount > 0 || ($application->duplicate ?? 0) == 1) {
-                                $duplicate = 1;
+                                $duplicate = 0;
                             }
                         }
                     }
                 }
-
-                if (($application->duplicate ?? 0) == 1) {
-                    $duplicate = 1;
-                }
+                //    dd($duplicate);
+                // if (($application->duplicate ?? 0) == 1) {
+                //     $duplicate = 1;
+                // }
 
                 try {
                     $response = $elasticService->getClient()->update([
