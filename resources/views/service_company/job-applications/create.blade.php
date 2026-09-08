@@ -1407,23 +1407,33 @@ $(document).ready(function () {
         return 'comp' + companyId + '_job' + jobId + '_app' + appId;
     }
 
-    // ── v2 Phase 6: recover a previous upload session after page refresh ──────
-    // recover() reads localStorage UUID → pings status endpoint → restores
-    // UPLOADED state if the file is still in R2 and context matches.
+    /**
+     * Intent: Clean resume state initialization for ADD vs EDIT candidate flows.
+     * Prevents previous session resume leakage on page load/refresh for ADD Candidate mode.
+     * In ADD mode ($page_event != 'EDIT' or appId == 0), start with a completely empty resume state,
+     * clear any stale browser-side upload sessions from localStorage, and never auto-recover old sessions.
+     * In EDIT mode ($page_event == 'EDIT' and appId > 0), preserve existing database resume state and
+     * clear uncommitted temporary V2 upload sessions so they do not interfere with saved data.
+     */
     if (RESUMES_FEATURE_BROWSER_UPLOAD) {
-        window.ResumePresign.recover(getUpContextKey()).then(function (session) {
-            if (session) {
-                // Session recovered — populate the upInfo card (outside #uploadBox)
-                // and hide the dropzone. Showing things inside #uploadBox then hiding
-                // the box would make them invisible — use #upInfo instead.
-                var sizeKb = session.file_size_bytes ? Math.round(session.file_size_bytes / 1024) + ' KB' : '';
-                $('#upFileName').text(session.original_filename || 'Resume');
-                $('#upFileSub').text(sizeKb);
-                $('#upDetailUploadedOn').text('Previously uploaded');
-                $('#uploadBox').hide();
-                $('#upInfo').addClass('show');
-            }
-        });
+        var isEditMode = @json(($page_event ?? '') === 'EDIT') || (($('#appId').val() || '0') !== '0');
+        if (!isEditMode) {
+            // ADD mode: clear stale session for current context & reset form fields & UI
+            window.ResumePresign.cancelUpload(getUpContextKey());
+            $('#resume_session_uuid').val('');
+            $('#uploaded_file_path').val('');
+            $('#resume_original_name').val('');
+            $('#resumeCheck').val('');
+            $('#upInfo').removeClass('show');
+            $('#uploadBox').show();
+            $('#fileInfo').hide();
+            $('#fileName').text('');
+            var ri = document.getElementById('resume'); if (ri) ri.value = '';
+        } else {
+            // EDIT mode: clear uncommitted temporary V2 session; DB resume is rendered via Blade HTML if present
+            window.ResumePresign.cancelUpload(getUpContextKey());
+            $('#resume_session_uuid').val('');
+        }
     }
     // ─────────────────────────────────────────────────────────────────────────
 
@@ -1529,6 +1539,9 @@ $(document).ready(function () {
         if (RESUMES_FEATURE_BROWSER_UPLOAD) {
             window.ResumePresign.cancelUpload(getUpContextKey());
         }
+        $('#resume_session_uuid').val('');
+        $('#uploaded_file_path').val('');
+        $('#resume_original_name').val('');
         $('#upInfo').removeClass('show');
         $('#uploadBox').show();
         $('#fileInfo').hide();
