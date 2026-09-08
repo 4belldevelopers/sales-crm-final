@@ -4751,6 +4751,9 @@ function downloadBlob(blob,fileName){
   a.download=fileName;
   document.body.appendChild(a);
   a.click();
+  try{
+    window.dispatchEvent(new CustomEvent('rdc:download-started',{detail:{fileName:fileName}}));
+  }catch(ex){}
   setTimeout(function(){
     URL.revokeObjectURL(url);
     if(a.parentNode) a.parentNode.removeChild(a);
@@ -8402,7 +8405,7 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
 
   function clearSmartCountdownTimer(){
     if(smartCountdownTimer){
-      clearInterval(smartCountdownTimer);
+      clearTimeout(smartCountdownTimer);
       smartCountdownTimer = null;
     }
   }
@@ -8474,6 +8477,14 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
       '<span id="rdcBtnLabel">' + downloadButtonLabel(m.label) + '</span>';
     btnLbl = document.getElementById('rdcBtnLabel');
   }
+
+  function markDownloadStarted(){
+    if(!isLoading || !dlBtn) return;
+    stopSmartCountdown();
+    dlBtn.innerHTML = '<span class="rdc-spin"></span><span>Download started...</span>';
+  }
+
+  window.addEventListener('rdc:download-started', markDownloadStarted);
 
   if(dlBtn){
     dlBtn.addEventListener('click', function(){
