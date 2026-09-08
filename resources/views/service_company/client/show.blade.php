@@ -593,10 +593,10 @@ use Carbon\Carbon;
                                         <span class="cd-info-value">{{ $industries_name }}</span>
                                     </div>
                                     @endif
-                                    @if (@$client->company_type > 0)
+                                    @if (isset($client->company_type) && $client->company_type !== '' && isset($companyType[$client->company_type]))
                                     <div class="cd-info-row">
                                         <span class="cd-info-label">Company Type</span>
-                                        <span class="cd-info-value">{{ $companyType[@$client->company_type] ?? '' }}</span>
+                                        <span class="cd-info-value">{{ $companyType[$client->company_type] }}</span>
                                     </div>
                                     @endif
                                     <div class="cd-info-row">
