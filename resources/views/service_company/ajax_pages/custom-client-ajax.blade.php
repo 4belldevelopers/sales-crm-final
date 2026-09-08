@@ -61,13 +61,15 @@
     }
 
     /* ── jobs (active / closed / hold) ── */
-    $jobsCount = GeneralMethod::InternalClientJobsCountAllStatus($company_id, $client_id);
+    $jKey = 'internal_' . $client_id;
+    $jobsCount = $jobsCountsMap[$jKey] ?? GeneralMethod::InternalClientJobsCountAllStatus($company_id, $client_id);
     $job_active = $jobsCount->job_active ?? 0;
     $job_closed = $jobsCount->job_inactive ?? 0;
     $job_hold   = $jobsCount->job_hold ?? 0;
 
     /* ── performance funnel ── */
-    $perf = GeneralMethod::InternalClientCandidatesCountList($client_id);
+    $pKey = 'internal_' . $client_id;
+    $perf = $candidateCountsMap[$pKey] ?? GeneralMethod::InternalClientCandidatesCountList($client_id);
     $sourced    = $perf->sourced ?? 0;
     $evaluated  = $perf->evaluated ?? 0;
     $interviews = $perf->all_interview ?? 0;

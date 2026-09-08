@@ -1,4 +1,4 @@
-@php 
+﻿@php 
    use App\Helper\GeneralMethod;
    $defaultTimeFormat = GeneralMethod::defaultTimeFormat();
     $symbolsValue = GeneralMethod::currencyConverter()['getKey'] ?? [];
@@ -350,6 +350,13 @@
 /* Spinner */
 @keyframes rdcSpin{to{transform:rotate(360deg);}}
 .rdc-spin{display:inline-block;width:13px;height:13px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:rdcSpin .65s linear infinite;flex-shrink:0;}
+@keyframes rdcCountdownReel{from{transform:translateY(0);}to{transform:translateY(var(--rdc-count-shift));}}
+.rdc-countdown{display:inline-flex;align-items:center;justify-content:center;gap:5px;min-width:0;}
+.rdc-countdown-text{min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.rdc-countdown-reel{width:28px;height:16px;line-height:16px;overflow:hidden;display:inline-block;text-align:right;font-variant-numeric:tabular-nums;font-feature-settings:"tnum" 1;flex-shrink:0;}
+.rdc-countdown-track{display:flex;flex-direction:column;will-change:transform;animation:rdcCountdownReel var(--rdc-count-duration,60s) steps(var(--rdc-count-steps,60), end) forwards;}
+.rdc-countdown-track span{height:16px;line-height:16px;display:block;}
+.rdc-countdown-unit{min-width:50px;text-align:left;flex-shrink:0;}
 /* Toast */
 .rdc-toast{position:fixed;bottom:20px;right:20px;background:#1e293b;color:#fff;padding:10px 15px;border-radius:8px;font-size:11.5px;font-family:'Poppins',sans-serif;z-index:1300000;opacity:0;transform:translateY(6px);transition:all .22s ease;pointer-events:none;max-width:280px;line-height:1.4;}
 .rdc-toast.rdc-tshow{opacity:1;transform:translateY(0);}
@@ -408,7 +415,7 @@
 @php 
       
     $jobId = $application->jobId ?? $application->job_id;
-    $jobData = DB::table('jobs')->select('max_sal_mode as jobMode','max_salary_currency as jobCurrency')->where('id','=',$jobId)->first();
+    $jobData = $jobData ?? (empty($jobId) ? null : DB::table('jobs')->select('max_sal_mode as jobMode','max_salary_currency as jobCurrency')->where('id','=',$jobId)->first());
     $jobMode = $jobData->jobMode ?? @$application->current_ctc_mode;
     $jobCurrency = $jobData->jobCurrency ?? @$application->current_ctc_cur;
     $symbols = $symbolsValue[$jobCurrency] ?? "INR";
@@ -445,7 +452,7 @@
       $posted_by_image			=	$posted_by			=	'';
 
       if($CaptainCompanyid != $application->ClientComID && $application->ClientComID != 0 && $application->ClientComID > 0){
-            $spokperson = DB::table('job_assign')->select('users.name')->leftjoin('users', 'users.id', 'job_assign.spok_user_id')->where('job_assign.job_id', $jobId)->where('job_assign.company_id', $application->ClientComID)->first();
+            $spokperson = $hdrSpokperson ?? DB::table('job_assign')->select('users.name')->leftjoin('users', 'users.id', 'job_assign.spok_user_id')->where('job_assign.job_id', $jobId)->where('job_assign.company_id', $application->ClientComID)->first();
             $posted_by = (@$spokperson->name) ? @$spokperson->name : @$application->posted_by;
         }else{
           // dd($application->posted_by);
@@ -540,8 +547,12 @@
           }
       }
       $__hdrMatchedCount = 0;
+      $__hdrMatchedSkillNames = [];
       foreach ($__hdrSkillsArr as $__cs) {
-          if (isset($__hdrJobSkills[mb_strtolower($__cs)])) { $__hdrMatchedCount++; }
+          if (isset($__hdrJobSkills[mb_strtolower($__cs)])) {
+              $__hdrMatchedCount++;
+              $__hdrMatchedSkillNames[] = $__cs;
+          }
       }
       $__hdrJobTotal   = count($__hdrJobSkills);
       $__hdrNotMatched = max(0, $__hdrJobTotal - $__hdrMatchedCount);
@@ -715,8 +726,7 @@
           }
           </script>
         @else
-          <a target="_blank" class="cdr-action-btn cdr-btn-secondary downloadCount {{ $dnone }}"
-             href="{{ route('service_company.job-applications.edit', [ GeneralMethod::value_encrypt($jobWiseCanId)]) }}?currentPage={{ GeneralMethod::value_encrypt($currentPage) }}&currentSlug={{ GeneralMethod::value_encrypt($currentSlug) }}" title="Download resume">
+          <a href="javascript:void(0);" class="cdr-action-btn cdr-btn-secondary downloadCount {{ $dnone }}" id="hdrDlToggleApp" role="button" aria-haspopup="true" aria-expanded="false" title="Download resume">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
             Download Resume
           </a>
@@ -1025,7 +1035,7 @@
         $rcvCompanyName = '';
         $__rcvCid = auth()->user()->company_id ?? 0;
         if($__rcvCid){
-            $__rcvC = DB::table('companies')->select('logo','company_name')->where('id', $__rcvCid)->first();
+            $__rcvC = $rcvCompany ?? DB::table('companies')->select('logo','company_name')->where('id', $__rcvCid)->first();
             $rcvCompanyName = ucwords((string) (@$__rcvC->company_name ?? ''));
             $__rcvLogo = $__rcvC->logo ?? '';
             if(!empty($__rcvLogo) && strlen($__rcvLogo) > 5){
@@ -1758,15 +1768,16 @@
           else { showIframe(); renderChips(); }
         }
 
-        // only the most-recently-injected instance responds (avoids stale listeners after AJAX re-injection)
-        var MY_TOKEN = (window.__rcvSeq = (window.__rcvSeq || 0) + 1);
-        document.addEventListener('click', function(e){
-          if(MY_TOKEN !== window.__rcvSeq) return;
-          var a = e.target.closest && e.target.closest('a[href="#resume_cv"]');
-          if(a){ setTimeout(init, 120); }
-        });
+        // Intent: Phase 6 Scope event listener directly to current drawer container (FINDING-RES-01 - P0)
+        var currentDrawer = document.getElementById('kt_activities3') || document.querySelector('.offcanvas-body') || document;
+        var rcvTabBtn = currentDrawer.querySelector('a[href="#resume_cv"], button[data-bs-target="#resume_cv"]');
+        if (rcvTabBtn) {
+          rcvTabBtn.addEventListener('click', function() {
+            setTimeout(init, 120);
+          });
+        }
         // if the tab is already visible on load
-        if(document.querySelector('#resume_cv.active, #resume_cv.show.active')) setTimeout(init, 250);
+        if(currentDrawer.querySelector('#resume_cv.active, #resume_cv.show.active')) setTimeout(init, 250);
       })();
       </script>
     </div>
@@ -1803,6 +1814,9 @@
                       <ul class="list-unstyled">
                           <?php 
                             $cnt	=	0;
+                            if (empty($notesArr) || count($notesArr) === 0) {
+                                echo '<li class="p-4 text-center text-muted notes-placeholder">No recruiter notes added yet.</li>';
+                            } else {
                             foreach($notesArr as $key => $notes )
                             {
                               $date		=	$notes->created_at;
@@ -1871,7 +1885,7 @@
                             </div>
                           </div>
                         </li>
-                         <?php 	$cnt++;	}	?>
+                         <?php 	$cnt++;	} }	?>
                       </ul>
                     </div>
                   </div>
@@ -2493,7 +2507,7 @@
                   Company Name 
                 </span>
                 @php
-                $companies = DB::table('companies')->select('companies.company_name')->join('users','users.company_id','companies.id')->where('users.id', $application->submitted_by)->first();
+                $companies = $submittedByCompany ?? (!empty($application->submitted_by) ? DB::table('companies')->select('companies.company_name')->join('users','users.company_id','companies.id')->where('users.id', $application->submitted_by)->first() : null);
                 @endphp
                 <span class="own-value">{{ ucwords(strtolower(@$companies->company_name ?? '')) }}</span>
               </div>
@@ -3226,1312 +3240,8 @@
              <!--end::Timeline header-->
         
           <div class="card-body px-0 py-7">
-                <div class="timeline">
-                  <?php
-                    if(!empty($updateTimeLine)){
-                      foreach($updateTimeLine as $tdata){
-                        $tdata = (object) $tdata;
-                        $tdata->update_at =   $tdata->updated_at;
-                        $company_or_client = GeneralMethod::companyDetailsByClient($tdata->job_id);
-                        $create_at	=	$newDate	=	$newTime	= $prev_tiles_bg	=	$timeline_type = $current_tiles_bg =  "";
-                        $create_at	=	$tdata->created_at;
-                        $newDate 							=	date("d-M-Y", strtotime($create_at));
-                        $newTime 							=	date("H:i A", strtotime($create_at));
-                        $posted_by_image					=	$comment							=	"";	
-                        if(!empty(@$tdata->image)){
-                          $posted_by_image				=	@$tdata->image;
-                        }
-                        if(!empty(@$tdata->prev_process_name)){
-                          $prevCandStatusArr				= 	GeneralMethod::candidateStatusColorCode(@$tdata->prev_process_name);$prev_tiles_bg					=	$prevCandStatusArr['tiles_bg'];
-                        }
-                        if(!empty(@$tdata->master_process_name)){
-                          $currentCandStatusArr			= 	GeneralMethod::candidateStatusColorCode(@$tdata->master_process_name);	
-                          $current_tiles_bg				=	$currentCandStatusArr['tiles_bg']; 
-                        }
-                        $master_process_name				=	@$tdata->master_process_name;
-                        $prev_process_name					=	@$tdata->prev_process_name;
-                        if($tdata->event_id == 1){
-                          $prev_process_name				=	@$tdata->note;	
-                          $prev_tiles_bg					=	'sourcing-bg';	
-                        }
-                        if($tdata->event_id == 2){
-                          $comment						=	@$tdata->note;		
-                        }
-                        if($tdata->event_id == 5 || $tdata->event_id == 6 || $tdata->event_id == 7 || $tdata->event_id == 8){
-                          $comment						=	@$tdata->note;	
-                        }
-                        $offer_status = $management_status = '----';
-                        $downloadOffer = '';
-                        if($tdata->candidate_status==1){                          
-                         
-                          $offer_status = 'Offer Released';
-                          $allow =  GeneralMethod::confidentialAmontShow($tdata->job_id); 
-                          if($allow){
-                             $downloadOffer = '<i  data-jobId="'.@$application->jobId.'" data-candidate="'.@$application->candidate_id.'" data-mtype="3" data-offerId="'.@$application->offer_id.'" class="fa fa-download download_offer"  data-wizard-type="action-next" style="width: 100%;cursor: pointer;"></i>';
-                          }else{
-                            $offer_job_applications = DB::table('offer_job_applications')->where('id','=',@$application->offer_id)->first();
-                            if($offer_job_applications->submitted_by != auth()->user()->id){
-                                $downloadOffer = '<i  data-jobId="'.@$application->jobId.'" data-candidate="'.@$application->candidate_id.'" data-mtype="3" data-offerId="'.@$application->offer_id.'" class="fa fa-download ConfidentialClass"  data-wizard-type="action-next" style="width: 100%;cursor: pointer;"></i>';
-                            }else{
-                             $downloadOffer = '<i  data-jobId="'.@$application->jobId.'" data-candidate="'.@$application->candidate_id.'" data-mtype="3" data-offerId="'.@$application->offer_id.'" class="fa fa-download download_offer"  data-wizard-type="action-next" style="width: 100%;cursor: pointer;"></i>';
-                            }
-
-                          }
-
-                        }elseif($tdata->candidate_status==2){
-                          $offer_status = 'Offer Accepted';
-                        }elseif($tdata->candidate_status==3){
-                          $offer_status = 'Offer Rejected';
-                        }elseif($tdata->candidate_status==4){
-                          $offer_status = 'Offer Expired';
-                        }elseif($tdata->candidate_status==0){
-                          $offer_status = 'Offer Created';
-                        }
-                        if($tdata->management_status==1){
-                          $management_status = 'In Process';
-                        }elseif($tdata->management_status==2){
-                          $management_status = 'Approved';
-                        }elseif($tdata->management_status==3){
-                          $management_status = 'Not Approved';
-                        }
-                        $feedback_status = GeneralMethod::feedback_status();
-                        $available_status = GeneralMethod::available_status();
-                        $available_status_name = '';
-                        if ($tdata->available_status > 0) {
-                          $available_status_name = @$available_status[@$tdata->available_status]['name'];
-                        } 
-                        $feedback = ucwords(substr(@$feedback_status[@$tdata->feedback]['name'], 0, 12));
-                        if($CaptainCompanyid == $tdata->event_by_company_id){
-                                $rowpostedby = $tdata->name;
-                        }else{
-                            $rowpostedby = $tdata->name;
-                            $userC = DB::table('users')->select('company_id')->where('id',$tdata->event_by_user_id)->first();
-                            if($CaptainCompanyid==$userC->company_id){
-                                    $rowpostedby = $tdata->name;
-                              }else{
-                                $spokperson = DB::table('job_assign')->select('users.name','job_assign.company_id')->leftjoin('users', 'users.id', 'job_assign.spok_user_id')->where('job_assign.job_id', $tdata->job_id)->where('job_assign.company_id', $tdata->event_by_company_id)->first();
-                                if($spokperson){
-                                    if(!empty($spokperson->name)){
-                                      if($CaptainCompanyid !=$spokperson->company_id){
-                                        $rowpostedby = (@$spokperson->name) ? @$spokperson->name : $tdata->name;
-                                      }else{
-                                        $rowpostedby = $tdata->name;
-                                      }
-                                  }
-                                }else{
-                                  $rowpostedby = $tdata->name;
-                                }
-                              }
-                        }
-                    
-                        $rowpostedby = ($rowpostedby) ? $rowpostedby : $tdata->name;
-                        $bgTextDecore				=	GeneralMethod::icoinText($rowpostedby);				
-        
-                        if(($tdata->event_id == 1) || ($tdata->event_id == 2))
-                        {		
-                        ?>
-                              <div class="timeline-item">
-                                <div class="timeline-line w-40px"></div>
-                                <div class="timeline-icon symbol symbol-circle symbol-40px">
-                                  <div class="symbol-label bg-light"> 
-                                    <span class="svg-icon svg-icon-2 svg-icon-gray-500 d-none">
-                                      <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="24px" height="24px" viewBox="0 0 24 24" version="1.1">
-                                        <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
-                                          <polygon points="0 0 24 0 24 24 0 24"/>
-                                          <rect fill="#000000" opacity="0.3" transform="translate(13.000000, 6.000000) rotate(-450.000000) translate(-13.000000, -6.000000) " x="12" y="8.8817842e-16" width="2" height="12" rx="1"/>
-                                          <path d="M9.79289322,3.79289322 C10.1834175,3.40236893 10.8165825,3.40236893 11.2071068,3.79289322 C11.5976311,4.18341751 11.5976311,4.81658249 11.2071068,5.20710678 L8.20710678,8.20710678 C7.81658249,8.59763107 7.18341751,8.59763107 6.79289322,8.20710678 L3.79289322,5.20710678 C3.40236893,4.81658249 3.40236893,4.18341751 3.79289322,3.79289322 C4.18341751,3.40236893 4.81658249,3.40236893 5.20710678,3.79289322 L7.5,6.08578644 L9.79289322,3.79289322 Z" fill="#000000" fill-rule="nonzero" transform="translate(7.500000, 6.000000) rotate(-270.000000) translate(-7.500000, -6.000000) "/>
-                                          <rect fill="#000000" opacity="0.3" transform="translate(11.000000, 18.000000) scale(1, -1) rotate(90.000000) translate(-11.000000, -18.000000) " x="10" y="12" width="2" height="12" rx="1"/>
-                                          <path d="M18.7928932,15.7928932 C19.1834175,15.4023689 19.8165825,15.4023689 20.2071068,15.7928932 C20.5976311,16.1834175 20.5976311,16.8165825 20.2071068,17.2071068 L17.2071068,20.2071068 C16.8165825,20.5976311 16.1834175,20.5976311 15.7928932,20.2071068 L12.7928932,17.2071068 C12.4023689,16.8165825 12.4023689,16.1834175 12.7928932,15.7928932 C13.1834175,15.4023689 13.8165825,15.4023689 14.2071068,15.7928932 L16.5,18.0857864 L18.7928932,15.7928932 Z" fill="#000000" fill-rule="nonzero" transform="translate(16.500000, 18.000000) scale(1, -1) rotate(270.000000) translate(-16.500000, -18.000000) "/>
-                                        </g>
-                                      </svg>
-                                    </span> 
-                                    <span class="svg-icon svg-icon-2 svg-icon-gray-500">
-                                      <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="24px" height="24px" viewBox="0 0 24 24" version="1.1">
-                                        <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
-                                          <rect x="0" y="0" width="24" height="24"/>
-                                          <path d="M21,5.5 L21,17.5 C21,18.3284271 20.3284271,19 19.5,19 L4.5,19 C3.67157288,19 3,18.3284271 3,17.5 L3,14.5 C3,13.6715729 3.67157288,13 4.5,13 L9,13 L9,9.5 C9,8.67157288 9.67157288,8 10.5,8 L15,8 L15,5.5 C15,4.67157288 15.6715729,4 16.5,4 L19.5,4 C20.3284271,4 21,4.67157288 21,5.5 Z" fill="#000000" fill-rule="nonzero"/>
-                                        </g>
-                                      </svg>
-                                    </span>
-                                  </div>
-                                </div>
-                                <div class="timeline-content mb-10 mt-n1">
-                                  <table class="table align-middle table-row-dashed fs-6 gy-0 mb-5" id="">
-                                    <tbody class="text-gray-600 fw-bold">
-                                      <tr>
-                                        <td class="min-w-150px">
-                                          <div class="d-flex flex-column">
-                                            <a href="javascript:void(0);" class="text-dark fw-bolder text-hover-primary fs-6">{{ ucwords(@$tdata->title) }}</a>
-                                            <span class="fw-bold text-muted d-block fs-7">{{ ucwords(@$company_or_client) }}</span>
-                                          </div>
-                                        </td>
-                                        <td class="min-w-150px">
-                                          <div class="d-flex flex-column">
-                                            <span class="badge fw-bolder fs-6 {{ @$prev_tiles_bg }} px-2 py-1">{{ ucwords(@$prev_process_name) }}</span>
-                                            <span class="text-muted fw-bold d-block fs-7">{{ ucwords(@$tdata->prev_process_child_name) }}</span>
-                                          </div>
-                                        </td>
-                                        <td class="min-w-50px">
-                                          <div class="d-flex flex-column">
-                                            <span class="text-dark fw-bolder fs-6"> To </span> 
-                                          </div>
-                                        </td>
-                                        <td class="min-w-150px">
-                                          <div class="d-flex flex-column">
-                                            <span class="badge fw-bolder fs-6 {{ @$current_tiles_bg }} px-2 py-1">{{ ucwords(@$master_process_name) }}</span>
-                                            <span class="text-muted fw-bold d-block fs-7">{{ ucwords(@$tdata->child_process_name) }}</span>
-                                          </div>
-                                        </td>
-                                        <td class="min-w-120px">
-                                          <div class="d-flex flex-column">
-                                            <span class="text-dark fw-bolder fs-6">{{  GeneralMethod::ymdTodmyNotTime(@$newDate) }}</span>
-                                            <span class="text-muted fw-bold text-muted d-block fs-7">{{ @$newTime }}(IST)</span>
-                                          </div>
-                                        </td>
-                                        <td class="min-w-50px">
-                                          <div class="d-flex flex-column">
-                                            <div class="symbol-group symbol-hover justify-content-center">
-                                              <div class="symbol symbol-30 symbol-circle"  data-toggle="tooltip" data-placement="top" title="{{ ucwords(@$tdata->name) }}">
-                                                 <div class="" data-bs-placement="top" data-toggle="tooltip2" data-html="true" title="{{ ucwords(@$tdata->name)}}" >
-                                                  <span class="text-dark fw-bolder fs-6">{{ substr(ucwords($tdata->name), 0, 10)}}</span>
-                                                </div>
-                                              </div>
-                                            </div>
-                                            <span class="text-muted fw-bold d-block fs-7" style="text-align: center;">{{ ucwords(@$tdata->cur_companyname) }}</span>
-                                          </div>
-                                        </td>
-                                      </tr>
-                                    </tbody>
-                                  </table>
-                                  @if(!empty($comment))
-                                    <div class="overflow-auto pb-5">
-                                      <div class="d-flex align-items-center border border-dashed border-gray-300 rounded min-w-700px p-5">
-                                        <div class="mb-1">
-                                          <p class="<?php //echo @$current_tiles_bg; ?>">
-                                            <a href="#" class="fs-5 fw-bold text-gray-800 text-hover-primary mb-2">&nbsp;Comment:</a>
-                                            {{ @$comment }}
-                                          </p>
-                                        </div>
-                                      </div>
-                                    </div>
-                                  @endif
-                                </div>
-                              </div>
-                        <?php
-                        }else if($tdata->event_id==3){
-                            $interview_schedule_date	=	$newDate	=	$newTime =	$interview_mode	=	$interview_mode_child_level	= $interviewers = $panellistArr = 	"";
-                            $interview_schedule_date	=	$tdata->interview_schedule_date;
-                            $interview_to_time	=	$tdata->interview_to_time;
-                            $newDate 					=	date("d-M-Y", strtotime($interview_schedule_date));
-                            $newTime 					=	date("h:i A", strtotime(@$interview_to_time));
-                            if($tdata->interview_mode > 0){
-                              $interview_mode_Arr		= 	GeneralMethod::interview_mode();
-                              $interview_mode			= 	$interview_mode_Arr[@$tdata->interview_mode];				
-                            }
-                            $interview_mode_child_level	=	$tdata->interview_mode_child_level;	
-                            if($tdata->interview_mode==3){
-                              $interview_mode_child_level	=	@$tdata->interview_mention_link;	
-                            }
-                            $interviewers				=	$tdata->interviewers;
-                            if(!empty($interviewers)){
-                              $panellistArr 			=	explode(',', $interviewers);	
-                            }	
-                            $average_star_rating	=	'';
-                            $average_star_rating	=	$tdata->average_star_rating;	
-                            $imagePath				=	$text = 	'';
-                            if($average_star_rating == 1){
-                              $imagePath	=	url('public/img/star/1.png');
-                              $text		=	'Bad';
-                            }else if($average_star_rating == 2){
-                              $imagePath	=	url('public/img/star/2.png');
-                              $text		=	'Poor';
-                            }else if($average_star_rating == 3){
-                              $imagePath	=	url('public/img/star/3.png');
-                              $text		=	'Average';
-                            }else if($average_star_rating == 4){
-                              $imagePath	=	url('public/img/star/4.png');
-                              $text		=	'Best';
-                            }else if($average_star_rating == 5){
-                              $imagePath	=	url('public/img/star/5.png');	
-                              $text		=	'Very Best';
-                            }else{
-                              $imagePath	=	url('public/img/star/5-blank.png');
-                              $text		=	'Blank';
-                            }
-                        ?>
-                            <div class="timeline-item">
-                              <!--begin::Timeline line-->
-                              <div class="timeline-line w-40px"></div>
-                              <!--end::Timeline line-->
-                              <!--begin::Timeline icon-->
-                              <div class="timeline-icon symbol symbol-circle symbol-40px">
-                                <div class="symbol-label bg-light">
-                                  <!--begin::Svg Icon-->
-                                  <span class="svg-icon svg-icon-2 svg-icon-gray-500">
-                                    <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="24px" height="24px" viewBox="0 0 24 24" version="1.1">
-                                      <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
-                                        <polygon points="0 0 24 0 24 24 0 24"/>
-                                        <path d="M4.85714286,1 L11.7364114,1 C12.0910962,1 12.4343066,1.12568431 12.7051108,1.35473959 L17.4686994,5.3839416 C17.8056532,5.66894833 18,6.08787823 18,6.52920201 L18,19.0833333 C18,20.8738751 17.9795521,21 16.1428571,21 L4.85714286,21 C3.02044787,21 3,20.8738751 3,19.0833333 L3,2.91666667 C3,1.12612489 3.02044787,1 4.85714286,1 Z M8,12 C7.44771525,12 7,12.4477153 7,13 C7,13.5522847 7.44771525,14 8,14 L15,14 C15.5522847,14 16,13.5522847 16,13 C16,12.4477153 15.5522847,12 15,12 L8,12 Z M8,16 C7.44771525,16 7,16.4477153 7,17 C7,17.5522847 7.44771525,18 8,18 L11,18 C11.5522847,18 12,17.5522847 12,17 C12,16.4477153 11.5522847,16 11,16 L8,16 Z" fill="#000000" fill-rule="nonzero" opacity="0.3"/>
-                                        <path d="M6.85714286,3 L14.7364114,3 C15.0910962,3 15.4343066,3.12568431 15.7051108,3.35473959 L20.4686994,7.3839416 C20.8056532,7.66894833 21,8.08787823 21,8.52920201 L21,21.0833333 C21,22.8738751 20.9795521,23 19.1428571,23 L6.85714286,23 C5.02044787,23 5,22.8738751 5,21.0833333 L5,4.91666667 C5,3.12612489 5.02044787,3 6.85714286,3 Z M8,12 C7.44771525,12 7,12.4477153 7,13 C7,13.5522847 7.44771525,14 8,14 L15,14 C15.5522847,14 16,13.5522847 16,13 C16,12.4477153 15.5522847,12 15,12 L8,12 Z M8,16 C7.44771525,16 7,16.4477153 7,17 C7,17.5522847 7.44771525,18 8,18 L11,18 C11.5522847,18 12,17.5522847 12,17 C12,16.4477153 11.5522847,16 11,16 L8,16 Z" fill="#000000" fill-rule="nonzero"/>
-                                      </g>
-                                    </svg>
-                                  </span>
-                                  <!--end::Svg Icon-->
-                                </div>
-                              </div>
-                              <!--end::Timeline icon-->
-                              <!--begin::Timeline content-->
-                              <div class="timeline-content mb-10 mt-n1">
-                                <!--begin::Table-->
-                                <table class="table align-middle table-row-dashed fs-6 gy-0 mb-5" id="">
-                                  <!--begin::Table body-->
-                                  <tbody class="text-gray-600 fw-bold">
-                                    <!--begin::Table row-->
-                                    <tr>
-                                      <!--begin::Requisitions=-->
-                                      <td class="min-w-150px">
-                                        <div class="d-flex flex-column">
-                                          <a href="javascript:void(0);" class="text-dark fw-bolder text-hover-primary fs-6"> {{ ucwords(@$tdata->title)}} </a>
-                                          <span class="fw-bold text-muted d-block fs-7"> {{ ucwords(@$company_or_client) }}  </span>
-                                        </div>
-                                        <!--end::Requisitions=-->
-                                        <!--begin::Interview Mode=-->
-                                        <td class="min-w-100px">
-                                          <div class="d-flex flex-column">
-                                            <span class="text-dark fw-bolder fs-6">{{ @$interview_mode }}</span>
-                                            <span class="fw-bold text-muted d-block fs-7">{{ @$interview_mode_child_level }}</span> 
-                                          </div>
-                                        </td>
-                                        <!--end::Interview Mode=-->
-                                        <!--begin::Interviewers=-->
-                                        <td class="min-w-90px">
-                                          <div class="d-flex flex-column">
-                                            <div class="symbol-group symbol-hover">
-                                               @php
-                                                  if(!empty($panellistArr)){
-                                                    foreach($panellistArr as $pval)
-                                                    {
-                                                      $bgTextDecore = $strVal = $team_full_name	=	 '';
-                                                      $str 			= $team_full_name =  trim(@$pval);
-                                                      $str 			= $strVal = strtolower($str[0]);
-                                                      $str = ord($str);
-                                                      if ($str >= 97 && $str <= 101) {
-                                                        $bgTextDecore = 'fs-8 bg-light-danger text-danger';
-                                                      } 
-                                                      else if ($str >= 102 && $str <= 106) {
-                                                        $bgTextDecore = 'fs-8 bg-light-warning text-warning';
-                                                      } 
-                                                      else if ($str >= 107 && $str <= 111) {
-                                                        $bgTextDecore = 'fs-8 bg-light-primary text-primary';
-                                                      } 
-                                                      else if ($str >= 112 && $str <= 116) {
-                                                        $bgTextDecore = 'fs-8 bg-light-success text-success';
-                                                      } 
-                                                      else if ($str >= 117 && $str <= 121) {
-                                                        $bgTextDecore = 'fs-8 bg-dark text-secondary';
-                                                      } else {
-                                                        $bgTextDecore = 'fs-8 bg-light-secondary text-dark';
-                                                      }
-                                                      echo '<div class="symbol symbol-circle symbol-25px" data-toggle="tooltip" data-placement="top" data-bs-original-title="'.ucwords(@$team_full_name).'">
-                                                        <div class="symbol-label '.@$bgTextDecore.'">'.strtoupper(@$strVal).'</div>
-                                                        </div>';
-                                                    }
-                                                  }
-                                                @endphp
-                                            </div>Interviewer
-                                          </div>
-                                        </td>
-                                        <!--end::Interviewers=-->
-                                        <!--begin::Interviewer Feedback=-->
-                                        <td class="min-w-70px">
-                                          <div class="d-flex flex-column">
-                                            <span class="text-dark fw-bolder  fs-6">{{ ($feedback) ? $feedback : '----' }}</span> <span class="fw-bold text-muted d-block fs-7">{{ ($available_status_name ? $available_status_name : '----') }}</span> 
-                                          </div>
-                                        </td>
-                                        <!--end::Interviewer Feedback-->
-                                        <!--begin::Date-->
-                                        <td class="min-w-140px">
-                                          <div class="d-flex flex-column">
-                                            <span class="text-dark fw-bolder fs-6"> {{ @$newDate}} </span>
-                                            <span class="text-muted fw-bold d-block fs-7"> {{ @$newTime }} {{ (@$tdata->timezone_abbreviation) ? '('.@$tdata->timezone_abbreviation.')' :'' }} 
-                                            </span>
-                                          </div>
-                                        </td>
-                                        <!--end::Date-->
-                                        <!--begin::Image-->
-                                        <td class="min-w-90px">
-                                          <img src="{{  str_replace('index.php','',@$imagePath) }}" alt="image" style="width: 5.5rem"> <span class="fw-bold text-muted d-block fs-7">{{ @$text }}</span> 
-                                        </td>
-                                        <!--end::Image-->
-                                        <!--begin::Soruce-->
-                                        <td class="min-w-50px">
-                                          <div class="d-flex flex-column">
-                                            <div class="symbol-group symbol-hover justify-content-center">
-                                              <div class="symbol symbol-30 symbol-circle" data-toggle="tooltip" data-placement="top" title="{{ ucwords(@$tdata->name)}}">
-                                                <div class="" data-bs-placement="top" data-toggle="tooltip2" data-html="true" title="{{ ucwords(@$tdata->name)}}">
-                                                  <span class="text-dark fw-bolder fs-6">{{ substr(ucwords($tdata->name), 0, 10)}}</span>
-                                                </div>
-                                              </div>
-                                            </div>
-                                            <span class="text-muted fw-bold d-block fs-7" data-toggle="tooltip" title="{{ ucwords(@$tdata->cur_companyname) }}" style="text-align: center;">{{ substr(ucwords(@$tdata->cur_companyname), 0, 20) }}</span>
-                                          </div>
-                                        </td>
-                                        <!--end::Soruce-->
-                                        <!--begin::Status-->
-                                        <td class="min-w-120px">
-                                          <div class="d-flex flex-column">
-                                            <span class="badge fw-bolder fs-6 {{ @$tdata->css_style }} px-2 py-1">{{ ucwords(@$tdata->status_name) }}</span>
-                                            <span class="text-muted fw-bold d-block fs-7">{{ ucwords(@$tdata->process_child_name) }}</span>
-                                          </div>
-                                        </td>
-                                        <!--end::Stage-->
-                                    </tr>
-                                      <!--end::Table row-->
-                                  </tbody>
-                                    <!--end::Table body-->
-                                </table>
-                                <!--end::Table-->
-                          @php 
-                          //interview_feedback  application_id    interview_schedules_id    
-                                $interview_feedback 	= DB::table('interview_feedback')
-                                ->select('interview_feedback.created_at', 'interview_feedback.message', 'interview_feedback.star_ratings','users.name', 'users.image')
-                                ->join('users', 'users.id', '=', 'interview_feedback.update_by')
-                                ->where('interview_feedback.application_id', @$tdata->application_id)
-                                ->where('interview_feedback.interview_id', @$tdata->interview_schedules_id)
-                                ->get(); 
-                                $feedbackdataView ='';
-                                $feedbackdata = DB::table('interview_skills_feedback')->where('interview_id',$tdata->interview_schedules_id)->orderByDesc('feedback_id')->count();
-                                if($feedbackdata>0){
-                                    $feedbackdataView = '<div class="overflow-auto pb-5">
-                                      <div class="d-flex align-items-center border border-dashed border-gray-300 rounded min-w-700px p-5">
-                                        <span href="#" class="fs-5 fw-bold text-gray-800 text-hover-primary mb-2">
-                                          &nbsp;Interview Feedback 
-                                          </span>  <span class="badge skill-feedback fw-bolder fs-6 interview px-2 py-1" data-row-id="' .$tdata->interview_schedules_id .'" style="cursor: pointer; margin-left: 4px; margin-top: 5px;">View</span>
-                                      </div>
-                                  </div>';
-                                }else{
-                                  $feedbackdataView = '<div class="overflow-auto pb-5">
-                                      <div class="d-flex align-items-center border border-dashed border-gray-300 rounded min-w-700px p-5">
-                                        <span href="#" class="fs-5 fw-bold text-gray-800 text-hover-primary mb-2">
-                                          &nbsp;Interview Feedback Pending
-                                          </span> 
-                                      </div>
-                                  </div>';
-                                }
-                        @endphp
-                                {!! $feedbackdataView !!}
-                        @php
-                                if(count($interview_feedback) > 0){
-                                  foreach($interview_feedback as $intfeed){
-                                    $newDate 		=	date("d-m-Y", strtotime($intfeed->created_at));
-                                    $newTime 		=	date("H:i A", strtotime($intfeed->created_at));
-                                    $bgTextDecore				=	GeneralMethod::icoinText(@$intfeed->name);
-                                    $imagePath	=	'';
-                                    if(!empty($intfeed->image)){
-                                      $imagePath	=	@$intfeed->image;
-                                    }   
-                                    $feedback_star_imagePath	=	$feedback_star_text =  '';
-                                    $feedbackstar_ratings				=	$intfeed->star_ratings;
-                                    if($feedbackstar_ratings == 1){
-                                      $feedback_star_imagePath	=	url('public/img/star/1.png');
-                                      $feedback_star_text			=	'Bad';
-                                    }else if($feedbackstar_ratings == 2){
-                                      $feedback_star_imagePath	=	url('public/img/star/2.png');
-                                      $feedback_star_text			=	'Poor';
-                                    }else if($feedbackstar_ratings == 3){
-                                      $feedback_star_imagePath	=	url('public/img/star/3.png');
-                                      $feedback_star_text			=	'Average';
-                                    }else if($feedbackstar_ratings == 4){
-                                      $feedback_star_imagePath	=	url('public/img/star/4.png');
-                                      $feedback_star_text			=	'Best';
-                                    }else if($feedbackstar_ratings == 5){
-                                      $feedback_star_imagePath	=	url('public/img/star/5.png');	
-                                      $feedback_star_text			=	'Very Best';
-                                    }else{
-                                      $feedback_star_imagePath	=	url('public/img/star/5-blank.png');
-                                      $feedback_star_text			=	'Blank';
-                                    }
-                                  }
-                                }
-                        @endphp
-                        </div>
-                          <!--end::Timeline content-->
-                        </div>
-                        <?php
-                        }else if($tdata->event_id == 4){
-                          // Offer Section 
-                          $currency 				=	GeneralMethod::currency();
-                          $salaryMode 			=	GeneralMethod::salaryModeOffer();
-                          $offer_currency			=	'';
-                          if($tdata->offer_currency >= 0){
-                            $offer_currency			= $currency[(int)@$tdata->offer_currency];
-                          }
-                          $offer_mode			=	'';
-                          if($tdata->offer_mode >= 0){
-                             $offer_mode			= $salaryMode[(int)@$tdata->offer_mode];
-                          }
-                          $joined_time = '';
-                          if(!empty($tdata->joined_date)){
-                            $joined_time = date("H:i a", strtotime(@$tdata->joined_date));
-                          }
-                        ?>
-                        <div class="timeline-item">
-                          <!--begin::Timeline line-->
-                          <div class="timeline-line w-40px"></div>
-                          <!--end::Timeline line-->
-                          <!--begin::Timeline icon-->
-                          <div class="timeline-icon symbol symbol-circle symbol-40px">
-                            <div class="symbol-label bg-light">
-                              <!--begin::Svg Icon-->
-                              <span class="svg-icon svg-icon-2 svg-icon-gray-500">
-                                <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="24px" height="24px" viewBox="0 0 24 24" version="1.1">
-                                  <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
-                                    <polygon points="0 0 24 0 24 24 0 24"/>
-                                    <path d="M4.85714286,1 L11.7364114,1 C12.0910962,1 12.4343066,1.12568431 12.7051108,1.35473959 L17.4686994,5.3839416 C17.8056532,5.66894833 18,6.08787823 18,6.52920201 L18,19.0833333 C18,20.8738751 17.9795521,21 16.1428571,21 L4.85714286,21 C3.02044787,21 3,20.8738751 3,19.0833333 L3,2.91666667 C3,1.12612489 3.02044787,1 4.85714286,1 Z M8,12 C7.44771525,12 7,12.4477153 7,13 C7,13.5522847 7.44771525,14 8,14 L15,14 C15.5522847,14 16,13.5522847 16,13 C16,12.4477153 15.5522847,12 15,12 L8,12 Z M8,16 C7.44771525,16 7,16.4477153 7,17 C7,17.5522847 7.44771525,18 8,18 L11,18 C11.5522847,18 12,17.5522847 12,17 C12,16.4477153 11.5522847,16 11,16 L8,16 Z" fill="#000000" fill-rule="nonzero" opacity="0.3"/>
-                                    <path d="M6.85714286,3 L14.7364114,3 C15.0910962,3 15.4343066,3.12568431 15.7051108,3.35473959 L20.4686994,7.3839416 C20.8056532,7.66894833 21,8.08787823 21,8.52920201 L21,21.0833333 C21,22.8738751 20.9795521,23 19.1428571,23 L6.85714286,23 C5.02044787,23 5,22.8738751 5,21.0833333 L5,4.91666667 C5,3.12612489 5.02044787,3 6.85714286,3 Z M8,12 C7.44771525,12 7,12.4477153 7,13 C7,13.5522847 7.44771525,14 8,14 L15,14 C15.5522847,14 16,13.5522847 16,13 C16,12.4477153 15.5522847,12 15,12 L8,12 Z M8,16 C7.44771525,16 7,16.4477153 7,17 C7,17.5522847 7.44771525,18 8,18 L11,18 C11.5522847,18 12,17.5522847 12,17 C12,16.4477153 11.5522847,16 11,16 L8,16 Z" fill="#000000" fill-rule="nonzero"/>
-                                  </g>
-                                </svg>
-                              </span>
-                              <!--end::Svg Icon-->
-                            </div>
-                          </div>
-                          <!--end::Timeline icon-->
-                          <!--begin::Timeline content-->
-                          <div class="timeline-content mb-10 mt-n1">
-                            <table class="table align-middle table-row-dashed fs-6 gy-5 dataTable no-footer dtr-inline" id="myTable" role="grid" aria-describedby="myTable_info" style="width: 1269px;">
-                              <thead>
-                                <tr class="fw-bolder text-muted" role="row">
-                                  <th class="sorting_disabled" style="width: 344px;" rowspan="1" colspan="1">Offer Created</th>
-                                  <th class="sorting_disabled">Offer Amount</th>
-                                  <th class="sorting_disabled" style="width: 244px;">Joining Date</th>
-                                  <th class="sorting_disabled" style="width: 79px;">Offer Status</th>
-                                  <th class="sorting_disabled" style="width: 79px;">Create Date</th>
-                                  <th class="sorting_disabled" style="width: 79px;">Stage</th>
-                                </tr>
-                              </thead>
-                              <tbody>
-                                <tr role="row" class="odd">
-                                  <td class="min-w-150px">
-                                      <div class="d-flex flex-column"> 
-                                        <a href="javascript:void(0);" class="text-dark fw-bolder text-hover-primary fs-6">{{ ucwords(@$tdata->title) }}</a> 
-                                        <span class="fw-bold text-muted d-block fs-7">{{ ucwords(@$company_or_client) }}</span> 
-                                      </div>
-                                  </td>
-                                  <td class="min-w-120px">
-                                    <div class="d-flex flex-column">
-                                       @php
-                                        $offerAmont = "Confidential";
-                                        $allow =  GeneralMethod::confidentialAmontShow($tdata->job_id);  
-                                      @endphp
-                                      @if($allow)
-                                     <span class="text-dark fw-bolder fs-6">{{ @$offer_currency }} {{ (@$tdata->yearly_final_gross) }} {{ @$offer_mode }}</span>
-                                      @else
-                                      <span class="text-dark fw-bolder fs-6">{{ $offerAmont }}</span>
-                                      @endif
-
-                                      <span class="text-muted fw-bold text-muted d-block fs-7">{{( @$tdata->employment_type==1) ? 'Contract' : 'Full-Time' }} </span>
-                                    </div>
-                                  </td>
-                                  <td class="min-w-120px">
-                                    <div class="d-flex flex-column">
-                                      <span class="text-dark fw-bolder fs-6">{{ GeneralMethod::ymdTodmyNotTime(@$tdata->joined_date) }}</span>
-                                      <span class="text-muted fw-bold text-muted d-block fs-7">{{$joined_time }} </span>
-                                    </div>
-                                  </td>
-                                  <td class="min-w-150px">
-                                    <div class="d-flex flex-column">
-                                    <span class="badge fw-bolder fs-6 {{ (@$tdata->candidate_status==2) ? 'joined' : 'screening' }}-bg px-2 py-1">{{ ucwords(@$offer_status)
-                                      }} {!! $downloadOffer !!}</span>
-                                    <span class="badge fw-bolder fs-6 {{ (@$tdata->management_status==2) ? 'joined' : 'offer' }}-bg px-2 py-1">{{ ucwords(@$management_status)
-                                      }}</span>
-                                    </div>
-                                  </td>
-                                  <td class="min-w-120px">
-                                    <div class="d-flex flex-column">
-                                      <span class="text-dark fw-bolder fs-6">{{ GeneralMethod::ymdTodmyNotTime(@$tdata->created_at) }}</span>
-                                      <span class="text-muted fw-bold text-muted d-block fs-7">{{ date("H:i", strtotime(@$tdata->created_at)) }}(IST)</span>
-                                    </div>
-                                  </td>
-                                  <td>
-                                      <div class="d-flex flex-column">  <span class="badge fw-bolder fs-6 {{ @$current_tiles_bg }} px-2 py-1">{{ ucwords(@$master_process_name) }}</span>  </div>
-                                  </td>
-                                  <td class="min-w-50px">
-                                    <div class="d-flex flex-column">
-                                      <div class="symbol-group symbol-hover justify-content-center">
-                                        <div class="symbol symbol-30 symbol-circle"  data-toggle="tooltip" data-placement="top" title="{{ ucwords(@$tdata->name) }}">
-                                          <div class="" data-bs-placement="top" data-toggle="tooltip2" data-html="true" title="{{ ucwords(@$tdata->name)}}" >
-                                            <span class="text-dark fw-bolder fs-6">{{ substr(ucwords($tdata->name), 0, 10)}}</span>
-                                          </div>
-                                        </div>
-                                      </div>
-                                      <span class="text-muted fw-bold d-block fs-7" style="text-align: center;">{{ ucwords(@$tdata->cur_companyname) }}</span>
-                                    </div>
-                                  </td>
-                                </tr>
-                              </tbody>
-                            </table>
-                          </div>
-                        </div>
-                <?php 
-                  }else if($tdata->event_id == 10){
-                    $currency 				=	GeneralMethod::currency();
-                    $salaryMode 			=	GeneralMethod::salaryModeOffer();
-                    $offer_currency			=	'';
-                    if($tdata->offer_currency >= 0){
-                      $offer_currency			= $currency[(int)@$tdata->offer_currency];
-                    }
-                    $offer_mode			=	'';
-                    if($tdata->offer_mode >= 0){
-                      $offer_mode			= $salaryMode[(int)@$tdata->offer_mode];
-                    }
-            
-                  $joined_time = '';
-                  if(!empty($tdata->joined_date)){
-                    $joined_time = date("H:i a", strtotime(@$tdata->joined_date));
-                  }
-                ?>
-                    <div class="timeline-item">
-                      <!--begin::Timeline line-->
-                      <div class="timeline-line w-40px"></div>
-                      <!--end::Timeline line-->
-                      <!--begin::Timeline icon-->
-                      <div class="timeline-icon symbol symbol-circle symbol-40px">
-                        <div class="symbol-label bg-light">
-                          <!--begin::Svg Icon-->
-                          <span class="svg-icon svg-icon-2 svg-icon-gray-500">
-                            <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="24px" height="24px" viewBox="0 0 24 24" version="1.1">
-                              <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
-                                <polygon points="0 0 24 0 24 24 0 24"/>
-                                <path d="M4.85714286,1 L11.7364114,1 C12.0910962,1 12.4343066,1.12568431 12.7051108,1.35473959 L17.4686994,5.3839416 C17.8056532,5.66894833 18,6.08787823 18,6.52920201 L18,19.0833333 C18,20.8738751 17.9795521,21 16.1428571,21 L4.85714286,21 C3.02044787,21 3,20.8738751 3,19.0833333 L3,2.91666667 C3,1.12612489 3.02044787,1 4.85714286,1 Z M8,12 C7.44771525,12 7,12.4477153 7,13 C7,13.5522847 7.44771525,14 8,14 L15,14 C15.5522847,14 16,13.5522847 16,13 C16,12.4477153 15.5522847,12 15,12 L8,12 Z M8,16 C7.44771525,16 7,16.4477153 7,17 C7,17.5522847 7.44771525,18 8,18 L11,18 C11.5522847,18 12,17.5522847 12,17 C12,16.4477153 11.5522847,16 11,16 L8,16 Z" fill="#000000" fill-rule="nonzero" opacity="0.3"/>
-                                <path d="M6.85714286,3 L14.7364114,3 C15.0910962,3 15.4343066,3.12568431 15.7051108,3.35473959 L20.4686994,7.3839416 C20.8056532,7.66894833 21,8.08787823 21,8.52920201 L21,21.0833333 C21,22.8738751 20.9795521,23 19.1428571,23 L6.85714286,23 C5.02044787,23 5,22.8738751 5,21.0833333 L5,4.91666667 C5,3.12612489 5.02044787,3 6.85714286,3 Z M8,12 C7.44771525,12 7,12.4477153 7,13 C7,13.5522847 7.44771525,14 8,14 L15,14 C15.5522847,14 16,13.5522847 16,13 C16,12.4477153 15.5522847,12 15,12 L8,12 Z M8,16 C7.44771525,16 7,16.4477153 7,17 C7,17.5522847 7.44771525,18 8,18 L11,18 C11.5522847,18 12,17.5522847 12,17 C12,16.4477153 11.5522847,16 11,16 L8,16 Z" fill="#000000" fill-rule="nonzero"/>
-                              </g>
-                            </svg>
-                          </span>
-                          <!--end::Svg Icon-->
-                        </div>
-                      </div>
-                      <!--end::Timeline icon-->
-                      <!--begin::Timeline content-->
-                      <div class="timeline-content mb-10 mt-n1">
-                        <table class="table align-middle table-row-dashed fs-6 gy-5 dataTable no-footer dtr-inline" id="myTable" role="grid" aria-describedby="myTable_info" style="width: 1269px;">
-                          <thead>
-                            <tr class="fw-bolder text-muted" role="row">
-                              <th class="sorting_disabled" style="width: 344px;" rowspan="1" colspan="1">Offer Expired</th>
-                              <th class="sorting_disabled">Offer Amount</th>
-                              <th class="sorting_disabled" style="width: 244px;">Joining Date</th>
-                              <th class="sorting_disabled" style="width: 79px;">Offer Status</th>
-                              <th class="sorting_disabled" style="width: 79px;">Expired Date</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            <tr role="row" class="odd">
-                              <td class="min-w-150px">
-                                <div class="d-flex flex-column">
-                                  <a href="javascript:void(0);" class="text-dark fw-bolder text-hover-primary fs-6">{{ ucwords(@$tdata->title) }}</a>
-                                  <span class="fw-bold text-muted d-block fs-7">{{ ucwords(@$company_or_client) }}</span>
-                                </div>
-                              </td>
-                              <td class="min-w-120px">
-                                <div class="d-flex flex-column">
-                                    @php
-                                      $offerAmont = "Confidential";
-                                      $allow =  GeneralMethod::confidentialAmontShow($tdata->job_id);  
-                                    @endphp
-                                    @if($allow)
-                                    <span class="text-dark fw-bolder fs-6">{{ @$offer_currency }} {{ (@$tdata->offer_amount) }} {{ @$offer_mode }}</span>
-                                    @else
-                                    <span class="text-dark fw-bolder fs-6">{{ $offerAmont }}</span>
-                                    @endif
-                                    <span class="text-muted fw-bold text-muted d-block fs-7">{{( @$tdata->employment_type==1) ? 'Contract' : 'Full-Time' }} </span>
-                                </div>
-                              </td>
-                              <td class="min-w-120px">
-                                <div class="d-flex flex-column">
-                                  <span class="text-dark fw-bolder fs-6">{{ GeneralMethod::ymdTodmyNotTime(@$tdata->joined_date) }}</span>
-                                  <span class="text-muted fw-bold text-muted d-block fs-7">{{$joined_time }} </span>
-                                </div>
-                              </td>
-                              <td class="min-w-150px">
-                                <div class="d-flex flex-column">
-                                  <span class="badge fw-bolder fs-6 {{ (@$tdata->candidate_status==4) ? 'rejected' : 'screening' }}-bg px-2 py-1">{{ ucwords(@$offer_status)
-                                      }} {!! $downloadOffer !!}</span>
-                                    <span class="badge fw-bolder fs-6 {{ (@$tdata->management_status==2) ? 'joined' : 'offer' }}-bg px-2 py-1">{{ ucwords(@$management_status)
-                                      }}</span>
-                                </div>
-                              </td>
-                              <td class="min-w-120px">
-                                <div class="d-flex flex-column">
-                                  <span class="text-dark fw-bolder fs-6">{{ GeneralMethod::ymdTodmyNotTime(@$tdata->created_at) }}</span>
-                                  <span class="text-muted fw-bold text-muted d-block fs-7">{{ date("H:i", strtotime(@$tdata->created_at)) }}(IST)</span>
-                                </div>
-                              </td>
-                              <td class="min-w-50px"><div class="d-flex flex-column">
-                                  <div class="symbol-group symbol-hover justify-content-center">
-                                      <div class="symbol symbol-30 symbol-circle"  data-toggle="tooltip" data-placement="top" title="{{ ucwords(@$tdata->name) }}">
-                                        <div class="" data-bs-placement="top" data-toggle="tooltip2" data-html="true" title="{{ ucwords(@$tdata->name)}}" >
-                                          <span class="text-dark fw-bolder fs-6">{{ substr(ucwords($tdata->name), 0, 10)}}</span>
-                                        </div>
-                                      </div>
-                                    </div>
-                                    <span class="text-muted fw-bold d-block fs-7" style="text-align: center;">{{ ucwords(@$tdata->cur_companyname) }}</span>
-                                  </div>
-                              </td>
-                            </tr>
-                          </tbody>
-                        </table>
-                      </div>
-                    </div>
-                <?php 
-                }else if($tdata->event_id == 5){
-                    $currency 				=	GeneralMethod::currency();
-                    $salaryMode 			=	GeneralMethod::salaryModeOffer();
-                    $offer_currency			=	'';
-                    if($tdata->offer_currency >= 0){
-                      $offer_currency			= $currency[(int)@$tdata->offer_currency];
-                    }
-                    $offer_mode			=	'';
-                    if($tdata->offer_mode >= 0){
-                      $offer_mode			= $salaryMode[(int)@$tdata->offer_mode];
-                    }
-                    $joined_time = '';
-                    if(!empty($tdata->joined_date)){
-                      $joined_time = date("H:i a", strtotime(@$tdata->joined_date));
-                    }
-                ?>
-                    <div class="timeline-item">
-                      <div class="timeline-line w-40px"></div>
-                      <div class="timeline-icon symbol symbol-circle symbol-40px">
-                        <div class="symbol-label bg-light"> 
-                          <span class="svg-icon svg-icon-2 svg-icon-gray-500 d-none">
-                              <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="24px" height="24px" iewBox="0 0 24 24" version="1.1">
-                                <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
-                                  <polygon points="0 0 24 0 24 24 0 24" />
-                                  <rect fill="#000000" opacity="0.3" transform="translate(13.000000, 6.000000) rotate(-450.000000) translate(-13.000000, -6.000000) " x="12" y="8.8817842e-16" width="2" height="12" rx="1" />
-                                      <path d="M9.79289322,3.79289322 C10.1834175,3.40236893 10.8165825,3.40236893 11.2071068,3.79289322 C11.5976311,4.18341751 11.5976311,4.81658249 11.2071068,5.20710678 L8.20710678,8.20710678 C7.81658249,8.59763107 7.18341751,8.59763107 6.79289322,8.20710678 L3.79289322,5.20710678 C3.40236893,4.81658249 3.40236893,4.18341751 3.79289322,3.79289322 C4.18341751,3.40236893 4.81658249,3.40236893 5.20710678,3.79289322 L7.5,6.08578644 L9.79289322,3.79289322 Z" fill="#000000" fill-rule="nonzero" transform="translate(7.500000, 6.000000) rotate(-270.000000) translate(-7.500000, -6.000000) " />
-                                      <rect fill="#000000" opacity="0.3" transform="translate(11.000000, 18.000000) scale(1, -1) rotate(90.000000) translate(-11.000000, -18.000000) " x="10" y="12" width="2" height="12" rx="1" />
-                                      <path d="M18.7928932,15.7928932 C19.1834175,15.4023689 19.8165825,15.4023689 20.2071068,15.7928932 C20.5976311,16.1834175 20.5976311,16.8165825 20.2071068,17.2071068 L17.2071068,20.2071068 C16.8165825,20.5976311 16.1834175,20.5976311 15.7928932,20.2071068 L12.7928932,17.2071068 C12.4023689,16.8165825 12.4023689,16.1834175 12.7928932,15.7928932 C13.1834175,15.4023689 13.8165825,15.4023689 14.2071068,15.7928932 L16.5,18.0857864 L18.7928932,15.7928932 Z" fill="#000000" fill-rule="nonzero" transform="translate(16.500000, 18.000000) scale(1, -1) rotate(270.000000) translate(-16.500000, -18.000000) " />
-                                </g>
-                              </svg>
-                            </span>
-                            <span class="svg-icon svg-icon-2 svg-icon-gray-500">
-                              <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="24px" height="24px" viewBox="0 0 24 24" version="1.1">
-                                <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
-                                  <rect x="0" y="0" width="24" height="24" />
-                                  <path d="M21,5.5 L21,17.5 C21,18.3284271 20.3284271,19 19.5,19 L4.5,19 C3.67157288,19 3,18.3284271 3,17.5 L3,14.5 C3,13.6715729 3.67157288,13 4.5,13 L9,13 L9,9.5 C9,8.67157288 9.67157288,8 10.5,8 L15,8 L15,5.5 C15,4.67157288 15.6715729,4 16.5,4 L19.5,4 C20.3284271,4 21,4.67157288 21,5.5 Z"
-                                    fill="#000000" fill-rule="nonzero" />
-                                </g>
-                              </svg>
-                            </span> 
-                        </div>
-                      </div>
-                        <div class="timeline-content mb-10 mt-n1">
-                          <table class="table align-middle table-row-dashed fs-6 gy-0 mb-5" id="">
-                            <thead>
-                              <tr class="fw-bolder text-muted" role="row">
-                                <th class="sorting_disabled" style="width: 344px;" rowspan="1" colspan="1">Offer Status</th>
-                                <th class="sorting_disabled" style="width: 79px;">Offer Amount</th>
-                                <th class="sorting_disabled" style="width: 79px;">Join Date</th>
-                                <th class="sorting_disabled" style="width: 79px;">Status</th>
-                                <th class="sorting_disabled" style="width: 79px;">Date/Time</th>
-                                <th class="sorting_disabled" style="width: 79px;">Stage</th>
-                              </tr>
-                            </thead>
-
-                            <tbody class="text-gray-600 fw-bold">
-                              <tr>
-                                <td class="min-w-150px" rowspan="1" colspan="1">
-                                  <div class="d-flex flex-column">
-                                    <a href="javascript:void(0);" class="text-dark fw-bolder text-hover-primary fs-6">{{ ucwords(@$application->full_name) }}</a>
-                                    <span class="fw-bold text-muted d-block fs-7">{{ucwords((@$tdata->designation_offer))}}</span>
-                                  </div>
-                                </td>
-                                <td class="min-w-120px">
-                                  <div class="d-flex flex-column">
-                                     <div class="d-flex flex-column">
-
-                                      @php
-                                      $offerAmont = "Confidential";
-                                        $allow =  GeneralMethod::confidentialAmontShow($tdata->job_id);  
-                                      @endphp
-                                      @if($allow)
-                                        <span class="text-dark fw-bolder fs-6">{{ @$offer_currency }} {{ (@$tdata->offer_amount) }} {{ @$offer_mode }}</span>
-                                      @else
-                                      <span class="text-dark fw-bolder fs-6">{{ $offerAmont }}</span>
-                                      @endif
-                                      <span class="text-muted fw-bold text-muted d-block fs-7">{{( @$tdata->employment_type==1) ? 'Contract' : 'Full-Time' }} </span>
-                                    </div>
-                                  </div>
-                                </td>
-                                <td class="min-w-120px">
-                                  <div class="d-flex flex-column">
-                                    <span class="text-dark fw-bolder fs-6">{{ GeneralMethod::ymdTodmyNotTime(@$tdata->joined_date) }}</span>
-                                    <span class="text-muted fw-bold text-muted d-block fs-7">{{ @$joined_time }} </span>
-                                  </div>
-                                </td>
-
-                                <td class="min-w-150px">
-                                  <div class="d-flex flex-column">
-                                    <span class="badge fw-bolder fs-6 {{ (@$tdata->candidate_status==2) ? 'joined' : 'offer' }}-bg px-2 py-1">{{ ucwords(@$offer_status)
-                                      }} {!! $downloadOffer !!}</span>
-                                  </div>
-                                </td>
-                                <td class="min-w-120px">
-                                  <div class="d-flex flex-column">
-                                    <span class="text-dark fw-bolder fs-6">{{ GeneralMethod::ymdTodmyNotTime(@$tdata->send_accept_date_time) }}</span>
-                                    <span class="text-muted fw-bold text-muted d-block fs-7">{{ date("H:i:s", strtotime(@$tdata->send_accept_date_time)) }}(IST)</span>
-                                  </div>
-                                </td>
-                                <td>
-                                    <div class="d-flex flex-column">  <span class="badge fw-bolder fs-6 {{ @$current_tiles_bg }} px-2 py-1">{{ ucwords(@$master_process_name) }}</span>  </div>
-                                 </td>
-
-                              </tr>
-                            </tbody>
-                          </table>
-
-                          @if(!empty($comment))
-                          <div class="overflow-auto pb-5">
-                            <div class="d-flex align-items-center border border-dashed border-gray-300 rounded min-w-700px p-5">
-                              <div class="mb-1">
-                                <p class="<?php //echo @$current_tiles_bg; ?>">
-                                  <a href="#" class="fs-5 fw-bold text-gray-800 text-hover-primary mb-2">&nbsp;Comment:</a>
-                                  {{ @$comment }}
-                                </p>
-                              </div>
-                            </div>
-                          </div>
-                          @endif
-                        </div>
-                  </div>
-                <?php 
-                   }else if($tdata->event_id == 6){ 
-                ?>
-                      <div class="timeline-item">
-                        <div class="timeline-line w-40px"></div>
-                        <div class="timeline-icon symbol symbol-circle symbol-40px">
-                          <div class="symbol-label bg-light"> <span class="svg-icon svg-icon-2 svg-icon-gray-500 d-none">
-                            <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="24px" height="24px" viewBox="0 0 24 24" version="1.1">
-                                <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
-                                  <polygon points="0 0 24 0 24 24 0 24" />
-                                  <rect fill="#000000" opacity="0.3" transform="translate(13.000000, 6.000000) rotate(-450.000000) translate(-13.000000, -6.000000) " x="12" y="8.8817842e-16" width="2" height="12" rx="1" />
-                                  <path d="M9.79289322,3.79289322 C10.1834175,3.40236893 10.8165825,3.40236893 11.2071068,3.79289322 C11.5976311,4.18341751 11.5976311,4.81658249 11.2071068,5.20710678 L8.20710678,8.20710678 C7.81658249,8.59763107 7.18341751,8.59763107 6.79289322,8.20710678 L3.79289322,5.20710678 C3.40236893,4.81658249 3.40236893,4.18341751 3.79289322,3.79289322 C4.18341751,3.40236893 4.81658249,3.40236893 5.20710678,3.79289322 L7.5,6.08578644 L9.79289322,3.79289322 Z" fill="#000000" fill-rule="nonzero" transform="translate(7.500000, 6.000000) rotate(-270.000000) translate(-7.500000, -6.000000) " />
-                                  <rect fill="#000000" opacity="0.3"
-                                    transform="translate(11.000000, 18.000000) scale(1, -1) rotate(90.000000) translate(-11.000000, -18.000000) " x="10" y="12" width="2" height="12" rx="1" />
-                                  <path d="M18.7928932,15.7928932 C19.1834175,15.4023689 19.8165825,15.4023689 20.2071068,15.7928932 C20.5976311,16.1834175 20.5976311,16.8165825 20.2071068,17.2071068 L17.2071068,20.2071068 C16.8165825,20.5976311 16.1834175,20.5976311 15.7928932,20.2071068 L12.7928932,17.2071068 C12.4023689,16.8165825 12.4023689,16.1834175 12.7928932,15.7928932 C13.1834175,15.4023689 13.8165825,15.4023689 14.2071068,15.7928932 L16.5,18.0857864 L18.7928932,15.7928932 Z"
-                                    fill="#000000" fill-rule="nonzero" transform="translate(16.500000, 18.000000) scale(1, -1) rotate(270.000000) translate(-16.500000, -18.000000) " />
-                                </g>
-                              </svg>
-                            </span> 
-                            <span class="svg-icon svg-icon-2 svg-icon-gray-500">
-                              <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="24px" height="24px" viewBox="0 0 24 24" version="1.1">
-                                <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
-                                  <rect x="0" y="0" width="24" height="24" />
-                                  <path d="M21,5.5 L21,17.5 C21,18.3284271 20.3284271,19 19.5,19 L4.5,19 C3.67157288,19 3,18.3284271 3,17.5 L3,14.5 C3,13.6715729 3.67157288,13 4.5,13 L9,13 L9,9.5 C9,8.67157288 9.67157288,8 10.5,8 L15,8 L15,5.5 C15,4.67157288 15.6715729,4 16.5,4 L19.5,4 C20.3284271,4 21,4.67157288 21,5.5 Z"
-                                    fill="#000000" fill-rule="nonzero" />
-                                </g>
-                              </svg>
-                            </span> 
-                          </div>
-                        </div>
-                        <div class="timeline-content mb-10 mt-n1">
-                          <table class="table align-middle table-row-dashed fs-6 gy-0 mb-5" id="">
-                            <thead>
-                              <tr class="fw-bolder text-muted" role="row">
-                                <th class="sorting_disabled" style="width: 344px;" rowspan="1" colspan="1">Offer Approval</th>
-                                <th class="sorting_disabled" style="width: 79px;">Status</th>
-                                <th class="sorting_disabled" style="width: 79px;">Date/Time</th>
-                                <th class="sorting_disabled" style="width: 79px;">Stage</th>
-                              </tr>
-                            </thead>
-
-                            <tbody class="text-gray-600 fw-bold">
-                              <tr>
-                                <td class="min-w-150px" rowspan="1" colspan="1">
-                                  <div class="d-flex flex-column">
-                                    <a href="javascript:void(0);" class="text-dark fw-bolder text-hover-primary fs-6">{{
-                                      ucwords(@$tdata->email_id_hr) }}</a>
-                                    <span class="fw-bold text-muted d-block fs-7">{{
-                                      ucwords(@$tdata->name_hr) }}</span>
-                                  </div>
-                                </td>
-                                <td class="min-w-150px">
-                                  <div class="d-flex flex-column">
-                                    <span class="badge fw-bolder fs-6 {{ (@$tdata->management_status==2) ? 'joined' : 'offer' }}-bg px-2 py-1">{{ ucwords(@$management_status)
-                                      }}</span>
-                                  </div>
-                                </td>
-                                <td class="min-w-120px">
-                                  <div class="d-flex flex-column">
-                                    <span class="text-dark fw-bolder fs-6">{{ GeneralMethod::ymdTodmyNotTime(@$tdata->send_approved_date_time) }}</span>
-                                    <span class="text-muted fw-bold text-muted d-block fs-7">{{ date("H:i", strtotime(@$tdata->send_approved_date_time)) }}(IST)</span>
-                                  </div>
-                                </td>
-                                <td>
-                                    <div class="d-flex flex-column">  <span class="badge fw-bolder fs-6 {{ @$current_tiles_bg }} px-2 py-1">{{ ucwords(@$master_process_name) }}</span>  </div>
-                                 </td>
-                              </tr>
-                            </tbody>
-                          </table>
-
-                          @if(!empty($comment))
-                          <div class="overflow-auto pb-5">
-                            <div class="d-flex align-items-center border border-dashed border-gray-300 rounded min-w-700px p-5">
-                              <div class="mb-1">
-                                <p class="<?php //echo @$current_tiles_bg; ?>">
-                                  <a href="#" class="fs-5 fw-bold text-gray-800 text-hover-primary mb-2">&nbsp;Comment:</a>
-                                  {{ @$comment }}
-                                </p>
-                              </div>
-                            </div>
-                          </div>
-                          @endif
-                        </div>
-                  </div>
-           
-            <?php }else if($tdata->event_id == 7){
-              
-                $currency 				=	GeneralMethod::currency();
-                $salaryMode 			=	GeneralMethod::salaryModeOffer();
-              
-                $offer_currency			=	'';
-                if($tdata->offer_currency >= 0){
-                  $offer_currency			= $currency[(int)@$tdata->offer_currency];
-                }
-                $offer_mode			=	'';
-                if($tdata->offer_mode >= 0){
-                  $offer_mode			= $salaryMode[(int)@$tdata->offer_mode];
-                }
-                $joined_time = '';
-                if(!empty($tdata->joined_date)){
-                   $joined_time = date("H:i a", strtotime(@$tdata->joined_date));
-                 }
-
-              ?>
-                  <div class="timeline-item">
-                        <div class="timeline-line w-40px"></div>
-                        <div class="timeline-icon symbol symbol-circle symbol-40px">
-                          <div class="symbol-label bg-light"> <span class="svg-icon svg-icon-2 svg-icon-gray-500 d-none">
-                              <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="24px" height="24px"
-                                viewBox="0 0 24 24" version="1.1">
-                                <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
-                                  <polygon points="0 0 24 0 24 24 0 24" />
-                                  <rect fill="#000000" opacity="0.3"
-                                    transform="translate(13.000000, 6.000000) rotate(-450.000000) translate(-13.000000, -6.000000) " x="12"
-                                    y="8.8817842e-16" width="2" height="12" rx="1" />
-                                  <path
-                                    d="M9.79289322,3.79289322 C10.1834175,3.40236893 10.8165825,3.40236893 11.2071068,3.79289322 C11.5976311,4.18341751 11.5976311,4.81658249 11.2071068,5.20710678 L8.20710678,8.20710678 C7.81658249,8.59763107 7.18341751,8.59763107 6.79289322,8.20710678 L3.79289322,5.20710678 C3.40236893,4.81658249 3.40236893,4.18341751 3.79289322,3.79289322 C4.18341751,3.40236893 4.81658249,3.40236893 5.20710678,3.79289322 L7.5,6.08578644 L9.79289322,3.79289322 Z"
-                                    fill="#000000" fill-rule="nonzero"
-                                    transform="translate(7.500000, 6.000000) rotate(-270.000000) translate(-7.500000, -6.000000) " />
-                                  <rect fill="#000000" opacity="0.3"
-                                    transform="translate(11.000000, 18.000000) scale(1, -1) rotate(90.000000) translate(-11.000000, -18.000000) "
-                                    x="10" y="12" width="2" height="12" rx="1" />
-                                  <path
-                                    d="M18.7928932,15.7928932 C19.1834175,15.4023689 19.8165825,15.4023689 20.2071068,15.7928932 C20.5976311,16.1834175 20.5976311,16.8165825 20.2071068,17.2071068 L17.2071068,20.2071068 C16.8165825,20.5976311 16.1834175,20.5976311 15.7928932,20.2071068 L12.7928932,17.2071068 C12.4023689,16.8165825 12.4023689,16.1834175 12.7928932,15.7928932 C13.1834175,15.4023689 13.8165825,15.4023689 14.2071068,15.7928932 L16.5,18.0857864 L18.7928932,15.7928932 Z"
-                                    fill="#000000" fill-rule="nonzero"
-                                    transform="translate(16.500000, 18.000000) scale(1, -1) rotate(270.000000) translate(-16.500000, -18.000000) " />
-                                </g>
-                              </svg>
-                            </span> <span class="svg-icon svg-icon-2 svg-icon-gray-500">
-                              <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="24px" height="24px"
-                                viewBox="0 0 24 24" version="1.1">
-                                <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
-                                  <rect x="0" y="0" width="24" height="24" />
-                                  <path
-                                    d="M21,5.5 L21,17.5 C21,18.3284271 20.3284271,19 19.5,19 L4.5,19 C3.67157288,19 3,18.3284271 3,17.5 L3,14.5 C3,13.6715729 3.67157288,13 4.5,13 L9,13 L9,9.5 C9,8.67157288 9.67157288,8 10.5,8 L15,8 L15,5.5 C15,4.67157288 15.6715729,4 16.5,4 L19.5,4 C20.3284271,4 21,4.67157288 21,5.5 Z"
-                                    fill="#000000" fill-rule="nonzero" />
-                                </g>
-                              </svg>
-                            </span> </div>
-                        </div>
-                        <div class="timeline-content mb-10 mt-n1">
-                          <table class="table align-middle table-row-dashed fs-6 gy-0 mb-5" id="">
-                            <thead>
-                              <tr class="fw-bolder text-muted" role="row">
-                                <th class="sorting_disabled" style="width: 344px;" rowspan="1" colspan="1">Offer Status</th>
-                                <th class="sorting_disabled" style="width: 79px;">Offer Amount</th>
-                                <th class="sorting_disabled" style="width: 79px;">Join Date</th>
-                                <th class="sorting_disabled" style="width: 79px;">Status</th>
-                                <th class="sorting_disabled" style="width: 79px;">Date/Time</th>
-                                <th class="sorting_disabled" style="width: 79px;">Stage</th>
-                              </tr>
-                            </thead>
-
-                            <tbody class="text-gray-600 fw-bold">
-                              <tr>
-                                <td class="min-w-150px" rowspan="1" colspan="1">
-                                  <div class="d-flex flex-column">
-                                    <a href="javascript:void(0);" class="text-dark fw-bolder text-hover-primary fs-6">{{ ucwords(@$application->full_name) }}</a>
-                                    <span class="fw-bold text-muted d-block fs-7">{{ucwords((@$tdata->designation_offer))}}</span>
-                                  </div>
-                                </td>
-                                <td class="min-w-120px">
-                                   <div class="d-flex flex-column">
-                                    @php
-                                      $offerAmont = "Confidential";
-                                        $allow =  GeneralMethod::confidentialAmontShow($tdata->job_id);  
-                                      @endphp
-                                      @if($allow)
-                                        <span class="text-dark fw-bolder fs-6">{{ @$offer_currency }} {{ (@$tdata->offer_amount) }} {{ @$offer_mode }}</span>
-                                      @else
-                                      <span class="text-dark fw-bolder fs-6">{{ $offerAmont }}</span>
-                                      @endif
-                                      
-                                      <span class="text-muted fw-bold text-muted d-block fs-7">{{( @$tdata->employment_type==1) ? 'Contract' : 'Full-Time' }} </span>
-                                    </div>
-                                </td>
-                                <td class="min-w-120px">
-                                  <div class="d-flex flex-column">
-                                    <span class="text-dark fw-bolder fs-6">{{ GeneralMethod::ymdTodmyNotTime(@$tdata->joined_date) }}</span>
-                                    <span class="text-muted fw-bold text-muted d-block fs-7">{{ @$joined_time }} </span>
-                                  </div>
-                                </td>
-
-                                <td class="min-w-150px">
-                                  <div class="d-flex flex-column">
-                                    <span class="badge fw-bolder fs-6 {{ (@$tdata->candidate_status==2) ? 'joined' : 'offer' }}-bg px-2 py-1">{{ ucwords(@$offer_status)
-                                      }} {!! $downloadOffer !!}</span>
-                                  </div>
-                                </td>
-                                <td class="min-w-120px">
-                                  <div class="d-flex flex-column">
-                                    <span class="text-dark fw-bolder fs-6">{{ GeneralMethod::ymdTodmyNotTime(@$tdata->accept_date_time) }}</span>
-                                    <span class="text-muted fw-bold text-muted d-block fs-7">{{ date("H:i", strtotime(@$tdata->accept_date_time)) }}(IST)</span>
-                                  </div>
-                                </td>
-                                <td>
-                                    <div class="d-flex flex-column">  <span class="badge fw-bolder fs-6 {{ @$current_tiles_bg }} px-2 py-1">{{ ucwords(@$master_process_name) }}</span>  </div>
-                                 </td>
-                              </tr>
-                            </tbody>
-                          </table>
-
-                          @if(!empty($comment))
-                          <div class="overflow-auto pb-5">
-                            <div class="d-flex align-items-center border border-dashed border-gray-300 rounded min-w-700px p-5">
-                              <div class="mb-1">
-                                <p class="<?php //echo @$current_tiles_bg; ?>">
-                                  <a href="#" class="fs-5 fw-bold text-gray-800 text-hover-primary mb-2">&nbsp;Comment:</a>
-                                  {{ @$comment }}
-                                </p>
-                              </div>
-                            </div>
-                          </div>
-                          @endif
-                        </div>
-                  </div>
-         
-            <?php }elseif($tdata->event_id == 45){ ?>
-
-               <div class="timeline-item">
-              <div class="timeline-line w-40px"></div>
-              <div class="timeline-icon symbol symbol-circle symbol-40px">
-                <div class="symbol-label bg-light"> <span class="svg-icon svg-icon-2 svg-icon-gray-500 d-none">
-                  <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="24px" height="24px" viewBox="0 0 24 24" version="1.1">
-                    <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
-                      <polygon points="0 0 24 0 24 24 0 24"/>
-                      <rect fill="#000000" opacity="0.3" transform="translate(13.000000, 6.000000) rotate(-450.000000) translate(-13.000000, -6.000000) " x="12" y="8.8817842e-16" width="2" height="12" rx="1"/>
-                      <path d="M9.79289322,3.79289322 C10.1834175,3.40236893 10.8165825,3.40236893 11.2071068,3.79289322 C11.5976311,4.18341751 11.5976311,4.81658249 11.2071068,5.20710678 L8.20710678,8.20710678 C7.81658249,8.59763107 7.18341751,8.59763107 6.79289322,8.20710678 L3.79289322,5.20710678 C3.40236893,4.81658249 3.40236893,4.18341751 3.79289322,3.79289322 C4.18341751,3.40236893 4.81658249,3.40236893 5.20710678,3.79289322 L7.5,6.08578644 L9.79289322,3.79289322 Z" fill="#000000" fill-rule="nonzero" transform="translate(7.500000, 6.000000) rotate(-270.000000) translate(-7.500000, -6.000000) "/>
-                      <rect fill="#000000" opacity="0.3" transform="translate(11.000000, 18.000000) scale(1, -1) rotate(90.000000) translate(-11.000000, -18.000000) " x="10" y="12" width="2" height="12" rx="1"/>
-                      <path d="M18.7928932,15.7928932 C19.1834175,15.4023689 19.8165825,15.4023689 20.2071068,15.7928932 C20.5976311,16.1834175 20.5976311,16.8165825 20.2071068,17.2071068 L17.2071068,20.2071068 C16.8165825,20.5976311 16.1834175,20.5976311 15.7928932,20.2071068 L12.7928932,17.2071068 C12.4023689,16.8165825 12.4023689,16.1834175 12.7928932,15.7928932 C13.1834175,15.4023689 13.8165825,15.4023689 14.2071068,15.7928932 L16.5,18.0857864 L18.7928932,15.7928932 Z" fill="#000000" fill-rule="nonzero" transform="translate(16.500000, 18.000000) scale(1, -1) rotate(270.000000) translate(-16.500000, -18.000000) "/>
-                    </g>
-                  </svg>
-                  </span> <span class="svg-icon svg-icon-2 svg-icon-gray-500">
-                  <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="24px" height="24px" viewBox="0 0 24 24" version="1.1">
-                    <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
-                      <rect x="0" y="0" width="24" height="24"/>
-                      <path d="M21,5.5 L21,17.5 C21,18.3284271 20.3284271,19 19.5,19 L4.5,19 C3.67157288,19 3,18.3284271 3,17.5 L3,14.5 C3,13.6715729 3.67157288,13 4.5,13 L9,13 L9,9.5 C9,8.67157288 9.67157288,8 10.5,8 L15,8 L15,5.5 C15,4.67157288 15.6715729,4 16.5,4 L19.5,4 C20.3284271,4 21,4.67157288 21,5.5 Z" fill="#000000" fill-rule="nonzero"/>
-                    </g>
-                  </svg>
-                  </span> </div>
-              </div>
-              <div class="timeline-content mb-10 mt-n1">
-                <table class="table align-middle table-row-dashed fs-6 gy-0 mb-5" id="">
-                  <tbody class="text-gray-600 fw-bold">
-                    <tr>
-                      <td class="min-w-150px">
-                        <div class="d-flex flex-column"> 
-                          <a href="javascript:void(0);" class="text-dark fw-bolder text-hover-primary fs-6">Whatsapp</a> 
-                          <span class="fw-bold text-muted d-block fs-7">Send</span> 
-                        </div>
-						         </td>
-                    <td class="min-w-150px" colspan="2">
-                      <div class="d-flex flex-column"> 
-                        <a href="javascript:void(0);" class="text-dark fw-bolder text-hover-primary fs-6">Subject</a> 
-                        <span class="text-muted fw-bold d-block fs-7">    {{$tdata->comment}}   </span> 
-                      </div>
-                    </td>
-                  <td class="min-w-120px">
-                      <div class="d-flex flex-column"> 
-                        <span class="text-dark fw-bolder fs-6">{{  GeneralMethod::ymdTodmyNotTime(@$newDate) }}</span> 
-                        <span class="text-muted fw-bold text-muted d-block fs-7">{{ @$newTime }}(IST)</span>    
-                      </div>
-						      </td>
-            <td class="min-w-50px"><div class="d-flex flex-column">
-                            <div class="symbol-group symbol-hover justify-content-center">
-								  <div class="symbol symbol-30 symbol-circle"  data-toggle="tooltip" data-placement="top" title="{{ ucwords(@$tdata->name) }}"> 
-                  {{-- @if(!empty($posted_by_image))
-									 <img alt="{{ ucwords(@$rowpostedby) }}" src="{{ @$posted_by_image }}"> 
-                  @else --}}
-                 
-                  <div class="" data-bs-placement="top" data-toggle="tooltip2" data-html="true" title="{{ ucwords(@$tdata->name)}}" >
-                    <span class="text-dark fw-bolder fs-6">{{ substr(ucwords($tdata->name), 0, 10)}}</span>
-                    </div>
-                  {{-- @endif --}}
-
-								  </div>
-                            </div>
-                            <span class="text-muted fw-bold d-block fs-7" style="text-align: center;">{{ ucwords(@$tdata->cur_companyname) }}</span>
-              <!--                     <a href="javascript:void(0);" class="text-muted fw-bold text-hover-primary d-block fs-7" -->
-							<!--data-toggle="tooltip" title="{{ ucwords(@$rowpostedby) }}"> {{ substr(ucwords(@$rowpostedby), 0, 7) }} </a> -->
-							
-							</div>
-							 </td>
-                      </tr>
-                    </tbody>
-                  </table>
-
-                </div>
-              </div>     
-
-           <?php }else if($tdata->event_id == 8){?>
-                  <div class="timeline-item">
-                        <div class="timeline-line w-40px"></div>
-                        <div class="timeline-icon symbol symbol-circle symbol-40px">
-                          <div class="symbol-label bg-light"> <span class="svg-icon svg-icon-2 svg-icon-gray-500 d-none">
-                              <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="24px" height="24px"
-                                viewBox="0 0 24 24" version="1.1">
-                                <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
-                                  <polygon points="0 0 24 0 24 24 0 24" />
-                                  <rect fill="#000000" opacity="0.3"
-                                    transform="translate(13.000000, 6.000000) rotate(-450.000000) translate(-13.000000, -6.000000) " x="12"
-                                    y="8.8817842e-16" width="2" height="12" rx="1" />
-                                  <path
-                                    d="M9.79289322,3.79289322 C10.1834175,3.40236893 10.8165825,3.40236893 11.2071068,3.79289322 C11.5976311,4.18341751 11.5976311,4.81658249 11.2071068,5.20710678 L8.20710678,8.20710678 C7.81658249,8.59763107 7.18341751,8.59763107 6.79289322,8.20710678 L3.79289322,5.20710678 C3.40236893,4.81658249 3.40236893,4.18341751 3.79289322,3.79289322 C4.18341751,3.40236893 4.81658249,3.40236893 5.20710678,3.79289322 L7.5,6.08578644 L9.79289322,3.79289322 Z"
-                                    fill="#000000" fill-rule="nonzero"
-                                    transform="translate(7.500000, 6.000000) rotate(-270.000000) translate(-7.500000, -6.000000) " />
-                                  <rect fill="#000000" opacity="0.3"
-                                    transform="translate(11.000000, 18.000000) scale(1, -1) rotate(90.000000) translate(-11.000000, -18.000000) "
-                                    x="10" y="12" width="2" height="12" rx="1" />
-                                  <path
-                                    d="M18.7928932,15.7928932 C19.1834175,15.4023689 19.8165825,15.4023689 20.2071068,15.7928932 C20.5976311,16.1834175 20.5976311,16.8165825 20.2071068,17.2071068 L17.2071068,20.2071068 C16.8165825,20.5976311 16.1834175,20.5976311 15.7928932,20.2071068 L12.7928932,17.2071068 C12.4023689,16.8165825 12.4023689,16.1834175 12.7928932,15.7928932 C13.1834175,15.4023689 13.8165825,15.4023689 14.2071068,15.7928932 L16.5,18.0857864 L18.7928932,15.7928932 Z"
-                                    fill="#000000" fill-rule="nonzero"
-                                    transform="translate(16.500000, 18.000000) scale(1, -1) rotate(270.000000) translate(-16.500000, -18.000000) " />
-                                </g>
-                              </svg>
-                            </span> <span class="svg-icon svg-icon-2 svg-icon-gray-500">
-                              <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="24px" height="24px"
-                                viewBox="0 0 24 24" version="1.1">
-                                <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
-                                  <rect x="0" y="0" width="24" height="24" />
-                                  <path
-                                    d="M21,5.5 L21,17.5 C21,18.3284271 20.3284271,19 19.5,19 L4.5,19 C3.67157288,19 3,18.3284271 3,17.5 L3,14.5 C3,13.6715729 3.67157288,13 4.5,13 L9,13 L9,9.5 C9,8.67157288 9.67157288,8 10.5,8 L15,8 L15,5.5 C15,4.67157288 15.6715729,4 16.5,4 L19.5,4 C20.3284271,4 21,4.67157288 21,5.5 Z"
-                                    fill="#000000" fill-rule="nonzero" />
-                                </g>
-                              </svg>
-                            </span> </div>
-                        </div>
-                        <div class="timeline-content mb-10 mt-n1">
-                          <table class="table align-middle table-row-dashed fs-6 gy-0 mb-5" id="">
-                            <thead>
-                              <tr class="fw-bolder text-muted" role="row">
-                                <th class="sorting_disabled" style="width: 344px;" rowspan="1" colspan="1">Offer Approval</th>
-                                <th class="sorting_disabled" style="width: 79px;">Status</th>
-                                <th class="sorting_disabled" style="width: 79px;">Date/Time</th>
-                                <th class="sorting_disabled" style="width: 79px;">Stage</th>
-                              </tr>
-                            </thead>
-
-                            <tbody class="text-gray-600 fw-bold">
-                              <tr>
-                                <td class="min-w-150px" rowspan="1" colspan="1">
-                                  <div class="d-flex flex-column">
-                                    <a href="javascript:void(0);" class="text-dark fw-bolder text-hover-primary fs-6">{{
-                                      ucwords(@$tdata->email_id_hr) }}</a>
-                                    <span class="fw-bold text-muted d-block fs-7">{{
-                                      ucwords(@$tdata->name_hr) }}</span>
-                                  </div>
-                                </td>
-                                <td class="min-w-150px">
-                                  <div class="d-flex flex-column">
-                                    <span class="badge fw-bolder fs-6 {{ (@$tdata->management_status==2) ? 'joined' : 'offer' }}-bg px-2 py-1">{{ ucwords(@$management_status)
-                                      }}</span>
-                                  </div>
-                                </td>
-                                <td class="min-w-120px">
-                                  <div class="d-flex flex-column">
-                                    <span class="text-dark fw-bolder fs-6">{{ GeneralMethod::ymdTodmyNotTime(@$tdata->approved_date_time) }}</span>
-                                    <span class="text-muted fw-bold text-muted d-block fs-7">{{ date("H:i", strtotime(@$tdata->approved_date_time)) }}(IST)</span>
-                                  </div>
-                                </td>
-                                <td>
-                                    <div class="d-flex flex-column">  <span class="badge fw-bolder fs-6 {{ @$current_tiles_bg }} px-2 py-1">{{ ucwords(@$master_process_name) }}</span>  </div>
-                                 </td>
-                              </tr>
-                            </tbody>
-                          </table>
-
-                          @if(!empty($comment))
-                          <div class="overflow-auto pb-5">
-                            <div class="d-flex align-items-center border border-dashed border-gray-300 rounded min-w-700px p-5">
-                              <div class="mb-1">
-                                <p class="<?php //echo @$current_tiles_bg; ?>">
-                                  <a href="#" class="fs-5 fw-bold text-gray-800 text-hover-primary mb-2">&nbsp;Comment:</a>
-                                  {{ @$comment }}
-                                </p>
-                              </div>
-                            </div>
-                          </div>
-                          @endif
-                        </div>
-                  </div>
-            <?php }else if($tdata->event_id == 9){?>
-              <div class="timeline-item">
-              <div class="timeline-line w-40px"></div>
-              <div class="timeline-icon symbol symbol-circle symbol-40px">
-                <div class="symbol-label bg-light"> <span class="svg-icon svg-icon-2 svg-icon-gray-500 d-none">
-                  <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="24px" height="24px" viewBox="0 0 24 24" version="1.1">
-                    <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
-                      <polygon points="0 0 24 0 24 24 0 24"/>
-                      <rect fill="#000000" opacity="0.3" transform="translate(13.000000, 6.000000) rotate(-450.000000) translate(-13.000000, -6.000000) " x="12" y="8.8817842e-16" width="2" height="12" rx="1"/>
-                      <path d="M9.79289322,3.79289322 C10.1834175,3.40236893 10.8165825,3.40236893 11.2071068,3.79289322 C11.5976311,4.18341751 11.5976311,4.81658249 11.2071068,5.20710678 L8.20710678,8.20710678 C7.81658249,8.59763107 7.18341751,8.59763107 6.79289322,8.20710678 L3.79289322,5.20710678 C3.40236893,4.81658249 3.40236893,4.18341751 3.79289322,3.79289322 C4.18341751,3.40236893 4.81658249,3.40236893 5.20710678,3.79289322 L7.5,6.08578644 L9.79289322,3.79289322 Z" fill="#000000" fill-rule="nonzero" transform="translate(7.500000, 6.000000) rotate(-270.000000) translate(-7.500000, -6.000000) "/>
-                      <rect fill="#000000" opacity="0.3" transform="translate(11.000000, 18.000000) scale(1, -1) rotate(90.000000) translate(-11.000000, -18.000000) " x="10" y="12" width="2" height="12" rx="1"/>
-                      <path d="M18.7928932,15.7928932 C19.1834175,15.4023689 19.8165825,15.4023689 20.2071068,15.7928932 C20.5976311,16.1834175 20.5976311,16.8165825 20.2071068,17.2071068 L17.2071068,20.2071068 C16.8165825,20.5976311 16.1834175,20.5976311 15.7928932,20.2071068 L12.7928932,17.2071068 C12.4023689,16.8165825 12.4023689,16.1834175 12.7928932,15.7928932 C13.1834175,15.4023689 13.8165825,15.4023689 14.2071068,15.7928932 L16.5,18.0857864 L18.7928932,15.7928932 Z" fill="#000000" fill-rule="nonzero" transform="translate(16.500000, 18.000000) scale(1, -1) rotate(270.000000) translate(-16.500000, -18.000000) "/>
-                    </g>
-                  </svg>
-                  </span> <span class="svg-icon svg-icon-2 svg-icon-gray-500">
-                  <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="24px" height="24px" viewBox="0 0 24 24" version="1.1">
-                    <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
-                      <rect x="0" y="0" width="24" height="24"/>
-                      <path d="M21,5.5 L21,17.5 C21,18.3284271 20.3284271,19 19.5,19 L4.5,19 C3.67157288,19 3,18.3284271 3,17.5 L3,14.5 C3,13.6715729 3.67157288,13 4.5,13 L9,13 L9,9.5 C9,8.67157288 9.67157288,8 10.5,8 L15,8 L15,5.5 C15,4.67157288 15.6715729,4 16.5,4 L19.5,4 C20.3284271,4 21,4.67157288 21,5.5 Z" fill="#000000" fill-rule="nonzero"/>
-                    </g>
-                  </svg>
-                  </span> </div>
-              </div>
-              <div class="timeline-content mb-10 mt-n1">
-                <table class="table align-middle table-row-dashed fs-6 gy-0 mb-5" id="">
-                  <tbody class="text-gray-600 fw-bold">
-                    <tr>
-                      <td class="min-w-150px">
-                        <div class="d-flex flex-column"> 
-                          <a href="javascript:void(0);" class="text-dark fw-bolder text-hover-primary fs-6">Mail</a> 
-                          <span class="fw-bold text-muted d-block fs-7">Send</span> 
-                        </div>
-						         </td>
-                    <td class="min-w-150px" colspan="2">
-                      <div class="d-flex flex-column"> 
-                        <a href="javascript:void(0);" class="text-dark fw-bolder text-hover-primary fs-6">Subject</a> 
-                        <span class="text-muted fw-bold d-block fs-7">    {{$tdata->comment}}   </span> 
-                      </div>
-                    </td>
-                  <td class="min-w-120px">
-                      <div class="d-flex flex-column"> 
-                        <span class="text-dark fw-bolder fs-6">{{  GeneralMethod::ymdTodmyNotTime(@$newDate) }}</span> 
-                        <span class="text-muted fw-bold text-muted d-block fs-7">{{ @$newTime }}(IST)</span>    
-                      </div>
-						      </td>
-            <td class="min-w-50px"><div class="d-flex flex-column">
-                            <div class="symbol-group symbol-hover justify-content-center">
-								  <div class="symbol symbol-30 symbol-circle"  data-toggle="tooltip" data-placement="top" title="{{ ucwords(@$tdata->name) }}"> 
-                  {{-- @if(!empty($posted_by_image))
-									 <img alt="{{ ucwords(@$rowpostedby) }}" src="{{ @$posted_by_image }}"> 
-                  @else --}}
-                 
-                  <div class="" data-bs-placement="top" data-toggle="tooltip2" data-html="true" title="{{ ucwords(@$tdata->name)}}" >
-                    <span class="text-dark fw-bolder fs-6">{{ substr(ucwords($tdata->name), 0, 10)}}</span>
-                    </div>
-                  {{-- @endif --}}
-
-								  </div>
-                            </div>
-                            <span class="text-muted fw-bold d-block fs-7" style="text-align: center;">{{ ucwords(@$tdata->cur_companyname) }}</span>
-              <!--                     <a href="javascript:void(0);" class="text-muted fw-bold text-hover-primary d-block fs-7" -->
-							<!--data-toggle="tooltip" title="{{ ucwords(@$rowpostedby) }}"> {{ substr(ucwords(@$rowpostedby), 0, 7) }} </a> -->
-							
-							</div>
-							 </td>
-                      </tr>
-                    </tbody>
-                  </table>
-
-                </div>
-              </div>      
-
-            <?php }else if($tdata->event_id == 11){?>
-              <div class="timeline-item">
-              <div class="timeline-line w-40px"></div>
-              <div class="timeline-icon symbol symbol-circle symbol-40px">
-                <div class="symbol-label bg-light"> <span class="svg-icon svg-icon-2 svg-icon-gray-500 d-none">
-                  <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="24px" height="24px" viewBox="0 0 24 24" version="1.1">
-                    <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
-                      <polygon points="0 0 24 0 24 24 0 24"/>
-                      <rect fill="#000000" opacity="0.3" transform="translate(13.000000, 6.000000) rotate(-450.000000) translate(-13.000000, -6.000000) " x="12" y="8.8817842e-16" width="2" height="12" rx="1"/>
-                      <path d="M9.79289322,3.79289322 C10.1834175,3.40236893 10.8165825,3.40236893 11.2071068,3.79289322 C11.5976311,4.18341751 11.5976311,4.81658249 11.2071068,5.20710678 L8.20710678,8.20710678 C7.81658249,8.59763107 7.18341751,8.59763107 6.79289322,8.20710678 L3.79289322,5.20710678 C3.40236893,4.81658249 3.40236893,4.18341751 3.79289322,3.79289322 C4.18341751,3.40236893 4.81658249,3.40236893 5.20710678,3.79289322 L7.5,6.08578644 L9.79289322,3.79289322 Z" fill="#000000" fill-rule="nonzero" transform="translate(7.500000, 6.000000) rotate(-270.000000) translate(-7.500000, -6.000000) "/>
-                      <rect fill="#000000" opacity="0.3" transform="translate(11.000000, 18.000000) scale(1, -1) rotate(90.000000) translate(-11.000000, -18.000000) " x="10" y="12" width="2" height="12" rx="1"/>
-                      <path d="M18.7928932,15.7928932 C19.1834175,15.4023689 19.8165825,15.4023689 20.2071068,15.7928932 C20.5976311,16.1834175 20.5976311,16.8165825 20.2071068,17.2071068 L17.2071068,20.2071068 C16.8165825,20.5976311 16.1834175,20.5976311 15.7928932,20.2071068 L12.7928932,17.2071068 C12.4023689,16.8165825 12.4023689,16.1834175 12.7928932,15.7928932 C13.1834175,15.4023689 13.8165825,15.4023689 14.2071068,15.7928932 L16.5,18.0857864 L18.7928932,15.7928932 Z" fill="#000000" fill-rule="nonzero" transform="translate(16.500000, 18.000000) scale(1, -1) rotate(270.000000) translate(-16.500000, -18.000000) "/>
-                    </g>
-                  </svg>
-                  </span> <span class="svg-icon svg-icon-2 svg-icon-gray-500">
-                  <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="24px" height="24px" viewBox="0 0 24 24" version="1.1">
-                    <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
-                      <rect x="0" y="0" width="24" height="24"/>
-                      <path d="M21,5.5 L21,17.5 C21,18.3284271 20.3284271,19 19.5,19 L4.5,19 C3.67157288,19 3,18.3284271 3,17.5 L3,14.5 C3,13.6715729 3.67157288,13 4.5,13 L9,13 L9,9.5 C9,8.67157288 9.67157288,8 10.5,8 L15,8 L15,5.5 C15,4.67157288 15.6715729,4 16.5,4 L19.5,4 C20.3284271,4 21,4.67157288 21,5.5 Z" fill="#000000" fill-rule="nonzero"/>
-                    </g>
-                  </svg>
-                  </span> </div>
-              </div>
-              <div class="timeline-content mb-10 mt-n1">
-                <table class="table align-middle table-row-dashed fs-6 gy-0 mb-5" id="">
-                  <tbody class="text-gray-600 fw-bold">
-                    <tr>
-                      <td class="min-w-150px">
-                        <div class="d-flex flex-column"> 
-                          <a href="javascript:void(0);" class="text-{{($tdata->note=='Interested') ? 'success' : 'danger'}} fw-bolder text-hover-{{($tdata->note=='Interested') ? 'success' : 'danger'}} fs-6">{{@$tdata->note}}</a> 
-                          <span class="fw-bold text-muted d-block fs-7">Mail</span> 
-                        </div>
-						         </td>
-                    <td class="min-w-150px" colspan="2">
-                      <div class="d-flex flex-column"> 
-                        <a href="javascript:void(0);" class="text-dark fw-bolder text-hover-primary fs-6">Subject</a> 
-                        <span class="text-muted fw-bold d-block fs-7">    {{$tdata->comment}}   </span> 
-                      </div>
-                    </td>
-                  <td class="min-w-120px">
-                      <div class="d-flex flex-column"> 
-                        <span class="text-dark fw-bolder fs-6">{{  GeneralMethod::ymdTodmyNotTime(@$newDate) }}</span> 
-                        <span class="text-muted fw-bold text-muted d-block fs-7">{{ @$newTime }}(IST)</span>    
-                      </div>
-						      </td>
-            <td class="min-w-50px"><div class="d-flex flex-column">
-                            <div class="symbol-group symbol-hover justify-content-center">
-								  <div class="symbol symbol-30 symbol-circle"  data-toggle="tooltip" data-placement="top" title="{{ ucwords(@$tdata->name) }}"> 
-                  {{-- @if(!empty($posted_by_image))
-									 <img alt="{{ ucwords(@$rowpostedby) }}" src="{{ @$posted_by_image }}"> 
-                  @else --}}
-                 
-                  <div class="" data-bs-placement="top" data-toggle="tooltip2" data-html="true" title="{{ ucwords(@$tdata->name)}}" >
-                    <span class="text-dark fw-bolder fs-6">{{ substr(ucwords($tdata->name), 0, 10)}}</span>
-                    </div>
-                  {{-- @endif --}}
-
-								  </div>
-                            </div>
-                            <span class="text-muted fw-bold d-block fs-7" style="text-align: center;">{{ ucwords(@$tdata->cur_companyname) }}</span>
-              <!--                     <a href="javascript:void(0);" class="text-muted fw-bold text-hover-primary d-block fs-7" -->
-							<!--data-toggle="tooltip" title="{{ ucwords(@$rowpostedby) }}"> {{ substr(ucwords(@$rowpostedby), 0, 7) }} </a> -->
-							
-							</div>
-							 </td>
-                      </tr>
-                    </tbody>
-                  </table>
-
-                </div>
-              </div>      
-            <?php } ?>
-
-       <?php }
-      } ?>
-
+                <div class="timeline" id="timeline-items-container">
+                  @include('service_company.job-applications.timeline_partial')
             </div>
           </div>
             
@@ -4661,20 +3371,102 @@ setTimeout(() => {
             const dialCode = countryDialCodes[calling_code] || ""; // Fetch the dial code dynamically
             const dialCodeSpan = document.createElement("span");
             dialCodeSpan.textContent = dialCode;
-
             // Append the flag and dial code
             flagContainer.appendChild(flagDiv);
             flagContainer.appendChild(dialCodeSpan);
-
-
         });
     }, 2000);
 
+    // Intent: Phase 2 Lazy loading Notes tab on click
+    var _notesTabLoaded = false;
+    $('body').on('click', 'a[href="#notes"], button[data-bs-target="#notes"]', function(){
+        if (_notesTabLoaded) return;
+        _notesTabLoaded = true;
+        var appId = {{ $application->id }};
+        $.ajax({
+            type: 'GET',
+            url: "{{ route('service_company.applicant-note.index') }}",
+            data: { application_id: appId, page: 1 },
+            success: function(response) {
+                if (response.status === 'success' && response.view) {
+                    $('#applicant-notes').html(response.view);
+                }
+            }
+        });
+    });
 
-   
-   		$('body').on('click', '#cancel-note', function(){
-   			$('#note_text').val(''); 
-   		});
+    $('body').on('click', '#cancel-note', function(){
+        $('#note_text').val(''); 
+    });
+
+    // Intent: Phase 3 Lazy loading Timeline tab on click (scoped to application ID)
+    $('body').off('click.v2timeline').on('click.v2timeline', 'a[href="#timeline"], button[data-bs-target="#timeline"]', function(){
+        var appId = {{ $application->wiseId }};
+        var $container = $('#timeline-items-container');
+        if ($container.data('loaded-app-id') === appId) return;
+
+        $container.html('<div class="text-center p-5 text-muted"><div class="spinner-border spinner-border-sm text-primary me-2" role="status"></div> Loading timeline activity...</div>');
+
+        var timelineUrl = "{{ url('/service_company/job-applications/timeline') }}/" + appId;
+        $.ajax({
+            type: 'GET',
+            url: timelineUrl,
+            data: { page: 1 },
+            success: function(response) {
+                if (response.status === 'success') {
+                    $container.data('loaded-app-id', appId);
+                    if (response.view) {
+                        $container.html(response.view);
+                    } else {
+                        $container.html('<div class="text-center p-5 text-muted">No timeline activity recorded yet.</div>');
+                    }
+                } else {
+                    $container.html('<div class="text-center p-5 text-danger">' + (response.message || 'Failed to load timeline activity.') + '</div>');
+                }
+            },
+            error: function() {
+                $container.html('<div class="text-center p-5 text-danger">Failed to load timeline activity. Click Timeline tab to retry.</div>');
+            }
+        });
+    });
+
+    // Intent: Phase 4 Lazy loading Resume / CV tab on click (scoped to application ID)
+    $('body').off('click.v2resume').on('click.v2resume', 'a[href="#resume_cv"], button[data-bs-target="#resume_cv"]', function(){
+        var appId = {{ $application->id }};
+        var $container = $('#resume_cv');
+        if ($container.data('loaded-app-id') === appId) return;
+        $container.data('loaded-app-id', appId);
+        var resumeUrl = "{{ url('/service_company/job-applications/resume-meta') }}/" + appId;
+        $.ajax({
+            type: 'GET',
+            url: resumeUrl,
+            success: function(response) {
+                if (response.status === 'success' && response.resume) {
+                    console.log("Resume metadata loaded:", response.resume);
+                }
+            }
+        });
+    });
+
+    // Intent: Phase 6 Scoped Offcanvas event cleanup to prevent memory leaks across drawer opens
+    var $drawerElement = $('#kt_activities3');
+    if ($drawerElement.length) {
+        $drawerElement.off('hidden.bs.offcanvas.v2cleanup').on('hidden.bs.offcanvas.v2cleanup', function () {
+            // Clean up PDF.js canvases to free browser RAM memory
+            $(this).find('canvas').each(function() {
+                var ctx = this.getContext('2d');
+                if (ctx) {
+                    ctx.clearRect(0, 0, this.width, this.height);
+                }
+                this.width = 1;
+                this.height = 1;
+            });
+            // Reset tab flags
+            _notesTabLoaded = false;
+            _timelineTabLoaded = false;
+            _resumeTabLoaded = false;
+        });
+    }
    
    		$('#add-note').click(function () {
    				var url 	= "{{ route('service_company.applicant-note.store') }}";
@@ -5364,11 +4156,11 @@ setTimeout(() => {
         }
     }
 
-    $(document).on('click', '.sendmaimodal', function() {
+    $(document).off('click.sdMailModal').on('click.sdMailModal', '.sendmaimodal', function() {
         showSendMailOverlay();
     });
 
-    $(document).on('click', '#kt_send_mail_showdetail_close', function() {
+    $(document).off('click.sdMailClose').on('click.sdMailClose', '#kt_send_mail_showdetail_close', function() {
         hideSendMailDrawer();
     });
 })();
@@ -5409,67 +4201,238 @@ setTimeout(() => {
         }
     }
 
-    $(document).on('click', '.sendwhatsappmodal', function() {
+    $(document).off('click.sdWaModal').on('click.sdWaModal', '.sendwhatsappmodal', function() {
         showWhatsappOverlay();
     });
 
-    $(document).on('click', '#kt_send_whatsapp_showdetail_close', function() {
+    $(document).off('click.sdWaClose').on('click.sdWaClose', '#kt_send_whatsapp_showdetail_close', function() {
         hideWhatsappDrawer();
     });
 })();
 </script>
 
 {{-- ═══════════════════════════════════════════════════════════════════
-     DOWNLOAD RESUME CENTER (RDC) — Phase 1 UI Shell
-     Overlay + right-slide drawer; 6 format cards displayed.
-     Option 1 (Original) & Option 2 (Branded) wired to existing logic.
-     Options 3–6 are Phase 2 placeholders (toast notification shown).
+     DOWNLOAD RESUME CENTER (RDC)
+     Overlay + right-slide drawer for original, branded, highlighted, report,
+     and final report/resume package downloads.
+     Option 6 is the newer R2/browser branded-resume header flow; the original
+     option 2 remains wired to the existing Resume/CV viewer engine.
      No new MySQL queries. No extra server-side logic.
 ═══════════════════════════════════════════════════════════════════ --}}
 
 {{-- Data bridge: PHP values injected once, read by JS — zero extra queries --}}
+@php
+  $rdcDownloadUrl = '';
+  $rdcR2DirectUrl = '';
+  $rdcR2PublicUrl = '';
+  $rdcResumePdfUrl = '';
+  $rdcResumeAvailable = false;
+  $rdcResumeRaw = (string)(@$application->resume ?? '');
+  if($rdcResumeRaw !== ''){
+    // Option 14 uses this signed URL so the browser fetches DOCX from R2 instead of Laravel streaming it.
+    $rdcR2Key = '';
+    if(strpos($rdcResumeRaw, 'https://file.jero.works/') === 0){
+      $rdcR2Key = ltrim((string)parse_url($rdcResumeRaw, PHP_URL_PATH), '/');
+    } elseif($resumeAwsPath && !filter_var($rdcResumeRaw, FILTER_VALIDATE_URL)){
+      $rdcR2Key = ltrim($rdcResumeRaw, '/');
+    }
+
+    if($rdcR2Key !== ''){
+      try{
+        $rdcR2ResolvedKey = $rdcR2Key;
+        if(!\Illuminate\Support\Facades\Storage::disk('r2')->exists($rdcR2ResolvedKey)){
+          $rdcR2FallbackKey = preg_replace('/\.[^.\/]+$/', '.pdf', $rdcR2ResolvedKey);
+          if($rdcR2FallbackKey !== $rdcR2ResolvedKey && \Illuminate\Support\Facades\Storage::disk('r2')->exists($rdcR2FallbackKey)){
+            $rdcR2ResolvedKey = $rdcR2FallbackKey;
+          } else {
+            $rdcR2ResolvedKey = '';
+          }
+        }
+        if($rdcR2ResolvedKey !== ''){
+          $rdcResumeAvailable = true;
+          $rdcR2Key = $rdcR2ResolvedKey;
+          $rdcDownloadUrl = route('download.resume', ['id' => $application->id, 'path' => rtrim(strtr(base64_encode($rdcR2Key), '+/', '-_'), '=')]);
+          $rdcR2PublicUrl = 'https://file.jero.works/'.$rdcR2Key;
+        }
+      } catch(\Throwable $e) {
+        $rdcResumeAvailable = false;
+        $rdcDownloadUrl = '';
+        $rdcR2PublicUrl = '';
+      }
+    } elseif(filter_var($rdcResumeRaw, FILTER_VALIDATE_URL)) {
+      $rdcResumeAvailable = true;
+      $rdcDownloadUrl = $rdcResumeRaw;
+      $rdcR2DirectUrl = strpos($rdcResumeRaw, request()->getSchemeAndHttpHost()) !== 0 ? $rdcResumeRaw : '';
+      $rdcR2PublicUrl = $rdcR2DirectUrl;
+    } else {
+      $rdcResumeAvailable = true;
+      $rdcDownloadUrl = url($rdcResumeRaw);
+    }
+
+    if($rdcResumeAvailable){
+      $rdcResumeConvertToken = rtrim(strtr(base64_encode(GeneralMethod::value_encrypt((string) $rdcResumeRaw)), '+/', '-_'), '=');
+      $rdcResumePdfUrl = route('service_company.job-applications.resume-convert', ['token' => $rdcResumeConvertToken]);
+    }
+
+    if($rdcR2Key !== '' && $rdcResumeAvailable){
+      try{
+        $rdcR2DownloadName = str_replace('"', '', basename($rdcR2Key));
+        $rdcR2DirectUrl = \Illuminate\Support\Facades\Storage::disk('r2')->temporaryUrl(
+          $rdcR2Key,
+          now()->addMinutes(15),
+          ['ResponseContentDisposition' => 'attachment; filename="'.$rdcR2DownloadName.'"']
+        );
+      } catch(\Throwable $e) {
+        $rdcR2DirectUrl = $rdcR2PublicUrl;
+      }
+    }
+  }
+@endphp
 <div id="rdcData" hidden
-     data-dl-url="{{ $resumeAwsPath ? route('download.resume', ['id' => $application->id, 'path' => rtrim(strtr(base64_encode($application->resume), '+/', '-_'), '=')]) : '' }}"
+     data-dl-url="{{ $rdcDownloadUrl }}"
+     data-r2-direct-url="{{ $rdcR2DirectUrl }}"
+     data-r2-public-url="{{ $rdcR2PublicUrl }}"
+     data-resume-pdf-url="{{ $rdcResumePdfUrl }}"
+     data-has-resume="{{ $rdcResumeAvailable ? 'true' : 'false' }}"
      data-has-aws="{{ $resumeAwsPath ? 'true' : 'false' }}"
      data-file-ext="{{ strtoupper(pathinfo((string)@$application->resume, PATHINFO_EXTENSION) ?: 'FILE') }}"></div>
+<link rel="modulepreload" href="https://file.jero.works/js/opendoc/casual_doc_wasm.js?v=opendoc-20260903" crossorigin>
+<link rel="preload" href="https://file.jero.works/js/opendoc/casual_doc_wasm_bg.wasm?v=opendoc-20260903" as="fetch" type="application/wasm" crossorigin>
+<link rel="preload" href="/js/pdf-lib.min.js" as="script">
+<link rel="preload" href="/js/jspdf.umd.min.js" as="script">
+<link rel="preload" href="/js/pdfmake.min.js" as="script">
+<link rel="preload" href="/js/vfs_fonts.min.js" as="script">
 
 {{-- Recruiter Summary data bridge — zero extra DB queries; all PHP vars already in scope --}}
 @php
   $rsSkills = [];
-  if(!empty($jobSkill)){
+  $rsSkillRatingMap = [];
+  $rsSkillNormalize = function($value) {
+    return mb_strtolower(trim((string) $value));
+  };
+  $rsSkillSources = [@$application->candidate_skills ?? [], @$application->skill_experiences ?? [], $jobSkill ?? []];
+  foreach($rsSkillSources as $rsSkillSource){
+    if(is_string($rsSkillSource)){
+      $decoded = json_decode($rsSkillSource);
+      $rsSkillSource = is_array($decoded) ? $decoded : [];
+    }
+    if(!is_iterable($rsSkillSource)) continue;
+    foreach($rsSkillSource as $rsSkillRow){
+      $rsSkillRow = (object) $rsSkillRow;
+      $rsSkillName = trim((string)($rsSkillRow->skill_key ?? $rsSkillRow->skill_name ?? $rsSkillRow->name ?? $rsSkillRow->skill ?? ''));
+      $rsSkillRating = $rsSkillRow->rating ?? $rsSkillRow->self_rating ?? $rsSkillRow->skill_rating ?? $rsSkillRow->candidate_rating ?? null;
+      if($rsSkillName !== '' && !is_null($rsSkillRating) && (is_numeric($rsSkillRating) || preg_match('/\d+/', (string)$rsSkillRating, $rsRatingMatch))){
+        $rsSkillRatingMap[$rsSkillNormalize($rsSkillName)] = max(0,min(5,(int)(is_numeric($rsSkillRating) ? $rsSkillRating : $rsRatingMatch[0])));
+      }
+    }
+  }
+  $rsResolveSkillRating = function($row, $name) use ($rsSkillRatingMap, $rsSkillNormalize) {
+    $row = (object) $row;
+    $rating = $row->rating ?? $row->self_rating ?? $row->skill_rating ?? $row->candidate_rating ?? null;
+    if(!is_null($rating) && (is_numeric($rating) || preg_match('/\d+/', (string)$rating, $ratingMatch))){
+      return max(0,min(5,(int)(is_numeric($rating) ? $rating : $ratingMatch[0])));
+    }
+    $key = $rsSkillNormalize($name);
+    return $rsSkillRatingMap[$key] ?? 0;
+  };
+  $rsFormatSkillExperience = function($years, $months, $hasValue = true) {
+    if(!$hasValue) return '--';
+    $years = max(0, (int) $years);
+    $months = max(0, (int) $months);
+    if($months >= 12){
+      $years += intdiv($months, 12);
+      $months = $months % 12;
+    }
+    if($years === 0 && $months === 0) return '0 Years';
+    $parts = [];
+    if($years > 0) $parts[] = $years.' Year'.($years > 1 ? 's' : '');
+    if($months > 0) $parts[] = $months.' Month'.($months > 1 ? 's' : '');
+    return implode(' ', $parts);
+  };
+  $rsParseSkillExperience = function($value) use ($rsFormatSkillExperience) {
+    $raw = trim((string) $value);
+    if($raw === '') return ['text'=>'--','value'=>0];
+    if(preg_match('/(\d+)\s*(?:years?|yrs?)?\s+(\d+)\s*(?:months?|mos?)/i', $raw, $match)){
+      $years = (int) $match[1];
+      $months = (int) $match[2];
+      return ['text'=>$rsFormatSkillExperience($years, $months, true),'value'=>$years + ($months / 12)];
+    }
+    if(preg_match('/(\d+)\s*[.]\s*(\d*)/', $raw, $match)){
+      $years = (int) $match[1];
+      $months = $match[2] === '' ? 0 : (int) $match[2];
+      return ['text'=>$rsFormatSkillExperience($years, $months, true),'value'=>$years + ($months / 12)];
+    }
+    if(preg_match('/(\d+)/', $raw, $match)){
+      $years = (int) $match[1];
+      return ['text'=>$rsFormatSkillExperience($years, 0, true),'value'=>$years];
+    }
+    return ['text'=>$raw,'value'=>0];
+  };
+  if(!empty($skillExperiencesCount) && !empty($skillExperiences)){
+    foreach($skillExperiences as $exp){
+      $exp=(object)$exp;
+      $sn=trim((string)($exp->skill_key??'')); if(!$sn) continue;
+      $year=(int)($exp->year ?? 0);
+      $month=(int)($exp->month ?? 0);
+      if(isset($exp->total_months) && is_numeric($exp->total_months) && (int)$exp->total_months > 0){
+        $year = intdiv((int)$exp->total_months, 12);
+        $month = (int)$exp->total_months % 12;
+      }
+      $expText=$rsFormatSkillExperience($year,$month,true);
+      $rsSkills[]=[
+        'name'=>$sn,
+        'expText'=>$expText,
+        'exp'=>$year + ($month / 12),
+        'rating'=>$rsResolveSkillRating($exp,$sn)
+      ];
+    }
+  }
+  if(empty($rsSkills)&&!empty($jobSkill)){
     foreach($jobSkill as $sv){
       $sv=(object)$sv; $sn=trim((string)($sv->skill_name??'')); if(!$sn) continue;
-      $expStr=trim(str_replace(['Years','Year',' '],'',(string)($sv->skill_value??'')));
-      $expYears=($expStr!=='')?(int)explode('.',$expStr)[0]:0;
-      $rsSkills[]=['name'=>$sn,'exp'=>$expYears,'rating'=>max(0,min(5,(int)($sv->rating??0)))];
+      $expData=$rsParseSkillExperience($sv->skill_value??'');
+      $rsSkills[]=[
+        'name'=>$sn,
+        'expText'=>$expData['text'],
+        'exp'=>$expData['value'],
+        'rating'=>$rsResolveSkillRating($sv,$sn)
+      ];
     }
   }
   if(empty($rsSkills)&&!empty($application->skills)){
     foreach(array_slice(array_values(array_filter(array_map('trim',explode(',', $application->skills)))),0,12) as $sn){
-      if($sn) $rsSkills[]=['name'=>$sn,'exp'=>0,'rating'=>0];
+      if($sn) $rsSkills[]=['name'=>$sn,'expText'=>'--','exp'=>0,'rating'=>0];
     }
   }
   $rsMatchPct=(int)round((float)(@$application->skill_match??0));
   if($rsMatchPct===0&&!empty($__hdrJobTotal)) $rsMatchPct=(int)round(($__hdrMatchedCount??0)/$__hdrJobTotal*100);
-  $rsWm=strtolower(trim((string)(@$application->wm??'')));
-  $rsWorkMode=$rsWm==='remote'?'Remote':($rsWm==='hybrid'?'Hybrid / Remote':($rsWm==='office'?'On-site':($rsWm!==''?ucfirst($rsWm):'—')));
+  $rsWm=trim((string)(@$application->wm??''));
+  $rsWorkMode=$rsWm!=='' ? ucwords(str_replace(['_', '-'], ' ', strtolower($rsWm))) : '—';
   $rsNpMode=(int)(@$application->serving_notice_period_mode??-1);
-  if($rsNpMode===0||$rsNpMode===1){ $rsNotice='Available '.date('d M Y',strtotime((string)@$application->np_id)); }
-  else { $rsNotice=trim((string)@$application->np_id); }
-  if($rsNotice===''||$rsNotice==='Available ') $rsNotice='--';
-  $rsIsImmediate=($rsNpMode===2||strtolower(trim((string)@$application->np_id))==='immediate');
+  $rsNpRaw=trim((string)@$application->np_id);
+  $rsNpTs=$rsNpRaw!=='' ? strtotime($rsNpRaw) : false;
+  if($rsNpMode===2||strtolower($rsNpRaw)==='immediate'){ $rsNotice='Immediate'; }
+  elseif(($rsNpMode===0||$rsNpMode===1)&&$rsNpTs!==false&&(int)date('Y',$rsNpTs)>1970){ $rsNotice='Available '.date('d M Y',$rsNpTs); }
+  else { $rsNotice=$rsNpRaw; }
+  if($rsNotice===''||$rsNotice==='Available '||str_contains($rsNotice,'01 Jan 1970')) $rsNotice='--';
+  $rsIsImmediate=($rsNpMode===2||strtolower($rsNpRaw)==='immediate');
   $rsLoc=trim(trim($city_name??'',', ').' '.trim($state_name??'',', '));
   if($rsLoc==='') $rsLoc=trim($country_name??'');
   if($rsLoc==='') $rsLoc='--';
   $rsTotalExp=trim((string)(@$application->total_exp??''));
-  $rsExpStr=$rsTotalExp!==''?$rsTotalExp.' Years':'--';
+  $rsTotalExp=trim($rsTotalExp," \t\n\r\0\x0B.");
+  $rsExpStr=$rsTotalExp!==''?$rsTotalExp.' Year'.((float)$rsTotalExp==1.0?'':'s'):'--';
   $rsValidation=[];
-  if(!empty($application->linkedin)) $rsValidation[]=['label'=>'LinkedIn Verified','status'=>'Verified'];
-  if(!empty($application->resume))   $rsValidation[]=['label'=>'Resume Verified','status'=>'Verified'];
+  if(!empty($application->resume))   $rsValidation[]=['label'=>'RESUME','status'=>'Verified'];
+  if(!empty($application->email)||!empty($application->secondrary_email)) $rsValidation[]=['label'=>'EMAIL ID','status'=>'Verified'];
+  if(!empty($application->phone)||!empty($application->secondary_mobile)) $rsValidation[]=['label'=>'PHONE NUMBER','status'=>'Verified'];
+  if(!empty($application->linkedin)) $rsValidation[]=['label'=>'LINKEDIN ID','status'=>'Verified'];
   if(!empty($application->recruiter_note)) $rsValidation[]=['label'=>'Recruiter Screened','status'=>'Completed'];
-  if(!empty($application->current_designation)||!empty($application->current_company)) $rsValidation[]=['label'=>'Job Description Acknowledged','status'=>'Confirmed'];
+  if(!empty($application->current_designation)||!empty($application->current_company)) $rsValidation[]=['label'=>'JOB DESCRIPTION','status'=>'Shared with candidate'];
   if((float)(@$application->ctc_yearly??0)>0||(float)(@$application->ectc_yearly??0)>0||(float)(@$application->percentage_hike??0)>0) $rsValidation[]=['label'=>'Compensation Discussed','status'=>'Discussed'];
   $rsCareerSummary=trim(strip_tags(html_entity_decode((string)(@$application->careersummary??''),ENT_QUOTES,'UTF-8')));
+  $rsCaptainName = trim((string)($clientjobAssignListCaptain ?? ''));
+  $rsCaptainName = $rsCaptainName !== '' ? ucwords(strtolower($rsCaptainName)) : '--';
 @endphp
 <div id="rsData" hidden
   data-name="{{ ucwords(@$application->full_name) }}"
@@ -5480,6 +4443,12 @@ setTimeout(() => {
   data-notice="{{ $rsNotice }}"
   data-education="{{ strtoupper(@$application->qualification_name) }}"
   data-work-mode="{{ $rsWorkMode }}"
+  data-report-id="JR{{ now()->format('Ymd') }}{{ str_pad((string)@$application->id, 6, '0', STR_PAD_LEFT) }}"
+  data-report-date="{{ now()->format('d M Y') }}"
+  data-recruiter-name="{{ $rsCaptainName }}"
+  data-report-company-name="{{ $rcvCompanyName ?? '' }}"
+  data-report-company-logo="{{ $rcvCompanyLogo ?? '' }}"
+  data-ai-version="Live Intelligence"
   data-match="{{ $rsMatchPct }}"
   data-is-immediate="{{ $rsIsImmediate ? '1' : '0' }}"
   @php
@@ -5493,263 +4462,2005 @@ setTimeout(() => {
   data-validation='@json($rsValidation)'></div>
 
 <script>
-/* buildRecruiterSummary — 100% client-side pre-screened candidate report */
+/* buildRecruiterSummary — client-side vector PDF report, no server calls */
 (function(){
 'use strict';
-function e(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 
-/* ── Inline SVG icon strings (stroke="currentColor" inherits parent color) ── */
-var SI={
-  monitor:'<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>',
-  grad:'<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>',
-  clock:'<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>',
-  person:'<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>',
-  pin:'<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>',
-  brief:'<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>',
-  building:'<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>',
-  mappin:'<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>',
-  trophy:'<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><polyline points="8 6 8 2 16 2 16 6"/><path d="M4 6h16v10a4 4 0 0 1-4 4H8a4 4 0 0 1-4-4z"/><line x1="9" y1="16" x2="15" y2="16"/></svg>',
-  flash:'<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>',
-  chart:'<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M18 20V10M12 20V4M6 20v-6"/></svg>',
-  chat:'<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>',
-  shield:'<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>',
-  lock:'<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="rgba(255,255,255,.8)" stroke-width="1.8" stroke-linecap="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>',
-  globe:'<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="rgba(255,255,255,.7)" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>',
-  check:'<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>',
-  linkedin:'<svg viewBox="0 0 28 28" width="16" height="16"><rect width="28" height="28" rx="5" fill="#0077b5"/><text x="5" y="21" font-family="Arial" font-size="15" font-weight="700" fill="white">in</text></svg>',
-  doc:'<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#64748b" stroke-width="1.8" stroke-linecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/></svg>',
-  user2:'<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#64748b" stroke-width="1.8" stroke-linecap="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>',
-  bag:'<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#64748b" stroke-width="1.8" stroke-linecap="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>',
-  dollar:'<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#64748b" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v12M9 9a3 3 0 0 1 3-3 3 3 0 0 1 3 3 3 3 0 0 1-3 3 3 3 0 0 0-3 3 3 3 0 0 0 3 3"/></svg>'
-};
-
-/* colored icon box helper */
-function cbox(svg,color,bg,sz){
-  sz=sz||'34px';
-  return '<div style="width:'+sz+';height:'+sz+';border-radius:9px;background:'+bg+';display:flex;align-items:center;justify-content:center;color:'+color+';flex-shrink:0;">'+svg+'</div>';
-}
-
-/* dark navy card section header */
-function secHead(ico,title){
-  return '<div style="display:flex;align-items:center;gap:10px;background:#0f3460;padding:10px 16px;">'
-    +'<span style="color:#fff;display:flex;align-items:center;">'+ico+'</span>'
-    +'<span style="color:#fff;font-size:12px;font-weight:700;letter-spacing:.3px;">'+title+'</span>'
-    +'</div>';
-}
-
-function buildRsHtml(data,companyName,logoUri){
-  var H=[];function h(s){H.push(s);}
-  var e=function(str){ return (str||'').toString().replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); };
-  var mp=Math.max(0,Math.min(100,data.match||0));
-  var mc=mp>=70?'#16a34a':mp>=40?'#ea580c':'#dc2626';
-  var ml=mp>=90?'Excellent Match':mp>=70?'Strong Match':mp>=40?'Moderate Match':'Low Match';
-  var init=(data.name||'').split(' ').filter(Boolean).map(function(w){return(w[0]||'').toUpperCase();}).slice(0,2).join('')||'DR';
-
-  var summary = data.careerSummary || data.summary || 'Experienced candidate with solid technical foundation and relevant hands-on experience in building scalable solutions. Strong problem-solving skills and a proven track record of delivering quality results.';
-
-  h('<div style="width:800px;font-family:\'Poppins\',sans-serif;background:#ffffff;padding:28px;box-sizing:border-box;color:#111827;line-height:1.5;">');
-
-  /* 1. HEADER */
-  h('<div style="display:flex;justify-content:space-between;align-items:center;padding-bottom:12px;border-bottom:1px solid #e5e7eb;margin-bottom:12px;">');
-  h('  <div style="display:flex;align-items:center;gap:10px;">');
-  if(logoUri){
-    h('    <img src="'+logoUri+'" style="height:36px;object-fit:contain;" alt="Logo">');
-  } else {
-    h('    <div style="font-size:22px;font-weight:700;color:#2563eb;">JERO<span style="background:#2563eb;color:#fff;font-size:10px;padding:2px 4px;border-radius:3px;margin-left:2px;">AI</span></div>');
-  }
-  h('    <div style="font-size:10px;font-weight:600;color:#6b7280;letter-spacing:0.5px;">RECRUITMENT INTELLIGENCE</div>');
-  h('  </div>');
-  h('  <div style="text-align:center;">');
-  h('    <div style="font-size:20px;font-weight:700;color:#111827;letter-spacing:-0.3px;">PRE-SCREENED CANDIDATE REPORT</div>');
-  h('    <div style="font-size:11px;color:#6b7280;margin-top:2px;">AI Powered &nbsp;|&nbsp; Intelligent &nbsp;|&nbsp; Data Driven</div>');
-  h('  </div>');
-  h('  <div>');
-  h('    <div style="background:#f0fdf4;border:1px solid #bbf7d0;color:#16a34a;font-size:11px;font-weight:600;padding:4px 10px;border-radius:6px;display:inline-block;">CONFIDENTIAL</div>');
-  h('  </div>');
-  h('</div>');
-
-  /* METADATA STRIP */
-  h('<div style="display:flex;justify-content:space-between;background:#ffffff;border:1px solid #e5e7eb;border-radius:8px;padding:8px 16px;margin-bottom:18px;font-size:11px;">');
-  h('  <div style="text-align:center;"><span style="color:#6b7280;">Report ID</span><br><strong style="font-size:13px;color:#111827;">'+e(data.reportId||'JR202507001234')+'</strong></div>');
-  h('  <div style="width:1px;background:#e5e7eb;"></div>');
-  h('  <div style="text-align:center;"><span style="color:#6b7280;">Report Date</span><br><strong style="font-size:13px;color:#111827;">'+e(data.dateStr||'06 July 2025')+'</strong></div>');
-  h('  <div style="width:1px;background:#e5e7eb;"></div>');
-  h('  <div style="text-align:center;"><span style="color:#6b7280;">AI Version</span><br><strong style="font-size:13px;color:#111827;">2.6.1</strong></div>');
-  h('  <div style="width:1px;background:#e5e7eb;"></div>');
-  h('  <div style="text-align:center;"><span style="color:#6b7280;">Recruiter</span><br><strong style="font-size:13px;color:#111827;">'+e(data.recruiterName||'Vibhanshu Jaiswal')+'</strong></div>');
-  h('</div>');
-
-  /* 2. CANDIDATE HERO CARD */
-  h('<div style="border:1px solid #e5e7eb;border-radius:8px;padding:18px;margin-bottom:18px;display:flex;justify-content:space-between;align-items:center;">');
-  h('  <div style="display:flex;align-items:center;gap:18px;">');
-  h('    <div style="width:90px;height:90px;border-radius:50%;background:#e0e7ff;border:3px solid #c7d2fe;display:flex;align-items:center;justify-content:center;font-size:32px;font-weight:700;color:#1e40af;">'+e(init)+'</div>');
-  h('    <div>');
-  h('      <div style="font-size:32px;font-weight:700;color:#111827;line-height:1.1;">'+e(data.name||'V Eena')+'</div>');
-  h('      <div style="font-size:18px;font-weight:600;color:#2563eb;margin-top:2px;margin-bottom:8px;">'+e(data.designation||data.role||'Full Stack Developer')+'</div>');
-  h('      <div style="font-size:13px;color:#6b7280;display:flex;flex-direction:column;gap:4px;">');
-  h('        <div>💼 &nbsp;'+e(data.experience||'6.2 Years')+'</div>');
-  h('        <div>🏢 &nbsp;'+e(data.company||'4Bell Technology')+'</div>');
-  h('        <div>📍 &nbsp;'+e(data.location||'Hyderabad')+'</div>');
-  h('      </div>');
-  h('    </div>');
-  h('  </div>');
-  h('  <div style="width:1px;height:100px;background:#e5e7eb;"></div>');
-  h('  <div style="text-align:center;min-width:180px;">');
-  h('    <div style="font-size:11px;font-weight:600;color:#6b7280;letter-spacing:0.5px;margin-bottom:4px;">OVERALL MATCH</div>');
-  h('    <div style="font-size:36px;font-weight:700;color:#ea580c;">'+mp+'%</div>');
-  h('    <div style="color:#f97316;font-size:16px;margin-bottom:4px;">★★3.5</div>');
-  h('    <div style="font-size:13px;font-weight:600;color:#f97316;margin-bottom:8px;">'+e(ml)+'</div>');
-  h('    <div style="background:#fff7ed;border:1px solid #ffedd5;color:#c2410c;font-size:11px;font-weight:700;padding:3px 10px;border-radius:6px;display:inline-block;">PRIORITY : HIGH</div>');
-  h('  </div>');
-  h('</div>');
-
-  /* 3. QUICK INFO CARDS */
-  h('<div style="display:grid;grid-template-columns:repeat(5, 1fr);gap:12px;margin-bottom:18px;">');
-  var quickList = [
-    {lbl:'Preferred Role', val:data.preferredRole||data.designation||'Full Stack Developer', icon:'👤'},
-    {lbl:'Highest Education', val:data.education||'B.Tech', icon:'🎓'},
-    {lbl:'Notice Period', val:data.notice||'Immediate', icon:'🔔'},
-    {lbl:'Location', val:data.location||'Hyderabad', icon:'📍'},
-    {lbl:'Work Mode', val:data.workMode||'Remote / Hybrid', icon:'💻'}
-  ];
-  quickList.forEach(function(q){
-    h('  <div style="border:1px solid #e5e7eb;border-radius:8px;padding:14px 10px;text-align:center;">');
-    h('    <div style="width:32px;height:32px;border-radius:50%;background:#eff6ff;color:#2563eb;display:flex;align-items:center;justify-content:center;margin:0 auto 6px;font-size:14px;">'+q.icon+'</div>');
-    h('    <div style="font-size:11px;color:#6b7280;margin-bottom:4px;">'+e(q.lbl)+'</div>');
-    h('    <div style="font-size:13px;font-weight:600;color:#111827;">'+e(q.val)+'</div>');
-    h('  </div>');
-  });
-  h('</div>');
-
-  /* 4. SKILLS INTELLIGENCE */
-  h('<div style="border:1px solid #e5e7eb;border-radius:8px;padding:18px;margin-bottom:18px;">');
-  h('  <div style="font-size:17px;font-weight:600;color:#2563eb;margin-bottom:12px;">SKILLS INTELLIGENCE</div>');
-  h('  <table style="width:100%;border-collapse:collapse;font-size:13px;">');
-  h('    <thead>');
-  h('      <tr style="border-bottom:1px solid #e5e7eb;text-align:left;">');
-  h('        <th style="padding:8px 0;color:#2563eb;font-weight:600;">Skill</th>');
-  h('        <th style="padding:8px 0;color:#2563eb;font-weight:600;">Experience</th>');
-  h('        <th style="padding:8px 0;color:#2563eb;font-weight:600;text-align:center;">Rating</th>');
-  h('        <th style="padding:8px 0;color:#2563eb;font-weight:600;text-align:center;">Status</th>');
-  h('      </tr>');
-  h('    </thead>');
-  h('    <tbody>');
-  var sks = (data.skills && data.skills.length) ? data.skills.slice(0, 6) : [
-    {name:'Python', exp:5, rating:5},
-    {name:'React', exp:4, rating:4},
-    {name:'Git', exp:6, rating:5},
-    {name:'SQL', exp:5, rating:5}
-  ];
-  sks.forEach(function(sk){
-    var stars = '★★★★★'.substring(0, sk.rating || 4) + '☆☆☆☆☆'.substring(0, 5 - (sk.rating || 4));
-    h('      <tr style="border-bottom:1px solid #f3f4f6;">');
-    h('        <td style="padding:10px 0;font-weight:500;color:#111827;">'+e(sk.name)+'</td>');
-    h('        <td style="padding:10px 0;color:#6b7280;">'+(sk.exp?sk.exp+' Years':'1 Year')+'</td>');
-    h('        <td style="padding:10px 0;text-align:center;color:#f97316;font-size:14px;">'+stars+'</td>');
-    h('        <td style="padding:10px 0;text-align:center;color:#16a34a;font-size:16px;">✔</td>');
-    h('      </tr>');
-  });
-  h('    </tbody>');
-  h('  </table>');
-  h('</div>');
-
-  /* 5. SUMMARY & RECRUITER COMMENTS SPLIT */
-  h('<div style="display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:18px;">');
-  h('  <div style="border:1px solid #e5e7eb;border-radius:8px;padding:18px;">');
-  h('    <div style="font-size:17px;font-weight:600;color:#2563eb;margin-bottom:8px;">📄 PROFESSIONAL SUMMARY</div>');
-  h('    <div style="font-size:13px;color:#111827;line-height:1.5;">'+e(summary)+'</div>');
-  h('  </div>');
-  h('  <div style="border:1px solid #e5e7eb;border-radius:8px;padding:18px;">');
-  h('    <div style="font-size:17px;font-weight:600;color:#2563eb;margin-bottom:8px;">💬 RECRUITER COMMENTS</div>');
-  h('    <div style="font-size:13px;color:#111827;line-height:1.5;margin-bottom:12px;">'+e(data.recruiterNote||'Good technical background with relevant experience in full stack development. Communication skills are good and demonstrated strong analytical thinking during interaction. Recommended to proceed to technical interview round.')+'</div>');
-  h('    <div style="border-top:1px solid #e5e7eb;padding-top:8px;display:flex;justify-content:space-between;font-size:11px;color:#6b7280;">');
-  h('      <div><strong>Recruiter</strong> &nbsp;'+e(data.recruiterName||'Vibhanshu Jaiswal')+'</div>');
-  h('      <div><strong>Date</strong> &nbsp;'+e(data.dateStr||'06 July 2025')+'</div>');
-  h('    </div>');
-  h('  </div>');
-  h('</div>');
-
-  /* 6. VERIFICATION STATUS */
-  h('<div style="border:1px solid #e5e7eb;border-radius:8px;padding:14px 18px;margin-bottom:18px;">');
-  h('  <div style="font-size:17px;font-weight:600;color:#2563eb;margin-bottom:10px;">VERIFICATION STATUS</div>');
-  h('  <div style="display:grid;grid-template-columns:repeat(3, 1fr);gap:10px;font-size:12px;">');
-  h('    <div style="color:#16a34a;font-weight:500;">✔ Resume Verified</div>');
-  h('    <div style="color:#f97316;font-weight:500;">🕒 Documents Pending</div>');
-  h('    <div style="color:#16a34a;font-weight:500;">✔ Education Verified</div>');
-  h('    <div style="color:#16a34a;font-weight:500;">✔ Email Verified</div>');
-  h('    <div style="color:#f97316;font-weight:500;">🕒 Identity Pending</div>');
-  h('    <div style="color:#16a34a;font-weight:500;">✔ Experience Verified</div>');
-  h('  </div>');
-  h('</div>');
-
-  /* 7. RECOMMENDATION BANNER */
-  h('<div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:14px 18px;margin-bottom:18px;display:flex;justify-content:space-between;align-items:center;">');
-  h('  <div style="display:flex;align-items:center;gap:10px;">');
-  h('    <div style="width:32px;height:32px;border-radius:50%;background:#16a34a;color:#fff;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;">✔</div>');
-  h('    <div style="font-size:15px;font-weight:700;color:#16a34a;">RECOMMENDED FOR INTERVIEW</div>');
-  h('  </div>');
-  h('  <div style="text-align:center;"><div style="font-size:11px;color:#6b7280;">Overall Confidence</div><div style="font-size:15px;font-weight:700;color:#16a34a;">96%</div></div>');
-  h('  <div style="text-align:center;"><div style="font-size:11px;color:#6b7280;">Recommended Round</div><div style="font-size:15px;font-weight:700;color:#16a34a;">Technical L1</div></div>');
-  h('  <div style="text-align:center;"><div style="font-size:11px;color:#6b7280;">Priority</div><div style="font-size:15px;font-weight:700;color:#16a34a;">HIGH</div></div>');
-  h('  <div style="text-align:center;"><div style="font-size:11px;color:#6b7280;">Expected Joining</div><div style="font-size:15px;font-weight:700;color:#16a34a;">Immediate</div></div>');
-  h('</div>');
-
-  /* 8. FOOTER */
-  h('<div style="display:flex;justify-content:space-between;align-items:center;font-size:10px;color:#6b7280;padding-top:10px;border-top:1px solid #e5e7eb;">');
-  h('  <div>Generated using <strong style="color:#2563eb;">Jero AI</strong> Recruitment Intelligence</div>');
-  h('  <div>🌐 &nbsp;www.jero.works</div>');
-  h('  <div>© 2026 Jero. All rights reserved.</div>');
-  h('</div>');
-
-  h('</div>');
-  return H.join('');
-}
-
-async function buildRecruiterSummary(){
-  window.__rsBusy=true;
-  var container=null;
-  try{
-    var _ls=function(src){return new Promise(function(res,rej){var s=document.createElement('script');s.src=src;s.async=true;s.onload=res;s.onerror=function(){rej(new Error('Load failed: '+src));};document.head.appendChild(s);});};
-    if(!(window.jspdf&&window.jspdf.jsPDF)) await _ls('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js');
-    if(!window.html2canvas) await _ls('https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js');
-    
-    var logoUri=null;
-    if(window.__rcvLogo&&window.__rcvLogo.__dataUri){ logoUri=window.__rcvLogo.__dataUri; }
-    
-    var rsEl=document.getElementById('rsData');
-    if(!rsEl) throw new Error('rsData not found');
-    var g=function(k){return rsEl.getAttribute(k)||'';};
-    var gj=function(k){try{return JSON.parse(rsEl.getAttribute(k)||'[]');}catch(ex){return[];}};
-    var data={
-      name:g('data-name')||'Candidate',designation:g('data-designation'),company:g('data-company'),
-      location:g('data-location'),experience:g('data-experience'),notice:g('data-notice'),
-      education:g('data-education'),workMode:g('data-work-mode'),match:parseInt(g('data-match'))||0,
-      isImmediate:g('data-is-immediate')==='1',recruiterNote:g('data-recruiter-note'),
-      careerSummary:g('data-career-summary'),skills:gj('data-skills'),validation:gj('data-validation')
+var rsPdfReady=null;
+var rsPdfLibReady=null;
+var rsPdfJsReady=null;
+var rsJsZipReady=null;
+var rsDocxReady=null;
+var rsHtml2CanvasReady=null;
+var rsJsPdfReady=null;
+var rsOpenDocLocalReady=null;
+var rsOpenDocExternalReady=null;
+var rsLogoCache={};
+var rsDocxMaxBytes=10*1024*1024;
+var rsPdfMaxBytes=30*1024*1024;
+var rsAtsHighlightKeywords=@json($rcvJobSkills ?? []);
+var rsDrawerMatchedKeywords=@json($__hdrMatchedSkillNames ?? []);
+var rsStarGold='<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path fill="#f59e0b" d="M12 2.6l2.85 5.78 6.38.93-4.62 4.5 1.09 6.35L12 17.16l-5.7 3 1.09-6.35-4.62-4.5 6.38-.93L12 2.6z"/></svg>';
+var rsStarMuted='<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path fill="#cbd5e1" d="M12 2.6l2.85 5.78 6.38.93-4.62 4.5 1.09 6.35L12 17.16l-5.7 3 1.09-6.35-4.62-4.5 6.38-.93L12 2.6z"/></svg>';
+var rsIconUser='<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path fill="#64748b" d="M12 12a5 5 0 1 0-5-5 5 5 0 0 0 5 5zm0 2c-4.42 0-8 2.24-8 5v1h16v-1c0-2.76-3.58-5-8-5z"/></svg>';
+var rsIconCalendar='<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path fill="#2563eb" d="M7 2h2v2h6V2h2v2h2a2 2 0 0 1 2 2v13a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2V2zm12 8H5v9h14v-9z"/></svg>';
+var rsIconBriefcase='<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path fill="#2563eb" d="M9 6V5a3 3 0 0 1 6 0v1h4a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4zm2 0h2V5a1 1 0 0 0-2 0v1z"/></svg>';
+var rsIconExperience='<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path fill="#64748b" d="M12 2l2.2 4.5 5 .7-3.6 3.5.8 5-4.4-2.4-4.4 2.4.8-5L4.8 7.2l5-.7L12 2zm-6 17h12v2H6v-2z"/></svg>';
+var rsIconClock='<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path fill="#64748b" d="M12 2a10 10 0 1 0 10 10A10.01 10.01 0 0 0 12 2zm1 11h5v-2h-4V6h-2v7z"/></svg>';
+var rsIconCompany='<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path fill="#64748b" d="M4 21V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v17h3v-9h-2v-2h3a1 1 0 0 1 1 1v10H4zm4-14h2V5H8v2zm4 0h2V5h-2v2zm-4 4h2V9H8v2zm4 0h2V9h-2v2zm-4 4h2v-2H8v2zm4 0h2v-2h-2v2z"/></svg>';
+var rsIconEducation='<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path fill="#2563eb" d="M12 3L1.5 8.5 12 14l8-4.2V16h2V8.5L12 3zm-6 9.1V16c0 1.7 2.7 4 6 4s6-2.3 6-4v-3.9L12 15.2l-6-3.1z"/></svg>';
+var rsIconLocation='<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path fill="#2563eb" d="M12 2a7 7 0 0 0-7 7c0 5.2 7 13 7 13s7-7.8 7-13a7 7 0 0 0-7-7zm0 9.5A2.5 2.5 0 1 1 12 6a2.5 2.5 0 0 1 0 5.5z"/></svg>';
+var rsIconLaptop='<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path fill="#2563eb" d="M4 4h16a2 2 0 0 1 2 2v10H2V6a2 2 0 0 1 2-2zm0 2v8h16V6H4zm-2 12h20v2H2v-2z"/></svg>';
+var rsIconSummary='<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path fill="#2563eb" d="M5 3h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2zm3 5h8V6H8v2zm0 5h8v-2H8v2zm0 5h5v-2H8v2z"/></svg>';
+var rsIconNote='<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path fill="#2563eb" d="M4 4a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H9l-5 5V4zm4 4v2h8V8H8zm0 4v2h6v-2H8z"/></svg>';
+var rsIconSkill='<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path fill="#2563eb" d="M12 2l2.4 5.4 5.9.6-4.4 3.9 1.3 5.8-5.2-3-5.2 3 1.3-5.8L3.7 8l5.9-.6L12 2z"/></svg>';
+var rsIconShield='<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path fill="#2563eb" d="M12 2l8 3v6c0 5-3.4 9.6-8 11-4.6-1.4-8-6-8-11V5l8-3zm-1 13.2l6-6-1.4-1.4L11 12.4 8.4 9.8 7 11.2l4 4z"/></svg>';
+var rsIconResume='<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path fill="#2563eb" d="M6 2h8l5 5v15H6V2zm7 1.8V8h4.2L13 3.8zM8 12h8v-1.7H8V12zm0 4h8v-1.7H8V16zm0 4h6v-1.7H8V20z"/></svg>';
+var rsIconEmail='<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path fill="#2563eb" d="M4 5h16a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2zm8 7.2L4.7 7H4v.7l8 5.7 8-5.7V7h-.7L12 12.2z"/></svg>';
+var rsIconPhone='<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path fill="#2563eb" d="M7.2 2.8l3 3a2 2 0 0 1 .4 2.2l-.9 2.1a13.5 13.5 0 0 0 4.2 4.2l2.1-.9a2 2 0 0 1 2.2.4l3 3a2 2 0 0 1 0 2.8l-1.4 1.4c-.8.8-2 .9-3 .5A25.2 25.2 0 0 1 2.5 7.2c-.4-1-.3-2.2.5-3l1.4-1.4a2 2 0 0 1 2.8 0z"/></svg>';
+var rsIconLinkedin='<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path fill="#2563eb" d="M5 3h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2zm3.4 15V9.6H6V18h2.4zM7.2 8.5a1.4 1.4 0 1 0 0-2.8 1.4 1.4 0 0 0 0 2.8zM18 18v-4.8c0-2.5-1.3-3.8-3.2-3.8-1.4 0-2.1.8-2.5 1.4V9.6H10V18h2.4v-4.2c0-1.1.2-2.2 1.6-2.2s1.5 1.3 1.5 2.3V18H18z"/></svg>';
+var rsIconJobDescription='<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path fill="#2563eb" d="M8 2h8a2 2 0 0 1 2 2v2h2v16H4V6h2V4a2 2 0 0 1 2-2zm0 4h8V4H8v2zm-1 6h10v-1.8H7V12zm0 4h10v-1.8H7V16zm0 4h7v-1.8H7V20z"/></svg>';
+function rsLoadScript(src){
+  return new Promise(function(resolve,reject){
+    var existing=document.querySelector('script[src="'+src+'"]');
+    if(existing && existing.getAttribute('data-ready')==='1'){ resolve(); return; }
+    var s=existing||document.createElement('script');
+    var done=false;
+    var finish=function(ok){
+      if(done) return;
+      done=true;
+      if(ok){
+        s.setAttribute('data-ready','1');
+        resolve();
+      }else{
+        reject(new Error('Load failed: '+src));
+      }
     };
-    var wrap2=document.querySelector('#resume_cv .rcv-wrap');
-    var cn=(wrap2&&wrap2.getAttribute('data-company'))||data.company||'Company';
-    
-    container=document.createElement('div');
-    container.style.cssText='position:fixed;left:-9999px;top:0;z-index:0;pointer-events:none;overflow:hidden;';
-    container.innerHTML=buildRsHtml(data,cn,logoUri);
-    document.body.appendChild(container);
-    var el=container.firstElementChild;
-    var cvs=await window.html2canvas(el,{scale:2,useCORS:false,allowTaint:false,logging:false,backgroundColor:'#ffffff',imageTimeout:15000});
-    var JsPDF=window.jspdf.jsPDF;
-    var pw=el.offsetWidth||800,ph=el.offsetHeight||1131;
-    var pdf=new JsPDF({orientation:'p',unit:'px',format:[pw,ph]});
-    pdf.addImage(cvs.toDataURL('image/jpeg',0.95),'JPEG',0,0,pw,ph,undefined,'FAST');
-    pdf.save('recruiter_summary_'+(data.name.replace(/[^a-z0-9]/gi,'_').toLowerCase()||'candidate')+'.pdf');
+    s.src=src; s.async=true;
+    s.onload=function(){ finish(true); };
+    s.onerror=function(){ finish(false); };
+    if(!existing) document.head.appendChild(s);
+    if(existing) setTimeout(function(){ finish(true); },100);
+    setTimeout(function(){ finish(false); },8000);
+  });
+}
+function rsTryList(list,index,test){
+  if(index>=list.length) return Promise.reject(new Error('Could not load Recruiter Summary PDF engine'));
+  if(test()) return Promise.resolve();
+  return rsLoadScript(list[index]).then(function(){
+    return test()?Promise.resolve():Promise.reject(new Error('Loaded script but PDF engine missing'));
+  }).catch(function(){ return rsTryList(list,index+1,test); });
+}
+function rsEnsurePdfMake(){
+  if(rsPdfReady && window.pdfMake && window.pdfMake.vfs && window.pdfMake.vfs['Roboto-Regular.ttf']) return rsPdfReady;
+  var core=['/js/pdfmake.min.js','https://cdn.jsdelivr.net/npm/pdfmake@0.2.7/build/pdfmake.min.js'];
+  var vfs=['/js/vfs_fonts.min.js','https://cdn.jsdelivr.net/npm/pdfmake@0.2.7/build/vfs_fonts.min.js'];
+  rsPdfReady=rsTryList(core,0,function(){ return !!window.pdfMake; })
+    .then(function(){ return rsTryList(vfs,0,function(){ return !!(window.pdfMake.vfs && window.pdfMake.vfs['Roboto-Regular.ttf']); }); })
+    .then(function(){
+      window.pdfMake.fonts={Roboto:{normal:'Roboto-Regular.ttf',bold:'Roboto-Medium.ttf',italics:'Roboto-Italic.ttf',bolditalics:'Roboto-MediumItalic.ttf'}};
+    });
+  return rsPdfReady;
+}
+function rsEnsurePdfLib(){
+  if(rsPdfLibReady && window.PDFLib && window.PDFLib.PDFDocument) return rsPdfLibReady;
+  var sources=['/js/pdf-lib.min.js','https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js'];
+  rsPdfLibReady=rsTryList(sources,0,function(){ return !!(window.PDFLib && window.PDFLib.PDFDocument); });
+  return rsPdfLibReady;
+}
+function rsEnsureJsZip(){
+  if(rsJsZipReady && window.JSZip) return rsJsZipReady;
+  var sources=['/js/jszip.min.js','https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js'];
+  rsJsZipReady=rsTryList(sources,0,function(){ return !!window.JSZip; });
+  return rsJsZipReady;
+}
+function rsEnsureDocxPreview(){
+  if(rsDocxReady && window.docx && typeof window.docx.renderAsync==='function') return rsDocxReady;
+  var sources=['/js/docx-preview.min.js','https://cdn.jsdelivr.net/npm/docx-preview@0.3.7/dist/docx-preview.min.js'];
+  rsDocxReady=rsEnsureJsZip().then(function(){
+    return rsTryList(sources,0,function(){ return !!(window.docx && typeof window.docx.renderAsync==='function'); });
+  });
+  return rsDocxReady;
+}
+function rsEnsureHtml2Canvas(){
+  if(rsHtml2CanvasReady && typeof window.html2canvas==='function') return rsHtml2CanvasReady;
+  var sources=['/js/html2canvas.min.js','https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js'];
+  rsHtml2CanvasReady=rsTryList(sources,0,function(){ return typeof window.html2canvas==='function'; });
+  return rsHtml2CanvasReady;
+}
+function rsEnsureJsPdf(){
+  if(rsJsPdfReady && window.jspdf && typeof window.jspdf.jsPDF==='function') return rsJsPdfReady;
+  var sources=['/js/jspdf.umd.min.js','https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js'];
+  rsJsPdfReady=rsTryList(sources,0,function(){ return !!(window.jspdf && typeof window.jspdf.jsPDF==='function'); });
+  return rsJsPdfReady;
+}
+function rsEnsurePdfJs(){
+  if(rsPdfJsReady && window.pdfjsLib && typeof window.pdfjsLib.getDocument==='function') return rsPdfJsReady;
+  var sources=['https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.11.338/pdf.min.js'];
+  rsPdfJsReady=rsTryList(sources,0,function(){ return !!(window.pdfjsLib && typeof window.pdfjsLib.getDocument==='function'); }).then(function(){
+    try{
+      var ver=window.pdfjsLib.version || '2.11.338';
+      window.pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/'+ver+'/pdf.worker.min.js';
+    }catch(err){}
+  });
+  return rsPdfJsReady;
+}
+function rsEnsureDocxConversion(){
+  return Promise.all([rsEnsureDocxPreview(),rsEnsureHtml2Canvas(),rsEnsureJsPdf()]);
+}
+function rsLogoDataUri(rawUrl){
+  rawUrl=clean(rawUrl,'');
+  if(!rawUrl || rawUrl==='--') return Promise.resolve(null);
+  if(/^data:image\//i.test(rawUrl)) return Promise.resolve(rawUrl);
+  if(rsLogoCache[rawUrl]) return rsLogoCache[rawUrl];
+  rsLogoCache[rawUrl]=fetch(rawUrl,{credentials:'include',cache:'force-cache'})
+    .then(function(response){ return response.ok ? response.blob() : null; })
+    .then(function(blob){
+      if(!blob) return null;
+      return new Promise(function(resolve){
+        var reader=new FileReader();
+        reader.onload=function(){ resolve(reader.result); };
+        reader.onerror=function(){ resolve(null); };
+        reader.readAsDataURL(blob);
+      });
+    })
+    .catch(function(){ return null; });
+  return rsLogoCache[rawUrl];
+}
+function preloadRecruiterSummaryAssets(){
+  var data=null;
+  try{ data=readData(); }catch(ex){}
+  var tasks=[rsEnsurePdfMake()];
+  if(data && clean(data.reportCompanyLogo,'') && clean(data.reportCompanyLogo,'')!=='--'){
+    tasks.push(rsLogoDataUri(data.reportCompanyLogo));
+  }
+  return Promise.all(tasks).catch(function(err){
+    console.warn('Recruiter Summary preload skipped:',err);
+    return null;
+  });
+}
+function preloadCombinedReportAssets(){
+  var ext='';
+  var dataEl=document.getElementById('rdcData');
+  if(dataEl) ext=(dataEl.getAttribute('data-file-ext')||'').toUpperCase();
+  var tasks=[preloadRecruiterSummaryAssets(),rsEnsurePdfLib()];
+  return Promise.all(tasks).catch(function(err){
+    console.warn('Combined Pre-Screened Report preload skipped:',err);
+    return null;
+  });
+}
+function preloadBrowserDocxConversionAssets(){
+  return rsEnsureDocxConversion().catch(function(err){
+    console.warn('Browser DOCX conversion preload skipped:',err);
+    return null;
+  });
+}
+function rsEnsureOpenDocLab(allowExternalFallback){
+  allowExternalFallback=allowExternalFallback===true;
+  if(rsOpenDocLocalReady) return rsOpenDocLocalReady;
+  var openDocSources=[
+    {
+      label:'Cloudflare OpenDoc runtime',
+      moduleUrl:'https://file.jero.works/js/opendoc/casual_doc_wasm.js?v=opendoc-20260903',
+      wasmUrl:'https://file.jero.works/js/opendoc/casual_doc_wasm_bg.wasm?v=opendoc-20260903'
+    },
+    {
+      label:'Local OpenDoc runtime',
+      moduleUrl:'/js/opendoc/casual_doc_wasm.js',
+      wasmUrl:'/js/opendoc/casual_doc_wasm_bg.wasm'
+    }
+  ];
+  async function loadOpenDocModule(moduleUrl,wasmUrl){
+    var blobUrl='';
+    var module=null;
+    try{
+      module=await import(moduleUrl);
+    }catch(importErr){
+      var moduleResponse=null;
+      try{
+        moduleResponse=await fetch(moduleUrl,{mode:'cors',cache:'force-cache'});
+      }catch(moduleFetchErr){
+        throw new Error('OpenDoc module fetch failed for '+moduleUrl+': '+(moduleFetchErr && moduleFetchErr.message ? moduleFetchErr.message : 'network blocked'));
+      }
+      if(!moduleResponse.ok) throw new Error('OpenDoc module request failed with HTTP '+moduleResponse.status);
+      var moduleCode=await moduleResponse.text();
+      moduleCode=moduleCode.replace(/new URL\(['"]casual_doc_wasm_bg\.wasm['"],\s*import\.meta\.url\)/g, JSON.stringify(wasmUrl));
+      blobUrl=URL.createObjectURL(new Blob([moduleCode],{type:'application/javascript'}));
+      module=await import(blobUrl);
+    }
+    if(typeof module.default==='function'){
+      var wasmResponse=null;
+      try{
+        wasmResponse=await fetch(wasmUrl,{mode:'cors',cache:'force-cache'});
+      }catch(wasmFetchErr){
+        throw new Error('OpenDoc WASM fetch failed for '+wasmUrl+': '+(wasmFetchErr && wasmFetchErr.message ? wasmFetchErr.message : 'network blocked'));
+      }
+      if(!wasmResponse.ok) throw new Error('OpenDoc WASM request failed with HTTP '+wasmResponse.status);
+      await module.default({module_or_path:await wasmResponse.arrayBuffer()});
+    }
+    if(blobUrl) setTimeout(function(){ URL.revokeObjectURL(blobUrl); }, 30000);
+    if(typeof module.open!=='function') throw new Error('OpenDoc open API missing');
+    return module;
+  }
+  rsOpenDocLocalReady=(async function(){
+    var lastErr=null;
+    for(var i=0;i<openDocSources.length;i++){
+      try{
+        return await loadOpenDocModule(openDocSources[i].moduleUrl,openDocSources[i].wasmUrl);
+      }catch(err){
+        lastErr=err;
+        console.warn(openDocSources[i].label+' unavailable:',err);
+      }
+    }
+    if(allowExternalFallback){
+      if(!rsOpenDocExternalReady){
+        rsOpenDocExternalReady=loadOpenDocModule('https://opendoc.casualoffice.org/pkg/casual_doc_wasm.js','https://opendoc.casualoffice.org/pkg/casual_doc_wasm_bg.wasm')
+          .catch(function(err){
+            rsOpenDocExternalReady=null;
+            throw err;
+          });
+      }
+      return rsOpenDocExternalReady;
+    }
+    throw (lastErr || new Error('OpenDoc runtime unavailable'));
+  })().catch(function(err){
+    rsOpenDocLocalReady=null;
+    throw err;
+  });
+  return rsOpenDocLocalReady;
+}
+function preloadOpenDocLabAssets(){
+  return rsEnsureOpenDocLab(true).catch(function(err){
+    console.warn('OpenDoc lab preload skipped:',err);
+    return null;
+  });
+}
+function preloadOpenDocLocalAssets(){
+  return rsEnsureOpenDocLab(false).catch(function(err){
+    console.warn('Local OpenDoc preload skipped:',err);
+    return null;
+  });
+}
+function downloadBlob(blob,fileName){
+  var url=URL.createObjectURL(blob);
+  var a=document.createElement('a');
+  a.href=url;
+  a.download=fileName;
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(function(){
+    URL.revokeObjectURL(url);
+    if(a.parentNode) a.parentNode.removeChild(a);
+  },1200);
+}
+function removeNode(node){
+  if(node && node.parentNode) node.parentNode.removeChild(node);
+}
+function waitForRenderedAssets(root){
+  var waits=[];
+  if(document.fonts && document.fonts.ready) waits.push(document.fonts.ready.catch(function(){ return null; }));
+  Array.prototype.slice.call(root.querySelectorAll('img')).forEach(function(img){
+    if(img.complete) return;
+    waits.push(new Promise(function(resolve){
+      img.onload=resolve;
+      img.onerror=resolve;
+      setTimeout(resolve,2500);
+    }));
+  });
+  return Promise.all(waits).then(function(){
+    return new Promise(function(resolve){ requestAnimationFrame(function(){ requestAnimationFrame(resolve); }); });
+  });
+}
+function xmlTextContent(node){
+  if(!node) return '';
+  var parts=[];
+  Array.prototype.slice.call(node.childNodes||[]).forEach(function(child){
+    if(child.nodeType===3){
+      parts.push(child.nodeValue||'');
+    }else if(child.nodeType===1){
+      var name=(child.localName||child.nodeName||'').toLowerCase();
+      if(name==='tab') parts.push(' ');
+      else if(name==='br'||name==='cr') parts.push('\n');
+      else parts.push(xmlTextContent(child));
+    }
+  });
+  return parts.join('').replace(/[ \t]+\n/g,'\n').replace(/\n[ \t]+/g,'\n').replace(/[ \t]{2,}/g,' ').trim();
+}
+function xmlParagraphTexts(node){
+  var paragraphs=Array.prototype.slice.call((node||{}).getElementsByTagName ? node.getElementsByTagName('*') : []).filter(function(child){
+    return (child.localName||'').toLowerCase()==='p';
+  }).map(function(p){
+    return xmlTextContent(p);
+  }).filter(function(text){
+    return !!text;
+  });
+  return paragraphs.length ? paragraphs : [xmlTextContent(node)].filter(function(text){ return !!text; });
+}
+function normalizeReadableDocxText(text){
+  return clean(text,'')
+    .replace(/\b(Contact|Phone|Email|Linkedin|LinkedIn|Education|Experience|Key Skills|Professional Summary|Professional Profile|Project|Client|Role|Environment|Description|Roles and Responsibilities)\s*:/g,'$1: ')
+    .replace(/([.;])(?=[A-Z][a-z])/g,'$1 ')
+    .replace(/\s{2,}/g,' ')
+    .trim();
+}
+function escapeHtml(value){
+  return String(value==null?'':value).replace(/[&<>"']/g,function(ch){
+    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch];
+  });
+}
+function docxNodeHas(node,localName){
+  return !!Array.prototype.slice.call(node.getElementsByTagName('*')).some(function(child){
+    return (child.localName||'').toLowerCase()===localName;
+  });
+}
+function classifyDocxLine(text,index,isBold){
+  var raw=clean(text,'');
+  var compact=raw.replace(/[:\-–—\s]+$/,'');
+  var upperRatio=compact ? compact.replace(/[^A-Z]/g,'').length/Math.max(1,compact.replace(/[^A-Za-z]/g,'').length) : 0;
+  if(index===0 && raw.length<=80) return 'docx-name';
+  if(index<=2 && raw.length<=100) return 'docx-role';
+  if((isBold || upperRatio>0.7) && raw.length<=45) return 'docx-section';
+  if(/^(project|client|role|environment|description|responsibilities|roles and responsibilities|education|experience|certification|key skills)\b/i.test(raw)) return 'docx-label';
+  return 'docx-body';
+}
+function readableDocxHtmlFromXml(xmlText){
+  var parser=new DOMParser();
+  var xml=parser.parseFromString(xmlText,'application/xml');
+  if(xml.getElementsByTagName('parsererror').length) throw new Error('DOCX XML parse failed');
+  var body=Array.prototype.slice.call(xml.getElementsByTagName('*')).filter(function(node){
+    return (node.localName||'').toLowerCase()==='body';
+  })[0] || xml;
+  var blocks=[];
+  var lineIndex=0;
+  Array.prototype.slice.call(body.childNodes||[]).forEach(function(node){
+    if(node.nodeType!==1) return;
+    var name=(node.localName||'').toLowerCase();
+    if(name==='p'){
+      var text=normalizeReadableDocxText(xmlTextContent(node));
+      if(!text){
+        blocks.push('<div class="docx-space"></div>');
+        return;
+      }
+      var isBold=docxNodeHas(node,'b');
+      var cls=classifyDocxLine(text,lineIndex,isBold);
+      lineIndex++;
+      blocks.push('<p class="'+cls+'">'+escapeHtml(text).replace(/\n/g,'<br>')+'</p>');
+      }else if(name==='tbl'){
+      var rows=[];
+      Array.prototype.slice.call(node.childNodes||[]).forEach(function(row){
+        if(row.nodeType!==1 || (row.localName||'').toLowerCase()!=='tr') return;
+        var cells=[];
+        Array.prototype.slice.call(row.childNodes||[]).forEach(function(cell){
+          if(cell.nodeType!==1 || (cell.localName||'').toLowerCase()!=='tc') return;
+          var cellText=xmlParagraphTexts(cell).map(normalizeReadableDocxText).join('\n');
+          cells.push('<td>'+escapeHtml(cellText).replace(/\n/g,'<br>')+'</td>');
+        });
+        if(cells.length) rows.push('<tr>'+cells.join('')+'</tr>');
+      });
+      if(rows.length) blocks.push('<table class="docx-table">'+rows.join('')+'</table>');
+    }
+  });
+  return [
+    '<div class="rs-readable-resume">',
+    blocks.join(''),
+    '</div>'
+  ].join('');
+}
+async function renderReadableDocxResume(bytes,host){
+  await rsEnsureJsZip();
+  var zip=await window.JSZip.loadAsync(bytes);
+  var documentFile=zip.file('word/document.xml');
+  if(!documentFile) throw new Error('DOCX document.xml not found');
+  var xmlText=await documentFile.async('string');
+  host.innerHTML=[
+    '<style>',
+    '.rs-readable-resume{width:794px;min-height:1123px;background:#fff;color:#111827;font-family:Arial,Helvetica,sans-serif;font-size:14px;line-height:1.45;padding:56px 62px;box-sizing:border-box;}',
+    '.rs-readable-resume p{margin:0 0 8px 0;white-space:normal;overflow-wrap:break-word;word-break:normal;}',
+    '.rs-readable-resume .docx-name{font-size:25px;line-height:1.16;font-weight:700;text-align:center;margin-bottom:4px;color:#111827;}',
+    '.rs-readable-resume .docx-role{font-size:16px;line-height:1.28;font-weight:700;text-align:center;margin-bottom:12px;color:#1f2937;}',
+    '.rs-readable-resume .docx-section{font-size:14px;line-height:1.25;font-weight:700;text-transform:uppercase;border-top:1px solid #cbd5e1;border-bottom:1px solid #cbd5e1;background:#f8fafc;text-align:left;padding:5px 8px;margin:14px 0 8px;color:#0f172a;}',
+    '.rs-readable-resume .docx-label{font-size:14px;line-height:1.35;font-weight:700;margin-top:8px;color:#111827;}',
+    '.rs-readable-resume .docx-body{font-size:13.5px;line-height:1.48;color:#111827;}',
+    '.rs-readable-resume .docx-space{height:7px;}',
+    '.rs-readable-resume .docx-table{width:100%;border-collapse:collapse;table-layout:fixed;margin:8px 0 12px;font-size:13px;line-height:1.4;}',
+    '.rs-readable-resume .docx-table td{border:1px solid #e2e8f0;padding:6px 8px;vertical-align:top;overflow-wrap:anywhere;word-break:normal;}',
+    '</style>',
+    readableDocxHtmlFromXml(xmlText)
+  ].join('');
+  await waitForRenderedAssets(host);
+  return [host.querySelector('.rs-readable-resume')||host];
+}
+function normalizeOriginalDocxLayout(pages){
+  pages.forEach(function(page){
+    Array.prototype.slice.call(page.querySelectorAll('p,li,td,th')).forEach(function(el){
+      var cs=window.getComputedStyle(el);
+      var fs=parseFloat(cs.fontSize)||12;
+      var lh=parseFloat(cs.lineHeight);
+      if(!lh || lh<fs*1.22) el.style.lineHeight='1.32';
+      if(el.scrollHeight && el.clientHeight && el.scrollHeight>el.clientHeight+2){
+        el.style.height='auto';
+        el.style.minHeight=(el.scrollHeight+4)+'px';
+        el.style.overflow='visible';
+      }
+    });
+    for(var pass=0;pass<2;pass++){
+      Array.prototype.slice.call(page.querySelectorAll('article,td,th,body,section')).forEach(function(parent){
+        var prev=null;
+        Array.prototype.slice.call(parent.children||[]).forEach(function(child){
+          if(!child.textContent || !child.textContent.trim()) return;
+          var rect=child.getBoundingClientRect();
+          if(!rect.height) return;
+          if(prev && rect.top<prev.bottom-1){
+            var current=parseFloat(child.style.marginTop||window.getComputedStyle(child).marginTop)||0;
+            child.style.marginTop=(current+(prev.bottom-rect.top)+6)+'px';
+            rect=child.getBoundingClientRect();
+          }
+          prev=rect;
+        });
+      });
+    }
+  });
+}
+function hasDocxLayoutCollisions(pages){
+  var collisionCount=0;
+  var checked=0;
+  Array.prototype.slice.call(pages||[]).some(function(page){
+    var nodes=Array.prototype.slice.call(page.querySelectorAll('p,li,td,th,div')).filter(function(el){
+      var text=(el.textContent||'').replace(/\s+/g,' ').trim();
+      if(text.length<8) return false;
+      var rect=el.getBoundingClientRect();
+      if(!rect.width || !rect.height || rect.height<4) return false;
+      var cs=window.getComputedStyle(el);
+      if(cs.position==='absolute' && rect.height<10) return false;
+      return true;
+    }).slice(0,260);
+    for(var i=1;i<nodes.length;i++){
+      var prev=nodes[i-1].getBoundingClientRect();
+      var curr=nodes[i].getBoundingClientRect();
+      checked++;
+      var sameColumn=curr.left<prev.right-8 && curr.right>prev.left+8;
+      var verticalOverlap=curr.top<prev.bottom-3;
+      if(sameColumn && verticalOverlap){
+        collisionCount++;
+        if(collisionCount>=3) return true;
+      }
+    }
+    return false;
+  });
+  return checked>8 && collisionCount>=3;
+}
+async function renderOriginalDocxResume(bytes,host){
+  await rsEnsureDocxPreview();
+  await window.docx.renderAsync(bytes,host,null,{
+    className:'rs-docx-preview',
+    inWrapper:true,
+    ignoreWidth:false,
+    ignoreHeight:true,
+    breakPages:true,
+    renderHeaders:true,
+    renderFooters:true,
+    renderFootnotes:true,
+    renderEndnotes:true,
+    experimental:true,
+    useBase64URL:true
+  });
+  var style=document.createElement('style');
+  style.textContent=[
+    '.rs-docx-preview-wrapper{background:#fff!important;padding:0!important;display:block!important;align-items:initial!important;}',
+    '.rs-docx-preview-wrapper>section.rs-docx-preview,section.rs-docx-preview{background:#fff!important;box-shadow:none!important;margin:0 0 18px 0!important;overflow:visible!important;transform:none!important;}',
+    '.rs-docx-preview{color:#111!important;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;}',
+    '.rs-docx-preview article{overflow:visible!important;}',
+    '.rs-docx-preview p{line-height:1.32!important;min-height:1.32em!important;margin-bottom:4px!important;overflow:visible!important;}',
+    '.rs-docx-preview span{line-height:inherit!important;white-space:pre-wrap!important;overflow-wrap:break-word!important;word-break:normal!important;vertical-align:baseline!important;}',
+    '.rs-docx-preview table{border-collapse:collapse!important;table-layout:auto!important;}',
+    '.rs-docx-preview td,.rs-docx-preview th{vertical-align:top!important;line-height:1.32!important;height:auto!important;min-height:1.32em!important;overflow:visible!important;}',
+    '.rs-docx-preview img{max-width:100%;height:auto;}'
+  ].join('');
+  host.insertBefore(style,host.firstChild);
+  await waitForRenderedAssets(host);
+  var pages=Array.prototype.slice.call(host.querySelectorAll('.rs-docx-preview-wrapper > section.rs-docx-preview, section.rs-docx-preview'));
+  if(!pages.length) pages=Array.prototype.slice.call(host.querySelectorAll('.docx-wrapper > section.docx, section.docx'));
+  if(!pages.length) throw new Error('DOCX original render produced no pages');
+  normalizeOriginalDocxLayout(pages);
+  await waitForRenderedAssets(host);
+  if(hasDocxLayoutCollisions(pages)) throw new Error('DOCX original render has overlapping text');
+  return pages;
+}
+async function fetchResumeBytes(resumeUrl){
+  resumeUrl=clean(resumeUrl,'');
+  if(resumeUrl==='--') resumeUrl='';
+  if(!resumeUrl) throw new Error('Resume URL not available');
+  var fetchOptions={cache:'no-store'};
+  try{
+    var resumeOrigin=(new URL(resumeUrl,window.location.href)).origin;
+    if(resumeOrigin===window.location.origin) fetchOptions.credentials='include';
+    else fetchOptions.mode='cors';
   }catch(err){
-    console.error('Recruiter Summary error:',err);
-    alert('Could not generate the Recruiter Summary. Please try again.');
+    fetchOptions.credentials='include';
+  }
+  var response=await fetch(resumeUrl,fetchOptions);
+  if(!response.ok) throw new Error('Resume request failed with HTTP '+response.status);
+  var size=parseInt(response.headers.get('content-length')||'0',10);
+  if(size && size>rsDocxMaxBytes) throw new Error('DOCX resume is larger than the browser conversion limit');
+  var bytes=await response.arrayBuffer();
+  if(bytes.byteLength>rsDocxMaxBytes) throw new Error('DOCX resume is larger than the browser conversion limit');
+  return bytes;
+}
+async function fetchResumeBytesFromSources(resumeUrls){
+  var sources=(Array.isArray(resumeUrls) ? resumeUrls : [resumeUrls]).map(function(url){
+    return clean(url,'');
+  }).filter(function(url,index,self){
+    return url && url!=='--' && self.indexOf(url)===index;
+  });
+  if(!sources.length) throw new Error('Direct R2 resume URL not available');
+  var lastErr=null;
+  for(var i=0;i<sources.length;i++){
+    try{
+      return await fetchResumeBytes(sources[i]);
+    }catch(err){
+      lastErr=err;
+      console.warn('Direct R2 resume fetch failed:',sources[i],err);
+    }
+  }
+  throw (lastErr || new Error('Direct R2 resume fetch failed'));
+}
+async function fetchPdfBlobFromSources(resumeUrls){
+  var sources=(Array.isArray(resumeUrls) ? resumeUrls : [resumeUrls]).map(function(url){
+    return clean(url,'');
+  }).filter(function(url,index,self){
+    return url && url!=='--' && self.indexOf(url)===index;
+  });
+  if(!sources.length) throw new Error('Direct R2 PDF URL not available');
+  var lastErr=null;
+  for(var i=0;i<sources.length;i++){
+    try{
+      var response=await fetch(sources[i],{mode:'cors',cache:'no-store'});
+      if(!response.ok) throw new Error('PDF request failed with HTTP '+response.status);
+      var size=parseInt(response.headers.get('content-length')||'0',10);
+      if(size && size>rsPdfMaxBytes) throw new Error('PDF resume is larger than the browser merge limit');
+      var blob=await response.blob();
+      if(blob.size>rsPdfMaxBytes) throw new Error('PDF resume is larger than the browser merge limit');
+      return blob;
+    }catch(err){
+      lastErr=err;
+      console.warn('Direct R2 PDF fetch failed:',sources[i],err);
+    }
+  }
+  throw (lastErr || new Error('Direct R2 PDF fetch failed'));
+}
+async function convertDocxResumeToPdfBlob(resumeUrl){
+  await rsEnsureDocxConversion();
+  var bytes=await fetchResumeBytes(resumeUrl);
+  var host=document.createElement('div');
+  host.setAttribute('aria-hidden','true');
+  host.style.cssText='position:fixed;left:-12000px;top:0;width:auto;min-width:794px;min-height:1123px;background:#fff;overflow:visible;pointer-events:none;';
+  document.body.appendChild(host);
+  try{
+    var pages;
+    try{
+      pages=await renderOriginalDocxResume(bytes,host);
+    }catch(renderErr){
+      console.warn('DOCX original-format render failed, using readable fallback:',renderErr);
+      host.innerHTML='';
+      pages=await renderReadableDocxResume(bytes,host);
+    }
+    var JsPDF=window.jspdf.jsPDF;
+    var pdf=new JsPDF({orientation:'portrait',unit:'pt',format:'a4',compress:true});
+    var pageW=pdf.internal.pageSize.getWidth();
+    var pageH=pdf.internal.pageSize.getHeight();
+    for(var i=0;i<pages.length;i++){
+      var page=pages[i];
+      var rect=page.getBoundingClientRect();
+      if(!rect.width || rect.width<500 || rect.width>1100){
+        page.style.width='794px';
+      }
+      page.style.margin='0';
+      page.style.boxShadow='none';
+      page.style.background='#ffffff';
+      page.style.maxWidth='none';
+      var canvas=await window.html2canvas(page,{
+        backgroundColor:'#ffffff',
+        scale:Math.max(2.5,Math.min(3,window.devicePixelRatio||2.5)),
+        useCORS:true,
+        allowTaint:false,
+        logging:false,
+        removeContainer:true,
+        scrollX:0,
+        scrollY:0,
+        windowWidth:Math.ceil(page.scrollWidth||page.getBoundingClientRect().width||794),
+        windowHeight:Math.ceil(page.scrollHeight||page.getBoundingClientRect().height||1123)
+      });
+      var sliceHeight=Math.max(1,Math.floor(canvas.width*(pageH/pageW)));
+      var offsetY=0;
+      var isFirstSlice=true;
+      while(offsetY<canvas.height){
+        if(i>0 || !isFirstSlice) pdf.addPage('a4','portrait');
+        var currentHeight=Math.min(sliceHeight,canvas.height-offsetY);
+        var slice=document.createElement('canvas');
+        slice.width=canvas.width;
+        slice.height=currentHeight;
+        var ctx=slice.getContext('2d');
+        ctx.fillStyle='#ffffff';
+        ctx.fillRect(0,0,slice.width,slice.height);
+        ctx.drawImage(canvas,0,offsetY,canvas.width,currentHeight,0,0,canvas.width,currentHeight);
+        var img=slice.toDataURL('image/png');
+        var drawH=currentHeight*(pageW/canvas.width);
+        pdf.addImage(img,'PNG',0,0,pageW,drawH,undefined,'SLOW');
+        offsetY+=currentHeight;
+        isFirstSlice=false;
+      }
+    }
+    return pdf.output('blob');
+  }catch(err){
+    console.error('Browser DOCX resume conversion error:',err);
+    throw err;
   }finally{
-    if(container&&container.parentNode) container.parentNode.removeChild(container);
+    removeNode(host);
+  }
+}
+async function convertDocxResumeToPdfBlobFromSources(resumeUrls){
+  var sources=(Array.isArray(resumeUrls) ? resumeUrls : [resumeUrls]).map(function(url){
+    return clean(url,'');
+  }).filter(function(url,index,self){
+    return url && url!=='--' && self.indexOf(url)===index;
+  });
+  if(!sources.length) throw new Error('DOCX resume URL not available for browser fallback');
+  var lastErr=null;
+  for(var i=0;i<sources.length;i++){
+    try{
+      return await convertDocxResumeToPdfBlob(sources[i]);
+    }catch(err){
+      lastErr=err;
+      console.warn('Legacy browser DOCX conversion failed:',sources[i],err);
+    }
+  }
+  throw new Error('DOCX browser fallback failed across all resume sources. '+(lastErr && lastErr.message ? lastErr.message : ''));
+}
+function rsKeywordRegex(list){
+  var seen={};
+  var cleaned=(Array.isArray(list) ? list : []).map(function(item){
+    if(typeof item === 'string') return item.trim();
+    return clean(item && (item.skill_name || item.skill_key || item.name || item.skill),'').trim();
+  }).filter(function(value){
+    value=value.replace(/\s+/g,' ').trim();
+    var key=value.toLowerCase();
+    if(value.length<2 || seen[key]) return false;
+    seen[key]=true;
+    return true;
+  });
+  if(!cleaned.length) return null;
+  cleaned.sort(function(a,b){ return b.length-a.length; });
+  return new RegExp(cleaned.map(function(value){
+    var expanded=value.replace(/([a-z])([A-Z])/g,'$1 $2').replace(/([A-Za-z])(\d)/g,'$1 $2').replace(/(\d)([A-Za-z])/g,'$1 $2');
+    var tokens=expanded.split(/[\s\/_\-.]+/).filter(Boolean);
+    var left=/^[A-Za-z0-9]/.test(value) ? '\\b' : '';
+    var right=/[A-Za-z0-9]$/.test(value) ? '\\b' : '';
+    if(tokens.length>1){
+      return left+tokens.map(function(token){ return token.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'); }).join('[\\s\\/_\\-.]*')+right;
+    }
+    return left+value.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+right;
+  }).join('|'),'gi');
+}
+function rsDrawerHighlightedKeywords(){
+  var values=[];
+  var seen={};
+  function addKeyword(value){
+    value=(value || '').replace(/\+\d+\s*More/gi,'').replace(/\s+/g,' ').trim();
+    if(!value) return;
+    var key=value.toLowerCase();
+    if(seen[key]) return;
+    seen[key]=true;
+    values.push(value);
+  }
+  (Array.isArray(rsDrawerMatchedKeywords) ? rsDrawerMatchedKeywords : []).forEach(addKeyword);
+  Array.prototype.slice.call(document.querySelectorAll('#kt_activitiesApplication .cdr-skill-tag.cdr-skill-match:not(.cdr-skill-more), .cdr-skill-tag.cdr-skill-match:not(.cdr-skill-more)')).forEach(function(el){
+    addKeyword(el.textContent || '');
+  });
+  (Array.isArray(rsAtsHighlightKeywords) ? rsAtsHighlightKeywords : []).forEach(addKeyword);
+  return values.length ? values : rsAtsHighlightKeywords;
+}
+function rsMarkKeywordMatches(root,re){
+  if(!root || !re) return;
+  var walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,{
+    acceptNode:function(node){
+      if(!node.nodeValue || !node.nodeValue.trim()) return NodeFilter.FILTER_REJECT;
+      var parent=node.parentNode;
+      if(!parent || /^(script|style|mark)$/i.test(parent.nodeName)) return NodeFilter.FILTER_REJECT;
+      return NodeFilter.FILTER_ACCEPT;
+    }
+  });
+  var nodes=[];
+  while(walker.nextNode()) nodes.push(walker.currentNode);
+  nodes.forEach(function(node){
+    var text=node.nodeValue;
+    re.lastIndex=0;
+    if(!re.test(text)){ re.lastIndex=0; return; }
+    re.lastIndex=0;
+    var frag=document.createDocumentFragment();
+    var last=0,match;
+    while((match=re.exec(text))!==null){
+      if(match.index>last) frag.appendChild(document.createTextNode(text.slice(last,match.index)));
+      var mark=document.createElement('mark');
+      mark.className='rcv-hit rdc-smart-hit';
+      mark.textContent=match[0];
+      frag.appendChild(mark);
+      last=match.index+match[0].length;
+      if(match.index===re.lastIndex) re.lastIndex++;
+    }
+    if(last<text.length) frag.appendChild(document.createTextNode(text.slice(last)));
+    node.parentNode.replaceChild(frag,node);
+  });
+}
+function rsOption3EscRe(value){
+  return String(value==null?'':value).replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
+}
+function rsOption3KeywordsFromResumeText(resumeText){
+  var source=Array.isArray(rsAtsHighlightKeywords) ? rsAtsHighlightKeywords : [];
+  var found=[];
+  var seen={};
+  source.forEach(function(item){
+    var name=typeof item === 'string' ? item : clean(item && (item.skill_name || item.skill || item.name || item.skill_key),'');
+    name=(name || '').replace(/\s+/g,' ').trim();
+    if(!name || seen[name.toLowerCase()]) return;
+    var re=new RegExp(rsOption3EscRe(name),'gi');
+    if((resumeText || '').match(re)){
+      seen[name.toLowerCase()]=true;
+      found.push(name);
+    }
+  });
+  return found;
+}
+function rsOption3BuildRegex(activeSkills){
+  var act=(Array.isArray(activeSkills) ? activeSkills : []).filter(Boolean);
+  if(!act.length) return null;
+  var pat=act.map(rsOption3EscRe).sort(function(a,b){ return b.length-a.length; }).join('|');
+  return new RegExp('('+pat+')','gi');
+}
+function rsOption3HighlightTextLayer(textLayer,re){
+  if(!textLayer || !re) return;
+  Array.prototype.slice.call(textLayer.querySelectorAll('span')).forEach(function(sp){
+    if(sp.dataset.orig === undefined) sp.dataset.orig = sp.textContent || '';
+    var t=sp.dataset.orig;
+    re.lastIndex=0;
+    if(!re.test(t)){ sp.textContent=t; re.lastIndex=0; return; }
+    re.lastIndex=0;
+    sp.innerHTML=escapeHtml(t).replace(re,'<mark class="rcv-hit">$1</mark>');
+  });
+}
+async function buildHeadlessOption3SkillsHighlightedResume(options){
+  if(window.__rsBusy) return Promise.resolve(false);
+  window.__rsBusy=true;
+  try{
+    options=options||{};
+    var resumeSources=(Array.isArray(options.resumeUrl) ? options.resumeUrl : [options.resumeUrl||'']).map(function(url){
+      return clean(url,'');
+    }).filter(function(url,index,self){
+      return url && url!=='--' && self.indexOf(url)===index;
+    });
+    var resumeExt=clean(options.resumeExt||'','').toUpperCase();
+    var resumePdfUrl=clean(options.resumePdfUrl||'','');
+    if(['PDF','DOC','DOCX'].indexOf(resumeExt) === -1) throw new Error('Resume + Skills Highlighted is available for PDF, DOC and DOCX resumes only');
+    await Promise.all([rsEnsurePdfJs(),rsEnsureJsPdf()]);
+    var pdfBlob=null;
+    if(resumeExt==='PDF'){
+      pdfBlob=await fetchPdfBlobFromSources(resumeSources);
+    }else if(resumeExt==='DOCX'){
+      try{
+        if(!resumePdfUrl) throw new Error('Enterprise converter PDF URL not available');
+        pdfBlob=await fetchPdfResumeBlob(resumePdfUrl);
+      }catch(converterErr){
+        console.warn('Option 8 DOCX enterprise converter PDF failed; trying browser conversion fallback:',converterErr);
+        try{
+          pdfBlob=await convertResumeWithOpenDocLabBlob(resumeSources,resumeExt,false);
+        }catch(openDocErr){
+          console.warn('Option 8 DOCX OpenDoc conversion failed; trying legacy browser renderer:',openDocErr);
+          pdfBlob=await convertDocxResumeToPdfBlobFromSources(resumeSources);
+        }
+      }
+    }else{
+      if(!resumePdfUrl) throw new Error('DOC resume needs enterprise converter PDF URL');
+      pdfBlob=await fetchPdfResumeBlob(resumePdfUrl);
+    }
+    var sourceBytes=await pdfBlob.arrayBuffer();
+    var bytes=new Uint8Array(sourceBytes);
+    var sig=String.fromCharCode.apply(null,bytes.subarray(0,5));
+    if(sig.indexOf('%PDF')===-1) throw new Error('Resume source is not a valid PDF');
+    var doc=await window.pdfjsLib.getDocument({data:bytes}).promise;
+    var host=document.createElement('div');
+    host.setAttribute('aria-hidden','true');
+    host.style.cssText='position:fixed;left:-14000px;top:0;width:900px;background:#525659;pointer-events:none;z-index:-1;';
+    var style=document.createElement('style');
+    style.textContent=[
+      '.rdc-headless-rcv-page{position:relative;background:#fff;box-shadow:none;margin:0 0 14px 0;}',
+      '.rdc-headless-rcv-page canvas{display:block;}',
+      '.rdc-headless-rcv-textlayer{position:absolute;left:0;top:0;right:0;bottom:0;overflow:hidden;line-height:1;opacity:1;}',
+      '.rdc-headless-rcv-textlayer span{position:absolute;white-space:pre;color:transparent;transform-origin:0% 0%;}',
+      '.rdc-headless-rcv-textlayer mark.rcv-hit{background:rgba(251,191,36,.45);color:transparent;border-radius:2px;}'
+    ].join('');
+    host.appendChild(style);
+    document.body.appendChild(host);
+    var JsPDF=window.jspdf.jsPDF;
+    var resumeText='';
+    var pages=[];
+    try{
+      for(var p=1;p<=doc.numPages;p++){
+        var page=await doc.getPage(p);
+        var base=page.getViewport({scale:1});
+        var cssScale=Math.min(1.35,820/base.width);
+        var viewport=page.getViewport({scale:cssScale});
+        var wrap=document.createElement('div');
+        wrap.className='rdc-headless-rcv-page';
+        wrap.style.width=Math.floor(viewport.width)+'px';
+        wrap.style.height=Math.floor(viewport.height)+'px';
+        var canvas=document.createElement('canvas');
+        canvas.width=Math.floor(viewport.width);
+        canvas.height=Math.floor(viewport.height);
+        canvas.style.width=Math.floor(viewport.width)+'px';
+        canvas.style.height=Math.floor(viewport.height)+'px';
+        wrap.appendChild(canvas);
+        var tl=document.createElement('div');
+        tl.className='rdc-headless-rcv-textlayer';
+        tl.style.width=Math.floor(viewport.width)+'px';
+        tl.style.height=Math.floor(viewport.height)+'px';
+        wrap.appendChild(tl);
+        host.appendChild(wrap);
+        await page.render({canvasContext:canvas.getContext('2d',{willReadFrequently:true}),viewport:viewport}).promise;
+        var tc=await page.getTextContent();
+        resumeText += tc.items.map(function(i){ return i.str; }).join(' ') + '\n';
+        try{
+          var task=window.pdfjsLib.renderTextLayer({textContent:tc,container:tl,viewport:viewport,textDivs:[]});
+          if(task && task.promise) await task.promise;
+        }catch(textLayerErr){
+          console.warn('Headless option 3 text layer failed:',textLayerErr);
+        }
+        pages.push({page:page,wrap:wrap,viewport:viewport});
+      }
+      var activeSkills=rsOption3KeywordsFromResumeText(resumeText);
+      var re=rsOption3BuildRegex(activeSkills);
+      if(re){
+        pages.forEach(function(pageInfo){ rsOption3HighlightTextLayer(pageInfo.wrap.querySelector('.rdc-headless-rcv-textlayer'),re); });
+      }
+      var QUALITY=3.0, MAXW=2800;
+      var rendered=await Promise.all(pages.map(function(pageInfo){
+        return (async function(){
+          var page=pageInfo.page;
+          var wrap=pageInfo.wrap;
+          var cssW=wrap.clientWidth || Math.floor(pageInfo.viewport.width);
+          var cssH=wrap.clientHeight || Math.floor(pageInfo.viewport.height);
+          var base=page.getViewport({scale:1});
+          var renderW=Math.min(cssW*QUALITY,MAXW);
+          var vp=page.getViewport({scale:renderW/base.width});
+          var hi=document.createElement('canvas');
+          hi.width=Math.floor(vp.width);
+          hi.height=Math.floor(vp.height);
+          await page.render({canvasContext:hi.getContext('2d',{willReadFrequently:true}),viewport:vp}).promise;
+          var ctx=hi.getContext('2d',{willReadFrequently:true});
+          var pr=wrap.getBoundingClientRect();
+          if(re){
+            ctx.fillStyle='rgba(255,210,0,0.4)';
+            Array.prototype.slice.call(wrap.querySelectorAll('mark.rcv-hit')).forEach(function(mk){
+              var r=mk.getBoundingClientRect();
+              if(!r.width || !r.height || !pr.width || !pr.height) return;
+              ctx.fillRect((r.left-pr.left)/pr.width*hi.width,(r.top-pr.top)/pr.height*hi.height,r.width/pr.width*hi.width,Math.max(r.height/pr.height*hi.height,6));
+            });
+          }
+          return {imgData:hi.toDataURL('image/jpeg',0.88),cssW:cssW,cssH:cssH};
+        })();
+      }));
+      var pdf=null;
+      for(var i=0;i<rendered.length;i++){
+        var out=rendered[i];
+        var pw=Math.round(out.cssW), ph=Math.round(out.cssH);
+        var orient=pw>ph?'l':'p';
+        if(!pdf) pdf=new JsPDF({orientation:orient,unit:'px',format:[pw,ph]});
+        else pdf.addPage([pw,ph],orient);
+        pdf.addImage(out.imgData,'JPEG',0,0,pw,ph,undefined,'FAST');
+      }
+      if(!pdf) throw new Error('No resume pages were rendered');
+      if(!activeSkills.length) console.warn('Resume + Skills Highlighted found no matching job skills in resume text.');
+      var data=readData();
+      downloadBlob(pdf.output('blob'),'JEROWORKS_'+fileSafeName(data.name,'Candidate')+'_Skills_Highlighted.pdf');
+      return true;
+    }finally{
+      removeNode(host);
+    }
+  }catch(err){
+    console.error('Headless option 3 highlighted resume error:',err);
+    alert('Could not generate Resume + Skills Highlighted.\n\nReason: '+(err && err.message ? err.message : 'Unknown highlight error')+'\n\nPDF uses signed R2 direct fetch. DOCX and DOC use enterprise converter PDF first to preserve layout.');
+    return false;
+  }finally{
     window.__rsBusy=false;
   }
 }
+function rsTextItemRect(item,viewport){
+  if(!item || !viewport || !(window.pdfjsLib && window.pdfjsLib.Util)) return null;
+  var tx=window.pdfjsLib.Util.transform(viewport.transform,item.transform);
+  var h=Math.max(Math.abs((item.height||0)*viewport.scale),Math.abs(tx[3]||0),6);
+  var w=Math.max(Math.abs((item.width||0)*viewport.scale),2);
+  return {x:tx[4],y:tx[5]-h,w:w,h:h};
+}
+function rsPageTextRuns(textContent){
+  var text='';
+  var runs=[];
+  (textContent && Array.isArray(textContent.items) ? textContent.items : []).forEach(function(item){
+    var value=(item && item.str ? String(item.str) : '');
+    if(!value.trim()) return;
+    if(text.length) text+=' ';
+    var start=text.length;
+    text+=value;
+    runs.push({item:item,start:start,end:text.length});
+  });
+  return {text:text,runs:runs};
+}
+function rsDrawKeywordHitsFromTextItems(ctx,textContent,viewport,keywordRe){
+  if(!ctx || !textContent || !viewport || !keywordRe) return 0;
+  var page=rsPageTextRuns(textContent);
+  if(!page.text || !page.runs.length) return 0;
+  keywordRe.lastIndex=0;
+  var count=0,match;
+  ctx.fillStyle='rgba(255,214,10,0.42)';
+  while((match=keywordRe.exec(page.text))!==null){
+    var start=match.index;
+    var end=start+match[0].length;
+    page.runs.forEach(function(run){
+      if(run.end<=start || run.start>=end) return;
+      var rect=rsTextItemRect(run.item,viewport);
+      if(!rect) return;
+      ctx.fillRect(rect.x,rect.y,rect.w,Math.max(rect.h,6));
+      count++;
+    });
+    if(match.index===keywordRe.lastIndex) keywordRe.lastIndex++;
+  }
+  return count;
+}
+async function convertDocxResumeToHighlightedPdfBlobFromSources(resumeUrls,keywords){
+  await rsEnsureDocxConversion();
+  var bytes=await fetchResumeBytesFromSources(resumeUrls);
+  var keywordRe=rsKeywordRegex(keywords);
+  var host=document.createElement('div');
+  host.setAttribute('aria-hidden','true');
+  host.style.cssText='position:fixed;left:-12000px;top:0;width:auto;min-width:794px;min-height:1123px;background:#fff;overflow:visible;pointer-events:none;';
+  document.body.appendChild(host);
+  try{
+    var pages;
+    try{
+      pages=await renderOriginalDocxResume(bytes,host);
+    }catch(renderErr){
+      console.warn('DOCX original-format render failed for highlights, using readable fallback:',renderErr);
+      host.innerHTML='';
+      pages=await renderReadableDocxResume(bytes,host);
+    }
+    if(keywordRe){
+      pages.forEach(function(page){ rsMarkKeywordMatches(page,keywordRe); });
+    }
+    var style=document.createElement('style');
+    style.textContent='.rdc-smart-hit{background:rgba(255,214,10,.46)!important;color:inherit!important;border-radius:2px;padding:0 1px;}';
+    host.insertBefore(style,host.firstChild);
+    await waitForRenderedAssets(host);
+    var JsPDF=window.jspdf.jsPDF;
+    var pdf=new JsPDF({orientation:'portrait',unit:'pt',format:'a4',compress:true});
+    var pageW=pdf.internal.pageSize.getWidth();
+    var pageH=pdf.internal.pageSize.getHeight();
+    for(var i=0;i<pages.length;i++){
+      var pageEl=pages[i];
+      var rect=pageEl.getBoundingClientRect();
+      if(!rect.width || rect.width<500 || rect.width>1100) pageEl.style.width='794px';
+      pageEl.style.margin='0';
+      pageEl.style.boxShadow='none';
+      pageEl.style.background='#ffffff';
+      pageEl.style.maxWidth='none';
+      var canvas=await window.html2canvas(pageEl,{
+        backgroundColor:'#ffffff',
+        scale:Math.max(2.5,Math.min(3,window.devicePixelRatio||2.5)),
+        useCORS:true,
+        allowTaint:false,
+        logging:false,
+        removeContainer:true,
+        scrollX:0,
+        scrollY:0,
+        windowWidth:Math.ceil(pageEl.scrollWidth||pageEl.getBoundingClientRect().width||794),
+        windowHeight:Math.ceil(pageEl.scrollHeight||pageEl.getBoundingClientRect().height||1123)
+      });
+      var sliceHeight=Math.max(1,Math.floor(canvas.width*(pageH/pageW)));
+      var offsetY=0;
+      var isFirstSlice=true;
+      while(offsetY<canvas.height){
+        if(i>0 || !isFirstSlice) pdf.addPage('a4','portrait');
+        var currentHeight=Math.min(sliceHeight,canvas.height-offsetY);
+        var slice=document.createElement('canvas');
+        slice.width=canvas.width;
+        slice.height=currentHeight;
+        var sctx=slice.getContext('2d');
+        sctx.fillStyle='#ffffff';
+        sctx.fillRect(0,0,slice.width,slice.height);
+        sctx.drawImage(canvas,0,offsetY,canvas.width,currentHeight,0,0,canvas.width,currentHeight);
+        var img=slice.toDataURL('image/jpeg',0.92);
+        var renderH=(currentHeight/canvas.width)*pageW;
+        pdf.addImage(img,'JPEG',0,0,pageW,Math.min(renderH,pageH),undefined,'FAST');
+        offsetY+=currentHeight;
+        isFirstSlice=false;
+      }
+    }
+    return pdf.output('blob');
+  }finally{
+    removeNode(host);
+  }
+}
+async function renderHighlightedPdfBlob(pdfBlob,keywords){
+  await Promise.all([rsEnsurePdfJs(),rsEnsureJsPdf()]);
+  var sourceBytes=await pdfBlob.arrayBuffer();
+  var bytes=new Uint8Array(sourceBytes);
+  var sig=String.fromCharCode.apply(null,bytes.subarray(0,5));
+  if(sig.indexOf('%PDF')===-1) throw new Error('Resume source is not a valid PDF after browser conversion');
+  var doc=await window.pdfjsLib.getDocument({data:bytes}).promise;
+  var JsPDF=window.jspdf.jsPDF;
+  var keywordRe=rsKeywordRegex(keywords);
+  var outPdf=null;
+  try{
+    for(var p=1;p<=doc.numPages;p++){
+      var pdfJsPage=await doc.getPage(p);
+      var base=pdfJsPage.getViewport({scale:1});
+      var cssScale=Math.min(1.35,820/base.width);
+      var cssViewport=pdfJsPage.getViewport({scale:cssScale});
+      var renderScale=Math.min(3,2800/base.width);
+      var renderViewport=pdfJsPage.getViewport({scale:renderScale});
+      var canvas=document.createElement('canvas');
+      canvas.width=Math.floor(renderViewport.width);
+      canvas.height=Math.floor(renderViewport.height);
+      var ctx=canvas.getContext('2d',{willReadFrequently:true});
+      ctx.fillStyle='#ffffff';
+      ctx.fillRect(0,0,canvas.width,canvas.height);
+      await pdfJsPage.render({canvasContext:ctx,viewport:renderViewport}).promise;
+      var tc=await pdfJsPage.getTextContent();
+      if(keywordRe){
+        rsDrawKeywordHitsFromTextItems(ctx,tc,renderViewport,keywordRe);
+      }
+      var imgData=canvas.toDataURL('image/jpeg',0.9);
+      var pageW=Math.round(cssViewport.width);
+      var pageH=Math.round(cssViewport.height);
+      var orient=pageW>pageH?'l':'p';
+      if(!outPdf) outPdf=new JsPDF({orientation:orient,unit:'px',format:[pageW,pageH]});
+      else outPdf.addPage([pageW,pageH],orient);
+      outPdf.addImage(imgData,'JPEG',0,0,pageW,pageH,undefined,'FAST');
+    }
+    if(!outPdf) throw new Error('No resume pages were rendered');
+    return outPdf.output('blob');
+  }finally{
+    // No DOM cleanup is needed here; PDF highlighting is coordinate-based.
+  }
+}
+async function buildSmartHighlightedResume(options){
+  if(window.__rsBusy) return Promise.resolve(false);
+  window.__rsBusy=true;
+  try{
+    options=options||{};
+    var resumeSources=(Array.isArray(options.resumeUrl) ? options.resumeUrl : [options.resumeUrl||'']).map(function(url){
+      return clean(url,'');
+    }).filter(function(url,index,self){
+      return url && url!=='--' && self.indexOf(url)===index;
+    });
+    var resumeExt=clean(options.resumeExt||'','').toUpperCase();
+    if(['PDF','DOCX'].indexOf(resumeExt)===-1) throw new Error('Client-side highlighted resume is available for PDF and DOCX resumes only');
+    var resumeBlob=null;
+    if(resumeExt==='PDF'){
+      resumeBlob=await fetchPdfBlobFromSources(resumeSources);
+      resumeBlob=await renderHighlightedPdfBlob(resumeBlob,rsDrawerHighlightedKeywords());
+    }else{
+      resumeBlob=await convertDocxResumeToHighlightedPdfBlobFromSources(resumeSources,rsDrawerHighlightedKeywords());
+    }
+    var data=readData();
+    downloadBlob(resumeBlob,'JEROWORKS_'+fileSafeName(data.name,'Candidate')+'_Highlighted.pdf');
+    return true;
+  }catch(err){
+    console.error('Smart Highlighted Resume error:',err);
+    alert('Could not generate the highlighted resume.\n\nReason: '+(err && err.message ? err.message : 'Unknown highlight error')+'\n\nThis option runs in the browser and supports PDF/DOCX resumes only.');
+    return false;
+  }finally{
+    window.__rsBusy=false;
+  }
+}
+async function fetchPdfResumeBlob(resumePdfUrl){
+  resumePdfUrl=clean(resumePdfUrl,'');
+  if(!resumePdfUrl) throw new Error('Resume PDF URL not available');
+  var response=await fetch(resumePdfUrl,{credentials:'include',cache:'no-store'});
+  if(!response.ok) throw new Error('Resume PDF request failed with HTTP '+response.status);
+  return response.blob();
+}
+async function convertResumeToPdfOnly(resumeUrl,resumePdfUrl,resumeExt){
+  if(window.__rsBusy) return Promise.resolve(false);
+  window.__rsBusy=true;
+  try{
+    resumeExt=clean(resumeExt,'').toUpperCase();
+    resumeUrl=clean(resumeUrl,'');
+    resumePdfUrl=clean(resumePdfUrl,'');
+    if(['PDF','DOC','DOCX'].indexOf(resumeExt)===-1) throw new Error('Resume PDF conversion is available for PDF, DOC and DOCX resumes only');
+    if(!resumePdfUrl) throw new Error('Resume PDF URL not available');
+    var data=readData();
+    var blob=await fetchPdfResumeBlob(resumePdfUrl);
+    downloadBlob(blob,'resume_pdf_conversion_'+slug(data.name)+'.pdf');
+    return true;
+  }catch(err){
+    console.error('Resume PDF conversion only error:',err);
+    var message=err && err.message ? err.message : '';
+    if(/HTTP 503|converter unavailable|Document converter unavailable/i.test(message)){
+      alert('Enterprise Word-to-PDF converter is not available on the server. Please enable LibreOffice/Gotenberg or upload a PDF resume.');
+    }else{
+      alert('Could not convert the resume to PDF. Please try again.');
+    }
+    return false;
+  }finally{
+    window.__rsBusy=false;
+  }
+}
+async function convertResumeToPdfBrowserOnly(resumeUrl,resumeExt){
+  if(window.__rsBusy) return Promise.resolve(false);
+  window.__rsBusy=true;
+  try{
+    resumeExt=clean(resumeExt,'').toUpperCase();
+    resumeUrl=clean(resumeUrl,'');
+    if(resumeExt!=='DOCX') throw new Error('Browser conversion is available for DOCX resumes only');
+    if(!resumeUrl) throw new Error('DOCX resume URL not available');
+    var data=readData();
+    var blob=await convertDocxResumeToPdfBlob(resumeUrl);
+    downloadBlob(blob,'browser_docx_pdf_conversion_'+slug(data.name)+'.pdf');
+    return true;
+  }catch(err){
+    console.error('Browser DOCX PDF conversion only error:',err);
+    var message=err && err.message ? err.message : '';
+    if(/larger than the browser conversion limit/i.test(message)){
+      alert('This DOCX resume is larger than the 10 MB browser conversion limit. Please use option 10 or upload a smaller DOCX.');
+    }else{
+      alert('Browser DOCX conversion could not produce a clean PDF for this resume. Please use option 10 for enterprise-quality conversion.');
+    }
+    return false;
+  }finally{
+    window.__rsBusy=false;
+  }
+}
+function openDocPagePoints(doc,index){
+  var fallback=[595.28,841.89];
+  try{
+    var size=doc.pageSize(index);
+    var width=size && size.widthTwip ? size.widthTwip/20 : 0;
+    var height=size && size.heightTwip ? size.heightTwip/20 : 0;
+    if(size && typeof size.free==='function') size.free();
+    if(width>=240 && height>=240 && width<=1600 && height<=2200) return [width,height];
+  }catch(err){
+    console.warn('OpenDoc page size fallback used:',err);
+  }
+  return fallback;
+}
+function openDocCanvasFromBitmap(bitmap){
+  var width=bitmap && bitmap.widthPx ? bitmap.widthPx : 0;
+  var height=bitmap && bitmap.heightPx ? bitmap.heightPx : 0;
+  if(!width || !height) throw new Error('OpenDoc rendered an empty page bitmap');
+  var rgba=bitmap.rgba;
+  var canvas=document.createElement('canvas');
+  canvas.width=width;
+  canvas.height=height;
+  var ctx=canvas.getContext('2d',{alpha:false});
+  ctx.fillStyle='#ffffff';
+  ctx.fillRect(0,0,width,height);
+  ctx.putImageData(new ImageData(rgba,width,height),0,0);
+  return canvas;
+}
+function openDocRenderDpi(pageCount){
+  pageCount=parseInt(pageCount,10)||1;
+  if(pageCount<=6) return 216;
+  if(pageCount<=15) return 180;
+  return 160;
+}
+function openDocNativePdfBlob(doc){
+  if(!doc || typeof doc.availableExportFormats!=='function' || typeof doc.exportAs!=='function') return null;
+  var formats=[];
+  try{
+    formats=doc.availableExportFormats() || [];
+  }catch(formatErr){
+    console.warn('OpenDoc export formats unavailable:',formatErr);
+    return null;
+  }
+  var hasPdf=formats.some(function(format){
+    return String(format||'').toLowerCase()==='pdf';
+  });
+  if(!hasPdf) return null;
+  var modes=['exact_if_unchanged','preserve_when_safe','semantic'];
+  for(var i=0;i<modes.length;i++){
+    var artifact=null;
+    try{
+      artifact=doc.exportAs('pdf',modes[i]);
+      var bytes=artifact && artifact.bytes ? artifact.bytes : null;
+      var mime=artifact && artifact.mimeType ? artifact.mimeType : 'application/pdf';
+      if(bytes && bytes.length) return new Blob([bytes],{type:mime || 'application/pdf'});
+    }catch(exportErr){
+      console.warn('OpenDoc native PDF export failed for '+modes[i]+':',exportErr);
+    }finally{
+      if(artifact && typeof artifact.free==='function') artifact.free();
+    }
+  }
+  return null;
+}
+async function convertResumeWithOpenDocLabBlob(resumeUrl,resumeExt,allowExternalFallback){
+  resumeExt=clean(resumeExt,'').toUpperCase();
+  var resumeSources=Array.isArray(resumeUrl) ? resumeUrl : [resumeUrl];
+  resumeUrl=clean(resumeSources[0]||'','');
+  if(resumeExt!=='DOCX') throw new Error('OpenDoc lab is available for DOCX resumes only');
+  if(!resumeUrl || resumeUrl==='--') throw new Error('DOCX resume URL not available');
+  var openDoc=await rsEnsureOpenDocLab(allowExternalFallback===true);
+  await rsEnsureJsPdf();
+  var bytes=await fetchResumeBytesFromSources(resumeSources);
+  var doc=null;
+  try{
+    var docBytes=new Uint8Array(bytes);
+    try{
+      doc=(typeof openDoc.openAs==='function') ? openDoc.openAs(docBytes,'docx') : openDoc.open(docBytes);
+    }catch(openAsErr){
+      doc=openDoc.open(docBytes);
+    }
+    var pageCount=parseInt(doc && doc.pageCount ? doc.pageCount : 0,10);
+    if(!pageCount && doc && typeof doc.documentStats==='function'){
+      var stats=doc.documentStats();
+      pageCount=parseInt(stats && stats.pages ? stats.pages : 0,10);
+      if(stats && typeof stats.free==='function') stats.free();
+    }
+    if(!pageCount || pageCount<1) throw new Error('OpenDoc produced no pages');
+    if(pageCount>30) throw new Error('OpenDoc lab page limit exceeded');
+    var nativePdfBlob=openDocNativePdfBlob(doc);
+    if(nativePdfBlob) return nativePdfBlob;
+    var renderDpi=openDocRenderDpi(pageCount);
+    var JsPDF=window.jspdf.jsPDF;
+    var firstSize=openDocPagePoints(doc,0);
+    var pdf=new JsPDF({
+      orientation:firstSize[0]>firstSize[1]?'landscape':'portrait',
+      unit:'pt',
+      format:firstSize,
+      compress:true
+    });
+    for(var i=0;i<pageCount;i++){
+      var pageSize=openDocPagePoints(doc,i);
+      if(i>0) pdf.addPage(pageSize,pageSize[0]>pageSize[1]?'landscape':'portrait');
+      var bitmap=null;
+      var canvas=null;
+      try{
+        bitmap=doc.renderPage(i,renderDpi);
+        canvas=openDocCanvasFromBitmap(bitmap);
+        pdf.addImage(canvas.toDataURL('image/png'),'PNG',0,0,pageSize[0],pageSize[1],undefined,'SLOW');
+      }finally{
+        if(bitmap && typeof bitmap.free==='function') bitmap.free();
+        if(canvas){
+          canvas.width=0;
+          canvas.height=0;
+        }
+      }
+    }
+    return pdf.output('blob');
+  }finally{
+    if(doc && typeof doc.free==='function') doc.free();
+  }
+}
+async function convertResumeWithOpenDocLab(resumeUrl,resumeExt){
+  if(window.__rsBusy) return Promise.resolve(false);
+  window.__rsBusy=true;
+  try{
+    var data=readData();
+    var blob=await convertResumeWithOpenDocLabBlob(resumeUrl,resumeExt,true);
+    downloadBlob(blob,'opendoc_preview_conversion_'+slug(data.name)+'.pdf');
+    return true;
+  }catch(err){
+    console.error('OpenDoc Preview Conversion Lab error:',err);
+    var message=err && err.message ? err.message : '';
+    if(/larger than the browser conversion limit/i.test(message)){
+      alert('This DOCX resume is larger than the 10 MB OpenDoc lab limit. Please use option 10 or upload a smaller DOCX.');
+    }else if(/page limit exceeded/i.test(message)){
+      alert('This DOCX resume has more than 30 pages. Please use option 10 for enterprise-quality conversion.');
+    }else{
+      alert('OpenDoc Preview Conversion Lab could not produce a clean PDF for this resume. Technical reason: '+(message || 'Unknown browser conversion error')+'. Please use option 10 for enterprise-quality conversion.');
+    }
+    return false;
+  }finally{
+    window.__rsBusy=false;
+  }
+}
+function clean(value,fallback){
+  value=String(value==null?'':value).replace(/\s+/g,' ').trim();
+  return value || fallback || '--';
+}
+function limitText(value,max,fallback){
+  value=clean(value,fallback||'--');
+  return value.length>max ? value.slice(0,max-1).trim()+'...' : value;
+}
+function safeNumber(value,min,max){
+  value=parseInt(value,10);
+  if(isNaN(value)) value=0;
+  return Math.max(min,Math.min(max,value));
+}
+function initials(name){
+  return clean(name,'Candidate').split(' ').filter(Boolean).map(function(part){ return part.charAt(0).toUpperCase(); }).slice(0,2).join('') || 'CA';
+}
+function slug(value){
+  return clean(value,'candidate').replace(/[^a-z0-9]+/gi,'_').replace(/^_+|_+$/g,'').toLowerCase() || 'candidate';
+}
+function fileSafeName(value,fallback){
+  return clean(value,fallback || 'Candidate').replace(/[\\/:*?"<>|]+/g,' ').replace(/\s+/g,' ').trim() || (fallback || 'Candidate');
+}
+function readData(){
+  var el=document.getElementById('rsData');
+  if(!el) throw new Error('rsData not found');
+  var g=function(k){ return el.getAttribute(k)||''; };
+  var gj=function(k){ try{return JSON.parse(el.getAttribute(k)||'[]')||[];}catch(ex){return[];} };
+  return {
+    name:g('data-name')||'Candidate',
+    designation:g('data-designation'),
+    company:g('data-company'),
+    location:g('data-location'),
+    experience:g('data-experience'),
+    notice:g('data-notice'),
+    education:g('data-education'),
+    workMode:g('data-work-mode'),
+    reportId:g('data-report-id'),
+    reportDate:g('data-report-date'),
+    recruiterName:g('data-recruiter-name'),
+    reportCompanyName:g('data-report-company-name'),
+    reportCompanyLogo:g('data-report-company-logo'),
+    aiVersion:g('data-ai-version'),
+    match:safeNumber(g('data-match'),0,100),
+    isImmediate:g('data-is-immediate')==='1',
+    recruiterNote:g('data-recruiter-note'),
+    careerSummary:g('data-career-summary'),
+    jobTitle:g('data-job-title'),
+    skills:gj('data-skills'),
+    validation:gj('data-validation')
+  };
+}
+function isGap(value){
+  value=clean(value,'');
+  return !value || value==='--' || value==='-' || /^available 01 jan 1970$/i.test(value);
+}
+function titleCase(value){
+  value=clean(value,'');
+  if(!value) return '--';
+  return value.toLowerCase().replace(/\b([a-z])/g,function(m){ return m.toUpperCase(); });
+}
+function cityOnly(value){
+  value=clean(value,'--');
+  if(isGap(value)) return '--';
+  var commaParts=value.split(',').map(function(part){ return clean(part,''); }).filter(Boolean);
+  if(commaParts.length>1) return commaParts[0];
+  var states='andhra pradesh|arunachal pradesh|assam|bihar|chhattisgarh|goa|gujarat|haryana|himachal pradesh|jharkhand|karnataka|kerala|madhya pradesh|maharashtra|manipur|meghalaya|mizoram|nagaland|odisha|punjab|rajasthan|sikkim|tamil nadu|telangana|tripura|uttar pradesh|uttarakhand|west bengal|delhi|jammu and kashmir|ladakh|puducherry|chandigarh|dadra and nagar haveli|daman and diu|andaman and nicobar islands|lakshadweep';
+  var pattern=new RegExp('\\s+('+states+')$','i');
+  return clean(value.replace(pattern,''),'--');
+}
+function matchTone(score,completeness){
+  if(completeness<45) return {label:'Profile Review',priority:'REVIEW',decision:'DATA REVIEW REQUIRED',round:'Recruiter Validation',color:'#7c3aed',fill:'#f5f3ff',border:'#ddd6fe'};
+  if(score>=80) return {label:'Excellent Fit',priority:'HIGH',decision:'RECOMMENDED FOR INTERVIEW',round:'Technical L1',color:'#047857',fill:'#ecfdf5',border:'#a7f3d0'};
+  if(score>=60) return {label:'Strong Fit',priority:'HIGH',decision:'RECOMMENDED FOR INTERVIEW',round:'Technical L1',color:'#1d4ed8',fill:'#eff6ff',border:'#bfdbfe'};
+  if(score>=40) return {label:'Needs Review',priority:'MEDIUM',decision:'RECRUITER REVIEW REQUIRED',round:'Recruiter Review',color:'#b45309',fill:'#fffbeb',border:'#fde68a'};
+  return {label:'Review Required',priority:'REVIEW',decision:'REVIEW BEFORE DECISION',round:'Recruiter Validation',color:'#be123c',fill:'#fff1f2',border:'#fecdd3'};
+}
+function panel(stack,margin,fill,border){
+  return {
+    margin:margin||[0,0,0,7],
+    table:{widths:['*'],body:[[ {stack:Array.isArray(stack)?stack:[stack],margin:[12,10,12,10],fillColor:fill||'#ffffff'} ]]},
+    layout:{
+      hLineWidth:function(){return 0.55;}, vLineWidth:function(){return 0.55;},
+      hLineColor:function(){return border||'#dbe3ef';}, vLineColor:function(){return border||'#dbe3ef';},
+      paddingLeft:function(){return 0;}, paddingRight:function(){return 0;},
+      paddingTop:function(){return 0;}, paddingBottom:function(){return 0;}
+    }
+  };
+}
+function fixedPanel(stack,margin,fill,border,minHeight){
+  return {
+    margin:margin||[0,0,0,7],
+    stack:[
+      {canvas:[{type:'rect',x:0,y:0,w:260,h:minHeight||72,r:6,lineWidth:0.55,lineColor:border||'#dbe3ef',color:fill||'#ffffff'}],margin:[0,0,0,-(minHeight||72)]},
+      {table:{widths:['*'],heights:function(){return minHeight||72;},body:[[ {stack:Array.isArray(stack)?stack:[stack],margin:[12,10,12,10]} ]]},layout:'noBorders'}
+    ]
+  };
+}
+function roundedFullCard(stack,margin,height,fill,border){
+  return {
+    margin:margin||[0,0,0,8],
+    stack:[
+      {canvas:[{type:'rect',x:0,y:0,w:535,h:height,r:6,lineWidth:0.55,lineColor:border||'#dbe3ef',color:fill||'#ffffff'}],margin:[0,0,0,-height]},
+      {table:{widths:['*'],heights:function(){return height;},body:[[ {stack:Array.isArray(stack)?stack:[stack],margin:[12,10,12,10]} ]]},layout:'noBorders'}
+    ]
+  };
+}
+function headerCard(companyName,logoCell,reportDate,captainName){
+  return {
+    margin:[0,0,0,10],
+    stack:[
+      {canvas:[{type:'rect',x:0,y:0,w:535,h:64,r:6,lineWidth:0.55,lineColor:'#dbe3ef',color:'#ffffff'}],margin:[0,0,0,-64]},
+      {
+        table:{widths:[220,'*'],body:[[
+          {
+            table:{widths:['auto','*'],body:[[logoCell,{stack:[
+              {text:'SHARED BY',fontSize:6,bold:true,color:'#64748b',margin:[0,1,0,3]},
+              {text:companyName,fontSize:11.2,bold:true,color:'#0f172a',margin:[0,0,0,0]}
+            ],border:[false,false,false,false]}]]},
+            layout:'noBorders',
+            margin:[14,12,10,10],
+            border:[false,false,false,false]
+          },
+          {
+            stack:[
+              {text:'PRE-SCREENED CANDIDATE REPORT',style:'title',margin:[0,2,0,0]},
+              {text:(clean(reportDate,'--')+' · Confidential').toUpperCase(),style:'eyebrow',margin:[0,4,0,0]}
+            ],
+            margin:[10,14,14,10],
+            border:[false,false,false,false]
+          }
+        ]]},
+        layout:'noBorders'
+      }
+    ]
+  };
+}
+function unbrandedHeaderCard(reportDate){
+  return {
+    margin:[0,0,0,10],
+    stack:[
+      {canvas:[{type:'rect',x:0,y:0,w:535,h:64,r:6,lineWidth:0.55,lineColor:'#dbe3ef',color:'#ffffff'}],margin:[0,0,0,-64]},
+      {
+        table:{widths:['*'],body:[[
+          {
+            stack:[
+              {text:'PRE-SCREENED CANDIDATE REPORT',style:'title',margin:[0,2,0,0]},
+              {text:(clean(reportDate,'--')+' · Confidential').toUpperCase(),style:'eyebrow',margin:[0,4,0,0]}
+            ],
+            margin:[14,14,14,10],
+            border:[false,false,false,false]
+          }
+        ]]},
+        layout:'noBorders'
+      }
+    ]
+  };
+}
+function pairedCardRow(leftStack,rightStack,leftFill,rightFill,rightBorder){
+  return {
+    margin:[0,0,0,8],
+    stack:[
+      {canvas:[{type:'rect',x:0,y:0,w:264,h:88,r:6,lineWidth:0.55,lineColor:'#cbd5e1',color:leftFill||'#ffffff'},{type:'rect',x:271,y:0,w:264,h:88,r:6,lineWidth:0.55,lineColor:rightBorder||'#cbd5e1',color:rightFill||'#ffffff'}],margin:[0,0,0,-88]},
+      {columns:[
+        {stack:Array.isArray(leftStack)?leftStack:[leftStack],width:264,margin:[12,10,12,10]},
+        {stack:Array.isArray(rightStack)?rightStack:[rightStack],width:264,margin:[12,10,12,10]}
+      ],columnGap:7}
+    ]
+  };
+}
+function iconLine(icon,text,style,color,iconWidth){
+  var width=iconWidth||7;
+  return {columns:[
+    {svg:icon,width:width,margin:[0,1,0,0],alignment:'left'},
+    {text:text,style:style||'small',color:color||undefined,margin:[3,0,0,0]}
+  ],columnGap:0};
+}
+function labeledIconLine(icon,label,value,style,color,iconWidth){
+  var width=iconWidth||7;
+  return {columns:[
+    {svg:icon,width:width,margin:[0,1,0,0],alignment:'left'},
+    {text:[{text:label,bold:true},' '+value],style:style||'small',color:color||undefined,margin:[3,0,0,0]}
+  ],columnGap:0};
+}
+function sectionTitle(title,subtle,icon){
+  if(!icon) return {text:title,style:subtle?'sectionTitleMuted':'sectionTitle',margin:[0,0,0,8]};
+  return {columns:[
+    {svg:icon,width:10,margin:[0,0,0,0]},
+    {text:'',width:5},
+    {text:title,style:subtle?'sectionTitleMuted':'sectionTitle',margin:[0,0.5,0,0]}
+  ],columnGap:0,margin:[0,0,0,8]};
+}
+function metaCell(label,value,align){
+  return {stack:[
+    {text:label,style:'metaLabel',alignment:align||'left'},
+    {text:clean(value),style:'metaValue',alignment:align||'left',margin:[0,2,0,0]}
+  ],margin:[0,4,0,4]};
+}
+function metricCell(label,value,icon){
+  return {stack:[
+    {columns:[
+      {text:'',width:'*'},
+      {svg:icon,width:10.5,margin:[0,0.2,0,0]},
+      {text:'',width:6},
+      {text:clean(label).toUpperCase(),style:'metricLabel',color:'#64748b',width:'auto',margin:[0,1.9,0,0]},
+      {text:'',width:'*'}
+    ],columnGap:0,margin:[0,0,0,8]},
+    {text:clean(value),style:'metricValue',alignment:'center'}
+  ],margin:[4,9,4,8]};
+}
+function dataCompleteness(data){
+  var checks=[
+    data.name,data.designation||data.jobTitle,data.experience,data.company,data.location,
+    data.education,data.notice,data.workMode,data.careerSummary
+  ];
+  var score=checks.filter(function(v){ return !isGap(v); }).length;
+  if((data.skills||[]).length) score+=1;
+  if((data.validation||[]).length) score+=1;
+  if(!isGap(data.recruiterNote)) score+=1;
+  return Math.round(score/12*100);
+}
+function buildSkillRows(skills){
+  var rows=[
+    [
+      {text:'SKILLS',style:'tableHead'},
+      {text:'EXPERIENCE',style:'tableHead'},
+      {text:'RATING',style:'tableHead',alignment:'center'}
+    ]
+  ];
+  skills=(skills||[]).filter(function(skill){ return clean(skill.name,'')!==''; }).slice(0,7);
+  if(!skills.length){
+    rows.push([{text:'No skill intelligence available in current candidate data.',colSpan:3,style:'muted',margin:[0,6,0,6]},{},{}]);
+    return rows;
+  }
+  skills.forEach(function(skill){
+    var rating=safeNumber(skill.rating,0,5);
+    var exp=Number(skill.exp||0);
+    var expText=clean(skill.expText,'');
+    var stars=[];
+    for(var i=1;i<=5;i++) stars.push({svg:i<=rating?rsStarGold:rsStarMuted,width:6.4,margin:[0,0.5,1.2,0]});
+    rows.push([
+      {text:clean(skill.name).toUpperCase(),style:'tableCellBold',alignment:'left'},
+      {text:expText!=='' && expText!=='--' ? expText : (exp>0 ? exp+' Year'+(exp>1?'s':'') : '--'),style:'tableCell',color:'#334155'},
+      {columns:stars,columnGap:0,alignment:'center',margin:[20,5,0,5]}
+    ]);
+  });
+  return rows;
+}
+function buildValidationRows(validation){
+  var map={};
+  (validation||[]).forEach(function(row){
+    var key=clean(row.label,'').toLowerCase();
+    if(key) map[key]=clean(row.status,'');
+  });
+  var slots=[
+    {label:'RESUME',key:'resume',fallbackKey:'resume verified',icon:rsIconResume},
+    {label:'EMAIL ID',key:'email id',fallbackKey:'email verified',icon:rsIconEmail},
+    {label:'PHONE NUMBER',key:'phone number',fallbackKey:'phone verified',icon:rsIconPhone},
+    {label:'LINKEDIN ID',key:'linkedin id',fallbackKey:'linkedin verified',icon:rsIconLinkedin},
+    {label:'JOB DESCRIPTION',key:'job description',fallbackKey:'job description acknowledged',icon:rsIconJobDescription}
+  ];
+  var cells=slots.map(function(row){
+    var status=map[row.key] || map[row.fallbackKey] || '--';
+    var verified=/verified|confirmed|completed|discussed|shared/i.test(status);
+    return {stack:[
+      {columns:[
+        {text:'',width:'*'},
+        {svg:row.icon,width:9.8,margin:[0,0.2,0,0]},
+        {text:'',width:5},
+        {text:row.label.toUpperCase(),fontSize:6.6,bold:true,color:'#0f172a',width:'auto',margin:[0,1.7,0,0]},
+        {text:'',width:'*'}
+      ],columnGap:0,margin:[0,0,0,7]},
+      {text:status,fontSize:6.5,bold:true,color:verified?'#16a34a':'#b45309',alignment:'center',margin:[0,0,0,0]}
+    ],margin:[2,7,2,7]};
+  });
+  return [cells];
+}
+function buildDefinition(data,logoUri,options){
+  options=options||{};
+  var noBranding=options.noBranding===true;
+  var score=safeNumber(data.match,0,100);
+  var completeness=dataCompleteness(data);
+  var tone=matchTone(score,completeness);
+  var summary=limitText(data.careerSummary,560,'No professional summary available.');
+  var noteMissing=isGap(data.recruiterNote);
+  var note=noteMissing ? 'No recruiter comments available.' : limitText(data.recruiterNote,420,'');
+  var joining=data.isImmediate?'Immediate':clean(data.notice,'--');
+  var companyName=clean(data.reportCompanyName,'Hiring Partner');
+  var skillCount=Math.max(1,Math.min(7,(data.skills||[]).filter(function(skill){ return clean(skill.name,'')!==''; }).length));
+  var skillCardHeight=90+(skillCount*31);
+  var logoCell=logoUri
+    ? {image:logoUri,fit:[42,28],alignment:'center',margin:[0,0,12,0],border:[false,false,false,false]}
+    : {text:companyName.charAt(0).toUpperCase(),fontSize:13,bold:true,color:'#1d4ed8',alignment:'center',margin:[0,5,12,4],fillColor:'#eef2ff',border:[false,false,false,false]};
+
+  return {
+    pageSize:'A4',
+    pageMargins:[30,26,30,24],
+    defaultStyle:{font:'Roboto',fontSize:8,color:'#1f2937',lineHeight:1.22},
+    styles:{
+      title:{fontSize:15,bold:true,color:'#0f172a',alignment:'right'},
+      eyebrow:{fontSize:6.2,color:'#64748b',alignment:'right'},
+      metaLabel:{fontSize:5.7,color:'#64748b'},
+      metaValue:{fontSize:7.4,bold:true,color:'#111827'},
+      candidateName:{fontSize:18,bold:true,color:'#0f172a'},
+      designation:{fontSize:9.2,bold:true,color:'#1d4ed8'},
+      small:{fontSize:7.4,color:'#64748b'},
+      sectionTitle:{fontSize:8.2,bold:true,color:'#1d4ed8'},
+      sectionTitleMuted:{fontSize:8,bold:true,color:'#334155'},
+      tableHead:{fontSize:7,bold:true,color:'#334155',fillColor:'#f8fafc',margin:[0,6,0,6]},
+      tableCell:{fontSize:7.2,color:'#334155',margin:[0,6,0,6]},
+      tableCellBold:{fontSize:7.2,bold:true,color:'#0f172a',margin:[0,6,0,6]},
+      metricLabel:{fontSize:6,color:'#64748b'},
+      metricValue:{fontSize:7.2,bold:true,color:'#0f172a'},
+      muted:{fontSize:7,color:'#64748b'},
+      body:{fontSize:7.6,color:'#1f2937',lineHeight:1.35},
+      footer:{fontSize:6,color:'#64748b'}
+    },
+    content:[
+      noBranding ? unbrandedHeaderCard(data.reportDate) : headerCard(companyName,logoCell,data.reportDate,data.recruiterName),
+      pairedCardRow([
+        {text:clean(data.name,'Candidate'),style:'candidateName'},
+        {text:clean(data.designation||data.jobTitle,'--'),style:'designation',margin:[0,3,0,8]},
+        labeledIconLine(rsIconExperience,'EXPERIENCE:',clean(data.experience,'--').toUpperCase(),'small','#64748b',6.5),
+        {stack:[labeledIconLine(rsIconCompany,'CURRENT COMPANY:',clean(data.company,'--').toUpperCase(),'small','#64748b',6.5)],margin:[0,3,0,0]}
+      ],[
+        {text:'HIRING CONFIDENCE',fontSize:12.4,bold:true,color:'#64748b',alignment:'center',margin:[0,8,0,0]},
+        {text:score+'%',fontSize:30,bold:true,color:'#1d4ed8',alignment:'center',margin:[0,7,0,0]}
+      ],'#ffffff','#f8fbff','#cfe0ff'),
+      roundedFullCard([
+        {table:{widths:[116,116,164,116],body:[[
+          metricCell('Education',data.education,rsIconEducation),
+          metricCell('Notice Period',joining,rsIconCalendar),
+          metricCell('Location',cityOnly(data.location),rsIconLocation),
+          metricCell('Work Mode',data.workMode,rsIconLaptop)
+        ]]},
+        layout:{
+          hLineWidth:function(){return 0;},
+          vLineWidth:function(i){return i>0&&i<4?0.45:0;},
+          vLineColor:function(){return '#dbe3ef';},
+          paddingLeft:function(){return 0;},
+          paddingRight:function(){return 0;},
+          paddingTop:function(){return 0;},
+          paddingBottom:function(){return 0;}
+        }}
+      ],[0,0,0,8],62,'#ffffff','#dbe3ef'),
+      {
+        columns:[
+          fixedPanel([sectionTitle('EXECUTIVE SUMMARY',false,rsIconSummary),{text:summary,style:'body'}],[0,0,6,8],'#ffffff','#dbe3ef',148),
+          fixedPanel([sectionTitle('RECRUITER COMMENTS',false,rsIconNote),{text:note,style:'body',color:noteMissing?'#64748b':'#1f2937',italics:noteMissing}],[6,0,0,8],'#ffffff','#dbe3ef',148)
+        ],
+        columnGap:0
+      },
+      roundedFullCard([
+        sectionTitle('SKILL INTELLIGENCE',false,rsIconSkill),
+        {table:{widths:['*',100,78],body:buildSkillRows(data.skills)},layout:{
+          hLineWidth:function(i){return i===1?0.75:0.45;},
+          vLineWidth:function(){return 0;},
+          hLineColor:function(i){return i===1?'#94a3b8':'#e2e8f0';}
+        }}
+      ],[0,0,0,8],skillCardHeight,'#ffffff','#dbe3ef'),
+      roundedFullCard([
+          sectionTitle('VERIFICATION STATUS',false,rsIconShield),
+          {table:{widths:['*','*','*','*','*'],body:buildValidationRows(data.validation)},layout:{
+            hLineWidth:function(){return 0;},
+            vLineWidth:function(i){return i>0&&i<5?0.55:0;},
+            vLineColor:function(){return '#cbd5e1';},
+            paddingLeft:function(){return 0;},
+            paddingRight:function(){return 0;},
+            paddingTop:function(){return 0;},
+            paddingBottom:function(){return 0;}
+          }}
+      ],[0,0,0,8],74,'#ffffff','#dbe3ef'),
+      {
+        table:{widths:['*','auto'],body:[[
+          {text:'This report is generated by AI hiring platform jero.works',style:'footer',border:[false,true,false,false],margin:[0,5,0,0]},
+          {text:'www.jero.works',style:'footer',border:[false,true,false,false],margin:[0,5,0,0]}
+        ]]},
+        layout:{hLineColor:function(){return '#e5e7eb';},hLineWidth:function(){return 0.6;},vLineWidth:function(){return 0;}}
+      }
+    ]
+  };
+}
+async function buildRecruiterSummary(){
+  if(window.__rsBusy) return Promise.resolve(false);
+  window.__rsBusy=true;
+  try{
+    var data=readData();
+    var blob=await buildRecruiterSummaryBlob(data);
+    downloadBlob(blob,'recruiter_summary_'+slug(data.name)+'.pdf');
+    return true;
+  }catch(err){
+    console.error('Recruiter Summary error:',err);
+    alert('Could not generate the Recruiter Summary. Please try again.');
+    return false;
+  }finally{
+    window.__rsBusy=false;
+  }
+}
+async function buildRecruiterSummaryBlob(data,options){
+  data=data||readData();
+  options=options||{};
+  var ready=await Promise.all([rsEnsurePdfMake(),options.noBranding ? Promise.resolve(null) : rsLogoDataUri(data.reportCompanyLogo)]);
+  return new Promise(function(resolve,reject){
+    try{
+      window.pdfMake.createPdf(buildDefinition(data,ready[1],options)).getBlob(function(blob){
+        if(blob && blob.size>200) resolve(blob);
+        else reject(new Error('Recruiter Summary PDF output was empty'));
+      });
+    }catch(ex){ reject(ex); }
+  });
+}
+async function mergePreScreenedReportAndResume(reportBlob,resumeBlob,fileName){
+  await rsEnsurePdfLib();
+  var resumeBytes=await resumeBlob.arrayBuffer();
+  var reportBytes=await reportBlob.arrayBuffer();
+  var merged=await window.PDFLib.PDFDocument.create();
+  var reportDoc=await window.PDFLib.PDFDocument.load(reportBytes);
+  var resumeDoc=await window.PDFLib.PDFDocument.load(resumeBytes);
+  var reportPages=await merged.copyPages(reportDoc,reportDoc.getPageIndices());
+  reportPages.forEach(function(page){ merged.addPage(page); });
+  var resumePages=await merged.copyPages(resumeDoc,resumeDoc.getPageIndices());
+  resumePages.forEach(function(page){ merged.addPage(page); });
+  var mergedBytes=await merged.save();
+  downloadBlob(new Blob([mergedBytes],{type:'application/pdf'}),fileName);
+}
+function dataUriBytes(dataUri){
+  var match=String(dataUri||'').match(/^data:([^;]+);base64,(.+)$/i);
+  if(!match) return null;
+  var raw=atob(match[2]);
+  var bytes=new Uint8Array(raw.length);
+  for(var i=0;i<raw.length;i++) bytes[i]=raw.charCodeAt(i);
+  return {mime:match[1].toLowerCase(),bytes:bytes};
+}
+async function addCompanyHeaderToResume(resumeBlob,data,fileName){
+  await rsEnsurePdfLib();
+  data=data||readData();
+  var PDFLib=window.PDFLib;
+  var resumeBytes=await resumeBlob.arrayBuffer();
+  var sourceDoc=await PDFLib.PDFDocument.load(resumeBytes);
+  var targetDoc=await PDFLib.PDFDocument.create();
+  var regularFont=await targetDoc.embedFont(PDFLib.StandardFonts.Helvetica);
+  var boldFont=await targetDoc.embedFont(PDFLib.StandardFonts.HelveticaBold);
+  var logoUri=await rsLogoDataUri(data.reportCompanyLogo);
+  var logoImage=null;
+  var logoData=dataUriBytes(logoUri);
+  if(logoData){
+    try{
+      if(logoData.mime.indexOf('png')!==-1) logoImage=await targetDoc.embedPng(logoData.bytes);
+      else if(logoData.mime.indexOf('jpeg')!==-1 || logoData.mime.indexOf('jpg')!==-1) logoImage=await targetDoc.embedJpg(logoData.bytes);
+    }catch(err){
+      console.warn('Branded resume logo embed skipped:',err);
+      logoImage=null;
+    }
+  }
+  var sourcePages=sourceDoc.getPages();
+  if(!sourcePages.length) throw new Error('Resume PDF has no pages');
+  var firstPage=sourcePages[0];
+  var pageSize=firstPage.getSize();
+  var headerH=Math.max(66,Math.min(82,pageSize.width*0.105));
+  var newFirst=targetDoc.addPage([pageSize.width,pageSize.height+headerH]);
+  var embeddedFirst=await targetDoc.embedPage(firstPage);
+  newFirst.drawPage(embeddedFirst,{x:0,y:0,width:pageSize.width,height:pageSize.height});
+  var topY=pageSize.height;
+  newFirst.drawRectangle({x:0,y:topY,width:pageSize.width,height:headerH,color:PDFLib.rgb(1,1,1),borderColor:PDFLib.rgb(0.86,0.89,0.94),borderWidth:0.8});
+  newFirst.drawRectangle({x:0,y:topY+headerH-4,width:pageSize.width,height:4,color:PDFLib.rgb(0.12,0.23,0.54)});
+  newFirst.drawRectangle({x:0,y:topY,width:pageSize.width,height:1.1,color:PDFLib.rgb(0.88,0.91,0.95)});
+  var companyName=clean(data.reportCompanyName,'Hiring Partner');
+  var logoBox=headerH-26;
+  var logoX=22;
+  var logoY=topY+14;
+  var logoAreaW=70;
+  if(logoImage){
+    var dims=logoImage.scaleToFit(logoBox*1.8,logoBox);
+    newFirst.drawImage(logoImage,{x:logoX,y:logoY+(logoBox-dims.height)/2,width:dims.width,height:dims.height});
+    logoAreaW=Math.max(56,Math.min(74,dims.width));
+  }else{
+    newFirst.drawRectangle({x:logoX,y:logoY,width:logoBox,height:logoBox,color:PDFLib.rgb(0.93,0.95,1),borderColor:PDFLib.rgb(0.75,0.82,0.98),borderWidth:0.8});
+    newFirst.drawText(companyName.charAt(0).toUpperCase(),{x:logoX+(logoBox/2)-5,y:logoY+(logoBox/2)-5,size:16,font:boldFont,color:PDFLib.rgb(0.12,0.23,0.54)});
+    logoAreaW=logoBox;
+  }
+  var textX=logoX+logoAreaW+12;
+  newFirst.drawText('SHARED BY',{x:textX,y:topY+headerH-27,size:7,font:boldFont,color:PDFLib.rgb(0.39,0.45,0.55)});
+  newFirst.drawText(limitText(companyName,42,companyName),{x:textX,y:topY+headerH-45,size:12,font:boldFont,color:PDFLib.rgb(0.06,0.09,0.16)});
+  newFirst.drawText('CONFIDENTIAL RESUME',{x:pageSize.width-190,y:topY+headerH-29,size:14,font:boldFont,color:PDFLib.rgb(0.06,0.09,0.16)});
+  newFirst.drawText(clean(data.reportDate,'') || (new Date()).toLocaleDateString(),{x:pageSize.width-190,y:topY+headerH-45,size:8.4,font:regularFont,color:PDFLib.rgb(0.39,0.45,0.55)});
+  if(sourcePages.length>1){
+    var rest=await targetDoc.copyPages(sourceDoc,sourceDoc.getPageIndices().slice(1));
+    rest.forEach(function(page){ targetDoc.addPage(page); });
+  }
+  var brandedBytes=await targetDoc.save();
+  downloadBlob(new Blob([brandedBytes],{type:'application/pdf'}),fileName);
+}
+async function buildSmartBrandedResume(resumePdfUrl,options){
+  if(window.__rsBusy) return Promise.resolve(false);
+  window.__rsBusy=true;
+  try{
+    options=options||{};
+    var resumeSources=(Array.isArray(options.resumeUrl) ? options.resumeUrl : [options.resumeUrl||'']).map(function(url){
+      return clean(url,'');
+    }).filter(function(url,index,self){
+      return url && url!=='--' && self.indexOf(url)===index;
+    });
+    var resumeExt=clean(options.resumeExt||'','').toUpperCase();
+    resumePdfUrl=clean(resumePdfUrl,'');
+    if(['PDF','DOC','DOCX'].indexOf(resumeExt)===-1) throw new Error('Smart branded resume is available for PDF, DOC and DOCX resumes only');
+    var resumeBlob=null;
+    if(resumeExt==='PDF'){
+      resumeBlob=await fetchPdfBlobFromSources(resumeSources);
+    }else if(resumeExt==='DOCX'){
+      try{
+        resumeBlob=await convertResumeWithOpenDocLabBlob(resumeSources,resumeExt,false);
+      }catch(browserDocxErr){
+        console.warn('OpenDoc DOCX branding conversion failed; trying legacy browser renderer:',browserDocxErr);
+        try{
+          resumeBlob=await convertDocxResumeToPdfBlobFromSources(resumeSources);
+        }catch(legacyDocxErr){
+          console.warn('Legacy DOCX branding conversion failed; using converter PDF URL if available:',legacyDocxErr);
+          if(!resumePdfUrl) throw legacyDocxErr;
+          resumeBlob=await fetchPdfResumeBlob(resumePdfUrl);
+        }
+      }
+    }else{
+      if(!resumePdfUrl) throw new Error('DOC resume needs enterprise converter PDF URL');
+      resumeBlob=await fetchPdfResumeBlob(resumePdfUrl);
+    }
+    var data=readData();
+    await addCompanyHeaderToResume(resumeBlob,data,'JEROWORKS_'+fileSafeName(data.name,'Candidate')+'.pdf');
+    return true;
+  }catch(err){
+    console.error('Smart Branded Resume error:',err);
+    alert('Could not generate the branded resume.\n\nReason: '+(err && err.message ? err.message : 'Unknown branding error')+'\n\nThis option keeps resume data visible and adds only the shared-by company header.');
+    return false;
+  }finally{
+    window.__rsBusy=false;
+  }
+}
+async function buildCombinedPreScreenedResume(resumePdfUrl,options){
+  if(window.__rsBusy) return Promise.resolve(false);
+  window.__rsBusy=true;
+  try{
+    options=options||{};
+    var resumeUrl=clean(options.resumeUrl||'','');
+    var resumeExt=clean(options.resumeExt||'','').toUpperCase();
+    resumePdfUrl=clean(resumePdfUrl,'');
+    if(resumeUrl==='--') resumeUrl='';
+    if(resumePdfUrl==='--') resumePdfUrl='';
+    if(['PDF','DOC','DOCX'].indexOf(resumeExt)===-1) throw new Error('Combined report is available for PDF, DOC and DOCX resumes');
+    if(!resumePdfUrl) throw new Error('Resume PDF URL not available');
+    var data=readData();
+    var reportBlob=await buildRecruiterSummaryBlob(data,options);
+    var resumeBlob=await fetchPdfResumeBlob(resumePdfUrl);
+    await mergePreScreenedReportAndResume(reportBlob,resumeBlob,'pre_screened_report_original_resume_'+(options.noBranding?'without_branding_':'')+slug(data.name)+'.pdf');
+    return true;
+  }catch(err){
+    console.error('Combined Pre-Screened Report error:',err);
+    var message=err && err.message ? err.message : 'Could not generate the combined Pre-Screened Report. Please try again.';
+    if(/HTTP 503|converter unavailable|Document converter unavailable/i.test(message)){
+      alert('Enterprise Word-to-PDF converter is not available on the server. Please enable LibreOffice/Gotenberg or upload a PDF resume.');
+    }else{
+      alert('Could not generate the combined Pre-Screened Report. Please try again.');
+    }
+    return false;
+  }finally{
+    window.__rsBusy=false;
+  }
+}
+async function buildWordPreScreenedResume(resumePdfUrl,options){
+  if(window.__rsBusy) return Promise.resolve(false);
+  window.__rsBusy=true;
+  try{
+    options=options||{};
+    var resumeUrl=clean(options.resumeUrl||'','');
+    var resumeExt=clean(options.resumeExt||'','').toUpperCase();
+    resumePdfUrl=clean(resumePdfUrl,'');
+    if(['DOC','DOCX'].indexOf(resumeExt)===-1) throw new Error('Word Pre-Screened Report is available for DOC and DOCX resumes only');
+    if(!resumePdfUrl && !(resumeExt==='DOCX' && resumeUrl)) throw new Error('Resume PDF URL not available');
+    var data=readData();
+    var reportBlob=await buildRecruiterSummaryBlob(data,options);
+    var resumeBlob=null;
+    var converterErr=null;
+    if(resumePdfUrl){
+      try{
+        resumeBlob=await fetchPdfResumeBlob(resumePdfUrl);
+      }catch(err){
+        converterErr=err;
+      }
+    }
+    if(!resumeBlob && resumeExt==='DOCX' && resumeUrl){
+      try{
+        resumeBlob=await convertResumeWithOpenDocLabBlob(resumeUrl,resumeExt,false);
+      }catch(openDocErr){
+        console.warn('Option 13 OpenDoc fallback failed:',openDocErr);
+        resumeBlob=await convertDocxResumeToPdfBlob(resumeUrl);
+      }
+    }
+    if(!resumeBlob) throw (converterErr || new Error('Converted resume PDF not available'));
+    await mergePreScreenedReportAndResume(reportBlob,resumeBlob,'pre_screened_report_word_resume_'+slug(data.name)+'.pdf');
+    return true;
+  }catch(err){
+    console.error('Word Pre-Screened Report merge error:',err);
+    var message=err && err.message ? err.message : '';
+    if(/HTTP 503|converter unavailable|Document converter unavailable|Converted resume PDF not available/i.test(message)){
+      alert('Word resume conversion is not available right now. For DOC files, please enable the enterprise converter or upload a PDF resume. For DOCX, the browser fallback was also unable to produce a clean PDF.');
+    }else{
+      alert('Could not generate the Word Pre-Screened Report package. Please try option 10 first, then retry option 13.');
+    }
+    return false;
+  }finally{
+    window.__rsBusy=false;
+  }
+}
+async function buildHybridWordPreScreenedResume(resumePdfUrl,options){
+  if(window.__rsBusy) return Promise.resolve(false);
+  window.__rsBusy=true;
+  try{
+    options=options||{};
+    var resumeSources=(Array.isArray(options.resumeUrl) ? options.resumeUrl : [options.resumeUrl||'']).map(function(url){
+      return clean(url,'');
+    }).filter(function(url,index,self){
+      return url && url!=='--' && self.indexOf(url)===index;
+    });
+    var resumeUrl=clean(resumeSources[0]||'','');
+    var resumeExt=clean(options.resumeExt||'','').toUpperCase();
+    if(resumeUrl==='--') resumeUrl='';
+    if(resumeExt!=='DOCX') throw new Error('Client-scale package is available for DOCX resumes only');
+    if(!resumeUrl) throw new Error('DOCX resume URL not available');
+    var data=readData();
+    var reportBlob=await buildRecruiterSummaryBlob(data,options);
+    var resumeBlob=await convertResumeWithOpenDocLabBlob(resumeSources,resumeExt,false);
+    await mergePreScreenedReportAndResume(reportBlob,resumeBlob,'pre_screened_report_hybrid_word_resume_'+slug(data.name)+'.pdf');
+    return true;
+  }catch(err){
+    console.error('Hybrid Word Pre-Screened Report merge error:',err);
+    alert('Could not generate the client-side DOCX Pre-Screened Report package.\n\nReason: '+(err && err.message ? err.message : 'Unknown browser conversion error')+'\n\nThis option does not use server conversion. Please use option 13 or option 10 for enterprise converter mode.');
+    return false;
+  }finally{
+    window.__rsBusy=false;
+  }
+}
+async function buildSmartPreScreenedResume(resumePdfUrl,options){
+  if(window.__rsBusy) return Promise.resolve(false);
+  window.__rsBusy=true;
+  try{
+    options=options||{};
+    var resumeSources=(Array.isArray(options.resumeUrl) ? options.resumeUrl : [options.resumeUrl||'']).map(function(url){
+      return clean(url,'');
+    }).filter(function(url,index,self){
+      return url && url!=='--' && self.indexOf(url)===index;
+    });
+    var resumeExt=clean(options.resumeExt||'','').toUpperCase();
+    resumePdfUrl=clean(resumePdfUrl,'');
+    if(['PDF','DOC','DOCX'].indexOf(resumeExt)===-1) throw new Error('Smart Pre-Screened package is available for PDF, DOC and DOCX resumes only');
+    var data=readData();
+    var reportBlob=await buildRecruiterSummaryBlob(data,options);
+    var resumeBlob=null;
+    if(resumeExt==='PDF'){
+      resumeBlob=await fetchPdfBlobFromSources(resumeSources);
+    }else if(resumeExt==='DOCX'){
+      try{
+        resumeBlob=await convertResumeWithOpenDocLabBlob(resumeSources,resumeExt,false);
+      }catch(browserDocxErr){
+        console.warn('OpenDoc DOCX conversion failed; trying legacy browser renderer:',browserDocxErr);
+        try{
+          resumeBlob=await convertDocxResumeToPdfBlobFromSources(resumeSources);
+        }catch(legacyDocxErr){
+          console.warn('Legacy DOCX conversion failed; using converter PDF URL if available:',legacyDocxErr);
+          if(!resumePdfUrl) throw legacyDocxErr;
+          resumeBlob=await fetchPdfResumeBlob(resumePdfUrl);
+        }
+      }
+    }else{
+      if(!resumePdfUrl) throw new Error('DOC resume needs enterprise converter PDF URL');
+      resumeBlob=await fetchPdfResumeBlob(resumePdfUrl);
+    }
+    var reportFileName='JEROWORKS_'+fileSafeName(data.name,'Candidate')+'.pdf';
+    await mergePreScreenedReportAndResume(reportBlob,resumeBlob,reportFileName);
+    return true;
+  }catch(err){
+    console.error('Smart Pre-Screened Report package error:',err);
+    alert('Could not generate the final Pre-Screened Report + Resume package.\n\nReason: '+(err && err.message ? err.message : 'Unknown package error')+'\n\nPDF and DOCX use direct R2/browser processing first. DOC files require enterprise converter fallback.');
+    return false;
+  }finally{
+    window.__rsBusy=false;
+  }
+}
+window.__preloadRS=preloadRecruiterSummaryAssets;
+window.__preloadRSCombined=preloadCombinedReportAssets;
+window.__preloadBrowserDocxConversion=preloadBrowserDocxConversionAssets;
+window.__preloadOpenDocLab=preloadOpenDocLabAssets;
+window.__preloadOpenDocLocal=preloadOpenDocLocalAssets;
+window.__buildRSBlob=buildRecruiterSummaryBlob;
 window.__buildRS=buildRecruiterSummary;
+window.__buildCombinedRSResume=buildCombinedPreScreenedResume;
+window.__buildWordPreScreenedResume=buildWordPreScreenedResume;
+window.__buildHybridWordPreScreenedResume=buildHybridWordPreScreenedResume;
+window.__buildSmartPreScreenedResume=buildSmartPreScreenedResume;
+window.__buildSmartBrandedResume=buildSmartBrandedResume;
+window.__buildSmartHighlightedResume=buildSmartHighlightedResume;
+window.__buildHeadlessOption3SkillsHighlightedResume=buildHeadlessOption3SkillsHighlightedResume;
+window.__convertResumeToPdfOnly=convertResumeToPdfOnly;
+window.__convertResumeToPdfBrowserOnly=convertResumeToPdfBrowserOnly;
+window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
 })();
 </script>
 
@@ -5800,24 +6511,6 @@ window.__buildRS=buildRecruiterSummary;
         <span class="rdc-ocirc" aria-hidden="true"></span>
       </label>
 
-      {{-- 2: Branded Resume --}}
-      <label class="rdc-opt" data-opt="2" data-coins="2">
-        <input class="rdc-rinput" type="radio" name="rdcFormat" value="2">
-        <span class="rdc-onum">2</span>
-        <span class="rdc-oi rdc-ic-purple" aria-hidden="true">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>
-        </span>
-        <span class="rdc-obody">
-          <span class="rdc-otitle">Branded Resume</span>
-          <span class="rdc-odesc">Resume with your company logo and branding overlay</span>
-        </span>
-        <span class="rdc-ometa">
-          <span class="rdc-ocost">2 Coins</span>
-          <span class="rdc-otime">~5 sec</span>
-        </span>
-        <span class="rdc-ocirc" aria-hidden="true"></span>
-      </label>
-
       {{-- 3: ATS Highlighted --}}
       <label class="rdc-opt" data-opt="3" data-coins="4">
         <input class="rdc-rinput" type="radio" name="rdcFormat" value="3">
@@ -5832,6 +6525,42 @@ window.__buildRS=buildRecruiterSummary;
         <span class="rdc-ometa">
           <span class="rdc-ocost">4 Coins</span>
           <span class="rdc-otime">~10 sec</span>
+        </span>
+        <span class="rdc-ocirc" aria-hidden="true"></span>
+      </label>
+
+      {{-- 7: R2/browser highlighted keywords package --}}
+      <label class="rdc-opt" data-opt="7" data-coins="4">
+        <input class="rdc-rinput" type="radio" name="rdcFormat" value="7">
+        <span class="rdc-onum">7</span>
+        <span class="rdc-oi rdc-ic-amber" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h16"/><path d="m7 16 8.5-8.5 3 3L10 19H7v-3z"/><path d="m14 9 3 3"/></svg>
+        </span>
+        <span class="rdc-obody">
+          <span class="rdc-otitle">Resume + Highlighted Keywords <span style="background:#fffbeb;color:#b45309;font-size:8.5px;font-weight:700;padding:1px 6px;border-radius:4px;vertical-align:middle;margin-left:4px;">Client</span></span>
+          <span class="rdc-odesc">Fetches from R2 and highlights job keywords in the browser without opening the Resume/CV tab</span>
+        </span>
+        <span class="rdc-ometa">
+          <span class="rdc-ocost">4 Coins</span>
+          <span class="rdc-otime">Smart</span>
+        </span>
+        <span class="rdc-ocirc" aria-hidden="true"></span>
+      </label>
+
+      {{-- 8: Headless option 3 style highlighted skills from direct/converted PDF --}}
+      <label class="rdc-opt" data-opt="8" data-coins="4">
+        <input class="rdc-rinput" type="radio" name="rdcFormat" value="8">
+        <span class="rdc-onum">8</span>
+        <span class="rdc-oi rdc-ic-amber" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/><path d="M7 15h7"/></svg>
+        </span>
+        <span class="rdc-obody">
+          <span class="rdc-otitle">Resume + Skills Highlighted <span style="background:#ecfeff;color:#0e7490;font-size:8.5px;font-weight:700;padding:1px 6px;border-radius:4px;vertical-align:middle;margin-left:4px;">Smart</span></span>
+          <span class="rdc-odesc">PDF uses signed R2 direct fetch; DOCX/DOC use enterprise PDF conversion first, then highlights and downloads</span>
+        </span>
+        <span class="rdc-ometa">
+          <span class="rdc-ocost">4 Coins</span>
+          <span class="rdc-otime">Smart</span>
         </span>
         <span class="rdc-ocirc" aria-hidden="true"></span>
       </label>
@@ -5854,7 +6583,7 @@ window.__buildRS=buildRecruiterSummary;
         <span class="rdc-ocirc" aria-hidden="true"></span>
       </label>
 
-      {{-- 5: Recruiter Summary --}}
+      {{-- 5: Pre-Screened Report --}}
       <label class="rdc-opt" data-opt="5" data-coins="7">
         <input class="rdc-rinput" type="radio" name="rdcFormat" value="5">
         <span class="rdc-onum">5</span>
@@ -5862,8 +6591,8 @@ window.__buildRS=buildRecruiterSummary;
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
         </span>
         <span class="rdc-obody">
-          <span class="rdc-otitle">Recruiter Summary <span class="rdc-p2-badge">Phase 2</span></span>
-          <span class="rdc-odesc">1-page AI-generated summary formatted for recruiter handoffs</span>
+          <span class="rdc-otitle">Pre-Screened Report <span class="rdc-p2-badge">Phase 2</span></span>
+          <span class="rdc-odesc">Client-ready AI report with hiring confidence, skills and verification status</span>
         </span>
         <span class="rdc-ometa">
           <span class="rdc-ocost">7 Coins</span>
@@ -5872,38 +6601,56 @@ window.__buildRS=buildRecruiterSummary;
         <span class="rdc-ocirc" aria-hidden="true"></span>
       </label>
 
-      {{-- 6: Client Presentation --}}
-      <label class="rdc-opt" data-opt="6" data-coins="8">
+      {{-- 6: New R2/browser branded resume header package --}}
+      <label class="rdc-opt" data-opt="6" data-coins="2">
         <input class="rdc-rinput" type="radio" name="rdcFormat" value="6">
         <span class="rdc-onum">6</span>
-        <span class="rdc-oi rdc-ic-teal" aria-hidden="true">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+        <span class="rdc-oi" style="background:#ecfeff;color:#0e7490;" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h10l6 6v10a2 2 0 0 1-2 2H4V4z"/><path d="M14 4v6h6"/><path d="M8 13h8"/><path d="M8 17h5"/><path d="M3 7h18"/></svg>
         </span>
         <span class="rdc-obody">
-          <span class="rdc-otitle">Client Presentation <span class="rdc-p2-badge">Phase 2</span></span>
-          <span class="rdc-odesc">Polished client-ready profile deck with candidate highlights</span>
+          <span class="rdc-otitle">Resume + Company Branding <span style="background:#ecfeff;color:#0e7490;font-size:8.5px;font-weight:700;padding:1px 6px;border-radius:4px;vertical-align:middle;margin-left:4px;">R2 Fast</span></span>
+          <span class="rdc-odesc">Adds the shared-by company name and logo header above the resume without hiding resume data</span>
         </span>
         <span class="rdc-ometa">
-          <span class="rdc-ocost">8 Coins</span>
-          <span class="rdc-otime">~30 sec</span>
+          <span class="rdc-ocost">2 Coins</span>
+          <span class="rdc-otime">Smart</span>
         </span>
         <span class="rdc-ocirc" aria-hidden="true"></span>
       </label>
 
-      {{-- 7: Export Candidate Profile PDF --}}
-      <label class="rdc-opt" data-opt="7" data-coins="0" style="cursor:pointer;">
-        <input class="rdc-rinput" type="radio" name="rdcFormat" value="7">
-        <span class="rdc-onum">7</span>
-        <span class="rdc-oi" style="background:#fef2f2;color:#dc2626;" aria-hidden="true">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><path d="M12 18v-6"/><path d="M9 15l3 3 3-3"/></svg>
+      {{-- 15: Smart final package with company branding --}}
+      <label class="rdc-opt" data-opt="15" data-coins="8">
+        <input class="rdc-rinput" type="radio" name="rdcFormat" value="15">
+        <span class="rdc-onum">15</span>
+        <span class="rdc-oi" style="background:#ecfdf5;color:#059669;" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M8 13h8"/><path d="M8 17h5"/><path d="m15 18 2 2 4-4"/></svg>
         </span>
         <span class="rdc-obody">
-          <span class="rdc-otitle">Export Candidate Profile <span style="background:#fef2f2;color:#dc2626;font-size:8.5px;font-weight:700;padding:1px 6px;border-radius:4px;vertical-align:middle;margin-left:4px;">PDF</span></span>
-          <span class="rdc-odesc">Hero section, skills, summary, recruiter notes &amp; employer branding — 100% client-side, instant</span>
+          <span class="rdc-otitle">Pre-Screened Report + Resume + Company Branding <span style="background:#ecfdf5;color:#059669;font-size:8.5px;font-weight:700;padding:1px 6px;border-radius:4px;vertical-align:middle;margin-left:4px;">Auto</span></span>
+          <span class="rdc-odesc">PDF merges directly from R2; DOCX converts in browser, then the Pre-Screened Report is added on top</span>
         </span>
         <span class="rdc-ometa">
-          <span class="rdc-ocost" style="color:#16a34a;font-weight:700;">Free</span>
-          <span class="rdc-otime">~2 sec</span>
+          <span class="rdc-ocost">8 Coins</span>
+          <span class="rdc-otime">Smart</span>
+        </span>
+        <span class="rdc-ocirc" aria-hidden="true"></span>
+      </label>
+
+      {{-- 16: Smart final package without company branding --}}
+      <label class="rdc-opt" data-opt="16" data-coins="8">
+        <input class="rdc-rinput" type="radio" name="rdcFormat" value="16">
+        <span class="rdc-onum">16</span>
+        <span class="rdc-oi" style="background:#f8fafc;color:#475569;" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M9 13h6"/><path d="M9 17h4"/><path d="m4 4 16 16"/></svg>
+        </span>
+        <span class="rdc-obody">
+          <span class="rdc-otitle">Pre-Screened Report + Resume without Company Branding <span style="background:#f1f5f9;color:#475569;font-size:8.5px;font-weight:700;padding:1px 6px;border-radius:4px;vertical-align:middle;margin-left:4px;">No Logo</span></span>
+          <span class="rdc-odesc">Same smart PDF/DOCX flow, with company logo and company name removed from the report page</span>
+        </span>
+        <span class="rdc-ometa">
+          <span class="rdc-ocost">8 Coins</span>
+          <span class="rdc-otime">Smart</span>
         </span>
         <span class="rdc-ocirc" aria-hidden="true"></span>
       </label>
@@ -5953,30 +6700,47 @@ window.__buildRS=buildRecruiterSummary;
   var rdcData  = document.getElementById('rdcData');
 
   var dlUrl  = rdcData ? rdcData.getAttribute('data-dl-url')  : '';
+  var r2DirectUrl = rdcData ? rdcData.getAttribute('data-r2-direct-url') : '';
+  var r2PublicUrl = rdcData ? rdcData.getAttribute('data-r2-public-url') : '';
+  var resumePdfUrl = rdcData ? rdcData.getAttribute('data-resume-pdf-url') : '';
+  var resumeExt = rdcData ? (rdcData.getAttribute('data-file-ext') || '').toUpperCase() : '';
+  var hasResume = rdcData ? rdcData.getAttribute('data-has-resume') === 'true' : false;
 
   var optMeta = {
     1: {cost:1, label:'Download Original Resume',       avail:true,  dlKey:null},
-    2: {cost:2, label:'Download Branded Resume',        avail:true,  dlKey:'logo'},
     3: {cost:4, label:'Download ATS Highlighted Resume',avail:true,  dlKey:'hl'},
     4: {cost:6, label:'Download Branded + Highlighted', avail:true,  dlKey:'both'},
-    5: {cost:7, label:'Download Recruiter Summary',     avail:true,  dlKey:'rs'},
-    6: {cost:8, label:'Download Client Presentation',   avail:false, dlKey:null},
-    7: {cost:0, label:'Export Candidate Profile PDF',   avail:true,  dlKey:'pdf'}
+    5: {cost:7, label:'Download Pre-Screened Report',   avail:true,  dlKey:'rs'},
+    6: {cost:2, label:'Resume + Company Branding', avail:(['PDF','DOC','DOCX'].indexOf(resumeExt) !== -1), dlKey:'smart-branded-resume', unavailableMsg:'Branded resume is available for PDF, DOC and DOCX resumes only.'},
+    7: {cost:4, label:'Resume + Highlighted Keywords', avail:(['PDF','DOCX'].indexOf(resumeExt) !== -1), dlKey:'smart-highlighted-resume', unavailableMsg:'Client-side highlighted resume is available for PDF and DOCX resumes only.'},
+    8: {cost:4, label:'Resume + Skills Highlighted', avail:(['PDF','DOC','DOCX'].indexOf(resumeExt) !== -1), dlKey:'headless-option3-skills-highlighted', unavailableMsg:'Resume + Skills Highlighted is available for PDF, DOC and DOCX resumes only.'},
+    15:{cost:8, label:'Pre-Screened Report + Resume + Company Branding', avail:(['PDF','DOC','DOCX'].indexOf(resumeExt) !== -1), dlKey:'smart-prescreened-package', unavailableMsg:'Final package is available for PDF, DOC and DOCX resumes only.'},
+    16:{cost:8, label:'Pre-Screened Report + Resume without Company Branding', avail:(['PDF','DOC','DOCX'].indexOf(resumeExt) !== -1), dlKey:'smart-prescreened-package-nobrand', unavailableMsg:'Final package is available for PDF, DOC and DOCX resumes only.'}
   };
 
   var selectedOpt = 1;
   var isLoading   = false;
 
+  function hasDownloadableResume(){
+    return hasResume && !!(dlUrl || r2DirectUrl || r2PublicUrl || resumePdfUrl);
+  }
+
+  function showNoResumeMessage(){
+    showToast('No resume uploaded for this candidate. Please upload the resume first.', 'warn');
+  }
+
   function openRdc(){
+    if(!hasDownloadableResume()){
+      showNoResumeMessage();
+      return;
+    }
     overlay.classList.add('rdc-open');
     drawer.classList.add('rdc-open');
     overlay.setAttribute('aria-hidden','false');
     drawer.setAttribute('aria-hidden','false');
     drawer.focus();
+    if(typeof window.__preloadRS === 'function') window.__preloadRS();
     document.addEventListener('keydown', onEsc);
-    /* preload jsPDF + html2canvas so they're ready when the user clicks download */
-    if(!window.jspdf){ var ps=document.createElement('script'); ps.src='https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js'; ps.async=true; document.head.appendChild(ps); }
-    if(!window.html2canvas){ var hs=document.createElement('script'); hs.src='https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js'; hs.async=true; document.head.appendChild(hs); }
   }
 
   function closeRdc(){
@@ -5994,8 +6758,21 @@ window.__buildRS=buildRecruiterSummary;
   if(origBtn){
     var newBtn = origBtn.cloneNode(true);
     origBtn.parentNode.replaceChild(newBtn, origBtn);
+    if(!hasDownloadableResume()){
+      newBtn.setAttribute('aria-disabled','true');
+      newBtn.setAttribute('title','No resume uploaded for this candidate');
+      newBtn.style.opacity = '0.55';
+      newBtn.style.cursor = 'not-allowed';
+    }
     newBtn.addEventListener('click', function(e){
+      e.preventDefault();
       e.stopPropagation();
+      if(!hasDownloadableResume()){
+        newBtn.setAttribute('aria-expanded','false');
+        showNoResumeMessage();
+        return;
+      }
+      newBtn.setAttribute('aria-expanded','true');
       openRdc();
     });
   }
@@ -6024,9 +6801,27 @@ window.__buildRS=buildRecruiterSummary;
     var m = optMeta[n] || {cost:0, label:'Download'};
     if(coinEl) coinEl.textContent = m.cost === 1 ? '1 Coin' : m.cost + ' Coins';
     if(btnLbl) btnLbl.textContent = m.label;
+    if(m.dlKey === 'rs' && typeof window.__preloadRS === 'function') window.__preloadRS();
+    if(m.dlKey === 'smart-highlighted-resume' && typeof window.__preloadRSCombined === 'function') window.__preloadRSCombined();
+    if(m.dlKey === 'smart-highlighted-resume' && resumeExt === 'DOCX' && typeof window.__preloadOpenDocLocal === 'function') window.__preloadOpenDocLocal();
+    if(m.dlKey === 'headless-option3-skills-highlighted' && typeof window.__preloadRSCombined === 'function') window.__preloadRSCombined();
+    if(m.dlKey === 'headless-option3-skills-highlighted' && resumeExt === 'DOCX' && typeof window.__preloadOpenDocLocal === 'function') window.__preloadOpenDocLocal();
+    if(m.dlKey === 'smart-branded-resume' && typeof window.__preloadRSCombined === 'function') window.__preloadRSCombined();
+    if(m.dlKey === 'smart-branded-resume' && resumeExt === 'DOCX' && typeof window.__preloadOpenDocLocal === 'function') window.__preloadOpenDocLocal();
+    if(m.dlKey === 'rs-combined' && typeof window.__preloadRSCombined === 'function') window.__preloadRSCombined();
+    if(m.dlKey === 'rs-combined-nobrand' && typeof window.__preloadRSCombined === 'function') window.__preloadRSCombined();
+    if(m.dlKey === 'resume-pdf-conversion' && typeof window.__preloadRSCombined === 'function') window.__preloadRSCombined();
+    if(m.dlKey === 'browser-docx-pdf-conversion' && typeof window.__preloadBrowserDocxConversion === 'function') window.__preloadBrowserDocxConversion();
+    if(m.dlKey === 'opendoc-preview-lab' && typeof window.__preloadOpenDocLab === 'function') window.__preloadOpenDocLab();
+    if(m.dlKey === 'word-prescreened-package' && typeof window.__preloadRSCombined === 'function') window.__preloadRSCombined();
+    if(m.dlKey === 'hybrid-word-prescreened-package' && typeof window.__preloadRSCombined === 'function') window.__preloadRSCombined();
+    if(m.dlKey === 'hybrid-word-prescreened-package' && resumeExt === 'DOCX' && typeof window.__preloadOpenDocLocal === 'function') window.__preloadOpenDocLocal();
+    if((m.dlKey === 'smart-prescreened-package' || m.dlKey === 'smart-prescreened-package-nobrand') && typeof window.__preloadRSCombined === 'function') window.__preloadRSCombined();
+    if((m.dlKey === 'smart-prescreened-package' || m.dlKey === 'smart-prescreened-package-nobrand') && resumeExt === 'DOCX' && typeof window.__preloadOpenDocLocal === 'function') window.__preloadOpenDocLocal();
   }
 
   var toastTimer = null;
+  var smartCountdownTimer = null;
   function showToast(msg, type){
     if(!toastEl) return;
     toastEl.textContent = msg;
@@ -6035,7 +6830,72 @@ window.__buildRS=buildRecruiterSummary;
     toastTimer = setTimeout(function(){ toastEl.classList.remove('rdc-tshow'); }, 3500);
   }
 
+  var smartCountdownResolve = null;
+
+  function clearSmartCountdownTimer(){
+    if(smartCountdownTimer){
+      clearInterval(smartCountdownTimer);
+      smartCountdownTimer = null;
+    }
+  }
+
+  function stopSmartCountdown(){
+    clearSmartCountdownTimer();
+    if(smartCountdownResolve){
+      smartCountdownResolve(false);
+      smartCountdownResolve = null;
+    }
+  }
+
+  function escapeCountdownText(value){
+    return String(value || '').replace(/[&<>"']/g,function(ch){
+      return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch];
+    });
+  }
+
+  function buildCountdownReel(totalSeconds){
+    var parts=[];
+    for(var i=totalSeconds;i>=0;i--){
+      parts.push('<span>'+i+'</span>');
+    }
+    return parts.join('');
+  }
+
+  function runSmartCountdown(prefix,totalSeconds){
+    stopSmartCountdown();
+    totalSeconds = totalSeconds || 60;
+    if(dlBtn){
+      var itemHeight=16;
+      dlBtn.innerHTML =
+        '<span class="rdc-spin"></span>' +
+        '<span class="rdc-countdown">' +
+          '<span class="rdc-countdown-text">'+escapeCountdownText(prefix)+'</span>' +
+          '<span class="rdc-countdown-reel" aria-hidden="true">' +
+            '<span class="rdc-countdown-track" style="--rdc-count-duration:'+totalSeconds+'s;--rdc-count-steps:'+totalSeconds+';--rdc-count-shift:-'+(totalSeconds * itemHeight)+'px;">'+buildCountdownReel(totalSeconds)+'</span>' +
+          '</span>' +
+          '<span class="rdc-countdown-unit">seconds</span>' +
+        '</span>';
+    }
+    return new Promise(function(resolve){
+      smartCountdownResolve = resolve;
+      function finish(shouldContinue){
+        clearSmartCountdownTimer();
+        if(smartCountdownResolve){
+          smartCountdownResolve = null;
+          resolve(shouldContinue);
+        }
+      }
+      smartCountdownTimer = setTimeout(function(){
+        if(dlBtn){
+          dlBtn.innerHTML = '<span class="rdc-spin"></span><span>'+escapeCountdownText(prefix)+' Finalizing...</span>';
+        }
+        finish(true);
+      }, totalSeconds * 1000);
+    });
+  }
+
   function resetBtn(){
+    stopSmartCountdown();
     isLoading = false;
     if(!dlBtn) return;
     dlBtn.disabled = false;
@@ -6054,7 +6914,7 @@ window.__buildRS=buildRecruiterSummary;
       if(!m) return;
 
       if(!m.avail){
-        showToast('This format is coming in Phase 2 — stay tuned!', 'info');
+        showToast(m.unavailableMsg || 'This format is coming in Phase 2 — stay tuned!', 'info');
         return;
       }
 
@@ -6064,29 +6924,299 @@ window.__buildRS=buildRecruiterSummary;
       dlBtn.innerHTML = '<span class="rdc-spin"></span><span>Preparing download…</span>';
 
       if(selectedOpt === 1){
-        /* Original: open download URL, keep spinner visible 2 sec then close */
-        if(dlUrl){
-          window.open(dlUrl, '_blank');
+        /* Original resume: prefer direct R2 so Laravel/FrankenPHP does not stream the file. */
+        var originalResumeUrl = r2DirectUrl || r2PublicUrl || dlUrl;
+        if(originalResumeUrl){
+          window.open(originalResumeUrl, '_blank');
         } else {
           showToast('Resume file URL not available.', 'warn');
         }
         setTimeout(function(){ closeRdc(); resetBtn(); }, 2000);
 
       } else if(m.dlKey === 'rs'){
-        /* Option 5: Recruiter Summary — fully client-side using buildRsHtml */
-        if(typeof window.__buildRS !== 'function'){
+        /* Option 5: Recruiter Summary — fully client-side vector PDF */
+        if(window.__rsBusy || typeof window.__buildRS !== 'function'){
           showToast('Please wait a moment and try again.', 'warn');
           resetBtn(); return;
         }
-        window.__rsBusy = true;
-        window.__buildRS();
-        var rsTicks = 0;
-        var rsDone = setInterval(function(){
-          if(!window.__rsBusy || ++rsTicks > 600){
-            clearInterval(rsDone);
-            closeRdc(); resetBtn();
-          }
-        }, 100);
+        window.__buildRS().then(function(ok){
+          if(ok) closeRdc();
+        }).catch(function(){
+          showToast('Could not generate Recruiter Summary. Please try again.', 'warn');
+        }).finally(function(){
+          resetBtn();
+        });
+
+      } else if(m.dlKey === 'rs-combined'){
+        /* Option 8: Pre-Screened Report + Original Resume.
+           Report + merge run client-side; Word resumes use the cached enterprise PDF converter first. */
+        if(window.__rsBusy || typeof window.__buildCombinedRSResume !== 'function'){
+          showToast('Please wait a moment and try again.', 'warn');
+          resetBtn(); return;
+        }
+        if(!resumePdfUrl || ['PDF','DOC','DOCX'].indexOf(resumeExt) === -1){
+          showToast('Combined report is available for PDF, DOC and DOCX resumes.', 'warn');
+          resetBtn(); return;
+        }
+        dlBtn.innerHTML = '<span class="rdc-spin"></span><span>' + (resumeExt === 'PDF' ? 'Merging PDF...' : 'Converting Word resume...') + '</span>';
+        window.__buildCombinedRSResume(resumePdfUrl,{resumeUrl:dlUrl,resumeExt:resumeExt}).then(function(ok){
+          if(ok) closeRdc();
+        }).catch(function(){
+          showToast('Could not generate combined report. Please try again.', 'warn');
+        }).finally(function(){
+          resetBtn();
+        });
+
+      } else if(m.dlKey === 'rs-combined-nobrand'){
+        /* Option 9: combined report with company branding removed from the report page; Word conversion remains cached. */
+        if(window.__rsBusy || typeof window.__buildCombinedRSResume !== 'function'){
+          showToast('Please wait a moment and try again.', 'warn');
+          resetBtn(); return;
+        }
+        if(!resumePdfUrl || ['PDF','DOC','DOCX'].indexOf(resumeExt) === -1){
+          showToast('Combined report is available for PDF, DOC and DOCX resumes.', 'warn');
+          resetBtn(); return;
+        }
+        dlBtn.innerHTML = '<span class="rdc-spin"></span><span>' + (resumeExt === 'PDF' ? 'Merging PDF...' : 'Converting Word resume...') + '</span>';
+        window.__buildCombinedRSResume(resumePdfUrl,{noBranding:true,resumeUrl:dlUrl,resumeExt:resumeExt}).then(function(ok){
+          if(ok) closeRdc();
+        }).catch(function(){
+          showToast('Could not generate combined report. Please try again.', 'warn');
+        }).finally(function(){
+          resetBtn();
+        });
+
+      } else if(m.dlKey === 'resume-pdf-conversion'){
+        /* Option 10: isolated resume-to-PDF quality gate before enabling merge as a client-ready flow. */
+        if(window.__rsBusy || typeof window.__convertResumeToPdfOnly !== 'function'){
+          showToast('Please wait a moment and try again.', 'warn');
+          resetBtn(); return;
+        }
+        if(!resumePdfUrl || ['PDF','DOC','DOCX'].indexOf(resumeExt) === -1){
+          showToast('Resume PDF conversion is available for PDF, DOC and DOCX resumes.', 'warn');
+          resetBtn(); return;
+        }
+        dlBtn.innerHTML = '<span class="rdc-spin"></span><span>' + (resumeExt === 'PDF' ? 'Preparing PDF...' : 'Converting Word to PDF...') + '</span>';
+        window.__convertResumeToPdfOnly(dlUrl,resumePdfUrl,resumeExt).then(function(ok){
+          if(ok) closeRdc();
+        }).catch(function(){
+          showToast('Could not convert resume to PDF. Please try again.', 'warn');
+        }).finally(function(){
+          resetBtn();
+        });
+
+      } else if(m.dlKey === 'browser-docx-pdf-conversion'){
+        /* Option 11: experimental browser-only DOCX conversion for low-load compatible templates. */
+        if(window.__rsBusy || typeof window.__convertResumeToPdfBrowserOnly !== 'function'){
+          showToast('Please wait a moment and try again.', 'warn');
+          resetBtn(); return;
+        }
+        if(resumeExt !== 'DOCX' || !dlUrl){
+          showToast('Browser conversion is available only for DOCX resumes. Use option 10 for PDF/DOC files.', 'warn');
+          resetBtn(); return;
+        }
+        dlBtn.innerHTML = '<span class="rdc-spin"></span><span>Converting DOCX in browser...</span>';
+        window.__convertResumeToPdfBrowserOnly(dlUrl,resumeExt).then(function(ok){
+          if(ok) closeRdc();
+        }).catch(function(){
+          showToast('Browser DOCX conversion failed. Please use option 10.', 'warn');
+        }).finally(function(){
+          resetBtn();
+        });
+
+      } else if(m.dlKey === 'opendoc-preview-lab'){
+        /* Option 12: guarded OpenDoc WASM lab. It runs only after local OpenDoc assets are installed. */
+        if(window.__rsBusy || typeof window.__convertResumeWithOpenDocLab !== 'function'){
+          showToast('Please wait a moment and try again.', 'warn');
+          resetBtn(); return;
+        }
+        if(resumeExt !== 'DOCX' || !dlUrl){
+          showToast('OpenDoc lab is available only for DOCX resumes.', 'warn');
+          resetBtn(); return;
+        }
+        dlBtn.innerHTML = '<span class="rdc-spin"></span><span>Checking OpenDoc lab...</span>';
+        window.__convertResumeWithOpenDocLab(dlUrl,resumeExt).then(function(ok){
+          if(ok) closeRdc();
+        }).catch(function(){
+          showToast('OpenDoc lab could not run. Please use option 10.', 'warn');
+        }).finally(function(){
+          resetBtn();
+        });
+
+      } else if(m.dlKey === 'word-prescreened-package'){
+        /* Option 13: DOC/DOCX-only package.
+           Enterprise converter is primary; DOCX can fall back to browser conversion before merge. */
+        if(window.__rsBusy || typeof window.__buildWordPreScreenedResume !== 'function'){
+          showToast('Please wait a moment and try again.', 'warn');
+          resetBtn(); return;
+        }
+        if(['DOC','DOCX'].indexOf(resumeExt) === -1 || (!resumePdfUrl && !(resumeExt === 'DOCX' && dlUrl))){
+          showToast('This option is available only for DOC and DOCX resumes.', 'warn');
+          resetBtn(); return;
+        }
+        dlBtn.innerHTML = '<span class="rdc-spin"></span><span>Converting Word resume and adding report...</span>';
+        window.__buildWordPreScreenedResume(resumePdfUrl,{resumeUrl:dlUrl,resumeExt:resumeExt}).then(function(ok){
+          if(ok) closeRdc();
+        }).catch(function(){
+          showToast('Could not generate Word report package. Please try option 10 first.', 'warn');
+        }).finally(function(){
+          resetBtn();
+        });
+
+      } else if(m.dlKey === 'hybrid-word-prescreened-package'){
+        /* Option 14: high-concurrency DOCX package.
+           Conversion, report generation, and merge run client-side to protect server CPU. */
+        if(window.__rsBusy || typeof window.__buildHybridWordPreScreenedResume !== 'function'){
+          showToast('Please wait a moment and try again.', 'warn');
+          resetBtn(); return;
+        }
+        if(resumeExt !== 'DOCX' || (!r2DirectUrl && !r2PublicUrl)){
+          showToast('Direct R2 DOCX URL is not available. Use option 13 for server converter mode.', 'warn');
+          resetBtn(); return;
+        }
+        dlBtn.innerHTML = '<span class="rdc-spin"></span><span>Fetching DOCX from R2 and merging in browser...</span>';
+        window.__buildHybridWordPreScreenedResume('',{resumeUrl:[r2DirectUrl,r2PublicUrl],resumeExt:resumeExt}).then(function(ok){
+          if(ok) closeRdc();
+        }).catch(function(){
+          showToast('Could not generate hybrid Word report package. Please try option 13.', 'warn');
+        }).finally(function(){
+          resetBtn();
+        });
+
+      } else if(m.dlKey === 'headless-option3-skills-highlighted'){
+        /* Headless option 3: direct/converted PDF, hidden PDF.js viewer, option-3-style skill detection, browser download. */
+        if(window.__rsBusy || typeof window.__buildHeadlessOption3SkillsHighlightedResume !== 'function'){
+          showToast('Please wait a moment and try again.', 'warn');
+          resetBtn(); return;
+        }
+        if(['PDF','DOC','DOCX'].indexOf(resumeExt) === -1){
+          showToast('Resume + Skills Highlighted is available for PDF, DOC and DOCX resumes only.', 'warn');
+          resetBtn(); return;
+        }
+        if(['PDF','DOCX'].indexOf(resumeExt) !== -1 && !r2DirectUrl && !r2PublicUrl && !dlUrl && !resumePdfUrl){
+          showToast('Resume URL is not available.', 'warn');
+          resetBtn(); return;
+        }
+        if(resumeExt === 'DOC' && !resumePdfUrl){
+          showToast('DOC resume needs enterprise converter PDF URL.', 'warn');
+          resetBtn(); return;
+        }
+        runSmartCountdown('Downloading Resume...', 60);
+        setTimeout(function(){
+          window.__buildHeadlessOption3SkillsHighlightedResume({
+            resumeUrl:[r2DirectUrl,r2PublicUrl,dlUrl],
+            resumeExt:resumeExt,
+            resumePdfUrl:resumePdfUrl
+          }).then(function(ok){
+            if(ok) closeRdc();
+          }).catch(function(){
+            showToast('Could not generate Resume + Skills Highlighted. Please try option 3.', 'warn');
+          }).finally(function(){
+            resetBtn();
+          });
+        }, 250);
+
+      } else if(m.dlKey === 'smart-highlighted-resume'){
+        /* New highlighted resume: direct R2/browser flow, independent of the Resume/CV tab. */
+        if(window.__rsBusy || typeof window.__buildSmartHighlightedResume !== 'function'){
+          showToast('Please wait a moment and try again.', 'warn');
+          resetBtn(); return;
+        }
+        if(['PDF','DOCX'].indexOf(resumeExt) === -1){
+          showToast('Client-side highlighted resume is available for PDF and DOCX resumes only.', 'warn');
+          resetBtn(); return;
+        }
+        if(!r2DirectUrl && !r2PublicUrl && !dlUrl){
+          showToast('Resume URL is not available.', 'warn');
+          resetBtn(); return;
+        }
+        runSmartCountdown('Downloading Resume...', 60);
+        setTimeout(function(){
+          window.__buildSmartHighlightedResume({
+            resumeUrl:[r2DirectUrl,r2PublicUrl,dlUrl],
+            resumeExt:resumeExt
+          }).then(function(ok){
+            if(ok) closeRdc();
+          }).catch(function(){
+            showToast('Could not generate highlighted resume. Please try the original ATS option.', 'warn');
+          }).finally(function(){
+            resetBtn();
+          });
+        }, 250);
+
+      } else if(m.dlKey === 'smart-branded-resume'){
+        /* New branded resume: direct R2/browser flow with only the shared-by company header added above resume content. */
+        if(window.__rsBusy || typeof window.__buildSmartBrandedResume !== 'function'){
+          showToast('Please wait a moment and try again.', 'warn');
+          resetBtn(); return;
+        }
+        if(['PDF','DOC','DOCX'].indexOf(resumeExt) === -1){
+          showToast('Branded resume is available for PDF, DOC and DOCX resumes only.', 'warn');
+          resetBtn(); return;
+        }
+        if(resumeExt === 'PDF' && !r2DirectUrl && !r2PublicUrl && !dlUrl){
+          showToast('PDF resume URL is not available.', 'warn');
+          resetBtn(); return;
+        }
+        if(resumeExt === 'DOCX' && !r2DirectUrl && !r2PublicUrl && !dlUrl && !resumePdfUrl){
+          showToast('DOCX resume URL is not available.', 'warn');
+          resetBtn(); return;
+        }
+        if(resumeExt === 'DOC' && !resumePdfUrl){
+          showToast('DOC resumes need the enterprise converter before branding.', 'warn');
+          resetBtn(); return;
+        }
+        runSmartCountdown('Downloading Resume...', 60);
+        setTimeout(function(){
+          window.__buildSmartBrandedResume(resumePdfUrl,{
+            resumeUrl:[r2DirectUrl,r2PublicUrl,dlUrl],
+            resumeExt:resumeExt
+          }).then(function(ok){
+            if(ok) closeRdc();
+          }).catch(function(){
+            showToast('Could not generate branded resume. Please try original download.', 'warn');
+          }).finally(function(){
+            resetBtn();
+          });
+        }, 250);
+
+      } else if(m.dlKey === 'smart-prescreened-package' || m.dlKey === 'smart-prescreened-package-nobrand'){
+        /* Options 15/16: final smart package.
+           PDF resumes fetch directly from R2; DOCX converts in browser; DOC uses enterprise converter fallback. */
+        if(window.__rsBusy || typeof window.__buildSmartPreScreenedResume !== 'function'){
+          showToast('Please wait a moment and try again.', 'warn');
+          resetBtn(); return;
+        }
+        if(['PDF','DOC','DOCX'].indexOf(resumeExt) === -1){
+          showToast('Final package is available for PDF, DOC and DOCX resumes only.', 'warn');
+          resetBtn(); return;
+        }
+        if(resumeExt === 'PDF' && !r2DirectUrl && !r2PublicUrl && !dlUrl){
+          showToast('PDF resume URL is not available.', 'warn');
+          resetBtn(); return;
+        }
+        if(resumeExt === 'DOCX' && !r2DirectUrl && !r2PublicUrl && !dlUrl && !resumePdfUrl){
+          showToast('DOCX resume URL is not available.', 'warn');
+          resetBtn(); return;
+        }
+        if(resumeExt === 'DOC' && !resumePdfUrl){
+          showToast('DOC resumes need the enterprise converter before final package generation.', 'warn');
+          resetBtn(); return;
+        }
+        runSmartCountdown('Generating Report, Kindly wait.', 60);
+        setTimeout(function(){
+          window.__buildSmartPreScreenedResume(resumePdfUrl,{
+            noBranding:(m.dlKey === 'smart-prescreened-package-nobrand'),
+            resumeUrl:[r2DirectUrl,r2PublicUrl,dlUrl],
+            resumeExt:resumeExt
+          }).then(function(ok){
+            if(ok) closeRdc();
+          }).catch(function(){
+            showToast('Could not generate final package. Please try option 13 or option 10.', 'warn');
+          }).finally(function(){
+            resetBtn();
+          });
+        }, 250);
 
       } else if(m.dlKey === 'pdf'){
         /* Option 7: Export Candidate Profile PDF */
@@ -6680,7 +7810,7 @@ function buildDef(d){
         {
           stack: [
             {text:'www.jero.works',bold:true,fontSize:7,color:'#FFFFFF',alignment:'right'},
-            {text:'© 2026 Jero AI. All rights reserved.',fontSize:4.5,color:'#6B7280',alignment:'right',margin:[0,1,0,0]}
+            {text:'',fontSize:4.5,color:'#6B7280',alignment:'right',margin:[0,1,0,0]}
           ],
           width: 110
         }

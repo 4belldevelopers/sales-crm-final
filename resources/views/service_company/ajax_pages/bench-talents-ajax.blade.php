@@ -43,12 +43,13 @@
    
 
     @endphp
-        <tr style="height: 82px; position: relative;">
-            <td>
+        <tr style="height: 84px; position: relative;">
+            {{-- Col 1: TALENT --}}
+            <td class="align-middle" style="position: relative; padding-bottom: 24px !important;">
                 @php
                     $bgTextDecore = $strVal = '';
                     $str = trim(@$row->full_name);
-                    $str = $strVal = strtolower($str[0]);
+                    $str = $strVal = strtolower($str[0] ?? 'c');
                     $str = ord($str);
                     if ($str >= 97 && $str <= 101) {
                         $bgTextDecore = 'fs-3 bg-light-danger text-danger';
@@ -64,17 +65,43 @@
                         $bgTextDecore = 'fs-3 bg-light-secondary text-dark';
                     }
 
-                    /* Skills — absolute footer strip */
-                    $skillArr = array_values(array_filter(array_map('trim', explode(',', (string) ($row->skills ?? '')))));
-                    $skilltag = '';
-                    foreach ($skillArr as $sval) {
+                    /* Skills & Matched Skill Highlighting */
+                    $matchedSkillsArr = array_map('strtolower', array_map('trim', explode(',', (string) ($row->matched_skills ?? ''))));
+                    $candidateSkills = array_values(array_filter(array_map('trim', explode(',', (string) ($row->skills ?? '')))));
+                    
+                    $matchedChips = [];
+                    $otherChips = [];
+                    foreach ($candidateSkills as $sval) {
                         if ($sval === '') { continue; }
-                        $skilltag .= '<span class="badge badge-light my-1 skill" style="font-weight:300;">' . e(ucfirst($sval)) . '</span> ';
+                        $svalLower = strtolower($sval);
+                        $isMatched = false;
+                        foreach ($matchedSkillsArr as $ms) {
+                            if ($ms !== '' && (strpos($svalLower, $ms) !== false || strpos($ms, $svalLower) !== false)) {
+                                $isMatched = true;
+                                break;
+                            }
+                        }
+                        if ($isMatched) {
+                            $matchedChips[] = '<span class="badge my-1 skill me-1" style="background:#dcfce7;color:#15803d;font-weight:600;border:1px solid #bbf7d0;" title="Matches a required skill">' . e(ucfirst($sval)) . '</span>';
+                        } else {
+                            $otherChips[] = '<span class="badge badge-light my-1 skill me-1" style="font-weight:300;">' . e(ucfirst($sval)) . '</span>';
+                        }
+                    }
+                    $skilltag = implode(' ', array_merge($matchedChips, $otherChips));
+
+                    /* Match % badge: >=90% green, 75%-89% blue, <75% red */
+                    $matchPercentVal = (float) ($row->skill_match_percent ?? 0);
+                    if ($matchPercentVal >= 90) {
+                        $matchBadge = '<span class="badge my-1 me-1" style="background:#dcfce7;color:#15803d;font-weight:600;">Match ' . (int)$matchPercentVal . '%</span> ';
+                    } elseif ($matchPercentVal >= 75) {
+                        $matchBadge = '<span class="badge my-1 me-1" style="background:#dbeafe;color:#1d4ed8;font-weight:600;">Match ' . (int)$matchPercentVal . '%</span> ';
+                    } else {
+                        $matchBadge = '<span class="badge my-1 me-1" style="background:#fee2e2;color:#dc2626;font-weight:600;">Match ' . (int)$matchPercentVal . '%</span> ';
                     }
 
-                    /* Match % badge — shown before skills, replaces Ads badge in this view */
-                    $matchBadge = (!empty($row->skill_match_percent))
-                        ? '<span class="badge badge-light-info my-0">' . (int)$row->skill_match_percent . '%</span> '
+                    /* Ads switch tag */
+                    $adsBadge = (isset($row->ads_switch_order) && $row->ads_switch_order == 0)
+                        ? '<span class="badge badge-light-danger my-0 fw-bold me-1" style="font-size:10px; color:#EF4444;">Ads</span> '
                         : '';
 
                     /* View / Download counts */
@@ -89,368 +116,224 @@
                     }
                 @endphp
 
-                <div class="d-flex align-items-start">
-                    <div class="symbol symbol-circle symbol-40px overflow-hidden me-2 border-radius-5 flex-shrink-0">
+                <div class="d-flex align-items-center me-2">
+                    <div class="symbol symbol-circle symbol-40px overflow-hidden me-3 border-radius-5 flex-shrink-0">
                         <a href="javascript:void(0);" data-row-id="{{ $row->id }}" class="d-flex w-100 h-100">
-                            <div class="symbol-label {{ $bgTextDecore }} border-radius-5 d-flex align-items-center justify-content-center">{{ strtoupper($strVal) }}</div>
+                            <div class="symbol-label {{ $bgTextDecore }} border-radius-5 d-flex align-items-center justify-content-center fw-bold">{{ strtoupper($strVal) }}</div>
                         </a>
                     </div>
                     <div class="d-flex flex-column">
                         <a href="javascript:void(0);" data-row-id="{{ $row->id }}"
                             class="text-dark fw-bolder text-hover-primary fs-6"
-                            data-toggle="tooltip" title="{{ ucwords(@$row->full_name) }}">{{ ucwords(mb_substr(@$row->full_name, 0, 20)) }}</a>
-                        <a href="javascript:void(0);" data-row-id="{{ $row->id }}"
-                            class="text-muted fw-bold d-block fs-7 text-hover-primary"
-                            data-toggle="tooltip" title="{{ ucwords(@$row->current_designation) }}">{{ ucwords(mb_substr(@$row->current_designation, 0, 20)) }}</a>
+                            data-toggle="tooltip" title="{{ ucwords(@$row->full_name) }}">{{ ucwords(mb_substr(@$row->full_name, 0, 22)) }}</a>
+                        <span class="text-muted fw-normal fs-7"
+                            data-toggle="tooltip" title="{{ ucwords(@$row->current_designation) }}">{{ ucwords(mb_substr(@$row->current_designation ?: 'Developer', 0, 25)) }}</span>
                     </div>
                 </div>
 
-                {{-- Match% + Skills footer strip (bottom-left) --}}
-                @if($matchBadge || $skilltag)
-                <div style="position: absolute; bottom: 0; left: 0; white-space: nowrap; width: 80%; overflow: hidden;">
-                    {!! $matchBadge !!}{!! $skilltag !!}
+                {{-- Skills & Tags footer strip --}}
+                @if($adsBadge || $matchBadge || $skilltag)
+                <div class="mt-1" style="position: absolute; bottom: 0; white-space: nowrap; width: 100%;">
+                    {!! $adsBadge !!}{!! $matchBadge !!}{!! $skilltag !!}
                 </div>
                 @endif
+            </td>
 
-                {{-- View / Download stats (bottom-right, inline) --}}
-                <div style="position: absolute; bottom: 4px; right: 8px; display: flex; align-items: center; gap: 14px;">
-                    <span style="display:flex; align-items:center; gap:4px; color:#a1a5b7; font-size:11px; font-weight:500;">
-                        <i class="fa fa-eye" style="font-size:12px;"></i> {{ $viewCount }}
-                    </span>
-                    <span style="display:flex; align-items:center; gap:4px; color:#a1a5b7; font-size:11px; font-weight:500;">
-                        <i class="fa fa-download" style="font-size:12px;"></i> {{ $downloadCount }}
-                    </span>
+            {{-- Col 3: EXPERIENCE --}}
+            <td class="align-middle">
+                @php
+                    $experience = trim((string) @$row->total_exp);
+                    if (strpos($experience, '.') !== false) {
+                        $parts = explode('.', $experience);
+                        $formattedExperience = (isset($parts[1]) && $parts[1] === '00') ? $parts[0] : $experience;
+                    } else {
+                        $formattedExperience = $experience;
+                    }
+
+                    $rawWm = strtolower(trim((string)(
+                        $row->work_mode ?? $row->work_type ?? $row->wm ?? $row->prefer_work_mode ?? $row->location_type ?? $row->work_location ?? ''
+                    )));
+
+                    if ($rawWm === 'office' || $rawWm === 'onsite' || $rawWm === 'no' || strpos($rawWm, 'onsite') !== false || strpos($rawWm, 'office') !== false) {
+                        $modeBadge = '<span style="color: #D97706; font-weight: 600; font-size: 11px;">Onsite</span>';
+                    } elseif ($rawWm === 'hybrid' || $rawWm === 'other' || strpos($rawWm, 'hybrid') !== false) {
+                        $modeBadge = '<span style="color: #2563EB; font-weight: 600; font-size: 11px;">Hybrid</span>';
+                    } elseif ($rawWm === 'remote' || $rawWm === 'yes' || strpos($rawWm, 'remote') !== false) {
+                        $modeBadge = '<span style="color: #059669; font-weight: 600; font-size: 11px;">Remote</span>';
+                    } else {
+                        // If not set, display dash (-)
+                        $modeBadge = '<span class="text-muted fs-7">—</span>';
+                    }
+                @endphp
+                <div class="d-flex flex-column">
+                    <span class="text-dark fw-bolder fs-6">{{ $formattedExperience ?: '0' }} Yrs</span>
+                    {!! $modeBadge !!}
                 </div>
             </td>
-            <td>
+
+            {{-- Col 4: AVAILABILITY --}}
+            <td class="align-middle">
                 @php
-                    $total_exp = $row->total_exp;
-                    if($total_exp == '0.'){
-                    $total_exp = str_replace('.','',$total_exp);
-                    }
-                    $rel_exp = $row->rel_exp;
-                    if($total_exp == '0.'){
-                    $rel_exp = str_replace('.','',$rel_exp);
-                    }
-                    if($total_exp==0 && $rel_exp==0){
-                        $rel_exp = ''; 
-                    }
-
-                        $experience = trim((string) @$row->total_exp);
-                        // Keep exact value like 3.0, 5.6, 9.10 — remove only ".00"
-                        if (strpos($experience, '.') !== false) {
-                            $parts = explode('.', $experience);
-                            if (isset($parts[1])) {
-                                // If decimals are exactly "00", remove them
-                                if ($parts[1] === '00') {
-                                    $formattedExperience = $parts[0];
-                                } else {
-                                    $formattedExperience = $experience; // keep as-is like 3.0, 5.6, 9.10
-                                }
-                            } else {
-                                $formattedExperience = $experience;
-                            }
-                        } else {
-                            $formattedExperience = $experience;
-                        }
-
-                        $rel_experience = trim((string) @$row->rel_exp);
-                        // Keep exact value like 3.0, 5.6, 9.10 — remove only ".00"
-                        if (strpos($rel_experience, '.') !== false) {
-                            $parts = explode('.', $rel_experience);
-                            if (isset($parts[1])) {
-                                // If decimals are exactly "00", remove them
-                                if ($parts[1] === '00') {
-                                    $rel_formattedExperience = $parts[0];
-                                } else {
-                                    $rel_formattedExperience = $rel_experience; // keep as-is like 3.0, 5.6, 9.10
-                                }
-                            } else {
-                                $rel_formattedExperience = $rel_experience;
-                            }
-                        } else {
-                            $rel_formattedExperience = $rel_experience;
-                        }
-
-                        echo '<div class="d-flex flex-column">
-                    <a href="javascript:void(0);" class="text-dark fw-bolder fs-6">' .$formattedExperience . ' Y' . 
-                        '</a>
-                        <span class="text-muted fw-bold d-block fs-7">' . $rel_formattedExperience . ' Y'. 
-                        '</span>
-                    </div>';
-                @endphp
-
-            </td>
-            <td>
-                @php
-                    $pay_rate_currency = $bill_rate_currency = $pay_rate_amount = $bill_rate_amount = $pay_rate_mode = $bill_rate_mode = '';
-
-                    $pay_rate_amount = GeneralMethod::thousandsCurrencyFormat($row->pay_rate_amount);
-                    $bill_rate_amount = GeneralMethod::thousandsCurrencyFormat($row->bill_rate_amount);
-                    $company_id 			=	auth()->user()->company_id;
-                    $currencyBenchshowMode = GeneralMethod::getCompanyCurrencyBenchshowMode($company_id);
-                    $currencyArr 	=	array(	
-							0	=>	"INR", 
-							1	=>	"EUR", 
-							2	=>	"JPY", 
-							3	=>	"GBP", 
-							4	=>	"USD",
-							5	=>	"AED"
-						);
-                    
-                    $currency =   $currencyArr[$sal_currency] ??  $currencyBenchshowMode->currency_code;
-                    $mode =  $sal_mode ?? $currencyBenchshowMode->show_mode;
-
-                    $payFormatViewSalary = GeneralMethod::formatViewSalary($row->ctc_yearly,$currency,$mode);
-                    $billFormatViewSalary = GeneralMethod::formatViewSalary($row->ectc_yearly,$currency,$mode);
-                    
-                    $pay_rate_currency = $currencySymbole[$payFormatViewSalary->currency];
-                    $pay_rate_mode = $salaryMode[$payFormatViewSalary->mode];
-                    $bill_rate_currency = $currencySymbole[$billFormatViewSalary->currency];
-                    $bill_rate_mode = $salaryMode[$billFormatViewSalary->mode];
-
-                    echo '<div class="d-flex flex-column">
-				<a href="javascript:void(0);" class="text-dark fw-bolder fs-6">' .
-                        $bill_rate_currency .
-                        $billFormatViewSalary->amount.
-                        '/' .
-                        mb_substr($bill_rate_mode,0,1) .
-                        '</a>
-                    <span class="text-muted fw-bold d-block fs-7">' .
-                        @$pay_rate_currency .
-                        $payFormatViewSalary->amount .
-                        '/' .
-                        mb_substr($pay_rate_mode,0,1) .
-                        '</span>
-                  </div>';
-                @endphp
-            </td>
-            <td>
-                @php
-                    $outsourcing_type = 'Full-time';
-                    if ($row->outsourcing_type == 2) {
-                        $outsourcing_type = 'Contract';
-                    }
-                    
-
-                    echo ' <div class="d-flex flex-column">
-						  <a href="javascript:void(0);" class="text-dark fw-bolder fs-6" data-toggle="tooltip" title="' .
-                        @$row->qualification_name .
-                        '" style="text-transform: uppercase;!important">' .
-                        @$row->qualification_name .
-                        '</a>
-						  <span class="text-muted fw-bold text-muted d-block fs-7" data-toggle="tooltip" title="' .
-                        $outsourcing_type .
-                        '">' .
-                        mb_substr($outsourcing_type, 0, 12) .
-                        '</span> 
-						</div>';
-                @endphp
-            </td>
-            <td>
-                @php
-                    $npArr = ['Notice period', 'Available from', 'Immediate'];
+                    $npMode = $row->serving_notice_period_mode ?? 0;
                     $npDate = $row->np_id;
-                    if ($row->serving_notice_period_mode == 0) {
-                        $npDate = $row->np_id == 1 ? $row->np_id . ' Day' : $row->np_id . ' Days';
-                    } elseif ($row->serving_notice_period_mode == 1) {
-                                                $originalDate = $row->np_id;
-                        $npDate = date('d-M-y', strtotime($originalDate));
-                        $today = date('Y-m-d'); 
-                        //if(date('Y-m-d', strtotime($row->np_id)) < $today){
-                        //     $npDate = "Immediate";
-                        // }
-                    } elseif ($row->serving_notice_period_mode == 2) {
+                    if ($npMode == 0) {
+                        $npDate = ($row->np_id == 1 || $row->np_id == '1') ? $row->np_id . ' Day' : ($row->np_id ? $row->np_id . ' Days' : 'Immediate');
+                    } elseif ($npMode == 1 || $npMode == 2) {
                         $originalDate = $row->np_id;
                         $npDate = date('d-M-y', strtotime($originalDate));
-                        $today = date('Y-m-d'); 
-                        if(date('Y-m-d', strtotime($row->np_id)) < $today){
-                            $npDate = "";
+                        if (date('Y-m-d', strtotime($originalDate)) < date('Y-m-d')) {
+                            $npDate = "Immediate";
                         }
                     } else {
-                        $npDate = '';
+                        $npDate = 'Immediate';
                     }
-                    echo '<div class="d-flex flex-column">
-					  <a href="javascript:void(0);" class="text-dark fw-bolder fs-6">' .
-                        $npArr[$row->serving_notice_period_mode] .
-                        '</a> 
-					  <span class="text-muted fw-bold text-muted d-block fs-7" data-toggle="tooltip" title="' .
-                        $row->np_id .
-                        '">' .
-                        $npDate .
-                        '</span>
-					</div>';
-                @endphp
-            </td>
-            <td>
-                @php
 
-                    $country = $state = $row_state_name = $row_country_name = $city = $row_city_name = '';
-                    if (empty($row->country)) {
-                        $row_country_name = '----';
+                    $npVal = strtolower((string)$row->np_id);
+                    $isImmediate = ($npMode == 2 || stripos($npVal, 'immediate') !== false || $npDate === 'Immediate' || $npVal === '0' || $npVal === '');
+
+                    if ($isImmediate) {
+                        $availHtml = '<span style="color: #10B981; font-weight: 700; font-size: 13px;">Immediate</span>';
                     } else {
-                        if (!empty(@$row->country)) {
-                            if (is_numeric(@$row->country)) {
-                                $country_name_Arr = GeneralMethod::getCountryName(@$row->country);
-                                foreach ($country_name_Arr as $cval) {
-                                    $row_country_name = ucwords($cval['name']);
-                                }
-                            }
-                        }
+                        $availHtml = '<span style="color: #D97706; font-weight: 700; font-size: 13px;">' . e($npDate) . '</span>';
                     }
 
-                    if (empty($row->state)) {
-                        $row_state_name = '----';
-                    } else {
-                        $row_state = DB::table('state_list')
-                            ->select('*')
-                            ->where('id', @$row->state)
-                            ->first();
-                        $row_state_name = @$row_state->state;
-                    }
-
-                    $row_city = DB::table('city_list')
-                        ->select('*')
-                        ->where('city_id', @$row->city_id)
-                        ->first();
-                    $row_city_name = @$row_city->city;
-                    $row_city_name = @$row->city_name;
-                    $row_state_name = @$row->state_name;
-                    $row_country_name = @$row->country_name;
-
-                    echo '<div class="d-flex flex-column">
-                    	<a href="javascript:void(0);" class="text-dark fw-bolder text-hover-primary fs-6" data-toggle="tooltip" title="' .
-                        ucwords($row_city_name) .
-                        '">' .
-                        ucwords(mb_substr($row_city_name, 0, 10)) .
-                        '</a>
-                    	<span class="text-muted fw-bold d-block fs-7" data-toggle="tooltip" title="' .
-                        ucwords($row_state_name) .
-                        ' | ' .
-                        strtoupper($row_country_name) .
-                        '">' .
-                        ucfirst(mb_substr($row_state_name, 0, 5)) .
-                        ' | ' .
-                        strtoupper(mb_substr($row_country_name, 0, 2)) .
-                        '</span>
-                    </div>';
+                    $outsourcing_type = ($row->outsourcing_type == 2) ? 'Contract' : 'Full-time';
                 @endphp
-            </td>
-            <td>
-                 @php
-                    $subS = '';
-                    if ($row->master_status_name == 'Bench') {
-                        $subS = 'Live';
-                        if ($row->superadminstatus == 0) {
-                            $subS = 'Pending';
-                        }
-                    }
-                    $result = GeneralMethod::bench_status_subline($row->status);
-					$subS = ($result->name) ?? '';
-                    echo '<div class="d-flex flex-column">
-                      <a href="javascript:void(0);" data-row-id="' .$row->id . '" class="fw-bold fs-6  stage_sub_stage ' . $row->css_style . '" data-toggle="modal" data-target="#stage_sub_stage" style="color: #009ef7; text-decoration: none;">' . $row->master_status_name .'</a>
-                      <span class="fw-bold text-muted d-block fs-7" data-bs-toggle="tooltip" data-bs-placement="top" title="" data-original-title="'.$subS.'">' .
-                        $subS .
-                        '</span>
-                    </div>';
-                @endphp
-            </td>
-            <td>
-                @php
-                    $created_at = '';
-                    $created_at = GeneralMethod::ymdTodmyNotTime($row->created_at); //$newDate = date("d M , Y", strtotime($row->created_at));
-                     $hmDataName = DB::table('bench_assign')
-                        ->join('users', 'users.id', '=', 'bench_assign.user_id')
-                        ->select('users.id', 'users.name', 'users.image')
-                        ->where('bench_assign.bench_applications_id', '=', $row->id)
-                        ->where('bench_assign.company_id', '=', $company_id)
-                        ->where('users.company_id', '=', $company_id)
-                        ->first();
-
-                    echo '<div class="d-flex flex-column">
-                        <a href="javascript:void(0);" class="text-dark fw-bolder text-hover-primary fs-6">' .
-                        $created_at .
-                        '</a>
-                        <span class="text-muted fw-bold text-muted d-block fs-7 text-hover-primary">'.@$hmDataName->name.'</span>
-                        </div>';
-                @endphp
-            </td>
-            {{-- Relationship Manager --}}
-            <td>
-                @php
-                    $hmCount = DB::table('bench_assign')
-                        ->join('users', 'users.id', '=', 'bench_assign.user_id')
-                        ->where('bench_assign.bench_applications_id', $row->id)
-                        ->where('bench_assign.company_id', $company_id)
-                        ->where('users.company_id', $company_id)
-                        ->count();
-                    $hmData = DB::table('bench_assign')
-                        ->join('users', 'users.id', '=', 'bench_assign.user_id')
-                        ->select('users.name', 'users.image')
-                        ->where('bench_assign.bench_applications_id', $row->id)
-                        ->where('bench_assign.company_id', $company_id)
-                        ->where('users.company_id', $company_id)
-                        ->orderBy('users.name', 'ASC')->take(1)->first();
-                    $managerFullName = @$hmData->name ? ucwords($hmData->name) : 'Unassigned';
-                    $managerFirstName = ucfirst(explode(' ', trim($managerFullName))[0]);
-                    $managerImg = (!empty(@$hmData->image) && strlen(@$hmData->image) > 10) ? $hmData->image : null;
-                    $extra = $hmCount > 1 ? ' +' . ($hmCount - 1) : '';
-                @endphp
-                <div class="d-flex align-items-center gap-2">
-                    @if($managerImg)
-                        <img src="{{ $managerImg }}" alt="{{ $managerFullName }}"
-                             style="width:28px;height:28px;border-radius:50%;object-fit:cover;flex-shrink:0;">
-                    @else
-                        <div style="width:28px;height:28px;border-radius:50%;background:#f1f3f8;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#7e8299;flex-shrink:0;">
-                            {{ strtoupper(substr($managerFirstName, 0, 1)) }}
-                        </div>
-                    @endif
-                    <div class="d-flex flex-column" style="min-width:0;">
-                        <span class="text-dark fw-bolder fs-6 text-truncate" style="max-width:80px;"
-                              data-toggle="tooltip" title="{{ $managerFullName }}{{ $extra }}">{{ $managerFirstName }}{{ $extra }}</span>
-                        <a href="javascript:void(0);" data-row-id="{{ $row->id }}" class="manager-change hmb-listing" style="font-size:11px;">Change</a>
-                    </div>
+                <div class="d-flex flex-column">
+                    {!! $availHtml !!}
+                    <span class="text-muted fw-bold d-block fs-7">{{ $outsourcing_type }}</span>
                 </div>
             </td>
-            <td>
 
-               @php
-                    
-                    
-                    $benchRequestCheck = GeneralMethod::benchRequestCheck($row->id,$currentJobId);
-                        
-                        $btnStyle = 'white-space:nowrap;font-size:11px;padding:5px 10px;';
-                        if ($benchRequestCheck == null) {
-                            echo '<div class="d-flex my-2">
-                                    <a href="javascript:void(0);" data-jobId="' . $currentJobId . '" data-conId="' . $row->id . '" class="btn btn-sm btn-primary request-send" style="' . $btnStyle . '">Send Bench Request</a>
-                                  </div>';
-                        } else if ($benchRequestCheck->ac_status == 0) {
-                            echo '<div class="d-flex my-2">
-                                    <a href="javascript:void(0);" class="btn btn-sm btn-success" style="' . $btnStyle . '">Request sent</a>
-                                  </div>';
-                        } else if ($benchRequestCheck->ac_status == 1) {
-                            echo '<div class="d-flex my-2">
-                                    <a href="javascript:void(0);" class="text-dark" style="' . $btnStyle . '">Added</a>
-                                  </div>';
-                        } else if ($benchRequestCheck->ac_status == 2) {
-                            echo '<div class="d-flex my-2">
-                                    <a href="javascript:void(0);" class="btn btn-sm btn-danger" style="' . $btnStyle . '">Expired</a>
-                                  </div>';
-                        } else if ($benchRequestCheck->ac_status == 3) {
-                            echo '<div class="d-flex my-2">
-                                    <a href="javascript:void(0);" class="btn btn-sm btn-danger" style="' . $btnStyle . '">Removed</a>
-                                  </div>';
-                        }
-                    
+            {{-- Col 5: LOCATION --}}
+            <td class="align-middle">
+                @php
+                    $row_city_name = @$row->city_name ?: '';
+                    $row_country_name = @$row->country_name ?: '';
+                    $locStr = trim(ucwords($row_city_name) . ($row_country_name ? ', ' . ucwords($row_country_name) : ''), ', ');
+                    if (empty($locStr)) { $locStr = '—'; }
+
+                    $qualStr = !empty($row->qualification_name) ? strtoupper($row->qualification_name) : '—';
                 @endphp
+                <div class="d-flex flex-column">
+                    <span class="text-dark fw-bolder fs-6" data-toggle="tooltip" title="{{ $locStr }}">{{ mb_substr($locStr, 0, 18) }}</span>
+                    <span class="text-muted fw-bold d-block fs-7" data-toggle="tooltip" title="{{ $qualStr }}">{{ mb_substr($qualStr, 0, 15) }}</span>
+                </div>
             </td>
 
+            {{-- Col 6: EXPECTED SALARY --}}
+            <td class="align-middle">
+                @php
+                    $company_id = auth()->user()->company_id;
+                    $currencyBenchshowMode = GeneralMethod::getCompanyCurrencyBenchshowMode($company_id);
+                    $currencyArr = array(0 => "INR", 1 => "EUR", 2 => "JPY", 3 => "GBP", 4 => "USD", 5 => "AED");
+                    $currency = $currencyArr[$sal_currency] ?? $currencyBenchshowMode->currency_code;
+                    $mode = $sal_mode ?? $currencyBenchshowMode->show_mode;
+
+                    $billFormatViewSalary = GeneralMethod::formatViewSalary($row->ectc_yearly, $currency, $mode);
+                    $bill_rate_currency = $currencySymbole[$billFormatViewSalary->currency] ?? '₹';
+                    $bill_rate_mode = $salaryMode[$billFormatViewSalary->mode] ?? 'H';
+
+                    $salAmountFormatted = $billFormatViewSalary->amount ? $bill_rate_currency . $billFormatViewSalary->amount : '—';
+                    $salModeFormatted = !empty($bill_rate_mode) ? '/' . strtoupper(substr($bill_rate_mode, 0, 1)) : '';
+
+                    $isPaid = isset($row->ads_switch_order) && $row->ads_switch_order == 0;
+                @endphp
+                <div class="d-flex flex-column">
+                    <span class="text-dark fw-bolder fs-6">{!! $salAmountFormatted !!}{{ $salModeFormatted }}</span>
+                    @if($isPaid)
+                        <span style="color: #10B981; font-weight: 600; font-size: 11px; display: inline-flex; align-items: center; gap: 3px;">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Paid
+                        </span>
+                    @else
+                        <span style="color: #6B7280; font-weight: 500; font-size: 11px; display: inline-flex; align-items: center; gap: 3px;">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/></svg> Free
+                        </span>
+                    @endif
+                </div>
+            </td>
+
+            {{-- Col 7: BENCH STATUS --}}
+            <td class="align-middle">
+                @php
+                    $statusName = $row->master_status_name ?: 'Bench';
+                    $statusColor = (strtolower($statusName) == 'pool') ? '#8B5CF6' : '#009EF7';
+                    $result = GeneralMethod::bench_status_subline($row->status);
+                    $subS = ($result->name) ?? 'Open For Work';
+
+                    $createdDate = @$row->created_at ? Carbon::parse($row->created_at) : null;
+                    $daysDiff = $createdDate ? (int) floor($createdDate->diffInDays(now())) : 0;
+                @endphp
+                <div class="d-flex flex-column">
+                    <a href="javascript:void(0);" data-row-id="{{ $row->id }}" class="fw-bolder fs-6 stage_sub_stage" data-toggle="modal" data-target="#stage_sub_stage" style="color: {{ $statusColor }}; text-decoration: none;">
+                        {{ $statusName }}
+                    </a>
+                    <span class="fw-bold text-muted d-block fs-7" data-bs-toggle="tooltip" data-bs-placement="top" title="{{ $subS }}">{{ $subS }}</span>
+                    @if($daysDiff > 30)
+                        <span style="color: #EF4444; font-weight: 600; font-size: 11px;">{{ $daysDiff }} Days</span>
+                    @endif
+                </div>
+            </td>
+
+            {{-- Col 8: RELATIONSHIP MANAGER --}}
+            <td class="align-middle">
+                @php
+                    $hmInfo = $benchManagersMap[$row->id] ?? null;
+                    if ($hmInfo) {
+                        $hmCount = $hmInfo['count'];
+                        $managerFullName = !empty($hmInfo['name']) ? ucwords($hmInfo['name']) : 'Unassigned';
+                    } else {
+                        $hmCount = DB::table('bench_assign')
+                            ->join('users', 'users.id', '=', 'bench_assign.user_id')
+                            ->where('bench_assign.bench_applications_id', $row->id)
+                            ->where('bench_assign.company_id', $company_id)
+                            ->where('users.company_id', $company_id)
+                            ->count();
+                        $hmData = DB::table('bench_assign')
+                            ->join('users', 'users.id', '=', 'bench_assign.user_id')
+                            ->select('users.name', 'users.image')
+                            ->where('bench_assign.bench_applications_id', $row->id)
+                            ->where('bench_assign.company_id', $company_id)
+                            ->where('users.company_id', $company_id)
+                            ->orderBy('users.name', 'ASC')->take(1)->first();
+                        $managerFullName = @$hmData->name ? ucwords($hmData->name) : 'Unassigned';
+                    }
+                    $managerFirstName = ucfirst(explode(' ', trim($managerFullName))[0]);
+                    $extra = $hmCount > 1 ? ' +' . ($hmCount - 1) : '';
+                @endphp
+                <div class="d-flex flex-column">
+                    <span class="text-dark fw-bolder fs-6 text-truncate" style="max-width:140px;" data-toggle="tooltip" title="{{ $managerFullName }}{{ $extra }}">{{ $managerFirstName }}{{ $extra }}</span>
+                </div>
+            </td>
+
+            {{-- Col 9: ACTION --}}
+            <td class="align-middle text-end">
+                @php
+                    if (isset($benchRequestsMap)) {
+                        $benchRequestCheck = $benchRequestsMap[$row->id] ?? null;
+                    } else {
+                        $benchRequestCheck = GeneralMethod::benchRequestCheck($row->id, $currentJobId);
+                    }
+                    $btnStyle = 'white-space:nowrap;font-size:12px;font-weight:600;padding:6px 14px;border-radius:6px;';
+                    if ($benchRequestCheck == null) {
+                        echo '<a href="javascript:void(0);" data-jobId="' . $currentJobId . '" data-conId="' . $row->id . '" class="btn btn-sm btn-primary request-send" style="' . $btnStyle . '">Submit Candidate</a>';
+                    } else if ($benchRequestCheck->ac_status == 0) {
+                        echo '<a href="javascript:void(0);" class="btn btn-sm btn-success" style="' . $btnStyle . 'background:#10B981;border-color:#10B981;color:#fff;">Request sent</a>';
+                    } else if ($benchRequestCheck->ac_status == 1) {
+                        echo '<span class="badge badge-light-primary fs-7 fw-bold" style="padding:6px 12px;">Added</span>';
+                    } else if ($benchRequestCheck->ac_status == 2) {
+                        echo '<span class="badge badge-light-danger fs-7 fw-bold" style="padding:6px 12px;">Expired</span>';
+                    } else if ($benchRequestCheck->ac_status == 3) {
+                        echo '<span class="badge badge-light-danger fs-7 fw-bold" style="padding:6px 12px;">Removed</span>';
+                    }
+                @endphp
+            </td>
         </tr>
     @endforeach
 @else
     <tr style="height: 102px; position: relative; background: #fffcfc7a;">
 
-        <td colspan="10" style="text-align:center; color:black;">
+        <td colspan="8" style="text-align:center; color:black;">
             <div class="" style="display:flex; justify-content:center; align-items:center; width:100%;">
                 <a href="{{ url('/service_company/bench-candidates/create') }}"  class="btn btn-sm btn-primary">Add Inhouse Talent</a>
             </div>

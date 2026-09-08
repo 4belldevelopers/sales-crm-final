@@ -74,7 +74,7 @@ class IndexCandidatesToElasticsearch extends Command
         $indexConfig = [
             'settings' => [
                 'number_of_shards' => 1,
-                'number_of_replicas' => 0,
+                'number_of_replicas' => 1,
                 'analysis' => [
                     'analyzer' => [
                         'comma_analyzer' => [
@@ -210,7 +210,7 @@ class IndexCandidatesToElasticsearch extends Command
                     'employment_type' => ['type' => 'integer'],
                     'client_name' => ['type' => 'keyword', 'ignore_above' => 256],
                     'client_company_name' => ['type' => 'keyword', 'ignore_above' => 256],
-                    'job_master_status_id' => ['type' => 'integer'],
+                    'job_master_status_id' => ['type' => 'keyword'],
                     'childStatus' => ['type' => 'integer'],
                     'master_status_id' => ['type' => 'integer'],
                     'child_status_id' => ['type' => 'integer'],
@@ -255,6 +255,17 @@ class IndexCandidatesToElasticsearch extends Command
                     'assignment_exit_reason'       => ['type' => 'text', 'fields' => ['keyword' => ['type' => 'keyword', 'ignore_above' => 256]]],
                     'assignment_project_outcome'   => ['type' => 'text', 'fields' => ['keyword' => ['type' => 'keyword', 'ignore_above' => 256]]],
                     'assignment_remarks'           => ['type' => 'text', 'fields' => ['keyword' => ['type' => 'keyword', 'ignore_above' => 256]]],
+                    // Phase 2 V2 Denormalized & Pre-computed Sort Fields
+                    'spokperson_name'              => ['type' => 'keyword', 'ignore_above' => 256],
+                    'offer_released_at'            => ['type' => 'date', 'format' => 'strict_date_optional_time||epoch_millis||yyyy-MM-dd HH:mm:ss'],
+                    'sourcing_date'                => ['type' => 'date', 'format' => 'strict_date_optional_time||epoch_millis||yyyy-MM-dd HH:mm:ss'],
+                    'evaluation_date'              => ['type' => 'date', 'format' => 'strict_date_optional_time||epoch_millis||yyyy-MM-dd HH:mm:ss'],
+                    'child_status_name'            => ['type' => 'keyword', 'ignore_above' => 256],
+                    'is_duplicate'                 => ['type' => 'boolean'],
+                    'notice_period_days'           => ['type' => 'integer'],
+                    'notice_period_epoch'          => ['type' => 'long'],
+                    'job_max_sal_mode'             => ['type' => 'integer'],
+                    'job_max_salary_currency'      => ['type' => 'integer'],
                 ]
             ]
         ];
@@ -282,6 +293,32 @@ class IndexCandidatesToElasticsearch extends Command
 
     protected function formatCandidateData(ElasticCandidate $candidate): array
     {
+        // Phase 2: Compute numeric notice period days & epoch for fast Painless-free sorting
+        $npId = $candidate->np_id;
+        $noticePeriodDays = 999999;
+        $noticePeriodEpoch = 999999999;
+
+        if (!empty($npId)) {
+            $trimmedNp = trim($npId);
+            if (strcasecmp($trimmedNp, 'Immediate') === 0) {
+                $noticePeriodDays = 0;
+                $noticePeriodEpoch = -999999998;
+            } else {
+                if (preg_match('/(\d+)/', $trimmedNp, $matches)) {
+                    $noticePeriodDays = (int) $matches[1];
+                }
+                try {
+                    $cleanDate = explode(',', $trimmedNp)[0];
+                    $cleanDate = explode('T', $cleanDate)[0];
+                    $cleanDate = str_replace('/', '-', trim($cleanDate));
+                    $parsedDate = Carbon::parse($cleanDate);
+                    $noticePeriodEpoch = $parsedDate->timestamp;
+                } catch (\Exception $e) {
+                    // Retain default fallback
+                }
+            }
+        }
+
         return [
             'id' => $candidate->id,
             'wiseId' => $candidate->wiseId,
@@ -372,6 +409,14 @@ class IndexCandidatesToElasticsearch extends Command
             'assignment_exit_reason'       => $candidate->assignment_exit_reason ?? null,
             'assignment_project_outcome'   => $candidate->assignment_project_outcome ?? null,
             'assignment_remarks'           => $candidate->assignment_remarks ?? null,
+            // Phase 2 V2 Denormalized & Pre-computed Fields
+            'spokperson_name'              => $candidate->spokperson_name ?? null,
+            'child_status_name'            => $candidate->child_status_name ?? null,
+            'is_duplicate'                 => (bool) ($candidate->duplicate ?? 0),
+            'notice_period_days'           => $noticePeriodDays,
+            'notice_period_epoch'          => $noticePeriodEpoch,
+            'job_max_sal_mode'             => $candidate->job_max_sal_mode ?? $candidate->current_ctc_mode ?? 0,
+            'job_max_salary_currency'      => $candidate->job_max_salary_currency ?? $candidate->current_ctc_cur ?? 0,
         ];
     }
 

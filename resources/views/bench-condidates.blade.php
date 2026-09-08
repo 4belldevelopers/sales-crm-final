@@ -10,13 +10,9 @@
     <link rel="canonical" href="" />
     <link rel="shortcut icon" type="image/x-icon"  href="{{ asset('img/favicon.svg')}}">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Poppins:300,400,500,600,700" />
-    <link href="{{ asset('demo/plugins/custom/fullcalendar/fullcalendar.bundle.css') }}{{ TM_VERSION }}" rel="stylesheet" type="text/css" />
-    <link href="{{ asset('demo/plugins/custom/datatables/datatables.bundle.css') }}" rel="stylesheet" type="text/css" />
     <link href="{{ asset('demo/plugins/global/plugins.bundle.css') }}{{ TM_VERSION }}" rel="stylesheet" type="text/css" />
     <link href="{{ asset('demo/css/style.bundle.css') }}{{ TM_VERSION }}" rel="stylesheet" type="text/css" />
     <link href="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.17/css/intlTelInput.css" rel="stylesheet"/>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.11.338/pdf.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.5.0/mammoth.browser.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 
     <style>
@@ -258,6 +254,8 @@
         @media only screen and (min-width:1440px) and (max-width:2560px) { #kt_activitiesCopy{width:1200px;} }
         @media only screen and (min-width:1024px) and (max-width:1440px) { #kt_activitiesBenchApplication{width:1025px;} }
         @media only screen and (min-width:1440px) and (max-width:2560px) { #kt_activitiesBenchApplication{width:1200px;} }
+        #kt_activitiesBenchApplication { overflow-y: auto !important; overflow-x: hidden !important; max-height: 100vh !important; height: 100vh !important; }
+        #bench_application_show_right_bar { min-height: 100%; height: auto !important; overflow: visible !important; }
 
         /* Star-rated skills (find-talent design) */
         .skill-item { display:flex;align-items:center;gap:6px;margin-bottom:3px; }
@@ -288,15 +286,8 @@
     if(!empty(@$account->logo) && strlen(@$account->logo)>10){ $logo_path = @$account->logo; }
     $initLetter = strtoupper(substr(trim(@$account->company_name),0,1));
 
-    $recommendateRow = DB::table('recommendation_relation')
-        ->select('id','from_company_id','from_status','to_status','final_status')
-        ->where(function($q) use($company_id,$to_company_id){
-            $q->where(function($q2) use($company_id,$to_company_id){
-                $q2->where('from_company_id',$company_id)->where('to_company_id',$to_company_id);
-            })->orWhere(function($q2) use($company_id,$to_company_id){
-                $q2->where('from_company_id',$to_company_id)->where('to_company_id',$company_id);
-            });
-        })->first();
+    /* Received pre-fetched $recommendateRow from controller to eliminate Blade header DB query leak */
+    $recommendateRow = $recommendateRow ?? null;
 
     /* Avatar colour by first letter */
     $avatarColors = ['#10B981','#3B82F6','#8B5CF6','#F59E0B','#EF4444','#06B6D4','#EC4899'];
@@ -555,9 +546,22 @@
                         else                                 { $bgTextDecore = 'fs-3 bg-light-secondary text-dark'; }
                         $profile_sidebar_css = 'pbench_show_application_detail';
 
-                        /* Skills badges (bottom of talent cell) */
-                        $skillExperiences = DB::table('bench_candidate_skill_experience')
-                            ->where('candidate_id', $row->id)->get();
+                        /* Skills badges (bottom of talent cell) - Intent: Load pre-fetched candidate skill ratings from ES document payload to eliminate Blade N+1 queries */
+                        $rawSkills = $row->skill_experiences ?? $row->candidate_skills ?? null;
+                        if (!empty($rawSkills) && (is_array($rawSkills) || $rawSkills instanceof \Illuminate\Support\Collection)) {
+                            $skillExperiences = collect($rawSkills)->map(function ($item) {
+                                return (object) [
+                                    'skill_key' => is_array($item) ? ($item['skill_key'] ?? '') : ($item->skill_key ?? ''),
+                                    'rating' => (int) (is_array($item) ? ($item['rating'] ?? 0) : ($item->rating ?? 0)),
+                                    'year' => (int) (is_array($item) ? ($item['year'] ?? 0) : ($item->year ?? 0)),
+                                    'month' => (int) (is_array($item) ? ($item['month'] ?? 0) : ($item->month ?? 0)),
+                                    'total_months' => (int) (is_array($item) ? ($item['total_months'] ?? 0) : ($item->total_months ?? 0)),
+                                ];
+                            });
+                        } else {
+                            /* Intent: Use controller pre-fetched skills array to eliminate Blade N+1 database queries */
+                            $skillExperiences = collect($prefetchedSkills[$row->id] ?? []);
+                        }
                         $skillArr = explode(',', @$row->skills);
                         $skilltag = '';
                         $viewMore = 0;
@@ -910,13 +914,10 @@ function sendContactMail(email) {
 
     <script src="{{ asset('demo/plugins/global/plugins.bundle.js') }}{{ TM_VERSION }}"></script>
 <script src="{{ asset('demo/js/scripts.bundle.js') }}{{ TM_VERSION }}"></script>
-<script src="{{ asset('demo/plugins/custom/fullcalendar/fullcalendar.bundle.js') }}{{ TM_VERSION }}"></script>
 <script src="{{ asset('demo/js/custom/widgets.js') }}{{ TM_VERSION }}"></script>
 <script src="{{ asset('demo/js/custom/apps/chat/chat.js') }}{{ TM_VERSION }}"></script>
 <script src="{{ asset('assets/plugins/jquery/jquery.min.js') }}{{ TM_VERSION }}"></script>
 <script src="{{ asset('assets/plugins/bootstrap/js/bootstrap.bundle.min.js') }}{{ TM_VERSION }}"></script>
-<script src="{{ asset('assets/plugins/datatables/jquery.dataTables.js') }}{{ TM_VERSION }}"></script>
-<script src="{{ asset('assets/plugins/datatables/dataTables.bootstrap4.js') }}{{ TM_VERSION }}"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.17/js/intlTelInput.min.js"></script>
 <script src="{{ asset('front/assets/js/number-to-words.js') }}"></script>
 <script src="{{ asset('front/assets/js/countryDialCodes.js') }}"></script>
@@ -1038,10 +1039,24 @@ function sendContactMail(email) {
                                             company_id : company_id   // ✅ PASS HERE
                                         },
 										beforeSend	:	function() {
-													  				$('#bench_application_show_right_bar').html('<img src="'+baseurl+'" height="35px" width="100%">');
+													  				// INTENT: detach drawer body before inject to evict
+													  				// orphaned jQuery handlers / intlTelInput instances from
+													  				// prior candidate, then reinit Metronic drawer widgets
+													  				// (drawer plugins re-scan on .empty() + DOM rebuild).
+													  				var $bar = $('#bench_application_show_right_bar');
+													  				$bar.empty();
+													  				$bar.html('<img src="'+baseurl+'" height="35px" width="100%">');
 														},
 										success 	:	function (response) {
-																			$('#bench_application_show_right_bar').html(response.view);
+																			var $bar = $('#bench_application_show_right_bar');
+																			// .empty() before .html() drops prior handlers & nodes
+																			// so intlTelInput (rendered inside benchshowdetail)
+																			// doesn't accumulate per drawer open.
+																			$bar.empty().html(response.view);
+																			// Re-init any drawer-scoped JS bound by benchshowdetail
+																			if (typeof KTDrawer !== 'undefined') {
+																				KTDrawer.createInstances();
+																			}
 														}
 								});
 		});

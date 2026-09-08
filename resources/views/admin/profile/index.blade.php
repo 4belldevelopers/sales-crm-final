@@ -982,6 +982,7 @@ body
    													stateSave     		: true,
    													
    													"bLengthChange"   	: false,   
+   													"lengthMenu"        : [[10, 25, 50, 100], [10, 25, 50, 100]],
    													sDom				: 'lrtip',       
    
          ajax: '{!! route('admin.team.appdata') !!}?userId='+userId,             
@@ -1040,7 +1041,8 @@ body
    		serverSide  : true,
    		destroy   : true,
    		ordering: false, //disable ordering
-   		"bLengthChange" : false, //thought this line could hide the LengthMenu
+   		"bLengthChange" : false,
+   		"lengthMenu"    : [[10, 25, 50, 100], [10, 25, 50, 100]],
    		sDom: 'lrtip',
    		oLanguage : {sLengthMenu: "_MENU_",},
                		ajax    : '{!! route('admin.team.intdata') !!}?userId=' + userId, 
@@ -1096,9 +1098,8 @@ body
         processing  	: true,
         serverSide  	: true,
         destroy   		: true,
-        ordering		: false, //disable ordering
-        
-            "bLengthChange" : false, //thought this line could hide the LengthMenu
+            "bLengthChange" : false,
+            "lengthMenu"    : [[10, 25, 50, 100], [10, 25, 50, 100]],
           sDom			: 'lrtip',
           oLanguage 		: {
         sLengthMenu: "_MENU_",
@@ -1229,9 +1230,8 @@ body
    		responsive  	: true,
    		processing  	: true,
    		serverSide  	: true,
-   		destroy   		: true,
-   		ordering		: false, //disable ordering   			
-   		"bLengthChange" : false, //thought this line could hide the LengthMenu
+   		"bLengthChange" : false,
+   		"lengthMenu"    : [[10, 25, 50, 100], [10, 25, 50, 100]],
    		sDom			: 'lrtip',
    		oLanguage 		: {sLengthMenu: "_MENU_",},   
      		ajax: {'url' : '{!! route('admin.team.jobdata') !!}?userId='+userId,

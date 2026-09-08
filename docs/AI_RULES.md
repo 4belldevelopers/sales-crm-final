@@ -32,8 +32,8 @@ read store). Following these saves tokens and prevents breakage.
    `EnsureOneDeviceLogin` → `package` middleware). Add routes in the right group.
 
 ## Data & tenancy
-10. **Tenancy:** Eloquent is auto-scoped by `company_id` (global scope). **Raw
-    `DB::table()` queries are NOT scoped — add `where('company_id', ...)` yourself.**
+10. **Tenancy:** Eloquent is auto-scoped by `company_id` (`TenantScope` / `BelongsToTenant`). **Raw
+    `DB::table()` queries must use `tenant_table('<name>')` or append `company_id` explicitly.** Legitimate cross-tenant or global queries require a `// TENANCY-EXEMPT: <reason>` comment.
 11. **Ask before any schema change.** Schema lives in the **live remote DB**, not
     migrations. Do not invent migrations or assume columns — confirm against the DB.
 12. **Keep MySQL ↔ Elasticsearch in sync.** When adding a model write path, check

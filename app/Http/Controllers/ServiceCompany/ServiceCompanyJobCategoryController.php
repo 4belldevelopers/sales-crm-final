@@ -108,7 +108,7 @@ class ServiceCompanyJobCategoryController extends ServiceCompanyBaseController
     	{
         abort_if(Gate::denies('edit_category'), 403);
 
-        $this->category = JobCategory::findOrFail($id);
+        $this->category = JobCategory::withoutGlobalScopes()->findOrFail($id);
         return view('service_company.job-category.edit', $this->data);
     }
    
@@ -116,7 +116,7 @@ class ServiceCompanyJobCategoryController extends ServiceCompanyBaseController
     	{
         abort_if(Gate::denies('edit_category'), 403);
 
-        $category = JobCategory::find($id);
+        $category = JobCategory::withoutGlobalScopes()->find($id);
         $category->name = $request->name;
         $category->save();
 

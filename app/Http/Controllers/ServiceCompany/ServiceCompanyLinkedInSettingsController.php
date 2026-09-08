@@ -37,7 +37,7 @@ class ServiceCompanyLinkedInSettingsController extends ServiceCompanyBaseControl
     public function update(Request $request, $id)
 	{
         /*dd($request->all());*/
-        $company = Company::findOrFail($id);
+        $company = Company::withoutGlobalScopes()->findOrFail($id);
         $company->linkedin = $request->status == "on" ? 'enable' : 'disable';
 
         $company->save();

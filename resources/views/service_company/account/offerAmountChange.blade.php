@@ -292,11 +292,12 @@
       .sst-edit #createForm > .form-group.row > .col-lg-12:first-of-type { display:flex; flex-wrap:wrap; gap:14px; }
       .sst-edit #createForm > .form-group.row > .col-lg-12:first-of-type > .row { display:contents; }
       .sst-edit #createForm > .form-group.row > .col-lg-12:first-of-type .col-4 { flex:1 1 15%; min-width:140px; max-width:none; width:auto; padding:0 !important; margin:0 !important; }
-      /* drop the non-template fields, reorder to match the screenshot */
-      .sst-edit #createForm .col-4:has(#ctc), .sst-edit #createForm .col-4:has(#current_designation) { display:none !important; }
+      /* Compensation fields mirror the read-only annexure view; all existing form names remain unchanged. */
+      .sst-edit #createForm .sst-mf-desc { display:none !important; }
       .sst-edit #createForm .sst-mf-name { order:1; } .sst-edit #createForm .col-4:has(#current_ctc_cur) { order:2; }
-      .sst-edit #createForm .col-4:has(#current_ctc_mode) { order:3; } .sst-edit #createForm .col-4:has(#employment_type) { order:4; }
-      .sst-edit #createForm .col-4:has(#dob) { order:5; } .sst-edit #createForm .sst-mf-desc { order:6; }
+      .sst-edit #createForm .col-4:has(#ctc) { order:3; } .sst-edit #createForm .col-4:has(#current_ctc_mode) { order:4; }
+      .sst-edit #createForm .col-4:has(#current_designation) { order:5; } .sst-edit #createForm .col-4:has(#dob) { order:6; }
+      .sst-edit #createForm .col-4:has(#employment_type) { order:7; }
       /* breadcrumb bar */
       .sst-bc { display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; background:#fff; border:1px solid var(--b); border-radius:12px; padding:12px 18px; margin:0 8px 12px; }
       .sst-bc-l { display:flex; align-items:center; gap:9px; font-size:13px; }
@@ -328,7 +329,7 @@
         content:"\22EE\22EE  " counter(sstrow); position:absolute; left:12px; top:50%; transform:translateY(-50%); color:#a1a5b7; font-size:12px; font-weight:600; letter-spacing:-2px; }
       /* name input → looks like text, with a Main/Additional badge after it */
       .sst-edit #pointList .offer_points, .sst-edit #bonusList .offer_points, .sst-edit #insurenceList .offer_points,
-      .sst-edit #bonusList .bonus_offer_points, .sst-edit #insurenceList .insurence_offer_points {
+      .sst-edit #bonusList .bonus_points, .sst-edit #bonusList .bonus_offer_points, .sst-edit #insurenceList .insurence_offer_points {
         border:none !important; background:transparent !important; box-shadow:none !important; font-weight:600; color:#181c32; width:auto !important; max-width:150px; display:inline-block; vertical-align:middle; padding:4px 0 !important; }
       .sst-edit #pointList tbody tr.other_section_row > td:first-child::after,
       .sst-edit #bonusList tbody tr.other_section_row > td:first-child::after,
@@ -384,9 +385,69 @@
       .sst-2col > .sst-2col-main { flex:1 1 auto; min-width:0; }
       .sst-2col > .sst-preview { width:310px; flex:0 0 310px; position:sticky; top:80px; align-self:flex-start; }
       @media (max-width:1200px){ .sst-2col { flex-wrap:wrap; } .sst-2col > .sst-preview { width:100%; flex-basis:100%; position:static; } }
+      /* Embedded drawer: reproduce the compact Compensation Details layout without changing form names or save behavior. */
+      @if (request('embed'))
+      html, body, #kt_wrapper, #kt_content, #kt_content_container { min-height:100% !important; background:#f5f8fa !important; }
+      .sst-edit #kt_activities_scroll { background:#f5f8fa !important; padding:12px !important; overflow-x:hidden !important; }
+      .sst-edit #kt_activities_scroll { height:auto !important; max-height:none !important; min-height:0 !important; overflow-y:visible !important; }
+      #kt_offercreate_body, #kt_offercreate_body > div, #kt_activities_scroll > .card, #kt_activities_scroll .card-custom { width:100% !important; max-width:none !important; }
+      #kt_activities_scroll > .card, #kt_activities_scroll .card-custom { margin:0 !important; border:0 !important; box-shadow:none !important; background:transparent !important; }
+      #kt_offercreate_body .card-body { padding:0 !important; }
+      .sst-edit #step1 { padding-top:0 !important; }
+      .sst-edit #step1 > .tab-content { padding:14px !important; border-radius:9px !important; }
+      .sst-edit #createForm > .form-group.row > .col-lg-12:first-of-type { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:10px 14px; margin:0 0 14px !important; }
+      .sst-edit #createForm > .form-group.row > .col-lg-12:first-of-type > .row { display:contents; }
+      .sst-edit #createForm > .form-group.row > .col-lg-12:first-of-type .col-4 { width:auto !important; min-width:0 !important; max-width:none !important; padding:0 !important; margin:0 !important; }
+      .sst-edit #step1 .form-label { display:flex; align-items:center; gap:3px; margin:0 0 4px !important; font-size:10px !important; line-height:1.2; }
+      .sst-edit #step1 .form-select-solid, .sst-edit #step1 .form-control-solid { min-height:31px !important; height:31px !important; padding:5px 8px !important; border-color:#dce3ef !important; border-radius:5px !important; font-size:11px !important; }
+      .sst-edit #pointList, .sst-edit #bonusList, .sst-edit #insurenceList { width:100% !important; min-width:0 !important; table-layout:fixed; margin:0 !important; }
+      .sst-edit #pointList th, .sst-edit #pointList td, .sst-edit #bonusList th, .sst-edit #bonusList td, .sst-edit #insurenceList th, .sst-edit #insurenceList td { padding:5px 5px !important; font-size:10px !important; vertical-align:middle !important; }
+      .sst-edit #pointList td, .sst-edit #bonusList td, .sst-edit #insurenceList td { color:#26334f; line-height:1.2; text-align:left; }
+      .sst-edit #pointList th, .sst-edit #bonusList th, .sst-edit #insurenceList th { background:#f7f9fc; color:#64748b; font-weight:600; white-space:normal !important; line-height:1.15; }
+      .sst-edit #pointList th:nth-child(4), .sst-edit #pointList td:nth-child(4), .sst-edit #bonusList th:nth-child(4), .sst-edit #bonusList td:nth-child(4), .sst-edit #insurenceList th:nth-child(4), .sst-edit #insurenceList td:nth-child(4) { display:none; }
+      .sst-edit #pointList th:nth-child(1), .sst-edit #bonusList th:nth-child(1), .sst-edit #insurenceList th:nth-child(1) { width:25% !important; }
+      .sst-edit #pointList th:nth-child(2), .sst-edit #bonusList th:nth-child(2), .sst-edit #insurenceList th:nth-child(2) { width:15% !important; }
+      .sst-edit #pointList th:nth-child(3), .sst-edit #bonusList th:nth-child(3), .sst-edit #insurenceList th:nth-child(3) { width:11% !important; }
+      .sst-edit #pointList th:nth-child(5), .sst-edit #bonusList th:nth-child(5), .sst-edit #insurenceList th:nth-child(5) { width:14% !important; }
+      .sst-edit #pointList th:nth-child(6), .sst-edit #bonusList th:nth-child(6), .sst-edit #insurenceList th:nth-child(6) { width:14% !important; }
+      .sst-edit #pointList th:nth-child(7), .sst-edit #bonusList th:nth-child(7), .sst-edit #insurenceList th:nth-child(7) { width:14% !important; }
+      .sst-edit #pointList th:nth-child(8), .sst-edit #bonusList th:nth-child(8), .sst-edit #insurenceList th:nth-child(8) { width:7% !important; }
+      .sst-edit #pointList .form-control, .sst-edit #pointList .form-select, .sst-edit #bonusList .form-control, .sst-edit #bonusList .form-select, .sst-edit #insurenceList .form-control, .sst-edit #insurenceList .form-select { width:100% !important; min-width:0 !important; min-height:28px !important; height:28px !important; padding:3px 5px !important; font-size:10px !important; border-radius:4px !important; }
+      .sst-edit #pointList tbody tr.other_section_row > td:first-child, .sst-edit #bonusList tbody tr.other_section_row > td:first-child, .sst-edit #insurenceList tbody tr.other_section_row > td:first-child { padding-left:26px !important; }
+      .sst-edit #pointList tbody tr.other_section_row > td:first-child .offer_points, .sst-edit #bonusList tbody tr.other_section_row > td:first-child .offer_points, .sst-edit #insurenceList tbody tr.other_section_row > td:first-child .offer_points { line-height:1.2 !important; vertical-align:middle !important; }
+      .sst-edit #pointList tbody tr.other_section_row > td:first-child::before, .sst-edit #bonusList tbody tr.other_section_row > td:first-child::before, .sst-edit #insurenceList tbody tr.other_section_row > td:first-child::before { left:5px !important; font-size:9px !important; }
+      /* Keep serial numbers and Main/Additional badges inside the name cell on every component row. */
+      .sst-edit #pointList tbody tr.other_section_row > td:first-child, .sst-edit #bonusList tbody tr.other_section_row > td:first-child, .sst-edit #insurenceList tbody tr.other_section_row > td:first-child { position:relative !important; padding:5px 64px 5px 27px !important; white-space:normal !important; }
+      .sst-edit #pointList tbody tr.other_section_row > td:first-child::before, .sst-edit #bonusList tbody tr.other_section_row > td:first-child::before, .sst-edit #insurenceList tbody tr.other_section_row > td:first-child::before { content:counter(sstrow) !important; left:8px !important; width:13px; color:#71809d; font-size:10px !important; font-weight:600; letter-spacing:0; text-align:center; }
+      .sst-edit #pointList tbody tr.other_section_row > td:first-child::after, .sst-edit #bonusList tbody tr.other_section_row > td:first-child::after, .sst-edit #insurenceList tbody tr.other_section_row > td:first-child::after { position:absolute !important; right:7px; left:auto !important; top:50%; margin:0 !important; transform:translateY(-50%); white-space:nowrap; }
+      /* Both live and newly added Additional rows use bonus_points, so keep their editable names visually identical to Main rows. */
+      .sst-edit #pointList tbody tr.other_section_row > td:first-child .offer_points, .sst-edit #bonusList tbody tr.other_section_row > td:first-child .offer_points, .sst-edit #bonusList tbody tr.other_section_row > td:first-child .bonus_points, .sst-edit #bonusList tbody tr.other_section_row > td:first-child .bonus_offer_points, .sst-edit #insurenceList tbody tr.other_section_row > td:first-child .offer_points, .sst-edit #insurenceList tbody tr.other_section_row > td:first-child .insurence_offer_points { box-sizing:border-box; width:100% !important; max-width:none !important; border:0 !important; background:transparent !important; box-shadow:none !important; color:#181c32 !important; font-weight:600 !important; padding:4px 0 !important; }
+      .salary-editor-card { margin:0 0 12px; border:1px solid #dce3ef; border-radius:8px; background:#fff; overflow:hidden; }
+      .salary-editor-card-head { display:flex; align-items:flex-start; justify-content:space-between; gap:12px; padding:12px 14px 7px; }
+      .salary-editor-card-head h3 { margin:0; color:#18223d; font-size:12px; font-weight:600; }
+      .salary-editor-card-head h3 span { color:#7d8aa6; font-size:10px; font-weight:500; }
+      .salary-editor-card-head p { margin:2px 0 0; color:#7d8aa6; font-size:9px; font-weight:500; }
+      .salary-editor-add { display:inline-flex; align-items:center; gap:5px; min-height:27px; padding:5px 9px; border:1px solid #d7e0ff; border-radius:5px; background:#f6f8ff; color:#315df6; font-size:10px; font-weight:600; white-space:nowrap; }
+      .salary-editor-card .row { margin:0 !important; overflow:visible !important; }
+      .salary-editor-card .addRowBtn, .salary-editor-card .addRowBtnbonus { display:none !important; }
+      .salary-editor-card #bonusList thead tr:first-child { display:none; }
+      .salary-editor-card #final_pay { border:0 !important; background:#e9fff2; }
+      .salary-editor-card #final_pay th { padding:8px 7px !important; background:#e9fff2 !important; }
+      .salary-editor-card-summary { margin:0 14px 10px; padding:7px 9px; border-radius:5px; background:#dcfbe9; color:#118651; font-size:10px; font-weight:600; }
+      .salary-editor-card.additional .salary-editor-card-summary { background:#f4efff; color:#6942c6; }
+      .salary-editor-card.final .salary-editor-card-head { padding-bottom:2px; }
+      .sst-edit #pointList tbody tr.other_section_row > td:last-child::before, .sst-edit #bonusList tbody tr.other_section_row > td:last-child::before, .sst-edit #insurenceList tbody tr.other_section_row > td:last-child::before { content:none !important; display:none !important; }
+      .sst-edit .remove_points { display:inline-flex !important; align-items:center; justify-content:center; width:26px; height:26px; padding:0 !important; border:1px solid #ffd8e2 !important; border-radius:5px !important; background:#fff5f8 !important; color:#f1416c !important; }
+      .sst-edit .remove_points svg { width:13px !important; height:13px !important; }
+      .sst-edit .remove_points svg rect { fill:#f1416c !important; }
+      .sst-edit .remove_points:disabled { opacity:.35; cursor:not-allowed; }
+      @media (max-width:900px){ .sst-edit #createForm > .form-group.row > .col-lg-12:first-of-type { grid-template-columns:repeat(2,minmax(0,1fr)); } }
+      @media (max-width:600px){ .sst-edit #createForm > .form-group.row > .col-lg-12:first-of-type { grid-template-columns:1fr; } .sst-edit #pointList, .sst-edit #bonusList, .sst-edit #insurenceList { min-width:720px !important; } .sst-edit #kt_offercreate_body .row { overflow-x:auto; } }
+      @endif
     </style>
     <div class="sst-edit">
-      <!-- breadcrumb bar -->
+      {{-- The drawer keeps only editable controls; standalone editing retains its navigation. --}}
+      @unless (request('embed'))
       <div class="sst-bc">
         <div class="sst-bc-l">
           <span class="sst-bc-mut">Salary Structure</span>
@@ -402,19 +463,27 @@
           <button type="button" class="sst-bc-btn icon"><i class="fas fa-ellipsis-v"></i></button>
         </div>
       </div>
+      @endunless
 
+      @unless (request('embed'))
       <div class="sst-edit-head">
+        @unless (request('embed'))
         <div>
           <div class="sst-edit-title">Edit Salary Template <span class="sst-edit-badge"><i class="fas fa-check" style="font-size:8px;"></i>Active</span></div>
           <div class="sst-edit-sub">Create and manage reusable salary components for the candidate offer letter.</div>
         </div>
+        @endunless
         <div class="sst-edit-acts">
+          @unless (request('embed'))
           <a href="{{ url()->previous() }}" onclick="event.preventDefault(); sstClose();" class="btn btn-light">Close</a>
+          @endunless
           <button type="button" class="btn" style="background:#1b84ff;color:#fff;" onclick="document.getElementById('save-form') && document.getElementById('save-form').click();">Save Template</button>
           <button type="button" class="btn" style="background:#5b21d6;color:#fff;" onclick="document.getElementById('save-form') && document.getElementById('save-form').click();">Save &amp; Set as Default</button>
         </div>
       </div>
+      @endunless
 
+      @unless (request('embed'))
       <div class="sst-cards">
         <div class="sst-card">
           <div class="sst-card-l">Main Components (Must Total 100%)</div>
@@ -441,9 +510,11 @@
           </div>
         </div>
       </div>
+      @endunless
     </div>
 
-    {{-- ── Preview Salary Structure sidebar (client-side, off the live components) ── --}}
+    @unless (request('embed'))
+    {{-- Preview is intentionally available only in standalone editing, not in the account drawer. --}}
     <div class="sst-preview" id="sstPreview">
       <div class="sst-pv-title"><i class="fas fa-eye"></i>Preview Salary Structure</div>
       <div class="sst-pv-sub">See how this structure calculates for a given amount.</div>
@@ -482,6 +553,7 @@
         <div class="ck warn" id="sstCk2"><i class="fas fa-exclamation-triangle"></i><span>Additional components exceed 100% (Allowed)</span></div>
       </div>
     </div>
+    @endunless
 
     <div class="card-body position-relative px-0 py-0 sst-edit" id="kt_offercreate_body">
         <div id="kt_activities_scroll" class="position-relative scroll-y bg-light pt-2" data-kt-scroll="true"
@@ -509,7 +581,6 @@
                                                         <label class="form-label required">Template Name <span style="color:#f1416c;">*</span></label>
                                                         <div style="position:relative;">
                                                             <input type="text" class="form-control form-control-solid" id="sstTemplateName" name="template_name" value="Standard Payroll Structure" placeholder="Template name" style="padding-right:30px;">
-                                                            <i class="fas fa-pen" style="position:absolute;right:11px;top:50%;transform:translateY(-50%);color:#a1a5b7;font-size:11px;"></i>
                                                         </div>
                                                     </div>
                                                     <div class="col-4 pe-0">
@@ -532,7 +603,7 @@
                                                         </select>
                                                     </div>
                                                     <div class="col-4 px-2">
-                                                        <label class="form-label required">Amount</label>
+                                                        <label class="form-label required"><i class="fas fa-wallet me-1 text-primary"></i>Enter Amount (CTC)</label>
                                                         <input type="text" class="form-control form-control-solid"
                                                             name="ctc" id="ctc"
                                                             placeholder="Enter current CTC"
@@ -555,14 +626,14 @@
                                                 </div>
                                                 <div class="row">
                                                     <div class="col-4 pe-0">
-                                                        <label class="form-label required">Designation</label>
+                                                        <label class="form-label required"><i class="fas fa-briefcase me-1 text-primary"></i>Offered Designation</label>
                                                         <input type="text" class="form-control form-control-solid"
                                                             name="current_designation" id="current_designation"
                                                             placeholder="Enter designation"
                                                             value="{{ @$designation }}">
                                                     </div>
                                                     <div class="col-4 px-2">
-                                                        <label class="form-label">Effective From</label>
+                                                        <label class="form-label"><i class="far fa-calendar-alt me-1 text-primary"></i>Date of Joining (DOJ)</label>
                                                         <input type="datetime-local"
                                                             class="form-control form-control-solid" name="dob"
                                                             id="dob" placeholder="Enter dob"
@@ -583,13 +654,6 @@
                                                             {{ $employment_type == 3 ? 'selected' : '' }}>Part Time
                                                         </option>
                                                         </select>
-                                                    </div>
-                                                    <div class="col-4 sst-mf-desc">
-                                                        <label class="form-label">Description (Optional)</label>
-                                                        <div style="position:relative;">
-                                                            <input type="text" class="form-control form-control-solid" id="sstDescription" name="template_description" maxlength="100" value="Primary template for all" placeholder="Description" style="padding-right:46px;">
-                                                            <span style="position:absolute;right:10px;top:50%;transform:translateY(-50%);color:#a1a5b7;font-size:11px;"><span id="sstCC">21</span>/100</span>
-                                                        </div>
                                                     </div>
                                                 </div>
                                             </div>
@@ -1726,13 +1790,59 @@
               wrap.appendChild(tablesCol);
               wrap.appendChild(preview);
             }
+            @if (request('embed'))
+            // Create visual card boundaries around the existing tables; original add handlers stay intact.
+            function buildSalaryEditorCards(){
+              var makeCard = function(tableId, title, subtitle, kind, buttonSelector, buttonLabel){
+                var table = document.getElementById(tableId);
+                var row = table && table.closest('.row');
+                if (!table || !row || row.closest('.salary-editor-card')) return;
+                var card = document.createElement('section');
+                card.className = 'salary-editor-card ' + kind;
+                var header = document.createElement('div');
+                header.className = 'salary-editor-card-head';
+                header.innerHTML = '<div><h3>' + title + '</h3><p>' + subtitle + '</p></div>';
+                if (buttonSelector){
+                  var add = document.createElement('button');
+                  add.type = 'button'; add.className = 'salary-editor-add';
+                  add.innerHTML = '<i class="fas fa-plus"></i>' + buttonLabel;
+                  add.addEventListener('click', function(){ var source = document.querySelector(buttonSelector); if (source) source.click(); });
+                  header.appendChild(add);
+                }
+                row.parentNode.insertBefore(card, row); card.appendChild(header); card.appendChild(row);
+                if (kind !== 'final'){
+                  var summary = document.createElement('div'); summary.className = 'salary-editor-card-summary';
+                  summary.setAttribute('data-summary-for', tableId); card.insertBefore(summary, row);
+                }
+              };
+              makeCard('pointList', 'Main Components <span>(Must Total 100%)</span>', 'These are core components. Total percentage must be exactly 100%.', 'main', '.addRowBtn', 'Add Main Component');
+              makeCard('bonusList', 'Additional Components <span>(Above 100% – Optional)</span>', 'These components are added on top of the main 100%.', 'additional', '.addRowBtnbonus', 'Add Additional Component');
+              makeCard('final_pay', 'Final CTC <span>(Cost to Company)</span>', 'Summary of total cost including main and additional components.', 'final');
+            }
+            function refreshEditorCardSummaries(){
+              var value = function(selector){ return Array.prototype.reduce.call(document.querySelectorAll(selector), function(total, el){ return total + num(el.value); }, 0); };
+              var main = value('#pointList .option_percentage');
+              var additional = value('#bonusList .bonus_option_percentage') + value('#insurenceList .insurence_option_percentage');
+              var mainSummary = document.querySelector('[data-summary-for="pointList"]');
+              var addSummary = document.querySelector('[data-summary-for="bonusList"]');
+              if (mainSummary) mainSummary.textContent = 'Total main components: ' + main.toFixed(2) + '% ' + (Math.abs(main - 100) < 0.01 ? '— exactly 100%' : '— must total 100%');
+              if (addSummary) addSummary.textContent = 'Total additional components: ' + additional.toFixed(2) + '% (allowed above 100%)';
+            }
+            @endif
             window.addEventListener('load', function(){
               relocateCards(); build2col();
+              @if (request('embed'))
+              buildSalaryEditorCards(); refreshEditorCardSummaries();
+              document.addEventListener('input', refreshEditorCardSummaries);
+              @endif
               setTimeout(function(){
                 relocateCards(); build2col();
                 var ctc = document.getElementById('ctc'), pv = document.getElementById('sstPvAmount');
                 if (ctc && pv && num(ctc.value) > 0) pv.value = ctc.value;
                 refreshSstCards();
+                @if (request('embed'))
+                buildSalaryEditorCards(); refreshEditorCardSummaries();
+                @endif
               }, 400);
             });
           })();
@@ -3408,7 +3518,16 @@
                             success: function(response) {
 
                                 if (response.status == 'success') {
-                                    Swal.fire("Success", response.message , "success");	
+                                    Swal.fire({
+                                        title: 'Salary template saved',
+                                        text: 'Your salary structure and component configuration have been updated and are ready for new offers.',
+                                        icon: 'success',
+                                        confirmButtonText: 'Done',
+                                        buttonsStyling: false,
+                                        customClass: {
+                                            confirmButton: 'btn btn-primary'
+                                        }
+                                    });
                                     return false;
                                 } else if (response.status == 'errors') {
                                     Swal.fire("Warning", response.message, "warning");
@@ -3439,6 +3558,12 @@
                                         popup: 'text-left' // Align the text to the left
                                     }
                                 });
+                            },
+                            // Notify the account drawer after this existing save request settles so its button can be used again.
+                            complete: function() {
+                                if (window.parent && window.parent !== window) {
+                                    window.parent.dispatchEvent(new CustomEvent('salary-template-save-complete'));
+                                }
                             }
                         });
                     });

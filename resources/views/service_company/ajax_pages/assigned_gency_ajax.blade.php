@@ -31,22 +31,25 @@
             else                                           { $bgColor = '#64748b'; }
 
             /* ── Industry / category ───────────────────────────── */
-            $getClientIdCompany = GeneralMethod::getClientIdCompany($row->to_company_id);
+            $getClientIdCompany = $row->_client_info ?? GeneralMethod::getClientIdCompany($row->to_company_id);
             $ind_name = $getClientIdCompany->main_ind_name ?? '';
 
             /* ── Contact ───────────────────────────────────────── */
-            $contactRows = DB::table('users')
-                ->join('job_assign', 'job_assign.user_id', 'users.id')
-                ->select('users.name', 'users.image', 'users.mobile', 'users.email')
-                ->where('users.company_id', $row->to_company_id)
-                ->where('job_assign.company_id', $row->to_company_id)
-                ->where('job_assign.job_id', $row->job_id)
-                ->skip(0)->take(1)
-                ->get();
-            $contact = $contactRows->first();
+            $contact = $row->_contact_info ?? null;
+            if (!isset($row->_contact_info)) {
+                $contactRows = DB::table('users')
+                    ->join('job_assign', 'job_assign.user_id', 'users.id')
+                    ->select('users.name', 'users.image', 'users.mobile', 'users.email')
+                    ->where('users.company_id', $row->to_company_id)
+                    ->where('job_assign.company_id', $row->to_company_id)
+                    ->where('job_assign.job_id', $row->job_id)
+                    ->skip(0)->take(1)
+                    ->get();
+                $contact = $contactRows->first();
+            }
 
             /* ── Performance ───────────────────────────────────── */
-            $perf = GeneralMethod::agencyCandidatesCount($row->to_company_id, $row->job_id);
+            $perf = $row->_perf_info ?? GeneralMethod::agencyCandidatesCount($row->to_company_id, $row->job_id);
             $sourced    = $perf->Upload    ?? 0;
             $interviews = $perf->Interview ?? 0;
             $joined     = $perf->Joined    ?? 0;

@@ -1,3 +1,72 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* ============================================================
+   JERO DESIGN SYSTEM TOKENS & GUARDRAILS (UI_UX_STANDARDS.md)
+   ============================================================ */
+
+:root {
+  --jero-font-family: 'Poppins', system-ui, -apple-system, sans-serif;
+  --jero-primary: #3E97FF;
+  --jero-primary-hover: #2884EF;
+  --jero-success: #50CD89;
+  --jero-danger: #F1416C;
+  --jero-warning: #FFC700;
+  --jero-dark: #1E2129;
+  --jero-gray-100: #F9F9F4;
+  --jero-gray-200: #F1F1F4;
+  --jero-gray-300: #E1E3EA;
+  --jero-gray-600: #7E8299;
+  --jero-gray-900: #181C32;
+  --jero-border-radius: 8px;
+}
+
+body {
+  font-family: var(--jero-font-family) !important;
+}
+
+/* 16px Font Cap Guardrail for Metronic Headings on App Layouts */
+.app-container h1,
+.app-container h2,
+.app-container h3,
+.app-container .fs-1,
+.app-container .fs-2,
+.app-container .fs-3,
+.app-container .fs-4 {
+  font-size: 16px !important;
+  font-family: var(--jero-font-family) !important;
+}
+
+/* Standard .btn-jero Button System */
+.btn-jero {
+  font-family: var(--jero-font-family);
+  font-size: 14px;
+  font-weight: 500;
+  border-radius: var(--jero-border-radius);
+  padding: 8px 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: all 0.2s ease-in-out;
+  border: 1px solid transparent;
+}
+
+.btn-jero-primary {
+  background-color: var(--jero-primary);
+  color: #FFFFFF;
+}
+.btn-jero-primary:hover {
+  background-color: var(--jero-primary-hover);
+  color: #FFFFFF;
+}
+
+.btn-jero-secondary {
+  background-color: var(--jero-gray-200);
+  color: var(--jero-gray-900);
+}
+.btn-jero-secondary:hover {
+  background-color: var(--jero-gray-300);
+  color: var(--jero-gray-900);
+}

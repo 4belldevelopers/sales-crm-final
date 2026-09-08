@@ -25,12 +25,19 @@
     $row = (object) $rowArr;
     $row->thirdparty_company_id = $row->ClientComID;
 
-    $jobData = DB::table('jobs')->select('max_sal_mode as jobMode','max_salary_currency as jobCurrency')->where('id','=',$row->jobId)->first();
-    $jobMode = $jobData->jobMode ?? @$row->current_ctc_mode;
+    if (isset($row->job_max_sal_mode) && isset($row->job_max_salary_currency)) {
+        $jobMode = $row->job_max_sal_mode;
+        $jobCurrency = $row->job_max_salary_currency;
+    } else {
+        $jobData = DB::table('jobs')->select('max_sal_mode as jobMode','max_salary_currency as jobCurrency')->where('id','=',$row->jobId)->first();
+        $jobMode = $jobData->jobMode ?? @$row->current_ctc_mode;
+        $jobCurrency = $jobData->jobCurrency ?? @$row->current_ctc_cur;
+    }
+
     if(!empty($modeFilter)){
        $jobMode = @$modeFilter;
     }
-    $jobCurrency = $jobData->jobCurrency ?? @$row->current_ctc_cur;
+    
     if(!empty($currencyFilter)){
         $jobCurrency = @$currencyFilter;
     }
@@ -558,7 +565,9 @@
                     $city = '';
                     $row_city_name = '';
 
-                    if (@$row->country == 101) {
+                    if (!empty($row->city_name)) {
+                        $row_city_name = $row->city_name;
+                    } elseif (@$row->country == 101) {
                         $row_city = DB::table('city_list')
                             ->select('*')
                             ->where('city_id', @$row->city_id)
@@ -592,11 +601,13 @@
 
                    
 
-                    if($company_id != $row->ClientComID && $row->ClientComID != 0 && $row->ClientComID > 0){
+                    if (!empty($row->spokperson_name)) {
+                        $rowpostedby = $row->spokperson_name;
+                    } elseif ($company_id != $row->ClientComID && $row->ClientComID != 0 && $row->ClientComID > 0) {
                         $spokperson = DB::table('job_assign')->select('users.name')->join('users', 'users.id', 'job_assign.spok_user_id')->where('job_assign.job_id', $row->jobId)->where('job_assign.company_id', $row->ClientComID)->first();
                         $rowpostedby = (@$spokperson) ? @$spokperson->name : $row->posted_by;
                         $rowpostedby = $row->rec_candidate_assign_id ? $row->posted_by :  $rowpostedby;
-                    }else{
+                    } else {
                         $rowpostedby = $row->posted_by;
                     }
                     // $rowpostedby = ucwords($row->posted_by); post_company_name
@@ -757,7 +768,9 @@
                     if ($row->job_master_status_id == 8) {
                         $name = 'Private';
                     }
-                    if (!empty(@$row->childStatus) && @$row->childStatus > 0) {
+                    if (!empty($row->child_status_name)) {
+                        $name = $row->child_status_name;
+                    } elseif (!empty(@$row->childStatus) && @$row->childStatus > 0) {
                         $childStatus = '';
                         $childStatus = DB::table('candidate_status')
                             ->select('*')

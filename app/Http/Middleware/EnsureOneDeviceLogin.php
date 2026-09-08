@@ -2,68 +2,75 @@
 
 namespace App\Http\Middleware;
 
+use App\Support\DeviceSessionManager;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\Session;
 use Symfony\Component\HttpFoundation\Response;
 
+/**
+ * V2_login Phase 3 — per-request session enforcement (Redis-only, no MySQL writes).
+ *
+ * Guards applied in order:
+ *   1. Super-admin token_check bypass (throttled super_admin_login_code clear).
+ *   2. Account status check (active only).
+ *   3. Epoch gate (Phase 3.4): kicks sessions created before the latest block/suspend action.
+ *   4. Single-device check (Phase 3.1): 1 Redis GET, no MySQL write per request.
+ *
+ * Phase 0 removed the MySQL session_id write-per-request (BUG-01).
+ * Phase 3.1 replaces the remaining MySQL write with a Redis key set only on login.
+ */
 class EnsureOneDeviceLogin
 {
-    /**
-     * Handle an incoming request.
-     *
-     * @param  \Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response)  $next
-     */
-    public function handle($request, Closure $next)
+    public function handle(Request $request, Closure $next): Response
     {
+        if (! Auth::check()) {
+            return $next($request);
+        }
 
-        
+        $user = Auth::user();
 
-        if (Auth::check()) {
-
-            $user = Auth::user();
-            // $clientIp = $request->ip();
-            // dd($request->session()->regenerate(),session()->getId(),$clientIp);
-            
-
-            if (Session::has('token_check')) {
-                // Throttle: write super_admin_login_code clear at most once per minute per user
-                $throttleKey = 'token_check_save_' . $user->id;
-                if (!Cache::has($throttleKey)) {
-                    $user->super_admin_login_code = '';
-                    $user->save();
-                    Cache::put($throttleKey, true, 60);
-                }
-            } else {
-
-                if ($user->status !== 'active') {
-                    Auth::logout();
-                    return redirect('/login')->withErrors([
-                        'device_message' => 'Your account has been suspended. To resolve this issue, please contact the administrator or send an email to support@jero.works for further assistance.'
-                    ]);
-                }
-
-                $currentSessionId = session()->getId();
-                if ($user->session_id && $user->session_id !== $currentSessionId) {
-                    session()->getHandler()->destroy($user->session_id);
-                }
-
-                // Only write to DB when the session ID actually changes (BUG-01 fix)
-                $cachedSessionId = Cache::get('user_session_' . $user->id);
-                if ($cachedSessionId !== $currentSessionId) {
-                    $user->session_id = $currentSessionId;
-                    $user->save();
-                    Cache::put('user_session_' . $user->id, $currentSessionId, 3600);
-                }
-
+        // 1. Super-admin impersonation: throttle-clear the super_admin_login_code.
+        if (session()->has('token_check')) {
+            $throttleKey = 'token_check_save_' . $user->id;
+            if (! Cache::has($throttleKey)) {
+                $user->super_admin_login_code = '';
+                $user->save();
+                Cache::put($throttleKey, true, 60);
             }
-            
+            return $next($request);
+        }
 
+        // 2. Account status.
+        if ($user->status !== 'active') {
+            Auth::logout();
+            return redirect('/login')->withErrors([
+                'device_message' => 'Your account has been suspended. To resolve this issue, please contact the administrator or send an email to support@jero.works for further assistance.',
+            ]);
+        }
 
-            
+        // 3. Epoch gate: invalidates all sessions born before the latest block/suspend action.
+        //    login_at is written to session by AttemptLoginAction on every successful login.
+        $loginAt = (int) session('login_at', 0);
+        if ($loginAt > 0) {
+            $userEpoch    = (int) Cache::get('user:epoch:' . $user->id, 0);
+            $companyEpoch = (int) Cache::get('company:epoch:' . $user->company_id, 0);
+            if ($loginAt < $userEpoch || $loginAt < $companyEpoch) {
+                Auth::logout();
+                return redirect('/login')->withErrors([
+                    'device_message' => 'Your session has been terminated by an administrator.',
+                ]);
+            }
+        }
 
+        // 4. Single-device enforcement (1 Redis GET, no MySQL write).
+        $currentSessionId = session()->getId();
+        if (! DeviceSessionManager::enforce($user->id, $currentSessionId)) {
+            Auth::logout();
+            return redirect('/login')->withErrors([
+                'device_message' => 'You have been logged in from another device. Please login again.',
+            ]);
         }
 
         return $next($request);

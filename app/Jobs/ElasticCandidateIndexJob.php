@@ -18,12 +18,15 @@ class ElasticCandidateIndexJob implements ShouldQueue
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
     public int $tries = 5;
+
     public array $backoff = [10, 30, 60, 120, 300];
+
     public int $timeout = 60;
 
     public function __construct(public int $candidateId)
     {
         $this->onQueue('es-index');
+        $this->afterCommit = true;
     }
 
     public function handle(): void
@@ -32,7 +35,7 @@ class ElasticCandidateIndexJob implements ShouldQueue
             ->where('id', $this->candidateId)
             ->first();
 
-        if (!$candidate) {
+        if (! $candidate) {
             return;
         }
 

@@ -92,7 +92,7 @@ class ServiceCompanyLocationsController extends ServiceCompanyBaseController
         abort_if(Gate::denies('edit_locations'), 403);
 
         $this->countries = Country::all();
-        $this->location = JobLocation::find($id);
+        $this->location = JobLocation::withoutGlobalScopes()->find($id);
         return view('service_company.locations.edit', $this->data);
     }
    
@@ -100,7 +100,7 @@ class ServiceCompanyLocationsController extends ServiceCompanyBaseController
     {
         abort_if(Gate::denies('edit_locations'), 403);
 
-        $location = JobLocation::find($id);
+        $location = JobLocation::withoutGlobalScopes()->find($id);
         $location->location = $request->location;
         $location->country_id = $request->country_id;
         $location->save();

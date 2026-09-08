@@ -66,13 +66,13 @@ class StageAssignService
             ->update(['child_status_id' => $childStatusId, 'master_status_id' => $parentStatusId]);
 
         // Insert timeline entry for audit trail
-        $application = JobApplication::find($applicationId);
+        $application = JobApplication::withoutGlobalScopes()->find($applicationId);
         if ($application) {
             $childStatus  = DB::table('candidate_status')
                 ->where('id', $childStatusId)
                 ->where('company_id', $companyId)
                 ->first();
-            $masterStatus = ApplicationStatus::find($parentStatusId);
+            $masterStatus = ApplicationStatus::withoutGlobalScopes()->find($parentStatusId);
 
             DB::table('timeline')->insert([
                 'owner_id'           => auth()->id(),
@@ -164,7 +164,7 @@ class StageAssignService
 
         // Timeline entry for audit trail
         if ($statusId > 0) {
-            $applicationStatus = ApplicationStatus::find($statusId);
+            $applicationStatus = ApplicationStatus::withoutGlobalScopes()->find($statusId);
             GeneralMethod::manageTimeline(
                 auth()->id(),
                 $applicationId,

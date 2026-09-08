@@ -72,11 +72,12 @@
         <h3 class="card-title fw-bolder text-dark">Direct Client</h3>
         <span class="h-20px border-gray-200 border-start mx-4 d-none"></span> </div>
       <div class="card-toolbar">
-        <button type="button" class="btn btn-sm btn-icon btn-active-light-primary me-n5" id="kt_activitiesDirectClient_close"> <span class="svg-icon svg-icon-1">
+        {{-- Intent: Direct Client details right-side drawer close button matching direct_client.blade.php UI --}}
+        <button type="button" class="btn btn-sm btn-icon btn-active-light-danger me-n5" id="kt_activitiesDirectClient_close"> <span class="svg-icon svg-icon-1">
         <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="24px" height="24px" viewBox="0 0 24 24" version="1.1">
-          <g transform="translate(12.000000, 12.000000) rotate(-45.000000) translate(-12.000000, -12.000000) translate(4.000000, 4.000000)" fill="#000000">
-            <rect fill="#000000" x="0" y="7" width="16" height="2" rx="1" />
-            <rect fill="#000000" opacity="0.5" transform="translate(8.000000, 8.000000) rotate(-270.000000) translate(-8.000000, -8.000000)" x="0" y="7" width="16" height="2" rx="1" />
+          <g transform="translate(12.000000, 12.000000) rotate(-45.000000) translate(-12.000000, -12.000000) translate(4.000000, 4.000000)" fill="currentColor">
+            <rect x="0" y="7" width="16" height="2" rx="1" />
+            <rect opacity="0.5" transform="translate(8.000000, 8.000000) rotate(-270.000000) translate(-8.000000, -8.000000)" x="0" y="7" width="16" height="2" rx="1" />
           </g>
         </svg>
         </span> </button>
@@ -88,243 +89,117 @@
 @endsection
 
 @push('footer-script')
-<script src="{{ asset('demo/cdn/js/dataTables.fixedHeader.min.js') }}{{ TM_VERSION }}"></script>
 <script>
-$(document).ready(function() {	
-	$('#inputSearch').keyup(function() {
-		// table._fnDraw(); 
-		 fetchCandidates();
-	}); 
+let searchTimer = null;
+
+$(document).ready(function() {
+    fetchCandidates(1);
+
+    $('#inputSearch, #kt_tagify_2').on('keyup input', function() {
+        clearTimeout(searchTimer);
+        const searchVal = $(this).val();
+        searchTimer = setTimeout(function() {
+            fetchCandidates(1, searchVal);
+        }, 300);
+    });
+
+    $(document).on('click', '#pagination .page-link', function(e) {
+        e.preventDefault();
+        const page = $(this).data('page');
+        if (!page || $(this).hasClass('disabled')) return;
+        $(this).addClass('disabled');
+        fetchCandidates(page, $('#inputSearch').val());
+    });
 });
 
-    var table = $('#myTable').dataTable({
-	   		responsive  	: true,
-			processing  	: true,
-			serverSide  	: true,
-			destroy   		: true,
-			ordering		: false, //disable ordering			
-			"bLengthChange" : false, //thought this line could hide the LengthMenu 
-			sDom			: 'lrtip',
-			oLanguage 		: {sLengthMenu: "_MENU_",},
-			ajax			: {'url' : '{!! route('service_company.clients.client_request_data') !!}', "data": function ( d ) {	d.search = $('#inputSearch').val() } },	
-	   		"drawCallback": function( settings ) {
-						$('[data-toggle="tooltip1"]').tooltip();
-						$('[data-toggle="tooltip2"]').tooltip();				
-				},				  
-        	columns			: [
-									{ data: 'chkbox', name: 'chkbox', searchable : false, orderable : false}     
-        					  ],
-			//timeout			: 500000,
-           async			: false
+function fetchCandidates(page = 1, search = '') {
+    search = search || $('#inputSearch').val() || $('#kt_tagify_2').val() || '';
+    $('.loadingMessage').css({ display: 'block' });
+    return $.ajax({
+        url: `{!! route('service_company.clients.client_request_data') !!}`,
+        type: 'GET',
+        data: {
+            page: page,
+            q: search,
+            search: search
+        },
+        success: function(response) {
+            $('.loadingMessage').css({ display: 'none' });
+            $('#requestJobLists').html(response.html);
+            $('#pagination').html(response.pagination);
+        },
+        error: function() {
+            $('.loadingMessage').css({ display: 'none' });
+        }
     });
-    // new $.fn.dataTable.FixedHeader( table );
-
- $(document).on('click', '.request_event', function (){
-		var id    			= $(this).data('row-id');
-		var event_id    	= $(this).data('row-event');
-		var from_company    = $(this).data('row-from_company');		
-		  	
-if(event_id == -1)
-{			
-			
-			
-		const swalWithBootstrapButtons = Swal.mixin({
-		  customClass: {
-			confirmButton: 'btn btn-success',
-			cancelButton: 'btn btn-danger'
-		  },
-		  buttonsStyling: false
-		})
-		swalWithBootstrapButtons.fire({
-										  title				: 'Are you sure?',
-										  text				: "You won't be able to revert this!",
-										  icon				: 'warning',
-										  showCancelButton	: true,
-										  confirmButtonText	: 'Yes, Ignore it!',
-										  cancelButtonText	: 'No, cancel!',
-										  reverseButtons	: true
-									}).then((result) => {
-		  if (result.isConfirmed) {
-			
-		  
-										var url   			= "{{ route('service_company.clients.request_update') }}";
-										$.ajax({
-													type	: 'GET',
-													url		: url,
-													data	: {'invitation_id':id, 'event_id': event_id, 'from_company': from_company},
-													success	: function (response) {
-																									var clientAll		=	response.clientDataCnt.clientAll;
-																									var clientDirect	=	response.clientDataCnt.clientDirect;
-																									var clientCustom	=	response.clientDataCnt.clientCustom;
-																									var clientRequest	=	response.clientDataCnt.clientRequest;
-																									
-																									$('#span_clientAll').html(clientAll);
-																									$('#span_clientDirect').html(clientDirect);
-																									$('#span_clientCustom').html(clientCustom);
-																									$('#span_clientRequest').html(clientRequest);
-																									
-																						if(response.status == 'success') {
-													
-																									// table._fnDraw(); 
-																									 fetchCandidates();
-																									swalWithBootstrapButtons.fire(
-																																	'Ignore!',
-																																	response.message,
-																																	'success'
-																																);
-																																location.reload();
-																						}
-													}
-										});
-		   
-		  
-		  } else if (
-			result.dismiss === Swal.DismissReason.cancel
-		  ) {
-			swalWithBootstrapButtons.fire(
-			  'Cancelled',
-			  'Selected request is safe :)',
-			  'error'
-			)
-		  }
-		})
-			
-			
 }
-else
-{
 
-		const swalWithBootstrapButtons = Swal.mixin({
-		  customClass: {
-			confirmButton: 'btn btn-success',
-			cancelButton: 'btn btn-danger'
-		  },
-		  buttonsStyling: false
-		})
-		swalWithBootstrapButtons.fire({
-										  title				: 'Are you sure?',
-										  text				: "You won't be able to revert this!",
-										  icon				: 'warning',
-										  showCancelButton	: true,
-										  confirmButtonText	: 'Yes, Accept it!',
-										  cancelButtonText	: 'No, cancel!',
-										  reverseButtons	: true
-									}).then((result) => {
-		  if (result.isConfirmed) {
-		  
-		  
-		  
-		  								var url   			= "{{ route('service_company.clients.request_update') }}";
-										$.ajax({
-													type	: 'GET',
-													url		: url,
-													data	: {'invitation_id':id, 'event_id': event_id, 'from_company': from_company},
-													success	: function (response) {
-																						fetchCandidates(); 
-																						if(response.status == 'success') {
-																				
-																									var clientAll		=	response.clientDataCnt.clientAll;
-																									var clientDirect	=	response.clientDataCnt.clientDirect;
-																									var clientCustom	=	response.clientDataCnt.clientCustom;
-																									var clientRequest	=	response.clientDataCnt.clientRequest;
-																									
-																									$('#span_clientAll').html(clientAll);
-																									$('#span_clientDirect').html(clientDirect);
-																									$('#span_clientCustom').html(clientCustom);
-																									$('#span_clientRequest').html(clientRequest);
-																									
-																									// table._fnDraw(); 
-																									 fetchCandidates();
-																									swalWithBootstrapButtons.fire(
-																																	  'Accept!',
-																																	  response.message,
-																																	  'success'
-																																	);
-																																	location.reload();
-																						}
-													}
-										});
-										
-										
-			
-		  } else if (
-			result.dismiss === Swal.DismissReason.cancel
-		  ) {
-			swalWithBootstrapButtons.fire(
-			  'Cancelled',
-			  'Selected request is safe :)',
-			  'error'
-			)
-		  }
-		})
-}			
-			
-				  
-}); 
+$(document).on('click', '.request_event', function () {
+    var id = $(this).data('row-id');
+    var event_id = $(this).data('row-event');
+    var from_company = $(this).data('row-from_company');
+    var actionText = (event_id == -1) ? 'Ignore' : 'Accept';
+    var confirmBtnClass = (event_id == -1) ? 'btn btn-danger' : 'btn btn-success';
 
+    const swalWithBootstrapButtons = Swal.mixin({
+        customClass: {
+            confirmButton: confirmBtnClass,
+            cancelButton: 'btn btn-light me-3'
+        },
+        buttonsStyling: false
+    });
 
-$(document).on('click', '.show-detail-direct', function (){
-	$('#kt_activitiesDirectClient_toggle').trigger('click');	
-	var id    		=	$(this).data('row-id');
-	var url   		=	"{{ route('service_company.clients.requestviewmore',':id') }}";
-	url     		=	url.replace(':id', id);
-	 var baseurl    =	"{{ asset('assets/images/Loading2.gif') }}"; 
-	$.ajax({
-					type  		: 'GET',
-					url   		: url,
-					beforeSend	: function() {
-								$('#kt_activitiesDirectClient_body').html('<img src="'+baseurl+'" height="35px" width="100%">');
-					},
-					success 	: function (response) {
-								$('#kt_activitiesDirectClient_body').html(response.view);
-					}
-			});
- }); 
-
-  $(document).ready(function() {
-
-            fetchCandidates();
-            
-            $(document).on('click', '#pagination .page-link', function(e) {
-                e.preventDefault();
-
-                const page = $(this).data('page');
-                if (!page || $(this).hasClass('disabled')) return;
-
-                // Disable the clicked pagination link
-                $(this).addClass('disabled');
-
-                // Fetch data
-                fetchCandidates(page, $('#search').val()).then(() => {
-                    // Re-enable the links after successful data fetch
-                    $('#pagination .page-link').removeClass('disabled');
-                }).catch(() => {
-                    // Re-enable the links even if there's an error
-                    $('#pagination .page-link').removeClass('disabled');
-                });
-            });
-
-      });
-
-      function fetchCandidates(page = 1, search = '') {
-            var clientid = '1';
-            $('.loadingMessage').css({ display: 'block' });
+    swalWithBootstrapButtons.fire({
+        title: 'Are you sure?',
+        text: "You won't be able to revert this!",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Yes, ' + actionText + ' it!',
+        cancelButtonText: 'No, cancel!',
+        reverseButtons: true
+    }).then((result) => {
+        if (result.isConfirmed) {
+            var url = "{{ route('service_company.clients.request_update') }}";
             $.ajax({
-                url: `{!! route('service_company.clients.client_request_data') !!}?page=${page}`,
                 type: 'GET',
-                data: {
-                  search : $('#inputSearch').val()
-                },
-                success: function(response) {
-                    $('.loadingMessage').css({ display: 'none' });
-                  //   alert(response.total);
-                    $('#requestJobLists').html(response.html);
-                    $('#pagination').html(response.pagination);
+                url: url,
+                data: {'invitation_id': id, 'event_id': event_id, 'from_company': from_company},
+                success: function (response) {
+                    if (response.clientDataCnt) {
+                        if ($('#span_clientAll').length) $('#span_clientAll').html(response.clientDataCnt.clientAll);
+                        if ($('#span_clientDirect').length) $('#span_clientDirect').html(response.clientDataCnt.clientDirect);
+                        if ($('#span_clientCustom').length) $('#span_clientCustom').html(response.clientDataCnt.clientCustom);
+                        if ($('#span_clientRequest').length) $('#span_clientRequest').html(response.clientDataCnt.clientRequest);
+                    }
+                    if (response.status == 'success') {
+                        fetchCandidates(1);
+                        swalWithBootstrapButtons.fire(
+                            actionText + 'ed!',
+                            response.message || ('Request has been ' + actionText.toLowerCase() + 'ed.'),
+                            'success'
+                        );
+                    }
                 }
             });
         }
+    });
+});
 
-
-
+$(document).on('click', '.show-detail-direct', function () {
+    $('#kt_activitiesDirectClient_toggle').trigger('click');
+    var id = $(this).data('row-id');
+    var url = "{{ route('service_company.clients.requestviewmore', ':id') }}".replace(':id', id);
+    var baseurl = "{{ asset('assets/images/Loading2.gif') }}";
+    $.ajax({
+        type: 'GET',
+        url: url,
+        beforeSend: function() {
+            $('#kt_activitiesDirectClient_body').html('<div class="p-5 text-center"><img src="' + baseurl + '" height="35px"></div>');
+        },
+        success: function (response) {
+            $('#kt_activitiesDirectClient_body').html(response.view);
+        }
+    });
+});
 </script>
 @endpush 

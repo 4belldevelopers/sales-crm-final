@@ -848,161 +848,21 @@
 @endsection
 
 @push('footer-script')
-    <script src="{{ asset('demo/cdn/js/dataTables.fixedHeader.min.js') }}{{ TM_VERSION }}"></script>
     <script>
-        // var input2 = document.querySelector("#kt_tagify_2");
-        // new Tagify(input2);
-    </script>
-    <script>
+        let searchTimer = null;
         $(document).ready(function() {
-            $('#kt_tagify_2').keyup(function() {
-                // tableLoad('load');
-                fetchBenchBenchCandidatesCandidateList();
+            $(document).on('keyup', '#inputSearch, #kt_tagify_2', function() {
+                clearTimeout(searchTimer);
+                searchTimer = setTimeout(function() {
+                    fetchBenchBenchCandidatesCandidateList();
+                }, 300);
             });
         });
-        var table;
-        // tableLoad('load');
 
         function filtersdataget() {
-            // tableLoad('load');
             fetchBenchBenchCandidatesCandidateList();
         }
 
-        // function tableLoad(type) {
-        //     var status = 'all';
-        //     var jobs = 'all';
-        //     var clients = 'all';
-        //     var source = 'all';
-        //     var search_passport = 'all';
-        //     var search_np_id = 'all';
-        //     var inputSearch = $('#inputSearch').val();
-        //     var sortingfilter = $('#sortingfilter').val();
-        //     var country = $('#country').val();
-        //     var cus_search = $('#kt_tagify_2').val();
-        //     table = $('#myTable').dataTable({
-        //         serverSide: true, // Enable server-side processing
-        //         responsive: true,
-        //         processing: true,
-        //         ordering: false, //disable ordering      			
-        //         destroy: true,
-        //         stateSave: true,
-        //         "bLengthChange": false,
-        //         sDom: 'lrtip',
-        //         ajax: '{!! route('service_company.bench-candidates.offerListingData') !!}?search=' + inputSearch + '&sortingfilter=' + sortingfilter +
-        //             '&country=' + country + '&cus_search=' + cus_search,
-        //         "fnDrawCallback": function(oSettings) {
-        //             $("body").tooltip({
-        //                 selector: '[data-toggle="tooltip"]'
-        //             });
-        //         },
-        //         "columnDefs": [{
-        //                 "targets": 0
-        //             },
-        //             {
-        //                 "targets": 1,
-        //                 "class": "align-items-center"
-        //             },
-        //             {
-        //                 "targets": 2
-        //             },
-        //             {
-        //                 "targets": 3
-        //             },
-        //             {
-        //                 "targets": 4
-        //             },
-        //             {
-        //                 "targets": 5
-        //             },
-        //             {
-        //                 "targets": 6
-        //             },
-        //             {
-        //                 "targets": 7
-        //             },
-        //             {
-        //                 "targets": 8
-        //             },
-        //             {
-        //                 "targets": 9
-        //             },
-        //             {
-        //                 "targets": 10
-        //             }
-        //         ],
-        //         columns: [{
-        //                 data: 'chkbox',
-        //                 name: 'chkbox',
-        //                 width: '1%',
-        //                 searchable: false,
-        //                 orderable: false
-        //             },
-        //             {
-        //                 data: 'Name',
-        //                 name: 'Name',
-        //                 width: '10%',
-        //                 orderable: true
-        //             },
-        //             {
-        //                 data: 'Contacts',
-        //                 name: 'Contacts',
-        //                 width: '7%',
-        //                 orderable: true
-        //             },
-        //             {
-        //                 data: 'Exp',
-        //                 name: 'Exp',
-        //                 width: '2%',
-        //                 orderable: true
-        //             },
-        //             {
-        //                 data: 'Salary',
-        //                 name: 'Salary',
-        //                 width: '5%',
-        //                 orderable: true
-        //             },
-        //             {
-        //                 data: 'Availability',
-        //                 name: 'Availability',
-        //                 width: '8%',
-        //                 orderable: true
-        //             },
-
-        //             {
-        //                 data: 'Qualifaction',
-        //                 name: 'Qualifaction',
-        //                 width: '2%',
-        //                 orderable: true
-        //             },
-        //             {
-        //                 data: 'Location',
-        //                 name: 'Location',
-        //                 width: '2%',
-        //                 orderable: true
-        //             },
-        //             {
-        //                 data: 'Assigned',
-        //                 name: 'Assigned',
-        //                 width: '2%',
-        //                 orderable: true
-        //             },
-        //             {
-        //                 data: 'Requisitions',
-        //                 name: 'Requisitions',
-        //                 width: '2%',
-        //                 orderable: true
-        //             },
-        //             {
-        //                 data: 'Status',
-        //                 name: 'Status',
-        //                 width: '2%',
-        //                 orderable: true
-        //             }
-        //         ]
-
-        //     });
-        //     new $.fn.dataTable.FixedHeader(table);
-        // }
         $(document).on('click', '.hm-listing', function() {
             $('#kt_activitiesHM_toggle').trigger('click');
             var id = $(this).data('row-id');
@@ -1017,15 +877,15 @@
                         '" height="35px" width="100%">');
                 },
                 success: function(response) {
-                    setTimeout(
-                        () => {
-                            if (response.status == "success") {
-                                $('#kt_activitiesHM_body').html(response.view);
-                            }
-                        }, 500);
+                    setTimeout(() => {
+                        if (response.status == "success") {
+                            $('#kt_activitiesHM_body').html(response.view);
+                        }
+                    }, 500);
                 }
             });
         });
+
         $(document).on('click', '.bench_assign_to_job', function() {
             $('#kt_activitiesBA_toggle').trigger('click');
             var id = $(this).data('row-id');
@@ -1048,11 +908,12 @@
                 }
             });
         });
+
         $(document).on('click', '.stage_sub_stage', function() {
             $('#stage_body_content').html('');
             var id = $(this).data('row-id');
             var placedID = $(this).data('placedid');
-            var url = "{{ route('service_company.bench-candidates.bench_application_status', ':id') }}?placedid="+placedID;
+            var url = "{{ route('service_company.bench-candidates.bench_application_status', ':id') }}?placedid=" + placedID;
             url = url.replace(':id', id);
             $.ajax({
                 type: 'GET',
@@ -1063,9 +924,7 @@
                     }
                 }
             });
-
         });
-
 
         $(document).on('click', '.bo-tab', function() {
             $('.bo-tab').removeClass('active');
@@ -1073,6 +932,7 @@
             $('#tabFilter').val($(this).data('tab'));
             fetchBenchBenchCandidatesCandidateList();
         });
+
         $(document).on('click', '.sort-ic', function() {
             var $el = $(this);
             var asc = String($el.data('sort-asc'));
@@ -1084,57 +944,52 @@
 
         $(document).ready(function() {
             fetchBenchBenchCandidatesCandidateList();
-            $(document).on('click', '#paginationbenchCandidateOffer .page-link', function(e) {
+            $(document).on('click', '#paginationbenchCandidateOffer .pagi-page, #paginationbenchCandidateOffer .pagi-arrow', function(e) {
                 e.preventDefault();
-
                 const page = $(this).data('page');
-                if (!page || $(this).hasClass('disabled')) return;
+                if (!page || $(this).hasClass('pagi-disabled') || $(this).hasClass('pagi-active-disabled')) return;
 
-                // Disable the clicked pagination link
                 $(this).addClass('disabled');
 
-                // Fetch data
-                fetchBenchBenchCandidatesCandidateList(page, $('#search').val()).then(() => {
-                  // Re-enable the links after successful data fetch
-                  $('#paginationbenchCandidateOffer .page-link').removeClass('disabled');
-                }).catch(() => {
-                  // Re-enable the links even if there's an error
-                  $('#paginationbenchCandidateOffer .page-link').removeClass('disabled');
+                fetchBenchBenchCandidatesCandidateList(page).always(function() {
+                    $('#paginationbenchCandidateOffer .pagi-page, #paginationbenchCandidateOffer .pagi-arrow').removeClass('disabled');
                 });
-                
             });
-        });   
 
-		function fetchBenchBenchCandidatesCandidateList(page = 1, search = '') {
-        var status = 'all';
-        var jobs = 'all';
-        var clients = 'all';
-        var source = 'all';
-        var search_passport = 'all';
-        var search_np_id = 'all';
-        var inputSearch = $('#inputSearch').val();
-        var sortingfilter = $('#sortingfilter').val();
-        var country = $('#country').val();
-        var cus_search = $('#kt_tagify_2').val();
-				$('.loadingMessagebenchCandidateOfferAjax').css({ display: 'block' });
-				$.ajax({
-					url: `{!! route('service_company.bench-candidates.offerListingData_ajax') !!}?page=${page}`,
-					type: 'GET',
-					data: {
-						search: $('#inputSearch').val(),
-						cus_search: $('#kt_tagify_2').val(),
-						country: $('#country').val(),
-						sortingfilter: $('#sortingfilter').val(),
-						tab: $('#tabFilter').val()
-					},
-					success: function(response) {
-						$('.loadingMessagebenchCandidateOfferAjax').css({ display: 'none' });
-                        $('#totalBenchShortlist').html(response.total);
-						$('#benchCandidateOfferAjax').html(response.html);
-						$('#paginationbenchCandidateOffer').html(response.pagination);
-					}
-				});
-		}
+            $(document).on('change', '#paginationbenchCandidateOffer .pagi-perpage', function(e) {
+                const selectedPerPage = $(this).val();
+                if (selectedPerPage) {
+                    localStorage.setItem('candidatePerPage', selectedPerPage);
+                    fetchBenchBenchCandidatesCandidateList(1);
+                }
+            });
+        });
 
+        function fetchBenchBenchCandidatesCandidateList(page = 1) {
+            $('.loadingMessagebenchCandidateOfferAjax').css({ display: 'block' });
+            var perPage = localStorage.getItem('candidatePerPage') || 10;
+            return $.ajax({
+                url: `{!! route('service_company.bench-candidates.offerListingData_ajax') !!}?page=${page}`,
+                type: 'GET',
+                data: {
+                    search: $('#inputSearch').val(),
+                    cus_search: $('#kt_tagify_2').val(),
+                    country: $('#country').val(),
+                    sortingfilter: $('#sortingfilter').val(),
+                    tab: $('#tabFilter').val(),
+                    per_page: perPage,
+                    size: perPage
+                },
+                success: function(response) {
+                    $('.loadingMessagebenchCandidateOfferAjax').css({ display: 'none' });
+                    $('#totalBenchShortlist').html(response.total);
+                    $('#benchCandidateOfferAjax').html(response.html);
+                    $('#paginationbenchCandidateOffer').html(response.pagination);
+                },
+                error: function() {
+                    $('.loadingMessagebenchCandidateOfferAjax').css({ display: 'none' });
+                }
+            });
+        }
     </script>
 @endpush

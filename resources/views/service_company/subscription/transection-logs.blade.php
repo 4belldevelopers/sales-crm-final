@@ -1,1663 +1,922 @@
 @extends('layouts.service_company_layout')
-@php
-    use App\Helper\GeneralMethod;
-    use Illuminate\Support\Facades\DB;
-    use Carbon\Carbon;
-
-@endphp
 
 @push('head-script')
-    <link rel="stylesheet" href="{{ asset('assets/node_modules/switchery/dist/switchery.min.css') }}<?php echo TM_VERSION; ?>">
+<style>
+/* ==========================================================================
+ * Transaction Log V2 — Professional Design
+ * Metronic-compatible · Poppins · max 14px · clean icon-based · no 3D
+ * ========================================================================== */
 
-    <style>
-        body {
-            overflow-x: hidden;
-        }
+/* ── Summary Stats Bar ────────────────────────────────────────────────────── */
+.txlog-stats-bar {
+    display: flex;
+    gap: 12px;
+    padding: 16px 20px 0;
+    flex-wrap: wrap;
+}
+.txlog-stat-card {
+    flex: 1;
+    min-width: 160px;
+    background: #fff;
+    border: 1px solid #f1f1f4;
+    border-radius: 10px;
+    padding: 14px 18px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    transition: box-shadow 0.2s;
+}
+.txlog-stat-card:hover { box-shadow: 0 2px 12px rgba(0,0,0,.06); }
+.txlog-stat-icon {
+    width: 40px; height: 40px;
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+}
+.txlog-stat-icon.ic-blue  { background: #eef6ff; }
+.txlog-stat-icon.ic-green { background: #e8fff3; }
+.txlog-stat-icon.ic-red   { background: #fff5f8; }
+.txlog-stat-icon.ic-amber { background: #fff8dd; }
+.txlog-stat-icon svg { width: 20px; height: 20px; }
+.txlog-stat-info .stat-val  { font-size: 18px; font-weight: 700; color: #181c32; line-height: 1.2; }
+.txlog-stat-info .stat-lbl  { font-size: 11px; color: #a1a5b7; font-weight: 500; margin-top: 2px; }
 
-        .w-md-130px {
-            width: 130px !important;
-        }
+/* ── Filter Bar ───────────────────────────────────────────────────────────── */
+.txlog-filter-bar {
+    display: flex;
+    flex-wrap: nowrap;        /* keep all controls on ONE row */
+    gap: 10px;
+    align-items: flex-end;
+    padding: 12px 20px 12px;
+    background: #fafafa;
+    border-top: 1px solid #f1f1f4;
+    border-bottom: 1px solid #f1f1f4;
+    overflow-x: auto;         /* allow horizontal scroll on very small screens */
+}
+.txlog-filter-group {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+.txlog-filter-label {
+    font-size: 11px;
+    font-weight: 600;
+    color: #7e8299;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+.txlog-filter-bar .form-control,
+.txlog-filter-bar .form-select {
+    font-size: 13px;
+    border: 1.5px solid #e4e6ef;
+    border-radius: 7px;
+    background: #fff;
+    color: #3f4254;
+    height: 36px;
+    padding: 0 10px;
+    transition: border-color 0.15s, box-shadow 0.15s;
+    outline: none;
+    box-shadow: none;
+}
+.txlog-filter-bar .form-control:focus,
+.txlog-filter-bar .form-select:focus {
+    border-color: #009ef7;
+    box-shadow: 0 0 0 3px rgba(0,158,247,.12);
+}
+.txlog-filter-bar .form-select { padding-right: 28px; }
+.txlog-search-wrap {
+    position: relative;
+}
+.txlog-search-wrap .search-ico {
+    position: absolute;
+    left: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #b5b5c3;
+    pointer-events: none;
+    display: flex;
+}
+.txlog-search-wrap .search-ico svg { width: 15px; height: 15px; }
+.txlog-search-wrap input { padding-left: 32px !important; }
 
-        .active_plan {
-            width: fit-content;
-        }
-
-        .btn-group.hg-plan-btn-group {
-            width: 100%;
-        }
-
-        .shared-hosting .container_hosting-package .btn-group button.btn {
-            padding: 10px 15px;
-        }
-
-        .shared-hosting .container_hosting-package .btn-group button.btn {
-            padding: 14px 15px;
-            text-align: left;
-            width: 100%;
-        }
-
-        .btn.btn-info.hg-plan-btn-info {
-            box-shadow: none;
-            border-color: #ddd;
-            width: 100%;
-            float: none;
-        }
-
-        .btn-group .selected-term {
-            display: inline;
-            color: #333;
-        }
-
-        .btn-group .selected-term .term-length {
-            color: #666;
-            font-size: 14px;
-            text-transform: capitalize;
-        }
-
-        .btn-group .selected-term .WebRupee.webrupee1,
-        .btn-group .selected-term span.WebRupee {
-            color: #0171bc;
-        }
-
-        .hg-plan-btn-group span.WebRupee {
-            font-size: 22px;
-        }
-
-        .btn-group.hg-plan-btn-group .selected-term span.term-price,
-        .btn-group.hg-plan-btn-group .selected-term span.term-description {
-            color: #0171bc;
-        }
-
-        .hg-plan-btn-group span.term-price {
-            font-size: 22px;
-            font-weight: 800;
-        }
-
-        .btn-group .selected-term .term-price {
-            font-weight: 700;
-        }
-
-        .btn-group.hg-plan-btn-group .selected-term span.term-price,
-        .btn-group.hg-plan-btn-group .selected-term span.term-description {
-            color: #0171bc;
-        }
-
-        .btn-group .selected-term .term-price {
-            font-weight: 700;
-        }
-
-        .btn-group.hg-plan-btn-group .selected-term span.term-price,
-        .btn-group.hg-plan-btn-group .selected-term span.term-description {
-            color: #0171bc;
-        }
-
-        .selected-term .testsdfd {
-            margin-left: 3%;
-            margin-right: 12%;
-            line-height: 17px;
-            float: none;
-        }
-
-        .hg-percentage-discount {
-            color: #f15922;
-            font-size: 14px;
-            font-weight: 500;
-        }
-
-        span.hg-actual-price,
-        .plan-featured .hg-plan-btn-group .hg-actual-price del span.WebRupee,
-        .hg-plan-btn-group .selected-term .testsdfd .hg-actual-price del span.WebRupee,
-        .plan-featured .hg-plan-btn-group .selected-term .testsdfd .hg-actual-price del span.WebRupee {
-            color: #767676;
-        }
-
-        span.hg-actual-price {
-            display: block;
-            font-size: 14px;
-            font-weight: 500;
-        }
-
-        span.hg-actual-price,
-        .plan-featured .hg-plan-btn-group .hg-actual-price del span.WebRupee,
-        .hg-plan-btn-group .selected-term .testsdfd .hg-actual-price del span.WebRupee,
-        .plan-featured .hg-plan-btn-group .selected-term .testsdfd .hg-actual-price del span.WebRupee {
-            color: #767676;
-        }
-
-        .hg-plan-btn-group .hg-actual-price span.WebRupee {
-            font-size: 14px;
-        }
-
-        .WebRupee {
-            font-family: 'WebRupee' !important;
-        }
-
-        span.hg-actual-price {
-            display: block;
-            font-size: 14px;
-            font-weight: 500;
-        }
-
-        span.hg-actual-price,
-        .plan-featured .hg-plan-btn-group .hg-actual-price del span.WebRupee,
-        .hg-plan-btn-group .selected-term .testsdfd .hg-actual-price del span.WebRupee,
-        .plan-featured .hg-plan-btn-group .selected-term .testsdfd .hg-actual-price del span.WebRupee {
-            color: #767676;
-        }
-
-        .package-term {
-            font-size: 16px;
-        }
-
-        .dropdown-menu li {
-            padding: .8em 1em;
-            cursor: pointer;
-            border-bottom: 1px dotted lightgray;
-            display: block;
-        }
-
-        .dropdown-menu li:last-child {
-            border-bottom: none;
-        }
-    </style>
-@endpush
-
-<?php
-
-$pagetype = request('pagetype');
-$operationaltab = 'active';
-$salestab = '';
-if($pagetype){
-    if($pagetype=='operationaltab'){
-        $operationaltab = 'active';
-        $salestab = '';
-    }elseif($pagetype=='salestab'){
-        $salestab = 'active';
-        $operationaltab = '';
-    }
+/* Month preset chips */
+.txlog-preset-chips {
+    display: flex;
+    gap: 6px;
+    align-items: flex-end;
+    padding-bottom: 0;
+}
+.txlog-chip {
+    font-size: 11px;
+    font-weight: 600;
+    padding: 0 10px;
+    height: 28px;
+    border-radius: 20px;
+    border: 1.5px solid #e4e6ef;
+    background: #fff;
+    color: #7e8299;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    transition: all 0.15s;
+    white-space: nowrap;
+    margin-bottom: 4px;
+}
+.txlog-chip:hover, .txlog-chip.active-chip {
+    background: #009ef7;
+    border-color: #009ef7;
+    color: #fff;
 }
 
+.btn-txreset {
+    height: 36px;
+    padding: 0 16px;
+    font-size: 12px;
+    font-weight: 600;
+    border-radius: 7px;
+    border: 1.5px solid #e4e6ef;
+    background: #fff;
+    color: #7e8299;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    transition: all 0.15s;
+}
+.btn-txreset:hover { border-color: #d1d5db; color: #3f4254; background: #f9f9f9; }
+.btn-txreset svg { width: 13px; height: 13px; }
 
+/* ── Shared CSS Grid — header + data rows share the same columns ─────────── */
+/*   icon | date  | event  | actor  | amount | balance                        */
+/*   36px | 20%   | 25%    | 20%    | 15%    | 20%                            */
+.txlog-grid {
+    display: grid;
+    grid-template-columns: 36px 20fr 25fr 20fr 15fr 20fr;
+    gap: 16px;
+    align-items: center;
+    padding: 0 20px;
+}
+.txlog-grid > div {
+    min-width: 0;
+}
 
+/* ── Table-style Timeline Header ─────────────────────────────────────────── */
+.txlog-table-header {
+    background: #fafafa;
+    border-bottom: 1.5px solid #f1f1f4;
+    padding-top: 8px;
+    padding-bottom: 8px;
+}
+.txlog-table-header .th {
+    font-size: 11px;
+    font-weight: 700;
+    color: #a1a5b7;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+}
+.txlog-table-header .th-right { text-align: right; }
 
+/* ── Timeline Content ─────────────────────────────────────────────────────── */
+.txlog-timeline { min-height: 200px; }
+.txlog-item {
+    border-bottom: 1px solid #f4f4f4;
+    transition: background 0.12s;
+    animation: txfadeIn 0.22s ease;
+    padding-top: 12px;
+    padding-bottom: 12px;
+}
+.txlog-item:hover { background: #fafcff; }
+.txlog-item:last-child { border-bottom: none; }
+@keyframes txfadeIn {
+    from { opacity: 0; transform: translateY(3px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
 
-?>
+/* Icon cell */
+.txlog-ic-col { display: flex; align-items: center; }
+.txlog-row-icon {
+    width: 34px; height: 34px;
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+}
+.txlog-row-icon svg { width: 15px; height: 15px; }
+.ri-credit { background: #e8fff3; }
+.ri-debit  { background: #fff5f8; }
+.ri-settle { background: #fff8dd; }
+
+/* Data cells — column margins & padding */
+.tx-col-datetime { padding-right: 12px; min-width: 0; }
+.tx-col-event    { padding-right: 12px; min-width: 0; }
+.tx-col-actor    { padding-right: 12px; min-width: 0; }
+.tx-col-amount   { padding-right: 12px; text-align: left; min-width: 0; }
+.tx-col-bal      { padding-right: 12px; text-align: left; min-width: 0; }
+
+/* Cell typography */
+.cell-main { font-size: 13px; font-weight: 600; color: #181c32; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cell-sub  { font-size: 11px; color: #b5b5c3; margin-top: 1px; white-space: nowrap; }
+.tx-col-event .cell-main { white-space: normal; overflow: visible; text-overflow: unset; word-break: break-word; }
+
+/* Badges */
+.tx-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 10px;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 20px;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+}
+.tx-badge.credit { background: #e8fff3; color: #50cd89; }
+.tx-badge.debit  { background: #fff5f8; color: #f1416c; }
+.tx-badge.settle { background: #fff8dd; color: #f6c000; }
+.tx-badge .dot { width: 5px; height: 5px; border-radius: 50%; background: currentColor; }
+
+/* Amount coloring */
+.amt-credit { color: #50cd89; font-size: 13px; font-weight: 700; }
+.amt-debit  { color: #f1416c; font-size: 13px; font-weight: 700; }
+.bal-num    { font-size: 13px; font-weight: 700; color: #009ef7; }
+
+/* ── Pagination ───────────────────────────────────────────────────────────── */
+.txlog-pagination {
+    display: flex;
+    gap: 4px;
+    justify-content: flex-end;
+    align-items: center;
+    padding: 14px 20px;
+    border-top: 1px solid #f1f1f4;
+    flex-wrap: wrap;
+}
+.txlog-pagination .pg-info {
+    flex: 1;
+    font-size: 12px;
+    color: #a1a5b7;
+    font-weight: 500;
+    min-width: 180px;
+}
+.txlog-pagination .page-link {
+    padding: 0 10px;
+    font-size: 12px;
+    font-weight: 600;
+    color: #5e6278;
+    border: 1.5px solid transparent;
+    border-radius: 7px;
+    cursor: pointer;
+    text-decoration: none;
+    background: transparent;
+    transition: all 0.15s;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 32px;
+    height: 32px;
+}
+.txlog-pagination .page-link:hover { background: #f1f3f4; color: #181c32; }
+.txlog-pagination .page-link.active { background: #009ef7; color: #fff; border-color: #009ef7; }
+.txlog-pagination .page-link.disabled { opacity: 0.35; pointer-events: none; }
+
+/* ── Loading & Empty ──────────────────────────────────────────────────────── */
+.txlog-loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 50px 0;
+    gap: 10px;
+    color: #a1a5b7;
+    font-size: 13px;
+}
+.txlog-spinner {
+    width: 22px; height: 22px;
+    border: 2.5px solid #e4e6ef;
+    border-top-color: #009ef7;
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.txlog-empty {
+    text-align: center;
+    padding: 55px 20px;
+    color: #b5b5c3;
+    font-size: 13px;
+}
+.txlog-empty .empty-ico {
+    width: 52px; height: 52px;
+    background: #f4f4f4;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 12px;
+}
+.txlog-empty .empty-ico svg { width: 24px; height: 24px; opacity: 0.4; }
+.txlog-empty p { margin: 0; font-weight: 500; }
+.txlog-empty .empty-sub { font-size: 11px; color: #d1d1d1; margin-top: 4px; }
+</style>
+@endpush
 
 @section('content')
-    <!--begin::Toolbar-->
-    <div class="toolbar" id="kt_toolbar">
-        <div id="kt_toolbar_container" class="container-fluid d-flex flex-stack px-5">
-            <div data-kt-swapper="true" data-kt-swapper-mode="prepend"
-                data-kt-swapper-parent="{default: '#kt_content_container', 'lg': '#kt_toolbar_container'}"
-                class="page-title d-flex align-items-center flex-wrap me-3 mb-5 mb-lg-0">
-                <div class="d-flex flex-column">
-                    <h5 class="d-flex align-items-center text-dark fw-bolder my-1">
-                        <span class="text-gray-800 mb-1">Coins Activity</span>
-                    </h5>
-                    <span class="text-gray-600" id=""></span>
-                </div>
-                
-            </div>
 
+{{-- Toolbar --}}
+<div class="toolbar" id="kt_toolbar">
+    <div id="kt_toolbar_container" class="container-fluid d-flex flex-stack px-5">
+        <div class="page-title d-flex align-items-center flex-wrap me-3 mb-5 mb-lg-0">
             <div class="d-flex flex-column">
                 <h5 class="d-flex align-items-center text-dark fw-bolder my-1">
-                  <a href="{{ url('service_company/subscribe') }}" class="text-gray-800 mb-1">Click to View Coin Usage Table: Predefined Deductions by Activity </a>
+                    <span class="text-gray-800 mb-1">Coins Activity</span>
                 </h5>
-           </div>
-        </div>
-    </div>
-    <!--end::Toolbar-->
-
-    <!--begin::Content-->
-    <div class="content d-flex flex-column flex-column-fluid pt-2 pb-0" id="kt_content">
-        <div class="post d-flex flex-column-fluid" id="kt_post">
-            <div id="kt_content_container" class="container-fluid px-3">
-                <!--begin::card-->
-                <div class="card bg-light">
-                    <!--begin::card body-->
-                    <div class="card-body pt-3 px-0 pb-4">
-
-                        <div class="card shadow-none">
-
-                            <!--begin::Table-->
-                            <div class="card-body">
-
-                                <div class="card card-custom mx-2">
-                                    <div class="card-header card-header-tabs-line">
-                                        <div class="card-toolbar">
-                                          <ul class="nav nav-tabs nav-tabs-space-lg nav-tabs-line nav-tabs-bold nav-tabs-line-3x" role="tablist">
-                                            <li class="nav-item me-3"> <a class="nav-link {{$operationaltab}}" href="{{url('/service_company/transection-log?pagetype=operationaltab&page=1')}}"> <span class="nav-text font-weight-bold">Operational Coins Activity</span> </a> </li>
-                                            <li class="nav-item me-3"> <a class="nav-link {{$salestab}}" href="{{url('/service_company/transection-log?pagetype=salestab&page=1')}}"> <span class="nav-text font-weight-bold">Sales Coins Activity</span> </a> </li>
-                                            </ul>
-                                        </div>
-                                      </div>
-                                      
-
-                                      <div class="card-body py-0">
-                                        <div class="tab-content">
-                                            <div class="tab-pane {{$operationaltab}}" id="salestab" role="tabpanel">
-                                                <div class="card-body px-0 py-7">
-                                                    <div class="timeline">
-                                                        @if(@$coin_transection_logs)
-
-                                                        @foreach($coin_transection_logs as $transection_log)
-                                                                <div class="timeline-item">
-                                                                    
-                                                                    <!--begin::Timeline line-->
-                                                                    <div class="timeline-line w-40px"></div>
-                                                                    <!--end::Timeline line-->
-                                                                    <!--begin::Timeline icon-->
-                                                                    <div class="timeline-icon symbol symbol-circle symbol-40px">
-                                                                        <div class="symbol-label bg-light">
-                                                                            <!--begin::Svg Icon-->
-                                                                            <span class="svg-icon svg-icon-2 svg-icon-gray-500">
-                                                                                <svg xmlns="http://www.w3.org/2000/svg"
-                                                                                    xmlns:xlink="http://www.w3.org/1999/xlink" width="24px"
-                                                                                    height="24px" viewBox="0 0 24 24" version="1.1">
-                                                                                    <g stroke="none" stroke-width="1" fill="none"
-                                                                                        fill-rule="evenodd">
-                                                                                        <polygon points="0 0 24 0 24 24 0 24"></polygon>
-                                                                                        <path
-                                                                                            d="M4.85714286,1 L11.7364114,1 C12.0910962,1 12.4343066,1.12568431 12.7051108,1.35473959 L17.4686994,5.3839416 C17.8056532,5.66894833 18,6.08787823 18,6.52920201 L18,19.0833333 C18,20.8738751 17.9795521,21 16.1428571,21 L4.85714286,21 C3.02044787,21 3,20.8738751 3,19.0833333 L3,2.91666667 C3,1.12612489 3.02044787,1 4.85714286,1 Z M8,12 C7.44771525,12 7,12.4477153 7,13 C7,13.5522847 7.44771525,14 8,14 L15,14 C15.5522847,14 16,13.5522847 16,13 C16,12.4477153 15.5522847,12 15,12 L8,12 Z M8,16 C7.44771525,16 7,16.4477153 7,17 C7,17.5522847 7.44771525,18 8,18 L11,18 C11.5522847,18 12,17.5522847 12,17 C12,16.4477153 11.5522847,16 11,16 L8,16 Z"
-                                                                                            fill="#000000" fill-rule="nonzero" opacity="0.3">
-                                                                                        </path>
-                                                                                        <path
-                                                                                            d="M6.85714286,3 L14.7364114,3 C15.0910962,3 15.4343066,3.12568431 15.7051108,3.35473959 L20.4686994,7.3839416 C20.8056532,7.66894833 21,8.08787823 21,8.52920201 L21,21.0833333 C21,22.8738751 20.9795521,23 19.1428571,23 L6.85714286,23 C5.02044787,23 5,22.8738751 5,21.0833333 L5,4.91666667 C5,3.12612489 5.02044787,3 6.85714286,3 Z M8,12 C7.44771525,12 7,12.4477153 7,13 C7,13.5522847 7.44771525,14 8,14 L15,14 C15.5522847,14 16,13.5522847 16,13 C16,12.4477153 15.5522847,12 15,12 L8,12 Z M8,16 C7.44771525,16 7,16.4477153 7,17 C7,17.5522847 7.44771525,18 8,18 L11,18 C11.5522847,18 12,17.5522847 12,17 C12,16.4477153 11.5522847,16 11,16 L8,16 Z"
-                                                                                            fill="#000000" fill-rule="nonzero"></path>
-                                                                                    </g>
-                                                                                </svg>
-                                                                            </span>
-                                                                            <!--end::Svg Icon-->
-                                                                        </div>
-                                                                    </div>
-                                                                    <!--end::Timeline icon-->
-                                                                    <!--begin::Timeline content-->
-                                                                    <div class="timeline-content mb-10 mt-n1">
-
-                                                                        <!--begin::Table-->
-                                                                        <table class="table align-middle table-row-dashed fs-6 gy-0 mb-5"
-                                                                            id="">
-                                                                            <!--begin::Table body-->
-                                                                            <tbody class="text-gray-600 fw-bold">
-                                                                                <!--begin::Table row-->
-                                                                                <tr>
-                                                                                    <!--begin::Date-->
-                                                                                    <td class="min-w-110px">
-                                                                                        <div class="d-flex flex-column">
-                                                                                            <span class="text-dark fw-bolder fs-6">
-                                                                                                {{ Carbon::parse($transection_log->created_at) ->timezone(config('app.timezone')) ->format('d M, Y')  }}
-                                                                                                
-                                                                                            </span>
-                                                                                            <span class="text-muted fw-bold d-block fs-7"> 
-                                                                                                {{ Carbon::parse($transection_log->created_at) ->timezone(config('app.timezone')) ->format('h:i A')  }}
-                                                    
-                                                                                            </span>
-                                                                                        </div>
-                                                                                    </td>
-                                                                                    <!--end::Date-->
-
-                                                                                    <td class="min-w-285px" style="width: 285px;">
-                                                                                        <div class="d-flex flex-column">
-                                                                                            <span class="text-dark fw-bolder fs-6">
-                                                                                                {{ $transection_log->event }}
-                                                                                            </span>
-                                                                                            <span class="fw-bold text-muted d-block fs-7"> 
-                                                                                                {{ ucwords($transection_log->event_type) }}
-                                                                                            </span>
-                                                                                        </div>
-                                                                                    </td>
-
-                                                                                    <!--begin::Status-->
-                                                                                    <td class="min-w-150px">
-                                                                                        <div class="d-flex flex-column">
-                                                                                            <div class="symbol-group symbol-hover">
-                                                                                                <div class="symbol symbol-30 symbol-circle"
-                                                                                                    data-toggle="tooltip" data-placement="top"
-                                                                                                    title="{{ ($transection_log->event_by !=1) ? $transection_log->name  : 'Free' }}" style="    text-align: center;">
-                                                                                                    <div class="text-dark fw-bolder fs-6"
-                                                                                                        data-bs-placement="top"
-                                                                                                        data-toggle="tooltip2" data-html="true"
-                                                                                                        title="{{ ($transection_log->event_by !=1) ? $transection_log->name : 'Free' }}">
-                                                                                                        {{ ($transection_log->event_by !=1) ? $transection_log->name : 'Free' }}
-                                                                                                    </div>
-                                                                                                    <span class="text-muted fw-bold d-block fs-7">{{ ($transection_log->event_by !=1) ? $transection_log->company_name : 'Default' }} </span>
-                                                                                                </div>
-                                                                                                
-                                                                                            </div>
-                                                                                            
-                                                                                            <!--                     <a href="javascript:void(0);" class="text-muted fw-bold text-hover-primary d-block fs-7" -->
-                                                                                            <!--data-toggle="tooltip" title="User Company2">
-                                                                                            User Co </a> -->
-
-                                                                                        </div>
-                                                                                    </td>
-                                                                                    <!--end::Stage-->
-
-                                                                                
-                                                                                    <!--begin::Requisitions=-->
-                                                                                    @if($transection_log->settlement_coins <= 0)
-                                                                                    <td class="min-w-120px">
-                                                                                        <div class="d-flex flex-column">
-                                                                                            <span class="text-dark fw-bolder  fs-6"> 
-                                                                                                @if($transection_log->transection_type==='credit')
-                                                                                                {{ ($transection_log->actual_coins) ? $transection_log->actual_coins : $transection_log->coins }} Coins
-                                                                                                @else
-                                                                                                {{ $transection_log->coins }} Coins
-                                                                                                @endif
-                                                                                            </span>
-                                                                                            <span class="fw-bold text-muted d-block fs-7"> 
-                                                                                                {{ ucwords($transection_log->transection_type) }}
-                                                                                            </span>
-                                                                                        </div>
-                                                                                    </td>
-                                                                                    @else
-                                                                                    <!--end::Requisitions=-->
-                                                                                    <!--begin::Interview Mode=-->
-                                                                                    <td class="min-w-120px">
-                                                                                        <div class="d-flex flex-column">
-                                                                                            <span class="fw-bold text-muted d-block fs-7">Settlement</span>
-                                                                                            <span class="text-dark fw-bolder  fs-6">
-                                                                                                {{ $transection_log->settlement_coins }} Coins
-                                                                                            </span>
-                                                                                            <span class="fw-bold text-muted d-block fs-7"> 
-                                                                                                {{ ucwords($transection_log->transection_type) }}
-                                                                                            </span>
-                                                                                        </div>
-                                                                                    </td>
-                                                                                    @endif
-                                                                                    <!--end::Interview Mode=-->
-                                                                                    <!--begin::Interviewer Feedback=-->
-                                                                                    <td class="min-w-70px">
-                                                                                        <div class="d-flex flex-column"> 
-                                                                                            <span class="text-dark fw-bolder  fs-6">{{ ($transection_log->remain_coins) ? $transection_log->remain_coins : $transection_log->coins }} Coins</span>
-                                                                                            <span
-                                                                                                class="fw-bold text-muted d-block fs-7">
-                                                                                                Balance
-                                                                                            </span>
-                                                                                        </div>
-                                                                                    </td>
-                                                                                    <!--end::Interviewer Feedback-->
-                                                                                </tr>
-                                                                                <!--end::Table row-->
-                                                                            </tbody>
-                                                                            <!--end::Table body-->
-                                                                        </table>
-                                                                        <!--end::Table-->
-                                                                    </div>
-                                                                    <!--end::Timeline content-->
-                                                                </div>
-                                                        @endforeach
-
-                                                        @else
-                                                        <div class="text-center">
-                                                            <p>No transaction logs available.</p>
-                                                        </div>
-                                                        @endif
-                                                        <x-custom-pagination :paginator="$coin_transection_logs" :extra="['pagetype' => 'operationaltab']" />
-
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            
-                                            <div class="tab-pane {{$salestab}}" id="operationaltab" role="tabpanel">
-                                                <div class="card-body px-0 py-7">
-                                                    <div class="timeline">
-                                                        @if(@$coin_transection_logs_sales)
-
-                                                        @foreach($coin_transection_logs_sales as $transection_log)
-                                                                <div class="timeline-item">
-                                                                    
-                                                                    <!--begin::Timeline line-->
-                                                                    <div class="timeline-line w-40px"></div>
-                                                                    <!--end::Timeline line-->
-                                                                    <!--begin::Timeline icon-->
-                                                                    <div class="timeline-icon symbol symbol-circle symbol-40px">
-                                                                        <div class="symbol-label bg-light">
-                                                                            <!--begin::Svg Icon-->
-                                                                            <span class="svg-icon svg-icon-2 svg-icon-gray-500">
-                                                                                <svg xmlns="http://www.w3.org/2000/svg"
-                                                                                    xmlns:xlink="http://www.w3.org/1999/xlink" width="24px"
-                                                                                    height="24px" viewBox="0 0 24 24" version="1.1">
-                                                                                    <g stroke="none" stroke-width="1" fill="none"
-                                                                                        fill-rule="evenodd">
-                                                                                        <polygon points="0 0 24 0 24 24 0 24"></polygon>
-                                                                                        <path
-                                                                                            d="M4.85714286,1 L11.7364114,1 C12.0910962,1 12.4343066,1.12568431 12.7051108,1.35473959 L17.4686994,5.3839416 C17.8056532,5.66894833 18,6.08787823 18,6.52920201 L18,19.0833333 C18,20.8738751 17.9795521,21 16.1428571,21 L4.85714286,21 C3.02044787,21 3,20.8738751 3,19.0833333 L3,2.91666667 C3,1.12612489 3.02044787,1 4.85714286,1 Z M8,12 C7.44771525,12 7,12.4477153 7,13 C7,13.5522847 7.44771525,14 8,14 L15,14 C15.5522847,14 16,13.5522847 16,13 C16,12.4477153 15.5522847,12 15,12 L8,12 Z M8,16 C7.44771525,16 7,16.4477153 7,17 C7,17.5522847 7.44771525,18 8,18 L11,18 C11.5522847,18 12,17.5522847 12,17 C12,16.4477153 11.5522847,16 11,16 L8,16 Z"
-                                                                                            fill="#000000" fill-rule="nonzero" opacity="0.3">
-                                                                                        </path>
-                                                                                        <path
-                                                                                            d="M6.85714286,3 L14.7364114,3 C15.0910962,3 15.4343066,3.12568431 15.7051108,3.35473959 L20.4686994,7.3839416 C20.8056532,7.66894833 21,8.08787823 21,8.52920201 L21,21.0833333 C21,22.8738751 20.9795521,23 19.1428571,23 L6.85714286,23 C5.02044787,23 5,22.8738751 5,21.0833333 L5,4.91666667 C5,3.12612489 5.02044787,3 6.85714286,3 Z M8,12 C7.44771525,12 7,12.4477153 7,13 C7,13.5522847 7.44771525,14 8,14 L15,14 C15.5522847,14 16,13.5522847 16,13 C16,12.4477153 15.5522847,12 15,12 L8,12 Z M8,16 C7.44771525,16 7,16.4477153 7,17 C7,17.5522847 7.44771525,18 8,18 L11,18 C11.5522847,18 12,17.5522847 12,17 C12,16.4477153 11.5522847,16 11,16 L8,16 Z"
-                                                                                            fill="#000000" fill-rule="nonzero"></path>
-                                                                                    </g>
-                                                                                </svg>
-                                                                            </span>
-                                                                            <!--end::Svg Icon-->
-                                                                        </div>
-                                                                    </div>
-                                                                    <!--end::Timeline icon-->
-                                                                    <!--begin::Timeline content-->
-                                                                    <div class="timeline-content mb-10 mt-n1">
-
-                                                                        <!--begin::Table-->
-                                                                        <table class="table align-middle table-row-dashed fs-6 gy-0 mb-5"
-                                                                            id="">
-                                                                            <!--begin::Table body-->
-                                                                            <tbody class="text-gray-600 fw-bold">
-                                                                                <!--begin::Table row-->
-                                                                                <tr>
-                                                                                    <!--begin::Date-->
-                                                                                    <td class="min-w-110px">
-                                                                                        <div class="d-flex flex-column">
-                                                                                            
-                                                                                            <span class="text-dark fw-bolder fs-6">
-                                                                                                {{ Carbon::parse($transection_log->created_at) ->timezone(config('app.timezone')) ->format('d M, Y')  }}
-                                                                                                
-                                                                                            </span>
-                                                                                            <span class="text-muted fw-bold d-block fs-7"> 
-                                                                                                {{ Carbon::parse($transection_log->created_at) ->timezone(config('app.timezone')) ->format('h:i A')  }}
-                                                    
-                                                                                            </span>
-                                                                                            
-                                                                                        </div>
-                                                                                    </td>
-                                                                                    <!--end::Date-->
-
-                                                                                    <td class="min-w-285px"  style="width: 285px;">
-                                                                                        <div class="d-flex flex-column">
-                                                                                            <span class="text-dark fw-bolder fs-6">
-                                                                                                {{ $transection_log->event }}
-                                                                                            </span>
-                                                                                            <span class="fw-bold text-muted d-block fs-7"> 
-                                                                                                {{ ucwords($transection_log->event_type) }}
-                                                                                            </span>
-                                                                                        </div>
-                                                                                    </td>
-
-                                                                                    <!--begin::Status-->
-                                                                                    <td class="min-w-150px">
-                                                                                        <div class="d-flex flex-column">
-                                                                                            <div class="symbol-group symbol-hover">
-                                                                                                <div class="symbol symbol-30 symbol-circle"
-                                                                                                    data-toggle="tooltip" data-placement="top"
-                                                                                                    title="{{ ($transection_log->event_by !=1) ? $transection_log->name : 'Free' }}" style="    text-align: center;">
-                                                                                                    <div class="symbol symbol-30 symbol-circle"
-                                                                                                        data-bs-placement="top"
-                                                                                                        data-toggle="tooltip2" data-html="true"
-                                                                                                        title="{{ ($transection_log->event_by !=1) ? $transection_log->name : 'Free' }}">
-                                                                                                        <div class="text-dark fw-bolder fs-6"
-                                                                                                        data-bs-placement="top"
-                                                                                                        data-toggle="tooltip2" data-html="true"
-                                                                                                        title="{{ ($transection_log->event_by !=1) ? $transection_log->name : 'Free' }}">
-                                                                                                        {{ ($transection_log->event_by !=1) ? $transection_log->name : 'Free' }}
-                                                                                                    </div>
-                                                                                                    </div>
-                                                                                                    <span class="text-muted fw-bold d-block fs-7">{{ ($transection_log->company_name) ? $transection_log->company_name : 'Default' }} </span>
-                                                                                                </div>
-                                                                                                
-                                                                                            </div>
-                                                                                            
-                                                                                            <!--                     <a href="javascript:void(0);" class="text-muted fw-bold text-hover-primary d-block fs-7" -->
-                                                                                            <!--data-toggle="tooltip" title="User Company2">
-                                                                                            User Co </a> -->
-
-                                                                                        </div>
-                                                                                    </td>
-                                                                                    <!--end::Stage-->
-
-                                                                                
-                                                                                    <!--begin::Requisitions=-->
-                                                                                    @if($transection_log->settlement_coins <= 0)
-                                                                                    <td class="min-w-120px">
-                                                                                        <div class="d-flex flex-column">
-                                                                                            <span class="text-dark fw-bolder  fs-6"> 
-                                                                                                @if($transection_log->transection_type==='credit')
-                                                                                                {{ ($transection_log->actual_coins) ? $transection_log->actual_coins : $transection_log->coins }} Coins
-                                                                                                @else
-                                                                                                {{ $transection_log->coins }} Coins
-                                                                                                @endif
-                                                                                            </span>
-                                                                                            <span class="fw-bold text-muted d-block fs-7"> 
-                                                                                                {{ ucwords($transection_log->transection_type) }}
-                                                                                            </span>
-                                                                                        </div>
-                                                                                    </td>
-                                                                                    @else
-                                                                                    <!--end::Requisitions=-->
-                                                                                    <!--begin::Interview Mode=-->
-                                                                                    <td class="min-w-120px">
-                                                                                        <div class="d-flex flex-column">
-                                                                                            <span class="fw-bold text-muted d-block fs-7">Settlement</span>
-                                                                                            <span class="text-dark fw-bolder  fs-6">
-                                                                                                {{ $transection_log->settlement_coins }} Coins
-                                                                                            </span>
-                                                                                            <span class="fw-bold text-muted d-block fs-7"> 
-                                                                                                {{ ucwords($transection_log->transection_type) }}
-                                                                                            </span>
-                                                                                        </div>
-                                                                                    </td>
-                                                                                    @endif
-                                                                                    <!--end::Interview Mode=-->
-                                                                                    <!--begin::Interviewer Feedback=-->
-                                                                                    <td class="min-w-70px">
-                                                                                        <div class="d-flex flex-column"> 
-                                                                                            <span class="text-dark fw-bolder  fs-6">{{ ($transection_log->remain_coins) ? $transection_log->remain_coins : $transection_log->coins }} Coins</span>
-                                                                                            <span
-                                                                                                class="fw-bold text-muted d-block fs-7">
-                                                                                                Balance
-                                                                                            </span>
-                                                                                        </div>
-                                                                                    </td>
-                                                                                    <!--end::Interviewer Feedback-->
-                                                                                </tr>
-                                                                                <!--end::Table row-->
-                                                                            </tbody>
-                                                                            <!--end::Table body-->
-                                                                        </table>
-                                                                        <!--end::Table-->
-                                                                    </div>
-                                                                    <!--end::Timeline content-->
-                                                                </div>
-                                                        @endforeach
-
-                                                        @else
-                                                        <div class="text-center">
-                                                            <p>No transaction logs available.</p>
-                                                        </div>
-                                                        @endif
-                                                    
-                                                        <x-custom-pagination :paginator="$coin_transection_logs_sales" :extra="['pagetype' => 'salestab']" />
-                                                    </div>
-                                                </div>
-                                            </div>
-
-                                            </div>
-                                        </div>          
-
-
-                            </div>
-
-                            </div>
-                            <!--end::Table-->
-                        </div>
-
-
-
-                        <!--begin::Logins -->
-                        <div class="card shadow-none d-none">
-                            <!--begin::Header-->
-                            <div class="card-header px-7">
-                                <div class="card-title m-0">
-                                    <h3 class="fw-bolder m-0">Logins</h3>
-                                </div>
-                                <a href="javascript:void(0);" class="btn btn-primary align-self-center">
-                                    <span class="svg-icon svg-icon-2">
-                                        <svg xmlns="http://www.w3.org/2000/svg"
-                                            xmlns:xlink="http://www.w3.org/1999/xlink" width="24px" height="24px"
-                                            viewBox="0 0 24 24" version="1.1">
-                                            <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
-                                                <rect x="0" y="0" width="24" height="24" />
-                                                <path
-                                                    d="M5.5,4 L18.5,4 C19.3284271,4 20,4.67157288 20,5.5 L20,9.5 C20,10.3284271 19.3284271,11 18.5,11 L5.5,11 C4.67157288,11 4,10.3284271 4,9.5 L4,5.5 C4,4.67157288 4.67157288,4 5.5,4 Z M11,6 C10.4477153,6 10,6.44771525 10,7 C10,7.55228475 10.4477153,8 11,8 L13,8 C13.5522847,8 14,7.55228475 14,7 C14,6.44771525 13.5522847,6 13,6 L11,6 Z"
-                                                    fill="#000000" opacity="0.3" />
-                                                <path
-                                                    d="M5.5,13 L18.5,13 C19.3284271,13 20,13.6715729 20,14.5 L20,18.5 C20,19.3284271 19.3284271,20 18.5,20 L5.5,20 C4.67157288,20 4,19.3284271 4,18.5 L4,14.5 C4,13.6715729 4.67157288,13 5.5,13 Z M11,15 C10.4477153,15 10,15.4477153 10,16 C10,16.5522847 10.4477153,17 11,17 L13,17 C13.5522847,17 14,16.5522847 14,16 C14,15.4477153 13.5522847,15 13,15 L11,15 Z"
-                                                    fill="#000000" />
-                                            </g>
-                                        </svg>
-                                    </span>
-                                    See Pricing
-                                </a>
-                            </div>
-                            <!--end::Header-->
-                            <!--begin::Table-->
-                            <div class="card-body">
-                                <table class="table align-middle table-row-dashed fs-6 gy-5" id="logins_list">
-                                    <thead>
-                                        <tr class="fw-bolder text-muted">
-                                            <th class="w-10px pe-2">#</th>
-                                            <th class="">Package Name</th>
-                                            <th class="">Number of users</th>
-                                            <th class="">Price</th>
-                                            <th class="">Select the duration</th>
-                                            <th class="">Number of CV limit</th>
-                                            <th class="">Actions</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody class="text-gray-600 fw-bold">
-                                        <tr class="odd">
-                                            <td class="invisible">
-                                                <div class="form-check form-check-sm form-check-custom form-check-solid">
-                                                    <input class="form-check-input">
-                                                </div>
-                                            </td>
-                                            <td class=" align-items-center">
-                                                <div class="symbol symbol-circle symbol-40px overflow-hidden me-2 border-radius-5"
-                                                    style="float:left">
-                                                    <a href="javascript:void(0);" class="">
-                                                        <div
-                                                            class="symbol-label fs-3 bg-dark-light text-light border-radius-5">
-                                                            <!-- <i class="fab fa-buffer fs-3 bg-light-danger text-danger"></i> -->
-                                                            <span class="svg-icon svg-icon-dark-800 svg-icon-2x">
-                                                                <svg xmlns="http://www.w3.org/2000/svg"
-                                                                    xmlns:xlink="http://www.w3.org/1999/xlink"
-                                                                    width="24px" height="24px" viewBox="0 0 24 24"
-                                                                    version="1.1">
-                                                                    <g stroke="none" stroke-width="1" fill="none"
-                                                                        fill-rule="evenodd">
-                                                                        <polygon points="0 0 24 0 24 24 0 24" />
-                                                                        <path
-                                                                            d="M22,15 L22,19 C22,20.1045695 21.1045695,21 20,21 L8,21 C5.790861,21 4,19.209139 4,17 C4,14.790861 5.790861,13 8,13 L20,13 C21.1045695,13 22,13.8954305 22,15 Z M7,19 C8.1045695,19 9,18.1045695 9,17 C9,15.8954305 8.1045695,15 7,15 C5.8954305,15 5,15.8954305 5,17 C5,18.1045695 5.8954305,19 7,19 Z"
-                                                                            fill="#000000" opacity="0.3" />
-                                                                        <path
-                                                                            d="M15.5421357,5.69999981 L18.3705628,8.52842693 C19.1516114,9.30947552 19.1516114,10.5758055 18.3705628,11.3568541 L9.88528147,19.8421354 C8.3231843,21.4042326 5.79052439,21.4042326 4.22842722,19.8421354 C2.66633005,18.2800383 2.66633005,15.7473784 4.22842722,14.1852812 L12.7137086,5.69999981 C13.4947572,4.91895123 14.7610871,4.91895123 15.5421357,5.69999981 Z M7,19 C8.1045695,19 9,18.1045695 9,17 C9,15.8954305 8.1045695,15 7,15 C5.8954305,15 5,15.8954305 5,17 C5,18.1045695 5.8954305,19 7,19 Z"
-                                                                            fill="#000000" opacity="0.3" />
-                                                                        <path
-                                                                            d="M5,3 L9,3 C10.1045695,3 11,3.8954305 11,5 L11,17 C11,19.209139 9.209139,21 7,21 C4.790861,21 3,19.209139 3,17 L3,5 C3,3.8954305 3.8954305,3 5,3 Z M7,19 C8.1045695,19 9,18.1045695 9,17 C9,15.8954305 8.1045695,15 7,15 C5.8954305,15 5,15.8954305 5,17 C5,18.1045695 5.8954305,19 7,19 Z"
-                                                                            fill="#000000" />
-                                                                    </g>
-                                                                </svg>
-                                                            </span>
-                                                        </div>
-                                                    </a>
-                                                </div>
-                                                <div class="d-flex flex-column">
-                                                    <div class="">
-                                                        <a href="javascript:void(0);"
-                                                            class="text-dark fw-bolder text-hover-primary fs-6">Free</a>
-                                                    </div>
-                                                    <span class="badge badge-light-success active_plan">Active Plan</span>
-                                                </div>
-                                            </td>
-                                            <td class="text-dark fs-6 fw-bolder" style="padding-left: 5em;">1</td>
-                                            <td class="text-dark fs-6 fw-bolder">Free</td>
-                                            <td class="text-dark fs-6 fw-bolder">Free Forever</td>
-                                            <td class="text-dark fs-6 fw-bolder" style="padding-left: 4em!important;">
-                                                30/
-                                                Month</td>
-                                            <td></td>
-                                        </tr>
-                                        <tr class="even">
-                                            <td>
-                                                <div class="form-check form-check-sm form-check-custom form-check-solid">
-                                                    <input class="form-check-input" type="radio" value="1"
-                                                        name="logins_plan">
-                                                </div>
-                                            </td>
-                                            <td class=" align-items-center">
-                                                <div class="symbol symbol-circle symbol-40px overflow-hidden me-2 border-radius-5"
-                                                    style="float:left">
-                                                    <a href="javascript:void(0);" data-row-id="806"
-                                                        class="show-application-detail">
-                                                        <div
-                                                            class="symbol-label fs-3 bg-light-success text-success border-radius-5">
-                                                            <!-- <i class="fab fa-buffer fs-3 bg-light-success text-success"></i> -->
-                                                            <span class="svg-icon svg-icon-success svg-icon-2x">
-                                                                <svg xmlns="http://www.w3.org/2000/svg"
-                                                                    xmlns:xlink="http://www.w3.org/1999/xlink"
-                                                                    width="24px" height="24px" viewBox="0 0 24 24"
-                                                                    version="1.1">
-                                                                    <g stroke="none" stroke-width="1" fill="none"
-                                                                        fill-rule="evenodd">
-                                                                        <polygon points="0 0 24 0 24 24 0 24" />
-                                                                        <path
-                                                                            d="M12,11 C9.790861,11 8,9.209139 8,7 C8,4.790861 9.790861,3 12,3 C14.209139,3 16,4.790861 16,7 C16,9.209139 14.209139,11 12,11 Z"
-                                                                            fill="#000000" fill-rule="nonzero"
-                                                                            opacity="0.3" />
-                                                                        <path
-                                                                            d="M3.00065168,20.1992055 C3.38825852,15.4265159 7.26191235,13 11.9833413,13 C16.7712164,13 20.7048837,15.2931929 20.9979143,20.2 C21.0095879,20.3954741 20.9979143,21 20.2466999,21 C16.541124,21 11.0347247,21 3.72750223,21 C3.47671215,21 2.97953825,20.45918 3.00065168,20.1992055 Z"
-                                                                            fill="#000000" fill-rule="nonzero" />
-                                                                    </g>
-                                                                </svg>
-                                                            </span>
-                                                        </div>
-                                                    </a>
-                                                </div>
-                                                <div class="d-flex flex-column">
-                                                    <div class="">
-                                                        <a href="javascript:void(0);" data-row-id="806"
-                                                            class="text-dark fw-bolder text-hover-primary fs-6 show-application-detail">Basic</a>
-                                                    </div>
-                                                    <a href="javascript:void(0);" data-row-id="806"
-                                                        class="text-muted fw-bold text-muted d-block fs-7 text-hover-primary show-application-detail">Basic
-                                                        service</a>
-                                                </div>
-                                            </td>
-                                            <td>
-                                                <div class="position-relative w-md-130px" data-kt-dialer="true"
-                                                    data-kt-dialer-min="1" data-kt-dialer-max="50000"
-                                                    data-kt-dialer-step="1" data-kt-dialer-prefix=""
-                                                    data-kt-dialer-decimals="">
-                                                    <button type="button"
-                                                        class="btn btn-icon btn-active-color-gray-700 position-absolute translate-middle-y top-50 start-0"
-                                                        data-kt-dialer-control="decrease">
-                                                        <span class="svg-icon svg-icon-1">
-                                                            <svg xmlns="http://www.w3.org/2000/svg" width="24"
-                                                                height="24" viewBox="0 0 24 24" fill="none">
-                                                                <rect opacity="0.3" x="2" y="2" width="20"
-                                                                    height="20" rx="5" fill="black">
-                                                                </rect>
-                                                                <rect x="6.0104" y="10.9247" width="12"
-                                                                    height="2" rx="1" fill="black">
-                                                                </rect>
-                                                            </svg>
-                                                        </span>
-                                                    </button>
-                                                    <input type="number"
-                                                        class="form-control form-control-solid border-0 ps-12"
-                                                        style=" padding: 0.5rem;padding-left: 4em!important;"
-                                                        data-kt-dialer-control="input" placeholder="Enter users"
-                                                        name="users" value="30">
-                                                    <button type="button"
-                                                        class="btn btn-icon btn-active-color-gray-700 position-absolute translate-middle-y top-50 end-0"
-                                                        data-kt-dialer-control="increase">
-                                                        <span class="svg-icon svg-icon-1">
-                                                            <svg xmlns="http://www.w3.org/2000/svg" width="24"
-                                                                height="24" viewBox="0 0 24 24" fill="none">
-                                                                <rect opacity="0.3" x="2" y="2" width="20"
-                                                                    height="20" rx="5" fill="black">
-                                                                </rect>
-                                                                <rect x="10.8891" y="17.8033" width="12"
-                                                                    height="2" rx="1"
-                                                                    transform="rotate(-90 10.8891 17.8033)"
-                                                                    fill="black"></rect>
-                                                                <rect x="6.01041" y="10.9247" width="12"
-                                                                    height="2" rx="1" fill="black">
-                                                                </rect>
-                                                            </svg>
-                                                        </span>
-                                                    </button>
-                                                </div>
-                                            </td>
-                                            <td class="">
-                                                <div class="d-flex flex-column">
-                                                    <span class="text-dark fw-bolder fs-6">4,999 INR</span>
-                                                    <span class="text-muted fw-bold d-block fs-7">Per month</span>
-                                                </div>
-                                            </td>
-                                            <td>
-                                                <div class="btn-group hg-plan-btn-group">
-                                                    <button type="button"
-                                                        class="btn btn-secondary  hg-plan-btn-secondary dropdown-toggle block-level shared d-flex align-items-center justify-content-between"
-                                                        data-toggle="dropdown" aria-expanded="false">
-                                                        <div class="selected-term" data-term-length="3">
-                                                            <span class="term-length">3 Months</span>
-                                                        </div>
-                                                        <span class="glyphicon glyphicon-chevron-down pull-right"></span>
-                                                    </button>
-                                                    <ul class="dropdown-menu block-level w-100" role="menu">
-                                                        <li>
-                                                            <a class="package-term d-flex align-items-center justify-content-between"
-                                                                data-term-length="1">
-                                                                <span class="term-length">1 Month</span>
-                                                            </a>
-                                                        </li>
-                                                        <li>
-                                                            <a class="package-term d-flex align-items-center justify-content-between"
-                                                                data-term-length="3">
-                                                                <span class="term-length">3 Months</span>
-                                                            </a>
-                                                        </li>
-                                                        <li>
-                                                            <a class="package-term d-flex align-items-center justify-content-between"
-                                                                data-term-length="6">
-                                                                <span class="term-length">6 Months</span>
-                                                            </a>
-                                                        </li>
-                                                        <li>
-                                                            <a class="package-term d-flex align-items-center justify-content-between"
-                                                                data-term-length="12">
-                                                                <span class="term-length">1 Year</span>
-                                                                <div class="testsdfd" style="display:inline-block;">
-                                                                    <span
-                                                                        class="hg-percentage-discount one-year-percentage">SAVE
-                                                                        20%</span>
-                                                                </div>
-                                                            </a>
-                                                        </li>
-                                                        <li>
-                                                            <a class="package-term d-flex align-items-center justify-content-between"
-                                                                data-term-length="24">
-                                                                <span class="term-length">2 Years</span>
-                                                                <div class="testsdfd" style="display:inline-block;">
-                                                                    <span
-                                                                        class="hg-percentage-discount two-year-percentage">SAVE
-                                                                        30%</span>
-                                                                </div>
-                                                            </a>
-                                                        </li>
-                                                        <li>
-                                                            <a class="package-term d-flex align-items-center justify-content-between"
-                                                                data-term-length="36">
-                                                                <span class="term-length">3 Years</span>
-                                                                <div class="testsdfd" style="display:inline-block;">
-                                                                    <span
-                                                                        class="hg-percentage-discount three-year-percentage">SAVE
-                                                                        30%</span>
-                                                                </div>
-                                                            </a>
-                                                        </li>
-                                                        <li>
-                                                            <a class="package-term d-flex align-items-center justify-content-between"
-                                                                data-term-length="60">
-                                                                <span class="term-length">5 Years</span>
-                                                                <div class="testsdfd" style="display:inline-block;">
-                                                                    <span
-                                                                        class="hg-percentage-discount five-year-percentage">SAVE
-                                                                        50%</span>
-                                                                </div>
-                                                            </a>
-                                                        </li>
-                                                    </ul>
-                                                </div>
-                                            </td>
-                                            <td class="text-dark fs-6 fw-bolder" style="padding-left: 5em!important;">12
-                                            </td>
-                                            <td></td>
-                                        </tr>
-                                        <tr class="odd">
-                                            <td>
-                                                <div class="form-check form-check-sm form-check-custom form-check-solid">
-                                                    <input class="form-check-input" type="radio" value="1"
-                                                        name="logins_plan">
-                                                </div>
-                                            </td>
-                                            <td class=" align-items-center">
-                                                <div class="symbol symbol-circle symbol-40px overflow-hidden me-2 border-radius-5"
-                                                    style="float:left">
-                                                    <a href="javascript:void(0);" data-row-id="806"
-                                                        class="show-application-detail">
-                                                        <div
-                                                            class="symbol-label fs-3 bg-light-warning text-warning border-radius-5">
-                                                            <!-- <i class="fab fa-buffer fs-3 bg-light-warning text-warning"></i> -->
-                                                            <span class="svg-icon svg-icon-warning svg-icon-2x">
-                                                                <svg xmlns="http://www.w3.org/2000/svg"
-                                                                    xmlns:xlink="http://www.w3.org/1999/xlink"
-                                                                    width="24px" height="24px" viewBox="0 0 24 24"
-                                                                    version="1.1">
-                                                                    <g stroke="none" stroke-width="1" fill="none"
-                                                                        fill-rule="evenodd">
-                                                                        <polygon points="0 0 24 0 24 24 0 24" />
-                                                                        <path
-                                                                            d="M12,11 C9.790861,11 8,9.209139 8,7 C8,4.790861 9.790861,3 12,3 C14.209139,3 16,4.790861 16,7 C16,9.209139 14.209139,11 12,11 Z"
-                                                                            fill="#000000" fill-rule="nonzero"
-                                                                            opacity="0.3" />
-                                                                        <path
-                                                                            d="M3.00065168,20.1992055 C3.38825852,15.4265159 7.26191235,13 11.9833413,13 C16.7712164,13 20.7048837,15.2931929 20.9979143,20.2 C21.0095879,20.3954741 20.9979143,21 20.2466999,21 C16.541124,21 11.0347247,21 3.72750223,21 C3.47671215,21 2.97953825,20.45918 3.00065168,20.1992055 Z"
-                                                                            fill="#000000" fill-rule="nonzero" />
-                                                                    </g>
-                                                                </svg>
-                                                            </span>
-                                                        </div>
-                                                    </a>
-                                                </div>
-                                                <div class="d-flex flex-column">
-                                                    <div class="">
-                                                        <a href="javascript:void(0);" data-row-id="806"
-                                                            class="text-dark fw-bolder text-hover-primary fs-6 show-application-detail">Premium</a>
-                                                    </div>
-                                                    <a href="javascript:void(0);" data-row-id="806"
-                                                        class="text-muted fw-bold text-muted d-block fs-7 text-hover-primary show-application-detail">Premium
-                                                        service</a>
-                                                </div>
-                                            </td>
-                                            <td>
-                                                <div class="position-relative w-md-130px" data-kt-dialer="true"
-                                                    data-kt-dialer-min="1" data-kt-dialer-max="50000"
-                                                    data-kt-dialer-step="1" data-kt-dialer-prefix=""
-                                                    data-kt-dialer-decimals="">
-                                                    <button type="button"
-                                                        class="btn btn-icon btn-active-color-gray-700 position-absolute translate-middle-y top-50 start-0"
-                                                        data-kt-dialer-control="decrease">
-                                                        <span class="svg-icon svg-icon-1">
-                                                            <svg xmlns="http://www.w3.org/2000/svg" width="24"
-                                                                height="24" viewBox="0 0 24 24" fill="none">
-                                                                <rect opacity="0.3" x="2" y="2" width="20"
-                                                                    height="20" rx="5" fill="black">
-                                                                </rect>
-                                                                <rect x="6.0104" y="10.9247" width="12"
-                                                                    height="2" rx="1" fill="black">
-                                                                </rect>
-                                                            </svg>
-                                                        </span>
-                                                    </button>
-                                                    <input type="number"
-                                                        class="form-control form-control-solid border-0 ps-12"
-                                                        style=" padding: 0.5rem;padding-left: 4em!important;""
-                                                        data-kt-dialer-control="input" placeholder="Enter users"
-                                                        name="users" value="120">
-                                                    <button type="button"
-                                                        class="btn btn-icon btn-active-color-gray-700 position-absolute translate-middle-y top-50 end-0"
-                                                        data-kt-dialer-control="increase">
-                                                        <span class="svg-icon svg-icon-1">
-                                                            <svg xmlns="http://www.w3.org/2000/svg" width="24"
-                                                                height="24" viewBox="0 0 24 24" fill="none">
-                                                                <rect opacity="0.3" x="2" y="2" width="20"
-                                                                    height="20" rx="5" fill="black">
-                                                                </rect>
-                                                                <rect x="10.8891" y="17.8033" width="12"
-                                                                    height="2" rx="1"
-                                                                    transform="rotate(-90 10.8891 17.8033)"
-                                                                    fill="black"></rect>
-                                                                <rect x="6.01041" y="10.9247" width="12"
-                                                                    height="2" rx="1" fill="black">
-                                                                </rect>
-                                                            </svg>
-                                                        </span>
-                                                    </button>
-                                                </div>
-                                            </td>
-                                            <td class="">
-                                                <div class="d-flex flex-column">
-                                                    <span class="text-dark fw-bolder fs-6">6,999 INR</a>
-                                                        <span class="text-muted fw-bold d-block fs-7">Per month</a>
-                                                </div>
-                                            </td>
-                                            <td class="text-dark fs-6 fw-bolder">10 days left</td>
-                                            <td class="text-dark fs-6 fw-bolder" style="padding-left: 5em!important;">30
-                                            </td>
-                                            <td>
-                                                <span class="text-dark fs-6 fw-bolder">Added</span>
-                                            </td>
-                                        </tr>
-                                        <tr class="even">
-                                            <td>
-                                                <div class="form-check form-check-sm form-check-custom form-check-solid">
-                                                    <input class="form-check-input" type="radio" value="1"
-                                                        name="logins_plan">
-                                                </div>
-                                            </td>
-                                            <td class=" align-items-center">
-                                                <div class="symbol symbol-circle symbol-40px overflow-hidden me-2 border-radius-5"
-                                                    style="float:left">
-                                                    <a href="javascript:void(0);" data-row-id="806"
-                                                        class="show-application-detail">
-                                                        <div
-                                                            class="symbol-label fs-3 bg-light-primary text-primary border-radius-5">
-                                                            <!-- <i class="fab fa-buffer fs-3 bg-light-primary text-primary"></i> -->
-                                                            <span class="svg-icon svg-icon-primary svg-icon-2x">
-                                                                <svg xmlns="http://www.w3.org/2000/svg"
-                                                                    xmlns:xlink="http://www.w3.org/1999/xlink"
-                                                                    width="24px" height="24px" viewBox="0 0 24 24"
-                                                                    version="1.1">
-                                                                    <g stroke="none" stroke-width="1" fill="none"
-                                                                        fill-rule="evenodd">
-                                                                        <polygon points="0 0 24 0 24 24 0 24" />
-                                                                        <path
-                                                                            d="M12,11 C9.790861,11 8,9.209139 8,7 C8,4.790861 9.790861,3 12,3 C14.209139,3 16,4.790861 16,7 C16,9.209139 14.209139,11 12,11 Z"
-                                                                            fill="#000000" fill-rule="nonzero"
-                                                                            opacity="0.3" />
-                                                                        <path
-                                                                            d="M3.00065168,20.1992055 C3.38825852,15.4265159 7.26191235,13 11.9833413,13 C16.7712164,13 20.7048837,15.2931929 20.9979143,20.2 C21.0095879,20.3954741 20.9979143,21 20.2466999,21 C16.541124,21 11.0347247,21 3.72750223,21 C3.47671215,21 2.97953825,20.45918 3.00065168,20.1992055 Z"
-                                                                            fill="#000000" fill-rule="nonzero" />
-                                                                    </g>
-                                                                </svg>
-                                                            </span>
-                                                        </div>
-                                                    </a>
-                                                </div>
-                                                <div class="d-flex flex-column">
-                                                    <div class="">
-                                                        <a href="javascript:void(0);" data-row-id="806"
-                                                            class="text-dark fw-bolder text-hover-primary fs-6 show-application-detail">Pro</a>
-                                                    </div>
-                                                    <a href="javascript:void(0);" data-row-id="806"
-                                                        class="text-muted fw-bold d-block fs-7 text-hover-primary show-application-detail">Pro
-                                                        service</a>
-                                                </div>
-                                            </td>
-                                            <td>
-                                                <div class="position-relative w-md-130px" data-kt-dialer="true"
-                                                    data-kt-dialer-min="1" data-kt-dialer-max="50000"
-                                                    data-kt-dialer-step="1" data-kt-dialer-prefix=""
-                                                    data-kt-dialer-decimals="">
-                                                    <button type="button"
-                                                        class="btn btn-icon btn-active-color-gray-700 position-absolute translate-middle-y top-50 start-0"
-                                                        data-kt-dialer-control="decrease">
-                                                        <span class="svg-icon svg-icon-1">
-                                                            <svg xmlns="http://www.w3.org/2000/svg" width="24"
-                                                                height="24" viewBox="0 0 24 24" fill="none">
-                                                                <rect opacity="0.3" x="2" y="2" width="20"
-                                                                    height="20" rx="5" fill="black">
-                                                                </rect>
-                                                                <rect x="6.0104" y="10.9247" width="12"
-                                                                    height="2" rx="1" fill="black">
-                                                                </rect>
-                                                            </svg>
-                                                        </span>
-                                                    </button>
-                                                    <input type="number"
-                                                        class="form-control form-control-solid border-0 ps-12"
-                                                        style=" padding: 0.5rem;padding-left: 4em!important;""
-                                                        data-kt-dialer-control="input" placeholder="Enter users"
-                                                        name="users" value="45">
-                                                    <button type="button"
-                                                        class="btn btn-icon btn-active-color-gray-700 position-absolute translate-middle-y top-50 end-0"
-                                                        data-kt-dialer-control="increase">
-                                                        <span class="svg-icon svg-icon-1">
-                                                            <svg xmlns="http://www.w3.org/2000/svg" width="24"
-                                                                height="24" viewBox="0 0 24 24" fill="none">
-                                                                <rect opacity="0.3" x="2" y="2" width="20"
-                                                                    height="20" rx="5" fill="black">
-                                                                </rect>
-                                                                <rect x="10.8891" y="17.8033" width="12"
-                                                                    height="2" rx="1"
-                                                                    transform="rotate(-90 10.8891 17.8033)"
-                                                                    fill="black"></rect>
-                                                                <rect x="6.01041" y="10.9247" width="12"
-                                                                    height="2" rx="1" fill="black">
-                                                                </rect>
-                                                            </svg>
-                                                        </span>
-                                                    </button>
-                                                </div>
-                                            </td>
-                                            <td class="">
-                                                <div class="d-flex flex-column">
-                                                    <span class="text-dark fw-bolder fs-6">8,999 INR</a>
-                                                        <span class="text-muted fw-bold d-block fs-7">Per month</a>
-                                                </div>
-                                            </td>
-                                            <td class="text-dark fs-6 fw-bolder">60 days left</td>
-                                            <td class="text-dark fs-6 fw-bolder" style="padding-left: 5em!important;">
-                                                120
-                                            </td>
-                                            <td>
-                                                <a href="javascript:void(0);" class="btn btn-sm btn-primary">Add to
-                                                    cart</a>
-                                            </td>
-                                        </tr>
-                                    </tbody>
-                                </table>
-                            </div>
-                            <!--end::Table-->
-                        </div>
-                        <!--end::Logins-->
-
-                        <!--begin::Emails-->
-                        <div class="card shadow-none mt-2 d-none">
-                            <!--begin::Header-->
-                            <div class="card-header px-7">
-                                <div class="card-title m-0">
-                                    <h3 class="fw-bolder m-0">Emails</h3>
-                                </div>
-                                <a href="javascript:void(0);" class="btn btn-primary align-self-center">
-                                    <span class="svg-icon svg-icon-2">
-                                        <svg xmlns="http://www.w3.org/2000/svg"
-                                            xmlns:xlink="http;//www.w3.org/1999/xlink" width="24px" height="24px"
-                                            viewBox="0 0 24 24" version="1.1">
-                                            <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
-                                                <rect x="0" y="0" width="24" height="24" />
-                                                <path
-                                                    d="M5.5,4 L18.5,4 C19.3284271,4 20,4.67157288 20,5.5 L20,9.5 C20,10.3284271 19.3284271,11 18.5,11 L5.5,11 C4.67157288,11 4,10.3284271 4,9.5 L4,5.5 C4,4.67157288 4.67157288,4 5.5,4 Z M11,6 C10.4477153,6 10,6.44771525 10,7 C10,7.55228475 10.4477153,8 11,8 L13,8 C13.5522847,8 14,7.55228475 14,7 C14,6.44771525 13.5522847,6 13,6 L11,6 Z"
-                                                    fill="#000000" opacity="0.3" />
-                                                <path
-                                                    d="M5.5,13 L18.5,13 C19.3284271,13 20,13.6715729 20,14.5 L20,18.5 C20,19.3284271 19.3284271,20 18.5,20 L5.5,20 C4.67157288,20 4,19.3284271 4,18.5 L4,14.5 C4,13.6715729 4.67157288,13 5.5,13 Z M11,15 C10.4477153,15 10,15.4477153 10,16 C10,16.5522847 10.4477153,17 11,17 L13,17 C13.5522847,17 14,16.5522847 14,16 C14,15.4477153 13.5522847,15 13,15 L11,15 Z"
-                                                    fill="#000000" />
-                                            </g>
-                                        </svg>
-                                    </span>
-                                    See Pricing
-                                </a>
-                            </div>
-                            <!--end::Header-->
-                            <!--begin::Table-->
-                            <div class="card-body">
-                                <table class="table align-middle table-row-dashed fs-6 gy-5" id="email_list">
-                                    <thead>
-                                        <tr class="fw-bolder text-muted">
-                                            <th class="w-10px pe-2">#</th>
-                                            <th class="">Package Name</th>
-                                            <th class="">Number of emails</th>
-                                            <th class="">Price</th>
-                                            <th class="">Duration</th>
-                                            <th class="">Actions</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody class="text-gray-600 fw-bold">
-                                        <tr class="odd">
-                                            <td class="invisible">
-                                                <div class="form-check form-check-sm form-check-custom form-check-solid">
-                                                    <input class="form-check-input">
-                                                </div>
-                                            </td>
-                                            <td class="align-items-center">
-                                                <div class="symbol symbol-circle symbol-40px overflow-hidden me-2 border-radius-5"
-                                                    style="float:left">
-                                                    <a href="javascript:void(0);" class="">
-                                                        <div
-                                                            class="symbol-label fs-3 bg-dark-light text-light border-radius-5">
-                                                            <!-- <i class="fab fa-buffer fs-3 bg-light-danger text-danger"></i> -->
-                                                            <span class="svg-icon svg-icon-dark-800 svg-icon-2x">
-                                                                <svg xmlns="http://www.w3.org/2000/svg"
-                                                                    xmlns:xlink="http://www.w3.org/1999/xlink"
-                                                                    width="24px" height="24px" viewBox="0 0 24 24"
-                                                                    version="1.1">
-                                                                    <g stroke="none" stroke-width="1" fill="none"
-                                                                        fill-rule="evenodd">
-                                                                        <polygon points="0 0 24 0 24 24 0 24" />
-                                                                        <path
-                                                                            d="M22,15 L22,19 C22,20.1045695 21.1045695,21 20,21 L8,21 C5.790861,21 4,19.209139 4,17 C4,14.790861 5.790861,13 8,13 L20,13 C21.1045695,13 22,13.8954305 22,15 Z M7,19 C8.1045695,19 9,18.1045695 9,17 C9,15.8954305 8.1045695,15 7,15 C5.8954305,15 5,15.8954305 5,17 C5,18.1045695 5.8954305,19 7,19 Z"
-                                                                            fill="#000000" opacity="0.3" />
-                                                                        <path
-                                                                            d="M15.5421357,5.69999981 L18.3705628,8.52842693 C19.1516114,9.30947552 19.1516114,10.5758055 18.3705628,11.3568541 L9.88528147,19.8421354 C8.3231843,21.4042326 5.79052439,21.4042326 4.22842722,19.8421354 C2.66633005,18.2800383 2.66633005,15.7473784 4.22842722,14.1852812 L12.7137086,5.69999981 C13.4947572,4.91895123 14.7610871,4.91895123 15.5421357,5.69999981 Z M7,19 C8.1045695,19 9,18.1045695 9,17 C9,15.8954305 8.1045695,15 7,15 C5.8954305,15 5,15.8954305 5,17 C5,18.1045695 5.8954305,19 7,19 Z"
-                                                                            fill="#000000" opacity="0.3" />
-                                                                        <path
-                                                                            d="M5,3 L9,3 C10.1045695,3 11,3.8954305 11,5 L11,17 C11,19.209139 9.209139,21 7,21 C4.790861,21 3,19.209139 3,17 L3,5 C3,3.8954305 3.8954305,3 5,3 Z M7,19 C8.1045695,19 9,18.1045695 9,17 C9,15.8954305 8.1045695,15 7,15 C5.8954305,15 5,15.8954305 5,17 C5,18.1045695 5.8954305,19 7,19 Z"
-                                                                            fill="#000000" />
-                                                                    </g>
-                                                                </svg>
-                                                            </span>
-                                                        </div>
-                                                    </a>
-                                                </div>
-                                                <div class="d-flex flex-column">
-                                                    <div class="">
-                                                        <a href="javascript:void(0);"
-                                                            class="text-dark fw-bolder text-hover-primary fs-6">Free</a>
-                                                    </div>
-                                                    <span class="badge badge-light-success active_plan">Active Plan</span>
-                                                </div>
-                                            </td>
-                                            <td class="text-dark fs-6 fw-bolder" style="padding-left: 5em;">1</td>
-                                            <td class="text-dark fs-6 fw-bolder">Free</td>
-                                            <td class="text-dark fs-6 fw-bolder">Free Forever</td>
-                                            <td></td>
-                                        </tr>
-                                        <tr class="even">
-                                            <td>
-                                                <div class="form-check form-check-sm form-check-custom form-check-solid">
-                                                    <input class="form-check-input" type="radio" value="1"
-                                                        name="email_plan">
-                                                </div>
-                                            </td>
-                                            <td class="align-items-center">
-                                                <div class="symbol symbol-circle symbol-40px overflow-hidden me-2 border-radius-5"
-                                                    style="float:left">
-                                                    <a href="javascript:void(0);" data-row-id="806"
-                                                        class="show-application-detail">
-                                                        <div
-                                                            class="symbol-label fs-3 bg-light-success text-success border-radius-5">
-                                                            <!-- <i class="fab fa-buffer fs-3 bg-light-success text-success"></i> -->
-                                                            <span class="svg-icon svg-icon-success svg-icon-2x">
-                                                                <svg xmlns="http://www.w3.org/2000/svg"
-                                                                    xmlns:xlink="http://www.w3.org/1999/xlink"
-                                                                    width="24px" height="24px" viewBox="0 0 24 24"
-                                                                    version="1.1">
-                                                                    <g stroke="none" stroke-width="1" fill="none"
-                                                                        fill-rule="evenodd">
-                                                                        <rect x="0" y="0" width="24"
-                                                                            height="24" />
-                                                                        <path
-                                                                            d="M6,2 L18,2 C18.5522847,2 19,2.44771525 19,3 L19,12 C19,12.5522847 18.5522847,13 18,13 L6,13 C5.44771525,13 5,12.5522847 5,12 L5,3 C5,2.44771525 5.44771525,2 6,2 Z M7.5,5 C7.22385763,5 7,5.22385763 7,5.5 C7,5.77614237 7.22385763,6 7.5,6 L13.5,6 C13.7761424,6 14,5.77614237 14,5.5 C14,5.22385763 13.7761424,5 13.5,5 L7.5,5 Z M7.5,7 C7.22385763,7 7,7.22385763 7,7.5 C7,7.77614237 7.22385763,8 7.5,8 L10.5,8 C10.7761424,8 11,7.77614237 11,7.5 C11,7.22385763 10.7761424,7 10.5,7 L7.5,7 Z"
-                                                                            fill="#000000" opacity="0.3" />
-                                                                        <path
-                                                                            d="M3.79274528,6.57253826 L12,12.5 L20.2072547,6.57253826 C20.4311176,6.4108595 20.7436609,6.46126971 20.9053396,6.68513259 C20.9668779,6.77033951 21,6.87277228 21,6.97787787 L21,17 C21,18.1045695 20.1045695,19 19,19 L5,19 C3.8954305,19 3,18.1045695 3,17 L3,6.97787787 C3,6.70173549 3.22385763,6.47787787 3.5,6.47787787 C3.60510559,6.47787787 3.70753836,6.51099993 3.79274528,6.57253826 Z"
-                                                                            fill="#000000" />
-                                                                    </g>
-                                                                </svg>
-                                                            </span>
-                                                        </div>
-                                                    </a>
-                                                </div>
-                                                <div class="d-flex flex-column">
-                                                    <div class="">
-                                                        <a href="javascript:void(0);" data-row-id="806"
-                                                            class="text-dark fw-bolder text-hover-primary fs-6 show-application-detail">Basic</a>
-                                                    </div>
-                                                    <a href="javascript:void(0);" data-row-id="806"
-                                                        class="text-muted fw-bold text-muted d-block fs-7 text-hover-primary show-application-detail">Basic
-                                                        service</a>
-                                                </div>
-                                            </td>
-                                            <td class="text-dark fs-6 fw-bolder" style="padding-left: 5em;">5</td>
-                                            <td class="">
-                                                <div class="d-flex flex-column">
-                                                    <span class="text-dark fw-bolder fs-6">4,999 INR</span>
-                                                    <span class="text-muted fw-bold d-block fs-7">Per month</span>
-                                                </div>
-                                            </td>
-                                            <td class="text-dark fs-6 fw-bolder">
-                                                <span style="padding-left:1.6em;">5</span>
-                                            </td>
-                                            <td>
-                                                <span class="text-dark fs-6 fw-bolder">Added</span>
-                                            </td>
-                                        </tr>
-                                        <tr class="odd">
-                                            <td>
-                                                <div class="form-check form-check-sm form-check-custom form-check-solid">
-                                                    <input class="form-check-input" type="radio" value="1"
-                                                        name="email_plan">
-                                                </div>
-                                            </td>
-                                            <td class=" align-items-center">
-                                                <div class="symbol symbol-circle symbol-40px overflow-hidden me-2 border-radius-5"
-                                                    style="float:left">
-                                                    <a href="javascript:void(0);" data-row-id="806"
-                                                        class="show-application-detail">
-                                                        <div
-                                                            class="symbol-label fs-3 bg-light-warning text-warning border-radius-5">
-                                                            <!-- <i class="fab fa-buffer fs-3 bg-light-warning text-warning"></i> -->
-                                                            <span class="svg-icon svg-icon-warning svg-icon-2x">
-                                                                <svg xmlns="http://www.w3.org/2000/svg"
-                                                                    xmlns:xlink="http://www.w3.org/1999/xlink"
-                                                                    width="24px" height="24px" viewBox="0 0 24 24"
-                                                                    version="1.1">
-                                                                    <g stroke="none" stroke-width="1" fill="none"
-                                                                        fill-rule="evenodd">
-                                                                        <rect x="0" y="0" width="24"
-                                                                            height="24" />
-                                                                        <path
-                                                                            d="M6,2 L18,2 C18.5522847,2 19,2.44771525 19,3 L19,12 C19,12.5522847 18.5522847,13 18,13 L6,13 C5.44771525,13 5,12.5522847 5,12 L5,3 C5,2.44771525 5.44771525,2 6,2 Z M7.5,5 C7.22385763,5 7,5.22385763 7,5.5 C7,5.77614237 7.22385763,6 7.5,6 L13.5,6 C13.7761424,6 14,5.77614237 14,5.5 C14,5.22385763 13.7761424,5 13.5,5 L7.5,5 Z M7.5,7 C7.22385763,7 7,7.22385763 7,7.5 C7,7.77614237 7.22385763,8 7.5,8 L10.5,8 C10.7761424,8 11,7.77614237 11,7.5 C11,7.22385763 10.7761424,7 10.5,7 L7.5,7 Z"
-                                                                            fill="#000000" opacity="0.3" />
-                                                                        <path
-                                                                            d="M3.79274528,6.57253826 L12,12.5 L20.2072547,6.57253826 C20.4311176,6.4108595 20.7436609,6.46126971 20.9053396,6.68513259 C20.9668779,6.77033951 21,6.87277228 21,6.97787787 L21,17 C21,18.1045695 20.1045695,19 19,19 L5,19 C3.8954305,19 3,18.1045695 3,17 L3,6.97787787 C3,6.70173549 3.22385763,6.47787787 3.5,6.47787787 C3.60510559,6.47787787 3.70753836,6.51099993 3.79274528,6.57253826 Z"
-                                                                            fill="#000000" />
-                                                                    </g>
-                                                                </svg>
-                                                            </span>
-                                                        </div>
-                                                    </a>
-                                                </div>
-                                                <div class="d-flex flex-column">
-                                                    <div class="">
-                                                        <a href="javascript:void(0);" data-row-id="806"
-                                                            class="text-dark fw-bolder text-hover-primary fs-6 show-application-detail">Premium</a>
-                                                    </div>
-                                                    <a href="javascript:void(0);" data-row-id="806"
-                                                        class="text-muted fw-bold text-muted d-block fs-7 text-hover-primary show-application-detail">Premium
-                                                        service</a>
-                                                </div>
-                                            </td>
-                                            <td class="text-dark fs-6 fw-bolder" style="padding-left: 5em;">56</td>
-                                            <td class="">
-                                                <div class="d-flex flex-column">
-                                                    <span class="text-dark fw-bolder fs-6">6,999 INR</span>
-                                                    <span class="text-muted fw-bold d-block fs-7">Per month</span>
-                                                </div>
-                                            </td>
-                                            <td class="text-dark fs-6 fw-bolder">
-                                                <span style="padding-left:1.6em;">6</span>
-                                            </td>
-                                            <td>
-                                                <a href="javascript:void(0);" class="btn btn-sm btn-primary">Add to
-                                                    cart</a>
-                                            </td>
-                                        </tr>
-                                        <tr class="even">
-                                            <td>
-                                                <div class="form-check form-check-sm form-check-custom form-check-solid">
-                                                    <input class="form-check-input" type="radio" value="1"
-                                                        name="email_plan">
-                                                </div>
-                                            </td>
-                                            <td class=" align-items-center">
-                                                <div class="symbol symbol-circle symbol-40px overflow-hidden me-2 border-radius-5"
-                                                    style="float:left">
-                                                    <a href="javascript:void(0);" data-row-id="806"
-                                                        class="show-application-detail">
-                                                        <div
-                                                            class="symbol-label fs-3 bg-light-primary text-primary border-radius-5">
-                                                            <!-- <i class="fab fa-buffer fs-3 bg-light-primary text-primary"></i> -->
-                                                            <span class="svg-icon svg-icon-primary svg-icon-2x">
-                                                                <svg xmlns="http://www.w3.org/2000/svg"
-                                                                    xmlns:xlink="http://www.w3.org/1999/xlink"
-                                                                    width="24px" height="24px" viewBox="0 0 24 24"
-                                                                    version="1.1">
-                                                                    <g stroke="none" stroke-width="1" fill="none"
-                                                                        fill-rule="evenodd">
-                                                                        <rect x="0" y="0" width="24"
-                                                                            height="24" />
-                                                                        <path
-                                                                            d="M6,2 L18,2 C18.5522847,2 19,2.44771525 19,3 L19,12 C19,12.5522847 18.5522847,13 18,13 L6,13 C5.44771525,13 5,12.5522847 5,12 L5,3 C5,2.44771525 5.44771525,2 6,2 Z M7.5,5 C7.22385763,5 7,5.22385763 7,5.5 C7,5.77614237 7.22385763,6 7.5,6 L13.5,6 C13.7761424,6 14,5.77614237 14,5.5 C14,5.22385763 13.7761424,5 13.5,5 L7.5,5 Z M7.5,7 C7.22385763,7 7,7.22385763 7,7.5 C7,7.77614237 7.22385763,8 7.5,8 L10.5,8 C10.7761424,8 11,7.77614237 11,7.5 C11,7.22385763 10.7761424,7 10.5,7 L7.5,7 Z"
-                                                                            fill="#000000" opacity="0.3" />
-                                                                        <path
-                                                                            d="M3.79274528,6.57253826 L12,12.5 L20.2072547,6.57253826 C20.4311176,6.4108595 20.7436609,6.46126971 20.9053396,6.68513259 C20.9668779,6.77033951 21,6.87277228 21,6.97787787 L21,17 C21,18.1045695 20.1045695,19 19,19 L5,19 C3.8954305,19 3,18.1045695 3,17 L3,6.97787787 C3,6.70173549 3.22385763,6.47787787 3.5,6.47787787 C3.60510559,6.47787787 3.70753836,6.51099993 3.79274528,6.57253826 Z"
-                                                                            fill="#000000" />
-                                                                    </g>
-                                                                </svg>
-                                                            </span>
-                                                        </div>
-                                                    </a>
-                                                </div>
-                                                <div class="d-flex flex-column">
-                                                    <div class="">
-                                                        <a href="javascript:void(0);" data-row-id="806"
-                                                            class="text-dark fw-bolder text-hover-primary fs-6 show-application-detail">Pro</a>
-                                                    </div>
-                                                    <a href="javascript:void(0);" data-row-id="806"
-                                                        class="text-muted fw-bold d-block fs-7 text-hover-primary show-application-detail">Pro
-                                                        service</a>
-                                                </div>
-                                            </td>
-                                            <td class="text-dark fs-6 fw-bolder" style="padding-left: 5em;">32</td>
-                                            <td class="">
-                                                <div class="d-flex flex-column">
-                                                    <span class="text-dark fw-bolder fs-6">8,999 INR</a>
-                                                        <span class="text-muted fw-bold d-block fs-7">Per month</a>
-                                                </div>
-                                            </td>
-                                            <td class="text-dark fs-6 fw-bolder">
-                                                <span style="padding-left:1.6em;">2</span>
-                                            </td>
-                                            <td></td>
-                                        </tr>
-                                    </tbody>
-                                </table>
-                            </div>
-                            <!--end::Table-->
-                        </div>
-                        <!--end::Emails-->
-
-                        <!--begin::Resume access-->
-                        <div class="card shadow-none mt-2 d-none">
-                            <!--begin::Header-->
-                            <div class="card-header px-7">
-                                <div class="card-title m-0">
-                                    <h3 class="fw-bolder m-0">Resume access</h3>
-                                </div>
-                                <a href="javascript:void(0);" class="btn btn-primary align-self-center">
-                                    <span class="svg-icon svg-icon-2">
-                                        <svg xmlns="http://www.w3.org/2000/svg"
-                                            xmlns:xlink="http;//www.w3.org/1999/xlink" width="24px" height="24px"
-                                            viewBox="0 0 24 24" version="1.1">
-                                            <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
-                                                <rect x="0" y="0" width="24" height="24" />
-                                                <path
-                                                    d="M5.5,4 L18.5,4 C19.3284271,4 20,4.67157288 20,5.5 L20,9.5 C20,10.3284271 19.3284271,11 18.5,11 L5.5,11 C4.67157288,11 4,10.3284271 4,9.5 L4,5.5 C4,4.67157288 4.67157288,4 5.5,4 Z M11,6 C10.4477153,6 10,6.44771525 10,7 C10,7.55228475 10.4477153,8 11,8 L13,8 C13.5522847,8 14,7.55228475 14,7 C14,6.44771525 13.5522847,6 13,6 L11,6 Z"
-                                                    fill="#000000" opacity="0.3" />
-                                                <path
-                                                    d="M5.5,13 L18.5,13 C19.3284271,13 20,13.6715729 20,14.5 L20,18.5 C20,19.3284271 19.3284271,20 18.5,20 L5.5,20 C4.67157288,20 4,19.3284271 4,18.5 L4,14.5 C4,13.6715729 4.67157288,13 5.5,13 Z M11,15 C10.4477153,15 10,15.4477153 10,16 C10,16.5522847 10.4477153,17 11,17 L13,17 C13.5522847,17 14,16.5522847 14,16 C14,15.4477153 13.5522847,15 13,15 L11,15 Z"
-                                                    fill="#000000" />
-                                            </g>
-                                        </svg>
-                                    </span>
-                                    See Pricing
-                                </a>
-                            </div>
-                            <!--end::Header-->
-                            <!--begin::Table-->
-                            <div class="card-body">
-                                <table class="table align-middle table-row-dashed fs-6 gy-5" id="resume_list">
-                                    <thead>
-                                        <tr class="fw-bolder text-muted">
-                                            <th class="w-10px pe-2">#</th>
-                                            <th class="">Package Name</th>
-                                            <th class="">Number of resume access</th>
-                                            <th class="">Price</th>
-                                            <th class="">Duration</th>
-                                            <th class="">Actions</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody class="text-gray-600 fw-bold">
-                                        <tr class="odd">
-                                            <td class="invisible">
-                                                <div class="form-check form-check-sm form-check-custom form-check-solid">
-                                                    <input class="form-check-input">
-                                                </div>
-                                            </td>
-                                            <td class=" align-items-center">
-                                                <div class="symbol symbol-circle symbol-40px overflow-hidden me-2 border-radius-5"
-                                                    style="float:left">
-                                                    <a href="javascript:void(0);" class="">
-                                                        <div
-                                                            class="symbol-label fs-3 bg-light-danger text-danger border-radius-5">
-                                                            <!-- <i class="fab fa-buffer fs-3 bg-light-danger text-danger"></i> -->
-                                                            <span class="svg-icon svg-icon-dark-800 svg-icon-2x">
-                                                                <svg xmlns="http://www.w3.org/2000/svg"
-                                                                    xmlns:xlink="http://www.w3.org/1999/xlink"
-                                                                    width="24px" height="24px" viewBox="0 0 24 24"
-                                                                    version="1.1">
-                                                                    <g stroke="none" stroke-width="1" fill="none"
-                                                                        fill-rule="evenodd">
-                                                                        <polygon points="0 0 24 0 24 24 0 24" />
-                                                                        <path
-                                                                            d="M22,15 L22,19 C22,20.1045695 21.1045695,21 20,21 L8,21 C5.790861,21 4,19.209139 4,17 C4,14.790861 5.790861,13 8,13 L20,13 C21.1045695,13 22,13.8954305 22,15 Z M7,19 C8.1045695,19 9,18.1045695 9,17 C9,15.8954305 8.1045695,15 7,15 C5.8954305,15 5,15.8954305 5,17 C5,18.1045695 5.8954305,19 7,19 Z"
-                                                                            fill="#000000" opacity="0.3" />
-                                                                        <path
-                                                                            d="M15.5421357,5.69999981 L18.3705628,8.52842693 C19.1516114,9.30947552 19.1516114,10.5758055 18.3705628,11.3568541 L9.88528147,19.8421354 C8.3231843,21.4042326 5.79052439,21.4042326 4.22842722,19.8421354 C2.66633005,18.2800383 2.66633005,15.7473784 4.22842722,14.1852812 L12.7137086,5.69999981 C13.4947572,4.91895123 14.7610871,4.91895123 15.5421357,5.69999981 Z M7,19 C8.1045695,19 9,18.1045695 9,17 C9,15.8954305 8.1045695,15 7,15 C5.8954305,15 5,15.8954305 5,17 C5,18.1045695 5.8954305,19 7,19 Z"
-                                                                            fill="#000000" opacity="0.3" />
-                                                                        <path
-                                                                            d="M5,3 L9,3 C10.1045695,3 11,3.8954305 11,5 L11,17 C11,19.209139 9.209139,21 7,21 C4.790861,21 3,19.209139 3,17 L3,5 C3,3.8954305 3.8954305,3 5,3 Z M7,19 C8.1045695,19 9,18.1045695 9,17 C9,15.8954305 8.1045695,15 7,15 C5.8954305,15 5,15.8954305 5,17 C5,18.1045695 5.8954305,19 7,19 Z"
-                                                                            fill="#000000" />
-                                                                    </g>
-                                                                </svg>
-                                                            </span>
-                                                        </div>
-                                                    </a>
-                                                </div>
-                                                <div class="d-flex flex-column">
-                                                    <div class="">
-                                                        <a href="javascript:void(0);"
-                                                            class="text-dark fw-bolder text-hover-primary fs-6">Free</a>
-                                                    </div>
-                                                    <span class="badge badge-light-success active_plan">Active Plan</span>
-                                                </div>
-                                            </td>
-                                            <td class="text-dark fs-6 fw-bolder" style="padding-left: 5em;">1</td>
-                                            <td class="text-dark fs-6 fw-bolder">Free</td>
-                                            <td class="text-dark fs-6 fw-bolder">Free Forever</td>
-                                            <td></td>
-                                        </tr>
-                                        <tr class="even">
-                                            <td>
-                                                <div class="form-check form-check-sm form-check-custom form-check-solid">
-                                                    <input class="form-check-input" type="radio" value="1"
-                                                        name="resume_plan">
-                                                </div>
-                                            </td>
-                                            <td class=" align-items-center">
-                                                <div class="symbol symbol-circle symbol-40px overflow-hidden me-2 border-radius-5"
-                                                    style="float:left">
-                                                    <a href="javascript:void(0);" data-row-id="806"
-                                                        class="show-application-detail">
-                                                        <div
-                                                            class="symbol-label fs-3 bg-light-success text-success border-radius-5">
-                                                            <!-- <i class="fab fa-buffer fs-3 bg-light-success text-success"></i> -->
-                                                            <span class="svg-icon svg-icon-success svg-icon-2x">
-                                                                <svg xmlns="http://www.w3.org/2000/svg"
-                                                                    xmlns:xlink="http://www.w3.org/1999/xlink"
-                                                                    width="24px" height="24px" viewBox="0 0 24 24"
-                                                                    version="1.1">
-                                                                    <g stroke="none" stroke-width="1" fill="none"
-                                                                        fill-rule="evenodd">
-                                                                        <polygon points="0 0 24 0 24 24 0 24" />
-                                                                        <path
-                                                                            d="M4.85714286,1 L11.7364114,1 C12.0910962,1 12.4343066,1.12568431 12.7051108,1.35473959 L17.4686994,5.3839416 C17.8056532,5.66894833 18,6.08787823 18,6.52920201 L18,19.0833333 C18,20.8738751 17.9795521,21 16.1428571,21 L4.85714286,21 C3.02044787,21 3,20.8738751 3,19.0833333 L3,2.91666667 C3,1.12612489 3.02044787,1 4.85714286,1 Z M8,12 C7.44771525,12 7,12.4477153 7,13 C7,13.5522847 7.44771525,14 8,14 L15,14 C15.5522847,14 16,13.5522847 16,13 C16,12.4477153 15.5522847,12 15,12 L8,12 Z M8,16 C7.44771525,16 7,16.4477153 7,17 C7,17.5522847 7.44771525,18 8,18 L11,18 C11.5522847,18 12,17.5522847 12,17 C12,16.4477153 11.5522847,16 11,16 L8,16 Z"
-                                                                            fill="#000000" fill-rule="nonzero"
-                                                                            opacity="0.3" />
-                                                                        <path
-                                                                            d="M6.85714286,3 L14.7364114,3 C15.0910962,3 15.4343066,3.12568431 15.7051108,3.35473959 L20.4686994,7.3839416 C20.8056532,7.66894833 21,8.08787823 21,8.52920201 L21,21.0833333 C21,22.8738751 20.9795521,23 19.1428571,23 L6.85714286,23 C5.02044787,23 5,22.8738751 5,21.0833333 L5,4.91666667 C5,3.12612489 5.02044787,3 6.85714286,3 Z M8,12 C7.44771525,12 7,12.4477153 7,13 C7,13.5522847 7.44771525,14 8,14 L15,14 C15.5522847,14 16,13.5522847 16,13 C16,12.4477153 15.5522847,12 15,12 L8,12 Z M8,16 C7.44771525,16 7,16.4477153 7,17 C7,17.5522847 7.44771525,18 8,18 L11,18 C11.5522847,18 12,17.5522847 12,17 C12,16.4477153 11.5522847,16 11,16 L8,16 Z"
-                                                                            fill="#000000" fill-rule="nonzero" />
-                                                                    </g>
-                                                                </svg>
-                                                            </span>
-                                                        </div>
-                                                    </a>
-                                                </div>
-                                                <div class="d-flex flex-column">
-                                                    <div class="">
-                                                        <a href="javascript:void(0);" data-row-id="806"
-                                                            class="text-dark fw-bolder text-hover-primary fs-6 show-application-detail">Basic</a>
-                                                    </div>
-                                                    <a href="javascript:void(0);" data-row-id="806"
-                                                        class="text-muted fw-bold text-muted d-block fs-7 text-hover-primary show-application-detail">Basic
-                                                        service</a>
-                                                </div>
-                                            </td>
-                                            <td class="text-dark fs-6 fw-bolder" style="padding-left: 5em;">45</td>
-                                            <td class="">
-                                                <div class="d-flex flex-column">
-                                                    <span class="text-dark fw-bolder fs-6">4,999 INR</span>
-                                                    <span class="text-muted fw-bold d-block fs-7">Per month</span>
-                                                </div>
-                                            </td>
-                                            <td>
-                                                <span class="text-dark fs-6 fw-bolder"
-                                                    style="padding-left:.5em;">5</span>
-                                            </td>
-                                            <td>
-                                                <a href="javascript:void(0);" class="btn btn-sm btn-primary">Add to
-                                                    cart</a>
-                                            </td>
-                                        </tr>
-                                        <tr class="odd">
-                                            <td>
-                                                <div class="form-check form-check-sm form-check-custom form-check-solid">
-                                                    <input class="form-check-input" type="radio" value="1"
-                                                        name="resume_plan">
-                                                </div>
-                                            </td>
-                                            <td class=" align-items-center">
-                                                <div class="symbol symbol-circle symbol-40px overflow-hidden me-2 border-radius-5"
-                                                    style="float:left">
-                                                    <a href="javascript:void(0);" data-row-id="806"
-                                                        class="show-application-detail">
-                                                        <div
-                                                            class="symbol-label fs-3 bg-light-warning text-warning border-radius-5">
-                                                            <!-- <i class="fab fa-buffer fs-3 bg-light-warning text-warning"></i> -->
-                                                            <span class="svg-icon svg-icon-warning svg-icon-2x">
-                                                                <svg xmlns="http://www.w3.org/2000/svg"
-                                                                    xmlns:xlink="http://www.w3.org/1999/xlink"
-                                                                    width="24px" height="24px" viewBox="0 0 24 24"
-                                                                    version="1.1">
-                                                                    <g stroke="none" stroke-width="1" fill="none"
-                                                                        fill-rule="evenodd">
-                                                                        <polygon points="0 0 24 0 24 24 0 24" />
-                                                                        <path
-                                                                            d="M4.85714286,1 L11.7364114,1 C12.0910962,1 12.4343066,1.12568431 12.7051108,1.35473959 L17.4686994,5.3839416 C17.8056532,5.66894833 18,6.08787823 18,6.52920201 L18,19.0833333 C18,20.8738751 17.9795521,21 16.1428571,21 L4.85714286,21 C3.02044787,21 3,20.8738751 3,19.0833333 L3,2.91666667 C3,1.12612489 3.02044787,1 4.85714286,1 Z M8,12 C7.44771525,12 7,12.4477153 7,13 C7,13.5522847 7.44771525,14 8,14 L15,14 C15.5522847,14 16,13.5522847 16,13 C16,12.4477153 15.5522847,12 15,12 L8,12 Z M8,16 C7.44771525,16 7,16.4477153 7,17 C7,17.5522847 7.44771525,18 8,18 L11,18 C11.5522847,18 12,17.5522847 12,17 C12,16.4477153 11.5522847,16 11,16 L8,16 Z"
-                                                                            fill="#000000" fill-rule="nonzero"
-                                                                            opacity="0.3" />
-                                                                        <path
-                                                                            d="M6.85714286,3 L14.7364114,3 C15.0910962,3 15.4343066,3.12568431 15.7051108,3.35473959 L20.4686994,7.3839416 C20.8056532,7.66894833 21,8.08787823 21,8.52920201 L21,21.0833333 C21,22.8738751 20.9795521,23 19.1428571,23 L6.85714286,23 C5.02044787,23 5,22.8738751 5,21.0833333 L5,4.91666667 C5,3.12612489 5.02044787,3 6.85714286,3 Z M8,12 C7.44771525,12 7,12.4477153 7,13 C7,13.5522847 7.44771525,14 8,14 L15,14 C15.5522847,14 16,13.5522847 16,13 C16,12.4477153 15.5522847,12 15,12 L8,12 Z M8,16 C7.44771525,16 7,16.4477153 7,17 C7,17.5522847 7.44771525,18 8,18 L11,18 C11.5522847,18 12,17.5522847 12,17 C12,16.4477153 11.5522847,16 11,16 L8,16 Z"
-                                                                            fill="#000000" fill-rule="nonzero" />
-                                                                    </g>
-                                                                </svg>
-                                                            </span>
-                                                        </div>
-                                                    </a>
-                                                </div>
-                                                <div class="d-flex flex-column">
-                                                    <div class="">
-                                                        <a href="javascript:void(0);" data-row-id="806"
-                                                            class="text-dark fw-bolder text-hover-primary fs-6 show-application-detail">Premium</a>
-                                                    </div>
-                                                    <a href="javascript:void(0);" data-row-id="806"
-                                                        class="text-muted fw-bold text-muted d-block fs-7 text-hover-primary show-application-detail">Premium
-                                                        service</a>
-                                                </div>
-                                            </td>
-                                            <td class="text-dark fs-6 fw-bolder" style="padding-left: 5em;">25</td>
-                                            <td class="">
-                                                <div class="d-flex flex-column">
-                                                    <span class="text-dark fw-bolder fs-6">6,999 INR</a>
-                                                        <span class="text-muted fw-bold d-block fs-7">Per month</a>
-                                                </div>
-                                            </td>
-                                            <td class="text-dark fs-6 fw-bolder">
-                                                <span style="padding:left:.5em;">3</span>
-                                            </td>
-                                            <td></td>
-                                        </tr>
-                                        <tr class="even">
-                                            <td>
-                                                <div class="form-check form-check-sm form-check-custom form-check-solid">
-                                                    <input class="form-check-input" type="radio" value="1"
-                                                        name="resume_plan">
-                                                </div>
-                                            </td>
-                                            <td class=" align-items-center">
-                                                <div class="symbol symbol-circle symbol-40px overflow-hidden me-2 border-radius-5"
-                                                    style="float:left">
-                                                    <a href="javascript:void(0);" data-row-id="806"
-                                                        class="show-application-detail">
-                                                        <div
-                                                            class="symbol-label fs-3 bg-light-primary text-primary border-radius-5">
-                                                            <!-- <i class="fab fa-buffer fs-3 bg-light-primary text-primary"></i> -->
-                                                            <span class="svg-icon svg-icon-primary svg-icon-2x">
-                                                                <svg xmlns="http://www.w3.org/2000/svg"
-                                                                    xmlns:xlink="http://www.w3.org/1999/xlink"
-                                                                    width="24px" height="24px" viewBox="0 0 24 24"
-                                                                    version="1.1">
-                                                                    <g stroke="none" stroke-width="1" fill="none"
-                                                                        fill-rule="evenodd">
-                                                                        <polygon points="0 0 24 0 24 24 0 24" />
-                                                                        <path
-                                                                            d="M4.85714286,1 L11.7364114,1 C12.0910962,1 12.4343066,1.12568431 12.7051108,1.35473959 L17.4686994,5.3839416 C17.8056532,5.66894833 18,6.08787823 18,6.52920201 L18,19.0833333 C18,20.8738751 17.9795521,21 16.1428571,21 L4.85714286,21 C3.02044787,21 3,20.8738751 3,19.0833333 L3,2.91666667 C3,1.12612489 3.02044787,1 4.85714286,1 Z M8,12 C7.44771525,12 7,12.4477153 7,13 C7,13.5522847 7.44771525,14 8,14 L15,14 C15.5522847,14 16,13.5522847 16,13 C16,12.4477153 15.5522847,12 15,12 L8,12 Z M8,16 C7.44771525,16 7,16.4477153 7,17 C7,17.5522847 7.44771525,18 8,18 L11,18 C11.5522847,18 12,17.5522847 12,17 C12,16.4477153 11.5522847,16 11,16 L8,16 Z"
-                                                                            fill="#000000" fill-rule="nonzero"
-                                                                            opacity="0.3" />
-                                                                        <path
-                                                                            d="M6.85714286,3 L14.7364114,3 C15.0910962,3 15.4343066,3.12568431 15.7051108,3.35473959 L20.4686994,7.3839416 C20.8056532,7.66894833 21,8.08787823 21,8.52920201 L21,21.0833333 C21,22.8738751 20.9795521,23 19.1428571,23 L6.85714286,23 C5.02044787,23 5,22.8738751 5,21.0833333 L5,4.91666667 C5,3.12612489 5.02044787,3 6.85714286,3 Z M8,12 C7.44771525,12 7,12.4477153 7,13 C7,13.5522847 7.44771525,14 8,14 L15,14 C15.5522847,14 16,13.5522847 16,13 C16,12.4477153 15.5522847,12 15,12 L8,12 Z M8,16 C7.44771525,16 7,16.4477153 7,17 C7,17.5522847 7.44771525,18 8,18 L11,18 C11.5522847,18 12,17.5522847 12,17 C12,16.4477153 11.5522847,16 11,16 L8,16 Z"
-                                                                            fill="#000000" fill-rule="nonzero" />
-                                                                    </g>
-                                                                </svg>
-                                                            </span>
-                                                        </div>
-                                                    </a>
-                                                </div>
-                                                <div class="d-flex flex-column">
-                                                    <div class="">
-                                                        <a href="javascript:void(0);" data-row-id="806"
-                                                            class="text-dark fw-bolder text-hover-primary fs-6 show-application-detail">Pro</a>
-                                                    </div>
-                                                    <a href="javascript:void(0);" data-row-id="806"
-                                                        class="text-muted fw-bold d-block fs-7 text-hover-primary show-application-detail">Pro
-                                                        service</a>
-                                                </div>
-                                            </td>
-                                            <td class="text-dark fs-6 fw-bolder" style="padding-left: 5em;">20</td>
-                                            <td class="">
-                                                <div class="d-flex flex-column">
-                                                    <span class="text-dark fw-bolder fs-6">8,999 INR</a>
-                                                        <span class="text-muted fw-bold d-block fs-7">Per month</a>
-                                                </div>
-                                            </td>
-                                            <td class="text-dark fs-6 fw-bolder" style="padding-left: .5em!important;">2
-                                            </td>
-                                            <td>
-                                                <span class="text-dark fs-6 fw-bolder">Added</span>
-                                            </td>
-                                        </tr>
-                                    </tbody>
-                                </table>
-                            </div>
-                            <!--end::Table-->
-                        </div>
-                        <!--end::Resume access-->
-
-                        <!--begin::Bench activation-->
-                        <!--end::Bench activation-->
-                    </div>
-                    <!--end::card body-->
-                </div>
-                <!--end::card-->
+                <span class="text-gray-500 fs-7">Track your operational and sales coin transactions</span>
             </div>
         </div>
+        <div>
+            <a href="{{ url('service_company/subscribe') }}"
+               class="btn btn-sm btn-light-primary fw-bold fs-7">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-1" style="vertical-align:-2px"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+                View Coin Usage Table
+            </a>
+        </div>
     </div>
-    <!--end::Content-->
+</div>
+
+{{-- Main Content --}}
+<div class="content d-flex flex-column flex-column-fluid pt-2 pb-0" id="kt_content">
+    <div class="post d-flex flex-column-fluid" id="kt_post">
+        <div id="kt_content_container" class="container-fluid px-3">
+            <div class="card shadow-sm">
+
+                {{-- Tab Navigation --}}
+                <div class="card-header card-header-tabs-line border-bottom-0 pt-0 px-5">
+                    <div class="card-toolbar">
+                        <ul class="nav nav-tabs nav-tabs-line nav-tabs-bold nav-tabs-line-3x" role="tablist">
+                            <li class="nav-item me-3">
+                                <a class="nav-link txlog-tab active" href="#" data-pagetype="operationaltab" id="tab-operational">
+                                    <span class="nav-text fw-bold">
+                                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-1" style="vertical-align:-1px"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg>
+                                        Operational Coins
+                                    </span>
+                                </a>
+                            </li>
+                            <li class="nav-item me-3">
+                                <a class="nav-link txlog-tab" href="#" data-pagetype="salestab" id="tab-sales">
+                                    <span class="nav-text fw-bold">
+                                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-1" style="vertical-align:-1px"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                                        Sales Coins
+                                    </span>
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                    {{-- Summary Stats (right side of header) --}}
+                    <div class="card-toolbar ms-auto" id="txlog-header-stats" style="gap:12px;display:flex;align-items:center;padding: 10px 0;">
+                        <div class="d-flex align-items-center gap-2 px-3 py-2 rounded" style="background:#f9fafb;border:1px solid #f1f1f4;">
+                            <span style="width:8px;height:8px;border-radius:50%;background:#50cd89;display:inline-block;"></span>
+                            <span class="fs-7 fw-bold text-gray-600">Credit: <span id="stat-credit" class="text-success">—</span></span>
+                        </div>
+                        <div class="d-flex align-items-center gap-2 px-3 py-2 rounded" style="background:#f9fafb;border:1px solid #f1f1f4;">
+                            <span style="width:8px;height:8px;border-radius:50%;background:#f1416c;display:inline-block;"></span>
+                            <span class="fs-7 fw-bold text-gray-600">Debit: <span id="stat-debit" class="text-danger">—</span></span>
+                        </div>
+                        <div class="d-flex align-items-center gap-2 px-3 py-2 rounded" style="background:#f9fafb;border:1px solid #f1f1f4;">
+                            <span style="width:8px;height:8px;border-radius:50%;background:#009ef7;display:inline-block;"></span>
+                            <span class="fs-7 fw-bold text-gray-600">Total: <span id="stat-total" class="text-primary">—</span></span>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- Filter Bar --}}
+                <div class="txlog-filter-bar">
+
+                    {{-- Search --}}
+                    <div class="txlog-filter-group">
+                        <span class="txlog-filter-label">Search</span>
+                        <div class="txlog-search-wrap">
+                            <span class="search-ico">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                            </span>
+                            <input type="text" id="txlog-search" class="form-control"
+                                   placeholder="Event or user name…" style="width:230px;">
+                        </div>
+                    </div>
+
+                    {{-- Date From --}}
+                    <div class="txlog-filter-group">
+                        <span class="txlog-filter-label">From Date</span>
+                        <input type="date" id="txlog-date-from" class="form-control" style="width:148px;">
+                    </div>
+
+                    {{-- Date To --}}
+                    <div class="txlog-filter-group">
+                        <span class="txlog-filter-label">To Date</span>
+                        <input type="date" id="txlog-date-to" class="form-control" style="width:148px;">
+                    </div>
+
+                    {{-- Preset chips --}}
+                    <div class="txlog-filter-group">
+                        <span class="txlog-filter-label">Quick Range</span>
+                        <div class="txlog-preset-chips">
+                            <button class="txlog-chip active-chip" data-preset="this_month">This Month</button>
+                            <button class="txlog-chip" data-preset="last_month">Last Month</button>
+                            <button class="txlog-chip" data-preset="last_7">7 Days</button>
+                            <button class="txlog-chip" data-preset="all">All Time</button>
+                        </div>
+                    </div>
+
+                    {{-- Type --}}
+                    <div class="txlog-filter-group">
+                        <span class="txlog-filter-label">Type</span>
+                        <select id="txlog-type" class="form-select" style="width:130px;">
+                            <option value="">All Types</option>
+                            <option value="credit">Credit</option>
+                            <option value="debit">Debit</option>
+                        </select>
+                    </div>
+
+
+                    {{-- Reset --}}
+                    <div class="txlog-filter-group" style="justify-content:flex-end;">
+                        <span class="txlog-filter-label" style="visibility:hidden;">x</span>
+                        <button id="txlog-reset" class="btn-txreset">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+                            Reset
+                        </button>
+                    </div>
+
+                </div>
+
+                {{-- Table Column Headers --}}
+                <div class="txlog-table-header txlog-grid" id="txlog-table-header">
+                    <div></div>
+                    <div class="th tx-col-datetime">Date &amp; Time</div>
+                    <div class="th tx-col-event">Event Description</div>
+                    <div class="th tx-col-actor">Initiated By</div>
+                    <div class="th tx-col-amount">Amount</div>
+                    <div class="th tx-col-bal">Balance</div>
+                </div>
+
+                {{-- Timeline Content --}}
+                <div class="txlog-timeline" id="txlog-content">
+                    <div class="txlog-loading" id="txlog-loader">
+                        <div class="txlog-spinner"></div>
+                        <span>Loading transactions…</span>
+                    </div>
+                </div>
+
+                {{-- Pagination --}}
+                <div class="txlog-pagination" id="txlog-pagination" style="display:none;"></div>
+
+            </div>{{-- /card --}}
+        </div>
+    </div>
+</div>
+
 @endsection
 
 @push('footer-script')
-    <script src="https://js.stripe.com/v3/"></script>
-    <script src="{{ asset('assets/node_modules/switchery/dist/switchery.min.js') }}<?php echo TM_VERSION; ?>"></script>
-    <script>
-        var elems = Array.prototype.slice.call(document.querySelectorAll('.js-switch'));
+<script>
+/**
+ * Transaction Log V2 — AJAX-driven professional timeline.
+ * Defaults to current month date range on load.
+ * Metronic-compatible · tenancy scoped server-side.
+ */
+(function () {
+    'use strict';
 
-        elems.forEach(function(html) {
-            var switchery = new Switchery(html, {
-                size: 'medium'
-            });
+    // Subdirectory-agnostic AJAX URL
+    var dataUrl = window.location.href
+        .split('?')[0]
+        .replace(/\/+$/, '')
+        .replace(/transection-log$/, 'transection-log/data');
+
+    // ── Date helpers ──────────────────────────────────────────────────────────
+    function pad(n) { return String(n).padStart(2, '0'); }
+    function fmt(d) { return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()); }
+
+    function getMonthRange(offset) {
+        var now  = new Date();
+        var year = now.getFullYear();
+        var mon  = now.getMonth() + offset;      // 0-based, supports negative
+        var first = new Date(year, mon, 1);
+        var last  = new Date(year, mon + 1, 0);  // day 0 = last day of prev month
+        return { from: fmt(first), to: fmt(last) };
+    }
+
+    function thisMonthRange() { return getMonthRange(0); }
+    function lastMonthRange() { return getMonthRange(-1); }
+
+    function last7Range() {
+        var to   = new Date();
+        var from = new Date();
+        from.setDate(to.getDate() - 6);
+        return { from: fmt(from), to: fmt(to) };
+    }
+
+    // ── State ─────────────────────────────────────────────────────────────────
+    var range  = thisMonthRange();   // default = current month
+    var state  = {
+        pagetype        : 'operationaltab',
+        search          : '',
+        date_from       : range.from,
+        date_to         : range.to,
+        transection_type: '',
+        per_page        : 10,
+        page            : 1,
+    };
+    var debounceTimer     = null;
+    var currentController = null; // Controller to abort pending AJAX requests and prevent duplicate/racing responses
+
+    // ── DOM refs ──────────────────────────────────────────────────────────────
+    var elContent    = document.getElementById('txlog-content');
+    var elLoader     = document.getElementById('txlog-loader');
+    var elPagination = document.getElementById('txlog-pagination');
+    var elSearch     = document.getElementById('txlog-search');
+    var elDateFrom   = document.getElementById('txlog-date-from');
+    var elDateTo     = document.getElementById('txlog-date-to');
+    var elType       = document.getElementById('txlog-type');
+    var elPerPage    = document.getElementById('txlog-per-page');
+    var elReset      = document.getElementById('txlog-reset');
+    var elStatCredit = document.getElementById('stat-credit');
+    var elStatDebit  = document.getElementById('stat-debit');
+    var elStatTotal  = document.getElementById('stat-total');
+
+    // ── Parse URL search parameters for direct deep-linking / page refresh ────
+    /**
+     * Parse query string parameters (pagetype, page, search, date_from, date_to, transection_type, per_page)
+     * so direct URL loads retain active state and UI controls synchronize immediately.
+     */
+    var urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.has('pagetype')) {
+        var pt = urlParams.get('pagetype');
+        if (pt === 'salestab' || pt === 'operationaltab') {
+            state.pagetype = pt;
+        }
+    }
+    if (urlParams.has('page')) {
+        var pg = parseInt(urlParams.get('page'), 10);
+        if (!isNaN(pg) && pg > 0) state.page = pg;
+    }
+    if (urlParams.has('search')) {
+        state.search = urlParams.get('search');
+    }
+    if (urlParams.has('date_from')) {
+        state.date_from = urlParams.get('date_from');
+    }
+    if (urlParams.has('date_to')) {
+        state.date_to = urlParams.get('date_to');
+    }
+    if (urlParams.has('transection_type')) {
+        state.transection_type = urlParams.get('transection_type');
+    }
+    if (urlParams.has('per_page')) {
+        var pp = parseInt(urlParams.get('per_page'), 10);
+        if (!isNaN(pp) && pp > 0) state.per_page = pp;
+    }
+
+    // ── Sync UI inputs & active states with initial state ─────────────────────
+    document.querySelectorAll('.txlog-tab').forEach(function(t) {
+        t.classList.toggle('active', t.getAttribute('data-pagetype') === state.pagetype);
+    });
+    if (elSearch) elSearch.value = state.search;
+    if (elDateFrom) elDateFrom.value = state.date_from;
+    if (elDateTo) elDateTo.value = state.date_to;
+    if (elType) elType.value = state.transection_type;
+    if (elPerPage) elPerPage.value = state.per_page;
+
+    // Highlight active preset chip if dates match standard range
+    var isThisMonth = state.date_from === range.from && state.date_to === range.to;
+    var lastM       = lastMonthRange();
+    var isLastMonth = state.date_from === lastM.from && state.date_to === lastM.to;
+    var l7          = last7Range();
+    var isLast7     = state.date_from === l7.from && state.date_to === l7.to;
+    var isAll       = state.date_from === '' && state.date_to === '';
+
+    document.querySelectorAll('.txlog-chip').forEach(function(c) {
+        var p = c.getAttribute('data-preset');
+        var act = (p === 'this_month' && isThisMonth) ||
+                  (p === 'last_month' && isLastMonth) ||
+                  (p === 'last_7' && isLast7) ||
+                  (p === 'all' && isAll);
+        c.classList.toggle('active-chip', act);
+    });
+
+    // ── Fetch ─────────────────────────────────────────────────────────────────
+    /**
+     * Primary AJAX request executor for transaction logs.
+     * Reused for initial page load, tab switches, search, filters, pagination, and resets.
+     * Cancels any pending request in-flight to prevent duplicate/stale responses.
+     */
+    function fetchData() {
+        showLoader();
+
+        // Abort previous in-flight request if present
+        if (currentController) {
+            currentController.abort();
+        }
+        if (typeof AbortController !== 'undefined') {
+            currentController = new AbortController();
+        }
+
+        var params = new URLSearchParams({
+            pagetype         : state.pagetype,
+            search           : state.search,
+            date_from        : state.date_from,
+            date_to          : state.date_to,
+            transection_type : state.transection_type,
+            per_page         : state.per_page,
+            page             : state.page,
         });
 
-        $('#package-switch').change(function() {
-            let checked = $(this).is(":checked");
-            if (checked) {
-                $('.monthly-packages').hide();
-                $('.annual-packages').fadeIn('slow');
+        var fetchOptions = {
+            headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' }
+        };
+        if (currentController) {
+            fetchOptions.signal = currentController.signal;
+        }
+
+        fetch(dataUrl + '?' + params.toString(), fetchOptions)
+        .then(function(r) {
+            if (!r.ok) {
+                throw new Error('HTTP status ' + r.status);
+            }
+            return r.json();
+        })
+        .then(function(json) {
+            if (json.success) {
+                renderItems(json.data);
+                renderPagination(json);
+                updateStats(json);
             } else {
-                $('.annual-packages').hide();
-                $('.monthly-packages').fadeIn('slow');
+                showError('Unable to load transactions. Please try again.');
             }
         })
-    </script>
+        .catch(function(err) {
+            if (err.name === 'AbortError') {
+                return; // Suppress UI error for aborted redundant request
+            }
+            showError('A network error occurred. Please refresh the page.');
+        });
+    }
+
+    // ── Stats mini-update ─────────────────────────────────────────────────────
+    function updateStats(json) {
+        var credit = 0, debit = 0, total = json.total || 0;
+        if (json.stats) {
+            credit = parseFloat(json.stats.total_credits || 0);
+            debit  = parseFloat(json.stats.total_debits  || 0);
+        } else {
+            (json.data || []).forEach(function(row) {
+                if (row.transection_type === 'credit') credit += parseFloat(row.display_coins) || 0;
+                else debit += parseFloat(row.display_coins) || 0;
+            });
+        }
+        if (elStatCredit) elStatCredit.textContent = credit.toLocaleString(undefined, {minimumFractionDigits: 0, maximumFractionDigits: 2}) + ' C';
+        if (elStatDebit)  elStatDebit.textContent  = debit.toLocaleString(undefined, {minimumFractionDigits: 0, maximumFractionDigits: 2})  + ' C';
+        if (elStatTotal)  elStatTotal.textContent  = total + ' rows';
+    }
+
+    // ── Render rows ───────────────────────────────────────────────────────────
+    function renderItems(items) {
+        elLoader.style.display = 'none';
+        if (!items || items.length === 0) {
+            elContent.innerHTML = emptyState();
+            elPagination.style.display = 'none';
+            return;
+        }
+
+        var html = '';
+        items.forEach(function(row) {
+            var dateStr   = row.formatted_date || '';
+            var timeStr   = row.formatted_time || '';
+
+            if (!dateStr && row.created_at) {
+                var cleanIso = String(row.created_at).replace(' ', 'T');
+                var d = new Date(cleanIso);
+                if (!isNaN(d.getTime())) {
+                    dateStr = d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+                    timeStr = d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', hour12: true }).toUpperCase();
+                } else {
+                    dateStr = row.created_at;
+                }
+            }
+            var isCredit  = row.transection_type === 'credit';
+            var isSettle  = row.settlement_coins && parseFloat(row.settlement_coins) > 0;
+
+            var iconClass = isSettle ? 'ri-settle' : (isCredit ? 'ri-credit' : 'ri-debit');
+            var iconColor = isSettle ? '#f6c000'   : (isCredit ? '#50cd89'   : '#f1416c');
+            var iconSvg   = isCredit
+                ? '<svg viewBox="0 0 24 24" fill="none" stroke="'+iconColor+'" stroke-width="2"><polyline points="18 15 12 9 6 15"/></svg>'
+                : '<svg viewBox="0 0 24 24" fill="none" stroke="'+iconColor+'" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>';
+
+            var typeBadge = '<span class="tx-badge '+(isCredit?'credit':'debit')+'"><span class="dot"></span>'+(isCredit?'Credit':'Debit')+'</span>';
+            var settleBdg = isSettle
+                ? ' <span class="tx-badge settle"><span class="dot"></span>Settlement</span>'
+                : '';
+
+            var amtClass  = isCredit ? 'amt-credit' : 'amt-debit';
+            var amtSign   = isCredit ? '+' : '−';
+            var displayAmt = parseFloat(row.display_coins || 0);
+            var displayBal = parseFloat(row.balance_coins || 0);
+
+            html += '<div class="txlog-item txlog-grid">' +
+                '<div class="txlog-ic-col">' +
+                    '<div class="txlog-row-icon '+iconClass+'">' + iconSvg + '</div>' +
+                '</div>' +
+                '<div class="tx-col-datetime">' +
+                    '<div class="cell-main">' + esc(dateStr) + '</div>' +
+                    '<div class="cell-sub">' + esc(timeStr) + '</div>' +
+                '</div>' +
+                '<div class="tx-col-event">' +
+                    '<div class="cell-main" style="font-size:12px;">' + esc(row.event || '—') + '</div>' +
+                    '<div class="cell-sub" style="margin-top:3px;">' + typeBadge + settleBdg + '</div>' +
+                '</div>' +
+                '<div class="tx-col-actor">' +
+                    '<div class="cell-main">' + esc(row.actor_name) + '</div>' +
+                    '<div class="cell-sub">' + esc(row.actor_company) + '</div>' +
+                '</div>' +
+                '<div class="tx-col-amount">' +
+                    '<div class="'+amtClass+'">' + amtSign + ' ' + displayAmt.toLocaleString(undefined,{minimumFractionDigits:0,maximumFractionDigits:2}) + '</div>' +
+                    '<div class="cell-sub">Coins</div>' +
+                '</div>' +
+                '<div class="tx-col-bal">' +
+                    '<div class="bal-num">' + displayBal.toLocaleString(undefined,{minimumFractionDigits:0,maximumFractionDigits:2}) + '</div>' +
+                    '<div class="cell-sub">Balance</div>' +
+                '</div>' +
+            '</div>';
+        });
+        elContent.innerHTML = html;
+    }
+
+    // ── Pagination ────────────────────────────────────────────────────────────
+    function renderPagination(json) {
+        if (json.last_page <= 1 && (!json.from)) {
+            elPagination.style.display = 'none';
+            return;
+        }
+        elPagination.style.display = 'flex';
+
+        var from = json.from || 0, to = json.to || 0;
+        var html = '<div class="pg-info">Showing <strong>' + from + '&ndash;' + to + '</strong> of <strong>' + json.total + '</strong> records</div><div style="display:flex;gap:3px;">';
+
+        html += pgLink('&lsaquo;', json.current_page - 1, json.current_page <= 1);
+
+        var start = Math.max(1, json.current_page - 2);
+        var end   = Math.min(json.last_page, json.current_page + 2);
+        if (start > 1) {
+            html += pgLink('1', 1, false);
+            if (start > 2) html += '<span class="page-link disabled">&hellip;</span>';
+        }
+        for (var i = start; i <= end; i++) {
+            html += pgLink(i, i, false, i === json.current_page);
+        }
+        if (end < json.last_page) {
+            if (end < json.last_page - 1) html += '<span class="page-link disabled">&hellip;</span>';
+            html += pgLink(json.last_page, json.last_page, false);
+        }
+
+        html += pgLink('&rsaquo;', json.current_page + 1, json.current_page >= json.last_page);
+        html += '</div>';
+
+        elPagination.innerHTML = html;
+        elPagination.querySelectorAll('.page-link[data-pg]').forEach(function(el) {
+            el.addEventListener('click', function(e) {
+                e.preventDefault();
+                if (el.classList.contains('disabled') || el.classList.contains('active')) return;
+                state.page = parseInt(el.getAttribute('data-pg'), 10);
+                fetchData();
+            });
+        });
+    }
+
+    function pgLink(label, pg, disabled, active) {
+        var cls = 'page-link' + (disabled ? ' disabled' : '') + (active ? ' active' : '');
+        return '<a href="#" class="' + cls + '" data-pg="' + pg + '">' + label + '</a>';
+    }
+
+    // ── Preset chips ──────────────────────────────────────────────────────────
+    function applyPreset(preset) {
+        var r;
+        document.querySelectorAll('.txlog-chip').forEach(function(c) {
+            c.classList.toggle('active-chip', c.getAttribute('data-preset') === preset);
+        });
+        if (preset === 'this_month')  r = thisMonthRange();
+        else if (preset === 'last_month') r = lastMonthRange();
+        else if (preset === 'last_7')  r = last7Range();
+        else { r = { from: '', to: '' }; }   // all time
+
+        if (elDateFrom) elDateFrom.value = r.from;
+        if (elDateTo) elDateTo.value   = r.to;
+        state.date_from  = r.from;
+        state.date_to    = r.to;
+        state.page = 1;
+        fetchData();
+    }
+
+    document.querySelectorAll('.txlog-chip').forEach(function(chip) {
+        chip.addEventListener('click', function() {
+            applyPreset(chip.getAttribute('data-preset'));
+        });
+    });
+
+    // ── Helpers ───────────────────────────────────────────────────────────────
+    function showLoader() {
+        elLoader.style.display = 'flex';
+        elContent.innerHTML = '';
+        elContent.appendChild(elLoader);
+        elPagination.style.display = 'none';
+    }
+    function showError(msg) {
+        elLoader.style.display = 'none';
+        elContent.innerHTML = '<div class="txlog-empty"><div class="empty-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></div><p>' + esc(msg) + '</p></div>';
+    }
+    function emptyState() {
+        return '<div class="txlog-empty"><div class="empty-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg></div><p>No transactions found</p><div class="empty-sub">Try adjusting your filters or date range</div></div>';
+    }
+    function esc(str) {
+        return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+    function resetPage() { state.page = 1; }
+
+    // ── Events ────────────────────────────────────────────────────────────────
+    document.querySelectorAll('.txlog-tab').forEach(function(tab) {
+        tab.addEventListener('click', function(e) {
+            e.preventDefault();
+            var targetType = tab.getAttribute('data-pagetype');
+            if (state.pagetype === targetType && tab.classList.contains('active')) {
+                return; // Ignore redundant clicks on currently active tab
+            }
+            document.querySelectorAll('.txlog-tab').forEach(function(t) { t.classList.remove('active'); });
+            tab.classList.add('active');
+            state.pagetype = targetType;
+            resetPage();
+            fetchData();
+        });
+    });
+
+    if (elSearch) {
+        elSearch.addEventListener('input', function() {
+            clearTimeout(debounceTimer);
+            debounceTimer = setTimeout(function() {
+                state.search = elSearch.value.trim();
+                // Clear preset highlight on manual search / filter change if dates modified
+                resetPage(); fetchData();
+            }, 450);
+        });
+    }
+
+    if (elDateFrom) {
+        elDateFrom.addEventListener('change', function() {
+            state.date_from = elDateFrom.value;
+            document.querySelectorAll('.txlog-chip').forEach(function(c) { c.classList.remove('active-chip'); });
+            resetPage(); fetchData();
+        });
+    }
+
+    if (elDateTo) {
+        elDateTo.addEventListener('change', function() {
+            state.date_to = elDateTo.value;
+            document.querySelectorAll('.txlog-chip').forEach(function(c) { c.classList.remove('active-chip'); });
+            resetPage(); fetchData();
+        });
+    }
+
+    if (elType) {
+        elType.addEventListener('change', function() {
+            state.transection_type = elType.value;
+            resetPage(); fetchData();
+        });
+    }
+
+    if (elPerPage) {
+        elPerPage.addEventListener('change', function() {
+            state.per_page = parseInt(elPerPage.value, 10);
+            resetPage(); fetchData();
+        });
+    }
+
+    if (elReset) {
+        elReset.addEventListener('click', function() {
+            var r        = thisMonthRange();
+            if (elSearch) elSearch.value   = '';
+            if (elDateFrom) elDateFrom.value = r.from;
+            if (elDateTo) elDateTo.value   = r.to;
+            if (elType) elType.value     = '';
+            if (elPerPage) elPerPage.value  = '10';
+            state.search     = '';
+            state.date_from  = r.from;
+            state.date_to    = r.to;
+            state.transection_type = '';
+            state.per_page   = 10;
+            document.querySelectorAll('.txlog-chip').forEach(function(c) {
+                c.classList.toggle('active-chip', c.getAttribute('data-preset') === 'this_month');
+            });
+            resetPage(); fetchData();
+        });
+    }
+
+    // ── Initial load ──────────────────────────────────────────────────────────
+    fetchData();
+
+})();
+</script>
 @endpush

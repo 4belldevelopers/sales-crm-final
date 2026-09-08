@@ -2,12 +2,13 @@
 
 namespace App\Models;
 
-// use Trebol\Entrust\EntrustRole;
+use App\Traits\BelongsToTenant;
 use Illuminate\Database\Eloquent\Builder;
 use Spatie\Permission\Models\Role as SpatieRole;
 
 class Role extends SpatieRole
 {
+    use BelongsToTenant;
 
     protected $fillable = ['name', 'guard_name', 'company_id','display_name','description','priority','manual_add'];
 

@@ -83,8 +83,12 @@ if (!function_exists('getDomainSpecificUrl')) {
             if ($company) {
                 $url = str_replace(request()->getHost(), $company->sub_domain, $url);
                 $url = str_replace('www.', '', $url);
-                // Replace https to http for sub-domain to
-                return $url = str_replace('https', 'http', $url);
+                // Only downgrade to http for subdomain in non-production (local dev may lack subdomain certs).
+                // In production, preserve HTTPS to prevent token exposure over plaintext. (audit M4)
+                if (! app()->isProduction()) {
+                    return $url = str_replace('https', 'http', $url);
+                }
+                return $url;
             }
 
             // If there is no company and url has login means
@@ -130,5 +134,12 @@ if (!function_exists('recruit_plugins')) {
             session(['recruit_plugins' => array_keys($plugins)]);
         }
         return session('recruit_plugins');
+    }
+}
+
+if (! function_exists('tenant_table')) {
+    function tenant_table(string $table): \Illuminate\Database\Query\Builder
+    {
+        return \App\Helper\TenantDB::table($table);
     }
 }

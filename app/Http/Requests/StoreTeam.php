@@ -2,8 +2,14 @@
 
 namespace App\Http\Requests;
 
-use Illuminate\Foundation\Http\FormRequest;
-
+/**
+ * Form Request: Store Team Member Invitation
+ *
+ * Intent: Validates incoming request parameters when inviting a new team member.
+ *
+ * Author: Antigravity AI
+ * Date: August 14, 2026
+ */
 class StoreTeam extends CoreRequest
 {
     /**
@@ -24,12 +30,27 @@ class StoreTeam extends CoreRequest
     public function rules()
     {
         return [
-            		'name' 			=> 'required',
-            		'email' 		=> 'required|unique:users,email',
-            		'password' 		=> 'required',
-            		'image' 		=> 'image|max:2048',
-            		'mobile' 		=> 'required',
-            		'calling_code' 	=> 'required_with:mobile'
+            'name' => 'required|string|max:191',
+            'email' => 'required|email:rfc,dns|disposable_email',
+            'role_id' => 'required|integer',
+            'logo' => 'nullable|image|max:2048',
+        ];
+    }
+
+    /**
+     * Custom validation messages.
+     *
+     * @return array
+     */
+    public function messages()
+    {
+        return [
+            'name.required' => 'Full name is required',
+            'email.required' => 'Email is required',
+            'email.email' => 'Please enter a valid email address',
+            'email.disposable_email' => 'Temporary/disposable emails are not allowed',
+            'role_id.required' => 'Please select a role',
+            'logo.max' => 'Logo file size must not exceed 2MB',
         ];
     }
 }

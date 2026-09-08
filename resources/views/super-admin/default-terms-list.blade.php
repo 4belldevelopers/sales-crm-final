@@ -100,7 +100,7 @@
                                         <td><a href="javascript:void(0);"
                                                 class="text-dark fw-bolder text-hover-primary d-block fs-6">Vendor Terms</a>
                                         </td>
-                                       
+
                                         <td> For Vendors</td>
                                         <td class="">
                                             <a href="{{ route('superadmin.company.defaultTerms',[encrypt(1)]) }}"
@@ -114,7 +114,7 @@
                                                 class="text-dark fw-bolder text-hover-primary d-block fs-6">2</a>
                                         </td>
                                         <td><a href="javascript:void(0);"
-                                                class="text-dark fw-bolder text-hover-primary d-block fs-6">Candidate Offer terms</a>
+                                                class="text-dark fw-bolder text-hover-primary d-block fs-6">Fulltime Offer Letter</a>
                                         </td>
                                        
                                         <td> For Candidates</td>
@@ -253,6 +253,53 @@
                                             </a>
                                         </td>
                                     </tr>  
+                                    <tr>
+                                        <td><a href="javascript:void(0);"
+                                                class="text-dark fw-bolder text-hover-primary d-block fs-6">11</a>
+                                        </td>
+                                        <td><a href="javascript:void(0);"
+                                                class="text-dark fw-bolder text-hover-primary d-block fs-6">Internship Offer Letter</a>
+                                        </td>
+                                       
+                                        <td> For Candidates</td>
+                                        <td class="">
+                                            <a href="{{ route('superadmin.company.defaultTerms',[encrypt(11)]) }}"
+                                                class="" data-toggle="tooltip" data-original-title="Edit">
+                                                <i class="fa fa-edit text-primary fs-4" aria-hidden="true">Edit/View</i>
+                                            </a>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td><a href="javascript:void(0);"
+                                                class="text-dark fw-bolder text-hover-primary d-block fs-6">12</a>
+                                        </td>
+                                        <td><a href="javascript:void(0);"
+                                                class="text-dark fw-bolder text-hover-primary d-block fs-6">Contract Offer Letter</a>
+                                        </td>
+                                       
+                                        <td> For Candidates</td>
+                                        <td class="">
+                                            <a href="{{ route('superadmin.company.defaultTerms',[encrypt(12)]) }}"
+                                                class="" data-toggle="tooltip" data-original-title="Edit">
+                                                <i class="fa fa-edit text-primary fs-4" aria-hidden="true">Edit/View</i>
+                                            </a>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td><a href="javascript:void(0);"
+                                                class="text-dark fw-bolder text-hover-primary d-block fs-6">13</a>
+                                        </td>
+                                        <td><a href="javascript:void(0);"
+                                                class="text-dark fw-bolder text-hover-primary d-block fs-6">Agency Commercial Defaults</a>
+                                        </td>
+                                        <td> For Agencies</td>
+                                        <td class="">
+                                            <a href="{{ route('superadmin.company.defaultTerms',[encrypt(13)]) }}"
+                                                class="" data-toggle="tooltip" data-original-title="Edit">
+                                                <i class="fa fa-edit text-primary fs-4" aria-hidden="true">Edit/View</i>
+                                            </a>
+                                        </td>
+                                    </tr>
                                 </tbody>
                             </table>
                         </div>

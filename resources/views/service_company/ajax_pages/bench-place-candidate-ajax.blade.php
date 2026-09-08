@@ -48,55 +48,7 @@
                             $bgTextDecore = 'fs-3 bg-light-secondary text-dark';
                         }
 
-                        $flag = 0;
-                        $duplicate = 0;
-                        $duplicate = $row->duplicate;
-                        $company_id = auth()->user()->roles[0]->company_id;
-                        $app_duplicate = auth()->user()->company->app_duplicate;
-                        $app_duplicate_days = auth()->user()->company->app_duplicate_days;
-
-                        $covid = '';
-                        if ($duplicate == 1) {
-                            if ($app_duplicate == 1 || $app_duplicate == 2) {
-                                if ($app_duplicate == 1) {
-                                    $application_cnt = DB::table('job_applications')
-                                        ->select('*')
-                                        ->where('company_id', $company_id)
-                                        ->where('job_id', $row->job_id)
-                                        ->where('email', $row->email)
-                                        ->orWhere('phone', $row->phone)
-                                        ->where(
-                                            'job_applications.created_at',
-                                            '>',
-                                            DB::raw('DATE_SUB(CURDATE(), INTERVAL ' . @$app_duplicate_days . ' DAY)'),
-                                        )
-                                        ->orderby('job_applications.id', 'DESC')
-                                        ->count();
-                                    $flag = $application_cnt > 1 ? 1 : 0;
-                                } elseif ($app_duplicate == 2) {
-                                    $application_cnt = DB::table('job_applications')
-                                        ->select('job_applications.id')
-                                        ->where('company_id', $company_id)
-                                        ->where('job_applications.email', $row->email)
-                                        ->orWhere('phone', $row->phone)
-                                        ->where(
-                                            'job_applications.created_at',
-                                            '>',
-                                            DB::raw('DATE_SUB(CURDATE(), INTERVAL ' . @$app_duplicate_days . ' DAY)'),
-                                        )
-                                        ->orderby('job_applications.id', 'DESC')
-                                        ->count();
-                                    $flag = $application_cnt > 1 ? 1 : 0;
-                                } else {
-                                    $flag = 0;
-                                }
-                            } else {
-                                $flag = 0;
-                            }
-                        } else {
-                            $flag = 0;
-                        }
-
+                        $flag = (!empty(@$row->is_duplicate) || @$row->duplicate == 1) ? 1 : 0;
                         $company_id = auth()->user()->company_id;
                         $profile_sidebar_css = 'show-application-detail';
                         if ($row->thirdparty_company_id > 0 && $row->thirdparty_company_id == $company_id) {
@@ -150,15 +102,14 @@
                         $nameLinkClass = $flag == 1 ? 'text-danger' : 'text-dark';
                         $subLinkClass = $flag == 1 ? 'text-danger' : 'text-muted';
 
-                        // Experience + current city — both are real fields already stored on the
-                        // ES candidate document (job_applications.total_exp / .city), same source
-                        // used by the sort/filter logic elsewhere in this controller.
                         $expLocBits = [];
                         if (!empty(@$row->total_exp)) {
                             $expLocBits[] = rtrim(@$row->total_exp, '.') . ' Yrs';
                         }
                         if (!empty(@$row->city)) {
                             $expLocBits[] = ucwords(@$row->city);
+                        } elseif (!empty(@$row->city_name)) {
+                            $expLocBits[] = ucwords(@$row->city_name);
                         }
                         $expLocLine = implode(' &middot; ', $expLocBits);
 
@@ -168,7 +119,7 @@
                                 </div>
                                 <div class="d-flex flex-column">
                                     <a href="javascript:void(0);" data-row-id="' . @$row->wiseId . '" class="' . $nameLinkClass . ' fw-bolder text-hover-primary fs-6 ' . $profile_sidebar_css . '" data-toggle="tooltip" title="' . ucwords(@$row->full_name) . '">' .
-                                        ucwords(mb_substr(@$row->full_name, 0, 22)) . $covid . $tredmark . '</a>
+                                        ucwords(mb_substr(@$row->full_name, 0, 22)) . $tredmark . '</a>
                                     <a href="javascript:void(0);" data-row-id="' . @$row->wiseId . '" class="' . $subLinkClass . ' fw-bold d-block fs-8 text-hover-primary ' . $profile_sidebar_css . '" data-toggle="tooltip" title="' . ucwords(@$row->current_designation) . '">' .
                                         ucwords(mb_substr(@$row->current_designation, 0, 24)) . '</a>
                                     <span class="text-muted fw-semibold fs-9 d-block">' . $expLocLine . '</span>
@@ -178,42 +129,19 @@
                     }
                 @endphp
             </td>
-            {{-- Placement Timeline: the full Bench -> Offer -> Joined -> Placed journey.
-                 Bench date = job_applications.created_at (the table backing this ES index),
-                 looked up by the candidate's own primary key — one indexed PK lookup, same
-                 cost profile as the duplicate-check / job_assign lookups already done per row
-                 above. Joined date = of_joined_date (already real). Offer date comes from the
-                 Offer Tracker module: offer_job_applications.application_id -> offer_id, then
-                 the offer_create_main_tds row for that offer with candidate_status = 1
-                 ("release", per the schema comment / the same enum ServiceCompanyApplicationOfferController
-                 already relies on for its Released KPI) — its created_at is the moment that
-                 offer version was released to the candidate. Placed = same event as Joined in
-                 this data model (there is no separate "placed" timestamp distinct from
-                 joining), so it reuses the joined date. --}}
             <td>
                 @php
                     $joinedRaw = @$row->of_joined_date;
                     $hasJoined = !empty($joinedRaw) && $joinedRaw != '0000-00-00 00:00:00';
 
-                    // created_at is already indexed on the ES candidate doc (see
-                    // ElasticCandidatesIndex.php), so no extra DB query is needed here.
                     $benchRaw = @$row->created_at;
                     $hasBench = !empty($benchRaw);
 
-                    $offerRaw = null;
-                    if (!empty(@$row->candidate_id)) {
-                        $offerAppId = DB::table('offer_job_applications')->where('application_id', $row->candidate_id)->value('id');
-                        if ($offerAppId) {
-                            $offerRaw = DB::table('offer_create_main_tds')
-                                ->where('offer_id', $offerAppId)
-                                ->where('candidate_status', 1)
-                                ->orderByDesc('id')
-                                ->value('created_at');
-                        }
-                    }
+                    // Denormalized offer release date from ES document
+                    $offerRaw = @$row->offer_released_at;
                     $hasOffer = !empty($offerRaw);
 
-                    $dateFmt = 'd M y'; // e.g. 02 May 26
+                    $dateFmt = 'd M y';
                     $benchLabel = $hasBench ? date($dateFmt, strtotime($benchRaw)) : '--';
                     $offerLabel = $hasOffer ? date($dateFmt, strtotime($offerRaw)) : '--';
                     $joinedLabel = $hasJoined ? date($dateFmt, strtotime($joinedRaw)) : '--';
@@ -233,7 +161,6 @@
                     $lineAfterJoined = $hasJoined ? 'is-done' : '';
 
                     if ($isBench) {
-                        // Bench candidates: 4-node timeline — Bench → Offer → Joined → Placed
                         $benchNodeCls  = $hasBench ? 'is-done' : 'is-static';
                         $lineAfterBench = $hasBench ? 'is-done' : '';
 
@@ -264,26 +191,11 @@
                             </div>';
                     } else {
                         // Non-bench candidates: 4-node timeline — Sourcing → Evaluation → Offer → Joined
-                        // Fetch latest date per stage from updateTimeline
-                        $tlAppId  = @$row->candidate_id;
-                        $tlJobId  = @$row->jobId;
-                        $tlRows   = ($tlAppId && $tlJobId)
-                            ? DB::table('updatetimeline')
-                                ->where('application_id', $tlAppId)
-                                ->where('job_id', $tlJobId)
-                                ->orderByDesc('id')
-                                ->get(['master_process_name', 'create_at'])
-                            : collect();
-
-                        // Latest date per stage (first match in DESC order = latest)
-                        $sourcingRaw  = optional($tlRows->firstWhere('master_process_name', 'Sourcing'))->create_at;
-                        $evalRaw      = optional($tlRows->first(fn($r) => in_array($r->master_process_name, ['Evaluation', 'InReview', 'Screening'])))->create_at;
-                        $tlOfferRaw   = optional($tlRows->firstWhere('master_process_name', 'Offered'))->create_at;
-                        $tlJoinedRaw  = optional($tlRows->firstWhere('master_process_name', 'Joined'))->create_at;
-
-                        // Fall back to previously resolved dates if updateTimeline has no entry
-                        $tlOfferRaw  = $tlOfferRaw  ?: $offerRaw;
-                        $tlJoinedRaw = $tlJoinedRaw ?: $joinedRaw;
+                        // Read stage dates directly from ES denormalized document fields
+                        $sourcingRaw  = @$row->sourcing_date;
+                        $evalRaw      = @$row->evaluation_date;
+                        $tlOfferRaw   = @$row->offer_released_at ?: $offerRaw;
+                        $tlJoinedRaw  = $joinedRaw;
 
                         $hasSourcing  = !empty($sourcingRaw);
                         $hasEval      = !empty($evalRaw);
@@ -303,7 +215,6 @@
                         $lineAfterTlOffer  = $hasTlOffer  ? 'is-done' : '';
                         $tlJoinedNodeCls   = $hasTlJoined ? 'is-done' : 'is-static';
 
-                        // Duration: Sourcing → Joined
                         if ($hasSourcing && $hasTlJoined) {
                             $durationDays = (int) floor(abs(\Carbon\Carbon::parse($sourcingRaw)->diffInSeconds(\Carbon\Carbon::parse($tlJoinedRaw))) / 86400);
                             $durationText = 'Total Duration: ' . $durationDays . ' Days';
@@ -341,24 +252,15 @@
                           </div>';
                 @endphp
             </td>
-            {{-- Client & Job Details: real job title / client / job-status --}}
+            {{-- Client & Job Details: read directly from ES candidate document _source --}}
             <td>
                 @php
-                    $removed_status = $icon = '';
-                    $job_title = ucwords(mb_substr($row->title, 0, 18));
-                    // client_name is already indexed on the ES candidate doc, so this reads
-                    // straight from it instead of the heavy companyDetailsByClient() aggregate
-                    // query (LEFT JOIN + ~15 SUM/CASE clauses) that used to run per row.
+                    $job_title = ucwords(mb_substr(@$row->title, 0, 18));
                     $client_title_name = @$row->client_name;
                     $client_name = ucwords(mb_substr($client_title_name, 0, 18));
 
-                    $job_status_get = GeneralMethod::jobDetails($row->jobId);
-                    $recommendation_id = $row->recommendation_id;
+                    $recommendation_id = @$row->recommendation_id;
 
-                    // Internal Client / Direct Client — same real client-relationship check the
-                    // job-status logic used before, just relabeled with this app's own existing
-                    // translation strings (messages.internal_client_tag / direct_clinet_tag),
-                    // the same ones the client-listing pages already use for this exact concept.
                     $recommendation_text = __('messages.direct_clinet_tag');
                     $recommendation_icon = 'fa-handshake';
                     $recommendation_cls = 'text-warning';
@@ -371,20 +273,18 @@
                         $recommendation_cls = 'text-primary';
                     }
 
-                    // job location — reuses the $job_status_get document already fetched above
-                    // for job status, so this adds no extra query.
-                    $jobLocationBits = array_filter([@$job_status_get->city, @$job_status_get->state]);
-                    $jobLocationLine = implode(', ', $jobLocationBits);
+                    // Read job location directly from ES document properties (location / city_name / state_name)
+                    $jobLocationLine = @$row->location ?: implode(', ', array_filter([@$row->city_name, @$row->state_name]));
 
                     echo '<div class="d-flex flex-column">
                             <span class="placed-detail-line"><i class="fa-solid fa-building text-muted"></i>
                                 <span class="text-muted fw-bold fs-8" data-toggle="tooltip" title="' . @$client_title_name . '">' . @$client_name . '</span>
                             </span>
                             <span class="placed-detail-line"><i class="fa-solid fa-briefcase text-muted"></i>
-                                <a href="javascript:void(0);" class="text-dark fw-bolder text-hover-primary fs-6" data-toggle="tooltip" title="' . $row->title . '">' . $job_title . '</a>
+                                <a href="javascript:void(0);" class="text-dark fw-bolder text-hover-primary fs-6" data-toggle="tooltip" title="' . @$row->title . '">' . $job_title . '</a>
                             </span>' .
                             ($jobLocationLine ? '<span class="placed-detail-line"><i class="fa-solid fa-location-dot text-muted"></i>
-                                <span class="text-muted fw-semibold fs-9">' . $jobLocationLine . '</span>
+                                <span class="text-muted fw-semibold fs-9">' . e($jobLocationLine) . '</span>
                             </span>' : '') . '
                             <span class="placed-detail-line mt-1"><i class="fa-solid ' . $recommendation_icon . ' ' . $recommendation_cls . '"></i>
                                 <span class="fw-bold fs-9 text-muted">' . $recommendation_text . ' &middot; ' . @$row->jobId . '</span>
@@ -392,16 +292,10 @@
                           </div>';
                 @endphp
             </td>
-            {{-- Recruiter: real posted_by / company --}}
+            {{-- Recruiter: read pre-indexed spokperson_name directly from ES document _source --}}
             <td>
                 @php
-                    if ($company_id != $row->ClientComID && $row->ClientComID != 0 && $row->ClientComID > 0) {
-                        $spokperson = DB::table('job_assign')->select('users.name')->join('users', 'users.id', 'job_assign.spok_user_id')->where('job_assign.job_id', $row->jobId)->where('job_assign.company_id', $row->ClientComID)->first();
-                        $rowpostedby = (@$spokperson) ? @$spokperson->name : $row->posted_by;
-                        $rowpostedby = $row->rec_candidate_assign_id ? $row->posted_by : $rowpostedby;
-                    } else {
-                        $rowpostedby = $row->posted_by;
-                    }
+                    $rowpostedby = !empty(@$row->spokperson_name) ? @$row->spokperson_name : @$row->posted_by;
 
                     echo '<div class="d-flex flex-column">
                             <span class="text-dark fw-bolder fs-6" data-toggle="tooltip" title="' . @$rowpostedby . '">' . ucfirst(mb_substr($rowpostedby, 0, 16)) . '</span>

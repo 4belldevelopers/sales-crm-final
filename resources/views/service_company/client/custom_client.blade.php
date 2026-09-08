@@ -101,8 +101,12 @@
 <script>
 
 $(document).ready(function() {
-	$('#kt_tagify_2').keyup(function() {
-        fetchCandidates();
+	var searchTimer = null;
+	$('#kt_tagify_2').on('keyup input', function() {
+		clearTimeout(searchTimer);
+		searchTimer = setTimeout(function() {
+			fetchCandidates(1);
+		}, 300);
 	});
 });
  function filtersdataget(){
@@ -141,8 +145,17 @@ $(document).ready(function() {
                 fetchCandidates(page, $('#search').val());
             });
 
+            $(document).on('change', '#pagination .pagi-perpage', function() {
+                var selectedPerPage = $(this).val();
+                localStorage.setItem('candidatePerPage', selectedPerPage);
+                localStorage.setItem('currentPageCustomClients', 1);
+                page_no = 1;
+                fetchCandidates(1);
+            });
+
       });
 
+      var page_no = localStorage.getItem('currentPageCustomClients') || 1;
 
       var hiringFilter = 0;
 
@@ -157,14 +170,20 @@ $(document).ready(function() {
           fetchCandidates(1);
       }
 
-      function fetchCandidates(page = 1, search = '') {
+      function fetchCandidates(page, search = '') {
+            var targetPage = page || page_no || 1;
+            page_no = targetPage;
+            localStorage.setItem('currentPageCustomClients', targetPage);
+
+            var perPage = $('#pagination .pagi-perpage').val() || localStorage.getItem('candidatePerPage') || 10;
+
             if($('#kt_tagify_2').val()!=''){
                 $('.loader_search').css({ display: 'block' });
             }else{
                 $('.page-loader').css('display', 'flex');
             }
             $.ajax({
-                url: `{!! route('service_company.clients.custom_client_data_ajax') !!}?page=${page}`,
+                url: `{!! route('service_company.clients.custom_client_data_ajax') !!}?page=${targetPage}`,
                 type: 'GET',
                 data: {
                   custom_status : $('#status').val(),
@@ -172,12 +191,15 @@ $(document).ready(function() {
                   sortingfilter : $('#sortingfilter').val(),
                   cus_search : $('#kt_tagify_2').val(),
                   country:$('#country').val(),
-                  hiring: hiringFilter
+                  hiring: hiringFilter,
+                  size: perPage,
+                  per_page: perPage
                 },
                 success: function(response) {
-                  $('.loadingMessage').css({ display: 'none' });
+                    $('.loadingMessage').css({ display: 'none' });
                     $('.loader_search').css({ display: 'none' });
                     $('.page-loader').css('display', 'none');
+                    localStorage.setItem('currentPageCustomClients', targetPage);
                     $('#allClients').html(response.html);
                     $('#custom_client_count').html(response.total);
                     $('#pagination').html(response.pagination);

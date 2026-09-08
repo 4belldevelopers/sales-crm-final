@@ -584,7 +584,7 @@ $(document).ready(function() {
                         destroy   		: true,
                         "bFilter" 		: false,
                         "bInfo"   		: false,
-                        "bLengthChange"	: true, 
+                        "bLengthChange"	: false, 
                         oLanguage 		: {
                                 				sLengthMenu: "_MENU_",
                                 		  },

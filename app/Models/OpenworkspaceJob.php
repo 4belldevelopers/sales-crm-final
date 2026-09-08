@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Traits\BelongsToTenant;
 use Carbon\Carbon;
 use Cviebrock\EloquentSluggable\Sluggable;
 use Illuminate\Database\Eloquent\Model;
@@ -9,7 +10,7 @@ use Illuminate\Database\Eloquent\Builder;
 
 class OpenworkspaceJob extends Model
 {
-    use Sluggable;
+    use Sluggable, BelongsToTenant;
 
 	protected $table 	= 'jobs';
     protected $dates 	= ['end_date', 'start_date'];
@@ -24,16 +25,7 @@ class OpenworkspaceJob extends Model
 							'active'
 						];
 
-    protected static function boot()
-    {
-        parent::boot();
 
-        /*static::addGlobalScope('company', function (Builder $builder) {
-            if (auth()->check() && !auth()->user()->is_superadmin) {
-                $builder->where('jobs.company_id', user()->company_id);
-            }
-        });*/
-    }
 
     public function applications()
     {

@@ -29,6 +29,7 @@ class RecommendationRelationObserver
         foreach (array_filter([$rec->to_company_id, $rec->from_company_id]) as $cid) {
             GeneralMethod::cacheClean("allclientrequisition_version_company_{$cid}");
             GeneralMethod::cacheClean("allcustomrequisition_version_company_{$cid}");
+            \Illuminate\Support\Facades\Cache::forget("ats:spartner_summary_cnt:comp_{$cid}");
         }
     }
 }

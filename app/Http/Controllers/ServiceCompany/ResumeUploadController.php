@@ -121,7 +121,7 @@ class ResumeUploadController extends Controller
      */
     public function status(int $id): JsonResponse
     {
-        $record = CandidateResumeUpload::find($id);
+        $record = CandidateResumeUpload::withoutGlobalScopes()->find($id);
 
         if (!$record) {
             return response()->json(['success' => false, 'message' => 'Not found.'], 404);
@@ -146,7 +146,7 @@ class ResumeUploadController extends Controller
      */
     public function retry(int $id): JsonResponse
     {
-        $record = CandidateResumeUpload::find($id);
+        $record = CandidateResumeUpload::withoutGlobalScopes()->find($id);
 
         if (!$record) {
             return response()->json(['success' => false, 'message' => 'Not found.'], 404);
