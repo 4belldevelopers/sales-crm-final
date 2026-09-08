@@ -5887,7 +5887,7 @@ async function convertResumeWithOpenDocLabBlob(resumeUrl,resumeExt,allowExternal
     var nativePdfBlob=openDocNativePdfBlob(doc);
     if(nativePdfBlob) return nativePdfBlob;
     if(conversionOptions.requireTextPdf===true) throw new Error('OpenDoc browser safety limit: text PDF export unavailable');
-    var renderDpi=conversionOptions.dpi||(conversionOptions.fastDpi ? conversionOptions.fastDpi : (pageCount<=4 ? 144 : 120));
+    var renderDpi=conversionOptions.dpi||openDocRenderDpi(pageCount);
     var JsPDF=window.jspdf.jsPDF;
     var firstSize=openDocPagePoints(doc,0);
     var pdf=new JsPDF({
@@ -5896,7 +5896,8 @@ async function convertResumeWithOpenDocLabBlob(resumeUrl,resumeExt,allowExternal
       format:firstSize,
       compress:true
     });
-    var useFastJpeg=conversionOptions.fastJpeg!==false;
+    var usePng=conversionOptions.losslessPng===true;
+    var jpegQuality=typeof conversionOptions.jpegQuality==='number' ? conversionOptions.jpegQuality : 0.98;
     for(var i=0;i<pageCount;i++){
       var pageSize=openDocPagePoints(doc,i);
       if(i>0) pdf.addPage(pageSize,pageSize[0]>pageSize[1]?'landscape':'portrait');
@@ -5906,11 +5907,13 @@ async function convertResumeWithOpenDocLabBlob(resumeUrl,resumeExt,allowExternal
         bitmap=doc.renderPage(i,renderDpi);
         canvas=openDocCanvasFromBitmap(bitmap);
 
-        // Render visible golden highlights over matched keyword rectangles
+        // Render visible golden highlights over matched keyword rectangles with multiply blend (keeps black text 100% crisp)
         var pageRects=pageHighlights[i]||[];
         if(pageRects.length && canvas){
           var ctx=canvas.getContext('2d');
           if(ctx){
+            ctx.save();
+            ctx.globalCompositeOperation='multiply';
             ctx.fillStyle='rgba(255, 215, 0, 0.42)';
             var scale=(renderDpi/72)/20;
             pageRects.forEach(function(r){
@@ -5926,14 +5929,16 @@ async function convertResumeWithOpenDocLabBlob(resumeUrl,resumeExt,allowExternal
                 ctx.fillRect(hx-1, hy, hw+2, Math.max(hh, 4));
               }
             });
+            ctx.restore();
           }
         }
 
-        if(useFastJpeg){
-          var imgData=canvas.toDataURL('image/jpeg', 0.86);
-          pdf.addImage(imgData,'JPEG',0,0,pageSize[0],pageSize[1],undefined,'FAST');
+        if(usePng){
+          var pngData=canvas.toDataURL('image/png');
+          pdf.addImage(pngData,'PNG',0,0,pageSize[0],pageSize[1],undefined,'FAST');
         }else{
-          pdf.addImage(canvas.toDataURL('image/png'),'PNG',0,0,pageSize[0],pageSize[1],undefined,'SLOW');
+          var imgData=canvas.toDataURL('image/jpeg', jpegQuality);
+          pdf.addImage(imgData,'JPEG',0,0,pageSize[0],pageSize[1],undefined,'FAST');
         }
       }finally{
         if(bitmap && typeof bitmap.free==='function') bitmap.free();
@@ -6654,8 +6659,8 @@ async function buildTurboVectorHighlightedResume(options){
       pdfBlob=await fetchPdfBlobFromSources(resumeSources);
     }else if(resumeExt==='DOCX'){
       if(options.useOpenDocOnly===true){
-        // Option 27: 100% Client-side OpenDoc WASM conversion with integrated keyword highlights
-        pdfBlob=await convertResumeWithOpenDocLabBlob(resumeSources,resumeExt,true,{fastJpeg:true});
+        // Option 27: 100% Client-side OpenDoc WASM conversion with integrated keyword highlights (High-definition 216 DPI & 0.98 JPEG)
+        pdfBlob=await convertResumeWithOpenDocLabBlob(resumeSources,resumeExt,true,{dpi:216,jpegQuality:0.98});
         if(options.returnBlob===true){
           return pdfBlob;
         }
