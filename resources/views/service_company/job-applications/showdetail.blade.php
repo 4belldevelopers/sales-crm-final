@@ -322,6 +322,7 @@
 #rdcOptsList .rdc-opt[data-opt="14"]{order:9;}
 #rdcOptsList .rdc-opt[data-opt="17"]{order:10;}
 #rdcOptsList .rdc-opt[data-opt="19"]{order:11;}
+#rdcOptsList .rdc-opt[data-opt="20"]{order:12;}
 #rdcOptsList .rdc-opt[data-opt="3"],
 #rdcOptsList .rdc-opt[data-opt="4"],
 #rdcOptsList .rdc-opt[data-opt="7"]{order:99;}
@@ -6861,6 +6862,24 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
         <span class="rdc-ocirc" aria-hidden="true"></span>
       </label>
 
+      {{-- 20: Client-first highlighted resume plus company branding package --}}
+      <label class="rdc-opt" data-opt="20" data-coins="6">
+        <input class="rdc-rinput" type="radio" name="rdcFormat" value="20">
+        <span class="rdc-onum">20</span>
+        <span class="rdc-oi rdc-ic-green" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h16"/><path d="m7 16 8.5-8.5 3 3L10 19H7v-3z"/><path d="M9 7h6"/><path d="M9 11h4"/><path d="M14 2v6h6"/></svg>
+        </span>
+        <span class="rdc-obody">
+          <span class="rdc-otitle">Resume + Highlighted Keywords + Company Branding <span style="background:#ecfdf5;color:#059669;font-size:8.5px;font-weight:700;padding:1px 6px;border-radius:4px;vertical-align:middle;margin-left:4px;">DOCX Client First</span></span>
+          <span class="rdc-odesc">Option 17 converter path without the Pre-Screened Report: highlight first, then add company header</span>
+        </span>
+        <span class="rdc-ometa">
+          <span class="rdc-ocost">6 Coins</span>
+          <span class="rdc-otime">Beta</span>
+        </span>
+        <span class="rdc-ocirc" aria-hidden="true"></span>
+      </label>
+
     </div>{{-- /.rdc-opts-list --}}
 
     {{-- Coin info summary --}}
@@ -6926,7 +6945,8 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
     15:{cost:8, label:'Pre-Screened Report + Resume + Company Branding', avail:(['PDF','DOC','DOCX'].indexOf(resumeExt) !== -1), dlKey:'smart-prescreened-package', unavailableMsg:'Final package is available for PDF, DOC and DOCX resumes only.'},
     16:{cost:8, label:'Pre-Screened Report + Resume without Company Branding', avail:(['PDF','DOC','DOCX'].indexOf(resumeExt) !== -1), dlKey:'smart-prescreened-package-nobrand', unavailableMsg:'Final package is available for PDF, DOC and DOCX resumes only.'},
     17:{cost:8, label:'Pre-Screened Report + Resume + Highlighted Keywords', avail:(['PDF','DOC','DOCX'].indexOf(resumeExt) !== -1), dlKey:'prescreened-highlighted-package-client-docx', unavailableMsg:'Client-first Pre-Screened Report + Resume + Highlighted Keywords is available for PDF, DOC and DOCX resumes only.'},
-    19:{cost:8, label:'Pre-Screened Report + Resume + Highlighted Keywords without Company Branding', avail:(['PDF','DOC','DOCX'].indexOf(resumeExt) !== -1), dlKey:'prescreened-highlighted-package-client-docx-nobrand', unavailableMsg:'Client-first Pre-Screened Report + Resume + Highlighted Keywords without Company Branding is available for PDF, DOC and DOCX resumes only.'}
+    19:{cost:8, label:'Pre-Screened Report + Resume + Highlighted Keywords without Company Branding', avail:(['PDF','DOC','DOCX'].indexOf(resumeExt) !== -1), dlKey:'prescreened-highlighted-package-client-docx-nobrand', unavailableMsg:'Client-first Pre-Screened Report + Resume + Highlighted Keywords without Company Branding is available for PDF, DOC and DOCX resumes only.'},
+    20:{cost:6, label:'Resume + Highlighted Keywords + Company Branding', avail:(['PDF','DOC','DOCX'].indexOf(resumeExt) !== -1), dlKey:'highlighted-branded-resume-client-docx', unavailableMsg:'Client-first Resume + Highlighted Keywords + Company Branding is available for PDF, DOC and DOCX resumes only.'}
   };
 
   var selectedOpt = 1;
@@ -7019,6 +7039,8 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
     if(m.dlKey === 'headless-option3-skills-highlighted' && resumeExt === 'DOCX' && typeof window.__preloadOpenDocLocal === 'function') window.__preloadOpenDocLocal();
     if(m.dlKey === 'highlighted-branded-resume' && typeof window.__preloadRSCombined === 'function') window.__preloadRSCombined();
     if(m.dlKey === 'highlighted-branded-resume' && resumeExt === 'DOCX' && typeof window.__preloadOpenDocLocal === 'function') window.__preloadOpenDocLocal();
+    if(m.dlKey === 'highlighted-branded-resume-client-docx' && typeof window.__preloadRSCombined === 'function') window.__preloadRSCombined();
+    if(m.dlKey === 'highlighted-branded-resume-client-docx' && resumeExt === 'DOCX' && typeof window.__preloadOpenDocLocal === 'function') window.__preloadOpenDocLocal();
     if((m.dlKey === 'prescreened-highlighted-package' || m.dlKey === 'prescreened-highlighted-package-nobrand' || m.dlKey === 'prescreened-highlighted-package-client-docx' || m.dlKey === 'prescreened-highlighted-package-client-docx-nobrand') && typeof window.__preloadRSCombined === 'function') window.__preloadRSCombined();
     if((m.dlKey === 'prescreened-highlighted-package' || m.dlKey === 'prescreened-highlighted-package-nobrand' || m.dlKey === 'prescreened-highlighted-package-client-docx' || m.dlKey === 'prescreened-highlighted-package-client-docx-nobrand') && resumeExt === 'DOCX' && typeof window.__preloadOpenDocLocal === 'function') window.__preloadOpenDocLocal();
     if(m.dlKey === 'smart-branded-resume' && typeof window.__preloadRSCombined === 'function') window.__preloadRSCombined();
@@ -7332,14 +7354,14 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
           });
         }, 250);
 
-      } else if(m.dlKey === 'highlighted-branded-resume'){
-        /* Option 9: option 8 highlighted output followed by option 6's exact company branding header. */
+      } else if(m.dlKey === 'highlighted-branded-resume' || m.dlKey === 'highlighted-branded-resume-client-docx'){
+        /* Options 9/20: highlighted output followed by option 6's exact company branding header. */
         if(window.__rsBusy || typeof window.__buildHighlightedBrandedResume !== 'function'){
           showToast('Please wait a moment and try again.', 'warn');
           resetBtn(); return;
         }
         if(['PDF','DOC','DOCX'].indexOf(resumeExt) === -1){
-          showToast('Resume + Highlighted + Company Branding is available for PDF, DOC and DOCX resumes only.', 'warn');
+          showToast(m.unavailableMsg || 'Resume + Highlighted + Company Branding is available for PDF, DOC and DOCX resumes only.', 'warn');
           resetBtn(); return;
         }
         if(['PDF','DOCX'].indexOf(resumeExt) !== -1 && !r2DirectUrl && !r2PublicUrl && !dlUrl && !resumePdfUrl){
