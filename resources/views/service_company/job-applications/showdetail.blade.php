@@ -4781,47 +4781,33 @@ function guessResumeDownloadName(ext){
   ext=clean(ext,'FILE').toLowerCase().replace(/[^a-z0-9]+/g,'') || 'file';
   return resumeTrackingFileName(readData(),'C',ext);
 }
-async function fetchOriginalResumeBlobFromSources(resumeUrls,maxBytes){
-  /* Purpose: download the original resume in the browser, preferring direct R2 so app servers do not stream resume bytes. */
+function collectOriginalResumeDownloadSources(resumeUrls){
   var sources=(Array.isArray(resumeUrls) ? resumeUrls : [resumeUrls]).map(function(url){
     return clean(url,'');
   }).filter(function(url,index,self){
     return url && url!=='--' && self.indexOf(url)===index;
   });
-  if(!sources.length) throw new Error('Resume file URL not available');
-  var byteLimit=parseInt(maxBytes,10)||50*1024*1024;
-  var lastErr=null;
-  for(var i=0;i<sources.length;i++){
-    try{
-      var source=sources[i];
-      var response=await fetch(source,{
-        mode:sameOriginUrl(source) ? 'same-origin' : 'cors',
-        credentials:sameOriginUrl(source) ? 'include' : 'omit',
-        cache:'force-cache'
-      });
-      if(!response.ok) throw new Error('Original resume request failed with HTTP '+response.status);
-      var size=parseInt(response.headers.get('content-length')||'0',10);
-      if(size && size>byteLimit) throw new Error('Original resume is larger than the browser download limit');
-      var type=(response.headers.get('content-type')||'').toLowerCase();
-      if(type.indexOf('text/html')!==-1) throw new Error('Original resume URL returned an HTML page instead of a file');
-      var blob=await response.blob();
-      if(!blob || !blob.size) throw new Error('Original resume file is empty');
-      if(blob.size>byteLimit) throw new Error('Original resume is larger than the browser download limit');
-      return blob;
-    }catch(err){
-      lastErr=err;
-      console.warn('Original resume direct browser download failed:',sources[i],err);
-    }
-  }
-  throw (lastErr || new Error('Original resume direct browser download failed'));
+  return sources;
 }
 async function downloadOriginalResumeFromR2First(options){
-  /* Purpose: option 1 zero-server-load happy path; R2/public URLs are tried before Laravel's authenticated fallback route. */
+  /* Purpose: option 1 uses the browser's native download path so R2 attachment/signed URLs are not blocked by fetch/CORS rules. */
   options=options||{};
   var resumeExt=clean(options.resumeExt||'FILE','FILE').toUpperCase();
-  var r2FirstSources=[options.r2PublicUrl,options.r2DirectUrl,options.dlUrl];
-  var blob=await fetchOriginalResumeBlobFromSources(r2FirstSources,options.maxBytes);
-  downloadBlob(blob,guessResumeDownloadName(resumeExt));
+  var fileName=guessResumeDownloadName(resumeExt);
+  var r2FirstSources=collectOriginalResumeDownloadSources([options.r2DirectUrl,options.r2PublicUrl,options.dlUrl]);
+  if(!r2FirstSources.length) throw new Error('Resume file URL not available');
+  var source=r2FirstSources[0];
+  var a=document.createElement('a');
+  a.href=source;
+  a.download=fileName;
+  a.rel='noopener';
+  if(!sameOriginUrl(source)) a.target='_blank';
+  document.body.appendChild(a);
+  a.click();
+  notifyRdcDownloadStarted(fileName);
+  setTimeout(function(){
+    if(a.parentNode) a.parentNode.removeChild(a);
+  },1200);
   return true;
 }
 function removeNode(node){
