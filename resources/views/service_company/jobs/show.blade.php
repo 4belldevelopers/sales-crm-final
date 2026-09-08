@@ -10,14 +10,13 @@ use Carbon\Carbon;
  $available_status = GeneralMethod::available_status();
  
 $employment_type = '';
-$employment_type = $job->employment_type;
-//if(!empty($employment_type)){
-$employment_type = $employmentType[$job->employment_type];
-//}
+if (! empty($job->employment_type) && isset($employmentType[$job->employment_type])) {
+    $employment_type = $employmentType[$job->employment_type];
+}
 $bgTextDecore = $strVal = '';
-$str = trim(@$job->client_name);
-$str = $strVal = strtolower($str[0]);
-$str = ord($str);
+$clientName = trim((string) (@$job->client_name ?? @$job->company_name ?? @$job->title ?? 'J'));
+$strVal = strtolower(substr($clientName, 0, 1) ?: 'j');
+$str = ord($strVal);
 if ($str >= 97 && $str <= 101) {
     $bgTextDecore = 'fs-3 bg-light-danger text-danger';
 } elseif ($str >= 102 && $str <= 106) {
@@ -1913,9 +1912,9 @@ $end_date   =	date('d-M-Y', $date);
                                                     <tr class="agency-row">
                                                         @php
                                                                 $bgTextDecore = $strVal = '';
-                                                                $str = trim(@$rval->name);
-                                                                $str = $strVal = strtolower($str[0]);
-                                                                $str = ord($str);
+                                                                $recName = trim((string) (@$rval->name ?? 'R'));
+                                                                $strVal = strtolower(substr($recName, 0, 1) ?: 'r');
+                                                                $str = ord($strVal);
                                                                 if ($str >= 97 && $str <= 101) {
                                                                     $bgTextDecore = 'fs-3 bg-light-danger text-danger';
                                                                 } elseif ($str >= 102 && $str <= 106) {
@@ -2429,7 +2428,7 @@ $end_date   =	date('d-M-Y', $date);
                                 </div>
                             </div>
                         </div>
-                        <div id="contactPersons" class="tab-panel">
+                        <div id="contactPersons" class="tab-panel" data-loaded="false">
                             <style>
                                 .ct-wrap { background:var(--bg-white); border:1px solid var(--border-color); border-radius:var(--radius-lg); overflow:hidden; }
                                 .ct-scroll { overflow-x:auto; }
@@ -2446,53 +2445,60 @@ $end_date   =	date('d-M-Y', $date);
                                 .ct-muted { color:var(--text-secondary); }
                                 .ct-empty { padding:40px 20px; text-align:center; color:var(--text-secondary); font-size:13px; }
                             </style>
-                            @php $ctPalette = ['#22c55e','#8b5cf6','#3b82f6','#f59e0b','#ef4444','#0ea5e9','#ec4899','#14b8a6']; @endphp
-                            <div class="ct-wrap">
-                                <div class="ct-scroll">
-                                    <table class="ct-table">
-                                        <thead>
-                                            <tr>
-                                                <th style="width:40px;">#</th>
-                                                <th>Name</th>
-                                                <th>Designation</th>
-                                                <th>Contact</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            @forelse (@$bench_assign_row ?? [] as $ctVal)
-                                                @php
-                                                    $ctVal   = (object) $ctVal;
-                                                    $ctFirst = strtolower(substr(trim(@$ctVal->name) ?: '#', 0, 1));
-                                                    $ctColor = $ctPalette[ord($ctFirst) % count($ctPalette)];
-                                                @endphp
+                            <!-- Intent: Lazy loading loader skeleton for Contacts tab -->
+                            <div class="tab-lazy-loader" style="padding:40px 20px; text-align:center;">
+                                <div class="spinner-border text-primary" role="status" style="width: 2rem; height: 2rem; border-width: 0.2em;"></div>
+                                <div class="mt-2 text-muted fs-7 font-weight-500">Loading contacts...</div>
+                            </div>
+                            <div class="tab-lazy-content" style="display:none;">
+                                @php $ctPalette = ['#22c55e','#8b5cf6','#3b82f6','#f59e0b','#ef4444','#0ea5e9','#ec4899','#14b8a6']; @endphp
+                                <div class="ct-wrap">
+                                    <div class="ct-scroll">
+                                        <table class="ct-table">
+                                            <thead>
                                                 <tr>
-                                                    <td class="ct-muted">{{ $loop->iteration }}</td>
-                                                    <td>
-                                                        <div class="ct-person">
-                                                            <div class="ct-avatar" style="background:{{ $ctColor }};">{{ strtoupper($ctFirst) }}</div>
-                                                            <span class="ct-name">{{ ucwords(@$ctVal->name) }}</span>
-                                                        </div>
-                                                    </td>
-                                                    <td>{{ ucwords(@$ctVal->designation) ?: '--' }}</td>
-                                                    <td>
-                                                        @if(!empty(@$ctVal->email))
-                                                            <a href="mailto:{{ $ctVal->email }}" class="ct-link">{{ $ctVal->email }}</a><br>
-                                                        @endif
-                                                        @if(!empty(@$ctVal->mobile))
-                                                            <span class="ct-muted">{{ ucwords(@$ctVal->mobile) }}</span>
-                                                        @endif
-                                                        @if(empty(@$ctVal->email) && empty(@$ctVal->mobile)) -- @endif
-                                                    </td>
+                                                    <th style="width:40px;">#</th>
+                                                    <th>Name</th>
+                                                    <th>Designation</th>
+                                                    <th>Contact</th>
                                                 </tr>
-                                            @empty
-                                                <tr><td colspan="4"><div class="ct-empty">No contacts available.</div></td></tr>
-                                            @endforelse
-                                        </tbody>
-                                    </table>
+                                            </thead>
+                                            <tbody>
+                                                @forelse (@$bench_assign_row ?? [] as $ctVal)
+                                                    @php
+                                                        $ctVal   = (object) $ctVal;
+                                                        $ctFirst = strtolower(substr(trim(@$ctVal->name) ?: '#', 0, 1));
+                                                        $ctColor = $ctPalette[ord($ctFirst) % count($ctPalette)];
+                                                    @endphp
+                                                    <tr>
+                                                        <td class="ct-muted">{{ $loop->iteration }}</td>
+                                                        <td>
+                                                            <div class="ct-person">
+                                                                <div class="ct-avatar" style="background:{{ $ctColor }};">{{ strtoupper($ctFirst) }}</div>
+                                                                <span class="ct-name">{{ ucwords(@$ctVal->name) }}</span>
+                                                            </div>
+                                                        </td>
+                                                        <td>{{ ucwords(@$ctVal->designation) ?: '--' }}</td>
+                                                        <td>
+                                                            @if(!empty(@$ctVal->email))
+                                                                <a href="mailto:{{ $ctVal->email }}" class="ct-link">{{ $ctVal->email }}</a><br>
+                                                            @endif
+                                                            @if(!empty(@$ctVal->mobile))
+                                                                <span class="ct-muted">{{ ucwords(@$ctVal->mobile) }}</span>
+                                                            @endif
+                                                            @if(empty(@$ctVal->email) && empty(@$ctVal->mobile)) -- @endif
+                                                        </td>
+                                                    </tr>
+                                                @empty
+                                                    <tr><td colspan="4"><div class="ct-empty">No contacts available.</div></td></tr>
+                                                @endforelse
+                                            </tbody>
+                                        </table>
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                        <div id="timeline" class="tab-panel">
+                        <div id="timeline" class="tab-panel" data-loaded="false">
                             <style>
                                 .tl-wrap { background:var(--bg-white); border:1px solid var(--border-color); border-radius:var(--radius-lg); padding:22px 24px; }
                                 .tl-list { position:relative; margin:0; padding:0 0 0 6px; list-style:none; }
@@ -2515,86 +2521,93 @@ $end_date   =	date('d-M-Y', $date);
                                 .tl-comment b { color:var(--text-primary); }
                                 .tl-empty { padding:40px 20px; text-align:center; color:var(--text-secondary); font-size:13px; }
                             </style>
-                            <div class="tl-wrap">
-                                @if(!empty($updateTimeLine))
-                                    <ul class="tl-list">
-                                        @foreach ($updateTimeLine as $tdata)
-                                            @php
-                                                $tdata     = (object) $tdata;
-                                                $tlDate    = date('d-M-Y', strtotime(@$tdata->created_at));
-                                                $tlTime    = date('h:i A', strtotime(@$tdata->created_at));
-                                                $tlBy      = ucwords(@$tdata->name);
-                                                $tlCompany = ucwords(@$tdata->cur_companyname);
-                                                $prevBg = $curBg = '';
-                                                if (!empty(@$tdata->prev_process_name)) {
-                                                    $prevBg = GeneralMethod::candidateStatusColorCode(@$tdata->prev_process_name)['tiles_bg'] ?? '';
-                                                }
-                                                if (!empty(@$tdata->master_process_name)) {
-                                                    $curBg = GeneralMethod::candidateStatusColorCode(@$tdata->master_process_name)['tiles_bg'] ?? '';
-                                                }
-                                            @endphp
-                                            <li class="tl-item">
-                                                <span class="tl-dot"><i class="fas fa-circle"></i></span>
-                                                <div class="tl-card">
-                                                    <div class="tl-top">
-                                                        <div>
-                                                            <div class="tl-title">{{ ucwords(@$tdata->title) ?: 'Activity' }}</div>
-                                                            <div class="tl-sub">{{ ucwords(GeneralMethod::companyDetailsByClient(@$tdata->job_id)) }}</div>
+                            <!-- Intent: Lazy loading loader skeleton for Timeline tab -->
+                            <div class="tab-lazy-loader" style="padding:40px 20px; text-align:center;">
+                                <div class="spinner-border text-primary" role="status" style="width: 2rem; height: 2rem; border-width: 0.2em;"></div>
+                                <div class="mt-2 text-muted fs-7 font-weight-500">Loading timeline...</div>
+                            </div>
+                            <div class="tab-lazy-content" style="display:none;">
+                                <div class="tl-wrap">
+                                    @if(!empty($updateTimeLine))
+                                        <ul class="tl-list">
+                                            @foreach ($updateTimeLine as $tdata)
+                                                @php
+                                                    $tdata     = (object) $tdata;
+                                                    $tlDate    = date('d-M-Y', strtotime(@$tdata->created_at));
+                                                    $tlTime    = date('h:i A', strtotime(@$tdata->created_at));
+                                                    $tlBy      = ucwords(@$tdata->name);
+                                                    $tlCompany = ucwords(@$tdata->cur_companyname);
+                                                    $prevBg = $curBg = '';
+                                                    if (!empty(@$tdata->prev_process_name)) {
+                                                        $prevBg = GeneralMethod::candidateStatusColorCode(@$tdata->prev_process_name)['tiles_bg'] ?? '';
+                                                    }
+                                                    if (!empty(@$tdata->master_process_name)) {
+                                                        $curBg = GeneralMethod::candidateStatusColorCode(@$tdata->master_process_name)['tiles_bg'] ?? '';
+                                                    }
+                                                @endphp
+                                                <li class="tl-item">
+                                                    <span class="tl-dot"><i class="fas fa-circle"></i></span>
+                                                    <div class="tl-card">
+                                                        <div class="tl-top">
+                                                            <div>
+                                                                <div class="tl-title">{{ ucwords(@$tdata->title) ?: 'Activity' }}</div>
+                                                                <div class="tl-sub">{{ ucwords(GeneralMethod::companyDetailsByClient(@$tdata->job_id)) }}</div>
+                                                            </div>
+                                                            <div class="tl-time"><b>{{ $tlDate }}</b>{{ $tlTime }} (IST)</div>
                                                         </div>
-                                                        <div class="tl-time"><b>{{ $tlDate }}</b>{{ $tlTime }} (IST)</div>
-                                                    </div>
 
-                                                    @if(in_array(@$tdata->event_id, [1,2]))
-                                                        @php
-                                                            $prevName = (@$tdata->event_id == 1 && !empty(@$tdata->note)) ? @$tdata->note : @$tdata->prev_process_name;
-                                                            $prevBg   = (@$tdata->event_id == 1) ? 'sourcing-bg' : $prevBg;
-                                                        @endphp
-                                                        <div class="tl-flow">
-                                                            @if(!empty($prevName))<span class="tl-badge {{ $prevBg }}">{{ ucwords($prevName) }}</span><i class="fas fa-arrow-right arrow"></i>@endif
-                                                            <span class="tl-badge {{ $curBg }}">{{ ucwords(@$tdata->master_process_name) }}</span>
-                                                        </div>
-                                                        @if(!empty(@$tdata->note) && @$tdata->event_id == 2)
-                                                            <div class="tl-comment"><b>Comment:</b> {{ @$tdata->note }}</div>
+                                                        @if(in_array(@$tdata->event_id, [1,2]))
+                                                            @php
+                                                                $prevName = (@$tdata->event_id == 1 && !empty(@$tdata->note)) ? @$tdata->note : @$tdata->prev_process_name;
+                                                                $prevBg   = (@$tdata->event_id == 1) ? 'sourcing-bg' : $prevBg;
+                                                            @endphp
+                                                            <div class="tl-flow">
+                                                                @if(!empty($prevName))<span class="tl-badge {{ $prevBg }}">{{ ucwords($prevName) }}</span><i class="fas fa-arrow-right arrow"></i>@endif
+                                                                <span class="tl-badge {{ $curBg }}">{{ ucwords(@$tdata->master_process_name) }}</span>
+                                                            </div>
+                                                            @if(!empty(@$tdata->note) && @$tdata->event_id == 2)
+                                                                <div class="tl-comment"><b>Comment:</b> {{ @$tdata->note }}</div>
+                                                            @endif
+                                                        @elseif(@$tdata->event_id == 3)
+                                                            @php
+                                                                $imode = '';
+                                                                if (@$tdata->interview_mode > 0) {
+                                                                    $imodeArr = GeneralMethod::interview_mode();
+                                                                    $imode = @$imodeArr[@$tdata->interview_mode];
+                                                                }
+                                                                $iDate = !empty(@$tdata->interview_schedule_date) ? date('d-M-Y', strtotime($tdata->interview_schedule_date)) : '';
+                                                                $iTime = !empty(@$tdata->interview_to_time) ? date('h:i A', strtotime($tdata->interview_to_time)) : '';
+                                                            @endphp
+                                                            <div class="tl-meta">
+                                                                <span><b>Interview</b> {{ $imode }}</span>
+                                                                @if($iDate)<span><b>When:</b> {{ $iDate }} {{ $iTime }}</span>@endif
+                                                                @if(!empty(@$tdata->interviewers))<span><b>Panel:</b> {{ ucwords($tdata->interviewers) }}</span>@endif
+                                                            </div>
+                                                        @elseif(@$tdata->event_id == 11)
+                                                            <div class="tl-flow">
+                                                                <span class="tl-badge {{ (@$tdata->note == 'Interested') ? 'bg-light-success text-success' : 'bg-light-danger text-danger' }}">{{ @$tdata->note }}</span>
+                                                                <span class="tl-sub">Mail</span>
+                                                            </div>
+                                                            @if(!empty(@$tdata->comment))
+                                                                <div class="tl-comment"><b>Subject:</b> {{ @$tdata->comment }}</div>
+                                                            @endif
+                                                        @else
+                                                            @if(!empty(@$tdata->note))
+                                                                <div class="tl-comment">{{ @$tdata->note }}</div>
+                                                            @endif
                                                         @endif
-                                                    @elseif(@$tdata->event_id == 3)
-                                                        @php
-                                                            $imode = '';
-                                                            if (@$tdata->interview_mode > 0) {
-                                                                $imodeArr = GeneralMethod::interview_mode();
-                                                                $imode = @$imodeArr[@$tdata->interview_mode];
-                                                            }
-                                                            $iDate = !empty(@$tdata->interview_schedule_date) ? date('d-M-Y', strtotime($tdata->interview_schedule_date)) : '';
-                                                            $iTime = !empty(@$tdata->interview_to_time) ? date('h:i A', strtotime($tdata->interview_to_time)) : '';
-                                                        @endphp
+
                                                         <div class="tl-meta">
-                                                            <span><b>Interview</b> {{ $imode }}</span>
-                                                            @if($iDate)<span><b>When:</b> {{ $iDate }} {{ $iTime }}</span>@endif
-                                                            @if(!empty(@$tdata->interviewers))<span><b>Panel:</b> {{ ucwords($tdata->interviewers) }}</span>@endif
+                                                            <span><b>By:</b> {{ $tlBy }}@if($tlCompany) — {{ $tlCompany }}@endif</span>
                                                         </div>
-                                                    @elseif(@$tdata->event_id == 11)
-                                                        <div class="tl-flow">
-                                                            <span class="tl-badge {{ (@$tdata->note == 'Interested') ? 'bg-light-success text-success' : 'bg-light-danger text-danger' }}">{{ @$tdata->note }}</span>
-                                                            <span class="tl-sub">Mail</span>
-                                                        </div>
-                                                        @if(!empty(@$tdata->comment))
-                                                            <div class="tl-comment"><b>Subject:</b> {{ @$tdata->comment }}</div>
-                                                        @endif
-                                                    @else
-                                                        @if(!empty(@$tdata->note))
-                                                            <div class="tl-comment">{{ @$tdata->note }}</div>
-                                                        @endif
-                                                    @endif
-
-                                                    <div class="tl-meta">
-                                                        <span><b>By:</b> {{ $tlBy }}@if($tlCompany) — {{ $tlCompany }}@endif</span>
                                                     </div>
-                                                </div>
-                                            </li>
-                                        @endforeach
-                                    </ul>
-                                @else
-                                    <div class="tl-empty">No timeline activity yet.</div>
-                                @endif
+                                                </li>
+                                            @endforeach
+                                        </ul>
+                                    @else
+                                        <div class="tl-empty">No timeline activity yet.</div>
+                                    @endif
+                                </div>
                             </div>
                         </div>
 
@@ -2811,11 +2824,41 @@ $end_date   =	date('d-M-Y', $date);
 
 
 <script>
+        /**
+         * Intent: Switch tab view and perform lazy loading reveal for Contacts and Timeline tabs
+         * Tenancy: Data within tabs is pre-scoped by tenancy in controller
+         * 
+         * @param {HTMLElement} btn - The tab button element clicked
+         * @param {string} tabId - Target panel container ID
+         */
         function switchTab(btn, tabId) {
             document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
             document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
             btn.classList.add('active');
-            document.getElementById(tabId).classList.add('active');
+            
+            const targetPanel = document.getElementById(tabId);
+            if (targetPanel) {
+                targetPanel.classList.add('active');
+                
+                // Lazy load tab content on first activation for Contacts and Timeline tabs
+                if ((tabId === 'contactPersons' || tabId === 'timeline') && targetPanel.getAttribute('data-loaded') !== 'true') {
+                    const loader = targetPanel.querySelector('.tab-lazy-loader');
+                    const content = targetPanel.querySelector('.tab-lazy-content');
+                    
+                    if (loader && content) {
+                        loader.style.display = 'block';
+                        content.style.display = 'none';
+                        
+                        setTimeout(function() {
+                            loader.style.display = 'none';
+                            content.style.display = 'block';
+                            targetPanel.setAttribute('data-loaded', 'true');
+                        }, 300);
+                    } else {
+                        targetPanel.setAttribute('data-loaded', 'true');
+                    }
+                }
+            }
         }
 
         function toggleSidebar() {
@@ -3235,17 +3278,17 @@ $end_date   =	date('d-M-Y', $date);
                     <!-- ═══ 3. JOB OVERVIEW ═══ -->
                     ${section(3, 'Job Overview',
                         subSection('Basic Details', `
-                            ${row('Job ID',         '{{ $job->id }}')}
-                            ${row('Due Date',       '{{ date("d-M-Y", strtotime($job->end_date)) }}')}
+                            ${row('Job ID',         '{{ $job->id ?? "" }}')}
+                            ${row('Due Date',       '{{ !empty($job->end_date) ? date("d-M-Y", strtotime($job->end_date)) : "N/A" }}')}
                             ${row('Department',     '{{ addslashes($job->cat_name ?? "") }}')}
                             ${row('Qualifications', '{{ addslashes($qualification->name ?? "") }}')}
                             ${row('Position Type',  '{{ addslashes(ucwords($employment_type ?? "")) }}')}
                         `) +
                         subSection('Experience &amp; Openings', `
-                            ${row('Min Experience',  '{{ $job->min_exp }} Year')}
-                            ${row('Max Experience',  '{{ $job->max_exp }} Years')}
+                            ${row('Min Experience',  '{{ ($job->min_exp ?? 0) }} Year')}
+                            ${row('Max Experience',  '{{ ($job->max_exp ?? 0) }} Years')}
                             ${row('Gender',          '{{ addslashes($job->required_columns ?? "Rather Not Say") }}')}
-                            ${row('No. of Openings', '{{ $job->total_positions }}')}
+                            ${row('No. of Openings', '{{ $job->total_positions ?? 0 }}')}
                             ${row('Job Location',    '{{ addslashes(ucwords($jobCitySelected ?? "")) }}')}
                             ${row('Work Mode',       '{{ $work_type }}')}
                             ${row('Work Shift',      '{{ addslashes($job->work_shifts ?? "") }}')}
