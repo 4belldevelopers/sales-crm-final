@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 
 <head>
@@ -1481,24 +1481,20 @@ $(document).ready(function () {
         });
     }
 
-    // ── v2 Phase 6: recover a previous upload session after page refresh ──────
+    /**
+     * Intent: Clean resume state initialization for public career applications.
+     * Starts fresh on every page load/refresh so candidates start with an empty resume field.
+     */
     if (RESUMES_FEATURE_BROWSER_UPLOAD && window.ResumePresign) {
-        window.ResumePresign.recover().then(function (session) {
-            if (session) {
-                $('#upWrap').show();
-                $('#upBar').css('width', '100%');
-                $('#upStats').html('100% &middot; Upload restored');
-                $('#upPill').css('display', 'inline-flex');
-                $('#upBanner').removeClass('err').addClass('ok').html(
-                    '<svg class="up-banner-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"'
-                    + ' stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'
-                    + '<circle cx="12" cy="12" r="10"/><polyline points="9 12 11 14 16 9"/></svg>'
-                    + '<span><strong>Resume restored.</strong> Your previously uploaded file is still attached.</span>'
-                ).show();
-                $('#uploadBox').hide();
-                $('#fileInfo').show();
-            }
-        });
+        window.ResumePresign.cancelUpload();
+        $('#resume_session_uuid').val('');
+        $('#uploaded_file_path').val('');
+        $('#resume_original_name').val('');
+        $('#resumeCheck').val('');
+        $('#uploadBox').show();
+        $('#fileInfo').hide();
+        $('#fileName').text('');
+        var ri = document.getElementById('resume'); if (ri) ri.value = '';
     }
     // ─────────────────────────────────────────────────────────────────────────
 
