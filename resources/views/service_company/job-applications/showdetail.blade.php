@@ -4754,7 +4754,9 @@ function notifyRdcDownloadStarted(fileName){
   }catch(ex){}
   try{
     if(typeof window.__rdcCompleteDownloadUi === 'function'){
-      setTimeout(function(){ window.__rdcCompleteDownloadUi(fileName); },0);
+      [0,120,500,1200].forEach(function(delay){
+        setTimeout(function(){ window.__rdcCompleteDownloadUi(fileName); },delay);
+      });
     }
   }catch(ex){}
 }
@@ -8313,10 +8315,15 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
   }
 
   function closeRdc(){
-    overlay.classList.remove('rdc-open');
-    drawer.classList.remove('rdc-open');
-    overlay.setAttribute('aria-hidden','true');
-    drawer.setAttribute('aria-hidden','true');
+    if(isLoading || smartCountdownTimer) resetBtn();
+    Array.prototype.slice.call(document.querySelectorAll('[id="rdcOverlay"]')).forEach(function(el){
+      el.classList.remove('rdc-open');
+      el.setAttribute('aria-hidden','true');
+    });
+    Array.prototype.slice.call(document.querySelectorAll('[id="rdcDrawer"]')).forEach(function(el){
+      el.classList.remove('rdc-open');
+      el.setAttribute('aria-hidden','true');
+    });
     document.removeEventListener('keydown', onEsc);
   }
 
@@ -8481,18 +8488,23 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
   function resetBtn(){
     stopSmartCountdown();
     isLoading = false;
-    if(!dlBtn) return;
-    dlBtn.disabled = false;
-    dlBtn.classList.remove('rdc-loading');
     var m = optMeta[selectedOpt] || {};
-    dlBtn.innerHTML =
+    var normalHtml =
       '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;flex-shrink:0" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>' +
       '<span id="rdcBtnLabel">' + downloadButtonLabel(m.label) + '</span>';
+    var buttons = Array.prototype.slice.call(document.querySelectorAll('[id="rdcDownloadBtn"]'));
+    if(dlBtn && buttons.indexOf(dlBtn) === -1) buttons.push(dlBtn);
+    buttons.forEach(function(button){
+      button.disabled = false;
+      button.classList.remove('rdc-loading');
+      button.innerHTML = normalHtml;
+    });
+    if(buttons.length) dlBtn = buttons[buttons.length - 1];
     btnLbl = document.getElementById('rdcBtnLabel');
   }
 
   function markDownloadStarted(){
-    if(!isLoading || !dlBtn) return;
+    if(!dlBtn) return;
     resetBtn();
   }
 
