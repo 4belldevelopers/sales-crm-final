@@ -5256,20 +5256,24 @@ async function buildHeadlessOption3SkillsHighlightedResume(options){
     if(['PDF','DOC','DOCX'].indexOf(resumeExt) === -1) throw new Error('Resume + Skills Highlighted is available for PDF, DOC and DOCX resumes only');
     await Promise.all([rsEnsurePdfJs(),rsEnsureJsPdf()]);
     var pdfBlob=null;
+    var usedClientDocxPdf=false;
     if(resumeExt==='PDF'){
       pdfBlob=await fetchPdfBlobFromSources(resumeSources);
     }else if(resumeExt==='DOCX'){
       if(options.preferClientDocx === true){
         try{
           pdfBlob=await convertResumeWithOpenDocLabBlob(resumeSources,resumeExt,false);
+          usedClientDocxPdf=true;
         }catch(openDocErr){
           console.warn('Client-first DOCX OpenDoc conversion failed; trying legacy browser renderer:',openDocErr);
           try{
             pdfBlob=await convertDocxResumeToPdfBlobFromSources(resumeSources);
+            usedClientDocxPdf=true;
           }catch(legacyDocxErr){
             console.warn('Client-first DOCX legacy renderer failed; using converter PDF URL if available:',legacyDocxErr);
             if(!resumePdfUrl) throw legacyDocxErr;
             pdfBlob=await fetchPdfResumeBlob(resumePdfUrl);
+            usedClientDocxPdf=false;
           }
         }
       }else{
@@ -5345,6 +5349,17 @@ async function buildHeadlessOption3SkillsHighlightedResume(options){
         pages.push({page:page,wrap:wrap,viewport:viewport});
       }
       var activeSkills=rsOption3KeywordsFromResumeText(resumeText);
+      if(!activeSkills.length && usedClientDocxPdf && resumePdfUrl){
+        console.warn('Client-first DOCX conversion produced no highlightable skill text; retrying enterprise converter PDF for accurate highlighting.');
+        removeNode(host);
+        window.__rsBusy=false;
+        return await buildHeadlessOption3SkillsHighlightedResume({
+          resumeUrl:resumeSources,
+          resumeExt:resumeExt,
+          resumePdfUrl:resumePdfUrl,
+          returnBlob:options.returnBlob===true
+        });
+      }
       var re=rsOption3BuildRegex(activeSkills);
       if(re){
         pages.forEach(function(pageInfo){ rsOption3HighlightTextLayer(pageInfo.wrap.querySelector('.rdc-headless-rcv-textlayer'),re); });
