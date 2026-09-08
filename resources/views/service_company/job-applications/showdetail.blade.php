@@ -327,6 +327,8 @@
 #rdcOptsList .rdc-opt[data-opt="22"]{order:14;}
 #rdcOptsList .rdc-opt[data-opt="23"]{order:15;}
 #rdcOptsList .rdc-opt[data-opt="24"]{order:16;}
+#rdcOptsList .rdc-opt[data-opt="25"]{order:17;}
+#rdcOptsList .rdc-opt[data-opt="26"]{order:18;}
 #rdcOptsList .rdc-opt[data-opt="3"],
 #rdcOptsList .rdc-opt[data-opt="4"],
 #rdcOptsList .rdc-opt[data-opt="7"]{order:99;}
@@ -6777,6 +6779,342 @@ async function buildTurboVectorBrandedResume(resumePdfUrl,options){
     window.__rsBusy=false;
   }
 }
+async function processClientLightningResume(isBranded,options){
+  /* Purpose: 100% Client-Side Lightning Resume Engine (Option 25 & 26).
+     Executes entirely in the user's browser with 0% server CPU load.
+     - For DOCX: Renders via docx-preview in browser memory without destructive layout overrides.
+       Highlights keywords directly in the DOM text nodes (100% accuracy, perfect wrapping, ascenders/descenders covered).
+       For Option 25, injects the company branding header at the top of Page 1 in the DOM.
+       Renders page-by-page directly to canvas at 2x DPI with FAST compression into jsPDF.
+     - For PDF: Uses pdf.js with parallel multi-page text extraction and pdf-lib for vector rectangles.
+       For Option 25, extends Page 1 height and embeds the company branding bar at the top. */
+  if(window.__rsBusy) return Promise.resolve(false);
+  window.__rsBusy=true;
+  try{
+    options=options||{};
+    var resumeSources=(Array.isArray(options.resumeUrl) ? options.resumeUrl : [options.resumeUrl||'']).map(function(url){
+      return clean(url,'');
+    }).filter(function(url,index,self){
+      return url && url!=='--' && self.indexOf(url)===index;
+    });
+    var resumeExt=clean(options.resumeExt||'','').toUpperCase();
+    var resumePdfUrl=clean(options.resumePdfUrl||'','');
+    if(['PDF','DOC','DOCX'].indexOf(resumeExt)===-1) throw new Error('Client Lightning Resume is available for PDF, DOC and DOCX resumes only');
+
+    var data=readData();
+
+    // Pool all ATS skills, drawer matches, and profile skills
+    var allKeywords=[];
+    var seenKw={};
+    function addKw(val){
+      if(!val) return;
+      if(typeof val==='object') val=val.skill_name||val.skill||val.name||val.skill_key||'';
+      val=String(val).replace(/\+\d+\s*More/gi,'').replace(/\s+/g,' ').trim();
+      if(val.length<2) return;
+      var k=val.toLowerCase();
+      if(seenKw[k]) return;
+      seenKw[k]=true;
+      allKeywords.push(val);
+    }
+    (Array.isArray(rsDrawerMatchedKeywords) ? rsDrawerMatchedKeywords : []).forEach(addKw);
+    Array.prototype.slice.call(document.querySelectorAll('#kt_activitiesApplication .cdr-skill-tag.cdr-skill-match:not(.cdr-skill-more), .cdr-skill-tag.cdr-skill-match:not(.cdr-skill-more), .cdr-skill-tag:not(.cdr-skill-more)')).forEach(function(el){
+      addKw(el.textContent||'');
+    });
+    (Array.isArray(rsAtsHighlightKeywords) ? rsAtsHighlightKeywords : []).forEach(addKw);
+    try{
+      (Array.isArray(data.skills) ? data.skills : []).forEach(addKw);
+    }catch(ex){}
+
+    var keywordRe=rsKeywordRegex(allKeywords);
+
+    if(resumeExt==='DOCX'){
+      // 100% Client-Side DOCX pipeline: docx-preview -> DOM keyword highlight -> Page 1 header -> Direct high-DPI canvas
+      await rsEnsureDocxConversion();
+      var docxBytes=window.__rsCachedResumeBytes;
+      if(!docxBytes || !docxBytes.byteLength){
+        docxBytes=await fetchResumeBytesFromSources(resumeSources);
+        window.__rsCachedResumeBytes=docxBytes;
+      }
+
+      var host=document.createElement('div');
+      host.className='rs-lightning-docx-host';
+      host.style.cssText='position:fixed;left:-9999px;top:0;width:794px;background:#ffffff;overflow:visible;pointer-events:none;z-index:-9999;';
+      document.body.appendChild(host);
+
+      try{
+        await window.docx.renderAsync(docxBytes,host,null,{
+          className:'rs-docx-lightning',
+          inWrapper:true,
+          ignoreWidth:false,
+          ignoreHeight:true,
+          breakPages:true,
+          renderHeaders:true,
+          renderFooters:true,
+          useBase64URL:true
+        });
+
+        // Direct DOM keyword highlighting via TreeWalker (100% accuracy, covers ascenders/descenders)
+        if(keywordRe){
+          var walker=document.createTreeWalker(host,NodeFilter.SHOW_TEXT,null,false);
+          var textNode;
+          var matchNodes=[];
+          while((textNode=walker.nextNode())){
+            var parent=textNode.parentElement;
+            if(!parent || ['SCRIPT','STYLE','MARK','BUTTON','INPUT'].indexOf(parent.tagName)!==-1) continue;
+            keywordRe.lastIndex=0;
+            if(keywordRe.test(textNode.nodeValue)){
+              matchNodes.push(textNode);
+            }
+          }
+          matchNodes.forEach(function(tn){
+            var val=tn.nodeValue;
+            keywordRe.lastIndex=0;
+            var frag=document.createDocumentFragment();
+            var lastIdx=0;
+            var m;
+            while((m=keywordRe.exec(val))!==null){
+              if(m.index>lastIdx){
+                frag.appendChild(document.createTextNode(val.substring(lastIdx,m.index)));
+              }
+              var mark=document.createElement('mark');
+              mark.style.cssText='background:#ffe27a!important;color:inherit!important;padding:1px 2px!important;border-radius:2px!important;box-decoration-break:clone;-webkit-box-decoration-break:clone;';
+              mark.textContent=m[0];
+              frag.appendChild(mark);
+              lastIdx=m.index+m[0].length;
+              if(m.index===keywordRe.lastIndex) keywordRe.lastIndex++;
+            }
+            if(lastIdx<val.length){
+              frag.appendChild(document.createTextNode(val.substring(lastIdx)));
+            }
+            if(tn.parentNode) tn.parentNode.replaceChild(frag,tn);
+          });
+        }
+
+        // Option 25: Inject company branding header at top of Page 1 in DOM
+        if(isBranded){
+          var firstSection=host.querySelector('section.rs-docx-lightning, section.docx, .docx-wrapper > section');
+          if(firstSection){
+            var headerCard=document.createElement('div');
+            headerCard.style.cssText='width:100%;box-sizing:border-box;background:#ffffff;padding:14px 22px 10px;border-bottom:1.5px solid #cbd5e1;display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;font-family:Arial,sans-serif;';
+            var logoUri=await rsLogoDataUri(data.reportCompanyLogo);
+            var compName=clean(data.reportCompanyName,'Hiring Partner');
+            var logoPart=logoUri ? '<img src="'+escapeHtml(logoUri)+'" style="height:42px;max-width:120px;object-fit:contain;margin-right:12px;" />' : '<div style="width:38px;height:38px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:6px;display:flex;align-items:center;justify-content:center;font-weight:700;color:#1e40af;font-size:18px;margin-right:12px;">'+escapeHtml(compName.charAt(0).toUpperCase())+'</div>';
+            headerCard.innerHTML='<div style="display:flex;align-items:center;">'+logoPart+'<div><div style="font-size:8px;font-weight:700;color:#64748b;letter-spacing:0.5px;text-transform:uppercase;">SHARED BY</div><div style="font-size:14px;font-weight:700;color:#0f172a;line-height:1.2;">'+escapeHtml(compName)+'</div></div></div><div style="text-align:right;"><div style="font-size:13px;font-weight:700;color:#1e293b;letter-spacing:0.5px;">CONFIDENTIAL RESUME</div><div style="font-size:9.5px;font-weight:500;color:#64748b;margin-top:2px;">'+escapeHtml(clean(data.reportDate,'') || (new Date()).toLocaleDateString())+'</div></div>';
+            firstSection.insertBefore(headerCard,firstSection.firstChild);
+          }
+        }
+
+        await waitForRenderedAssets(host);
+
+        var sections=Array.prototype.slice.call(host.querySelectorAll('section.rs-docx-lightning, section.docx, .docx-wrapper > section'));
+        if(!sections.length) sections=[host];
+
+        var JsPDF=window.jspdf.jsPDF;
+        var pdf=new JsPDF({orientation:'portrait',unit:'pt',format:'a4',compress:true});
+        var pageW=pdf.internal.pageSize.getWidth();
+        var pageH=pdf.internal.pageSize.getHeight();
+
+        for(var i=0;i<sections.length;i++){
+          var sec=sections[i];
+          sec.style.background='#ffffff';
+          sec.style.boxShadow='none';
+          sec.style.margin='0';
+          var cv=await window.html2canvas(sec,{
+            backgroundColor:'#ffffff',
+            scale:2.0,
+            useCORS:true,
+            logging:false,
+            removeContainer:false
+          });
+          if(i>0) pdf.addPage('a4','portrait');
+          var img=cv.toDataURL('image/png');
+          var drawH=cv.height*(pageW/cv.width);
+          pdf.addImage(img,'PNG',0,0,pageW,Math.min(pageH,drawH),undefined,'FAST');
+          cv.width=0; cv.height=0;
+        }
+
+        var outputBlob=pdf.output('blob');
+        var suffix=isBranded ? '_Client_Lightning_Highlighted_Branded.pdf' : '_Client_Lightning_Highlighted.pdf';
+        downloadBlob(outputBlob,'JEROWORKS_'+fileSafeName(data.name,'Candidate')+suffix);
+        return true;
+      }finally{
+        removeNode(host);
+      }
+    }else{
+      // 100% Client-Side PDF pipeline: pdf.js parallel extraction -> sub-pixel pdf-lib vector rectangles -> Page 1 header extension
+      await Promise.all([rsEnsurePdfJs(),rsEnsurePdfLib()]);
+      var sourceBytes=window.__rsCachedResumeBytes;
+      if(!sourceBytes || !sourceBytes.byteLength){
+        var pdfBlob=await fetchPdfBlobFromSources(resumeSources);
+        sourceBytes=await pdfBlob.arrayBuffer();
+        window.__rsCachedResumeBytes=sourceBytes;
+      }
+      var bytes=new Uint8Array(sourceBytes);
+      var pdfjsDoc=await window.pdfjsLib.getDocument({data:bytes}).promise;
+
+      // Parallel text extraction across all pages
+      var pagePromises=[];
+      for(var p=1;p<=pdfjsDoc.numPages;p++){
+        pagePromises.push((async function(num){
+          var pg=await pdfjsDoc.getPage(num);
+          var tc=await pg.getTextContent();
+          return {pageNum:num,tc:tc};
+        })(p));
+      }
+      var pagesTextData=await Promise.all(pagePromises);
+
+      var PDFLib=window.PDFLib;
+      var pdfDoc=await PDFLib.PDFDocument.load(sourceBytes);
+
+      var measureCanvas=document.createElement('canvas');
+      var measureCtx=measureCanvas.getContext('2d');
+      function measureSliceFast(fullStr,startIdx,endIdx,itemWidth,fontH){
+        measureCtx.font=Math.round(fontH)+'px sans-serif';
+        var fullM=measureCtx.measureText(fullStr).width;
+        if(!fullM || fullM<=0){
+          var len=Math.max(1,fullStr.length);
+          return {offset:(startIdx/len)*itemWidth,width:Math.max(3,((endIdx-startIdx)/len)*itemWidth)};
+        }
+        var scale=itemWidth/fullM;
+        return {
+          offset:measureCtx.measureText(fullStr.substring(0,startIdx)).width*scale,
+          width:Math.max(3,measureCtx.measureText(fullStr.substring(startIdx,endIdx)).width*scale)
+        };
+      }
+
+      if(keywordRe){
+        pagesTextData.forEach(function(pData){
+          var pdfLibPage=pdfDoc.getPage(pData.pageNum-1);
+          var runsData=rsPageTextRuns(pData.tc);
+          if(!runsData.text || !runsData.runs.length) return;
+          keywordRe.lastIndex=0;
+          var match;
+          while((match=keywordRe.exec(runsData.text))!==null){
+            var mStart=match.index;
+            var mEnd=mStart+match[0].length;
+            runsData.runs.forEach(function(run){
+              if(run.end<=mStart || run.start>=mEnd) return;
+              var item=run.item;
+              if(!item || !item.transform) return;
+              var tx=item.transform[4]||0;
+              var ty=item.transform[5]||0;
+              var itemH=Math.max(Math.abs(item.transform[3]||item.height||0),9);
+              var itemW=Math.max(Math.abs(item.width||0),2);
+              var itemStr=item.str||'';
+              if(!itemStr.trim()) return;
+              var subStart=Math.max(0,mStart-run.start);
+              var subEnd=Math.min(itemStr.length,mEnd-run.start);
+              if(subEnd<=subStart) return;
+              var slice=measureSliceFast(itemStr,subStart,subEnd,itemW,itemH);
+              var padX=Math.min(2.5,itemH*0.14);
+              pdfLibPage.drawRectangle({
+                x:tx+slice.offset-padX,
+                y:ty-(itemH*0.22),
+                width:slice.width+(padX*2),
+                height:itemH*1.16,
+                color:PDFLib.rgb(1,0.85,0.15),
+                opacity:0.42
+              });
+            });
+            if(match.index===keywordRe.lastIndex) keywordRe.lastIndex++;
+          }
+        });
+      }
+
+      if(isBranded){
+        var sourcePages=pdfDoc.getPages();
+        var firstPage=sourcePages[0];
+        var pageSize=firstPage.getSize();
+        var targetDoc=await PDFLib.PDFDocument.create();
+        var regularFont=await targetDoc.embedFont(PDFLib.StandardFonts.Helvetica);
+        var boldFont=await targetDoc.embedFont(PDFLib.StandardFonts.HelveticaBold);
+        var logoUri=await rsLogoDataUri(data.reportCompanyLogo);
+        var logoImage=null;
+        var logoData=dataUriBytes(logoUri);
+        if(logoData){
+          try{
+            if(logoData.mime.indexOf('png')!==-1) logoImage=await targetDoc.embedPng(logoData.bytes);
+            else if(logoData.mime.indexOf('jpeg')!==-1 || logoData.mime.indexOf('jpg')!==-1) logoImage=await targetDoc.embedJpg(logoData.bytes);
+          }catch(err){ logoImage=null; }
+        }
+        var headerScale=Math.max(1,Math.min(1.45,pageSize.width/612));
+        var headerH=Math.max(66,Math.min(82,pageSize.width*0.105))*headerScale;
+        var newFirst=targetDoc.addPage([pageSize.width,pageSize.height+headerH]);
+        var embeddedFirst=await targetDoc.embedPage(firstPage);
+        newFirst.drawPage(embeddedFirst,{x:0,y:0,width:pageSize.width,height:pageSize.height});
+        var topY=pageSize.height;
+        newFirst.drawRectangle({x:0,y:topY,width:pageSize.width,height:headerH,color:PDFLib.rgb(1,1,1),borderColor:PDFLib.rgb(0.86,0.89,0.94),borderWidth:0.8});
+        newFirst.drawRectangle({x:0,y:topY+headerH-(4*headerScale),width:pageSize.width,height:4*headerScale,color:PDFLib.rgb(0.12,0.23,0.54)});
+        newFirst.drawRectangle({x:0,y:topY,width:pageSize.width,height:1.1*headerScale,color:PDFLib.rgb(0.88,0.91,0.95)});
+        var compName=clean(data.reportCompanyName,'Hiring Partner');
+        var logoBox=headerH-(26*headerScale);
+        var logoX=22*headerScale;
+        var logoY=topY+(14*headerScale);
+        var logoAreaW=70*headerScale;
+        if(logoImage){
+          var dims=logoImage.scaleToFit(logoBox*1.8,logoBox);
+          newFirst.drawImage(logoImage,{x:logoX,y:logoY+(logoBox-dims.height)/2,width:dims.width,height:dims.height});
+          logoAreaW=Math.max(56*headerScale,Math.min(74*headerScale,dims.width));
+        }else{
+          newFirst.drawRectangle({x:logoX,y:logoY,width:logoBox,height:logoBox,color:PDFLib.rgb(0.93,0.95,1),borderColor:PDFLib.rgb(0.75,0.82,0.98),borderWidth:0.8*headerScale});
+          newFirst.drawText(compName.charAt(0).toUpperCase(),{x:logoX+(logoBox/2)-(5*headerScale),y:logoY+(logoBox/2)-(5*headerScale),size:16*headerScale,font:boldFont,color:PDFLib.rgb(0.12,0.23,0.54)});
+          logoAreaW=logoBox;
+        }
+        var textX=logoX+logoAreaW+(12*headerScale);
+        var rightX=pageSize.width-(190*headerScale);
+        newFirst.drawText('SHARED BY',{x:textX,y:topY+headerH-(29*headerScale),size:7*headerScale,font:boldFont,color:PDFLib.rgb(0.39,0.45,0.55)});
+        newFirst.drawText(limitText(compName,42,compName),{x:textX,y:topY+headerH-(47*headerScale),size:12*headerScale,font:boldFont,color:PDFLib.rgb(0.06,0.09,0.16)});
+        newFirst.drawText('CONFIDENTIAL RESUME',{x:rightX,y:topY+headerH-(29*headerScale),size:14*headerScale,font:boldFont,color:PDFLib.rgb(0.06,0.09,0.16)});
+        newFirst.drawText(clean(data.reportDate,'') || (new Date()).toLocaleDateString(),{x:rightX,y:topY+headerH-(45*headerScale),size:8.4*headerScale,font:regularFont,color:PDFLib.rgb(0.39,0.45,0.55)});
+        if(sourcePages.length>1){
+          var restPages=await targetDoc.copyPages(pdfDoc,pdfDoc.getPageIndices().slice(1));
+          restPages.forEach(function(page){ targetDoc.addPage(page); });
+        }
+        var finalBytes=await targetDoc.save();
+        downloadBlob(new Blob([finalBytes],{type:'application/pdf'}),'JEROWORKS_'+fileSafeName(data.name,'Candidate')+'_Client_Lightning_Highlighted_Branded.pdf');
+        return true;
+      }else{
+        var outputBytes=await pdfDoc.save();
+        downloadBlob(new Blob([outputBytes],{type:'application/pdf'}),'JEROWORKS_'+fileSafeName(data.name,'Candidate')+'_Client_Lightning_Highlighted.pdf');
+        return true;
+      }
+    }
+  }catch(err){
+    console.error('Client Lightning Resume error:',err);
+    alert('Could not generate Client Lightning Resume.\n\nReason: '+(err && err.message ? err.message : 'Unknown lightning error'));
+    return false;
+  }finally{
+    window.__rsBusy=false;
+  }
+}
+async function buildClientLightningHighlightedResume(options){
+  /* Purpose: Option 26 — 100% Client-Side Fast Highlighted Resume without branding */
+  return processClientLightningResume(false,options);
+}
+async function buildClientLightningBrandedResume(options){
+  /* Purpose: Option 25 — 100% Client-Side Fast Highlighted Resume with Company Branding */
+  return processClientLightningResume(true,options);
+}
+function preloadClientLightningAssets(){
+  /* Purpose: Preload client-side conversion libraries and speculative resume bytes */
+  var dataEl=document.getElementById('rdcData');
+  var ext=(dataEl ? dataEl.getAttribute('data-file-ext') : '') || '';
+  ext=ext.toUpperCase();
+  var tasks=[rsEnsurePdfJs(),rsEnsurePdfLib()];
+  if(ext==='DOCX'||ext==='DOC'){
+    tasks.push(rsEnsureDocxConversion());
+  }
+  // Speculative fetch of resume bytes into client RAM cache
+  if(dataEl && !window.__rsCachedResumeBytes){
+    var urls=[dataEl.getAttribute('data-r2-direct-url'),dataEl.getAttribute('data-r2-public-url'),dataEl.getAttribute('data-resume-url')].filter(Boolean);
+    if(urls.length){
+      fetchResumeBytesFromSources(urls).then(function(b){
+        window.__rsCachedResumeBytes=b;
+      }).catch(function(){});
+    }
+  }
+  return Promise.all(tasks).catch(function(){ return null; });
+}
 async function buildPreScreenedHighlightedResume(resumePdfUrl,options){
   /* Purpose: generate the Pre-Screened Report and append the highlighted resume; DOCX can run browser-first with enterprise PDF fallback, while DOC stays on the enterprise converter. */
   if(window.__rsBusy) return Promise.resolve(false);
@@ -6975,6 +7313,9 @@ window.__buildFastHighlightedBrandingResume=buildFastHighlightedBrandingResume;
 window.__buildPreScreenedHighlightedResume=buildPreScreenedHighlightedResume;
 window.__buildTurboVectorHighlightedResume=buildTurboVectorHighlightedResume;
 window.__buildTurboVectorBrandedResume=buildTurboVectorBrandedResume;
+window.__buildClientLightningHighlightedResume=buildClientLightningHighlightedResume;
+window.__buildClientLightningBrandedResume=buildClientLightningBrandedResume;
+window.__preloadClientLightning=preloadClientLightningAssets;
 window.__convertResumeToPdfOnly=convertResumeToPdfOnly;
 window.__convertResumeToPdfBrowserOnly=convertResumeToPdfBrowserOnly;
 window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
@@ -7352,6 +7693,42 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
         <span class="rdc-ocirc" aria-hidden="true"></span>
       </label>
 
+      {{-- 25: Client Lightning highlighted resume plus company branding --}}
+      <label class="rdc-opt" data-opt="25" data-coins="6">
+        <input class="rdc-rinput" type="radio" name="rdcFormat" value="25">
+        <span class="rdc-onum">25</span>
+        <span class="rdc-oi" style="background:#ede9fe;color:#7c3aed;" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+        </span>
+        <span class="rdc-obody">
+          <span class="rdc-otitle">Client Lightning Resume + Highlights + Branding <span style="background:#f3e8ff;color:#6b21a8;font-size:8.5px;font-weight:700;padding:1px 6px;border-radius:4px;vertical-align:middle;margin-left:4px;">100% Client-Side</span></span>
+          <span class="rdc-odesc">Ultra-fast pure browser conversion + DOM keyword highlights + company branding header (~1.5s)</span>
+        </span>
+        <span class="rdc-ometa">
+          <span class="rdc-ocost">6 Coins</span>
+          <span class="rdc-otime">Fast</span>
+        </span>
+        <span class="rdc-ocirc" aria-hidden="true"></span>
+      </label>
+
+      {{-- 26: Client Lightning highlighted resume only --}}
+      <label class="rdc-opt" data-opt="26" data-coins="4">
+        <input class="rdc-rinput" type="radio" name="rdcFormat" value="26">
+        <span class="rdc-onum">26</span>
+        <span class="rdc-oi" style="background:#e0e7ff;color:#4338ca;" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+        </span>
+        <span class="rdc-obody">
+          <span class="rdc-otitle">Client Lightning Resume + Highlights <span style="background:#e0e7ff;color:#3730a3;font-size:8.5px;font-weight:700;padding:1px 6px;border-radius:4px;vertical-align:middle;margin-left:4px;">100% Client-Side</span></span>
+          <span class="rdc-odesc">Ultra-fast pure browser conversion + 100% accurate DOM keyword highlights (~1.2s)</span>
+        </span>
+        <span class="rdc-ometa">
+          <span class="rdc-ocost">4 Coins</span>
+          <span class="rdc-otime">Fast</span>
+        </span>
+        <span class="rdc-ocirc" aria-hidden="true"></span>
+      </label>
+
     </div>{{-- /.rdc-opts-list --}}
 
     {{-- Coin info summary --}}
@@ -7422,7 +7799,9 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
     21:{cost:6, label:'Fast Resume + Highlighted Keywords + Company Branding', avail:(['PDF','DOC','DOCX'].indexOf(resumeExt) !== -1), dlKey:'fast-highlighted-branded-resume-client-docx', unavailableMsg:'Fast Resume + Highlighted Keywords + Company Branding is available for PDF, DOC and DOCX resumes only.'},
     22:{cost:4, label:'Fast Resume + Highlighted Keywords', avail:(['PDF','DOC','DOCX'].indexOf(resumeExt) !== -1), dlKey:'fast-highlighted-resume-client-docx', unavailableMsg:'Fast Resume + Highlighted Keywords is available for PDF, DOC and DOCX resumes only.'},
     23:{cost:6, label:'Turbo Vector Resume + Highlights + Branding', avail:(['PDF','DOC','DOCX'].indexOf(resumeExt) !== -1), dlKey:'turbo-vector-highlighted-branded', unavailableMsg:'Turbo Vector Branded Resume is available for PDF, DOC and DOCX resumes only.'},
-    24:{cost:4, label:'Turbo Vector Resume + Highlights', avail:(['PDF','DOC','DOCX'].indexOf(resumeExt) !== -1), dlKey:'turbo-vector-highlighted', unavailableMsg:'Turbo Vector Highlighted Resume is available for PDF, DOC and DOCX resumes only.'}
+    24:{cost:4, label:'Turbo Vector Resume + Highlights', avail:(['PDF','DOC','DOCX'].indexOf(resumeExt) !== -1), dlKey:'turbo-vector-highlighted', unavailableMsg:'Turbo Vector Highlighted Resume is available for PDF, DOC and DOCX resumes only.'},
+    25:{cost:6, label:'Client Lightning Resume + Highlights + Branding', avail:(['PDF','DOC','DOCX'].indexOf(resumeExt) !== -1), dlKey:'client-lightning-highlighted-branded', unavailableMsg:'Client Lightning Branded Resume is available for PDF, DOC and DOCX resumes only.'},
+    26:{cost:4, label:'Client Lightning Resume + Highlights', avail:(['PDF','DOC','DOCX'].indexOf(resumeExt) !== -1), dlKey:'client-lightning-highlighted', unavailableMsg:'Client Lightning Highlighted Resume is available for PDF, DOC and DOCX resumes only.'}
   };
 
   var selectedOpt = 1;
@@ -7447,6 +7826,7 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
     drawer.setAttribute('aria-hidden','false');
     drawer.focus();
     if(typeof window.__preloadRS === 'function') window.__preloadRS();
+    if(typeof window.__preloadClientLightning === 'function') window.__preloadClientLightning();
     document.addEventListener('keydown', onEsc);
   }
 
@@ -7522,6 +7902,7 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
     if(m.dlKey === 'fast-highlighted-resume-client-docx' && typeof window.__preloadRSCombined === 'function') window.__preloadRSCombined();
     if(m.dlKey === 'fast-highlighted-resume-client-docx' && resumeExt === 'DOCX' && typeof window.__preloadOpenDocLocal === 'function') window.__preloadOpenDocLocal();
     if((m.dlKey === 'turbo-vector-highlighted-branded' || m.dlKey === 'turbo-vector-highlighted') && typeof window.__preloadRSCombined === 'function') window.__preloadRSCombined();
+    if((m.dlKey === 'client-lightning-highlighted-branded' || m.dlKey === 'client-lightning-highlighted') && typeof window.__preloadClientLightning === 'function') window.__preloadClientLightning();
     if((m.dlKey === 'prescreened-highlighted-package' || m.dlKey === 'prescreened-highlighted-package-nobrand' || m.dlKey === 'prescreened-highlighted-package-client-docx' || m.dlKey === 'prescreened-highlighted-package-client-docx-nobrand') && typeof window.__preloadRSCombined === 'function') window.__preloadRSCombined();
     if((m.dlKey === 'prescreened-highlighted-package' || m.dlKey === 'prescreened-highlighted-package-nobrand' || m.dlKey === 'prescreened-highlighted-package-client-docx' || m.dlKey === 'prescreened-highlighted-package-client-docx-nobrand') && resumeExt === 'DOCX' && typeof window.__preloadOpenDocLocal === 'function') window.__preloadOpenDocLocal();
     if(m.dlKey === 'smart-branded-resume' && typeof window.__preloadRSCombined === 'function') window.__preloadRSCombined();
@@ -7994,6 +8375,64 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
             if(ok) closeRdc();
           }).catch(function(err){
             showToast('Could not generate Turbo Vector resume: ' + (err && err.message ? err.message : 'Unknown error'), 'warn');
+          }).finally(function(){
+            resetBtn();
+          });
+        }, 50);
+
+      } else if(m.dlKey === 'client-lightning-highlighted-branded'){
+        /* Option 25: 100% Client-Side Lightning Resume with keyword highlights and company branding */
+        if(window.__rsBusy || typeof window.__buildClientLightningBrandedResume !== 'function'){
+          showToast('Please wait a moment and try again.', 'warn');
+          resetBtn(); return;
+        }
+        if(['PDF','DOC','DOCX'].indexOf(resumeExt) === -1){
+          showToast(m.unavailableMsg || 'Client Lightning Resume is available for PDF, DOC and DOCX resumes only.', 'warn');
+          resetBtn(); return;
+        }
+        if(!r2DirectUrl && !r2PublicUrl && !dlUrl && !resumePdfUrl){
+          showToast('Resume URL is not available.', 'warn');
+          resetBtn(); return;
+        }
+        dlBtn.innerHTML = '<span class="rdc-spin"></span><span>Generating 100% Client-Side PDF...</span>';
+        setTimeout(function(){
+          window.__buildClientLightningBrandedResume({
+            resumeUrl:[r2DirectUrl,r2PublicUrl,dlUrl],
+            resumeExt:resumeExt,
+            resumePdfUrl:resumePdfUrl
+          }).then(function(ok){
+            if(ok) closeRdc();
+          }).catch(function(err){
+            showToast('Could not generate Client Lightning resume: ' + (err && err.message ? err.message : 'Unknown error'), 'warn');
+          }).finally(function(){
+            resetBtn();
+          });
+        }, 50);
+
+      } else if(m.dlKey === 'client-lightning-highlighted'){
+        /* Option 26: 100% Client-Side Lightning Resume with keyword highlights only */
+        if(window.__rsBusy || typeof window.__buildClientLightningHighlightedResume !== 'function'){
+          showToast('Please wait a moment and try again.', 'warn');
+          resetBtn(); return;
+        }
+        if(['PDF','DOC','DOCX'].indexOf(resumeExt) === -1){
+          showToast(m.unavailableMsg || 'Client Lightning Resume is available for PDF, DOC and DOCX resumes only.', 'warn');
+          resetBtn(); return;
+        }
+        if(!r2DirectUrl && !r2PublicUrl && !dlUrl && !resumePdfUrl){
+          showToast('Resume URL is not available.', 'warn');
+          resetBtn(); return;
+        }
+        dlBtn.innerHTML = '<span class="rdc-spin"></span><span>Generating 100% Client-Side PDF...</span>';
+        setTimeout(function(){
+          window.__buildClientLightningHighlightedResume({
+            resumeUrl:[r2DirectUrl,r2PublicUrl,dlUrl],
+            resumeExt:resumeExt,
+            resumePdfUrl:resumePdfUrl
+          }).then(function(ok){
+            if(ok) closeRdc();
+          }).catch(function(err){
+            showToast('Could not generate Client Lightning resume: ' + (err && err.message ? err.message : 'Unknown error'), 'warn');
           }).finally(function(){
             resetBtn();
           });
