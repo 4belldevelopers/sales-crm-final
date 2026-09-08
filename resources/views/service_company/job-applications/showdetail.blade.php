@@ -5845,14 +5845,6 @@ async function convertResumeWithOpenDocLabBlob(resumeUrl,resumeExt,allowExternal
             var eOffset=m.endOffset;
             if(typeof m.free === 'function') m.free();
 
-            // Set native highlight in OpenDoc model
-            try{
-              if(typeof doc.setHighlight === 'function'){
-                var hRes=doc.setHighlight(sNode, sOffset, eNode, eOffset, 'yellow');
-                if(hRes && typeof hRes.free === 'function') hRes.free();
-              }
-            }catch(shErr){}
-
             // Query exact line-fragment bounding boxes from OpenDoc layout engine
             try{
               if(typeof doc.selectionRects === 'function'){
@@ -5884,7 +5876,7 @@ async function convertResumeWithOpenDocLabBlob(resumeUrl,resumeExt,allowExternal
       });
     }
 
-    var nativePdfBlob=openDocNativePdfBlob(doc);
+    var nativePdfBlob=pageHighlights && Object.keys(pageHighlights).length ? null : openDocNativePdfBlob(doc);
     if(nativePdfBlob) return nativePdfBlob;
     if(conversionOptions.requireTextPdf===true) throw new Error('OpenDoc browser safety limit: text PDF export unavailable');
     var renderDpi=conversionOptions.dpi||openDocRenderDpi(pageCount);
@@ -7366,6 +7358,7 @@ async function buildPreScreenedHighlightedResume(resumePdfUrl,options){
           openDocConversionOptions:{
             maxBytes:parseInt(options.clientDocxMaxBytes,10)||1536*1024,
             maxPages:parseInt(options.clientDocxMaxPages,10)||6,
+            requireTextPdf:true,
             dpi:216,
             jpegQuality:0.98
           },
