@@ -5812,8 +5812,8 @@ async function convertResumeWithOpenDocLabBlob(resumeUrl,resumeExt,allowExternal
     if(!pageCount || pageCount<1) throw new Error('OpenDoc produced no pages');
     if(pageCount>maxPages) throw new Error('OpenDoc lab page limit exceeded');
 
-    // Extract full document text across all pages using copyText
-    var allKws=conversionOptions.highlightKeywords||rsCollectActiveKeywords();
+    // Keep branding-only DOCX conversions clean while allowing highlighter options to reuse this converter.
+    var allKws=(conversionOptions.skipHighlights===true) ? [] : (conversionOptions.highlightKeywords||rsCollectActiveKeywords());
     var fullDocText='';
     try{
       var pos1=(typeof doc.firstPosition === 'function') ? doc.firstPosition() : null;
@@ -5826,7 +5826,7 @@ async function convertResumeWithOpenDocLabBlob(resumeUrl,resumeExt,allowExternal
     }catch(ctErr){}
 
     // Also extract skills directly detected in resume text across all pages (Option 3 engine)
-    if(fullDocText && typeof rsOption3KeywordsFromResumeText==='function'){
+    if(conversionOptions.skipHighlights!==true && fullDocText && typeof rsOption3KeywordsFromResumeText==='function'){
       try{
         var extractedSkills=rsOption3KeywordsFromResumeText(fullDocText);
         if(Array.isArray(extractedSkills)){
@@ -6509,16 +6509,11 @@ async function buildSmartBrandedResume(resumePdfUrl,options){
       resumeBlob=await fetchPdfBlobFromSources(resumeSources);
     }else if(resumeExt==='DOCX'){
       try{
-        resumeBlob=await convertResumeWithOpenDocLabBlob(resumeSources,resumeExt,false);
+        resumeBlob=await convertResumeWithOpenDocLabBlob(resumeSources,resumeExt,false,{skipHighlights:true});
       }catch(browserDocxErr){
-        console.warn('OpenDoc DOCX branding conversion failed; trying legacy browser renderer:',browserDocxErr);
-        try{
-          resumeBlob=await convertDocxResumeToPdfBlobFromSources(resumeSources);
-        }catch(legacyDocxErr){
-          console.warn('Legacy DOCX branding conversion failed; using converter PDF URL if available:',legacyDocxErr);
-          if(!resumePdfUrl) throw legacyDocxErr;
-          resumeBlob=await fetchPdfResumeBlob(resumePdfUrl);
-        }
+        console.warn('OpenDoc DOCX branding conversion failed; using enterprise converter PDF URL if available:',browserDocxErr);
+        if(!resumePdfUrl) throw browserDocxErr;
+        resumeBlob=await fetchPdfResumeBlob(resumePdfUrl);
       }
     }else{
       if(!resumePdfUrl) throw new Error('DOC resume needs enterprise converter PDF URL');
