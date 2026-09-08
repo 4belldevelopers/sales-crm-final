@@ -330,6 +330,13 @@
 #rdcOptsList .rdc-opt[data-opt="25"]{order:17;}
 #rdcOptsList .rdc-opt[data-opt="26"]{order:18;}
 #rdcOptsList .rdc-opt[data-opt="27"]{order:19;}
+#rdcOptsList .rdc-opt[data-opt="21"],
+#rdcOptsList .rdc-opt[data-opt="22"],
+#rdcOptsList .rdc-opt[data-opt="23"],
+#rdcOptsList .rdc-opt[data-opt="24"],
+#rdcOptsList .rdc-opt[data-opt="25"],
+#rdcOptsList .rdc-opt[data-opt="26"],
+#rdcOptsList .rdc-opt[data-opt="27"]{display:none!important;}
 #rdcOptsList .rdc-opt[data-opt="3"],
 #rdcOptsList .rdc-opt[data-opt="4"],
 #rdcOptsList .rdc-opt[data-opt="7"]{order:99;}
