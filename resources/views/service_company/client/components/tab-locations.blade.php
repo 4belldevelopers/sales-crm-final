@@ -33,7 +33,7 @@
               }
               $countryListing .= '<option value="'.$cont['id'].'" '.$sel.'>'.$cont['name'].'</option>';
             }
-            $statelist = GeneralMethod::statelist($clVal->country_id);
+            $statelist = \App\Helper\GeneralMethod::statelist($clVal->country_id);
             foreach ($statelist as $state) {
               $sel = ($state['id'] == $clVal->state) ? 'selected="selected"' : '';
               $stateListing .= '<option value="'.$state['id'].'" '.$sel.'>'.$state['name'].'</option>';
