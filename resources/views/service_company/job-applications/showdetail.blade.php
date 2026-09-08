@@ -5107,9 +5107,9 @@ async function convertDocxResumeToPdfBlob(resumeUrl){
         ctx.fillStyle='#ffffff';
         ctx.fillRect(0,0,slice.width,slice.height);
         ctx.drawImage(canvas,0,offsetY,canvas.width,currentHeight,0,0,canvas.width,currentHeight);
-        var img=slice.toDataURL('image/jpeg',0.92);
+        var img=slice.toDataURL('image/png');
         var drawH=currentHeight*(pageW/canvas.width);
-        pdf.addImage(img,'JPEG',0,0,pageW,drawH,undefined,'FAST');
+        pdf.addImage(img,'PNG',0,0,pageW,drawH,undefined,'SLOW');
         offsetY+=currentHeight;
         isFirstSlice=false;
       }
@@ -6512,16 +6512,19 @@ async function buildTurboVectorHighlightedResume(options){
     if(resumeExt==='PDF'){
       pdfBlob=await fetchPdfBlobFromSources(resumeSources);
     }else if(resumeExt==='DOCX'){
-      // 100% Client-Side: fetches raw DOCX bytes directly from Cloudflare R2 and converts locally in browser
-      try{
-        pdfBlob=await convertDocxResumeToPdfBlobFromSources(resumeSources);
-      }catch(browserDocxErr){
-        console.warn('Turbo Vector client DOCX conversion failed; trying OpenDoc fallback:',browserDocxErr);
+      // Use high-fidelity vector PDF (cached on Cloudflare R2) to guarantee 100% vector typography, exact Word layout, and crisp text highlighting
+      if(resumePdfUrl){
         try{
-          pdfBlob=await convertResumeWithOpenDocLabBlob(resumeSources,resumeExt,false);
-        }catch(openDocErr){
-          if(!resumePdfUrl) throw browserDocxErr;
           pdfBlob=await fetchPdfResumeBlob(resumePdfUrl);
+        }catch(convErr){
+          console.warn('Turbo Vector DOCX vector PDF fetch failed; trying browser conversion fallback:',convErr);
+        }
+      }
+      if(!pdfBlob){
+        try{
+          pdfBlob=await convertDocxResumeToPdfBlobFromSources(resumeSources);
+        }catch(browserDocxErr){
+          pdfBlob=await convertResumeWithOpenDocLabBlob(resumeSources,resumeExt,false);
         }
       }
     }else{
