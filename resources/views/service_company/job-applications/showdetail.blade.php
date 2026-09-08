@@ -1593,7 +1593,11 @@
             if(pdf){
               var fn = ((document.querySelector('#resume_cv .rcv-file span') || {}).textContent || 'resume').replace(/\.[^.]+$/, '');
               var sfx = (opts.highlights && opts.logo) ? '_highlighted_logo' : opts.highlights ? '_highlighted' : opts.logo ? '_logo' : '';
-              pdf.save(fn + sfx + '.pdf');
+              var outputName = fn + sfx + '.pdf';
+              pdf.save(outputName);
+              if(typeof window.__rdcNotifyDownloadStarted === 'function'){
+                window.__rdcNotifyDownloadStarted(outputName);
+              }
             }
             if(opts.logo && !bannerImg){ alert('Could not add the company banner; downloaded the résumé without it.'); }
             else if(opts.logo && logoFailed){ alert('Banner added without the company logo — the logo image could not be embedded due to its security settings.'); }
@@ -4744,6 +4748,17 @@ function preloadOpenDocLocalAssets(){
     return null;
   });
 }
+function notifyRdcDownloadStarted(fileName){
+  try{
+    window.dispatchEvent(new CustomEvent('rdc:download-started',{detail:{fileName:fileName}}));
+  }catch(ex){}
+  try{
+    if(typeof window.__rdcCompleteDownloadUi === 'function'){
+      setTimeout(function(){ window.__rdcCompleteDownloadUi(fileName); },0);
+    }
+  }catch(ex){}
+}
+window.__rdcNotifyDownloadStarted = notifyRdcDownloadStarted;
 function downloadBlob(blob,fileName){
   var url=URL.createObjectURL(blob);
   var a=document.createElement('a');
@@ -4751,9 +4766,7 @@ function downloadBlob(blob,fileName){
   a.download=fileName;
   document.body.appendChild(a);
   a.click();
-  try{
-    window.dispatchEvent(new CustomEvent('rdc:download-started',{detail:{fileName:fileName}}));
-  }catch(ex){}
+  notifyRdcDownloadStarted(fileName);
   setTimeout(function(){
     URL.revokeObjectURL(url);
     if(a.parentNode) a.parentNode.removeChild(a);
@@ -8483,6 +8496,7 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
     resetBtn();
   }
 
+  window.__rdcCompleteDownloadUi = markDownloadStarted;
   window.addEventListener('rdc:download-started', markDownloadStarted);
 
   if(dlBtn){
@@ -9891,6 +9905,9 @@ window.cdrExportProfilePDF = function(triggerEl, fromRdc){
     a.href=url; a.download=filename;
     document.body.appendChild(a);
     a.click();
+    if(typeof window.__rdcNotifyDownloadStarted === 'function'){
+      window.__rdcNotifyDownloadStarted(filename);
+    }
     document.body.removeChild(a);
     setTimeout(function(){ URL.revokeObjectURL(url); },3000);
   }).catch(function(err){
