@@ -6490,8 +6490,8 @@ async function buildFastHighlightedBrandingResume(resumePdfUrl,options){
 }
 async function buildTurboVectorHighlightedResume(options){
   /* Purpose: High-speed, zero-raster client-side vector keyword highlighting.
-     Uses pdfjsLib.getTextContent() solely to parse text run positions (points),
-     then uses pdf-lib to draw semi-transparent rectangles directly onto the vector PDF.
+     Extracts character coordinates via pdfjsLib, then uses pdf-lib to draw semi-transparent
+     rectangles directly onto the vector PDF with sub-pixel text measurement.
      Zero canvas rasterization, zero DOM thrashing, 100% crisp vector output with selectable text. */
   if(window.__rsBusy) return Promise.resolve(false);
   window.__rsBusy=true;
@@ -6550,11 +6550,57 @@ async function buildTurboVectorHighlightedResume(options){
       pagesTextData.push({pageNum:p,tc:tc});
     }
 
-    var activeSkills=rsOption3KeywordsFromResumeText(fullResumeText);
-    if(!activeSkills.length){
-      activeSkills=rsDrawerHighlightedKeywords();
+    // Comprehensive keyword collection: pools matched drawer skills, ATS job skills, and candidate profile skills
+    var allKeywords=[];
+    var seenKw={};
+    function addKw(val){
+      if(!val) return;
+      if(typeof val==='object') val=val.skill_name||val.skill||val.name||val.skill_key||'';
+      val=String(val).replace(/\+\d+\s*More/gi,'').replace(/\s+/g,' ').trim();
+      if(val.length<2) return;
+      var k=val.toLowerCase();
+      if(seenKw[k]) return;
+      seenKw[k]=true;
+      allKeywords.push(val);
     }
-    var keywordRe=rsOption3BuildRegex(activeSkills);
+    (Array.isArray(rsDrawerMatchedKeywords) ? rsDrawerMatchedKeywords : []).forEach(addKw);
+    Array.prototype.slice.call(document.querySelectorAll('#kt_activitiesApplication .cdr-skill-tag.cdr-skill-match:not(.cdr-skill-more), .cdr-skill-tag.cdr-skill-match:not(.cdr-skill-more), .cdr-skill-tag:not(.cdr-skill-more)')).forEach(function(el){
+      addKw(el.textContent||'');
+    });
+    (Array.isArray(rsAtsHighlightKeywords) ? rsAtsHighlightKeywords : []).forEach(addKw);
+    try{
+      var rData=readData();
+      (Array.isArray(rData.skills) ? rData.skills : []).forEach(addKw);
+    }catch(ex){}
+
+    // Build word-boundary regex with length-descending order
+    var keywordRe=rsKeywordRegex(allKeywords);
+    if(!keywordRe){
+      var fallbackSkills=rsOption3KeywordsFromResumeText(fullResumeText);
+      if(fallbackSkills.length) keywordRe=rsOption3BuildRegex(fallbackSkills);
+    }
+
+    // Helper for sub-pixel substring position and width measurement
+    var measureCanvas=document.createElement('canvas');
+    var measureCtx=measureCanvas.getContext('2d');
+    function measureSlice(fullStr,startIdx,endIdx,itemWidth,fontH){
+      measureCtx.font=Math.round(fontH)+'px sans-serif';
+      var fullM=measureCtx.measureText(fullStr).width;
+      if(!fullM || fullM<=0){
+        var len=Math.max(1,fullStr.length);
+        return {
+          offset:(startIdx/len)*itemWidth,
+          width:Math.max(3,((endIdx-startIdx)/len)*itemWidth)
+        };
+      }
+      var scale=itemWidth/fullM;
+      var prefixW=measureCtx.measureText(fullStr.substring(0,startIdx)).width*scale;
+      var matchW=measureCtx.measureText(fullStr.substring(startIdx,endIdx)).width*scale;
+      return {
+        offset:prefixW,
+        width:Math.max(3,matchW)
+      };
+    }
 
     // Draw native vector highlight rectangles into the PDF
     var PDFLib=window.PDFLib;
@@ -6579,25 +6625,29 @@ async function buildTurboVectorHighlightedResume(options){
 
             var tx=item.transform[4] || 0;
             var ty=item.transform[5] || 0;
-            var itemH=Math.max(Math.abs(item.transform[3] || item.height || 0), 8);
+            var itemH=Math.max(Math.abs(item.transform[3] || item.height || 0), 9);
             var itemW=Math.max(Math.abs(item.width || 0), 2);
-            var itemLen=Math.max(1, (item.str || '').length);
+            var itemStr=item.str || '';
+            if(!itemStr.trim()) return;
 
             var subStart=Math.max(0, mStart - run.start);
-            var subEnd=Math.min(itemLen, mEnd - run.start);
+            var subEnd=Math.min(itemStr.length, mEnd - run.start);
+            if(subEnd<=subStart) return;
 
-            var boxX=tx + (subStart / itemLen) * itemW;
-            var boxW=Math.max(3, ((subEnd - subStart) / itemLen) * itemW);
-            var boxY=Math.max(0, ty - (itemH * 0.18));
-            var boxH=Math.max(itemH * 1.12, 8);
+            var slice=measureSlice(itemStr,subStart,subEnd,itemW,itemH);
+            var padX=Math.min(2.5, itemH*0.14);
+            var boxX=tx + slice.offset - padX;
+            var boxW=slice.width + (padX * 2);
+            var boxY=ty - (itemH * 0.22);
+            var boxH=itemH * 1.16;
 
             pdfLibPage.drawRectangle({
               x:boxX,
               y:boxY,
               width:boxW,
               height:boxH,
-              color:PDFLib.rgb(1, 0.84, 0), // Golden yellow
-              opacity:0.38
+              color:PDFLib.rgb(1, 0.85, 0.15), // Warm golden ATS yellow
+              opacity:0.42
             });
           });
 
@@ -6629,9 +6679,9 @@ async function buildTurboVectorHighlightedResume(options){
   }
 }
 async function buildTurboVectorBrandedResume(resumePdfUrl,options){
-  /* Purpose: Instant vector keyword highlighting plus company branding header in a single in-memory session.
-     Executes vector highlights, prepends company branding header page, and serializes the PDF once.
-     Takes ~300ms total, keeps text 100% vector (searchable, selectable, crisp). */
+  /* Purpose: Instant vector keyword highlighting plus company branding header at top of Page 1.
+     Highlights keywords across pages, embeds Page 1 directly below the company header bar,
+     and copies subsequent pages untouched. Generates in ~300ms, 100% crisp vector typography. */
   if(window.__rsBusy) return Promise.resolve(false);
   try{
     options=options||{};
@@ -6649,8 +6699,11 @@ async function buildTurboVectorBrandedResume(resumePdfUrl,options){
 
     window.__rsBusy=true;
     var PDFLib=window.PDFLib;
-    var firstPage=pdfDoc.getPages()[0];
-    var pageSize=firstPage ? firstPage.getSize() : {width:595.28,height:841.89};
+    var sourcePages=pdfDoc.getPages();
+    if(!sourcePages.length) throw new Error('Resume PDF has no pages');
+
+    var firstPage=sourcePages[0];
+    var pageSize=firstPage.getSize();
 
     var targetDoc=await PDFLib.PDFDocument.create();
     var regularFont=await targetDoc.embedFont(PDFLib.StandardFonts.Helvetica);
@@ -6669,39 +6722,49 @@ async function buildTurboVectorBrandedResume(resumePdfUrl,options){
     }
 
     var headerScale=Math.max(1,Math.min(1.45,pageSize.width/612));
-    var headerH=Math.max(72,Math.min(92,pageSize.width*0.118))*headerScale;
-    var introPage=targetDoc.addPage([pageSize.width,headerH]);
+    var headerH=Math.max(66,Math.min(82,pageSize.width*0.105))*headerScale;
 
-    introPage.drawRectangle({x:0,y:0,width:pageSize.width,height:headerH,color:PDFLib.rgb(1,1,1),borderColor:PDFLib.rgb(0.86,0.89,0.94),borderWidth:0.8});
-    introPage.drawRectangle({x:0,y:headerH-(4*headerScale),width:pageSize.width,height:4*headerScale,color:PDFLib.rgb(0.12,0.23,0.54)});
-    introPage.drawRectangle({x:0,y:0,width:pageSize.width,height:1.1*headerScale,color:PDFLib.rgb(0.88,0.91,0.95)});
+    // Page 1: Extended height with company branding header at top and resume below
+    var newFirst=targetDoc.addPage([pageSize.width,pageSize.height+headerH]);
+    var embeddedFirst=await targetDoc.embedPage(firstPage);
+    newFirst.drawPage(embeddedFirst,{x:0,y:0,width:pageSize.width,height:pageSize.height});
+
+    var topY=pageSize.height;
+    // Header container with white background and bottom border
+    newFirst.drawRectangle({x:0,y:topY,width:pageSize.width,height:headerH,color:PDFLib.rgb(1,1,1),borderColor:PDFLib.rgb(0.86,0.89,0.94),borderWidth:0.8});
+    // Top blue accent bar
+    newFirst.drawRectangle({x:0,y:topY+headerH-(4*headerScale),width:pageSize.width,height:4*headerScale,color:PDFLib.rgb(0.12,0.23,0.54)});
+    // Bottom subtle divider line
+    newFirst.drawRectangle({x:0,y:topY,width:pageSize.width,height:1.1*headerScale,color:PDFLib.rgb(0.88,0.91,0.95)});
 
     var companyName=clean(data.reportCompanyName,'Hiring Partner');
-    var logoBox=headerH-(28*headerScale);
+    var logoBox=headerH-(26*headerScale);
     var logoX=22*headerScale;
-    var logoY=14*headerScale;
+    var logoY=topY+(14*headerScale);
     var logoAreaW=70*headerScale;
 
     if(logoImage){
       var dims=logoImage.scaleToFit(logoBox*1.8,logoBox);
-      introPage.drawImage(logoImage,{x:logoX,y:logoY+(logoBox-dims.height)/2,width:dims.width,height:dims.height});
+      newFirst.drawImage(logoImage,{x:logoX,y:logoY+(logoBox-dims.height)/2,width:dims.width,height:dims.height});
       logoAreaW=Math.max(56*headerScale,Math.min(74*headerScale,dims.width));
     }else{
-      introPage.drawRectangle({x:logoX,y:logoY,width:logoBox,height:logoBox,color:PDFLib.rgb(0.93,0.95,1),borderColor:PDFLib.rgb(0.75,0.82,0.98),borderWidth:0.8*headerScale});
-      introPage.drawText(companyName.charAt(0).toUpperCase(),{x:logoX+(logoBox/2)-(5*headerScale),y:logoY+(logoBox/2)-(5*headerScale),size:16*headerScale,font:boldFont,color:PDFLib.rgb(0.12,0.23,0.54)});
+      newFirst.drawRectangle({x:logoX,y:logoY,width:logoBox,height:logoBox,color:PDFLib.rgb(0.93,0.95,1),borderColor:PDFLib.rgb(0.75,0.82,0.98),borderWidth:0.8*headerScale});
+      newFirst.drawText(companyName.charAt(0).toUpperCase(),{x:logoX+(logoBox/2)-(5*headerScale),y:logoY+(logoBox/2)-(5*headerScale),size:16*headerScale,font:boldFont,color:PDFLib.rgb(0.12,0.23,0.54)});
       logoAreaW=logoBox;
     }
 
     var textX=logoX+logoAreaW+(12*headerScale);
     var rightX=pageSize.width-(190*headerScale);
-    introPage.drawText('SHARED BY',{x:textX,y:headerH-(29*headerScale),size:7*headerScale,font:boldFont,color:PDFLib.rgb(0.39,0.45,0.55)});
-    introPage.drawText(limitText(companyName,42,companyName),{x:textX,y:headerH-(49*headerScale),size:12*headerScale,font:boldFont,color:PDFLib.rgb(0.06,0.09,0.16)});
-    introPage.drawText('CONFIDENTIAL RESUME',{x:rightX,y:headerH-(31*headerScale),size:14*headerScale,font:boldFont,color:PDFLib.rgb(0.06,0.09,0.16)});
-    introPage.drawText(clean(data.reportDate,'') || (new Date()).toLocaleDateString(),{x:rightX,y:headerH-(51*headerScale),size:8.4*headerScale,font:regularFont,color:PDFLib.rgb(0.39,0.45,0.55)});
+    newFirst.drawText('SHARED BY',{x:textX,y:topY+headerH-(27*headerScale),size:7*headerScale,font:boldFont,color:PDFLib.rgb(0.39,0.45,0.55)});
+    newFirst.drawText(limitText(companyName,42,companyName),{x:textX,y:topY+headerH-(45*headerScale),size:12*headerScale,font:boldFont,color:PDFLib.rgb(0.06,0.09,0.16)});
+    newFirst.drawText('CONFIDENTIAL RESUME',{x:rightX,y:topY+headerH-(29*headerScale),size:14*headerScale,font:boldFont,color:PDFLib.rgb(0.06,0.09,0.16)});
+    newFirst.drawText(clean(data.reportDate,'') || (new Date()).toLocaleDateString(),{x:rightX,y:topY+headerH-(45*headerScale),size:8.4*headerScale,font:regularFont,color:PDFLib.rgb(0.39,0.45,0.55)});
 
-    // Copy all vector highlighted pages directly into target document
-    var resumePages=await targetDoc.copyPages(pdfDoc,pdfDoc.getPageIndices());
-    resumePages.forEach(function(page){ targetDoc.addPage(page); });
+    // Copy all remaining pages (Page 2, 3, etc.) untouched
+    if(sourcePages.length>1){
+      var restPages=await targetDoc.copyPages(pdfDoc,pdfDoc.getPageIndices().slice(1));
+      restPages.forEach(function(page){ targetDoc.addPage(page); });
+    }
 
     var finalBytes=await targetDoc.save();
     downloadBlob(new Blob([finalBytes],{type:'application/pdf'}),'JEROWORKS_'+fileSafeName(data.name,'Candidate')+'_Turbo_Highlighted_Branded.pdf');
