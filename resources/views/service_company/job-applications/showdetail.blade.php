@@ -330,6 +330,7 @@
 #rdcOptsList .rdc-opt[data-opt="25"]{order:17;}
 #rdcOptsList .rdc-opt[data-opt="26"]{order:18;}
 #rdcOptsList .rdc-opt[data-opt="27"]{order:19;}
+#rdcOptsList .rdc-opt[data-opt="28"]{order:20;}
 #rdcOptsList .rdc-opt[data-opt="21"],
 #rdcOptsList .rdc-opt[data-opt="22"],
 #rdcOptsList .rdc-opt[data-opt="23"],
@@ -6580,6 +6581,53 @@ async function buildHighlightedBrandedResume(resumePdfUrl,options){
     window.__rsBusy=false;
   }
 }
+async function buildIsolatedHighlightedKeywordsResume(resumePdfUrl,options){
+  /* Purpose: keep the highlighted-keywords-only download as a separate package from branded/report options while reusing the client-first converter primitive. */
+  if(window.__rsBusy) return Promise.resolve(false);
+  try{
+    options=options||{};
+    var data=readData();
+    var resumeExt=clean(options.resumeExt||'','').toUpperCase();
+    var highlightedBlob=null;
+    if(resumeExt==='DOCX' && options.preferClientDocx===true){
+      try{
+        highlightedBlob=await buildTurboVectorHighlightedResume({
+          resumeUrl:options.resumeUrl,
+          resumeExt:resumeExt,
+          resumePdfUrl:null,
+          useOpenDocOnly:true,
+          openDocConversionOptions:{
+            maxBytes:parseInt(options.clientDocxMaxBytes,10)||1536*1024,
+            maxPages:parseInt(options.clientDocxMaxPages,10)||6,
+            requireTextPdf:true,
+            dpi:216,
+            jpegQuality:0.98
+          },
+          throwOnError:true,
+          returnBlob:true
+        });
+      }catch(clientDocxErr){
+        console.warn('Option 28 DOCX browser highlighted path failed; using enterprise PDF fallback:',clientDocxErr);
+      }
+    }
+    if(!(highlightedBlob instanceof Blob)){
+      highlightedBlob=await buildTurboVectorHighlightedResume({
+        resumeUrl:options.resumeUrl,
+        resumeExt:resumeExt,
+        resumePdfUrl:resumePdfUrl,
+        throwOnError:true,
+        returnBlob:true
+      });
+    }
+    if(!(highlightedBlob instanceof Blob)) throw new Error('Highlighted resume PDF was not generated');
+    downloadBlob(highlightedBlob,'JEROWORKS_'+fileSafeName(data.name,'Candidate')+'_Highlighted.pdf');
+    return true;
+  }catch(err){
+    console.error('Isolated highlighted keywords resume error:',err);
+    alert('Could not generate Resume + Highlighted Keywords.\n\nReason: '+(err && err.message ? err.message : 'Unknown highlighted resume error')+'\n\nThis option highlights matched keywords only and does not add company branding.');
+    return false;
+  }
+}
 async function buildCompanyBrandingIntroBlob(resumeBlob,data){
   /* Purpose: create a lightweight first-page company branding sheet that can be merged without rewriting resume pages. */
   await rsEnsurePdfLib();
@@ -7590,6 +7638,7 @@ window.__buildSmartBrandedResume=buildSmartBrandedResume;
 window.__buildSmartHighlightedResume=buildSmartHighlightedResume;
 window.__buildHeadlessOption3SkillsHighlightedResume=buildHeadlessOption3SkillsHighlightedResume;
 window.__buildHighlightedBrandedResume=buildHighlightedBrandedResume;
+window.__buildIsolatedHighlightedKeywordsResume=buildIsolatedHighlightedKeywordsResume;
 window.__buildFastHighlightedBrandingResume=buildFastHighlightedBrandingResume;
 window.__buildPreScreenedHighlightedResume=buildPreScreenedHighlightedResume;
 window.__buildTurboPreScreenedHighlightedPackage=buildTurboPreScreenedHighlightedPackage;
@@ -7903,6 +7952,24 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
         <span class="rdc-ocirc" aria-hidden="true"></span>
       </label>
 
+      {{-- 28: Isolated client-first highlighted resume without company branding --}}
+      <label class="rdc-opt" data-opt="28" data-coins="4">
+        <input class="rdc-rinput" type="radio" name="rdcFormat" value="28">
+        <span class="rdc-onum">28</span>
+        <span class="rdc-oi rdc-ic-green" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h16"/><path d="m7 16 8.5-8.5 3 3L10 19H7v-3z"/><path d="M9 7h6"/><path d="M9 11h4"/><path d="M14 2v6h6"/></svg>
+        </span>
+        <span class="rdc-obody">
+          <span class="rdc-otitle">Resume + Highlighted Keywords <span style="background:#ecfdf5;color:#059669;font-size:8.5px;font-weight:700;padding:1px 6px;border-radius:4px;vertical-align:middle;margin-left:4px;">DOCX Client First</span></span>
+          <span class="rdc-odesc">Separate highlight-only package using browser conversion first, with enterprise PDF fallback for DOCX</span>
+        </span>
+        <span class="rdc-ometa">
+          <span class="rdc-ocost">4 Coins</span>
+          <span class="rdc-otime">Smart</span>
+        </span>
+        <span class="rdc-ocirc" aria-hidden="true"></span>
+      </label>
+
       {{-- 21: Fast highlighted resume plus separate company branding page --}}
       <label class="rdc-opt" data-opt="21" data-coins="6">
         <input class="rdc-rinput" type="radio" name="rdcFormat" value="21">
@@ -8102,7 +8169,8 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
     24:{cost:4, label:'Turbo Vector Resume + Highlights', avail:(['PDF','DOC','DOCX'].indexOf(resumeExt) !== -1), dlKey:'turbo-vector-highlighted', unavailableMsg:'Turbo Vector Highlighted Resume is available for PDF, DOC and DOCX resumes only.'},
     25:{cost:6, label:'Client Lightning Resume + Highlights + Branding', avail:(['PDF','DOC','DOCX'].indexOf(resumeExt) !== -1), dlKey:'client-lightning-highlighted-branded', unavailableMsg:'Client Lightning Branded Resume is available for PDF, DOC and DOCX resumes only.'},
     26:{cost:4, label:'Client Lightning Resume + Highlights', avail:(['PDF','DOC','DOCX'].indexOf(resumeExt) !== -1), dlKey:'client-lightning-highlighted', unavailableMsg:'Client Lightning Highlighted Resume is available for PDF, DOC and DOCX resumes only.'},
-    27:{cost:8, label:'Turbo Pre-Screened Report + Resume + Highlights', avail:(['PDF','DOC','DOCX'].indexOf(resumeExt) !== -1), dlKey:'turbo-prescreened-highlighted-package', unavailableMsg:'Turbo Pre-Screened Package is available for PDF, DOC and DOCX resumes only.'}
+    27:{cost:8, label:'Turbo Pre-Screened Report + Resume + Highlights', avail:(['PDF','DOC','DOCX'].indexOf(resumeExt) !== -1), dlKey:'turbo-prescreened-highlighted-package', unavailableMsg:'Turbo Pre-Screened Package is available for PDF, DOC and DOCX resumes only.'},
+    28:{cost:4, label:'Resume + Highlighted Keywords', avail:(['PDF','DOC','DOCX'].indexOf(resumeExt) !== -1), dlKey:'isolated-highlighted-keywords-client-docx', unavailableMsg:'Resume + Highlighted Keywords is available for PDF, DOC and DOCX resumes only.'}
   };
 
   var selectedOpt = 1;
@@ -8198,6 +8266,8 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
     if(m.dlKey === 'highlighted-branded-resume' && resumeExt === 'DOCX' && typeof window.__preloadOpenDocLocal === 'function') window.__preloadOpenDocLocal();
     if(m.dlKey === 'highlighted-branded-resume-client-docx' && typeof window.__preloadRSCombined === 'function') window.__preloadRSCombined();
     if(m.dlKey === 'highlighted-branded-resume-client-docx' && resumeExt === 'DOCX' && typeof window.__preloadOpenDocLocal === 'function') window.__preloadOpenDocLocal();
+    if(m.dlKey === 'isolated-highlighted-keywords-client-docx' && typeof window.__preloadRSCombined === 'function') window.__preloadRSCombined();
+    if(m.dlKey === 'isolated-highlighted-keywords-client-docx' && resumeExt === 'DOCX' && typeof window.__preloadOpenDocLocal === 'function') window.__preloadOpenDocLocal();
     if(m.dlKey === 'fast-highlighted-branded-resume-client-docx' && typeof window.__preloadRSCombined === 'function') window.__preloadRSCombined();
     if(m.dlKey === 'fast-highlighted-branded-resume-client-docx' && resumeExt === 'DOCX' && typeof window.__preloadOpenDocLocal === 'function') window.__preloadOpenDocLocal();
     if(m.dlKey === 'fast-highlighted-resume-client-docx' && typeof window.__preloadRSCombined === 'function') window.__preloadRSCombined();
@@ -8546,6 +8616,39 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
             if(ok) closeRdc();
           }).catch(function(){
             showToast('Could not generate highlighted branded resume. Please try option 8 or option 6.', 'warn');
+          }).finally(function(){
+            resetBtn();
+          });
+        }, 250);
+
+      } else if(m.dlKey === 'isolated-highlighted-keywords-client-docx'){
+        /* Option 28: isolated highlighted-keywords-only package; DOCX tries browser OpenDoc first, then enterprise PDF fallback. */
+        if(window.__rsBusy || typeof window.__buildIsolatedHighlightedKeywordsResume !== 'function'){
+          showToast('Please wait a moment and try again.', 'warn');
+          resetBtn(); return;
+        }
+        if(['PDF','DOC','DOCX'].indexOf(resumeExt) === -1){
+          showToast(m.unavailableMsg || 'Resume + Highlighted Keywords is available for PDF, DOC and DOCX resumes only.', 'warn');
+          resetBtn(); return;
+        }
+        if(['PDF','DOCX'].indexOf(resumeExt) !== -1 && !r2DirectUrl && !r2PublicUrl && !dlUrl && !resumePdfUrl){
+          showToast('Resume URL is not available.', 'warn');
+          resetBtn(); return;
+        }
+        if(resumeExt === 'DOC' && !resumePdfUrl){
+          showToast('DOC resume needs enterprise converter PDF URL.', 'warn');
+          resetBtn(); return;
+        }
+        runSmartCountdown('Downloading Resume...', 60);
+        setTimeout(function(){
+          window.__buildIsolatedHighlightedKeywordsResume(resumePdfUrl,{
+            resumeUrl:[r2DirectUrl,r2PublicUrl,dlUrl],
+            resumeExt:resumeExt,
+            preferClientDocx:true
+          }).then(function(ok){
+            if(ok) closeRdc();
+          }).catch(function(){
+            showToast('Could not generate Resume + Highlighted Keywords. Please try option 20.', 'warn');
           }).finally(function(){
             resetBtn();
           });
