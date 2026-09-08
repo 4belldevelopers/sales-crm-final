@@ -8453,7 +8453,7 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
           showToast('Resume file URL not available.', 'warn');
           resetBtn(); return;
         }
-        runSmartCountdown('Downloading Resume...', 60);
+        runSmartCountdown('Downloading Resume, Kindly wait.', 60);
         downloadOriginalResumeFromR2First({
           r2PublicUrl:r2PublicUrl,
           r2DirectUrl:r2DirectUrl,
@@ -8636,7 +8636,7 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
           showToast('DOC resume needs enterprise converter PDF URL.', 'warn');
           resetBtn(); return;
         }
-        runSmartCountdown('Downloading Resume...', 60);
+        runSmartCountdown('Downloading Resume, Kindly wait.', 60);
         setTimeout(function(){
           window.__buildHeadlessOption3SkillsHighlightedResume({
             resumeUrl:[r2DirectUrl,r2PublicUrl,dlUrl],
@@ -8670,7 +8670,7 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
           showToast('DOC resume needs enterprise converter PDF URL.', 'warn');
           resetBtn(); return;
         }
-        runSmartCountdown('Downloading Resume...', 60);
+        runSmartCountdown('Downloading Resume, Kindly wait.', 60);
         setTimeout(function(){
           window.__buildHighlightedBrandedResume(resumePdfUrl,{
             resumeUrl:[r2DirectUrl,r2PublicUrl,dlUrl],
@@ -8703,7 +8703,7 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
           showToast('DOC resume needs enterprise converter PDF URL.', 'warn');
           resetBtn(); return;
         }
-        runSmartCountdown('Downloading Resume...', 60);
+        runSmartCountdown('Downloading Resume, Kindly wait.', 60);
         setTimeout(function(){
           window.__buildIsolatedHighlightedKeywordsResume(resumePdfUrl,{
             resumeUrl:[r2DirectUrl,r2PublicUrl,dlUrl],
@@ -8736,7 +8736,7 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
           showToast('DOC resume needs enterprise converter PDF URL.', 'warn');
           resetBtn(); return;
         }
-        runSmartCountdown('Downloading Resume...', 60);
+        runSmartCountdown('Downloading Resume, Kindly wait.', 60);
         setTimeout(function(){
           window.__buildHeadlessOption3SkillsHighlightedResume({
             resumeUrl:[r2DirectUrl,r2PublicUrl,dlUrl],
@@ -8770,7 +8770,7 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
           showToast('DOC resume needs enterprise converter PDF URL.', 'warn');
           resetBtn(); return;
         }
-        runSmartCountdown('Downloading Resume...', 60);
+        runSmartCountdown('Downloading Resume, Kindly wait.', 60);
         setTimeout(function(){
           window.__buildFastHighlightedBrandingResume(resumePdfUrl,{
             resumeUrl:[r2DirectUrl,r2PublicUrl,dlUrl],
@@ -8802,7 +8802,7 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
           showToast('DOC resume needs enterprise converter PDF URL.', 'warn');
           resetBtn(); return;
         }
-        runSmartCountdown('Downloading Resume.... Kindly wait', 60);
+        runSmartCountdown('Downloading Resume, Kindly wait.', 60);
         setTimeout(function(){
           window.__buildTurboVectorBrandedResume(resumePdfUrl,{
             resumeUrl:[r2DirectUrl,r2PublicUrl,dlUrl],
@@ -8834,7 +8834,7 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
           showToast('DOC resume needs enterprise converter PDF URL.', 'warn');
           resetBtn(); return;
         }
-        runSmartCountdown('Downloading Resume.... Kindly wait', 60);
+        runSmartCountdown('Downloading Resume, Kindly wait.', 60);
         setTimeout(function(){
           window.__buildTurboVectorHighlightedResume({
             resumeUrl:[r2DirectUrl,r2PublicUrl,dlUrl],
@@ -8863,7 +8863,7 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
           showToast('Resume URL is not available.', 'warn');
           resetBtn(); return;
         }
-        runSmartCountdown('Downloading Resume.... Kindly wait', 60);
+        runSmartCountdown('Downloading Resume, Kindly wait.', 60);
         setTimeout(function(){
           window.__buildClientLightningBrandedResume({
             resumeUrl:[r2DirectUrl,r2PublicUrl,dlUrl],
@@ -8892,7 +8892,7 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
           showToast('Resume URL is not available.', 'warn');
           resetBtn(); return;
         }
-        runSmartCountdown('Downloading Resume.... Kindly wait', 60);
+        runSmartCountdown('Downloading Resume, Kindly wait.', 60);
         setTimeout(function(){
           window.__buildClientLightningHighlightedResume({
             resumeUrl:[r2DirectUrl,r2PublicUrl,dlUrl],
@@ -8925,7 +8925,7 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
           showToast('DOC resume needs enterprise converter PDF URL.', 'warn');
           resetBtn(); return;
         }
-        runSmartCountdown('Downloading Resume.... Kindly wait', 60);
+        runSmartCountdown('Downloading Resume, Kindly wait.', 60);
         setTimeout(function(){
           window.__buildTurboPreScreenedHighlightedPackage(null,{
             resumeUrl:[r2DirectUrl,r2PublicUrl,dlUrl],
@@ -8987,7 +8987,7 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
           showToast('Resume URL is not available.', 'warn');
           resetBtn(); return;
         }
-        runSmartCountdown('Downloading Resume...', 60);
+        runSmartCountdown('Downloading Resume, Kindly wait.', 60);
         setTimeout(function(){
           window.__buildSmartHighlightedResume({
             resumeUrl:[r2DirectUrl,r2PublicUrl,dlUrl],
@@ -9023,7 +9023,7 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
           showToast('DOC resumes need the enterprise converter before branding.', 'warn');
           resetBtn(); return;
         }
-        runSmartCountdown('Downloading Resume...', 60);
+        runSmartCountdown('Downloading Resume, Kindly wait.', 60);
         setTimeout(function(){
           window.__buildSmartBrandedResume(resumePdfUrl,{
             resumeUrl:[r2DirectUrl,r2PublicUrl,dlUrl],
