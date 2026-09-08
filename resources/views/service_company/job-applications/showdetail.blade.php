@@ -4318,12 +4318,6 @@ setTimeout(() => {
      data-has-resume="{{ $rdcResumeAvailable ? 'true' : 'false' }}"
      data-has-aws="{{ $resumeAwsPath ? 'true' : 'false' }}"
      data-file-ext="{{ strtoupper(pathinfo((string)@$application->resume, PATHINFO_EXTENSION) ?: 'FILE') }}"></div>
-<link rel="modulepreload" href="https://file.jero.works/js/opendoc/casual_doc_wasm.js?v=opendoc-20260903" crossorigin>
-<link rel="preload" href="https://file.jero.works/js/opendoc/casual_doc_wasm_bg.wasm?v=opendoc-20260903" as="fetch" type="application/wasm" crossorigin>
-<link rel="preload" href="/js/pdf-lib.min.js" as="script">
-<link rel="preload" href="/js/jspdf.umd.min.js" as="script">
-<link rel="preload" href="/js/pdfmake.min.js" as="script">
-<link rel="preload" href="/js/vfs_fonts.min.js" as="script">
 
 {{-- Recruiter Summary data bridge — zero extra DB queries; all PHP vars already in scope --}}
 @php
@@ -7291,6 +7285,8 @@ function preloadClientLightningAssets(){
   var tasks=[rsEnsurePdfJs(),rsEnsurePdfLib()];
   if(ext==='DOCX'||ext==='DOC'){
     tasks.push(rsEnsureDocxConversion());
+    tasks.push(rsEnsureOpenDocLab(true));
+    tasks.push(rsEnsureJsPdf());
   }
   // Speculative fetch of resume bytes into client RAM cache
   if(dataEl && !window.__rsCachedResumeBytes){
@@ -7304,23 +7300,24 @@ function preloadClientLightningAssets(){
   return Promise.all(tasks).catch(function(){ return null; });
 }
 async function buildTurboPreScreenedHighlightedPackage(resumePdfUrl,options){
-  /* Purpose: Option 27 — God-Level Hyper-Speed Pre-Screened Package.
-     1. TIER 1 (Ultra Fast ~250ms): If pre-cached R2 vector PDF is available, use it via parallel pdf-lib vector engine.
-        Zero server conversion CPU (static CDN fetch), 100% crisp vector typography, 10x faster than Option 17!
-     2. TIER 2 (Turbo OpenDoc WASM Fallback ~800ms): If R2 PDF is not available, uses optimized OpenDoc WASM with native highlights.
-     Completely blows Option 17 away in speed, quality, and responsiveness. */
+  /* Purpose: Option 27 — Pure Client-Side Pre-Screened Package.
+     When DOCX: 100% in-browser conversion via OpenDoc WASM engine (ZERO server-side conversion at any cost).
+     Highlights are applied natively in browser memory via OpenDoc text layout rects.
+     Pre-Screened Report (pdfMake) and OpenDoc conversion run concurrently in parallel.
+     0.00% server conversion CPU. */
   if(window.__rsBusy) return Promise.resolve(false);
   try{
     options=options||{};
     var data=readData();
 
-    // Run report creation and vector resume highlighting in parallel:
+    // Run report creation and 100% client-side OpenDoc highlighted resume conversion in parallel:
     var results=await Promise.all([
       buildRecruiterSummaryBlob(data,options),
       buildTurboVectorHighlightedResume({
         resumeUrl:options.resumeUrl,
         resumeExt:options.resumeExt,
-        resumePdfUrl:resumePdfUrl,
+        resumePdfUrl:null, // STRICT: Zero server-side conversion at any cost
+        useOpenDocOnly:true, // Pure client-side OpenDoc WASM only
         returnBlob:true
       })
     ]);
@@ -7329,7 +7326,7 @@ async function buildTurboPreScreenedHighlightedPackage(resumePdfUrl,options){
     var highlightedBlob=results[1];
 
     if(!(reportBlob instanceof Blob)) throw new Error('Pre-Screened Report PDF was not generated');
-    if(!(highlightedBlob instanceof Blob)) throw new Error('Turbo highlighted resume PDF was not generated');
+    if(!(highlightedBlob instanceof Blob)) throw new Error('Client-side highlighted resume PDF was not generated');
 
     window.__rsBusy=true;
     var fileName='JEROWORKS_'+fileSafeName(data.name,'Candidate')+'_Turbo_PreScreened_Highlighted.pdf';
@@ -7958,7 +7955,7 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
         <span class="rdc-ocirc" aria-hidden="true"></span>
       </label>
 
-      {{-- 27: Turbo Pre-Screened Report + Resume + Highlights (Dual-Engine Accelerated) --}}
+      {{-- 27: Turbo Pre-Screened Report + Resume + Highlights (OpenDoc Client-Side Package) --}}
       <label class="rdc-opt" data-opt="27" data-coins="8">
         <input class="rdc-rinput" type="radio" name="rdcFormat" value="27">
         <span class="rdc-onum">27</span>
@@ -7966,12 +7963,12 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
         </span>
         <span class="rdc-obody">
-          <span class="rdc-otitle">Turbo Pre-Screened Report + Resume + Highlights <span style="background:#fce7f3;color:#9d174d;font-size:8.5px;font-weight:700;padding:1px 6px;border-radius:4px;vertical-align:middle;margin-left:4px;">Turbo Dual Engine</span></span>
-          <span class="rdc-odesc">Instant pre-screened report + keyword highlights with dual-engine acceleration (~300ms, crisp vector output)</span>
+          <span class="rdc-otitle">Turbo Pre-Screened Report + Resume + Highlights <span style="background:#fce7f3;color:#9d174d;font-size:8.5px;font-weight:700;padding:1px 6px;border-radius:4px;vertical-align:middle;margin-left:4px;">OpenDoc Client-Side</span></span>
+          <span class="rdc-odesc">100% client-side conversion (OpenDoc WASM) + Pre-Screened Report + Highlights (Zero server conversion)</span>
         </span>
         <span class="rdc-ometa">
           <span class="rdc-ocost">8 Coins</span>
-          <span class="rdc-otime">Instant</span>
+          <span class="rdc-otime">Fast</span>
         </span>
         <span class="rdc-ocirc" aria-hidden="true"></span>
       </label>
@@ -8697,7 +8694,7 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
           showToast(m.unavailableMsg || 'Turbo Pre-Screened Package is available for PDF, DOC and DOCX resumes only.', 'warn');
           resetBtn(); return;
         }
-        if(['PDF','DOCX'].indexOf(resumeExt) !== -1 && !r2DirectUrl && !r2PublicUrl && !dlUrl && !resumePdfUrl){
+        if(['PDF','DOCX'].indexOf(resumeExt) !== -1 && !r2DirectUrl && !r2PublicUrl && !dlUrl){
           showToast('Resume URL is not available.', 'warn');
           resetBtn(); return;
         }
@@ -8707,7 +8704,7 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
         }
         runSmartCountdown('Downloading Resume.... Kindly wait', 60);
         setTimeout(function(){
-          window.__buildTurboPreScreenedHighlightedPackage(resumePdfUrl,{
+          window.__buildTurboPreScreenedHighlightedPackage(null,{
             resumeUrl:[r2DirectUrl,r2PublicUrl,dlUrl],
             resumeExt:resumeExt
           }).then(function(ok){
