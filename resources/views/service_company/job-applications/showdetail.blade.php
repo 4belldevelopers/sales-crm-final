@@ -5396,7 +5396,7 @@ async function buildHeadlessOption3SkillsHighlightedResume(options){
     }
   }catch(err){
     console.error('Headless option 3 highlighted resume error:',err);
-    alert('Could not generate Resume + Skills Highlighted.\n\nReason: '+(err && err.message ? err.message : 'Unknown highlight error')+'\n\nPDF uses signed R2 direct fetch. DOCX and DOC use enterprise converter PDF first to preserve layout.');
+    alert('Could not generate Resume + Skills Highlighted.\n\nReason: '+(err && err.message ? err.message : 'Unknown highlight error')+'\n\nPDF uses signed R2 direct fetch. DOCX can use browser conversion first with enterprise fallback. DOC requires enterprise converter PDF.');
     return false;
   }finally{
     window.__rsBusy=false;
@@ -7306,7 +7306,8 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
           window.__buildHeadlessOption3SkillsHighlightedResume({
             resumeUrl:[r2DirectUrl,r2PublicUrl,dlUrl],
             resumeExt:resumeExt,
-            resumePdfUrl:resumePdfUrl
+            resumePdfUrl:resumePdfUrl,
+            preferClientDocx:true
           }).then(function(ok){
             if(ok) closeRdc();
           }).catch(function(){
@@ -7338,7 +7339,8 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
         setTimeout(function(){
           window.__buildHighlightedBrandedResume(resumePdfUrl,{
             resumeUrl:[r2DirectUrl,r2PublicUrl,dlUrl],
-            resumeExt:resumeExt
+            resumeExt:resumeExt,
+            preferClientDocx:true
           }).then(function(ok){
             if(ok) closeRdc();
           }).catch(function(){
