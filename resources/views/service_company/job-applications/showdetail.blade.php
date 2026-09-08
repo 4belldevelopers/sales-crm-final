@@ -6529,18 +6529,43 @@ async function buildSmartBrandedResume(resumePdfUrl,options){
   }
 }
 async function buildHighlightedBrandedResume(resumePdfUrl,options){
-  /* Purpose: combine option 8 highlighting with option 6's exact company branding header without duplicating header design constants. */
+  /* Purpose: combine the turbo keyword highlighter with option 6's exact company branding header without duplicating header design constants. */
   if(window.__rsBusy) return Promise.resolve(false);
   try{
     options=options||{};
     var data=readData();
-    var highlightedBlob=await buildHeadlessOption3SkillsHighlightedResume({
-      resumeUrl:options.resumeUrl,
-      resumeExt:options.resumeExt,
-      resumePdfUrl:resumePdfUrl,
-      preferClientDocx:options.preferClientDocx===true,
-      returnBlob:true
-    });
+    var resumeExt=clean(options.resumeExt||'','').toUpperCase();
+    var highlightedBlob=null;
+    if(resumeExt==='DOCX' && options.preferClientDocx===true){
+      try{
+        highlightedBlob=await buildTurboVectorHighlightedResume({
+          resumeUrl:options.resumeUrl,
+          resumeExt:resumeExt,
+          resumePdfUrl:null,
+          useOpenDocOnly:true,
+          openDocConversionOptions:{
+            maxBytes:parseInt(options.clientDocxMaxBytes,10)||1536*1024,
+            maxPages:parseInt(options.clientDocxMaxPages,10)||6,
+            requireTextPdf:true,
+            dpi:216,
+            jpegQuality:0.98
+          },
+          throwOnError:true,
+          returnBlob:true
+        });
+      }catch(clientDocxErr){
+        console.warn('Option 20 DOCX browser turbo path failed; using enterprise PDF fallback:',clientDocxErr);
+      }
+    }
+    if(!(highlightedBlob instanceof Blob)){
+      highlightedBlob=await buildTurboVectorHighlightedResume({
+        resumeUrl:options.resumeUrl,
+        resumeExt:resumeExt,
+        resumePdfUrl:resumePdfUrl,
+        throwOnError:true,
+        returnBlob:true
+      });
+    }
     if(!(highlightedBlob instanceof Blob)) throw new Error('Highlighted resume PDF was not generated');
     window.__rsBusy=true;
     await addCompanyHeaderToResume(highlightedBlob,data,'JEROWORKS_'+fileSafeName(data.name,'Candidate')+'_Highlighted_Branded.pdf',{matchOption6VisualScale:true});
