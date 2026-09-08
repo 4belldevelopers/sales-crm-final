@@ -3266,8 +3266,26 @@ END:VCALENDAR";
 
     public static function companyOrClientDetails($jobid = '')
     {
-
+        /**
+         * Resilience & Tenancy Note: Protect against invalid or missing job IDs.
+         * Returns an empty details object if the job record does not exist in DB.
+         */
         $jobs = DB::table('jobs')->select('jobs.company_id', 'jobs.client_id')->where('jobs.id', $jobid)->first();
+
+        if (! $jobs) {
+            return (object) [
+                'companyOrclientName' => '',
+                'selfCompany' => '',
+                'company' => '',
+                'logo_logical_path' => '',
+                'company_website' => '',
+                'founded' => '',
+                'email' => '',
+                'acount_type' => '',
+                'company_size' => '',
+                'ind_name' => '',
+            ];
+        }
 
         $company_id = $jobs->company_id;
 

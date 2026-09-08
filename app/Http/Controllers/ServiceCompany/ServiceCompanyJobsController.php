@@ -5585,6 +5585,18 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
 
         abort_if(Gate::denies('view_jobs'), 403);
         $company_id = auth()->user()->company_id;
+
+        /**
+         * Tenancy / Resilience Note: Resolve candidate application ID (add_job_wise_condidates.id) to actual job_id if needed.
+         */
+        $realJobId = (int) $id;
+        if (! DB::table('jobs')->where('id', $realJobId)->exists()) {
+            $wiseCand = DB::table('add_job_wise_condidates')->where('id', $realJobId)->first();
+            if ($wiseCand && ! empty($wiseCand->job_id)) {
+                $realJobId = (int) $wiseCand->job_id;
+            }
+        }
+        $id = $realJobId;
         $this->salaryMode = GeneralMethod::salaryMode();
         $this->currency = GeneralMethod::currency();
         $this->employmentType = GeneralMethod::employmentType();
@@ -5611,73 +5623,105 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
             return response()->json(cache()->get($cacheKeySet));
         }
 
-        $params = [
-            'index' => ELASTIC_JOBS,
-            'id' => $id,
-        ];
+        /**
+         * Tenancy / Resilience Note: Protect against missing Elasticsearch job/client/company/category documents.
+         * Falls back to MySQL lookup if document is missing from ES.
+         */
+        try {
+            $params = [
+                'index' => ELASTIC_JOBS,
+                'id' => $id,
+            ];
 
-        $response = $this->elasticService->getClient()->get($params);
-        $this->job = (object) $response['_source'];
+            $response = $this->elasticService->getClient()->get($params);
+            $this->job = (object) ($response['_source'] ?? []);
+        } catch (\Throwable $esJobEx) {
+            $this->job = GeneralMethod::jobDetails($id);
+            if (! empty($this->job->id)) {
+                try {
+                    app(\App\Services\ElasticJobIndex::class)->jobIndexElastic($id);
+                } catch (\Throwable $idxEx) {}
+            }
+        }
 
-        // dd($this->job);
+        $this->job->company_id = $this->job->comId ?? $this->job->company_id ?? 0;
 
-        $this->job->company_id = $this->job->comId;
-        $params = [
-            'index' => ELASTIC_CLIENT_LIST,
-            'id' => $this->job->client_id,
-        ];
+        $client_job = null;
+        if (! empty($this->job->client_id)) {
+            try {
+                $params = [
+                    'index' => ELASTIC_CLIENT_LIST,
+                    'id' => $this->job->client_id,
+                ];
 
-        $response = $this->elasticService->getClient()->get($params);
-        $client_job = (object) $response['_source'];
+                $response = $this->elasticService->getClient()->get($params);
+                $client_job = (object) ($response['_source'] ?? []);
+            } catch (\Throwable $esClientEx) {
+                $client_job = DB::table('clients')->where('id', $this->job->client_id)->first();
+            }
+        }
 
         $this->job->client_description = '';
         $this->job->logo_logical_path = '';
         $this->job->self_company = '';
         $this->job->client_name = '';
         if ($client_job) {
-            $this->job->client_description = $client_job->description;
-            $this->job->logo_logical_path = $client_job->logo_logical_path;
-            $this->job->self_company = $client_job->self_company;
-            $this->job->client_name = $client_job->name;
+            $this->job->client_description = $client_job->description ?? '';
+            $this->job->logo_logical_path = $client_job->logo_logical_path ?? '';
+            $this->job->self_company = $client_job->self_company ?? '';
+            $this->job->client_name = $client_job->name ?? '';
         }
 
-        $params = [
-            'index' => ELASTIC_COMPANIES_INDEX,
-            'id' => $this->job->comId,
-        ];
+        $company_job = null;
+        $comId = $this->job->comId ?? $this->job->company_id ?? 0;
+        if (! empty($comId)) {
+            try {
+                $params = [
+                    'index' => ELASTIC_COMPANIES_INDEX,
+                    'id' => $comId,
+                ];
 
-        $response = $this->elasticService->getClient()->get($params);
-        $company_job = (object) $response['_source'];
+                $response = $this->elasticService->getClient()->get($params);
+                $company_job = (object) ($response['_source'] ?? []);
+            } catch (\Throwable $esCompEx) {
+                $company_job = DB::table('companies')->where('id', $comId)->first();
+            }
+        }
 
-        $this->job->company_id = $this->job->comId;
-        $params = [
-            'index' => ELASTIC_JOB_CATEGORIES,
-            'id' => $this->job->category_id,
-        ];
-        $response = $this->elasticService->getClient()->get($params);
-        $category_job = (object) $response['_source'];
+        $category_job = null;
+        if (! empty($this->job->category_id)) {
+            try {
+                $params = [
+                    'index' => ELASTIC_JOB_CATEGORIES,
+                    'id' => $this->job->category_id,
+                ];
+                $response = $this->elasticService->getClient()->get($params);
+                $category_job = (object) ($response['_source'] ?? []);
+            } catch (\Throwable $esCatEx) {
+                $category_job = DB::table('job_categories')->where('id', $this->job->category_id)->first();
+            }
+        }
 
-        // dd($company_job);
         $this->job->cat_name = @$category_job ? @$category_job->name : null;
         $this->job->company_description = '';
         $this->job->company_name = '';
         $this->job->company_logo = '';
         if ($company_job) {
 
-            $this->job->company_description = $company_job->description;
-            $this->job->company_name = $company_job->company_name;
-            $this->job->company_logo = $company_job->logo;
+            $this->job->company_description = $company_job->description ?? '';
+            $this->job->company_name = $company_job->company_name ?? '';
+            $this->job->company_logo = $company_job->logo ?? '';
 
         }
 
-        $qualifications = (object) $this->job->job_qualifications;
+        $qualifications = (object) ($this->job->job_qualifications ?? []);
 
         if (! empty($qualifications)) {
             $first = reset($qualifications);
             $this->job->qualification_name = $first['qualification_name'] ?? '';
         }
 
-        $job_metronics_skills = $this->job->job_metronics_skills;
+        $job_metronics_skills = $this->job->job_metronics_skills ?? [];
         $this->skillArr = (object) collect($job_metronics_skills)->map(fn ($row) => (object) $row)
             ->values()->all();
 
@@ -5685,12 +5729,12 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
 
         $this->jobLocation = '';
 
-        if ($this->job->id > 0) {
+        if (($this->job->id ?? 0) > 0) {
 
-            $client_city_jobs = $this->job->client_city_jobs;
+            $client_city_jobs = $this->job->client_city_jobs ?? [];
             $this->jobLocationCount = is_array($client_city_jobs) ? count($client_city_jobs) : 0;
 
-            $client_contact_info_jobs = $this->job->client_contact_info_jobs;
+            $client_contact_info_jobs = $this->job->client_contact_info_jobs ?? [];
             $clientContactInfoJobs = collect($client_contact_info_jobs);
 
             $this->clientContactPersonListing = $clientContactInfoJobs
@@ -5702,7 +5746,7 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
 
         }
 
-        $job_assign = $this->job->job_assign;
+        $job_assign = $this->job->job_assign ?? [];
         $jobAssign = collect($job_assign);
         $this->assignTeamCount = is_array($job_assign) ? count($job_assign) : 0;
 
@@ -5749,13 +5793,21 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
         if ($this->assignTeamCount > 0) {
             foreach ($this->jobAssignList as $key => $row) {
                 $row = (object) $row;
-                $params = [
-                    'index' => ELASTIC_USERS_LIST,
-                    'id' => $row->user_id ?? 0,
-                ];
+                $user_job = null;
+                $userIdToFetch = $row->user_id ?? 0;
+                if ($userIdToFetch > 0) {
+                    try {
+                        $params = [
+                            'index' => ELASTIC_USERS_LIST,
+                            'id' => $userIdToFetch,
+                        ];
 
-                $response = $this->elasticService->getClient()->get($params);
-                $user_job = (object) ($response['_source'] ?? []);
+                        $response = $this->elasticService->getClient()->get($params);
+                        $user_job = (object) ($response['_source'] ?? []);
+                    } catch (\Throwable $esUserEx) {
+                        $user_job = DB::table('users')->where('id', $userIdToFetch)->first();
+                    }
+                }
 
                 $industryName = $this->job->industry['industry_name'] ?? '';
                 $industryId = $this->job->industry['ind_id'] ?? '';
@@ -5865,7 +5917,7 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
 
         // dd(auth()->user()->id,$company_id,$this->job->id);
 
-        $client_city_jobs = $this->job->client_city_jobs;
+        $client_city_jobs = $this->job->client_city_jobs ?? [];
         $this->jobLocationCount = is_array($client_city_jobs) ? count($client_city_jobs) : 0;
         $clientLocation = collect($client_city_jobs);
         $this->jobCitySel = $clientLocation
@@ -5875,19 +5927,20 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
             ->values()
             ->all();
 
-        if ($this->job->work_type == 'yes') {
+        $work_type = $this->job->work_type ?? 'no';
+        if ($work_type == 'yes') {
             $this->jobCitySelected = 'Remote';
-        } elseif ($this->job->work_type == 'no') {
+        } elseif ($work_type == 'no') {
             $this->jobCitySelected = implode(',', $this->jobCitySel);
-        } elseif ($this->job->work_type == 'any') {
+        } elseif ($work_type == 'any') {
             $this->jobCitySelected = 'Remote/'.implode(',', $this->jobCitySel);
-        } elseif ($this->job->work_type == 'other') {
+        } elseif ($work_type == 'other') {
             $this->jobCitySelected = ''.implode(',', $this->jobCitySel);
         }
 
-        $jobId = $this->job->id;
+        $jobId = $this->job->id ?? $id;
 
-        $recommendation_relation = $this->job->recommendation_relation;
+        $recommendation_relation = $this->job->recommendation_relation ?? [];
         $recommendationRelation = collect($recommendation_relation);
 
         $recommendedDataList = $recommendationRelation->where('from_company_id', $company_id)->where('to_status', 1)->values()->all();
@@ -5899,13 +5952,21 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
                 $row = (object) $row;
                 //    dd($row);
 
-                $params = [
-                    'index' => ELASTIC_COMPANIES_INDEX,
-                    'id' => $row->to_company_id ?? 0,
-                ];
+                $company_job = null;
+                $toCompIdToFetch = $row->to_company_id ?? 0;
+                if ($toCompIdToFetch > 0) {
+                    try {
+                        $params = [
+                            'index' => ELASTIC_COMPANIES_INDEX,
+                            'id' => $toCompIdToFetch,
+                        ];
 
-                $response = $this->elasticService->getClient()->get($params);
-                $company_job = (object) ($response['_source'] ?? []);
+                        $response = $this->elasticService->getClient()->get($params);
+                        $company_job = (object) ($response['_source'] ?? []);
+                    } catch (\Throwable $esToCompEx) {
+                        $company_job = DB::table('companies')->where('id', $toCompIdToFetch)->first();
+                    }
+                }
 
                 // dd($company_job->industry['industry_name']);
 
@@ -6120,6 +6181,13 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
 
         }
 
+        /**
+         * Tenancy / Resilience Note: Candidate timeline DB fallback if Elasticsearch timeline index returned empty.
+         */
+        if (empty($this->updateTimeLine) && ! empty($this->job->id) && ! empty(@$request->conid)) {
+            $this->updateTimeLine = GeneralMethod::condidate_timeline($this->job->id, @$request->conid);
+        }
+
         $params = [
             'index' => ELASTIC_CANDIDATES,
             'body' => [
@@ -6155,50 +6223,120 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
                     ->pluck('spok_user_id')
                     ->first();   // 👈 only one value
 
-                $params = [
-                    'index' => ELASTIC_USERS_LIST,
-                    'id' => $this->jobAssignListCaptain,
-                ];
+                $user_job = null;
+                if (! empty($this->jobAssignListCaptain)) {
+                    try {
+                        $params = [
+                            'index' => ELASTIC_USERS_LIST,
+                            'id' => $this->jobAssignListCaptain,
+                        ];
 
-                $response = $this->elasticService->getClient()->get($params);
-                $user_job = (object) $response['_source'];
+                        $response = $this->elasticService->getClient()->get($params);
+                        $user_job = (object) ($response['_source'] ?? []);
+                    } catch (\Throwable $esUserEx) {
+                        $user_job = DB::table('users')->where('id', $this->jobAssignListCaptain)->first();
+                    }
+                }
 
-                $params = [
-                    'index' => ELASTIC_CANDIDATES,
-                    'body' => [
-                        'size' => 0,   // we only need counts
-                        'query' => [
-                            'bool' => [
-                                'must' => [
-                                    ['term' => ['submitted_by' => $this->jobAssignListCaptain]],
-                                    ['term' => ['jobId' => $this->job->id]],
+                if ($user_job) {
+                    $allCandidate = 0;
+                    $Interview = 0;
+                    $Joined = 0;
+                    try {
+                        $params = [
+                            'index' => ELASTIC_CANDIDATES,
+                            'body' => [
+                                'size' => 0,   // we only need counts
+                                'query' => [
+                                    'bool' => [
+                                        'must' => [
+                                            ['term' => ['submitted_by' => $this->jobAssignListCaptain]],
+                                            ['term' => ['jobId' => $this->job->id]],
+                                        ],
+                                    ],
                                 ],
                             ],
-                        ],
-                    ],
-                ];
+                        ];
 
-                $response = $this->elasticService->getClient()->search($params);
-                $allCandidate = $response['aggregations']['all_candidates']['value'] ?? 0;
-                $Interview = $response['aggregations']['interview']['doc_count'] ?? 0;
-                $Joined = $response['aggregations']['joined']['doc_count'] ?? 0;
-                $bench_assign_Arr[0] = (object) [
-                    'id' => $user_job->id,
-                    'name' => $user_job->name,
-                    'email' => $user_job->email,
-                    'image' => $user_job->image,
-                    'calling_code' => $user_job->calling_code,
-                    'mobile' => $user_job->mobile,
-                    'display_name' => $user_job->display_name,
-                    'designation' => $user_job->designation,
-                    'allCandidate' => $allCandidate,
-                    'Interview' => $Interview,
-                    'Joined' => $Joined,
-                ];
+                        $response = $this->elasticService->getClient()->search($params);
+                        $allCandidate = $response['aggregations']['all_candidates']['value'] ?? 0;
+                        $Interview = $response['aggregations']['interview']['doc_count'] ?? 0;
+                        $Joined = $response['aggregations']['joined']['doc_count'] ?? 0;
+                    } catch (\Throwable $esCandEx) {}
+
+                    $bench_assign_Arr[0] = (object) [
+                        'id' => $user_job->id ?? null,
+                        'name' => $user_job->name ?? null,
+                        'email' => $user_job->email ?? null,
+                        'image' => $user_job->image ?? null,
+                        'calling_code' => $user_job->calling_code ?? null,
+                        'mobile' => $user_job->mobile ?? null,
+                        'display_name' => $user_job->display_name ?? null,
+                        'designation' => $user_job->designation ?? null,
+                        'allCandidate' => $allCandidate,
+                        'Interview' => $Interview,
+                        'Joined' => $Joined,
+                    ];
+                }
 
                 $this->bench_assign_count = count($bench_assign_Arr);
                 $this->bench_assign_row = $bench_assign_Arr;
             }
+        }
+
+        /**
+         * Tenancy / Resilience Note: Contacts fallback from client_contact_info_jobs & job_assign if bench_assign_row is empty.
+         */
+        if (empty($this->bench_assign_row)) {
+            $fallbackContacts = [];
+            $clientContacts = $this->job->client_contact_info_jobs ?? [];
+            if (! empty($clientContacts)) {
+                foreach ($clientContacts as $cc) {
+                    $cc = (object) $cc;
+                    if (! empty($cc->contact_person_name) || ! empty($cc->contact_person_email)) {
+                        $fallbackContacts[] = (object) [
+                            'id' => $cc->id ?? null,
+                            'name' => $cc->contact_person_name ?? '',
+                            'email' => $cc->contact_person_email ?? '',
+                            'image' => null,
+                            'calling_code' => $cc->calling_code ?? '',
+                            'mobile' => $cc->contact_person_number ?? '',
+                            'display_name' => $cc->contact_person_name ?? '',
+                            'designation' => $cc->contact_person_designation ?? 'Recruiter',
+                            'allCandidate' => 0,
+                            'Interview' => 0,
+                            'Joined' => 0,
+                        ];
+                    }
+                }
+            }
+            $jobAssigns = $this->job->job_assign ?? [];
+            if (! empty($jobAssigns)) {
+                foreach ($jobAssigns as $ja) {
+                    $ja = (object) $ja;
+                    $userName = $ja->user_name ?? '';
+                    if (! empty($ja->user_id)) {
+                        $uObj = DB::table('users')->where('id', $ja->user_id)->first();
+                        if ($uObj) {
+                            $fallbackContacts[] = (object) [
+                                'id' => $uObj->id,
+                                'name' => $uObj->name ?? $userName,
+                                'email' => $uObj->email ?? '',
+                                'image' => $uObj->image ?? null,
+                                'calling_code' => $uObj->phone_code ?? '',
+                                'mobile' => $uObj->mobile ?? '',
+                                'display_name' => $uObj->name ?? $userName,
+                                'designation' => $uObj->designation ?? 'Team Member',
+                                'allCandidate' => 0,
+                                'Interview' => 0,
+                                'Joined' => 0,
+                            ];
+                        }
+                    }
+                }
+            }
+            $this->bench_assign_row = $fallbackContacts;
+            $this->bench_assign_count = count($fallbackContacts);
         }
 
         // $params = [

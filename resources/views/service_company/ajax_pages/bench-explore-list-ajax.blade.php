@@ -26,7 +26,10 @@
 @foreach ($data as $rowArr)
 @php
     $row = (object) $rowArr;
-    $jobId = $row->jobId ?? $row->job_id ?? $row->id ?? 0;
+    $jobId = $row->jobId ?? $row->job_id ?? 0;
+    if ($jobId <= 0 && ! empty($row->id)) {
+        $jobId = DB::table('add_job_wise_condidates')->where('id', $row->id)->value('job_id') ?? 0;
+    }
     $row->jobId = $jobId;
     $jobDetails      = GeneralMethod::jobDetails($jobId);
     $company_id      = auth()->user()->company_id;
