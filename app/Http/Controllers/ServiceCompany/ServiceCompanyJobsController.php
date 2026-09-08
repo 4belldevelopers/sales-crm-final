@@ -23,6 +23,7 @@ use App\Models\Country;
 use App\Models\Job;
 use App\Models\JobApplication;
 use App\Models\JobCategory;
+use App\Models\JobStatusLog;
 use App\Models\Skill;
 use App\Models\User;
 use App\Services\ElasticService;
@@ -5640,7 +5641,8 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
             if (! empty($this->job->id)) {
                 try {
                     app(\App\Services\ElasticJobIndex::class)->jobIndexElastic($id);
-                } catch (\Throwable $idxEx) {}
+                } catch (\Throwable $idxEx) {
+                }
             }
         }
 
@@ -6262,7 +6264,8 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
                         $allCandidate = $response['aggregations']['all_candidates']['value'] ?? 0;
                         $Interview = $response['aggregations']['interview']['doc_count'] ?? 0;
                         $Joined = $response['aggregations']['joined']['doc_count'] ?? 0;
-                    } catch (\Throwable $esCandEx) {}
+                    } catch (\Throwable $esCandEx) {
+                    }
 
                     $bench_assign_Arr[0] = (object) [
                         'id' => $user_job->id ?? null,
