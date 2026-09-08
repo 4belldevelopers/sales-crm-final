@@ -5743,7 +5743,8 @@ function openDocNativePdfBlob(doc){
   return null;
 }
 function rsCollectActiveKeywords(){
-  /* Purpose: Collect only matched ATS keywords from drawer activity/header to avoid false-positive highlights */
+  /* Purpose: Comprehensive keyword collection for client-side highlighting:
+     pools matched ATS skills, candidate profile skills, drawer badges, and technical skills */
   var allKeywords=[];
   var seenKw={};
   function addKw(val){
@@ -5756,12 +5757,19 @@ function rsCollectActiveKeywords(){
     seenKw[k]=true;
     allKeywords.push(val);
   }
-  // Strictly matched ATS skills only — exclude non-matched profile skills to prevent unwanted highlights:
+  // 1. Matched ATS keywords from drawer
   (Array.isArray(rsDrawerMatchedKeywords) ? rsDrawerMatchedKeywords : []).forEach(addKw);
-  Array.prototype.slice.call(document.querySelectorAll('#kt_activitiesApplication .cdr-skill-tag.cdr-skill-match:not(.cdr-skill-more), .cdr-skill-tag.cdr-skill-match:not(.cdr-skill-more)')).forEach(function(el){
+  // 2. All skill badges on candidate drawer
+  Array.prototype.slice.call(document.querySelectorAll('#kt_activitiesApplication .cdr-skill-tag:not(.cdr-skill-more), .cdr-skill-tag:not(.cdr-skill-more)')).forEach(function(el){
     addKw(el.textContent||'');
   });
+  // 3. ATS highlight keywords
   (Array.isArray(rsAtsHighlightKeywords) ? rsAtsHighlightKeywords : []).forEach(addKw);
+  // 4. Candidate skills from application data
+  try{
+    var rData=readData();
+    (Array.isArray(rData.skills) ? rData.skills : []).forEach(addKw);
+  }catch(ex){}
   return allKeywords;
 }
 async function convertResumeWithOpenDocLabBlob(resumeUrl,resumeExt,allowExternalFallback,conversionOptions){
@@ -5797,65 +5805,99 @@ async function convertResumeWithOpenDocLabBlob(resumeUrl,resumeExt,allowExternal
     if(!pageCount || pageCount<1) throw new Error('OpenDoc produced no pages');
     if(pageCount>maxPages) throw new Error('OpenDoc lab page limit exceeded');
 
-    // Fast pre-filter using doc.copyText: find which keywords actually exist in the resume text
+    // Extract full document text across all pages using copyText
     var allKws=conversionOptions.highlightKeywords||rsCollectActiveKeywords();
-    var keywords=[];
+    var fullDocText='';
     try{
       var pos1=(typeof doc.firstPosition === 'function') ? doc.firstPosition() : null;
       var pos2=(typeof doc.lastPosition === 'function') ? doc.lastPosition() : null;
       if(pos1 && pos2 && typeof doc.copyText === 'function'){
-        var fullDocText=doc.copyText(pos1.node, pos1.offset, pos2.node, pos2.offset).toLowerCase();
-        keywords=allKws.filter(function(k){
-          return k && k.length >= 2 && fullDocText.indexOf(k.toLowerCase()) !== -1;
-        });
+        fullDocText=doc.copyText(pos1.node, pos1.offset, pos2.node, pos2.offset);
       }
       if(pos1 && typeof pos1.free === 'function') pos1.free();
       if(pos2 && typeof pos2.free === 'function') pos2.free();
-    }catch(ctErr){
-      keywords=allKws.slice(0, 15);
+    }catch(ctErr){}
+
+    // Also extract skills directly detected in resume text across all pages (Option 3 engine)
+    if(fullDocText && typeof rsOption3KeywordsFromResumeText==='function'){
+      try{
+        var extractedSkills=rsOption3KeywordsFromResumeText(fullDocText);
+        if(Array.isArray(extractedSkills)){
+          extractedSkills.forEach(function(sk){
+            if(!sk || sk.length<2) return;
+            var skLower=sk.toLowerCase();
+            if(!allKws.some(function(k){ return k.toLowerCase()===skLower; })){
+              allKws.push(sk);
+            }
+          });
+        }
+      }catch(skErr){}
     }
+
+    var lowerDocText=(fullDocText||'').toLowerCase();
+    var keywords=allKws.filter(function(k){
+      if(!k || k.length<2) return false;
+      return lowerDocText ? lowerDocText.indexOf(k.toLowerCase()) !== -1 : true;
+    });
     if(!keywords.length && allKws.length){
-      keywords=allKws.slice(0, 10);
+      keywords=allKws;
     }
-    var pageHighlights={};
+
     if(Array.isArray(keywords) && keywords.length){
-      keywords.forEach(function(kw){
-        if(!kw || typeof kw !== 'string') return;
-        kw=kw.trim();
-        if(kw.length<2) return;
-        try{
-          var first=(typeof doc.firstPosition === 'function') ? doc.firstPosition() : null;
-          if(!first) return;
-          var currNode=first.node;
-          var currOffset=first.offset;
-          if(typeof first.free === 'function') first.free();
+      keywords.forEach(function(rawKw){
+        if(!rawKw || typeof rawKw !== 'string') return;
+        rawKw=rawKw.trim();
+        if(rawKw.length<2) return;
 
-          var maxMatches=40;
-          while(maxMatches-- > 0){
-            var m=doc.findText(kw, currNode, currOffset, true, false);
-            if(!m || !m.found){
-              if(m && typeof m.free === 'function') m.free();
-              break;
-            }
-            var sNode=m.startNode;
-            var sOffset=m.startOffset;
-            var eNode=m.endNode;
-            var eOffset=m.endOffset;
-            if(typeof doc.setHighlight==='function'){
-              try{
-                doc.setHighlight(sNode,sOffset,eNode,eOffset,'yellow');
-              }catch(hlErr){}
-            }
-            if(typeof m.free==='function') m.free();
+        var kwList=[rawKw];
+        if(/\.js$/i.test(rawKw)){
+          kwList.push(rawKw.replace(/\.js$/i,'js'));
+        }
 
-            if(sNode===eNode && eOffset<=currOffset){
-              currOffset++;
-            }else{
-              currNode=eNode;
-              currOffset=eOffset;
+        kwList.forEach(function(kw){
+          try{
+            var first=(typeof doc.firstPosition === 'function') ? doc.firstPosition() : null;
+            if(!first) return;
+            var currNode=first.node;
+            var currOffset=first.offset;
+            if(typeof first.free === 'function') first.free();
+
+            var visited={};
+            var maxMatches=100;
+            while(maxMatches-- > 0){
+              var m=doc.findText(kw, currNode, currOffset, true, false);
+              if(!m || !m.found){
+                if(m && typeof m.free === 'function') m.free();
+                break;
+              }
+              var sNode=m.startNode;
+              var sOffset=m.startOffset;
+              var eNode=m.endNode;
+              var eOffset=m.endOffset;
+              var visitKey=sNode+':'+sOffset+':'+eNode+':'+eOffset;
+              if(visited[visitKey]){
+                if(typeof m.free === 'function') m.free();
+                break; // Detected wrap-around back to earlier page; finish searching this keyword
+              }
+              visited[visitKey]=true;
+
+              if(typeof doc.setHighlight==='function'){
+                try{
+                  var hRes=doc.setHighlight(sNode,sOffset,eNode,eOffset,'yellow');
+                  if(hRes && typeof hRes.free==='function') hRes.free();
+                }catch(hlErr){}
+              }
+              if(typeof m.free==='function') m.free();
+
+              if(sNode===eNode && eOffset<=currOffset){
+                currOffset++;
+              }else{
+                currNode=eNode;
+                currOffset=eOffset;
+              }
             }
-          }
-        }catch(fErr){}
+          }catch(fErr){}
+        });
       });
     }
 
