@@ -6467,7 +6467,7 @@ async function buildFastHighlightedBrandingResume(resumePdfUrl,options){
   }
 }
 async function buildPreScreenedHighlightedResume(resumePdfUrl,options){
-  /* Purpose: generate the Pre-Screened Report and append the option-8 highlighted resume without adding server conversion work for PDF/DOCX flows. */
+  /* Purpose: generate the Pre-Screened Report and append the highlighted resume; DOCX can run browser-first with enterprise PDF fallback, while DOC stays on the enterprise converter. */
   if(window.__rsBusy) return Promise.resolve(false);
   try{
     options=options||{};
@@ -6477,6 +6477,7 @@ async function buildPreScreenedHighlightedResume(resumePdfUrl,options){
       resumeUrl:options.resumeUrl,
       resumeExt:options.resumeExt,
       resumePdfUrl:resumePdfUrl,
+      preferClientDocx:options.preferClientDocx===true,
       returnBlob:true
     });
     if(!(reportBlob instanceof Blob)) throw new Error('Pre-Screened Report PDF was not generated');
