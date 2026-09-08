@@ -323,6 +323,7 @@
 #rdcOptsList .rdc-opt[data-opt="17"]{order:10;}
 #rdcOptsList .rdc-opt[data-opt="19"]{order:11;}
 #rdcOptsList .rdc-opt[data-opt="20"]{order:12;}
+#rdcOptsList .rdc-opt[data-opt="21"]{order:13;}
 #rdcOptsList .rdc-opt[data-opt="3"],
 #rdcOptsList .rdc-opt[data-opt="4"],
 #rdcOptsList .rdc-opt[data-opt="7"]{order:99;}
@@ -6384,6 +6385,86 @@ async function buildHighlightedBrandedResume(resumePdfUrl,options){
     window.__rsBusy=false;
   }
 }
+async function buildCompanyBrandingIntroBlob(resumeBlob,data){
+  /* Purpose: create a lightweight first-page company branding sheet that can be merged without rewriting resume pages. */
+  await rsEnsurePdfLib();
+  data=data||readData();
+  var PDFLib=window.PDFLib;
+  var resumeBytes=await resumeBlob.arrayBuffer();
+  var resumeDoc=await PDFLib.PDFDocument.load(resumeBytes);
+  var firstPage=resumeDoc.getPages()[0];
+  if(!firstPage) throw new Error('Highlighted resume PDF has no pages');
+  var pageSize=firstPage.getSize();
+  var targetDoc=await PDFLib.PDFDocument.create();
+  var regularFont=await targetDoc.embedFont(PDFLib.StandardFonts.Helvetica);
+  var boldFont=await targetDoc.embedFont(PDFLib.StandardFonts.HelveticaBold);
+  var logoUri=await rsLogoDataUri(data.reportCompanyLogo);
+  var logoImage=null;
+  var logoData=dataUriBytes(logoUri);
+  if(logoData){
+    try{
+      if(logoData.mime.indexOf('png')!==-1) logoImage=await targetDoc.embedPng(logoData.bytes);
+      else if(logoData.mime.indexOf('jpeg')!==-1 || logoData.mime.indexOf('jpg')!==-1) logoImage=await targetDoc.embedJpg(logoData.bytes);
+    }catch(err){
+      console.warn('Fast branding intro logo embed skipped:',err);
+      logoImage=null;
+    }
+  }
+  var headerScale=Math.max(1,Math.min(1.45,pageSize.width/612));
+  var headerH=Math.max(72,Math.min(92,pageSize.width*0.118))*headerScale;
+  var introPage=targetDoc.addPage([pageSize.width,headerH]);
+  introPage.drawRectangle({x:0,y:0,width:pageSize.width,height:headerH,color:PDFLib.rgb(1,1,1),borderColor:PDFLib.rgb(0.86,0.89,0.94),borderWidth:0.8});
+  introPage.drawRectangle({x:0,y:headerH-(4*headerScale),width:pageSize.width,height:4*headerScale,color:PDFLib.rgb(0.12,0.23,0.54)});
+  introPage.drawRectangle({x:0,y:0,width:pageSize.width,height:1.1*headerScale,color:PDFLib.rgb(0.88,0.91,0.95)});
+  var companyName=clean(data.reportCompanyName,'Hiring Partner');
+  var logoBox=headerH-(28*headerScale);
+  var logoX=22*headerScale;
+  var logoY=14*headerScale;
+  var logoAreaW=70*headerScale;
+  if(logoImage){
+    var dims=logoImage.scaleToFit(logoBox*1.8,logoBox);
+    introPage.drawImage(logoImage,{x:logoX,y:logoY+(logoBox-dims.height)/2,width:dims.width,height:dims.height});
+    logoAreaW=Math.max(56*headerScale,Math.min(74*headerScale,dims.width));
+  }else{
+    introPage.drawRectangle({x:logoX,y:logoY,width:logoBox,height:logoBox,color:PDFLib.rgb(0.93,0.95,1),borderColor:PDFLib.rgb(0.75,0.82,0.98),borderWidth:0.8*headerScale});
+    introPage.drawText(companyName.charAt(0).toUpperCase(),{x:logoX+(logoBox/2)-(5*headerScale),y:logoY+(logoBox/2)-(5*headerScale),size:16*headerScale,font:boldFont,color:PDFLib.rgb(0.12,0.23,0.54)});
+    logoAreaW=logoBox;
+  }
+  var textX=logoX+logoAreaW+(12*headerScale);
+  var rightX=pageSize.width-(190*headerScale);
+  introPage.drawText('SHARED BY',{x:textX,y:headerH-(29*headerScale),size:7*headerScale,font:boldFont,color:PDFLib.rgb(0.39,0.45,0.55)});
+  introPage.drawText(limitText(companyName,42,companyName),{x:textX,y:headerH-(49*headerScale),size:12*headerScale,font:boldFont,color:PDFLib.rgb(0.06,0.09,0.16)});
+  introPage.drawText('CONFIDENTIAL RESUME',{x:rightX,y:headerH-(31*headerScale),size:14*headerScale,font:boldFont,color:PDFLib.rgb(0.06,0.09,0.16)});
+  introPage.drawText(clean(data.reportDate,'') || (new Date()).toLocaleDateString(),{x:rightX,y:headerH-(51*headerScale),size:8.4*headerScale,font:regularFont,color:PDFLib.rgb(0.39,0.45,0.55)});
+  var introBytes=await targetDoc.save();
+  return new Blob([introBytes],{type:'application/pdf'});
+}
+async function buildFastHighlightedBrandingResume(resumePdfUrl,options){
+  /* Purpose: provide a faster highlighted branded resume by merging a branding intro page instead of rewriting resume pages. */
+  if(window.__rsBusy) return Promise.resolve(false);
+  try{
+    options=options||{};
+    var data=readData();
+    var highlightedBlob=await buildHeadlessOption3SkillsHighlightedResume({
+      resumeUrl:options.resumeUrl,
+      resumeExt:options.resumeExt,
+      resumePdfUrl:resumePdfUrl,
+      preferClientDocx:true,
+      returnBlob:true
+    });
+    if(!(highlightedBlob instanceof Blob)) throw new Error('Highlighted resume PDF was not generated');
+    var introBlob=await buildCompanyBrandingIntroBlob(highlightedBlob,data);
+    window.__rsBusy=true;
+    await mergePreScreenedReportAndResume(introBlob,highlightedBlob,'JEROWORKS_'+fileSafeName(data.name,'Candidate')+'_Fast_Highlighted_Branded.pdf');
+    return true;
+  }catch(err){
+    console.error('Fast highlighted branded resume error:',err);
+    alert('Could not generate Fast Resume + Highlighted Keywords + Company Branding.\n\nReason: '+(err && err.message ? err.message : 'Unknown fast branding error')+'\n\nThis option keeps the highlighted resume pages untouched and merges a separate branding page first.');
+    return false;
+  }finally{
+    window.__rsBusy=false;
+  }
+}
 async function buildPreScreenedHighlightedResume(resumePdfUrl,options){
   /* Purpose: generate the Pre-Screened Report and append the option-8 highlighted resume without adding server conversion work for PDF/DOCX flows. */
   if(window.__rsBusy) return Promise.resolve(false);
@@ -6574,6 +6655,7 @@ window.__buildSmartBrandedResume=buildSmartBrandedResume;
 window.__buildSmartHighlightedResume=buildSmartHighlightedResume;
 window.__buildHeadlessOption3SkillsHighlightedResume=buildHeadlessOption3SkillsHighlightedResume;
 window.__buildHighlightedBrandedResume=buildHighlightedBrandedResume;
+window.__buildFastHighlightedBrandingResume=buildFastHighlightedBrandingResume;
 window.__buildPreScreenedHighlightedResume=buildPreScreenedHighlightedResume;
 window.__convertResumeToPdfOnly=convertResumeToPdfOnly;
 window.__convertResumeToPdfBrowserOnly=convertResumeToPdfBrowserOnly;
@@ -6880,6 +6962,24 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
         <span class="rdc-ocirc" aria-hidden="true"></span>
       </label>
 
+      {{-- 21: Fast highlighted resume plus separate company branding page --}}
+      <label class="rdc-opt" data-opt="21" data-coins="6">
+        <input class="rdc-rinput" type="radio" name="rdcFormat" value="21">
+        <span class="rdc-onum">21</span>
+        <span class="rdc-oi rdc-ic-green" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h16"/><path d="M8 4h8v5H8z"/><path d="M7 14l3 3 7-7"/></svg>
+        </span>
+        <span class="rdc-obody">
+          <span class="rdc-otitle">Fast Resume + Highlighted Keywords + Company Branding <span style="background:#ecfdf5;color:#059669;font-size:8.5px;font-weight:700;padding:1px 6px;border-radius:4px;vertical-align:middle;margin-left:4px;">Fast Merge</span></span>
+          <span class="rdc-odesc">Adds company branding as a separate first page, then appends the highlighted resume without rewriting it</span>
+        </span>
+        <span class="rdc-ometa">
+          <span class="rdc-ocost">6 Coins</span>
+          <span class="rdc-otime">Fast</span>
+        </span>
+        <span class="rdc-ocirc" aria-hidden="true"></span>
+      </label>
+
     </div>{{-- /.rdc-opts-list --}}
 
     {{-- Coin info summary --}}
@@ -6946,7 +7046,8 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
     16:{cost:8, label:'Pre-Screened Report + Resume without Company Branding', avail:(['PDF','DOC','DOCX'].indexOf(resumeExt) !== -1), dlKey:'smart-prescreened-package-nobrand', unavailableMsg:'Final package is available for PDF, DOC and DOCX resumes only.'},
     17:{cost:8, label:'Pre-Screened Report + Resume + Highlighted Keywords', avail:(['PDF','DOC','DOCX'].indexOf(resumeExt) !== -1), dlKey:'prescreened-highlighted-package-client-docx', unavailableMsg:'Client-first Pre-Screened Report + Resume + Highlighted Keywords is available for PDF, DOC and DOCX resumes only.'},
     19:{cost:8, label:'Pre-Screened Report + Resume + Highlighted Keywords without Company Branding', avail:(['PDF','DOC','DOCX'].indexOf(resumeExt) !== -1), dlKey:'prescreened-highlighted-package-client-docx-nobrand', unavailableMsg:'Client-first Pre-Screened Report + Resume + Highlighted Keywords without Company Branding is available for PDF, DOC and DOCX resumes only.'},
-    20:{cost:6, label:'Resume + Highlighted Keywords + Company Branding', avail:(['PDF','DOC','DOCX'].indexOf(resumeExt) !== -1), dlKey:'highlighted-branded-resume-client-docx', unavailableMsg:'Client-first Resume + Highlighted Keywords + Company Branding is available for PDF, DOC and DOCX resumes only.'}
+    20:{cost:6, label:'Resume + Highlighted Keywords + Company Branding', avail:(['PDF','DOC','DOCX'].indexOf(resumeExt) !== -1), dlKey:'highlighted-branded-resume-client-docx', unavailableMsg:'Client-first Resume + Highlighted Keywords + Company Branding is available for PDF, DOC and DOCX resumes only.'},
+    21:{cost:6, label:'Fast Resume + Highlighted Keywords + Company Branding', avail:(['PDF','DOC','DOCX'].indexOf(resumeExt) !== -1), dlKey:'fast-highlighted-branded-resume-client-docx', unavailableMsg:'Fast Resume + Highlighted Keywords + Company Branding is available for PDF, DOC and DOCX resumes only.'}
   };
 
   var selectedOpt = 1;
@@ -7041,6 +7142,8 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
     if(m.dlKey === 'highlighted-branded-resume' && resumeExt === 'DOCX' && typeof window.__preloadOpenDocLocal === 'function') window.__preloadOpenDocLocal();
     if(m.dlKey === 'highlighted-branded-resume-client-docx' && typeof window.__preloadRSCombined === 'function') window.__preloadRSCombined();
     if(m.dlKey === 'highlighted-branded-resume-client-docx' && resumeExt === 'DOCX' && typeof window.__preloadOpenDocLocal === 'function') window.__preloadOpenDocLocal();
+    if(m.dlKey === 'fast-highlighted-branded-resume-client-docx' && typeof window.__preloadRSCombined === 'function') window.__preloadRSCombined();
+    if(m.dlKey === 'fast-highlighted-branded-resume-client-docx' && resumeExt === 'DOCX' && typeof window.__preloadOpenDocLocal === 'function') window.__preloadOpenDocLocal();
     if((m.dlKey === 'prescreened-highlighted-package' || m.dlKey === 'prescreened-highlighted-package-nobrand' || m.dlKey === 'prescreened-highlighted-package-client-docx' || m.dlKey === 'prescreened-highlighted-package-client-docx-nobrand') && typeof window.__preloadRSCombined === 'function') window.__preloadRSCombined();
     if((m.dlKey === 'prescreened-highlighted-package' || m.dlKey === 'prescreened-highlighted-package-nobrand' || m.dlKey === 'prescreened-highlighted-package-client-docx' || m.dlKey === 'prescreened-highlighted-package-client-docx-nobrand') && resumeExt === 'DOCX' && typeof window.__preloadOpenDocLocal === 'function') window.__preloadOpenDocLocal();
     if(m.dlKey === 'smart-branded-resume' && typeof window.__preloadRSCombined === 'function') window.__preloadRSCombined();
@@ -7382,6 +7485,38 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
             if(ok) closeRdc();
           }).catch(function(){
             showToast('Could not generate highlighted branded resume. Please try option 8 or option 6.', 'warn');
+          }).finally(function(){
+            resetBtn();
+          });
+        }, 250);
+
+      } else if(m.dlKey === 'fast-highlighted-branded-resume-client-docx'){
+        /* Option 21: fast highlighted resume package with a separate company branding page. */
+        if(window.__rsBusy || typeof window.__buildFastHighlightedBrandingResume !== 'function'){
+          showToast('Please wait a moment and try again.', 'warn');
+          resetBtn(); return;
+        }
+        if(['PDF','DOC','DOCX'].indexOf(resumeExt) === -1){
+          showToast(m.unavailableMsg || 'Fast Resume + Highlighted Keywords + Company Branding is available for PDF, DOC and DOCX resumes only.', 'warn');
+          resetBtn(); return;
+        }
+        if(['PDF','DOCX'].indexOf(resumeExt) !== -1 && !r2DirectUrl && !r2PublicUrl && !dlUrl && !resumePdfUrl){
+          showToast('Resume URL is not available.', 'warn');
+          resetBtn(); return;
+        }
+        if(resumeExt === 'DOC' && !resumePdfUrl){
+          showToast('DOC resume needs enterprise converter PDF URL.', 'warn');
+          resetBtn(); return;
+        }
+        runSmartCountdown('Downloading Resume...', 60);
+        setTimeout(function(){
+          window.__buildFastHighlightedBrandingResume(resumePdfUrl,{
+            resumeUrl:[r2DirectUrl,r2PublicUrl,dlUrl],
+            resumeExt:resumeExt
+          }).then(function(ok){
+            if(ok) closeRdc();
+          }).catch(function(){
+            showToast('Could not generate fast highlighted branded resume. Please try option 20.', 'warn');
           }).finally(function(){
             resetBtn();
           });
