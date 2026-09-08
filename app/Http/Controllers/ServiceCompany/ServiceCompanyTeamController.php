@@ -2011,7 +2011,7 @@ class ServiceCompanyTeamController extends ServiceCompanyBaseController
                     'notice_period', 'np_id', 'created_at', 'jobId', 'title', 'client_name', 'posted_by',
                     'company_name', 'job_master_status_id', 'name', 'master_status_name', 'child_status_id',
                     'css_style', 'country', 'state', 'city', 'city_id', 'thirdparty_company_id',
-                    'client_comapny_id', 'qualification_name', 'skills', 'total_exp', 'rel_exp',
+                    'client_comapny_id', 'duplicate','is_duplicate', 'qualification_name', 'skills', 'total_exp', 'rel_exp',
                     'condidate_type', 'ctc_yearly', 'ectc_yearly', 'serving_notice_period_mode',
                     'current_company', 'current_ctc_mode', 'current_ctc_cur',
                 ],
