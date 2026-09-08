@@ -871,30 +871,28 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
 
     }
 
+    /**
+     * Intent: Bench Candidate Detail Page V2 (Initial Profile Overview Drawer View)
+     * Tenancy: Scoped to logged-in user's company_id. Shared Redis cache per company.
+     * Performance: Eliminates Elasticsearch search overhead; renders Profile Overview ONLY (True Tab Lazy Loading).
+     */
     public function show($id)
     {
-        // dd("jfif");
-        $company_id = $this->job_additional_detail = $this->bench_assign = '';
         $company_id = auth()->user()->company_id;
 
-        $cachePayload = [
-            'id' => $id,
-            'user_id' => $this->user->id,
-            'company' => $company_id,
-        ];
-
-        $versionKey = 'benchviewmore_version_user_'.$this->user->id;
+        // Intent: Shared Tenant Cache Key (eliminates per-user fragmentation and cache stampedes)
+        $versionKey = 'benchviewmore_version_company_'.$company_id;
         $version = cache()->get($versionKey, 1);
-        $cacheKeySet = 'ats:benchviewmore:'.$this->user->id.':'.$version.':'.md5(json_encode($cachePayload));
-        /* ----------------------------
-        ⚡ Check DragonflyDB first
-        ----------------------------- */
+        $cacheKeySet = 'ats:bench_detail:'.$company_id.':'.$id.':v'.$version;
+
         if (cache()->has($cacheKeySet)) {
             return response()->json(cache()->get($cacheKeySet));
         }
 
         $this->currency = GeneralMethod::currency();
         $this->salaryMode = GeneralMethod::salaryMode();
+
+        // Intent: Query candidate details with tenancy check & explicit column selection
         $this->benchApplication = JobApplication::select(
             'job_applications.id',
             'job_applications.company_id',
@@ -918,8 +916,6 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
             'job_applications.second_phone_code',
             'job_applications.outsourcing_type',
             'job_applications.phone',
-            'job_applications.phone_code',
-            'job_applications.second_phone_code',
             'job_applications.secondary_mobile',
             'job_applications.dob',
             'job_applications.email',
@@ -961,52 +957,51 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
             'companies.company_name',
             'users.image as posted_by_image'
         )
-            ->leftjoin('users', 'users.id', 'job_applications.submitted_by')
-            ->leftjoin('qualification_master', 'qualification_master.id', 'job_applications.qualification')
+            ->leftjoin('users', 'users.id', '=', 'job_applications.submitted_by')
+            ->leftjoin('qualification_master', 'qualification_master.id', '=', 'job_applications.qualification')
             ->leftJoin('bench_master_status', 'bench_master_status.id', '=', 'job_applications.status')
             ->leftJoin('state_list', 'state_list.id', '=', 'job_applications.state')
-            ->leftjoin('companies', 'companies.id', 'users.company_id')
-            ->leftJoin('city_list', 'city_list.city_id', '=', 'job_applications.city_id');
-        $this->benchApplication = $this->benchApplication->where('job_applications.id', $id);
-        $this->benchApplication = $this->benchApplication->first();
-        $this->job_additional_detail = DB::table('bench_additional_detail')->select('*')->where('bench_additional_detail.bench_id', '=', @$this->benchApplication->id)->orderBy('bench_additional_detail.id', 'ASC')->get();
-        $this->bench_assign = DB::table('bench_assign')->select('users.id', 'users.name')->leftjoin('users', 'users.id', 'bench_assign.user_id')->where('bench_assign.bench_applications_id', '=', @$this->benchApplication->id)->orderBy('bench_assign.id', 'ASC')->get();
+            ->leftjoin('companies', 'companies.id', '=', 'job_applications.company_id')
+            ->leftJoin('city_list', 'city_list.city_id', '=', 'job_applications.city_id')
+            ->where('job_applications.id', $id)
+            ->first();
 
-        $params = [
-            'index' => ELASTIC_BENCH_ASSIGN,
-            'body' => [
-                'query' => [
-                    'bool' => [
-                        'must' => [
-                            ['term' => ['bench_applications_id' => (int) $id]],
-                        ],
-                    ],
-                ],
-                'sort' => [
-                    ['id' => ['order' => 'desc']],
-                ],
-                'size' => 10000, // optional: get more records
-            ],
-        ];
-
-        $response = $this->elasticService->getClient()->search($params);
-        // return users
-        $this->bench_assign_count = $response['hits']['total']['value'] ?? 0;
-        $this->bench_assign_row = collect($response['hits']['hits'] ?? [])->map(fn ($hit) => (object) $hit['_source']);
-
-        $this->boostkeywords = '';
-
-        $boostkeywords = DB::table('benchboostkeywordcandidates')->where('candidate_id', $id)->pluck('skill_name')->toArray();
-        if (count($boostkeywords) > 0) {
-            $this->boostkeywords = implode(',', $boostkeywords);
+        if (! $this->benchApplication) {
+            return Reply::dataOnly(['status' => 'error', 'message' => 'Candidate not found.']);
         }
 
+        $this->job_additional_detail = DB::table('bench_additional_detail')
+            ->select('*')
+            ->where('bench_id', '=', $this->benchApplication->id)
+            ->orderBy('id', 'ASC')
+            ->get();
+
+        // Intent: Fetch Relationship Managers directly from MySQL (eliminating Elasticsearch search overhead under 10K scale)
+        $this->bench_assign_row = DB::table('bench_assign')
+            ->select('users.id', 'users.name', 'users.email', 'users.mobile', 'users.calling_code')
+            ->leftjoin('users', 'users.id', '=', 'bench_assign.user_id')
+            ->where('bench_assign.bench_applications_id', '=', $this->benchApplication->id)
+            ->orderBy('bench_assign.id', 'ASC')
+            ->get();
+
+        $this->bench_assign_count = $this->bench_assign_row->count();
+
+        $boostkeywords = DB::table('benchboostkeywordcandidates')->where('candidate_id', $id)->pluck('skill_name')->toArray();
+        $this->boostkeywords = count($boostkeywords) > 0 ? implode(',', $boostkeywords) : '';
+
+        // Intent: Single SQL query for skill experiences (eliminating duplicate count query)
         $this->skillExperiences = DB::table('bench_candidate_skill_experience')
             ->where('candidate_id', $this->benchApplication->id)
             ->get();
-        $this->skillExperiencesCount = DB::table('bench_candidate_skill_experience')
-            ->where('candidate_id', $this->benchApplication->id)
-            ->count();
+        $this->skillExperiencesCount = $this->skillExperiences->count();
+
+        // Intent: Pre-fetch company logo & name to eliminate direct raw SQL in Blade
+        $companyData = DB::table('companies')->select('logo', 'company_name')->where('id', $company_id)->first();
+        $this->company_logo = '';
+        $this->company_name = ucwords((string) ($companyData->company_name ?? ''));
+        if (! empty($companyData->logo) && strlen($companyData->logo) > 5) {
+            $this->company_logo = route('service_company.job-applications.company-logo-proxy');
+        }
 
         $view = view('service_company.bench-candidates.showdetail', $this->data)->render();
         $responseData = Reply::dataOnly(['status' => 'success', 'view' => $view]);
@@ -1015,6 +1010,160 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
 
         return $responseData;
 
+    }
+
+    /**
+     * Intent: Lazy-loaded Ads Setting Tab endpoint (V2 Architecture)
+     * Tenancy: Scoped to logged-in user's company_id.
+     */
+    public function getAdsTab($id)
+    {
+        $company_id = auth()->user()->company_id;
+        $versionKey = 'benchviewmore_version_company_'.$company_id;
+        $version = cache()->get($versionKey, 1);
+        $cacheKey = 'ats:bench_ads_tab:'.$company_id.':'.$id.':v'.$version;
+
+        if (cache()->has($cacheKey)) {
+            return response()->json(cache()->get($cacheKey));
+        }
+
+        $benchApplication = DB::table('job_applications')
+            ->select('id', 'company_id', 'ads_switch', 'status_type')
+            ->where('id', $id)
+            ->first();
+
+        if (! $benchApplication) {
+            return Reply::dataOnly(['status' => 'error', 'message' => 'Candidate not found.']);
+        }
+
+        $view = view('service_company.bench-candidates.partials.tab_ads_setting', compact('benchApplication'))->render();
+        $responseData = Reply::dataOnly(['status' => 'success', 'view' => $view]);
+
+        cache()->put($cacheKey, $responseData, now()->addMinutes(BENCH_VIEWMORE));
+
+        return $responseData;
+    }
+
+    /**
+     * Intent: Lazy-loaded Resume / CV Tab endpoint (V2 Architecture)
+     * Tenancy: Scoped to logged-in user's company_id; contact masking applied for cross-company viewing.
+     */
+    public function getResumeTab($id)
+    {
+        $company_id = auth()->user()->company_id;
+        $versionKey = 'benchviewmore_version_company_'.$company_id;
+        $version = cache()->get($versionKey, 1);
+        $cacheKey = 'ats:bench_resume_tab:'.$company_id.':'.$id.':v'.$version;
+
+        if (cache()->has($cacheKey)) {
+            return response()->json(cache()->get($cacheKey));
+        }
+
+        $benchApplication = JobApplication::select(
+            'job_applications.id', 'job_applications.company_id', 'job_applications.resume', 'job_applications.skills', 'job_applications.total_exp',
+            'job_applications.serving_notice_period_mode', 'job_applications.np_id', 'job_applications.city', 'job_applications.country',
+            'job_applications.pay_rate_currency', 'job_applications.pay_rate_amount', 'job_applications.bill_rate_currency', 'job_applications.bill_rate_amount',
+            'city_list.city as city_name'
+        )
+            ->leftJoin('city_list', 'city_list.city_id', '=', 'job_applications.city_id')
+            ->where('job_applications.id', $id)
+            ->first();
+
+        if (! $benchApplication || empty($benchApplication->resume)) {
+            return Reply::dataOnly(['status' => 'error', 'message' => 'Resume not found.']);
+        }
+
+        $skillExperiences = DB::table('bench_candidate_skill_experience')
+            ->where('candidate_id', $id)
+            ->get();
+
+        $currencySymbole = GeneralMethod::currencySymbole();
+        $current_ctc_cur = $currencySymbole[(@$benchApplication->pay_rate_currency) ? @$benchApplication->pay_rate_currency : 0] ?? '';
+        $current_ectc_cur = $currencySymbole[(@$benchApplication->bill_rate_currency) ? @$benchApplication->bill_rate_currency : 0] ?? '';
+
+        $country_name_Arr = GeneralMethod::getCountryName(@$benchApplication->country);
+        $country_name = isset($country_name_Arr[0]['name']) ? ucwords($country_name_Arr[0]['name']) : '';
+        $city_name = ! empty($benchApplication->city_name) ? $benchApplication->city_name : @$benchApplication->city;
+
+        $companyData = DB::table('companies')->select('logo', 'company_name')->where('id', $company_id)->first();
+        $rcvCompanyName = ucwords((string) ($companyData->company_name ?? ''));
+        $rcvCompanyLogo = '';
+        if (! empty($companyData->logo) && strlen($companyData->logo) > 5) {
+            $rcvCompanyLogo = route('service_company.job-applications.company-logo-proxy');
+        }
+
+        $rcvSkills = [];
+        if (! empty($benchApplication->skills)) {
+            foreach (explode(',', $benchApplication->skills) as $s) {
+                $s = trim($s);
+                if ($s !== '') {
+                    $rcvSkills[] = $s;
+                }
+            }
+        }
+        foreach ($skillExperiences as $__se) {
+            $__sk = trim((string) (@$__se->skill_key));
+            if ($__sk !== '') {
+                $rcvSkills[] = $__sk;
+            }
+        }
+        $rcvSkills = array_values(array_unique($rcvSkills));
+
+        $__te = trim((string) @$benchApplication->total_exp);
+        $rcvBExp = $__te !== '' ? $__te.' Years' : '--';
+        if ((@$benchApplication->serving_notice_period_mode == 0) || (@$benchApplication->serving_notice_period_mode == 1)) {
+            $rcvBNotice = 'Available '.date('d M Y', strtotime(@$benchApplication->np_id));
+        } else {
+            $rcvBNotice = trim((string) @$benchApplication->np_id);
+        }
+        if ($rcvBNotice === '') {
+            $rcvBNotice = '--';
+        }
+        $rcvBLoc = trim((string) @$city_name);
+        if ($rcvBLoc === '') {
+            $rcvBLoc = trim($country_name);
+        }
+        if ($rcvBLoc === '') {
+            $rcvBLoc = '--';
+        }
+
+        $__cur1 = html_entity_decode(strip_tags((string) $current_ctc_cur), ENT_QUOTES, 'UTF-8');
+        $__cur2 = html_entity_decode(strip_tags((string) $current_ectc_cur), ENT_QUOTES, 'UTF-8');
+        $rcvBCctc = trim($__cur1.' '.@$benchApplication->pay_rate_amount);
+        if ($rcvBCctc === '') {
+            $rcvBCctc = '--';
+        }
+        $rcvBEctc = trim($__cur2.' '.@$benchApplication->bill_rate_amount);
+        if ($rcvBEctc === '') {
+            $rcvBEctc = '--';
+        }
+        $rcvBPresented = ucwords((string) (auth()->user()->name ?? ''));
+        if ($rcvBPresented === '') {
+            $rcvBPresented = '--';
+        }
+        $rcvDownloadUrl = route('download.resume', ['id' => $benchApplication->id, 'path' => rtrim(strtr(base64_encode((string) @$benchApplication->resume), '+/', '-_'), '=')]);
+        $rcvMaskContact = ((int) @$benchApplication->company_id !== (int) $company_id);
+
+        $view = view('service_company.partials.resume_cv_viewer', [
+            'rcvResume' => @$benchApplication->resume,
+            'rcvMaskContact' => $rcvMaskContact,
+            'rcvSkills' => $rcvSkills,
+            'rcvCompanyLogo' => $rcvCompanyLogo,
+            'rcvCompanyName' => $rcvCompanyName,
+            'rcvBExp' => $rcvBExp,
+            'rcvBCctc' => $rcvBCctc,
+            'rcvBEctc' => $rcvBEctc,
+            'rcvBNotice' => $rcvBNotice,
+            'rcvBLoc' => $rcvBLoc,
+            'rcvBPresented' => $rcvBPresented,
+            'rcvDownloadUrl' => $rcvDownloadUrl,
+        ])->render();
+
+        $responseData = Reply::dataOnly(['status' => 'success', 'view' => $view]);
+
+        cache()->put($cacheKey, $responseData, now()->addMinutes(BENCH_VIEWMORE));
+
+        return $responseData;
     }
 
     public function talent_pool()
@@ -1566,8 +1715,16 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
                     $tempPath = $request->input('uploaded_file_path');
                     $full_name = $request->input('resume_original_name');
                     if ($tempPath && $full_name) {
-                        UploadResumeToTestRTwo::dispatch($tempPath, $full_name, $benchApplication->id, $companyNameRTwo, $year, $month)->onConnection('emails');
-                        $fileUrl = "https://file.jero.works/Companies/{$companyNameRTwo}/Resumes/{$year}/{$month}/{$full_name}";
+                        // Intent: Generate candidate-specific unique R2 path synchronously before queue dispatch to prevent non-unique filename collisions in async queues.
+                        $baseName = pathinfo($full_name, PATHINFO_FILENAME);
+                        $ext = strtolower(pathinfo($tempPath, PATHINFO_EXTENSION) ?: pathinfo($full_name, PATHINFO_EXTENSION));
+                        $safeBaseName = preg_replace('/[^a-zA-Z0-9_\-]/', '_', $baseName);
+                        $uuidSuffix = (string) \Illuminate\Support\Str::uuid();
+                        $uniqueFileName = "{$benchApplication->id}_{$safeBaseName}_{$uuidSuffix}.{$ext}";
+                        $r2Path = "Companies/{$companyNameRTwo}/Resumes/{$year}/{$month}/{$uniqueFileName}";
+                        $fileUrl = "https://file.jero.works/{$r2Path}";
+
+                        UploadResumeToTestRTwo::dispatch($tempPath, $full_name, $benchApplication->id, $companyNameRTwo, $year, $month, $r2Path)->onConnection('emails');
                         DB::table('job_applications')
                             ->where('id', $benchApplication->id)
                             ->update(['resume' => $fileUrl]);
@@ -1596,8 +1753,16 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
                     $tempPath = $request->input('uploaded_file_path');
                     $full_name = $request->input('resume_original_name');
                     if ($tempPath && $full_name) {
-                        UploadResumeToTestRTwo::dispatch($tempPath, $full_name, $benchApplication->id, $companyNameRTwo, $year, $month)->onConnection('emails');
-                        $fileUrl = "https://file.jero.works/Companies/{$companyNameRTwo}/Resumes/{$year}/{$month}/{$full_name}";
+                        // Intent: Generate candidate-specific unique R2 path synchronously before queue dispatch to prevent non-unique filename collisions in async queues.
+                        $baseName = pathinfo($full_name, PATHINFO_FILENAME);
+                        $ext = strtolower(pathinfo($tempPath, PATHINFO_EXTENSION) ?: pathinfo($full_name, PATHINFO_EXTENSION));
+                        $safeBaseName = preg_replace('/[^a-zA-Z0-9_\-]/', '_', $baseName);
+                        $uuidSuffix = (string) \Illuminate\Support\Str::uuid();
+                        $uniqueFileName = "{$benchApplication->id}_{$safeBaseName}_{$uuidSuffix}.{$ext}";
+                        $r2Path = "Companies/{$companyNameRTwo}/Resumes/{$year}/{$month}/{$uniqueFileName}";
+                        $fileUrl = "https://file.jero.works/{$r2Path}";
+
+                        UploadResumeToTestRTwo::dispatch($tempPath, $full_name, $benchApplication->id, $companyNameRTwo, $year, $month, $r2Path)->onConnection('emails');
                         DB::table('job_applications')
                             ->where('id', $benchApplication->id)
                             ->update(['resume' => $fileUrl]);
@@ -1607,7 +1772,7 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
                 }
             }
 
-            if (empty($request->resumeCheck) && ! $resumeSession) {
+            if (empty($request->resumeCheck) && ! $resumeSession && ! $request->hasFile('resume')) {
                 DB::table('job_applications')
                     ->where('id', $benchApplication->id)
                     ->update(['resume' => '']);
@@ -1805,7 +1970,8 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
                                     'ectc_monthly' => $applications_up->ectc_monthly,
                                     'ectc_yearly' => $applications_up->ectc_yearly,
                                     'status' => $applications_up->status,
-                                    'duplicate' => $applications_up->duplicate,
+                                    'duplicate' => (int) ($applications_up->duplicate ?? 0),
+                                    'is_duplicate' => (bool) (($applications_up->duplicate ?? 0) == 1),
                                     'pay_rate_currency' => $applications_up->pay_rate_currency,
                                     'pay_rate_amount' => $applications_up->pay_rate_amount,
                                     'pay_rate_mode' => $applications_up->pay_rate_mode,
@@ -5027,10 +5193,11 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
         ];
 
         $versionKey = 'allbenchexplore_version_user_'.$this->user->id;
-        $version = 3;
+        $version = 4;
         try {
-            $version = cache()->get($versionKey, 3);
-        } catch (\Throwable $e) {}
+            $version = cache()->get($versionKey, 4);
+        } catch (\Throwable $e) {
+        }
 
         /**
          * Phase 9: Multi-Tenant Redis Cache Key — Enforce company_id and user_id scoping with try-catch resilience.
@@ -5221,7 +5388,7 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
             'index' => ELASTIC_CANDIDATES,
             'body' => [
                 '_source' => [
-                    'id', 'candidate_id', 'job_id', 'job_applications_id', 'other_company',
+                    'id', 'candidate_id', 'job_id', 'jobId', 'job_applications_id', 'other_company',
                     'job_master_status_id', 'job_status', 'title', 'client_name', 'posted_by',
                     'name', 'css_style', 'childStatus', 'submitted_by', 'created_at', 'updated_at',
                     'max_salary', 'min_salary', 'city_name', 'location',
@@ -5500,8 +5667,8 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
 
                 $skilltag = '';
                 static $bxrLegacySkillsCache = [];
-                $jId = (int)$row->jobId;
-                if (!array_key_exists($jId, $bxrLegacySkillsCache)) {
+                $jId = (int) $row->jobId;
+                if (! array_key_exists($jId, $bxrLegacySkillsCache)) {
                     $bxrLegacySkillsCache[$jId] = DB::table('job_metronics_skills')->select('skill_name')->where('job_id', $jId)->get();
                 }
                 $skillArr = $bxrLegacySkillsCache[$jId];

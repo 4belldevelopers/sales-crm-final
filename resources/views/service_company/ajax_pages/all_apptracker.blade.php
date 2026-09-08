@@ -23,6 +23,7 @@
     @foreach ($data as $rowArr)
     @php
     $row = (object) $rowArr;
+    // dd($row);
     $row->id = $row->candidate_id;
     $row->add_job_wise_condidates_id = $row->wiseId;
     // BUG-04 fix: use pre-fetched map instead of per-row DB query (was N+1 #1)
@@ -68,10 +69,10 @@
 
                     $covid = '';
                     // BUG-04 fix N+1 #4: look up pre-fetched duplicate map instead of per-row DB count
-                    if ($duplicate == 1 && ($app_duplicate == 1 || $app_duplicate == 2)) {
-                        $dupKey = ($app_duplicate === 1 ? $row->job_id . ':' : '') . ($row->email ?? '') . '|' . ($row->phone ?? '');
-                        $application_cnt = $rowMaps['duplicates'][$dupKey] ?? 0;
-                        $flag = $application_cnt > 1 ? 1 : 0;
+                    if ($duplicate == 1) {
+                        // $dupKey = ($app_duplicate === 1 ? $row->job_id . ':' : '') . ($row->email ?? '') . '|' . ($row->phone ?? '');
+                        // $application_cnt = $rowMaps['duplicates'][$dupKey] ?? 0;
+                        $flag =$duplicate;// $application_cnt > 1 ? 1 : 0;
                     }
 
                     if (@$row->condidate_type == 'bench_condidate') {

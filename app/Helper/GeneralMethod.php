@@ -578,67 +578,117 @@ END:VCALENDAR";
         return $array;
     }
 
+    /**
+     * Intent: Check duplicate candidates by email or phone within tenant company context.
+     * Tenancy note: Filters by company_id or thirdparty_company_id.
+     */
     public static function checkDuplicateCandidate($company_id, $app_duplicate, $job_id, $email, $app_duplicate_days, $phone)
     {
         $application_cnt = 0;
+        if (empty($email) && empty($phone)) {
+            return 0;
+        }
+
+        $days = (int) ($app_duplicate_days ?? 0);
+
         if ($app_duplicate == 1) {
-            $application_cnt = DB::table('job_applications')->select('*')
+            $query = DB::table('job_applications')
                 ->where(function ($query) use ($company_id) {
                     $query->where('company_id', $company_id)
                         ->orWhere('thirdparty_company_id', $company_id);
                 })
                 ->where('job_id', $job_id)
                 ->where(function ($query) use ($email, $phone) {
-                    $query->where('email', $email)
-                        ->orWhere('phone', $phone);
-                })
-                ->where('job_applications.created_at', '>=', DB::raw('DATE_SUB(CURDATE(), INTERVAL '.@$app_duplicate_days.' DAY)'))
-                ->count();
+                    if (! empty($email) && ! empty($phone)) {
+                        $query->where('email', $email)->orWhere('phone', $phone);
+                    } elseif (! empty($email)) {
+                        $query->where('email', $email);
+                    } elseif (! empty($phone)) {
+                        $query->where('phone', $phone);
+                    }
+                });
+
+            if ($days > 0) {
+                $query->where('job_applications.created_at', '>=', DB::raw('DATE_SUB(CURDATE(), INTERVAL '.$days.' DAY)'));
+            }
+
+            $application_cnt = $query->count();
         } elseif ($app_duplicate == 2) {
-            $application_cnt = DB::table('job_applications')->select('*')
+            $query = DB::table('job_applications')
                 ->where(function ($query) use ($company_id) {
                     $query->where('company_id', $company_id)
                         ->orWhere('thirdparty_company_id', $company_id);
                 })
                 ->where(function ($query) use ($email, $phone) {
-                    $query->where('email', $email)
-                        ->orWhere('phone', $phone);
-                })
-                ->where('job_applications.created_at', '>=', DB::raw('DATE_SUB(CURDATE(), INTERVAL '.@$app_duplicate_days.' DAY)'))
-                ->count();
-            // echo $application_cnt."- query execute";
+                    if (! empty($email) && ! empty($phone)) {
+                        $query->where('email', $email)->orWhere('phone', $phone);
+                    } elseif (! empty($email)) {
+                        $query->where('email', $email);
+                    } elseif (! empty($phone)) {
+                        $query->where('phone', $phone);
+                    }
+                });
+
+            if ($days > 0) {
+                $query->where('job_applications.created_at', '>=', DB::raw('DATE_SUB(CURDATE(), INTERVAL '.$days.' DAY)'));
+            }
+
+            $application_cnt = $query->count();
         }
 
         return $application_cnt;
     }
 
+    /**
+     * Intent: Check duplicate candidates for client third-party company context.
+     * Tenancy note: Filters by thirdparty_company_id.
+     */
     public static function checkDuplicateCandidateClient($company_id, $app_duplicate, $job_id, $email, $app_duplicate_days, $phone)
     {
         $application_cnt = 0;
+        if (empty($email) && empty($phone)) {
+            return 0;
+        }
+
+        $days = (int) ($app_duplicate_days ?? 0);
+
         if ($app_duplicate == 1) {
-            $application_cnt = DB::table('job_applications')->select('*')
-                ->where(function ($query) use ($company_id) {
-                    $query->where('thirdparty_company_id', $company_id);
-                })
+            $query = DB::table('job_applications')
+                ->where('thirdparty_company_id', $company_id)
                 ->where('job_id', $job_id)
                 ->where(function ($query) use ($email, $phone) {
-                    $query->where('email', $email)
-                        ->orWhere('phone', $phone);
-                })
-                ->where('job_applications.created_at', '>=', DB::raw('DATE_SUB(CURDATE(), INTERVAL '.@$app_duplicate_days.' DAY)'))
-                ->count();
+                    if (! empty($email) && ! empty($phone)) {
+                        $query->where('email', $email)->orWhere('phone', $phone);
+                    } elseif (! empty($email)) {
+                        $query->where('email', $email);
+                    } elseif (! empty($phone)) {
+                        $query->where('phone', $phone);
+                    }
+                });
+
+            if ($days > 0) {
+                $query->where('job_applications.created_at', '>=', DB::raw('DATE_SUB(CURDATE(), INTERVAL '.$days.' DAY)'));
+            }
+
+            $application_cnt = $query->count();
         } elseif ($app_duplicate == 2) {
-            $application_cnt = DB::table('job_applications')->select('*')
-                ->where(function ($query) use ($company_id) {
-                    $query->where('thirdparty_company_id', $company_id);
-                })
+            $query = DB::table('job_applications')
+                ->where('thirdparty_company_id', $company_id)
                 ->where(function ($query) use ($email, $phone) {
-                    $query->where('email', $email)
-                        ->orWhere('phone', $phone);
-                })
-                ->where('job_applications.created_at', '>=', DB::raw('DATE_SUB(CURDATE(), INTERVAL '.@$app_duplicate_days.' DAY)'))
-                ->count();
-            // echo $application_cnt."- query execute";
+                    if (! empty($email) && ! empty($phone)) {
+                        $query->where('email', $email)->orWhere('phone', $phone);
+                    } elseif (! empty($email)) {
+                        $query->where('email', $email);
+                    } elseif (! empty($phone)) {
+                        $query->where('phone', $phone);
+                    }
+                });
+
+            if ($days > 0) {
+                $query->where('job_applications.created_at', '>=', DB::raw('DATE_SUB(CURDATE(), INTERVAL '.$days.' DAY)'));
+            }
+
+            $application_cnt = $query->count();
         }
 
         return $application_cnt;
@@ -3266,8 +3316,26 @@ END:VCALENDAR";
 
     public static function companyOrClientDetails($jobid = '')
     {
-
+        /**
+         * Resilience & Tenancy Note: Protect against invalid or missing job IDs.
+         * Returns an empty details object if the job record does not exist in DB.
+         */
         $jobs = DB::table('jobs')->select('jobs.company_id', 'jobs.client_id')->where('jobs.id', $jobid)->first();
+
+        if (! $jobs) {
+            return (object) [
+                'companyOrclientName' => '',
+                'selfCompany' => '',
+                'company' => '',
+                'logo_logical_path' => '',
+                'company_website' => '',
+                'founded' => '',
+                'email' => '',
+                'acount_type' => '',
+                'company_size' => '',
+                'ind_name' => '',
+            ];
+        }
 
         $company_id = $jobs->company_id;
 
@@ -7039,7 +7107,7 @@ END:VCALENDAR";
 
             $id = $add_job_wise->id;
             $jobId = $add_job_wise->job_id;
-            $applications = JobApplication::select(
+            $applications = JobApplication::withoutGlobalScopes()->select(
                 'job_applications.id',
                 'job_applications.thirdparty_company_id',
                 'job_applications.full_name',
@@ -7325,193 +7393,219 @@ END:VCALENDAR";
                 $response = $elasticService->getClient()->search($params);
 
                 $exists = ! empty($response['hits']['hits']);
-                $duplicate = (($response['hits']['total']['value'] ?? 0) > 1) ? 1 : ($application->duplicate ?? 0);
 
-                // $duplicate = $exists ? 1 : ($application->duplicate ?? 0);
+                $duplicate = (int) ($application->duplicate ?? 0);
 
-                // $job_application_skills = DB::table('job_application_skills')
-                // ->where('job_application_id', $application->id)
-                // ->get()
-                // // ->map(fn($row) => (array) $row)
-                // ->map(function ($s) {
-                // 	return [
-                // 	'id' => $s->id,
-                // 	'job_application_id' => $s->id,
-                // 	'skills' => strtolower($s->skills)
-                // 	];
-                // })
-                // ->toArray();
+                // Intent: Evaluate candidate duplicate status in static method context without $this or undefined variables.
+                // TENANCY NOTE: Scope company duplicate checks by application company_id.
+                $companyId = $application->company_id ?: ($application->other_company ?: (auth()->check() ? auth()->user()->company_id : null));
+                if ($companyId) {
+                    $company = DB::table('companies')->where('id', $companyId)->first();
+                    $appDuplicate = $company->app_duplicate ?? 0;
+                    $appDuplicateDays = $company->app_duplicate_days ?? 0;
 
-                // $application_skills = DB::table('job_application_skills')
-                // ->where('job_application_id', $application->id)
-                // ->pluck('skills') // only take skills column
-                // ->map(fn($skill) => strtolower($skill))
-                // ->implode(',');
+                    if ($appDuplicate == 1 || $appDuplicate == 2) {
+                        $applicationEmail = $application->email ?? '';
+                        $applicationPhone = $application->phone ?? '';
+                        $targetJobId = $application->jobId ?? ($application->job_id ?? null);
 
-                $response = $elasticService->getClient()->update([
-                    'index' => ELASTIC_CANDIDATES,
-                    'id' => $wiseId,
-                    'retry_on_conflict' => 5,
-                    'body' => [
-                        'doc' => [
-                            'id' => $wiseId,
-                            'candidate_id' => $application->id,
-                            'thirdparty_company_id' => $application->thirdparty_company_id,
-                            'full_name' => strtolower($application->full_name),
-                            'email' => $application->email,
-                            'phone' => $application->phone,
-                            'gender' => $application->gender,
-                            'np_id' => $application->np_id,
-                            'immediate_join' => $application->np_id,
-                            'serving_notice_period_mode' => $application->serving_notice_period_mode,
-                            'country_name' => strtolower($application->country_name),
-                            'state_name' => strtolower($application->state_name),
-                            'city_name' => strtolower($application->city_name),
-                            'city_id' => $application->city_id,
-                            'skills' => $application_skills,
-                            'photo' => $application->photo,
-                            'job_id' => $application->job_id,
-                            'jobId' => $application->jobId,
-                            'careersummary' => $application->careersummary,
-                            'nationality' => $application->nationality,
-                            'wm' => $application->wm,
-                            'employmentType' => $application->employmentType,
-                            'oh' => $application->oh,
-                            'visastatu' => $application->visastatu,
-                            'referencename' => $application->referencename,
-                            'recruiter_note' => $application->recruiter_note,
-                            'reason_for_job_change' => $application->reason_for_job_change,
-                            'total_exp' => $application->total_exp,
-                            'rel_exp' => $application->rel_exp,
-                            'ctc' => $application->ctc,
-                            'outsourcing_type' => $application->outsourcing_type,
-                            'pay_rate_currency' => $application->pay_rate_currency,
-                            'pay_rate_amount' => $application->pay_rate_amount,
-                            'pay_rate_mode' => $application->pay_rate_mode,
-                            'job_application_skills' => $job_application_skills,
-                            'current_ctc_cur' => $application->current_ctc_cur,
-                            'current_ctc_mode' => $application->current_ctc_mode,
-                            'current_designation' => $application->current_designation,
-                            'ectc' => $application->ectc,
-                            'current_ectc_cur' => $application->current_ectc_cur,
-                            'current_ectc_mode' => $application->current_ectc_mode,
-                            'current_company' => $application->current_company,
-                            'duplicate' => $duplicate,
-                            'bill_rate_currency' => $application->bill_rate_currency,
-                            'bill_rate_amount' => $application->bill_rate_amount,
-                            'bill_rate_mode' => $application->bill_rate_mode,
-                            'condidate_type' => $application->condidate_type,
-                            'master_status_id' => $application->master_status_id,
-                            'title' => strtolower($application->title),
-                            'client_id' => $application->client_id,
-                            'employment_type' => $application->employment_type,
-                            'client_comapny_id' => $application->client_comapny_id,
-                            'location' => $application->location,
-                            'client_name' => strtolower($application->client_name),
-                            'posted_by' => strtolower($application->posted_by),
-                            'posted_by_image' => $application->posted_by_image,
-                            'name' => $application->name,
-                            'post_company_name' => $application->post_company_name,
-                            'css_style' => $application->css_style,
-                            'qualification_name' => strtolower($application->qualification_name),
-                            'final_status' => $application->final_status,
-                            'recommendation_id' => $application->recommendation_id,
-                            'from_company_id' => $application->from_company_id,
-                            'to_company_id' => $application->to_company_id,
-                            'company_id' => $application->company_id,
-                            'company_name' => strtolower($application->company_name),
-                            'apl_company_name' => strtolower($application->apl_company_name),
-                            'cur_company_name' => strtolower($application->cur_company_name),
-                            'job_status' => $application->job_status,
-                            'childStatus' => $application->childStatus,
-                            'wiseId' => $application->wiseId,
-                            'job_master_status_id' => $application->job_master_status_id,
-                            'of_any_offer' => $application->of_any_offer,
-                            'of_offer_approved' => $application->of_offer_approved,
-                            'of_offer_release' => $application->of_offer_release,
-                            'of_offer_acceptance' => $application->of_offer_acceptance,
-                            'of_joined' => $application->of_joined,
-                            'of_joined_date' => (! empty($application->of_joined_date) && $application->of_joined_date != '0000-00-00 00:00:00') ? Carbon::parse($application->of_joined_date)->toIso8601String() : null,
-                            'of_offer_currency' => $application->of_offer_currency,
-                            'of_offer_mode' => $application->of_offer_mode,
-                            'of_offer_amount' => $application->of_offer_amount,
-                            'offer_id' => $application->offer_id,
-                            'ClientComID' => $application->ClientComID,
-                            'is_viewed' => $application->is_viewed,
-                            'column_priority' => $application->column_priority,
-                            'phone_code' => $application->phone_code,
-                            'second_phone_code' => $application->second_phone_code,
-                            'secondary_mobile' => $application->secondary_mobile,
-                            'ctc_hourly' => $application->ctc_hourly,
-                            'ctc_monthly' => $application->ctc_monthly,
-                            'ctc_yearly' => $application->ctc_yearly,
-                            'ectc_hourly' => $application->ectc_hourly,
-                            'ectc_monthly' => $application->ectc_monthly,
-                            'ectc_yearly' => $application->ectc_yearly,
-                            'status' => $application->status,
-                            'skill_match' => $application->skill_match,
-                            'existing' => $application->existing,
-                            'placed_end_date' => $application->placed_end_date,
-                            'rec_candidate_assign_id' => $application->rec_candidate_assign_id,
-                            'resume' => $application->resume,
-                            'rating' => $application->rating,
-                            'skype_id' => $application->skype_id,
-                            'cover_letter' => $application->cover_letter,
-                            'passport' => $application->passport,
-                            'updated_at' => ($application->updated_at) ? Carbon::parse($application->updated_at)->toIso8601String() : null,
-                            'created_at' => ($application->created_at) ? Carbon::parse($application->created_at)->toIso8601String() : null,
-                            'deleted_at' => ($application->deleted_at) ? Carbon::parse($application->created_at)->toIso8601String() : null,
-                            'process_id' => $application->process_id,
-                            'qualification' => $application->qualification,
-                            'secondrary_email' => $application->secondrary_email,
-                            'city' => $application->city,
-                            'country' => $application->country,
-                            'pincode' => $application->pincode,
-                            'state' => $application->state,
-                            'percentage_hike' => $application->percentage_hike,
-                            'comment' => $application->comment,
-                            'dob' => $application->dob,
-                            'other_company' => $application->other_company,
-                            'master_status_name' => $application->master_status_name,
-                            'proposed_ctc' => $application->proposed_ctc,
-                            'document' => $application->document,
-                            'sub_for_approval' => $application->sub_for_approval,
-                            'own_company_name' => $application->own_company_name,
-                            'client_or_company_name' => strtolower($client_name_com),
-                            'rjobid' => $application->rjobid,
-                            'submitted_by' => $application->submitted_by,
-                            'hashname' => $application->hashname,
-                            'linkedin' => $application->linkedin,
-                            'github' => $application->github,
-                            'behance' => $application->behance,
-                            'otherLink' => $application->otherLink,
-                            'interviewDateOne' => ($application->interviewDateOne) ? Carbon::parse($application->interviewDateOne)->toIso8601String() : null,
-                            'interview_mode_one' => $application->interview_mode_one,
-                            'interviewDateTwo' => ($application->interviewDateTwo) ? Carbon::parse($application->interviewDateTwo)->toIso8601String() : null,
-                            'interview_mode_two' => $application->interview_mode_two,
-                            'interviewDateThree' => ($application->interviewDateThree) ? Carbon::parse($application->interviewDateThree)->toIso8601String() : null,
-                            'interview_mode_three' => $application->interview_mode_three,
-                            'interviewDateFour' => ($application->interviewDateFour) ? Carbon::parse($application->interviewDateFour)->toIso8601String() : null,
-                            'interview_mode_four' => $application->interview_mode_four,
-                            'interviewDateFive' => ($application->interviewDateFive) ? Carbon::parse($application->interviewDateFive)->toIso8601String() : null,
-                            'interview_mode_five' => $application->interview_mode_five,
-                            'interviewDateSix' => ($application->interviewDateSix) ? Carbon::parse($application->interviewDateSix)->toIso8601String() : null,
-                            'interview_mode_six' => $application->interview_mode_six,
-                            'schedule_date' => ($intRow) ? Carbon::parse($intRow->schedule_date)->toIso8601String() : null,
-                            'timezone_abbreviation' => ($intRow) ? $intRow->timezone_abbreviation : null,
-                            'schedule_to_time' => ($intRow) ? $intRow->schedule_to_time : null,
+                        if (! empty($applicationEmail) || ! empty($applicationPhone)) {
+                            $returnCount = self::checkDuplicateCandidate(
+                                $companyId,
+                                $appDuplicate,
+                                $targetJobId,
+                                $applicationEmail,
+                                $appDuplicateDays,
+                                $applicationPhone
+                            );
+
+                            if ($returnCount > 0 || ($application->duplicate ?? 0) == 1) {
+                                $duplicate = 1;
+                            }
+                        }
+                    }
+                }
+
+                if (($application->duplicate ?? 0) == 1) {
+                    $duplicate = 1;
+                }
+
+                try {
+                    $response = $elasticService->getClient()->update([
+                        'index' => ELASTIC_CANDIDATES,
+                        'id' => $wiseId,
+                        'retry_on_conflict' => 5,
+                        'body' => [
+                            'doc' => [
+                                'id' => $wiseId,
+                                'candidate_id' => $application->id,
+                                'thirdparty_company_id' => $application->thirdparty_company_id,
+                                'full_name' => strtolower($application->full_name),
+                                'email' => $application->email,
+                                'phone' => $application->phone,
+                                'gender' => $application->gender,
+                                'np_id' => $application->np_id,
+                                'immediate_join' => $application->np_id,
+                                'serving_notice_period_mode' => $application->serving_notice_period_mode,
+                                'country_name' => strtolower($application->country_name),
+                                'state_name' => strtolower($application->state_name),
+                                'city_name' => strtolower($application->city_name),
+                                'city_id' => $application->city_id,
+                                'skills' => $application_skills,
+                                'photo' => $application->photo,
+                                'job_id' => $application->job_id,
+                                'jobId' => $application->jobId,
+                                'careersummary' => $application->careersummary,
+                                'nationality' => $application->nationality,
+                                'wm' => $application->wm,
+                                'employmentType' => $application->employmentType,
+                                'oh' => $application->oh,
+                                'visastatu' => $application->visastatu,
+                                'referencename' => $application->referencename,
+                                'recruiter_note' => $application->recruiter_note,
+                                'reason_for_job_change' => $application->reason_for_job_change,
+                                'total_exp' => $application->total_exp,
+                                'rel_exp' => $application->rel_exp,
+                                'ctc' => $application->ctc,
+                                'outsourcing_type' => $application->outsourcing_type,
+                                'pay_rate_currency' => $application->pay_rate_currency,
+                                'pay_rate_amount' => $application->pay_rate_amount,
+                                'pay_rate_mode' => $application->pay_rate_mode,
+                                'job_application_skills' => $job_application_skills,
+                                'current_ctc_cur' => $application->current_ctc_cur,
+                                'current_ctc_mode' => $application->current_ctc_mode,
+                                'current_designation' => $application->current_designation,
+                                'ectc' => $application->ectc,
+                                'current_ectc_cur' => $application->current_ectc_cur,
+                                'current_ectc_mode' => $application->current_ectc_mode,
+                                'current_company' => $application->current_company,
+                                'duplicate' => (int) ($duplicate ?? $application->duplicate ?? 0),
+                                'is_duplicate' => (bool) (($duplicate ?? $application->duplicate ?? 0) == 1),
+                                'bill_rate_currency' => $application->bill_rate_currency,
+                                'bill_rate_amount' => $application->bill_rate_amount,
+                                'bill_rate_mode' => $application->bill_rate_mode,
+                                'condidate_type' => $application->condidate_type,
+                                'master_status_id' => $application->master_status_id,
+                                'title' => strtolower($application->title),
+                                'client_id' => $application->client_id,
+                                'employment_type' => $application->employment_type,
+                                'client_comapny_id' => $application->client_comapny_id,
+                                'location' => $application->location,
+                                'client_name' => strtolower($application->client_name),
+                                'posted_by' => strtolower($application->posted_by),
+                                'posted_by_image' => $application->posted_by_image,
+                                'name' => $application->name,
+                                'post_company_name' => $application->post_company_name,
+                                'css_style' => $application->css_style,
+                                'qualification_name' => strtolower($application->qualification_name),
+                                'final_status' => $application->final_status,
+                                'recommendation_id' => $application->recommendation_id,
+                                'from_company_id' => $application->from_company_id,
+                                'to_company_id' => $application->to_company_id,
+                                'company_id' => $application->company_id,
+                                'company_name' => strtolower($application->company_name),
+                                'apl_company_name' => strtolower($application->apl_company_name),
+                                'cur_company_name' => strtolower($application->cur_company_name),
+                                'job_status' => $application->job_status,
+                                'childStatus' => $application->childStatus,
+                                'wiseId' => $application->wiseId,
+                                'job_master_status_id' => $application->job_master_status_id,
+                                'of_any_offer' => $application->of_any_offer,
+                                'of_offer_approved' => $application->of_offer_approved,
+                                'of_offer_release' => $application->of_offer_release,
+                                'of_offer_acceptance' => $application->of_offer_acceptance,
+                                'of_joined' => $application->of_joined,
+                                'of_joined_date' => (! empty($application->of_joined_date) && $application->of_joined_date != '0000-00-00 00:00:00') ? Carbon::parse($application->of_joined_date)->toIso8601String() : null,
+                                'of_offer_currency' => $application->of_offer_currency,
+                                'of_offer_mode' => $application->of_offer_mode,
+                                'of_offer_amount' => $application->of_offer_amount,
+                                'offer_id' => $application->offer_id,
+                                'ClientComID' => $application->ClientComID,
+                                'is_viewed' => $application->is_viewed,
+                                'column_priority' => $application->column_priority,
+                                'phone_code' => $application->phone_code,
+                                'second_phone_code' => $application->second_phone_code,
+                                'secondary_mobile' => $application->secondary_mobile,
+                                'ctc_hourly' => $application->ctc_hourly,
+                                'ctc_monthly' => $application->ctc_monthly,
+                                'ctc_yearly' => $application->ctc_yearly,
+                                'ectc_hourly' => $application->ectc_hourly,
+                                'ectc_monthly' => $application->ectc_monthly,
+                                'ectc_yearly' => $application->ectc_yearly,
+                                'status' => $application->status,
+                                'skill_match' => $application->skill_match,
+                                'existing' => $application->existing,
+                                'placed_end_date' => $application->placed_end_date,
+                                'rec_candidate_assign_id' => $application->rec_candidate_assign_id,
+                                'resume' => $application->resume,
+                                'rating' => $application->rating,
+                                'skype_id' => $application->skype_id,
+                                'cover_letter' => $application->cover_letter,
+                                'passport' => $application->passport,
+                                'updated_at' => ($application->updated_at) ? Carbon::parse($application->updated_at)->toIso8601String() : null,
+                                'created_at' => ($application->created_at) ? Carbon::parse($application->created_at)->toIso8601String() : null,
+                                'deleted_at' => ($application->deleted_at) ? Carbon::parse($application->created_at)->toIso8601String() : null,
+                                'process_id' => $application->process_id,
+                                'qualification' => $application->qualification,
+                                'secondrary_email' => $application->secondrary_email,
+                                'city' => $application->city,
+                                'country' => $application->country,
+                                'pincode' => $application->pincode,
+                                'state' => $application->state,
+                                'percentage_hike' => $application->percentage_hike,
+                                'comment' => $application->comment,
+                                'dob' => $application->dob,
+                                'other_company' => $application->other_company,
+                                'master_status_name' => $application->master_status_name,
+                                'proposed_ctc' => $application->proposed_ctc,
+                                'document' => $application->document,
+                                'sub_for_approval' => $application->sub_for_approval,
+                                'own_company_name' => $application->own_company_name,
+                                'client_or_company_name' => strtolower($client_name_com),
+                                'rjobid' => $application->rjobid,
+                                'submitted_by' => $application->submitted_by,
+                                'hashname' => $application->hashname,
+                                'linkedin' => $application->linkedin,
+                                'github' => $application->github,
+                                'behance' => $application->behance,
+                                'otherLink' => $application->otherLink,
+                                'interviewDateOne' => ($application->interviewDateOne) ? Carbon::parse($application->interviewDateOne)->toIso8601String() : null,
+                                'interview_mode_one' => $application->interview_mode_one,
+                                'interviewDateTwo' => ($application->interviewDateTwo) ? Carbon::parse($application->interviewDateTwo)->toIso8601String() : null,
+                                'interview_mode_two' => $application->interview_mode_two,
+                                'interviewDateThree' => ($application->interviewDateThree) ? Carbon::parse($application->interviewDateThree)->toIso8601String() : null,
+                                'interview_mode_three' => $application->interview_mode_three,
+                                'interviewDateFour' => ($application->interviewDateFour) ? Carbon::parse($application->interviewDateFour)->toIso8601String() : null,
+                                'interview_mode_four' => $application->interview_mode_four,
+                                'interviewDateFive' => ($application->interviewDateFive) ? Carbon::parse($application->interviewDateFive)->toIso8601String() : null,
+                                'interview_mode_five' => $application->interview_mode_five,
+                                'interviewDateSix' => ($application->interviewDateSix) ? Carbon::parse($application->interviewDateSix)->toIso8601String() : null,
+                                'interview_mode_six' => $application->interview_mode_six,
+                                'schedule_date' => ($intRow) ? Carbon::parse($intRow->schedule_date)->toIso8601String() : null,
+                                'timezone_abbreviation' => ($intRow) ? $intRow->timezone_abbreviation : null,
+                                'schedule_to_time' => ($intRow) ? $intRow->schedule_to_time : null,
+                            ],
+                            'doc_as_upsert' => true,
+                            'detect_noop' => false,
                         ],
-                        'doc_as_upsert' => true,
-                        'detect_noop' => false,
-                    ],
-                ]);
+                    ]);
 
-                self::addCompanyCandidate($application->company_id, $wiseId);
+                    self::addCompanyCandidate($application->company_id, $wiseId);
 
+                    $resultStatus = $response['result'] ?? '';
+                    $hasHits = ! empty($response['_id']);
+                    $success = in_array($resultStatus, ['updated', 'created', 'noop']) || $hasHits;
+                } catch (\Exception $e) {
+                    Log::error('JobApplicationsAddEditUpload ES sync failed', [
+                        'wise_id' => $wiseId,
+                        'error' => $e->getMessage(),
+                    ]);
+                    $success = false;
+                }
             }
         }
 
-        return $response;
+        return $success ?? true;
     }
 
     public static function elasticBenchCandidateAddEditIndex($id)
@@ -7519,7 +7613,7 @@ END:VCALENDAR";
         $elasticService = app(ElasticService::class);
         $response = '';
 
-        $applications = JobApplication::select(
+        $applications = JobApplication::withoutGlobalScopes()->select(
             'job_applications.id',
             'job_applications.thirdparty_company_id',
             'job_applications.outsourcing_type',
@@ -8286,7 +8380,7 @@ END:VCALENDAR";
                 'companies.company_name',
                 'companies.industries',
                 'companies.logo',
-                'companies.company_type',
+                'clients.company_type',
                 'companies.industries_type',
                 'companies.description as companies_description',
                 'clients.id as client_id',
@@ -12123,7 +12217,7 @@ END:VCALENDAR";
      * Fetch job details from Elasticsearch index (ELASTIC_JOBS) with MySQL fallback & memoization cache.
      * Tenancy / Resilience Note: Protects against missing ES documents, ES cluster outages, or invalid IDs.
      *
-     * @param int|string $id
+     * @param  int|string  $id
      * @return object
      */
     public static function jobDetails($id)
@@ -12170,9 +12264,10 @@ END:VCALENDAR";
             ];
 
             $response = $elasticService->getClient()->get($params);
-            if (!empty($response['found']) && !empty($response['_source'])) {
+            if (! empty($response['found']) && ! empty($response['_source'])) {
                 $jobs_details = (object) $response['_source'];
                 $jobDetailsCache[$jId] = $jobs_details;
+
                 return $jobs_details;
             }
         } catch (\Throwable $e) {
@@ -12221,6 +12316,7 @@ END:VCALENDAR";
                     ->toArray();
 
                 $jobDetailsCache[$jId] = $dbJob;
+
                 return $dbJob;
             }
         } catch (\Throwable $dbEx) {
@@ -12229,7 +12325,7 @@ END:VCALENDAR";
 
         $defaultObj = (object) [
             'id' => $jId,
-            'title' => 'Requisition #' . $jId,
+            'title' => 'Requisition #'.$jId,
             'comId' => 0,
             'client_name' => '',
             'logo' => '',
@@ -12253,6 +12349,7 @@ END:VCALENDAR";
         ];
 
         $jobDetailsCache[$jId] = $defaultObj;
+
         return $defaultObj;
     }
 
@@ -12871,8 +12968,8 @@ END:VCALENDAR";
      * Calculate pipeline status stage counters for bench explore candidates.
      * Tenancy Note: Filtered strictly by candidate_id and tenant other_company for 100% data consistency with listing.
      *
-     * @param int|string $bench_id
-     * @param int|string|null $company_id
+     * @param  int|string  $bench_id
+     * @param  int|string|null  $company_id
      * @return object
      */
     public static function bench_explore_listing_counter($bench_id, $company_id = null)
@@ -12887,7 +12984,7 @@ END:VCALENDAR";
             ['term' => ['candidate_id' => (int) $bench_id]],
             ['terms' => ['job_status' => ['active', 'hold', 'inactive', '2']]],
         ];
-        if (!empty($company_id)) {
+        if (! empty($company_id)) {
             $must[] = ['term' => ['other_company' => (int) $company_id]];
         }
 
@@ -12943,7 +13040,8 @@ END:VCALENDAR";
                 'applicationCounter' => $applicationCounter,
             ];
         } catch (\Throwable $e) {
-            \Log::warning('bench_explore_listing_counter exception: ' . $e->getMessage());
+            \Log::warning('bench_explore_listing_counter exception: '.$e->getMessage());
+
             return (object) [
                 'total' => 0,
                 'applicationCounter' => (object) [

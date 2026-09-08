@@ -44,7 +44,10 @@ class ServiceCompanyDashboardController extends ServiceCompanyBaseController
     {
 
         $chkAdminRole = $this->user->hasRole('admin');
-
+                // $mapping = $this->elasticService->getClient()->indices()->getMapping([
+                //     'index' => ELASTIC_CANDIDATES
+                //      ]);
+                // dd($mapping);
         // $add_job_wise_condidates =  DB::table('add_job_wise_condidates')
         // ->where('job_id','=',254)
         // ->select('add_job_wise_condidates.id','add_job_wise_condidates.job_id')
