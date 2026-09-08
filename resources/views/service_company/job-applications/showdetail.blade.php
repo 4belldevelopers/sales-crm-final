@@ -4757,6 +4757,56 @@ function downloadBlob(blob,fileName){
     if(a.parentNode) a.parentNode.removeChild(a);
   },1200);
 }
+function sameOriginUrl(url){
+  try{ return (new URL(url, window.location.href)).origin === window.location.origin; }catch(ex){ return false; }
+}
+function guessResumeDownloadName(ext){
+  ext=clean(ext,'FILE').toLowerCase().replace(/[^a-z0-9]+/g,'') || 'file';
+  return fileSafeName(readData().name,'Candidate')+'.'+ext;
+}
+async function fetchOriginalResumeBlobFromSources(resumeUrls,maxBytes){
+  /* Purpose: download the original resume in the browser, preferring direct R2 so app servers do not stream resume bytes. */
+  var sources=(Array.isArray(resumeUrls) ? resumeUrls : [resumeUrls]).map(function(url){
+    return clean(url,'');
+  }).filter(function(url,index,self){
+    return url && url!=='--' && self.indexOf(url)===index;
+  });
+  if(!sources.length) throw new Error('Resume file URL not available');
+  var byteLimit=parseInt(maxBytes,10)||50*1024*1024;
+  var lastErr=null;
+  for(var i=0;i<sources.length;i++){
+    try{
+      var source=sources[i];
+      var response=await fetch(source,{
+        mode:sameOriginUrl(source) ? 'same-origin' : 'cors',
+        credentials:sameOriginUrl(source) ? 'include' : 'omit',
+        cache:'force-cache'
+      });
+      if(!response.ok) throw new Error('Original resume request failed with HTTP '+response.status);
+      var size=parseInt(response.headers.get('content-length')||'0',10);
+      if(size && size>byteLimit) throw new Error('Original resume is larger than the browser download limit');
+      var type=(response.headers.get('content-type')||'').toLowerCase();
+      if(type.indexOf('text/html')!==-1) throw new Error('Original resume URL returned an HTML page instead of a file');
+      var blob=await response.blob();
+      if(!blob || !blob.size) throw new Error('Original resume file is empty');
+      if(blob.size>byteLimit) throw new Error('Original resume is larger than the browser download limit');
+      return blob;
+    }catch(err){
+      lastErr=err;
+      console.warn('Original resume direct browser download failed:',sources[i],err);
+    }
+  }
+  throw (lastErr || new Error('Original resume direct browser download failed'));
+}
+async function downloadOriginalResumeFromR2First(options){
+  /* Purpose: option 1 zero-server-load happy path; R2/public URLs are tried before Laravel's authenticated fallback route. */
+  options=options||{};
+  var resumeExt=clean(options.resumeExt||'FILE','FILE').toUpperCase();
+  var r2FirstSources=[options.r2PublicUrl,options.r2DirectUrl,options.dlUrl];
+  var blob=await fetchOriginalResumeBlobFromSources(r2FirstSources,options.maxBytes);
+  downloadBlob(blob,guessResumeDownloadName(resumeExt));
+  return true;
+}
 function removeNode(node){
   if(node && node.parentNode) node.parentNode.removeChild(node);
 }
@@ -8395,14 +8445,25 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
       dlBtn.innerHTML = '<span class="rdc-spin"></span><span>Preparing download…</span>';
 
       if(selectedOpt === 1){
-        /* Original resume: prefer direct R2 so Laravel/FrankenPHP does not stream the file. */
-        var originalResumeUrl = r2DirectUrl || r2PublicUrl || dlUrl;
-        if(originalResumeUrl){
-          window.open(originalResumeUrl, '_blank');
-        } else {
+        /* Original resume: R2/public browser download first; Laravel route is only a compatibility fallback. */
+        if(!r2DirectUrl && !r2PublicUrl && !dlUrl){
           showToast('Resume file URL not available.', 'warn');
+          resetBtn(); return;
         }
-        setTimeout(function(){ closeRdc(); resetBtn(); }, 2000);
+        runSmartCountdown('Downloading Resume...', 60);
+        downloadOriginalResumeFromR2First({
+          r2PublicUrl:r2PublicUrl,
+          r2DirectUrl:r2DirectUrl,
+          dlUrl:dlUrl,
+          resumeExt:resumeExt
+        }).then(function(ok){
+          if(ok) closeRdc();
+        }).catch(function(err){
+          console.error('Original resume R2-first download failed:',err);
+          showToast(err && err.message ? err.message : 'Could not download original resume. Please try again.', 'warn');
+        }).finally(function(){
+          resetBtn();
+        });
 
       } else if(m.dlKey === 'rs'){
         /* Option 5: Recruiter Summary — fully client-side vector PDF */
