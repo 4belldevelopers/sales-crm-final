@@ -1817,7 +1817,7 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
             $client->company_size_from = $from_size;
             $client->company_sizes = $to_size;
         }
-        if (! empty($request->company_type)) {
+        if (isset($request->company_type) && $request->company_type !== '') {
             $client->company_type = $request->company_type;
         }
         if (! empty($request->founded)) {
@@ -2119,7 +2119,7 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
         if (empty($request->company_sizes)) {
             return Reply::error('Company Size is required.');
         }
-        if (empty($request->company_type)) {
+        if (! isset($request->company_type) || $request->company_type === '') {
             return Reply::error('Company Type is required.');
         }
         if (empty($request->founded)) {
@@ -2199,8 +2199,8 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
             $client->company_size_from = $from_size;
             $client->company_sizes = $to_size;
         }
-        if (! empty(@$request->company_type)) {
-            $client->company_type = @$request->company_type;
+        if (isset($request->company_type) && $request->company_type !== '') {
+            $client->company_type = $request->company_type;
         }
         if (! empty(@$request->founded)) {
             $client->founded = @$request->founded;

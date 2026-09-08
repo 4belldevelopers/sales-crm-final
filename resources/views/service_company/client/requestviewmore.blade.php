@@ -279,10 +279,10 @@
                                         <span class="cd-info-value">{{ $industries_name }}</span>
                                     </div>
                                     @endif
-                                    @if (!empty(@$directClientDetail->company_type) && isset($companyType[@$directClientDetail->company_type]))
+                                    @if (isset($directClientDetail->company_type) && $directClientDetail->company_type !== '' && isset($companyType[$directClientDetail->company_type]))
                                     <div class="cd-info-row">
                                         <span class="cd-info-label">Company Type</span>
-                                        <span class="cd-info-value">{{ $companyType[@$directClientDetail->company_type] }}</span>
+                                        <span class="cd-info-value">{{ $companyType[$directClientDetail->company_type] }}</span>
                                     </div>
                                     @endif
                                     <div class="cd-info-row">
