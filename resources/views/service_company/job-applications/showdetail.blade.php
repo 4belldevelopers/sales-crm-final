@@ -4983,10 +4983,11 @@ async function renderOriginalDocxResume(bytes,host){
   if(hasDocxLayoutCollisions(pages)) throw new Error('DOCX original render has overlapping text');
   return pages;
 }
-async function fetchResumeBytes(resumeUrl){
+async function fetchResumeBytes(resumeUrl,maxBytes){
   resumeUrl=clean(resumeUrl,'');
   if(resumeUrl==='--') resumeUrl='';
   if(!resumeUrl) throw new Error('Resume URL not available');
+  var byteLimit=parseInt(maxBytes,10)||rsDocxMaxBytes;
   var fetchOptions={cache:'no-store'};
   try{
     var resumeOrigin=(new URL(resumeUrl,window.location.href)).origin;
@@ -4998,12 +4999,12 @@ async function fetchResumeBytes(resumeUrl){
   var response=await fetch(resumeUrl,fetchOptions);
   if(!response.ok) throw new Error('Resume request failed with HTTP '+response.status);
   var size=parseInt(response.headers.get('content-length')||'0',10);
-  if(size && size>rsDocxMaxBytes) throw new Error('DOCX resume is larger than the browser conversion limit');
+  if(size && size>byteLimit) throw new Error('DOCX resume is larger than the browser conversion limit');
   var bytes=await response.arrayBuffer();
-  if(bytes.byteLength>rsDocxMaxBytes) throw new Error('DOCX resume is larger than the browser conversion limit');
+  if(bytes.byteLength>byteLimit) throw new Error('DOCX resume is larger than the browser conversion limit');
   return bytes;
 }
-async function fetchResumeBytesFromSources(resumeUrls){
+async function fetchResumeBytesFromSources(resumeUrls,maxBytes){
   var sources=(Array.isArray(resumeUrls) ? resumeUrls : [resumeUrls]).map(function(url){
     return clean(url,'');
   }).filter(function(url,index,self){
@@ -5013,13 +5014,17 @@ async function fetchResumeBytesFromSources(resumeUrls){
   var lastErr=null;
   for(var i=0;i<sources.length;i++){
     try{
-      return await fetchResumeBytes(sources[i]);
+      return await fetchResumeBytes(sources[i],maxBytes);
     }catch(err){
       lastErr=err;
       console.warn('Direct R2 resume fetch failed:',sources[i],err);
     }
   }
   throw (lastErr || new Error('Direct R2 resume fetch failed'));
+}
+function isBrowserDocxSafetyError(err){
+  var message=err && err.message ? err.message : String(err||'');
+  return /browser conversion limit|page limit exceeded|browser safety limit/i.test(message);
 }
 async function fetchPdfBlobFromSources(resumeUrls){
   var sources=(Array.isArray(resumeUrls) ? resumeUrls : [resumeUrls]).map(function(url){
@@ -5264,10 +5269,20 @@ async function buildHeadlessOption3SkillsHighlightedResume(options){
       pdfBlob=await fetchPdfBlobFromSources(resumeSources);
     }else if(resumeExt==='DOCX'){
       if(options.preferClientDocx === true){
+        var clientDocxOptions={
+          maxBytes:parseInt(options.clientDocxMaxBytes,10)||rsDocxMaxBytes,
+          maxPages:parseInt(options.clientDocxMaxPages,10)||30,
+          requireTextPdf:options.clientDocxRequireTextPdf===true
+        };
         try{
-          pdfBlob=await convertResumeWithOpenDocLabBlob(resumeSources,resumeExt,false);
+          pdfBlob=await convertResumeWithOpenDocLabBlob(resumeSources,resumeExt,false,clientDocxOptions);
           usedClientDocxPdf=true;
         }catch(openDocErr){
+          if(isBrowserDocxSafetyError(openDocErr) && resumePdfUrl){
+            console.warn('Client-first DOCX skipped by browser safety guard; using converter PDF URL:',openDocErr);
+            pdfBlob=await fetchPdfResumeBlob(resumePdfUrl);
+            usedClientDocxPdf=false;
+          }else{
           console.warn('Client-first DOCX OpenDoc conversion failed; trying legacy browser renderer:',openDocErr);
           try{
             pdfBlob=await convertDocxResumeToPdfBlobFromSources(resumeSources);
@@ -5277,6 +5292,7 @@ async function buildHeadlessOption3SkillsHighlightedResume(options){
             if(!resumePdfUrl) throw legacyDocxErr;
             pdfBlob=await fetchPdfResumeBlob(resumePdfUrl);
             usedClientDocxPdf=false;
+          }
           }
         }
       }else{
@@ -5727,15 +5743,18 @@ function openDocNativePdfBlob(doc){
   }
   return null;
 }
-async function convertResumeWithOpenDocLabBlob(resumeUrl,resumeExt,allowExternalFallback){
+async function convertResumeWithOpenDocLabBlob(resumeUrl,resumeExt,allowExternalFallback,conversionOptions){
   resumeExt=clean(resumeExt,'').toUpperCase();
   var resumeSources=Array.isArray(resumeUrl) ? resumeUrl : [resumeUrl];
   resumeUrl=clean(resumeSources[0]||'','');
   if(resumeExt!=='DOCX') throw new Error('OpenDoc lab is available for DOCX resumes only');
   if(!resumeUrl || resumeUrl==='--') throw new Error('DOCX resume URL not available');
+  conversionOptions=conversionOptions||{};
+  var maxBytes=parseInt(conversionOptions.maxBytes,10)||rsDocxMaxBytes;
+  var maxPages=parseInt(conversionOptions.maxPages,10)||30;
   var openDoc=await rsEnsureOpenDocLab(allowExternalFallback===true);
   await rsEnsureJsPdf();
-  var bytes=await fetchResumeBytesFromSources(resumeSources);
+  var bytes=await fetchResumeBytesFromSources(resumeSources,maxBytes);
   var doc=null;
   try{
     var docBytes=new Uint8Array(bytes);
@@ -5751,9 +5770,10 @@ async function convertResumeWithOpenDocLabBlob(resumeUrl,resumeExt,allowExternal
       if(stats && typeof stats.free==='function') stats.free();
     }
     if(!pageCount || pageCount<1) throw new Error('OpenDoc produced no pages');
-    if(pageCount>30) throw new Error('OpenDoc lab page limit exceeded');
+    if(pageCount>maxPages) throw new Error('OpenDoc lab page limit exceeded');
     var nativePdfBlob=openDocNativePdfBlob(doc);
     if(nativePdfBlob) return nativePdfBlob;
+    if(conversionOptions.requireTextPdf===true) throw new Error('OpenDoc browser safety limit: text PDF export unavailable');
     var renderDpi=openDocRenderDpi(pageCount);
     var JsPDF=window.jspdf.jsPDF;
     var firstSize=openDocPagePoints(doc,0);
@@ -6478,6 +6498,9 @@ async function buildPreScreenedHighlightedResume(resumePdfUrl,options){
       resumeExt:options.resumeExt,
       resumePdfUrl:resumePdfUrl,
       preferClientDocx:options.preferClientDocx===true,
+      clientDocxMaxBytes:parseInt(options.clientDocxMaxBytes,10)||1536*1024,
+      clientDocxMaxPages:parseInt(options.clientDocxMaxPages,10)||6,
+      clientDocxRequireTextPdf:true,
       returnBlob:true
     });
     if(!(reportBlob instanceof Blob)) throw new Error('Pre-Screened Report PDF was not generated');
