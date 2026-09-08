@@ -306,7 +306,7 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
         'current_ctc_mode', 'current_ctc_cur',
         'outsourcing_type',
         'np_id', 'serving_notice_period_mode',
-        'city_name', 'country_name',
+        'city_name', 'country_name','duplicate','is_duplicate',
         'qualification_name',
         'posted_by', 'posted_by_image', 'rec_candidate_assign_id',
         'post_company_name', 'company_name',

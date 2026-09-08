@@ -593,10 +593,10 @@ use Carbon\Carbon;
                                         <span class="cd-info-value">{{ $industries_name }}</span>
                                     </div>
                                     @endif
-                                    @if (@$client->company_type > 0)
+                                    @if (isset($client->company_type) && $client->company_type !== '' && isset($companyType[$client->company_type]))
                                     <div class="cd-info-row">
                                         <span class="cd-info-label">Company Type</span>
-                                        <span class="cd-info-value">{{ $companyType[@$client->company_type] ?? '' }}</span>
+                                        <span class="cd-info-value">{{ $companyType[$client->company_type] }}</span>
                                     </div>
                                     @endif
                                     <div class="cd-info-row">
@@ -634,7 +634,7 @@ use Carbon\Carbon;
                                     <div class="cd-tabcard-sub">Manage and view all contacts associated with this client.</div>
                                 </div>
                                 <div class="cd-tabcard-actions">
-                                    <div class="cd-search"><i class="fas fa-search"></i><input type="text" placeholder="Search contacts..." /></div>
+                                    <div class="cd-search"><i class="fas fa-search"></i><input type="text" id="contactSearchInput" placeholder="Search contacts..." /></div>
                                 </div>
                             </div>
                             <div style="overflow-x:auto;">
@@ -2282,7 +2282,7 @@ use Carbon\Carbon;
             ajax: {
                 'url': '{!! route('service_company.clients.contactdata') !!}?clientId=' + {{ @$client->id }},
                 "data": function(d) {
-                    d.search = $('#inputSearch').val()
+                    d.search = $('#contactSearchInput').val() || $('#inputSearch').val()
                 }
             },
             "drawCallback": function(settings) {
@@ -2372,6 +2372,12 @@ use Carbon\Carbon;
             }
         });
 
+        $(document).on('keyup', '#contactSearchInput', function() {
+            if ($.fn.DataTable.isDataTable('#contactList')) {
+                $('#contactList').DataTable().search($(this).val()).draw();
+            }
+        });
+
         var jobSearchTimer = null;
         $('#inputJobSearch').on('keyup', function() {
             clearTimeout(jobSearchTimer);
@@ -2389,81 +2395,56 @@ use Carbon\Carbon;
             }, 300);
         });
 
-        $(document).on('click', '#paginationcandidate .page-link', function(e) {
+        $(document).off('click', '#paginationcandidate [data-page], #paginationcandidate .page-link, #paginationcandidate .pagi-page, #paginationcandidate .pagi-arrow');
+        $(document).on('click', '#paginationcandidate [data-page], #paginationcandidate .page-link, #paginationcandidate .pagi-page, #paginationcandidate .pagi-arrow', function(e) {
             e.preventDefault();
+            var $btn = $(e.target).closest('[data-page]');
+            if (!$btn.length) return;
 
-            const page = $(this).data('page');
-            if (!page || $(this).hasClass('disabled')) return;
+            var page = parseInt($btn.attr('data-page') || $btn.data('page'), 10);
+            if (!page || page < 1 || $btn.hasClass('disabled') || $btn.hasClass('pagi-disabled') || $btn.hasClass('pagi-active-disabled') || $btn.is(':disabled')) return;
 
-            // Disable the clicked pagination link
-            $(this).addClass('disabled');
-
-            // Fetch data
-            fetchCandidates(page, $('#search').val()).then(() => {
-                // Re-enable the links after successful data fetch
-                $('#paginationcandidate .page-link').removeClass('disabled');
-            }).catch(() => {
-                // Re-enable the links even if there's an error
-                $('#paginationcandidate .page-link').removeClass('disabled');
-            });
+            var search = $('#inputSearch').val() || '';
+            fetchCandidates(page, search);
         });
 
-        $(document).on('click', '#paginationcandidatejoin .page-link', function(e) {
+        $(document).off('click', '#paginationcandidatejoin [data-page], #paginationcandidatejoin .page-link, #paginationcandidatejoin .pagi-page, #paginationcandidatejoin .pagi-arrow');
+        $(document).on('click', '#paginationcandidatejoin [data-page], #paginationcandidatejoin .page-link, #paginationcandidatejoin .pagi-page, #paginationcandidatejoin .pagi-arrow', function(e) {
             e.preventDefault();
+            var $btn = $(e.target).closest('[data-page]');
+            if (!$btn.length) return;
 
-            const page = $(this).data('page');
-            if (!page || $(this).hasClass('disabled')) return;
+            var page = parseInt($btn.attr('data-page') || $btn.data('page'), 10);
+            if (!page || page < 1 || $btn.hasClass('disabled') || $btn.hasClass('pagi-disabled') || $btn.hasClass('pagi-active-disabled') || $btn.is(':disabled')) return;
 
-            // Disable the clicked pagination link
-            $(this).addClass('disabled');
-
-            // Fetch data
-            fetchCandidatesJoin(page, $('#search').val()).then(() => {
-                // Re-enable the links after successful data fetch
-                $('#paginationcandidatejoin .page-link').removeClass('disabled');
-            }).catch(() => {
-                // Re-enable the links even if there's an error
-                $('#paginationcandidatejoin .page-link').removeClass('disabled');
-            });
+            var search = $('#inputSearch').val() || '';
+            fetchCandidatesJoin(page, search);
         });
 
-        $(document).on('click', '#paginationcandidateinterviewtracker .page-link', function(e) {
+        $(document).off('click', '#paginationcandidateinterviewtracker [data-page], #paginationcandidateinterviewtracker .page-link, #paginationcandidateinterviewtracker .pagi-page, #paginationcandidateinterviewtracker .pagi-arrow');
+        $(document).on('click', '#paginationcandidateinterviewtracker [data-page], #paginationcandidateinterviewtracker .page-link, #paginationcandidateinterviewtracker .pagi-page, #paginationcandidateinterviewtracker .pagi-arrow', function(e) {
             e.preventDefault();
+            var $btn = $(e.target).closest('[data-page]');
+            if (!$btn.length) return;
 
-            const page = $(this).data('page');
-            if (!page || $(this).hasClass('disabled')) return;
+            var page = parseInt($btn.attr('data-page') || $btn.data('page'), 10);
+            if (!page || page < 1 || $btn.hasClass('disabled') || $btn.hasClass('pagi-disabled') || $btn.hasClass('pagi-active-disabled') || $btn.is(':disabled')) return;
 
-            // Disable the clicked pagination link
-            $(this).addClass('disabled');
-
-            // Fetch data
-            fetchCandidatesInverViewTracker(page, $('#search').val()).then(() => {
-                // Re-enable the links after successful data fetch
-                $('#paginationcandidateinterviewtracker .page-link').removeClass('disabled');
-            }).catch(() => {
-                // Re-enable the links even if there's an error
-                $('#paginationcandidateinterviewtracker .page-link').removeClass('disabled');
-            });
+            var search = $('#inputSearch').val() || '';
+            fetchCandidatesInverViewTracker(page, search);
         });
 
-        $(document).on('click', '#paginationclientjobs .page-link', function(e) {
+        $(document).off('click', '#paginationclientjobs [data-page], #paginationclientjobs .page-link, #paginationclientjobs .pagi-page, #paginationclientjobs .pagi-arrow');
+        $(document).on('click', '#paginationclientjobs [data-page], #paginationclientjobs .page-link, #paginationclientjobs .pagi-page, #paginationclientjobs .pagi-arrow', function(e) {
             e.preventDefault();
+            var $btn = $(e.target).closest('[data-page]');
+            if (!$btn.length) return;
 
-            const page = $(this).data('page');
-            if (!page || $(this).hasClass('disabled')) return;
+            var page = parseInt($btn.attr('data-page') || $btn.data('page'), 10);
+            if (!page || page < 1 || $btn.hasClass('disabled') || $btn.hasClass('pagi-disabled') || $btn.hasClass('pagi-active-disabled') || $btn.is(':disabled')) return;
 
-            // Disable the clicked pagination link
-            $(this).addClass('disabled');
-
-            // Fetch data
-            fetchJobsClient(page, $('#search').val()).then(() => {
-                // Re-enable the links after successful data fetch
-                $('#paginationclientjobs .page-link').removeClass('disabled');
-            }).catch(() => {
-                // Re-enable the links even if there's an error
-                $('#paginationclientjobs .page-link').removeClass('disabled');
-            });
-            
+            var search = $('#inputJobSearch').val() || '';
+            fetchJobsClient(page, search);
         });
 
 
@@ -2472,7 +2453,7 @@ use Carbon\Carbon;
     function fetchCandidates(page = 1, search = '') {
         var clientid = '{{ $client->id }}';
         $('.page-loader').css('display', 'flex');
-        $.ajax({
+        return $.ajax({
             url: `{{ url('service_company/client-candidate-list') }}?page=${page}`,
             type: 'GET',
             data: {
@@ -2490,7 +2471,7 @@ use Carbon\Carbon;
     function fetchCandidatesJoin(page = 1, search = '') {
         var clientid = '{{ $client->id }}';
         $('.page-loader').css('display', 'flex');
-        $.ajax({
+        return $.ajax({
             url: `{{ url('service_company/client-candidate-join-list') }}?page=${page}`,
             type: 'GET',
             data: {
@@ -2508,7 +2489,7 @@ use Carbon\Carbon;
     function fetchCandidatesInverViewTracker(page = 1, search = '') {
         var clientid = '{{ $client->id }}';
         $('.page-loader').css('display', 'flex');
-        $.ajax({
+        return $.ajax({
             url: `{{ url('service_company/client-candidate-interview-tracker') }}?page=${page}`,
             type: 'GET',
             data: {
@@ -2525,7 +2506,7 @@ use Carbon\Carbon;
 
     function fetchClientDashboardAnalytics() {
         var clientId = '{{ $client->id }}';
-        $.ajax({
+        return $.ajax({
             url: `{{ url('service_company/clients/dashboard-analytics') }}/${clientId}`,
             type: 'GET',
             success: function(response) {
@@ -2583,7 +2564,7 @@ use Carbon\Carbon;
 
     function fetchJobsClient(page = 1, search = '') {
         $('.page-loader').css('display', 'flex');
-        $.ajax({
+        return $.ajax({
             url: `{{ url('service_company/jobs_side_bar_job_ajax/data') }}?page=${page}`,
             type: 'GET',
             data: {

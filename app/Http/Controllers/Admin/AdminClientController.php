@@ -92,8 +92,8 @@ class AdminClientController extends AdminBaseController {
 			if (!empty(@$request->company_sizes)) {
             	$client->company_sizes = @$request->company_sizes;
         	}
-			if (!empty(@$request->company_type)) {
-            	$client->company_type = @$request->company_type;
+			if (isset($request->company_type) && $request->company_type !== '') {
+            	$client->company_type = $request->company_type;
         	}
 			if (!empty(@$request->founded)) {
             	$client->founded = @$request->founded;
@@ -400,7 +400,7 @@ class AdminClientController extends AdminBaseController {
 		if (!empty($request->company_sizes)) {
             $client->company_sizes = $request->company_sizes;
         }
-		if (!empty($request->company_type)) {
+		if (isset($request->company_type) && $request->company_type !== '') {
             $client->company_type = $request->company_type;
         }
 		if (!empty($request->founded)) {

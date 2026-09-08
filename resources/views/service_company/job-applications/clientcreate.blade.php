@@ -1291,24 +1291,26 @@ $(document).ready(function () {
         return 'comp' + companyId + '_job' + jobId + '_app' + appId;
     }
 
-    // ── v2 Phase 6: recover a previous upload session after page refresh ──────
+    /**
+     * Intent: Clean resume state initialization for ADD vs EDIT candidate flows on clientcreate.
+     * Prevents previous session resume leakage on page refresh.
+     */
     if (RESUMES_FEATURE_BROWSER_UPLOAD) {
-        window.ResumePresign.recover(getUpContextKey()).then(function (session) {
-            if (session) {
-                $('#upWrap').show();
-                $('#upBar').css('width', '100%');
-                $('#upStats').html('100% &middot; Upload restored');
-                $('#upPill').css('display', 'inline-flex');
-                $('#upBanner').removeClass('err').addClass('ok').html(
-                    '<svg class="up-banner-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"'
-                    + ' stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'
-                    + '<circle cx="12" cy="12" r="10"/><polyline points="9 12 11 14 16 9"/></svg>'
-                    + '<span><strong>Resume restored.</strong> Your previously uploaded file is still attached.</span>'
-                ).show();
-                $('#uploadBox').hide();
-                $('#fileInfo').show();
-            }
-        });
+        var isEditMode = @json(($page_event ?? '') === 'EDIT') || (($('#appId').val() || '0') !== '0');
+        if (!isEditMode) {
+            window.ResumePresign.cancelUpload(getUpContextKey());
+            $('#resume_session_uuid').val('');
+            $('#uploaded_file_path').val('');
+            $('#resume_original_name').val('');
+            $('#resumeCheck').val('');
+            $('#uploadBox').show();
+            $('#fileInfo').hide();
+            $('#fileName').text('');
+            var ri = document.getElementById('resume'); if (ri) ri.value = '';
+        } else {
+            window.ResumePresign.cancelUpload(getUpContextKey());
+            $('#resume_session_uuid').val('');
+        }
     }
     // ─────────────────────────────────────────────────────────────────────────
 

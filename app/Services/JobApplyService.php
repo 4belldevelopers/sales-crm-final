@@ -451,11 +451,22 @@ class JobApplyService
                 $tempPath = $request->input('uploaded_file_path');
                 $full_name = $request->input('resume_original_name');
                 if ($tempPath && $full_name) {
-                    UploadResumeToTestRTwo::dispatch($tempPath, $full_name, $jobApplication->id, $companyNameRTwo, date('Y'), date('m'))
+                    // Intent: Generate candidate-specific unique R2 path synchronously before queue dispatch to prevent non-unique filename collisions in async queues.
+                    $year = date('Y');
+                    $month = date('m');
+                    $baseName = pathinfo($full_name, PATHINFO_FILENAME);
+                    $ext = strtolower(pathinfo($tempPath, PATHINFO_EXTENSION) ?: pathinfo($full_name, PATHINFO_EXTENSION));
+                    $safeBaseName = preg_replace('/[^a-zA-Z0-9_\-]/', '_', $baseName);
+                    $uuidSuffix = (string) \Illuminate\Support\Str::uuid();
+                    $uniqueFileName = "{$jobApplication->id}_{$safeBaseName}_{$uuidSuffix}.{$ext}";
+                    $r2Path = "Companies/{$companyNameRTwo}/Resumes/{$year}/{$month}/{$uniqueFileName}";
+                    $fileUrl = "https://file.jero.works/{$r2Path}";
+
+                    UploadResumeToTestRTwo::dispatch($tempPath, $full_name, $jobApplication->id, $companyNameRTwo, $year, $month, $r2Path)
                         ->onConnection('emails');
                     DB::table('job_applications')
                         ->where('id', $jobApplication->id)
-                        ->update(['resume' => 'https://file.jero.works/'.$full_name]);
+                        ->update(['resume' => $fileUrl]);
                 }
             }
 

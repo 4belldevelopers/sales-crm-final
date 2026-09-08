@@ -197,7 +197,7 @@ class ProcessCandidateUpdateJob implements ShouldQueue
                         ->leftJoin('qualification_master', 'qualification_master.id', 'job_applications.qualification')
                         ->where('add_job_wise_condidates.id', $addJobWiseCandidateId)
                         ->first();
-
+                       
                     if ($applications_up) {
                         // Sync skills from job_metronics_skills that have exp data
                         $jobSkill = DB::table('job_metronics_skills')
@@ -304,7 +304,8 @@ class ProcessCandidateUpdateJob implements ShouldQueue
                                     'ectc_monthly' => $applications_up->ectc_monthly,
                                     'ectc_yearly' => $applications_up->ectc_yearly,
                                     'status' => $applications_up->status,
-                                    'duplicate' => $applications_up->duplicate,
+                                    'duplicate' => (int) ($applications_up->duplicate ?? 0),
+                                    'is_duplicate' => (bool) (($applications_up->duplicate ?? 0) == 1),
                                     'bill_rate_currency' => $applications_up->bill_rate_currency,
                                     'bill_rate_amount' => $applications_up->bill_rate_amount,
                                     'bill_rate_mode' => $applications_up->bill_rate_mode,
