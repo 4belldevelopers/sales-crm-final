@@ -8304,7 +8304,7 @@ END:VCALENDAR";
                 'companies.company_name',
                 'companies.industries',
                 'companies.logo',
-                'companies.company_type',
+                'clients.company_type',
                 'companies.industries_type',
                 'companies.description as companies_description',
                 'clients.id as client_id',
