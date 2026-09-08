@@ -1467,7 +1467,11 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
     }
 
     /** Fetch résumé bytes from r2 / full URL / local public path. Returns string|null. */
-    private function fetchResumeBytes($resume)
+    /**
+     * Intent: Fetch resume binary bytes from R2 or fallback storage.
+     * Tenancy note: Checks candidate_resume_uploads table if main R2 path is pending queue move.
+     */
+    private function fetchResumeBytes($resume, $appId = null)
     {
         $bytes = null;
         try {
@@ -1475,6 +1479,16 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
                 $key = str_replace('https://file.jero.works/', '', $resume);
                 if (Storage::disk('r2')->exists($key)) {
                     $bytes = Storage::disk('r2')->get($key);
+                }
+            }
+            // Fallback: If destination object does not exist in R2 yet (queue pending), check candidate_resume_uploads for this candidate
+            if ($bytes === null && ! empty($appId)) {
+                $tempUpload = DB::table('candidate_resume_uploads')
+                    ->where('candidate_id', $appId)
+                    ->orderBy('id', 'desc')
+                    ->first();
+                if ($tempUpload && ! empty($tempUpload->object_key) && Storage::disk('r2')->exists($tempUpload->object_key)) {
+                    $bytes = Storage::disk('r2')->get($tempUpload->object_key);
                 }
             }
             if ($bytes === null && filter_var($resume, FILTER_VALIDATE_URL)) {
@@ -1694,29 +1708,7 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
         }
 
         if (! file_exists($pdfCache) || filesize($pdfCache) < 100) {
-            $bytes = null;
-            try {
-                if (strpos($resume, 'file.jero.works') !== false) {
-                    $key = str_replace('https://file.jero.works/', '', $resume);
-                    if (Storage::disk('r2')->exists($key)) {
-                        $bytes = Storage::disk('r2')->get($key);
-                    }
-                }
-                if ($bytes === null && filter_var($resume, FILTER_VALIDATE_URL)) {
-                    $resp = \Illuminate\Support\Facades\Http::timeout(15)->withOptions(['verify' => false])->get($resume);
-                    if ($resp->successful()) {
-                        $bytes = $resp->body();
-                    }
-                }
-                if ($bytes === null) {
-                    $local = public_path($resume);
-                    if (file_exists($local)) {
-                        $bytes = file_get_contents($local);
-                    }
-                }
-            } catch (\Throwable $e) {
-                $bytes = null;
-            }
+            $bytes = $this->fetchResumeBytes($resume, $id);
             if ($bytes === null) {
                 abort(404);
             }
@@ -2007,19 +1999,37 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
         $jobApplication->recruiter_note = $request->recruiter_note;
         $jobApplication->reason_for_job_change = $request->reason_for_job_change;
 
-        $cnt = 0;
-        $skillStr = '';
-        $skillArr = json_decode($request->skills, true);
-        if (! empty($skillArr)) {
-            foreach ($skillArr as $sval) {
-                if ($cnt == 0) {
-                    $skillStr .= $sval['value'];
-                } else {
-                    $skillStr .= ' , '.$sval['value'];
+        $parsedSkillList = [];
+        $skillsInput = $request->skills;
+
+        if (is_array($skillsInput)) {
+            foreach ($skillsInput as $sval) {
+                if (is_array($sval) && isset($sval['value'])) {
+                    $parsedSkillList[] = trim($sval['value']);
+                } elseif (is_string($sval)) {
+                    $parsedSkillList[] = trim($sval);
                 }
-                $cnt++;
+            }
+        } elseif (is_string($skillsInput) && ! empty($skillsInput)) {
+            $decoded = json_decode($skillsInput, true);
+            if (is_array($decoded)) {
+                foreach ($decoded as $sval) {
+                    if (is_array($sval) && isset($sval['value'])) {
+                        $parsedSkillList[] = trim($sval['value']);
+                    } elseif (is_string($sval)) {
+                        $parsedSkillList[] = trim($sval);
+                    }
+                }
+            } else {
+                $parsedSkillList = array_filter(array_map('trim', explode(',', $skillsInput)));
             }
         }
+
+        $parsedSkillList = array_values(array_unique(array_filter($parsedSkillList)));
+        if (! empty($parsedSkillList)) {
+            GeneralMethod::skillsAddElastic($parsedSkillList);
+        }
+        $skillStr = implode(' , ', $parsedSkillList);
         $jobApplication->skills = $skillStr;
 
         // $jobApplication->master_status_id 	=	$applicationStatus->id;
@@ -2120,7 +2130,7 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
 
         if (($this->user->company->app_duplicate == 1) || ($this->user->company->app_duplicate == 2)) {
             $returnCount = GeneralMethod::checkDuplicateCandidate($company_id, $app_duplicate, $request->job_id, $applicationEmail, $app_duplicate_days, $applicationPhone);
-
+            // dd($returnCount);
             if ($returnCount > 0 && $app_duplicate == 1) {
                 $message = 'Duplicate :: application already in this job';
                 $jobApplication->duplicate = 1;
@@ -2130,6 +2140,7 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
             }
             // dd($jobApplication->duplicate,$returnCount,$app_duplicate,$message);
         }
+        // dd($jobApplication->duplicate);
 
         $chkApplication = DB::table('job_applications')
             ->select('job_applications.id')
@@ -2250,8 +2261,24 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
             // teamRankElastic are all handled by ProcessCandidateSubmissionJob after commit.
             // Only skill_match_percentage stays synchronous — its result is required for the
             // add_job_wise_condidates insert below (V2 Steps 2–4).
-            $skillArr = explode(',', $jobApplication->skills);
-            $percentage = GeneralMethod::skill_match_percentage($request->job_id, $skillArr);
+            // Insert job_application_skills synchronously so primary ES indexer has skill rows available
+            if (! empty($parsedSkillList)) {
+                foreach ($parsedSkillList as $skillVal) {
+                    if (! empty($skillVal)) {
+                        if (! DB::table('job_application_skills')
+                            ->where('job_application_id', '=', $jobApplication->id)
+                            ->where('skills', 'LIKE', '%'.$skillVal.'%')
+                            ->exists()) {
+                            DB::table('job_application_skills')->insert([
+                                'job_application_id' => $jobApplication->id,
+                                'skills' => $skillVal,
+                            ]);
+                        }
+                    }
+                }
+            }
+
+            $percentage = GeneralMethod::skill_match_percentage($request->job_id, $parsedSkillList);
 
             $now = now();
             $insertArr = ['job_id' => $request->job_id, 'job_application_id' => $jobApplication->id, 'status_id' => $jobApplication->status_id, 'master_status_id' => $jobApplication->master_status_id, 'child_status_id' => $jobApplication->child_status_id, 'company_id' => $company_id, 'submitted_by' => $submitted_by, 'skill_match' => $percentage, 'created_at' => $now, 'updated_at' => $now];
@@ -2308,8 +2335,16 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
                 $tempPath = $request->input('uploaded_file_path');
                 $full_name = $request->input('resume_original_name');
                 if ($tempPath && $full_name) {
-                    UploadResumeToTestRTwo::dispatch($tempPath, $full_name, $jobApplication->id, $companyNameRTwo, $year, $month)->onConnection('emails');
-                    $fileUrl = "https://file.jero.works/Companies/{$companyNameRTwo}/Resumes/{$year}/{$month}/{$full_name}";
+                    // Intent: Generate candidate-specific unique R2 path synchronously before queue dispatch to prevent non-unique filename collisions in async queues.
+                    $baseName = pathinfo($full_name, PATHINFO_FILENAME);
+                    $ext = strtolower(pathinfo($tempPath, PATHINFO_EXTENSION) ?: pathinfo($full_name, PATHINFO_EXTENSION));
+                    $safeBaseName = preg_replace('/[^a-zA-Z0-9_\-]/', '_', $baseName);
+                    $uuidSuffix = (string) \Illuminate\Support\Str::uuid();
+                    $uniqueFileName = "{$jobApplication->id}_{$safeBaseName}_{$uuidSuffix}.{$ext}";
+                    $r2Path = "Companies/{$companyNameRTwo}/Resumes/{$year}/{$month}/{$uniqueFileName}";
+                    $fileUrl = "https://file.jero.works/{$r2Path}";
+
+                    UploadResumeToTestRTwo::dispatch($tempPath, $full_name, $jobApplication->id, $companyNameRTwo, $year, $month, $r2Path)->onConnection('emails');
                     DB::table('job_applications')
                         ->where('id', $jobApplication->id)
                         ->update(['resume' => $fileUrl]);
@@ -2321,8 +2356,8 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
                 }
             }
 
-            // Guard: do not wipe the resume URL when v2 already set it above.
-            if (empty($request->resumeCheck) && ! $resumeSession) {
+            // Guard: do not wipe the resume URL when v2 or file upload already set it above.
+            if (empty($request->resumeCheck) && ! $resumeSession && ! $request->hasFile('resume')) {
                 DB::table('job_applications')
                     ->where('id', $jobApplication->id)
                     ->update(['resume' => '']);
@@ -2528,12 +2563,26 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
             $returnCount = GeneralMethod::checkDuplicateCandidate($company_id, $app_duplicate, $request->job_id, $applicationEmail, $app_duplicate_days, $applicationPhone);
             if ($returnCount > 0 && $app_duplicate == 1) {
                 $message = 'Duplicate :: application already in this job';
+                $jobApplication->duplicate = 1;
             } elseif ($returnCount > 0 && $app_duplicate == 2) {
                 $message = 'Duplicate :: application already in system';
+                $jobApplication->duplicate = 1;
             }
         }
 
-        $chkApplication = DB::table('job_applications')->select('job_applications.id')->where('company_id', $company_id)->where('email', $applicationEmail)->orWhere('phone', $request->phone)->count();
+        $chkApplication = DB::table('job_applications')
+            ->select('job_applications.id')
+            ->where('company_id', $company_id)
+            ->where(function ($query) use ($applicationEmail, $request) {
+                if (! empty($applicationEmail) && ! empty($request->phone)) {
+                    $query->where('email', $applicationEmail)->orWhere('phone', $request->phone);
+                } elseif (! empty($applicationEmail)) {
+                    $query->where('email', $applicationEmail);
+                } elseif (! empty($request->phone)) {
+                    $query->where('phone', $request->phone);
+                }
+            })
+            ->count();
         if ($chkApplication > 0 && $returnCount > 0) {
             $jobApplication->duplicate = 1;
         }
@@ -6040,8 +6089,16 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
                 $tempPath = $request->input('uploaded_file_path');
                 $full_name = $request->input('resume_original_name');
                 if ($tempPath && $full_name) {
-                    UploadResumeToTestRTwo::dispatch($tempPath, $full_name, $jobApplication->id, $companyNameRTwo, $year, $month)->onConnection('emails');
-                    $fileUrl = "https://file.jero.works/Companies/{$companyNameRTwo}/Resumes/{$year}/{$month}/{$full_name}";
+                    // Intent: Generate candidate-specific unique R2 path synchronously before queue dispatch to prevent non-unique filename collisions in async queues.
+                    $baseName = pathinfo($full_name, PATHINFO_FILENAME);
+                    $ext = strtolower(pathinfo($tempPath, PATHINFO_EXTENSION) ?: pathinfo($full_name, PATHINFO_EXTENSION));
+                    $safeBaseName = preg_replace('/[^a-zA-Z0-9_\-]/', '_', $baseName);
+                    $uuidSuffix = (string) \Illuminate\Support\Str::uuid();
+                    $uniqueFileName = "{$jobApplication->id}_{$safeBaseName}_{$uuidSuffix}.{$ext}";
+                    $r2Path = "Companies/{$companyNameRTwo}/Resumes/{$year}/{$month}/{$uniqueFileName}";
+                    $fileUrl = "https://file.jero.works/{$r2Path}";
+
+                    UploadResumeToTestRTwo::dispatch($tempPath, $full_name, $jobApplication->id, $companyNameRTwo, $year, $month, $r2Path)->onConnection('emails');
                     DB::table('job_applications')
                         ->where('id', $jobApplication->id)
                         ->update(['resume' => $fileUrl]);
@@ -6053,7 +6110,7 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
                 }
             }
 
-            if (empty($request->resumeCheck)) {
+            if (empty($request->resumeCheck) && ! $resumeSession && ! $request->hasFile('resume')) {
                 DB::table('job_applications')
                     ->where('id', $jobApplication->id)
                     ->update(['resume' => '']);
@@ -9824,27 +9881,37 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
         }
 
         $cnt = 0;
-        $skillStr = '';
-        $skillArr = json_decode($request->skills, true);
+        $parsedSkillListClient = [];
+        $skillsInputClient = $request->skills;
 
-        if (! empty($skillArr)) {
-            $skillsAddElastic = array_column($skillArr, 'value');
-            if (count($skillsAddElastic) > 0) {
-                GeneralMethod::skillsAddElastic($skillsAddElastic);
-            }
-        }
-
-        if (! empty($skillArr)) {
-            foreach ($skillArr as $sval) {
-                if ($cnt == 0) {
-                    $skillStr .= $sval['value'];
-                } else {
-                    $skillStr .= ' , '.$sval['value'];
+        if (is_array($skillsInputClient)) {
+            foreach ($skillsInputClient as $sval) {
+                if (is_array($sval) && isset($sval['value'])) {
+                    $parsedSkillListClient[] = trim($sval['value']);
+                } elseif (is_string($sval)) {
+                    $parsedSkillListClient[] = trim($sval);
                 }
-                $cnt++;
+            }
+        } elseif (is_string($skillsInputClient) && ! empty($skillsInputClient)) {
+            $decodedClient = json_decode($skillsInputClient, true);
+            if (is_array($decodedClient)) {
+                foreach ($decodedClient as $sval) {
+                    if (is_array($sval) && isset($sval['value'])) {
+                        $parsedSkillListClient[] = trim($sval['value']);
+                    } elseif (is_string($sval)) {
+                        $parsedSkillListClient[] = trim($sval);
+                    }
+                }
+            } else {
+                $parsedSkillListClient = array_filter(array_map('trim', explode(',', $skillsInputClient)));
             }
         }
 
+        $parsedSkillListClient = array_values(array_unique(array_filter($parsedSkillListClient)));
+        if (! empty($parsedSkillListClient)) {
+            GeneralMethod::skillsAddElastic($parsedSkillListClient);
+        }
+        $skillStr = implode(' , ', $parsedSkillListClient);
         $job_application_arr['skills'] = $skillStr;
         $job_application_arr['master_status_id'] = 8;
         if (! empty($request->secondrary_email)) {
@@ -10057,8 +10124,23 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
             // $jobApplication->save();
             $jobApplicationGet = JobApplication::withoutGlobalScopes()->find($application_id);
 
-            $skillArr = explode(',', $jobApplicationGet->skills);
-            $percentage = GeneralMethod::skill_match_percentage($request->job_id, $skillArr);
+            if (! empty($parsedSkillListClient)) {
+                foreach ($parsedSkillListClient as $skillVal) {
+                    if (! empty($skillVal)) {
+                        if (! DB::table('job_application_skills')
+                            ->where('job_application_id', '=', $application_id)
+                            ->where('skills', 'LIKE', '%'.$skillVal.'%')
+                            ->exists()) {
+                            DB::table('job_application_skills')->insert([
+                                'job_application_id' => $application_id,
+                                'skills' => $skillVal,
+                            ]);
+                        }
+                    }
+                }
+            }
+
+            $percentage = GeneralMethod::skill_match_percentage($request->job_id, $parsedSkillListClient);
 
             $now = now();
             $insertArr = ['job_id' => $request->job_id, 'job_application_id' => $application_id, 'status_id' => 8, 'master_status_id' => 8, 'company_id' => $jobRow->company_id, 'submitted_by' => $submitted_by, 'thirdparty_company_id' => $this->user->company_id, 'skill_match' => $percentage, 'created_at' => $now, 'updated_at' => $now];
@@ -11058,6 +11140,15 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
 
                 $duplicate = ($duplicateType == 'NEW') ? 0 : 1;
 
+                $dbDuplicate = DB::table('add_job_wise_condidates')
+                    ->join('job_applications', 'job_applications.id', '=', 'add_job_wise_condidates.job_application_id')
+                    ->where('add_job_wise_condidates.id', $addJobWiseCondidate_id)
+                    ->value('job_applications.duplicate');
+
+                if (($dbDuplicate ?? 0) == 1) {
+                    $duplicate = 1;
+                }
+
                 /*
                 |--------------------------------------------------------------------------
                 | Update Current Candidate
@@ -11070,7 +11161,8 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
                     'id' => $addJobWiseCondidate_id,
                     'body' => [
                         'doc' => [
-                            'duplicate' => $duplicate,
+                            'duplicate' => (int) $duplicate,
+                            'is_duplicate' => (bool) ($duplicate == 1),
                             'updated_at' => $updateTime,
 
                         ],
