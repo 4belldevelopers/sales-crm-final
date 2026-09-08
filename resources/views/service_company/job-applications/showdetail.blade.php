@@ -6660,7 +6660,8 @@ async function buildTurboVectorHighlightedResume(options){
     }else if(resumeExt==='DOCX'){
       if(options.useOpenDocOnly===true){
         // Option 27: 100% Client-side OpenDoc WASM conversion with integrated keyword highlights (High-definition 216 DPI & 0.98 JPEG)
-        pdfBlob=await convertResumeWithOpenDocLabBlob(resumeSources,resumeExt,true,{dpi:216,jpegQuality:0.98});
+        var openDocOptions=options.openDocConversionOptions||{dpi:216,jpegQuality:0.98};
+        pdfBlob=await convertResumeWithOpenDocLabBlob(resumeSources,resumeExt,true,openDocOptions);
         if(options.returnBlob===true){
           return pdfBlob;
         }
@@ -6829,6 +6830,7 @@ async function buildTurboVectorHighlightedResume(options){
     return true;
   }catch(err){
     console.error('Turbo Vector Highlighted Resume error:',err);
+    if(options && options.throwOnError===true) throw err;
     alert('Could not generate Turbo Vector Highlighted Resume.\n\nReason: '+(err && err.message ? err.message : 'Unknown vector error'));
     return false;
   }finally{
@@ -7346,22 +7348,44 @@ async function buildTurboPreScreenedHighlightedPackage(resumePdfUrl,options){
   }
 }
 async function buildPreScreenedHighlightedResume(resumePdfUrl,options){
-  /* Purpose: generate the Pre-Screened Report and append the highlighted resume; DOCX can run browser-first with enterprise PDF fallback, while DOC stays on the enterprise converter. */
+  /* Purpose: generate the Pre-Screened Report and append the highlighted resume using the fastest safe path: turbo vector PDF highlighting, DOCX OpenDoc-first, and enterprise PDF fallback for unsafe Word files. */
   if(window.__rsBusy) return Promise.resolve(false);
   try{
     options=options||{};
     var data=readData();
-    var reportBlob=await buildRecruiterSummaryBlob(data,options);
-    var highlightedBlob=await buildHeadlessOption3SkillsHighlightedResume({
-      resumeUrl:options.resumeUrl,
-      resumeExt:options.resumeExt,
-      resumePdfUrl:resumePdfUrl,
-      preferClientDocx:options.preferClientDocx===true,
-      clientDocxMaxBytes:parseInt(options.clientDocxMaxBytes,10)||1536*1024,
-      clientDocxMaxPages:parseInt(options.clientDocxMaxPages,10)||6,
-      clientDocxRequireTextPdf:true,
-      returnBlob:true
-    });
+    var resumeExt=clean(options.resumeExt||'','').toUpperCase();
+    var reportPromise=buildRecruiterSummaryBlob(data,options);
+    var highlightedBlob=null;
+    if(resumeExt==='DOCX' && options.preferClientDocx===true){
+      try{
+        highlightedBlob=await buildTurboVectorHighlightedResume({
+          resumeUrl:options.resumeUrl,
+          resumeExt:resumeExt,
+          resumePdfUrl:null,
+          useOpenDocOnly:true,
+          openDocConversionOptions:{
+            maxBytes:parseInt(options.clientDocxMaxBytes,10)||1536*1024,
+            maxPages:parseInt(options.clientDocxMaxPages,10)||6,
+            dpi:216,
+            jpegQuality:0.98
+          },
+          throwOnError:true,
+          returnBlob:true
+        });
+      }catch(clientDocxErr){
+        console.warn('Option 17 DOCX browser turbo path failed; using enterprise PDF fallback:',clientDocxErr);
+      }
+    }
+    if(!(highlightedBlob instanceof Blob)){
+      highlightedBlob=await buildTurboVectorHighlightedResume({
+        resumeUrl:options.resumeUrl,
+        resumeExt:resumeExt,
+        resumePdfUrl:resumePdfUrl,
+        throwOnError:true,
+        returnBlob:true
+      });
+    }
+    var reportBlob=await reportPromise;
     if(!(reportBlob instanceof Blob)) throw new Error('Pre-Screened Report PDF was not generated');
     if(!(highlightedBlob instanceof Blob)) throw new Error('Highlighted resume PDF was not generated');
     window.__rsBusy=true;
