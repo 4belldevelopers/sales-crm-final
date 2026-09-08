@@ -5748,6 +5748,30 @@ function openDocNativePdfBlob(doc){
   }
   return null;
 }
+function rsCollectActiveKeywords(){
+  var allKeywords=[];
+  var seenKw={};
+  function addKw(val){
+    if(!val) return;
+    if(typeof val==='object') val=val.skill_name||val.skill||val.name||val.skill_key||'';
+    val=String(val).replace(/\+\d+\s*More/gi,'').replace(/\s+/g,' ').trim();
+    if(val.length<2) return;
+    var k=val.toLowerCase();
+    if(seenKw[k]) return;
+    seenKw[k]=true;
+    allKeywords.push(val);
+  }
+  (Array.isArray(rsDrawerMatchedKeywords) ? rsDrawerMatchedKeywords : []).forEach(addKw);
+  Array.prototype.slice.call(document.querySelectorAll('#kt_activitiesApplication .cdr-skill-tag.cdr-skill-match:not(.cdr-skill-more), .cdr-skill-tag.cdr-skill-match:not(.cdr-skill-more), .cdr-skill-tag:not(.cdr-skill-more)')).forEach(function(el){
+    addKw(el.textContent||'');
+  });
+  (Array.isArray(rsAtsHighlightKeywords) ? rsAtsHighlightKeywords : []).forEach(addKw);
+  try{
+    var rData=readData();
+    (Array.isArray(rData.skills) ? rData.skills : []).forEach(addKw);
+  }catch(ex){}
+  return allKeywords;
+}
 async function convertResumeWithOpenDocLabBlob(resumeUrl,resumeExt,allowExternalFallback,conversionOptions){
   resumeExt=clean(resumeExt,'').toUpperCase();
   var resumeSources=Array.isArray(resumeUrl) ? resumeUrl : [resumeUrl];
@@ -5780,6 +5804,74 @@ async function convertResumeWithOpenDocLabBlob(resumeUrl,resumeExt,allowExternal
     }
     if(!pageCount || pageCount<1) throw new Error('OpenDoc produced no pages');
     if(pageCount>maxPages) throw new Error('OpenDoc lab page limit exceeded');
+
+    // Keyword detection & highlighting in OpenDoc WASM model and page layouts
+    var keywords=conversionOptions.highlightKeywords||rsCollectActiveKeywords();
+    var pageHighlights={};
+    if(Array.isArray(keywords) && keywords.length){
+      keywords.forEach(function(kw){
+        if(!kw || typeof kw !== 'string') return;
+        kw=kw.trim();
+        if(kw.length<2) return;
+        try{
+          var first=(typeof doc.firstPosition === 'function') ? doc.firstPosition() : null;
+          if(!first) return;
+          var currNode=first.node;
+          var currOffset=first.offset;
+          if(typeof first.free === 'function') first.free();
+
+          var maxMatches=60;
+          while(maxMatches-- > 0){
+            var m=doc.findText(kw, currNode, currOffset, true, false);
+            if(!m || !m.found){
+              if(m && typeof m.free === 'function') m.free();
+              break;
+            }
+            var sNode=m.startNode;
+            var sOffset=m.startOffset;
+            var eNode=m.endNode;
+            var eOffset=m.endOffset;
+            if(typeof m.free === 'function') m.free();
+
+            // Set native highlight in OpenDoc model
+            try{
+              if(typeof doc.setHighlight === 'function'){
+                var hRes=doc.setHighlight(sNode, sOffset, eNode, eOffset, 'yellow');
+                if(hRes && typeof hRes.free === 'function') hRes.free();
+              }
+            }catch(shErr){}
+
+            // Query exact line-fragment bounding boxes from OpenDoc layout engine
+            try{
+              if(typeof doc.selectionRects === 'function'){
+                var rects=doc.selectionRects(sNode, sOffset, eNode, eOffset);
+                if(rects && rects.length >= 5){
+                  for(var rIdx=0; rIdx<rects.length; rIdx+=5){
+                    var pNum=rects[rIdx];
+                    var rx=rects[rIdx+1];
+                    var ry=rects[rIdx+2];
+                    var rw=rects[rIdx+3];
+                    var rh=rects[rIdx+4];
+                    if(rw>0 && rh>0){
+                      if(!pageHighlights[pNum]) pageHighlights[pNum]=[];
+                      pageHighlights[pNum].push({x:rx, y:ry, w:rw, h:rh});
+                    }
+                  }
+                }
+              }
+            }catch(srErr){}
+
+            if(sNode === eNode && eOffset <= currOffset){
+              currOffset++;
+            }else{
+              currNode=eNode;
+              currOffset=eOffset;
+            }
+          }
+        }catch(fErr){}
+      });
+    }
+
     var nativePdfBlob=openDocNativePdfBlob(doc);
     if(nativePdfBlob) return nativePdfBlob;
     if(conversionOptions.requireTextPdf===true) throw new Error('OpenDoc browser safety limit: text PDF export unavailable');
@@ -5801,6 +5893,30 @@ async function convertResumeWithOpenDocLabBlob(resumeUrl,resumeExt,allowExternal
       try{
         bitmap=doc.renderPage(i,renderDpi);
         canvas=openDocCanvasFromBitmap(bitmap);
+
+        // Render visible golden highlights over matched keyword rectangles
+        var pageRects=pageHighlights[i]||[];
+        if(pageRects.length && canvas){
+          var ctx=canvas.getContext('2d');
+          if(ctx){
+            ctx.fillStyle='rgba(255, 215, 0, 0.42)';
+            var scale=(renderDpi/72)/20;
+            pageRects.forEach(function(r){
+              var hx=r.x*scale;
+              var hy=r.y*scale;
+              var hw=r.w*scale;
+              var hh=r.h*scale;
+              if(typeof ctx.roundRect === 'function'){
+                ctx.beginPath();
+                ctx.roundRect(hx-1, hy, hw+2, Math.max(hh, 4), 3);
+                ctx.fill();
+              }else{
+                ctx.fillRect(hx-1, hy, hw+2, Math.max(hh, 4));
+              }
+            });
+          }
+        }
+
         if(useFastJpeg){
           var imgData=canvas.toDataURL('image/jpeg', 0.92);
           pdf.addImage(imgData,'JPEG',0,0,pageSize[0],pageSize[1],undefined,'FAST');
@@ -6526,8 +6642,14 @@ async function buildTurboVectorHighlightedResume(options){
       pdfBlob=await fetchPdfBlobFromSources(resumeSources);
     }else if(resumeExt==='DOCX'){
       if(options.useOpenDocOnly===true){
-        // Option 27: 100% Client-side OpenDoc WASM conversion only (ignoring server-side conversion completely)
+        // Option 27: 100% Client-side OpenDoc WASM conversion with integrated keyword highlights
         pdfBlob=await convertResumeWithOpenDocLabBlob(resumeSources,resumeExt,true,{fastJpeg:true});
+        if(options.returnBlob===true){
+          return pdfBlob;
+        }
+        var data=readData();
+        downloadBlob(pdfBlob,'JEROWORKS_'+fileSafeName(data.name,'Candidate')+'_Turbo_Highlighted.pdf');
+        return true;
       }else{
         // Use high-fidelity vector PDF (cached on Cloudflare R2) to guarantee 100% vector typography, exact Word layout, and crisp text highlighting
         if(resumePdfUrl){
