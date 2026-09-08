@@ -7627,6 +7627,28 @@ async function buildHybridWordPreScreenedResume(resumePdfUrl,options){
     window.__rsBusy=false;
   }
 }
+async function resolveSmartPreScreenedResumeBlob(resumePdfUrl,resumeSources,resumeExt){
+  /* Purpose: options 15/16 must append a clean resume only; this isolated resolver never enables keyword highlighting. */
+  resumeExt=clean(resumeExt||'','').toUpperCase();
+  resumePdfUrl=clean(resumePdfUrl,'');
+  if(resumeExt==='PDF'){
+    return await fetchPdfBlobFromSources(resumeSources);
+  }
+  if(resumeExt==='DOCX'){
+    try{
+      return await convertResumeWithOpenDocLabBlob(resumeSources,resumeExt,false,{skipHighlights:true});
+    }catch(browserDocxErr){
+      console.warn('Options 15/16 clean DOCX browser conversion failed; using enterprise converter PDF URL if available:',browserDocxErr);
+      if(!resumePdfUrl) throw browserDocxErr;
+      return await fetchPdfResumeBlob(resumePdfUrl);
+    }
+  }
+  if(resumeExt==='DOC'){
+    if(!resumePdfUrl) throw new Error('DOC resume needs enterprise converter PDF URL');
+    return await fetchPdfResumeBlob(resumePdfUrl);
+  }
+  throw new Error('Clean Pre-Screened package is available for PDF, DOC and DOCX resumes only');
+}
 async function buildSmartPreScreenedResume(resumePdfUrl,options){
   if(window.__rsBusy) return Promise.resolve(false);
   window.__rsBusy=true;
@@ -7642,26 +7664,7 @@ async function buildSmartPreScreenedResume(resumePdfUrl,options){
     if(['PDF','DOC','DOCX'].indexOf(resumeExt)===-1) throw new Error('Smart Pre-Screened package is available for PDF, DOC and DOCX resumes only');
     var data=readData();
     var reportBlob=await buildRecruiterSummaryBlob(data,options);
-    var resumeBlob=null;
-    if(resumeExt==='PDF'){
-      resumeBlob=await fetchPdfBlobFromSources(resumeSources);
-    }else if(resumeExt==='DOCX'){
-      try{
-        resumeBlob=await convertResumeWithOpenDocLabBlob(resumeSources,resumeExt,false);
-      }catch(browserDocxErr){
-        console.warn('OpenDoc DOCX conversion failed; trying legacy browser renderer:',browserDocxErr);
-        try{
-          resumeBlob=await convertDocxResumeToPdfBlobFromSources(resumeSources);
-        }catch(legacyDocxErr){
-          console.warn('Legacy DOCX conversion failed; using converter PDF URL if available:',legacyDocxErr);
-          if(!resumePdfUrl) throw legacyDocxErr;
-          resumeBlob=await fetchPdfResumeBlob(resumePdfUrl);
-        }
-      }
-    }else{
-      if(!resumePdfUrl) throw new Error('DOC resume needs enterprise converter PDF URL');
-      resumeBlob=await fetchPdfResumeBlob(resumePdfUrl);
-    }
+    var resumeBlob=await resolveSmartPreScreenedResumeBlob(resumePdfUrl,resumeSources,resumeExt);
     var reportFileName='JEROWORKS_'+fileSafeName(data.name,'Candidate')+'.pdf';
     await mergePreScreenedReportAndResume(reportBlob,resumeBlob,reportFileName);
     return true;
