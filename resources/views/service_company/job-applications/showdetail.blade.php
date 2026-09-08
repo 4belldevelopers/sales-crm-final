@@ -5757,9 +5757,13 @@ async function convertResumeWithOpenDocLabBlob(resumeUrl,resumeExt,allowExternal
   conversionOptions=conversionOptions||{};
   var maxBytes=parseInt(conversionOptions.maxBytes,10)||rsDocxMaxBytes;
   var maxPages=parseInt(conversionOptions.maxPages,10)||30;
-  var openDoc=await rsEnsureOpenDocLab(allowExternalFallback===true);
-  await rsEnsureJsPdf();
-  var bytes=await fetchResumeBytesFromSources(resumeSources,maxBytes);
+  var initResults=await Promise.all([
+    rsEnsureOpenDocLab(allowExternalFallback===true),
+    rsEnsureJsPdf(),
+    fetchResumeBytesFromSources(resumeSources,maxBytes)
+  ]);
+  var openDoc=initResults[0];
+  var bytes=initResults[2];
   var doc=null;
   try{
     var docBytes=new Uint8Array(bytes);
@@ -5779,7 +5783,7 @@ async function convertResumeWithOpenDocLabBlob(resumeUrl,resumeExt,allowExternal
     var nativePdfBlob=openDocNativePdfBlob(doc);
     if(nativePdfBlob) return nativePdfBlob;
     if(conversionOptions.requireTextPdf===true) throw new Error('OpenDoc browser safety limit: text PDF export unavailable');
-    var renderDpi=openDocRenderDpi(pageCount);
+    var renderDpi=conversionOptions.dpi||openDocRenderDpi(pageCount);
     var JsPDF=window.jspdf.jsPDF;
     var firstSize=openDocPagePoints(doc,0);
     var pdf=new JsPDF({
@@ -5788,6 +5792,7 @@ async function convertResumeWithOpenDocLabBlob(resumeUrl,resumeExt,allowExternal
       format:firstSize,
       compress:true
     });
+    var useFastJpeg=conversionOptions.fastJpeg!==false;
     for(var i=0;i<pageCount;i++){
       var pageSize=openDocPagePoints(doc,i);
       if(i>0) pdf.addPage(pageSize,pageSize[0]>pageSize[1]?'landscape':'portrait');
@@ -5796,7 +5801,12 @@ async function convertResumeWithOpenDocLabBlob(resumeUrl,resumeExt,allowExternal
       try{
         bitmap=doc.renderPage(i,renderDpi);
         canvas=openDocCanvasFromBitmap(bitmap);
-        pdf.addImage(canvas.toDataURL('image/png'),'PNG',0,0,pageSize[0],pageSize[1],undefined,'SLOW');
+        if(useFastJpeg){
+          var imgData=canvas.toDataURL('image/jpeg', 0.92);
+          pdf.addImage(imgData,'JPEG',0,0,pageSize[0],pageSize[1],undefined,'FAST');
+        }else{
+          pdf.addImage(canvas.toDataURL('image/png'),'PNG',0,0,pageSize[0],pageSize[1],undefined,'SLOW');
+        }
       }finally{
         if(bitmap && typeof bitmap.free==='function') bitmap.free();
         if(canvas){
@@ -6515,19 +6525,24 @@ async function buildTurboVectorHighlightedResume(options){
     if(resumeExt==='PDF'){
       pdfBlob=await fetchPdfBlobFromSources(resumeSources);
     }else if(resumeExt==='DOCX'){
-      // Use high-fidelity vector PDF (cached on Cloudflare R2) to guarantee 100% vector typography, exact Word layout, and crisp text highlighting
-      if(resumePdfUrl){
-        try{
-          pdfBlob=await fetchPdfResumeBlob(resumePdfUrl);
-        }catch(convErr){
-          console.warn('Turbo Vector DOCX vector PDF fetch failed; trying browser conversion fallback:',convErr);
+      if(options.useOpenDocOnly===true){
+        // Option 27: 100% Client-side OpenDoc WASM conversion only (ignoring server-side conversion completely)
+        pdfBlob=await convertResumeWithOpenDocLabBlob(resumeSources,resumeExt,true,{fastJpeg:true});
+      }else{
+        // Use high-fidelity vector PDF (cached on Cloudflare R2) to guarantee 100% vector typography, exact Word layout, and crisp text highlighting
+        if(resumePdfUrl){
+          try{
+            pdfBlob=await fetchPdfResumeBlob(resumePdfUrl);
+          }catch(convErr){
+            console.warn('Turbo Vector DOCX vector PDF fetch failed; trying browser conversion fallback:',convErr);
+          }
         }
-      }
-      if(!pdfBlob){
-        try{
-          pdfBlob=await convertDocxResumeToPdfBlobFromSources(resumeSources);
-        }catch(browserDocxErr){
-          pdfBlob=await convertResumeWithOpenDocLabBlob(resumeSources,resumeExt,false);
+        if(!pdfBlob){
+          try{
+            pdfBlob=await convertDocxResumeToPdfBlobFromSources(resumeSources);
+          }catch(browserDocxErr){
+            pdfBlob=await convertResumeWithOpenDocLabBlob(resumeSources,resumeExt,false);
+          }
         }
       }
     }else{
@@ -7149,23 +7164,23 @@ function preloadClientLightningAssets(){
   return Promise.all(tasks).catch(function(){ return null; });
 }
 async function buildTurboPreScreenedHighlightedPackage(resumePdfUrl,options){
-  /* Purpose: Option 27 — God-level pure vector package (Pre-Screened Report + Resume + Highlights).
-     Completely replaces Option 17's heavy double-canvas rasterization and JPEG recompression.
-     1. Runs vector Recruiter Summary (pdfMake) and vector keyword highlighting (pdf-lib) concurrently in parallel.
-     2. Zero canvas rasterization, zero JPEGs, 100% crisp vector typography on all pages.
-     3. Merges vector report at Page 1 and downloads in ~400ms-600ms, with 0% server CPU load. */
+  /* Purpose: Option 27 — Pure Client-Side Pre-Screened Package.
+     When DOCX: uses OpenDoc WASM in browser memory (zero server-side conversion).
+     Runs Recruiter Summary (pdfMake) and OpenDoc DOCX conversion/highlighting concurrently in parallel.
+     Zero server CPU load on conversion. */
   if(window.__rsBusy) return Promise.resolve(false);
   try{
     options=options||{};
     var data=readData();
 
-    // Run report creation and vector resume highlighting in parallel:
+    // Run report creation and OpenDoc resume highlighting in parallel:
     var results=await Promise.all([
       buildRecruiterSummaryBlob(data,options),
       buildTurboVectorHighlightedResume({
         resumeUrl:options.resumeUrl,
         resumeExt:options.resumeExt,
-        resumePdfUrl:resumePdfUrl,
+        resumePdfUrl:null, // Ignore server-side conversion completely!
+        useOpenDocOnly:true, // Pure client-side OpenDoc WASM only
         returnBlob:true
       })
     ]);
@@ -7174,7 +7189,7 @@ async function buildTurboPreScreenedHighlightedPackage(resumePdfUrl,options){
     var highlightedBlob=results[1];
 
     if(!(reportBlob instanceof Blob)) throw new Error('Pre-Screened Report PDF was not generated');
-    if(!(highlightedBlob instanceof Blob)) throw new Error('Turbo Vector highlighted resume PDF was not generated');
+    if(!(highlightedBlob instanceof Blob)) throw new Error('OpenDoc highlighted resume PDF was not generated');
 
     window.__rsBusy=true;
     var fileName='JEROWORKS_'+fileSafeName(data.name,'Candidate')+'_Turbo_PreScreened_Highlighted.pdf';
@@ -7803,7 +7818,7 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
         <span class="rdc-ocirc" aria-hidden="true"></span>
       </label>
 
-      {{-- 27: Turbo Pre-Screened Report + Resume + Highlights (Vector Package) --}}
+      {{-- 27: Turbo Pre-Screened Report + Resume + Highlights (OpenDoc Client-Side Package) --}}
       <label class="rdc-opt" data-opt="27" data-coins="8">
         <input class="rdc-rinput" type="radio" name="rdcFormat" value="27">
         <span class="rdc-onum">27</span>
@@ -7811,8 +7826,8 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
         </span>
         <span class="rdc-obody">
-          <span class="rdc-otitle">Turbo Pre-Screened Report + Resume + Highlights <span style="background:#fce7f3;color:#9d174d;font-size:8.5px;font-weight:700;padding:1px 6px;border-radius:4px;vertical-align:middle;margin-left:4px;">Turbo Vector Package</span></span>
-          <span class="rdc-odesc">Instant zero-raster vector report + keyword highlighted resume package (~400ms, 100% crisp vector)</span>
+          <span class="rdc-otitle">Turbo Pre-Screened Report + Resume + Highlights <span style="background:#fce7f3;color:#9d174d;font-size:8.5px;font-weight:700;padding:1px 6px;border-radius:4px;vertical-align:middle;margin-left:4px;">OpenDoc Client-Side</span></span>
+          <span class="rdc-odesc">100% client-side conversion (OpenDoc WASM) + Pre-Screened Report + Highlights (Zero server conversion)</span>
         </span>
         <span class="rdc-ometa">
           <span class="rdc-ocost">8 Coins</span>
@@ -7995,6 +8010,7 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
     if(m.dlKey === 'fast-highlighted-resume-client-docx' && typeof window.__preloadRSCombined === 'function') window.__preloadRSCombined();
     if(m.dlKey === 'fast-highlighted-resume-client-docx' && resumeExt === 'DOCX' && typeof window.__preloadOpenDocLocal === 'function') window.__preloadOpenDocLocal();
     if((m.dlKey === 'turbo-vector-highlighted-branded' || m.dlKey === 'turbo-vector-highlighted' || m.dlKey === 'turbo-prescreened-highlighted-package') && typeof window.__preloadRSCombined === 'function') window.__preloadRSCombined();
+    if(m.dlKey === 'turbo-prescreened-highlighted-package' && resumeExt === 'DOCX' && typeof window.__preloadOpenDocLocal === 'function') window.__preloadOpenDocLocal();
     if((m.dlKey === 'client-lightning-highlighted-branded' || m.dlKey === 'client-lightning-highlighted') && typeof window.__preloadClientLightning === 'function') window.__preloadClientLightning();
     if((m.dlKey === 'prescreened-highlighted-package' || m.dlKey === 'prescreened-highlighted-package-nobrand' || m.dlKey === 'prescreened-highlighted-package-client-docx' || m.dlKey === 'prescreened-highlighted-package-client-docx-nobrand') && typeof window.__preloadRSCombined === 'function') window.__preloadRSCombined();
     if((m.dlKey === 'prescreened-highlighted-package' || m.dlKey === 'prescreened-highlighted-package-nobrand' || m.dlKey === 'prescreened-highlighted-package-client-docx' || m.dlKey === 'prescreened-highlighted-package-client-docx-nobrand') && resumeExt === 'DOCX' && typeof window.__preloadOpenDocLocal === 'function') window.__preloadOpenDocLocal();
