@@ -5845,26 +5845,6 @@ async function convertResumeWithOpenDocLabBlob(resumeUrl,resumeExt,allowExternal
             var eOffset=m.endOffset;
             if(typeof m.free === 'function') m.free();
 
-            // Query exact line-fragment bounding boxes from OpenDoc layout engine
-            try{
-              if(typeof doc.selectionRects === 'function'){
-                var rects=doc.selectionRects(sNode, sOffset, eNode, eOffset);
-                if(rects && rects.length >= 5){
-                  for(var rIdx=0; rIdx<rects.length; rIdx+=5){
-                    var pNum=rects[rIdx];
-                    var rx=rects[rIdx+1];
-                    var ry=rects[rIdx+2];
-                    var rw=rects[rIdx+3];
-                    var rh=rects[rIdx+4];
-                    if(rw>0 && rh>0){
-                      if(!pageHighlights[pNum]) pageHighlights[pNum]=[];
-                      pageHighlights[pNum].push({x:rx, y:ry, w:rw, h:rh});
-                    }
-                  }
-                }
-              }
-            }catch(srErr){}
-
             if(sNode === eNode && eOffset <= currOffset){
               currOffset++;
             }else{
@@ -5876,7 +5856,7 @@ async function convertResumeWithOpenDocLabBlob(resumeUrl,resumeExt,allowExternal
       });
     }
 
-    var nativePdfBlob=pageHighlights && Object.keys(pageHighlights).length ? null : openDocNativePdfBlob(doc);
+    var nativePdfBlob=openDocNativePdfBlob(doc);
     if(nativePdfBlob) return nativePdfBlob;
     if(conversionOptions.requireTextPdf===true) throw new Error('OpenDoc browser safety limit: text PDF export unavailable');
     var renderDpi=conversionOptions.dpi||openDocRenderDpi(pageCount);
@@ -5898,32 +5878,6 @@ async function convertResumeWithOpenDocLabBlob(resumeUrl,resumeExt,allowExternal
       try{
         bitmap=doc.renderPage(i,renderDpi);
         canvas=openDocCanvasFromBitmap(bitmap);
-
-        // Render visible golden highlights over matched keyword rectangles with multiply blend (keeps black text 100% crisp)
-        var pageRects=pageHighlights[i]||[];
-        if(pageRects.length && canvas){
-          var ctx=canvas.getContext('2d');
-          if(ctx){
-            ctx.save();
-            ctx.globalCompositeOperation='multiply';
-            ctx.fillStyle='rgba(255, 215, 0, 0.42)';
-            var scale=(renderDpi/72)/20;
-            pageRects.forEach(function(r){
-              var hx=r.x*scale;
-              var hy=r.y*scale;
-              var hw=r.w*scale;
-              var hh=r.h*scale;
-              if(typeof ctx.roundRect === 'function'){
-                ctx.beginPath();
-                ctx.roundRect(hx-1, hy, hw+2, Math.max(hh, 4), 3);
-                ctx.fill();
-              }else{
-                ctx.fillRect(hx-1, hy, hw+2, Math.max(hh, 4));
-              }
-            });
-            ctx.restore();
-          }
-        }
 
         if(usePng){
           var pngData=canvas.toDataURL('image/png');
@@ -7299,24 +7253,22 @@ function preloadClientLightningAssets(){
   return Promise.all(tasks).catch(function(){ return null; });
 }
 async function buildTurboPreScreenedHighlightedPackage(resumePdfUrl,options){
-  /* Purpose: Option 27 — Pure Client-Side Pre-Screened Package.
-     When DOCX: 100% in-browser conversion via OpenDoc WASM engine (ZERO server-side conversion at any cost).
-     Highlights are applied natively in browser memory via OpenDoc text layout rects.
-     Pre-Screened Report (pdfMake) and OpenDoc conversion run concurrently in parallel.
-     0.00% server conversion CPU. */
+  /* Purpose: Option 27 — Turbo Pre-Screened Report + Resume + Highlights.
+     Uses the high-fidelity vector PDF (cached on R2) to guarantee 100% exact Word header alignment, margins,
+     and crisp vector typography with exact sub-pixel keyword highlights (zero server conversion CPU).
+     If R2 vector PDF is not available, gracefully falls back to browser conversion. */
   if(window.__rsBusy) return Promise.resolve(false);
   try{
     options=options||{};
     var data=readData();
 
-    // Run report creation and 100% client-side OpenDoc highlighted resume conversion in parallel:
+    // Run report creation and vector resume highlighting in parallel:
     var results=await Promise.all([
       buildRecruiterSummaryBlob(data,options),
       buildTurboVectorHighlightedResume({
         resumeUrl:options.resumeUrl,
         resumeExt:options.resumeExt,
-        resumePdfUrl:null, // STRICT: Zero server-side conversion at any cost
-        useOpenDocOnly:true, // Pure client-side OpenDoc WASM only
+        resumePdfUrl:resumePdfUrl,
         returnBlob:true
       })
     ]);
@@ -7325,7 +7277,7 @@ async function buildTurboPreScreenedHighlightedPackage(resumePdfUrl,options){
     var highlightedBlob=results[1];
 
     if(!(reportBlob instanceof Blob)) throw new Error('Pre-Screened Report PDF was not generated');
-    if(!(highlightedBlob instanceof Blob)) throw new Error('Client-side highlighted resume PDF was not generated');
+    if(!(highlightedBlob instanceof Blob)) throw new Error('Turbo highlighted resume PDF was not generated');
 
     window.__rsBusy=true;
     var fileName='JEROWORKS_'+fileSafeName(data.name,'Candidate')+'_Turbo_PreScreened_Highlighted.pdf';
@@ -7977,7 +7929,7 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
         <span class="rdc-ocirc" aria-hidden="true"></span>
       </label>
 
-      {{-- 27: Turbo Pre-Screened Report + Resume + Highlights (OpenDoc Client-Side Package) --}}
+      {{-- 27: Turbo Pre-Screened Report + Resume + Highlights (Vector Package) --}}
       <label class="rdc-opt" data-opt="27" data-coins="8">
         <input class="rdc-rinput" type="radio" name="rdcFormat" value="27">
         <span class="rdc-onum">27</span>
@@ -7985,12 +7937,12 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
         </span>
         <span class="rdc-obody">
-          <span class="rdc-otitle">Turbo Pre-Screened Report + Resume + Highlights <span style="background:#fce7f3;color:#9d174d;font-size:8.5px;font-weight:700;padding:1px 6px;border-radius:4px;vertical-align:middle;margin-left:4px;">OpenDoc Client-Side</span></span>
-          <span class="rdc-odesc">100% client-side conversion (OpenDoc WASM) + Pre-Screened Report + Highlights (Zero server conversion)</span>
+          <span class="rdc-otitle">Turbo Pre-Screened Report + Resume + Highlights <span style="background:#fce7f3;color:#9d174d;font-size:8.5px;font-weight:700;padding:1px 6px;border-radius:4px;vertical-align:middle;margin-left:4px;">Turbo Vector</span></span>
+          <span class="rdc-odesc">Instant pre-screened report + keyword highlights (~250ms, perfect alignment, crisp vector typography)</span>
         </span>
         <span class="rdc-ometa">
           <span class="rdc-ocost">8 Coins</span>
-          <span class="rdc-otime">Fast</span>
+          <span class="rdc-otime">Instant</span>
         </span>
         <span class="rdc-ocirc" aria-hidden="true"></span>
       </label>
@@ -8716,7 +8668,7 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
           showToast(m.unavailableMsg || 'Turbo Pre-Screened Package is available for PDF, DOC and DOCX resumes only.', 'warn');
           resetBtn(); return;
         }
-        if(['PDF','DOCX'].indexOf(resumeExt) !== -1 && !r2DirectUrl && !r2PublicUrl && !dlUrl){
+        if(['PDF','DOCX'].indexOf(resumeExt) !== -1 && !r2DirectUrl && !r2PublicUrl && !dlUrl && !resumePdfUrl){
           showToast('Resume URL is not available.', 'warn');
           resetBtn(); return;
         }
@@ -8726,7 +8678,7 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
         }
         runSmartCountdown('Downloading Resume.... Kindly wait', 60);
         setTimeout(function(){
-          window.__buildTurboPreScreenedHighlightedPackage(null,{
+          window.__buildTurboPreScreenedHighlightedPackage(resumePdfUrl,{
             resumeUrl:[r2DirectUrl,r2PublicUrl,dlUrl],
             resumeExt:resumeExt
           }).then(function(ok){
