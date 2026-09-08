@@ -5157,9 +5157,9 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
         ];
 
         $versionKey = 'allbenchexplore_version_user_'.$this->user->id;
-        $version = 3;
+        $version = 4;
         try {
-            $version = cache()->get($versionKey, 3);
+            $version = cache()->get($versionKey, 4);
         } catch (\Throwable $e) {}
 
         /**
@@ -5351,7 +5351,7 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
             'index' => ELASTIC_CANDIDATES,
             'body' => [
                 '_source' => [
-                    'id', 'candidate_id', 'job_id', 'job_applications_id', 'other_company',
+                    'id', 'candidate_id', 'job_id', 'jobId', 'job_applications_id', 'other_company',
                     'job_master_status_id', 'job_status', 'title', 'client_name', 'posted_by',
                     'name', 'css_style', 'childStatus', 'submitted_by', 'created_at', 'updated_at',
                     'max_salary', 'min_salary', 'city_name', 'location',
