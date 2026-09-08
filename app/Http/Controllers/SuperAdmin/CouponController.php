@@ -14,9 +14,11 @@ class CouponController extends SuperAdminBaseController
         $this->pageTitle = 'Coupons';
     }
 
-    public function index()
+    public function index(Request $request)
     {
-        $this->coupons = Coupon::orderByDesc('id')->paginate(20);
+        $perPage = (int) $request->input('per_page', $request->input('size', $request->input('limit', 20)));
+        $perPage = min(max($perPage, 1), 100);
+        $this->coupons = Coupon::orderByDesc('id')->paginate($perPage)->appends($request->query());
 
         return view('super-admin.coupons.index', $this->data);
     }
@@ -26,7 +28,7 @@ class CouponController extends SuperAdminBaseController
         $this->update = false;
 
         if ($request->id) {
-            $this->coupon = Coupon::findOrFail(decrypt($request->id));
+            $this->coupon = Coupon::withoutGlobalScopes()->findOrFail(decrypt($request->id));
             $this->update = true;
         }
 
@@ -68,7 +70,7 @@ class CouponController extends SuperAdminBaseController
 
     public function toggleStatus(Request $request)
     {
-        $coupon = Coupon::findOrFail($request->id);
+        $coupon = Coupon::withoutGlobalScopes()->findOrFail($request->id);
         $coupon->status = $coupon->status === 'active' ? 'inactive' : 'active';
         $coupon->save();
 

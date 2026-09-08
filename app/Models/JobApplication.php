@@ -12,7 +12,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class JobApplication extends Model
 {
-    use Notifiable;
+    use Notifiable, SoftDeletes;
 
 	// BUG-12 fix: removed from $appends to stop N+1 on every hydration (accessors still callable explicitly).
 	protected $appends = [];

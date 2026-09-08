@@ -8,6 +8,8 @@
     $currency = GeneralMethod::currency();
     $job_status_arr = GeneralMethod::job_status();
     $job_status = GeneralMethod::job_status();
+    $categoryIds = collect($data)->pluck('category_id')->filter()->unique()->toArray();
+    $categoriesMap = !empty($categoryIds) ? DB::table('job_categories')->select('id', 'name')->whereIn('id', $categoryIds)->get()->keyBy('id') : collect();
 @endphp
 @if (count($data) > 0)
     @foreach ($data as $rowArr)
@@ -29,7 +31,7 @@
     $row->companyidcount= $row->comId;
     $row->clients_name = $row->client_name;
 
-    $job_assign = $row->job_assign;
+    $job_assign = $row->job_assign ?? [];
     $jobAssign = collect($job_assign);
 
             $clients_name = '';
@@ -58,7 +60,7 @@
             $clients_name = ucwords(mb_substr(@$row->clients_name, 0, 30));
 
             $logo_path = GeneralMethod::companyDetails($row->id);
-            $departmentRow = DB::table('job_categories')->where('id','=',@$row->category_id)->first();
+            $departmentRow = $categoriesMap->get(@$row->category_id);
             $department = $departmentRow->name ?? '';
 
             $min_sal_mode = $max_sal_mode = $min_salary_currency = $max_salary_currency = $max_salary = $min_salary = '';

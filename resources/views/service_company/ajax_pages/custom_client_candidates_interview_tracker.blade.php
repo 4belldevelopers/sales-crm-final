@@ -75,9 +75,9 @@
             {{-- Job title + company + Internal/Client badge + Job ID (view-only) --}}
             <td>
                 @php
-                    $company_client_name = $row->company_name;
-                    if (auth()->user()->company_id == $row->job_company_id) {
-                        $company_client_name = $row->client_name;
+                    $company_client_name = @$row->company_name ?: (@$row->client_name ?: '');
+                    if (auth()->user()->company_id == (@$row->job_company_id ?? 0)) {
+                        $company_client_name = @$row->client_name ?: (@$row->company_name ?: '');
                     }
                     $jobTypeLabel = 'Internal';
                     $jobTypeCls   = 'cit-badge-internal';
@@ -218,7 +218,7 @@
             <td>
                 @php
                     $stageSub = '';
-                    if ($row->master_status_id == 8) { $stageSub = 'Private'; }
+                    if ((@$row->master_status_id ?? 0) == 8) { $stageSub = 'Private'; }
                     if (!empty(@$row->child_status_id) && @$row->child_status_id > 0) {
                         $childStatus = DB::table('candidate_status')->select('*')->where('id', $row->child_status_id)->first();
                         if (!empty($childStatus)) { $stageSub = @$childStatus->name; }

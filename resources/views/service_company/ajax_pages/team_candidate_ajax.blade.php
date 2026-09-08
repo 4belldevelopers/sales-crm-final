@@ -23,11 +23,28 @@
     @foreach ($data as $rowArr)
     @php
     $row = (object) $rowArr;
-    $row->thirdparty_company_id = $row->ClientComID;
+    $row->thirdparty_company_id = $row->thirdparty_company_id ?? $row->ClientComID ?? $row->client_comapny_id ?? 0;
+    $row->ClientComID = $row->ClientComID ?? $row->thirdparty_company_id ?? 0;
+    $row->name = $row->name ?? $row->master_status_name ?? '';
+    $row->master_status_id = $row->master_status_id ?? $row->job_master_status_id ?? 0;
 
-    $jobData = DB::table('jobs')->select('max_sal_mode as jobMode','max_salary_currency as jobCurrency')->where('id','=',$row->jobId)->first();
-    $jobMode = $jobData->jobMode ?? @$row->current_ctc_mode;
-    $jobCurrency = $jobData->jobCurrency ?? @$row->current_ctc_cur;
+
+
+
+    static $jobModesMap = null;
+    if ($jobModesMap === null) {
+        $jobModesMap = \Illuminate\Support\Facades\Cache::remember('ats:jobs_modes_map', 3600, function() {
+            return DB::table('jobs')->pluck('max_sal_mode', 'id')->toArray();
+        });
+    }
+    static $jobCurrenciesMap = null;
+    if ($jobCurrenciesMap === null) {
+        $jobCurrenciesMap = \Illuminate\Support\Facades\Cache::remember('ats:jobs_currencies_map', 3600, function() {
+            return DB::table('jobs')->pluck('max_salary_currency', 'id')->toArray();
+        });
+    }
+    $jobMode = $jobModesMap[$row->jobId] ?? @$row->current_ctc_mode;
+    $jobCurrency = $jobCurrenciesMap[$row->jobId] ?? @$row->current_ctc_cur;
     $symbols = $symbolsValue[$jobCurrency] ?? "INR";
 
     @endphp
@@ -66,7 +83,8 @@
                         }
                         $skilltag = '';
                         $skilltagclass = $percentage ='';
-                        $skillArr = explode(',', $row->skills);
+                        $skillArr = !empty($row->skills) ? explode(',', $row->skills) : [];
+
 
                         if(@$row->wiseId){
                             $percentage =  GeneralMethod::skill_percentage($row->jobId,$skillArr);

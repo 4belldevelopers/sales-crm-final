@@ -368,7 +368,7 @@
     'use strict';
 
     /* ── state ── */
-    var state = { page: 1, size: 10, search: '', country: '', sort: '12', tab: 'all' };
+    var state = { page: 1, size: parseInt(localStorage.getItem('candidatePerPage'), 10) || 10, search: '', country: '', sort: '12', tab: 'all' };
 
     var URL_CANDIDATES = '{!! route('service_company.cvtracker.allcandidates') !!}';
 
@@ -387,6 +387,7 @@
             data : {
                 status_cus         : 6,
                 size               : state.size,
+                per_page           : state.size,
                 cus_search         : state.search,
                 country            : state.country,
                 sortingfilter      : state.sort,
@@ -509,6 +510,17 @@
         if (!pg) return;
         state.page = pg;
         fetchTable(false);
+    });
+
+    document.getElementById('jt_pagination').addEventListener('change', function (e) {
+        if (e.target.classList.contains('pagi-perpage')) {
+            var selectedPerPage = parseInt(e.target.value, 10);
+            if (selectedPerPage) {
+                state.size = selectedPerPage;
+                localStorage.setItem('candidatePerPage', selectedPerPage);
+                fetchTable(true);
+            }
+        }
     });
 
     /* Stage sub-stage drawer */

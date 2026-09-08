@@ -1,4 +1,4 @@
-﻿@extends('layouts.service_company_layout')
+@extends('layouts.service_company_layout')
 @push('head-script')
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta2/css/all.min.css" crossorigin="anonymous">
     <style>
@@ -2035,29 +2035,33 @@
             }, 200);
             
             
-            $(document).on('click', '#paginationcandidate .page-link', function(e) {
+            var aptkPaginationLoading = false;
+            $(document).on('click', '#paginationcandidate .pagi-page, #paginationcandidate .pagi-arrow', function(e) {
                 e.preventDefault();
 
+                if (aptkPaginationLoading) return;
                 const page = $(this).data('page');
-                if (!page || $(this).hasClass('disabled')) return;
+                if (!page || $(this).hasClass('pagi-disabled') || $(this).hasClass('pagi-active-disabled')) return;
 
-                // Disable the clicked pagination link
-                $(this).addClass('disabled');
-
-                // Fetch data
+                aptkPaginationLoading = true;
                 fetchCandidates(page, $('#search').val()).then(() => {
-                    // Re-enable the links after successful data fetch
-                    $('#paginationcandidate .page-link').removeClass('disabled');
+                    aptkPaginationLoading = false;
                 }).catch(() => {
-                    // Re-enable the links even if there's an error
-                    $('#paginationcandidate .page-link').removeClass('disabled');
+                    aptkPaginationLoading = false;
                 });
+            });
+
+            $(document).on('change', '#paginationcandidate .pagi-perpage', function() {
+                var selectedPerPage = $(this).val();
+                localStorage.setItem('candidatePerPage', selectedPerPage);
+                fetchCandidates(1);
             });
 
 
         });
 
         function fetchCandidates(page = 1, search = '') {
+            var perPage = $('#paginationcandidate .pagi-perpage').val() || localStorage.getItem('candidatePerPage') || 10;
             var jobid = $('#jobid').val();
             var mstatus_id = $('#mstatus_id').val();
             // #kt_tagify_2 is the toolbar's genuine free-text search box
@@ -2101,7 +2105,8 @@
                 kt_tagify_education:kt_tagify_education,
                 app_int_activity:app_int_activity,
                 app_int_notice:app_int_notice,
-                app_int_outsource:app_int_outsource
+                app_int_outsource:app_int_outsource,
+                size:perPage
                 },
                 success: function(response) {
                     $('.loadingMessage').css({ display: 'none' });

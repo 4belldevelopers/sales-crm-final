@@ -15,9 +15,18 @@
             $row->id = $row->candidate_id;
 
             // ---- Status column (bench-level status + subline, opens the Inhouse Talent Status modal) ----
-            $benchMasterStatus = DB::table('bench_master_status')->where('id', $row->status)->first();
-            $row->master_status_name = $benchMasterStatus->name ?? '';
-            $statusSubline = GeneralMethod::bench_status_subline($row->status)->name ?? '';
+            if (isset($rowArr['_prehydrated_master_status_name'])) {
+                $row->master_status_name = $rowArr['_prehydrated_master_status_name'];
+            } else {
+                $benchMasterStatus = DB::table('bench_master_status')->where('id', $row->status)->first();
+                $row->master_status_name = $benchMasterStatus->name ?? '';
+            }
+
+            if (isset($rowArr['_prehydrated_status_subline'])) {
+                $statusSubline = $rowArr['_prehydrated_status_subline'];
+            } else {
+                $statusSubline = GeneralMethod::bench_status_subline($row->status)->name ?? '';
+            }
 
             // ---- Candidate avatar (first-letter colour bucket, same palette used site-wide) ----
             $name = trim((string) @$row->full_name);
@@ -37,7 +46,9 @@
 
             // ---- Duplicate detection (preserved from the previous template) ----
             $duplicateFlag = 0;
-            if (@$row->duplicate == 1) {
+            if (isset($rowArr['_prehydrated_duplicate_flag'])) {
+                $duplicateFlag = $rowArr['_prehydrated_duplicate_flag'];
+            } elseif (@$row->duplicate == 1) {
                 $viewerCompanyId = auth()->user()->roles[0]->company_id;
                 $appDuplicate = auth()->user()->company->app_duplicate;
                 $appDuplicateDays = auth()->user()->company->app_duplicate_days;
@@ -59,12 +70,20 @@
 
             // ---- Job column ----
             $jobTitle = ucwords(mb_substr((string) $row->title, 0, 22));
-            $clientNameCom = GeneralMethod::companyDetailsByClient($row->jobId);
+            if (isset($rowArr['_prehydrated_client_name'])) {
+                $clientNameCom = $rowArr['_prehydrated_client_name'];
+            } else {
+                $clientNameCom = GeneralMethod::companyDetailsByClient($row->jobId);
+            }
             $clientTitleName = !empty($clientNameCom) ? $clientNameCom : $row->client_name;
             $clientName = ucwords(mb_substr((string) $clientTitleName, 0, 22));
 
             // ---- Job Status, ID & Client column ----
-            $jobStatusGet = GeneralMethod::jobDetails($row->jobId);
+            if (isset($rowArr['_prehydrated_job_status'])) {
+                $jobStatusGet = $rowArr['_prehydrated_job_status'];
+            } else {
+                $jobStatusGet = GeneralMethod::jobDetails($row->jobId);
+            }
             $jobStatus = ucwords((string) $jobStatusGet->status);
             if ($jobStatus === 'Active') {
                 $jobStatus = 'Hiring';
@@ -85,7 +104,8 @@
             $optionCurrency = $currency[$row->of_offer_currency] ?? '';
             $optionSalaryMode = $salaryModeOffer[$row->of_offer_mode ? $row->of_offer_mode : 0] ?? '';
             $employmentType = ($row->of_employment_type ?? $row->employment_type) == 1 ? 'Contract' : 'Full-time';
-            if ($hasOffer && @$row->confidential == 1 && !GeneralMethod::confidentialAmontShow($row->jobId)) {
+            $confidentialAllowed = $rowArr['_prehydrated_confidential_allow'] ?? GeneralMethod::confidentialAmontShow($row->jobId);
+            if ($hasOffer && @$row->confidential == 1 && !$confidentialAllowed) {
                 $compensationAmount = 'Confidential';
             } else {
                 $compensationAmount = $optionCurrency . ' ' . number_format((float) $ofOfferAmount) . '/' . mb_substr($optionSalaryMode, 0, 1);

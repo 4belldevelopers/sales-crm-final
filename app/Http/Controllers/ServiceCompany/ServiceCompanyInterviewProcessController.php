@@ -82,7 +82,7 @@ class ServiceCompanyInterviewProcessController extends ServiceCompanyBaseControl
         abort_if(Gate::denies('edit_skills'), 403);
 
        // $this->categories = JobCategory::all();
-        $this->InterviewProcess 	= InterviewProcess::find($id);
+        $this->InterviewProcess 	= InterviewProcess::withoutGlobalScopes()->find($id);
         return view('service_company.interview-process.edit', $this->data);
     }
     
@@ -90,7 +90,7 @@ class ServiceCompanyInterviewProcessController extends ServiceCompanyBaseControl
     {
        // abort_if(Gate::denies('edit_skills'), 403);
 
-        $row 				= InterviewProcess::find($id);
+        $row 				= InterviewProcess::withoutGlobalScopes()->find($id);
         $row->name 			= $request->name;
 		//$row->status 		= $request->status;
         //$skill->category_id = $request->category_id;

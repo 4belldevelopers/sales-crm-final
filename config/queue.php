@@ -43,10 +43,11 @@ return [
             'after_commit' => false,
         ],
         'emails' => [
-            'driver' => 'redis',
-            'table' => 'custom_queue_jobs', // Custom table for emails
-            'queue' => 'default',    // Queue name
-            'retry_after' => 90,     // Retry jobs after 90 seconds
+            'driver'       => 'redis',
+            'table'        => 'custom_queue_jobs',
+            'queue'        => 'default',
+            'retry_after'  => 90,
+            'after_commit' => true, // ADR-V2R-08/13 — prevents ghost-tenant mails on DB rollback
         ],
 
         'beanstalkd' => [

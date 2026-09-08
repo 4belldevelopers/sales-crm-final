@@ -515,20 +515,8 @@ a:hover .ot-comp-change { text-decoration: underline; }
         </table>
     </div>
 
-    {{-- Footer: pagination view already includes "Showing X to Y" info --}}
+    {{-- Footer: pagination view includes info and per-page select --}}
     <div id="ot_pagination"></div>
-    <div class="ot-table-footer" style="border-top:none;padding-top:8px;">
-        <div></div>
-        <div></div>
-        <div class="ot-rows-per">
-            Rows per page:
-            <select class="ot-rows-select" id="ot_size">
-                <option value="10">10</option>
-                <option value="25">25</option>
-                <option value="50">50</option>
-            </select>
-        </div>
-    </div>
     @else
     <div style="padding:40px;text-align:center;color:#ef4444;font-size:13px;font-weight:600;">
         ACCESS DENIED — Contact your administrator
@@ -648,7 +636,7 @@ a:hover .ot-comp-change { text-decoration: underline; }
     /* ── state ── */
     var state = {
         page    : 1,
-        size    : 10,
+        size    : parseInt(localStorage.getItem('candidatePerPage'), 10) || 10,
         search  : '',
         country : '',
         sort    : '',
@@ -671,6 +659,7 @@ a:hover .ot-comp-change { text-decoration: underline; }
             data : {
                 status_cus       : 5,
                 size             : state.size,
+                per_page         : state.size,
                 cus_search       : state.search,
                 country          : state.country,
                 sortingfilter    : state.sort,
@@ -792,9 +781,15 @@ a:hover .ot-comp-change { text-decoration: underline; }
         });
     });
 
-    document.getElementById('ot_size').addEventListener('change', function () {
-        state.size = parseInt(this.value, 10);
-        fetchTable(true);
+    document.getElementById('ot_pagination').addEventListener('change', function (e) {
+        if (e.target.classList.contains('pagi-perpage')) {
+            var selectedPerPage = parseInt(e.target.value, 10);
+            if (selectedPerPage) {
+                state.size = selectedPerPage;
+                localStorage.setItem('candidatePerPage', selectedPerPage);
+                fetchTable(true);
+            }
+        }
     });
 
     /* Offers Pipeline date window (this month / last 6 months / all time) */

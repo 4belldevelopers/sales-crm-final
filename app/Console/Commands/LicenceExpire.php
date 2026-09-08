@@ -71,7 +71,7 @@ class LicenceExpire extends Command
         // Set default package for license expired companies.
         if($activePackageBefore){
             foreach($activePackageBefore as $package){
-                $company = Company::findOrFail($package->company_id);
+                $company = Company::withoutGlobalScopes()->findOrFail($package->company_id);
                 if($company->company_email){
                     $companyUser = User::join('role_user', 'role_user.user_id', '=', 'users.id')
                         ->join('roles', 'roles.id', '=', 'role_user.role_id')
@@ -86,7 +86,7 @@ class LicenceExpire extends Command
         // Set default package for license expired companies.
         if($activePackageAfter){
             foreach($activePackageAfter as $package){
-                $company = Company::findOrFail($package->company_id);
+                $company = Company::withoutGlobalScopes()->findOrFail($package->company_id);
                 if($company->company_email){
                     $companyUser = User::join('role_user', 'role_user.user_id', '=', 'users.id')
                         ->join('roles', 'roles.id', '=', 'role_user.role_id')

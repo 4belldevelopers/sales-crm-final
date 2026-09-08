@@ -1,4 +1,5 @@
 <?php
+
 // Intent: master feature-flag registry for JERO incremental rollouts.
 // All flags default to false — safe to deploy before the feature is live.
 // Usage: config('feature.<flag_name>')
@@ -20,6 +21,47 @@ return [
     |   agency_drawer:{company_id}:{job_id}:{page}
     |--------------------------------------------------------------------------
     */
-    'use_three_drawers_v3' => (bool) env('FEATURE_THREE_DRAWERS_V3', false),
+    /*
+    |--------------------------------------------------------------------------
+    | Account Module V2 Optimization
+    |
+    | When true: uses lazy-loaded tab partials, Redis reference data caching,
+    | and consolidated DB queries for Account Settings V2.
+    |--------------------------------------------------------------------------
+    */
+    'account_v2' => (bool) env('FEATURE_ACCOUNT_V2', true),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Jobs Module V2 Engine
+    |
+    | When true: uses JobService, Redis JobCacheKeys, EnsureIdempotentSubmission,
+    | JobConcurrencyLock, and asynchronous Horizon queue offloading for Jobs module.
+    |--------------------------------------------------------------------------
+    */
+    'jobs_v2_enabled' => (bool) env('FEATURE_JOBS_V2_ENABLED', true),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Talent (Bench Candidates) Module V2 Engine
+    |
+    | Intent: Controls feature activation for Talent V2 optimizations, including
+    | async Elasticsearch sync, bulk skill inserts, Redis cache tags, and backend
+    | idempotency. Defaults to false for zero-impact deployment.
+    |--------------------------------------------------------------------------
+    */
+    'talents_v2_enabled' => (bool) env('FEATURE_TALENTS_V2_ENABLED', false),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Team View More Module V2 Engine
+    |
+    | Intent: Controls feature activation for Team View More V2 optimizations, including
+    | True Tab-Level Lazy Loading, lightweight initial shell, server-side tenant scoping,
+    | Redis Cache::lock stampede protection, and request debouncing.
+    | Defaults to true.
+    |--------------------------------------------------------------------------
+    */
+    'team_viewmore_v2_enabled' => (bool) env('FEATURE_TEAM_VIEWMORE_V2_ENABLED', true),
 
 ];

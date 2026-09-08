@@ -3669,7 +3669,7 @@ var input = document.querySelector('input[name=tags]');
         oLanguage: {
             sLengthMenu: "_MENU_",
         },
-        "pageLength": 25,
+        "pageLength": 10,
         colReorder: true,
         ajax: {
             'url': '{!! route('superadmin.company.all_data') !!}',

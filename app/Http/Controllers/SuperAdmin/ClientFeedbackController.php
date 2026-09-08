@@ -37,7 +37,7 @@ class ClientFeedbackController extends SuperAdminBaseController
         return view('super-admin.feedback.edit', $this->data);
     }
     public function update(StoreClientFeedback $request, $id) {
-        $feedback = ClientFeedback::findOrFail($id);
+        $feedback = ClientFeedback::withoutGlobalScopes()->findOrFail($id);
         $feedback->client_title = $request->client_title;
         $feedback->feedback = $request->feedback;
         $feedback->language_settings_id = $request->language;

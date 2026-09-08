@@ -448,7 +448,7 @@ function loadTable()
 														serverSide		: true,
 														"bFilter"		: false,
 														stateSave		: true,"bInfo": false,
-													   "bLengthChange"	: true,
+													   "bLengthChange"	: false,
 													   oLanguage: {
 														   sLengthMenu	: "_MENU_",
 														},

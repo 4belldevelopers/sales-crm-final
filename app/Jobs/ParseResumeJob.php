@@ -32,7 +32,7 @@ class ParseResumeJob implements ShouldQueue
 
     public function handle(ResumeTextExtractorService $extractor, ResumeParserService $parser): void
     {
-        $record = CandidateResumeUpload::find($this->resumeUploadId);
+        $record = CandidateResumeUpload::withoutGlobalScopes()->find($this->resumeUploadId);
 
         if (!$record) {
             Log::error('ParseResumeJob: record not found', ['id' => $this->resumeUploadId]);

@@ -116,7 +116,7 @@ class LanguageSettingsController extends SuperAdminBaseController
         return view('super-admin.language-settings.edit', $this->data);
     }
     public function update(StoreLanguage $request, $id){
-        $language = LanguageSetting::findOrFail($id);
+        $language = LanguageSetting::withoutGlobalScopes()->findOrFail($id);
 
         if ($language->language_code === 'en') {
             return Reply::error(__('modules.languageSettings.defaultLanguageCannotBeModified'));
@@ -190,7 +190,7 @@ class LanguageSettingsController extends SuperAdminBaseController
         if (!$request->has('status')) {
             $request->request->add(['status' => 'disabled']);
         }
-        $language = LanguageSetting::findOrFail($id);
+        $language = LanguageSetting::withoutGlobalScopes()->findOrFail($id);
 
         $language->status = $request->status;
         if ($request->status == 'disabled' && $language->language_code == $this->global->locale) {

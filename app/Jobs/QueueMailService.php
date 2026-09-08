@@ -2,42 +2,54 @@
 
 namespace App\Jobs;
 
+use App\Services\MailService;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Str;
-use App\Services\MailService;
 
 class QueueMailService implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
     public $email;
+
     public $subject;
+
     public $view;
+
     public $data;
+
     public $attachments;
+
     public $fromAddress;
+
     public $senderName;
+
     public $cc;
+
     public $company_id;
+
+    /**
+     * @var array|string List of Reply-To email addresses for candidate replies.
+     */
+    public $replyTo;
+
     protected $sendMailService;
 
     // Bounded now that failures actually throw (previously they were always silently
     // "successful", so retries never mattered) — avoids looping forever on a permanently
     // bad address once this does start throwing.
     public $tries = 3;
+
     public $backoff = 60;
 
-    /**
-     * Create a new job instance.
-     *
-     * @return void
-     */
-    public function __construct($email,$subject,$view,$data,$attachments,$fromAddress,$senderName,$cc,$company_id)
+    public function __construct($email, $subject, $view, $data, $attachments, $fromAddress, $senderName, $cc, $company_id, $replyTo = [])
     {
+        $this->afterCommit = true;
+        $this->onQueue('mail');
         $this->email = $email;
         $this->subject = $subject;
         $this->view = $view;
@@ -46,7 +58,8 @@ class QueueMailService implements ShouldQueue
         $this->fromAddress = $fromAddress;
         $this->senderName = $senderName;
         $this->cc = $cc;
-        $this->company_id =$company_id;
+        $this->company_id = $company_id;
+        $this->replyTo = $replyTo;
         if (empty($this->uuid)) {
             $this->uuid = (string) Str::uuid();
         }
@@ -67,7 +80,7 @@ class QueueMailService implements ShouldQueue
      */
     public function handle(MailService $sendMailService)
     {
-        $result = $sendMailService->sendEmail($this->email,$this->subject,$this->view, $this->data, $this->attachments, $this->fromAddress,$this->senderName,$this->cc,$this->company_id);
+        $result = $sendMailService->sendEmail($this->email, $this->subject, $this->view, $this->data, $this->attachments, $this->fromAddress, $this->senderName, $this->cc, $this->company_id, $this->replyTo);
         if ($result !== true) {
             throw new \RuntimeException('QueueMailService failed to send to '.$this->email.': '.(is_string($result) ? $result : 'unknown error'));
         }

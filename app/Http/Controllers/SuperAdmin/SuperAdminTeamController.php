@@ -1230,7 +1230,7 @@ class SuperAdminTeamController extends SuperAdminBaseController
 	{
 		
 		    // dd($request->all());
-		    $user 				= User::find($id);
+		    $user 				= User::withoutGlobalScopes()->find($id);
         	$user->name 		= $request->name;
 			$user->mobile       = $request->mobile;
 			$user->email       = $request->email;

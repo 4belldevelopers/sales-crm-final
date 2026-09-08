@@ -49,11 +49,13 @@ window.ResumePresign = (function () {
     // ─── Public API ──────────────────────────────────────────────────────────
 
     /**
-     * Start a fresh upload for the given File object.
+     * Intent: Start a fresh upload for the given File object, scoped to a specific application/job context.
      * Generates a new Idempotency-Key → always a new session (INV-1).
+     * @param {File} file - The file to upload.
+     * @param {string} [contextKey] - Optional tenant/job/application context key (e.g. "comp1_job2_app3").
      * Returns a Promise that resolves with the session object on success.
      */
-    async function startUpload(file) {
+    async function startUpload(file, contextKey) {
         if (_state === STATE.UPLOADING) {
             throw new Error('Upload already in progress');
         }
@@ -69,7 +71,7 @@ window.ResumePresign = (function () {
             const session = await _presign(file, sha256Hex, idempotencyKey);
             _sessionUuid = session.uuid;
             _setSessionUuidGlobal(session.uuid);
-            _persistSession(session.uuid, idempotencyKey);
+            _persistSession(session.uuid, idempotencyKey, contextKey);
 
             await _putToR2(file, session.upload_url);
 
@@ -86,17 +88,18 @@ window.ResumePresign = (function () {
     }
 
     /**
-     * Abort an in-progress upload and reset state.
+     * Intent: Abort an in-progress upload and reset state.
+     * @param {string} [contextKey] - Optional tenant/job/application context key to clear from storage.
      * Safe to call at any time, including when idle.
      */
-    function cancelUpload() {
+    function cancelUpload(contextKey) {
         if (_uploadXHR) {
             _uploadXHR.abort();
             _uploadXHR = null;
         }
         _sessionUuid = null;
         _setSessionUuidGlobal(null);
-        _clearPersistedSession();
+        _clearPersistedSession(contextKey);
         _setState(STATE.CANCELLED, 0);
     }
 
@@ -119,20 +122,17 @@ window.ResumePresign = (function () {
     }
 
     /**
-     * Phase 6 — Recover a previous upload session from localStorage.
-     *
-     * Reads the stored UUID, pings GET /resume/v2/sessions/{uuid}, and restores
-     * UPLOADED state if the file is still in R2. The submit handler can then
-     * claim the session atomically without re-uploading.
-     *
+     * Intent: Phase 6 — Recover a previous upload session from localStorage, ONLY if contextKey matches current job/candidate.
+     * Prevents cross-job/cross-candidate CV association bugs when navigating or using multiple browser tabs.
+     * @param {string} [contextKey] - Tenant/job/application context key (e.g. "comp1_job2_app3").
      * Call once on DOM-ready when the feature flag is ON.
      * Returns the session object on success, or null if nothing to recover.
      */
-    async function recover() {
+    async function recover(contextKey) {
         var storedUuid = null;
-        try { storedUuid = localStorage.getItem('resume_v2_session_uuid'); } catch (_e) {}
+        try { storedUuid = localStorage.getItem(_getStorageKey(contextKey)); } catch (_e) {}
 
-        if (!storedUuid || _sessionUuid) return null;   // nothing stored, or active session
+        if (!storedUuid || _sessionUuid) return null;   // nothing stored for this context, or active session
 
         var baseUrl = window.RESUME_PRESIGN_URL;
         if (!baseUrl) return null;
@@ -149,7 +149,7 @@ window.ResumePresign = (function () {
             });
 
             if (!resp.ok) {
-                _clearPersistedSession();
+                _clearPersistedSession(contextKey);
                 return null;
             }
 
@@ -163,8 +163,8 @@ window.ResumePresign = (function () {
                 return body;
             }
 
-            // Terminal or unknown state — clear stale localStorage entry.
-            _clearPersistedSession();
+            // Terminal or unknown state — clear stale localStorage entry for this context.
+            _clearPersistedSession(contextKey);
             return null;
         } catch (_e) {
             // Network error during recovery check — non-fatal, fresh upload is available.
@@ -366,17 +366,27 @@ window.ResumePresign = (function () {
         if (el) el.value = uuid || '';
     }
 
-    function _persistSession(uuid, key) {
+    function _getStorageKey(contextKey) {
+        var suffix = contextKey ? ('_' + contextKey) : '';
+        return 'resume_v2_session' + suffix;
+    }
+
+    function _getIdempotencyStorageKey(contextKey) {
+        var suffix = contextKey ? ('_' + contextKey) : '';
+        return 'resume_v2_idempotency_key' + suffix;
+    }
+
+    function _persistSession(uuid, key, contextKey) {
         try {
-            localStorage.setItem('resume_v2_session_uuid', uuid);
-            localStorage.setItem('resume_v2_idempotency_key', key);
+            localStorage.setItem(_getStorageKey(contextKey), uuid);
+            localStorage.setItem(_getIdempotencyStorageKey(contextKey), key);
         } catch (_) {}
     }
 
-    function _clearPersistedSession() {
+    function _clearPersistedSession(contextKey) {
         try {
-            localStorage.removeItem('resume_v2_session_uuid');
-            localStorage.removeItem('resume_v2_idempotency_key');
+            localStorage.removeItem(_getStorageKey(contextKey));
+            localStorage.removeItem(_getIdempotencyStorageKey(contextKey));
         } catch (_) {}
     }
 

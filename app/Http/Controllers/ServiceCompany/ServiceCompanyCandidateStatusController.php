@@ -297,7 +297,7 @@ class ServiceCompanyCandidateStatusController extends ServiceCompanyBaseControll
     {
        // abort_if(! $this->user->can('edit_skills'), 403);
 
-       $CandidateStatus 			= CandidateStatus::find($id);
+       $CandidateStatus 			= CandidateStatus::withoutGlobalScopes()->find($id);
 		
 		if(!empty($request->parent)){
 			$CandidateStatus->parent = $request->parent;
