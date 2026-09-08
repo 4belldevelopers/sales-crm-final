@@ -6913,24 +6913,56 @@ async function processClientLightningResume(isBranded,options){
         var pdf=new JsPDF({orientation:'portrait',unit:'pt',format:'a4',compress:true});
         var pageW=pdf.internal.pageSize.getWidth();
         var pageH=pdf.internal.pageSize.getHeight();
+        var isFirstPage=true;
 
         for(var i=0;i<sections.length;i++){
           var sec=sections[i];
+          var rect=sec.getBoundingClientRect();
+          if(!rect.width || rect.width<500 || rect.width>1100){
+            sec.style.width='794px';
+          }
           sec.style.background='#ffffff';
           sec.style.boxShadow='none';
           sec.style.margin='0';
+          sec.style.maxWidth='none';
+
           var cv=await window.html2canvas(sec,{
             backgroundColor:'#ffffff',
             scale:2.0,
             useCORS:true,
             logging:false,
-            removeContainer:false
+            removeContainer:false,
+            windowWidth:Math.ceil(sec.scrollWidth||sec.getBoundingClientRect().width||794),
+            windowHeight:Math.ceil(sec.scrollHeight||sec.getBoundingClientRect().height||1123)
           });
-          if(i>0) pdf.addPage('a4','portrait');
-          var img=cv.toDataURL('image/png');
-          var drawH=cv.height*(pageW/cv.width);
-          pdf.addImage(img,'PNG',0,0,pageW,Math.min(pageH,drawH),undefined,'FAST');
-          cv.width=0; cv.height=0;
+
+          var sliceHeight=Math.max(1,Math.floor(cv.width*(pageH/pageW)));
+          var offsetY=0;
+
+          while(offsetY<cv.height){
+            if(!isFirstPage) pdf.addPage('a4','portrait');
+            var currentHeight=Math.min(sliceHeight,cv.height-offsetY);
+            var slice=document.createElement('canvas');
+            slice.width=cv.width;
+            slice.height=currentHeight;
+            var ctx=slice.getContext('2d');
+            ctx.fillStyle='#ffffff';
+            ctx.fillRect(0,0,slice.width,slice.height);
+            ctx.drawImage(cv,0,offsetY,cv.width,currentHeight,0,0,cv.width,currentHeight);
+
+            var img=slice.toDataURL('image/png');
+            var drawH=currentHeight*(pageW/cv.width);
+            pdf.addImage(img,'PNG',0,0,pageW,drawH,undefined,'FAST');
+
+            offsetY+=currentHeight;
+            isFirstPage=false;
+
+            slice.width=0;
+            slice.height=0;
+          }
+
+          cv.width=0;
+          cv.height=0;
         }
 
         var outputBlob=pdf.output('blob');
