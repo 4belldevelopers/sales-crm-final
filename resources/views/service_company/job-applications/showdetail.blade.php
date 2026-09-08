@@ -5743,6 +5743,8 @@ function openDocNativePdfBlob(doc){
   return null;
 }
 function rsCollectActiveKeywords(){
+  /* Purpose: Comprehensive keyword collection for client-side highlighting:
+     pools matched ATS skills, candidate profile skills, drawer badges, and technical skills */
   var allKeywords=[];
   var seenKw={};
   function addKw(val){
@@ -5755,11 +5757,15 @@ function rsCollectActiveKeywords(){
     seenKw[k]=true;
     allKeywords.push(val);
   }
+  // 1. Matched ATS keywords from drawer
   (Array.isArray(rsDrawerMatchedKeywords) ? rsDrawerMatchedKeywords : []).forEach(addKw);
-  Array.prototype.slice.call(document.querySelectorAll('#kt_activitiesApplication .cdr-skill-tag.cdr-skill-match:not(.cdr-skill-more), .cdr-skill-tag.cdr-skill-match:not(.cdr-skill-more), .cdr-skill-tag:not(.cdr-skill-more)')).forEach(function(el){
+  // 2. All skill badges on candidate drawer
+  Array.prototype.slice.call(document.querySelectorAll('#kt_activitiesApplication .cdr-skill-tag:not(.cdr-skill-more), .cdr-skill-tag:not(.cdr-skill-more)')).forEach(function(el){
     addKw(el.textContent||'');
   });
+  // 3. ATS highlight keywords
   (Array.isArray(rsAtsHighlightKeywords) ? rsAtsHighlightKeywords : []).forEach(addKw);
+  // 4. Candidate skills from application data
   try{
     var rData=readData();
     (Array.isArray(rData.skills) ? rData.skills : []).forEach(addKw);
@@ -5799,60 +5805,99 @@ async function convertResumeWithOpenDocLabBlob(resumeUrl,resumeExt,allowExternal
     if(!pageCount || pageCount<1) throw new Error('OpenDoc produced no pages');
     if(pageCount>maxPages) throw new Error('OpenDoc lab page limit exceeded');
 
-    // Fast pre-filter using doc.copyText: find which keywords actually exist in the resume text
+    // Extract full document text across all pages using copyText
     var allKws=conversionOptions.highlightKeywords||rsCollectActiveKeywords();
-    var keywords=[];
+    var fullDocText='';
     try{
       var pos1=(typeof doc.firstPosition === 'function') ? doc.firstPosition() : null;
       var pos2=(typeof doc.lastPosition === 'function') ? doc.lastPosition() : null;
       if(pos1 && pos2 && typeof doc.copyText === 'function'){
-        var fullDocText=doc.copyText(pos1.node, pos1.offset, pos2.node, pos2.offset).toLowerCase();
-        keywords=allKws.filter(function(k){
-          return k && k.length >= 2 && fullDocText.indexOf(k.toLowerCase()) !== -1;
-        });
+        fullDocText=doc.copyText(pos1.node, pos1.offset, pos2.node, pos2.offset);
       }
       if(pos1 && typeof pos1.free === 'function') pos1.free();
       if(pos2 && typeof pos2.free === 'function') pos2.free();
-    }catch(ctErr){
-      keywords=allKws.slice(0, 15);
+    }catch(ctErr){}
+
+    // Also extract skills directly detected in resume text across all pages (Option 3 engine)
+    if(fullDocText && typeof rsOption3KeywordsFromResumeText==='function'){
+      try{
+        var extractedSkills=rsOption3KeywordsFromResumeText(fullDocText);
+        if(Array.isArray(extractedSkills)){
+          extractedSkills.forEach(function(sk){
+            if(!sk || sk.length<2) return;
+            var skLower=sk.toLowerCase();
+            if(!allKws.some(function(k){ return k.toLowerCase()===skLower; })){
+              allKws.push(sk);
+            }
+          });
+        }
+      }catch(skErr){}
     }
+
+    var lowerDocText=(fullDocText||'').toLowerCase();
+    var keywords=allKws.filter(function(k){
+      if(!k || k.length<2) return false;
+      return lowerDocText ? lowerDocText.indexOf(k.toLowerCase()) !== -1 : true;
+    });
     if(!keywords.length && allKws.length){
-      keywords=allKws.slice(0, 10);
+      keywords=allKws;
     }
-    var pageHighlights={};
+
     if(Array.isArray(keywords) && keywords.length){
-      keywords.forEach(function(kw){
-        if(!kw || typeof kw !== 'string') return;
-        kw=kw.trim();
-        if(kw.length<2) return;
-        try{
-          var first=(typeof doc.firstPosition === 'function') ? doc.firstPosition() : null;
-          if(!first) return;
-          var currNode=first.node;
-          var currOffset=first.offset;
-          if(typeof first.free === 'function') first.free();
+      keywords.forEach(function(rawKw){
+        if(!rawKw || typeof rawKw !== 'string') return;
+        rawKw=rawKw.trim();
+        if(rawKw.length<2) return;
 
-          var maxMatches=40;
-          while(maxMatches-- > 0){
-            var m=doc.findText(kw, currNode, currOffset, true, false);
-            if(!m || !m.found){
-              if(m && typeof m.free === 'function') m.free();
-              break;
-            }
-            var sNode=m.startNode;
-            var sOffset=m.startOffset;
-            var eNode=m.endNode;
-            var eOffset=m.endOffset;
-            if(typeof m.free === 'function') m.free();
+        var kwList=[rawKw];
+        if(/\.js$/i.test(rawKw)){
+          kwList.push(rawKw.replace(/\.js$/i,'js'));
+        }
 
-            if(sNode === eNode && eOffset <= currOffset){
-              currOffset++;
-            }else{
-              currNode=eNode;
-              currOffset=eOffset;
+        kwList.forEach(function(kw){
+          try{
+            var first=(typeof doc.firstPosition === 'function') ? doc.firstPosition() : null;
+            if(!first) return;
+            var currNode=first.node;
+            var currOffset=first.offset;
+            if(typeof first.free === 'function') first.free();
+
+            var visited={};
+            var maxMatches=100;
+            while(maxMatches-- > 0){
+              var m=doc.findText(kw, currNode, currOffset, true, false);
+              if(!m || !m.found){
+                if(m && typeof m.free === 'function') m.free();
+                break;
+              }
+              var sNode=m.startNode;
+              var sOffset=m.startOffset;
+              var eNode=m.endNode;
+              var eOffset=m.endOffset;
+              var visitKey=sNode+':'+sOffset+':'+eNode+':'+eOffset;
+              if(visited[visitKey]){
+                if(typeof m.free === 'function') m.free();
+                break; // Detected wrap-around back to earlier page; finish searching this keyword
+              }
+              visited[visitKey]=true;
+
+              if(typeof doc.setHighlight==='function'){
+                try{
+                  var hRes=doc.setHighlight(sNode,sOffset,eNode,eOffset,'yellow');
+                  if(hRes && typeof hRes.free==='function') hRes.free();
+                }catch(hlErr){}
+              }
+              if(typeof m.free==='function') m.free();
+
+              if(sNode===eNode && eOffset<=currOffset){
+                currOffset++;
+              }else{
+                currNode=eNode;
+                currOffset=eOffset;
+              }
             }
-          }
-        }catch(fErr){}
+          }catch(fErr){}
+        });
       });
     }
 
@@ -5861,30 +5906,38 @@ async function convertResumeWithOpenDocLabBlob(resumeUrl,resumeExt,allowExternal
     if(conversionOptions.requireTextPdf===true) throw new Error('OpenDoc browser safety limit: text PDF export unavailable');
     var renderDpi=conversionOptions.dpi||openDocRenderDpi(pageCount);
     var JsPDF=window.jspdf.jsPDF;
-    var firstSize=openDocPagePoints(doc,0);
-    var pdf=new JsPDF({
-      orientation:firstSize[0]>firstSize[1]?'landscape':'portrait',
-      unit:'pt',
-      format:firstSize,
-      compress:true
-    });
     var usePng=conversionOptions.losslessPng===true;
     var jpegQuality=typeof conversionOptions.jpegQuality==='number' ? conversionOptions.jpegQuality : 0.98;
+    var pdf=null;
     for(var i=0;i<pageCount;i++){
-      var pageSize=openDocPagePoints(doc,i);
-      if(i>0) pdf.addPage(pageSize,pageSize[0]>pageSize[1]?'landscape':'portrait');
       var bitmap=null;
       var canvas=null;
       try{
         bitmap=doc.renderPage(i,renderDpi);
         canvas=openDocCanvasFromBitmap(bitmap);
 
+        /* Intent: Derive exact point dimensions from rendered bitmap to ensure 100% 1:1 aspect ratio,
+           preventing vertical/horizontal stretching and keeping the header banner and layout pixel-perfect. */
+        var pageW=(bitmap.widthPx/renderDpi)*72;
+        var pageH=(bitmap.heightPx/renderDpi)*72;
+
+        if(!pdf){
+          pdf=new JsPDF({
+            orientation:pageW>pageH?'landscape':'portrait',
+            unit:'pt',
+            format:[pageW,pageH],
+            compress:true
+          });
+        }else{
+          pdf.addPage([pageW,pageH],pageW>pageH?'landscape':'portrait');
+        }
+
         if(usePng){
           var pngData=canvas.toDataURL('image/png');
-          pdf.addImage(pngData,'PNG',0,0,pageSize[0],pageSize[1],undefined,'FAST');
+          pdf.addImage(pngData,'PNG',0,0,pageW,pageH,undefined,'FAST');
         }else{
-          var imgData=canvas.toDataURL('image/jpeg', jpegQuality);
-          pdf.addImage(imgData,'JPEG',0,0,pageSize[0],pageSize[1],undefined,'FAST');
+          var imgData=canvas.toDataURL('image/jpeg',jpegQuality);
+          pdf.addImage(imgData,'JPEG',0,0,pageW,pageH,undefined,'FAST');
         }
       }finally{
         if(bitmap && typeof bitmap.free==='function') bitmap.free();
@@ -5894,7 +5947,7 @@ async function convertResumeWithOpenDocLabBlob(resumeUrl,resumeExt,allowExternal
         }
       }
     }
-    return pdf.output('blob');
+    return pdf ? pdf.output('blob') : null;
   }finally{
     if(doc && typeof doc.free==='function') doc.free();
   }
@@ -7253,22 +7306,24 @@ function preloadClientLightningAssets(){
   return Promise.all(tasks).catch(function(){ return null; });
 }
 async function buildTurboPreScreenedHighlightedPackage(resumePdfUrl,options){
-  /* Purpose: Option 27 — Turbo Pre-Screened Report + Resume + Highlights.
-     Uses the high-fidelity vector PDF (cached on R2) to guarantee 100% exact Word header alignment, margins,
-     and crisp vector typography with exact sub-pixel keyword highlights (zero server conversion CPU).
-     If R2 vector PDF is not available, gracefully falls back to browser conversion. */
+  /* Purpose: Option 27 — 100% Pure Client-Side Pre-Screened Package.
+     When DOCX: 100% in-browser conversion via OpenDoc WASM engine (ZERO server-side conversion at any cost).
+     Highlights and rendering execute entirely in browser memory.
+     Pre-Screened Report (pdfMake) and OpenDoc conversion run concurrently in parallel.
+     0.00% server conversion CPU. */
   if(window.__rsBusy) return Promise.resolve(false);
   try{
     options=options||{};
     var data=readData();
 
-    // Run report creation and vector resume highlighting in parallel:
+    // Run report creation and 100% client-side OpenDoc highlighted resume conversion in parallel:
     var results=await Promise.all([
       buildRecruiterSummaryBlob(data,options),
       buildTurboVectorHighlightedResume({
         resumeUrl:options.resumeUrl,
         resumeExt:options.resumeExt,
-        resumePdfUrl:resumePdfUrl,
+        resumePdfUrl:null, // STRICT: 0% server conversion at any cost
+        useOpenDocOnly:true, // Pure client-side OpenDoc WASM only
         returnBlob:true
       })
     ]);
@@ -7277,7 +7332,7 @@ async function buildTurboPreScreenedHighlightedPackage(resumePdfUrl,options){
     var highlightedBlob=results[1];
 
     if(!(reportBlob instanceof Blob)) throw new Error('Pre-Screened Report PDF was not generated');
-    if(!(highlightedBlob instanceof Blob)) throw new Error('Turbo highlighted resume PDF was not generated');
+    if(!(highlightedBlob instanceof Blob)) throw new Error('Client-side highlighted resume PDF was not generated');
 
     window.__rsBusy=true;
     var fileName='JEROWORKS_'+fileSafeName(data.name,'Candidate')+'_Turbo_PreScreened_Highlighted.pdf';
@@ -7929,7 +7984,7 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
         <span class="rdc-ocirc" aria-hidden="true"></span>
       </label>
 
-      {{-- 27: Turbo Pre-Screened Report + Resume + Highlights (Vector Package) --}}
+      {{-- 27: Turbo Pre-Screened Report + Resume + Highlights (OpenDoc Client-Side Package) --}}
       <label class="rdc-opt" data-opt="27" data-coins="8">
         <input class="rdc-rinput" type="radio" name="rdcFormat" value="27">
         <span class="rdc-onum">27</span>
@@ -7937,12 +7992,12 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
         </span>
         <span class="rdc-obody">
-          <span class="rdc-otitle">Turbo Pre-Screened Report + Resume + Highlights <span style="background:#fce7f3;color:#9d174d;font-size:8.5px;font-weight:700;padding:1px 6px;border-radius:4px;vertical-align:middle;margin-left:4px;">Turbo Vector</span></span>
-          <span class="rdc-odesc">Instant pre-screened report + keyword highlights (~250ms, perfect alignment, crisp vector typography)</span>
+          <span class="rdc-otitle">Turbo Pre-Screened Report + Resume + Highlights <span style="background:#fce7f3;color:#9d174d;font-size:8.5px;font-weight:700;padding:1px 6px;border-radius:4px;vertical-align:middle;margin-left:4px;">OpenDoc Client-Side</span></span>
+          <span class="rdc-odesc">100% client-side conversion (OpenDoc WASM) + Pre-Screened Report + Highlights (Zero server conversion)</span>
         </span>
         <span class="rdc-ometa">
           <span class="rdc-ocost">8 Coins</span>
-          <span class="rdc-otime">Instant</span>
+          <span class="rdc-otime">Fast</span>
         </span>
         <span class="rdc-ocirc" aria-hidden="true"></span>
       </label>
@@ -8668,7 +8723,7 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
           showToast(m.unavailableMsg || 'Turbo Pre-Screened Package is available for PDF, DOC and DOCX resumes only.', 'warn');
           resetBtn(); return;
         }
-        if(['PDF','DOCX'].indexOf(resumeExt) !== -1 && !r2DirectUrl && !r2PublicUrl && !dlUrl && !resumePdfUrl){
+        if(['PDF','DOCX'].indexOf(resumeExt) !== -1 && !r2DirectUrl && !r2PublicUrl && !dlUrl){
           showToast('Resume URL is not available.', 'warn');
           resetBtn(); return;
         }
@@ -8678,7 +8733,7 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
         }
         runSmartCountdown('Downloading Resume.... Kindly wait', 60);
         setTimeout(function(){
-          window.__buildTurboPreScreenedHighlightedPackage(resumePdfUrl,{
+          window.__buildTurboPreScreenedHighlightedPackage(null,{
             resumeUrl:[r2DirectUrl,r2PublicUrl,dlUrl],
             resumeExt:resumeExt
           }).then(function(ok){
