@@ -8480,8 +8480,7 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
 
   function markDownloadStarted(){
     if(!isLoading || !dlBtn) return;
-    stopSmartCountdown();
-    dlBtn.innerHTML = '<span class="rdc-spin"></span><span>Download started...</span>';
+    resetBtn();
   }
 
   window.addEventListener('rdc:download-started', markDownloadStarted);
