@@ -50,28 +50,33 @@
                     } else {
                         $bgTextDecore = 'fs-3 bg-light-secondary text-dark';
                     }
+                    $duplicate = $row->duplicate ?? 0;
+                    $flag = 0;
+                    if ($duplicate == 1) {
+                        $flag = $duplicate;
+                    }
+
                     echo '<div class="symbol symbol-circle symbol-40px overflow-hidden me-2 border-radius-5" style="float:left">
                     <a href="javascript:void(0);" data-row-id="' .
                         $row->id .
-                        '" class="custom-show-application-detail">
-                      <div class="symbol-label fs-3 ' .
-                        $bgTextDecore .
-                        ' text-warning border-radius-5">' .
+                        '" class="custom-show-application-detail ' . ($flag == 1 ? 'btn btn-icon btn-light-danger pulse pulse-danger': '') . '">
+                      <div class="' . ($flag == 1 ? 'btn btn-icon btn-light-danger mr-5' : 'symbol-label fs-3 ' . $bgTextDecore . ' text-warning border-radius-5') . '">' .
                         ucwords($strVal) .
                         '</div>
+                      <span class="pulse-ring"></span>
                     </a>
                   </div>
                   <div class="d-flex flex-column">
                     <a href="javascript:void(0);" data-row-id="' .
                         $row->wiseId .
-                        '" class="text-dark fw-bolder text-hover-primary fs-6 custom-show-application-detail" data-toggle="tooltip" title="' .
+                        '" class="' . ($flag == 1 ? 'text-danger' : 'text-dark') . ' fw-bolder text-hover-primary fs-6 custom-show-application-detail" data-toggle="tooltip" title="' .
                         ucwords(@$row->full_name) .
                         '">' .
                         ucwords(mb_substr(@$row->full_name, 0, 20)) .
                         '</a> 
                     <a href="javascript:void(0);" data-row-id="' .
                         $row->wiseId .
-                        '"  class="text-muted fw-bold d-block fs-7 text-hover-primary custom-show-application-detail" data-toggle="tooltip" title="' .
+                        '"  class="' . ($flag == 1 ? 'text-danger' : 'text-muted') . ' fw-bold d-block fs-7 text-hover-primary custom-show-application-detail" data-toggle="tooltip" title="' .
                         ucwords(@$row->current_designation) .
                         '">' .
                         ucwords(mb_substr(@$row->current_designation, 0, 20)) .
