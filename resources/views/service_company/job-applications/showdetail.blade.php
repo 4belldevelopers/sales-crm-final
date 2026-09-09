@@ -6086,9 +6086,8 @@ function fileSafeName(value,fallback){
   return clean(value,fallback || 'Candidate').replace(/[\\/:*?"<>|]+/g,' ').replace(/\s+/g,' ').trim() || (fallback || 'Candidate');
 }
 function resumeTrackingFileName(data,marker,ext){
-  marker=(String(marker||'C').toUpperCase()==='S') ? 'S' : 'C';
   ext=clean(ext||'pdf','pdf').toLowerCase().replace(/[^a-z0-9]+/g,'') || 'pdf';
-  return 'JEROWORKS_'+fileSafeName(data && data.name,'Candidate')+'_'+marker+'.'+ext;
+  return 'JEROWORKS_'+fileSafeName(data && data.name,'Candidate')+'.'+ext;
 }
 function preScreenReportFileName(data){
   return 'PRESCREEN_REPORT_'+fileSafeName(data && data.name,'Candidate')+'.pdf';
@@ -8284,7 +8283,7 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
         return resumeTrackingFileName(readData(), 'C', ext);
       }
     } catch(ex) {}
-    return 'JEROWORKS_Candidate_C.' + ext;
+    return 'JEROWORKS_Candidate.' + ext;
   }
 
   function startOriginalResumeDownload(options){
@@ -8333,7 +8332,7 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
   }
 
   var optMeta = {
-    1: {cost:1, label:'Download Original Resume',       avail:hasResume && !!(originalR2PublicUrl || originalR2DirectUrl || dlUrl),  dlKey:null, unavailableMsg:'Original resume is not available for download.'},
+    1: {cost:1, label:'Download Resume',       avail:hasResume && !!(originalR2PublicUrl || originalR2DirectUrl || dlUrl),  dlKey:null, unavailableMsg:'Original resume is not available for download.'},
     3: {cost:4, label:'Download ATS Highlighted Resume',avail:true,  dlKey:'hl'},
     4: {cost:6, label:'Download Branded + Highlighted', avail:true,  dlKey:'both'},
     5: {cost:7, label:'Download Pre-Screened Report',   avail:true,  dlKey:'rs'},
@@ -8653,6 +8652,7 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
   function markDownloadStarted(){
     if(!dlBtn) return;
     resetBtn();
+    closeRdc();
   }
 
   window.__rdcCompleteDownloadUi = markDownloadStarted;
@@ -8680,7 +8680,7 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
           showToast('Original resume is not available for download.', 'warn');
           resetBtn(); return;
         }
-        dlBtn.innerHTML = '<span class="rdc-spin"></span><span>Starting direct R2 download...</span>';
+        dlBtn.innerHTML = '<span class="rdc-spin"></span><span>Download Resume</span>';
         try {
           var ok = startOriginalResumeDownload({
           originalR2PublicUrl:originalR2PublicUrl,

@@ -1724,7 +1724,7 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
     public function resumeR2DownloadUrl(Request $request, $id)
     {
         // TENANCY NOTE: same company guard as resumeAsPdf to avoid cross-tenant URL minting.
-        $query = DB::table('job_applications')->select('id', 'company_id', 'resume')->where('id', $id);
+        $query = DB::table('job_applications')->select('id', 'company_id', 'full_name', 'resume')->where('id', $id);
         if (auth()->check() && ! auth()->user()->is_superadmin && auth()->user()->company_id) {
             $query->where('company_id', auth()->user()->company_id);
         }
@@ -1747,14 +1747,14 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
         }
 
         $resolvedKey = $r2Key;
-        $downloadName = str_replace('"', '', basename($resolvedKey));
+        $downloadName = $this->resumeCenterDownloadName((string) ($app->full_name ?? ''), $resolvedKey);
 
         if (in_array(strtolower(pathinfo($resolvedKey, PATHINFO_EXTENSION)), ['htm', 'html'])) {
             try {
                 $fallbackKey = preg_replace('/\.[^.\/]+$/', '.pdf', $resolvedKey);
                 if ($fallbackKey !== $resolvedKey && Storage::disk('r2')->exists($fallbackKey)) {
                     $resolvedKey = $fallbackKey;
-                    $downloadName = str_replace('"', '', basename($resolvedKey));
+                    $downloadName = $this->resumeCenterDownloadName((string) ($app->full_name ?? ''), $resolvedKey);
                 }
             } catch (\Throwable $e) {
                 Log::warning('R2 original resume fallback check error', ['application_id' => $id, 'error' => $e->getMessage()]);
@@ -1762,7 +1762,7 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
         }
 
         $publicUrl = 'https://file.jero.works/'.$r2Key;
-        $originalDirectUrl = $this->temporaryR2Url($r2Key, str_replace('"', '', basename($r2Key)));
+        $originalDirectUrl = $this->temporaryR2Url($r2Key, $this->resumeCenterDownloadName((string) ($app->full_name ?? ''), $r2Key));
         $resolvedPublicUrl = 'https://file.jero.works/'.$resolvedKey;
         $resolvedDirectUrl = $this->temporaryR2Url($resolvedKey, $downloadName);
 
@@ -1779,6 +1779,22 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
             'original_r2_available' => true,
             'download_url' => $resolvedDirectUrl,
         ])->header('Cache-Control', 'no-store, max-age=0');
+    }
+
+    /**
+     * Intent: Keep Resume Center direct-R2 downloads named for the candidate while
+     * leaving the stored object key and billing/download decisions unchanged.
+     */
+    private function resumeCenterDownloadName(string $candidateName, string $r2Key): string
+    {
+        $name = preg_replace('/[\\\\\/:*?"<>|]+/', ' ', $candidateName);
+        $name = trim((string) preg_replace('/\s+/', ' ', (string) $name));
+        $ext = strtolower(pathinfo($r2Key, PATHINFO_EXTENSION));
+        if ($ext === '') {
+            $ext = 'file';
+        }
+
+        return 'JEROWORKS_'.($name !== '' ? $name : 'Candidate').'.'.$ext;
     }
 
     /**
