@@ -101,11 +101,9 @@ class ServiceCompanyProfileController extends ServiceCompanyBaseController
 		$this->labelsCommoffer = $graphs['labelsCommoffer'];
 		$this->candidateValuesCommoffer = $graphs['candidateValuesCommoffer'];
 		$this->candidateValuesTotaloffer = $graphs['candidateValuesTotaloffer'];
-
-		// Default interview chart placeholders
-		$this->interviewlabelsMonth = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
-		$this->interviewValuesMonth = [0, 0, 0, 0, 0, 0];
-		$this->interviewValuesTotalMonth = 0;
+		$this->interviewlabelsMonth = $graphs['interviewlabelsMonth'] ?? ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
+		$this->interviewValuesMonth = $graphs['interviewValuesMonth'] ?? [0, 0, 0, 0, 0, 0];
+		$this->interviewValuesTotalMonth = $graphs['interviewValuesTotalMonth'] ?? 0;
 		$this->interviewlabels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 		$this->interviewValues = [0, 0, 0, 0, 0, 0, 0];
 		$this->interviewValuesTotal = 0;
@@ -115,9 +113,9 @@ class ServiceCompanyProfileController extends ServiceCompanyBaseController
 		$this->data_list = $listItems['data_list'];
 		$this->total_candidates_join = $listItems['total_candidates_join'];
 		$this->upcomingData = $listItems['upcomingData'];
-		$this->labelsCommjoin = $listItems['labelsCommjoin'] ?? [];
-		$this->candidateValuesCommjoin = $listItems['candidateValuesCommjoin'] ?? [];
-		$this->candidateValuesTotaljoin = $listItems['candidateValuesTotaljoin'] ?? 0;
+		$this->labelsCommjoin = $graphs['labelsCommjoin'] ?? $listItems['labelsCommjoin'] ?? [];
+		$this->candidateValuesCommjoin = $graphs['candidateValuesCommjoin'] ?? $listItems['candidateValuesCommjoin'] ?? [];
+		$this->candidateValuesTotaljoin = $graphs['candidateValuesTotaljoin'] ?? $listItems['candidateValuesTotaljoin'] ?? 0;
 
 		$this->startOfMonth = Carbon::now()->startOfMonth()->subMonths(3);
 		$this->endOfMonth = Carbon::now()->endOfMonth();

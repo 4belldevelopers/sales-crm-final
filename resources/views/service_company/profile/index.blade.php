@@ -2200,8 +2200,8 @@ body
           var off=document.getElementById('sdb_offer'); if(!off || off.offsetParent===null) return;
           __sdbDone=true;
           sdbArea(off.getContext('2d'),'#f59e0b',{!! json_encode($labelsCommoffer) !!},{!! json_encode($candidateValuesCommoffer) !!});
-          var jn=document.getElementById('sdb_join'); if(jn) sdbArea(jn.getContext('2d'),'#16a34a',{!! json_encode($labelsCommjoin) !!},{!! json_encode($candidateValuesCommjoin) !!});
-          var iv=document.getElementById('sdb_interview'); if(iv) sdbArea(iv.getContext('2d'),'#7c4dff',{!! json_encode($interviewlabelsMonth) !!},{!! json_encode($interviewValuesMonth) !!});
+          var jn=document.getElementById('sdb_join'); if(jn) window.sdbJoinChart = sdbArea(jn.getContext('2d'),'#16a34a',{!! json_encode($labelsCommjoin) !!},{!! json_encode($candidateValuesCommjoin) !!});
+          var iv=document.getElementById('sdb_interview'); if(iv) window.sdbInterviewChart = sdbArea(iv.getContext('2d'),'#7c4dff',{!! json_encode($interviewlabelsMonth) !!},{!! json_encode($interviewValuesMonth) !!});
           var cn=document.getElementById('sdb_candidates'); if(cn) sdbBar(cn.getContext('2d'),'#2196f3',{!! json_encode($labels) !!},{!! json_encode($candidateValues) !!});
         }
         document.addEventListener('click',function(e){var a=e.target.closest('a[href="#candidateDashboard"]');if(a)setTimeout(drawSdb,60);});
@@ -3296,63 +3296,68 @@ $(document).ready(function() {
 
   ProfileTabManager.init();
 
-    $(document).off('click.profilePaginate', '#paginationTeamtjobs .page-link').on('click.profilePaginate', '#paginationTeamtjobs .page-link', function(e) {
+    // Tab Pagination Event Delegation: Bind click events to rendered pagination buttons (.pagi-page, .pagi-arrow, .page-link, .team-page-link)
+    $(document).off('click.profilePaginate', '#paginationTeamtjobs .pagi-page, #paginationTeamtjobs .pagi-arrow, #paginationTeamtjobs .page-link, #paginationTeamtjobs .team-page-link')
+               .on('click.profilePaginate', '#paginationTeamtjobs .pagi-page, #paginationTeamtjobs .pagi-arrow, #paginationTeamtjobs .page-link, #paginationTeamtjobs .team-page-link', function(e) {
             e.preventDefault();
 
             const page = $(this).data('page');
-            if (!page || $(this).hasClass('disabled')) return;
+            if (!page || $(this).hasClass('disabled') || $(this).hasClass('pagi-disabled') || $(this).hasClass('pagi-active')) return;
 
-            $(this).addClass('disabled');
+            $(this).addClass('disabled pagi-disabled');
 
-            fetchTeamJobs(page, $('#search').val()).then(() => {
-                $('#paginationTeamtjobs .page-link').removeClass('disabled');
+            fetchTeamJobs(page).then(() => {
+                $('#paginationTeamtjobs .pagi-page, #paginationTeamtjobs .pagi-arrow, #paginationTeamtjobs .page-link, #paginationTeamtjobs .team-page-link').removeClass('disabled pagi-disabled');
             }).catch(() => {
-                $('#paginationTeamtjobs .page-link').removeClass('disabled');
+                $('#paginationTeamtjobs .pagi-page, #paginationTeamtjobs .pagi-arrow, #paginationTeamtjobs .page-link, #paginationTeamtjobs .team-page-link').removeClass('disabled pagi-disabled');
             });
     });
 
-    $(document).off('click.profilePaginate', '#paginationTeamtCandidates .page-link').on('click.profilePaginate', '#paginationTeamtCandidates .page-link', function(e) {
+    $(document).off('click.profilePaginate', '#paginationTeamtCandidates .pagi-page, #paginationTeamtCandidates .pagi-arrow, #paginationTeamtCandidates .page-link, #paginationTeamtCandidates .team-page-link')
+               .on('click.profilePaginate', '#paginationTeamtCandidates .pagi-page, #paginationTeamtCandidates .pagi-arrow, #paginationTeamtCandidates .page-link, #paginationTeamtCandidates .team-page-link', function(e) {
             e.preventDefault();
 
             const page = $(this).data('page');
-            if (!page || $(this).hasClass('disabled')) return;
+            if (!page || $(this).hasClass('disabled') || $(this).hasClass('pagi-disabled') || $(this).hasClass('pagi-active')) return;
 
-            $(this).addClass('disabled');
+            $(this).addClass('disabled pagi-disabled');
 
-            fetchTeamCandidate(page, $('#search').val()).then(() => {
-                $('#paginationTeamtCandidates .page-link').removeClass('disabled');
+            fetchTeamCandidate(page).then(() => {
+                $('#paginationTeamtCandidates .pagi-page, #paginationTeamtCandidates .pagi-arrow, #paginationTeamtCandidates .page-link, #paginationTeamtCandidates .team-page-link').removeClass('disabled pagi-disabled');
             }).catch(() => {
-                $('#paginationTeamtCandidates .page-link').removeClass('disabled');
+                $('#paginationTeamtCandidates .pagi-page, #paginationTeamtCandidates .pagi-arrow, #paginationTeamtCandidates .page-link, #paginationTeamtCandidates .team-page-link').removeClass('disabled pagi-disabled');
             });
     });
 
-    $(document).off('click.profilePaginate', '#paginationteamjoiningjobs .page-link').on('click.profilePaginate', '#paginationteamjoiningjobs .page-link', function(e) {
+    $(document).off('click.profilePaginate', '#paginationteamjoiningjobs .pagi-page, #paginationteamjoiningjobs .pagi-arrow, #paginationteamjoiningjobs .page-link, #paginationteamjoiningjobs .team-page-link')
+               .on('click.profilePaginate', '#paginationteamjoiningjobs .pagi-page, #paginationteamjoiningjobs .pagi-arrow, #paginationteamjoiningjobs .page-link, #paginationteamjoiningjobs .team-page-link', function(e) {
             e.preventDefault();
 
             const page = $(this).data('page');
-            if (!page || $(this).hasClass('disabled')) return;
+            if (!page || $(this).hasClass('disabled') || $(this).hasClass('pagi-disabled') || $(this).hasClass('pagi-active')) return;
 
-            $(this).addClass('disabled');
+            $(this).addClass('disabled pagi-disabled');
 
-            fetchTeamCandidateJoining(page, $('#search').val()).then(() => {
-                $('#paginationteamjoiningjobs .page-link').removeClass('disabled');
+            fetchTeamCandidateJoining(page).then(() => {
+                $('#paginationteamjoiningjobs .pagi-page, #paginationteamjoiningjobs .pagi-arrow, #paginationteamjoiningjobs .page-link, #paginationteamjoiningjobs .team-page-link').removeClass('disabled pagi-disabled');
             }).catch(() => {
-                $('#paginationteamjoiningjobs .page-link').removeClass('disabled');
+                $('#paginationteamjoiningjobs .pagi-page, #paginationteamjoiningjobs .pagi-arrow, #paginationteamjoiningjobs .page-link, #paginationteamjoiningjobs .team-page-link').removeClass('disabled pagi-disabled');
             });
     });
 
-    $(document).off('click.profilePaginate', '#paginationteaminterviewjobs .page-link').on('click.profilePaginate', '#paginationteaminterviewjobs .page-link', function(e) {
+    $(document).off('click.profilePaginate', '#paginationteaminterviewjobs .pagi-page, #paginationteaminterviewjobs .pagi-arrow, #paginationteaminterviewjobs .page-link, #paginationteaminterviewjobs .team-page-link')
+               .on('click.profilePaginate', '#paginationteaminterviewjobs .pagi-page, #paginationteaminterviewjobs .pagi-arrow, #paginationteaminterviewjobs .page-link, #paginationteaminterviewjobs .team-page-link', function(e) {
             e.preventDefault();
 
             const page = $(this).data('page');
-            if (!page || $(this).hasClass('disabled')) return;
+            if (!page || $(this).hasClass('disabled') || $(this).hasClass('pagi-disabled') || $(this).hasClass('pagi-active')) return;
 
-            $(this).addClass('disabled');
+            $(this).addClass('disabled pagi-disabled');
 
-            fetchTeamCandidateInterviewTracker(page, $('#search').val()).then(() => {
-                $('#paginationteaminterviewjobs .page-link').removeClass('disabled');
+            fetchTeamCandidateInterviewTracker(page).then(() => {
+                $('#paginationteaminterviewjobs .pagi-page, #paginationteaminterviewjobs .pagi-arrow, #paginationteaminterviewjobs .page-link, #paginationteaminterviewjobs .team-page-link').removeClass('disabled pagi-disabled');
             }).catch(() => {
-                $('#paginationteaminterviewjobs .page-link').removeClass('disabled');
+                $('#paginationteaminterviewjobs .pagi-page, #paginationteaminterviewjobs .pagi-arrow, #paginationteaminterviewjobs .page-link, #paginationteaminterviewjobs .team-page-link').removeClass('disabled pagi-disabled');
             });
     });
 
@@ -3551,6 +3556,24 @@ function fetchDashboardV2() {
     success: function(resp) {
       var dur = Math.round(performance.now() - t0);
       if (window.__profileTelemetry) window.__profileTelemetry.recordTabLoad('my_dashboard', dur);
+      if (resp && resp.data) {
+        if (resp.data.interviewlabelsMonth && resp.data.interviewValuesMonth) {
+          var iv = document.getElementById('sdb_interview');
+          if (iv && typeof Chart !== 'undefined' && typeof sdbArea === 'function') {
+            var existingIv = (typeof Chart.getChart === 'function') ? Chart.getChart(iv) : window.sdbInterviewChart;
+            if (existingIv) existingIv.destroy();
+            window.sdbInterviewChart = sdbArea(iv.getContext('2d'), '#7c4dff', resp.data.interviewlabelsMonth, resp.data.interviewValuesMonth);
+          }
+        }
+        if (resp.data.labelsCommjoin && resp.data.candidateValuesCommjoin) {
+          var jn = document.getElementById('sdb_join');
+          if (jn && typeof Chart !== 'undefined' && typeof sdbArea === 'function') {
+            var existingJn = (typeof Chart.getChart === 'function') ? Chart.getChart(jn) : window.sdbJoinChart;
+            if (existingJn) existingJn.destroy();
+            window.sdbJoinChart = sdbArea(jn.getContext('2d'), '#16a34a', resp.data.labelsCommjoin, resp.data.candidateValuesCommjoin);
+          }
+        }
+      }
       if (window.ProfileTabManager) window.ProfileTabManager.clearRequest('candidateDashboard');
     },
     error: function() {

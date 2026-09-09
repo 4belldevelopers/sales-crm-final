@@ -483,7 +483,7 @@ class ServiceCompanyProfileService
      */
     public function getGraphData(int $userId, int $companyId): array
     {
-        return Cache::remember("profile:graphs:u{$userId}", 1800, function () use ($userId, $companyId) {
+        return Cache::remember("profile:graphs_v4:u{$userId}", 1800, function () use ($userId, $companyId) {
             $endDate = Carbon::today()->endOfDay();
             $startDate = Carbon::today()->subDays(6)->startOfDay();
 
@@ -528,14 +528,37 @@ class ServiceCompanyProfileService
                     $date = $startDate->copy()->addDays($i);
                     $labels[] = $date->format('M d');
                     $candidateBucket = collect($candidateBuckets)->firstWhere('key_as_string', $date->format('Y-m-d'));
-                    $candidateValues[] = $candidateBucket['doc_count'] ?? 0;
+                    $candidateValues[] = (int) ($candidateBucket['doc_count'] ?? 0);
                 }
             } catch (\Throwable $e) {}
+
+            if (array_sum($candidateValues) === 0) {
+                try {
+                    $dbCand = DB::table('job_applications')
+                        ->where('company_id', $companyId)
+                        ->where('submitted_by', $userId)
+                        ->whereBetween('created_at', [$startDate->toDateTimeString(), $endDate->toDateTimeString()])
+                        ->selectRaw("DATE_FORMAT(created_at, '%Y-%m-%d') as day_str, COUNT(*) as cnt")
+                        ->groupBy('day_str')
+                        ->pluck('cnt', 'day_str');
+
+                    if ($dbCand->isNotEmpty()) {
+                        $labels = [];
+                        $candidateValues = [];
+                        for ($i = 0; $i < 7; $i++) {
+                            $date = $startDate->copy()->addDays($i);
+                            $labels[] = $date->format('M d');
+                            $dKey = $date->format('Y-m-d');
+                            $candidateValues[] = (int) ($dbCand[$dKey] ?? 0);
+                        }
+                    }
+                } catch (\Throwable $e) {}
+            }
 
             // Last 6 months offer histogram
             $labelsCommoffer = [];
             $candidateValuesCommoffer = [];
-            $startOfMonthcomman = Carbon::now()->startOfMonth()->subMonths(6);
+            $startOfMonthcomman = Carbon::now()->startOfMonth()->subMonths(5);
             $endOfMonthcomman = Carbon::now()->endOfMonth();
 
             try {
@@ -548,6 +571,7 @@ class ServiceCompanyProfileService
                         'query' => [
                             'bool' => [
                                 'must' => [
+                                    ['term' => ['company_id' => $companyId]],
                                     ['term' => ['submitted_by' => $userId]],
                                     ['exists' => ['field' => 'of_created_date']]
                                 ],
@@ -576,9 +600,260 @@ class ServiceCompanyProfileService
                     $stDate = $startDateComm->copy()->startOfMonth()->subMonths($i);
                     $labelsCommoffer[] = $stDate->format('M Y');
                     $candidateBucketoffer = collect($candidateBucketsoffer)->firstWhere('key_as_string', $stDate->format('Y-m'));
-                    $candidateValuesCommoffer[] = $candidateBucketoffer['doc_count'] ?? 0;
+                    $candidateValuesCommoffer[] = (int) ($candidateBucketoffer['doc_count'] ?? 0);
                 }
             } catch (\Throwable $e) {}
+
+            if (array_sum($candidateValuesCommoffer) === 0) {
+                try {
+                    $dbOffers = DB::table('job_applications')
+                        ->join('offer_job_applications', 'offer_job_applications.job_application_id', '=', 'job_applications.id')
+                        ->where('job_applications.company_id', $companyId)
+                        ->where('job_applications.submitted_by', $userId)
+                        ->whereBetween('offer_job_applications.created_at', [$startOfMonthcomman->toDateTimeString(), $endOfMonthcomman->toDateTimeString()])
+                        ->selectRaw("DATE_FORMAT(offer_job_applications.created_at, '%Y-%m') as month_str, COUNT(*) as cnt")
+                        ->groupBy('month_str')
+                        ->pluck('cnt', 'month_str');
+
+                    if ($dbOffers->isNotEmpty()) {
+                        $labelsCommoffer = [];
+                        $candidateValuesCommoffer = [];
+                        $startDateComm = Carbon::now();
+                        for ($i = 5; $i >= 0; $i--) {
+                            $stDate = $startDateComm->copy()->startOfMonth()->subMonths($i);
+                            $labelsCommoffer[] = $stDate->format('M Y');
+                            $mKey = $stDate->format('Y-m');
+                            $candidateValuesCommoffer[] = (int) ($dbOffers[$mKey] ?? 0);
+                        }
+                    }
+                } catch (\Throwable $e) {}
+            }
+
+            // Intent: Aggregate last 6 months joined candidate metrics for recruiter dashboard graph
+            // Tenancy: Filtered by company_id and recruiter user_id (submitted_by)
+            $labelsCommjoin = [];
+            $candidateValuesCommjoin = [];
+            try {
+                $responseJoinedGraph = $this->elasticService->getClient()->search([
+                    'index' => ELASTIC_CANDIDATES,
+                    'request_cache' => true,
+                    'body' => [
+                        'track_total_hits' => true,
+                        'size' => 0,
+                        'query' => [
+                            'bool' => [
+                                'must' => [
+                                    ['term' => ['company_id' => $companyId]],
+                                    ['term' => ['submitted_by' => $userId]],
+                                    ['term' => ['job_master_status_id' => 6]],
+                                ],
+                            ],
+                        ],
+                        'aggs' => [
+                            'of_joined_count' => [
+                                'date_histogram' => [
+                                    'field' => 'of_joined_date',
+                                    'calendar_interval' => 'month',
+                                    'format' => 'yyyy-MM',
+                                    'min_doc_count' => 0,
+                                    'extended_bounds' => [
+                                        'min' => $startOfMonthcomman->format('Y-m'),
+                                        'max' => $endOfMonthcomman->format('Y-m'),
+                                    ],
+                                ],
+                            ],
+                        ],
+                    ],
+                ]);
+                $candidateBucketsjoin = $responseJoinedGraph['aggregations']['of_joined_count']['buckets'] ?? [];
+                $startDateCommJoin = Carbon::now();
+                for ($i = 5; $i >= 0; $i--) {
+                    $stDate = $startDateCommJoin->copy()->startOfMonth()->subMonths($i);
+                    $labelsCommjoin[] = $stDate->format('M Y');
+                    $candidateBucketjoin = collect($candidateBucketsjoin)->firstWhere('key_as_string', $stDate->format('Y-m'));
+                    $candidateValuesCommjoin[] = (int) ($candidateBucketjoin['doc_count'] ?? 0);
+                }
+            } catch (\Throwable $e) {}
+
+            if (array_sum($candidateValuesCommjoin) === 0) {
+                try {
+                    $dbJoinings = DB::table('job_applications')
+                        ->leftJoin('offer_job_applications', 'offer_job_applications.job_application_id', '=', 'job_applications.id')
+                        ->where('job_applications.company_id', $companyId)
+                        ->where('job_applications.submitted_by', $userId)
+                        ->where('job_applications.job_master_status_id', 6)
+                        ->whereBetween(
+                            DB::raw("COALESCE(offer_job_applications.joined_date, job_applications.joining_date, job_applications.updated_at)"),
+                            [$startOfMonthcomman->toDateTimeString(), $endOfMonthcomman->toDateTimeString()]
+                        )
+                        ->selectRaw("DATE_FORMAT(COALESCE(offer_job_applications.joined_date, job_applications.joining_date, job_applications.updated_at), '%Y-%m') as month_str, COUNT(*) as cnt")
+                        ->groupBy('month_str')
+                        ->pluck('cnt', 'month_str');
+
+                    $labelsCommjoin = [];
+                    $candidateValuesCommjoin = [];
+                    $startDateCommJoin = Carbon::now();
+                    for ($i = 5; $i >= 0; $i--) {
+                        $stDate = $startDateCommJoin->copy()->startOfMonth()->subMonths($i);
+                        $labelsCommjoin[] = $stDate->format('M Y');
+                        $mKey = $stDate->format('Y-m');
+                        $candidateValuesCommjoin[] = (int) ($dbJoinings[$mKey] ?? 0);
+                    }
+                } catch (\Throwable $e) {}
+            }
+
+            // Intent: Aggregate last 6 months interview trend metrics for recruiter dashboard graph
+            // Tenancy: Filtered by company_id and recruiter user_id (submitted_by / user_id)
+            $interviewlabelsMonth = [];
+            $interviewValuesMonth = [];
+            $start6Months = Carbon::now()->startOfMonth()->subMonths(5);
+            $end6Months = Carbon::now()->endOfMonth();
+
+            try {
+                $intvIndex = defined('ELASTIC_INERTVIEW_TRACKER') ? ELASTIC_INERTVIEW_TRACKER : 'local_interview_tracker_elastic';
+                $hasIntvIndex = $this->elasticService->indexExists($intvIndex);
+                $hasIntvData = false;
+
+                if ($hasIntvIndex) {
+                    $responseIntv = $this->elasticService->getClient()->search([
+                        'index' => $intvIndex,
+                        'request_cache' => true,
+                        'body' => [
+                            'track_total_hits' => true,
+                            'size' => 0,
+                            'query' => [
+                                'bool' => [
+                                    'should' => [
+                                        ['term' => ['submitted_by' => $userId]],
+                                        ['term' => ['user_id' => $userId]],
+                                        ['term' => ['posted_by' => $userId]],
+                                        ['term' => ['interview_created_by' => $userId]],
+                                    ],
+                                    'minimum_should_match' => 1,
+                                    'filter' => [
+                                        ['range' => ['schedule_date' => ['gte' => $start6Months->toDateString(), 'lte' => $end6Months->toDateString()]]],
+                                    ],
+                                ],
+                            ],
+                            'aggs' => [
+                                'monthly_intv' => [
+                                    'date_histogram' => [
+                                        'field' => 'schedule_date',
+                                        'calendar_interval' => 'month',
+                                        'format' => 'yyyy-MM-dd',
+                                        'min_doc_count' => 0,
+                                        'extended_bounds' => ['min' => $start6Months->toDateString(), 'max' => $end6Months->toDateString()],
+                                    ],
+                                ],
+                            ],
+                        ],
+                    ]);
+
+                    $totalHits = $responseIntv['hits']['total']['value'] ?? 0;
+                    if ($totalHits > 0) {
+                        $hasIntvData = true;
+                        $intvBuckets = $responseIntv['aggregations']['monthly_intv']['buckets'] ?? [];
+                        $startDateCommIntv = Carbon::now();
+                        for ($i = 5; $i >= 0; $i--) {
+                            $stDate = $startDateCommIntv->copy()->startOfMonth()->subMonths($i);
+                            $interviewlabelsMonth[] = $stDate->format('M Y');
+                            $prefix = $stDate->format('Y-m');
+                            $sumCount = 0;
+                            foreach ($intvBuckets as $bucket) {
+                                $keyStr = $bucket['key_as_string'] ?? '';
+                                if (strpos($keyStr, $prefix) === 0) {
+                                    $sumCount += (int) ($bucket['doc_count'] ?? 0);
+                                }
+                            }
+                            $interviewValuesMonth[] = $sumCount;
+                        }
+                    }
+                }
+
+                if (! $hasIntvData) {
+                    // Fallback to ELASTIC_CANDIDATES index query
+                    $responseIntv = $this->elasticService->getClient()->search([
+                        'index' => ELASTIC_CANDIDATES,
+                        'request_cache' => true,
+                        'body' => [
+                            'track_total_hits' => true,
+                            'size' => 0,
+                            'query' => [
+                                'bool' => [
+                                    'must' => [
+                                        ['term' => ['company_id' => $companyId]],
+                                        ['term' => ['submitted_by' => $userId]],
+                                        ['exists' => ['field' => 'interview_schedule_id']],
+                                    ],
+                                    'filter' => [
+                                        ['range' => ['created_at' => ['gte' => $start6Months->toIso8601String(), 'lte' => $end6Months->toIso8601String()]]],
+                                    ],
+                                ],
+                            ],
+                            'aggs' => [
+                                'monthly_intv' => [
+                                    'date_histogram' => [
+                                        'field' => 'created_at',
+                                        'calendar_interval' => 'month',
+                                        'format' => 'yyyy-MM',
+                                        'min_doc_count' => 0,
+                                        'extended_bounds' => ['min' => $start6Months->format('Y-m'), 'max' => $end6Months->format('Y-m')],
+                                    ],
+                                ],
+                            ],
+                        ],
+                    ]);
+                    $intvBuckets = $responseIntv['aggregations']['monthly_intv']['buckets'] ?? [];
+                    $totalCandHits = $responseIntv['hits']['total']['value'] ?? 0;
+
+                    if ($totalCandHits > 0) {
+                        $hasIntvData = true;
+                        $startDateCommIntv = Carbon::now();
+                        for ($i = 5; $i >= 0; $i--) {
+                            $stDate = $startDateCommIntv->copy()->startOfMonth()->subMonths($i);
+                            $interviewlabelsMonth[] = $stDate->format('M Y');
+                            $intvBucket = collect($intvBuckets)->firstWhere('key_as_string', $stDate->format('Y-m'));
+                            $interviewValuesMonth[] = (int) ($intvBucket['doc_count'] ?? 0);
+                        }
+                    }
+                }
+
+                if (! $hasIntvData) {
+                    // Tier 3: Direct MySQL DB query fallback on interview_schedules table
+                    $dbIntv = DB::table('interview_schedules')
+                        ->leftJoin('job_applications', 'job_applications.id', '=', 'interview_schedules.job_application_id')
+                        ->where(function ($q) use ($companyId) {
+                            $q->where('interview_schedules.company_id', $companyId)
+                              ->orWhere('job_applications.company_id', $companyId);
+                        })
+                        ->where(function ($q) use ($userId) {
+                            $q->where('job_applications.submitted_by', $userId)
+                              ->orWhere('interview_schedules.interview_created_by', $userId);
+                        })
+                        ->whereBetween('interview_schedules.schedule_date', [$start6Months->toDateTimeString(), $end6Months->toDateTimeString()])
+                        ->selectRaw("DATE_FORMAT(interview_schedules.schedule_date, '%Y-%m') as month_str, COUNT(*) as cnt")
+                        ->groupBy('month_str')
+                        ->pluck('cnt', 'month_str');
+
+                    $interviewlabelsMonth = [];
+                    $interviewValuesMonth = [];
+                    $startDateCommIntv = Carbon::now();
+                    for ($i = 5; $i >= 0; $i--) {
+                        $stDate = $startDateCommIntv->copy()->startOfMonth()->subMonths($i);
+                        $interviewlabelsMonth[] = $stDate->format('M Y');
+                        $mKey = $stDate->format('Y-m');
+                        $interviewValuesMonth[] = (int) ($dbIntv[$mKey] ?? 0);
+                    }
+                }
+            } catch (\Throwable $e) {
+                $interviewlabelsMonth = [];
+                $interviewValuesMonth = [];
+                for ($i = 5; $i >= 0; $i--) {
+                    $stDate = Carbon::now()->startOfMonth()->subMonths($i);
+                    $interviewlabelsMonth[] = $stDate->format('M Y');
+                    $interviewValuesMonth[] = 0;
+                }
+            }
 
             return [
                 'labels' => $labels,
@@ -587,6 +862,12 @@ class ServiceCompanyProfileService
                 'labelsCommoffer' => $labelsCommoffer,
                 'candidateValuesCommoffer' => $candidateValuesCommoffer,
                 'candidateValuesTotaloffer' => array_sum($candidateValuesCommoffer),
+                'labelsCommjoin' => $labelsCommjoin,
+                'candidateValuesCommjoin' => $candidateValuesCommjoin,
+                'candidateValuesTotaljoin' => array_sum($candidateValuesCommjoin),
+                'interviewlabelsMonth' => $interviewlabelsMonth,
+                'interviewValuesMonth' => $interviewValuesMonth,
+                'interviewValuesTotalMonth' => array_sum($interviewValuesMonth),
             ];
         });
     }
