@@ -7410,25 +7410,135 @@ END:VCALENDAR";
                         $targetJobId = $application->jobId ?? ($application->job_id ?? null);
 
                         if (! empty($applicationEmail) || ! empty($applicationPhone)) {
-                            $returnCount = self::checkDuplicateCandidate(
-                                $companyId,
-                                $appDuplicate,
-                                $targetJobId,
-                                $applicationEmail,
-                                $appDuplicateDays,
-                                $applicationPhone
-                            );
+                        $days = (int) ($appDuplicateDays ?? 0);
 
-                            if ($returnCount > 0 || ($application->duplicate ?? 0) == 1) {
+
+                        if (!empty($applicationEmail) || !empty($applicationPhone)) {
+                            $filters = [];
+                            /*
+                            * company_id OR thirdparty_company_id
+                            */
+                            $filters[] = [
+                                'bool' => [
+                                    'should' => [
+                                        [
+                                            'term' => [
+                                                'company_id' => (int) $companyId,
+                                            ],
+                                        ],
+                                        [
+                                            'term' => [
+                                                'thirdparty_company_id' => (int) $companyId,
+                                            ],
+                                        ],
+                                    ],
+                                    'minimum_should_match' => 1,
+                                ],
+                            ];
+
+                            /*
+                            * appDuplicate = 1
+                            * Check duplicate for SAME JOB
+                            *
+                            * appDuplicate = 2
+                            * Check duplicate across ALL JOBS
+                            */
+                            if ((int) $appDuplicate === 1) {
+                                $filters[] = [
+                                    'term' => [
+                                        'jobId' => (int) $targetJobId,
+                                    ],
+                                ];
+                            }
+
+                            /*
+                            * Email OR Phone
+                            *
+                            * Same behavior as:
+                            *
+                            * where('email', $applicationEmail)
+                            * ->orWhere('phone', $applicationPhone)
+                            */
+                            $duplicateFields = [];
+
+                            if (!empty($applicationEmail)) {
+                                $duplicateFields[] = [
+                                    'term' => [
+                                        'email.keyword' => trim($applicationEmail),
+                                    ],
+                                ];
+                            }
+
+                            if (!empty($applicationPhone)) {
+                                $duplicateFields[] = [
+                                    'term' => [
+                                        'phone.keyword' => trim($applicationPhone),
+                                    ],
+                                ];
+                            }
+
+                            if (!empty($duplicateFields)) {
+                                $filters[] = [
+                                    'bool' => [
+                                        'should' => $duplicateFields,
+                                        'minimum_should_match' => 1,
+                                    ],
+                                ];
+                            }
+
+                            /*
+                            * Date condition
+                            *
+                            * MySQL:
+                            *
+                            * created_at >= DATE_SUB(CURDATE(), INTERVAL $days DAY)
+                            */
+                            if ($days > 0) {
+                                $filters[] = [
+                                    'range' => [
+                                        'created_at' => [
+                                            'gte' => "now-{$days}d/d",
+                                        ],
+                                    ],
+                                ];
+                            }
+
+                            /*
+                            * Elasticsearch query
+                            */
+                            $params = [
+                                'index' => ELASTIC_CANDIDATES,
+                                'size' => 1,
+                                'body' => [
+                                    'query' => [
+                                        'bool' => [
+                                            'filter' => $filters,
+                                        ],
+                                    ],
+                                ],
+                            ];
+
+                            /*
+                            * Execute Elasticsearch query
+                            */
+                                $response = $elasticService->getClient()->search($params);
+
+                                /*
+                                * Duplicate count
+                                */
+                                $duplicate = $response['hits']['total']['value'] ?? 0;
+                            }
+                        
+
+                            if ($duplicate > 0 || ($application->duplicate ?? 0) == 1) {
                                 $duplicate = 1;
                             }
                         }
                     }
                 }
-
-                if (($application->duplicate ?? 0) == 1) {
-                    $duplicate = 1;
-                }
+                // if (($application->duplicate ?? 0) == 1) {
+                //     $duplicate = 1;
+                // }
 
                 try {
                     $response = $elasticService->getClient()->update([
