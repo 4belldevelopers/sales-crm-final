@@ -1535,9 +1535,8 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
         }
 
         if ($ext === 'pdf') {
-            // Intent: Resume/CV preview requires readable same-origin PDF bytes
-            // for keyword extraction; direct download links keep using R2 redirects.
-            if (request()->boolean('preview')) {
+            // Intent: Resume/CV preview & client-side highlighter require readable same-origin PDF bytes.
+            if (request()->boolean('preview') || request()->expectsJson() === false) {
                 $r2Key = $this->resumeR2KeyFromValue((string) $resume);
                 try {
                     if ($r2Key !== '' && Storage::disk('r2')->exists($r2Key)) {
@@ -1550,6 +1549,13 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
                     }
                 } catch (\Throwable $e) {
                     Log::warning('R2 resume preview read error', ['error' => $e->getMessage()]);
+                }
+
+                $bytes = $this->fetchResumeBytes($resume, $payload['candidate_id'] ?? null);
+                if ($bytes !== null) {
+                    return response($bytes, 200)
+                        ->header('Content-Type', 'application/pdf')
+                        ->header('Cache-Control', 'private, max-age=300');
                 }
             }
 
@@ -1568,7 +1574,7 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
             if (Storage::disk('r2')->exists($r2CacheKey)) {
                 // Intent: Serve converted preview bytes same-origin so existing
                 // PDF.js keyword highlighting can run on cached DOC/DOCX output.
-                if (request()->boolean('preview')) {
+                if (request()->boolean('preview') || request()->expectsJson() === false) {
                     return Storage::disk('r2')->response(
                         $r2CacheKey,
                         'converted_'.$hash.'.pdf',
@@ -1586,7 +1592,7 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
         if (file_exists($pdfCache) && filesize($pdfCache) > 100) {
             // Intent: Local converter cache is preview-only here; download flows
             // continue through R2 once the converted artifact is uploaded.
-            if (request()->boolean('preview')) {
+            if (request()->boolean('preview') || request()->expectsJson() === false) {
                 return response()->file($pdfCache, [
                     'Content-Type' => 'application/pdf',
                     'Cache-Control' => 'private, max-age=300',
@@ -1599,6 +1605,35 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
                 return redirect()->away($this->temporaryR2Url($r2CacheKey, null));
             } catch (\Throwable $e) {
                 Log::warning('R2 converted PDF cache store error', ['error' => $e->getMessage()]);
+            }
+        }
+
+        // Intent: Synchronous fallback conversion for preview/download requests when
+        // cached PDF is not present yet, ensuring client never receives 202 JSON.
+        $bytes = $this->fetchResumeBytes($resume, $payload['candidate_id'] ?? null);
+        $soffice = $this->sofficeBinary();
+        if ($bytes !== null && $soffice) {
+            $srcFile = $cacheDir.DIRECTORY_SEPARATOR.$hash.'.'.$ext;
+            file_put_contents($srcFile, $bytes);
+            $profile = 'file:///'.str_replace('\\', '/', $cacheDir.DIRECTORY_SEPARATOR.'lo_'.$hash);
+            $this->runResumePdfConversion($soffice, $profile, $cacheDir, $srcFile);
+            @unlink($srcFile);
+
+            if (file_exists($pdfCache) && filesize($pdfCache) > 100) {
+                try {
+                    Storage::disk('r2')->put($r2CacheKey, file_get_contents($pdfCache));
+                } catch (\Throwable $e) {
+                    Log::warning('R2 converted PDF cache store error', ['error' => $e->getMessage()]);
+                }
+
+                if (request()->boolean('preview') || request()->expectsJson() === false) {
+                    return response()->file($pdfCache, [
+                        'Content-Type' => 'application/pdf',
+                        'Cache-Control' => 'private, max-age=300',
+                    ]);
+                }
+
+                return redirect()->away($this->temporaryR2Url($r2CacheKey, null));
             }
         }
 
