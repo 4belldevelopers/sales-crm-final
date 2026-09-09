@@ -4791,81 +4791,23 @@ function collectOriginalResumeDownloadSources(resumeUrls){
   return sources;
 }
 async function downloadOriginalResumeFromR2First(options){
-  /* Purpose: Option 1 — 100% direct client download from Cloudflare R2 edge CDN (zero Laravel server streaming, scales to 10k+ concurrent users).
-     Directly fetches the resume via CORS into a Blob from Cloudflare R2 and triggers a clean native download with the candidate's name.
-     Prevents the browser from navigating away or opening raw URLs in the active tab. */
+  /* Purpose: Option 1 hands the browser to R2 immediately. Avoid Blob/CORS fetches here:
+     cross-origin resume reads can stall and keep the Resume Center countdown stuck. */
   options=options||{};
   var resumeExt=clean(options.resumeExt||'FILE','FILE').toUpperCase();
   var fileName=guessResumeDownloadName(resumeExt);
 
-  // Collect direct Cloudflare R2 URLs:
-  var r2Sources=collectOriginalResumeDownloadSources([
-    options.originalR2PublicUrl,
-    options.r2PublicUrl,
+  var directSources=collectOriginalResumeDownloadSources([
+    options.r2DirectUrl,
     options.originalR2DirectUrl,
-    options.r2DirectUrl
+    options.r2RedirectUrl,
+    options.dlUrl,
+    options.r2PublicUrl,
+    options.originalR2PublicUrl
   ]);
 
-  var expandedSources=[];
-  r2Sources.forEach(function(src){
-    if(!src) return;
-    expandedSources.push(src);
-    // If filename on R2 was converted to .pdf or stored without original extension, check .pdf fallback directly on R2
-    if(/\.[a-zA-Z0-9]+$/i.test(src) && !/\.pdf$/i.test(src)){
-      expandedSources.push(src.replace(/\.[a-zA-Z0-9]+$/i, '.pdf'));
-    }
-  });
-
-  var blob=null;
-  var matchedSrc='';
-
-  for(var i=0; i<expandedSources.length; i++){
-    var rawSrc=expandedSources[i];
-    if(!rawSrc) continue;
-    var safeSrc=rawSrc;
-    try{ safeSrc=encodeURI(decodeURI(rawSrc)); }catch(e){}
-
-    try{
-      var ctrl=(typeof AbortController !== 'undefined') ? new AbortController() : null;
-      var timeoutId=ctrl ? setTimeout(function(){ try{ ctrl.abort(); }catch(e){} }, 4000) : null;
-      var fetchOpts={
-        mode:'cors',
-        cache:'force-cache'
-      };
-      if(ctrl) fetchOpts.signal=ctrl.signal;
-
-      var res=await fetch(safeSrc, fetchOpts);
-      if(timeoutId) clearTimeout(timeoutId);
-
-      if(res.ok){
-        var ct=(res.headers.get('content-type')||'').toLowerCase();
-        if(ct.indexOf('text/html')===-1){
-          blob=await res.blob();
-          if(blob && blob.size>0){
-            matchedSrc=safeSrc;
-            break;
-          }
-        }
-      }
-    }catch(err){
-      // Non-blocking catch, continue to next source or fallback
-    }
-  }
-
-  // 1. Pure zero-server R2 path:
-  if(blob && blob.size>0){
-    if(/\.pdf$/i.test(matchedSrc) && !/\.pdf$/i.test(fileName)){
-      fileName=fileName.replace(/\.[^.]+$/, '.pdf');
-    } else if(/\.docx$/i.test(matchedSrc) && !/\.docx$/i.test(fileName)){
-      fileName=fileName.replace(/\.[^.]+$/, '.docx');
-    }
-    downloadBlob(blob, fileName);
-    return true;
-  }
-
-  // 2. Direct anchor click fallback to Cloudflare R2
-  if(expandedSources.length>0){
-    var firstSrc=expandedSources[0];
+  if(directSources.length>0){
+    var firstSrc=directSources[0];
     try{ firstSrc=encodeURI(decodeURI(firstSrc)); }catch(e){}
     var aDirect=document.createElement('a');
     aDirect.href=firstSrc;
@@ -4875,18 +4817,6 @@ async function downloadOriginalResumeFromR2First(options){
     aDirect.click();
     notifyRdcDownloadStarted(fileName);
     setTimeout(function(){ if(aDirect.parentNode) aDirect.parentNode.removeChild(aDirect); }, 1200);
-    return true;
-  }
-
-  // 3. Absolute fallback only if R2 public fetch/link failed (e.g. legacy local server file)
-  if(options.dlUrl){
-    var a=document.createElement('a');
-    a.href=options.dlUrl;
-    a.download=fileName;
-    document.body.appendChild(a);
-    a.click();
-    notifyRdcDownloadStarted(fileName);
-    setTimeout(function(){ if(a.parentNode) a.parentNode.removeChild(a); }, 1200);
     return true;
   }
 
@@ -8443,6 +8373,7 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
       return;
     }
     renderOpenRdc();
+    ensureDownloadCenterR2Urls();
   }
 
   function closeRdc(){
@@ -8670,6 +8601,7 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
           r2PublicUrl:r2PublicUrl,
           originalR2DirectUrl:originalR2DirectUrl,
           r2DirectUrl:r2DirectUrl,
+          r2RedirectUrl:r2SignUrl ? (r2SignUrl + (r2SignUrl.indexOf('?') === -1 ? '?' : '&') + 'redirect=1') : '',
           dlUrl:dlUrl,
           resumeExt:resumeExt
         }).then(function(ok){

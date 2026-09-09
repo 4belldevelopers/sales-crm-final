@@ -1683,7 +1683,7 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
      * Center opens. The app returns metadata only; resume bytes are still served
      * directly by R2 to keep web workers free under high concurrency.
      */
-    public function resumeR2DownloadUrl($id)
+    public function resumeR2DownloadUrl(Request $request, $id)
     {
         // TENANCY NOTE: same company guard as resumeAsPdf to avoid cross-tenant URL minting.
         $query = DB::table('job_applications')->select('id', 'company_id', 'resume')->where('id', $id);
@@ -1708,23 +1708,31 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
             return response()->json(['status' => 'error', 'message' => 'Original resume is not available on R2.'], 404);
         }
 
-        $publicUrl = 'https://file.jero.works/'.$r2Key;
-        $downloadName = str_replace('"', '', basename($r2Key));
-        $originalDirectUrl = $publicUrl;
+        $resolvedKey = $r2Key;
+        $downloadName = str_replace('"', '', basename($resolvedKey));
+
         try {
-            $originalDirectUrl = Storage::disk('r2')->temporaryUrl(
-                $r2Key,
-                now()->addMinutes(15),
-                ['ResponseContentDisposition' => 'attachment; filename="'.$downloadName.'"']
-            );
+            if (! Storage::disk('r2')->exists($resolvedKey)) {
+                $fallbackKey = preg_replace('/\.[^.\/]+$/', '.pdf', $resolvedKey);
+                if ($fallbackKey !== $resolvedKey && Storage::disk('r2')->exists($fallbackKey)) {
+                    $resolvedKey = $fallbackKey;
+                    $downloadName = str_replace('"', '', basename($resolvedKey));
+                } else {
+                    return response()->json(['status' => 'error', 'message' => 'Original resume was not found on R2. Please re-upload the resume.'], 404);
+                }
+            }
         } catch (\Throwable $e) {
-            Log::warning('R2 original resume signed URL error', ['application_id' => $id, 'error' => $e->getMessage()]);
+            Log::warning('R2 original resume existence check error', ['application_id' => $id, 'error' => $e->getMessage()]);
         }
 
-        $resolvedKey = $r2Key;
+        $publicUrl = 'https://file.jero.works/'.$r2Key;
+        $originalDirectUrl = $this->temporaryR2Url($r2Key, str_replace('"', '', basename($r2Key)));
         $resolvedPublicUrl = 'https://file.jero.works/'.$resolvedKey;
-        $resolvedDownloadName = str_replace('"', '', basename($resolvedKey));
-        $resolvedDirectUrl = $originalDirectUrl;
+        $resolvedDirectUrl = $this->temporaryR2Url($resolvedKey, $downloadName);
+
+        if ($request->boolean('redirect')) {
+            return redirect()->away($resolvedDirectUrl);
+        }
 
         return response()->json([
             'status' => 'success',
@@ -1733,6 +1741,7 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
             'original_r2_direct_url' => $originalDirectUrl,
             'original_r2_public_url' => $publicUrl,
             'original_r2_available' => true,
+            'download_url' => $resolvedDirectUrl,
         ])->header('Cache-Control', 'no-store, max-age=0');
     }
 
