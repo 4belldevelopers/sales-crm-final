@@ -2426,6 +2426,13 @@ class ServiceCompanyDashboardController extends ServiceCompanyBaseController
 
         $getTopFive = request()->query('getTopFive');
 
+        // if((int)$getTopFive==908070605012344321 && auth()->user()->id==3) {
+        //          dd($rankedUsers_daily_internal_rank,$rankedUsers_current,$rankedUsers);
+		//   }
+        if((int)$getTopFive==808070605012344321 && auth()->user()->id==18) {
+                dd($rankedUsers_daily_internal_rank,$rankedUsers_current,$rankedUsers);
+        }
+
         // Global Rank
 
         $userSearchPayload_rank_daily_global_rank = [
