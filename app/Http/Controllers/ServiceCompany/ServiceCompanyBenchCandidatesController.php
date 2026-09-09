@@ -1148,7 +1148,7 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
             'candidate_id' => (int) $benchApplication->id,
             'resume' => (string) @$benchApplication->resume,
         ]));
-        $rcvConvertUrl = route('service_company.job-applications.resume-convert', ['token' => $rcvConvertToken]);
+        $rcvConvertUrl = route('service_company.job-applications.resume-convert', ['token' => $rcvConvertToken, 'preview' => 1]);
         $rcvMaskContact = ((int) @$benchApplication->company_id !== (int) $company_id);
 
         $view = view('service_company.partials.resume_cv_viewer', [

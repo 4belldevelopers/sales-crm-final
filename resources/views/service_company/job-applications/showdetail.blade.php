@@ -1040,21 +1040,26 @@
         $rcvIsPdf = ($rcvExt === 'pdf');
         // same-origin URL pdf.js / mammoth can fetch: r2 -> download route, full URL -> direct, relative -> url()
         $rcvFetchUrl = '';
+        $rcvDownloadUrl = '';
         if(!empty($application->resume)){
             $__r = $application->resume;
             if($resumeAwsPath || strpos($__r, 'file.jero.works') !== false){
-                $rcvFetchUrl = route('download.resume', ['id' => $application->id, 'path' => rtrim(strtr(base64_encode($__r), '+/', '-_'), '=')]);
+                $__rcvEncodedPath = rtrim(strtr(base64_encode($__r), '+/', '-_'), '=');
+                $rcvFetchUrl = route('download.resume', ['id' => $application->id, 'path' => $__rcvEncodedPath, 'preview' => 1]);
+                $rcvDownloadUrl = route('download.resume', ['id' => $application->id, 'path' => $__rcvEncodedPath]);
             } elseif(filter_var($__r, FILTER_VALIDATE_URL)){
                 $rcvFetchUrl = $__r;
+                $rcvDownloadUrl = $__r;
             } else {
                 $rcvFetchUrl = url($__r);
+                $rcvDownloadUrl = url($__r);
             }
         }
         $rcvPublicUrl = @$application->resume;
         $rcvFileName  = basename(@$application->resume);
         // doc/docx -> server converts to PDF (LibreOffice, cached) so the full PDF pipeline can render + highlight it
         $rcvConvertUrl = in_array($rcvExt, ['doc','docx'])
-            ? route('service_company.job-applications.resume-as-pdf', ['id' => $application->id])
+            ? route('service_company.job-applications.resume-as-pdf', ['id' => $application->id, 'preview' => 1])
             : '';
         // hide contact/social only for other-company bench candidates
         $rcvMaskContact = (@$application->condidate_type == 'bench_condidate'
@@ -1243,7 +1248,7 @@
                 <span id="rcvHitNav">0/0</span>
                 <button type="button" id="rcvNextHit" title="Next match"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></button>
               </div>
-              <a id="rcvOpenNew" href="{{ $rcvFetchUrl ?: $rcvPublicUrl }}" target="_blank" title="Open in new tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg></a>
+              <a id="rcvOpenNew" href="{{ $rcvDownloadUrl ?: $rcvPublicUrl }}" target="_blank" title="Open in new tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg></a>
               <div class="rcv-dl" id="rcvDl">
                 <button type="button" class="rcv-hl-dl" id="rcvDlToggle">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
@@ -1251,7 +1256,7 @@
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px;"><polyline points="6 9 12 15 18 9"/></svg>
                 </button>
                 <div class="rcv-dl-menu" id="rcvDlMenu">
-                  <a class="rcv-dl-item" href="{{ $rcvFetchUrl ?: $rcvPublicUrl }}" target="_blank">Download Resume</a>
+                  <a class="rcv-dl-item" href="{{ $rcvDownloadUrl ?: $rcvPublicUrl }}" target="_blank">Download Resume</a>
                   <button type="button" class="rcv-dl-item" data-dl="logo">Resume with Company Logo</button>
                   <button type="button" class="rcv-dl-item" data-dl="hl">Resume with Highlighted Keywords</button>
                   <button type="button" class="rcv-dl-item" data-dl="both">Highlighted Keywords + Company Logo</button>
@@ -1652,7 +1657,8 @@
         function withTimeout(promise, ms){
           return Promise.race([ promise, new Promise(function(_,rej){ setTimeout(function(){ rej(new Error('timeout')); }, ms); }) ]);
         }
-        async function renderPdf(url, fallback){
+        async function renderPdf(url, fallback, attempt){
+          attempt = attempt || 0;
           var fail = function(msg){ if(typeof fallback === 'function'){ fallback(); } else { showIframe(msg || 'Showing résumé in preview mode.'); } };
           if(typeof pdfjsLib === 'undefined'){ fail('PDF viewer library not available.'); return; }
           try { var ver = pdfjsLib.version || '2.11.338'; pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/'+ver+'/pdf.worker.min.js'; } catch(e){}
@@ -1660,7 +1666,17 @@
           // Fetch the bytes ourselves — avoids PDF.js range-request/worker hangs and gives clear errors.
           var bytes;
           try {
-            var resp = await withTimeout(fetch(url, { credentials:'include' }), 35000);
+            var resp = await withTimeout(fetch(url, { credentials:'same-origin' }), 35000);
+            if(resp.status === 202){
+              var wait = Math.min(2500 + (attempt * 250), 6000);
+              $id('rcvLoading').style.display = 'block';
+              $id('rcvLoading').textContent = 'Preparing résumé preview…';
+              if(attempt < 40){
+                setTimeout(function(){ renderPdf(url, fallback, attempt + 1); }, wait);
+                return;
+              }
+              throw new Error('conversion-timeout');
+            }
             if(!resp.ok) throw new Error('HTTP '+resp.status);
             var ab = await resp.arrayBuffer();
             bytes = new Uint8Array(ab);
