@@ -1707,13 +1707,24 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
         try {
             $options = [];
             if ($downloadName !== null) {
-                $options['ResponseContentDisposition'] = 'attachment; filename="'.str_replace('"', '', $downloadName).'"';
+                $options['ResponseContentDisposition'] = $this->resumeContentDisposition($downloadName);
             }
 
             return Storage::disk('r2')->temporaryUrl($r2Key, now()->addMinutes(15), $options);
         } catch (\Throwable $e) {
             return 'https://file.jero.works/'.$r2Key;
         }
+    }
+
+    /**
+     * Intent: Provide browser-safe attachment names for R2 downloads, including
+     * candidate names with spaces, without changing stored object keys.
+     */
+    private function resumeContentDisposition(string $downloadName): string
+    {
+        $asciiName = trim(str_replace('"', '', $downloadName)) ?: 'resume.pdf';
+
+        return 'attachment; filename="'.$asciiName.'"; filename*=UTF-8\'\''.rawurlencode($asciiName);
     }
 
     /**
