@@ -8669,37 +8669,38 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
         return;
       }
 
+      if(selectedOpt === 1){
+        /* Original resume: direct R2 browser download only; no loading state because browsers do not expose a reliable download-finished event. */
+        if(!originalR2DirectUrl && !originalR2PublicUrl && !r2PublicUrl && !dlUrl){
+          showToast('Original resume is not available for download.', 'warn');
+          resetBtn(); return;
+        }
+        try {
+          startOriginalResumeDownload({
+            originalR2PublicUrl:originalR2PublicUrl,
+            r2PublicUrl:r2PublicUrl,
+            originalR2DirectUrl:originalR2DirectUrl,
+            r2DirectUrl:r2DirectUrl,
+            r2RedirectUrl:r2SignUrl ? (r2SignUrl + (r2SignUrl.indexOf('?') === -1 ? '?' : '&') + 'redirect=1') : '',
+            dlUrl:dlUrl,
+            resumeExt:resumeExt
+          });
+          resetBtn();
+          closeRdc();
+        } catch(err) {
+          console.error('Original resume R2-first download failed:',err);
+          showToast(err && err.message ? err.message : 'Could not download original resume. Please try again.', 'warn');
+          resetBtn();
+        }
+        return;
+      }
+
       isLoading = true;
       dlBtn.disabled = true;
       dlBtn.classList.add('rdc-loading');
       dlBtn.innerHTML = '<span class="rdc-spin"></span><span>Preparing download…</span>';
 
-      if(selectedOpt === 1){
-        /* Original resume: direct R2 browser download only; Laravel must not stream original resume bytes. */
-        if(!originalR2DirectUrl && !originalR2PublicUrl && !r2PublicUrl && !dlUrl){
-          showToast('Original resume is not available for download.', 'warn');
-          resetBtn(); return;
-        }
-        dlBtn.innerHTML = '<span class="rdc-spin"></span><span>Download Resume</span>';
-        try {
-          var ok = startOriginalResumeDownload({
-          originalR2PublicUrl:originalR2PublicUrl,
-          r2PublicUrl:r2PublicUrl,
-          originalR2DirectUrl:originalR2DirectUrl,
-          r2DirectUrl:r2DirectUrl,
-          r2RedirectUrl:r2SignUrl ? (r2SignUrl + (r2SignUrl.indexOf('?') === -1 ? '?' : '&') + 'redirect=1') : '',
-          dlUrl:dlUrl,
-          resumeExt:resumeExt
-          });
-          if(ok) closeRdc();
-        } catch(err) {
-          console.error('Original resume R2-first download failed:',err);
-          showToast(err && err.message ? err.message : 'Could not download original resume. Please try again.', 'warn');
-        } finally {
-          resetBtn();
-        }
-
-      } else if(m.dlKey === 'rs'){
+      if(m.dlKey === 'rs'){
         /* Option 5: Recruiter Summary — fully client-side vector PDF */
         if(window.__rsBusy || typeof window.__buildRS !== 'function'){
           showToast('Please wait a moment and try again.', 'warn');
