@@ -38,6 +38,11 @@
                         if ($row->thirdparty_company_id > 0) {
                             $profile_sidebar_css = 'client-show-application-detail';
                         }
+                        $duplicate = $row->duplicate ?? 0;
+                        $flag = 0;
+                        if ($duplicate == 1) {
+                            $flag = $duplicate;
+                        }
 
                         echo '<div class="symbol symbol-circle symbol-40px overflow-hidden me-2 border-radius-5"
                                 style="float:left">
@@ -46,19 +51,18 @@
                             '"
                                     class="' .
                             $profile_sidebar_css .
-                            '">
-                                    <div class="symbol-label ' .
-                            @$bgTextDecore .
-                            ' border-radius-5">' .
+                            ' ' . ($flag == 1 ? 'btn btn-icon btn-light-danger pulse pulse-danger': '') . '">
+                                    <div class="' . ($flag == 1 ? 'btn btn-icon btn-light-danger mr-5' : 'symbol-label ' . @$bgTextDecore . ' border-radius-5') . '">' .
                             strtoupper(@$strVal) .
                             '</div>
+                                    <span class="pulse-ring"></span>
                                 </a>
                             </div>
                             <div class="d-flex flex-column">
                                 <a href="javascript:void(0);" data-row-id="' .
                             @$row->wiseId .
                             '"
-                                    class="text-dark fw-bolder text-hover-primary fs-6 ' .
+                                    class="' . ($flag == 1 ? 'text-danger' : 'text-dark') . ' fw-bolder text-hover-primary fs-6 ' .
                             $profile_sidebar_css .
                             '"
                                     data-toggle="tooltip" title="' .
@@ -69,7 +73,7 @@
                                 <a href="javascript:void(0);" data-row-id="' .
                             @$row->wiseId .
                             '"
-                                    class="text-muted fw-bold d-block fs-7 text-hover-primary ' .
+                                    class="' . ($flag == 1 ? 'text-danger' : 'text-muted') . ' fw-bold d-block fs-7 text-hover-primary ' .
                             $profile_sidebar_css .
                             '"
                                     data-toggle="tooltip" title="' .

@@ -197,56 +197,10 @@ class ProductCompanyCvTrackerController extends ProductCompanyBaseController
 					$bgTextDecore = 'fs-3 bg-light-secondary text-dark';
 				}
 
-				$flag = $duplicate = 0;
-				$duplicate = $row->duplicate;
-				$company_id = $this->user->roles[0]->company_id;
-				$app_duplicate = $this->user->company->app_duplicate;
-				$app_duplicate_days = $this->user->company->app_duplicate_days;
-
-				if ($duplicate == 1)											// CHECK RECORD IS DUPLICATE
-				{
-					if (($app_duplicate == 1) || ($app_duplicate == 2)) 		// CHECK SYSTEM MODE SET IN DUPLICATE
-					{
-						if ($app_duplicate == 1)								// CHECK DUPLICATE JOBWISE WITH TIME INTERVAL IN DAYS FOR- 1
-						{
-							$email = $row->email;
-							$phone = $row->phone;
-							$application_cnt = DB::table('job_applications')->select('*');
-							$application_cnt = $application_cnt->where('job_applications.company_id', $company_id);
-							$application_cnt = $application_cnt->where('job_applications.job_id', $row->job_id);
-							$application_cnt = $application_cnt->where('job_applications.email', $row->email);
-							$application_cnt = $application_cnt->orWhere('job_applications.phone', $row->phone);
-							$application_cnt = $application_cnt->where('job_applications.created_at', '>', DB::raw('DATE_SUB(CURDATE(), INTERVAL ' . @$app_duplicate_days . ' DAY)'));
-							$application_cnt = $application_cnt->orderby('job_applications.id', 'DESC');
-							$application_cnt = $application_cnt->count();
-							if ($application_cnt > 1) {
-								$flag = 1;
-							} else {
-								$flag = 0;
-							}
-						} else if ($app_duplicate == 2)						// CHECK DUPLICATE OVERALL SYSTEM WITH TIME INTERVAL IN DAYS FOR- 2		
-						{
-							$application_cnt = DB::table('job_applications');
-							$application_cnt = $application_cnt->select('job_applications.id');
-							$application_cnt = $application_cnt->where('job_applications.company_id', $company_id);
-							$application_cnt = $application_cnt->where('job_applications.email', $row->email);
-							$application_cnt = $application_cnt->orWhere('job_applications.phone', $row->phone);
-							$application_cnt = $application_cnt->where('job_applications.created_at', '>', DB::raw('DATE_SUB(CURDATE(), INTERVAL ' . @$app_duplicate_days . ' DAY)'));
-							$application_cnt = $application_cnt->orderby('job_applications.id', 'DESC');
-							$application_cnt = $application_cnt->count();
-							if ($application_cnt > 1) {
-								$flag = 1;
-							} else {
-								$flag = 0;
-							}
-						} else {
-							$flag = 0;
-						}
-					} else {
-						$flag = 0;
-					}
-				} else {
-					$flag = 0;
+				$duplicate = $row->duplicate ?? 0;
+				$flag = 0;
+				if ($duplicate == 1) {
+					$flag = $duplicate;
 				}
 
 				$profile_sidebar_css = 'show-application-detail';
@@ -276,55 +230,10 @@ class ProductCompanyCvTrackerController extends ProductCompanyBaseController
 			})
 			->editColumn('Contacts', function ($row) {
 
-				$flag = $duplicate = 0;
-				$duplicate = $row->duplicate;
-				$company_id = $this->user->roles[0]->company_id;
-				$app_duplicate = $this->user->company->app_duplicate;
-				$app_duplicate_days = $this->user->company->app_duplicate_days;
-
-				if ($duplicate == 1)										// CHECK RECORD IS DUPLICATE
-				{
-					if (($app_duplicate == 1) || ($app_duplicate == 2)) 		// CHECK SYSTEM MODE SET IN DUPLICATE
-					{
-						if ($app_duplicate == 1)								// CHECK DUPLICATE JOBWISE WITH TIME INTERVAL IN DAYS FOR- 1
-						{
-							$application_cnt = DB::table('job_applications');
-							$application_cnt = $application_cnt->select('*');
-							$application_cnt = $application_cnt->where('company_id', $company_id);
-							$application_cnt = $application_cnt->where('job_id', $row->job_id);
-							$application_cnt = $application_cnt->where('email', $row->email);
-							$application_cnt = $application_cnt->orWhere('phone', $row->phone);
-							$application_cnt = $application_cnt->where('job_applications.created_at', '>', DB::raw('DATE_SUB(CURDATE(), INTERVAL ' . @$app_duplicate_days . ' DAY)'));
-							$application_cnt = $application_cnt->orderby('job_applications.id', 'DESC');
-							$application_cnt = $application_cnt->count();
-							if ($application_cnt > 1) {
-								$flag = 1;
-							} else {
-								$flag = 0;
-							}
-						} else if ($app_duplicate == 2)						// CHECK DUPLICATE OVERALL SYSTEM WITH TIME INTERVAL IN DAYS FOR- 2		
-						{
-							$application_cnt = DB::table('job_applications');
-							$application_cnt = $application_cnt->select('job_applications.id');
-							$application_cnt = $application_cnt->where('company_id', $company_id);
-							$application_cnt = $application_cnt->where('job_applications.email', $row->email);
-							$application_cnt = $application_cnt->orWhere('phone', $row->phone);
-							$application_cnt = $application_cnt->where('job_applications.created_at', '>', DB::raw('DATE_SUB(CURDATE(), INTERVAL ' . @$app_duplicate_days . ' DAY)'));
-							$application_cnt = $application_cnt->orderby('job_applications.id', 'DESC');
-							$application_cnt = $application_cnt->count();
-							if ($application_cnt > 1) {
-								$flag = 1;
-							} else {
-								$flag = 0;
-							}
-						} else {
-							$flag = 0;
-						}
-					} else {
-						$flag = 0;
-					}
-				} else {
-					$flag = 0;
+				$duplicate = $row->duplicate ?? 0;
+				$flag = 0;
+				if ($duplicate == 1) {
+					$flag = $duplicate;
 				}
 
 				$bench_count = DB::table('rec_candidate_assign');

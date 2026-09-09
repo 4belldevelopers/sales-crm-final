@@ -79,68 +79,12 @@
                             $bgTextDecore = 'fs-3 bg-light-secondary text-dark';
                         }
 
+                        $duplicate = $row->duplicate ?? 0;
                         $flag = 0;
-                        $duplicate = 0;
-                        $duplicate = $row->duplicate;
-                        $company_id = auth()->user()->roles[0]->company_id;
-                        $app_duplicate = auth()->user()->company->app_duplicate;
-                        $app_duplicate_days = auth()->user()->company->app_duplicate_days;
-
-                        $covid = '';
                         if ($duplicate == 1) {
-                            // CHECK RECORD IS DUPLICATE
-                            if ($app_duplicate == 1 || $app_duplicate == 2) {
-                                // CHECK SYSTEM MODE SET IN DUPLICATE
-                                if ($app_duplicate == 1) {
-                                    // CHECK DUPLICATE JOBWISE WITH TIME INTERVAL IN DAYS FOR- 1
-                                    $application_cnt = DB::table('job_applications')
-                                        ->select('*')
-                                        ->where('company_id', $company_id)
-                                        ->where('job_id', $row->job_id)
-                                        ->where('email', $row->email)
-                                        ->orWhere('phone', $row->phone)
-                                        ->where(
-                                            'job_applications.created_at',
-                                            '>',
-                                            DB::raw('DATE_SUB(CURDATE(), INTERVAL ' . @$app_duplicate_days . ' DAY)'),
-                                        )
-                                        ->orderby('job_applications.id', 'DESC')
-                                        ->count();
-                                    if ($application_cnt > 1) {
-                                        $flag = 1;
-                                    } else {
-                                        $flag = 0;
-                                    }
-                                } elseif ($app_duplicate == 2) {
-                                    // CHECK DUPLICATE OVERALL SYSTEM WITH TIME INTERVAL IN DAYS FOR- 2
-                                    $application_cnt = DB::table('job_applications')
-                                        ->select('job_applications.id')
-                                        ->where('company_id', $company_id)
-                                        ->where('job_applications.email', $row->email)
-                                        ->orWhere('phone', $row->phone)
-                                        ->where(
-                                            'job_applications.created_at',
-                                            '>',
-                                            DB::raw('DATE_SUB(CURDATE(), INTERVAL ' . @$app_duplicate_days . ' DAY)'),
-                                        )
-                                        //->where('job_applications.duplicate', '=', 1 )
-                                        ->orderby('job_applications.id', 'DESC')
-                                        ->count();
-
-                                    if ($application_cnt > 1) {
-                                        $flag = 1;
-                                    } else {
-                                        $flag = 0;
-                                    }
-                                } else {
-                                    $flag = 0;
-                                }
-                            } else {
-                                $flag = 0;
-                            }
-                        } else {
-                            $flag = 0;
+                            $flag = $duplicate;
                         }
+                        $covid = '';
 
                         $company_id = auth()->user()->company_id;
                         $profile_sidebar_css = 'show-application-detail';
