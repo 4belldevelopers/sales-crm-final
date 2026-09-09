@@ -1589,6 +1589,64 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
     }
 
     /**
+     * Intent: create short-lived R2 download URLs only when the Download Resume
+     * Center opens. The app returns metadata only; resume bytes are still served
+     * directly by R2 to keep web workers free under high concurrency.
+     */
+    public function resumeR2DownloadUrl($id)
+    {
+        // TENANCY NOTE: same company guard as resumeAsPdf to avoid cross-tenant URL minting.
+        $query = DB::table('job_applications')->select('id', 'company_id', 'resume')->where('id', $id);
+        if (auth()->check() && ! auth()->user()->is_superadmin && auth()->user()->company_id) {
+            $query->where('company_id', auth()->user()->company_id);
+        }
+
+        $app = $query->first();
+        if (! $app || empty($app->resume)) {
+            return response()->json(['status' => 'error', 'message' => 'No resume uploaded for this candidate.'], 404);
+        }
+
+        $resume = (string) $app->resume;
+        $r2Key = '';
+        if (strpos($resume, 'https://file.jero.works/') === 0) {
+            $r2Key = ltrim((string) parse_url($resume, PHP_URL_PATH), '/');
+        } elseif (! filter_var($resume, FILTER_VALIDATE_URL)) {
+            $r2Key = ltrim($resume, '/');
+        }
+
+        if ($r2Key === '') {
+            return response()->json(['status' => 'error', 'message' => 'Original resume is not available on R2.'], 404);
+        }
+
+        $publicUrl = 'https://file.jero.works/'.$r2Key;
+        $downloadName = str_replace('"', '', basename($r2Key));
+        $originalDirectUrl = $publicUrl;
+        try {
+            $originalDirectUrl = Storage::disk('r2')->temporaryUrl(
+                $r2Key,
+                now()->addMinutes(15),
+                ['ResponseContentDisposition' => 'attachment; filename="'.$downloadName.'"']
+            );
+        } catch (\Throwable $e) {
+            Log::warning('R2 original resume signed URL error', ['application_id' => $id, 'error' => $e->getMessage()]);
+        }
+
+        $resolvedKey = $r2Key;
+        $resolvedPublicUrl = 'https://file.jero.works/'.$resolvedKey;
+        $resolvedDownloadName = str_replace('"', '', basename($resolvedKey));
+        $resolvedDirectUrl = $originalDirectUrl;
+
+        return response()->json([
+            'status' => 'success',
+            'r2_direct_url' => $resolvedDirectUrl,
+            'r2_public_url' => $resolvedPublicUrl,
+            'original_r2_direct_url' => $originalDirectUrl,
+            'original_r2_public_url' => $publicUrl,
+            'original_r2_available' => true,
+        ])->header('Cache-Control', 'no-store, max-age=0');
+    }
+
+    /**
      * Same-origin proxy for the logged-in company's own logo so it can be embedded
      * into the résumé-banner canvas without CORS taint. No URL param -> no SSRF.
      */

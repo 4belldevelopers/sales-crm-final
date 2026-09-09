@@ -4258,45 +4258,39 @@ setTimeout(() => {
   $rdcDownloadUrl = '';
   $rdcR2DirectUrl = '';
   $rdcR2PublicUrl = '';
+  $rdcOriginalR2DirectUrl = '';
+  $rdcOriginalR2PublicUrl = '';
+  $rdcOriginalR2Available = false;
+  $rdcR2SignUrl = '';
   $rdcResumePdfUrl = '';
   $rdcResumeAvailable = false;
   $rdcResumeRaw = (string)(@$application->resume ?? '');
   if($rdcResumeRaw !== ''){
-    // Option 14 uses this signed URL so the browser fetches DOCX from R2 instead of Laravel streaming it.
+    // Direct R2 key used by browser-first download/conversion options; no extra query.
     $rdcR2Key = '';
     if(strpos($rdcResumeRaw, 'https://file.jero.works/') === 0){
       $rdcR2Key = ltrim((string)parse_url($rdcResumeRaw, PHP_URL_PATH), '/');
-    } elseif($resumeAwsPath && !filter_var($rdcResumeRaw, FILTER_VALIDATE_URL)){
+    } elseif(!filter_var($rdcResumeRaw, FILTER_VALIDATE_URL)){
       $rdcR2Key = ltrim($rdcResumeRaw, '/');
     }
 
     if($rdcR2Key !== ''){
-      try{
-        $rdcR2ResolvedKey = $rdcR2Key;
-        if(!\Illuminate\Support\Facades\Storage::disk('r2')->exists($rdcR2ResolvedKey)){
-          $rdcR2FallbackKey = preg_replace('/\.[^.\/]+$/', '.pdf', $rdcR2ResolvedKey);
-          if($rdcR2FallbackKey !== $rdcR2ResolvedKey && \Illuminate\Support\Facades\Storage::disk('r2')->exists($rdcR2FallbackKey)){
-            $rdcR2ResolvedKey = $rdcR2FallbackKey;
-          } else {
-            $rdcR2ResolvedKey = '';
-          }
-        }
-        if($rdcR2ResolvedKey !== ''){
-          $rdcResumeAvailable = true;
-          $rdcR2Key = $rdcR2ResolvedKey;
-          $rdcDownloadUrl = route('download.resume', ['id' => $application->id, 'path' => rtrim(strtr(base64_encode($rdcR2Key), '+/', '-_'), '=')]);
-          $rdcR2PublicUrl = 'https://file.jero.works/'.$rdcR2Key;
-        }
-      } catch(\Throwable $e) {
-        $rdcResumeAvailable = false;
-        $rdcDownloadUrl = '';
-        $rdcR2PublicUrl = '';
-      }
+      $rdcResumeAvailable = true;
+      $rdcOriginalR2Available = true;
+      $rdcOriginalR2PublicUrl = 'https://file.jero.works/'.$rdcR2Key;
+      $rdcR2PublicUrl = $rdcOriginalR2PublicUrl;
+      $rdcDownloadUrl = route('download.resume', ['id' => $application->id, 'path' => rtrim(strtr(base64_encode($rdcR2Key), '+/', '-_'), '=')]);
+      $rdcR2SignUrl = route('service_company.job-applications.r2-download-url', ['id' => $application->id]);
     } elseif(filter_var($rdcResumeRaw, FILTER_VALIDATE_URL)) {
       $rdcResumeAvailable = true;
       $rdcDownloadUrl = $rdcResumeRaw;
       $rdcR2DirectUrl = strpos($rdcResumeRaw, request()->getSchemeAndHttpHost()) !== 0 ? $rdcResumeRaw : '';
       $rdcR2PublicUrl = $rdcR2DirectUrl;
+      if($rdcR2DirectUrl !== ''){
+        $rdcOriginalR2Available = true;
+        $rdcOriginalR2DirectUrl = $rdcR2DirectUrl;
+        $rdcOriginalR2PublicUrl = $rdcR2PublicUrl;
+      }
     } else {
       $rdcResumeAvailable = true;
       $rdcDownloadUrl = url($rdcResumeRaw);
@@ -4306,25 +4300,16 @@ setTimeout(() => {
       $rdcResumeConvertToken = rtrim(strtr(base64_encode(GeneralMethod::value_encrypt((string) $rdcResumeRaw)), '+/', '-_'), '=');
       $rdcResumePdfUrl = route('service_company.job-applications.resume-convert', ['token' => $rdcResumeConvertToken]);
     }
-
-    if($rdcR2Key !== '' && $rdcResumeAvailable){
-      try{
-        $rdcR2DownloadName = str_replace('"', '', basename($rdcR2Key));
-        $rdcR2DirectUrl = \Illuminate\Support\Facades\Storage::disk('r2')->temporaryUrl(
-          $rdcR2Key,
-          now()->addMinutes(15),
-          ['ResponseContentDisposition' => 'attachment; filename="'.$rdcR2DownloadName.'"']
-        );
-      } catch(\Throwable $e) {
-        $rdcR2DirectUrl = $rdcR2PublicUrl;
-      }
-    }
   }
 @endphp
 <div id="rdcData" hidden
      data-dl-url="{{ $rdcDownloadUrl }}"
      data-r2-direct-url="{{ $rdcR2DirectUrl }}"
      data-r2-public-url="{{ $rdcR2PublicUrl }}"
+     data-original-r2-direct-url="{{ $rdcOriginalR2DirectUrl }}"
+     data-original-r2-public-url="{{ $rdcOriginalR2PublicUrl }}"
+     data-original-r2-available="{{ $rdcOriginalR2Available ? 'true' : 'false' }}"
+     data-r2-sign-url="{{ $rdcR2SignUrl }}"
      data-resume-pdf-url="{{ $rdcResumePdfUrl }}"
      data-has-resume="{{ $rdcResumeAvailable ? 'true' : 'false' }}"
      data-has-aws="{{ $resumeAwsPath ? 'true' : 'false' }}"
@@ -4779,7 +4764,23 @@ function sameOriginUrl(url){
 }
 function guessResumeDownloadName(ext){
   ext=clean(ext,'FILE').toLowerCase().replace(/[^a-z0-9]+/g,'') || 'file';
-  return resumeTrackingFileName(readData(),'C',ext);
+  var data=null;
+  try{ data=readData(); }catch(ex){}
+  if(!data || !data.name || data.name==='--' || data.name==='Candidate'){
+    try{
+      var candNameEl=document.getElementById('rsData') || document.querySelector('[data-candidate-name]');
+      if(candNameEl){
+        var n=candNameEl.getAttribute('data-name') || candNameEl.getAttribute('data-candidate-name') || candNameEl.textContent;
+        if(n) data={name:clean(n,'Candidate')};
+      }
+    }catch(ex){}
+  }
+  try{
+    return resumeTrackingFileName(data,'C',ext);
+  }catch(ex){
+    var candSafe=(data && data.name) ? fileSafeName(data.name,'Candidate') : 'Candidate';
+    return 'JEROWORKS_'+candSafe+'_C.'+ext;
+  }
 }
 function collectOriginalResumeDownloadSources(resumeUrls){
   var sources=(Array.isArray(resumeUrls) ? resumeUrls : [resumeUrls]).map(function(url){
@@ -4790,25 +4791,106 @@ function collectOriginalResumeDownloadSources(resumeUrls){
   return sources;
 }
 async function downloadOriginalResumeFromR2First(options){
-  /* Purpose: option 1 uses the browser's native download path so R2 attachment/signed URLs are not blocked by fetch/CORS rules. */
+  /* Purpose: Option 1 — 100% direct client download from Cloudflare R2 edge CDN (zero Laravel server streaming, scales to 10k+ concurrent users).
+     Directly fetches the resume via CORS into a Blob from Cloudflare R2 and triggers a clean native download with the candidate's name.
+     Prevents the browser from navigating away or opening raw URLs in the active tab. */
   options=options||{};
   var resumeExt=clean(options.resumeExt||'FILE','FILE').toUpperCase();
   var fileName=guessResumeDownloadName(resumeExt);
-  var r2FirstSources=collectOriginalResumeDownloadSources([options.r2DirectUrl,options.r2PublicUrl,options.dlUrl]);
-  if(!r2FirstSources.length) throw new Error('Resume file URL not available');
-  var source=r2FirstSources[0];
-  var a=document.createElement('a');
-  a.href=source;
-  a.download=fileName;
-  a.rel='noopener';
-  if(!sameOriginUrl(source)) a.target='_blank';
-  document.body.appendChild(a);
-  a.click();
-  notifyRdcDownloadStarted(fileName);
-  setTimeout(function(){
-    if(a.parentNode) a.parentNode.removeChild(a);
-  },1200);
-  return true;
+
+  // Collect direct Cloudflare R2 URLs:
+  var r2Sources=collectOriginalResumeDownloadSources([
+    options.originalR2PublicUrl,
+    options.r2PublicUrl,
+    options.originalR2DirectUrl,
+    options.r2DirectUrl
+  ]);
+
+  var expandedSources=[];
+  r2Sources.forEach(function(src){
+    if(!src) return;
+    expandedSources.push(src);
+    // If filename on R2 was converted to .pdf or stored without original extension, check .pdf fallback directly on R2
+    if(/\.[a-zA-Z0-9]+$/i.test(src) && !/\.pdf$/i.test(src)){
+      expandedSources.push(src.replace(/\.[a-zA-Z0-9]+$/i, '.pdf'));
+    }
+  });
+
+  var blob=null;
+  var matchedSrc='';
+
+  for(var i=0; i<expandedSources.length; i++){
+    var rawSrc=expandedSources[i];
+    if(!rawSrc) continue;
+    var safeSrc=rawSrc;
+    try{ safeSrc=encodeURI(decodeURI(rawSrc)); }catch(e){}
+
+    try{
+      var ctrl=(typeof AbortController !== 'undefined') ? new AbortController() : null;
+      var timeoutId=ctrl ? setTimeout(function(){ try{ ctrl.abort(); }catch(e){} }, 4000) : null;
+      var fetchOpts={
+        mode:'cors',
+        cache:'force-cache'
+      };
+      if(ctrl) fetchOpts.signal=ctrl.signal;
+
+      var res=await fetch(safeSrc, fetchOpts);
+      if(timeoutId) clearTimeout(timeoutId);
+
+      if(res.ok){
+        var ct=(res.headers.get('content-type')||'').toLowerCase();
+        if(ct.indexOf('text/html')===-1){
+          blob=await res.blob();
+          if(blob && blob.size>0){
+            matchedSrc=safeSrc;
+            break;
+          }
+        }
+      }
+    }catch(err){
+      // Non-blocking catch, continue to next source or fallback
+    }
+  }
+
+  // 1. Pure zero-server R2 path:
+  if(blob && blob.size>0){
+    if(/\.pdf$/i.test(matchedSrc) && !/\.pdf$/i.test(fileName)){
+      fileName=fileName.replace(/\.[^.]+$/, '.pdf');
+    } else if(/\.docx$/i.test(matchedSrc) && !/\.docx$/i.test(fileName)){
+      fileName=fileName.replace(/\.[^.]+$/, '.docx');
+    }
+    downloadBlob(blob, fileName);
+    return true;
+  }
+
+  // 2. Direct anchor click fallback to Cloudflare R2
+  if(expandedSources.length>0){
+    var firstSrc=expandedSources[0];
+    try{ firstSrc=encodeURI(decodeURI(firstSrc)); }catch(e){}
+    var aDirect=document.createElement('a');
+    aDirect.href=firstSrc;
+    aDirect.download=fileName;
+    aDirect.rel='noopener noreferrer';
+    document.body.appendChild(aDirect);
+    aDirect.click();
+    notifyRdcDownloadStarted(fileName);
+    setTimeout(function(){ if(aDirect.parentNode) aDirect.parentNode.removeChild(aDirect); }, 1200);
+    return true;
+  }
+
+  // 3. Absolute fallback only if R2 public fetch/link failed (e.g. legacy local server file)
+  if(options.dlUrl){
+    var a=document.createElement('a');
+    a.href=options.dlUrl;
+    a.download=fileName;
+    document.body.appendChild(a);
+    a.click();
+    notifyRdcDownloadStarted(fileName);
+    setTimeout(function(){ if(a.parentNode) a.parentNode.removeChild(a); }, 1200);
+    return true;
+  }
+
+  throw new Error('Original resume is not available for download.');
 }
 function removeNode(node){
   if(node && node.parentNode) node.parentNode.removeChild(node);
@@ -8207,25 +8289,36 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
 (function(){
   'use strict';
 
-  var overlay  = document.getElementById('rdcOverlay');
-  var drawer   = document.getElementById('rdcDrawer');
-  var closeBtn = document.getElementById('rdcCloseBtn');
-  var dlBtn    = document.getElementById('rdcDownloadBtn');
-  var btnLbl   = document.getElementById('rdcBtnLabel');
-  var coinEl   = document.getElementById('rdcCoinCost');
-  var toastEl  = document.getElementById('rdcToast');
-  var opts     = document.querySelectorAll('#rdcOptsList .rdc-opt');
-  var rdcData  = document.getElementById('rdcData');
+  function latestById(id){
+    var nodes = document.querySelectorAll('[id="'+id+'"]');
+    return nodes.length ? nodes[nodes.length - 1] : null;
+  }
+
+  var overlay  = latestById('rdcOverlay');
+  var drawer   = latestById('rdcDrawer');
+  var closeBtn = latestById('rdcCloseBtn');
+  var dlBtn    = latestById('rdcDownloadBtn');
+  var btnLbl   = latestById('rdcBtnLabel');
+  var coinEl   = latestById('rdcCoinCost');
+  var toastEl  = latestById('rdcToast');
+  var opts     = drawer ? drawer.querySelectorAll('#rdcOptsList .rdc-opt') : document.querySelectorAll('#rdcOptsList .rdc-opt');
+  var rdcData  = latestById('rdcData');
 
   var dlUrl  = rdcData ? rdcData.getAttribute('data-dl-url')  : '';
   var r2DirectUrl = rdcData ? rdcData.getAttribute('data-r2-direct-url') : '';
   var r2PublicUrl = rdcData ? rdcData.getAttribute('data-r2-public-url') : '';
+  var originalR2DirectUrl = rdcData ? rdcData.getAttribute('data-original-r2-direct-url') : '';
+  var originalR2PublicUrl = rdcData ? rdcData.getAttribute('data-original-r2-public-url') : '';
+  var originalR2Available = rdcData ? rdcData.getAttribute('data-original-r2-available') === 'true' : false;
+  var r2SignUrl = rdcData ? rdcData.getAttribute('data-r2-sign-url') : '';
+  var r2SignPromise = null;
+  var r2SignReady = false;
   var resumePdfUrl = rdcData ? rdcData.getAttribute('data-resume-pdf-url') : '';
   var resumeExt = rdcData ? (rdcData.getAttribute('data-file-ext') || '').toUpperCase() : '';
   var hasResume = rdcData ? rdcData.getAttribute('data-has-resume') === 'true' : false;
 
   var optMeta = {
-    1: {cost:1, label:'Download Original Resume',       avail:true,  dlKey:null},
+    1: {cost:1, label:'Download Original Resume',       avail:hasResume && !!(originalR2PublicUrl || originalR2DirectUrl || dlUrl),  dlKey:null, unavailableMsg:'Original resume is not available for download.'},
     3: {cost:4, label:'Download ATS Highlighted Resume',avail:true,  dlKey:'hl'},
     4: {cost:6, label:'Download Branded + Highlighted', avail:true,  dlKey:'both'},
     5: {cost:7, label:'Download Pre-Screened Report',   avail:true,  dlKey:'rs'},
@@ -8262,6 +8355,50 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
     return hasResume && !!(dlUrl || r2DirectUrl || r2PublicUrl || resumePdfUrl);
   }
 
+  function applyDownloadCenterR2Urls(payload){
+    if(!payload || payload.status !== 'success') return;
+    r2DirectUrl = clean(payload.r2_direct_url || r2DirectUrl, '');
+    r2PublicUrl = clean(payload.r2_public_url || r2PublicUrl, '');
+    originalR2DirectUrl = clean(payload.original_r2_direct_url || originalR2DirectUrl, '');
+    originalR2PublicUrl = clean(payload.original_r2_public_url || originalR2PublicUrl, '');
+    originalR2Available = payload.original_r2_available !== false && !!(originalR2DirectUrl || originalR2PublicUrl);
+    if(rdcData){
+      rdcData.setAttribute('data-r2-direct-url', r2DirectUrl);
+      rdcData.setAttribute('data-r2-public-url', r2PublicUrl);
+      rdcData.setAttribute('data-original-r2-direct-url', originalR2DirectUrl);
+      rdcData.setAttribute('data-original-r2-public-url', originalR2PublicUrl);
+      rdcData.setAttribute('data-original-r2-available', originalR2Available ? 'true' : 'false');
+    }
+    if(optMeta[1]){
+      optMeta[1].avail = originalR2Available && !!(originalR2DirectUrl || originalR2PublicUrl);
+    }
+  }
+
+  function ensureDownloadCenterR2Urls(){
+    /* Purpose: defer R2 signing until the Download Resume Center is opened, keeping candidate drawer render cheap. */
+    if(!r2SignUrl || r2SignReady) return Promise.resolve(true);
+    if(r2SignPromise) return r2SignPromise;
+    r2SignPromise = fetch(r2SignUrl,{
+      method:'GET',
+      credentials:'same-origin',
+      headers:{'Accept':'application/json','X-Requested-With':'XMLHttpRequest'},
+      cache:'no-store'
+    }).then(function(response){
+      if(!response.ok) throw new Error('Could not prepare direct R2 resume download.');
+      return response.json();
+    }).then(function(payload){
+      applyDownloadCenterR2Urls(payload);
+      r2SignReady = true;
+      return true;
+    }).catch(function(err){
+      console.warn('Download Resume Center R2 signing failed:',err);
+      return false;
+    }).finally(function(){
+      r2SignPromise = null;
+    });
+    return r2SignPromise;
+  }
+
   function showNoResumeMessage(){
     showToast('No resume uploaded for this candidate. Please upload the resume first.', 'warn');
   }
@@ -8284,7 +8421,7 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
       });
   }
 
-  function openRdc(){
+  function renderOpenRdc(){
     if(!hasDownloadableResume()){
       showNoResumeMessage();
       return;
@@ -8298,6 +8435,14 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
     if(typeof window.__preloadRS === 'function') window.__preloadRS();
     if(typeof window.__preloadClientLightning === 'function') window.__preloadClientLightning();
     document.addEventListener('keydown', onEsc);
+  }
+
+  function openRdc(){
+    if(!hasDownloadableResume()){
+      showNoResumeMessage();
+      return;
+    }
+    renderOpenRdc();
   }
 
   function closeRdc(){
@@ -8514,14 +8659,16 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
       dlBtn.innerHTML = '<span class="rdc-spin"></span><span>Preparing download…</span>';
 
       if(selectedOpt === 1){
-        /* Original resume: R2/public browser download first; Laravel route is only a compatibility fallback. */
-        if(!r2DirectUrl && !r2PublicUrl && !dlUrl){
-          showToast('Resume file URL not available.', 'warn');
+        /* Original resume: direct R2 browser download only; Laravel must not stream original resume bytes. */
+        if(!originalR2DirectUrl && !originalR2PublicUrl && !r2PublicUrl && !dlUrl){
+          showToast('Original resume is not available for download.', 'warn');
           resetBtn(); return;
         }
         runSmartCountdown('Downloading Resume, Kindly wait.', 60);
         downloadOriginalResumeFromR2First({
+          originalR2PublicUrl:originalR2PublicUrl,
           r2PublicUrl:r2PublicUrl,
+          originalR2DirectUrl:originalR2DirectUrl,
           r2DirectUrl:r2DirectUrl,
           dlUrl:dlUrl,
           resumeExt:resumeExt
