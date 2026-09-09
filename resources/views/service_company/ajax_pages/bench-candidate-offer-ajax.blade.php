@@ -48,21 +48,10 @@
             $duplicateFlag = 0;
             if (isset($rowArr['_prehydrated_duplicate_flag'])) {
                 $duplicateFlag = $rowArr['_prehydrated_duplicate_flag'];
-            } elseif (@$row->duplicate == 1) {
-                $viewerCompanyId = auth()->user()->roles[0]->company_id;
-                $appDuplicate = auth()->user()->company->app_duplicate;
-                $appDuplicateDays = auth()->user()->company->app_duplicate_days;
-                if ($appDuplicate == 1 || $appDuplicate == 2) {
-                    $applicationCount = DB::table('job_applications')
-                        ->select('*')
-                        ->where('company_id', $company_id)
-                        ->when($appDuplicate == 1, fn ($q) => $q->where('job_id', $row->job_id))
-                        ->where('email', $row->email)
-                        ->orWhere('phone', $row->phone)
-                        ->where('job_applications.created_at', '>', DB::raw('DATE_SUB(CURDATE(), INTERVAL ' . (int) $appDuplicateDays . ' DAY)'))
-                        ->orderByDesc('job_applications.id')
-                        ->count();
-                    $duplicateFlag = $applicationCount > 1 ? 1 : 0;
+            } else {
+                $duplicate = $row->duplicate ?? 0;
+                if ($duplicate == 1) {
+                    $duplicateFlag = 1;
                 }
             }
 

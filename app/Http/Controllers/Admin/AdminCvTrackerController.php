@@ -1038,85 +1038,18 @@ Date			:	05-April-2021
 			->editColumn('full_name', function ($row) use($chkAdminRole) 
 			{
 				
-					$duplicate				=	0;
-					$duplicate				=	$row->duplicate;
-					
-					$mstatus_text			=	'';					
-					$company_id				= 	$this->user->roles[0]->company_id;
-					$app_duplicate			=	$this->user->company->app_duplicate;
-					$app_duplicate_days 	=	$this->user->company->app_duplicate_days;
-					
-					if($duplicate	==1)											// CHECK RECORD IS DUPLICATE
-					{
-							if(($app_duplicate == 1)||($app_duplicate == 2)) 		// CHECK SYSTEM MODE SET IN DUPLICATE
-							{
-							
-									if($app_duplicate == 1)							// CHECK DUPLICATE JOBWISE WITH TIME INTERVAL IN DAYS FOR- 1
-									{
-										$application_cnt		= DB::table('job_applications')->select('*')
-																->where('company_id', $company_id )
-																->where('job_id', $row->job_id )
-																->where('email', $row->email )
-																->where('job_applications.created_at', '>', DB::raw('DATE_SUB(CURDATE(), INTERVAL '.@$app_duplicate_days.' DAY)')) 
-																->where('job_applications.duplicate', '=', 1 )
-																->count();
-										if($application_cnt > 0){
-												$mstatus_text	=	'
-												<div class="d-inline-grid">
-													<div class="duplicate-style m-t-1" style="">
-														<div class="tooltip font-weight-500">
-															<span class="d-flex font-weight-700 duplicate-child" style="">.</span>
-															<span class="tooltiptext font-weight-500">Duplicate Appilcant</span>
-														</div>
-													</div>
-													<div class="duplicate-style bg-warning m-t-1" style="">
-														<div class="tooltip font-weight-500">
-															<span class="d-flex font-weight-700 duplicate-child" style="">.</span>
-															<span class="tooltiptext font-weight-500">
-																Assessment Sub Stage - Rejected | Not Intrested
-															</span>
-														</div>
-													</div>
-												</div>';
-										}				
-											
-									}
-									else if($app_duplicate == 2)					
-									// CHECK DUPLICATE OVERALL SYSTEM WITH TIME INTERVAL IN DAYS FOR- 2
-									{
-										$application_cnt		= DB::table('job_applications')->select('job_applications.id')
-																->where('company_id', $company_id)
-																//->where('job_id', $job_id)
-																->where('job_applications.email', $row->email )
-																->where('job_applications.created_at', '>', DB::raw('DATE_SUB(CURDATE(), INTERVAL '.@$app_duplicate_days.' DAY)')) 
-																->where('job_applications.duplicate', '=', 1 )
-																->count();	
-										if($application_cnt > 0)
-										{
-											$mstatus_text	=	'
-												<div class="d-inline-grid">
-													<div class="duplicate-style m-t-1" style="">
-														<div class="tooltip font-weight-500">
-															<span class="d-flex font-weight-700 duplicate-child" style="">D</span>
-															<span class="tooltiptext font-weight-500">Duplicate Appilcant</span>
-														</div>
-													</div>
-													<div class="duplicate-style bg-warning m-t-1" style="">
-														<div class="tooltip font-weight-500">
-															<span class="d-flex font-weight-700 duplicate-child" style="">.</span>
-															<span class="tooltiptext font-weight-500">
-																Assessment Sub Stage - Rejected | Not Intrested
-															</span>
-														</div>
-													</div>
-												</div>';
-										}						
-																
-									}
-									
-									
-									
-							}
+					$duplicate = $row->duplicate ?? 0;
+					$mstatus_text = '';					
+					if ($duplicate == 1) {
+						$mstatus_text = '
+						<div class="d-inline-grid">
+							<div class="duplicate-style m-t-1" style="">
+								<div class="tooltip font-weight-500">
+									<span class="d-flex font-weight-700 duplicate-child" style="">D</span>
+									<span class="tooltiptext font-weight-500">Duplicate Applicant</span>
+								</div>
+							</div>
+						</div>';
 					}		
 					
 					$full_name				=	'';

@@ -500,23 +500,8 @@ class ShortlistBenchCandidateListingService
                     ->get();
 
                 foreach ($hits as $hit) {
-                    if (($hit['duplicate'] ?? 0) == 1) {
-                        $candEmail = $hit['email'] ?? '';
-                        $candPhone = $hit['phone'] ?? '';
-                        $candJobId = $hit['job_id'] ?? null;
-
-                        $matchCount = 0;
-                        foreach ($dupCounts as $dup) {
-                            if ($appDuplicate == 1 && $dup->job_id != $candJobId) {
-                                continue;
-                            }
-                            if (($candEmail !== '' && $dup->email === $candEmail) || ($candPhone !== '' && $dup->phone === $candPhone)) {
-                                $matchCount += $dup->total;
-                            }
-                        }
-                        $candKey = ($hit['candidate_id'] ?? $hit['wiseId'] ?? rand());
-                        $duplicateFlagsMap[$candKey] = $matchCount > 1 ? 1 : 0;
-                    }
+                    $candKey = ($hit['candidate_id'] ?? $hit['wiseId'] ?? rand());
+                    $duplicateFlagsMap[$candKey] = (($hit['duplicate'] ?? 0) == 1 || !empty($hit['is_duplicate'])) ? 1 : 0;
                 }
             }
         }
