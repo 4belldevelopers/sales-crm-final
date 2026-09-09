@@ -835,6 +835,17 @@ class HomeController extends Controller
             }
         }
 
+        // Intent: PDF.js/Mammoth preview needs same-origin bytes so keyword
+        // highlighting can inspect text; normal downloads still redirect to R2.
+        if (request()->boolean('preview')) {
+            return Storage::disk('r2')->response(
+                $storedPath,
+                $customName,
+                ['Cache-Control' => 'private, max-age=300'],
+                'inline'
+            );
+        }
+
         return redirect()->away($this->temporaryResumeDownloadUrl($storedPath, $customName));
     }
 

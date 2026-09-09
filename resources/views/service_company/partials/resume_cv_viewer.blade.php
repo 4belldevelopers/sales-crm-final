@@ -21,7 +21,7 @@
     // single same-origin endpoint: PDFs pass through, doc/docx are converted (LibreOffice, cached)
     if ($rcvConvertUrl === '') {
         $rcvConvertUrl = $rcvResume
-            ? route('service_company.job-applications.resume-convert', ['token' => GeneralMethod::value_encrypt($rcvResume)])
+            ? route('service_company.job-applications.resume-convert', ['token' => GeneralMethod::value_encrypt($rcvResume), 'preview' => 1])
             : '';
     }
     if ($rcvDownloadUrl === '') $rcvDownloadUrl = $rcvConvertUrl;

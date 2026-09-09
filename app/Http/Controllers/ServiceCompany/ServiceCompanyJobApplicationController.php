@@ -1535,6 +1535,24 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
         }
 
         if ($ext === 'pdf') {
+            // Intent: Resume/CV preview requires readable same-origin PDF bytes
+            // for keyword extraction; direct download links keep using R2 redirects.
+            if (request()->boolean('preview')) {
+                $r2Key = $this->resumeR2KeyFromValue((string) $resume);
+                try {
+                    if ($r2Key !== '' && Storage::disk('r2')->exists($r2Key)) {
+                        return Storage::disk('r2')->response(
+                            $r2Key,
+                            str_replace('"', '', basename($r2Key)),
+                            ['Cache-Control' => 'private, max-age=300'],
+                            'inline'
+                        );
+                    }
+                } catch (\Throwable $e) {
+                    Log::warning('R2 resume preview read error', ['error' => $e->getMessage()]);
+                }
+            }
+
             return redirect()->away($this->temporaryResumePreviewUrl((string) $resume));
         }
 
@@ -1548,6 +1566,17 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
 
         try {
             if (Storage::disk('r2')->exists($r2CacheKey)) {
+                // Intent: Serve converted preview bytes same-origin so existing
+                // PDF.js keyword highlighting can run on cached DOC/DOCX output.
+                if (request()->boolean('preview')) {
+                    return Storage::disk('r2')->response(
+                        $r2CacheKey,
+                        'converted_'.$hash.'.pdf',
+                        ['Cache-Control' => 'private, max-age=300'],
+                        'inline'
+                    );
+                }
+
                 return redirect()->away($this->temporaryR2Url($r2CacheKey, null));
             }
         } catch (\Throwable $e) {
@@ -1555,6 +1584,15 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
         }
 
         if (file_exists($pdfCache) && filesize($pdfCache) > 100) {
+            // Intent: Local converter cache is preview-only here; download flows
+            // continue through R2 once the converted artifact is uploaded.
+            if (request()->boolean('preview')) {
+                return response()->file($pdfCache, [
+                    'Content-Type' => 'application/pdf',
+                    'Cache-Control' => 'private, max-age=300',
+                ]);
+            }
+
             try {
                 Storage::disk('r2')->put($r2CacheKey, file_get_contents($pdfCache));
 
