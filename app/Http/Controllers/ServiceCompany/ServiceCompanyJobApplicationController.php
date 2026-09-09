@@ -1749,18 +1749,16 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
         $resolvedKey = $r2Key;
         $downloadName = str_replace('"', '', basename($resolvedKey));
 
-        try {
-            if (! Storage::disk('r2')->exists($resolvedKey)) {
+        if (in_array(strtolower(pathinfo($resolvedKey, PATHINFO_EXTENSION)), ['htm', 'html'])) {
+            try {
                 $fallbackKey = preg_replace('/\.[^.\/]+$/', '.pdf', $resolvedKey);
                 if ($fallbackKey !== $resolvedKey && Storage::disk('r2')->exists($fallbackKey)) {
                     $resolvedKey = $fallbackKey;
                     $downloadName = str_replace('"', '', basename($resolvedKey));
-                } else {
-                    return response()->json(['status' => 'error', 'message' => 'Original resume was not found on R2. Please re-upload the resume.'], 404);
                 }
+            } catch (\Throwable $e) {
+                Log::warning('R2 original resume fallback check error', ['application_id' => $id, 'error' => $e->getMessage()]);
             }
-        } catch (\Throwable $e) {
-            Log::warning('R2 original resume existence check error', ['application_id' => $id, 'error' => $e->getMessage()]);
         }
 
         $publicUrl = 'https://file.jero.works/'.$r2Key;

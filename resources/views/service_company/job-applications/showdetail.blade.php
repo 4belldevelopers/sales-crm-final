@@ -4806,7 +4806,7 @@ function collectOriginalResumeDownloadSources(resumeUrls){
   });
   return sources;
 }
-async function downloadOriginalResumeFromR2First(options){
+function downloadOriginalResumeFromR2First(options){
   /* Purpose: Option 1 hands the browser to R2 immediately. Avoid Blob/CORS fetches here:
      cross-origin resume reads can stall and keep the Resume Center countdown stuck. */
   options=options||{};
@@ -4814,10 +4814,10 @@ async function downloadOriginalResumeFromR2First(options){
   var fileName=guessResumeDownloadName(resumeExt);
 
   var directSources=collectOriginalResumeDownloadSources([
-    options.r2DirectUrl,
-    options.originalR2DirectUrl,
     options.r2RedirectUrl,
     options.dlUrl,
+    options.r2DirectUrl,
+    options.originalR2DirectUrl,
     options.r2PublicUrl,
     options.originalR2PublicUrl
   ]);
@@ -4825,14 +4825,13 @@ async function downloadOriginalResumeFromR2First(options){
   if(directSources.length>0){
     var firstSrc=directSources[0];
     try{ firstSrc=encodeURI(decodeURI(firstSrc)); }catch(e){}
-    var aDirect=document.createElement('a');
-    aDirect.href=firstSrc;
-    aDirect.download=fileName;
-    aDirect.rel='noopener noreferrer';
-    document.body.appendChild(aDirect);
-    aDirect.click();
     notifyRdcDownloadStarted(fileName);
-    setTimeout(function(){ if(aDirect.parentNode) aDirect.parentNode.removeChild(aDirect); }, 1200);
+    var frame=document.createElement('iframe');
+    frame.style.display='none';
+    frame.setAttribute('aria-hidden','true');
+    frame.src=firstSrc;
+    document.body.appendChild(frame);
+    setTimeout(function(){ if(frame.parentNode) frame.parentNode.removeChild(frame); }, 60000);
     return true;
   }
 
@@ -8611,8 +8610,9 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
           showToast('Original resume is not available for download.', 'warn');
           resetBtn(); return;
         }
-        runSmartCountdown('Downloading Resume, Kindly wait.', 60);
-        downloadOriginalResumeFromR2First({
+        dlBtn.innerHTML = '<span class="rdc-spin"></span><span>Starting direct R2 download...</span>';
+        try {
+          var ok = downloadOriginalResumeFromR2First({
           originalR2PublicUrl:originalR2PublicUrl,
           r2PublicUrl:r2PublicUrl,
           originalR2DirectUrl:originalR2DirectUrl,
@@ -8620,14 +8620,14 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
           r2RedirectUrl:r2SignUrl ? (r2SignUrl + (r2SignUrl.indexOf('?') === -1 ? '?' : '&') + 'redirect=1') : '',
           dlUrl:dlUrl,
           resumeExt:resumeExt
-        }).then(function(ok){
+          });
           if(ok) closeRdc();
-        }).catch(function(err){
+        } catch(err) {
           console.error('Original resume R2-first download failed:',err);
           showToast(err && err.message ? err.message : 'Could not download original resume. Please try again.', 'warn');
-        }).finally(function(){
+        } finally {
           resetBtn();
-        });
+        }
 
       } else if(m.dlKey === 'rs'){
         /* Option 5: Recruiter Summary — fully client-side vector PDF */
