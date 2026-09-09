@@ -4258,11 +4258,14 @@ setTimeout(() => {
   $rdcDownloadUrl = '';
   $rdcR2DirectUrl = '';
   $rdcR2PublicUrl = '';
+  $rdcOriginalR2DirectUrl = '';
+  $rdcOriginalR2PublicUrl = '';
+  $rdcOriginalR2Available = false;
   $rdcResumePdfUrl = '';
   $rdcResumeAvailable = false;
   $rdcResumeRaw = (string)(@$application->resume ?? '');
   if($rdcResumeRaw !== ''){
-    // Option 14 uses this signed URL so the browser fetches DOCX from R2 instead of Laravel streaming it.
+    // Direct R2 key used by browser-first download/conversion options; no extra query.
     $rdcR2Key = '';
     if(strpos($rdcResumeRaw, 'https://file.jero.works/') === 0){
       $rdcR2Key = ltrim((string)parse_url($rdcResumeRaw, PHP_URL_PATH), '/');
@@ -4271,6 +4274,20 @@ setTimeout(() => {
     }
 
     if($rdcR2Key !== ''){
+      try{
+        $rdcOriginalR2Available = true;
+        $rdcOriginalR2PublicUrl = 'https://file.jero.works/'.$rdcR2Key;
+        $rdcOriginalR2DownloadName = str_replace('"', '', basename($rdcR2Key));
+        $rdcOriginalR2DirectUrl = \Illuminate\Support\Facades\Storage::disk('r2')->temporaryUrl(
+          $rdcR2Key,
+          now()->addMinutes(15),
+          ['ResponseContentDisposition' => 'attachment; filename="'.$rdcOriginalR2DownloadName.'"']
+        );
+      } catch(\Throwable $e) {
+        $rdcOriginalR2Available = $rdcOriginalR2PublicUrl !== '';
+        $rdcOriginalR2DirectUrl = '';
+      }
+
       try{
         $rdcR2ResolvedKey = $rdcR2Key;
         if(!\Illuminate\Support\Facades\Storage::disk('r2')->exists($rdcR2ResolvedKey)){
@@ -4297,6 +4314,11 @@ setTimeout(() => {
       $rdcDownloadUrl = $rdcResumeRaw;
       $rdcR2DirectUrl = strpos($rdcResumeRaw, request()->getSchemeAndHttpHost()) !== 0 ? $rdcResumeRaw : '';
       $rdcR2PublicUrl = $rdcR2DirectUrl;
+      if($rdcR2DirectUrl !== ''){
+        $rdcOriginalR2Available = true;
+        $rdcOriginalR2DirectUrl = $rdcR2DirectUrl;
+        $rdcOriginalR2PublicUrl = $rdcR2PublicUrl;
+      }
     } else {
       $rdcResumeAvailable = true;
       $rdcDownloadUrl = url($rdcResumeRaw);
@@ -4325,6 +4347,9 @@ setTimeout(() => {
      data-dl-url="{{ $rdcDownloadUrl }}"
      data-r2-direct-url="{{ $rdcR2DirectUrl }}"
      data-r2-public-url="{{ $rdcR2PublicUrl }}"
+     data-original-r2-direct-url="{{ $rdcOriginalR2DirectUrl }}"
+     data-original-r2-public-url="{{ $rdcOriginalR2PublicUrl }}"
+     data-original-r2-available="{{ $rdcOriginalR2Available ? 'true' : 'false' }}"
      data-resume-pdf-url="{{ $rdcResumePdfUrl }}"
      data-has-resume="{{ $rdcResumeAvailable ? 'true' : 'false' }}"
      data-has-aws="{{ $resumeAwsPath ? 'true' : 'false' }}"
@@ -4794,14 +4819,13 @@ async function downloadOriginalResumeFromR2First(options){
   options=options||{};
   var resumeExt=clean(options.resumeExt||'FILE','FILE').toUpperCase();
   var fileName=guessResumeDownloadName(resumeExt);
-  var r2FirstSources=collectOriginalResumeDownloadSources([options.r2DirectUrl,options.r2PublicUrl,options.dlUrl]);
-  if(!r2FirstSources.length) throw new Error('Resume file URL not available');
+  var r2FirstSources=collectOriginalResumeDownloadSources([options.originalR2DirectUrl,options.originalR2PublicUrl]);
+  if(!r2FirstSources.length) throw new Error('Original resume is not available on R2 for direct download');
   var source=r2FirstSources[0];
   var a=document.createElement('a');
   a.href=source;
   a.download=fileName;
   a.rel='noopener';
-  if(!sameOriginUrl(source)) a.target='_blank';
   document.body.appendChild(a);
   a.click();
   notifyRdcDownloadStarted(fileName);
@@ -8207,25 +8231,33 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
 (function(){
   'use strict';
 
-  var overlay  = document.getElementById('rdcOverlay');
-  var drawer   = document.getElementById('rdcDrawer');
-  var closeBtn = document.getElementById('rdcCloseBtn');
-  var dlBtn    = document.getElementById('rdcDownloadBtn');
-  var btnLbl   = document.getElementById('rdcBtnLabel');
-  var coinEl   = document.getElementById('rdcCoinCost');
-  var toastEl  = document.getElementById('rdcToast');
-  var opts     = document.querySelectorAll('#rdcOptsList .rdc-opt');
-  var rdcData  = document.getElementById('rdcData');
+  function latestById(id){
+    var nodes = document.querySelectorAll('[id="'+id+'"]');
+    return nodes.length ? nodes[nodes.length - 1] : null;
+  }
+
+  var overlay  = latestById('rdcOverlay');
+  var drawer   = latestById('rdcDrawer');
+  var closeBtn = latestById('rdcCloseBtn');
+  var dlBtn    = latestById('rdcDownloadBtn');
+  var btnLbl   = latestById('rdcBtnLabel');
+  var coinEl   = latestById('rdcCoinCost');
+  var toastEl  = latestById('rdcToast');
+  var opts     = drawer ? drawer.querySelectorAll('#rdcOptsList .rdc-opt') : document.querySelectorAll('#rdcOptsList .rdc-opt');
+  var rdcData  = latestById('rdcData');
 
   var dlUrl  = rdcData ? rdcData.getAttribute('data-dl-url')  : '';
   var r2DirectUrl = rdcData ? rdcData.getAttribute('data-r2-direct-url') : '';
   var r2PublicUrl = rdcData ? rdcData.getAttribute('data-r2-public-url') : '';
+  var originalR2DirectUrl = rdcData ? rdcData.getAttribute('data-original-r2-direct-url') : '';
+  var originalR2PublicUrl = rdcData ? rdcData.getAttribute('data-original-r2-public-url') : '';
+  var originalR2Available = rdcData ? rdcData.getAttribute('data-original-r2-available') === 'true' : false;
   var resumePdfUrl = rdcData ? rdcData.getAttribute('data-resume-pdf-url') : '';
   var resumeExt = rdcData ? (rdcData.getAttribute('data-file-ext') || '').toUpperCase() : '';
   var hasResume = rdcData ? rdcData.getAttribute('data-has-resume') === 'true' : false;
 
   var optMeta = {
-    1: {cost:1, label:'Download Original Resume',       avail:true,  dlKey:null},
+    1: {cost:1, label:'Download Original Resume',       avail:originalR2Available && !!(originalR2DirectUrl || originalR2PublicUrl),  dlKey:null, unavailableMsg:'Original resume is not available on R2 for direct download.'},
     3: {cost:4, label:'Download ATS Highlighted Resume',avail:true,  dlKey:'hl'},
     4: {cost:6, label:'Download Branded + Highlighted', avail:true,  dlKey:'both'},
     5: {cost:7, label:'Download Pre-Screened Report',   avail:true,  dlKey:'rs'},
@@ -8514,16 +8546,15 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
       dlBtn.innerHTML = '<span class="rdc-spin"></span><span>Preparing download…</span>';
 
       if(selectedOpt === 1){
-        /* Original resume: R2/public browser download first; Laravel route is only a compatibility fallback. */
-        if(!r2DirectUrl && !r2PublicUrl && !dlUrl){
-          showToast('Resume file URL not available.', 'warn');
+        /* Original resume: direct R2 browser download only; Laravel must not stream original resume bytes. */
+        if(!originalR2DirectUrl && !originalR2PublicUrl){
+          showToast('Original resume is not available on R2 for direct download.', 'warn');
           resetBtn(); return;
         }
         runSmartCountdown('Downloading Resume, Kindly wait.', 60);
         downloadOriginalResumeFromR2First({
-          r2PublicUrl:r2PublicUrl,
-          r2DirectUrl:r2DirectUrl,
-          dlUrl:dlUrl,
+          originalR2PublicUrl:originalR2PublicUrl,
+          originalR2DirectUrl:originalR2DirectUrl,
           resumeExt:resumeExt
         }).then(function(ok){
           if(ok) closeRdc();
