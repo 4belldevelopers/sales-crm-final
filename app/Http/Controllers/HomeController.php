@@ -815,8 +815,8 @@ class HomeController extends Controller
         }
 
         $candidateName = $job_application
-            ? 'JERO_'.str_replace(' ', '_', $job_application->full_name)
-            : 'JERO_'.pathinfo($storedPath, PATHINFO_FILENAME);
+            ? $this->resumeDownloadBaseName((string) $job_application->full_name)
+            : $this->resumeDownloadBaseName(pathinfo($storedPath, PATHINFO_FILENAME));
 
         $ext = strtolower(pathinfo($storedPath, PATHINFO_EXTENSION));
         if (! in_array($ext, ['pdf', 'doc', 'docx', 'htm', 'html'])) {
@@ -864,6 +864,18 @@ class HomeController extends Controller
         }
 
         return ltrim($resume, '/');
+    }
+
+    /**
+     * Intent: Keep downloaded resume names consistent with the Resume Center
+     * naming standard without changing the stored R2 object key.
+     */
+    private function resumeDownloadBaseName(string $candidateName): string
+    {
+        $name = preg_replace('/[\\\\\/:*?"<>|]+/', ' ', $candidateName);
+        $name = trim((string) preg_replace('/\s+/', ' ', (string) $name));
+
+        return 'JEROWORKS_'.($name !== '' ? $name : 'Candidate');
     }
 
     /**
