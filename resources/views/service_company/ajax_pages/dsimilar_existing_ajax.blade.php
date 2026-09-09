@@ -60,6 +60,7 @@
                     if ($duplicate == 1) {
                         $flag = $duplicate;
                     }
+                    $covid = '';
 
                     $company_id = auth()->user()->company_id;
                     $profile_sidebar_css = 'show-application-detail';

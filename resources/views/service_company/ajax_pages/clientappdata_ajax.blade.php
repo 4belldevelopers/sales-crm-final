@@ -67,6 +67,7 @@
                     if ($duplicate == 1) {
                         $flag = $duplicate;
                     }
+                    $covid = '';
 
                     if (@$row->condidate_type == 'bench_condidate') {
                         $tredmark = '[Bench]';
