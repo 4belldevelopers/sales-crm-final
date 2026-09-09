@@ -14,28 +14,22 @@
     @foreach ($data as $rowArr)
         @php
             $row = (object) $rowArr;
-            if (isset($row->sourcing_count) || isset($row->interview_count)) {
-                $row->Sourcing = $row->sourcing_count ?? 0;
-                $row->Screening = $row->screening_count ?? 0;
-                $row->Evaluation = $row->evaluation_count ?? 0;
-                $row->Negotiation = $row->negotiation_count ?? 0;
-                $row->Offered = $row->offered_count ?? 0;
-                $row->Joined = $row->joined_count ?? 0;
-                $row->Rejected = $row->rejected_count ?? 0;
-                $row->InReview = $row->interview_count ?? 0;
-            } else {
-                $bench_explore_listing_counter = GeneralMethod::bench_explore_listing_counter($row->id);
-                $applicationCounter = $bench_explore_listing_counter->applicationCounter;
+            /**
+             * Intent: Fetch candidate pipeline activity counts via GeneralMethod::bench_explore_listing_counter
+             * to guarantee 100% count consistency between the bench candidates table and the bench explore view.
+             * Tenancy: Scoped by candidate ID and logged-in company.
+             */
+            $bench_explore_listing_counter = GeneralMethod::bench_explore_listing_counter($row->id);
+            $applicationCounter = $bench_explore_listing_counter->applicationCounter;
 
-                $row->Sourcing = $applicationCounter->Sourcing ?? 0;
-                $row->Screening = $applicationCounter->Screening ?? 0;
-                $row->Evaluation = $applicationCounter->Evaluation ?? 0;
-                $row->Negotiation = $applicationCounter->Negotiation ?? 0;
-                $row->Offered = $applicationCounter->Offered ?? 0;
-                $row->Joined = $applicationCounter->Joined ?? 0;
-                $row->Rejected = $applicationCounter->Rejected ?? 0;
-                $row->InReview = $applicationCounter->Interview ?? 0;
-            }
+            $row->Sourcing = $applicationCounter->Sourcing ?? 0;
+            $row->Screening = $applicationCounter->Screening ?? 0;
+            $row->Evaluation = $applicationCounter->Evaluation ?? 0;
+            $row->Negotiation = $applicationCounter->Negotiation ?? 0;
+            $row->Offered = $applicationCounter->Offered ?? 0;
+            $row->Joined = $applicationCounter->Joined ?? 0;
+            $row->Rejected = $applicationCounter->Rejected ?? 0;
+            $row->InReview = $applicationCounter->Interview ?? 0;
 
             $exploreBase = url('/service_company/bench-candidates/bench_explore/' . $row->id);
 
@@ -294,7 +288,8 @@
                     <div>
                         <div class="pipe-grid">
                             <div class="h">INW</div><div class="h">SOU</div><div class="h">SCR</div><div class="h">EVA</div><div class="h">NEG</div><div class="h">JOI</div><div class="h">REJ</div>
-                            <div class="v"><a href="{{ $exploreBase }}/3" class="text-hover-primary">{{ $row->InReview }}</a></div>
+                            {{-- Intent: Clicking INW (InReview) opens the full bench explore list with stage = 'all' --}}
+                            <div class="v"><a href="{{ $exploreBase }}/all" class="text-hover-primary">{{ $row->InReview }}</a></div>
                             <div class="v"><a href="{{ $exploreBase }}/1" class="text-hover-primary">{{ $row->Sourcing }}</a></div>
                             <div class="v"><a href="{{ $exploreBase }}/2" class="text-hover-primary">{{ $row->Screening }}</a></div>
                             <div class="v"><a href="{{ $exploreBase }}/3" class="text-hover-primary">{{ $row->Evaluation }}</a></div>
