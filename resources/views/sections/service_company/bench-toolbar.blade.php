@@ -16,9 +16,9 @@
                 // dd($bench_detail);
                     $jobtitle = @$job->title;
                     $bgTextDecore = $strVal = '';
-                    $str = @$bench_detail->full_name;
-                    $str = $strVal = strtolower($str[0]);
-                    $str = ord($str);
+                    $str = @$bench_detail->full_name ?? '';
+                    $strVal = strtolower(mb_substr($str, 0, 1));
+                    $str = ord($strVal);
                     if ($str >= 97 && $str <= 101) {
                         $bgTextDecore = 'fs-3 bg-light-danger text-danger';
                     } elseif ($str >= 102 && $str <= 106) {
@@ -34,9 +34,9 @@
                     }
                     
                     $max_sal_mode =  $max_salary_currency = $max_salary = '';
-                    $max_sal_mode = strtoupper(mb_substr($salaryMode[$bench_detail->bill_rate_mode], 0, 1));
-                    $max_salary_currency = $currencySymbole[@$bench_detail->bill_rate_currency];
-                    $max_salary = GeneralMethod::thousandsCurrencyFormat($bench_detail->bill_rate_amount);
+                    $max_sal_mode = strtoupper(mb_substr($salaryMode[@$bench_detail->bill_rate_mode] ?? '', 0, 1));
+                    $max_salary_currency = $currencySymbole[@$bench_detail->bill_rate_currency] ?? '';
+                    $max_salary = GeneralMethod::thousandsCurrencyFormat(@$bench_detail->bill_rate_amount);
 
                 @endphp
 

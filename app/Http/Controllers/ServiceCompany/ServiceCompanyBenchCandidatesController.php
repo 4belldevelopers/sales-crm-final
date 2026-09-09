@@ -5306,13 +5306,13 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
                 $status = explode(',', $status);
             }
 
-            // Optional: handle special logic (example: 7 => [7,9])
+            // Stage 7 (Rejected) encompasses master_status_ids [7, 9].
             if (in_array(7, $status)) {
                 $status = array_unique(array_merge($status, [9]));
             }
 
             $filters[] = [
-                'terms' => ['job_master_status_id' => array_map('intval', $status)],
+                'terms' => ['job_master_status_id' => array_values(array_map('intval', $status))],
             ];
         }
 
@@ -5456,7 +5456,7 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
                 'listType' => 'allcandidate',
             ],
             'counters' => $bench_explore_counter_obj->applicationCounter ?? null,
-            'allCounter' => $total,
+            'allCounter' => $bench_explore_counter_obj->total ?? $bench_explore_counter_obj->applicationCounter->allCandidate ?? $total,
             'total' => $total,
             'html' => view('service_company.ajax_pages.bench-explore-list-ajax', compact('data', 'userPermissions', 'company_id', 'salaryMode', 'currencySymbole', 'job_status', 'feedback_status', 'bench_id'))->render(),
             'pagination' => view('service_company.ajax_pages.pagination', compact('pagination'))->render(),
