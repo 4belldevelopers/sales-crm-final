@@ -5710,12 +5710,40 @@ async function buildSmartHighlightedResume(options){
     window.__rsBusy=false;
   }
 }
-async function fetchPdfResumeBlob(resumePdfUrl){
+function resumePdfFetchUrl(resumePdfUrl){
   resumePdfUrl=clean(resumePdfUrl,'');
+  if(!resumePdfUrl) return '';
+  try{
+    var url=new URL(resumePdfUrl,window.location.href);
+    if(url.origin===window.location.origin && /\/resume-(convert|as-pdf)\//.test(url.pathname)){
+      url.searchParams.set('preview','1');
+      return url.toString();
+    }
+  }catch(ex){}
+  return resumePdfUrl;
+}
+function waitResumePdfReady(ms){
+  return new Promise(function(resolve){ setTimeout(resolve,ms); });
+}
+async function fetchPdfResumeBlob(resumePdfUrl,attempt){
+  attempt=attempt||0;
+  resumePdfUrl=resumePdfFetchUrl(resumePdfUrl);
   if(!resumePdfUrl) throw new Error('Resume PDF URL not available');
   var response=await fetch(resumePdfUrl,{credentials:'include',cache:'no-store'});
+  if(response.status===202){
+    if(attempt>=40) throw new Error('Resume PDF conversion is still processing. Please try again in a moment.');
+    var retryAfter=parseInt(response.headers.get('Retry-After')||'0',10);
+    var waitMs=retryAfter>0 ? Math.min(retryAfter*1000,6000) : Math.min(2500+(attempt*250),6000);
+    await waitResumePdfReady(waitMs);
+    return fetchPdfResumeBlob(resumePdfUrl,attempt+1);
+  }
   if(!response.ok) throw new Error('Resume PDF request failed with HTTP '+response.status);
-  return response.blob();
+  var blob=await response.blob();
+  if(!blob || blob.size<10) throw new Error('Resume PDF response was empty');
+  var bytes=await blob.arrayBuffer();
+  var sig=String.fromCharCode.apply(null,new Uint8Array(bytes).subarray(0,5));
+  if(sig.indexOf('%PDF')===-1) throw new Error('Resume PDF conversion did not return a valid PDF');
+  return new Blob([bytes],{type:'application/pdf'});
 }
 async function convertResumeToPdfOnly(resumeUrl,resumePdfUrl,resumeExt){
   if(window.__rsBusy) return Promise.resolve(false);
