@@ -1632,29 +1632,9 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
         }
 
         $resolvedKey = $r2Key;
-        try {
-            if (! Storage::disk('r2')->exists($resolvedKey)) {
-                $fallbackKey = preg_replace('/\.[^.\/]+$/', '.pdf', $resolvedKey);
-                if ($fallbackKey !== $resolvedKey && Storage::disk('r2')->exists($fallbackKey)) {
-                    $resolvedKey = $fallbackKey;
-                }
-            }
-        } catch (\Throwable $e) {
-            Log::warning('R2 resume availability check error', ['application_id' => $id, 'error' => $e->getMessage()]);
-        }
-
         $resolvedPublicUrl = 'https://file.jero.works/'.$resolvedKey;
         $resolvedDownloadName = str_replace('"', '', basename($resolvedKey));
-        $resolvedDirectUrl = $resolvedPublicUrl;
-        try {
-            $resolvedDirectUrl = Storage::disk('r2')->temporaryUrl(
-                $resolvedKey,
-                now()->addMinutes(15),
-                ['ResponseContentDisposition' => 'attachment; filename="'.$resolvedDownloadName.'"']
-            );
-        } catch (\Throwable $e) {
-            Log::warning('R2 resume signed URL error', ['application_id' => $id, 'error' => $e->getMessage()]);
-        }
+        $resolvedDirectUrl = $originalDirectUrl;
 
         return response()->json([
             'status' => 'success',
