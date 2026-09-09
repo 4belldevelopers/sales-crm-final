@@ -21,6 +21,7 @@ use App\Helper\Google;
 use App\Helper\Reply;
 use App\Helper\Zoom;
 use App\Imports\JobApplicationImport;
+use App\Jobs\ConvertResumeToPdfJob;
 use App\Jobs\ProcessCandidateSubmissionJob;
 use App\Jobs\ProcessCandidateUpdateJob;
 use App\Jobs\QueueCandidateNotificationJob;
@@ -62,6 +63,7 @@ use Google_Service_Calendar as Calendar;
 use Google_Service_Calendar_Event;
 use Illuminate\Http\Request;
 use Illuminate\Mail\Message;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Http;
@@ -1511,36 +1513,29 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
     }
 
     /**
-     * Generalized résumé->PDF endpoint keyed by an encrypted resume path (works for any
-     * candidate type). PDFs stream through as-is; .doc/.docx are converted via LibreOffice
-     * (cached on disk). Token is produced server-side, so there is no arbitrary-URL/SSRF surface.
+     * Intent: Resolve Resume Center preview requests without streaming heavy files
+     * through Laravel; PDF/DOCX bytes are served by R2 whenever possible.
+     * Tenancy: scoped preview tokens include candidate_id and must match DB resume truth.
      */
     public function resumeConvertPdf($token)
     {
-        $resume = GeneralMethod::value_decrypt($token);
-        if (empty($resume)) {
-            $safeToken = strtr((string) $token, '-_', '+/');
-            $safeToken .= str_repeat('=', (4 - strlen($safeToken) % 4) % 4);
-            $decodedToken = base64_decode($safeToken, true);
-            if (is_string($decodedToken) && $decodedToken !== '') {
-                $resume = GeneralMethod::value_decrypt($decodedToken);
-            }
-        }
+        $payload = $this->resolveResumePreviewPayload($token);
+        $resume = $payload['resume'] ?? '';
         if (empty($resume)) {
             abort(404);
         }
+
+        if (! empty($payload['candidate_id'])) {
+            $this->assertResumePreviewAllowed((int) $payload['candidate_id'], (string) $resume);
+        }
+
         $ext = strtolower(pathinfo(parse_url($resume, PHP_URL_PATH) ?: $resume, PATHINFO_EXTENSION));
         if (! in_array($ext, ['pdf', 'doc', 'docx'])) {
             abort(404);
         }
 
-        $bytes = $this->fetchResumeBytes($resume);
-        if ($bytes === null) {
-            abort(404);
-        }
-
         if ($ext === 'pdf') {
-            return response($bytes, 200)->header('Content-Type', 'application/pdf')->header('Cache-Control', 'private, max-age=86400');
+            return redirect()->away($this->temporaryResumePreviewUrl((string) $resume));
         }
 
         $cacheDir = storage_path('app/resume-pdf-cache');
@@ -1551,41 +1546,136 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
         $pdfCache = $cacheDir.DIRECTORY_SEPARATOR.$hash.'.pdf';
         $r2CacheKey = 'Resumes/converted_'.$hash.'.pdf';
 
-        if (! file_exists($pdfCache) || filesize($pdfCache) < 100) {
-            try {
-                if (Storage::disk('r2')->exists($r2CacheKey)) {
-                    $r2Bytes = Storage::disk('r2')->get($r2CacheKey);
-                    if ($r2Bytes && strlen($r2Bytes) > 100) {
-                        file_put_contents($pdfCache, $r2Bytes);
-                    }
-                }
-            } catch (\Throwable $e) {
-                // Ignore R2 cache error
+        try {
+            if (Storage::disk('r2')->exists($r2CacheKey)) {
+                return redirect()->away($this->temporaryR2Url($r2CacheKey, null));
             }
+        } catch (\Throwable $e) {
+            Log::warning('R2 converted PDF cache read error', ['error' => $e->getMessage()]);
         }
 
-        if (! file_exists($pdfCache) || filesize($pdfCache) < 100) {
-            $srcFile = $cacheDir.DIRECTORY_SEPARATOR.$hash.'.'.$ext;
-            file_put_contents($srcFile, $bytes);
-            $soffice = $this->sofficeBinary();
-            if (! $soffice) {
-                @unlink($srcFile);
-                abort(503, 'Document converter unavailable');
-            }
-            $profile = 'file:///'.str_replace('\\', '/', $cacheDir.DIRECTORY_SEPARATOR.'lo_'.$hash);
-            $this->runResumePdfConversion($soffice, $profile, $cacheDir, $srcFile);
-            @unlink($srcFile);
-            if (! file_exists($pdfCache) || filesize($pdfCache) < 100) {
-                abort(500, 'Conversion failed');
-            }
+        if (file_exists($pdfCache) && filesize($pdfCache) > 100) {
             try {
                 Storage::disk('r2')->put($r2CacheKey, file_get_contents($pdfCache));
+
+                return redirect()->away($this->temporaryR2Url($r2CacheKey, null));
             } catch (\Throwable $e) {
                 Log::warning('R2 converted PDF cache store error', ['error' => $e->getMessage()]);
             }
         }
 
-        return response()->file($pdfCache, ['Content-Type' => 'application/pdf', 'Cache-Control' => 'private, max-age=86400']);
+        $statusKey = 'resume_pdf_convert_status:'.$hash;
+        $status = Cache::get($statusKey);
+
+        if ($status !== 'processing') {
+            Cache::put($statusKey, 'processing', now()->addMinutes(30));
+            ConvertResumeToPdfJob::dispatch((string) $resume, $hash, $ext);
+        }
+
+        return response()->json([
+            'status' => 'processing',
+            'message' => 'Resume preview is being prepared.',
+        ], 202)
+            ->header('Retry-After', '3')
+            ->header('Cache-Control', 'no-store, max-age=0');
+    }
+
+    /**
+     * Intent: Support both legacy encrypted resume strings and scoped JSON tokens
+     * emitted by the Bench Resume Center lazy tab.
+     */
+    private function resolveResumePreviewPayload($token): array
+    {
+        $decrypted = GeneralMethod::value_decrypt($token);
+        if (empty($decrypted)) {
+            $safeToken = strtr((string) $token, '-_', '+/');
+            $safeToken .= str_repeat('=', (4 - strlen($safeToken) % 4) % 4);
+            $decodedToken = base64_decode($safeToken, true);
+            if (is_string($decodedToken) && $decodedToken !== '') {
+                $decrypted = GeneralMethod::value_decrypt($decodedToken);
+            }
+        }
+
+        $json = is_string($decrypted) ? json_decode($decrypted, true) : null;
+        if (is_array($json) && ! empty($json['resume'])) {
+            return [
+                'resume' => (string) $json['resume'],
+                'candidate_id' => isset($json['candidate_id']) ? (int) $json['candidate_id'] : null,
+            ];
+        }
+
+        return ['resume' => (string) $decrypted, 'candidate_id' => null];
+    }
+
+    /**
+     * Intent: Prevent preview-token replay across candidates or tenants by
+     * requiring the token resume to match the stored candidate resume.
+     */
+    private function assertResumePreviewAllowed(int $candidateId, string $resume): void
+    {
+        $query = DB::table('job_applications')
+            ->select('id', 'company_id', 'resume')
+            ->where('id', $candidateId);
+
+        if (auth()->check() && ! auth()->user()->is_superadmin && auth()->user()->company_id) {
+            $query->where('company_id', auth()->user()->company_id);
+        }
+
+        $candidate = $query->first();
+        if (! $candidate || empty($candidate->resume)) {
+            abort(404);
+        }
+
+        $storedKey = $this->resumeR2KeyFromValue((string) $candidate->resume);
+        $requestedKey = $this->resumeR2KeyFromValue($resume);
+        if ($storedKey === '' || $requestedKey === '' || ! hash_equals($storedKey, $requestedKey)) {
+            abort(403);
+        }
+    }
+
+    /**
+     * Intent: Convert supported stored resume values into R2 object keys for
+     * exact authorization comparisons and signed URL generation.
+     */
+    private function resumeR2KeyFromValue(string $resume): string
+    {
+        if (strpos($resume, 'https://file.jero.works/') === 0) {
+            return ltrim((string) parse_url($resume, PHP_URL_PATH), '/');
+        }
+
+        if (filter_var($resume, FILTER_VALIDATE_URL)) {
+            return '';
+        }
+
+        return ltrim($resume, '/');
+    }
+
+    /**
+     * Intent: Serve preview files from R2/CDN directly so web workers only
+     * authorize access and never carry resume bytes at 10K concurrency.
+     */
+    private function temporaryResumePreviewUrl(string $resume): string
+    {
+        $r2Key = $this->resumeR2KeyFromValue($resume);
+        if ($r2Key !== '') {
+            return $this->temporaryR2Url($r2Key, null);
+        }
+
+        return $resume;
+    }
+
+    private function temporaryR2Url(string $r2Key, ?string $downloadName): string
+    {
+        try {
+            $options = [];
+            if ($downloadName !== null) {
+                $options['ResponseContentDisposition'] = 'attachment; filename="'.str_replace('"', '', $downloadName).'"';
+            }
+
+            return Storage::disk('r2')->temporaryUrl($r2Key, now()->addMinutes(15), $options);
+        } catch (\Throwable $e) {
+            return 'https://file.jero.works/'.$r2Key;
+        }
     }
 
     /**
@@ -1659,19 +1749,30 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
             abort(404);
         }
         try {
-            $resp = \Illuminate\Support\Facades\Http::timeout(8)->withOptions(['verify' => false])->get($logo);
-            if (! $resp->successful()) {
+            $payload = Cache::remember('company_logo_proxy:'.$cid.':'.md5($logo), 3600, function () use ($logo) {
+                // Intent: Cache logo bytes by company/logo value so 10K logo exports
+                // do not become 10K repeated remote image fetches.
+                $resp = \Illuminate\Support\Facades\Http::timeout(8)->withOptions(['verify' => false])->get($logo);
+                if (! $resp->successful() || strlen($resp->body()) > 1024 * 1024) {
+                    return null;
+                }
+
+                $ct = $resp->header('Content-Type');
+                if (! $ct || strpos($ct, 'image/') !== 0) {
+                    $ext = strtolower(pathinfo(parse_url($logo, PHP_URL_PATH) ?: $logo, PATHINFO_EXTENSION));
+                    $map = ['png' => 'image/png', 'jpg' => 'image/jpeg', 'jpeg' => 'image/jpeg', 'gif' => 'image/gif', 'svg' => 'image/svg+xml', 'webp' => 'image/webp'];
+                    $ct = $map[$ext] ?? 'image/png';
+                }
+
+                return ['body' => $resp->body(), 'content_type' => $ct];
+            });
+
+            if (! $payload || empty($payload['body'])) {
                 abort(404);
             }
-            $ct = $resp->header('Content-Type');
-            if (! $ct || strpos($ct, 'image/') !== 0) {
-                $ext = strtolower(pathinfo(parse_url($logo, PHP_URL_PATH) ?: $logo, PATHINFO_EXTENSION));
-                $map = ['png' => 'image/png', 'jpg' => 'image/jpeg', 'jpeg' => 'image/jpeg', 'gif' => 'image/gif', 'svg' => 'image/svg+xml', 'webp' => 'image/webp'];
-                $ct = $map[$ext] ?? 'image/png';
-            }
 
-            return response($resp->body(), 200)
-                ->header('Content-Type', $ct)
+            return response($payload['body'], 200)
+                ->header('Content-Type', $payload['content_type'])
                 ->header('Cache-Control', 'private, max-age=3600');
         } catch (\Throwable $e) {
             abort(404);
@@ -1724,8 +1825,8 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
     }
 
     /**
-     * Convert a candidate's .doc/.docx résumé to PDF (via LibreOffice headless) and stream it
-     * inline, same-origin. Result is cached on disk so each résumé converts only once.
+     * Intent: Backward-compatible candidate-id preview route. It now delegates to
+     * the same queue-backed converter used by the Resume Center.
      */
     public function resumeAsPdf($id)
     {
@@ -1744,61 +1845,13 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
             abort(404);
         }
 
-        $cacheDir = storage_path('app/resume-pdf-cache');
-        if (! is_dir($cacheDir)) {
-            @mkdir($cacheDir, 0775, true);
-        }
-        $hash = md5($id.'|'.$resume);
-        $pdfCache = $cacheDir.DIRECTORY_SEPARATOR.$hash.'.pdf';
-        $r2CacheKey = 'Resumes/converted_'.$hash.'.pdf';
+        $token = GeneralMethod::value_encrypt(json_encode([
+            'scope' => 'candidate_resume_preview',
+            'candidate_id' => (int) $app->id,
+            'resume' => (string) $resume,
+        ]));
 
-        if (! file_exists($pdfCache) || filesize($pdfCache) < 100) {
-            try {
-                if (Storage::disk('r2')->exists($r2CacheKey)) {
-                    $r2Bytes = Storage::disk('r2')->get($r2CacheKey);
-                    if ($r2Bytes && strlen($r2Bytes) > 100) {
-                        file_put_contents($pdfCache, $r2Bytes);
-                    }
-                }
-            } catch (\Throwable $e) {
-                // Ignore R2 cache error
-            }
-        }
-
-        if (! file_exists($pdfCache) || filesize($pdfCache) < 100) {
-            $bytes = $this->fetchResumeBytes($resume, $id);
-            if ($bytes === null) {
-                abort(404);
-            }
-
-            $srcFile = $cacheDir.DIRECTORY_SEPARATOR.$hash.'.'.$ext;
-            file_put_contents($srcFile, $bytes);
-
-            $soffice = $this->sofficeBinary();
-            if (! $soffice) {
-                @unlink($srcFile);
-                abort(503, 'Document converter unavailable');
-            }
-
-            $profile = 'file:///'.str_replace('\\', '/', $cacheDir.DIRECTORY_SEPARATOR.'lo_'.$hash);
-            $this->runResumePdfConversion($soffice, $profile, $cacheDir, $srcFile);
-            @unlink($srcFile);
-
-            if (! file_exists($pdfCache) || filesize($pdfCache) < 100) {
-                abort(500, 'Conversion failed');
-            }
-
-            try {
-                Storage::disk('r2')->put($r2CacheKey, file_get_contents($pdfCache));
-            } catch (\Throwable $e) {
-                Log::warning('R2 converted PDF cache store error', ['error' => $e->getMessage()]);
-            }
-        }
-
-        return response()->file($pdfCache, [
-            'Content-Type' => 'application/pdf',
-            'Cache-Control' => 'private, max-age=86400',
-        ]);
+        return $this->resumeConvertPdf($token);
     }
 
     // **  end ajax  */
