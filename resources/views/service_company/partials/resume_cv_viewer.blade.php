@@ -12,15 +12,18 @@
     $rcvBLoc        = $rcvBLoc        ?? '--';
     $rcvBPresented  = $rcvBPresented  ?? '--';
     $rcvDownloadUrl = $rcvDownloadUrl ?? '';
+    $rcvConvertUrl  = $rcvConvertUrl  ?? '';
     $rcvMaskContact = $rcvMaskContact ?? true;  // false = same-company candidate -> reveal contact/social
 
     $__p = parse_url((string) $rcvResume, PHP_URL_PATH) ?: (string) $rcvResume;
     $rcvExt = strtolower(pathinfo($__p, PATHINFO_EXTENSION));
     $rcvFileName = basename($__p);
     // single same-origin endpoint: PDFs pass through, doc/docx are converted (LibreOffice, cached)
-    $rcvConvertUrl = $rcvResume
-        ? route('service_company.job-applications.resume-convert', ['token' => GeneralMethod::value_encrypt($rcvResume)])
-        : '';
+    if ($rcvConvertUrl === '') {
+        $rcvConvertUrl = $rcvResume
+            ? route('service_company.job-applications.resume-convert', ['token' => GeneralMethod::value_encrypt($rcvResume), 'preview' => 1])
+            : '';
+    }
     if ($rcvDownloadUrl === '') $rcvDownloadUrl = $rcvConvertUrl;
 @endphp
 
@@ -150,7 +153,11 @@
             <span id="rcvHitNav">0/0</span>
             <button type="button" id="rcvNextHit" title="Next match"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></button>
           </div>
-          <a id="rcvOpenNew" href="{{ $rcvResume }}" target="_blank" title="Open in new tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg></a>
+          @if($rcvMaskContact)
+            <a id="rcvOpenNew" href="javascript:;" title="Original resume is protected for masked profiles" aria-disabled="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg></a>
+          @else
+            <a id="rcvOpenNew" href="{{ $rcvResume }}" target="_blank" title="Open in new tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg></a>
+          @endif
           <div class="rcv-dl" id="rcvDl">
             <button type="button" class="rcv-hl-dl" id="rcvDlToggle">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
@@ -158,7 +165,11 @@
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px;"><polyline points="6 9 12 15 18 9"/></svg>
             </button>
             <div class="rcv-dl-menu" id="rcvDlMenu">
-              <a class="rcv-dl-item" href="{{ $rcvDownloadUrl }}" target="_blank">Download Resume</a>
+              @if($rcvMaskContact)
+                <button type="button" class="rcv-dl-item" disabled title="Original resume is protected for masked profiles">Download Resume</button>
+              @else
+                <a class="rcv-dl-item" href="{{ $rcvDownloadUrl }}" target="_blank">Download Resume</a>
+              @endif
               <button type="button" class="rcv-dl-item rcv-dl-logo" data-dl="logo">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px;flex-shrink:0;"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>
                 Resume with Company Logo
@@ -243,12 +254,20 @@
       countOccurrences(); renderChips();
     }
 
-    async function renderPdf(url){
+    async function renderPdf(url, attempt){
+      attempt = attempt || 0;
       if(typeof pdfjsLib==='undefined'){ showIframe('PDF viewer library not available.'); return; }
       try { var ver=pdfjsLib.version||'2.11.338'; pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/'+ver+'/pdf.worker.min.js'; } catch(e){}
       var pagesEl=$id('rcvPages'); pagesEl.innerHTML=''; hits=[]; var bytes;
       try {
-        var resp=await withTimeout(fetch(url,{credentials:'include'}),35000);
+        var resp=await withTimeout(fetch(url,{credentials:'same-origin'}),35000);
+        if(resp.status===202){
+          var wait=Math.min(2500 + (attempt*250), 6000);
+          $id('rcvLoading').style.display='block';
+          $id('rcvLoading').textContent='Preparing résumé preview…';
+          if(attempt < 40){ setTimeout(function(){ renderPdf(url, attempt+1); }, wait); return; }
+          throw new Error('conversion-timeout');
+        }
         if(!resp.ok) throw new Error('HTTP '+resp.status);
         bytes=new Uint8Array(await resp.arrayBuffer());
         if(String.fromCharCode.apply(null,bytes.subarray(0,5)).indexOf('%PDF')===-1) throw new Error('not-pdf');
@@ -284,7 +303,7 @@
       window.__rcvLogoTried=true;
       var wrap=document.querySelector('#resume_cv .rcv-wrap'); var src=(wrap&&wrap.getAttribute('data-logo'))||'';
       if(!src) return Promise.resolve(null);
-      return fetch(src,{credentials:'include'}).then(function(r){ if(!r.ok) throw 0; return r.blob(); })
+      return fetch(src,{credentials:'same-origin'}).then(function(r){ if(!r.ok) throw 0; return r.blob(); })
         .then(function(b){ return new Promise(function(res){ var fr=new FileReader(); fr.onload=function(){ var im=new Image(); im.onload=function(){ im.__dataUri=fr.result; window.__rcvLogo=im; res(im); }; im.onerror=function(){ res(null); }; im.src=fr.result; }; fr.onerror=function(){ res(null); }; fr.readAsDataURL(b); }); })
         .catch(function(){ return null; });
     }

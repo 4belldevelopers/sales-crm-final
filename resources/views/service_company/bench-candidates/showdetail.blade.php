@@ -165,6 +165,7 @@
               @endif
               @php                                
                   $url = @$benchApplication->resume;
+                  $hdrMaskContact = ((int) @$benchApplication->company_id !== (int) (auth()->user()->company_id ?? 0));
 
                   $info = pathinfo($url);
               @endphp
@@ -180,9 +181,15 @@
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:12px;height:12px;color:#475569"><polyline points="6 9 12 15 18 9"/></svg>
                   </button>
                   <div id="hdrDlMenuBench" style="display:none;position:absolute;right:0;top:calc(100% + 5px);background:#fff;border:1px solid #e2e8f0;border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,.12);min-width:230px;z-index:999;overflow:hidden;">
-                    <a target="_blank" data-id="{{ $benchApplication->id }}" class="downloadCount" href="{{ route('download.resume', ['id' => $benchApplication->id,'path' => rtrim(strtr(base64_encode($url), '+/', '-_'), '=')]) }}" style="display:block;padding:9px 13px;font-size:12px;font-weight:500;color:#334155;text-decoration:none;border-bottom:1px solid #f1f5f9;">
-                      Download Resume
-                    </a>
+                    @if($hdrMaskContact)
+                      <button type="button" disabled title="Original resume is protected for masked profiles" style="display:block;width:100%;padding:9px 13px;font-size:12px;font-weight:500;color:#94a3b8;text-decoration:none;border:0;border-bottom:1px solid #f1f5f9;background:#f8fafc;text-align:left;cursor:not-allowed;">
+                        Download Resume
+                      </button>
+                    @else
+                      <a target="_blank" data-id="{{ $benchApplication->id }}" class="downloadCount" href="{{ route('download.resume', ['id' => $benchApplication->id,'path' => rtrim(strtr(base64_encode($url), '+/', '-_'), '=')]) }}" style="display:block;padding:9px 13px;font-size:12px;font-weight:500;color:#334155;text-decoration:none;border-bottom:1px solid #f1f5f9;">
+                        Download Resume
+                      </a>
+                    @endif
                     <button type="button" onclick="hdrDownloadWithLogoBench()" style="display:flex;align-items:center;gap:6px;width:100%;padding:9px 13px;font-size:12px;font-weight:600;color:#15803d;background:#f0fdf4;border:0;border-left:3px solid #22c55e;cursor:pointer;text-align:left;">
                       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px;flex-shrink:0;"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>
                       Resume with Company Logo

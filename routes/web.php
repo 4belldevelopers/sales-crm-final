@@ -91,6 +91,7 @@ Route::post('/salary/calculate', [HomeController::class, 'salaryCalculate'])->na
 
 Route::get('/download-resume/{id}/{path}', [HomeController::class, 'downloadResume'])
     ->where('path', '[A-Za-z0-9\-_]+')
+    ->middleware('auth')
     ->name('download.resume');
 
 Route::get('/captcha', [\App\Http\Controllers\Auth\CaptchaController::class, 'generate'])->name('captcha.generate');

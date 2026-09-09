@@ -9067,57 +9067,10 @@ class SuperAdminCompanyController extends SuperAdminBaseController
                     $this->company = Company::withoutGlobalScope('company')->findOrFail($row->client_comapny_id);
                     // dd($this->company);
                     $flag = 0;
-                    $duplicate = 0;
-                    $duplicate = $row->duplicate;
-                    $company_id = $this->company->company_id;
-                    $app_duplicate = $this->company->app_duplicate;
-                    $app_duplicate_days = $this->company->app_duplicate_days;
-
-                    $covid = '';
-                    if ($duplicate == 1) {											// CHECK RECORD IS DUPLICATE
-
-                        if (($app_duplicate == 1) || ($app_duplicate == 2)) { 		// CHECK SYSTEM MODE SET IN DUPLICATE
-
-                            if ($app_duplicate == 1) {								// CHECK DUPLICATE JOBWISE WITH TIME INTERVAL IN DAYS FOR- 1
-
-                                $application_cnt = DB::table('job_applications')->select('*')
-                                    ->where('company_id', $company_id)
-                                    ->where('job_id', $row->job_id)
-                                    ->where('email', $row->email)
-                                    ->orWhere('phone', $row->phone)
-                                    ->where('job_applications.created_at', '>', DB::raw('DATE_SUB(CURDATE(), INTERVAL '.@$app_duplicate_days.' DAY)'))
-                                    ->orderby('job_applications.id', 'DESC')
-                                    ->count();
-                                if ($application_cnt > 1) {
-                                    $flag = 1;
-                                } else {
-                                    $flag = 0;
-                                }
-                            } elseif ($app_duplicate == 2) {						// CHECK DUPLICATE OVERALL SYSTEM WITH TIME INTERVAL IN DAYS FOR- 2
-
-                                $application_cnt = DB::table('job_applications')
-                                    ->select('job_applications.id')
-                                    ->where('company_id', $company_id)
-                                    ->where('job_applications.email', $row->email)
-                                    ->orWhere('phone', $row->phone)
-                                    ->where('job_applications.created_at', '>', DB::raw('DATE_SUB(CURDATE(), INTERVAL '.@$app_duplicate_days.' DAY)'))
-                                    // ->where('job_applications.duplicate', '=', 1 )
-                                    ->orderby('job_applications.id', 'DESC')
-                                    ->count();
-
-                                if ($application_cnt > 1) {
-                                    $flag = 1;
-                                } else {
-                                    $flag = 0;
-                                }
-                            } else {
-                                $flag = 0;
-                            }
-                        } else {
-                            $flag = 0;
-                        }
-                    } else {
-                        $flag = 0;
+                    $duplicate = $row->duplicate ?? 0;
+                    $flag = 0;
+                    if ($duplicate == 1) {
+                        $flag = $duplicate;
                     }
 
                     $company_id = auth()->user()->company_id;
@@ -9211,53 +9164,10 @@ class SuperAdminCompanyController extends SuperAdminBaseController
             ->editColumn('Contacts', function ($row) {
                 return 1;
 
+                $duplicate = $row->duplicate ?? 0;
                 $flag = 0;
-                $duplicate = 0;
-                $duplicate = $row->duplicate;
-                $company_id = $this->user->roles[0]->company_id;
-                $app_duplicate = $this->user->company->app_duplicate;
-                $app_duplicate_days = $this->user->company->app_duplicate_days;
-
-                if ($duplicate == 1) {										// CHECK RECORD IS DUPLICATE
-                    if (($app_duplicate == 1) || ($app_duplicate == 2)) { 		// CHECK SYSTEM MODE SET IN DUPLICATE
-                        if ($app_duplicate == 1) {								// CHECK DUPLICATE JOBWISE WITH TIME INTERVAL IN DAYS FOR- 1
-                            // dd($company_id,$row->job_id,$row->email,$row->phone);
-                            $application_cnt = DB::table('job_applications')
-                                ->select('*')
-                                ->where('company_id', $company_id)
-                                ->where('job_id', $row->job_id)
-                                ->where('email', $row->email)
-                                ->orWhere('phone', $row->phone)
-                                ->where('job_applications.created_at', '>', DB::raw('DATE_SUB(CURDATE(), INTERVAL '.@$app_duplicate_days.' DAY)'))
-                                ->orderby('job_applications.id', 'DESC')
-                                ->count();
-                            if ($application_cnt > 1) {
-                                $flag = 1;
-                            } else {
-                                $flag = 0;
-                            }
-                        } elseif ($app_duplicate == 2) {						// CHECK DUPLICATE OVERALL SYSTEM WITH TIME INTERVAL IN DAYS FOR- 2
-                            $application_cnt = DB::table('job_applications')
-                                    ->select('job_applications.id')
-                                    ->where('company_id', $company_id)
-                                    ->where('job_applications.email', $row->email)
-                                    ->orWhere('phone', $row->phone)
-                                    ->where('job_applications.created_at', '>', DB::raw('DATE_SUB(CURDATE(), INTERVAL '.@$app_duplicate_days.' DAY)'))
-                                    ->orderby('job_applications.id', 'DESC')
-                                    ->count();
-                            if ($application_cnt > 1) {
-                                $flag = 1;
-                            } else {
-                                $flag = 0;
-                            }
-                        } else {
-                            $flag = 0;
-                        }
-                    } else {
-                        $flag = 0;
-                    }
-                } else {
-                    $flag = 0;
+                if ($duplicate == 1) {
+                    $flag = $duplicate;
                 }
 
                 $bench_count = DB::table('rec_candidate_assign')
