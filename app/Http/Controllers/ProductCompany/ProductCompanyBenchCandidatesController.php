@@ -1538,62 +1538,21 @@ class ProductCompanyBenchCandidatesController extends ProductCompanyBaseControll
 	}
 	public function bench_explore_listing_counter(Request $request)
 	{
-
-		$bench_id = $stage = $inputSearch = '';
+		$bench_id = $request->bench_id;
 		$company_id = auth()->user()->company_id;
 
-		$bench_id = $request->bench_id;
-		$stage = $request->stage;
-		$inputSearch = $request->inputSearch;
+		/**
+		 * Intent: Use Elasticsearch GeneralMethod::bench_explore_listing_counter for candidate explore pipeline counts.
+		 * Tenancy: Scoped strictly to authenticated tenant company_id.
+		 */
+		$bench_explore_listing_counter = GeneralMethod::bench_explore_listing_counter($bench_id, $company_id);
 
-		$allCounter = DB::table('rec_candidate_assign')
-			->select(
-				DB::raw("count(job_applications.id) as allCandidate"),
-				DB::raw("SUM(CASE WHEN job_applications.master_status_id = 1 THEN 1 ELSE 0 END) AS Sourcing"),
-				DB::raw("SUM(CASE WHEN job_applications.master_status_id = 2 THEN 1 ELSE 0 END) AS Screening"),
-				DB::raw("SUM(CASE WHEN job_applications.master_status_id = 3 THEN 1 ELSE 0 END) AS Interview"),
-				DB::raw("SUM(CASE WHEN job_applications.master_status_id = 4 THEN 1 ELSE 0 END) AS Negotiation"),
-				DB::raw("SUM(CASE WHEN job_applications.master_status_id = 5 THEN 1 ELSE 0 END) AS Offered"),
-				DB::raw("SUM(CASE WHEN job_applications.master_status_id = 6 THEN 1 ELSE 0 END) AS Joined"),
-				DB::raw("SUM(CASE WHEN job_applications.master_status_id = 7 THEN 1 ELSE 0 END) AS Rejected"),
-				DB::raw("SUM(CASE WHEN job_applications.master_status_id = 8 THEN 1 ELSE 0 END) AS InReview")
-			);
-		$allCounter = $allCounter->join('job_applications', function ($join) use ($bench_id, $company_id) {
-			$join->on('job_applications.id', '=', 'rec_candidate_assign.source_application_id');
-			$join->on('rec_candidate_assign.source_from_id', '=', DB::raw($bench_id));
-			$join->on('rec_candidate_assign.source_from_company_id', '=', DB::raw($company_id));
-
-		});
-		$allCounter = $allCounter->groupBy('rec_candidate_assign.source_from_id');
-		$allCounter = $allCounter->count();
-
-
-		$applicationCounter = DB::table('rec_candidate_assign')
-			->select(
-				DB::raw("count(job_applications.id) as allCandidate"),
-				DB::raw("SUM(CASE WHEN job_applications.master_status_id = 1 THEN 1 ELSE 0 END) AS Sourcing"),
-				DB::raw("SUM(CASE WHEN job_applications.master_status_id = 2 THEN 1 ELSE 0 END) AS Screening"),
-				DB::raw("SUM(CASE WHEN job_applications.master_status_id = 3 THEN 1 ELSE 0 END) AS Interview"),
-				DB::raw("SUM(CASE WHEN job_applications.master_status_id = 4 THEN 1 ELSE 0 END) AS Negotiation"),
-				DB::raw("SUM(CASE WHEN job_applications.master_status_id = 5 THEN 1 ELSE 0 END) AS Offered"),
-				DB::raw("SUM(CASE WHEN job_applications.master_status_id = 6 THEN 1 ELSE 0 END) AS Joined"),
-				DB::raw("SUM(CASE WHEN job_applications.master_status_id = 7 THEN 1 ELSE 0 END) AS Rejected"),
-				DB::raw("SUM(CASE WHEN job_applications.master_status_id = 8 THEN 1 ELSE 0 END) AS InReview")
-
-			);
-		$applicationCounter = $applicationCounter->join('job_applications', function ($join) use ($bench_id, $company_id) {
-			$join->on('job_applications.id', '=', 'rec_candidate_assign.source_application_id');
-			$join->on('rec_candidate_assign.source_from_id', '=', DB::raw($bench_id));
-			$join->on('rec_candidate_assign.source_from_company_id', '=', DB::raw($company_id));
-
-
-		});
-		$applicationCounter = $applicationCounter->groupBy('rec_candidate_assign.source_from_id');
-		$applicationCounter = $applicationCounter->first();
+		$allCounter = $bench_explore_listing_counter->total;
+		$applicationCounter = $bench_explore_listing_counter->applicationCounter;
 
 		return Reply::dataOnly(['status' => 'success', 'data' => $applicationCounter, 'allCounter' => $allCounter]);
-
 	}
+
 	public function bench_explore_listing(Request $request)
 	{
 
