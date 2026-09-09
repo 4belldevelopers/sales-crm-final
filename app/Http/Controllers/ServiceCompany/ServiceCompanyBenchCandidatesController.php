@@ -16,6 +16,7 @@ use App\Helper\GeneralMethod;
 use App\Helper\Reply;
 use App\Jobs\ElasticBenchCandidateIndex;
 use App\Jobs\QueueNotificationMailService;
+use App\Jobs\RecordBenchResumeDownloadJob;
 use App\Jobs\UploadResumeToTestRTwo;
 use App\Models\ApplicationStatus;
 use App\Models\BenchApplication;
@@ -1142,6 +1143,12 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
             $rcvBPresented = '--';
         }
         $rcvDownloadUrl = route('download.resume', ['id' => $benchApplication->id, 'path' => rtrim(strtr(base64_encode((string) @$benchApplication->resume), '+/', '-_'), '=')]);
+        $rcvConvertToken = GeneralMethod::value_encrypt(json_encode([
+            'scope' => 'bench_resume_center',
+            'candidate_id' => (int) $benchApplication->id,
+            'resume' => (string) @$benchApplication->resume,
+        ]));
+        $rcvConvertUrl = route('service_company.job-applications.resume-convert', ['token' => $rcvConvertToken, 'preview' => 1]);
         $rcvMaskContact = ((int) @$benchApplication->company_id !== (int) $company_id);
 
         $view = view('service_company.partials.resume_cv_viewer', [
@@ -1157,6 +1164,7 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
             'rcvBLoc' => $rcvBLoc,
             'rcvBPresented' => $rcvBPresented,
             'rcvDownloadUrl' => $rcvDownloadUrl,
+            'rcvConvertUrl' => $rcvConvertUrl,
         ])->render();
 
         $responseData = Reply::dataOnly(['status' => 'success', 'view' => $view]);
@@ -5298,13 +5306,13 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
                 $status = explode(',', $status);
             }
 
-            // Optional: handle special logic (example: 7 => [7,9])
+            // Stage 7 (Rejected) encompasses master_status_ids [7, 9].
             if (in_array(7, $status)) {
                 $status = array_unique(array_merge($status, [9]));
             }
 
             $filters[] = [
-                'terms' => ['job_master_status_id' => array_map('intval', $status)],
+                'terms' => ['job_master_status_id' => array_values(array_map('intval', $status))],
             ];
         }
 
@@ -5448,7 +5456,7 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
                 'listType' => 'allcandidate',
             ],
             'counters' => $bench_explore_counter_obj->applicationCounter ?? null,
-            'allCounter' => $total,
+            'allCounter' => $bench_explore_counter_obj->total ?? $bench_explore_counter_obj->applicationCounter->allCandidate ?? $total,
             'total' => $total,
             'html' => view('service_company.ajax_pages.bench-explore-list-ajax', compact('data', 'userPermissions', 'company_id', 'salaryMode', 'currencySymbole', 'job_status', 'feedback_status', 'bench_id'))->render(),
             'pagination' => view('service_company.ajax_pages.pagination', compact('pagination'))->render(),
@@ -7392,16 +7400,23 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
 
     public function downloadResumeBenchCandidate(Request $request)
     {
-        $id = $request->candidateId;
-        $view_count = [
-            'user_id' => auth()->user()->id,
-            'candidate_id' => $id,
-            'type' => 2,
-            'status' => 0,
-            'created_at' => date('Y-m-d H:i:'),
-            'updated_at' => date('Y-m-d H:i:'),
-        ];
-        DB::table('bench_count_view_download')->insert($view_count);
+        $id = (int) $request->candidateId;
+        $companyId = (int) auth()->user()->company_id;
+
+        // TENANCY: Validate the clicked candidate belongs to the current company
+        // before queuing analytics; download counters must not accept arbitrary IDs.
+        $candidateExists = DB::table('job_applications')
+            ->where('id', $id)
+            ->where('company_id', $companyId)
+            ->exists();
+
+        if (! $candidateExists) {
+            return response()->json(['status' => 'error'], 404);
+        }
+
+        RecordBenchResumeDownloadJob::dispatch($id, (int) auth()->user()->id, $companyId);
+
+        return response()->json(['status' => 'success']);
 
     }
 

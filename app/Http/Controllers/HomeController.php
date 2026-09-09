@@ -781,38 +781,106 @@ class HomeController extends Controller
 
     public function downloadResume($id, $encodedPath)
     {
-        // base64url decode (encoded with rtrim(strtr(base64_encode($url),'+/','-_'),'=') in blade views)
-        $pad = strlen($encodedPath) % 4 ? 4 - strlen($encodedPath) % 4 : 0;
-        $resumeUrl = base64_decode(strtr($encodedPath.str_repeat('=', $pad), '-_', '+/'));
+        abort_unless(auth()->check(), 403);
 
-        $s3Path = str_replace('https://file.jero.works/', '', $resumeUrl);
+        // Intent: Resume Center download URLs carry a path hint, but the stored
+        // candidate resume remains the source of truth for tenant-safe access.
+        $pad = strlen($encodedPath) % 4 ? 4 - strlen($encodedPath) % 4 : 0;
+        $resumeUrl = base64_decode(strtr($encodedPath.str_repeat('=', $pad), '-_', '+/'), true);
+        if ($resumeUrl === false || $resumeUrl === '') {
+            abort(404);
+        }
+
+        $requestedPath = $this->resumeR2KeyFromUrl((string) $resumeUrl);
+        if ($requestedPath === '') {
+            abort(404);
+        }
 
         // Derive candidate name from job_applications (fall back to file basename if not found)
         // TENANCY NOTE: Enforce company_id guard for authenticated tenant users to prevent cross-tenant IDOR
-        $appQuery = DB::table('job_applications')->where('id', $id);
+        $appQuery = DB::table('job_applications')
+            ->select('id', 'company_id', 'full_name', 'resume')
+            ->where('id', $id);
         if (auth()->check() && ! auth()->user()->is_superadmin && auth()->user()->company_id) {
             $appQuery->where('company_id', auth()->user()->company_id);
         }
         $job_application = $appQuery->first();
+        if (! $job_application || empty($job_application->resume)) {
+            abort(404);
+        }
+
+        $storedPath = $this->resumeR2KeyFromUrl((string) $job_application->resume);
+        if ($storedPath === '' || ! hash_equals($storedPath, $requestedPath)) {
+            abort(403);
+        }
+
         $candidateName = $job_application
             ? 'JERO_'.str_replace(' ', '_', $job_application->full_name)
-            : 'JERO_'.pathinfo($s3Path, PATHINFO_FILENAME);
+            : 'JERO_'.pathinfo($storedPath, PATHINFO_FILENAME);
 
-        $ext = strtolower(pathinfo($s3Path, PATHINFO_EXTENSION));
+        $ext = strtolower(pathinfo($storedPath, PATHINFO_EXTENSION));
+        if (! in_array($ext, ['pdf', 'doc', 'docx', 'htm', 'html'])) {
+            abort(404);
+        }
         $customName = $candidateName.'.'.$ext;
 
         // If not found at stored path, try PDF fallback (covers records with corrupted .htm extension in DB)
-        if (! Storage::disk('r2')->exists($s3Path)) {
-            $fallbackPath = preg_replace('/\.[^.\/]+$/', '.pdf', $s3Path);
-            if ($fallbackPath !== $s3Path && Storage::disk('r2')->exists($fallbackPath)) {
-                $s3Path = $fallbackPath;
+        if (in_array($ext, ['htm', 'html']) || ! Storage::disk('r2')->exists($storedPath)) {
+            $fallbackPath = preg_replace('/\.[^.\/]+$/', '.pdf', $storedPath);
+            if ($fallbackPath !== $storedPath && Storage::disk('r2')->exists($fallbackPath)) {
+                $storedPath = $fallbackPath;
                 $customName = $candidateName.'.pdf';
             } else {
                 abort(404, 'Resume file not found. Please re-upload the resume.');
             }
         }
 
-        return Storage::disk('r2')->download($s3Path, $customName);
+        // Intent: PDF.js/Mammoth preview needs same-origin bytes so keyword
+        // highlighting can inspect text; normal downloads still redirect to R2.
+        if (request()->boolean('preview')) {
+            return Storage::disk('r2')->response(
+                $storedPath,
+                $customName,
+                ['Cache-Control' => 'private, max-age=300'],
+                'inline'
+            );
+        }
+
+        return redirect()->away($this->temporaryResumeDownloadUrl($storedPath, $customName));
+    }
+
+    /**
+     * Intent: Normalize stored/file.jero.works resume values into R2 object keys
+     * before authorization compares the requested path against database truth.
+     */
+    private function resumeR2KeyFromUrl(string $resume): string
+    {
+        if (strpos($resume, 'https://file.jero.works/') === 0) {
+            return ltrim((string) parse_url($resume, PHP_URL_PATH), '/');
+        }
+
+        if (filter_var($resume, FILTER_VALIDATE_URL)) {
+            return '';
+        }
+
+        return ltrim($resume, '/');
+    }
+
+    /**
+     * Intent: Keep resume bytes on R2/CDN at high concurrency; Laravel only mints
+     * the authorized short-lived URL and never streams the file through PHP.
+     */
+    private function temporaryResumeDownloadUrl(string $r2Key, string $downloadName): string
+    {
+        try {
+            return Storage::disk('r2')->temporaryUrl(
+                $r2Key,
+                now()->addMinutes(15),
+                ['ResponseContentDisposition' => 'attachment; filename="'.str_replace('"', '', $downloadName).'"']
+            );
+        } catch (\Throwable $e) {
+            return 'https://file.jero.works/'.$r2Key;
+        }
     }
 
     public function benchCandidates(Request $request, $companyName, $companyId)
@@ -1108,9 +1176,8 @@ class HomeController extends Controller
      * Route: GET /career-jobs/{companyName}/{companyId} & GET /api/v2/career-jobs/{companyId}
      * Multi-tenancy: Strictly scoped by company_id parameter across MySQL and Elasticsearch queries.
      *
-     * @param Request $request
-     * @param string $companyName
-     * @param int|string $companyId
+     * @param  string  $companyName
+     * @param  int|string  $companyId
      * @return \Illuminate\Contracts\View\View|\Illuminate\Http\JsonResponse
      */
     public function careerJobPage(Request $request, $companyName, $companyId)
