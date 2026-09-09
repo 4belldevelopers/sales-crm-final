@@ -888,11 +888,22 @@ class HomeController extends Controller
             return Storage::disk('r2')->temporaryUrl(
                 $r2Key,
                 now()->addMinutes(15),
-                ['ResponseContentDisposition' => 'attachment; filename="'.str_replace('"', '', $downloadName).'"']
+                ['ResponseContentDisposition' => $this->resumeContentDisposition($downloadName)]
             );
         } catch (\Throwable $e) {
             return 'https://file.jero.works/'.$r2Key;
         }
+    }
+
+    /**
+     * Intent: Provide browser-safe attachment names for R2 downloads, including
+     * candidate names with spaces, without changing stored object keys.
+     */
+    private function resumeContentDisposition(string $downloadName): string
+    {
+        $asciiName = trim(str_replace('"', '', $downloadName)) ?: 'resume.pdf';
+
+        return 'attachment; filename="'.$asciiName.'"; filename*=UTF-8\'\''.rawurlencode($asciiName);
     }
 
     public function benchCandidates(Request $request, $companyName, $companyId)

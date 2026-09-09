@@ -8216,7 +8216,7 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
   <div class="rdc-footer">
     <button id="rdcDownloadBtn" class="rdc-dl-btn" type="button">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;flex-shrink:0" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-      <span id="rdcBtnLabel">Download Original Resume</span>
+      <span id="rdcBtnLabel">Download Resume</span>
     </button>
     <p class="rdc-foot-note">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:11px;height:11px;color:#94a3b8" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
@@ -8361,7 +8361,7 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
   var isLoading   = false;
 
   function downloadButtonLabel(label){
-    label=clean(label,'Download');
+    label=rdcCleanLocal(label) || 'Download';
     return /^download\b/i.test(label) ? label : 'Download '+label;
   }
 
@@ -8371,10 +8371,10 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
 
   function applyDownloadCenterR2Urls(payload){
     if(!payload || payload.status !== 'success') return;
-    r2DirectUrl = clean(payload.r2_direct_url || r2DirectUrl, '');
-    r2PublicUrl = clean(payload.r2_public_url || r2PublicUrl, '');
-    originalR2DirectUrl = clean(payload.original_r2_direct_url || originalR2DirectUrl, '');
-    originalR2PublicUrl = clean(payload.original_r2_public_url || originalR2PublicUrl, '');
+    r2DirectUrl = rdcCleanLocal(payload.r2_direct_url || r2DirectUrl);
+    r2PublicUrl = rdcCleanLocal(payload.r2_public_url || r2PublicUrl);
+    originalR2DirectUrl = rdcCleanLocal(payload.original_r2_direct_url || originalR2DirectUrl);
+    originalR2PublicUrl = rdcCleanLocal(payload.original_r2_public_url || originalR2PublicUrl);
     originalR2Available = payload.original_r2_available !== false && !!(originalR2DirectUrl || originalR2PublicUrl);
     if(rdcData){
       rdcData.setAttribute('data-r2-direct-url', r2DirectUrl);
