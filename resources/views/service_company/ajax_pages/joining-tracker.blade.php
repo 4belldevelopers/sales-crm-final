@@ -151,23 +151,27 @@
                 $stageCss = 'client_stage_sub_stage';
                 if ($row->job_master_status_id != 8) { $stageCss = ''; }
             }
+
+            $duplicate = $row->duplicate ?? 0;
+            $duplicateFlag = ($duplicate == 1) ? 1 : 0;
         @endphp
         <tr class="jt-row">
             {{-- Candidate --}}
             <td class="jt-td">
                 <div class="jt-cand">
-                    <a href="javascript:void(0);" data-row-id="{{ @$row->wiseId }}" class="show-application-detail jt-avatar-link">
+                    <a href="javascript:void(0);" data-row-id="{{ @$row->wiseId }}" class="show-application-detail jt-avatar-link {{ $duplicateFlag ? 'btn btn-icon btn-light-danger pulse pulse-danger' : '' }}">
                         @if(!empty($row->photo))
                             <img src="{{ $row->photo }}" class="jt-avatar-img" alt="">
                         @else
-                            <span class="jt-avatar {{ $candTone }}">{{ $initial }}</span>
+                            <span class="jt-avatar {{ $duplicateFlag ? 'btn-light-danger' : $candTone }}">{{ $initial }}</span>
                         @endif
+                        @if($duplicateFlag) <span class="pulse-ring"></span> @endif
                     </a>
                     <div class="jt-cand-info">
-                        <a href="javascript:void(0);" data-row-id="{{ @$row->wiseId }}" class="show-application-detail jt-cand-name" title="{{ ucwords($full_name) }}">
+                        <a href="javascript:void(0);" data-row-id="{{ @$row->wiseId }}" class="show-application-detail jt-cand-name {{ $duplicateFlag ? 'text-danger' : '' }}" title="{{ ucwords($full_name) }}">
                             {{ ucwords(mb_substr($full_name, 0, 22)) }}{!! $bench !!}
                         </a>
-                        <span class="jt-cand-role" title="{{ ucwords((string) @$row->current_designation) }}">{{ $candSub }}</span>
+                        <span class="jt-cand-role {{ $duplicateFlag ? 'text-danger' : '' }}" title="{{ ucwords((string) @$row->current_designation) }}">{{ $candSub }}</span>
                     </div>
                 </div>
             </td>
