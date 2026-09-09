@@ -971,19 +971,21 @@ var BenchExploreTabManager = (function(){
         },
 
         render: function(res) {
+            var overallTotal = (res.counters ? (res.counters.allCandidate || res.counters.all) : null) || res.allCounter || res.total;
             $('#benchCandidateExploreJobAjax').html(res.html);
-            $('#bench_explore_pool_id').html(res.total);
-            $('.bxr-live').html(res.total);
+            $('#bench_explore_pool_id').html(overallTotal);
+            $('.bxr-live').html(overallTotal);
             $('#bxr_footer_number').text(res.total);
             $('#paginationbenchCandidateExploreJob').html(res.pagination);
 
             if (res.counters) {
                 var d = res.counters;
+                var totalCandidateCnt = d.allCandidate || d.all || overallTotal;
                 $('#bg_1').html(d.Sourcing || 0);   $('#bg_2').html(d.Screening || 0);
                 $('#bg_3').html(d.Evaluation || 0); $('#bg_4').html(d.Negotiation || 0);
                 $('#bg_5').html(d.Offered || 0);    $('#bg_6').html(d.Joined || 0);
-                $('#bg_7').html(d.Rejected || 0);   $('#totalcnt').html(res.allCounter || d.allCandidate || res.total);
-                $('#totalcnt_plain').html(res.allCounter || d.allCandidate || res.total);
+                $('#bg_7').html(d.Rejected || 0);   $('#totalcnt').html(totalCandidateCnt);
+                $('#totalcnt_plain').html(totalCandidateCnt);
                 syncPillCounts();
             } else {
                 tableLoad();
