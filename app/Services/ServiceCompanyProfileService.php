@@ -483,7 +483,7 @@ class ServiceCompanyProfileService
      */
     public function getGraphData(int $userId, int $companyId): array
     {
-        return Cache::remember("profile:graphs_v4:u{$userId}", 1800, function () use ($userId, $companyId) {
+        return Cache::remember("profile:graphs_v5:u{$userId}", 1800, function () use ($userId, $companyId) {
             $endDate = Carbon::today()->endOfDay();
             $startDate = Carbon::today()->subDays(6)->startOfDay();
 
@@ -731,6 +731,7 @@ class ServiceCompanyProfileService
                                     ],
                                     'minimum_should_match' => 1,
                                     'filter' => [
+                                        ['term' => ['available_status' => 1]],
                                         ['range' => ['schedule_date' => ['gte' => $start6Months->toDateString(), 'lte' => $end6Months->toDateString()]]],
                                     ],
                                 ],
@@ -771,7 +772,7 @@ class ServiceCompanyProfileService
                 }
 
                 if (! $hasIntvData) {
-                    // Fallback to ELASTIC_CANDIDATES index query
+                    // Fallback to ELASTIC_CANDIDATES index query (attended interviews only)
                     $responseIntv = $this->elasticService->getClient()->search([
                         'index' => ELASTIC_CANDIDATES,
                         'request_cache' => true,
@@ -784,6 +785,7 @@ class ServiceCompanyProfileService
                                         ['term' => ['company_id' => $companyId]],
                                         ['term' => ['submitted_by' => $userId]],
                                         ['exists' => ['field' => 'interview_schedule_id']],
+                                        ['term' => ['available_status' => 1]],
                                     ],
                                     'filter' => [
                                         ['range' => ['created_at' => ['gte' => $start6Months->toIso8601String(), 'lte' => $end6Months->toIso8601String()]]],
@@ -819,9 +821,10 @@ class ServiceCompanyProfileService
                 }
 
                 if (! $hasIntvData) {
-                    // Tier 3: Direct MySQL DB query fallback on interview_schedules table
+                    // Tier 3: Direct MySQL DB query fallback on interview_schedules table (attended interviews only: available_status = 1)
                     $dbIntv = DB::table('interview_schedules')
                         ->leftJoin('job_applications', 'job_applications.id', '=', 'interview_schedules.job_application_id')
+                        ->where('interview_schedules.available_status', 1)
                         ->where(function ($q) use ($companyId) {
                             $q->where('interview_schedules.company_id', $companyId)
                               ->orWhere('job_applications.company_id', $companyId);
