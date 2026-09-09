@@ -4270,7 +4270,7 @@ setTimeout(() => {
     $rdcR2Key = '';
     if(strpos($rdcResumeRaw, 'https://file.jero.works/') === 0){
       $rdcR2Key = ltrim((string)parse_url($rdcResumeRaw, PHP_URL_PATH), '/');
-    } elseif($resumeAwsPath && !filter_var($rdcResumeRaw, FILTER_VALIDATE_URL)){
+    } elseif(!filter_var($rdcResumeRaw, FILTER_VALIDATE_URL)){
       $rdcR2Key = ltrim($rdcResumeRaw, '/');
     }
 
@@ -4764,7 +4764,23 @@ function sameOriginUrl(url){
 }
 function guessResumeDownloadName(ext){
   ext=clean(ext,'FILE').toLowerCase().replace(/[^a-z0-9]+/g,'') || 'file';
-  return resumeTrackingFileName(readData(),'C',ext);
+  var data=null;
+  try{ data=readData(); }catch(ex){}
+  if(!data || !data.name || data.name==='--' || data.name==='Candidate'){
+    try{
+      var candNameEl=document.getElementById('rsData') || document.querySelector('[data-candidate-name]');
+      if(candNameEl){
+        var n=candNameEl.getAttribute('data-name') || candNameEl.getAttribute('data-candidate-name') || candNameEl.textContent;
+        if(n) data={name:clean(n,'Candidate')};
+      }
+    }catch(ex){}
+  }
+  try{
+    return resumeTrackingFileName(data,'C',ext);
+  }catch(ex){
+    var candSafe=(data && data.name) ? fileSafeName(data.name,'Candidate') : 'Candidate';
+    return 'JEROWORKS_'+candSafe+'_C.'+ext;
+  }
 }
 function collectOriginalResumeDownloadSources(resumeUrls){
   var sources=(Array.isArray(resumeUrls) ? resumeUrls : [resumeUrls]).map(function(url){
@@ -4792,53 +4808,81 @@ async function downloadOriginalResumeFromR2First(options){
 
   var expandedSources=[];
   r2Sources.forEach(function(src){
+    if(!src) return;
     expandedSources.push(src);
     // If filename on R2 was converted to .pdf or stored without original extension, check .pdf fallback directly on R2
-    if(/\.[a-zA-Z0-9]+$/.test(src) && !/\.pdf$/i.test(src)){
-      expandedSources.push(src.replace(/\.[a-zA-Z0-9]+$/, '.pdf'));
+    if(/\.[a-zA-Z0-9]+$/i.test(src) && !/\.pdf$/i.test(src)){
+      expandedSources.push(src.replace(/\.[a-zA-Z0-9]+$/i, '.pdf'));
     }
   });
 
   var blob=null;
-  var lastErr=null;
+  var matchedSrc='';
 
   for(var i=0; i<expandedSources.length; i++){
-    var src=expandedSources[i];
+    var rawSrc=expandedSources[i];
+    if(!rawSrc) continue;
+    var safeSrc=rawSrc;
+    try{ safeSrc=encodeURI(decodeURI(rawSrc)); }catch(e){}
+
     try{
-      var res=await fetch(src, {
+      var ctrl=(typeof AbortController !== 'undefined') ? new AbortController() : null;
+      var timeoutId=ctrl ? setTimeout(function(){ try{ ctrl.abort(); }catch(e){} }, 4000) : null;
+      var fetchOpts={
         mode:'cors',
         cache:'force-cache'
-      });
+      };
+      if(ctrl) fetchOpts.signal=ctrl.signal;
+
+      var res=await fetch(safeSrc, fetchOpts);
+      if(timeoutId) clearTimeout(timeoutId);
+
       if(res.ok){
         var ct=(res.headers.get('content-type')||'').toLowerCase();
         if(ct.indexOf('text/html')===-1){
           blob=await res.blob();
           if(blob && blob.size>0){
-            if(/\.pdf$/i.test(src) && !/\.pdf$/i.test(fileName)){
-              fileName=fileName.replace(/\.[^.]+$/, '.pdf');
-            }
+            matchedSrc=safeSrc;
             break;
           }
         }
       }
     }catch(err){
-      lastErr=err;
+      // Non-blocking catch, continue to next source or fallback
     }
   }
 
-  // Pure zero-server R2 path:
+  // 1. Pure zero-server R2 path:
   if(blob && blob.size>0){
+    if(/\.pdf$/i.test(matchedSrc) && !/\.pdf$/i.test(fileName)){
+      fileName=fileName.replace(/\.[^.]+$/, '.pdf');
+    } else if(/\.docx$/i.test(matchedSrc) && !/\.docx$/i.test(fileName)){
+      fileName=fileName.replace(/\.[^.]+$/, '.docx');
+    }
     downloadBlob(blob, fileName);
     return true;
   }
 
-  // Absolute fallback only if R2 public fetch failed (e.g. legacy local server file)
+  // 2. Direct anchor click fallback to Cloudflare R2
+  if(expandedSources.length>0){
+    var firstSrc=expandedSources[0];
+    try{ firstSrc=encodeURI(decodeURI(firstSrc)); }catch(e){}
+    var aDirect=document.createElement('a');
+    aDirect.href=firstSrc;
+    aDirect.download=fileName;
+    aDirect.rel='noopener noreferrer';
+    document.body.appendChild(aDirect);
+    aDirect.click();
+    notifyRdcDownloadStarted(fileName);
+    setTimeout(function(){ if(aDirect.parentNode) aDirect.parentNode.removeChild(aDirect); }, 1200);
+    return true;
+  }
+
+  // 3. Absolute fallback only if R2 public fetch/link failed (e.g. legacy local server file)
   if(options.dlUrl){
     var a=document.createElement('a');
     a.href=options.dlUrl;
     a.download=fileName;
-    a.target='_blank';
-    a.rel='noopener noreferrer';
     document.body.appendChild(a);
     a.click();
     notifyRdcDownloadStarted(fileName);
@@ -4846,7 +4890,7 @@ async function downloadOriginalResumeFromR2First(options){
     return true;
   }
 
-  throw (lastErr || new Error('Original resume is not available on R2 for direct download.'));
+  throw new Error('Original resume is not available for download.');
 }
 function removeNode(node){
   if(node && node.parentNode) node.parentNode.removeChild(node);
