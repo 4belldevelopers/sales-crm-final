@@ -8371,38 +8371,50 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
     return 'JEROWORKS_Candidate.' + ext;
   }
 
-  function downloadOriginalResumeFromR2First(options){
-    /* Purpose: Option 1 uses the browser's native direct download path from Cloudflare R2 edge storage.
-       Zero Laravel server load to support 10k+ concurrent downloads without server CPU or bandwidth bottleneck. */
+  function startOriginalResumeDownload(options){
+    /* Purpose: keep option 1 self-contained inside the RDC script. The drawer can
+       be injected without exposing earlier helper functions on window. */
     options = options || {};
-    var fileName = rdcOriginalFileName();
     var sources = rdcCollectDownloadSources([
-      options.originalR2DirectUrl,
+      options.r2RedirectUrl,
+      options.dlUrl,
       options.r2DirectUrl,
-      options.originalR2PublicUrl,
+      options.originalR2DirectUrl,
       options.r2PublicUrl,
-      options.dlUrl
+      options.originalR2PublicUrl
     ]);
     if(!sources.length) throw new Error('Original resume is not available for download.');
 
-    var source = sources[0];
-    try { source = encodeURI(decodeURI(source)); } catch(ex) {}
+    var src = sources[0];
+    try { src = encodeURI(decodeURI(src)); } catch(ex) {}
 
-    var a = document.createElement('a');
-    a.href = source;
-    a.download = fileName;
-    a.rel = 'noopener';
-    if(source.indexOf('file.jero.works') !== -1 || source.indexOf('cloudflarestorage.com') !== -1 || source.indexOf('r2.dev') !== -1){
-      a.target = '_blank';
-    }
-    document.body.appendChild(a);
-    a.click();
-    setTimeout(function(){
-      if(a.parentNode) a.parentNode.removeChild(a);
-    }, 1500);
+    var oldFrame = document.getElementById('rdcOriginalResumeDownloadFrame');
+    if(oldFrame && oldFrame.parentNode) oldFrame.parentNode.removeChild(oldFrame);
+
+    var frame = document.createElement('iframe');
+    frame.id = 'rdcOriginalResumeDownloadFrame';
+    frame.name = 'rdcOriginalResumeDownloadFrame';
+    frame.style.display = 'none';
+    frame.setAttribute('aria-hidden','true');
+    frame.onload = function(){
+      try {
+        var text = frame.contentDocument && frame.contentDocument.body ? frame.contentDocument.body.innerText : '';
+        if(text && /Original resume|No resume|not found|error/i.test(text)){
+          showToast(text.replace(/\s+/g,' ').trim().slice(0, 180), 'warn');
+        }
+      } catch(ex) {}
+    };
+    document.body.appendChild(frame);
+
+    var link = document.createElement('a');
+    link.href = src;
+    link.target = frame.name;
+    document.body.appendChild(link);
+    link.click();
+    setTimeout(function(){ if(link.parentNode) link.parentNode.removeChild(link); }, 1200);
+    setTimeout(function(){ if(frame.parentNode) frame.parentNode.removeChild(frame); }, 60000);
     return true;
   }
-  var startOriginalResumeDownload = downloadOriginalResumeFromR2First;
 
   var optMeta = {
     1: {cost:1, label:'Download Resume',       avail:hasResume && !!(originalR2PublicUrl || originalR2DirectUrl || dlUrl),  dlKey:null, unavailableMsg:'Original resume is not available for download.'},
@@ -8743,24 +8755,25 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
       }
 
       if(selectedOpt === 1){
-        /* Original resume: direct R2 browser download only; zero server load for 10k concurrent users. */
-        if(!originalR2DirectUrl && !originalR2PublicUrl && !r2DirectUrl && !r2PublicUrl && !dlUrl){
+        /* Original resume: direct R2 browser download only; no loading state because browsers do not expose a reliable download-finished event. */
+        if(!originalR2DirectUrl && !originalR2PublicUrl && !r2PublicUrl && !dlUrl){
           showToast('Original resume is not available for download.', 'warn');
           resetBtn(); return;
         }
         try {
-          downloadOriginalResumeFromR2First({
-            originalR2DirectUrl:originalR2DirectUrl,
-            r2DirectUrl:r2DirectUrl,
+          startOriginalResumeDownload({
             originalR2PublicUrl:originalR2PublicUrl,
             r2PublicUrl:r2PublicUrl,
+            originalR2DirectUrl:originalR2DirectUrl,
+            r2DirectUrl:r2DirectUrl,
+            r2RedirectUrl:r2SignUrl ? (r2SignUrl + (r2SignUrl.indexOf('?') === -1 ? '?' : '&') + 'redirect=1') : '',
             dlUrl:dlUrl,
             resumeExt:resumeExt
           });
           resetBtn();
           closeRdc();
         } catch(err) {
-          console.error('Original resume direct R2 download failed:',err);
+          console.error('Original resume R2-first download failed:',err);
           showToast(err && err.message ? err.message : 'Could not download original resume. Please try again.', 'warn');
           resetBtn();
         }
