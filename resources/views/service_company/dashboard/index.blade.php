@@ -3304,6 +3304,7 @@
                                                                         if ($duplicate == 1) {
                                                                             $flag = $duplicate;
                                                                         }
+                                                                        $covid = '';
                                                                         $skilltag = '';
                                                                         $skilltagclass = '';
                                                                         $skillArr = explode(',', $row->skills);
