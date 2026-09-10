@@ -5530,7 +5530,10 @@ async function buildHeadlessOption3SkillsHighlightedResume(options){
     });
     var resumeExt=clean(options.resumeExt||'','').toUpperCase();
     var resumePdfUrl=clean(options.resumePdfUrl||'','');
+    var strictClientOnly=options.strictClientOnly===true;
+    if(strictClientOnly) resumePdfUrl='';
     if(['PDF','DOC','DOCX'].indexOf(resumeExt) === -1) throw new Error('Resume + Skills Highlighted is available for PDF, DOC and DOCX resumes only');
+    if(strictClientOnly && resumeExt==='DOC') throw new Error('This test option is browser-only and supports PDF/DOCX resumes only');
     await Promise.all([rsEnsurePdfJs(),rsEnsureJsPdf()]);
     var pdfBlob=null;
     var usedClientDocxPdf=false;
@@ -5693,7 +5696,11 @@ async function buildHeadlessOption3SkillsHighlightedResume(options){
     }
   }catch(err){
     console.error('Headless option 3 highlighted resume error:',err);
-    alert('Could not generate Resume + Skills Highlighted.\n\nReason: '+(err && err.message ? err.message : 'Unknown highlight error')+'\n\nPDF uses signed R2 direct fetch. DOCX can use browser conversion first with enterprise fallback. DOC requires enterprise converter PDF.');
+    if(options && options.strictClientOnly===true){
+      alert('Could not generate the browser-only test highlighted resume.\n\nReason: '+(err && err.message ? err.message : 'Unknown highlight error')+'\n\nServer-side conversion is disabled for this test option.');
+    }else{
+      alert('Could not generate Resume + Skills Highlighted.\n\nReason: '+(err && err.message ? err.message : 'Unknown highlight error')+'\n\nPDF uses signed R2 direct fetch. DOCX can use browser conversion first with enterprise fallback. DOC requires enterprise converter PDF.');
+    }
     return false;
   }finally{
     window.__rsBusy=false;
@@ -8237,6 +8244,7 @@ async function buildPreAntigravityPreScreenedHighlightedResume(resumePdfUrl,opti
       clientDocxMaxBytes:parseInt(options.clientDocxMaxBytes,10)||1536*1024,
       clientDocxMaxPages:parseInt(options.clientDocxMaxPages,10)||6,
       clientDocxRequireTextPdf:true,
+      strictClientOnly:true,
       returnBlob:true
     });
     if(!(reportBlob instanceof Blob)) throw new Error('Pre-Screened Report PDF was not generated');
@@ -9197,7 +9205,7 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
     31:{cost:6, label:'Hide Contact Details + Company Branding', avail:(['PDF','DOCX'].indexOf(resumeExt) !== -1) && !!(r2DirectUrl || r2PublicUrl || originalR2DirectUrl || originalR2PublicUrl), dlKey:'client-contact-hidden-branded-resume', unavailableMsg:'Hide Contact Details + Company Branding is browser-only and available for direct R2 PDF/DOCX resumes.'},
     32:{cost:11, label:'Hide Contact Details + Pre-Screened Report', avail:(['PDF','DOCX'].indexOf(resumeExt) !== -1) && !!(r2DirectUrl || r2PublicUrl || originalR2DirectUrl || originalR2PublicUrl), dlKey:'client-contact-hidden-prescreened-resume', unavailableMsg:'Hide Contact Details + Pre-Screened Report is browser-only and available for direct R2 PDF/DOCX resumes.'},
     33:{cost:12, label:'Hide Contact Details + Pre-Screened Report without Company Branding', avail:(['PDF','DOCX'].indexOf(resumeExt) !== -1) && !!(r2DirectUrl || r2PublicUrl || originalR2DirectUrl || originalR2PublicUrl), dlKey:'client-contact-hidden-prescreened-nobrand-resume', unavailableMsg:'Hide Contact Details + Pre-Screened Report without Company Branding is browser-only and available for direct R2 PDF/DOCX resumes.'},
-    34:{cost:8, label:'Test: Pre-Screened Report + Resume + Highlighted Keywords + Company Branding', avail:(['PDF','DOCX'].indexOf(resumeExt) !== -1) && !!(r2DirectUrl || r2PublicUrl || originalR2DirectUrl || originalR2PublicUrl || dlUrl), dlKey:'test-preantigravity-prescreened-highlighted-branded', unavailableMsg:'Test package is browser-only and available for direct PDF/DOCX resumes only.'}
+    34:{cost:8, label:'Test: Pre-Screened Report + Resume + Highlighted Keywords + Company Branding', avail:(['PDF','DOCX'].indexOf(resumeExt) !== -1) && !!(r2DirectUrl || r2PublicUrl || originalR2DirectUrl || originalR2PublicUrl), dlKey:'test-preantigravity-prescreened-highlighted-branded', unavailableMsg:'Test package is browser-only and available for direct PDF/DOCX resumes only.'}
   };
 
   var selectedOpt = 1;
@@ -9257,7 +9265,7 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
       optMeta[33].avail = ['PDF','DOCX'].indexOf(resumeExt) !== -1 && !!(r2DirectUrl || r2PublicUrl || originalR2DirectUrl || originalR2PublicUrl);
     }
     if(optMeta[34]){
-      optMeta[34].avail = ['PDF','DOCX'].indexOf(resumeExt) !== -1 && !!(r2DirectUrl || r2PublicUrl || originalR2DirectUrl || originalR2PublicUrl || dlUrl);
+      optMeta[34].avail = ['PDF','DOCX'].indexOf(resumeExt) !== -1 && !!(r2DirectUrl || r2PublicUrl || originalR2DirectUrl || originalR2PublicUrl);
     }
   }
 
@@ -10254,25 +10262,24 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
           showToast(m.unavailableMsg || 'Test package is browser-only and available for direct PDF/DOCX resumes only.', 'warn');
           resetBtn(); return;
         }
-        if(!r2DirectUrl && !r2PublicUrl && !dlUrl){
-          showToast('Resume URL is not available.', 'warn');
-          resetBtn(); return;
-        }
         runSmartCountdown('Generating Report, Kindly wait.', 60);
-        setTimeout(function(){
-          window.__buildPreAntigravityPreScreenedHighlightedResume(null,{
+        ensureDownloadCenterR2Urls().then(function(){
+          var testSources = rdcCollectDownloadSources([r2DirectUrl,r2PublicUrl,originalR2DirectUrl,originalR2PublicUrl]);
+          if(!testSources.length) throw new Error('Direct R2 resume URL is not available for browser-only testing.');
+          return window.__buildPreAntigravityPreScreenedHighlightedResume(null,{
             noBranding:false,
             preferClientDocx:true,
-            resumeUrl:[r2DirectUrl,r2PublicUrl,dlUrl],
+            resumeUrl:testSources,
             resumeExt:resumeExt
-          }).then(function(ok){
-            if(ok) closeRdc();
-          }).catch(function(){
-            showToast('Could not generate the test pre-Antigravity package. Please try the live highlighted package.', 'warn');
-          }).finally(function(){
-            resetBtn();
           });
-        }, 250);
+        }).then(function(ok){
+          if(ok) closeRdc();
+        }).catch(function(err){
+          console.error('Browser-only test package failed:',err);
+          showToast(err && err.message ? err.message : 'Could not generate the browser-only test package.', 'warn');
+        }).finally(function(){
+          resetBtn();
+        });
 
       } else if(m.dlKey === 'prescreened-highlighted-package' || m.dlKey === 'prescreened-highlighted-package-nobrand' || m.dlKey === 'prescreened-highlighted-package-client-docx' || m.dlKey === 'prescreened-highlighted-package-client-docx-nobrand'){
         /* Options 13/14/17/19: Pre-Screened Report first, then browser-highlighted resume pages appended in the final PDF. */
