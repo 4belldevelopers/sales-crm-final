@@ -313,16 +313,17 @@
 .rdc-opt{display:grid;grid-template-columns:18px 30px 1fr auto 15px;grid-template-rows:auto auto;column-gap:9px;row-gap:2px;align-items:center;padding:10px 11px;border:1.5px solid #e2e8f0;border-radius:10px;cursor:pointer;transition:border-color .15s,background .15s,box-shadow .15s;background:#fff;position:relative;}
 #rdcOptsList .rdc-opt[data-opt="1"]{order:1;}
 #rdcOptsList .rdc-opt[data-opt="29"]{order:2;}
-#rdcOptsList .rdc-opt[data-opt="6"]{order:3;}
-#rdcOptsList .rdc-opt[data-opt="28"]{order:4;}
-#rdcOptsList .rdc-opt[data-opt="20"]{order:5;}
-#rdcOptsList .rdc-opt[data-opt="5"]{order:6;}
-#rdcOptsList .rdc-opt[data-opt="15"]{order:7;}
-#rdcOptsList .rdc-opt[data-opt="16"]{order:8;}
+#rdcOptsList .rdc-opt[data-opt="30"]{order:3;}
+#rdcOptsList .rdc-opt[data-opt="6"]{order:4;}
+#rdcOptsList .rdc-opt[data-opt="28"]{order:5;}
+#rdcOptsList .rdc-opt[data-opt="20"]{order:6;}
+#rdcOptsList .rdc-opt[data-opt="5"]{order:7;}
+#rdcOptsList .rdc-opt[data-opt="15"]{order:8;}
+#rdcOptsList .rdc-opt[data-opt="16"]{order:9;}
 #rdcOptsList .rdc-opt[data-opt="13"]{order:97;}
 #rdcOptsList .rdc-opt[data-opt="14"]{order:98;}
-#rdcOptsList .rdc-opt[data-opt="17"]{order:9;}
-#rdcOptsList .rdc-opt[data-opt="19"]{order:10;}
+#rdcOptsList .rdc-opt[data-opt="17"]{order:10;}
+#rdcOptsList .rdc-opt[data-opt="19"]{order:11;}
 #rdcOptsList .rdc-opt[data-opt="21"]{order:13;}
 #rdcOptsList .rdc-opt[data-opt="22"]{order:14;}
 #rdcOptsList .rdc-opt[data-opt="23"]{order:15;}
@@ -5772,19 +5773,22 @@ function rdcLinkedInTargets(value){
   }
   return targets;
 }
-function rdcAnonymizeRules(data){
+function rdcAnonymizeRules(data,options){
   /* Purpose: keep the anonymizer deterministic by using known drawer PII first,
      with regex only as a fallback for PII present in the resume but not in fields. */
   data=data||{};
+  options=options||{};
   var textRegexes=[];
   var phoneDigits=[];
   var exactTerms=[];
   var emails=[];
   var phones=[];
-  rdcPushUnique(exactTerms,data.name);
-  rdcPlain(data.name).split(/\s+/).forEach(function(token){
-    if(token.length>=3) rdcPushUnique(exactTerms,token);
-  });
+  if(options.keepName!==true){
+    rdcPushUnique(exactTerms,data.name);
+    rdcPlain(data.name).split(/\s+/).forEach(function(token){
+      if(token.length>=3) rdcPushUnique(exactTerms,token);
+    });
+  }
   [data.email,data.secondaryEmail].forEach(function(email){
     rdcPushUnique(emails,email);
     rdcPushUnique(exactTerms,email);
@@ -5995,11 +5999,13 @@ async function buildClientAnonymizedResume(options){
     if(['PDF','DOCX'].indexOf(resumeExt)===-1) throw new Error('Anonymized Resume is available for PDF and DOCX resumes only');
     if(!resumeSources.length) throw new Error('Direct R2 resume URL is not available for browser anonymization');
     var data=options.candidate || readData();
-    var rules=rdcAnonymizeRules(data);
+    var keepName=options.keepName===true;
+    var rules=rdcAnonymizeRules(data,{keepName:keepName});
     var resumeBlob=resumeExt==='PDF'
       ? await renderAnonymizedPdfBlob(await fetchPdfBlobFromSources(resumeSources),rules)
       : await convertDocxResumeToAnonymizedPdfBlobFromSources(resumeSources,rules);
-    downloadBlob(resumeBlob,'JEROWORKS_Anonymized_Resume.pdf');
+    var fileName=keepName ? 'JEROWORKS_'+fileSafeName(data && data.name,'Candidate')+'_Contact_Hidden.pdf' : 'JEROWORKS_Anonymized_Resume.pdf';
+    downloadBlob(resumeBlob,fileName);
     return true;
   }catch(err){
     console.error('Anonymized Resume error:',err);
@@ -8225,6 +8231,24 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
         <span class="rdc-ocirc" aria-hidden="true"></span>
       </label>
 
+      {{-- 30: Client-side contact-hidden resume that keeps candidate name visible --}}
+      <label class="rdc-opt" data-opt="30" data-coins="4">
+        <input class="rdc-rinput" type="radio" name="rdcFormat" value="30">
+        <span class="rdc-onum">3</span>
+        <span class="rdc-oi rdc-ic-blue" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 4 7v6c0 5 3.4 7.8 8 9 4.6-1.2 8-4 8-9V7l-8-4z"/><path d="M8 11h8"/><path d="M8 15h5"/></svg>
+        </span>
+        <span class="rdc-obody">
+          <span class="rdc-otitle">Hide Contact Details</span>
+          <span class="rdc-odesc">Keep candidate name visible while hiding email, phone, mobile, contact and LinkedIn details in browser.</span>
+        </span>
+        <span class="rdc-ometa">
+          <span class="rdc-ocost">4 Coins</span>
+          <span class="rdc-otime">60 seconds</span>
+        </span>
+        <span class="rdc-ocirc" aria-hidden="true"></span>
+      </label>
+
       {{-- 3: ATS Highlighted --}}
       <label class="rdc-opt" data-opt="3" data-coins="4" style="display:none;" aria-hidden="true">
         <input class="rdc-rinput" type="radio" name="rdcFormat" value="3">
@@ -8777,7 +8801,8 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
     26:{cost:4, label:'Client Lightning Resume + Highlights', avail:(['PDF','DOC','DOCX'].indexOf(resumeExt) !== -1), dlKey:'client-lightning-highlighted', unavailableMsg:'Client Lightning Highlighted Resume is available for PDF, DOC and DOCX resumes only.'},
     27:{cost:8, label:'Turbo Pre-Screened Report + Resume + Highlights', avail:(['PDF','DOC','DOCX'].indexOf(resumeExt) !== -1), dlKey:'turbo-prescreened-highlighted-package', unavailableMsg:'Turbo Pre-Screened Package is available for PDF, DOC and DOCX resumes only.'},
     28:{cost:4, label:'Resume + Highlighted Keywords', avail:(['PDF','DOC','DOCX'].indexOf(resumeExt) !== -1), dlKey:'isolated-highlighted-keywords-client-docx', unavailableMsg:'Resume + Highlighted Keywords is available for PDF, DOC and DOCX resumes only.'},
-    29:{cost:4, label:'Anonymized Resume', avail:(['PDF','DOCX'].indexOf(resumeExt) !== -1) && !!(r2DirectUrl || r2PublicUrl || originalR2DirectUrl || originalR2PublicUrl), dlKey:'client-anonymized-resume', unavailableMsg:'Anonymized Resume is browser-only and available for direct R2 PDF/DOCX resumes.'}
+    29:{cost:4, label:'Anonymized Resume', avail:(['PDF','DOCX'].indexOf(resumeExt) !== -1) && !!(r2DirectUrl || r2PublicUrl || originalR2DirectUrl || originalR2PublicUrl), dlKey:'client-anonymized-resume', unavailableMsg:'Anonymized Resume is browser-only and available for direct R2 PDF/DOCX resumes.'},
+    30:{cost:4, label:'Hide Contact Details', avail:(['PDF','DOCX'].indexOf(resumeExt) !== -1) && !!(r2DirectUrl || r2PublicUrl || originalR2DirectUrl || originalR2PublicUrl), dlKey:'client-anonymized-keep-name-resume', keepName:true, unavailableMsg:'Hide Contact Details is browser-only and available for direct R2 PDF/DOCX resumes.'}
   };
 
   var selectedOpt = 1;
@@ -8811,6 +8836,9 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
     }
     if(optMeta[29]){
       optMeta[29].avail = ['PDF','DOCX'].indexOf(resumeExt) !== -1 && !!(r2DirectUrl || r2PublicUrl || originalR2DirectUrl || originalR2PublicUrl);
+    }
+    if(optMeta[30]){
+      optMeta[30].avail = ['PDF','DOCX'].indexOf(resumeExt) !== -1 && !!(r2DirectUrl || r2PublicUrl || originalR2DirectUrl || originalR2PublicUrl);
     }
   }
 
@@ -8961,6 +8989,7 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
     if(m.dlKey === 'isolated-highlighted-keywords-client-docx' && typeof window.__preloadRSCombined === 'function') window.__preloadRSCombined();
     if(m.dlKey === 'isolated-highlighted-keywords-client-docx' && resumeExt === 'DOCX' && typeof window.__preloadOpenDocLocal === 'function') window.__preloadOpenDocLocal();
     if(m.dlKey === 'client-anonymized-resume' && typeof window.__preloadClientAnonymizer === 'function') window.__preloadClientAnonymizer();
+    if(m.dlKey === 'client-anonymized-keep-name-resume' && typeof window.__preloadClientAnonymizer === 'function') window.__preloadClientAnonymizer();
     if(m.dlKey === 'fast-highlighted-branded-resume-client-docx' && typeof window.__preloadRSCombined === 'function') window.__preloadRSCombined();
     if(m.dlKey === 'fast-highlighted-branded-resume-client-docx' && resumeExt === 'DOCX' && typeof window.__preloadOpenDocLocal === 'function') window.__preloadOpenDocLocal();
     if(m.dlKey === 'fast-highlighted-resume-client-docx' && typeof window.__preloadRSCombined === 'function') window.__preloadRSCombined();
@@ -9127,8 +9156,8 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
       dlBtn.classList.add('rdc-loading');
       dlBtn.innerHTML = '<span class="rdc-spin"></span><span>Preparing download…</span>';
 
-      if(m.dlKey === 'client-anonymized-resume'){
-        /* Option 29: browser-only privacy copy. It uses direct R2 bytes and never calls the server PDF converter. */
+      if(m.dlKey === 'client-anonymized-resume' || m.dlKey === 'client-anonymized-keep-name-resume'){
+        /* Options 29/30: browser-only privacy copies. They use direct R2 bytes and never call the server PDF converter. */
         if(window.__rsBusy || typeof window.__buildClientAnonymizedResume !== 'function'){
           showToast('Please wait a moment and try again.', 'warn');
           resetBtn(); return;
@@ -9143,7 +9172,8 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
           if(!anonymizedSources.length) throw new Error('Direct R2 resume URL is not available for browser anonymization.');
           return window.__buildClientAnonymizedResume({
             resumeUrl:anonymizedSources,
-            resumeExt:resumeExt
+            resumeExt:resumeExt,
+            keepName:m.keepName===true
           });
         }).then(function(ok){
           if(ok) closeRdc();
