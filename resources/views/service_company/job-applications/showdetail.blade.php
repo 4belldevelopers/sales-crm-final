@@ -8231,7 +8231,8 @@ async function buildPreAntigravityPreScreenedHighlightedResume(resumePdfUrl,opti
     var highlightedBlob=await buildHeadlessOption3SkillsHighlightedResume({
       resumeUrl:options.resumeUrl,
       resumeExt:options.resumeExt,
-      resumePdfUrl:resumePdfUrl,
+      // Server-side conversion intentionally disabled for this test option.
+      resumePdfUrl:null,
       preferClientDocx:options.preferClientDocx===true,
       clientDocxMaxBytes:parseInt(options.clientDocxMaxBytes,10)||1536*1024,
       clientDocxMaxPages:parseInt(options.clientDocxMaxPages,10)||6,
@@ -9196,7 +9197,7 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
     31:{cost:6, label:'Hide Contact Details + Company Branding', avail:(['PDF','DOCX'].indexOf(resumeExt) !== -1) && !!(r2DirectUrl || r2PublicUrl || originalR2DirectUrl || originalR2PublicUrl), dlKey:'client-contact-hidden-branded-resume', unavailableMsg:'Hide Contact Details + Company Branding is browser-only and available for direct R2 PDF/DOCX resumes.'},
     32:{cost:11, label:'Hide Contact Details + Pre-Screened Report', avail:(['PDF','DOCX'].indexOf(resumeExt) !== -1) && !!(r2DirectUrl || r2PublicUrl || originalR2DirectUrl || originalR2PublicUrl), dlKey:'client-contact-hidden-prescreened-resume', unavailableMsg:'Hide Contact Details + Pre-Screened Report is browser-only and available for direct R2 PDF/DOCX resumes.'},
     33:{cost:12, label:'Hide Contact Details + Pre-Screened Report without Company Branding', avail:(['PDF','DOCX'].indexOf(resumeExt) !== -1) && !!(r2DirectUrl || r2PublicUrl || originalR2DirectUrl || originalR2PublicUrl), dlKey:'client-contact-hidden-prescreened-nobrand-resume', unavailableMsg:'Hide Contact Details + Pre-Screened Report without Company Branding is browser-only and available for direct R2 PDF/DOCX resumes.'},
-    34:{cost:8, label:'Test: Pre-Screened Report + Resume + Highlighted Keywords + Company Branding', avail:(['PDF','DOC','DOCX'].indexOf(resumeExt) !== -1), dlKey:'test-preantigravity-prescreened-highlighted-branded', unavailableMsg:'Test package is available for PDF, DOC and DOCX resumes only.'}
+    34:{cost:8, label:'Test: Pre-Screened Report + Resume + Highlighted Keywords + Company Branding', avail:(['PDF','DOCX'].indexOf(resumeExt) !== -1) && !!(r2DirectUrl || r2PublicUrl || originalR2DirectUrl || originalR2PublicUrl || dlUrl), dlKey:'test-preantigravity-prescreened-highlighted-branded', unavailableMsg:'Test package is browser-only and available for direct PDF/DOCX resumes only.'}
   };
 
   var selectedOpt = 1;
@@ -9254,6 +9255,9 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
     }
     if(optMeta[33]){
       optMeta[33].avail = ['PDF','DOCX'].indexOf(resumeExt) !== -1 && !!(r2DirectUrl || r2PublicUrl || originalR2DirectUrl || originalR2PublicUrl);
+    }
+    if(optMeta[34]){
+      optMeta[34].avail = ['PDF','DOCX'].indexOf(resumeExt) !== -1 && !!(r2DirectUrl || r2PublicUrl || originalR2DirectUrl || originalR2PublicUrl || dlUrl);
     }
   }
 
@@ -10246,21 +10250,17 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
           showToast('Please wait a moment and try again.', 'warn');
           resetBtn(); return;
         }
-        if(['PDF','DOC','DOCX'].indexOf(resumeExt) === -1){
-          showToast(m.unavailableMsg || 'Test package is available for PDF, DOC and DOCX resumes only.', 'warn');
+        if(['PDF','DOCX'].indexOf(resumeExt) === -1){
+          showToast(m.unavailableMsg || 'Test package is browser-only and available for direct PDF/DOCX resumes only.', 'warn');
           resetBtn(); return;
         }
-        if(['PDF','DOCX'].indexOf(resumeExt) !== -1 && !r2DirectUrl && !r2PublicUrl && !dlUrl && !resumePdfUrl){
+        if(!r2DirectUrl && !r2PublicUrl && !dlUrl){
           showToast('Resume URL is not available.', 'warn');
-          resetBtn(); return;
-        }
-        if(resumeExt === 'DOC' && !resumePdfUrl){
-          showToast('DOC resumes need the enterprise converter before highlighted report package generation.', 'warn');
           resetBtn(); return;
         }
         runSmartCountdown('Generating Report, Kindly wait.', 60);
         setTimeout(function(){
-          window.__buildPreAntigravityPreScreenedHighlightedResume(resumePdfUrl,{
+          window.__buildPreAntigravityPreScreenedHighlightedResume(null,{
             noBranding:false,
             preferClientDocx:true,
             resumeUrl:[r2DirectUrl,r2PublicUrl,dlUrl],
