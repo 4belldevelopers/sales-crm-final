@@ -312,16 +312,17 @@
 .rdc-opts-list{display:flex;flex-direction:column;gap:8px;padding:0 14px 10px;}
 .rdc-opt{display:grid;grid-template-columns:18px 30px 1fr auto 15px;grid-template-rows:auto auto;column-gap:9px;row-gap:2px;align-items:center;padding:10px 11px;border:1.5px solid #e2e8f0;border-radius:10px;cursor:pointer;transition:border-color .15s,background .15s,box-shadow .15s;background:#fff;position:relative;}
 #rdcOptsList .rdc-opt[data-opt="1"]{order:1;}
-#rdcOptsList .rdc-opt[data-opt="6"]{order:2;}
-#rdcOptsList .rdc-opt[data-opt="28"]{order:3;}
-#rdcOptsList .rdc-opt[data-opt="20"]{order:4;}
-#rdcOptsList .rdc-opt[data-opt="5"]{order:5;}
-#rdcOptsList .rdc-opt[data-opt="15"]{order:6;}
-#rdcOptsList .rdc-opt[data-opt="16"]{order:7;}
+#rdcOptsList .rdc-opt[data-opt="29"]{order:2;}
+#rdcOptsList .rdc-opt[data-opt="6"]{order:3;}
+#rdcOptsList .rdc-opt[data-opt="28"]{order:4;}
+#rdcOptsList .rdc-opt[data-opt="20"]{order:5;}
+#rdcOptsList .rdc-opt[data-opt="5"]{order:6;}
+#rdcOptsList .rdc-opt[data-opt="15"]{order:7;}
+#rdcOptsList .rdc-opt[data-opt="16"]{order:8;}
 #rdcOptsList .rdc-opt[data-opt="13"]{order:97;}
 #rdcOptsList .rdc-opt[data-opt="14"]{order:98;}
-#rdcOptsList .rdc-opt[data-opt="17"]{order:8;}
-#rdcOptsList .rdc-opt[data-opt="19"]{order:9;}
+#rdcOptsList .rdc-opt[data-opt="17"]{order:9;}
+#rdcOptsList .rdc-opt[data-opt="19"]{order:10;}
 #rdcOptsList .rdc-opt[data-opt="21"]{order:13;}
 #rdcOptsList .rdc-opt[data-opt="22"]{order:14;}
 #rdcOptsList .rdc-opt[data-opt="23"]{order:15;}
@@ -4464,6 +4465,12 @@ setTimeout(() => {
 @endphp
 <div id="rsData" hidden
   data-name="{{ ucwords(@$application->full_name) }}"
+  data-email="{{ !@$rcvMaskContact ? @$application->email : '' }}"
+  data-secondary-email="{{ !@$rcvMaskContact ? @$application->secondrary_email : '' }}"
+  data-phone="{{ !@$rcvMaskContact ? @$application->phone : '' }}"
+  data-secondary-phone="{{ !@$rcvMaskContact ? @$application->secondary_mobile : '' }}"
+  data-phone-code="{{ !@$rcvMaskContact ? @$application->phone_code : '' }}"
+  data-secondary-phone-code="{{ !@$rcvMaskContact ? @$application->second_phone_code : '' }}"
   data-designation="{{ ucwords(@$application->current_designation) }}"
   data-company="{{ ucwords(@$application->current_company ?: @$application->cur_company_name) }}"
   data-location="{{ $rsLoc }}"
@@ -5710,6 +5717,277 @@ async function buildSmartHighlightedResume(options){
     window.__rsBusy=false;
   }
 }
+/* Purpose: isolated browser-only anonymizer helpers for Download Resume Center option 29.
+   They never call the server-side resume converter or alter existing report/highlight flows. */
+function rdcPlain(value){
+  return String(value==null?'':value).replace(/\s+/g,' ').trim();
+}
+function rdcEscapeRegExp(value){
+  return rdcPlain(value).replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
+}
+function rdcDigitsOnly(value){
+  return String(value==null?'':value).replace(/\D+/g,'');
+}
+function rdcPushUnique(list,value){
+  value=rdcPlain(value);
+  if(!value || value==='--') return;
+  var key=value.toLowerCase();
+  if(list.some(function(item){ return item.toLowerCase()===key; })) return;
+  list.push(value);
+}
+function rdcFlexibleTextRegex(value){
+  var parts=rdcPlain(value).split(/\s+/).filter(Boolean);
+  if(!parts.length) return null;
+  return new RegExp(parts.map(rdcEscapeRegExp).join('[\\s\\u00a0._-]+'),'gi');
+}
+function rdcPhoneTextRegex(value){
+  var digits=rdcDigitsOnly(value);
+  if(digits.length<5) return null;
+  return new RegExp('(?:\\+?\\d{1,3}[\\s().\\-+]*)?'+digits.split('').join('[\\s().\\-+]*'),'g');
+}
+function rdcAnonymizeRules(data){
+  /* Purpose: keep the anonymizer deterministic by using known drawer PII first,
+     with regex only as a fallback for PII present in the resume but not in fields. */
+  data=data||{};
+  var textRegexes=[];
+  var phoneDigits=[];
+  var exactTerms=[];
+  var emails=[];
+  var phones=[];
+  rdcPushUnique(exactTerms,data.name);
+  rdcPlain(data.name).split(/\s+/).forEach(function(token){
+    if(token.length>=3) rdcPushUnique(exactTerms,token);
+  });
+  [data.email,data.secondaryEmail].forEach(function(email){
+    rdcPushUnique(emails,email);
+    rdcPushUnique(exactTerms,email);
+  });
+  [data.phone,data.secondaryPhone].forEach(function(phone){
+    rdcPushUnique(phones,phone);
+    rdcPushUnique(exactTerms,phone);
+  });
+  phones.forEach(function(phone){
+    var digits=rdcDigitsOnly(phone);
+    if(digits.length>=5 && phoneDigits.indexOf(digits)===-1) phoneDigits.push(digits);
+    var phoneRe=rdcPhoneTextRegex(phone);
+    if(phoneRe) textRegexes.push(phoneRe);
+  });
+  exactTerms.forEach(function(term){
+    if(rdcDigitsOnly(term).length>=5) return;
+    var re=rdcFlexibleTextRegex(term);
+    if(re) textRegexes.push(re);
+  });
+  textRegexes.push(/[A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\.[A-Za-z]{2,}/gi);
+  textRegexes.push(/\+?\d[\d\s().\-]{7,}\d/g);
+  return {textRegexes:textRegexes,phoneDigits:phoneDigits,emails:emails,phones:phones,exactTerms:exactTerms};
+}
+function rdcRegexMatches(regex,text){
+  regex.lastIndex=0;
+  var ok=regex.test(text);
+  regex.lastIndex=0;
+  return ok;
+}
+function rdcShouldRedactText(text,rules){
+  text=rdcPlain(text);
+  if(!text) return false;
+  var lower=text.toLowerCase();
+  var digits=rdcDigitsOnly(text);
+  if(digits.length>=5 && rules.phoneDigits.some(function(phoneDigits){
+    return phoneDigits.indexOf(digits)!==-1 || digits.indexOf(phoneDigits)!==-1;
+  })) return true;
+  if(rules.exactTerms.some(function(term){
+    term=rdcPlain(term).toLowerCase();
+    return term.length>=3 && lower.indexOf(term)!==-1;
+  })) return true;
+  return rules.textRegexes.some(function(regex){ return rdcRegexMatches(regex,text); });
+}
+function rdcRedactTextValue(text,rules){
+  var original=String(text==null?'':text);
+  var output=original;
+  rules.textRegexes.forEach(function(regex){
+    regex.lastIndex=0;
+    output=output.replace(regex,'REDACTED');
+    regex.lastIndex=0;
+  });
+  if(output!==original) return output;
+  return rdcShouldRedactText(original,rules) ? 'REDACTED' : original;
+}
+function rdcRedactDocxDom(root,rules){
+  var showText=window.NodeFilter ? window.NodeFilter.SHOW_TEXT : 4;
+  var walker=document.createTreeWalker(root,showText,null);
+  var nodes=[];
+  var redacted=0;
+  while(walker.nextNode()) nodes.push(walker.currentNode);
+  nodes.forEach(function(node){
+    var next=rdcRedactTextValue(node.nodeValue||'',rules);
+    if(next!==node.nodeValue){
+      node.nodeValue=next;
+      redacted++;
+    }
+  });
+  return redacted;
+}
+function rdcDrawAnonymizedBlocks(ctx,textContent,viewport,rules){
+  if(!ctx || !textContent || !viewport || !rules) return 0;
+  var count=0;
+  ctx.save();
+  ctx.fillStyle='#111827';
+  (textContent.items||[]).forEach(function(item){
+    if(!rdcShouldRedactText(item && item.str,rules)) return;
+    var rect=rsTextItemRect(item,viewport);
+    if(!rect) return;
+    var pad=Math.max(2,Math.min(8,rect.h*0.22));
+    ctx.fillRect(Math.max(0,rect.x-pad),Math.max(0,rect.y-pad),rect.w+(pad*2),rect.h+(pad*2));
+    count++;
+  });
+  ctx.restore();
+  return count;
+}
+async function renderAnonymizedPdfBlob(pdfBlob,rules){
+  await Promise.all([rsEnsurePdfJs(),rsEnsureJsPdf()]);
+  var sourceBytes=await pdfBlob.arrayBuffer();
+  var bytes=new Uint8Array(sourceBytes);
+  var sig=String.fromCharCode.apply(null,bytes.subarray(0,5));
+  if(sig.indexOf('%PDF')===-1) throw new Error('Resume source is not a valid PDF');
+  var doc=await window.pdfjsLib.getDocument({data:bytes}).promise;
+  var JsPDF=window.jspdf.jsPDF;
+  var outPdf=null;
+  var textItems=0;
+  var redactions=0;
+  for(var p=1;p<=doc.numPages;p++){
+    var pdfJsPage=await doc.getPage(p);
+    var base=pdfJsPage.getViewport({scale:1});
+    var cssScale=Math.min(1.35,820/base.width);
+    var cssViewport=pdfJsPage.getViewport({scale:cssScale});
+    var renderScale=Math.min(3,2800/base.width);
+    var renderViewport=pdfJsPage.getViewport({scale:renderScale});
+    var canvas=document.createElement('canvas');
+    canvas.width=Math.floor(renderViewport.width);
+    canvas.height=Math.floor(renderViewport.height);
+    var ctx=canvas.getContext('2d',{willReadFrequently:true});
+    ctx.fillStyle='#ffffff';
+    ctx.fillRect(0,0,canvas.width,canvas.height);
+    await pdfJsPage.render({canvasContext:ctx,viewport:renderViewport}).promise;
+    var tc=await pdfJsPage.getTextContent();
+    textItems += (tc.items||[]).length;
+    redactions += rdcDrawAnonymizedBlocks(ctx,tc,renderViewport,rules);
+    var pageW=Math.round(cssViewport.width);
+    var pageH=Math.round(cssViewport.height);
+    var orient=pageW>pageH?'l':'p';
+    if(!outPdf) outPdf=new JsPDF({orientation:orient,unit:'px',format:[pageW,pageH]});
+    else outPdf.addPage([pageW,pageH],orient);
+    outPdf.addImage(canvas.toDataURL('image/jpeg',0.9),'JPEG',0,0,pageW,pageH,undefined,'FAST');
+  }
+  if(!outPdf) throw new Error('No resume pages were rendered');
+  if(!textItems) throw new Error('This resume appears to be scanned/image-only. Browser anonymization needs extractable text.');
+  if(!redactions) console.warn('Anonymized Resume completed with no PII matches from drawer data or fallback regex.');
+  return outPdf.output('blob');
+}
+async function convertDocxResumeToAnonymizedPdfBlobFromSources(resumeUrls,rules){
+  await rsEnsureDocxConversion();
+  var bytes=await fetchResumeBytesFromSources(resumeUrls);
+  var host=document.createElement('div');
+  host.setAttribute('aria-hidden','true');
+  host.style.cssText='position:fixed;left:-12000px;top:0;width:auto;min-width:794px;min-height:1123px;background:#fff;overflow:visible;pointer-events:none;';
+  document.body.appendChild(host);
+  try{
+    var pages;
+    try{
+      pages=await renderOriginalDocxResume(bytes,host);
+    }catch(renderErr){
+      console.warn('DOCX anonymized render failed, using readable fallback:',renderErr);
+      host.innerHTML='';
+      pages=await renderReadableDocxResume(bytes,host);
+    }
+    rdcRedactDocxDom(host,rules);
+    await waitForRenderedAssets(host);
+    var JsPDF=window.jspdf.jsPDF;
+    var pdf=new JsPDF({orientation:'portrait',unit:'pt',format:'a4',compress:true});
+    var pageW=pdf.internal.pageSize.getWidth();
+    var pageH=pdf.internal.pageSize.getHeight();
+    for(var i=0;i<pages.length;i++){
+      var page=pages[i];
+      var rect=page.getBoundingClientRect();
+      if(!rect.width || rect.width<500 || rect.width>1100) page.style.width='794px';
+      page.style.margin='0';
+      page.style.boxShadow='none';
+      page.style.background='#ffffff';
+      page.style.maxWidth='none';
+      var canvas=await window.html2canvas(page,{
+        backgroundColor:'#ffffff',
+        scale:Math.max(2.5,Math.min(3,window.devicePixelRatio||2.5)),
+        useCORS:true,
+        allowTaint:false,
+        logging:false,
+        removeContainer:true,
+        scrollX:0,
+        scrollY:0,
+        windowWidth:Math.ceil(page.scrollWidth||page.getBoundingClientRect().width||794),
+        windowHeight:Math.ceil(page.scrollHeight||page.getBoundingClientRect().height||1123)
+      });
+      var sliceHeight=Math.max(1,Math.floor(canvas.width*(pageH/pageW)));
+      var offsetY=0;
+      var isFirstSlice=true;
+      while(offsetY<canvas.height){
+        if(i>0 || !isFirstSlice) pdf.addPage('a4','portrait');
+        var currentHeight=Math.min(sliceHeight,canvas.height-offsetY);
+        var slice=document.createElement('canvas');
+        slice.width=canvas.width;
+        slice.height=currentHeight;
+        var ctx=slice.getContext('2d');
+        ctx.fillStyle='#ffffff';
+        ctx.fillRect(0,0,slice.width,slice.height);
+        ctx.drawImage(canvas,0,offsetY,canvas.width,currentHeight,0,0,canvas.width,currentHeight);
+        var drawH=currentHeight*(pageW/canvas.width);
+        pdf.addImage(slice.toDataURL('image/png'),'PNG',0,0,pageW,drawH,undefined,'SLOW');
+        offsetY+=currentHeight;
+        isFirstSlice=false;
+      }
+    }
+    return pdf.output('blob');
+  }finally{
+    removeNode(host);
+  }
+}
+async function buildClientAnonymizedResume(options){
+  if(window.__rsBusy) return Promise.resolve(false);
+  window.__rsBusy=true;
+  try{
+    options=options||{};
+    var resumeSources=(Array.isArray(options.resumeUrl) ? options.resumeUrl : [options.resumeUrl||'']).map(function(url){
+      return clean(url,'');
+    }).filter(function(url,index,self){
+      return url && url!=='--' && self.indexOf(url)===index;
+    });
+    var resumeExt=clean(options.resumeExt||'','').toUpperCase();
+    if(['PDF','DOCX'].indexOf(resumeExt)===-1) throw new Error('Anonymized Resume is available for PDF and DOCX resumes only');
+    if(!resumeSources.length) throw new Error('Direct R2 resume URL is not available for browser anonymization');
+    var data=options.candidate || readData();
+    var rules=rdcAnonymizeRules(data);
+    var resumeBlob=resumeExt==='PDF'
+      ? await renderAnonymizedPdfBlob(await fetchPdfBlobFromSources(resumeSources),rules)
+      : await convertDocxResumeToAnonymizedPdfBlobFromSources(resumeSources,rules);
+    downloadBlob(resumeBlob,'JEROWORKS_Anonymized_Resume.pdf');
+    return true;
+  }catch(err){
+    console.error('Anonymized Resume error:',err);
+    alert('Could not generate the anonymized resume.\n\nReason: '+(err && err.message ? err.message : 'Unknown anonymization error')+'\n\nThis option runs only in the browser and does not use server conversion.');
+    return false;
+  }finally{
+    window.__rsBusy=false;
+  }
+}
+function preloadClientAnonymizerAssets(){
+  var dataEl=document.getElementById('rdcData');
+  var ext=(dataEl ? dataEl.getAttribute('data-file-ext') : '') || '';
+  ext=ext.toUpperCase();
+  var tasks=[rsEnsurePdfJs(),rsEnsureJsPdf()];
+  if(ext==='DOCX') tasks.push(rsEnsureDocxConversion());
+  return Promise.all(tasks).catch(function(err){
+    console.warn('Anonymized Resume preload skipped:',err);
+    return null;
+  });
+}
 function resumePdfFetchUrl(resumePdfUrl){
   resumePdfUrl=clean(resumePdfUrl,'');
   if(!resumePdfUrl) return '';
@@ -6127,6 +6405,12 @@ function readData(){
   var gj=function(k){ try{return JSON.parse(el.getAttribute(k)||'[]')||[];}catch(ex){return[];} };
   return {
     name:g('data-name')||'Candidate',
+    email:g('data-email'),
+    secondaryEmail:g('data-secondary-email'),
+    phone:g('data-phone'),
+    secondaryPhone:g('data-secondary-phone'),
+    phoneCode:g('data-phone-code'),
+    secondaryPhoneCode:g('data-secondary-phone-code'),
     designation:g('data-designation'),
     company:g('data-company'),
     location:g('data-location'),
@@ -7824,6 +8108,8 @@ window.__buildHybridWordPreScreenedResume=buildHybridWordPreScreenedResume;
 window.__buildSmartPreScreenedResume=buildSmartPreScreenedResume;
 window.__buildSmartBrandedResume=buildSmartBrandedResume;
 window.__buildSmartHighlightedResume=buildSmartHighlightedResume;
+window.__buildClientAnonymizedResume=buildClientAnonymizedResume;
+window.__preloadClientAnonymizer=preloadClientAnonymizerAssets;
 window.__buildHeadlessOption3SkillsHighlightedResume=buildHeadlessOption3SkillsHighlightedResume;
 window.__buildHighlightedBrandedResume=buildHighlightedBrandedResume;
 window.__buildIsolatedHighlightedKeywordsResume=buildIsolatedHighlightedKeywordsResume;
@@ -7883,6 +8169,24 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
         </span>
         <span class="rdc-ometa">
           <span class="rdc-ocost">1 Coin</span>
+          <span class="rdc-otime">60 seconds</span>
+        </span>
+        <span class="rdc-ocirc" aria-hidden="true"></span>
+      </label>
+
+      {{-- 29: Client-side anonymized resume --}}
+      <label class="rdc-opt" data-opt="29" data-coins="4">
+        <input class="rdc-rinput" type="radio" name="rdcFormat" value="29">
+        <span class="rdc-onum">2</span>
+        <span class="rdc-oi rdc-ic-blue" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 4 7v6c0 5 3.4 7.8 8 9 4.6-1.2 8-4 8-9V7l-8-4z"/><path d="M9 12h6"/><path d="M12 9v6"/></svg>
+        </span>
+        <span class="rdc-obody">
+          <span class="rdc-otitle">Anonymized Resume</span>
+          <span class="rdc-odesc">Hide candidate name, email, and phone numbers in a browser-only resume copy.</span>
+        </span>
+        <span class="rdc-ometa">
+          <span class="rdc-ocost">4 Coins</span>
           <span class="rdc-otime">60 seconds</span>
         </span>
         <span class="rdc-ocirc" aria-hidden="true"></span>
@@ -8439,7 +8743,8 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
     25:{cost:6, label:'Client Lightning Resume + Highlights + Branding', avail:(['PDF','DOC','DOCX'].indexOf(resumeExt) !== -1), dlKey:'client-lightning-highlighted-branded', unavailableMsg:'Client Lightning Branded Resume is available for PDF, DOC and DOCX resumes only.'},
     26:{cost:4, label:'Client Lightning Resume + Highlights', avail:(['PDF','DOC','DOCX'].indexOf(resumeExt) !== -1), dlKey:'client-lightning-highlighted', unavailableMsg:'Client Lightning Highlighted Resume is available for PDF, DOC and DOCX resumes only.'},
     27:{cost:8, label:'Turbo Pre-Screened Report + Resume + Highlights', avail:(['PDF','DOC','DOCX'].indexOf(resumeExt) !== -1), dlKey:'turbo-prescreened-highlighted-package', unavailableMsg:'Turbo Pre-Screened Package is available for PDF, DOC and DOCX resumes only.'},
-    28:{cost:4, label:'Resume + Highlighted Keywords', avail:(['PDF','DOC','DOCX'].indexOf(resumeExt) !== -1), dlKey:'isolated-highlighted-keywords-client-docx', unavailableMsg:'Resume + Highlighted Keywords is available for PDF, DOC and DOCX resumes only.'}
+    28:{cost:4, label:'Resume + Highlighted Keywords', avail:(['PDF','DOC','DOCX'].indexOf(resumeExt) !== -1), dlKey:'isolated-highlighted-keywords-client-docx', unavailableMsg:'Resume + Highlighted Keywords is available for PDF, DOC and DOCX resumes only.'},
+    29:{cost:4, label:'Anonymized Resume', avail:(['PDF','DOCX'].indexOf(resumeExt) !== -1) && !!(r2DirectUrl || r2PublicUrl || originalR2DirectUrl || originalR2PublicUrl), dlKey:'client-anonymized-resume', unavailableMsg:'Anonymized Resume is browser-only and available for direct R2 PDF/DOCX resumes.'}
   };
 
   var selectedOpt = 1;
@@ -8470,6 +8775,9 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
     }
     if(optMeta[1]){
       optMeta[1].avail = originalR2Available && !!(originalR2DirectUrl || originalR2PublicUrl);
+    }
+    if(optMeta[29]){
+      optMeta[29].avail = ['PDF','DOCX'].indexOf(resumeExt) !== -1 && !!(r2DirectUrl || r2PublicUrl || originalR2DirectUrl || originalR2PublicUrl);
     }
   }
 
@@ -8619,6 +8927,7 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
     if(m.dlKey === 'highlighted-branded-resume-client-docx' && resumeExt === 'DOCX' && typeof window.__preloadOpenDocLocal === 'function') window.__preloadOpenDocLocal();
     if(m.dlKey === 'isolated-highlighted-keywords-client-docx' && typeof window.__preloadRSCombined === 'function') window.__preloadRSCombined();
     if(m.dlKey === 'isolated-highlighted-keywords-client-docx' && resumeExt === 'DOCX' && typeof window.__preloadOpenDocLocal === 'function') window.__preloadOpenDocLocal();
+    if(m.dlKey === 'client-anonymized-resume' && typeof window.__preloadClientAnonymizer === 'function') window.__preloadClientAnonymizer();
     if(m.dlKey === 'fast-highlighted-branded-resume-client-docx' && typeof window.__preloadRSCombined === 'function') window.__preloadRSCombined();
     if(m.dlKey === 'fast-highlighted-branded-resume-client-docx' && resumeExt === 'DOCX' && typeof window.__preloadOpenDocLocal === 'function') window.__preloadOpenDocLocal();
     if(m.dlKey === 'fast-highlighted-resume-client-docx' && typeof window.__preloadRSCombined === 'function') window.__preloadRSCombined();
@@ -8785,7 +9094,35 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
       dlBtn.classList.add('rdc-loading');
       dlBtn.innerHTML = '<span class="rdc-spin"></span><span>Preparing download…</span>';
 
-      if(m.dlKey === 'rs'){
+      if(m.dlKey === 'client-anonymized-resume'){
+        /* Option 29: browser-only privacy copy. It uses direct R2 bytes and never calls the server PDF converter. */
+        if(window.__rsBusy || typeof window.__buildClientAnonymizedResume !== 'function'){
+          showToast('Please wait a moment and try again.', 'warn');
+          resetBtn(); return;
+        }
+        if(['PDF','DOCX'].indexOf(resumeExt) === -1){
+          showToast(m.unavailableMsg || 'Anonymized Resume is available for PDF and DOCX resumes only.', 'warn');
+          resetBtn(); return;
+        }
+        dlBtn.innerHTML = '<span class="rdc-spin"></span><span>Anonymizing resume in browser...</span>';
+        ensureDownloadCenterR2Urls().then(function(){
+          var anonymizedSources = rdcCollectDownloadSources([r2DirectUrl,r2PublicUrl,originalR2DirectUrl,originalR2PublicUrl]);
+          if(!anonymizedSources.length) throw new Error('Direct R2 resume URL is not available for browser anonymization.');
+          return window.__buildClientAnonymizedResume({
+            resumeUrl:anonymizedSources,
+            resumeExt:resumeExt,
+            candidate:readData()
+          });
+        }).then(function(ok){
+          if(ok) closeRdc();
+        }).catch(function(err){
+          console.error('Anonymized Resume drawer flow failed:',err);
+          showToast(err && err.message ? err.message : 'Could not generate anonymized resume.', 'warn');
+        }).finally(function(){
+          resetBtn();
+        });
+
+      } else if(m.dlKey === 'rs'){
         /* Option 5: Recruiter Summary — fully client-side vector PDF */
         if(window.__rsBusy || typeof window.__buildRS !== 'function'){
           showToast('Please wait a moment and try again.', 'warn');
