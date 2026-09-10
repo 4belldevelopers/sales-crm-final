@@ -9770,7 +9770,7 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
                     ],
                     'doc_as_upsert' => false, // Changed to false since we verified existence
                 ],
-                'refresh' => false, // Eventual consistency for 10K concurrent scale
+                'refresh' => true, // Immediate index refresh for real-time stage listing consistency
             ];
             // dd($updateParams);
             $redud = $this->elasticService->getClient()->update($updateParams);
@@ -11814,7 +11814,7 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
                     ],
                     'doc_as_upsert' => false, // Changed to false since we verified existence
                 ],
-                'refresh' => false, // Eventual consistency for 10K concurrent scale
+                'refresh' => true, // Immediate index refresh for real-time stage listing consistency
             ];
 
             $this->elasticService->getClient()->update($updateParams);
