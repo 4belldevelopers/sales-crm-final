@@ -382,35 +382,21 @@
 .rdc-foot-note{text-align:center;font-size:10px;color:#94a3b8;margin:8px 0 0;display:flex;align-items:center;justify-content:center;gap:4px;font-family:'Poppins',sans-serif;}
 .rdc-foot-note svg{flex-shrink:0;}
 /* Premium grouped design shell */
-.rdc-header{align-items:center;padding:12px 18px 12px;background:linear-gradient(90deg,#ffffff 0%,#f8fbff 100%);}
-.rdc-head-left{display:flex;align-items:center;gap:14px;min-width:0;flex:1;}
-.rdc-head-icon{width:42px;height:42px;border-radius:12px;background:#ede9fe;color:#5b21ff;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
-.rdc-head-icon svg{width:24px;height:24px;}
-.rdc-title{font-size:20px;font-weight:800;color:#08154a;line-height:1.15;margin:0 0 3px;}
-.rdc-subtitle{font-size:13px;color:#274374;line-height:1.35;margin:0;}
+.rdc-header{align-items:flex-start;padding:13px 18px 12px;background:linear-gradient(90deg,#ffffff 0%,#f8fbff 100%);}
+.rdc-head-left{display:flex;align-items:flex-start;gap:10px;min-width:0;flex:1;}
+.rdc-head-icon{width:31px;height:31px;border-radius:8px;background:#ede9fe;color:#5b21ff;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.rdc-head-icon svg{width:17px;height:17px;}
+.rdc-title{font-size:13px;font-weight:700;color:#0f172a;line-height:1.3;margin:0 0 2px;}
+.rdc-subtitle{font-size:11px;color:#64748b;line-height:1.35;margin:0;}
 .rdc-head-actions{display:flex;align-items:center;gap:10px;flex-shrink:0;}
 .rdc-close-btn{width:30px;height:30px;border:0;background:transparent;color:#40527b;}
 .rdc-close-btn:hover{background:#eef2ff;color:#4f16e8;border-color:transparent;}
 .rdc-body{background:#f8fbff;padding:12px 18px 0;}
 .rdc-sect-lbl{display:none;}
 .rdc-opts-list{padding:0 0 12px;gap:10px;}
-.rdc-reco-card{position:relative;display:grid;grid-template-columns:132px 1fr auto 24px;gap:18px;align-items:center;width:100%;padding:18px;border:2px solid #681cff;border-radius:10px;background:linear-gradient(100deg,#f4edff 0%,#ffffff 52%,#f3ecff 100%);box-shadow:0 10px 26px rgba(91,33,255,.09);cursor:pointer;text-align:left;font-family:'Poppins',sans-serif;}
-.rdc-reco-card.rdc-reco-selected{box-shadow:0 0 0 3px rgba(104,28,255,.11),0 10px 26px rgba(91,33,255,.09);}
-.rdc-reco-ribbon{position:absolute;top:-13px;left:14px;display:inline-flex;align-items:center;gap:7px;height:27px;padding:0 15px;border-radius:8px;background:linear-gradient(90deg,#6419f9,#7c3aed);color:#fff;font-size:12px;font-weight:800;}
-.rdc-reco-art{height:76px;border-radius:12px;background:linear-gradient(135deg,#ffffff,#e9ddff);display:flex;align-items:center;justify-content:center;color:#5b21ff;box-shadow:inset 0 0 0 1px rgba(104,28,255,.12);}
-.rdc-reco-art svg{width:74px;height:58px;}
-.rdc-reco-title{display:block;font-size:18px;font-weight:800;color:#08154a;margin:0 0 5px;line-height:1.2;}
-.rdc-reco-desc{display:block;font-size:13px;color:#263f72;margin:0 0 14px;line-height:1.35;}
-.rdc-reco-checks{display:flex;flex-wrap:wrap;gap:10px;}
-.rdc-reco-check{display:inline-flex;align-items:center;gap:6px;font-size:11px;color:#0f2b5f;}
-.rdc-reco-check::before{content:'';width:17px;height:17px;border-radius:50%;background:#a7f3d0;box-shadow:inset 0 0 0 5px #d1fae5;flex-shrink:0;}
-.rdc-reco-side{border-left:1px solid #e1d7fb;padding-left:18px;min-width:150px;}
-.rdc-best{display:inline-flex;height:24px;align-items:center;padding:0 13px;border-radius:999px;background:#6d28d9;color:#fff;font-size:11px;font-weight:800;margin-bottom:12px;}
-.rdc-reco-meta{display:flex;gap:14px;align-items:center;font-size:12px;font-weight:700;color:#07164f;margin-bottom:12px;}
-.rdc-reco-note{display:inline-flex;align-items:center;border-radius:999px;background:#ede9fe;color:#4f16e8;font-size:10px;font-weight:600;padding:5px 9px;white-space:nowrap;}
-.rdc-reco-radio,.rdc-ocirc{width:18px;height:18px;border:2px solid #a8b8d5;border-radius:50%;display:flex;align-items:center;justify-content:center;transition:all .15s ease;}
-.rdc-reco-selected .rdc-reco-radio,.rdc-opt-sel .rdc-ocirc{border-color:#5b21ff;background:#5b21ff;box-shadow:0 0 0 4px rgba(91,33,255,.12);}
-.rdc-reco-selected .rdc-reco-radio::after,.rdc-opt-sel .rdc-ocirc::after{content:'';width:6px;height:6px;border-radius:50%;background:#fff;display:block;}
+.rdc-ocirc{width:18px;height:18px;border:2px solid #a8b8d5;border-radius:50%;display:flex;align-items:center;justify-content:center;transition:all .15s ease;}
+.rdc-opt-sel .rdc-ocirc{border-color:#5b21ff;background:#5b21ff;box-shadow:0 0 0 4px rgba(91,33,255,.12);}
+.rdc-opt-sel .rdc-ocirc::after{content:'';width:6px;height:6px;border-radius:50%;background:#fff;display:block;}
 .rdc-section{border:1px solid #dbe7f7;border-radius:10px;background:#fff;overflow:hidden;box-shadow:0 8px 20px rgba(15,23,42,.04);}
 .rdc-section-head{display:flex;align-items:center;gap:11px;padding:8px 11px;border-bottom:1px solid #dde9f8;}
 .rdc-section-icon{width:32px;height:32px;border-radius:9px;display:flex;align-items:center;justify-content:center;color:#fff;flex-shrink:0;box-shadow:0 8px 16px rgba(15,23,42,.12);}
@@ -457,7 +443,6 @@
 .rdc-dl-btn:disabled,.rdc-dl-btn.rdc-loading{background:#4338ca;cursor:not-allowed;opacity:.75;}
 .rdc-foot-note{text-align:center;font-size:10px;color:#94a3b8;margin:8px 0 0;display:flex;align-items:center;justify-content:center;gap:4px;font-family:'Poppins',sans-serif;}
 .rdc-foot-note svg{flex-shrink:0;}
-.rdc-reco-ribbon svg{width:16px;height:16px;flex-shrink:0;}
 /* Spinner */
 @keyframes rdcSpin{to{transform:rotate(360deg);}}
 .rdc-spin{display:inline-block;width:13px;height:13px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:rdcSpin .65s linear infinite;flex-shrink:0;}
@@ -479,13 +464,9 @@
   .rdc-drawer.rdc-open{transform:translateY(0);}
   .rdc-header{align-items:flex-start;padding:12px;}
   .rdc-head-actions{gap:8px;}
-  .rdc-title{font-size:17px;}
-  .rdc-subtitle{font-size:11.5px;}
+  .rdc-title{font-size:13px;}
+  .rdc-subtitle{font-size:11px;}
   .rdc-body{padding:10px 10px 0;}
-  .rdc-reco-card{grid-template-columns:1fr 24px;padding:38px 12px 12px;}
-  .rdc-reco-art,.rdc-reco-side{display:none;}
-  .rdc-reco-title{font-size:15px;}
-  .rdc-reco-desc{font-size:12px;}
   .rdc-section-head{flex-wrap:wrap;}
   .rdc-section-title{font-size:14px;}
   .rdc-section-pill{order:5;width:100%;justify-content:center;}
@@ -8396,7 +8377,6 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
       <div class="rdc-header-text">
         <p class="rdc-title">Download Resume Center</p>
         <p class="rdc-subtitle">Choose the resume, report, or recruiter package you want to download.</p>
-        <p class="rdc-subtitle">All files are processed securely and ready in ~60 seconds.</p>
       </div>
     </div>
     <div class="rdc-head-actions">
@@ -8730,7 +8710,7 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
         </span>
         <span class="rdc-obody">
           <span class="rdc-otitle">Pre-Screened Report + Resume + Highlighted Keywords + Company Branding</span>
-          <span class="rdc-odesc">Create the complete recruiter package: pre-screened report, branded resume pages, and highlighted job-matching skills.</span>
+          <span class="rdc-odesc">Create the recruiter package: pre-screened report, branded resume pages, and highlighted job-matching skills.</span>
         </span>
         <span class="rdc-ometa">
           <span class="rdc-ocost">8 Coins</span>
@@ -8748,7 +8728,7 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
         </span>
         <span class="rdc-obody">
           <span class="rdc-otitle">Pre-Screened Report + Resume + Highlighted Keywords without Company Branding</span>
-          <span class="rdc-odesc">Create the complete recruiter package with report, resume, and highlighted skills, without company branding.</span>
+          <span class="rdc-odesc">Create the recruiter package with report, resume, and highlighted skills, without company branding.</span>
         </span>
         <span class="rdc-ometa">
           <span class="rdc-ocost">8 Coins</span>
@@ -9101,8 +9081,6 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
     n=parseInt(n || selectedOpt,10);
     if(coinEl) coinEl.textContent = rdcCoinText(m.cost);
     if(btnLbl) btnLbl.textContent = downloadButtonLabel(m.label);
-    var reco=latestById('rdcRecoCard');
-    if(reco) reco.classList.toggle('rdc-reco-selected', n === 17);
   }
 
   function hasDownloadableResume(){
@@ -9198,26 +9176,14 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
       optionMap[parseInt(opt.getAttribute('data-opt'),10)] = opt;
     });
     var groups=[
-      {theme:'blue',icon:'resume',title:'1. Resume Options',pill:"Get the candidate's resume in different formats.",ids:[1,28,6]},
-      {theme:'purple',icon:'privacy',title:'2. Privacy & Anonymization',pill:'Protect candidate information as needed.',ids:[29,30,31]},
+      {theme:'blue',icon:'resume',title:'1. Resume Options',pill:"Get the candidate's resume in different formats.",ids:[1,6]},
+      {theme:'purple',icon:'privacy',title:'2. Privacy & Anonymization',pill:'Protect candidate information as needed.',ids:[29,30,31,32,33]},
       {theme:'rose',icon:'report',title:'3. Pre-Screened Report',pill:'Get AI-powered insights and verification details.',ids:[5]},
-      {theme:'green',icon:'package',title:'4. Recruiter Packages (Report + Resume)',pill:'Combine reports and resumes for a complete hiring package.',ids:[15,16,32,33]},
-      {theme:'amber',icon:'keyword',title:'5. Keyword Enhancements (Report + Resume + Skills)',pill:'Get enhanced resumes with job-matching keywords.',ids:[20,17,19]}
+      {theme:'green',icon:'package',title:'4. Recruiter Packages (Report + Resume)',pill:'Combine reports and resumes for a complete hiring package.',ids:[15,16]},
+      {theme:'amber',icon:'keyword',title:'5. Keyword Enhancements (Report + Resume + Skills)',pill:'Get enhanced resumes with job-matching keywords.',ids:[28,20,17,19]}
     ];
     var moved={};
     var frag=document.createDocumentFragment();
-    var reco=document.createElement('button');
-    reco.type='button';
-    reco.id='rdcRecoCard';
-    reco.className='rdc-reco-card';
-    reco.innerHTML =
-      '<span class="rdc-reco-ribbon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m2 7 5 5 5-9 5 9 5-5-2 12H4L2 7z"/><path d="M5 21h14"/></svg> Recommended for Recruiters</span>' +
-      '<span class="rdc-reco-art" aria-hidden="true"><svg viewBox="0 0 120 90" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M26 20h47l17 17v39H26z" fill="#fff"/><path d="M73 20v17h17"/><path d="M38 38h26"/><path d="M38 50h40"/><path d="M38 62h24"/><rect x="76" y="54" width="26" height="20" rx="4" fill="#6d28d9" stroke="#6d28d9"/><path d="M81 68V60h5a3 3 0 0 1 0 6h-5"/><path d="M90 60v8h4a4 4 0 0 0 0-8h-4"/><path d="M99 68v-8h9"/></svg></span>' +
-      '<span><span class="rdc-reco-title">Complete Recruiter Package</span><span class="rdc-reco-desc">Pre-screened report + branded resume + highlighted keywords.</span><span class="rdc-reco-checks"><span class="rdc-reco-check">Pre-screened report</span><span class="rdc-reco-check">Branded resume</span><span class="rdc-reco-check">Job-matching keywords highlighted</span></span></span>' +
-      '<span class="rdc-reco-side"><span class="rdc-best">Best Value</span><span class="rdc-reco-meta"><span>8 Coins</span><span>~60 sec</span></span><span class="rdc-reco-note">Everything you need in one download</span></span>' +
-      '<span class="rdc-reco-radio" aria-hidden="true"></span>';
-    reco.addEventListener('click',function(){ selectOpt(17); });
-    frag.appendChild(reco);
     groups.forEach(function(group){
       var section=document.createElement('section');
       section.className='rdc-section rdc-section-'+group.theme;
