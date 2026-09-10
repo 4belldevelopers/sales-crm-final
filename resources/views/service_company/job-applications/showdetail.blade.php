@@ -5339,6 +5339,75 @@ async function convertDocxResumeToPdfBlobFromSources(resumeUrls){
   }
   throw new Error('DOCX browser fallback failed across all resume sources. '+(lastErr && lastErr.message ? lastErr.message : ''));
 }
+function rsKeywordPatternEscape(value){
+  return String(value==null?'':value).replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
+}
+function rsKeywordAliasValues(value){
+  /* Purpose: keep job-skill highlighting recruiter-friendly when resumes use
+     common cloud shorthand instead of the exact skill label configured on the job. */
+  var raw=String(value==null?'':value).replace(/\s+/g,' ').trim();
+  var normalized=raw.toLowerCase().replace(/[^a-z0-9+#.]+/g,' ').replace(/\s+/g,' ').trim();
+  var aliases=[raw];
+  function add(alias){
+    if(alias && aliases.map(function(v){ return v.toLowerCase(); }).indexOf(alias.toLowerCase())===-1) aliases.push(alias);
+  }
+  if(/\baws\b/.test(normalized) && /\bcloud\b/.test(normalized)){
+    add('AWS');
+    add('Amazon Web Services');
+  }
+  if(normalized === 'amazon web services'){
+    add('AWS');
+    add('AWS Cloud');
+  }
+  if((/\bgcp\b/.test(normalized) || normalized === 'google cloud platform') && normalized.indexOf('cloud') !== -1){
+    add('GCP');
+    add('Google Cloud');
+  }
+  if(/\bazure\b/.test(normalized) && /\bcloud\b/.test(normalized)){
+    add('Azure');
+    add('Microsoft Azure');
+  }
+  return aliases;
+}
+function rsKeywordPatternFromValue(value){
+  var raw=String(value==null?'':value)
+    .replace(/\+\d+\s*More/gi,'')
+    .replace(/\s+/g,' ')
+    .trim();
+  if(!raw) return '';
+
+  var compact=raw.replace(/\s+/g,'');
+  if(/^[A-Za-z][+#]{1,2}$/i.test(compact)){
+    return '\\b'+rsKeywordPatternEscape(compact);
+  }
+
+  var expanded=raw
+    .replace(/([a-z])([A-Z])/g,'$1 $2')
+    .replace(/([A-Za-z])(\d)/g,'$1 $2')
+    .replace(/(\d)([A-Za-z])/g,'$1 $2');
+  var tokens=expanded.split(/[\s\u00a0\/\\_\-.+,;:()[\]{}|&]+/).filter(Boolean);
+  if(!tokens.length) return '';
+  var left=/^[A-Za-z0-9]/.test(tokens[0]) ? '\\b' : '';
+  var right=/[A-Za-z0-9]$/.test(tokens[tokens.length-1]) ? '\\b' : '';
+  if(tokens.length===1){
+    return left+rsKeywordPatternEscape(tokens[0])+right;
+  }
+  var flexibleJoin='(?:[\\s\\u00a0\\/\\\\_\\-.+,;:()\\[\\]{}|&]+|\\b(?:and|or)\\b)*';
+  return left+tokens.map(rsKeywordPatternEscape).join(flexibleJoin)+right;
+}
+function rsKeywordPatternsForValue(value){
+  var seen={};
+  var patterns=[];
+  rsKeywordAliasValues(value).forEach(function(alias){
+    var pattern=rsKeywordPatternFromValue(alias);
+    var key=pattern.toLowerCase();
+    if(pattern && !seen[key]){
+      seen[key]=true;
+      patterns.push(pattern);
+    }
+  });
+  return patterns;
+}
 function rsKeywordRegex(list){
   var seen={};
   var cleaned=(Array.isArray(list) ? list : []).map(function(item){
@@ -5353,16 +5422,11 @@ function rsKeywordRegex(list){
   });
   if(!cleaned.length) return null;
   cleaned.sort(function(a,b){ return b.length-a.length; });
-  return new RegExp(cleaned.map(function(value){
-    var expanded=value.replace(/([a-z])([A-Z])/g,'$1 $2').replace(/([A-Za-z])(\d)/g,'$1 $2').replace(/(\d)([A-Za-z])/g,'$1 $2');
-    var tokens=expanded.split(/[\s\/_\-.]+/).filter(Boolean);
-    var left=/^[A-Za-z0-9]/.test(value) ? '\\b' : '';
-    var right=/[A-Za-z0-9]$/.test(value) ? '\\b' : '';
-    if(tokens.length>1){
-      return left+tokens.map(function(token){ return token.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'); }).join('[\\s\\/_\\-.]*')+right;
-    }
-    return left+value.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+right;
-  }).join('|'),'gi');
+  var parts=[];
+  cleaned.forEach(function(value){
+    parts=parts.concat(rsKeywordPatternsForValue(value));
+  });
+  return parts.length ? new RegExp(parts.join('|'),'gi') : null;
 }
 function rsDrawerHighlightedKeywords(){
   var values=[];
@@ -5415,7 +5479,7 @@ function rsMarkKeywordMatches(root,re){
   });
 }
 function rsOption3EscRe(value){
-  return String(value==null?'':value).replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
+  return rsKeywordPatternEscape(value);
 }
 function rsOption3KeywordsFromResumeText(resumeText){
   var source=Array.isArray(rsAtsHighlightKeywords) ? rsAtsHighlightKeywords : [];
@@ -5425,8 +5489,8 @@ function rsOption3KeywordsFromResumeText(resumeText){
     var name=typeof item === 'string' ? item : clean(item && (item.skill_name || item.skill || item.name || item.skill_key),'');
     name=(name || '').replace(/\s+/g,' ').trim();
     if(!name || seen[name.toLowerCase()]) return;
-    var re=new RegExp(rsOption3EscRe(name),'gi');
-    if((resumeText || '').match(re)){
+    var re=rsKeywordRegex([name]);
+    if(re && (resumeText || '').match(re)){
       seen[name.toLowerCase()]=true;
       found.push(name);
     }
@@ -5438,11 +5502,9 @@ function rsOption3BuildRegex(activeSkills){
   if(!act.length) return null;
   act.sort(function(a,b){ return b.length-a.length; });
   var pat=act.map(function(val){
-    var esc=rsOption3EscRe(val);
-    var left=/^[A-Za-z0-9]/.test(val) ? '\\b' : '';
-    var right=/[A-Za-z0-9]$/.test(val) ? '\\b' : '';
-    return left+esc+right;
-  }).join('|');
+    return rsKeywordPatternsForValue(val).join('|');
+  }).filter(Boolean).join('|');
+  if(!pat) return null;
   return new RegExp('('+pat+')','gi');
 }
 function rsOption3HighlightTextLayer(textLayer,re){
