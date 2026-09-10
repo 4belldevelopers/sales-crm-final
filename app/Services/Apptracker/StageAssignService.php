@@ -29,11 +29,9 @@ class StageAssignService
      * Move a candidate to a child sub-stage; tenant-scoped.
      *
      * @param  int  $applicationId  job_applications.id
-     * @param  int  $jobId
      * @param  int  $childStatusId  candidate_status.id (the sub-stage target)
-     * @param  int  $companyId
      * @param  int  $parentStatusId  master_status_id; resolved from DB when 0.
-     * @return object|null  Fresh per-stage counter row; null when no applications for job.
+     * @return object|null Fresh per-stage counter row; null when no applications for job.
      */
     public function move(
         int $applicationId,
@@ -44,7 +42,7 @@ class StageAssignService
     ): ?object {
         // Resolve parent stage when not supplied by the caller
         if ($parentStatusId === 0) {
-            $parentRow    = DB::table('candidate_status')->where('id', $childStatusId)->first();
+            $parentRow = DB::table('candidate_status')->where('id', $childStatusId)->first();
             $parentStatusId = (int) ($parentRow->parent ?? 0);
         }
 
@@ -54,7 +52,7 @@ class StageAssignService
             ->where('company_id', $companyId)
             ->exists();
 
-        if (!$appExists) {
+        if (! $appExists) {
             return null;
         }
 
@@ -65,27 +63,35 @@ class StageAssignService
             ->limit(1)
             ->update(['child_status_id' => $childStatusId, 'master_status_id' => $parentStatusId]);
 
+        DB::table('add_job_wise_condidates')
+            ->where('job_application_id', $applicationId)
+            ->where('job_id', $jobId)
+            ->where('company_id', $companyId)
+            ->update(['child_status_id' => $childStatusId, 'master_status_id' => $parentStatusId]);
+
+        $this->counterService->onStageMoved($jobId, $applicationId, $parentStatusId, $companyId);
+
         // Insert timeline entry for audit trail
         $application = JobApplication::withoutGlobalScopes()->find($applicationId);
         if ($application) {
-            $childStatus  = DB::table('candidate_status')
+            $childStatus = DB::table('candidate_status')
                 ->where('id', $childStatusId)
                 ->where('company_id', $companyId)
                 ->first();
             $masterStatus = ApplicationStatus::withoutGlobalScopes()->find($parentStatusId);
 
             DB::table('timeline')->insert([
-                'owner_id'           => auth()->id(),
-                'application_id'     => $application->id,
-                'application_email'  => $application->email,
-                'job_id'             => $application->job_id,
-                'process_id'         => $parentStatusId,
-                'status_name'        => $masterStatus->name ?? '',
+                'owner_id' => auth()->id(),
+                'application_id' => $application->id,
+                'application_email' => $application->email,
+                'job_id' => $application->job_id,
+                'process_id' => $parentStatusId,
+                'status_name' => $masterStatus->name ?? '',
                 'process_child_name' => $childStatus->name ?? '',
-                'insert_type'        => 0,
-                'interview_message'  => $childStatus->name ?? '',
-                'create_at'          => now()->format('Y-m-d H:i:s'),
-                'update_at'          => now()->format('Y-m-d H:i:s'),
+                'insert_type' => 0,
+                'interview_message' => $childStatus->name ?? '',
+                'create_at' => now()->format('Y-m-d H:i:s'),
+                'update_at' => now()->format('Y-m-d H:i:s'),
             ]);
         }
 
@@ -110,10 +116,8 @@ class StageAssignService
      *
      * Returns array with keys: status, data (HTML), counter, flag, activeAppCounter.
      *
-     * @param  int  $statusId        The master stage clicked
-     * @param  int  $applicationId   job_applications.id
-     * @param  int  $jobId
-     * @param  int  $companyId
+     * @param  int  $statusId  The master stage clicked
+     * @param  int  $applicationId  job_applications.id
      */
     public function childStageHtml(
         int $statusId,
@@ -127,11 +131,11 @@ class StageAssignService
             ->where('company_id', $companyId)
             ->first();
 
-        if (!$rowData) {
+        if (! $rowData) {
             return ['status' => 'error', 'message' => 'Application not found.'];
         }
 
-        $candidateArr     = DB::table('candidate_status')
+        $candidateArr = DB::table('candidate_status')
             ->where('parent', $statusId)
             ->where('company_id', $companyId)
             ->get();
@@ -145,16 +149,24 @@ class StageAssignService
                 ->where('company_id', $companyId)
                 ->limit(1)
                 ->update(['master_status_id' => $statusId, 'child_status_id' => null]);
+
+            DB::table('add_job_wise_condidates')
+                ->where('job_application_id', $applicationId)
+                ->where('job_id', $jobId)
+                ->where('company_id', $companyId)
+                ->update(['master_status_id' => $statusId, 'child_status_id' => null]);
+
+            $this->counterService->onStageMoved($jobId, $applicationId, $statusId, $companyId);
         }
 
         // Build child-stage dropdown HTML
         $flag = 0;
         if ($candidateArr->isNotEmpty()) {
-            $html = '<select name="childStatus" id="childStatus_' . $applicationId
-                . '" onchange="getOpenRejectionResionFrm(this.value,' . $applicationId
-                . ',' . $jobId . ',' . $statusId . ');"><option value="">Select Sub Stage</option>';
+            $html = '<select name="childStatus" id="childStatus_'.$applicationId
+                .'" onchange="getOpenRejectionResionFrm(this.value,'.$applicationId
+                .','.$jobId.','.$statusId.');"><option value="">Select Sub Stage</option>';
             foreach ($candidateArr as $cval) {
-                $html .= '<option value="' . $cval->id . '">' . ucfirst($cval->name) . '</option>';
+                $html .= '<option value="'.$cval->id.'">'.ucfirst($cval->name).'</option>';
                 $flag = 1;
             }
             $html .= '</select>';
@@ -198,10 +210,10 @@ class StageAssignService
             ->count();
 
         return [
-            'status'           => 'success',
-            'data'             => $html,
-            'counter'          => $countArr,
-            'flag'             => $flag,
+            'status' => 'success',
+            'data' => $html,
+            'counter' => $countArr,
+            'flag' => $flag,
             'activeAppCounter' => $activeAppCounter,
         ];
     }
