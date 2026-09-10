@@ -44,10 +44,10 @@ class ServiceCompanyDashboardController extends ServiceCompanyBaseController
     {
 
         $chkAdminRole = $this->user->hasRole('admin');
-                // $mapping = $this->elasticService->getClient()->indices()->getMapping([
-                //     'index' => ELASTIC_CANDIDATES
-                //      ]);
-                // dd($mapping);
+        // $mapping = $this->elasticService->getClient()->indices()->getMapping([
+        //     'index' => ELASTIC_CANDIDATES
+        //      ]);
+        // dd($mapping);
         // $add_job_wise_condidates =  DB::table('add_job_wise_condidates')
         // ->where('job_id','=',254)
         // ->select('add_job_wise_condidates.id','add_job_wise_condidates.job_id')
@@ -1619,7 +1619,9 @@ class ServiceCompanyDashboardController extends ServiceCompanyBaseController
         });
 
         $rankedUsers = $users->map(function ($user) use ($uploadsMap) {
-            $user['upload_count'] = $uploadsMap[$user['id']] ?? 0;
+            // Intent: Null-coalesce user id to prevent undefined array key exceptions when Elasticsearch hits omit 'id'
+            $userId = $user['id'] ?? null;
+            $user['upload_count'] = $uploadsMap[$userId] ?? 0;
 
             return $user;
         })->sortByDesc('upload_count')->values();
@@ -1758,7 +1760,9 @@ class ServiceCompanyDashboardController extends ServiceCompanyBaseController
         });
 
         $rankedUsers_month = $users->map(function ($user_month) use ($uploadsMap_month) {
-            $user_month['upload_count'] = $uploadsMap_month[$user_month['id']] ?? 0;
+            // Intent: Null-coalesce user id to prevent undefined array key exceptions when Elasticsearch hits omit 'id'
+            $userMonthId = $user_month['id'] ?? null;
+            $user_month['upload_count'] = $uploadsMap_month[$userMonthId] ?? 0;
 
             return $user_month;
         })->sortByDesc('upload_count')->values();
@@ -1912,7 +1916,8 @@ class ServiceCompanyDashboardController extends ServiceCompanyBaseController
         });
 
         $rankedUsers = $usersteam->map(function ($userteam) use ($scoreMap) {
-            $user_id = $userteam['id'];
+            // Intent: Null-coalesce user id to prevent undefined array key exceptions when Elasticsearch hits omit 'id'
+            $user_id = $userteam['id'] ?? null;
             $userteam['profileUpload'] = $scoreMap[$user_id]['profileUpload'] ?? 0;
             $userteam['interviewScheduled'] = $scoreMap[$user_id]['interviewScheduled'] ?? 0;
             $userteam['interviewNoShow'] = $scoreMap[$user_id]['interviewNoShow'] ?? 0;
@@ -2159,7 +2164,8 @@ class ServiceCompanyDashboardController extends ServiceCompanyBaseController
         });
 
         $rankedUsers_current = $usersteam_current->map(function ($userteam_current) use ($scoreMap_current) {
-            $user_id = $userteam_current['id'];
+            // Intent: Null-coalesce user id to prevent undefined array key exceptions when Elasticsearch hits omit 'id'
+            $user_id = $userteam_current['id'] ?? null;
             $userteam_current['profileUpload'] = $scoreMap_current[$user_id]['profileUpload'] ?? 0;
             $userteam_current['interviewScheduled'] = $scoreMap_current[$user_id]['interviewScheduled'] ?? 0;
             $userteam_current['interviewNoShow'] = $scoreMap_current[$user_id]['interviewNoShow'] ?? 0;
@@ -2349,7 +2355,8 @@ class ServiceCompanyDashboardController extends ServiceCompanyBaseController
         });
 
         $rankedUsers_daily_internal_rank = $usersteam_daily_internal_rank->map(function ($userteam_daily_internal_rank) use ($scoreMap_daily_internal_rank) {
-            $user_id = $userteam_daily_internal_rank['id'];
+            // Intent: Null-coalesce user id to prevent undefined array key exceptions when Elasticsearch hits omit 'id'
+            $user_id = $userteam_daily_internal_rank['id'] ?? null;
             $userteam_daily_internal_rank['profileUpload'] = $scoreMap_daily_internal_rank[$user_id]['profileUpload'] ?? 0;
             $userteam_daily_internal_rank['interviewScheduled'] = $scoreMap_daily_internal_rank[$user_id]['interviewScheduled'] ?? 0;
             $userteam_daily_internal_rank['interviewNoShow'] = $scoreMap_daily_internal_rank[$user_id]['interviewNoShow'] ?? 0;
@@ -2426,11 +2433,11 @@ class ServiceCompanyDashboardController extends ServiceCompanyBaseController
 
         $getTopFive = request()->query('getTopFive');
 
-        // if((int)$getTopFive==908070605012344321 && auth()->user()->id==3) {
-        //          dd($rankedUsers_daily_internal_rank,$rankedUsers_current,$rankedUsers);
-		//   }
-        if((int)$getTopFive==808070605012344321 && auth()->user()->id==18) {
-                dd($rankedUsers_daily_internal_rank,$rankedUsers_current,$rankedUsers);
+        if ((int) $getTopFive == 808070605012344321 && auth()->user()->id == 3) {
+            dd($rankedUsers_daily_internal_rank, $rankedUsers_current, $rankedUsers);
+        }
+        if ((int) $getTopFive == 808070605012344321 && auth()->user()->id == 18) {
+            dd($rankedUsers_daily_internal_rank, $rankedUsers_current, $rankedUsers);
         }
 
         // Global Rank
@@ -2550,7 +2557,8 @@ class ServiceCompanyDashboardController extends ServiceCompanyBaseController
         });
 
         $rankedUsers_daily_global_rank = $usersteam_daily_global_rank->map(function ($userteam_daily_global_rank) use ($scoreMap_daily_global_rank) {
-            $user_id = $userteam_daily_global_rank['id'];
+            // Intent: Null-coalesce user id to prevent undefined array key exceptions when Elasticsearch hits omit 'id'
+            $user_id = $userteam_daily_global_rank['id'] ?? null;
             $userteam_daily_global_rank['profileUpload'] = $scoreMap_daily_global_rank[$user_id]['profileUpload'] ?? 0;
             $userteam_daily_global_rank['interviewScheduled'] = $scoreMap_daily_global_rank[$user_id]['interviewScheduled'] ?? 0;
             $userteam_daily_global_rank['interviewNoShow'] = $scoreMap_daily_global_rank[$user_id]['interviewNoShow'] ?? 0;
@@ -2730,7 +2738,8 @@ class ServiceCompanyDashboardController extends ServiceCompanyBaseController
         });
 
         $rankedUsers_global = $usersteam_global->map(function ($userteam_global) use ($scoreMap_global) {
-            $user_id = $userteam_global['id'];
+            // Intent: Null-coalesce user id to prevent undefined array key exceptions when Elasticsearch hits omit 'id'
+            $user_id = $userteam_global['id'] ?? null;
             $userteam_global['profileUpload'] = $scoreMap_global[$user_id]['profileUpload'] ?? 0;
             $userteam_global['interviewScheduled'] = $scoreMap_global[$user_id]['interviewScheduled'] ?? 0;
             $userteam_global['interviewNoShow'] = $scoreMap_global[$user_id]['interviewNoShow'] ?? 0;
@@ -2938,7 +2947,8 @@ class ServiceCompanyDashboardController extends ServiceCompanyBaseController
         });
 
         $rankedUsers_global_company = $usersteam_global_company->map(function ($userteam_global_company) use ($scoreMap_global_company) {
-            $company_id = $userteam_global_company['id'];
+            // Intent: Null-coalesce company id to prevent undefined array key exceptions when Elasticsearch hits omit 'id'
+            $company_id = $userteam_global_company['id'] ?? null;
             $userteam_global_company['profileUpload'] = $scoreMap_global_company[$company_id]['profileUpload'] ?? 0;
             $userteam_global_company['interviewScheduled'] = $scoreMap_global_company[$company_id]['interviewScheduled'] ?? 0;
             $userteam_global_company['interviewNoShow'] = $scoreMap_global_company[$company_id]['interviewNoShow'] ?? 0;
