@@ -5544,7 +5544,8 @@ async function buildHeadlessOption3SkillsHighlightedResume(options){
         var clientDocxOptions={
           maxBytes:parseInt(options.clientDocxMaxBytes,10)||rsDocxMaxBytes,
           maxPages:parseInt(options.clientDocxMaxPages,10)||30,
-          requireTextPdf:options.clientDocxRequireTextPdf===true
+          requireTextPdf:options.clientDocxRequireTextPdf===true,
+          skipHighlights:(options.clientDocxSkipOpenDocHighlights===true || strictClientOnly)
         };
         try{
           pdfBlob=await convertResumeWithOpenDocLabBlob(resumeSources,resumeExt,false,clientDocxOptions);
@@ -5670,7 +5671,15 @@ async function buildHeadlessOption3SkillsHighlightedResume(options){
           hi.height=Math.floor(vp.height);
           await page.render({canvasContext:hi.getContext('2d',{willReadFrequently:true}),viewport:vp}).promise;
           var ctx=hi.getContext('2d',{willReadFrequently:true});
-          if(re && pageInfo.tc){
+          if(re && options.legacyTextLayerHighlightBoxes===true){
+            var pr=wrap.getBoundingClientRect();
+            ctx.fillStyle='rgba(255,210,0,0.4)';
+            Array.prototype.slice.call(wrap.querySelectorAll('mark.rcv-hit')).forEach(function(mk){
+              var r=mk.getBoundingClientRect();
+              if(!r.width || !r.height || !pr.width || !pr.height) return;
+              ctx.fillRect((r.left-pr.left)/pr.width*hi.width,(r.top-pr.top)/pr.height*hi.height,r.width/pr.width*hi.width,Math.max(r.height/pr.height*hi.height,6));
+            });
+          }else if(re && pageInfo.tc){
             rsDrawKeywordHitsFromTextItems(ctx,pageInfo.tc,vp,re);
           }
           return {imgData:hi.toDataURL('image/jpeg',0.96),cssW:cssW,cssH:cssH};
@@ -8244,6 +8253,8 @@ async function buildPreAntigravityPreScreenedHighlightedResume(resumePdfUrl,opti
       clientDocxMaxBytes:parseInt(options.clientDocxMaxBytes,10)||1536*1024,
       clientDocxMaxPages:parseInt(options.clientDocxMaxPages,10)||6,
       clientDocxRequireTextPdf:true,
+      clientDocxSkipOpenDocHighlights:true,
+      legacyTextLayerHighlightBoxes:true,
       strictClientOnly:true,
       returnBlob:true
     });
