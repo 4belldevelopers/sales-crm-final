@@ -1090,24 +1090,23 @@ class InterviewScheduleController extends StaffingCompanyBaseController
 		
 
 		$interview_id 				= $request->interview_id;
-
 		$job_application_id 		= $request->job_application_id;
-
 		$status_id 					= $request->status_id;
 
-		
+		$request->merge([
+			'interview_id' => $interview_id,
+			'application_id' => $job_application_id,
+			'app_int_status' => $status_id,
+		]);
 
-		$returnValue = DB::table('interview_schedules')
+		$transitionEngine = app(\App\Services\Interview\InterviewStatusTransitionEngine::class);
+		$result = $transitionEngine->process($request, $this->user);
 
-		->where('id', $interview_id)
+		if (! $result->success) {
+			return Reply::dataOnly(['status' => 'error', 'msg' => $result->message]);
+		}
 
-		->where('job_application_id', @$job_application_id)
-
-		//->where('skill_id', @$request->schemaname)
-
-		->limit(1) 
-
-		->update(array('available_status' => @$status_id)); 
+		$returnValue = 1; 
 
 		
 
@@ -2742,62 +2741,14 @@ class InterviewScheduleController extends StaffingCompanyBaseController
 	}
 	public	function updateInterview(Request $request)
 	{
-								
-						$interview_id =	$app_int_status =	$app_int_feedback_status	= $feedback_comment	= $application_id	= $rating	=	'';
-							
-						$interview_id 				= @$request->id;
-						$app_int_status 			= @$request->app_int_status;
-						$app_int_feedback_status 	= @$request->app_int_feedback_status;
-						$feedback_comment 			= @$request->feedback_comment;
-						$application_id 			= @$request->application_id;	
-						$rating 					= @$request->rating;				
-						
-						
-							
-						$values = array(
-											'interview_id' 		 		=> @$interview_id,
-											'application_id' 		 	=> @$application_id, 
-											'available_status' 			=> @$app_int_status, 
-											'feedback_id' 				=> @$app_int_feedback_status,
-											'star_ratings' 				=> @$rating,
-											//'feedback_name' 		 	=> $feedback_name,
-											'message' 					=> @$feedback_comment,
-											'update_by'  				=> $this->user->id,
-											'created_at'			 	=> date('Y-m-d:H:i:s')
-										);
-						$update = DB::table('interview_feedback')->insert($values);		
-						
-						
-						
-						$interviewCount 	= DB::table('interview_feedback')
-												->select('interview_feedback.id')
-												->where('interview_id', @$interview_id)
-												->where('application_id', @$application_id)
-												->count();
-												
-						$interviewSum 		= DB::table('interview_feedback')
-												->select(DB::raw('SUM(star_ratings) AS star_ratings_sum'))
-												->where('interview_id', @$interview_id)
-												->where('application_id', @$application_id)
-												->first();
-												
-						$averageRatimg		= $interviewSum->star_ratings_sum/$interviewCount;
-							
-						$returnValue = DB::table('interview_schedules')
-						->where('id', $interview_id)
-						->limit(1)  
-						->update(array('available_status' => @$app_int_status, 'feedback' => @$app_int_feedback_status, 'average_star_rating' => ceil($averageRatimg) )); 
-						
-						
-						$returnValue = DB::table('timeline')
-						->where('interview_schedules_id', $interview_id)
-						->limit(1)  
-						->update(array('average_star_rating' => ceil($averageRatimg) )); 
-							
-								
-						return Reply::dataOnly(['status' => 'success', 'msg' => 'Interview feedback update successfully.']); 
-		
-		
+						$transitionEngine = app(\App\Services\Interview\InterviewStatusTransitionEngine::class);
+						$result = $transitionEngine->process($request, $this->user);
+
+						if (! $result->success) {
+							return Reply::dataOnly(['status' => 'error', 'msg' => $result->message]);
+						}
+
+						return Reply::dataOnly(['status' => 'success', 'msg' => 'Interview feedback updated successfully.']);
 	}	
 
 } 

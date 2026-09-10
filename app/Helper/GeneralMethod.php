@@ -9621,47 +9621,48 @@ END:VCALENDAR";
         ]);
         // dd("sksk",$mysqlId);
 
-        $response = $elasticService->getClient()->index([
-            'index' => ELASTIC_TEAM_RANK,
-            'id' => $mysqlId,
-            'body' => [
-                'doc' => [
-                    'company_id' => $company_id,
-                    'user_id' => $user_id,
-                    'candidate_id' => $candidate_id,
-                    'profileUpload' => $profileUpload,  // +1 point
-                    'interviewScheduled' => $interviewScheduled, // +100 points
-                    'interviewNoShow' => $interviewNoShow, // –5 points
-                    'offerReleased' => $offerReleased, // +300 points
-                    'candidateJoined' => $candidateJoined, // +500 points
-                    'jobsPosted' => $jobsPosted, // +2 pts per job
-                    'feedbackGivenOnCVs' => $feedbackGivenOnCVs, // +3 pts per feedback
-                    'postJobToVendorMarket' => $postJobToVendorMarket, // +2 pts per vendor post
-                    'outsourceJobsToVendors' => $outsourceJobsToVendors, // +5 pts per vendor assignment
-                    'listBenchCandidates' => $listBenchCandidates, // +3 pts per candidate listed
-                    'respondToBenchRequests' => $respondToBenchRequests, // +4 pts per response
-                    'interestedCandidates' => $interestedCandidates, // +2 pts per response
-                    'notInterestedCandidates' => $notInterestedCandidates, // -1 pts per response
-                    'teamCaptainInterviewScheduled' => $teamCaptainInterviewScheduled, // +2 pts per response
-                    'teamCaptainInterviewNoShow' => $teamCaptainInterviewNoShow, // -1 pts per response
-                    'teamCaptainOfferReleased' => $teamCaptainOfferReleased, // +10 pts per response
-                    'teamCaptainCandidateJoined' => $teamCaptainCandidateJoined, // +20 pts per response
-                    'candidateJoinedContract' => $candidateJoinedContract, // joined on a contract job
-                    'teamCaptainCandidateJoinedContract' => $teamCaptainCandidateJoinedContract, // team captain, contract job
-                    'sourcing' => $sourcing, // +1 pts per response
-                    'screening' => $screening, // +1 pts per response
-                    'evaluation' => $evaluation, // +1 pts per response
-                    'negotiation' => $negotiation, // +1 pts per response
-                    'backout' => $backout, // join pts per response
-                    'backoutTeam' => $backoutTeam, // join pts per response
-                    'backoutContract' => $backoutContract, // backout on a contract job
-                    'backoutTeamContract' => $backoutTeamContract, // team captain backout, contract job
-                    'created_at' => $updateTime,
-                    'updated_at' => $updateTime,
-                ],
-            ],
-        ]);
+        $docPayload = [
+            'company_id' => $company_id,
+            'user_id' => $user_id,
+            'candidate_id' => $candidate_id,
+            'profileUpload' => $profileUpload,
+            'interviewScheduled' => $interviewScheduled,
+            'interviewNoShow' => $interviewNoShow,
+            'offerReleased' => $offerReleased,
+            'candidateJoined' => $candidateJoined,
+            'jobsPosted' => $jobsPosted,
+            'feedbackGivenOnCVs' => $feedbackGivenOnCVs,
+            'postJobToVendorMarket' => $postJobToVendorMarket,
+            'outsourceJobsToVendors' => $outsourceJobsToVendors,
+            'listBenchCandidates' => $listBenchCandidates,
+            'respondToBenchRequests' => $respondToBenchRequests,
+            'interestedCandidates' => $interestedCandidates,
+            'notInterestedCandidates' => $notInterestedCandidates,
+            'teamCaptainInterviewScheduled' => $teamCaptainInterviewScheduled,
+            'teamCaptainInterviewNoShow' => $teamCaptainInterviewNoShow,
+            'teamCaptainOfferReleased' => $teamCaptainOfferReleased,
+            'teamCaptainCandidateJoined' => $teamCaptainCandidateJoined,
+            'candidateJoinedContract' => $candidateJoinedContract,
+            'teamCaptainCandidateJoinedContract' => $teamCaptainCandidateJoinedContract,
+            'sourcing' => $sourcing,
+            'screening' => $screening,
+            'evaluation' => $evaluation,
+            'negotiation' => $negotiation,
+            'backout' => $backout,
+            'backoutTeam' => $backoutTeam,
+            'backoutContract' => $backoutContract,
+            'backoutTeamContract' => $backoutTeamContract,
+            'created_at' => $updateTime,
+            'updated_at' => $updateTime,
+        ];
 
+        if (DB::transactionLevel() > 0) {
+            DB::afterCommit(function () use ($mysqlId, $docPayload) {
+                \App\Jobs\SyncTeamRankToElasticJob::dispatch($mysqlId, $docPayload);
+            });
+        } else {
+            \App\Jobs\SyncTeamRankToElasticJob::dispatch($mysqlId, $docPayload);
+        }
     }
 
     public static function skillsAddElastic($skillsElastic = [])
