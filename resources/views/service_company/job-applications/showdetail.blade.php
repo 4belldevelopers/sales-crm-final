@@ -398,11 +398,11 @@
 .rdc-opt-sel .rdc-ocirc{border-color:#5b21ff;background:#5b21ff;box-shadow:0 0 0 4px rgba(91,33,255,.12);}
 .rdc-opt-sel .rdc-ocirc::after{content:'';width:6px;height:6px;border-radius:50%;background:#fff;display:block;}
 .rdc-section{border:1px solid #dbe7f7;border-radius:10px;background:#fff;overflow:hidden;box-shadow:0 8px 20px rgba(15,23,42,.04);}
-.rdc-section-head{display:flex;align-items:center;gap:11px;padding:8px 11px;border-bottom:1px solid #dde9f8;}
+.rdc-section-head{display:flex;align-items:center;gap:9px 11px;padding:8px 11px;border-bottom:1px solid #dde9f8;min-width:0;}
 .rdc-section-icon{width:32px;height:32px;border-radius:9px;display:flex;align-items:center;justify-content:center;color:#fff;flex-shrink:0;box-shadow:0 8px 16px rgba(15,23,42,.12);}
 .rdc-section-icon svg{width:18px;height:18px;}
-.rdc-section-title{font-size:16px;font-weight:800;color:#08154a;line-height:1.2;white-space:nowrap;}
-.rdc-section-pill{display:inline-flex;align-items:center;height:22px;padding:0 11px;border-radius:999px;font-size:11px;font-weight:500;white-space:nowrap;}
+.rdc-section-title{font-size:16px;font-weight:800;color:#08154a;line-height:1.2;white-space:nowrap;min-width:0;overflow:hidden;text-overflow:ellipsis;}
+.rdc-section-pill{display:inline-flex;align-items:center;height:22px;padding:0 11px;border-radius:999px;font-size:11px;font-weight:500;white-space:nowrap;min-width:0;max-width:100%;overflow:hidden;text-overflow:ellipsis;}
 .rdc-section-count{margin-left:auto;color:#4f16e8;font-size:13px;font-weight:800;white-space:nowrap;}
 .rdc-section-chevron{width:18px;height:18px;color:#5b21ff;flex-shrink:0;}
 .rdc-section-options{display:flex;flex-direction:column;gap:6px;padding:8px 9px;}
@@ -480,6 +480,29 @@
 }
 @media(min-width:641px) and (max-width:900px){
   .rdc-drawer{width:100%;}
+}
+@media(max-width:1440px), (max-height:820px){
+  .rdc-drawer{width:min(704px,100vw);}
+  .rdc-header{padding:10px 14px 9px;}
+  .rdc-body{padding:9px 12px 0;}
+  .rdc-opts-list{gap:8px;padding-bottom:9px;}
+  .rdc-section-head{padding:7px 10px;flex-wrap:wrap;}
+  .rdc-section-title{font-size:14px;flex:1 1 auto;}
+  .rdc-section-pill{height:20px;font-size:10px;flex:1 1 220px;}
+  .rdc-section-count{font-size:12px;margin-left:auto;}
+  .rdc-section-options{gap:6px;padding:7px 8px;}
+  .rdc-opt{grid-template-columns:38px minmax(0,1fr) 96px 18px;column-gap:10px;padding:8px 9px;}
+  .rdc-oi{width:32px;height:32px;}
+  .rdc-oi svg{width:16px;height:16px;}
+  .rdc-otitle{font-size:12px;}
+  .rdc-odesc{font-size:10.5px;line-height:1.3;}
+  .rdc-ometa{padding-left:10px;}
+  .rdc-ocost{font-size:11.5px;}
+  .rdc-ocost::before{width:15px;height:15px;box-shadow:inset 0 -3px 0 #d97706,0 0 0 3px #fff7dd;}
+  .rdc-otime{font-size:10px;padding-left:22px;}
+  .rdc-footer{padding:10px 12px 8px;}
+  .rdc-dl-btn{padding:11px 14px;}
+  .rdc-foot-note{margin-top:7px;}
 }
 /* ===== HERO SKILLS BAR REDESIGN ===== */
 /* Skills % match badge on avatar */
@@ -8421,7 +8444,7 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 4 7v6c0 5 3.4 7.8 8 9 4.6-1.2 8-4 8-9V7l-8-4z"/><path d="M9 12h6"/><path d="M12 9v6"/></svg>
         </span>
         <span class="rdc-obody">
-          <span class="rdc-otitle">Anonymized Resume</span>
+          <span class="rdc-otitle">Hide Candidate Name & Contacts Details</span>
           <span class="rdc-odesc">Hide candidate name, email, and phone numbers in a browser-only resume copy.</span>
         </span>
         <span class="rdc-ometa">
@@ -9056,7 +9079,7 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
     26:{cost:4, label:'Client Lightning Resume + Highlights', avail:(['PDF','DOC','DOCX'].indexOf(resumeExt) !== -1), dlKey:'client-lightning-highlighted', unavailableMsg:'Client Lightning Highlighted Resume is available for PDF, DOC and DOCX resumes only.'},
     27:{cost:8, label:'Turbo Pre-Screened Report + Resume + Highlights', avail:(['PDF','DOC','DOCX'].indexOf(resumeExt) !== -1), dlKey:'turbo-prescreened-highlighted-package', unavailableMsg:'Turbo Pre-Screened Package is available for PDF, DOC and DOCX resumes only.'},
     28:{cost:4, label:'Resume + Highlighted Keywords', avail:(['PDF','DOC','DOCX'].indexOf(resumeExt) !== -1), dlKey:'isolated-highlighted-keywords-client-docx', unavailableMsg:'Resume + Highlighted Keywords is available for PDF, DOC and DOCX resumes only.'},
-    29:{cost:4, label:'Anonymized Resume', avail:(['PDF','DOCX'].indexOf(resumeExt) !== -1) && !!(r2DirectUrl || r2PublicUrl || originalR2DirectUrl || originalR2PublicUrl), dlKey:'client-anonymized-resume', unavailableMsg:'Anonymized Resume is browser-only and available for direct R2 PDF/DOCX resumes.'},
+    29:{cost:4, label:'Hide Candidate Name & Contacts Details', avail:(['PDF','DOCX'].indexOf(resumeExt) !== -1) && !!(r2DirectUrl || r2PublicUrl || originalR2DirectUrl || originalR2PublicUrl), dlKey:'client-anonymized-resume', unavailableMsg:'Anonymized Resume is browser-only and available for direct R2 PDF/DOCX resumes.'},
     30:{cost:4, label:'Hide Contact Details', avail:(['PDF','DOCX'].indexOf(resumeExt) !== -1) && !!(r2DirectUrl || r2PublicUrl || originalR2DirectUrl || originalR2PublicUrl), dlKey:'client-anonymized-keep-name-resume', keepName:true, unavailableMsg:'Hide Contact Details is browser-only and available for direct R2 PDF/DOCX resumes.'},
     31:{cost:6, label:'Hide Contact Details + Company Branding', avail:(['PDF','DOCX'].indexOf(resumeExt) !== -1) && !!(r2DirectUrl || r2PublicUrl || originalR2DirectUrl || originalR2PublicUrl), dlKey:'client-contact-hidden-branded-resume', unavailableMsg:'Hide Contact Details + Company Branding is browser-only and available for direct R2 PDF/DOCX resumes.'},
     32:{cost:11, label:'Hide Contact Details + Pre-Screened Report', avail:(['PDF','DOCX'].indexOf(resumeExt) !== -1) && !!(r2DirectUrl || r2PublicUrl || originalR2DirectUrl || originalR2PublicUrl), dlKey:'client-contact-hidden-prescreened-resume', unavailableMsg:'Hide Contact Details + Pre-Screened Report is browser-only and available for direct R2 PDF/DOCX resumes.'},
@@ -9177,10 +9200,10 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
     });
     var groups=[
       {theme:'blue',icon:'resume',title:'1. Resume Options',pill:"Get the candidate's resume in different formats.",ids:[1,6]},
-      {theme:'purple',icon:'privacy',title:'2. Privacy & Anonymization',pill:'Protect candidate information as needed.',ids:[29,30,31,32,33]},
-      {theme:'rose',icon:'report',title:'3. Pre-Screened Report',pill:'Get AI-powered insights and verification details.',ids:[5]},
-      {theme:'green',icon:'package',title:'4. Recruiter Packages (Report + Resume)',pill:'Combine reports and resumes for a complete hiring package.',ids:[15,16]},
-      {theme:'amber',icon:'keyword',title:'5. Keyword Enhancements (Report + Resume + Skills)',pill:'Get enhanced resumes with job-matching keywords.',ids:[28,20,17,19]}
+      {theme:'rose',icon:'report',title:'2. Pre-Screened Report',pill:'Get AI-powered insights and verification details.',ids:[5]},
+      {theme:'green',icon:'package',title:'3. Recruiter Packages (Report + Resume)',pill:'Combine reports and resumes for a complete hiring package.',ids:[15,16]},
+      {theme:'amber',icon:'keyword',title:'4. Keyword Enhancements (Report + Resume + Skills)',pill:'Get enhanced resumes with job-matching keywords.',ids:[28,20,17,19]},
+      {theme:'purple',icon:'privacy',title:'5. Privacy & Anonymization',pill:'Protect candidate information as needed.',ids:[29,30,31,32,33]}
     ];
     var moved={};
     var frag=document.createDocumentFragment();
@@ -9439,6 +9462,12 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
     });
   }
 
+  function beginDownloadCountdown(prefix){
+    /* Purpose: standardize the RDC loading UI so every download option shows the
+       same countdown treatment without changing the option-specific workflows. */
+    runSmartCountdown(prefix || 'Downloading Resume, Kindly wait.', 60);
+  }
+
   function resetBtn(){
     stopSmartCountdown();
     isLoading = false;
@@ -9479,11 +9508,15 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
       }
 
       if(selectedOpt === 1){
-        /* Original resume: direct R2 browser download only; no loading state because browsers do not expose a reliable download-finished event. */
+        /* Original resume: direct R2 browser download only; browsers do not expose a reliable download-finished event. */
         if(!originalR2DirectUrl && !originalR2PublicUrl && !r2PublicUrl && !dlUrl){
           showToast('Original resume is not available for download.', 'warn');
           resetBtn(); return;
         }
+        isLoading = true;
+        dlBtn.disabled = true;
+        dlBtn.classList.add('rdc-loading');
+        beginDownloadCountdown('Downloading Resume, Kindly wait.');
         try {
           startOriginalResumeDownload({
             originalR2PublicUrl:originalR2PublicUrl,
@@ -9494,8 +9527,10 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
             dlUrl:dlUrl,
             resumeExt:resumeExt
           });
-          resetBtn();
-          closeRdc();
+          setTimeout(function(){
+            resetBtn();
+            closeRdc();
+          }, 500);
         } catch(err) {
           console.error('Original resume R2-first download failed:',err);
           showToast(err && err.message ? err.message : 'Could not download original resume. Please try again.', 'warn');
@@ -9507,7 +9542,7 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
       isLoading = true;
       dlBtn.disabled = true;
       dlBtn.classList.add('rdc-loading');
-      dlBtn.innerHTML = '<span class="rdc-spin"></span><span>Preparing download…</span>';
+      beginDownloadCountdown('Downloading Resume, Kindly wait.');
 
       if(m.dlKey === 'client-anonymized-resume' || m.dlKey === 'client-anonymized-keep-name-resume'){
         /* Options 29/30: browser-only privacy copies. They use direct R2 bytes and never call the server PDF converter. */
@@ -9519,7 +9554,7 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
           showToast(m.unavailableMsg || 'Anonymized Resume is available for PDF and DOCX resumes only.', 'warn');
           resetBtn(); return;
         }
-        dlBtn.innerHTML = '<span class="rdc-spin"></span><span>Anonymizing resume in browser...</span>';
+        beginDownloadCountdown('Downloading Resume, Kindly wait.');
         ensureDownloadCenterR2Urls().then(function(){
           var anonymizedSources = rdcCollectDownloadSources([r2DirectUrl,r2PublicUrl,originalR2DirectUrl,originalR2PublicUrl]);
           if(!anonymizedSources.length) throw new Error('Direct R2 resume URL is not available for browser anonymization.');
@@ -9547,7 +9582,7 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
           showToast(m.unavailableMsg || 'Hide Contact Details + Company Branding is available for PDF and DOCX resumes only.', 'warn');
           resetBtn(); return;
         }
-        dlBtn.innerHTML = '<span class="rdc-spin"></span><span>Hiding contact details and adding branding...</span>';
+        beginDownloadCountdown('Downloading Resume, Kindly wait.');
         ensureDownloadCenterR2Urls().then(function(){
           var contactHiddenSources = rdcCollectDownloadSources([r2DirectUrl,r2PublicUrl,originalR2DirectUrl,originalR2PublicUrl]);
           if(!contactHiddenSources.length) throw new Error('Direct R2 resume URL is not available for browser processing.');
@@ -9574,7 +9609,7 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
           showToast(m.unavailableMsg || 'Hide Contact Details + Pre-Screened Report is available for PDF and DOCX resumes only.', 'warn');
           resetBtn(); return;
         }
-        dlBtn.innerHTML = '<span class="rdc-spin"></span><span>Hiding contact details and adding report...</span>';
+        beginDownloadCountdown('Generating Report, Kindly wait.');
         ensureDownloadCenterR2Urls().then(function(){
           var contactHiddenReportSources = rdcCollectDownloadSources([r2DirectUrl,r2PublicUrl,originalR2DirectUrl,originalR2PublicUrl]);
           if(!contactHiddenReportSources.length) throw new Error('Direct R2 resume URL is not available for browser processing.');
@@ -9601,7 +9636,7 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
           showToast(m.unavailableMsg || 'Hide Contact Details + Pre-Screened Report without Company Branding is available for PDF and DOCX resumes only.', 'warn');
           resetBtn(); return;
         }
-        dlBtn.innerHTML = '<span class="rdc-spin"></span><span>Hiding contact details and adding no-brand report...</span>';
+        beginDownloadCountdown('Generating Report, Kindly wait.');
         ensureDownloadCenterR2Urls().then(function(){
           var contactHiddenNoBrandSources = rdcCollectDownloadSources([r2DirectUrl,r2PublicUrl,originalR2DirectUrl,originalR2PublicUrl]);
           if(!contactHiddenNoBrandSources.length) throw new Error('Direct R2 resume URL is not available for browser processing.');
@@ -9624,6 +9659,7 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
           showToast('Please wait a moment and try again.', 'warn');
           resetBtn(); return;
         }
+        beginDownloadCountdown('Generating Report, Kindly wait.');
         window.__buildRS().then(function(ok){
           if(ok) closeRdc();
         }).catch(function(){
@@ -9643,7 +9679,7 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
           showToast('Combined report is available for PDF, DOC and DOCX resumes.', 'warn');
           resetBtn(); return;
         }
-        dlBtn.innerHTML = '<span class="rdc-spin"></span><span>' + (resumeExt === 'PDF' ? 'Merging PDF...' : 'Converting Word resume...') + '</span>';
+        beginDownloadCountdown('Generating Report, Kindly wait.');
         window.__buildCombinedRSResume(resumePdfUrl,{resumeUrl:dlUrl,resumeExt:resumeExt}).then(function(ok){
           if(ok) closeRdc();
         }).catch(function(){
@@ -9662,7 +9698,7 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
           showToast('Combined report is available for PDF, DOC and DOCX resumes.', 'warn');
           resetBtn(); return;
         }
-        dlBtn.innerHTML = '<span class="rdc-spin"></span><span>' + (resumeExt === 'PDF' ? 'Merging PDF...' : 'Converting Word resume...') + '</span>';
+        beginDownloadCountdown('Generating Report, Kindly wait.');
         window.__buildCombinedRSResume(resumePdfUrl,{noBranding:true,resumeUrl:dlUrl,resumeExt:resumeExt}).then(function(ok){
           if(ok) closeRdc();
         }).catch(function(){
@@ -9681,7 +9717,7 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
           showToast('Resume PDF conversion is available for PDF, DOC and DOCX resumes.', 'warn');
           resetBtn(); return;
         }
-        dlBtn.innerHTML = '<span class="rdc-spin"></span><span>' + (resumeExt === 'PDF' ? 'Preparing PDF...' : 'Converting Word to PDF...') + '</span>';
+        beginDownloadCountdown('Downloading Resume, Kindly wait.');
         window.__convertResumeToPdfOnly(dlUrl,resumePdfUrl,resumeExt).then(function(ok){
           if(ok) closeRdc();
         }).catch(function(){
@@ -9700,7 +9736,7 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
           showToast('Browser conversion is available only for DOCX resumes. Use option 10 for PDF/DOC files.', 'warn');
           resetBtn(); return;
         }
-        dlBtn.innerHTML = '<span class="rdc-spin"></span><span>Converting DOCX in browser...</span>';
+        beginDownloadCountdown('Downloading Resume, Kindly wait.');
         window.__convertResumeToPdfBrowserOnly(dlUrl,resumeExt).then(function(ok){
           if(ok) closeRdc();
         }).catch(function(){
@@ -9719,7 +9755,7 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
           showToast('OpenDoc lab is available only for DOCX resumes.', 'warn');
           resetBtn(); return;
         }
-        dlBtn.innerHTML = '<span class="rdc-spin"></span><span>Checking OpenDoc lab...</span>';
+        beginDownloadCountdown('Downloading Resume, Kindly wait.');
         window.__convertResumeWithOpenDocLab(dlUrl,resumeExt).then(function(ok){
           if(ok) closeRdc();
         }).catch(function(){
@@ -9739,7 +9775,7 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
           showToast('This option is available only for DOC and DOCX resumes.', 'warn');
           resetBtn(); return;
         }
-        dlBtn.innerHTML = '<span class="rdc-spin"></span><span>Converting Word resume and adding report...</span>';
+        beginDownloadCountdown('Generating Report, Kindly wait.');
         window.__buildWordPreScreenedResume(resumePdfUrl,{resumeUrl:dlUrl,resumeExt:resumeExt}).then(function(ok){
           if(ok) closeRdc();
         }).catch(function(){
@@ -9759,7 +9795,7 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
           showToast('Direct R2 DOCX URL is not available. Use option 13 for server converter mode.', 'warn');
           resetBtn(); return;
         }
-        dlBtn.innerHTML = '<span class="rdc-spin"></span><span>Fetching DOCX from R2 and merging in browser...</span>';
+        beginDownloadCountdown('Generating Report, Kindly wait.');
         window.__buildHybridWordPreScreenedResume('',{resumeUrl:[r2DirectUrl,r2PublicUrl],resumeExt:resumeExt}).then(function(ok){
           if(ok) closeRdc();
         }).catch(function(){
