@@ -8495,8 +8495,8 @@ async function agyEnsureMetricFonts(){
       '@font-face{font-family:"Cambria";src:local("Cambria"),local("Caladea"),url("https://cdn.jsdelivr.net/npm/@fontsource/caladea@5.0.8/files/caladea-latin-400-normal.woff2") format("woff2");font-weight:400;font-style:normal;font-display:swap;}',
       '@font-face{font-family:"Cambria";src:local("Cambria Bold"),local("Caladea-Bold"),url("https://cdn.jsdelivr.net/npm/@fontsource/caladea@5.0.8/files/caladea-latin-700-normal.woff2") format("woff2");font-weight:700;font-style:normal;font-display:swap;}',
       '.agy-docx-host .docx-wrapper{background:transparent!important;padding:0!important;}',
-      '.agy-docx-host .docx-wrapper > section.docx{box-sizing:border-box!important;position:relative!important;overflow:hidden!important;contain:paint layout!important;margin:0 auto!important;width:794px!important;min-height:1123px!important;background:#ffffff!important;box-shadow:none!important;}',
-      '.agy-docx-host table{table-layout:fixed!important;border-collapse:collapse!important;}',
+      '.agy-docx-host .docx-wrapper > section.docx{box-sizing:border-box!important;position:relative!important;margin:0 auto!important;background:#ffffff!important;box-shadow:none!important;}',
+      '.agy-docx-host table{border-collapse:collapse!important;}',
       '.agy-keyword-hit{background:rgba(255,214,10,0.45)!important;color:#111827!important;border-radius:2px!important;padding:0 2px!important;box-decoration-break:clone!important;-webkit-box-decoration-break:clone!important;vertical-align:baseline!important;line-height:inherit!important;}'
     ].join('\n');
     document.head.appendChild(style);
@@ -8510,10 +8510,18 @@ async function agyEnsureMetricFonts(){
   return true;
 }
 
-function agyInjectInvisibleTextLayer(pdf, pageEl, drawW, drawH){
+function agyInjectInvisibleTextLayer(pdf, pageEl, drawW, drawH, sliceOffsetY, sliceH, canvasH){
   try{
     var pRect = pageEl.getBoundingClientRect();
     if(!pRect.width || !pRect.height) return;
+    sliceOffsetY = sliceOffsetY || 0;
+    sliceH = sliceH || canvasH || pRect.height;
+    canvasH = canvasH || pRect.height;
+
+    var scaleY = canvasH / pRect.height;
+    var sliceStartCanvasY = sliceOffsetY;
+    var sliceEndCanvasY = sliceOffsetY + sliceH;
+
     var showText = window.NodeFilter ? window.NodeFilter.SHOW_TEXT : 4;
     var walker = document.createTreeWalker(pageEl, showText, null);
     var node;
@@ -8524,12 +8532,18 @@ function agyInjectInvisibleTextLayer(pdf, pageEl, drawW, drawH){
       if(!parent || ['SCRIPT','STYLE'].indexOf(parent.tagName)!==-1) continue;
       var rect = parent.getBoundingClientRect();
       if(!rect.width || !rect.height) continue;
-      var ptX = ((rect.left - pRect.left) / pRect.width) * drawW;
-      var ptY = ((rect.top - pRect.top) / pRect.height) * drawH + (rect.height * (drawH / pRect.height) * 0.82);
-      var fontSize = Math.max(6, Math.min(18, rect.height * (drawH / pRect.height) * 0.75));
-      if(typeof pdf.setFontSize === 'function') pdf.setFontSize(fontSize);
-      if(typeof pdf.text === 'function'){
-        pdf.text(val, ptX, ptY, { renderingMode: 'invisible' });
+
+      var nodeCanvasY = (rect.top - pRect.top) * scaleY;
+      if(nodeCanvasY >= sliceStartCanvasY && nodeCanvasY < sliceEndCanvasY){
+        var relCanvasY = nodeCanvasY - sliceStartCanvasY;
+        var ptX = ((rect.left - pRect.left) / pRect.width) * drawW;
+        var nodeCanvasH = rect.height * scaleY;
+        var ptY = (relCanvasY / sliceH) * drawH + (nodeCanvasH / sliceH * drawH * 0.82);
+        var fontSize = Math.max(6, Math.min(18, (nodeCanvasH / sliceH) * drawH * 0.75));
+        if(typeof pdf.setFontSize === 'function') pdf.setFontSize(fontSize);
+        if(typeof pdf.text === 'function'){
+          pdf.text(val, ptX, ptY, { renderingMode: 'invisible' });
+        }
       }
     }
   }catch(ex){}
@@ -8544,7 +8558,7 @@ async function renderAgyTrueSectionDocxToPdfBlob(docxBytes, options){
   var host = document.createElement('div');
   host.className = 'agy-docx-host';
   host.setAttribute('aria-hidden', 'true');
-  host.style.cssText = 'position:fixed;left:-14000px;top:0;width:820px;opacity:0;pointer-events:none;z-index:-9999;';
+  host.style.cssText = 'position:fixed;left:-14000px;top:0;width:auto;min-width:794px;background:#ffffff;overflow:visible;pointer-events:none;z-index:-9999;';
   document.body.appendChild(host);
 
   try{
@@ -8632,16 +8646,23 @@ async function renderAgyTrueSectionDocxToPdfBlob(docxBytes, options){
     var pdf = new JsPDF({ orientation: 'portrait', unit: 'pt', format: 'a4', compress: true });
     var pageW = pdf.internal.pageSize.getWidth();
     var pageH = pdf.internal.pageSize.getHeight();
+    var a4Aspect = pageH / pageW;
+
+    var isFirstPdfPage = true;
+    var totalSlicesEstimate = 0;
 
     for(var i = 0; i < pages.length; i++){
       if(options.statusCallback){
-        options.statusCallback('Converting Page ' + (i + 1) + ' of ' + pages.length + ' (' + Math.round(((i + 1) / pages.length) * 65 + 25) + '%)...');
+        options.statusCallback('Rasterizing section ' + (i + 1) + ' of ' + pages.length + ' (40%)...');
       }
       await agyYieldToMain();
       var pageEl = pages[i];
       pageEl.style.margin = '0 auto';
       pageEl.style.boxShadow = 'none';
       pageEl.style.background = '#ffffff';
+
+      var elWidth = Math.ceil(pageEl.scrollWidth || pageEl.getBoundingClientRect().width || 794);
+      var elHeight = Math.ceil(pageEl.scrollHeight || pageEl.getBoundingClientRect().height || 1123);
 
       var canvas = await window.html2canvas(pageEl, {
         backgroundColor: '#ffffff',
@@ -8652,25 +8673,82 @@ async function renderAgyTrueSectionDocxToPdfBlob(docxBytes, options){
         removeContainer: true,
         scrollX: 0,
         scrollY: 0,
-        windowWidth: Math.ceil(pageEl.scrollWidth || pageEl.getBoundingClientRect().width || 794),
-        windowHeight: Math.ceil(pageEl.scrollHeight || pageEl.getBoundingClientRect().height || 1123)
+        windowWidth: elWidth,
+        windowHeight: elHeight
       });
 
-      var img = canvas.toDataURL('image/jpeg', 0.92);
+      var targetSliceH = Math.round(canvas.width * a4Aspect);
+      var ctx = canvas.getContext('2d', { willReadFrequently: true });
+      var offsetY = 0;
 
-      if(i > 0) pdf.addPage('a4', 'portrait');
+      while(offsetY < canvas.height){
+        totalSlicesEstimate++;
+        var remainingH = canvas.height - offsetY;
+        var currentSliceH = Math.min(targetSliceH, remainingH);
 
-      var cRatio = canvas.width / canvas.height;
-      var a4Ratio = pageW / pageH;
-      var drawW = pageW;
-      var drawH = pageH;
-      if(Math.abs(cRatio - a4Ratio) > 0.08){
-        drawH = Math.min(pageH, pageW / cRatio);
-      }
-      pdf.addImage(img, 'JPEG', 0, 0, drawW, drawH, undefined, 'FAST');
+        // If remaining content exceeds one A4 page slice, search for a 100% white line between rows
+        if(remainingH > targetSliceH){
+          var idealCutY = offsetY + targetSliceH;
+          var bestCutY = idealCutY;
+          var searchMinY = Math.max(offsetY + Math.round(targetSliceH * 0.82), idealCutY - 220);
 
-      if(options.searchableText !== false){
-        agyInjectInvisibleTextLayer(pdf, pageEl, drawW, drawH);
+          for(var checkY = idealCutY; checkY >= searchMinY; checkY -= 2){
+            var rowData = ctx.getImageData(0, checkY, canvas.width, 1).data;
+            var isBlankRow = true;
+            for(var x = 0; x < rowData.length; x += 32){
+              var a = rowData[x + 3];
+              if(a > 20){
+                var r = rowData[x];
+                var g = rowData[x + 1];
+                var b = rowData[x + 2];
+                if(r < 240 || g < 240 || b < 240){
+                  isBlankRow = false;
+                  break;
+                }
+              }
+            }
+            if(isBlankRow){
+              bestCutY = checkY;
+              break;
+            }
+          }
+          currentSliceH = bestCutY - offsetY;
+        }
+
+        if(options.statusCallback){
+          options.statusCallback('Generating PDF page ' + totalSlicesEstimate + ' (' + Math.min(92, Math.round(30 + (offsetY / canvas.height) * 60)) + '%)...');
+        }
+
+        var sliceCanvas = document.createElement('canvas');
+        sliceCanvas.width = canvas.width;
+        sliceCanvas.height = currentSliceH;
+        var sCtx = sliceCanvas.getContext('2d');
+        sCtx.fillStyle = '#ffffff';
+        sCtx.fillRect(0, 0, sliceCanvas.width, sliceCanvas.height);
+        sCtx.drawImage(canvas, 0, offsetY, canvas.width, currentSliceH, 0, 0, canvas.width, currentSliceH);
+
+        var sliceImg = sliceCanvas.toDataURL('image/jpeg', 0.92);
+
+        if(!isFirstPdfPage){
+          pdf.addPage('a4', 'portrait');
+        }else{
+          isFirstPdfPage = false;
+        }
+
+        // Exact 1:1 Aspect Ratio Scaling: ZERO vertical squashing or stretching
+        var drawH = currentSliceH * (pageW / canvas.width);
+        pdf.addImage(sliceImg, 'JPEG', 0, 0, pageW, Math.min(pageH, drawH), undefined, 'FAST');
+
+        if(options.searchableText !== false){
+          agyInjectInvisibleTextLayer(pdf, pageEl, pageW, drawH, offsetY, currentSliceH, canvas.height);
+        }
+
+        sliceCanvas.width = 0;
+        sliceCanvas.height = 0;
+        sliceCanvas = null;
+
+        offsetY += currentSliceH;
+        await agyYieldToMain();
       }
 
       canvas.width = 0;
