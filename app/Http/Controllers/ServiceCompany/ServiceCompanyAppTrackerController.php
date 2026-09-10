@@ -163,7 +163,6 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
                     $row = DB::connection('mysql_replica')->table('pipeline_counters')
                         ->where('job_id', $jobid)
                         ->where('company_id', $company_id)
-                        ->whereNotNull('computed_at')
                         ->first();
                     if ($row) {
                         return $this->pipelineRowToCounters($row);
@@ -248,15 +247,35 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
      */
     private function pipelineRowToCounters(object $row): array
     {
+        $sourcing = (int) ($row->sourcing ?? 0);
+        $screening = (int) ($row->screening ?? 0);
+        $evaluation = (int) ($row->evaluation ?? 0);
+        $negotiation = (int) ($row->negotiation ?? 0);
+        $offered = (int) ($row->offered ?? 0);
+        $joined = (int) ($row->joined ?? 0);
+        $rejected = (int) ($row->rejected ?? 0);
+
+        $allCandidate = DB::table('add_job_wise_condidates')
+            ->where('job_id', $row->job_id)
+            ->where('company_id', $row->company_id)
+            ->where(function ($q) {
+                $q->where('thirdparty_company_id', '=', 0)
+                    ->orWhere(function ($q2) {
+                        $q2->where('thirdparty_company_id', '>', 0)
+                            ->whereNotIn('master_status_id', [8, 9]);
+                    });
+            })
+            ->count();
+
         return [
-            'allCandidate' => (int) $row->all_candidate,
-            'Sourcing' => (int) $row->sourcing,
-            'Screening' => (int) $row->screening,
-            'Interview' => (int) $row->interview,
-            'Negotiation' => (int) $row->negotiation,
-            'Offered' => (int) $row->offered,
-            'Joined' => (int) $row->joined,
-            'Rejected' => (int) $row->rejected,
+            'allCandidate' => $allCandidate,
+            'Sourcing' => $sourcing,
+            'Screening' => $screening,
+            'Interview' => $evaluation,
+            'Negotiation' => $negotiation,
+            'Offered' => $offered,
+            'Joined' => $joined,
+            'Rejected' => $rejected,
         ];
     }
 
@@ -306,7 +325,7 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
         'current_ctc_mode', 'current_ctc_cur',
         'outsourcing_type',
         'np_id', 'serving_notice_period_mode',
-        'city_name', 'country_name','duplicate','is_duplicate',
+        'city_name', 'country_name', 'duplicate', 'is_duplicate',
         'qualification_name',
         'posted_by', 'posted_by_image', 'rec_candidate_assign_id',
         'post_company_name', 'company_name',
