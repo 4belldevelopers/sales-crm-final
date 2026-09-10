@@ -9264,7 +9264,7 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
       {theme:'blue',icon:'resume',title:'1. Resume Options',pill:"Get the candidate's resume in different formats.",ids:[1,6]},
       {theme:'rose',icon:'report',title:'2. Pre-Screened Report',pill:'Get AI-powered insights and verification details.',ids:[5]},
       {theme:'green',icon:'package',title:'3. Recruiter Packages (Report + Resume)',pill:'',ids:[15,16]},
-      {theme:'amber',icon:'keyword',title:'4. Keyword Enhancements (Report + Resume + Skills)',pill:'',ids:[28,20,17,19]},
+      {theme:'amber',icon:'keyword',title:'4. Highlighted skills',pill:'',ids:[28,20,17,19]},
       {theme:'purple',icon:'privacy',title:'5. Privacy & Anonymization',pill:'Protect candidate information as needed.',ids:[29,30,31,32,33]}
     ];
     var moved={};
