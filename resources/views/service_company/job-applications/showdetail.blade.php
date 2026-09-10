@@ -314,23 +314,26 @@
 #rdcOptsList .rdc-opt[data-opt="1"]{order:1;}
 #rdcOptsList .rdc-opt[data-opt="29"]{order:2;}
 #rdcOptsList .rdc-opt[data-opt="30"]{order:3;}
-#rdcOptsList .rdc-opt[data-opt="6"]{order:4;}
-#rdcOptsList .rdc-opt[data-opt="28"]{order:5;}
-#rdcOptsList .rdc-opt[data-opt="20"]{order:6;}
-#rdcOptsList .rdc-opt[data-opt="5"]{order:7;}
-#rdcOptsList .rdc-opt[data-opt="15"]{order:8;}
-#rdcOptsList .rdc-opt[data-opt="16"]{order:9;}
+#rdcOptsList .rdc-opt[data-opt="31"]{order:4;}
+#rdcOptsList .rdc-opt[data-opt="6"]{order:5;}
+#rdcOptsList .rdc-opt[data-opt="28"]{order:6;}
+#rdcOptsList .rdc-opt[data-opt="20"]{order:7;}
+#rdcOptsList .rdc-opt[data-opt="5"]{order:8;}
+#rdcOptsList .rdc-opt[data-opt="15"]{order:9;}
+#rdcOptsList .rdc-opt[data-opt="16"]{order:10;}
+#rdcOptsList .rdc-opt[data-opt="32"]{order:11;}
+#rdcOptsList .rdc-opt[data-opt="33"]{order:12;}
 #rdcOptsList .rdc-opt[data-opt="13"]{order:97;}
 #rdcOptsList .rdc-opt[data-opt="14"]{order:98;}
-#rdcOptsList .rdc-opt[data-opt="17"]{order:10;}
-#rdcOptsList .rdc-opt[data-opt="19"]{order:11;}
-#rdcOptsList .rdc-opt[data-opt="21"]{order:13;}
-#rdcOptsList .rdc-opt[data-opt="22"]{order:14;}
-#rdcOptsList .rdc-opt[data-opt="23"]{order:15;}
-#rdcOptsList .rdc-opt[data-opt="24"]{order:16;}
-#rdcOptsList .rdc-opt[data-opt="25"]{order:17;}
-#rdcOptsList .rdc-opt[data-opt="26"]{order:18;}
-#rdcOptsList .rdc-opt[data-opt="27"]{order:19;}
+#rdcOptsList .rdc-opt[data-opt="17"]{order:13;}
+#rdcOptsList .rdc-opt[data-opt="19"]{order:14;}
+#rdcOptsList .rdc-opt[data-opt="21"]{order:15;}
+#rdcOptsList .rdc-opt[data-opt="22"]{order:16;}
+#rdcOptsList .rdc-opt[data-opt="23"]{order:17;}
+#rdcOptsList .rdc-opt[data-opt="24"]{order:18;}
+#rdcOptsList .rdc-opt[data-opt="25"]{order:19;}
+#rdcOptsList .rdc-opt[data-opt="26"]{order:20;}
+#rdcOptsList .rdc-opt[data-opt="27"]{order:21;}
 #rdcOptsList .rdc-opt[data-opt="8"],
 #rdcOptsList .rdc-opt[data-opt="9"],
 #rdcOptsList .rdc-opt[data-opt="21"],
@@ -5985,30 +5988,39 @@ async function convertDocxResumeToAnonymizedPdfBlobFromSources(resumeUrls,rules)
     removeNode(host);
   }
 }
+async function resolveClientAnonymizedResumeBlob(options){
+  /* Purpose: build the contact-redacted resume PDF as a reusable browser-only blob
+     so combined options can compose it without sharing button or drawer state. */
+  options=options||{};
+  var resumeSources=(Array.isArray(options.resumeUrl) ? options.resumeUrl : [options.resumeUrl||'']).map(function(url){
+    return clean(url,'');
+  }).filter(function(url,index,self){
+    return url && url!=='--' && self.indexOf(url)===index;
+  });
+  var resumeExt=clean(options.resumeExt||'','').toUpperCase();
+  if(['PDF','DOCX'].indexOf(resumeExt)===-1) throw new Error('Anonymized Resume is available for PDF and DOCX resumes only');
+  if(!resumeSources.length) throw new Error('Direct R2 resume URL is not available for browser anonymization');
+  var data=options.candidate || readData();
+  var keepName=options.keepName===true;
+  var rules=rdcAnonymizeRules(data,{keepName:keepName});
+  return resumeExt==='PDF'
+    ? await renderAnonymizedPdfBlob(await fetchPdfBlobFromSources(resumeSources),rules)
+    : await convertDocxResumeToAnonymizedPdfBlobFromSources(resumeSources,rules);
+}
 async function buildClientAnonymizedResume(options){
   if(window.__rsBusy) return Promise.resolve(false);
   window.__rsBusy=true;
   try{
     options=options||{};
-    var resumeSources=(Array.isArray(options.resumeUrl) ? options.resumeUrl : [options.resumeUrl||'']).map(function(url){
-      return clean(url,'');
-    }).filter(function(url,index,self){
-      return url && url!=='--' && self.indexOf(url)===index;
-    });
-    var resumeExt=clean(options.resumeExt||'','').toUpperCase();
-    if(['PDF','DOCX'].indexOf(resumeExt)===-1) throw new Error('Anonymized Resume is available for PDF and DOCX resumes only');
-    if(!resumeSources.length) throw new Error('Direct R2 resume URL is not available for browser anonymization');
     var data=options.candidate || readData();
     var keepName=options.keepName===true;
-    var rules=rdcAnonymizeRules(data,{keepName:keepName});
-    var resumeBlob=resumeExt==='PDF'
-      ? await renderAnonymizedPdfBlob(await fetchPdfBlobFromSources(resumeSources),rules)
-      : await convertDocxResumeToAnonymizedPdfBlobFromSources(resumeSources,rules);
+    var resumeBlob=await resolveClientAnonymizedResumeBlob(options);
     var fileName=keepName ? 'JEROWORKS_'+fileSafeName(data && data.name,'Candidate')+'_Contact_Hidden.pdf' : 'JEROWORKS_Anonymized_Resume.pdf';
     downloadBlob(resumeBlob,fileName);
     return true;
   }catch(err){
     console.error('Anonymized Resume error:',err);
+    if(options.throwOnError===true) throw err;
     alert('Could not generate the anonymized resume.\n\nReason: '+(err && err.message ? err.message : 'Unknown anonymization error')+'\n\nThis option runs only in the browser and does not use server conversion.');
     return false;
   }finally{
@@ -6025,6 +6037,80 @@ function preloadClientAnonymizerAssets(){
     console.warn('Anonymized Resume preload skipped:',err);
     return null;
   });
+}
+async function buildContactHiddenBrandedResume(options){
+  /* Purpose: isolated option 31 pipeline that combines option 30 contact hiding
+     with option 6 company branding without touching either option's click flow. */
+  if(window.__rsBusy) return Promise.resolve(false);
+  window.__rsBusy=true;
+  try{
+    options=options||{};
+    var data=readData();
+    var resumeBlob=await resolveClientAnonymizedResumeBlob({
+      resumeUrl:options.resumeUrl,
+      resumeExt:options.resumeExt,
+      keepName:true
+    });
+    if(!(resumeBlob instanceof Blob)) throw new Error('Contact-hidden resume PDF was not generated');
+    await addCompanyHeaderToResume(resumeBlob,data,'JEROWORKS_'+fileSafeName(data && data.name,'Candidate')+'_Contact_Hidden_Branded.pdf',{matchOption6VisualScale:true});
+    return true;
+  }catch(err){
+    console.error('Contact Hidden Branded Resume error:',err);
+    alert('Could not generate Hide Contact Details + Company Branding.\n\nReason: '+(err && err.message ? err.message : 'Unknown contact-hidden branding error')+'\n\nThis option hides contact details first, then applies the company header in the browser.');
+    return false;
+  }finally{
+    window.__rsBusy=false;
+  }
+}
+async function buildContactHiddenPreScreenedResume(options){
+  /* Purpose: isolated option 32 pipeline that combines contact-hidden resume output
+     with the normal branded pre-screened report without changing either source option. */
+  if(window.__rsBusy) return Promise.resolve(false);
+  window.__rsBusy=true;
+  try{
+    options=options||{};
+    var data=readData();
+    var resumeBlob=await resolveClientAnonymizedResumeBlob({
+      resumeUrl:options.resumeUrl,
+      resumeExt:options.resumeExt,
+      keepName:true
+    });
+    if(!(resumeBlob instanceof Blob)) throw new Error('Contact-hidden resume PDF was not generated');
+    var reportBlob=await buildRecruiterSummaryBlob(data,{});
+    await mergePreScreenedReportAndResume(reportBlob,resumeBlob,'JEROWORKS_'+fileSafeName(data && data.name,'Candidate')+'_Contact_Hidden_PreScreened.pdf');
+    return true;
+  }catch(err){
+    console.error('Contact Hidden Pre-Screened Resume error:',err);
+    alert('Could not generate Hide Contact Details + Pre-Screened Report.\n\nReason: '+(err && err.message ? err.message : 'Unknown contact-hidden report error')+'\n\nThis option hides contact details first, then merges the pre-screened report in the browser.');
+    return false;
+  }finally{
+    window.__rsBusy=false;
+  }
+}
+async function buildContactHiddenPreScreenedNoBrandResume(options){
+  /* Purpose: isolated option 33 pipeline that combines contact-hidden resume output
+     with the no-brand pre-screened report package without touching other options. */
+  if(window.__rsBusy) return Promise.resolve(false);
+  window.__rsBusy=true;
+  try{
+    options=options||{};
+    var data=readData();
+    var resumeBlob=await resolveClientAnonymizedResumeBlob({
+      resumeUrl:options.resumeUrl,
+      resumeExt:options.resumeExt,
+      keepName:true
+    });
+    if(!(resumeBlob instanceof Blob)) throw new Error('Contact-hidden resume PDF was not generated');
+    var reportBlob=await buildRecruiterSummaryBlob(data,{noBranding:true});
+    await mergePreScreenedReportAndResume(reportBlob,resumeBlob,'JEROWORKS_'+fileSafeName(data && data.name,'Candidate')+'_Contact_Hidden_PreScreened_No_Brand.pdf');
+    return true;
+  }catch(err){
+    console.error('Contact Hidden Pre-Screened No-Brand Resume error:',err);
+    alert('Could not generate Hide Contact Details + Pre-Screened Report without Company Branding.\n\nReason: '+(err && err.message ? err.message : 'Unknown contact-hidden no-brand report error')+'\n\nThis option hides contact details first, then merges the no-brand pre-screened report in the browser.');
+    return false;
+  }finally{
+    window.__rsBusy=false;
+  }
 }
 function resumePdfFetchUrl(resumePdfUrl){
   resumePdfUrl=clean(resumePdfUrl,'');
@@ -8149,6 +8235,9 @@ window.__buildSmartBrandedResume=buildSmartBrandedResume;
 window.__buildSmartHighlightedResume=buildSmartHighlightedResume;
 window.__buildClientAnonymizedResume=buildClientAnonymizedResume;
 window.__preloadClientAnonymizer=preloadClientAnonymizerAssets;
+window.__buildContactHiddenBrandedResume=buildContactHiddenBrandedResume;
+window.__buildContactHiddenPreScreenedResume=buildContactHiddenPreScreenedResume;
+window.__buildContactHiddenPreScreenedNoBrandResume=buildContactHiddenPreScreenedNoBrandResume;
 window.__buildHeadlessOption3SkillsHighlightedResume=buildHeadlessOption3SkillsHighlightedResume;
 window.__buildHighlightedBrandedResume=buildHighlightedBrandedResume;
 window.__buildIsolatedHighlightedKeywordsResume=buildIsolatedHighlightedKeywordsResume;
@@ -8244,6 +8333,60 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
         </span>
         <span class="rdc-ometa">
           <span class="rdc-ocost">4 Coins</span>
+          <span class="rdc-otime">60 seconds</span>
+        </span>
+        <span class="rdc-ocirc" aria-hidden="true"></span>
+      </label>
+
+      {{-- 31: Client-side contact-hidden resume with company branding --}}
+      <label class="rdc-opt" data-opt="31" data-coins="6">
+        <input class="rdc-rinput" type="radio" name="rdcFormat" value="31">
+        <span class="rdc-onum">4</span>
+        <span class="rdc-oi rdc-ic-green" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 4 7v6c0 5 3.4 7.8 8 9 4.6-1.2 8-4 8-9V7l-8-4z"/><path d="M8 12h8"/><path d="M4 20h16"/></svg>
+        </span>
+        <span class="rdc-obody">
+          <span class="rdc-otitle">Hide Contact Details + Company Branding</span>
+          <span class="rdc-odesc">Keep the name visible, hide contact and LinkedIn details, then add your company header.</span>
+        </span>
+        <span class="rdc-ometa">
+          <span class="rdc-ocost">6 Coins</span>
+          <span class="rdc-otime">60 seconds</span>
+        </span>
+        <span class="rdc-ocirc" aria-hidden="true"></span>
+      </label>
+
+      {{-- 32: Client-side contact-hidden resume with pre-screened report --}}
+      <label class="rdc-opt" data-opt="32" data-coins="11">
+        <input class="rdc-rinput" type="radio" name="rdcFormat" value="32">
+        <span class="rdc-onum">11</span>
+        <span class="rdc-oi" style="background:#f5f3ff;color:#6d28d9;" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 4 7v6c0 5 3.4 7.8 8 9 4.6-1.2 8-4 8-9V7l-8-4z"/><path d="M14 2v6h6"/><path d="M8 13h8"/><path d="M8 17h6"/></svg>
+        </span>
+        <span class="rdc-obody">
+          <span class="rdc-otitle">Hide Contact Details + Pre-Screened Report</span>
+          <span class="rdc-odesc">Keep the name visible, hide contact and LinkedIn details, then merge the pre-screened report.</span>
+        </span>
+        <span class="rdc-ometa">
+          <span class="rdc-ocost">11 Coins</span>
+          <span class="rdc-otime">60 seconds</span>
+        </span>
+        <span class="rdc-ocirc" aria-hidden="true"></span>
+      </label>
+
+      {{-- 33: Client-side contact-hidden resume with no-brand pre-screened report --}}
+      <label class="rdc-opt" data-opt="33" data-coins="12">
+        <input class="rdc-rinput" type="radio" name="rdcFormat" value="33">
+        <span class="rdc-onum">12</span>
+        <span class="rdc-oi" style="background:#f8fafc;color:#475569;" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 4 7v6c0 5 3.4 7.8 8 9 4.6-1.2 8-4 8-9V7l-8-4z"/><path d="M14 2v6h6"/><path d="M8 13h8"/><path d="m4 4 16 16"/></svg>
+        </span>
+        <span class="rdc-obody">
+          <span class="rdc-otitle">Hide Contact Details + Pre-Screened Report without Company Branding</span>
+          <span class="rdc-odesc">Keep the name visible, hide contact and LinkedIn details, then merge a no-brand report.</span>
+        </span>
+        <span class="rdc-ometa">
+          <span class="rdc-ocost">12 Coins</span>
           <span class="rdc-otime">60 seconds</span>
         </span>
         <span class="rdc-ocirc" aria-hidden="true"></span>
@@ -8378,7 +8521,7 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
       {{-- 5: Pre-Screened Report --}}
       <label class="rdc-opt" data-opt="5" data-coins="7">
         <input class="rdc-rinput" type="radio" name="rdcFormat" value="5">
-        <span class="rdc-onum">5</span>
+        <span class="rdc-onum">8</span>
         <span class="rdc-oi rdc-ic-rose" aria-hidden="true">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
         </span>
@@ -8396,7 +8539,7 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
       {{-- 6: New R2/browser branded resume header package --}}
       <label class="rdc-opt" data-opt="6" data-coins="2">
         <input class="rdc-rinput" type="radio" name="rdcFormat" value="6">
-        <span class="rdc-onum">2</span>
+        <span class="rdc-onum">5</span>
         <span class="rdc-oi" style="background:#ecfeff;color:#0e7490;" aria-hidden="true">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h10l6 6v10a2 2 0 0 1-2 2H4V4z"/><path d="M14 4v6h6"/><path d="M8 13h8"/><path d="M8 17h5"/><path d="M3 7h18"/></svg>
         </span>
@@ -8414,7 +8557,7 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
       {{-- 15: Smart final package with company branding --}}
       <label class="rdc-opt" data-opt="15" data-coins="8">
         <input class="rdc-rinput" type="radio" name="rdcFormat" value="15">
-        <span class="rdc-onum">6</span>
+        <span class="rdc-onum">9</span>
         <span class="rdc-oi" style="background:#ecfdf5;color:#059669;" aria-hidden="true">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M8 13h8"/><path d="M8 17h5"/><path d="m15 18 2 2 4-4"/></svg>
         </span>
@@ -8432,7 +8575,7 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
       {{-- 16: Smart final package without company branding --}}
       <label class="rdc-opt" data-opt="16" data-coins="8">
         <input class="rdc-rinput" type="radio" name="rdcFormat" value="16">
-        <span class="rdc-onum">7</span>
+        <span class="rdc-onum">10</span>
         <span class="rdc-oi" style="background:#f8fafc;color:#475569;" aria-hidden="true">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M9 13h6"/><path d="M9 17h4"/><path d="m4 4 16 16"/></svg>
         </span>
@@ -8450,7 +8593,7 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
       {{-- 17: Client-first DOCX pre-screened report plus highlighted resume package --}}
       <label class="rdc-opt" data-opt="17" data-coins="8">
         <input class="rdc-rinput" type="radio" name="rdcFormat" value="17">
-        <span class="rdc-onum">8</span>
+        <span class="rdc-onum">13</span>
         <span class="rdc-oi" style="background:#eef2ff;color:#4338ca;" aria-hidden="true">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18"/><path d="M3 12h18"/><path d="M7 7h10v10H7z"/><path d="m15 9 2 2-2 2"/></svg>
         </span>
@@ -8468,7 +8611,7 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
       {{-- 19: Client-first DOCX pre-screened report without company branding plus highlighted resume package --}}
       <label class="rdc-opt" data-opt="19" data-coins="8">
         <input class="rdc-rinput" type="radio" name="rdcFormat" value="19">
-        <span class="rdc-onum">9</span>
+        <span class="rdc-onum">14</span>
         <span class="rdc-oi" style="background:#f8fafc;color:#475569;" aria-hidden="true">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18"/><path d="M3 12h18"/><path d="M7 7h10v10H7z"/><path d="m4 4 16 16"/></svg>
         </span>
@@ -8486,7 +8629,7 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
       {{-- 20: Client-first highlighted resume plus company branding package --}}
       <label class="rdc-opt" data-opt="20" data-coins="6">
         <input class="rdc-rinput" type="radio" name="rdcFormat" value="20">
-        <span class="rdc-onum">4</span>
+        <span class="rdc-onum">7</span>
         <span class="rdc-oi rdc-ic-green" aria-hidden="true">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h16"/><path d="m7 16 8.5-8.5 3 3L10 19H7v-3z"/><path d="M9 7h6"/><path d="M9 11h4"/><path d="M14 2v6h6"/></svg>
         </span>
@@ -8504,7 +8647,7 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
       {{-- 28: Isolated client-first highlighted resume without company branding --}}
       <label class="rdc-opt" data-opt="28" data-coins="4">
         <input class="rdc-rinput" type="radio" name="rdcFormat" value="28">
-        <span class="rdc-onum">3</span>
+        <span class="rdc-onum">6</span>
         <span class="rdc-oi rdc-ic-green" aria-hidden="true">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h16"/><path d="m7 16 8.5-8.5 3 3L10 19H7v-3z"/><path d="M9 7h6"/><path d="M9 11h4"/><path d="M14 2v6h6"/></svg>
         </span>
@@ -8802,7 +8945,10 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
     27:{cost:8, label:'Turbo Pre-Screened Report + Resume + Highlights', avail:(['PDF','DOC','DOCX'].indexOf(resumeExt) !== -1), dlKey:'turbo-prescreened-highlighted-package', unavailableMsg:'Turbo Pre-Screened Package is available for PDF, DOC and DOCX resumes only.'},
     28:{cost:4, label:'Resume + Highlighted Keywords', avail:(['PDF','DOC','DOCX'].indexOf(resumeExt) !== -1), dlKey:'isolated-highlighted-keywords-client-docx', unavailableMsg:'Resume + Highlighted Keywords is available for PDF, DOC and DOCX resumes only.'},
     29:{cost:4, label:'Anonymized Resume', avail:(['PDF','DOCX'].indexOf(resumeExt) !== -1) && !!(r2DirectUrl || r2PublicUrl || originalR2DirectUrl || originalR2PublicUrl), dlKey:'client-anonymized-resume', unavailableMsg:'Anonymized Resume is browser-only and available for direct R2 PDF/DOCX resumes.'},
-    30:{cost:4, label:'Hide Contact Details', avail:(['PDF','DOCX'].indexOf(resumeExt) !== -1) && !!(r2DirectUrl || r2PublicUrl || originalR2DirectUrl || originalR2PublicUrl), dlKey:'client-anonymized-keep-name-resume', keepName:true, unavailableMsg:'Hide Contact Details is browser-only and available for direct R2 PDF/DOCX resumes.'}
+    30:{cost:4, label:'Hide Contact Details', avail:(['PDF','DOCX'].indexOf(resumeExt) !== -1) && !!(r2DirectUrl || r2PublicUrl || originalR2DirectUrl || originalR2PublicUrl), dlKey:'client-anonymized-keep-name-resume', keepName:true, unavailableMsg:'Hide Contact Details is browser-only and available for direct R2 PDF/DOCX resumes.'},
+    31:{cost:6, label:'Hide Contact Details + Company Branding', avail:(['PDF','DOCX'].indexOf(resumeExt) !== -1) && !!(r2DirectUrl || r2PublicUrl || originalR2DirectUrl || originalR2PublicUrl), dlKey:'client-contact-hidden-branded-resume', unavailableMsg:'Hide Contact Details + Company Branding is browser-only and available for direct R2 PDF/DOCX resumes.'},
+    32:{cost:11, label:'Hide Contact Details + Pre-Screened Report', avail:(['PDF','DOCX'].indexOf(resumeExt) !== -1) && !!(r2DirectUrl || r2PublicUrl || originalR2DirectUrl || originalR2PublicUrl), dlKey:'client-contact-hidden-prescreened-resume', unavailableMsg:'Hide Contact Details + Pre-Screened Report is browser-only and available for direct R2 PDF/DOCX resumes.'},
+    33:{cost:12, label:'Hide Contact Details + Pre-Screened Report without Company Branding', avail:(['PDF','DOCX'].indexOf(resumeExt) !== -1) && !!(r2DirectUrl || r2PublicUrl || originalR2DirectUrl || originalR2PublicUrl), dlKey:'client-contact-hidden-prescreened-nobrand-resume', unavailableMsg:'Hide Contact Details + Pre-Screened Report without Company Branding is browser-only and available for direct R2 PDF/DOCX resumes.'}
   };
 
   var selectedOpt = 1;
@@ -8839,6 +8985,15 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
     }
     if(optMeta[30]){
       optMeta[30].avail = ['PDF','DOCX'].indexOf(resumeExt) !== -1 && !!(r2DirectUrl || r2PublicUrl || originalR2DirectUrl || originalR2PublicUrl);
+    }
+    if(optMeta[31]){
+      optMeta[31].avail = ['PDF','DOCX'].indexOf(resumeExt) !== -1 && !!(r2DirectUrl || r2PublicUrl || originalR2DirectUrl || originalR2PublicUrl);
+    }
+    if(optMeta[32]){
+      optMeta[32].avail = ['PDF','DOCX'].indexOf(resumeExt) !== -1 && !!(r2DirectUrl || r2PublicUrl || originalR2DirectUrl || originalR2PublicUrl);
+    }
+    if(optMeta[33]){
+      optMeta[33].avail = ['PDF','DOCX'].indexOf(resumeExt) !== -1 && !!(r2DirectUrl || r2PublicUrl || originalR2DirectUrl || originalR2PublicUrl);
     }
   }
 
@@ -8990,6 +9145,10 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
     if(m.dlKey === 'isolated-highlighted-keywords-client-docx' && resumeExt === 'DOCX' && typeof window.__preloadOpenDocLocal === 'function') window.__preloadOpenDocLocal();
     if(m.dlKey === 'client-anonymized-resume' && typeof window.__preloadClientAnonymizer === 'function') window.__preloadClientAnonymizer();
     if(m.dlKey === 'client-anonymized-keep-name-resume' && typeof window.__preloadClientAnonymizer === 'function') window.__preloadClientAnonymizer();
+    if(m.dlKey === 'client-contact-hidden-branded-resume' && typeof window.__preloadClientAnonymizer === 'function') window.__preloadClientAnonymizer();
+    if(m.dlKey === 'client-contact-hidden-branded-resume' && typeof window.__preloadRSCombined === 'function') window.__preloadRSCombined();
+    if((m.dlKey === 'client-contact-hidden-prescreened-resume' || m.dlKey === 'client-contact-hidden-prescreened-nobrand-resume') && typeof window.__preloadClientAnonymizer === 'function') window.__preloadClientAnonymizer();
+    if((m.dlKey === 'client-contact-hidden-prescreened-resume' || m.dlKey === 'client-contact-hidden-prescreened-nobrand-resume') && typeof window.__preloadRSCombined === 'function') window.__preloadRSCombined();
     if(m.dlKey === 'fast-highlighted-branded-resume-client-docx' && typeof window.__preloadRSCombined === 'function') window.__preloadRSCombined();
     if(m.dlKey === 'fast-highlighted-branded-resume-client-docx' && resumeExt === 'DOCX' && typeof window.__preloadOpenDocLocal === 'function') window.__preloadOpenDocLocal();
     if(m.dlKey === 'fast-highlighted-resume-client-docx' && typeof window.__preloadRSCombined === 'function') window.__preloadRSCombined();
@@ -9180,6 +9339,87 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
         }).catch(function(err){
           console.error('Anonymized Resume drawer flow failed:',err);
           showToast(err && err.message ? err.message : 'Could not generate anonymized resume.', 'warn');
+        }).finally(function(){
+          resetBtn();
+        });
+
+      } else if(m.dlKey === 'client-contact-hidden-branded-resume'){
+        /* Option 31: isolated combination of contact hiding and option 6 company branding. */
+        if(window.__rsBusy || typeof window.__buildContactHiddenBrandedResume !== 'function'){
+          showToast('Please wait a moment and try again.', 'warn');
+          resetBtn(); return;
+        }
+        if(['PDF','DOCX'].indexOf(resumeExt) === -1){
+          showToast(m.unavailableMsg || 'Hide Contact Details + Company Branding is available for PDF and DOCX resumes only.', 'warn');
+          resetBtn(); return;
+        }
+        dlBtn.innerHTML = '<span class="rdc-spin"></span><span>Hiding contact details and adding branding...</span>';
+        ensureDownloadCenterR2Urls().then(function(){
+          var contactHiddenSources = rdcCollectDownloadSources([r2DirectUrl,r2PublicUrl,originalR2DirectUrl,originalR2PublicUrl]);
+          if(!contactHiddenSources.length) throw new Error('Direct R2 resume URL is not available for browser processing.');
+          return window.__buildContactHiddenBrandedResume({
+            resumeUrl:contactHiddenSources,
+            resumeExt:resumeExt
+          });
+        }).then(function(ok){
+          if(ok) closeRdc();
+        }).catch(function(err){
+          console.error('Contact hidden branded drawer flow failed:',err);
+          showToast(err && err.message ? err.message : 'Could not generate contact-hidden branded resume.', 'warn');
+        }).finally(function(){
+          resetBtn();
+        });
+
+      } else if(m.dlKey === 'client-contact-hidden-prescreened-resume'){
+        /* Option 32: isolated combination of contact hiding and branded pre-screened report merge. */
+        if(window.__rsBusy || typeof window.__buildContactHiddenPreScreenedResume !== 'function'){
+          showToast('Please wait a moment and try again.', 'warn');
+          resetBtn(); return;
+        }
+        if(['PDF','DOCX'].indexOf(resumeExt) === -1){
+          showToast(m.unavailableMsg || 'Hide Contact Details + Pre-Screened Report is available for PDF and DOCX resumes only.', 'warn');
+          resetBtn(); return;
+        }
+        dlBtn.innerHTML = '<span class="rdc-spin"></span><span>Hiding contact details and adding report...</span>';
+        ensureDownloadCenterR2Urls().then(function(){
+          var contactHiddenReportSources = rdcCollectDownloadSources([r2DirectUrl,r2PublicUrl,originalR2DirectUrl,originalR2PublicUrl]);
+          if(!contactHiddenReportSources.length) throw new Error('Direct R2 resume URL is not available for browser processing.');
+          return window.__buildContactHiddenPreScreenedResume({
+            resumeUrl:contactHiddenReportSources,
+            resumeExt:resumeExt
+          });
+        }).then(function(ok){
+          if(ok) closeRdc();
+        }).catch(function(err){
+          console.error('Contact hidden pre-screened drawer flow failed:',err);
+          showToast(err && err.message ? err.message : 'Could not generate contact-hidden pre-screened package.', 'warn');
+        }).finally(function(){
+          resetBtn();
+        });
+
+      } else if(m.dlKey === 'client-contact-hidden-prescreened-nobrand-resume'){
+        /* Option 33: isolated combination of contact hiding and no-brand pre-screened report merge. */
+        if(window.__rsBusy || typeof window.__buildContactHiddenPreScreenedNoBrandResume !== 'function'){
+          showToast('Please wait a moment and try again.', 'warn');
+          resetBtn(); return;
+        }
+        if(['PDF','DOCX'].indexOf(resumeExt) === -1){
+          showToast(m.unavailableMsg || 'Hide Contact Details + Pre-Screened Report without Company Branding is available for PDF and DOCX resumes only.', 'warn');
+          resetBtn(); return;
+        }
+        dlBtn.innerHTML = '<span class="rdc-spin"></span><span>Hiding contact details and adding no-brand report...</span>';
+        ensureDownloadCenterR2Urls().then(function(){
+          var contactHiddenNoBrandSources = rdcCollectDownloadSources([r2DirectUrl,r2PublicUrl,originalR2DirectUrl,originalR2PublicUrl]);
+          if(!contactHiddenNoBrandSources.length) throw new Error('Direct R2 resume URL is not available for browser processing.');
+          return window.__buildContactHiddenPreScreenedNoBrandResume({
+            resumeUrl:contactHiddenNoBrandSources,
+            resumeExt:resumeExt
+          });
+        }).then(function(ok){
+          if(ok) closeRdc();
+        }).catch(function(err){
+          console.error('Contact hidden pre-screened no-brand drawer flow failed:',err);
+          showToast(err && err.message ? err.message : 'Could not generate contact-hidden no-brand pre-screened package.', 'warn');
         }).finally(function(){
           resetBtn();
         });
