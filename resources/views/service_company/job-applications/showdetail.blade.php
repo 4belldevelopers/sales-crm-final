@@ -6917,6 +6917,28 @@ async function buildRecruiterSummaryBlob(data,options){
     }catch(ex){ reject(ex); }
   });
 }
+async function copyPdfPagesToA4(targetDoc,sourceDoc){
+  /* Purpose: keep pre-screened report packages visually consistent by normalizing
+     every merged report/resume page to portrait A4 without changing document content. */
+  var A4_W=595.28;
+  var A4_H=841.89;
+  var pages=sourceDoc.getPages();
+  if(!pages.length) throw new Error('PDF has no pages to merge');
+  for(var i=0;i<pages.length;i++){
+    var size=pages[i].getSize();
+    var scale=Math.min(A4_W/size.width,A4_H/size.height);
+    var drawW=size.width*scale;
+    var drawH=size.height*scale;
+    var a4Page=targetDoc.addPage([A4_W,A4_H]);
+    var embedded=await targetDoc.embedPage(pages[i]);
+    a4Page.drawPage(embedded,{
+      x:(A4_W-drawW)/2,
+      y:(A4_H-drawH)/2,
+      width:drawW,
+      height:drawH
+    });
+  }
+}
 async function mergePreScreenedReportAndResume(reportBlob,resumeBlob,fileName,mergeOptions){
   await rsEnsurePdfLib();
   mergeOptions=mergeOptions||{};
@@ -6925,7 +6947,9 @@ async function mergePreScreenedReportAndResume(reportBlob,resumeBlob,fileName,me
   var merged=await window.PDFLib.PDFDocument.create();
   var reportDoc=await window.PDFLib.PDFDocument.load(reportBytes);
   var resumeDoc=await window.PDFLib.PDFDocument.load(resumeBytes);
-  if(mergeOptions.matchReportWidthToResume){
+  if(mergeOptions.forceA4 !== false){
+    await copyPdfPagesToA4(merged,reportDoc);
+  }else if(mergeOptions.matchReportWidthToResume){
     var resumeFirstPage=resumeDoc.getPages()[0];
     if(!resumeFirstPage) throw new Error('Resume PDF has no pages');
     var resumeWidth=resumeFirstPage.getSize().width;
@@ -6941,8 +6965,12 @@ async function mergePreScreenedReportAndResume(reportBlob,resumeBlob,fileName,me
     var reportPages=await merged.copyPages(reportDoc,reportDoc.getPageIndices());
     reportPages.forEach(function(page){ merged.addPage(page); });
   }
-  var resumePages=await merged.copyPages(resumeDoc,resumeDoc.getPageIndices());
-  resumePages.forEach(function(page){ merged.addPage(page); });
+  if(mergeOptions.forceA4 !== false){
+    await copyPdfPagesToA4(merged,resumeDoc);
+  }else{
+    var resumePages=await merged.copyPages(resumeDoc,resumeDoc.getPageIndices());
+    resumePages.forEach(function(page){ merged.addPage(page); });
+  }
   var mergedBytes=await merged.save();
   downloadBlob(new Blob([mergedBytes],{type:'application/pdf'}),fileName);
 }
