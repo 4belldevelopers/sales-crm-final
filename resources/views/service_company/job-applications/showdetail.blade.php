@@ -4471,6 +4471,7 @@ setTimeout(() => {
   data-secondary-phone="{{ !@$rcvMaskContact ? @$application->secondary_mobile : '' }}"
   data-phone-code="{{ !@$rcvMaskContact ? @$application->phone_code : '' }}"
   data-secondary-phone-code="{{ !@$rcvMaskContact ? @$application->second_phone_code : '' }}"
+  data-linkedin="{{ !@$rcvMaskContact ? @$application->linkedin : '' }}"
   data-designation="{{ ucwords(@$application->current_designation) }}"
   data-company="{{ ucwords(@$application->current_company ?: @$application->cur_company_name) }}"
   data-location="{{ $rsLoc }}"
@@ -5745,6 +5746,32 @@ function rdcPhoneTextRegex(value){
   if(digits.length<5) return null;
   return new RegExp('(?:\\+?\\d{1,3}[\\s().\\-+]*)?'+digits.split('').join('[\\s().\\-+]*'),'g');
 }
+function rdcContactLabelRegexes(){
+  return [
+    /\b(?:e[\s._-]*mail|email|mail)[\s._-]*(?:id|address)?[\s.:#-]*(?:primary|secondary|alternate|alt|1|2)?\b/gi,
+    /\b(?:phone|mobile|mob|cell|contact|tel|telephone)[\s._-]*(?:number|no|num|id|details)?[\s.:#-]*(?:primary|secondary|alternate|alt|1|2)?\b/gi,
+    /\b(?:contact|personal)[\s._-]*(?:details|info|information)\b/gi,
+    /\b(?:whats[\s._-]*app|whatsapp|linked[\s._-]*in|linkedin)[\s._-]*(?:id|profile|url|link|number|no)?\b/gi
+  ];
+}
+function rdcLinkedInTargets(value){
+  value=rdcPlain(value);
+  if(!value || value==='--') return [];
+  var targets=[];
+  rdcPushUnique(targets,value);
+  var withoutProtocol=value.replace(/^https?:\/\//i,'').replace(/^www\./i,'');
+  rdcPushUnique(targets,withoutProtocol);
+  if(!/^https?:\/\//i.test(value) && !/^www\./i.test(value) && /linkedin\.com/i.test(value)){
+    rdcPushUnique(targets,'https://'+value);
+    rdcPushUnique(targets,'www.'+withoutProtocol);
+  }
+  var match=withoutProtocol.match(/linkedin\.com\/(?:in|pub|company)\/([^/?#\s]+)/i);
+  if(match && match[1]){
+    rdcPushUnique(targets,match[1].replace(/[-_]+/g,' '));
+    rdcPushUnique(targets,match[1]);
+  }
+  return targets;
+}
 function rdcAnonymizeRules(data){
   /* Purpose: keep the anonymizer deterministic by using known drawer PII first,
      with regex only as a fallback for PII present in the resume but not in fields. */
@@ -5766,6 +5793,9 @@ function rdcAnonymizeRules(data){
     rdcPushUnique(phones,phone);
     rdcPushUnique(exactTerms,phone);
   });
+  rdcLinkedInTargets(data.linkedin).forEach(function(target){
+    rdcPushUnique(exactTerms,target);
+  });
   phones.forEach(function(phone){
     var digits=rdcDigitsOnly(phone);
     if(digits.length>=5 && phoneDigits.indexOf(digits)===-1) phoneDigits.push(digits);
@@ -5779,6 +5809,8 @@ function rdcAnonymizeRules(data){
   });
   textRegexes.push(/[A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\.[A-Za-z]{2,}/gi);
   textRegexes.push(/\+?\d[\d\s().\-]{7,}\d/g);
+  textRegexes.push(/(?:https?:\/\/|www\.)?linkedin\.com\/(?:in|pub|company)\/[^\s<>"')]+/gi);
+  rdcContactLabelRegexes().forEach(function(regex){ textRegexes.push(regex); });
   return {textRegexes:textRegexes,phoneDigits:phoneDigits,emails:emails,phones:phones,exactTerms:exactTerms};
 }
 function rdcRegexMatches(regex,text){
@@ -5806,11 +5838,11 @@ function rdcRedactTextValue(text,rules){
   var output=original;
   rules.textRegexes.forEach(function(regex){
     regex.lastIndex=0;
-    output=output.replace(regex,'REDACTED');
+    output=output.replace(regex,function(match){ return new Array(Math.max(2,match.length)+1).join('\u00a0'); });
     regex.lastIndex=0;
   });
   if(output!==original) return output;
-  return rdcShouldRedactText(original,rules) ? 'REDACTED' : original;
+  return rdcShouldRedactText(original,rules) ? new Array(Math.max(2,original.length)+1).join('\u00a0') : original;
 }
 function rdcRedactDocxDom(root,rules){
   var showText=window.NodeFilter ? window.NodeFilter.SHOW_TEXT : 4;
@@ -5831,12 +5863,12 @@ function rdcDrawAnonymizedBlocks(ctx,textContent,viewport,rules){
   if(!ctx || !textContent || !viewport || !rules) return 0;
   var count=0;
   ctx.save();
-  ctx.fillStyle='#111827';
+  ctx.fillStyle='#ffffff';
   (textContent.items||[]).forEach(function(item){
     if(!rdcShouldRedactText(item && item.str,rules)) return;
     var rect=rsTextItemRect(item,viewport);
     if(!rect) return;
-    var pad=Math.max(2,Math.min(8,rect.h*0.22));
+    var pad=Math.max(12,28.3464567*(viewport.scale||1));
     ctx.fillRect(Math.max(0,rect.x-pad),Math.max(0,rect.y-pad),rect.w+(pad*2),rect.h+(pad*2));
     count++;
   });
@@ -6411,6 +6443,7 @@ function readData(){
     secondaryPhone:g('data-secondary-phone'),
     phoneCode:g('data-phone-code'),
     secondaryPhoneCode:g('data-secondary-phone-code'),
+    linkedin:g('data-linkedin'),
     designation:g('data-designation'),
     company:g('data-company'),
     location:g('data-location'),
