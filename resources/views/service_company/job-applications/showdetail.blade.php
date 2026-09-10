@@ -9110,8 +9110,7 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
           if(!anonymizedSources.length) throw new Error('Direct R2 resume URL is not available for browser anonymization.');
           return window.__buildClientAnonymizedResume({
             resumeUrl:anonymizedSources,
-            resumeExt:resumeExt,
-            candidate:readData()
+            resumeExt:resumeExt
           });
         }).then(function(ok){
           if(ok) closeRdc();
