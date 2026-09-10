@@ -5868,7 +5868,7 @@ function rdcDrawAnonymizedBlocks(ctx,textContent,viewport,rules){
     if(!rdcShouldRedactText(item && item.str,rules)) return;
     var rect=rsTextItemRect(item,viewport);
     if(!rect) return;
-    var pad=Math.max(12,28.3464567*(viewport.scale||1));
+    var pad=Math.max(2,Math.min(8,rect.h*0.22));
     ctx.fillRect(Math.max(0,rect.x-pad),Math.max(0,rect.y-pad),rect.w+(pad*2),rect.h+(pad*2));
     count++;
   });
