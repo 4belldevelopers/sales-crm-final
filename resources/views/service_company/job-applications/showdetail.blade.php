@@ -281,7 +281,7 @@
 =================================================================== */
 .rdc-overlay{position:fixed;inset:0;background:rgba(15,23,42,.48);opacity:0;pointer-events:none;transition:opacity .25s ease;z-index:1200000;}
 .rdc-overlay.rdc-open{opacity:1;pointer-events:auto;}
-.rdc-drawer{position:fixed;top:0;right:0;height:100%;width:624px;max-width:100vw;background:#fff;z-index:1200001;transform:translateX(100%);transition:transform .25s ease;display:flex;flex-direction:column;font-family:'Poppins',sans-serif;box-shadow:-4px 0 40px rgba(15,23,42,.12);overflow:hidden;}
+.rdc-drawer{position:fixed;top:0;right:0;height:100%;width:748px;max-width:100vw;background:#fff;z-index:1200001;transform:translateX(100%);transition:transform .25s ease;display:flex;flex-direction:column;font-family:'Poppins',sans-serif;box-shadow:-4px 0 40px rgba(15,23,42,.12);overflow:hidden;}
 .rdc-drawer.rdc-open{transform:translateX(0);}
 /* Header */
 .rdc-header{display:flex;align-items:flex-start;justify-content:space-between;padding:16px 18px 13px;border-bottom:1px solid #e2e8f0;flex-shrink:0;gap:10px;background:#fff;}
@@ -381,6 +381,101 @@
 .rdc-dl-btn:disabled,.rdc-dl-btn.rdc-loading{background:#4338ca;cursor:not-allowed;opacity:.75;}
 .rdc-foot-note{text-align:center;font-size:10px;color:#94a3b8;margin:8px 0 0;display:flex;align-items:center;justify-content:center;gap:4px;font-family:'Poppins',sans-serif;}
 .rdc-foot-note svg{flex-shrink:0;}
+/* Premium grouped design shell */
+.rdc-header{align-items:center;padding:12px 18px 12px;background:linear-gradient(90deg,#ffffff 0%,#f8fbff 100%);}
+.rdc-head-left{display:flex;align-items:center;gap:14px;min-width:0;flex:1;}
+.rdc-head-icon{width:42px;height:42px;border-radius:12px;background:#ede9fe;color:#5b21ff;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.rdc-head-icon svg{width:24px;height:24px;}
+.rdc-title{font-size:20px;font-weight:800;color:#08154a;line-height:1.15;margin:0 0 3px;}
+.rdc-subtitle{font-size:13px;color:#274374;line-height:1.35;margin:0;}
+.rdc-head-actions{display:flex;align-items:center;gap:14px;flex-shrink:0;}
+.rdc-balance-card{display:flex;align-items:center;gap:10px;padding:8px 10px;border:1px solid #d8e4fb;border-radius:10px;background:#f8fbff;box-shadow:0 8px 22px rgba(15,23,42,.06);}
+.rdc-balance-icon,.rdc-metric-icon{width:34px;height:34px;border-radius:50%;background:#fff7dd;color:#f59e0b;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.rdc-balance-copy{min-width:112px;}
+.rdc-balance-label,.rdc-metric-label,.rdc-selected-kicker{display:block;font-size:10px;font-weight:500;color:#526896;line-height:1.15;}
+.rdc-balance-value,.rdc-metric-value,.rdc-selected-name{display:block;font-size:14px;font-weight:800;color:#07164f;line-height:1.25;}
+.rdc-buy-btn{height:34px;padding:0 14px;border:1px solid #cdbdff;background:#f7f3ff;color:#4f16e8;border-radius:8px;font-size:12px;font-weight:700;font-family:'Poppins',sans-serif;}
+.rdc-close-btn{width:30px;height:30px;border:0;background:transparent;color:#40527b;}
+.rdc-close-btn:hover{background:#eef2ff;color:#4f16e8;border-color:transparent;}
+.rdc-body{background:#f8fbff;padding:12px 18px 0;}
+.rdc-sect-lbl{display:none;}
+.rdc-opts-list{padding:0 0 12px;gap:10px;}
+.rdc-reco-card{position:relative;display:grid;grid-template-columns:132px 1fr auto 24px;gap:18px;align-items:center;width:100%;padding:18px;border:2px solid #681cff;border-radius:10px;background:linear-gradient(100deg,#f4edff 0%,#ffffff 52%,#f3ecff 100%);box-shadow:0 10px 26px rgba(91,33,255,.09);cursor:pointer;text-align:left;font-family:'Poppins',sans-serif;}
+.rdc-reco-card.rdc-reco-selected{box-shadow:0 0 0 3px rgba(104,28,255,.11),0 10px 26px rgba(91,33,255,.09);}
+.rdc-reco-ribbon{position:absolute;top:-13px;left:14px;display:inline-flex;align-items:center;gap:7px;height:27px;padding:0 15px;border-radius:8px;background:linear-gradient(90deg,#6419f9,#7c3aed);color:#fff;font-size:12px;font-weight:800;}
+.rdc-reco-art{height:76px;border-radius:12px;background:linear-gradient(135deg,#ffffff,#e9ddff);display:flex;align-items:center;justify-content:center;color:#5b21ff;box-shadow:inset 0 0 0 1px rgba(104,28,255,.12);}
+.rdc-reco-art svg{width:74px;height:58px;}
+.rdc-reco-title{display:block;font-size:18px;font-weight:800;color:#08154a;margin:0 0 5px;line-height:1.2;}
+.rdc-reco-desc{display:block;font-size:13px;color:#263f72;margin:0 0 14px;line-height:1.35;}
+.rdc-reco-checks{display:flex;flex-wrap:wrap;gap:10px;}
+.rdc-reco-check{display:inline-flex;align-items:center;gap:6px;font-size:11px;color:#0f2b5f;}
+.rdc-reco-check::before{content:'';width:17px;height:17px;border-radius:50%;background:#a7f3d0;box-shadow:inset 0 0 0 5px #d1fae5;flex-shrink:0;}
+.rdc-reco-side{border-left:1px solid #e1d7fb;padding-left:18px;min-width:150px;}
+.rdc-best{display:inline-flex;height:24px;align-items:center;padding:0 13px;border-radius:999px;background:#6d28d9;color:#fff;font-size:11px;font-weight:800;margin-bottom:12px;}
+.rdc-reco-meta{display:flex;gap:14px;align-items:center;font-size:12px;font-weight:700;color:#07164f;margin-bottom:12px;}
+.rdc-reco-note{display:inline-flex;align-items:center;border-radius:999px;background:#ede9fe;color:#4f16e8;font-size:10px;font-weight:600;padding:5px 9px;white-space:nowrap;}
+.rdc-reco-radio,.rdc-ocirc{width:18px;height:18px;border:2px solid #a8b8d5;border-radius:50%;display:flex;align-items:center;justify-content:center;transition:all .15s ease;}
+.rdc-reco-selected .rdc-reco-radio,.rdc-opt-sel .rdc-ocirc{border-color:#5b21ff;background:#5b21ff;box-shadow:0 0 0 4px rgba(91,33,255,.12);}
+.rdc-reco-selected .rdc-reco-radio::after,.rdc-opt-sel .rdc-ocirc::after{content:'';width:6px;height:6px;border-radius:50%;background:#fff;display:block;}
+.rdc-section{border:1px solid #dbe7f7;border-radius:10px;background:#fff;overflow:hidden;box-shadow:0 8px 20px rgba(15,23,42,.04);}
+.rdc-section-head{display:flex;align-items:center;gap:11px;padding:8px 11px;border-bottom:1px solid #dde9f8;}
+.rdc-section-icon{width:32px;height:32px;border-radius:9px;display:flex;align-items:center;justify-content:center;color:#fff;flex-shrink:0;box-shadow:0 8px 16px rgba(15,23,42,.12);}
+.rdc-section-icon svg{width:18px;height:18px;}
+.rdc-section-title{font-size:16px;font-weight:800;color:#08154a;line-height:1.2;white-space:nowrap;}
+.rdc-section-pill{display:inline-flex;align-items:center;height:22px;padding:0 11px;border-radius:999px;font-size:11px;font-weight:500;white-space:nowrap;}
+.rdc-section-count{margin-left:auto;color:#4f16e8;font-size:13px;font-weight:800;white-space:nowrap;}
+.rdc-section-chevron{width:18px;height:18px;color:#5b21ff;flex-shrink:0;}
+.rdc-section-options{display:flex;flex-direction:column;gap:6px;padding:8px 9px;}
+.rdc-section-options .rdc-opt{order:0!important;}
+.rdc-section-blue .rdc-section-head{background:linear-gradient(90deg,#eaf4ff,#f7fbff);}
+.rdc-section-blue .rdc-section-icon{background:linear-gradient(135deg,#0b7bff,#5b7cfa);}
+.rdc-section-blue .rdc-section-pill{background:#dceeff;color:#075aa9;}
+.rdc-section-purple .rdc-section-head{background:linear-gradient(90deg,#efe8ff,#fbf8ff);}
+.rdc-section-purple .rdc-section-icon{background:linear-gradient(135deg,#6d28d9,#7c3aed);}
+.rdc-section-purple .rdc-section-pill{background:#eee4ff;color:#4f16e8;}
+.rdc-section-rose .rdc-section-head{background:linear-gradient(90deg,#ffe6ee,#fff8fa);}
+.rdc-section-rose .rdc-section-icon{background:linear-gradient(135deg,#f43f5e,#ec4899);}
+.rdc-section-rose .rdc-section-pill{background:#ffdce7;color:#be123c;}
+.rdc-section-green .rdc-section-head{background:linear-gradient(90deg,#dcfce7,#f2fffb);}
+.rdc-section-green .rdc-section-icon{background:linear-gradient(135deg,#059669,#10b981);}
+.rdc-section-green .rdc-section-pill{background:#d1fae5;color:#047857;}
+.rdc-section-amber .rdc-section-head{background:linear-gradient(90deg,#fff0d6,#fffaf0);}
+.rdc-section-amber .rdc-section-icon{background:linear-gradient(135deg,#f97316,#f59e0b);}
+.rdc-section-amber .rdc-section-pill{background:#ffedd5;color:#c2410c;}
+.rdc-opt{grid-template-columns:44px minmax(0,1fr) 92px 82px 20px;column-gap:12px;padding:9px 10px;border:1px solid #d9e5f4;border-radius:9px;background:#fff;box-shadow:0 2px 8px rgba(15,23,42,.03);}
+.rdc-opt:hover{border-color:#c9d7ef;background:#fbfdff;box-shadow:0 6px 14px rgba(15,23,42,.06);}
+.rdc-opt.rdc-opt-sel{border-color:#6d28d9;background:#fbfaff;box-shadow:0 0 0 2px rgba(109,40,217,.10);}
+.rdc-onum{display:none;}
+.rdc-oi{grid-column:1;grid-row:1/3;width:34px;height:34px;border-radius:9px;}
+.rdc-oi svg{width:18px;height:18px;}
+.rdc-otitle{grid-column:2;grid-row:1;font-size:12.5px;font-weight:800;color:#08154a;line-height:1.2;}
+.rdc-odesc{grid-column:2;grid-row:2;font-size:11.5px;color:#29456f;line-height:1.35;}
+.rdc-ocost{grid-column:3;grid-row:1/3;align-self:center;display:flex;align-items:center;justify-content:flex-start;gap:7px;text-align:left;font-size:12px;font-weight:800;color:#07164f;border-left:1px solid #dbe7f7;padding-left:13px;}
+.rdc-ocost::before{content:'';width:17px;height:17px;border-radius:50%;background:#f59e0b;box-shadow:inset 0 -3px 0 #d97706,0 0 0 4px #fff7dd;flex-shrink:0;}
+.rdc-otime{grid-column:4;grid-row:1/3;align-self:center;display:flex;align-items:center;justify-content:flex-start;gap:7px;text-align:left;font-size:12px;color:#29456f;border-left:1px solid #dbe7f7;padding-left:13px;}
+.rdc-otime::before{content:'';width:14px;height:14px;border:2px solid #5872a3;border-radius:50%;flex-shrink:0;}
+.rdc-ocirc{grid-column:5;grid-row:1/3;align-self:center;}
+.rdc-coin-card{display:none;}
+.rdc-footer{padding:10px 18px 13px;border-top:1px solid #dbe7f7;background:#fff;box-shadow:0 -8px 22px rgba(15,23,42,.06);}
+.rdc-summary-row{display:grid;grid-template-columns:minmax(220px,1.35fr) repeat(3,minmax(132px,1fr));gap:12px;margin-bottom:10px;}
+.rdc-selected-card,.rdc-metric-card{display:flex;align-items:center;gap:12px;min-width:0;border:1px solid #dbe7f7;border-radius:9px;background:#fbfdff;padding:9px 11px;}
+.rdc-selected-card{background:#f6f2ff;border-color:#cfc4ff;}
+.rdc-selected-icon{width:34px;height:34px;border-radius:50%;background:#ede9fe;color:#5b21ff;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.rdc-selected-icon svg,.rdc-metric-icon svg{width:18px;height:18px;}
+.rdc-selected-copy{min-width:0;flex:1;}
+.rdc-selected-name{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.rdc-clear-selected{width:24px;height:24px;border:0;border-radius:50%;background:#dbe4f5;color:#40527b;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.rdc-clear-selected svg{width:13px;height:13px;}
+.rdc-metric-icon.rdc-clock{background:#e8f2ff;color:#1267ff;}
+.rdc-metric-icon.rdc-wallet{background:#efe9ff;color:#5b21ff;border-radius:12px;}
+.rdc-action-row{display:flex;align-items:center;gap:12px;}
+.rdc-foot-note{margin:0;justify-content:flex-start;flex:1;color:#274374;font-size:12px;}
+.rdc-foot-note svg{width:18px!important;height:18px!important;color:#059669!important;stroke-width:3;}
+.rdc-cancel-btn{height:38px;min-width:88px;border:1px solid #cbd8ea;border-radius:8px;background:#fff;color:#274374;font-size:13px;font-weight:700;font-family:'Poppins',sans-serif;}
+.rdc-dl-btn{width:auto;min-width:190px;height:38px;padding:0 20px;border-radius:8px;background:linear-gradient(135deg,#7638ff,#4f16e8);font-size:13px;box-shadow:0 8px 18px rgba(91,33,255,.22);}
+.rdc-dl-btn:hover:not(:disabled){background:linear-gradient(135deg,#6d28d9,#4511d2);}
+.rdc-dl-btn:disabled,.rdc-dl-btn.rdc-loading{background:#6d5bd7;opacity:.82;}
+.rdc-reco-ribbon svg{width:16px;height:16px;flex-shrink:0;}
 /* Spinner */
 @keyframes rdcSpin{to{transform:rotate(360deg);}}
 .rdc-spin{display:inline-block;width:13px;height:13px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:rdcSpin .65s linear infinite;flex-shrink:0;}
@@ -400,8 +495,38 @@
 @media(max-width:640px){
   .rdc-drawer{width:100%;top:auto;bottom:0;height:92dvh;border-radius:14px 14px 0 0;transform:translateY(100%);}
   .rdc-drawer.rdc-open{transform:translateY(0);}
+  .rdc-header{align-items:flex-start;padding:12px;}
+  .rdc-head-actions{gap:8px;}
+  .rdc-balance-card{display:none;}
+  .rdc-title{font-size:17px;}
+  .rdc-subtitle{font-size:11.5px;}
+  .rdc-body{padding:10px 10px 0;}
+  .rdc-reco-card{grid-template-columns:1fr 24px;padding:38px 12px 12px;}
+  .rdc-reco-art,.rdc-reco-side{display:none;}
+  .rdc-reco-title{font-size:15px;}
+  .rdc-reco-desc{font-size:12px;}
+  .rdc-section-head{flex-wrap:wrap;}
+  .rdc-section-title{font-size:14px;}
+  .rdc-section-pill{order:5;width:100%;justify-content:center;}
+  .rdc-opt{grid-template-columns:34px minmax(0,1fr) 18px;gap:9px;}
+  .rdc-otitle{font-size:12px;}
+  .rdc-odesc{font-size:10.5px;}
+  .rdc-ocost,.rdc-otime{grid-column:2;border-left:0;padding-left:0;font-size:10.5px;}
+  .rdc-ocost{grid-row:3;}
+  .rdc-otime{grid-row:3;margin-left:86px;}
+  .rdc-ocirc{grid-column:3;grid-row:1/4;}
+  .rdc-summary-row{grid-template-columns:1fr 1fr;gap:8px;}
+  .rdc-selected-card{grid-column:1/3;}
+  .rdc-action-row{flex-wrap:wrap;}
+  .rdc-foot-note{flex-basis:100%;font-size:11px;}
+  .rdc-cancel-btn{flex:1;}
+  .rdc-dl-btn{flex:2;min-width:0;}
 }
-@media(min-width:641px) and (max-width:900px){.rdc-drawer{width:100%;}}
+@media(min-width:641px) and (max-width:900px){
+  .rdc-drawer{width:100%;}
+  .rdc-summary-row{grid-template-columns:1.2fr 1fr 1fr;}
+  .rdc-summary-row .rdc-metric-card:last-child{display:none;}
+}
 /* ===== HERO SKILLS BAR REDESIGN ===== */
 /* Skills % match badge on avatar */
 #kt_activitiesApplication .cdr-avatar-wrap{position:relative;overflow:visible;}
@@ -8291,16 +8416,31 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
 
   {{-- Header --}}
   <div class="rdc-header">
-    <div class="rdc-header-text">
-      <p class="rdc-title">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:inline-block;vertical-align:middle;width:13px;height:13px;margin-right:5px;color:#4f46e5" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-        Download Resume Center
-      </p>
-      <p class="rdc-subtitle">Select a format to download the candidate's resume</p>
+    <div class="rdc-head-left">
+      <span class="rdc-head-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg>
+      </span>
+      <div class="rdc-header-text">
+        <p class="rdc-title">Download Resume Center</p>
+        <p class="rdc-subtitle">Choose the resume, report, or recruiter package you want to download.</p>
+        <p class="rdc-subtitle">All files are processed securely and ready in ~60 seconds.</p>
+      </div>
     </div>
-    <button class="rdc-close-btn" id="rdcCloseBtn" aria-label="Close" title="Close">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-    </button>
+    <div class="rdc-head-actions">
+      <div class="rdc-balance-card" aria-label="Coin balance">
+        <span class="rdc-balance-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="7" ry="3"/><path d="M5 5v5c0 1.7 3.1 3 7 3s7-1.3 7-3V5"/><path d="M5 10v5c0 1.7 3.1 3 7 3s7-1.3 7-3v-5"/></svg>
+        </span>
+        <span class="rdc-balance-copy">
+          <span class="rdc-balance-label">Your Coin Balance</span>
+          <span class="rdc-balance-value" id="rdcBalanceValue">Available at checkout</span>
+        </span>
+        <button type="button" class="rdc-buy-btn" aria-label="Buy Coins">Buy Coins</button>
+      </div>
+      <button class="rdc-close-btn" id="rdcCloseBtn" aria-label="Close" title="Close">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
   </div>
 
   {{-- Scrollable body --}}
@@ -8831,14 +8971,58 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
 
   {{-- Sticky footer --}}
   <div class="rdc-footer">
-    <button id="rdcDownloadBtn" class="rdc-dl-btn" type="button">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;flex-shrink:0" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-      <span id="rdcBtnLabel">Download Resume</span>
-    </button>
-    <p class="rdc-foot-note">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:11px;height:11px;color:#94a3b8" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-      Coins deducted only after a successful download
-    </p>
+    <div class="rdc-summary-row">
+      <div class="rdc-selected-card">
+        <span class="rdc-selected-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 4 7v6c0 5 3.4 7.8 8 9 4.6-1.2 8-4 8-9V7l-8-4z"/><path d="m9 12 2 2 4-5"/></svg>
+        </span>
+        <span class="rdc-selected-copy">
+          <span class="rdc-selected-kicker">Selected Download</span>
+          <span class="rdc-selected-name" id="rdcSelectedLabel">Download Resume</span>
+        </span>
+        <button type="button" class="rdc-clear-selected" id="rdcClearSelected" aria-label="Reset selected download" title="Reset selected download">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+      <div class="rdc-metric-card">
+        <span class="rdc-metric-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="7" ry="3"/><path d="M5 5v5c0 1.7 3.1 3 7 3s7-1.3 7-3V5"/><path d="M5 10v5c0 1.7 3.1 3 7 3s7-1.3 7-3v-5"/></svg>
+        </span>
+        <span>
+          <span class="rdc-metric-label">You will be charged</span>
+          <strong class="rdc-metric-value" id="rdcCoinCost">1 Coin</strong>
+        </span>
+      </div>
+      <div class="rdc-metric-card">
+        <span class="rdc-metric-icon rdc-clock" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+        </span>
+        <span>
+          <span class="rdc-metric-label">Estimated time</span>
+          <strong class="rdc-metric-value">~60 sec</strong>
+        </span>
+      </div>
+      <div class="rdc-metric-card">
+        <span class="rdc-metric-icon rdc-wallet" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M20 7H5a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1V8a1 1 0 0 0-1-1z"/><path d="M16 12h4"/><path d="M18 12.01v.01"/></svg>
+        </span>
+        <span>
+          <span class="rdc-metric-label">Remaining balance</span>
+          <strong class="rdc-metric-value" id="rdcRemainingBalance">After confirmation</strong>
+        </span>
+      </div>
+    </div>
+    <div class="rdc-action-row">
+      <p class="rdc-foot-note">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>
+        Coins deducted only after a successful download. No charge if the download fails.
+      </p>
+      <button type="button" class="rdc-cancel-btn" id="rdcCancelBtn">Cancel</button>
+      <button id="rdcDownloadBtn" class="rdc-dl-btn" type="button">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;flex-shrink:0" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        <span id="rdcBtnLabel">Download - 1 Coin</span>
+      </button>
+    </div>
   </div>
 
 </div>{{-- /#rdcDrawer --}}
@@ -8858,12 +9042,19 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
   var overlay  = latestById('rdcOverlay');
   var drawer   = latestById('rdcDrawer');
   var closeBtn = latestById('rdcCloseBtn');
+  var cancelBtn = latestById('rdcCancelBtn');
+  var clearSelectedBtn = latestById('rdcClearSelected');
+  var buyCoinsBtn = drawer ? drawer.querySelector('.rdc-buy-btn') : null;
   var dlBtn    = latestById('rdcDownloadBtn');
   var btnLbl   = latestById('rdcBtnLabel');
   var coinEl   = latestById('rdcCoinCost');
+  var selectedLabelEl = latestById('rdcSelectedLabel');
+  var remainingBalanceEl = latestById('rdcRemainingBalance');
+  var balanceValueEl = latestById('rdcBalanceValue');
   var toastEl  = latestById('rdcToast');
   var opts     = drawer ? drawer.querySelectorAll('#rdcOptsList .rdc-opt') : document.querySelectorAll('#rdcOptsList .rdc-opt');
   var rdcData  = latestById('rdcData');
+  var rdcSectionsBuilt = false;
 
   var dlUrl  = rdcData ? rdcData.getAttribute('data-dl-url')  : '';
   var r2DirectUrl = rdcData ? rdcData.getAttribute('data-r2-direct-url') : '';
@@ -8987,6 +9178,40 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
     return /^download\b/i.test(label) ? label : 'Download '+label;
   }
 
+  function rdcCoinText(cost){
+    cost=parseInt(cost,10)||0;
+    return cost === 1 ? '1 Coin' : cost + ' Coins';
+  }
+
+  function rdcOptionDisplayName(n,m){
+    if(parseInt(n,10) === 17) return 'Complete Recruiter Package';
+    return rdcCleanLocal(m && m.label) || 'Download Resume';
+  }
+
+  function rdcActionText(m){
+    return 'Download - ' + rdcCoinText(m && m.cost);
+  }
+
+  function syncDownloadCenterSummary(m,n){
+    m=m || optMeta[selectedOpt] || {cost:0,label:'Download Resume'};
+    n=parseInt(n || selectedOpt,10);
+    if(coinEl) coinEl.textContent = rdcCoinText(m.cost);
+    if(selectedLabelEl) selectedLabelEl.textContent = rdcOptionDisplayName(n,m);
+    if(btnLbl) btnLbl.textContent = rdcActionText(m);
+    if(remainingBalanceEl){
+      var balanceText=rdcCleanLocal(balanceValueEl ? balanceValueEl.textContent : '');
+      var balanceMatch=balanceText.match(/(\d+)/);
+      if(balanceMatch){
+        var remaining=Math.max(0,parseInt(balanceMatch[1],10)-(parseInt(m.cost,10)||0));
+        remainingBalanceEl.textContent = remaining + ' Coins';
+      }else{
+        remainingBalanceEl.textContent = 'After confirmation';
+      }
+    }
+    var reco=latestById('rdcRecoCard');
+    if(reco) reco.classList.toggle('rdc-reco-selected', n === 17);
+  }
+
   function hasDownloadableResume(){
     return hasResume && !!(dlUrl || r2DirectUrl || r2PublicUrl || resumePdfUrl);
   }
@@ -9054,17 +9279,97 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
     showToast('No resume uploaded for this candidate. Please upload the resume first.', 'warn');
   }
 
+  function rdcSectionIconSvg(type){
+    var icons={
+      resume:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>',
+      privacy:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 4 7v6c0 5 3.4 7.8 8 9 4.6-1.2 8-4 8-9V7l-8-4z"/><path d="m9 12 2 2 4-5"/></svg>',
+      report:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19V5"/><path d="M8 19v-7"/><path d="M12 19V9"/><path d="M16 19v-4"/><path d="M20 19V7"/></svg>',
+      package:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8 12 3 3 8l9 5 9-5z"/><path d="m3 8 9 5v8l-9-5V8z"/><path d="m21 8-9 5v8l9-5V8z"/></svg>',
+      keyword:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v5"/><path d="M12 17v5"/><path d="M4.93 4.93 8.46 8.46"/><path d="m15.54 15.54 3.53 3.53"/><path d="M2 12h5"/><path d="M17 12h5"/><path d="m4.93 19.07 3.53-3.53"/><path d="m15.54 8.46 3.53-3.53"/></svg>'
+    };
+    return icons[type] || icons.resume;
+  }
+
+  function rdcChevronSvg(){
+    return '<svg class="rdc-section-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m18 15-6-6-6 6"/></svg>';
+  }
+
+  function buildDownloadOptionSections(){
+    /* Purpose: group existing Download Resume Center options in the browser so the
+       presentation can evolve without changing option IDs, handlers, or billing keys. */
+    if(rdcSectionsBuilt) return;
+    var list=latestById('rdcOptsList');
+    if(!list || !opts || !opts.length) return;
+    var optionMap={};
+    Array.prototype.slice.call(opts).forEach(function(opt){
+      optionMap[parseInt(opt.getAttribute('data-opt'),10)] = opt;
+    });
+    var groups=[
+      {theme:'blue',icon:'resume',title:'1. Resume Options',pill:"Get the candidate's resume in different formats.",ids:[1,28,6]},
+      {theme:'purple',icon:'privacy',title:'2. Privacy & Anonymization',pill:'Protect candidate information as needed.',ids:[29,30,31]},
+      {theme:'rose',icon:'report',title:'3. Pre-Screened Report',pill:'Get AI-powered insights and verification details.',ids:[5]},
+      {theme:'green',icon:'package',title:'4. Recruiter Packages (Report + Resume)',pill:'Combine reports and resumes for a complete hiring package.',ids:[15,16,32,33]},
+      {theme:'amber',icon:'keyword',title:'5. Keyword Enhancements (Report + Resume + Skills)',pill:'Get enhanced resumes with job-matching keywords.',ids:[20,17,19]}
+    ];
+    var moved={};
+    var frag=document.createDocumentFragment();
+    var reco=document.createElement('button');
+    reco.type='button';
+    reco.id='rdcRecoCard';
+    reco.className='rdc-reco-card';
+    reco.innerHTML =
+      '<span class="rdc-reco-ribbon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m2 7 5 5 5-9 5 9 5-5-2 12H4L2 7z"/><path d="M5 21h14"/></svg> Recommended for Recruiters</span>' +
+      '<span class="rdc-reco-art" aria-hidden="true"><svg viewBox="0 0 120 90" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M26 20h47l17 17v39H26z" fill="#fff"/><path d="M73 20v17h17"/><path d="M38 38h26"/><path d="M38 50h40"/><path d="M38 62h24"/><rect x="76" y="54" width="26" height="20" rx="4" fill="#6d28d9" stroke="#6d28d9"/><path d="M81 68V60h5a3 3 0 0 1 0 6h-5"/><path d="M90 60v8h4a4 4 0 0 0 0-8h-4"/><path d="M99 68v-8h9"/></svg></span>' +
+      '<span><span class="rdc-reco-title">Complete Recruiter Package</span><span class="rdc-reco-desc">Pre-screened report + branded resume + highlighted keywords.</span><span class="rdc-reco-checks"><span class="rdc-reco-check">Pre-screened report</span><span class="rdc-reco-check">Branded resume</span><span class="rdc-reco-check">Job-matching keywords highlighted</span></span></span>' +
+      '<span class="rdc-reco-side"><span class="rdc-best">Best Value</span><span class="rdc-reco-meta"><span>8 Coins</span><span>~60 sec</span></span><span class="rdc-reco-note">Everything you need in one download</span></span>' +
+      '<span class="rdc-reco-radio" aria-hidden="true"></span>';
+    reco.addEventListener('click',function(){ selectOpt(17); });
+    frag.appendChild(reco);
+    groups.forEach(function(group){
+      var section=document.createElement('section');
+      section.className='rdc-section rdc-section-'+group.theme;
+      var head=document.createElement('div');
+      head.className='rdc-section-head';
+      head.innerHTML =
+        '<span class="rdc-section-icon" aria-hidden="true">'+rdcSectionIconSvg(group.icon)+'</span>' +
+        '<span class="rdc-section-title">'+group.title+'</span>' +
+        '<span class="rdc-section-pill">'+group.pill+'</span>' +
+        '<span class="rdc-section-count">'+group.ids.length+' '+(group.ids.length === 1 ? 'option' : 'options')+'</span>' +
+        rdcChevronSvg();
+      var body=document.createElement('div');
+      body.className='rdc-section-options';
+      group.ids.forEach(function(id){
+        if(optionMap[id]){
+          body.appendChild(optionMap[id]);
+          moved[id]=true;
+        }
+      });
+      section.appendChild(head);
+      section.appendChild(body);
+      frag.appendChild(section);
+    });
+    var hiddenBin=document.createElement('div');
+    hiddenBin.className='rdc-hidden-options';
+    hiddenBin.setAttribute('hidden','hidden');
+    Array.prototype.slice.call(opts).forEach(function(opt){
+      var id=parseInt(opt.getAttribute('data-opt'),10);
+      if(!moved[id]) hiddenBin.appendChild(opt);
+    });
+    while(list.firstChild) list.removeChild(list.firstChild);
+    frag.appendChild(hiddenBin);
+    list.appendChild(frag);
+    rdcSectionsBuilt = true;
+  }
+
   function renumberVisibleDownloadOptions(){
-    if(!opts || !opts.length) return;
-    Array.prototype.slice.call(opts)
+    var list=latestById('rdcOptsList');
+    var visibleOpts=list ? list.querySelectorAll('.rdc-opt') : opts;
+    if(!visibleOpts || !visibleOpts.length) return;
+    Array.prototype.slice.call(visibleOpts)
       .filter(function(opt){
+        if(opt.closest && opt.closest('.rdc-hidden-options')) return false;
         if(opt.getAttribute('aria-hidden') === 'true') return false;
         return window.getComputedStyle(opt).display !== 'none';
-      })
-      .sort(function(a,b){
-        var ao=parseInt(window.getComputedStyle(a).order || '0', 10);
-        var bo=parseInt(window.getComputedStyle(b).order || '0', 10);
-        return ao - bo;
       })
       .forEach(function(opt,index){
         var badge=opt.querySelector('.rdc-onum');
@@ -9077,7 +9382,9 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
       showNoResumeMessage();
       return;
     }
+    buildDownloadOptionSections();
     renumberVisibleDownloadOptions();
+    syncDownloadCenterSummary(optMeta[selectedOpt] || {}, selectedOpt);
     overlay.classList.add('rdc-open');
     drawer.classList.add('rdc-open');
     overlay.setAttribute('aria-hidden','false');
@@ -9141,6 +9448,11 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
 
   overlay.addEventListener('click', closeRdc);
   if(closeBtn) closeBtn.addEventListener('click', closeRdc);
+  if(cancelBtn) cancelBtn.addEventListener('click', closeRdc);
+  if(clearSelectedBtn) clearSelectedBtn.addEventListener('click', function(){ selectOpt(1); });
+  if(buyCoinsBtn) buyCoinsBtn.addEventListener('click', function(){
+    showToast('Coin purchase opens from the wallet flow. No coins are deducted from this drawer.', 'info');
+  });
 
   /* Option card selection */
   opts.forEach(function(opt){
@@ -9158,8 +9470,7 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
       if(inp) inp.checked = isThis;
     });
     var m = optMeta[n] || {cost:0, label:'Download'};
-    if(coinEl) coinEl.textContent = m.cost === 1 ? '1 Coin' : m.cost + ' Coins';
-    if(btnLbl) btnLbl.textContent = downloadButtonLabel(m.label);
+    syncDownloadCenterSummary(m,n);
     if(m.dlKey === 'rs' && typeof window.__preloadRS === 'function') window.__preloadRS();
     if(m.dlKey === 'smart-highlighted-resume' && typeof window.__preloadRSCombined === 'function') window.__preloadRSCombined();
     if(m.dlKey === 'smart-highlighted-resume' && resumeExt === 'DOCX' && typeof window.__preloadOpenDocLocal === 'function') window.__preloadOpenDocLocal();
@@ -9278,9 +9589,10 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
     stopSmartCountdown();
     isLoading = false;
     var m = optMeta[selectedOpt] || {};
+    syncDownloadCenterSummary(m,selectedOpt);
     var normalHtml =
       '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;flex-shrink:0" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>' +
-      '<span id="rdcBtnLabel">' + downloadButtonLabel(m.label) + '</span>';
+      '<span id="rdcBtnLabel">' + rdcActionText(m) + '</span>';
     var buttons = Array.prototype.slice.call(document.querySelectorAll('[id="rdcDownloadBtn"]'));
     if(dlBtn && buttons.indexOf(dlBtn) === -1) buttons.push(dlBtn);
     buttons.forEach(function(button){
@@ -9289,7 +9601,7 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
       button.innerHTML = normalHtml;
     });
     if(buttons.length) dlBtn = buttons[buttons.length - 1];
-    btnLbl = document.getElementById('rdcBtnLabel');
+    btnLbl = latestById('rdcBtnLabel');
   }
 
   function markDownloadStarted(){
