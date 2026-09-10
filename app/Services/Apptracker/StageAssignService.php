@@ -5,6 +5,7 @@ namespace App\Services\Apptracker;
 use App\Helper\GeneralMethod;
 use App\Models\ApplicationStatus;
 use App\Models\JobApplication;
+use App\Services\ElasticService;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -17,13 +18,18 @@ use Illuminate\Support\Facades\DB;
  *   1. Tenant-checks the application (company_id)
  *   2. Updates job_applications.child_status_id / master_status_id
  *   3. Inserts a timeline entry
- *   4. Returns fresh per-stage counter data for immediate badge refresh
+ *   4. Syncs the stage to Elasticsearch read index with immediate refresh
+ *   5. Invalidates user listing caches
+ *   6. Returns fresh per-stage counter data for immediate badge refresh
  *
  * All DB writes include company_id for tenant isolation.
  */
 class StageAssignService
 {
-    public function __construct(private readonly CounterService $counterService) {}
+    public function __construct(
+        private readonly CounterService $counterService,
+        private readonly ElasticService $elasticService
+    ) {}
 
     /**
      * Move a candidate to a child sub-stage; tenant-scoped.
@@ -69,6 +75,7 @@ class StageAssignService
             ->where('company_id', $companyId)
             ->update(['child_status_id' => $childStatusId, 'master_status_id' => $parentStatusId]);
 
+        $this->syncElasticStage($applicationId, $jobId, $companyId, $parentStatusId, $childStatusId);
         $this->counterService->onStageMoved($jobId, $applicationId, $parentStatusId, $companyId);
 
         // Insert timeline entry for audit trail
@@ -156,6 +163,7 @@ class StageAssignService
                 ->where('company_id', $companyId)
                 ->update(['master_status_id' => $statusId, 'child_status_id' => null]);
 
+            $this->syncElasticStage($applicationId, $jobId, $companyId, $statusId, 0);
             $this->counterService->onStageMoved($jobId, $applicationId, $statusId, $companyId);
         }
 
@@ -216,5 +224,52 @@ class StageAssignService
             'flag' => $flag,
             'activeAppCounter' => $activeAppCounter,
         ];
+    }
+
+    /**
+     * Syncs updated candidate stage to Elasticsearch index immediately and busts listing caches.
+     */
+    private function syncElasticStage(int $applicationId, int $jobId, int $companyId, int $masterStatusId, int $childStatusId = 0): void
+    {
+        try {
+            $ajwcRow = DB::table('add_job_wise_condidates')
+                ->where('job_application_id', $applicationId)
+                ->where('job_id', $jobId)
+                ->where('company_id', $companyId)
+                ->first();
+
+            if ($ajwcRow) {
+                $masterStatusName = DB::table('master_status')->where('id', $masterStatusId)->first();
+                $exists = $this->elasticService->getClient()->exists([
+                    'index' => ELASTIC_CANDIDATES,
+                    'id' => $ajwcRow->id,
+                ]);
+                if ($exists) {
+                    $this->elasticService->getClient()->update([
+                        'index' => ELASTIC_CANDIDATES,
+                        'id' => $ajwcRow->id,
+                        'body' => [
+                            'doc' => [
+                                'job_master_status_id' => (int) $masterStatusId,
+                                'childStatus' => (int) $childStatusId,
+                                'name' => $masterStatusName->name ?? '',
+                                'css_style' => $masterStatusName->css_style ?? '',
+                                'updated_at' => now()->toIso8601String(),
+                            ],
+                        ],
+                        'refresh' => true,
+                    ]);
+                }
+            }
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning('StageAssignService ES sync failed: '.$e->getMessage());
+        }
+
+        if (auth()->check()) {
+            GeneralMethod::cacheClean('allapptracker_version_user_'.auth()->id());
+            GeneralMethod::cacheClean('alljobslist_version_user_'.auth()->id());
+            GeneralMethod::cacheClean('allcvtracker_version_user_'.auth()->id());
+            GeneralMethod::cacheClean('allclientapp_version_user_'.auth()->id());
+        }
     }
 }
