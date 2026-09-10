@@ -1590,6 +1590,12 @@ class ProductCompanyJobApplicationController extends ProductCompanyBaseControlle
 			
 		}
 
+		$finalJobId = (int) ($addJobWiseCondidate->job_id ?? $jobApplication->job_id ?? 0);
+		$finalCompanyId = (int) ($addJobWiseCondidate->company_id ?? $company_id ?? auth()->user()->company_id ?? 0);
+		if ($finalJobId > 0 && $finalCompanyId > 0) {
+			app(\App\Services\Apptracker\CounterService::class)->onStageMoved($finalJobId, (int) $application_id, (int) $master_status, $finalCompanyId);
+		}
+
 		return Reply::dataOnly(['status' => 'success', 'message' => 'Application stage update successfully !']);
 
 	}

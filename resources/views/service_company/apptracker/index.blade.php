@@ -1458,16 +1458,16 @@
                     var Joined = 0;
                     var Interview = 0;
 
-                    if (response.allCounter > 0) {
-                        allCandidate = response.data.allCandidate;
-                        Sourcing = response.data.Sourcing;
-                        Screening = response.data.Screening;
-                        Rejected = response.data.Rejected;
-                        Offered = response.data.Offered;
+                    if (response.status === 'success' && response.data) {
+                        allCandidate = response.data.allCandidate || 0;
+                        Sourcing = response.data.Sourcing || 0;
+                        Screening = response.data.Screening || 0;
+                        Rejected = response.data.Rejected || 0;
+                        Offered = response.data.Offered || 0;
 
-                        Negotiation = response.data.Negotiation;
-                        Joined = response.data.Joined;
-                        Interview = response.data.Interview;
+                        Negotiation = response.data.Negotiation || 0;
+                        Joined = response.data.Joined || 0;
+                        Interview = response.data.Interview || 0;
                     }
 
                     setTimeout(() => {
@@ -1647,6 +1647,7 @@
                                     // $('#stage_sub_stage').modal('hide');
                                     $("#stage_sub_stage_close").click();
                                 });
+                                countder();
                                 var page = $('#paginationcandidate .pagi-page.pagi-active').data('page') || 1;
                                 fetchCandidates(page);
                                 //  	var table;
