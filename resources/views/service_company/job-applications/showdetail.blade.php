@@ -8504,7 +8504,10 @@ async function agyEnsureMetricFonts(){
       '.agy-docx-host table{border-collapse:collapse!important;table-layout:auto!important;}',
       '.agy-docx-host td, .agy-docx-host th{vertical-align:top!important;line-height:1.32!important;overflow:visible!important;}',
       '.agy-docx-host [class*="_num_"]:before, .agy-docx-host p:before{font-family:"Segoe UI Symbol","Apple Symbols","Symbol","Wingdings",sans-serif!important;display:inline-block!important;min-width:0.8em!important;margin-right:0.25em!important;}',
-      '.agy-docx-host .docx-tab-stop{display:inline!important;width:auto!important;word-spacing:normal!important;}',
+      '.agy-docx-host .agy-tab-left{display:inline-block!important;flex:0 1 auto!important;min-width:0!important;overflow-wrap:break-word!important;}',
+      '.agy-docx-host .agy-tab-spacer{display:inline-block!important;flex:1 1 auto!important;min-width:14px!important;}',
+      '.agy-docx-host .agy-tab-right{display:inline-block!important;flex:0 0 auto!important;text-align:right!important;margin-left:auto!important;white-space:nowrap!important;padding-left:12px!important;}',
+      '.agy-docx-host .docx-tab-stop{display:inline-block!important;min-width:0.8em!important;word-spacing:normal!important;}',
       '.agy-keyword-hit{background:rgba(255,214,10,0.45)!important;color:#111827!important;border-radius:2px!important;padding:0 2px!important;box-decoration-break:clone!important;-webkit-box-decoration-break:clone!important;vertical-align:baseline!important;line-height:inherit!important;}'
     ].join('\n');
     document.head.appendChild(style);
@@ -8557,10 +8560,253 @@ function agyInjectInvisibleTextLayer(pdf, pageEl, drawW, drawH, sliceOffsetY, sl
   }catch(ex){}
 }
 
+/* ==========================================================================
+   STRATEGY 3: CLIENT-SIDE OOXML PRE-PARSER & SYNTHETIC TAB STOP ENGINE
+   - Intercepts word/document.xml via in-memory JSZip before DOM rendering
+   - Maps PUA bullet codepoints (\uF0B7, \uF0A7, etc.) to crisp universal Unicode
+   - Extracts <w:tblGrid> column widths to lock HTML tables to exact OOXML twips
+   - Synthesizes two-sided paragraph layouts (Left Title <---> Right Date/Location)
+   - Restores hanging bullet indentation and dot leader tab fills
+   - Preserves 100% isolation in Section 6 (Options 35-39)
+   ========================================================================== */
+
+function agyExtractDocxMetadata(docXml){
+  var metadata = {
+    tables: [],
+    paragraphs: []
+  };
+  if(!docXml) return metadata;
+
+  try{
+    // Extract table column grid proportions
+    var tbls = docXml.getElementsByTagName('w:tbl');
+    if(!tbls || !tbls.length) tbls = docXml.getElementsByTagName('tbl');
+    for(var t = 0; t < tbls.length; t++){
+      var tbl = tbls[t];
+      var gridCols = tbl.getElementsByTagName('w:gridCol');
+      if(!gridCols || !gridCols.length) gridCols = tbl.getElementsByTagName('gridCol');
+      var colWidths = [];
+      var totalW = 0;
+      for(var c = 0; c < gridCols.length; c++){
+        var w = parseInt(gridCols[c].getAttribute('w:w') || gridCols[c].getAttribute('w') || '0', 10);
+        colWidths.push(w);
+        totalW += w;
+      }
+      var percentages = colWidths.map(function(w){
+        return totalW > 0 ? ((w / totalW) * 100).toFixed(2) + '%' : '';
+      });
+      metadata.tables.push({ colCount: gridCols.length, percentages: percentages });
+    }
+
+    // Extract paragraph tab definitions
+    var ps = docXml.getElementsByTagName('w:p');
+    if(!ps || !ps.length) ps = docXml.getElementsByTagName('p');
+    for(var p = 0; p < ps.length; p++){
+      var pNode = ps[p];
+      var tabsNode = pNode.getElementsByTagName('w:tabs')[0] || pNode.getElementsByTagName('tabs')[0];
+      var pInfo = { hasRightTab: false, hasLeader: false, leaderType: null };
+      if(tabsNode){
+        var tabList = tabsNode.getElementsByTagName('w:tab');
+        if(!tabList || !tabList.length) tabList = tabsNode.getElementsByTagName('tab');
+        for(var tb = 0; tb < tabList.length; tb++){
+          var tItem = tabList[tb];
+          var val = (tItem.getAttribute('w:val') || tItem.getAttribute('val') || '').toLowerCase();
+          var leader = (tItem.getAttribute('w:leader') || tItem.getAttribute('leader') || '').toLowerCase();
+          var pos = parseInt(tItem.getAttribute('w:pos') || tItem.getAttribute('pos') || '0', 10);
+          if(val === 'right' || val === 'decimal' || pos >= 7200){
+            pInfo.hasRightTab = true;
+            if(leader && leader !== 'none'){
+              pInfo.hasLeader = true;
+              pInfo.leaderType = leader;
+            }
+          }
+        }
+      }
+      metadata.paragraphs.push(pInfo);
+    }
+  }catch(ex){
+    console.warn('Strategy 3 XML metadata extraction warning:', ex);
+  }
+  return metadata;
+}
+
+async function agyPreProcessDocxZip(docxBytes){
+  try{
+    await rsEnsureJsZip();
+    var zip = await window.JSZip.loadAsync(docxBytes);
+    var docFile = zip.file('word/document.xml');
+    if(!docFile) return { bytes: docxBytes, metadata: null };
+
+    var xmlText = await docFile.async('string');
+
+    // 1. Sanitize PUA bullets and unmapped symbols directly in OOXML markup
+    var sanitizedXml = xmlText
+      .replace(/\uF0B7/g, '•')
+      .replace(/\uF0A7/g, '▪')
+      .replace(/\uF0D8/g, '➢')
+      .replace(/\uF0FC/g, '✓')
+      .replace(/&#xF0B7;/gi, '&#x2022;')
+      .replace(/&#xF0A7;/gi, '&#x25AA;')
+      .replace(/&#xF0D8;/gi, '&#x27A2;')
+      .replace(/&#xF0FC;/gi, '&#x2713;');
+
+    var parser = new DOMParser();
+    var docXml = parser.parseFromString(sanitizedXml, 'application/xml');
+    var metadata = agyExtractDocxMetadata(docXml);
+
+    zip.file('word/document.xml', sanitizedXml);
+    var cleanBytes = await zip.generateAsync({ type: 'uint8array' });
+    return { bytes: cleanBytes, metadata: metadata };
+  }catch(err){
+    console.warn('Strategy 3 pre-processing fallback to original bytes:', err);
+    return { bytes: docxBytes, metadata: null };
+  }
+}
+
+function agyApplyStrategy3DomEngine(host, metadata){
+  if(!host) return;
+
+  // 1. Sanitize text nodes: map leftover PUA codepoints and clean orphan spacing
+  var textWalker = document.createTreeWalker(host, NodeFilter.SHOW_TEXT, null, false);
+  var curText;
+  var textNodesToClean = [];
+  while((curText = textWalker.nextNode())){
+    textNodesToClean.push(curText);
+  }
+  textNodesToClean.forEach(function(tn){
+    var val = tn.nodeValue;
+    var cleaned = val
+      .replace(/\uF0B7/g, '•')
+      .replace(/\uF0A7/g, '▪')
+      .replace(/\uF0D8/g, '➢')
+      .replace(/\uF0FC/g, '✓')
+      .replace(/[\u00A0\t]+/g, ' ')
+      .replace(/\s+([.,;:!?])/g, '$1');
+    if(cleaned !== val){
+      tn.nodeValue = cleaned;
+    }
+  });
+
+  // 2. Synthetic OOXML Tab Stop Engine
+  // Locates paragraphs containing .docx-tab-stop and synthesizes proper layout
+  var tabStops = Array.prototype.slice.call(host.querySelectorAll('.docx-tab-stop'));
+  var processedParagraphs = [];
+
+  tabStops.forEach(function(tabEl){
+    var p = tabEl.closest('p, li');
+    if(!p || processedParagraphs.indexOf(p) !== -1) return;
+    processedParagraphs.push(p);
+
+    var childNodes = Array.prototype.slice.call(p.childNodes);
+    var tabIndex = childNodes.indexOf(tabEl);
+    if(tabIndex === -1){
+      for(var i = 0; i < childNodes.length; i++){
+        if(childNodes[i].contains && childNodes[i].contains(tabEl)){
+          tabIndex = i;
+          break;
+        }
+      }
+    }
+
+    var beforeNodes = childNodes.slice(0, tabIndex);
+    var afterNodes = childNodes.slice(tabIndex + 1);
+
+    var beforeText = beforeNodes.map(function(n){ return n.textContent || ''; }).join('').trim();
+    var afterText = afterNodes.map(function(n){ return n.textContent || ''; }).join('').trim();
+
+    var isBulletLeader = /^[•▪➢✓\-\*\d+\.]\s*$/.test(beforeText);
+
+    if(isBulletLeader){
+      p.style.setProperty('padding-left', '1.6em', 'important');
+      p.style.setProperty('text-indent', '-1.6em', 'important');
+      tabEl.style.setProperty('display', 'inline-block', 'important');
+      tabEl.style.setProperty('width', '0.6em', 'important');
+      tabEl.style.setProperty('min-width', '0.6em', 'important');
+      tabEl.innerHTML = '&nbsp;';
+    }else if(beforeText.length > 0 && afterText.length > 0){
+      p.style.setProperty('display', 'flex', 'important');
+      p.style.setProperty('justify-content', 'space-between', 'important');
+      p.style.setProperty('align-items', 'baseline', 'important');
+      p.style.setProperty('width', '100%', 'important');
+      p.style.setProperty('box-sizing', 'border-box', 'important');
+
+      var leftWrapper = document.createElement('span');
+      leftWrapper.className = 'agy-tab-left';
+      leftWrapper.style.cssText = 'flex:0 1 auto; min-width:0; overflow-wrap:break-word;';
+      beforeNodes.forEach(function(n){ leftWrapper.appendChild(n); });
+
+      var spacer = document.createElement('span');
+      spacer.className = 'agy-tab-spacer';
+      var hasDotLeader = metadata && metadata.paragraphs && metadata.paragraphs.some(function(pm){ return pm.hasLeader; });
+      if(hasDotLeader){
+        spacer.style.cssText = 'flex:1 1 auto; border-bottom:1.2px dotted #94a3b8; margin:0 10px 4px 10px; min-width:14px;';
+      }else{
+        spacer.style.cssText = 'flex:1 1 auto; min-width:14px;';
+      }
+
+      var rightWrapper = document.createElement('span');
+      rightWrapper.className = 'agy-tab-right';
+      rightWrapper.style.cssText = 'flex:0 0 auto; text-align:right; margin-left:auto; white-space:nowrap; padding-left:12px;';
+      afterNodes.forEach(function(n){ rightWrapper.appendChild(n); });
+
+      p.innerHTML = '';
+      p.appendChild(leftWrapper);
+      p.appendChild(spacer);
+      p.appendChild(rightWrapper);
+    }else{
+      tabEl.style.setProperty('display', 'inline-block', 'important');
+      tabEl.style.setProperty('width', '2.5em', 'important');
+      tabEl.style.setProperty('min-width', '2.5em', 'important');
+      tabEl.innerHTML = '&nbsp;';
+    }
+  });
+
+  // 3. Table Column Lock Engine (<w:tblGrid> enforcement)
+  var domTables = Array.prototype.slice.call(host.querySelectorAll('table'));
+  domTables.forEach(function(tbl, tIdx){
+    tbl.style.setProperty('table-layout', 'fixed', 'important');
+    tbl.style.setProperty('width', '100%', 'important');
+    tbl.style.setProperty('border-collapse', 'collapse', 'important');
+    tbl.style.setProperty('box-sizing', 'border-box', 'important');
+
+    var tMeta = metadata && metadata.tables ? metadata.tables[tIdx] : null;
+    var rows = Array.prototype.slice.call(tbl.querySelectorAll('tr'));
+    rows.forEach(function(row){
+      var cells = Array.prototype.slice.call(row.querySelectorAll('td, th'));
+      cells.forEach(function(cell, cIdx){
+        cell.style.setProperty('vertical-align', 'top', 'important');
+        cell.style.setProperty('overflow-wrap', 'break-word', 'important');
+        cell.style.setProperty('word-break', 'normal', 'important');
+        cell.style.setProperty('box-sizing', 'border-box', 'important');
+        if(tMeta && tMeta.percentages && tMeta.percentages[cIdx]){
+          cell.style.setProperty('width', tMeta.percentages[cIdx], 'important');
+        }
+      });
+    });
+  });
+
+  // 4. Neutralize negative spacing and normalize line heights
+  host.querySelectorAll('*').forEach(function(el){
+    var s = el.style;
+    if(s){
+      if(parseFloat(s.wordSpacing) < 0) s.setProperty('word-spacing', 'normal', 'important');
+      if(parseFloat(s.letterSpacing) < 0) s.setProperty('letter-spacing', 'normal', 'important');
+    }
+  });
+}
+
 async function renderAgyTrueSectionDocxToPdfBlob(docxBytes, options){
   options = options || {};
   await Promise.all([rsEnsureDocxConversion(), rsEnsureJsPdf(), agyEnsureMetricFonts()]);
-  if(options.statusCallback) options.statusCallback('Formatting Word layout (25%)...');
+  if(options.statusCallback) options.statusCallback('Pre-processing Word XML & font metrics (20%)...');
+  await agyYieldToMain();
+
+  // Strategy 3: In-memory OOXML pre-processing & metadata extraction
+  var preResult = await agyPreProcessDocxZip(docxBytes);
+  var renderBytes = preResult.bytes || docxBytes;
+  var docxMetadata = preResult.metadata;
+
+  if(options.statusCallback) options.statusCallback('Formatting Word layout (35%)...');
   await agyYieldToMain();
 
   var host = document.createElement('div');
@@ -8570,7 +8816,7 @@ async function renderAgyTrueSectionDocxToPdfBlob(docxBytes, options){
   document.body.appendChild(host);
 
   try{
-    await window.docx.renderAsync(docxBytes, host, null, {
+    await window.docx.renderAsync(renderBytes, host, null, {
       className: 'docx',
       inWrapper: true,
       ignoreWidth: false,
@@ -8587,40 +8833,9 @@ async function renderAgyTrueSectionDocxToPdfBlob(docxBytes, options){
     });
     await agyYieldToMain();
 
-    // 1. Sanitize text nodes: map Wingdings/Symbol Private Use Area bullets to crisp universal symbols & strip orphan spaces
-    var textWalker = document.createTreeWalker(host, NodeFilter.SHOW_TEXT, null, false);
-    var curText;
-    var textNodesToClean = [];
-    while((curText = textWalker.nextNode())){
-      textNodesToClean.push(curText);
-    }
-    textNodesToClean.forEach(function(tn){
-      var val = tn.nodeValue;
-      var cleaned = val
-        .replace(/\uF0B7/g, '•')
-        .replace(/\uF0A7/g, '▪')
-        .replace(/\uF0D8/g, '➢')
-        .replace(/\uF0FC/g, '✓')
-        .replace(/[\u00A0\t]+/g, ' ')
-        .replace(/\s+([.,;:!?])/g, '$1');
-      if(cleaned !== val){
-        tn.nodeValue = cleaned;
-      }
-    });
-
-    // 2. Neutralize negative word/letter spacing without destroying bullet indentation
-    host.querySelectorAll('*').forEach(function(el){
-      var s = el.style;
-      if(s){
-        if(parseFloat(s.wordSpacing) < 0) s.setProperty('word-spacing', 'normal', 'important');
-        if(parseFloat(s.letterSpacing) < 0) s.setProperty('letter-spacing', 'normal', 'important');
-      }
-      if(el.classList && el.classList.contains('docx-tab-stop')){
-        el.style.setProperty('word-spacing', 'normal', 'important');
-        el.style.setProperty('display', 'inline', 'important');
-        el.innerHTML = ' ';
-      }
-    });
+    // Strategy 3: Apply Synthetic Tab Stop Engine, Table Column Lock, and Typography Normalization
+    agyApplyStrategy3DomEngine(host, docxMetadata);
+    await agyYieldToMain();
 
     if(options.anonymizeRules){
       rdcRedactDocxDom(host, options.anonymizeRules);
