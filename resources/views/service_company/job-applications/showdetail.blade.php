@@ -1478,9 +1478,16 @@
               });
               if(missingKws.length > 0){
                 var newHits = agyCollectWasmDocxWordHits(window.__rcvActiveWasmDoc, missingKws);
+                var chipUpdated = false;
                 missingKws.forEach(function(k){
                   window.__rcvDocxWasmHitsSearched[k.toLowerCase()] = true;
+                  var kHits = newHits.filter(function(h){ return h.word.toLowerCase() === k.toLowerCase(); });
+                  if(keywords[k] && (!keywords[k].count || keywords[k].count < kHits.length)){
+                    keywords[k].count = kHits.length;
+                    chipUpdated = true;
+                  }
                 });
+                if(chipUpdated) renderChips();
                 if(newHits && newHits.length){
                   window.__rcvDocxWasmHits = (window.__rcvDocxWasmHits || []).concat(newHits);
                   var pageWraps = document.querySelectorAll('#rcvPages .rcv-page');
@@ -2050,7 +2057,7 @@
               });
             }
           }
-          if(extractedText.trim()){
+          if(extractedText.trim() && (!resumeText || extractedText.length > resumeText.length)){
             resumeText = extractedText;
           }
           countOccurrences();
@@ -7632,7 +7639,10 @@ async function renderAgyStrategy2WasmDocxToPdfBlob(docxBytes, options){
   await agyYieldToMain();
 
   // Strategy 2: Pre-process DOCX bytes to sanitize numbering, PUA codepoints, and spacing
-  var preResult = await agyPreProcessDocxZip(docxBytes, options);
+  // NOTE: Do not pass keywords to agyPreProcessDocxZip so the base canvas bitmap is 100% clean
+  // and free of baked-in OOXML yellow highlights. The viewer handles all highlights dynamically.
+  var preOpts = Object.assign({}, options, { keywords: null });
+  var preResult = await agyPreProcessDocxZip(docxBytes, preOpts);
   var renderBytes = preResult.bytes || docxBytes;
 
   if(options.statusCallback) options.statusCallback('Parsing OOXML in WebAssembly (50%)...');
