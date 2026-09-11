@@ -9447,21 +9447,18 @@ async function processAgyTestOption(optNum, options){
       outFileName = 'JEROWORKS_' + fileSafeName(data.name, 'Candidate') + '_Strategy2_Branded.pdf';
 
     }else if(optNum === 42){
-      // Strategy 2 WASM: Pre-Screened Report + Resume + Company Branding Package
-      if(options.statusCallback) options.statusCallback('Building AI Pre-Screened Report (25%)...');
+      // Strategy 2 WASM: Pre-Screened Report (with Company Branding on Page 1) + Clean Resume Package
+      if(options.statusCallback) options.statusCallback('Building AI Pre-Screened Report with Company Branding (30%)...');
       var reportBlob = await buildRecruiterSummaryBlob(data, {});
 
-      if(options.statusCallback) options.statusCallback('Converting Word document via WASM (55%)...');
+      if(options.statusCallback) options.statusCallback('Converting Word document via WASM (65%)...');
       var wasmBlob = await renderAgyStrategy2WasmDocxToPdfBlob(docxBytes, {
         statusCallback: options.statusCallback
       });
 
-      if(options.statusCallback) options.statusCallback('Applying Company Branding Header (75%)...');
-      var brandedResumeBlob = await applyAgyCompanyBrandingToPdfBlob(wasmBlob, data);
-
       if(options.statusCallback) options.statusCallback('Merging Executive Package (90%)...');
       var mergedName = resumeTrackingFileName(data, 'C', 'pdf');
-      await mergePreScreenedReportAndResume(reportBlob, brandedResumeBlob, mergedName);
+      await mergePreScreenedReportAndResume(reportBlob, wasmBlob, mergedName);
       return true;
     }
 
@@ -10368,7 +10365,7 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
         </span>
         <span class="rdc-obody">
           <span class="rdc-otitle">Test: Pre-Screened Report + Strategy 2 WASM Resume + Company Branding <span style="background:#dc2626;color:#fff;font-size:8.5px;font-weight:700;padding:1px 6px;border-radius:4px;vertical-align:middle;margin-left:4px;">Executive Package</span></span>
-          <span class="rdc-odesc">One polished PDF: AI Pre-Screened verification report first, followed by the WASM-converted resume with company branding.</span>
+          <span class="rdc-odesc">One polished PDF: AI Pre-Screened report with company branding on Page 1, followed by the candidate's clean WASM-converted resume.</span>
         </span>
         <span class="rdc-ometa">
           <span class="rdc-ocost">6 Coins</span>
