@@ -9023,6 +9023,106 @@ async function renderAgyTrueSectionDocxToPdfBlob(docxBytes, options){
   }
 }
 
+/* ==========================================================================
+   STRATEGY 2: PURE WEBASSEMBLY TYPESETTING ENGINE (ISOLATED - CONVERSION ONLY)
+   - Powered by Rust/C++ OpenDoc WASM typesetting core
+   - Zero HTML DOM footprint, zero rasterization slicing heuristics
+   - True physical page vector coordinate model
+   - Conversion only: no highlighting, no branding, no report merging
+   ========================================================================== */
+async function renderAgyStrategy2WasmDocxToPdfBlob(docxBytes, options){
+  options = options || {};
+  if(options.statusCallback) options.statusCallback('Initializing WASM typesetting core (20%)...');
+  await agyYieldToMain();
+
+  var initResults = await Promise.all([
+    rsEnsureOpenDocLab(false),
+    rsEnsureJsPdf()
+  ]);
+  var openDoc = initResults[0];
+
+  if(options.statusCallback) options.statusCallback('Parsing OOXML in WebAssembly (40%)...');
+  await agyYieldToMain();
+
+  var doc = null;
+  try{
+    var u8 = new Uint8Array(docxBytes);
+    try{
+      doc = (typeof openDoc.openAs === 'function') ? openDoc.openAs(u8, 'docx') : openDoc.open(u8);
+    }catch(err){
+      doc = openDoc.open(u8);
+    }
+
+    if(!doc) throw new Error('WASM engine failed to open document');
+
+    var pageCount = parseInt(doc.pageCount, 10);
+    if(!pageCount && typeof doc.documentStats === 'function'){
+      var stats = doc.documentStats();
+      pageCount = parseInt(stats && stats.pages ? stats.pages : 0, 10);
+      if(stats && typeof stats.free === 'function') stats.free();
+    }
+    if(!pageCount || pageCount < 1) throw new Error('WASM engine reported 0 pages for this document');
+
+    // Check if native vector PDF is directly emitted by the WASM core
+    var nativeBlob = openDocNativePdfBlob(doc);
+    if(nativeBlob){
+      if(options.statusCallback) options.statusCallback('Exporting native vector PDF (100%)...');
+      return nativeBlob;
+    }
+
+    if(options.statusCallback) options.statusCallback('Rasterizing pages via WASM vector pipeline (60%)...');
+    await agyYieldToMain();
+
+    var JsPDF = window.jspdf.jsPDF;
+    var pdf = null;
+    var renderDpi = 216;
+
+    for(var i = 0; i < pageCount; i++){
+      if(options.statusCallback){
+        options.statusCallback('Rendering WASM page ' + (i + 1) + ' of ' + pageCount + ' (' + Math.round(50 + (i / pageCount) * 45) + '%)...');
+      }
+      await agyYieldToMain();
+
+      var bitmap = null;
+      var canvas = null;
+      try{
+        bitmap = doc.renderPage(i, renderDpi);
+        canvas = openDocCanvasFromBitmap(bitmap);
+
+        var pageW = (bitmap.widthPx / renderDpi) * 72;
+        var pageH = (bitmap.heightPx / renderDpi) * 72;
+
+        if(!pdf){
+          pdf = new JsPDF({
+            orientation: pageW > pageH ? 'landscape' : 'portrait',
+            unit: 'pt',
+            format: [pageW, pageH],
+            compress: true
+          });
+        }else{
+          pdf.addPage([pageW, pageH], pageW > pageH ? 'landscape' : 'portrait');
+        }
+
+        var imgData = canvas.toDataURL('image/jpeg', 0.98);
+        pdf.addImage(imgData, 'JPEG', 0, 0, pageW, pageH, undefined, 'FAST');
+      }finally{
+        if(bitmap && typeof bitmap.free === 'function') bitmap.free();
+        if(canvas){
+          canvas.width = 0;
+          canvas.height = 0;
+          canvas = null;
+        }
+      }
+    }
+
+    if(options.statusCallback) options.statusCallback('Finalizing PDF (95%)...');
+    await agyYieldToMain();
+    return pdf.output('blob');
+  }finally{
+    if(doc && typeof doc.free === 'function') doc.free();
+  }
+}
+
 async function processAgyTestOption(optNum, options){
   options = options || {};
   if(window.__rsBusy) return Promise.resolve(false);
@@ -9094,6 +9194,13 @@ async function processAgyTestOption(optNum, options){
         statusCallback: options.statusCallback
       });
       outFileName = 'JEROWORKS_' + fileSafeName(data.name, 'Candidate') + '_Agy_Anonymized.pdf';
+
+    }else if(optNum === 40){
+      // Pure Strategy 2 WASM Engine - Direct DOCX to PDF Conversion Only
+      pdfBlob = await renderAgyStrategy2WasmDocxToPdfBlob(docxBytes, {
+        statusCallback: options.statusCallback
+      });
+      outFileName = 'JEROWORKS_' + fileSafeName(data.name, 'Candidate') + '_Strategy2_WASM.pdf';
     }
 
     if(pdfBlob instanceof Blob){
@@ -9112,6 +9219,7 @@ async function processAgyTestOption(optNum, options){
 
 window.__processAgyTestOption=processAgyTestOption;
 window.__renderAgyTrueSectionDocxToPdfBlob=renderAgyTrueSectionDocxToPdfBlob;
+window.__renderAgyStrategy2WasmDocxToPdfBlob=renderAgyStrategy2WasmDocxToPdfBlob;
 window.__preloadAgyMetricFonts=agyEnsureMetricFonts;
 window.__preloadRS=preloadRecruiterSummaryAssets;
 window.__preloadRSCombined=preloadCombinedReportAssets;
@@ -9794,6 +9902,24 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
         <span class="rdc-ocirc" aria-hidden="true"></span>
       </label>
 
+      {{-- 40: Strategy 2 Pure WASM Engine (DOCX to PDF Conversion Only) --}}
+      <label class="rdc-opt" data-opt="40" data-coins="1">
+        <input class="rdc-rinput" type="radio" name="rdcFormat" value="40">
+        <span class="rdc-onum">40</span>
+        <span class="rdc-oi" style="background:#eff6ff;color:#2563eb;" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
+        </span>
+        <span class="rdc-obody">
+          <span class="rdc-otitle">Test: Strategy 2 Pure WASM Engine <span style="background:#2563eb;color:#fff;font-size:8.5px;font-weight:700;padding:1px 6px;border-radius:4px;vertical-align:middle;margin-left:4px;">Conversion Only</span></span>
+          <span class="rdc-odesc">Pure WebAssembly C++/Rust typesetting core. Zero DOM manipulation, zero extra features, direct Word-to-PDF conversion only.</span>
+        </span>
+        <span class="rdc-ometa">
+          <span class="rdc-ocost">1 Coin</span>
+          <span class="rdc-otime">WASM</span>
+        </span>
+        <span class="rdc-ocirc" aria-hidden="true"></span>
+      </label>
+
     </div>{{-- /.rdc-opts-list --}}
 
     {{-- Coin info summary --}}
@@ -9961,7 +10087,8 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
     36:{cost:4, label:'Test: Antigravity Resume + Highlights', avail:(['PDF','DOCX'].indexOf(resumeExt) !== -1) && !!(r2DirectUrl || r2PublicUrl || originalR2DirectUrl || originalR2PublicUrl || dlUrl), dlKey:'test-agy-highlighted-resume', unavailableMsg:'Antigravity Highlighted Resume is browser-only and available for direct PDF/DOCX resumes.'},
     37:{cost:6, label:'Test: Antigravity Resume + Highlights + Branding', avail:(['PDF','DOCX'].indexOf(resumeExt) !== -1) && !!(r2DirectUrl || r2PublicUrl || originalR2DirectUrl || originalR2PublicUrl || dlUrl), dlKey:'test-agy-highlighted-branded', unavailableMsg:'Antigravity Branded Resume is browser-only and available for direct PDF/DOCX resumes.'},
     38:{cost:8, label:'Test: Antigravity Pre-Screened Report + Resume Package', avail:(['PDF','DOCX'].indexOf(resumeExt) !== -1) && !!(r2DirectUrl || r2PublicUrl || originalR2DirectUrl || originalR2PublicUrl || dlUrl), dlKey:'test-agy-prescreened-package', unavailableMsg:'Antigravity Pre-Screened Package is browser-only and available for direct PDF/DOCX resumes.'},
-    39:{cost:4, label:'Test: Antigravity Hide Contact Details (Anonymized)', avail:(['PDF','DOCX'].indexOf(resumeExt) !== -1) && !!(r2DirectUrl || r2PublicUrl || originalR2DirectUrl || originalR2PublicUrl || dlUrl), dlKey:'test-agy-anonymized-resume', unavailableMsg:'Antigravity Anonymized Resume is browser-only and available for direct PDF/DOCX resumes.'}
+    39:{cost:4, label:'Test: Antigravity Hide Contact Details (Anonymized)', avail:(['PDF','DOCX'].indexOf(resumeExt) !== -1) && !!(r2DirectUrl || r2PublicUrl || originalR2DirectUrl || originalR2PublicUrl || dlUrl), dlKey:'test-agy-anonymized-resume', unavailableMsg:'Antigravity Anonymized Resume is browser-only and available for direct PDF/DOCX resumes.'},
+    40:{cost:1, label:'Test: Strategy 2 WASM (DOCX → PDF Only)', avail:(['PDF','DOCX'].indexOf(resumeExt) !== -1) && !!(r2DirectUrl || r2PublicUrl || originalR2DirectUrl || originalR2PublicUrl || dlUrl), dlKey:'test-agy-strategy2-wasm', unavailableMsg:'Strategy 2 WASM Engine is browser-only and available for direct PDF/DOCX resumes.'}
   };
 
   var selectedOpt = 1;
@@ -10023,7 +10150,7 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
     if(optMeta[34]){
       optMeta[34].avail = ['PDF','DOCX'].indexOf(resumeExt) !== -1 && !!(r2DirectUrl || r2PublicUrl || originalR2DirectUrl || originalR2PublicUrl);
     }
-    [35, 36, 37, 38, 39].forEach(function(id){
+    [35, 36, 37, 38, 39, 40].forEach(function(id){
       if(optMeta[id]){
         optMeta[id].avail = ['PDF','DOCX'].indexOf(resumeExt) !== -1 && !!(r2DirectUrl || r2PublicUrl || originalR2DirectUrl || originalR2PublicUrl || dlUrl);
       }
@@ -10090,7 +10217,7 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
       {theme:'green',icon:'package',title:'3. Recruiter Packages (Report + Resume)',pill:'',ids:[15,16]},
       {theme:'amber',icon:'keyword',title:'4. Highlighted skills',pill:'',ids:[28,20,17,34,19]},
       {theme:'purple',icon:'privacy',title:'5. Privacy & Anonymization',pill:'Protect candidate information as needed.',ids:[29,30,31,32,33]},
-      {theme:'cyan',icon:'resume',title:'6. Antigravity Client Engine (Isolated Test Lab)',pill:'LibreOffice Quality Client Engine (0% server load, 99.9% accuracy, 60 FPS)',ids:[35,36,37,38,39]}
+      {theme:'cyan',icon:'resume',title:'6. Antigravity Client Engine (Isolated Test Lab)',pill:'LibreOffice Quality Client Engine (0% server load, 99.9% accuracy, 60 FPS)',ids:[35,36,37,38,39,40]}
     ];
     var moved={};
     var frag=document.createDocumentFragment();
@@ -10258,8 +10385,8 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
     if(m.dlKey === 'fast-highlighted-resume-client-docx' && resumeExt === 'DOCX' && typeof window.__preloadOpenDocLocal === 'function') window.__preloadOpenDocLocal();
     if((m.dlKey === 'turbo-vector-highlighted-branded' || m.dlKey === 'turbo-vector-highlighted' || m.dlKey === 'turbo-prescreened-highlighted-package') && typeof window.__preloadRSCombined === 'function') window.__preloadRSCombined();
     if(m.dlKey === 'turbo-prescreened-highlighted-package' && resumeExt === 'DOCX' && typeof window.__preloadOpenDocLocal === 'function') window.__preloadOpenDocLocal();
-    if((m.dlKey === 'client-lightning-highlighted-branded' || m.dlKey === 'client-lightning-highlighted') && typeof window.__preloadClientLightning === 'function') window.__preloadClientLightning();
     if(m.dlKey && m.dlKey.indexOf('test-agy-') === 0 && typeof window.__preloadAgyMetricFonts === 'function') window.__preloadAgyMetricFonts();
+    if(m.dlKey === 'test-agy-strategy2-wasm' && typeof window.__preloadOpenDocLocal === 'function') window.__preloadOpenDocLocal();
     if(m.dlKey === 'test-preantigravity-prescreened-highlighted-branded' && typeof window.__preloadRSCombined === 'function') window.__preloadRSCombined();
     if(m.dlKey === 'test-preantigravity-prescreened-highlighted-branded' && resumeExt === 'DOCX' && typeof window.__preloadOpenDocLocal === 'function') window.__preloadOpenDocLocal();
     if((m.dlKey === 'prescreened-highlighted-package' || m.dlKey === 'prescreened-highlighted-package-nobrand' || m.dlKey === 'prescreened-highlighted-package-client-docx' || m.dlKey === 'prescreened-highlighted-package-client-docx-nobrand') && typeof window.__preloadRSCombined === 'function') window.__preloadRSCombined();
