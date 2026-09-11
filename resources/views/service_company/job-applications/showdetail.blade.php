@@ -8499,10 +8499,11 @@ async function agyEnsureMetricFonts(){
       '.agy-docx-host *{word-spacing:normal!important;letter-spacing:normal!important;}',
       '.agy-docx-host .docx-wrapper{background:transparent!important;padding:0!important;}',
       '.agy-docx-host .docx-wrapper > section.docx{box-sizing:border-box!important;position:relative!important;margin:0 auto!important;background:#ffffff!important;box-shadow:none!important;}',
-      '.agy-docx-host p{line-height:1.32!important;min-height:1.25em!important;margin-bottom:3px!important;overflow:visible!important;}',
+      '.agy-docx-host p{line-height:1.28!important;min-height:1.2em!important;margin-bottom:3px!important;overflow:visible!important;}',
       '.agy-docx-host span{line-height:inherit!important;white-space:pre-wrap!important;overflow-wrap:break-word!important;vertical-align:baseline!important;}',
-      '.agy-docx-host table{border-collapse:collapse!important;table-layout:auto!important;}',
-      '.agy-docx-host td, .agy-docx-host th{vertical-align:top!important;line-height:1.32!important;overflow:visible!important;}',
+      '.agy-docx-host table{border-collapse:collapse!important;box-sizing:border-box!important;max-width:100%!important;}',
+      '.agy-docx-host td, .agy-docx-host th{vertical-align:top!important;line-height:1.28!important;box-sizing:border-box!important;padding-left:10px!important;padding-right:10px!important;overflow:visible!important;}',
+      '.agy-docx-host td:first-child, .agy-docx-host th:first-child{padding-left:4px!important;}',
       '.agy-docx-host [class*="_num_"]:before, .agy-docx-host p:before{font-family:"Segoe UI Symbol","Apple Symbols","Symbol","Wingdings",sans-serif!important;display:inline-block!important;min-width:0.8em!important;margin-right:0.25em!important;}',
       '.agy-docx-host .agy-tab-left{display:inline-block!important;flex:0 1 auto!important;min-width:0!important;overflow-wrap:break-word!important;}',
       '.agy-docx-host .agy-tab-spacer{display:inline-block!important;flex:1 1 auto!important;min-width:14px!important;}',
@@ -8578,7 +8579,7 @@ function agyExtractDocxMetadata(docXml){
   if(!docXml) return metadata;
 
   try{
-    // Extract table column grid proportions
+    // Extract table column grid proportions and borders
     var tbls = docXml.getElementsByTagName('w:tbl');
     if(!tbls || !tbls.length) tbls = docXml.getElementsByTagName('tbl');
     for(var t = 0; t < tbls.length; t++){
@@ -8595,7 +8596,33 @@ function agyExtractDocxMetadata(docXml){
       var percentages = colWidths.map(function(w){
         return totalW > 0 ? ((w / totalW) * 100).toFixed(2) + '%' : '';
       });
-      metadata.tables.push({ colCount: gridCols.length, percentages: percentages });
+
+      // Check for vertical column borders in table XML
+      var tblBorders = tbl.getElementsByTagName('w:tblBorders')[0] || tbl.getElementsByTagName('tblBorders')[0];
+      var hasInsideV = false;
+      var insideVColor = '#cbd5e1';
+      var insideVSize = '1px';
+      if(tblBorders){
+        var insideV = tblBorders.getElementsByTagName('w:insideV')[0] || tblBorders.getElementsByTagName('insideV')[0];
+        if(insideV){
+          var vVal = (insideV.getAttribute('w:val') || insideV.getAttribute('val') || '').toLowerCase();
+          if(vVal && vVal !== 'none' && vVal !== 'nil'){
+            hasInsideV = true;
+            var cHex = insideV.getAttribute('w:color') || insideV.getAttribute('color') || '';
+            if(cHex && cHex !== 'auto') insideVColor = '#' + cHex;
+            var sz = parseInt(insideV.getAttribute('w:sz') || insideV.getAttribute('sz') || '8', 10);
+            insideVSize = Math.max(1, Math.round(sz / 8)) + 'px';
+          }
+        }
+      }
+
+      metadata.tables.push({
+        colCount: gridCols.length,
+        percentages: percentages,
+        hasInsideV: hasInsideV,
+        insideVColor: insideVColor,
+        insideVSize: insideVSize
+      });
     }
 
     // Extract paragraph tab definitions
@@ -8778,8 +8805,16 @@ function agyApplyStrategy3DomEngine(host, metadata){
         cell.style.setProperty('overflow-wrap', 'break-word', 'important');
         cell.style.setProperty('word-break', 'normal', 'important');
         cell.style.setProperty('box-sizing', 'border-box', 'important');
+
+        // Apply column width percentages from OOXML grid
         if(tMeta && tMeta.percentages && tMeta.percentages[cIdx]){
           cell.style.setProperty('width', tMeta.percentages[cIdx], 'important');
+        }
+
+        // Apply vertical divider borders if defined in OOXML
+        if(tMeta && tMeta.hasInsideV && cIdx > 0){
+          cell.style.setProperty('border-left', tMeta.insideVSize + ' solid ' + tMeta.insideVColor, 'important');
+          cell.style.setProperty('padding-left', '16px', 'important');
         }
       });
     });
