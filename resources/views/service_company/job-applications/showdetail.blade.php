@@ -8499,16 +8499,20 @@ async function agyEnsureMetricFonts(){
       '.agy-docx-host *{word-spacing:normal!important;letter-spacing:normal!important;}',
       '.agy-docx-host .docx-wrapper{background:transparent!important;padding:0!important;}',
       '.agy-docx-host .docx-wrapper > section.docx{box-sizing:border-box!important;position:relative!important;margin:0 auto!important;background:#ffffff!important;box-shadow:none!important;}',
-      '.agy-docx-host p{line-height:1.28!important;min-height:1.2em!important;margin-bottom:3px!important;overflow:visible!important;}',
+      '.agy-docx-host p{margin-top:0!important;margin-bottom:2px!important;padding-top:0!important;padding-bottom:0!important;line-height:1.24!important;min-height:0!important;overflow:visible!important;}',
+      '.agy-docx-host p + p{margin-top:0!important;}',
+      '.agy-docx-host td p, .agy-docx-host th p{margin-top:0!important;margin-bottom:1px!important;}',
+      '.agy-docx-host p.agy-empty-para{min-height:0!important;height:3px!important;margin:0!important;padding:0!important;line-height:3px!important;}',
       '.agy-docx-host span{line-height:inherit!important;white-space:pre-wrap!important;overflow-wrap:break-word!important;vertical-align:baseline!important;}',
       '.agy-docx-host table{border-collapse:collapse!important;box-sizing:border-box!important;max-width:100%!important;}',
-      '.agy-docx-host td, .agy-docx-host th{vertical-align:top!important;line-height:1.28!important;box-sizing:border-box!important;padding-left:10px!important;padding-right:10px!important;overflow:visible!important;}',
+      '.agy-docx-host td, .agy-docx-host th{vertical-align:top!important;line-height:1.24!important;box-sizing:border-box!important;padding-left:10px!important;padding-right:10px!important;overflow:visible!important;}',
       '.agy-docx-host td:first-child, .agy-docx-host th:first-child{padding-left:4px!important;}',
-      '.agy-docx-host [class*="_num_"]:before, .agy-docx-host p:before{font-family:"Segoe UI Symbol","Apple Symbols","Symbol","Wingdings",sans-serif!important;display:inline-block!important;min-width:0.8em!important;margin-right:0.25em!important;}',
+      '.agy-docx-host [class*="_num_"]:before, .agy-docx-host .docx-num-list:before{font-family:"Segoe UI Symbol","Apple Symbols","Symbol","Wingdings",sans-serif!important;display:inline-block!important;min-width:1.2em!important;margin-right:0.25em!important;text-align:left!important;}',
+      '.agy-docx-host .agy-bullet-symbol{display:inline-block!important;width:1.2em!important;min-width:1.2em!important;text-indent:0!important;text-align:left!important;flex-shrink:0!important;}',
       '.agy-docx-host .agy-tab-left{display:inline-block!important;flex:0 1 auto!important;min-width:0!important;overflow-wrap:break-word!important;}',
       '.agy-docx-host .agy-tab-spacer{display:inline-block!important;flex:1 1 auto!important;min-width:14px!important;}',
       '.agy-docx-host .agy-tab-right{display:inline-block!important;flex:0 0 auto!important;text-align:right!important;margin-left:auto!important;white-space:nowrap!important;padding-left:12px!important;}',
-      '.agy-docx-host .docx-tab-stop{display:inline-block!important;min-width:0.8em!important;word-spacing:normal!important;}',
+      '.agy-docx-host .docx-tab-stop{display:inline-block!important;min-width:0.4em!important;word-spacing:normal!important;}',
       '.agy-keyword-hit{background:rgba(255,214,10,0.45)!important;color:#111827!important;border-radius:2px!important;padding:0 2px!important;box-decoration-break:clone!important;-webkit-box-decoration-break:clone!important;vertical-align:baseline!important;line-height:inherit!important;}'
     ].join('\n');
     document.head.appendChild(style);
@@ -8668,14 +8672,18 @@ async function agyPreProcessDocxZip(docxBytes){
 
     // 1. Sanitize PUA bullets and unmapped symbols directly in OOXML markup
     var sanitizedXml = xmlText
-      .replace(/\uF0B7/g, '•')
-      .replace(/\uF0A7/g, '▪')
-      .replace(/\uF0D8/g, '➢')
-      .replace(/\uF0FC/g, '✓')
-      .replace(/&#xF0B7;/gi, '&#x2022;')
-      .replace(/&#xF0A7;/gi, '&#x25AA;')
-      .replace(/&#xF0D8;/gi, '&#x27A2;')
-      .replace(/&#xF0FC;/gi, '&#x2713;');
+      .replace(/[\uF0B7\uF0A7\uF0A8\uF06F\uF0A4\uF0A5\uF0B0\u2022\u25AA\u25CF\u25CB\u25A0\u25A1]/g, '•')
+      .replace(/[\uF0D8\u27A2\u2794]/g, '➢')
+      .replace(/[\uF0FC\uF076\u2713\u2714]/g, '✓')
+      .replace(/\uF0E0/g, '✉')
+      .replace(/&#xF0B7;|&#61623;/gi, '•')
+      .replace(/&#xF0A7;|&#61607;/gi, '•')
+      .replace(/&#xF0A8;|&#61608;/gi, '•')
+      .replace(/&#xF06F;|&#61551;/gi, '•')
+      .replace(/&#xF0D8;|&#61656;/gi, '➢')
+      .replace(/&#xF0FC;|&#61692;/gi, '✓')
+      .replace(/&#xF076;|&#61558;/gi, '✓')
+      .replace(/[\uE000-\uF8FF]/g, '');
 
     var parser = new DOMParser();
     var docXml = parser.parseFromString(sanitizedXml, 'application/xml');
@@ -8693,7 +8701,7 @@ async function agyPreProcessDocxZip(docxBytes){
 function agyApplyStrategy3DomEngine(host, metadata){
   if(!host) return;
 
-  // 1. Sanitize text nodes: map leftover PUA codepoints and clean orphan spacing
+  // 1. Sanitize text nodes: map leftover PUA codepoints and clean orphan square glyphs
   var textWalker = document.createTreeWalker(host, NodeFilter.SHOW_TEXT, null, false);
   var curText;
   var textNodesToClean = [];
@@ -8703,10 +8711,10 @@ function agyApplyStrategy3DomEngine(host, metadata){
   textNodesToClean.forEach(function(tn){
     var val = tn.nodeValue;
     var cleaned = val
-      .replace(/\uF0B7/g, '•')
-      .replace(/\uF0A7/g, '▪')
-      .replace(/\uF0D8/g, '➢')
-      .replace(/\uF0FC/g, '✓')
+      .replace(/[\uF0B7\uF0A7\uF0A8\uF06F\uF0A4\uF0A5\uF0B0\u2022\u25AA\u25CF\u25CB\u25A0\u25A1]/g, '•')
+      .replace(/[\uF0D8\u27A2\u2794]/g, '➢')
+      .replace(/[\uF0FC\uF076\u2713\u2714]/g, '✓')
+      .replace(/[\uE000-\uF8FF□■]/g, '')
       .replace(/[\u00A0\t]+/g, ' ')
       .replace(/\s+([.,;:!?])/g, '$1');
     if(cleaned !== val){
@@ -8714,77 +8722,122 @@ function agyApplyStrategy3DomEngine(host, metadata){
     }
   });
 
-  // 2. Synthetic OOXML Tab Stop Engine
-  // Locates paragraphs containing .docx-tab-stop and synthesizes proper layout
-  var tabStops = Array.prototype.slice.call(host.querySelectorAll('.docx-tab-stop'));
+  // 2. Standardize ALL paragraphs: row spacing, bullet pointer alignment & tab stops
+  var allParagraphs = Array.prototype.slice.call(host.querySelectorAll('p, li'));
   var processedParagraphs = [];
 
-  tabStops.forEach(function(tabEl){
-    var p = tabEl.closest('p, li');
-    if(!p || processedParagraphs.indexOf(p) !== -1) return;
-    processedParagraphs.push(p);
-
-    var childNodes = Array.prototype.slice.call(p.childNodes);
-    var tabIndex = childNodes.indexOf(tabEl);
-    if(tabIndex === -1){
-      for(var i = 0; i < childNodes.length; i++){
-        if(childNodes[i].contains && childNodes[i].contains(tabEl)){
-          tabIndex = i;
-          break;
-        }
-      }
+  allParagraphs.forEach(function(p){
+    // Collapse empty paragraphs or lines with only whitespace/orphan symbols
+    var rawTxt = (p.textContent || '').replace(/[\s\u00A0\uE000-\uF8FF□■○●•▪➢✓]/g, '');
+    if(rawTxt.length === 0 && !p.querySelector('img, svg, canvas, table')){
+      p.className = (p.className ? p.className + ' ' : '') + 'agy-empty-para';
+      p.style.setProperty('margin-top', '0', 'important');
+      p.style.setProperty('margin-bottom', '3px', 'important');
+      p.style.setProperty('min-height', '0', 'important');
+      p.style.setProperty('height', '3px', 'important');
+      p.style.setProperty('line-height', '3px', 'important');
+      p.innerHTML = '';
+      return;
     }
 
-    var beforeNodes = childNodes.slice(0, tabIndex);
-    var afterNodes = childNodes.slice(tabIndex + 1);
+    var pText = (p.textContent || '').trim();
+    var hasBulletSymbol = /^[•▪➢✓\-\*]/.test(pText);
+    var isNativeList = p.classList.contains('docx-num-list') || /_num_/.test(p.className);
 
-    var beforeText = beforeNodes.map(function(n){ return n.textContent || ''; }).join('').trim();
-    var afterText = afterNodes.map(function(n){ return n.textContent || ''; }).join('').trim();
+    // If it's a bullet paragraph or numbered list item, enforce unified horizontal alignment
+    if(hasBulletSymbol || isNativeList){
+      p.style.setProperty('padding-left', '1.3em', 'important');
+      p.style.setProperty('text-indent', '-1.3em', 'important');
+      p.style.setProperty('margin-top', '0', 'important');
+      p.style.setProperty('margin-bottom', '2px', 'important');
+      p.style.setProperty('line-height', '1.24', 'important');
 
-    var isBulletLeader = /^[•▪➢✓\-\*\d+\.]\s*$/.test(beforeText);
-
-    if(isBulletLeader){
-      p.style.setProperty('padding-left', '1.6em', 'important');
-      p.style.setProperty('text-indent', '-1.6em', 'important');
-      tabEl.style.setProperty('display', 'inline-block', 'important');
-      tabEl.style.setProperty('width', '0.6em', 'important');
-      tabEl.style.setProperty('min-width', '0.6em', 'important');
-      tabEl.innerHTML = '&nbsp;';
-    }else if(beforeText.length > 0 && afterText.length > 0){
-      p.style.setProperty('display', 'flex', 'important');
-      p.style.setProperty('justify-content', 'space-between', 'important');
-      p.style.setProperty('align-items', 'baseline', 'important');
-      p.style.setProperty('width', '100%', 'important');
-      p.style.setProperty('box-sizing', 'border-box', 'important');
-
-      var leftWrapper = document.createElement('span');
-      leftWrapper.className = 'agy-tab-left';
-      leftWrapper.style.cssText = 'flex:0 1 auto; min-width:0; overflow-wrap:break-word;';
-      beforeNodes.forEach(function(n){ leftWrapper.appendChild(n); });
-
-      var spacer = document.createElement('span');
-      spacer.className = 'agy-tab-spacer';
-      var hasDotLeader = metadata && metadata.paragraphs && metadata.paragraphs.some(function(pm){ return pm.hasLeader; });
-      if(hasDotLeader){
-        spacer.style.cssText = 'flex:1 1 auto; border-bottom:1.2px dotted #94a3b8; margin:0 10px 4px 10px; min-width:14px;';
-      }else{
-        spacer.style.cssText = 'flex:1 1 auto; min-width:14px;';
+      // If bullet symbol is inline text, wrap in standard width bullet span
+      if(hasBulletSymbol && p.firstChild){
+        var fc = p.firstChild;
+        if(fc.nodeType === Node.TEXT_NODE && /^[•▪➢✓\-\*]/.test(fc.nodeValue.trim())){
+          var bulletChar = fc.nodeValue.trim().charAt(0);
+          var rem = fc.nodeValue.trim().substring(1).replace(/^\s+/, '');
+          var bSpan = document.createElement('span');
+          bSpan.className = 'agy-bullet-symbol';
+          bSpan.textContent = bulletChar + ' ';
+          p.replaceChild(bSpan, fc);
+          if(rem){
+            p.insertBefore(document.createTextNode(rem), bSpan.nextSibling);
+          }
+        }
       }
 
-      var rightWrapper = document.createElement('span');
-      rightWrapper.className = 'agy-tab-right';
-      rightWrapper.style.cssText = 'flex:0 0 auto; text-align:right; margin-left:auto; white-space:nowrap; padding-left:12px;';
-      afterNodes.forEach(function(n){ rightWrapper.appendChild(n); });
+      // Minimize any tab stops immediately following bullet
+      var firstTab = p.querySelector('.docx-tab-stop');
+      if(firstTab){
+        firstTab.style.setProperty('display', 'inline-block', 'important');
+        firstTab.style.setProperty('width', '0.25em', 'important');
+        firstTab.style.setProperty('min-width', '0.25em', 'important');
+        firstTab.innerHTML = '&nbsp;';
+      }
+      processedParagraphs.push(p);
+      return;
+    }
 
-      p.innerHTML = '';
-      p.appendChild(leftWrapper);
-      p.appendChild(spacer);
-      p.appendChild(rightWrapper);
-    }else{
-      tabEl.style.setProperty('display', 'inline-block', 'important');
-      tabEl.style.setProperty('width', '2.5em', 'important');
-      tabEl.style.setProperty('min-width', '2.5em', 'important');
-      tabEl.innerHTML = '&nbsp;';
+    // Two-sided paragraph handling (e.g. Job Title <---> Date/Location)
+    var tabEl = p.querySelector('.docx-tab-stop');
+    if(tabEl && processedParagraphs.indexOf(p) === -1){
+      processedParagraphs.push(p);
+      var childNodes = Array.prototype.slice.call(p.childNodes);
+      var tabIndex = childNodes.indexOf(tabEl);
+      if(tabIndex === -1){
+        for(var i = 0; i < childNodes.length; i++){
+          if(childNodes[i].contains && childNodes[i].contains(tabEl)){
+            tabIndex = i;
+            break;
+          }
+        }
+      }
+
+      var beforeNodes = childNodes.slice(0, tabIndex);
+      var afterNodes = childNodes.slice(tabIndex + 1);
+      var beforeText = beforeNodes.map(function(n){ return n.textContent || ''; }).join('').trim();
+      var afterText = afterNodes.map(function(n){ return n.textContent || ''; }).join('').trim();
+
+      if(beforeText.length > 0 && afterText.length > 0){
+        p.style.setProperty('display', 'flex', 'important');
+        p.style.setProperty('justify-content', 'space-between', 'important');
+        p.style.setProperty('align-items', 'baseline', 'important');
+        p.style.setProperty('width', '100%', 'important');
+        p.style.setProperty('box-sizing', 'border-box', 'important');
+        p.style.setProperty('margin-top', '1px', 'important');
+        p.style.setProperty('margin-bottom', '2px', 'important');
+
+        var leftWrapper = document.createElement('span');
+        leftWrapper.className = 'agy-tab-left';
+        leftWrapper.style.cssText = 'flex:0 1 auto; min-width:0; overflow-wrap:break-word;';
+        beforeNodes.forEach(function(n){ leftWrapper.appendChild(n); });
+
+        var spacer = document.createElement('span');
+        spacer.className = 'agy-tab-spacer';
+        var hasDotLeader = metadata && metadata.paragraphs && metadata.paragraphs.some(function(pm){ return pm.hasLeader; });
+        if(hasDotLeader){
+          spacer.style.cssText = 'flex:1 1 auto; border-bottom:1.2px dotted #94a3b8; margin:0 10px 4px 10px; min-width:14px;';
+        }else{
+          spacer.style.cssText = 'flex:1 1 auto; min-width:14px;';
+        }
+
+        var rightWrapper = document.createElement('span');
+        rightWrapper.className = 'agy-tab-right';
+        rightWrapper.style.cssText = 'flex:0 0 auto; text-align:right; margin-left:auto; white-space:nowrap; padding-left:12px;';
+        afterNodes.forEach(function(n){ rightWrapper.appendChild(n); });
+
+        p.innerHTML = '';
+        p.appendChild(leftWrapper);
+        p.appendChild(spacer);
+        p.appendChild(rightWrapper);
+      }else{
+        tabEl.style.setProperty('display', 'inline-block', 'important');
+        tabEl.style.setProperty('width', '1.5em', 'important');
+        tabEl.style.setProperty('min-width', '1.5em', 'important');
+        tabEl.innerHTML = '&nbsp;';
+      }
     }
   });
 
@@ -8959,7 +9012,7 @@ async function renderAgyTrueSectionDocxToPdfBlob(docxBytes, options){
 
       var canvas = await window.html2canvas(pageEl, {
         backgroundColor: '#ffffff',
-        scale: 2.0,
+        scale: 2.75,
         useCORS: true,
         allowTaint: false,
         logging: false,
@@ -8979,33 +9032,48 @@ async function renderAgyTrueSectionDocxToPdfBlob(docxBytes, options){
         var remainingH = canvas.height - offsetY;
         var currentSliceH = Math.min(targetSliceH, remainingH);
 
-        // If remaining content exceeds one A4 page slice, search for a 100% white line between rows
+        // If remaining content exceeds one A4 page slice, search for a safe cut between rows
         if(remainingH > targetSliceH){
           var idealCutY = offsetY + targetSliceH;
           var bestCutY = idealCutY;
-          var searchMinY = Math.max(offsetY + Math.round(targetSliceH * 0.82), idealCutY - 220);
+          var searchMinY = Math.max(offsetY + Math.round(targetSliceH * 0.80), idealCutY - 260);
+
+          // Find cleanest interline gap by measuring dark pixel density across horizontal rows
+          // Ignores outer 4% margins to avoid page borders, shadows, or scanner artifacts
+          var marginPad = Math.round(canvas.width * 0.04);
+          var checkWidth = canvas.width - (marginPad * 2);
+          var minDarkPixels = Infinity;
+          var bestGapY = -1;
 
           for(var checkY = idealCutY; checkY >= searchMinY; checkY -= 2){
-            var rowData = ctx.getImageData(0, checkY, canvas.width, 1).data;
-            var isBlankRow = true;
-            for(var x = 0; x < rowData.length; x += 32){
+            var rowData = ctx.getImageData(marginPad, checkY, checkWidth, 1).data;
+            var darkCount = 0;
+            for(var x = 0; x < rowData.length; x += 16){
               var a = rowData[x + 3];
               if(a > 20){
                 var r = rowData[x];
                 var g = rowData[x + 1];
                 var b = rowData[x + 2];
-                if(r < 240 || g < 240 || b < 240){
-                  isBlankRow = false;
-                  break;
+                if(r < 235 || g < 235 || b < 235){
+                  darkCount++;
                 }
               }
             }
-            if(isBlankRow){
-              bestCutY = checkY;
+            if(darkCount <= 1){
+              bestGapY = checkY;
               break;
             }
+            if(darkCount < minDarkPixels){
+              minDarkPixels = darkCount;
+              bestCutY = checkY;
+            }
           }
-          currentSliceH = bestCutY - offsetY;
+
+          if(bestGapY !== -1){
+            currentSliceH = bestGapY - offsetY;
+          }else{
+            currentSliceH = bestCutY - offsetY;
+          }
         }
 
         if(options.statusCallback){
@@ -9020,7 +9088,7 @@ async function renderAgyTrueSectionDocxToPdfBlob(docxBytes, options){
         sCtx.fillRect(0, 0, sliceCanvas.width, sliceCanvas.height);
         sCtx.drawImage(canvas, 0, offsetY, canvas.width, currentSliceH, 0, 0, canvas.width, currentSliceH);
 
-        var sliceImg = sliceCanvas.toDataURL('image/jpeg', 0.92);
+        var sliceImg = sliceCanvas.toDataURL('image/jpeg', 0.98);
 
         if(!isFirstPdfPage){
           pdf.addPage('a4', 'portrait');
@@ -9110,7 +9178,7 @@ async function renderAgyStrategy2WasmDocxToPdfBlob(docxBytes, options){
 
     var JsPDF = window.jspdf.jsPDF;
     var pdf = null;
-    var renderDpi = 216;
+    var renderDpi = 288;
 
     for(var i = 0; i < pageCount; i++){
       if(options.statusCallback){
