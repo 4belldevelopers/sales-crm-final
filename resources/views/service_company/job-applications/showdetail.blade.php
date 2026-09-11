@@ -7486,7 +7486,8 @@ async function buildTurboVectorHighlightedResume(options){
      Extracts character coordinates via pdfjsLib, then uses pdf-lib to draw semi-transparent
      rectangles directly onto the vector PDF with sub-pixel text measurement.
      Zero canvas rasterization, zero DOM thrashing, 100% crisp vector output with selectable text. */
-  if(window.__rsBusy) return Promise.resolve(false);
+  if(window.__rsBusy && !(options && options.ignoreBusy)) return Promise.resolve(false);
+  var wasBusy=!!window.__rsBusy;
   window.__rsBusy=true;
   try{
     options=options||{};
@@ -7497,12 +7498,15 @@ async function buildTurboVectorHighlightedResume(options){
     });
     var resumeExt=clean(options.resumeExt||'','').toUpperCase();
     var resumePdfUrl=clean(options.resumePdfUrl||'','');
+    if(options.resumeBlob instanceof Blob && !resumeExt) resumeExt='PDF';
     if(['PDF','DOC','DOCX'].indexOf(resumeExt) === -1) throw new Error('Turbo Vector Highlighted Resume is available for PDF, DOC and DOCX resumes only');
 
     await Promise.all([rsEnsurePdfJs(),rsEnsurePdfLib()]);
 
     var pdfBlob=null;
-    if(resumeExt==='PDF'){
+    if(options.resumeBlob instanceof Blob){
+      pdfBlob=options.resumeBlob;
+    }else if(resumeExt==='PDF'){
       pdfBlob=await fetchPdfBlobFromSources(resumeSources);
     }else if(resumeExt==='DOCX'){
       if(options.useOpenDocOnly===true){
@@ -7568,6 +7572,7 @@ async function buildTurboVectorHighlightedResume(options){
       seenKw[k]=true;
       allKeywords.push(val);
     }
+    (Array.isArray(options.keywords) ? options.keywords : []).forEach(addKw);
     (Array.isArray(rsDrawerMatchedKeywords) ? rsDrawerMatchedKeywords : []).forEach(addKw);
     Array.prototype.slice.call(document.querySelectorAll('#kt_activitiesApplication .cdr-skill-tag.cdr-skill-match:not(.cdr-skill-more), .cdr-skill-tag.cdr-skill-match:not(.cdr-skill-more)')).forEach(function(el){
       addKw(el.textContent||'');
@@ -7681,7 +7686,7 @@ async function buildTurboVectorHighlightedResume(options){
     alert('Could not generate Turbo Vector Highlighted Resume.\n\nReason: '+(err && err.message ? err.message : 'Unknown vector error'));
     return false;
   }finally{
-    window.__rsBusy=false;
+    if(!wasBusy) window.__rsBusy=false;
   }
 }
 async function buildTurboVectorBrandedResume(resumePdfUrl,options){
@@ -9523,10 +9528,15 @@ async function processAgyTestOption(optNum, options){
 
       if(resumeExt === 'PDF'){
         if(options.statusCallback) options.statusCallback('Applying vector keyword highlights (60%)...');
+        var rawPdfBlob = new Blob([docxBytes], { type: 'application/pdf' });
         pdfBlob = await buildTurboVectorHighlightedResume({
+          resumeBlob: rawPdfBlob,
           resumeUrl: resumeSources,
           resumeExt: 'PDF',
-          returnBlob: true
+          keywords: allKeywords,
+          returnBlob: true,
+          ignoreBusy: true,
+          throwOnError: true
         });
       }else{
         if(options.statusCallback) options.statusCallback('Highlighting skills & typesetting via WASM (55%)...');
@@ -9545,10 +9555,15 @@ async function processAgyTestOption(optNum, options){
       var highlightedBlob = null;
       if(resumeExt === 'PDF'){
         if(options.statusCallback) options.statusCallback('Applying vector keyword highlights (50%)...');
+        var rawPdfBlob = new Blob([docxBytes], { type: 'application/pdf' });
         highlightedBlob = await buildTurboVectorHighlightedResume({
+          resumeBlob: rawPdfBlob,
           resumeUrl: resumeSources,
           resumeExt: 'PDF',
-          returnBlob: true
+          keywords: allKeywords,
+          returnBlob: true,
+          ignoreBusy: true,
+          throwOnError: true
         });
       }else{
         if(options.statusCallback) options.statusCallback('Highlighting skills & typesetting via WASM (50%)...');
@@ -9571,10 +9586,15 @@ async function processAgyTestOption(optNum, options){
       var highlightedBlob = null;
       if(resumeExt === 'PDF'){
         if(options.statusCallback) options.statusCallback('Applying vector keyword highlights (55%)...');
+        var rawPdfBlob = new Blob([docxBytes], { type: 'application/pdf' });
         highlightedBlob = await buildTurboVectorHighlightedResume({
+          resumeBlob: rawPdfBlob,
           resumeUrl: resumeSources,
           resumeExt: 'PDF',
-          returnBlob: true
+          keywords: allKeywords,
+          returnBlob: true,
+          ignoreBusy: true,
+          throwOnError: true
         });
       }else{
         if(options.statusCallback) options.statusCallback('Highlighting skills & typesetting via WASM (55%)...');
@@ -9598,10 +9618,15 @@ async function processAgyTestOption(optNum, options){
       var highlightedBlob = null;
       if(resumeExt === 'PDF'){
         if(options.statusCallback) options.statusCallback('Applying vector keyword highlights (55%)...');
+        var rawPdfBlob = new Blob([docxBytes], { type: 'application/pdf' });
         highlightedBlob = await buildTurboVectorHighlightedResume({
+          resumeBlob: rawPdfBlob,
           resumeUrl: resumeSources,
           resumeExt: 'PDF',
-          returnBlob: true
+          keywords: allKeywords,
+          returnBlob: true,
+          ignoreBusy: true,
+          throwOnError: true
         });
       }else{
         if(options.statusCallback) options.statusCallback('Highlighting skills & typesetting via WASM (55%)...');
@@ -9736,8 +9761,12 @@ async function processAgyTestOption(optNum, options){
         var redactedPdf = await renderAnonymizedPdfBlob(rawPdfBlob, rules);
         resumeBlob = await buildTurboVectorHighlightedResume({
           resumeBlob: redactedPdf,
+          resumeUrl: resumeSources,
           resumeExt: 'PDF',
-          returnBlob: true
+          keywords: allKeywords,
+          returnBlob: true,
+          ignoreBusy: true,
+          throwOnError: true
         });
       }else{
         if(options.statusCallback) options.statusCallback('Redacting contacts, highlighting skills & typesetting via WASM (55%)...');
