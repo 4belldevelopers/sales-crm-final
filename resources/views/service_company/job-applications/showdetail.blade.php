@@ -8810,7 +8810,7 @@ window.__buildTurboVectorHighlightedResume=buildTurboVectorHighlightedResume;
           showToast(m.unavailableMsg || 'Download is available for PDF and DOCX resumes.', 'warn');
           resetBtn(); return;
         }
-        runSmartCountdown('Starting Document Engine...', 60);
+        runSmartCountdown('Downloading Resume...., Kindly Wait for', 60);
         ensureDownloadCenterR2Urls().then(function(){
           var testSources = rdcCollectDownloadSources([r2DirectUrl,r2PublicUrl,originalR2DirectUrl,originalR2PublicUrl,dlUrl]);
           if(!testSources.length) throw new Error('Direct resume URL is not available.');
