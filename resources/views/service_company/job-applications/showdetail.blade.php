@@ -10534,7 +10534,7 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
       </label>
 
       {{-- 40: Resume (PDF Conversion) --}}
-      <label class="rdc-opt" data-opt="40" data-coins="1">
+      <label class="rdc-opt" data-opt="40" data-coins="1" style="display:none;" aria-hidden="true">
         <input class="rdc-rinput" type="radio" name="rdcFormat" value="40">
         <span class="rdc-onum">40</span>
         <span class="rdc-oi" style="background:#eff6ff;color:#2563eb;" aria-hidden="true">
@@ -11112,7 +11112,7 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
       optionMap[parseInt(opt.getAttribute('data-opt'),10)] = opt;
     });
     var groups=[
-      {theme:'blue',icon:'resume',title:'1. Resume Options',pill:"Get the candidate's resume in different formats.",ids:[1,40,41]},
+      {theme:'blue',icon:'resume',title:'1. Resume Options',pill:"Get the candidate's resume in different formats.",ids:[1,41]},
       {theme:'rose',icon:'report',title:'2. Pre-Screened Report',pill:'Get AI-powered insights and verification details.',ids:[5]},
       {theme:'green',icon:'package',title:'3. Recruiter Packages (Report + Resume)',pill:'',ids:[42,43]},
       {theme:'amber',icon:'keyword',title:'4. Highlighted skills',pill:'',ids:[44,45,46,47]},
