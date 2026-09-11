@@ -10055,7 +10055,7 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 4 7v6c0 5 3.4 7.8 8 9 4.6-1.2 8-4 8-9V7l-8-4z"/><path d="M9 12h6"/><path d="M12 9v6"/></svg>
         </span>
         <span class="rdc-obody">
-          <span class="rdc-otitle">Hide Candidate Name & Contacts Details</span>
+          <span class="rdc-otitle">old_Hide Candidate Name & Contacts Details</span>
           <span class="rdc-odesc">Hide candidate name, email, and phone numbers in a browser-only resume copy.</span>
         </span>
         <span class="rdc-ometa">
@@ -10073,7 +10073,7 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 4 7v6c0 5 3.4 7.8 8 9 4.6-1.2 8-4 8-9V7l-8-4z"/><path d="M8 11h8"/><path d="M8 15h5"/></svg>
         </span>
         <span class="rdc-obody">
-          <span class="rdc-otitle">Hide Contact Details</span>
+          <span class="rdc-otitle">old_Hide Contact Details</span>
           <span class="rdc-odesc">Keep candidate name visible while hiding email, phone, mobile, contact and LinkedIn details in browser.</span>
         </span>
         <span class="rdc-ometa">
@@ -10091,7 +10091,7 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 4 7v6c0 5 3.4 7.8 8 9 4.6-1.2 8-4 8-9V7l-8-4z"/><path d="M8 12h8"/><path d="M4 20h16"/></svg>
         </span>
         <span class="rdc-obody">
-          <span class="rdc-otitle">Hide Contact Details + Company Branding</span>
+          <span class="rdc-otitle">old_Hide Contact Details + Company Branding</span>
           <span class="rdc-odesc">Keep the name visible, hide contact and LinkedIn details, then add your company header.</span>
         </span>
         <span class="rdc-ometa">
@@ -10109,7 +10109,7 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 4 7v6c0 5 3.4 7.8 8 9 4.6-1.2 8-4 8-9V7l-8-4z"/><path d="M14 2v6h6"/><path d="M8 13h8"/><path d="M8 17h6"/></svg>
         </span>
         <span class="rdc-obody">
-          <span class="rdc-otitle">Hide Contact Details + Pre-Screened Report</span>
+          <span class="rdc-otitle">old_Hide Contact Details + Pre-Screened Report</span>
           <span class="rdc-odesc">Keep the name visible, hide contact and LinkedIn details, then merge the pre-screened report.</span>
         </span>
         <span class="rdc-ometa">
@@ -10127,7 +10127,7 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 4 7v6c0 5 3.4 7.8 8 9 4.6-1.2 8-4 8-9V7l-8-4z"/><path d="M14 2v6h6"/><path d="M8 13h8"/><path d="m4 4 16 16"/></svg>
         </span>
         <span class="rdc-obody">
-          <span class="rdc-otitle">Hide Contact Details + Pre-Screened Report without Company Branding</span>
+          <span class="rdc-otitle">old_Hide Contact Details + Pre-Screened Report without Company Branding</span>
           <span class="rdc-odesc">Keep the name visible, hide contact and LinkedIn details, then merge a no-brand report.</span>
         </span>
         <span class="rdc-ometa">
@@ -10145,7 +10145,7 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
         </span>
         <span class="rdc-obody">
-          <span class="rdc-otitle">ATS Highlighted Resume</span>
+          <span class="rdc-otitle">old_ATS Highlighted Resume</span>
           <span class="rdc-odesc">Review the resume with role-matched skills highlighted so recruiters can scan fit faster.</span>
         </span>
         <span class="rdc-ometa">
@@ -10163,7 +10163,7 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h16"/><path d="m7 16 8.5-8.5 3 3L10 19H7v-3z"/><path d="m14 9 3 3"/></svg>
         </span>
         <span class="rdc-obody">
-          <span class="rdc-otitle">Resume + Highlighted Keywords</span>
+          <span class="rdc-otitle">old_Resume + Highlighted Keywords</span>
           <span class="rdc-odesc">Create a recruiter-ready resume copy with important job skills highlighted for quick screening.</span>
         </span>
         <span class="rdc-ometa">
@@ -10181,7 +10181,7 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/><path d="M7 15h7"/></svg>
         </span>
         <span class="rdc-obody">
-          <span class="rdc-otitle">Resume + Skills Highlighted</span>
+          <span class="rdc-otitle">old_Resume + Skills Highlighted</span>
           <span class="rdc-odesc">Download a screening copy that highlights the candidate skills most relevant to the job.</span>
         </span>
         <span class="rdc-ometa">
@@ -10199,7 +10199,7 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h16"/><path d="m7 16 8.5-8.5 3 3L10 19H7v-3z"/><path d="M9 7h6"/><path d="M9 11h4"/></svg>
         </span>
         <span class="rdc-obody">
-          <span class="rdc-otitle">Resume + Highlighted + Company Branding</span>
+          <span class="rdc-otitle">old_Resume + Highlighted + Company Branding</span>
           <span class="rdc-odesc">Share a branded resume version with relevant skills highlighted and your company header applied.</span>
         </span>
         <span class="rdc-ometa">
@@ -10217,7 +10217,7 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M8 13h5"/><path d="M8 17h8"/><path d="m15 13 2 2 4-4"/></svg>
         </span>
         <span class="rdc-obody">
-          <span class="rdc-otitle">Pre-Screened Report + Resume + Highlighted Keywords</span>
+          <span class="rdc-otitle">old_Pre-Screened Report + Resume + Highlighted Keywords</span>
           <span class="rdc-odesc">Combine the candidate report and highlighted resume into one client-ready hiring document.</span>
         </span>
         <span class="rdc-ometa">
@@ -10235,7 +10235,7 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M8 13h5"/><path d="M8 17h8"/><path d="m4 4 16 16"/></svg>
         </span>
         <span class="rdc-obody">
-          <span class="rdc-otitle">Pre-Screened Report + Resume + Highlighted Keywords without Company Branding</span>
+          <span class="rdc-otitle">old_Pre-Screened Report + Resume + Highlighted Keywords without Company Branding</span>
           <span class="rdc-odesc">Prepare the report and highlighted resume together without displaying company branding.</span>
         </span>
         <span class="rdc-ometa">
@@ -10253,7 +10253,7 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
         </span>
         <span class="rdc-obody">
-          <span class="rdc-otitle">Branded + Highlighted</span>
+          <span class="rdc-otitle">old_Branded + Highlighted</span>
           <span class="rdc-odesc">Add company branding and highlight matching skills so the resume is easier to review and share.</span>
         </span>
         <span class="rdc-ometa">
@@ -10289,7 +10289,7 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h10l6 6v10a2 2 0 0 1-2 2H4V4z"/><path d="M14 4v6h6"/><path d="M8 13h8"/><path d="M8 17h5"/><path d="M3 7h18"/></svg>
         </span>
         <span class="rdc-obody">
-          <span class="rdc-otitle">Resume + Company Branding</span>
+          <span class="rdc-otitle">old_Resume + Company Branding</span>
           <span class="rdc-odesc">Add your company logo and shared-by header above the resume while keeping all candidate details visible.</span>
         </span>
         <span class="rdc-ometa">
@@ -10307,7 +10307,7 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M8 13h8"/><path d="M8 17h5"/><path d="m15 18 2 2 4-4"/></svg>
         </span>
         <span class="rdc-obody">
-          <span class="rdc-otitle">Pre-Screened Report + Resume + Company Branding</span>
+          <span class="rdc-otitle">old_Pre-Screened Report + Resume + Company Branding</span>
           <span class="rdc-odesc">Deliver one polished PDF with the pre-screened report first, followed by the candidate resume with company branding.</span>
         </span>
         <span class="rdc-ometa">
@@ -10325,7 +10325,7 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M9 13h6"/><path d="M9 17h4"/><path d="m4 4 16 16"/></svg>
         </span>
         <span class="rdc-obody">
-          <span class="rdc-otitle">Pre-Screened Report + Resume without Company Branding</span>
+          <span class="rdc-otitle">old_Pre-Screened Report + Resume without Company Branding</span>
           <span class="rdc-odesc">Download the same report-and-resume package without company logo or company name on the report page.</span>
         </span>
         <span class="rdc-ometa">
@@ -10343,7 +10343,7 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18"/><path d="M3 12h18"/><path d="M7 7h10v10H7z"/><path d="m15 9 2 2-2 2"/></svg>
         </span>
         <span class="rdc-obody">
-          <span class="rdc-otitle">Pre-Screened Report + Resume + Highlighted Keywords + Company Branding</span>
+          <span class="rdc-otitle">old_Pre-Screened Report + Resume + Highlighted Keywords + Company Branding</span>
           <span class="rdc-odesc">Create the recruiter package: pre-screened report, branded resume pages, and highlighted job-matching skills.</span>
         </span>
         <span class="rdc-ometa">
@@ -10361,7 +10361,7 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18"/><path d="M3 12h18"/><path d="M7 7h10v10H7z"/><path d="m4 4 16 16"/></svg>
         </span>
         <span class="rdc-obody">
-          <span class="rdc-otitle">Pre-Screened Report + Resume + Highlighted Keywords without Company Branding</span>
+          <span class="rdc-otitle">old_Pre-Screened Report + Resume + Highlighted Keywords without Company Branding</span>
           <span class="rdc-odesc">Create the recruiter package with report, resume, and highlighted skills, without company branding.</span>
         </span>
         <span class="rdc-ometa">
@@ -10379,7 +10379,7 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h16"/><path d="m7 16 8.5-8.5 3 3L10 19H7v-3z"/><path d="M9 7h6"/><path d="M9 11h4"/><path d="M14 2v6h6"/></svg>
         </span>
         <span class="rdc-obody">
-          <span class="rdc-otitle">Resume + Highlighted Keywords + Company Branding</span>
+          <span class="rdc-otitle">old_Resume + Highlighted Keywords + Company Branding</span>
           <span class="rdc-odesc">Download a branded resume with job-matching keywords highlighted for faster recruiter screening.</span>
         </span>
         <span class="rdc-ometa">
@@ -10397,7 +10397,7 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h16"/><path d="m7 16 8.5-8.5 3 3L10 19H7v-3z"/><path d="M9 7h6"/><path d="M9 11h4"/><path d="M14 2v6h6"/></svg>
         </span>
         <span class="rdc-obody">
-          <span class="rdc-otitle">Resume + Highlighted Keywords</span>
+          <span class="rdc-otitle">old_Resume + Highlighted Keywords</span>
           <span class="rdc-odesc">Download a clean resume copy with the most relevant skills highlighted for quick recruiter review.</span>
         </span>
         <span class="rdc-ometa">
@@ -10415,7 +10415,7 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h16"/><path d="M8 4h8v5H8z"/><path d="M7 14l3 3 7-7"/></svg>
         </span>
         <span class="rdc-obody">
-          <span class="rdc-otitle">Resume + Highlighted Keywords + Company Branding</span>
+          <span class="rdc-otitle">old_Resume + Highlighted Keywords + Company Branding</span>
           <span class="rdc-odesc">Download a branded resume package that highlights role-matched skills for easier recruiter review.</span>
         </span>
         <span class="rdc-ometa">
@@ -10433,7 +10433,7 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h16"/><path d="M7 16l8.5-8.5 3 3L10 19H7v-3z"/><path d="M8 7h8"/><path d="M8 11h5"/></svg>
         </span>
         <span class="rdc-obody">
-          <span class="rdc-otitle">Resume + Highlighted Keywords</span>
+          <span class="rdc-otitle">old_Resume + Highlighted Keywords</span>
           <span class="rdc-odesc">Download the resume with matching skills highlighted, without adding report pages or branding.</span>
         </span>
         <span class="rdc-ometa">
@@ -10451,7 +10451,7 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
         </span>
         <span class="rdc-obody">
-          <span class="rdc-otitle">Resume + Highlights + Branding</span>
+          <span class="rdc-otitle">old_Resume + Highlights + Branding</span>
           <span class="rdc-odesc">Prepare a branded resume version with skill highlights for quick client or hiring-team sharing.</span>
         </span>
         <span class="rdc-ometa">
@@ -10469,7 +10469,7 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
         </span>
         <span class="rdc-obody">
-          <span class="rdc-otitle">Resume + Highlights</span>
+          <span class="rdc-otitle">old_Resume + Highlights</span>
           <span class="rdc-odesc">Prepare a resume copy with role-matched highlights and no additional report or branding pages.</span>
         </span>
         <span class="rdc-ometa">
@@ -10487,7 +10487,7 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
         </span>
         <span class="rdc-obody">
-          <span class="rdc-otitle">Resume + Highlights + Branding</span>
+          <span class="rdc-otitle">old_Resume + Highlights + Branding</span>
           <span class="rdc-odesc">Create a polished branded resume with highlighted skills for recruiter and client evaluation.</span>
         </span>
         <span class="rdc-ometa">
@@ -10505,7 +10505,7 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
         </span>
         <span class="rdc-obody">
-          <span class="rdc-otitle">Resume + Highlights</span>
+          <span class="rdc-otitle">old_Resume + Highlights</span>
           <span class="rdc-odesc">Create a clean highlighted resume copy that helps recruiters spot matching skills quickly.</span>
         </span>
         <span class="rdc-ometa">
@@ -10523,7 +10523,7 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
         </span>
         <span class="rdc-obody">
-          <span class="rdc-otitle">Pre-Screened Report + Resume + Highlights</span>
+          <span class="rdc-otitle">old_Pre-Screened Report + Resume + Highlights</span>
           <span class="rdc-odesc">Package the pre-screened report with highlighted resume pages for complete recruiter handoff.</span>
         </span>
         <span class="rdc-ometa">
@@ -10951,33 +10951,33 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
 
   var optMeta = {
     1: {cost:1, label:'Download Resume',       avail:hasResume && !!(originalR2PublicUrl || originalR2DirectUrl || dlUrl),  dlKey:null, unavailableMsg:'Original resume is not available for download.'},
-    3: {cost:4, label:'Download ATS Highlighted Resume',avail:true,  dlKey:'hl'},
-    4: {cost:6, label:'Download Branded + Highlighted', avail:true,  dlKey:'both'},
+    3: {cost:4, label:'old_Download ATS Highlighted Resume',avail:true,  dlKey:'hl'},
+    4: {cost:6, label:'old_Download Branded + Highlighted', avail:true,  dlKey:'both'},
     5: {cost:7, label:'Download Pre-Screened Report',   avail:true,  dlKey:'rs'},
-    6: {cost:2, label:'Resume + Company Branding', avail:(['PDF','DOC','DOCX'].indexOf(resumeExt) !== -1), dlKey:'smart-branded-resume', unavailableMsg:'Branded resume is available for PDF, DOC and DOCX resumes only.'},
-    7: {cost:4, label:'Resume + Highlighted Keywords', avail:(['PDF','DOCX'].indexOf(resumeExt) !== -1), dlKey:'smart-highlighted-resume', unavailableMsg:'Client-side highlighted resume is available for PDF and DOCX resumes only.'},
-    8: {cost:4, label:'Resume + Skills Highlighted', avail:(['PDF','DOC','DOCX'].indexOf(resumeExt) !== -1), dlKey:'headless-option3-skills-highlighted', unavailableMsg:'Resume + Skills Highlighted is available for PDF, DOC and DOCX resumes only.'},
-    9: {cost:6, label:'Resume + Highlighted + Company Branding', avail:(['PDF','DOC','DOCX'].indexOf(resumeExt) !== -1), dlKey:'highlighted-branded-resume', unavailableMsg:'Resume + Highlighted + Company Branding is available for PDF, DOC and DOCX resumes only.'},
-    13:{cost:8, label:'Pre-Screened Report + Resume + Highlighted Keywords', avail:(['PDF','DOC','DOCX'].indexOf(resumeExt) !== -1), dlKey:'prescreened-highlighted-package', unavailableMsg:'Pre-Screened Report + Resume + Highlighted Keywords is available for PDF, DOC and DOCX resumes only.'},
-    14:{cost:8, label:'Pre-Screened Report + Resume + Highlighted Keywords without Company Branding', avail:(['PDF','DOC','DOCX'].indexOf(resumeExt) !== -1), dlKey:'prescreened-highlighted-package-nobrand', unavailableMsg:'Pre-Screened Report + Resume + Highlighted Keywords without Company Branding is available for PDF, DOC and DOCX resumes only.'},
-    15:{cost:8, label:'Pre-Screened Report + Resume + Company Branding', avail:(['PDF','DOC','DOCX'].indexOf(resumeExt) !== -1), dlKey:'smart-prescreened-package', unavailableMsg:'Final package is available for PDF, DOC and DOCX resumes only.'},
-    16:{cost:8, label:'Pre-Screened Report + Resume without Company Branding', avail:(['PDF','DOC','DOCX'].indexOf(resumeExt) !== -1), dlKey:'smart-prescreened-package-nobrand', unavailableMsg:'Final package is available for PDF, DOC and DOCX resumes only.'},
-    17:{cost:8, label:'Pre-Screened Report + Resume + Highlighted Keywords + Company Branding', avail:(['PDF','DOC','DOCX'].indexOf(resumeExt) !== -1), dlKey:'prescreened-highlighted-package-client-docx', unavailableMsg:'Pre-Screened Report + Resume + Highlighted Keywords + Company Branding is available for PDF, DOC and DOCX resumes only.'},
-    19:{cost:8, label:'Pre-Screened Report + Resume + Highlighted Keywords without Company Branding', avail:(['PDF','DOC','DOCX'].indexOf(resumeExt) !== -1), dlKey:'prescreened-highlighted-package-client-docx-nobrand', unavailableMsg:'Pre-Screened Report + Resume + Highlighted Keywords without Company Branding is available for PDF, DOC and DOCX resumes only.'},
-    20:{cost:6, label:'Resume + Highlighted Keywords + Company Branding', avail:(['PDF','DOC','DOCX'].indexOf(resumeExt) !== -1), dlKey:'highlighted-branded-resume-client-docx', unavailableMsg:'Resume + Highlighted Keywords + Company Branding is available for PDF, DOC and DOCX resumes only.'},
-    21:{cost:6, label:'Fast Resume + Highlighted Keywords + Company Branding', avail:(['PDF','DOC','DOCX'].indexOf(resumeExt) !== -1), dlKey:'fast-highlighted-branded-resume-client-docx', unavailableMsg:'Fast Resume + Highlighted Keywords + Company Branding is available for PDF, DOC and DOCX resumes only.'},
-    22:{cost:4, label:'Fast Resume + Highlighted Keywords', avail:(['PDF','DOC','DOCX'].indexOf(resumeExt) !== -1), dlKey:'fast-highlighted-resume-client-docx', unavailableMsg:'Fast Resume + Highlighted Keywords is available for PDF, DOC and DOCX resumes only.'},
-    23:{cost:6, label:'Turbo Vector Resume + Highlights + Branding', avail:(['PDF','DOC','DOCX'].indexOf(resumeExt) !== -1), dlKey:'turbo-vector-highlighted-branded', unavailableMsg:'Turbo Vector Branded Resume is available for PDF, DOC and DOCX resumes only.'},
-    24:{cost:4, label:'Turbo Vector Resume + Highlights', avail:(['PDF','DOC','DOCX'].indexOf(resumeExt) !== -1), dlKey:'turbo-vector-highlighted', unavailableMsg:'Turbo Vector Highlighted Resume is available for PDF, DOC and DOCX resumes only.'},
-    25:{cost:6, label:'Client Lightning Resume + Highlights + Branding', avail:(['PDF','DOC','DOCX'].indexOf(resumeExt) !== -1), dlKey:'client-lightning-highlighted-branded', unavailableMsg:'Client Lightning Branded Resume is available for PDF, DOC and DOCX resumes only.'},
-    26:{cost:4, label:'Client Lightning Resume + Highlights', avail:(['PDF','DOC','DOCX'].indexOf(resumeExt) !== -1), dlKey:'client-lightning-highlighted', unavailableMsg:'Client Lightning Highlighted Resume is available for PDF, DOC and DOCX resumes only.'},
-    27:{cost:8, label:'Turbo Pre-Screened Report + Resume + Highlights', avail:(['PDF','DOC','DOCX'].indexOf(resumeExt) !== -1), dlKey:'turbo-prescreened-highlighted-package', unavailableMsg:'Turbo Pre-Screened Package is available for PDF, DOC and DOCX resumes only.'},
-    28:{cost:4, label:'Resume + Highlighted Keywords', avail:(['PDF','DOC','DOCX'].indexOf(resumeExt) !== -1), dlKey:'isolated-highlighted-keywords-client-docx', unavailableMsg:'Resume + Highlighted Keywords is available for PDF, DOC and DOCX resumes only.'},
-    29:{cost:4, label:'Hide Candidate Name & Contacts Details', avail:(['PDF','DOCX'].indexOf(resumeExt) !== -1) && !!(r2DirectUrl || r2PublicUrl || originalR2DirectUrl || originalR2PublicUrl), dlKey:'client-anonymized-resume', unavailableMsg:(resumeExt === 'DOC' ? docUnsupportedMsg : 'Anonymized Resume is browser-only and available for direct R2 PDF/DOCX resumes.')},
-    30:{cost:4, label:'Hide Contact Details', avail:(['PDF','DOCX'].indexOf(resumeExt) !== -1) && !!(r2DirectUrl || r2PublicUrl || originalR2DirectUrl || originalR2PublicUrl), dlKey:'client-anonymized-keep-name-resume', keepName:true, unavailableMsg:(resumeExt === 'DOC' ? docUnsupportedMsg : 'Hide Contact Details is browser-only and available for direct R2 PDF/DOCX resumes.')},
-    31:{cost:6, label:'Hide Contact Details + Company Branding', avail:(['PDF','DOCX'].indexOf(resumeExt) !== -1) && !!(r2DirectUrl || r2PublicUrl || originalR2DirectUrl || originalR2PublicUrl), dlKey:'client-contact-hidden-branded-resume', unavailableMsg:(resumeExt === 'DOC' ? docUnsupportedMsg : 'Hide Contact Details + Company Branding is browser-only and available for direct R2 PDF/DOCX resumes.')},
-    32:{cost:11, label:'Hide Contact Details + Pre-Screened Report', avail:(['PDF','DOCX'].indexOf(resumeExt) !== -1) && !!(r2DirectUrl || r2PublicUrl || originalR2DirectUrl || originalR2PublicUrl), dlKey:'client-contact-hidden-prescreened-resume', unavailableMsg:(resumeExt === 'DOC' ? docUnsupportedMsg : 'Hide Contact Details + Pre-Screened Report is browser-only and available for direct R2 PDF/DOCX resumes.')},
-    33:{cost:12, label:'Hide Contact Details + Pre-Screened Report without Company Branding', avail:(['PDF','DOCX'].indexOf(resumeExt) !== -1) && !!(r2DirectUrl || r2PublicUrl || originalR2DirectUrl || originalR2PublicUrl), dlKey:'client-contact-hidden-prescreened-nobrand-resume', unavailableMsg:(resumeExt === 'DOC' ? docUnsupportedMsg : 'Hide Contact Details + Pre-Screened Report without Company Branding is browser-only and available for direct R2 PDF/DOCX resumes.')},
+    6: {cost:2, label:'old_Resume + Company Branding', avail:(['PDF','DOC','DOCX'].indexOf(resumeExt) !== -1), dlKey:'smart-branded-resume', unavailableMsg:'Branded resume is available for PDF, DOC and DOCX resumes only.'},
+    7: {cost:4, label:'old_Resume + Highlighted Keywords', avail:(['PDF','DOCX'].indexOf(resumeExt) !== -1), dlKey:'smart-highlighted-resume', unavailableMsg:'Client-side highlighted resume is available for PDF and DOCX resumes only.'},
+    8: {cost:4, label:'old_Resume + Skills Highlighted', avail:(['PDF','DOC','DOCX'].indexOf(resumeExt) !== -1), dlKey:'headless-option3-skills-highlighted', unavailableMsg:'Resume + Skills Highlighted is available for PDF, DOC and DOCX resumes only.'},
+    9: {cost:6, label:'old_Resume + Highlighted + Company Branding', avail:(['PDF','DOC','DOCX'].indexOf(resumeExt) !== -1), dlKey:'highlighted-branded-resume', unavailableMsg:'Resume + Highlighted + Company Branding is available for PDF, DOC and DOCX resumes only.'},
+    13:{cost:8, label:'old_Pre-Screened Report + Resume + Highlighted Keywords', avail:(['PDF','DOC','DOCX'].indexOf(resumeExt) !== -1), dlKey:'prescreened-highlighted-package', unavailableMsg:'Pre-Screened Report + Resume + Highlighted Keywords is available for PDF, DOC and DOCX resumes only.'},
+    14:{cost:8, label:'old_Pre-Screened Report + Resume + Highlighted Keywords without Company Branding', avail:(['PDF','DOC','DOCX'].indexOf(resumeExt) !== -1), dlKey:'prescreened-highlighted-package-nobrand', unavailableMsg:'Pre-Screened Report + Resume + Highlighted Keywords without Company Branding is available for PDF, DOC and DOCX resumes only.'},
+    15:{cost:8, label:'old_Pre-Screened Report + Resume + Company Branding', avail:(['PDF','DOC','DOCX'].indexOf(resumeExt) !== -1), dlKey:'smart-prescreened-package', unavailableMsg:'Final package is available for PDF, DOC and DOCX resumes only.'},
+    16:{cost:8, label:'old_Pre-Screened Report + Resume without Company Branding', avail:(['PDF','DOC','DOCX'].indexOf(resumeExt) !== -1), dlKey:'smart-prescreened-package-nobrand', unavailableMsg:'Final package is available for PDF, DOC and DOCX resumes only.'},
+    17:{cost:8, label:'old_Pre-Screened Report + Resume + Highlighted Keywords + Company Branding', avail:(['PDF','DOC','DOCX'].indexOf(resumeExt) !== -1), dlKey:'prescreened-highlighted-package-client-docx', unavailableMsg:'Pre-Screened Report + Resume + Highlighted Keywords + Company Branding is available for PDF, DOC and DOCX resumes only.'},
+    19:{cost:8, label:'old_Pre-Screened Report + Resume + Highlighted Keywords without Company Branding', avail:(['PDF','DOC','DOCX'].indexOf(resumeExt) !== -1), dlKey:'prescreened-highlighted-package-client-docx-nobrand', unavailableMsg:'Pre-Screened Report + Resume + Highlighted Keywords without Company Branding is available for PDF, DOC and DOCX resumes only.'},
+    20:{cost:6, label:'old_Resume + Highlighted Keywords + Company Branding', avail:(['PDF','DOC','DOCX'].indexOf(resumeExt) !== -1), dlKey:'highlighted-branded-resume-client-docx', unavailableMsg:'Resume + Highlighted Keywords + Company Branding is available for PDF, DOC and DOCX resumes only.'},
+    21:{cost:6, label:'old_Fast Resume + Highlighted Keywords + Company Branding', avail:(['PDF','DOC','DOCX'].indexOf(resumeExt) !== -1), dlKey:'fast-highlighted-branded-resume-client-docx', unavailableMsg:'Fast Resume + Highlighted Keywords + Company Branding is available for PDF, DOC and DOCX resumes only.'},
+    22:{cost:4, label:'old_Fast Resume + Highlighted Keywords', avail:(['PDF','DOC','DOCX'].indexOf(resumeExt) !== -1), dlKey:'fast-highlighted-resume-client-docx', unavailableMsg:'Fast Resume + Highlighted Keywords is available for PDF, DOC and DOCX resumes only.'},
+    23:{cost:6, label:'old_Turbo Vector Resume + Highlights + Branding', avail:(['PDF','DOC','DOCX'].indexOf(resumeExt) !== -1), dlKey:'turbo-vector-highlighted-branded', unavailableMsg:'Turbo Vector Branded Resume is available for PDF, DOC and DOCX resumes only.'},
+    24:{cost:4, label:'old_Turbo Vector Resume + Highlights', avail:(['PDF','DOC','DOCX'].indexOf(resumeExt) !== -1), dlKey:'turbo-vector-highlighted', unavailableMsg:'Turbo Vector Highlighted Resume is available for PDF, DOC and DOCX resumes only.'},
+    25:{cost:6, label:'old_Client Lightning Resume + Highlights + Branding', avail:(['PDF','DOC','DOCX'].indexOf(resumeExt) !== -1), dlKey:'client-lightning-highlighted-branded', unavailableMsg:'Client Lightning Branded Resume is available for PDF, DOC and DOCX resumes only.'},
+    26:{cost:4, label:'old_Client Lightning Resume + Highlights', avail:(['PDF','DOC','DOCX'].indexOf(resumeExt) !== -1), dlKey:'client-lightning-highlighted', unavailableMsg:'Client Lightning Highlighted Resume is available for PDF, DOC and DOCX resumes only.'},
+    27:{cost:8, label:'old_Turbo Pre-Screened Report + Resume + Highlights', avail:(['PDF','DOC','DOCX'].indexOf(resumeExt) !== -1), dlKey:'turbo-prescreened-highlighted-package', unavailableMsg:'Turbo Pre-Screened Package is available for PDF, DOC and DOCX resumes only.'},
+    28:{cost:4, label:'old_Resume + Highlighted Keywords', avail:(['PDF','DOC','DOCX'].indexOf(resumeExt) !== -1), dlKey:'isolated-highlighted-keywords-client-docx', unavailableMsg:'Resume + Highlighted Keywords is available for PDF, DOC and DOCX resumes only.'},
+    29:{cost:4, label:'old_Hide Candidate Name & Contacts Details', avail:(['PDF','DOCX'].indexOf(resumeExt) !== -1) && !!(r2DirectUrl || r2PublicUrl || originalR2DirectUrl || originalR2PublicUrl), dlKey:'client-anonymized-resume', unavailableMsg:(resumeExt === 'DOC' ? docUnsupportedMsg : 'Anonymized Resume is browser-only and available for direct R2 PDF/DOCX resumes.')},
+    30:{cost:4, label:'old_Hide Contact Details', avail:(['PDF','DOCX'].indexOf(resumeExt) !== -1) && !!(r2DirectUrl || r2PublicUrl || originalR2DirectUrl || originalR2PublicUrl), dlKey:'client-anonymized-keep-name-resume', keepName:true, unavailableMsg:(resumeExt === 'DOC' ? docUnsupportedMsg : 'Hide Contact Details is browser-only and available for direct R2 PDF/DOCX resumes.')},
+    31:{cost:6, label:'old_Hide Contact Details + Company Branding', avail:(['PDF','DOCX'].indexOf(resumeExt) !== -1) && !!(r2DirectUrl || r2PublicUrl || originalR2DirectUrl || originalR2PublicUrl), dlKey:'client-contact-hidden-branded-resume', unavailableMsg:(resumeExt === 'DOC' ? docUnsupportedMsg : 'Hide Contact Details + Company Branding is browser-only and available for direct R2 PDF/DOCX resumes.')},
+    32:{cost:11, label:'old_Hide Contact Details + Pre-Screened Report', avail:(['PDF','DOCX'].indexOf(resumeExt) !== -1) && !!(r2DirectUrl || r2PublicUrl || originalR2DirectUrl || originalR2PublicUrl), dlKey:'client-contact-hidden-prescreened-resume', unavailableMsg:(resumeExt === 'DOC' ? docUnsupportedMsg : 'Hide Contact Details + Pre-Screened Report is browser-only and available for direct R2 PDF/DOCX resumes.')},
+    33:{cost:12, label:'old_Hide Contact Details + Pre-Screened Report without Company Branding', avail:(['PDF','DOCX'].indexOf(resumeExt) !== -1) && !!(r2DirectUrl || r2PublicUrl || originalR2DirectUrl || originalR2PublicUrl), dlKey:'client-contact-hidden-prescreened-nobrand-resume', unavailableMsg:(resumeExt === 'DOC' ? docUnsupportedMsg : 'Hide Contact Details + Pre-Screened Report without Company Branding is browser-only and available for direct R2 PDF/DOCX resumes.')},
     40:{cost:1, label:'Test: Strategy 2 WASM (DOCX → PDF Only)', avail:(['PDF','DOCX'].indexOf(resumeExt) !== -1) && !!(r2DirectUrl || r2PublicUrl || originalR2DirectUrl || originalR2PublicUrl || dlUrl), dlKey:'test-agy-strategy2-wasm', unavailableMsg:(resumeExt === 'DOC' ? docUnsupportedMsg : 'Strategy 2 WASM Engine is browser-only and available for direct PDF/DOCX resumes.')},
     41:{cost:2, label:'Test: Strategy 2 WASM + Company Branding', avail:(['PDF','DOCX'].indexOf(resumeExt) !== -1) && !!(r2DirectUrl || r2PublicUrl || originalR2DirectUrl || originalR2PublicUrl || dlUrl), dlKey:'test-agy-strategy2-branded', unavailableMsg:(resumeExt === 'DOC' ? docUnsupportedMsg : 'Strategy 2 WASM Branded is browser-only and available for direct PDF/DOCX resumes.')},
     42:{cost:6, label:'Test: Pre-Screened Report + Strategy 2 WASM Resume + Company Branding', avail:(['PDF','DOCX'].indexOf(resumeExt) !== -1) && !!(r2DirectUrl || r2PublicUrl || originalR2DirectUrl || originalR2PublicUrl || dlUrl), dlKey:'test-agy-strategy2-prescreened-branded', unavailableMsg:(resumeExt === 'DOC' ? docUnsupportedMsg : 'Strategy 2 WASM Pre-Screened Package is browser-only and available for direct PDF/DOCX resumes.')},
