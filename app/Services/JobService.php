@@ -654,6 +654,7 @@ class JobService
             if (! empty($workCity)) {
                 DB::table('client_city_jobs')->where('job_id', $job->id)->delete();
                 $workCityAll = is_array($workCity) ? $workCity : json_decode($workCity, true);
+                
                 if (is_array($workCityAll) && count($workCityAll) > 0) {
                     $cityNames = [];
                     $countryNames = [];
@@ -661,6 +662,7 @@ class JobService
 
                     foreach ($workCityAll as $cVal) {
                         $parts = explode('|', $cVal['value'] ?? '');
+                        
                         if (count($parts) >= 3) {
                             $cName = trim($parts[0]);
                             $coName = trim($parts[2]);
@@ -681,10 +683,24 @@ class JobService
 
                         $batchCityInsert = [];
                         foreach ($cityPairs as $pair) {
+                            // dd($cityPairs);
+                            // $match = $cityRows->first(function ($item) use ($pair) {
+                            //     return $item->city === $pair['city'] && $item->country_name === $pair['country'];
+                            // });
                             $match = $cityRows->first(function ($item) use ($pair) {
-                                return $item->city === $pair['city'] && $item->country_name === $pair['country'];
+
+                                $itemCity = trim((string) $item->city);
+                                $pairCity = trim((string) $pair['city']);
+
+                                $itemCountry = trim((string) $item->country_name);
+                                $pairCountry = trim((string) $pair['country']);
+
+                                return strcasecmp($itemCity, $pairCity) === 0
+                                    && strcasecmp($itemCountry, $pairCountry) === 0;
                             });
+                          
                             if ($match) {
+                               
                                 $batchCityInsert[] = [
                                     'company_id' => $user->company_id,
                                     'city_id' => $match->city_id,
