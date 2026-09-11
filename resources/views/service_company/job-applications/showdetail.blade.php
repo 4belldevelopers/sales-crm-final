@@ -10533,205 +10533,205 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
         <span class="rdc-ocirc" aria-hidden="true"></span>
       </label>
 
-      {{-- 40: Strategy 2 Pure WASM Engine (DOCX to PDF Conversion Only) --}}
+      {{-- 40: Resume (PDF Conversion) --}}
       <label class="rdc-opt" data-opt="40" data-coins="1">
         <input class="rdc-rinput" type="radio" name="rdcFormat" value="40">
         <span class="rdc-onum">40</span>
         <span class="rdc-oi" style="background:#eff6ff;color:#2563eb;" aria-hidden="true">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
         </span>
         <span class="rdc-obody">
-          <span class="rdc-otitle">Test: Strategy 2 Pure WASM Engine <span style="background:#2563eb;color:#fff;font-size:8.5px;font-weight:700;padding:1px 6px;border-radius:4px;vertical-align:middle;margin-left:4px;">Conversion Only</span></span>
-          <span class="rdc-odesc">Pure WebAssembly C++/Rust typesetting core. Zero DOM manipulation, zero extra features, direct Word-to-PDF conversion only.</span>
+          <span class="rdc-otitle">Resume (PDF Conversion)</span>
+          <span class="rdc-odesc">Download the candidate's uploaded resume converted to a clean PDF with exact layout and formatting preserved.</span>
         </span>
         <span class="rdc-ometa">
           <span class="rdc-ocost">1 Coin</span>
-          <span class="rdc-otime">WASM</span>
+          <span class="rdc-otime">60 seconds</span>
         </span>
         <span class="rdc-ocirc" aria-hidden="true"></span>
       </label>
 
-      {{-- 41: Strategy 2 WASM + Company Branding --}}
+      {{-- 41: Resume + Company Branding --}}
       <label class="rdc-opt" data-opt="41" data-coins="2">
         <input class="rdc-rinput" type="radio" name="rdcFormat" value="41">
         <span class="rdc-onum">41</span>
-        <span class="rdc-oi" style="background:#f0fdf4;color:#16a34a;" aria-hidden="true">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M16 13H8"/><path d="M16 17H8"/><path d="M10 9H8"/></svg>
+        <span class="rdc-oi" style="background:#ecfeff;color:#0e7490;" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h10l6 6v10a2 2 0 0 1-2 2H4V4z"/><path d="M14 4v6h6"/><path d="M8 13h8"/><path d="M8 17h5"/><path d="M3 7h18"/></svg>
         </span>
         <span class="rdc-obody">
-          <span class="rdc-otitle">Test: Strategy 2 WASM + Company Branding <span style="background:#16a34a;color:#fff;font-size:8.5px;font-weight:700;padding:1px 6px;border-radius:4px;vertical-align:middle;margin-left:4px;">Branded WASM</span></span>
-          <span class="rdc-odesc">Strategy 2 WASM conversion with your company logo & shared-by header above Page 1. 100% candidate details visible.</span>
+          <span class="rdc-otitle">Resume + Company Branding</span>
+          <span class="rdc-odesc">Add your company logo and shared-by header above the resume while keeping all candidate details visible.</span>
         </span>
         <span class="rdc-ometa">
           <span class="rdc-ocost">2 Coins</span>
-          <span class="rdc-otime">WASM</span>
+          <span class="rdc-otime">60 seconds</span>
         </span>
         <span class="rdc-ocirc" aria-hidden="true"></span>
       </label>
 
-      {{-- 42: Strategy 2 WASM Pre-Screened Report + Resume + Company Branding --}}
+      {{-- 42: Pre-Screened Report + Resume + Company Branding --}}
       <label class="rdc-opt" data-opt="42" data-coins="6">
         <input class="rdc-rinput" type="radio" name="rdcFormat" value="42">
         <span class="rdc-onum">42</span>
-        <span class="rdc-oi" style="background:#fef2f2;color:#dc2626;" aria-hidden="true">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8 12 3 3 8l9 5 9-5z"/><path d="m3 8 9 5v8l-9-5V8z"/><path d="m21 8-9 5v8l9-5V8z"/></svg>
+        <span class="rdc-oi" style="background:#ecfdf5;color:#059669;" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M8 13h8"/><path d="M8 17h5"/><path d="m15 18 2 2 4-4"/></svg>
         </span>
         <span class="rdc-obody">
-          <span class="rdc-otitle">Test: Pre-Screened Report + Strategy 2 WASM Resume + Company Branding <span style="background:#dc2626;color:#fff;font-size:8.5px;font-weight:700;padding:1px 6px;border-radius:4px;vertical-align:middle;margin-left:4px;">Executive Package</span></span>
-          <span class="rdc-odesc">One polished PDF: AI Pre-Screened report with company branding on Page 1, followed by the candidate's clean WASM-converted resume.</span>
+          <span class="rdc-otitle">Pre-Screened Report + Resume + Company Branding</span>
+          <span class="rdc-odesc">Deliver one polished PDF with the pre-screened report first, followed by the candidate resume with company branding.</span>
         </span>
         <span class="rdc-ometa">
           <span class="rdc-ocost">6 Coins</span>
-          <span class="rdc-otime">WASM</span>
+          <span class="rdc-otime">60 seconds</span>
         </span>
         <span class="rdc-ocirc" aria-hidden="true"></span>
       </label>
 
-      {{-- 43: Strategy 2 WASM Pre-Screened Report + Resume without Company Branding --}}
+      {{-- 43: Pre-Screened Report + Resume without Company Branding --}}
       <label class="rdc-opt" data-opt="43" data-coins="7">
         <input class="rdc-rinput" type="radio" name="rdcFormat" value="43">
         <span class="rdc-onum">43</span>
         <span class="rdc-oi" style="background:#f8fafc;color:#475569;" aria-hidden="true">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19V5"/><path d="M8 19v-7"/><path d="M12 19V9"/><path d="M16 19v-4"/><path d="M20 19V7"/></svg>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M9 13h6"/><path d="M9 17h4"/><path d="m4 4 16 16"/></svg>
         </span>
         <span class="rdc-obody">
-          <span class="rdc-otitle">Test: Pre-Screened Report + Strategy 2 WASM Resume without Company Branding <span style="background:#475569;color:#fff;font-size:8.5px;font-weight:700;padding:1px 6px;border-radius:4px;vertical-align:middle;margin-left:4px;">Unbranded Package</span></span>
+          <span class="rdc-otitle">Pre-Screened Report + Resume without Company Branding</span>
           <span class="rdc-odesc">Download the same report-and-resume package without company logo or company name on the report page.</span>
         </span>
         <span class="rdc-ometa">
           <span class="rdc-ocost">7 Coins</span>
-          <span class="rdc-otime">WASM</span>
+          <span class="rdc-otime">60 seconds</span>
         </span>
         <span class="rdc-ocirc" aria-hidden="true"></span>
       </label>
 
-      {{-- 44: Strategy 2 WASM Resume + Highlighted Keywords --}}
+      {{-- 44: Resume + Highlighted Keywords --}}
       <label class="rdc-opt" data-opt="44" data-coins="4">
         <input class="rdc-rinput" type="radio" name="rdcFormat" value="44">
         <span class="rdc-onum">44</span>
-        <span class="rdc-oi" style="background:#fffbeb;color:#d97706;" aria-hidden="true">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 11-6 6v3h3l6-6"/><path d="m22 7-3-3"/><path d="M14.5 9.5 19 5l-2-2-4.5 4.5"/><path d="m11.5 6.5 6 6"/></svg>
+        <span class="rdc-oi rdc-ic-green" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h16"/><path d="m7 16 8.5-8.5 3 3L10 19H7v-3z"/><path d="M9 7h6"/><path d="M9 11h4"/><path d="M14 2v6h6"/></svg>
         </span>
         <span class="rdc-obody">
-          <span class="rdc-otitle">Test: Strategy 2 WASM Resume + Highlighted Keywords <span style="background:#d97706;color:#fff;font-size:8.5px;font-weight:700;padding:1px 6px;border-radius:4px;vertical-align:middle;margin-left:4px;">Keywords Highlighted</span></span>
+          <span class="rdc-otitle">Resume + Highlighted Keywords</span>
           <span class="rdc-odesc">Download a clean resume copy with the most relevant skills highlighted for quick recruiter review.</span>
         </span>
         <span class="rdc-ometa">
           <span class="rdc-ocost">4 Coins</span>
-          <span class="rdc-otime">WASM</span>
+          <span class="rdc-otime">60 seconds</span>
         </span>
         <span class="rdc-ocirc" aria-hidden="true"></span>
       </label>
 
-      {{-- 45: Strategy 2 WASM Resume + Highlighted Keywords + Company Branding --}}
+      {{-- 45: Resume + Highlighted Keywords + Company Branding --}}
       <label class="rdc-opt" data-opt="45" data-coins="6">
         <input class="rdc-rinput" type="radio" name="rdcFormat" value="45">
         <span class="rdc-onum">45</span>
-        <span class="rdc-oi" style="background:#ede9fe;color:#7c3aed;" aria-hidden="true">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 11-6 6v3h3l6-6"/><path d="m22 7-3-3"/><path d="M14.5 9.5 19 5l-2-2-4.5 4.5"/><path d="m11.5 6.5 6 6"/><rect width="18" height="18" x="3" y="3" rx="2"/></svg>
+        <span class="rdc-oi rdc-ic-green" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h16"/><path d="m7 16 8.5-8.5 3 3L10 19H7v-3z"/><path d="M9 7h6"/><path d="M9 11h4"/><path d="M14 2v6h6"/></svg>
         </span>
         <span class="rdc-obody">
-          <span class="rdc-otitle">Test: Strategy 2 WASM Resume + Highlighted Keywords + Company Branding <span style="background:#7c3aed;color:#fff;font-size:8.5px;font-weight:700;padding:1px 6px;border-radius:4px;vertical-align:middle;margin-left:4px;">Branded + Highlighted</span></span>
-          <span class="rdc-odesc">Download a branded resume with your company logo & header, plus role-matched keywords highlighted.</span>
+          <span class="rdc-otitle">Resume + Highlighted Keywords + Company Branding</span>
+          <span class="rdc-odesc">Download a branded resume with job-matching keywords highlighted for faster recruiter screening.</span>
         </span>
         <span class="rdc-ometa">
           <span class="rdc-ocost">6 Coins</span>
-          <span class="rdc-otime">WASM</span>
+          <span class="rdc-otime">60 seconds</span>
         </span>
         <span class="rdc-ocirc" aria-hidden="true"></span>
       </label>
 
-      {{-- 46: Strategy 2 WASM Pre-Screened Report + Resume + Highlighted Keywords + Company Branding --}}
+      {{-- 46: Pre-Screened Report + Resume + Highlighted Keywords + Company Branding --}}
       <label class="rdc-opt" data-opt="46" data-coins="8">
         <input class="rdc-rinput" type="radio" name="rdcFormat" value="46">
         <span class="rdc-onum">46</span>
-        <span class="rdc-oi" style="background:#fef2f2;color:#dc2626;" aria-hidden="true">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+        <span class="rdc-oi" style="background:#eef2ff;color:#4338ca;" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18"/><path d="M3 12h18"/><path d="M7 7h10v10H7z"/><path d="m15 9 2 2-2 2"/></svg>
         </span>
         <span class="rdc-obody">
-          <span class="rdc-otitle">Test: Pre-Screened Report + Strategy 2 WASM Resume + Highlighted Keywords + Company Branding <span style="background:#dc2626;color:#fff;font-size:8.5px;font-weight:700;padding:1px 6px;border-radius:4px;vertical-align:middle;margin-left:4px;">Executive Package</span></span>
-          <span class="rdc-odesc">All-in-one package: Branded AI pre-screened report on Page 1, followed by highlighted candidate resume.</span>
+          <span class="rdc-otitle">Pre-Screened Report + Resume + Highlighted Keywords + Company Branding</span>
+          <span class="rdc-odesc">Create the recruiter package: pre-screened report, branded resume pages, and highlighted job-matching skills.</span>
         </span>
         <span class="rdc-ometa">
           <span class="rdc-ocost">8 Coins</span>
-          <span class="rdc-otime">WASM</span>
+          <span class="rdc-otime">60 seconds</span>
         </span>
         <span class="rdc-ocirc" aria-hidden="true"></span>
       </label>
 
-      {{-- 47: Strategy 2 WASM Pre-Screened Report + Resume + Highlighted Keywords without Company Branding --}}
+      {{-- 47: Pre-Screened Report + Resume + Highlighted Keywords without Company Branding --}}
       <label class="rdc-opt" data-opt="47" data-coins="8">
         <input class="rdc-rinput" type="radio" name="rdcFormat" value="47">
         <span class="rdc-onum">47</span>
         <span class="rdc-oi" style="background:#f8fafc;color:#475569;" aria-hidden="true">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19V5"/><path d="M8 19v-7"/><path d="M12 19V9"/><path d="M16 19v-4"/><path d="M20 19V7"/><path d="m9 11-6 6v3h3l6-6"/></svg>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18"/><path d="M3 12h18"/><path d="M7 7h10v10H7z"/><path d="m4 4 16 16"/></svg>
         </span>
         <span class="rdc-obody">
-          <span class="rdc-otitle">Test: Pre-Screened Report + Strategy 2 WASM Resume + Highlighted Keywords without Company Branding <span style="background:#475569;color:#fff;font-size:8.5px;font-weight:700;padding:1px 6px;border-radius:4px;vertical-align:middle;margin-left:4px;">Unbranded Package</span></span>
-          <span class="rdc-odesc">Download the full report and highlighted resume package without company logo or name on the report.</span>
+          <span class="rdc-otitle">Pre-Screened Report + Resume + Highlighted Keywords without Company Branding</span>
+          <span class="rdc-odesc">Create the recruiter package with report, resume, and highlighted skills, without company branding.</span>
         </span>
         <span class="rdc-ometa">
           <span class="rdc-ocost">8 Coins</span>
-          <span class="rdc-otime">WASM</span>
+          <span class="rdc-otime">60 seconds</span>
         </span>
         <span class="rdc-ocirc" aria-hidden="true"></span>
       </label>
 
-      {{-- 48: Strategy 2 WASM Hide Contact Details --}}
+      {{-- 48: Hide Contact Details --}}
       <label class="rdc-opt" data-opt="48" data-coins="4">
         <input class="rdc-rinput" type="radio" name="rdcFormat" value="48">
         <span class="rdc-onum">48</span>
-        <span class="rdc-oi" style="background:#f0fdfa;color:#0d9488;" aria-hidden="true">
+        <span class="rdc-oi rdc-ic-blue" aria-hidden="true">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 4 7v6c0 5 3.4 7.8 8 9 4.6-1.2 8-4 8-9V7l-8-4z"/><path d="M8 11h8"/><path d="M8 15h5"/></svg>
         </span>
         <span class="rdc-obody">
-          <span class="rdc-otitle">Test: Strategy 2 WASM Hide Contact Details <span style="background:#0d9488;color:#fff;font-size:8.5px;font-weight:700;padding:1px 6px;border-radius:4px;vertical-align:middle;margin-left:4px;">Keep Name Visible</span></span>
+          <span class="rdc-otitle">Hide Contact Details</span>
           <span class="rdc-odesc">Keep candidate name visible while hiding email, phone, mobile, contact and LinkedIn details in browser.</span>
         </span>
         <span class="rdc-ometa">
           <span class="rdc-ocost">4 Coins</span>
-          <span class="rdc-otime">WASM</span>
+          <span class="rdc-otime">60 seconds</span>
         </span>
         <span class="rdc-ocirc" aria-hidden="true"></span>
       </label>
 
-      {{-- 49: Strategy 2 WASM Hide Candidate Name & Contacts Details --}}
+      {{-- 49: Hide Candidate Name & Contacts Details --}}
       <label class="rdc-opt" data-opt="49" data-coins="4">
         <input class="rdc-rinput" type="radio" name="rdcFormat" value="49">
         <span class="rdc-onum">49</span>
-        <span class="rdc-oi" style="background:#eff6ff;color:#2563eb;" aria-hidden="true">
+        <span class="rdc-oi rdc-ic-blue" aria-hidden="true">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 4 7v6c0 5 3.4 7.8 8 9 4.6-1.2 8-4 8-9V7l-8-4z"/><path d="M9 12h6"/><path d="M12 9v6"/></svg>
         </span>
         <span class="rdc-obody">
-          <span class="rdc-otitle">Test: Strategy 2 WASM Hide Candidate Name & Contacts Details <span style="background:#2563eb;color:#fff;font-size:8.5px;font-weight:700;padding:1px 6px;border-radius:4px;vertical-align:middle;margin-left:4px;">Full Anonymization</span></span>
+          <span class="rdc-otitle">Hide Candidate Name & Contacts Details</span>
           <span class="rdc-odesc">Hide candidate name, email, and phone numbers in a browser-only resume copy.</span>
         </span>
         <span class="rdc-ometa">
           <span class="rdc-ocost">4 Coins</span>
-          <span class="rdc-otime">WASM</span>
+          <span class="rdc-otime">60 seconds</span>
         </span>
         <span class="rdc-ocirc" aria-hidden="true"></span>
       </label>
 
-      {{-- 50: Strategy 2 WASM Hide Contact Details + Company Branding --}}
+      {{-- 50: Hide Contact Details + Company Branding --}}
       <label class="rdc-opt" data-opt="50" data-coins="6">
         <input class="rdc-rinput" type="radio" name="rdcFormat" value="50">
         <span class="rdc-onum">50</span>
-        <span class="rdc-oi" style="background:#f0fdf4;color:#16a34a;" aria-hidden="true">
+        <span class="rdc-oi rdc-ic-green" aria-hidden="true">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 4 7v6c0 5 3.4 7.8 8 9 4.6-1.2 8-4 8-9V7l-8-4z"/><path d="M8 12h8"/><path d="M4 20h16"/></svg>
         </span>
         <span class="rdc-obody">
-          <span class="rdc-otitle">Test: Strategy 2 WASM Hide Contact Details + Company Branding <span style="background:#16a34a;color:#fff;font-size:8.5px;font-weight:700;padding:1px 6px;border-radius:4px;vertical-align:middle;margin-left:4px;">Branded Privacy</span></span>
+          <span class="rdc-otitle">Hide Contact Details + Company Branding</span>
           <span class="rdc-odesc">Keep the name visible, hide contact and LinkedIn details, then add your company header.</span>
         </span>
         <span class="rdc-ometa">
           <span class="rdc-ocost">6 Coins</span>
-          <span class="rdc-otime">WASM</span>
+          <span class="rdc-otime">60 seconds</span>
         </span>
         <span class="rdc-ocirc" aria-hidden="true"></span>
       </label>
 
-      {{-- 51: Strategy 2 WASM Hide Contact Details + Pre-Screened Report --}}
+      {{-- 51: Hide Contact Details + Pre-Screened Report --}}
       <label class="rdc-opt" data-opt="51" data-coins="11">
         <input class="rdc-rinput" type="radio" name="rdcFormat" value="51">
         <span class="rdc-onum">51</span>
@@ -10739,17 +10739,17 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 4 7v6c0 5 3.4 7.8 8 9 4.6-1.2 8-4 8-9V7l-8-4z"/><path d="M14 2v6h6"/><path d="M8 13h8"/><path d="M8 17h6"/></svg>
         </span>
         <span class="rdc-obody">
-          <span class="rdc-otitle">Test: Strategy 2 WASM Hide Contact Details + Pre-Screened Report <span style="background:#6d28d9;color:#fff;font-size:8.5px;font-weight:700;padding:1px 6px;border-radius:4px;vertical-align:middle;margin-left:4px;">Executive Privacy</span></span>
+          <span class="rdc-otitle">Hide Contact Details + Pre-Screened Report</span>
           <span class="rdc-odesc">Keep the name visible, hide contact and LinkedIn details, then merge the pre-screened report.</span>
         </span>
         <span class="rdc-ometa">
           <span class="rdc-ocost">11 Coins</span>
-          <span class="rdc-otime">WASM</span>
+          <span class="rdc-otime">60 seconds</span>
         </span>
         <span class="rdc-ocirc" aria-hidden="true"></span>
       </label>
 
-      {{-- 52: Strategy 2 WASM Hide Contact Details + Pre-Screened Report without Company Branding --}}
+      {{-- 52: Hide Contact Details + Pre-Screened Report without Company Branding --}}
       <label class="rdc-opt" data-opt="52" data-coins="12">
         <input class="rdc-rinput" type="radio" name="rdcFormat" value="52">
         <span class="rdc-onum">52</span>
@@ -10757,30 +10757,30 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 4 7v6c0 5 3.4 7.8 8 9 4.6-1.2 8-4 8-9V7l-8-4z"/><path d="M14 2v6h6"/><path d="M8 13h8"/><path d="m4 4 16 16"/></svg>
         </span>
         <span class="rdc-obody">
-          <span class="rdc-otitle">Test: Strategy 2 WASM Hide Contact Details + Pre-Screened Report without Company Branding <span style="background:#475569;color:#fff;font-size:8.5px;font-weight:700;padding:1px 6px;border-radius:4px;vertical-align:middle;margin-left:4px;">Unbranded Privacy</span></span>
+          <span class="rdc-otitle">Hide Contact Details + Pre-Screened Report without Company Branding</span>
           <span class="rdc-odesc">Keep the name visible, hide contact and LinkedIn details, then merge a no-brand report.</span>
         </span>
         <span class="rdc-ometa">
           <span class="rdc-ocost">12 Coins</span>
-          <span class="rdc-otime">WASM</span>
+          <span class="rdc-otime">60 seconds</span>
         </span>
         <span class="rdc-ocirc" aria-hidden="true"></span>
       </label>
 
-      {{-- 53: Strategy 2 WASM Hide Contact Details + Pre-Screened Report + Highlighted Keywords --}}
+      {{-- 53: Hide Contact Details + Pre-Screened Report + Highlighted Keywords --}}
       <label class="rdc-opt" data-opt="53" data-coins="13">
         <input class="rdc-rinput" type="radio" name="rdcFormat" value="53">
         <span class="rdc-onum">53</span>
         <span class="rdc-oi" style="background:#fdf2f8;color:#be185d;" aria-hidden="true">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 4 7v6c0 5 3.4 7.8 8 9 4.6-1.2 8-4 8-9V7l-8-4z"/><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><path d="m9 11-6 6v3h3l6-6"/></svg>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 4 7v6c0 5 3.4 7.8 8 9 4.6-1.2 8-4 8-9V7l-8-4z"/><path d="M14 2v6h6"/><path d="M8 13h8"/><path d="M8 17h5"/><path d="m15 18 2 2 4-4"/><path d="m9 11-6 6v3h3l6-6"/></svg>
         </span>
         <span class="rdc-obody">
-          <span class="rdc-otitle">Test: Pre-Screened Report + Strategy 2 WASM Resume <span style="background:#be185d;color:#fff;font-size:8.5px;font-weight:700;padding:1px 6px;border-radius:4px;vertical-align:middle;margin-left:4px;">Contact Hidden + Highlighted</span></span>
+          <span class="rdc-otitle">Hide Contact Details + Pre-Screened Report + Highlighted Keywords</span>
           <span class="rdc-odesc">Branded pre-screened report on Page 1, followed by contact-hidden resume with role-matched skills highlighted.</span>
         </span>
         <span class="rdc-ometa">
           <span class="rdc-ocost">13 Coins</span>
-          <span class="rdc-otime">WASM</span>
+          <span class="rdc-otime">60 seconds</span>
         </span>
         <span class="rdc-ocirc" aria-hidden="true"></span>
       </label>
@@ -10978,20 +10978,20 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
     31:{cost:6, label:'old_Hide Contact Details + Company Branding', avail:(['PDF','DOCX'].indexOf(resumeExt) !== -1) && !!(r2DirectUrl || r2PublicUrl || originalR2DirectUrl || originalR2PublicUrl), dlKey:'client-contact-hidden-branded-resume', unavailableMsg:(resumeExt === 'DOC' ? docUnsupportedMsg : 'Hide Contact Details + Company Branding is browser-only and available for direct R2 PDF/DOCX resumes.')},
     32:{cost:11, label:'old_Hide Contact Details + Pre-Screened Report', avail:(['PDF','DOCX'].indexOf(resumeExt) !== -1) && !!(r2DirectUrl || r2PublicUrl || originalR2DirectUrl || originalR2PublicUrl), dlKey:'client-contact-hidden-prescreened-resume', unavailableMsg:(resumeExt === 'DOC' ? docUnsupportedMsg : 'Hide Contact Details + Pre-Screened Report is browser-only and available for direct R2 PDF/DOCX resumes.')},
     33:{cost:12, label:'old_Hide Contact Details + Pre-Screened Report without Company Branding', avail:(['PDF','DOCX'].indexOf(resumeExt) !== -1) && !!(r2DirectUrl || r2PublicUrl || originalR2DirectUrl || originalR2PublicUrl), dlKey:'client-contact-hidden-prescreened-nobrand-resume', unavailableMsg:(resumeExt === 'DOC' ? docUnsupportedMsg : 'Hide Contact Details + Pre-Screened Report without Company Branding is browser-only and available for direct R2 PDF/DOCX resumes.')},
-    40:{cost:1, label:'Test: Strategy 2 WASM (DOCX → PDF Only)', avail:(['PDF','DOCX'].indexOf(resumeExt) !== -1) && !!(r2DirectUrl || r2PublicUrl || originalR2DirectUrl || originalR2PublicUrl || dlUrl), dlKey:'test-agy-strategy2-wasm', unavailableMsg:(resumeExt === 'DOC' ? docUnsupportedMsg : 'Strategy 2 WASM Engine is browser-only and available for direct PDF/DOCX resumes.')},
-    41:{cost:2, label:'Test: Strategy 2 WASM + Company Branding', avail:(['PDF','DOCX'].indexOf(resumeExt) !== -1) && !!(r2DirectUrl || r2PublicUrl || originalR2DirectUrl || originalR2PublicUrl || dlUrl), dlKey:'test-agy-strategy2-branded', unavailableMsg:(resumeExt === 'DOC' ? docUnsupportedMsg : 'Strategy 2 WASM Branded is browser-only and available for direct PDF/DOCX resumes.')},
-    42:{cost:6, label:'Test: Pre-Screened Report + Strategy 2 WASM Resume + Company Branding', avail:(['PDF','DOCX'].indexOf(resumeExt) !== -1) && !!(r2DirectUrl || r2PublicUrl || originalR2DirectUrl || originalR2PublicUrl || dlUrl), dlKey:'test-agy-strategy2-prescreened-branded', unavailableMsg:(resumeExt === 'DOC' ? docUnsupportedMsg : 'Strategy 2 WASM Pre-Screened Package is browser-only and available for direct PDF/DOCX resumes.')},
-    43:{cost:7, label:'Test: Pre-Screened Report + Strategy 2 WASM Resume without Company Branding', avail:(['PDF','DOCX'].indexOf(resumeExt) !== -1) && !!(r2DirectUrl || r2PublicUrl || originalR2DirectUrl || originalR2PublicUrl || dlUrl), dlKey:'test-agy-strategy2-prescreened-nobrand', unavailableMsg:(resumeExt === 'DOC' ? docUnsupportedMsg : 'Strategy 2 WASM Pre-Screened Package without Branding is browser-only and available for direct PDF/DOCX resumes.')},
-    44:{cost:4, label:'Test: Strategy 2 WASM Resume + Highlighted Keywords', avail:(['PDF','DOCX'].indexOf(resumeExt) !== -1) && !!(r2DirectUrl || r2PublicUrl || originalR2DirectUrl || originalR2PublicUrl || dlUrl), dlKey:'test-agy-strategy2-highlighted', unavailableMsg:(resumeExt === 'DOC' ? docUnsupportedMsg : 'Strategy 2 WASM Highlighted Resume is browser-only and available for direct PDF/DOCX resumes.')},
-    45:{cost:6, label:'Test: Strategy 2 WASM Resume + Highlighted Keywords + Company Branding', avail:(['PDF','DOCX'].indexOf(resumeExt) !== -1) && !!(r2DirectUrl || r2PublicUrl || originalR2DirectUrl || originalR2PublicUrl || dlUrl), dlKey:'test-agy-strategy2-highlighted-branded', unavailableMsg:(resumeExt === 'DOC' ? docUnsupportedMsg : 'Strategy 2 WASM Highlighted Branded Resume is browser-only and available for direct PDF/DOCX resumes.')},
-    46:{cost:8, label:'Test: Pre-Screened Report + Strategy 2 WASM Resume + Highlighted Keywords + Company Branding', avail:(['PDF','DOCX'].indexOf(resumeExt) !== -1) && !!(r2DirectUrl || r2PublicUrl || originalR2DirectUrl || originalR2PublicUrl || dlUrl), dlKey:'test-agy-strategy2-prescreened-highlighted-branded', unavailableMsg:(resumeExt === 'DOC' ? docUnsupportedMsg : 'Strategy 2 WASM Pre-Screened Highlighted Package is browser-only and available for direct PDF/DOCX resumes.')},
-    47:{cost:8, label:'Test: Pre-Screened Report + Strategy 2 WASM Resume + Highlighted Keywords without Company Branding', avail:(['PDF','DOCX'].indexOf(resumeExt) !== -1) && !!(r2DirectUrl || r2PublicUrl || originalR2DirectUrl || originalR2PublicUrl || dlUrl), dlKey:'test-agy-strategy2-prescreened-highlighted-nobrand', unavailableMsg:(resumeExt === 'DOC' ? docUnsupportedMsg : 'Strategy 2 WASM Pre-Screened Highlighted Package without Branding is browser-only and available for direct PDF/DOCX resumes.')},
-    48:{cost:4, label:'Test: Strategy 2 WASM Hide Contact Details', avail:(['PDF','DOCX'].indexOf(resumeExt) !== -1) && !!(r2DirectUrl || r2PublicUrl || originalR2DirectUrl || originalR2PublicUrl || dlUrl), dlKey:'test-agy-strategy2-contact-hidden', unavailableMsg:(resumeExt === 'DOC' ? docUnsupportedMsg : 'Strategy 2 WASM Contact Hidden Resume is browser-only and available for direct PDF/DOCX resumes.')},
-    49:{cost:4, label:'Test: Strategy 2 WASM Hide Candidate Name & Contacts Details', avail:(['PDF','DOCX'].indexOf(resumeExt) !== -1) && !!(r2DirectUrl || r2PublicUrl || originalR2DirectUrl || originalR2PublicUrl || dlUrl), dlKey:'test-agy-strategy2-anonymized-all', unavailableMsg:(resumeExt === 'DOC' ? docUnsupportedMsg : 'Strategy 2 WASM Anonymized Resume is browser-only and available for direct PDF/DOCX resumes.')},
-    50:{cost:6, label:'Test: Strategy 2 WASM Hide Contact Details + Company Branding', avail:(['PDF','DOCX'].indexOf(resumeExt) !== -1) && !!(r2DirectUrl || r2PublicUrl || originalR2DirectUrl || originalR2PublicUrl || dlUrl), dlKey:'test-agy-strategy2-contact-hidden-branded', unavailableMsg:(resumeExt === 'DOC' ? docUnsupportedMsg : 'Strategy 2 WASM Contact Hidden Branded Resume is browser-only and available for direct PDF/DOCX resumes.')},
-    51:{cost:11, label:'Test: Pre-Screened Report + Strategy 2 WASM Resume (Contact Hidden) + Company Branding', avail:(['PDF','DOCX'].indexOf(resumeExt) !== -1) && !!(r2DirectUrl || r2PublicUrl || originalR2DirectUrl || originalR2PublicUrl || dlUrl), dlKey:'test-agy-strategy2-contact-hidden-prescreened', unavailableMsg:(resumeExt === 'DOC' ? docUnsupportedMsg : 'Strategy 2 WASM Contact Hidden Pre-Screened Package is browser-only and available for direct PDF/DOCX resumes.')},
-    52:{cost:12, label:'Test: Pre-Screened Report + Strategy 2 WASM Resume (Contact Hidden) without Company Branding', avail:(['PDF','DOCX'].indexOf(resumeExt) !== -1) && !!(r2DirectUrl || r2PublicUrl || originalR2DirectUrl || originalR2PublicUrl || dlUrl), dlKey:'test-agy-strategy2-contact-hidden-prescreened-nobrand', unavailableMsg:(resumeExt === 'DOC' ? docUnsupportedMsg : 'Strategy 2 WASM Contact Hidden Pre-Screened Package without Branding is browser-only and available for direct PDF/DOCX resumes.')},
-    53:{cost:13, label:'Test: Pre-Screened Report + Strategy 2 WASM Resume (Contact Hidden + Highlighted)', avail:(['PDF','DOCX'].indexOf(resumeExt) !== -1) && !!(r2DirectUrl || r2PublicUrl || originalR2DirectUrl || originalR2PublicUrl || dlUrl), dlKey:'test-agy-strategy2-contact-hidden-prescreened-highlighted', unavailableMsg:(resumeExt === 'DOC' ? docUnsupportedMsg : 'Strategy 2 WASM Contact Hidden Highlighted Pre-Screened Package is browser-only and available for direct PDF/DOCX resumes.')}
+    40:{cost:1, label:'Resume (PDF Conversion)', avail:(['PDF','DOCX'].indexOf(resumeExt) !== -1) && !!(r2DirectUrl || r2PublicUrl || originalR2DirectUrl || originalR2PublicUrl || dlUrl), dlKey:'test-agy-strategy2-wasm', unavailableMsg:(resumeExt === 'DOC' ? docUnsupportedMsg : 'Resume (PDF Conversion) is browser-only and available for direct PDF/DOCX resumes.')},
+    41:{cost:2, label:'Resume + Company Branding', avail:(['PDF','DOCX'].indexOf(resumeExt) !== -1) && !!(r2DirectUrl || r2PublicUrl || originalR2DirectUrl || originalR2PublicUrl || dlUrl), dlKey:'test-agy-strategy2-branded', unavailableMsg:(resumeExt === 'DOC' ? docUnsupportedMsg : 'Resume + Company Branding is browser-only and available for direct PDF/DOCX resumes.')},
+    42:{cost:6, label:'Pre-Screened Report + Resume + Company Branding', avail:(['PDF','DOCX'].indexOf(resumeExt) !== -1) && !!(r2DirectUrl || r2PublicUrl || originalR2DirectUrl || originalR2PublicUrl || dlUrl), dlKey:'test-agy-strategy2-prescreened-branded', unavailableMsg:(resumeExt === 'DOC' ? docUnsupportedMsg : 'Pre-Screened Report + Resume + Company Branding is browser-only and available for direct PDF/DOCX resumes.')},
+    43:{cost:7, label:'Pre-Screened Report + Resume without Company Branding', avail:(['PDF','DOCX'].indexOf(resumeExt) !== -1) && !!(r2DirectUrl || r2PublicUrl || originalR2DirectUrl || originalR2PublicUrl || dlUrl), dlKey:'test-agy-strategy2-prescreened-nobrand', unavailableMsg:(resumeExt === 'DOC' ? docUnsupportedMsg : 'Pre-Screened Report + Resume without Company Branding is browser-only and available for direct PDF/DOCX resumes.')},
+    44:{cost:4, label:'Resume + Highlighted Keywords', avail:(['PDF','DOCX'].indexOf(resumeExt) !== -1) && !!(r2DirectUrl || r2PublicUrl || originalR2DirectUrl || originalR2PublicUrl || dlUrl), dlKey:'test-agy-strategy2-highlighted', unavailableMsg:(resumeExt === 'DOC' ? docUnsupportedMsg : 'Resume + Highlighted Keywords is browser-only and available for direct PDF/DOCX resumes.')},
+    45:{cost:6, label:'Resume + Highlighted Keywords + Company Branding', avail:(['PDF','DOCX'].indexOf(resumeExt) !== -1) && !!(r2DirectUrl || r2PublicUrl || originalR2DirectUrl || originalR2PublicUrl || dlUrl), dlKey:'test-agy-strategy2-highlighted-branded', unavailableMsg:(resumeExt === 'DOC' ? docUnsupportedMsg : 'Resume + Highlighted Keywords + Company Branding is browser-only and available for direct PDF/DOCX resumes.')},
+    46:{cost:8, label:'Pre-Screened Report + Resume + Highlighted Keywords + Company Branding', avail:(['PDF','DOCX'].indexOf(resumeExt) !== -1) && !!(r2DirectUrl || r2PublicUrl || originalR2DirectUrl || originalR2PublicUrl || dlUrl), dlKey:'test-agy-strategy2-prescreened-highlighted-branded', unavailableMsg:(resumeExt === 'DOC' ? docUnsupportedMsg : 'Pre-Screened Report + Resume + Highlighted Keywords + Company Branding is browser-only and available for direct PDF/DOCX resumes.')},
+    47:{cost:8, label:'Pre-Screened Report + Resume + Highlighted Keywords without Company Branding', avail:(['PDF','DOCX'].indexOf(resumeExt) !== -1) && !!(r2DirectUrl || r2PublicUrl || originalR2DirectUrl || originalR2PublicUrl || dlUrl), dlKey:'test-agy-strategy2-prescreened-highlighted-nobrand', unavailableMsg:(resumeExt === 'DOC' ? docUnsupportedMsg : 'Pre-Screened Report + Resume + Highlighted Keywords without Company Branding is browser-only and available for direct PDF/DOCX resumes.')},
+    48:{cost:4, label:'Hide Contact Details', avail:(['PDF','DOCX'].indexOf(resumeExt) !== -1) && !!(r2DirectUrl || r2PublicUrl || originalR2DirectUrl || originalR2PublicUrl || dlUrl), dlKey:'test-agy-strategy2-contact-hidden', unavailableMsg:(resumeExt === 'DOC' ? docUnsupportedMsg : 'Hide Contact Details is browser-only and available for direct PDF/DOCX resumes.')},
+    49:{cost:4, label:'Hide Candidate Name & Contacts Details', avail:(['PDF','DOCX'].indexOf(resumeExt) !== -1) && !!(r2DirectUrl || r2PublicUrl || originalR2DirectUrl || originalR2PublicUrl || dlUrl), dlKey:'test-agy-strategy2-anonymized-all', unavailableMsg:(resumeExt === 'DOC' ? docUnsupportedMsg : 'Hide Candidate Name & Contacts Details is browser-only and available for direct PDF/DOCX resumes.')},
+    50:{cost:6, label:'Hide Contact Details + Company Branding', avail:(['PDF','DOCX'].indexOf(resumeExt) !== -1) && !!(r2DirectUrl || r2PublicUrl || originalR2DirectUrl || originalR2PublicUrl || dlUrl), dlKey:'test-agy-strategy2-contact-hidden-branded', unavailableMsg:(resumeExt === 'DOC' ? docUnsupportedMsg : 'Hide Contact Details + Company Branding is browser-only and available for direct PDF/DOCX resumes.')},
+    51:{cost:11, label:'Hide Contact Details + Pre-Screened Report', avail:(['PDF','DOCX'].indexOf(resumeExt) !== -1) && !!(r2DirectUrl || r2PublicUrl || originalR2DirectUrl || originalR2PublicUrl || dlUrl), dlKey:'test-agy-strategy2-contact-hidden-prescreened', unavailableMsg:(resumeExt === 'DOC' ? docUnsupportedMsg : 'Hide Contact Details + Pre-Screened Report is browser-only and available for direct PDF/DOCX resumes.')},
+    52:{cost:12, label:'Hide Contact Details + Pre-Screened Report without Company Branding', avail:(['PDF','DOCX'].indexOf(resumeExt) !== -1) && !!(r2DirectUrl || r2PublicUrl || originalR2DirectUrl || originalR2PublicUrl || dlUrl), dlKey:'test-agy-strategy2-contact-hidden-prescreened-nobrand', unavailableMsg:(resumeExt === 'DOC' ? docUnsupportedMsg : 'Hide Contact Details + Pre-Screened Report without Company Branding is browser-only and available for direct PDF/DOCX resumes.')},
+    53:{cost:13, label:'Hide Contact Details + Pre-Screened Report + Highlighted Keywords', avail:(['PDF','DOCX'].indexOf(resumeExt) !== -1) && !!(r2DirectUrl || r2PublicUrl || originalR2DirectUrl || originalR2PublicUrl || dlUrl), dlKey:'test-agy-strategy2-contact-hidden-prescreened-highlighted', unavailableMsg:(resumeExt === 'DOC' ? docUnsupportedMsg : 'Hide Contact Details + Pre-Screened Report + Highlighted Keywords is browser-only and available for direct PDF/DOCX resumes.')}
   };
 
   var selectedOpt = 1;
