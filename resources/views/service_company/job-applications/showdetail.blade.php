@@ -8668,20 +8668,28 @@ async function agyPreProcessDocxZip(docxBytes){
     var docFile = zip.file('word/document.xml');
     if(!docFile) return { bytes: docxBytes, metadata: null };
 
-    // 1. Sanitize PUA bullets, unmapped symbols and normalize paragraph spacing in word/document.xml
+    // 1. Sanitize PUA bullets to semantic Unicode equivalents and normalize paragraph spacing in word/document.xml
     var xmlText = await docFile.async('string');
     var sanitizedXml = xmlText
-      .replace(/[\uF0B7\uF0A7\uF0A8\uF06F\uF0A4\uF0A5\uF0B0\u2022\u25AA\u25CF\u25CB\u25A0\u25A1]/g, '•')
-      .replace(/[\uF0D8\u27A2\u2794]/g, '➢')
-      .replace(/[\uF0FC\uF076\u2713\u2714]/g, '✓')
+      // Squares
+      .replace(/[\uF0A7\uF0A8\u25AA\u25A0\u25A1]|&#xF0A7;|&#61607;|&#xF0A8;|&#61608;/gi, '▪')
+      // Hollow circles
+      .replace(/[\uF06F\u25CB]|&#xF06F;|&#61551;/gi, '○')
+      // Arrows
+      .replace(/[\uF0D8\u27A2\u2794]|&#xF0D8;|&#61656;/gi, '➢')
+      // Checks
+      .replace(/[\uF0FC\u2713]|&#xF0FC;|&#61692;/gi, '✓')
+      .replace(/[\uF076\u2714]|&#xF076;|&#61558;/gi, '✔')
+      // Diamonds
+      .replace(/[\uF0A4\u25C6]|&#xF0A4;/gi, '◆')
+      .replace(/[\uF0A5\u25C7]|&#xF0A5;/gi, '◇')
+      // Dashes
+      .replace(/[\uF02D\u2013\u2014]|&#xF02D;/gi, '–')
+      // Envelopes
       .replace(/\uF0E0/g, '✉')
-      .replace(/&#xF0B7;|&#61623;/gi, '•')
-      .replace(/&#xF0A7;|&#61607;/gi, '•')
-      .replace(/&#xF0A8;|&#61608;/gi, '•')
-      .replace(/&#xF06F;|&#61551;/gi, '•')
-      .replace(/&#xF0D8;|&#61656;/gi, '➢')
-      .replace(/&#xF0FC;|&#61692;/gi, '✓')
-      .replace(/&#xF076;|&#61558;/gi, '✓')
+      // Standard round bullets
+      .replace(/[\uF0B7\uF0B0\u2022\u25CF]|&#xF0B7;|&#61623;/gi, '•')
+      // Strip any remaining unmapped PUA codepoints
       .replace(/[\uE000-\uF8FF]/g, '')
       .replace(/<w:spacing\b([^>]*)\/?>/gi, function(match, attrs){
         var newAttrs = attrs
@@ -8697,23 +8705,54 @@ async function agyPreProcessDocxZip(docxBytes){
         return '<w:spacing' + newAttrs + '/>';
       });
 
-    // 2. Sanitize and normalize word/numbering.xml (Fixes square bullets & bullet indentations in Word lists)
+    // 2. Sanitize and normalize word/numbering.xml (Preserves original bullet styles & hierarchical sub-pointer indents)
     var numFile = zip.file('word/numbering.xml');
     if(numFile){
       try{
         var numXml = await numFile.async('string');
-        var cleanNumXml = numXml
-          .replace(/<w:lvlText\s+w:val="([^"]*)"/gi, function(m, val){
-            // Preserve numbered lists (%1, %2, etc.) while standardizing bullet symbols to •
-            if(/%\d/.test(val)) return m;
-            return '<w:lvlText w:val="•"';
-          })
-          .replace(/w:ascii="(Symbol|Wingdings[^"]*)"/gi, 'w:ascii="Arial"')
-          .replace(/w:hAnsi="(Symbol|Wingdings[^"]*)"/gi, 'w:hAnsi="Arial"')
-          .replace(/<w:ind\s+[^>]*\/>/gi, '<w:ind w:left="420" w:hanging="240"/>');
+        var cleanNumXml = numXml.replace(/<w:lvl\b([^>]*)>([\s\S]*?)<\/w:lvl>/gi, function(match, lvlAttrs, lvlContent){
+          var ilvlMatch = lvlAttrs.match(/\bw:ilvl="(\d+)"/i) || lvlContent.match(/<w:ilvl\b[^>]*w:val="(\d+)"/i);
+          var ilvl = ilvlMatch ? parseInt(ilvlMatch[1], 10) : 0;
+
+          var isBullet = false;
+          var newContent = lvlContent.replace(/<w:lvlText\b([^>]*?)\bw:val="([^"]*)"([^>]*?)\/?>/gi, function(m, pre, val, post){
+            if(/%\d/.test(val)) return m; // Preserve numbered lists (%1, %2, etc.)
+            isBullet = true;
+            // Map original bullet symbol to its true semantic Unicode twin
+            var mapped = '•';
+            if(/[\uF0A7\uF0A8\u25AA\u25A0\u25A1]/.test(val)) mapped = '▪';
+            else if(/[\uF06F\u25CB]/.test(val)) mapped = '○';
+            else if(/[\uF0D8\u27A2\u2794>]/.test(val)) mapped = '➢';
+            else if(/[\uF0FC\u2713]/.test(val)) mapped = '✓';
+            else if(/[\uF076\u2714]/.test(val)) mapped = '✔';
+            else if(/[\uF0A4\u25C6]/.test(val)) mapped = '◆';
+            else if(/[\uF0A5\u25C7]/.test(val)) mapped = '◇';
+            else if(/[\uF02D\-\u2013]/.test(val)) mapped = '–';
+            return '<w:lvlText' + pre + 'w:val="' + mapped + '"' + post.replace(/\/$/, '') + '/>';
+          });
+
+          // If bullet list, normalize font family to Arial so universal glyphs render crisply
+          if(isBullet){
+            newContent = newContent.replace(/w:ascii="[^"]*"/gi, 'w:ascii="Arial"')
+                                   .replace(/w:hAnsi="[^"]*"/gi, 'w:hAnsi="Arial"');
+          }
+
+          // Strict Level-Indexed Indentation Grid: Level 0 = 360 twips (0.25 in), Level 1 = 720 twips (0.50 in)
+          // Hanging gap is exactly 240 twips (12 pt) across all levels so wrapped lines align perfectly
+          var leftTwips = 360 + (ilvl * 360);
+          var hangingTwips = 240;
+
+          if(/<w:ind\b[^>]*\/?>/i.test(newContent)){
+            newContent = newContent.replace(/<w:ind\b[^>]*\/?>/gi, '<w:ind w:left="' + leftTwips + '" w:hanging="' + hangingTwips + '"/>');
+          }else{
+            newContent = newContent.replace(/<\/w:pPr>/i, '<w:ind w:left="' + leftTwips + '" w:hanging="' + hangingTwips + '"/></w:pPr>');
+          }
+
+          return '<w:lvl' + lvlAttrs + '>' + newContent + '</w:lvl>';
+        });
         zip.file('word/numbering.xml', cleanNumXml);
       }catch(nErr){
-        console.warn('Strategy 3 numbering.xml pre-process warning:', nErr);
+        console.warn('Strategy 2/3 numbering.xml pre-process warning:', nErr);
       }
     }
 
@@ -8772,10 +8811,23 @@ function agyApplyStrategy3DomEngine(host, metadata){
   textNodesToClean.forEach(function(tn){
     var val = tn.nodeValue;
     var cleaned = val
-      .replace(/[\uF0B7\uF0A7\uF0A8\uF06F\uF0A4\uF0A5\uF0B0\u2022\u25AA\u25CF\u25CB\u25A0\u25A1]/g, '•')
-      .replace(/[\uF0D8\u27A2\u2794]/g, '➢')
-      .replace(/[\uF0FC\uF076\u2713\u2714]/g, '✓')
-      .replace(/[\uE000-\uF8FF□■]/g, '')
+      // Squares
+      .replace(/[\uF0A7\uF0A8\u25AA\u25A0\u25A1]|&#xF0A7;|&#61607;|&#xF0A8;|&#61608;/gi, '▪')
+      // Hollow circles
+      .replace(/[\uF06F\u25CB]|&#xF06F;|&#61551;/gi, '○')
+      // Arrows
+      .replace(/[\uF0D8\u27A2\u2794]|&#xF0D8;|&#61656;/gi, '➢')
+      // Checks
+      .replace(/[\uF0FC\u2713]|&#xF0FC;|&#61692;/gi, '✓')
+      .replace(/[\uF076\u2714]|&#xF076;|&#61558;/gi, '✔')
+      // Diamonds
+      .replace(/[\uF0A4\u25C6]|&#xF0A4;/gi, '◆')
+      .replace(/[\uF0A5\u25C7]|&#xF0A5;/gi, '◇')
+      // Dashes
+      .replace(/[\uF02D\u2013\u2014]|&#xF02D;/gi, '–')
+      // Standard round bullets
+      .replace(/[\uF0B7\uF0B0\u2022\u25CF]|&#xF0B7;|&#61623;/gi, '•')
+      .replace(/[\uE000-\uF8FF□]/g, '')
       .replace(/[\u00A0\t]+/g, ' ')
       .replace(/\s+([.,;:!?])/g, '$1');
     if(cleaned !== val){
