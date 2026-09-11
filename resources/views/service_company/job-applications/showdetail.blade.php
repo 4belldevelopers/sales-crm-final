@@ -9435,6 +9435,16 @@ async function processAgyTestOption(optNum, options){
         statusCallback: options.statusCallback
       });
       outFileName = 'JEROWORKS_' + fileSafeName(data.name, 'Candidate') + '_Strategy2_WASM.pdf';
+
+    }else if(optNum === 41){
+      // Strategy 2 WASM + Dynamic Company Branding Header
+      if(options.statusCallback) options.statusCallback('Converting Word document via WASM (45%)...');
+      var wasmBlob = await renderAgyStrategy2WasmDocxToPdfBlob(docxBytes, {
+        statusCallback: options.statusCallback
+      });
+      if(options.statusCallback) options.statusCallback('Applying Company Branding Header (85%)...');
+      pdfBlob = await applyAgyCompanyBrandingToPdfBlob(wasmBlob, data);
+      outFileName = 'JEROWORKS_' + fileSafeName(data.name, 'Candidate') + '_Strategy2_Branded.pdf';
     }
 
     if(pdfBlob instanceof Blob){
@@ -9451,9 +9461,168 @@ async function processAgyTestOption(optNum, options){
   }
 }
 
+/* ==========================================================================
+   AGY COMPANY BRANDING ENGINE (PURE CLIENT-SIDE VECTOR HEADER INJECTION)
+   - Extends Page 1 canvas height by header height (72-82 pt)
+   - Mounts Company Logo + "SHARED BY" header above Page 1
+   - Original resume drawn 1:1 below header with ZERO squashing or text clipping
+   - 100% of candidate contact info, name, title remain completely visible
+   - Copies subsequent pages untouched with 100% vector fidelity
+   ========================================================================== */
+async function applyAgyCompanyBrandingToPdfBlob(resumePdfBlob, brandingData){
+  await rsEnsurePdfLib();
+  brandingData = brandingData || readData();
+  var PDFLib = window.PDFLib;
+  var resumeBytes = await resumePdfBlob.arrayBuffer();
+  var resumeDoc = await PDFLib.PDFDocument.load(resumeBytes);
+  var sourcePages = resumeDoc.getPages();
+  if(!sourcePages.length) throw new Error('Resume PDF has no pages');
+
+  var firstPage = sourcePages[0];
+  var pageSize = firstPage.getSize();
+
+  var targetDoc = await PDFLib.PDFDocument.create();
+  var regularFont = await targetDoc.embedFont(PDFLib.StandardFonts.Helvetica);
+  var boldFont = await targetDoc.embedFont(PDFLib.StandardFonts.HelveticaBold);
+
+  var logoUri = await rsLogoDataUri(brandingData.reportCompanyLogo);
+  var logoImage = null;
+  var logoData = dataUriBytes(logoUri);
+  if(logoData){
+    try{
+      if(logoData.mime.indexOf('png') !== -1) logoImage = await targetDoc.embedPng(logoData.bytes);
+      else if(logoData.mime.indexOf('jpeg') !== -1 || logoData.mime.indexOf('jpg') !== -1) logoImage = await targetDoc.embedJpg(logoData.bytes);
+    }catch(err){
+      console.warn('Agy company branding logo embed skipped:', err);
+      logoImage = null;
+    }
+  }
+
+  var headerScale = Math.max(1, Math.min(1.45, pageSize.width / 612));
+  var headerH = Math.max(66, Math.min(82, pageSize.width * 0.105)) * headerScale;
+
+  // Extended Page 1: add headerH to total height so candidate resume below is 100% untouched
+  var newFirst = targetDoc.addPage([pageSize.width, pageSize.height + headerH]);
+  var embeddedFirst = await targetDoc.embedPage(firstPage);
+  newFirst.drawPage(embeddedFirst, { x: 0, y: 0, width: pageSize.width, height: pageSize.height });
+
+  var topY = pageSize.height;
+  // Header background container
+  newFirst.drawRectangle({
+    x: 0,
+    y: topY,
+    width: pageSize.width,
+    height: headerH,
+    color: PDFLib.rgb(1, 1, 1),
+    borderColor: PDFLib.rgb(0.86, 0.89, 0.94),
+    borderWidth: 0.8
+  });
+
+  // Top blue accent bar
+  newFirst.drawRectangle({
+    x: 0,
+    y: topY + headerH - (4 * headerScale),
+    width: pageSize.width,
+    height: 4 * headerScale,
+    color: PDFLib.rgb(0.12, 0.23, 0.54)
+  });
+
+  // Bottom divider line separating header from resume
+  newFirst.drawRectangle({
+    x: 0,
+    y: topY,
+    width: pageSize.width,
+    height: 1.1 * headerScale,
+    color: PDFLib.rgb(0.88, 0.91, 0.95)
+  });
+
+  var companyName = clean(brandingData.reportCompanyName, 'Hiring Partner');
+  var logoBox = headerH - (26 * headerScale);
+  var logoX = 22 * headerScale;
+  var logoY = topY + (13 * headerScale);
+  var logoAreaW = 70 * headerScale;
+
+  if(logoImage){
+    var dims = logoImage.scaleToFit(logoBox * 1.8, logoBox);
+    newFirst.drawImage(logoImage, {
+      x: logoX,
+      y: logoY + (logoBox - dims.height) / 2,
+      width: dims.width,
+      height: dims.height
+    });
+    logoAreaW = Math.max(56 * headerScale, Math.min(74 * headerScale, dims.width));
+  }else{
+    newFirst.drawRectangle({
+      x: logoX,
+      y: logoY,
+      width: logoBox,
+      height: logoBox,
+      color: PDFLib.rgb(0.93, 0.95, 1),
+      borderColor: PDFLib.rgb(0.75, 0.82, 0.98),
+      borderWidth: 0.8 * headerScale
+    });
+    newFirst.drawText(companyName.charAt(0).toUpperCase(), {
+      x: logoX + (logoBox / 2) - (5 * headerScale),
+      y: logoY + (logoBox / 2) - (5 * headerScale),
+      size: 16 * headerScale,
+      font: boldFont,
+      color: PDFLib.rgb(0.12, 0.23, 0.54)
+    });
+    logoAreaW = logoBox;
+  }
+
+  var textX = logoX + logoAreaW + (12 * headerScale);
+  var confText = 'CONFIDENTIAL RESUME';
+  var dateText = clean(brandingData.reportDate, '') || (new Date()).toLocaleDateString();
+  var confSize = 13 * headerScale;
+  var dateSize = 8.5 * headerScale;
+  var confW = boldFont.widthOfTextAtSize(confText, confSize);
+  var dateW = regularFont.widthOfTextAtSize(dateText, dateSize);
+  var rightMargin = 24 * headerScale;
+
+  newFirst.drawText('SHARED BY', {
+    x: textX,
+    y: topY + headerH - (27 * headerScale),
+    size: 7 * headerScale,
+    font: boldFont,
+    color: PDFLib.rgb(0.39, 0.45, 0.55)
+  });
+  newFirst.drawText(limitText(companyName, 42, companyName), {
+    x: textX,
+    y: topY + headerH - (45 * headerScale),
+    size: 12 * headerScale,
+    font: boldFont,
+    color: PDFLib.rgb(0.06, 0.09, 0.16)
+  });
+  newFirst.drawText(confText, {
+    x: pageSize.width - rightMargin - confW,
+    y: topY + headerH - (29 * headerScale),
+    size: confSize,
+    font: boldFont,
+    color: PDFLib.rgb(0.06, 0.09, 0.16)
+  });
+  newFirst.drawText(dateText, {
+    x: pageSize.width - rightMargin - dateW,
+    y: topY + headerH - (45 * headerScale),
+    size: dateSize,
+    font: regularFont,
+    color: PDFLib.rgb(0.39, 0.45, 0.55)
+  });
+
+  // Copy all remaining pages (Page 2, 3, etc.) untouched
+  if(sourcePages.length > 1){
+    var restPages = await targetDoc.copyPages(resumeDoc, resumeDoc.getPageIndices().slice(1));
+    restPages.forEach(function(page){ targetDoc.addPage(page); });
+  }
+
+  var finalBytes = await targetDoc.save();
+  return new Blob([finalBytes], { type: 'application/pdf' });
+}
+
 window.__processAgyTestOption=processAgyTestOption;
 window.__renderAgyTrueSectionDocxToPdfBlob=renderAgyTrueSectionDocxToPdfBlob;
 window.__renderAgyStrategy2WasmDocxToPdfBlob=renderAgyStrategy2WasmDocxToPdfBlob;
+window.__applyAgyCompanyBrandingToPdfBlob=applyAgyCompanyBrandingToPdfBlob;
 window.__preloadAgyMetricFonts=agyEnsureMetricFonts;
 window.__preloadRS=preloadRecruiterSummaryAssets;
 window.__preloadRSCombined=preloadCombinedReportAssets;
@@ -10154,6 +10323,24 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
         <span class="rdc-ocirc" aria-hidden="true"></span>
       </label>
 
+      {{-- 41: Strategy 2 WASM + Company Branding --}}
+      <label class="rdc-opt" data-opt="41" data-coins="2">
+        <input class="rdc-rinput" type="radio" name="rdcFormat" value="41">
+        <span class="rdc-onum">41</span>
+        <span class="rdc-oi" style="background:#f0fdf4;color:#16a34a;" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M16 13H8"/><path d="M16 17H8"/><path d="M10 9H8"/></svg>
+        </span>
+        <span class="rdc-obody">
+          <span class="rdc-otitle">Test: Strategy 2 WASM + Company Branding <span style="background:#16a34a;color:#fff;font-size:8.5px;font-weight:700;padding:1px 6px;border-radius:4px;vertical-align:middle;margin-left:4px;">Branded WASM</span></span>
+          <span class="rdc-odesc">Strategy 2 WASM conversion with your company logo & shared-by header above Page 1. 100% candidate details visible.</span>
+        </span>
+        <span class="rdc-ometa">
+          <span class="rdc-ocost">2 Coins</span>
+          <span class="rdc-otime">WASM</span>
+        </span>
+        <span class="rdc-ocirc" aria-hidden="true"></span>
+      </label>
+
     </div>{{-- /.rdc-opts-list --}}
 
     {{-- Coin info summary --}}
@@ -10322,7 +10509,8 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
     37:{cost:6, label:'Test: Antigravity Resume + Highlights + Branding', avail:(['PDF','DOCX'].indexOf(resumeExt) !== -1) && !!(r2DirectUrl || r2PublicUrl || originalR2DirectUrl || originalR2PublicUrl || dlUrl), dlKey:'test-agy-highlighted-branded', unavailableMsg:'Antigravity Branded Resume is browser-only and available for direct PDF/DOCX resumes.'},
     38:{cost:8, label:'Test: Antigravity Pre-Screened Report + Resume Package', avail:(['PDF','DOCX'].indexOf(resumeExt) !== -1) && !!(r2DirectUrl || r2PublicUrl || originalR2DirectUrl || originalR2PublicUrl || dlUrl), dlKey:'test-agy-prescreened-package', unavailableMsg:'Antigravity Pre-Screened Package is browser-only and available for direct PDF/DOCX resumes.'},
     39:{cost:4, label:'Test: Antigravity Hide Contact Details (Anonymized)', avail:(['PDF','DOCX'].indexOf(resumeExt) !== -1) && !!(r2DirectUrl || r2PublicUrl || originalR2DirectUrl || originalR2PublicUrl || dlUrl), dlKey:'test-agy-anonymized-resume', unavailableMsg:'Antigravity Anonymized Resume is browser-only and available for direct PDF/DOCX resumes.'},
-    40:{cost:1, label:'Test: Strategy 2 WASM (DOCX → PDF Only)', avail:(['PDF','DOCX'].indexOf(resumeExt) !== -1) && !!(r2DirectUrl || r2PublicUrl || originalR2DirectUrl || originalR2PublicUrl || dlUrl), dlKey:'test-agy-strategy2-wasm', unavailableMsg:'Strategy 2 WASM Engine is browser-only and available for direct PDF/DOCX resumes.'}
+    40:{cost:1, label:'Test: Strategy 2 WASM (DOCX → PDF Only)', avail:(['PDF','DOCX'].indexOf(resumeExt) !== -1) && !!(r2DirectUrl || r2PublicUrl || originalR2DirectUrl || originalR2PublicUrl || dlUrl), dlKey:'test-agy-strategy2-wasm', unavailableMsg:'Strategy 2 WASM Engine is browser-only and available for direct PDF/DOCX resumes.'},
+    41:{cost:2, label:'Test: Strategy 2 WASM + Company Branding', avail:(['PDF','DOCX'].indexOf(resumeExt) !== -1) && !!(r2DirectUrl || r2PublicUrl || originalR2DirectUrl || originalR2PublicUrl || dlUrl), dlKey:'test-agy-strategy2-branded', unavailableMsg:'Strategy 2 WASM Branded is browser-only and available for direct PDF/DOCX resumes.'}
   };
 
   var selectedOpt = 1;
@@ -10384,7 +10572,7 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
     if(optMeta[34]){
       optMeta[34].avail = ['PDF','DOCX'].indexOf(resumeExt) !== -1 && !!(r2DirectUrl || r2PublicUrl || originalR2DirectUrl || originalR2PublicUrl);
     }
-    [35, 36, 37, 38, 39, 40].forEach(function(id){
+    [35, 36, 37, 38, 39, 40, 41].forEach(function(id){
       if(optMeta[id]){
         optMeta[id].avail = ['PDF','DOCX'].indexOf(resumeExt) !== -1 && !!(r2DirectUrl || r2PublicUrl || originalR2DirectUrl || originalR2PublicUrl || dlUrl);
       }
@@ -10451,7 +10639,7 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
       {theme:'green',icon:'package',title:'3. Recruiter Packages (Report + Resume)',pill:'',ids:[15,16]},
       {theme:'amber',icon:'keyword',title:'4. Highlighted skills',pill:'',ids:[28,20,17,34,19]},
       {theme:'purple',icon:'privacy',title:'5. Privacy & Anonymization',pill:'Protect candidate information as needed.',ids:[29,30,31,32,33]},
-      {theme:'cyan',icon:'resume',title:'6. Antigravity Client Engine (Isolated Test Lab)',pill:'LibreOffice Quality Client Engine (0% server load, 99.9% accuracy, 60 FPS)',ids:[35,36,37,38,39,40]}
+      {theme:'cyan',icon:'resume',title:'6. Antigravity Client Engine (Isolated Test Lab)',pill:'LibreOffice Quality Client Engine (0% server load, 99.9% accuracy, 60 FPS)',ids:[35,36,37,38,39,40,41]}
     ];
     var moved={};
     var frag=document.createDocumentFragment();
@@ -10620,7 +10808,8 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
     if((m.dlKey === 'turbo-vector-highlighted-branded' || m.dlKey === 'turbo-vector-highlighted' || m.dlKey === 'turbo-prescreened-highlighted-package') && typeof window.__preloadRSCombined === 'function') window.__preloadRSCombined();
     if(m.dlKey === 'turbo-prescreened-highlighted-package' && resumeExt === 'DOCX' && typeof window.__preloadOpenDocLocal === 'function') window.__preloadOpenDocLocal();
     if(m.dlKey && m.dlKey.indexOf('test-agy-') === 0 && typeof window.__preloadAgyMetricFonts === 'function') window.__preloadAgyMetricFonts();
-    if(m.dlKey === 'test-agy-strategy2-wasm' && typeof window.__preloadOpenDocLocal === 'function') window.__preloadOpenDocLocal();
+    if((m.dlKey === 'test-agy-strategy2-wasm' || m.dlKey === 'test-agy-strategy2-branded') && typeof window.__preloadOpenDocLocal === 'function') window.__preloadOpenDocLocal();
+    if(m.dlKey === 'test-agy-strategy2-branded' && typeof window.__preloadRSCombined === 'function') window.__preloadRSCombined();
     if(m.dlKey === 'test-preantigravity-prescreened-highlighted-branded' && typeof window.__preloadRSCombined === 'function') window.__preloadRSCombined();
     if(m.dlKey === 'test-preantigravity-prescreened-highlighted-branded' && resumeExt === 'DOCX' && typeof window.__preloadOpenDocLocal === 'function') window.__preloadOpenDocLocal();
     if((m.dlKey === 'prescreened-highlighted-package' || m.dlKey === 'prescreened-highlighted-package-nobrand' || m.dlKey === 'prescreened-highlighted-package-client-docx' || m.dlKey === 'prescreened-highlighted-package-client-docx-nobrand') && typeof window.__preloadRSCombined === 'function') window.__preloadRSCombined();
