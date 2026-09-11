@@ -1470,6 +1470,52 @@
             }
             hits = Array.prototype.slice.call(document.querySelectorAll('#rcvHtml mark.rcv-hit'));
           } else {
+            // Dynamic text layer coordinate resolution for WASM-converted DOCX resumes
+            if(window.__rcvActiveWasmDoc && window.__rcvDocxWasmHitsSearched && typeof agyCollectWasmDocxWordHits === 'function'){
+              var activeKws = activeList();
+              var missingKws = activeKws.filter(function(k){
+                return !window.__rcvDocxWasmHitsSearched[k.toLowerCase()];
+              });
+              if(missingKws.length > 0){
+                var newHits = agyCollectWasmDocxWordHits(window.__rcvActiveWasmDoc, missingKws);
+                missingKws.forEach(function(k){
+                  window.__rcvDocxWasmHitsSearched[k.toLowerCase()] = true;
+                });
+                if(newHits && newHits.length){
+                  window.__rcvDocxWasmHits = (window.__rcvDocxWasmHits || []).concat(newHits);
+                  var pageWraps = document.querySelectorAll('#rcvPages .rcv-page');
+                  pageWraps.forEach(function(wrap, idx){
+                    var pNum = idx + 1;
+                    var tl = wrap.querySelector('.rcv-textlayer');
+                    if(!tl) return;
+                    var pNewHits = newHits.filter(function(h){ return h.page === pNum; });
+                    if(!pNewHits.length) return;
+                    var baseW = wrap.__baseW || (wrap.clientWidth ? (wrap.clientWidth * 20) : 11905.6);
+                    var baseH = wrap.__baseH || (wrap.clientHeight ? (wrap.clientHeight * 20) : 16837.8);
+                    var sX = wrap.clientWidth / baseW;
+                    var sY = wrap.clientHeight / baseH;
+
+                    pNewHits.forEach(function(h){
+                      var sp = document.createElement('span');
+                      sp.className = 'rcv-wasm-hit-span';
+                      sp.setAttribute('data-kw', h.word.toLowerCase());
+                      sp.style.position = 'absolute';
+                      sp.style.left = (h.x * sX) + 'px';
+                      sp.style.top = (h.y * sY) + 'px';
+                      sp.style.width = Math.max(12, h.w * sX) + 'px';
+                      sp.style.height = (h.h * sY) + 'px';
+                      sp.style.fontSize = Math.max(9, Math.round(h.h * sY * 0.82)) + 'px';
+                      sp.style.lineHeight = (h.h * sY) + 'px';
+                      sp.style.color = 'transparent';
+                      sp.style.whiteSpace = 'pre';
+                      sp.textContent = h.word;
+                      tl.appendChild(sp);
+                    });
+                  });
+                }
+              }
+            }
+
             var spans = document.querySelectorAll('#rcvPages .rcv-textlayer span');
             spans.forEach(function(sp){
               if(sp.dataset.orig === undefined) sp.dataset.orig = sp.textContent;
@@ -1955,6 +2001,8 @@
             var wrap = document.createElement('div'); wrap.className='rcv-page';
             wrap.style.width = Math.floor(viewport.width)+'px';
             wrap.style.height = Math.floor(viewport.height)+'px';
+            wrap.__baseW = base.width * 20;
+            wrap.__baseH = base.height * 20;
             var canvas = document.createElement('canvas');
             var outScale = window.devicePixelRatio || 1;
             canvas.width = Math.floor(viewport.width*outScale);
@@ -1976,6 +2024,31 @@
               var task = pdfjsLib.renderTextLayer({ textContent:tc, container:tl, viewport:viewport, textDivs:[] });
               if(task && task.promise) await task.promise;
             } catch(e){}
+
+            // Direct text layer activation for WASM-rendered DOCX resumes
+            var currentSpans = tl.querySelectorAll('span');
+            if(currentSpans.length === 0 && window.__rcvDocxWasmHits && window.__rcvDocxWasmHits.length){
+              var pHits = window.__rcvDocxWasmHits.filter(function(h){ return h.page === p || h.page === (p - 1); });
+              var sX = viewport.width / (base.width * 20);
+              var sY = viewport.height / (base.height * 20);
+
+              pHits.forEach(function(h){
+                var sp = document.createElement('span');
+                sp.className = 'rcv-wasm-hit-span';
+                sp.setAttribute('data-kw', h.word.toLowerCase());
+                sp.style.position = 'absolute';
+                sp.style.left = (h.x * sX) + 'px';
+                sp.style.top = (h.y * sY) + 'px';
+                sp.style.width = Math.max(12, h.w * sX) + 'px';
+                sp.style.height = (h.h * sY) + 'px';
+                sp.style.fontSize = Math.max(9, Math.round(h.h * sY * 0.82)) + 'px';
+                sp.style.lineHeight = (h.h * sY) + 'px';
+                sp.style.color = 'transparent';
+                sp.style.whiteSpace = 'pre';
+                sp.textContent = h.word;
+                tl.appendChild(sp);
+              });
+            }
           }
           if(extractedText.trim()){
             resumeText = extractedText;
@@ -2054,6 +2127,14 @@
           if(!pane || pane.getAttribute('data-rcv-inited') === '1') return;  // another (stale) instance already owns this DOM
           pane.setAttribute('data-rcv-inited', '1');
           inited = true;
+
+          if(window.__rcvActiveWasmDoc && typeof window.__rcvActiveWasmDoc.free === 'function'){
+            try { window.__rcvActiveWasmDoc.free(); } catch(e){}
+          }
+          window.__rcvActiveWasmDoc = null;
+          window.__rcvDocxWasmHits = [];
+          window.__rcvDocxWasmHitsSearched = {};
+
           var wrap = pane.querySelector('.rcv-wrap');
           hideContact = wrap.getAttribute('data-mask') !== '0';
           var fallbackUrl = wrap.getAttribute('data-url');
@@ -2110,43 +2191,37 @@
               } catch(e){}
 
               var pdfBlob = null;
-              var primaryConverter = window.__renderAgyTrueSectionDocxToPdfBlob || (typeof renderAgyTrueSectionDocxToPdfBlob === 'function' ? renderAgyTrueSectionDocxToPdfBlob : null);
-              if(!primaryConverter){
-                for(var w = 0; w < 10 && !window.__renderAgyTrueSectionDocxToPdfBlob; w++){
-                  await new Promise(function(r){ setTimeout(r, 100); });
-                }
-                primaryConverter = window.__renderAgyTrueSectionDocxToPdfBlob;
+              var wasmConverter = window.__renderAgyStrategy2WasmDocxToPdfBlob || (typeof renderAgyStrategy2WasmDocxToPdfBlob === 'function' ? renderAgyStrategy2WasmDocxToPdfBlob : null);
+              var ensureWasm = window.__rsEnsureOpenDocLab || (typeof rsEnsureOpenDocLab === 'function' ? rsEnsureOpenDocLab : null);
+              if(!wasmConverter && typeof ensureWasm === 'function'){
+                await ensureWasm(false);
+                wasmConverter = window.__renderAgyStrategy2WasmDocxToPdfBlob || (typeof renderAgyStrategy2WasmDocxToPdfBlob === 'function' ? renderAgyStrategy2WasmDocxToPdfBlob : null);
               }
-              if(typeof primaryConverter === 'function'){
-                try {
-                  pdfBlob = await primaryConverter(docxBytes, {
-                    searchableText: true,
-                    statusCallback: function(statusMsg){
-                      var loadingEl = $id('rcvLoading');
-                      if(loadingEl) loadingEl.textContent = statusMsg || 'Rendering Word document…';
-                    }
-                  });
-                } catch(primaryErr){
-                  console.warn('Primary DOCX converter with text layer failed, trying WASM:', primaryErr);
-                }
+              if(typeof wasmConverter === 'function'){
+                var allKwList = Object.keys(keywords);
+                pdfBlob = await wasmConverter(docxBytes, {
+                  keywords: allKwList,
+                  fullText: resumeText || docxText || '',
+                  searchableText: true,
+                  statusCallback: function(statusMsg){
+                    var loadingEl = $id('rcvLoading');
+                    if(loadingEl) loadingEl.textContent = statusMsg || 'Rendering Word document via WASM…';
+                  }
+                });
               }
 
               if(!pdfBlob){
-                var wasmConverter = window.__renderAgyStrategy2WasmDocxToPdfBlob || (typeof renderAgyStrategy2WasmDocxToPdfBlob === 'function' ? renderAgyStrategy2WasmDocxToPdfBlob : null);
-                var ensureWasm = window.__rsEnsureOpenDocLab || (typeof rsEnsureOpenDocLab === 'function' ? rsEnsureOpenDocLab : null);
-                if(!wasmConverter && typeof ensureWasm === 'function'){
-                  await ensureWasm(false);
-                  wasmConverter = window.__renderAgyStrategy2WasmDocxToPdfBlob || (typeof renderAgyStrategy2WasmDocxToPdfBlob === 'function' ? renderAgyStrategy2WasmDocxToPdfBlob : null);
-                }
-                if(typeof wasmConverter === 'function'){
-                  var allKwList = Object.keys(keywords);
-                  pdfBlob = await wasmConverter(docxBytes, {
-                    keywords: allKwList,
-                    statusCallback: function(statusMsg){
-                      var loadingEl = $id('rcvLoading');
-                      if(loadingEl) loadingEl.textContent = statusMsg || 'Rendering Word document via WASM…';
-                    }
-                  });
+                var fallbackConverter = window.__renderAgyTrueSectionDocxToPdfBlob || (typeof renderAgyTrueSectionDocxToPdfBlob === 'function' ? renderAgyTrueSectionDocxToPdfBlob : null);
+                if(typeof fallbackConverter === 'function'){
+                  try {
+                    pdfBlob = await fallbackConverter(docxBytes, {
+                      searchableText: true,
+                      statusCallback: function(statusMsg){
+                        var loadingEl = $id('rcvLoading');
+                        if(loadingEl) loadingEl.textContent = statusMsg || 'Rendering Word document…';
+                      }
+                    });
+                  } catch(fbErr){}
                 }
               }
 
@@ -7469,6 +7544,78 @@ function openDocNativePdfBlob(doc){
   return null;
 }
 
+function agyCollectWasmDocxWordHits(doc, tokens){
+  var allHits = [];
+  if(!doc || !Array.isArray(tokens) || !tokens.length) return allHits;
+  if(typeof doc.findText !== 'function' || typeof doc.selectionRects !== 'function') return allHits;
+
+  var seen = {};
+  var uniqueTokens = [];
+  for(var t = 0; t < tokens.length; t++){
+    var tok = String(tokens[t] || '').trim();
+    var low = tok.toLowerCase();
+    if(!seen[low] && tok.length >= 2){
+      seen[low] = true;
+      uniqueTokens.push(tok);
+    }
+  }
+
+  uniqueTokens.forEach(function(word){
+    var first = null;
+    try{
+      if(typeof doc.firstPosition !== 'function') return;
+      first = doc.firstPosition();
+      if(!first || !first.node) return;
+      var curNode = first.node;
+      var curOffset = first.offset || 0;
+      var matchSeen = {};
+
+      for(var iter = 0; iter < 100; iter++){
+        var match = null;
+        try{
+          match = doc.findText(word, curNode, curOffset, true, false);
+          if(!match || !match.__wbg_ptr || !match.found) break;
+          var sNode = match.startNode;
+          var sOff = match.startOffset;
+          var eNode = match.endNode;
+          var eOff = match.endOffset;
+          if(!sNode || !eNode) break;
+
+          var mKey = sNode + ':' + sOff;
+          if(matchSeen[mKey]) break;
+          matchSeen[mKey] = true;
+
+          var rects = doc.selectionRects(sNode, sOff, eNode, eOff);
+          if(rects && rects.length >= 5){
+            for(var r = 0; r < rects.length; r += 5){
+              allHits.push({
+                page: rects[r],
+                x: rects[r + 1],
+                y: rects[r + 2],
+                w: rects[r + 3],
+                h: rects[r + 4],
+                word: word
+              });
+            }
+          }
+          if(curNode === eNode && curOffset === eOff) break;
+          curNode = eNode;
+          curOffset = eOff;
+        }catch(mErr){
+          break;
+        }finally{
+          if(match && typeof match.free === 'function') match.free();
+        }
+      }
+    }catch(err){
+    }finally{
+      if(first && typeof first.free === 'function') first.free();
+    }
+  });
+
+  return allHits;
+}
+
 async function renderAgyStrategy2WasmDocxToPdfBlob(docxBytes, options){
   options = options || {};
   if(options.statusCallback) options.statusCallback('Initializing WASM typesetting core (20%)...');
@@ -7517,6 +7664,24 @@ async function renderAgyStrategy2WasmDocxToPdfBlob(docxBytes, options){
       return nativeBlob;
     }
 
+    if(options.statusCallback) options.statusCallback('Extracting searchable text metrics & coordinates (55%)...');
+    await agyYieldToMain();
+
+    window.__rcvDocxWasmHits = [];
+    window.__rcvDocxWasmHitsSearched = {};
+    if(Array.isArray(options.keywords)){
+      options.keywords.forEach(function(k){
+        window.__rcvDocxWasmHitsSearched[String(k).toLowerCase()] = true;
+      });
+    }
+
+    var wasmHits = agyCollectWasmDocxWordHits(doc, options.keywords || []);
+    window.__rcvDocxWasmHits = wasmHits;
+    if(window.__rcvActiveWasmDoc && window.__rcvActiveWasmDoc !== doc && typeof window.__rcvActiveWasmDoc.free === 'function'){
+      try { window.__rcvActiveWasmDoc.free(); } catch(e){}
+    }
+    window.__rcvActiveWasmDoc = doc;
+
     if(options.statusCallback) options.statusCallback('Rasterizing pages via WASM vector pipeline (60%)...');
     await agyYieldToMain();
 
@@ -7553,6 +7718,17 @@ async function renderAgyStrategy2WasmDocxToPdfBlob(docxBytes, options){
 
         var imgData = canvas.toDataURL('image/jpeg', 0.98);
         pdf.addImage(imgData, 'JPEG', 0, 0, pageW, pageH, undefined, 'FAST');
+
+        var pageHits = wasmHits.filter(function(h){ return h.page === (i + 1); });
+        pageHits.forEach(function(h){
+          var ptX = h.x / 20;
+          var ptY = (h.y / 20) + ((h.h / 20) * 0.82);
+          var ptH = Math.max(6, Math.min(24, (h.h / 20) * 0.85));
+          if(typeof pdf.setFontSize === 'function') pdf.setFontSize(ptH);
+          if(typeof pdf.text === 'function'){
+            pdf.text(h.word, ptX, ptY, { renderingMode: 'invisible' });
+          }
+        });
       }finally{
         if(bitmap && typeof bitmap.free === 'function') bitmap.free();
         if(canvas){
@@ -7565,9 +7741,11 @@ async function renderAgyStrategy2WasmDocxToPdfBlob(docxBytes, options){
 
     if(options.statusCallback) options.statusCallback('Finalizing PDF (95%)...');
     await agyYieldToMain();
-    return pdf.output('blob');
+    var outBlob = pdf.output('blob');
+    outBlob.__wasmHits = wasmHits;
+    return outBlob;
   }finally{
-    if(doc && typeof doc.free === 'function') doc.free();
+    if(window.__rcvActiveWasmDoc !== doc && doc && typeof doc.free === 'function') doc.free();
   }
 }
 
