@@ -222,8 +222,19 @@ class JobService
 
                         $batchCityInsert = [];
                         foreach ($cityPairs as $pair) {
+                            // $match = $cityRows->first(function ($item) use ($pair) {
+                            //     return $item->city === $pair['city'] && $item->country_name === $pair['country'];
+                            // });
                             $match = $cityRows->first(function ($item) use ($pair) {
-                                return $item->city === $pair['city'] && $item->country_name === $pair['country'];
+
+                                $itemCity = trim((string) $item->city);
+                                $pairCity = trim((string) $pair['city']);
+
+                                $itemCountry = trim((string) $item->country_name);
+                                $pairCountry = trim((string) $pair['country']);
+
+                                return strcasecmp($itemCity, $pairCity) === 0
+                                    && strcasecmp($itemCountry, $pairCountry) === 0;
                             });
                             if ($match) {
                                 $batchCityInsert[] = [
