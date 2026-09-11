@@ -8494,13 +8494,18 @@ async function agyEnsureMetricFonts(){
       '@font-face{font-family:"Calibri";src:local("Calibri Bold"),local("Carlito-Bold"),url("https://cdn.jsdelivr.net/npm/@fontsource/carlito@5.0.8/files/carlito-latin-700-normal.woff2") format("woff2");font-weight:700;font-style:normal;font-display:swap;}',
       '@font-face{font-family:"Cambria";src:local("Cambria"),local("Caladea"),url("https://cdn.jsdelivr.net/npm/@fontsource/caladea@5.0.8/files/caladea-latin-400-normal.woff2") format("woff2");font-weight:400;font-style:normal;font-display:swap;}',
       '@font-face{font-family:"Cambria";src:local("Cambria Bold"),local("Caladea-Bold"),url("https://cdn.jsdelivr.net/npm/@fontsource/caladea@5.0.8/files/caladea-latin-700-normal.woff2") format("woff2");font-weight:700;font-style:normal;font-display:swap;}',
+      '@font-face{font-family:"Arial";src:local("Arial"),local("Arimo"),url("https://cdn.jsdelivr.net/npm/@fontsource/arimo@5.0.8/files/arimo-latin-400-normal.woff2") format("woff2");font-weight:400;font-style:normal;font-display:swap;}',
+      '@font-face{font-family:"Arial";src:local("Arial Bold"),local("Arimo-Bold"),url("https://cdn.jsdelivr.net/npm/@fontsource/arimo@5.0.8/files/arimo-latin-700-normal.woff2") format("woff2");font-weight:700;font-style:normal;font-display:swap;}',
+      '@font-face{font-family:"Times New Roman";src:local("Times New Roman"),local("Tinos"),url("https://cdn.jsdelivr.net/npm/@fontsource/tinos@5.0.8/files/tinos-latin-400-normal.woff2") format("woff2");font-weight:400;font-style:normal;font-display:swap;}',
+      '@font-face{font-family:"Times New Roman";src:local("Times New Roman Bold"),local("Tinos-Bold"),url("https://cdn.jsdelivr.net/npm/@fontsource/tinos@5.0.8/files/tinos-latin-700-normal.woff2") format("woff2");font-weight:700;font-style:normal;font-display:swap;}',
       '.agy-docx-host *{word-spacing:normal!important;letter-spacing:normal!important;}',
       '.agy-docx-host .docx-wrapper{background:transparent!important;padding:0!important;}',
       '.agy-docx-host .docx-wrapper > section.docx{box-sizing:border-box!important;position:relative!important;margin:0 auto!important;background:#ffffff!important;box-shadow:none!important;}',
-      '.agy-docx-host p{margin-top:0!important;margin-bottom:4px!important;min-height:1.25em!important;overflow:visible!important;}',
+      '.agy-docx-host p{margin-top:0!important;margin-bottom:3px!important;min-height:1.2em!important;text-indent:0!important;overflow:visible!important;}',
       '.agy-docx-host span{white-space:pre-wrap!important;overflow-wrap:break-word!important;}',
-      '.agy-docx-host table{margin-top:6px!important;margin-bottom:6px!important;border-collapse:collapse!important;}',
-      '.agy-docx-host .docx-tab-stop{display:inline-block!important;width:auto!important;word-spacing:normal!important;}',
+      '.agy-docx-host table{table-layout:fixed!important;width:100%!important;box-sizing:border-box!important;margin-top:4px!important;margin-bottom:4px!important;border-collapse:collapse!important;}',
+      '.agy-docx-host td, .agy-docx-host th{box-sizing:border-box!important;word-wrap:break-word!important;overflow-wrap:break-word!important;vertical-align:top!important;}',
+      '.agy-docx-host .docx-tab-stop{display:inline!important;width:auto!important;word-spacing:normal!important;}',
       '.agy-keyword-hit{background:rgba(255,214,10,0.45)!important;color:#111827!important;border-radius:2px!important;padding:0 2px!important;box-decoration-break:clone!important;-webkit-box-decoration-break:clone!important;vertical-align:baseline!important;line-height:inherit!important;}'
     ].join('\n');
     document.head.appendChild(style);
@@ -8583,17 +8588,34 @@ async function renderAgyTrueSectionDocxToPdfBlob(docxBytes, options){
     });
     await agyYieldToMain();
 
-    // Sanitize DOM: completely neutralize any negative word-spacing or letter-spacing
+    // 1. Sanitize text nodes: strip multiple spaces/tabs before punctuation to eliminate orphan " ." and " ,"
+    var textWalker = document.createTreeWalker(host, NodeFilter.SHOW_TEXT, null, false);
+    var curText;
+    var textNodesToClean = [];
+    while((curText = textWalker.nextNode())){
+      if(/\s+([.,;:!?])/.test(curText.nodeValue) || /[\u00A0\t]{2,}/.test(curText.nodeValue)){
+        textNodesToClean.push(curText);
+      }
+    }
+    textNodesToClean.forEach(function(tn){
+      tn.nodeValue = tn.nodeValue
+        .replace(/[\u00A0\t]+/g, ' ')
+        .replace(/\s+([.,;:!?])/g, '$1');
+    });
+
+    // 2. Neutralize any negative indents, margins, or letter/word spacing across all elements
     host.querySelectorAll('*').forEach(function(el){
-      var ws = el.style && el.style.wordSpacing ? parseFloat(el.style.wordSpacing) : 0;
-      if(ws < 0) el.style.setProperty('word-spacing', 'normal', 'important');
-      var ls = el.style && el.style.letterSpacing ? parseFloat(el.style.letterSpacing) : 0;
-      if(ls < 0) el.style.setProperty('letter-spacing', 'normal', 'important');
+      var s = el.style;
+      if(s){
+        if(parseFloat(s.textIndent) < 0) s.setProperty('text-indent', '0', 'important');
+        if(parseFloat(s.marginLeft) < 0) s.setProperty('margin-left', '0', 'important');
+        if(parseFloat(s.wordSpacing) < 0) s.setProperty('word-spacing', 'normal', 'important');
+        if(parseFloat(s.letterSpacing) < 0) s.setProperty('letter-spacing', 'normal', 'important');
+      }
       if(el.classList && el.classList.contains('docx-tab-stop')){
         el.style.setProperty('word-spacing', 'normal', 'important');
-        if(!el.textContent || !el.textContent.trim()){
-          el.innerHTML = '&emsp;';
-        }
+        el.style.setProperty('display', 'inline', 'important');
+        el.innerHTML = ' ';
       }
     });
 
