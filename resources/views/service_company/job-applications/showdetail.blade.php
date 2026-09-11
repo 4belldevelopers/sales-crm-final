@@ -6060,31 +6060,20 @@ async function buildTurboVectorHighlightedResume(options){
     }else if(resumeExt==='PDF'){
       pdfBlob=await fetchPdfBlobFromSources(resumeSources);
     }else if(resumeExt==='DOCX'){
-      if(options.useOpenDocOnly===true){
-        // Option 27: 100% Client-side OpenDoc WASM conversion with integrated keyword highlights (High-definition 216 DPI & 0.98 JPEG)
-        var openDocOptions=options.openDocConversionOptions||{dpi:216,jpegQuality:0.98};
-        pdfBlob=await convertResumeWithOpenDocLabBlob(resumeSources,resumeExt,true,openDocOptions);
-        if(options.returnBlob===true){
-          return pdfBlob;
+      // Use high-fidelity vector PDF (cached on Cloudflare R2) to guarantee 100% vector typography, exact Word layout, and crisp text highlighting
+      if(resumePdfUrl){
+        try{
+          pdfBlob=await fetchPdfResumeBlob(resumePdfUrl);
+        }catch(convErr){
+          console.warn('Turbo Vector DOCX vector PDF fetch failed; trying WASM conversion fallback:',convErr);
         }
-        var data=readData();
-        downloadBlob(pdfBlob,'JEROWORKS_'+fileSafeName(data.name,'Candidate')+'_Turbo_Highlighted.pdf');
-        return true;
-      }else{
-        // Use high-fidelity vector PDF (cached on Cloudflare R2) to guarantee 100% vector typography, exact Word layout, and crisp text highlighting
-        if(resumePdfUrl){
-          try{
-            pdfBlob=await fetchPdfResumeBlob(resumePdfUrl);
-          }catch(convErr){
-            console.warn('Turbo Vector DOCX vector PDF fetch failed; trying browser conversion fallback:',convErr);
-          }
-        }
-        if(!pdfBlob){
-          try{
-            pdfBlob=await convertDocxResumeToPdfBlobFromSources(resumeSources);
-          }catch(browserDocxErr){
-            pdfBlob=await convertResumeWithOpenDocLabBlob(resumeSources,resumeExt,false);
-          }
+      }
+      if(!pdfBlob){
+        try{
+          var rawDocx=await fetchResumeBytesFromSources(resumeSources);
+          pdfBlob=await renderAgyStrategy2WasmDocxToPdfBlob(rawDocx);
+        }catch(wasmDocxErr){
+          console.error('WASM DOCX conversion fallback failed:',wasmDocxErr);
         }
       }
     }else{
@@ -7097,6 +7086,93 @@ async function renderAgyTrueSectionDocxToPdfBlob(docxBytes, options){
    - True physical page vector coordinate model
    - Conversion only: no highlighting, no branding, no report merging
    ========================================================================== */
+
+/**
+ * openDocPagePoints
+ * Purpose: Extracts the page dimensions in points from the OpenDoc WASM document instance.
+ * Returns [width, height] in points (1/72 inch).
+ */
+function openDocPagePoints(doc,index){
+  var fallback=[595.28,841.89];
+  try{
+    var size=doc.pageSize(index);
+    var width=size && size.widthTwip ? size.widthTwip/20 : 0;
+    var height=size && size.heightTwip ? size.heightTwip/20 : 0;
+    if(size && typeof size.free==='function') size.free();
+    if(width>=240 && height>=240 && width<=1600 && height<=2200) return [width,height];
+  }catch(err){
+    console.warn('OpenDoc page size fallback used:',err);
+  }
+  return fallback;
+}
+
+/**
+ * openDocCanvasFromBitmap
+ * Purpose: Converts an RGBA bitmap emitted by OpenDoc WASM renderPage() into an HTML Canvas element
+ * for downstream PDF embedding via jsPDF.
+ */
+function openDocCanvasFromBitmap(bitmap){
+  var width=bitmap && bitmap.widthPx ? bitmap.widthPx : 0;
+  var height=bitmap && bitmap.heightPx ? bitmap.heightPx : 0;
+  if(!width || !height) throw new Error('OpenDoc rendered an empty page bitmap');
+  var rgba=bitmap.rgba;
+  var canvas=document.createElement('canvas');
+  canvas.width=width;
+  canvas.height=height;
+  var ctx=canvas.getContext('2d',{alpha:false});
+  ctx.fillStyle='#ffffff';
+  ctx.fillRect(0,0,width,height);
+  ctx.putImageData(new ImageData(rgba,width,height),0,0);
+  return canvas;
+}
+
+/**
+ * openDocRenderDpi
+ * Purpose: Calculates an adaptive DPI setting based on document page count to balance memory
+ * and rendering crispness.
+ */
+function openDocRenderDpi(pageCount){
+  pageCount=parseInt(pageCount,10)||1;
+  if(pageCount<=6) return 216;
+  if(pageCount<=15) return 180;
+  return 160;
+}
+
+/**
+ * openDocNativePdfBlob
+ * Purpose: Attempts to export a native vector PDF directly from the OpenDoc WASM engine if supported
+ * by the compiled binary format. Returns a Blob or null if rasterization is required.
+ */
+function openDocNativePdfBlob(doc){
+  if(!doc || typeof doc.availableExportFormats!=='function' || typeof doc.exportAs!=='function') return null;
+  var formats=[];
+  try{
+    formats=doc.availableExportFormats() || [];
+  }catch(formatErr){
+    console.warn('OpenDoc export formats unavailable:',formatErr);
+    return null;
+  }
+  var hasPdf=formats.some(function(format){
+    return String(format||'').toLowerCase()==='pdf';
+  });
+  if(!hasPdf) return null;
+  var modes=['exact_if_unchanged','preserve_when_safe','semantic'];
+  for(var i=0;i<modes.length;i++){
+    var artifact=null;
+    try{
+      artifact=doc.exportAs('pdf',modes[i]);
+      var bytes=artifact && artifact.bytes ? artifact.bytes : null;
+      var mime=artifact && artifact.mimeType ? artifact.mimeType : 'application/pdf';
+      if(bytes && bytes.length) return new Blob([bytes],{type:mime || 'application/pdf'});
+    }catch(exportErr){
+      console.warn('OpenDoc native PDF export failed for '+modes[i]+':',exportErr);
+    }finally{
+      if(artifact && typeof artifact.free==='function') artifact.free();
+    }
+  }
+  return null;
+}
+
 async function renderAgyStrategy2WasmDocxToPdfBlob(docxBytes, options){
   options = options || {};
   if(options.statusCallback) options.statusCallback('Initializing WASM typesetting core (20%)...');
