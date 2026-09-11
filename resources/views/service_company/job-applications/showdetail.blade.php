@@ -1290,6 +1290,7 @@
            data-logo="{{ $rcvCompanyLogo }}"
            data-company="{{ $rcvCompanyName }}"
            data-pdfconv="{{ $rcvConvertUrl }}"
+           data-r2-sign-url="{{ route('service_company.job-applications.r2-download-url', ['id' => $application->id]) }}"
            data-mask="{{ $rcvMaskContact ? '1' : '0' }}"
            data-b-exp="{{ $rcvBExp }}"
            data-b-cctc="{{ $rcvBCctc }}"
@@ -1749,42 +1750,203 @@
         function withTimeout(promise, ms){
           return Promise.race([ promise, new Promise(function(_,rej){ setTimeout(function(){ rej(new Error('timeout')); }, ms); }) ]);
         }
-        async function renderPdf(url, fallback, attempt){
+
+        async function resolveRcvSources(){
+          if(typeof window.ensureDownloadCenterR2Urls === 'function'){
+            try { await window.ensureDownloadCenterR2Urls(); } catch(e){}
+          }
+          var rdc = document.getElementById('rdcData');
+          var wrap = document.querySelector('#resume_cv .rcv-wrap');
+          var r2Direct = (rdc && rdc.getAttribute('data-r2-direct-url')) || '';
+          var origR2Direct = (rdc && rdc.getAttribute('data-original-r2-direct-url')) || '';
+          var r2Public = (rdc && rdc.getAttribute('data-r2-public-url')) || '';
+          var origR2Public = (rdc && rdc.getAttribute('data-original-r2-public-url')) || '';
+          var dlUrl = (rdc && rdc.getAttribute('data-dl-url')) || '';
+          var wrapUrl = (wrap && wrap.getAttribute('data-url')) || '';
+          var wrapPublic = (wrap && wrap.getAttribute('data-public')) || '';
+
+          var signUrl = (rdc && rdc.getAttribute('data-r2-sign-url')) || (wrap && wrap.getAttribute('data-r2-sign-url')) || '';
+          if(!r2Direct && !origR2Direct && signUrl){
+            try {
+              var sResp = await fetch(signUrl, {
+                method: 'GET',
+                credentials: 'same-origin',
+                headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' }
+              });
+              if(sResp.ok){
+                var data = await sResp.json();
+                if(data && data.status === 'success'){
+                  r2Direct = data.r2_direct_url || '';
+                  origR2Direct = data.original_r2_direct_url || '';
+                  r2Public = data.r2_public_url || '';
+                  origR2Public = data.original_r2_public_url || '';
+                  if(rdc){
+                    if(r2Direct) rdc.setAttribute('data-r2-direct-url', r2Direct);
+                    if(r2Public) rdc.setAttribute('data-r2-public-url', r2Public);
+                    if(origR2Direct) rdc.setAttribute('data-original-r2-direct-url', origR2Direct);
+                    if(origR2Public) rdc.setAttribute('data-original-r2-public-url', origR2Public);
+                  }
+                }
+              }
+            } catch(e){}
+          }
+
+          var sources = [];
+          [r2Direct, origR2Direct, r2Public, origR2Public, wrapUrl, dlUrl, wrapPublic].forEach(function(u){
+            if(u && sources.indexOf(u) === -1) sources.push(u);
+          });
+          return {
+            sources: sources,
+            primaryDirectUrl: r2Direct || origR2Direct || r2Public || origR2Public || wrapUrl || dlUrl,
+            downloadUrl: origR2Direct || r2Direct || origR2Public || r2Public || dlUrl || wrapUrl
+          };
+        }
+
+        async function fetchResumeBytesWithFallback(sources){
+          for(var i = 0; i < sources.length; i++){
+            var src = sources[i];
+            if(!src) continue;
+            try {
+              var isDirectR2 = src.indexOf('file.jero.works') !== -1 || src.indexOf('r2.cloudflarestorage.com') !== -1;
+              var fetchOpts = isDirectR2
+                ? { mode: 'cors', cache: 'default' }
+                : { credentials: 'same-origin', cache: 'default' };
+              var resp = await withTimeout(fetch(src, fetchOpts), 25000);
+              if(resp.ok){
+                var ab = await resp.arrayBuffer();
+                if(ab && ab.byteLength > 100){
+                  return new Uint8Array(ab);
+                }
+              }
+            } catch(err){
+              console.warn('Failed to fetch resume bytes from source ' + src + ':', err);
+            }
+          }
+          throw new Error('Unable to load resume file bytes from available sources.');
+        }
+
+        async function extractDocxText(docxBytes){
+          try {
+            if(typeof rsEnsureJsZip === 'function') await rsEnsureJsZip();
+            if(!window.JSZip) return '';
+            var zip = await window.JSZip.loadAsync(docxBytes);
+            var docXmlFile = zip.file('word/document.xml');
+            if(!docXmlFile) return '';
+            var xmlStr = await docXmlFile.async('string');
+            var paras = xmlStr.match(/<w:p\b[^>]*>[\s\S]*?<\/w:p>/gi) || [];
+            var lines = [];
+            for(var i = 0; i < paras.length; i++){
+              var tMatches = paras[i].match(/<w:t\b[^>]*>([^<]*)<\/w:t>/gi);
+              if(tMatches){
+                var pText = tMatches.map(function(t){
+                  return t.replace(/<[^>]+>/g, '');
+                }).join('');
+                if(pText.trim()) lines.push(pText.trim());
+              }
+            }
+            return lines.join('\n');
+          } catch(e){
+            console.warn('extractDocxText error:', e);
+            return '';
+          }
+        }
+
+        function showDocUnsupportedNotice(downloadUrl){
+          $id('rcvLoading').style.display = 'none';
+          $id('rcvPages').style.display = 'none';
+          var ifr = $id('rcvIframe');
+          if(ifr) ifr.style.display = 'none';
+
+          var wrap = document.querySelector('#resume_cv .rcv-wrap');
+          if(!downloadUrl){
+            downloadUrl = (wrap && (wrap.getAttribute('data-url') || wrap.getAttribute('data-public'))) || '#';
+            var rdc = document.getElementById('rdcData');
+            if(rdc){
+              var r2Orig = rdc.getAttribute('data-original-r2-direct-url') || rdc.getAttribute('data-original-r2-public-url') || rdc.getAttribute('data-dl-url');
+              if(r2Orig) downloadUrl = r2Orig;
+            }
+          }
+
+          var openNew = $id('rcvOpenNew');
+          if(openNew && downloadUrl) openNew.href = downloadUrl;
+          var dlItem = document.querySelector('#rcvDlMenu a.rcv-dl-item');
+          if(dlItem && downloadUrl) dlItem.href = downloadUrl;
+
+          // Notification banner directly ABOVE the viewer
+          var viewport = $id('rcvViewport');
+          if(!document.getElementById('rcvDocNotice') && viewport){
+            var notice = document.createElement('div');
+            notice.id = 'rcvDocNotice';
+            notice.style.cssText = 'background:#fffbeb;border:1px solid #fef3c7;border-left:4px solid #f59e0b;padding:12px 16px;border-radius:8px;margin:12px 14px 0;display:flex;align-items:center;justify-content:space-between;gap:12px;box-shadow:0 1px 2px rgba(0,0,0,0.05);';
+            notice.innerHTML = '<div style="display:flex;align-items:center;gap:10px;">' +
+              '<svg style="width:20px;height:20px;color:#d97706;flex-shrink:0;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>' +
+              '<span style="font-size:12.5px;font-weight:500;color:#92400e;line-height:1.4;">This Word (.doc) file version isn’t supported. Please upload the resume as PDF or download the original resume.</span>' +
+              '</div>' +
+              '<a id="rcvDocDownloadBtn" href="' + downloadUrl + '" target="_blank" class="rcv-btn" style="background:#f59e0b;color:#fff;border:none;padding:7px 14px;border-radius:7px;font-size:11.5px;font-weight:600;text-decoration:none;white-space:nowrap;cursor:pointer;flex-shrink:0;">Download Original (.doc)</a>';
+            viewport.parentNode.insertBefore(notice, viewport);
+          }
+
+          // Inside viewport: clean placeholder (NO popup alert)
+          if(viewport){
+            viewport.innerHTML = '<div style="color:#cbd5e1;font-size:13px;padding:60px 20px;text-align:center;max-width:480px;">' +
+              '<svg style="width:40px;height:40px;margin:0 auto 12px;display:block;opacity:0.6;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="15" x2="15" y2="15"/></svg>' +
+              'Preview is unavailable for legacy binary (.doc) Word files.<br>Please download the original file above or upload the resume as PDF.' +
+              '</div>';
+          }
+
+          countOccurrences();
+          renderChips();
+        }
+
+        async function renderPdf(source, fallback, attempt){
           attempt = attempt || 0;
           var fail = function(msg){ if(typeof fallback === 'function'){ fallback(); } else { showIframe(msg || 'Showing résumé in preview mode.'); } };
           if(typeof pdfjsLib === 'undefined'){ fail('PDF viewer library not available.'); return; }
           try { var ver = pdfjsLib.version || '2.11.338'; pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/'+ver+'/pdf.worker.min.js'; } catch(e){}
           var pagesEl = $id('rcvPages');
-          // Fetch the bytes ourselves — avoids PDF.js range-request/worker hangs and gives clear errors.
+
           var bytes;
           try {
-            var resp = await withTimeout(fetch(url, { credentials:'same-origin' }), 35000);
-            if(resp.status === 202){
-              var wait = Math.min(2500 + (attempt * 250), 6000);
-              $id('rcvLoading').style.display = 'block';
-              $id('rcvLoading').textContent = 'Preparing résumé preview…';
-              if(attempt < 40){
-                setTimeout(function(){ renderPdf(url, fallback, attempt + 1); }, wait);
-                return;
+            if(source instanceof Uint8Array){
+              bytes = source;
+            } else if(source instanceof ArrayBuffer){
+              bytes = new Uint8Array(source);
+            } else if(typeof Blob !== 'undefined' && source instanceof Blob){
+              var ab = await source.arrayBuffer();
+              bytes = new Uint8Array(ab);
+            } else if(typeof source === 'string'){
+              var resp = await withTimeout(fetch(source, { credentials:'same-origin' }), 35000);
+              if(resp.status === 202){
+                var wait = Math.min(2500 + (attempt * 250), 6000);
+                $id('rcvLoading').style.display = 'block';
+                $id('rcvLoading').textContent = 'Preparing résumé preview…';
+                if(attempt < 40){
+                  setTimeout(function(){ renderPdf(source, fallback, attempt + 1); }, wait);
+                  return;
+                }
+                throw new Error('conversion-timeout');
               }
-              throw new Error('conversion-timeout');
+              if(!resp.ok) throw new Error('HTTP '+resp.status);
+              var fetchedAb = await resp.arrayBuffer();
+              bytes = new Uint8Array(fetchedAb);
+            } else {
+              throw new Error('Invalid PDF source');
             }
-            if(!resp.ok) throw new Error('HTTP '+resp.status);
-            var ab = await resp.arrayBuffer();
-            bytes = new Uint8Array(ab);
             var sig = String.fromCharCode.apply(null, bytes.subarray(0,5));
             if(sig.indexOf('%PDF') === -1) throw new Error('not-pdf');
           } catch(err){ fail(); return; }
+
           var doc;
           try { doc = await withTimeout(pdfjsLib.getDocument({ data: bytes }).promise, 25000); }
           catch(err){ fail(); return; }
+
           pdfDoc = doc;
           rcvMode = 'pdf';
           $id('rcvPages').style.display='flex';
           $id('rcvLoading').style.display='none';
           var containerW = Math.min(pagesEl.clientWidth || 760, 820);
           pagesEl.innerHTML = ''; hits = [];
-          resumeText = '';
+          var extractedText = '';
           for(var p=1; p<=doc.numPages; p++){
             var page = await doc.getPage(p);
             var base = page.getViewport({ scale:1 });
@@ -1809,11 +1971,14 @@
             var transform = outScale!==1 ? [outScale,0,0,outScale,0,0] : null;
             await page.render({ canvasContext:ctx, viewport:viewport, transform:transform }).promise;
             var tc = await page.getTextContent();
-            resumeText += tc.items.map(function(i){ return i.str; }).join(' ') + '\n';
+            extractedText += tc.items.map(function(i){ return i.str; }).join(' ') + '\n';
             try {
               var task = pdfjsLib.renderTextLayer({ textContent:tc, container:tl, viewport:viewport, textDivs:[] });
               if(task && task.promise) await task.promise;
             } catch(e){}
+          }
+          if(extractedText.trim() || !resumeText){
+            resumeText = extractedText;
           }
           countOccurrences();
           // default: highlight job skills that are present
@@ -1883,7 +2048,7 @@
           jobSkills.forEach(function(s){ if(s) keywords[s] = { type:'job', active:false, count:0 }; });
         }
 
-        function init(){
+        async function init(){
           if(inited) return;
           var pane = document.getElementById('resume_cv');
           if(!pane || pane.getAttribute('data-rcv-inited') === '1') return;  // another (stale) instance already owns this DOM
@@ -1891,22 +2056,101 @@
           inited = true;
           var wrap = pane.querySelector('.rcv-wrap');
           hideContact = wrap.getAttribute('data-mask') !== '0';
-          var url = wrap.getAttribute('data-url');
+          var fallbackUrl = wrap.getAttribute('data-url');
           var isPdf = wrap.getAttribute('data-ispdf')==='1';
+          var ext = (wrap.getAttribute('data-ext') || '').toLowerCase();
+
           seedKeywords();
           renderChips();
           wireControls();
-          var ext = (wrap.getAttribute('data-ext') || '').toLowerCase();
-          var pdfConv = wrap.getAttribute('data-pdfconv') || '';
-          if(isPdf && url){ renderPdf(url); }
-          else if(pdfConv){
-            // doc/docx: render the server-converted PDF (full highlight + download pipeline);
-            // if conversion fails, fall back to in-browser Word rendering, then preview.
-            $id('rcvLoading').textContent = 'Converting document to PDF…';
-            renderPdf(pdfConv, function(){ if(url){ renderDocx(url); } else { showIframe(); } });
+
+          // 1. Handle Legacy .doc format (Direct inline banner above viewer, no popup alert)
+          if(ext === 'doc'){
+            showDocUnsupportedNotice();
+            return;
           }
-          else if(url){ renderDocx(url); }
-          else { showIframe(); renderChips(); }
+
+          // 2. Resolve Direct R2 Sources
+          var rcvInfo = await resolveRcvSources();
+          if(rcvInfo.downloadUrl){
+            var openNew = $id('rcvOpenNew');
+            if(openNew) openNew.href = rcvInfo.downloadUrl;
+            var dlItem = document.querySelector('#rcvDlMenu a.rcv-dl-item');
+            if(dlItem) dlItem.href = rcvInfo.downloadUrl;
+          }
+
+          // 3. Handle PDF format
+          if(isPdf || ext === 'pdf'){
+            try {
+              $id('rcvLoading').textContent = 'Loading résumé from Cloudflare R2…';
+              var pdfBytes = await fetchResumeBytesWithFallback(rcvInfo.sources);
+              await renderPdf(pdfBytes);
+            } catch(pdfErr){
+              console.warn('Direct R2 PDF fetch failed, trying fallback:', pdfErr);
+              if(fallbackUrl){
+                renderPdf(fallbackUrl, function(){ showIframe(); });
+              } else {
+                showIframe('Résumé file is not available for preview.');
+              }
+            }
+            return;
+          }
+
+          // 4. Handle DOCX format via Strategy 2 Client WASM Engine
+          if(ext === 'docx'){
+            try {
+              $id('rcvLoading').textContent = 'Loading Word document from Cloudflare R2…';
+              var docxBytes = await fetchResumeBytesWithFallback(rcvInfo.sources);
+              $id('rcvLoading').textContent = 'Converting Word document via Client WASM Engine…';
+
+              // Extract raw text from docx for 100% reliable keyword counting and matching
+              try {
+                var docxText = await extractDocxText(docxBytes);
+                if(docxText) resumeText = docxText;
+              } catch(e){}
+
+              // Ensure WASM typesetting engine is ready and convert to high-def PDF Blob
+              var activeKws = Object.keys(keywords).filter(function(k){ return keywords[k].active; });
+              var wasmConverter = window.__renderAgyStrategy2WasmDocxToPdfBlob || (typeof renderAgyStrategy2WasmDocxToPdfBlob === 'function' ? renderAgyStrategy2WasmDocxToPdfBlob : null);
+              if(!wasmConverter){
+                if(typeof rsEnsureOpenDocLab === 'function') await rsEnsureOpenDocLab(false);
+                wasmConverter = window.__renderAgyStrategy2WasmDocxToPdfBlob || (typeof renderAgyStrategy2WasmDocxToPdfBlob === 'function' ? renderAgyStrategy2WasmDocxToPdfBlob : null);
+              }
+
+              if(typeof wasmConverter === 'function'){
+                var pdfBlob = await wasmConverter(docxBytes, {
+                  keywords: activeKws,
+                  statusCallback: function(statusMsg){
+                    var loadingEl = $id('rcvLoading');
+                    if(loadingEl) loadingEl.textContent = statusMsg || 'Rendering Word document via WASM…';
+                  }
+                });
+                if(pdfBlob){
+                  await renderPdf(pdfBlob, function(){
+                    renderDocx(rcvInfo.primaryDirectUrl || fallbackUrl);
+                  });
+                  return;
+                }
+              }
+              throw new Error('WASM converter not available');
+            } catch(wasmErr){
+              console.warn('Strategy 2 WASM DOCX conversion failed, falling back to Mammoth/iframe:', wasmErr);
+              if(rcvInfo.primaryDirectUrl || fallbackUrl){
+                renderDocx(rcvInfo.primaryDirectUrl || fallbackUrl);
+              } else {
+                showIframe();
+              }
+            }
+            return;
+          }
+
+          // Fallback for other extensions
+          if(fallbackUrl){
+            renderDocx(fallbackUrl);
+          } else {
+            showIframe();
+            renderChips();
+          }
         }
 
         // Intent: Phase 6 Scope event listener directly to current drawer container (FINDING-RES-01 - P0)
@@ -8376,6 +8620,7 @@ window.__buildTurboVectorHighlightedResume=buildTurboVectorHighlightedResume;
     });
     return r2SignPromise;
   }
+  window.ensureDownloadCenterR2Urls = ensureDownloadCenterR2Urls;
 
   function showNoResumeMessage(){
     showToast('No resume uploaded for this candidate. Please upload the resume first.', 'warn');
