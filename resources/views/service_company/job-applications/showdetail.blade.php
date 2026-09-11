@@ -8494,9 +8494,13 @@ async function agyEnsureMetricFonts(){
       '@font-face{font-family:"Calibri";src:local("Calibri Bold"),local("Carlito-Bold"),url("https://cdn.jsdelivr.net/npm/@fontsource/carlito@5.0.8/files/carlito-latin-700-normal.woff2") format("woff2");font-weight:700;font-style:normal;font-display:swap;}',
       '@font-face{font-family:"Cambria";src:local("Cambria"),local("Caladea"),url("https://cdn.jsdelivr.net/npm/@fontsource/caladea@5.0.8/files/caladea-latin-400-normal.woff2") format("woff2");font-weight:400;font-style:normal;font-display:swap;}',
       '@font-face{font-family:"Cambria";src:local("Cambria Bold"),local("Caladea-Bold"),url("https://cdn.jsdelivr.net/npm/@fontsource/caladea@5.0.8/files/caladea-latin-700-normal.woff2") format("woff2");font-weight:700;font-style:normal;font-display:swap;}',
+      '.agy-docx-host *{word-spacing:normal!important;letter-spacing:normal!important;}',
       '.agy-docx-host .docx-wrapper{background:transparent!important;padding:0!important;}',
       '.agy-docx-host .docx-wrapper > section.docx{box-sizing:border-box!important;position:relative!important;margin:0 auto!important;background:#ffffff!important;box-shadow:none!important;}',
-      '.agy-docx-host table{border-collapse:collapse!important;}',
+      '.agy-docx-host p{margin-top:0!important;margin-bottom:4px!important;min-height:1.25em!important;overflow:visible!important;}',
+      '.agy-docx-host span{white-space:pre-wrap!important;overflow-wrap:break-word!important;}',
+      '.agy-docx-host table{margin-top:6px!important;margin-bottom:6px!important;border-collapse:collapse!important;}',
+      '.agy-docx-host .docx-tab-stop{display:inline-block!important;width:auto!important;word-spacing:normal!important;}',
       '.agy-keyword-hit{background:rgba(255,214,10,0.45)!important;color:#111827!important;border-radius:2px!important;padding:0 2px!important;box-decoration-break:clone!important;-webkit-box-decoration-break:clone!important;vertical-align:baseline!important;line-height:inherit!important;}'
     ].join('\n');
     document.head.appendChild(style);
@@ -8558,7 +8562,7 @@ async function renderAgyTrueSectionDocxToPdfBlob(docxBytes, options){
   var host = document.createElement('div');
   host.className = 'agy-docx-host';
   host.setAttribute('aria-hidden', 'true');
-  host.style.cssText = 'position:fixed;left:-14000px;top:0;width:auto;min-width:794px;background:#ffffff;overflow:visible;pointer-events:none;z-index:-9999;';
+  host.style.cssText = 'position:fixed;left:0;top:0;width:794px;opacity:0;pointer-events:none;z-index:-9999;background:#ffffff;overflow:visible;';
   document.body.appendChild(host);
 
   try{
@@ -8566,10 +8570,10 @@ async function renderAgyTrueSectionDocxToPdfBlob(docxBytes, options){
       className: 'docx',
       inWrapper: true,
       ignoreWidth: false,
-      ignoreHeight: false,
+      ignoreHeight: true,
       breakPages: true,
       ignoreLastRenderedPageBreak: false,
-      experimental: true,
+      experimental: false,
       useBase64URL: true,
       renderHeaders: true,
       renderFooters: true,
@@ -8578,6 +8582,20 @@ async function renderAgyTrueSectionDocxToPdfBlob(docxBytes, options){
       trimXmlDeclaration: true
     });
     await agyYieldToMain();
+
+    // Sanitize DOM: completely neutralize any negative word-spacing or letter-spacing
+    host.querySelectorAll('*').forEach(function(el){
+      var ws = el.style && el.style.wordSpacing ? parseFloat(el.style.wordSpacing) : 0;
+      if(ws < 0) el.style.setProperty('word-spacing', 'normal', 'important');
+      var ls = el.style && el.style.letterSpacing ? parseFloat(el.style.letterSpacing) : 0;
+      if(ls < 0) el.style.setProperty('letter-spacing', 'normal', 'important');
+      if(el.classList && el.classList.contains('docx-tab-stop')){
+        el.style.setProperty('word-spacing', 'normal', 'important');
+        if(!el.textContent || !el.textContent.trim()){
+          el.innerHTML = '&emsp;';
+        }
+      }
+    });
 
     if(options.anonymizeRules){
       rdcRedactDocxDom(host, options.anonymizeRules);
@@ -8778,11 +8796,17 @@ async function processAgyTestOption(optNum, options){
     var resumeExt = clean(options.resumeExt || '', '').toUpperCase();
     var data = readData();
 
+    // Cache key tied strictly to this candidate's specific primary resume URL or ID
+    var cacheKey = resumeSources[0] || (data && (data.id || data.name) ? 'cand_' + (data.id || data.name) : '');
+    window.__agyResumeCache = window.__agyResumeCache || {};
+
     if(options.statusCallback) options.statusCallback('Fetching DOCX file (10%)...');
-    var docxBytes = window.__rsCachedResumeBytes;
+    var docxBytes = cacheKey ? window.__agyResumeCache[cacheKey] : null;
     if(!docxBytes || !docxBytes.byteLength){
       docxBytes = await fetchResumeBytesFromSources(resumeSources);
-      window.__rsCachedResumeBytes = docxBytes;
+      if(cacheKey && docxBytes && docxBytes.byteLength){
+        window.__agyResumeCache[cacheKey] = docxBytes;
+      }
     }
 
     var pdfBlob = null;
