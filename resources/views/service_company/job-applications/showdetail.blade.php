@@ -9273,13 +9273,11 @@ async function renderAgyStrategy2WasmDocxToPdfBlob(docxBytes, options){
 
     var JsPDF = window.jspdf.jsPDF;
     var pdf = null;
-    // Upgrade resolution to 360 DPI (5x supersampling, exact integer multiplier: 1pt = 5px)
-    // For documents with <= 5 pages, use 360 DPI; for 6+ pages, use 300 DPI for optimal RAM efficiency.
-    var renderDpi = (pageCount <= 5) ? 360 : 300;
+    var renderDpi = 288;
 
     for(var i = 0; i < pageCount; i++){
       if(options.statusCallback){
-        options.statusCallback('Rendering Ultra-HD page ' + (i + 1) + ' of ' + pageCount + ' (' + Math.round(50 + (i / pageCount) * 45) + '%)...');
+        options.statusCallback('Rendering WASM page ' + (i + 1) + ' of ' + pageCount + ' (' + Math.round(50 + (i / pageCount) * 45) + '%)...');
       }
       await agyYieldToMain();
 
@@ -9304,15 +9302,8 @@ async function renderAgyStrategy2WasmDocxToPdfBlob(docxBytes, options){
           pdf.addPage([pageW, pageH], pageW > pageH ? 'landscape' : 'portrait');
         }
 
-        // Lossless PNG vector-sharp rasterization: eliminate JPEG ringing and prevent text breaking on scroll/zoom
-        try{
-          var pngData = canvas.toDataURL('image/png');
-          pdf.addImage(pngData, 'PNG', 0, 0, pageW, pageH, undefined, 'FAST');
-        }catch(pngErr){
-          console.warn('PNG addImage fallback to high-quality JPEG:', pngErr);
-          var jpgData = canvas.toDataURL('image/jpeg', 0.99);
-          pdf.addImage(jpgData, 'JPEG', 0, 0, pageW, pageH, undefined, 'SLOW');
-        }
+        var imgData = canvas.toDataURL('image/jpeg', 0.98);
+        pdf.addImage(imgData, 'JPEG', 0, 0, pageW, pageH, undefined, 'FAST');
       }finally{
         if(bitmap && typeof bitmap.free === 'function') bitmap.free();
         if(canvas){
