@@ -9428,7 +9428,7 @@ async function processAgyTestOption(optNum, options){
     var cacheKey = resumeSources[0] || (data && (data.id || data.name) ? 'cand_' + (data.id || data.name) : '');
     window.__agyResumeCache = window.__agyResumeCache || {};
 
-    if(options.statusCallback) options.statusCallback('Fetching DOCX file (10%)...');
+    if(options.statusCallback) options.statusCallback('Fetching ' + (resumeExt === 'PDF' ? 'PDF' : 'DOCX') + ' file (10%)...');
     var docxBytes = cacheKey ? window.__agyResumeCache[cacheKey] : null;
     if(!docxBytes || !docxBytes.byteLength){
       docxBytes = await fetchResumeBytesFromSources(resumeSources);
@@ -9447,20 +9447,31 @@ async function processAgyTestOption(optNum, options){
     var outFileName = '';
 
     if(optNum === 40){
-      // Pure Strategy 2 WASM Engine - Direct DOCX to PDF Conversion Only
-      pdfBlob = await renderAgyStrategy2WasmDocxToPdfBlob(docxBytes, {
-        statusCallback: options.statusCallback
-      });
+      // Pure Strategy 2 WASM Engine - Direct Conversion to PDF Only
+      if(resumeExt === 'PDF'){
+        if(options.statusCallback) options.statusCallback('Standardizing PDF document (80%)...');
+        pdfBlob = new Blob([docxBytes], { type: 'application/pdf' });
+      }else{
+        pdfBlob = await renderAgyStrategy2WasmDocxToPdfBlob(docxBytes, {
+          statusCallback: options.statusCallback
+        });
+      }
       outFileName = 'JEROWORKS_' + fileSafeName(data.name, 'Candidate') + '_Strategy2_WASM.pdf';
 
     }else if(optNum === 41){
       // Strategy 2 WASM + Dynamic Company Branding Header
-      if(options.statusCallback) options.statusCallback('Converting Word document via WASM (45%)...');
-      var wasmBlob = await renderAgyStrategy2WasmDocxToPdfBlob(docxBytes, {
-        statusCallback: options.statusCallback
-      });
+      var resumeBlob = null;
+      if(resumeExt === 'PDF'){
+        if(options.statusCallback) options.statusCallback('Preparing PDF for branding (40%)...');
+        resumeBlob = new Blob([docxBytes], { type: 'application/pdf' });
+      }else{
+        if(options.statusCallback) options.statusCallback('Converting Word document via WASM (45%)...');
+        resumeBlob = await renderAgyStrategy2WasmDocxToPdfBlob(docxBytes, {
+          statusCallback: options.statusCallback
+        });
+      }
       if(options.statusCallback) options.statusCallback('Applying Company Branding Header (85%)...');
-      pdfBlob = await applyAgyCompanyBrandingToPdfBlob(wasmBlob, data);
+      pdfBlob = await applyAgyCompanyBrandingToPdfBlob(resumeBlob, data);
       outFileName = 'JEROWORKS_' + fileSafeName(data.name, 'Candidate') + '_Strategy2_Branded.pdf';
 
     }else if(optNum === 42){
@@ -9468,14 +9479,20 @@ async function processAgyTestOption(optNum, options){
       if(options.statusCallback) options.statusCallback('Building AI Pre-Screened Report with Company Branding (30%)...');
       var reportBlob = await buildRecruiterSummaryBlob(data, {});
 
-      if(options.statusCallback) options.statusCallback('Converting Word document via WASM (65%)...');
-      var wasmBlob = await renderAgyStrategy2WasmDocxToPdfBlob(docxBytes, {
-        statusCallback: options.statusCallback
-      });
+      var resumeBlob = null;
+      if(resumeExt === 'PDF'){
+        if(options.statusCallback) options.statusCallback('Preparing PDF resume (60%)...');
+        resumeBlob = new Blob([docxBytes], { type: 'application/pdf' });
+      }else{
+        if(options.statusCallback) options.statusCallback('Converting Word document via WASM (65%)...');
+        resumeBlob = await renderAgyStrategy2WasmDocxToPdfBlob(docxBytes, {
+          statusCallback: options.statusCallback
+        });
+      }
 
       if(options.statusCallback) options.statusCallback('Merging Executive Package (90%)...');
       var mergedName = resumeTrackingFileName(data, 'C', 'pdf');
-      await mergePreScreenedReportAndResume(reportBlob, wasmBlob, mergedName);
+      await mergePreScreenedReportAndResume(reportBlob, resumeBlob, mergedName);
       return true;
 
     }else if(optNum === 43){
@@ -9483,14 +9500,20 @@ async function processAgyTestOption(optNum, options){
       if(options.statusCallback) options.statusCallback('Building AI Pre-Screened Report (Unbranded) (30%)...');
       var reportBlob = await buildRecruiterSummaryBlob(data, { noBranding: true });
 
-      if(options.statusCallback) options.statusCallback('Converting Word document via WASM (65%)...');
-      var wasmBlob = await renderAgyStrategy2WasmDocxToPdfBlob(docxBytes, {
-        statusCallback: options.statusCallback
-      });
+      var resumeBlob = null;
+      if(resumeExt === 'PDF'){
+        if(options.statusCallback) options.statusCallback('Preparing PDF resume (60%)...');
+        resumeBlob = new Blob([docxBytes], { type: 'application/pdf' });
+      }else{
+        if(options.statusCallback) options.statusCallback('Converting Word document via WASM (65%)...');
+        resumeBlob = await renderAgyStrategy2WasmDocxToPdfBlob(docxBytes, {
+          statusCallback: options.statusCallback
+        });
+      }
 
       if(options.statusCallback) options.statusCallback('Merging Executive Package (90%)...');
       var mergedName = resumeTrackingFileName(data, 'C', 'pdf');
-      await mergePreScreenedReportAndResume(reportBlob, wasmBlob, mergedName);
+      await mergePreScreenedReportAndResume(reportBlob, resumeBlob, mergedName);
       return true;
 
     }else if(optNum === 44){
