@@ -1827,24 +1827,24 @@
 
         async function extractDocxText(docxBytes){
           try {
-            if(typeof rsEnsureJsZip === 'function') await rsEnsureJsZip();
-            if(!window.JSZip) return '';
-            var zip = await window.JSZip.loadAsync(docxBytes);
+            if(typeof window.__rsEnsureJsZip === 'function') await window.__rsEnsureJsZip();
+            else if(typeof rsEnsureJsZip === 'function') await rsEnsureJsZip();
+            else if(!window.JSZip && typeof loadScript === 'function') {
+              try { await loadScript('/js/jszip.min.js'); } catch(e){}
+            }
+            var JSZipLib = window.JSZip;
+            if(!JSZipLib) return '';
+            var zip = await JSZipLib.loadAsync(docxBytes);
             var docXmlFile = zip.file('word/document.xml');
             if(!docXmlFile) return '';
             var xmlStr = await docXmlFile.async('string');
-            var paras = xmlStr.match(/<w:p\b[^>]*>[\s\S]*?<\/w:p>/gi) || [];
-            var lines = [];
-            for(var i = 0; i < paras.length; i++){
-              var tMatches = paras[i].match(/<w:t\b[^>]*>([^<]*)<\/w:t>/gi);
-              if(tMatches){
-                var pText = tMatches.map(function(t){
-                  return t.replace(/<[^>]+>/g, '');
-                }).join('');
-                if(pText.trim()) lines.push(pText.trim());
-              }
+            var matches = xmlStr.match(/<w:t\b[^>]*>([\s\S]*?)<\/w:t>/gi) || [];
+            var textParts = [];
+            for(var i = 0; i < matches.length; i++){
+              var t = matches[i].replace(/<[^>]+>/g, '').trim();
+              if(t) textParts.push(t);
             }
-            return lines.join('\n');
+            return textParts.join(' ');
           } catch(e){
             console.warn('extractDocxText error:', e);
             return '';
@@ -1977,7 +1977,7 @@
               if(task && task.promise) await task.promise;
             } catch(e){}
           }
-          if(extractedText.trim() || !resumeText){
+          if(extractedText.trim()){
             resumeText = extractedText;
           }
           countOccurrences();
@@ -2096,45 +2096,69 @@
             return;
           }
 
-          // 4. Handle DOCX format via Strategy 2 Client WASM Engine
+          // 4. Handle DOCX format via High-Fidelity Client Converter with Searchable Text Layer
           if(ext === 'docx'){
             try {
               $id('rcvLoading').textContent = 'Loading Word document from Cloudflare R2…';
               var docxBytes = await fetchResumeBytesWithFallback(rcvInfo.sources);
-              $id('rcvLoading').textContent = 'Converting Word document via Client WASM Engine…';
+              $id('rcvLoading').textContent = 'Converting Word document to PDF…';
 
-              // Extract raw text from docx for 100% reliable keyword counting and matching
+              // Extract text directly from docx as baseline guarantee
               try {
                 var docxText = await extractDocxText(docxBytes);
                 if(docxText) resumeText = docxText;
               } catch(e){}
 
-              // Ensure WASM typesetting engine is ready and convert to high-def PDF Blob
-              var activeKws = Object.keys(keywords).filter(function(k){ return keywords[k].active; });
-              var wasmConverter = window.__renderAgyStrategy2WasmDocxToPdfBlob || (typeof renderAgyStrategy2WasmDocxToPdfBlob === 'function' ? renderAgyStrategy2WasmDocxToPdfBlob : null);
-              if(!wasmConverter){
-                if(typeof rsEnsureOpenDocLab === 'function') await rsEnsureOpenDocLab(false);
-                wasmConverter = window.__renderAgyStrategy2WasmDocxToPdfBlob || (typeof renderAgyStrategy2WasmDocxToPdfBlob === 'function' ? renderAgyStrategy2WasmDocxToPdfBlob : null);
+              var pdfBlob = null;
+              var primaryConverter = window.__renderAgyTrueSectionDocxToPdfBlob || (typeof renderAgyTrueSectionDocxToPdfBlob === 'function' ? renderAgyTrueSectionDocxToPdfBlob : null);
+              if(!primaryConverter){
+                for(var w = 0; w < 10 && !window.__renderAgyTrueSectionDocxToPdfBlob; w++){
+                  await new Promise(function(r){ setTimeout(r, 100); });
+                }
+                primaryConverter = window.__renderAgyTrueSectionDocxToPdfBlob;
               }
-
-              if(typeof wasmConverter === 'function'){
-                var pdfBlob = await wasmConverter(docxBytes, {
-                  keywords: activeKws,
-                  statusCallback: function(statusMsg){
-                    var loadingEl = $id('rcvLoading');
-                    if(loadingEl) loadingEl.textContent = statusMsg || 'Rendering Word document via WASM…';
-                  }
-                });
-                if(pdfBlob){
-                  await renderPdf(pdfBlob, function(){
-                    renderDocx(rcvInfo.primaryDirectUrl || fallbackUrl);
+              if(typeof primaryConverter === 'function'){
+                try {
+                  pdfBlob = await primaryConverter(docxBytes, {
+                    searchableText: true,
+                    statusCallback: function(statusMsg){
+                      var loadingEl = $id('rcvLoading');
+                      if(loadingEl) loadingEl.textContent = statusMsg || 'Rendering Word document…';
+                    }
                   });
-                  return;
+                } catch(primaryErr){
+                  console.warn('Primary DOCX converter with text layer failed, trying WASM:', primaryErr);
                 }
               }
-              throw new Error('WASM converter not available');
-            } catch(wasmErr){
-              console.warn('Strategy 2 WASM DOCX conversion failed, falling back to Mammoth/iframe:', wasmErr);
+
+              if(!pdfBlob){
+                var wasmConverter = window.__renderAgyStrategy2WasmDocxToPdfBlob || (typeof renderAgyStrategy2WasmDocxToPdfBlob === 'function' ? renderAgyStrategy2WasmDocxToPdfBlob : null);
+                var ensureWasm = window.__rsEnsureOpenDocLab || (typeof rsEnsureOpenDocLab === 'function' ? rsEnsureOpenDocLab : null);
+                if(!wasmConverter && typeof ensureWasm === 'function'){
+                  await ensureWasm(false);
+                  wasmConverter = window.__renderAgyStrategy2WasmDocxToPdfBlob || (typeof renderAgyStrategy2WasmDocxToPdfBlob === 'function' ? renderAgyStrategy2WasmDocxToPdfBlob : null);
+                }
+                if(typeof wasmConverter === 'function'){
+                  var allKwList = Object.keys(keywords);
+                  pdfBlob = await wasmConverter(docxBytes, {
+                    keywords: allKwList,
+                    statusCallback: function(statusMsg){
+                      var loadingEl = $id('rcvLoading');
+                      if(loadingEl) loadingEl.textContent = statusMsg || 'Rendering Word document via WASM…';
+                    }
+                  });
+                }
+              }
+
+              if(pdfBlob){
+                await renderPdf(pdfBlob, function(){
+                  renderDocx(rcvInfo.primaryDirectUrl || fallbackUrl);
+                });
+                return;
+              }
+              throw new Error('All DOCX converters failed');
+            } catch(docxErr){
+              console.warn('DOCX conversion failed, falling back to Mammoth/iframe:', docxErr);
               if(rcvInfo.primaryDirectUrl || fallbackUrl){
                 renderDocx(rcvInfo.primaryDirectUrl || fallbackUrl);
               } else {
@@ -6551,24 +6575,52 @@ function agyInjectInvisibleTextLayer(pdf, pageEl, drawW, drawH, sliceOffsetY, sl
     var showText = window.NodeFilter ? window.NodeFilter.SHOW_TEXT : 4;
     var walker = document.createTreeWalker(pageEl, showText, null);
     var node;
+    var range = document.createRange ? document.createRange() : null;
+
     while((node = walker.nextNode())){
-      var val = (node.nodeValue || '').trim();
-      if(!val) continue;
+      var val = node.nodeValue;
+      if(!val || !val.trim()) continue;
       var parent = node.parentElement;
       if(!parent || ['SCRIPT','STYLE'].indexOf(parent.tagName)!==-1) continue;
-      var rect = parent.getBoundingClientRect();
-      if(!rect.width || !rect.height) continue;
 
-      var nodeCanvasY = (rect.top - pRect.top) * scaleY;
-      if(nodeCanvasY >= sliceStartCanvasY && nodeCanvasY < sliceEndCanvasY){
-        var relCanvasY = nodeCanvasY - sliceStartCanvasY;
-        var ptX = ((rect.left - pRect.left) / pRect.width) * drawW;
-        var nodeCanvasH = rect.height * scaleY;
-        var ptY = (relCanvasY / sliceH) * drawH + (nodeCanvasH / sliceH * drawH * 0.82);
-        var fontSize = Math.max(6, Math.min(18, (nodeCanvasH / sliceH) * drawH * 0.75));
-        if(typeof pdf.setFontSize === 'function') pdf.setFontSize(fontSize);
-        if(typeof pdf.text === 'function'){
-          pdf.text(val, ptX, ptY, { renderingMode: 'invisible' });
+      if(range){
+        var wordRegex = /\S+/g;
+        var wm;
+        while((wm = wordRegex.exec(val)) !== null){
+          try{
+            range.setStart(node, wm.index);
+            range.setEnd(node, wm.index + wm[0].length);
+            var wRect = range.getBoundingClientRect();
+            if(!wRect.width || !wRect.height) continue;
+
+            var nodeCanvasY = (wRect.top - pRect.top) * scaleY;
+            if(nodeCanvasY >= sliceStartCanvasY && nodeCanvasY < sliceEndCanvasY){
+              var relCanvasY = nodeCanvasY - sliceStartCanvasY;
+              var ptX = ((wRect.left - pRect.left) / pRect.width) * drawW;
+              var nodeCanvasH = wRect.height * scaleY;
+              var ptY = (relCanvasY / sliceH) * drawH + (nodeCanvasH / sliceH * drawH * 0.82);
+              var fontSize = Math.max(6, Math.min(18, (nodeCanvasH / sliceH) * drawH * 0.75));
+              if(typeof pdf.setFontSize === 'function') pdf.setFontSize(fontSize);
+              if(typeof pdf.text === 'function'){
+                pdf.text(wm[0], ptX, ptY, { renderingMode: 'invisible' });
+              }
+            }
+          }catch(rErr){}
+        }
+      }else{
+        var rect = parent.getBoundingClientRect();
+        if(!rect.width || !rect.height) continue;
+        var nodeCanvasY = (rect.top - pRect.top) * scaleY;
+        if(nodeCanvasY >= sliceStartCanvasY && nodeCanvasY < sliceEndCanvasY){
+          var relCanvasY = nodeCanvasY - sliceStartCanvasY;
+          var ptX = ((rect.left - pRect.left) / pRect.width) * drawW;
+          var nodeCanvasH = rect.height * scaleY;
+          var ptY = (relCanvasY / sliceH) * drawH + (nodeCanvasH / sliceH * drawH * 0.82);
+          var fontSize = Math.max(6, Math.min(18, (nodeCanvasH / sliceH) * drawH * 0.75));
+          if(typeof pdf.setFontSize === 'function') pdf.setFontSize(fontSize);
+          if(typeof pdf.text === 'function'){
+            pdf.text(val.trim(), ptX, ptY, { renderingMode: 'invisible' });
+          }
         }
       }
     }
@@ -8060,6 +8112,9 @@ window.__preloadRS=preloadRecruiterSummaryAssets;
 window.__buildRSBlob=buildRecruiterSummaryBlob;
 window.__buildRS=buildRecruiterSummary;
 window.__buildTurboVectorHighlightedResume=buildTurboVectorHighlightedResume;
+window.__rsEnsureJsZip=rsEnsureJsZip;
+window.__rsEnsureDocxConversion=rsEnsureDocxConversion;
+window.__rsEnsureOpenDocLab=rsEnsureOpenDocLab;
 })();
 </script>
 
