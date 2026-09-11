@@ -8626,7 +8626,7 @@ function agyExtractDocxMetadata(docXml){
   return metadata;
 }
 
-async function agyPreProcessDocxZip(docxBytes){
+async function agyPreProcessDocxZip(docxBytes, options){
   try{
     await rsEnsureJsZip();
     var zip = await window.JSZip.loadAsync(docxBytes);
@@ -8749,6 +8749,63 @@ async function agyPreProcessDocxZip(docxBytes){
       }
       return match;
     });
+
+    // 4. Inject native OOXML yellow highlighting for skill keywords if requested
+    options = options || {};
+    if(Array.isArray(options.keywords) && options.keywords.length){
+      var kwList = options.keywords.map(function(k){
+        return String(k || '').trim();
+      }).filter(function(k){
+        return k.length >= 2;
+      }).sort(function(a, b){
+        return b.length - a.length;
+      });
+
+      if(kwList.length){
+        var kwPatterns = kwList.map(function(k){
+          var esc = k.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+          var leftBound = /^\w/.test(k) ? '\\b' : '(?:^|\\s)';
+          var rightBound = /\w$/.test(k) ? '\\b' : '(?=$|\\s|[.,;!?)])';
+          return leftBound + esc + rightBound;
+        });
+        var kwRegex = new RegExp('(' + kwPatterns.join('|') + ')', 'gi');
+
+        sanitizedXml = sanitizedXml.replace(/<w:r\b([^>]*)>([\s\S]*?)<\/w:r>/gi, function(fullRun, rAttrs, rContent){
+          if(rContent.indexOf('<w:highlight') !== -1) return fullRun;
+          var tMatch = rContent.match(/<w:t\b([^>]*)>([\s\S]*?)<\/w:t>/i);
+          if(!tMatch) return fullRun;
+
+          var text = tMatch[2];
+          kwRegex.lastIndex = 0;
+          if(!kwRegex.test(text)) return fullRun;
+
+          kwRegex.lastIndex = 0;
+          var rPrMatch = rContent.match(/<w:rPr\b[^>]*>[\s\S]*?<\/w:rPr>/i);
+          var baseRPr = rPrMatch ? rPrMatch[0] : '';
+          var highlightedRPr = baseRPr
+            ? (baseRPr.indexOf('</w:rPr>') !== -1 ? baseRPr.replace('</w:rPr>', '<w:highlight w:val="yellow"/></w:rPr>') : baseRPr + '<w:highlight w:val="yellow"/>')
+            : '<w:rPr><w:highlight w:val="yellow"/></w:rPr>';
+
+          var parts = [];
+          var lastIdx = 0;
+          var m;
+          kwRegex.lastIndex = 0;
+          while((m = kwRegex.exec(text)) !== null){
+            if(m.index > lastIdx){
+              var preText = text.substring(lastIdx, m.index);
+              parts.push('<w:r' + rAttrs + '>' + baseRPr + '<w:t xml:space="preserve">' + preText + '</w:t></w:r>');
+            }
+            parts.push('<w:r' + rAttrs + '>' + highlightedRPr + '<w:t xml:space="preserve">' + m[0] + '</w:t></w:r>');
+            lastIdx = m.index + m[0].length;
+          }
+          if(lastIdx < text.length){
+            var postText = text.substring(lastIdx);
+            parts.push('<w:r' + rAttrs + '>' + baseRPr + '<w:t xml:space="preserve">' + postText + '</w:t></w:r>');
+          }
+          return parts.join('');
+        });
+      }
+    }
 
     var parser = new DOMParser();
     var docXml = parser.parseFromString(sanitizedXml, 'application/xml');
@@ -9236,7 +9293,7 @@ async function renderAgyStrategy2WasmDocxToPdfBlob(docxBytes, options){
   await agyYieldToMain();
 
   // Strategy 2: Pre-process DOCX bytes to sanitize numbering, PUA codepoints, and spacing
-  var preResult = await agyPreProcessDocxZip(docxBytes);
+  var preResult = await agyPreProcessDocxZip(docxBytes, options);
   var renderBytes = preResult.bytes || docxBytes;
 
   if(options.statusCallback) options.statusCallback('Parsing OOXML in WebAssembly (50%)...');
@@ -9397,6 +9454,27 @@ async function processAgyTestOption(optNum, options){
       var mergedName = resumeTrackingFileName(data, 'C', 'pdf');
       await mergePreScreenedReportAndResume(reportBlob, wasmBlob, mergedName);
       return true;
+
+    }else if(optNum === 44){
+      // Strategy 2 WASM: Resume with Matched Skill Keywords Highlighted
+      if(options.statusCallback) options.statusCallback('Collecting matched skill keywords (20%)...');
+      var allKeywords = rsDrawerHighlightedKeywords();
+
+      if(resumeExt === 'PDF'){
+        if(options.statusCallback) options.statusCallback('Applying vector keyword highlights (60%)...');
+        pdfBlob = await buildTurboVectorHighlightedResume({
+          resumeUrl: resumeSources,
+          resumeExt: 'PDF',
+          returnBlob: true
+        });
+      }else{
+        if(options.statusCallback) options.statusCallback('Highlighting skills & typesetting via WASM (55%)...');
+        pdfBlob = await renderAgyStrategy2WasmDocxToPdfBlob(docxBytes, {
+          keywords: allKeywords,
+          statusCallback: options.statusCallback
+        });
+      }
+      outFileName = 'JEROWORKS_' + fileSafeName(data.name, 'Candidate') + '_Strategy2_Highlighted.pdf';
     }
 
     if(pdfBlob instanceof Blob){
@@ -10220,6 +10298,24 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
         <span class="rdc-ocirc" aria-hidden="true"></span>
       </label>
 
+      {{-- 44: Strategy 2 WASM Resume + Highlighted Keywords --}}
+      <label class="rdc-opt" data-opt="44" data-coins="4">
+        <input class="rdc-rinput" type="radio" name="rdcFormat" value="44">
+        <span class="rdc-onum">44</span>
+        <span class="rdc-oi" style="background:#fffbeb;color:#d97706;" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 11-6 6v3h3l6-6"/><path d="m22 7-3-3"/><path d="M14.5 9.5 19 5l-2-2-4.5 4.5"/><path d="m11.5 6.5 6 6"/></svg>
+        </span>
+        <span class="rdc-obody">
+          <span class="rdc-otitle">Test: Strategy 2 WASM Resume + Highlighted Keywords <span style="background:#d97706;color:#fff;font-size:8.5px;font-weight:700;padding:1px 6px;border-radius:4px;vertical-align:middle;margin-left:4px;">Keywords Highlighted</span></span>
+          <span class="rdc-odesc">Download a clean resume copy with the most relevant skills highlighted for quick recruiter review.</span>
+        </span>
+        <span class="rdc-ometa">
+          <span class="rdc-ocost">4 Coins</span>
+          <span class="rdc-otime">WASM</span>
+        </span>
+        <span class="rdc-ocirc" aria-hidden="true"></span>
+      </label>
+
     </div>{{-- /.rdc-opts-list --}}
 
     {{-- Coin info summary --}}
@@ -10385,7 +10481,8 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
     40:{cost:1, label:'Test: Strategy 2 WASM (DOCX → PDF Only)', avail:(['PDF','DOCX'].indexOf(resumeExt) !== -1) && !!(r2DirectUrl || r2PublicUrl || originalR2DirectUrl || originalR2PublicUrl || dlUrl), dlKey:'test-agy-strategy2-wasm', unavailableMsg:'Strategy 2 WASM Engine is browser-only and available for direct PDF/DOCX resumes.'},
     41:{cost:2, label:'Test: Strategy 2 WASM + Company Branding', avail:(['PDF','DOCX'].indexOf(resumeExt) !== -1) && !!(r2DirectUrl || r2PublicUrl || originalR2DirectUrl || originalR2PublicUrl || dlUrl), dlKey:'test-agy-strategy2-branded', unavailableMsg:'Strategy 2 WASM Branded is browser-only and available for direct PDF/DOCX resumes.'},
     42:{cost:6, label:'Test: Pre-Screened Report + Strategy 2 WASM Resume + Company Branding', avail:(['PDF','DOCX'].indexOf(resumeExt) !== -1) && !!(r2DirectUrl || r2PublicUrl || originalR2DirectUrl || originalR2PublicUrl || dlUrl), dlKey:'test-agy-strategy2-prescreened-branded', unavailableMsg:'Strategy 2 WASM Pre-Screened Package is browser-only and available for direct PDF/DOCX resumes.'},
-    43:{cost:7, label:'Test: Pre-Screened Report + Strategy 2 WASM Resume without Company Branding', avail:(['PDF','DOCX'].indexOf(resumeExt) !== -1) && !!(r2DirectUrl || r2PublicUrl || originalR2DirectUrl || originalR2PublicUrl || dlUrl), dlKey:'test-agy-strategy2-prescreened-nobrand', unavailableMsg:'Strategy 2 WASM Pre-Screened Package without Branding is browser-only and available for direct PDF/DOCX resumes.'}
+    43:{cost:7, label:'Test: Pre-Screened Report + Strategy 2 WASM Resume without Company Branding', avail:(['PDF','DOCX'].indexOf(resumeExt) !== -1) && !!(r2DirectUrl || r2PublicUrl || originalR2DirectUrl || originalR2PublicUrl || dlUrl), dlKey:'test-agy-strategy2-prescreened-nobrand', unavailableMsg:'Strategy 2 WASM Pre-Screened Package without Branding is browser-only and available for direct PDF/DOCX resumes.'},
+    44:{cost:4, label:'Test: Strategy 2 WASM Resume + Highlighted Keywords', avail:(['PDF','DOCX'].indexOf(resumeExt) !== -1) && !!(r2DirectUrl || r2PublicUrl || originalR2DirectUrl || originalR2PublicUrl || dlUrl), dlKey:'test-agy-strategy2-highlighted', unavailableMsg:'Strategy 2 WASM Highlighted Resume is browser-only and available for direct PDF/DOCX resumes.'}
   };
 
   var selectedOpt = 1;
@@ -10444,7 +10541,7 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
     if(optMeta[33]){
       optMeta[33].avail = ['PDF','DOCX'].indexOf(resumeExt) !== -1 && !!(r2DirectUrl || r2PublicUrl || originalR2DirectUrl || originalR2PublicUrl);
     }
-    [40, 41, 42, 43].forEach(function(id){
+    [40, 41, 42, 43, 44].forEach(function(id){
       if(optMeta[id]){
         optMeta[id].avail = ['PDF','DOCX'].indexOf(resumeExt) !== -1 && !!(r2DirectUrl || r2PublicUrl || originalR2DirectUrl || originalR2PublicUrl || dlUrl);
       }
@@ -10511,7 +10608,7 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
       {theme:'green',icon:'package',title:'3. Recruiter Packages (Report + Resume)',pill:'',ids:[15,16]},
       {theme:'amber',icon:'keyword',title:'4. Highlighted skills',pill:'',ids:[28,20,17,19]},
       {theme:'purple',icon:'privacy',title:'5. Privacy & Anonymization',pill:'Protect candidate information as needed.',ids:[29,30,31,32,33]},
-      {theme:'cyan',icon:'resume',title:'6. Antigravity Client Engine (Isolated Test Lab)',pill:'LibreOffice Quality Client Engine (0% server load, 99.9% accuracy, 60 FPS)',ids:[40,41,42,43]}
+      {theme:'cyan',icon:'resume',title:'6. Antigravity Client Engine (Isolated Test Lab)',pill:'LibreOffice Quality Client Engine (0% server load, 99.9% accuracy, 60 FPS)',ids:[40,41,42,43,44]}
     ];
     var moved={};
     var frag=document.createDocumentFragment();
@@ -10680,7 +10777,7 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
     if((m.dlKey === 'turbo-vector-highlighted-branded' || m.dlKey === 'turbo-vector-highlighted' || m.dlKey === 'turbo-prescreened-highlighted-package') && typeof window.__preloadRSCombined === 'function') window.__preloadRSCombined();
     if(m.dlKey === 'turbo-prescreened-highlighted-package' && resumeExt === 'DOCX' && typeof window.__preloadOpenDocLocal === 'function') window.__preloadOpenDocLocal();
     if(m.dlKey && m.dlKey.indexOf('test-agy-') === 0 && typeof window.__preloadAgyMetricFonts === 'function') window.__preloadAgyMetricFonts();
-    if((m.dlKey === 'test-agy-strategy2-wasm' || m.dlKey === 'test-agy-strategy2-branded' || m.dlKey === 'test-agy-strategy2-prescreened-branded' || m.dlKey === 'test-agy-strategy2-prescreened-nobrand') && typeof window.__preloadOpenDocLocal === 'function') window.__preloadOpenDocLocal();
+    if((m.dlKey === 'test-agy-strategy2-wasm' || m.dlKey === 'test-agy-strategy2-branded' || m.dlKey === 'test-agy-strategy2-prescreened-branded' || m.dlKey === 'test-agy-strategy2-prescreened-nobrand' || m.dlKey === 'test-agy-strategy2-highlighted') && typeof window.__preloadOpenDocLocal === 'function') window.__preloadOpenDocLocal();
     if((m.dlKey === 'test-agy-strategy2-branded' || m.dlKey === 'test-agy-strategy2-prescreened-branded' || m.dlKey === 'test-agy-strategy2-prescreened-nobrand') && typeof window.__preloadRSCombined === 'function') window.__preloadRSCombined();
     if(m.dlKey === 'test-preantigravity-prescreened-highlighted-branded' && typeof window.__preloadRSCombined === 'function') window.__preloadRSCombined();
     if(m.dlKey === 'test-preantigravity-prescreened-highlighted-branded' && resumeExt === 'DOCX' && typeof window.__preloadOpenDocLocal === 'function') window.__preloadOpenDocLocal();
