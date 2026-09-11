@@ -9756,11 +9756,10 @@ async function processAgyTestOption(optNum, options){
       var rules = rdcAnonymizeRules(data, { keepName: true });
       var resumeBlob = null;
       if(resumeExt === 'PDF'){
-        if(options.statusCallback) options.statusCallback('Redacting PDF contacts & highlighting skills (55%)...');
+        if(options.statusCallback) options.statusCallback('Highlighting role-matched skills (40%)...');
         var rawPdfBlob = new Blob([docxBytes], { type: 'application/pdf' });
-        var redactedPdf = await renderAnonymizedPdfBlob(rawPdfBlob, rules);
-        resumeBlob = await buildTurboVectorHighlightedResume({
-          resumeBlob: redactedPdf,
+        var highlightedBlob = await buildTurboVectorHighlightedResume({
+          resumeBlob: rawPdfBlob,
           resumeUrl: resumeSources,
           resumeExt: 'PDF',
           keywords: allKeywords,
@@ -9768,6 +9767,8 @@ async function processAgyTestOption(optNum, options){
           ignoreBusy: true,
           throwOnError: true
         });
+        if(options.statusCallback) options.statusCallback('Redacting contact details (70%)...');
+        resumeBlob = await renderAnonymizedPdfBlob(highlightedBlob, rules);
       }else{
         if(options.statusCallback) options.statusCallback('Redacting contacts, highlighting skills & typesetting via WASM (55%)...');
         resumeBlob = await renderAgyStrategy2WasmDocxToPdfBlob(docxBytes, {
