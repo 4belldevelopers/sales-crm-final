@@ -3409,8 +3409,9 @@
                 method: "POST", processData: false, contentType: false, data: data, redirect: true,
                 success: function(data) {
                     if (data.status == 'success') {
+                         $btn.prop('disabled', false).html('Publish Job');
                         showToast('Job saved successfully!', 'success');
-                        setTimeout(function() { window.location = __indexUrl; }, 600);
+                        // setTimeout(function() { window.location = __indexUrl; }, 600);
                     } else {
                         $btn.prop('disabled', false).html('Publish Job');
                         if (!navigator.onLine) {

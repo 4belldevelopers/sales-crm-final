@@ -43,6 +43,17 @@ class ServiceCompanyDashboardController extends ServiceCompanyBaseController
     public function index()
     {
 
+    // $params = [
+    //             'index' => ELASTIC_LOCATIONS,
+    //             'id' => '132032',
+    //         ];
+
+    //         $response = $this->elasticService->getClient()->get($params);
+    //         $dddddd = (object) $response['_source'];
+
+    //         dd($dddddd);
+
+
         $chkAdminRole = $this->user->hasRole('admin');
         // $mapping = $this->elasticService->getClient()->indices()->getMapping([
         //     'index' => ELASTIC_CANDIDATES
