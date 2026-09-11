@@ -8703,7 +8703,11 @@ async function agyPreProcessDocxZip(docxBytes){
       try{
         var numXml = await numFile.async('string');
         var cleanNumXml = numXml
-          .replace(/<w:lvlText\s+w:val="[^"]*"/gi, '<w:lvlText w:val="•"')
+          .replace(/<w:lvlText\s+w:val="([^"]*)"/gi, function(m, val){
+            // Preserve numbered lists (%1, %2, etc.) while standardizing bullet symbols to •
+            if(/%\d/.test(val)) return m;
+            return '<w:lvlText w:val="•"';
+          })
           .replace(/w:ascii="(Symbol|Wingdings[^"]*)"/gi, 'w:ascii="Arial"')
           .replace(/w:hAnsi="(Symbol|Wingdings[^"]*)"/gi, 'w:hAnsi="Arial"')
           .replace(/<w:ind\s+[^>]*\/>/gi, '<w:ind w:left="420" w:hanging="240"/>');
@@ -8733,6 +8737,14 @@ async function agyPreProcessDocxZip(docxBytes){
         console.warn('Strategy 3 styles.xml pre-process warning:', sErr);
       }
     }
+
+    // Inject contextual spacing into list item paragraphs in document.xml
+    sanitizedXml = sanitizedXml.replace(/<w:pPr\b([^>]*)>/gi, function(match, attrs){
+      if((match.indexOf('w:numPr') !== -1 || match.indexOf('List') !== -1) && match.indexOf('contextualSpacing') === -1){
+        return '<w:pPr' + attrs + '><w:contextualSpacing/>';
+      }
+      return match;
+    });
 
     var parser = new DOMParser();
     var docXml = parser.parseFromString(sanitizedXml, 'application/xml');
@@ -8801,10 +8813,10 @@ function agyApplyStrategy3DomEngine(host, metadata){
       p.style.setProperty('margin-bottom', '2px', 'important');
       p.style.setProperty('line-height', '1.24', 'important');
 
-      // If bullet symbol is inline text, wrap in standard width bullet span
-      if(hasBulletSymbol && p.firstChild){
-        var fc = p.firstChild;
-        if(fc.nodeType === Node.TEXT_NODE && /^[•▪➢✓\-\*]/.test(fc.nodeValue.trim())){
+      // Format bullet symbol into fixed-width span regardless of text node or span nesting
+      if(hasBulletSymbol){
+        if(p.firstChild && p.firstChild.nodeType === Node.TEXT_NODE && /^[•▪➢✓\-\*]/.test(p.firstChild.nodeValue.trim())){
+          var fc = p.firstChild;
           var bulletChar = fc.nodeValue.trim().charAt(0);
           var rem = fc.nodeValue.trim().substring(1).replace(/^\s+/, '');
           var bSpan = document.createElement('span');
@@ -8813,6 +8825,15 @@ function agyApplyStrategy3DomEngine(host, metadata){
           p.replaceChild(bSpan, fc);
           if(rem){
             p.insertBefore(document.createTextNode(rem), bSpan.nextSibling);
+          }
+        }else if(p.firstElementChild && /^[•▪➢✓\-\*]/.test(p.firstElementChild.textContent.trim())){
+          var fec = p.firstElementChild;
+          var bChar = fec.textContent.trim().charAt(0);
+          var bRem = fec.textContent.trim().substring(1).replace(/^\s+/, '');
+          fec.className = (fec.className ? fec.className + ' ' : '') + 'agy-bullet-symbol';
+          fec.textContent = bChar + ' ';
+          if(bRem){
+            fec.parentNode.insertBefore(document.createTextNode(bRem), fec.nextSibling);
           }
         }
       }
@@ -9249,8 +9270,9 @@ async function renderAgyStrategy2WasmDocxToPdfBlob(docxBytes, options){
         bitmap = doc.renderPage(i, renderDpi);
         canvas = openDocCanvasFromBitmap(bitmap);
 
-        var pageW = (bitmap.widthPx / renderDpi) * 72;
-        var pageH = (bitmap.heightPx / renderDpi) * 72;
+        var points = openDocPagePoints(doc, i);
+        var pageW = (points && points[0]) ? points[0] : (bitmap.widthPx / renderDpi) * 72;
+        var pageH = (points && points[1]) ? points[1] : (bitmap.heightPx / renderDpi) * 72;
 
         if(!pdf){
           pdf = new JsPDF({
