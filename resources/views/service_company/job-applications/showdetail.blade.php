@@ -7865,7 +7865,7 @@ window.__buildTurboVectorHighlightedResume=buildTurboVectorHighlightedResume;
         </span>
         <span class="rdc-ometa">
           <span class="rdc-ocost">1 Coin</span>
-          <span class="rdc-otime">60 seconds</span>
+          <span class="rdc-otime">Instant</span>
         </span>
         <span class="rdc-ocirc" aria-hidden="true"></span>
       </label>
@@ -7883,7 +7883,7 @@ window.__buildTurboVectorHighlightedResume=buildTurboVectorHighlightedResume;
         </span>
         <span class="rdc-ometa">
           <span class="rdc-ocost">1 Coin</span>
-          <span class="rdc-otime">60 seconds</span>
+          <span class="rdc-otime">Instant</span>
         </span>
         <span class="rdc-ocirc" aria-hidden="true"></span>
       </label>
