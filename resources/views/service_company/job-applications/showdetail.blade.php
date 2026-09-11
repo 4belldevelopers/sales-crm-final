@@ -10048,7 +10048,7 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
       </label>
 
       {{-- 29: Client-side anonymized resume --}}
-      <label class="rdc-opt" data-opt="29" data-coins="4">
+      <label class="rdc-opt" data-opt="29" data-coins="4" style="display:none;" aria-hidden="true">
         <input class="rdc-rinput" type="radio" name="rdcFormat" value="29">
         <span class="rdc-onum">2</span>
         <span class="rdc-oi rdc-ic-blue" aria-hidden="true">
@@ -10066,7 +10066,7 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
       </label>
 
       {{-- 30: Client-side contact-hidden resume that keeps candidate name visible --}}
-      <label class="rdc-opt" data-opt="30" data-coins="4">
+      <label class="rdc-opt" data-opt="30" data-coins="4" style="display:none;" aria-hidden="true">
         <input class="rdc-rinput" type="radio" name="rdcFormat" value="30">
         <span class="rdc-onum">3</span>
         <span class="rdc-oi rdc-ic-blue" aria-hidden="true">
@@ -10084,7 +10084,7 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
       </label>
 
       {{-- 31: Client-side contact-hidden resume with company branding --}}
-      <label class="rdc-opt" data-opt="31" data-coins="6">
+      <label class="rdc-opt" data-opt="31" data-coins="6" style="display:none;" aria-hidden="true">
         <input class="rdc-rinput" type="radio" name="rdcFormat" value="31">
         <span class="rdc-onum">4</span>
         <span class="rdc-oi rdc-ic-green" aria-hidden="true">
@@ -10102,7 +10102,7 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
       </label>
 
       {{-- 32: Client-side contact-hidden resume with pre-screened report --}}
-      <label class="rdc-opt" data-opt="32" data-coins="11">
+      <label class="rdc-opt" data-opt="32" data-coins="11" style="display:none;" aria-hidden="true">
         <input class="rdc-rinput" type="radio" name="rdcFormat" value="32">
         <span class="rdc-onum">11</span>
         <span class="rdc-oi" style="background:#f5f3ff;color:#6d28d9;" aria-hidden="true">
@@ -10120,7 +10120,7 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
       </label>
 
       {{-- 33: Client-side contact-hidden resume with no-brand pre-screened report --}}
-      <label class="rdc-opt" data-opt="33" data-coins="12">
+      <label class="rdc-opt" data-opt="33" data-coins="12" style="display:none;" aria-hidden="true">
         <input class="rdc-rinput" type="radio" name="rdcFormat" value="33">
         <span class="rdc-onum">12</span>
         <span class="rdc-oi" style="background:#f8fafc;color:#475569;" aria-hidden="true">
@@ -10174,7 +10174,7 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
       </label>
 
       {{-- 8: Headless option 3 style highlighted skills from direct/converted PDF --}}
-      <label class="rdc-opt" data-opt="8" data-coins="4">
+      <label class="rdc-opt" data-opt="8" data-coins="4" style="display:none;" aria-hidden="true">
         <input class="rdc-rinput" type="radio" name="rdcFormat" value="8">
         <span class="rdc-onum">8</span>
         <span class="rdc-oi rdc-ic-amber" aria-hidden="true">
@@ -10192,7 +10192,7 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
       </label>
 
       {{-- 9: Option 8 highlighted resume plus exact option 6 company branding --}}
-      <label class="rdc-opt" data-opt="9" data-coins="6">
+      <label class="rdc-opt" data-opt="9" data-coins="6" style="display:none;" aria-hidden="true">
         <input class="rdc-rinput" type="radio" name="rdcFormat" value="9">
         <span class="rdc-onum">9</span>
         <span class="rdc-oi rdc-ic-green" aria-hidden="true">
@@ -10282,7 +10282,7 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
       </label>
 
       {{-- 6: New R2/browser branded resume header package --}}
-      <label class="rdc-opt" data-opt="6" data-coins="2">
+      <label class="rdc-opt" data-opt="6" data-coins="2" style="display:none;" aria-hidden="true">
         <input class="rdc-rinput" type="radio" name="rdcFormat" value="6">
         <span class="rdc-onum">5</span>
         <span class="rdc-oi" style="background:#ecfeff;color:#0e7490;" aria-hidden="true">
@@ -10300,7 +10300,7 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
       </label>
 
       {{-- 15: Smart final package with company branding --}}
-      <label class="rdc-opt" data-opt="15" data-coins="8">
+      <label class="rdc-opt" data-opt="15" data-coins="8" style="display:none;" aria-hidden="true">
         <input class="rdc-rinput" type="radio" name="rdcFormat" value="15">
         <span class="rdc-onum">9</span>
         <span class="rdc-oi" style="background:#ecfdf5;color:#059669;" aria-hidden="true">
@@ -10318,7 +10318,7 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
       </label>
 
       {{-- 16: Smart final package without company branding --}}
-      <label class="rdc-opt" data-opt="16" data-coins="8">
+      <label class="rdc-opt" data-opt="16" data-coins="8" style="display:none;" aria-hidden="true">
         <input class="rdc-rinput" type="radio" name="rdcFormat" value="16">
         <span class="rdc-onum">10</span>
         <span class="rdc-oi" style="background:#f8fafc;color:#475569;" aria-hidden="true">
@@ -10336,7 +10336,7 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
       </label>
 
       {{-- 17: Client-first DOCX pre-screened report plus highlighted resume package --}}
-      <label class="rdc-opt" data-opt="17" data-coins="8">
+      <label class="rdc-opt" data-opt="17" data-coins="8" style="display:none;" aria-hidden="true">
         <input class="rdc-rinput" type="radio" name="rdcFormat" value="17">
         <span class="rdc-onum">13</span>
         <span class="rdc-oi" style="background:#eef2ff;color:#4338ca;" aria-hidden="true">
@@ -10354,7 +10354,7 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
       </label>
 
       {{-- 19: Client-first DOCX pre-screened report without company branding plus highlighted resume package --}}
-      <label class="rdc-opt" data-opt="19" data-coins="8">
+      <label class="rdc-opt" data-opt="19" data-coins="8" style="display:none;" aria-hidden="true">
         <input class="rdc-rinput" type="radio" name="rdcFormat" value="19">
         <span class="rdc-onum">14</span>
         <span class="rdc-oi" style="background:#f8fafc;color:#475569;" aria-hidden="true">
@@ -10372,7 +10372,7 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
       </label>
 
       {{-- 20: Client-first highlighted resume plus company branding package --}}
-      <label class="rdc-opt" data-opt="20" data-coins="6">
+      <label class="rdc-opt" data-opt="20" data-coins="6" style="display:none;" aria-hidden="true">
         <input class="rdc-rinput" type="radio" name="rdcFormat" value="20">
         <span class="rdc-onum">7</span>
         <span class="rdc-oi rdc-ic-green" aria-hidden="true">
@@ -10390,7 +10390,7 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
       </label>
 
       {{-- 28: Isolated client-first highlighted resume without company branding --}}
-      <label class="rdc-opt" data-opt="28" data-coins="4">
+      <label class="rdc-opt" data-opt="28" data-coins="4" style="display:none;" aria-hidden="true">
         <input class="rdc-rinput" type="radio" name="rdcFormat" value="28">
         <span class="rdc-onum">6</span>
         <span class="rdc-oi rdc-ic-green" aria-hidden="true">
@@ -10408,7 +10408,7 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
       </label>
 
       {{-- 21: Fast highlighted resume plus separate company branding page --}}
-      <label class="rdc-opt" data-opt="21" data-coins="6">
+      <label class="rdc-opt" data-opt="21" data-coins="6" style="display:none;" aria-hidden="true">
         <input class="rdc-rinput" type="radio" name="rdcFormat" value="21">
         <span class="rdc-onum">21</span>
         <span class="rdc-oi rdc-ic-green" aria-hidden="true">
@@ -10426,7 +10426,7 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
       </label>
 
       {{-- 22: Client-first highlighted resume only package --}}
-      <label class="rdc-opt" data-opt="22" data-coins="4">
+      <label class="rdc-opt" data-opt="22" data-coins="4" style="display:none;" aria-hidden="true">
         <input class="rdc-rinput" type="radio" name="rdcFormat" value="22">
         <span class="rdc-onum">22</span>
         <span class="rdc-oi rdc-ic-amber" aria-hidden="true">
@@ -10444,7 +10444,7 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
       </label>
 
       {{-- 23: Turbo Vector highlighted resume plus company branding --}}
-      <label class="rdc-opt" data-opt="23" data-coins="6">
+      <label class="rdc-opt" data-opt="23" data-coins="6" style="display:none;" aria-hidden="true">
         <input class="rdc-rinput" type="radio" name="rdcFormat" value="23">
         <span class="rdc-onum">23</span>
         <span class="rdc-oi" style="background:#f0fdf4;color:#16a34a;" aria-hidden="true">
@@ -10462,7 +10462,7 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
       </label>
 
       {{-- 24: Turbo Vector highlighted resume only --}}
-      <label class="rdc-opt" data-opt="24" data-coins="4">
+      <label class="rdc-opt" data-opt="24" data-coins="4" style="display:none;" aria-hidden="true">
         <input class="rdc-rinput" type="radio" name="rdcFormat" value="24">
         <span class="rdc-onum">24</span>
         <span class="rdc-oi" style="background:#fef9c3;color:#a16207;" aria-hidden="true">
@@ -10480,7 +10480,7 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
       </label>
 
       {{-- 25: Client Lightning highlighted resume plus company branding --}}
-      <label class="rdc-opt" data-opt="25" data-coins="6">
+      <label class="rdc-opt" data-opt="25" data-coins="6" style="display:none;" aria-hidden="true">
         <input class="rdc-rinput" type="radio" name="rdcFormat" value="25">
         <span class="rdc-onum">25</span>
         <span class="rdc-oi" style="background:#ede9fe;color:#7c3aed;" aria-hidden="true">
@@ -10498,7 +10498,7 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
       </label>
 
       {{-- 26: Client Lightning highlighted resume only --}}
-      <label class="rdc-opt" data-opt="26" data-coins="4">
+      <label class="rdc-opt" data-opt="26" data-coins="4" style="display:none;" aria-hidden="true">
         <input class="rdc-rinput" type="radio" name="rdcFormat" value="26">
         <span class="rdc-onum">26</span>
         <span class="rdc-oi" style="background:#e0e7ff;color:#4338ca;" aria-hidden="true">
@@ -10516,7 +10516,7 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
       </label>
 
       {{-- 27: Turbo Pre-Screened Report + Resume + Highlights (OpenDoc Client-Side Package) --}}
-      <label class="rdc-opt" data-opt="27" data-coins="8">
+      <label class="rdc-opt" data-opt="27" data-coins="8" style="display:none;" aria-hidden="true">
         <input class="rdc-rinput" type="radio" name="rdcFormat" value="27">
         <span class="rdc-onum">27</span>
         <span class="rdc-oi" style="background:#fdf2f8;color:#be185d;" aria-hidden="true">
@@ -11112,11 +11112,11 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
       optionMap[parseInt(opt.getAttribute('data-opt'),10)] = opt;
     });
     var groups=[
-      {theme:'blue',icon:'resume',title:'1. Resume Options',pill:"Get the candidate's resume in different formats.",ids:[1,40,41,6]},
+      {theme:'blue',icon:'resume',title:'1. Resume Options',pill:"Get the candidate's resume in different formats.",ids:[1,40,41]},
       {theme:'rose',icon:'report',title:'2. Pre-Screened Report',pill:'Get AI-powered insights and verification details.',ids:[5]},
-      {theme:'green',icon:'package',title:'3. Recruiter Packages (Report + Resume)',pill:'',ids:[42,43,15,16]},
-      {theme:'amber',icon:'keyword',title:'4. Highlighted skills',pill:'',ids:[44,45,46,47,28,20,17,19]},
-      {theme:'purple',icon:'privacy',title:'5. Privacy & Anonymization',pill:'Protect candidate information as needed.',ids:[48,49,50,51,52,53,30,29,31,32,33]}
+      {theme:'green',icon:'package',title:'3. Recruiter Packages (Report + Resume)',pill:'',ids:[42,43]},
+      {theme:'amber',icon:'keyword',title:'4. Highlighted skills',pill:'',ids:[44,45,46,47]},
+      {theme:'purple',icon:'privacy',title:'5. Privacy & Anonymization',pill:'Protect candidate information as needed.',ids:[48,49,50,51,52,53]}
     ];
     var moved={};
     var frag=document.createDocumentFragment();
@@ -11146,6 +11146,8 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
     var hiddenBin=document.createElement('div');
     hiddenBin.className='rdc-hidden-options';
     hiddenBin.setAttribute('hidden','hidden');
+    hiddenBin.setAttribute('aria-hidden','true');
+    hiddenBin.style.display='none';
     Array.prototype.slice.call(opts).forEach(function(opt){
       var id=parseInt(opt.getAttribute('data-opt'),10);
       if(!moved[id]) hiddenBin.appendChild(opt);
