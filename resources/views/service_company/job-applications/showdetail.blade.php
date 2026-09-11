@@ -458,6 +458,26 @@
 .rdc-toast.rdc-tshow{opacity:1;transform:translateY(0);}
 .rdc-toast-info{background:#7c3aed;}
 .rdc-toast-warn{background:#d97706;}
+/* Word (.doc) Unsupported Popup Modal Notification */
+.rdc-doc-modal-backdrop{position:fixed;inset:0;background:rgba(15,23,42,.6);z-index:1300002;display:none;align-items:center;justify-content:center;padding:16px;-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px);transition:opacity .2s ease;}
+.rdc-doc-modal{background:#fff;border-radius:12px;width:100%;max-width:440px;box-shadow:0 20px 25px -5px rgba(0,0,0,.15),0 10px 10px -5px rgba(0,0,0,.06);font-family:'Poppins',sans-serif;overflow:hidden;border:1px solid #e2e8f0;animation:rdcDocPop .22s cubic-bezier(.16,1,.3,1);}
+@keyframes rdcDocPop{from{opacity:0;transform:scale(.94) translateY(6px);}to{opacity:1;transform:scale(1) translateY(0);}}
+.rdc-doc-modal-header{display:flex;align-items:center;justify-content:space-between;padding:18px 20px 0;}
+.rdc-doc-modal-icon{width:40px;height:40px;border-radius:10px;background:#fef3c7;color:#d97706;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.rdc-doc-modal-icon svg{width:22px;height:22px;}
+.rdc-doc-modal-close{width:28px;height:28px;border:1px solid #e2e8f0;border-radius:6px;background:#fff;cursor:pointer;color:#64748b;display:flex;align-items:center;justify-content:center;padding:0;transition:all .15s ease;}
+.rdc-doc-modal-close:hover{background:#fee2e2;color:#dc2626;border-color:#fca5a5;}
+.rdc-doc-modal-close svg{width:13px;height:13px;}
+.rdc-doc-modal-body{padding:14px 20px 18px;}
+.rdc-doc-modal-title{font-size:14px;font-weight:700;color:#0f172a;margin:0 0 8px;line-height:1.35;font-family:'Poppins',sans-serif;}
+.rdc-doc-modal-text{font-size:12.5px;color:#475569;margin:0;line-height:1.55;font-family:'Poppins',sans-serif;}
+.rdc-doc-modal-footer{display:flex;align-items:center;justify-content:flex-end;gap:10px;padding:12px 20px 16px;background:#f8fafc;border-top:1px solid #f1f5f9;}
+.rdc-doc-modal-btn{font-family:'Poppins',sans-serif;font-size:12px;font-weight:600;padding:8px 16px;border-radius:7px;cursor:pointer;transition:all .15s ease;display:inline-flex;align-items:center;gap:6px;}
+.rdc-doc-modal-btn-primary{background:#4f46e5;color:#fff;border:none;}
+.rdc-doc-modal-btn-primary:hover{background:#4338ca;}
+.rdc-doc-modal-btn-primary svg{width:13px;height:13px;}
+.rdc-doc-modal-btn-secondary{background:#fff;color:#64748b;border:1px solid #cbd5e1;}
+.rdc-doc-modal-btn-secondary:hover{background:#f1f5f9;color:#334155;}
 /* Responsive */
 @media(max-width:640px){
   .rdc-drawer{width:100%;top:auto;bottom:0;height:92dvh;border-radius:14px 14px 0 0;transform:translateY(100%);}
@@ -9398,6 +9418,10 @@ async function processAgyTestOption(optNum, options){
       return url && url !== '--' && self.indexOf(url) === index;
     });
     var resumeExt = clean(options.resumeExt || '', '').toUpperCase();
+    if(resumeExt === 'DOC'){
+      if(typeof window.__showDocFileUnsupportedPopup === 'function') window.__showDocFileUnsupportedPopup();
+      throw new Error('This Word (.doc) file version isn’t supported. Please upload the resume as PDF or download the original resume using Option 1.');
+    }
     var data = readData();
 
     // Cache key tied strictly to this candidate's specific primary resume URL or ID
@@ -9411,6 +9435,12 @@ async function processAgyTestOption(optNum, options){
       if(cacheKey && docxBytes && docxBytes.byteLength){
         window.__agyResumeCache[cacheKey] = docxBytes;
       }
+    }
+
+    var isLegacyDoc = (docxBytes && docxBytes.byteLength >= 4 && docxBytes[0] === 0xD0 && docxBytes[1] === 0xCF && docxBytes[2] === 0x11 && docxBytes[3] === 0xE0);
+    if(isLegacyDoc){
+      if(typeof window.__showDocFileUnsupportedPopup === 'function') window.__showDocFileUnsupportedPopup();
+      throw new Error('This Word (.doc) file version isn’t supported. Please upload the resume as PDF or download the original resume using Option 1.');
     }
 
     var pdfBlob = null;
@@ -10732,6 +10762,35 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
 {{-- Toast --}}
 <div id="rdcToast" class="rdc-toast" role="status" aria-live="polite"></div>
 
+{{-- Word (.doc) Version Unsupported Popup Notification Modal --}}
+<div id="rdcDocModalBackdrop" class="rdc-doc-modal-backdrop" aria-hidden="true" style="display:none;">
+  <div class="rdc-doc-modal" role="alertdialog" aria-modal="true" aria-labelledby="rdcDocModalTitle" aria-describedby="rdcDocModalDesc">
+    <div class="rdc-doc-modal-header">
+      <div class="rdc-doc-modal-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="12" y1="8" x2="12" y2="12"></line>
+          <line x1="12" y1="16" x2="12.01" y2="16"></line>
+        </svg>
+      </div>
+      <button type="button" class="rdc-doc-modal-close" id="rdcDocModalCloseBtn" aria-label="Close" title="Close">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+      </button>
+    </div>
+    <div class="rdc-doc-modal-body">
+      <h3 id="rdcDocModalTitle" class="rdc-doc-modal-title">This Word (.doc) file version isn’t supported.</h3>
+      <p id="rdcDocModalDesc" class="rdc-doc-modal-text">Please upload the resume as PDF or download the original resume using Option 1.</p>
+    </div>
+    <div class="rdc-doc-modal-footer">
+      <button type="button" class="rdc-doc-modal-btn rdc-doc-modal-btn-primary" id="rdcDocModalOpt1Btn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Download Option 1
+      </button>
+      <button type="button" class="rdc-doc-modal-btn rdc-doc-modal-btn-secondary" id="rdcDocModalDismissBtn">Close</button>
+    </div>
+  </div>
+</div>
+
 <script>
 (function(){
   'use strict';
@@ -10835,6 +10894,8 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
     return true;
   }
 
+  var docUnsupportedMsg = 'This Word (.doc) file version isn’t supported. Please upload the resume as PDF or download the original resume using Option 1.';
+
   var optMeta = {
     1: {cost:1, label:'Download Resume',       avail:hasResume && !!(originalR2PublicUrl || originalR2DirectUrl || dlUrl),  dlKey:null, unavailableMsg:'Original resume is not available for download.'},
     3: {cost:4, label:'Download ATS Highlighted Resume',avail:true,  dlKey:'hl'},
@@ -10859,25 +10920,25 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
     26:{cost:4, label:'Client Lightning Resume + Highlights', avail:(['PDF','DOC','DOCX'].indexOf(resumeExt) !== -1), dlKey:'client-lightning-highlighted', unavailableMsg:'Client Lightning Highlighted Resume is available for PDF, DOC and DOCX resumes only.'},
     27:{cost:8, label:'Turbo Pre-Screened Report + Resume + Highlights', avail:(['PDF','DOC','DOCX'].indexOf(resumeExt) !== -1), dlKey:'turbo-prescreened-highlighted-package', unavailableMsg:'Turbo Pre-Screened Package is available for PDF, DOC and DOCX resumes only.'},
     28:{cost:4, label:'Resume + Highlighted Keywords', avail:(['PDF','DOC','DOCX'].indexOf(resumeExt) !== -1), dlKey:'isolated-highlighted-keywords-client-docx', unavailableMsg:'Resume + Highlighted Keywords is available for PDF, DOC and DOCX resumes only.'},
-    29:{cost:4, label:'Hide Candidate Name & Contacts Details', avail:(['PDF','DOCX'].indexOf(resumeExt) !== -1) && !!(r2DirectUrl || r2PublicUrl || originalR2DirectUrl || originalR2PublicUrl), dlKey:'client-anonymized-resume', unavailableMsg:'Anonymized Resume is browser-only and available for direct R2 PDF/DOCX resumes.'},
-    30:{cost:4, label:'Hide Contact Details', avail:(['PDF','DOCX'].indexOf(resumeExt) !== -1) && !!(r2DirectUrl || r2PublicUrl || originalR2DirectUrl || originalR2PublicUrl), dlKey:'client-anonymized-keep-name-resume', keepName:true, unavailableMsg:'Hide Contact Details is browser-only and available for direct R2 PDF/DOCX resumes.'},
-    31:{cost:6, label:'Hide Contact Details + Company Branding', avail:(['PDF','DOCX'].indexOf(resumeExt) !== -1) && !!(r2DirectUrl || r2PublicUrl || originalR2DirectUrl || originalR2PublicUrl), dlKey:'client-contact-hidden-branded-resume', unavailableMsg:'Hide Contact Details + Company Branding is browser-only and available for direct R2 PDF/DOCX resumes.'},
-    32:{cost:11, label:'Hide Contact Details + Pre-Screened Report', avail:(['PDF','DOCX'].indexOf(resumeExt) !== -1) && !!(r2DirectUrl || r2PublicUrl || originalR2DirectUrl || originalR2PublicUrl), dlKey:'client-contact-hidden-prescreened-resume', unavailableMsg:'Hide Contact Details + Pre-Screened Report is browser-only and available for direct R2 PDF/DOCX resumes.'},
-    33:{cost:12, label:'Hide Contact Details + Pre-Screened Report without Company Branding', avail:(['PDF','DOCX'].indexOf(resumeExt) !== -1) && !!(r2DirectUrl || r2PublicUrl || originalR2DirectUrl || originalR2PublicUrl), dlKey:'client-contact-hidden-prescreened-nobrand-resume', unavailableMsg:'Hide Contact Details + Pre-Screened Report without Company Branding is browser-only and available for direct R2 PDF/DOCX resumes.'},
-    40:{cost:1, label:'Test: Strategy 2 WASM (DOCX → PDF Only)', avail:(['PDF','DOCX'].indexOf(resumeExt) !== -1) && !!(r2DirectUrl || r2PublicUrl || originalR2DirectUrl || originalR2PublicUrl || dlUrl), dlKey:'test-agy-strategy2-wasm', unavailableMsg:'Strategy 2 WASM Engine is browser-only and available for direct PDF/DOCX resumes.'},
-    41:{cost:2, label:'Test: Strategy 2 WASM + Company Branding', avail:(['PDF','DOCX'].indexOf(resumeExt) !== -1) && !!(r2DirectUrl || r2PublicUrl || originalR2DirectUrl || originalR2PublicUrl || dlUrl), dlKey:'test-agy-strategy2-branded', unavailableMsg:'Strategy 2 WASM Branded is browser-only and available for direct PDF/DOCX resumes.'},
-    42:{cost:6, label:'Test: Pre-Screened Report + Strategy 2 WASM Resume + Company Branding', avail:(['PDF','DOCX'].indexOf(resumeExt) !== -1) && !!(r2DirectUrl || r2PublicUrl || originalR2DirectUrl || originalR2PublicUrl || dlUrl), dlKey:'test-agy-strategy2-prescreened-branded', unavailableMsg:'Strategy 2 WASM Pre-Screened Package is browser-only and available for direct PDF/DOCX resumes.'},
-    43:{cost:7, label:'Test: Pre-Screened Report + Strategy 2 WASM Resume without Company Branding', avail:(['PDF','DOCX'].indexOf(resumeExt) !== -1) && !!(r2DirectUrl || r2PublicUrl || originalR2DirectUrl || originalR2PublicUrl || dlUrl), dlKey:'test-agy-strategy2-prescreened-nobrand', unavailableMsg:'Strategy 2 WASM Pre-Screened Package without Branding is browser-only and available for direct PDF/DOCX resumes.'},
-    44:{cost:4, label:'Test: Strategy 2 WASM Resume + Highlighted Keywords', avail:(['PDF','DOCX'].indexOf(resumeExt) !== -1) && !!(r2DirectUrl || r2PublicUrl || originalR2DirectUrl || originalR2PublicUrl || dlUrl), dlKey:'test-agy-strategy2-highlighted', unavailableMsg:'Strategy 2 WASM Highlighted Resume is browser-only and available for direct PDF/DOCX resumes.'},
-    45:{cost:6, label:'Test: Strategy 2 WASM Resume + Highlighted Keywords + Company Branding', avail:(['PDF','DOCX'].indexOf(resumeExt) !== -1) && !!(r2DirectUrl || r2PublicUrl || originalR2DirectUrl || originalR2PublicUrl || dlUrl), dlKey:'test-agy-strategy2-highlighted-branded', unavailableMsg:'Strategy 2 WASM Highlighted Branded Resume is browser-only and available for direct PDF/DOCX resumes.'},
-    46:{cost:8, label:'Test: Pre-Screened Report + Strategy 2 WASM Resume + Highlighted Keywords + Company Branding', avail:(['PDF','DOCX'].indexOf(resumeExt) !== -1) && !!(r2DirectUrl || r2PublicUrl || originalR2DirectUrl || originalR2PublicUrl || dlUrl), dlKey:'test-agy-strategy2-prescreened-highlighted-branded', unavailableMsg:'Strategy 2 WASM Pre-Screened Highlighted Package is browser-only and available for direct PDF/DOCX resumes.'},
-    47:{cost:8, label:'Test: Pre-Screened Report + Strategy 2 WASM Resume + Highlighted Keywords without Company Branding', avail:(['PDF','DOCX'].indexOf(resumeExt) !== -1) && !!(r2DirectUrl || r2PublicUrl || originalR2DirectUrl || originalR2PublicUrl || dlUrl), dlKey:'test-agy-strategy2-prescreened-highlighted-nobrand', unavailableMsg:'Strategy 2 WASM Pre-Screened Highlighted Package without Branding is browser-only and available for direct PDF/DOCX resumes.'},
-    48:{cost:4, label:'Test: Strategy 2 WASM Hide Contact Details', avail:(['PDF','DOCX'].indexOf(resumeExt) !== -1) && !!(r2DirectUrl || r2PublicUrl || originalR2DirectUrl || originalR2PublicUrl || dlUrl), dlKey:'test-agy-strategy2-contact-hidden', unavailableMsg:'Strategy 2 WASM Contact Hidden Resume is browser-only and available for direct PDF/DOCX resumes.'},
-    49:{cost:4, label:'Test: Strategy 2 WASM Hide Candidate Name & Contacts Details', avail:(['PDF','DOCX'].indexOf(resumeExt) !== -1) && !!(r2DirectUrl || r2PublicUrl || originalR2DirectUrl || originalR2PublicUrl || dlUrl), dlKey:'test-agy-strategy2-anonymized-all', unavailableMsg:'Strategy 2 WASM Anonymized Resume is browser-only and available for direct PDF/DOCX resumes.'},
-    50:{cost:6, label:'Test: Strategy 2 WASM Hide Contact Details + Company Branding', avail:(['PDF','DOCX'].indexOf(resumeExt) !== -1) && !!(r2DirectUrl || r2PublicUrl || originalR2DirectUrl || originalR2PublicUrl || dlUrl), dlKey:'test-agy-strategy2-contact-hidden-branded', unavailableMsg:'Strategy 2 WASM Contact Hidden Branded Resume is browser-only and available for direct PDF/DOCX resumes.'},
-    51:{cost:11, label:'Test: Pre-Screened Report + Strategy 2 WASM Resume (Contact Hidden) + Company Branding', avail:(['PDF','DOCX'].indexOf(resumeExt) !== -1) && !!(r2DirectUrl || r2PublicUrl || originalR2DirectUrl || originalR2PublicUrl || dlUrl), dlKey:'test-agy-strategy2-contact-hidden-prescreened', unavailableMsg:'Strategy 2 WASM Contact Hidden Pre-Screened Package is browser-only and available for direct PDF/DOCX resumes.'},
-    52:{cost:12, label:'Test: Pre-Screened Report + Strategy 2 WASM Resume (Contact Hidden) without Company Branding', avail:(['PDF','DOCX'].indexOf(resumeExt) !== -1) && !!(r2DirectUrl || r2PublicUrl || originalR2DirectUrl || originalR2PublicUrl || dlUrl), dlKey:'test-agy-strategy2-contact-hidden-prescreened-nobrand', unavailableMsg:'Strategy 2 WASM Contact Hidden Pre-Screened Package without Branding is browser-only and available for direct PDF/DOCX resumes.'},
-    53:{cost:13, label:'Test: Pre-Screened Report + Strategy 2 WASM Resume (Contact Hidden + Highlighted)', avail:(['PDF','DOCX'].indexOf(resumeExt) !== -1) && !!(r2DirectUrl || r2PublicUrl || originalR2DirectUrl || originalR2PublicUrl || dlUrl), dlKey:'test-agy-strategy2-contact-hidden-prescreened-highlighted', unavailableMsg:'Strategy 2 WASM Contact Hidden Highlighted Pre-Screened Package is browser-only and available for direct PDF/DOCX resumes.'}
+    29:{cost:4, label:'Hide Candidate Name & Contacts Details', avail:(['PDF','DOCX'].indexOf(resumeExt) !== -1) && !!(r2DirectUrl || r2PublicUrl || originalR2DirectUrl || originalR2PublicUrl), dlKey:'client-anonymized-resume', unavailableMsg:(resumeExt === 'DOC' ? docUnsupportedMsg : 'Anonymized Resume is browser-only and available for direct R2 PDF/DOCX resumes.')},
+    30:{cost:4, label:'Hide Contact Details', avail:(['PDF','DOCX'].indexOf(resumeExt) !== -1) && !!(r2DirectUrl || r2PublicUrl || originalR2DirectUrl || originalR2PublicUrl), dlKey:'client-anonymized-keep-name-resume', keepName:true, unavailableMsg:(resumeExt === 'DOC' ? docUnsupportedMsg : 'Hide Contact Details is browser-only and available for direct R2 PDF/DOCX resumes.')},
+    31:{cost:6, label:'Hide Contact Details + Company Branding', avail:(['PDF','DOCX'].indexOf(resumeExt) !== -1) && !!(r2DirectUrl || r2PublicUrl || originalR2DirectUrl || originalR2PublicUrl), dlKey:'client-contact-hidden-branded-resume', unavailableMsg:(resumeExt === 'DOC' ? docUnsupportedMsg : 'Hide Contact Details + Company Branding is browser-only and available for direct R2 PDF/DOCX resumes.')},
+    32:{cost:11, label:'Hide Contact Details + Pre-Screened Report', avail:(['PDF','DOCX'].indexOf(resumeExt) !== -1) && !!(r2DirectUrl || r2PublicUrl || originalR2DirectUrl || originalR2PublicUrl), dlKey:'client-contact-hidden-prescreened-resume', unavailableMsg:(resumeExt === 'DOC' ? docUnsupportedMsg : 'Hide Contact Details + Pre-Screened Report is browser-only and available for direct R2 PDF/DOCX resumes.')},
+    33:{cost:12, label:'Hide Contact Details + Pre-Screened Report without Company Branding', avail:(['PDF','DOCX'].indexOf(resumeExt) !== -1) && !!(r2DirectUrl || r2PublicUrl || originalR2DirectUrl || originalR2PublicUrl), dlKey:'client-contact-hidden-prescreened-nobrand-resume', unavailableMsg:(resumeExt === 'DOC' ? docUnsupportedMsg : 'Hide Contact Details + Pre-Screened Report without Company Branding is browser-only and available for direct R2 PDF/DOCX resumes.')},
+    40:{cost:1, label:'Test: Strategy 2 WASM (DOCX → PDF Only)', avail:(['PDF','DOCX'].indexOf(resumeExt) !== -1) && !!(r2DirectUrl || r2PublicUrl || originalR2DirectUrl || originalR2PublicUrl || dlUrl), dlKey:'test-agy-strategy2-wasm', unavailableMsg:(resumeExt === 'DOC' ? docUnsupportedMsg : 'Strategy 2 WASM Engine is browser-only and available for direct PDF/DOCX resumes.')},
+    41:{cost:2, label:'Test: Strategy 2 WASM + Company Branding', avail:(['PDF','DOCX'].indexOf(resumeExt) !== -1) && !!(r2DirectUrl || r2PublicUrl || originalR2DirectUrl || originalR2PublicUrl || dlUrl), dlKey:'test-agy-strategy2-branded', unavailableMsg:(resumeExt === 'DOC' ? docUnsupportedMsg : 'Strategy 2 WASM Branded is browser-only and available for direct PDF/DOCX resumes.')},
+    42:{cost:6, label:'Test: Pre-Screened Report + Strategy 2 WASM Resume + Company Branding', avail:(['PDF','DOCX'].indexOf(resumeExt) !== -1) && !!(r2DirectUrl || r2PublicUrl || originalR2DirectUrl || originalR2PublicUrl || dlUrl), dlKey:'test-agy-strategy2-prescreened-branded', unavailableMsg:(resumeExt === 'DOC' ? docUnsupportedMsg : 'Strategy 2 WASM Pre-Screened Package is browser-only and available for direct PDF/DOCX resumes.')},
+    43:{cost:7, label:'Test: Pre-Screened Report + Strategy 2 WASM Resume without Company Branding', avail:(['PDF','DOCX'].indexOf(resumeExt) !== -1) && !!(r2DirectUrl || r2PublicUrl || originalR2DirectUrl || originalR2PublicUrl || dlUrl), dlKey:'test-agy-strategy2-prescreened-nobrand', unavailableMsg:(resumeExt === 'DOC' ? docUnsupportedMsg : 'Strategy 2 WASM Pre-Screened Package without Branding is browser-only and available for direct PDF/DOCX resumes.')},
+    44:{cost:4, label:'Test: Strategy 2 WASM Resume + Highlighted Keywords', avail:(['PDF','DOCX'].indexOf(resumeExt) !== -1) && !!(r2DirectUrl || r2PublicUrl || originalR2DirectUrl || originalR2PublicUrl || dlUrl), dlKey:'test-agy-strategy2-highlighted', unavailableMsg:(resumeExt === 'DOC' ? docUnsupportedMsg : 'Strategy 2 WASM Highlighted Resume is browser-only and available for direct PDF/DOCX resumes.')},
+    45:{cost:6, label:'Test: Strategy 2 WASM Resume + Highlighted Keywords + Company Branding', avail:(['PDF','DOCX'].indexOf(resumeExt) !== -1) && !!(r2DirectUrl || r2PublicUrl || originalR2DirectUrl || originalR2PublicUrl || dlUrl), dlKey:'test-agy-strategy2-highlighted-branded', unavailableMsg:(resumeExt === 'DOC' ? docUnsupportedMsg : 'Strategy 2 WASM Highlighted Branded Resume is browser-only and available for direct PDF/DOCX resumes.')},
+    46:{cost:8, label:'Test: Pre-Screened Report + Strategy 2 WASM Resume + Highlighted Keywords + Company Branding', avail:(['PDF','DOCX'].indexOf(resumeExt) !== -1) && !!(r2DirectUrl || r2PublicUrl || originalR2DirectUrl || originalR2PublicUrl || dlUrl), dlKey:'test-agy-strategy2-prescreened-highlighted-branded', unavailableMsg:(resumeExt === 'DOC' ? docUnsupportedMsg : 'Strategy 2 WASM Pre-Screened Highlighted Package is browser-only and available for direct PDF/DOCX resumes.')},
+    47:{cost:8, label:'Test: Pre-Screened Report + Strategy 2 WASM Resume + Highlighted Keywords without Company Branding', avail:(['PDF','DOCX'].indexOf(resumeExt) !== -1) && !!(r2DirectUrl || r2PublicUrl || originalR2DirectUrl || originalR2PublicUrl || dlUrl), dlKey:'test-agy-strategy2-prescreened-highlighted-nobrand', unavailableMsg:(resumeExt === 'DOC' ? docUnsupportedMsg : 'Strategy 2 WASM Pre-Screened Highlighted Package without Branding is browser-only and available for direct PDF/DOCX resumes.')},
+    48:{cost:4, label:'Test: Strategy 2 WASM Hide Contact Details', avail:(['PDF','DOCX'].indexOf(resumeExt) !== -1) && !!(r2DirectUrl || r2PublicUrl || originalR2DirectUrl || originalR2PublicUrl || dlUrl), dlKey:'test-agy-strategy2-contact-hidden', unavailableMsg:(resumeExt === 'DOC' ? docUnsupportedMsg : 'Strategy 2 WASM Contact Hidden Resume is browser-only and available for direct PDF/DOCX resumes.')},
+    49:{cost:4, label:'Test: Strategy 2 WASM Hide Candidate Name & Contacts Details', avail:(['PDF','DOCX'].indexOf(resumeExt) !== -1) && !!(r2DirectUrl || r2PublicUrl || originalR2DirectUrl || originalR2PublicUrl || dlUrl), dlKey:'test-agy-strategy2-anonymized-all', unavailableMsg:(resumeExt === 'DOC' ? docUnsupportedMsg : 'Strategy 2 WASM Anonymized Resume is browser-only and available for direct PDF/DOCX resumes.')},
+    50:{cost:6, label:'Test: Strategy 2 WASM Hide Contact Details + Company Branding', avail:(['PDF','DOCX'].indexOf(resumeExt) !== -1) && !!(r2DirectUrl || r2PublicUrl || originalR2DirectUrl || originalR2PublicUrl || dlUrl), dlKey:'test-agy-strategy2-contact-hidden-branded', unavailableMsg:(resumeExt === 'DOC' ? docUnsupportedMsg : 'Strategy 2 WASM Contact Hidden Branded Resume is browser-only and available for direct PDF/DOCX resumes.')},
+    51:{cost:11, label:'Test: Pre-Screened Report + Strategy 2 WASM Resume (Contact Hidden) + Company Branding', avail:(['PDF','DOCX'].indexOf(resumeExt) !== -1) && !!(r2DirectUrl || r2PublicUrl || originalR2DirectUrl || originalR2PublicUrl || dlUrl), dlKey:'test-agy-strategy2-contact-hidden-prescreened', unavailableMsg:(resumeExt === 'DOC' ? docUnsupportedMsg : 'Strategy 2 WASM Contact Hidden Pre-Screened Package is browser-only and available for direct PDF/DOCX resumes.')},
+    52:{cost:12, label:'Test: Pre-Screened Report + Strategy 2 WASM Resume (Contact Hidden) without Company Branding', avail:(['PDF','DOCX'].indexOf(resumeExt) !== -1) && !!(r2DirectUrl || r2PublicUrl || originalR2DirectUrl || originalR2PublicUrl || dlUrl), dlKey:'test-agy-strategy2-contact-hidden-prescreened-nobrand', unavailableMsg:(resumeExt === 'DOC' ? docUnsupportedMsg : 'Strategy 2 WASM Contact Hidden Pre-Screened Package without Branding is browser-only and available for direct PDF/DOCX resumes.')},
+    53:{cost:13, label:'Test: Pre-Screened Report + Strategy 2 WASM Resume (Contact Hidden + Highlighted)', avail:(['PDF','DOCX'].indexOf(resumeExt) !== -1) && !!(r2DirectUrl || r2PublicUrl || originalR2DirectUrl || originalR2PublicUrl || dlUrl), dlKey:'test-agy-strategy2-contact-hidden-prescreened-highlighted', unavailableMsg:(resumeExt === 'DOC' ? docUnsupportedMsg : 'Strategy 2 WASM Contact Hidden Highlighted Pre-Screened Package is browser-only and available for direct PDF/DOCX resumes.')}
   };
 
   var selectedOpt = 1;
@@ -11134,7 +11195,13 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
   /* Option card selection */
   opts.forEach(function(opt){
     opt.addEventListener('click', function(){
-      selectOpt(parseInt(opt.getAttribute('data-opt'), 10));
+      var n = parseInt(opt.getAttribute('data-opt'), 10);
+      var m = optMeta[n];
+      if(m && !m.avail && resumeExt === 'DOC'){
+        showDocFileUnsupportedPopup();
+        return;
+      }
+      selectOpt(n);
     });
   });
 
@@ -11201,6 +11268,58 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
     clearTimeout(toastTimer);
     toastTimer = setTimeout(function(){ toastEl.classList.remove('rdc-tshow'); }, 3500);
   }
+
+  var docModalBackdrop = latestById('rdcDocModalBackdrop');
+  var docModalCloseBtn = latestById('rdcDocModalCloseBtn');
+  var docModalDismissBtn = latestById('rdcDocModalDismissBtn');
+  var docModalOpt1Btn = latestById('rdcDocModalOpt1Btn');
+
+  /**
+   * Displays modal popup notification for legacy Word (.doc) files.
+   * Intent: Notifies user that .doc version is not supported in client WASM/browser mode
+   * and provides a direct 1-click fallback to Option 1 (Original Resume).
+   */
+  function showDocFileUnsupportedPopup(){
+    if(docModalBackdrop){
+      docModalBackdrop.style.display = 'flex';
+      docModalBackdrop.setAttribute('aria-hidden', 'false');
+    }
+    showToast('This Word (.doc) file version isn’t supported.', 'warn');
+  }
+
+  function hideDocFileUnsupportedPopup(){
+    if(docModalBackdrop){
+      docModalBackdrop.style.display = 'none';
+      docModalBackdrop.setAttribute('aria-hidden', 'true');
+    }
+  }
+
+  if(docModalCloseBtn) docModalCloseBtn.addEventListener('click', hideDocFileUnsupportedPopup);
+  if(docModalDismissBtn) docModalDismissBtn.addEventListener('click', hideDocFileUnsupportedPopup);
+  if(docModalBackdrop){
+    docModalBackdrop.addEventListener('click', function(e){
+      if(e.target === docModalBackdrop) hideDocFileUnsupportedPopup();
+    });
+  }
+  document.addEventListener('keydown', function(e){
+    if(e.key === 'Escape' && docModalBackdrop && docModalBackdrop.style.display === 'flex'){
+      hideDocFileUnsupportedPopup();
+    }
+  });
+
+  if(docModalOpt1Btn){
+    docModalOpt1Btn.addEventListener('click', function(){
+      hideDocFileUnsupportedPopup();
+      selectOpt(1);
+      if(dlBtn){
+        setTimeout(function(){
+          dlBtn.click();
+        }, 120);
+      }
+    });
+  }
+
+  window.__showDocFileUnsupportedPopup = showDocFileUnsupportedPopup;
 
   var smartCountdownResolve = null;
 
@@ -11307,6 +11426,10 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
       if(!m) return;
 
       if(!m.avail){
+        if(resumeExt === 'DOC'){
+          showDocFileUnsupportedPopup();
+          return;
+        }
         showToast(m.unavailableMsg || 'This download format is not available for this resume type.', 'info');
         return;
       }
@@ -11354,6 +11477,10 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
           showToast('Please wait a moment and try again.', 'warn');
           resetBtn(); return;
         }
+        if(resumeExt === 'DOC'){
+          showDocFileUnsupportedPopup();
+          resetBtn(); return;
+        }
         if(['PDF','DOCX'].indexOf(resumeExt) === -1){
           showToast(m.unavailableMsg || 'Anonymized Resume is available for PDF and DOCX resumes only.', 'warn');
           resetBtn(); return;
@@ -11380,6 +11507,10 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
         /* Option 31: isolated combination of contact hiding and option 6 company branding. */
         if(window.__rsBusy || typeof window.__buildContactHiddenBrandedResume !== 'function'){
           showToast('Please wait a moment and try again.', 'warn');
+          resetBtn(); return;
+        }
+        if(resumeExt === 'DOC'){
+          showDocFileUnsupportedPopup();
           resetBtn(); return;
         }
         if(['PDF','DOCX'].indexOf(resumeExt) === -1){
@@ -11409,6 +11540,10 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
           showToast('Please wait a moment and try again.', 'warn');
           resetBtn(); return;
         }
+        if(resumeExt === 'DOC'){
+          showDocFileUnsupportedPopup();
+          resetBtn(); return;
+        }
         if(['PDF','DOCX'].indexOf(resumeExt) === -1){
           showToast(m.unavailableMsg || 'Hide Contact Details + Pre-Screened Report is available for PDF and DOCX resumes only.', 'warn');
           resetBtn(); return;
@@ -11434,6 +11569,10 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
         /* Option 33: isolated combination of contact hiding and no-brand pre-screened report merge. */
         if(window.__rsBusy || typeof window.__buildContactHiddenPreScreenedNoBrandResume !== 'function'){
           showToast('Please wait a moment and try again.', 'warn');
+          resetBtn(); return;
+        }
+        if(resumeExt === 'DOC'){
+          showDocFileUnsupportedPopup();
           resetBtn(); return;
         }
         if(['PDF','DOCX'].indexOf(resumeExt) === -1){
@@ -11933,6 +12072,10 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
         /* Antigravity Client Engine (Isolated Test Lab - Options 35-39) */
         if(window.__rsBusy || typeof window.__processAgyTestOption !== 'function'){
           showToast('Please wait a moment and try again.', 'warn');
+          resetBtn(); return;
+        }
+        if(resumeExt === 'DOC'){
+          showDocFileUnsupportedPopup();
           resetBtn(); return;
         }
         if(['PDF','DOCX'].indexOf(resumeExt) === -1){
