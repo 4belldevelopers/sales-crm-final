@@ -9564,8 +9564,26 @@ async function processAgyTestOption(optNum, options){
       return true;
 
     }else if(optNum === 48){
-      // Strategy 2 WASM: Hide Contact Details / Anonymized Resume
-      if(options.statusCallback) options.statusCallback('Preparing PII redaction rules (20%)...');
+      // Strategy 2 WASM: Hide Contact Details (keepName: true)
+      if(options.statusCallback) options.statusCallback('Preparing contact redaction rules (20%)...');
+      var rules = rdcAnonymizeRules(data, { keepName: true });
+
+      if(resumeExt === 'PDF'){
+        if(options.statusCallback) options.statusCallback('Redacting PDF contacts (60%)...');
+        var rawPdfBlob = new Blob([docxBytes], { type: 'application/pdf' });
+        pdfBlob = await renderAnonymizedPdfBlob(rawPdfBlob, rules);
+      }else{
+        if(options.statusCallback) options.statusCallback('Redacting contacts & typesetting via WASM (55%)...');
+        pdfBlob = await renderAgyStrategy2WasmDocxToPdfBlob(docxBytes, {
+          anonymizeRules: rules,
+          statusCallback: options.statusCallback
+        });
+      }
+      outFileName = 'JEROWORKS_' + fileSafeName(data.name, 'Candidate') + '_Strategy2_Contact_Hidden.pdf';
+
+    }else if(optNum === 49){
+      // Strategy 2 WASM: Hide Candidate Name & Contacts Details (keepName: false)
+      if(options.statusCallback) options.statusCallback('Preparing full anonymization rules (20%)...');
       var rules = rdcAnonymizeRules(data, { keepName: false });
 
       if(resumeExt === 'PDF'){
@@ -9579,7 +9597,77 @@ async function processAgyTestOption(optNum, options){
           statusCallback: options.statusCallback
         });
       }
-      outFileName = 'JEROWORKS_' + fileSafeName(data.name, 'Candidate') + '_Strategy2_Anonymized.pdf';
+      outFileName = 'JEROWORKS_Strategy2_Anonymized_Resume.pdf';
+
+    }else if(optNum === 50){
+      // Strategy 2 WASM: Hide Contact Details + Company Branding Header (keepName: true)
+      if(options.statusCallback) options.statusCallback('Preparing contact redaction rules (20%)...');
+      var rules = rdcAnonymizeRules(data, { keepName: true });
+
+      var contactHiddenBlob = null;
+      if(resumeExt === 'PDF'){
+        if(options.statusCallback) options.statusCallback('Redacting PDF contacts (50%)...');
+        var rawPdfBlob = new Blob([docxBytes], { type: 'application/pdf' });
+        contactHiddenBlob = await renderAnonymizedPdfBlob(rawPdfBlob, rules);
+      }else{
+        if(options.statusCallback) options.statusCallback('Redacting contacts & typesetting via WASM (50%)...');
+        contactHiddenBlob = await renderAgyStrategy2WasmDocxToPdfBlob(docxBytes, {
+          anonymizeRules: rules,
+          statusCallback: options.statusCallback
+        });
+      }
+
+      if(options.statusCallback) options.statusCallback('Applying Company Branding Header (85%)...');
+      pdfBlob = await applyAgyCompanyBrandingToPdfBlob(contactHiddenBlob, data);
+      outFileName = 'JEROWORKS_' + fileSafeName(data.name, 'Candidate') + '_Strategy2_Contact_Hidden_Branded.pdf';
+
+    }else if(optNum === 51){
+      // Strategy 2 WASM: Hide Contact Details + Pre-Screened Report (Branded)
+      if(options.statusCallback) options.statusCallback('Building AI Pre-Screened Report with Company Branding (25%)...');
+      var reportBlob = await buildRecruiterSummaryBlob(data, {});
+
+      var rules = rdcAnonymizeRules(data, { keepName: true });
+      var contactHiddenBlob = null;
+      if(resumeExt === 'PDF'){
+        if(options.statusCallback) options.statusCallback('Redacting PDF contacts (55%)...');
+        var rawPdfBlob = new Blob([docxBytes], { type: 'application/pdf' });
+        contactHiddenBlob = await renderAnonymizedPdfBlob(rawPdfBlob, rules);
+      }else{
+        if(options.statusCallback) options.statusCallback('Redacting contacts & typesetting via WASM (55%)...');
+        contactHiddenBlob = await renderAgyStrategy2WasmDocxToPdfBlob(docxBytes, {
+          anonymizeRules: rules,
+          statusCallback: options.statusCallback
+        });
+      }
+
+      if(options.statusCallback) options.statusCallback('Merging Executive Package (90%)...');
+      var mergedName = 'JEROWORKS_' + fileSafeName(data.name, 'Candidate') + '_Strategy2_Contact_Hidden_PreScreened.pdf';
+      await mergePreScreenedReportAndResume(reportBlob, contactHiddenBlob, mergedName);
+      return true;
+
+    }else if(optNum === 52){
+      // Strategy 2 WASM: Hide Contact Details + Pre-Screened Report without Company Branding
+      if(options.statusCallback) options.statusCallback('Building AI Pre-Screened Report (Unbranded) (25%)...');
+      var reportBlob = await buildRecruiterSummaryBlob(data, { noBranding: true });
+
+      var rules = rdcAnonymizeRules(data, { keepName: true });
+      var contactHiddenBlob = null;
+      if(resumeExt === 'PDF'){
+        if(options.statusCallback) options.statusCallback('Redacting PDF contacts (55%)...');
+        var rawPdfBlob = new Blob([docxBytes], { type: 'application/pdf' });
+        contactHiddenBlob = await renderAnonymizedPdfBlob(rawPdfBlob, rules);
+      }else{
+        if(options.statusCallback) options.statusCallback('Redacting contacts & typesetting via WASM (55%)...');
+        contactHiddenBlob = await renderAgyStrategy2WasmDocxToPdfBlob(docxBytes, {
+          anonymizeRules: rules,
+          statusCallback: options.statusCallback
+        });
+      }
+
+      if(options.statusCallback) options.statusCallback('Merging Executive Package (90%)...');
+      var mergedName = 'JEROWORKS_' + fileSafeName(data.name, 'Candidate') + '_Strategy2_Contact_Hidden_PreScreened_No_Brand.pdf';
+      await mergePreScreenedReportAndResume(reportBlob, contactHiddenBlob, mergedName);
+      return true;
     }
 
     if(pdfBlob instanceof Blob){
@@ -10475,19 +10563,91 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
         <span class="rdc-ocirc" aria-hidden="true"></span>
       </label>
 
-      {{-- 48: Strategy 2 WASM Hide Contact Details (Anonymized) --}}
+      {{-- 48: Strategy 2 WASM Hide Contact Details --}}
       <label class="rdc-opt" data-opt="48" data-coins="4">
         <input class="rdc-rinput" type="radio" name="rdcFormat" value="48">
         <span class="rdc-onum">48</span>
         <span class="rdc-oi" style="background:#f0fdfa;color:#0d9488;" aria-hidden="true">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 4 7v6c0 5 3.4 7.8 8 9 4.6-1.2 8-4 8-9V7l-8-4z"/><path d="M9 12h6"/><path d="M12 9v6"/></svg>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 4 7v6c0 5 3.4 7.8 8 9 4.6-1.2 8-4 8-9V7l-8-4z"/><path d="M8 11h8"/><path d="M8 15h5"/></svg>
         </span>
         <span class="rdc-obody">
-          <span class="rdc-otitle">Test: Strategy 2 WASM Hide Contact Details <span style="background:#0d9488;color:#fff;font-size:8.5px;font-weight:700;padding:1px 6px;border-radius:4px;vertical-align:middle;margin-left:4px;">Privacy Protected</span></span>
-          <span class="rdc-odesc">Browser-side PII redaction (email, phone, address, links) rendered cleanly via WASM typesetting.</span>
+          <span class="rdc-otitle">Test: Strategy 2 WASM Hide Contact Details <span style="background:#0d9488;color:#fff;font-size:8.5px;font-weight:700;padding:1px 6px;border-radius:4px;vertical-align:middle;margin-left:4px;">Keep Name Visible</span></span>
+          <span class="rdc-odesc">Keep candidate name visible while hiding email, phone, mobile, contact and LinkedIn details in browser.</span>
         </span>
         <span class="rdc-ometa">
           <span class="rdc-ocost">4 Coins</span>
+          <span class="rdc-otime">WASM</span>
+        </span>
+        <span class="rdc-ocirc" aria-hidden="true"></span>
+      </label>
+
+      {{-- 49: Strategy 2 WASM Hide Candidate Name & Contacts Details --}}
+      <label class="rdc-opt" data-opt="49" data-coins="4">
+        <input class="rdc-rinput" type="radio" name="rdcFormat" value="49">
+        <span class="rdc-onum">49</span>
+        <span class="rdc-oi" style="background:#eff6ff;color:#2563eb;" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 4 7v6c0 5 3.4 7.8 8 9 4.6-1.2 8-4 8-9V7l-8-4z"/><path d="M9 12h6"/><path d="M12 9v6"/></svg>
+        </span>
+        <span class="rdc-obody">
+          <span class="rdc-otitle">Test: Strategy 2 WASM Hide Candidate Name & Contacts Details <span style="background:#2563eb;color:#fff;font-size:8.5px;font-weight:700;padding:1px 6px;border-radius:4px;vertical-align:middle;margin-left:4px;">Full Anonymization</span></span>
+          <span class="rdc-odesc">Hide candidate name, email, and phone numbers in a browser-only resume copy.</span>
+        </span>
+        <span class="rdc-ometa">
+          <span class="rdc-ocost">4 Coins</span>
+          <span class="rdc-otime">WASM</span>
+        </span>
+        <span class="rdc-ocirc" aria-hidden="true"></span>
+      </label>
+
+      {{-- 50: Strategy 2 WASM Hide Contact Details + Company Branding --}}
+      <label class="rdc-opt" data-opt="50" data-coins="6">
+        <input class="rdc-rinput" type="radio" name="rdcFormat" value="50">
+        <span class="rdc-onum">50</span>
+        <span class="rdc-oi" style="background:#f0fdf4;color:#16a34a;" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 4 7v6c0 5 3.4 7.8 8 9 4.6-1.2 8-4 8-9V7l-8-4z"/><path d="M8 12h8"/><path d="M4 20h16"/></svg>
+        </span>
+        <span class="rdc-obody">
+          <span class="rdc-otitle">Test: Strategy 2 WASM Hide Contact Details + Company Branding <span style="background:#16a34a;color:#fff;font-size:8.5px;font-weight:700;padding:1px 6px;border-radius:4px;vertical-align:middle;margin-left:4px;">Branded Privacy</span></span>
+          <span class="rdc-odesc">Keep the name visible, hide contact and LinkedIn details, then add your company header.</span>
+        </span>
+        <span class="rdc-ometa">
+          <span class="rdc-ocost">6 Coins</span>
+          <span class="rdc-otime">WASM</span>
+        </span>
+        <span class="rdc-ocirc" aria-hidden="true"></span>
+      </label>
+
+      {{-- 51: Strategy 2 WASM Hide Contact Details + Pre-Screened Report --}}
+      <label class="rdc-opt" data-opt="51" data-coins="11">
+        <input class="rdc-rinput" type="radio" name="rdcFormat" value="51">
+        <span class="rdc-onum">51</span>
+        <span class="rdc-oi" style="background:#f5f3ff;color:#6d28d9;" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 4 7v6c0 5 3.4 7.8 8 9 4.6-1.2 8-4 8-9V7l-8-4z"/><path d="M14 2v6h6"/><path d="M8 13h8"/><path d="M8 17h6"/></svg>
+        </span>
+        <span class="rdc-obody">
+          <span class="rdc-otitle">Test: Strategy 2 WASM Hide Contact Details + Pre-Screened Report <span style="background:#6d28d9;color:#fff;font-size:8.5px;font-weight:700;padding:1px 6px;border-radius:4px;vertical-align:middle;margin-left:4px;">Executive Privacy</span></span>
+          <span class="rdc-odesc">Keep the name visible, hide contact and LinkedIn details, then merge the pre-screened report.</span>
+        </span>
+        <span class="rdc-ometa">
+          <span class="rdc-ocost">11 Coins</span>
+          <span class="rdc-otime">WASM</span>
+        </span>
+        <span class="rdc-ocirc" aria-hidden="true"></span>
+      </label>
+
+      {{-- 52: Strategy 2 WASM Hide Contact Details + Pre-Screened Report without Company Branding --}}
+      <label class="rdc-opt" data-opt="52" data-coins="12">
+        <input class="rdc-rinput" type="radio" name="rdcFormat" value="52">
+        <span class="rdc-onum">52</span>
+        <span class="rdc-oi" style="background:#f8fafc;color:#475569;" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 4 7v6c0 5 3.4 7.8 8 9 4.6-1.2 8-4 8-9V7l-8-4z"/><path d="M14 2v6h6"/><path d="M8 13h8"/><path d="m4 4 16 16"/></svg>
+        </span>
+        <span class="rdc-obody">
+          <span class="rdc-otitle">Test: Strategy 2 WASM Hide Contact Details + Pre-Screened Report without Company Branding <span style="background:#475569;color:#fff;font-size:8.5px;font-weight:700;padding:1px 6px;border-radius:4px;vertical-align:middle;margin-left:4px;">Unbranded Privacy</span></span>
+          <span class="rdc-odesc">Keep the name visible, hide contact and LinkedIn details, then merge a no-brand report.</span>
+        </span>
+        <span class="rdc-ometa">
+          <span class="rdc-ocost">12 Coins</span>
           <span class="rdc-otime">WASM</span>
         </span>
         <span class="rdc-ocirc" aria-hidden="true"></span>
@@ -10663,7 +10823,11 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
     45:{cost:6, label:'Test: Strategy 2 WASM Resume + Highlighted Keywords + Company Branding', avail:(['PDF','DOCX'].indexOf(resumeExt) !== -1) && !!(r2DirectUrl || r2PublicUrl || originalR2DirectUrl || originalR2PublicUrl || dlUrl), dlKey:'test-agy-strategy2-highlighted-branded', unavailableMsg:'Strategy 2 WASM Highlighted Branded Resume is browser-only and available for direct PDF/DOCX resumes.'},
     46:{cost:8, label:'Test: Pre-Screened Report + Strategy 2 WASM Resume + Highlighted Keywords + Company Branding', avail:(['PDF','DOCX'].indexOf(resumeExt) !== -1) && !!(r2DirectUrl || r2PublicUrl || originalR2DirectUrl || originalR2PublicUrl || dlUrl), dlKey:'test-agy-strategy2-prescreened-highlighted-branded', unavailableMsg:'Strategy 2 WASM Pre-Screened Highlighted Package is browser-only and available for direct PDF/DOCX resumes.'},
     47:{cost:8, label:'Test: Pre-Screened Report + Strategy 2 WASM Resume + Highlighted Keywords without Company Branding', avail:(['PDF','DOCX'].indexOf(resumeExt) !== -1) && !!(r2DirectUrl || r2PublicUrl || originalR2DirectUrl || originalR2PublicUrl || dlUrl), dlKey:'test-agy-strategy2-prescreened-highlighted-nobrand', unavailableMsg:'Strategy 2 WASM Pre-Screened Highlighted Package without Branding is browser-only and available for direct PDF/DOCX resumes.'},
-    48:{cost:4, label:'Test: Strategy 2 WASM Hide Contact Details (Anonymized)', avail:(['PDF','DOCX'].indexOf(resumeExt) !== -1) && !!(r2DirectUrl || r2PublicUrl || originalR2DirectUrl || originalR2PublicUrl || dlUrl), dlKey:'test-agy-strategy2-anonymized', unavailableMsg:'Strategy 2 WASM Anonymized Resume is browser-only and available for direct PDF/DOCX resumes.'}
+    48:{cost:4, label:'Test: Strategy 2 WASM Hide Contact Details', avail:(['PDF','DOCX'].indexOf(resumeExt) !== -1) && !!(r2DirectUrl || r2PublicUrl || originalR2DirectUrl || originalR2PublicUrl || dlUrl), dlKey:'test-agy-strategy2-contact-hidden', unavailableMsg:'Strategy 2 WASM Contact Hidden Resume is browser-only and available for direct PDF/DOCX resumes.'},
+    49:{cost:4, label:'Test: Strategy 2 WASM Hide Candidate Name & Contacts Details', avail:(['PDF','DOCX'].indexOf(resumeExt) !== -1) && !!(r2DirectUrl || r2PublicUrl || originalR2DirectUrl || originalR2PublicUrl || dlUrl), dlKey:'test-agy-strategy2-anonymized-all', unavailableMsg:'Strategy 2 WASM Anonymized Resume is browser-only and available for direct PDF/DOCX resumes.'},
+    50:{cost:6, label:'Test: Strategy 2 WASM Hide Contact Details + Company Branding', avail:(['PDF','DOCX'].indexOf(resumeExt) !== -1) && !!(r2DirectUrl || r2PublicUrl || originalR2DirectUrl || originalR2PublicUrl || dlUrl), dlKey:'test-agy-strategy2-contact-hidden-branded', unavailableMsg:'Strategy 2 WASM Contact Hidden Branded Resume is browser-only and available for direct PDF/DOCX resumes.'},
+    51:{cost:11, label:'Test: Pre-Screened Report + Strategy 2 WASM Resume (Contact Hidden) + Company Branding', avail:(['PDF','DOCX'].indexOf(resumeExt) !== -1) && !!(r2DirectUrl || r2PublicUrl || originalR2DirectUrl || originalR2PublicUrl || dlUrl), dlKey:'test-agy-strategy2-contact-hidden-prescreened', unavailableMsg:'Strategy 2 WASM Contact Hidden Pre-Screened Package is browser-only and available for direct PDF/DOCX resumes.'},
+    52:{cost:12, label:'Test: Pre-Screened Report + Strategy 2 WASM Resume (Contact Hidden) without Company Branding', avail:(['PDF','DOCX'].indexOf(resumeExt) !== -1) && !!(r2DirectUrl || r2PublicUrl || originalR2DirectUrl || originalR2PublicUrl || dlUrl), dlKey:'test-agy-strategy2-contact-hidden-prescreened-nobrand', unavailableMsg:'Strategy 2 WASM Contact Hidden Pre-Screened Package without Branding is browser-only and available for direct PDF/DOCX resumes.'}
   };
 
   var selectedOpt = 1;
@@ -10722,7 +10886,7 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
     if(optMeta[33]){
       optMeta[33].avail = ['PDF','DOCX'].indexOf(resumeExt) !== -1 && !!(r2DirectUrl || r2PublicUrl || originalR2DirectUrl || originalR2PublicUrl);
     }
-    [40, 41, 42, 43, 44, 45, 46, 47, 48].forEach(function(id){
+    [40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52].forEach(function(id){
       if(optMeta[id]){
         optMeta[id].avail = ['PDF','DOCX'].indexOf(resumeExt) !== -1 && !!(r2DirectUrl || r2PublicUrl || originalR2DirectUrl || originalR2PublicUrl || dlUrl);
       }
@@ -10789,7 +10953,7 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
       {theme:'green',icon:'package',title:'3. Recruiter Packages (Report + Resume)',pill:'',ids:[15,16]},
       {theme:'amber',icon:'keyword',title:'4. Highlighted skills',pill:'',ids:[28,20,17,19]},
       {theme:'purple',icon:'privacy',title:'5. Privacy & Anonymization',pill:'Protect candidate information as needed.',ids:[29,30,31,32,33]},
-      {theme:'cyan',icon:'resume',title:'6. Antigravity Client Engine (Isolated Test Lab)',pill:'LibreOffice Quality Client Engine (0% server load, 99.9% accuracy, 60 FPS)',ids:[40,41,42,43,44,45,46,47,48]}
+      {theme:'cyan',icon:'resume',title:'6. Antigravity Client Engine (Isolated Test Lab)',pill:'LibreOffice Quality Client Engine (0% server load, 99.9% accuracy, 60 FPS)',ids:[40,41,42,43,44,45,46,47,48,49,50,51,52]}
     ];
     var moved={};
     var frag=document.createDocumentFragment();
@@ -10959,7 +11123,7 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
     if(m.dlKey === 'turbo-prescreened-highlighted-package' && resumeExt === 'DOCX' && typeof window.__preloadOpenDocLocal === 'function') window.__preloadOpenDocLocal();
     if(m.dlKey && m.dlKey.indexOf('test-agy-') === 0 && typeof window.__preloadAgyMetricFonts === 'function') window.__preloadAgyMetricFonts();
     if(m.dlKey && m.dlKey.indexOf('test-agy-strategy2-') === 0 && typeof window.__preloadOpenDocLocal === 'function') window.__preloadOpenDocLocal();
-    if((m.dlKey === 'test-agy-strategy2-branded' || m.dlKey === 'test-agy-strategy2-prescreened-branded' || m.dlKey === 'test-agy-strategy2-prescreened-nobrand' || m.dlKey === 'test-agy-strategy2-highlighted-branded' || m.dlKey === 'test-agy-strategy2-prescreened-highlighted-branded' || m.dlKey === 'test-agy-strategy2-prescreened-highlighted-nobrand') && typeof window.__preloadRSCombined === 'function') window.__preloadRSCombined();
+    if((m.dlKey === 'test-agy-strategy2-branded' || m.dlKey === 'test-agy-strategy2-prescreened-branded' || m.dlKey === 'test-agy-strategy2-prescreened-nobrand' || m.dlKey === 'test-agy-strategy2-highlighted-branded' || m.dlKey === 'test-agy-strategy2-prescreened-highlighted-branded' || m.dlKey === 'test-agy-strategy2-prescreened-highlighted-nobrand' || m.dlKey === 'test-agy-strategy2-contact-hidden-branded' || m.dlKey === 'test-agy-strategy2-contact-hidden-prescreened' || m.dlKey === 'test-agy-strategy2-contact-hidden-prescreened-nobrand') && typeof window.__preloadRSCombined === 'function') window.__preloadRSCombined();
     if(m.dlKey === 'test-preantigravity-prescreened-highlighted-branded' && typeof window.__preloadRSCombined === 'function') window.__preloadRSCombined();
     if(m.dlKey === 'test-preantigravity-prescreened-highlighted-branded' && resumeExt === 'DOCX' && typeof window.__preloadOpenDocLocal === 'function') window.__preloadOpenDocLocal();
     if((m.dlKey === 'prescreened-highlighted-package' || m.dlKey === 'prescreened-highlighted-package-nobrand' || m.dlKey === 'prescreened-highlighted-package-client-docx' || m.dlKey === 'prescreened-highlighted-package-client-docx-nobrand') && typeof window.__preloadRSCombined === 'function') window.__preloadRSCombined();
