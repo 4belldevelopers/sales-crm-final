@@ -8668,9 +8668,8 @@ async function agyPreProcessDocxZip(docxBytes){
     var docFile = zip.file('word/document.xml');
     if(!docFile) return { bytes: docxBytes, metadata: null };
 
+    // 1. Sanitize PUA bullets, unmapped symbols and normalize paragraph spacing in word/document.xml
     var xmlText = await docFile.async('string');
-
-    // 1. Sanitize PUA bullets and unmapped symbols directly in OOXML markup
     var sanitizedXml = xmlText
       .replace(/[\uF0B7\uF0A7\uF0A8\uF06F\uF0A4\uF0A5\uF0B0\u2022\u25AA\u25CF\u25CB\u25A0\u25A1]/g, '•')
       .replace(/[\uF0D8\u27A2\u2794]/g, '➢')
@@ -8683,7 +8682,57 @@ async function agyPreProcessDocxZip(docxBytes){
       .replace(/&#xF0D8;|&#61656;/gi, '➢')
       .replace(/&#xF0FC;|&#61692;/gi, '✓')
       .replace(/&#xF076;|&#61558;/gi, '✓')
-      .replace(/[\uE000-\uF8FF]/g, '');
+      .replace(/[\uE000-\uF8FF]/g, '')
+      .replace(/<w:spacing\b([^>]*)\/?>/gi, function(match, attrs){
+        var newAttrs = attrs
+          .replace(/\bw:line="(\d+)"/gi, function(m, val){
+            return parseInt(val, 10) > 280 ? 'w:line="260"' : m;
+          })
+          .replace(/\bw:after="(\d+)"/gi, function(m, val){
+            return parseInt(val, 10) > 80 ? 'w:after="40"' : m;
+          })
+          .replace(/\bw:before="(\d+)"/gi, function(m, val){
+            return parseInt(val, 10) > 80 ? 'w:before="0"' : m;
+          });
+        return '<w:spacing' + newAttrs + '/>';
+      });
+
+    // 2. Sanitize and normalize word/numbering.xml (Fixes square bullets & bullet indentations in Word lists)
+    var numFile = zip.file('word/numbering.xml');
+    if(numFile){
+      try{
+        var numXml = await numFile.async('string');
+        var cleanNumXml = numXml
+          .replace(/<w:lvlText\s+w:val="[^"]*"/gi, '<w:lvlText w:val="•"')
+          .replace(/w:ascii="(Symbol|Wingdings[^"]*)"/gi, 'w:ascii="Arial"')
+          .replace(/w:hAnsi="(Symbol|Wingdings[^"]*)"/gi, 'w:hAnsi="Arial"')
+          .replace(/<w:ind\s+[^>]*\/>/gi, '<w:ind w:left="420" w:hanging="240"/>');
+        zip.file('word/numbering.xml', cleanNumXml);
+      }catch(nErr){
+        console.warn('Strategy 3 numbering.xml pre-process warning:', nErr);
+      }
+    }
+
+    // 3. Sanitize and normalize word/styles.xml (Fixes inherited double spacing)
+    var stylesFile = zip.file('word/styles.xml');
+    if(stylesFile){
+      try{
+        var stylesXml = await stylesFile.async('string');
+        var cleanStylesXml = stylesXml.replace(/<w:spacing\b([^>]*)\/?>/gi, function(match, attrs){
+          var newAttrs = attrs
+            .replace(/\bw:line="(\d+)"/gi, function(m, val){
+              return parseInt(val, 10) > 280 ? 'w:line="260"' : m;
+            })
+            .replace(/\bw:after="(\d+)"/gi, function(m, val){
+              return parseInt(val, 10) > 80 ? 'w:after="40"' : m;
+            });
+          return '<w:spacing' + newAttrs + '/>';
+        });
+        zip.file('word/styles.xml', cleanStylesXml);
+      }catch(sErr){
+        console.warn('Strategy 3 styles.xml pre-process warning:', sErr);
+      }
+    }
 
     var parser = new DOMParser();
     var docXml = parser.parseFromString(sanitizedXml, 'application/xml');
@@ -9140,16 +9189,24 @@ async function renderAgyStrategy2WasmDocxToPdfBlob(docxBytes, options){
 
   var initResults = await Promise.all([
     rsEnsureOpenDocLab(false),
-    rsEnsureJsPdf()
+    rsEnsureJsPdf(),
+    rsEnsureJsZip()
   ]);
   var openDoc = initResults[0];
 
-  if(options.statusCallback) options.statusCallback('Parsing OOXML in WebAssembly (40%)...');
+  if(options.statusCallback) options.statusCallback('Pre-processing Word XML & font metrics (35%)...');
+  await agyYieldToMain();
+
+  // Strategy 2: Pre-process DOCX bytes to sanitize numbering, PUA codepoints, and spacing
+  var preResult = await agyPreProcessDocxZip(docxBytes);
+  var renderBytes = preResult.bytes || docxBytes;
+
+  if(options.statusCallback) options.statusCallback('Parsing OOXML in WebAssembly (50%)...');
   await agyYieldToMain();
 
   var doc = null;
   try{
-    var u8 = new Uint8Array(docxBytes);
+    var u8 = new Uint8Array(renderBytes);
     try{
       doc = (typeof openDoc.openAs === 'function') ? openDoc.openAs(u8, 'docx') : openDoc.open(u8);
     }catch(err){
