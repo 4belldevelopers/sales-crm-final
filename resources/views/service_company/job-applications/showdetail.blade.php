@@ -8236,41 +8236,6 @@ async function buildPreScreenedHighlightedResume(resumePdfUrl,options){
     window.__rsBusy=false;
   }
 }
-async function buildPreAntigravityPreScreenedHighlightedResume(resumePdfUrl,options){
-  /* Purpose: isolated test copy of the pre-Antigravity option 17 browser conversion
-     behavior so DOCX quality can be compared before changing the production path. */
-  if(window.__rsBusy) return Promise.resolve(false);
-  try{
-    options=options||{};
-    var data=readData();
-    var reportBlob=await buildRecruiterSummaryBlob(data,options);
-    var highlightedBlob=await buildHeadlessOption3SkillsHighlightedResume({
-      resumeUrl:options.resumeUrl,
-      resumeExt:options.resumeExt,
-      // Server-side conversion intentionally disabled for this test option.
-      resumePdfUrl:null,
-      preferClientDocx:options.preferClientDocx===true,
-      clientDocxMaxBytes:parseInt(options.clientDocxMaxBytes,10)||1536*1024,
-      clientDocxMaxPages:parseInt(options.clientDocxMaxPages,10)||6,
-      clientDocxRequireTextPdf:true,
-      clientDocxSkipOpenDocHighlights:true,
-      legacyTextLayerHighlightBoxes:true,
-      strictClientOnly:true,
-      returnBlob:true
-    });
-    if(!(reportBlob instanceof Blob)) throw new Error('Pre-Screened Report PDF was not generated');
-    if(!(highlightedBlob instanceof Blob)) throw new Error('Highlighted resume PDF was not generated');
-    window.__rsBusy=true;
-    await mergePreScreenedReportAndResume(reportBlob,highlightedBlob,resumeTrackingFileName(data,'C','pdf'),{matchReportWidthToResume:true});
-    return true;
-  }catch(err){
-    console.error('Pre-Antigravity test package error:',err);
-    alert('Could not generate the test Pre-Screened Report + Resume + Highlighted Keywords package.\n\nReason: '+(err && err.message ? err.message : 'Unknown package error')+'\n\nThis test uses the older browser conversion limits from before the Antigravity options.');
-    return false;
-  }finally{
-    window.__rsBusy=false;
-  }
-}
 async function buildCombinedPreScreenedResume(resumePdfUrl,options){
   if(window.__rsBusy) return Promise.resolve(false);
   window.__rsBusy=true;
@@ -9634,7 +9599,6 @@ window.__buildHighlightedBrandedResume=buildHighlightedBrandedResume;
 window.__buildIsolatedHighlightedKeywordsResume=buildIsolatedHighlightedKeywordsResume;
 window.__buildFastHighlightedBrandingResume=buildFastHighlightedBrandingResume;
 window.__buildPreScreenedHighlightedResume=buildPreScreenedHighlightedResume;
-window.__buildPreAntigravityPreScreenedHighlightedResume=buildPreAntigravityPreScreenedHighlightedResume;
 window.__buildTurboPreScreenedHighlightedPackage=buildTurboPreScreenedHighlightedPackage;
 window.__buildTurboVectorHighlightedResume=buildTurboVectorHighlightedResume;
 window.__buildTurboVectorBrandedResume=buildTurboVectorBrandedResume;
@@ -9996,24 +9960,6 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
         <span class="rdc-obody">
           <span class="rdc-otitle">Pre-Screened Report + Resume + Highlighted Keywords + Company Branding</span>
           <span class="rdc-odesc">Create the recruiter package: pre-screened report, branded resume pages, and highlighted job-matching skills.</span>
-        </span>
-        <span class="rdc-ometa">
-          <span class="rdc-ocost">8 Coins</span>
-          <span class="rdc-otime">60 seconds</span>
-        </span>
-        <span class="rdc-ocirc" aria-hidden="true"></span>
-      </label>
-
-      {{-- 34: Test copy of pre-Antigravity browser conversion for option 17 --}}
-      <label class="rdc-opt" data-opt="34" data-coins="8">
-        <input class="rdc-rinput" type="radio" name="rdcFormat" value="34">
-        <span class="rdc-onum">15</span>
-        <span class="rdc-oi" style="background:#fff7ed;color:#ea580c;" aria-hidden="true">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 2h6"/><path d="M10 2v6l-5 9a3 3 0 0 0 2.6 4.5h8.8A3 3 0 0 0 19 17l-5-9V2"/><path d="M8.5 14h7"/><path d="M9.5 18h5"/></svg>
-        </span>
-        <span class="rdc-obody">
-          <span class="rdc-otitle">Test: Pre-Screened Report + Resume + Highlighted Keywords + Company Branding</span>
-          <span class="rdc-odesc">Test the older browser conversion flow from before the Antigravity options.</span>
         </span>
         <span class="rdc-ometa">
           <span class="rdc-ocost">8 Coins</span>
@@ -10436,7 +10382,6 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
     31:{cost:6, label:'Hide Contact Details + Company Branding', avail:(['PDF','DOCX'].indexOf(resumeExt) !== -1) && !!(r2DirectUrl || r2PublicUrl || originalR2DirectUrl || originalR2PublicUrl), dlKey:'client-contact-hidden-branded-resume', unavailableMsg:'Hide Contact Details + Company Branding is browser-only and available for direct R2 PDF/DOCX resumes.'},
     32:{cost:11, label:'Hide Contact Details + Pre-Screened Report', avail:(['PDF','DOCX'].indexOf(resumeExt) !== -1) && !!(r2DirectUrl || r2PublicUrl || originalR2DirectUrl || originalR2PublicUrl), dlKey:'client-contact-hidden-prescreened-resume', unavailableMsg:'Hide Contact Details + Pre-Screened Report is browser-only and available for direct R2 PDF/DOCX resumes.'},
     33:{cost:12, label:'Hide Contact Details + Pre-Screened Report without Company Branding', avail:(['PDF','DOCX'].indexOf(resumeExt) !== -1) && !!(r2DirectUrl || r2PublicUrl || originalR2DirectUrl || originalR2PublicUrl), dlKey:'client-contact-hidden-prescreened-nobrand-resume', unavailableMsg:'Hide Contact Details + Pre-Screened Report without Company Branding is browser-only and available for direct R2 PDF/DOCX resumes.'},
-    34:{cost:8, label:'Test: Pre-Screened Report + Resume + Highlighted Keywords + Company Branding', avail:(['PDF','DOCX'].indexOf(resumeExt) !== -1) && !!(r2DirectUrl || r2PublicUrl || originalR2DirectUrl || originalR2PublicUrl), dlKey:'test-preantigravity-prescreened-highlighted-branded', unavailableMsg:'Test package is browser-only and available for direct PDF/DOCX resumes only.'},
     40:{cost:1, label:'Test: Strategy 2 WASM (DOCX → PDF Only)', avail:(['PDF','DOCX'].indexOf(resumeExt) !== -1) && !!(r2DirectUrl || r2PublicUrl || originalR2DirectUrl || originalR2PublicUrl || dlUrl), dlKey:'test-agy-strategy2-wasm', unavailableMsg:'Strategy 2 WASM Engine is browser-only and available for direct PDF/DOCX resumes.'},
     41:{cost:2, label:'Test: Strategy 2 WASM + Company Branding', avail:(['PDF','DOCX'].indexOf(resumeExt) !== -1) && !!(r2DirectUrl || r2PublicUrl || originalR2DirectUrl || originalR2PublicUrl || dlUrl), dlKey:'test-agy-strategy2-branded', unavailableMsg:'Strategy 2 WASM Branded is browser-only and available for direct PDF/DOCX resumes.'},
     42:{cost:6, label:'Test: Pre-Screened Report + Strategy 2 WASM Resume + Company Branding', avail:(['PDF','DOCX'].indexOf(resumeExt) !== -1) && !!(r2DirectUrl || r2PublicUrl || originalR2DirectUrl || originalR2PublicUrl || dlUrl), dlKey:'test-agy-strategy2-prescreened-branded', unavailableMsg:'Strategy 2 WASM Pre-Screened Package is browser-only and available for direct PDF/DOCX resumes.'},
@@ -10498,9 +10443,6 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
     }
     if(optMeta[33]){
       optMeta[33].avail = ['PDF','DOCX'].indexOf(resumeExt) !== -1 && !!(r2DirectUrl || r2PublicUrl || originalR2DirectUrl || originalR2PublicUrl);
-    }
-    if(optMeta[34]){
-      optMeta[34].avail = ['PDF','DOCX'].indexOf(resumeExt) !== -1 && !!(r2DirectUrl || r2PublicUrl || originalR2DirectUrl || originalR2PublicUrl);
     }
     [40, 41, 42, 43].forEach(function(id){
       if(optMeta[id]){
@@ -10567,7 +10509,7 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
       {theme:'blue',icon:'resume',title:'1. Resume Options',pill:"Get the candidate's resume in different formats.",ids:[1,6]},
       {theme:'rose',icon:'report',title:'2. Pre-Screened Report',pill:'Get AI-powered insights and verification details.',ids:[5]},
       {theme:'green',icon:'package',title:'3. Recruiter Packages (Report + Resume)',pill:'',ids:[15,16]},
-      {theme:'amber',icon:'keyword',title:'4. Highlighted skills',pill:'',ids:[28,20,17,34,19]},
+      {theme:'amber',icon:'keyword',title:'4. Highlighted skills',pill:'',ids:[28,20,17,19]},
       {theme:'purple',icon:'privacy',title:'5. Privacy & Anonymization',pill:'Protect candidate information as needed.',ids:[29,30,31,32,33]},
       {theme:'cyan',icon:'resume',title:'6. Antigravity Client Engine (Isolated Test Lab)',pill:'LibreOffice Quality Client Engine (0% server load, 99.9% accuracy, 60 FPS)',ids:[40,41,42,43]}
     ];
@@ -11522,35 +11464,6 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
         }).catch(function(err){
           console.error('Antigravity Test Lab conversion failed:',err);
           showToast(err && err.message ? err.message : 'Antigravity Test Lab conversion failed.', 'warn');
-        }).finally(function(){
-          resetBtn();
-        });
-
-      } else if(m.dlKey === 'test-preantigravity-prescreened-highlighted-branded'){
-        /* Option 34: test-only pre-Antigravity browser conversion for option 17 quality comparison. */
-        if(window.__rsBusy || typeof window.__buildPreAntigravityPreScreenedHighlightedResume !== 'function'){
-          showToast('Please wait a moment and try again.', 'warn');
-          resetBtn(); return;
-        }
-        if(['PDF','DOCX'].indexOf(resumeExt) === -1){
-          showToast(m.unavailableMsg || 'Test package is browser-only and available for direct PDF/DOCX resumes only.', 'warn');
-          resetBtn(); return;
-        }
-        runSmartCountdown('Generating Report, Kindly wait.', 60);
-        ensureDownloadCenterR2Urls().then(function(){
-          var testSources = rdcCollectDownloadSources([r2DirectUrl,r2PublicUrl,originalR2DirectUrl,originalR2PublicUrl]);
-          if(!testSources.length) throw new Error('Direct R2 resume URL is not available for browser-only testing.');
-          return window.__buildPreAntigravityPreScreenedHighlightedResume(null,{
-            noBranding:false,
-            preferClientDocx:true,
-            resumeUrl:testSources,
-            resumeExt:resumeExt
-          });
-        }).then(function(ok){
-          if(ok) closeRdc();
-        }).catch(function(err){
-          console.error('Browser-only test package failed:',err);
-          showToast(err && err.message ? err.message : 'Could not generate the browser-only test package.', 'warn');
         }).finally(function(){
           resetBtn();
         });
