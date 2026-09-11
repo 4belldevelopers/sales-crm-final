@@ -4894,7 +4894,7 @@ function guessResumeDownloadName(ext){
     return resumeTrackingFileName(data,'C',ext);
   }catch(ex){
     var candSafe=(data && data.name) ? fileSafeName(data.name,'Candidate') : 'Candidate';
-    return 'JEROWORKS_'+candSafe+'_C.'+ext;
+    return 'Jeroworks_'+candSafe+'.'+ext;
   }
 }
 function collectOriginalResumeDownloadSources(resumeUrls){
@@ -5567,7 +5567,7 @@ function fileSafeName(value,fallback){
 }
 function resumeTrackingFileName(data,marker,ext){
   ext=clean(ext||'pdf','pdf').toLowerCase().replace(/[^a-z0-9]+/g,'') || 'pdf';
-  return 'JEROWORKS_'+fileSafeName(data && data.name,'Candidate')+'.'+ext;
+  return 'Jeroworks_'+fileSafeName(data && data.name,'Candidate')+'.'+ext;
 }
 function preScreenReportFileName(data){
   return 'PRESCREEN_REPORT_'+fileSafeName(data && data.name,'Candidate')+'.pdf';
@@ -6218,7 +6218,7 @@ async function buildTurboVectorHighlightedResume(options){
     }
 
     var data=readData();
-    downloadBlob(outputBlob,'JEROWORKS_'+fileSafeName(data.name,'Candidate')+'_Turbo_Highlighted.pdf');
+    downloadBlob(outputBlob,'Jeroworks_'+fileSafeName(data.name,'Candidate')+'.pdf');
     return true;
   }catch(err){
     console.error('Turbo Vector Highlighted Resume error:',err);
@@ -7328,7 +7328,7 @@ async function processAgyTestOption(optNum, options){
       }
       if(options.statusCallback) options.statusCallback('Applying Company Branding Header (85%)...');
       pdfBlob = await applyAgyCompanyBrandingToPdfBlob(resumeBlob, data);
-      outFileName = 'JEROWORKS_' + fileSafeName(data.name, 'Candidate') + '_Strategy2_Branded.pdf';
+      outFileName = 'Jeroworks_' + fileSafeName(data.name, 'Candidate') + '.pdf';
 
     }else if(optNum === 42){
       // Strategy 2 WASM: Pre-Screened Report (with Company Branding on Page 1) + Clean Resume Package
@@ -7396,7 +7396,7 @@ async function processAgyTestOption(optNum, options){
           statusCallback: options.statusCallback
         });
       }
-      outFileName = 'JEROWORKS_' + fileSafeName(data.name, 'Candidate') + '_Strategy2_Highlighted.pdf';
+      outFileName = 'Jeroworks_' + fileSafeName(data.name, 'Candidate') + '.pdf';
 
     }else if(optNum === 45){
       // Strategy 2 WASM: Resume + Highlighted Keywords + Company Branding Header
@@ -7426,7 +7426,7 @@ async function processAgyTestOption(optNum, options){
 
       if(options.statusCallback) options.statusCallback('Applying Company Branding Header (85%)...');
       pdfBlob = await applyAgyCompanyBrandingToPdfBlob(highlightedBlob, data);
-      outFileName = 'JEROWORKS_' + fileSafeName(data.name, 'Candidate') + '_Strategy2_Highlighted_Branded.pdf';
+      outFileName = 'Jeroworks_' + fileSafeName(data.name, 'Candidate') + '.pdf';
 
     }else if(optNum === 46){
       // Strategy 2 WASM: Pre-Screened Report (Branded) + Resume with Highlighted Keywords
@@ -7508,7 +7508,7 @@ async function processAgyTestOption(optNum, options){
           statusCallback: options.statusCallback
         });
       }
-      outFileName = 'JEROWORKS_' + fileSafeName(data.name, 'Candidate') + '_Strategy2_Contact_Hidden.pdf';
+      outFileName = 'Jeroworks_' + fileSafeName(data.name, 'Candidate') + '.pdf';
 
     }else if(optNum === 49){
       // Strategy 2 WASM: Hide Candidate Name & Contacts Details (keepName: false)
@@ -7526,7 +7526,7 @@ async function processAgyTestOption(optNum, options){
           statusCallback: options.statusCallback
         });
       }
-      outFileName = 'JEROWORKS_Strategy2_Anonymized_Resume.pdf';
+      outFileName = 'Jeroworks_Resume.pdf';
 
     }else if(optNum === 50){
       // Strategy 2 WASM: Hide Contact Details + Company Branding Header (keepName: true)
@@ -7548,7 +7548,7 @@ async function processAgyTestOption(optNum, options){
 
       if(options.statusCallback) options.statusCallback('Applying Company Branding Header (85%)...');
       pdfBlob = await applyAgyCompanyBrandingToPdfBlob(contactHiddenBlob, data);
-      outFileName = 'JEROWORKS_' + fileSafeName(data.name, 'Candidate') + '_Strategy2_Contact_Hidden_Branded.pdf';
+      outFileName = 'Jeroworks_' + fileSafeName(data.name, 'Candidate') + '.pdf';
 
     }else if(optNum === 51){
       // Strategy 2 WASM: Hide Contact Details + Pre-Screened Report (Branded)
@@ -7570,7 +7570,7 @@ async function processAgyTestOption(optNum, options){
       }
 
       if(options.statusCallback) options.statusCallback('Merging Executive Package (90%)...');
-      var mergedName = 'JEROWORKS_' + fileSafeName(data.name, 'Candidate') + '_Strategy2_Contact_Hidden_PreScreened.pdf';
+      var mergedName = 'Jeroworks_' + fileSafeName(data.name, 'Candidate') + '.pdf';
       await mergePreScreenedReportAndResume(reportBlob, contactHiddenBlob, mergedName);
       return true;
 
@@ -7594,7 +7594,7 @@ async function processAgyTestOption(optNum, options){
       }
 
       if(options.statusCallback) options.statusCallback('Merging Executive Package (90%)...');
-      var mergedName = 'JEROWORKS_' + fileSafeName(data.name, 'Candidate') + '_Strategy2_Contact_Hidden_PreScreened_No_Brand.pdf';
+      var mergedName = 'Jeroworks_' + fileSafeName(data.name, 'Candidate') + '.pdf';
       await mergePreScreenedReportAndResume(reportBlob, contactHiddenBlob, mergedName);
       return true;
 
@@ -7630,13 +7630,13 @@ async function processAgyTestOption(optNum, options){
       }
 
       if(options.statusCallback) options.statusCallback('Merging Executive Package (90%)...');
-      var mergedName = 'JEROWORKS_' + fileSafeName(data.name, 'Candidate') + '_Strategy2_Contact_Hidden_Highlighted_PreScreened.pdf';
+      var mergedName = 'Jeroworks_' + fileSafeName(data.name, 'Candidate') + '.pdf';
       await mergePreScreenedReportAndResume(reportBlob, resumeBlob, mergedName);
       return true;
     }
 
     if(pdfBlob instanceof Blob){
-      downloadBlob(pdfBlob, outFileName || 'JEROWORKS_Resume.pdf');
+      downloadBlob(pdfBlob, outFileName || 'Jeroworks_Resume.pdf');
       return true;
     }
     throw new Error('PDF output could not be created');
@@ -8236,7 +8236,7 @@ window.__buildTurboVectorHighlightedResume=buildTurboVectorHighlightedResume;
         return resumeTrackingFileName(readData(), 'C', ext);
       }
     } catch(ex) {}
-    return 'JEROWORKS_Candidate.' + ext;
+    return 'Jeroworks_Candidate.' + ext;
   }
 
   function startOriginalResumeDownload(options){
