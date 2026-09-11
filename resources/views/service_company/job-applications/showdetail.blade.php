@@ -9386,50 +9386,7 @@ async function processAgyTestOption(optNum, options){
     var pdfBlob = null;
     var outFileName = '';
 
-    if(optNum === 35){
-      pdfBlob = await renderAgyTrueSectionDocxToPdfBlob(docxBytes, {
-        statusCallback: options.statusCallback
-      });
-      outFileName = 'JEROWORKS_' + fileSafeName(data.name, 'Candidate') + '_Agy_Converted.pdf';
-
-    }else if(optNum === 36){
-      var allKeywords = rsDrawerHighlightedKeywords();
-      pdfBlob = await renderAgyTrueSectionDocxToPdfBlob(docxBytes, {
-        keywords: allKeywords,
-        statusCallback: options.statusCallback
-      });
-      outFileName = 'JEROWORKS_' + fileSafeName(data.name, 'Candidate') + '_Agy_Highlighted.pdf';
-
-    }else if(optNum === 37){
-      var kw = rsDrawerHighlightedKeywords();
-      pdfBlob = await renderAgyTrueSectionDocxToPdfBlob(docxBytes, {
-        keywords: kw,
-        branding: true,
-        brandingData: data,
-        statusCallback: options.statusCallback
-      });
-      outFileName = 'JEROWORKS_' + fileSafeName(data.name, 'Candidate') + '_Agy_Branded.pdf';
-
-    }else if(optNum === 38){
-      if(options.statusCallback) options.statusCallback('Building Pre-Screened Report (30%)...');
-      var reportBlob = await buildRecruiterSummaryBlob(data, {});
-      var resumeDocxBlob = await renderAgyTrueSectionDocxToPdfBlob(docxBytes, {
-        statusCallback: options.statusCallback
-      });
-      if(options.statusCallback) options.statusCallback('Merging Package (90%)...');
-      var mergedName = resumeTrackingFileName(data, 'C', 'pdf');
-      await mergePreScreenedReportAndResume(reportBlob, resumeDocxBlob, mergedName);
-      return true;
-
-    }else if(optNum === 39){
-      var rules = rdcAnonymizeRules(data, { keepName: false });
-      pdfBlob = await renderAgyTrueSectionDocxToPdfBlob(docxBytes, {
-        anonymizeRules: rules,
-        statusCallback: options.statusCallback
-      });
-      outFileName = 'JEROWORKS_' + fileSafeName(data.name, 'Candidate') + '_Agy_Anonymized.pdf';
-
-    }else if(optNum === 40){
+    if(optNum === 40){
       // Pure Strategy 2 WASM Engine - Direct DOCX to PDF Conversion Only
       pdfBlob = await renderAgyStrategy2WasmDocxToPdfBlob(docxBytes, {
         statusCallback: options.statusCallback
@@ -10245,96 +10202,6 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
         <span class="rdc-ocirc" aria-hidden="true"></span>
       </label>
 
-      {{-- 35: Antigravity Test 1: Standard DOCX to PDF (LibreOffice Quality) --}}
-      <label class="rdc-opt" data-opt="35" data-coins="1">
-        <input class="rdc-rinput" type="radio" name="rdcFormat" value="35">
-        <span class="rdc-onum">35</span>
-        <span class="rdc-oi" style="background:#ecfeff;color:#0e7490;" aria-hidden="true">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><path d="M16 13H8"/><path d="M16 17H8"/><path d="M10 9H8"/></svg>
-        </span>
-        <span class="rdc-obody">
-          <span class="rdc-otitle">Test: Antigravity DOCX → PDF <span style="background:#0e7490;color:#fff;font-size:8.5px;font-weight:700;padding:1px 6px;border-radius:4px;vertical-align:middle;margin-left:4px;">LibreOffice Quality</span></span>
-          <span class="rdc-odesc">100% browser-converted A4 PDF with true Word pagination, metric fonts, zero line slicing, and fluid 60 FPS.</span>
-        </span>
-        <span class="rdc-ometa">
-          <span class="rdc-ocost">1 Coin</span>
-          <span class="rdc-otime">Sub-2s</span>
-        </span>
-        <span class="rdc-ocirc" aria-hidden="true"></span>
-      </label>
-
-      {{-- 36: Antigravity Test 2: Highlighted Keywords across all pages --}}
-      <label class="rdc-opt" data-opt="36" data-coins="4">
-        <input class="rdc-rinput" type="radio" name="rdcFormat" value="36">
-        <span class="rdc-onum">36</span>
-        <span class="rdc-oi" style="background:#fef3c7;color:#d97706;" aria-hidden="true">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v5"/><path d="M12 17v5"/><path d="M4.93 4.93 8.46 8.46"/><path d="M15.54 15.54 3.53 3.53"/><path d="M2 12h5"/><path d="M17 12h5"/><path d="M4.93 19.07 3.53-3.53"/><path d="M15.54 8.46 3.53-3.53"/></svg>
-        </span>
-        <span class="rdc-obody">
-          <span class="rdc-otitle">Test: Antigravity Resume + Highlights <span style="background:#d97706;color:#fff;font-size:8.5px;font-weight:700;padding:1px 6px;border-radius:4px;vertical-align:middle;margin-left:4px;">All Pages</span></span>
-          <span class="rdc-odesc">Browser-highlighted keywords traversing all pages (Page 1, 2, 3+) with exact bounding boxes.</span>
-        </span>
-        <span class="rdc-ometa">
-          <span class="rdc-ocost">4 Coins</span>
-          <span class="rdc-otime">Sub-2s</span>
-        </span>
-        <span class="rdc-ocirc" aria-hidden="true"></span>
-      </label>
-
-      {{-- 37: Antigravity Test 3: Highlighted + Company Branding --}}
-      <label class="rdc-opt" data-opt="37" data-coins="6">
-        <input class="rdc-rinput" type="radio" name="rdcFormat" value="37">
-        <span class="rdc-onum">37</span>
-        <span class="rdc-oi" style="background:#f0fdf4;color:#16a34a;" aria-hidden="true">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 4 7v6c0 5 3.4 7.8 8 9 4.6-1.2 8-4 8-9V7l-8-4z"/><path d="M8 12h8"/><path d="M4 20h16"/></svg>
-        </span>
-        <span class="rdc-obody">
-          <span class="rdc-otitle">Test: Antigravity Resume + Highlights + Branding</span>
-          <span class="rdc-odesc">Company logo & recruiter header on Page 1, all-page keyword highlights, and natural section flow.</span>
-        </span>
-        <span class="rdc-ometa">
-          <span class="rdc-ocost">6 Coins</span>
-          <span class="rdc-otime">Sub-2s</span>
-        </span>
-        <span class="rdc-ocirc" aria-hidden="true"></span>
-      </label>
-
-      {{-- 38: Antigravity Test 4: Pre-Screened Report + Resume Package --}}
-      <label class="rdc-opt" data-opt="38" data-coins="8">
-        <input class="rdc-rinput" type="radio" name="rdcFormat" value="38">
-        <span class="rdc-onum">38</span>
-        <span class="rdc-oi" style="background:#fdf2f8;color:#be185d;" aria-hidden="true">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8 12 3 3 8l9 5 9-5z"/><path d="m3 8 9 5v8l-9-5V8z"/><path d="m21 8-9 5v8l9-5V8z"/></svg>
-        </span>
-        <span class="rdc-obody">
-          <span class="rdc-otitle">Test: Antigravity Pre-Screened Report + Resume Package</span>
-          <span class="rdc-odesc">Merges client-side Pre-Screened Report with high-fidelity browser DOCX resume pages.</span>
-        </span>
-        <span class="rdc-ometa">
-          <span class="rdc-ocost">8 Coins</span>
-          <span class="rdc-otime">Sub-2s</span>
-        </span>
-        <span class="rdc-ocirc" aria-hidden="true"></span>
-      </label>
-
-      {{-- 39: Antigravity Test 5: Anonymized Resume (PII Redaction) --}}
-      <label class="rdc-opt" data-opt="39" data-coins="4">
-        <input class="rdc-rinput" type="radio" name="rdcFormat" value="39">
-        <span class="rdc-onum">39</span>
-        <span class="rdc-oi" style="background:#f5f3ff;color:#7c3aed;" aria-hidden="true">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 4 7v6c0 5 3.4 7.8 8 9 4.6-1.2 8-4 8-9V7l-8-4z"/><path d="M9 12h6"/><path d="M12 9v6"/></svg>
-        </span>
-        <span class="rdc-obody">
-          <span class="rdc-otitle">Test: Antigravity Hide Contact Details (Anonymized)</span>
-          <span class="rdc-odesc">Browser-side PII redaction on DOCX DOM before vector export, preserving full layout.</span>
-        </span>
-        <span class="rdc-ometa">
-          <span class="rdc-ocost">4 Coins</span>
-          <span class="rdc-otime">Sub-2s</span>
-        </span>
-        <span class="rdc-ocirc" aria-hidden="true"></span>
-      </label>
-
       {{-- 40: Strategy 2 Pure WASM Engine (DOCX to PDF Conversion Only) --}}
       <label class="rdc-opt" data-opt="40" data-coins="1">
         <input class="rdc-rinput" type="radio" name="rdcFormat" value="40">
@@ -10570,11 +10437,6 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
     32:{cost:11, label:'Hide Contact Details + Pre-Screened Report', avail:(['PDF','DOCX'].indexOf(resumeExt) !== -1) && !!(r2DirectUrl || r2PublicUrl || originalR2DirectUrl || originalR2PublicUrl), dlKey:'client-contact-hidden-prescreened-resume', unavailableMsg:'Hide Contact Details + Pre-Screened Report is browser-only and available for direct R2 PDF/DOCX resumes.'},
     33:{cost:12, label:'Hide Contact Details + Pre-Screened Report without Company Branding', avail:(['PDF','DOCX'].indexOf(resumeExt) !== -1) && !!(r2DirectUrl || r2PublicUrl || originalR2DirectUrl || originalR2PublicUrl), dlKey:'client-contact-hidden-prescreened-nobrand-resume', unavailableMsg:'Hide Contact Details + Pre-Screened Report without Company Branding is browser-only and available for direct R2 PDF/DOCX resumes.'},
     34:{cost:8, label:'Test: Pre-Screened Report + Resume + Highlighted Keywords + Company Branding', avail:(['PDF','DOCX'].indexOf(resumeExt) !== -1) && !!(r2DirectUrl || r2PublicUrl || originalR2DirectUrl || originalR2PublicUrl), dlKey:'test-preantigravity-prescreened-highlighted-branded', unavailableMsg:'Test package is browser-only and available for direct PDF/DOCX resumes only.'},
-    35:{cost:1, label:'Test: Antigravity DOCX → PDF (LibreOffice Quality)', avail:(['PDF','DOCX'].indexOf(resumeExt) !== -1) && !!(r2DirectUrl || r2PublicUrl || originalR2DirectUrl || originalR2PublicUrl || dlUrl), dlKey:'test-agy-docx-to-pdf', unavailableMsg:'Antigravity DOCX to PDF is browser-only and available for direct PDF/DOCX resumes.'},
-    36:{cost:4, label:'Test: Antigravity Resume + Highlights', avail:(['PDF','DOCX'].indexOf(resumeExt) !== -1) && !!(r2DirectUrl || r2PublicUrl || originalR2DirectUrl || originalR2PublicUrl || dlUrl), dlKey:'test-agy-highlighted-resume', unavailableMsg:'Antigravity Highlighted Resume is browser-only and available for direct PDF/DOCX resumes.'},
-    37:{cost:6, label:'Test: Antigravity Resume + Highlights + Branding', avail:(['PDF','DOCX'].indexOf(resumeExt) !== -1) && !!(r2DirectUrl || r2PublicUrl || originalR2DirectUrl || originalR2PublicUrl || dlUrl), dlKey:'test-agy-highlighted-branded', unavailableMsg:'Antigravity Branded Resume is browser-only and available for direct PDF/DOCX resumes.'},
-    38:{cost:8, label:'Test: Antigravity Pre-Screened Report + Resume Package', avail:(['PDF','DOCX'].indexOf(resumeExt) !== -1) && !!(r2DirectUrl || r2PublicUrl || originalR2DirectUrl || originalR2PublicUrl || dlUrl), dlKey:'test-agy-prescreened-package', unavailableMsg:'Antigravity Pre-Screened Package is browser-only and available for direct PDF/DOCX resumes.'},
-    39:{cost:4, label:'Test: Antigravity Hide Contact Details (Anonymized)', avail:(['PDF','DOCX'].indexOf(resumeExt) !== -1) && !!(r2DirectUrl || r2PublicUrl || originalR2DirectUrl || originalR2PublicUrl || dlUrl), dlKey:'test-agy-anonymized-resume', unavailableMsg:'Antigravity Anonymized Resume is browser-only and available for direct PDF/DOCX resumes.'},
     40:{cost:1, label:'Test: Strategy 2 WASM (DOCX → PDF Only)', avail:(['PDF','DOCX'].indexOf(resumeExt) !== -1) && !!(r2DirectUrl || r2PublicUrl || originalR2DirectUrl || originalR2PublicUrl || dlUrl), dlKey:'test-agy-strategy2-wasm', unavailableMsg:'Strategy 2 WASM Engine is browser-only and available for direct PDF/DOCX resumes.'},
     41:{cost:2, label:'Test: Strategy 2 WASM + Company Branding', avail:(['PDF','DOCX'].indexOf(resumeExt) !== -1) && !!(r2DirectUrl || r2PublicUrl || originalR2DirectUrl || originalR2PublicUrl || dlUrl), dlKey:'test-agy-strategy2-branded', unavailableMsg:'Strategy 2 WASM Branded is browser-only and available for direct PDF/DOCX resumes.'},
     42:{cost:6, label:'Test: Pre-Screened Report + Strategy 2 WASM Resume + Company Branding', avail:(['PDF','DOCX'].indexOf(resumeExt) !== -1) && !!(r2DirectUrl || r2PublicUrl || originalR2DirectUrl || originalR2PublicUrl || dlUrl), dlKey:'test-agy-strategy2-prescreened-branded', unavailableMsg:'Strategy 2 WASM Pre-Screened Package is browser-only and available for direct PDF/DOCX resumes.'},
@@ -10640,7 +10502,7 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
     if(optMeta[34]){
       optMeta[34].avail = ['PDF','DOCX'].indexOf(resumeExt) !== -1 && !!(r2DirectUrl || r2PublicUrl || originalR2DirectUrl || originalR2PublicUrl);
     }
-    [35, 36, 37, 38, 39, 40, 41, 42, 43].forEach(function(id){
+    [40, 41, 42, 43].forEach(function(id){
       if(optMeta[id]){
         optMeta[id].avail = ['PDF','DOCX'].indexOf(resumeExt) !== -1 && !!(r2DirectUrl || r2PublicUrl || originalR2DirectUrl || originalR2PublicUrl || dlUrl);
       }
@@ -10707,7 +10569,7 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
       {theme:'green',icon:'package',title:'3. Recruiter Packages (Report + Resume)',pill:'',ids:[15,16]},
       {theme:'amber',icon:'keyword',title:'4. Highlighted skills',pill:'',ids:[28,20,17,34,19]},
       {theme:'purple',icon:'privacy',title:'5. Privacy & Anonymization',pill:'Protect candidate information as needed.',ids:[29,30,31,32,33]},
-      {theme:'cyan',icon:'resume',title:'6. Antigravity Client Engine (Isolated Test Lab)',pill:'LibreOffice Quality Client Engine (0% server load, 99.9% accuracy, 60 FPS)',ids:[35,36,37,38,39,40,41,42,43]}
+      {theme:'cyan',icon:'resume',title:'6. Antigravity Client Engine (Isolated Test Lab)',pill:'LibreOffice Quality Client Engine (0% server load, 99.9% accuracy, 60 FPS)',ids:[40,41,42,43]}
     ];
     var moved={};
     var frag=document.createDocumentFragment();
