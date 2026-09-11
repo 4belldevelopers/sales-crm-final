@@ -265,14 +265,10 @@
                 <div style="font-size:12.5px; font-weight:700; color:#181c32;">{{ $teamName }}</div>
             @endif
             <div style="font-size:11px; color:#a1a5b7; margin-top:2px;">+{{ $teamCnt }} Members</div>
-            @if(in_array('add_team_on_requisition', $userPermissions))
-                <span class="action-more" style="margin-top:3px;">+ Add More</span>
-            @endif
         </div>
 
         {{-- ── Col 6: Agency ── --}}
         <div class="col-action spartner-listing" data-row-id="{{ $row->id }}">
-            <span class="jobx-add-link"><i class="fas fa-plus-circle"></i> Add Agency</span>
             @if($agencyMatchCnt > 0)
                 <div style="font-size:11px; color:#a1a5b7; margin-top:4px;">{{ $agencyMatchCnt }} Matching</div>
             @endif

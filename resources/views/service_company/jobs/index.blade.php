@@ -881,18 +881,230 @@ $(document).on('click', '.client-hm-listing', function ()
 
         });
 
-          var page_no = localStorage.getItem('currentPageJobs');
-                if (!page_no) {
-                    page_no = 1;
-                }
-          localStorage.removeItem('jobsPageSize'); // stale value from before page size was fixed at 10
-          var pageSize = 10;
+        var page_no = localStorage.getItem('currentPageJobs');
+        if (!page_no) {
+            page_no = 1;
+        }
+        localStorage.removeItem('jobsPageSize');
+        var pageSize = 10;
 
+        /**
+         * Client-Side Jobs Store & Rendering Engine
+         * Enables instant 0ms searching, filtering, sorting, and UI updates on the client side.
+         */
+        window.jobsState = {
+            all: [],
+            filtered: [],
+            total: 0
+        };
+
+        function renderJobsClientSide(jobs) {
+            if (!jobs || jobs.length === 0) {
+                return '<div style="text-align:center;padding:40px 20px;font-family:Poppins,sans-serif;color:#7e8299;">' +
+                       '<i class="fa fa-briefcase" style="font-size:32px;margin-bottom:12px;display:block;"></i>' +
+                       '<p style="font-size:13px;margin:0;">No jobs found matching your criteria.</p></div>';
+            }
+
+            var html = '';
+            jobs.forEach(function(job) {
+                var profileDetailClass = job.is_direct_client ? 'client-show-detail' : 'show-detail';
+                var directClientAttr = job.is_direct_client ? '1' : '0';
+                var statusIcon = job.status === 'Hiring' ? 'fa-user-group' : (job.status === 'Hold' ? 'fa-pause' : 'fa-box-archive');
+                var statusClass = job.status_raw === 'active' ? 'active-bg' : (job.status_raw === 'hold' ? 'hold-bg' : 'closed-bg');
+                if (job.status === 'Removed') statusClass = 'closed-bg';
+
+                var ulink = job.status === 'Removed'
+                    ? '<span class="badge-hiring ' + statusClass + '">' + job.status + '</span>'
+                    : '<span data-row-id="' + job.id + '" data-direct-client="' + directClientAttr + '" class="badge-hiring ' + statusClass + ' status_stage"><i class="fas ' + statusIcon + '"></i> ' + job.status + '</span>';
+
+                var logoHtml = job.logo_path
+                    ? '<img src="' + job.logo_path + '" alt="Company Logo" class="border-radius-5 w-100">'
+                    : job.initial_letter;
+
+                var typeIcon = job.is_direct_client
+                    ? '<i class="fas fa-handshake" style="color:#09b760;"></i>'
+                    : '<i class="fas fa-building" style="color:#3e97ff;"></i>';
+
+                var skillsHtml = '';
+                if (job.skills && job.skills.length > 0) {
+                    skillsHtml = job.skills.map(function(s) {
+                        return '<span class="badge badge-light my-1">' + s + '</span>';
+                    }).join(' ');
+                }
+
+                var teamHtml = '';
+                if (job.is_direct_client) {
+                    if (job.partners_first_name) {
+                        teamHtml += '<div class="hm-name team-listing" data-row-id="' + job.id + '">' + job.partners_first_name.substring(0, 10) + '</div>';
+                    }
+                    var pCount = job.partners_count > 1 ? '+' + (job.partners_count - 1) : job.partners_count;
+                    teamHtml += '<div class="action-count">' + pCount + ' Members</div>';
+                    teamHtml += '<div class="action-more team-listing" data-row-id="' + job.id + '">+ Add More</div>';
+                } else {
+                    if (job.partners_first_name) {
+                        teamHtml += '<div class="hm-name hm-listing" data-row-id="' + job.id + '">' + job.partners_first_name.substring(0, 10) + '</div>';
+                    }
+                    var pCount = job.partners_count > 1 ? '+' + (job.partners_count - 1) : job.partners_count;
+                    teamHtml += '<div class="action-count">' + pCount + ' Members</div>';
+                    teamHtml += '<div class="action-more hm-listing" data-row-id="' + job.id + '">+ Add More</div>';
+                }
+
+                var agencyHtml = '';
+                if (job.is_direct_client) {
+                    agencyHtml += '<div class="hm-name">' + (job.agency_company_name ? job.agency_company_name.substring(0, 30) : '') + '</div>';
+                } else {
+                    if (job.agency_count > 0) {
+                        agencyHtml += '<div class="hm-name">' + job.agency_count + ' Agency</div>';
+                        agencyHtml += '<div class="action-count">15 Matching</div>';
+                        agencyHtml += '<div data-row-id="' + job.id + '" class="action-more spartner-listing">+ Add More</div>';
+                    } else {
+                        agencyHtml += '<button class="btn-action spartner-listing" data-row-id="' + job.id + '"><svg fill="none" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>Add Agency</button>';
+                        agencyHtml += '<div class="action-count">15 Matching</div>';
+                    }
+                }
+
+                var apptrackerBase = job.is_direct_client
+                    ? "{{ url('/service_company/apptracker/clientapp') }}/" + job.encrypted_id + "/"
+                    : "{{ url('/service_company/apptracker') }}/" + job.encrypted_id + "/";
+
+                var allAppUrl = job.is_direct_client
+                    ? "{{ url('/service_company/apptracker/clientapp') }}/" + job.encrypted_id + "/all"
+                    : "{{ url('/service_company/apptracker') }}/" + job.encrypted_id + "/all";
+
+                var stageLabels = [
+                    { id: 1, key: 's-sou', label: 'SOU' },
+                    { id: 2, key: 's-scr', label: 'SCR' },
+                    { id: 3, key: 's-eva', label: 'EVA' },
+                    { id: 4, key: 's-neg', label: 'NEG' },
+                    { id: 5, key: 's-off', label: 'OFF' },
+                    { id: 6, key: 's-joi', label: 'JOI' },
+                    { id: 7, key: 's-rej', label: 'REJ' }
+                ];
+
+                var pipelineHtml = '<div class="pipeline-stages">';
+                pipelineHtml += '<div class="stage"><div class="stage-label">INW</div><div class="stage-badge s-inw"><a href="' + allAppUrl + '" class="s-inw fw-bolder fs-6">' + (job.inreview_counter || 0) + '</a></div></div>';
+
+                stageLabels.forEach(function(stg) {
+                    var count = (job.stage_counts && job.stage_counts[stg.id]) ? job.stage_counts[stg.id] : 0;
+                    var stgUrl = apptrackerBase + stg.id;
+                    var countClass = count > 0 ? (stg.id === 1 ? 'text-dark fw-bolder fs-6' : stg.key + ' fs-6') : stg.key + ' fs-6';
+                    pipelineHtml += '<div class="stage"><div class="stage-label">' + stg.label + '</div><div class="stage-badge ' + stg.key + '"><a href="' + stgUrl + '" class="' + countClass + '">' + count + '</a></div></div>';
+                });
+                pipelineHtml += '</div>';
+
+                html += '<div class="job-row" data-job-id="' + job.id + '" style="position: relative; min-height: 111px; cursor: pointer;">' +
+                    '<div style="display: flex; gap: 8px; align-items: flex-start">' +
+                      '<div class="drag-col"><div class="drag-handle"><svg width="12" height="12" fill="none" viewBox="0 0 24 24"><circle cx="9" cy="5" r="1.5" fill="currentColor"/><circle cx="15" cy="5" r="1.5" fill="currentColor"/><circle cx="9" cy="12" r="1.5" fill="currentColor"/><circle cx="15" cy="12" r="1.5" fill="currentColor"/><circle cx="9" cy="19" r="1.5" fill="currentColor"/><circle cx="15" cy="19" r="1.5" fill="currentColor"/></svg></div></div>' +
+                      '<div class="col-job ' + profileDetailClass + '" data-row-id="' + job.id + '">' +
+                        '<div class="job-logo ' + job.bg_text_decore + '" style="min-height: 48px; align-self: flex-start;">' + logoHtml + '</div>' +
+                        '<div class="job-info">' +
+                          '<div class="job-title">' + (job.title ? job.title.substring(0, 30) : '') + '</div>' +
+                          '<div class="job-dept">' + (job.department || '') + '</div>' +
+                          '<div class="job-client">' + (job.clients_name ? job.clients_name.substring(0, 30) : '') + '</div>' +
+                        '</div>' +
+                      '</div>' +
+                    '</div>' +
+
+                    '<div class="col-exp">' +
+                      '<div class="exp-row"><svg fill="none" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="1.8"/><polyline points="12 6 12 12 16 14" stroke="currentColor" stroke-width="1.8"/></svg>' + job.min_exp + ' - ' + job.max_exp + ' Years</div>' +
+                      '<div class="sal-row">' + job.min_salary_currency + ' ' + job.min_salary + ' - ' + job.max_salary + ' <span class="sal-mode">' + job.min_sal_mode + '</span></div>' +
+                      '<span class="badge-type">' + typeIcon + ' <span class="it-job-type ' + job.badge + '">' + job.recommendation_text + '</span> <span class="it-dot-separator"></span> <a href="javascript:void(0);" class="it-job-id">' + job.id + '</a></span>' +
+                    '</div>' +
+
+                    '<div class="col-hl">' + ulink +
+                      '<div class="loc-row"><svg fill="none" viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="10" r="3" stroke="currentColor" stroke-width="1.8"/></svg>' + (job.city ? job.city.substring(0, 10) : '') + '</div>' +
+                      '<div class="mode-row"><svg fill="none" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" stroke="currentColor" stroke-width="1.8"/><polyline points="9,22 9,12 15,12 15,22" stroke="currentColor" stroke-width="1.8"/></svg>' + job.work_type + '</div>' +
+                    '</div>' +
+
+                    '<div class="col-hm">' +
+                      '<div class="hm-name">' + (job.hiring_manager ? job.hiring_manager.substring(0, 10) : '') + '</div>' +
+                      '<div class="hm-title">' + (job.hiring_manager_designation || '') + '</div>' +
+                      '<div class="hm-company">' + job.employment_type + '</div>' +
+                    '</div>' +
+
+                    '<div class="col-action">' + teamHtml + '</div>' +
+                    '<div class="col-action">' + agencyHtml + '</div>' +
+
+                    '<div class="col-pipeline">' + pipelineHtml +
+                      '<div class="pipeline-total">Total: <strong>' + (job.application_counter || 0) + ' Applications</strong> &nbsp;|&nbsp; Interview: <strong>' + (job.interview_counter || 0) + '</strong></div>' +
+                      '<div class="add-date" style="display:flex;justify-content: flex-end;"><svg fill="none" viewBox="0 0 24 24" style="width: 6%;"><rect x="3" y="4" width="18" height="18" rx="2" stroke="currentColor" stroke-width="1.8"/><path d="M16 2v4M8 2v4M3 10h18" stroke="currentColor" stroke-width="1.8"/></svg><span>&nbsp;' + (job.added_date || '') + '</span></div>' +
+                    '</div>' +
+
+                    '<div class="" style="position: absolute; bottom: 5px; left: 30px; white-space: nowrap; width: 90%; overflow: hidden;">' +
+                      '<div class="job-meta-line"><span class="skills-inline"><b>Skills:</b> ' + skillsHtml + '</span></div>' +
+                    '</div>' +
+                  '</div>';
+            });
+
+            return html;
+        }
+
+        function filtersdata() {
+            if (!window.jobsState || !window.jobsState.all || window.jobsState.all.length === 0) {
+                return fetchCandidates(1);
+            }
+
+            var searchTerm = ($('.inputJobSearch').val() || $('#inputSearch').val() || '').toLowerCase().trim();
+            var status = $('#status').val() || 'all';
+            var employmentType = $('#employment_type').val() || 'all';
+            var expFilter = $('#experience_filter').val() || 'all';
+            var sortVal = $('#hiringtype').val() || '1';
+
+            var filtered = window.jobsState.all.filter(function(job) {
+                if (searchTerm !== '') {
+                    var matchTitle = (job.title || '').toLowerCase().includes(searchTerm);
+                    var matchDept = (job.department || '').toLowerCase().includes(searchTerm);
+                    var matchClient = (job.clients_name || '').toLowerCase().includes(searchTerm);
+                    var matchCity = (job.city || '').toLowerCase().includes(searchTerm);
+                    var matchHM = (job.hiring_manager || '').toLowerCase().includes(searchTerm);
+                    var matchSkills = (job.skills || []).some(function(s) { return s.toLowerCase().includes(searchTerm); });
+                    var matchId = String(job.id) === searchTerm;
+                    if (!matchTitle && !matchDept && !matchClient && !matchCity && !matchHM && !matchSkills && !matchId) {
+                        return false;
+                    }
+                }
+
+                if (status !== 'all' && status !== '') {
+                    if (status === 'active' && job.status !== 'Hiring') return false;
+                    if (status === 'hold' && job.status !== 'Hold') return false;
+                    if (status === 'inactive' && job.status !== 'Closed') return false;
+                    if (status === 'removed' && job.status !== 'Removed') return false;
+                }
+
+                if (employmentType !== 'all' && employmentType !== '') {
+                    if (String(job.employment_type_raw) !== String(employmentType)) return false;
+                }
+
+                if (expFilter !== 'all' && expFilter !== '') {
+                    var minE = parseInt(job.min_exp) || 0;
+                    var maxE = parseInt(job.max_exp) || 0;
+                    if (expFilter === '0-1' && !(minE <= 1 && maxE >= 0)) return false;
+                    if (expFilter === '1-3' && !(minE <= 3 && maxE >= 1)) return false;
+                    if (expFilter === '3-5' && !(minE <= 5 && maxE >= 3)) return false;
+                    if (expFilter === '5+' && maxE < 5) return false;
+                }
+
+                return true;
+            });
+
+            filtered.sort(function(a, b) {
+                if (sortVal === '1') return b.id - a.id;
+                if (sortVal === '2') return a.id - b.id;
+                if (sortVal === '3') return (parseFloat(a.min_salary) || 0) - (parseFloat(b.min_salary) || 0);
+                if (sortVal === '4') return (parseFloat(b.max_salary) || 0) - (parseFloat(a.max_salary) || 0);
+                if (sortVal === '5') return (a.clients_name || '').localeCompare(b.clients_name || '');
+                if (sortVal === '6') return (b.clients_name || '').localeCompare(a.clients_name || '');
+                return b.id - a.id;
+            });
+
+            window.jobsState.filtered = filtered;
+            $('#allJobList').html(renderJobsClientSide(filtered));
+            $('#all_jobs_count').html(filtered.length);
+        }
 
         function fetchCandidates(page = page_no, search = '', size = pageSize) {
             var clientid = '1';
             if($('.inputJobSearch').val()!=''){
-                // $('.loadingMessage').css({ display: 'block' });
                 $('.loader_search').css({ display: 'block' });
                 $('.page-loader').css('display', 'flex');
             }else{
@@ -914,7 +1126,17 @@ $(document).on('click', '.client-hm-listing', function ()
                     $('.loader_search').css({ display: 'none' });
                     $('.page-loader').css('display', 'none');
                     localStorage.setItem('currentPageJobs', page);
-                    $('#allJobList').html(response.html);
+
+                    if (response.jobs && response.jobs.length > 0) {
+                        window.jobsState = {
+                            all: response.jobs,
+                            filtered: response.jobs,
+                            total: response.total
+                        };
+                        $('#allJobList').html(renderJobsClientSide(response.jobs));
+                    } else if (response.html) {
+                        $('#allJobList').html(response.html);
+                    }
                     $('#all_jobs_count').html(response.total);
                     $('#pagination').html(response.pagination);
                 },

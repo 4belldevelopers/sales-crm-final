@@ -2953,8 +2953,201 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
 
         session()->forget('UrlMailJobId');
         $userPermissions = $this->userPermissions;
+
+        /**
+         * Serialize job DTOs for client-side rendering and instant browser filtering.
+         * Enforces tenant scoping by company_id and prepares all UI presentation properties.
+         */
+        $formattedJobs = [];
+        if (!empty($data)) {
+            $categoryIds = collect($data)->pluck('category_id')->filter()->unique()->toArray();
+            $categoriesMap = !empty($categoryIds)
+                ? DB::table('job_categories')->whereIn('id', $categoryIds)->pluck('name', 'id')->toArray()
+                : [];
+
+            $salaryMode = GeneralMethod::salaryMode();
+            $currencySymbole = GeneralMethod::currencySymbole();
+
+            foreach ($data as $rowArr) {
+                $row = (object) $rowArr;
+                $targetJobId = $row->id;
+
+                $relationget = GeneralMethod::getrRcommendationRelationData($company_id, $targetJobId);
+                $from_company_id = $relationget->from_company_id ?? null;
+                $recommendation_id = $relationget->to_company_id ?? null;
+                $final_status = $relationget->final_status ?? null;
+
+                $row->final_status = $final_status;
+                $row->recommendation_id = $recommendation_id;
+                $row->to_company_id = $recommendation_id;
+                $row->from_company_id = $from_company_id;
+                $row->companyidcount = $row->comId ?? null;
+                $row->clients_name = $row->client_name ?? null;
+
+                $isDirectClientJob = ($recommendation_id > 0 && @$row->to_company_id == $company_id);
+
+                $logo_path = GeneralMethod::companyDetails($row->id);
+                $department = $categoriesMap[$row->category_id] ?? '';
+
+                $min_sal_mode = ['/Annum', '/Month', '/Hour'][$row->min_sal_mode ?? 0] ?? '';
+                $min_salary_currency = $currencySymbole[@$row->min_salary_currency] ?? '$';
+                $max_salary = GeneralMethod::formatAmount(GeneralMethod::thousandsCurrencyFormat($row->max_salary ?? 0));
+                $min_salary = GeneralMethod::formatAmount(GeneralMethod::thousandsCurrencyFormat($row->min_salary ?? 0));
+
+                $clientTypeJob = $isDirectClientJob ? 'Direct' : 'Client';
+                $recommendation_text = $isDirectClientJob ? ($clientTypeJob.' '.__('messages.clinet_tag')) : (__('messages.internal_tag').' '.$clientTypeJob);
+                $badge = $isDirectClientJob ? 'badge-client' : 'badge-internal';
+
+                $status = ucwords($row->status ?? 'active');
+                if ($status == 'Active') $status = 'Hiring';
+                if ($status == 'Inactive') $status = 'Closed';
+                if (($final_status == 2 || $final_status == 3) && $isDirectClientJob) {
+                    $status = 'Removed';
+                }
+
+                $work_type = 'Office';
+                if (($row->work_type ?? '') == 'yes') $work_type = 'Remote';
+                elseif (($row->work_type ?? '') == 'other') $work_type = 'Hybrid';
+
+                $employment_type = ($row->employment_type ?? 0) == 1 ? 'Contract' : 'Full-time';
+
+                $created_at = $row->created_at ?? null;
+                $newDate = GeneralMethod::ymdTodmyNotTime($created_at);
+
+                $skills = [];
+                if (!empty($row->job_metronics_skills)) {
+                    foreach ($row->job_metronics_skills as $sval) {
+                        $sval = (object) $sval;
+                        if (!empty($sval->skill_name)) {
+                            $skills[] = ucfirst($sval->skill_name);
+                        }
+                    }
+                }
+
+                $client_city_jobs = $row->client_city_jobs ?? [];
+                $firstCity = collect($client_city_jobs)->first();
+                $cityName = $firstCity['city_name'] ?? '';
+                $countryName = $firstCity['country_name'] ?? '';
+
+                $hiringManager = '--------';
+                $hiringManagerdesignation = '--------';
+                if (!empty($row->client_contact_info_jobs[0])) {
+                    $hiringManager = $row->client_contact_info_jobs[0]['contact_person_name'] ?? '--------';
+                    $hiringManagerdesignation = $row->client_contact_info_jobs[0]['contact_person_designation'] ?? '--------';
+                }
+
+                $jobAssign = collect($row->job_assign ?? []);
+                if ($isDirectClientJob) {
+                    $jobAssignListCaptain = $jobAssign->where('spok_user_id', '>', 0)->where('company_id', $row->comId ?? null)
+                        ->filter()->values()->all();
+                    if (count($jobAssignListCaptain) > 0 && ($row->comId ?? null) != $company_id) {
+                        $hiringManager = ucfirst($jobAssignListCaptain[0]['user_name']);
+                        $spok_user_id = $jobAssignListCaptain[0]['spok_user_id'];
+                        $hiringManagerdesignation = DB::table('users_profile')->where('user_id', $spok_user_id)->value('designation') ?? '--------';
+                    }
+                }
+
+                $encryptedJobId = GeneralMethod::value_encrypt($row->id);
+                $inreview_counter = $isDirectClientJob
+                    ? GeneralMethod::statusCountAllThirdpartyInRe($company_id, $row->id)
+                    : GeneralMethod::statusCountAllInRe($row->id);
+
+                $applicationCounter = $isDirectClientJob
+                    ? GeneralMethod::statusCountThirdpartyAll($company_id, $row->id)
+                    : GeneralMethod::statusCountAll($row->id);
+
+                $stageCounts = [];
+                for ($stageId = 1; $stageId <= 7; $stageId++) {
+                    $cnt = $isDirectClientJob
+                        ? GeneralMethod::statusCountThirdparty($company_id, $row->id, $stageId)
+                        : GeneralMethod::statusCount($row->companyidcount ?? $company_id, $row->id, $stageId);
+                    $stageCounts[$stageId] = $cnt;
+                }
+
+                $interview_counter = $isDirectClientJob
+                    ? GeneralMethod::statusCountThirdpartyInterview($company_id, $row->id)
+                    : GeneralMethod::statusCountInterview($row->companyidcount ?? $company_id, $row->id);
+
+                $strVal = strtolower(trim($row->title ?? '')[0] ?? 'a');
+                $strOrd = ord($strVal);
+                $bgTextDecore = 'fs-3 bg-light-secondary text-dark';
+                if ($strOrd >= 97 && $strOrd <= 101) $bgTextDecore = 'fs-3 bg-light-danger text-danger';
+                elseif ($strOrd >= 102 && $strOrd <= 106) $bgTextDecore = 'fs-3 bg-light-warning text-warning';
+                elseif ($strOrd >= 107 && $strOrd <= 111) $bgTextDecore = 'fs-3 bg-light-primary text-primary';
+                elseif ($strOrd >= 112 && $strOrd <= 116) $bgTextDecore = 'fs-3 bg-light-success text-success';
+                elseif ($strOrd >= 117 && $strOrd <= 121) $bgTextDecore = 'fs-3 bg-dark text-secondary';
+
+                $partnersCount = 0;
+                $partnersFirstName = '';
+                if ($isDirectClientJob) {
+                    $partnersCount = $jobAssign->where('company_id', $row->to_company_id)->where('job_id', $row->id)->unique('user_id')->count();
+                    $partnersData = $jobAssign->where('company_id', $row->to_company_id)->where('job_id', $row->id)
+                        ->filter(fn($r) => $r['user_id'] == $r['spok_user_id'])->sortBy('user_name')->take(1)->values();
+                    if (count($partnersData) > 0) {
+                        $partnersFirstName = ucfirst($partnersData[0]['user_name']);
+                    }
+                } else {
+                    $partnersCount = $jobAssign->where('company_id', $company_id)->where('job_id', $row->id)->unique('user_id')->count();
+                    $partnersData = $jobAssign->where('company_id', $company_id)->where('job_id', $row->id)
+                        ->filter(fn($r) => $r['user_id'] == $r['spok_user_id'])->sortBy('user_name')->take(1)->values();
+                    if (count($partnersData) > 0) {
+                        $partnersFirstName = ucfirst($partnersData[0]['user_name']);
+                    }
+                }
+
+                $agencyCompanyName = '';
+                $agencyCount = 0;
+                if ($isDirectClientJob) {
+                    $agencyCompanyName = DB::table('companies')->where('id', $row->to_company_id)->value('company_name') ?? '';
+                } else {
+                    $agencies = GeneralMethod::agencyCount($company_id, $row->id, 1);
+                    $agencyCount = count($agencies);
+                }
+
+                $formattedJobs[] = [
+                    'id' => $row->id,
+                    'encrypted_id' => $encryptedJobId,
+                    'title' => $row->title ?? '',
+                    'department' => $department,
+                    'clients_name' => $row->clients_name ?? ($row->company_name ?? ''),
+                    'logo_path' => $logo_path ? str_replace('index.php', '', $logo_path) : '',
+                    'initial_letter' => strtoupper($strVal),
+                    'bg_text_decore' => $bgTextDecore,
+                    'min_exp' => $row->min_exp ?? 0,
+                    'max_exp' => $row->max_exp ?? 0,
+                    'min_salary' => $min_salary,
+                    'max_salary' => $max_salary,
+                    'min_salary_currency' => $min_salary_currency,
+                    'min_sal_mode' => $min_sal_mode,
+                    'recommendation_text' => $recommendation_text,
+                    'badge' => $badge,
+                    'is_direct_client' => $isDirectClientJob,
+                    'status' => $status,
+                    'status_raw' => $row->status ?? 'active',
+                    'city' => $cityName,
+                    'country' => $countryName,
+                    'work_type' => $work_type,
+                    'employment_type' => $employment_type,
+                    'employment_type_raw' => $row->employment_type ?? 0,
+                    'hiring_manager' => $hiringManager,
+                    'hiring_manager_designation' => $hiringManagerdesignation,
+                    'partners_count' => $partnersCount,
+                    'partners_first_name' => $partnersFirstName,
+                    'agency_company_name' => $agencyCompanyName,
+                    'agency_count' => $agencyCount,
+                    'inreview_counter' => $inreview_counter,
+                    'application_counter' => $applicationCounter,
+                    'interview_counter' => $interview_counter,
+                    'stage_counts' => $stageCounts,
+                    'added_date' => $newDate,
+                    'skills' => $skills,
+                ];
+            }
+        }
+
         $responseData = [
             'html' => view('service_company.ajax_pages.all_jobs_ajax', compact('data', 'userPermissions', 'company_id'))->render(),
+            'jobs' => $formattedJobs,
             'total' => $total,
             'pagination' => view('service_company.ajax_pages.pagination', compact('pagination'))->render(),
             'next_cursor' => $nextCursor,
