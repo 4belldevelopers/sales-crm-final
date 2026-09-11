@@ -11112,12 +11112,11 @@ window.__convertResumeWithOpenDocLab=convertResumeWithOpenDocLab;
       optionMap[parseInt(opt.getAttribute('data-opt'),10)] = opt;
     });
     var groups=[
-      {theme:'blue',icon:'resume',title:'1. Resume Options',pill:"Get the candidate's resume in different formats.",ids:[1,6]},
+      {theme:'blue',icon:'resume',title:'1. Resume Options',pill:"Get the candidate's resume in different formats.",ids:[1,40,41,6]},
       {theme:'rose',icon:'report',title:'2. Pre-Screened Report',pill:'Get AI-powered insights and verification details.',ids:[5]},
-      {theme:'green',icon:'package',title:'3. Recruiter Packages (Report + Resume)',pill:'',ids:[15,16]},
-      {theme:'amber',icon:'keyword',title:'4. Highlighted skills',pill:'',ids:[28,20,17,19]},
-      {theme:'purple',icon:'privacy',title:'5. Privacy & Anonymization',pill:'Protect candidate information as needed.',ids:[29,30,31,32,33]},
-      {theme:'cyan',icon:'resume',title:'6. Antigravity Client Engine (Isolated Test Lab)',pill:'LibreOffice Quality Client Engine (0% server load, 99.9% accuracy, 60 FPS)',ids:[40,41,42,43,44,45,46,47,48,49,50,51,52,53]}
+      {theme:'green',icon:'package',title:'3. Recruiter Packages (Report + Resume)',pill:'',ids:[42,43,15,16]},
+      {theme:'amber',icon:'keyword',title:'4. Highlighted skills',pill:'',ids:[44,45,46,47,28,20,17,19]},
+      {theme:'purple',icon:'privacy',title:'5. Privacy & Anonymization',pill:'Protect candidate information as needed.',ids:[48,49,50,51,52,53,30,29,31,32,33]}
     ];
     var moved={};
     var frag=document.createDocumentFragment();
