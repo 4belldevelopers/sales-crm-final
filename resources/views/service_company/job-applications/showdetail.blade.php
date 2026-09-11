@@ -8720,14 +8720,14 @@ async function agyPreProcessDocxZip(docxBytes){
             isBullet = true;
             // Map original bullet symbol to its true semantic Unicode twin
             var mapped = '•';
-            if(/[\uF0A7\uF0A8\u25AA\u25A0\u25A1]/.test(val)) mapped = '▪';
-            else if(/[\uF06F\u25CB]/.test(val)) mapped = '○';
-            else if(/[\uF0D8\u27A2\u2794>]/.test(val)) mapped = '➢';
-            else if(/[\uF0FC\u2713]/.test(val)) mapped = '✓';
-            else if(/[\uF076\u2714]/.test(val)) mapped = '✔';
-            else if(/[\uF0A4\u25C6]/.test(val)) mapped = '◆';
-            else if(/[\uF0A5\u25C7]/.test(val)) mapped = '◇';
-            else if(/[\uF02D\-\u2013]/.test(val)) mapped = '–';
+            if(/[\uF0A7\uF0A8\u25AA\u25A0\u25A1]|&#xF0A7;|&#61607;|&#xF0A8;|&#61608;/i.test(val)) mapped = '▪';
+            else if(/[\uF06F\u25CB]|&#xF06F;|&#61551;/i.test(val)) mapped = '○';
+            else if(/[\uF0D8\u27A2\u2794>]|&#xF0D8;|&#61656;/i.test(val)) mapped = '➢';
+            else if(/[\uF0FC\u2713]|&#xF0FC;|&#61692;/i.test(val)) mapped = '✓';
+            else if(/[\uF076\u2714]|&#xF076;|&#61558;/i.test(val)) mapped = '✔';
+            else if(/[\uF0A4\u25C6]|&#xF0A4;/i.test(val)) mapped = '◆';
+            else if(/[\uF0A5\u25C7]|&#xF0A5;/i.test(val)) mapped = '◇';
+            else if(/[\uF02D\-\u2013]|&#xF02D;/i.test(val)) mapped = '–';
             return '<w:lvlText' + pre + 'w:val="' + mapped + '"' + post.replace(/\/$/, '') + '/>';
           });
 
