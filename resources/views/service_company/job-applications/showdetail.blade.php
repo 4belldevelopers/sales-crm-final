@@ -7871,7 +7871,7 @@ window.__buildTurboVectorHighlightedResume=buildTurboVectorHighlightedResume;
       </label>
 
 {{-- 5: Pre-Screened Report --}}
-      <label class="rdc-opt" data-opt="5" data-coins="7">
+      <label class="rdc-opt" data-opt="5" data-coins="1">
         <input class="rdc-rinput" type="radio" name="rdcFormat" value="5">
         <span class="rdc-onum">8</span>
         <span class="rdc-oi rdc-ic-rose" aria-hidden="true">
@@ -7882,7 +7882,7 @@ window.__buildTurboVectorHighlightedResume=buildTurboVectorHighlightedResume;
           <span class="rdc-odesc">Generate a concise hiring report with fit summary, key skills, and verification status for recruiter review.</span>
         </span>
         <span class="rdc-ometa">
-          <span class="rdc-ocost">7 Coins</span>
+          <span class="rdc-ocost">1 Coin</span>
           <span class="rdc-otime">60 seconds</span>
         </span>
         <span class="rdc-ocirc" aria-hidden="true"></span>
@@ -7907,7 +7907,7 @@ window.__buildTurboVectorHighlightedResume=buildTurboVectorHighlightedResume;
       </label>
 
       {{-- 42: Pre-Screened Report + Resume + Company Branding --}}
-      <label class="rdc-opt" data-opt="42" data-coins="6">
+      <label class="rdc-opt" data-opt="42" data-coins="3">
         <input class="rdc-rinput" type="radio" name="rdcFormat" value="42">
         <span class="rdc-onum">42</span>
         <span class="rdc-oi" style="background:#ecfdf5;color:#059669;" aria-hidden="true">
@@ -7918,14 +7918,14 @@ window.__buildTurboVectorHighlightedResume=buildTurboVectorHighlightedResume;
           <span class="rdc-odesc">Deliver one polished PDF with the pre-screened report first, followed by the candidate resume with company branding.</span>
         </span>
         <span class="rdc-ometa">
-          <span class="rdc-ocost">6 Coins</span>
+          <span class="rdc-ocost">3 Coins</span>
           <span class="rdc-otime">60 seconds</span>
         </span>
         <span class="rdc-ocirc" aria-hidden="true"></span>
       </label>
 
       {{-- 43: Pre-Screened Report + Resume without Company Branding --}}
-      <label class="rdc-opt" data-opt="43" data-coins="7">
+      <label class="rdc-opt" data-opt="43" data-coins="3">
         <input class="rdc-rinput" type="radio" name="rdcFormat" value="43">
         <span class="rdc-onum">43</span>
         <span class="rdc-oi" style="background:#f8fafc;color:#475569;" aria-hidden="true">
@@ -7936,14 +7936,14 @@ window.__buildTurboVectorHighlightedResume=buildTurboVectorHighlightedResume;
           <span class="rdc-odesc">Download the same report-and-resume package without company logo or company name on the report page.</span>
         </span>
         <span class="rdc-ometa">
-          <span class="rdc-ocost">7 Coins</span>
+          <span class="rdc-ocost">3 Coins</span>
           <span class="rdc-otime">60 seconds</span>
         </span>
         <span class="rdc-ocirc" aria-hidden="true"></span>
       </label>
 
       {{-- 44: Resume + Highlighted Keywords --}}
-      <label class="rdc-opt" data-opt="44" data-coins="4">
+      <label class="rdc-opt" data-opt="44" data-coins="2">
         <input class="rdc-rinput" type="radio" name="rdcFormat" value="44">
         <span class="rdc-onum">44</span>
         <span class="rdc-oi rdc-ic-green" aria-hidden="true">
@@ -7954,14 +7954,14 @@ window.__buildTurboVectorHighlightedResume=buildTurboVectorHighlightedResume;
           <span class="rdc-odesc">Download a clean resume copy with the most relevant skills highlighted for quick recruiter review.</span>
         </span>
         <span class="rdc-ometa">
-          <span class="rdc-ocost">4 Coins</span>
+          <span class="rdc-ocost">2 Coins</span>
           <span class="rdc-otime">60 seconds</span>
         </span>
         <span class="rdc-ocirc" aria-hidden="true"></span>
       </label>
 
       {{-- 45: Resume + Highlighted Keywords + Company Branding --}}
-      <label class="rdc-opt" data-opt="45" data-coins="6">
+      <label class="rdc-opt" data-opt="45" data-coins="3">
         <input class="rdc-rinput" type="radio" name="rdcFormat" value="45">
         <span class="rdc-onum">45</span>
         <span class="rdc-oi rdc-ic-green" aria-hidden="true">
@@ -7972,14 +7972,14 @@ window.__buildTurboVectorHighlightedResume=buildTurboVectorHighlightedResume;
           <span class="rdc-odesc">Download a branded resume with job-matching keywords highlighted for faster recruiter screening.</span>
         </span>
         <span class="rdc-ometa">
-          <span class="rdc-ocost">6 Coins</span>
+          <span class="rdc-ocost">3 Coins</span>
           <span class="rdc-otime">60 seconds</span>
         </span>
         <span class="rdc-ocirc" aria-hidden="true"></span>
       </label>
 
       {{-- 46: Pre-Screened Report + Resume + Highlighted Keywords + Company Branding --}}
-      <label class="rdc-opt" data-opt="46" data-coins="8">
+      <label class="rdc-opt" data-opt="46" data-coins="3">
         <input class="rdc-rinput" type="radio" name="rdcFormat" value="46">
         <span class="rdc-onum">46</span>
         <span class="rdc-oi" style="background:#eef2ff;color:#4338ca;" aria-hidden="true">
@@ -7990,14 +7990,14 @@ window.__buildTurboVectorHighlightedResume=buildTurboVectorHighlightedResume;
           <span class="rdc-odesc">Create the recruiter package: pre-screened report, branded resume pages, and highlighted job-matching skills.</span>
         </span>
         <span class="rdc-ometa">
-          <span class="rdc-ocost">8 Coins</span>
+          <span class="rdc-ocost">3 Coins</span>
           <span class="rdc-otime">60 seconds</span>
         </span>
         <span class="rdc-ocirc" aria-hidden="true"></span>
       </label>
 
       {{-- 47: Pre-Screened Report + Resume + Highlighted Keywords without Company Branding --}}
-      <label class="rdc-opt" data-opt="47" data-coins="8">
+      <label class="rdc-opt" data-opt="47" data-coins="3">
         <input class="rdc-rinput" type="radio" name="rdcFormat" value="47">
         <span class="rdc-onum">47</span>
         <span class="rdc-oi" style="background:#f8fafc;color:#475569;" aria-hidden="true">
@@ -8008,14 +8008,14 @@ window.__buildTurboVectorHighlightedResume=buildTurboVectorHighlightedResume;
           <span class="rdc-odesc">Create the recruiter package with report, resume, and highlighted skills, without company branding.</span>
         </span>
         <span class="rdc-ometa">
-          <span class="rdc-ocost">8 Coins</span>
+          <span class="rdc-ocost">3 Coins</span>
           <span class="rdc-otime">60 seconds</span>
         </span>
         <span class="rdc-ocirc" aria-hidden="true"></span>
       </label>
 
       {{-- 48: Hide Contact Details --}}
-      <label class="rdc-opt" data-opt="48" data-coins="4">
+      <label class="rdc-opt" data-opt="48" data-coins="2">
         <input class="rdc-rinput" type="radio" name="rdcFormat" value="48">
         <span class="rdc-onum">48</span>
         <span class="rdc-oi rdc-ic-blue" aria-hidden="true">
@@ -8026,14 +8026,14 @@ window.__buildTurboVectorHighlightedResume=buildTurboVectorHighlightedResume;
           <span class="rdc-odesc">Keep candidate name visible while hiding email, phone, mobile, contact and LinkedIn details in browser.</span>
         </span>
         <span class="rdc-ometa">
-          <span class="rdc-ocost">4 Coins</span>
+          <span class="rdc-ocost">2 Coins</span>
           <span class="rdc-otime">60 seconds</span>
         </span>
         <span class="rdc-ocirc" aria-hidden="true"></span>
       </label>
 
       {{-- 49: Hide Candidate Name & Contacts Details --}}
-      <label class="rdc-opt" data-opt="49" data-coins="4">
+      <label class="rdc-opt" data-opt="49" data-coins="2">
         <input class="rdc-rinput" type="radio" name="rdcFormat" value="49">
         <span class="rdc-onum">49</span>
         <span class="rdc-oi rdc-ic-blue" aria-hidden="true">
@@ -8044,14 +8044,14 @@ window.__buildTurboVectorHighlightedResume=buildTurboVectorHighlightedResume;
           <span class="rdc-odesc">Hide candidate name, email, and phone numbers in a browser-only resume copy.</span>
         </span>
         <span class="rdc-ometa">
-          <span class="rdc-ocost">4 Coins</span>
+          <span class="rdc-ocost">2 Coins</span>
           <span class="rdc-otime">60 seconds</span>
         </span>
         <span class="rdc-ocirc" aria-hidden="true"></span>
       </label>
 
       {{-- 50: Hide Contact Details + Company Branding --}}
-      <label class="rdc-opt" data-opt="50" data-coins="6">
+      <label class="rdc-opt" data-opt="50" data-coins="3">
         <input class="rdc-rinput" type="radio" name="rdcFormat" value="50">
         <span class="rdc-onum">50</span>
         <span class="rdc-oi rdc-ic-green" aria-hidden="true">
@@ -8062,14 +8062,14 @@ window.__buildTurboVectorHighlightedResume=buildTurboVectorHighlightedResume;
           <span class="rdc-odesc">Keep the name visible, hide contact and LinkedIn details, then add your company header.</span>
         </span>
         <span class="rdc-ometa">
-          <span class="rdc-ocost">6 Coins</span>
+          <span class="rdc-ocost">3 Coins</span>
           <span class="rdc-otime">60 seconds</span>
         </span>
         <span class="rdc-ocirc" aria-hidden="true"></span>
       </label>
 
       {{-- 51: Hide Contact Details + Pre-Screened Report --}}
-      <label class="rdc-opt" data-opt="51" data-coins="11">
+      <label class="rdc-opt" data-opt="51" data-coins="3">
         <input class="rdc-rinput" type="radio" name="rdcFormat" value="51">
         <span class="rdc-onum">51</span>
         <span class="rdc-oi" style="background:#f5f3ff;color:#6d28d9;" aria-hidden="true">
@@ -8080,14 +8080,14 @@ window.__buildTurboVectorHighlightedResume=buildTurboVectorHighlightedResume;
           <span class="rdc-odesc">Keep the name visible, hide contact and LinkedIn details, then merge the pre-screened report.</span>
         </span>
         <span class="rdc-ometa">
-          <span class="rdc-ocost">11 Coins</span>
+          <span class="rdc-ocost">3 Coins</span>
           <span class="rdc-otime">60 seconds</span>
         </span>
         <span class="rdc-ocirc" aria-hidden="true"></span>
       </label>
 
       {{-- 52: Hide Contact Details + Pre-Screened Report without Company Branding --}}
-      <label class="rdc-opt" data-opt="52" data-coins="12">
+      <label class="rdc-opt" data-opt="52" data-coins="3">
         <input class="rdc-rinput" type="radio" name="rdcFormat" value="52">
         <span class="rdc-onum">52</span>
         <span class="rdc-oi" style="background:#f8fafc;color:#475569;" aria-hidden="true">
@@ -8098,14 +8098,14 @@ window.__buildTurboVectorHighlightedResume=buildTurboVectorHighlightedResume;
           <span class="rdc-odesc">Keep the name visible, hide contact and LinkedIn details, then merge a no-brand report.</span>
         </span>
         <span class="rdc-ometa">
-          <span class="rdc-ocost">12 Coins</span>
+          <span class="rdc-ocost">3 Coins</span>
           <span class="rdc-otime">60 seconds</span>
         </span>
         <span class="rdc-ocirc" aria-hidden="true"></span>
       </label>
 
       {{-- 53: Hide Contact Details + Pre-Screened Report + Highlighted Keywords --}}
-      <label class="rdc-opt" data-opt="53" data-coins="13">
+      <label class="rdc-opt" data-opt="53" data-coins="4">
         <input class="rdc-rinput" type="radio" name="rdcFormat" value="53">
         <span class="rdc-onum">53</span>
         <span class="rdc-oi" style="background:#fdf2f8;color:#be185d;" aria-hidden="true">
@@ -8116,7 +8116,7 @@ window.__buildTurboVectorHighlightedResume=buildTurboVectorHighlightedResume;
           <span class="rdc-odesc">Branded pre-screened report on Page 1, followed by contact-hidden resume with role-matched skills highlighted.</span>
         </span>
         <span class="rdc-ometa">
-          <span class="rdc-ocost">13 Coins</span>
+          <span class="rdc-ocost">4 Coins</span>
           <span class="rdc-otime">60 seconds</span>
         </span>
         <span class="rdc-ocirc" aria-hidden="true"></span>
@@ -8288,20 +8288,20 @@ window.__buildTurboVectorHighlightedResume=buildTurboVectorHighlightedResume;
 
     var optMeta = {
     1: {cost:1, label:'Download Resume',       avail:hasResume && !!(originalR2PublicUrl || originalR2DirectUrl || dlUrl),  dlKey:null, unavailableMsg:'Original resume is not available for download.'},
-    5: {cost:7, label:'Download Pre-Screened Report',   avail:true,  dlKey:'rs'},
+    5: {cost:1, label:'Download Pre-Screened Report',   avail:true,  dlKey:'rs'},
     41:{cost:2, label:'Resume + Company Branding', avail:(['PDF','DOCX'].indexOf(resumeExt) !== -1) && !!(r2DirectUrl || r2PublicUrl || originalR2DirectUrl || originalR2PublicUrl || dlUrl), dlKey:'test-agy-strategy2-branded', unavailableMsg:(resumeExt === 'DOC' ? docUnsupportedMsg : 'Resume + Company Branding is browser-only and available for direct PDF/DOCX resumes.')},
-    42:{cost:6, label:'Pre-Screened Report + Resume + Company Branding', avail:(['PDF','DOCX'].indexOf(resumeExt) !== -1) && !!(r2DirectUrl || r2PublicUrl || originalR2DirectUrl || originalR2PublicUrl || dlUrl), dlKey:'test-agy-strategy2-prescreened-branded', unavailableMsg:(resumeExt === 'DOC' ? docUnsupportedMsg : 'Pre-Screened Report + Resume + Company Branding is browser-only and available for direct PDF/DOCX resumes.')},
-    43:{cost:7, label:'Pre-Screened Report + Resume without Company Branding', avail:(['PDF','DOCX'].indexOf(resumeExt) !== -1) && !!(r2DirectUrl || r2PublicUrl || originalR2DirectUrl || originalR2PublicUrl || dlUrl), dlKey:'test-agy-strategy2-prescreened-nobrand', unavailableMsg:(resumeExt === 'DOC' ? docUnsupportedMsg : 'Pre-Screened Report + Resume without Company Branding is browser-only and available for direct PDF/DOCX resumes.')},
-    44:{cost:4, label:'Resume + Highlighted Keywords', avail:(['PDF','DOCX'].indexOf(resumeExt) !== -1) && !!(r2DirectUrl || r2PublicUrl || originalR2DirectUrl || originalR2PublicUrl || dlUrl), dlKey:'test-agy-strategy2-highlighted', unavailableMsg:(resumeExt === 'DOC' ? docUnsupportedMsg : 'Resume + Highlighted Keywords is browser-only and available for direct PDF/DOCX resumes.')},
-    45:{cost:6, label:'Resume + Highlighted Keywords + Company Branding', avail:(['PDF','DOCX'].indexOf(resumeExt) !== -1) && !!(r2DirectUrl || r2PublicUrl || originalR2DirectUrl || originalR2PublicUrl || dlUrl), dlKey:'test-agy-strategy2-highlighted-branded', unavailableMsg:(resumeExt === 'DOC' ? docUnsupportedMsg : 'Resume + Highlighted Keywords + Company Branding is browser-only and available for direct PDF/DOCX resumes.')},
-    46:{cost:8, label:'Pre-Screened Report + Resume + Highlighted Keywords + Company Branding', avail:(['PDF','DOCX'].indexOf(resumeExt) !== -1) && !!(r2DirectUrl || r2PublicUrl || originalR2DirectUrl || originalR2PublicUrl || dlUrl), dlKey:'test-agy-strategy2-prescreened-highlighted-branded', unavailableMsg:(resumeExt === 'DOC' ? docUnsupportedMsg : 'Pre-Screened Report + Resume + Highlighted Keywords + Company Branding is browser-only and available for direct PDF/DOCX resumes.')},
-    47:{cost:8, label:'Pre-Screened Report + Resume + Highlighted Keywords without Company Branding', avail:(['PDF','DOCX'].indexOf(resumeExt) !== -1) && !!(r2DirectUrl || r2PublicUrl || originalR2DirectUrl || originalR2PublicUrl || dlUrl), dlKey:'test-agy-strategy2-prescreened-highlighted-nobrand', unavailableMsg:(resumeExt === 'DOC' ? docUnsupportedMsg : 'Pre-Screened Report + Resume + Highlighted Keywords without Company Branding is browser-only and available for direct PDF/DOCX resumes.')},
-    48:{cost:4, label:'Hide Contact Details', avail:(['PDF','DOCX'].indexOf(resumeExt) !== -1) && !!(r2DirectUrl || r2PublicUrl || originalR2DirectUrl || originalR2PublicUrl || dlUrl), dlKey:'test-agy-strategy2-contact-hidden', unavailableMsg:(resumeExt === 'DOC' ? docUnsupportedMsg : 'Hide Contact Details is browser-only and available for direct PDF/DOCX resumes.')},
-    49:{cost:4, label:'Hide Candidate Name & Contacts Details', avail:(['PDF','DOCX'].indexOf(resumeExt) !== -1) && !!(r2DirectUrl || r2PublicUrl || originalR2DirectUrl || originalR2PublicUrl || dlUrl), dlKey:'test-agy-strategy2-anonymized-all', unavailableMsg:(resumeExt === 'DOC' ? docUnsupportedMsg : 'Hide Candidate Name & Contacts Details is browser-only and available for direct PDF/DOCX resumes.')},
-    50:{cost:6, label:'Hide Contact Details + Company Branding', avail:(['PDF','DOCX'].indexOf(resumeExt) !== -1) && !!(r2DirectUrl || r2PublicUrl || originalR2DirectUrl || originalR2PublicUrl || dlUrl), dlKey:'test-agy-strategy2-contact-hidden-branded', unavailableMsg:(resumeExt === 'DOC' ? docUnsupportedMsg : 'Hide Contact Details + Company Branding is browser-only and available for direct PDF/DOCX resumes.')},
-    51:{cost:11, label:'Hide Contact Details + Pre-Screened Report', avail:(['PDF','DOCX'].indexOf(resumeExt) !== -1) && !!(r2DirectUrl || r2PublicUrl || originalR2DirectUrl || originalR2PublicUrl || dlUrl), dlKey:'test-agy-strategy2-contact-hidden-prescreened', unavailableMsg:(resumeExt === 'DOC' ? docUnsupportedMsg : 'Hide Contact Details + Pre-Screened Report is browser-only and available for direct PDF/DOCX resumes.')},
-    52:{cost:12, label:'Hide Contact Details + Pre-Screened Report without Company Branding', avail:(['PDF','DOCX'].indexOf(resumeExt) !== -1) && !!(r2DirectUrl || r2PublicUrl || originalR2DirectUrl || originalR2PublicUrl || dlUrl), dlKey:'test-agy-strategy2-contact-hidden-prescreened-nobrand', unavailableMsg:(resumeExt === 'DOC' ? docUnsupportedMsg : 'Hide Contact Details + Pre-Screened Report without Company Branding is browser-only and available for direct PDF/DOCX resumes.')},
-    53:{cost:13, label:'Hide Contact Details + Pre-Screened Report + Highlighted Keywords', avail:(['PDF','DOCX'].indexOf(resumeExt) !== -1) && !!(r2DirectUrl || r2PublicUrl || originalR2DirectUrl || originalR2PublicUrl || dlUrl), dlKey:'test-agy-strategy2-contact-hidden-prescreened-highlighted', unavailableMsg:(resumeExt === 'DOC' ? docUnsupportedMsg : 'Hide Contact Details + Pre-Screened Report + Highlighted Keywords is browser-only and available for direct PDF/DOCX resumes.')}
+    42:{cost:3, label:'Pre-Screened Report + Resume + Company Branding', avail:(['PDF','DOCX'].indexOf(resumeExt) !== -1) && !!(r2DirectUrl || r2PublicUrl || originalR2DirectUrl || originalR2PublicUrl || dlUrl), dlKey:'test-agy-strategy2-prescreened-branded', unavailableMsg:(resumeExt === 'DOC' ? docUnsupportedMsg : 'Pre-Screened Report + Resume + Company Branding is browser-only and available for direct PDF/DOCX resumes.')},
+    43:{cost:3, label:'Pre-Screened Report + Resume without Company Branding', avail:(['PDF','DOCX'].indexOf(resumeExt) !== -1) && !!(r2DirectUrl || r2PublicUrl || originalR2DirectUrl || originalR2PublicUrl || dlUrl), dlKey:'test-agy-strategy2-prescreened-nobrand', unavailableMsg:(resumeExt === 'DOC' ? docUnsupportedMsg : 'Pre-Screened Report + Resume without Company Branding is browser-only and available for direct PDF/DOCX resumes.')},
+    44:{cost:2, label:'Resume + Highlighted Keywords', avail:(['PDF','DOCX'].indexOf(resumeExt) !== -1) && !!(r2DirectUrl || r2PublicUrl || originalR2DirectUrl || originalR2PublicUrl || dlUrl), dlKey:'test-agy-strategy2-highlighted', unavailableMsg:(resumeExt === 'DOC' ? docUnsupportedMsg : 'Resume + Highlighted Keywords is browser-only and available for direct PDF/DOCX resumes.')},
+    45:{cost:3, label:'Resume + Highlighted Keywords + Company Branding', avail:(['PDF','DOCX'].indexOf(resumeExt) !== -1) && !!(r2DirectUrl || r2PublicUrl || originalR2DirectUrl || originalR2PublicUrl || dlUrl), dlKey:'test-agy-strategy2-highlighted-branded', unavailableMsg:(resumeExt === 'DOC' ? docUnsupportedMsg : 'Resume + Highlighted Keywords + Company Branding is browser-only and available for direct PDF/DOCX resumes.')},
+    46:{cost:3, label:'Pre-Screened Report + Resume + Highlighted Keywords + Company Branding', avail:(['PDF','DOCX'].indexOf(resumeExt) !== -1) && !!(r2DirectUrl || r2PublicUrl || originalR2DirectUrl || originalR2PublicUrl || dlUrl), dlKey:'test-agy-strategy2-prescreened-highlighted-branded', unavailableMsg:(resumeExt === 'DOC' ? docUnsupportedMsg : 'Pre-Screened Report + Resume + Highlighted Keywords + Company Branding is browser-only and available for direct PDF/DOCX resumes.')},
+    47:{cost:3, label:'Pre-Screened Report + Resume + Highlighted Keywords without Company Branding', avail:(['PDF','DOCX'].indexOf(resumeExt) !== -1) && !!(r2DirectUrl || r2PublicUrl || originalR2DirectUrl || originalR2PublicUrl || dlUrl), dlKey:'test-agy-strategy2-prescreened-highlighted-nobrand', unavailableMsg:(resumeExt === 'DOC' ? docUnsupportedMsg : 'Pre-Screened Report + Resume + Highlighted Keywords without Company Branding is browser-only and available for direct PDF/DOCX resumes.')},
+    48:{cost:2, label:'Hide Contact Details', avail:(['PDF','DOCX'].indexOf(resumeExt) !== -1) && !!(r2DirectUrl || r2PublicUrl || originalR2DirectUrl || originalR2PublicUrl || dlUrl), dlKey:'test-agy-strategy2-contact-hidden', unavailableMsg:(resumeExt === 'DOC' ? docUnsupportedMsg : 'Hide Contact Details is browser-only and available for direct PDF/DOCX resumes.')},
+    49:{cost:2, label:'Hide Candidate Name & Contacts Details', avail:(['PDF','DOCX'].indexOf(resumeExt) !== -1) && !!(r2DirectUrl || r2PublicUrl || originalR2DirectUrl || originalR2PublicUrl || dlUrl), dlKey:'test-agy-strategy2-anonymized-all', unavailableMsg:(resumeExt === 'DOC' ? docUnsupportedMsg : 'Hide Candidate Name & Contacts Details is browser-only and available for direct PDF/DOCX resumes.')},
+    50:{cost:3, label:'Hide Contact Details + Company Branding', avail:(['PDF','DOCX'].indexOf(resumeExt) !== -1) && !!(r2DirectUrl || r2PublicUrl || originalR2DirectUrl || originalR2PublicUrl || dlUrl), dlKey:'test-agy-strategy2-contact-hidden-branded', unavailableMsg:(resumeExt === 'DOC' ? docUnsupportedMsg : 'Hide Contact Details + Company Branding is browser-only and available for direct PDF/DOCX resumes.')},
+    51:{cost:3, label:'Hide Contact Details + Pre-Screened Report', avail:(['PDF','DOCX'].indexOf(resumeExt) !== -1) && !!(r2DirectUrl || r2PublicUrl || originalR2DirectUrl || originalR2PublicUrl || dlUrl), dlKey:'test-agy-strategy2-contact-hidden-prescreened', unavailableMsg:(resumeExt === 'DOC' ? docUnsupportedMsg : 'Hide Contact Details + Pre-Screened Report is browser-only and available for direct PDF/DOCX resumes.')},
+    52:{cost:3, label:'Hide Contact Details + Pre-Screened Report without Company Branding', avail:(['PDF','DOCX'].indexOf(resumeExt) !== -1) && !!(r2DirectUrl || r2PublicUrl || originalR2DirectUrl || originalR2PublicUrl || dlUrl), dlKey:'test-agy-strategy2-contact-hidden-prescreened-nobrand', unavailableMsg:(resumeExt === 'DOC' ? docUnsupportedMsg : 'Hide Contact Details + Pre-Screened Report without Company Branding is browser-only and available for direct PDF/DOCX resumes.')},
+    53:{cost:4, label:'Hide Contact Details + Pre-Screened Report + Highlighted Keywords', avail:(['PDF','DOCX'].indexOf(resumeExt) !== -1) && !!(r2DirectUrl || r2PublicUrl || originalR2DirectUrl || originalR2PublicUrl || dlUrl), dlKey:'test-agy-strategy2-contact-hidden-prescreened-highlighted', unavailableMsg:(resumeExt === 'DOC' ? docUnsupportedMsg : 'Hide Contact Details + Pre-Screened Report + Highlighted Keywords is browser-only and available for direct PDF/DOCX resumes.')}
   };
 
   var selectedOpt = 1;
