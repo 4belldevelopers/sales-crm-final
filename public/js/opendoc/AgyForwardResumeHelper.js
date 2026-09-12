@@ -211,16 +211,10 @@
     var ext = (optId === 1 && resumeExt === 'DOCX') ? 'docx' : 'pdf';
     var filename = 'Jeroworks_' + safeName + '.' + ext;
 
-    if (optId === 5) {
-      filename = 'PRESCREEN_REPORT_' + safeName + '.pdf';
-    } else if (optId === 49) {
-      filename = 'Jeroworks_Resume.pdf';
-    }
+    // Attach filename property to Blob for maximum backward/forward compatibility
+    blob.filename = filename;
 
-    return {
-      blob: blob,
-      filename: filename
-    };
+    return blob;
   }
 
   return {
