@@ -16,15 +16,20 @@
 (function (root, factory) {
   'use strict';
   var exp = factory();
-  if (typeof define === 'function' && define.amd) {
-    try { define([], function () { return exp; }); } catch (e) {}
-  }
-  if (typeof module === 'object' && module.exports) {
-    module.exports = exp;
-  }
-  root.AgyForwardResumeHelper = exp;
   if (typeof window !== 'undefined') {
     window.AgyForwardResumeHelper = exp;
+  }
+  if (typeof root !== 'undefined') {
+    root.AgyForwardResumeHelper = exp;
+  }
+  if (typeof self !== 'undefined') {
+    self.AgyForwardResumeHelper = exp;
+  }
+  if (typeof globalThis !== 'undefined') {
+    globalThis.AgyForwardResumeHelper = exp;
+  }
+  if (typeof module === 'object' && module && module.exports) {
+    module.exports = exp;
   }
 }(typeof self !== 'undefined' ? self : this, function () {
   'use strict';
@@ -41,23 +46,64 @@
     if (_rendererPromise) return _rendererPromise;
 
     _rendererPromise = new Promise(function (resolve, reject) {
-      var sources = ['/js/opendoc/AgyResumeRenderer.js'];
-      function tryLoad(idx) {
-        if (idx >= sources.length) {
-          reject(new Error('Could not load AgyResumeRenderer from /js/opendoc/AgyResumeRenderer.js'));
-          return;
+      // Check if it's already in flight / about to be defined
+      var checkAttempts = 0;
+      var pollExisting = setInterval(function () {
+        if (typeof window !== 'undefined' && window.AgyResumeRenderer && typeof window.AgyResumeRenderer.processOption === 'function') {
+          clearInterval(pollExisting);
+          resolve(window.AgyResumeRenderer);
+        } else if (++checkAttempts > 8) {
+          clearInterval(pollExisting);
+          loadSources();
         }
-        var s = document.createElement('script');
-        s.src = sources[idx];
-        s.async = true;
-        s.onload = function () {
-          if (window.AgyResumeRenderer) resolve(window.AgyResumeRenderer);
-          else tryLoad(idx + 1);
-        };
-        s.onerror = function () { tryLoad(idx + 1); };
-        document.head.appendChild(s);
+      }, 50);
+
+      function loadSources() {
+        var origin = (typeof window !== 'undefined' && window.location && window.location.origin) ? window.location.origin : '';
+        var sources = [
+          '/js/opendoc/AgyResumeRenderer.js',
+          origin + '/js/opendoc/AgyResumeRenderer.js'
+        ];
+
+        function tryLoad(idx) {
+          if (idx >= sources.length) {
+            _rendererPromise = null;
+            reject(new Error('Could not load AgyResumeRenderer module'));
+            return;
+          }
+
+          var s = document.createElement('script');
+          s.type = 'text/javascript';
+          s.src = sources[idx] + (sources[idx].indexOf('?') === -1 ? '?v=' + Date.now() : '');
+          s.async = false;
+
+          var pollTries = 0;
+          function pollCheck() {
+            if (typeof window !== 'undefined' && window.AgyResumeRenderer && typeof window.AgyResumeRenderer.processOption === 'function') {
+              resolve(window.AgyResumeRenderer);
+              return;
+            }
+            if (++pollTries < 30) {
+              setTimeout(pollCheck, 60);
+            } else {
+              console.warn('[AgyForwardResumeHelper] Polling timed out for ' + sources[idx]);
+              tryLoad(idx + 1);
+            }
+          }
+
+          s.onload = function () { pollCheck(); };
+          s.onerror = function (e) {
+            console.warn('[AgyForwardResumeHelper] Script load failed for ' + sources[idx], e);
+            tryLoad(idx + 1);
+          };
+          document.head.appendChild(s);
+        }
+
+        tryLoad(0);
       }
-      tryLoad(0);
+    }).catch(function (err) {
+      _rendererPromise = null;
+      throw err;
     });
 
     return _rendererPromise;
