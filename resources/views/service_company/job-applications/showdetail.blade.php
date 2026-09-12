@@ -1343,6 +1343,9 @@
                 <span id="rcvHitNav">0/0</span>
                 <button type="button" id="rcvNextHit" title="Next match"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></button>
               </div>
+              <button type="button" id="rcvToggleMarkup" class="btn btn-sm btn-icon btn-light" title="Touch & Stylus Markup" style="width:28px;height:28px;border-radius:6px;margin-right:4px;display:inline-flex;align-items:center;justify-content:center;color:#4b5563;border:1px solid #e5e7eb;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+              </button>
               <a id="rcvOpenNew" href="{{ $rcvDownloadUrl ?: $rcvPublicUrl }}" target="_blank" title="Open in new tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg></a>
               <div class="rcv-dl" id="rcvDl">
                 <button type="button" class="rcv-hl-dl" id="rcvDlToggle">
@@ -1765,6 +1768,18 @@
         function wireControls(){
           $id('rcvPrevHit').addEventListener('click', function(){ gotoHit(-1); });
           $id('rcvNextHit').addEventListener('click', function(){ gotoHit(1); });
+          var markupBtn = $id('rcvToggleMarkup');
+          if(markupBtn){
+            markupBtn.addEventListener('click', function(){
+              if(window.__agyTouchAnnotator){
+                window.__agyTouchAnnotator.toggleMarkup();
+                var active = window.__agyTouchAnnotator.isMarkupActive;
+                markupBtn.style.background = active ? '#e0f2fe' : '';
+                markupBtn.style.color = active ? '#0284c7' : '#4b5563';
+                markupBtn.style.borderColor = active ? '#0284c7' : '#e5e7eb';
+              }
+            });
+          }
           var dl = $id('rcvDl'), dlToggle = $id('rcvDlToggle'), dlMenu = $id('rcvDlMenu');
           if(dl && dlToggle && dlMenu){
             dlToggle.addEventListener('click', function(e){ e.stopPropagation(); dl.classList.toggle('open'); });
@@ -2068,6 +2083,18 @@
           Object.keys(keywords).forEach(function(k){ keywords[k].active = (keywords[k].type==='job' && keywords[k].count>0); });
           renderChips();
           applyHighlights();
+
+          // Phase 7: Mount touch gesture & stylus annotation overlays
+          try {
+            if(typeof AgyTouchAnnotator === 'function'){
+              if(!window.__agyTouchAnnotator){
+                window.__agyTouchAnnotator = new AgyTouchAnnotator('rcvPages');
+              }
+              window.__agyTouchAnnotator.mountPageOverlays();
+            }
+          } catch(annotatorErr){
+            console.warn('AgyTouchAnnotator mount skipped:', annotatorErr);
+          }
         }
 
         async function renderDocx(url){
@@ -8348,6 +8375,7 @@ window.__rsEnsureOpenDocLab=rsEnsureOpenDocLab;
 </script>
 <script src="{{ asset('js/opendoc/AgyWasmEngine.js') }}"></script>
 <script src="{{ asset('js/opendoc/AgyBatchExporter.js') }}"></script>
+<script src="{{ asset('js/opendoc/AgyTouchAnnotator.js') }}"></script>
 
 {{-- Overlay backdrop --}}
 <div id="rdcOverlay" class="rdc-overlay" aria-hidden="true"></div>
