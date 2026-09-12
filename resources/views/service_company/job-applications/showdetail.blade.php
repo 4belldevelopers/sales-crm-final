@@ -1112,6 +1112,12 @@
         </svg>
         Resume / CV
       </a>
+      <a type="button" class="tab" data-toggle="tab" href="#edit_optimize_cv" id="tabNavEditOptimize" aria-selected="false">
+        <svg class="tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+        </svg>
+        Edit &amp; Optimize CV
+      </a>
      @endif
   </nav>
 
@@ -1349,7 +1355,11 @@
               <button type="button" id="rcvToggleMarkup" class="btn btn-sm btn-icon btn-light" title="Touch & Stylus Markup" style="width:28px;height:28px;border-radius:6px;margin-right:4px;display:inline-flex;align-items:center;justify-content:center;color:#4b5563;border:1px solid #e5e7eb;">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
               </button>
-              <a id="rcvOpenNew" href="{{ $rcvDownloadUrl ?: $rcvPublicUrl }}" target="_blank" title="Open in new tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg></a>
+              <a id="rcvOpenNew" href="{{ $rcvDownloadUrl ?: $rcvPublicUrl }}" target="_blank" title="Open original in new tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg></a>
+              <button type="button" id="rcvBtnSwitchToOptimize" class="btn btn-sm" title="Edit & Optimize CV Studio (Covers Resume Space)" style="height:28px;border-radius:6px;margin-left:4px;padding:0 9px;font-size:11px;font-weight:600;display:inline-flex;align-items:center;gap:5px;color:#0f766e;border:1px solid #99f6e4;background:#f0fdfa;cursor:pointer;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px;"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+                <span>Edit &amp; Optimize CV</span>
+              </button>
               <div class="rcv-dl" id="rcvDl">
                 <button type="button" class="rcv-hl-dl" id="rcvDlToggle">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
@@ -2307,6 +2317,970 @@
         }
         // if the tab is already visible on load
         if(currentDrawer.querySelector('#resume_cv.active, #resume_cv.show.active')) setTimeout(init, 250);
+        var btnSwitch = currentDrawer.querySelector('#rcvBtnSwitchToOptimize');
+        if(btnSwitch){
+          btnSwitch.addEventListener('click', function(e){
+            e.preventDefault();
+            var optTab = currentDrawer.querySelector('#tabNavEditOptimize, a[href="#edit_optimize_cv"]');
+            if(optTab){
+              optTab.click();
+              if(window.jQuery && $(optTab).tab) $(optTab).tab('show');
+            }
+          });
+        }
+      })();
+      </script>
+    </div>
+
+    {{-- Edit & Optimize CV Studio Tab Pane (Covers Resume Space) --}}
+    <div class="tab-pane fade" id="edit_optimize_cv" role="tabpanel">
+      <style>
+        #edit_optimize_cv, #edit_optimize_cv * { font-family:'Poppins',-apple-system,BlinkMacSystemFont,sans-serif; }
+        #edit_optimize_cv { font-size:13px; }
+        .cv-opt-wrap {
+          display: flex;
+          flex-direction: column;
+          gap: 0;
+          border: 1px solid #e2e8f0;
+          border-radius: 12px;
+          overflow: hidden;
+          box-shadow: 0 1px 3px rgba(0,0,0,.05), 0 4px 12px rgba(0,0,0,.03);
+          background: #fff;
+          min-height: 820px;
+        }
+        .cv-opt-topbar {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 12px;
+          padding: 12px 18px;
+          background: linear-gradient(90deg, #f0fdfa 0%, #ffffff 100%);
+          border-bottom: 1px solid #ccfbf1;
+          flex-wrap: wrap;
+        }
+        .cv-opt-top-left {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          flex-wrap: wrap;
+        }
+        .cv-opt-top-icon {
+          width: 32px;
+          height: 32px;
+          border-radius: 8px;
+          background: #0d9488;
+          color: #fff;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          box-shadow: 0 2px 6px rgba(13, 148, 136, 0.25);
+          flex-shrink: 0;
+        }
+        .cv-opt-title {
+          font-size: 13.5px;
+          font-weight: 700;
+          color: #0f766e;
+          margin: 0;
+          line-height: 1.2;
+        }
+        .cv-opt-subtitle {
+          font-size: 11px;
+          color: #64748b;
+          margin: 0;
+        }
+        .cv-opt-job-badge {
+          font-size: 11px;
+          font-weight: 600;
+          padding: 3px 10px;
+          border-radius: 999px;
+          background: #e0f2fe;
+          color: #0284c7;
+          border: 1px solid #bae6fd;
+          max-width: 260px;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
+        .cv-opt-top-actions {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+        }
+        .cv-opt-top-btn {
+          height: 32px;
+          padding: 0 12px;
+          font-size: 11.5px;
+          font-weight: 600;
+          border-radius: 7px;
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+          cursor: pointer;
+          text-decoration: none;
+          transition: all .15s;
+        }
+        .cv-opt-top-btn:hover {
+          filter: brightness(0.96);
+        }
+        .cv-opt-grid {
+          display: grid;
+          grid-template-columns: 340px 1fr;
+          min-height: 750px;
+          background: #f8fafc;
+        }
+        @media (max-width: 991px) {
+          .cv-opt-grid { grid-template-columns: 1fr; }
+        }
+        .cv-opt-sidebar {
+          padding: 16px;
+          border-right: 1px solid #e2e8f0;
+          background: #ffffff;
+          display: flex;
+          flex-direction: column;
+          gap: 14px;
+          overflow-y: auto;
+        }
+        .cv-opt-card {
+          background: #fff;
+          border: 1px solid #e2e8f0;
+          border-radius: 9px;
+          padding: 12px;
+          box-shadow: 0 1px 2px rgba(0,0,0,.03);
+        }
+        .cv-opt-card-head {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          margin-bottom: 8px;
+        }
+        .cv-opt-card-title {
+          font-size: 10.5px;
+          font-weight: 700;
+          color: #475569;
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
+          margin: 0;
+        }
+        .cv-opt-score-box {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          padding: 12px;
+          background: #f0fdf4;
+          border: 1px solid #bbf7d0;
+          border-radius: 8px;
+          transition: background .2s, border-color .2s;
+        }
+        .cv-opt-score-val {
+          font-size: 28px;
+          font-weight: 800;
+          color: #15803d;
+          line-height: 1;
+        }
+        .cv-opt-score-desc {
+          font-size: 11px;
+          color: #166534;
+          line-height: 1.35;
+        }
+        .cv-opt-chips {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 6px;
+          max-height: 160px;
+          overflow-y: auto;
+          padding: 2px;
+        }
+        .cv-opt-chip-btn {
+          padding: 3px 9px;
+          font-size: 11px;
+          font-weight: 600;
+          border-radius: 999px;
+          border: 1px solid #bae6fd;
+          background: #f0f9ff;
+          color: #0369a1;
+          cursor: pointer;
+          display: inline-flex;
+          align-items: center;
+          gap: 4px;
+          transition: all .12s;
+        }
+        .cv-opt-chip-btn:hover {
+          background: #0284c7;
+          color: #fff;
+          border-color: #0284c7;
+        }
+        .cv-opt-chip-matched {
+          padding: 2px 8px;
+          font-size: 10.5px;
+          font-weight: 600;
+          border-radius: 999px;
+          border: 1px solid #bbf7d0;
+          background: #f0fdf4;
+          color: #15803d;
+          display: inline-flex;
+          align-items: center;
+          gap: 3px;
+        }
+        .cv-opt-export-btn {
+          width: 100%;
+          height: 38px;
+          border-radius: 7px;
+          font-size: 12px;
+          font-weight: 600;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          gap: 8px;
+          cursor: pointer;
+          border: none;
+          transition: all .15s;
+          margin-bottom: 8px;
+        }
+        .cv-opt-export-btn:hover {
+          filter: brightness(0.95);
+        }
+        .cv-opt-editor-area {
+          display: flex;
+          flex-direction: column;
+          background: #fff;
+        }
+        .cv-opt-editor-bar {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          padding: 10px 16px;
+          background: #fafbff;
+          border-bottom: 1px solid #eef2f7;
+          flex-wrap: wrap;
+          gap: 8px;
+        }
+        .cv-opt-snippet-btn {
+          font-size: 11px;
+          font-weight: 600;
+          padding: 4px 9px;
+          border-radius: 6px;
+          border: 1px solid #e2e8f0;
+          background: #fff;
+          color: #475569;
+          cursor: pointer;
+          display: inline-flex;
+          align-items: center;
+          gap: 4px;
+        }
+        .cv-opt-snippet-btn:hover {
+          background: #f1f5f9;
+          border-color: #cbd5e1;
+        }
+        .cv-opt-textarea {
+          flex: 1;
+          width: 100%;
+          min-height: 620px;
+          border: none;
+          padding: 16px 20px;
+          font-family: 'Poppins', -apple-system, BlinkMacSystemFont, sans-serif;
+          font-size: 12.5px;
+          line-height: 1.6;
+          color: #1e293b;
+          resize: vertical;
+          outline: none;
+          background: #ffffff;
+        }
+        .cv-opt-footer {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          padding: 8px 16px;
+          background: #fafbff;
+          border-top: 1px solid #eef2f7;
+          font-size: 11px;
+          color: #64748b;
+          flex-wrap: wrap;
+          gap: 8px;
+        }
+      </style>
+
+      <div class="cv-opt-wrap">
+        {{-- Studio Header --}}
+        <div class="cv-opt-topbar">
+          <div class="cv-opt-top-left">
+            <span class="cv-opt-top-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="width:16px;height:16px;"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+            </span>
+            <div>
+              <h3 class="cv-opt-title">Edit &amp; Optimize CV Studio</h3>
+              <p class="cv-opt-subtitle">Live ATS match optimization, missing skills chips &amp; instant client-ready vector PDF export</p>
+            </div>
+            @if(!empty($job->title) || !empty($application->job_title))
+              <span class="cv-opt-job-badge" title="Target Job Position">
+                Target: {{ ucwords(@$job->title ?: @$application->job_title ?: '') }}
+              </span>
+            @endif
+          </div>
+          <div class="cv-opt-top-actions">
+            <button type="button" id="cvOptOpenNewTabBtn" class="cv-opt-top-btn" style="background:#e0f2fe;color:#0284c7;border:1px solid #bae6fd;" title="Open Studio in Standalone Full Browser Tab">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px;"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+              <span>Open in New Tab ↗</span>
+            </button>
+            <button type="button" id="cvOptBackToResumeBtn" class="cv-opt-top-btn" style="background:#fff;color:#475569;border:1px solid #e2e8f0;" title="Switch back to Original Resume View">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+              <span>Original Resume</span>
+            </button>
+          </div>
+        </div>
+
+        {{-- 2-Column Split Body --}}
+        <div class="cv-opt-grid">
+          {{-- Left Column: ATS Intelligence & Downloads --}}
+          <div class="cv-opt-sidebar">
+            {{-- ATS Match Score --}}
+            <div class="cv-opt-card">
+              <div class="cv-opt-card-head">
+                <span class="cv-opt-card-title">Real-Time ATS Score</span>
+                <span id="cvOptScoreStatus" style="font-size:10px;font-weight:700;color:#0d9488;text-transform:uppercase;">Live</span>
+              </div>
+              <div class="cv-opt-score-box" id="cvOptScoreBox">
+                <div class="cv-opt-score-val" id="cvOptScoreVal">--%</div>
+                <div class="cv-opt-score-desc" id="cvOptScoreDesc">Calculating real-time ATS match against target job description skills…</div>
+              </div>
+            </div>
+
+            {{-- Missing Skills --}}
+            <div class="cv-opt-card">
+              <div class="cv-opt-card-head">
+                <span class="cv-opt-card-title">Missing Target Skills (1-Click Insert)</span>
+                <span id="cvOptMissingCount" style="font-size:11px;font-weight:700;color:#0284c7;">--</span>
+              </div>
+              <div id="cvOptMissingChips" class="cv-opt-chips">
+                <span style="font-size:11.5px;color:#94a3b8;">Scanning job requirements…</span>
+              </div>
+            </div>
+
+            {{-- Matched Skills --}}
+            <div class="cv-opt-card">
+              <div class="cv-opt-card-head">
+                <span class="cv-opt-card-title">Matched Skills in Resume</span>
+                <span id="cvOptMatchedCount" style="font-size:11px;font-weight:700;color:#15803d;">--</span>
+              </div>
+              <div id="cvOptMatchedChips" class="cv-opt-chips">
+                <span style="font-size:11.5px;color:#94a3b8;">Evaluating resume content…</span>
+              </div>
+            </div>
+
+            {{-- 1-Click Exports --}}
+            <div class="cv-opt-card" style="background:#f0fdfa;border-color:#99f6e4;">
+              <div class="cv-opt-card-head">
+                <span class="cv-opt-card-title" style="color:#0f766e;">Export Client-Facing PDF</span>
+                <span style="font-size:10px;color:#0d9488;font-weight:600;">0% Server Load</span>
+              </div>
+              <button type="button" id="cvOptBtnCleanPdf" class="cv-opt-export-btn" style="background:#0d9488;color:#fff;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                <span>Download Clean ATS PDF</span>
+              </button>
+              <button type="button" id="cvOptBtnBrandedPdf" class="cv-opt-export-btn" style="background:#0284c7;color:#fff;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;"><path d="M4 4h10l6 6v10a2 2 0 0 1-2 2H4V4z"/><path d="M14 4v6h6"/><path d="M8 13h8"/><path d="M8 17h5"/></svg>
+                <span>Download + Company Branding</span>
+              </button>
+              <button type="button" id="cvOptBtnHighlightedPdf" class="cv-opt-export-btn" style="background:#d97706;color:#fff;margin-bottom:0;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;"><path d="M4 20h16"/><path d="m7 16 8.5-8.5 3 3L10 19H7v-3z"/><path d="M9 7h6"/></svg>
+                <span>Download + Highlighted Skills</span>
+              </button>
+            </div>
+          </div>
+
+          {{-- Right Column: Full-Height Text Editor --}}
+          <div class="cv-opt-editor-area">
+            <div class="cv-opt-editor-bar">
+              <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
+                <span style="font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;margin-right:4px;">Insert:</span>
+                <button type="button" class="cv-opt-snippet-btn" data-snippet="summary">+ Summary</button>
+                <button type="button" class="cv-opt-snippet-btn" data-snippet="experience">+ Experience</button>
+                <button type="button" class="cv-opt-snippet-btn" data-snippet="skills">+ Skills</button>
+                <button type="button" class="cv-opt-snippet-btn" data-snippet="education">+ Education</button>
+                <button type="button" id="cvOptResetBtn" class="cv-opt-snippet-btn" style="color:#b91c1c;border-color:#fecaca;" title="Reset back to originally extracted text">↺ Reset</button>
+              </div>
+              <div style="display:flex;align-items:center;gap:12px;">
+                <span id="cvOptWordCount" style="font-size:11px;color:#64748b;">0 words</span>
+                <span id="cvOptCharCount" style="font-size:11px;color:#64748b;">0 chars</span>
+                <span id="cvOptTypingStatus" style="font-size:11px;color:#0d9488;font-weight:600;">✓ Synced</span>
+              </div>
+            </div>
+
+            <textarea id="cvOptTextarea" class="cv-opt-textarea" placeholder="Loading resume text for optimization…" spellcheck="false"></textarea>
+
+            <div class="cv-opt-footer">
+              <span>Client-Side High Fidelity Vector PDF • In-Browser WASM Engine • 0% Server CPU</span>
+              <span style="color:#0f766e;font-weight:600;">Original candidate file in Cloudflare R2 remains 100% untouched</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {{-- Studio Script --}}
+      <script>
+      (function(){
+        // Guarantee getResumeTextForOptimization is defined globally
+        window.getResumeTextForOptimization = function(){
+          // Tier 1: Extracted text from canvas/WASM/HTML
+          if(window.__rcvResumeText && window.__rcvResumeText.trim().length > 30){
+            return window.__rcvResumeText.trim();
+          }
+
+          // Tier 2: Check text layers in DOM
+          var textNodes = document.querySelectorAll('#rcvPages .rcv-textlayer span, #rcvPages .rcv-wasm-hit-span');
+          if(textNodes && textNodes.length > 5){
+            var domParts = [];
+            for(var i = 0; i < textNodes.length; i++){
+              var t = (textNodes[i].textContent || '').trim();
+              if(t) domParts.push(t);
+            }
+            var domJoined = domParts.join(' ').replace(/\s+/g, ' ').trim();
+            if(domJoined.length > 40) return domJoined;
+          }
+
+          var htmlEl = document.getElementById('rcvHtml');
+          if(htmlEl && htmlEl.innerText && htmlEl.innerText.trim().length > 30){
+            return htmlEl.innerText.trim();
+          }
+
+          if(window.__rdcPreloadedResumeText && window.__rdcPreloadedResumeText.trim().length > 30){
+            return window.__rdcPreloadedResumeText.trim();
+          }
+
+          // Tier 3: Structured candidate profile synthesis (Guarantees editor is NEVER blank)
+          var lines = [];
+          var candName = @json(ucwords(@$application->full_name ?: @$application->name ?: 'Candidate'));
+          var jobTitle = @json(ucwords(@$job->title ?: @$application->job_title ?: ''));
+          var designation = @json(ucwords(@$application->current_designation ?: ''));
+          var company = @json(ucwords(@$application->current_company ?: @$application->cur_company_name ?: ''));
+          var exp = @json(@$application->total_experience ? (@$application->total_experience . ' Years Experience') : '');
+          var email = @json(@$application->email ?: '');
+          var phone = @json(@$application->phone ?: '');
+          var candSkills = @json($rcvCandSkills ?? []);
+          var summary = @json(\Illuminate\Support\Str::limit(strip_tags((string)(@$application->cover_letter ?: @$application->career_summary ?: @$application->comment ?? '')), 500));
+
+          lines.push(candName);
+          var subParts = [];
+          if(designation) subParts.push(designation);
+          if(company) subParts.push('at ' + company);
+          if(exp) subParts.push('• ' + exp);
+          if(subParts.length) lines.push(subParts.join(' '));
+
+          var contactParts = [];
+          if(email) contactParts.push(email);
+          if(phone) contactParts.push(phone);
+          if(contactParts.length) lines.push(contactParts.join(' | '));
+
+          lines.push('');
+          if(summary){
+            lines.push('PROFESSIONAL SUMMARY:');
+            lines.push(summary);
+            lines.push('');
+          }
+
+          if(candSkills && candSkills.length){
+            lines.push('CORE SKILLS & EXPERTISE:');
+            lines.push(candSkills.map(function(s){ return '• ' + s; }).join('\n'));
+            lines.push('');
+          }
+
+          if(jobTitle){
+            lines.push('TARGET POSITION OBJECTIVE:');
+            lines.push('Experienced candidate seeking to contribute strong industry expertise for the role of ' + jobTitle + '.');
+            lines.push('');
+          }
+
+          return lines.join('\n');
+        };
+
+        var currentDrawer = document.getElementById('kt_activities3') || document.querySelector('.offcanvas-body') || document;
+        var tabBtn = currentDrawer.querySelector('#tabNavEditOptimize, a[href="#edit_optimize_cv"]');
+        var optPane = currentDrawer.querySelector('#edit_optimize_cv');
+        if(!optPane) return;
+
+        var textarea = optPane.querySelector('#cvOptTextarea');
+        var scoreVal = optPane.querySelector('#cvOptScoreVal');
+        var scoreDesc = optPane.querySelector('#cvOptScoreDesc');
+        var scoreBox = optPane.querySelector('#cvOptScoreBox');
+        var missingChips = optPane.querySelector('#cvOptMissingChips');
+        var matchedChips = optPane.querySelector('#cvOptMatchedChips');
+        var missingCount = optPane.querySelector('#cvOptMissingCount');
+        var matchedCount = optPane.querySelector('#cvOptMatchedCount');
+        var wordCount = optPane.querySelector('#cvOptWordCount');
+        var charCount = optPane.querySelector('#cvOptCharCount');
+        var typingStatus = optPane.querySelector('#cvOptTypingStatus');
+
+        var jobSkills = (typeof rsDrawerHighlightedKeywords === 'function' ? rsDrawerHighlightedKeywords() : []) || @json($rcvJobSkills ?? []);
+        var candSkills = @json($rcvCandSkills ?? []);
+        var candName = @json(ucwords(@$application->full_name ?: @$application->name ?: 'Candidate'));
+        var jobTitle = @json(ucwords(@$job->title ?: @$application->job_title ?: ''));
+        var companyName = @json($rcvCompanyName ?? '');
+        var companyLogo = @json($rcvCompanyLogo ?? '');
+
+        var _optimizer = null;
+        var _initialized = false;
+        var _originalText = '';
+
+        function ensureOptimizer(){
+          var OptClass = window.AgyCvOptimizer || (typeof AgyCvOptimizer === 'function' ? AgyCvOptimizer : null);
+          if(!OptClass) return null;
+          if(!_optimizer){
+            _optimizer = new OptClass({
+              jobSkills: jobSkills,
+              candSkills: candSkills,
+              candidateName: candName,
+              targetJobTitle: jobTitle,
+              resumeText: textarea ? textarea.value : ''
+            });
+          }
+          return _optimizer;
+        }
+
+        function updateCounts(text){
+          text = text || '';
+          var chars = text.length;
+          var words = text.trim() ? text.trim().split(/\s+/).length : 0;
+          if(wordCount) wordCount.textContent = words + ' words';
+          if(charCount) charCount.textContent = chars + ' chars';
+        }
+
+        function renderScoreUI(score, matched, missing){
+          if(scoreVal) scoreVal.textContent = score + '%';
+          var isHigh = score >= 80;
+          var isMed = score >= 50 && score < 80;
+          var color = isHigh ? '#15803d' : (isMed ? '#b45309' : '#b91c1c');
+          var bg = isHigh ? '#f0fdf4' : (isMed ? '#fef3c7' : '#fee2e2');
+          var border = isHigh ? '#bbf7d0' : (isMed ? '#fde68a' : '#fecaca');
+
+          if(scoreBox){
+            scoreBox.style.background = bg;
+            scoreBox.style.borderColor = border;
+          }
+          if(scoreVal) scoreVal.style.color = color;
+
+          if(scoreDesc){
+            scoreDesc.textContent = isHigh 
+              ? 'Excellent ATS compatibility (' + matched.length + ' of ' + (matched.length + missing.length) + ' skills matched)'
+              : (isMed 
+                ? 'Good foundation (' + matched.length + ' matched). Add missing keywords below to reach 85%+.'
+                : 'Low match (' + matched.length + ' matched). Click missing skills chips to optimize.');
+          }
+
+          if(missingCount) missingCount.textContent = missing.length + ' missing';
+          if(matchedCount) matchedCount.textContent = matched.length + ' matched';
+
+          // Render Missing Chips
+          if(missingChips){
+            if(!missing || missing.length === 0){
+              missingChips.innerHTML = '<span style="font-size:11px;color:#15803d;font-weight:600;">✓ All target job skills found!</span>';
+            } else {
+              missingChips.innerHTML = '';
+              missing.slice(0, 20).forEach(function(skill){
+                var btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = 'cv-opt-chip-btn';
+                btn.innerHTML = '+ ' + skill;
+                btn.title = 'Click to insert into resume text';
+                btn.addEventListener('click', function(e){
+                  e.preventDefault();
+                  if(textarea){
+                    textarea.value = textarea.value.trim() + '\n• ' + skill;
+                    updateCounts(textarea.value);
+                    recalcScore();
+                  }
+                });
+                missingChips.appendChild(btn);
+              });
+            }
+          }
+
+          // Render Matched Chips
+          if(matchedChips){
+            if(!matched || matched.length === 0){
+              matchedChips.innerHTML = '<span style="font-size:11px;color:#94a3b8;">No target skills matched yet.</span>';
+            } else {
+              matchedChips.innerHTML = '';
+              matched.slice(0, 20).forEach(function(item){
+                var span = document.createElement('span');
+                span.className = 'cv-opt-chip-matched';
+                span.innerHTML = '✓ ' + item.name + (item.count > 1 ? ' (' + item.count + ')' : '');
+                matchedChips.appendChild(span);
+              });
+            }
+          }
+        }
+
+        function recalcScore(){
+          var opt = ensureOptimizer();
+          if(!opt || !textarea) return;
+          if(typingStatus) typingStatus.textContent = 'Calculating…';
+          var res = opt.calculateAtsScore(textarea.value);
+          renderScoreUI(res.score, res.matched, res.missing);
+          if(typingStatus) typingStatus.textContent = '✓ Live Match Active';
+        }
+
+        function initStudio(){
+          if(_initialized) return;
+          _initialized = true;
+
+          var initialText = (typeof window.getResumeTextForOptimization === 'function')
+            ? window.getResumeTextForOptimization()
+            : (window.__rcvResumeText || '');
+
+          if(textarea){
+            textarea.value = initialText;
+            _originalText = initialText;
+            updateCounts(initialText);
+          }
+
+          recalcScore();
+
+          // Debounced textarea listener
+          if(textarea){
+            var debounceTimer = null;
+            textarea.addEventListener('input', function(){
+              updateCounts(textarea.value);
+              if(typingStatus) typingStatus.textContent = 'Typing…';
+              clearTimeout(debounceTimer);
+              debounceTimer = setTimeout(recalcScore, 50);
+            });
+          }
+
+          // Snippet buttons
+          optPane.querySelectorAll('.cv-opt-snippet-btn[data-snippet]').forEach(function(btn){
+            btn.addEventListener('click', function(e){
+              e.preventDefault();
+              var snip = btn.getAttribute('data-snippet');
+              var snippetText = '';
+              if(snip === 'summary'){
+                snippetText = '\n\nPROFESSIONAL SUMMARY:\nSeasoned professional with proven track record of driving impactful business results, optimizing operational workflows, and collaborating cross-functionally to achieve strategic hiring objectives.';
+              } else if(snip === 'experience'){
+                snippetText = '\n\nPROFESSIONAL EXPERIENCE:\nSenior Specialist | Enterprise Corp (2021 – Present)\n• Spearheaded cross-functional initiatives delivering 35% improvement in core metrics.\n• Managed enterprise lifecycle processes with strict adherence to compliance standards.';
+              } else if(snip === 'skills'){
+                snippetText = '\n\nTECHNICAL & PROFESSIONAL SKILLS:\n• Industry Methodologies & Best Practices\n• Strategic Planning & Stakeholder Management';
+              } else if(snip === 'education'){
+                snippetText = '\n\nEDUCATION & CREDENTIALS:\n• Bachelor of Science / Professional Degree\n• Relevant Industry Certification';
+              }
+              if(textarea && snippetText){
+                textarea.value = textarea.value.trim() + snippetText;
+                updateCounts(textarea.value);
+                recalcScore();
+                textarea.focus();
+              }
+            });
+          });
+
+          // Reset button
+          var resetBtn = optPane.querySelector('#cvOptResetBtn');
+          if(resetBtn){
+            resetBtn.addEventListener('click', function(e){
+              e.preventDefault();
+              if(confirm('Reset all changes back to originally extracted text?')){
+                if(textarea){
+                  textarea.value = _originalText || (typeof window.getResumeTextForOptimization === 'function' ? window.getResumeTextForOptimization() : '');
+                  updateCounts(textarea.value);
+                  recalcScore();
+                }
+              }
+            });
+          }
+
+          // Back to resume button
+          var backBtn = optPane.querySelector('#cvOptBackToResumeBtn');
+          if(backBtn){
+            backBtn.addEventListener('click', function(e){
+              e.preventDefault();
+              var rcvTab = currentDrawer.querySelector('a[href="#resume_cv"], button[data-bs-target="#resume_cv"]');
+              if(rcvTab){
+                rcvTab.click();
+                if(window.jQuery && $(rcvTab).tab) $(rcvTab).tab('show');
+              }
+            });
+          }
+
+          // Open in New Tab Button
+          var newTabBtn = optPane.querySelector('#cvOptOpenNewTabBtn');
+          if(newTabBtn){
+            newTabBtn.addEventListener('click', function(e){
+              e.preventDefault();
+              window.cvOptOpenInNewTab();
+            });
+          }
+
+          // Vector PDF Exports
+          async function doExport(isBranded, isHighlighted){
+            var OptClass = window.AgyCvOptimizer || (typeof AgyCvOptimizer === 'function' ? AgyCvOptimizer : null);
+            if(!OptClass){
+              alert('PDF compiler is initializing. Please try again in a moment.');
+              return;
+            }
+            var text = textarea ? textarea.value : '';
+            var opt = ensureOptimizer() || new OptClass({ jobSkills: jobSkills, candidateName: candName, targetJobTitle: jobTitle });
+            
+            var logoUri = null;
+            if(isBranded && companyLogo && typeof rsLogoDataUri === 'function'){
+              try { logoUri = await rsLogoDataUri(companyLogo); } catch(e){}
+            }
+
+            try {
+              if(typingStatus) typingStatus.textContent = 'Compiling PDF…';
+              var blob = await opt.exportOptimizedPdf(text, {
+                candidateName: candName,
+                jobTitle: jobTitle,
+                brandHeader: isBranded,
+                companyName: companyName,
+                companyLogo: logoUri,
+                highlightKeywords: isHighlighted ? jobSkills : false
+              });
+              var cleanName = (candName || 'Candidate').replace(/[^a-zA-Z0-9_\-]/g, '_');
+              var suffix = isBranded ? '_Branded' : (isHighlighted ? '_Highlighted' : '');
+              OptClass.downloadBlob(blob, cleanName + '_ATS_Optimized' + suffix + '.pdf');
+              if(typingStatus) typingStatus.textContent = '✓ Downloaded';
+              setTimeout(function(){ if(typingStatus) typingStatus.textContent = '✓ Live Match Active'; }, 3000);
+            } catch(err){
+              console.error('Export failed:', err);
+              alert('Could not export PDF. Error: ' + err.message);
+              if(typingStatus) typingStatus.textContent = 'Export error';
+            }
+          }
+
+          var btnClean = optPane.querySelector('#cvOptBtnCleanPdf');
+          if(btnClean) btnClean.addEventListener('click', function(e){ e.preventDefault(); doExport(false, false); });
+
+          var btnBranded = optPane.querySelector('#cvOptBtnBrandedPdf');
+          if(btnBranded) btnBranded.addEventListener('click', function(e){ e.preventDefault(); doExport(true, false); });
+
+          var btnHighlighted = optPane.querySelector('#cvOptBtnHighlightedPdf');
+          if(btnHighlighted) btnHighlighted.addEventListener('click', function(e){ e.preventDefault(); doExport(false, true); });
+        }
+
+        // Tab activation listeners
+        if(tabBtn){
+          tabBtn.addEventListener('click', function(){
+            setTimeout(initStudio, 80);
+          });
+        }
+        if(optPane.classList.contains('active') || optPane.classList.contains('show')){
+          setTimeout(initStudio, 150);
+        }
+
+        // Standalone New Tab Launcher
+        window.cvOptOpenInNewTab = function(){
+          var currentText = (optPane.querySelector('#cvOptTextarea') && optPane.querySelector('#cvOptTextarea').value) ||
+            (typeof window.getResumeTextForOptimization === 'function' ? window.getResumeTextForOptimization() : (window.__rcvResumeText || ''));
+
+          var win = window.open('', '_blank');
+          if(!win){
+            alert('Popup blocked. Please allow popups to open the CV Studio in a new tab.');
+            return;
+          }
+
+          var html = '<!DOCTYPE html>' +
+'<html lang="en">' +
+'<head>' +
+'  <meta charset="UTF-8">' +
+'  <meta name="viewport" content="width=device-width, initial-scale=1.0">' +
+'  <title>Edit & Optimize CV — ' + candName + '</title>' +
+'  <link rel="preconnect" href="https://fonts.googleapis.com">' +
+'  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>' +
+'  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">' +
+'  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/pdfmake.min.js"><\/script>' +
+'  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/vfs_fonts.js"><\/script>' +
+'  <script src="' + window.location.origin + '/js/opendoc/AgyCvOptimizer.js"><\/script>' +
+'  <style>' +
+'    * { box-sizing: border-box; margin: 0; padding: 0; font-family: \'Poppins\', -apple-system, sans-serif; }' +
+'    body { background: #0f172a; color: #1e293b; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }' +
+'    .topbar { background: #1e293b; border-bottom: 1px solid #334155; padding: 12px 24px; display: flex; align-items: center; justify-content: space-between; color: #fff; flex-shrink: 0; }' +
+'    .top-left { display: flex; align-items: center; gap: 14px; }' +
+'    .top-badge { background: #0d9488; color: #fff; padding: 4px 12px; border-radius: 999px; font-size: 11px; font-weight: 700; letter-spacing: 0.5px; }' +
+'    .top-title { font-size: 16px; font-weight: 700; color: #f8fafc; }' +
+'    .top-sub { font-size: 12px; color: #94a3b8; }' +
+'    .top-actions { display: flex; align-items: center; gap: 10px; }' +
+'    .btn { padding: 7px 16px; border-radius: 7px; font-size: 12px; font-weight: 600; cursor: pointer; border: none; display: inline-flex; align-items: center; gap: 6px; transition: all .15s; }' +
+'    .btn-teal { background: #0d9488; color: #fff; }' +
+'    .btn-teal:hover { background: #0f766e; }' +
+'    .btn-sky { background: #0284c7; color: #fff; }' +
+'    .btn-sky:hover { background: #0369a1; }' +
+'    .btn-amber { background: #d97706; color: #fff; }' +
+'    .btn-amber:hover { background: #b45309; }' +
+'    .btn-dark { background: #334155; color: #e2e8f0; }' +
+'    .btn-dark:hover { background: #475569; }' +
+'    .main-grid { display: grid; grid-template-columns: 380px 1fr; flex: 1; overflow: hidden; background: #f8fafc; }' +
+'    .sidebar { background: #fff; border-right: 1px solid #e2e8f0; padding: 20px; display: flex; flex-direction: column; gap: 16px; overflow-y: auto; }' +
+'    .card { background: #fff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 14px; box-shadow: 0 1px 3px rgba(0,0,0,.03); }' +
+'    .card-title { font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }' +
+'    .score-box { display: flex; align-items: center; gap: 14px; padding: 14px; background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 9px; }' +
+'    .score-val { font-size: 34px; font-weight: 800; color: #15803d; line-height: 1; }' +
+'    .score-desc { font-size: 12px; color: #166534; line-height: 1.4; }' +
+'    .chips { display: flex; flex-wrap: wrap; gap: 6px; max-height: 180px; overflow-y: auto; }' +
+'    .chip-btn { padding: 4px 10px; font-size: 11px; font-weight: 600; border-radius: 999px; border: 1px solid #bae6fd; background: #f0f9ff; color: #0369a1; cursor: pointer; transition: all .12s; }' +
+'    .chip-btn:hover { background: #0284c7; color: #fff; }' +
+'    .chip-matched { padding: 3px 9px; font-size: 11px; font-weight: 600; border-radius: 999px; border: 1px solid #bbf7d0; background: #f0fdf4; color: #15803d; }' +
+'    .editor-pane { display: flex; flex-direction: column; background: #fff; flex: 1; overflow: hidden; }' +
+'    .editor-toolbar { padding: 10px 20px; background: #f1f5f9; border-bottom: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; }' +
+'    .editor-textarea { flex: 1; width: 100%; border: none; outline: none; padding: 24px; font-size: 13.5px; line-height: 1.65; color: #0f172a; resize: none; overflow-y: auto; }' +
+'    .footer { padding: 10px 20px; background: #f8fafc; border-top: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: space-between; font-size: 11.5px; color: #64748b; flex-shrink: 0; }' +
+'  </style>' +
+'</head>' +
+'<body>' +
+'  <div class="topbar">' +
+'    <div class="top-left">' +
+'      <span class="top-badge">⚡ JERO CV STUDIO</span>' +
+'      <div>' +
+'        <div class="top-title">' + candName + '</div>' +
+'        <div class="top-sub">Target Position: ' + (jobTitle || 'Verified Candidate') + '</div>' +
+'      </div>' +
+'    </div>' +
+'    <div class="top-actions">' +
+'      <button class="btn btn-teal" id="btnClean">Clean ATS PDF</button>' +
+'      <button class="btn btn-sky" id="btnBranded">Branded PDF</button>' +
+'      <button class="btn btn-amber" id="btnHighlighted">Highlighted PDF</button>' +
+'      <button class="btn btn-dark" onclick="window.close()">Close Tab</button>' +
+'    </div>' +
+'  </div>' +
+'  <div class="main-grid">' +
+'    <div class="sidebar">' +
+'      <div class="card">' +
+'        <div class="card-title">Real-Time ATS Match Score</div>' +
+'        <div class="score-box" id="scoreBox">' +
+'          <div class="score-val" id="scoreVal">--%</div>' +
+'          <div class="score-desc" id="scoreDesc">Calculating ATS score...</div>' +
+'        </div>' +
+'      </div>' +
+'      <div class="card">' +
+'        <div class="card-title">Missing Target Job Skills (1-Click Insert)</div>' +
+'        <div id="missingChips" class="chips"></div>' +
+'      </div>' +
+'      <div class="card">' +
+'        <div class="card-title">Matched Skills</div>' +
+'        <div id="matchedChips" class="chips"></div>' +
+'      </div>' +
+'      <div class="card" style="background:#f0fdfa;border-color:#99f6e4;">' +
+'        <div class="card-title" style="color:#0f766e;">Export Guarantee</div>' +
+'        <p style="font-size:11.5px;color:#0f766e;line-height:1.45;">Vector PDF exports compile directly in your browser with 0% server CPU and standard recruiter typography.</p>' +
+'      </div>' +
+'    </div>' +
+'    <div class="editor-pane">' +
+'      <div class="editor-toolbar">' +
+'        <div style="display:flex;gap:8px;">' +
+'          <button class="btn btn-dark" id="btnSnipSum">+ Summary</button>' +
+'          <button class="btn btn-dark" id="btnSnipExp">+ Experience</button>' +
+'          <button class="btn btn-dark" id="btnSnipSkills">+ Skills</button>' +
+'          <button class="btn btn-dark" id="btnSnipEdu">+ Education</button>' +
+'          <button class="btn btn-dark" id="btnCopy" style="background:#0284c7;color:#fff;">📋 Copy Text</button>' +
+'        </div>' +
+'        <div style="font-size:11.5px;color:#64748b;">' +
+'          <span id="wordCnt">0 words</span> • <span id="charCnt">0 chars</span>' +
+'        </div>' +
+'      </div>' +
+'      <textarea class="editor-textarea" id="mainText" spellcheck="false"></textarea>' +
+'      <div class="footer">' +
+'        <span>GOD-Level ATS Candidate Optimizer • In-Browser WASM Architecture</span>' +
+'        <span style="color:#0f766e;font-weight:600;">Original file remains untouched in Cloudflare R2</span>' +
+'      </div>' +
+'    </div>' +
+'  </div>' +
+'  <script>' +
+'    var jobSkills = ' + JSON.stringify(jobSkills) + ';' +
+'    var candSkills = ' + JSON.stringify(candSkills) + ';' +
+'    var candName = ' + JSON.stringify(candName) + ';' +
+'    var jobTitle = ' + JSON.stringify(jobTitle) + ';' +
+'    var companyName = ' + JSON.stringify(companyName) + ';' +
+'    var companyLogo = ' + JSON.stringify(companyLogo) + ';' +
+'    var resumeText = ' + JSON.stringify(currentText) + ';' +
+'    var textarea = document.getElementById("mainText");' +
+'    textarea.value = resumeText;' +
+'    var OptClass = window.AgyCvOptimizer;' +
+'    var optimizer = null;' +
+'    if(OptClass){' +
+'      optimizer = new OptClass({' +
+'        jobSkills: jobSkills,' +
+'        candSkills: candSkills,' +
+'        candidateName: candName,' +
+'        targetJobTitle: jobTitle,' +
+'        resumeText: resumeText' +
+'      });' +
+'    }' +
+'    function updateCounters(){' +
+'      var val = textarea.value || "";' +
+'      document.getElementById("charCnt").textContent = val.length + " chars";' +
+'      document.getElementById("wordCnt").textContent = (val.trim() ? val.trim().split(/\\s+/).length : 0) + " words";' +
+'    }' +
+'    function recalc(){' +
+'      updateCounters();' +
+'      if(!optimizer) return;' +
+'      var res = optimizer.calculateAtsScore(textarea.value);' +
+'      var score = res.score;' +
+'      var isHigh = score >= 80;' +
+'      var isMed = score >= 50 && score < 80;' +
+'      var valEl = document.getElementById("scoreVal");' +
+'      var descEl = document.getElementById("scoreDesc");' +
+'      var boxEl = document.getElementById("scoreBox");' +
+'      valEl.textContent = score + "%";' +
+'      valEl.style.color = isHigh ? "#15803d" : (isMed ? "#b45309" : "#b91c1c");' +
+'      boxEl.style.background = isHigh ? "#f0fdf4" : (isMed ? "#fef3c7" : "#fee2e2");' +
+'      boxEl.style.borderColor = isHigh ? "#bbf7d0" : (isMed ? "#fde68a" : "#fecaca");' +
+'      descEl.textContent = isHigh ? "Excellent match (" + res.matched.length + " of " + (res.matched.length + res.missing.length) + " skills)" : (isMed ? "Good match (" + res.matched.length + " skills). Insert missing skills to reach 85%+." : "Low match (" + res.matched.length + " skills). Click chips to optimize.");' +
+'      var mc = document.getElementById("missingChips");' +
+'      if(!res.missing || res.missing.length === 0){' +
+'        mc.innerHTML = "<span style=\'font-size:11px;color:#15803d;font-weight:600;\'>✓ All skills matched!</span>";' +
+'      } else {' +
+'        mc.innerHTML = "";' +
+'        res.missing.forEach(function(s){' +
+'          var b = document.createElement("button");' +
+'          b.className = "chip-btn";' +
+'          b.textContent = "+ " + s;' +
+'          b.onclick = function(){ textarea.value = textarea.value.trim() + "\\n• " + s; recalc(); };' +
+'          mc.appendChild(b);' +
+'        });' +
+'      }' +
+'      var matchC = document.getElementById("matchedChips");' +
+'      if(!res.matched || res.matched.length === 0){' +
+'        matchC.innerHTML = "<span style=\'font-size:11px;color:#94a3b8;\'>No skills matched yet.</span>";' +
+'      } else {' +
+'        matchC.innerHTML = "";' +
+'        res.matched.forEach(function(m){' +
+'          var sp = document.createElement("span");' +
+'          sp.className = "chip-matched";' +
+'          sp.textContent = "✓ " + m.name + (m.count > 1 ? " (" + m.count + ")" : "");' +
+'          matchC.appendChild(sp);' +
+'        });' +
+'      }' +
+'    }' +
+'    textarea.addEventListener("input", recalc);' +
+'    recalc();' +
+'    document.getElementById("btnSnipSum").onclick = function(){ textarea.value += "\\n\\nPROFESSIONAL SUMMARY:\\nExperienced professional with strong background in delivering results."; recalc(); };' +
+'    document.getElementById("btnSnipExp").onclick = function(){ textarea.value += "\\n\\nPROFESSIONAL EXPERIENCE:\\nSenior Specialist | Enterprise (2021 – Present)\\n• Drove key strategic initiatives across business units."; recalc(); };' +
+'    document.getElementById("btnSnipSkills").onclick = function(){ textarea.value += "\\n\\nCORE SKILLS:\\n• Technical Excellence\\n• Strategic Problem Solving"; recalc(); };' +
+'    document.getElementById("btnSnipEdu").onclick = function(){ textarea.value += "\\n\\nEDUCATION:\\n• Bachelor Degree in Relevant Field"; recalc(); };' +
+'    document.getElementById("btnCopy").onclick = function(){ navigator.clipboard.writeText(textarea.value); alert("Copied resume text to clipboard!"); };' +
+'    async function exportPdf(branded, highlighted){' +
+'      if(!optimizer) return;' +
+'      try {' +
+'        var blob = await optimizer.exportOptimizedPdf(textarea.value, {' +
+'          candidateName: candName,' +
+'          jobTitle: jobTitle,' +
+'          brandHeader: branded,' +
+'          companyName: companyName,' +
+'          highlightKeywords: highlighted ? jobSkills : false' +
+'        });' +
+'        var cleanName = (candName || "Candidate").replace(/[^a-zA-Z0-9_\\-]/g, "_");' +
+'        var suffix = branded ? "_Branded" : (highlighted ? "_Highlighted" : "");' +
+'        AgyCvOptimizer.downloadBlob(blob, cleanName + "_ATS_Optimized" + suffix + ".pdf");' +
+'      } catch(e){' +
+'        alert("Export failed: " + e.message);' +
+'      }' +
+'    }' +
+'    document.getElementById("btnClean").onclick = function(){ exportPdf(false, false); };' +
+'    document.getElementById("btnBranded").onclick = function(){ exportPdf(true, false); };' +
+'    document.getElementById("btnHighlighted").onclick = function(){ exportPdf(false, true); };' +
+'  <\/script>' +
+'</body>' +
+'</html>';
+
+          win.document.open();
+          win.document.write(html);
+          win.document.close();
+        };
       })();
       </script>
     </div>
@@ -9068,12 +10042,19 @@ window.__rsEnsureOpenDocLab=rsEnsureOpenDocLab;
         studio.id = 'rdcGroup6Studio';
         studio.style.cssText = 'display:none;margin-top:10px;padding:12px;background:#f0fdfa;border:1px solid #99f6e4;border-radius:8px;';
         studio.innerHTML =
-          '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">' +
+          '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:6px;">' +
             '<div style="display:flex;align-items:center;gap:8px;">' +
               '<span style="font-weight:700;font-size:12.5px;color:#0f766e;">Live ATS Optimizer Studio</span>' +
               '<span id="rdcGroup6ScoreBadge" style="font-size:11px;font-weight:700;padding:2px 8px;border-radius:999px;background:#dcfce7;color:#15803d;">Calculating…</span>' +
             '</div>' +
-            '<span style="font-size:11px;color:#0d9488;font-weight:500;">0% Server Load • Instant Browser Export</span>' +
+            '<div style="display:flex;align-items:center;gap:6px;">' +
+              '<button type="button" id="rdcBtnJumpToTab" title="Open full studio in the resume space tab" style="font-size:11px;color:#0f766e;background:#ccfbf1;border:1px solid #99f6e4;border-radius:6px;padding:3px 9px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:4px;">' +
+                '<span>Open in Resume Tab ↗</span>' +
+              '</button>' +
+              '<button type="button" id="rdcBtnJumpToNewWindow" title="Open studio in a new browser tab" style="font-size:11px;color:#0284c7;background:#e0f2fe;border:1px solid #bae6fd;border-radius:6px;padding:3px 9px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:4px;">' +
+                '<span>New Tab ↗</span>' +
+              '</button>' +
+            '</div>' +
           '</div>' +
           '<div style="background:#fff;border:1px solid #ccfbf1;border-radius:6px;padding:9px 11px;margin-bottom:10px;">' +
             '<div style="font-size:10.5px;font-weight:700;color:#0f766e;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">' +
@@ -9353,6 +10334,33 @@ window.__rsEnsureOpenDocLab=rsEnsureOpenDocLab;
         e.preventDefault();
         e.stopPropagation();
         triggerGroup6Download();
+      });
+    }
+
+    var jumpTabBtn = document.getElementById('rdcBtnJumpToTab');
+    if(jumpTabBtn && !jumpTabBtn.__wired){
+      jumpTabBtn.__wired = true;
+      jumpTabBtn.addEventListener('click', function(e){
+        e.preventDefault();
+        e.stopPropagation();
+        closeRdc();
+        var optTab = document.getElementById('tabNavEditOptimize') || document.querySelector('a[href="#edit_optimize_cv"]');
+        if(optTab){
+          optTab.click();
+          if(window.jQuery && $(optTab).tab) $(optTab).tab('show');
+        }
+      });
+    }
+
+    var jumpWinBtn = document.getElementById('rdcBtnJumpToNewWindow');
+    if(jumpWinBtn && !jumpWinBtn.__wired){
+      jumpWinBtn.__wired = true;
+      jumpWinBtn.addEventListener('click', function(e){
+        e.preventDefault();
+        e.stopPropagation();
+        if(typeof window.cvOptOpenInNewTab === 'function'){
+          window.cvOptOpenInNewTab();
+        }
       });
     }
   }
