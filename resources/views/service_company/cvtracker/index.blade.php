@@ -3086,8 +3086,4 @@
             setTimeout(cvhRenderAppliedFiltersCard, 700);
         });
     </script>
-    <script src="{{ asset('js/pdf-lib.min.js') }}"></script>
-    <script src="{{ asset('js/opendoc/AgyWasmEngine.js') }}"></script>
-    <script src="{{ asset('js/opendoc/AgyResumeRenderer.js') }}"></script>
-    <script src="{{ asset('js/opendoc/AgyForwardResumeHelper.js') }}"></script>
 @endpush
