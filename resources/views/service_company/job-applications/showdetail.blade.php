@@ -8346,6 +8346,8 @@ window.__rsEnsureDocxConversion=rsEnsureDocxConversion;
 window.__rsEnsureOpenDocLab=rsEnsureOpenDocLab;
 })();
 </script>
+<script src="{{ asset('js/opendoc/AgyWasmEngine.js') }}"></script>
+<script src="{{ asset('js/opendoc/AgyBatchExporter.js') }}"></script>
 
 {{-- Overlay backdrop --}}
 <div id="rdcOverlay" class="rdc-overlay" aria-hidden="true"></div>
@@ -9016,13 +9018,49 @@ window.__rsEnsureOpenDocLab=rsEnsureOpenDocLab;
     document.addEventListener('keydown', onEsc);
   }
 
+  function preloadOnDemandRdcAssets(){
+    /* Ultra-lean on-demand preload: ONLY triggers when Download Resume Center opens.
+       Zero bytes of overhead during candidate browsing. */
+    ensureDownloadCenterR2Urls().then(function(){
+      var data = typeof readData === 'function' ? readData() : {};
+      var testSources = rdcCollectDownloadSources([r2DirectUrl,r2PublicUrl,originalR2DirectUrl,originalR2PublicUrl,dlUrl]);
+      var cacheKey = testSources[0] || (data && (data.id || data.name) ? 'cand_' + (data.id || data.name) : '');
+      window.__agyResumeCache = window.__agyResumeCache || {};
+
+      // 1. Pre-fetch candidate resume binary into memory cache silently
+      if(cacheKey && (!window.__agyResumeCache[cacheKey] || !window.__agyResumeCache[cacheKey].byteLength)){
+        fetchResumeBytesFromSources(testSources).then(function(bytes){
+          if(bytes && bytes.byteLength) window.__agyResumeCache[cacheKey] = bytes;
+        }).catch(function(e){ console.warn('On-demand resume preload skipped:', e); });
+      }
+
+      // 2. Pre-embed company logo & metric fonts in background
+      if(data && data.reportCompanyLogo && typeof rsLogoDataUri === 'function'){
+        rsLogoDataUri(data.reportCompanyLogo).catch(function(){});
+      }
+      if(typeof agyEnsureMetricFonts === 'function'){
+        agyEnsureMetricFonts().catch(function(){});
+      }
+
+      // 3. Pre-warm OpenDoc WASM engine if DOCX
+      if(resumeExt === 'DOCX' && typeof rsEnsureOpenDocLab === 'function'){
+        rsEnsureOpenDocLab(false).catch(function(){});
+      }
+
+      // 4. Pre-scan matched keywords
+      if(typeof rsDrawerHighlightedKeywords === 'function'){
+        try { rsDrawerHighlightedKeywords(); } catch(e){}
+      }
+    }).catch(function(){});
+  }
+
   function openRdc(){
     if(!hasDownloadableResume()){
       showNoResumeMessage();
       return;
     }
     renderOpenRdc();
-    ensureDownloadCenterR2Urls();
+    preloadOnDemandRdcAssets();
   }
 
   function closeRdc(){
