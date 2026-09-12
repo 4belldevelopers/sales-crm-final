@@ -5133,6 +5133,7 @@ function rsLogoDataUri(rawUrl){
     .catch(function(){ return null; });
   return rsLogoCache[rawUrl];
 }
+window.rsLogoDataUri = rsLogoDataUri;
 function preloadRecruiterSummaryAssets(){
   var data=null;
   try{ data=readData(); }catch(ex){}
@@ -6449,6 +6450,7 @@ async function mergePreScreenedReportAndResume(reportBlob,resumeBlob,fileName,me
   var mergedBytes=await merged.save();
   downloadBlob(new Blob([mergedBytes],{type:'application/pdf'}),fileName);
 }
+window.mergePreScreenedReportAndResume = mergePreScreenedReportAndResume;
 function dataUriBytes(dataUri){
   var match=String(dataUri||'').match(/^data:([^;]+);base64,(.+)$/i);
   if(!match) return null;
@@ -9392,7 +9394,22 @@ window.__rsEnsureCvOptimizer=rsEnsureCvOptimizer;
       // 1. Pre-fetch candidate resume binary into memory cache silently
       if(cacheKey && (!window.__agyResumeCache[cacheKey] || !window.__agyResumeCache[cacheKey].byteLength)){
         fetchResumeBytesFromSources(testSources).then(function(bytes){
-          if(bytes && bytes.byteLength) window.__agyResumeCache[cacheKey] = bytes;
+          if(bytes && bytes.byteLength){
+            window.__agyResumeCache[cacheKey] = bytes;
+            if(resumeExt === 'DOCX' && typeof mammoth !== 'undefined'){
+              try {
+                mammoth.convertToHtml({ arrayBuffer: bytes.buffer || bytes }).then(function(res){
+                  if(res && res.value) window.__rcvResumeHtml = res.value;
+                }).catch(function(){});
+                mammoth.extractRawText({ arrayBuffer: bytes.buffer || bytes }).then(function(res){
+                  if(res && res.value){
+                    window.__rcvResumeText = res.value;
+                    window.__rdcPreloadedResumeText = res.value;
+                  }
+                }).catch(function(){});
+              } catch(e){}
+            }
+          }
         }).catch(function(e){ console.warn('On-demand resume preload skipped:', e); });
       }
 
@@ -9493,7 +9510,6 @@ window.__rsEnsureCvOptimizer=rsEnsureCvOptimizer;
 
   function openCvOptimizerWorkspace(optId){
     optId = parseInt(optId, 10) || 61;
-    var currentText = (typeof getResumeTextForOptimization === 'function' ? getResumeTextForOptimization() : '') || (window.__rcvResumeText || '');
     var candName = @json(ucwords(@$application->full_name ?: @$application->name ?: 'Candidate'));
     var jobTitle = @json(ucwords(@$job->title ?: @$application->job_title ?: ''));
     var companyName = @json($rcvCompanyName ?? '');
@@ -9504,6 +9520,18 @@ window.__rsEnsureCvOptimizer=rsEnsureCvOptimizer;
     try {
       if(typeof readData === 'function') candidateData = readData() || {};
     } catch(e){}
+
+    // Collect all candidate resume sources for direct fetch in new tab if needed
+    var resumeSources = [];
+    try {
+      if(typeof rdcCollectDownloadSources === 'function'){
+        resumeSources = rdcCollectDownloadSources([r2DirectUrl, r2PublicUrl, originalR2DirectUrl, originalR2PublicUrl, dlUrl]);
+      }
+    } catch(e){}
+    var resumeExtLower = (typeof resumeExt !== 'undefined' ? resumeExt : '').toLowerCase();
+    var cachedHtml = window.__rcvResumeHtml || (document.getElementById('rcvHtml') ? document.getElementById('rcvHtml').innerHTML : '') || '';
+    var cachedText = window.__rcvResumeText || window.__rdcPreloadedResumeText || (document.getElementById('rcvHtml') ? document.getElementById('rcvHtml').innerText : '') || '';
+    var fallbackProfileText = (typeof getResumeTextForOptimization === 'function') ? getResumeTextForOptimization() : '';
 
     var win = window.open('', '_blank');
     if(!win){
@@ -9524,6 +9552,8 @@ window.__rsEnsureCvOptimizer=rsEnsureCvOptimizer;
 '  <link rel="preconnect" href="https://fonts.googleapis.com">\n' +
 '  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>\n' +
 '  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">\n' +
+'  <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.5.0/mammoth.browser.min.js"><\/script>\n' +
+'  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.11.338/pdf.min.js"><\/script>\n' +
 '  <script src="/js/pdfmake.min.js"><\/script>\n' +
 '  <script src="/js/vfs_fonts.min.js"><\/script>\n' +
 '  <script src="/js/pdf-lib.min.js"><\/script>\n' +
@@ -9551,8 +9581,8 @@ window.__rsEnsureCvOptimizer=rsEnsureCvOptimizer;
 '    .spin { display: inline-block; width: 12px; height: 12px; border: 2px solid #fff; border-top-color: transparent; border-radius: 50%; animation: spin .6s linear infinite; }\n' +
 '    @keyframes spin { to { transform: rotate(360deg); } }\n' +
 '    .workspace-grid { display: flex; height: calc(100vh - 56px); overflow: hidden; }\n' +
-'    .editor-column { width: 44%; min-width: 420px; max-width: 600px; border-right: 1px solid #e2e8f0; background: #ffffff; display: flex; flex-direction: column; overflow: hidden; }\n' +
-'    .studio-top { padding: 14px 16px 10px; border-bottom: 1px solid #f1f5f9; overflow-y: auto; max-height: 42%; flex-shrink: 0; background: #fafbfc; }\n' +
+'    .editor-column { width: 36%; min-width: 360px; max-width: 460px; border-right: 1px solid #e2e8f0; background: #ffffff; display: flex; flex-direction: column; overflow: hidden; }\n' +
+'    .studio-top { padding: 14px 16px 10px; border-bottom: 1px solid #f1f5f9; overflow-y: auto; max-height: 44%; flex-shrink: 0; background: #fafbfc; }\n' +
 '    .ats-card { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px 14px; margin-bottom: 10px; box-shadow: 0 1px 3px rgba(0,0,0,0.02); display: flex; align-items: center; justify-content: space-between; gap: 12px; }\n' +
 '    .ats-gauge { font-size: 20px; font-weight: 700; color: #15803d; line-height: 1; }\n' +
 '    .ats-meta { flex: 1; }\n' +
@@ -9575,20 +9605,22 @@ window.__rsEnsureCvOptimizer=rsEnsureCvOptimizer;
 '    .editor-textarea { flex: 1; width: 100%; border: 1.5px solid #cbd5e1; border-radius: 7px; padding: 12px; font-family: "Poppins", sans-serif; font-size: 12px; line-height: 1.6; color: #0f172a; resize: none; outline: none; background: #fafbfc; transition: border-color .15s, background .15s; }\n' +
 '    .editor-textarea:focus { border-color: #0d9488; background: #ffffff; box-shadow: 0 0 0 3px rgba(13,148,136,.08); }\n' +
 '    .editor-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 8px; font-size: 10.5px; color: #94a3b8; }\n' +
-'    .preview-column { flex: 1; background: #f1f5f9; overflow-y: auto; padding: 24px 16px 40px; display: flex; flex-direction: column; align-items: center; }\n' +
-'    .preview-statusbar { width: 794px; max-width: 100%; display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; font-size: 11.5px; color: #64748b; font-weight: 500; }\n' +
-'    .pv-paper { width: 794px; max-width: 100%; min-height: 1000px; background: #ffffff; box-shadow: 0 4px 20px rgba(15,23,42,0.08); border-radius: 4px; padding: 46px 48px; position: relative; }\n' +
-'    .pv-report-box { background: #fdf2f8; border: 1.5px solid #fbcfe8; border-radius: 8px; padding: 14px 16px; margin-bottom: 22px; }\n' +
-'    .pv-brand-box { background: #f0fdfa; border: 1.5px solid #99f6e4; border-radius: 8px; padding: 12px 16px; margin-bottom: 18px; display: flex; align-items: center; justify-content: space-between; }\n' +
-'    .pv-cand-head { display: flex; justify-content: space-between; align-items: flex-start; padding-bottom: 10px; margin-bottom: 14px; border-bottom: 2px solid #0d9488; }\n' +
-'    .pv-cand-name { font-size: 20px; font-weight: 700; color: #0f172a; line-height: 1.2; margin-bottom: 3px; }\n' +
-'    .pv-cand-title { font-size: 12.5px; font-weight: 600; color: #0284c7; }\n' +
-'    .pv-badge { font-size: 9.5px; font-weight: 700; color: #0f766e; text-align: right; text-transform: uppercase; letter-spacing: 0.5px; }\n' +
-'    .pv-section-title { font-size: 11.5px; font-weight: 700; color: #0f766e; text-transform: uppercase; letter-spacing: 0.8px; margin-top: 14px; margin-bottom: 4px; padding-bottom: 3px; border-bottom: 1.5px solid #ccfbf1; }\n' +
-'    .pv-bullet { display: flex; align-items: flex-start; gap: 8px; font-size: 11.5px; line-height: 1.55; color: #334155; margin-bottom: 3px; }\n' +
-'    .pv-bullet-dot { color: #0d9488; font-weight: 700; }\n' +
-'    .pv-line { font-size: 11.5px; line-height: 1.55; color: #334155; margin-bottom: 4px; }\n' +
-'    .kw-hl { background: #fef08a; color: #713f12; font-weight: 600; padding: 1px 4px; border-radius: 3px; }\n' +
+'    /* Preview Column matching exactly [Resume / CV] tab */\n' +
+'    .preview-column { flex: 1; background: #525659; overflow-y: auto; padding: 24px 16px 40px; display: flex; flex-direction: column; align-items: center; }\n' +
+'    .preview-statusbar { width: 820px; max-width: 100%; display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; font-size: 11.5px; color: #e2e8f0; font-weight: 500; }\n' +
+'    .rcv-html { background: #ffffff; width: 100%; max-width: 820px; margin: 0 auto; padding: 44px 52px; color: #1f2937; font-size: 13px; line-height: 1.65; box-shadow: 0 4px 16px rgba(0,0,0,.35); word-wrap: break-word; min-height: 1050px; border-radius: 2px; outline: none; position: relative; transition: box-shadow 0.15s; }\n' +
+'    .rcv-html:focus { box-shadow: 0 6px 20px rgba(0,0,0,.45), 0 0 0 2px rgba(13,148,136,.35); }\n' +
+'    .rcv-html * { max-width: 100%; font-size: inherit; }\n' +
+'    .rcv-html p { margin: 0 0 8px; }\n' +
+'    .rcv-html h1, .rcv-html h2, .rcv-html h3 { font-size: 14px; font-weight: 700; margin: 14px 0 6px; color: #0f172a; }\n' +
+'    .rcv-html ul, .rcv-html ol { margin: 0 0 8px 20px; }\n' +
+'    .rcv-html table { border-collapse: collapse; width: 100%; margin: 8px 0; }\n' +
+'    .rcv-html td, .rcv-html th { border: 1px solid #e2e8f0; padding: 4px 6px; }\n' +
+'    .rcv-html img { height: auto; max-width: 100%; }\n' +
+'    .rcv-html mark.rcv-hit { background: rgba(251,191,36,.55); color: inherit; border-radius: 2px; padding: 0 2px; }\n' +
+'    .rcv-html mark.rcv-hit-active { background: rgba(249,115,22,.65); box-shadow: 0 0 0 2px rgba(249,115,22,.4); }\n' +
+'    .pv-report-box { background: #fdf2f8; border: 1.5px solid #fbcfe8; border-radius: 8px; padding: 14px 16px; margin-bottom: 22px; user-select: none; }\n' +
+'    .pv-brand-box { background: #f0fdfa; border: 1.5px solid #99f6e4; border-radius: 8px; padding: 12px 16px; margin-bottom: 18px; display: flex; align-items: center; justify-content: space-between; user-select: none; }\n' +
 '  </style>\n' +
 '</head>\n' +
 '<body>\n' +
@@ -9604,11 +9636,11 @@ window.__rsEnsureCvOptimizer=rsEnsureCvOptimizer;
 '      <label style="font-size:11.5px;font-weight:600;color:#475569;display:flex;align-items:center;gap:6px;">\n' +
 '        <span>Option / Mode:</span>\n' +
 '        <select id="modeSelector" class="mode-select">\n' +
-'          <option value="61">61. Edit & Optimize Resume (Clean Vector PDF)</option>\n' +
-'          <option value="62">62. Edit & Optimize Resume + Company Branding</option>\n' +
-'          <option value="63">63. Edit & Optimize Resume + Highlighted Keywords</option>\n' +
-'          <option value="64">64. Edit & Optimize Resume + Pre-Screened Report</option>\n' +
-'          <option value="65">65. Edit & Optimize Resume + Pre-Screened Report + Highlighted Keywords</option>\n' +
+'          <option value="61">61. Edit &amp; Optimize Resume (Clean Vector PDF)</option>\n' +
+'          <option value="62">62. Edit &amp; Optimize Resume + Company Branding</option>\n' +
+'          <option value="63">63. Edit &amp; Optimize Resume + Highlighted Keywords</option>\n' +
+'          <option value="64">64. Edit &amp; Optimize Resume + Pre-Screened Report</option>\n' +
+'          <option value="65">65. Edit &amp; Optimize Resume + Pre-Screened Report + Highlighted Keywords</option>\n' +
 '        </select>\n' +
 '      </label>\n' +
 '    </div>\n' +
@@ -9650,7 +9682,7 @@ window.__rsEnsureCvOptimizer=rsEnsureCvOptimizer;
 '      <div class="editor-body">\n' +
 '        <div class="editor-label-row">\n' +
 '          <span class="editor-label">Editable Resume Content</span>\n' +
-'          <span class="editor-hint">Changes recalculate ATS score and update preview live</span>\n' +
+'          <span class="editor-hint">Two-way sync with live document</span>\n' +
 '        </div>\n' +
 '        <textarea id="resumeTextarea" class="editor-textarea" spellcheck="false"></textarea>\n' +
 '        <div class="editor-footer">\n' +
@@ -9661,20 +9693,19 @@ window.__rsEnsureCvOptimizer=rsEnsureCvOptimizer;
 '    </div>\n' +
 '    <div class="preview-column">\n' +
 '      <div class="preview-statusbar">\n' +
-'        <span>Live Document Preview (A4 Vector PDF Simulation)</span>\n' +
+'        <span>Live Document Preview (Click anywhere on the resume to edit live)</span>\n' +
 '        <span id="previewPill" style="background:#ccfbf1;color:#0f766e;font-size:11px;font-weight:600;padding:2px 8px;border-radius:999px;">Option 61 Active</span>\n' +
 '      </div>\n' +
-'      <div class="pv-paper" id="previewPaper">\n' +
-'        <div id="pvReportBlock" class="pv-report-box" style="display:none;"></div>\n' +
-'        <div id="pvBrandBlock" class="pv-brand-box" style="display:none;"></div>\n' +
-'        <div class="pv-cand-head">\n' +
-'          <div>\n' +
-'            <div class="pv-cand-name">' + safeCandName.replace(/</g,'&lt;') + '</div>\n' +
-'            <div class="pv-cand-title">' + (safeJobTitle ? ('Target Position: ' + safeJobTitle.replace(/</g,'&lt;')) : 'Verified Candidate Profile') + '</div>\n' +
+'      <div class="rcv-html" id="rcvDocPaper" contenteditable="true" spellcheck="false">\n' +
+'        <div id="pvReportBlock" class="pv-report-box" style="display:none;" contenteditable="false"></div>\n' +
+'        <div id="pvBrandBlock" class="pv-brand-box" style="display:none;" contenteditable="false"></div>\n' +
+'        <div id="pvResumeBody">\n' +
+'          <div id="rcvDocLoading" style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:120px 20px;color:#64748b;gap:12px;">\n' +
+'            <div class="spin" style="width:28px;height:28px;border:2.5px solid #0d9488;border-top-color:transparent;border-radius:50%;"></div>\n' +
+'            <span style="font-size:13px;font-weight:600;color:#0f172a;">Loading candidate’s original résumé from Cloudflare R2…</span>\n' +
+'            <span style="font-size:11px;color:#64748b;">Rendering high-fidelity preview for live editing</span>\n' +
 '          </div>\n' +
-'          <div class="pv-badge">ATS OPTIMIZED<br><span style="color:#94a3b8;font-size:8px;">Standard Recruiter PDF</span></div>\n' +
 '        </div>\n' +
-'        <div id="pvResumeBody"></div>\n' +
 '      </div>\n' +
 '    </div>\n' +
 '  </div>\n' +
@@ -9687,36 +9718,60 @@ window.__rsEnsureCvOptimizer=rsEnsureCvOptimizer;
 '    var companyLogo = ' + JSON.stringify(companyLogo) + ';\n' +
 '    var initialOpt = ' + optId + ';\n' +
 '    var candidateData = ' + JSON.stringify(candidateData) + ';\n' +
-'    var initialText = ' + JSON.stringify(currentText) + ';\n' +
+'    var resumeSources = ' + JSON.stringify(resumeSources) + ';\n' +
+'    var resumeExtLower = ' + JSON.stringify(resumeExtLower) + ';\n' +
+'    var initialHtml = ' + JSON.stringify(cachedHtml) + ';\n' +
+'    var initialText = ' + JSON.stringify(cachedText) + ';\n' +
+'    var fallbackText = ' + JSON.stringify(fallbackProfileText) + ';\n' +
+'    var rawOriginalHtml = "";\n' +
 '    var textarea = document.getElementById("resumeTextarea");\n' +
 '    var modeSelector = document.getElementById("modeSelector");\n' +
+'    var docPaper = document.getElementById("rcvDocPaper");\n' +
+'    var resumeBody = document.getElementById("pvResumeBody");\n' +
 '    modeSelector.value = String(initialOpt || 61);\n' +
-'    textarea.value = initialText || "";\n' +
 '    var OptClass = window.AgyCvOptimizer || (window.opener && window.opener.AgyCvOptimizer);\n' +
 '    var optimizer = null;\n' +
 '    if(OptClass){\n' +
-'      optimizer = new OptClass({ jobSkills: jobSkills, candSkills: candSkills, candidateName: candName, targetJobTitle: jobTitle, resumeText: textarea.value });\n' +
+'      optimizer = new OptClass({ jobSkills: jobSkills, candSkills: candSkills, candidateName: candName, targetJobTitle: jobTitle });\n' +
 '    }\n' +
 '    function escapeHtml(s){ return String(s||"").replace(/[&<>"]/g, function(c){ return {"&":"&amp;","<":"&lt;",">":"&gt;",\'"\':"&quot;"}[c]; }); }\n' +
 '    function escapeRegex(s){ return String(s||"").replace(/[.*+?^${}()|[\\]\\\\]/g, "\\\\$&"); }\n' +
-'    function highlightText(text, skills){\n' +
-'      if(!skills || !skills.length) return escapeHtml(text);\n' +
-'      var sorted = skills.slice().filter(Boolean).sort(function(a,b){ return b.length - a.length; });\n' +
-'      var reStr = sorted.map(function(k){ return escapeRegex(k); }).join("|");\n' +
-'      if(!reStr) return escapeHtml(text);\n' +
-'      var re = new RegExp("\\\\b(" + reStr + ")\\\\b", "gi");\n' +
-'      var parts = text.split(re);\n' +
-'      var out = "";\n' +
-'      for(var i=0; i<parts.length; i++){\n' +
-'        if(i%2 === 1){\n' +
-'          out += \'<mark class="kw-hl">\' + escapeHtml(parts[i]) + \'</mark>\';\n' +
-'        } else {\n' +
-'          out += escapeHtml(parts[i]);\n' +
+'    function highlightInNode(node, re, cls){\n' +
+'      cls = cls || "rcv-hit";\n' +
+'      if(node.nodeType === 3){\n' +
+'        re.lastIndex = 0;\n' +
+'        var m = re.exec(node.nodeValue);\n' +
+'        if(!m) return;\n' +
+'        var mark = document.createElement("mark");\n' +
+'        mark.className = cls;\n' +
+'        var matched = node.splitText(m.index);\n' +
+'        matched.splitText(m[0].length);\n' +
+'        mark.appendChild(matched.cloneNode(true));\n' +
+'        matched.parentNode.replaceChild(mark, matched);\n' +
+'      } else if(node.nodeType === 1 && node.childNodes && !/(script|style|mark)/i.test(node.tagName)){\n' +
+'        for(var i=0; i<node.childNodes.length; i++){\n' +
+'          highlightInNode(node.childNodes[i], re, cls);\n' +
 '        }\n' +
 '      }\n' +
-'      return out;\n' +
 '    }\n' +
-'    function renderPreview(){\n' +
+'    function applyKeywordHighlights(isHighlighted){\n' +
+'      var bodyEl = document.getElementById("pvResumeBody");\n' +
+'      if(!bodyEl) return;\n' +
+'      var marks = bodyEl.querySelectorAll("mark.rcv-hit");\n' +
+'      marks.forEach(function(m){\n' +
+'        var p = m.parentNode;\n' +
+'        while(m.firstChild) p.insertBefore(m.firstChild, m);\n' +
+'        p.removeChild(m);\n' +
+'      });\n' +
+'      if(!isHighlighted) return;\n' +
+'      var activeSkills = (jobSkills || []).filter(Boolean).sort(function(a,b){ return b.length - a.length; });\n' +
+'      if(!activeSkills.length) return;\n' +
+'      var pat = activeSkills.map(escapeRegex).join("|");\n' +
+'      if(!pat) return;\n' +
+'      var re = new RegExp("\\\\b(" + pat + ")\\\\b", "gi");\n' +
+'      highlightInNode(bodyEl, re, "rcv-hit");\n' +
+'    }\n' +
+'    function renderOverlays(){\n' +
 '      var mode = parseInt(modeSelector.value, 10) || 61;\n' +
 '      var isBranded = (mode === 62);\n' +
 '      var isHighlighted = (mode === 63 || mode === 65);\n' +
@@ -9740,7 +9795,7 @@ window.__rsEnsureCvOptimizer=rsEnsureCvOptimizer;
 '              \'<div><strong>Current Role:</strong> \' + escapeHtml(candidateData.designation || "Specialist") + \'</div>\' +\n' +
 '            \'</div>\' +\n' +
 '            \'<div style="text-align:center;font-size:10px;color:#9d174d;font-weight:600;padding-top:4px;border-top:1px dashed #f9a8d4;">\' +\n' +
-'              \'── Report exports on Page 1 • Live Optimized Resume begins on Page 2 ──\' +\n' +
+'              \'── Pre-Screened Report Page 1 • Edited Resume begins on Page 2 ──\' +\n' +
 '            \'</div>\';\n' +
 '        } else {\n' +
 '          reportEl.style.display = "none";\n' +
@@ -9773,36 +9828,14 @@ window.__rsEnsureCvOptimizer=rsEnsureCvOptimizer;
 '        else if(isHighlighted) btnLbl.textContent = "Download Resume (Highlighted)";\n' +
 '        else btnLbl.textContent = "Download Resume (PDF)";\n' +
 '      }\n' +
-'      var bodyEl = document.getElementById("pvResumeBody");\n' +
-'      var lines = (textarea.value || "").split("\\n");\n' +
-'      var htmlLines = [];\n' +
-'      for(var j=0; j<lines.length; j++){\n' +
-'        var l = lines[j].trim();\n' +
-'        if(!l){\n' +
-'          htmlLines.push(\'<div style="height:8px;"></div>\');\n' +
-'          continue;\n' +
-'        }\n' +
-'        var isHead = (l.length < 55 && (l === l.toUpperCase() || l.slice(-1) === ":") && !/^[•\\-*]/.test(l));\n' +
-'        if(isHead){\n' +
-'          htmlLines.push(\'<div class="pv-section-title">\' + escapeHtml(l.toUpperCase()) + \'</div>\');\n' +
-'        } else if(/^[•\\-*]\\s*/.test(l)){\n' +
-'          var cleanB = l.replace(/^[•\\-*]\\s*/, "");\n' +
-'          var fmtB = isHighlighted ? highlightText(cleanB, jobSkills) : escapeHtml(cleanB);\n' +
-'          htmlLines.push(\'<div class="pv-bullet"><span class="pv-bullet-dot">•</span><div>\' + fmtB + \'</div></div>\');\n' +
-'        } else {\n' +
-'          var fmtL = isHighlighted ? highlightText(l, jobSkills) : escapeHtml(l);\n' +
-'          htmlLines.push(\'<div class="pv-line">\' + fmtL + \'</div>\');\n' +
-'        }\n' +
-'      }\n' +
-'      bodyEl.innerHTML = htmlLines.join("");\n' +
+'      applyKeywordHighlights(isHighlighted);\n' +
 '    }\n' +
-'    function recalc(){\n' +
-'      var val = textarea.value || "";\n' +
+'    function recalcScoreOnly(val){\n' +
+'      val = val || "";\n' +
 '      var words = val.trim() ? val.trim().split(/\\s+/).length : 0;\n' +
 '      document.getElementById("counterStats").textContent = words + " words • " + val.length + " chars";\n' +
-'      renderPreview();\n' +
 '      if(!optimizer && OptClass){\n' +
-'        optimizer = new OptClass({ jobSkills: jobSkills, candSkills: candSkills, candidateName: candName, targetJobTitle: jobTitle, resumeText: val });\n' +
+'        optimizer = new OptClass({ jobSkills: jobSkills, candSkills: candSkills, candidateName: candName, targetJobTitle: jobTitle });\n' +
 '      }\n' +
 '      if(!optimizer) return;\n' +
 '      var res = optimizer.calculateAtsScore(val);\n' +
@@ -9832,27 +9865,185 @@ window.__rsEnsureCvOptimizer=rsEnsureCvOptimizer;
 '          b.className = "chip-btn";\n' +
 '          b.textContent = "+ " + sk;\n' +
 '          b.onclick = function(){\n' +
-'            textarea.value = textarea.value.trim() + "\\n• " + sk;\n' +
-'            recalc();\n' +
+'            var p = document.createElement("p");\n' +
+'            p.innerHTML = "• <strong>" + escapeHtml(sk) + "</strong>";\n' +
+'            document.getElementById("pvResumeBody").appendChild(p);\n' +
+'            var updatedText = document.getElementById("pvResumeBody").innerText || "";\n' +
+'            textarea.value = updatedText;\n' +
+'            recalcScoreOnly(updatedText);\n' +
+'            var mode = parseInt(modeSelector.value, 10) || 61;\n' +
+'            if(mode === 63 || mode === 65) applyKeywordHighlights(true);\n' +
 '          };\n' +
 '          missingEl.appendChild(b);\n' +
 '        });\n' +
 '      }\n' +
 '    }\n' +
-'    var debounceTimer = null;\n' +
-'    textarea.addEventListener("input", function(){\n' +
-'      clearTimeout(debounceTimer);\n' +
-'      debounceTimer = setTimeout(recalc, 30);\n' +
+'    function renderOriginalResume(html, text){\n' +
+'      var loadingEl = document.getElementById("rcvDocLoading");\n' +
+'      if(loadingEl) loadingEl.remove();\n' +
+'      rawOriginalHtml = html || "";\n' +
+'      var bodyEl = document.getElementById("pvResumeBody");\n' +
+'      bodyEl.innerHTML = html;\n' +
+'      var cleanText = text || bodyEl.innerText || "";\n' +
+'      textarea.value = cleanText;\n' +
+'      renderOverlays();\n' +
+'      recalcScoreOnly(cleanText);\n' +
+'    }\n' +
+'    function renderFromPlainText(text){\n' +
+'      var loadingEl = document.getElementById("rcvDocLoading");\n' +
+'      if(loadingEl) loadingEl.remove();\n' +
+'      var lines = (text || "").split("\\n");\n' +
+'      var htmlParts = [];\n' +
+'      for(var j=0; j<lines.length; j++){\n' +
+'        var l = lines[j].trim();\n' +
+'        if(!l){\n' +
+'          htmlParts.push(\'<div style="height:8px;"></div>\');\n' +
+'          continue;\n' +
+'        }\n' +
+'        var isHead = (l.length < 55 && (l === l.toUpperCase() || l.slice(-1) === ":") && !/^[•\\-*]/.test(l));\n' +
+'        if(isHead){\n' +
+'          htmlParts.push("<h3>" + escapeHtml(l.toUpperCase()) + "</h3>");\n' +
+'        } else if(/^[•\\-*]\\s*/.test(l)){\n' +
+'          var cleanB = l.replace(/^[•\\-*]\\s*/, "");\n' +
+'          htmlParts.push("<ul><li>" + escapeHtml(cleanB) + "</li></ul>");\n' +
+'        } else {\n' +
+'          htmlParts.push("<p>" + escapeHtml(l) + "</p>");\n' +
+'        }\n' +
+'      }\n' +
+'      var bodyEl = document.getElementById("pvResumeBody");\n' +
+'      bodyEl.innerHTML = htmlParts.join("");\n' +
+'      textarea.value = text || "";\n' +
+'      renderOverlays();\n' +
+'      recalcScoreOnly(text);\n' +
+'    }\n' +
+'    async function loadOriginalResume(){\n' +
+'      // 1. Check if HTML is already populated in opener\n' +
+'      var openerHtml = initialHtml || (window.opener && window.opener.__rcvResumeHtml);\n' +
+'      var openerText = initialText || (window.opener && window.opener.__rcvResumeText);\n' +
+'      if(openerHtml && openerHtml.trim().length > 30){\n' +
+'        renderOriginalResume(openerHtml, openerText);\n' +
+'        return;\n' +
+'      }\n' +
+'      // 2. Check opener binary cache\n' +
+'      var bytes = null;\n' +
+'      if(window.opener && window.opener.__agyResumeCache){\n' +
+'        for(var k in window.opener.__agyResumeCache){\n' +
+'          var b = window.opener.__agyResumeCache[k];\n' +
+'          if(b && b.byteLength > 100){ bytes = b; break; }\n' +
+'        }\n' +
+'      }\n' +
+'      // 3. Fetch bytes from R2 sources if needed\n' +
+'      if(!bytes && resumeSources && resumeSources.length){\n' +
+'        for(var i=0; i<resumeSources.length; i++){\n' +
+'          var u = resumeSources[i];\n' +
+'          if(!u) continue;\n' +
+'          try {\n' +
+'            var isDirectR2 = (u.indexOf("file.jero.works") !== -1 || u.indexOf("r2.cloudflarestorage.com") !== -1);\n' +
+'            var resp = await fetch(u, isDirectR2 ? { mode:"cors" } : { credentials:"same-origin" });\n' +
+'            if(resp.ok){\n' +
+'              var ab = await resp.arrayBuffer();\n' +
+'              if(ab && ab.byteLength > 100){ bytes = new Uint8Array(ab); break; }\n' +
+'            }\n' +
+'          } catch(fetchErr){}\n' +
+'        }\n' +
+'      }\n' +
+'      // 4. Convert bytes based on file format\n' +
+'      if(bytes){\n' +
+'        if(resumeExtLower === "docx" || resumeExtLower === "doc" || !resumeExtLower){\n' +
+'          try {\n' +
+'            if(typeof mammoth !== "undefined"){\n' +
+'              var conv = await mammoth.convertToHtml({ arrayBuffer: bytes.buffer || bytes });\n' +
+'              var raw = await mammoth.extractRawText({ arrayBuffer: bytes.buffer || bytes });\n' +
+'              if(conv && conv.value && conv.value.trim().length > 20){\n' +
+'                renderOriginalResume(conv.value, raw ? raw.value : "");\n' +
+'                return;\n' +
+'              }\n' +
+'            }\n' +
+'          } catch(mErr){ console.warn("Mammoth conversion error:", mErr); }\n' +
+'        }\n' +
+'        if(resumeExtLower === "pdf"){\n' +
+'          try {\n' +
+'            if(typeof pdfjsLib !== "undefined"){\n' +
+'              var ver = pdfjsLib.version || "2.11.338";\n' +
+'              pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/" + ver + "/pdf.worker.min.js";\n' +
+'              var pdf = await pdfjsLib.getDocument({ data: bytes }).promise;\n' +
+'              var fullText = "";\n' +
+'              var pParts = [];\n' +
+'              for(var p=1; p<=pdf.numPages; p++){\n' +
+'                var page = await pdf.getPage(p);\n' +
+'                var tc = await page.getTextContent();\n' +
+'                var pageText = tc.items.map(function(item){ return item.str; }).join(" ");\n' +
+'                fullText += pageText + "\\n\\n";\n' +
+'                var chunks = pageText.split(/(?<=[.?!])\\s+/);\n' +
+'                chunks.forEach(function(ck){ if(ck.trim()) pParts.push("<p>" + escapeHtml(ck.trim()) + "</p>"); });\n' +
+'              }\n' +
+'              if(fullText.trim().length > 30){\n' +
+'                renderOriginalResume(pParts.join(""), fullText);\n' +
+'                return;\n' +
+'              }\n' +
+'            }\n' +
+'          } catch(pErr){ console.warn("PDF extraction error:", pErr); }\n' +
+'        }\n' +
+'      }\n' +
+'      // 5. Fallback only if binary unavailable\n' +
+'      renderFromPlainText(openerText || fallbackText || initialText);\n' +
+'    }\n' +
+'    loadOriginalResume();\n' +
+'    var docDebounce = null;\n' +
+'    docPaper.addEventListener("input", function(){\n' +
+'      clearTimeout(docDebounce);\n' +
+'      docDebounce = setTimeout(function(){\n' +
+'        var currentText = document.getElementById("pvResumeBody").innerText || "";\n' +
+'        textarea.value = currentText;\n' +
+'        recalcScoreOnly(currentText);\n' +
+'      }, 80);\n' +
 '    });\n' +
-'    modeSelector.addEventListener("change", function(){ recalc(); });\n' +
-'    recalc();\n' +
-'    document.getElementById("snipSum").onclick = function(){ textarea.value += "\\n\\nPROFESSIONAL SUMMARY:\\nAccomplished specialist with track record of driving impact."; recalc(); };\n' +
-'    document.getElementById("snipExp").onclick = function(){ textarea.value += "\\n\\nWORK EXPERIENCE:\\nSenior Specialist | Enterprise (2021 – Present)\\n• Spearheaded high-impact initiatives and optimized delivery."; recalc(); };\n' +
-'    document.getElementById("snipSkills").onclick = function(){ textarea.value += "\\n\\nCORE SKILLS:\\n• Technical Leadership\\n• Project Execution"; recalc(); };\n' +
-'    document.getElementById("snipEdu").onclick = function(){ textarea.value += "\\n\\nEDUCATION:\\n• Bachelor of Science in Engineering or Related Discipline"; recalc(); };\n' +
-'    document.getElementById("snipCert").onclick = function(){ textarea.value += "\\n\\nCERTIFICATIONS:\\n• Industry Certified Professional"; recalc(); };\n' +
+'    var txtDebounce = null;\n' +
+'    textarea.addEventListener("input", function(){\n' +
+'      clearTimeout(txtDebounce);\n' +
+'      txtDebounce = setTimeout(function(){\n' +
+'        renderFromPlainText(textarea.value);\n' +
+'      }, 150);\n' +
+'    });\n' +
+'    modeSelector.addEventListener("change", function(){ renderOverlays(); });\n' +
+'    document.getElementById("snipSum").onclick = function(){\n' +
+'      var p = document.createElement("p");\n' +
+'      p.innerHTML = "<h3>PROFESSIONAL SUMMARY</h3><p>Accomplished specialist with a strong background in driving impactful solutions and scalable architectures.</p>";\n' +
+'      document.getElementById("pvResumeBody").appendChild(p);\n' +
+'      textarea.value = document.getElementById("pvResumeBody").innerText;\n' +
+'      recalcScoreOnly(textarea.value);\n' +
+'    };\n' +
+'    document.getElementById("snipExp").onclick = function(){\n' +
+'      var p = document.createElement("p");\n' +
+'      p.innerHTML = "<h3>WORK EXPERIENCE</h3><p><strong>Senior Specialist</strong> — Enterprise Delivery (2021 – Present)<br>• Spearheaded high-impact technical initiatives and optimized service performance.</p>";\n' +
+'      document.getElementById("pvResumeBody").appendChild(p);\n' +
+'      textarea.value = document.getElementById("pvResumeBody").innerText;\n' +
+'      recalcScoreOnly(textarea.value);\n' +
+'    };\n' +
+'    document.getElementById("snipSkills").onclick = function(){\n' +
+'      var p = document.createElement("p");\n' +
+'      p.innerHTML = "<h3>CORE SKILLS &amp; COMPETENCIES</h3><ul><li>Cloud &amp; Distributed Architecture</li><li>Full-Stack Development &amp; Automation</li></ul>";\n' +
+'      document.getElementById("pvResumeBody").appendChild(p);\n' +
+'      textarea.value = document.getElementById("pvResumeBody").innerText;\n' +
+'      recalcScoreOnly(textarea.value);\n' +
+'    };\n' +
+'    document.getElementById("snipEdu").onclick = function(){\n' +
+'      var p = document.createElement("p");\n' +
+'      p.innerHTML = "<h3>EDUCATION</h3><p>Bachelor of Science in Engineering / Computer Science — Accredited University</p>";\n' +
+'      document.getElementById("pvResumeBody").appendChild(p);\n' +
+'      textarea.value = document.getElementById("pvResumeBody").innerText;\n' +
+'      recalcScoreOnly(textarea.value);\n' +
+'    };\n' +
+'    document.getElementById("snipCert").onclick = function(){\n' +
+'      var p = document.createElement("p");\n' +
+'      p.innerHTML = "<h3>CERTIFICATIONS</h3><p>Certified Professional Engineer — Industry Recognized Credential</p>";\n' +
+'      document.getElementById("pvResumeBody").appendChild(p);\n' +
+'      textarea.value = document.getElementById("pvResumeBody").innerText;\n' +
+'      recalcScoreOnly(textarea.value);\n' +
+'    };\n' +
 '    document.getElementById("btnCopyText").onclick = function(){\n' +
-'      navigator.clipboard.writeText(textarea.value).then(function(){\n' +
+'      var textToCopy = document.getElementById("pvResumeBody").innerText || textarea.value;\n' +
+'      navigator.clipboard.writeText(textToCopy).then(function(){\n' +
 '        alert("Resume text successfully copied to clipboard!");\n' +
 '      }).catch(function(){ alert("Could not copy text."); });\n' +
 '    };\n' +
@@ -9866,6 +10057,8 @@ window.__rsEnsureCvOptimizer=rsEnsureCvOptimizer;
 '        var isBranded = (mode === 62);\n' +
 '        var isHighlighted = (mode === 63 || mode === 65);\n' +
 '        var hasReport = (mode === 64 || mode === 65);\n' +
+'        var resumeText = (document.getElementById("pvResumeBody").innerText || textarea.value || "").trim();\n' +
+'        if(!resumeText) throw new Error("Resume content is empty.");\n' +
 '        if(!OptClass){\n' +
 '          OptClass = window.AgyCvOptimizer || (window.opener && window.opener.AgyCvOptimizer);\n' +
 '        }\n' +
@@ -9874,7 +10067,7 @@ window.__rsEnsureCvOptimizer=rsEnsureCvOptimizer;
 '        var cleanCand = (candName || "Candidate").replace(/[^a-zA-Z0-9_\\\\-]/g, "_");\n' +
 '        if(hasReport && window.opener && typeof window.opener.__buildRSBlob === "function" && typeof window.opener.mergePreScreenedReportAndResume === "function"){\n' +
 '          var reportBlob = await window.opener.__buildRSBlob();\n' +
-'          var resumeBlob = await optInstance.exportOptimizedPdf(textarea.value, {\n' +
+'          var resumeBlob = await optInstance.exportOptimizedPdf(resumeText, {\n' +
 '            candidateName: candName,\n' +
 '            jobTitle: jobTitle,\n' +
 '            highlightKeywords: isHighlighted ? jobSkills : false\n' +
@@ -9886,7 +10079,7 @@ window.__rsEnsureCvOptimizer=rsEnsureCvOptimizer;
 '          if(isBranded && companyLogo && window.opener && typeof window.opener.rsLogoDataUri === "function"){\n' +
 '            try { logoUri = await window.opener.rsLogoDataUri(companyLogo); } catch(e){}\n' +
 '          }\n' +
-'          var blob = await optInstance.exportOptimizedPdf(textarea.value, {\n' +
+'          var blob = await optInstance.exportOptimizedPdf(resumeText, {\n' +
 '            candidateName: candName,\n' +
 '            jobTitle: jobTitle,\n' +
 '            brandHeader: isBranded,\n' +
@@ -9894,7 +10087,7 @@ window.__rsEnsureCvOptimizer=rsEnsureCvOptimizer;
 '            companyLogo: logoUri,\n' +
 '            highlightKeywords: isHighlighted ? jobSkills : false\n' +
 '          });\n' +
-'          var sfx = isBranded ? "_Branded" : (isHighlighted ? "_Highlighted" : (hasReport ? "_Report" : ""));\n' +
+'          var sfx = isBranded ? "_Branded" : (isHighlighted ? "_Highlighted" : "");\n' +
 '          OptClass.downloadBlob(blob, "Jeroworks_" + cleanCand + "_ATS_Optimized" + sfx + ".pdf");\n' +
 '        }\n' +
 '      } catch(err){\n' +
