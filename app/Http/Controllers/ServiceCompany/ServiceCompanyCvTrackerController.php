@@ -2785,6 +2785,7 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
                 'job_applications.serving_notice_period_mode',
                 'job_applications.current_company',
                 'job_applications.skills',
+                'job_applications.resume',
                 'qualification_master.name as qualification_name',
                 'jobs.title as job_title',
                 'clients.name as client_name'
@@ -2824,6 +2825,19 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
             });
 
         $this->userdata = $this->user;
+
+        // Company branding & skill keywords for custom resume format attachment
+        $companyRow = DB::table('companies')->select('id', 'company_name', 'logo')->where('id', auth()->user()->company_id)->first();
+        $this->companyName = $companyRow ? ucwords((string) $companyRow->company_name) : 'Hiring Partner';
+        $this->companyLogo = ($companyRow && ! empty($companyRow->logo)) ? route('service_company.job-applications.company-logo-proxy') : '';
+
+        $jobSkillsList = [];
+        if (! empty($this->jobIdArr)) {
+            $metronicSkills = DB::table('job_metronics_skills')->whereIn('job_id', $this->jobIdArr)->pluck('skill_name')->toArray();
+            $standardSkills = DB::table('job_skills')->join('skills', 'job_skills.skill_id', '=', 'skills.id')->whereIn('job_skills.job_id', $this->jobIdArr)->pluck('skills.name')->toArray();
+            $jobSkillsList = array_values(array_unique(array_filter(array_map('trim', array_merge($metronicSkills, $standardSkills)))));
+        }
+        $this->jobSkills = $jobSkillsList;
 
         $this->to_email_from_count = $this->cc_email_count = 0;
         $this->to_email_from_data = [];
@@ -4854,7 +4868,11 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
         $subject = $request->subject;
         $attached_cv = $request->attached_cv;
         $message = $request->editor1;
-        $arr = $request->arr;
+        $arr = $request->arr ?: [];
+        // Intent: Cap maximum forwarded candidates to 10 to prevent SMTP gateway rejections (25MB size limit)
+        if (is_array($arr) && count($arr) > 10) {
+            $arr = array_slice($arr, 0, 10);
+        }
         $decoded = json_decode($from, true);
         if (is_array($decoded)) {
             $from = implode(',', array_column($decoded, 'value'));
@@ -4893,32 +4911,95 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
             // 			$cc = $request->cc_email;//implode(',', $cc);
         }
 
-        // 		dd($emails);
         $attachments = [];
         if ($attached_cv == 1) {
-            $resumeRowCount = DB::table('job_applications')->select('*')->whereIn('job_applications.id', $arr)->count();
-            $resumeRow = DB::table('job_applications')->select('*')->whereIn('job_applications.id', $arr)->get();
+            $company_id = (int) auth()->user()->company_id;
+            $tempDir = storage_path('app/temp-attachments/'.$company_id);
+            if (! file_exists($tempDir)) {
+                @mkdir($tempDir, 0755, true);
+            }
 
-            $raw_filename = [];
-            if ($resumeRowCount) {
-                foreach ($resumeRow as $key => $rval) {
-                    if (! empty($rval->resume) && in_array(strtolower(pathinfo($rval->resume, PATHINFO_EXTENSION)), ['pdf', 'doc', 'docx'])) {
-                        $hashname = $documentable_id = '';
-                        $hashname = $rval->resume;
-                        $documentable_id = $rval->id;
-                        $candidates = DB::table('job_applications')->select('*')->where('id', $documentable_id)->first();
-                        $extension = pathinfo($hashname, PATHINFO_EXTENSION);
-                        $customName = 'JERO_'.str_replace(' ', '_', $candidates->full_name).'_'.$documentable_id.'.'.$extension;
+            // 1. Check for client-uploaded custom attachments via FormData (file uploads)
+            $uploadedCustomFiles = $request->file('custom_attachments');
+            $customBase64Map = [];
+            if ($request->filled('custom_attachments_base64')) {
+                $customBase64Map = json_decode($request->input('custom_attachments_base64'), true) ?: [];
+            }
 
-                        $raw_filename[] = $hashname;
+            $handledCandidates = [];
+
+            // Process uploaded custom PDF files (Option 41, 44, 45, 5, etc.)
+            if (! empty($uploadedCustomFiles) && is_array($uploadedCustomFiles)) {
+                foreach ($uploadedCustomFiles as $candId => $uploadedFile) {
+                    if ($uploadedFile && $uploadedFile->isValid()) {
+                        $candId = (int) $candId;
+                        $candidate = DB::table('job_applications')->where('id', $candId)->first();
+                        $candName = $candidate ? str_replace(' ', '_', $candidate->full_name) : 'Candidate';
+                        $customFilename = 'JERO_'.$candName.'_'.$candId.'.pdf';
+                        $storedName = 'fwd_'.$candId.'_'.uniqid().'.pdf';
+                        $uploadedFile->move($tempDir, $storedName);
 
                         $attachments[] = [
-                            'path' => $hashname,
-                            'filename' => $customName,
+                            'path' => $tempDir.'/'.$storedName,
+                            'filename' => $customFilename,
+                            'is_local' => true,
                             'options' => [],
                         ];
+                        $handledCandidates[] = $candId;
                     }
+                }
+            }
 
+            // Process base64 custom attachments if any
+            if (! empty($customBase64Map)) {
+                foreach ($customBase64Map as $candId => $b64) {
+                    $candId = (int) $candId;
+                    if (in_array($candId, $handledCandidates)) {
+                        continue;
+                    }
+                    if (strpos($b64, 'base64,') !== false) {
+                        $b64 = explode('base64,', $b64)[1];
+                    }
+                    $binData = base64_decode($b64);
+                    if ($binData && strlen($binData) > 50) {
+                        $candidate = DB::table('job_applications')->where('id', $candId)->first();
+                        $candName = $candidate ? str_replace(' ', '_', $candidate->full_name) : 'Candidate';
+                        $customFilename = 'JERO_'.$candName.'_'.$candId.'.pdf';
+                        $storedName = 'fwd_'.$candId.'_'.uniqid().'.pdf';
+                        file_put_contents($tempDir.'/'.$storedName, $binData);
+
+                        $attachments[] = [
+                            'path' => $tempDir.'/'.$storedName,
+                            'filename' => $customFilename,
+                            'is_local' => true,
+                            'options' => [],
+                        ];
+                        $handledCandidates[] = $candId;
+                    }
+                }
+            }
+
+            // Fallback to original resume for any remaining candidates (or Option 1)
+            $remainingIds = array_diff($arr, $handledCandidates);
+            if (! empty($remainingIds)) {
+                $resumeRow = DB::table('job_applications')->select('*')->whereIn('id', $remainingIds)->get();
+                if ($resumeRow->count() > 0) {
+                    foreach ($resumeRow as $key => $rval) {
+                        if (! empty($rval->resume) && in_array(strtolower(pathinfo($rval->resume, PATHINFO_EXTENSION)), ['pdf', 'doc', 'docx'])) {
+                            $hashname = $rval->resume;
+                            $documentable_id = $rval->id;
+                            $candidates = DB::table('job_applications')->select('*')->where('id', $documentable_id)->first();
+                            $extension = pathinfo($hashname, PATHINFO_EXTENSION);
+                            $customName = 'JERO_'.str_replace(' ', '_', $candidates->full_name).'_'.$documentable_id.'.'.$extension;
+
+                            $attachments[] = [
+                                'path' => $hashname,
+                                'filename' => $customName,
+                                'is_local' => false,
+                                'options' => [],
+                            ];
+                        }
+                    }
                 }
             }
         }
