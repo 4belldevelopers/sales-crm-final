@@ -9,12 +9,16 @@
  * - Preserves original candidate file in Cloudflare R2 completely untouched
  */
 (function(root, factory){
+  var mod = factory();
   if(typeof define === 'function' && define.amd){
-    define([], factory);
-  }else if(typeof module === 'object' && module.exports){
-    module.exports = factory();
-  }else{
-    root.AgyCvOptimizer = factory();
+    try { define([], function(){ return mod; }); } catch(e){}
+  }
+  if(typeof module === 'object' && module.exports){
+    module.exports = mod;
+  }
+  root.AgyCvOptimizer = mod;
+  if(typeof window !== 'undefined'){
+    window.AgyCvOptimizer = mod;
   }
 })(typeof self !== 'undefined' ? self : this, function(){
   'use strict';

@@ -10,12 +10,17 @@
  * Part of JERO GOD-Level ATS & Marketplace Engine (Phase 3)
  */
 (function(root, factory){
+  var jszip = root.JSZip || (typeof window !== 'undefined' ? window.JSZip : null);
+  var mod = factory(jszip);
   if(typeof define === 'function' && define.amd){
-    define(['JSZip'], factory);
-  }else if(typeof module === 'object' && module.exports){
-    module.exports = factory(require('jszip'));
-  }else{
-    root.AgyBatchExporter = factory(root.JSZip);
+    try { define(['JSZip'], function(){ return mod; }); } catch(e){}
+  }
+  if(typeof module === 'object' && module.exports){
+    module.exports = mod;
+  }
+  root.AgyBatchExporter = mod;
+  if(typeof window !== 'undefined'){
+    window.AgyBatchExporter = mod;
   }
 })(typeof self !== 'undefined' ? self : this, function(JSZip){
   'use strict';
