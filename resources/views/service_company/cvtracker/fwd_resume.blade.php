@@ -16,10 +16,9 @@ if (window.__savedAmdDefine) {
     define.amd = window.__savedAmdDefine;
     delete window.__savedAmdDefine;
 }
-</script>
-<script src="{{ asset('js/mammoth.browser.min.js') }}" onerror="this.onerror=null;this.src='https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.5.0/mammoth.browser.min.js'"></script>
-<script src="{{ asset('js/opendoc/AgyForwardResumeHelper.js') }}"></script>
 <script src="{{ asset('js/opendoc/AgyWasmEngine.js') }}"></script>
+<script src="{{ asset('js/opendoc/AgyResumeRenderer.js') }}"></script>
+<script src="{{ asset('js/opendoc/AgyForwardResumeHelper.js') }}"></script>
 <script src="{{ asset('demo/ckeditor/ckeditor.js') }}"></script>
 <script>
 									
@@ -246,27 +245,29 @@ if($cc_email_count > 0){
         <div id="fwd_format_container">
           <select name="attached_cv_format" id="fwd_resume_format" class="mm-select" style="font-weight:500;">
             <optgroup label="1. Standard Resume Options">
-              <option value="1" selected data-label="Original Candidate Resume" data-desc="Pristine resume file as originally uploaded by candidate/agency.">1. Original Resume (Default)</option>
-              <option value="41" data-label="Resume + Company Branding Logo" data-desc="Resume with your agency/company logo header & confidential watermark on Page 1.">41. Resume + Company Branding Logo</option>
+              <option value="1" selected data-label="Original Candidate Resume" data-desc="Download the candidate's uploaded resume exactly as received, with no edits or formatting changes.">1. Original Resume (Default)</option>
+              <option value="41" data-label="Resume + Company Branding" data-desc="Add your company logo and shared-by header above the resume while keeping all candidate details visible.">41. Resume + Company Branding</option>
             </optgroup>
             <optgroup label="2. Pre-Screened Report">
-              <option value="5" data-label="Candidate Pre-Screened Report PDF" data-desc="Complete verification & interview evaluation assessment dossier.">5. Candidate Pre-Screened Report PDF</option>
+              <option value="5" data-label="Pre-Screened Report" data-desc="Generate a concise hiring report with fit summary, key skills, and verification status for recruiter review.">5. Pre-Screened Report PDF</option>
             </optgroup>
             <optgroup label="3. Recruiter Packages (Report + Resume)">
-              <option value="42" data-label="Dossier: Pre-Screened Report + Original Resume" data-desc="Combined evaluation report followed by original candidate resume.">42. Pre-Screened Report + Original Resume</option>
-              <option value="43" data-label="Dossier: Pre-Screened Report + Branded Resume" data-desc="Combined evaluation report with company-branded resume.">43. Pre-Screened Report + Branded Resume</option>
+              <option value="42" data-label="Pre-Screened Report + Resume + Company Branding" data-desc="Deliver one polished PDF with the pre-screened report first, followed by the candidate resume with company branding.">42. Pre-Screened Report + Resume + Company Branding</option>
+              <option value="43" data-label="Pre-Screened Report + Resume without Company Branding" data-desc="Download the same report-and-resume package without company logo or company name on the report page.">43. Pre-Screened Report + Resume without Company Branding</option>
             </optgroup>
             <optgroup label="4. Highlighted Skills">
-              <option value="44" data-label="Resume + Highlighted Skills" data-desc="Candidate resume with matching ATS keywords highlighted in yellow.">44. Resume + Highlighted Skills</option>
-              <option value="45" data-label="Resume + Company Branding + Highlights" data-desc="Company logo header on Page 1 plus highlighted matching skills.">45. Resume + Company Branding + Highlights</option>
-              <option value="46" data-label="Dossier: Report + Highlighted Resume" data-desc="Evaluation dossier with highlighted candidate resume.">46. Pre-Screened Report + Highlighted Resume</option>
-              <option value="47" data-label="Dossier: Report + Branding + Highlights" data-desc="Full presentation package: Report + Company logo header + Highlighted skills.">47. Full Recruiter Dossier (Report + Branding + Highlights)</option>
+              <option value="44" data-label="Resume + Highlighted Keywords" data-desc="Download a clean resume copy with the most relevant skills highlighted for quick recruiter review.">44. Resume + Highlighted Keywords</option>
+              <option value="45" data-label="Resume + Highlighted Keywords + Company Branding" data-desc="Download a branded resume with job-matching keywords highlighted for faster recruiter screening.">45. Resume + Highlighted Keywords + Company Branding</option>
+              <option value="46" data-label="Pre-Screened Report + Resume + Highlighted Keywords + Company Branding" data-desc="Create the recruiter package: pre-screened report, branded resume pages, and highlighted job-matching skills.">46. Pre-Screened Report + Resume + Highlighted Keywords + Company Branding</option>
+              <option value="47" data-label="Pre-Screened Report + Resume + Highlighted Keywords without Company Branding" data-desc="Create the recruiter package with report, resume, and highlighted skills, without company branding.">47. Pre-Screened Report + Resume + Highlighted Keywords without Company Branding</option>
             </optgroup>
             <optgroup label="5. Privacy & Anonymization (Anti-Poaching Shield)">
-              <option value="48" data-label="Anonymized (Masked Contact Info)" data-desc="Candidate email, phone number, and LinkedIn redacted for privacy.">48. Masked Contact Info (Anonymized)</option>
-              <option value="49" data-label="Anonymized + Company Branding" data-desc="Masked candidate contact info with your agency header on Page 1.">49. Masked Contact Info + Company Branding</option>
-              <option value="50" data-label="Anonymized + Highlights" data-desc="Masked candidate contact info with highlighted matching skills.">50. Masked Contact Info + Highlights</option>
-              <option value="51" data-label="Full Anonymized Recruiter Dossier" data-desc="Complete anonymized package: Report + Masked contact info + Agency branding.">51. Full Anonymized Recruiter Dossier</option>
+              <option value="48" data-label="Hide Contact Details" data-desc="Keep candidate name visible while hiding email, phone, mobile, contact and LinkedIn details in browser.">48. Hide Contact Details</option>
+              <option value="49" data-label="Hide Candidate Name & Contacts Details" data-desc="Hide candidate name, email, and phone numbers in a browser-only resume copy.">49. Hide Candidate Name & Contacts Details</option>
+              <option value="50" data-label="Hide Contact Details + Company Branding" data-desc="Keep the name visible, hide contact and LinkedIn details, then add your company header.">50. Hide Contact Details + Company Branding</option>
+              <option value="51" data-label="Hide Contact Details + Pre-Screened Report (Branded)" data-desc="Keep the name visible, hide contact and LinkedIn details, then merge the pre-screened report.">51. Hide Contact Details + Pre-Screened Report (Branded)</option>
+              <option value="52" data-label="Hide Contact Details + Pre-Screened Report without Company Branding" data-desc="Keep the name visible, hide contact and LinkedIn details, then merge a no-brand report.">52. Hide Contact Details + Pre-Screened Report without Company Branding</option>
+              <option value="53" data-label="Hide Contact Details + Pre-Screened Report + Highlighted Keywords" data-desc="Full privacy package: masked contacts, highlighted skills, and pre-screened report dossier.">53. Hide Contact Details + Pre-Screened Report + Highlighted Keywords</option>
             </optgroup>
           </select>
 
@@ -649,7 +650,12 @@ $(document).on('change', '#fwd_resume_format', function () {
     var optVal = $(this).val();
 
     var candName = "{{ !empty($applicationData[0]->full_name) ? str_replace(' ', '_', $applicationData[0]->full_name) : 'Candidate' }}";
-    var filename = 'JERO_' + candName + '_' + (optVal === '1' ? 'Resume.pdf' : (optVal === '5' ? 'Report.pdf' : 'Branded_Resume.pdf'));
+    var filename = 'Jeroworks_' + candName + '.pdf';
+    if (optVal === '5') {
+        filename = 'PRESCREEN_REPORT_' + candName + '.pdf';
+    } else if (optVal === '49') {
+        filename = 'Jeroworks_Resume.pdf';
+    }
 
     $('#fwd_preview_filename').text(filename);
     $('#fwd_preview_desc').text(desc);
@@ -723,7 +729,7 @@ document.getElementById("btnSubmit").addEventListener("click", async function ()
 
                 if (pdfBlob) {
                     var safeCandName = (cand.full_name || 'Candidate').replace(/[^\w\s.-]/g, '').replace(/\s+/g, '_');
-                    var outName = 'JERO_' + safeCandName + '_' + cand.id + '.pdf';
+                    var outName = (pdfBlob && pdfBlob.filename) ? pdfBlob.filename : ('Jeroworks_' + safeCandName + '.pdf');
                     formData.append('custom_attachments[' + cand.id + ']', pdfBlob, outName);
                 }
             }
