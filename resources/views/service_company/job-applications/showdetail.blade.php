@@ -7730,6 +7730,22 @@ async function renderAgyStrategy2WasmDocxToPdfBlob(docxBytes, options){
           pdf.addPage([pageW, pageH], pageW > pageH ? 'landscape' : 'portrait');
         }
 
+        // Composite exact-width highlights onto canvas when requested for PDF downloads (Options 44, 45, 46, 47, 53)
+        if(options.burnHighlights && wasmHits && wasmHits.length){
+          var pageHits = wasmHits.filter(function(h){ return h.page === (i + 1); });
+          if(pageHits.length){
+            var ctx = canvas.getContext('2d');
+            ctx.save();
+            ctx.fillStyle = 'rgba(251, 191, 36, 0.42)';
+            var sX = canvas.width / (pageW * 20);
+            var sY = canvas.height / (pageH * 20);
+            pageHits.forEach(function(h){
+              ctx.fillRect(Math.round(h.x * sX), Math.round(h.y * sY), Math.max(8, Math.round(h.w * sX)), Math.round(h.h * sY));
+            });
+            ctx.restore();
+          }
+        }
+
         var imgData = canvas.toDataURL('image/jpeg', 0.98);
         pdf.addImage(imgData, 'JPEG', 0, 0, pageW, pageH, undefined, 'FAST');
       }finally{
@@ -7870,6 +7886,7 @@ async function processAgyTestOption(optNum, options){
         if(options.statusCallback) options.statusCallback('Highlighting skills & typesetting via WASM (55%)...');
         pdfBlob = await renderAgyStrategy2WasmDocxToPdfBlob(docxBytes, {
           keywords: allKeywords,
+          burnHighlights: true,
           statusCallback: options.statusCallback
         });
       }
@@ -7897,6 +7914,7 @@ async function processAgyTestOption(optNum, options){
         if(options.statusCallback) options.statusCallback('Highlighting skills & typesetting via WASM (50%)...');
         highlightedBlob = await renderAgyStrategy2WasmDocxToPdfBlob(docxBytes, {
           keywords: allKeywords,
+          burnHighlights: true,
           statusCallback: options.statusCallback
         });
       }
@@ -7928,6 +7946,7 @@ async function processAgyTestOption(optNum, options){
         if(options.statusCallback) options.statusCallback('Highlighting skills & typesetting via WASM (55%)...');
         highlightedBlob = await renderAgyStrategy2WasmDocxToPdfBlob(docxBytes, {
           keywords: allKeywords,
+          burnHighlights: true,
           statusCallback: options.statusCallback
         });
       }
@@ -7960,6 +7979,7 @@ async function processAgyTestOption(optNum, options){
         if(options.statusCallback) options.statusCallback('Highlighting skills & typesetting via WASM (55%)...');
         highlightedBlob = await renderAgyStrategy2WasmDocxToPdfBlob(docxBytes, {
           keywords: allKeywords,
+          burnHighlights: true,
           statusCallback: options.statusCallback
         });
       }
@@ -8102,6 +8122,7 @@ async function processAgyTestOption(optNum, options){
         resumeBlob = await renderAgyStrategy2WasmDocxToPdfBlob(docxBytes, {
           anonymizeRules: rules,
           keywords: allKeywords,
+          burnHighlights: true,
           statusCallback: options.statusCallback
         });
       }
@@ -8381,7 +8402,7 @@ window.__rsEnsureOpenDocLab=rsEnsureOpenDocLab;
         </span>
         <span class="rdc-ometa">
           <span class="rdc-ocost">2 Coins</span>
-          <span class="rdc-otime">60 seconds</span>
+          <span class="rdc-otime">Instant</span>
         </span>
         <span class="rdc-ocirc" aria-hidden="true"></span>
       </label>
@@ -8399,7 +8420,7 @@ window.__rsEnsureOpenDocLab=rsEnsureOpenDocLab;
         </span>
         <span class="rdc-ometa">
           <span class="rdc-ocost">3 Coins</span>
-          <span class="rdc-otime">60 seconds</span>
+          <span class="rdc-otime">Instant</span>
         </span>
         <span class="rdc-ocirc" aria-hidden="true"></span>
       </label>
@@ -8417,7 +8438,7 @@ window.__rsEnsureOpenDocLab=rsEnsureOpenDocLab;
         </span>
         <span class="rdc-ometa">
           <span class="rdc-ocost">3 Coins</span>
-          <span class="rdc-otime">60 seconds</span>
+          <span class="rdc-otime">Instant</span>
         </span>
         <span class="rdc-ocirc" aria-hidden="true"></span>
       </label>
@@ -8435,7 +8456,7 @@ window.__rsEnsureOpenDocLab=rsEnsureOpenDocLab;
         </span>
         <span class="rdc-ometa">
           <span class="rdc-ocost">2 Coins</span>
-          <span class="rdc-otime">60 seconds</span>
+          <span class="rdc-otime">Instant</span>
         </span>
         <span class="rdc-ocirc" aria-hidden="true"></span>
       </label>
@@ -8453,7 +8474,7 @@ window.__rsEnsureOpenDocLab=rsEnsureOpenDocLab;
         </span>
         <span class="rdc-ometa">
           <span class="rdc-ocost">3 Coins</span>
-          <span class="rdc-otime">60 seconds</span>
+          <span class="rdc-otime">Instant</span>
         </span>
         <span class="rdc-ocirc" aria-hidden="true"></span>
       </label>
@@ -8471,7 +8492,7 @@ window.__rsEnsureOpenDocLab=rsEnsureOpenDocLab;
         </span>
         <span class="rdc-ometa">
           <span class="rdc-ocost">3 Coins</span>
-          <span class="rdc-otime">60 seconds</span>
+          <span class="rdc-otime">Instant</span>
         </span>
         <span class="rdc-ocirc" aria-hidden="true"></span>
       </label>
@@ -8489,7 +8510,7 @@ window.__rsEnsureOpenDocLab=rsEnsureOpenDocLab;
         </span>
         <span class="rdc-ometa">
           <span class="rdc-ocost">3 Coins</span>
-          <span class="rdc-otime">60 seconds</span>
+          <span class="rdc-otime">Instant</span>
         </span>
         <span class="rdc-ocirc" aria-hidden="true"></span>
       </label>
@@ -8507,7 +8528,7 @@ window.__rsEnsureOpenDocLab=rsEnsureOpenDocLab;
         </span>
         <span class="rdc-ometa">
           <span class="rdc-ocost">2 Coins</span>
-          <span class="rdc-otime">60 seconds</span>
+          <span class="rdc-otime">Instant</span>
         </span>
         <span class="rdc-ocirc" aria-hidden="true"></span>
       </label>
@@ -8525,7 +8546,7 @@ window.__rsEnsureOpenDocLab=rsEnsureOpenDocLab;
         </span>
         <span class="rdc-ometa">
           <span class="rdc-ocost">2 Coins</span>
-          <span class="rdc-otime">60 seconds</span>
+          <span class="rdc-otime">Instant</span>
         </span>
         <span class="rdc-ocirc" aria-hidden="true"></span>
       </label>
@@ -8543,7 +8564,7 @@ window.__rsEnsureOpenDocLab=rsEnsureOpenDocLab;
         </span>
         <span class="rdc-ometa">
           <span class="rdc-ocost">3 Coins</span>
-          <span class="rdc-otime">60 seconds</span>
+          <span class="rdc-otime">Instant</span>
         </span>
         <span class="rdc-ocirc" aria-hidden="true"></span>
       </label>
@@ -8561,7 +8582,7 @@ window.__rsEnsureOpenDocLab=rsEnsureOpenDocLab;
         </span>
         <span class="rdc-ometa">
           <span class="rdc-ocost">3 Coins</span>
-          <span class="rdc-otime">60 seconds</span>
+          <span class="rdc-otime">Instant</span>
         </span>
         <span class="rdc-ocirc" aria-hidden="true"></span>
       </label>
@@ -8579,7 +8600,7 @@ window.__rsEnsureOpenDocLab=rsEnsureOpenDocLab;
         </span>
         <span class="rdc-ometa">
           <span class="rdc-ocost">3 Coins</span>
-          <span class="rdc-otime">60 seconds</span>
+          <span class="rdc-otime">Instant</span>
         </span>
         <span class="rdc-ocirc" aria-hidden="true"></span>
       </label>
@@ -8597,7 +8618,7 @@ window.__rsEnsureOpenDocLab=rsEnsureOpenDocLab;
         </span>
         <span class="rdc-ometa">
           <span class="rdc-ocost">4 Coins</span>
-          <span class="rdc-otime">60 seconds</span>
+          <span class="rdc-otime">Instant</span>
         </span>
         <span class="rdc-ocirc" aria-hidden="true"></span>
       </label>
@@ -9145,18 +9166,13 @@ window.__rsEnsureOpenDocLab=rsEnsureOpenDocLab;
 
   function runSmartCountdown(prefix,totalSeconds){
     stopSmartCountdown();
-    totalSeconds = totalSeconds || 60;
+    totalSeconds = totalSeconds || 30;
+    prefix = prefix || 'Preparing Resume...';
     if(dlBtn){
-      var itemHeight=16;
       dlBtn.innerHTML =
         '<span class="rdc-spin"></span>' +
-        '<span class="rdc-countdown">' +
-          '<span class="rdc-countdown-text">'+escapeCountdownText(prefix)+'</span>' +
-          '<span class="rdc-countdown-reel" aria-hidden="true">' +
-            '<span class="rdc-countdown-track" style="--rdc-count-duration:'+totalSeconds+'s;--rdc-count-steps:'+totalSeconds+';--rdc-count-shift:-'+(totalSeconds * itemHeight)+'px;">'+buildCountdownReel(totalSeconds)+'</span>' +
-          '</span>' +
-          '<span class="rdc-countdown-unit">seconds</span>' +
-        '</span>';
+        '<span id="rdcBtnLabel" class="rdc-countdown-text">' + escapeCountdownText(prefix) + '</span>';
+      btnLbl = latestById('rdcBtnLabel');
     }
     return new Promise(function(resolve){
       smartCountdownResolve = resolve;
@@ -9168,8 +9184,8 @@ window.__rsEnsureOpenDocLab=rsEnsureOpenDocLab;
         }
       }
       smartCountdownTimer = setTimeout(function(){
-        if(dlBtn){
-          dlBtn.innerHTML = '<span class="rdc-spin"></span><span>'+escapeCountdownText(prefix)+' Finalizing...</span>';
+        if(btnLbl){
+          btnLbl.textContent = escapeCountdownText(prefix) + ' Finalizing...';
         }
         finish(true);
       }, totalSeconds * 1000);
@@ -9177,9 +9193,8 @@ window.__rsEnsureOpenDocLab=rsEnsureOpenDocLab;
   }
 
   function beginDownloadCountdown(prefix){
-    /* Purpose: standardize the RDC loading UI so every download option shows the
-       same countdown treatment without changing the option-specific workflows. */
-    runSmartCountdown(prefix || 'Downloading Resume, Kindly wait.', 60);
+    /* Purpose: standardize the RDC loading UI with a live progress spinner preserving #rdcBtnLabel. */
+    runSmartCountdown(prefix || 'Preparing Resume, kindly wait...', 30);
   }
 
   function resetBtn(){
@@ -9291,7 +9306,7 @@ window.__rsEnsureOpenDocLab=rsEnsureOpenDocLab;
           showToast(m.unavailableMsg || 'Download is available for PDF and DOCX resumes.', 'warn');
           resetBtn(); return;
         }
-        runSmartCountdown('Downloading Resume...., Kindly Wait for', 60);
+        runSmartCountdown('Preparing Resume...', 30);
         ensureDownloadCenterR2Urls().then(function(){
           var testSources = rdcCollectDownloadSources([r2DirectUrl,r2PublicUrl,originalR2DirectUrl,originalR2PublicUrl,dlUrl]);
           if(!testSources.length) throw new Error('Direct resume URL is not available.');
