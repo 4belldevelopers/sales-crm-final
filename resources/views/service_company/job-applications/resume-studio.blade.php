@@ -10,6 +10,28 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <!-- Core Client-Side PDF Engines -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.11.338/pdf.min.js"></script>
+  <script src="{{ asset('js/pdfmake.min.js') }}"></script>
+  <script src="{{ asset('js/vfs_fonts.min.js') }}"></script>
+
+  <!-- PDF-Lib shielded from RequireJS / AMD definition conflicts -->
+  <script>
+    window.__tempAmd = window.define;
+    window.define = undefined;
+  </script>
+  <script src="{{ asset('js/pdf-lib.min.js') }}"></script>
+  <script>
+    if(window.__tempAmd) window.define = window.__tempAmd;
+  </script>
+
+  <!-- DOCX & Canvas Utilities for client-side fallbacks -->
+  <script src="{{ asset('js/jszip.min.js') }}"></script>
+  <script src="{{ asset('js/docx-preview.min.js') }}"></script>
+  <script src="{{ asset('js/jspdf.umd.min.js') }}"></script>
+  <script src="{{ asset('js/html2canvas.min.js') }}"></script>
+
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     html, body {
@@ -45,7 +67,13 @@
     .brand-section {
       display: flex;
       align-items: center;
-      gap: 12px;
+      gap: 10px;
+    }
+    .brand-logo-wrap {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 28px;
     }
     .brand-logo-img {
       height: 24px;
@@ -251,52 +279,44 @@
       border-radius: 5px;
       cursor: pointer;
     }
-    .kw-add-row {
-      display: flex;
-      gap: 6px;
-      margin-top: 8px;
-    }
-    .kw-add-input {
-      flex: 1;
-      height: 28px;
-      padding: 0 8px;
-      font-size: 11.5px;
-      font-family: inherit;
-      border: 1px solid #cbd5e1;
-      border-radius: 5px;
-      outline: none;
-    }
-    .kw-add-input:focus { border-color: #0284c7; }
 
-    /* Action Tools */
+    /* Action Tools List */
     .action-tools-list {
       display: flex;
       flex-direction: column;
-      gap: 8px;
+      gap: 6px;
     }
     .btn-action-tool {
+      display: flex;
+      align-items: center;
+      gap: 9px;
       width: 100%;
-      height: 34px;
-      padding: 0 12px;
+      padding: 8px 12px;
       font-size: 12px;
       font-weight: 600;
       font-family: inherit;
+      color: #1e293b;
       background: #f8fafc;
-      color: #0f172a;
-      border: 1px solid #cbd5e1;
+      border: 1px solid #e2e8f0;
       border-radius: 6px;
-      display: flex;
-      align-items: center;
-      gap: 8px;
       cursor: pointer;
       text-align: left;
-      transition: background 0.12s ease;
+      transition: all 0.12s ease;
       user-select: none;
     }
-    .btn-action-tool:hover { background: #f1f5f9; border-color: #94a3b8; }
-    .btn-tool-highlight:hover { background: #fef9c3; border-color: #facc15; }
-    .btn-tool-whiteout:hover { background: #fee2e2; border-color: #f87171; }
-    .btn-tool-active { background: #e0f2fe !important; border-color: #0284c7 !important; color: #0284c7 !important; }
+    .btn-action-tool:hover {
+      background: #f1f5f9;
+      border-color: #cbd5e1;
+      color: #0f172a;
+    }
+    .btn-action-tool.btn-tool-active {
+      background: #e0f2fe;
+      border-color: #38bdf8;
+      color: #0369a1;
+      box-shadow: 0 0 0 1px #38bdf8;
+    }
+    .btn-tool-highlight:hover { background: #fef9c3; border-color: #fde047; }
+    .btn-tool-whiteout:hover { background: #f1f5f9; border-color: #94a3b8; }
 
     /* ZONE B: Center Document Viewport (Dedicated High-Fidelity Canvas) */
     .acrobat-canvas {
@@ -318,6 +338,7 @@
       background: #ffffff;
       border-radius: 2px;
       user-select: text;
+      -webkit-user-select: text;
     }
     .rcv-page-canvas {
       display: block;
@@ -333,6 +354,9 @@
       overflow: hidden;
       line-height: 1;
       z-index: 2;
+      pointer-events: auto;
+      user-select: text;
+      -webkit-user-select: text;
     }
     .rcv-textlayer span {
       position: absolute;
@@ -340,19 +364,20 @@
       color: transparent;
       transform-origin: 0% 0%;
       cursor: text;
+      pointer-events: auto;
+      user-select: text;
+      -webkit-user-select: text;
     }
-    .rcv-textlayer span::selection {
-      background: rgba(2, 132, 199, 0.3);
+    .rcv-textlayer span::selection,
+    .rcv-textlayer ::selection {
+      background: rgba(2, 132, 199, 0.35) !important;
+      color: transparent !important;
     }
-    .rcv-textlayer mark.rcv-hit {
-      background: rgba(254, 240, 138, 0.55);
-      color: transparent;
-      border-radius: 2px;
-    }
-    .rcv-textlayer mark.rcv-redact {
-      background: #0f172a;
-      color: transparent;
-      border-radius: 2px;
+
+    /* Dynamic User Annotations Overlay Layer */
+    .rcv-user-mark {
+      pointer-events: none !important;
+      user-select: none !important;
     }
 
     /* Drawing / Markup Canvas Overlay */
@@ -458,83 +483,78 @@
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      padding: 120px 20px;
-      color: #e2e8f0;
-      gap: 14px;
+      gap: 12px;
+      height: 380px;
+      color: #ffffff;
     }
   </style>
-
-  <!-- Local Engines (WASM, PDF-Lib, PDFMake, PDF.js, Annotator) -->
-  <script src="{{ asset('js/pdfmake.min.js') }}"></script>
-  <script src="{{ asset('js/vfs_fonts.min.js') }}"></script>
-  <script src="{{ asset('js/pdf-lib.min.js') }}"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.11.338/pdf.min.js"></script>
-  <script src="{{ asset('js/opendoc/AgyWasmEngine.js') }}"></script>
-  <script src="{{ asset('js/opendoc/AgyTouchAnnotator.js') }}"></script>
-  <script src="{{ asset('js/opendoc/AgyCvOptimizer.js') }}"></script>
 </head>
 <body>
 
 <div class="acrobat-app">
 
-  <!-- TOP HEADER -->
+  <!-- Top Enterprise Acrobat-Style Header -->
   <header class="acrobat-header">
     <div class="brand-section">
-      <img src="{{ asset('img/logo.svg') }}" alt="JERO" class="brand-logo-img">
+      <div class="brand-logo-wrap">
+        <img src="{{ asset('img/logo.svg') }}" alt="jero.works" class="brand-logo-img" onerror="this.style.display='none'">
+      </div>
       <div class="brand-text-block">
-        <span class="brand-title">jero.works</span>
-        <span class="doc-status-tag">WASM Online Editor</span>
+        <span class="brand-title">jero.works online editor</span>
+        <span class="doc-status-tag">{{ ucwords(@$application->full_name ?: @$application->name ?: 'Candidate') }}</span>
       </div>
     </div>
 
     <div class="header-actions">
-      <label for="modePicker" style="font-size:11.5px;font-weight:600;color:#64748b;">Dossier Format:</label>
-      <select id="modePicker" class="mode-picker-select">
-        <option value="61">Option 61: ATS Optimized Résumé</option>
-        <option value="62">Option 62: Resume + Company Branding (Group 3)</option>
-        <option value="63">Option 63: Highlighted Keywords Résumé (Group 5)</option>
-        <option value="64">Option 64: Pre-Screen Report + Résumé (Group 4)</option>
-        <option value="65" selected>Option 65: Pre-Screen Report + Highlighted Résumé (Group 5)</option>
+      <!-- Mode Selection Dropdown -->
+      <select id="modePicker" class="mode-picker-select" title="Switch Document Generation Format">
+        <option value="61">Format: ATS Original Resume</option>
+        <option value="62">Format: Resume + Company Branding</option>
+        <option value="64">Format: Pre-Screen Report + Resume</option>
+        <option value="65">Format: Pre-Screen Report + Highlighted Resume</option>
       </select>
 
-      <button type="button" id="btnDownload" class="btn-header-dl">
-        <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM17 13l-5 5-5-5h3V9h4v4h3z"/></svg>
-        <span id="btnDlText">Download Final PDF</span>
+      <button type="button" class="btn-header-dl" id="btnDownload">
+        <i class="fa-solid fa-download"></i> Download Final Vector PDF
       </button>
     </div>
   </header>
 
-  <!-- MAIN WORKSPACE -->
+  <!-- Workspace Container -->
   <div class="acrobat-workspace">
 
     <!-- ZONE A: Left Tools Sidebar -->
     <aside class="acrobat-sidebar">
 
-      <!-- ATS Keyword Match Card -->
+      <!-- ATS Scorecard -->
       <div class="sidebar-section">
         <div class="sidebar-sec-head">
-          <span class="sidebar-sec-title">ATS Match &amp; Keywords</span>
+          <span class="sidebar-sec-title">Candidate ATS Score</span>
         </div>
         <div class="ats-score-card">
-          <div class="ats-score-circle" id="atsScoreCircle" style="--score-pct: 100%;">
-            <span class="ats-score-circle-text" id="atsScoreVal">100%</span>
+          <div class="ats-score-circle" id="atsScoreCircle" style="--score-pct: 88%;">
+            <span class="ats-score-circle-text" id="atsScoreVal">88%</span>
           </div>
           <div class="ats-score-meta">
-            <span class="ats-score-label">GOD-Level ATS Match</span>
-            <span class="ats-score-sub" id="atsMatchRatio">All keywords verified</span>
+            <span class="ats-score-label" id="atsMatchLabel">ATS Match Confidence</span>
+            <span class="ats-score-sub" id="atsMatchRatio">Calculating keyword presence…</span>
           </div>
         </div>
+      </div>
 
-        <div style="margin-top:12px;">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
-            <span style="font-size:11px;font-weight:700;color:#475569;text-transform:uppercase;">Key Skills (Click to Toggle)</span>
-            <span id="kwCountBadge" style="font-size:10.5px;color:#0284c7;font-weight:600;">0 active</span>
-          </div>
-          <div class="kw-chip-bank" id="kwBank"></div>
-          <div class="kw-add-row">
-            <input type="text" id="kwInput" class="kw-add-input" placeholder="Add custom keyword…">
-            <button type="button" id="btnKwAdd" class="btn-ats-add-kw">Add</button>
-          </div>
+      <!-- Keyword Bank & Real-time Highlighting -->
+      <div class="sidebar-section">
+        <div class="sidebar-sec-head">
+          <span class="sidebar-sec-title">Skill Keywords</span>
+          <span id="kwCountBadge" style="font-size:10px;font-weight:700;color:#0284c7;background:#e0f2fe;padding:2px 6px;border-radius:4px;">0 active</span>
+        </div>
+        <div class="kw-chip-bank" id="kwBank">
+          <!-- Dynamically populated chips -->
+        </div>
+
+        <div style="display:flex;gap:6px;margin-top:10px;">
+          <input type="text" id="kwInput" placeholder="Add custom skill…" style="flex:1;height:28px;padding:0 8px;font-size:11.5px;font-family:inherit;border:1px solid #cbd5e1;border-radius:5px;outline:none;">
+          <button type="button" id="btnKwAdd" class="btn-ats-add-kw">Add</button>
         </div>
       </div>
 
@@ -575,8 +595,8 @@
     <main class="acrobat-canvas" id="canvas">
       <div class="loading-container" id="loaderBox">
         <div class="spin" style="width:34px;height:34px;border-width:3px;border-color:#38bdf8;border-top-color:transparent;"></div>
-        <span style="font-size:14px;font-weight:600;">Generating high-fidelity dossier via WASM Engine…</span>
-        <span style="font-size:12px;color:#94a3b8;">Embedding vector corporate branding, report metrics, and keyword coordinates</span>
+        <span style="font-size:14px;font-weight:600;">Loading candidate document into online editor…</span>
+        <span style="font-size:12px;color:#94a3b8;">Preserving authentic typography, formatting, and vector resolution</span>
       </div>
       <div id="docPagesContainer" style="display:none;display:flex;flex-direction:column;align-items:center;gap:24px;width:100%;"></div>
     </main>
@@ -622,10 +642,12 @@
   var companyLogo = @json($companyLogo ?? '');
   var resumeExt = @json(strtolower($resumeExt ?? 'pdf'));
   var rcvFetchUrl = @json($rcvFetchUrl ?? '');
+  var rcvDownloadUrl = @json($rcvDownloadUrl ?? '');
+  var rcvPublicUrl = @json($rcvPublicUrl ?? '');
   var r2SignUrl = @json($r2SignUrl ?? '');
-  var initialOpt = @json($optId ?? 65);
+  var initialOpt = @json($optId ?? 64);
 
-  // Full Pre-Screened Report Data Attributes (matching showdetail.blade.php buildDefinition)
+  // Full Pre-Screened Report Data Attributes
   var candidateDossierData = {
     name: candName,
     designation: @json($rsCurrentDesignation ?? (@$job->title ?: 'Verified Professional')),
@@ -657,16 +679,15 @@
   var modePicker = document.getElementById('modePicker');
 
   var currentGeneratedPdfBlob = null;
-  var currentPdfDoc = null;
   var currentPdfJsDoc = null;
   var currentZoom = 1.0;
   var pageElements = [];
 
   // Edits recorded for vector PDF burning
   var userAnnotations = {
-    highlights: [], // { pageNum, x, y, width, height } in PDF pts
-    whiteouts: [],  // { pageNum, x, y, width, height, isBlack }
-    stamps: []      // { pageNum, x, y, width, height, imgDataUrl }
+    highlights: [], // { pageNum, x, y, width, height, viewportW, viewportH }
+    whiteouts: [],  // { pageNum, x, y, width, height, viewportW, viewportH }
+    stamps: []      // { pageNum, x, y, width, height, imgDataUrl, viewportW, viewportH }
   };
 
   // History stack for Undo / Redo
@@ -676,7 +697,7 @@
   function recordHistoryState(){
     historyStack = historyStack.slice(0, historyIndex + 1);
     historyStack.push(JSON.parse(JSON.stringify(userAnnotations)));
-    if(historyStack.length > 30) historyStack.shift();
+    if(historyStack.length > 40) historyStack.shift();
     historyIndex = historyStack.length - 1;
     updateUndoRedoUI();
   }
@@ -717,6 +738,66 @@
       }
     }
   });
+
+  // Re-draws dynamic DOM overlays after Undo / Redo / Selection without altering text layer
+  function redrawPageOverlays(){
+    document.querySelectorAll('.rcv-user-mark').forEach(function(el){
+      if(el.parentNode) el.parentNode.removeChild(el);
+    });
+
+    // Highlights
+    userAnnotations.highlights.forEach(function(hl){
+      var pageWrap = document.getElementById('page_' + hl.pageNum);
+      if(!pageWrap) return;
+      var mark = document.createElement('div');
+      mark.className = 'rcv-user-mark';
+      mark.style.position = 'absolute';
+      mark.style.left = hl.x + 'px';
+      mark.style.top = hl.y + 'px';
+      mark.style.width = hl.width + 'px';
+      mark.style.height = hl.height + 'px';
+      mark.style.backgroundColor = 'rgba(254, 240, 138, 0.55)';
+      mark.style.borderRadius = '2px';
+      mark.style.pointerEvents = 'none';
+      mark.style.zIndex = '4';
+      pageWrap.appendChild(mark);
+    });
+
+    // Whiteouts
+    userAnnotations.whiteouts.forEach(function(wo){
+      var pageWrap = document.getElementById('page_' + wo.pageNum);
+      if(!pageWrap) return;
+      var mark = document.createElement('div');
+      mark.className = 'rcv-user-mark';
+      mark.style.position = 'absolute';
+      mark.style.left = wo.x + 'px';
+      mark.style.top = wo.y + 'px';
+      mark.style.width = wo.width + 'px';
+      mark.style.height = wo.height + 'px';
+      mark.style.backgroundColor = '#ffffff';
+      mark.style.boxShadow = '0 0 0 1px #cbd5e1';
+      mark.style.pointerEvents = 'none';
+      mark.style.zIndex = '4';
+      pageWrap.appendChild(mark);
+    });
+
+    // Stamps & Signatures
+    userAnnotations.stamps.forEach(function(st){
+      var pageWrap = document.getElementById('page_' + st.pageNum);
+      if(!pageWrap) return;
+      var img = document.createElement('img');
+      img.className = 'rcv-user-mark';
+      img.src = st.imgDataUrl;
+      img.style.position = 'absolute';
+      img.style.left = st.x + 'px';
+      img.style.top = st.y + 'px';
+      img.style.width = st.width + 'px';
+      img.style.height = (st.height ? st.height + 'px' : 'auto');
+      img.style.pointerEvents = 'none';
+      img.style.zIndex = '10';
+      pageWrap.appendChild(img);
+    });
+  }
 
   // -------------------------------------------------------------
   // ATS KEYWORD ENGINE & REAL-TIME MATCH CALCULATION
@@ -788,7 +869,7 @@
   }
 
   // -------------------------------------------------------------
-  // BUILD FINAL DOSSIER DOCUMENT (Exact Group 3, 4, 5 WASM Pipeline)
+  // RAW RESUME FETCH & STANDALONE PROCESSING
   // -------------------------------------------------------------
   async function fetchRawResumeBytes(){
     // 1. Check parent window cache
@@ -800,31 +881,102 @@
       }
     }
 
-    var endpoint = rcvFetchUrl;
-    if(!endpoint && r2SignUrl){
+    // 2. Fetch URLs in order
+    var urlsToTry = [rcvPublicUrl, rcvFetchUrl, rcvDownloadUrl].filter(Boolean);
+    for(var u = 0; u < urlsToTry.length; u++){
+      try {
+        var res = await fetch(urlsToTry[u], { credentials: 'same-origin', cache: 'no-store' });
+        if(res.ok){
+          var ab = await res.arrayBuffer();
+          if(ab && ab.byteLength > 100){
+            return new Uint8Array(ab);
+          }
+        }
+      } catch(fetchErr){
+        console.warn('Resume fetch attempt failed for ' + urlsToTry[u], fetchErr);
+      }
+    }
+
+    // 3. Fallback: R2 signed download URL
+    if(r2SignUrl){
       try {
         var sRes = await fetch(r2SignUrl, { headers: { 'Accept': 'application/json' } });
         if(sRes.ok){
           var sData = await sRes.json();
-          if(sData && sData.download_url) endpoint = sData.download_url;
+          if(sData && sData.download_url){
+            var sFetch = await fetch(sData.download_url);
+            if(sFetch.ok){
+              var sAb = await sFetch.arrayBuffer();
+              if(sAb && sAb.byteLength > 100) return new Uint8Array(sAb);
+            }
+          }
         }
       } catch(e){}
     }
 
-    if(!endpoint) throw new Error('No candidate resume source available.');
-    var res = await fetch(endpoint, { credentials: 'same-origin' });
-    if(!res.ok) throw new Error('Fetch failed with status ' + res.status);
-    var ab = await res.arrayBuffer();
-    return new Uint8Array(ab);
+    throw new Error('Candidate resume could not be retrieved.');
   }
 
-  // Vector Pre-Screen Report Builder (pdfMake)
-  async function buildRecruiterSummaryVectorBlob(data){
-    if(window.opener && typeof window.opener.__buildRSBlob === 'function'){
-      return window.opener.__buildRSBlob(data, {});
+  // Standalone DOCX to PDF converter
+  async function convertDocxToPdfBlob(docxBytes){
+    // 1. Try opener WASM engine if available
+    if(window.opener && typeof window.opener.__renderAgyStrategy2WasmDocxToPdfBlob === 'function'){
+      try {
+        var b = await window.opener.__renderAgyStrategy2WasmDocxToPdfBlob(docxBytes);
+        if(b && b.size > 200) return b;
+      } catch(err){
+        console.warn('Opener WASM docx conversion skipped:', err);
+      }
     }
 
-    // Local standalone pdfMake definition
+    // 2. Local fallback using docx-preview + html2canvas + jsPDF
+    try {
+      var tempContainer = document.createElement('div');
+      tempContainer.style.position = 'fixed';
+      tempContainer.style.left = '-9999px';
+      tempContainer.style.top = '0';
+      tempContainer.style.width = '794px';
+      tempContainer.style.background = '#ffffff';
+      document.body.appendChild(tempContainer);
+
+      await window.docx.renderAsync(docxBytes, tempContainer, null, {
+        className: 'docx-preview-root',
+        inWrapper: false,
+        ignoreWidth: false,
+        ignoreHeight: false
+      });
+
+      if(document.fonts && document.fonts.ready) await document.fonts.ready;
+      await new Promise(function(r){ setTimeout(r, 120); });
+
+      var pages = tempContainer.querySelectorAll('.docx-wrapper > section, section.docx');
+      if(!pages.length) pages = [tempContainer];
+
+      var jsPdf = new window.jspdf.jsPDF('p', 'pt', 'a4');
+      for(var i = 0; i < pages.length; i++){
+        var c = await window.html2canvas(pages[i], { scale: 2, useCORS: true, logging: false });
+        var imgData = c.toDataURL('image/jpeg', 0.95);
+        if(i > 0) jsPdf.addPage('a4', 'p');
+        jsPdf.addImage(imgData, 'JPEG', 0, 0, 595.28, 841.89);
+      }
+
+      document.body.removeChild(tempContainer);
+      return jsPdf.output('blob');
+    } catch(e){
+      console.error('Local docx-preview conversion failed:', e);
+      return new Blob([docxBytes], { type: 'application/pdf' });
+    }
+  }
+
+  // Standalone Pre-Screen Report Builder (pdfMake)
+  async function buildRecruiterSummaryVectorBlob(data){
+    if(window.opener && typeof window.opener.__buildRSBlob === 'function'){
+      try {
+        var opBlob = await window.opener.__buildRSBlob(data, {});
+        if(opBlob && opBlob.size > 200) return opBlob;
+      } catch(e){}
+    }
+
     return new Promise(function(resolve, reject){
       try {
         var score = data.match || 88;
@@ -865,7 +1017,7 @@
               ]]},
               margin: [0, 0, 0, 12]
             },
-            // 4 Metrics
+            // 4 Key Candidate Metrics
             {
               table: { widths: ['*', '*', '*', '*'], body: [[
                 { stack: [ { text: 'EDUCATION', fontSize: 6.5, bold: true, color: '#64748b', alignment: 'center' }, { text: data.education, fontSize: 8, bold: true, alignment: 'center', margin: [0, 2, 0, 0] } ], margin: [4, 6, 4, 6] },
@@ -899,10 +1051,39 @@
     });
   }
 
+  // Clean, Standalone Vector PDF Merger (Returns Blob directly, 0% download triggers)
+  async function mergeReportAndResume(reportBlob, resumeBlob){
+    var PDFLib = window.PDFLib;
+    if(!PDFLib || !PDFLib.PDFDocument) throw new Error('PDFLib is not loaded');
+
+    var rBytes = await reportBlob.arrayBuffer();
+    var cvBytes = await resumeBlob.arrayBuffer();
+
+    var merged = await PDFLib.PDFDocument.create();
+    var reportDoc = await PDFLib.PDFDocument.load(rBytes);
+    var cvDoc = await PDFLib.PDFDocument.load(cvBytes);
+
+    // Copy Report Pages
+    var p1 = await merged.copyPages(reportDoc, reportDoc.getPageIndices());
+    p1.forEach(function(page){ merged.addPage(page); });
+
+    // Copy Resume Pages
+    var p2 = await merged.copyPages(cvDoc, cvDoc.getPageIndices());
+    p2.forEach(function(page){ merged.addPage(page); });
+
+    var mergedBytes = await merged.save();
+    return new Blob([mergedBytes], { type: 'application/pdf' });
+  }
+
   // Vector Company Branding Header Injection (PDFLib)
   async function applyCompanyBrandingToPdf(resumePdfBlob, brandingData){
     if(window.opener && typeof window.opener.__applyAgyCompanyBrandingToPdfBlob === 'function'){
-      return window.opener.__applyAgyCompanyBrandingToPdfBlob(resumePdfBlob, brandingData);
+      try {
+        var bBlob = await window.opener.__applyAgyCompanyBrandingToPdfBlob(resumePdfBlob, brandingData);
+        if(bBlob && bBlob.size > 200) return bBlob;
+      } catch(e){
+        console.warn('Opener branding error, using local branding:', e);
+      }
     }
 
     var PDFLib = window.PDFLib;
@@ -936,7 +1117,6 @@
     newFirst.drawText(brandingData.reportCompanyName || 'Hiring Partner', { x: 24, y: topY + headerH - 44, size: 12, font: boldFont, color: PDFLib.rgb(0.06, 0.09, 0.16) });
     newFirst.drawText('CONFIDENTIAL RESUME', { x: pageSize.width - 170, y: topY + headerH - 26, size: 12, font: boldFont, color: PDFLib.rgb(0.06, 0.09, 0.16) });
 
-    // Copy remaining pages
     var sourcePages = resumeDoc.getPages();
     if(sourcePages.length > 1){
       var rest = await targetDoc.copyPages(resumeDoc, resumeDoc.getPageIndices().slice(1));
@@ -950,12 +1130,19 @@
   // Vector Keyword Highlighting (PDFLib + PDF.js text runs)
   async function applyVectorKeywordsHighlight(resumePdfBlob, keywordsList){
     if(window.opener && typeof window.opener.__buildTurboVectorHighlightedResume === 'function'){
-      return window.opener.__buildTurboVectorHighlightedResume({
-        resumeBlob: resumePdfBlob,
-        keywords: keywordsList,
-        returnBlob: true,
-        ignoreBusy: true
-      });
+      try {
+        var hlBlob = await window.opener.__buildTurboVectorHighlightedResume({
+          resumeBlob: resumePdfBlob,
+          resumeExt: 'PDF', // Pass explicitly to prevent cross-realm instanceof Blob failure
+          keywords: keywordsList,
+          returnBlob: true,
+          ignoreBusy: true,
+          throwOnError: true
+        });
+        if(hlBlob && hlBlob.size > 200) return hlBlob;
+      } catch(e){
+        console.warn('Opener keyword highlighter skipped:', e);
+      }
     }
 
     var PDFLib = window.PDFLib;
@@ -998,57 +1185,17 @@
     return new Blob([savedBytes], { type: 'application/pdf' });
   }
 
-  // Merges Pre-Screen Report and Resume (PDFLib)
-  async function mergeReportAndResume(reportBlob, resumeBlob){
-    if(window.opener && typeof window.opener.mergePreScreenedReportAndResume === 'function'){
-      var PDFLib = window.PDFLib;
-      var rBytes = await reportBlob.arrayBuffer();
-      var cvBytes = await resumeBlob.arrayBuffer();
-      var merged = await PDFLib.PDFDocument.create();
-      var doc1 = await PDFLib.PDFDocument.load(rBytes);
-      var doc2 = await PDFLib.PDFDocument.load(cvBytes);
-
-      var p1 = await merged.copyPages(doc1, doc1.getPageIndices());
-      p1.forEach(function(page){ merged.addPage(page); });
-
-      var p2 = await merged.copyPages(doc2, doc2.getPageIndices());
-      p2.forEach(function(page){ merged.addPage(page); });
-
-      var b = await merged.save();
-      return new Blob([b], { type: 'application/pdf' });
-    }
-
-    var PDFLib = window.PDFLib;
-    var merged = await PDFLib.PDFDocument.create();
-    var doc1 = await PDFLib.PDFDocument.load(await reportBlob.arrayBuffer());
-    var doc2 = await PDFLib.PDFDocument.load(await resumeBlob.arrayBuffer());
-
-    var p1 = await merged.copyPages(doc1, doc1.getPageIndices());
-    p1.forEach(function(p){ merged.addPage(p); });
-    var p2 = await merged.copyPages(doc2, doc2.getPageIndices());
-    p2.forEach(function(p){ merged.addPage(p); });
-
-    var res = await merged.save();
-    return new Blob([res], { type: 'application/pdf' });
-  }
-
   // -------------------------------------------------------------
   // PRIMARY PIPELINE: Generates the Selected Option's Final Base File
   // -------------------------------------------------------------
   async function buildOptionDocument(modeNum){
-    modeNum = parseInt(modeNum, 10) || 61;
+    modeNum = parseInt(modeNum, 10) || 64;
     var rawBytes = await fetchRawResumeBytes();
 
     var baseResumeBlob = null;
-    // Check if DOCX
-    if(rawBytes[0] === 0x50 && rawBytes[1] === 0x4B && resumeExt === 'docx'){
-      if(window.AgyWasmEngine && typeof window.AgyWasmEngine.renderDocxToPdfBlob === 'function'){
-        baseResumeBlob = await window.AgyWasmEngine.renderDocxToPdfBlob(rawBytes);
-      } else if(window.opener && typeof window.opener.__renderAgyStrategy2WasmDocxToPdfBlob === 'function'){
-        baseResumeBlob = await window.opener.__renderAgyStrategy2WasmDocxToPdfBlob(rawBytes);
-      } else {
-        baseResumeBlob = new Blob([rawBytes], { type: 'application/pdf' });
-      }
+    var isDocx = (rawBytes[0] === 0x50 && rawBytes[1] === 0x4B) || resumeExt === 'docx';
+    if(isDocx){
+      baseResumeBlob = await convertDocxToPdfBlob(rawBytes);
     } else {
       baseResumeBlob = new Blob([rawBytes], { type: 'application/pdf' });
     }
@@ -1056,18 +1203,18 @@
     var finalBlob = baseResumeBlob;
 
     if(modeNum === 62){
-      // Option 62 (Group 3: Resume + Company Branding)
+      // Option 62: Resume + Company Branding
       finalBlob = await applyCompanyBrandingToPdf(baseResumeBlob, candidateDossierData);
     } else if(modeNum === 63){
-      // Option 63 (Group 5: Highlighted Keywords)
+      // Option 63: Highlighted Keywords
       var activeKws = Object.keys(keywords).filter(function(k){ return keywords[k].active; });
       finalBlob = await applyVectorKeywordsHighlight(baseResumeBlob, activeKws);
     } else if(modeNum === 64){
-      // Option 64 (Group 4: Pre-Screen Report + Resume)
+      // Option 64: Pre-Screen Report + Resume
       var reportBlob = await buildRecruiterSummaryVectorBlob(candidateDossierData);
       finalBlob = await mergeReportAndResume(reportBlob, baseResumeBlob);
     } else if(modeNum === 65){
-      // Option 65 (Group 5: Pre-Screen Report + Highlighted Keywords)
+      // Option 65: Pre-Screen Report + Highlighted Keywords
       var reportBlob = await buildRecruiterSummaryVectorBlob(candidateDossierData);
       var activeKws = Object.keys(keywords).filter(function(k){ return keywords[k].active; });
       var hlResumeBlob = await applyVectorKeywordsHighlight(baseResumeBlob, activeKws);
@@ -1125,7 +1272,7 @@
       tl.style.height = Math.floor(viewport.height) + 'px';
       pageWrap.appendChild(tl);
 
-      // Annotation Canvas Overlay (Touch / Stylus / Redaction drawing)
+      // Annotation Canvas Overlay (Touch / Stylus drawing)
       var annotCanvas = document.createElement('canvas');
       annotCanvas.className = 'rcv-annotation-canvas';
       annotCanvas.width = canvas.width;
@@ -1141,7 +1288,7 @@
       var transform = (dpr !== 1) ? [dpr, 0, 0, dpr, 0, 0] : null;
       await page.render({ canvasContext: ctx, viewport: viewport, transform: transform }).promise;
 
-      // Render Text Layer
+      // Render Text Layer for mouse selection & highlights
       var tc = await page.getTextContent();
       try {
         await window.pdfjsLib.renderTextLayer({
@@ -1157,6 +1304,7 @@
 
     loaderBox.style.display = 'none';
     docPagesContainer.style.display = 'flex';
+    redrawPageOverlays();
     countOccurrences();
     renderChips();
     recordHistoryState();
@@ -1173,33 +1321,30 @@
     var ctx = annotCanvas.getContext('2d');
     var dpr = window.devicePixelRatio || 1;
 
-    // Pointer drawing for annotations
     annotCanvas.addEventListener('pointerdown', function(e){
       if(!isAnnotatingMode) return;
       e.preventDefault();
       isDrawingStroke = true;
       currentStroke = [{ x: e.offsetX * dpr, y: e.offsetY * dpr }];
+      ctx.beginPath();
+      ctx.moveTo(e.offsetX * dpr, e.offsetY * dpr);
+      ctx.strokeStyle = '#f59e0b';
+      ctx.lineWidth = 3 * dpr;
+      ctx.lineCap = 'round';
     });
 
     annotCanvas.addEventListener('pointermove', function(e){
-      if(!isDrawingStroke || !isAnnotatingMode) return;
+      if(!isAnnotatingMode || !isDrawingStroke) return;
       e.preventDefault();
-      currentStroke.push({ x: e.offsetX * dpr, y: e.offsetY * dpr });
-
-      ctx.beginPath();
-      ctx.strokeStyle = '#0284c7';
-      ctx.lineWidth = 2.5 * dpr;
-      ctx.lineCap = 'round';
-      ctx.lineJoin = 'round';
-      ctx.moveTo(currentStroke[currentStroke.length - 2].x, currentStroke[currentStroke.length - 2].y);
-      ctx.lineTo(currentStroke[currentStroke.length - 1].x, currentStroke[currentStroke.length - 1].y);
+      ctx.lineTo(e.offsetX * dpr, e.offsetY * dpr);
       ctx.stroke();
+      currentStroke.push({ x: e.offsetX * dpr, y: e.offsetY * dpr });
     });
 
-    window.addEventListener('pointerup', function(){
+    annotCanvas.addEventListener('pointerup', function(e){
+      if(!isAnnotatingMode) return;
       if(isDrawingStroke && currentStroke.length > 1){
         isDrawingStroke = false;
-        // Save as stamp for vector burning
         var imgUrl = annotCanvas.toDataURL('image/png');
         userAnnotations.stamps.push({
           pageNum: pageNum,
@@ -1207,7 +1352,9 @@
           y: 0,
           width: viewport.width,
           height: viewport.height,
-          imgDataUrl: imgUrl
+          imgDataUrl: imgUrl,
+          viewportW: viewport.width,
+          viewportH: viewport.height
         });
         recordHistoryState();
       }
@@ -1215,13 +1362,13 @@
     });
   }
 
-  // Text selection highlight tool
+  // Text Selection Highlight Tool
   document.getElementById('btnToolHighlight').onclick = function(e){
     e.preventDefault();
     applySelectionAnnotation('highlight');
   };
 
-  // Text selection whiteout tool
+  // Text Selection Whiteout Tool
   document.getElementById('btnToolWhiteout').onclick = function(e){
     e.preventDefault();
     applySelectionAnnotation('whiteout');
@@ -1229,69 +1376,67 @@
 
   function applySelectionAnnotation(type){
     var sel = window.getSelection();
-    if(!sel || !sel.rangeCount || sel.isCollapsed) return;
+    if(!sel || !sel.rangeCount || sel.isCollapsed){
+      alert('Please select some text on the resume page first, then click ' + (type === 'highlight' ? 'Highlight' : 'Whiteout') + '.');
+      return;
+    }
 
     var range = sel.getRangeAt(0);
     var rects = range.getClientRects();
     if(!rects || !rects.length) return;
 
-    for(var r = 0; r < rects.length; r++){
-      var rect = rects[r];
-      // Find which page container this rect belongs to
+    var container = range.commonAncestorContainer;
+    var pageWrap = (container.nodeType === 1 ? container : container.parentElement).closest('.rcv-page-wrap');
+    if(!pageWrap){
       for(var p = 0; p < pageElements.length; p++){
-        var pageWrap = pageElements[p];
-        var pRect = pageWrap.getBoundingClientRect();
-        if(rect.top >= pRect.top && rect.bottom <= pRect.bottom && rect.left >= pRect.left && rect.right <= pRect.right){
-          var pageNum = p + 1;
-          var x = rect.left - pRect.left;
-          var y = rect.top - pRect.top;
-          var w = rect.width;
-          var h = rect.height;
-
-          var mark = document.createElement('div');
-          mark.style.position = 'absolute';
-          mark.style.left = x + 'px';
-          mark.style.top = y + 'px';
-          mark.style.width = w + 'px';
-          mark.style.height = h + 'px';
-          mark.style.pointerEvents = 'none';
-          mark.style.zIndex = '4';
-
-          if(type === 'highlight'){
-            mark.style.backgroundColor = 'rgba(254, 240, 138, 0.55)';
-            mark.style.borderRadius = '2px';
-            pageWrap.appendChild(mark);
-
-            userAnnotations.highlights.push({
-              pageNum: pageNum,
-              x: x,
-              y: y,
-              width: w,
-              height: h,
-              viewportW: pageWrap.__viewport.width,
-              viewportH: pageWrap.__viewport.height
-            });
-          } else {
-            mark.style.backgroundColor = '#ffffff';
-            mark.style.border = '1px solid #e2e8f0';
-            pageWrap.appendChild(mark);
-
-            userAnnotations.whiteouts.push({
-              pageNum: pageNum,
-              x: x,
-              y: y,
-              width: w,
-              height: h,
-              viewportW: pageWrap.__viewport.width,
-              viewportH: pageWrap.__viewport.height
-            });
-          }
+        var pRect = pageElements[p].getBoundingClientRect();
+        if(rects[0].top >= pRect.top - 5 && rects[0].bottom <= pRect.bottom + 5){
+          pageWrap = pageElements[p];
           break;
         }
       }
     }
+    if(!pageWrap) return;
+
+    var pageNum = parseInt(pageWrap.getAttribute('data-page'), 10) || 1;
+    var pRect = pageWrap.getBoundingClientRect();
+    var vpW = pageWrap.__viewport ? pageWrap.__viewport.width : pRect.width;
+    var vpH = pageWrap.__viewport ? pageWrap.__viewport.height : pRect.height;
+
+    for(var r = 0; r < rects.length; r++){
+      var rect = rects[r];
+      if(rect.width < 1 || rect.height < 1) continue;
+
+      var x = rect.left - pRect.left;
+      var y = rect.top - pRect.top;
+      var w = rect.width;
+      var h = rect.height;
+
+      if(type === 'highlight'){
+        userAnnotations.highlights.push({
+          pageNum: pageNum,
+          x: x,
+          y: y,
+          width: w,
+          height: h,
+          viewportW: vpW,
+          viewportH: vpH
+        });
+      } else {
+        userAnnotations.whiteouts.push({
+          pageNum: pageNum,
+          x: x,
+          y: y,
+          width: w,
+          height: h,
+          viewportW: vpW,
+          viewportH: vpH
+        });
+      }
+    }
 
     sel.removeAllRanges();
+    redrawPageOverlays();
     recordHistoryState();
   }
 
@@ -1343,13 +1488,13 @@
     var dataUrl = signCanvas.toDataURL('image/png');
     signModal.style.display = 'none';
 
-    // Place signature stamp onto current active page
     var targetPage = pageElements[0] || docPagesContainer.firstElementChild;
     if(!targetPage) return;
 
     var pNum = parseInt(targetPage.getAttribute('data-page'), 10) || 1;
     var img = document.createElement('img');
     img.src = dataUrl;
+    img.className = 'rcv-user-mark';
     img.style.position = 'absolute';
     img.style.bottom = '80px';
     img.style.right = '60px';
@@ -1370,7 +1515,7 @@
     recordHistoryState();
   };
 
-  // Image Upload
+  // Image / Stamp Upload
   document.getElementById('btnToolImage').onclick = function(){
     document.getElementById('fileImageInput').click();
   };
@@ -1385,6 +1530,7 @@
 
       var img = document.createElement('img');
       img.src = evt.target.result;
+      img.className = 'rcv-user-mark';
       img.style.position = 'absolute';
       img.style.top = '30px';
       img.style.right = '50px';
@@ -1433,15 +1579,18 @@
     btn.innerHTML = '<span class="spin"></span> Compiling Vector PDF…';
 
     try {
-      if(!currentGeneratedPdfBlob) throw new Error('Document is still loading.');
+      if(!currentGeneratedPdfBlob) throw new Error('Document is still loading. Please wait.');
 
       var PDFLib = window.PDFLib;
+      if(!PDFLib || !PDFLib.PDFDocument) throw new Error('Vector PDF engine is not available.');
+
       var srcBytes = await currentGeneratedPdfBlob.arrayBuffer();
       var pdfDoc = await PDFLib.PDFDocument.load(srcBytes);
 
-      // Burn User Highlights
+      // Burn User Highlights into Vector PDF
       for(var i = 0; i < userAnnotations.highlights.length; i++){
         var hl = userAnnotations.highlights[i];
+        if(hl.pageNum > pdfDoc.getPageCount()) continue;
         var page = pdfDoc.getPage(hl.pageNum - 1);
         var size = page.getSize();
         var scaleX = size.width / (hl.viewportW || size.width);
@@ -1453,13 +1602,14 @@
           width: hl.width * scaleX,
           height: hl.height * scaleY,
           color: PDFLib.rgb(1, 0.85, 0.15),
-          opacity: 0.42
+          opacity: 0.45
         });
       }
 
-      // Burn User Whiteouts
+      // Burn User Whiteouts (Redactions) into Vector PDF
       for(var w = 0; w < userAnnotations.whiteouts.length; w++){
         var wo = userAnnotations.whiteouts[w];
+        if(wo.pageNum > pdfDoc.getPageCount()) continue;
         var page = pdfDoc.getPage(wo.pageNum - 1);
         var size = page.getSize();
         var scaleX = size.width / (wo.viewportW || size.width);
@@ -1478,6 +1628,7 @@
       // Burn Stamps / Signatures / Logos
       for(var s = 0; s < userAnnotations.stamps.length; s++){
         var st = userAnnotations.stamps[s];
+        if(st.pageNum > pdfDoc.getPageCount()) continue;
         var page = pdfDoc.getPage(st.pageNum - 1);
         var size = page.getSize();
         var scaleX = size.width / (st.viewportW || size.width);
@@ -1485,9 +1636,8 @@
 
         try {
           var imgBytes = await (await fetch(st.imgDataUrl)).arrayBuffer();
-          var embeddedImg = (st.imgDataUrl.indexOf('jpeg') !== -1 || st.imgDataUrl.indexOf('jpg') !== -1)
-            ? await pdfDoc.embedJpg(imgBytes)
-            : await pdfDoc.embedPng(imgBytes);
+          var isJpg = (st.imgDataUrl.indexOf('jpeg') !== -1 || st.imgDataUrl.indexOf('jpg') !== -1);
+          var embeddedImg = isJpg ? await pdfDoc.embedJpg(imgBytes) : await pdfDoc.embedPng(imgBytes);
 
           page.drawImage(embeddedImg, {
             x: st.x * scaleX,
@@ -1503,7 +1653,7 @@
       var finalBytes = await pdfDoc.save();
       var finalBlob = new Blob([finalBytes], { type: 'application/pdf' });
 
-      // Clean direct download via hidden link
+      // Direct download without browser print dialog
       var cleanName = (candName || 'Candidate').replace(/[^a-zA-Z0-9_\-]/g, '_');
       var m = parseInt(modePicker.value, 10) || 61;
       var sfx = (m === 64 || m === 65) ? '_Dossier' : (m === 62 ? '_Branded' : '_ATS_Optimized');
@@ -1550,7 +1700,7 @@
 
   // Mode change: Regenerate document for the selected option
   modePicker.addEventListener('change', async function(){
-    var m = parseInt(this.value, 10) || 61;
+    var m = parseInt(this.value, 10) || 64;
     try {
       loaderBox.style.display = 'flex';
       docPagesContainer.style.display = 'none';
@@ -1570,7 +1720,7 @@
       await renderDocumentPages(currentGeneratedPdfBlob);
     } catch(err){
       console.error('Init error:', err);
-      loaderBox.innerHTML = '<span style="color:#f87171;font-size:14px;font-weight:600;">Failed to load candidate document.</span><span style="font-size:12px;color:#cbd5e1;">' + (err.message || 'Please check candidate resume in database.') + '</span>';
+      loaderBox.innerHTML = '<span style="color:#f87171;font-size:14px;font-weight:600;">Failed to load candidate document.</span><span style="font-size:12px;color:#cbd5e1;">' + (err.message || 'Please check candidate resume.') + '</span>';
     }
   }
   initStudio();
