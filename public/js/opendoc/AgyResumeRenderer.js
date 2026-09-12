@@ -36,15 +36,20 @@
 (function (root, factory) {
   'use strict';
   var exp = factory();
-  if (typeof define === 'function' && define.amd) {
-    try { define([], function () { return exp; }); } catch (e) {}
-  }
-  if (typeof module === 'object' && module.exports) {
-    module.exports = exp;
-  }
-  root.AgyResumeRenderer = exp;
   if (typeof window !== 'undefined') {
     window.AgyResumeRenderer = exp;
+  }
+  if (typeof root !== 'undefined') {
+    root.AgyResumeRenderer = exp;
+  }
+  if (typeof self !== 'undefined') {
+    self.AgyResumeRenderer = exp;
+  }
+  if (typeof globalThis !== 'undefined') {
+    globalThis.AgyResumeRenderer = exp;
+  }
+  if (typeof module === 'object' && module && module.exports) {
+    module.exports = exp;
   }
 }(typeof self !== 'undefined' ? self : this, function () {
   'use strict';
