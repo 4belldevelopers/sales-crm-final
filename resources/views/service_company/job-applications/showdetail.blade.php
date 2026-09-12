@@ -8394,8 +8394,8 @@ window.__rsEnsureDocxConversion=rsEnsureDocxConversion;
 window.__rsEnsureOpenDocLab=rsEnsureOpenDocLab;
 window.__rsEnsureCvOptimizer=rsEnsureCvOptimizer;
 })();
-</script>
 <script src="{{ asset('js/opendoc/AgyWasmEngine.js') }}"></script>
+<script src="{{ asset('js/opendoc/AgyResumeRenderer.js') }}"></script>
 <script src="{{ asset('js/opendoc/AgyBatchExporter.js') }}"></script>
 <script src="{{ asset('js/opendoc/AgyTouchAnnotator.js') }}"></script>
 <script src="{{ asset('js/opendoc/AgyCvOptimizer.js') }}"></script>
