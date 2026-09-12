@@ -253,6 +253,7 @@ Route::group(['middleware' => 'auth'], function () {
                 Route::get('staffing-client-candidate-interview-tracker', [ServiceCompanyJobApplicationController::class, 'staffingclientCandidateInterviewTracker'])->name('job-applications.staffing-client-candidates-interview-tracker');
                 Route::get('company-logo-proxy', [ServiceCompanyJobApplicationController::class, 'companyLogoProxy'])->name('job-applications.company-logo-proxy');
                 Route::get('resume-as-pdf/{id}', [ServiceCompanyJobApplicationController::class, 'resumeAsPdf'])->name('job-applications.resume-as-pdf');
+                Route::get('resume-studio/{id}', [ServiceCompanyJobApplicationController::class, 'resumeStudio'])->name('job-applications.resume-studio');
                 Route::get('resume-convert/{token}', [ServiceCompanyJobApplicationController::class, 'resumeConvertPdf'])->where('token', '.*')->name('job-applications.resume-convert');
                 /** custom ajax route define */
                 Route::post('offer-mail-format/{id?}', [ServiceCompanyCvTrackerController::class, 'offerSendMail'])->name('cvtracker.offer_send_mail');

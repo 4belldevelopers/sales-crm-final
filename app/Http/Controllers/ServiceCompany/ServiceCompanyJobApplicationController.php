@@ -1961,6 +1961,103 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
         return $this->resumeConvertPdf($token);
     }
 
+    /**
+     * Dedicated Online ATS Resume Studio & Editor Workspace
+     * Tenancy-guarded full-page document editor and preview.
+     */
+    public function resumeStudio(Request $request, $id)
+    {
+        $tenantCompanyId = (int) (auth()->user()->company_id ?? 0);
+        $query = DB::table('job_applications')->where('id', $id);
+        if ($tenantCompanyId > 0 && ! auth()->user()->is_superadmin) {
+            $query->where(function ($q) use ($tenantCompanyId) {
+                $q->where('company_id', $tenantCompanyId)
+                  ->orWhere('thirdparty_company_id', $tenantCompanyId);
+            });
+        }
+        $application = $query->first();
+        if (! $application) {
+            abort(404, 'Candidate application not found.');
+        }
+
+        $job = null;
+        $jobSkills = [];
+        if (! empty($application->job_id)) {
+            $job = DB::table('jobs')->where('id', $application->job_id)->first();
+            $rawSkills = DB::table('job_skills')
+                ->join('skills', 'job_skills.skill_id', '=', 'skills.id')
+                ->where('job_skills.job_id', $application->job_id)
+                ->pluck('skills.name')
+                ->toArray();
+            if (! empty($rawSkills)) {
+                $jobSkills = array_values(array_unique(array_filter(array_map('trim', $rawSkills))));
+            }
+        }
+
+        $candSkills = [];
+        if (! empty($application->skills)) {
+            foreach (explode(',', $application->skills) as $cs) {
+                $cs = trim($cs);
+                if ($cs !== '') {
+                    $candSkills[] = $cs;
+                }
+            }
+            $candSkills = array_values(array_unique($candSkills));
+        }
+
+        $company = null;
+        $companyLogo = '';
+        $companyName = '';
+        if ($tenantCompanyId > 0) {
+            $company = DB::table('companies')->select('id', 'company_name', 'logo')->where('id', $tenantCompanyId)->first();
+            if ($company) {
+                $companyName = ucwords((string) $company->company_name);
+                if (! empty($company->logo) && strlen($company->logo) > 5) {
+                    $companyLogo = route('service_company.job-applications.company-logo-proxy');
+                }
+            }
+        }
+
+        $resumePath = parse_url((string) @$application->resume, PHP_URL_PATH) ?: (string) @$application->resume;
+        $resumeExt = strtolower(pathinfo($resumePath, PATHINFO_EXTENSION));
+
+        $rcvFetchUrl = '';
+        $rcvDownloadUrl = '';
+        if (! empty($application->resume)) {
+            $__r = $application->resume;
+            if (strpos($__r, 'file.jero.works') !== false || strpos($__r, 'r2.cloudflarestorage.com') !== false) {
+                $__rcvEncodedPath = rtrim(strtr(base64_encode($__r), '+/', '-_'), '=');
+                $rcvFetchUrl = route('download.resume', ['id' => $application->id, 'path' => $__rcvEncodedPath, 'preview' => 1]);
+                $rcvDownloadUrl = route('download.resume', ['id' => $application->id, 'path' => $__rcvEncodedPath]);
+            } elseif (filter_var($__r, FILTER_VALIDATE_URL)) {
+                $rcvFetchUrl = $__r;
+                $rcvDownloadUrl = $__r;
+            } else {
+                $rcvFetchUrl = url($__r);
+                $rcvDownloadUrl = url($__r);
+            }
+        }
+        $rcvPublicUrl = (string) @$application->resume;
+
+        $r2SignUrl = route('service_company.job-applications.r2-download-url', ['id' => $application->id]);
+        $optId = (int) $request->query('opt', 61);
+
+        return view('service_company.job-applications.resume-studio', compact(
+            'application',
+            'job',
+            'jobSkills',
+            'candSkills',
+            'companyName',
+            'companyLogo',
+            'resumeExt',
+            'rcvFetchUrl',
+            'rcvDownloadUrl',
+            'rcvPublicUrl',
+            'r2SignUrl',
+            'optId'
+        ));
+    }
+
     // **  end ajax  */
     public function create($jobId = null, $appId = null)
     {
