@@ -4,7 +4,20 @@
 		$currencySymbole 				=	GeneralMethod::currencySymbole();
 			
 @endphp 
+<script>
+if (typeof define === 'function' && define.amd) {
+    window.__savedAmdDefine = define.amd;
+    define.amd = false;
+}
+</script>
 <script src="{{ asset('js/pdf-lib.min.js') }}"></script>
+<script>
+if (window.__savedAmdDefine) {
+    define.amd = window.__savedAmdDefine;
+    delete window.__savedAmdDefine;
+}
+</script>
+<script src="{{ asset('js/mammoth.browser.min.js') }}" onerror="this.onerror=null;this.src='https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.5.0/mammoth.browser.min.js'"></script>
 <script src="{{ asset('js/opendoc/AgyForwardResumeHelper.js') }}"></script>
 <script src="{{ asset('demo/ckeditor/ckeditor.js') }}"></script>
 <script>
