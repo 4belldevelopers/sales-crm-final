@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>{{ ucwords(@$application->full_name ?: @$application->name ?: 'Candidate') }} — jero.works online editor (Adobe Acrobat Studio)</title>
+  <title>{{ ucwords(@$application->full_name ?: @$application->name ?: 'Candidate') }} — jero.works</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -17,56 +17,42 @@
     * { box-sizing: border-box; margin: 0; padding: 0; }
     html, body { height: 100%; overflow: hidden; font-family: 'Poppins', -apple-system, BlinkMacSystemFont, sans-serif; background: #f3f4f6; color: #1e293b; }
 
-    /* App Container: Header + 4-Zone Horizontal Split Layout (Acrobat Architecture) */
     .acrobat-app { display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
 
-    /* 1. Global Adobe Acrobat-Style Top App Bar */
-    .acrobat-navbar { height: 54px; background: #ffffff; border-bottom: 1px solid #e5e7eb; display: flex; align-items: center; justify-content: space-between; padding: 0 16px; flex-shrink: 0; z-index: 110; }
+    /* 1. Global Clean Top Navigation Bar */
+    .acrobat-navbar { height: 54px; background: #ffffff; border-bottom: 1px solid #e5e7eb; display: flex; align-items: center; justify-content: space-between; padding: 0 18px; flex-shrink: 0; z-index: 110; }
     .nav-left { display: flex; align-items: center; gap: 14px; }
     .nav-logo-wrap { display: flex; align-items: center; gap: 8px; text-decoration: none; }
-    .nav-logo-img { height: 24px; width: auto; }
-    .nav-title { font-size: 13.5px; font-weight: 700; color: #0f172a; display: flex; align-items: center; gap: 6px; }
-    .nav-title span { color: #0d9488; }
-    .nav-tabs { display: flex; align-items: center; gap: 4px; margin-left: 12px; }
-    .nav-tab { padding: 6px 12px; font-size: 12px; font-weight: 500; color: #475569; text-decoration: none; border-radius: 6px; cursor: pointer; transition: all .15s; }
-    .nav-tab:hover { background: #f1f5f9; color: #0f172a; }
-    .nav-tab.active { background: #f1f5f9; color: #0f172a; font-weight: 600; }
+    .nav-logo-img { height: 26px; width: auto; }
+    .nav-title { font-size: 15px; font-weight: 700; color: #0f172a; }
+    .cand-badge-pill { display: flex; align-items: center; gap: 6px; background: #f8fafc; border: 1px solid #e2e8f0; padding: 4px 12px; border-radius: 999px; margin-left: 8px; }
+    .cand-badge-name { font-size: 11.5px; font-weight: 600; color: #0f172a; max-width: 170px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .cand-badge-role { font-size: 11px; font-weight: 500; color: #64748b; max-width: 220px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
-    .nav-center { display: flex; align-items: center; gap: 8px; flex: 1; max-width: 440px; margin: 0 20px; }
+    .nav-center { display: flex; align-items: center; gap: 8px; flex: 1; max-width: 440px; margin: 0 24px; }
     .nav-search-box { position: relative; width: 100%; display: flex; align-items: center; }
-    .nav-search-input { width: 100%; height: 32px; padding: 0 70px 0 32px; font-size: 12px; font-family: 'Poppins', sans-serif; border: 1px solid #cbd5e1; border-radius: 999px; background: #f8fafc; outline: none; transition: all .15s; }
-    .nav-search-input:focus { background: #ffffff; border-color: #6366f1; box-shadow: 0 0 0 3px rgba(99,102,241,.12); }
-    .nav-search-icon { position: absolute; left: 10px; color: #94a3b8; width: 14px; height: 14px; }
-    .nav-search-nav { position: absolute; right: 8px; display: flex; align-items: center; gap: 2px; font-size: 10.5px; color: #64748b; font-weight: 600; }
-    .nav-search-btn { background: none; border: none; cursor: pointer; padding: 2px 4px; color: #64748b; border-radius: 3px; display: flex; align-items: center; }
-    .nav-search-btn:hover { background: #e2e8f0; color: #0f172a; }
+    .nav-search-input { width: 100%; height: 34px; padding: 0 16px 0 34px; font-size: 12px; font-family: 'Poppins', sans-serif; border: 1px solid #cbd5e1; border-radius: 999px; background: #f8fafc; outline: none; transition: all .15s; }
+    .nav-search-input:focus { background: #ffffff; border-color: #0284c7; box-shadow: 0 0 0 3px rgba(2,132,199,.12); }
+    .nav-search-icon { position: absolute; left: 11px; color: #94a3b8; width: 14px; height: 14px; }
 
-    .nav-right { display: flex; align-items: center; gap: 10px; }
-    .ats-score-pill { display: inline-flex; align-items: center; gap: 5px; background: #f0fdf4; border: 1px solid #bbf7d0; color: #15803d; font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 999px; }
-    .doc-metrics-text { font-size: 11px; color: #64748b; font-weight: 500; }
-    .btn-action-copy { background: #f8fafc; border: 1px solid #cbd5e1; color: #334155; padding: 6px 12px; font-size: 11.5px; font-weight: 600; border-radius: 6px; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; font-family: 'Poppins', sans-serif; transition: all .15s; }
-    .btn-action-copy:hover { background: #f1f5f9; border-color: #94a3b8; }
-    .btn-action-download { background: #0284c7; color: #ffffff; border: none; padding: 6px 14px; font-size: 12px; font-weight: 600; border-radius: 6px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; font-family: 'Poppins', sans-serif; transition: all .15s; box-shadow: 0 1px 3px rgba(2,132,199,.3); }
-    .btn-action-download:hover { background: #0369a1; }
+    .nav-right { display: flex; align-items: center; gap: 12px; }
+    .btn-action-download { background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); color: #ffffff; border: none; padding: 8px 18px; font-size: 12px; font-weight: 600; border-radius: 7px; cursor: pointer; display: inline-flex; align-items: center; gap: 7px; font-family: 'Poppins', sans-serif; transition: all .15s; box-shadow: 0 2px 6px rgba(2,132,199,.3); }
+    .btn-action-download:hover { background: linear-gradient(135deg, #0369a1 0%, #075985 100%); box-shadow: 0 4px 10px rgba(2,132,199,.4); }
     .btn-action-download:disabled { opacity: 0.65; cursor: not-allowed; }
 
     /* 2. Main Body Split Workspace */
     .acrobat-body { display: flex; flex: 1; height: calc(100vh - 54px); overflow: hidden; position: relative; }
 
-    /* ZONE A: Left Tools & ATS Panel (Acrobat "All tools") */
-    .acrobat-sidebar { width: 330px; background: #ffffff; border-right: 1px solid #e5e7eb; display: flex; flex-direction: column; overflow-y: auto; flex-shrink: 0; z-index: 90; transition: width .2s; }
-    .sidebar-head { padding: 14px 16px 10px 16px; border-bottom: 1px solid #f1f5f9; display: flex; align-items: center; justify-content: space-between; }
-    .sidebar-head h2 { font-size: 14px; font-weight: 700; color: #0f172a; margin: 0; }
-    .cand-chip-pill { font-size: 10px; font-weight: 600; background: #ccfbf1; color: #0f766e; border: 1px solid #99f6e4; padding: 2px 8px; border-radius: 999px; max-width: 140px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    /* ZONE A: Left Sidebar (All Editing & ATS Features) */
+    .acrobat-sidebar { width: 330px; background: #ffffff; border-right: 1px solid #e5e7eb; display: flex; flex-direction: column; overflow-y: auto; flex-shrink: 0; z-index: 90; }
+    .acrobat-sidebar::-webkit-scrollbar { width: 6px; }
+    .acrobat-sidebar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
 
-    /* Mode / Format Dropdown in Sidebar */
-    .sidebar-section { padding: 12px 16px; border-bottom: 1px solid #f1f5f9; }
-    .section-title { font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; display: block; }
-    .mode-select-box { width: 100%; padding: 7px 10px; font-size: 11.5px; font-family: 'Poppins', sans-serif; font-weight: 600; color: #0f172a; background: #f8fafc; border: 1.5px solid #cbd5e1; border-radius: 7px; outline: none; cursor: pointer; transition: all .15s; }
-    .mode-select-box:focus { border-color: #0d9488; background: #fff; }
+    .sidebar-block { padding: 14px 16px; border-bottom: 1px solid #f1f5f9; }
+    .sidebar-block-title { font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
 
     /* ATS Keyword Highlights Card */
-    .sidebar-ats-card { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px; margin-top: 4px; }
+    .sidebar-ats-card { background: #f8fafc; border: 1.5px solid #e2e8f0; border-radius: 8px; padding: 12px; }
     .ats-stats-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; margin-bottom: 10px; }
     .stat-pill-box { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 6px; padding: 6px 8px; text-align: center; }
     .stat-pill-val { display: block; font-size: 14px; font-weight: 700; color: #0f172a; line-height: 1.2; }
@@ -76,40 +62,40 @@
     .stat-pill-box.val-score .stat-pill-val { color: #16a34a; }
 
     .ats-search-wrap { display: flex; gap: 6px; margin-bottom: 10px; }
-    .ats-kw-input { flex: 1; padding: 6px 10px; font-size: 11px; font-family: 'Poppins', sans-serif; border: 1px solid #cbd5e1; border-radius: 6px; outline: none; background: #fff; }
+    .ats-kw-input { flex: 1; padding: 6px 10px; font-size: 11.5px; font-family: 'Poppins', sans-serif; border: 1px solid #cbd5e1; border-radius: 6px; outline: none; background: #fff; }
     .ats-kw-input:focus { border-color: #6366f1; }
     .btn-ats-add-kw { padding: 6px 12px; background: #6366f1; color: #fff; border: none; border-radius: 6px; font-size: 11px; font-weight: 600; cursor: pointer; font-family: 'Poppins', sans-serif; white-space: nowrap; }
     .btn-ats-add-kw:hover { background: #4f46e5; }
 
-    .skills-title { font-size: 10.5px; font-weight: 700; color: #475569; text-transform: uppercase; letter-spacing: 0.4px; margin-bottom: 6px; display: block; }
     .chips-flow { display: flex; flex-wrap: wrap; gap: 5px; }
     .kw-chip { display: inline-flex; align-items: center; gap: 4px; background: #fef08a; border: 1px solid #facc15; color: #854d0e; padding: 2px 8px; border-radius: 999px; font-size: 10.5px; font-weight: 600; cursor: pointer; transition: all .15s; }
     .kw-chip:hover { transform: translateY(-1px); box-shadow: 0 2px 4px rgba(250,204,21,.3); }
     .kw-chip.missing { background: #f1f5f9; border-color: #cbd5e1; color: #64748b; }
     .kw-chip .chip-count { font-size: 9px; font-weight: 700; background: rgba(0,0,0,0.08); padding: 1px 4px; border-radius: 999px; }
 
-    /* Acrobat Tools Menu Items List */
-    .tools-menu-list { list-style: none; padding: 4px 0; }
-    .tool-menu-item { display: flex; align-items: center; gap: 12px; padding: 9px 16px; font-size: 12px; font-weight: 500; color: #334155; cursor: pointer; transition: all .15s; }
-    .tool-menu-item:hover { background: #f8fafc; color: #0f172a; }
-    .tool-menu-item.active { background: #e0f2fe; color: #0369a1; font-weight: 600; border-left: 3px solid #0284c7; }
-    .tool-menu-icon { width: 18px; height: 18px; display: flex; align-items: center; justify-content: center; color: #64748b; }
-    .tool-menu-item.active .tool-menu-icon { color: #0284c7; }
+    /* Editing Tools Section */
+    .edit-tools-grid { display: flex; flex-direction: column; gap: 10px; }
+    .tool-row { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+    .tool-select { flex: 1; min-width: 90px; border: 1px solid #cbd5e1; border-radius: 6px; padding: 5px 8px; font-size: 11.5px; font-family: 'Poppins', sans-serif; color: #1e293b; background: #fff; outline: none; }
+    .tool-color-input { width: 30px; height: 30px; border: 1px solid #cbd5e1; border-radius: 6px; padding: 0; cursor: pointer; background: none; }
 
-    /* ZONE B: Vertical Floating Tool Dock (Between Sidebar & Canvas) */
-    .acrobat-dock { width: 44px; background: #ffffff; border-right: 1px solid #e5e7eb; display: flex; flex-direction: column; align-items: center; padding: 12px 0; gap: 6px; flex-shrink: 0; z-index: 80; box-shadow: 1px 0 3px rgba(0,0,0,0.02); }
-    .dock-btn { width: 32px; height: 32px; border-radius: 6px; border: none; background: transparent; color: #475569; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all .15s; font-size: 12px; }
-    .dock-btn:hover { background: #f1f5f9; color: #0f172a; }
-    .dock-btn.active { background: #0284c7; color: #ffffff; }
-    .dock-sep { width: 22px; height: 1px; background: #e2e8f0; margin: 4px 0; }
-    .dock-color { width: 22px; height: 22px; border: 1px solid #cbd5e1; border-radius: 4px; padding: 0; cursor: pointer; background: none; }
+    .tool-btn-group { display: flex; align-items: center; gap: 4px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 2px 4px; width: 100%; justify-content: space-between; }
+    .btn-format { background: transparent; border: none; padding: 5px 8px; border-radius: 4px; font-size: 11.5px; font-weight: 600; color: #334155; cursor: pointer; transition: all .15s; font-family: 'Poppins', sans-serif; }
+    .btn-format:hover { background: #e2e8f0; color: #0f172a; }
 
-    /* ZONE C: Center Document Viewport (Isolated Scroller) */
+    .action-tools-list { display: flex; flex-direction: column; gap: 6px; margin-top: 4px; }
+    .btn-action-tool { display: flex; align-items: center; gap: 8px; padding: 7px 10px; border-radius: 6px; font-size: 11.5px; font-weight: 600; border: 1px solid #e2e8f0; background: #ffffff; color: #334155; cursor: pointer; transition: all .15s; font-family: 'Poppins', sans-serif; }
+    .btn-action-tool:hover { background: #f8fafc; border-color: #cbd5e1; color: #0f172a; }
+    .btn-tool-highlight { background: #fef9c3; border-color: #fde047; color: #854d0e; }
+    .btn-tool-highlight:hover { background: #fef08a; }
+    .btn-tool-whiteout { background: #0f172a; border-color: #0f172a; color: #ffffff; }
+    .btn-tool-whiteout:hover { background: #1e293b; color: #ffffff; }
+
+    /* ZONE B: Center Document Viewport (Dedicated Scroller) */
     .acrobat-canvas { flex: 1; background: #f3f4f6; overflow-y: auto; overflow-x: hidden; padding: 28px 24px 80px 24px; position: relative; scroll-behavior: smooth; }
     .acrobat-canvas::-webkit-scrollbar { width: 9px; }
     .acrobat-canvas::-webkit-scrollbar-track { background: #e5e7eb; }
     .acrobat-canvas::-webkit-scrollbar-thumb { background: #9ca3af; border-radius: 4px; }
-    .acrobat-canvas::-webkit-scrollbar-thumb:hover { background: #6b7280; }
 
     /* A4 Paper Sheets */
     .paper-sheet { width: 816px; min-height: 1056px; margin: 0 auto 32px auto; background: #ffffff; box-shadow: 0 4px 20px rgba(0,0,0,0.12), 0 1px 4px rgba(0,0,0,0.06); border-radius: 4px; padding: 48px 56px; outline: none; position: relative; font-family: 'Poppins', -apple-system, BlinkMacSystemFont, sans-serif; font-size: 13px; line-height: 1.65; color: #1e293b; }
@@ -126,7 +112,6 @@
     .ps-report-main-title { font-size: 18px; font-weight: 800; color: #0f172a; text-transform: uppercase; letter-spacing: -0.2px; }
     .ps-report-sub-date { font-size: 10.5px; font-weight: 600; color: #64748b; margin-top: 2px; text-transform: uppercase; letter-spacing: 0.4px; }
 
-    /* Top Split Row: Candidate Card + Hiring Confidence Card */
     .ps-top-split { display: grid; grid-template-columns: 1.6fr 1fr; gap: 14px; margin-bottom: 14px; }
     .ps-card { background: #ffffff; border: 1.5px solid #e2e8f0; border-radius: 8px; padding: 16px 18px; }
     .ps-cand-name { font-size: 20px; font-weight: 800; color: #0f172a; margin-bottom: 2px; }
@@ -137,13 +122,11 @@
     .ps-confidence-lbl { font-size: 11.5px; font-weight: 700; color: #475569; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; }
     .ps-confidence-val { font-size: 38px; font-weight: 800; color: #0284c7; line-height: 1; }
 
-    /* Middle Row: 4 Metric Cards (Education, Notice Period, Location, Work Mode) */
     .ps-metrics-4grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 14px; }
     .ps-metric-item { background: #ffffff; border: 1.5px solid #e2e8f0; border-radius: 8px; padding: 12px 10px; text-align: center; }
     .ps-metric-head { font-size: 10px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.4px; margin-bottom: 4px; display: flex; align-items: center; justify-content: center; gap: 5px; }
     .ps-metric-val { font-size: 12.5px; font-weight: 700; color: #0f172a; }
 
-    /* Bottom Row: Executive Summary + Recruiter Comments */
     .ps-bottom-split { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 16px; }
     .ps-summary-card { background: #ffffff; border: 1.5px solid #e2e8f0; border-radius: 8px; padding: 16px; }
     .ps-section-title { font-size: 11px; font-weight: 700; color: #0284c7; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
@@ -170,13 +153,7 @@
     .doc-page-break { border-top: 2px dashed #94a3b8; margin: 26px 0; position: relative; text-align: center; }
     .doc-page-break::after { content: "PAGE BREAK"; font-size: 9.5px; font-weight: 700; color: #64748b; background: #fff; padding: 0 8px; position: absolute; top: -7px; left: 50%; transform: translateX(-50%); letter-spacing: 0.5px; }
 
-    /* Floating Bottom Acrobat AI Bar */
-    .acrobat-bottom-bar { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); width: 560px; background: #ffffff; border: 1px solid #cbd5e1; border-radius: 999px; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.15); display: flex; align-items: center; padding: 6px 14px; gap: 10px; z-index: 100; }
-    .bottom-ai-icon { width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; color: #6366f1; }
-    .bottom-ai-input { flex: 1; border: none; outline: none; font-size: 12px; font-family: 'Poppins', sans-serif; color: #1e293b; background: transparent; }
-    .bottom-ai-btn { background: #6366f1; color: #fff; border: none; border-radius: 999px; padding: 5px 14px; font-size: 11px; font-weight: 600; cursor: pointer; font-family: 'Poppins', sans-serif; }
-
-    /* ZONE D: Right Page Navigation Strip (Acrobat Style) */
+    /* ZONE C: Right Page Navigation Strip */
     .acrobat-right-strip { width: 46px; background: #ffffff; border-left: 1px solid #e5e7eb; display: flex; flex-direction: column; align-items: center; padding: 14px 0; gap: 10px; flex-shrink: 0; z-index: 80; }
     .page-counter-box { font-size: 10.5px; font-weight: 700; color: #475569; border: 1px solid #cbd5e1; border-radius: 4px; padding: 4px 6px; text-align: center; }
     .strip-btn { width: 28px; height: 28px; border-radius: 4px; border: none; background: transparent; color: #475569; display: flex; align-items: center; justify-content: center; cursor: pointer; }
@@ -197,43 +174,29 @@
 
 <div class="acrobat-app">
 
-  <!-- 1. Top Global Navigation Bar (Acrobat Header) -->
+  <!-- 1. Top Global Clean Navigation Bar -->
   <header class="acrobat-navbar">
     <div class="nav-left">
       <a href="{{ route('service_company.dashboard') }}" class="nav-logo-wrap" title="JERO Works Dashboard">
         <img src="{{ asset('img/logo.svg') }}" alt="JERO Logo" class="nav-logo-img">
       </a>
-      <div class="nav-title">jero.works <span>online editor</span></div>
-      <div class="nav-tabs">
-        <span class="nav-tab active">All tools</span>
-        <span class="nav-tab">Read</span>
-        <span class="nav-tab">Edit</span>
-        <span class="nav-tab">Convert</span>
-        <span class="nav-tab">E-Sign</span>
+      <div class="nav-title">jero.works</div>
+      <div class="cand-badge-pill">
+        <span class="cand-badge-name" title="{{ ucwords(@$application->full_name ?: 'Candidate') }}">{{ ucwords(@$application->full_name ?: 'Candidate') }}</span>
+        <span class="cand-badge-role" title="{{ $job->title ?? ($application->job_title ?? 'Verified Profile') }}">• {{ $job->title ?? ($application->job_title ?? 'Verified Profile') }}</span>
       </div>
     </div>
 
     <div class="nav-center">
       <div class="nav-search-box">
         <svg class="nav-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-        <input type="text" id="docSearchInput" class="nav-search-input" placeholder="Find text or tools in document…" autocomplete="off">
-        <div class="nav-search-nav">
-          <span id="navCount">0/0</span>
-          <button type="button" id="navPrev" class="nav-search-btn" title="Previous occurrence (Shift+F3)">▲</button>
-          <button type="button" id="navNext" class="nav-search-btn" title="Next occurrence (F3)">▼</button>
-        </div>
+        <input type="text" id="docSearchInput" class="nav-search-input" placeholder="Find text in document…" autocomplete="off">
       </div>
     </div>
 
     <div class="nav-right">
-      <span class="ats-score-pill">
-        <svg viewBox="0 0 24 24" fill="currentColor" style="width:13px;height:13px;"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-        <span id="topAtsScore">--% ATS Match</span>
-      </span>
-      <span class="doc-metrics-text" id="docMetrics">0 words • 0 chars</span>
-      <button type="button" id="btnCopyText" class="btn-action-copy">📋 Copy Text</button>
       <button type="button" id="btnDownload" class="btn-action-download">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
         <span id="btnDlText">Download Final PDF</span>
       </button>
     </div>
@@ -242,28 +205,15 @@
   <!-- 2. Main Body: Split Architecture -->
   <div class="acrobat-body">
 
-    <!-- ZONE A: Left Sidebar ("All tools" + ATS Hub) -->
+    <!-- ZONE A: Left Sidebar (All Editing & ATS Features) -->
     <aside class="acrobat-sidebar" id="sidebar">
-      <div class="sidebar-head">
-        <h2>All tools</h2>
-        <span class="cand-chip-pill" title="{{ ucwords(@$application->full_name ?: 'Candidate') }}">{{ ucwords(@$application->full_name ?: 'Candidate') }}</span>
-      </div>
 
-      <!-- Format / Option Selector -->
-      <div class="sidebar-section">
-        <label class="section-title">Format &amp; Mode</label>
-        <select id="modeSelect" class="mode-select-box">
-          <option value="61" {{ ($optId ?? (int)request('opt', 61)) == 61 ? 'selected' : '' }}>61. Clean Resume (Vector PDF)</option>
-          <option value="62" {{ ($optId ?? (int)request('opt', 61)) == 62 ? 'selected' : '' }}>62. Resume + Company Branding</option>
-          <option value="63" {{ ($optId ?? (int)request('opt', 61)) == 63 ? 'selected' : '' }}>63. Resume + Highlighted Keywords</option>
-          <option value="64" {{ ($optId ?? (int)request('opt', 61)) == 64 ? 'selected' : '' }}>64. Pre-Screen Report + Resume</option>
-          <option value="65" {{ ($optId ?? (int)request('opt', 61)) == 65 ? 'selected' : '' }}>65. Pre-Screen Report + Resume + Highlights</option>
-        </select>
-      </div>
+      <!-- Hidden modeSelect input to honor URL opt parameter -->
+      <input type="hidden" id="modeSelect" value="{{ ($optId ?? (int)request('opt', 61)) }}">
 
-      <!-- ATS Keyword Highlights Card -->
-      <div class="sidebar-section">
-        <label class="section-title">ATS Match &amp; Highlights</label>
+      <!-- Section 1: ATS Keyword Highlights & Match Score -->
+      <div class="sidebar-block">
+        <label class="sidebar-block-title">ATS Match &amp; Highlights</label>
         <div class="sidebar-ats-card">
           <div class="ats-stats-grid">
             <div class="stat-pill-box val-matched"><span class="stat-pill-val" id="statMatched">0</span><span class="stat-pill-lbl">Matched</span></div>
@@ -277,48 +227,83 @@
             <button type="button" id="btnKwAdd" class="btn-ats-add-kw">Add &amp; Check</button>
           </div>
 
-          <span class="skills-title">Target Job Skills</span>
+          <span style="font-size:10.5px;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:0.4px;margin-bottom:6px;display:block;">Target Job Skills</span>
           <div class="chips-flow" id="chipsContainer"></div>
         </div>
       </div>
 
-      <!-- Acrobat Quick Tool Menu Items -->
-      <div class="sidebar-section" style="border-bottom:none; flex:1;">
-        <label class="section-title">Document Tools</label>
-        <ul class="tools-menu-list">
-          <li class="tool-menu-item active" id="menuEditPdf"><span class="tool-menu-icon">✏️</span> Edit Document</li>
-          <li class="tool-menu-item" id="menuExportPdf"><span class="tool-menu-icon">📥</span> Export a PDF</li>
-          <li class="tool-menu-item" id="menuCombine"><span class="tool-menu-icon">📑</span> Combine Dossier (Report + Resume)</li>
-          <li class="tool-menu-item" id="menuOrganize"><span class="tool-menu-icon">🗂</span> Organize Pages</li>
-          <li class="tool-menu-item" id="menuSign"><span class="tool-menu-icon">✍</span> Request E-Signatures</li>
-          <li class="tool-menu-item" id="menuRedact"><span class="tool-menu-icon">⬛</span> Redact a PDF (Whiteout)</li>
-          <li class="tool-menu-item" id="menuCompress"><span class="tool-menu-icon">🗜</span> Compress &amp; Optimize PDF</li>
-        </ul>
+      <!-- Section 2: All Document Editing Features -->
+      <div class="sidebar-block">
+        <label class="sidebar-block-title">Document Editing Tools</label>
+        <div class="edit-tools-grid">
+
+          <!-- Style & Font Selectors -->
+          <div class="tool-row">
+            <select id="selFormat" class="tool-select" title="Text Style">
+              <option value="p">Paragraph</option>
+              <option value="h1">Heading 1</option>
+              <option value="h2">Heading 2</option>
+              <option value="h3">Heading 3</option>
+            </select>
+            <select id="selSize" class="tool-select" title="Font Size" style="max-width:80px;">
+              <option value="2">11px</option>
+              <option value="3" selected>13px</option>
+              <option value="4">15px</option>
+              <option value="5">18px</option>
+            </select>
+            <input type="color" id="pickerColor" class="tool-color-input" value="#1e293b" title="Text Color">
+          </div>
+
+          <div class="tool-row">
+            <select id="selFont" class="tool-select" title="Font Family">
+              <option value="Poppins, sans-serif">Poppins</option>
+              <option value="Inter, sans-serif">Inter</option>
+              <option value="Calibri, sans-serif">Calibri</option>
+              <option value="Arial, sans-serif">Arial</option>
+              <option value="'Times New Roman', serif">Times New Roman</option>
+            </select>
+          </div>
+
+          <!-- Format Buttons -->
+          <div class="tool-btn-group">
+            <button type="button" class="btn-format" data-cmd="bold" title="Bold (Ctrl+B)"><strong>B</strong></button>
+            <button type="button" class="btn-format" data-cmd="italic" title="Italic (Ctrl+I)"><em>I</em></button>
+            <button type="button" class="btn-format" data-cmd="underline" title="Underline (Ctrl+U)"><u>U</u></button>
+            <button type="button" class="btn-format" data-cmd="strikeThrough" title="Strikethrough"><s>S</s></button>
+            <button type="button" class="btn-format" data-cmd="insertUnorderedList" title="Bullet List">• List</button>
+            <button type="button" class="btn-format" data-cmd="insertOrderedList" title="Numbered List">1. List</button>
+          </div>
+
+          <!-- Action Power Tools -->
+          <div class="action-tools-list">
+            <button type="button" id="btnToolHighlight" class="btn-action-tool btn-tool-highlight">
+              <span>🖍</span> Highlight Selected Text
+            </button>
+            <button type="button" id="btnToolWhiteout" class="btn-action-tool btn-tool-whiteout">
+              <span>⬛</span> Whiteout / Redact Sensitive Data
+            </button>
+            <button type="button" id="btnToolImage" class="btn-action-tool">
+              <span>🖼</span> Insert Image or Logo
+            </button>
+            <button type="button" id="btnToolSign" class="btn-action-tool">
+              <span>✍</span> Draw &amp; Insert Signature
+            </button>
+            <button type="button" id="btnToolPageBreak" class="btn-action-tool">
+              <span>📄</span> Insert Page Break
+            </button>
+            <div style="display:flex;gap:6px;margin-top:2px;">
+              <button type="button" class="btn-action-tool" data-cmd="undo" style="flex:1;justify-content:center;">↶ Undo</button>
+              <button type="button" class="btn-action-tool" data-cmd="redo" style="flex:1;justify-content:center;">↷ Redo</button>
+            </div>
+            <input type="file" id="fileImageInput" accept="image/*" style="display:none;">
+          </div>
+
+        </div>
       </div>
+
     </aside>
 
-    <!-- ZONE B: Vertical Floating Tool Dock (Between Sidebar and Canvas) -->
-    <div class="acrobat-dock">
-      <button type="button" class="dock-btn active" id="dockSelect" title="Select / Move">↖</button>
-      <div class="dock-sep"></div>
-      <button type="button" class="dock-btn" data-cmd="bold" title="Bold (Ctrl+B)"><strong>B</strong></button>
-      <button type="button" class="dock-btn" data-cmd="italic" title="Italic (Ctrl+I)"><em>I</em></button>
-      <button type="button" class="dock-btn" data-cmd="underline" title="Underline (Ctrl+U)"><u>U</u></button>
-      <button type="button" class="dock-btn" data-cmd="strikeThrough" title="Strikethrough"><s>S</s></button>
-      <div class="dock-sep"></div>
-      <button type="button" class="dock-btn" id="dockHighlight" title="Highlight Selection" style="background:#fef9c3;color:#854d0e;">🖍</button>
-      <button type="button" class="dock-btn" id="dockWhiteout" title="Redact / Whiteout Selection" style="background:#0f172a;color:#ffffff;">⬛</button>
-      <button type="button" class="dock-btn" id="dockImage" title="Insert Image / Logo">🖼</button>
-      <button type="button" class="dock-btn" id="dockSign" title="Draw Signature">✍</button>
-      <button type="button" class="dock-btn" id="dockPageBreak" title="Insert Page Break">📄</button>
-      <div class="dock-sep"></div>
-      <input type="color" id="dockColor" class="dock-color" value="#1e293b" title="Text Color">
-      <button type="button" class="dock-btn" data-cmd="undo" title="Undo">↶</button>
-      <button type="button" class="dock-btn" data-cmd="redo" title="Redo">↷</button>
-      <input type="file" id="dockFileInput" accept="image/*" style="display:none;">
-    </div>
-
-    <!-- ZONE C: Center Document Viewport (Dedicated Scroller) -->
+    <!-- ZONE B: Center Document Viewport (Dedicated Scroller) -->
     <main class="acrobat-canvas" id="canvas">
 
       <!-- PAGE 1: PRE-SCREENED CANDIDATE REPORT (Exact replica of media_1789225189169.png) -->
@@ -422,21 +407,14 @@
 
       </div>
 
-      <!-- Floating Bottom Adobe AI Bar -->
-      <div class="acrobat-bottom-bar">
-        <span class="bottom-ai-icon">✨</span>
-        <input type="text" class="bottom-ai-input" placeholder="Ask ATS AI Assistant: What would you like to optimize in this candidate résumé?" id="bottomAiInput">
-        <button type="button" class="bottom-ai-btn" id="btnBottomAi">Optimize</button>
-      </div>
-
     </main>
 
-    <!-- ZONE D: Right Page Navigation Strip (Acrobat Style) -->
+    <!-- ZONE C: Right Page Navigation Strip -->
     <aside class="acrobat-right-strip">
       <div class="page-counter-box" id="stripPageNum">1 / 2</div>
       <button type="button" class="strip-btn" id="stripPrevPage" title="Previous Page">▲</button>
       <button type="button" class="strip-btn" id="stripNextPage" title="Next Page">▼</button>
-      <div class="dock-sep"></div>
+      <div style="width:22px;height:1px;background:#e2e8f0;margin:4px 0;"></div>
       <button type="button" class="strip-btn" id="stripFitWidth" title="Fit to Width">⛶</button>
       <button type="button" class="strip-btn" id="stripZoomIn" title="Zoom In">＋</button>
       <button type="button" class="strip-btn" id="stripZoomOut" title="Zoom Out">－</button>
@@ -456,7 +434,7 @@
     <p style="font-size:11.5px;color:#64748b;margin-bottom:8px;">Sign below with your mouse, finger, or stylus:</p>
     <canvas id="signCanvas" class="sign-canvas" width="400" height="160"></canvas>
     <div class="sign-box-actions">
-      <button type="button" id="btnSignClear" class="dock-btn" style="width:auto;padding:6px 12px;">Clear</button>
+      <button type="button" id="btnSignClear" class="btn-action-tool" style="width:auto;padding:6px 12px;">Clear</button>
       <button type="button" id="btnSignInsert" class="btn-ats-add-kw" style="padding:6px 14px;">Insert Signature</button>
     </div>
   </div>
@@ -471,7 +449,7 @@
   var companyName = @json($companyName ?? '');
   var companyLogo = @json($companyLogo ?? '');
   var resumeExt = @json($resumeExt ?? '');
-  var initialOpt = @json($optId ?? 61);
+  var initialOpt = @json($optId ?? (int)request('opt', 61));
   var resumeSources = [
     @json($rcvFetchUrl ?? ''),
     @json($rcvDownloadUrl ?? ''),
@@ -527,23 +505,23 @@
       chipsContainer.appendChild(chip);
     });
 
-    document.getElementById('statMatched').textContent = matched;
-    document.getElementById('statMissing').textContent = missing;
-    document.getElementById('statHighlights').textContent = totalHits;
-
-    // Update word / character counts
-    var fullText = (sheetReport && sheetReport.style.display !== 'none' ? sheetReport.innerText : '') + ' ' + (resumeBody.innerText || '');
-    var words = fullText.trim() ? fullText.trim().split(/\s+/).length : 0;
-    document.getElementById('docMetrics').textContent = words + ' words • ' + fullText.length + ' chars';
+    var elMatched = document.getElementById('statMatched');
+    if(elMatched) elMatched.textContent = matched;
+    var elMissing = document.getElementById('statMissing');
+    if(elMissing) elMissing.textContent = missing;
+    var elHighlights = document.getElementById('statHighlights');
+    if(elHighlights) elHighlights.textContent = totalHits;
 
     // Calculate ATS Score
+    var fullText = (sheetReport && sheetReport.style.display !== 'none' ? sheetReport.innerText : '') + ' ' + (resumeBody.innerText || '');
     if(!optimizer && OptClass) optimizer = new OptClass({ jobSkills: jobSkills, candSkills: candSkills, candidateName: candName, targetJobTitle: jobTitle });
     if(optimizer){
       var res = optimizer.calculateAtsScore(fullText);
       var scoreEl = document.getElementById('statScore');
-      scoreEl.textContent = res.score + '%';
-      scoreEl.style.color = res.score >= 80 ? '#15803d' : (res.score >= 50 ? '#b45309' : '#b91c1c');
-      document.getElementById('topAtsScore').textContent = res.score + '% ATS Match';
+      if(scoreEl){
+        scoreEl.textContent = res.score + '%';
+        scoreEl.style.color = res.score >= 80 ? '#15803d' : (res.score >= 50 ? '#b45309' : '#b91c1c');
+      }
     }
   }
 
@@ -577,7 +555,7 @@
   }
 
   function applyHighlights(){
-    var mode = parseInt(modeSelect.value, 10) || 61;
+    var mode = parseInt(modeSelect ? modeSelect.value : initialOpt, 10) || 61;
     var isHighlighted = (mode === 63 || mode === 65);
 
     // Remove existing marks
@@ -590,7 +568,6 @@
 
     if(!isHighlighted){
       hits = [];
-      document.getElementById('navCount').textContent = '0/0';
       return;
     }
 
@@ -603,37 +580,28 @@
     highlightInNode(resumeBody, re, 'rcv-hit');
 
     hits = Array.prototype.slice.call(sheetResume.querySelectorAll('mark.rcv-hit'));
-    document.getElementById('navCount').textContent = hits.length ? ('1/' + hits.length) : '0/0';
     curHit = 0;
   }
 
-  function gotoHit(dir){
-    if(!hits.length) return;
-    if(curHit >= 0 && hits[curHit]) hits[curHit].classList.remove('rcv-hit-active');
-    curHit = (curHit + dir + hits.length) % hits.length;
-    var target = hits[curHit];
-    target.classList.add('rcv-hit-active');
-    target.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    document.getElementById('navCount').textContent = (curHit + 1) + '/' + hits.length;
-  }
-
   function syncModeViews(){
-    var mode = parseInt(modeSelect.value, 10) || 61;
+    var mode = parseInt(modeSelect ? modeSelect.value : initialOpt, 10) || 61;
     var isBranded = (mode === 62);
     var hasReport = (mode === 64 || mode === 65);
 
-    brandingBanner.style.display = isBranded ? 'flex' : 'none';
-    sheetReport.style.display = hasReport ? 'block' : 'none';
+    if(brandingBanner) brandingBanner.style.display = isBranded ? 'flex' : 'none';
+    if(sheetReport) sheetReport.style.display = hasReport ? 'block' : 'none';
 
     var btnLbl = document.getElementById('btnDlText');
-    if(isBranded) btnLbl.textContent = 'Download Branded Resume';
-    else if(hasReport && mode === 65) btnLbl.textContent = 'Download Report + Highlighted';
-    else if(hasReport) btnLbl.textContent = 'Download Report + Resume';
-    else if(mode === 63) btnLbl.textContent = 'Download Highlighted Resume';
-    else btnLbl.textContent = 'Download Resume (PDF)';
+    if(btnLbl){
+      if(isBranded) btnLbl.textContent = 'Download Branded Resume';
+      else if(hasReport && mode === 65) btnLbl.textContent = 'Download Report + Highlighted';
+      else if(hasReport) btnLbl.textContent = 'Download Report + Resume';
+      else if(mode === 63) btnLbl.textContent = 'Download Highlighted Resume';
+      else btnLbl.textContent = 'Download Resume (PDF)';
+    }
 
-    // Update page strip counter
-    document.getElementById('stripPageNum').textContent = hasReport ? '1 / 2' : '1 / 1';
+    var pageCounter = document.getElementById('stripPageNum');
+    if(pageCounter) pageCounter.textContent = hasReport ? '1 / 2' : '1 / 1';
 
     countOccurrences();
     renderChips();
@@ -642,14 +610,12 @@
 
   // Load authentic candidate resume
   async function loadOriginalResume(){
-    // 1. Check parent window in-memory cache
     if(window.opener && window.opener.__rcvResumeHtml && window.opener.__rcvResumeHtml.trim().length > 30){
       displayResume(window.opener.__rcvResumeHtml);
       return;
     }
     var openerText = window.opener && (window.opener.__rcvResumeText || window.opener.__rdcPreloadedResumeText);
 
-    // 2. Check binary cache in parent window
     var bytes = null;
     if(window.opener && window.opener.__agyResumeCache){
       for(var k in window.opener.__agyResumeCache){
@@ -658,7 +624,6 @@
       }
     }
 
-    // 3. Direct fetch from available resume sources
     if(!bytes && resumeSources && resumeSources.length){
       for(var i = 0; i < resumeSources.length; i++){
         var src = resumeSources[i];
@@ -674,7 +639,6 @@
       }
     }
 
-    // 4. Parse bytes based on file format
     if(bytes){
       var ext = (resumeExt || '').toLowerCase();
       if(ext === 'docx' || ext === 'doc' || !ext){
@@ -711,7 +675,6 @@
       }
     }
 
-    // 5. Fallback profile
     if(openerText){
       var fLines = openerText.split(/\r?\n/);
       var fHtml = fLines.map(function(l){ return l.trim() ? ('<p>' + esc(l.trim()) + '</p>') : '<br>'; }).join('');
@@ -756,15 +719,6 @@
     applyHighlights();
   });
 
-  // Hit navigation
-  document.getElementById('navPrev').onclick = function(){ gotoHit(-1); };
-  document.getElementById('navNext').onclick = function(){ gotoHit(1); };
-
-  // Mode Dropdown change
-  modeSelect.addEventListener('change', function(){
-    syncModeViews();
-  });
-
   // Live input sync
   var editDebounce = null;
   function onDocumentInput(){
@@ -777,8 +731,8 @@
   sheetResume.addEventListener('input', onDocumentInput);
   sheetReport.addEventListener('input', onDocumentInput);
 
-  // Floating Dock Formatting Buttons
-  document.querySelectorAll('.dock-btn[data-cmd]').forEach(function(btn){
+  // Formatting Toolbar Buttons
+  document.querySelectorAll('[data-cmd]').forEach(function(btn){
     btn.addEventListener('click', function(e){
       e.preventDefault();
       var cmd = this.getAttribute('data-cmd');
@@ -786,12 +740,24 @@
     });
   });
 
-  document.getElementById('dockColor').addEventListener('input', function(){
+  document.getElementById('selFormat').addEventListener('change', function(){
+    document.execCommand('formatBlock', false, this.value);
+  });
+
+  document.getElementById('selFont').addEventListener('change', function(){
+    document.execCommand('fontName', false, this.value);
+  });
+
+  document.getElementById('selSize').addEventListener('change', function(){
+    document.execCommand('fontSize', false, this.value);
+  });
+
+  document.getElementById('pickerColor').addEventListener('input', function(){
     document.execCommand('foreColor', false, this.value);
   });
 
-  // Advanced Tools in Dock
-  document.getElementById('dockHighlight').onclick = function(){
+  // Action Tools
+  document.getElementById('btnToolHighlight').onclick = function(){
     var sel = window.getSelection();
     if(!sel.rangeCount || sel.isCollapsed) return;
     var range = sel.getRangeAt(0);
@@ -803,7 +769,7 @@
     renderChips();
   };
 
-  document.getElementById('dockWhiteout').onclick = function(){
+  document.getElementById('btnToolWhiteout').onclick = function(){
     var sel = window.getSelection();
     if(!sel.rangeCount || sel.isCollapsed) return;
     var range = sel.getRangeAt(0);
@@ -813,7 +779,7 @@
     range.insertNode(mark);
   };
 
-  document.getElementById('dockPageBreak').onclick = function(){
+  document.getElementById('btnToolPageBreak').onclick = function(){
     var div = document.createElement('div');
     div.className = 'doc-page-break';
     div.contentEditable = 'false';
@@ -827,10 +793,10 @@
   };
 
   // Image Insertion
-  document.getElementById('dockImage').onclick = function(){
-    document.getElementById('dockFileInput').click();
+  document.getElementById('btnToolImage').onclick = function(){
+    document.getElementById('fileImageInput').click();
   };
-  document.getElementById('dockFileInput').addEventListener('change', function(e){
+  document.getElementById('fileImageInput').addEventListener('change', function(e){
     var file = e.target.files && e.target.files[0];
     if(!file) return;
     var reader = new FileReader();
@@ -857,7 +823,7 @@
   var signCtx = signCanvas.getContext('2d');
   var isDrawing = false;
 
-  document.getElementById('dockSign').onclick = function(){
+  document.getElementById('btnToolSign').onclick = function(){
     signModal.style.display = 'flex';
     signCtx.clearRect(0, 0, signCanvas.width, signCanvas.height);
     signCtx.lineWidth = 2.5;
@@ -916,14 +882,6 @@
     sheetResume.style.transformOrigin = 'top center';
   }
 
-  // Copy text
-  document.getElementById('btnCopyText').onclick = function(){
-    var text = (sheetReport && sheetReport.style.display !== 'none' ? sheetReport.innerText + '\n\n' : '') + (resumeBody.innerText || '');
-    navigator.clipboard.writeText(text).then(function(){
-      alert('Document text copied to clipboard!');
-    }).catch(function(){ alert('Could not copy text.'); });
-  };
-
   // Download PDF
   document.getElementById('btnDownload').onclick = async function(){
     var btn = document.getElementById('btnDownload');
@@ -931,7 +889,7 @@
     btn.disabled = true;
     btn.innerHTML = '<span class="spin"></span> Generating PDF…';
     try {
-      var mode = parseInt(modeSelect.value, 10) || 61;
+      var mode = parseInt(modeSelect ? modeSelect.value : initialOpt, 10) || 61;
       var isBranded = (mode === 62);
       var isHighlighted = (mode === 63 || mode === 65);
       var hasReport = (mode === 64 || mode === 65);
