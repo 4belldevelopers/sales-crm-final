@@ -8,7 +8,8 @@
   <link rel="icon" type="image/svg+xml" href="{{ asset('img/logo.svg') }}">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Poppins:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     html, body {
@@ -17,7 +18,7 @@
       font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
       font-size: 13px;
       color: #0f172a;
-      background: #e5e7eb;
+      background: #334155;
       -webkit-font-smoothing: antialiased;
     }
 
@@ -32,14 +33,14 @@
     .acrobat-header {
       height: 48px;
       background: #ffffff;
-      border-bottom: 1px solid #d1d5db;
+      border-bottom: 1px solid #cbd5e1;
       display: flex;
       align-items: center;
       justify-content: space-between;
       padding: 0 16px;
       flex-shrink: 0;
       z-index: 50;
-      box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
     }
     .brand-section {
       display: flex;
@@ -74,7 +75,7 @@
     .header-actions {
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 12px;
     }
     .mode-picker-select {
       height: 32px;
@@ -121,7 +122,7 @@
     .acrobat-sidebar {
       width: 320px;
       background: #ffffff;
-      border-right: 1px solid #d1d5db;
+      border-right: 1px solid #cbd5e1;
       display: flex;
       flex-direction: column;
       flex-shrink: 0;
@@ -203,7 +204,7 @@
       display: flex;
       flex-wrap: wrap;
       gap: 6px;
-      max-height: 170px;
+      max-height: 180px;
       overflow-y: auto;
       padding: 4px 1px;
     }
@@ -226,6 +227,7 @@
       background: #fef08a;
       color: #854d0e;
       border-color: #facc15;
+      box-shadow: 0 0 0 1px #facc15;
     }
     .kw-chip:hover {
       border-color: #94a3b8;
@@ -266,76 +268,23 @@
     }
     .kw-add-input:focus { border-color: #0284c7; }
 
-    /* Editing Tools Toolbar */
-    .tool-row {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      margin-bottom: 8px;
-    }
-    .tool-select {
-      flex: 1;
-      height: 30px;
-      font-size: 11.5px;
-      font-family: inherit;
-      color: #0f172a;
-      background: #ffffff;
-      border: 1px solid #cbd5e1;
-      border-radius: 5px;
-      padding: 0 6px;
-      outline: none;
-      cursor: pointer;
-    }
-    .tool-color-input {
-      width: 32px;
-      height: 30px;
-      border: 1px solid #cbd5e1;
-      border-radius: 5px;
-      padding: 1px;
-      cursor: pointer;
-      background: #ffffff;
-    }
-    .tool-btn-group {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 4px;
-      margin-bottom: 10px;
-    }
-    .btn-format {
-      min-width: 30px;
-      height: 28px;
-      padding: 0 8px;
-      font-size: 11.5px;
-      font-family: inherit;
-      background: #f8fafc;
-      color: #334155;
-      border: 1px solid #cbd5e1;
-      border-radius: 5px;
-      cursor: pointer;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      user-select: none;
-    }
-    .btn-format:hover { background: #e2e8f0; color: #0f172a; }
-    .btn-format:active { background: #cbd5e1; }
-
+    /* Action Tools */
     .action-tools-list {
       display: flex;
       flex-direction: column;
-      gap: 6px;
+      gap: 8px;
     }
     .btn-action-tool {
       width: 100%;
-      height: 32px;
-      padding: 0 10px;
-      font-size: 11.5px;
+      height: 34px;
+      padding: 0 12px;
+      font-size: 12px;
       font-weight: 600;
       font-family: inherit;
       background: #f8fafc;
       color: #0f172a;
       border: 1px solid #cbd5e1;
-      border-radius: 5px;
+      border-radius: 6px;
       display: flex;
       align-items: center;
       gap: 8px;
@@ -347,396 +296,82 @@
     .btn-action-tool:hover { background: #f1f5f9; border-color: #94a3b8; }
     .btn-tool-highlight:hover { background: #fef9c3; border-color: #facc15; }
     .btn-tool-whiteout:hover { background: #fee2e2; border-color: #f87171; }
+    .btn-tool-active { background: #e0f2fe !important; border-color: #0284c7 !important; color: #0284c7 !important; }
 
-    /* ZONE B: Center Document Viewport */
+    /* ZONE B: Center Document Viewport (Dedicated High-Fidelity Canvas) */
     .acrobat-canvas {
       flex: 1;
-      background: #cbd5e1;
+      background: #475569;
       overflow-y: auto;
       overflow-x: auto;
       display: flex;
       flex-direction: column;
       align-items: center;
-      padding: 30px 20px 80px 20px;
-      gap: 30px;
+      padding: 24px 20px 80px 20px;
+      gap: 24px;
     }
 
-    /* Paper Page Sheet (Standard A4) */
-    .paper-sheet {
-      width: 820px;
-      min-height: 1140px;
-      background: #ffffff;
-      box-shadow: 0 4px 16px rgba(0,0,0,0.12), 0 1px 3px rgba(0,0,0,0.08);
-      border-radius: 2px;
-      padding: 44px 50px;
-      box-sizing: border-box;
-      outline: none;
+    /* Page Container */
+    .rcv-page-wrap {
       position: relative;
-    }
-    .paper-sheet:focus {
-      box-shadow: 0 0 0 2px #0284c7, 0 4px 16px rgba(0,0,0,0.15);
-    }
-
-    /* Page 1: PRE-SCREENED CANDIDATE REPORT (Exact replica of showdetail.blade.php buildDefinition) */
-    .rs-header-card {
-      border: 1px solid #dbe3ef;
-      border-radius: 6px;
-      padding: 12px 16px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 12px;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.35);
       background: #ffffff;
+      border-radius: 2px;
+      user-select: text;
     }
-    .rs-hdr-left {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-    .rs-hdr-logo {
-      max-height: 34px;
-      max-width: 60px;
-      object-fit: contain;
-    }
-    .rs-hdr-logo-box {
-      width: 36px;
-      height: 36px;
-      border-radius: 5px;
-      background: #eef2ff;
-      color: #1d4ed8;
-      font-size: 16px;
-      font-weight: 800;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-    .rs-hdr-info {
-      display: flex;
-      flex-direction: column;
-    }
-    .rs-hdr-shared {
-      font-size: 8.5px;
-      font-weight: 700;
-      color: #64748b;
-      letter-spacing: 0.5px;
-    }
-    .rs-hdr-company {
-      font-size: 14px;
-      font-weight: 700;
-      color: #0f172a;
-    }
-    .rs-hdr-right {
-      text-align: right;
-    }
-    .rs-hdr-title {
-      font-size: 16px;
-      font-weight: 800;
-      color: #0f172a;
-      letter-spacing: -0.2px;
-    }
-    .rs-hdr-date {
-      font-size: 9.5px;
-      font-weight: 600;
-      color: #64748b;
-      margin-top: 2px;
-      letter-spacing: 0.5px;
-    }
-
-    /* Paired Card Row */
-    .rs-paired-row {
-      display: flex;
-      gap: 12px;
-      margin-bottom: 12px;
-    }
-    .rs-cand-card {
-      flex: 1;
-      border: 1px solid #cbd5e1;
-      border-radius: 6px;
-      padding: 14px 16px;
-      background: #ffffff;
-      display: flex;
-      flex-direction: column;
-    }
-    .rs-cand-name {
-      font-size: 20px;
-      font-weight: 800;
-      color: #0f172a;
-      line-height: 1.2;
-    }
-    .rs-cand-role {
-      font-size: 12.5px;
-      font-weight: 700;
-      color: #1d4ed8;
-      margin: 3px 0 10px 0;
-    }
-    .rs-cand-meta {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      font-size: 11px;
-      color: #475569;
-      margin-top: 4px;
-    }
-    .rs-cand-meta strong {
-      color: #0f172a;
-    }
-    .rs-conf-card {
-      width: 220px;
-      border: 1.5px solid #cfe0ff;
-      border-radius: 6px;
-      background: #f8fbff;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding: 14px;
-      text-align: center;
-      flex-shrink: 0;
-    }
-    .rs-conf-label {
-      font-size: 11.5px;
-      font-weight: 700;
-      color: #64748b;
-      letter-spacing: 0.5px;
-    }
-    .rs-conf-score {
-      font-size: 38px;
-      font-weight: 900;
-      color: #1d4ed8;
-      line-height: 1.1;
-      margin-top: 6px;
-    }
-
-    /* 4-Metric Grid */
-    .rs-metrics-card {
-      border: 1px solid #dbe3ef;
-      border-radius: 6px;
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      background: #ffffff;
-      margin-bottom: 12px;
-    }
-    .rs-metric-col {
-      padding: 12px 14px;
-      text-align: center;
-      border-right: 1px solid #dbe3ef;
-    }
-    .rs-metric-col:last-child { border-right: none; }
-    .rs-metric-lbl {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 5px;
-      font-size: 9px;
-      font-weight: 700;
-      color: #64748b;
-      letter-spacing: 0.5px;
-      margin-bottom: 6px;
-    }
-    .rs-metric-txt {
-      font-size: 12px;
-      font-weight: 800;
-      color: #0f172a;
-    }
-
-    /* Two Columns: Executive Summary & Recruiter Comments */
-    .rs-columns-row {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 12px;
-      margin-bottom: 12px;
-    }
-    .rs-panel-card {
-      border: 1px solid #dbe3ef;
-      border-radius: 6px;
-      padding: 12px 14px;
-      background: #ffffff;
-      min-height: 120px;
-    }
-    .rs-panel-title {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      font-size: 10.5px;
-      font-weight: 700;
-      color: #1d4ed8;
-      letter-spacing: 0.5px;
-      margin-bottom: 8px;
-    }
-    .rs-panel-body {
-      font-size: 11.5px;
-      line-height: 1.5;
-      color: #1f2937;
-    }
-
-    /* Skill Intelligence Table */
-    .rs-full-card {
-      border: 1px solid #dbe3ef;
-      border-radius: 6px;
-      padding: 12px 14px;
-      background: #ffffff;
-      margin-bottom: 12px;
-    }
-    .rs-card-sec-title {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      font-size: 10.5px;
-      font-weight: 700;
-      color: #1d4ed8;
-      letter-spacing: 0.5px;
-      margin-bottom: 8px;
-    }
-    .rs-skills-table {
+    .rcv-page-canvas {
+      display: block;
       width: 100%;
-      border-collapse: collapse;
+      height: 100%;
     }
-    .rs-skills-table th {
-      text-align: left;
-      font-size: 9.5px;
-      font-weight: 700;
-      color: #475569;
-      padding: 5px 8px;
-      background: #f8fafc;
-      border-bottom: 1.5px solid #94a3b8;
-    }
-    .rs-skills-table td {
-      padding: 6px 8px;
-      font-size: 11px;
-      border-bottom: 1px solid #e2e8f0;
-    }
-    .rs-skill-name {
-      font-weight: 700;
-      color: #0f172a;
-    }
-    .rs-skill-exp {
-      color: #334155;
-    }
-    .rs-star {
-      width: 13px;
-      height: 13px;
-      display: inline-block;
-      vertical-align: middle;
-      margin: 0 1px;
-    }
-    .rs-star-gold path { fill: #f59e0b; }
-    .rs-star-muted path { fill: #cbd5e1; }
-
-    /* Verification Status */
-    .rs-verif-grid {
-      display: grid;
-      grid-template-columns: repeat(5, 1fr);
-      text-align: center;
-    }
-    .rs-verif-col {
-      border-right: 1px solid #cbd5e1;
-      padding: 6px 4px;
-    }
-    .rs-verif-col:last-child { border-right: none; }
-    .rs-verif-head {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 4px;
-      font-size: 9px;
-      font-weight: 700;
-      color: #0f172a;
-      margin-bottom: 4px;
-    }
-    .rs-verif-status {
-      font-size: 10px;
-      font-weight: 700;
-      color: #16a34a;
-    }
-
-    /* Report Footer */
-    .rs-footer {
-      border-top: 1px solid #e5e7eb;
-      padding-top: 8px;
-      margin-top: 12px;
-      display: flex;
-      justify-content: space-between;
-      font-size: 9.5px;
-      color: #64748b;
-    }
-
-    /* Page 2: Candidate Resume */
-    .resume-brand-banner {
-      border-bottom: 2px solid #0284c7;
-      padding-bottom: 12px;
-      margin-bottom: 18px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-    .resume-brand-title {
-      font-size: 15px;
-      font-weight: 800;
-      color: #0f172a;
-    }
-    .resume-brand-sub {
-      font-size: 11px;
-      color: #64748b;
-    }
-
-    #resumeBody {
-      font-family: inherit;
-      color: #0f172a;
-      line-height: 1.6;
-      font-size: 13px;
-      outline: none;
-    }
-    #resumeBody p, #resumeBody div { margin-bottom: 8px; }
-    #resumeBody h1, #resumeBody h2, #resumeBody h3 {
-      font-weight: 700;
-      color: #0f172a;
-      margin-top: 14px;
-      margin-bottom: 6px;
-    }
-    #resumeBody ul, #resumeBody ol {
-      margin-left: 20px;
-      margin-bottom: 8px;
-    }
-
-    /* Highlights & Redactions */
-    mark.rcv-hit, span.rcv-hit {
-      background-color: #fef08a !important;
-      color: inherit;
-      padding: 1px 2px;
-      border-radius: 2px;
-    }
-    mark.rcv-redact, span.rcv-redact {
-      background-color: #0f172a !important;
-      color: #0f172a !important;
-      user-select: none;
-      border-radius: 2px;
-      padding: 0 4px;
-    }
-    .doc-page-break {
-      border-top: 2px dashed #cbd5e1;
-      margin: 24px 0;
-      text-align: center;
-      position: relative;
-    }
-    .doc-page-break::after {
-      content: 'Page Break';
-      background: #cbd5e1;
-      color: #475569;
-      font-size: 10px;
-      font-weight: 700;
-      padding: 2px 8px;
-      border-radius: 999px;
+    .rcv-textlayer {
       position: absolute;
-      top: -10px;
-      left: 50%;
-      transform: translateX(-50%);
+      left: 0;
+      top: 0;
+      right: 0;
+      bottom: 0;
+      overflow: hidden;
+      line-height: 1;
+      z-index: 2;
+    }
+    .rcv-textlayer span {
+      position: absolute;
+      white-space: pre;
+      color: transparent;
+      transform-origin: 0% 0%;
+      cursor: text;
+    }
+    .rcv-textlayer span::selection {
+      background: rgba(2, 132, 199, 0.3);
+    }
+    .rcv-textlayer mark.rcv-hit {
+      background: rgba(254, 240, 138, 0.55);
+      color: transparent;
+      border-radius: 2px;
+    }
+    .rcv-textlayer mark.rcv-redact {
+      background: #0f172a;
+      color: transparent;
+      border-radius: 2px;
     }
 
-    /* ZONE C: Right Navigation Strip */
+    /* Drawing / Markup Canvas Overlay */
+    .rcv-annotation-canvas {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 5;
+      pointer-events: none;
+      touch-action: none;
+    }
+
+    /* ZONE C: Right Page Navigation Strip */
     .acrobat-right-strip {
       width: 44px;
       background: #ffffff;
-      border-left: 1px solid #d1d5db;
+      border-left: 1px solid #cbd5e1;
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -771,7 +406,7 @@
     .sign-backdrop {
       position: fixed;
       inset: 0;
-      background: rgba(15, 23, 42, 0.6);
+      background: rgba(15, 23, 42, 0.65);
       backdrop-filter: blur(2px);
       z-index: 9999;
       display: none;
@@ -782,8 +417,8 @@
       background: #ffffff;
       border-radius: 10px;
       padding: 20px;
-      width: 440px;
-      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2);
+      width: 460px;
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.25);
     }
     .sign-box-head {
       display: flex;
@@ -818,15 +453,25 @@
     }
     @keyframes spin { to { transform: rotate(360deg); } }
 
-    @media print {
-      body { background: #fff !important; }
-      .acrobat-header, .acrobat-sidebar, .acrobat-right-strip { display: none !important; }
-      .acrobat-workspace, .acrobat-canvas { padding: 0 !important; margin: 0 !important; background: #fff !important; }
-      .paper-sheet { box-shadow: none !important; margin: 0 !important; page-break-after: always; width: 100% !important; min-height: 100% !important; padding: 20mm !important; }
+    .loading-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 120px 20px;
+      color: #e2e8f0;
+      gap: 14px;
     }
   </style>
-  <script src="{{ asset('js/html2canvas.min.js') }}"></script>
-  <script src="{{ asset('js/jspdf.umd.min.js') }}"></script>
+
+  <!-- Local Engines (WASM, PDF-Lib, PDFMake, PDF.js, Annotator) -->
+  <script src="{{ asset('js/pdfmake.min.js') }}"></script>
+  <script src="{{ asset('js/vfs_fonts.min.js') }}"></script>
+  <script src="{{ asset('js/pdf-lib.min.js') }}"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.11.338/pdf.min.js"></script>
+  <script src="{{ asset('js/opendoc/AgyWasmEngine.js') }}"></script>
+  <script src="{{ asset('js/opendoc/AgyTouchAnnotator.js') }}"></script>
+  <script src="{{ asset('js/opendoc/AgyCvOptimizer.js') }}"></script>
 </head>
 <body>
 
@@ -838,18 +483,18 @@
       <img src="{{ asset('img/logo.svg') }}" alt="JERO" class="brand-logo-img">
       <div class="brand-text-block">
         <span class="brand-title">jero.works</span>
-        <span class="doc-status-tag" id="statusBadge">Online Editor</span>
+        <span class="doc-status-tag">WASM Online Editor</span>
       </div>
     </div>
 
     <div class="header-actions">
-      <label for="modePicker" style="font-size:11.5px;font-weight:600;color:#64748b;">Dossier View:</label>
+      <label for="modePicker" style="font-size:11.5px;font-weight:600;color:#64748b;">Dossier Format:</label>
       <select id="modePicker" class="mode-picker-select">
         <option value="61">Option 61: ATS Optimized Résumé</option>
-        <option value="62">Option 62: Branded Company Résumé</option>
-        <option value="63">Option 63: Highlighted Keywords Résumé</option>
-        <option value="64">Option 64: Pre-Screen Report + Résumé</option>
-        <option value="65" selected>Option 65: Pre-Screen Report + Highlighted Résumé</option>
+        <option value="62">Option 62: Resume + Company Branding (Group 3)</option>
+        <option value="63">Option 63: Highlighted Keywords Résumé (Group 5)</option>
+        <option value="64">Option 64: Pre-Screen Report + Résumé (Group 4)</option>
+        <option value="65" selected>Option 65: Pre-Screen Report + Highlighted Résumé (Group 5)</option>
       </select>
 
       <button type="button" id="btnDownload" class="btn-header-dl">
@@ -882,7 +527,7 @@
 
         <div style="margin-top:12px;">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
-            <span style="font-size:11px;font-weight:700;color:#475569;text-transform:uppercase;">Job Skills &amp; Highlights</span>
+            <span style="font-size:11px;font-weight:700;color:#475569;text-transform:uppercase;">Key Skills (Click to Toggle)</span>
             <span id="kwCountBadge" style="font-size:10.5px;color:#0284c7;font-weight:600;">0 active</span>
           </div>
           <div class="kw-chip-bank" id="kwBank"></div>
@@ -893,305 +538,52 @@
         </div>
       </div>
 
-      <!-- Document Formatting Tools -->
+      <!-- Action Power Tools -->
       <div class="sidebar-section">
         <div class="sidebar-sec-head">
           <span class="sidebar-sec-title">Document Tools</span>
         </div>
 
-        <div style="display:flex;flex-direction:column;gap:8px;">
-          <div class="tool-row">
-            <select id="selFormat" class="tool-select" title="Text Style">
-              <option value="p">Paragraph</option>
-              <option value="h1">Heading 1</option>
-              <option value="h2">Heading 2</option>
-              <option value="h3">Heading 3</option>
-            </select>
-            <select id="selSize" class="tool-select" title="Font Size" style="max-width:80px;">
-              <option value="2">11px</option>
-              <option value="3" selected>13px</option>
-              <option value="4">15px</option>
-              <option value="5">18px</option>
-            </select>
-            <input type="color" id="pickerColor" class="tool-color-input" value="#1e293b" title="Text Color">
-          </div>
+        <div class="action-tools-list">
+          <button type="button" id="btnToolHighlight" class="btn-action-tool btn-tool-highlight" title="Highlight selected text in yellow">
+            <span>🖍</span> Highlight Selected Text
+          </button>
+          <button type="button" id="btnToolWhiteout" class="btn-action-tool btn-tool-whiteout" title="Whiteout sensitive text">
+            <span>⬛</span> Whiteout / Redact Selected
+          </button>
+          <button type="button" id="btnToolDraw" class="btn-action-tool" title="Draw with pen, highlighter or stylus">
+            <span>✍</span> Touch / Stylus Annotator
+          </button>
+          <button type="button" id="btnToolSign" class="btn-action-tool" title="Draw and place signature stamp">
+            <span>🔏</span> Draw &amp; Insert Signature
+          </button>
+          <button type="button" id="btnToolImage" class="btn-action-tool" title="Insert company logo or image">
+            <span>🖼</span> Insert Company Logo / Stamp
+          </button>
 
-          <div class="tool-row">
-            <select id="selFont" class="tool-select" title="Font Family">
-              <option value="Poppins, sans-serif">Poppins</option>
-              <option value="Inter, sans-serif">Inter</option>
-              <option value="Calibri, sans-serif">Calibri</option>
-              <option value="Arial, sans-serif">Arial</option>
-              <option value="'Times New Roman', serif">Times New Roman</option>
-            </select>
+          <div style="display:flex;gap:6px;margin-top:4px;">
+            <button type="button" id="btnToolUndo" class="btn-action-tool" style="flex:1;justify-content:center;">↶ Undo (Ctrl+Z)</button>
+            <button type="button" id="btnToolRedo" class="btn-action-tool" style="flex:1;justify-content:center;">↷ Redo (Ctrl+Y)</button>
           </div>
-
-          <!-- Format Buttons -->
-          <div class="tool-btn-group">
-            <button type="button" class="btn-format" data-cmd="bold" title="Bold (Ctrl+B)"><strong>B</strong></button>
-            <button type="button" class="btn-format" data-cmd="italic" title="Italic (Ctrl+I)"><em>I</em></button>
-            <button type="button" class="btn-format" data-cmd="underline" title="Underline (Ctrl+U)"><u>U</u></button>
-            <button type="button" class="btn-format" data-cmd="strikeThrough" title="Strikethrough"><s>S</s></button>
-            <button type="button" class="btn-format" data-cmd="insertUnorderedList" title="Bullet List">• List</button>
-            <button type="button" class="btn-format" data-cmd="insertOrderedList" title="Numbered List">1. List</button>
-          </div>
-
-          <!-- Action Power Tools -->
-          <div class="action-tools-list">
-            <button type="button" id="btnToolHighlight" class="btn-action-tool btn-tool-highlight">
-              <span>🖍</span> Highlight Selected Text
-            </button>
-            <button type="button" id="btnToolWhiteout" class="btn-action-tool btn-tool-whiteout">
-              <span>⬛</span> Whiteout / Redact Sensitive Data
-            </button>
-            <button type="button" id="btnToolImage" class="btn-action-tool">
-              <span>🖼</span> Insert Image or Logo
-            </button>
-            <button type="button" id="btnToolSign" class="btn-action-tool">
-              <span>✍</span> Draw &amp; Insert Signature
-            </button>
-            <button type="button" id="btnToolPageBreak" class="btn-action-tool">
-              <span>📄</span> Insert Page Break
-            </button>
-            <div style="display:flex;gap:6px;margin-top:2px;">
-              <button type="button" id="btnToolUndo" class="btn-action-tool" style="flex:1;justify-content:center;">↶ Undo (Ctrl+Z)</button>
-              <button type="button" id="btnToolRedo" class="btn-action-tool" style="flex:1;justify-content:center;">↷ Redo (Ctrl+Y)</button>
-            </div>
-            <input type="file" id="fileImageInput" accept="image/*" style="display:none;">
-          </div>
-
+          <input type="file" id="fileImageInput" accept="image/*" style="display:none;">
         </div>
       </div>
 
     </aside>
 
-    <!-- ZONE B: Center Document Viewport (Dedicated Scroller) -->
+    <!-- ZONE B: Center Document Viewport (Renders EXACT Generated PDF Document Pages) -->
     <main class="acrobat-canvas" id="canvas">
-
-      <!-- PAGE 1: PRE-SCREENED CANDIDATE REPORT (Exact replica of showdetail.blade.php buildDefinition) -->
-      <div class="paper-sheet" id="sheetReport" style="display:none;" contenteditable="true" spellcheck="false">
-
-        <!-- 1. Header Card -->
-        <div class="rs-header-card">
-          <div class="rs-hdr-left">
-            @if(!empty($companyLogo ?? null))
-              <img src="{{ $companyLogo }}" alt="Company Logo" class="rs-hdr-logo">
-            @else
-              <div class="rs-hdr-logo-box">{{ strtoupper(substr(($companyName ?? 'JERO'), 0, 1)) }}</div>
-            @endif
-            <div class="rs-hdr-info">
-              <span class="rs-hdr-shared">SHARED BY</span>
-              <span class="rs-hdr-company">{{ ($companyName ?? null) ?: 'Hiring Partner' }}</span>
-            </div>
-          </div>
-          <div class="rs-hdr-right">
-            <div class="rs-hdr-title">PRE-SCREENED CANDIDATE REPORT</div>
-            <div class="rs-hdr-date">{{ strtoupper(now()->format('d M Y')) }} · CONFIDENTIAL</div>
-          </div>
-        </div>
-
-        <!-- 2. Candidate Profile + Hiring Confidence Row -->
-        <div class="rs-paired-row">
-          <div class="rs-cand-card">
-            <div class="rs-cand-name">{{ ucwords(@$application->full_name ?: 'Candidate') }}</div>
-            <div class="rs-cand-role">{{ ucwords(@$application->current_designation ?: (@$job->title ?: 'Verified Professional')) }}</div>
-            <div class="rs-cand-meta">
-              <svg viewBox="0 0 24 24" width="13" height="13"><path fill="#64748b" d="M12 2l2.2 4.5 5 .7-3.6 3.5.8 5-4.4-2.4-4.4 2.4.8-5L4.8 7.2l5-.7L12 2zm-6 17h12v2H6v-2z"/></svg>
-              <span><strong>EXPERIENCE:</strong> {{ strtoupper($rsExperience ?? (@$application->total_exp ? @$application->total_exp.' YEARS' : '5 YEARS')) }}</span>
-            </div>
-            <div class="rs-cand-meta">
-              <svg viewBox="0 0 24 24" width="13" height="13"><path fill="#64748b" d="M4 21V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v17h3v-9h-2v-2h3a1 1 0 0 1 1 1v10H4zm4-14h2V5H8v2zm4 0h2V5h-2v2zm-4 4h2V9H8v2zm4 0h2V9h-2v2zm-4 4h2v-2H8v2zm4 0h2v-2h-2v2z"/></svg>
-              <span><strong>CURRENT COMPANY:</strong> {{ strtoupper($rsCurrentCompany ?? (@$application->current_company ?: (@$application->cur_company_name ?: '--'))) }}</span>
-            </div>
-          </div>
-          <div class="rs-conf-card">
-            <div class="rs-conf-label">HIRING CONFIDENCE</div>
-            <div class="rs-conf-score">{{ $rsMatchPct ?? 88 }}%</div>
-          </div>
-        </div>
-
-        <!-- 3. Four-Metric Glance Row -->
-        <div class="rs-metrics-card">
-          <div class="rs-metric-col">
-            <div class="rs-metric-lbl">
-              <svg viewBox="0 0 24 24" width="12" height="12"><path fill="#2563eb" d="M12 3L1.5 8.5 12 14l8-4.2V16h2V8.5L12 3zm-6 9.1V16c0 1.7 2.7 4 6 4s6-2.3 6-4v-3.9L12 15.2l-6-3.1z"/></svg>
-              <span>EDUCATION</span>
-            </div>
-            <div class="rs-metric-txt">{{ strtoupper($rsEducation ?? (@$application->qualification_name ?: 'GRADUATE / BE / B.TECH')) }}</div>
-          </div>
-          <div class="rs-metric-col">
-            <div class="rs-metric-lbl">
-              <svg viewBox="0 0 24 24" width="12" height="12"><path fill="#2563eb" d="M7 2h2v2h6V2h2v2h2a2 2 0 0 1 2 2v13a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2V2zm12 8H5v9h14v-9z"/></svg>
-              <span>NOTICE PERIOD</span>
-            </div>
-            <div class="rs-metric-txt">{{ $rsNotice ?? ($noticePeriod ?? (@$application->np_id ?: 'Immediate / Serving')) }}</div>
-          </div>
-          <div class="rs-metric-col">
-            <div class="rs-metric-lbl">
-              <svg viewBox="0 0 24 24" width="12" height="12"><path fill="#2563eb" d="M12 2a7 7 0 0 0-7 7c0 5.2 7 13 7 13s7-7.8 7-13a7 7 0 0 0-7-7zm0 9.5A2.5 2.5 0 1 1 12 6a2.5 2.5 0 0 1 0 5.5z"/></svg>
-              <span>LOCATION</span>
-            </div>
-            <div class="rs-metric-txt">{{ $cityName ?? 'Verified Location' }}</div>
-          </div>
-          <div class="rs-metric-col">
-            <div class="rs-metric-lbl">
-              <svg viewBox="0 0 24 24" width="12" height="12"><path fill="#2563eb" d="M4 4h16a2 2 0 0 1 2 2v10H2V6a2 2 0 0 1 2-2zm0 2v8h16V6H4zm-2 12h20v2H2v-2z"/></svg>
-              <span>WORK MODE</span>
-            </div>
-            <div class="rs-metric-txt">{{ $rsWorkMode ?? 'Hybrid' }}</div>
-          </div>
-        </div>
-
-        <!-- 4. Two Panels: Executive Summary & Recruiter Comments -->
-        <div class="rs-columns-row">
-          <div class="rs-panel-card">
-            <div class="rs-panel-title">
-              <svg viewBox="0 0 24 24" width="13" height="13"><path fill="#2563eb" d="M5 3h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2zm3 5h8V6H8v2zm0 5h8v-2H8v2zm0 5h5v-2H8v2z"/></svg>
-              <span>EXECUTIVE SUMMARY</span>
-            </div>
-            <div class="rs-panel-body">
-              {{ $rsCareerSummary ?? ($prescreenNotes ?? (@$application->comment ?: @$application->cover_letter ?: 'Experienced professional with demonstrated background in designing, developing, and deploying scalable software architectures, driving end-to-end delivery and engineering excellence.')) }}
-            </div>
-          </div>
-          <div class="rs-panel-card">
-            <div class="rs-panel-title">
-              <svg viewBox="0 0 24 24" width="13" height="13"><path fill="#2563eb" d="M4 4a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H9l-5 5V4zm4 4v2h8V8H8zm0 4v2h6v-2H8z"/></svg>
-              <span>RECRUITER COMMENTS</span>
-            </div>
-            <div class="rs-panel-body">
-              {{ $rsRecruiterNote ?? ('Candidate thoroughly verified by ' . ($recruiterName ?? 'Senior Technical Recruiter') . '. Clear communication, strong analytical aptitude, and immediate project delivery readiness verified.') }}
-            </div>
-          </div>
-        </div>
-
-        <!-- 5. Skill Intelligence Table -->
-        <div class="rs-full-card">
-          <div class="rs-card-sec-title">
-            <svg viewBox="0 0 24 24" width="13" height="13"><path fill="#2563eb" d="M12 2l2.4 5.4 5.9.6-4.4 3.9 1.3 5.8-5.2-3-5.2 3 1.3-5.8L3.7 8l5.9-.6L12 2z"/></svg>
-            <span>SKILL INTELLIGENCE</span>
-          </div>
-          <table class="rs-skills-table">
-            <thead>
-              <tr>
-                <th style="width:48%;">SKILLS</th>
-                <th style="width:26%;">EXPERIENCE</th>
-                <th style="width:26%;text-align:center;">RATING</th>
-              </tr>
-            </thead>
-            <tbody>
-              @php
-                $displaySkills = !empty($rsSkills) ? $rsSkills : [];
-                if(empty($displaySkills) && !empty($jobSkills)){
-                  foreach(array_slice($jobSkills, 0, 5) as $idx => $js){
-                    $displaySkills[] = [
-                      'name' => $js,
-                      'expText' => max(2, 5 - $idx) . ' Years',
-                      'rating' => max(3, 5 - ($idx % 3))
-                    ];
-                  }
-                }
-              @endphp
-              @forelse($displaySkills as $sk)
-                <tr>
-                  <td class="rs-skill-name">{{ strtoupper($sk['name'] ?? 'SKILL') }}</td>
-                  <td class="rs-skill-exp">{{ $sk['expText'] ?? '3 Years' }}</td>
-                  <td style="text-align:center;">
-                    @php $stars = max(1, min(5, (int)($sk['rating'] ?? 4))); @endphp
-                    @for($st = 1; $st <= 5; $st++)
-                      <svg viewBox="0 0 24 24" class="rs-star {{ $st <= $stars ? 'rs-star-gold' : 'rs-star-muted' }}"><path d="M12 2.6l2.85 5.78 6.38.93-4.62 4.5 1.09 6.35L12 17.16l-5.7 3 1.09-6.35-4.62-4.5 6.38-.93L12 2.6z"/></svg>
-                    @endfor
-                  </td>
-                </tr>
-              @empty
-                <tr>
-                  <td colspan="3" style="text-align:center;color:#64748b;padding:12px;">Candidate verified with core job technical requirements.</td>
-                </tr>
-              @endforelse
-            </tbody>
-          </table>
-        </div>
-
-        <!-- 6. Verification Status Row -->
-        <div class="rs-full-card">
-          <div class="rs-card-sec-title">
-            <svg viewBox="0 0 24 24" width="13" height="13"><path fill="#2563eb" d="M12 2l8 3v6c0 5-3.4 9.6-8 11-4.6-1.4-8-6-8-11V5l8-3zm-1 13.2l6-6-1.4-1.4L11 12.4 8.4 9.8 7 11.2l4 4z"/></svg>
-            <span>VERIFICATION STATUS</span>
-          </div>
-          <div class="rs-verif-grid">
-            <div class="rs-verif-col">
-              <div class="rs-verif-head">
-                <svg viewBox="0 0 24 24" width="12" height="12"><path fill="#2563eb" d="M6 2h8l5 5v15H6V2zm7 1.8V8h4.2L13 3.8zM8 12h8v-1.7H8V12zm0 4h8v-1.7H8V16zm0 4h6v-1.7H8V20z"/></svg>
-                <span>RESUME</span>
-              </div>
-              <div class="rs-verif-status">Verified</div>
-            </div>
-            <div class="rs-verif-col">
-              <div class="rs-verif-head">
-                <svg viewBox="0 0 24 24" width="12" height="12"><path fill="#2563eb" d="M4 5h16a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2zm8 7.2L4.7 7H4v.7l8 5.7 8-5.7V7h-.7L12 12.2z"/></svg>
-                <span>EMAIL ID</span>
-              </div>
-              <div class="rs-verif-status">Verified</div>
-            </div>
-            <div class="rs-verif-col">
-              <div class="rs-verif-head">
-                <svg viewBox="0 0 24 24" width="12" height="12"><path fill="#2563eb" d="M7.2 2.8l3 3a2 2 0 0 1 .4 2.2l-.9 2.1a13.5 13.5 0 0 0 4.2 4.2l2.1-.9a2 2 0 0 1 2.2.4l3 3a2 2 0 0 1 0 2.8l-1.4 1.4c-.8.8-2 .9-3 .5A25.2 25.2 0 0 1 2.5 7.2c-.4-1-.3-2.2.5-3l1.4-1.4a2 2 0 0 1 2.8 0z"/></svg>
-                <span>PHONE NUMBER</span>
-              </div>
-              <div class="rs-verif-status">Verified</div>
-            </div>
-            <div class="rs-verif-col">
-              <div class="rs-verif-head">
-                <svg viewBox="0 0 24 24" width="12" height="12"><path fill="#2563eb" d="M5 3h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2zm3.4 15V9.6H6V18h2.4zM7.2 8.5a1.4 1.4 0 1 0 0-2.8 1.4 1.4 0 0 0 0 2.8zM18 18v-4.8c0-2.5-1.3-3.8-3.2-3.8-1.4 0-2.1.8-2.5 1.4V9.6H10V18h2.4v-4.2c0-1.1.2-2.2 1.6-2.2s1.5 1.3 1.5 2.3V18H18z"/></svg>
-                <span>LINKEDIN ID</span>
-              </div>
-              <div class="rs-verif-status">Verified</div>
-            </div>
-            <div class="rs-verif-col">
-              <div class="rs-verif-head">
-                <svg viewBox="0 0 24 24" width="12" height="12"><path fill="#2563eb" d="M8 2h8a2 2 0 0 1 2 2v2h2v16H4V6h2V4a2 2 0 0 1 2-2zm0 4h8V4H8v2zm-1 6h10v-1.8H7V12zm0 4h10v-1.8H7V16zm0 4h7v-1.8H7V20z"/></svg>
-                <span>JOB DESCRIPTION</span>
-              </div>
-              <div class="rs-verif-status">Shared with candidate</div>
-            </div>
-          </div>
-        </div>
-
-        <!-- 7. Footer -->
-        <div class="rs-footer">
-          <span>This report is generated by AI hiring platform jero.works</span>
-          <span>www.jero.works</span>
-        </div>
-
+      <div class="loading-container" id="loaderBox">
+        <div class="spin" style="width:34px;height:34px;border-width:3px;border-color:#38bdf8;border-top-color:transparent;"></div>
+        <span style="font-size:14px;font-weight:600;">Generating high-fidelity dossier via WASM Engine…</span>
+        <span style="font-size:12px;color:#94a3b8;">Embedding vector corporate branding, report metrics, and keyword coordinates</span>
       </div>
-
-      <!-- PAGE 2: CANDIDATE RÉSUMÉ SHEET (All Modes) -->
-      <div class="paper-sheet" id="sheetResume" contenteditable="true" spellcheck="false">
-
-        <!-- Company Branding Header (Option 62) -->
-        <div class="resume-brand-banner" id="brandingBanner" style="display:none;" contenteditable="false">
-          <div>
-            <div class="resume-brand-title">{{ strtoupper(($companyName ?? null) ?: 'CONFIDENTIAL CANDIDATE') }}</div>
-            <div class="resume-brand-sub">Represented Candidate • Verified ATS Optimized Résumé</div>
-          </div>
-          <span style="background:#ccfbf1;color:#0f766e;font-size:10.5px;font-weight:700;padding:3px 10px;border-radius:999px;">Branded Profile</span>
-        </div>
-
-        <!-- Resume Body -->
-        <div id="resumeBody">
-          <div id="loaderPlaceholder" style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:140px 20px;color:#64748b;gap:12px;" contenteditable="false">
-            <div class="spin" style="width:30px;height:30px;border-color:#0284c7;border-top-color:transparent;border-width:3px;"></div>
-            <span style="font-size:14px;font-weight:600;color:#0f172a;">Loading candidate résumé from Cloudflare R2…</span>
-            <span style="font-size:11.5px;color:#64748b;">Rendering exact high-fidelity document pages for live editing</span>
-          </div>
-        </div>
-
-      </div>
-
+      <div id="docPagesContainer" style="display:none;display:flex;flex-direction:column;align-items:center;gap:24px;width:100%;"></div>
     </main>
 
     <!-- ZONE C: Right Page Navigation Strip -->
     <aside class="acrobat-right-strip">
-      <div class="page-counter-box" id="stripPageNum">1 / 2</div>
+      <div class="page-counter-box" id="stripPageNum">1 / 1</div>
       <button type="button" class="strip-btn" id="stripPrevPage" title="Previous Page">▲</button>
       <button type="button" class="strip-btn" id="stripNextPage" title="Next Page">▼</button>
       <div style="width:22px;height:1px;background:#e2e8f0;margin:4px 0;"></div>
@@ -1212,173 +604,122 @@
       <button type="button" id="btnSignClose" style="background:none;border:none;font-size:18px;cursor:pointer;color:#64748b;">&times;</button>
     </div>
     <p style="font-size:11.5px;color:#64748b;margin-bottom:8px;">Sign below with your mouse, finger, or stylus:</p>
-    <canvas id="signCanvas" class="sign-canvas" width="400" height="160"></canvas>
+    <canvas id="signCanvas" class="sign-canvas" width="420" height="160"></canvas>
     <div class="sign-box-actions">
       <button type="button" id="btnSignClear" class="btn-action-tool" style="width:auto;padding:6px 12px;">Clear</button>
-      <button type="button" id="btnSignInsert" class="btn-ats-add-kw" style="padding:6px 14px;">Insert Signature</button>
+      <button type="button" id="btnSignInsert" class="btn-ats-add-kw" style="padding:6px 16px;">Insert into Document</button>
     </div>
   </div>
 </div>
 
 <script>
-  // Server-rendered variables
+  // Server-rendered Candidate Dossier Data
   var jobSkills = @json($jobSkills ?? []);
   var candSkills = @json($candSkills ?? []);
   var candName = @json(ucwords(@$application->full_name ?: @$application->name ?: 'Candidate'));
-  var jobTitle = @json(ucwords(@$job->title ?: @$application->job_title ?: 'Verified Profile'));
-  var companyName = @json($companyName ?? '');
+  var jobTitle = @json(ucwords(@$job->title ?: @$application->job_title ?: 'Verified Professional'));
+  var companyName = @json($companyName ?? 'Hiring Partner');
   var companyLogo = @json($companyLogo ?? '');
-  var resumeExt = @json($resumeExt ?? '');
+  var resumeExt = @json(strtolower($resumeExt ?? 'pdf'));
   var rcvFetchUrl = @json($rcvFetchUrl ?? '');
   var r2SignUrl = @json($r2SignUrl ?? '');
-  var initialOpt = @json($optId ?? 61);
+  var initialOpt = @json($optId ?? 65);
 
-  var canvas = document.getElementById('canvas');
-  var sheetReport = document.getElementById('sheetReport');
-  var sheetResume = document.getElementById('sheetResume');
-  var resumeBody = document.getElementById('resumeBody');
-  var brandingBanner = document.getElementById('brandingBanner');
-  var modeSelect = document.getElementById('modePicker');
+  // Full Pre-Screened Report Data Attributes (matching showdetail.blade.php buildDefinition)
+  var candidateDossierData = {
+    name: candName,
+    designation: @json($rsCurrentDesignation ?? (@$job->title ?: 'Verified Professional')),
+    company: @json($rsCurrentCompany ?? (@$application->current_company ?: (@$application->cur_company_name ?: 'Hiring Partner'))),
+    experience: @json($rsExperience ?? (@$application->total_exp ? @$application->total_exp.' Years' : '5 Years')),
+    education: @json($rsEducation ?? (@$application->qualification_name ?: 'Graduate / BE / B.Tech')),
+    notice: @json($rsNotice ?? ($noticePeriod ?? (@$application->np_id ?: 'Immediate'))),
+    location: @json($cityName ?? 'Bangalore'),
+    workMode: @json($rsWorkMode ?? 'Hybrid'),
+    match: @json($rsMatchPct ?? 88),
+    careerSummary: @json($rsCareerSummary ?? (@$application->careersummary ?: 'Experienced professional with demonstrated background in scalable systems.')),
+    recruiterNote: @json($rsRecruiterNote ?? (@$application->recruiter_note ?: 'Candidate thoroughly pre-screened and assessed for technical competency.')),
+    skills: @json($rsSkills ?? []),
+    validation: @json($rsValidation ?? []),
+    reportCompanyName: companyName,
+    reportCompanyLogo: companyLogo,
+    reportDate: @json(now()->format('d M Y'))
+  };
 
-  // Set initial mode in dropdown
-  if(modeSelect && initialOpt) {
-    modeSelect.value = String(initialOpt);
+  // Configure PDF.js worker
+  if(window.pdfjsLib){
+    var pVer = window.pdfjsLib.version || '2.11.338';
+    window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/' + pVer + '/pdf.worker.min.js';
   }
 
-  // Synchronize Mode View
-  function syncModeViews(){
-    var mode = parseInt(modeSelect ? modeSelect.value : initialOpt, 10) || 61;
-    var isBranded = (mode === 62);
-    var hasReport = (mode === 64 || mode === 65);
+  var canvasViewport = document.getElementById('canvas');
+  var docPagesContainer = document.getElementById('docPagesContainer');
+  var loaderBox = document.getElementById('loaderBox');
+  var modePicker = document.getElementById('modePicker');
 
-    if(brandingBanner) brandingBanner.style.display = isBranded ? 'flex' : 'none';
-    if(sheetReport) sheetReport.style.display = hasReport ? 'block' : 'none';
+  var currentGeneratedPdfBlob = null;
+  var currentPdfDoc = null;
+  var currentPdfJsDoc = null;
+  var currentZoom = 1.0;
+  var pageElements = [];
 
-    var btnLbl = document.getElementById('btnDlText');
-    if(btnLbl){
-      if(isBranded) btnLbl.textContent = 'Download Branded PDF';
-      else if(hasReport && mode === 65) btnLbl.textContent = 'Download Report + Highlighted PDF';
-      else if(hasReport) btnLbl.textContent = 'Download Report + PDF';
-      else if(mode === 63) btnLbl.textContent = 'Download Highlighted PDF';
-      else btnLbl.textContent = 'Download Final PDF';
-    }
+  // Edits recorded for vector PDF burning
+  var userAnnotations = {
+    highlights: [], // { pageNum, x, y, width, height } in PDF pts
+    whiteouts: [],  // { pageNum, x, y, width, height, isBlack }
+    stamps: []      // { pageNum, x, y, width, height, imgDataUrl }
+  };
 
-    var pageCounter = document.getElementById('stripPageNum');
-    if(pageCounter) pageCounter.textContent = hasReport ? '1 / 2' : '1 / 1';
-  }
-
-  if(modeSelect){
-    modeSelect.addEventListener('change', syncModeViews);
-  }
-  syncModeViews();
-
-  // -------------------------------------------------------------
-  // ENTERPRISE DOCUMENT HISTORY STACK (Undo, Redo, Ctrl+Z, Ctrl+Y)
-  // -------------------------------------------------------------
+  // History stack for Undo / Redo
   var historyStack = [];
   var historyIndex = -1;
-  var maxHistory = 50;
-  var isRestoringHistory = false;
 
-  function getSnapshot(){
-    return {
-      report: sheetReport ? sheetReport.innerHTML : '',
-      resume: sheetResume ? sheetResume.innerHTML : ''
-    };
-  }
-
-  function recordHistory(){
-    if (isRestoringHistory) return;
-    var snap = getSnapshot();
-    if (historyIndex >= 0 && historyStack[historyIndex]) {
-      var prev = historyStack[historyIndex];
-      if (prev.report === snap.report && prev.resume === snap.resume) {
-        return;
-      }
-    }
+  function recordHistoryState(){
     historyStack = historyStack.slice(0, historyIndex + 1);
-    historyStack.push(snap);
-    if (historyStack.length > maxHistory) {
-      historyStack.shift();
-    }
+    historyStack.push(JSON.parse(JSON.stringify(userAnnotations)));
+    if(historyStack.length > 30) historyStack.shift();
     historyIndex = historyStack.length - 1;
     updateUndoRedoUI();
   }
 
   function doUndo(){
-    if (historyIndex > 0) {
+    if(historyIndex > 0){
       historyIndex--;
-      restoreSnapshot(historyStack[historyIndex]);
-    } else {
-      try { document.execCommand('undo', false, null); } catch(e){}
+      userAnnotations = JSON.parse(JSON.stringify(historyStack[historyIndex]));
+      redrawPageOverlays();
     }
     updateUndoRedoUI();
   }
 
   function doRedo(){
-    if (historyIndex < historyStack.length - 1) {
+    if(historyIndex < historyStack.length - 1){
       historyIndex++;
-      restoreSnapshot(historyStack[historyIndex]);
-    } else {
-      try { document.execCommand('redo', false, null); } catch(e){}
+      userAnnotations = JSON.parse(JSON.stringify(historyStack[historyIndex]));
+      redrawPageOverlays();
     }
     updateUndoRedoUI();
   }
 
-  function restoreSnapshot(snap){
-    if (!snap) return;
-    isRestoringHistory = true;
-    if (sheetReport && snap.report !== undefined) {
-      sheetReport.innerHTML = snap.report;
-    }
-    if (sheetResume && snap.resume !== undefined) {
-      sheetResume.innerHTML = snap.resume;
-    }
-    isRestoringHistory = false;
-    countOccurrences();
-    renderChips();
-  }
-
   function updateUndoRedoUI(){
-    var btnU = document.getElementById('btnToolUndo');
-    var btnR = document.getElementById('btnToolRedo');
-    if(btnU) btnU.style.opacity = (historyIndex > 0) ? '1' : '0.45';
-    if(btnR) btnR.style.opacity = (historyIndex < historyStack.length - 1) ? '1' : '0.45';
+    var u = document.getElementById('btnToolUndo');
+    var r = document.getElementById('btnToolRedo');
+    if(u) u.style.opacity = (historyIndex > 0) ? '1' : '0.45';
+    if(r) r.style.opacity = (historyIndex < historyStack.length - 1) ? '1' : '0.45';
   }
 
-  // Keyboard shortcut listener for Ctrl+Z, Ctrl+Shift+Z, Ctrl+Y
   window.addEventListener('keydown', function(e){
-    var isZ = (e.key === 'z' || e.key === 'Z' || e.keyCode === 90);
-    var isY = (e.key === 'y' || e.key === 'Y' || e.keyCode === 89);
-    if (e.ctrlKey || e.metaKey) {
-      if (isZ) {
+    if(e.ctrlKey || e.metaKey){
+      if(e.key === 'z' || e.key === 'Z'){
         e.preventDefault();
-        if (e.shiftKey) {
-          doRedo();
-        } else {
-          doUndo();
-        }
-      } else if (isY) {
+        if(e.shiftKey) doRedo(); else doUndo();
+      } else if(e.key === 'y' || e.key === 'Y'){
         e.preventDefault();
         doRedo();
       }
     }
   });
 
-  // Debounced input tracking on editable sheets
-  var inputDebounce = null;
-  function onSheetInput(){
-    clearTimeout(inputDebounce);
-    inputDebounce = setTimeout(function(){
-      recordHistory();
-      countOccurrences();
-    }, 400);
-  }
-  if(sheetReport) sheetReport.addEventListener('input', onSheetInput);
-  if(sheetResume) sheetResume.addEventListener('input', onSheetInput);
-
   // -------------------------------------------------------------
-  // KEYWORDS BANK & ATS SCORE ENGINE
+  // ATS KEYWORD ENGINE & REAL-TIME MATCH CALCULATION
   // -------------------------------------------------------------
   var keywords = {};
   function initKeywords(){
@@ -1396,7 +737,10 @@
   initKeywords();
 
   function countOccurrences(){
-    var text = (resumeBody.innerText || '').toLowerCase();
+    var fullText = '';
+    document.querySelectorAll('.rcv-textlayer').forEach(function(tl){ fullText += ' ' + tl.innerText; });
+    fullText = fullText.toLowerCase();
+
     var matched = 0;
     var totalActive = 0;
     Object.keys(keywords).forEach(function(k){
@@ -1406,7 +750,7 @@
       var count = 0;
       var pos = 0;
       while(true){
-        var idx = text.indexOf(k, pos);
+        var idx = fullText.indexOf(k, pos);
         if(idx === -1) break;
         count++;
         pos = idx + k.length;
@@ -1437,328 +781,550 @@
       chip.onclick = function(){
         kw.active = !kw.active;
         renderChips();
-        applyHighlights();
+        toggleKeywordHighlightOnDoc(kw.name, kw.active);
       };
       bank.appendChild(chip);
     });
   }
 
-  function applyHighlights(){
-    var mode = parseInt(modeSelect ? modeSelect.value : initialOpt, 10) || 61;
-    var shouldHighlight = (mode === 63 || mode === 65);
-    var activeList = [];
-    if(shouldHighlight){
-      Object.keys(keywords).forEach(function(k){
-        if(keywords[k].active) activeList.push(k);
+  // -------------------------------------------------------------
+  // BUILD FINAL DOSSIER DOCUMENT (Exact Group 3, 4, 5 WASM Pipeline)
+  // -------------------------------------------------------------
+  async function fetchRawResumeBytes(){
+    // 1. Check parent window cache
+    if(window.opener && window.opener.__agyResumeCache){
+      var keys = Object.keys(window.opener.__agyResumeCache);
+      for(var i = 0; i < keys.length; i++){
+        var cached = window.opener.__agyResumeCache[keys[i]];
+        if(cached && cached.byteLength) return new Uint8Array(cached);
+      }
+    }
+
+    var endpoint = rcvFetchUrl;
+    if(!endpoint && r2SignUrl){
+      try {
+        var sRes = await fetch(r2SignUrl, { headers: { 'Accept': 'application/json' } });
+        if(sRes.ok){
+          var sData = await sRes.json();
+          if(sData && sData.download_url) endpoint = sData.download_url;
+        }
+      } catch(e){}
+    }
+
+    if(!endpoint) throw new Error('No candidate resume source available.');
+    var res = await fetch(endpoint, { credentials: 'same-origin' });
+    if(!res.ok) throw new Error('Fetch failed with status ' + res.status);
+    var ab = await res.arrayBuffer();
+    return new Uint8Array(ab);
+  }
+
+  // Vector Pre-Screen Report Builder (pdfMake)
+  async function buildRecruiterSummaryVectorBlob(data){
+    if(window.opener && typeof window.opener.__buildRSBlob === 'function'){
+      return window.opener.__buildRSBlob(data, {});
+    }
+
+    // Local standalone pdfMake definition
+    return new Promise(function(resolve, reject){
+      try {
+        var score = data.match || 88;
+        var docDef = {
+          pageSize: 'A4',
+          pageMargins: [30, 26, 30, 24],
+          defaultStyle: { font: 'Roboto', fontSize: 8, color: '#1f2937', lineHeight: 1.25 },
+          styles: {
+            title: { fontSize: 15, bold: true, color: '#0f172a', alignment: 'right' },
+            eyebrow: { fontSize: 6.5, color: '#64748b', alignment: 'right' },
+            candName: { fontSize: 18, bold: true, color: '#0f172a' },
+            candRole: { fontSize: 9.5, bold: true, color: '#1d4ed8' },
+            footer: { fontSize: 6.5, color: '#64748b' }
+          },
+          content: [
+            // Header
+            {
+              table: { widths: ['*', 'auto'], body: [[
+                { text: [ { text: 'SHARED BY\n', fontSize: 6, bold: true, color: '#64748b' }, { text: data.reportCompanyName || 'Hiring Partner', fontSize: 12, bold: true, color: '#0f172a' } ], border: [false, false, false, false] },
+                { stack: [ { text: 'PRE-SCREENED CANDIDATE REPORT', style: 'title' }, { text: (data.reportDate + ' · CONFIDENTIAL').toUpperCase(), style: 'eyebrow', margin: [0, 3, 0, 0] } ], border: [false, false, false, false] }
+              ]]},
+              layout: 'noBorders',
+              margin: [0, 0, 0, 14]
+            },
+            // Candidate & Hiring Confidence
+            {
+              table: { widths: ['*', 140], body: [[
+                { stack: [
+                    { text: data.name, style: 'candName' },
+                    { text: data.designation, style: 'candRole', margin: [0, 3, 0, 8] },
+                    { text: 'EXPERIENCE: ' + (data.experience || '5 YEARS').toUpperCase(), fontSize: 7.5, bold: true, color: '#475569' },
+                    { text: 'CURRENT COMPANY: ' + (data.company || '--').toUpperCase(), fontSize: 7.5, bold: true, color: '#475569', margin: [0, 2, 0, 0] }
+                  ], fillColor: '#ffffff', border: [true, true, true, true], borderColor: ['#cbd5e1','#cbd5e1','#cbd5e1','#cbd5e1'], margin: [10, 8, 10, 8] },
+                { stack: [
+                    { text: 'HIRING CONFIDENCE', fontSize: 10, bold: true, color: '#64748b', alignment: 'center', margin: [0, 6, 0, 0] },
+                    { text: score + '%', fontSize: 26, bold: true, color: '#1d4ed8', alignment: 'center', margin: [0, 4, 0, 0] }
+                  ], fillColor: '#f8fbff', border: [true, true, true, true], borderColor: ['#cfe0ff','#cfe0ff','#cfe0ff','#cfe0ff'], margin: [10, 8, 10, 8] }
+              ]]},
+              margin: [0, 0, 0, 12]
+            },
+            // 4 Metrics
+            {
+              table: { widths: ['*', '*', '*', '*'], body: [[
+                { stack: [ { text: 'EDUCATION', fontSize: 6.5, bold: true, color: '#64748b', alignment: 'center' }, { text: data.education, fontSize: 8, bold: true, alignment: 'center', margin: [0, 2, 0, 0] } ], margin: [4, 6, 4, 6] },
+                { stack: [ { text: 'NOTICE PERIOD', fontSize: 6.5, bold: true, color: '#64748b', alignment: 'center' }, { text: data.notice, fontSize: 8, bold: true, alignment: 'center', margin: [0, 2, 0, 0] } ], margin: [4, 6, 4, 6] },
+                { stack: [ { text: 'LOCATION', fontSize: 6.5, bold: true, color: '#64748b', alignment: 'center' }, { text: data.location, fontSize: 8, bold: true, alignment: 'center', margin: [0, 2, 0, 0] } ], margin: [4, 6, 4, 6] },
+                { stack: [ { text: 'WORK MODE', fontSize: 6.5, bold: true, color: '#64748b', alignment: 'center' }, { text: data.workMode, fontSize: 8, bold: true, alignment: 'center', margin: [0, 2, 0, 0] } ], margin: [4, 6, 4, 6] }
+              ]]},
+              fillColor: '#ffffff',
+              margin: [0, 0, 0, 12]
+            },
+            // Executive Summary & Recruiter Comments
+            {
+              columns: [
+                { stack: [ { text: 'EXECUTIVE SUMMARY', fontSize: 8, bold: true, color: '#1d4ed8', margin: [0, 0, 0, 4] }, { text: data.careerSummary, fontSize: 7.5, lineHeight: 1.35 } ], margin: [0, 0, 6, 0] },
+                { stack: [ { text: 'RECRUITER COMMENTS', fontSize: 8, bold: true, color: '#1d4ed8', margin: [0, 0, 0, 4] }, { text: data.recruiterNote, fontSize: 7.5, lineHeight: 1.35 } ], margin: [6, 0, 0, 0] }
+              ],
+              margin: [0, 0, 0, 12]
+            },
+            // Footer
+            {
+              table: { widths: ['*', 'auto'], body: [[
+                { text: 'This report is generated by AI hiring platform jero.works', style: 'footer', border: [false, true, false, false], margin: [0, 6, 0, 0] },
+                { text: 'www.jero.works', style: 'footer', border: [false, true, false, false], margin: [0, 6, 0, 0] }
+              ]]},
+              layout: { hLineColor: function(){ return '#e5e7eb'; }, hLineWidth: function(){ return 0.6; }, vLineWidth: function(){ return 0; } }
+            }
+          ]
+        };
+        window.pdfMake.createPdf(docDef).getBlob(function(b){ resolve(b); });
+      } catch(e){ reject(e); }
+    });
+  }
+
+  // Vector Company Branding Header Injection (PDFLib)
+  async function applyCompanyBrandingToPdf(resumePdfBlob, brandingData){
+    if(window.opener && typeof window.opener.__applyAgyCompanyBrandingToPdfBlob === 'function'){
+      return window.opener.__applyAgyCompanyBrandingToPdfBlob(resumePdfBlob, brandingData);
+    }
+
+    var PDFLib = window.PDFLib;
+    var resumeBytes = await resumePdfBlob.arrayBuffer();
+    var resumeDoc = await PDFLib.PDFDocument.load(resumeBytes);
+    var firstPage = resumeDoc.getPages()[0];
+    var pageSize = firstPage.getSize();
+
+    var targetDoc = await PDFLib.PDFDocument.create();
+    var regularFont = await targetDoc.embedFont(PDFLib.StandardFonts.Helvetica);
+    var boldFont = await targetDoc.embedFont(PDFLib.StandardFonts.HelveticaBold);
+
+    var headerH = Math.max(68, pageSize.width * 0.11);
+    var newFirst = targetDoc.addPage([pageSize.width, pageSize.height + headerH]);
+    var embedded = await targetDoc.embedPage(firstPage);
+    newFirst.drawPage(embedded, { x: 0, y: 0, width: pageSize.width, height: pageSize.height });
+
+    var topY = pageSize.height;
+    newFirst.drawRectangle({
+      x: 0, y: topY, width: pageSize.width, height: headerH,
+      color: PDFLib.rgb(1, 1, 1),
+      borderColor: PDFLib.rgb(0.86, 0.89, 0.94),
+      borderWidth: 0.8
+    });
+    newFirst.drawRectangle({
+      x: 0, y: topY + headerH - 4, width: pageSize.width, height: 4,
+      color: PDFLib.rgb(0.12, 0.23, 0.54)
+    });
+
+    newFirst.drawText('SHARED BY', { x: 24, y: topY + headerH - 24, size: 7, font: boldFont, color: PDFLib.rgb(0.39, 0.45, 0.55) });
+    newFirst.drawText(brandingData.reportCompanyName || 'Hiring Partner', { x: 24, y: topY + headerH - 44, size: 12, font: boldFont, color: PDFLib.rgb(0.06, 0.09, 0.16) });
+    newFirst.drawText('CONFIDENTIAL RESUME', { x: pageSize.width - 170, y: topY + headerH - 26, size: 12, font: boldFont, color: PDFLib.rgb(0.06, 0.09, 0.16) });
+
+    // Copy remaining pages
+    var sourcePages = resumeDoc.getPages();
+    if(sourcePages.length > 1){
+      var rest = await targetDoc.copyPages(resumeDoc, resumeDoc.getPageIndices().slice(1));
+      rest.forEach(function(p){ targetDoc.addPage(p); });
+    }
+
+    var bytes = await targetDoc.save();
+    return new Blob([bytes], { type: 'application/pdf' });
+  }
+
+  // Vector Keyword Highlighting (PDFLib + PDF.js text runs)
+  async function applyVectorKeywordsHighlight(resumePdfBlob, keywordsList){
+    if(window.opener && typeof window.opener.__buildTurboVectorHighlightedResume === 'function'){
+      return window.opener.__buildTurboVectorHighlightedResume({
+        resumeBlob: resumePdfBlob,
+        keywords: keywordsList,
+        returnBlob: true,
+        ignoreBusy: true
       });
     }
 
-    // Remove existing highlights
-    var existing = resumeBody.querySelectorAll('mark.rcv-hit');
-    existing.forEach(function(m){
-      var parent = m.parentNode;
-      while(m.firstChild) parent.insertBefore(m.firstChild, m);
-      parent.removeChild(m);
-    });
-    resumeBody.normalize();
+    var PDFLib = window.PDFLib;
+    var bytes = await resumePdfBlob.arrayBuffer();
+    var pdfDoc = await PDFLib.PDFDocument.load(bytes);
+    var pdfjsDoc = await window.pdfjsLib.getDocument({ data: new Uint8Array(bytes) }).promise;
 
-    if(!activeList.length){
-      countOccurrences();
-      return;
-    }
+    for(var p = 1; p <= pdfjsDoc.numPages; p++){
+      var page = await pdfjsDoc.getPage(p);
+      var tc = await page.getTextContent();
+      var pdfLibPage = pdfDoc.getPage(p - 1);
 
-    // Safe highlighting of keyword strings in text nodes
-    function highlightNode(node){
-      if(node.nodeType === 3){
-        var text = node.nodeValue;
-        var lower = text.toLowerCase();
-        for(var i = 0; i < activeList.length; i++){
-          var kw = activeList[i];
-          var idx = lower.indexOf(kw);
-          if(idx !== -1){
-            var mark = document.createElement('mark');
-            mark.className = 'rcv-hit';
-            var mid = node.splitText(idx);
-            mid.splitText(kw.length);
-            mark.textContent = mid.nodeValue;
-            mid.parentNode.replaceChild(mark, mid);
-            highlightNode(mark.nextSibling);
-            break;
+      tc.items.forEach(function(item){
+        var str = (item.str || '').toLowerCase();
+        if(!str.trim()) return;
+
+        keywordsList.forEach(function(kw){
+          kw = String(kw).toLowerCase().trim();
+          if(!kw || kw.length < 2) return;
+          if(str.indexOf(kw) !== -1){
+            var tx = item.transform[4] || 0;
+            var ty = item.transform[5] || 0;
+            var itemH = Math.max(Math.abs(item.transform[3] || item.height || 10), 9);
+            var itemW = Math.max(Math.abs(item.width || 20), 10);
+
+            pdfLibPage.drawRectangle({
+              x: tx - 2,
+              y: ty - (itemH * 0.2),
+              width: itemW + 4,
+              height: itemH * 1.15,
+              color: PDFLib.rgb(1, 0.85, 0.15),
+              opacity: 0.42
+            });
           }
-        }
-      } else if(node.nodeType === 1 && node.childNodes && !/(mark|style|script|canvas)/i.test(node.tagName)){
-        for(var j = 0; j < node.childNodes.length; j++){
-          highlightNode(node.childNodes[j]);
-        }
-      }
+        });
+      });
     }
-    highlightNode(resumeBody);
-    countOccurrences();
+
+    var savedBytes = await pdfDoc.save();
+    return new Blob([savedBytes], { type: 'application/pdf' });
+  }
+
+  // Merges Pre-Screen Report and Resume (PDFLib)
+  async function mergeReportAndResume(reportBlob, resumeBlob){
+    if(window.opener && typeof window.opener.mergePreScreenedReportAndResume === 'function'){
+      var PDFLib = window.PDFLib;
+      var rBytes = await reportBlob.arrayBuffer();
+      var cvBytes = await resumeBlob.arrayBuffer();
+      var merged = await PDFLib.PDFDocument.create();
+      var doc1 = await PDFLib.PDFDocument.load(rBytes);
+      var doc2 = await PDFLib.PDFDocument.load(cvBytes);
+
+      var p1 = await merged.copyPages(doc1, doc1.getPageIndices());
+      p1.forEach(function(page){ merged.addPage(page); });
+
+      var p2 = await merged.copyPages(doc2, doc2.getPageIndices());
+      p2.forEach(function(page){ merged.addPage(page); });
+
+      var b = await merged.save();
+      return new Blob([b], { type: 'application/pdf' });
+    }
+
+    var PDFLib = window.PDFLib;
+    var merged = await PDFLib.PDFDocument.create();
+    var doc1 = await PDFLib.PDFDocument.load(await reportBlob.arrayBuffer());
+    var doc2 = await PDFLib.PDFDocument.load(await resumeBlob.arrayBuffer());
+
+    var p1 = await merged.copyPages(doc1, doc1.getPageIndices());
+    p1.forEach(function(p){ merged.addPage(p); });
+    var p2 = await merged.copyPages(doc2, doc2.getPageIndices());
+    p2.forEach(function(p){ merged.addPage(p); });
+
+    var res = await merged.save();
+    return new Blob([res], { type: 'application/pdf' });
   }
 
   // -------------------------------------------------------------
-  // RÉSUMÉ DATA RETRIEVAL (Cloudflare R2 Direct / Local Storage)
+  // PRIMARY PIPELINE: Generates the Selected Option's Final Base File
   // -------------------------------------------------------------
-  var OptClass = window.AgyCvOptimizer || (window.opener && window.opener.AgyCvOptimizer);
+  async function buildOptionDocument(modeNum){
+    modeNum = parseInt(modeNum, 10) || 61;
+    var rawBytes = await fetchRawResumeBytes();
 
-  async function loadResumeContent(){
-    try {
-      if(window.opener && window.opener.__rcvRawHtml){
-        displayResume(window.opener.__rcvRawHtml);
-        return;
+    var baseResumeBlob = null;
+    // Check if DOCX
+    if(rawBytes[0] === 0x50 && rawBytes[1] === 0x4B && resumeExt === 'docx'){
+      if(window.AgyWasmEngine && typeof window.AgyWasmEngine.renderDocxToPdfBlob === 'function'){
+        baseResumeBlob = await window.AgyWasmEngine.renderDocxToPdfBlob(rawBytes);
+      } else if(window.opener && typeof window.opener.__renderAgyStrategy2WasmDocxToPdfBlob === 'function'){
+        baseResumeBlob = await window.opener.__renderAgyStrategy2WasmDocxToPdfBlob(rawBytes);
+      } else {
+        baseResumeBlob = new Blob([rawBytes], { type: 'application/pdf' });
       }
-
-      var fetchEndpoint = rcvFetchUrl;
-      if(!fetchEndpoint && r2SignUrl){
-        var signRes = await fetch(r2SignUrl, { headers: { 'Accept': 'application/json' } });
-        if(signRes.ok){
-          var signData = await signRes.json();
-          if(signData && signData.download_url) fetchEndpoint = signData.download_url;
-        }
-      }
-
-      if(!fetchEndpoint) throw new Error('No candidate résumé URL available.');
-
-      var res = await fetch(fetchEndpoint, { credentials: 'same-origin' });
-      if(!res.ok) throw new Error('Resume fetch returned status ' + res.status);
-
-      var blob = await res.blob();
-      var ext = (resumeExt || '').toLowerCase();
-
-      if(ext === 'docx' || blob.type.indexOf('wordprocessingml') !== -1){
-        if(window.docx && typeof window.docx.renderAsync === 'function'){
-          var wrap = document.createElement('div');
-          await window.docx.renderAsync(blob, wrap);
-          displayResume(wrap.innerHTML);
-          return;
-        }
-      }
-
-      if(ext === 'pdf' || blob.type.indexOf('pdf') !== -1){
-        var arrayBuf = await blob.arrayBuffer();
-        var pdfjs = window.pdfjsLib || (window.opener && window.opener.pdfjsLib);
-        if(pdfjs){
-          var pdfDoc = await pdfjs.getDocument({ data: arrayBuf }).promise;
-          var textPages = [];
-          for(var p = 1; p <= pdfDoc.numPages; p++){
-            var page = await pdfDoc.getPage(p);
-            var content = await page.getTextContent();
-            var pageStrings = content.items.map(function(item){ return item.str; });
-            textPages.push('<div style="margin-bottom:24px;">' + pageStrings.join(' ') + '</div>');
-          }
-          displayResume(textPages.join(''));
-          return;
-        }
-      }
-
-      var textContent = await blob.text();
-      if(textContent && textContent.length > 20){
-        displayResume(textContent);
-        return;
-      }
-
-      throw new Error('Document format requires desktop reader or could not be rendered inline.');
-
-    } catch(err){
-      console.warn('Direct stream fallback to text extraction:', err);
-      displayResume(
-        '<h2 style="font-size:18px;font-weight:700;color:#0f172a;margin-bottom:12px;">' + candName + '</h2>' +
-        '<p style="font-size:13px;font-weight:600;color:#1d4ed8;margin-bottom:14px;">' + jobTitle + '</p>' +
-        '<div style="font-size:12.5px;line-height:1.6;color:#1f2937;">' +
-          '<p><strong>Technical Competencies:</strong> ' + jobSkills.join(', ') + '</p>' +
-          '<p style="margin-top:10px;">Full verified résumé profile loaded in memory. You can format, highlight keywords, add company branding, draw your signature, and download the high-resolution ATS optimized dossier.</p>' +
-        '</div>'
-      );
+    } else {
+      baseResumeBlob = new Blob([rawBytes], { type: 'application/pdf' });
     }
+
+    var finalBlob = baseResumeBlob;
+
+    if(modeNum === 62){
+      // Option 62 (Group 3: Resume + Company Branding)
+      finalBlob = await applyCompanyBrandingToPdf(baseResumeBlob, candidateDossierData);
+    } else if(modeNum === 63){
+      // Option 63 (Group 5: Highlighted Keywords)
+      var activeKws = Object.keys(keywords).filter(function(k){ return keywords[k].active; });
+      finalBlob = await applyVectorKeywordsHighlight(baseResumeBlob, activeKws);
+    } else if(modeNum === 64){
+      // Option 64 (Group 4: Pre-Screen Report + Resume)
+      var reportBlob = await buildRecruiterSummaryVectorBlob(candidateDossierData);
+      finalBlob = await mergeReportAndResume(reportBlob, baseResumeBlob);
+    } else if(modeNum === 65){
+      // Option 65 (Group 5: Pre-Screen Report + Highlighted Keywords)
+      var reportBlob = await buildRecruiterSummaryVectorBlob(candidateDossierData);
+      var activeKws = Object.keys(keywords).filter(function(k){ return keywords[k].active; });
+      var hlResumeBlob = await applyVectorKeywordsHighlight(baseResumeBlob, activeKws);
+      finalBlob = await mergeReportAndResume(reportBlob, hlResumeBlob);
+    }
+
+    return finalBlob;
   }
 
-  function displayResume(html){
-    resumeBody.innerHTML = html;
+  // -------------------------------------------------------------
+  // HIGH-FIDELITY VIEWER RENDERER (Render PDF Pages into Canvas Viewport)
+  // -------------------------------------------------------------
+  async function renderDocumentPages(pdfBlob){
+    loaderBox.style.display = 'flex';
+    docPagesContainer.style.display = 'none';
+    docPagesContainer.innerHTML = '';
+    pageElements = [];
+
+    var ab = await pdfBlob.arrayBuffer();
+    currentPdfJsDoc = await window.pdfjsLib.getDocument({ data: new Uint8Array(ab) }).promise;
+
+    var containerW = Math.min(canvasViewport.clientWidth - 40, 840);
+    document.getElementById('stripPageNum').textContent = '1 / ' + currentPdfJsDoc.numPages;
+
+    for(var p = 1; p <= currentPdfJsDoc.numPages; p++){
+      var page = await currentPdfJsDoc.getPage(p);
+      var baseVp = page.getViewport({ scale: 1 });
+      var scale = (containerW - 4) / baseVp.width;
+      var viewport = page.getViewport({ scale: scale * currentZoom });
+
+      var pageWrap = document.createElement('div');
+      pageWrap.className = 'rcv-page-wrap';
+      pageWrap.id = 'page_' + p;
+      pageWrap.setAttribute('data-page', p);
+      pageWrap.style.width = Math.floor(viewport.width) + 'px';
+      pageWrap.style.height = Math.floor(viewport.height) + 'px';
+      pageWrap.style.margin = '0 auto';
+      pageWrap.__pdfPage = page;
+      pageWrap.__viewport = viewport;
+
+      // Base Render Canvas
+      var canvas = document.createElement('canvas');
+      canvas.className = 'rcv-page-canvas';
+      var dpr = window.devicePixelRatio || 1;
+      canvas.width = Math.floor(viewport.width * dpr);
+      canvas.height = Math.floor(viewport.height * dpr);
+      canvas.style.width = Math.floor(viewport.width) + 'px';
+      canvas.style.height = Math.floor(viewport.height) + 'px';
+      pageWrap.appendChild(canvas);
+
+      // Text Layer
+      var tl = document.createElement('div');
+      tl.className = 'rcv-textlayer';
+      tl.style.width = Math.floor(viewport.width) + 'px';
+      tl.style.height = Math.floor(viewport.height) + 'px';
+      pageWrap.appendChild(tl);
+
+      // Annotation Canvas Overlay (Touch / Stylus / Redaction drawing)
+      var annotCanvas = document.createElement('canvas');
+      annotCanvas.className = 'rcv-annotation-canvas';
+      annotCanvas.width = canvas.width;
+      annotCanvas.height = canvas.height;
+      annotCanvas.style.width = canvas.style.width;
+      annotCanvas.style.height = canvas.style.height;
+      pageWrap.appendChild(annotCanvas);
+
+      docPagesContainer.appendChild(pageWrap);
+      pageElements.push(pageWrap);
+
+      var ctx = canvas.getContext('2d');
+      var transform = (dpr !== 1) ? [dpr, 0, 0, dpr, 0, 0] : null;
+      await page.render({ canvasContext: ctx, viewport: viewport, transform: transform }).promise;
+
+      // Render Text Layer
+      var tc = await page.getTextContent();
+      try {
+        await window.pdfjsLib.renderTextLayer({
+          textContent: tc,
+          container: tl,
+          viewport: viewport,
+          textDivs: []
+        }).promise;
+      } catch(e){}
+
+      bindPageEvents(pageWrap, annotCanvas, p, viewport);
+    }
+
+    loaderBox.style.display = 'none';
+    docPagesContainer.style.display = 'flex';
     countOccurrences();
     renderChips();
-    applyHighlights();
-    recordHistory();
+    recordHistoryState();
   }
 
-  loadResumeContent();
-
-  // Add Custom Keyword button
-  document.getElementById('btnKwAdd').onclick = function(){
-    var input = document.getElementById('kwInput');
-    var val = (input.value || '').trim();
-    if(!val) return;
-    keywords[val.toLowerCase()] = { name: val, active: true, count: 0 };
-    input.value = '';
-    renderChips();
-    applyHighlights();
-  };
-  document.getElementById('kwInput').addEventListener('keydown', function(e){
-    if(e.key === 'Enter'){ e.preventDefault(); document.getElementById('btnKwAdd').click(); }
-  });
-
   // -------------------------------------------------------------
-  // FORMATTING & ACTION TOOLS (With Selection Preservation)
+  // INTERACTIVE TOOLS: Highlighting, Whiteout, Signatures
   // -------------------------------------------------------------
-  // Prevent default on mousedown for toolbar controls so selection in contenteditable is NOT lost
-  document.querySelectorAll('.btn-format, .btn-action-tool').forEach(function(el){
-    el.addEventListener('mousedown', function(e){
-      // Keep editor text selection active
+  var isAnnotatingMode = false;
+  var isDrawingStroke = false;
+  var currentStroke = [];
+
+  function bindPageEvents(pageWrap, annotCanvas, pageNum, viewport){
+    var ctx = annotCanvas.getContext('2d');
+    var dpr = window.devicePixelRatio || 1;
+
+    // Pointer drawing for annotations
+    annotCanvas.addEventListener('pointerdown', function(e){
+      if(!isAnnotatingMode) return;
       e.preventDefault();
+      isDrawingStroke = true;
+      currentStroke = [{ x: e.offsetX * dpr, y: e.offsetY * dpr }];
     });
-  });
 
-  // Formatting Buttons
-  document.querySelectorAll('[data-cmd]').forEach(function(btn){
-    btn.addEventListener('click', function(e){
+    annotCanvas.addEventListener('pointermove', function(e){
+      if(!isDrawingStroke || !isAnnotatingMode) return;
       e.preventDefault();
-      var cmd = this.getAttribute('data-cmd');
-      document.execCommand(cmd, false, null);
-      recordHistory();
+      currentStroke.push({ x: e.offsetX * dpr, y: e.offsetY * dpr });
+
+      ctx.beginPath();
+      ctx.strokeStyle = '#0284c7';
+      ctx.lineWidth = 2.5 * dpr;
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+      ctx.moveTo(currentStroke[currentStroke.length - 2].x, currentStroke[currentStroke.length - 2].y);
+      ctx.lineTo(currentStroke[currentStroke.length - 1].x, currentStroke[currentStroke.length - 1].y);
+      ctx.stroke();
     });
-  });
 
-  document.getElementById('selFormat').addEventListener('change', function(){
-    document.execCommand('formatBlock', false, this.value);
-    recordHistory();
-  });
+    window.addEventListener('pointerup', function(){
+      if(isDrawingStroke && currentStroke.length > 1){
+        isDrawingStroke = false;
+        // Save as stamp for vector burning
+        var imgUrl = annotCanvas.toDataURL('image/png');
+        userAnnotations.stamps.push({
+          pageNum: pageNum,
+          x: 0,
+          y: 0,
+          width: viewport.width,
+          height: viewport.height,
+          imgDataUrl: imgUrl
+        });
+        recordHistoryState();
+      }
+      isDrawingStroke = false;
+    });
+  }
 
-  document.getElementById('selFont').addEventListener('change', function(){
-    document.execCommand('fontName', false, this.value);
-    recordHistory();
-  });
-
-  document.getElementById('selSize').addEventListener('change', function(){
-    document.execCommand('fontSize', false, this.value);
-    recordHistory();
-  });
-
-  document.getElementById('pickerColor').addEventListener('input', function(){
-    document.execCommand('foreColor', false, this.value);
-    recordHistory();
-  });
-
-  // HIGHLIGHT SELECTED TEXT (Bug Fix: NEVER deletes multi-line or block selections)
+  // Text selection highlight tool
   document.getElementById('btnToolHighlight').onclick = function(e){
     e.preventDefault();
-    recordHistory();
-    var sel = window.getSelection();
-    if(!sel || !sel.rangeCount || sel.isCollapsed) return;
-
-    var ok = false;
-    try {
-      ok = document.execCommand('hiliteColor', false, '#fef08a');
-      if(!ok){
-        ok = document.execCommand('backColor', false, '#fef08a');
-      }
-    } catch(err){ ok = false; }
-
-    if(!ok){
-      try {
-        var range = sel.getRangeAt(0);
-        if(range.startContainer === range.endContainer && range.startContainer.nodeType === 3){
-          var mark = document.createElement('mark');
-          mark.className = 'rcv-hit';
-          mark.textContent = range.toString();
-          range.deleteContents();
-          range.insertNode(mark);
-        }
-      } catch(e2){}
-    }
-
-    countOccurrences();
-    renderChips();
-    recordHistory();
+    applySelectionAnnotation('highlight');
   };
 
-  // WHITEOUT / REDACT SENSITIVE DATA (Bug Fix: safe non-destructive redaction)
+  // Text selection whiteout tool
   document.getElementById('btnToolWhiteout').onclick = function(e){
     e.preventDefault();
-    recordHistory();
+    applySelectionAnnotation('whiteout');
+  };
+
+  function applySelectionAnnotation(type){
     var sel = window.getSelection();
     if(!sel || !sel.rangeCount || sel.isCollapsed) return;
 
-    var ok = false;
-    try {
-      ok = document.execCommand('backColor', false, '#0f172a');
-      if(ok){
-        document.execCommand('foreColor', false, '#0f172a');
-      }
-    } catch(err){ ok = false; }
+    var range = sel.getRangeAt(0);
+    var rects = range.getClientRects();
+    if(!rects || !rects.length) return;
 
-    if(!ok){
-      try {
-        var range = sel.getRangeAt(0);
-        if(range.startContainer === range.endContainer && range.startContainer.nodeType === 3){
-          var mark = document.createElement('mark');
-          mark.className = 'rcv-redact';
-          mark.textContent = range.toString();
-          range.deleteContents();
-          range.insertNode(mark);
+    for(var r = 0; r < rects.length; r++){
+      var rect = rects[r];
+      // Find which page container this rect belongs to
+      for(var p = 0; p < pageElements.length; p++){
+        var pageWrap = pageElements[p];
+        var pRect = pageWrap.getBoundingClientRect();
+        if(rect.top >= pRect.top && rect.bottom <= pRect.bottom && rect.left >= pRect.left && rect.right <= pRect.right){
+          var pageNum = p + 1;
+          var x = rect.left - pRect.left;
+          var y = rect.top - pRect.top;
+          var w = rect.width;
+          var h = rect.height;
+
+          var mark = document.createElement('div');
+          mark.style.position = 'absolute';
+          mark.style.left = x + 'px';
+          mark.style.top = y + 'px';
+          mark.style.width = w + 'px';
+          mark.style.height = h + 'px';
+          mark.style.pointerEvents = 'none';
+          mark.style.zIndex = '4';
+
+          if(type === 'highlight'){
+            mark.style.backgroundColor = 'rgba(254, 240, 138, 0.55)';
+            mark.style.borderRadius = '2px';
+            pageWrap.appendChild(mark);
+
+            userAnnotations.highlights.push({
+              pageNum: pageNum,
+              x: x,
+              y: y,
+              width: w,
+              height: h,
+              viewportW: pageWrap.__viewport.width,
+              viewportH: pageWrap.__viewport.height
+            });
+          } else {
+            mark.style.backgroundColor = '#ffffff';
+            mark.style.border = '1px solid #e2e8f0';
+            pageWrap.appendChild(mark);
+
+            userAnnotations.whiteouts.push({
+              pageNum: pageNum,
+              x: x,
+              y: y,
+              width: w,
+              height: h,
+              viewportW: pageWrap.__viewport.width,
+              viewportH: pageWrap.__viewport.height
+            });
+          }
+          break;
         }
-      } catch(e2){}
-    }
-    recordHistory();
-  };
-
-  // Undo and Redo Button Handlers
-  document.getElementById('btnToolUndo').onclick = function(e){
-    e.preventDefault();
-    doUndo();
-  };
-  document.getElementById('btnToolRedo').onclick = function(e){
-    e.preventDefault();
-    doRedo();
-  };
-
-  // Page Break Tool
-  document.getElementById('btnToolPageBreak').onclick = function(e){
-    e.preventDefault();
-    recordHistory();
-    var div = document.createElement('div');
-    div.className = 'doc-page-break';
-    div.contentEditable = 'false';
-    var sel = window.getSelection();
-    if(sel && sel.rangeCount){
-      var range = sel.getRangeAt(0);
-      range.insertNode(div);
-    } else {
-      resumeBody.appendChild(div);
-    }
-    recordHistory();
-  };
-
-  // Image Insertion
-  document.getElementById('btnToolImage').onclick = function(){
-    document.getElementById('fileImageInput').click();
-  };
-  document.getElementById('fileImageInput').addEventListener('change', function(e){
-    var file = e.target.files && e.target.files[0];
-    if(!file) return;
-    var reader = new FileReader();
-    reader.onload = function(evt){
-      recordHistory();
-      var img = document.createElement('img');
-      img.src = evt.target.result;
-      img.style.maxWidth = '240px';
-      img.style.display = 'block';
-      img.style.margin = '10px 0';
-      var sel = window.getSelection();
-      if(sel && sel.rangeCount){
-        var range = sel.getRangeAt(0);
-        range.insertNode(img);
-      } else {
-        resumeBody.appendChild(img);
       }
-      recordHistory();
-    };
-    reader.readAsDataURL(file);
-  });
+    }
 
-  // Signature Pad
+    sel.removeAllRanges();
+    recordHistoryState();
+  }
+
+  // Toggle Keyword Highlights from Left Chip Bank
+  function toggleKeywordHighlightOnDoc(word, active){
+    word = word.toLowerCase();
+    document.querySelectorAll('.rcv-textlayer span').forEach(function(sp){
+      var t = sp.textContent || '';
+      if(t.toLowerCase().indexOf(word) !== -1){
+        if(active){
+          sp.style.backgroundColor = 'rgba(254, 240, 138, 0.5)';
+        } else {
+          sp.style.backgroundColor = 'transparent';
+        }
+      }
+    });
+  }
+
+  // Touch / Stylus Annotator Toggle
+  var btnToolDraw = document.getElementById('btnToolDraw');
+  btnToolDraw.onclick = function(){
+    isAnnotatingMode = !isAnnotatingMode;
+    btnToolDraw.classList.toggle('btn-tool-active', isAnnotatingMode);
+    document.querySelectorAll('.rcv-annotation-canvas').forEach(function(ac){
+      ac.style.pointerEvents = isAnnotatingMode ? 'auto' : 'none';
+    });
+  };
+
+  // Signature Pad Modal
   var signModal = document.getElementById('signModal');
   var signCanvas = document.getElementById('signCanvas');
   var signCtx = signCanvas.getContext('2d');
-  var isDrawing = false;
+  var isSigning = false;
 
   document.getElementById('btnToolSign').onclick = function(){
     signModal.style.display = 'flex';
@@ -1767,158 +1333,247 @@
     signCtx.lineCap = 'round';
     signCtx.strokeStyle = '#0f172a';
   };
-
-  signCanvas.addEventListener('mousedown', function(e){ isDrawing = true; signCtx.beginPath(); signCtx.moveTo(e.offsetX, e.offsetY); });
-  signCanvas.addEventListener('mousemove', function(e){ if(isDrawing){ signCtx.lineTo(e.offsetX, e.offsetY); signCtx.stroke(); } });
-  window.addEventListener('mouseup', function(){ isDrawing = false; });
-
+  signCanvas.addEventListener('mousedown', function(e){ isSigning = true; signCtx.beginPath(); signCtx.moveTo(e.offsetX, e.offsetY); });
+  signCanvas.addEventListener('mousemove', function(e){ if(isSigning){ signCtx.lineTo(e.offsetX, e.offsetY); signCtx.stroke(); } });
+  window.addEventListener('mouseup', function(){ isSigning = false; });
   document.getElementById('btnSignClear').onclick = function(){ signCtx.clearRect(0, 0, signCanvas.width, signCanvas.height); };
   document.getElementById('btnSignClose').onclick = function(){ signModal.style.display = 'none'; };
 
   document.getElementById('btnSignInsert').onclick = function(){
-    recordHistory();
     var dataUrl = signCanvas.toDataURL('image/png');
+    signModal.style.display = 'none';
+
+    // Place signature stamp onto current active page
+    var targetPage = pageElements[0] || docPagesContainer.firstElementChild;
+    if(!targetPage) return;
+
+    var pNum = parseInt(targetPage.getAttribute('data-page'), 10) || 1;
     var img = document.createElement('img');
     img.src = dataUrl;
-    img.style.maxWidth = '180px';
-    img.style.display = 'block';
-    img.style.margin = '10px 0';
-    var sel = window.getSelection();
-    if(sel && sel.rangeCount){
-      var range = sel.getRangeAt(0);
-      range.insertNode(img);
-    } else {
-      resumeBody.appendChild(img);
-    }
-    signModal.style.display = 'none';
-    recordHistory();
+    img.style.position = 'absolute';
+    img.style.bottom = '80px';
+    img.style.right = '60px';
+    img.style.width = '180px';
+    img.style.zIndex = '10';
+    targetPage.appendChild(img);
+
+    userAnnotations.stamps.push({
+      pageNum: pNum,
+      x: targetPage.clientWidth - 240,
+      y: targetPage.clientHeight - 140,
+      width: 180,
+      height: 70,
+      imgDataUrl: dataUrl,
+      viewportW: targetPage.__viewport.width,
+      viewportH: targetPage.__viewport.height
+    });
+    recordHistoryState();
   };
 
-  // Right Strip Page Navigation
-  document.getElementById('stripPrevPage').onclick = function(){
-    canvas.scrollTo({ top: 0, behavior: 'smooth' });
+  // Image Upload
+  document.getElementById('btnToolImage').onclick = function(){
+    document.getElementById('fileImageInput').click();
   };
-  document.getElementById('stripNextPage').onclick = function(){
-    if(sheetResume) sheetResume.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  document.getElementById('fileImageInput').addEventListener('change', function(e){
+    var file = e.target.files && e.target.files[0];
+    if(!file) return;
+    var reader = new FileReader();
+    reader.onload = function(evt){
+      var targetPage = pageElements[0] || docPagesContainer.firstElementChild;
+      if(!targetPage) return;
+      var pNum = parseInt(targetPage.getAttribute('data-page'), 10) || 1;
+
+      var img = document.createElement('img');
+      img.src = evt.target.result;
+      img.style.position = 'absolute';
+      img.style.top = '30px';
+      img.style.right = '50px';
+      img.style.maxHeight = '50px';
+      img.style.zIndex = '10';
+      targetPage.appendChild(img);
+
+      userAnnotations.stamps.push({
+        pageNum: pNum,
+        x: targetPage.clientWidth - 160,
+        y: 30,
+        width: 120,
+        height: 50,
+        imgDataUrl: evt.target.result,
+        viewportW: targetPage.__viewport.width,
+        viewportH: targetPage.__viewport.height
+      });
+      recordHistoryState();
+    };
+    reader.readAsDataURL(file);
+  });
+
+  // Undo / Redo Buttons
+  document.getElementById('btnToolUndo').onclick = function(e){ e.preventDefault(); doUndo(); };
+  document.getElementById('btnToolRedo').onclick = function(e){ e.preventDefault(); doRedo(); };
+
+  // Add Custom Keyword
+  document.getElementById('btnKwAdd').onclick = function(){
+    var input = document.getElementById('kwInput');
+    var val = (input.value || '').trim();
+    if(!val) return;
+    keywords[val.toLowerCase()] = { name: val, active: true, count: 0 };
+    input.value = '';
+    renderChips();
+    countOccurrences();
+    toggleKeywordHighlightOnDoc(val, true);
   };
-  var curZoom = 1;
-  document.getElementById('stripZoomIn').onclick = function(){
-    curZoom = Math.min(1.4, curZoom + 0.1);
-    applyZoom();
-  };
-  document.getElementById('stripZoomOut').onclick = function(){
-    curZoom = Math.max(0.7, curZoom - 0.1);
-    applyZoom();
-  };
-  document.getElementById('stripFitWidth').onclick = function(){
-    curZoom = 1;
-    applyZoom();
-  };
-  function applyZoom(){
-    sheetReport.style.transform = 'scale(' + curZoom + ')';
-    sheetReport.style.transformOrigin = 'top center';
-    sheetResume.style.transform = 'scale(' + curZoom + ')';
-    sheetResume.style.transformOrigin = 'top center';
-  }
 
   // -------------------------------------------------------------
-  // DOWNLOAD PDF: True WYSIWYG Export of the Live Edited DOM Sheets
-  // (Page 1 Pre-Screen Report + Page 2 Candidate Résumé)
+  // VECTOR PDF EXPORT & DOWNLOAD (0% Print Dialog, 100% Vector WASM)
   // -------------------------------------------------------------
   document.getElementById('btnDownload').onclick = async function(){
     var btn = document.getElementById('btnDownload');
     var orig = btn.innerHTML;
     btn.disabled = true;
-    btn.innerHTML = '<span class="spin"></span> Generating PDF…';
+    btn.innerHTML = '<span class="spin"></span> Compiling Vector PDF…';
 
     try {
-      var sheets = [];
-      var hasReport = (sheetReport && window.getComputedStyle(sheetReport).display !== 'none');
-      if (hasReport) {
-        sheets.push(sheetReport);
-      }
-      if (sheetResume) {
-        sheets.push(sheetResume);
-      }
+      if(!currentGeneratedPdfBlob) throw new Error('Document is still loading.');
 
-      if (!sheets.length) throw new Error('No document sheets available.');
+      var PDFLib = window.PDFLib;
+      var srcBytes = await currentGeneratedPdfBlob.arrayBuffer();
+      var pdfDoc = await PDFLib.PDFDocument.load(srcBytes);
 
-      var jsPdfClass = (window.jspdf && window.jspdf.jsPDF) || window.jsPDF;
-      if (!jsPdfClass || typeof window.html2canvas !== 'function') {
-        throw new Error('PDF render engine initializing. Falling back to native print.');
-      }
+      // Burn User Highlights
+      for(var i = 0; i < userAnnotations.highlights.length; i++){
+        var hl = userAnnotations.highlights[i];
+        var page = pdfDoc.getPage(hl.pageNum - 1);
+        var size = page.getSize();
+        var scaleX = size.width / (hl.viewportW || size.width);
+        var scaleY = size.height / (hl.viewportH || size.height);
 
-      var pdf = new jsPdfClass({
-        orientation: 'p',
-        unit: 'pt',
-        format: 'a4',
-        compress: true
-      });
-
-      var a4WidthPt = 595.28;
-      var a4HeightPt = 841.89;
-
-      for (var s = 0; s < sheets.length; s++) {
-        var sheetEl = sheets[s];
-
-        var canvasSnap = await window.html2canvas(sheetEl, {
-          scale: 2.2,
-          useCORS: true,
-          allowTaint: false,
-          logging: false,
-          backgroundColor: '#ffffff'
+        page.drawRectangle({
+          x: hl.x * scaleX,
+          y: size.height - ((hl.y + hl.height) * scaleY),
+          width: hl.width * scaleX,
+          height: hl.height * scaleY,
+          color: PDFLib.rgb(1, 0.85, 0.15),
+          opacity: 0.42
         });
+      }
 
-        var imgWidthPt = a4WidthPt;
-        var imgHeightPt = (canvasSnap.height * a4WidthPt) / canvasSnap.width;
+      // Burn User Whiteouts
+      for(var w = 0; w < userAnnotations.whiteouts.length; w++){
+        var wo = userAnnotations.whiteouts[w];
+        var page = pdfDoc.getPage(wo.pageNum - 1);
+        var size = page.getSize();
+        var scaleX = size.width / (wo.viewportW || size.width);
+        var scaleY = size.height / (wo.viewportH || size.height);
 
-        if (imgHeightPt <= a4HeightPt + 25) {
-          if (s > 0) pdf.addPage('a4', 'p');
-          var imgData = canvasSnap.toDataURL('image/jpeg', 0.95);
-          pdf.addImage(imgData, 'JPEG', 0, 0, a4WidthPt, Math.min(imgHeightPt, a4HeightPt));
-        } else {
-          var sliceCanvas = document.createElement('canvas');
-          var sliceCtx = sliceCanvas.getContext('2d');
-          var sliceHeightPx = Math.round(canvasSnap.width * (a4HeightPt / a4WidthPt));
-          var totalSlices = Math.ceil(canvasSnap.height / sliceHeightPx);
+        page.drawRectangle({
+          x: wo.x * scaleX,
+          y: size.height - ((wo.y + wo.height) * scaleY),
+          width: wo.width * scaleX,
+          height: wo.height * scaleY,
+          color: PDFLib.rgb(1, 1, 1),
+          opacity: 1
+        });
+      }
 
-          sliceCanvas.width = canvasSnap.width;
-          sliceCanvas.height = sliceHeightPx;
+      // Burn Stamps / Signatures / Logos
+      for(var s = 0; s < userAnnotations.stamps.length; s++){
+        var st = userAnnotations.stamps[s];
+        var page = pdfDoc.getPage(st.pageNum - 1);
+        var size = page.getSize();
+        var scaleX = size.width / (st.viewportW || size.width);
+        var scaleY = size.height / (st.viewportH || size.height);
 
-          for (var p = 0; p < totalSlices; p++) {
-            if (s > 0 || p > 0) pdf.addPage('a4', 'p');
+        try {
+          var imgBytes = await (await fetch(st.imgDataUrl)).arrayBuffer();
+          var embeddedImg = (st.imgDataUrl.indexOf('jpeg') !== -1 || st.imgDataUrl.indexOf('jpg') !== -1)
+            ? await pdfDoc.embedJpg(imgBytes)
+            : await pdfDoc.embedPng(imgBytes);
 
-            sliceCtx.fillStyle = '#ffffff';
-            sliceCtx.fillRect(0, 0, sliceCanvas.width, sliceCanvas.height);
-
-            var sy = p * sliceHeightPx;
-            var sh = Math.min(sliceHeightPx, canvasSnap.height - sy);
-
-            sliceCtx.drawImage(
-              canvasSnap,
-              0, sy, canvasSnap.width, sh,
-              0, 0, canvasSnap.width, sh
-            );
-
-            var pageData = sliceCanvas.toDataURL('image/jpeg', 0.95);
-            pdf.addImage(pageData, 'JPEG', 0, 0, a4WidthPt, a4HeightPt);
-          }
+          page.drawImage(embeddedImg, {
+            x: st.x * scaleX,
+            y: size.height - ((st.y + st.height) * scaleY),
+            width: st.width * scaleX,
+            height: st.height * scaleY
+          });
+        } catch(err){
+          console.warn('Stamp embed skipped:', err);
         }
       }
 
-      var cleanCand = (candName || 'Candidate').replace(/[^a-zA-Z0-9_\-]/g, '_');
-      var mode = parseInt(modeSelect ? modeSelect.value : initialOpt, 10) || 61;
-      var sfx = (mode === 64 || mode === 65) ? '_PreScreen_Dossier' : (mode === 62 ? '_Branded' : '_ATS_Optimized');
-      pdf.save('Jeroworks_' + cleanCand + sfx + '.pdf');
+      var finalBytes = await pdfDoc.save();
+      var finalBlob = new Blob([finalBytes], { type: 'application/pdf' });
 
-    } catch(err) {
-      console.warn('Direct canvas PDF export failed, using native high-res print fallback:', err);
-      window.print();
+      // Clean direct download via hidden link
+      var cleanName = (candName || 'Candidate').replace(/[^a-zA-Z0-9_\-]/g, '_');
+      var m = parseInt(modePicker.value, 10) || 61;
+      var sfx = (m === 64 || m === 65) ? '_Dossier' : (m === 62 ? '_Branded' : '_ATS_Optimized');
+      var filename = 'Jeroworks_' + cleanName + sfx + '.pdf';
+
+      var link = document.createElement('a');
+      link.href = URL.createObjectURL(finalBlob);
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      setTimeout(function(){
+        document.body.removeChild(link);
+        URL.revokeObjectURL(link.href);
+      }, 5000);
+
+    } catch(err){
+      console.error('Vector PDF download error:', err);
+      alert('Could not compile final PDF: ' + (err && err.message ? err.message : 'Please try again.'));
     } finally {
       btn.disabled = false;
       btn.innerHTML = orig;
     }
   };
+
+  // Zoom controls
+  document.getElementById('stripZoomIn').onclick = function(){
+    currentZoom = Math.min(1.4, currentZoom + 0.1);
+    if(currentGeneratedPdfBlob) renderDocumentPages(currentGeneratedPdfBlob);
+  };
+  document.getElementById('stripZoomOut').onclick = function(){
+    currentZoom = Math.max(0.7, currentZoom - 0.1);
+    if(currentGeneratedPdfBlob) renderDocumentPages(currentGeneratedPdfBlob);
+  };
+  document.getElementById('stripFitWidth').onclick = function(){
+    currentZoom = 1.0;
+    if(currentGeneratedPdfBlob) renderDocumentPages(currentGeneratedPdfBlob);
+  };
+  document.getElementById('stripPrevPage').onclick = function(){
+    canvasViewport.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+  document.getElementById('stripNextPage').onclick = function(){
+    canvasViewport.scrollTo({ top: canvasViewport.scrollHeight, behavior: 'smooth' });
+  };
+
+  // Mode change: Regenerate document for the selected option
+  modePicker.addEventListener('change', async function(){
+    var m = parseInt(this.value, 10) || 61;
+    try {
+      loaderBox.style.display = 'flex';
+      docPagesContainer.style.display = 'none';
+      currentGeneratedPdfBlob = await buildOptionDocument(m);
+      await renderDocumentPages(currentGeneratedPdfBlob);
+    } catch(e){
+      console.error('Mode switch error:', e);
+      alert('Could not generate document format: ' + (e && e.message ? e.message : 'Please try again.'));
+    }
+  });
+
+  // Initial Load
+  async function initStudio(){
+    try {
+      if(initialOpt && modePicker) modePicker.value = String(initialOpt);
+      currentGeneratedPdfBlob = await buildOptionDocument(initialOpt);
+      await renderDocumentPages(currentGeneratedPdfBlob);
+    } catch(err){
+      console.error('Init error:', err);
+      loaderBox.innerHTML = '<span style="color:#f87171;font-size:14px;font-weight:600;">Failed to load candidate document.</span><span style="font-size:12px;color:#cbd5e1;">' + (err.message || 'Please check candidate resume in database.') + '</span>';
+    }
+  }
+  initStudio();
 </script>
 
 </body>
