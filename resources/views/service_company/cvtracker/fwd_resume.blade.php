@@ -19,6 +19,7 @@ if (window.__savedAmdDefine) {
 </script>
 <script src="{{ asset('js/mammoth.browser.min.js') }}" onerror="this.onerror=null;this.src='https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.5.0/mammoth.browser.min.js'"></script>
 <script src="{{ asset('js/opendoc/AgyForwardResumeHelper.js') }}"></script>
+<script src="{{ asset('js/opendoc/AgyWasmEngine.js') }}"></script>
 <script src="{{ asset('demo/ckeditor/ckeditor.js') }}"></script>
 <script>
 									
@@ -727,8 +728,18 @@ document.getElementById("btnSubmit").addEventListener("click", async function ()
                 }
             }
         } catch (genErr) {
-            console.warn('Client-side resume preparation fallback:', genErr);
-            // Non-blocking: Server falls back to original resume file if client generation encountered an issue
+            // HARD ABORT: Never submit without completed custom attachments.
+            // Server enforces 422 rejection anyway — show clear error to recruiter.
+            console.error('WASM resume compilation failed:', genErr);
+            $('.indicator-progress').hide();
+            $('.indicator-label').show();
+            document.getElementById('btnSubmit').disabled = false;
+            Swal.fire(
+                'Resume Generation Error',
+                'Could not prepare custom format: ' + (genErr.message || 'WASM processing error') + '. Email not sent.',
+                'error'
+            );
+            return; // STOP — do NOT proceed to $.ajax
         }
     }
 
