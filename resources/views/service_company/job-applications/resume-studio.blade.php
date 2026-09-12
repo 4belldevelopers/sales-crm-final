@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>{{ ucwords(@$application->full_name ?: @$application->name ?: 'Candidate') }} — jero.works online editor</title>
+  <title>{{ ucwords(@$application->full_name ?: @$application->name ?: 'Candidate') }} — jero.works online editor (Adobe Acrobat Studio)</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -15,137 +15,150 @@
   <script src="/js/opendoc/AgyCvOptimizer.js"></script>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    html, body { height: 100%; overflow: hidden; background: #f1f5f9; font-family: 'Poppins', -apple-system, BlinkMacSystemFont, sans-serif; color: #1e293b; }
+    html, body { height: 100%; overflow: hidden; font-family: 'Poppins', -apple-system, BlinkMacSystemFont, sans-serif; background: #f3f4f6; color: #1e293b; }
 
-    /* App Wrapper: Flex column with fixed header/controls and isolated scrollable viewport */
-    .app-wrapper { display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+    /* App Container: Header + 4-Zone Horizontal Split Layout (Acrobat Architecture) */
+    .acrobat-app { display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
 
-    /* Top Enterprise Header */
-    .top-header { height: 60px; background: #ffffff; border-bottom: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: space-between; padding: 0 20px; flex-shrink: 0; z-index: 100; box-shadow: 0 1px 3px rgba(0,0,0,0.03); }
-    .header-left { display: flex; align-items: center; gap: 14px; }
-    .header-logo-link { display: flex; align-items: center; text-decoration: none; gap: 8px; }
-    .header-logo-img { height: 26px; width: auto; display: block; }
-    .header-title-box { display: flex; flex-direction: column; }
-    .product-title { font-size: 14px; font-weight: 700; color: #0f172a; line-height: 1.2; letter-spacing: -0.3px; display: flex; align-items: center; gap: 6px; }
-    .product-title span { color: #0d9488; }
-    .studio-pill { font-size: 9px; font-weight: 700; text-transform: uppercase; background: #e0f2fe; color: #0369a1; padding: 1px 6px; border-radius: 4px; letter-spacing: 0.4px; }
-    .header-vsep { width: 1px; height: 26px; background: #e2e8f0; margin: 0 4px; }
-    .cand-badge { display: flex; align-items: center; gap: 8px; background: #f8fafc; border: 1px solid #e2e8f0; padding: 4px 12px; border-radius: 999px; }
-    .cand-name { font-size: 12px; font-weight: 600; color: #0f172a; max-width: 170px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .role-name { font-size: 11px; font-weight: 500; color: #64748b; max-width: 200px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    /* 1. Global Adobe Acrobat-Style Top App Bar */
+    .acrobat-navbar { height: 54px; background: #ffffff; border-bottom: 1px solid #e5e7eb; display: flex; align-items: center; justify-content: space-between; padding: 0 16px; flex-shrink: 0; z-index: 110; }
+    .nav-left { display: flex; align-items: center; gap: 14px; }
+    .nav-logo-wrap { display: flex; align-items: center; gap: 8px; text-decoration: none; }
+    .nav-logo-img { height: 24px; width: auto; }
+    .nav-title { font-size: 13.5px; font-weight: 700; color: #0f172a; display: flex; align-items: center; gap: 6px; }
+    .nav-title span { color: #0d9488; }
+    .nav-tabs { display: flex; align-items: center; gap: 4px; margin-left: 12px; }
+    .nav-tab { padding: 6px 12px; font-size: 12px; font-weight: 500; color: #475569; text-decoration: none; border-radius: 6px; cursor: pointer; transition: all .15s; }
+    .nav-tab:hover { background: #f1f5f9; color: #0f172a; }
+    .nav-tab.active { background: #f1f5f9; color: #0f172a; font-weight: 600; }
 
-    .header-center { display: flex; align-items: center; gap: 8px; }
-    .mode-label { font-size: 11.5px; font-weight: 600; color: #475569; display: flex; align-items: center; gap: 6px; }
-    .mode-dropdown { padding: 6px 14px; font-size: 12px; font-family: 'Poppins', sans-serif; font-weight: 600; color: #0f172a; background: #f8fafc; border: 1.5px solid #cbd5e1; border-radius: 8px; outline: none; cursor: pointer; transition: all .15s; }
-    .mode-dropdown:focus { border-color: #0d9488; background: #ffffff; box-shadow: 0 0 0 3px rgba(13,148,136,.12); }
+    .nav-center { display: flex; align-items: center; gap: 8px; flex: 1; max-width: 440px; margin: 0 20px; }
+    .nav-search-box { position: relative; width: 100%; display: flex; align-items: center; }
+    .nav-search-input { width: 100%; height: 32px; padding: 0 70px 0 32px; font-size: 12px; font-family: 'Poppins', sans-serif; border: 1px solid #cbd5e1; border-radius: 999px; background: #f8fafc; outline: none; transition: all .15s; }
+    .nav-search-input:focus { background: #ffffff; border-color: #6366f1; box-shadow: 0 0 0 3px rgba(99,102,241,.12); }
+    .nav-search-icon { position: absolute; left: 10px; color: #94a3b8; width: 14px; height: 14px; }
+    .nav-search-nav { position: absolute; right: 8px; display: flex; align-items: center; gap: 2px; font-size: 10.5px; color: #64748b; font-weight: 600; }
+    .nav-search-btn { background: none; border: none; cursor: pointer; padding: 2px 4px; color: #64748b; border-radius: 3px; display: flex; align-items: center; }
+    .nav-search-btn:hover { background: #e2e8f0; color: #0f172a; }
 
-    .header-right { display: flex; align-items: center; gap: 10px; }
-    .stat-text { font-size: 11.5px; color: #64748b; font-weight: 500; }
-    .btn-header { display: inline-flex; align-items: center; gap: 6px; padding: 8px 14px; border-radius: 7px; font-size: 12px; font-weight: 600; cursor: pointer; transition: all .15s; font-family: 'Poppins', sans-serif; }
-    .btn-header-copy { background: #f8fafc; color: #334155; border: 1.5px solid #cbd5e1; }
-    .btn-header-copy:hover { background: #f1f5f9; border-color: #94a3b8; }
-    .btn-header-download { background: linear-gradient(135deg, #0d9488 0%, #0f766e 100%); color: #ffffff; border: none; box-shadow: 0 2px 6px rgba(13,148,136,.25); }
-    .btn-header-download:hover { background: linear-gradient(135deg, #0f766e 0%, #115e59 100%); box-shadow: 0 4px 10px rgba(13,148,136,.35); }
-    .btn-header-download:disabled { opacity: 0.65; cursor: not-allowed; }
+    .nav-right { display: flex; align-items: center; gap: 10px; }
+    .ats-score-pill { display: inline-flex; align-items: center; gap: 5px; background: #f0fdf4; border: 1px solid #bbf7d0; color: #15803d; font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 999px; }
+    .doc-metrics-text { font-size: 11px; color: #64748b; font-weight: 500; }
+    .btn-action-copy { background: #f8fafc; border: 1px solid #cbd5e1; color: #334155; padding: 6px 12px; font-size: 11.5px; font-weight: 600; border-radius: 6px; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; font-family: 'Poppins', sans-serif; transition: all .15s; }
+    .btn-action-copy:hover { background: #f1f5f9; border-color: #94a3b8; }
+    .btn-action-download { background: #0284c7; color: #ffffff; border: none; padding: 6px 14px; font-size: 12px; font-weight: 600; border-radius: 6px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; font-family: 'Poppins', sans-serif; transition: all .15s; box-shadow: 0 1px 3px rgba(2,132,199,.3); }
+    .btn-action-download:hover { background: #0369a1; }
+    .btn-action-download:disabled { opacity: 0.65; cursor: not-allowed; }
 
-    /* Pinned Control Cards Container (Fixed above document viewport) */
-    .controls-panel { background: #ffffff; border-bottom: 1px solid #e2e8f0; flex-shrink: 0; box-shadow: 0 2px 8px rgba(0,0,0,0.03); z-index: 90; }
+    /* 2. Main Body Split Workspace */
+    .acrobat-body { display: flex; flex: 1; height: calc(100vh - 54px); overflow: hidden; position: relative; }
 
-    /* Sub-Card 1: Real-time ATS & Keyword Highlights Card */
-    .ats-card { padding: 12px 20px 10px 20px; border-bottom: 1px solid #f1f5f9; }
-    .ats-card-header { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 10px; }
-    .ats-title-group h2 { font-size: 13.5px; font-weight: 700; color: #0f172a; margin: 0; display: flex; align-items: center; gap: 6px; }
-    .ats-title-group p { font-size: 11px; color: #64748b; margin: 1px 0 0 0; }
-    .ats-metrics-row { display: flex; align-items: center; gap: 8px; }
-    .ats-metric-box { min-width: 82px; background: #f8fafc; border: 1.5px solid #e2e8f0; border-radius: 8px; padding: 5px 10px; text-align: center; }
-    .ats-metric-val { display: block; font-size: 14px; font-weight: 700; color: #0f172a; line-height: 1.2; }
-    .ats-metric-lbl { font-size: 9px; color: #64748b; text-transform: uppercase; letter-spacing: .4px; font-weight: 600; white-space: nowrap; }
-    .ats-metric-box.box-ats { border-color: #bbf7d0; background: #f0fdf4; }
-    .ats-metric-box.box-ats .ats-metric-val { color: #16a34a; }
-    .ats-metric-box.box-ats .ats-metric-lbl { color: #15803d; }
-    .ats-metric-box.box-matched .ats-metric-val { color: #0d9488; }
-    .ats-metric-box.box-missing .ats-metric-val { color: #dc2626; }
+    /* ZONE A: Left Tools & ATS Panel (Acrobat "All tools") */
+    .acrobat-sidebar { width: 330px; background: #ffffff; border-right: 1px solid #e5e7eb; display: flex; flex-direction: column; overflow-y: auto; flex-shrink: 0; z-index: 90; transition: width .2s; }
+    .sidebar-head { padding: 14px 16px 10px 16px; border-bottom: 1px solid #f1f5f9; display: flex; align-items: center; justify-content: space-between; }
+    .sidebar-head h2 { font-size: 14px; font-weight: 700; color: #0f172a; margin: 0; }
+    .cand-chip-pill { font-size: 10px; font-weight: 600; background: #ccfbf1; color: #0f766e; border: 1px solid #99f6e4; padding: 2px 8px; border-radius: 999px; max-width: 140px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
-    .ats-search-row { display: flex; gap: 8px; margin-bottom: 8px; }
-    .ats-search-input { flex: 1; padding: 7px 12px; border: 1.5px solid #e2e8f0; border-radius: 7px; font-size: 11.5px; outline: none; font-family: 'Poppins', sans-serif; transition: border-color .15s; }
-    .ats-search-input:focus { border-color: #6366f1; }
-    .btn-ats-add { padding: 7px 16px; border: none; background: #6366f1; color: #fff; border-radius: 7px; font-size: 11.5px; font-weight: 600; cursor: pointer; white-space: nowrap; font-family: 'Poppins', sans-serif; transition: background .15s; }
-    .btn-ats-add:hover { background: #4f46e5; }
+    /* Mode / Format Dropdown in Sidebar */
+    .sidebar-section { padding: 12px 16px; border-bottom: 1px solid #f1f5f9; }
+    .section-title { font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; display: block; }
+    .mode-select-box { width: 100%; padding: 7px 10px; font-size: 11.5px; font-family: 'Poppins', sans-serif; font-weight: 600; color: #0f172a; background: #f8fafc; border: 1.5px solid #cbd5e1; border-radius: 7px; outline: none; cursor: pointer; transition: all .15s; }
+    .mode-select-box:focus { border-color: #0d9488; background: #fff; }
 
-    .ats-skills-strip { display: flex; align-items: center; gap: 8px; }
-    .ats-skills-lbl { font-size: 10.5px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; white-space: nowrap; }
-    .ats-chips-wrapper { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; flex: 1; }
-    .kw-chip { display: inline-flex; align-items: center; gap: 5px; background: #fef08a; border: 1px solid #facc15; color: #854d0e; padding: 2px 9px; border-radius: 999px; font-size: 11px; font-weight: 600; cursor: pointer; transition: all .15s; user-select: none; }
+    /* ATS Keyword Highlights Card */
+    .sidebar-ats-card { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px; margin-top: 4px; }
+    .ats-stats-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; margin-bottom: 10px; }
+    .stat-pill-box { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 6px; padding: 6px 8px; text-align: center; }
+    .stat-pill-val { display: block; font-size: 14px; font-weight: 700; color: #0f172a; line-height: 1.2; }
+    .stat-pill-lbl { font-size: 9px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.3px; color: #64748b; }
+    .stat-pill-box.val-matched .stat-pill-val { color: #0d9488; }
+    .stat-pill-box.val-missing .stat-pill-val { color: #dc2626; }
+    .stat-pill-box.val-score .stat-pill-val { color: #16a34a; }
+
+    .ats-search-wrap { display: flex; gap: 6px; margin-bottom: 10px; }
+    .ats-kw-input { flex: 1; padding: 6px 10px; font-size: 11px; font-family: 'Poppins', sans-serif; border: 1px solid #cbd5e1; border-radius: 6px; outline: none; background: #fff; }
+    .ats-kw-input:focus { border-color: #6366f1; }
+    .btn-ats-add-kw { padding: 6px 12px; background: #6366f1; color: #fff; border: none; border-radius: 6px; font-size: 11px; font-weight: 600; cursor: pointer; font-family: 'Poppins', sans-serif; white-space: nowrap; }
+    .btn-ats-add-kw:hover { background: #4f46e5; }
+
+    .skills-title { font-size: 10.5px; font-weight: 700; color: #475569; text-transform: uppercase; letter-spacing: 0.4px; margin-bottom: 6px; display: block; }
+    .chips-flow { display: flex; flex-wrap: wrap; gap: 5px; }
+    .kw-chip { display: inline-flex; align-items: center; gap: 4px; background: #fef08a; border: 1px solid #facc15; color: #854d0e; padding: 2px 8px; border-radius: 999px; font-size: 10.5px; font-weight: 600; cursor: pointer; transition: all .15s; }
     .kw-chip:hover { transform: translateY(-1px); box-shadow: 0 2px 4px rgba(250,204,21,.3); }
-    .kw-chip.missing { background: #f1f5f9; border-color: #cbd5e1; color: #64748b; opacity: 0.85; }
-    .kw-chip .chip-count { font-size: 9.5px; font-weight: 700; background: rgba(0,0,0,0.08); padding: 1px 5px; border-radius: 999px; }
+    .kw-chip.missing { background: #f1f5f9; border-color: #cbd5e1; color: #64748b; }
+    .kw-chip .chip-count { font-size: 9px; font-weight: 700; background: rgba(0,0,0,0.08); padding: 1px 4px; border-radius: 999px; }
 
-    /* Sub-Card 2: Pinned Document Editing Ribbon */
-    .editor-ribbon { padding: 8px 20px; background: #fafafa; border-top: 1px solid #f1f5f9; display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
-    .ribbon-left { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
-    .doc-pill { display: inline-flex; align-items: center; gap: 5px; background: #e0e7ff; color: #3730a3; border: 1px solid #c7d2fe; padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 600; max-width: 220px; }
-    .doc-pill svg { width: 13px; height: 13px; flex-shrink: 0; }
-    .doc-pill span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    /* Acrobat Tools Menu Items List */
+    .tools-menu-list { list-style: none; padding: 4px 0; }
+    .tool-menu-item { display: flex; align-items: center; gap: 12px; padding: 9px 16px; font-size: 12px; font-weight: 500; color: #334155; cursor: pointer; transition: all .15s; }
+    .tool-menu-item:hover { background: #f8fafc; color: #0f172a; }
+    .tool-menu-item.active { background: #e0f2fe; color: #0369a1; font-weight: 600; border-left: 3px solid #0284c7; }
+    .tool-menu-icon { width: 18px; height: 18px; display: flex; align-items: center; justify-content: center; color: #64748b; }
+    .tool-menu-item.active .tool-menu-icon { color: #0284c7; }
 
-    .hit-nav-group { display: inline-flex; align-items: center; background: #ffffff; border: 1px solid #cbd5e1; border-radius: 6px; padding: 2px 6px; gap: 4px; font-size: 11px; font-weight: 600; color: #334155; }
-    .hit-nav-btn { background: none; border: none; cursor: pointer; color: #475569; padding: 2px 4px; border-radius: 4px; display: flex; align-items: center; justify-content: center; }
-    .hit-nav-btn:hover { background: #f1f5f9; color: #0f172a; }
+    /* ZONE B: Vertical Floating Tool Dock (Between Sidebar & Canvas) */
+    .acrobat-dock { width: 44px; background: #ffffff; border-right: 1px solid #e5e7eb; display: flex; flex-direction: column; align-items: center; padding: 12px 0; gap: 6px; flex-shrink: 0; z-index: 80; box-shadow: 1px 0 3px rgba(0,0,0,0.02); }
+    .dock-btn { width: 32px; height: 32px; border-radius: 6px; border: none; background: transparent; color: #475569; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all .15s; font-size: 12px; }
+    .dock-btn:hover { background: #f1f5f9; color: #0f172a; }
+    .dock-btn.active { background: #0284c7; color: #ffffff; }
+    .dock-sep { width: 22px; height: 1px; background: #e2e8f0; margin: 4px 0; }
+    .dock-color { width: 22px; height: 22px; border: 1px solid #cbd5e1; border-radius: 4px; padding: 0; cursor: pointer; background: none; }
 
-    .tool-group { display: inline-flex; align-items: center; gap: 4px; background: #ffffff; border: 1px solid #cbd5e1; border-radius: 6px; padding: 2px 4px; }
-    .tool-btn { background: none; border: none; padding: 4px 7px; border-radius: 4px; font-size: 11px; font-weight: 600; color: #334155; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; font-family: 'Poppins', sans-serif; transition: all .1s; }
-    .tool-btn:hover { background: #f1f5f9; color: #0f172a; }
-    .tool-select { border: 1px solid #cbd5e1; border-radius: 4px; padding: 3px 6px; font-size: 11px; font-family: 'Poppins', sans-serif; font-weight: 500; color: #334155; background: #fff; outline: none; }
-    .tool-color { width: 22px; height: 22px; border: 1px solid #cbd5e1; border-radius: 4px; padding: 0; cursor: pointer; background: none; }
+    /* ZONE C: Center Document Viewport (Isolated Scroller) */
+    .acrobat-canvas { flex: 1; background: #f3f4f6; overflow-y: auto; overflow-x: hidden; padding: 28px 24px 80px 24px; position: relative; scroll-behavior: smooth; }
+    .acrobat-canvas::-webkit-scrollbar { width: 9px; }
+    .acrobat-canvas::-webkit-scrollbar-track { background: #e5e7eb; }
+    .acrobat-canvas::-webkit-scrollbar-thumb { background: #9ca3af; border-radius: 4px; }
+    .acrobat-canvas::-webkit-scrollbar-thumb:hover { background: #6b7280; }
 
-    .btn-tool-highlight { background: #fef9c3 !important; color: #854d0e !important; border: 1px solid #fde047 !important; border-radius: 5px; padding: 3px 8px !important; }
-    .btn-tool-highlight:hover { background: #fef08a !important; }
-    .btn-tool-whiteout { background: #0f172a !important; color: #ffffff !important; border-radius: 5px; padding: 3px 8px !important; }
-    .btn-tool-whiteout:hover { background: #1e293b !important; }
-    .btn-tool-sign { background: #f0fdfa !important; color: #0f766e !important; border: 1px solid #99f6e4 !important; border-radius: 5px; padding: 3px 8px !important; }
+    /* A4 Paper Sheets */
+    .paper-sheet { width: 816px; min-height: 1056px; margin: 0 auto 32px auto; background: #ffffff; box-shadow: 0 4px 20px rgba(0,0,0,0.12), 0 1px 4px rgba(0,0,0,0.06); border-radius: 4px; padding: 48px 56px; outline: none; position: relative; font-family: 'Poppins', -apple-system, BlinkMacSystemFont, sans-serif; font-size: 13px; line-height: 1.65; color: #1e293b; }
+    .paper-sheet:focus { box-shadow: 0 6px 24px rgba(0,0,0,0.2), 0 0 0 2px #0284c7; }
 
-    /* Sub-Card 3: Dedicated Document Viewport with Isolated Scroller */
-    .document-viewport { flex: 1; overflow-y: auto; overflow-x: hidden; background: #525659; padding: 32px 16px 80px 16px; scroll-behavior: smooth; position: relative; }
-    .document-viewport::-webkit-scrollbar { width: 10px; }
-    .document-viewport::-webkit-scrollbar-track { background: #424649; }
-    .document-viewport::-webkit-scrollbar-thumb { background: #6b7280; border-radius: 5px; }
-    .document-viewport::-webkit-scrollbar-thumb:hover { background: #9ca3af; }
+    /* PAGE 1: PRE-SCREENED CANDIDATE REPORT (Exact Match to User's Screenshot media_1789225189169.png) */
+    .ps-header { display: flex; align-items: flex-start; justify-content: space-between; border-bottom: 2px solid #0f172a; padding-bottom: 14px; margin-bottom: 18px; }
+    .ps-shared-by { display: flex; align-items: center; gap: 10px; }
+    .ps-company-logo-img { height: 36px; width: auto; max-width: 140px; object-fit: contain; }
+    .ps-shared-title { font-size: 10px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; }
+    .ps-shared-name { font-size: 15px; font-weight: 800; color: #0f172a; }
 
-    /* Document Sheet (Standard A4 Paper Card Representation) */
-    .paper-sheet { width: 816px; min-height: 1056px; margin: 0 auto 32px auto; background: #ffffff; box-shadow: 0 8px 30px rgba(0,0,0,0.35); border-radius: 4px; padding: 56px 64px; outline: none; position: relative; font-family: 'Poppins', -apple-system, BlinkMacSystemFont, sans-serif; font-size: 13px; line-height: 1.65; color: #1e293b; }
-    .paper-sheet:focus { box-shadow: 0 8px 30px rgba(0,0,0,0.45), 0 0 0 2px #0d9488; }
+    .ps-report-title-box { text-align: right; }
+    .ps-report-main-title { font-size: 18px; font-weight: 800; color: #0f172a; text-transform: uppercase; letter-spacing: -0.2px; }
+    .ps-report-sub-date { font-size: 10.5px; font-weight: 600; color: #64748b; margin-top: 2px; text-transform: uppercase; letter-spacing: 0.4px; }
 
-    /* Page 1: Pre-Screened Report Dossier Card */
-    .report-card { margin-bottom: 24px; }
-    .report-dossier-header { display: flex; align-items: center; justify-content: space-between; border-bottom: 2px solid #0f172a; padding-bottom: 16px; margin-bottom: 20px; }
-    .report-brand-title { font-size: 18px; font-weight: 800; color: #0f172a; text-transform: uppercase; letter-spacing: -0.3px; display: flex; align-items: center; gap: 8px; }
-    .report-tag-badge { background: #0f172a; color: #ffffff; font-size: 10px; font-weight: 700; padding: 3px 8px; border-radius: 4px; letter-spacing: 0.5px; }
-    .report-verification-stamp { display: inline-flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 700; color: #15803d; background: #f0fdf4; border: 1.5px solid #86efac; padding: 4px 10px; border-radius: 6px; }
+    /* Top Split Row: Candidate Card + Hiring Confidence Card */
+    .ps-top-split { display: grid; grid-template-columns: 1.6fr 1fr; gap: 14px; margin-bottom: 14px; }
+    .ps-card { background: #ffffff; border: 1.5px solid #e2e8f0; border-radius: 8px; padding: 16px 18px; }
+    .ps-cand-name { font-size: 20px; font-weight: 800; color: #0f172a; margin-bottom: 2px; }
+    .ps-cand-role { font-size: 13.5px; font-weight: 600; color: #0284c7; margin-bottom: 8px; }
+    .ps-cand-meta-line { font-size: 11.5px; color: #475569; font-weight: 500; margin-bottom: 3px; display: flex; align-items: center; gap: 6px; }
 
-    .report-meta-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px; margin-bottom: 20px; }
-    .meta-cell-lbl { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.4px; color: #64748b; margin-bottom: 2px; }
-    .meta-cell-val { font-size: 13px; font-weight: 600; color: #0f172a; }
+    .ps-confidence-card { text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #f8fafc; }
+    .ps-confidence-lbl { font-size: 11.5px; font-weight: 700; color: #475569; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; }
+    .ps-confidence-val { font-size: 38px; font-weight: 800; color: #0284c7; line-height: 1; }
 
-    .report-section-head { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #0f172a; border-left: 3px solid #0d9488; padding-left: 8px; margin: 18px 0 10px 0; }
-    .report-summary-box { background: #fdf2f8; border: 1px solid #fbcfe8; border-radius: 8px; padding: 14px 16px; font-size: 12.5px; color: #334155; line-height: 1.6; margin-bottom: 18px; }
+    /* Middle Row: 4 Metric Cards (Education, Notice Period, Location, Work Mode) */
+    .ps-metrics-4grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 14px; }
+    .ps-metric-item { background: #ffffff; border: 1.5px solid #e2e8f0; border-radius: 8px; padding: 12px 10px; text-align: center; }
+    .ps-metric-head { font-size: 10px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.4px; margin-bottom: 4px; display: flex; align-items: center; justify-content: center; gap: 5px; }
+    .ps-metric-val { font-size: 12.5px; font-weight: 700; color: #0f172a; }
 
-    .report-skills-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
-    .report-skills-table th { background: #f1f5f9; text-align: left; padding: 8px 12px; font-size: 11px; font-weight: 700; text-transform: uppercase; color: #475569; border: 1px solid #e2e8f0; }
-    .report-skills-table td { padding: 8px 12px; font-size: 12px; border: 1px solid #e2e8f0; color: #1e293b; }
+    /* Bottom Row: Executive Summary + Recruiter Comments */
+    .ps-bottom-split { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 16px; }
+    .ps-summary-card { background: #ffffff; border: 1.5px solid #e2e8f0; border-radius: 8px; padding: 16px; }
+    .ps-section-title { font-size: 11px; font-weight: 700; color: #0284c7; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
+    .ps-text-content { font-size: 11.5px; color: #334155; line-height: 1.6; min-height: 100px; }
 
-    .report-page-banner { text-align: center; font-size: 11px; font-weight: 600; color: #64748b; background: #f1f5f9; border-radius: 6px; padding: 8px 12px; margin-top: 24px; border: 1px dashed #cbd5e1; }
+    .ps-page-footer-note { text-align: center; font-size: 10.5px; font-weight: 600; color: #64748b; background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 6px; padding: 8px; margin-top: 20px; }
 
-    /* Company Branding Header (Option 62) */
-    .company-branding-banner { display: flex; align-items: center; justify-content: space-between; border-bottom: 2px solid #0d9488; padding-bottom: 14px; margin-bottom: 24px; }
-    .branding-left { display: flex; align-items: center; gap: 14px; }
-    .branding-logo { max-height: 44px; max-width: 140px; object-fit: contain; }
-    .branding-title { font-size: 16px; font-weight: 800; color: #0f172a; text-transform: uppercase; letter-spacing: -0.2px; }
-    .branding-subtitle { font-size: 11px; color: #0d9488; font-weight: 600; }
-    .branding-badge { background: #ccfbf1; color: #0f766e; font-size: 10.5px; font-weight: 700; padding: 3px 9px; border-radius: 999px; border: 1px solid #99f6e4; }
+    /* PAGE 2: CANDIDATE RÉSUMÉ */
+    .resume-brand-banner { display: flex; align-items: center; justify-content: space-between; border-bottom: 2px solid #0d9488; padding-bottom: 12px; margin-bottom: 20px; }
+    .resume-brand-title { font-size: 15px; font-weight: 800; color: #0f172a; text-transform: uppercase; }
+    .resume-brand-sub { font-size: 10.5px; color: #0d9488; font-weight: 600; }
 
-    /* In-Document Elements & Highlights */
-    .paper-sheet h1 { font-size: 18px; font-weight: 700; color: #0f172a; margin: 18px 0 8px 0; border-bottom: 1px solid #e2e8f0; padding-bottom: 4px; }
-    .paper-sheet h2 { font-size: 15px; font-weight: 700; color: #0f172a; margin: 14px 0 6px 0; }
-    .paper-sheet h3 { font-size: 13.5px; font-weight: 600; color: #0f172a; margin: 10px 0 4px 0; }
+    .paper-sheet h1 { font-size: 18px; font-weight: 700; color: #0f172a; margin: 16px 0 8px 0; border-bottom: 1px solid #e2e8f0; padding-bottom: 4px; }
+    .paper-sheet h2 { font-size: 15px; font-weight: 700; color: #0f172a; margin: 12px 0 6px 0; }
+    .paper-sheet h3 { font-size: 13px; font-weight: 600; color: #0f172a; margin: 8px 0 4px 0; }
     .paper-sheet p { margin-bottom: 8px; }
     .paper-sheet ul, .paper-sheet ol { margin-left: 20px; margin-bottom: 10px; }
     .paper-sheet li { margin-bottom: 3px; }
@@ -154,8 +167,20 @@
     mark.rcv-hit.rcv-hit-active { background: #f97316 !important; color: #ffffff !important; box-shadow: 0 0 0 3px rgba(249,115,22,.4) !important; }
     mark.rcv-redact { background: #000000 !important; color: #000000 !important; user-select: none !important; padding: 0 4px !important; border-radius: 2px !important; }
 
-    .doc-page-break { border-top: 2px dashed #94a3b8; margin: 30px 0; position: relative; text-align: center; }
-    .doc-page-break::after { content: "PAGE BREAK"; font-size: 10px; font-weight: 700; color: #64748b; background: #fff; padding: 0 8px; position: absolute; top: -7px; left: 50%; transform: translateX(-50%); letter-spacing: 0.5px; }
+    .doc-page-break { border-top: 2px dashed #94a3b8; margin: 26px 0; position: relative; text-align: center; }
+    .doc-page-break::after { content: "PAGE BREAK"; font-size: 9.5px; font-weight: 700; color: #64748b; background: #fff; padding: 0 8px; position: absolute; top: -7px; left: 50%; transform: translateX(-50%); letter-spacing: 0.5px; }
+
+    /* Floating Bottom Acrobat AI Bar */
+    .acrobat-bottom-bar { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); width: 560px; background: #ffffff; border: 1px solid #cbd5e1; border-radius: 999px; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.15); display: flex; align-items: center; padding: 6px 14px; gap: 10px; z-index: 100; }
+    .bottom-ai-icon { width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; color: #6366f1; }
+    .bottom-ai-input { flex: 1; border: none; outline: none; font-size: 12px; font-family: 'Poppins', sans-serif; color: #1e293b; background: transparent; }
+    .bottom-ai-btn { background: #6366f1; color: #fff; border: none; border-radius: 999px; padding: 5px 14px; font-size: 11px; font-weight: 600; cursor: pointer; font-family: 'Poppins', sans-serif; }
+
+    /* ZONE D: Right Page Navigation Strip (Acrobat Style) */
+    .acrobat-right-strip { width: 46px; background: #ffffff; border-left: 1px solid #e5e7eb; display: flex; flex-direction: column; align-items: center; padding: 14px 0; gap: 10px; flex-shrink: 0; z-index: 80; }
+    .page-counter-box { font-size: 10.5px; font-weight: 700; color: #475569; border: 1px solid #cbd5e1; border-radius: 4px; padding: 4px 6px; text-align: center; }
+    .strip-btn { width: 28px; height: 28px; border-radius: 4px; border: none; background: transparent; color: #475569; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+    .strip-btn:hover { background: #f1f5f9; color: #0f172a; }
 
     /* Signature Modal */
     .sign-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: none; align-items: center; justify-content: center; z-index: 999; backdrop-filter: blur(2px); }
@@ -170,256 +195,254 @@
 </head>
 <body>
 
-<div class="app-wrapper">
+<div class="acrobat-app">
 
-  <!-- 1. Enterprise Top Header -->
-  <header class="top-header">
-    <div class="header-left">
-      <a href="{{ route('service_company.dashboard') }}" class="header-logo-link" title="JERO Dashboard">
-        <img src="{{ asset('img/logo.svg') }}" alt="JERO Logo" class="header-logo-img">
+  <!-- 1. Top Global Navigation Bar (Acrobat Header) -->
+  <header class="acrobat-navbar">
+    <div class="nav-left">
+      <a href="{{ route('service_company.dashboard') }}" class="nav-logo-wrap" title="JERO Works Dashboard">
+        <img src="{{ asset('img/logo.svg') }}" alt="JERO Logo" class="nav-logo-img">
       </a>
-      <div class="header-title-box">
-        <div class="product-title">jero.works <span>online editor</span> <span class="studio-pill">ATS STUDIO</span></div>
-      </div>
-      <div class="header-vsep"></div>
-      <div class="cand-badge">
-        <span class="cand-name" title="{{ ucwords(@$application->full_name ?: @$application->name ?: 'Candidate') }}">{{ ucwords(@$application->full_name ?: @$application->name ?: 'Candidate') }}</span>
-        <span class="role-name" title="{{ $job->title ?? ($application->job_title ?? 'Candidate') }}">• {{ $job->title ?? ($application->job_title ?? 'Verified Profile') }}</span>
+      <div class="nav-title">jero.works <span>online editor</span></div>
+      <div class="nav-tabs">
+        <span class="nav-tab active">All tools</span>
+        <span class="nav-tab">Read</span>
+        <span class="nav-tab">Edit</span>
+        <span class="nav-tab">Convert</span>
+        <span class="nav-tab">E-Sign</span>
       </div>
     </div>
 
-    <div class="header-center">
-      <label class="mode-label">
-        <span>Format / Mode:</span>
-        <select id="modeDropdown" class="mode-dropdown">
-          <option value="61" {{ $optId == 61 ? 'selected' : '' }}>61. Edit &amp; Optimize Resume (Clean Vector PDF)</option>
-          <option value="62" {{ $optId == 62 ? 'selected' : '' }}>62. Edit &amp; Optimize Resume + Company Branding</option>
-          <option value="63" {{ $optId == 63 ? 'selected' : '' }}>63. Edit &amp; Optimize Resume + Highlighted Keywords</option>
-          <option value="64" {{ $optId == 64 ? 'selected' : '' }}>64. Edit &amp; Optimize Resume + Pre-Screened Report</option>
-          <option value="65" {{ $optId == 65 ? 'selected' : '' }}>65. Edit &amp; Optimize Resume + Pre-Screened Report + Highlighted Keywords</option>
-        </select>
-      </label>
+    <div class="nav-center">
+      <div class="nav-search-box">
+        <svg class="nav-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input type="text" id="docSearchInput" class="nav-search-input" placeholder="Find text or tools in document…" autocomplete="off">
+        <div class="nav-search-nav">
+          <span id="navCount">0/0</span>
+          <button type="button" id="navPrev" class="nav-search-btn" title="Previous occurrence (Shift+F3)">▲</button>
+          <button type="button" id="navNext" class="nav-search-btn" title="Next occurrence (F3)">▼</button>
+        </div>
+      </div>
     </div>
 
-    <div class="header-right">
-      <span class="stat-text" id="docStats">0 words • 0 chars</span>
-      <button type="button" id="btnCopyText" class="btn-header btn-header-copy">📋 Copy Text</button>
-      <button type="button" id="btnDownload" class="btn-header btn-header-download">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+    <div class="nav-right">
+      <span class="ats-score-pill">
+        <svg viewBox="0 0 24 24" fill="currentColor" style="width:13px;height:13px;"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+        <span id="topAtsScore">--% ATS Match</span>
+      </span>
+      <span class="doc-metrics-text" id="docMetrics">0 words • 0 chars</span>
+      <button type="button" id="btnCopyText" class="btn-action-copy">📋 Copy Text</button>
+      <button type="button" id="btnDownload" class="btn-action-download">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
         <span id="btnDlText">Download Final PDF</span>
       </button>
     </div>
   </header>
 
-  <!-- 2. Pinned Top Control Panels -->
-  <div class="controls-panel">
+  <!-- 2. Main Body: Split Architecture -->
+  <div class="acrobat-body">
 
-    <!-- Sub-Card 1: Real-Time ATS & Keyword Highlights Card -->
-    <div class="ats-card">
-      <div class="ats-card-header">
-        <div class="ats-title-group">
-          <h2>Keyword Highlights</h2>
-          <p>Job skills matched against this résumé • Real-time ATS match scoring</p>
+    <!-- ZONE A: Left Sidebar ("All tools" + ATS Hub) -->
+    <aside class="acrobat-sidebar" id="sidebar">
+      <div class="sidebar-head">
+        <h2>All tools</h2>
+        <span class="cand-chip-pill" title="{{ ucwords(@$application->full_name ?: 'Candidate') }}">{{ ucwords(@$application->full_name ?: 'Candidate') }}</span>
+      </div>
+
+      <!-- Format / Option Selector -->
+      <div class="sidebar-section">
+        <label class="section-title">Format &amp; Mode</label>
+        <select id="modeSelect" class="mode-select-box">
+          <option value="61" {{ $optId == 61 ? 'selected' : '' }}>61. Clean Resume (Vector PDF)</option>
+          <option value="62" {{ $optId == 62 ? 'selected' : '' }}>62. Resume + Company Branding</option>
+          <option value="63" {{ $optId == 63 ? 'selected' : '' }}>63. Resume + Highlighted Keywords</option>
+          <option value="64" {{ $optId == 64 ? 'selected' : '' }}>64. Pre-Screen Report + Resume</option>
+          <option value="65" {{ $optId == 65 ? 'selected' : '' }}>65. Pre-Screen Report + Resume + Highlights</option>
+        </select>
+      </div>
+
+      <!-- ATS Keyword Highlights Card -->
+      <div class="sidebar-section">
+        <label class="section-title">ATS Match &amp; Highlights</label>
+        <div class="sidebar-ats-card">
+          <div class="ats-stats-grid">
+            <div class="stat-pill-box val-matched"><span class="stat-pill-val" id="statMatched">0</span><span class="stat-pill-lbl">Matched</span></div>
+            <div class="stat-pill-box val-missing"><span class="stat-pill-val" id="statMissing">0</span><span class="stat-pill-lbl">Missing</span></div>
+            <div class="stat-pill-box"><span class="stat-pill-val" id="statHighlights">0</span><span class="stat-pill-lbl">Highlights</span></div>
+            <div class="stat-pill-box val-score"><span class="stat-pill-val" id="statScore">--%</span><span class="stat-pill-lbl">ATS Score</span></div>
+          </div>
+
+          <div class="ats-search-wrap">
+            <input type="text" id="kwInput" class="ats-kw-input" placeholder="Add keyword to check…" autocomplete="off">
+            <button type="button" id="btnKwAdd" class="btn-ats-add-kw">Add &amp; Check</button>
+          </div>
+
+          <span class="skills-title">Target Job Skills</span>
+          <div class="chips-flow" id="chipsContainer"></div>
         </div>
-        <div class="ats-metrics-row">
-          <div class="ats-metric-box box-matched"><span class="ats-metric-val" id="statMatched">0</span><span class="ats-metric-lbl">Matched</span></div>
-          <div class="ats-metric-box box-missing"><span class="ats-metric-val" id="statMissing">0</span><span class="ats-metric-lbl">Missing</span></div>
-          <div class="ats-metric-box"><span class="ats-metric-val" id="statHighlights">0</span><span class="ats-metric-lbl">Highlights</span></div>
-          <div class="ats-metric-box box-ats"><span class="ats-metric-val" id="statScore">--%</span><span class="ats-metric-lbl">ATS Match</span></div>
-        </div>
       </div>
 
-      <div class="ats-search-row">
-        <input type="text" id="kwSearchInput" class="ats-search-input" placeholder="Add a keyword to check &amp; highlight…" autocomplete="off">
-        <button type="button" id="btnKwAdd" class="btn-ats-add">Add &amp; Check</button>
+      <!-- Acrobat Quick Tool Menu Items -->
+      <div class="sidebar-section" style="border-bottom:none; flex:1;">
+        <label class="section-title">Document Tools</label>
+        <ul class="tools-menu-list">
+          <li class="tool-menu-item active" id="menuEditPdf"><span class="tool-menu-icon">✏️</span> Edit Document</li>
+          <li class="tool-menu-item" id="menuExportPdf"><span class="tool-menu-icon">📥</span> Export a PDF</li>
+          <li class="tool-menu-item" id="menuCombine"><span class="tool-menu-icon">📑</span> Combine Dossier (Report + Resume)</li>
+          <li class="tool-menu-item" id="menuOrganize"><span class="tool-menu-icon">🗂</span> Organize Pages</li>
+          <li class="tool-menu-item" id="menuSign"><span class="tool-menu-icon">✍</span> Request E-Signatures</li>
+          <li class="tool-menu-item" id="menuRedact"><span class="tool-menu-icon">⬛</span> Redact a PDF (Whiteout)</li>
+          <li class="tool-menu-item" id="menuCompress"><span class="tool-menu-icon">🗜</span> Compress &amp; Optimize PDF</li>
+        </ul>
       </div>
+    </aside>
 
-      <div class="ats-skills-strip">
-        <span class="ats-skills-lbl">Job Key Skills</span>
-        <div class="ats-chips-wrapper" id="chipsContainer"></div>
-      </div>
+    <!-- ZONE B: Vertical Floating Tool Dock (Between Sidebar and Canvas) -->
+    <div class="acrobat-dock">
+      <button type="button" class="dock-btn active" id="dockSelect" title="Select / Move">↖</button>
+      <div class="dock-sep"></div>
+      <button type="button" class="dock-btn" data-cmd="bold" title="Bold (Ctrl+B)"><strong>B</strong></button>
+      <button type="button" class="dock-btn" data-cmd="italic" title="Italic (Ctrl+I)"><em>I</em></button>
+      <button type="button" class="dock-btn" data-cmd="underline" title="Underline (Ctrl+U)"><u>U</u></button>
+      <button type="button" class="dock-btn" data-cmd="strikeThrough" title="Strikethrough"><s>S</s></button>
+      <div class="dock-sep"></div>
+      <button type="button" class="dock-btn" id="dockHighlight" title="Highlight Selection" style="background:#fef9c3;color:#854d0e;">🖍</button>
+      <button type="button" class="dock-btn" id="dockWhiteout" title="Redact / Whiteout Selection" style="background:#0f172a;color:#ffffff;">⬛</button>
+      <button type="button" class="dock-btn" id="dockImage" title="Insert Image / Logo">🖼</button>
+      <button type="button" class="dock-btn" id="dockSign" title="Draw Signature">✍</button>
+      <button type="button" class="dock-btn" id="dockPageBreak" title="Insert Page Break">📄</button>
+      <div class="dock-sep"></div>
+      <input type="color" id="dockColor" class="dock-color" value="#1e293b" title="Text Color">
+      <button type="button" class="dock-btn" data-cmd="undo" title="Undo">↶</button>
+      <button type="button" class="dock-btn" data-cmd="redo" title="Redo">↷</button>
+      <input type="file" id="dockFileInput" accept="image/*" style="display:none;">
     </div>
 
-    <!-- Sub-Card 2: Sticky Document Control Ribbon -->
-    <div class="editor-ribbon">
-      <div class="ribbon-left">
-        <div class="doc-pill">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-          <span title="{{ basename($application->resume) }}">{{ basename($application->resume) }}</span>
-        </div>
+    <!-- ZONE C: Center Document Viewport (Dedicated Scroller) -->
+    <main class="acrobat-canvas" id="canvas">
 
-        <div class="hit-nav-group">
-          <button type="button" id="navPrev" class="hit-nav-btn" title="Previous occurrence (Shift+F3)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:12px;height:12px;"><polyline points="18 15 12 9 6 15"/></svg></button>
-          <span id="navCount">0/0</span>
-          <button type="button" id="navNext" class="hit-nav-btn" title="Next occurrence (F3)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:12px;height:12px;"><polyline points="6 9 12 15 18 9"/></svg></button>
-        </div>
+      <!-- PAGE 1: PRE-SCREENED CANDIDATE REPORT (Exact replica of media_1789225189169.png) -->
+      <div class="paper-sheet" id="sheetReport" style="display:none;" contenteditable="true" spellcheck="false">
 
-        <div class="tool-group">
-          <button type="button" class="tool-btn" data-cmd="bold" title="Bold (Ctrl+B)"><strong>B</strong></button>
-          <button type="button" class="tool-btn" data-cmd="italic" title="Italic (Ctrl+I)"><em>I</em></button>
-          <button type="button" class="tool-btn" data-cmd="underline" title="Underline (Ctrl+U)"><u>U</u></button>
-          <button type="button" class="tool-btn" data-cmd="strikeThrough" title="Strikethrough"><s>S</s></button>
-        </div>
-
-        <select id="selFormat" class="tool-select" title="Paragraph Style">
-          <option value="p">Paragraph</option>
-          <option value="h1">Heading 1</option>
-          <option value="h2">Heading 2</option>
-          <option value="h3">Heading 3</option>
-        </select>
-
-        <select id="selFont" class="tool-select" title="Font Family">
-          <option value="Poppins, sans-serif">Poppins</option>
-          <option value="Inter, sans-serif">Inter</option>
-          <option value="Calibri, sans-serif">Calibri</option>
-          <option value="Arial, sans-serif">Arial</option>
-          <option value="'Times New Roman', serif">Times</option>
-        </select>
-
-        <select id="selSize" class="tool-select" title="Font Size">
-          <option value="2">11px</option>
-          <option value="3" selected>13px</option>
-          <option value="4">15px</option>
-          <option value="5">18px</option>
-        </select>
-
-        <input type="color" id="pickerColor" class="tool-color" value="#1e293b" title="Text Color">
-
-        <div class="tool-group">
-          <button type="button" class="tool-btn" data-cmd="insertUnorderedList" title="Bullet List">• List</button>
-          <button type="button" class="tool-btn" data-cmd="insertOrderedList" title="Numbered List">1. List</button>
-        </div>
-
-        <button type="button" id="btnHighlight" class="tool-btn btn-tool-highlight" title="Highlight Selected Text">🖍 Highlight</button>
-        <button type="button" id="btnWhiteout" class="tool-btn btn-tool-whiteout" title="Redact / Whiteout">⬛ Whiteout</button>
-        <button type="button" id="btnInsertImage" class="tool-btn" title="Insert Image / Logo">🖼 Image</button>
-        <button type="button" id="btnSign" class="tool-btn btn-tool-sign" title="Draw Signature">✍ Sign</button>
-        <button type="button" id="btnPageBreak" class="tool-btn" title="Insert Page Break">📄 Page</button>
-
-        <div class="tool-group">
-          <button type="button" class="tool-btn" data-cmd="undo" title="Undo (Ctrl+Z)">↶</button>
-          <button type="button" class="tool-btn" data-cmd="redo" title="Redo (Ctrl+Y)">↷</button>
-        </div>
-        <input type="file" id="fileImageInput" accept="image/*" style="display:none;">
-      </div>
-    </div>
-
-  </div>
-
-  <!-- 3. Sub-Card 3: Dedicated Document Viewport (Isolated Scroller) -->
-  <main class="document-viewport" id="viewport">
-
-    <!-- Page 1: Pre-Screened Report Dossier Card (Options 64 & 65) -->
-    <div class="paper-sheet report-card" id="pageReport" style="display:none;" contenteditable="true" spellcheck="false">
-      <div class="report-dossier-header">
-        <div>
-          <span class="report-tag-badge">PAGE 1 • CONFIDENTIAL EVALUATION DOSSIER</span>
-          <div class="report-brand-title">Pre-Screened Candidate Evaluation Report</div>
-        </div>
-        <div class="report-verification-stamp">
-          <svg viewBox="0 0 24 24" fill="currentColor" style="width:14px;height:14px;"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
-          Verified Candidate
-        </div>
-      </div>
-
-      <div class="report-meta-grid">
-        <div class="meta-cell">
-          <div class="meta-cell-lbl">Candidate Name</div>
-          <div class="meta-cell-val">{{ ucwords(@$application->full_name ?: @$application->name ?: 'Candidate') }}</div>
-        </div>
-        <div class="meta-cell">
-          <div class="meta-cell-lbl">Target Role</div>
-          <div class="meta-cell-val">{{ $job->title ?? ($application->job_title ?? 'Verified Role') }}</div>
-        </div>
-        <div class="meta-cell">
-          <div class="meta-cell-lbl">Total Experience</div>
-          <div class="meta-cell-val">{{ @$application->total_exp ? (@$application->total_exp . ' Years') : 'Verified Experience' }}</div>
-        </div>
-        <div class="meta-cell">
-          <div class="meta-cell-lbl">Current Designation</div>
-          <div class="meta-cell-val">{{ ucwords(@$application->current_designation ?: 'Specialist') }}</div>
-        </div>
-        <div class="meta-cell">
-          <div class="meta-cell-lbl">Notice Period</div>
-          <div class="meta-cell-val">{{ $noticePeriod }}</div>
-        </div>
-        <div class="meta-cell">
-          <div class="meta-cell-lbl">Current Location</div>
-          <div class="meta-cell-val">{{ $cityName }}</div>
-        </div>
-        <div class="meta-cell">
-          <div class="meta-cell-lbl">Current / Expected CTC</div>
-          <div class="meta-cell-val">{{ @$application->cur_sal ? (@$application->cur_sal . ' ' . @$application->cur_sal_unit) : 'Confidential' }} / {{ @$application->exp_sal ? (@$application->exp_sal . ' ' . @$application->exp_sal_unit) : 'Negotiable' }}</div>
-        </div>
-        <div class="meta-cell">
-          <div class="meta-cell-lbl">Assessment Agency</div>
-          <div class="meta-cell-val">{{ $companyName ?: '4Bell Technology' }}</div>
-        </div>
-        <div class="meta-cell">
-          <div class="meta-cell-lbl">Lead Technical Recruiter</div>
-          <div class="meta-cell-val">{{ $recruiterName }}</div>
-        </div>
-      </div>
-
-      <div class="report-section-head">Key Competency Evaluation Scorecard</div>
-      <table class="report-skills-table">
-        <thead>
-          <tr>
-            <th style="width:40%;">Skill / Competency</th>
-            <th style="width:30%;">Required by Job</th>
-            <th style="width:30%;">Evaluation Status</th>
-          </tr>
-        </thead>
-        <tbody>
-          @foreach($jobSkills as $sk)
-            <tr>
-              <td><strong>{{ ucwords($sk) }}</strong></td>
-              <td>Target Core Skill</td>
-              <td><span style="color:#15803d;font-weight:600;">✓ Verified &amp; Screened</span></td>
-            </tr>
-          @endforeach
-        </tbody>
-      </table>
-
-      <div class="report-section-head">Technical &amp; Cultural Assessment Summary</div>
-      <div class="report-summary-box">
-        {{ $prescreenNotes }}
-      </div>
-
-      <div class="report-page-banner">
-        ── End of Pre-Screened Evaluation Dossier (Page 1) • Full Edited Résumé Continues on Page 2 ──
-      </div>
-    </div>
-
-    <!-- Page 2+: Candidate Résumé Paper Sheet (All Modes) -->
-    <div class="paper-sheet" id="pageResume" contenteditable="true" spellcheck="false">
-
-      <!-- Company Branding Header (Option 62) -->
-      <div class="company-branding-banner" id="brandingBanner" style="display:none;" contenteditable="false">
-        <div class="branding-left">
-          @if(!empty($companyLogo))
-            <img src="{{ $companyLogo }}" alt="Company Logo" class="branding-logo">
-          @endif
-          <div>
-            <div class="branding-title">{{ strtoupper($companyName ?: 'CONFIDENTIAL CANDIDATE') }}</div>
-            <div class="branding-subtitle">Represented Candidate • Verified ATS Optimized Résumé</div>
+        <!-- Report Top Header -->
+        <div class="ps-header">
+          <div class="ps-shared-by">
+            @if(!empty($companyLogo))
+              <img src="{{ $companyLogo }}" alt="Company Logo" class="ps-company-logo-img">
+            @else
+              <svg viewBox="0 0 24 24" fill="#0284c7" style="width:34px;height:34px;"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+            @endif
+            <div>
+              <div class="ps-shared-title">SHARED BY</div>
+              <div class="ps-shared-name">{{ $companyName ?: '4Bell Technology' }}</div>
+            </div>
+          </div>
+          <div class="ps-report-title-box">
+            <div class="ps-report-main-title">PRE-SCREENED CANDIDATE REPORT</div>
+            <div class="ps-report-sub-date">{{ strtoupper(date('d M Y')) }} • CONFIDENTIAL</div>
           </div>
         </div>
-        <span class="branding-badge">Branded Profile</span>
-      </div>
 
-      <!-- Resume Content Sheet -->
-      <div id="resumeBody">
-        <div id="loaderPlaceholder" style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:140px 20px;color:#64748b;gap:12px;" contenteditable="false">
-          <div class="spin" style="width:30px;height:30px;border-color:#0d9488;border-top-color:transparent;border-width:3px;"></div>
-          <span style="font-size:14px;font-weight:600;color:#0f172a;">Loading candidate résumé from Cloudflare R2…</span>
-          <span style="font-size:11.5px;color:#64748b;">Rendering exact high-fidelity document pages for live editing</span>
+        <!-- Top Split: Candidate Info Card + Hiring Confidence Card -->
+        <div class="ps-top-split">
+          <div class="ps-card">
+            <div class="ps-cand-name">{{ ucwords(@$application->full_name ?: 'V Eena') }}</div>
+            <div class="ps-cand-role">{{ $job->title ?? ($application->job_title ?? 'Full Stack Developer') }}</div>
+            <div class="ps-cand-meta-line">★ EXPERIENCE: {{ @$application->total_exp ? (@$application->total_exp . ' YEARS') : '0 YEARS' }}</div>
+            <div class="ps-cand-meta-line">🏢 CURRENT COMPANY / CONTACT: {{ @$application->phone ?: '+91 - 7022934385' }}</div>
+          </div>
+          <div class="ps-card ps-confidence-card">
+            <div class="ps-confidence-lbl">HIRING CONFIDENCE</div>
+            <div class="ps-confidence-val">{{ @$application->rating ? ($application->rating * 20) . '%' : '85%' }}</div>
+          </div>
         </div>
+
+        <!-- Middle 4-Grid Glance Metrics -->
+        <div class="ps-metrics-4grid">
+          <div class="ps-metric-item">
+            <div class="ps-metric-head">🎓 EDUCATION</div>
+            <div class="ps-metric-val">DIPLOMA / DEGREE</div>
+          </div>
+          <div class="ps-metric-item">
+            <div class="ps-metric-head">📅 NOTICE PERIOD</div>
+            <div class="ps-metric-val">{{ $noticePeriod }}</div>
+          </div>
+          <div class="ps-metric-item">
+            <div class="ps-metric-head">📍 LOCATION</div>
+            <div class="ps-metric-val">{{ $cityName }}</div>
+          </div>
+          <div class="ps-metric-item">
+            <div class="ps-metric-head">💻 WORK MODE</div>
+            <div class="ps-metric-val">Hybrid</div>
+          </div>
+        </div>
+
+        <!-- Bottom Split: Executive Summary + Recruiter Comments -->
+        <div class="ps-bottom-split">
+          <div class="ps-summary-card">
+            <div class="ps-section-title">📄 EXECUTIVE SUMMARY</div>
+            <div class="ps-text-content">
+              {{ $prescreenNotes }}
+            </div>
+          </div>
+          <div class="ps-summary-card">
+            <div class="ps-section-title">👤 RECRUITER COMMENTS</div>
+            <div class="ps-text-content">
+              Candidate thoroughly verified by {{ $recruiterName }}. Clear communication, strong analytical aptitude, and immediate project delivery readiness verified.
+            </div>
+          </div>
+        </div>
+
+        <div class="ps-page-footer-note">
+          ── End of Pre-Screened Candidate Report (Page 1) • Verified Résumé Begins on Page 2 ──
+        </div>
+
       </div>
 
-    </div>
+      <!-- PAGE 2: CANDIDATE RÉSUMÉ SHEET (All Modes) -->
+      <div class="paper-sheet" id="sheetResume" contenteditable="true" spellcheck="false">
 
-  </main>
+        <!-- Company Branding Header (Option 62) -->
+        <div class="resume-brand-banner" id="brandingBanner" style="display:none;" contenteditable="false">
+          <div>
+            <div class="resume-brand-title">{{ strtoupper($companyName ?: 'CONFIDENTIAL CANDIDATE') }}</div>
+            <div class="resume-brand-sub">Represented Candidate • Verified ATS Optimized Résumé</div>
+          </div>
+          <span style="background:#ccfbf1;color:#0f766e;font-size:10.5px;font-weight:700;padding:3px 10px;border-radius:999px;">Branded Profile</span>
+        </div>
+
+        <!-- Resume Body -->
+        <div id="resumeBody">
+          <div id="loaderPlaceholder" style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:140px 20px;color:#64748b;gap:12px;" contenteditable="false">
+            <div class="spin" style="width:30px;height:30px;border-color:#0284c7;border-top-color:transparent;border-width:3px;"></div>
+            <span style="font-size:14px;font-weight:600;color:#0f172a;">Loading candidate résumé from Cloudflare R2…</span>
+            <span style="font-size:11.5px;color:#64748b;">Rendering exact high-fidelity document pages for live editing</span>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Floating Bottom Adobe AI Bar -->
+      <div class="acrobat-bottom-bar">
+        <span class="bottom-ai-icon">✨</span>
+        <input type="text" class="bottom-ai-input" placeholder="Ask ATS AI Assistant: What would you like to optimize in this candidate résumé?" id="bottomAiInput">
+        <button type="button" class="bottom-ai-btn" id="btnBottomAi">Optimize</button>
+      </div>
+
+    </main>
+
+    <!-- ZONE D: Right Page Navigation Strip (Acrobat Style) -->
+    <aside class="acrobat-right-strip">
+      <div class="page-counter-box" id="stripPageNum">1 / 2</div>
+      <button type="button" class="strip-btn" id="stripPrevPage" title="Previous Page">▲</button>
+      <button type="button" class="strip-btn" id="stripNextPage" title="Next Page">▼</button>
+      <div class="dock-sep"></div>
+      <button type="button" class="strip-btn" id="stripFitWidth" title="Fit to Width">⛶</button>
+      <button type="button" class="strip-btn" id="stripZoomIn" title="Zoom In">＋</button>
+      <button type="button" class="strip-btn" id="stripZoomOut" title="Zoom Out">－</button>
+    </aside>
+
+  </div>
 
 </div>
 
@@ -433,8 +456,8 @@
     <p style="font-size:11.5px;color:#64748b;margin-bottom:8px;">Sign below with your mouse, finger, or stylus:</p>
     <canvas id="signCanvas" class="sign-canvas" width="400" height="160"></canvas>
     <div class="sign-box-actions">
-      <button type="button" id="btnSignClear" class="tool-btn" style="padding:6px 12px;">Clear</button>
-      <button type="button" id="btnSignInsert" class="btn-ats-add" style="padding:6px 14px;">Insert into Document</button>
+      <button type="button" id="btnSignClear" class="dock-btn" style="width:auto;padding:6px 12px;">Clear</button>
+      <button type="button" id="btnSignInsert" class="btn-ats-add-kw" style="padding:6px 14px;">Insert Signature</button>
     </div>
   </div>
 </div>
@@ -464,12 +487,13 @@
     optimizer = new OptClass({ jobSkills: jobSkills, candSkills: candSkills, candidateName: candName, targetJobTitle: jobTitle });
   }
 
-  var pageReport = document.getElementById('pageReport');
-  var pageResume = document.getElementById('pageResume');
+  var sheetReport = document.getElementById('sheetReport');
+  var sheetResume = document.getElementById('sheetResume');
   var resumeBody = document.getElementById('resumeBody');
   var brandingBanner = document.getElementById('brandingBanner');
-  var modeDropdown = document.getElementById('modeDropdown');
+  var modeSelect = document.getElementById('modeSelect');
   var chipsContainer = document.getElementById('chipsContainer');
+  var canvas = document.getElementById('canvas');
 
   function esc(s){ return String(s||'').replace(/[&<>"]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
   function escRe(s){ return String(s||'').replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
@@ -480,7 +504,7 @@
   });
 
   function countOccurrences(){
-    var text = (resumeBody.innerText || '') + ' ' + (pageReport ? pageReport.innerText : '');
+    var text = (resumeBody.innerText || '') + ' ' + (sheetReport ? sheetReport.innerText : '');
     Object.keys(keywords).forEach(function(k){
       var re = new RegExp('\\b' + escRe(keywords[k].name) + '\\b', 'gi');
       var m = text.match(re);
@@ -508,9 +532,9 @@
     document.getElementById('statHighlights').textContent = totalHits;
 
     // Update word / character counts
-    var fullText = (pageReport && pageReport.style.display !== 'none' ? pageReport.innerText : '') + ' ' + (resumeBody.innerText || '');
+    var fullText = (sheetReport && sheetReport.style.display !== 'none' ? sheetReport.innerText : '') + ' ' + (resumeBody.innerText || '');
     var words = fullText.trim() ? fullText.trim().split(/\s+/).length : 0;
-    document.getElementById('docStats').textContent = words + ' words • ' + fullText.length + ' chars';
+    document.getElementById('docMetrics').textContent = words + ' words • ' + fullText.length + ' chars';
 
     // Calculate ATS Score
     if(!optimizer && OptClass) optimizer = new OptClass({ jobSkills: jobSkills, candSkills: candSkills, candidateName: candName, targetJobTitle: jobTitle });
@@ -519,11 +543,12 @@
       var scoreEl = document.getElementById('statScore');
       scoreEl.textContent = res.score + '%';
       scoreEl.style.color = res.score >= 80 ? '#15803d' : (res.score >= 50 ? '#b45309' : '#b91c1c');
+      document.getElementById('topAtsScore').textContent = res.score + '% ATS Match';
     }
   }
 
   function scrollToKeyword(kw){
-    var activeMarks = Array.prototype.slice.call(pageResume.querySelectorAll('mark.rcv-hit'));
+    var activeMarks = Array.prototype.slice.call(sheetResume.querySelectorAll('mark.rcv-hit'));
     var match = activeMarks.filter(function(m){ return (m.innerText || '').toLowerCase() === kw.toLowerCase(); })[0];
     if(match){
       match.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -552,11 +577,11 @@
   }
 
   function applyHighlights(){
-    var mode = parseInt(modeDropdown.value, 10) || 61;
+    var mode = parseInt(modeSelect.value, 10) || 61;
     var isHighlighted = (mode === 63 || mode === 65);
 
-    // Remove existing highlight tags
-    var marks = Array.prototype.slice.call(pageResume.querySelectorAll('mark.rcv-hit'));
+    // Remove existing marks
+    var marks = Array.prototype.slice.call(sheetResume.querySelectorAll('mark.rcv-hit'));
     marks.forEach(function(m){
       var p = m.parentNode;
       while(m.firstChild) p.insertBefore(m.firstChild, m);
@@ -577,7 +602,7 @@
     var re = new RegExp('\\b(' + pat + ')\\b', 'gi');
     highlightInNode(resumeBody, re, 'rcv-hit');
 
-    hits = Array.prototype.slice.call(pageResume.querySelectorAll('mark.rcv-hit'));
+    hits = Array.prototype.slice.call(sheetResume.querySelectorAll('mark.rcv-hit'));
     document.getElementById('navCount').textContent = hits.length ? ('1/' + hits.length) : '0/0';
     curHit = 0;
   }
@@ -593,19 +618,22 @@
   }
 
   function syncModeViews(){
-    var mode = parseInt(modeDropdown.value, 10) || 61;
+    var mode = parseInt(modeSelect.value, 10) || 61;
     var isBranded = (mode === 62);
     var hasReport = (mode === 64 || mode === 65);
 
     brandingBanner.style.display = isBranded ? 'flex' : 'none';
-    pageReport.style.display = hasReport ? 'block' : 'none';
+    sheetReport.style.display = hasReport ? 'block' : 'none';
 
     var btnLbl = document.getElementById('btnDlText');
-    if(isBranded) btnLbl.textContent = 'Download Resume (Branded)';
+    if(isBranded) btnLbl.textContent = 'Download Branded Resume';
     else if(hasReport && mode === 65) btnLbl.textContent = 'Download Report + Highlighted';
     else if(hasReport) btnLbl.textContent = 'Download Report + Resume';
-    else if(mode === 63) btnLbl.textContent = 'Download Resume (Highlighted)';
+    else if(mode === 63) btnLbl.textContent = 'Download Highlighted Resume';
     else btnLbl.textContent = 'Download Resume (PDF)';
+
+    // Update page strip counter
+    document.getElementById('stripPageNum').textContent = hasReport ? '1 / 2' : '1 / 1';
 
     countOccurrences();
     renderChips();
@@ -702,7 +730,7 @@
 
   // Keyword search & add
   document.getElementById('btnKwAdd').onclick = function(){
-    var inp = document.getElementById('kwSearchInput');
+    var inp = document.getElementById('kwInput');
     var val = (inp.value || '').trim();
     if(!val) return;
     keywords[val.toLowerCase()] = { name: val, type: 'custom', active: true, count: 0 };
@@ -711,8 +739,21 @@
     renderChips();
     applyHighlights();
   };
-  document.getElementById('kwSearchInput').addEventListener('keydown', function(e){
+  document.getElementById('kwInput').addEventListener('keydown', function(e){
     if(e.key === 'Enter'){ e.preventDefault(); document.getElementById('btnKwAdd').click(); }
+  });
+
+  // Top Search in document
+  document.getElementById('docSearchInput').addEventListener('input', function(){
+    var q = (this.value || '').trim();
+    if(!q){
+      applyHighlights();
+      return;
+    }
+    keywords[q.toLowerCase()] = { name: q, type: 'search', active: true, count: 0 };
+    countOccurrences();
+    renderChips();
+    applyHighlights();
   });
 
   // Hit navigation
@@ -720,7 +761,7 @@
   document.getElementById('navNext').onclick = function(){ gotoHit(1); };
 
   // Mode Dropdown change
-  modeDropdown.addEventListener('change', function(){
+  modeSelect.addEventListener('change', function(){
     syncModeViews();
   });
 
@@ -733,11 +774,11 @@
       renderChips();
     }, 150);
   }
-  pageResume.addEventListener('input', onDocumentInput);
-  pageReport.addEventListener('input', onDocumentInput);
+  sheetResume.addEventListener('input', onDocumentInput);
+  sheetReport.addEventListener('input', onDocumentInput);
 
-  // Formatting Toolbar Buttons
-  document.querySelectorAll('.tool-btn[data-cmd]').forEach(function(btn){
+  // Floating Dock Formatting Buttons
+  document.querySelectorAll('.dock-btn[data-cmd]').forEach(function(btn){
     btn.addEventListener('click', function(e){
       e.preventDefault();
       var cmd = this.getAttribute('data-cmd');
@@ -745,24 +786,12 @@
     });
   });
 
-  document.getElementById('selFormat').addEventListener('change', function(){
-    document.execCommand('formatBlock', false, this.value);
-  });
-
-  document.getElementById('selFont').addEventListener('change', function(){
-    document.execCommand('fontName', false, this.value);
-  });
-
-  document.getElementById('selSize').addEventListener('change', function(){
-    document.execCommand('fontSize', false, this.value);
-  });
-
-  document.getElementById('pickerColor').addEventListener('input', function(){
+  document.getElementById('dockColor').addEventListener('input', function(){
     document.execCommand('foreColor', false, this.value);
   });
 
-  // Advanced Tools
-  document.getElementById('btnHighlight').onclick = function(){
+  // Advanced Tools in Dock
+  document.getElementById('dockHighlight').onclick = function(){
     var sel = window.getSelection();
     if(!sel.rangeCount || sel.isCollapsed) return;
     var range = sel.getRangeAt(0);
@@ -774,7 +803,7 @@
     renderChips();
   };
 
-  document.getElementById('btnWhiteout').onclick = function(){
+  document.getElementById('dockWhiteout').onclick = function(){
     var sel = window.getSelection();
     if(!sel.rangeCount || sel.isCollapsed) return;
     var range = sel.getRangeAt(0);
@@ -784,7 +813,7 @@
     range.insertNode(mark);
   };
 
-  document.getElementById('btnPageBreak').onclick = function(){
+  document.getElementById('dockPageBreak').onclick = function(){
     var div = document.createElement('div');
     div.className = 'doc-page-break';
     div.contentEditable = 'false';
@@ -798,10 +827,10 @@
   };
 
   // Image Insertion
-  document.getElementById('btnInsertImage').onclick = function(){
-    document.getElementById('fileImageInput').click();
+  document.getElementById('dockImage').onclick = function(){
+    document.getElementById('dockFileInput').click();
   };
-  document.getElementById('fileImageInput').addEventListener('change', function(e){
+  document.getElementById('dockFileInput').addEventListener('change', function(e){
     var file = e.target.files && e.target.files[0];
     if(!file) return;
     var reader = new FileReader();
@@ -828,7 +857,7 @@
   var signCtx = signCanvas.getContext('2d');
   var isDrawing = false;
 
-  document.getElementById('btnSign').onclick = function(){
+  document.getElementById('dockSign').onclick = function(){
     signModal.style.display = 'flex';
     signCtx.clearRect(0, 0, signCanvas.width, signCanvas.height);
     signCtx.lineWidth = 2.5;
@@ -860,9 +889,36 @@
     signModal.style.display = 'none';
   };
 
+  // Right Strip Page Navigation
+  document.getElementById('stripPrevPage').onclick = function(){
+    canvas.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+  document.getElementById('stripNextPage').onclick = function(){
+    if(sheetResume) sheetResume.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
+  var curZoom = 1;
+  document.getElementById('stripZoomIn').onclick = function(){
+    curZoom = Math.min(1.4, curZoom + 0.1);
+    applyZoom();
+  };
+  document.getElementById('stripZoomOut').onclick = function(){
+    curZoom = Math.max(0.7, curZoom - 0.1);
+    applyZoom();
+  };
+  document.getElementById('stripFitWidth').onclick = function(){
+    curZoom = 1;
+    applyZoom();
+  };
+  function applyZoom(){
+    sheetReport.style.transform = 'scale(' + curZoom + ')';
+    sheetReport.style.transformOrigin = 'top center';
+    sheetResume.style.transform = 'scale(' + curZoom + ')';
+    sheetResume.style.transformOrigin = 'top center';
+  }
+
   // Copy text
   document.getElementById('btnCopyText').onclick = function(){
-    var text = (pageReport && pageReport.style.display !== 'none' ? pageReport.innerText + '\n\n' : '') + (resumeBody.innerText || '');
+    var text = (sheetReport && sheetReport.style.display !== 'none' ? sheetReport.innerText + '\n\n' : '') + (resumeBody.innerText || '');
     navigator.clipboard.writeText(text).then(function(){
       alert('Document text copied to clipboard!');
     }).catch(function(){ alert('Could not copy text.'); });
@@ -875,7 +931,7 @@
     btn.disabled = true;
     btn.innerHTML = '<span class="spin"></span> Generating PDF…';
     try {
-      var mode = parseInt(modeDropdown.value, 10) || 61;
+      var mode = parseInt(modeSelect.value, 10) || 61;
       var isBranded = (mode === 62);
       var isHighlighted = (mode === 63 || mode === 65);
       var hasReport = (mode === 64 || mode === 65);
