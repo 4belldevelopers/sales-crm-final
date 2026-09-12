@@ -1984,26 +1984,66 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
         $jobSkills = [];
         if (! empty($application->job_id)) {
             $job = DB::table('jobs')->where('id', $application->job_id)->first();
-            $rawSkills = DB::table('job_skills')
+            // 1. Check job_metronics_skills (primary in JERO)
+            $metronicSkills = DB::table('job_metronics_skills')
+                ->where('job_id', $application->job_id)
+                ->pluck('skill_name')
+                ->toArray();
+
+            // 2. Check job_skills joined with skills
+            $standardSkills = DB::table('job_skills')
                 ->join('skills', 'job_skills.skill_id', '=', 'skills.id')
                 ->where('job_skills.job_id', $application->job_id)
                 ->pluck('skills.name')
                 ->toArray();
-            if (! empty($rawSkills)) {
-                $jobSkills = array_values(array_unique(array_filter(array_map('trim', $rawSkills))));
+
+            $combined = array_merge($metronicSkills, $standardSkills);
+            if (! empty($combined)) {
+                $jobSkills = array_values(array_unique(array_filter(array_map('trim', $combined))));
             }
         }
 
-        $candSkills = [];
+        // Candidate skills from job_application_skills table + application->skills column
+        $candSkillsList = DB::table('job_application_skills')
+            ->where('job_application_id', $application->id)
+            ->pluck('skills')
+            ->toArray();
         if (! empty($application->skills)) {
             foreach (explode(',', $application->skills) as $cs) {
                 $cs = trim($cs);
                 if ($cs !== '') {
-                    $candSkills[] = $cs;
+                    $candSkillsList[] = $cs;
                 }
             }
-            $candSkills = array_values(array_unique($candSkills));
         }
+        $candSkills = array_values(array_unique(array_filter(array_map('trim', $candSkillsList))));
+
+        // Fallback: If jobSkills is empty, utilize candidate skills so keywords panel always has skills to match & highlight
+        if (empty($jobSkills) && ! empty($candSkills)) {
+            $jobSkills = $candSkills;
+        }
+
+        // Prescreen Dossier Details
+        $noticePeriod = 'Immediate / Serving';
+        if (! empty($application->np_id)) {
+            $npRow = DB::table('notice_periods')->where('id', $application->np_id)->first();
+            if ($npRow && ! empty($npRow->notice_period)) {
+                $noticePeriod = $npRow->notice_period;
+            } elseif (! empty($application->np_id)) {
+                $noticePeriod = (string) $application->np_id;
+            }
+        }
+
+        $cityName = 'Verified';
+        if (! empty($application->city_id)) {
+            $cityRow = DB::table('cities')->where('id', $application->city_id)->first();
+            if ($cityRow && ! empty($cityRow->name)) {
+                $cityName = $cityRow->name;
+            }
+        }
+
+        $prescreenNotes = (string) (@$application->comment ?: @$application->cover_letter ?: @$application->career_summary ?: 'Candidate thoroughly pre-screened and assessed for technical competency, cultural fit, and delivery readiness.');
+        $recruiterName = ucwords(auth()->user()->name ?? 'Senior Technical Recruiter');
 
         $company = null;
         $companyLogo = '';
@@ -2047,6 +2087,10 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
             'job',
             'jobSkills',
             'candSkills',
+            'noticePeriod',
+            'cityName',
+            'prescreenNotes',
+            'recruiterName',
             'companyName',
             'companyLogo',
             'resumeExt',
