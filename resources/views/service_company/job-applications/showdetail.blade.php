@@ -387,6 +387,9 @@
 .rdc-section-amber .rdc-section-head{background:linear-gradient(90deg,#fff0d6,#fffaf0);}
 .rdc-section-amber .rdc-section-icon{background:linear-gradient(135deg,#f97316,#f59e0b);}
 .rdc-section-amber .rdc-section-pill{background:#ffedd5;color:#c2410c;}
+.rdc-section-teal .rdc-section-head{background:linear-gradient(90deg,#e6fffa,#f0fdfa);}
+.rdc-section-teal .rdc-section-icon{background:linear-gradient(135deg,#0d9488,#14b8a6);}
+.rdc-section-teal .rdc-section-pill{background:#ccfbf1;color:#0f766e;}
 .rdc-opt{grid-template-columns:44px minmax(0,1fr) 108px 20px;column-gap:12px;padding:9px 10px;border:1px solid #d9e5f4;border-radius:9px;background:#fff;box-shadow:0 2px 8px rgba(15,23,42,.03);}
 .rdc-opt:hover{border-color:#c9d7ef;background:#fbfdff;box-shadow:0 6px 14px rgba(15,23,42,.06);}
 .rdc-opt.rdc-opt-sel{border-color:#6d28d9;background:#fbfaff;box-shadow:0 0 0 2px rgba(109,40,217,.10);}
@@ -2077,6 +2080,7 @@
           }
           if(extractedText.trim() && (!resumeText || extractedText.length > resumeText.length)){
             resumeText = extractedText;
+            window.__rcvResumeText = resumeText;
           }
           countOccurrences();
           // default: highlight job skills that are present
@@ -2126,6 +2130,7 @@
           $id('rcvViewport').appendChild(cont);
           htmlOriginal = html;
           resumeText = cont.innerText || cont.textContent || '';
+          window.__rcvResumeText = resumeText;
           countOccurrences();
           Object.keys(keywords).forEach(function(k){ keywords[k].active = (keywords[k].type==='job' && keywords[k].count>0); });
           renderChips();
@@ -2224,7 +2229,10 @@
               // Extract text directly from docx as baseline guarantee
               try {
                 var docxText = await extractDocxText(docxBytes);
-                if(docxText) resumeText = docxText;
+                if(docxText){
+                  resumeText = docxText;
+                  window.__rcvResumeText = docxText;
+                }
               } catch(e){}
 
               var pdfBlob = null;
@@ -8405,66 +8413,7 @@ window.__rsEnsureOpenDocLab=rsEnsureOpenDocLab;
   {{-- Scrollable body --}}
   <div class="rdc-body" id="rdcBody">
 
-    {{-- Featured: Edit & Optimize Resume Studio (Phase 8) --}}
-    <div class="rdc-optimize-banner" id="rdcOptimizeBanner" style="background: linear-gradient(135deg, #f0fdf4 0%, #e0f2fe 100%); border: 1px solid #bae6fd; border-radius: 10px; padding: 13px 16px; margin-bottom: 16px; display: flex; align-items: center; justify-content: space-between; gap: 12px; box-shadow: 0 2px 8px rgba(2, 132, 199, 0.06);">
-      <div style="display: flex; align-items: center; gap: 12px;">
-        <div style="width: 36px; height: 36px; border-radius: 8px; background: #0284c7; color: #fff; display: flex; align-items: center; justify-content: center; flex-shrink: 0; box-shadow: 0 2px 6px rgba(2, 132, 199, 0.25);">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 18px; height: 18px;"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
-        </div>
-        <div>
-          <div style="font-weight: 600; font-size: 13px; color: #0f172a; display: flex; align-items: center; gap: 6px;">
-            <span>Edit & Optimize CV</span>
-            <span id="rdcLiveAtsScoreBadge" style="font-size: 11px; padding: 2px 8px; border-radius: 9999px; background: #dcfce7; color: #15803d; font-weight: 600;">ATS: Checking…</span>
-          </div>
-          <div style="font-size: 12px; color: #475569; margin-top: 2px;">Review ATS match against job, insert missing skills & fix typos before downloading.</div>
-        </div>
-      </div>
-      <button type="button" id="rdcBtnOpenOptimizer" class="btn btn-sm" style="background: #0284c7; color: #fff; border-radius: 6px; font-weight: 600; font-size: 12px; padding: 7px 14px; flex-shrink: 0; display: inline-flex; align-items: center; gap: 6px; border: none; cursor: pointer;">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 13px; height: 13px;"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-        <span>Open Studio</span>
-      </button>
-    </div>
 
-    {{-- Studio Workbench Panel (Hidden by default, toggled via Open Studio) --}}
-    <div id="rdcOptimizerPanel" style="display: none; flex-direction: column; gap: 14px; margin-bottom: 16px;">
-      <div style="display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #e2e8f0; padding-bottom: 10px;">
-        <div style="display: flex; align-items: center; gap: 8px;">
-          <span style="font-size: 13px; font-weight: 600; color: #0f172a;">Live ATS Optimizer Studio</span>
-          <span id="rdcStudioScorePill" style="font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 9999px; background: #dcfce7; color: #15803d;">Calculating…</span>
-        </div>
-        <button type="button" id="rdcBtnCloseOptimizer" class="btn btn-sm btn-light" style="padding: 4px 10px; font-size: 11px; border-radius: 6px; color: #475569; border: 1px solid #e2e8f0;">
-          ← Back to All Options
-        </button>
-      </div>
-
-      <!-- Missing Skills Inspector -->
-      <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px 12px;">
-        <div style="font-size: 11px; font-weight: 600; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px;">
-          Missing Target Job Skills (Click chip to 1-Click Insert)
-        </div>
-        <div id="rdcMissingSkillsChips" style="display: flex; flex-wrap: wrap; gap: 6px;">
-          <span style="font-size: 12px; color: #94a3b8;">Scanning job requirements…</span>
-        </div>
-      </div>
-
-      <!-- Live Editable Resume Content -->
-      <div style="display: flex; flex-direction: column; gap: 6px;">
-        <div style="display: flex; align-items: center; justify-content: space-between;">
-          <label style="font-size: 12px; font-weight: 600; color: #334155; margin: 0;">Editable Resume Content</label>
-          <span style="font-size: 11px; color: #64748b;">Live ATS score recalculates as you type</span>
-        </div>
-        <textarea id="rdcOptimizerTextarea" rows="12" style="width: 100%; border: 1px solid #cbd5e1; border-radius: 8px; padding: 12px; font-family: 'Poppins', monospace, sans-serif; font-size: 12px; line-height: 1.6; color: #1e293b; resize: vertical; outline: none;"></textarea>
-      </div>
-
-      <!-- Download Actions -->
-      <div style="display: flex; align-items: center; justify-content: space-between; gap: 10px; padding-top: 6px;">
-        <span style="font-size: 11px; color: #64748b;">Processed 100% in browser memory (0% server load)</span>
-        <button type="button" id="rdcBtnDownloadOptimizedPdf" class="btn btn-primary btn-sm" style="font-weight: 600; font-size: 12px; padding: 8px 16px; border-radius: 6px; display: inline-flex; align-items: center; gap: 6px;">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 14px; height: 14px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-          <span>Download Optimized PDF</span>
-        </button>
-      </div>
-    </div>
 
     {{-- Section heading --}}
     <div class="rdc-sect-lbl">Choose Download Format</div>
@@ -8742,6 +8691,60 @@ window.__rsEnsureOpenDocLab=rsEnsureOpenDocLab;
         <span class="rdc-ocirc" aria-hidden="true"></span>
       </label>
 
+      {{-- 61: Edit & Optimize Resume (Text, Formatting & ATS Score) --}}
+      <label class="rdc-opt" data-opt="61" data-coins="2">
+        <input class="rdc-rinput" type="radio" name="rdcFormat" value="61">
+        <span class="rdc-onum">61</span>
+        <span class="rdc-oi" style="background:#ccfbf1;color:#0f766e;" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        </span>
+        <span class="rdc-obody">
+          <span class="rdc-otitle">Edit & Optimize Resume (Text, Formatting & ATS Score)</span>
+          <span class="rdc-odesc">Edit candidate resume text, 1-click insert missing job skills, optimize ATS score in real time, and download clean vector PDF.</span>
+        </span>
+        <span class="rdc-ometa">
+          <span class="rdc-ocost">2 Coins</span>
+          <span class="rdc-otime">Instant</span>
+        </span>
+        <span class="rdc-ocirc" aria-hidden="true"></span>
+      </label>
+
+      {{-- 62: Edit & Optimize Resume + Company Branding --}}
+      <label class="rdc-opt" data-opt="62" data-coins="3">
+        <input class="rdc-rinput" type="radio" name="rdcFormat" value="62">
+        <span class="rdc-onum">62</span>
+        <span class="rdc-oi" style="background:#e0f2fe;color:#0284c7;" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h10l6 6v10a2 2 0 0 1-2 2H4V4z"/><path d="M14 4v6h6"/><path d="M8 13h8"/><path d="M8 17h5"/><path d="M3 7h18"/></svg>
+        </span>
+        <span class="rdc-obody">
+          <span class="rdc-otitle">Edit & Optimize Resume + Company Branding</span>
+          <span class="rdc-odesc">Full interactive text and ATS optimization with your company logo & agency header styled on the exported PDF.</span>
+        </span>
+        <span class="rdc-ometa">
+          <span class="rdc-ocost">3 Coins</span>
+          <span class="rdc-otime">Instant</span>
+        </span>
+        <span class="rdc-ocirc" aria-hidden="true"></span>
+      </label>
+
+      {{-- 63: Edit & Optimize Resume + Highlighted Keywords --}}
+      <label class="rdc-opt" data-opt="63" data-coins="3">
+        <input class="rdc-rinput" type="radio" name="rdcFormat" value="63">
+        <span class="rdc-onum">63</span>
+        <span class="rdc-oi" style="background:#fef3c7;color:#b45309;" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h16"/><path d="m7 16 8.5-8.5 3 3L10 19H7v-3z"/><path d="M9 7h6"/><path d="M9 11h4"/><path d="M14 2v6h6"/></svg>
+        </span>
+        <span class="rdc-obody">
+          <span class="rdc-otitle">Edit & Optimize Resume + Highlighted Keywords</span>
+          <span class="rdc-odesc">Interactive text editor and ATS optimizer with matched job keywords highlighted for fast hiring manager review.</span>
+        </span>
+        <span class="rdc-ometa">
+          <span class="rdc-ocost">3 Coins</span>
+          <span class="rdc-otime">Instant</span>
+        </span>
+        <span class="rdc-ocirc" aria-hidden="true"></span>
+      </label>
+
     </div>{{-- /.rdc-opts-list --}}
 
     {{-- Coin info summary --}}
@@ -8921,7 +8924,10 @@ window.__rsEnsureOpenDocLab=rsEnsureOpenDocLab;
     50:{cost:3, label:'Hide Contact Details + Company Branding', avail:(['PDF','DOCX'].indexOf(resumeExt) !== -1) && !!(r2DirectUrl || r2PublicUrl || originalR2DirectUrl || originalR2PublicUrl || dlUrl), dlKey:'test-agy-strategy2-contact-hidden-branded', unavailableMsg:(resumeExt === 'DOC' ? docUnsupportedMsg : 'Hide Contact Details + Company Branding is browser-only and available for direct PDF/DOCX resumes.')},
     51:{cost:3, label:'Hide Contact Details + Pre-Screened Report', avail:(['PDF','DOCX'].indexOf(resumeExt) !== -1) && !!(r2DirectUrl || r2PublicUrl || originalR2DirectUrl || originalR2PublicUrl || dlUrl), dlKey:'test-agy-strategy2-contact-hidden-prescreened', unavailableMsg:(resumeExt === 'DOC' ? docUnsupportedMsg : 'Hide Contact Details + Pre-Screened Report is browser-only and available for direct PDF/DOCX resumes.')},
     52:{cost:3, label:'Hide Contact Details + Pre-Screened Report without Company Branding', avail:(['PDF','DOCX'].indexOf(resumeExt) !== -1) && !!(r2DirectUrl || r2PublicUrl || originalR2DirectUrl || originalR2PublicUrl || dlUrl), dlKey:'test-agy-strategy2-contact-hidden-prescreened-nobrand', unavailableMsg:(resumeExt === 'DOC' ? docUnsupportedMsg : 'Hide Contact Details + Pre-Screened Report without Company Branding is browser-only and available for direct PDF/DOCX resumes.')},
-    53:{cost:4, label:'Hide Contact Details + Pre-Screened Report + Highlighted Keywords', avail:(['PDF','DOCX'].indexOf(resumeExt) !== -1) && !!(r2DirectUrl || r2PublicUrl || originalR2DirectUrl || originalR2PublicUrl || dlUrl), dlKey:'test-agy-strategy2-contact-hidden-prescreened-highlighted', unavailableMsg:(resumeExt === 'DOC' ? docUnsupportedMsg : 'Hide Contact Details + Pre-Screened Report + Highlighted Keywords is browser-only and available for direct PDF/DOCX resumes.')}
+    53:{cost:4, label:'Hide Contact Details + Pre-Screened Report + Highlighted Keywords', avail:(['PDF','DOCX'].indexOf(resumeExt) !== -1) && !!(r2DirectUrl || r2PublicUrl || originalR2DirectUrl || originalR2PublicUrl || dlUrl), dlKey:'test-agy-strategy2-contact-hidden-prescreened-highlighted', unavailableMsg:(resumeExt === 'DOC' ? docUnsupportedMsg : 'Hide Contact Details + Pre-Screened Report + Highlighted Keywords is browser-only and available for direct PDF/DOCX resumes.')},
+    61:{cost:2, label:'Edit & Optimize Resume', avail:hasResume, dlKey:'agy-opt-clean'},
+    62:{cost:3, label:'Edit & Optimize Resume + Company Branding', avail:hasResume, dlKey:'agy-opt-branded'},
+    63:{cost:3, label:'Edit & Optimize Resume + Highlighted Keywords', avail:hasResume, dlKey:'agy-opt-highlighted'}
   };
 
   var selectedOpt = 1;
@@ -9008,7 +9014,8 @@ window.__rsEnsureOpenDocLab=rsEnsureOpenDocLab;
       privacy:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 4 7v6c0 5 3.4 7.8 8 9 4.6-1.2 8-4 8-9V7l-8-4z"/><path d="m9 12 2 2 4-5"/></svg>',
       report:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19V5"/><path d="M8 19v-7"/><path d="M12 19V9"/><path d="M16 19v-4"/><path d="M20 19V7"/></svg>',
       package:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8 12 3 3 8l9 5 9-5z"/><path d="m3 8 9 5v8l-9-5V8z"/><path d="m21 8-9 5v8l9-5V8z"/></svg>',
-      keyword:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v5"/><path d="M12 17v5"/><path d="M4.93 4.93 8.46 8.46"/><path d="m15.54 15.54 3.53 3.53"/><path d="M2 12h5"/><path d="M17 12h5"/><path d="m4.93 19.07 3.53-3.53"/><path d="m15.54 8.46 3.53-3.53"/></svg>'
+      keyword:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v5"/><path d="M12 17v5"/><path d="M4.93 4.93 8.46 8.46"/><path d="m15.54 15.54 3.53 3.53"/><path d="M2 12h5"/><path d="M17 12h5"/><path d="m4.93 19.07 3.53-3.53"/><path d="m15.54 8.46 3.53-3.53"/></svg>',
+      edit:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>'
     };
     return icons[type] || icons.resume;
   }
@@ -9032,7 +9039,8 @@ window.__rsEnsureOpenDocLab=rsEnsureOpenDocLab;
       {theme:'rose',icon:'report',title:'2. Pre-Screened Report',pill:'Get AI-powered insights and verification details.',ids:[5]},
       {theme:'green',icon:'package',title:'3. Recruiter Packages (Report + Resume)',pill:'',ids:[42,43]},
       {theme:'amber',icon:'keyword',title:'4. Highlighted skills',pill:'',ids:[44,45,46,47]},
-      {theme:'purple',icon:'privacy',title:'5. Privacy & Anonymization',pill:'Protect candidate information as needed.',ids:[48,49,50,51,52,53]}
+      {theme:'purple',icon:'privacy',title:'5. Privacy & Anonymization',pill:'Protect candidate information as needed.',ids:[48,49,50,51,52,53]},
+      {theme:'teal',icon:'edit',title:'6. Edit & Optimize Resume',pill:'Live ATS score, keyword optimizer & client-ready export.',ids:[61,62,63]}
     ];
     var moved={};
     var frag=document.createDocumentFragment();
@@ -9055,6 +9063,42 @@ window.__rsEnsureOpenDocLab=rsEnsureOpenDocLab;
           moved[id]=true;
         }
       });
+      if(group.ids && group.ids.indexOf(61) !== -1){
+        var studio = document.createElement('div');
+        studio.id = 'rdcGroup6Studio';
+        studio.style.cssText = 'display:none;margin-top:10px;padding:12px;background:#f0fdfa;border:1px solid #99f6e4;border-radius:8px;';
+        studio.innerHTML =
+          '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">' +
+            '<div style="display:flex;align-items:center;gap:8px;">' +
+              '<span style="font-weight:700;font-size:12.5px;color:#0f766e;">Live ATS Optimizer Studio</span>' +
+              '<span id="rdcGroup6ScoreBadge" style="font-size:11px;font-weight:700;padding:2px 8px;border-radius:999px;background:#dcfce7;color:#15803d;">Calculating…</span>' +
+            '</div>' +
+            '<span style="font-size:11px;color:#0d9488;font-weight:500;">0% Server Load • Instant Browser Export</span>' +
+          '</div>' +
+          '<div style="background:#fff;border:1px solid #ccfbf1;border-radius:6px;padding:9px 11px;margin-bottom:10px;">' +
+            '<div style="font-size:10.5px;font-weight:700;color:#0f766e;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">' +
+              'Missing Target Job Skills (1-Click to Insert)' +
+            '</div>' +
+            '<div id="rdcGroup6Chips" style="display:flex;flex-wrap:wrap;gap:5px;">' +
+              '<span style="font-size:11.5px;color:#94a3b8;">Scanning job requirements…</span>' +
+            '</div>' +
+          '</div>' +
+          '<div style="display:flex;flex-direction:column;gap:5px;margin-bottom:10px;">' +
+            '<div style="display:flex;align-items:center;justify-content:space-between;">' +
+              '<label style="font-size:11.5px;font-weight:700;color:#134e4a;margin:0;">Editable Resume Content</label>' +
+              '<span style="font-size:10.5px;color:#64748b;">Live ATS recalculation on keystroke</span>' +
+            '</div>' +
+            '<textarea id="rdcGroup6Textarea" rows="10" style="width:100%;border:1px solid #99f6e4;border-radius:6px;padding:10px;font-family:\'Poppins\',sans-serif;font-size:11.5px;line-height:1.55;color:#1e293b;resize:vertical;outline:none;background:#fff;"></textarea>' +
+          '</div>' +
+          '<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">' +
+            '<span style="font-size:11px;color:#64748b;">Ready to export client-facing vector PDF</span>' +
+            '<button type="button" id="rdcGroup6DlBtn" class="btn btn-sm" style="background:#0d9488;color:#fff;font-weight:600;font-size:12px;padding:6px 16px;border-radius:6px;border:none;display:inline-flex;align-items:center;gap:6px;cursor:pointer;">' +
+              '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>' +
+              '<span>Download Optimized Resume</span>' +
+            '</button>' +
+          '</div>';
+        body.appendChild(studio);
+      }
       section.appendChild(head);
       section.appendChild(body);
       frag.appendChild(section);
@@ -9144,173 +9188,223 @@ window.__rsEnsureOpenDocLab=rsEnsureOpenDocLab;
     }).catch(function(){});
   }
 
-  var _rdcOptimizer = null;
+  var _rdcGroup6Optimizer = null;
 
-  function initRdcOptimizerStudio(){
-    var banner = document.getElementById('rdcOptimizeBanner');
-    var panel = document.getElementById('rdcOptimizerPanel');
-    var badge = document.getElementById('rdcLiveAtsScoreBadge');
-    var pill = document.getElementById('rdcStudioScorePill');
-    var textarea = document.getElementById('rdcOptimizerTextarea');
-    var chipsCont = document.getElementById('rdcMissingSkillsChips');
-    var optsList = document.getElementById('rdcOptsList');
-    var coinCard = document.querySelector('.rdc-coin-card');
-    var sectLbl = document.querySelector('.rdc-sect-lbl');
-    var footer = document.querySelector('.rdc-footer');
-    var openBtn = document.getElementById('rdcBtnOpenOptimizer');
-    var closeBtn = document.getElementById('rdcBtnCloseOptimizer');
-    var dlBtn = document.getElementById('rdcBtnDownloadOptimizedPdf');
+  function getResumeTextForOptimization(){
+    // Tier 1: Viewer extracted text from canvas/WASM/HTML
+    if(window.__rcvResumeText && window.__rcvResumeText.trim().length > 30){
+      return window.__rcvResumeText.trim();
+    }
 
-    if(!banner || !badge) return;
+    // Tier 2: Check text layers in DOM
+    var textNodes = document.querySelectorAll('#rcvPages .rcv-textlayer span, #rcvPages .rcv-wasm-hit-span');
+    if(textNodes && textNodes.length > 5){
+      var domParts = [];
+      for(var i = 0; i < textNodes.length; i++){
+        var t = (textNodes[i].textContent || '').trim();
+        if(t) domParts.push(t);
+      }
+      var domJoined = domParts.join(' ').replace(/\s+/g, ' ').trim();
+      if(domJoined.length > 40) return domJoined;
+    }
 
-    var data = typeof readData === 'function' ? readData() : {};
-    var candName = (data && data.name) || @json(@$application->name ?? 'Candidate');
-    var jobTitle = (data && data.jobTitle) || @json(@$application->job_title ?? '');
+    var htmlEl = document.getElementById('rcvHtml');
+    if(htmlEl && htmlEl.innerText && htmlEl.innerText.trim().length > 30){
+      return htmlEl.innerText.trim();
+    }
+
+    if(window.__rdcPreloadedResumeText && window.__rdcPreloadedResumeText.trim().length > 30){
+      return window.__rdcPreloadedResumeText.trim();
+    }
+
+    // Tier 3: Structured candidate profile synthesis (Guarantees textarea is NEVER blank)
+    var lines = [];
+    var candName = @json(ucwords(@$application->full_name ?: @$application->name ?: 'Candidate'));
+    var jobTitle = @json(ucwords(@$job->title ?: @$application->job_title ?: ''));
+    var designation = @json(ucwords(@$application->current_designation ?: ''));
+    var company = @json(ucwords(@$application->current_company ?: @$application->cur_company_name ?: ''));
+    var exp = @json(@$application->total_experience ? (@$application->total_experience . ' Years Experience') : '');
+    var email = @json(@$application->email ?: '');
+    var phone = @json(@$application->phone ?: '');
+    var candSkills = @json($rcvCandSkills ?? []);
+    var summary = @json(\Illuminate\Support\Str::limit(strip_tags((string)(@$application->cover_letter ?: @$application->career_summary ?: @$application->comment ?? '')), 500));
+
+    lines.push(candName);
+    var subParts = [];
+    if(designation) subParts.push(designation);
+    if(company) subParts.push('at ' + company);
+    if(exp) subParts.push('• ' + exp);
+    if(subParts.length) lines.push(subParts.join(' '));
+
+    var contactParts = [];
+    if(email) contactParts.push(email);
+    if(phone) contactParts.push(phone);
+    if(contactParts.length) lines.push(contactParts.join(' | '));
+
+    lines.push('');
+    if(summary){
+      lines.push('PROFESSIONAL SUMMARY:');
+      lines.push(summary);
+      lines.push('');
+    }
+
+    if(candSkills && candSkills.length){
+      lines.push('CORE SKILLS & EXPERTISE:');
+      lines.push(candSkills.map(function(s){ return '• ' + s; }).join('\n'));
+      lines.push('');
+    }
+
+    if(jobTitle){
+      lines.push('TARGET POSITION OBJECTIVE:');
+      lines.push('Experienced candidate seeking to contribute strong industry expertise for the role of ' + jobTitle + '.');
+      lines.push('');
+    }
+
+    return lines.join('\n');
+  }
+
+  function updateGroup6OptimizerStudio(){
+    var studio = document.getElementById('rdcGroup6Studio');
+    if(!studio) return;
+
+    var textarea = document.getElementById('rdcGroup6Textarea');
+    var badge = document.getElementById('rdcGroup6ScoreBadge');
+    var chips = document.getElementById('rdcGroup6Chips');
+    var dlBtn = document.getElementById('rdcGroup6DlBtn');
+
     var jobSkills = (typeof rsDrawerHighlightedKeywords === 'function' ? rsDrawerHighlightedKeywords() : []) || @json($rcvJobSkills ?? []);
     var candSkills = @json($rcvCandSkills ?? []);
+    var candName = @json(ucwords(@$application->full_name ?: @$application->name ?: 'Candidate'));
+    var jobTitle = @json(ucwords(@$job->title ?: @$application->job_title ?: ''));
 
-    // Extract current resume text from DOM or cache
-    var currentText = '';
-    var pagesEl = document.getElementById('rcvPages');
-    if(pagesEl && pagesEl.innerText){
-      currentText = pagesEl.innerText.trim();
-    } else {
-      var htmlEl = document.getElementById('rcvHtml');
-      if(htmlEl && htmlEl.innerText) currentText = htmlEl.innerText.trim();
-    }
-    if(!currentText && window.__rdcPreloadedResumeText){
-      currentText = window.__rdcPreloadedResumeText.trim();
+    if(textarea && (!textarea.value || textarea.value.trim().length < 20)){
+      textarea.value = getResumeTextForOptimization();
     }
 
-    if(typeof AgyCvOptimizer === 'function'){
-      _rdcOptimizer = new AgyCvOptimizer({
+    var OptClass = window.AgyCvOptimizer || (typeof AgyCvOptimizer === 'function' ? AgyCvOptimizer : null);
+    if(OptClass){
+      _rdcGroup6Optimizer = new OptClass({
         jobSkills: jobSkills,
         candSkills: candSkills,
         candidateName: candName,
         targetJobTitle: jobTitle,
-        resumeText: currentText,
-        onScoreChange: function(res){
-          updateScoreDisplay(res.score);
-        }
+        resumeText: textarea ? textarea.value : ''
       });
-
-      var initialResult = _rdcOptimizer.calculateAtsScore(currentText);
-      updateScoreDisplay(initialResult.score);
-
-      if(textarea && (!textarea.value || textarea.value.length < 20)){
-        textarea.value = currentText || (candName + '\n' + (jobTitle ? 'Target Position: ' + jobTitle : '') + '\n\nPROFESSIONAL SUMMARY:\n\nCORE SKILLS:\n' + candSkills.map(function(s){ return '• ' + s; }).join('\n') + '\n\nWORK EXPERIENCE:\n\nEDUCATION:');
-      }
-
-      renderMissingChips(initialResult.missing);
     }
 
-    function updateScoreDisplay(score){
-      var color = score >= 80 ? '#15803d' : (score >= 60 ? '#b45309' : '#b91c1c');
-      var bg = score >= 80 ? '#dcfce7' : (score >= 60 ? '#fef3c7' : '#fee2e2');
-      var label = score + '% Match';
-      if(badge){
-        badge.textContent = label;
-        badge.style.background = bg;
-        badge.style.color = color;
-      }
-      if(pill){
-        pill.textContent = label;
-        pill.style.background = bg;
-        pill.style.color = color;
-      }
+    function renderScore(score){
+      if(!badge) return;
+      var color = score >= 80 ? '#15803d' : (score >= 50 ? '#b45309' : '#b91c1c');
+      var bg = score >= 80 ? '#dcfce7' : (score >= 50 ? '#fef3c7' : '#fee2e2');
+      badge.textContent = score + '% Match';
+      badge.style.background = bg;
+      badge.style.color = color;
     }
 
-    function renderMissingChips(missing){
-      if(!chipsCont) return;
+    function renderChips(missing){
+      if(!chips) return;
       if(!missing || missing.length === 0){
-        chipsCont.innerHTML = '<span style="font-size: 12px; color: #15803d; font-weight: 500;">✓ Excellent! All core job skills are present in resume.</span>';
+        chips.innerHTML = '<span style="font-size:11.5px;color:#15803d;font-weight:600;">✓ Excellent! All core target job skills are present in resume.</span>';
         return;
       }
-      chipsCont.innerHTML = '';
-      missing.slice(0, 12).forEach(function(skill){
+      chips.innerHTML = '';
+      missing.slice(0, 15).forEach(function(skill){
         var chip = document.createElement('button');
         chip.type = 'button';
         chip.className = 'btn btn-sm';
-        chip.style.cssText = 'padding: 3px 8px; font-size: 11px; border-radius: 9999px; background: #e0f2fe; color: #0369a1; border: 1px solid #bae6fd; font-weight: 500; cursor: pointer;';
+        chip.style.cssText = 'padding:2px 8px;font-size:10.5px;border-radius:999px;background:#e0f2fe;color:#0369a1;border:1px solid #bae6fd;font-weight:600;cursor:pointer;line-height:1.4;';
         chip.innerHTML = '+ ' + skill;
         chip.title = 'Click to insert into resume text';
-        chip.addEventListener('click', function(){
+        chip.addEventListener('click', function(e){
+          e.preventDefault();
+          e.stopPropagation();
           if(textarea){
             textarea.value = textarea.value.trim() + '\n• ' + skill;
-            textarea.dispatchEvent(new Event('input'));
             chip.style.display = 'none';
+            onTextChange();
           }
         });
-        chipsCont.appendChild(chip);
+        chips.appendChild(chip);
       });
     }
 
-    // Toggle Optimizer Studio View
-    if(openBtn && !openBtn.__wired){
-      openBtn.__wired = true;
-      openBtn.addEventListener('click', function(e){
-        e.preventDefault();
-        if(optsList) optsList.style.display = 'none';
-        if(coinCard) coinCard.style.display = 'none';
-        if(sectLbl) sectLbl.style.display = 'none';
-        if(footer) footer.style.display = 'none';
-        if(banner) banner.style.display = 'none';
-        if(panel) panel.style.display = 'flex';
-      });
+    function onTextChange(){
+      if(_rdcGroup6Optimizer && textarea){
+        var res = _rdcGroup6Optimizer.calculateAtsScore(textarea.value);
+        renderScore(res.score);
+        renderChips(res.missing);
+      }
     }
 
-    if(closeBtn && !closeBtn.__wired){
-      closeBtn.__wired = true;
-      closeBtn.addEventListener('click', function(e){
-        e.preventDefault();
-        if(panel) panel.style.display = 'none';
-        if(banner) banner.style.display = 'flex';
-        if(optsList) optsList.style.display = 'grid';
-        if(coinCard) coinCard.style.display = 'block';
-        if(sectLbl) sectLbl.style.display = 'block';
-        if(footer) footer.style.display = 'block';
-      });
-    }
+    onTextChange();
 
-    // Textarea input debounced live score
     if(textarea && !textarea.__wired){
       textarea.__wired = true;
       var debounceTimer = null;
       textarea.addEventListener('input', function(){
         clearTimeout(debounceTimer);
-        debounceTimer = setTimeout(function(){
-          if(_rdcOptimizer){
-            var res = _rdcOptimizer.calculateAtsScore(textarea.value);
-            renderMissingChips(res.missing);
-          }
-        }, 60);
+        debounceTimer = setTimeout(onTextChange, 60);
       });
     }
 
-    // Download Optimized PDF
     if(dlBtn && !dlBtn.__wired){
       dlBtn.__wired = true;
-      dlBtn.addEventListener('click', async function(e){
+      dlBtn.addEventListener('click', function(e){
         e.preventDefault();
-        if(!_rdcOptimizer) return;
-        var origHtml = dlBtn.innerHTML;
-        dlBtn.disabled = true;
-        dlBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true" style="width:12px;height:12px;margin-right:6px;"></span> Generating PDF…';
-        try {
-          var pdfBlob = await _rdcOptimizer.exportOptimizedPdf(textarea.value, {
-            candidateName: candName,
-            jobTitle: jobTitle
-          });
-          var cleanName = (candName || 'Candidate').replace(/[^a-zA-Z0-9_\-]/g, '_');
-          AgyCvOptimizer.downloadBlob(pdfBlob, cleanName + '_Optimized_Resume.pdf');
-        } catch(err){
-          console.error('Error generating optimized PDF:', err);
-          alert('Could not export PDF. Please try again.');
-        } finally {
-          dlBtn.disabled = false;
-          dlBtn.innerHTML = origHtml;
-        }
+        e.stopPropagation();
+        triggerGroup6Download();
       });
+    }
+  }
+
+  async function triggerGroup6Download(){
+    var textarea = document.getElementById('rdcGroup6Textarea');
+    var text = (textarea && textarea.value) ? textarea.value : getResumeTextForOptimization();
+    var candName = @json(ucwords(@$application->full_name ?: @$application->name ?: 'Candidate'));
+    var jobTitle = @json(ucwords(@$job->title ?: @$application->job_title ?: ''));
+    var companyName = @json($rcvCompanyName ?? '');
+    var companyLogo = @json($rcvCompanyLogo ?? '');
+    var jobSkills = (typeof rsDrawerHighlightedKeywords === 'function' ? rsDrawerHighlightedKeywords() : []) || @json($rcvJobSkills ?? []);
+
+    var isBranded = (selectedOpt === 62);
+    var isHighlighted = (selectedOpt === 63);
+
+    var logoUri = null;
+    if(isBranded && companyLogo && typeof rsLogoDataUri === 'function'){
+      try { logoUri = await rsLogoDataUri(companyLogo); } catch(e){}
+    }
+
+    var OptClass = window.AgyCvOptimizer || (typeof AgyCvOptimizer === 'function' ? AgyCvOptimizer : null);
+    if(!OptClass){
+      showToast('Optimizer is initializing, please try again in a moment.', 'info');
+      return;
+    }
+
+    var optimizer = new OptClass({
+      jobSkills: jobSkills,
+      candidateName: candName,
+      targetJobTitle: jobTitle
+    });
+
+    beginDownloadCountdown('Downloading Resume, Kindly wait.');
+    try {
+      var blob = await optimizer.exportOptimizedPdf(text, {
+        candidateName: candName,
+        jobTitle: jobTitle,
+        brandHeader: isBranded,
+        companyName: companyName,
+        companyLogo: logoUri,
+        highlightKeywords: isHighlighted ? jobSkills : false
+      });
+      var cleanName = (candName || 'Candidate').replace(/[^a-zA-Z0-9_\-]/g, '_');
+      var suffix = isBranded ? '_Branded' : (isHighlighted ? '_Highlighted' : '');
+      OptClass.downloadBlob(blob, cleanName + '_ATS_Optimized' + suffix + '.pdf');
+      closeRdc();
+    } catch(err){
+      console.error('Group 6 download failed:', err);
+      showToast('Could not download optimized resume. Please try again.', 'warn');
+    } finally {
+      resetBtn();
     }
   }
 
@@ -9321,7 +9415,9 @@ window.__rsEnsureOpenDocLab=rsEnsureOpenDocLab;
     }
     renderOpenRdc();
     preloadOnDemandRdcAssets();
-    try { initRdcOptimizerStudio(); } catch(e){ console.warn('Optimizer studio init ignored:', e); }
+    if([61, 62, 63].indexOf(selectedOpt) !== -1){
+      try { updateGroup6OptimizerStudio(); } catch(e){}
+    }
   }
 
   function closeRdc(){
@@ -9392,6 +9488,15 @@ window.__rsEnsureOpenDocLab=rsEnsureOpenDocLab;
     });
     var m = optMeta[n] || {cost:0, label:'Download'};
     syncDownloadCenterSummary(m,n);
+    var studio = document.getElementById('rdcGroup6Studio');
+    if(studio){
+      if([61, 62, 63].indexOf(n) !== -1){
+        studio.style.display = 'block';
+        try { updateGroup6OptimizerStudio(); } catch(e){}
+      } else {
+        studio.style.display = 'none';
+      }
+    }
     if(m.dlKey === 'rs' && typeof window.__preloadRS === 'function') window.__preloadRS();
     if(m.dlKey && m.dlKey.indexOf('test-agy-') === 0 && typeof window.__preloadAgyMetricFonts === 'function') window.__preloadAgyMetricFonts();
     if((m.dlKey === 'test-agy-strategy2-branded' || m.dlKey === 'test-agy-strategy2-prescreened-branded' || m.dlKey === 'test-agy-strategy2-prescreened-nobrand' || m.dlKey === 'test-agy-strategy2-highlighted-branded' || m.dlKey === 'test-agy-strategy2-prescreened-highlighted-branded' || m.dlKey === 'test-agy-strategy2-prescreened-highlighted-nobrand' || m.dlKey === 'test-agy-strategy2-contact-hidden-branded' || m.dlKey === 'test-agy-strategy2-contact-hidden-prescreened' || m.dlKey === 'test-agy-strategy2-contact-hidden-prescreened-nobrand' || m.dlKey === 'test-agy-strategy2-contact-hidden-prescreened-highlighted') && typeof window.__preloadRSCombined === 'function') window.__preloadRSCombined();
@@ -9595,6 +9700,14 @@ window.__rsEnsureOpenDocLab=rsEnsureOpenDocLab;
           showToast(err && err.message ? err.message : 'Could not download original resume. Please try again.', 'warn');
           resetBtn();
         }
+        return;
+      }
+
+      if([61, 62, 63].indexOf(selectedOpt) !== -1){
+        isLoading = true;
+        dlBtn.disabled = true;
+        dlBtn.classList.add('rdc-loading');
+        triggerGroup6Download();
         return;
       }
 
