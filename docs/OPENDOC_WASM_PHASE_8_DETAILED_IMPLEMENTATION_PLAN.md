@@ -1,4 +1,4 @@
-﻿# JERO OpenDoc WASM Engine — Phase 8 Detailed Implementation Plan
+# JERO OpenDoc WASM Engine — Phase 8 Detailed Implementation Plan
 ## Download Resume Center: Edit & Optimize Studio, Live ATS Match Optimizer & In-Browser Client-Ready Exporter
 
 > **Document Status:** Complete Architecture & Implementation Specification  
@@ -29,36 +29,40 @@ Phase 8 provides this workflow directly inside the Download Resume Center with *
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│              DOWNLOAD RESUME CENTER: OPTIMIZE & EXPORT WORKFLOW             │
+│             GROUP 6: DOWNLOAD RESUME CENTER OPTIMIZE & EXPORT               │
 ├─────────────────────────────────────────────────────────────────────────────┤
 │ 1. Recruiter opens Download Resume Center (#rdcDrawer)                      │
 │       │                                                                     │
 │       ▼                                                                     │
-│ 2. Featured Studio Card Displays at Top:                                    │
-│    [ ⚡ EDIT & OPTIMIZE RESUME BEFORE DOWNLOAD ]                             │
-│    "Current ATS Match: 76% • Target Job: Senior Backend Engineer"           │
-│    [ ✏️ Open Optimizer Studio ]                                              │
+│ 2. Modal Header remains clean (no top banner attached to header).           │
+│    Format options list displays standard groups 1 through 5, and:           │
+│    [ 6. Edit & Optimize Resume ] (3 Options, Teal Theme)                    │
+│       ├── Option 61: Edit & Optimize Resume (Clean ATS Standard) - 2 Coins │
+│       ├── Option 62: Edit & Optimize Resume + Company Branding - 3 Coins   │
+│       └── Option 63: Edit & Optimize Resume + Highlighted Keywords - 3 Coins│
 │       │                                                                     │
 │       ▼                                                                     │
-│ 3. Recruiter clicks "Open Optimizer Studio":                                │
-│    - Options list collapses into #rdcOptimizerPanel                         │
-│    - Pre-loads candidate resume text & job skills from on-demand cache      │
+│ 3. Recruiter selects Option 61, 62, or 63:                                  │
+│    - Inline Studio Workbench (#rdcGroup6Studio) expands directly in Group 6 │
+│    - Multi-tiered text extractor loads resume text (never blank):           │
+│        Tier 1: rcvResumeText from viewer layer                              │
+│        Tier 2: DOM span text nodes                                          │
+│        Tier 3: Structured candidate profile fallback                        │
 │       │                                                                     │
 │       ▼                                                                     │
-│ 4. Split Optimizer Workbench:                                               │
-│    ├── Left Panel: ATS Score Gauge & Missing Skills Inspector               │
-│    │     - Circular Progress Ring (e.g. 76% -> 92%)                         │
-│    │     - Missing Keywords: [ + Docker ] [ + CI/CD ] [ + Kubernetes ]      │
-│    │     - Clicking a chip inserts skill into the editor in real-time       │
-│    │                                                                        │
-│    └── Right Panel: Interactive Resume Text Editor                          │
-│          - Editable sections: Summary, Experience, Skills                   │
-│          - Live debounced score recalculator (< 50ms)                       │
+│ 4. Interactive In-Group Workbench:                                          │
+│    ├── Top: Live ATS Score Badge (e.g. 85% Match) & Target Job Title        │
+│    ├── Missing Skills Inspector: [ + Skill ] 1-click insertion chips        │
+│    ├── Editable Resume Textarea: Live debounced ATS recalculation (< 30ms)  │
+│    └── Direct Action: [ 📥 Download Optimized Resume ]                      │
 │       │                                                                     │
 │       ▼                                                                     │
-│ 5. Recruiter clicks "Download Optimized PDF":                               │
-│    - Compiles clean, ATS-standard vector PDF client-side                    │
-│    - Zero server roundtrip; instant download in < 800ms                     │
+│ 5. Recruiter clicks Download from Group 6 or sticky footer:                 │
+│    - Compiles high-fidelity vector PDF via pdfMake in browser memory        │
+│    - Option 61: Clean ATS-standard vector PDF                               │
+│    - Option 62: Vector PDF + Company Branding (Logo & Header)               │
+│    - Option 63: Vector PDF + Highlighted Matching Keywords                  │
+│    - Instant download in < 800ms; zero server load                          │
 │       │                                                                     │
 │       ▼                                                                     │
 │ 6. Option 1 (Original Resume) remains completely untouched on Cloudflare R2 │
@@ -75,21 +79,20 @@ The scoring engine operates entirely in browser memory (`AgyCvOptimizer.js`):
 2. **Normalized Word Boundary Scanning:**
    - Evaluates resume text against token patterns: `\b(skill)\b` with punctuation normalization (e.g. `node.js` $\leftrightarrow$ `nodejs`, `ci/cd` $\leftrightarrow$ `continuous integration`).
 3. **Dynamic Weighting:**
-   - Mandatory Core Skills: $60\%$ of total score weight.
-   - Secondary / Good-to-Have Skills: $30\%$ of total score weight.
-   - Structural Density (Experience bullet count, tenure formatting): $10\%$ of total score weight.
+   - Evaluates matched skills against unique job requirements.
+   - Computes live match percentage ($0\% \rightarrow 100\%$).
 4. **Live Delta Computation:**
-   - As characters are typed or keyword chips clicked, `optimizer.recalculateScore()` executes within $15\text{ms}$ and updates the UI progress ring smoothly.
+   - As characters are typed or keyword chips clicked, `optimizer.calculateAtsScore()` executes within $< 30\text{ms}$ and updates the UI score badge smoothly.
 
 ---
 
 ## 4. UI/UX Design Specifications (Metronic Standard)
 
-- **Drawer Integration:** Seamlessly mounted inside `#rdcDrawer` above Group 1.
+- **Drawer Integration:** Housed cleanly inside Group 6 (`.rdc-section-teal`) in `#rdcDrawer`. Header of `#rdcDrawer` remains completely unencumbered.
 - **Color Coding:**
-  - High Match ($\ge 80\%$): `#10b981` (Emerald Green)
-  - Moderate Match ($60\% - 79\%$): `#f59e0b` (Amber Gold)
-  - Low Match ($< 60\%$): `#ef4444` (Crimson Red)
+  - High Match ($\ge 80\%$): `#15803d` (Emerald Green)
+  - Moderate Match ($50\% - 79\%$): `#b45309` (Amber Gold)
+  - Low Match ($< 50\%$): `#b91c1c` (Crimson Red)
 - **Typography:** Poppins font family across all labels, buttons, and textareas; maximum body font size 14px.
 - **Iconography:** Clean SVG vector icons for edit, spark, chip insertion, and download; zero 3D elements.
 

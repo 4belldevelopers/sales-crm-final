@@ -1,4 +1,4 @@
-﻿/**
+/**
  * AgyCvOptimizer — JERO In-Browser Resume Editor & Real-Time ATS Score Optimizer (Phase 8)
  * 
  * Provides:
@@ -94,37 +94,212 @@
     meta = meta || {};
     var candidateName = meta.candidateName || this.candidateName || 'Candidate';
     var jobTitle = meta.jobTitle || this.targetJobTitle || '';
+    var companyName = meta.companyName || '';
+    var companyLogo = meta.companyLogo || null;
+    var brandHeader = !!meta.brandHeader;
+    var highlightKeywords = meta.highlightKeywords || false;
+    var keywordsToHighlight = Array.isArray(meta.highlightKeywords) ? meta.highlightKeywords : (highlightKeywords ? this.jobSkills : []);
 
-    // Render using Offscreen Canvas / Standard PDF Assembler
+    if(typeof rsEnsurePdfMake === 'function'){
+      try { await rsEnsurePdfMake(); } catch(e){}
+    }
+
+    if(window.pdfMake && typeof window.pdfMake.createPdf === 'function'){
+      return this._exportViaPdfMake(text, {
+        candidateName: candidateName,
+        jobTitle: jobTitle,
+        companyName: companyName,
+        companyLogo: companyLogo,
+        brandHeader: brandHeader,
+        keywords: keywordsToHighlight
+      });
+    }
+
+    return this._exportViaCanvas(text, {
+      candidateName: candidateName,
+      jobTitle: jobTitle
+    });
+  };
+
+  /**
+   * High-fidelity Vector PDF export via pdfMake
+   * @private
+   */
+  AgyCvOptimizer.prototype._exportViaPdfMake = function(text, meta){
+    return new Promise(function(resolve, reject){
+      try {
+        var content = [];
+
+        // 1. Company Branding Header (if requested)
+        if(meta.brandHeader && (meta.companyName || meta.companyLogo)){
+          var brandCols = [];
+          if(meta.companyLogo){
+            brandCols.push({ image: meta.companyLogo, width: 85, margin: [0, 0, 15, 0] });
+          }
+          brandCols.push({
+            stack: [
+              { text: (meta.companyName || 'CONFIDENTIAL CANDIDATE PROFILE').toUpperCase(), fontSize: 13, bold: true, color: '#0f766e' },
+              { text: 'Represented Candidate • Verified ATS Optimized', fontSize: 9, color: '#64748b', margin: [0, 2, 0, 0] }
+            ],
+            margin: [0, 4, 0, 0]
+          });
+
+          content.push({
+            table: {
+              widths: ['*'],
+              body: [[{
+                fillColor: '#f0fdfa',
+                columns: brandCols,
+                margin: [12, 10, 12, 10]
+              }]]
+            },
+            layout: 'noBorders',
+            margin: [0, 0, 0, 14]
+          });
+        }
+
+        // 2. Candidate Header Bar
+        content.push({
+          columns: [
+            {
+              stack: [
+                { text: meta.candidateName, fontSize: 20, bold: true, color: '#0f172a' },
+                { text: meta.jobTitle ? ('Target Position: ' + meta.jobTitle) : 'Verified Candidate Profile', fontSize: 11, color: '#0369a1', margin: [0, 2, 0, 0] }
+              ]
+            },
+            {
+              stack: [
+                { text: 'ATS OPTIMIZED', fontSize: 9, bold: true, color: '#0f766e', alignment: 'right' },
+                { text: 'Standard Recruiter Vector PDF', fontSize: 8, color: '#94a3b8', alignment: 'right' }
+              ],
+              margin: [0, 4, 0, 0]
+            }
+          ],
+          margin: [0, 0, 0, 10]
+        });
+
+        // Accent divider
+        content.push({
+          canvas: [{ type: 'line', x1: 0, y1: 0, x2: 515, y2: 0, lineWidth: 1.5, lineColor: '#0d9488' }],
+          margin: [0, 0, 0, 14]
+        });
+
+        // 3. Body lines with optional keyword highlights
+        var rawLines = (text || '').split('\n');
+        var kwMap = {};
+        if(meta.keywords && meta.keywords.length){
+          meta.keywords.forEach(function(k){ if(k) kwMap[k.toLowerCase()] = true; });
+        }
+
+        for(var i = 0; i < rawLines.length; i++){
+          var line = rawLines[i].trim();
+          if(!line){
+            content.push({ text: ' ', margin: [0, 3, 0, 0] });
+            continue;
+          }
+
+          var isHeader = line.length < 50 && (line === line.toUpperCase() || line.endsWith(':'));
+          if(isHeader){
+            content.push({
+              text: line.toUpperCase(),
+              fontSize: 12,
+              bold: true,
+              color: '#0f766e',
+              margin: [0, 10, 0, 4]
+            });
+            content.push({
+              canvas: [{ type: 'line', x1: 0, y1: 0, x2: 515, y2: 0, lineWidth: 0.5, lineColor: '#cbd5e1' }],
+              margin: [0, 0, 0, 6]
+            });
+            continue;
+          }
+
+          if(meta.keywords && meta.keywords.length > 0){
+            var words = line.split(' ');
+            var spans = [];
+            for(var w = 0; w < words.length; w++){
+              var cleanWord = words[w].replace(/[^a-zA-Z0-9_\-#\+]/g, '').toLowerCase();
+              if(cleanWord && kwMap[cleanWord]){
+                spans.push({ text: words[w] + ' ', background: '#fef08a', bold: true, color: '#713f12' });
+              } else {
+                spans.push({ text: words[w] + ' ' });
+              }
+            }
+            content.push({
+              text: spans,
+              fontSize: 9.5,
+              lineHeight: 1.35,
+              color: '#1e293b',
+              margin: [0, 1, 0, 1]
+            });
+          } else {
+            content.push({
+              text: line,
+              fontSize: 9.5,
+              lineHeight: 1.35,
+              color: '#1e293b',
+              margin: [0, 1, 0, 1]
+            });
+          }
+        }
+
+        var docDef = {
+          pageSize: 'A4',
+          pageMargins: [40, 40, 40, 40],
+          defaultStyle: {
+            font: 'Roboto',
+            fontSize: 9.5,
+            color: '#1e293b'
+          },
+          content: content,
+          footer: function(currentPage, pageCount){
+            return {
+              columns: [
+                { text: 'Confidential Candidate Profile • In-Browser ATS Optimization', fontSize: 8, color: '#94a3b8', margin: [40, 0] },
+                { text: 'Page ' + currentPage + ' of ' + pageCount, fontSize: 8, color: '#94a3b8', alignment: 'right', margin: [0, 0, 40, 0] }
+              ]
+            };
+          }
+        };
+
+        window.pdfMake.createPdf(docDef).getBlob(function(blob){
+          if(blob && blob.size > 200) resolve(blob);
+          else reject(new Error('Generated PDF was empty.'));
+        });
+      } catch(err){
+        reject(err);
+      }
+    });
+  };
+
+  /**
+   * Canvas fallback for environments without pdfMake
+   * @private
+   */
+  AgyCvOptimizer.prototype._exportViaCanvas = function(text, meta){
     var canvas = document.createElement('canvas');
     var ctx = canvas.getContext('2d');
-    var pageW = 1200; // High-res 150 DPI width
+    var pageW = 1200;
     var pageH = 1700;
     var margin = 70;
     var maxW = pageW - (margin * 2);
 
     canvas.width = pageW;
     canvas.height = pageH;
-
-    // Background
     ctx.fillStyle = '#ffffff';
     ctx.fillRect(0, 0, pageW, pageH);
 
-    // Accent line at top
-    ctx.fillStyle = '#0284c7';
+    ctx.fillStyle = '#0d9488';
     ctx.fillRect(0, 0, pageW, 8);
 
-    // Header: Candidate Name
     ctx.fillStyle = '#0f172a';
     ctx.font = 'bold 36px Poppins, sans-serif';
-    ctx.fillText(candidateName, margin, margin + 40);
+    ctx.fillText(meta.candidateName || 'Candidate', margin, margin + 40);
 
-    // Subtitle / Job Title
     ctx.fillStyle = '#64748b';
     ctx.font = '500 20px Poppins, sans-serif';
-    ctx.fillText(jobTitle ? 'Target: ' + jobTitle + '  •  Verified ATS Optimized' : 'Verified ATS Optimized Candidate', margin, margin + 75);
+    ctx.fillText(meta.jobTitle ? 'Target: ' + meta.jobTitle + ' • Verified ATS Optimized' : 'Verified ATS Optimized Candidate', margin, margin + 75);
 
-    // Divider line
     ctx.strokeStyle = '#e2e8f0';
     ctx.lineWidth = 2;
     ctx.beginPath();
@@ -132,25 +307,19 @@
     ctx.lineTo(pageW - margin, margin + 95);
     ctx.stroke();
 
-    // Body Text Formatting
     ctx.fillStyle = '#1e293b';
     ctx.font = '16px Poppins, sans-serif';
     var lineHeight = 26;
     var y = margin + 140;
 
-    var lines = text.split('\n');
+    var lines = (text || '').split('\n');
     for(var l = 0; l < lines.length; l++){
       var rawLine = lines[l].trim();
-      if(!rawLine){
-        y += 14;
-        continue;
-      }
-
-      // Detect Headings (all caps or trailing colon)
+      if(!rawLine){ y += 14; continue; }
       var isHeading = rawLine.length < 45 && (rawLine === rawLine.toUpperCase() || rawLine.endsWith(':'));
       if(isHeading){
         y += 18;
-        ctx.fillStyle = '#0284c7';
+        ctx.fillStyle = '#0d9488';
         ctx.font = 'bold 20px Poppins, sans-serif';
         ctx.fillText(rawLine, margin, y);
         y += 12;
@@ -165,8 +334,6 @@
         ctx.font = '16px Poppins, sans-serif';
         continue;
       }
-
-      // Word wrap long lines
       var words = rawLine.split(' ');
       var curLine = '';
       for(var w = 0; w < words.length; w++){
@@ -180,29 +347,20 @@
           curLine = testLine;
         }
       }
-      if(curLine){
-        ctx.fillText(curLine, margin, y);
-        y += lineHeight;
-      }
-
-      // Page boundary check
-      if(y > pageH - margin - 40){
-        break; // Keep to primary high-impact single/double view
-      }
+      if(curLine){ ctx.fillText(curLine, margin, y); y += lineHeight; }
+      if(y > pageH - margin - 40) break;
     }
 
-    // Footer
     ctx.fillStyle = '#94a3b8';
     ctx.font = '13px Poppins, sans-serif';
     ctx.fillText('Generated by JERO GOD-Level ATS • Confidential Candidate Profile', margin, pageH - 40);
 
     return new Promise(function(resolve){
       canvas.toBlob(function(blob){
-        // Deterministic cleanup
         canvas.width = 0;
         canvas.height = 0;
         resolve(blob);
-      }, 'application/pdf');
+      }, 'image/png');
     });
   };
 
