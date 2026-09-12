@@ -91,7 +91,7 @@
 
   var _mammothPromise = null;
   /**
-   * Ensures Mammoth docx converter is loaded
+   * Ensures Mammoth docx converter is loaded (last-resort text fallback only)
    */
   function ensureMammoth() {
     if (typeof window !== 'undefined' && window.mammoth && typeof window.mammoth.extractRawText === 'function') {
@@ -116,10 +116,243 @@
     return _mammothPromise;
   }
 
+  var _jsPdfPromise = null;
   /**
-   * Guarantees candidate resume bytes are returned as a valid vector PDF.
-   * If candidate file is DOCX (ZIP signature PK), extracts text via Mammoth
-   * and renders clean, multi-page vector PDF pages using PDFLib.
+   * Dynamically loads jsPDF with AMD protection and CDN fallback.
+   * Required for WASM bitmap→PDF compositing pipeline.
+   */
+  function ensureJsPdf() {
+    if (typeof window !== 'undefined' && window.jspdf && typeof window.jspdf.jsPDF === 'function') {
+      return Promise.resolve(window.jspdf);
+    }
+    if (_jsPdfPromise) return _jsPdfPromise;
+
+    _jsPdfPromise = new Promise(function (resolve, reject) {
+      var sources = ['/js/jspdf.umd.min.js', 'https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js'];
+      function tryLoad(idx) {
+        if (idx >= sources.length) {
+          reject(new Error('Could not load jsPDF from any source.'));
+          return;
+        }
+        var wasAmd = (typeof window !== 'undefined' && window.define && window.define.amd);
+        if (wasAmd) window.define.amd = false;
+
+        var s = document.createElement('script');
+        s.src = sources[idx];
+        s.onload = function () {
+          if (wasAmd && window.define) window.define.amd = wasAmd;
+          if (window.jspdf && typeof window.jspdf.jsPDF === 'function') {
+            resolve(window.jspdf);
+          } else {
+            tryLoad(idx + 1);
+          }
+        };
+        s.onerror = function () {
+          if (wasAmd && window.define) window.define.amd = wasAmd;
+          tryLoad(idx + 1);
+        };
+        document.head.appendChild(s);
+      }
+      tryLoad(0);
+    });
+    return _jsPdfPromise;
+  }
+
+  /**
+   * Converts WASM bitmap to HTML Canvas for jsPDF embedding.
+   * Mirrors openDocCanvasFromBitmap() from Download Resume Center.
+   */
+  function wasmBitmapToCanvas(bitmap) {
+    var width = bitmap && bitmap.widthPx ? bitmap.widthPx : 0;
+    var height = bitmap && bitmap.heightPx ? bitmap.heightPx : 0;
+    if (!width || !height) throw new Error('OpenDoc WASM rendered an empty page bitmap');
+    var rgba = bitmap.rgba;
+    var canvas = document.createElement('canvas');
+    canvas.width = width;
+    canvas.height = height;
+    var ctx = canvas.getContext('2d', { alpha: false });
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, width, height);
+    ctx.putImageData(new ImageData(rgba, width, height), 0, 0);
+    return canvas;
+  }
+
+  /**
+   * Extracts page dimensions in points from WASM document.
+   * Mirrors openDocPagePoints() from Download Resume Center.
+   */
+  function wasmPagePoints(doc, index) {
+    var fallback = [595.28, 841.89]; // A4 default
+    try {
+      var size = doc.pageSize(index);
+      var width = size && size.widthTwip ? size.widthTwip / 20 : 0;
+      var height = size && size.heightTwip ? size.heightTwip / 20 : 0;
+      if (size && typeof size.free === 'function') size.free();
+      if (width >= 240 && height >= 240 && width <= 1600 && height <= 2200) return [width, height];
+    } catch (err) {
+      console.warn('OpenDoc page size fallback used:', err);
+    }
+    return fallback;
+  }
+
+  /**
+   * Attempts native vector PDF export from WASM engine if supported.
+   * Mirrors openDocNativePdfBlob() from Download Resume Center.
+   */
+  function wasmNativePdfBlob(doc) {
+    if (!doc || typeof doc.availableExportFormats !== 'function' || typeof doc.exportAs !== 'function') return null;
+    var formats = [];
+    try {
+      formats = doc.availableExportFormats() || [];
+    } catch (e) { return null; }
+
+    var hasPdf = formats.some(function (f) { return String(f || '').toLowerCase() === 'pdf'; });
+    if (!hasPdf) return null;
+
+    var modes = ['exact_if_unchanged', 'preserve_when_safe', 'semantic'];
+    for (var i = 0; i < modes.length; i++) {
+      var artifact = null;
+      try {
+        artifact = doc.exportAs('pdf', modes[i]);
+        var bytes = artifact && artifact.bytes ? artifact.bytes : null;
+        var mime = artifact && artifact.mimeType ? artifact.mimeType : 'application/pdf';
+        if (bytes && bytes.length) return new Blob([bytes], { type: mime || 'application/pdf' });
+      } catch (e) {
+        console.warn('OpenDoc native PDF export failed for ' + modes[i] + ':', e);
+      } finally {
+        if (artifact && typeof artifact.free === 'function') artifact.free();
+      }
+    }
+    return null;
+  }
+
+  /**
+   * Yield execution to browser event loop to maintain responsive UI during
+   * heavy WASM rendering. Uses scheduler.yield() when available.
+   */
+  function yieldToMain() {
+    if (typeof window !== 'undefined' && window.scheduler && typeof window.scheduler.yield === 'function') {
+      return window.scheduler.yield().catch(function () {
+        return new Promise(function (r) { setTimeout(r, 0); });
+      });
+    }
+    return new Promise(function (r) { setTimeout(r, 0); });
+  }
+
+  /**
+   * WASM-based DOCX→PDF conversion using AgyWasmEngine + jsPDF.
+   * Identical pipeline to Download Resume Center (showdetail.blade.php):
+   *   1. Init OpenDoc WASM via AgyWasmEngine.init()
+   *   2. Open DOCX bytes in WASM linear memory
+   *   3. Try native vector PDF export first
+   *   4. Fall back to 288 DPI bitmap rasterization + jsPDF compositing
+   *   5. Deterministic memory cleanup on each page
+   *
+   * @param {Uint8Array|ArrayBuffer} docxBytes - Raw DOCX file bytes
+   * @returns {Promise<ArrayBuffer>} - PDF bytes ready for PDFLib downstream processing
+   */
+  async function wasmDocxToPdfBytes(docxBytes) {
+    if (!window.AgyWasmEngine || typeof window.AgyWasmEngine.init !== 'function') {
+      throw new Error('AgyWasmEngine not available');
+    }
+
+    // Step 1: Initialize WASM runtime (cached after first call)
+    var wasmModule = await window.AgyWasmEngine.init();
+    if (!wasmModule || typeof wasmModule.open !== 'function') {
+      throw new Error('OpenDoc WASM module missing open() API');
+    }
+
+    // Step 2: Load jsPDF for bitmap→PDF compositing
+    var jspdf = await ensureJsPdf();
+    var JsPDF = jspdf.jsPDF;
+
+    // Step 3: Open DOCX in WASM linear memory
+    var u8 = new Uint8Array(docxBytes);
+    var doc = null;
+    try {
+      doc = (typeof wasmModule.openAs === 'function') ? wasmModule.openAs(u8, 'docx') : wasmModule.open(u8);
+    } catch (err) {
+      doc = wasmModule.open(u8);
+    }
+    if (!doc) throw new Error('WASM engine failed to open DOCX document');
+
+    var pageCount = parseInt(doc.pageCount, 10);
+    if (!pageCount && typeof doc.documentStats === 'function') {
+      var stats = doc.documentStats();
+      pageCount = parseInt(stats && stats.pages ? stats.pages : 0, 10);
+      if (stats && typeof stats.free === 'function') stats.free();
+    }
+    if (!pageCount || pageCount < 1) throw new Error('WASM engine reported 0 pages for this DOCX');
+
+    try {
+      // Step 4: Try native vector PDF export first (highest fidelity)
+      var nativeBlob = wasmNativePdfBlob(doc);
+      if (nativeBlob) {
+        return await nativeBlob.arrayBuffer();
+      }
+
+      // Step 5: Rasterize pages at 288 DPI via WASM bitmap pipeline + jsPDF
+      var renderDpi = 288;
+      var pdf = null;
+
+      for (var i = 0; i < pageCount; i++) {
+        await yieldToMain();
+
+        var bitmap = null;
+        var canvas = null;
+        try {
+          bitmap = doc.renderPage(i, renderDpi);
+          canvas = wasmBitmapToCanvas(bitmap);
+
+          var points = wasmPagePoints(doc, i);
+          var pageW = (points && points[0]) ? points[0] : (bitmap.widthPx / renderDpi) * 72;
+          var pageH = (points && points[1]) ? points[1] : (bitmap.heightPx / renderDpi) * 72;
+
+          if (!pdf) {
+            pdf = new JsPDF({
+              orientation: pageW > pageH ? 'landscape' : 'portrait',
+              unit: 'pt',
+              format: [pageW, pageH],
+              compress: true
+            });
+          } else {
+            pdf.addPage([pageW, pageH], pageW > pageH ? 'landscape' : 'portrait');
+          }
+
+          var imgData = canvas.toDataURL('image/jpeg', 0.98);
+          pdf.addImage(imgData, 'JPEG', 0, 0, pageW, pageH, undefined, 'FAST');
+        } finally {
+          // Deterministic memory cleanup per page
+          if (bitmap && typeof bitmap.free === 'function') bitmap.free();
+          if (canvas) {
+            canvas.width = 0;
+            canvas.height = 0;
+            canvas = null;
+          }
+        }
+      }
+
+      var outBlob = pdf.output('blob');
+      return await outBlob.arrayBuffer();
+    } finally {
+      // Free WASM document from linear memory
+      if (doc && typeof doc.free === 'function') {
+        try { doc.free(); } catch (e) {}
+      }
+    }
+  }
+
+  /**
+   * Guarantees candidate resume bytes are returned as a valid PDF.
+   *
+   * Pipeline priority:
+   *   1. If already PDF → pass through unchanged
+   *   2. If DOCX → AgyWasmEngine DOCX→PDF at 288 DPI (same as Download Resume Center)
+   *   3. Last-resort fallback → Mammoth text extraction + PDFLib text rendering
+   *
+   * Intent: Achieve 100% client-side conversion with pixel-perfect WASM fidelity.
+   * The Mammoth fallback exists only for edge cases where WASM init might fail
+   * (e.g. SharedArrayBuffer not available in non-secure contexts).
    */
   async function ensurePdfDocBytes(rawBytes, candidate) {
     if (!rawBytes) throw new Error('Empty resume bytes received');
@@ -130,7 +363,26 @@
       return rawBytes;
     }
 
-    // Candidate resume is DOCX or non-PDF binary
+    // ═══════════════════════════════════════════════════════════════════════
+    // PRIMARY: WASM-based DOCX→PDF (AgyWasmEngine + casual_doc_wasm + jsPDF)
+    // Identical pipeline to Download Resume Center for vector/bitmap fidelity
+    // ═══════════════════════════════════════════════════════════════════════
+    if (window.AgyWasmEngine && typeof window.AgyWasmEngine.init === 'function') {
+      try {
+        var wasmPdfBytes = await wasmDocxToPdfBytes(rawBytes);
+        if (wasmPdfBytes && wasmPdfBytes.byteLength > 100) {
+          console.log('AgyForwardResumeHelper: DOCX→PDF via WASM engine (' + wasmPdfBytes.byteLength + ' bytes)');
+          return wasmPdfBytes;
+        }
+      } catch (wasmErr) {
+        console.warn('AgyForwardResumeHelper: WASM DOCX→PDF failed, using Mammoth text fallback:', wasmErr);
+      }
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════
+    // FALLBACK: Mammoth text extraction + PDFLib text rendering
+    // Used ONLY when WASM runtime is unavailable (non-secure context, etc.)
+    // ═══════════════════════════════════════════════════════════════════════
     var PDFLib = await ensurePdfLib();
     var mammoth = await ensureMammoth();
     var extractedText = '';
