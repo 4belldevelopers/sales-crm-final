@@ -15,12 +15,16 @@
 
 (function (root, factory) {
   'use strict';
+  var exp = factory();
   if (typeof define === 'function' && define.amd) {
-    define([], factory);
-  } else if (typeof module === 'object' && module.exports) {
-    module.exports = factory();
-  } else {
-    root.AgyForwardResumeHelper = factory();
+    try { define([], function () { return exp; }); } catch (e) {}
+  }
+  if (typeof module === 'object' && module.exports) {
+    module.exports = exp;
+  }
+  root.AgyForwardResumeHelper = exp;
+  if (typeof window !== 'undefined') {
+    window.AgyForwardResumeHelper = exp;
   }
 }(typeof self !== 'undefined' ? self : this, function () {
   'use strict';

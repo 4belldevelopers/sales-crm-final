@@ -11,14 +11,15 @@ if (typeof define === 'function' && define.amd) {
 }
 </script>
 <script src="{{ asset('js/pdf-lib.min.js') }}"></script>
+<script src="{{ asset('js/opendoc/AgyWasmEngine.js') }}"></script>
+<script src="{{ asset('js/opendoc/AgyResumeRenderer.js') }}"></script>
+<script src="{{ asset('js/opendoc/AgyForwardResumeHelper.js') }}"></script>
 <script>
 if (window.__savedAmdDefine) {
     define.amd = window.__savedAmdDefine;
     delete window.__savedAmdDefine;
 }
-<script src="{{ asset('js/opendoc/AgyWasmEngine.js') }}"></script>
-<script src="{{ asset('js/opendoc/AgyResumeRenderer.js') }}"></script>
-<script src="{{ asset('js/opendoc/AgyForwardResumeHelper.js') }}"></script>
+</script>
 <script src="{{ asset('demo/ckeditor/ckeditor.js') }}"></script>
 <script>
 									
@@ -710,7 +711,19 @@ document.getElementById("btnSubmit").addEventListener("click", async function ()
     }
 
     // If custom format is chosen (optId !== 1) and attached_cv is enabled:
-    if (attached_cv === 1 && optId !== 1 && window.AgyForwardResumeHelper) {
+    if (attached_cv === 1 && optId !== 1) {
+        if (!window.AgyForwardResumeHelper) {
+            $('.indicator-progress').hide();
+            $('.indicator-label').show();
+            document.getElementById('btnSubmit').disabled = false;
+            Swal.fire(
+                'Engine Initializing',
+                'Resume rendering engine is still loading. Please try sending again in a few seconds.',
+                'warning'
+            );
+            return;
+        }
+
         try {
             var candidatesList = @json($applicationData ?? []);
             var companyData = {
@@ -719,9 +732,15 @@ document.getElementById("btnSubmit").addEventListener("click", async function ()
             };
             var jobSkills = @json($jobSkills ?? []);
 
-            for (var c = 0; c < candidatesList.length; c++) {
-                var cand = candidatesList[c];
-                $('.indicator-progress').html('Preparing ' + (cand.full_name || 'Resume') + ' (' + (c + 1) + '/' + candidatesList.length + ')... <span class="spinner-border spinner-border-sm align-middle ms-2"></span>');
+            // Only compile selected candidates (those checked in arr)
+            var selectedIds = arr.map(function(id) { return String(id); });
+            var candidatesToProcess = candidatesList.filter(function (cand) {
+                return selectedIds.indexOf(String(cand.id)) !== -1;
+            });
+
+            for (var c = 0; c < candidatesToProcess.length; c++) {
+                var cand = candidatesToProcess[c];
+                $('.indicator-progress').html('Preparing ' + (cand.full_name || 'Resume') + ' (' + (c + 1) + '/' + candidatesToProcess.length + ')... <span class="spinner-border spinner-border-sm align-middle ms-2"></span>');
 
                 var pdfBlob = await window.AgyForwardResumeHelper.generateAttachmentForCandidate(cand, optId, companyData, jobSkills, function (statusMsg) {
                     $('.indicator-progress').html(statusMsg + ' <span class="spinner-border spinner-border-sm align-middle ms-2"></span>');
@@ -778,9 +797,10 @@ document.getElementById("btnSubmit").addEventListener("click", async function ()
             $('.indicator-progress').hide();
             $('.indicator-label').show();
             document.getElementById('btnSubmit').disabled = false;
+            var serverMsg = xhr.responseJSON && xhr.responseJSON.message;
             var msg = (xhr.status === 0 || !navigator.onLine)
                 ? 'You are offline. Please check your connection and try again.'
-                : 'Something went wrong (HTTP ' + xhr.status + '). Please try again.';
+                : (serverMsg || ('Something went wrong (HTTP ' + xhr.status + '). Please try again.'));
             Swal.fire('Error', msg, 'error');
         }
     });

@@ -35,12 +35,16 @@
 
 (function (root, factory) {
   'use strict';
+  var exp = factory();
   if (typeof define === 'function' && define.amd) {
-    define([], factory);
-  } else if (typeof module === 'object' && module.exports) {
-    module.exports = factory();
-  } else {
-    root.AgyResumeRenderer = factory();
+    try { define([], function () { return exp; }); } catch (e) {}
+  }
+  if (typeof module === 'object' && module.exports) {
+    module.exports = exp;
+  }
+  root.AgyResumeRenderer = exp;
+  if (typeof window !== 'undefined') {
+    window.AgyResumeRenderer = exp;
   }
 }(typeof self !== 'undefined' ? self : this, function () {
   'use strict';
