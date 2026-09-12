@@ -4,9 +4,13 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>{{ ucwords(@$application->full_name ?: @$application->name ?: 'Candidate') }} — jero.works</title>
+  <link rel="icon" type="image/svg+xml" href="{{ asset('img/logo.svg') }}">
+  <link rel="shortcut icon" href="{{ asset('img/logo.svg') }}">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="/js/html2canvas.min.js"></script>
+  <script src="/js/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.5.0/mammoth.browser.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.11.338/pdf.min.js"></script>
   <script src="/js/pdfmake.min.js"></script>
@@ -19,24 +23,18 @@
 
     .acrobat-app { display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
 
-    /* 1. Global Clean Top Navigation Bar */
-    .acrobat-navbar { height: 54px; background: #ffffff; border-bottom: 1px solid #e5e7eb; display: flex; align-items: center; justify-content: space-between; padding: 0 18px; flex-shrink: 0; z-index: 110; }
+    /* 1. Global Clean Top Navigation Bar (No Search Bar, No Extra Pills) */
+    .acrobat-navbar { height: 54px; background: #ffffff; border-bottom: 1px solid #e5e7eb; display: flex; align-items: center; justify-content: space-between; padding: 0 20px; flex-shrink: 0; z-index: 110; }
     .nav-left { display: flex; align-items: center; gap: 14px; }
     .nav-logo-wrap { display: flex; align-items: center; gap: 8px; text-decoration: none; }
     .nav-logo-img { height: 26px; width: auto; }
     .nav-title { font-size: 15px; font-weight: 700; color: #0f172a; }
     .cand-badge-pill { display: flex; align-items: center; gap: 6px; background: #f8fafc; border: 1px solid #e2e8f0; padding: 4px 12px; border-radius: 999px; margin-left: 8px; }
     .cand-badge-name { font-size: 11.5px; font-weight: 600; color: #0f172a; max-width: 170px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .cand-badge-role { font-size: 11px; font-weight: 500; color: #64748b; max-width: 220px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-
-    .nav-center { display: flex; align-items: center; gap: 8px; flex: 1; max-width: 440px; margin: 0 24px; }
-    .nav-search-box { position: relative; width: 100%; display: flex; align-items: center; }
-    .nav-search-input { width: 100%; height: 34px; padding: 0 16px 0 34px; font-size: 12px; font-family: 'Poppins', sans-serif; border: 1px solid #cbd5e1; border-radius: 999px; background: #f8fafc; outline: none; transition: all .15s; }
-    .nav-search-input:focus { background: #ffffff; border-color: #0284c7; box-shadow: 0 0 0 3px rgba(2,132,199,.12); }
-    .nav-search-icon { position: absolute; left: 11px; color: #94a3b8; width: 14px; height: 14px; }
+    .cand-badge-role { font-size: 11px; font-weight: 500; color: #64748b; max-width: 240px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
     .nav-right { display: flex; align-items: center; gap: 12px; }
-    .btn-action-download { background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); color: #ffffff; border: none; padding: 8px 18px; font-size: 12px; font-weight: 600; border-radius: 7px; cursor: pointer; display: inline-flex; align-items: center; gap: 7px; font-family: 'Poppins', sans-serif; transition: all .15s; box-shadow: 0 2px 6px rgba(2,132,199,.3); }
+    .btn-action-download { background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); color: #ffffff; border: none; padding: 8px 20px; font-size: 12px; font-weight: 600; border-radius: 7px; cursor: pointer; display: inline-flex; align-items: center; gap: 7px; font-family: 'Poppins', sans-serif; transition: all .15s; box-shadow: 0 2px 6px rgba(2,132,199,.3); }
     .btn-action-download:hover { background: linear-gradient(135deg, #0369a1 0%, #075985 100%); box-shadow: 0 4px 10px rgba(2,132,199,.4); }
     .btn-action-download:disabled { opacity: 0.65; cursor: not-allowed; }
 
@@ -168,13 +166,21 @@
 
     .spin { display: inline-block; width: 14px; height: 14px; border: 2px solid rgba(255,255,255,.3); border-radius: 50%; border-top-color: #fff; animation: spin 0.8s linear infinite; }
     @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Native High-Resolution PDF Print CSS (WYSIWYG DOM Output) */
+    @media print {
+      body, html, .acrobat-app { overflow: visible !important; height: auto !important; background: #ffffff !important; }
+      .acrobat-navbar, .acrobat-sidebar, .acrobat-right-strip, .sign-backdrop { display: none !important; }
+      .acrobat-body, .acrobat-canvas { overflow: visible !important; height: auto !important; padding: 0 !important; background: #ffffff !important; }
+      .paper-sheet { box-shadow: none !important; margin: 0 auto 30px auto !important; width: 100% !important; padding: 18mm 16mm !important; page-break-after: always; }
+    }
   </style>
 </head>
 <body>
 
 <div class="acrobat-app">
 
-  <!-- 1. Top Global Clean Navigation Bar -->
+  <!-- 1. Top Global Clean Navigation Bar (Clean & Focused) -->
   <header class="acrobat-navbar">
     <div class="nav-left">
       <a href="{{ route('service_company.dashboard') }}" class="nav-logo-wrap" title="JERO Works Dashboard">
@@ -184,13 +190,6 @@
       <div class="cand-badge-pill">
         <span class="cand-badge-name" title="{{ ucwords(@$application->full_name ?: 'Candidate') }}">{{ ucwords(@$application->full_name ?: 'Candidate') }}</span>
         <span class="cand-badge-role" title="{{ $job->title ?? ($application->job_title ?? 'Verified Profile') }}">• {{ $job->title ?? ($application->job_title ?? 'Verified Profile') }}</span>
-      </div>
-    </div>
-
-    <div class="nav-center">
-      <div class="nav-search-box">
-        <svg class="nav-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-        <input type="text" id="docSearchInput" class="nav-search-input" placeholder="Find text in document…" autocomplete="off">
       </div>
     </div>
 
@@ -593,11 +592,11 @@
 
     var btnLbl = document.getElementById('btnDlText');
     if(btnLbl){
-      if(isBranded) btnLbl.textContent = 'Download Branded Resume';
+      if(isBranded) btnLbl.textContent = 'Download Branded PDF';
       else if(hasReport && mode === 65) btnLbl.textContent = 'Download Report + Highlighted';
-      else if(hasReport) btnLbl.textContent = 'Download Report + Resume';
-      else if(mode === 63) btnLbl.textContent = 'Download Highlighted Resume';
-      else btnLbl.textContent = 'Download Resume (PDF)';
+      else if(hasReport) btnLbl.textContent = 'Download Report + PDF';
+      else if(mode === 63) btnLbl.textContent = 'Download Highlighted PDF';
+      else btnLbl.textContent = 'Download Final PDF';
     }
 
     var pageCounter = document.getElementById('stripPageNum');
@@ -704,19 +703,6 @@
   };
   document.getElementById('kwInput').addEventListener('keydown', function(e){
     if(e.key === 'Enter'){ e.preventDefault(); document.getElementById('btnKwAdd').click(); }
-  });
-
-  // Top Search in document
-  document.getElementById('docSearchInput').addEventListener('input', function(){
-    var q = (this.value || '').trim();
-    if(!q){
-      applyHighlights();
-      return;
-    }
-    keywords[q.toLowerCase()] = { name: q, type: 'search', active: true, count: 0 };
-    countOccurrences();
-    renderChips();
-    applyHighlights();
   });
 
   // Live input sync
@@ -882,54 +868,100 @@
     sheetResume.style.transformOrigin = 'top center';
   }
 
-  // Download PDF
+  // DOWNLOAD PDF: True WYSIWYG Export of the Exact Edited DOM Sheets (Page 1 Report + Page 2 Resume)
   document.getElementById('btnDownload').onclick = async function(){
     var btn = document.getElementById('btnDownload');
     var orig = btn.innerHTML;
     btn.disabled = true;
     btn.innerHTML = '<span class="spin"></span> Generating PDF…';
+
     try {
-      var mode = parseInt(modeSelect ? modeSelect.value : initialOpt, 10) || 61;
-      var isBranded = (mode === 62);
-      var isHighlighted = (mode === 63 || mode === 65);
-      var hasReport = (mode === 64 || mode === 65);
-      var resumeText = (resumeBody.innerText || '').trim();
-      if(!resumeText) throw new Error('Resume content is empty.');
-
-      if(!OptClass) OptClass = window.AgyCvOptimizer || (window.opener && window.opener.AgyCvOptimizer);
-      if(!OptClass) throw new Error('Optimizer engine is initializing, please try again.');
-
-      var optInstance = new OptClass({ jobSkills: jobSkills, candidateName: candName, targetJobTitle: jobTitle });
-      var cleanCand = (candName || 'Candidate').replace(/[^a-zA-Z0-9_\-]/g, '_');
-
-      if(hasReport && window.opener && typeof window.opener.__buildRSBlob === 'function' && typeof window.opener.mergePreScreenedReportAndResume === 'function'){
-        var reportBlob = await window.opener.__buildRSBlob();
-        var resumeBlob = await optInstance.exportOptimizedPdf(resumeText, {
-          candidateName: candName,
-          jobTitle: jobTitle,
-          highlightKeywords: isHighlighted ? jobSkills : false
-        });
-        var mName = 'Jeroworks_' + cleanCand + (isHighlighted ? '_Report_Highlighted' : '_Report') + '.pdf';
-        await window.opener.mergePreScreenedReportAndResume(reportBlob, resumeBlob, mName);
-      } else {
-        var logoUri = null;
-        if(isBranded && companyLogo && window.opener && typeof window.opener.rsLogoDataUri === 'function'){
-          try { logoUri = await window.opener.rsLogoDataUri(companyLogo); } catch(e){}
-        }
-        var blob = await optInstance.exportOptimizedPdf(resumeText, {
-          candidateName: candName,
-          jobTitle: jobTitle,
-          brandHeader: isBranded,
-          companyName: companyName,
-          companyLogo: logoUri,
-          highlightKeywords: isHighlighted ? jobSkills : false
-        });
-        var sfx = isBranded ? '_Branded' : (isHighlighted ? '_Highlighted' : (hasReport ? '_Report' : ''));
-        OptClass.downloadBlob(blob, 'Jeroworks_' + cleanCand + '_ATS_Optimized' + sfx + '.pdf');
+      var sheets = [];
+      var hasReport = (sheetReport && window.getComputedStyle(sheetReport).display !== 'none');
+      if (hasReport) {
+        sheets.push(sheetReport);
       }
-    } catch(err){
-      console.error('Download error:', err);
-      alert('Could not download resume: ' + (err && err.message ? err.message : 'Please try again.'));
+      if (sheetResume) {
+        sheets.push(sheetResume);
+      }
+
+      if (!sheets.length) throw new Error('No document sheets available.');
+
+      // Check jsPDF availability
+      var jsPdfClass = (window.jspdf && window.jspdf.jsPDF) || window.jsPDF;
+      if (!jsPdfClass || typeof window.html2canvas !== 'function') {
+        throw new Error('PDF render engines initializing. Falling back to high-res browser print.');
+      }
+
+      var pdf = new jsPdfClass({
+        orientation: 'p',
+        unit: 'pt',
+        format: 'a4',
+        compress: true
+      });
+
+      var a4WidthPt = 595.28;
+      var a4HeightPt = 841.89;
+
+      for (var s = 0; s < sheets.length; s++) {
+        var sheetEl = sheets[s];
+
+        // High-DPI canvas capture of the live edited DOM sheet
+        var canvasSnap = await window.html2canvas(sheetEl, {
+          scale: 2.2,
+          useCORS: true,
+          allowTaint: false,
+          logging: false,
+          backgroundColor: '#ffffff'
+        });
+
+        var imgWidthPt = a4WidthPt;
+        var imgHeightPt = (canvasSnap.height * a4WidthPt) / canvasSnap.width;
+
+        // If sheet fits on one A4 page
+        if (imgHeightPt <= a4HeightPt + 25) {
+          if (s > 0) pdf.addPage('a4', 'p');
+          var imgData = canvasSnap.toDataURL('image/jpeg', 0.95);
+          pdf.addImage(imgData, 'JPEG', 0, 0, a4WidthPt, Math.min(imgHeightPt, a4HeightPt));
+        } else {
+          // Multi-page A4 slice for longer content
+          var sliceCanvas = document.createElement('canvas');
+          var sliceCtx = sliceCanvas.getContext('2d');
+          var sliceHeightPx = Math.round(canvasSnap.width * (a4HeightPt / a4WidthPt));
+          var totalSlices = Math.ceil(canvasSnap.height / sliceHeightPx);
+
+          sliceCanvas.width = canvasSnap.width;
+          sliceCanvas.height = sliceHeightPx;
+
+          for (var p = 0; p < totalSlices; p++) {
+            if (s > 0 || p > 0) pdf.addPage('a4', 'p');
+
+            sliceCtx.fillStyle = '#ffffff';
+            sliceCtx.fillRect(0, 0, sliceCanvas.width, sliceCanvas.height);
+
+            var sy = p * sliceHeightPx;
+            var sh = Math.min(sliceHeightPx, canvasSnap.height - sy);
+
+            sliceCtx.drawImage(
+              canvasSnap,
+              0, sy, canvasSnap.width, sh,
+              0, 0, canvasSnap.width, sh
+            );
+
+            var pageData = sliceCanvas.toDataURL('image/jpeg', 0.95);
+            pdf.addImage(pageData, 'JPEG', 0, 0, a4WidthPt, a4HeightPt);
+          }
+        }
+      }
+
+      var cleanCand = (candName || 'Candidate').replace(/[^a-zA-Z0-9_\-]/g, '_');
+      var mode = parseInt(modeSelect ? modeSelect.value : initialOpt, 10) || 61;
+      var sfx = (mode === 64 || mode === 65) ? '_PreScreen_Dossier' : (mode === 62 ? '_Branded' : '_ATS_Optimized');
+      pdf.save('Jeroworks_' + cleanCand + sfx + '.pdf');
+
+    } catch(err) {
+      console.warn('Direct canvas PDF export failed, using native high-res print fallback:', err);
+      window.print();
     } finally {
       btn.disabled = false;
       btn.innerHTML = orig;
