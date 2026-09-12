@@ -36,13 +36,25 @@
   }
 
   /**
-   * Dynamically loads pdf-lib with fallback
+   * Dynamically loads pdf-lib with AMD protection and CDN fallback
    */
   function ensurePdfLib() {
-    if (typeof window !== 'undefined' && window.PDFLib) {
+    if (typeof window !== 'undefined' && window.PDFLib && window.PDFLib.PDFDocument) {
       _pdfLibLoaded = true;
       return Promise.resolve(window.PDFLib);
     }
+    // Check if RequireJS / AMD registered it
+    if (typeof require === 'function') {
+      try {
+        var m = require('pdf-lib');
+        if (m && m.PDFDocument) {
+          window.PDFLib = m;
+          _pdfLibLoaded = true;
+          return Promise.resolve(window.PDFLib);
+        }
+      } catch (e) {}
+    }
+
     if (_pdfLibPromise) return _pdfLibPromise;
 
     _pdfLibPromise = new Promise(function (resolve, reject) {
@@ -52,22 +64,194 @@
           reject(new Error('Could not load PDFLib from any source.'));
           return;
         }
+        var wasAmd = (typeof window !== 'undefined' && window.define && window.define.amd);
+        if (wasAmd) window.define.amd = false;
+
         var s = document.createElement('script');
         s.src = sources[idx];
         s.onload = function () {
-          if (window.PDFLib) {
+          if (wasAmd && window.define) window.define.amd = wasAmd;
+          if (window.PDFLib && window.PDFLib.PDFDocument) {
             _pdfLibLoaded = true;
             resolve(window.PDFLib);
           } else {
             tryLoad(idx + 1);
           }
         };
-        s.onerror = function () { tryLoad(idx + 1); };
+        s.onerror = function () {
+          if (wasAmd && window.define) window.define.amd = wasAmd;
+          tryLoad(idx + 1);
+        };
         document.head.appendChild(s);
       }
       tryLoad(0);
     });
     return _pdfLibPromise;
+  }
+
+  var _mammothPromise = null;
+  /**
+   * Ensures Mammoth docx converter is loaded
+   */
+  function ensureMammoth() {
+    if (typeof window !== 'undefined' && window.mammoth && typeof window.mammoth.extractRawText === 'function') {
+      return Promise.resolve(window.mammoth);
+    }
+    if (_mammothPromise) return _mammothPromise;
+    _mammothPromise = new Promise(function (resolve) {
+      var sources = ['/js/mammoth.browser.min.js', 'https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.5.0/mammoth.browser.min.js'];
+      function tryLoad(idx) {
+        if (idx >= sources.length) return resolve(null);
+        var s = document.createElement('script');
+        s.src = sources[idx];
+        s.onload = function () {
+          if (window.mammoth) resolve(window.mammoth);
+          else tryLoad(idx + 1);
+        };
+        s.onerror = function () { tryLoad(idx + 1); };
+        document.head.appendChild(s);
+      }
+      tryLoad(0);
+    });
+    return _mammothPromise;
+  }
+
+  /**
+   * Guarantees candidate resume bytes are returned as a valid vector PDF.
+   * If candidate file is DOCX (ZIP signature PK), extracts text via Mammoth
+   * and renders clean, multi-page vector PDF pages using PDFLib.
+   */
+  async function ensurePdfDocBytes(rawBytes, candidate) {
+    if (!rawBytes) throw new Error('Empty resume bytes received');
+    var u8 = new Uint8Array(rawBytes);
+
+    // Check if already a PDF (%PDF-)
+    if (u8.length >= 4 && u8[0] === 0x25 && u8[1] === 0x50 && u8[2] === 0x44 && u8[3] === 0x46) {
+      return rawBytes;
+    }
+
+    // Candidate resume is DOCX or non-PDF binary
+    var PDFLib = await ensurePdfLib();
+    var mammoth = await ensureMammoth();
+    var extractedText = '';
+
+    if (mammoth) {
+      try {
+        var mRes = await mammoth.extractRawText({ arrayBuffer: rawBytes });
+        extractedText = mRes.value || '';
+      } catch (mErr) {
+        console.warn('Mammoth text extraction warning:', mErr);
+      }
+    }
+
+    // Fallback if mammoth returned empty: construct profile text from candidate metadata
+    if (!extractedText || extractedText.trim().length < 20) {
+      var parts = [];
+      parts.push(candidate.full_name || 'Candidate Profile');
+      if (candidate.current_designation) parts.push('Designation: ' + candidate.current_designation);
+      if (candidate.current_company) parts.push('Company: ' + candidate.current_company);
+      if (candidate.total_exp) parts.push('Total Experience: ' + candidate.total_exp + ' Years');
+      if (candidate.email) parts.push('Email: ' + candidate.email);
+      if (candidate.phone) parts.push('Phone: ' + candidate.phone);
+      if (candidate.skills) parts.push('\nCore Skills:\n' + candidate.skills);
+      extractedText = parts.join('\n');
+    }
+
+    // Compile clean vector PDF from text lines using PDFLib
+    var doc = await PDFLib.PDFDocument.create();
+    var regularFont = await doc.embedFont(PDFLib.StandardFonts.Helvetica);
+    var boldFont = await doc.embedFont(PDFLib.StandardFonts.HelveticaBold);
+
+    var pageWidth = 595.28;  // A4
+    var pageHeight = 841.89;
+    var margin = 40;
+    var contentWidth = pageWidth - (margin * 2);
+    var lineHeight = 14;
+    var fontSize = 9.5;
+
+    var currentPage = doc.addPage([pageWidth, pageHeight]);
+    var curY = pageHeight - margin;
+
+    // Header candidate card
+    currentPage.drawRectangle({
+      x: margin,
+      y: curY - 45,
+      width: contentWidth,
+      height: 45,
+      color: PDFLib.rgb(0.96, 0.97, 0.99),
+      borderColor: PDFLib.rgb(0.85, 0.88, 0.95),
+      borderWidth: 0.8
+    });
+    currentPage.drawText(safeText(candidate.full_name, 'Candidate Resume'), {
+      x: margin + 12,
+      y: curY - 20,
+      size: 14,
+      font: boldFont,
+      color: PDFLib.rgb(0.08, 0.15, 0.35)
+    });
+    var candSub = [candidate.current_designation, candidate.current_company, (candidate.total_exp ? (candidate.total_exp + ' Yrs Exp') : '')].filter(Boolean).join(' • ');
+    currentPage.drawText(candSub || 'Verified Candidate Profile', {
+      x: margin + 12,
+      y: curY - 35,
+      size: 8.5,
+      font: regularFont,
+      color: PDFLib.rgb(0.35, 0.4, 0.5)
+    });
+
+    curY -= 65;
+
+    // Break text into clean lines
+    var rawLines = extractedText.split(/\r?\n/);
+    for (var i = 0; i < rawLines.length; i++) {
+      var line = rawLines[i].trim();
+      if (!line) {
+        curY -= 6;
+        continue;
+      }
+
+      // Word wrap
+      var words = line.split(/\s+/);
+      var curLine = '';
+      for (var w = 0; w < words.length; w++) {
+        var testLine = curLine ? (curLine + ' ' + words[w]) : words[w];
+        var wWidth = regularFont.widthOfTextAtSize(testLine, fontSize);
+        if (wWidth > contentWidth && curLine) {
+          if (curY < margin + 20) {
+            currentPage = doc.addPage([pageWidth, pageHeight]);
+            curY = pageHeight - margin;
+          }
+          currentPage.drawText(curLine, {
+            x: margin,
+            y: curY,
+            size: fontSize,
+            font: regularFont,
+            color: PDFLib.rgb(0.15, 0.18, 0.25)
+          });
+          curY -= lineHeight;
+          curLine = words[w];
+        } else {
+          curLine = testLine;
+        }
+      }
+
+      if (curLine) {
+        if (curY < margin + 20) {
+          currentPage = doc.addPage([pageWidth, pageHeight]);
+          curY = pageHeight - margin;
+        }
+        currentPage.drawText(curLine, {
+          x: margin,
+          y: curY,
+          size: fontSize,
+          font: regularFont,
+          color: PDFLib.rgb(0.15, 0.18, 0.25)
+        });
+        curY -= lineHeight;
+      }
+    }
+
+    var pdfBytes = await doc.save();
+    return pdfBytes;
   }
 
   /**
@@ -599,17 +783,20 @@
       if (statusCallback) statusCallback('Fetching candidate resume stream...');
       var rawBytes = await fetchResumeBytes(candidate);
 
+      if (statusCallback) statusCallback('Validating document format...');
+      var pdfBytes = await ensurePdfDocBytes(rawBytes, candidate);
+
       // Option 41: Resume + Company Branding Logo
       if (optId === 41) {
         if (statusCallback) statusCallback('Injecting company branding header...');
-        return await applyCompanyBranding(rawBytes, companyData);
+        return await applyCompanyBranding(pdfBytes, companyData);
       }
 
       // Option 42: Pre-Screened Report + Original Resume
       if (optId === 42) {
         if (statusCallback) statusCallback('Generating Prescreen Dossier...');
         var repBlob = await generatePrescreenReportBlob(candidate, companyData);
-        var resBlob = new Blob([rawBytes], { type: 'application/pdf' });
+        var resBlob = new Blob([pdfBytes], { type: 'application/pdf' });
         return await mergePdfBlobs(repBlob, resBlob);
       }
 
@@ -617,20 +804,20 @@
       if (optId === 43) {
         if (statusCallback) statusCallback('Generating Branded Prescreen Dossier...');
         var repBlob2 = await generatePrescreenReportBlob(candidate, companyData);
-        var brandBlob = await applyCompanyBranding(rawBytes, companyData);
+        var brandBlob = await applyCompanyBranding(pdfBytes, companyData);
         return await mergePdfBlobs(repBlob2, brandBlob);
       }
 
       // Option 44: Resume + Highlighted Skills
       if (optId === 44) {
         if (statusCallback) statusCallback('Highlighting matching ATS skills...');
-        return await highlightPdfKeywords(rawBytes, jobSkills);
+        return await highlightPdfKeywords(pdfBytes, jobSkills);
       }
 
       // Option 45: Resume + Company Branding + Highlights
       if (optId === 45) {
         if (statusCallback) statusCallback('Applying Company Branding + Highlights...');
-        var highlighted = await highlightPdfKeywords(rawBytes, jobSkills);
+        var highlighted = await highlightPdfKeywords(pdfBytes, jobSkills);
         var highBytes = await highlighted.arrayBuffer();
         return await applyCompanyBranding(highBytes, companyData);
       }
@@ -639,7 +826,7 @@
       if (optId === 46) {
         if (statusCallback) statusCallback('Compiling Report + Highlighted Resume...');
         var repBlob3 = await generatePrescreenReportBlob(candidate, companyData);
-        var highBlob = await highlightPdfKeywords(rawBytes, jobSkills);
+        var highBlob = await highlightPdfKeywords(pdfBytes, jobSkills);
         return await mergePdfBlobs(repBlob3, highBlob);
       }
 
@@ -647,7 +834,7 @@
       if (optId === 47) {
         if (statusCallback) statusCallback('Compiling Full Recruiter Presentation Dossier...');
         var repBlob4 = await generatePrescreenReportBlob(candidate, companyData);
-        var highBlob2 = await highlightPdfKeywords(rawBytes, jobSkills);
+        var highBlob2 = await highlightPdfKeywords(pdfBytes, jobSkills);
         var highBytes2 = await highBlob2.arrayBuffer();
         var brandBlob2 = await applyCompanyBranding(highBytes2, companyData);
         return await mergePdfBlobs(repBlob4, brandBlob2);
@@ -656,13 +843,13 @@
       // Option 48: Anonymized Resume (Masked Contact Info)
       if (optId === 48) {
         if (statusCallback) statusCallback('Redacting contact details via Privacy Shield...');
-        return await maskContactInfo(rawBytes);
+        return await maskContactInfo(pdfBytes);
       }
 
       // Option 49: Anonymized Resume + Company Branding
       if (optId === 49) {
         if (statusCallback) statusCallback('Applying Privacy Shield + Company Branding...');
-        var masked = await maskContactInfo(rawBytes);
+        var masked = await maskContactInfo(pdfBytes);
         var maskedBytes = await masked.arrayBuffer();
         return await applyCompanyBranding(maskedBytes, companyData);
       }
@@ -670,7 +857,7 @@
       // Option 50: Anonymized Resume + Highlights
       if (optId === 50) {
         if (statusCallback) statusCallback('Applying Privacy Shield + Skill Highlights...');
-        var masked2 = await maskContactInfo(rawBytes);
+        var masked2 = await maskContactInfo(pdfBytes);
         var maskedBytes2 = await masked2.arrayBuffer();
         return await highlightPdfKeywords(maskedBytes2, jobSkills);
       }
@@ -679,10 +866,10 @@
       if (optId === 51) {
         if (statusCallback) statusCallback('Compiling Full Anonymized Recruiter Dossier...');
         var repBlob5 = await generatePrescreenReportBlob(candidate, companyData);
-        var masked3 = await maskContactInfo(rawBytes);
+        var masked3 = await maskContactInfo(pdfBytes);
         var maskedBytes3 = await masked3.arrayBuffer();
-        var brandBlob3 = await applyCompanyBranding(maskedBytes3, companyData);
-        return await mergePdfBlobs(repBlob5, brandBlob3);
+        var brandedMasked = await applyCompanyBranding(maskedBytes3, companyData);
+        return await mergePdfBlobs(repBlob5, brandedMasked);
       }
 
       return null;
