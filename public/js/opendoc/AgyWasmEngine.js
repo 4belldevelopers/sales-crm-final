@@ -11,12 +11,16 @@
  * Part of JERO GOD-Level ATS & Marketplace Engine (Phase 3)
  */
 (function(root, factory){
+  var mod = factory();
   if(typeof define === 'function' && define.amd){
-    define([], factory);
-  }else if(typeof module === 'object' && module.exports){
-    module.exports = factory();
-  }else{
-    root.AgyWasmEngine = factory();
+    try { define([], function(){ return mod; }); } catch(e){}
+  }
+  if(typeof module === 'object' && module.exports){
+    module.exports = mod;
+  }
+  root.AgyWasmEngine = mod;
+  if(typeof window !== 'undefined'){
+    window.AgyWasmEngine = mod;
   }
 })(typeof self !== 'undefined' ? self : this, function(){
   'use strict';

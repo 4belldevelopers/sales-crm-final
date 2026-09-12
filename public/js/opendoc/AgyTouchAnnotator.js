@@ -1,4 +1,4 @@
-﻿/**
+/**
  * AgyTouchAnnotator — JERO Touch-Native Viewer & In-Browser Stylus Annotator (Phase 7)
  * 
  * Provides:
@@ -10,12 +10,16 @@
  * - Tenancy-isolated vector stroke export/import (preserves original resume binary untouched)
  */
 (function(root, factory){
+  var mod = factory();
   if(typeof define === 'function' && define.amd){
-    define([], factory);
-  }else if(typeof module === 'object' && module.exports){
-    module.exports = factory();
-  }else{
-    root.AgyTouchAnnotator = factory();
+    try { define([], function(){ return mod; }); } catch(e){}
+  }
+  if(typeof module === 'object' && module.exports){
+    module.exports = mod;
+  }
+  root.AgyTouchAnnotator = mod;
+  if(typeof window !== 'undefined'){
+    window.AgyTouchAnnotator = mod;
   }
 })(typeof self !== 'undefined' ? self : this, function(){
   'use strict';
