@@ -8376,6 +8376,7 @@ window.__rsEnsureOpenDocLab=rsEnsureOpenDocLab;
 <script src="{{ asset('js/opendoc/AgyWasmEngine.js') }}"></script>
 <script src="{{ asset('js/opendoc/AgyBatchExporter.js') }}"></script>
 <script src="{{ asset('js/opendoc/AgyTouchAnnotator.js') }}"></script>
+<script src="{{ asset('js/opendoc/AgyCvOptimizer.js') }}"></script>
 
 {{-- Overlay backdrop --}}
 <div id="rdcOverlay" class="rdc-overlay" aria-hidden="true"></div>
@@ -8403,6 +8404,67 @@ window.__rsEnsureOpenDocLab=rsEnsureOpenDocLab;
 
   {{-- Scrollable body --}}
   <div class="rdc-body" id="rdcBody">
+
+    {{-- Featured: Edit & Optimize Resume Studio (Phase 8) --}}
+    <div class="rdc-optimize-banner" id="rdcOptimizeBanner" style="background: linear-gradient(135deg, #f0fdf4 0%, #e0f2fe 100%); border: 1px solid #bae6fd; border-radius: 10px; padding: 13px 16px; margin-bottom: 16px; display: flex; align-items: center; justify-content: space-between; gap: 12px; box-shadow: 0 2px 8px rgba(2, 132, 199, 0.06);">
+      <div style="display: flex; align-items: center; gap: 12px;">
+        <div style="width: 36px; height: 36px; border-radius: 8px; background: #0284c7; color: #fff; display: flex; align-items: center; justify-content: center; flex-shrink: 0; box-shadow: 0 2px 6px rgba(2, 132, 199, 0.25);">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 18px; height: 18px;"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+        </div>
+        <div>
+          <div style="font-weight: 600; font-size: 13px; color: #0f172a; display: flex; align-items: center; gap: 6px;">
+            <span>Edit & Optimize CV</span>
+            <span id="rdcLiveAtsScoreBadge" style="font-size: 11px; padding: 2px 8px; border-radius: 9999px; background: #dcfce7; color: #15803d; font-weight: 600;">ATS: Checking…</span>
+          </div>
+          <div style="font-size: 12px; color: #475569; margin-top: 2px;">Review ATS match against job, insert missing skills & fix typos before downloading.</div>
+        </div>
+      </div>
+      <button type="button" id="rdcBtnOpenOptimizer" class="btn btn-sm" style="background: #0284c7; color: #fff; border-radius: 6px; font-weight: 600; font-size: 12px; padding: 7px 14px; flex-shrink: 0; display: inline-flex; align-items: center; gap: 6px; border: none; cursor: pointer;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 13px; height: 13px;"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        <span>Open Studio</span>
+      </button>
+    </div>
+
+    {{-- Studio Workbench Panel (Hidden by default, toggled via Open Studio) --}}
+    <div id="rdcOptimizerPanel" style="display: none; flex-direction: column; gap: 14px; margin-bottom: 16px;">
+      <div style="display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #e2e8f0; padding-bottom: 10px;">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <span style="font-size: 13px; font-weight: 600; color: #0f172a;">Live ATS Optimizer Studio</span>
+          <span id="rdcStudioScorePill" style="font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 9999px; background: #dcfce7; color: #15803d;">Calculating…</span>
+        </div>
+        <button type="button" id="rdcBtnCloseOptimizer" class="btn btn-sm btn-light" style="padding: 4px 10px; font-size: 11px; border-radius: 6px; color: #475569; border: 1px solid #e2e8f0;">
+          ← Back to All Options
+        </button>
+      </div>
+
+      <!-- Missing Skills Inspector -->
+      <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px 12px;">
+        <div style="font-size: 11px; font-weight: 600; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px;">
+          Missing Target Job Skills (Click chip to 1-Click Insert)
+        </div>
+        <div id="rdcMissingSkillsChips" style="display: flex; flex-wrap: wrap; gap: 6px;">
+          <span style="font-size: 12px; color: #94a3b8;">Scanning job requirements…</span>
+        </div>
+      </div>
+
+      <!-- Live Editable Resume Content -->
+      <div style="display: flex; flex-direction: column; gap: 6px;">
+        <div style="display: flex; align-items: center; justify-content: space-between;">
+          <label style="font-size: 12px; font-weight: 600; color: #334155; margin: 0;">Editable Resume Content</label>
+          <span style="font-size: 11px; color: #64748b;">Live ATS score recalculates as you type</span>
+        </div>
+        <textarea id="rdcOptimizerTextarea" rows="12" style="width: 100%; border: 1px solid #cbd5e1; border-radius: 8px; padding: 12px; font-family: 'Poppins', monospace, sans-serif; font-size: 12px; line-height: 1.6; color: #1e293b; resize: vertical; outline: none;"></textarea>
+      </div>
+
+      <!-- Download Actions -->
+      <div style="display: flex; align-items: center; justify-content: space-between; gap: 10px; padding-top: 6px;">
+        <span style="font-size: 11px; color: #64748b;">Processed 100% in browser memory (0% server load)</span>
+        <button type="button" id="rdcBtnDownloadOptimizedPdf" class="btn btn-primary btn-sm" style="font-weight: 600; font-size: 12px; padding: 8px 16px; border-radius: 6px; display: inline-flex; align-items: center; gap: 6px;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 14px; height: 14px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          <span>Download Optimized PDF</span>
+        </button>
+      </div>
+    </div>
 
     {{-- Section heading --}}
     <div class="rdc-sect-lbl">Choose Download Format</div>
@@ -9082,6 +9144,176 @@ window.__rsEnsureOpenDocLab=rsEnsureOpenDocLab;
     }).catch(function(){});
   }
 
+  var _rdcOptimizer = null;
+
+  function initRdcOptimizerStudio(){
+    var banner = document.getElementById('rdcOptimizeBanner');
+    var panel = document.getElementById('rdcOptimizerPanel');
+    var badge = document.getElementById('rdcLiveAtsScoreBadge');
+    var pill = document.getElementById('rdcStudioScorePill');
+    var textarea = document.getElementById('rdcOptimizerTextarea');
+    var chipsCont = document.getElementById('rdcMissingSkillsChips');
+    var optsList = document.getElementById('rdcOptsList');
+    var coinCard = document.querySelector('.rdc-coin-card');
+    var sectLbl = document.querySelector('.rdc-sect-lbl');
+    var footer = document.querySelector('.rdc-footer');
+    var openBtn = document.getElementById('rdcBtnOpenOptimizer');
+    var closeBtn = document.getElementById('rdcBtnCloseOptimizer');
+    var dlBtn = document.getElementById('rdcBtnDownloadOptimizedPdf');
+
+    if(!banner || !badge) return;
+
+    var data = typeof readData === 'function' ? readData() : {};
+    var candName = (data && data.name) || @json(@$application->name ?? 'Candidate');
+    var jobTitle = (data && data.jobTitle) || @json(@$application->job_title ?? '');
+    var jobSkills = (typeof rsDrawerHighlightedKeywords === 'function' ? rsDrawerHighlightedKeywords() : []) || @json($rcvJobSkills ?? []);
+    var candSkills = @json($rcvCandSkills ?? []);
+
+    // Extract current resume text from DOM or cache
+    var currentText = '';
+    var pagesEl = document.getElementById('rcvPages');
+    if(pagesEl && pagesEl.innerText){
+      currentText = pagesEl.innerText.trim();
+    } else {
+      var htmlEl = document.getElementById('rcvHtml');
+      if(htmlEl && htmlEl.innerText) currentText = htmlEl.innerText.trim();
+    }
+    if(!currentText && window.__rdcPreloadedResumeText){
+      currentText = window.__rdcPreloadedResumeText.trim();
+    }
+
+    if(typeof AgyCvOptimizer === 'function'){
+      _rdcOptimizer = new AgyCvOptimizer({
+        jobSkills: jobSkills,
+        candSkills: candSkills,
+        candidateName: candName,
+        targetJobTitle: jobTitle,
+        resumeText: currentText,
+        onScoreChange: function(res){
+          updateScoreDisplay(res.score);
+        }
+      });
+
+      var initialResult = _rdcOptimizer.calculateAtsScore(currentText);
+      updateScoreDisplay(initialResult.score);
+
+      if(textarea && (!textarea.value || textarea.value.length < 20)){
+        textarea.value = currentText || (candName + '\n' + (jobTitle ? 'Target Position: ' + jobTitle : '') + '\n\nPROFESSIONAL SUMMARY:\n\nCORE SKILLS:\n' + candSkills.map(function(s){ return '• ' + s; }).join('\n') + '\n\nWORK EXPERIENCE:\n\nEDUCATION:');
+      }
+
+      renderMissingChips(initialResult.missing);
+    }
+
+    function updateScoreDisplay(score){
+      var color = score >= 80 ? '#15803d' : (score >= 60 ? '#b45309' : '#b91c1c');
+      var bg = score >= 80 ? '#dcfce7' : (score >= 60 ? '#fef3c7' : '#fee2e2');
+      var label = score + '% Match';
+      if(badge){
+        badge.textContent = label;
+        badge.style.background = bg;
+        badge.style.color = color;
+      }
+      if(pill){
+        pill.textContent = label;
+        pill.style.background = bg;
+        pill.style.color = color;
+      }
+    }
+
+    function renderMissingChips(missing){
+      if(!chipsCont) return;
+      if(!missing || missing.length === 0){
+        chipsCont.innerHTML = '<span style="font-size: 12px; color: #15803d; font-weight: 500;">✓ Excellent! All core job skills are present in resume.</span>';
+        return;
+      }
+      chipsCont.innerHTML = '';
+      missing.slice(0, 12).forEach(function(skill){
+        var chip = document.createElement('button');
+        chip.type = 'button';
+        chip.className = 'btn btn-sm';
+        chip.style.cssText = 'padding: 3px 8px; font-size: 11px; border-radius: 9999px; background: #e0f2fe; color: #0369a1; border: 1px solid #bae6fd; font-weight: 500; cursor: pointer;';
+        chip.innerHTML = '+ ' + skill;
+        chip.title = 'Click to insert into resume text';
+        chip.addEventListener('click', function(){
+          if(textarea){
+            textarea.value = textarea.value.trim() + '\n• ' + skill;
+            textarea.dispatchEvent(new Event('input'));
+            chip.style.display = 'none';
+          }
+        });
+        chipsCont.appendChild(chip);
+      });
+    }
+
+    // Toggle Optimizer Studio View
+    if(openBtn && !openBtn.__wired){
+      openBtn.__wired = true;
+      openBtn.addEventListener('click', function(e){
+        e.preventDefault();
+        if(optsList) optsList.style.display = 'none';
+        if(coinCard) coinCard.style.display = 'none';
+        if(sectLbl) sectLbl.style.display = 'none';
+        if(footer) footer.style.display = 'none';
+        if(banner) banner.style.display = 'none';
+        if(panel) panel.style.display = 'flex';
+      });
+    }
+
+    if(closeBtn && !closeBtn.__wired){
+      closeBtn.__wired = true;
+      closeBtn.addEventListener('click', function(e){
+        e.preventDefault();
+        if(panel) panel.style.display = 'none';
+        if(banner) banner.style.display = 'flex';
+        if(optsList) optsList.style.display = 'grid';
+        if(coinCard) coinCard.style.display = 'block';
+        if(sectLbl) sectLbl.style.display = 'block';
+        if(footer) footer.style.display = 'block';
+      });
+    }
+
+    // Textarea input debounced live score
+    if(textarea && !textarea.__wired){
+      textarea.__wired = true;
+      var debounceTimer = null;
+      textarea.addEventListener('input', function(){
+        clearTimeout(debounceTimer);
+        debounceTimer = setTimeout(function(){
+          if(_rdcOptimizer){
+            var res = _rdcOptimizer.calculateAtsScore(textarea.value);
+            renderMissingChips(res.missing);
+          }
+        }, 60);
+      });
+    }
+
+    // Download Optimized PDF
+    if(dlBtn && !dlBtn.__wired){
+      dlBtn.__wired = true;
+      dlBtn.addEventListener('click', async function(e){
+        e.preventDefault();
+        if(!_rdcOptimizer) return;
+        var origHtml = dlBtn.innerHTML;
+        dlBtn.disabled = true;
+        dlBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true" style="width:12px;height:12px;margin-right:6px;"></span> Generating PDF…';
+        try {
+          var pdfBlob = await _rdcOptimizer.exportOptimizedPdf(textarea.value, {
+            candidateName: candName,
+            jobTitle: jobTitle
+          });
+          var cleanName = (candName || 'Candidate').replace(/[^a-zA-Z0-9_\-]/g, '_');
+          AgyCvOptimizer.downloadBlob(pdfBlob, cleanName + '_Optimized_Resume.pdf');
+        } catch(err){
+          console.error('Error generating optimized PDF:', err);
+          alert('Could not export PDF. Please try again.');
+        } finally {
+          dlBtn.disabled = false;
+          dlBtn.innerHTML = origHtml;
+        }
+      });
+    }
+  }
+
   function openRdc(){
     if(!hasDownloadableResume()){
       showNoResumeMessage();
@@ -9089,6 +9321,7 @@ window.__rsEnsureOpenDocLab=rsEnsureOpenDocLab;
     }
     renderOpenRdc();
     preloadOnDemandRdcAssets();
+    try { initRdcOptimizerStudio(); } catch(e){ console.warn('Optimizer studio init ignored:', e); }
   }
 
   function closeRdc(){
