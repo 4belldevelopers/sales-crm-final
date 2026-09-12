@@ -1265,6 +1265,8 @@
         #resume_cv .rcv-textlayer span { position:absolute; white-space:pre; color:transparent; transform-origin:0% 0%; }
         #resume_cv .rcv-textlayer mark.rcv-hit { background:rgba(251,191,36,.45); color:transparent; border-radius:2px; }
         #resume_cv .rcv-textlayer mark.rcv-hit-active { background:rgba(249,115,22,.6); box-shadow:0 0 0 2px rgba(249,115,22,.5); }
+        #resume_cv .rcv-textlayer span.rcv-wasm-hit-span { display:block; pointer-events:auto; }
+        #resume_cv .rcv-textlayer span.rcv-wasm-hit-span mark.rcv-hit { display:block; width:100%; height:100%; line-height:inherit; }
         #resume_cv .rcv-loading { color:#e2e8f0; font-size:13px; padding:40px; }
         #resume_cv .rcv-iframe { width:100%; height:70vh; border:0; background:#fff; }
         #resume_cv .rcv-html { background:#fff; width:100%; max-width:820px; margin:0 auto; padding:44px 52px; color:#1f2937; font-size:13px; line-height:1.65; box-shadow:0 4px 16px rgba(0,0,0,.35); word-wrap:break-word; }
@@ -1471,13 +1473,14 @@
             hits = Array.prototype.slice.call(document.querySelectorAll('#rcvHtml mark.rcv-hit'));
           } else {
             // Dynamic text layer coordinate resolution for WASM-converted DOCX resumes
-            if(window.__rcvActiveWasmDoc && window.__rcvDocxWasmHitsSearched && typeof agyCollectWasmDocxWordHits === 'function'){
+            var collector = window.agyCollectWasmDocxWordHits || (typeof agyCollectWasmDocxWordHits === 'function' ? agyCollectWasmDocxWordHits : null);
+            if(window.__rcvActiveWasmDoc && window.__rcvDocxWasmHitsSearched && typeof collector === 'function'){
               var activeKws = activeList();
               var missingKws = activeKws.filter(function(k){
                 return !window.__rcvDocxWasmHitsSearched[k.toLowerCase()];
               });
               if(missingKws.length > 0){
-                var newHits = agyCollectWasmDocxWordHits(window.__rcvActiveWasmDoc, missingKws);
+                var newHits = collector(window.__rcvActiveWasmDoc, missingKws);
                 var chipUpdated = false;
                 missingKws.forEach(function(k){
                   window.__rcvDocxWasmHitsSearched[k.toLowerCase()] = true;
@@ -1507,12 +1510,12 @@
                       sp.className = 'rcv-wasm-hit-span';
                       sp.setAttribute('data-kw', h.word.toLowerCase());
                       sp.style.position = 'absolute';
-                      sp.style.left = (h.x * sX) + 'px';
-                      sp.style.top = (h.y * sY) + 'px';
-                      sp.style.width = Math.max(12, h.w * sX) + 'px';
-                      sp.style.height = (h.h * sY) + 'px';
+                      sp.style.left = Math.round(h.x * sX) + 'px';
+                      sp.style.top = Math.round(h.y * sY) + 'px';
+                      sp.style.width = Math.max(10, Math.round(h.w * sX)) + 'px';
+                      sp.style.height = Math.round(h.h * sY) + 'px';
                       sp.style.fontSize = Math.max(9, Math.round(h.h * sY * 0.82)) + 'px';
-                      sp.style.lineHeight = (h.h * sY) + 'px';
+                      sp.style.lineHeight = Math.round(h.h * sY) + 'px';
                       sp.style.color = 'transparent';
                       sp.style.whiteSpace = 'pre';
                       sp.textContent = h.word;
@@ -2027,15 +2030,15 @@
             await page.render({ canvasContext:ctx, viewport:viewport, transform:transform }).promise;
             var tc = await page.getTextContent();
             extractedText += tc.items.map(function(i){ return i.str; }).join(' ') + '\n';
-            try {
-              var task = pdfjsLib.renderTextLayer({ textContent:tc, container:tl, viewport:viewport, textDivs:[] });
-              if(task && task.promise) await task.promise;
-            } catch(e){}
-
-            // Direct text layer activation for WASM-rendered DOCX resumes
-            var currentSpans = tl.querySelectorAll('span');
-            if(currentSpans.length === 0 && window.__rcvDocxWasmHits && window.__rcvDocxWasmHits.length){
-              var pHits = window.__rcvDocxWasmHits.filter(function(h){ return h.page === p || h.page === (p - 1); });
+            var isDocxWasm = !!(window.__rcvActiveWasmDoc || (window.__rcvDocxWasmHits && window.__rcvDocxWasmHits.length));
+            if(!isDocxWasm){
+              try {
+                var task = pdfjsLib.renderTextLayer({ textContent:tc, container:tl, viewport:viewport, textDivs:[] });
+                if(task && task.promise) await task.promise;
+              } catch(e){}
+            } else {
+              // Exact WASM twip coordinates for DOCX resumes: strict h.page === p, zero ghost marks, exact word widths
+              var pHits = (window.__rcvDocxWasmHits || []).filter(function(h){ return h.page === p; });
               var sX = viewport.width / (base.width * 20);
               var sY = viewport.height / (base.height * 20);
 
@@ -2044,12 +2047,12 @@
                 sp.className = 'rcv-wasm-hit-span';
                 sp.setAttribute('data-kw', h.word.toLowerCase());
                 sp.style.position = 'absolute';
-                sp.style.left = (h.x * sX) + 'px';
-                sp.style.top = (h.y * sY) + 'px';
-                sp.style.width = Math.max(12, h.w * sX) + 'px';
-                sp.style.height = (h.h * sY) + 'px';
+                sp.style.left = Math.round(h.x * sX) + 'px';
+                sp.style.top = Math.round(h.y * sY) + 'px';
+                sp.style.width = Math.max(10, Math.round(h.w * sX)) + 'px';
+                sp.style.height = Math.round(h.h * sY) + 'px';
                 sp.style.fontSize = Math.max(9, Math.round(h.h * sY * 0.82)) + 'px';
-                sp.style.lineHeight = (h.h * sY) + 'px';
+                sp.style.lineHeight = Math.round(h.h * sY) + 'px';
                 sp.style.color = 'transparent';
                 sp.style.whiteSpace = 'pre';
                 sp.textContent = h.word;
@@ -7622,6 +7625,7 @@ function agyCollectWasmDocxWordHits(doc, tokens){
 
   return allHits;
 }
+window.agyCollectWasmDocxWordHits = agyCollectWasmDocxWordHits;
 
 async function renderAgyStrategy2WasmDocxToPdfBlob(docxBytes, options){
   options = options || {};
@@ -7728,17 +7732,6 @@ async function renderAgyStrategy2WasmDocxToPdfBlob(docxBytes, options){
 
         var imgData = canvas.toDataURL('image/jpeg', 0.98);
         pdf.addImage(imgData, 'JPEG', 0, 0, pageW, pageH, undefined, 'FAST');
-
-        var pageHits = wasmHits.filter(function(h){ return h.page === (i + 1); });
-        pageHits.forEach(function(h){
-          var ptX = h.x / 20;
-          var ptY = (h.y / 20) + ((h.h / 20) * 0.82);
-          var ptH = Math.max(6, Math.min(24, (h.h / 20) * 0.85));
-          if(typeof pdf.setFontSize === 'function') pdf.setFontSize(ptH);
-          if(typeof pdf.text === 'function'){
-            pdf.text(h.word, ptX, ptY, { renderingMode: 'invisible' });
-          }
-        });
       }finally{
         if(bitmap && typeof bitmap.free === 'function') bitmap.free();
         if(canvas){
