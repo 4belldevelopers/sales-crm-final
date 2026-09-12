@@ -115,27 +115,39 @@ class CandidatesMailAndResumeForward
                     $msg->replyTo($fromAddress_reply, $fromName_reply);
                 }
 
-                // ✅ Attachment from URL (Queue Safe)
+                // ✅ Attachment from Local Storage or Remote URL (Queue Safe)
                 // ✅ Dynamic Attachments
                 if (count($attachments) > 0) {
                     foreach ($attachments as $attachment) {
-                        // dd($attachment['path']);
-                        // $attachment = $this->downloadAttachment($attachment['path']);
-                        $fileContent = file_get_contents($attachment['path']);
-                        $attachmentData = $this->downloadAttachment($attachment['path']);
-                        if ($attachmentData) {
-                            if (! empty($attachmentData['filename'])) {
-                                $filename = $attachment['filename'] ?? $attachmentData['filename'];
-                                $msg->attachData(
-                                    $fileContent,
-                                    $filename, // auto file name
-                                    [
-                                        'mime' => 'application/pdf',
-                                    ]
-                                );
-                            }
+                        $path = $attachment['path'] ?? '';
+                        if (empty($path)) {
+                            continue;
                         }
 
+                        $filename = $attachment['filename'] ?? basename($path);
+                        $mime = strtolower(pathinfo($filename, PATHINFO_EXTENSION)) === 'pdf' ? 'application/pdf' : 'application/octet-stream';
+
+                        // Check if it is a local filesystem path (e.g. generated custom PDF)
+                        if (! empty($attachment['is_local']) || (file_exists($path) && ! filter_var($path, FILTER_VALIDATE_URL))) {
+                            if (file_exists($path)) {
+                                $fileContent = file_get_contents($path);
+                                if ($fileContent !== false && strlen($fileContent) > 0) {
+                                    $msg->attachData($fileContent, $filename, ['mime' => $mime]);
+                                }
+                            }
+                        } else {
+                            // Remote URL (e.g. Cloudflare R2 / S3 storage)
+                            $attachmentData = $this->downloadAttachment($path);
+                            if ($attachmentData && ! empty($attachmentData['data'])) {
+                                $finalName = $attachment['filename'] ?? $attachmentData['filename'];
+                                $msg->attachData($attachmentData['data'], $finalName, ['mime' => $mime]);
+                            } elseif (@file_get_contents($path)) {
+                                $fileContent = file_get_contents($path);
+                                if ($fileContent !== false && strlen($fileContent) > 0) {
+                                    $msg->attachData($fileContent, $filename, ['mime' => $mime]);
+                                }
+                            }
+                        }
                     }
                 }
 

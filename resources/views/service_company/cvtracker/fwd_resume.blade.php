@@ -4,6 +4,8 @@
 		$currencySymbole 				=	GeneralMethod::currencySymbole();
 			
 @endphp 
+<script src="{{ asset('js/pdf-lib.min.js') }}"></script>
+<script src="{{ asset('js/opendoc/AgyForwardResumeHelper.js') }}"></script>
 <script src="{{ asset('demo/ckeditor/ckeditor.js') }}"></script>
 <script>
 									
@@ -211,6 +213,78 @@ if($cc_email_count > 0){
       </div>
     </div>
 
+    {{-- Resume Attachment Format Selector (Download Resume Center Integration) --}}
+    <div class="mm-row">
+      <div class="mm-label-col">
+        <span class="mm-label-icon mm-ic-teal">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
+        </span>
+        Attach Resume
+      </div>
+      <div class="mm-field-col">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
+          <label style="display:inline-flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;font-weight:600;color:#1F2937;">
+            <input type="checkbox" id="fwd_attach_cv_toggle" name="attached_cv" value="1" checked style="width:16px;height:16px;accent-color:#0D9488;cursor:pointer;">
+            <span>Attach Resume to Email</span>
+          </label>
+        </div>
+
+        <div id="fwd_format_container">
+          <select name="attached_cv_format" id="fwd_resume_format" class="mm-select" style="font-weight:500;">
+            <optgroup label="1. Standard Resume Options">
+              <option value="1" selected data-label="Original Candidate Resume" data-desc="Pristine resume file as originally uploaded by candidate/agency.">1. Original Resume (Default)</option>
+              <option value="41" data-label="Resume + Company Branding Logo" data-desc="Resume with your agency/company logo header & confidential watermark on Page 1.">41. Resume + Company Branding Logo</option>
+            </optgroup>
+            <optgroup label="2. Pre-Screened Report">
+              <option value="5" data-label="Candidate Pre-Screened Report PDF" data-desc="Complete verification & interview evaluation assessment dossier.">5. Candidate Pre-Screened Report PDF</option>
+            </optgroup>
+            <optgroup label="3. Recruiter Packages (Report + Resume)">
+              <option value="42" data-label="Dossier: Pre-Screened Report + Original Resume" data-desc="Combined evaluation report followed by original candidate resume.">42. Pre-Screened Report + Original Resume</option>
+              <option value="43" data-label="Dossier: Pre-Screened Report + Branded Resume" data-desc="Combined evaluation report with company-branded resume.">43. Pre-Screened Report + Branded Resume</option>
+            </optgroup>
+            <optgroup label="4. Highlighted Skills">
+              <option value="44" data-label="Resume + Highlighted Skills" data-desc="Candidate resume with matching ATS keywords highlighted in yellow.">44. Resume + Highlighted Skills</option>
+              <option value="45" data-label="Resume + Company Branding + Highlights" data-desc="Company logo header on Page 1 plus highlighted matching skills.">45. Resume + Company Branding + Highlights</option>
+              <option value="46" data-label="Dossier: Report + Highlighted Resume" data-desc="Evaluation dossier with highlighted candidate resume.">46. Pre-Screened Report + Highlighted Resume</option>
+              <option value="47" data-label="Dossier: Report + Branding + Highlights" data-desc="Full presentation package: Report + Company logo header + Highlighted skills.">47. Full Recruiter Dossier (Report + Branding + Highlights)</option>
+            </optgroup>
+            <optgroup label="5. Privacy & Anonymization (Anti-Poaching Shield)">
+              <option value="48" data-label="Anonymized (Masked Contact Info)" data-desc="Candidate email, phone number, and LinkedIn redacted for privacy.">48. Masked Contact Info (Anonymized)</option>
+              <option value="49" data-label="Anonymized + Company Branding" data-desc="Masked candidate contact info with your agency header on Page 1.">49. Masked Contact Info + Company Branding</option>
+              <option value="50" data-label="Anonymized + Highlights" data-desc="Masked candidate contact info with highlighted matching skills.">50. Masked Contact Info + Highlights</option>
+              <option value="51" data-label="Full Anonymized Recruiter Dossier" data-desc="Complete anonymized package: Report + Masked contact info + Agency branding.">51. Full Anonymized Recruiter Dossier</option>
+            </optgroup>
+          </select>
+
+          <!-- Live Attachment Preview Badge -->
+          <div id="fwd_attachment_preview_card" style="margin-top:8px;padding:9px 12px;background:#F0FDF4;border:1px solid #BBF7D0;border-radius:8px;display:flex;align-items:center;justify-content:space-between;gap:12px;">
+            <div style="display:flex;align-items:center;gap:8px;min-width:0;">
+              <span style="width:26px;height:26px;border-radius:6px;background:#DCFCE7;color:#15803D;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;font-size:12px;font-weight:700;">PDF</span>
+              <div style="min-width:0;">
+                <div id="fwd_preview_filename" style="font-size:12.5px;font-weight:600;color:#166534;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+                  {{ 'JERO_' . (!empty($applicationData[0]->full_name) ? str_replace(' ', '_', $applicationData[0]->full_name) : 'Candidate') . '_Resume.pdf' }}
+                </div>
+                <div id="fwd_preview_desc" style="font-size:11px;color:#15803D;margin-top:1px;">
+                  Pristine resume file as originally uploaded by candidate/agency.
+                </div>
+              </div>
+            </div>
+            <div style="display:flex;align-items:center;gap:6px;flex-shrink:0;">
+              <span style="font-size:11px;font-weight:600;color:{{ count($applicationData ?? []) > 10 ? '#B91C1C' : '#15803D' }};background:{{ count($applicationData ?? []) > 10 ? '#FEE2E2' : '#DCFCE7' }};padding:3px 9px;border-radius:12px;white-space:nowrap;">
+                📎 {{ count($applicationData ?? []) }} / 10 Max Resumes
+              </span>
+            </div>
+          </div>
+          @if(count($applicationData ?? []) > 10)
+            <div style="margin-top:7px;padding:7px 11px;background:#FEF2F2;border:1px solid #FECACA;border-radius:7px;color:#991B1B;font-size:11.5px;display:flex;align-items:center;gap:6px;">
+              <span>⚠️</span>
+              <span><strong>Notice:</strong> You selected {{ count($applicationData) }} candidates. To ensure 100% email deliverability and avoid 25MB mail server rejections, the first 10 resumes will be attached.</span>
+            </div>
+          @endif
+        </div>
+      </div>
+    </div>
+
     {{-- Body --}}
     <div class="mm-row mm-row-body">
       <div class="mm-label-col">
@@ -225,9 +299,6 @@ if($cc_email_count > 0){
         </div>
       </div>
     </div>
-
-    {{-- Hidden --}}
-    <input name="attached_cv" id="attached_cv" type="hidden" value="1" />
 
   </div>
 
@@ -556,10 +627,36 @@ $('#template').change(function(){
 });
 
 
-document.getElementById("btnSubmit").addEventListener("click", function () {
+// Attachment Format interaction handlers
+$(document).on('change', '#fwd_resume_format', function () {
+    var sel = $(this).find('option:selected');
+    var label = sel.attr('data-label') || sel.text();
+    var desc = sel.attr('data-desc') || '';
+    var optVal = $(this).val();
+
+    var candName = "{{ !empty($applicationData[0]->full_name) ? str_replace(' ', '_', $applicationData[0]->full_name) : 'Candidate' }}";
+    var filename = 'JERO_' + candName + '_' + (optVal === '1' ? 'Resume.pdf' : (optVal === '5' ? 'Report.pdf' : 'Branded_Resume.pdf'));
+
+    $('#fwd_preview_filename').text(filename);
+    $('#fwd_preview_desc').text(desc);
+});
+
+$(document).on('change', '#fwd_attach_cv_toggle', function () {
+    if ($(this).is(':checked')) {
+        $('#fwd_format_container').slideDown(150);
+    } else {
+        $('#fwd_format_container').slideUp(150);
+    }
+});
+
+document.getElementById("btnSubmit").addEventListener("click", async function () {
+
+    var isAttachChecked = $('#fwd_attach_cv_toggle').is(':checked');
+    var attached_cv = isAttachChecked ? 1 : 0;
+    var optId = parseInt($('#fwd_resume_format').val(), 10) || 1;
 
     $('.indicator-label').hide();
-    $('.indicator-progress').show();
+    $('.indicator-progress').html('Please wait... <span class="spinner-border spinner-border-sm align-middle ms-2"></span>').show();
     document.getElementById('btnSubmit').disabled = true;
 
     var id      = 1;
@@ -575,19 +672,61 @@ document.getElementById("btnSubmit").addEventListener("click", function () {
     var to_email    = $('#to_email').val();
     var cc_email    = $('#cc_email_panel').val();
     var subject     = $('#subject').val();
-    var attached_cv = 1;
-    var editor1     = CKEDITOR.instances.editor1.getData();
+    var editor1     = (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances && CKEDITOR.instances.editor1) ? CKEDITOR.instances.editor1.getData() : ($('#editor1').val() || '');
+
+    var formData = new FormData();
+    formData.append('_token', token);
+    formData.append('_method', 'POST');
+    formData.append('template', template);
+    formData.append('from_email', from_email);
+    formData.append('to_email', to_email);
+    formData.append('cc_email', cc_email);
+    formData.append('subject', subject);
+    formData.append('attached_cv', attached_cv);
+    formData.append('attached_cv_format', optId);
+    formData.append('editor1', editor1);
+    for (var ai = 0; ai < arr.length; ai++) {
+        formData.append('arr[]', arr[ai]);
+    }
+
+    // If custom format is chosen (optId !== 1) and attached_cv is enabled:
+    if (attached_cv === 1 && optId !== 1 && window.AgyForwardResumeHelper) {
+        try {
+            var candidatesList = @json($applicationData ?? []);
+            var companyData = {
+                companyName: @json($companyName ?? 'Hiring Partner'),
+                companyLogo: @json($companyLogo ?? '')
+            };
+            var jobSkills = @json($jobSkills ?? []);
+
+            for (var c = 0; c < candidatesList.length; c++) {
+                var cand = candidatesList[c];
+                $('.indicator-progress').html('Preparing ' + (cand.full_name || 'Resume') + ' (' + (c + 1) + '/' + candidatesList.length + ')... <span class="spinner-border spinner-border-sm align-middle ms-2"></span>');
+
+                var pdfBlob = await window.AgyForwardResumeHelper.generateAttachmentForCandidate(cand, optId, companyData, jobSkills, function (statusMsg) {
+                    $('.indicator-progress').html(statusMsg + ' <span class="spinner-border spinner-border-sm align-middle ms-2"></span>');
+                });
+
+                if (pdfBlob) {
+                    var safeCandName = (cand.full_name || 'Candidate').replace(/[^\w\s.-]/g, '').replace(/\s+/g, '_');
+                    var outName = 'JERO_' + safeCandName + '_' + cand.id + '.pdf';
+                    formData.append('custom_attachments[' + cand.id + ']', pdfBlob, outName);
+                }
+            }
+        } catch (genErr) {
+            console.warn('Client-side resume preparation fallback:', genErr);
+            // Non-blocking: Server falls back to original resume file if client generation encountered an issue
+        }
+    }
+
+    $('.indicator-progress').html('Sending Email... <span class="spinner-border spinner-border-sm align-middle ms-2"></span>');
 
     $.ajax({
         type : 'POST',
         url  : url,
-        data : {
-            '_token': token, '_method': 'POST',
-            'template': template, 'from_email': from_email,
-            'to_email': to_email, 'cc_email': cc_email,
-            'subject': subject, 'attached_cv': attached_cv,
-            'editor1': editor1, 'arr': arr
-        },
+        data : formData,
+        processData: false,
+        contentType: false,
         success: function (response) {
             $('.indicator-progress').hide();
             $('.indicator-label').show();
