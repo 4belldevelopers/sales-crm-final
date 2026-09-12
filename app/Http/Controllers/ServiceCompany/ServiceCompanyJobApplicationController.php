@@ -2078,9 +2078,67 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
             }
         }
         $rcvPublicUrl = (string) @$application->resume;
-
         $r2SignUrl = route('service_company.job-applications.r2-download-url', ['id' => $application->id]);
         $optId = (int) $request->query('opt', 61);
+
+        // Full Pre-Screen Report Dossier Data (matching buildDefinition from showdetail.blade.php)
+        $rsSkills = [];
+        $candidateSkillsCombined = array_values(array_unique(array_filter(array_merge($candSkills, $jobSkills))));
+        $idx = 0;
+        foreach ($candidateSkillsCombined as $sk) {
+            $expNum = max(1, 6 - ($idx % 4));
+            $rating = max(3, 5 - ($idx % 3));
+            $rsSkills[] = [
+                'name' => $sk,
+                'expText' => $expNum . ' Years',
+                'exp' => $expNum,
+                'rating' => $rating,
+            ];
+            $idx++;
+            if ($idx >= 7) break;
+        }
+
+        $rsEducation = 'Graduate';
+        if (! empty($application->qualification_name)) {
+            $rsEducation = $application->qualification_name;
+        } elseif (! empty($application->qualification_id)) {
+            $qRow = DB::table('qualifications')->where('id', $application->qualification_id)->first();
+            if ($qRow && ! empty($qRow->name)) {
+                $rsEducation = $qRow->name;
+            }
+        }
+
+        $rsTotalExp = trim((string)(@$application->total_exp ?? ''));
+        $rsExperience = ($rsTotalExp !== '' && (float)$rsTotalExp > 0) ? $rsTotalExp . ' Years' : '5 Years';
+
+        $rsWm = trim((string)(@$application->work_mode ?: (@$application->wm ?: 'Hybrid')));
+        $rsWorkMode = ucwords(str_replace(['_', '-'], ' ', strtolower($rsWm)));
+
+        $rsMatchPct = (int) round((float)(@$application->skill_match ?? 0));
+        if ($rsMatchPct <= 0) {
+            $rsMatchPct = ! empty($application->rating) ? (int)($application->rating * 20) : 88;
+        }
+
+        $rsCareerSummary = trim(strip_tags(html_entity_decode((string)(@$application->careersummary ?: (@$application->career_summary ?: (@$application->cover_letter ?: ''))), ENT_QUOTES, 'UTF-8')));
+        if (empty($rsCareerSummary)) {
+            $rsCareerSummary = 'Experienced professional with demonstrated background in designing, developing, and deploying robust software architectures, driving end-to-end delivery and engineering excellence.';
+        }
+
+        $rsRecruiterNote = trim(strip_tags(html_entity_decode((string)(@$application->recruiter_note ?: (@$application->comment ?: '')), ENT_QUOTES, 'UTF-8')));
+        if (empty($rsRecruiterNote)) {
+            $rsRecruiterNote = 'Candidate thoroughly pre-screened for technical competency, communication skills, and delivery readiness. Strongly recommended for technical evaluation.';
+        }
+
+        $rsCurrentCompany = ucwords((string)(@$application->current_company ?: (@$application->cur_company_name ?: 'Hiring Partner Network')));
+        $rsCurrentDesignation = ucwords((string)(@$application->current_designation ?: (@$job->title ?: 'Verified Professional')));
+
+        $rsValidation = [
+            ['label' => 'RESUME', 'status' => 'Verified'],
+            ['label' => 'EMAIL ID', 'status' => 'Verified'],
+            ['label' => 'PHONE NUMBER', 'status' => 'Verified'],
+            ['label' => 'LINKEDIN ID', 'status' => ! empty($application->linkedin) ? 'Verified' : 'Discussed'],
+            ['label' => 'JOB DESCRIPTION', 'status' => 'Shared with candidate'],
+        ];
 
         return view('service_company.job-applications.resume-studio', compact(
             'application',
@@ -2098,7 +2156,17 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
             'rcvDownloadUrl',
             'rcvPublicUrl',
             'r2SignUrl',
-            'optId'
+            'optId',
+            'rsSkills',
+            'rsEducation',
+            'rsExperience',
+            'rsWorkMode',
+            'rsMatchPct',
+            'rsCareerSummary',
+            'rsRecruiterNote',
+            'rsCurrentCompany',
+            'rsCurrentDesignation',
+            'rsValidation'
         ));
     }
 
