@@ -4979,24 +4979,23 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
                 }
             }
 
-            // Fallback for remaining candidates: If custom format requested (Option != 1), generate server-side fail-safe PDF!
+            // If custom format requested (Option != 1), verify all requested candidates have client-assembled custom attachments
             $remainingIds = array_diff($arr, $handledCandidates);
-            if (! empty($remainingIds)) {
-                $formatId = (int) $request->input('attached_cv_format', 1);
+            $formatId = (int) $request->input('attached_cv_format', 1);
+
+            if ($formatId !== 1 && ! empty($remainingIds)) {
+                // Strict client-only policy: Never fall back to server-side converter or attach original resume when custom format was chosen.
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Custom resume compilation was not completed by the client WASM engine. Please re-open the drawer and try sending again.',
+                ], 422);
+            }
+
+            // Option 1 (Original Candidate Resume) — direct stream from Cloudflare R2
+            if ($formatId === 1 && ! empty($remainingIds)) {
                 $resumeRow = DB::table('job_applications')->select('*')->whereIn('id', $remainingIds)->get();
                 if ($resumeRow->count() > 0) {
                     foreach ($resumeRow as $key => $rval) {
-                        // If recruiter chose a customized format (Option 5, 41, 42-51) but browser did not upload custom_attachments,
-                        // generate the requested format server-side so recipient ALWAYS gets the selected format.
-                        if ($formatId !== 1) {
-                            $customAttachment = $this->generateFallbackCustomAttachment($rval, $formatId, $company_id, $tempDir);
-                            if ($customAttachment) {
-                                $attachments[] = $customAttachment;
-                                continue;
-                            }
-                        }
-
-                        // Option 1 (Original Resume) or ultimate fallback
                         if (! empty($rval->resume) && in_array(strtolower(pathinfo($rval->resume, PATHINFO_EXTENSION)), ['pdf', 'doc', 'docx'])) {
                             $hashname = $rval->resume;
                             $documentable_id = $rval->id;
@@ -5113,171 +5112,6 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
 
         return Reply::dataOnly(['status' => 'success', 'view' => $view]);
 
-    }
-
-    /**
-     * Generates a server-side fail-safe PDF attachment matching the recruiter's chosen format.
-     * Guarantees 100% format accuracy even if the client browser failed to upload custom_attachments.
-     */
-    protected function generateFallbackCustomAttachment($candidate, int $formatId, int $companyId, string $tempDir): ?array
-    {
-        try {
-            $companyRow = DB::table('companies')->where('id', $companyId)->first();
-            $companyName = $companyRow ? ucwords((string) $companyRow->company_name) : 'Hiring Partner';
-
-            $isReport = ($formatId === 5 || in_array($formatId, [42, 43, 46, 47, 51]));
-            $isBranded = in_array($formatId, [41, 43, 45, 47, 49, 51]);
-            $isHighlighted = in_array($formatId, [44, 45, 46, 47, 50]);
-            $isAnonymized = in_array($formatId, [48, 49, 50, 51]);
-
-            $candName = $candidate->full_name ?: 'Candidate';
-            $candEmail = $isAnonymized ? '[CONFIDENTIAL CONTACT REDACTED]' : ($candidate->email ?: 'Verified Contact');
-            $candPhone = $isAnonymized ? '[CONFIDENTIAL PHONE REDACTED]' : ($candidate->phone ?: 'Verified Phone');
-
-            $html = '<!DOCTYPE html><html><head><meta charset="utf-8"><style>
-              body { font-family: "Helvetica Neue", Helvetica, Arial, sans-serif; font-size: 11px; color: #1e293b; margin: 0; padding: 20px; }
-              .brand-bar { background: #0f2757; color: #fff; padding: 12px 18px; border-radius: 6px; margin-bottom: 16px; }
-              .brand-title { font-size: 13px; font-weight: bold; text-transform: uppercase; }
-              .brand-sub { font-size: 9px; color: #93c5fd; margin-top: 2px; }
-              .cand-card { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 12px 16px; margin-bottom: 14px; }
-              .cand-name { font-size: 16px; font-weight: bold; color: #0f172a; }
-              .cand-sub { font-size: 10.5px; color: #64748b; margin-top: 2px; }
-              .grid-table { width: 100%; border-collapse: collapse; margin-bottom: 14px; }
-              .grid-table td { width: 50%; padding: 7px 10px; border: 1px solid #e2e8f0; background: #fff; vertical-align: top; }
-              .grid-label { font-size: 7.5px; font-weight: bold; color: #64748b; text-transform: uppercase; margin-bottom: 2px; }
-              .grid-val { font-size: 10px; font-weight: bold; color: #0f172a; }
-              .section-title { font-size: 9.5px; font-weight: bold; color: #0f2757; text-transform: uppercase; margin-bottom: 6px; }
-              .badge { display: inline-block; background: #eff6ff; border: 1px solid #bfdbfe; color: #1d4ed8; padding: 2px 7px; border-radius: 4px; font-size: 8.5px; margin: 2px 3px 2px 0; font-weight: bold; }
-              .notes-box { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 10px 14px; font-size: 9.5px; color: #334155; line-height: 1.4; margin-bottom: 14px; }
-              .page-break { page-break-after: always; }
-              .resume-body { font-size: 10px; line-height: 1.5; color: #334155; }
-              .resume-para { margin: 0 0 6px 0; }
-              .mark-hl { background: #fef08a; padding: 1px 3px; font-weight: bold; border-radius: 2px; }
-              .footer { margin-top: 20px; font-size: 8px; color: #94a3b8; text-align: center; border-top: 1px solid #f1f5f9; padding-top: 8px; }
-            </style></head><body>';
-
-            if ($isBranded) {
-                $html .= '<div class="brand-bar"><table style="width:100%;"><tr><td><div class="brand-title">' . htmlspecialchars($companyName) . '</div><div class="brand-sub">Official Recruitment Partner Presentation • Verified Candidate</div></td><td style="text-align:right;font-size:8.5px;color:#bfdbfe;">CONFIDENTIAL CANDIDATE DOSSIER<br>' . date('d M Y') . '</td></tr></table></div>';
-            }
-
-            if ($isReport) {
-                $html .= '
-                <div class="cand-card">
-                  <div class="cand-name">' . htmlspecialchars($candName) . '</div>
-                  <div class="cand-sub">' . htmlspecialchars($candidate->current_designation ?? 'Qualified Professional') . ' ' . ($candidate->current_company ? ('at ' . htmlspecialchars($candidate->current_company)) : '') . ' • ' . ($candidate->total_exp ?? '0') . ' Yrs Exp</div>
-                </div>
-
-                <table class="grid-table">
-                  <tr>
-                    <td><div class="grid-label">Notice Period</div><div class="grid-val">' . htmlspecialchars($candidate->np_id ? ($candidate->np_id . ' Days') : 'Immediate / Serving') . '</div></td>
-                    <td><div class="grid-label">Current CTC</div><div class="grid-val">' . htmlspecialchars($candidate->ctc ? ($candidate->ctc . ' ' . ($candidate->current_ctc_cur ?: 'LPA')) : 'Confidential') . '</div></td>
-                  </tr>
-                  <tr>
-                    <td><div class="grid-label">Expected CTC</div><div class="grid-val">' . htmlspecialchars($candidate->ectc ? ($candidate->ectc . ' ' . ($candidate->current_ectc_cur ?: 'LPA')) : 'Negotiable') . '</div></td>
-                    <td><div class="grid-label">Verified Contact</div><div class="grid-val">' . htmlspecialchars($candEmail) . '</div></td>
-                  </tr>
-                  <tr>
-                    <td><div class="grid-label">Highest Qualification</div><div class="grid-val">Professional Degree / Technical Certification</div></td>
-                    <td><div class="grid-label">Screening Assessment</div><div class="grid-val" style="color:#16a34a;">Passed • Recommended for Client Interview</div></td>
-                  </tr>
-                </table>
-
-                <div style="margin-bottom:12px;">
-                  <div class="section-title">Verified Technical Skills & Competencies</div>';
-                $skills = array_filter(array_map('trim', explode(',', $candidate->skills ?: 'Software Engineering, Communication, Team Collaboration')));
-                foreach ($skills as $sk) {
-                    $html .= '<span class="badge">' . htmlspecialchars($sk) . '</span>';
-                }
-                $html .= '</div>
-
-                <div class="notes-box">
-                  <div class="section-title" style="margin-bottom:3px;">Recruiter Assessment Notes</div>
-                  Candidate thoroughly verified and assessed for technical competency, cultural fit, and delivery readiness. Recommended for immediate client interview rounds with verified communication benchmarks.
-                </div>';
-
-                if ($formatId !== 5) {
-                    $html .= '<div class="page-break"></div>';
-                }
-            }
-
-            if ($formatId !== 5) {
-                $resumeText = '';
-                if (! empty($candidate->resume)) {
-                    $parsedUrl = parse_url($candidate->resume, PHP_URL_PATH);
-                    $r2Key = ltrim((string) $parsedUrl, '/');
-                    if (\Storage::disk('r2')->exists($r2Key)) {
-                        $raw = \Storage::disk('r2')->get($r2Key);
-                        $ext = strtolower(pathinfo($r2Key, PATHINFO_EXTENSION));
-                        if ($ext === 'docx') {
-                            $tmp = tempnam(sys_get_temp_dir(), 'dx_');
-                            file_put_contents($tmp, $raw);
-                            $zip = new \ZipArchive();
-                            if ($zip->open($tmp) === true) {
-                                $xml = $zip->getFromName('word/document.xml');
-                                $zip->close();
-                                if ($xml) {
-                                    $resumeText = strip_tags(str_replace(['</w:p>', '</w:tr>'], ["\n", "\n"], $xml));
-                                }
-                            }
-                            @unlink($tmp);
-                        }
-                    }
-                }
-
-                if (empty($resumeText)) {
-                    $resumeText = $candName . "\n" . ($candidate->current_designation ?: 'Professional') . "\nEmail: " . $candEmail . "\nPhone: " . $candPhone . "\nSkills: " . $candidate->skills;
-                }
-
-                if ($isAnonymized) {
-                    $resumeText = preg_replace('/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/', '[CONFIDENTIAL EMAIL REDACTED]', $resumeText);
-                    $resumeText = preg_replace('/(\+?\d{1,3}[-.\s]?)?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}/', '[CONFIDENTIAL PHONE REDACTED]', $resumeText);
-                }
-
-                $lines = explode("\n", $resumeText);
-                $bodyHtml = '';
-                $skillsToHl = ($isHighlighted && ! empty($candidate->skills)) ? array_filter(array_map('trim', explode(',', $candidate->skills))) : [];
-
-                foreach ($lines as $line) {
-                    $t = trim($line);
-                    if ($t === '') {
-                        continue;
-                    }
-                    $escaped = htmlspecialchars($t);
-                    if (! empty($skillsToHl)) {
-                        foreach ($skillsToHl as $sk) {
-                            if (strlen($sk) >= 3) {
-                                $escaped = preg_replace('/\b(' . preg_quote($sk, '/') . ')\b/i', '<mark class="mark-hl">$1</mark>', $escaped);
-                            }
-                        }
-                    }
-                    $bodyHtml .= '<p class="resume-para">' . $escaped . '</p>';
-                }
-
-                $html .= '<div class="section-title" style="margin-top:10px;">Candidate Professional Resume</div><div class="resume-body">' . $bodyHtml . '</div>';
-            }
-
-            $html .= '<div class="footer">Generated via JERO Enterprise Recruitment Platform • ' . htmlspecialchars($companyName) . ' • Confidential</div></body></html>';
-
-            $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadHTML($html);
-            $pdfBytes = $pdf->output();
-
-            $storedName = 'fwd_' . $candidate->id . '_' . uniqid() . '.pdf';
-            file_put_contents($tempDir . '/' . $storedName, $pdfBytes);
-
-            $safeCandName = str_replace(' ', '_', $candName);
-            $suffix = ($formatId === 5) ? 'Report' : (($formatId === 41) ? 'Branded_Resume' : 'Dossier');
-            $customFilename = 'JERO_' . $safeCandName . '_' . $suffix . '_' . $candidate->id . '.pdf';
-
-            return [
-                'path' => $tempDir . '/' . $storedName,
-                'filename' => $customFilename,
-                'is_local' => true,
-                'options' => [],
-            ];
-        } catch (\Throwable $e) {
-            \Log::warning('Server-side fallback resume format generation error: ' . $e->getMessage());
-            return null;
-        }
     }
 
     public function mass_mail_send(Request $request)
