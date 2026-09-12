@@ -1,5 +1,5 @@
 ﻿# JERO OpenDoc WASM Engine — Phase 5 Detailed Implementation Plan
-## Advanced Document Intelligence, Resume Diff Comparator, Pre-Upload Sanitizer & Dynamic Offer Letter Generator
+## Advanced Document Intelligence, Resume Diff Comparator, Pre-Upload Sanitizer & Agency Presentation Mode
 
 > **Document Status:** Complete Architecture & Implementation Specification  
 > **Target Version:** Laravel 11 / OpenDoc WASM 2.0 / Client-Side Engine  
@@ -7,23 +7,25 @@
 > **Master Reference:** [docs/OPENDOC_WASM_MASTER_IMPLEMENTATION_PLAN.md](OPENDOC_WASM_MASTER_IMPLEMENTATION_PLAN.md)  
 > **Phase 3 Reference:** [docs/OPENDOC_WASM_PHASE_3_DETAILED_IMPLEMENTATION_PLAN.md](OPENDOC_WASM_PHASE_3_DETAILED_IMPLEMENTATION_PLAN.md)  
 > **Phase 4 Reference:** [docs/OPENDOC_WASM_PHASE_4_DETAILED_IMPLEMENTATION_PLAN.md](OPENDOC_WASM_PHASE_4_DETAILED_IMPLEMENTATION_PLAN.md)  
+> **Phase 6 Reference:** [docs/OPENDOC_WASM_PHASE_6_DETAILED_IMPLEMENTATION_PLAN.md](OPENDOC_WASM_PHASE_6_DETAILED_IMPLEMENTATION_PLAN.md)  
 > **Rule Adherence:** Multi-Tenancy Scoped (`company_id`), Zero LibreOffice Server Load, Metronic UI Standard, Poppins Font $\le$ 14px
 
 ---
 
 ## 1. Executive Summary & Core Objectives
 
-Phase 5 transitions JERO from a high-speed document viewer and exporter into an **active client-side document intelligence and workflow automation suite**. By utilizing WebAssembly to parse, inspect, modify, and render document abstract syntax trees (ASTs) directly inside the browser, JERO eliminates costly third-party SaaS subscriptions (DocuSign, PandaDoc, resume parsing APIs, and diffing services) while keeping server CPU consumption at **0%**.
+Phase 5 transitions JERO from a high-speed document viewer and exporter into an **active client-side document intelligence and screening suite**. By utilizing WebAssembly to parse, inspect, and diff document abstract syntax trees (ASTs) directly inside the browser, JERO automates candidate quality control and verification while keeping server CPU consumption at **0%**.
 
-### The 4 Pillars of Phase 5:
+### The 3 Core Pillars of Phase 5:
 1. **Client-Side Pre-Upload Resume Sanitizer & Anti-Cheat Engine:**  
    Inspects candidate resumes in browser memory the instant a file is selected in `<input type="file">`. Detects white-on-white text cheats, micro-fonts ($< 4\text{pt}$), hidden table cells, and trailing page overflow (2.1-page resumes), prompting candidates to auto-optimize formatting *before* uploading to Cloudflare R2.
 2. **Multi-Version Resume Visual Comparator (Diff Tool):**  
    Empowers recruiters reviewing re-applicants (e.g. candidate re-applying after 6–12 months) to instantly compare old vs. new resumes side-by-side or in a unified overlay with green vector additions and red strikethrough deletions.
 3. **White-Label Agency Presentation Mode (Instant Vendor Rebranding):**  
    Enables staffing agencies to prepend stylized vector cover sheets, candidate scorecards, interview ratings, rate cards, and standardized headers/footers to candidate resumes in under 1 second.
-4. **In-Browser Dynamic Offer Letter & Consulting Contract Generator:**  
-   Allows HR teams to manage Microsoft Word `.docx` offer templates containing merge tags (`{{candidate_name}}`, `{{annual_ctc}}`, `{{joining_date}}`), preview populated contracts interactively, and export digitally signed PDFs client-side.
+
+> [!NOTE]
+> **Dedicated Phase 6 Promotion:** The *In-Browser Dynamic Offer Letter & Consulting Contract Generator* has been promoted into its own dedicated specification. See [docs/OPENDOC_WASM_PHASE_6_DETAILED_IMPLEMENTATION_PLAN.md](OPENDOC_WASM_PHASE_6_DETAILED_IMPLEMENTATION_PLAN.md).
 
 ---
 
@@ -179,49 +181,11 @@ Recruiting agencies on JERO present vetted candidates to enterprise corporate cl
 
 ---
 
-## 5. Feature 4: In-Browser Dynamic Offer Letter & Contract Generator
+## 5. Promotion of Offer Letter Generator to Phase 6
 
-### 5.1 Eliminating External Contract Platforms
-Hiring teams currently pay for separate software licenses (DocuSign, PandaDoc, Adobe Sign) or rely on server-side PDF generators (`wkhtmltopdf`/Puppeteer) that crash under heavy concurrency.
-
-### 5.2 Word Template Merge-Tag Engine
-JERO companies maintain standard `.docx` contract templates in Company Settings (`service_company/settings/templates`):
-- `Standard_Offer_Letter_Template.docx`
-- `Consulting_Agreement_Template.docx`
-- `Non_Disclosure_Agreement_Template.docx`
-
-Templates contain standard double-brace merge tags:
-`{{candidate_name}}`, `{{job_title}}`, `{{department}}`, `{{annual_ctc}}`, `{{joining_date}}`, `{{work_location}}`, `{{reporting_manager}}`.
-
-### 5.3 In-Browser XML Substitution & Live Preview
-
-```
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                  DYNAMIC OFFER LETTER GENERATOR PIPELINE                    │
-├─────────────────────────────────────────────────────────────────────────────┤
-│ 1. Recruiter moves candidate to "Offered" Stage -> Clicks "Draft Offer"     │
-│       │                                                                     │
-│       ▼                                                                     │
-│ 2. Selects Template from Dropdown -> Fetches Template .docx ArrayBuffer     │
-│       │                                                                     │
-│       ▼                                                                     │
-│ 3. OpenDoc WASM In-Memory Merge Tag Scanner:                                │
-│    - Locates all {{tag}} patterns across document.xml runs                  │
-│    - Pre-populates form with candidate database fields                      │
-│    - Recruiter adjusts custom parameters (e.g. Signing Bonus, Equity)       │
-│       │                                                                     │
-│       ▼                                                                     │
-│ 4. Real-Time Interactive Canvas Preview:                                    │
-│    - Replaces tags in XML run tree while preserving original styles & fonts │
-│    - Renders WYSIWYG canvas preview in modal in < 300ms                     │
-│       │                                                                     │
-│       ▼                                                                     │
-│ 5. 1-Click Finalization:                                                    │
-│    - Recruiter clicks "Send Offer" or "Download PDF"                        │
-│    - WASM compiles finalized PDF client-side                                │
-│    - Optional candidate digital signature canvas integration                │
-└─────────────────────────────────────────────────────────────────────────────┘
-```
+To maintain clean engineering modularity and support deep e-sign contract workflows, the **Dynamic Offer Letter & Contract Generator** is fully specified as **Phase 6**:
+- **Reference:** [docs/OPENDOC_WASM_PHASE_6_DETAILED_IMPLEMENTATION_PLAN.md](OPENDOC_WASM_PHASE_6_DETAILED_IMPLEMENTATION_PLAN.md)
+- **Scope:** Microsoft Word `.docx` template management, split-run XML substitution, interactive canvas preview, digital signature capture, and tamper-evident SHA-256 audit logging.
 
 ---
 
@@ -230,23 +194,28 @@ Templates contain standard double-brace merge tags:
 All Phase 5 modules strictly adhere to JERO multi-tenant data boundaries:
 
 ```php
-// Strict Company Scoping on Templates and Historical Resumes
-public function getOfferTemplates(Request $request)
+// Strict Company Scoping on Candidate Resumes and Historical Versions
+public function getCandidateVersions(Request $request, $candidateId)
 {
     $companyId = auth()->user()->company_id;
     
-    // Tenancy Note: Ensure templates belong strictly to current tenant
-    $templates = DB::table('offer_letter_templates')
+    // Tenancy Note: Ensure candidate history belongs strictly to current tenant
+    $candidate = DB::table('candidates')
+        ->where('id', $candidateId)
         ->where('company_id', $companyId)
-        ->whereNull('deleted_at')
-        ->get(['id', 'name', 'template_file_url', 'created_at']);
+        ->firstOrFail();
 
-    return response()->json(['templates' => $templates]);
+    $versions = DB::table('candidate_resumes')
+        ->where('candidate_id', $candidate->id)
+        ->where('company_id', $companyId)
+        ->orderBy('created_at', 'desc')
+        ->get(['id', 'file_name', 'file_url', 'created_at']);
+
+    return response()->json(['versions' => $versions]);
 }
 ```
 
-- **Contract Templates:** Templates uploaded by Company A cannot be viewed, edited, or used by Company B.
-- **Resume Diffs:** Version comparison is strictly limited to candidate records owned by the authenticated recruiter's `company_id`.
+- **Candidate Diff Privacy:** Version comparison is strictly limited to candidate records owned by the authenticated recruiter's `company_id`.
 - **Agency Branding:** Agency cover sheets draw strictly from the logged-in user's corporate profile assets.
 
 ---
@@ -255,7 +224,7 @@ public function getOfferTemplates(Request $request)
 
 - **Design System:** Metronic Clean Card System (`card card-custom`, `card-header`, `card-body`).
 - **Typography:** Poppins font family across all modals, tabs, and canvas labels; maximum body font size 14px.
-- **Iconography:** Clean SVG vector icons for diff additions (`+`), removals (`-`), cheat flags (`!`), and template downloads; zero 3D elements.
+- **Iconography:** Clean SVG vector icons for diff additions (`+`), removals (`-`), cheat flags (`!`), and downloads; zero 3D elements.
 - **Diff Color Coding:**
   - Added text: `#10b981` (Emerald green, 15% opacity background, solid green border).
   - Removed text: `#ef4444` (Crimson red, 15% opacity background, red strikethrough line).
@@ -270,7 +239,6 @@ public function getOfferTemplates(Request $request)
 | **Pre-Upload Sanitizer Inspection** | $< 350\text{ms}$ | Pure in-memory XML scanning; stops at first page break for cheat analysis |
 | **Dual-Document Diff Memory** | $< 70\text{MB}$ peak | Serial document loading; deterministic `.free()` cleanup upon modal dismissal |
 | **Cover Sheet Prepend & PDF Export** | $< 900\text{ms}$ | Vector element injection directly into canvas compositor |
-| **Merge Tag Substitution & Re-render** | $< 250\text{ms}$ | In-place XML run replacement; avoids full re-layout if pagination is unchanged |
 
 ---
 
@@ -278,10 +246,9 @@ public function getOfferTemplates(Request $request)
 
 | Edge Case | Solution / Fallback |
 | :--- | :--- |
-| **Non-Standard Merge Tag Syntax** | Engine supports `{{tag}}`, `{tag}`, and `[[tag]]`; unmapped tags remain visible with an amber warning badge. |
-| **Split-Run Word Tags** | Microsoft Word often splits `{{candidate_name}}` across multiple `<w:r>` tags; engine uses cross-run string normalization before replacement. |
-| **Diffing Structurally Mismatched Files** | If Candidate uploads DOCX for v1 and scanned PDF for v2, engine falls back to structured OCR text diff with a notification banner. |
-| **Corrupted Template Upload** | Pre-upload validator rejects malformed `.docx` files with an alert explaining the exact XML error. |
+| **Diffing Structurally Mismatched Files** | If candidate uploads DOCX for v1 and scanned PDF for v2, engine falls back to structured OCR text diff with a notification banner. |
+| **Obsolete `.doc` Binary Upload** | Sanitizer displays standard Metronic notification prompting conversion to `.docx` or `.pdf`. |
+| **Extremely Large Resume (> 20 pages)** | Diff engine samples headings and body sections progressively to maintain 60 FPS responsiveness. |
 
 ---
 
@@ -291,6 +258,5 @@ public function getOfferTemplates(Request $request)
 - [ ] **2.1-Page Budget Optimizer:** Confirm that resumes with 2 lines on page 3 display the "Fit to Page" prompt and cleanly adjust margins and spacing.
 - [ ] **Side-by-Side Diff Synchronization:** Verify that scrolling v1 or v2 resumes maintains accurate line alignment and correctly highlights added/removed sections.
 - [ ] **Agency Presentation Export:** Confirm that prepending an agency cover sheet generates a high-resolution vector PDF with candidate contact info automatically redacted.
-- [ ] **Dynamic Offer Letter Substitution:** Verify that merge tags (`{{candidate_name}}`, `{{annual_ctc}}`) in a `.docx` template correctly populate and render on canvas.
-- [ ] **Multi-Tenancy Security:** Verify that templates and candidate version histories cannot be accessed by unauthorized `company_id` accounts.
-- [ ] **Zero Server CPU:** Confirm that all sanitization, diffing, and contract generation runs 100% on the client with zero LibreOffice/Puppeteer backend load.
+- [ ] **Multi-Tenancy Security:** Verify that candidate version histories cannot be accessed by unauthorized `company_id` accounts.
+- [ ] **Zero Server CPU:** Confirm that all sanitization, diffing, and presentation generation runs 100% on the client with zero LibreOffice/Puppeteer backend load.
