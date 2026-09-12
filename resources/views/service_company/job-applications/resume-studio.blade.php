@@ -8,39 +8,25 @@
   <link rel="icon" type="image/svg+xml" href="{{ asset('img/logo.svg') }}">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
-  <!-- Core Client-Side PDF Engines -->
+  <!-- Core Client-Side Engines -->
+  <script src="{{ asset('js/mammoth.browser.min.js') }}" onerror="this.onerror=null;this.src='https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.5.0/mammoth.browser.min.js'"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.11.338/pdf.min.js"></script>
   <script src="{{ asset('js/pdfmake.min.js') }}"></script>
   <script src="{{ asset('js/vfs_fonts.min.js') }}"></script>
-
-  <!-- PDF-Lib shielded from RequireJS / AMD definition conflicts -->
-  <script>
-    window.__tempAmd = window.define;
-    window.define = undefined;
-  </script>
-  <script src="{{ asset('js/pdf-lib.min.js') }}"></script>
-  <script>
-    if(window.__tempAmd) window.define = window.__tempAmd;
-  </script>
-
-  <!-- DOCX & Canvas Utilities for client-side fallbacks -->
-  <script src="{{ asset('js/jszip.min.js') }}"></script>
-  <script src="{{ asset('js/docx-preview.min.js') }}"></script>
-  <script src="{{ asset('js/jspdf.umd.min.js') }}"></script>
-  <script src="{{ asset('js/html2canvas.min.js') }}"></script>
+  <script src="{{ asset('js/opendoc/AgyCvOptimizer.js') }}"></script>
 
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     html, body {
       height: 100%;
       overflow: hidden;
-      font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      font-family: 'Poppins', -apple-system, BlinkMacSystemFont, sans-serif;
       font-size: 13px;
-      color: #0f172a;
-      background: #334155;
+      color: #1e293b;
+      background: #f1f5f9;
       -webkit-font-smoothing: antialiased;
     }
 
@@ -51,18 +37,18 @@
       width: 100vw;
     }
 
-    /* Top Bar */
+    /* Top Enterprise Header */
     .acrobat-header {
-      height: 48px;
+      height: 50px;
       background: #ffffff;
-      border-bottom: 1px solid #cbd5e1;
+      border-bottom: 1px solid #e2e8f0;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 0 16px;
+      padding: 0 18px;
       flex-shrink: 0;
-      z-index: 50;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+      z-index: 100;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.04);
     }
     .brand-section {
       display: flex;
@@ -80,13 +66,8 @@
       width: auto;
       display: block;
     }
-    .brand-text-block {
-      display: flex;
-      align-items: baseline;
-      gap: 6px;
-    }
     .brand-title {
-      font-size: 14px;
+      font-size: 14.5px;
       font-weight: 700;
       color: #0f172a;
       letter-spacing: -0.2px;
@@ -96,8 +77,9 @@
       font-weight: 600;
       color: #0284c7;
       background: #e0f2fe;
-      padding: 2px 8px;
+      padding: 2px 10px;
       border-radius: 999px;
+      margin-left: 6px;
     }
 
     .header-actions {
@@ -106,21 +88,26 @@
       gap: 12px;
     }
     .mode-picker-select {
-      height: 32px;
-      padding: 0 10px;
+      height: 34px;
+      padding: 0 12px;
       font-size: 12px;
       font-weight: 600;
       font-family: inherit;
       color: #0f172a;
       background: #f8fafc;
-      border: 1px solid #cbd5e1;
+      border: 1.5px solid #cbd5e1;
       border-radius: 6px;
       cursor: pointer;
       outline: none;
+      transition: all 0.15s ease;
+    }
+    .mode-picker-select:focus {
+      border-color: #0284c7;
+      box-shadow: 0 0 0 2px rgba(2,132,199,0.15);
     }
     .btn-header-dl {
       height: 34px;
-      padding: 0 16px;
+      padding: 0 18px;
       background: #0284c7;
       color: #ffffff;
       font-size: 12.5px;
@@ -130,13 +117,13 @@
       border-radius: 6px;
       display: inline-flex;
       align-items: center;
-      gap: 6px;
+      gap: 7px;
       cursor: pointer;
-      transition: background 0.15s ease, box-shadow 0.15s ease;
-      box-shadow: 0 1px 2px rgba(2, 132, 199, 0.25);
+      transition: all 0.15s ease;
+      box-shadow: 0 1px 3px rgba(2, 132, 199, 0.3);
     }
     .btn-header-dl:hover { background: #0369a1; }
-    .btn-header-dl:disabled { opacity: 0.6; cursor: not-allowed; }
+    .btn-header-dl:disabled { opacity: 0.65; cursor: not-allowed; }
 
     /* Workspace */
     .acrobat-workspace {
@@ -148,9 +135,9 @@
 
     /* ZONE A: Left Tools Sidebar */
     .acrobat-sidebar {
-      width: 320px;
+      width: 325px;
       background: #ffffff;
-      border-right: 1px solid #cbd5e1;
+      border-right: 1px solid #e2e8f0;
       display: flex;
       flex-direction: column;
       flex-shrink: 0;
@@ -187,10 +174,10 @@
       gap: 14px;
     }
     .ats-score-circle {
-      width: 54px;
-      height: 54px;
+      width: 52px;
+      height: 52px;
       border-radius: 50%;
-      background: conic-gradient(#0284c7 var(--score-pct, 100%), #e2e8f0 0);
+      background: conic-gradient(#0284c7 var(--score-pct, 88%), #e2e8f0 0);
       display: flex;
       align-items: center;
       justify-content: center;
@@ -200,8 +187,8 @@
     .ats-score-circle::before {
       content: '';
       position: absolute;
-      width: 44px;
-      height: 44px;
+      width: 42px;
+      height: 42px;
       background: #ffffff;
       border-radius: 50%;
     }
@@ -232,7 +219,7 @@
       display: flex;
       flex-wrap: wrap;
       gap: 6px;
-      max-height: 180px;
+      max-height: 160px;
       overflow-y: auto;
       padding: 4px 1px;
     }
@@ -242,8 +229,8 @@
       gap: 5px;
       font-size: 11px;
       font-weight: 600;
-      padding: 4px 8px;
-      border-radius: 5px;
+      padding: 4px 9px;
+      border-radius: 999px;
       background: #f1f5f9;
       color: #334155;
       border: 1px solid #cbd5e1;
@@ -257,14 +244,12 @@
       border-color: #facc15;
       box-shadow: 0 0 0 1px #facc15;
     }
-    .kw-chip:hover {
-      border-color: #94a3b8;
-    }
+    .kw-chip:hover { border-color: #94a3b8; }
     .kw-count {
       font-size: 9.5px;
       font-weight: 700;
-      background: rgba(0,0,0,0.06);
-      padding: 1px 4px;
+      background: rgba(0,0,0,0.07);
+      padding: 1px 5px;
       border-radius: 999px;
     }
     .btn-ats-add-kw {
@@ -278,6 +263,69 @@
       border: none;
       border-radius: 5px;
       cursor: pointer;
+    }
+
+    /* Rich Formatting Toolbar (Bold, Pointer, Lists, Colors) */
+    .rich-format-panel {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 10px;
+    }
+    .format-btn-row {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      width: 100%;
+    }
+    .btn-fmt {
+      flex: 1;
+      height: 30px;
+      background: #ffffff;
+      border: 1px solid #cbd5e1;
+      border-radius: 5px;
+      font-size: 12px;
+      font-weight: 700;
+      color: #334155;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.1s ease;
+    }
+    .btn-fmt:hover {
+      background: #e2e8f0;
+      color: #0f172a;
+    }
+    .btn-fmt.active {
+      background: #0284c7;
+      color: #ffffff;
+      border-color: #0284c7;
+    }
+    .select-fmt-size {
+      height: 30px;
+      padding: 0 6px;
+      font-size: 11px;
+      font-weight: 600;
+      font-family: inherit;
+      border: 1px solid #cbd5e1;
+      border-radius: 5px;
+      background: #ffffff;
+      color: #334155;
+      outline: none;
+      cursor: pointer;
+    }
+    .input-fmt-color {
+      width: 32px;
+      height: 30px;
+      border: 1px solid #cbd5e1;
+      border-radius: 5px;
+      padding: 0;
+      cursor: pointer;
+      background: #ffffff;
     }
 
     /* Action Tools List */
@@ -296,7 +344,7 @@
       font-weight: 600;
       font-family: inherit;
       color: #1e293b;
-      background: #f8fafc;
+      background: #ffffff;
       border: 1px solid #e2e8f0;
       border-radius: 6px;
       cursor: pointer;
@@ -305,91 +353,307 @@
       user-select: none;
     }
     .btn-action-tool:hover {
-      background: #f1f5f9;
+      background: #f8fafc;
       border-color: #cbd5e1;
       color: #0f172a;
     }
-    .btn-action-tool.btn-tool-active {
-      background: #e0f2fe;
-      border-color: #38bdf8;
-      color: #0369a1;
-      box-shadow: 0 0 0 1px #38bdf8;
-    }
-    .btn-tool-highlight:hover { background: #fef9c3; border-color: #fde047; }
-    .btn-tool-whiteout:hover { background: #f1f5f9; border-color: #94a3b8; }
+    .btn-tool-highlight { background: #fef9c3; border-color: #fde047; color: #854d0e; }
+    .btn-tool-highlight:hover { background: #fef08a; }
+    .btn-tool-whiteout { background: #0f172a; border-color: #0f172a; color: #ffffff; }
+    .btn-tool-whiteout:hover { background: #1e293b; color: #ffffff; }
 
-    /* ZONE B: Center Document Viewport (Dedicated High-Fidelity Canvas) */
+    /* ZONE B: Center Document Viewport */
     .acrobat-canvas {
       flex: 1;
       background: #475569;
       overflow-y: auto;
-      overflow-x: auto;
+      overflow-x: hidden;
       display: flex;
       flex-direction: column;
       align-items: center;
       padding: 24px 20px 80px 20px;
-      gap: 24px;
+      gap: 26px;
+      scroll-behavior: smooth;
     }
 
-    /* Page Container */
-    .rcv-page-wrap {
-      position: relative;
-      box-shadow: 0 6px 20px rgba(0,0,0,0.35);
+    /* White A4 Paper Sheets (Live Interactive WYSIWYG) */
+    .paper-sheet {
+      width: 820px;
+      min-height: 1080px;
       background: #ffffff;
-      border-radius: 2px;
+      box-shadow: 0 8px 30px rgba(0,0,0,0.35);
+      border-radius: 3px;
+      padding: 46px 54px;
+      outline: none;
+      position: relative;
+      font-family: 'Poppins', -apple-system, BlinkMacSystemFont, sans-serif;
+      font-size: 13px;
+      line-height: 1.6;
+      color: #1e293b;
       user-select: text;
       -webkit-user-select: text;
     }
-    .rcv-page-canvas {
-      display: block;
-      width: 100%;
-      height: 100%;
-    }
-    .rcv-textlayer {
-      position: absolute;
-      left: 0;
-      top: 0;
-      right: 0;
-      bottom: 0;
-      overflow: hidden;
-      line-height: 1;
-      z-index: 2;
-      pointer-events: auto;
-      user-select: text;
-      -webkit-user-select: text;
-    }
-    .rcv-textlayer span {
-      position: absolute;
-      white-space: pre;
-      color: transparent;
-      transform-origin: 0% 0%;
-      cursor: text;
-      pointer-events: auto;
-      user-select: text;
-      -webkit-user-select: text;
-    }
-    .rcv-textlayer span::selection,
-    .rcv-textlayer ::selection {
-      background: rgba(2, 132, 199, 0.35) !important;
-      color: transparent !important;
+    .paper-sheet:focus {
+      box-shadow: 0 8px 32px rgba(0,0,0,0.4), 0 0 0 2px #0284c7;
     }
 
-    /* Dynamic User Annotations Overlay Layer */
-    .rcv-user-mark {
-      pointer-events: none !important;
+    /* Pre-Screened Candidate Report Card (Page 1 in Option 64 & 65) */
+    .ps-report-container {
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 24px;
+      background: #ffffff;
+      margin-bottom: 8px;
+    }
+    .ps-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      border-bottom: 2px solid #0f172a;
+      padding-bottom: 12px;
+      margin-bottom: 16px;
+    }
+    .ps-shared-title {
+      font-size: 9px;
+      font-weight: 700;
+      color: #64748b;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .ps-shared-name {
+      font-size: 15px;
+      font-weight: 800;
+      color: #0f172a;
+    }
+    .ps-report-main-title {
+      font-size: 17px;
+      font-weight: 800;
+      color: #0f172a;
+      text-transform: uppercase;
+      text-align: right;
+    }
+    .ps-report-sub-date {
+      font-size: 10px;
+      font-weight: 600;
+      color: #64748b;
+      text-transform: uppercase;
+      text-align: right;
+    }
+
+    .ps-top-split {
+      display: grid;
+      grid-template-columns: 1.6fr 1fr;
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+    .ps-card {
+      background: #ffffff;
+      border: 1.5px solid #e2e8f0;
+      border-radius: 6px;
+      padding: 14px 16px;
+    }
+    .ps-cand-name {
+      font-size: 19px;
+      font-weight: 800;
+      color: #0f172a;
+    }
+    .ps-cand-role {
+      font-size: 13px;
+      font-weight: 700;
+      color: #0284c7;
+      margin-bottom: 6px;
+    }
+    .ps-cand-meta {
+      font-size: 11px;
+      color: #475569;
+      font-weight: 600;
+      margin-bottom: 2px;
+    }
+
+    .ps-confidence-card {
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: #f8fbff;
+      border: 1.5px solid #cfe0ff;
+    }
+    .ps-confidence-lbl {
+      font-size: 11px;
+      font-weight: 700;
+      color: #64748b;
+      text-transform: uppercase;
+      margin-bottom: 2px;
+    }
+    .ps-confidence-val {
+      font-size: 34px;
+      font-weight: 800;
+      color: #0284c7;
+      line-height: 1;
+    }
+
+    .ps-metrics-4grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+    .ps-metric-item {
+      background: #ffffff;
+      border: 1.5px solid #e2e8f0;
+      border-radius: 6px;
+      padding: 10px 8px;
+      text-align: center;
+    }
+    .ps-metric-head {
+      font-size: 9.5px;
+      font-weight: 700;
+      color: #64748b;
+      text-transform: uppercase;
+      margin-bottom: 2px;
+    }
+    .ps-metric-val {
+      font-size: 12px;
+      font-weight: 700;
+      color: #0f172a;
+    }
+
+    .ps-bottom-split {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+    .ps-summary-card {
+      background: #ffffff;
+      border: 1.5px solid #e2e8f0;
+      border-radius: 6px;
+      padding: 14px;
+    }
+    .ps-sec-head {
+      font-size: 10.5px;
+      font-weight: 700;
+      color: #0284c7;
+      text-transform: uppercase;
+      margin-bottom: 6px;
+    }
+    .ps-sec-body {
+      font-size: 11.5px;
+      color: #334155;
+      line-height: 1.5;
+    }
+
+    /* Company Branding Header (Option 62) */
+    .branding-header-wrap {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 2.5px solid #0284c7;
+      padding-bottom: 10px;
+      margin-bottom: 24px;
+    }
+    .branding-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .branding-company-title {
+      font-size: 15px;
+      font-weight: 800;
+      color: #0f172a;
+      text-transform: uppercase;
+    }
+    .branding-sub-tag {
+      font-size: 10px;
+      font-weight: 600;
+      color: #0284c7;
+    }
+
+    /* Resume Typography inside Editable Sheet */
+    .paper-sheet h1 {
+      font-size: 18px;
+      font-weight: 700;
+      color: #0f172a;
+      margin: 16px 0 8px 0;
+      border-bottom: 1.5px solid #e2e8f0;
+      padding-bottom: 4px;
+    }
+    .paper-sheet h2 {
+      font-size: 15px;
+      font-weight: 700;
+      color: #0f172a;
+      margin: 14px 0 6px 0;
+    }
+    .paper-sheet h3 {
+      font-size: 13px;
+      font-weight: 600;
+      color: #0f172a;
+      margin: 10px 0 4px 0;
+    }
+    .paper-sheet p {
+      margin-bottom: 8px;
+      line-height: 1.6;
+    }
+    .paper-sheet ul, .paper-sheet ol {
+      margin-left: 24px;
+      margin-bottom: 10px;
+    }
+    .paper-sheet li {
+      margin-bottom: 4px;
+    }
+    .paper-sheet table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 10px 0 14px 0;
+      font-size: 12px;
+    }
+    .paper-sheet table td, .paper-sheet table th {
+      border: 1px solid #cbd5e1;
+      padding: 6px 10px;
+      vertical-align: top;
+    }
+
+    /* Highlights & Redactions */
+    mark.rcv-hit {
+      background: #fef08a !important;
+      color: #854d0e !important;
+      padding: 1px 4px !important;
+      border-radius: 3px !important;
+      font-weight: 600 !important;
+    }
+    mark.rcv-hit.rcv-hit-active {
+      background: #f97316 !important;
+      color: #ffffff !important;
+      box-shadow: 0 0 0 2px #f97316 !important;
+    }
+    mark.rcv-redact {
+      background: #000000 !important;
+      color: #000000 !important;
+      padding: 1px 4px !important;
+      border-radius: 2px !important;
       user-select: none !important;
     }
 
-    /* Drawing / Markup Canvas Overlay */
-    .rcv-annotation-canvas {
+    .doc-page-break {
+      border-top: 2px dashed #94a3b8;
+      margin: 28px 0;
+      position: relative;
+      text-align: center;
+      user-select: none;
+    }
+    .doc-page-break::after {
+      content: "PAGE BREAK";
+      font-size: 9px;
+      font-weight: 700;
+      color: #64748b;
+      background: #ffffff;
+      padding: 0 8px;
       position: absolute;
-      left: 0;
-      top: 0;
-      width: 100%;
-      height: 100%;
-      z-index: 5;
-      pointer-events: none;
-      touch-action: none;
+      top: -7px;
+      left: 50%;
+      transform: translateX(-50%);
+      letter-spacing: 0.5px;
     }
 
     /* ZONE C: Right Page Navigation Strip */
@@ -442,7 +706,7 @@
       background: #ffffff;
       border-radius: 10px;
       padding: 20px;
-      width: 460px;
+      width: 440px;
       box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.25);
     }
     .sign-box-head {
@@ -456,7 +720,7 @@
       border-radius: 6px;
       background: #f8fafc;
       width: 100%;
-      height: 160px;
+      height: 150px;
       touch-action: none;
       cursor: crosshair;
     }
@@ -477,41 +741,29 @@
       animation: spin 0.7s linear infinite;
     }
     @keyframes spin { to { transform: rotate(360deg); } }
-
-    .loading-container {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 12px;
-      height: 380px;
-      color: #ffffff;
-    }
   </style>
 </head>
 <body>
 
 <div class="acrobat-app">
 
-  <!-- Top Enterprise Acrobat-Style Header -->
+  <!-- Top Header -->
   <header class="acrobat-header">
     <div class="brand-section">
       <div class="brand-logo-wrap">
         <img src="{{ asset('img/logo.svg') }}" alt="jero.works" class="brand-logo-img" onerror="this.style.display='none'">
       </div>
-      <div class="brand-text-block">
-        <span class="brand-title">jero.works online editor</span>
-        <span class="doc-status-tag">{{ ucwords(@$application->full_name ?: @$application->name ?: 'Candidate') }}</span>
-      </div>
+      <span class="brand-title">jero.works online editor</span>
+      <span class="doc-status-tag">{{ ucwords(@$application->full_name ?: @$application->name ?: 'Candidate') }}</span>
     </div>
 
     <div class="header-actions">
       <!-- Mode Selection Dropdown -->
       <select id="modePicker" class="mode-picker-select" title="Switch Document Generation Format">
-        <option value="61">Format: ATS Original Resume</option>
-        <option value="62">Format: Resume + Company Branding</option>
-        <option value="64">Format: Pre-Screen Report + Resume</option>
         <option value="65">Format: Pre-Screen Report + Highlighted Resume</option>
+        <option value="64">Format: Pre-Screen Report + Resume</option>
+        <option value="62">Format: Resume + Company Branding</option>
+        <option value="61">Format: ATS Original Resume</option>
       </select>
 
       <button type="button" class="btn-header-dl" id="btnDownload">
@@ -542,7 +794,7 @@
         </div>
       </div>
 
-      <!-- Keyword Bank & Real-time Highlighting -->
+      <!-- Skill Keywords Bank -->
       <div class="sidebar-section">
         <div class="sidebar-sec-head">
           <span class="sidebar-sec-title">Skill Keywords</span>
@@ -558,7 +810,37 @@
         </div>
       </div>
 
-      <!-- Action Power Tools -->
+      <!-- Rich Formatting & Editing Tools (Bold, Pointer, Lists, Colors) -->
+      <div class="sidebar-section">
+        <div class="sidebar-sec-head">
+          <span class="sidebar-sec-title">Text &amp; Formatting</span>
+        </div>
+
+        <div class="rich-format-panel">
+          <!-- Bold, Italic, Underline, Pointer/Bullets, Numbered List -->
+          <div class="format-btn-row">
+            <button type="button" class="btn-fmt" id="btnBold" title="Bold Selected (Ctrl+B)"><b>B</b></button>
+            <button type="button" class="btn-fmt" id="btnItalic" title="Italic Selected (Ctrl+I)"><i>I</i></button>
+            <button type="button" class="btn-fmt" id="btnUnderline" title="Underline Selected (Ctrl+U)"><u>U</u></button>
+            <button type="button" class="btn-fmt" id="btnBullet" title="Bullet Pointer List">• Pointer</button>
+            <button type="button" class="btn-fmt" id="btnNumList" title="Numbered List">1. List</button>
+          </div>
+
+          <!-- Font Size & Color -->
+          <div class="format-btn-row" style="margin-top:2px;">
+            <select id="selFontSize" class="select-fmt-size" style="flex:1;">
+              <option value="2">Size: Small (11px)</option>
+              <option value="3" selected>Size: Normal (13px)</option>
+              <option value="4">Size: Medium (15px)</option>
+              <option value="5">Size: Large (18px)</option>
+              <option value="6">Size: Heading (22px)</option>
+            </select>
+            <input type="color" id="pickerColor" class="input-fmt-color" value="#1e293b" title="Text Color">
+          </div>
+        </div>
+      </div>
+
+      <!-- Document Power Tools -->
       <div class="sidebar-section">
         <div class="sidebar-sec-head">
           <span class="sidebar-sec-title">Document Tools</span>
@@ -568,17 +850,20 @@
           <button type="button" id="btnToolHighlight" class="btn-action-tool btn-tool-highlight" title="Highlight selected text in yellow">
             <span>🖍</span> Highlight Selected Text
           </button>
-          <button type="button" id="btnToolWhiteout" class="btn-action-tool btn-tool-whiteout" title="Whiteout sensitive text">
+          <button type="button" id="btnToolWhiteout" class="btn-action-tool btn-tool-whiteout" title="Whiteout / redact sensitive text">
             <span>⬛</span> Whiteout / Redact Selected
-          </button>
-          <button type="button" id="btnToolDraw" class="btn-action-tool" title="Draw with pen, highlighter or stylus">
-            <span>✍</span> Touch / Stylus Annotator
           </button>
           <button type="button" id="btnToolSign" class="btn-action-tool" title="Draw and place signature stamp">
             <span>🔏</span> Draw &amp; Insert Signature
           </button>
           <button type="button" id="btnToolImage" class="btn-action-tool" title="Insert company logo or image">
             <span>🖼</span> Insert Company Logo / Stamp
+          </button>
+          <button type="button" id="btnToolPageBreak" class="btn-action-tool" title="Insert page break divider">
+            <span>📄</span> Insert Page Break
+          </button>
+          <button type="button" id="btnToolCopy" class="btn-action-tool" title="Copy clean resume text to clipboard">
+            <span>📋</span> Copy All Text
           </button>
 
           <div style="display:flex;gap:6px;margin-top:4px;">
@@ -591,19 +876,109 @@
 
     </aside>
 
-    <!-- ZONE B: Center Document Viewport (Renders EXACT Generated PDF Document Pages) -->
+    <!-- ZONE B: Center Document Viewport (Interactive A4 Paper Sheets) -->
     <main class="acrobat-canvas" id="canvas">
-      <div class="loading-container" id="loaderBox">
-        <div class="spin" style="width:34px;height:34px;border-width:3px;border-color:#38bdf8;border-top-color:transparent;"></div>
-        <span style="font-size:14px;font-weight:600;">Loading candidate document into online editor…</span>
-        <span style="font-size:12px;color:#94a3b8;">Preserving authentic typography, formatting, and vector resolution</span>
+
+      <!-- SHEET 1: Pre-Screened Candidate Report Card (Option 64 & 65) -->
+      <div class="paper-sheet" id="sheetReport" style="display:block;" contenteditable="true">
+        <div class="ps-header" contenteditable="false">
+          <div class="ps-shared-by">
+            @if(!empty($companyLogo ?? ''))
+              <img src="{{ $companyLogo }}" alt="{{ $companyName ?? 'Hiring Partner' }}" style="height:32px;width:auto;margin-bottom:4px;display:block;" onerror="this.style.display='none'">
+            @endif
+            <div>
+              <div class="ps-shared-title">SHARED BY</div>
+              <div class="ps-shared-name">{{ $companyName ?? 'Hiring Partner' }}</div>
+            </div>
+          </div>
+          <div class="ps-report-title-box">
+            <div class="ps-report-main-title">PRE-SCREENED CANDIDATE REPORT</div>
+            <div class="ps-report-sub-date">{{ now()->format('d M Y') }} · CONFIDENTIAL</div>
+          </div>
+        </div>
+
+        <div class="ps-top-split">
+          <div class="ps-card">
+            <div class="ps-cand-name">{{ ucwords(@$application->full_name ?: @$application->name ?: 'Candidate') }}</div>
+            <div class="ps-cand-role">{{ ucwords(@$job->title ?: @$application->job_title ?: 'Verified Professional') }}</div>
+            <div class="ps-cand-meta">EXPERIENCE: {{ strtoupper($rsExperience ?? '5 YEARS') }}</div>
+            <div class="ps-cand-meta">CURRENT COMPANY: {{ strtoupper($rsCurrentCompany ?? 'HIRING PARTNER') }}</div>
+          </div>
+          <div class="ps-card ps-confidence-card">
+            <div class="ps-confidence-lbl">HIRING CONFIDENCE</div>
+            <div class="ps-confidence-val">{{ $rsMatchPct ?? 88 }}%</div>
+          </div>
+        </div>
+
+        <div class="ps-metrics-4grid">
+          <div class="ps-metric-item">
+            <div class="ps-metric-head">EDUCATION</div>
+            <div class="ps-metric-val">{{ $rsEducation ?? 'Graduate' }}</div>
+          </div>
+          <div class="ps-metric-item">
+            <div class="ps-metric-head">NOTICE PERIOD</div>
+            <div class="ps-metric-val">{{ $noticePeriod ?? 'Immediate' }}</div>
+          </div>
+          <div class="ps-metric-item">
+            <div class="ps-metric-head">LOCATION</div>
+            <div class="ps-metric-val">{{ $cityName ?? 'Bangalore' }}</div>
+          </div>
+          <div class="ps-metric-item">
+            <div class="ps-metric-head">WORK MODE</div>
+            <div class="ps-metric-val">{{ $rsWorkMode ?? 'Hybrid' }}</div>
+          </div>
+        </div>
+
+        <div class="ps-bottom-split">
+          <div class="ps-summary-card">
+            <div class="ps-sec-head">EXECUTIVE SUMMARY</div>
+            <div class="ps-sec-body">{{ $rsCareerSummary ?? 'Demonstrated track record of technical delivery and architectural excellence.' }}</div>
+          </div>
+          <div class="ps-summary-card">
+            <div class="ps-sec-head">RECRUITER COMMENTS</div>
+            <div class="ps-sec-body">{{ $rsRecruiterNote ?? 'Candidate thoroughly pre-screened and assessed for technical competency and communication.' }}</div>
+          </div>
+        </div>
+
+        <div style="font-size:9.5px;color:#94a3b8;text-align:center;margin-top:14px;border-top:1px solid #e2e8f0;padding-top:8px;" contenteditable="false">
+          This report is generated by AI hiring platform jero.works · www.jero.works
+        </div>
       </div>
-      <div id="docPagesContainer" style="display:none;display:flex;flex-direction:column;align-items:center;gap:24px;width:100%;"></div>
+
+      <!-- SHEET 2: Candidate Resume (Live Editable Content) -->
+      <div class="paper-sheet" id="sheetResume" contenteditable="true">
+        <!-- Optional Company Branding Banner (Option 62) -->
+        <div class="branding-header-wrap" id="brandingBanner" style="display:none;" contenteditable="false">
+          <div class="branding-left">
+            @if(!empty($companyLogo ?? ''))
+              <img src="{{ $companyLogo }}" alt="{{ $companyName ?? 'Hiring Partner' }}" style="height:32px;width:auto;" onerror="this.style.display='none'">
+            @endif
+            <div>
+              <div style="font-size:8px;font-weight:700;color:#64748b;text-transform:uppercase;">SHARED BY</div>
+              <div class="branding-company-title">{{ $companyName ?? 'Hiring Partner' }}</div>
+            </div>
+          </div>
+          <div style="text-align:right;">
+            <div style="font-size:12px;font-weight:800;color:#0f172a;">CONFIDENTIAL RESUME</div>
+            <div class="branding-sub-tag">{{ now()->format('d M Y') }} · Verified ATS Format</div>
+          </div>
+        </div>
+
+        <!-- Editable Resume Body -->
+        <div id="resumeBody">
+          <div id="loaderPlaceholder" style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:120px 20px;color:#64748b;gap:12px;" contenteditable="false">
+            <div class="spin" style="width:32px;height:32px;border-color:#0284c7;border-top-color:transparent;border-width:3px;"></div>
+            <span style="font-size:14px;font-weight:600;color:#0f172a;">Loading candidate document into online editor…</span>
+            <span style="font-size:12px;color:#94a3b8;">Preserving authentic typography, formatting, and vector resolution</span>
+          </div>
+        </div>
+      </div>
+
     </main>
 
     <!-- ZONE C: Right Page Navigation Strip -->
     <aside class="acrobat-right-strip">
-      <div class="page-counter-box" id="stripPageNum">1 / 1</div>
+      <div class="page-counter-box" id="stripPageNum">1 / 2</div>
       <button type="button" class="strip-btn" id="stripPrevPage" title="Previous Page">▲</button>
       <button type="button" class="strip-btn" id="stripNextPage" title="Next Page">▼</button>
       <div style="width:22px;height:1px;background:#e2e8f0;margin:4px 0;"></div>
@@ -624,10 +999,10 @@
       <button type="button" id="btnSignClose" style="background:none;border:none;font-size:18px;cursor:pointer;color:#64748b;">&times;</button>
     </div>
     <p style="font-size:11.5px;color:#64748b;margin-bottom:8px;">Sign below with your mouse, finger, or stylus:</p>
-    <canvas id="signCanvas" class="sign-canvas" width="420" height="160"></canvas>
+    <canvas id="signCanvas" class="sign-canvas" width="400" height="150"></canvas>
     <div class="sign-box-actions">
       <button type="button" id="btnSignClear" class="btn-action-tool" style="width:auto;padding:6px 12px;">Clear</button>
-      <button type="button" id="btnSignInsert" class="btn-ats-add-kw" style="padding:6px 16px;">Insert into Document</button>
+      <button type="button" id="btnSignInsert" class="btn-ats-add-kw" style="padding:6px 14px;">Insert Signature</button>
     </div>
   </div>
 </div>
@@ -645,9 +1020,8 @@
   var rcvDownloadUrl = @json($rcvDownloadUrl ?? '');
   var rcvPublicUrl = @json($rcvPublicUrl ?? '');
   var r2SignUrl = @json($r2SignUrl ?? '');
-  var initialOpt = @json($optId ?? 64);
+  var initialOpt = @json($optId ?? 65);
 
-  // Full Pre-Screened Report Data Attributes
   var candidateDossierData = {
     name: candName,
     designation: @json($rsCurrentDesignation ?? (@$job->title ?: 'Verified Professional')),
@@ -667,140 +1041,19 @@
     reportDate: @json(now()->format('d M Y'))
   };
 
-  // Configure PDF.js worker
-  if(window.pdfjsLib){
-    var pVer = window.pdfjsLib.version || '2.11.338';
-    window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/' + pVer + '/pdf.worker.min.js';
-  }
-
-  var canvasViewport = document.getElementById('canvas');
-  var docPagesContainer = document.getElementById('docPagesContainer');
-  var loaderBox = document.getElementById('loaderBox');
+  var sheetReport = document.getElementById('sheetReport');
+  var sheetResume = document.getElementById('sheetResume');
+  var resumeBody = document.getElementById('resumeBody');
+  var brandingBanner = document.getElementById('brandingBanner');
   var modePicker = document.getElementById('modePicker');
+  var kwBank = document.getElementById('kwBank');
+  var canvas = document.getElementById('canvas');
 
-  var currentGeneratedPdfBlob = null;
-  var currentPdfJsDoc = null;
-  var currentZoom = 1.0;
-  var pageElements = [];
-
-  // Edits recorded for vector PDF burning
-  var userAnnotations = {
-    highlights: [], // { pageNum, x, y, width, height, viewportW, viewportH }
-    whiteouts: [],  // { pageNum, x, y, width, height, viewportW, viewportH }
-    stamps: []      // { pageNum, x, y, width, height, imgDataUrl, viewportW, viewportH }
-  };
-
-  // History stack for Undo / Redo
-  var historyStack = [];
-  var historyIndex = -1;
-
-  function recordHistoryState(){
-    historyStack = historyStack.slice(0, historyIndex + 1);
-    historyStack.push(JSON.parse(JSON.stringify(userAnnotations)));
-    if(historyStack.length > 40) historyStack.shift();
-    historyIndex = historyStack.length - 1;
-    updateUndoRedoUI();
-  }
-
-  function doUndo(){
-    if(historyIndex > 0){
-      historyIndex--;
-      userAnnotations = JSON.parse(JSON.stringify(historyStack[historyIndex]));
-      redrawPageOverlays();
-    }
-    updateUndoRedoUI();
-  }
-
-  function doRedo(){
-    if(historyIndex < historyStack.length - 1){
-      historyIndex++;
-      userAnnotations = JSON.parse(JSON.stringify(historyStack[historyIndex]));
-      redrawPageOverlays();
-    }
-    updateUndoRedoUI();
-  }
-
-  function updateUndoRedoUI(){
-    var u = document.getElementById('btnToolUndo');
-    var r = document.getElementById('btnToolRedo');
-    if(u) u.style.opacity = (historyIndex > 0) ? '1' : '0.45';
-    if(r) r.style.opacity = (historyIndex < historyStack.length - 1) ? '1' : '0.45';
-  }
-
-  window.addEventListener('keydown', function(e){
-    if(e.ctrlKey || e.metaKey){
-      if(e.key === 'z' || e.key === 'Z'){
-        e.preventDefault();
-        if(e.shiftKey) doRedo(); else doUndo();
-      } else if(e.key === 'y' || e.key === 'Y'){
-        e.preventDefault();
-        doRedo();
-      }
-    }
-  });
-
-  // Re-draws dynamic DOM overlays after Undo / Redo / Selection without altering text layer
-  function redrawPageOverlays(){
-    document.querySelectorAll('.rcv-user-mark').forEach(function(el){
-      if(el.parentNode) el.parentNode.removeChild(el);
-    });
-
-    // Highlights
-    userAnnotations.highlights.forEach(function(hl){
-      var pageWrap = document.getElementById('page_' + hl.pageNum);
-      if(!pageWrap) return;
-      var mark = document.createElement('div');
-      mark.className = 'rcv-user-mark';
-      mark.style.position = 'absolute';
-      mark.style.left = hl.x + 'px';
-      mark.style.top = hl.y + 'px';
-      mark.style.width = hl.width + 'px';
-      mark.style.height = hl.height + 'px';
-      mark.style.backgroundColor = 'rgba(254, 240, 138, 0.55)';
-      mark.style.borderRadius = '2px';
-      mark.style.pointerEvents = 'none';
-      mark.style.zIndex = '4';
-      pageWrap.appendChild(mark);
-    });
-
-    // Whiteouts
-    userAnnotations.whiteouts.forEach(function(wo){
-      var pageWrap = document.getElementById('page_' + wo.pageNum);
-      if(!pageWrap) return;
-      var mark = document.createElement('div');
-      mark.className = 'rcv-user-mark';
-      mark.style.position = 'absolute';
-      mark.style.left = wo.x + 'px';
-      mark.style.top = wo.y + 'px';
-      mark.style.width = wo.width + 'px';
-      mark.style.height = wo.height + 'px';
-      mark.style.backgroundColor = '#ffffff';
-      mark.style.boxShadow = '0 0 0 1px #cbd5e1';
-      mark.style.pointerEvents = 'none';
-      mark.style.zIndex = '4';
-      pageWrap.appendChild(mark);
-    });
-
-    // Stamps & Signatures
-    userAnnotations.stamps.forEach(function(st){
-      var pageWrap = document.getElementById('page_' + st.pageNum);
-      if(!pageWrap) return;
-      var img = document.createElement('img');
-      img.className = 'rcv-user-mark';
-      img.src = st.imgDataUrl;
-      img.style.position = 'absolute';
-      img.style.left = st.x + 'px';
-      img.style.top = st.y + 'px';
-      img.style.width = st.width + 'px';
-      img.style.height = (st.height ? st.height + 'px' : 'auto');
-      img.style.pointerEvents = 'none';
-      img.style.zIndex = '10';
-      pageWrap.appendChild(img);
-    });
-  }
+  function esc(s){ return String(s||'').replace(/[&<>"]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
+  function escRe(s){ return String(s||'').replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
 
   // -------------------------------------------------------------
-  // ATS KEYWORD ENGINE & REAL-TIME MATCH CALCULATION
+  // ATS KEYWORD SCANNER & REAL-TIME MATCH CALCULATION
   // -------------------------------------------------------------
   var keywords = {};
   function initKeywords(){
@@ -818,8 +1071,7 @@
   initKeywords();
 
   function countOccurrences(){
-    var fullText = '';
-    document.querySelectorAll('.rcv-textlayer').forEach(function(tl){ fullText += ' ' + tl.innerText; });
+    var fullText = (resumeBody.innerText || '') + ' ' + (sheetReport.style.display !== 'none' ? sheetReport.innerText : '');
     fullText = fullText.toLowerCase();
 
     var matched = 0;
@@ -843,7 +1095,7 @@
     var pct = 100;
     if(totalActive > 0){
       pct = Math.round((matched / totalActive) * 100);
-      pct = Math.max(75, Math.min(100, pct));
+      pct = Math.max(70, Math.min(100, pct));
     }
     document.getElementById('atsScoreVal').textContent = pct + '%';
     document.getElementById('atsScoreCircle').style.setProperty('--score-pct', pct + '%');
@@ -852,53 +1104,119 @@
   }
 
   function renderChips(){
-    var bank = document.getElementById('kwBank');
-    bank.innerHTML = '';
+    kwBank.innerHTML = '';
     Object.keys(keywords).forEach(function(k){
       var kw = keywords[k];
       var chip = document.createElement('span');
       chip.className = 'kw-chip' + (kw.active ? ' active' : '');
-      chip.innerHTML = kw.name + ' <span class="kw-count">' + kw.count + '</span>';
+      chip.innerHTML = esc(kw.name) + ' <span class="kw-count">' + kw.count + '</span>';
       chip.onclick = function(){
         kw.active = !kw.active;
         renderChips();
-        toggleKeywordHighlightOnDoc(kw.name, kw.active);
+        applyKeywordHighlights();
       };
-      bank.appendChild(chip);
+      kwBank.appendChild(chip);
     });
   }
 
-  // -------------------------------------------------------------
-  // RAW RESUME FETCH & STANDALONE PROCESSING
-  // -------------------------------------------------------------
-  async function fetchRawResumeBytes(){
-    // 1. Check parent window cache
-    if(window.opener && window.opener.__agyResumeCache){
-      var keys = Object.keys(window.opener.__agyResumeCache);
-      for(var i = 0; i < keys.length; i++){
-        var cached = window.opener.__agyResumeCache[keys[i]];
-        if(cached && cached.byteLength) return new Uint8Array(cached);
-      }
-    }
+  // Highlights active keywords in resume body without breaking DOM cursor
+  function applyKeywordHighlights(){
+    var mode = parseInt(modePicker.value, 10) || 65;
+    var shouldHighlight = (mode === 63 || mode === 65);
 
-    // 2. Fetch URLs in order
-    var urlsToTry = [rcvPublicUrl, rcvFetchUrl, rcvDownloadUrl].filter(Boolean);
-    for(var u = 0; u < urlsToTry.length; u++){
-      try {
-        var res = await fetch(urlsToTry[u], { credentials: 'same-origin', cache: 'no-store' });
-        if(res.ok){
-          var ab = await res.arrayBuffer();
-          if(ab && ab.byteLength > 100){
-            return new Uint8Array(ab);
-          }
+    // Remove existing keyword marks
+    var marks = Array.prototype.slice.call(sheetResume.querySelectorAll('mark.rcv-hit'));
+    marks.forEach(function(m){
+      var p = m.parentNode;
+      while(m.firstChild) p.insertBefore(m.firstChild, m);
+      p.removeChild(m);
+    });
+
+    if(!shouldHighlight) return;
+
+    var activeWords = Object.keys(keywords).filter(function(k){ return keywords[k].active; });
+    if(!activeWords.length) return;
+
+    var sorted = activeWords.map(function(k){ return keywords[k].name; }).sort(function(a,b){ return b.length - a.length; });
+    var pattern = sorted.map(escRe).join('|');
+    if(!pattern) return;
+
+    var regex = new RegExp('\\b(' + pattern + ')\\b', 'gi');
+
+    function highlightNode(node){
+      if(node.nodeType === 3){
+        regex.lastIndex = 0;
+        var m = regex.exec(node.nodeValue);
+        if(!m) return;
+        var mark = document.createElement('mark');
+        mark.className = 'rcv-hit';
+        var matched = node.splitText(m.index);
+        matched.splitText(m[0].length);
+        mark.appendChild(matched.cloneNode(true));
+        matched.parentNode.replaceChild(mark, matched);
+      } else if(node.nodeType === 1 && node.childNodes && !/(script|style|mark)/i.test(node.tagName)){
+        for(var i = 0; i < node.childNodes.length; i++){
+          highlightNode(node.childNodes[i]);
         }
-      } catch(fetchErr){
-        console.warn('Resume fetch attempt failed for ' + urlsToTry[u], fetchErr);
       }
     }
 
-    // 3. Fallback: R2 signed download URL
-    if(r2SignUrl){
+    highlightNode(resumeBody);
+  }
+
+  // Mode change handler (61, 62, 64, 65)
+  function syncModeViews(){
+    var mode = parseInt(modePicker.value, 10) || 65;
+    var isBranded = (mode === 62);
+    var hasReport = (mode === 64 || mode === 65);
+
+    if(brandingBanner) brandingBanner.style.display = isBranded ? 'flex' : 'none';
+    if(sheetReport) sheetReport.style.display = hasReport ? 'block' : 'none';
+
+    var counter = document.getElementById('stripPageNum');
+    if(counter) counter.textContent = hasReport ? '1 / 2' : '1 / 1';
+
+    countOccurrences();
+    renderChips();
+    applyKeywordHighlights();
+  }
+
+  modePicker.addEventListener('change', syncModeViews);
+
+  // -------------------------------------------------------------
+  // CANDIDATE RÉSUMÉ FETCH & HIGH-FIDELITY EXTRACTION
+  // -------------------------------------------------------------
+  async function loadCandidateResume(){
+    // 1. Check parent window HTML / text cache
+    if(window.opener && window.opener.__rcvResumeHtml && window.opener.__rcvResumeHtml.trim().length > 30){
+      displayResume(window.opener.__rcvResumeHtml);
+      return;
+    }
+
+    var bytes = null;
+    if(window.opener && window.opener.__agyResumeCache){
+      for(var k in window.opener.__agyResumeCache){
+        var b = window.opener.__agyResumeCache[k];
+        if(b && b.byteLength > 100){ bytes = new Uint8Array(b); break; }
+      }
+    }
+
+    var urlsToTry = [rcvPublicUrl, rcvFetchUrl, rcvDownloadUrl].filter(Boolean);
+    if(!bytes && urlsToTry.length){
+      for(var i = 0; i < urlsToTry.length; i++){
+        try {
+          var isDirectR2 = (urlsToTry[i].indexOf('file.jero.works') !== -1 || urlsToTry[i].indexOf('r2.cloudflarestorage.com') !== -1);
+          var resp = await fetch(urlsToTry[i], isDirectR2 ? { mode: 'cors', cache: 'no-store' } : { credentials: 'same-origin', cache: 'no-store' });
+          if(resp.ok){
+            var ab = await resp.arrayBuffer();
+            if(ab && ab.byteLength > 100){ bytes = new Uint8Array(ab); break; }
+          }
+        } catch(e){}
+      }
+    }
+
+    // Fallback: R2 signed download URL
+    if(!bytes && r2SignUrl){
       try {
         var sRes = await fetch(r2SignUrl, { headers: { 'Accept': 'application/json' } });
         if(sRes.ok){
@@ -907,576 +1225,208 @@
             var sFetch = await fetch(sData.download_url);
             if(sFetch.ok){
               var sAb = await sFetch.arrayBuffer();
-              if(sAb && sAb.byteLength > 100) return new Uint8Array(sAb);
+              if(sAb && sAb.byteLength > 100) bytes = new Uint8Array(sAb);
             }
           }
         }
       } catch(e){}
     }
 
-    throw new Error('Candidate resume could not be retrieved.');
-  }
-
-  // Standalone DOCX to PDF converter
-  async function convertDocxToPdfBlob(docxBytes){
-    // 1. Try opener WASM engine if available
-    if(window.opener && typeof window.opener.__renderAgyStrategy2WasmDocxToPdfBlob === 'function'){
-      try {
-        var b = await window.opener.__renderAgyStrategy2WasmDocxToPdfBlob(docxBytes);
-        if(b && b.size > 200) return b;
-      } catch(err){
-        console.warn('Opener WASM docx conversion skipped:', err);
-      }
-    }
-
-    // 2. Local fallback using docx-preview + html2canvas + jsPDF
-    try {
-      var tempContainer = document.createElement('div');
-      tempContainer.style.position = 'fixed';
-      tempContainer.style.left = '-9999px';
-      tempContainer.style.top = '0';
-      tempContainer.style.width = '794px';
-      tempContainer.style.background = '#ffffff';
-      document.body.appendChild(tempContainer);
-
-      await window.docx.renderAsync(docxBytes, tempContainer, null, {
-        className: 'docx-preview-root',
-        inWrapper: false,
-        ignoreWidth: false,
-        ignoreHeight: false
-      });
-
-      if(document.fonts && document.fonts.ready) await document.fonts.ready;
-      await new Promise(function(r){ setTimeout(r, 120); });
-
-      var pages = tempContainer.querySelectorAll('.docx-wrapper > section, section.docx');
-      if(!pages.length) pages = [tempContainer];
-
-      var jsPdf = new window.jspdf.jsPDF('p', 'pt', 'a4');
-      for(var i = 0; i < pages.length; i++){
-        var c = await window.html2canvas(pages[i], { scale: 2, useCORS: true, logging: false });
-        var imgData = c.toDataURL('image/jpeg', 0.95);
-        if(i > 0) jsPdf.addPage('a4', 'p');
-        jsPdf.addImage(imgData, 'JPEG', 0, 0, 595.28, 841.89);
-      }
-
-      document.body.removeChild(tempContainer);
-      return jsPdf.output('blob');
-    } catch(e){
-      console.error('Local docx-preview conversion failed:', e);
-      return new Blob([docxBytes], { type: 'application/pdf' });
-    }
-  }
-
-  // Standalone Pre-Screen Report Builder (pdfMake)
-  async function buildRecruiterSummaryVectorBlob(data){
-    if(window.opener && typeof window.opener.__buildRSBlob === 'function'){
-      try {
-        var opBlob = await window.opener.__buildRSBlob(data, {});
-        if(opBlob && opBlob.size > 200) return opBlob;
-      } catch(e){}
-    }
-
-    return new Promise(function(resolve, reject){
-      try {
-        var score = data.match || 88;
-        var docDef = {
-          pageSize: 'A4',
-          pageMargins: [30, 26, 30, 24],
-          defaultStyle: { font: 'Roboto', fontSize: 8, color: '#1f2937', lineHeight: 1.25 },
-          styles: {
-            title: { fontSize: 15, bold: true, color: '#0f172a', alignment: 'right' },
-            eyebrow: { fontSize: 6.5, color: '#64748b', alignment: 'right' },
-            candName: { fontSize: 18, bold: true, color: '#0f172a' },
-            candRole: { fontSize: 9.5, bold: true, color: '#1d4ed8' },
-            footer: { fontSize: 6.5, color: '#64748b' }
-          },
-          content: [
-            // Header
-            {
-              table: { widths: ['*', 'auto'], body: [[
-                { text: [ { text: 'SHARED BY\n', fontSize: 6, bold: true, color: '#64748b' }, { text: data.reportCompanyName || 'Hiring Partner', fontSize: 12, bold: true, color: '#0f172a' } ], border: [false, false, false, false] },
-                { stack: [ { text: 'PRE-SCREENED CANDIDATE REPORT', style: 'title' }, { text: (data.reportDate + ' · CONFIDENTIAL').toUpperCase(), style: 'eyebrow', margin: [0, 3, 0, 0] } ], border: [false, false, false, false] }
-              ]]},
-              layout: 'noBorders',
-              margin: [0, 0, 0, 14]
-            },
-            // Candidate & Hiring Confidence
-            {
-              table: { widths: ['*', 140], body: [[
-                { stack: [
-                    { text: data.name, style: 'candName' },
-                    { text: data.designation, style: 'candRole', margin: [0, 3, 0, 8] },
-                    { text: 'EXPERIENCE: ' + (data.experience || '5 YEARS').toUpperCase(), fontSize: 7.5, bold: true, color: '#475569' },
-                    { text: 'CURRENT COMPANY: ' + (data.company || '--').toUpperCase(), fontSize: 7.5, bold: true, color: '#475569', margin: [0, 2, 0, 0] }
-                  ], fillColor: '#ffffff', border: [true, true, true, true], borderColor: ['#cbd5e1','#cbd5e1','#cbd5e1','#cbd5e1'], margin: [10, 8, 10, 8] },
-                { stack: [
-                    { text: 'HIRING CONFIDENCE', fontSize: 10, bold: true, color: '#64748b', alignment: 'center', margin: [0, 6, 0, 0] },
-                    { text: score + '%', fontSize: 26, bold: true, color: '#1d4ed8', alignment: 'center', margin: [0, 4, 0, 0] }
-                  ], fillColor: '#f8fbff', border: [true, true, true, true], borderColor: ['#cfe0ff','#cfe0ff','#cfe0ff','#cfe0ff'], margin: [10, 8, 10, 8] }
-              ]]},
-              margin: [0, 0, 0, 12]
-            },
-            // 4 Key Candidate Metrics
-            {
-              table: { widths: ['*', '*', '*', '*'], body: [[
-                { stack: [ { text: 'EDUCATION', fontSize: 6.5, bold: true, color: '#64748b', alignment: 'center' }, { text: data.education, fontSize: 8, bold: true, alignment: 'center', margin: [0, 2, 0, 0] } ], margin: [4, 6, 4, 6] },
-                { stack: [ { text: 'NOTICE PERIOD', fontSize: 6.5, bold: true, color: '#64748b', alignment: 'center' }, { text: data.notice, fontSize: 8, bold: true, alignment: 'center', margin: [0, 2, 0, 0] } ], margin: [4, 6, 4, 6] },
-                { stack: [ { text: 'LOCATION', fontSize: 6.5, bold: true, color: '#64748b', alignment: 'center' }, { text: data.location, fontSize: 8, bold: true, alignment: 'center', margin: [0, 2, 0, 0] } ], margin: [4, 6, 4, 6] },
-                { stack: [ { text: 'WORK MODE', fontSize: 6.5, bold: true, color: '#64748b', alignment: 'center' }, { text: data.workMode, fontSize: 8, bold: true, alignment: 'center', margin: [0, 2, 0, 0] } ], margin: [4, 6, 4, 6] }
-              ]]},
-              fillColor: '#ffffff',
-              margin: [0, 0, 0, 12]
-            },
-            // Executive Summary & Recruiter Comments
-            {
-              columns: [
-                { stack: [ { text: 'EXECUTIVE SUMMARY', fontSize: 8, bold: true, color: '#1d4ed8', margin: [0, 0, 0, 4] }, { text: data.careerSummary, fontSize: 7.5, lineHeight: 1.35 } ], margin: [0, 0, 6, 0] },
-                { stack: [ { text: 'RECRUITER COMMENTS', fontSize: 8, bold: true, color: '#1d4ed8', margin: [0, 0, 0, 4] }, { text: data.recruiterNote, fontSize: 7.5, lineHeight: 1.35 } ], margin: [6, 0, 0, 0] }
-              ],
-              margin: [0, 0, 0, 12]
-            },
-            // Footer
-            {
-              table: { widths: ['*', 'auto'], body: [[
-                { text: 'This report is generated by AI hiring platform jero.works', style: 'footer', border: [false, true, false, false], margin: [0, 6, 0, 0] },
-                { text: 'www.jero.works', style: 'footer', border: [false, true, false, false], margin: [0, 6, 0, 0] }
-              ]]},
-              layout: { hLineColor: function(){ return '#e5e7eb'; }, hLineWidth: function(){ return 0.6; }, vLineWidth: function(){ return 0; } }
+    if(bytes){
+      var isDocx = (bytes[0] === 0x50 && bytes[1] === 0x4B) || resumeExt === 'docx' || resumeExt === 'doc';
+      if(isDocx){
+        try {
+          if(typeof mammoth !== 'undefined'){
+            var conv = await mammoth.convertToHtml({ arrayBuffer: bytes.buffer || bytes });
+            if(conv && conv.value && conv.value.trim().length > 20){
+              displayResume(conv.value);
+              return;
             }
-          ]
-        };
-        window.pdfMake.createPdf(docDef).getBlob(function(b){ resolve(b); });
-      } catch(e){ reject(e); }
-    });
-  }
-
-  // Clean, Standalone Vector PDF Merger (Returns Blob directly, 0% download triggers)
-  async function mergeReportAndResume(reportBlob, resumeBlob){
-    var PDFLib = window.PDFLib;
-    if(!PDFLib || !PDFLib.PDFDocument) throw new Error('PDFLib is not loaded');
-
-    var rBytes = await reportBlob.arrayBuffer();
-    var cvBytes = await resumeBlob.arrayBuffer();
-
-    var merged = await PDFLib.PDFDocument.create();
-    var reportDoc = await PDFLib.PDFDocument.load(rBytes);
-    var cvDoc = await PDFLib.PDFDocument.load(cvBytes);
-
-    // Copy Report Pages
-    var p1 = await merged.copyPages(reportDoc, reportDoc.getPageIndices());
-    p1.forEach(function(page){ merged.addPage(page); });
-
-    // Copy Resume Pages
-    var p2 = await merged.copyPages(cvDoc, cvDoc.getPageIndices());
-    p2.forEach(function(page){ merged.addPage(page); });
-
-    var mergedBytes = await merged.save();
-    return new Blob([mergedBytes], { type: 'application/pdf' });
-  }
-
-  // Vector Company Branding Header Injection (PDFLib)
-  async function applyCompanyBrandingToPdf(resumePdfBlob, brandingData){
-    if(window.opener && typeof window.opener.__applyAgyCompanyBrandingToPdfBlob === 'function'){
-      try {
-        var bBlob = await window.opener.__applyAgyCompanyBrandingToPdfBlob(resumePdfBlob, brandingData);
-        if(bBlob && bBlob.size > 200) return bBlob;
-      } catch(e){
-        console.warn('Opener branding error, using local branding:', e);
-      }
-    }
-
-    var PDFLib = window.PDFLib;
-    var resumeBytes = await resumePdfBlob.arrayBuffer();
-    var resumeDoc = await PDFLib.PDFDocument.load(resumeBytes);
-    var firstPage = resumeDoc.getPages()[0];
-    var pageSize = firstPage.getSize();
-
-    var targetDoc = await PDFLib.PDFDocument.create();
-    var regularFont = await targetDoc.embedFont(PDFLib.StandardFonts.Helvetica);
-    var boldFont = await targetDoc.embedFont(PDFLib.StandardFonts.HelveticaBold);
-
-    var headerH = Math.max(68, pageSize.width * 0.11);
-    var newFirst = targetDoc.addPage([pageSize.width, pageSize.height + headerH]);
-    var embedded = await targetDoc.embedPage(firstPage);
-    newFirst.drawPage(embedded, { x: 0, y: 0, width: pageSize.width, height: pageSize.height });
-
-    var topY = pageSize.height;
-    newFirst.drawRectangle({
-      x: 0, y: topY, width: pageSize.width, height: headerH,
-      color: PDFLib.rgb(1, 1, 1),
-      borderColor: PDFLib.rgb(0.86, 0.89, 0.94),
-      borderWidth: 0.8
-    });
-    newFirst.drawRectangle({
-      x: 0, y: topY + headerH - 4, width: pageSize.width, height: 4,
-      color: PDFLib.rgb(0.12, 0.23, 0.54)
-    });
-
-    newFirst.drawText('SHARED BY', { x: 24, y: topY + headerH - 24, size: 7, font: boldFont, color: PDFLib.rgb(0.39, 0.45, 0.55) });
-    newFirst.drawText(brandingData.reportCompanyName || 'Hiring Partner', { x: 24, y: topY + headerH - 44, size: 12, font: boldFont, color: PDFLib.rgb(0.06, 0.09, 0.16) });
-    newFirst.drawText('CONFIDENTIAL RESUME', { x: pageSize.width - 170, y: topY + headerH - 26, size: 12, font: boldFont, color: PDFLib.rgb(0.06, 0.09, 0.16) });
-
-    var sourcePages = resumeDoc.getPages();
-    if(sourcePages.length > 1){
-      var rest = await targetDoc.copyPages(resumeDoc, resumeDoc.getPageIndices().slice(1));
-      rest.forEach(function(p){ targetDoc.addPage(p); });
-    }
-
-    var bytes = await targetDoc.save();
-    return new Blob([bytes], { type: 'application/pdf' });
-  }
-
-  // Vector Keyword Highlighting (PDFLib + PDF.js text runs)
-  async function applyVectorKeywordsHighlight(resumePdfBlob, keywordsList){
-    if(window.opener && typeof window.opener.__buildTurboVectorHighlightedResume === 'function'){
-      try {
-        var hlBlob = await window.opener.__buildTurboVectorHighlightedResume({
-          resumeBlob: resumePdfBlob,
-          resumeExt: 'PDF', // Pass explicitly to prevent cross-realm instanceof Blob failure
-          keywords: keywordsList,
-          returnBlob: true,
-          ignoreBusy: true,
-          throwOnError: true
-        });
-        if(hlBlob && hlBlob.size > 200) return hlBlob;
-      } catch(e){
-        console.warn('Opener keyword highlighter skipped:', e);
-      }
-    }
-
-    var PDFLib = window.PDFLib;
-    var bytes = await resumePdfBlob.arrayBuffer();
-    var pdfDoc = await PDFLib.PDFDocument.load(bytes);
-    var pdfjsDoc = await window.pdfjsLib.getDocument({ data: new Uint8Array(bytes) }).promise;
-
-    for(var p = 1; p <= pdfjsDoc.numPages; p++){
-      var page = await pdfjsDoc.getPage(p);
-      var tc = await page.getTextContent();
-      var pdfLibPage = pdfDoc.getPage(p - 1);
-
-      tc.items.forEach(function(item){
-        var str = (item.str || '').toLowerCase();
-        if(!str.trim()) return;
-
-        keywordsList.forEach(function(kw){
-          kw = String(kw).toLowerCase().trim();
-          if(!kw || kw.length < 2) return;
-          if(str.indexOf(kw) !== -1){
-            var tx = item.transform[4] || 0;
-            var ty = item.transform[5] || 0;
-            var itemH = Math.max(Math.abs(item.transform[3] || item.height || 10), 9);
-            var itemW = Math.max(Math.abs(item.width || 20), 10);
-
-            pdfLibPage.drawRectangle({
-              x: tx - 2,
-              y: ty - (itemH * 0.2),
-              width: itemW + 4,
-              height: itemH * 1.15,
-              color: PDFLib.rgb(1, 0.85, 0.15),
-              opacity: 0.42
-            });
           }
-        });
-      });
-    }
-
-    var savedBytes = await pdfDoc.save();
-    return new Blob([savedBytes], { type: 'application/pdf' });
-  }
-
-  // -------------------------------------------------------------
-  // PRIMARY PIPELINE: Generates the Selected Option's Final Base File
-  // -------------------------------------------------------------
-  async function buildOptionDocument(modeNum){
-    modeNum = parseInt(modeNum, 10) || 64;
-    var rawBytes = await fetchRawResumeBytes();
-
-    var baseResumeBlob = null;
-    var isDocx = (rawBytes[0] === 0x50 && rawBytes[1] === 0x4B) || resumeExt === 'docx';
-    if(isDocx){
-      baseResumeBlob = await convertDocxToPdfBlob(rawBytes);
-    } else {
-      baseResumeBlob = new Blob([rawBytes], { type: 'application/pdf' });
-    }
-
-    var finalBlob = baseResumeBlob;
-
-    if(modeNum === 62){
-      // Option 62: Resume + Company Branding
-      finalBlob = await applyCompanyBrandingToPdf(baseResumeBlob, candidateDossierData);
-    } else if(modeNum === 63){
-      // Option 63: Highlighted Keywords
-      var activeKws = Object.keys(keywords).filter(function(k){ return keywords[k].active; });
-      finalBlob = await applyVectorKeywordsHighlight(baseResumeBlob, activeKws);
-    } else if(modeNum === 64){
-      // Option 64: Pre-Screen Report + Resume
-      var reportBlob = await buildRecruiterSummaryVectorBlob(candidateDossierData);
-      finalBlob = await mergeReportAndResume(reportBlob, baseResumeBlob);
-    } else if(modeNum === 65){
-      // Option 65: Pre-Screen Report + Highlighted Keywords
-      var reportBlob = await buildRecruiterSummaryVectorBlob(candidateDossierData);
-      var activeKws = Object.keys(keywords).filter(function(k){ return keywords[k].active; });
-      var hlResumeBlob = await applyVectorKeywordsHighlight(baseResumeBlob, activeKws);
-      finalBlob = await mergeReportAndResume(reportBlob, hlResumeBlob);
-    }
-
-    return finalBlob;
-  }
-
-  // -------------------------------------------------------------
-  // HIGH-FIDELITY VIEWER RENDERER (Render PDF Pages into Canvas Viewport)
-  // -------------------------------------------------------------
-  async function renderDocumentPages(pdfBlob){
-    loaderBox.style.display = 'flex';
-    docPagesContainer.style.display = 'none';
-    docPagesContainer.innerHTML = '';
-    pageElements = [];
-
-    var ab = await pdfBlob.arrayBuffer();
-    currentPdfJsDoc = await window.pdfjsLib.getDocument({ data: new Uint8Array(ab) }).promise;
-
-    var containerW = Math.min(canvasViewport.clientWidth - 40, 840);
-    document.getElementById('stripPageNum').textContent = '1 / ' + currentPdfJsDoc.numPages;
-
-    for(var p = 1; p <= currentPdfJsDoc.numPages; p++){
-      var page = await currentPdfJsDoc.getPage(p);
-      var baseVp = page.getViewport({ scale: 1 });
-      var scale = (containerW - 4) / baseVp.width;
-      var viewport = page.getViewport({ scale: scale * currentZoom });
-
-      var pageWrap = document.createElement('div');
-      pageWrap.className = 'rcv-page-wrap';
-      pageWrap.id = 'page_' + p;
-      pageWrap.setAttribute('data-page', p);
-      pageWrap.style.width = Math.floor(viewport.width) + 'px';
-      pageWrap.style.height = Math.floor(viewport.height) + 'px';
-      pageWrap.style.margin = '0 auto';
-      pageWrap.__pdfPage = page;
-      pageWrap.__viewport = viewport;
-
-      // Base Render Canvas
-      var canvas = document.createElement('canvas');
-      canvas.className = 'rcv-page-canvas';
-      var dpr = window.devicePixelRatio || 1;
-      canvas.width = Math.floor(viewport.width * dpr);
-      canvas.height = Math.floor(viewport.height * dpr);
-      canvas.style.width = Math.floor(viewport.width) + 'px';
-      canvas.style.height = Math.floor(viewport.height) + 'px';
-      pageWrap.appendChild(canvas);
-
-      // Text Layer
-      var tl = document.createElement('div');
-      tl.className = 'rcv-textlayer';
-      tl.style.width = Math.floor(viewport.width) + 'px';
-      tl.style.height = Math.floor(viewport.height) + 'px';
-      pageWrap.appendChild(tl);
-
-      // Annotation Canvas Overlay (Touch / Stylus drawing)
-      var annotCanvas = document.createElement('canvas');
-      annotCanvas.className = 'rcv-annotation-canvas';
-      annotCanvas.width = canvas.width;
-      annotCanvas.height = canvas.height;
-      annotCanvas.style.width = canvas.style.width;
-      annotCanvas.style.height = canvas.style.height;
-      pageWrap.appendChild(annotCanvas);
-
-      docPagesContainer.appendChild(pageWrap);
-      pageElements.push(pageWrap);
-
-      var ctx = canvas.getContext('2d');
-      var transform = (dpr !== 1) ? [dpr, 0, 0, dpr, 0, 0] : null;
-      await page.render({ canvasContext: ctx, viewport: viewport, transform: transform }).promise;
-
-      // Render Text Layer for mouse selection & highlights
-      var tc = await page.getTextContent();
-      try {
-        await window.pdfjsLib.renderTextLayer({
-          textContent: tc,
-          container: tl,
-          viewport: viewport,
-          textDivs: []
-        }).promise;
-      } catch(e){}
-
-      bindPageEvents(pageWrap, annotCanvas, p, viewport);
-    }
-
-    loaderBox.style.display = 'none';
-    docPagesContainer.style.display = 'flex';
-    redrawPageOverlays();
-    countOccurrences();
-    renderChips();
-    recordHistoryState();
-  }
-
-  // -------------------------------------------------------------
-  // INTERACTIVE TOOLS: Highlighting, Whiteout, Signatures
-  // -------------------------------------------------------------
-  var isAnnotatingMode = false;
-  var isDrawingStroke = false;
-  var currentStroke = [];
-
-  function bindPageEvents(pageWrap, annotCanvas, pageNum, viewport){
-    var ctx = annotCanvas.getContext('2d');
-    var dpr = window.devicePixelRatio || 1;
-
-    annotCanvas.addEventListener('pointerdown', function(e){
-      if(!isAnnotatingMode) return;
-      e.preventDefault();
-      isDrawingStroke = true;
-      currentStroke = [{ x: e.offsetX * dpr, y: e.offsetY * dpr }];
-      ctx.beginPath();
-      ctx.moveTo(e.offsetX * dpr, e.offsetY * dpr);
-      ctx.strokeStyle = '#f59e0b';
-      ctx.lineWidth = 3 * dpr;
-      ctx.lineCap = 'round';
-    });
-
-    annotCanvas.addEventListener('pointermove', function(e){
-      if(!isAnnotatingMode || !isDrawingStroke) return;
-      e.preventDefault();
-      ctx.lineTo(e.offsetX * dpr, e.offsetY * dpr);
-      ctx.stroke();
-      currentStroke.push({ x: e.offsetX * dpr, y: e.offsetY * dpr });
-    });
-
-    annotCanvas.addEventListener('pointerup', function(e){
-      if(!isAnnotatingMode) return;
-      if(isDrawingStroke && currentStroke.length > 1){
-        isDrawingStroke = false;
-        var imgUrl = annotCanvas.toDataURL('image/png');
-        userAnnotations.stamps.push({
-          pageNum: pageNum,
-          x: 0,
-          y: 0,
-          width: viewport.width,
-          height: viewport.height,
-          imgDataUrl: imgUrl,
-          viewportW: viewport.width,
-          viewportH: viewport.height
-        });
-        recordHistoryState();
+        } catch(err){
+          console.warn('Mammoth docx parse error:', err);
+        }
       }
-      isDrawingStroke = false;
-    });
+
+      // PDF Resume Parser
+      try {
+        if(typeof window.pdfjsLib !== 'undefined'){
+          var pVer = window.pdfjsLib.version || '2.11.338';
+          window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/' + pVer + '/pdf.worker.min.js';
+          var pdf = await window.pdfjsLib.getDocument({ data: bytes }).promise;
+          var htmlBlocks = [];
+          for(var p = 1; p <= pdf.numPages; p++){
+            var page = await pdf.getPage(p);
+            var tc = await page.getTextContent();
+            var pageStr = tc.items.map(function(item){ return item.str || ''; }).join(' ');
+            var sentences = pageStr.split(/(?<=[.?!])\s+/);
+            sentences.forEach(function(s){ if(s.trim()) htmlBlocks.push('<p>' + esc(s.trim()) + '</p>'); });
+            if(p < pdf.numPages) htmlBlocks.push('<div class="doc-page-break"></div>');
+          }
+          if(htmlBlocks.length){
+            displayResume(htmlBlocks.join(''));
+            return;
+          }
+        }
+      } catch(pdfErr){
+        console.warn('PDF.js text extraction error:', pdfErr);
+      }
+    }
+
+    // Opener plain text fallback
+    var openerText = window.opener && (window.opener.__rcvResumeText || window.opener.__rdcPreloadedResumeText);
+    if(openerText){
+      var lines = openerText.split(/\r?\n/);
+      var textHtml = lines.map(function(l){ return l.trim() ? ('<p>' + esc(l.trim()) + '</p>') : '<br>'; }).join('');
+      displayResume(textHtml);
+    } else {
+      displayResume('<p><strong>' + esc(candName) + '</strong></p><p>' + esc(jobTitle) + '</p><p>Verified candidate profile loaded for online editing.</p>');
+    }
   }
 
-  // Text Selection Highlight Tool
+  function displayResume(html){
+    var loader = document.getElementById('loaderPlaceholder');
+    if(loader) loader.remove();
+    resumeBody.innerHTML = html;
+    syncModeViews();
+  }
+
+  // -------------------------------------------------------------
+  // LIVE RICH FORMATTING TOOLBAR: BOLD, ITALIC, POINTERS, LISTS
+  // -------------------------------------------------------------
+  document.getElementById('btnBold').onclick = function(e){
+    e.preventDefault();
+    document.execCommand('bold', false, null);
+    resumeBody.focus();
+  };
+  document.getElementById('btnItalic').onclick = function(e){
+    e.preventDefault();
+    document.execCommand('italic', false, null);
+    resumeBody.focus();
+  };
+  document.getElementById('btnUnderline').onclick = function(e){
+    e.preventDefault();
+    document.execCommand('underline', false, null);
+    resumeBody.focus();
+  };
+  document.getElementById('btnBullet').onclick = function(e){
+    e.preventDefault();
+    document.execCommand('insertUnorderedList', false, null);
+    resumeBody.focus();
+  };
+  document.getElementById('btnNumList').onclick = function(e){
+    e.preventDefault();
+    document.execCommand('insertOrderedList', false, null);
+    resumeBody.focus();
+  };
+  document.getElementById('selFontSize').onchange = function(){
+    document.execCommand('fontSize', false, this.value);
+    resumeBody.focus();
+  };
+  document.getElementById('pickerColor').oninput = function(){
+    document.execCommand('foreColor', false, this.value);
+    resumeBody.focus();
+  };
+
+  // Highlight Selected Text
   document.getElementById('btnToolHighlight').onclick = function(e){
     e.preventDefault();
-    applySelectionAnnotation('highlight');
-  };
-
-  // Text Selection Whiteout Tool
-  document.getElementById('btnToolWhiteout').onclick = function(e){
-    e.preventDefault();
-    applySelectionAnnotation('whiteout');
-  };
-
-  function applySelectionAnnotation(type){
     var sel = window.getSelection();
-    if(!sel || !sel.rangeCount || sel.isCollapsed){
-      alert('Please select some text on the resume page first, then click ' + (type === 'highlight' ? 'Highlight' : 'Whiteout') + '.');
+    if(!sel.rangeCount || sel.isCollapsed){
+      alert('Please select some text to highlight first.');
       return;
     }
-
     var range = sel.getRangeAt(0);
-    var rects = range.getClientRects();
-    if(!rects || !rects.length) return;
-
-    var container = range.commonAncestorContainer;
-    var pageWrap = (container.nodeType === 1 ? container : container.parentElement).closest('.rcv-page-wrap');
-    if(!pageWrap){
-      for(var p = 0; p < pageElements.length; p++){
-        var pRect = pageElements[p].getBoundingClientRect();
-        if(rects[0].top >= pRect.top - 5 && rects[0].bottom <= pRect.bottom + 5){
-          pageWrap = pageElements[p];
-          break;
-        }
-      }
-    }
-    if(!pageWrap) return;
-
-    var pageNum = parseInt(pageWrap.getAttribute('data-page'), 10) || 1;
-    var pRect = pageWrap.getBoundingClientRect();
-    var vpW = pageWrap.__viewport ? pageWrap.__viewport.width : pRect.width;
-    var vpH = pageWrap.__viewport ? pageWrap.__viewport.height : pRect.height;
-
-    for(var r = 0; r < rects.length; r++){
-      var rect = rects[r];
-      if(rect.width < 1 || rect.height < 1) continue;
-
-      var x = rect.left - pRect.left;
-      var y = rect.top - pRect.top;
-      var w = rect.width;
-      var h = rect.height;
-
-      if(type === 'highlight'){
-        userAnnotations.highlights.push({
-          pageNum: pageNum,
-          x: x,
-          y: y,
-          width: w,
-          height: h,
-          viewportW: vpW,
-          viewportH: vpH
-        });
-      } else {
-        userAnnotations.whiteouts.push({
-          pageNum: pageNum,
-          x: x,
-          y: y,
-          width: w,
-          height: h,
-          viewportW: vpW,
-          viewportH: vpH
-        });
-      }
-    }
-
+    var mark = document.createElement('mark');
+    mark.className = 'rcv-hit';
+    mark.appendChild(range.extractContents());
+    range.insertNode(mark);
     sel.removeAllRanges();
-    redrawPageOverlays();
-    recordHistoryState();
-  }
-
-  // Toggle Keyword Highlights from Left Chip Bank
-  function toggleKeywordHighlightOnDoc(word, active){
-    word = word.toLowerCase();
-    document.querySelectorAll('.rcv-textlayer span').forEach(function(sp){
-      var t = sp.textContent || '';
-      if(t.toLowerCase().indexOf(word) !== -1){
-        if(active){
-          sp.style.backgroundColor = 'rgba(254, 240, 138, 0.5)';
-        } else {
-          sp.style.backgroundColor = 'transparent';
-        }
-      }
-    });
-  }
-
-  // Touch / Stylus Annotator Toggle
-  var btnToolDraw = document.getElementById('btnToolDraw');
-  btnToolDraw.onclick = function(){
-    isAnnotatingMode = !isAnnotatingMode;
-    btnToolDraw.classList.toggle('btn-tool-active', isAnnotatingMode);
-    document.querySelectorAll('.rcv-annotation-canvas').forEach(function(ac){
-      ac.style.pointerEvents = isAnnotatingMode ? 'auto' : 'none';
-    });
+    countOccurrences();
+    renderChips();
   };
+
+  // Whiteout Selected Text
+  document.getElementById('btnToolWhiteout').onclick = function(e){
+    e.preventDefault();
+    var sel = window.getSelection();
+    if(!sel.rangeCount || sel.isCollapsed){
+      alert('Please select some text to redact/whiteout first.');
+      return;
+    }
+    var range = sel.getRangeAt(0);
+    var mark = document.createElement('mark');
+    mark.className = 'rcv-redact';
+    mark.appendChild(range.extractContents());
+    range.insertNode(mark);
+    sel.removeAllRanges();
+  };
+
+  // Page Break Tool
+  document.getElementById('btnToolPageBreak').onclick = function(){
+    var hr = document.createElement('div');
+    hr.className = 'doc-page-break';
+    hr.contentEditable = 'false';
+    var sel = window.getSelection();
+    if(sel.rangeCount && !sel.isCollapsed){
+      var range = sel.getRangeAt(0);
+      range.insertNode(hr);
+    } else {
+      resumeBody.appendChild(hr);
+    }
+  };
+
+  // Copy All Text Tool
+  document.getElementById('btnToolCopy').onclick = function(){
+    var t = (sheetReport.style.display !== 'none' ? sheetReport.innerText + '\n\n' : '') + (resumeBody.innerText || '');
+    navigator.clipboard.writeText(t).then(function(){
+      alert('Document text copied to clipboard!');
+    }).catch(function(){ alert('Could not copy text.'); });
+  };
+
+  // Undo / Redo
+  document.getElementById('btnToolUndo').onclick = function(e){ e.preventDefault(); document.execCommand('undo', false, null); };
+  document.getElementById('btnToolRedo').onclick = function(e){ e.preventDefault(); document.execCommand('redo', false, null); };
+
+  // Add Custom Skill Keyword
+  document.getElementById('btnKwAdd').onclick = function(){
+    var input = document.getElementById('kwInput');
+    var val = (input.value || '').trim();
+    if(!val) return;
+    keywords[val.toLowerCase()] = { name: val, active: true, count: 0 };
+    input.value = '';
+    countOccurrences();
+    renderChips();
+    applyKeywordHighlights();
+  };
+  document.getElementById('kwInput').addEventListener('keydown', function(e){
+    if(e.key === 'Enter'){ e.preventDefault(); document.getElementById('btnKwAdd').click(); }
+  });
+
+  // Debounced input sync for live ATS score calculation
+  var syncTimer = null;
+  function handleLiveEdit(){
+    clearTimeout(syncTimer);
+    syncTimer = setTimeout(function(){
+      countOccurrences();
+      renderChips();
+    }, 200);
+  }
+  sheetResume.addEventListener('input', handleLiveEdit);
+  sheetReport.addEventListener('input', handleLiveEdit);
 
   // Signature Pad Modal
   var signModal = document.getElementById('signModal');
   var signCanvas = document.getElementById('signCanvas');
   var signCtx = signCanvas.getContext('2d');
   var isSigning = false;
+  signCtx.lineWidth = 2.5;
+  signCtx.strokeStyle = '#0f172a';
+  signCtx.lineCap = 'round';
 
   document.getElementById('btnToolSign').onclick = function(){
     signModal.style.display = 'flex';
     signCtx.clearRect(0, 0, signCanvas.width, signCanvas.height);
-    signCtx.lineWidth = 2.5;
-    signCtx.lineCap = 'round';
-    signCtx.strokeStyle = '#0f172a';
   };
   signCanvas.addEventListener('mousedown', function(e){ isSigning = true; signCtx.beginPath(); signCtx.moveTo(e.offsetX, e.offsetY); });
   signCanvas.addEventListener('mousemove', function(e){ if(isSigning){ signCtx.lineTo(e.offsetX, e.offsetY); signCtx.stroke(); } });
@@ -1486,91 +1436,45 @@
 
   document.getElementById('btnSignInsert').onclick = function(){
     var dataUrl = signCanvas.toDataURL('image/png');
-    signModal.style.display = 'none';
-
-    var targetPage = pageElements[0] || docPagesContainer.firstElementChild;
-    if(!targetPage) return;
-
-    var pNum = parseInt(targetPage.getAttribute('data-page'), 10) || 1;
     var img = document.createElement('img');
     img.src = dataUrl;
-    img.className = 'rcv-user-mark';
-    img.style.position = 'absolute';
-    img.style.bottom = '80px';
-    img.style.right = '60px';
-    img.style.width = '180px';
-    img.style.zIndex = '10';
-    targetPage.appendChild(img);
-
-    userAnnotations.stamps.push({
-      pageNum: pNum,
-      x: targetPage.clientWidth - 240,
-      y: targetPage.clientHeight - 140,
-      width: 180,
-      height: 70,
-      imgDataUrl: dataUrl,
-      viewportW: targetPage.__viewport.width,
-      viewportH: targetPage.__viewport.height
-    });
-    recordHistoryState();
+    img.style.maxHeight = '48px';
+    img.style.display = 'block';
+    img.style.margin = '10px 0';
+    var sel = window.getSelection();
+    if(sel.rangeCount && !sel.isCollapsed){
+      var range = sel.getRangeAt(0);
+      range.insertNode(img);
+    } else {
+      resumeBody.appendChild(img);
+    }
+    signModal.style.display = 'none';
   };
 
-  // Image / Stamp Upload
-  document.getElementById('btnToolImage').onclick = function(){
-    document.getElementById('fileImageInput').click();
-  };
+  // Image Upload Tool
+  document.getElementById('btnToolImage').onclick = function(){ document.getElementById('fileImageInput').click(); };
   document.getElementById('fileImageInput').addEventListener('change', function(e){
     var file = e.target.files && e.target.files[0];
     if(!file) return;
     var reader = new FileReader();
     reader.onload = function(evt){
-      var targetPage = pageElements[0] || docPagesContainer.firstElementChild;
-      if(!targetPage) return;
-      var pNum = parseInt(targetPage.getAttribute('data-page'), 10) || 1;
-
       var img = document.createElement('img');
       img.src = evt.target.result;
-      img.className = 'rcv-user-mark';
-      img.style.position = 'absolute';
-      img.style.top = '30px';
-      img.style.right = '50px';
-      img.style.maxHeight = '50px';
-      img.style.zIndex = '10';
-      targetPage.appendChild(img);
-
-      userAnnotations.stamps.push({
-        pageNum: pNum,
-        x: targetPage.clientWidth - 160,
-        y: 30,
-        width: 120,
-        height: 50,
-        imgDataUrl: evt.target.result,
-        viewportW: targetPage.__viewport.width,
-        viewportH: targetPage.__viewport.height
-      });
-      recordHistoryState();
+      img.style.maxWidth = '180px';
+      img.style.margin = '10px 0';
+      var sel = window.getSelection();
+      if(sel.rangeCount && !sel.isCollapsed){
+        var range = sel.getRangeAt(0);
+        range.insertNode(img);
+      } else {
+        resumeBody.appendChild(img);
+      }
     };
     reader.readAsDataURL(file);
   });
 
-  // Undo / Redo Buttons
-  document.getElementById('btnToolUndo').onclick = function(e){ e.preventDefault(); doUndo(); };
-  document.getElementById('btnToolRedo').onclick = function(e){ e.preventDefault(); doRedo(); };
-
-  // Add Custom Keyword
-  document.getElementById('btnKwAdd').onclick = function(){
-    var input = document.getElementById('kwInput');
-    var val = (input.value || '').trim();
-    if(!val) return;
-    keywords[val.toLowerCase()] = { name: val, active: true, count: 0 };
-    input.value = '';
-    renderChips();
-    countOccurrences();
-    toggleKeywordHighlightOnDoc(val, true);
-  };
-
   // -------------------------------------------------------------
-  // VECTOR PDF EXPORT & DOWNLOAD (0% Print Dialog, 100% Vector WASM)
+  // GOD-LEVEL VECTOR PDF COMPILER & INSTANT DOWNLOAD (0% Print Dialog)
   // -------------------------------------------------------------
   document.getElementById('btnDownload').onclick = async function(){
     var btn = document.getElementById('btnDownload');
@@ -1579,151 +1483,272 @@
     btn.innerHTML = '<span class="spin"></span> Compiling Vector PDF…';
 
     try {
-      if(!currentGeneratedPdfBlob) throw new Error('Document is still loading. Please wait.');
-
-      var PDFLib = window.PDFLib;
-      if(!PDFLib || !PDFLib.PDFDocument) throw new Error('Vector PDF engine is not available.');
-
-      var srcBytes = await currentGeneratedPdfBlob.arrayBuffer();
-      var pdfDoc = await PDFLib.PDFDocument.load(srcBytes);
-
-      // Burn User Highlights into Vector PDF
-      for(var i = 0; i < userAnnotations.highlights.length; i++){
-        var hl = userAnnotations.highlights[i];
-        if(hl.pageNum > pdfDoc.getPageCount()) continue;
-        var page = pdfDoc.getPage(hl.pageNum - 1);
-        var size = page.getSize();
-        var scaleX = size.width / (hl.viewportW || size.width);
-        var scaleY = size.height / (hl.viewportH || size.height);
-
-        page.drawRectangle({
-          x: hl.x * scaleX,
-          y: size.height - ((hl.y + hl.height) * scaleY),
-          width: hl.width * scaleX,
-          height: hl.height * scaleY,
-          color: PDFLib.rgb(1, 0.85, 0.15),
-          opacity: 0.45
-        });
+      if(!window.pdfMake || !window.pdfMake.createPdf){
+        throw new Error('PDF compiler engine is initializing. Please wait a moment.');
       }
 
-      // Burn User Whiteouts (Redactions) into Vector PDF
-      for(var w = 0; w < userAnnotations.whiteouts.length; w++){
-        var wo = userAnnotations.whiteouts[w];
-        if(wo.pageNum > pdfDoc.getPageCount()) continue;
-        var page = pdfDoc.getPage(wo.pageNum - 1);
-        var size = page.getSize();
-        var scaleX = size.width / (wo.viewportW || size.width);
-        var scaleY = size.height / (wo.viewportH || size.height);
+      var mode = parseInt(modePicker.value, 10) || 65;
+      var isBranded = (mode === 62);
+      var hasReport = (mode === 64 || mode === 65);
+      var shouldHighlight = (mode === 63 || mode === 65);
 
-        page.drawRectangle({
-          x: wo.x * scaleX,
-          y: size.height - ((wo.y + wo.height) * scaleY),
-          width: wo.width * scaleX,
-          height: wo.height * scaleY,
-          color: PDFLib.rgb(1, 1, 1),
-          opacity: 1
-        });
+      var fullPdfContent = [];
+
+      // 1. PAGE 1: PRE-SCREENED CANDIDATE REPORT (If Option 64 or 65)
+      if(hasReport){
+        var score = candidateDossierData.match || 88;
+        var reportTable = [
+          // Header
+          {
+            table: { widths: ['*', 'auto'], body: [[
+              { text: [ { text: 'SHARED BY\n', fontSize: 6, bold: true, color: '#64748b' }, { text: candidateDossierData.reportCompanyName || 'Hiring Partner', fontSize: 12, bold: true, color: '#0f172a' } ], border: [false, false, false, false] },
+              { stack: [ { text: 'PRE-SCREENED CANDIDATE REPORT', fontSize: 14, bold: true, color: '#0f172a', alignment: 'right' }, { text: (candidateDossierData.reportDate + ' · CONFIDENTIAL').toUpperCase(), fontSize: 6.5, color: '#64748b', alignment: 'right', margin: [0, 3, 0, 0] } ], border: [false, false, false, false] }
+            ]]},
+            layout: 'noBorders',
+            margin: [0, 0, 0, 14]
+          },
+          // Candidate & Hiring Confidence
+          {
+            table: { widths: ['*', 140], body: [[
+              { stack: [
+                  { text: candidateDossierData.name, fontSize: 17, bold: true, color: '#0f172a' },
+                  { text: candidateDossierData.designation, fontSize: 9.5, bold: true, color: '#0284c7', margin: [0, 3, 0, 8] },
+                  { text: 'EXPERIENCE: ' + (candidateDossierData.experience || '5 YEARS').toUpperCase(), fontSize: 7.5, bold: true, color: '#475569' },
+                  { text: 'CURRENT COMPANY: ' + (candidateDossierData.company || '--').toUpperCase(), fontSize: 7.5, bold: true, color: '#475569', margin: [0, 2, 0, 0] }
+                ], fillColor: '#ffffff', border: [true, true, true, true], borderColor: ['#cbd5e1','#cbd5e1','#cbd5e1','#cbd5e1'], margin: [10, 8, 10, 8] },
+              { stack: [
+                  { text: 'HIRING CONFIDENCE', fontSize: 10, bold: true, color: '#64748b', alignment: 'center', margin: [0, 6, 0, 0] },
+                  { text: score + '%', fontSize: 26, bold: true, color: '#0284c7', alignment: 'center', margin: [0, 4, 0, 0] }
+                ], fillColor: '#f8fbff', border: [true, true, true, true], borderColor: ['#cfe0ff','#cfe0ff','#cfe0ff','#cfe0ff'], margin: [10, 8, 10, 8] }
+            ]]},
+            margin: [0, 0, 0, 12]
+          },
+          // 4 Metrics
+          {
+            table: { widths: ['*', '*', '*', '*'], body: [[
+              { stack: [ { text: 'EDUCATION', fontSize: 6.5, bold: true, color: '#64748b', alignment: 'center' }, { text: candidateDossierData.education, fontSize: 8, bold: true, alignment: 'center', margin: [0, 2, 0, 0] } ], margin: [4, 6, 4, 6] },
+              { stack: [ { text: 'NOTICE PERIOD', fontSize: 6.5, bold: true, color: '#64748b', alignment: 'center' }, { text: candidateDossierData.notice, fontSize: 8, bold: true, alignment: 'center', margin: [0, 2, 0, 0] } ], margin: [4, 6, 4, 6] },
+              { stack: [ { text: 'LOCATION', fontSize: 6.5, bold: true, color: '#64748b', alignment: 'center' }, { text: candidateDossierData.location, fontSize: 8, bold: true, alignment: 'center', margin: [0, 2, 0, 0] } ], margin: [4, 6, 4, 6] },
+              { stack: [ { text: 'WORK MODE', fontSize: 6.5, bold: true, color: '#64748b', alignment: 'center' }, { text: candidateDossierData.workMode, fontSize: 8, bold: true, alignment: 'center', margin: [0, 2, 0, 0] } ], margin: [4, 6, 4, 6] }
+            ]]},
+            fillColor: '#ffffff',
+            margin: [0, 0, 0, 12]
+          },
+          // Executive Summary & Recruiter Comments
+          {
+            columns: [
+              { stack: [ { text: 'EXECUTIVE SUMMARY', fontSize: 8, bold: true, color: '#0284c7', margin: [0, 0, 0, 4] }, { text: candidateDossierData.careerSummary, fontSize: 7.5, lineHeight: 1.35 } ], margin: [0, 0, 6, 0] },
+              { stack: [ { text: 'RECRUITER COMMENTS', fontSize: 8, bold: true, color: '#0284c7', margin: [0, 0, 0, 4] }, { text: candidateDossierData.recruiterNote, fontSize: 7.5, lineHeight: 1.35 } ], margin: [6, 0, 0, 0] }
+            ],
+            margin: [0, 0, 0, 14]
+          },
+          // Footer
+          {
+            table: { widths: ['*', 'auto'], body: [[
+              { text: 'This report is generated by AI hiring platform jero.works', fontSize: 6.5, color: '#64748b', border: [false, true, false, false], margin: [0, 6, 0, 0] },
+              { text: 'www.jero.works', fontSize: 6.5, color: '#64748b', border: [false, true, false, false], margin: [0, 6, 0, 0] }
+            ]]},
+            layout: { hLineColor: function(){ return '#e5e7eb'; }, hLineWidth: function(){ return 0.6; }, vLineWidth: function(){ return 0; } }
+          }
+        ];
+
+        fullPdfContent = fullPdfContent.concat(reportTable);
       }
 
-      // Burn Stamps / Signatures / Logos
-      for(var s = 0; s < userAnnotations.stamps.length; s++){
-        var st = userAnnotations.stamps[s];
-        if(st.pageNum > pdfDoc.getPageCount()) continue;
-        var page = pdfDoc.getPage(st.pageNum - 1);
-        var size = page.getSize();
-        var scaleX = size.width / (st.viewportW || size.width);
-        var scaleY = size.height / (st.viewportH || size.height);
-
-        try {
-          var imgBytes = await (await fetch(st.imgDataUrl)).arrayBuffer();
-          var isJpg = (st.imgDataUrl.indexOf('jpeg') !== -1 || st.imgDataUrl.indexOf('jpg') !== -1);
-          var embeddedImg = isJpg ? await pdfDoc.embedJpg(imgBytes) : await pdfDoc.embedPng(imgBytes);
-
-          page.drawImage(embeddedImg, {
-            x: st.x * scaleX,
-            y: size.height - ((st.y + st.height) * scaleY),
-            width: st.width * scaleX,
-            height: st.height * scaleY
-          });
-        } catch(err){
-          console.warn('Stamp embed skipped:', err);
-        }
+      // 2. PAGE 2 (OR PAGE 1 IF NO REPORT): COMPANY BRANDING BANNER (If Option 62)
+      if(isBranded){
+        var brandBanner = {
+          table: { widths: ['*', 'auto'], body: [[
+            { stack: [
+                { text: 'SHARED BY', fontSize: 6.5, bold: true, color: '#64748b' },
+                { text: companyName || 'Hiring Partner', fontSize: 13, bold: true, color: '#0f172a' }
+              ], border: [false, false, false, true] },
+            { stack: [
+                { text: 'CONFIDENTIAL RESUME', fontSize: 12, bold: true, color: '#0f172a', alignment: 'right' },
+                { text: (candidateDossierData.reportDate + ' · Verified ATS Format').toUpperCase(), fontSize: 7, color: '#0284c7', alignment: 'right', margin: [0, 2, 0, 0] }
+              ], border: [false, false, false, true] }
+          ]]},
+          layout: { hLineColor: function(){ return '#0284c7'; }, hLineWidth: function(){ return 2; }, vLineWidth: function(){ return 0; } },
+          margin: [0, 0, 0, 16]
+        };
+        fullPdfContent.push(brandBanner);
       }
 
-      var finalBytes = await pdfDoc.save();
-      var finalBlob = new Blob([finalBytes], { type: 'application/pdf' });
+      // 3. RÉSUMÉ CONTENT PARSING (Converts HTML DOM Elements to native vector pdfMake nodes)
+      var activeKwList = Object.keys(keywords).filter(function(k){ return keywords[k].active; });
+      var resumeNodes = parseHtmlToPdfMake(resumeBody, activeKwList, shouldHighlight);
 
-      // Direct download without browser print dialog
+      if(hasReport && resumeNodes.length > 0){
+        resumeNodes[0].pageBreak = 'before';
+      }
+
+      fullPdfContent = fullPdfContent.concat(resumeNodes);
+
+      var docDef = {
+        pageSize: 'A4',
+        pageMargins: [36, 30, 36, 30],
+        defaultStyle: {
+          font: 'Roboto',
+          fontSize: 9,
+          lineHeight: 1.35,
+          color: '#1e293b'
+        },
+        content: fullPdfContent
+      };
+
       var cleanName = (candName || 'Candidate').replace(/[^a-zA-Z0-9_\-]/g, '_');
-      var m = parseInt(modePicker.value, 10) || 61;
-      var sfx = (m === 64 || m === 65) ? '_Dossier' : (m === 62 ? '_Branded' : '_ATS_Optimized');
+      var sfx = (mode === 65 ? '_Dossier_Highlighted' : (mode === 64 ? '_Dossier' : (mode === 62 ? '_Branded' : '_ATS_Optimized')));
       var filename = 'Jeroworks_' + cleanName + sfx + '.pdf';
 
-      var link = document.createElement('a');
-      link.href = URL.createObjectURL(finalBlob);
-      link.download = filename;
-      document.body.appendChild(link);
-      link.click();
-      setTimeout(function(){
-        document.body.removeChild(link);
-        URL.revokeObjectURL(link.href);
-      }, 5000);
+      window.pdfMake.createPdf(docDef).download(filename);
 
     } catch(err){
-      console.error('Vector PDF download error:', err);
-      alert('Could not compile final PDF: ' + (err && err.message ? err.message : 'Please try again.'));
+      console.error('Vector download error:', err);
+      alert('Could not compile PDF: ' + (err && err.message ? err.message : 'Please try again.'));
     } finally {
       btn.disabled = false;
       btn.innerHTML = orig;
     }
   };
 
+  // Converts HTML DOM elements to native vector pdfMake objects
+  function parseHtmlToPdfMake(root, activeKeywords, shouldHighlight){
+    var content = [];
+    var kwMap = {};
+    if(shouldHighlight && activeKeywords){
+      activeKeywords.forEach(function(k){ if(k) kwMap[k.toLowerCase()] = true; });
+    }
+
+    function parseNode(node){
+      if(node.nodeType === 3){
+        var t = (node.nodeValue || '').trim();
+        if(!t) return null;
+        return { text: t + ' ' };
+      }
+      if(node.nodeType !== 1) return null;
+
+      var tag = node.tagName.toLowerCase();
+      if(tag === 'script' || tag === 'style') return null;
+
+      if(tag === 'h1'){
+        return { text: node.innerText.trim(), fontSize: 16, bold: true, color: '#0f172a', margin: [0, 10, 0, 4] };
+      }
+      if(tag === 'h2'){
+        return { text: node.innerText.trim(), fontSize: 13, bold: true, color: '#0f172a', margin: [0, 8, 0, 3] };
+      }
+      if(tag === 'h3'){
+        return { text: node.innerText.trim(), fontSize: 11, bold: true, color: '#1e293b', margin: [0, 6, 0, 2] };
+      }
+      if(tag === 'hr' || node.classList.contains('doc-page-break')){
+        return { text: '', pageBreak: 'before' };
+      }
+      if(tag === 'ul'){
+        var ulItems = [];
+        Array.prototype.slice.call(node.children).forEach(function(li){
+          if(li.tagName.toLowerCase() === 'li'){
+            var inlines = parseInlines(li);
+            if(inlines.length) ulItems.push({ text: inlines });
+          }
+        });
+        return ulItems.length ? { ul: ulItems, margin: [0, 2, 0, 6] } : null;
+      }
+      if(tag === 'ol'){
+        var olItems = [];
+        Array.prototype.slice.call(node.children).forEach(function(li){
+          if(li.tagName.toLowerCase() === 'li'){
+            var inlines = parseInlines(li);
+            if(inlines.length) olItems.push({ text: inlines });
+          }
+        });
+        return olItems.length ? { ol: olItems, margin: [0, 2, 0, 6] } : null;
+      }
+      if(tag === 'img'){
+        var src = node.getAttribute('src');
+        if(src && src.indexOf('data:image') === 0){
+          return { image: src, width: Math.min(node.clientWidth || 160, 220), margin: [0, 4, 0, 4] };
+        }
+        return null;
+      }
+      if(tag === 'p' || tag === 'div'){
+        var pInlines = parseInlines(node);
+        if(!pInlines.length) return { text: ' ', margin: [0, 1.5, 0, 1.5] };
+        return { text: pInlines, margin: [0, 1.5, 0, 1.5] };
+      }
+      return null;
+    }
+
+    function parseInlines(parent){
+      var inlines = [];
+      Array.prototype.slice.call(parent.childNodes).forEach(function(ch){
+        if(ch.nodeType === 3){
+          var str = ch.nodeValue || '';
+          if(str) inlines.push({ text: str });
+        } else if(ch.nodeType === 1){
+          var t = ch.tagName.toLowerCase();
+          var txt = ch.innerText || ch.textContent || '';
+          var span = { text: txt };
+          if(t === 'b' || t === 'strong' || ch.style.fontWeight === 'bold' || parseInt(ch.style.fontWeight, 10) >= 600){
+            span.bold = true;
+          }
+          if(t === 'i' || t === 'em' || ch.style.fontStyle === 'italic'){
+            span.italics = true;
+          }
+          if(t === 'u' || (ch.style.textDecoration && ch.style.textDecoration.indexOf('underline') !== -1)){
+            span.decoration = 'underline';
+          }
+          if(ch.style.color){
+            span.color = ch.style.color;
+          }
+          if(t === 'mark' || ch.classList.contains('rcv-hit')){
+            span.background = '#fef08a';
+            span.color = '#854d0e';
+            span.bold = true;
+          } else if(ch.classList.contains('rcv-redact')){
+            span.background = '#000000';
+            span.color = '#000000';
+          }
+          inlines.push(span);
+        }
+      });
+      return inlines;
+    }
+
+    Array.prototype.slice.call(root.children).forEach(function(child){
+      var res = parseNode(child);
+      if(res) content.push(res);
+    });
+
+    return content;
+  }
+
   // Zoom controls
+  var currentZoom = 1.0;
   document.getElementById('stripZoomIn').onclick = function(){
-    currentZoom = Math.min(1.4, currentZoom + 0.1);
-    if(currentGeneratedPdfBlob) renderDocumentPages(currentGeneratedPdfBlob);
+    currentZoom = Math.min(1.3, currentZoom + 0.1);
+    sheetResume.style.transform = 'scale(' + currentZoom + ')';
+    sheetReport.style.transform = 'scale(' + currentZoom + ')';
   };
   document.getElementById('stripZoomOut').onclick = function(){
     currentZoom = Math.max(0.7, currentZoom - 0.1);
-    if(currentGeneratedPdfBlob) renderDocumentPages(currentGeneratedPdfBlob);
+    sheetResume.style.transform = 'scale(' + currentZoom + ')';
+    sheetReport.style.transform = 'scale(' + currentZoom + ')';
   };
   document.getElementById('stripFitWidth').onclick = function(){
     currentZoom = 1.0;
-    if(currentGeneratedPdfBlob) renderDocumentPages(currentGeneratedPdfBlob);
+    sheetResume.style.transform = 'scale(1)';
+    sheetReport.style.transform = 'scale(1)';
   };
   document.getElementById('stripPrevPage').onclick = function(){
-    canvasViewport.scrollTo({ top: 0, behavior: 'smooth' });
+    canvas.scrollTo({ top: 0, behavior: 'smooth' });
   };
   document.getElementById('stripNextPage').onclick = function(){
-    canvasViewport.scrollTo({ top: canvasViewport.scrollHeight, behavior: 'smooth' });
+    canvas.scrollTo({ top: sheetResume.offsetTop - 20, behavior: 'smooth' });
   };
 
-  // Mode change: Regenerate document for the selected option
-  modePicker.addEventListener('change', async function(){
-    var m = parseInt(this.value, 10) || 64;
-    try {
-      loaderBox.style.display = 'flex';
-      docPagesContainer.style.display = 'none';
-      currentGeneratedPdfBlob = await buildOptionDocument(m);
-      await renderDocumentPages(currentGeneratedPdfBlob);
-    } catch(e){
-      console.error('Mode switch error:', e);
-      alert('Could not generate document format: ' + (e && e.message ? e.message : 'Please try again.'));
-    }
-  });
-
   // Initial Load
-  async function initStudio(){
-    try {
-      if(initialOpt && modePicker) modePicker.value = String(initialOpt);
-      currentGeneratedPdfBlob = await buildOptionDocument(initialOpt);
-      await renderDocumentPages(currentGeneratedPdfBlob);
-    } catch(err){
-      console.error('Init error:', err);
-      loaderBox.innerHTML = '<span style="color:#f87171;font-size:14px;font-weight:600;">Failed to load candidate document.</span><span style="font-size:12px;color:#cbd5e1;">' + (err.message || 'Please check candidate resume.') + '</span>';
-    }
-  }
-  initStudio();
+  if(initialOpt && modePicker) modePicker.value = String(initialOpt);
+  syncModeViews();
+  loadCandidateResume();
 </script>
 
 </body>
