@@ -15,6 +15,7 @@ use App\Helper\Files;
 use App\Helper\GeneralMethod;
 use App\Helper\Reply;
 use App\Jobs\QueueCandidatesMailAndResumeForwardMailService;
+use App\Jobs\SendForwardResumeBatchMailJob;
 use App\Jobs\QueueMailService;
 use App\Jobs\QueueMassMailService;
 use App\Jobs\QueueNotificationMailService;
@@ -25,6 +26,10 @@ use App\Models\AddJobWiseCondidate;
 use App\Models\ApplicationStatus;
 use App\Models\Client;
 use App\Models\Company;
+use App\Models\ForwardAttachment;
+use App\Models\ForwardDeliveryAttempt;
+use App\Models\ForwardRequest;
+use App\Services\ForwardResumeUploadService;
 use App\Models\Job;
 use App\Models\JobApplication;
 use App\Models\JobLocation;
@@ -4950,6 +4955,28 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
 
     }
 
+    /**
+     * Generate batch presigned PUT URLs for direct browser-to-R2 upload of candidate resumes.
+     * Zero PDF bytes traverse PHP. Eliminates waterfall latency.
+     */
+    public function fwd_attachments_initiate(Request $request, ForwardResumeUploadService $uploadService)
+    {
+        $companyId = (int) auth()->user()->company_id;
+        $userId = (int) auth()->user()->id;
+
+        $files = $request->input('files', []);
+        if (empty($files) || ! is_array($files)) {
+            return response()->json(['status' => 'error', 'message' => 'No files provided for upload initiation'], 400);
+        }
+
+        $results = $uploadService->initiateBatchUploads($companyId, $userId, $files);
+
+        return response()->json([
+            'status' => 'success',
+            'attachments' => $results,
+        ]);
+    }
+
     public function fwd_resume_send(Request $request)
     {
 
@@ -5016,14 +5043,46 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
                 @mkdir($tempDir, 0755, true);
             }
 
-            // 1. Check for client-uploaded custom attachments via FormData (file uploads)
+            // Opportunistic GC: Purge any stale temp files in this company directory older than 2 hours
+            $staleFiles = @glob($tempDir.'/*.pdf') ?: [];
+            $nowTime = time();
+            foreach ($staleFiles as $staleFile) {
+                if (is_file($staleFile) && ($nowTime - @filemtime($staleFile)) > 7200) {
+                    @unlink($staleFile);
+                }
+            }
+
+            // 0. Check for Direct-to-R2 uploaded attachments (Zero server disk writes)
+            $r2AttachmentUuids = [];
+            if ($request->filled('attachment_ids')) {
+                $rawAttIds = $request->input('attachment_ids');
+                if (is_string($rawAttIds)) {
+                    $rawAttIds = json_decode($rawAttIds, true) ?: [];
+                }
+                if (is_array($rawAttIds)) {
+                    $r2AttachmentUuids = array_values(array_filter($rawAttIds));
+                }
+            }
+
+            $handledCandidates = [];
+            if (! empty($r2AttachmentUuids)) {
+                $r2Attachments = ForwardAttachment::whereIn('uuid', $r2AttachmentUuids)
+                    ->forCompany($company_id)
+                    ->get();
+
+                foreach ($r2Attachments as $r2Att) {
+                    if ($r2Att->candidate_id) {
+                        $handledCandidates[] = (int) $r2Att->candidate_id;
+                    }
+                }
+            }
+
+            // 1. Check for client-uploaded custom attachments via FormData (file uploads fallback)
             $uploadedCustomFiles = $request->file('custom_attachments');
             $customBase64Map = [];
             if ($request->filled('custom_attachments_base64')) {
                 $customBase64Map = json_decode($request->input('custom_attachments_base64'), true) ?: [];
             }
-
-            $handledCandidates = [];
 
             // Process uploaded custom PDF files (Option 41, 44, 45, 5, etc.)
             if (! empty($uploadedCustomFiles) && is_array($uploadedCustomFiles)) {
@@ -5143,7 +5202,25 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
         $companyId = (int) auth()->user()->company_id;
         $coinsDeductions = GeneralMethod::coinsValidationsAllcompany($companyId, $eventId, $coinsRequ);
         if ($coinsDeductions->status) {
+            if (! empty($attachments) && is_array($attachments)) {
+                foreach ($attachments as $attItem) {
+                    if (! empty($attItem['is_local']) && ! empty($attItem['path']) && file_exists($attItem['path'])) {
+                        @unlink($attItem['path']);
+                    }
+                }
+            }
+
             return Reply::dataOnly(['status' => 'coinCheck', 'message' => $coinsDeductions->message, 'company_coins' => $coinsDeductions->company_coins]);
+        }
+
+        // Register multi-recipient ref-counter in Cache so files are not prematurely unlinked across queue workers
+        $recipientCount = max(1, count($to));
+        if (! empty($attachments) && is_array($attachments)) {
+            foreach ($attachments as $attItem) {
+                if (! empty($attItem['is_local']) && ! empty($attItem['path'])) {
+                    \Cache::put('temp_att_ref:'.md5($attItem['path']), $recipientCount, now()->addHours(2));
+                }
+            }
         }
 
         $hr_name_first_set = '';
@@ -5174,25 +5251,75 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
                 $data = ['message' => $template_description, 'subject' => $subject, 'company_name' => $company_name->company_name, 'consultant_name' => '4Bell Technology', 'position' => 'PHP', 'candidate_skills' => $candidateSkills];
                 $checkMailPermision = GeneralMethod::mailPermission(13);
                 if ($checkMailPermision) {
-                    // QueueMailService
-                    QueueCandidatesMailAndResumeForwardMailService::dispatch(
-                        $mailto,
-                        $subject,
-                        'email.resume-forward.forward-resume',
-                        (object) $data,
-                        $attachments,
-                        $fromAddress,
-                        $senderName,
-                        $cc,
-                        $company_id
-                    )->onConnection('emails');
+                    if (! empty($r2AttachmentUuids)) {
+                        // Direct-to-R2 Cloudflare Ephemeral Pipeline with Multi-Recipient Delivery Barrier
+                        $fwdRequestUuid = (string) Str::uuid();
+                        $fwdRequest = ForwardRequest::create([
+                            'uuid' => $fwdRequestUuid,
+                            'company_id' => $company_id,
+                            'user_id' => (int) auth()->user()->id,
+                            'candidate_count' => count($r2AttachmentUuids),
+                            'recipient_count' => count($to),
+                            'status' => 'QUEUED',
+                        ]);
 
-                    // $result = $this->massMailService->sendEmail($mailto, $subject,'email.resume-forward.forward-resume', $data, $attachments, $fromAddress, $senderName,$cc);
+                        ForwardAttachment::whereIn('uuid', $r2AttachmentUuids)
+                            ->forCompany($company_id)
+                            ->update([
+                                'forward_request_id' => $fwdRequest->id,
+                                'status' => 'QUEUED',
+                            ]);
 
-                    // $this->massMailService->sendEmail($fromAddress, $subject,'email.resume-forward.forward-resume', $data, $attachments, $fromAddress, $senderName,$cc);
-                    // if($result){
-                    $coinsDeductions = GeneralMethod::coinsDeductions((int) auth()->user()->company_id, $eventId, auth()->user()->id, auth()->user()->company_id, '', '');
-                    // }
+                        foreach ($to as $recip) {
+                            $trimmedR = strtolower(trim((string) $recip));
+                            if (! empty($trimmedR) && filter_var($trimmedR, FILTER_VALIDATE_EMAIL)) {
+                                ForwardDeliveryAttempt::firstOrCreate(
+                                    [
+                                        'forward_request_id' => $fwdRequest->id,
+                                        'recipient_email' => $trimmedR,
+                                    ],
+                                    [
+                                        'status' => 'PENDING',
+                                        'attempt_count' => 0,
+                                        'idempotency_key' => md5($fwdRequestUuid.':'.$trimmedR),
+                                    ]
+                                );
+                            }
+                        }
+
+                        SendForwardResumeBatchMailJob::dispatch(
+                            $fwdRequestUuid,
+                            $to,
+                            $subject,
+                            'email.resume-forward.forward-resume',
+                            (object) $data,
+                            $r2AttachmentUuids,
+                            $fromAddress,
+                            $senderName,
+                            $cc,
+                            $company_id
+                        )->onConnection('emails');
+
+                        for ($rIdx = 0; $rIdx < count($to); $rIdx++) {
+                            GeneralMethod::coinsDeductions((int) auth()->user()->company_id, $eventId, auth()->user()->id, auth()->user()->company_id, '', '');
+                        }
+                        break; // Batch job handles all recipients atomically
+                    } else {
+                        // Legacy queue service fallback
+                        QueueCandidatesMailAndResumeForwardMailService::dispatch(
+                            $mailto,
+                            $subject,
+                            'email.resume-forward.forward-resume',
+                            (object) $data,
+                            $attachments,
+                            $fromAddress,
+                            $senderName,
+                            $cc,
+                            $company_id
+                        )->onConnection('emails');
+
+                        $coinsDeductions = GeneralMethod::coinsDeductions((int) auth()->user()->company_id, $eventId, auth()->user()->id, auth()->user()->company_id, '', '');
+                    }
                 }
             }
         }

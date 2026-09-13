@@ -25,6 +25,8 @@ class CandidatesMailAndResumeForward
                 'company_id' => $company_id,
             ]);
 
+            $this->cleanupLocalAttachments($attachments);
+
             return true;
         }
 
@@ -43,6 +45,8 @@ class CandidatesMailAndResumeForward
                 'company_id' => $company_id,
                 'existing_id' => $recentLog->id,
             ]);
+
+            $this->cleanupLocalAttachments($attachments);
 
             return true;
         }
@@ -182,8 +186,43 @@ class CandidatesMailAndResumeForward
             return true;
         } finally {
             $lock->release();
+            $this->cleanupLocalAttachments($attachments);
         }
 
+    }
+
+    /**
+     * Safely unlinks client-compiled temporary resume files from storage/app/temp-attachments.
+     * Uses a multi-recipient ref-counter in Cache to prevent race conditions when multiple
+     * recipients are queued for the same batch forward.
+     *
+     * @param  array  $attachments
+     * @return void
+     */
+    private function cleanupLocalAttachments($attachments): void
+    {
+        if (empty($attachments) || ! is_array($attachments)) {
+            return;
+        }
+
+        foreach ($attachments as $att) {
+            if (! empty($att['is_local']) && ! empty($att['path'])) {
+                $localPath = $att['path'];
+                if (file_exists($localPath)) {
+                    $refKey = 'temp_att_ref:'.md5($localPath);
+                    if (\Cache::has($refKey)) {
+                        $remaining = \Cache::decrement($refKey);
+                        if ($remaining <= 0) {
+                            @unlink($localPath);
+                            \Cache::forget($refKey);
+                        }
+                    } else {
+                        // Direct or single recipient fallback
+                        @unlink($localPath);
+                    }
+                }
+            }
+        }
     }
 
     private function setDynamicMailConfig($smtp, $fromName = '')
