@@ -5800,6 +5800,8 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
             'job_id' => $id,
             'bechshowtab' => @$request->bechshowtab,
             'user_id' => $this->user->id,
+            // Intent: make cached drawer HTML expire when the company Agency Agreement is edited.
+            'company_terms_version' => Cache::get('jobDetails_version_company_'.$company_id, 1),
         ];
 
         $this->benchshowtabclose = true;
@@ -6279,24 +6281,13 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
 
         $this->recommendedDataList = $recommendedDataListArr;
 
-        $params = [
-            'index' => ELASTIC_JOB_REQUEST,
-            'body' => [
-                'query' => [
-                    'bool' => [
-                        'must' => [
-                            ['term' => ['to_company_id' => $company_id]],
-                            ['term' => ['job_id' => $jobId]],
-                        ],
-                    ],
-                ],
-            ],
-        ];
-
-        $response = $this->elasticService->getClient()->search($params);
-        $intRow = isset($response['hits']['hits'][0]) ? (object) $response['hits']['hits'][0]['_source'] : null;
-
-        $this->terms = $intRow ? @$intRow->accepterms : '';
+        // Intent: mirror Company Profile > Settings > Agency Agreement content inside the job drawer.
+        $agencyAgreementTerms = trim((string) (@$company_arr->terms ?? ''));
+        if ($agencyAgreementTerms === '') {
+            $globalSettings = DB::table('global_settings')->select('global_settings.*')->first();
+            $agencyAgreementTerms = trim((string) (@$globalSettings->terms ?? ''));
+        }
+        $this->terms = $agencyAgreementTerms;
 
         $chkAdminRole = $this->user->hasRole('admin');
 

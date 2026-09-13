@@ -565,6 +565,8 @@ class ServiceCompanyAccountSettingsController extends ServiceCompanyBaseControll
             $company->terms = @$request->description;
             $company->save();
             $this->accountSettingsService->flushAccountCache($company_id);
+            // Intent: refresh cached job drawer HTML after Agency Agreement content changes.
+            Cache::forever('jobDetails_version_company_'.$company_id, ((int) Cache::get('jobDetails_version_company_'.$company_id, 1)) + 1);
 
             return Reply::dataOnly(['status' => 'success', 'terms' => $company->terms]);
         } elseif ($request->pageterms == 'termsoffer') {

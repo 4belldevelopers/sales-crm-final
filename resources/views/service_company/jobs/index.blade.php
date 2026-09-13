@@ -17,11 +17,20 @@
   th:nth-child(n+2)
   { width: revert!important;}
 }
-@media only screen and (min-width: 1024px) and (max-width: 1440px){
-  #kt_activitiesJob {width: 1025px;}
+@media only screen and (min-width: 992px){
+  /* Intent: size the Total Jobs drawer against the content canvas, not the left sidebar. */
+  #kt_activitiesJob {
+    --jero-service-aside-width: 225px;
+    width: min(90vw, calc((100vw - var(--jero-service-aside-width)) * .9)) !important;
+    max-width: calc(100vw - var(--jero-service-aside-width)) !important;
+  }
+  body.aside-minimize #kt_activitiesJob { --jero-service-aside-width: 75px; }
 }
-@media only screen and (min-width: 1440px) and (max-width: 2560px){
-  #kt_activitiesJob {width: 1200px;}
+@media only screen and (max-width: 991.98px){
+  #kt_activitiesJob {
+    width: 100vw !important;
+    max-width: 100vw !important;
+  }
 }
 @media only screen and (min-width: 1024px) and (max-width: 1440px){
   #kt_activitiesTerms {width: 1025px;}
@@ -824,6 +833,40 @@ $(document).ready(function(){
 												
 		
 		});
+
+  // Intent: load the existing agencies drawer for dynamically-rendered Add Agency controls.
+  $(document).on('click', '.spartner-listing', function(){
+        $('#kt_activitiesRecruiter_toggle').trigger('click');
+        var id = $(this).data('row-id');
+        var url = "{{ route('service_company.jobs.spartnerlisting',':id') }}";
+        url = url.replace(':id', id);
+        var baseurl = "{{ asset('assets/images/Loading2.gif') }}";
+        var errorHtml = '<div style="padding:24px;text-align:center;font-family:Poppins,sans-serif;font-size:13px;color:#f64e60;">Could not load agencies. Please try again.</div>';
+
+        $.ajax({
+            type: 'GET',
+            url: url,
+            cache: false,
+            beforeSend: function() {
+                $('#kt_activitiesRecruiter_body').html('<img src="'+baseurl+'" height="35px" width="100%">');
+            },
+            success: function (response, textStatus, xhr) {
+                if (xhr.status === 304) {
+                    return;
+                }
+
+                if (response && response.view) {
+                    $('#kt_activitiesRecruiter_body').html(response.view);
+                    return;
+                }
+
+                $('#kt_activitiesRecruiter_body').html(errorHtml);
+            },
+            error: function () {
+                $('#kt_activitiesRecruiter_body').html(errorHtml);
+            }
+        });
+  });
     
 });
 </script>
