@@ -2,9 +2,15 @@
 {{-- ══════════════════════════════════════════════
      Jobs Hero Card  (title + stats + tab row)
 ══════════════════════════════════════════════ --}}
-<div class="jh-wrap">
+@php
+    $showTop = $tabactive['showTop'] ?? true;
+    $showStats = $tabactive['showStats'] ?? true;
+@endphp
+
+<div class="jh-wrap {{ $showTop ? '' : 'jh-wrap-stats-only' }}">
 
     {{-- ── Top row: title / subtitle / action buttons ── --}}
+    @if($showTop)
     <div class="jh-top">
         <div>
             <div class="jh-title">Jobs Tracker</div>
@@ -24,8 +30,10 @@
             @endif
         </div>
     </div>
+    @endif
 
     {{-- ── Stat cards ── --}}
+    @if($showStats)
     <div class="jh-stats">
 
         <a href="{{ $tabactive['allRequisition_url'] }}" class="jh-card">
@@ -82,6 +90,7 @@
         @endif
 
     </div>
+    @endif
 </div>
 
 {{-- ── Tab row (below the hero card) ── --}}

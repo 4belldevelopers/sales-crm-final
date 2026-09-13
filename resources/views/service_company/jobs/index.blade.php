@@ -159,11 +159,8 @@
       <!-- CONTENT -->
         <div class="content">        
 
-          <!-- HERO -->
-           @include('sections.service_company.jobHeader',['tabactive'=>array_merge($tabactive, ['showTabs' => false])])
-
-          <!-- FILTER BAR -->
-          @include('sections.service_company.jobFilterBar',['searchbar'=>$searchbar])
+          <!-- HEADER -->
+           @include('sections.service_company.jobHeader',['tabactive'=>array_merge($tabactive, ['showTabs' => false, 'showStats' => false])])
 
           <!-- STATUS TABS -->
           <div class="jh-tabs-card">
@@ -219,6 +216,12 @@
             </a>
           </div>
 
+          <!-- FILTER BAR -->
+          @include('sections.service_company.jobFilterBar',['searchbar'=>$searchbar])
+
+          <!-- HERO METRICS -->
+           @include('sections.service_company.jobHeader',['tabactive'=>array_merge($tabactive, ['showTabs' => false, 'showTop' => false])])
+
           <!-- TABLE -->
           <div class="table-card">
             <!-- Header -->
@@ -243,7 +246,7 @@
                   />
                 </svg>
               </div>
-              <div class="th">Hiring &amp; Location</div>
+              <div class="th">Location</div>
               <div class="th">Hiring Manager</div>
               <div class="th">Team</div>
               <div class="th">Agency</div>
@@ -976,6 +979,7 @@ $(document).on('click', '.client-hm-listing', function ()
                 var displayTitle = formatJobPositionName(job.title);
                 var displayClientName = formatCompanyName(job.clients_name);
                 var displayAgencyName = formatCompanyName(job.agency_company_name);
+                var displayCity = formatJobPositionName(job.city);
                 var statusIcon = job.status === 'Hiring' ? 'fa-user-group' : (job.status === 'Hold' ? 'fa-pause' : 'fa-box-archive');
                 var statusClass = job.status_raw === 'active' ? 'active-bg' : (job.status_raw === 'hold' ? 'hold-bg' : 'closed-bg');
                 if (job.status === 'Removed') statusClass = 'closed-bg';
@@ -995,9 +999,12 @@ $(document).on('click', '.client-hm-listing', function ()
                 var skillsHtml = '';
                 if (job.skills && job.skills.length > 0) {
                     skillsHtml = job.skills.map(function(s) {
-                        return '<span class="badge badge-light my-1">' + s + '</span>';
+                        return '<span class="skill-tag">' + s + '</span>';
                     }).join(' ');
                 }
+                var addedDateHtml = job.added_date
+                    ? '<span class="job-date-tag"><svg fill="none" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" stroke="currentColor" stroke-width="1.8"/><path d="M16 2v4M8 2v4M3 10h18" stroke="currentColor" stroke-width="1.8"/></svg>' + job.added_date + '</span>'
+                    : '';
 
                 var teamHtml = '';
                 if (job.is_direct_client) {
@@ -1059,7 +1066,7 @@ $(document).on('click', '.client-hm-listing', function ()
                 });
                 pipelineHtml += '</div>';
 
-                html += '<div class="job-row" data-job-id="' + job.id + '" style="position: relative; min-height: 111px; cursor: pointer;">' +
+                html += '<div class="job-row" data-job-id="' + job.id + '" style="position: relative; min-height: 96px; cursor: pointer;">' +
                     '<div style="display: flex; gap: 8px; align-items: flex-start">' +
                       '<div class="drag-col"><div class="drag-handle"><svg width="12" height="12" fill="none" viewBox="0 0 24 24"><circle cx="9" cy="5" r="1.5" fill="currentColor"/><circle cx="15" cy="5" r="1.5" fill="currentColor"/><circle cx="9" cy="12" r="1.5" fill="currentColor"/><circle cx="15" cy="12" r="1.5" fill="currentColor"/><circle cx="9" cy="19" r="1.5" fill="currentColor"/><circle cx="15" cy="19" r="1.5" fill="currentColor"/></svg></div></div>' +
                       '<div class="col-job ' + profileDetailClass + '" data-row-id="' + job.id + '">' +
@@ -1079,7 +1086,7 @@ $(document).on('click', '.client-hm-listing', function ()
                     '</div>' +
 
                     '<div class="col-hl">' + ulink +
-                      '<div class="loc-row"><svg fill="none" viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="10" r="3" stroke="currentColor" stroke-width="1.8"/></svg>' + (job.city ? job.city.substring(0, 10) : '') + '</div>' +
+                      '<div class="loc-row"><svg fill="none" viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="10" r="3" stroke="currentColor" stroke-width="1.8"/></svg>' + (displayCity ? displayCity.substring(0, 10) : '') + '</div>' +
                       '<div class="mode-row"><svg fill="none" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" stroke="currentColor" stroke-width="1.8"/><polyline points="9,22 9,12 15,12 15,22" stroke="currentColor" stroke-width="1.8"/></svg>' + job.work_type + '</div>' +
                     '</div>' +
 
@@ -1094,11 +1101,10 @@ $(document).on('click', '.client-hm-listing', function ()
 
                     '<div class="col-pipeline">' + pipelineHtml +
                       '<div class="pipeline-total">Total: <strong>' + (job.application_counter || 0) + ' Applications</strong> &nbsp;|&nbsp; Interview: <strong>' + (job.interview_counter || 0) + '</strong></div>' +
-                      '<div class="add-date" style="display:flex;justify-content: flex-end;"><svg fill="none" viewBox="0 0 24 24" style="width: 6%;"><rect x="3" y="4" width="18" height="18" rx="2" stroke="currentColor" stroke-width="1.8"/><path d="M16 2v4M8 2v4M3 10h18" stroke="currentColor" stroke-width="1.8"/></svg><span>&nbsp;' + (job.added_date || '') + '</span></div>' +
                     '</div>' +
 
-                    '<div class="" style="position: absolute; bottom: 5px; left: 30px; white-space: nowrap; width: 90%; overflow: hidden;">' +
-                      '<div class="job-meta-line"><span class="skills-inline"><b>Skills:</b> ' + skillsHtml + '</span></div>' +
+                    '<div class="job-meta-strip">' +
+                      '<div class="job-meta-line">' + addedDateHtml + skillsHtml + '</div>' +
                     '</div>' +
                   '</div>';
             });
