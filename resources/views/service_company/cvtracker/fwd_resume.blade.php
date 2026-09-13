@@ -4,22 +4,17 @@
 		$currencySymbole 				=	GeneralMethod::currencySymbole();
 			
 @endphp 
-<script>
-if (typeof define === 'function' && define.amd) {
-    window.__savedAmdDefine = define.amd;
-    define.amd = false;
-}
-</script>
-<script src="{{ asset('js/pdf-lib.min.js') }}"></script>
-<script src="{{ asset('js/opendoc/AgyWasmEngine.js') }}"></script>
-<script src="{{ asset('js/opendoc/AgyForwardResumeEngine.js') }}"></script>
-<script src="{{ asset('js/opendoc/AgyForwardResumeHelper.js') }}"></script>
-<script>
-if (window.__savedAmdDefine) {
-    define.amd = window.__savedAmdDefine;
-    delete window.__savedAmdDefine;
-}
-</script>
+{{--
+    NOTE: AgyForwardResumeEngine.js and AgyForwardResumeHelper.js are intentionally
+    NOT included here. This blade is injected into the DOM via jQuery's $.html() which
+    silently strips all <script src="..."> external script tags. Those engines are
+    pre-loaded on the host page (cvtracker/index.blade.php footer-script block) so that
+    window.AgyForwardResumeEngine and window.AgyForwardResumeHelper are already defined
+    when the inline IIFE below executes.
+
+    CKEditor is loaded dynamically here because $.html() DOES execute inline <script> blocks,
+    and CKEditor is needed only within this drawer context.
+--}}
 <script src="{{ asset('demo/ckeditor/ckeditor.js') }}"></script>
 <script>
 									
