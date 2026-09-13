@@ -11,7 +11,7 @@
  * 2. Forward Resume Engine (AgyForwardResumeEngine.js)
  * 
  * NEVER MERGE OR CROSS-REFERENCE THOSE ENGINES WITH THIS FILE.
- * See: docs/AI_OPENDOC_ENGINE_ISOLATION_MANDATE.md
+ * See: docs/Resume Converter_Online Editor_Forward Resume/AI_OPENDOC_ENGINE_ISOLATION_MANDATE.md
  */
 (function(root, factory){
   'use strict';
