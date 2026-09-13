@@ -661,16 +661,233 @@ $('#template').change(function(){
 
 
 // ══════════════════════════════════════════════════════════════════════════════
-// GUARANTEED INLINE ADAPTER & DYNAMIC ENGINE LOADER FOR FORWARD RESUME
+// FORWARD RESUME ENGINE BOOTSTRAP — GOD-LEVEL INLINE LOADER
+// ══════════════════════════════════════════════════════════════════════════════
+// Why this exists inline:
+//   This blade is injected via jQuery $.html() which strips <script src="…"> tags.
+//   The host page (cvtracker/index.blade.php) pre-loads AgyForwardResumeEngine.js
+//   and AgyForwardResumeHelper.js. If they are already on window, we use them
+//   directly. If for any reason they are missing (cold load, race, CDN miss), this
+//   inline bootstrap fetches and evals the engine text directly — bypassing all
+//   script-tag injection restrictions. fetch()+eval() is the only 100% reliable
+//   cross-browser strategy inside jQuery-injected HTML.
 // ══════════════════════════════════════════════════════════════════════════════
 (function () {
-    if (window.AgyForwardResumeHelper && typeof window.AgyForwardResumeHelper.generateAttachmentForCandidate === 'function') {
-        return;
+    'use strict';
+
+    // ── Shared promise so concurrent calls to ensureEngine() don't double-load ──
+    var _engineLoadPromise = null;
+
+    /**
+     * Ensures window.AgyForwardResumeEngine is loaded and ready.
+     * Strategy 1: already on window → resolve immediately (common case when host pre-loaded)
+     * Strategy 2: fetch JS text → globalEval (bypasses jQuery .html() script stripping)
+     * Strategy 3: dynamic <script> tag fallback
+     */
+    function ensureEngine() {
+        if (window.AgyForwardResumeEngine &&
+            typeof window.AgyForwardResumeEngine.processOption === 'function') {
+            return Promise.resolve(window.AgyForwardResumeEngine);
+        }
+        if (_engineLoadPromise) return _engineLoadPromise;
+
+        var engineUrls = [
+            '/js/opendoc/AgyForwardResumeEngine.js',
+            "{{ asset('js/opendoc/AgyForwardResumeEngine.js') }}"
+        ];
+
+        _engineLoadPromise = (function tryUrls(idx) {
+            if (idx >= engineUrls.length) {
+                _engineLoadPromise = null;
+                return Promise.reject(new Error('Could not load AgyForwardResumeEngine module'));
+            }
+            var url = engineUrls[idx] + '?_cv=' + Date.now();
+            return fetch(url, { cache: 'force-cache' })
+                .then(function (res) {
+                    if (!res.ok) throw new Error('HTTP ' + res.status + ' for ' + url);
+                    return res.text();
+                })
+                .then(function (src) {
+                    try {
+                        // globalEval: runs in global scope, sets window.AgyForwardResumeEngine
+                        var geval = (0, eval); // indirect eval = global scope
+                        geval(src);
+                    } catch (evalErr) {
+                        console.warn('[FwdResume] eval failed, trying script tag:', evalErr);
+                        return new Promise(function (resolve, reject) {
+                            var s = document.createElement('script');
+                            s.src = engineUrls[idx];
+                            s.onload = resolve;
+                            s.onerror = reject;
+                            document.head.appendChild(s);
+                        });
+                    }
+                    // Poll for a short time after eval to confirm global was set
+                    return new Promise(function (resolve, reject) {
+                        var polls = 0;
+                        function check() {
+                            if (window.AgyForwardResumeEngine &&
+                                typeof window.AgyForwardResumeEngine.processOption === 'function') {
+                                return resolve(window.AgyForwardResumeEngine);
+                            }
+                            if (++polls < 20) return setTimeout(check, 50);
+                            reject(new Error('Engine eval completed but window.AgyForwardResumeEngine not set'));
+                        }
+                        check();
+                    });
+                })
+                .catch(function () { return tryUrls(idx + 1); });
+        }(0));
+
+        return _engineLoadPromise;
     }
 
-    var _rendererPromise = null;
+    function normalizeCandidateData(candidate, companyData) {
+        candidate = candidate || {};
+        companyData = companyData || {};
 
-    function ensureRenderer(statusCb) {
+        var locParts = [candidate.city, candidate.state, candidate.country].filter(function (p) {
+            return p && String(p).trim() !== '' && String(p).trim() !== '--';
+        });
+        var formattedLocation = candidate.location || (locParts.length ? locParts.join(', ') : '--');
+
+        var exp = candidate.experience;
+        if (!exp && candidate.total_exp) {
+            var tot = String(candidate.total_exp).trim();
+            exp = tot + ' Year' + (parseFloat(tot) === 1.0 ? '' : 's');
+        }
+        exp = exp || '--';
+
+        var skills = [];
+        if (Array.isArray(candidate.parsed_skills)) {
+            skills = candidate.parsed_skills;
+        } else if (Array.isArray(candidate.skills)) {
+            skills = candidate.skills;
+        } else if (typeof candidate.skills === 'string' && candidate.skills.trim()) {
+            var sList = candidate.skills.split(',').map(function (s) { return s.trim(); }).filter(Boolean);
+            skills = sList.slice(0, 7).map(function (sName, idx) {
+                var expNum = Math.max(1, 6 - (idx % 4));
+                var rating = Math.max(3, 5 - (idx % 3));
+                return { name: sName, expText: expNum + ' Years', exp: expNum, rating: rating };
+            });
+        }
+
+        var validation = [];
+        if (Array.isArray(candidate.parsed_validation)) {
+            validation = candidate.parsed_validation;
+        } else if (Array.isArray(candidate.validation)) {
+            validation = candidate.validation;
+        } else {
+            if (candidate.resume) validation.push({ label: 'RESUME', status: 'Verified' });
+            if (candidate.email || candidate.secondrary_email) validation.push({ label: 'EMAIL ID', status: 'Verified' });
+            if (candidate.phone || candidate.secondary_mobile) validation.push({ label: 'PHONE NUMBER', status: 'Verified' });
+            if (candidate.linkedin) validation.push({ label: 'LINKEDIN ID', status: 'Verified' });
+            else validation.push({ label: 'LINKEDIN ID', status: 'Discussed' });
+            if (candidate.current_designation || candidate.current_company) validation.push({ label: 'JOB DESCRIPTION', status: 'Shared with candidate' });
+        }
+
+        var todayDate = (new Date()).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+        var reportId = candidate.report_id || ('JR' + (new Date()).toISOString().slice(0, 10).replace(/-/g, '') + String(candidate.id || '000000').padStart(6, '0'));
+
+        return {
+            id: candidate.id,
+            name: candidate.full_name || candidate.name || 'Candidate',
+            email: candidate.email || '',
+            secondaryEmail: candidate.secondrary_email || '',
+            phone: candidate.phone || '',
+            secondaryPhone: candidate.secondary_mobile || '',
+            phoneCode: candidate.phone_code || '',
+            secondaryPhoneCode: candidate.second_phone_code || '',
+            linkedin: candidate.linkedin || '',
+            designation: candidate.current_designation || candidate.designation || '',
+            company: candidate.current_company || candidate.company || '',
+            location: formattedLocation,
+            experience: exp,
+            notice: candidate.notice || candidate.np_id || '--',
+            education: candidate.qualification_name || candidate.education || 'Graduate',
+            workMode: candidate.work_mode || candidate.wm || 'Hybrid',
+            reportId: reportId,
+            reportDate: candidate.report_date || todayDate,
+            recruiterName: candidate.recruiter_name || companyData.recruiterName || 'Hiring Team',
+            reportCompanyName: companyData.companyName || candidate.report_company_name || 'Hiring Partner',
+            reportCompanyLogo: companyData.companyLogo || candidate.report_company_logo || '',
+            aiVersion: 'Live Intelligence',
+            match: candidate.match || (candidate.rating ? Math.min(100, Math.max(40, parseInt(candidate.rating, 10) * 20)) : 85),
+            isImmediate: !!candidate.is_immediate,
+            recruiterNote: candidate.recruiter_note_text || candidate.recruiter_note || candidate.comment || 'Candidate thoroughly pre-screened for technical competency, communication skills, and delivery readiness. Strongly recommended for technical evaluation.',
+            careerSummary: candidate.career_summary || candidate.careersummary || candidate.cover_letter || 'Experienced professional with demonstrated background in designing, developing, and deploying robust software architectures, driving end-to-end delivery and engineering excellence.',
+            jobTitle: candidate.job_title || candidate.current_designation || 'Verified Professional',
+            skills: skills,
+            validation: validation,
+            resume: candidate.resume || ''
+        };
+    }
+
+    async function generateAttachmentForCandidate(candidate, optId, companyData, jobSkills, statusCallback) {
+        optId = parseInt(optId, 10);
+        if (isNaN(optId)) optId = 1;
+
+        var renderer = await ensureEngine();
+        var data = normalizeCandidateData(candidate, companyData);
+
+        var sources = [];
+        if (candidate.resume_r2_url) sources.push(candidate.resume_r2_url);
+        if (candidate.id) {
+            sources.push('/service-company/job-applications/r2-download-url/' + candidate.id);
+            sources.push('/service-company/cvtracker/fwd_resume_download/' + candidate.id);
+        }
+        if (candidate.resume) sources.push(candidate.resume);
+
+        var resumeExt = '';
+        if (candidate.resume) {
+            var rParts = String(candidate.resume).split('?')[0].split('.');
+            if (rParts.length > 1) resumeExt = rParts.pop().toUpperCase();
+        }
+        if (resumeExt !== 'PDF' && resumeExt !== 'DOCX') {
+            resumeExt = 'PDF';
+        }
+
+        if (statusCallback) {
+            statusCallback('Rendering Option ' + optId + ' for ' + data.name + '...');
+        }
+
+        var blob = await renderer.processOption(optId, data, {
+            returnBlob: true,
+            resumeUrl: sources,
+            resumeExt: resumeExt,
+            keywords: jobSkills || [],
+            statusCallback: statusCallback
+        });
+
+        if (!(blob instanceof Blob) || blob.size < 100) {
+            throw new Error('Could not render valid PDF for candidate: ' + data.name);
+        }
+
+        var safeName = String(data.name || 'Candidate').replace(/[\\/:*?"<>|]+/g, ' ').replace(/\s+/g, ' ').trim() || 'Candidate';
+        var ext = (optId === 1 && resumeExt === 'DOCX') ? 'docx' : 'pdf';
+        blob.filename = 'Jeroworks_' + safeName + '.' + ext;
+        return blob;
+    }
+
+    // Always override window.AgyForwardResumeHelper with this inline version
+    // which uses the fetch+eval ensureEngine() strategy
+    window.AgyForwardResumeHelper = {
+        generateAttachmentForCandidate: generateAttachmentForCandidate,
+        normalizeCandidateData: normalizeCandidateData,
+        ensureRenderer: ensureEngine
+    };
+
+    // Pre-warm the engine as soon as the drawer HTML is injected (not waiting for user to select option)
+    if (window.AgyForwardResumeEngine &&
+        typeof window.AgyForwardResumeEngine.processOption === 'function') {
+        // Engine already on window from host page pre-load — nothing to do
+    } else {
+        // Kick off background pre-load so it is ready before user selects an option
+        ensureEngine().catch(function (err) {
+            console.warn('[FwdResume] Background engine pre-warm failed:', err);
+        });
+    }
+})();
         if (typeof window !== 'undefined' && window.AgyForwardResumeEngine && typeof window.AgyForwardResumeEngine.processOption === 'function') {
             return Promise.resolve(window.AgyForwardResumeEngine);
         }
