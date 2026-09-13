@@ -160,10 +160,64 @@
         <div class="content">        
 
           <!-- HERO -->
-           @include('sections.service_company.jobHeader',['tabactive'=>$tabactive])
+           @include('sections.service_company.jobHeader',['tabactive'=>array_merge($tabactive, ['showTabs' => false])])
 
           <!-- FILTER BAR -->
           @include('sections.service_company.jobFilterBar',['searchbar'=>$searchbar])
+
+          <!-- STATUS TABS -->
+          <div class="jh-tabs-card">
+            <a href="#" class="jh-tab jh-tab-active" data-status="all" onclick="filterJobsByStatus('all'); return false;">
+                <span class="jh-tab-icon jh-tab-icon-blue">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/>
+                    </svg>
+                </span>
+                All Jobs
+                <span class="jh-badge jh-badge-blue">{{ $tabactive['allTabCount'] ?? $tabactive['allRequisition'] }}</span>
+            </a>
+            <div class="jh-tab-divider"></div>
+            <a href="#" class="jh-tab" data-status="active" onclick="filterJobsByStatus('active'); return false;">
+                <span class="jh-tab-icon jh-tab-icon-green">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
+                        <path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>
+                    </svg>
+                </span>
+                Hiring
+                <span class="jh-badge jh-badge-green">{{ $tabactive['hiringCount'] ?? 0 }}</span>
+            </a>
+            <div class="jh-tab-divider"></div>
+            <a href="#" class="jh-tab" data-status="hold" onclick="filterJobsByStatus('hold'); return false;">
+                <span class="jh-tab-icon jh-tab-icon-orange">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10"/><line x1="10" y1="15" x2="10" y2="9"/><line x1="14" y1="15" x2="14" y2="9"/>
+                    </svg>
+                </span>
+                On Hold
+                <span class="jh-badge jh-badge-orange">{{ $tabactive['holdCount'] ?? 0 }}</span>
+            </a>
+            <div class="jh-tab-divider"></div>
+            <a href="#" class="jh-tab" data-status="inactive" onclick="filterJobsByStatus('inactive'); return false;">
+                <span class="jh-tab-icon jh-tab-icon-red">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                    </svg>
+                </span>
+                Closed
+                <span class="jh-badge jh-badge-red">{{ $tabactive['closedCount'] ?? 0 }}</span>
+            </a>
+            <div class="jh-tab-divider"></div>
+            <a href="#" class="jh-tab" data-status="removed" onclick="filterJobsByStatus('removed'); return false;">
+                <span class="jh-tab-icon" style="background:#f1f1f4;color:#7e8299;">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
+                    </svg>
+                </span>
+                Removed
+                <span class="jh-badge" style="background:#f1f1f4;color:#7e8299;">{{ $tabactive['removedCount'] ?? 0 }}</span>
+            </a>
+          </div>
 
           <!-- TABLE -->
           <div class="table-card">
@@ -898,6 +952,16 @@ $(document).on('click', '.client-hm-listing', function ()
             total: 0
         };
 
+        function formatCompanyName(value) {
+            return value ? String(value).toUpperCase() : '';
+        }
+
+        function formatJobPositionName(value) {
+            if (!value) return '';
+            var text = String(value).toLowerCase();
+            return text.charAt(0).toUpperCase() + text.slice(1);
+        }
+
         function renderJobsClientSide(jobs) {
             if (!jobs || jobs.length === 0) {
                 return '<div style="text-align:center;padding:40px 20px;font-family:Poppins,sans-serif;color:#7e8299;">' +
@@ -909,6 +973,9 @@ $(document).on('click', '.client-hm-listing', function ()
             jobs.forEach(function(job) {
                 var profileDetailClass = job.is_direct_client ? 'client-show-detail' : 'show-detail';
                 var directClientAttr = job.is_direct_client ? '1' : '0';
+                var displayTitle = formatJobPositionName(job.title);
+                var displayClientName = formatCompanyName(job.clients_name);
+                var displayAgencyName = formatCompanyName(job.agency_company_name);
                 var statusIcon = job.status === 'Hiring' ? 'fa-user-group' : (job.status === 'Hold' ? 'fa-pause' : 'fa-box-archive');
                 var statusClass = job.status_raw === 'active' ? 'active-bg' : (job.status_raw === 'hold' ? 'hold-bg' : 'closed-bg');
                 if (job.status === 'Removed') statusClass = 'closed-bg';
@@ -951,7 +1018,7 @@ $(document).on('click', '.client-hm-listing', function ()
 
                 var agencyHtml = '';
                 if (job.is_direct_client) {
-                    agencyHtml += '<div class="hm-name">' + (job.agency_company_name ? job.agency_company_name.substring(0, 30) : '') + '</div>';
+                    agencyHtml += '<div class="hm-name">' + (displayAgencyName ? displayAgencyName.substring(0, 30) : '') + '</div>';
                 } else {
                     if (job.agency_count > 0) {
                         agencyHtml += '<div class="hm-name">' + job.agency_count + ' Agency</div>';
@@ -972,23 +1039,23 @@ $(document).on('click', '.client-hm-listing', function ()
                     : "{{ url('/service_company/apptracker') }}/" + job.encrypted_id + "/all";
 
                 var stageLabels = [
-                    { id: 1, key: 's-sou', label: 'SOU' },
-                    { id: 2, key: 's-scr', label: 'SCR' },
-                    { id: 3, key: 's-eva', label: 'EVA' },
-                    { id: 4, key: 's-neg', label: 'NEG' },
-                    { id: 5, key: 's-off', label: 'OFF' },
-                    { id: 6, key: 's-joi', label: 'JOI' },
-                    { id: 7, key: 's-rej', label: 'REJ' }
+                    { id: 1, key: 's-sou', label: 'SOU', title: 'Sourcing', compact: 'Source' },
+                    { id: 2, key: 's-scr', label: 'SCR', title: 'Screening', compact: 'Screen' },
+                    { id: 3, key: 's-eva', label: 'EVA', title: 'Evaluation', compact: 'Eval' },
+                    { id: 4, key: 's-neg', label: 'NEG', title: 'Negotiation', compact: 'Neg' },
+                    { id: 5, key: 's-off', label: 'OFF', title: 'Offer', compact: 'Offer' },
+                    { id: 6, key: 's-joi', label: 'JOI', title: 'Joining', compact: 'Join' },
+                    { id: 7, key: 's-rej', label: 'REJ', title: 'Rejected', compact: 'Reject' }
                 ];
 
                 var pipelineHtml = '<div class="pipeline-stages">';
-                pipelineHtml += '<div class="stage"><div class="stage-label">INW</div><div class="stage-badge s-inw"><a href="' + allAppUrl + '" class="s-inw fw-bolder fs-6">' + (job.inreview_counter || 0) + '</a></div></div>';
+                pipelineHtml += '<div class="stage" title="INW - In Review"><div class="stage-label">INW</div><div class="stage-badge s-inw"><a href="' + allAppUrl + '" class="s-inw fw-bolder fs-6">' + (job.inreview_counter || 0) + '</a></div><div class="stage-caption">Review</div></div>';
 
                 stageLabels.forEach(function(stg) {
                     var count = (job.stage_counts && job.stage_counts[stg.id]) ? job.stage_counts[stg.id] : 0;
                     var stgUrl = apptrackerBase + stg.id;
                     var countClass = count > 0 ? (stg.id === 1 ? 'text-dark fw-bolder fs-6' : stg.key + ' fs-6') : stg.key + ' fs-6';
-                    pipelineHtml += '<div class="stage"><div class="stage-label">' + stg.label + '</div><div class="stage-badge ' + stg.key + '"><a href="' + stgUrl + '" class="' + countClass + '">' + count + '</a></div></div>';
+                    pipelineHtml += '<div class="stage" title="' + stg.label + ' - ' + stg.title + '"><div class="stage-label">' + stg.label + '</div><div class="stage-badge ' + stg.key + '"><a href="' + stgUrl + '" class="' + countClass + '">' + count + '</a></div><div class="stage-caption">' + stg.compact + '</div></div>';
                 });
                 pipelineHtml += '</div>';
 
@@ -998,9 +1065,9 @@ $(document).on('click', '.client-hm-listing', function ()
                       '<div class="col-job ' + profileDetailClass + '" data-row-id="' + job.id + '">' +
                         '<div class="job-logo ' + job.bg_text_decore + '" style="min-height: 48px; align-self: flex-start;">' + logoHtml + '</div>' +
                         '<div class="job-info">' +
-                          '<div class="job-title">' + (job.title ? job.title.substring(0, 30) : '') + '</div>' +
+                          '<div class="job-title">' + (displayTitle ? displayTitle.substring(0, 30) : '') + '</div>' +
                           '<div class="job-dept">' + (job.department || '') + '</div>' +
-                          '<div class="job-client">' + (job.clients_name ? job.clients_name.substring(0, 30) : '') + '</div>' +
+                          '<div class="job-client">' + (displayClientName ? displayClientName.substring(0, 30) : '') + '</div>' +
                         '</div>' +
                       '</div>' +
                     '</div>' +
@@ -1222,4 +1289,4 @@ $(document).on('click', '.client-hm-listing', function ()
 </script>
 
 
-@endpush 
+@endpush
