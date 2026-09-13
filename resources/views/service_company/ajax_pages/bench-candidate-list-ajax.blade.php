@@ -73,8 +73,13 @@
                     }
                     $profile_sidebar_css = 'bench_show_application_detail';
 
-                    /* Skills — absolute footer strip at bottom of <tr>, no-wrap, overflow hidden. */
+                    /* Skills row: stage date first, then skill chips in the same compact footer strip. */
                     $skillArr = array_values(array_filter(array_map('trim', explode(',', (string) ($row->skills ?? '')))));
+                    $stageMovedAt = $row->updated_at ?? $row->created_at ?? null;
+                    $stageDateLabel = $stageMovedAt ? Carbon::parse($stageMovedAt)->format('d M y') : '';
+                    $stageDateChip = $stageDateLabel
+                        ? '<span class="badge badge-light my-1 stage-date-chip"><i class="fa fa-calendar-days me-1"></i>' . e($stageDateLabel) . '</span> '
+                        : '';
 
                     $skilltag = '';
                     foreach ($skillArr as $sval) {
@@ -102,10 +107,10 @@
                             data-toggle="tooltip" title="{{ ucwords(@$row->current_designation) }}">{{ ucwords(mb_substr(@$row->current_designation, 0, 20)) }}</a>
                     </div>
                 </div>
-                {{-- Ads + Skills footer strip (bottom-left) --}}
-                @if($award || $skilltag)
+                {{-- Stage date + Ads + Skills footer strip (bottom-left) --}}
+                @if($stageDateChip || $award || $skilltag)
                 <div style="position: absolute; bottom: 0; left: 0; white-space: nowrap; width: 80%; overflow: hidden;">
-                    {!! $award !!}{!! $skilltag !!}
+                    {!! $stageDateChip !!}{!! $award !!}{!! $skilltag !!}
                 </div>
                 @endif
 
@@ -194,7 +199,7 @@
                     $billFormatViewSalary = GeneralMethod::formatViewSalary($row->ectc_yearly, $currencyBenchMode->currency_code, $currencyBenchMode->show_mode);
                     $bill_rate_currency = $currencySymbole[$billFormatViewSalary->currency];
                     $bill_rate_mode = $salaryMode[$billFormatViewSalary->mode];
-                    $serviceType = @$row->comission_type == 2 ? 'Paid' : (@$row->comission_type == 1 ? 'Free' : '—');
+                    $serviceType = @$row->comission_type == 2 ? 'Paid Services' : (@$row->comission_type == 1 ? 'Free Services' : '—');
                     $serviceClass = @$row->comission_type == 2 ? 'text-success' : 'text-muted';
                     // Whole-number display — no redundant ".00" decimals on the headline salary figure.
                     $billAmountClean = number_format((float) $billFormatViewSalary->amount, 0);
@@ -243,7 +248,6 @@
                         $hmCount = count($hiringHr);
                         $firstHr = (object) ($hiringHr[0] ?? []);
                         $managerName = !empty($firstHr->name) ? ucwords($firstHr->name) : 'Unassigned';
-                        $managerImg  = (!empty($firstHr->image) && strlen($firstHr->image) > 10) ? $firstHr->image : null;
                         $extra = $hmCount > 1 ? ' +' . ($hmCount - 1) : '';
                     } else {
                         $hmCount = DB::table('bench_assign')
@@ -254,26 +258,16 @@
                             ->count();
                         $hmData = DB::table('bench_assign')
                             ->join('users', 'users.id', '=', 'bench_assign.user_id')
-                            ->select('users.name', 'users.image')
+                            ->select('users.name')
                             ->where('bench_assign.bench_applications_id', $row->id)
                             ->where('bench_assign.company_id', $company_id)
                             ->where('users.company_id', $company_id)
                             ->orderBy('users.name', 'ASC')->take(1)->first();
                         $managerName = @$hmData->name ? ucwords($hmData->name) : 'Unassigned';
-                        $managerImg  = (!empty(@$hmData->image) && strlen(@$hmData->image) > 10) ? $hmData->image : null;
                         $extra = $hmCount > 1 ? ' +' . ($hmCount - 1) : '';
                     }
                 @endphp
                 <div class="d-flex align-items-center gap-2">
-                    {{-- Manager avatar --}}
-                    @if($managerImg)
-                        <img src="{{ $managerImg }}" alt="{{ $managerName }}"
-                             style="width:28px;height:28px;border-radius:50%;object-fit:cover;flex-shrink:0;">
-                    @else
-                        <div style="width:28px;height:28px;border-radius:50%;background:#f1f3f8;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#7e8299;flex-shrink:0;">
-                            {{ strtoupper(substr($managerName, 0, 1)) }}
-                        </div>
-                    @endif
                     <div class="d-flex flex-column" style="min-width:0;">
                         <span class="text-dark fw-bolder fs-6 text-truncate" style="max-width:90px;"
                               data-toggle="tooltip" title="{{ $managerName }}{{ $extra }}">{{ $managerName }}{{ $extra }}</span>
