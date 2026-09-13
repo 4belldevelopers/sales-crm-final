@@ -12,7 +12,7 @@ if (typeof define === 'function' && define.amd) {
 </script>
 <script src="{{ asset('js/pdf-lib.min.js') }}"></script>
 <script src="{{ asset('js/opendoc/AgyWasmEngine.js') }}"></script>
-<script src="{{ asset('js/opendoc/AgyResumeRenderer.js') }}"></script>
+<script src="{{ asset('js/opendoc/AgyForwardResumeEngine.js') }}"></script>
 <script src="{{ asset('js/opendoc/AgyForwardResumeHelper.js') }}"></script>
 <script>
 if (window.__savedAmdDefine) {
@@ -676,18 +676,18 @@ $('#template').change(function(){
     var _rendererPromise = null;
 
     function ensureRenderer(statusCb) {
-        if (typeof window !== 'undefined' && window.AgyResumeRenderer && typeof window.AgyResumeRenderer.processOption === 'function') {
-            return Promise.resolve(window.AgyResumeRenderer);
+        if (typeof window !== 'undefined' && window.AgyForwardResumeEngine && typeof window.AgyForwardResumeEngine.processOption === 'function') {
+            return Promise.resolve(window.AgyForwardResumeEngine);
         }
         if (_rendererPromise) return _rendererPromise;
 
         _rendererPromise = new Promise(function (resolve, reject) {
-            // Check if AgyResumeRenderer becomes available or is already in flight
+            // Check if AgyForwardResumeEngine becomes available or is already in flight
             var checkAttempts = 0;
             var pollExisting = setInterval(function () {
-                if (typeof window !== 'undefined' && window.AgyResumeRenderer && typeof window.AgyResumeRenderer.processOption === 'function') {
+                if (typeof window !== 'undefined' && window.AgyForwardResumeEngine && typeof window.AgyForwardResumeEngine.processOption === 'function') {
                     clearInterval(pollExisting);
-                    resolve(window.AgyResumeRenderer);
+                    resolve(window.AgyForwardResumeEngine);
                 } else if (++checkAttempts > 8) {
                     clearInterval(pollExisting);
                     loadSources();
@@ -697,14 +697,14 @@ $('#template').change(function(){
             function loadSources() {
                 var origin = (typeof window !== 'undefined' && window.location && window.location.origin) ? window.location.origin : '';
                 var sources = [
-                    '/js/opendoc/AgyResumeRenderer.js',
-                    origin + '/js/opendoc/AgyResumeRenderer.js',
-                    "{{ asset('js/opendoc/AgyResumeRenderer.js') }}"
+                    '/js/opendoc/AgyForwardResumeEngine.js',
+                    origin + '/js/opendoc/AgyForwardResumeEngine.js',
+                    "{{ asset('js/opendoc/AgyForwardResumeEngine.js') }}"
                 ];
                 function tryLoad(idx) {
                     if (idx >= sources.length) {
                         _rendererPromise = null;
-                        reject(new Error('Could not load AgyResumeRenderer module'));
+                        reject(new Error('Could not load AgyForwardResumeEngine module'));
                         return;
                     }
                     var s = document.createElement('script');
@@ -714,14 +714,14 @@ $('#template').change(function(){
 
                     var pollTries = 0;
                     function pollCheck() {
-                        if (typeof window !== 'undefined' && window.AgyResumeRenderer && typeof window.AgyResumeRenderer.processOption === 'function') {
-                            resolve(window.AgyResumeRenderer);
+                        if (typeof window !== 'undefined' && window.AgyForwardResumeEngine && typeof window.AgyForwardResumeEngine.processOption === 'function') {
+                            resolve(window.AgyForwardResumeEngine);
                             return;
                         }
                         if (++pollTries < 30) {
                             setTimeout(pollCheck, 60);
                         } else {
-                            console.warn('[fwd_resume] Script loaded but window.AgyResumeRenderer not ready, trying next source:', sources[idx]);
+                            console.warn('[fwd_resume] Script loaded but window.AgyForwardResumeEngine not ready, trying next source:', sources[idx]);
                             tryLoad(idx + 1);
                         }
                     }

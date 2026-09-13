@@ -16,6 +16,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.11.338/pdf.min.js"></script>
   <script src="{{ asset('js/pdfmake.min.js') }}"></script>
   <script src="{{ asset('js/vfs_fonts.min.js') }}"></script>
+  <script src="{{ asset('js/opendoc/AgyEditorWasmEngine.js') }}"></script>
   <script src="{{ asset('js/opendoc/AgyCvOptimizer.js') }}"></script>
 
   <style>
@@ -762,6 +763,7 @@
       <select id="modePicker" class="mode-picker-select" title="Switch Document Generation Format">
         <option value="65">Format: Pre-Screen Report + Highlighted Resume</option>
         <option value="64">Format: Pre-Screen Report + Resume</option>
+        <option value="63">Format: Highlighted Resume</option>
         <option value="62">Format: Resume + Company Branding</option>
         <option value="61">Format: ATS Original Resume</option>
       </select>
@@ -1233,6 +1235,37 @@
     }
 
     if(bytes){
+      var currentMode = parseInt(modePicker ? modePicker.value : initialOpt, 10) || 61;
+      var targetSkillsList = (jobSkills || []).concat(candSkills || []);
+
+      if(window.AgyEditorWasmEngine && typeof window.AgyEditorWasmEngine.prepareDocumentForEditing === 'function'){
+        try {
+          var prepResult = await window.AgyEditorWasmEngine.prepareDocumentForEditing({
+            bytes: bytes,
+            formatHint: resumeExt,
+            mode: currentMode,
+            dossier: candidateDossierData,
+            targetSkills: targetSkillsList
+          });
+          if(prepResult && prepResult.html && prepResult.html.trim().length > 20){
+            displayResume(prepResult.html);
+            return;
+          }
+        } catch(prepErr){
+          console.warn('[AgyEditorWasmEngine] prepareDocumentForEditing note:', prepErr);
+        }
+      } else if(window.AgyEditorWasmEngine && typeof window.AgyEditorWasmEngine.extractDocumentToHtml === 'function'){
+        try {
+          var parsedHtml = await window.AgyEditorWasmEngine.extractDocumentToHtml(bytes, resumeExt);
+          if(parsedHtml && parsedHtml.trim().length > 20){
+            displayResume(parsedHtml);
+            return;
+          }
+        } catch(agyDocErr){
+          console.warn('[AgyEditorWasmEngine] Document extraction note:', agyDocErr);
+        }
+      }
+
       var isDocx = (bytes[0] === 0x50 && bytes[1] === 0x4B) || resumeExt === 'docx' || resumeExt === 'doc';
       if(isDocx){
         try {
@@ -1492,6 +1525,25 @@
       var hasReport = (mode === 64 || mode === 65);
       var shouldHighlight = (mode === 63 || mode === 65);
 
+      // Leverage dedicated AgyEditorWasmEngine for high-fidelity vector PDF compilation
+      if(window.AgyEditorWasmEngine && typeof window.AgyEditorWasmEngine.compileEditedDocumentPdf === 'function'){
+        var activeKwList = Object.keys(keywords).filter(function(k){ return keywords[k].active; });
+        var pdfBlob = await window.AgyEditorWasmEngine.compileEditedDocumentPdf({
+          editorRoot: resumeBody,
+          reportRoot: sheetReport,
+          mode: mode,
+          dossier: candidateDossierData,
+          activeKeywords: activeKwList
+        });
+
+        var cleanName = (candName || 'Candidate').replace(/[^a-zA-Z0-9_\-]/g, '_');
+        var sfx = (mode === 65 ? '_Dossier_Highlighted' : (mode === 64 ? '_Dossier' : (mode === 63 ? '_Highlighted' : (mode === 62 ? '_Branded' : '_ATS_Optimized'))));
+        var filename = 'Jeroworks_' + cleanName + sfx + '.pdf';
+
+        window.AgyEditorWasmEngine.downloadBlob(pdfBlob, filename);
+        return;
+      }
+
       var fullPdfContent = [];
 
       // 1. PAGE 1: PRE-SCREENED CANDIDATE REPORT (If Option 64 or 65)
@@ -1597,7 +1649,7 @@
       };
 
       var cleanName = (candName || 'Candidate').replace(/[^a-zA-Z0-9_\-]/g, '_');
-      var sfx = (mode === 65 ? '_Dossier_Highlighted' : (mode === 64 ? '_Dossier' : (mode === 62 ? '_Branded' : '_ATS_Optimized')));
+      var sfx = (mode === 65 ? '_Dossier_Highlighted' : (mode === 64 ? '_Dossier' : (mode === 63 ? '_Highlighted' : (mode === 62 ? '_Branded' : '_ATS_Optimized'))));
       var filename = 'Jeroworks_' + cleanName + sfx + '.pdf';
 
       window.pdfMake.createPdf(docDef).download(filename);
