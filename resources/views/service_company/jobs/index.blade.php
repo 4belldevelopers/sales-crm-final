@@ -18,10 +18,10 @@
   { width: revert!important;}
 }
 @media only screen and (min-width: 992px){
-  /* Intent: size the Total Jobs drawer against the content canvas, not the left sidebar. */
+  /* Intent: size the Total Jobs drawer at 80% of the content canvas, not the left sidebar. */
   #kt_activitiesJob {
     --jero-service-aside-width: 225px;
-    width: min(90vw, calc((100vw - var(--jero-service-aside-width)) * .9)) !important;
+    width: min(80vw, calc((100vw - var(--jero-service-aside-width)) * .8)) !important;
     max-width: calc(100vw - var(--jero-service-aside-width)) !important;
   }
   body.aside-minimize #kt_activitiesJob { --jero-service-aside-width: 75px; }
