@@ -45,8 +45,8 @@
                 </svg>
             </div>
             <div class="jh-card-body">
-                <div class="jh-num" id="{{ $tabactive['allRequisition_id'] }}">{{ $tabactive['allRequisition'] }}</div>
                 <div class="jh-lbl">All Sources</div>
+                <div class="jh-num" id="{{ $tabactive['allRequisition_id'] }}">{{ $tabactive['allRequisition'] }}</div>
             </div>
         </a>
 
@@ -59,8 +59,8 @@
                 </svg>
             </div>
             <div class="jh-card-body">
-                <div class="jh-num" id="{{ $tabactive['clientRequisition_id'] }}">{{ $tabactive['clientRequisition'] }}</div>
                 <div class="jh-lbl">Direct Client Jobs</div>
+                <div class="jh-num" id="{{ $tabactive['clientRequisition_id'] }}">{{ $tabactive['clientRequisition'] }}</div>
             </div>
         </a>
 
@@ -71,8 +71,8 @@
                 </svg>
             </div>
             <div class="jh-card-body">
-                <div class="jh-num" id="{{ $tabactive['customRequisition_id'] }}">{{ $tabactive['customRequisition'] }}</div>
                 <div class="jh-lbl">Internal Client / Internal Hiring jobs</div>
+                <div class="jh-num" id="{{ $tabactive['customRequisition_id'] }}">{{ $tabactive['customRequisition'] }}</div>
             </div>
         </a>
 
@@ -83,8 +83,8 @@
                 </svg>
             </div>
             <div class="jh-card-body">
-                <div class="jh-num" id="{{ $tabactive['jobRequest_id'] }}">{{ $tabactive['jobRequest'] }}</div>
                 <div class="jh-lbl">Job Requests</div>
+                <div class="jh-num" id="{{ $tabactive['jobRequest_id'] }}">{{ $tabactive['jobRequest'] }}</div>
             </div>
         </a>
         @endif
