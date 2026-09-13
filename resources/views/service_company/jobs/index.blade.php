@@ -1015,6 +1015,21 @@ $(document).on('click', '.client-hm-listing', function ()
             return text;
         }
 
+        function getEmploymentTypeMeta(value, rawValue) {
+            var text = String(value || '').toLowerCase();
+            var raw = String(rawValue || '');
+            if (raw === '1' || text.indexOf('contract') !== -1) {
+                return { icon: 'fa-file-signature', tone: 'contract' };
+            }
+            if (raw === '2' || text.indexOf('freelance') !== -1) {
+                return { icon: 'fa-user-clock', tone: 'freelance' };
+            }
+            if (raw === '3' || text.indexOf('part') !== -1) {
+                return { icon: 'fa-clock', tone: 'parttime' };
+            }
+            return { icon: 'fa-briefcase', tone: 'fulltime' };
+        }
+
         function renderJobsClientSide(jobs) {
             if (!jobs || jobs.length === 0) {
                 return '<div style="text-align:center;padding:40px 20px;font-family:Poppins,sans-serif;color:#7e8299;">' +
@@ -1032,6 +1047,7 @@ $(document).on('click', '.client-hm-listing', function ()
                 var displayCity = formatJobPositionName(job.city);
                 var displayHiringManager = formatJobPositionName(job.hiring_manager);
                 var displaySalaryMode = formatSalaryMode(job.min_sal_mode);
+                var employmentMeta = getEmploymentTypeMeta(job.employment_type, job.employment_type_raw);
                 var statusIcon = job.status === 'Hiring' ? 'fa-user-group' : (job.status === 'Hold' ? 'fa-pause' : 'fa-box-archive');
                 var statusClass = job.status_raw === 'active' ? 'active-bg' : (job.status_raw === 'hold' ? 'hold-bg' : 'closed-bg');
                 if (job.status === 'Removed') statusClass = 'closed-bg';
@@ -1133,8 +1149,8 @@ $(document).on('click', '.client-hm-listing', function ()
 
                     '<div class="col-exp">' +
                       '<div class="exp-row"><svg fill="none" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="1.8"/><polyline points="12 6 12 12 16 14" stroke="currentColor" stroke-width="1.8"/></svg>' + job.min_exp + ' - ' + job.max_exp + ' Years</div>' +
-                      '<div class="sal-row"><span class="sal-amount">' + job.min_salary_currency + ' ' + job.min_salary + ' - ' + job.max_salary + '</span><span class="sal-mode">' + displaySalaryMode + '</span></div>' +
-                      '<span class="badge-type"><i class="fas fa-briefcase" style="color:#64748b;"></i><span class="it-job-type">' + job.employment_type + '</span></span>' +
+                      '<div class="sal-row"><span class="sal-amount">' + job.min_salary_currency + ' ' + job.min_salary + ' - ' + job.max_salary + '</span><span class="sal-divider">/</span><span class="sal-mode">' + displaySalaryMode + '</span></div>' +
+                      '<span class="badge-type employment-badge employment-badge-' + employmentMeta.tone + '"><i class="fas ' + employmentMeta.icon + '"></i><span class="it-job-type">' + job.employment_type + '</span></span>' +
                     '</div>' +
 
                     '<div class="col-hl">' + ulink +
