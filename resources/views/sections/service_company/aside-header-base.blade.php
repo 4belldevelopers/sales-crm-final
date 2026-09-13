@@ -132,14 +132,14 @@ $productAllowCompany = GeneralMethod::companiesType();
                                 </svg>
                             </span>
                             <!--end::Svg Icon-->
-                        </span> <span class="menu-title">Jobs</span><span class="menu-arrow"></span> </span>
+                        </span> <span class="menu-title">Hiring</span><span class="menu-arrow"></span> </span>
                     <div class="menu-sub menu-sub-accordion">
                         <!--begin::Bench list-->
                         @if (in_array('view_jobs', $userPermissions))
                             <div class="menu-item"> <a href="{{ route('service_company.jobs.index') }}"
                                     class="menu-link {{ request()->is('service_company/jobs') ? 'active' : '' }}">
                                     <span class="menu-icon"><span class="bullet bullet-dot"></span> </span> <span
-                                        class="menu-title">Jobs</span> </a> </div>
+                                        class="menu-title">Job Tracker</span> </a> </div>
                         @endif
                         <!--end::Bench list-->
 
@@ -286,7 +286,7 @@ $productAllowCompany = GeneralMethod::companiesType();
                                 </span>
                                 <!--end::Svg Icon-->
                             </span>
-                             <span class="menu-title">Talent Marketplace</span>
+                             <span class="menu-title">Staffing Business</span>
                              <span class="menu-arrow"></span>
                         </span>
                         <div class="menu-sub menu-sub-accordion">
