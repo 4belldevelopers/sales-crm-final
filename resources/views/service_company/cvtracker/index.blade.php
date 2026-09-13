@@ -1669,6 +1669,29 @@
 @push('footer-script')
     <script src="{{ asset('demo/cdn/js/dataTables.fixedHeader.min.js') }}{{ TM_VERSION }}"></script>
 
+    {{-- ═══════════════════════════════════════════════════════════════════════
+         FORWARD RESUME ENGINE — Pre-loaded on host page.
+         Rationale: The Forward Resume drawer is injected via $.html() which
+         silently discards all <script src="…"> tags. These two scripts MUST be
+         present in the host page's DOM so window.AgyForwardResumeEngine and
+         window.AgyForwardResumeHelper are defined before the inline IIFE in
+         the drawer blade runs.
+    ══════════════════════════════════════════════════════════════════════════ --}}
+    <script>
+    if (typeof define === 'function' && define.amd) {
+        window.__fwdResumeAmdSave = define.amd;
+        define.amd = false;
+    }
+    </script>
+    <script src="{{ asset('js/opendoc/AgyForwardResumeEngine.js') }}"></script>
+    <script src="{{ asset('js/opendoc/AgyForwardResumeHelper.js') }}"></script>
+    <script>
+    if (window.__fwdResumeAmdSave) {
+        define.amd = window.__fwdResumeAmdSave;
+        delete window.__fwdResumeAmdSave;
+    }
+    </script>
+
    
 
     <script>
