@@ -178,9 +178,13 @@
 
             $employment_type = 'Full-time';
             $badgeemploymenttype = "badge-fulltime";
+            $employmentIcon = 'fa-briefcase';
+            $employmentTone = 'fulltime';
             if ($row->employment_type == 1) {
                 $employment_type = 'Contract';
                 $badgeemploymenttype = "badge-contract";
+                $employmentIcon = 'fa-file-signature';
+                $employmentTone = 'contract';
             }
             $created_at = $row->created_at;
             $newDate = GeneralMethod::ymdTodmyNotTime($created_at);
@@ -195,7 +199,7 @@
                 foreach ($skillArr as $sval) {
                     $sval = (object) $sval;
                     $skilltag .=
-                                    '<span class="badge badge-light my-1">' . ucfirst($sval->skill_name) . '</span>  ';
+                                    '<span class="skill-tag">' . ucfirst($sval->skill_name) . '</span>  ';
                     array_push($skillArrFinal,ucfirst($sval->skill_name));
                 }
             }
@@ -249,21 +253,8 @@
     
 
             <!-- ══ ROW 1: Java Developer ══ -->
-            <div class="job-row" data-job-id="JB001" data-status="active" data-location="pune" data-job-type="full-time" style="position: relative; min-height: 111px;">
+            <div class="job-row" data-job-id="JB001" data-status="active" data-location="pune" data-job-type="full-time" style="position: relative; min-height: 96px;">
               <!-- Col 1: Job Details -->
-              <div style="display: flex; gap: 8px; align-items: flex-start">
-                <div class="drag-col">
-                  <div class="drag-handle">
-                    <svg width="12" height="12" fill="none" viewBox="0 0 24 24">
-                      <circle cx="9" cy="5" r="1.5" fill="currentColor" />
-                      <circle cx="15" cy="5" r="1.5" fill="currentColor" />
-                      <circle cx="9" cy="12" r="1.5" fill="currentColor" />
-                      <circle cx="15" cy="12" r="1.5" fill="currentColor" />
-                      <circle cx="9" cy="19" r="1.5" fill="currentColor" />
-                      <circle cx="15" cy="19" r="1.5" fill="currentColor" />
-                    </svg>
-                  </div>
-                </div>
                 <div class="col-job {{ $profile_detail_class }}" data-row-id="{{ $row->id }}">
                   <!-- FIX 3: logo aligned to cover title + dept + company -->
                   <div class="job-logo {{ $bgTextDecore }}" style="min-height: 48px;align-self: flex-start;">
@@ -279,7 +270,6 @@
                     <div class="job-client">{{ $clients_name }}</div>
                   </div>
                 </div>
-              </div>
 
               <!-- Col 2: Experience + Salary + FIX 4: badge -->
               <div class="col-exp">
@@ -291,14 +281,12 @@
                   {{ @$row->min_exp }} - {{ @$row->max_exp }} Years
                 </div>
                 <div class="sal-row">
-                  {!! $min_salary_currency !!} {{ $min_salary }} - {{ $max_salary }} <span class="sal-mode">{{ $min_sal_mode }}</span>
+                  <span class="sal-amount">{!! $min_salary_currency !!} {{ $min_salary }} - {{ $max_salary }} {{ $min_sal_mode }}</span>
                 </div>
                 <!-- FIX 4: job type badge here -->
-                <span class="badge-type">
-                  {!! $svg !!}
-                  <span class="it-job-type {{ $badge }}">{{ $recommendation_text }}</span>
-                    <span class="it-dot-separator"></span>
-                    <a href="javascript:void(0);" class="it-job-id">{{ @$row->id }}</a>
+                <span class="badge-type employment-badge employment-badge-{{ $employmentTone }}">
+                  <i class="fas {{ $employmentIcon }}"></i>
+                  <span class="it-job-type">{{ $employment_type }}</span>
                 </span>
               </div>
 
@@ -343,7 +331,7 @@
               <div class="col-hm">
                 <div class="hm-name">{{ ucwords(mb_substr(@$hiringManager, 0, 10)) }}</div>
                 <div class="hm-title">{{ @$hiringManagerdesignation }}</div>
-                <div class="hm-company">{{ ucwords(@$employment_type) }}</div>
+                <div class="hm-company hm-client-type"><span class="it-job-type {{ $badge }}">{{ $recommendation_text }}</span><span class="it-dot-separator"></span><a href="javascript:void(0);" class="it-job-id">{{ @$row->id }}</a></div>
               </div>
 
               <!-- Col 5 -->
@@ -804,23 +792,18 @@
                   Total: <strong>{{ $applicationCounter }} Applications</strong> &nbsp;|&nbsp;
                   Interview: <strong>{{ $interview_counter }}</strong>
                 </div>
-                <div class="add-date" style="display:flex;justify-content: flex-end;">
-                    <svg fill="none" viewBox="0 0 24 24" style="width: 6%;">
-                    <rect x="3" y="4" width="18" height="18" rx="2" stroke="currentColor" stroke-width="1.8"/>
-                    <path d="M16 2v4M8 2v4M3 10h18" stroke="currentColor" stroke-width="1.8"/>
-                    </svg> 
-                    <span>&nbsp;{{ $newDate }}</span>
-                </div>
               </div>
 
-              <div class="" style="position: absolute; bottom: 5px; left: 30px;white-space: nowrap; width: 90%; overflow: hidden;">
-                <!-- FIX 2: all on one line -->
-                    <div class="job-meta-line">
-                        <span class="skills-inline" style="">
-                            <b>Skills:</b> {!! $skilltag !!}
-                        </span>
-
-                    </div>
+              <div class="job-meta-strip">
+                <div class="job-meta-line">
+                  <span class="job-date-tag">
+                    <svg fill="none" viewBox="0 0 24 24">
+                      <rect x="3" y="4" width="18" height="18" rx="2" stroke="currentColor" stroke-width="1.8"/>
+                      <path d="M16 2v4M8 2v4M3 10h18" stroke="currentColor" stroke-width="1.8"/>
+                    </svg>{{ $newDate }}
+                  </span>
+                  {!! $skilltag !!}
+                </div>
               </div>
 
             </div>
