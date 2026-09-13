@@ -328,7 +328,7 @@ $end_date   =	date('d-M-Y', $date);
             text-decoration: none;
         }
 
-        .content-area { padding: 24px; max-width: 1400px; }
+        .content-area { padding: 24px; max-width: 1400px; width: 100%; }
 
         .job-header-card {
             background: var(--bg-white);
@@ -746,8 +746,8 @@ $end_date   =	date('d-M-Y', $date);
         }
 
         .jd-wrap .info-row:last-child { border-bottom: none; }
-        .jd-wrap .info-label { font-size: 12px; color: var(--text-secondary); font-weight: 400; flex-shrink: 0; }
-        .jd-wrap .info-value { font-size: 12px; color: var(--text-primary); font-weight: 500; text-align: right; max-width: 60%; }
+        .jd-wrap .info-label { font-size: 12px; color: var(--text-secondary); font-weight: 400; flex-shrink: 0; padding-right: 12px; }
+        .jd-wrap .info-value { font-size: 12px; color: var(--text-primary); font-weight: 500; text-align: right; max-width: 62%; min-width: 0; overflow-wrap: anywhere; }
         .jd-wrap .info-value a { color: var(--primary); text-decoration: none; transition: all 0.2s; }
         .jd-wrap .info-value a:hover { text-decoration: underline; }
 
@@ -1231,9 +1231,14 @@ $end_date   =	date('d-M-Y', $date);
         .jd-wrap .top-actions::-webkit-scrollbar { display: none; }
         .jd-wrap .action-btn { white-space: nowrap; flex-shrink: 0; padding: 5px 9px; font-size: 10.5px; }
         .jd-wrap .job-title-section h1 { font-size: 13.5px; }
-        .jd-wrap .info-grid { grid-template-columns: repeat(3, 1fr); gap: 14px; }
-        .jd-wrap .desc-grid { grid-template-columns: 1fr 1fr; gap: 14px; }
-        .jd-wrap .questions-section { grid-template-columns: 1fr 1fr; gap: 14px; }
+        .jd-wrap .content-area { padding: 12px; }
+        .jd-wrap .tabs-content { padding: 14px; }
+        .jd-wrap .info-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+        .jd-wrap .desc-grid { grid-template-columns: 1fr; gap: 12px; }
+        .jd-wrap .questions-section { grid-template-columns: 1fr; gap: 12px; }
+        .jd-wrap .info-card,
+        .jd-wrap .desc-card,
+        .jd-wrap .questions-card { padding: 14px; }
         .jd-wrap .hero-personnel-inline { gap: 10px; }
         .jd-wrap .personnel-card-inline { padding: 8px 10px; gap: 8px; }
     }
@@ -2562,7 +2567,7 @@ $end_date   =	date('d-M-Y', $date);
                                 <div class="info-card-header">
                                     <span class="info-card-title">Agency Terms & Condition</span>
                                     <div class="info-card-actions">
-                                        <a href="{{ url('service_company/settings/settings') }}" class="jd-empty-state-action" style="padding:5px 10px;margin-top:0;font-size:11px;" target="_blank">
+                                        <a href="{{ url('service_company/settings/settings#terms') }}" class="jd-empty-state-action" style="padding:5px 10px;margin-top:0;font-size:11px;" target="_blank">
                                             <i class="far fa-edit"></i> Edit
                                         </a>
                                         <button type="button" class="copy-btn tooltip" data-tooltip="Copy all" onclick="copyCardText('card-activity')"><i class="far fa-copy"></i></button>
@@ -2578,7 +2583,7 @@ $end_date   =	date('d-M-Y', $date);
                                         <span class="jd-empty-state-icon"><i class="far fa-file-alt"></i></span>
                                         <p class="jd-empty-state-title">No agency terms configured</p>
                                         <p class="jd-empty-state-text">Agency agreement terms are not available for this job yet. Edit the agency agreement settings to keep agency sharing clear.</p>
-                                        <a href="{{ url('service_company/settings/settings') }}" class="jd-empty-state-action" target="_blank">
+                                        <a href="{{ url('service_company/settings/settings#terms') }}" class="jd-empty-state-action" target="_blank">
                                             <i class="far fa-edit"></i> Edit Agency T&C
                                         </a>
                                     </div>
