@@ -348,7 +348,7 @@
       }
       .employment-badge-contract,
       .employment-badge-contract i {
-        color: #b45309;
+        color: var(--orange);
       }
       .employment-badge-freelance,
       .employment-badge-freelance i {
