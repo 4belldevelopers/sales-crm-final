@@ -159,8 +159,11 @@
       <!-- CONTENT -->
         <div class="content">        
 
-          <!-- HEADER -->
-           @include('sections.service_company.jobHeader',['tabactive'=>array_merge($tabactive, ['showTabs' => false, 'showStats' => false])])
+          <!-- HERO -->
+           @include('sections.service_company.jobHeader',['tabactive'=>array_merge($tabactive, ['showTabs' => false])])
+
+          <!-- FILTER BAR -->
+          @include('sections.service_company.jobFilterBar',['searchbar'=>$searchbar])
 
           <!-- STATUS TABS -->
           <div class="jh-tabs-card">
@@ -215,12 +218,6 @@
                 <span class="jh-badge" style="background:#f1f1f4;color:#7e8299;">{{ $tabactive['removedCount'] ?? 0 }}</span>
             </a>
           </div>
-
-          <!-- FILTER BAR -->
-          @include('sections.service_company.jobFilterBar',['searchbar'=>$searchbar])
-
-          <!-- HERO METRICS -->
-           @include('sections.service_company.jobHeader',['tabactive'=>array_merge($tabactive, ['showTabs' => false, 'showTop' => false])])
 
           <!-- TABLE -->
           <div class="table-card">
@@ -671,6 +668,49 @@ data-kt-drawer-toggle="#kt_activitiesJob_toggle" data-kt-drawer-close="#kt_activ
         localStorage.setItem('currentPageJobs', 1);
         fetchCandidates(1);
     }
+
+    function syncJobCustomSelect(selectId) {
+        var $select = $('#' + selectId);
+        var value = $select.val();
+        var label = $select.find('option:selected').text();
+        var $wrap = $('.jh-select-trigger[data-select-target="' + selectId + '"]').closest('.jh-custom-select');
+        $wrap.find('.jh-select-value').text(label);
+        $wrap.find('.jh-select-option').removeClass('is-selected');
+        $wrap.find('.jh-select-option[data-value="' + value + '"]').addClass('is-selected');
+    }
+
+    $(document).on('click', '.jh-select-trigger', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        var $wrap = $(this).closest('.jh-custom-select');
+        $('.jh-custom-select').not($wrap).removeClass('is-open').find('.jh-select-trigger').attr('aria-expanded', 'false');
+        $wrap.toggleClass('is-open');
+        $(this).attr('aria-expanded', $wrap.hasClass('is-open') ? 'true' : 'false');
+    });
+
+    $(document).on('click', '.jh-select-option', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        var $option = $(this);
+        var $wrap = $option.closest('.jh-custom-select');
+        var selectId = $wrap.find('.jh-select-trigger').data('select-target');
+        $('#' + selectId).val($option.data('value'));
+        syncJobCustomSelect(selectId);
+        $wrap.removeClass('is-open').find('.jh-select-trigger').attr('aria-expanded', 'false');
+        localStorage.setItem('currentPageJobs', 1);
+        filtersdata();
+    });
+
+    $(document).on('click', function() {
+        $('.jh-custom-select').removeClass('is-open').find('.jh-select-trigger').attr('aria-expanded', 'false');
+    });
+
+    $(document).on('change', '.jh-select-native', function() {
+        syncJobCustomSelect(this.id);
+    });
+
+    syncJobCustomSelect('employment_type');
+    syncJobCustomSelect('hiringtype');
     
    
    
@@ -980,6 +1020,7 @@ $(document).on('click', '.client-hm-listing', function ()
                 var displayClientName = formatCompanyName(job.clients_name);
                 var displayAgencyName = formatCompanyName(job.agency_company_name);
                 var displayCity = formatJobPositionName(job.city);
+                var displayHiringManager = formatJobPositionName(job.hiring_manager);
                 var statusIcon = job.status === 'Hiring' ? 'fa-user-group' : (job.status === 'Hold' ? 'fa-pause' : 'fa-box-archive');
                 var statusClass = job.status_raw === 'active' ? 'active-bg' : (job.status_raw === 'hold' ? 'hold-bg' : 'closed-bg');
                 if (job.status === 'Removed') statusClass = 'closed-bg';
@@ -1056,13 +1097,13 @@ $(document).on('click', '.client-hm-listing', function ()
                 ];
 
                 var pipelineHtml = '<div class="pipeline-stages">';
-                pipelineHtml += '<div class="stage" title="INW - In Review"><div class="stage-label">INW</div><div class="stage-badge s-inw"><a href="' + allAppUrl + '" class="s-inw fw-bolder fs-6">' + (job.inreview_counter || 0) + '</a></div><div class="stage-caption">Review</div></div>';
+                pipelineHtml += '<div class="stage" title="INW - In Review"><div class="stage-label">INW</div><div class="stage-badge s-inw"><a href="' + allAppUrl + '" class="s-inw fw-bolder fs-6">' + (job.inreview_counter || 0) + '</a></div></div>';
 
                 stageLabels.forEach(function(stg) {
                     var count = (job.stage_counts && job.stage_counts[stg.id]) ? job.stage_counts[stg.id] : 0;
                     var stgUrl = apptrackerBase + stg.id;
                     var countClass = count > 0 ? (stg.id === 1 ? 'text-dark fw-bolder fs-6' : stg.key + ' fs-6') : stg.key + ' fs-6';
-                    pipelineHtml += '<div class="stage" title="' + stg.label + ' - ' + stg.title + '"><div class="stage-label">' + stg.label + '</div><div class="stage-badge ' + stg.key + '"><a href="' + stgUrl + '" class="' + countClass + '">' + count + '</a></div><div class="stage-caption">' + stg.compact + '</div></div>';
+                    pipelineHtml += '<div class="stage" title="' + stg.label + ' - ' + stg.title + '"><div class="stage-label">' + stg.label + '</div><div class="stage-badge ' + stg.key + '"><a href="' + stgUrl + '" class="' + countClass + '">' + count + '</a></div></div>';
                 });
                 pipelineHtml += '</div>';
 
@@ -1091,7 +1132,7 @@ $(document).on('click', '.client-hm-listing', function ()
                     '</div>' +
 
                     '<div class="col-hm">' +
-                      '<div class="hm-name">' + (job.hiring_manager ? job.hiring_manager.substring(0, 10) : '') + '</div>' +
+                      '<div class="hm-name">' + (displayHiringManager ? displayHiringManager.substring(0, 10) : '') + '</div>' +
                       '<div class="hm-title">' + (job.hiring_manager_designation || '') + '</div>' +
                       '<div class="hm-company">' + job.employment_type + '</div>' +
                     '</div>' +

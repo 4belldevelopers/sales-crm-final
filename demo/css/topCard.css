@@ -236,6 +236,7 @@
     background: #fff;
     padding: 6px 32px 6px 12px;
     transition: border-color .15s ease, box-shadow .15s ease;
+    cursor: pointer;
 }
 .jh-select-wrap:focus-within {
     border-color: #2563EB;
@@ -266,12 +267,17 @@
     margin-bottom: 3px;
     pointer-events: none;
 }
-.jh-select {
-    appearance: none;
-    -webkit-appearance: none;
+.jh-select-native {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    opacity: 0;
+    pointer-events: none;
+}
+.jh-select-trigger {
     border: none;
-    border-radius: 0;
     padding: 0;
+    margin: 0;
     font-size: 12.5px;
     font-weight: 600;
     color: #1F2937;
@@ -282,6 +288,12 @@
     white-space: nowrap;
     width: 100%;
     min-width: 0;
+    text-align: left;
+}
+.jh-select-value {
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 .jh-select-caret {
     position: absolute;
@@ -290,6 +302,57 @@
     transform: translateY(-50%);
     color: #94A3B8;
     pointer-events: none;
+    transition: transform .15s ease, color .15s ease;
+}
+.jh-custom-select.is-open {
+    border-color: #2563EB;
+    box-shadow: 0 0 0 3px rgba(37,99,235,.08);
+}
+.jh-custom-select.is-open .jh-select-caret {
+    transform: translateY(-50%) rotate(180deg);
+    color: #2563EB;
+}
+.jh-select-menu {
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 0;
+    right: 0;
+    z-index: 80;
+    display: none;
+    padding: 6px;
+    border: 1px solid #dbe3f0;
+    border-radius: 10px;
+    background: #fff;
+    box-shadow: 0 14px 34px rgba(15,23,42,.14);
+}
+.jh-custom-select.is-open .jh-select-menu {
+    display: grid;
+    gap: 2px;
+}
+.jh-select-option {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    min-height: 30px;
+    border: none;
+    border-radius: 7px;
+    padding: 0 9px;
+    background: transparent;
+    color: #334155;
+    font-family: 'Poppins', sans-serif;
+    font-size: 12px;
+    font-weight: 500;
+    text-align: left;
+    cursor: pointer;
+}
+.jh-select-option:hover {
+    background: #f1f5f9;
+    color: #0f172a;
+}
+.jh-select-option.is-selected {
+    background: #eff6ff;
+    color: #1d4ed8;
+    font-weight: 700;
 }
 
 /* Filters button */
