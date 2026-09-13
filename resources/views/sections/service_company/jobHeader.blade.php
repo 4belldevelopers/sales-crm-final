@@ -45,7 +45,7 @@
                 </svg>
             </div>
             <div class="jh-card-body">
-                <div class="jh-lbl">All Sources</div>
+                <div class="jh-lbl">Total Jobs</div>
                 <div class="jh-count-row">
                     <div class="jh-num" id="{{ $tabactive['allRequisition_id'] }}">{{ $tabactive['allRequisition'] }}</div>
                     <span class="jh-count-link">View Jobs List</span>
