@@ -150,7 +150,7 @@
 @endphp     
      
 <!--begin::Content-->
-<div class="content d-flex flex-column flex-column-fluid pt-4 kt_content_job" id="kt_content" style="margin-top: -90px;">
+<div class="content d-flex flex-column flex-column-fluid pt-4 kt_content_job" id="kt_content">
   <!--begin::Post-->
   <div class="post d-flex flex-column-fluid" id="kt_post">
     <!--begin::Container-->
@@ -272,8 +272,17 @@
 <div id="kt_activitiesJob_toggle"></div>
 <div id="kt_activitiesJob" class="bg-body" data-kt-drawer="true" data-kt-drawer-name="activities" data-kt-drawer-activate="true" data-kt-drawer-overlay="true" data-kt-drawer-direction="end"
 data-kt-drawer-toggle="#kt_activitiesJob_toggle" data-kt-drawer-close="#kt_activitiesJob_close">
-  <div class="card shadow-none bg-custom-bar rounded-0 w-100">
-   {{-- header removed --}}
+  <div class="card shadow-none bg-custom-bar rounded-0 w-100 h-100">
+    <div class="jobs-drawer-header">
+      <div class="jobs-drawer-title-wrap">
+        <span class="jobs-drawer-kicker" id="jobsDrawerKicker">Job Details</span>
+        <h3 class="jobs-drawer-title" id="jobsDrawerTitle">Job Details</h3>
+        <div class="jobs-drawer-meta" id="jobsDrawerMeta">Loading selected requisition...</div>
+      </div>
+      <button type="button" class="jobs-drawer-close jd-drawer-close-btn" id="kt_activitiesJob_close" aria-label="Close job details">
+        <i class="fa fa-xmark"></i>
+      </button>
+    </div>
     <div class="card-body bg-custom-bar position-relative px-0 py-0" id="kt_activitiesJob_body"></div>
   </div>
 </div>
@@ -627,14 +636,14 @@ data-kt-drawer-toggle="#kt_activitiesJob_toggle" data-kt-drawer-close="#kt_activ
       localStorage.setItem('currentPageJobs', currentPageJobs);
 
    		var id    		=	$(this).data('row-id');
+      var selectedJob = findJobById(id);
    		var url   		=	"{{ route('service_company.jobs.viewmore',':id') }}?viewmore=viewmore";
    		url     		=	url.replace(':id', id);
-   		var baseurl    	=	"{{ asset('assets/images/Loading2.gif') }}"; 
    		$.ajax({
    						type  		: 'GET',
    						url   		: url,
    						 beforeSend	: function() {
-                                     $('#kt_activitiesJob_body').html('<img src="'+baseurl+'" height="35px" width="100%">');
+                                     setJobsDrawerLoading(selectedJob);
                        	},
    						success 	: function (response) {
 									$('#kt_activitiesJob_body').html(response.view);
@@ -692,14 +701,14 @@ $(document).on('click', '.client-show-detail', function ()
 {
   $('#kt_activitiesJob_toggle').trigger('click');		
    		var id    		=	$(this).data('row-id');
+        var selectedJob = findJobById(id);
    		var url   		=	"{{ route('service_company.jobs.viewmore',':id') }}?viewmore=clientviewmore";
    		url     		=	url.replace(':id', id);
-   		var baseurl    	=	"{{ asset('assets/images/Loading2.gif') }}"; 
    		$.ajax({
    						type  		: 'GET',
    						url   		: url,
    						 beforeSend	: function() {
-                                     $('#kt_activitiesJob_body').html('<img src="'+baseurl+'" height="35px" width="100%">');
+                                     setJobsDrawerLoading(selectedJob);
                        	},
    						success 	: function (response) {
 									$('#kt_activitiesJob_body').html(response.view);
@@ -898,11 +907,159 @@ $(document).on('click', '.client-hm-listing', function ()
             total: 0
         };
 
+        function escHtml(value) {
+            return String(value == null ? '' : value)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        }
+
+        function escAttr(value) {
+            return escHtml(value).replace(/`/g, '&#096;');
+        }
+
+        function cssClassList(value) {
+            return String(value == null ? '' : value).replace(/[^a-zA-Z0-9_\-\s]/g, '').trim();
+        }
+
+        function numText(value, fallback) {
+            var parsed = parseInt(value, 10);
+            return isNaN(parsed) ? (fallback || 0) : parsed;
+        }
+
+        function countLabel(count, singular, plural) {
+            var safeCount = numText(count, 0);
+            return safeCount + ' ' + (safeCount === 1 ? singular : plural);
+        }
+
+        function syncJobsResultSummary(visibleCount, totalCount) {
+            var visible = numText(visibleCount, 0);
+            var total = numText(totalCount, visible);
+            var text = total > visible ? ('Showing ' + visible + ' of ' + total + ' jobs') : ('Showing ' + visible + ' jobs');
+            $('#jobsResultCount').text(text);
+        }
+
+        function selectedOptionText(selector) {
+            var $option = $(selector).find('option:selected');
+            return ($option.text() || '').trim();
+        }
+
+        function renderAppliedFiltersCard() {
+            var chips = [];
+            var searchTerm = ($('.inputJobSearch').val() || '').trim();
+            var status = $('#status').val() || 'all';
+            var employmentType = $('#employment_type').val() || 'all';
+            var expFilter = $('#experience_filter').val() || 'all';
+            var sortVal = $('#hiringtype').val() || '1';
+
+            if (searchTerm !== '') chips.push({ label: 'Search', value: searchTerm, target: 'search' });
+            if (status !== 'all' && status !== '') chips.push({ label: 'Status', value: selectedOptionText('#status'), target: 'status' });
+            if (employmentType !== 'all' && employmentType !== '') chips.push({ label: 'Type', value: selectedOptionText('#employment_type'), target: 'employment_type' });
+            if (expFilter !== 'all' && expFilter !== '') chips.push({ label: 'Experience', value: selectedOptionText('#experience_filter'), target: 'experience_filter' });
+            if (sortVal !== '1') chips.push({ label: 'Sort', value: selectedOptionText('#hiringtype'), target: 'hiringtype' });
+
+            var visibleCount = window.jobsState && window.jobsState.filtered ? window.jobsState.filtered.length : 0;
+            var totalCount = window.jobsState ? window.jobsState.total : visibleCount;
+            syncJobsResultSummary(visibleCount, totalCount);
+
+            if (chips.length === 0) {
+                $('#jobsAppliedChips').html('<span class="jh-applied-muted">No filters applied</span>');
+            } else {
+                $('#jobsAppliedChips').html(chips.map(function(chip) {
+                    return '<button type="button" class="jh-applied-chip" data-filter-target="' + escAttr(chip.target) + '">' +
+                        '<span>' + escHtml(chip.label) + ':</span> ' + escHtml(chip.value) +
+                        '<i class="fa fa-xmark"></i>' +
+                    '</button>';
+                }).join(''));
+            }
+
+            $('#jobsAppliedFilters').removeClass('d-none');
+        }
+
+        function resetJobsFilters() {
+            $('.inputJobSearch').val('');
+            $('#status').val('all');
+            $('#employment_type').val('all');
+            $('#experience_filter').val('all');
+            $('#hiringtype').val('1');
+            $('.jh-tab').removeClass('jh-tab-active');
+            $('.jh-tab[data-status="all"]').addClass('jh-tab-active');
+            localStorage.setItem('currentPageJobs', 1);
+            fetchCandidates(1);
+        }
+
+        $(document).on('click', '.jh-applied-chip', function() {
+            var target = $(this).data('filter-target');
+            if (target === 'search') {
+                $('.inputJobSearch').val('');
+                fetchCandidates(1);
+                return;
+            }
+
+            if (target === 'status') {
+                $('#status').val('all');
+                $('.jh-tab').removeClass('jh-tab-active');
+                $('.jh-tab[data-status="all"]').addClass('jh-tab-active');
+                fetchCandidates(1);
+                return;
+            }
+
+            if (target === 'employment_type') {
+                $('#employment_type').val('all');
+                fetchCandidates(1);
+                return;
+            }
+
+            if (target === 'experience_filter') {
+                $('#experience_filter').val('all');
+                filtersdata();
+                return;
+            }
+
+            if (target === 'hiringtype') {
+                $('#hiringtype').val('1');
+                fetchCandidates(1);
+            }
+        });
+
+        function setJobsDrawerContext(job) {
+            $('#jobsDrawerKicker').text(job && job.is_direct_client ? 'Direct Client Job' : 'Job Details');
+            $('#jobsDrawerTitle').text((job && job.title) ? job.title : 'Job Details');
+
+            var meta = [];
+            if (job && job.id) meta.push('Job ID ' + job.id);
+            if (job && job.clients_name) meta.push(job.clients_name);
+            if (job && job.status) meta.push(job.status);
+            if (job && job.city) meta.push(job.city);
+            $('#jobsDrawerMeta').text(meta.length ? meta.join(' | ') : 'Loading selected requisition...');
+        }
+
+        function setJobsDrawerLoading(job) {
+            setJobsDrawerContext(job || null);
+            $('#kt_activitiesJob_body').html(
+                '<div class="jobs-drawer-skeleton">' +
+                    '<div class="jd-skel-line jd-skel-lg"></div>' +
+                    '<div class="jd-skel-line"></div>' +
+                    '<div class="jd-skel-grid">' +
+                        '<span></span><span></span><span></span><span></span>' +
+                    '</div>' +
+                '</div>'
+            );
+        }
+
+        function findJobById(id) {
+            var allJobs = (window.jobsState && window.jobsState.all) ? window.jobsState.all : [];
+            return allJobs.find(function(job) { return String(job.id) === String(id); }) || null;
+        }
+
         function renderJobsClientSide(jobs) {
             if (!jobs || jobs.length === 0) {
                 return '<div style="text-align:center;padding:40px 20px;font-family:Poppins,sans-serif;color:#7e8299;">' +
                        '<i class="fa fa-briefcase" style="font-size:32px;margin-bottom:12px;display:block;"></i>' +
-                       '<p style="font-size:13px;margin:0;">No jobs found matching your criteria.</p></div>';
+                       '<p style="font-size:13px;margin:0 0 14px;">No jobs found matching your criteria.</p>' +
+                       '<button type="button" onclick="resetJobsFilters()" class="btn btn-sm btn-primary" style="font-size:12px;">Reset Filters</button></div>';
             }
 
             var html = '';
@@ -914,12 +1071,12 @@ $(document).on('click', '.client-hm-listing', function ()
                 if (job.status === 'Removed') statusClass = 'closed-bg';
 
                 var ulink = job.status === 'Removed'
-                    ? '<span class="badge-hiring ' + statusClass + '">' + job.status + '</span>'
-                    : '<span data-row-id="' + job.id + '" data-direct-client="' + directClientAttr + '" class="badge-hiring ' + statusClass + ' status_stage"><i class="fas ' + statusIcon + '"></i> ' + job.status + '</span>';
+                    ? '<span class="badge-hiring ' + statusClass + '">' + escHtml(job.status) + '</span>'
+                    : '<span data-row-id="' + escAttr(job.id) + '" data-direct-client="' + directClientAttr + '" class="badge-hiring ' + statusClass + ' status_stage" title="Change job status"><i class="fas ' + statusIcon + '"></i> ' + escHtml(job.status) + '</span>';
 
                 var logoHtml = job.logo_path
-                    ? '<img src="' + job.logo_path + '" alt="Company Logo" class="border-radius-5 w-100">'
-                    : job.initial_letter;
+                    ? '<img src="' + escAttr(job.logo_path) + '" alt="Company Logo" class="border-radius-5 w-100">'
+                    : escHtml(job.initial_letter);
 
                 var typeIcon = job.is_direct_client
                     ? '<i class="fas fa-handshake" style="color:#09b760;"></i>'
@@ -927,111 +1084,115 @@ $(document).on('click', '.client-hm-listing', function ()
 
                 var skillsHtml = '';
                 if (job.skills && job.skills.length > 0) {
-                    skillsHtml = job.skills.map(function(s) {
-                        return '<span class="badge badge-light my-1">' + s + '</span>';
+                    var visibleSkills = job.skills.slice(0, 4);
+                    skillsHtml = visibleSkills.map(function(s) {
+                        return '<span class="badge badge-light my-1 job-skill-chip" title="' + escAttr(s) + '">' + escHtml(s) + '</span>';
                     }).join(' ');
+                    if (job.skills.length > visibleSkills.length) {
+                        skillsHtml += ' <span class="badge badge-light-primary my-1 job-skill-chip" title="' + escAttr(job.skills.join(', ')) + '">+' + (job.skills.length - visibleSkills.length) + '</span>';
+                    }
                 }
 
                 var teamHtml = '';
+                var partnersCount = numText(job.partners_count, 0);
                 if (job.is_direct_client) {
                     if (job.partners_first_name) {
-                        teamHtml += '<div class="hm-name team-listing" data-row-id="' + job.id + '">' + job.partners_first_name.substring(0, 10) + '</div>';
+                        teamHtml += '<div class="hm-name team-listing text-truncate" title="' + escAttr(job.partners_first_name) + '" data-row-id="' + escAttr(job.id) + '">' + escHtml(job.partners_first_name) + '</div>';
                     }
-                    var pCount = job.partners_count > 1 ? '+' + (job.partners_count - 1) : job.partners_count;
-                    teamHtml += '<div class="action-count">' + pCount + ' Members</div>';
-                    teamHtml += '<div class="action-more team-listing" data-row-id="' + job.id + '">+ Add More</div>';
+                    teamHtml += '<div class="action-count">' + countLabel(partnersCount, 'Member', 'Members') + '</div>';
+                    teamHtml += '<button type="button" class="action-more team-listing" data-row-id="' + escAttr(job.id) + '">Manage Team</button>';
                 } else {
                     if (job.partners_first_name) {
-                        teamHtml += '<div class="hm-name hm-listing" data-row-id="' + job.id + '">' + job.partners_first_name.substring(0, 10) + '</div>';
+                        teamHtml += '<div class="hm-name hm-listing text-truncate" title="' + escAttr(job.partners_first_name) + '" data-row-id="' + escAttr(job.id) + '">' + escHtml(job.partners_first_name) + '</div>';
                     }
-                    var pCount = job.partners_count > 1 ? '+' + (job.partners_count - 1) : job.partners_count;
-                    teamHtml += '<div class="action-count">' + pCount + ' Members</div>';
-                    teamHtml += '<div class="action-more hm-listing" data-row-id="' + job.id + '">+ Add More</div>';
+                    teamHtml += '<div class="action-count">' + countLabel(partnersCount, 'Member', 'Members') + '</div>';
+                    teamHtml += '<button type="button" class="action-more hm-listing" data-row-id="' + escAttr(job.id) + '">Manage Team</button>';
                 }
 
                 var agencyHtml = '';
                 if (job.is_direct_client) {
-                    agencyHtml += '<div class="hm-name">' + (job.agency_company_name ? job.agency_company_name.substring(0, 30) : '') + '</div>';
+                    agencyHtml += '<div class="hm-name text-truncate" title="' + escAttr(job.agency_company_name || '') + '">' + escHtml(job.agency_company_name || '') + '</div>';
                 } else {
                     if (job.agency_count > 0) {
-                        agencyHtml += '<div class="hm-name">' + job.agency_count + ' Agency</div>';
-                        agencyHtml += '<div class="action-count">15 Matching</div>';
-                        agencyHtml += '<div data-row-id="' + job.id + '" class="action-more spartner-listing">+ Add More</div>';
+                        agencyHtml += '<div class="hm-name">' + countLabel(job.agency_count, 'Agency', 'Agencies') + '</div>';
+                        if (typeof job.matching_agency_count !== 'undefined') {
+                            agencyHtml += '<div class="action-count">' + countLabel(job.matching_agency_count, 'Match', 'Matches') + '</div>';
+                        }
+                        agencyHtml += '<button type="button" data-row-id="' + escAttr(job.id) + '" class="action-more spartner-listing">Manage Agency</button>';
                     } else {
-                        agencyHtml += '<button class="btn-action spartner-listing" data-row-id="' + job.id + '"><svg fill="none" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>Add Agency</button>';
-                        agencyHtml += '<div class="action-count">15 Matching</div>';
+                        agencyHtml += '<button type="button" class="btn-action spartner-listing" data-row-id="' + escAttr(job.id) + '"><svg fill="none" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>Add Agency</button>';
+                        if (typeof job.matching_agency_count !== 'undefined') {
+                            agencyHtml += '<div class="action-count">' + countLabel(job.matching_agency_count, 'Match', 'Matches') + '</div>';
+                        }
                     }
                 }
 
                 var apptrackerBase = job.is_direct_client
-                    ? "{{ url('/service_company/apptracker/clientapp') }}/" + job.encrypted_id + "/"
-                    : "{{ url('/service_company/apptracker') }}/" + job.encrypted_id + "/";
+                    ? "{{ url('/service_company/apptracker/clientapp') }}/" + String(job.encrypted_id || '') + "/"
+                    : "{{ url('/service_company/apptracker') }}/" + String(job.encrypted_id || '') + "/";
 
                 var allAppUrl = job.is_direct_client
-                    ? "{{ url('/service_company/apptracker/clientapp') }}/" + job.encrypted_id + "/all"
-                    : "{{ url('/service_company/apptracker') }}/" + job.encrypted_id + "/all";
+                    ? "{{ url('/service_company/apptracker/clientapp') }}/" + String(job.encrypted_id || '') + "/all"
+                    : "{{ url('/service_company/apptracker') }}/" + String(job.encrypted_id || '') + "/all";
 
                 var stageLabels = [
-                    { id: 1, key: 's-sou', label: 'SOU' },
-                    { id: 2, key: 's-scr', label: 'SCR' },
-                    { id: 3, key: 's-eva', label: 'EVA' },
-                    { id: 4, key: 's-neg', label: 'NEG' },
-                    { id: 5, key: 's-off', label: 'OFF' },
-                    { id: 6, key: 's-joi', label: 'JOI' },
-                    { id: 7, key: 's-rej', label: 'REJ' }
+                    { id: 1, key: 's-sou', label: 'SOU', title: 'Sourcing' },
+                    { id: 2, key: 's-scr', label: 'SCR', title: 'Screening' },
+                    { id: 3, key: 's-eva', label: 'EVA', title: 'Evaluation' },
+                    { id: 4, key: 's-neg', label: 'NEG', title: 'Negotiation' },
+                    { id: 5, key: 's-off', label: 'OFF', title: 'Offer' },
+                    { id: 6, key: 's-joi', label: 'JOI', title: 'Joining' },
+                    { id: 7, key: 's-rej', label: 'REJ', title: 'Rejected' }
                 ];
 
                 var pipelineHtml = '<div class="pipeline-stages">';
-                pipelineHtml += '<div class="stage"><div class="stage-label">INW</div><div class="stage-badge s-inw"><a href="' + allAppUrl + '" class="s-inw fw-bolder fs-6">' + (job.inreview_counter || 0) + '</a></div></div>';
+                pipelineHtml += '<div class="stage" title="In Review"><div class="stage-label">INW</div><div class="stage-badge s-inw"><a href="' + escAttr(allAppUrl) + '" class="s-inw fw-bolder fs-6" aria-label="In Review applications">' + numText(job.inreview_counter, 0) + '</a></div></div>';
 
                 stageLabels.forEach(function(stg) {
                     var count = (job.stage_counts && job.stage_counts[stg.id]) ? job.stage_counts[stg.id] : 0;
                     var stgUrl = apptrackerBase + stg.id;
                     var countClass = count > 0 ? (stg.id === 1 ? 'text-dark fw-bolder fs-6' : stg.key + ' fs-6') : stg.key + ' fs-6';
-                    pipelineHtml += '<div class="stage"><div class="stage-label">' + stg.label + '</div><div class="stage-badge ' + stg.key + '"><a href="' + stgUrl + '" class="' + countClass + '">' + count + '</a></div></div>';
+                    pipelineHtml += '<div class="stage" title="' + escAttr(stg.title) + '"><div class="stage-label">' + stg.label + '</div><div class="stage-badge ' + stg.key + '"><a href="' + escAttr(stgUrl) + '" class="' + countClass + '" aria-label="' + escAttr(stg.title) + ' applications">' + numText(count, 0) + '</a></div></div>';
                 });
                 pipelineHtml += '</div>';
 
-                html += '<div class="job-row" data-job-id="' + job.id + '" style="position: relative; min-height: 111px; cursor: pointer;">' +
+                html += '<div class="job-row" data-job-id="' + escAttr(job.id) + '" data-job-title="' + escAttr(job.title || '') + '" data-job-client="' + escAttr(job.clients_name || '') + '" data-job-status="' + escAttr(job.status || '') + '" data-job-city="' + escAttr(job.city || '') + '" data-direct-client="' + directClientAttr + '" style="position: relative; min-height: 111px;">' +
                     '<div style="display: flex; gap: 8px; align-items: flex-start">' +
                       '<div class="drag-col"><div class="drag-handle"><svg width="12" height="12" fill="none" viewBox="0 0 24 24"><circle cx="9" cy="5" r="1.5" fill="currentColor"/><circle cx="15" cy="5" r="1.5" fill="currentColor"/><circle cx="9" cy="12" r="1.5" fill="currentColor"/><circle cx="15" cy="12" r="1.5" fill="currentColor"/><circle cx="9" cy="19" r="1.5" fill="currentColor"/><circle cx="15" cy="19" r="1.5" fill="currentColor"/></svg></div></div>' +
-                      '<div class="col-job ' + profileDetailClass + '" data-row-id="' + job.id + '">' +
-                        '<div class="job-logo ' + job.bg_text_decore + '" style="min-height: 48px; align-self: flex-start;">' + logoHtml + '</div>' +
+                      '<div class="col-job ' + profileDetailClass + '" data-row-id="' + escAttr(job.id) + '">' +
+                        '<div class="job-logo ' + cssClassList(job.bg_text_decore) + '" style="min-height: 48px; align-self: flex-start;">' + logoHtml + '</div>' +
                         '<div class="job-info">' +
-                          '<div class="job-title">' + (job.title ? job.title.substring(0, 30) : '') + '</div>' +
-                          '<div class="job-dept">' + (job.department || '') + '</div>' +
-                          '<div class="job-client">' + (job.clients_name ? job.clients_name.substring(0, 30) : '') + '</div>' +
+                          '<div class="job-title text-truncate" title="' + escAttr(job.title || '') + '">' + escHtml(job.title || '') + '</div>' +
+                          '<div class="job-dept text-truncate" title="' + escAttr(job.department || '') + '">' + escHtml(job.department || '') + '</div>' +
+                          '<div class="job-client text-truncate" title="' + escAttr(job.clients_name || '') + '">' + escHtml(job.clients_name || '') + '</div>' +
+                          '<div class="job-meta-line"><span class="skills-inline"><b>Skills:</b> ' + (skillsHtml || '<span class="text-muted">Not specified</span>') + '</span></div>' +
                         '</div>' +
                       '</div>' +
                     '</div>' +
 
                     '<div class="col-exp">' +
-                      '<div class="exp-row"><svg fill="none" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="1.8"/><polyline points="12 6 12 12 16 14" stroke="currentColor" stroke-width="1.8"/></svg>' + job.min_exp + ' - ' + job.max_exp + ' Years</div>' +
-                      '<div class="sal-row">' + job.min_salary_currency + ' ' + job.min_salary + ' - ' + job.max_salary + ' <span class="sal-mode">' + job.min_sal_mode + '</span></div>' +
-                      '<span class="badge-type">' + typeIcon + ' <span class="it-job-type ' + job.badge + '">' + job.recommendation_text + '</span> <span class="it-dot-separator"></span> <a href="javascript:void(0);" class="it-job-id">' + job.id + '</a></span>' +
+                      '<div class="exp-row"><svg fill="none" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="1.8"/><polyline points="12 6 12 12 16 14" stroke="currentColor" stroke-width="1.8"/></svg>' + escHtml(job.min_exp) + ' - ' + escHtml(job.max_exp) + ' Years</div>' +
+                      '<div class="sal-row">' + escHtml(job.min_salary_currency) + ' ' + escHtml(job.min_salary) + ' - ' + escHtml(job.max_salary) + ' <span class="sal-mode">' + escHtml(job.min_sal_mode) + '</span></div>' +
+                      '<span class="badge-type">' + typeIcon + ' <span class="it-job-type ' + cssClassList(job.badge) + '">' + escHtml(job.recommendation_text) + '</span> <span class="it-dot-separator"></span> <a href="javascript:void(0);" class="it-job-id">' + escHtml(job.id) + '</a></span>' +
                     '</div>' +
 
                     '<div class="col-hl">' + ulink +
-                      '<div class="loc-row"><svg fill="none" viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="10" r="3" stroke="currentColor" stroke-width="1.8"/></svg>' + (job.city ? job.city.substring(0, 10) : '') + '</div>' +
-                      '<div class="mode-row"><svg fill="none" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" stroke="currentColor" stroke-width="1.8"/><polyline points="9,22 9,12 15,12 15,22" stroke="currentColor" stroke-width="1.8"/></svg>' + job.work_type + '</div>' +
+                      '<div class="loc-row text-truncate" title="' + escAttr(job.city || '') + '"><svg fill="none" viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="10" r="3" stroke="currentColor" stroke-width="1.8"/></svg>' + escHtml(job.city || '') + '</div>' +
+                      '<div class="mode-row text-truncate" title="' + escAttr(job.work_type || '') + '"><svg fill="none" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" stroke="currentColor" stroke-width="1.8"/><polyline points="9,22 9,12 15,12 15,22" stroke="currentColor" stroke-width="1.8"/></svg>' + escHtml(job.work_type || '') + '</div>' +
                     '</div>' +
 
                     '<div class="col-hm">' +
-                      '<div class="hm-name">' + (job.hiring_manager ? job.hiring_manager.substring(0, 10) : '') + '</div>' +
-                      '<div class="hm-title">' + (job.hiring_manager_designation || '') + '</div>' +
-                      '<div class="hm-company">' + job.employment_type + '</div>' +
+                      '<div class="hm-name text-truncate" title="' + escAttr(job.hiring_manager || '') + '">' + escHtml(job.hiring_manager || '') + '</div>' +
+                      '<div class="hm-title text-truncate" title="' + escAttr(job.hiring_manager_designation || '') + '">' + escHtml(job.hiring_manager_designation || '') + '</div>' +
+                      '<div class="hm-company text-truncate" title="' + escAttr(job.employment_type || '') + '">' + escHtml(job.employment_type || '') + '</div>' +
                     '</div>' +
 
                     '<div class="col-action">' + teamHtml + '</div>' +
                     '<div class="col-action">' + agencyHtml + '</div>' +
 
                     '<div class="col-pipeline">' + pipelineHtml +
-                      '<div class="pipeline-total">Total: <strong>' + (job.application_counter || 0) + ' Applications</strong> &nbsp;|&nbsp; Interview: <strong>' + (job.interview_counter || 0) + '</strong></div>' +
-                      '<div class="add-date" style="display:flex;justify-content: flex-end;"><svg fill="none" viewBox="0 0 24 24" style="width: 6%;"><rect x="3" y="4" width="18" height="18" rx="2" stroke="currentColor" stroke-width="1.8"/><path d="M16 2v4M8 2v4M3 10h18" stroke="currentColor" stroke-width="1.8"/></svg><span>&nbsp;' + (job.added_date || '') + '</span></div>' +
-                    '</div>' +
-
-                    '<div class="" style="position: absolute; bottom: 5px; left: 30px; white-space: nowrap; width: 90%; overflow: hidden;">' +
-                      '<div class="job-meta-line"><span class="skills-inline"><b>Skills:</b> ' + skillsHtml + '</span></div>' +
+                      '<div class="pipeline-total">Total: <strong>' + countLabel(job.application_counter, 'Application', 'Applications') + '</strong> <span>|</span> Interview: <strong>' + numText(job.interview_counter, 0) + '</strong></div>' +
+                      '<div class="add-date"><svg fill="none" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" stroke="currentColor" stroke-width="1.8"/><path d="M16 2v4M8 2v4M3 10h18" stroke="currentColor" stroke-width="1.8"/></svg><span>' + escHtml(job.added_date || '') + '</span></div>' +
                     '</div>' +
                   '</div>';
             });
@@ -1100,6 +1261,7 @@ $(document).on('click', '.client-hm-listing', function ()
             window.jobsState.filtered = filtered;
             $('#allJobList').html(renderJobsClientSide(filtered));
             $('#all_jobs_count').html(filtered.length);
+            renderAppliedFiltersCard();
         }
 
         function fetchCandidates(page = page_no, search = '', size = pageSize) {
@@ -1135,10 +1297,23 @@ $(document).on('click', '.client-hm-listing', function ()
                         };
                         $('#allJobList').html(renderJobsClientSide(response.jobs));
                     } else if (response.html) {
+                        window.jobsState = {
+                            all: [],
+                            filtered: [],
+                            total: response.total || 0
+                        };
                         $('#allJobList').html(response.html);
+                    } else {
+                        window.jobsState = {
+                            all: [],
+                            filtered: [],
+                            total: response.total || 0
+                        };
+                        $('#allJobList').html(renderJobsClientSide([]));
                     }
                     $('#all_jobs_count').html(response.total);
                     $('#pagination').html(response.pagination);
+                    renderAppliedFiltersCard();
                 },
                 error: function(xhr) {
                     $('.loadingMessage').css({ display: 'none' });
@@ -1165,6 +1340,7 @@ $(document).on('click', '.client-hm-listing', function ()
                         '</div>'
                     );
                     $('#pagination').html('');
+                    syncJobsResultSummary(0, 0);
                 }
             });
         }
@@ -1178,17 +1354,17 @@ $(document).on('click', '.client-hm-listing', function ()
 
       setTimeout(() => {
          $('#kt_activitiesJob_toggle').trigger('click');		
+        setJobsDrawerLoading(null);
       
 
         var id    		=	UrlMailJobId;
         var url   		=	"{{ route('service_company.jobs.viewmore',':id') }}?viewmore=viewmore";
         url     		=	url.replace(':id', id);
-        var baseurl    	=	"{{ asset('assets/images/Loading2.gif') }}"; 
         $.ajax({
                 type  		: 'GET',
                 url   		: url,
                 beforeSend	: function() {
-                                      $('#kt_activitiesJob_body').html('<img src="'+baseurl+'" height="35px" width="100%">');
+                                      setJobsDrawerLoading(null);
                           },
                 success 	: function (response) {
                     $('#kt_activitiesJob_body').html(response.view);	
@@ -1222,4 +1398,4 @@ $(document).on('click', '.client-hm-listing', function ()
 </script>
 
 
-@endpush 
+@endpush
