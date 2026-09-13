@@ -46,7 +46,10 @@
             </div>
             <div class="jh-card-body">
                 <div class="jh-lbl">All Sources</div>
-                <div class="jh-num" id="{{ $tabactive['allRequisition_id'] }}">{{ $tabactive['allRequisition'] }}</div>
+                <div class="jh-count-row">
+                    <div class="jh-num" id="{{ $tabactive['allRequisition_id'] }}">{{ $tabactive['allRequisition'] }}</div>
+                    <span class="jh-count-link">View Jobs List</span>
+                </div>
             </div>
         </a>
 
@@ -60,7 +63,10 @@
             </div>
             <div class="jh-card-body">
                 <div class="jh-lbl">Direct Client Jobs</div>
-                <div class="jh-num" id="{{ $tabactive['clientRequisition_id'] }}">{{ $tabactive['clientRequisition'] }}</div>
+                <div class="jh-count-row">
+                    <div class="jh-num" id="{{ $tabactive['clientRequisition_id'] }}">{{ $tabactive['clientRequisition'] }}</div>
+                    <span class="jh-count-link">View Jobs List</span>
+                </div>
             </div>
         </a>
 
@@ -71,8 +77,11 @@
                 </svg>
             </div>
             <div class="jh-card-body">
-                <div class="jh-lbl">Internal Client / Internal Hiring jobs</div>
-                <div class="jh-num" id="{{ $tabactive['customRequisition_id'] }}">{{ $tabactive['customRequisition'] }}</div>
+                <div class="jh-lbl">Internal Jobs</div>
+                <div class="jh-count-row">
+                    <div class="jh-num" id="{{ $tabactive['customRequisition_id'] }}">{{ $tabactive['customRequisition'] }}</div>
+                    <span class="jh-count-link">View Jobs List</span>
+                </div>
             </div>
         </a>
 
@@ -84,7 +93,10 @@
             </div>
             <div class="jh-card-body">
                 <div class="jh-lbl">Job Requests</div>
-                <div class="jh-num" id="{{ $tabactive['jobRequest_id'] }}">{{ $tabactive['jobRequest'] }}</div>
+                <div class="jh-count-row">
+                    <div class="jh-num" id="{{ $tabactive['jobRequest_id'] }}">{{ $tabactive['jobRequest'] }}</div>
+                    <span class="jh-count-link">View Jobs List</span>
+                </div>
             </div>
         </a>
         @endif

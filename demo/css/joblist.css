@@ -277,35 +277,19 @@
       .sal-row {
         display: flex;
         align-items: center;
-        gap: 5px;
+        gap: 3px;
         font-size: 11.5px;
         font-weight: 500;
         color: var(--text-dark);
         line-height: 1;
         white-space: nowrap;
-        overflow: hidden;
+        overflow: visible;
       }
       .sal-amount {
-        flex: 1 1 auto;
+        flex: 0 0 auto;
         min-width: 0;
-        overflow: hidden;
-        text-overflow: ellipsis;
-      }
-      .sal-divider {
-        color: var(--text-light);
-        flex: 0 0 auto;
-      }
-      .sal-mode {
-        display: inline-flex;
-        align-items: center;
-        height: 17px;
-        padding: 0 6px;
-        border-radius: 5px;
-        background: #eef2ff;
-        color: #3730a3;
-        font-size: 9.5px;
-        font-weight: 700;
-        flex: 0 0 auto;
+        overflow: visible;
+        font-weight: 600;
       }
       /* One identical 13x13 flex-centred icon box for every row in this column — the clock
          (svg), the currency symbol (a Font Awesome <i>, not an svg — the old ".sal-row svg"
@@ -356,9 +340,11 @@
       .employment-badge {
         color: #475569;
       }
-      .employment-badge-fulltime,
+      .employment-badge-fulltime {
+        color: var(--text-dark);
+      }
       .employment-badge-fulltime i {
-        color: #2563eb;
+        color: var(--text-light);
       }
       .employment-badge-contract,
       .employment-badge-contract i {
