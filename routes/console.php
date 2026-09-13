@@ -10,3 +10,4 @@ Artisan::command('inspire', function () {
 
 // Add scheduler here
 Schedule::command('interview:send-reminder')->everyMinute();
+Schedule::command('temp-attachments:clean')->hourly();
