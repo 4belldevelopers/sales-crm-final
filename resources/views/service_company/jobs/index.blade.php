@@ -173,7 +173,7 @@
                         <rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/>
                     </svg>
                 </span>
-                All Jobs
+                All Statuses
                 <span class="jh-badge jh-badge-blue">{{ $tabactive['allTabCount'] ?? $tabactive['allRequisition'] }}</span>
             </a>
             <div class="jh-tab-divider"></div>
@@ -1060,10 +1060,6 @@ $(document).on('click', '.client-hm-listing', function ()
                     ? '<img src="' + job.logo_path + '" alt="Company Logo" class="border-radius-5 w-100">'
                     : job.initial_letter;
 
-                var typeIcon = job.is_direct_client
-                    ? '<i class="fas fa-handshake" style="color:#09b760;"></i>'
-                    : '<i class="fas fa-building" style="color:#3e97ff;"></i>';
-
                 var skillsHtml = '';
                 if (job.skills && job.skills.length > 0) {
                     skillsHtml = job.skills.map(function(s) {
@@ -1161,7 +1157,7 @@ $(document).on('click', '.client-hm-listing', function ()
                     '<div class="col-hm">' +
                       '<div class="hm-name">' + (displayHiringManager ? displayHiringManager.substring(0, 10) : '') + '</div>' +
                       '<div class="hm-title">' + (job.hiring_manager_designation || '') + '</div>' +
-                      '<div class="hm-company hm-client-type">' + typeIcon + '<span class="it-job-type ' + job.badge + '">' + job.recommendation_text + '</span><span class="it-dot-separator"></span><a href="javascript:void(0);" class="it-job-id">' + job.id + '</a></div>' +
+                      '<div class="hm-company hm-client-type"><span class="it-job-type ' + job.badge + '">' + job.recommendation_text + '</span><span class="it-dot-separator"></span><a href="javascript:void(0);" class="it-job-id">' + job.id + '</a></div>' +
                     '</div>' +
 
                     '<div class="col-action">' + teamHtml + '</div>' +
