@@ -54,7 +54,7 @@
         .bench-dash .kpi-delta i { font-size: 9px !important; }
         .bench-dash .kpi-vs { color: #a1a5b7; font-weight: 500; }
 
-        /* Ghost buttons (Saved Views / Export) */
+        /* Ghost buttons (Export) */
         .bench-dash .btn-ghost { border: 1px solid #eef0f4; background: #fff; color: #3f4254; border-radius: 8px; padding: 7px 12px; font-size: 12px !important; font-weight: 500; display: inline-flex; align-items: center; gap: 6px; height: 34px; }
         .bench-dash .btn-ghost:hover { border-color: #d5dbe6; color: #3e97ff; }
         .bench-dash .btn-ghost i { font-size: 12px !important; }
@@ -101,7 +101,9 @@
         .bench-dash .tab-exited { --tab-color: #7e8299; --tab-bg: #f1f2f6; }
 
         /* Table */
-        .bench-dash #benchListingTable { width: 100% !important; margin: 0; }
+        .bench-dash #benchListingTable { width: 100% !important; min-width: 1220px; margin: 0; table-layout: auto; }
+        .bench-dash #benchListingTable .col-talent-name { min-width: 310px; width: 28%; }
+        .bench-dash #benchListingTable .col-manager-name { min-width: 210px; width: 17%; }
         .bench-dash #benchListingTable thead th { font-size: 11px !important; text-transform: uppercase; letter-spacing: .3px; color: #a1a5b7; font-weight: 600; border-bottom: 1px solid #eef0f4; padding: 8px 8px !important; white-space: nowrap; background: #fff; }
         .bench-dash #benchListingTable tbody td { font-size: 12px !important; border-bottom: 1px solid #f4f5f8; padding: 8px 8px !important; vertical-align: middle; }
         .bench-dash #benchListingTable tbody tr:hover td { background: #fafbfc; }
@@ -112,6 +114,20 @@
         .bench-dash #benchListingTable .symbol-40px { width: 32px !important; height: 32px !important; }
         .bench-dash #benchListingTable .symbol-label { line-height: 1; }
         .bench-dash .badge { font-size: 10px !important; padding: 2px 5px; }
+        .bench-dash .talent-name-main,
+        .bench-dash .talent-name-role,
+        .bench-dash .manager-name-main {
+            display: -webkit-box !important;
+            -webkit-box-orient: vertical;
+            -webkit-line-clamp: 2;
+            overflow: hidden;
+            white-space: normal !important;
+            word-break: break-word;
+            line-height: 1.25;
+        }
+        .bench-dash .talent-name-main,
+        .bench-dash .talent-name-role { max-width: 260px; }
+        .bench-dash .manager-name-main { max-width: 180px; }
 
         /* Clients Pipeline Activity mini-grid — bold throughout */
         .bench-dash .pipe { display: flex; align-items: flex-start; gap: 10px; }
@@ -143,21 +159,28 @@
 
         .loadingMessagebenchCandidateBenchCandidatesAjax { font-size: 12px !important; }
 
-        /* ── Skill chips — absolute footer strip technique ─────── */
+        /* Job Tracker style meta strip: date first, then compact skill chips on the same row */
         /* Rows need position:relative so the absolute skills strip anchors to them */
         .bench-dash #benchListingTable tbody tr { position: relative; }
-
-        /* Skills badge style matches badge-light but slightly lighter weight */
-        .bench-dash #benchListingTable tbody tr .skill {
+        .bench-dash #benchListingTable .job-meta-strip { position: absolute; bottom: 4px; left: 8px; right: 86px; overflow: hidden; }
+        .bench-dash #benchListingTable .job-meta-line { display: flex; align-items: center; gap: 4px; white-space: nowrap; overflow: hidden; }
+        .bench-dash #benchListingTable .job-date-tag,
+        .bench-dash #benchListingTable .skill-tag {
+            display: inline-flex;
+            align-items: center;
+            min-height: 19px;
+            border-radius: 5px;
+            padding: 2px 6px;
             font-size: 10px !important;
-            font-weight: 300 !important;
+            line-height: 1.25;
+            font-weight: 500;
+            background: #f1f3f8;
+            color: #5e6278;
+            flex-shrink: 0;
         }
-        .bench-dash #benchListingTable tbody tr .stage-date-chip {
-            color: #3f4254 !important;
-            font-weight: 600 !important;
-            background: #f1f3f8 !important;
-        }
-        .bench-dash #benchListingTable tbody tr .stage-date-chip i { font-size: 9px !important; color: #7e8299; }
+        .bench-dash #benchListingTable .job-date-tag { color: #181c32; font-weight: 700; }
+        .bench-dash #benchListingTable .job-date-tag svg { width: 12px; height: 12px; margin-right: 4px; color: #3f4254; flex-shrink: 0; }
+        .bench-dash #benchListingTable .skill-tag { color: #7e8299; font-weight: 500; }
 
         /* Fit smaller / 15.6" laptops */
         @media only screen and (max-width: 1440px) {
@@ -297,17 +320,6 @@
                     </div>
                     <div class="d-flex align-items-center gap-2 flex-wrap">
                         <input type="hidden" id="inputSearch" name="inputSearch" />
-                        <div class="dropdown">
-                            <button class="btn-ghost dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                <i class="fa fa-bookmark"></i> Saved Views
-                            </button>
-                            <ul class="dropdown-menu dropdown-menu-end p-2" style="font-size:12px;">
-                                <li><a class="dropdown-item saved-view" data-view="all" href="javascript:void(0);">All Talents</a></li>
-                                <li><a class="dropdown-item saved-view" data-view="2" href="javascript:void(0);">On Bench</a></li>
-                                <li><a class="dropdown-item saved-view" data-view="1" href="javascript:void(0);">On Pool</a></li>
-                                <li><a class="dropdown-item saved-view" data-view="3" href="javascript:void(0);">Placed</a></li>
-                            </ul>
-                        </div>
                         @if (in_array('view_bench', $userPermissions))
                             <a href="javascript:void(0);" class="btn-add" id="AddInternalPool">
                                 <i class="fa fa-plus"></i> Add Talent
@@ -326,7 +338,7 @@
                             $kpis = [
                                 ['rel' => 'all', 'label' => 'Total Talents', 'val' => (int) ($counts->all_records ?? 0), 'ico' => 'fa-users', 'sc' => 'sc-primary', 'spark' => 'sp1', 'color' => '#3e97ff'],
                                 ['rel' => '1',   'label' => 'Talent On Pool', 'val' => (int) ($counts->pool ?? 0), 'ico' => 'fa-user-friends', 'sc' => 'sc-success', 'spark' => 'sp2', 'color' => '#17c653'],
-                                ['rel' => '2',   'label' => 'Bench Talents', 'val' => (int) ($counts->bench ?? 0), 'ico' => 'fa-couch', 'sc' => 'sc-warning', 'spark' => 'sp3', 'color' => '#f6a609'],
+                                ['rel' => '2',   'label' => 'Talents on Bench', 'val' => (int) ($counts->bench ?? 0), 'ico' => 'fa-couch', 'sc' => 'sc-warning', 'spark' => 'sp3', 'color' => '#f6a609'],
                                 ['rel' => '4',   'label' => 'Talent On Hold', 'val' => (int) ($counts->paused ?? 0), 'ico' => 'fa-pause-circle', 'sc' => 'sc-info', 'spark' => 'sp4', 'color' => '#7239ea'],
                                 ['rel' => '3',   'label' => 'Talent Placed', 'val' => (int) ($counts->placed ?? 0), 'ico' => 'fa-calendar-check', 'sc' => 'sc-primary', 'spark' => 'sp5', 'color' => '#3e97ff'],
                             ];
@@ -430,13 +442,13 @@
                                                 <input class="form-check-input" type="checkbox" value="1">
                                             </div>
                                         </th>
-                                        <th>Talent</th>
+                                        <th class="col-talent-name">Talent Name</th>
                                         <th>Experience</th>
                                         <th>Availability</th>
                                         <th>Location</th>
                                         <th>Expected Salary</th>
                                         <th>Bench Status</th>
-                                        <th>Relationship Manager</th>
+                                        <th class="col-manager-name">Relationship Manager</th>
                                         <th>Clients Pipeline Activity</th>
                                     </tr>
                                 </thead>
@@ -979,7 +991,7 @@
         }
     </script>
 
-    <!-- ===== Toolbar functionality: Export / filters / saved views ===== -->
+    <!-- ===== Toolbar functionality: Export / filters ===== -->
     <script>
         // Export the currently loaded talent table to CSV.
         $(document).on('click', '#exportTalents', function() {
@@ -1006,12 +1018,6 @@
             link.href = URL.createObjectURL(blob);
             link.download = 'inhouse-talents-' + new Date().toISOString().slice(0, 10) + '.csv';
             document.body.appendChild(link); link.click(); document.body.removeChild(link);
-        });
-
-        // Saved views jump to the matching tab.
-        $(document).on('click', '.saved-view', function() {
-            var v = $(this).data('view');
-            $(".application_sttus_nav[rel='" + v + "']").trigger('click');
         });
     </script>
 @endpush
