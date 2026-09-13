@@ -9,10 +9,10 @@ use Carbon\Carbon;
  $feedback_status = GeneralMethod::feedback_status();
  $available_status = GeneralMethod::available_status();
  
-$employment_type = '';
-if (! empty($job->employment_type) && isset($employmentType[$job->employment_type])) {
-    $employment_type = $employmentType[$job->employment_type];
-}
+$employmentIndex = $job->employment_type ?? null;
+$employment_type = ($employmentIndex !== null && $employmentIndex !== '' && isset($employmentType[$employmentIndex]))
+    ? $employmentType[$employmentIndex]
+    : 'Not specified';
 $bgTextDecore = $strVal = '';
 $clientName = trim((string) (@$job->client_name ?? @$job->company_name ?? @$job->title ?? 'J'));
 $strVal = strtolower(substr($clientName, 0, 1) ?: 'j');
@@ -38,18 +38,35 @@ if (!empty(@$job->logo_logical_path) && strlen(@$job->logo_logical_path) > 10) {
 
 $currency = GeneralMethod::currencySymbole();
 
-$max_salary = $min_salary = $max_sal_mode = $min_sal_mode = '';
+$formatDrawerSalary = function ($amount) {
+    $formattedAmount = GeneralMethod::thousandsCurrencyFormat((float) ($amount ?? 0));
+    return preg_replace('/\.00$/', '', (string) $formattedAmount);
+};
 
-$max_salary = GeneralMethod::thousandsCurrencyFormat($job->max_salary ?? 0);
-$min_salary = GeneralMethod::thousandsCurrencyFormat($job->min_salary ?? 0);
+$formatSalaryMode = function ($mode) use ($salaryMode) {
+    $label = trim((string) ($salaryMode[$mode] ?? ''));
+    $normalized = strtolower($label);
 
-$min_sal_mode = strtoupper(
-    substr($salaryMode[$job->min_sal_mode ?? ''] ?? '', 0, 1)
-);
+    if (strpos($normalized, 'ann') !== false) {
+        return 'Annum';
+    }
 
-$max_sal_mode = strtoupper(
-    substr($salaryMode[$job->max_sal_mode ?? ''] ?? '', 0, 1)
-);
+    if (strpos($normalized, 'month') !== false) {
+        return 'Monthly';
+    }
+
+    if (strpos($normalized, 'hour') !== false) {
+        return 'Hourly';
+    }
+
+    return $label !== '' ? ucwords($label) : 'Not specified';
+};
+
+$max_salary = $formatDrawerSalary($job->max_salary ?? 0);
+$min_salary = $formatDrawerSalary($job->min_salary ?? 0);
+$min_sal_mode = $formatSalaryMode($job->min_sal_mode ?? null);
+$max_sal_mode = $formatSalaryMode($job->max_sal_mode ?? null);
+$drawerPayType = $max_sal_mode !== 'Not specified' ? $max_sal_mode : $min_sal_mode;
 
 // $max_salary = GeneralMethod::thousandsCurrencyFormat($job->max_salary);
 // $min_salary = GeneralMethod::thousandsCurrencyFormat($job->min_salary);
@@ -77,6 +94,10 @@ if (!empty($logos->logo_logical_path)) {
 }
 $logo_path = GeneralMethod::companyDetails($job->id);
 $companyOrClientDetails = GeneralMethod::companyOrClientDetails($job->id);
+$companySizeRaw = trim((string) (@$companyOrClientDetails->company_size ?? ''));
+$companySizeValue = ($companySizeRaw === '' || $companySizeRaw === '-' || preg_match('/^-\d+/', $companySizeRaw))
+    ? 'Not specified'
+    : $companySizeRaw;
 // dd($companyOrClientDetails);
 if(@$tabshow){
     $company_or_client = GeneralMethod::companyDetailsByClient($job->id);
@@ -221,6 +242,91 @@ $end_date   =	date('d-M-Y', $date);
         .action-btn.primary { background: var(--primary); color: #fff; border-color: var(--primary); }
         .action-btn.primary:hover { background: var(--primary-dark); }
         .action-btn.primary i { color: #fff; }
+
+        .drawer-rich-text,
+        .drawer-rich-text p,
+        .drawer-rich-text li,
+        .jd-terms-body,
+        .jd-terms-body p,
+        .jd-terms-body li {
+            font-size: 12px;
+            line-height: 1.6;
+            color: var(--text-primary);
+            font-weight: 500;
+        }
+
+        .drawer-rich-text ul,
+        .drawer-rich-text ol,
+        .jd-terms-body ul,
+        .jd-terms-body ol {
+            padding-left: 18px;
+            margin-bottom: 0;
+        }
+
+        .jd-empty-state {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            min-height: 132px;
+            padding: 22px 18px;
+            text-align: center;
+            background: #f8fafc;
+            border: 1px dashed #cbd5e1;
+            border-radius: var(--radius-md);
+            color: var(--text-secondary);
+        }
+
+        .jd-empty-state-icon {
+            width: 34px;
+            height: 34px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 9px;
+            color: var(--primary);
+            background: #eff6ff;
+            border: 1px solid #bfdbfe;
+            font-size: 13px;
+        }
+
+        .jd-empty-state-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 0;
+        }
+
+        .jd-empty-state-text {
+            max-width: 430px;
+            margin: 0;
+            color: var(--text-secondary);
+            font-size: 12px;
+            line-height: 1.5;
+        }
+
+        .jd-empty-state-action {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            margin-top: 4px;
+            padding: 7px 12px;
+            border: 1px solid var(--primary);
+            border-radius: var(--radius-sm);
+            background: var(--primary);
+            color: #fff;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+        }
+
+        .jd-empty-state-action:hover {
+            background: var(--primary-dark);
+            color: #fff;
+            text-decoration: none;
+        }
 
         .content-area { padding: 24px; max-width: 1400px; }
 
@@ -1259,7 +1365,7 @@ $end_date   =	date('d-M-Y', $date);
                     @if(empty($hideMarketSections))
                     <div class="top-actions" style="position: relative; padding-right: 70px;">
                         <!-- Close button positioned at top-right of drawer for /service_company/jobs -->
-                        <button type="button" class="btn btn-sm btn-icon btn-active-light-danger jd-drawer-close-btn" onclick="(function(btn){var d=btn.closest('[data-kt-drawer=\&quot;true\&quot;]')||document.getElementById('kt_activitiesJob');if(d){if(typeof KTDrawer!=='undefined'){var inst=KTDrawer.getInstance(d);if(!inst&&typeof KTDrawer==='function')inst=new KTDrawer(d);if(inst&&typeof inst.hide==='function'){inst.hide();return;}}d.classList.remove('drawer-on');document.querySelectorAll('.drawer-overlay').forEach(function(e){e.remove();});document.body.removeAttribute('data-kt-drawer-activities');document.body.style.overflow='';}})(this);" style="cursor: pointer; position: absolute; top: 14px; right: 20px; z-index: 20; width: 34px; height: 34px; border-radius: 8px; border: 1px solid #E2E8F0; background: #FFFFFF; display: flex; align-items: center; justify-content: center; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04); transition: all 0.15s ease;" title="Close"> 
+                        <button type="button" class="btn btn-sm btn-icon btn-active-light-danger jd-drawer-close-btn" onclick="(function(btn){var d=btn.closest('[data-kt-drawer=\&quot;true\&quot;]')||document.getElementById('kt_activitiesJob');if(d){if(typeof KTDrawer!=='undefined'){var inst=KTDrawer.getInstance(d);if(!inst&&typeof KTDrawer==='function')inst=new KTDrawer(d);if(inst&&typeof inst.hide==='function'){inst.hide();return;}}d.classList.remove('drawer-on');document.querySelectorAll('.drawer-overlay').forEach(function(e){e.remove();});document.body.removeAttribute('data-kt-drawer-activities');document.body.style.overflow='';}})(this);" style="cursor: pointer; position: absolute; top: 10px; right: 10px; z-index: 20; width: 36px; height: 36px; border-radius: 8px; border: 1px solid #E2E8F0; background: #FFFFFF; display: flex; align-items: center; justify-content: center; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04); transition: all 0.15s ease;" title="Close">
                             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#64748B" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
                                 <line x1="18" y1="6" x2="6" y2="18"></line>
                                 <line x1="6" y1="6" x2="18" y2="18"></line>
@@ -1613,12 +1719,13 @@ $end_date   =	date('d-M-Y', $date);
                                         </div>
                                     </div>
                                     <div class="info-row"><span class="info-label">Min Salary</span><span class="info-value">
-                                    {!! $currency[@$job->min_salary_currency ?? 0] !!} {{ @$min_salary }} /{{ @$max_sal_mode }}</span></div>
+                                    {!! $currency[@$job->min_salary_currency ?? 0] !!} {{ @$min_salary }} /{{ @$min_sal_mode }}</span></div>
                                     <div class="info-row"><span class="info-label">Max Salary</span><span class="info-value">{!! $currency[@$job->min_salary_currency ?? 0]!!} {{@$max_salary}} /{{@$max_sal_mode}}</span></div>
                                     <div class="info-row"><span class="info-label">Pay Type</span><span class="info-value">
-                                    {{ $salaryMode[@$job->max_sal_mode ?? 0] }}</span></div>
+                                    {{ $drawerPayType }}</span></div>
                                     <div class="info-row"><span class="info-label">Currency</span><span class="info-value">{{ $currencyArr[@$job->min_salary_currency ?? 0] }}</span></div>
-                                    <div class="info-row"><span class="info-label">Hiring HR</span><span class="info-value">{{ @$hrManager }}</span></div>
+                                    <div class="info-row"><span class="info-label">Assigned Recruiter</span><span class="info-value">{{ @$hrManager ?: 'Not assigned' }}</span></div>
+                                    <div class="info-row"><span class="info-label">Hiring Manager</span><span class="info-value">{{ @$hiringManager ?: 'Not assigned' }}</span></div>
                                 </div>
                             </div>
 
@@ -1631,7 +1738,9 @@ $end_date   =	date('d-M-Y', $date);
                                             {{-- <button class="info-card-edit" onclick="showEditPopup('Job Description')">Edit</button> --}}
                                         </div>
                                     </div>
-                                    <?php echo @$job->job_description; ?>
+                                    <div class="drawer-rich-text">
+                                        <?php echo @$job->job_description ?: '<span class="text-muted">No job description added.</span>'; ?>
+                                    </div>
                                     {{-- <button class="view-more" onclick="showFullDescription()">View More <i class="fas fa-chevron-down" style="font-size:10px;margin-left:4px;"></i></button> --}}
                                 </div>
 
@@ -1645,9 +1754,9 @@ $end_date   =	date('d-M-Y', $date);
                                         </div>
                                     </div>
                                     @if(@$job->self_company==1)
-                                        <?php echo $description; ?>
+                                        <div class="drawer-rich-text"><?php echo $description ?: '<span class="text-muted">No company description added.</span>'; ?></div>
                                         @else
-                                        <?php echo $description; ?>
+                                        <div class="drawer-rich-text"><?php echo $description ?: '<span class="text-muted">No company description added.</span>'; ?></div>
                                     @endif
                                     {{-- <button class="view-more" onclick="showFullCompany()">View More <i class="fas fa-chevron-down" style="font-size:10px;margin-left:4px;"></i></button> --}}
                                 </div>
@@ -1658,22 +1767,28 @@ $end_date   =	date('d-M-Y', $date);
                             <div class="questions-section">
                                 <div class="questions-card" id="card-questions">
                                     <div class="questions-card-header">
-                                        <h3>Job Questions</h3>
+                                        <h3>Screening Questions</h3>
                                         <div class="info-card-actions">
                                             <button type="button" class="copy-btn tooltip" data-tooltip="Copy all" onclick="copyCardText('card-questions')"><i class="far fa-copy"></i></button>
-                                            {{-- <button class="info-card-edit" onclick="showEditPopup('Job Questions')">Edit</button> --}}
+                                            {{-- <button class="info-card-edit" onclick="showEditPopup('Screening Questions')">Edit</button> --}}
                                         </div>
                                     </div>
                                     @php
                                          $job_additional_detail = DB::table('job_additional_detail')->select('*')->where('job_id', @$job->id)->get();
                                     @endphp
-                                    <ol class="question-list">
-                                        @if(@$job_additional_detail)
+                                    @if($job_additional_detail->isNotEmpty())
+                                        <ol class="question-list">
                                            @foreach($job_additional_detail as $qRow)
                                            <li>{{ $qRow->detail_value }}</li>
                                            @endforeach
-                                        @endif
-                                    </ol>
+                                        </ol>
+                                    @else
+                                        <div class="jd-empty-state">
+                                            <span class="jd-empty-state-icon"><i class="far fa-question-circle"></i></span>
+                                            <p class="jd-empty-state-title">No screening questions added</p>
+                                            <p class="jd-empty-state-text">No screening questions have been added for this job position.</p>
+                                        </div>
+                                    @endif
                                     {{-- <button class="view-all-btn" onclick="showAllQuestions()">View All Questions</button> --}}
                                 </div>
 
@@ -1703,7 +1818,7 @@ $end_date   =	date('d-M-Y', $date);
                                         <div class="company-detail-row">
                                             <i class="fas fa-users"></i>
                                             <span class="company-detail-label">No. of Employees</span>
-                                            <span class="company-detail-value">{{@$companyOrClientDetails->company_size}}</span>
+                                            <span class="company-detail-value">{{ $companySizeValue }}</span>
                                         </div>
                                         <div class="company-detail-row">
                                             <i class="far fa-calendar-alt"></i>
@@ -2033,7 +2148,7 @@ $end_date   =	date('d-M-Y', $date);
                                         </thead>
                                         <tbody id="agenciesTableBody">
                                             
-                                            @if ($recommendedDataList)
+                                            @if (collect($recommendedDataList ?? [])->isNotEmpty())
                                                 @foreach ($recommendedDataList as $reqVal)
                                                     <tr class="agency-row">
                                                         <td>
@@ -2127,6 +2242,21 @@ $end_date   =	date('d-M-Y', $date);
                                                         </td>
                                                     </tr>
                                                 @endforeach
+                                            @else
+                                                <tr>
+                                                    <td colspan="6" style="padding:18px;">
+                                                        <div class="jd-empty-state">
+                                                            <span class="jd-empty-state-icon"><i class="fas fa-building"></i></span>
+                                                            <p class="jd-empty-state-title">No agencies assigned</p>
+                                                            <p class="jd-empty-state-text">No agencies are currently working on this job. Add an agency to start receiving profiles.</p>
+                                                            @if(@$tabshow && $viewmore)
+                                                                <button type="button" data-row-id="{{ @$job->id }}" class="jd-empty-state-action spartner-listing">
+                                                                    <i class="fa-solid fa-plus"></i> Add Agency
+                                                                </button>
+                                                            @endif
+                                                        </div>
+                                                    </td>
+                                                </tr>
                                             @endif
                                         </tbody>
                                     </table>
@@ -2411,21 +2541,48 @@ $end_date   =	date('d-M-Y', $date);
                                     </div>
                                 </div>
                                 <div class="card-body" id="questionList_{{@$job->id}}">
-                                     {!! @$interview_questions->questions !!}
+                                    @php $interviewQuestionsHtml = trim((string) (@$interview_questions->questions ?? '')); @endphp
+                                    @if($interviewQuestionsHtml !== '')
+                                        {!! $interviewQuestionsHtml !!}
+                                    @else
+                                        <div class="jd-empty-state">
+                                            <span class="jd-empty-state-icon"><i class="far fa-comments"></i></span>
+                                            <p class="jd-empty-state-title">No interview questions added</p>
+                                            <p class="jd-empty-state-text">No interview questions have been added for this job yet.</p>
+                                            <button type="button" class="jd-empty-state-action" onclick="var addQuestionBtn=document.getElementById('addQuestionBtn_{{ $job->id }}'); if(addQuestionBtn){addQuestionBtn.click();}">
+                                                <i class="fa-solid fa-plus"></i> Add Question
+                                            </button>
+                                        </div>
+                                    @endif
                                 </div>
                             </div>
                         </div>
                         <div id="agency_t_c" class="tab-panel">
                             <div class="info-card" id="card-activity">
                                 <div class="info-card-header">
-                                    <span class="info-card-title">Terms & Condition</span>
+                                    <span class="info-card-title">Agency Terms & Condition</span>
                                     <div class="info-card-actions">
+                                        <a href="{{ url('service_company/settings/settings') }}" class="jd-empty-state-action" style="padding:5px 10px;margin-top:0;font-size:11px;" target="_blank">
+                                            <i class="far fa-edit"></i> Edit
+                                        </a>
                                         <button type="button" class="copy-btn tooltip" data-tooltip="Copy all" onclick="copyCardText('card-activity')"><i class="far fa-copy"></i></button>
                                     </div>
                                 </div>
-                                <div style="padding:16px 0;">
-                                   {!!@$terms!!}
-                                </div>
+                                @php $agencyTermsHtml = trim((string) (@$terms ?? '')); @endphp
+                                @if($agencyTermsHtml !== '')
+                                    <div class="jd-terms-body" style="padding:16px 0;">
+                                       {!! $agencyTermsHtml !!}
+                                    </div>
+                                @else
+                                    <div class="jd-empty-state">
+                                        <span class="jd-empty-state-icon"><i class="far fa-file-alt"></i></span>
+                                        <p class="jd-empty-state-title">No agency terms configured</p>
+                                        <p class="jd-empty-state-text">Agency agreement terms are not available for this job yet. Edit the agency agreement settings to keep agency sharing clear.</p>
+                                        <a href="{{ url('service_company/settings/settings') }}" class="jd-empty-state-action" target="_blank">
+                                            <i class="far fa-edit"></i> Edit Agency T&C
+                                        </a>
+                                    </div>
+                                @endif
                             </div>
                         </div>
                         <div id="contactPersons" class="tab-panel" data-loaded="false">
@@ -3155,13 +3312,13 @@ $end_date   =	date('d-M-Y', $date);
                 @php
                     // Clean currency: use text symbol, not FontAwesome HTML icon
                     $currText    = html_entity_decode($currencyArr[$job->min_salary_currency ?? 0] ?? 'INR');
-                    $salaryRange = $currText . ' ' . $min_salary . ' – ' . $currText . ' ' . $max_salary . ' / ' . ucfirst(strtolower($salaryMode[$job->max_sal_mode] ?? ''));
-                    $salaryMin   = $currText . ' ' . $min_salary . ' / ' . ucfirst(strtolower($salaryMode[$job->min_sal_mode] ?? ''));
-                    $salaryMax   = $currText . ' ' . $max_salary . ' / ' . ucfirst(strtolower($salaryMode[$job->max_sal_mode] ?? ''));
-                    $payType     = html_entity_decode($salaryMode[$job->max_sal_mode] ?? '');
+                    $salaryRange = $currText . ' ' . $min_salary . ' - ' . $currText . ' ' . $max_salary . ' / ' . $drawerPayType;
+                    $salaryMin   = $currText . ' ' . $min_salary . ' / ' . $min_sal_mode;
+                    $salaryMax   = $currText . ' ' . $max_salary . ' / ' . $max_sal_mode;
+                    $payType     = html_entity_decode($drawerPayType ?? '');
                     $indName     = html_entity_decode($companyOrClientDetails->ind_name ?? '');
                     $companyWeb  = html_entity_decode($companyOrClientDetails->company_website ?? '');
-                    $compSize    = html_entity_decode($companyOrClientDetails->company_size ?? '');
+                    $compSize    = html_entity_decode($companySizeValue ?? '');
                     $compFounded = html_entity_decode($companyOrClientDetails->founded ?? '');
                     $compType    = html_entity_decode($companyOrClientDetails->acount_type ?? '');
                     $statusLabel = $job->status == 'active' ? 'Hiring' : ($job->status == 'hold' ? 'Hold' : 'Closed');
@@ -3298,7 +3455,8 @@ $end_date   =	date('d-M-Y', $date);
                             ${row('Max Salary',     '{{ addslashes($salaryMax) }}')}
                             ${row('Pay Type',       '{{ addslashes($payType) }}')}
                             ${row('Currency',       '{{ addslashes($currText) }}')}
-                            ${row('Hiring HR',      '{{ addslashes($hrManager ?? "") }}')}
+                            ${row('Assigned Recruiter', '{{ addslashes($hrManager ?? "Not assigned") }}')}
+                            ${row('Hiring Manager', '{{ addslashes($hiringManager ?? "Not assigned") }}')}
                         `)
                     )}
 
@@ -3307,8 +3465,8 @@ $end_date   =	date('d-M-Y', $date);
                         `<div style="padding:4px 0;">${descHtml}</div>`
                     )}
 
-                    <!-- ═══ 5. JOB QUESTIONS ═══ -->
-                    ${section(5, 'Job Questions', questionsHtml)}
+                    <!-- ═══ 5. SCREENING QUESTIONS ═══ -->
+                    ${section(5, 'Screening Questions', questionsHtml)}
 
                     <!-- ═══ 6. ABOUT COMPANY ═══ -->
                     ${section(6, 'About Company',
