@@ -672,21 +672,6 @@
         flex-shrink: 0;
       }
 
-      /* drag handle */
-      .drag-col {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        padding-top: 2px;
-        flex-shrink: 0;
-      }
-      .drag-handle {
-        color: var(--text-light);
-        cursor: grab;
-      }
-    
-
-  
       /* Enterprise V2 Responsive Pack */
       .table-header,
       .job-row {

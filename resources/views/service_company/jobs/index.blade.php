@@ -95,6 +95,10 @@
   font-size: 12.5px !important;
   white-space: nowrap;
 }
+#kt_content.flex-column-fluid {
+  flex: 0 0 auto !important;
+  padding-bottom: 0 !important;
+}
 
 </style>
 
@@ -1132,16 +1136,13 @@ $(document).on('click', '.client-hm-listing', function ()
                 pipelineHtml += '</div>';
 
                 html += '<div class="job-row" data-job-id="' + job.id + '" style="position: relative; min-height: 96px; cursor: pointer;">' +
-                    '<div style="display: flex; gap: 8px; align-items: flex-start">' +
-                      '<div class="drag-col"><div class="drag-handle"><svg width="12" height="12" fill="none" viewBox="0 0 24 24"><circle cx="9" cy="5" r="1.5" fill="currentColor"/><circle cx="15" cy="5" r="1.5" fill="currentColor"/><circle cx="9" cy="12" r="1.5" fill="currentColor"/><circle cx="15" cy="12" r="1.5" fill="currentColor"/><circle cx="9" cy="19" r="1.5" fill="currentColor"/><circle cx="15" cy="19" r="1.5" fill="currentColor"/></svg></div></div>' +
-                      '<div class="col-job ' + profileDetailClass + '" data-row-id="' + job.id + '">' +
+                    '<div class="col-job ' + profileDetailClass + '" data-row-id="' + job.id + '">' +
                         '<div class="job-logo ' + job.bg_text_decore + '" style="min-height: 48px; align-self: flex-start;">' + logoHtml + '</div>' +
                         '<div class="job-info">' +
                           '<div class="job-title">' + (displayTitle ? displayTitle.substring(0, 30) : '') + '</div>' +
                           '<div class="job-dept">' + (job.department || '') + '</div>' +
                           '<div class="job-client">' + (displayClientName ? displayClientName.substring(0, 30) : '') + '</div>' +
                         '</div>' +
-                      '</div>' +
                     '</div>' +
 
                     '<div class="col-exp">' +
