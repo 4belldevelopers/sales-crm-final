@@ -82,7 +82,7 @@
       .table-header,
       .job-row {
         display: grid;
-        grid-template-columns: minmax(260px, 2.55fr) minmax(112px, .95fr) minmax(106px, .9fr) minmax(124px, 1fr) minmax(96px, .78fr) minmax(96px, .78fr) minmax(236px, 1.75fr);
+        grid-template-columns: minmax(235px, 2.25fr) minmax(150px, 1.18fr) minmax(106px, .9fr) minmax(124px, 1fr) minmax(96px, .78fr) minmax(96px, .78fr) minmax(236px, 1.75fr);
         align-items: start;
         column-gap: 10px;
       }
@@ -283,12 +283,14 @@
         color: var(--text-dark);
         line-height: 1;
         white-space: nowrap;
-        overflow: visible;
+        overflow: hidden;
       }
       .sal-amount {
-        flex: 0 0 auto;
+        flex: 1 1 auto;
         min-width: 0;
-        overflow: visible;
+        max-width: 100%;
+        overflow: hidden;
+        text-overflow: ellipsis;
         font-weight: 600;
       }
       /* One identical 13x13 flex-centred icon box for every row in this column — the clock
@@ -712,7 +714,7 @@
       @media (max-width: 1600px) {
         .table-header,
         .job-row {
-          grid-template-columns: 2.45fr .92fr .86fr .98fr .76fr .76fr 1.72fr;
+          grid-template-columns: 2.24fr 1.12fr .86fr .98fr .76fr .76fr 1.72fr;
         }
       }
       @media (max-width: 1366px) {
@@ -726,7 +728,7 @@
         .job-row {
           min-width: unset;
           width: 100%;
-          grid-template-columns: 2.55fr .9fr .82fr .98fr .72fr .72fr 1.55fr;
+          grid-template-columns: 2.26fr 1.16fr .82fr .98fr .72fr .72fr 1.55fr;
           column-gap: 8px;
         }
       }
@@ -982,10 +984,10 @@
 #kt_activitiesJob,#kt_activitiesTerms,#kt_activitiesHM,#kt_activitiesClientjob_toggle{width:min(95vw,1200px)!important;}
 .search-wrap{min-width:0!important;max-width:none!important;width:100%!important;flex:1 1 auto!important;}
 .toolbar{display:flex!important;flex-wrap:wrap!important;gap:10px!important;}
-.table-header,.job-row{grid-template-columns:minmax(260px,2.55fr) minmax(112px,.95fr) minmax(106px,.9fr) minmax(124px,1fr) minmax(96px,.78fr) minmax(96px,.78fr) minmax(236px,1.75fr)!important;column-gap:10px!important;}
+.table-header,.job-row{grid-template-columns:minmax(235px,2.25fr) minmax(150px,1.18fr) minmax(106px,.9fr) minmax(124px,1fr) minmax(96px,.78fr) minmax(96px,.78fr) minmax(236px,1.75fr)!important;column-gap:10px!important;}
 .table-custom-class tbody tr{height:auto!important;}
 @media(max-width:1366px){
-.table-header,.job-row{grid-template-columns:2.55fr .9fr .82fr .98fr .72fr .72fr 1.55fr!important;column-gap:8px!important;}
+.table-header,.job-row{grid-template-columns:2.26fr 1.16fr .82fr .98fr .72fr .72fr 1.55fr!important;column-gap:8px!important;}
 }
 
 
