@@ -60,7 +60,7 @@
             </div>
             <div class="jh-card-body">
                 <div class="jh-num" id="{{ $tabactive['clientRequisition_id'] }}">{{ $tabactive['clientRequisition'] }}</div>
-                <div class="jh-lbl">Direct Client</div>
+                <div class="jh-lbl">Direct Client Jobs</div>
             </div>
         </a>
 
@@ -72,7 +72,7 @@
             </div>
             <div class="jh-card-body">
                 <div class="jh-num" id="{{ $tabactive['customRequisition_id'] }}">{{ $tabactive['customRequisition'] }}</div>
-                <div class="jh-lbl">Internal Client</div>
+                <div class="jh-lbl">Internal Client / Internal Hiring jobs</div>
             </div>
         </a>
 
