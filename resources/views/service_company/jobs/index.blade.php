@@ -1005,6 +1005,16 @@ $(document).on('click', '.client-hm-listing', function ()
             return text.charAt(0).toUpperCase() + text.slice(1);
         }
 
+        function formatSalaryMode(value) {
+            if (!value) return '';
+            var text = String(value).replace('/', '').trim();
+            var normalized = text.toLowerCase();
+            if (normalized.indexOf('ann') !== -1 || normalized === 'yearly' || normalized === 'annual') return 'Annum';
+            if (normalized.indexOf('month') !== -1) return 'Monthly';
+            if (normalized.indexOf('hour') !== -1) return 'Hourly';
+            return text;
+        }
+
         function renderJobsClientSide(jobs) {
             if (!jobs || jobs.length === 0) {
                 return '<div style="text-align:center;padding:40px 20px;font-family:Poppins,sans-serif;color:#7e8299;">' +
@@ -1021,6 +1031,7 @@ $(document).on('click', '.client-hm-listing', function ()
                 var displayAgencyName = formatCompanyName(job.agency_company_name);
                 var displayCity = formatJobPositionName(job.city);
                 var displayHiringManager = formatJobPositionName(job.hiring_manager);
+                var displaySalaryMode = formatSalaryMode(job.min_sal_mode);
                 var statusIcon = job.status === 'Hiring' ? 'fa-user-group' : (job.status === 'Hold' ? 'fa-pause' : 'fa-box-archive');
                 var statusClass = job.status_raw === 'active' ? 'active-bg' : (job.status_raw === 'hold' ? 'hold-bg' : 'closed-bg');
                 if (job.status === 'Removed') statusClass = 'closed-bg';
@@ -1122,8 +1133,8 @@ $(document).on('click', '.client-hm-listing', function ()
 
                     '<div class="col-exp">' +
                       '<div class="exp-row"><svg fill="none" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="1.8"/><polyline points="12 6 12 12 16 14" stroke="currentColor" stroke-width="1.8"/></svg>' + job.min_exp + ' - ' + job.max_exp + ' Years</div>' +
-                      '<div class="sal-row">' + job.min_salary_currency + ' ' + job.min_salary + ' - ' + job.max_salary + ' <span class="sal-mode">' + job.min_sal_mode + '</span></div>' +
-                      '<span class="badge-type">' + typeIcon + ' <span class="it-job-type ' + job.badge + '">' + job.recommendation_text + '</span> <span class="it-dot-separator"></span> <a href="javascript:void(0);" class="it-job-id">' + job.id + '</a></span>' +
+                      '<div class="sal-row"><span class="sal-amount">' + job.min_salary_currency + ' ' + job.min_salary + ' - ' + job.max_salary + '</span><span class="sal-mode">' + displaySalaryMode + '</span></div>' +
+                      '<span class="badge-type"><i class="fas fa-briefcase" style="color:#64748b;"></i><span class="it-job-type">' + job.employment_type + '</span></span>' +
                     '</div>' +
 
                     '<div class="col-hl">' + ulink +
@@ -1134,7 +1145,7 @@ $(document).on('click', '.client-hm-listing', function ()
                     '<div class="col-hm">' +
                       '<div class="hm-name">' + (displayHiringManager ? displayHiringManager.substring(0, 10) : '') + '</div>' +
                       '<div class="hm-title">' + (job.hiring_manager_designation || '') + '</div>' +
-                      '<div class="hm-company">' + job.employment_type + '</div>' +
+                      '<div class="hm-company hm-client-type">' + typeIcon + '<span class="it-job-type ' + job.badge + '">' + job.recommendation_text + '</span><span class="it-dot-separator"></span><a href="javascript:void(0);" class="it-job-id">' + job.id + '</a></div>' +
                     '</div>' +
 
                     '<div class="col-action">' + teamHtml + '</div>' +
