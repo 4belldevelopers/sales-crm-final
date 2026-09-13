@@ -39,7 +39,10 @@
             <div class="jh-card-body">
                 <div class="jh-num" id="{{ $tabactive['allRequisition_id'] }}">{{ $tabactive['allRequisition'] }}</div>
                 <div class="jh-lbl">All Jobs</div>
-                <div class="jh-trend jh-trend-neutral">Live count</div>
+                <div class="jh-trend jh-trend-up">
+                    <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M5 8V2M2 5l3-3 3 3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    12% vs last month
+                </div>
             </div>
         </a>
 
@@ -54,7 +57,10 @@
             <div class="jh-card-body">
                 <div class="jh-num" id="{{ $tabactive['clientRequisition_id'] }}">{{ $tabactive['clientRequisition'] }}</div>
                 <div class="jh-lbl">Direct Jobs</div>
-                <div class="jh-trend jh-trend-neutral">Direct client requisitions</div>
+                <div class="jh-trend jh-trend-up">
+                    <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M5 8V2M2 5l3-3 3 3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    8% vs last month
+                </div>
             </div>
         </a>
 
@@ -67,7 +73,10 @@
             <div class="jh-card-body">
                 <div class="jh-num" id="{{ $tabactive['customRequisition_id'] }}">{{ $tabactive['customRequisition'] }}</div>
                 <div class="jh-lbl">Internal Jobs</div>
-                <div class="jh-trend jh-trend-neutral">Internal requisitions</div>
+                <div class="jh-trend jh-trend-up">
+                    <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M5 8V2M2 5l3-3 3 3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    5% vs last month
+                </div>
             </div>
         </a>
 
@@ -80,7 +89,7 @@
             <div class="jh-card-body">
                 <div class="jh-num" id="{{ $tabactive['jobRequest_id'] }}">{{ $tabactive['jobRequest'] }}</div>
                 <div class="jh-lbl">Job Requests</div>
-                <div class="jh-trend jh-trend-neutral">Partner requests</div>
+                <div class="jh-trend jh-trend-neutral">0% vs last month</div>
             </div>
         </a>
         @endif
