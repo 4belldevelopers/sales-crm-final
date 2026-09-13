@@ -42,6 +42,16 @@
 
             // Employment type (Full-time/Contract) — shared by the Availability column's 2nd row.
             $outsourcing_type = $row->outsourcing_type == 2 ? 'Contract' : 'Full-time';
+
+            // Word-aware labels let the widened Talent and RM columns show useful names without spilling across cells.
+            $limitWords = function ($text, $limit) {
+                $words = preg_split('/\s+/', trim((string) $text), -1, PREG_SPLIT_NO_EMPTY);
+                if (count($words) <= $limit) {
+                    return trim((string) $text);
+                }
+
+                return implode(' ', array_slice($words, 0, $limit)) . '...';
+            };
         @endphp
         <tr style="height: 102px; position: relative;">
             {{-- Checkbox --}}
@@ -52,7 +62,7 @@
             </td>
 
             {{-- Talent (avatar + name + designation + skills) --}}
-            <td>
+            <td class="col-talent-name">
                 @php
                     $bgTextDecore = $strVal = '';
                     $str = trim(@$row->full_name);
@@ -73,20 +83,22 @@
                     }
                     $profile_sidebar_css = 'bench_show_application_detail';
 
-                    /* Skills row: stage date first, then skill chips in the same compact footer strip. */
+                    /* Jobs Tracker style meta row: stage date first, then skill chips in the same compact strip. */
                     $skillArr = array_values(array_filter(array_map('trim', explode(',', (string) ($row->skills ?? '')))));
                     $stageMovedAt = $row->updated_at ?? $row->created_at ?? null;
                     $stageDateLabel = $stageMovedAt ? Carbon::parse($stageMovedAt)->format('d M y') : '';
                     $stageDateChip = $stageDateLabel
-                        ? '<span class="badge badge-light my-1 stage-date-chip"><i class="fa fa-calendar-days me-1"></i>' . e($stageDateLabel) . '</span> '
+                        ? '<span class="job-date-tag"><svg fill="none" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" stroke="currentColor" stroke-width="1.8"/><path d="M16 2v4M8 2v4M3 10h18" stroke="currentColor" stroke-width="1.8"/></svg>' . e($stageDateLabel) . '</span>'
                         : '';
 
                     $skilltag = '';
                     foreach ($skillArr as $sval) {
                         if ($sval === '') { continue; }
-                        $skilltag .= '<span class="badge badge-light my-1 skill" style="font-weight:300;">' . e(ucfirst($sval)) . '</span> ';
+                        $skilltag .= '<span class="skill-tag">' . e(ucfirst($sval)) . '</span> ';
                     }
                     $award = (@$row->ads_switch == 'Yes') ? '<span class="badge badge-light-danger my-0">Ads</span>' : '';
+                    $displayFullName = $limitWords(ucwords(@$row->full_name), 25);
+                    $displayDesignation = $limitWords(ucwords(@$row->current_designation), 25);
 
                     /* View / Download counts pre-fetched in bulk via controller */
                     $viewCount = $viewCounts[$row->id] ?? $row->viewCount ?? 0;
@@ -100,17 +112,17 @@
                     </div>
                     <div class="d-flex flex-column">
                         <a href="javascript:void(0);" data-row-id="{{ $row->id }}"
-                            class="text-dark fw-bolder text-hover-primary fs-6 {{ $profile_sidebar_css }}"
-                            data-toggle="tooltip" title="{{ ucwords(@$row->full_name) }}">{{ ucwords(mb_substr(@$row->full_name, 0, 20)) }}</a>
+                            class="text-dark fw-bolder text-hover-primary fs-6 {{ $profile_sidebar_css }} talent-name-main"
+                            data-toggle="tooltip" title="{{ ucwords(@$row->full_name) }}">{{ $displayFullName }}</a>
                         <a href="javascript:void(0);" data-row-id="{{ $row->id }}"
-                            class="text-muted fw-bold d-block fs-7 text-hover-primary {{ $profile_sidebar_css }}"
-                            data-toggle="tooltip" title="{{ ucwords(@$row->current_designation) }}">{{ ucwords(mb_substr(@$row->current_designation, 0, 20)) }}</a>
+                            class="text-muted fw-bold d-block fs-7 text-hover-primary {{ $profile_sidebar_css }} talent-name-role"
+                            data-toggle="tooltip" title="{{ ucwords(@$row->current_designation) }}">{{ $displayDesignation }}</a>
                     </div>
                 </div>
                 {{-- Stage date + Ads + Skills footer strip (bottom-left) --}}
                 @if($stageDateChip || $award || $skilltag)
-                <div style="position: absolute; bottom: 0; left: 0; white-space: nowrap; width: 80%; overflow: hidden;">
-                    {!! $stageDateChip !!}{!! $award !!}{!! $skilltag !!}
+                <div class="job-meta-strip">
+                    <div class="job-meta-line">{!! $stageDateChip !!}{!! $award !!}{!! $skilltag !!}</div>
                 </div>
                 @endif
 
@@ -241,7 +253,7 @@
             </td>
 
             {{-- Relationship Manager (name + Change only — no filler subtitle, no avatar image) --}}
-            <td>
+            <td class="col-manager-name">
                 @php
                     if (!empty($row->hiring_hr)) {
                         $hiringHr = (array) $row->hiring_hr;
@@ -266,11 +278,12 @@
                         $managerName = @$hmData->name ? ucwords($hmData->name) : 'Unassigned';
                         $extra = $hmCount > 1 ? ' +' . ($hmCount - 1) : '';
                     }
+                    $displayManagerName = $limitWords($managerName . $extra, 20);
                 @endphp
                 <div class="d-flex align-items-center gap-2">
                     <div class="d-flex flex-column" style="min-width:0;">
-                        <span class="text-dark fw-bolder fs-6 text-truncate" style="max-width:90px;"
-                              data-toggle="tooltip" title="{{ $managerName }}{{ $extra }}">{{ $managerName }}{{ $extra }}</span>
+                        <span class="text-dark fw-bolder fs-6 manager-name-main"
+                              data-toggle="tooltip" title="{{ $managerName }}{{ $extra }}">{{ $displayManagerName }}</span>
                         <a href="javascript:void(0);" data-row-id="{{ $row->id }}" class="manager-change hmb-listing" style="font-size:11px;">Change</a>
                     </div>
                 </div>
