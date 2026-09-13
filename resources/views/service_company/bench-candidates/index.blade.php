@@ -12,14 +12,6 @@
         if ($a >= 1000) return $neg . round($a / 1000, 1) . 'K';
         return $neg . round($a);
     };
-    $dl = $deltas ?? (object) ['all' => 0, 'pool' => 0, 'bench' => 0, 'hold' => 0, 'placed' => 0, 'cost' => 0, 'profit' => 0];
-    // Renders an "↑/↓ N% vs last month" chip. For "cost", a rise is bad (red), everything else a rise is good.
-    $deltaChip = function ($v, $invert = false) {
-        $up = $v >= 0;
-        $good = $invert ? !$up : $up;
-        return '<span class="kpi-delta ' . ($good ? 'up' : 'down') . '"><i class="fa fa-arrow-' . ($up ? 'up' : 'down') . '"></i> ' .
-            abs($v) . '% <span class="kpi-vs">vs last month</span></span>';
-    };
 @endphp
 
 @push('head-script')
@@ -45,18 +37,20 @@
         .bench-dash .jw-card { background: #fff; border: 1px solid #eef0f4; border-radius: 10px; }
         .bench-dash .jw-sub { background: #fff; border: 1px solid #f0f1f5; border-radius: 8px; }
 
-        /* KPI cards — icon on the left, label/value/delta stacked to its right (value sits directly under the label, not the icon) */
-        .bench-dash .kpi { padding: 10px 12px; display: flex; align-items: flex-start; gap: 10px; min-height: 82px; cursor: default; transition: box-shadow .15s, border-color .15s; }
+        /* KPI cards — icon on the left, label above value/action on one compact row */
+        .bench-dash .kpi { padding: 10px 12px; display: flex; align-items: flex-start; gap: 10px; min-height: 78px; cursor: default; transition: box-shadow .15s, border-color .15s; }
         .bench-dash .kpi.kpi-filter { cursor: pointer; }
         .bench-dash .kpi.kpi-filter:hover { border-color: #d5dbe6; box-shadow: 0 3px 10px rgba(24,28,50,.06); }
         .bench-dash .kpi.active { border-color: #3e97ff; box-shadow: 0 0 0 1px #3e97ff inset; }
         .bench-dash .kpi-ico { width: 30px; height: 30px; border-radius: 7px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
         .bench-dash .kpi-ico i { font-size: 14px !important; }
-        .bench-dash .kpi-text { display: flex; flex-direction: column; gap: 2px; }
+        .bench-dash .kpi-text { display: flex; flex-direction: column; gap: 6px; min-width: 0; flex: 1 1 auto; }
         .bench-dash .kpi-label { font-size: 11.5px !important; color: #7e8299; font-weight: 500; }
-        .bench-dash .kpi-delta { font-size: 10.5px !important; font-weight: 600; }
+        .bench-dash .kpi-value-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-width: 0; }
+        .bench-dash .kpi-action { font-size: 10.5px !important; color: #3e97ff; font-weight: 600; white-space: nowrap; }
+        .bench-dash .kpi-filter:hover .kpi-action { text-decoration: underline; }
+        .bench-dash .kpi-delta { display: none; }
         .bench-dash .up { color: #17c653; } .bench-dash .down { color: #f8285a; }
-        .bench-dash .kpi-delta { display: inline-flex; align-items: center; gap: 3px; }
         .bench-dash .kpi-delta i { font-size: 9px !important; }
         .bench-dash .kpi-vs { color: #a1a5b7; font-weight: 500; }
 
@@ -89,12 +83,22 @@
         .bench-dash .dot { width: 8px; height: 8px; border-radius: 2px; display: inline-block; margin-right: 6px; }
 
         /* Filter / tabs strip */
-        .bench-dash .tab-strip { display: flex; gap: 6px; flex-wrap: wrap; }
-        .bench-dash .tab-pill { border: 1px solid #eef0f4; background: #fff; border-radius: 7px; padding: 6px 12px; cursor: pointer; display: flex; align-items: center; gap: 7px; }
-        .bench-dash .tab-pill .cnt { background: #f1f2f6; color: #3f4254; border-radius: 5px; padding: 1px 6px; font-size: 11px !important; font-weight: 600; }
-        .bench-dash .tab-pill.active { border-color: #3e97ff; background: #f5f9ff; }
-        .bench-dash .tab-pill.active .lbl { color: #3e97ff; font-weight: 600; }
-        .bench-dash .tab-pill.active .cnt { background: #3e97ff; color: #fff; }
+        .bench-dash .tab-strip { display: flex; align-items: stretch; flex-wrap: nowrap; width: 100%; overflow-x: auto; }
+        .bench-dash .tab-pill { flex: 1 1 0; min-width: 118px; border: 0; border-bottom: 2px solid transparent; background: #fff; border-radius: 0; padding: 11px 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 7px; color: #637083; }
+        .bench-dash .tab-pill .tab-ico { color: #7e8aa0; font-size: 12px !important; }
+        .bench-dash .tab-pill .lbl { color: #4b5675; font-weight: 500; white-space: nowrap; }
+        .bench-dash .tab-pill .cnt { background: #f1f2f6; color: #3f4254; border-radius: 999px; padding: 1px 6px; font-size: 10.5px !important; font-weight: 700; line-height: 1.35; }
+        .bench-dash .tab-pill:not(.active):hover { background: #fafbfc; }
+        .bench-dash .tab-pill.active { background: #fff; }
+        .bench-dash .tab-pill.active .lbl, .bench-dash .tab-pill.active .tab-ico { color: var(--tab-color); font-weight: 600; }
+        .bench-dash .tab-pill.active { border-bottom-color: var(--tab-color); }
+        .bench-dash .tab-pill.active .cnt { background: var(--tab-bg); color: var(--tab-color); }
+        .bench-dash .tab-all { --tab-color: #3e97ff; --tab-bg: #eef3ff; }
+        .bench-dash .tab-pool { --tab-color: #17c653; --tab-bg: #e8fff3; }
+        .bench-dash .tab-bench { --tab-color: #f6a609; --tab-bg: #fff4de; }
+        .bench-dash .tab-hold { --tab-color: #7239ea; --tab-bg: #f3effe; }
+        .bench-dash .tab-placed { --tab-color: #3e97ff; --tab-bg: #eef3ff; }
+        .bench-dash .tab-exited { --tab-color: #7e8299; --tab-bg: #f1f2f6; }
 
         /* Table */
         .bench-dash #benchListingTable { width: 100% !important; margin: 0; }
@@ -148,6 +152,12 @@
             font-size: 10px !important;
             font-weight: 300 !important;
         }
+        .bench-dash #benchListingTable tbody tr .stage-date-chip {
+            color: #3f4254 !important;
+            font-weight: 600 !important;
+            background: #f1f3f8 !important;
+        }
+        .bench-dash #benchListingTable tbody tr .stage-date-chip i { font-size: 9px !important; color: #7e8299; }
 
         /* Fit smaller / 15.6" laptops */
         @media only screen and (max-width: 1440px) {
@@ -314,11 +324,11 @@
                     <div class="row g-2 mb-2">
                         @php
                             $kpis = [
-                                ['rel' => 'all', 'label' => 'Total Talents', 'val' => (int) ($counts->all_records ?? 0), 'ico' => 'fa-users', 'sc' => 'sc-primary', 'spark' => 'sp1', 'color' => '#3e97ff', 'd' => $dl->all],
-                                ['rel' => '1',   'label' => 'Talent On Pool', 'val' => (int) ($counts->pool ?? 0), 'ico' => 'fa-user-friends', 'sc' => 'sc-success', 'spark' => 'sp2', 'color' => '#17c653', 'd' => $dl->pool],
-                                ['rel' => '2',   'label' => 'Bench Talents', 'val' => (int) ($counts->bench ?? 0), 'ico' => 'fa-couch', 'sc' => 'sc-warning', 'spark' => 'sp3', 'color' => '#f6a609', 'd' => $dl->bench],
-                                ['rel' => '4',   'label' => 'Talent On Hold', 'val' => (int) ($counts->paused ?? 0), 'ico' => 'fa-pause-circle', 'sc' => 'sc-info', 'spark' => 'sp4', 'color' => '#7239ea', 'd' => $dl->hold],
-                                ['rel' => '3',   'label' => 'Talent Placed', 'val' => (int) ($counts->placed ?? 0), 'ico' => 'fa-calendar-check', 'sc' => 'sc-primary', 'spark' => 'sp5', 'color' => '#3e97ff', 'd' => $dl->placed],
+                                ['rel' => 'all', 'label' => 'Total Talents', 'val' => (int) ($counts->all_records ?? 0), 'ico' => 'fa-users', 'sc' => 'sc-primary', 'spark' => 'sp1', 'color' => '#3e97ff'],
+                                ['rel' => '1',   'label' => 'Talent On Pool', 'val' => (int) ($counts->pool ?? 0), 'ico' => 'fa-user-friends', 'sc' => 'sc-success', 'spark' => 'sp2', 'color' => '#17c653'],
+                                ['rel' => '2',   'label' => 'Bench Talents', 'val' => (int) ($counts->bench ?? 0), 'ico' => 'fa-couch', 'sc' => 'sc-warning', 'spark' => 'sp3', 'color' => '#f6a609'],
+                                ['rel' => '4',   'label' => 'Talent On Hold', 'val' => (int) ($counts->paused ?? 0), 'ico' => 'fa-pause-circle', 'sc' => 'sc-info', 'spark' => 'sp4', 'color' => '#7239ea'],
+                                ['rel' => '3',   'label' => 'Talent Placed', 'val' => (int) ($counts->placed ?? 0), 'ico' => 'fa-calendar-check', 'sc' => 'sc-primary', 'spark' => 'sp5', 'color' => '#3e97ff'],
                             ];
                         @endphp
                         @foreach ($kpis as $k)
@@ -327,8 +337,10 @@
                                     <span class="kpi-ico {{ $k['sc'] }}"><i class="fa {{ $k['ico'] }}"></i></span>
                                     <div class="kpi-text">
                                         <span class="kpi-label">{{ $k['label'] }}</span>
-                                        <span class="num" id="kpival_{{ $k['rel'] }}">{{ $k['val'] }}</span>
-                                        {!! $deltaChip($k['d']) !!}
+                                        <span class="kpi-value-row">
+                                            <span class="num" id="kpival_{{ $k['rel'] }}">{{ $k['val'] }}</span>
+                                            <span class="kpi-action">View Candidate</span>
+                                        </span>
                                     </div>
                                 </div>
                             </div>
@@ -341,7 +353,6 @@
                                 <div class="kpi-text">
                                     <span class="kpi-label">Bench Cost (Loss)</span>
                                     <span class="money text-danger">{{ $curSym }}{{ $fmtMoney($benchCost ?? 0) }}</span>
-                                    {!! $deltaChip($dl->cost, true) !!}
                                 </div>
                             </div>
                         </div>
@@ -368,25 +379,25 @@
                     </div>
 
                     <!-- Tabs strip -->
-                    <div class="jw-card p-2 mb-2 d-flex align-items-center justify-content-between flex-wrap gap-2">
+                    <div class="jw-card mb-2 d-flex align-items-center justify-content-between flex-wrap gap-2" style="overflow:hidden;">
                         <div class="tab-strip">
-                            <a href="Javascript:void(0);" rel="all" for="all_talents" class="tab-pill application_sttus_nav active" id="tab_all">
-                                <span class="lbl">All Talents</span><span class="cnt" id="bg_all">{{ $counts->all_records ?? 0 }}</span>
+                            <a href="Javascript:void(0);" rel="all" for="all_talents" class="tab-pill tab-all application_sttus_nav active" id="tab_all">
+                                <i class="fa fa-users tab-ico"></i><span class="lbl">All Talents</span><span class="cnt" id="bg_all">{{ $counts->all_records ?? 0 }}</span>
                             </a>
-                            <a href="Javascript:void(0);" rel="1" for="talent_Pool" class="tab-pill application_sttus_nav">
-                                <span class="lbl">On Pool</span><span class="cnt" id="bg_1">{{ $counts->pool ?? 0 }}</span>
+                            <a href="Javascript:void(0);" rel="1" for="talent_Pool" class="tab-pill tab-pool application_sttus_nav">
+                                <i class="fa fa-user-group tab-ico"></i><span class="lbl">On Pool</span><span class="cnt" id="bg_1">{{ $counts->pool ?? 0 }}</span>
                             </a>
-                            <a href="Javascript:void(0);" rel="2" for="bench_live" class="tab-pill application_sttus_nav">
-                                <span class="lbl">Bench</span><span class="cnt" id="bg_2">{{ $counts->bench ?? 0 }}</span>
+                            <a href="Javascript:void(0);" rel="2" for="bench_live" class="tab-pill tab-bench application_sttus_nav">
+                                <i class="fa fa-briefcase tab-ico"></i><span class="lbl">Bench</span><span class="cnt" id="bg_2">{{ $counts->bench ?? 0 }}</span>
                             </a>
-                            <a href="Javascript:void(0);" rel="4" for="bench_pause" class="tab-pill application_sttus_nav">
-                                <span class="lbl">On Hold</span><span class="cnt" id="bg_4">{{ $counts->paused ?? 0 }}</span>
+                            <a href="Javascript:void(0);" rel="4" for="bench_pause" class="tab-pill tab-hold application_sttus_nav">
+                                <i class="fa fa-circle-pause tab-ico"></i><span class="lbl">On Hold</span><span class="cnt" id="bg_4">{{ $counts->paused ?? 0 }}</span>
                             </a>
-                            <a href="Javascript:void(0);" rel="3" for="bench_placed" class="tab-pill application_sttus_nav">
-                                <span class="lbl">Placed</span><span class="cnt" id="bg_3">{{ $counts->placed ?? 0 }}</span>
+                            <a href="Javascript:void(0);" rel="3" for="bench_placed" class="tab-pill tab-placed application_sttus_nav">
+                                <i class="fa fa-calendar-check tab-ico"></i><span class="lbl">Placed</span><span class="cnt" id="bg_3">{{ $counts->placed ?? 0 }}</span>
                             </a>
-                            <a href="Javascript:void(0);" rel="5" for="bench_left" class="tab-pill application_sttus_nav">
-                                <span class="lbl">Exited</span><span class="cnt" id="bg_5">{{ $counts->exited ?? 0 }}</span>
+                            <a href="Javascript:void(0);" rel="5" for="bench_left" class="tab-pill tab-exited application_sttus_nav">
+                                <i class="fa fa-right-from-bracket tab-ico"></i><span class="lbl">Exited</span><span class="cnt" id="bg_5">{{ $counts->exited ?? 0 }}</span>
                             </a>
                         </div>
                         <!-- Hidden inputs preserved for existing fetch logic -->
