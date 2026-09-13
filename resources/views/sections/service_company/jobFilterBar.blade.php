@@ -1,4 +1,6 @@
 <div class="jh-filter-bar">
+    <input type="hidden" id="status" value="all">
+    <input type="hidden" id="experience_filter" value="all">
 
     <div class="jh-search-wrap" style="position:relative;">
         <svg class="jh-search-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -17,18 +19,6 @@
     <div class="jh-filter-group">
 
         <div class="jh-select-wrap">
-            <div class="jh-select-label">Status</div>
-            <select class="jh-select" id="status" onchange="filtersdata()">
-                <option value="all" selected>All Status</option>
-                <option value="active">Hiring</option>
-                <option value="hold">Hold</option>
-                <option value="inactive">Closed</option>
-                <option value="removed">Removed</option>
-            </select>
-            <svg class="jh-select-caret" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
-        </div>
-
-        <div class="jh-select-wrap">
             <div class="jh-select-label">Job Type</div>
             <select class="jh-select" id="employment_type" onchange="filtersdata()">
                 <option value="all" selected>All Types</option>
@@ -36,18 +26,6 @@
                 <option value="1">Contract</option>
                 <option value="2">Freelance</option>
                 <option value="3">Part Time</option>
-            </select>
-            <svg class="jh-select-caret" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
-        </div>
-
-        <div class="jh-select-wrap">
-            <div class="jh-select-label">Experience</div>
-            <select class="jh-select" id="experience_filter" onchange="filtersdata()">
-                <option value="all" selected>All Exp.</option>
-                <option value="0-1">0–1 yr</option>
-                <option value="1-3">1–3 yrs</option>
-                <option value="3-5">3–5 yrs</option>
-                <option value="5+">5+ yrs</option>
             </select>
             <svg class="jh-select-caret" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
         </div>

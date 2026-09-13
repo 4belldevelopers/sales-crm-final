@@ -465,6 +465,16 @@
         font-size: 10px;
         font-weight: 700;
       }
+      .stage-caption {
+        font-size: 7.5px;
+        font-weight: 500;
+        color: var(--text-mid);
+        line-height: 1.05;
+        max-width: 34px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
       .s-inw {
         background: #ffffde;
         color: #bdbd26;
@@ -881,4 +891,3 @@
 .it-job-id { font-size: 11.5px; color: #6a6b70; font-weight: 500; text-decoration: none; }
 .it-job-id:hover { text-decoration: underline; }
 .it-dot-separator { width: 3px; height: 3px; border-radius: 50%; background: var(--text-light); }
-    
