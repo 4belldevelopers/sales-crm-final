@@ -7,7 +7,8 @@
             <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
         </svg>
         <input type="text" class="jh-search-input inputJobSearch" name="inputJobSearch"
-               placeholder="Search by job title, skills, company..." id="kt_tagify_2"/>
+               placeholder="Search by job title, skills, company..." id="kt_tagify_2"
+               autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
         <button type="button" id="jobSearchBtn" class="jh-search-btn" onclick="fetchCandidates(1)">
             Search
         </button>
