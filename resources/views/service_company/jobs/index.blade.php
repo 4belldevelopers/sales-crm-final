@@ -1047,6 +1047,7 @@ $(document).on('click', '.client-hm-listing', function ()
                 var displayCity = formatJobPositionName(job.city);
                 var displayHiringManager = formatJobPositionName(job.hiring_manager);
                 var displaySalaryMode = formatSalaryMode(job.min_sal_mode);
+                var salaryModeText = displaySalaryMode ? ' /' + displaySalaryMode : '';
                 var employmentMeta = getEmploymentTypeMeta(job.employment_type, job.employment_type_raw);
                 var statusIcon = job.status === 'Hiring' ? 'fa-user-group' : (job.status === 'Hold' ? 'fa-pause' : 'fa-box-archive');
                 var statusClass = job.status_raw === 'active' ? 'active-bg' : (job.status_raw === 'hold' ? 'hold-bg' : 'closed-bg');
@@ -1145,7 +1146,7 @@ $(document).on('click', '.client-hm-listing', function ()
 
                     '<div class="col-exp">' +
                       '<div class="exp-row"><svg fill="none" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="1.8"/><polyline points="12 6 12 12 16 14" stroke="currentColor" stroke-width="1.8"/></svg>' + job.min_exp + ' - ' + job.max_exp + ' Years</div>' +
-                      '<div class="sal-row"><span class="sal-amount">' + job.min_salary_currency + ' ' + job.min_salary + ' - ' + job.max_salary + '</span><span class="sal-divider">/</span><span class="sal-mode">' + displaySalaryMode + '</span></div>' +
+                      '<div class="sal-row"><span class="sal-amount">' + job.min_salary_currency + ' ' + job.min_salary + ' - ' + job.max_salary + salaryModeText + '</span></div>' +
                       '<span class="badge-type employment-badge employment-badge-' + employmentMeta.tone + '"><i class="fas ' + employmentMeta.icon + '"></i><span class="it-job-type">' + job.employment_type + '</span></span>' +
                     '</div>' +
 
