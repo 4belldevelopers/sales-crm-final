@@ -3,14 +3,10 @@
  * 
  * Client-Side Adapter for the Forward Resume Drawer (cvtracker/fwd_resume).
  * Delegates 100% of resume conversion, branding, highlighting, anonymization,
- * and report generation to the unified AgyResumeRenderer engine.
+ * and report generation to the dedicated, ISOLATED AgyForwardResumeEngine.
  *
- * Guarantees that Forward Resume email attachments are 100% byte-for-byte and
- * pixel-for-pixel identical to the files downloaded from Download Resume Center.
- *
- * ZERO Mammoth lossy text fallback.
- * ZERO fake highlighting badge stamps.
- * ZERO single-box fake redaction.
+ * 100% DECOUPLED FROM DOWNLOAD RESUME CENTER:
+ * Any changes made to Forward Resume will not touch or impact Download Resume Center.
  */
 
 (function (root, factory) {
@@ -34,24 +30,24 @@
 }(typeof self !== 'undefined' ? self : this, function () {
   'use strict';
 
-  var _rendererPromise = null;
+  var _enginePromise = null;
 
   /**
-   * Ensures the master AgyResumeRenderer module is loaded.
+   * Ensures the isolated AgyForwardResumeEngine module is loaded.
    */
   function ensureRenderer() {
-    if (typeof window !== 'undefined' && window.AgyResumeRenderer && typeof window.AgyResumeRenderer.processOption === 'function') {
-      return Promise.resolve(window.AgyResumeRenderer);
+    if (typeof window !== 'undefined' && window.AgyForwardResumeEngine && typeof window.AgyForwardResumeEngine.processOption === 'function') {
+      return Promise.resolve(window.AgyForwardResumeEngine);
     }
-    if (_rendererPromise) return _rendererPromise;
+    if (_enginePromise) return _enginePromise;
 
-    _rendererPromise = new Promise(function (resolve, reject) {
+    _enginePromise = new Promise(function (resolve, reject) {
       // Check if it's already in flight / about to be defined
       var checkAttempts = 0;
       var pollExisting = setInterval(function () {
-        if (typeof window !== 'undefined' && window.AgyResumeRenderer && typeof window.AgyResumeRenderer.processOption === 'function') {
+        if (typeof window !== 'undefined' && window.AgyForwardResumeEngine && typeof window.AgyForwardResumeEngine.processOption === 'function') {
           clearInterval(pollExisting);
-          resolve(window.AgyResumeRenderer);
+          resolve(window.AgyForwardResumeEngine);
         } else if (++checkAttempts > 8) {
           clearInterval(pollExisting);
           loadSources();
@@ -61,14 +57,14 @@
       function loadSources() {
         var origin = (typeof window !== 'undefined' && window.location && window.location.origin) ? window.location.origin : '';
         var sources = [
-          '/js/opendoc/AgyResumeRenderer.js',
-          origin + '/js/opendoc/AgyResumeRenderer.js'
+          '/js/opendoc/AgyForwardResumeEngine.js',
+          origin + '/js/opendoc/AgyForwardResumeEngine.js'
         ];
 
         function tryLoad(idx) {
           if (idx >= sources.length) {
-            _rendererPromise = null;
-            reject(new Error('Could not load AgyResumeRenderer module'));
+            _enginePromise = null;
+            reject(new Error('Could not load AgyForwardResumeEngine module'));
             return;
           }
 
@@ -79,8 +75,8 @@
 
           var pollTries = 0;
           function pollCheck() {
-            if (typeof window !== 'undefined' && window.AgyResumeRenderer && typeof window.AgyResumeRenderer.processOption === 'function') {
-              resolve(window.AgyResumeRenderer);
+            if (typeof window !== 'undefined' && window.AgyForwardResumeEngine && typeof window.AgyForwardResumeEngine.processOption === 'function') {
+              resolve(window.AgyForwardResumeEngine);
               return;
             }
             if (++pollTries < 30) {
@@ -102,16 +98,16 @@
         tryLoad(0);
       }
     }).catch(function (err) {
-      _rendererPromise = null;
+      _enginePromise = null;
       throw err;
     });
 
-    return _rendererPromise;
+    return _enginePromise;
   }
 
   /**
    * Normalizes raw candidate object from server or Blade JSON into the standard
-   * data structure expected by AgyResumeRenderer (identical to showdetail readData).
+   * data structure expected by AgyForwardResumeEngine (identical to showdetail readData).
    */
   function normalizeCandidateData(candidate, companyData) {
     candidate = candidate || {};
@@ -243,7 +239,7 @@
       statusCallback('Rendering Option ' + optId + ' for ' + data.name + '...');
     }
 
-    // Call unified AgyResumeRenderer with returnBlob: true
+    // Call isolated AgyForwardResumeEngine with returnBlob: true
     var blob = await renderer.processOption(optId, data, {
       returnBlob: true,
       resumeUrl: sources,
@@ -253,7 +249,7 @@
     });
 
     if (!(blob instanceof Blob) || blob.size < 100) {
-      throw new Error('AgyResumeRenderer produced an invalid or empty resume blob for candidate: ' + data.name);
+      throw new Error('AgyForwardResumeEngine produced an invalid or empty resume blob for candidate: ' + data.name);
     }
 
     // Construct filename matching Download Resume Center conventions

@@ -8399,6 +8399,7 @@ window.__rsEnsureCvOptimizer=rsEnsureCvOptimizer;
 <script src="{{ asset('js/opendoc/AgyResumeRenderer.js') }}"></script>
 <script src="{{ asset('js/opendoc/AgyBatchExporter.js') }}"></script>
 <script src="{{ asset('js/opendoc/AgyTouchAnnotator.js') }}"></script>
+<script src="{{ asset('js/opendoc/AgyEditorWasmEngine.js') }}"></script>
 <script src="{{ asset('js/opendoc/AgyCvOptimizer.js') }}"></script>
 <script>
 /* Inlined AgyCvOptimizer Guarantee: Ensures instant availability even if external scripts are delayed or in AMD/AJAX drawers */
@@ -9511,6 +9512,9 @@ window.__rsEnsureCvOptimizer=rsEnsureCvOptimizer;
 
   function openCvOptimizerWorkspace(optId){
     optId = parseInt(optId, 10) || 61;
+    if(window.AgyEditorWasmEngine && typeof window.AgyEditorWasmEngine.initWasm === 'function'){
+      try { window.AgyEditorWasmEngine.initWasm().catch(function(){}); } catch(e){}
+    }
     var studioUrl = "{{ route('service_company.job-applications.resume-studio', ['id' => $application->id]) }}?opt=" + optId;
     var win = window.open(studioUrl, '_blank');
     if(!win){
