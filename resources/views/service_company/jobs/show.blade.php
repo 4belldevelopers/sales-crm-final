@@ -1231,14 +1231,21 @@ $end_date   =	date('d-M-Y', $date);
         .jd-wrap .top-actions::-webkit-scrollbar { display: none; }
         .jd-wrap .action-btn { white-space: nowrap; flex-shrink: 0; padding: 5px 9px; font-size: 10.5px; }
         .jd-wrap .job-title-section h1 { font-size: 13.5px; }
-        .jd-wrap .content-area { padding: 12px; }
-        .jd-wrap .tabs-content { padding: 14px; }
-        .jd-wrap .info-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
-        .jd-wrap .desc-grid { grid-template-columns: 1fr; gap: 12px; }
-        .jd-wrap .questions-section { grid-template-columns: 1fr; gap: 12px; }
+        .jd-wrap .content-area { padding: 10px; }
+        .jd-wrap .tabs-content { padding: 10px; }
+        .jd-wrap .info-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+        .jd-wrap .desc-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+        .jd-wrap .questions-section { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
         .jd-wrap .info-card,
         .jd-wrap .desc-card,
-        .jd-wrap .questions-card { padding: 14px; }
+        .jd-wrap .questions-card { padding: 10px; }
+        .jd-wrap .info-card-header { margin-bottom: 10px; }
+        .jd-wrap .info-card-title,
+        .jd-wrap .desc-card h3,
+        .jd-wrap .questions-card h3 { font-size: 12px; }
+        .jd-wrap .info-row { gap: 6px; padding: 6px 0; }
+        .jd-wrap .info-label { font-size: 11px; padding-right: 6px; }
+        .jd-wrap .info-value { font-size: 11px; line-height: 1.35; max-width: 58%; }
         .jd-wrap .hero-personnel-inline { gap: 10px; }
         .jd-wrap .personnel-card-inline { padding: 8px 10px; gap: 8px; }
     }
