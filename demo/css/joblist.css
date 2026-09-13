@@ -286,15 +286,20 @@
         overflow: hidden;
       }
       .sal-amount {
+        flex: 1 1 auto;
         min-width: 0;
         overflow: hidden;
         text-overflow: ellipsis;
+      }
+      .sal-divider {
+        color: var(--text-light);
+        flex: 0 0 auto;
       }
       .sal-mode {
         display: inline-flex;
         align-items: center;
         height: 17px;
-        padding: 0 5px;
+        padding: 0 6px;
         border-radius: 5px;
         background: #eef2ff;
         color: #3730a3;
@@ -328,7 +333,7 @@
       .badge-type {
         display: flex;
         align-items: center;
-        gap: 3px;
+        gap: 4px;
         font-size: 11.5px;
         font-weight: 500;
         width: 100%;
@@ -347,6 +352,25 @@
         flex-shrink: 0;
         font-size: 12px;
         line-height: 13px;
+      }
+      .employment-badge {
+        color: #475569;
+      }
+      .employment-badge-fulltime,
+      .employment-badge-fulltime i {
+        color: #2563eb;
+      }
+      .employment-badge-contract,
+      .employment-badge-contract i {
+        color: #b45309;
+      }
+      .employment-badge-freelance,
+      .employment-badge-freelance i {
+        color: #7c3aed;
+      }
+      .employment-badge-parttime,
+      .employment-badge-parttime i {
+        color: #0f766e;
       }
       .badge-internal, .badge-internal i {
         color: #3e97ff;
@@ -479,6 +503,17 @@
         justify-content: center;
         flex: 0 0 auto;
         font-size: 11px;
+      }
+      .hm-client-type .it-job-type {
+        flex: 1 1 auto;
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .hm-client-type .it-job-id {
+        flex: 0 0 auto;
+        color: #475569;
+        font-weight: 600;
       }
 
       /* ── COLS 5-6-7 ── */

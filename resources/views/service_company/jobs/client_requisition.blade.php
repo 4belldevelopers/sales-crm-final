@@ -121,7 +121,7 @@
                         />
                      </svg>
                   </div>
-                  <div class="th">Hiring &amp; Location</div>
+                  <div class="th">Location</div>
                   <div class="th">Hiring Manager</div>
                   <div class="th">Team</div>
                   <div class="th">Agency</div>
