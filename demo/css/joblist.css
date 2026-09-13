@@ -291,7 +291,7 @@
         max-width: 100%;
         overflow: hidden;
         text-overflow: ellipsis;
-        font-weight: 600;
+        font-weight: 500;
       }
       /* One identical 13x13 flex-centred icon box for every row in this column — the clock
          (svg), the currency symbol (a Font Awesome <i>, not an svg — the old ".sal-row svg"
@@ -343,10 +343,10 @@
         color: #475569;
       }
       .employment-badge-fulltime {
-        color: var(--text-dark);
+        color: #2563eb;
       }
       .employment-badge-fulltime i {
-        color: var(--text-light);
+        color: #2563eb;
       }
       .employment-badge-contract,
       .employment-badge-contract i {
