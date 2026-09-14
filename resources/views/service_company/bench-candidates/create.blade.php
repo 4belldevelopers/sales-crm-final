@@ -79,12 +79,12 @@ if($snp_mode== 1){
   $snp_one		=	'checked="checked"';
   $snp_text_one	=	'display:flex'; 
   $snp_text_dummy = 'Available From';   
-  $snp_last_working = $application->np_id;                                  	
+  $snp_last_working = @$application->np_id;                                  	
 }else if($snp_mode== 2){
   $snp_two	=	'checked="checked"';
   $snp_text_one	=	'display:flex';
   $snp_text_dummy = 'Immediate';  
-  $snp_last_working = $application->last_working_date; 
+  $snp_last_working = @$application->last_working_date; 
 }else{
   $snp_zero		=	'checked="checked"';	
   $snp_text_zero	=	'display:block';
