@@ -856,8 +856,8 @@ if($snp_mode== 1){
                       <div class="br-auto-box">
                         <strong>Auto Calculated</strong>
                         <div>
-                          <span>Monthly Cost <b id="br_pay_monthly_display">0</b></span>
-                          <span>Hourly Cost <b id="br_pay_hourly_display">0</b></span>
+                          <span><em id="br_pay_auto_label_one">Monthly Cost</em><b id="br_pay_monthly_display">0</b></span>
+                          <span><em id="br_pay_auto_label_two">Hourly Cost</em><b id="br_pay_hourly_display">0</b></span>
                         </div>
                       </div>
                       <div class="br-formula"><i class="fa-regular fa-circle-info"></i> Monthly = Annual / 12 <span>|</span> Hourly = Annual / 2080 hours</div>
@@ -903,8 +903,8 @@ if($snp_mode== 1){
                       <div class="br-auto-box">
                         <strong>Auto Calculated</strong>
                         <div>
-                          <span>Monthly Bill Rate <b id="br_bill_monthly_display">0</b></span>
-                          <span>Hourly Bill Rate <b id="br_bill_hourly_display">0</b></span>
+                          <span><em id="br_bill_auto_label_one">Monthly Bill Rate</em><b id="br_bill_monthly_display">0</b></span>
+                          <span><em id="br_bill_auto_label_two">Hourly Bill Rate</em><b id="br_bill_hourly_display">0</b></span>
                         </div>
                       </div>
                       <div class="br-formula"><i class="fa-regular fa-circle-info"></i> Monthly = Annual / 12 <span>|</span> Hourly = Annual / 2080 hours</div>
@@ -1664,6 +1664,62 @@ $(document).ready(function () {
         $('[data-rate-panel="pay-' + tab + '"], [data-rate-panel="bill-' + tab + '"]').addClass('is-active');
     }
 
+    function activeCommercialRateTab() {
+        return $('.br-rate-tabs button.is-active').first().data('rate-tab') || 'annual';
+    }
+
+    function commercialModeConfig(tab, values) {
+        let config = {
+            annual: {
+                payLabel: 'Annual Pay Rate',
+                billLabel: 'Annual Bill Rate',
+                marginLabel: 'Annual Margin',
+                basePay: values.payAnnual,
+                baseBill: values.billAnnual,
+                payAutoOneLabel: 'Monthly Cost',
+                payAutoOneValue: values.payMonthly,
+                payAutoTwoLabel: 'Hourly Cost',
+                payAutoTwoValue: values.payHourly,
+                billAutoOneLabel: 'Monthly Bill Rate',
+                billAutoOneValue: values.billMonthly,
+                billAutoTwoLabel: 'Hourly Bill Rate',
+                billAutoTwoValue: values.billHourly
+            },
+            monthly: {
+                payLabel: 'Monthly Pay Rate',
+                billLabel: 'Monthly Bill Rate',
+                marginLabel: 'Monthly Margin',
+                basePay: values.payMonthly,
+                baseBill: values.billMonthly,
+                payAutoOneLabel: 'Annual Cost',
+                payAutoOneValue: values.payAnnual,
+                payAutoTwoLabel: 'Hourly Cost',
+                payAutoTwoValue: values.payHourly,
+                billAutoOneLabel: 'Annual Bill Rate',
+                billAutoOneValue: values.billAnnual,
+                billAutoTwoLabel: 'Hourly Bill Rate',
+                billAutoTwoValue: values.billHourly
+            },
+            hourly: {
+                payLabel: 'Hourly Pay Rate',
+                billLabel: 'Hourly Bill Rate',
+                marginLabel: 'Hourly Margin',
+                basePay: values.payHourly,
+                baseBill: values.billHourly,
+                payAutoOneLabel: 'Annual Cost',
+                payAutoOneValue: values.payAnnual,
+                payAutoTwoLabel: 'Monthly Cost',
+                payAutoTwoValue: values.payMonthly,
+                billAutoOneLabel: 'Annual Bill Rate',
+                billAutoOneValue: values.billAnnual,
+                billAutoTwoLabel: 'Monthly Bill Rate',
+                billAutoTwoValue: values.billMonthly
+            }
+        };
+
+        return config[tab] || config.annual;
+    }
+
     function refreshCommercialAfterSplit() {
         updatePayUI();
         updateBillUI();
@@ -1685,20 +1741,32 @@ $(document).ready(function () {
             billMonthly = billMonthly || (billAnnual / MONTHS_PER_YEAR);
             billHourly = billHourly || (billAnnual / MONTHS_PER_YEAR / HOURS_PER_MONTH);
         }
-        let margin = billAnnual - payAnnual;
-        let computedPercent = payAnnual > 0 ? (margin / payAnnual) * 100 : 0;
+        let modeConfig = commercialModeConfig(activeCommercialRateTab(), {
+            payAnnual: payAnnual,
+            payMonthly: payMonthly,
+            payHourly: payHourly,
+            billAnnual: billAnnual,
+            billMonthly: billMonthly,
+            billHourly: billHourly
+        });
+        let margin = modeConfig.baseBill - modeConfig.basePay;
+        let computedPercent = modeConfig.basePay > 0 ? (margin / modeConfig.basePay) * 100 : 0;
         let profitValue = $('#percentage_hike').val();
         let displayedPercent = profitValue !== '' ? commercialNumber(profitValue) : computedPercent;
         let isFree = isFreeCommercialMode();
 
-        $('#br_pay_monthly_display').text(commercialFormat(payMonthly));
-        $('#br_pay_hourly_display').text(commercialFormat(payHourly));
-        $('#br_summary_pay_annual').text(commercialFormat(payAnnual));
+        $('#br_pay_auto_label_one').text(modeConfig.payAutoOneLabel);
+        $('#br_pay_auto_label_two').text(modeConfig.payAutoTwoLabel);
+        $('#br_bill_auto_label_one').text(modeConfig.billAutoOneLabel);
+        $('#br_bill_auto_label_two').text(modeConfig.billAutoTwoLabel);
+        $('#br_pay_monthly_display').text(commercialFormat(modeConfig.payAutoOneValue));
+        $('#br_pay_hourly_display').text(commercialFormat(modeConfig.payAutoTwoValue));
+        $('#br_summary_pay_annual').text(commercialFormat(modeConfig.basePay));
 
         if (isFree) {
             $('#br_bill_monthly_display').text('No billing');
             $('#br_bill_hourly_display').text('No billing');
-            $('#br_summary_pay_label').text('Annual Pay Rate');
+            $('#br_summary_pay_label').text(modeConfig.payLabel);
             $('#br_summary_bill_label').text('Client Billing');
             $('#br_summary_margin_label').text('Commercial Margin');
             $('#br_summary_percent_label').text('Selected Model');
@@ -1709,13 +1777,13 @@ $(document).ready(function () {
             $('#br_margin_status').text('Free Service Selected');
             $('#br_margin_note').text('Client bill rate is locked because this talent will be offered without commercial billing.');
         } else {
-            $('#br_bill_monthly_display').text(commercialFormat(billMonthly));
-            $('#br_bill_hourly_display').text(commercialFormat(billHourly));
-            $('#br_summary_pay_label').text('Annual Pay Rate');
-            $('#br_summary_bill_label').text('Annual Bill Rate');
-            $('#br_summary_margin_label').text('Annual Margin');
+            $('#br_bill_monthly_display').text(commercialFormat(modeConfig.billAutoOneValue));
+            $('#br_bill_hourly_display').text(commercialFormat(modeConfig.billAutoTwoValue));
+            $('#br_summary_pay_label').text(modeConfig.payLabel);
+            $('#br_summary_bill_label').text(modeConfig.billLabel);
+            $('#br_summary_margin_label').text(modeConfig.marginLabel);
             $('#br_summary_percent_label').text('Margin Percentage');
-            $('#br_summary_bill_annual').text(commercialFormat(billAnnual));
+            $('#br_summary_bill_annual').text(commercialFormat(modeConfig.baseBill));
             $('#br_summary_margin').text(commercialFormat(margin));
             $('#br_summary_percent').text(commercialFormat(displayedPercent, '%'));
             $('.br-margin-state').removeClass('is-free').toggleClass('is-low', margin < 0 || displayedPercent < 10);
@@ -1765,7 +1833,8 @@ $(document).ready(function () {
     }
 
     $(document).on('click', '.br-model-option', function () {
-        $('#comission_type').val($(this).attr('data-commercial-value')).trigger('change');
+        $('#comission_type').val($(this).attr('data-commercial-value'));
+        applyCommercialMode();
     });
 
     $(document).on('click', '.br-rate-tabs button', function () {
