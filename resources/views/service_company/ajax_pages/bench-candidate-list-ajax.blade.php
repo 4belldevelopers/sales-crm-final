@@ -126,17 +126,6 @@
                 </div>
                 @endif
 
-                {{-- View / Download stats (bottom-right, inline) --}}
-                <div style="position: absolute; bottom: 4px; right: 8px; display: flex; align-items: center; gap: 14px;">
-                    <span style="display: flex; align-items: center; gap: 4px; color: #a1a5b7; font-size: 11px; font-weight: 500;">
-                        <i class="fa fa-eye" style="font-size: 12px;"></i>
-                        {{ $viewCount }}
-                    </span>
-                    <span style="display: flex; align-items: center; gap: 4px; color: #a1a5b7; font-size: 11px; font-weight: 500;">
-                        <i class="fa fa-download" style="font-size: 12px;"></i>
-                        {{ $downloadCount }}
-                    </span>
-                </div>
             </td>
 
             {{-- Experience: Experience (1) · Work preference (2) --}}
@@ -307,6 +296,8 @@
                         <div class="pipe-foot">
                             Interview: {{ $row->InReview }}
                             <a href="javascript:void(0);" data-row-id="{{ $row->id }}" class="pipe-view bench_show_application_detail">View</a>
+                            <span class="pipe-stat"><i class="fa fa-eye"></i>{{ $viewCount }}</span>
+                            <span class="pipe-stat"><i class="fa fa-download"></i>{{ $downloadCount }}</span>
                         </div>
                     </div>
                 </div>

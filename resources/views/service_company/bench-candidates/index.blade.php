@@ -145,6 +145,8 @@
         .bench-dash .pipe-grid .v { font-size: 10px !important; font-weight: 700; color: #181c32; padding-top: 1px; overflow: hidden; }
         .bench-dash .pipe-grid a { font-size: 10px !important; font-weight: 700; }
         .bench-dash .pipe-foot { font-size: 9.5px !important; font-weight: 700; color: #3f4254; margin-top: 3px; display: flex; align-items: center; gap: 6px; flex-wrap: nowrap; line-height: 1; white-space: nowrap; overflow: hidden; }
+        .bench-dash .pipe-stat { display: inline-flex; align-items: center; gap: 3px; color: #a1a5b7; font-size: 9.5px !important; font-weight: 600; line-height: 1; flex-shrink: 0; }
+        .bench-dash .pipe-stat i { font-size: 10px !important; }
         /* "View" — plain text link (same size as the Interview label it sits next to), opens the profile */
         .bench-dash .pipe-view { color: #3e97ff !important; font-size: 10px !important; font-weight: 700; cursor: pointer; }
         .bench-dash .pipe-view:hover { text-decoration: underline; }
