@@ -1296,13 +1296,15 @@
     padding-left: 42px;
 }
 .bd-control--tagify .tagify {
-    min-height: 42px;
+    height: 42px !important;
+    min-height: 42px !important;
     padding: 5px 10px 5px 38px;
     border-color: #D8DEEC !important;
     border-radius: 6px;
     background: #FFFFFF;
     box-shadow: 0 1px 2px rgba(15, 23, 42, .03);
     transition: border-color .16s ease, box-shadow .16s ease, background .16s ease;
+    font-family: 'Poppins', sans-serif;
 }
 .bd-control--tagify .tagify:hover,
 .bd-control--tagify .tagify.tagify--focus {
@@ -1312,37 +1314,51 @@
 .bd-control--tagify .tagify__input {
     min-width: 180px;
     color: #53618C;
+    font-family: 'Poppins', sans-serif;
     font-size: 1rem;
     font-weight: 500;
+    line-height: 1.35;
     margin: 0;
     padding: 5px 0;
 }
 .bd-control--tagify .tagify__input::before {
     color: #8A95B5;
+    font-size: 1rem;
     font-weight: 500;
 }
 .bd-control--tagify .tagify__tag {
     max-width: calc(100% - 4px);
     margin: 0;
     border-radius: 6px;
-    background: #EEF4FF;
+    background: #F3F6FC;
+    border: 1px solid #E2E8F4;
 }
 .bd-control--tagify .tagify__tag > div {
     max-width: 100%;
-    padding: 6px 8px;
-    color: #0B1545;
+    min-height: 28px;
+    padding: 5px 9px;
+    color: #1F2A44;
     background: transparent;
     border-radius: 6px;
-    font-weight: 700;
+    font-family: 'Poppins', sans-serif;
+    font-size: 1.05rem !important;
+    font-weight: 600 !important;
+    line-height: 1.35;
 }
 .bd-control--tagify .tagify__tag-text {
     max-width: 100%;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+    color: #1F2A44 !important;
+    font-family: 'Poppins', sans-serif !important;
+    font-size: 1.05rem !important;
+    font-weight: 600 !important;
+    letter-spacing: 0;
 }
 .bd-control--tagify .tagify__tag__removeBtn {
-    color: #53618C;
+    color: #64748B;
+    font-size: .95rem;
     margin-left: 4px;
 }
 .tagify__dropdown.bd-location-dropdown {
