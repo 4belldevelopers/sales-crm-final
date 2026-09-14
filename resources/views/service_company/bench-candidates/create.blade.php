@@ -78,7 +78,7 @@ $snp_mode = @$application->serving_notice_period_mode;
 if($snp_mode== 1){
   $snp_one		=	'checked="checked"';
   $snp_text_one	=	'display:flex'; 
-  $snp_text_dummy = 'Serving Notice Period';   
+  $snp_text_dummy = 'Available From';   
   $snp_last_working = $application->np_id;                                  	
 }else if($snp_mode== 2){
   $snp_two	=	'checked="checked"';
@@ -484,43 +484,51 @@ if($snp_mode== 1){
             <div class="fs aw-card">
               <div class="aw-hero">
                 <div class="aw-hero-title">
-                  <span class="aw-hero-icon"><i class="fa-solid fa-briefcase"></i></span>
+                  <span class="aw-hero-icon"><i class="fa-regular fa-calendar-days"></i></span>
                   <span>
                     <strong>Availability &amp; Work Preferences</strong>
                     <small>Define the availability and work preferences for this talent.</small>
                   </span>
                 </div>
+                <span class="aw-talent-badge"><i class="fa-regular fa-building"></i> In-House Talent</span>
               </div>
               <div class="fsc aw-body">
                 <div class="aw-grid">
                   <div class="fg fv-row aw-field aw-field--wide">
-                    <label>Availability Status <span class="rq">*</span></label>
+                    <label>Availability <span class="rq">*</span></label>
                     <select name="serving_notice_period" id="serving_notice_period" class="aw-native-select">
                       <option value="0" {{ ($snp_mode==0) ? 'selected' : '' }} hidden></option>
-                      <option value="1" {{ ($snp_mode===1) ? 'selected' : '' }}>Serving Notice Period</option>
+                      <option value="1" {{ ($snp_mode===1) ? 'selected' : '' }}>Available From Date</option>
                       <option value="2" {{ ($snp_mode===2) ? 'selected' : '' }}>Immediate Joiner</option>
                     </select>
                     <div class="aw-option-grid" data-aw-options>
                       <button type="button" class="aw-option {{ ($snp_mode===2) ? 'is-selected' : '' }}" data-snp-value="2">
                         <span class="aw-radio"></span>
-                        <i class="fa-solid fa-circle-check"></i>
-                        <strong>Immediate Joiner</strong>
+                        <span class="aw-option-icon aw-option-icon--now"><i class="fa-solid fa-bolt"></i></span>
+                        <span class="aw-option-copy">
+                          <strong>Immediate Joiner</strong>
+                          <small>This talent can start immediately.</small>
+                        </span>
                       </button>
                       <button type="button" class="aw-option {{ ($snp_mode===1) ? 'is-selected' : '' }}" data-snp-value="1">
                         <span class="aw-radio"></span>
-                        <i class="fa-regular fa-clock"></i>
-                        <strong>Serving Notice Period</strong>
+                        <span class="aw-option-icon"><i class="fa-solid fa-calendar-days"></i></span>
+                        <span class="aw-option-copy">
+                          <strong>Available From (Date)</strong>
+                          <small>This talent will be available from a specific date.</small>
+                        </span>
                       </button>
                     </div>
                   </div>
 
                   <div class="fg fv-row aw-field">
-                    <label>Available From <span class="rq">*</span></label>
+                    <label>Available From Date <span class="rq">*</span></label>
                     <div class="aw-date-wrap" id="snp-immediate" style="{{ ($snp_mode===1 || $snp_mode===2) ? 'display:flex' : @$snp_text_one }}">
-                      <input type="text" id="text_display" value="{{ ($snp_mode===1) ? 'Available from' : 'Immediate' }}" class="form-control form-control-solid" placeholder="" readonly>
+                      <input type="text" id="text_display" value="{{ ($snp_mode===1) ? 'Available From' : 'Immediate' }}" class="form-control form-control-solid" placeholder="" readonly>
                       <input type="text" id="np_id_display" class="form-control form-control-solid" placeholder="Select date" name="np_id_display" value="{{ ($snp_last_working) ? date('d/M/Y',strtotime(@$snp_last_working)) : '' }}" onclick="document.getElementById('np_id').click()" readonly>
                       <input type="date" class="form-control form-control-solid np_id" name="np_id" id="np_id" style="opacity: 0; position: absolute; z-index: -1;top: 0;" onclick="this.showPicker()">
                     </div>
+                    <small class="aw-date-help">Enter the date from which this talent will be available.</small>
                     <select class="form-select form-select-solid aw-notice-days" arial-label="Select ddl_np_id" id="ddl_np_id" name="ddl_np_id" style="display:none;">
                       <option value="">Select Notice Period</option>
                       @php 
@@ -2521,7 +2529,7 @@ $(document).on('change','#serving_notice_period',function(){
 			$('#np_id').show();		
 			$('#np_id').attr("disabled", false);	
 			$("#np_id").attr('type','date');
-      $('#text_display').val('Available from');
+      $('#text_display').val('Available From');
 			$("#np_id").css({ '-webkit-calendar-picker-indicator':'display(none)' });		
       $("#snp-immediate").attr('style','display:flex');	
       dateManageFunc();
