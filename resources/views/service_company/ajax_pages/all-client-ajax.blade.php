@@ -90,6 +90,7 @@
 
     $departmentArr = (@$row->ind_name) ? @$row->ind_name : @$row->main_ind_name;
     $client_id = $row->client_id;
+    $rowTargetId = $isDirect ? ($row->client_id ?: ($row->from_company_id ?: ($row->company_id ?: ($row->id ?? 0)))) : ($row->client_id ?: ($row->id ?? 0));
 
     /* ── location ── */
     $country_name = $stateName = $city = '';
@@ -146,13 +147,13 @@
 
         <div class="tbl-a">
             @if (!empty($background_image) && strlen($background_image) > 10)
-                <div class="tbl-av {{ $client_type_css }}" data-row-id="{{ $row->client_id }}">
-                    <img src="{{ $background_image }}" data-row-id="{{ $row->client_id }}" class="{{ $client_type_css }}">
+                <div class="tbl-av {{ $client_type_css }}" data-row-id="{{ $rowTargetId }}">
+                    <img src="{{ $background_image }}" data-row-id="{{ $rowTargetId }}" class="{{ $client_type_css }}">
                 </div>
             @else
-                <div class="tbl-av {{ $client_type_css }} {{ $bgTextDecore }}" data-row-id="{{ $row->client_id }}">{{ $initials }}</div>
+                <div class="tbl-av {{ $client_type_css }} {{ $bgTextDecore }}" data-row-id="{{ $rowTargetId }}">{{ $initials }}</div>
             @endif
-            <div class="tbl-ai {{ $client_type_css }}" data-row-id="{{ $row->client_id }}" data-toggle="tooltip1" data-html="true" title="{{ ucwords(@$client_Or_CompanyName) }}">
+            <div class="tbl-ai {{ $client_type_css }}" data-row-id="{{ $rowTargetId }}" data-toggle="tooltip1" data-html="true" title="{{ ucwords(@$client_Or_CompanyName) }}">
                 <div class="tbl-n">{{ ucwords(mb_substr(@$client_Or_CompanyName, 0, 22)) }}</div>
                 <div class="tbl-t">{{ @$departmentArr }}
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
@@ -184,7 +185,7 @@
 
         <div>
             <div class="tbl-co">{{ @$newDate }}</div>
-            <div class="tbl-cv {{ $client_type_css }}" data-row-id="{{ $row->client_id }}">view client</div>
+            <div class="tbl-cv {{ $client_type_css }}" data-row-id="{{ $rowTargetId }}">view client</div>
         </div>
 
         <div>

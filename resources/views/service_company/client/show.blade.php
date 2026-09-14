@@ -612,7 +612,7 @@ use Carbon\Carbon;
                                     @if (@$client->company_sizes)
                                     <div class="cd-info-row">
                                         <span class="cd-info-label">Number of Employees</span>
-                                        <span class="cd-info-value">{{ number_format(@$client->company_sizes) }}+</span>
+                                        <span class="cd-info-value">{{ is_numeric(@$client->company_sizes) ? number_format((float)@$client->company_sizes) . '+' : @$client->company_sizes }}</span>
                                     </div>
                                     @endif
                                     @php $tagsList = array_filter(array_map('trim', explode(',', (string) @$client->tags))); @endphp

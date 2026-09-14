@@ -1973,6 +1973,10 @@
     <script>
        $(document).on('click', '.application_copy', function() {
             window._currentCandidateName = '';
+            var candSkills = [];
+            var firstCandName = '';
+            var checkedCount = $('.chk_list_item:checked').length;
+
             $('#kt_activitiesCopy_toggle').trigger('click');
             var id = 1;
             var url = "{{ route('service_company.cvtracker.application_copy', ':id') }}";
@@ -1983,10 +1987,29 @@
             var wiseId = [];
             $('.chk_list_item:checked').each(function() {
                 arr.push($(this).val());
-            });
-            $('.chk_list_item:checked').each(function() {
                 wiseId.push($(this).data('wiseid'));
+                var sk = $(this).attr('data-skills') || $(this).data('skills');
+                if (sk) {
+                    var sArr = String(sk).split(',');
+                    sArr.forEach(function(s) {
+                        var cleaned = $.trim(s).toLowerCase();
+                        if (cleaned && candSkills.indexOf(cleaned) === -1) {
+                            candSkills.push(cleaned);
+                        }
+                    });
+                }
+                var cn = $(this).attr('data-cname') || $(this).data('cname');
+                if (cn && !firstCandName) {
+                    firstCandName = cn;
+                }
             });
+
+            window._candidateSkills = candSkills;
+            if (checkedCount === 1 && firstCandName) {
+                window._currentCandidateName = firstCandName;
+            } else if (checkedCount > 1) {
+                window._currentCandidateName = checkedCount + ' candidates';
+            }
             $.ajax({
                 type: 'POST',
                 url: url,

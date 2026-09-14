@@ -59,17 +59,76 @@ class AgencyListingService
                 ->where('to_invitation_status', '!=', 1)
                 ->count();
 
-            // 3. Direct Clients
-            $counters['clientDirect'] = DB::table('staffing_company_relation')
-                ->where('to_company_id', $companyId)
-                ->where('final_status', 1)
-                ->count();
+            // 3. Direct Clients via Elasticsearch
+            $clientDirect = 0;
+            if ($this->elasticService->indexExists(ELASTIC_CLIENT_AND_AGENCY_RELATION_INDEX)) {
+                try {
+                    $resDirect = $this->elasticService->getClient()->count([
+                        'index' => ELASTIC_CLIENT_AND_AGENCY_RELATION_INDEX,
+                        'body' => [
+                            'query' => [
+                                'bool' => [
+                                    'must' => [
+                                        ['term' => ['to_company_id' => $companyId]],
+                                        ['term' => ['final_status' => 1]],
+                                    ],
+                                    'must_not' => [
+                                        ['term' => ['from_company_id' => $companyId]],
+                                    ],
+                                ],
+                            ],
+                        ],
+                    ]);
+                    $clientDirect = $resDirect['count'] ?? 0;
+                } catch (\Exception $e) {
+                    $clientDirect = DB::table('staffing_company_relation')
+                        ->where('to_company_id', $companyId)
+                        ->where('from_company_id', '!=', $companyId)
+                        ->where('final_status', 1)
+                        ->count();
+                }
+            } else {
+                $clientDirect = DB::table('staffing_company_relation')
+                    ->where('to_company_id', $companyId)
+                    ->where('from_company_id', '!=', $companyId)
+                    ->where('final_status', 1)
+                    ->count();
+            }
+            $counters['clientDirect'] = $clientDirect;
 
-            // 4. Custom Clients
-            $counters['clientCustom'] = DB::table('clients')
-                ->where('self_company', '!=', 1)
-                ->where('company_id', $companyId)
-                ->count();
+            // 4. Custom Clients via Elasticsearch
+            $clientCustom = 0;
+            if ($this->elasticService->indexExists(ELASTIC_CLIENT_LIST)) {
+                try {
+                    $resCustom = $this->elasticService->getClient()->count([
+                        'index' => ELASTIC_CLIENT_LIST,
+                        'body' => [
+                            'query' => [
+                                'bool' => [
+                                    'must' => [
+                                        ['term' => ['company_id' => $companyId]],
+                                    ],
+                                    'must_not' => [
+                                        ['term' => ['self_company' => 1]],
+                                    ],
+                                ],
+                            ],
+                        ],
+                    ]);
+                    $clientCustom = $resCustom['count'] ?? 0;
+                } catch (\Exception $e) {
+                    $clientCustom = DB::table('clients')
+                        ->where('self_company', '!=', 1)
+                        ->where('company_id', $companyId)
+                        ->count();
+                }
+            } else {
+                $clientCustom = DB::table('clients')
+                    ->where('self_company', '!=', 1)
+                    ->where('company_id', $companyId)
+                    ->count();
+            }
+            $counters['clientCustom'] = $clientCustom;
 
             // 5. Agencies added this month
             $counters['spartnerThisMonth'] = DB::table('staffing_company_relation')
