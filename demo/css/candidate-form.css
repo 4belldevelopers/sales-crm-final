@@ -1572,6 +1572,10 @@ input[type="radio"]:checked {
     color: #5F6A91;
     font-size: 1rem;
 }
+.br-auto-box em {
+    display: block;
+    font-style: normal;
+}
 .br-auto-box span + span {
     border-left: 1px solid #CAD4E6;
     padding-left: 14px;
