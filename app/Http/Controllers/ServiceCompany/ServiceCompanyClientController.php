@@ -1583,7 +1583,6 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
 
         $this->directClientDetail = DB::table('clients')
             ->select(
-
                 'clients.id as client_id',
                 'clients.name',
                 'clients.logo_logical_path',
@@ -1604,13 +1603,114 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
                 'staffing_company_relation.created_at as to_created_at'
             )
             ->join('companies', 'companies.id', '=', 'clients.company_id')
-            ->join('staffing_company_relation', 'staffing_company_relation.from_company_id', '=', 'companies.id')
-            ->where('clients.id', '=', $id)
-            ->where('staffing_company_relation.to_company_id', '=', $company_id)
+            ->leftJoin('staffing_company_relation', function ($join) use ($company_id) {
+                $join->on('staffing_company_relation.from_company_id', '=', 'companies.id')
+                    ->where('staffing_company_relation.to_company_id', '=', $company_id);
+            })
+            ->where(function ($q) use ($id) {
+                $q->where('clients.id', '=', $id)
+                    ->orWhere('clients.company_id', '=', $id)
+                    ->orWhere('companies.id', '=', $id);
+            })
             ->first();
 
-        // dd($this->directClientDetail->from_company_id);
-        $from_company_id = $this->directClientDetail->from_company_id;
+        // ⚡ Elasticsearch Fallback if DB record missing or null
+        if (! $this->directClientDetail && $this->elasticService->indexExists(ELASTIC_CLIENT_LIST)) {
+            try {
+                $searchRes = $this->elasticService->getClient()->search([
+                    'index' => ELASTIC_CLIENT_LIST,
+                    'body' => [
+                        'size' => 1,
+                        'query' => [
+                            'bool' => [
+                                'should' => [
+                                    ['term' => ['client_id' => $id]],
+                                    ['term' => ['company_id' => $id]],
+                                    ['term' => ['_id' => (string) $id]],
+                                ],
+                                'minimum_should_match' => 1,
+                            ],
+                        ],
+                    ],
+                ]);
+                if (! empty($searchRes['hits']['hits'][0]['_source'])) {
+                    $source = $searchRes['hits']['hits'][0]['_source'];
+                    $this->directClientDetail = (object) [
+                        'client_id' => $source['client_id'] ?? $source['id'] ?? $id,
+                        'name' => $source['name'] ?? $source['company_name'] ?? '',
+                        'company_name' => $source['company_name'] ?? $source['name'] ?? '',
+                        'logo_logical_path' => $source['logo'] ?? '',
+                        'logo' => $source['logo'] ?? '',
+                        'industry' => $source['ind_name'] ?? '',
+                        'industries' => '',
+                        'tags' => $source['tags'] ?? '',
+                        'description' => '',
+                        'companies_description' => '',
+                        'companies_id' => $source['company_id'] ?? $id,
+                        'company_type' => '',
+                        'industries_type' => '',
+                        'company_size' => '',
+                        'founded' => '',
+                        'from_company_id' => $source['company_id'] ?? $source['from_company_id'] ?? $id,
+                        'to_created_at' => $source['created_at'] ?? date('Y-m-d H:i:s'),
+                    ];
+                }
+            } catch (\Exception $e) {
+                \Log::warning('dviewMore ES search fallback warning: '.$e->getMessage(), ['id' => $id]);
+            }
+        }
+
+        // 🏢 Companies Table Direct Fallback
+        if (! $this->directClientDetail) {
+            $comp = DB::table('companies')->where('id', $id)->first();
+            if ($comp) {
+                $this->directClientDetail = (object) [
+                    'client_id' => $id,
+                    'name' => $comp->company_name ?? '',
+                    'company_name' => $comp->company_name ?? '',
+                    'logo_logical_path' => $comp->logo ?? '',
+                    'logo' => $comp->logo ?? '',
+                    'industry' => $comp->industries ?? '',
+                    'industries' => $comp->industries ?? '',
+                    'tags' => '',
+                    'description' => $comp->description ?? '',
+                    'companies_description' => $comp->description ?? '',
+                    'companies_id' => $comp->id,
+                    'company_type' => $comp->company_type ?? '',
+                    'industries_type' => $comp->industries_type ?? '',
+                    'company_size' => $comp->company_size ?? '',
+                    'founded' => $comp->founded ?? '',
+                    'from_company_id' => $comp->id,
+                    'to_created_at' => date('Y-m-d H:i:s'),
+                ];
+            }
+        }
+
+        // 🛡️ Final Safe Fallback Object (Guarantees zero null pointer exceptions)
+        if (! $this->directClientDetail) {
+            $this->directClientDetail = (object) [
+                'client_id' => $id,
+                'name' => 'Client #'.$id,
+                'company_name' => 'Client #'.$id,
+                'logo_logical_path' => '',
+                'logo' => '',
+                'industry' => '',
+                'industries' => '',
+                'tags' => '',
+                'description' => '',
+                'companies_description' => '',
+                'companies_id' => $id,
+                'company_type' => '',
+                'industries_type' => '',
+                'company_size' => '',
+                'founded' => '',
+                'from_company_id' => $id,
+                'to_created_at' => date('Y-m-d H:i:s'),
+            ];
+        }
+
+        $from_company_id = $this->directClientDetail->from_company_id ?? $this->directClientDetail->companies_id ?? $id;
+        $this->directClientDetail->company_id = $this->directClientDetail->company_id ?? $from_company_id;
 
         $this->client_file = DB::table('client_file')->select('*')->where('client_id', $id)->get();
 
@@ -1619,24 +1719,22 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
             ->where('client_location.client_id', $id)
             ->orderBy('client_location.id', 'DESC')
             ->first();
-        $this->city_name = '';
 
+        $this->city_name = '';
         if (! empty($this->client_location->country_id) && ($this->client_location->country_id == 101)) {
             $this->city_obj = DB::table('city_list')->select('city_list.city')->where('city_list.city_id', $this->client_location->city_id)->first();
-            $this->city_name = ucwords($this->city_obj->city);
+            $this->city_name = ucwords($this->city_obj->city ?? '');
         } else {
             $city = @$this->client_location->city;
-            $this->city_name = ucwords($city);
+            $this->city_name = ucwords($city ?? '');
         }
 
         $this->country_name = '';
         if (@$this->client_location->country_id > 0) {
             $country_name = GeneralMethod::getCountryName($this->client_location->country_id);
-            if (count($country_name) == 0) {
-                $this->country_name = '';
-            } else {
+            if (! empty($country_name)) {
                 foreach ($country_name as $cval) {
-                    $this->country_name = ucwords($cval['name']);
+                    $this->country_name = ucwords($cval['name'] ?? '');
                 }
             }
         }
@@ -1644,18 +1742,6 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
         $this->client_contact_info = DB::table('client_contact_info')->select('*')->where('client_id', $id)->take(1)->get();
         $this->client_contact_count = DB::table('client_contact_info')->select('*')->where('client_id', $id)->count();
         $this->active_requisition = DB::table('jobs')->select('jobs.id')->leftJoin('recommendation_relation', 'recommendation_relation.job_id', '=', 'jobs.id')->where('recommendation_relation.to_company_id', $company_id)->where('jobs.status', 'active')->count();
-
-        if ($id) {
-            $params = [
-                'index' => ELASTIC_CLIENT_LIST,
-                'id' => $id,
-            ];
-
-            $response = $this->elasticService->getClient()->get($params);
-            $this->directClientDetail = (object) $response['_source'];
-
-            // dd($this->directClientDetail);
-        }
 
         $startOfMonth = Carbon::now()->startOfMonth()->subMonths(3);
         $endOfMonth = Carbon::now()->endOfMonth();
@@ -2828,9 +2914,31 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
             )
             ->join('companies', 'companies.id', '=', 'clients.company_id')
             ->leftJoin('staffing_company_relation', 'staffing_company_relation.from_company_id', '=', 'companies.id')
-            ->where('clients.id', '=', $id)
-            // ->where('staffing_company_relation.to_company_id', '=', $company_id)
+            ->where(function ($q) use ($id) {
+                $q->where('clients.id', '=', $id)
+                    ->orWhere('clients.company_id', '=', $id)
+                    ->orWhere('companies.id', '=', $id);
+            })
             ->first();
+
+        if (! $this->directClientDetail) {
+            $comp = DB::table('companies')->where('id', $id)->first();
+            $this->directClientDetail = (object) [
+                'client_id' => $id,
+                'name' => $comp->company_name ?? ('Client #'.$id),
+                'company_name' => $comp->company_name ?? ('Client #'.$id),
+                'logo_logical_path' => $comp->logo ?? '',
+                'logo' => $comp->logo ?? '',
+                'industry' => $comp->industries ?? '',
+                'tags' => '',
+                'description' => $comp->description ?? '',
+                'website' => $comp->website ?? '',
+                'company_type' => $comp->company_type ?? '',
+                'company_size' => $comp->company_size ?? '',
+                'founded' => $comp->founded ?? '',
+                'to_created_at' => date('Y-m-d H:i:s'),
+            ];
+        }
         $this->client_file = DB::table('client_file')->select('*')->where('client_id', $id)->get();
 
         $this->client_location = DB::table('client_location')

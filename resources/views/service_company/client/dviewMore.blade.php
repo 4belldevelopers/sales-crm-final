@@ -2051,7 +2051,7 @@
     // new $.fn.dataTable.FixedHeader(table);
 </script>
 <script>
-    var company_id = {{ $directClientDetail->company_id }};
+    var company_id = {{ $directClientDetail->company_id ?? $directClientDetail->from_company_id ?? $directClientDetail->companies_id ?? $directClientDetail->client_id ?? 0 }};
     function initDContactsDataTable() {
         if ($.fn.DataTable.isDataTable('#dcontactList')) {
             return;
