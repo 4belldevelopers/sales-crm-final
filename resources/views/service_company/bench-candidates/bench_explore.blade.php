@@ -284,11 +284,11 @@ a.bxr-sum-link{ color:inherit; cursor:pointer; }
 .bxr-tbl thead th:nth-child(2),
 .bxr-tbl tbody td:nth-child(2){ width:17%; }
 .bxr-tbl thead th:nth-child(3),
-.bxr-tbl tbody td:nth-child(3){ width:14%; }
+.bxr-tbl tbody td:nth-child(3){ width:15%; }
 .bxr-tbl thead th:nth-child(4),
-.bxr-tbl tbody td:nth-child(4){ width:14%; }
+.bxr-tbl tbody td:nth-child(4){ width:16%; }
 .bxr-tbl thead th:nth-child(5),
-.bxr-tbl tbody td:nth-child(5){ width:13%; }
+.bxr-tbl tbody td:nth-child(5){ width:10%; }
 .bxr-tbl thead th:nth-child(6),
 .bxr-tbl tbody td:nth-child(6){ width:11%; }
 
@@ -342,6 +342,7 @@ a.bxr-sum-link{ color:inherit; cursor:pointer; }
 .bxr-b.pu{ background:#F5F3FF; color:#7C3AED; }
 .bxr-b.gy{ background:#F1F5F9; color:#475569; }
 .bxr-b.rd{ background:#FEE2E2; color:#DC2626; }
+.bxr-b i{ font-size:10px; line-height:1; }
 
 /* Pagination wrapper — content rendered by pagination partial */
 .bxr-pagi{ display:block; }
@@ -434,7 +435,7 @@ a.bxr-sum-link{ color:inherit; cursor:pointer; }
 }
 .bxr-col-exp-mode{
   font-size:9.5px; color:#64748B; font-weight:600; padding-left:2px;
-  text-transform:uppercase; letter-spacing:0.3px;
+  letter-spacing:0.2px;
 }
 .bxr-col-loc-stack{ display:flex; flex-direction:column; gap:5px; min-width:0; }
 .bxr-col-loc-row{
@@ -446,8 +447,9 @@ a.bxr-sum-link{ color:inherit; cursor:pointer; }
   width:13px; height:13px; display:inline-flex; align-items:center;
   justify-content:center; color:#2563EB; flex-shrink:0; font-size:12px;
 }
-.bxr-col-loc-mode{ font-size:10.5px; color:#7E8299; font-weight:500; padding-left:19px; }
-.bxr-col-hm-row{ display:flex; align-items:center; gap:8px; min-width:0; }
+.bxr-col-loc-mode{ display:flex; align-items:center; gap:6px; font-size:10.5px; color:#7E8299; font-weight:500; }
+.bxr-col-loc-mode i{ color:#64748B; font-size:12px; width:13px; text-align:center; }
+.bxr-col-hm-row{ display:flex; align-items:flex-start; gap:8px; min-width:0; }
 .bxr-col-hm-av{
   width:30px; height:30px; border-radius:8px; flex-shrink:0;
   display:flex; align-items:center; justify-content:center;
@@ -465,6 +467,15 @@ a.bxr-sum-link{ color:inherit; cursor:pointer; }
 .bxr-col-hm-name.hmlisting{ cursor:pointer; }
 .bxr-col-hm-name.hmlisting:hover{ color:#2563EB; }
 .bxr-col-hm-role{ font-size:10.5px; color:#64748B; font-weight:500; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:130px; }
+.bxr-pos-badge{
+  display:inline-flex; align-items:center; gap:5px;
+  width:max-content; max-width:100%;
+  border-radius:6px; padding:3px 8px;
+  font-size:10.5px; font-weight:600; line-height:1.15;
+}
+.bxr-pos-badge i{ font-size:10px; }
+.bxr-pos-fulltime{ background:#EAF5FF; color:#1D4ED8; border:1px solid #BFDBFE; }
+.bxr-pos-contract{ background:#FFF7ED; color:#C2410C; border:1px solid #FDBA74; }
 
 .bxr-team-cell{ display:flex; flex-direction:column; gap:3px; align-items:flex-start; min-width:0; }
 .bxr-team-name{
@@ -475,8 +486,14 @@ a.bxr-sum-link{ color:inherit; cursor:pointer; }
 .bxr-team-more{ font-size:10.5px; font-weight:500; color:#2563EB; line-height:1.25; }
 .bxr-stage-cell{ display:flex; flex-direction:column; gap:4px; align-items:flex-start; min-width:0; }
 .bxr-stage-added{ font-size:10px; color:#94A3B8; font-weight:500; line-height:1.2; }
+.bxr-added-cell{ display:flex; flex-direction:column; gap:3px; align-items:flex-start; min-width:0; }
+.bxr-added-name{
+  font-size:12px; font-weight:600; color:#0F172A; line-height:1.2;
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:130px;
+}
+.bxr-added-date{ font-size:10.5px; color:#64748B; font-weight:500; line-height:1.2; }
 
-.bxr-tbl tbody td:nth-child(6) .badge {
+.bxr-tbl tbody td:nth-child(5) .badge {
   border-radius:5px;
   font-size:10.5px !important;
   font-weight:600 !important;
@@ -578,6 +595,7 @@ a.bxr-sum-link{ color:inherit; cursor:pointer; }
     if (str_contains($bxrStageKey, 'placed'))     { $bxrStageColor='#16A34A'; $bxrStageBg='#F0FDF4'; $bxrStageBorder='#86EFAC'; }
     elseif (str_contains($bxrStageKey, 'hold'))   { $bxrStageColor='#EA580C'; $bxrStageBg='#FFF7ED'; $bxrStageBorder='#FDBA74'; }
     elseif (str_contains($bxrStageKey, 'bench'))  { $bxrStageColor='#2563EB'; $bxrStageBg='#EFF6FF'; $bxrStageBorder='#93C5FD'; }
+    elseif (str_contains($bxrStageKey, 'pool'))   { $bxrStageColor='#7C3AED'; $bxrStageBg='#F5F3FF'; $bxrStageBorder='#C4B5FD'; }
     else                                           { $bxrStageColor='#64748B'; $bxrStageBg='#F1F5F9'; $bxrStageBorder='#CBD5E1'; }
     /* Bill Rate — same source fields the old bench-toolbar partial displayed
        (bill_rate_amount/currency/mode, already in the select). */
@@ -589,10 +607,11 @@ a.bxr-sum-link{ color:inherit; cursor:pointer; }
                       . number_format((float)$bench_detail->bill_rate_amount)
                       . ($bxrModeAbbr !== '' ? ' /'.$bxrModeAbbr : '');
     }
-    /* On Bench — days since the candidate record was created. */
-    $bxrOnBenchDays = '—';
-    if (@$bench_detail->created_at) {
-        $bxrOnBenchDays = (int) abs(\Carbon\Carbon::parse($bench_detail->created_at)->diffInDays(now())) . ' Days';
+    $bxrStageDurationLabel = 'On ' . ($bxrStageLabel ?: 'Stage');
+    $bxrStageStartedAt = @$bench_detail->updated_at ?: @$bench_detail->created_at;
+    $bxrStageDays = '—';
+    if ($bxrStageStartedAt) {
+        $bxrStageDays = (int) abs(\Carbon\Carbon::parse($bxrStageStartedAt)->diffInDays(now())) . ' Days';
     }
   @endphp
   <div class="bxr-hero">
@@ -626,7 +645,7 @@ a.bxr-sum-link{ color:inherit; cursor:pointer; }
         <span class="bxr-fact-label">Bench Status</span>
         <span class="bxr-bench-tag" style="--bxr-stage-bg:{{ $bxrStageBg }};--bxr-stage-color:{{ $bxrStageColor }};--bxr-stage-border:{{ $bxrStageBorder }};"><span class="bxr-bench-dot"></span>{{ $bxrStageLabel }}</span>
       </div>
-      <div><span class="bxr-fact-label">On Bench</span><span class="bxr-fact-value">{{ $bxrOnBenchDays }}</span></div>
+      <div><span class="bxr-fact-label">{{ $bxrStageDurationLabel }}</span><span class="bxr-fact-value">{{ $bxrStageDays }}</span></div>
     </div>
 
     <div class="bxr-hero-sep"></div>
@@ -796,9 +815,9 @@ a.bxr-sum-link{ color:inherit; cursor:pointer; }
             <th style="min-width:220px;">JOB DETAILS</th>
             <th style="min-width:130px;">EXPERIENCE <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="#64748B" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="display:inline-block;vertical-align:-1px;margin-left:3px;"><path d="M10 6V5a2 2 0 0 1 2-2h0a2 2 0 0 1 2 2v1"/><rect x="4" y="6" width="16" height="14" rx="2"/><path d="M9 12h6"/></svg></th>
             <th style="min-width:130px;">LOCATION</th>
-            <th style="min-width:130px;">HIRING MANAGER</th>
-            <th style="min-width:120px;">TEAM</th>
-            <th style="min-width:110px;">STAGE</th>
+            <th style="min-width:150px;">HIRING MANAGER</th>
+            <th style="min-width:105px;">STAGE</th>
+            <th style="min-width:120px;">ADDED BY</th>
           </tr>
         </thead>
         <tbody id="benchCandidateExploreJobAjax"></tbody>

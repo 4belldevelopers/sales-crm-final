@@ -124,14 +124,17 @@
        Map currency_id → unicode glyph instead. */
     $currencyGlyphs = [0=>'₹', 1=>'€', 2=>'¥', 3=>'£', 4=>'$', 5=>'د.إ'];
     $salCurrencySym = $currencyGlyphs[(int)@$jobDetails->min_salary_currency] ?? '₹';
-    $salSuffix = ['/annum', '/month', '/hour'][(int)(@$jobDetails->min_sal_mode ?? 0)] ?? '';
+    $salSuffix = ['/Annum', '/Month', '/Hour'][(int)(@$jobDetails->min_sal_mode ?? 0)] ?? '';
     $salaryDisplay = '';
     if ($min_salary_raw > 0 || $max_salary_raw > 0) {
-        $salaryDisplay = GeneralMethod::thousandsCurrencyFormat($min_salary_raw)
-            . ' - ' . GeneralMethod::thousandsCurrencyFormat($max_salary_raw);
+        $salaryMinDisplay = GeneralMethod::formatAmount(GeneralMethod::thousandsCurrencyFormat($min_salary_raw));
+        $salaryMaxDisplay = GeneralMethod::formatAmount(GeneralMethod::thousandsCurrencyFormat($max_salary_raw));
+        $salaryDisplay = $salCurrencySym . ' ' . $salaryMinDisplay . ' - ' . $salaryMaxDisplay;
     }
 
     $employment_type = ($jobDetails->employment_type == 1) ? 'Contract' : 'Full-time';
+    $employmentClass = ($jobDetails->employment_type == 1) ? 'bxr-pos-contract' : 'bxr-pos-fulltime';
+    $employmentIcon = ($jobDetails->employment_type == 1) ? 'fa-file-contract' : 'fa-briefcase';
 
     /* ── Location — city list comes straight off the ES job document
        (client_city_jobs is already in $jobDetails), replacing the two
@@ -151,6 +154,7 @@
     } elseif (in_array($jobDetails->work_type, ['any', 'other'], true)) {
         $workMode = 'Hybrid';
     }
+    $workModeIcon = $workMode === 'Remote' ? 'fa-wifi' : ($workMode === 'Hybrid' ? 'fa-location-dot' : 'fa-building');
 
     /* ── Client Type Badge — derived from the same branch that the jobs
        page uses to colour its $internalBadge. Pure data-derivation, no
@@ -191,6 +195,7 @@
     elseif ($statusLabel == 'Inactive') { $statusLabel = 'Closed'; $statusClass = 'bxr-b rd'; }
     elseif ($statusLabel == 'Hold')     { $statusLabel = 'Hold';   $statusClass = 'bxr-b yw'; }
     else                                { $statusClass = 'bxr-b gy'; }
+    $statusIcon = $statusLabel === 'Hiring' ? 'fa-user-group' : ($statusLabel === 'Hold' ? 'fa-pause' : ($statusLabel === 'Closed' ? 'fa-box-archive' : 'fa-circle'));
 
     /* ── Hiring Manager ──────────────────────────── */
     $hiringManager    = '—';
@@ -262,18 +267,6 @@
         $addedByName = ucwords($bxrUserCache[$subUserId]);
     }
 
-    /* Team display uses the already-loaded job_assign payload from jobDetails,
-       matching the jobs page visual without introducing another query. */
-    $teamCompanyId = ($recommendation_id > 0 && @$row->to_company_id == $company_id)
-        ? $row->to_company_id
-        : $company_id;
-    $teamRows = $jobAssign->where('company_id', $teamCompanyId)->where('job_id', $jobDetails->id);
-    $teamCount = $teamRows->unique('user_id')->count();
-    $teamFirst = $teamRows->filter(function ($teamRow) {
-        return data_get($teamRow, 'user_id') == data_get($teamRow, 'spok_user_id');
-    })->sortBy('user_name')->first();
-    $teamFirstName = $teamFirst ? ucwords(mb_substr(data_get($teamFirst, 'user_name', ''), 0, 16)) : '';
-    $teamMoreCount = max($teamCount - 1, 0);
 @endphp
 
 <tr>
@@ -309,7 +302,7 @@
         </div>
     </td>
 
-    {{-- ② EXPERIENCE (vertical: clock ▸ exp · ₹ ▸ salary · Client Type Badge) --}}
+    {{-- ② EXPERIENCE --}}
     <td>
         <div class="bxr-col-exp-stack">
             <div class="bxr-col-exp-row">
@@ -323,11 +316,9 @@
             </div>
             @endif
             <div>
-                <span class="client-badge client-badge--{{ $clientBadgeKey }}">
-                    <span class="client-badge-stripe"></span>
-                    {!! $clientBadgeSvg !!}
-                    <span class="client-badge-label">{{ $clientBadgeLabel }}</span>
-                    <span class="client-badge-id">· {{ $jobDetails->id }}</span>
+                <span class="bxr-pos-badge {{ $employmentClass }}">
+                    <i class="fa-solid {{ $employmentIcon }}" aria-hidden="true"></i>
+                    {{ $employment_type }}
                 </span>
             </div>
         </div>
@@ -338,7 +329,7 @@
         <div class="bxr-col-loc-stack">
             <div>
                 <span class="{{ $statusClass }}">
-                    <svg viewBox="0 0 24 24" width="7" height="7" fill="currentColor" aria-hidden="true" style="display:inline-block;vertical-align:middle;margin-right:4px;"><circle cx="12" cy="12" r="9"/></svg> {{ $statusLabel }}
+                    <i class="fa-solid {{ $statusIcon }}" aria-hidden="true"></i> {{ $statusLabel }}
                 </span>
             </div>
             @if($cityDisplay && $cityDisplay !== '—')
@@ -346,7 +337,7 @@
                 <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="#2563EB" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex-shrink:0;display:inline-block;vertical-align:middle;"><path d="M12 22s-7-7.5-7-12a7 7 0 1 1 14 0c0 4.5-7 12-7 12z"/><circle cx="12" cy="10" r="2.5"/></svg>
                 <span>{{ $cityDisplay }}</span>
             </div>
-            <div class="bxr-col-loc-mode">{{ $workMode }}</div>
+            <div class="bxr-col-loc-mode"><i class="fa-solid {{ $workModeIcon }}" aria-hidden="true"></i>{{ $workMode }}</div>
             @endif
         </div>
     </td>
@@ -354,7 +345,6 @@
     {{-- ④ HIRING MANAGER --}}
     <td>
         <div class="bxr-col-hm-row">
-            <span class="bxr-col-hm-av {{ $hmHasName ? 'bxr-col-hm-av--filled' : 'bxr-col-hm-av--empty' }}">{{ $hmInitials }}</span>
             <div class="bxr-col-hm-info">
                 <span class="bxr-col-hm-name">{{ $hiringManager }}</span>
                 @if($showDesig)
@@ -362,21 +352,17 @@
                 @else
                     <span class="bxr-col-hm-role">Hiring Manager</span>
                 @endif
-                <span class="bxr-b gy" style="font-size:10px;margin-top:2px;align-self:flex-start;">{{ $employment_type }}</span>
+                <span class="client-badge client-badge--{{ $clientBadgeKey }}" style="margin-top:3px;">
+                    <span class="client-badge-stripe"></span>
+                    {!! $clientBadgeSvg !!}
+                    <span class="client-badge-label">{{ $clientBadgeLabel }}</span>
+                    <span class="client-badge-id">· {{ $jobDetails->id }}</span>
+                </span>
             </div>
         </div>
     </td>
 
-    {{-- ⑤ TEAM --}}
-    <td>
-        <div class="bxr-team-cell">
-            <div class="bxr-team-name">{{ $teamFirstName ?: 'No member' }}</div>
-            <div class="bxr-team-count">{{ $teamMoreCount > 0 ? '+' . $teamMoreCount : $teamCount }} {{ $teamCount == 1 ? 'Member' : 'Members' }}</div>
-            <div class="bxr-team-more">+ Add More</div>
-        </div>
-    </td>
-
-    {{-- ⑥ STAGE --}}
+    {{-- ⑤ STAGE --}}
     <td>
         <div class="bxr-stage-cell">
             @if(!empty($job_wise_condidates) && $job_wise_condidates->master_status_id == 8)
@@ -391,8 +377,15 @@
                 <span class="bxr-b gy" style="font-size:10px;">{{ $childName }}</span>
             @endif
             {!! $privateTag !!}
-            @if($addedByName || $addedDate)
-                <span class="bxr-stage-added">{{ $addedByName ? mb_substr($addedByName,0,14) . ' · ' : '' }}{{ $addedDate }}</span>
+        </div>
+    </td>
+
+    {{-- ⑥ ADDED BY --}}
+    <td>
+        <div class="bxr-added-cell">
+            <span class="bxr-added-name">{{ $addedByName ?: '—' }}</span>
+            @if($addedDate)
+                <span class="bxr-added-date">{{ $addedDate }}</span>
             @endif
             @if($daysAgo)
                 <span class="bxr-stage-added">{{ $daysAgo }}</span>
