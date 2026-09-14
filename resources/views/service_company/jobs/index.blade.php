@@ -135,16 +135,16 @@
         $tabactive = [
          'allRequisition_active'=>'tabactive',
          'allRequisition_url'=> 'javascript:void(0);',
-         'allRequisition_id'=>'all_jobs_count',
+         'allRequisition_id'=>'top_card_all_jobs_count',
          'customRequisition_active'=>'',
-         'customRequisition_url'=> url('service_company/jobs/custom_requisition/0'),
-         'customRequisition_id'=>'',
+         'customRequisition_url'=> 'javascript:void(0);',
+         'customRequisition_id'=>'top_card_custom_requisition_count',
          'clientRequisition_active'=>'',
-         'clientRequisition_url'=> url('service_company/jobs/client_requisition/0'),
-         'clientRequisition_id'=>'',
+         'clientRequisition_url'=> 'javascript:void(0);',
+         'clientRequisition_id'=>'top_card_client_requisition_count',
          'jobRequest_active'=>'',
-         'jobRequest_url'=> url('service_company/jobs/job_request/0'),
-         'jobRequest_id'=>'',
+         'jobRequest_url'=> 'javascript:void(0);',
+         'jobRequest_id'=>'top_card_job_request_count',
          'allRequisition' =>@$dataCnt['allRequisition'],
          'customRequisition' =>@$dataCnt['customRequisition'],
          'clientRequisition' =>@$dataCnt['clientRequisition'],
@@ -604,21 +604,77 @@ data-kt-drawer-toggle="#kt_activitiesJob_toggle" data-kt-drawer-close="#kt_activ
    	  //  table._fnDraw();
 
    	});
-   	$(document).on('change','#status,#hiringtype,#employment_type',function(){
+   	$(document).on('change','#status,#hiringtype,#employment_type,#experience_filter',function(){
         if (this.id === 'status') {
             // Sync the tab row to match the selected status
             var val = $(this).val();
-            var tabStatus = (val === 'inactive') ? 'inactive' : val; // closed → inactive
+            var tabStatus = (val === 'inactive') ? 'inactive' : val;
             $('.jh-tab').removeClass('jh-tab-active');
             $('.jh-tab[data-status="' + tabStatus + '"]').addClass('jh-tab-active');
         }
+        syncJobCustomSelect(this.id);
         localStorage.setItem('currentPageJobs', 1);
         fetchCandidates(1);
    	});
 
+    window.currentKpiFilter = (new URLSearchParams(window.location.search)).get('kpi') || 'all';
+
+    // Clean up ?kpi= from address bar if present on page load
+    if ((new URLSearchParams(window.location.search)).has('kpi')) {
+        var cleanUrl = new URL(window.location.href);
+        cleanUrl.searchParams.delete('kpi');
+        window.history.replaceState({}, '', cleanUrl.pathname + cleanUrl.search + cleanUrl.hash);
+    }
+
+    function updateKpiViewToggle(kpiType) {
+        if (kpiType === 'job_request' || kpiType === 'request') {
+            $('.jh-filter-bar').hide();
+            $('.jh-tabs-card').hide();
+            $('.pipeline-legend-card').hide();
+            $('.table-header-standard').hide();
+            $('.table-header-request').show();
+        } else {
+            $('.jh-filter-bar').show();
+            $('.jh-tabs-card').show();
+            $('.pipeline-legend-card').show();
+            $('.table-header-standard').show();
+            $('.table-header-request').hide();
+        }
+    }
+
+    function filterJobsByKpi(kpiType) {
+        window.currentKpiFilter = kpiType;
+        $('.jh-card').removeClass('jh-card-active');
+        $(`.jh-card[data-kpi="${kpiType}"]`).addClass('jh-card-active');
+
+        $('.jh-radio-input').prop('checked', false);
+        $(`.jh-card[data-kpi="${kpiType}"] .jh-radio-input`).prop('checked', true);
+
+        updateKpiViewToggle(kpiType);
+
+        localStorage.setItem('currentPageJobs', 1);
+        fetchCandidates(1);
+    }
+
+    var searchTimer = null;
+    $(document).on('keyup input', '.inputJobSearch, #inputSearch', function(e) {
+        if (e.key === 'Enter' || e.keyCode === 13) {
+            if (searchTimer) clearTimeout(searchTimer);
+            localStorage.setItem('currentPageJobs', 1);
+            fetchCandidates(1);
+            return;
+        }
+        if (searchTimer) clearTimeout(searchTimer);
+        searchTimer = setTimeout(function() {
+            localStorage.setItem('currentPageJobs', 1);
+            fetchCandidates(1);
+        }, 300);
+    });
+
     // Called from the tab row in jobHeader — filters table and marks tab active
     function filterJobsByStatus(status) {
         $('#status').val(status);
+        syncJobCustomSelect('status');
         $('.jh-tab').removeClass('jh-tab-active');
         $('.jh-tab[data-status="' + status + '"]').addClass('jh-tab-active');
         localStorage.setItem('currentPageJobs', 1);
@@ -653,6 +709,11 @@ data-kt-drawer-toggle="#kt_activitiesJob_toggle" data-kt-drawer-close="#kt_activ
         $('#' + selectId).val($option.data('value'));
         syncJobCustomSelect(selectId);
         $wrap.removeClass('is-open').find('.jh-select-trigger').attr('aria-expanded', 'false');
+        if (selectId === 'status') {
+            var val = $option.data('value');
+            $('.jh-tab').removeClass('jh-tab-active');
+            $('.jh-tab[data-status="' + val + '"]').addClass('jh-tab-active');
+        }
         localStorage.setItem('currentPageJobs', 1);
         filtersdata();
     });
@@ -665,7 +726,9 @@ data-kt-drawer-toggle="#kt_activitiesJob_toggle" data-kt-drawer-close="#kt_activ
         syncJobCustomSelect(this.id);
     });
 
+    syncJobCustomSelect('status');
     syncJobCustomSelect('employment_type');
+    syncJobCustomSelect('experience_filter');
     syncJobCustomSelect('hiringtype');
     
    
@@ -949,6 +1012,7 @@ $(document).on('click', '.client-hm-listing', function ()
       $(document).ready(function() {
             // $.noConflict();
 
+            updateKpiViewToggle(window.currentKpiFilter);
             fetchCandidates();
 
             // Pagination bar markup (service_company.ajax_pages.pagination) uses .pagi-page /
@@ -1235,10 +1299,16 @@ $(document).on('click', '.client-hm-listing', function ()
             }else{
                 $('.page-loader').css('display', 'flex');
             }
-            return $.ajax({
+
+            if (window.currentJobsAjax && typeof window.currentJobsAjax.abort === 'function') {
+                window.currentJobsAjax.abort();
+            }
+
+            window.currentJobsAjax = $.ajax({
                 url: `{!! route('service_company.jobs.all_data_ajax') !!}?page=${page}`,
                 type: 'GET',
                 data: {
+                  requisition_type: window.currentKpiFilter || 'all',
                   custom_status : $('#status').val(),
                   search : $('#inputSearch').val(),
                   custom_hiringtype : $('#hiringtype').val(),
@@ -1247,25 +1317,69 @@ $(document).on('click', '.client-hm-listing', function ()
                   size : size
                 },
                 success: function(response) {
+                    window.currentJobsAjax = null;
                     $('.loadingMessage').css({ display: 'none' });
                     $('.loader_search').css({ display: 'none' });
                     $('.page-loader').css('display', 'none');
                     localStorage.setItem('currentPageJobs', page);
 
-                    if (response.jobs && response.jobs.length > 0) {
-                        window.jobsState = {
-                            all: response.jobs,
-                            filtered: response.jobs,
-                            total: response.total
-                        };
-                        $('#allJobList').html(renderJobsClientSide(response.jobs));
-                    } else if (response.html) {
-                        $('#allJobList').html(response.html);
+                    updateKpiViewToggle(window.currentKpiFilter);
+
+                    if (window.currentKpiFilter === 'job_request' || window.currentKpiFilter === 'request') {
+                        if (response.html && response.html.trim() !== '') {
+                            $('#allJobList').html(response.html);
+                        } else if (response.jobs && response.jobs.length > 0) {
+                            $('#allJobList').html(renderJobsClientSide(response.jobs));
+                        } else {
+                            $('#allJobList').html(
+                                '<div class="card border-0 shadow-sm rounded-4 text-center py-16 px-6 my-4" style="background: #ffffff; border: 1px solid #eef0f4; border-radius: 12px;">' +
+                                  '<div class="mb-4 d-flex justify-content-center">' +
+                                    '<div style="width: 64px; height: 64px; border-radius: 16px; background-color: #f1f3f7; display: flex; align-items: center; justify-content: center; color: #a1a5b7;">' +
+                                      '<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">' +
+                                        '<rect x="2" y="7" width="20" height="14" rx="2" ry="2"/>' +
+                                        '<path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/>' +
+                                        '<line x1="12" y1="11" x2="12" y2="17"/>' +
+                                        '<line x1="9" y1="14" x2="15" y2="14"/>' +
+                                      '</svg>' +
+                                    '</div>' +
+                                  '</div>' +
+                                  '<h4 class="fw-bolder text-dark mb-2" style="font-family: \'Poppins\', sans-serif; font-size: 16px; color: #181c32;">No Job Requests Found</h4>' +
+                                  '<p class="text-muted fs-7 mb-0" style="font-family: \'Poppins\', sans-serif; font-size: 13px; color: #7e8299;">There are no pending job requests at the moment.</p>' +
+                                '</div>'
+                            );
+                        }
+                    } else {
+                        if (response.jobs && response.jobs.length > 0) {
+                            window.jobsState = {
+                                all: response.jobs,
+                                filtered: response.jobs,
+                                total: response.total
+                            };
+                            $('#allJobList').html(renderJobsClientSide(response.jobs));
+                        } else if (response.html) {
+                            $('#allJobList').html(response.html);
+                        } else {
+                            $('#allJobList').html(
+                                '<div style="text-align:center;padding:40px 20px;font-family:Poppins,sans-serif;">' +
+                                '<p style="font-size:13px;color:#5e6278;margin:0;">No jobs found.</p>' +
+                                '</div>'
+                            );
+                        }
                     }
-                    $('#all_jobs_count').html(response.total);
-                    $('#pagination').html(response.pagination);
+                    $('#all_jobs_count').html(response.total !== undefined ? response.total : 0);
+                    $('#pagination').html(response.pagination || '');
+
+                    if (response.status_counts) {
+                        $('.jh-tab[data-status="all"] .jh-badge').text(response.status_counts.all !== undefined ? response.status_counts.all : 0);
+                        $('.jh-tab[data-status="active"] .jh-badge').text(response.status_counts.active !== undefined ? response.status_counts.active : 0);
+                        $('.jh-tab[data-status="hold"] .jh-badge').text(response.status_counts.hold !== undefined ? response.status_counts.hold : 0);
+                        $('.jh-tab[data-status="inactive"] .jh-badge').text(response.status_counts.inactive !== undefined ? response.status_counts.inactive : 0);
+                        $('.jh-tab[data-status="removed"] .jh-badge').text(response.status_counts.removed !== undefined ? response.status_counts.removed : 0);
+                    }
                 },
-                error: function(xhr) {
+                error: function(xhr, status, error) {
+                    window.currentJobsAjax = null;
+                    if (status === 'abort') return;
                     $('.loadingMessage').css({ display: 'none' });
                     $('.loader_search').css({ display: 'none' });
                     $('.page-loader').css('display', 'none');
@@ -1292,6 +1406,8 @@ $(document).on('click', '.client-hm-listing', function ()
                     $('#pagination').html('');
                 }
             });
+
+            return window.currentJobsAjax;
         }
 
     

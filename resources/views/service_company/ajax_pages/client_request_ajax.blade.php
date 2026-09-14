@@ -5,152 +5,79 @@
     @foreach ($data as $rowArr)
 	  @php
         $row = (object) $rowArr;
-       
-                 $company_name = '';
-				$company_name = ucwords($row->company_name);
+        $company_name = ucwords($row->company_name ?? '');
+        $client_id = $row->client_id ?? 0;
+        $city = @$row->city_name;
+        $country_name = @$row->country_name;
+        $ind_name = $row->ind_name ?? '';
+        $logo_path = (!empty(@$row->logo) && strlen(@$row->logo) > 10) ? @$row->logo : '';
+        $staffing_company_invitation_id = $row->staffing_company_invitation_id ?? 0;
+        $from_company_id = $row->from_company_id ?? 0;
 
-				$client_id = '';
-				$client_id = $row->client_id;
+        $str = trim(@$company_name);
+        $strVal = strtolower($str[0] ?? 'a');
+        $ascii = ord($strVal);
+        if ($ascii >= 97 && $ascii <= 101) {
+            $bgTextDecore = 'bg-light-danger text-danger';
+        } elseif ($ascii >= 102 && $ascii <= 106) {
+            $bgTextDecore = 'bg-light-warning text-warning';
+        } elseif ($ascii >= 107 && $ascii <= 111) {
+            $bgTextDecore = 'bg-light-primary text-primary';
+        } elseif ($ascii >= 112 && $ascii <= 116) {
+            $bgTextDecore = 'bg-light-success text-success';
+        } elseif ($ascii >= 117 && $ascii <= 121) {
+            $bgTextDecore = 'bg-dark text-white';
+        } else {
+            $bgTextDecore = 'bg-light-secondary text-dark';
+        }
+        $initials = strtoupper(mb_substr($strVal, 0, 1));
 
-
-
-				$locationHtml = '';
-				
-				
-
-				
-                $city = @$row->city_name;
-                $country_name = @$row->country_name;
-				$locationHtml = ucwords(substr(@$city, 0, 10)) . '&nbsp;' . @$country_name;
-
-
-				$tags_html = '';
-				$tags = $row->tags;
-				if (!empty($tags)) {
-					$tagsArr = explode(',', $tags);
-					foreach ($tagsArr as $key => $val) {
-						$tags_html .= '<span class="badge badge-light my-1 me-2">' . $val . '</span>';
-					}
-				}
-
-				$ind_name = '';
-				$ind_name = $row->ind_name;
-
-				$logo_path = url('img/client-default.png');
-				if (!empty(@$row->logo) && strlen(@$row->logo) > 10) {
-					$logo_path = @$row->logo;
-				}
-
-				$staffing_company_invitation_id = '';
-				$staffing_company_invitation_id = $row->staffing_company_invitation_id;
-
-				$from_company_id = '';
-				$from_company_id = $row->from_company_id;
+        $created_at = !empty($row->from_created_at) ? $row->from_created_at : ($row->created_at ?? '');
+        $newDate = !empty($created_at) ? date('d M, Y', strtotime($created_at)) : '';
+        $daysAgo = !empty($created_at) ? GeneralMethod::timeAgo($created_at) : '';
 	  @endphp
 
-        <tr style="">
-            <td class="show-detail-direct" data-row-id="{{ $row->client_id }}">
-				@php
-				
-				
-                    $image = '';
-                    $bgTextDecore = $strVal = '';
-                    $str = trim(@$company_name);
-                    $str = $strVal = strtolower($str[0]);
-                    $str = ord($str);
-                    if ($str >= 97 && $str <= 101) {
-                        $bgTextDecore = 'fs-3 bg-light-danger text-danger';
-                    } elseif ($str >= 102 && $str <= 106) {
-                        $bgTextDecore = 'fs-3 bg-light-warning text-warning';
-                    } elseif ($str >= 107 && $str <= 111) {
-                        $bgTextDecore = 'fs-3 bg-light-primary text-primary';
-                    } elseif ($str >= 112 && $str <= 116) {
-                        $bgTextDecore = 'fs-3 bg-light-success text-success';
-                    } elseif ($str >= 117 && $str <= 121) {
-                        $bgTextDecore = 'fs-3 bg-dark text-secondary';
-                    } else {
-                        $bgTextDecore = 'fs-3 bg-light-secondary text-dark';
-                    }
-
-					$logo_path = ''; //url('img/client-default.png');
-					if (!empty(@$row->logo) && strlen(@$row->logo) > 10) {
-						$logo_path = @$row->logo;
-					}
-					$client_type_css = '';
-
-				@endphp
-
-				@php
-				if (!empty($logo_path)) {
-                            echo '<div class="symbol symbol-circle symbol-40px overflow-hidden me-2 border-radius-5 ' .$client_type_css .'" style="float:left"> 
-								<img src="' .$logo_path .'" height="100px" width="100px" class="' .$client_type_css .' border-radius-5">
-							</div>';
-                        } else {
-                            echo '<div class="symbol symbol-circle symbol-40px overflow-hidden me-2 border-radius-5" style="float:left" >
-								<a href="javascript:void(0);" data-row-id="' .$row->client_id .'" class="' . $client_type_css . ' border-radius-5  ssss" id="kt_activities3_toggle" >
-									<div class="symbol-label fs-3 ' .@$bgTextDecore .'  border-radius-5">' . ucwords(@$strVal) . '</div>
-									</a>
-							</div>';
-                        }
-				@endphp	
-
-                  <div class="d-flex flex-column">
-                    <a href="javascript:void(0);" data-row-id="{{$row->client_id}}" class="text-dark fw-bolder text-hover-primary fs-6 show-detail" data-toggle="tooltip1" data-html="true" title="{{ $company_name }}">{{ $company_name }}</a>
-                    <a href="javascript:void(0);" data-row-id="{{ $row->client_id }}" class="text-muted fw-bold text-muted d-block fs-7 text-hover-primary show-detail">{{ $ind_name }}</a>
-				</div>
-			</td>
-            <td>
-				<a href="javascript:void(0);" class="text-dark fw-bolder text-hover-primary fs-6">{{ $row->city_name }}</a>
-				<div class="d-flex align-items-center">
-					<span class="text-muted fw-bold text-muted d-block fs-7 text-hover-primary">{{ $row->country_name }}</span>
-				<div>
-			</td>
-            <td>
-				@php
-						$created_at = !empty($row->from_created_at) ? $row->from_created_at : $row->created_at;
-						$newDate = date('d M, Y', strtotime($created_at));
-						$daysAgo = GeneralMethod::timeAgo($created_at);
-				@endphp
-                <div class="d-flex flex-column">
-                    <a href="javascript:void(0);" class="text-dark fw-bolder text-hover-primary fs-6">{{ $newDate }}</a>
-                    <a href="javascript:void(0);" class="text-muted fw-bold text-muted d-block fs-7 text-hover-primary">{{ $daysAgo }}</a>
-                  </div>
-            </td>
-            <td>
-                <div class="d-flex flex-column">
-						@php
-						
-							if($row->to_invitation_status==1){
-								echo '
-									<a href="javascript:void(0);" type="button" class="btn btn-sm btn-success fw-bolder me-3 fs-6">Accepted</a> 
-							';
-							}elseif($row->to_invitation_status==-1){
-							echo ' 
-									<a href="javascript:void(0);" type="button" class="btn btn-sm btn-danger fw-bolder me-3 fs-6">Rejected</a> 
-							';
-							}elseif($row->to_invitation_status==2){
-							echo ' 
-									<a href="javascript:void(0);" type="button" class="btn btn-sm btn-danger fw-bolder me-3 fs-6">Expired</a> 
-							';
-							}else{
-							echo '
-									<a href="javascript:void(0);" data-row-id="' . $staffing_company_invitation_id . '" data-row-event="-1" data-row-from_company="' . $from_company_id . '" type="button" class="btn btn-sm btn-light fw-bolder  mb-1 me-3 fs-6 request_event">Ignore</a> 
-									<a href="javascript:void(0);" data-row-id="' . $staffing_company_invitation_id . '" data-row-event="1" data-row-from_company="' . $from_company_id . '" type="button" class="btn btn-sm btn-primary fw-bolder me-3 fs-6 request_event">Accept</a> 
-							';
-							}
-						@endphp
-				</div>            
-			</td>
-        </tr>
+        <div class="tbl-r">
+            <div class="tbl-a show-detail-direct" data-row-id="{{ $client_id }}">
+                @if (!empty($logo_path))
+                    <div class="tbl-av show-detail-direct" data-row-id="{{ $client_id }}">
+                        <img src="{{ $logo_path }}" style="width:100%;height:100%;object-fit:cover;">
+                    </div>
+                @else
+                    <div class="tbl-av show-detail-direct {{ $bgTextDecore }}" data-row-id="{{ $client_id }}">
+                        {{ $initials }}
+                    </div>
+                @endif
+                <div class="tbl-ai">
+                    <div class="tbl-n show-detail-direct" data-row-id="{{ $client_id }}" title="{{ $company_name }}">{{ $company_name }}</div>
+                    <div class="tbl-t">{{ $ind_name }}</div>
+                </div>
+            </div>
+            <div>
+                <div class="fw-bolder text-dark fs-6">{{ $city }}</div>
+                <div class="text-muted fs-7">{{ $country_name }}</div>
+            </div>
+            <div>
+                <div class="fw-bolder text-dark fs-6">{{ $newDate }}</div>
+                <div class="text-muted fs-7">{{ $daysAgo }}</div>
+            </div>
+            <div class="d-flex flex-column gap-1 ms-auto" style="width: 100%; max-width: 180px;">
+                @if(($row->to_invitation_status ?? 0) == 1)
+                    <span class="btn btn-sm btn-success fw-bolder py-2 w-100">Accepted</span>
+                @elseif(($row->to_invitation_status ?? 0) == -1)
+                    <span class="btn btn-sm btn-danger fw-bolder py-2 w-100">Rejected</span>
+                @elseif(($row->to_invitation_status ?? 0) == 2)
+                    <span class="btn btn-sm btn-danger fw-bolder py-2 w-100" style="background-color: #ff2854; border-color: #ff2854; color: #fff;">Expired</span>
+                @else
+                    <a href="javascript:void(0);" data-row-id="{{ $staffing_company_invitation_id }}" data-row-event="-1" data-row-from_company="{{ $from_company_id }}" class="btn btn-sm btn-light fw-bolder py-2 w-100 request_event" style="background-color: #f5f8fa; color: #5e6278; text-align:center;">Ignore</a>
+                    <a href="javascript:void(0);" data-row-id="{{ $staffing_company_invitation_id }}" data-row-event="1" data-row-from_company="{{ $from_company_id }}" class="btn btn-sm btn-primary fw-bolder py-2 w-100 request_event" style="text-align:center;">Accept</a>
+                @endif
+            </div>
+        </div>
 
     @endforeach
 @else
-
-    <tr style="height: 102px; position: relative; background: #fffcfc7a;">
-
-        <td colspan="5" style="text-align: center; color: black;">
-            No data available in table
-        </td>
-
-    </tr>
+    <div class="p-5 text-center text-muted fw-bold">
+        No pending job requests available
+    </div>
 @endif

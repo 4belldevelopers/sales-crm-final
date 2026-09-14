@@ -36,7 +36,11 @@
     @if($showStats)
     <div class="jh-stats">
 
-        <a href="{{ $tabactive['allRequisition_url'] }}" class="jh-card jh-card-source-all {{ !empty($tabactive['allRequisition_active']) ? 'jh-card-active' : '' }}">
+        <a href="javascript:void(0);" data-kpi="all" onclick="filterJobsByKpi('all'); return false;" class="jh-card jh-card-source-all {{ !empty($tabactive['allRequisition_active']) ? 'jh-card-active' : '' }}">
+            <div class="jh-radio-wrap">
+                <input type="radio" name="kpi_filter_radio" value="all" class="jh-radio-input" {{ !empty($tabactive['allRequisition_active']) ? 'checked' : '' }}>
+                <span class="jh-radio-custom"></span>
+            </div>
             <div class="jh-icon jh-icon-blue">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <rect x="2" y="7" width="20" height="14" rx="2"/>
@@ -54,7 +58,11 @@
         </a>
 
         @if($tabactive['productAllowCompany'])
-        <a href="{{ $tabactive['clientRequisition_url'] }}" class="jh-card jh-card-source-direct {{ !empty($tabactive['clientRequisition_active']) ? 'jh-card-active' : '' }}">
+        <a href="javascript:void(0);" data-kpi="direct" onclick="filterJobsByKpi('direct'); return false;" class="jh-card jh-card-source-direct {{ !empty($tabactive['clientRequisition_active']) ? 'jh-card-active' : '' }}">
+            <div class="jh-radio-wrap">
+                <input type="radio" name="kpi_filter_radio" value="direct" class="jh-radio-input" {{ !empty($tabactive['clientRequisition_active']) ? 'checked' : '' }}>
+                <span class="jh-radio-custom"></span>
+            </div>
             <div class="jh-icon jh-icon-green">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
@@ -70,7 +78,11 @@
             </div>
         </a>
 
-        <a href="{{ $tabactive['customRequisition_url'] }}" class="jh-card jh-card-source-internal {{ !empty($tabactive['customRequisition_active']) ? 'jh-card-active' : '' }}">
+        <a href="javascript:void(0);" data-kpi="internal" onclick="filterJobsByKpi('internal'); return false;" class="jh-card jh-card-source-internal {{ !empty($tabactive['customRequisition_active']) ? 'jh-card-active' : '' }}">
+            <div class="jh-radio-wrap">
+                <input type="radio" name="kpi_filter_radio" value="internal" class="jh-radio-input" {{ !empty($tabactive['customRequisition_active']) ? 'checked' : '' }}>
+                <span class="jh-radio-custom"></span>
+            </div>
             <div class="jh-icon jh-icon-orange">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
@@ -85,7 +97,11 @@
             </div>
         </a>
 
-        <a href="{{ $tabactive['jobRequest_url'] }}" class="jh-card jh-card-source-request {{ !empty($tabactive['jobRequest_active']) ? 'jh-card-active' : '' }}">
+        <a href="javascript:void(0);" data-kpi="job_request" onclick="filterJobsByKpi('job_request'); return false;" class="jh-card jh-card-source-request {{ !empty($tabactive['jobRequest_active']) ? 'jh-card-active' : '' }}">
+            <div class="jh-radio-wrap">
+                <input type="radio" name="kpi_filter_radio" value="job_request" class="jh-radio-input" {{ !empty($tabactive['jobRequest_active']) ? 'checked' : '' }}>
+                <span class="jh-radio-custom"></span>
+            </div>
             <div class="jh-icon jh-icon-purple">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>

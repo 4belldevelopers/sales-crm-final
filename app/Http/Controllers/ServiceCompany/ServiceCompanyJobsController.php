@@ -1362,7 +1362,7 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
             });
             // $this->jobsAll = $this->jobsAll->count();
 
-            $filter[] = ['term' => ['status' => 'active']];
+            $filter[] = ['terms' => ['status' => ['active', 'hold', 'inactive', '2']]];
             // 1. COMPANY ACCESS CONDITIONS
             $must[] = [
                 'bool' => [
@@ -1427,7 +1427,7 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
 
             // BUG-08: dead SQL $clientRequisition count removed — overwritten by ES count below anyway.
 
-            $filter_client[] = ['term' => ['status' => 'active']];
+            $filter_client[] = ['terms' => ['status' => ['active', 'hold', 'inactive', '2']]];
             // 1. COMPANY ACCESS CONDITIONS
             $must_client[] = [
                 'bool' => [
@@ -1486,7 +1486,7 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
 
             // BUG-08: dead SQL $customRequisition count removed — overwritten by ES count below anyway.
 
-            $filter_internal[] = ['term' => ['status' => 'active']];
+            $filter_internal[] = ['terms' => ['status' => ['active', 'hold', 'inactive', '2']]];
             // 1. COMPANY ACCESS CONDITIONS
             $must_internal[] = [
                 'bool' => [
@@ -2664,6 +2664,8 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
         $employment_type = request('employment_type');
         $custom_search = trim(request('custom_search'));
 
+        $requisition_type = request('requisition_type', request('kpi_type', 'all'));
+
         // Step 7b: persist non-empty search terms per-user in a Redis sorted set (score = unix time).
         // zrevrange("user:searches:{$userId}", 0, 4) returns the 5 most-recent unique terms
         // which the front-end can show as "recent searches" in the search dropdown.
@@ -2689,6 +2691,8 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
             'employment_type' => $employment_type,
             'user_id' => $this->user->id,
             'custom_search' => $custom_search,
+            'requisition_type' => $requisition_type,
+            'v' => 'status_v6',
         ];
 
         // Two-axis version key: user (personal filter changes) + company (job creates/updates by any team member).
@@ -2704,10 +2708,17 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
             return response()->json(cache()->get($cacheKeySet));
         }
 
-        $final_status = [1, 2];
-        if ($custom_status === 'removed') {
-            $final_status = [2];
+        if ($requisition_type === 'job_request' || $requisition_type === 'request') {
+            return $this->recommandedrequest_ajax($request);
         }
+
+        $final_status = [1, 2, 3];
+        if ($custom_status === 'removed') {
+            $final_status = [2, 3];
+        } elseif (in_array($custom_status, ['active', 'hold', 'inactive'])) {
+            $final_status = [1];
+        }
+
         $rcommendationIds = $this->elasticService->getClient()->search([
             'index' => ELASTIC_JOB_REQUEST,
             'body' => [
@@ -2733,7 +2744,7 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
 
         // dd($jobIds);
 
-        $statusArr = ['active', 'hold', 'inactive', '2'];
+        $statusArr = [];
         $must = [];
         $should = [];
         $filter = [];
@@ -2777,26 +2788,12 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
         }
 
         // 1. STATUS FILTERING
-        // if (!session()->has('UrlMailJobId')) {
         if ($custom_status !== '' && $custom_status !== 'all') {
             if (in_array($custom_status, ['active', 'hold', 'inactive'])) {
                 $statusArr = [$custom_status];
-            } elseif ($custom_status === 'removed') {
-                $statusArr = [];
-                // $must[] = [
-                // 	'nested' => [
-                // 		'path' => 'recommendation_relation',
-                // 		'query' => [
-                // 			'term' => ['recommendation_relation.final_status' => 2],
-                // 		],
-                // 	],
-                // ];
-
+                $filter[] = ['terms' => ['status' => $statusArr]];
             }
         }
-
-        // }
-        $filter[] = ['terms' => ['status' => $statusArr]];
 
         // 2. HIRING TYPE
         if ($employment_type != '' && $employment_type != 'all') {
@@ -2844,54 +2841,53 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
             ];
         }
 
-        // 4. COMPANY ACCESS CONDITIONS
-
-        // if (session()->has('UrlMailJobId')) {
-        // 	$UrlMailJobId = session('UrlMailJobId');
-        // 		$must[] = [
-        // 		'bool' => [
-        // 			'should' => [
-        // 				['term' => ['id' => $UrlMailJobId]]
-        // 			],
-        // 			'minimum_should_match' => 1,
-        // 		],
-        // 	];
-
-        // }else{
-        $must[] = [
-            'bool' => [
-                'should' => [
-                    [
-                        'term' => [
-                            'comId' => $company_id,
-                        ],
+        // 4. COMPANY ACCESS CONDITIONS BASED ON KPI REQUISITION TYPE
+        if ($custom_status === 'removed') {
+            if ($requisition_type === 'internal' || $requisition_type === 'custom') {
+                $must[] = [
+                    'terms' => [
+                        'id' => [0],
                     ],
-                    [
-                        'nested' => [
-                            'path' => 'recommendation_relation',
-                            'query' => [
-                                'bool' => [
-                                    'must' => [
-                                        [
-                                            'term' => [
-                                                'recommendation_relation.to_company_id' => $company_id,
-                                            ],
-                                        ],
-                                        [
-                                            'terms' => [
-                                                'recommendation_relation.final_status' => $final_status,
-                                            ],
-                                        ],
-                                    ],
-                                ],
+                ];
+            } else {
+                $must[] = [
+                    'terms' => [
+                        'id' => ! empty($jobIds) ? $jobIds : [0],
+                    ],
+                ];
+            }
+        } elseif ($requisition_type === 'direct' || $requisition_type === 'client') {
+            $must[] = [
+                'terms' => [
+                    'id' => ! empty($jobIds) ? $jobIds : [0],
+                ],
+            ];
+        } elseif ($requisition_type === 'internal' || $requisition_type === 'custom') {
+            $must[] = [
+                'term' => [
+                    'comId' => $company_id,
+                ],
+            ];
+        } else {
+            // Default 'all'
+            $must[] = [
+                'bool' => [
+                    'should' => [
+                        [
+                            'term' => [
+                                'comId' => $company_id,
+                            ],
+                        ],
+                        [
+                            'terms' => [
+                                'id' => ! empty($jobIds) ? $jobIds : [0],
                             ],
                         ],
                     ],
+                    'minimum_should_match' => 1,
                 ],
-                'minimum_should_match' => 1,
-            ],
-        ];
-        // }
+            ];
+        }
 
         // 5. RESTRICT TO ASSIGNED USERS (if not admin)
         if (! (($chkAdminRole > 0) && in_array('all_requisition', $this->userPermissions) && in_array('view_jobs', $this->userPermissions))) {
@@ -2959,9 +2955,9 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
          * Enforces tenant scoping by company_id and prepares all UI presentation properties.
          */
         $formattedJobs = [];
-        if (!empty($data)) {
+        if (! empty($data)) {
             $categoryIds = collect($data)->pluck('category_id')->filter()->unique()->toArray();
-            $categoriesMap = !empty($categoryIds)
+            $categoriesMap = ! empty($categoryIds)
                 ? DB::table('job_categories')->whereIn('id', $categoryIds)->pluck('name', 'id')->toArray()
                 : [];
 
@@ -2999,15 +2995,22 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
                 $badge = $isDirectClientJob ? 'badge-client' : 'badge-internal';
 
                 $status = ucwords($row->status ?? 'active');
-                if ($status == 'Active') $status = 'Hiring';
-                if ($status == 'Inactive') $status = 'Closed';
+                if ($status == 'Active') {
+                    $status = 'Hiring';
+                }
+                if ($status == 'Inactive') {
+                    $status = 'Closed';
+                }
                 if (($final_status == 2 || $final_status == 3) && $isDirectClientJob) {
                     $status = 'Removed';
                 }
 
                 $work_type = 'Office';
-                if (($row->work_type ?? '') == 'yes') $work_type = 'Remote';
-                elseif (($row->work_type ?? '') == 'other') $work_type = 'Hybrid';
+                if (($row->work_type ?? '') == 'yes') {
+                    $work_type = 'Remote';
+                } elseif (($row->work_type ?? '') == 'other') {
+                    $work_type = 'Hybrid';
+                }
 
                 $employment_type = ($row->employment_type ?? 0) == 1 ? 'Contract' : 'Full-time';
 
@@ -3015,10 +3018,10 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
                 $newDate = GeneralMethod::ymdTodmyNotTime($created_at);
 
                 $skills = [];
-                if (!empty($row->job_metronics_skills)) {
+                if (! empty($row->job_metronics_skills)) {
                     foreach ($row->job_metronics_skills as $sval) {
                         $sval = (object) $sval;
-                        if (!empty($sval->skill_name)) {
+                        if (! empty($sval->skill_name)) {
                             $skills[] = ucfirst($sval->skill_name);
                         }
                     }
@@ -3031,7 +3034,7 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
 
                 $hiringManager = '--------';
                 $hiringManagerdesignation = '--------';
-                if (!empty($row->client_contact_info_jobs[0])) {
+                if (! empty($row->client_contact_info_jobs[0])) {
                     $hiringManager = $row->client_contact_info_jobs[0]['contact_person_name'] ?? '--------';
                     $hiringManagerdesignation = $row->client_contact_info_jobs[0]['contact_person_designation'] ?? '--------';
                 }
@@ -3071,25 +3074,31 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
                 $strVal = strtolower(trim($row->title ?? '')[0] ?? 'a');
                 $strOrd = ord($strVal);
                 $bgTextDecore = 'fs-3 bg-light-secondary text-dark';
-                if ($strOrd >= 97 && $strOrd <= 101) $bgTextDecore = 'fs-3 bg-light-danger text-danger';
-                elseif ($strOrd >= 102 && $strOrd <= 106) $bgTextDecore = 'fs-3 bg-light-warning text-warning';
-                elseif ($strOrd >= 107 && $strOrd <= 111) $bgTextDecore = 'fs-3 bg-light-primary text-primary';
-                elseif ($strOrd >= 112 && $strOrd <= 116) $bgTextDecore = 'fs-3 bg-light-success text-success';
-                elseif ($strOrd >= 117 && $strOrd <= 121) $bgTextDecore = 'fs-3 bg-dark text-secondary';
+                if ($strOrd >= 97 && $strOrd <= 101) {
+                    $bgTextDecore = 'fs-3 bg-light-danger text-danger';
+                } elseif ($strOrd >= 102 && $strOrd <= 106) {
+                    $bgTextDecore = 'fs-3 bg-light-warning text-warning';
+                } elseif ($strOrd >= 107 && $strOrd <= 111) {
+                    $bgTextDecore = 'fs-3 bg-light-primary text-primary';
+                } elseif ($strOrd >= 112 && $strOrd <= 116) {
+                    $bgTextDecore = 'fs-3 bg-light-success text-success';
+                } elseif ($strOrd >= 117 && $strOrd <= 121) {
+                    $bgTextDecore = 'fs-3 bg-dark text-secondary';
+                }
 
                 $partnersCount = 0;
                 $partnersFirstName = '';
                 if ($isDirectClientJob) {
                     $partnersCount = $jobAssign->where('company_id', $row->to_company_id)->where('job_id', $row->id)->unique('user_id')->count();
                     $partnersData = $jobAssign->where('company_id', $row->to_company_id)->where('job_id', $row->id)
-                        ->filter(fn($r) => $r['user_id'] == $r['spok_user_id'])->sortBy('user_name')->take(1)->values();
+                        ->filter(fn ($r) => $r['user_id'] == $r['spok_user_id'])->sortBy('user_name')->take(1)->values();
                     if (count($partnersData) > 0) {
                         $partnersFirstName = ucfirst($partnersData[0]['user_name']);
                     }
                 } else {
                     $partnersCount = $jobAssign->where('company_id', $company_id)->where('job_id', $row->id)->unique('user_id')->count();
                     $partnersData = $jobAssign->where('company_id', $company_id)->where('job_id', $row->id)
-                        ->filter(fn($r) => $r['user_id'] == $r['spok_user_id'])->sortBy('user_name')->take(1)->values();
+                        ->filter(fn ($r) => $r['user_id'] == $r['spok_user_id'])->sortBy('user_name')->take(1)->values();
                     if (count($partnersData) > 0) {
                         $partnersFirstName = ucfirst($partnersData[0]['user_name']);
                     }
@@ -3145,12 +3154,161 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
             }
         }
 
+        $statusCounts = ['all' => 0, 'active' => 0, 'hold' => 0, 'inactive' => 0, 'removed' => 0];
+        if ($this->elasticService->indexExists(ELASTIC_JOBS) && $requisition_type !== 'job_request') {
+            try {
+                // Query ELASTIC_JOB_REQUEST for exact recommendation job IDs by status
+                $allRecJobIds = $this->elasticService->getClient()->search([
+                    'index' => ELASTIC_JOB_REQUEST,
+                    'body' => [
+                        'size' => 10000,
+                        'query' => [
+                            'bool' => [
+                                'must' => [
+                                    ['term' => ['to_company_id' => $company_id]],
+                                    ['terms' => ['final_status' => [1, 2, 3]]],
+                                ],
+                            ],
+                        ],
+                        '_source' => ['job_id'],
+                    ],
+                ]);
+                $allDirectIds = collect($allRecJobIds['hits']['hits'] ?? [])->pluck('_source.job_id')->unique()->values()->toArray();
+
+                $removedRecJobIds = $this->elasticService->getClient()->search([
+                    'index' => ELASTIC_JOB_REQUEST,
+                    'body' => [
+                        'size' => 10000,
+                        'query' => [
+                            'bool' => [
+                                'must' => [
+                                    ['term' => ['to_company_id' => $company_id]],
+                                    ['terms' => ['final_status' => [2, 3]]],
+                                ],
+                            ],
+                        ],
+                        '_source' => ['job_id'],
+                    ],
+                ]);
+                $removedDirectIds = collect($removedRecJobIds['hits']['hits'] ?? [])->pluck('_source.job_id')->unique()->values()->toArray();
+
+                $activeRecJobIds = array_values(array_diff($allDirectIds, $removedDirectIds));
+
+                if ($requisition_type === 'direct' || $requisition_type === 'client') {
+                    $statusCounts['removed'] = count($removedDirectIds);
+
+                    if (! empty($activeRecJobIds)) {
+                        $aggsRes = $this->elasticService->getClient()->search([
+                            'index' => ELASTIC_JOBS,
+                            'size' => 0,
+                            'body' => [
+                                'query' => [
+                                    'terms' => ['id' => $activeRecJobIds],
+                                ],
+                                'aggs' => [
+                                    'by_status' => [
+                                        'terms' => [
+                                            'field' => 'status',
+                                        ],
+                                    ],
+                                ],
+                            ],
+                        ]);
+                        $buckets = $aggsRes['aggregations']['by_status']['buckets'] ?? [];
+                        foreach ($buckets as $b) {
+                            $st = $b['key'] ?? '';
+                            $cnt = $b['doc_count'] ?? 0;
+                            if ($st === 'active') {
+                                $statusCounts['active'] = $cnt;
+                            } elseif ($st === 'hold') {
+                                $statusCounts['hold'] = $cnt;
+                            } elseif ($st === 'inactive') {
+                                $statusCounts['inactive'] = $cnt;
+                            }
+                        }
+                    }
+                } elseif ($requisition_type === 'internal' || $requisition_type === 'custom') {
+                    $aggsRes = $this->elasticService->getClient()->search([
+                        'index' => ELASTIC_JOBS,
+                        'size' => 0,
+                        'body' => [
+                            'query' => [
+                                'term' => ['comId' => $company_id],
+                            ],
+                            'aggs' => [
+                                'by_status' => [
+                                    'terms' => [
+                                        'field' => 'status',
+                                    ],
+                                ],
+                            ],
+                        ],
+                    ]);
+                    $buckets = $aggsRes['aggregations']['by_status']['buckets'] ?? [];
+                    foreach ($buckets as $b) {
+                        $st = $b['key'] ?? '';
+                        $cnt = $b['doc_count'] ?? 0;
+                        if ($st === 'active') {
+                            $statusCounts['active'] = $cnt;
+                        } elseif ($st === 'hold') {
+                            $statusCounts['hold'] = $cnt;
+                        } elseif ($st === 'inactive') {
+                            $statusCounts['inactive'] = $cnt;
+                        }
+                    }
+                } else {
+                    // 'all'
+                    $statusCounts['removed'] = count($removedDirectIds);
+
+                    $aggsRes = $this->elasticService->getClient()->search([
+                        'index' => ELASTIC_JOBS,
+                        'size' => 0,
+                        'body' => [
+                            'query' => [
+                                'bool' => [
+                                    'should' => [
+                                        ['term' => ['comId' => $company_id]],
+                                        ['terms' => ['id' => ! empty($activeRecJobIds) ? $activeRecJobIds : [0]]],
+                                    ],
+                                    'minimum_should_match' => 1,
+                                ],
+                            ],
+                            'aggs' => [
+                                'by_status' => [
+                                    'terms' => [
+                                        'field' => 'status',
+                                    ],
+                                ],
+                            ],
+                        ],
+                    ]);
+                    $buckets = $aggsRes['aggregations']['by_status']['buckets'] ?? [];
+                    foreach ($buckets as $b) {
+                        $st = $b['key'] ?? '';
+                        $cnt = $b['doc_count'] ?? 0;
+                        if ($st === 'active') {
+                            $statusCounts['active'] = $cnt;
+                        } elseif ($st === 'hold') {
+                            $statusCounts['hold'] = $cnt;
+                        } elseif ($st === 'inactive') {
+                            $statusCounts['inactive'] = $cnt;
+                        }
+                    }
+                }
+
+                $statusCounts['all'] = $statusCounts['active'] + $statusCounts['hold'] + $statusCounts['inactive'] + $statusCounts['removed'];
+            } catch (\Throwable) {
+                // Non-fatal fallback
+            }
+        }
+
         $responseData = [
             'html' => view('service_company.ajax_pages.all_jobs_ajax', compact('data', 'userPermissions', 'company_id'))->render(),
             'jobs' => $formattedJobs,
             'total' => $total,
             'pagination' => view('service_company.ajax_pages.pagination', compact('pagination'))->render(),
             'next_cursor' => $nextCursor,
+            'status_counts' => $statusCounts,
         ];
         cache()->put($cacheKeySet, $responseData, now()->addMinutes(ALL_JOBS_LIST_TIME));
 
@@ -5004,6 +5162,13 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
             'html' => view('service_company.ajax_pages.request_jobs_ajax', compact('data', 'userPermissions'))->render(),
             'total' => $total,
             'pagination' => view('service_company.ajax_pages.pagination', compact('pagination'))->render(),
+            'status_counts' => [
+                'all' => $total,
+                'active' => 0,
+                'hold' => 0,
+                'inactive' => 0,
+                'removed' => 0,
+            ],
         ];
 
         cache()->put($cacheKeySet, $responseData, now()->addMinutes(3));

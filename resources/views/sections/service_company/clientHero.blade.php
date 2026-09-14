@@ -73,48 +73,48 @@
 
 <!-- STAT CARDS -->
 <div class="cl-stats">
-    <a href="{{ route('service_company.clients.index') }}" class="cl-stat">
+    <a href="{{ route('service_company.clients.index') }}" onclick="if(typeof setClientTab==='function'){setClientTab('all', this); return false;}" class="cl-stat cl-stat-filter {{ ($activeTab??'all')=='all' ? 'active' : '' }}" data-tab="all">
         <div class="cl-stat-icon blue">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
         </div>
         <div>
-            <div class="cl-stat-num">{{ $clientDataCnt['clientAll'] ?? 0 }}</div>
+            <div class="cl-stat-num" id="span_clientAll">{{ $clientDataCnt['clientAll'] ?? 0 }}</div>
             <div class="cl-stat-label">Total Clients</div>
         </div>
     </a>
-    <a href="{{ url('service_company/clients/custom_client/0') }}" class="cl-stat">
+    <a href="{{ url('service_company/clients/custom_client/0') }}" onclick="if(typeof setClientTab==='function'){setClientTab('internal', this); return false;}" class="cl-stat cl-stat-filter {{ ($activeTab??'')=='internal' ? 'active' : '' }}" data-tab="internal">
         <div class="cl-stat-icon indigo">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
         </div>
         <div>
-            <div class="cl-stat-num">{{ $clientDataCnt['clientCustom'] ?? 0 }}</div>
+            <div class="cl-stat-num" id="span_clientCustom">{{ $clientDataCnt['clientCustom'] ?? 0 }}</div>
             <div class="cl-stat-label">Internal Clients</div>
         </div>
     </a>
-    <a href="{{ url('service_company/clients/direct_client/0') }}" class="cl-stat">
+    <a href="{{ url('service_company/clients/direct_client/0') }}" onclick="if(typeof setClientTab==='function'){setClientTab('direct', this); return false;}" class="cl-stat cl-stat-filter {{ ($activeTab??'')=='direct' ? 'active' : '' }}" data-tab="direct">
         <div class="cl-stat-icon green">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
         </div>
         <div>
-            <div class="cl-stat-num">{{ $clientDataCnt['clientDirect'] ?? 0 }}</div>
+            <div class="cl-stat-num" id="span_clientDirect">{{ $clientDataCnt['clientDirect'] ?? 0 }}</div>
             <div class="cl-stat-label">Direct Clients</div>
         </div>
     </a>
-    <div class="cl-stat" style="cursor:pointer;" onclick="document.getElementById('tab-hiring').click()">
+    <a href="#" onclick="if(typeof setClientTab==='function'){setClientTab('hiring', this); return false;}" class="cl-stat cl-stat-filter {{ ($activeTab??'')=='hiring' ? 'active' : '' }}" data-tab="hiring">
         <div class="cl-stat-icon orange">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/><line x1="12" y1="12" x2="12" y2="16"/><line x1="10" y1="14" x2="14" y2="14"/></svg>
         </div>
         <div>
-            <div class="cl-stat-num">{{ $clientDataCnt['clientHiring'] ?? 0 }}</div>
+            <div class="cl-stat-num" id="span_clientHiring">{{ $clientDataCnt['clientHiring'] ?? 0 }}</div>
             <div class="cl-stat-label">Clients Actively Hiring</div>
         </div>
-    </div>
-    <a href="{{ url('service_company/clients/client_request/0') }}" class="cl-stat">
+    </a>
+    <a href="{{ url('service_company/clients/client_request/0') }}" onclick="if(typeof setClientTab==='function'){setClientTab('request', this); return false;}" class="cl-stat cl-stat-filter {{ ($activeTab??'')=='request' ? 'active' : '' }}" data-tab="request">
         <div class="cl-stat-icon purple">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="12" y2="17"/></svg>
         </div>
         <div>
-            <div class="cl-stat-num">{{ $clientDataCnt['clientRequest'] ?? 0 }}</div>
+            <div class="cl-stat-num" id="span_clientRequest">{{ $clientDataCnt['clientRequest'] ?? 0 }}</div>
             <div class="cl-stat-label">Pending Requests</div>
         </div>
     </a>
@@ -122,24 +122,24 @@
 
 <!-- TABS -->
 <div class="cl-tabs">
-    <a href="{{ route('service_company.clients.index') }}" class="cl-tab {{ $activeTab=='all' ? 'active' : '' }}">
+    <a href="{{ route('service_company.clients.index') }}" onclick="if(typeof setClientTab==='function'){setClientTab('all', this); return false;}" class="cl-tab cl-tab-filter {{ ($activeTab??'all')=='all' ? 'active' : '' }}" data-tab="all">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
         All Clients
     </a>
-    <a href="{{ url('service_company/clients/custom_client/0') }}" class="cl-tab {{ $activeTab=='internal' ? 'active' : '' }}">
+    <a href="{{ url('service_company/clients/custom_client/0') }}" onclick="if(typeof setClientTab==='function'){setClientTab('internal', this); return false;}" class="cl-tab cl-tab-filter {{ ($activeTab??'')=='internal' ? 'active' : '' }}" data-tab="internal">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
         Internal Clients
     </a>
-    <a href="{{ url('service_company/clients/direct_client/0') }}" class="cl-tab {{ $activeTab=='direct' ? 'active' : '' }}">
+    <a href="{{ url('service_company/clients/direct_client/0') }}" onclick="if(typeof setClientTab==='function'){setClientTab('direct', this); return false;}" class="cl-tab cl-tab-filter {{ ($activeTab??'')=='direct' ? 'active' : '' }}" data-tab="direct">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
         Direct Clients
     </a>
-    <a href="#" class="cl-tab" id="tab-hiring" onclick="setHiringFilter(this); return false;">
+    <a href="#" onclick="if(typeof setClientTab==='function'){setClientTab('hiring', this); return false;}" class="cl-tab cl-tab-filter {{ ($activeTab??'')=='hiring' ? 'active' : '' }}" id="tab-hiring" data-tab="hiring">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>
         Hiring
     </a>
 
-    <a href="{{ url('service_company/clients/client_request/0') }}" class="cl-tab {{ $activeTab=='request' ? 'active' : '' }}">
+    <a href="{{ url('service_company/clients/client_request/0') }}" onclick="if(typeof setClientTab==='function'){setClientTab('request', this); return false;}" class="cl-tab cl-tab-filter {{ ($activeTab??'')=='request' ? 'active' : '' }}" data-tab="request">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
         Pending Job Requests
     </a>

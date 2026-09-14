@@ -46,8 +46,8 @@
 
         /* Stat cards */
         .cl-stats { display:flex; gap:12px; margin-bottom:16px; flex-wrap:wrap; }
-        .cl-stat { flex:1; min-width:140px; background:#fff; border:1px solid #e4e6ef; border-radius:10px; padding:14px 16px; display:flex; align-items:center; gap:12px; cursor:pointer; transition:box-shadow .15s; text-decoration:none; }
-        .cl-stat:hover { box-shadow:0 4px 14px rgba(0,0,0,.08); text-decoration:none; }
+        .cl-stat { flex:1; min-width:140px; background:#fff; border:1px solid #e4e6ef; border-radius:10px; padding:14px 16px; display:flex; align-items:center; gap:12px; cursor:pointer; transition:box-shadow .15s, border-color .15s; text-decoration:none; }
+        .cl-stat:hover, .cl-stat.active { box-shadow:0 4px 14px rgba(27,132,255,.18); border-color:#1b84ff; text-decoration:none; }
         .cl-stat-icon { width:42px; height:42px; border-radius:10px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
         .cl-stat-icon svg { width:20px; height:20px; }
         .cl-stat-icon.blue { background:#eff6ff; color:#2563eb; }
@@ -103,48 +103,48 @@
 
         <!-- STAT CARDS -->
         <div class="cl-stats">
-            <a href="{{ route('service_company.clients.index') }}" class="cl-stat">
+            <a href="#" onclick="setClientTab('all', this); return false;" class="cl-stat cl-stat-filter active" data-tab="all">
                 <div class="cl-stat-icon blue">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
                 </div>
                 <div>
-                    <div class="cl-stat-num">{{ $clientDataCnt['clientAll'] ?? 0 }}</div>
+                    <div class="cl-stat-num" id="span_clientAll">{{ $clientDataCnt['clientAll'] ?? 0 }}</div>
                     <div class="cl-stat-label">Total Clients</div>
                 </div>
             </a>
-            <a href="{{ url('service_company/clients/custom_client/0') }}" class="cl-stat">
+            <a href="#" onclick="setClientTab('internal', this); return false;" class="cl-stat cl-stat-filter" data-tab="internal">
                 <div class="cl-stat-icon indigo">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
                 </div>
                 <div>
-                    <div class="cl-stat-num">{{ $clientDataCnt['clientCustom'] ?? 0 }}</div>
+                    <div class="cl-stat-num" id="span_clientCustom">{{ $clientDataCnt['clientCustom'] ?? 0 }}</div>
                     <div class="cl-stat-label">Internal Clients</div>
                 </div>
             </a>
-            <a href="{{ url('service_company/clients/direct_client/0') }}" class="cl-stat">
+            <a href="#" onclick="setClientTab('direct', this); return false;" class="cl-stat cl-stat-filter" data-tab="direct">
                 <div class="cl-stat-icon green">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
                 </div>
                 <div>
-                    <div class="cl-stat-num">{{ $clientDataCnt['clientDirect'] ?? 0 }}</div>
+                    <div class="cl-stat-num" id="span_clientDirect">{{ $clientDataCnt['clientDirect'] ?? 0 }}</div>
                     <div class="cl-stat-label">Direct Clients</div>
                 </div>
             </a>
-            <div class="cl-stat" style="cursor:pointer;" onclick="document.getElementById('tab-hiring').click()">
+            <a href="#" onclick="setClientTab('hiring', this); return false;" class="cl-stat cl-stat-filter" data-tab="hiring">
                 <div class="cl-stat-icon orange">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/><line x1="12" y1="12" x2="12" y2="16"/><line x1="10" y1="14" x2="14" y2="14"/></svg>
                 </div>
                 <div>
-                    <div class="cl-stat-num">{{ $clientDataCnt['clientHiring'] ?? 0 }}</div>
+                    <div class="cl-stat-num" id="span_clientHiring">{{ $clientDataCnt['clientHiring'] ?? 0 }}</div>
                     <div class="cl-stat-label">Clients Actively Hiring</div>
                 </div>
-            </div>
-            <a href="{{ url('service_company/clients/client_request/0') }}" class="cl-stat">
+            </a>
+            <a href="#" onclick="setClientTab('request', this); return false;" class="cl-stat cl-stat-filter" data-tab="request">
                 <div class="cl-stat-icon purple">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="12" y2="17"/></svg>
                 </div>
                 <div>
-                    <div class="cl-stat-num">{{ $clientDataCnt['clientRequest'] ?? 0 }}</div>
+                    <div class="cl-stat-num" id="span_clientRequest">{{ $clientDataCnt['clientRequest'] ?? 0 }}</div>
                     <div class="cl-stat-label">Pending Requests</div>
                 </div>
             </a>
@@ -174,24 +174,23 @@
 
         <!-- TABS -->
         <div class="cl-tabs">
-            <a href="{{ route('service_company.clients.index') }}" class="cl-tab active">
+            <a href="#" onclick="setClientTab('all', this); return false;" class="cl-tab cl-tab-filter active" data-tab="all">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
                 All Clients
             </a>
-            <a href="{{ url('service_company/clients/custom_client/0') }}" class="cl-tab">
+            <a href="#" onclick="setClientTab('internal', this); return false;" class="cl-tab cl-tab-filter" data-tab="internal">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
                 Internal Clients
             </a>
-            <a href="{{ url('service_company/clients/direct_client/0') }}" class="cl-tab">
+            <a href="#" onclick="setClientTab('direct', this); return false;" class="cl-tab cl-tab-filter" data-tab="direct">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
                 Direct Clients
             </a>
-            <a href="#" class="cl-tab" id="tab-hiring" onclick="setHiringFilter(this); return false;">
+            <a href="#" onclick="setClientTab('hiring', this); return false;" class="cl-tab cl-tab-filter" id="tab-hiring" data-tab="hiring">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>
                 Hiring
             </a>
-
-            <a href="{{ url('service_company/clients/client_request/0') }}" class="cl-tab">
+            <a href="#" onclick="setClientTab('request', this); return false;" class="cl-tab cl-tab-filter" data-tab="request">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
                 Pending Job Requests
             </a>
@@ -201,7 +200,7 @@
         <!-- Table -->
         <div class="tbl">
             <div class="tbl-w">
-                <div class="tbl-h">
+                <div class="tbl-h" id="clientTableHead">
                     <span>
                         <div class="form-check form-check-sm form-check-custom form-check-solid">
                             <input class="tbl-cb" type="checkbox" data-kt-check="true" data-kt-check-target="#allClients .tbl-cb" value="1" />
@@ -379,17 +378,53 @@ $(document).ready(function() {
 
       var page_no = localStorage.getItem('currentPageClients') || 1;
 
+      var activeClientTab = 'all';
       var hiringFilter = 0;
 
-      function setHiringFilter(el) {
-          hiringFilter = (hiringFilter === 1) ? 0 : 1;
-          $('.cl-tab').removeClass('active');
-          if (hiringFilter === 1) {
-              $(el).addClass('active');
+      function setClientTab(tabName, el) {
+          activeClientTab = tabName;
+          hiringFilter = (tabName === 'hiring') ? 1 : 0;
+
+          $('.cl-stat-filter').removeClass('active');
+          $('.cl-tab-filter').removeClass('active');
+
+          $(`.cl-stat-filter[data-tab="${tabName}"]`).addClass('active');
+          $(`.cl-tab-filter[data-tab="${tabName}"]`).addClass('active');
+
+          if (tabName === 'request') {
+              $('.tbl').addClass('tbl-req');
+              $('#clientTableHead').html(`
+                  <span>Name</span>
+                  <span>Location</span>
+                  <span>Request Date</span>
+                  <span style="justify-content:flex-end;">Action</span>
+              `);
           } else {
-              $('.cl-tab').first().addClass('active');
+              $('.tbl').removeClass('tbl-req');
+              $('#clientTableHead').html(`
+                  <span>
+                      <div class="form-check form-check-sm form-check-custom form-check-solid">
+                          <input class="tbl-cb" type="checkbox" data-kt-check="true" data-kt-check-target="#allClients .tbl-cb" value="1" />
+                      </div>
+                  </span>
+                  <span>Name
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg>
+                  </span>
+                  <span>Location</span>
+                  <span>Jobs</span>
+                  <span>Performance
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+                  </span>
+                  <span>Connected On</span>
+                  <span>Client</span>
+              `);
           }
+
           fetchCandidates(1);
+      }
+
+      function setHiringFilter(el) {
+          setClientTab('hiring', el);
       }
 
       function fetchCandidates(page, search = '') {
@@ -414,6 +449,7 @@ $(document).ready(function() {
                   cus_search : $('#kt_tagify_2').val(),
                   country:$('#country').val(),
                   hiring: hiringFilter,
+                  tab: activeClientTab,
                   size: perPage,
                   per_page: perPage
                 },
@@ -423,11 +459,64 @@ $(document).ready(function() {
                     $('.page-loader').css('display', 'none');
                     localStorage.setItem('currentPageClients', targetPage);
                     $('#allClients').html(response.html);
-                    $('#span_clientAll').html(response.total);
+                    if (activeClientTab === 'all' && response.total !== undefined) {
+                        $('#span_clientAll').html(response.total);
+                    }
                     $('#pagination').html(response.pagination);
                 }
             });
         }
+
+$(document).on('click', '.request_event', function () {
+    var id = $(this).data('row-id');
+    var event_id = $(this).data('row-event');
+    var from_company = $(this).data('row-from_company');
+    var actionText = (event_id == -1) ? 'Ignore' : 'Accept';
+    var confirmBtnClass = (event_id == -1) ? 'btn btn-danger' : 'btn btn-success';
+
+    const swalWithBootstrapButtons = Swal.mixin({
+        customClass: {
+            confirmButton: confirmBtnClass,
+            cancelButton: 'btn btn-light me-3'
+        },
+        buttonsStyling: false
+    });
+
+    swalWithBootstrapButtons.fire({
+        title: 'Are you sure?',
+        text: "You won't be able to revert this!",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Yes, ' + actionText + ' it!',
+        cancelButtonText: 'No, cancel!',
+        reverseButtons: true
+    }).then((result) => {
+        if (result.isConfirmed) {
+            var url = "{{ route('service_company.clients.request_update') }}";
+            $.ajax({
+                type: 'GET',
+                url: url,
+                data: {'invitation_id': id, 'event_id': event_id, 'from_company': from_company},
+                success: function (response) {
+                    if (response.clientDataCnt) {
+                        if ($('#span_clientAll').length) $('#span_clientAll').html(response.clientDataCnt.clientAll);
+                        if ($('#span_clientDirect').length) $('#span_clientDirect').html(response.clientDataCnt.clientDirect);
+                        if ($('#span_clientCustom').length) $('#span_clientCustom').html(response.clientDataCnt.clientCustom);
+                        if ($('#span_clientRequest').length) $('#span_clientRequest').html(response.clientDataCnt.clientRequest);
+                    }
+                    if (response.status == 'success') {
+                        fetchCandidates(1);
+                        swalWithBootstrapButtons.fire(
+                            actionText + 'ed!',
+                            response.message || ('Request has been ' + actionText.toLowerCase() + 'ed.'),
+                            'success'
+                        );
+                    }
+                }
+            });
+        }
+    });
+});
 
 </script>
 @endpush
