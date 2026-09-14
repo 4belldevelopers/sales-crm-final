@@ -2567,7 +2567,7 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
             'user_id' => $this->user->id,
             'custom_search' => $custom_search,
             'requisition_type' => $requisition_type,
-            'v' => 'status_v11',
+            'v' => 'status_v12',
         ];
 
         // Two-axis version key: user (personal filter changes) + company (job creates/updates by any team member).
@@ -2834,19 +2834,177 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
          */
         $formattedJobs = [];
         if (! empty($data)) {
+            $allJobIds = collect($data)->pluck('id')->filter()->unique()->values()->toArray();
+
             $categoryIds = collect($data)->pluck('category_id')->filter()->unique()->toArray();
             $categoriesMap = ! empty($categoryIds)
                 ? DB::table('job_categories')->whereIn('id', $categoryIds)->pluck('name', 'id')->toArray()
                 : [];
+
+            $relationMap = ! empty($allJobIds)
+                ? GeneralMethod::getrRcommendationRelationDataBulk($company_id, $allJobIds)
+                : [];
+
+            $spokUserIds = collect($data)->flatMap(function ($r) {
+                return collect($r['job_assign'] ?? [])->pluck('spok_user_id');
+            })->filter(fn ($id) => $id > 0)->unique()->values()->toArray();
+            $designationsMap = ! empty($spokUserIds)
+                ? DB::table('users_profile')->whereIn('user_id', $spokUserIds)->pluck('designation', 'user_id')->toArray()
+                : [];
+
+            $agencyCompanyIds = collect($data)->pluck('companyidcount')->filter(fn ($id) => $id > 0)->unique()->values()->toArray();
+            $companiesMap = ! empty($agencyCompanyIds)
+                ? DB::table('companies')->whereIn('id', $agencyCompanyIds)->pluck('company_name', 'id')->toArray()
+                : [];
+
+            $batchCandidateCounts = [];
+            if (! empty($allJobIds) && $this->elasticService->indexExists(ELASTIC_CANDIDATES)) {
+                try {
+                    $candAggs = $this->elasticService->getClient()->search([
+                        'index' => ELASTIC_CANDIDATES,
+                        'size' => 0,
+                        'body' => [
+                            'query' => [
+                                'bool' => [
+                                    'must' => [
+                                        ['terms' => ['jobId' => array_map('intval', $allJobIds)]],
+                                    ],
+                                ],
+                            ],
+                            'aggs' => [
+                                'by_job' => [
+                                    'terms' => ['field' => 'jobId', 'size' => 1000],
+                                    'aggs' => [
+                                        'by_company' => [
+                                            'terms' => ['field' => 'company_id', 'size' => 1000],
+                                            'aggs' => [
+                                                'by_status' => [
+                                                    'terms' => ['field' => 'job_master_status_id', 'size' => 20],
+                                                ],
+                                                'by_client_zero' => [
+                                                    'filter' => [
+                                                        'bool' => [
+                                                            'must_not' => [['range' => ['ClientComID' => ['gt' => 0]]]],
+                                                        ],
+                                                    ],
+                                                    'aggs' => [
+                                                        'by_status' => [
+                                                            'terms' => ['field' => 'job_master_status_id', 'size' => 20],
+                                                        ],
+                                                    ],
+                                                ],
+                                            ],
+                                        ],
+                                        'by_client' => [
+                                            'terms' => ['field' => 'ClientComID', 'size' => 1000],
+                                            'aggs' => [
+                                                'by_status' => [
+                                                    'terms' => ['field' => 'job_master_status_id', 'size' => 20],
+                                                ],
+                                            ],
+                                        ],
+                                    ],
+                                ],
+                            ],
+                        ],
+                    ]);
+
+                    $jobBuckets = $candAggs['aggregations']['by_job']['buckets'] ?? [];
+                    foreach ($jobBuckets as $jb) {
+                        $jId = (int) $jb['key'];
+                        $batchCandidateCounts[$jId] = [
+                            'by_company' => [],
+                            'by_client' => [],
+                        ];
+
+                        foreach ($jb['by_company']['buckets'] ?? [] as $cb) {
+                            $cId = (int) $cb['key'];
+                            $statusMap = [];
+                            foreach ($cb['by_status']['buckets'] ?? [] as $sb) {
+                                $statusMap[(int) $sb['key']] = (int) $sb['doc_count'];
+                            }
+                            $zeroMap = [];
+                            foreach ($cb['by_client_zero']['by_status']['buckets'] ?? [] as $sb) {
+                                $zeroMap[(int) $sb['key']] = (int) $sb['doc_count'];
+                            }
+                            $batchCandidateCounts[$jId]['by_company'][$cId] = [
+                                'status' => $statusMap,
+                                'zero_status' => $zeroMap,
+                            ];
+                        }
+
+                        foreach ($jb['by_client']['buckets'] ?? [] as $clb) {
+                            $clientComId = (int) $clb['key'];
+                            $statusMap = [];
+                            foreach ($clb['by_status']['buckets'] ?? [] as $sb) {
+                                $statusMap[(int) $sb['key']] = (int) $sb['doc_count'];
+                            }
+                            $batchCandidateCounts[$jId]['by_client'][$clientComId] = [
+                                'total' => (int) $clb['doc_count'],
+                                'status' => $statusMap,
+                            ];
+                        }
+                    }
+                } catch (\Throwable $e) {
+                }
+            }
+
+            $batchInterviewCounts = [];
+            if (! empty($allJobIds) && $this->elasticService->indexExists(ELASTIC_INERTVIEW_TRACKER)) {
+                try {
+                    $intAggs = $this->elasticService->getClient()->search([
+                        'index' => ELASTIC_INERTVIEW_TRACKER,
+                        'size' => 0,
+                        'body' => [
+                            'query' => [
+                                'bool' => [
+                                    'must' => [
+                                        ['terms' => ['jobId' => array_map('intval', $allJobIds)]],
+                                    ],
+                                ],
+                            ],
+                            'aggs' => [
+                                'by_job' => [
+                                    'terms' => ['field' => 'jobId', 'size' => 1000],
+                                    'aggs' => [
+                                        'by_company' => [
+                                            'terms' => ['field' => 'company_id', 'size' => 1000],
+                                        ],
+                                        'by_client' => [
+                                            'terms' => ['field' => 'ClientComID', 'size' => 1000],
+                                        ],
+                                    ],
+                                ],
+                            ],
+                        ],
+                    ]);
+
+                    $intJobBuckets = $intAggs['aggregations']['by_job']['buckets'] ?? [];
+                    foreach ($intJobBuckets as $jb) {
+                        $jId = (int) $jb['key'];
+                        $batchInterviewCounts[$jId] = [
+                            'by_company' => [],
+                            'by_client' => [],
+                        ];
+                        foreach ($jb['by_company']['buckets'] ?? [] as $cb) {
+                            $batchInterviewCounts[$jId]['by_company'][(int) $cb['key']] = (int) $cb['doc_count'];
+                        }
+                        foreach ($jb['by_client']['buckets'] ?? [] as $clb) {
+                            $batchInterviewCounts[$jId]['by_client'][(int) $clb['key']] = (int) $clb['doc_count'];
+                        }
+                    }
+                } catch (\Throwable $e) {
+                }
+            }
 
             $salaryMode = GeneralMethod::salaryMode();
             $currencySymbole = GeneralMethod::currencySymbole();
 
             foreach ($data as $rowArr) {
                 $row = (object) $rowArr;
-                $targetJobId = $row->id;
+                $targetJobId = (int) $row->id;
 
-                $relationget = GeneralMethod::getrRcommendationRelationData($company_id, $targetJobId);
+                $relationget = $relationMap[$targetJobId] ?? (object) [];
                 $from_company_id = $relationget->from_company_id ?? null;
                 $recommendation_id = $relationget->to_company_id ?? null;
                 $final_status = $relationget->final_status ?? null;
@@ -2924,30 +3082,56 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
                     if (count($jobAssignListCaptain) > 0 && ($row->comId ?? null) != $company_id) {
                         $hiringManager = ucfirst($jobAssignListCaptain[0]['user_name']);
                         $spok_user_id = $jobAssignListCaptain[0]['spok_user_id'];
-                        $hiringManagerdesignation = DB::table('users_profile')->where('user_id', $spok_user_id)->value('designation') ?? '--------';
+                        $hiringManagerdesignation = $designationsMap[$spok_user_id] ?? '--------';
                     }
                 }
 
                 $encryptedJobId = GeneralMethod::value_encrypt($row->id);
-                $inreview_counter = $isDirectClientJob
-                    ? GeneralMethod::statusCountAllThirdpartyInRe($company_id, $row->id)
-                    : GeneralMethod::statusCountAllInRe($row->id);
 
-                $applicationCounter = $isDirectClientJob
-                    ? GeneralMethod::statusCountThirdpartyAll($company_id, $row->id)
-                    : GeneralMethod::statusCountAll($row->id);
+                $targetCompanyId = (int) ($row->companyidcount ?? $company_id);
+                if ($isDirectClientJob) {
+                    $clientData = $batchCandidateCounts[$targetJobId]['by_client'][(int) $company_id] ?? ['total' => 0, 'status' => []];
+                    $clientStatusMap = $clientData['status'] ?? [];
 
-                $stageCounts = [];
-                for ($stageId = 1; $stageId <= 7; $stageId++) {
-                    $cnt = $isDirectClientJob
-                        ? GeneralMethod::statusCountThirdparty($company_id, $row->id, $stageId)
-                        : GeneralMethod::statusCount($row->companyidcount ?? $company_id, $row->id, $stageId);
-                    $stageCounts[$stageId] = $cnt;
+                    $inreview_counter = $clientStatusMap[8] ?? 0;
+                    $applicationCounter = $clientData['total'] ?? 0;
+
+                    $stageCounts = [];
+                    for ($stageId = 1; $stageId <= 7; $stageId++) {
+                        if ($stageId == 7) {
+                            $stageCounts[7] = ($clientStatusMap[7] ?? 0) + ($clientStatusMap[9] ?? 0);
+                        } else {
+                            $stageCounts[$stageId] = $clientStatusMap[$stageId] ?? 0;
+                        }
+                    }
+
+                    $interview_counter = $batchInterviewCounts[$targetJobId]['by_client'][(int) $company_id] ?? 0;
+                } else {
+                    $companyData = $batchCandidateCounts[$targetJobId]['by_company'][$targetCompanyId] ?? ['status' => [], 'zero_status' => []];
+                    $companyStatusMap = $companyData['status'] ?? [];
+                    $zeroStatusMap = $companyData['zero_status'] ?? [];
+
+                    $inreview_counter = $zeroStatusMap[8] ?? 0;
+
+                    $appSum = 0;
+                    foreach ($companyStatusMap as $stId => $cntVal) {
+                        if (! in_array($stId, [8, 9])) {
+                            $appSum += $cntVal;
+                        }
+                    }
+                    $applicationCounter = $appSum;
+
+                    $stageCounts = [];
+                    for ($stageId = 1; $stageId <= 7; $stageId++) {
+                        if ($stageId == 7) {
+                            $stageCounts[7] = ($companyStatusMap[7] ?? 0) + ($companyStatusMap[9] ?? 0);
+                        } else {
+                            $stageCounts[$stageId] = $companyStatusMap[$stageId] ?? 0;
+                        }
+                    }
+
+                    $interview_counter = $batchInterviewCounts[$targetJobId]['by_company'][$targetCompanyId] ?? 0;
                 }
-
-                $interview_counter = $isDirectClientJob
-                    ? GeneralMethod::statusCountThirdpartyInterview($company_id, $row->id)
-                    : GeneralMethod::statusCountInterview($row->companyidcount ?? $company_id, $row->id);
 
                 $strVal = strtolower(trim($row->title ?? '')[0] ?? 'a');
                 $strOrd = ord($strVal);
@@ -2985,7 +3169,7 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
                 $agencyCompanyName = '';
                 $agencyCount = 0;
                 if ($isDirectClientJob) {
-                    $agencyCompanyName = DB::table('companies')->where('id', $row->companyidcount)->value('company_name');
+                    $agencyCompanyName = $companiesMap[$row->companyidcount] ?? '';
                 } else {
                     $agencies = GeneralMethod::agencyCount($company_id, $row->id, 1);
                     $agencyCount = is_array($agencies) || $agencies instanceof \Countable ? count($agencies) : 0;
@@ -3233,7 +3417,7 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
         }
 
         $responseData = [
-            'html' => view('service_company.ajax_pages.all_jobs_ajax', compact('data', 'userPermissions', 'company_id'))->render(),
+            'html' => '',
             'jobs' => $formattedJobs,
             'total' => $total,
             'pagination' => view('service_company.ajax_pages.pagination', compact('pagination'))->render(),
