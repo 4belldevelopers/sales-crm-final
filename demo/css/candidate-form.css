@@ -4377,3 +4377,84 @@ select option,
     opacity: 0 !important;
     pointer-events: none !important;
 }
+
+/* Create Talent final polish: dashboard-inspired icon color, compact warning copy, and star required markers. */
+.resume-card .resume-note {
+    font-size: 11px !important;
+    line-height: 1.45 !important;
+    font-weight: 500 !important;
+}
+
+.resume-card .resume-note strong {
+    font-weight: 500 !important;
+}
+
+.resume-card-icon,
+.summary-card-icon,
+.bd-hero-icon,
+.aw-hero-icon,
+.pd-hero-icon,
+.br-hero-icon,
+.se-icon,
+.rm-hero-icon,
+.addl-hero-icon,
+.addl-section-icon {
+    color: #FFFFFF !important;
+    border: 0 !important;
+    box-shadow: 0 8px 18px rgba(37, 99, 235, .18) !important;
+}
+
+.resume-card-icon { background: linear-gradient(135deg, #5B3DF5, #7C5CFF) !important; }
+.summary-card-icon { background: linear-gradient(135deg, #2563EB, #38BDF8) !important; }
+.bd-hero-icon { background: linear-gradient(135deg, #4F46E5, #8B5CF6) !important; }
+.pd-hero-icon { background: linear-gradient(135deg, #1D4ED8, #06B6D4) !important; }
+.aw-hero-icon { background: linear-gradient(135deg, #059669, #34D399) !important; }
+.br-hero-icon { background: linear-gradient(135deg, #F59E0B, #F97316) !important; }
+.se-icon { background: linear-gradient(135deg, #6D28D9, #A855F7) !important; }
+.rm-hero-icon { background: linear-gradient(135deg, #2563EB, #6366F1) !important; }
+.addl-hero-icon { background: linear-gradient(135deg, #5B3DF5, #9B5CFF) !important; }
+.addl-section-icon { background: linear-gradient(135deg, #0EA5E9, #22C55E) !important; }
+
+.pd-exp-head > span,
+.pd-tip-icon,
+.br-step-num,
+.br-option-icon,
+.br-panel-icon,
+.summary-tip i,
+.rm-info-icon,
+.aw-option-icon {
+    border: 0 !important;
+    color: #FFFFFF !important;
+    box-shadow: 0 7px 16px rgba(79, 70, 229, .16) !important;
+}
+
+.pd-exp-head > span { background: linear-gradient(135deg, #EEF2FF, #E0F2FE) !important; color: #2563EB !important; }
+.pd-exp-card--blue .pd-exp-head > span { color: #4F46E5 !important; }
+.pd-tip-icon { background: linear-gradient(135deg, #10B981, #34D399) !important; }
+.br-step-num { background: linear-gradient(135deg, #4F46E5, #2563EB) !important; }
+.br-option-icon { background: linear-gradient(135deg, #EEF2FF, #DBEAFE) !important; color: #3B5BFF !important; }
+.br-panel-icon { background: linear-gradient(135deg, #E0F2FE, #DCFCE7) !important; color: #0EA5E9 !important; }
+.summary-tip i { background: linear-gradient(135deg, #EEF2FF, #E0E7FF) !important; color: #4F46E5 !important; }
+.rm-info-icon { background: linear-gradient(135deg, #4F46E5, #7C5CFF) !important; }
+.aw-option-icon--now { background: linear-gradient(135deg, #10B981, #34D399) !important; }
+.aw-option-icon--date { background: linear-gradient(135deg, #4F46E5, #7C5CFF) !important; }
+
+.rq-star {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 16px !important;
+    height: 16px !important;
+    margin-left: 4px !important;
+    border-radius: 50% !important;
+    background: #FFF1F2 !important;
+    color: #F1416C !important;
+    font-size: 8px !important;
+    vertical-align: middle !important;
+}
+
+.rq-star i {
+    color: inherit !important;
+    font-size: 8px !important;
+    line-height: 1 !important;
+}
