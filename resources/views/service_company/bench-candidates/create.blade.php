@@ -2338,32 +2338,42 @@ tagifyskills.value.forEach(tag => {
         whitelist: cities,
         enforceWhitelist: true, // Prevents users from adding custom values
         maxTags: 1,
+        placeholder: 'Search and select one verified location',
         dropdown: {
-            maxItems: 20,           // <- mixumum allowed rendered suggestions
-            classname: "", // <- custom classname for this dropdown, so it could be targeted
+            maxItems: 20,           // <- maximum allowed rendered suggestions
+            classname: "bd-location-dropdown", // <- custom classname for this dropdown, so it could be targeted
             enabled: 0,             // <- show suggestions on focus
-            closeOnSelect: true,    // <- do not hide the suggestions dropdown once an item has been selected
+            closeOnSelect: true,
             highlightFirst: true // First suggestion active
         }
     });
 
-    // Prevent creating tags on blur or enter key
+    function setSingleLocationTag(locationValue) {
+        var selectedLocation = Array.isArray(locationValue) ? locationValue[0] : locationValue;
+        if (selectedLocation && typeof selectedLocation === 'object') {
+            selectedLocation = selectedLocation.value || selectedLocation.name || selectedLocation.text || '';
+        }
+        selectedLocation = (selectedLocation || '').toString().trim();
+        tagifylocation.removeAllTags();
+        if (selectedLocation) {
+            tagifylocation.addTags([selectedLocation]);
+        }
+    }
+
+    // Keep location as a single verified selection while preserving the existing Tagify field payload.
     tagifylocation.on('input', function(e) {
-        tagify.dropdown.show(); // show the dropdown immediately
+        tagifylocation.dropdown.show.call(tagifylocation);
     });
 
-    // Create tags only on select
     tagifylocation.on('dropdown:select', function(e) {
-        tagify.addTags([e.detail.data.value]);
+        setSingleLocationTag(e.detail.data.value);
     });
+
     tagifylocation.on('add', function(e) {
-    // Remove the tag if it wasn't selected from the dropdown
-      // if (!cities.includes(e.detail.data.value)) {
-      //   setTimeout(() => {
-      //     tagifylocation.removeTag(e.detail.data.value);
-      //   }, 200);
-      // }
-   });
+        if (tagifylocation.value.length > 1) {
+            setSingleLocationTag(e.detail.data.value);
+        }
+    });
     
    function debounce(func, delay) {
         let timer;
@@ -2412,7 +2422,7 @@ tagifyskills.value.forEach(tag => {
     setTimeout(() => {
         var defaultLocation = {!! json_encode(@$default_loc) !!}; // Ensure proper Blade syntax for JavaScript
         if (defaultLocation) {
-            tagifylocation.addTags([defaultLocation]); // Add the default location as a tag
+            setSingleLocationTag(defaultLocation); // Add the default location as a tag
             tagifylocation.dropdown.hide();
         }
     }, 2000); // 3 seconds delay
@@ -2968,8 +2978,7 @@ $.ajax({
                     tagifyskill.removeAllTags(); // Clear existing tags first
                     tagifyskill.addTags(response.skills); // Add new tags
 
-                    tagifylocation.removeAllTags(); // Clear existing tags first
-                    tagifylocation.addTags(response.country); // Add new tags
+                    setSingleLocationTag(response.country); // Keep current location to one selected value
 
                     
                     
