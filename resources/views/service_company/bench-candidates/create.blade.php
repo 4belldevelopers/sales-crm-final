@@ -74,7 +74,7 @@ if(@$jobLocation->country_id > 0){
 
 $snp_one	=	$snp_two	= $snp_zero	= $snp_text_dummy = $snp_last_working = "";
 $snp_text_one	=	$snp_text_two	= $snp_text_zero	=	'display:none;';		
-$snp_mode = @$application->serving_notice_period_mode;
+$snp_mode = (int) (@$application->serving_notice_period_mode ?: 2);
 if($snp_mode== 1){
   $snp_one		=	'checked="checked"';
   $snp_text_one	=	'display:flex'; 
@@ -510,7 +510,7 @@ if($snp_mode== 1){
                     <div class="aw-option-grid" data-aw-options>
                       <button type="button" class="aw-option {{ ($snp_mode===2) ? 'is-selected' : '' }}" data-snp-value="2">
                         <span class="aw-radio"></span>
-                        <span class="aw-option-icon aw-option-icon--now"><i class="fa-solid fa-bolt"></i></span>
+                        <span class="aw-option-icon aw-option-icon--now"><i class="fa-solid fa-bolt" aria-hidden="true"></i></span>
                         <span class="aw-option-copy">
                           <strong>Immediate Joiner</strong>
                           <small>This talent can start immediately.</small>
@@ -518,7 +518,7 @@ if($snp_mode== 1){
                       </button>
                       <button type="button" class="aw-option {{ ($snp_mode===1) ? 'is-selected' : '' }}" data-snp-value="1">
                         <span class="aw-radio"></span>
-                        <span class="aw-option-icon"><i class="fa-solid fa-calendar-days"></i></span>
+                        <span class="aw-option-icon aw-option-icon--date"><i class="fa-solid fa-calendar-days" aria-hidden="true"></i></span>
                         <span class="aw-option-copy">
                           <strong>Available From (Date)</strong>
                           <small>This talent will be available from a specific date.</small>
@@ -529,9 +529,9 @@ if($snp_mode== 1){
 
                   <div class="fg fv-row aw-field">
                     <label>Available From Date <span class="rq">*</span></label>
-                    <div class="aw-date-wrap" id="snp-immediate" style="{{ ($snp_mode===1 || $snp_mode===2) ? 'display:flex' : @$snp_text_one }}">
+                    <div class="aw-date-wrap" id="snp-immediate" style="display:flex">
                       <input type="text" id="text_display" value="{{ ($snp_mode===1) ? 'Available From' : 'Immediate' }}" class="form-control form-control-solid" placeholder="" readonly>
-                      <input type="text" id="np_id_display" class="form-control form-control-solid" placeholder="Select date" name="np_id_display" value="{{ ($snp_last_working) ? date('d/M/Y',strtotime(@$snp_last_working)) : '' }}" onclick="openAvailableFromDatePicker()" readonly>
+                      <input type="text" id="np_id_display" class="form-control form-control-solid" placeholder="Select date" name="np_id_display" value="{{ ($snp_last_working) ? date('d/M/Y',strtotime(@$snp_last_working)) : '' }}" readonly>
                       <input type="date" class="form-control form-control-solid np_id" name="np_id" id="np_id" value="{{ ($snp_last_working) ? date('Y-m-d',strtotime(@$snp_last_working)) : '' }}" style="opacity: 0; position: absolute; z-index: -1;top: 0;">
                     </div>
                     <small class="aw-date-help">Enter the date from which this talent will be available.</small>
@@ -556,22 +556,22 @@ if($snp_mode== 1){
                   <div class="fg fv-row aw-field aw-field--wide">
                     <label>Preferred Work Mode <span class="rq">*</span></label>
                     <div class="aw-work-grid">
-                      <label class="aw-work-option" for="wr">
+                      <label class="aw-work-option aw-work-option--remote" for="wr">
                         <input type="radio" name="wm" id="wr" {{ @$application->wm == 'remote' ? 'checked' : '' }} value="remote" />
                         <span class="aw-radio"></span>
-                        <i class="fa-solid fa-wifi"></i>
+                        <i class="fa-solid fa-wifi" aria-hidden="true"></i>
                         <strong>Remote</strong>
                       </label>
-                      <label class="aw-work-option" for="wh">
+                      <label class="aw-work-option aw-work-option--hybrid" for="wh">
                         <input type="radio" name="wm" id="wh" {{ (@$application->wm == 'hybrid' || empty(@$application->wm)) ? 'checked' : '' }} value="hybrid" checked />
                         <span class="aw-radio"></span>
-                        <i class="fa-solid fa-location-dot"></i>
+                        <i class="fa-solid fa-location-dot" aria-hidden="true"></i>
                         <strong>Hybrid</strong>
                       </label>
-                      <label class="aw-work-option" for="wo">
+                      <label class="aw-work-option aw-work-option--office" for="wo">
                         <input type="radio" name="wm" id="wo" {{ @$application->wm == 'office' ? 'checked' : '' }} value="office" />
                         <span class="aw-radio"></span>
-                        <i class="fa-regular fa-building"></i>
+                        <i class="fa-solid fa-building" aria-hidden="true"></i>
                         <strong>Work From Office</strong>
                       </label>
                     </div>
@@ -1184,21 +1184,13 @@ if($snp_mode== 1){
                 <div class="addl-hero-title">
                   <span class="addl-hero-icon"><i class="fa-solid fa-link"></i></span>
                   <span>
-                    <strong>Professional Links &amp; Additional Details</strong>
-                    <small>Add online profiles and other information that helps clients evaluate this talent.</small>
+                    <strong>Professional Links</strong>
+                    <small>Add online profiles that help clients evaluate this talent.</small>
                   </span>
                 </div>
               </div>
               <div class="fsc addl-body">
                 <section class="addl-section">
-                  <div class="addl-section-head">
-                    <span class="addl-section-icon"><i class="fa-solid fa-link"></i></span>
-                    <span>
-                      <strong>Professional Links</strong>
-                      <small>Share your online profiles so clients can learn more about your work.</small>
-                    </span>
-                  </div>
-
                   <div class="addl-field fv-row">
                     <span class="addl-brand-icon addl-brand-linkedin">in</span>
                     <label>LinkedIn <span>(Optional)</span></label>
@@ -1239,16 +1231,21 @@ if($snp_mode== 1){
                     <small>e.g. https://yourportfolio.com</small>
                   </div>
                 </section>
+              </div>
+            </div>
 
+            <div class="fs addl-card addl-card--details">
+              <div class="addl-hero">
+                <div class="addl-hero-title">
+                  <span class="addl-hero-icon"><i class="fa-solid fa-user"></i></span>
+                  <span>
+                    <strong>Additional Details</strong>
+                    <small>Provide any other relevant information about your professional background.</small>
+                  </span>
+                </div>
+              </div>
+              <div class="fsc addl-body">
                 <section class="addl-section addl-section--details">
-                  <div class="addl-section-head">
-                    <span class="addl-section-icon"><i class="fa-solid fa-user"></i></span>
-                    <span>
-                      <strong>Additional Details</strong>
-                      <small>Provide any other relevant information about your professional background.</small>
-                    </span>
-                  </div>
-
                   <div class="addl-wide-field fv-row">
                     <label><i class="fa-solid fa-passport"></i> Work Authorization <span>(Optional)</span> <i class="fa-solid fa-circle-info addl-label-info"></i></label>
                     <div class="addl-select-wrap">
@@ -2732,6 +2729,7 @@ function isAvailableFromDateMode() {
 function syncAvailableFromDateControl() {
     var editable = isAvailableFromDateMode();
     $('#np_id').prop('disabled', !editable);
+    $('#snp-immediate').css('display', 'flex');
     $('#np_id_display')
         .toggleClass('is-disabled', !editable)
         .attr('aria-disabled', editable ? 'false' : 'true')
@@ -2800,8 +2798,16 @@ $(document).on('click', '.aw-option', function(){
     $('#serving_notice_period').val($(this).data('snp-value')).trigger('change');
 });
 
+$(document).on('click', '#snp-immediate', function(){
+    openAvailableFromDatePicker();
+});
+
 $(function(){
     var selectedAvailability = $('#serving_notice_period').val() || '2';
+    if (selectedAvailability === '0') {
+        selectedAvailability = '2';
+        $('#serving_notice_period').val('2');
+    }
     $('.aw-option').removeClass('is-selected');
     $('.aw-option[data-snp-value="' + selectedAvailability + '"]').addClass('is-selected');
     syncAvailableFromDateControl();

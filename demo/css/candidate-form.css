@@ -4289,3 +4289,81 @@ select option,
 .summary-card-header {
     justify-content: flex-start !important;
 }
+
+/* Availability and separated additional-details polish. */
+.addl-card + .addl-card--details {
+    margin-top: 16px !important;
+}
+
+.addl-card--details .addl-section {
+    margin-top: 0 !important;
+    padding-top: 0 !important;
+    border-top: 0 !important;
+}
+
+.aw-option-icon i,
+.aw-work-option > i {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 1em !important;
+    height: 1em !important;
+    color: inherit !important;
+    font-family: "Jero Font Awesome 6 Free", "Font Awesome 6 Free", "FontAwesome" !important;
+    font-style: normal !important;
+    font-weight: 900 !important;
+    line-height: 1 !important;
+    opacity: 1 !important;
+}
+
+.aw-option-icon--now i::before {
+    content: "\f0e7" !important;
+}
+
+.aw-option-icon--date i::before {
+    content: "\f073" !important;
+}
+
+.aw-work-option--remote > i::before {
+    content: "\f1eb" !important;
+}
+
+.aw-work-option--hybrid > i::before {
+    content: "\f3c5" !important;
+}
+
+.aw-work-option--office > i::before {
+    content: "\f1ad" !important;
+}
+
+.aw-option.is-selected .aw-option-icon {
+    color: #FFFFFF !important;
+    background: var(--et-success) !important;
+}
+
+.aw-option.is-selected .aw-option-icon i,
+.aw-option.is-selected .aw-option-icon i::before {
+    color: #FFFFFF !important;
+}
+
+.aw-work-option:has(input:checked) > i,
+.aw-work-option:has(input:checked) > i::before {
+    color: var(--et-primary) !important;
+}
+
+#snp-immediate {
+    display: flex !important;
+}
+
+#snp-immediate:not(.is-disabled),
+#snp-immediate:not(.is-disabled) #np_id_display {
+    cursor: pointer !important;
+}
+
+#snp-immediate #np_id {
+    display: block !important;
+    width: 1px !important;
+    height: 1px !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+}
