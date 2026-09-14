@@ -259,14 +259,14 @@ a.bxr-sum-link{ color:inherit; cursor:pointer; }
 .bxr-tbl-scroll{ overflow-x:auto; }
 .bxr-tbl{
     width:100%; border-collapse:collapse;
-    min-width:1040px;
+    min-width:1080px;
     table-layout:fixed;
 }
 .bxr-tbl thead tr{ background:#F8FAFC; }
 .bxr-tbl thead th{
-    padding:10px 14px;
+    padding:10px 16px;
     font-size:10.5px; font-weight:600;
-    color:#94A3B8; text-transform:uppercase;
+    color:#0F172A; text-transform:uppercase;
     letter-spacing:.4px;
     border-bottom:1.5px solid #E8EDF5;
     white-space:nowrap; font-family:'Poppins',sans-serif;
@@ -274,51 +274,55 @@ a.bxr-sum-link{ color:inherit; cursor:pointer; }
 .bxr-tbl tbody tr{
     border-bottom:1px solid #EEF2F7;
     transition:background .13s;
+    min-height:88px;
 }
 .bxr-tbl tbody tr:hover{ background:#F8FAFF; }
 .bxr-tbl tbody tr:last-child{ border-bottom:none; }
-.bxr-tbl td{ padding:14px; vertical-align:middle; }
+.bxr-tbl td{ padding:13px 16px; vertical-align:middle; }
 .bxr-tbl thead th:nth-child(1),
-.bxr-tbl tbody td:nth-child(1){ width:30%; }
+.bxr-tbl tbody td:nth-child(1){ width:31%; }
 .bxr-tbl thead th:nth-child(2),
-.bxr-tbl tbody td:nth-child(2){ width:20%; }
+.bxr-tbl tbody td:nth-child(2){ width:17%; }
 .bxr-tbl thead th:nth-child(3),
-.bxr-tbl tbody td:nth-child(3){ width:15%; }
+.bxr-tbl tbody td:nth-child(3){ width:14%; }
 .bxr-tbl thead th:nth-child(4),
-.bxr-tbl tbody td:nth-child(4){ width:15%; }
+.bxr-tbl tbody td:nth-child(4){ width:14%; }
 .bxr-tbl thead th:nth-child(5),
-.bxr-tbl tbody td:nth-child(5){ width:10%; }
+.bxr-tbl tbody td:nth-child(5){ width:13%; }
 .bxr-tbl thead th:nth-child(6),
-.bxr-tbl tbody td:nth-child(6){ width:10%; }
+.bxr-tbl tbody td:nth-child(6){ width:11%; }
 
 /* Company logo */
 .bxr-co-logo{
-    width:44px; height:44px; border-radius:10px;
+    width:48px; height:48px; border-radius:50%;
     object-fit:contain; border:1px solid #EDF2F7;
     background:#F8FAFC; flex-shrink:0;
 }
 .bxr-co-init{
-    width:44px; height:44px; border-radius:10px;
+    width:48px; height:48px; border-radius:50%;
     background:linear-gradient(135deg,#4F46E5,#7C3AED);
     display:flex; align-items:center; justify-content:center;
     font-size:17px; font-weight:800; color:#fff; flex-shrink:0;
 }
-.bxr-job-row{ display:flex; align-items:flex-start; gap:10px; min-width:0; }
-.bxr-job-title{ font-size:12.5px; font-weight:700; color:#181C32; margin-bottom:2px; line-height:1.3; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-.bxr-job-co{ font-size:11px; color:#64748B; font-weight:500; margin-bottom:6px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-.bxr-skills{ display:flex; align-items:center; flex-wrap:nowrap; gap:4px; margin-top:3px; max-width:100%; overflow:hidden; white-space:nowrap; }
+.bxr-job-row{ display:flex; align-items:flex-start; gap:11px; min-width:0; }
+.bxr-job-info{ min-width:0; flex:1; }
+.bxr-job-title{ font-size:13px; font-weight:700; color:#0F172A; margin-bottom:2px; line-height:1.25; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.bxr-job-dept{ font-size:11px; color:#334155; font-weight:500; line-height:1.25; margin-bottom:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.bxr-job-co{ font-size:10.5px; color:#0F172A; font-weight:500; line-height:1.25; margin-bottom:6px; text-transform:uppercase; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.bxr-skills{ display:flex; align-items:center; flex-wrap:wrap; gap:4px; margin-top:3px; max-width:100%; overflow:hidden; }
 .bxr-skill{
-    font-size:10px; font-weight:500;
-    background:#F1F5F9; color:#475569;
+    font-size:9.5px; font-weight:500;
+    background:#EEF2F7; color:#334155;
     padding:2px 7px; border-radius:5px;
     flex:0 0 auto;
+    line-height:1.25;
 }
 .bxr-skill.more{ background:#EFF6FF; color:#2563EB; }
 /* Matched keyword — candidate skill that satisfies one of the job's required
    skills (same green treatment as AppTracker's matched-skill badge) */
 .bxr-skill.matched{ background:#DCFCE7; color:#15803D; border:1px solid #BBF7D0; }
 /* Match % badge — AppTracker's exact score-color thresholds, replicated here */
-.bxr-match-badge{ font-size:10px; font-weight:700; padding:2px 8px; border-radius:5px; white-space:nowrap; flex:0 0 auto; }
+.bxr-match-badge{ font-size:9.5px; font-weight:700; padding:2px 8px; border-radius:5px; white-space:nowrap; flex:0 0 auto; line-height:1.25; }
 
 /* Cell text */
 .bxr-c1{ font-size:12px; font-weight:600; color:#181C32; margin-bottom:2px; }
@@ -420,7 +424,7 @@ a.bxr-sum-link{ color:inherit; cursor:pointer; }
 .bxr-col-exp-stack{ display:flex; flex-direction:column; gap:6px; min-width:0; }
 .bxr-col-exp-row{
   display:flex; align-items:center; gap:6px;
-  font-size:11.5px; font-weight:500; color:#181C32; line-height:1.2;
+  font-size:11.5px; font-weight:500; color:#0F172A; line-height:1.2;
   min-width:0;
 }
 .bxr-col-exp-row .bxr-icon-box{
@@ -435,7 +439,7 @@ a.bxr-sum-link{ color:inherit; cursor:pointer; }
 .bxr-col-loc-stack{ display:flex; flex-direction:column; gap:5px; min-width:0; }
 .bxr-col-loc-row{
   display:flex; align-items:center; gap:6px;
-  font-size:11.5px; font-weight:500; color:#181C32; line-height:1.2;
+  font-size:11.5px; font-weight:500; color:#0F172A; line-height:1.2;
   min-width:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
 }
 .bxr-col-loc-row .bxr-icon-box{
@@ -454,7 +458,7 @@ a.bxr-sum-link{ color:inherit; cursor:pointer; }
 .bxr-col-hm-av--empty{ background:#F1F5F9; color:#94A3B8; border:1px dashed #E4E6EF; }
 .bxr-col-hm-info{ min-width:0; display:flex; flex-direction:column; gap:1px; }
 .bxr-col-hm-name{
-  font-size:12px; font-weight:600; color:#181C32; line-height:1.2;
+  font-size:12px; font-weight:600; color:#0F172A; line-height:1.2;
   white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
   max-width:130px;
 }
@@ -462,18 +466,22 @@ a.bxr-sum-link{ color:inherit; cursor:pointer; }
 .bxr-col-hm-name.hmlisting:hover{ color:#2563EB; }
 .bxr-col-hm-role{ font-size:10.5px; color:#64748B; font-weight:500; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:130px; }
 
-.bxr-tbl tbody td:nth-child(5) .badge {
+.bxr-team-cell{ display:flex; flex-direction:column; gap:3px; align-items:flex-start; min-width:0; }
+.bxr-team-name{
+  font-size:12px; font-weight:600; color:#0F172A; line-height:1.25;
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:140px;
+}
+.bxr-team-count{ font-size:10.5px; font-weight:500; color:#475569; line-height:1.25; }
+.bxr-team-more{ font-size:10.5px; font-weight:500; color:#2563EB; line-height:1.25; }
+.bxr-stage-cell{ display:flex; flex-direction:column; gap:4px; align-items:flex-start; min-width:0; }
+.bxr-stage-added{ font-size:10px; color:#94A3B8; font-weight:500; line-height:1.2; }
+
+.bxr-tbl tbody td:nth-child(6) .badge {
   border-radius:5px;
   font-size:10.5px !important;
   font-weight:600 !important;
   line-height:1.1;
   padding:4px 7px !important;
-}
-
-.bxr-tbl tbody td:nth-child(6) {
-  font-size:11px;
-  font-weight:500;
-  color:#64748B;
 }
 
 @media(max-width:1366px){
@@ -786,11 +794,11 @@ a.bxr-sum-link{ color:inherit; cursor:pointer; }
         <thead>
           <tr>
             <th style="min-width:220px;">JOB DETAILS</th>
-            <th style="min-width:130px;">EXPERIENCE</th>
-            <th style="min-width:130px;">HIRING &amp; LOCATION</th>
+            <th style="min-width:130px;">EXPERIENCE <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="#64748B" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="display:inline-block;vertical-align:-1px;margin-left:3px;"><path d="M10 6V5a2 2 0 0 1 2-2h0a2 2 0 0 1 2 2v1"/><rect x="4" y="6" width="16" height="14" rx="2"/><path d="M9 12h6"/></svg></th>
+            <th style="min-width:130px;">LOCATION</th>
             <th style="min-width:130px;">HIRING MANAGER</th>
-            <th style="min-width:110px;">JOB STAGE</th>
-            <th style="min-width:110px;">ADDED BY</th>
+            <th style="min-width:120px;">TEAM</th>
+            <th style="min-width:110px;">STAGE</th>
           </tr>
         </thead>
         <tbody id="benchCandidateExploreJobAjax"></tbody>

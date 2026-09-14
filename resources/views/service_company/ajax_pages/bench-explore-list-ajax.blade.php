@@ -261,6 +261,19 @@
         }
         $addedByName = ucwords($bxrUserCache[$subUserId]);
     }
+
+    /* Team display uses the already-loaded job_assign payload from jobDetails,
+       matching the jobs page visual without introducing another query. */
+    $teamCompanyId = ($recommendation_id > 0 && @$row->to_company_id == $company_id)
+        ? $row->to_company_id
+        : $company_id;
+    $teamRows = $jobAssign->where('company_id', $teamCompanyId)->where('job_id', $jobDetails->id);
+    $teamCount = $teamRows->unique('user_id')->count();
+    $teamFirst = $teamRows->filter(function ($teamRow) {
+        return data_get($teamRow, 'user_id') == data_get($teamRow, 'spok_user_id');
+    })->sortBy('user_name')->first();
+    $teamFirstName = $teamFirst ? ucwords(mb_substr(data_get($teamFirst, 'user_name', ''), 0, 16)) : '';
+    $teamMoreCount = max($teamCount - 1, 0);
 @endphp
 
 <tr>
@@ -276,14 +289,17 @@
                      style="background:{{ $initBg }};color:{{ $initClr }};cursor:pointer;">{{ $initials }}</div>
             @endif
 
-            <div style="min-width:0;">
+            <div class="bxr-job-info">
                 <div class="bxr-job-title {{ $profile_detail_class }}"
                      data-row-id="{{ $jobDetails->id }}"
                      data-row-job_applications_id="{{ $bench_id }}"
                      title="{{ ucwords($displayTitle) }}"
                      style="cursor:pointer;">
-                    {{ ucwords(mb_substr($displayTitle, 0, 22)) }}
+                    {{ ucwords(mb_substr($displayTitle, 0, 34)) }}
                 </div>
+                @if($deptName)
+                    <div class="bxr-job-dept">{{ $deptName }}</div>
+                @endif
                 <div class="bxr-job-co">{{ $company_display_name }}</div>
                 <div class="bxr-skills">
                     {!! $matchBadge !!}
@@ -317,7 +333,7 @@
         </div>
     </td>
 
-    {{-- ③ HIRING & LOCATION --}}
+    {{-- ③ LOCATION --}}
     <td>
         <div class="bxr-col-loc-stack">
             <div>
@@ -351,9 +367,18 @@
         </div>
     </td>
 
-    {{-- ⑤ JOB STAGE --}}
+    {{-- ⑤ TEAM --}}
     <td>
-        <div style="display:flex;flex-direction:column;gap:4px;align-items:flex-start;">
+        <div class="bxr-team-cell">
+            <div class="bxr-team-name">{{ $teamFirstName ?: 'No member' }}</div>
+            <div class="bxr-team-count">{{ $teamMoreCount > 0 ? '+' . $teamMoreCount : $teamCount }} {{ $teamCount == 1 ? 'Member' : 'Members' }}</div>
+            <div class="bxr-team-more">+ Add More</div>
+        </div>
+    </td>
+
+    {{-- ⑥ STAGE --}}
+    <td>
+        <div class="bxr-stage-cell">
             @if(!empty($job_wise_condidates) && $job_wise_condidates->master_status_id == 8)
                 <a href="javascript:void(0);" data-row-id="{{ $jobDetails->id }}"
                    class="client_stage_sub_stage" data-toggle="modal" data-target="#client_stage_sub_stage">
@@ -366,18 +391,13 @@
                 <span class="bxr-b gy" style="font-size:10px;">{{ $childName }}</span>
             @endif
             {!! $privateTag !!}
+            @if($addedByName || $addedDate)
+                <span class="bxr-stage-added">{{ $addedByName ? mb_substr($addedByName,0,14) . ' · ' : '' }}{{ $addedDate }}</span>
+            @endif
+            @if($daysAgo)
+                <span class="bxr-stage-added">{{ $daysAgo }}</span>
+            @endif
         </div>
-    </td>
-
-    {{-- ⑥ ADDED BY --}}
-    <td style="white-space:nowrap;">
-        @if($addedByName)
-        <div class="bxr-c1" style="font-size:12px;">{{ mb_substr($addedByName,0,16) }}</div>
-        @endif
-        <div class="bxr-c2">{{ $addedDate }}</div>
-        @if($daysAgo)
-        <div class="bxr-c2" style="color:#94A3B8;font-size:10px;margin-top:2px;">{{ $daysAgo }}</div>
-        @endif
     </td>
 </tr>
 

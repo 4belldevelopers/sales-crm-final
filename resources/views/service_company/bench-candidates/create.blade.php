@@ -121,7 +121,7 @@ if($snp_mode== 1){
             if(@$page_event == 'EDIT'){ 
               echo '<button type="button" name="edit-form" id="edit-form" value="update" class="talent-topbar-primary">Update Candidate <i class="fa-solid fa-arrow-right"></i></button>';
             }else{
-              echo '<button type="button" name="save" id="save-form" value="save" class="talent-topbar-primary"><i class="fa-solid fa-arrow-up"></i> Publish to Marketplace</button>';	
+              echo '<button type="button" name="save" id="save-form" value="save" class="talent-topbar-primary"><i class="fa-solid fa-arrow-up"></i> Publish to Talent Marketplace</button>';
             }
         @endphp
       </div>
@@ -487,100 +487,6 @@ if($snp_mode== 1){
               </div>
             </div>
 
-            <div class="fs aw-card">
-              <div class="aw-hero">
-                <div class="aw-hero-title">
-                  <span class="aw-hero-icon"><i class="fa-regular fa-calendar-days"></i></span>
-                  <span>
-                    <strong>Availability &amp; Work Preferences</strong>
-                    <small>Define the availability and work preferences for this talent.</small>
-                  </span>
-                </div>
-                <span class="aw-talent-badge"><i class="fa-regular fa-building"></i> In-House Talent</span>
-              </div>
-              <div class="fsc aw-body">
-                <div class="aw-grid">
-                  <div class="fg fv-row aw-field aw-field--wide">
-                    <label>Availability <span class="rq">*</span></label>
-                    <select name="serving_notice_period" id="serving_notice_period" class="aw-native-select">
-                      <option value="0" {{ ($snp_mode==0) ? 'selected' : '' }} hidden></option>
-                      <option value="1" {{ ($snp_mode===1) ? 'selected' : '' }}>Available From Date</option>
-                      <option value="2" {{ ($snp_mode===2) ? 'selected' : '' }}>Immediate Joiner</option>
-                    </select>
-                    <div class="aw-option-grid" data-aw-options>
-                      <button type="button" class="aw-option {{ ($snp_mode===2) ? 'is-selected' : '' }}" data-snp-value="2">
-                        <span class="aw-radio"></span>
-                        <span class="aw-option-icon aw-option-icon--now"><i class="fa-solid fa-bolt" aria-hidden="true"></i></span>
-                        <span class="aw-option-copy">
-                          <strong>Immediate Joiner</strong>
-                          <small>This talent can start immediately.</small>
-                        </span>
-                      </button>
-                      <button type="button" class="aw-option {{ ($snp_mode===1) ? 'is-selected' : '' }}" data-snp-value="1">
-                        <span class="aw-radio"></span>
-                        <span class="aw-option-icon aw-option-icon--date"><i class="fa-solid fa-calendar-days" aria-hidden="true"></i></span>
-                        <span class="aw-option-copy">
-                          <strong>Available From (Date)</strong>
-                          <small>This talent will be available from a specific date.</small>
-                        </span>
-                      </button>
-                    </div>
-                  </div>
-
-                  <div class="fg fv-row aw-field">
-                    <label>Available From Date <span class="rq">*</span></label>
-                    <div class="aw-date-wrap" id="snp-immediate" style="display:flex">
-                      <input type="text" id="text_display" value="{{ ($snp_mode===1) ? 'Available From' : 'Immediate' }}" class="form-control form-control-solid" placeholder="" readonly>
-                      <input type="text" id="np_id_display" class="form-control form-control-solid" placeholder="Select date" name="np_id_display" value="{{ ($snp_last_working) ? date('d/M/Y',strtotime(@$snp_last_working)) : '' }}" readonly>
-                      <input type="date" class="form-control form-control-solid np_id" name="np_id" id="np_id" value="{{ ($snp_last_working) ? date('Y-m-d',strtotime(@$snp_last_working)) : '' }}" style="opacity: 0; position: absolute; z-index: -1;top: 0;">
-                    </div>
-                    <small class="aw-date-help">Enter the date from which this talent will be available.</small>
-                    <select class="form-select form-select-solid aw-notice-days" arial-label="Select ddl_np_id" id="ddl_np_id" name="ddl_np_id" style="display:none;">
-                      <option value="">Select Notice Period</option>
-                      @php 
-                          for ($i = 1; $i <= 200; $i++) {
-                                  $s = 'Day';
-                                  if($i > 1){
-                                      $s = 'Days';
-                                  }
-                                $selected = ($i == @$application->np_id) ? 'selected' : '';
-                              echo "<option value=\"$i\" $selected>{$i} {$s}</option>";
-                          }
-                      @endphp
-                    </select>
-                    <input type="text" id="calender" name="calender" style="display:none">
-                  </div>
-                </div>
-
-                <div class="aw-grid aw-grid--work">
-                  <div class="fg fv-row aw-field aw-field--wide">
-                    <label>Preferred Work Mode <span class="rq">*</span></label>
-                    <div class="aw-work-grid">
-                      <label class="aw-work-option aw-work-option--remote" for="wr">
-                        <input type="radio" name="wm" id="wr" {{ @$application->wm == 'remote' ? 'checked' : '' }} value="remote" />
-                        <span class="aw-radio"></span>
-                        <i class="fa-solid fa-wifi" aria-hidden="true"></i>
-                        <strong>Remote</strong>
-                      </label>
-                      <label class="aw-work-option aw-work-option--hybrid" for="wh">
-                        <input type="radio" name="wm" id="wh" {{ (@$application->wm == 'hybrid' || empty(@$application->wm)) ? 'checked' : '' }} value="hybrid" checked />
-                        <span class="aw-radio"></span>
-                        <i class="fa-solid fa-location-dot" aria-hidden="true"></i>
-                        <strong>Hybrid</strong>
-                      </label>
-                      <label class="aw-work-option aw-work-option--office" for="wo">
-                        <input type="radio" name="wm" id="wo" {{ @$application->wm == 'office' ? 'checked' : '' }} value="office" />
-                        <span class="aw-radio"></span>
-                        <i class="fa-solid fa-building" aria-hidden="true"></i>
-                        <strong>Work From Office</strong>
-                      </label>
-                    </div>
-                  </div>
-                </div>
-
-              </div>
-            </div>
-
             <!-- Professional Details -->
             <div class="fs fv-row d-none">
               <div class="fsh"><h3>Primary Skills *</h3></div>
@@ -670,7 +576,7 @@ if($snp_mode== 1){
                   <div class="fg fv-row pd-exp-card">
                     <div class="pd-exp-head">
                       <span><i class="fa-regular fa-clock"></i></span>
-                      <strong>Total Experience <span class="rq">*</span></strong>
+                      <strong>Total Experience <span class="rq rq-star" aria-hidden="true"><i class="fa-solid fa-star"></i></span></strong>
                     </div>
                     <div class="ei pd-exp-inputs">
                       @php
@@ -736,7 +642,7 @@ if($snp_mode== 1){
                   <div class="fg fv-row pd-exp-card pd-exp-card--blue">
                     <div class="pd-exp-head">
                       <span><i class="fa-regular fa-file-lines"></i></span>
-                      <strong>Relevant Experience <span class="rq">*</span></strong>
+                      <strong>Relevant Experience <span class="rq rq-star" aria-hidden="true"><i class="fa-solid fa-star"></i></span></strong>
                     </div>
                     <div class="ei pd-exp-inputs">
                         @php
@@ -814,6 +720,100 @@ if($snp_mode== 1){
                     </div>
                   </div>
                 </div>
+              </div>
+            </div>
+
+            <div class="fs aw-card">
+              <div class="aw-hero">
+                <div class="aw-hero-title">
+                  <span class="aw-hero-icon"><i class="fa-regular fa-calendar-days"></i></span>
+                  <span>
+                    <strong>Availability &amp; Work Preferences</strong>
+                    <small>Define the availability and work preferences for this talent.</small>
+                  </span>
+                </div>
+                <span class="aw-talent-badge"><i class="fa-regular fa-building"></i> In-House Talent</span>
+              </div>
+              <div class="fsc aw-body">
+                <div class="aw-grid">
+                  <div class="fg fv-row aw-field aw-field--wide">
+                    <label>Availability <span class="rq">*</span></label>
+                    <select name="serving_notice_period" id="serving_notice_period" class="aw-native-select">
+                      <option value="0" {{ ($snp_mode==0) ? 'selected' : '' }} hidden></option>
+                      <option value="1" {{ ($snp_mode===1) ? 'selected' : '' }}>Available From Date</option>
+                      <option value="2" {{ ($snp_mode===2) ? 'selected' : '' }}>Immediate Joiner</option>
+                    </select>
+                    <div class="aw-option-grid" data-aw-options>
+                      <button type="button" class="aw-option {{ ($snp_mode===2) ? 'is-selected' : '' }}" data-snp-value="2">
+                        <span class="aw-radio"></span>
+                        <span class="aw-option-icon aw-option-icon--now"><i class="fa-solid fa-bolt" aria-hidden="true"></i></span>
+                        <span class="aw-option-copy">
+                          <strong>Immediate Joiner</strong>
+                          <small>This talent can start immediately.</small>
+                        </span>
+                      </button>
+                      <button type="button" class="aw-option {{ ($snp_mode===1) ? 'is-selected' : '' }}" data-snp-value="1">
+                        <span class="aw-radio"></span>
+                        <span class="aw-option-icon aw-option-icon--date"><i class="fa-solid fa-calendar-days" aria-hidden="true"></i></span>
+                        <span class="aw-option-copy">
+                          <strong>Available From (Date)</strong>
+                          <small>This talent will be available from a specific date.</small>
+                        </span>
+                      </button>
+                    </div>
+                  </div>
+
+                  <div class="fg fv-row aw-field">
+                    <label>Enter the date from which this talent will be available. <span class="rq">*</span></label>
+                    <div class="aw-date-wrap" id="snp-immediate" style="display:flex">
+                      <input type="text" id="text_display" value="{{ ($snp_mode===1) ? 'Available From' : 'Immediate' }}" class="form-control form-control-solid" placeholder="" readonly>
+                      <input type="text" id="np_id_display" class="form-control form-control-solid" placeholder="Select date" name="np_id_display" value="{{ ($snp_last_working) ? date('d/M/Y',strtotime(@$snp_last_working)) : '' }}" readonly>
+                      <input type="date" class="form-control form-control-solid np_id" name="np_id" id="np_id" value="{{ ($snp_last_working) ? date('Y-m-d',strtotime(@$snp_last_working)) : '' }}" style="opacity: 0; position: absolute; z-index: -1;top: 0;">
+                    </div>
+                    <small class="aw-date-help">Available From Date</small>
+                    <select class="form-select form-select-solid aw-notice-days" arial-label="Select ddl_np_id" id="ddl_np_id" name="ddl_np_id" style="display:none;">
+                      <option value="">Select Notice Period</option>
+                      @php
+                          for ($i = 1; $i <= 200; $i++) {
+                                  $s = 'Day';
+                                  if($i > 1){
+                                      $s = 'Days';
+                                  }
+                                $selected = ($i == @$application->np_id) ? 'selected' : '';
+                              echo "<option value=\"$i\" $selected>{$i} {$s}</option>";
+                          }
+                      @endphp
+                    </select>
+                    <input type="text" id="calender" name="calender" style="display:none">
+                  </div>
+                </div>
+
+                <div class="aw-grid aw-grid--work">
+                  <div class="fg fv-row aw-field aw-field--wide">
+                    <label>Preferred Work Mode <span class="rq">*</span></label>
+                    <div class="aw-work-grid">
+                      <label class="aw-work-option aw-work-option--remote" for="wr">
+                        <input type="radio" name="wm" id="wr" {{ @$application->wm == 'remote' ? 'checked' : '' }} value="remote" />
+                        <span class="aw-radio"></span>
+                        <i class="fa-solid fa-wifi" aria-hidden="true"></i>
+                        <strong>Remote</strong>
+                      </label>
+                      <label class="aw-work-option aw-work-option--hybrid" for="wh">
+                        <input type="radio" name="wm" id="wh" {{ (@$application->wm == 'hybrid' || empty(@$application->wm)) ? 'checked' : '' }} value="hybrid" checked />
+                        <span class="aw-radio"></span>
+                        <i class="fa-solid fa-location-dot" aria-hidden="true"></i>
+                        <strong>Hybrid</strong>
+                      </label>
+                      <label class="aw-work-option aw-work-option--office" for="wo">
+                        <input type="radio" name="wm" id="wo" {{ @$application->wm == 'office' ? 'checked' : '' }} value="office" />
+                        <span class="aw-radio"></span>
+                        <i class="fa-solid fa-building" aria-hidden="true"></i>
+                        <strong>Work From Office</strong>
+                      </label>
+                    </div>
+                  </div>
+                </div>
+
               </div>
             </div>
 
