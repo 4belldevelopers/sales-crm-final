@@ -33,9 +33,9 @@
 
             $exploreBase = url('/service_company/bench-candidates/bench_explore/' . $row->id);
 
-            // Work preference (Remote/Onsite/Hybrid) — shared by the Experience column's 2nd row.
+            // Work preference (Remote/Hybrid/Work from office) — shared by the Experience column's 2nd row.
             $wm = strtolower((string) @$row->wm);
-            $wmMap = ['remote' => 'Remote', 'hybrid' => 'Hybrid', 'office' => 'Onsite'];
+            $wmMap = ['remote' => 'Remote', 'hybrid' => 'Hybrid', 'office' => 'Work from office'];
             $wmClassMap = ['remote' => 'text-success', 'hybrid' => 'text-primary', 'office' => 'text-warning'];
             $wmLabel = $wmMap[$wm] ?? '—';
             $wmClass = $wmClassMap[$wm] ?? 'text-muted';
@@ -295,9 +295,8 @@
                         </div>
                         <div class="pipe-foot">
                             Interview: {{ $row->InReview }}
-                            <a href="javascript:void(0);" data-row-id="{{ $row->id }}" class="pipe-view bench_show_application_detail">View</a>
-                            <span class="pipe-stat"><i class="fa fa-eye"></i>{{ $viewCount }}</span>
-                            <span class="pipe-stat"><i class="fa fa-download"></i>{{ $downloadCount }}</span>
+                            <span class="pipe-stat">Views: {{ $viewCount }}</span>
+                            <span class="pipe-stat">Downloads: {{ $downloadCount }}</span>
                         </div>
                     </div>
                 </div>
