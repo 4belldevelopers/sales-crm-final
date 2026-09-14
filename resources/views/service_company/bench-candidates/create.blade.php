@@ -1657,6 +1657,19 @@ $(document).ready(function () {
         updateBillUI();
     }
 
+    function syncCommercialRateTab(tab) {
+        $('.br-rate-tabs button').removeClass('is-active');
+        $('.br-rate-tabs button[data-rate-tab="' + tab + '"]').addClass('is-active');
+        $('.br-rate-field').removeClass('is-active');
+        $('[data-rate-panel="pay-' + tab + '"], [data-rate-panel="bill-' + tab + '"]').addClass('is-active');
+    }
+
+    function refreshCommercialAfterSplit() {
+        updatePayUI();
+        updateBillUI();
+        refreshCommercialSummary();
+    }
+
     function refreshCommercialSummary() {
         let payAnnual = commercialNumber($('#pay_annual').val());
         let payMonthly = commercialNumber($('#pay_monthly').val());
@@ -1664,6 +1677,14 @@ $(document).ready(function () {
         let billAnnual = commercialNumber($('#bill_annual').val());
         let billMonthly = commercialNumber($('#bill_monthly').val());
         let billHourly = commercialNumber($('#bill_rate_amount').val());
+        if (payAnnual > 0) {
+            payMonthly = payMonthly || (payAnnual / MONTHS_PER_YEAR);
+            payHourly = payHourly || (payAnnual / MONTHS_PER_YEAR / HOURS_PER_MONTH);
+        }
+        if (billAnnual > 0) {
+            billMonthly = billMonthly || (billAnnual / MONTHS_PER_YEAR);
+            billHourly = billHourly || (billAnnual / MONTHS_PER_YEAR / HOURS_PER_MONTH);
+        }
         let margin = billAnnual - payAnnual;
         let computedPercent = payAnnual > 0 ? (margin / payAnnual) * 100 : 0;
         let profitValue = $('#percentage_hike').val();
@@ -1730,6 +1751,7 @@ $(document).ready(function () {
             $('#bill_rate_hourly_usd, #bill_rate_monthly_usd, #bill_rate_annual_usd').text('');
         } else if (!isFree && wasFree) {
             restorePaidBillValues();
+            syncCommercialRateTab($('.br-rate-tabs button.is-active').first().data('rate-tab') || 'annual');
             updateBillUI();
             percentage_hike();
         }
@@ -1747,14 +1769,10 @@ $(document).ready(function () {
     });
 
     $(document).on('click', '.br-rate-tabs button', function () {
-        let group = $(this).closest('.br-rate-tabs').data('rate-tabs');
         let tab = $(this).data('rate-tab');
 
-        $(this).siblings('button').removeClass('is-active');
-        $(this).addClass('is-active');
-        $('[data-rate-panel^="' + group + '-"]').removeClass('is-active');
-        $('[data-rate-panel="' + group + '-' + tab + '"]').addClass('is-active');
-        $('[data-rate-panel="' + group + '-' + tab + '"] input').trigger('focus');
+        syncCommercialRateTab(tab);
+        $('[data-rate-panel$="-' + tab + '"] input').first().trigger('focus');
     });
 
     $(document).on('change', '#comission_type', applyCommercialMode);
@@ -1781,7 +1799,7 @@ $(document).ready(function () {
 
         $('#pay_monthly').val(format(hourly * HOURS_PER_MONTH));
         $('#pay_annual').val(format(hourly * HOURS_PER_MONTH * MONTHS_PER_YEAR));
-        updatePayUI();
+        refreshCommercialAfterSplit();
         percentage_hike();
 
         isUpdating = false;
@@ -1797,7 +1815,7 @@ $(document).ready(function () {
 
         $('#pay_rate_amount').val(format(hourly));
         $('#pay_annual').val(format(monthly * MONTHS_PER_YEAR));
-        updatePayUI();
+        refreshCommercialAfterSplit();
         percentage_hike();
 
         isUpdating = false;
@@ -1814,7 +1832,7 @@ $(document).ready(function () {
 
         $('#pay_rate_amount').val(format(hourly));
         $('#pay_monthly').val(format(monthly));
-        updatePayUI();
+        refreshCommercialAfterSplit();
         percentage_hike();
 
         isUpdating = false;
@@ -1829,7 +1847,7 @@ $(document).ready(function () {
 
         $('#bill_monthly').val(format(hourly * HOURS_PER_MONTH));
         $('#bill_annual').val(format(hourly * HOURS_PER_MONTH * MONTHS_PER_YEAR));
-        updateBillUI();
+        refreshCommercialAfterSplit();
         percentage_hike();
         isUpdating = false;
     });
@@ -1844,7 +1862,7 @@ $(document).ready(function () {
 
         $('#bill_rate_amount').val(format(hourly));
         $('#bill_annual').val(format(monthly * MONTHS_PER_YEAR));
-         updateBillUI();
+        refreshCommercialAfterSplit();
         percentage_hike();
 
         isUpdating = false;
@@ -1861,7 +1879,7 @@ $(document).ready(function () {
 
         $('#bill_rate_amount').val(format(hourly));
         $('#bill_monthly').val(format(monthly));
-         updateBillUI();
+        refreshCommercialAfterSplit();
         percentage_hike();
 
         isUpdating = false;
