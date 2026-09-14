@@ -1838,14 +1838,20 @@ $(document).ready(function () {
     });
 
     $(document).on('click', '.br-rate-tabs button', function () {
+        let group = $(this).closest('.br-rate-tabs').data('rate-tabs');
         let tab = $(this).data('rate-tab');
 
         syncCommercialRateTab(tab);
-        $('[data-rate-panel$="-' + tab + '"] input').first().trigger('focus');
+        $('[data-rate-panel="' + group + '-' + tab + '"] input').trigger('focus');
     });
 
     $(document).on('change', '#comission_type', applyCommercialMode);
     $(document).on('input change', '#pay_annual, #pay_monthly, #pay_rate_amount, #bill_annual, #bill_monthly, #bill_rate_amount, #percentage_hike, #comment, #br_free_notes', refreshCommercialSummary);
+
+    window.isFreeCommercialMode = isFreeCommercialMode;
+    window.refreshCommercialSummary = refreshCommercialSummary;
+    window.syncBillFieldsFromAnnual = syncBillFieldsFromAnnual;
+    window.applyCommercialMode = applyCommercialMode;
 
     function format(val) {
         return val ? parseFloat(val).toFixed(2) : '';
@@ -3062,9 +3068,11 @@ $(document).on('change', '#total_exp, #rel_exp', function() {
 
 
      function percentage_hike(){
-     if (isFreeCommercialMode()) {
+     if (window.isFreeCommercialMode && window.isFreeCommercialMode()) {
         $('#percentage_hike').val('');
-        refreshCommercialSummary();
+        if (window.refreshCommercialSummary) {
+          window.refreshCommercialSummary();
+        }
         return;
      }
      
@@ -3078,26 +3086,36 @@ $(document).on('change', '#total_exp, #rel_exp', function() {
         }else{
           $('#percentage_hike').val('');
       }
-      refreshCommercialSummary();
+      if (window.refreshCommercialSummary) {
+        window.refreshCommercialSummary();
+      }
  }
 
  function ectc(){
-     if (isFreeCommercialMode()) {
+     if (window.isFreeCommercialMode && window.isFreeCommercialMode()) {
         $('#percentage_hike').val('');
-        refreshCommercialSummary();
+        if (window.refreshCommercialSummary) {
+          window.refreshCommercialSummary();
+        }
         return;
      }
 
      var currentCTC = parseFloat($('#pay_annual').val());
      var percentage_hike = $('#percentage_hike').val();
      if (isNaN(currentCTC)) {
-        refreshCommercialSummary();
+        if (window.refreshCommercialSummary) {
+          window.refreshCommercialSummary();
+        }
         return;
      }
      var amount = currentCTC*percentage_hike/100;
      $('#bill_annual').val(amount+currentCTC);
-     syncBillFieldsFromAnnual();
-     refreshCommercialSummary();
+     if (window.syncBillFieldsFromAnnual) {
+        window.syncBillFieldsFromAnnual();
+     }
+     if (window.refreshCommercialSummary) {
+        window.refreshCommercialSummary();
+     }
      
  }
 
