@@ -3952,6 +3952,16 @@ input[type="radio"]:checked {
     background: #F4F7FF !important;
 }
 
+.resume-card .resume-note {
+    font-size: 13px !important;
+    line-height: 1.55 !important;
+    font-weight: 600 !important;
+}
+
+.resume-card .resume-note strong {
+    font-weight: 700 !important;
+}
+
 .aw-option.is-selected,
 .br-margin-state.is-healthy {
     border-color: rgba(12, 168, 102, .28) !important;

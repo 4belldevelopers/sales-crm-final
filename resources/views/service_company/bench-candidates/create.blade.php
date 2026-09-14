@@ -578,10 +578,6 @@ if($snp_mode== 1){
                   </div>
                 </div>
 
-                <div class="aw-info-strip">
-                  <i class="fa-regular fa-circle-info"></i>
-                  <span>Availability and work preferences help match this talent with the right opportunities in the marketplace.</span>
-                </div>
               </div>
             </div>
 
