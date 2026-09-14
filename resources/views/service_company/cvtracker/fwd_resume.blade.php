@@ -976,89 +976,102 @@ document.getElementById("btnSubmit").addEventListener("click", async function ()
                 }
             }
 
-            // Step 2 & 3: Batch Upload Intent for direct browser-to-R2 upload (Zero PHP bandwidth)
+            // Step 2: Upload to Cloudflare R2 cloud (Direct-to-Cloud Pipeline)
+            var r2UploadedSuccess = false;
+            var uploadedAttachmentIds = [];
+
             if (filesToInitiate.length > 0) {
-                $('.indicator-progress').html('Uploading Attachments directly to Cloud Storage... <span class="spinner-border spinner-border-sm align-middle ms-2"></span>');
-                var initiateRes = await fetch("{{ route('service_company.cvtracker.fwd_attachments_initiate') }}", {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': token
-                    },
-                    body: JSON.stringify({ files: filesToInitiate })
-                });
+                $('.indicator-progress').html('Preparing Cloud Storage Upload... <span class="spinner-border spinner-border-sm align-middle ms-2"></span>');
 
-                var initiateJson = await initiateRes.json();
-                if (!initiateJson || initiateJson.status !== 'success' || !initiateJson.attachments) {
-                    throw new Error(initiateJson.message || 'Could not initiate cloud attachment upload');
+                try {
+                    var initiateJson = await new Promise(function(resolve, reject) {
+                        $.ajax({
+                            url: "{{ route('service_company.cvtracker.fwd_attachments_initiate') }}",
+                            type: 'POST',
+                            dataType: 'json',
+                            contentType: 'application/json',
+                            headers: {
+                                'Accept': 'application/json',
+                                'X-Requested-With': 'XMLHttpRequest',
+                                'X-CSRF-TOKEN': token
+                            },
+                            data: JSON.stringify({ files: filesToInitiate }),
+                            success: resolve,
+                            error: function(xhr, status, error) {
+                                // Gracefully capture non-200 without throwing fatal syntax error
+                                resolve({ status: 'fallback', message: (xhr.responseJSON && xhr.responseJSON.message) || error });
+                            }
+                        });
+                    });
+
+                    if (initiateJson && initiateJson.status === 'success' && initiateJson.attachments) {
+                        $('.indicator-progress').html('Uploading directly to Cloud Storage... <span class="spinner-border spinner-border-sm align-middle ms-2"></span>');
+
+                        var uploadResults = await Promise.allSettled(filesToInitiate.map(async function (item) {
+                            var initInfo = initiateJson.attachments[item.candidate_id];
+                            var candDisplayName = item.candidate_name || item.filename || ('Candidate #' + item.candidate_id);
+                            if (!initInfo || !initInfo.upload_url) {
+                                throw new Error(candDisplayName + ': Missing pre-signed upload URL');
+                            }
+                            var blobInfo = candidateBlobs[item.candidate_id];
+                            var r2Res = await fetch(initInfo.upload_url, {
+                                method: 'PUT',
+                                headers: {
+                                    'Content-Type': item.mime || 'application/pdf'
+                                },
+                                body: blobInfo.blob
+                            });
+                            if (!r2Res.ok) {
+                                throw new Error(candDisplayName + ': Storage returned HTTP ' + r2Res.status);
+                            }
+                            return {
+                                candidate_id: item.candidate_id,
+                                attachment_id: initInfo.attachment_id,
+                                name: candDisplayName
+                            };
+                        }));
+
+                        var allDirectSucceeded = true;
+                        uploadResults.forEach(function (result) {
+                            if (result.status === 'fulfilled') {
+                                uploadedAttachmentIds.push(result.value.attachment_id);
+                            } else {
+                                allDirectSucceeded = false;
+                            }
+                        });
+
+                        if (allDirectSucceeded && uploadedAttachmentIds.length === filesToInitiate.length) {
+                            r2UploadedSuccess = true;
+                            for (var u = 0; u < uploadedAttachmentIds.length; u++) {
+                                formData.append('attachment_ids[]', uploadedAttachmentIds[u]);
+                            }
+                        }
+                    }
+                } catch (r2Err) {
+                    console.warn('[ForwardResume] Cloud storage upload bypassed, using direct attachment:', r2Err);
                 }
 
-                // Step 4: Parallel Direct-to-R2 Binary Uploads using Promise.allSettled (Correction 5)
-                var uploadResults = await Promise.allSettled(filesToInitiate.map(async function (item) {
-                    var initInfo = initiateJson.attachments[item.candidate_id];
-                    var candDisplayName = item.candidate_name || item.filename || ('Candidate #' + item.candidate_id);
-                    if (!initInfo || !initInfo.upload_url) {
-                        throw new Error(candDisplayName + ': Missing pre-signed upload URL');
+                // Step 3: Attach PDF files to request for email dispatch
+                // If direct R2 was not used or failed for any reason, attach the compiled PDF Blobs directly to formData!
+                if (!r2UploadedSuccess) {
+                    for (var candId in candidateBlobs) {
+                        if (candidateBlobs.hasOwnProperty(candId)) {
+                            var bInfo = candidateBlobs[candId];
+                            if (bInfo && bInfo.blob) {
+                                formData.append('custom_attachments[' + candId + ']', bInfo.blob, bInfo.filename);
+                            }
+                        }
                     }
-                    var blobInfo = candidateBlobs[item.candidate_id];
-                    var r2Res = await fetch(initInfo.upload_url, {
-                        method: 'PUT',
-                        headers: {
-                            'Content-Type': item.mime || 'application/pdf'
-                        },
-                        body: blobInfo.blob
-                    });
-                    if (!r2Res.ok) {
-                        throw new Error(candDisplayName + ': Storage returned HTTP ' + r2Res.status);
-                    }
-                    return {
-                        candidate_id: item.candidate_id,
-                        attachment_id: initInfo.attachment_id,
-                        name: candDisplayName
-                    };
-                }));
-
-                var failedUploads = [];
-                var uploadedAttachmentIds = [];
-
-                uploadResults.forEach(function (result, idx) {
-                    var item = filesToInitiate[idx];
-                    var candDisplayName = item.candidate_name || item.filename || ('Candidate #' + item.candidate_id);
-                    if (result.status === 'fulfilled') {
-                        uploadedAttachmentIds.push(result.value.attachment_id);
-                    } else {
-                        var reasonMsg = (result.reason && result.reason.message) ? result.reason.message : 'Network error';
-                        failedUploads.push(reasonMsg);
-                    }
-                });
-
-                // Abort entire batch send if any candidate upload failed
-                if (failedUploads.length > 0) {
-                    var failedListHtml = failedUploads.map(function(msg) { return '<li>' + msg + '</li>'; }).join('');
-                    $('.indicator-progress').hide();
-                    $('.indicator-label').show();
-                    document.getElementById('btnSubmit').disabled = false;
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Upload Incomplete (' + failedUploads.length + ' of ' + filesToInitiate.length + ' failed)',
-                        html: '<p>The following candidate resume(s) could not be uploaded directly to cloud storage:</p><ul class="text-start mb-2">' + failedListHtml + '</ul><p class="text-danger fw-bold mb-0">Email was NOT sent. Please retry when connection is stable.</p>'
-                    });
-                    return;
-                }
-
-                // Step 5: Pass opaque attachment IDs (Zero PDF bytes traverse the send request)
-                for (var u = 0; u < uploadedAttachmentIds.length; u++) {
-                    formData.append('attachment_ids[]', uploadedAttachmentIds[u]);
                 }
             }
         } catch (genErr) {
-            console.error('Direct cloud upload failed:', genErr);
+            console.error('Resume preparation failed:', genErr);
             $('.indicator-progress').hide();
             $('.indicator-label').show();
             document.getElementById('btnSubmit').disabled = false;
             Swal.fire(
-                'Upload Error',
-                'Could not complete direct cloud upload: ' + (genErr.message || 'Network/WASM error') + '. Email not sent.',
+                'Compilation Error',
+                'Could not prepare candidate resume: ' + (genErr.message || 'Engine error') + '. Please try again.',
                 'error'
             );
             return;
