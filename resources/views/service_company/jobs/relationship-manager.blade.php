@@ -2,6 +2,17 @@
 /* ── RM Drawer (bench-candidates/create) — scoped styles ── */
 #kt_activitiesRecruiter_body,
 #kt_activitiesRecruiter_body * { font-family: 'Poppins', sans-serif !important; }
+#kt_activitiesRecruiter_body i[class*="fa-"] {
+    font-family: "Jero Font Awesome 6 Free", "Font Awesome 6 Free", "FontAwesome" !important;
+    font-style: normal;
+}
+#kt_activitiesRecruiter_body i.fa-regular {
+    font-family: "Font Awesome 6 Free", "FontAwesome" !important;
+    font-weight: 400;
+}
+#kt_activitiesRecruiter_body i.fa-solid {
+    font-weight: 900;
+}
 #kt_activities_scroll { background: #fff !important; }
 
 /* Section wrapper */
@@ -289,21 +300,21 @@ $crmTeamJs = array_map(fn($r) => [
                 </div>
               </div>
               <div class="d-flex align-items-center gap-1 flex-shrink-0">
-                <span class="crm-badge-assigned"><i class="la la-check-circle" style="font-size:12px;"></i> Assigned</span>
+                <span class="crm-badge-assigned"><i class="fa-solid fa-circle-check" style="font-size:12px;"></i> Assigned</span>
                 @if($r['email'])
                 <div class="crm-kebab-wrap">
-                  <button type="button" class="crm-kebab-btn"><i class="la la-ellipsis-v"></i></button>
+                  <button type="button" class="crm-kebab-btn"><i class="fa-solid fa-ellipsis-vertical"></i></button>
                   <div class="crm-kebab-menu">
-                    <a href="javascript:void(0);" class="crm-email-action" data-email="{{ $r['email'] }}"><i class="la la-envelope"></i> Email</a>
+                    <a href="javascript:void(0);" class="crm-email-action" data-email="{{ $r['email'] }}"><i class="fa-regular fa-envelope"></i> Email</a>
                   </div>
                 </div>
                 @endif
               </div>
             </div>
             <div class="crm-wl">
-              <div><div class="crm-wl-top"><i class="la la-briefcase crm-ic-blue"></i><span class="crm-wl-num">{{ $r['activeJobs'] }}</span></div><div class="crm-wl-lbl">Active Jobs</div></div>
-              <div><div class="crm-wl-top"><i class="la la-crown crm-ic-purple"></i><span class="crm-wl-num">{{ $r['captainJobs'] }}</span></div><div class="crm-wl-lbl">Captain Jobs</div></div>
-              <div><div class="crm-wl-top"><i class="la la-user-friends crm-ic-green"></i><span class="crm-wl-num">{{ $r['trmTalents'] }}</span></div><div class="crm-wl-lbl">TRM Talents</div></div>
+              <div><div class="crm-wl-top"><i class="fa-solid fa-briefcase crm-ic-blue"></i><span class="crm-wl-num">{{ $r['activeJobs'] }}</span></div><div class="crm-wl-lbl">Active Jobs</div></div>
+              <div><div class="crm-wl-top"><i class="fa-solid fa-crown crm-ic-purple"></i><span class="crm-wl-num">{{ $r['captainJobs'] }}</span></div><div class="crm-wl-lbl">Captain Jobs</div></div>
+              <div><div class="crm-wl-top"><i class="fa-solid fa-users crm-ic-green"></i><span class="crm-wl-num">{{ $r['trmTalents'] }}</span></div><div class="crm-wl-lbl">TRM Talents</div></div>
             </div>
             <button type="button" class="crm-btn-remove crm-card-remove" data-rmid="{{ $r['id'] }}">Remove</button>
           </div>
@@ -312,11 +323,11 @@ $crmTeamJs = array_map(fn($r) => [
 
         <div id="crmEmptyState" style="{{ count($crmSelected) ? 'display:none;' : '' }}">
           <div class="crm-empty">
-            <div class="crm-empty-icon"><i class="la la-user-check"></i></div>
+            <div class="crm-empty-icon"><i class="fa-solid fa-user-check"></i></div>
             <div class="crm-empty-title">No relationship manager selected</div>
             <div class="crm-empty-sub">Select a team member below to assign as relationship manager.</div>
             <button type="button" class="crm-btn-scroll" id="crmScrollToTable">
-              <i class="la la-plus" style="font-size:13px;"></i> Select Team Member
+              <i class="fa-solid fa-plus" style="font-size:13px;"></i> Select Team Member
             </button>
           </div>
         </div>
@@ -326,7 +337,7 @@ $crmTeamJs = array_map(fn($r) => [
 
     {{-- ── Info banner ── --}}
     <div class="crm-info-banner">
-      <i class="la la-info-circle"></i>
+      <i class="fa-solid fa-circle-info"></i>
       <span>Relationship managers coordinate this candidate's bench engagement and client communication.</span>
     </div>
 
@@ -339,7 +350,7 @@ $crmTeamJs = array_map(fn($r) => [
       <div class="crm-section-body">
 
         <div class="crm-search-wrap">
-          <i class="la la-search crm-search-icon"></i>
+          <i class="fa-solid fa-magnifying-glass crm-search-icon"></i>
           <input type="text" id="searchInput" class="crm-search-input" placeholder="Search for relationship manager....">
         </div>
 
@@ -369,7 +380,7 @@ $crmTeamJs = array_map(fn($r) => [
                 <td>
                   @if($r['email'])
                     <a href="javascript:void(0);" class="crm-contact-btn crm-email-action" data-email="{{ $r['email'] }}" title="Email">
-                      <i class="la la-envelope"></i>
+                      <i class="fa-regular fa-envelope"></i>
                     </a>
                   @else
                     <span style="color:#d1d5db;">—</span>
@@ -377,9 +388,9 @@ $crmTeamJs = array_map(fn($r) => [
                 </td>
                 <td>
                   <div class="crm-wl">
-                    <div><div class="crm-wl-top"><i class="la la-briefcase crm-ic-blue"></i><span class="crm-wl-num">{{ $r['activeJobs'] }}</span></div><div class="crm-wl-lbl">Active Jobs</div></div>
-                    <div><div class="crm-wl-top"><i class="la la-crown crm-ic-purple"></i><span class="crm-wl-num">{{ $r['captainJobs'] }}</span></div><div class="crm-wl-lbl">Captain Jobs</div></div>
-                    <div><div class="crm-wl-top"><i class="la la-user-friends crm-ic-green"></i><span class="crm-wl-num">{{ $r['trmTalents'] }}</span></div><div class="crm-wl-lbl">TRM Talents</div></div>
+                    <div><div class="crm-wl-top"><i class="fa-solid fa-briefcase crm-ic-blue"></i><span class="crm-wl-num">{{ $r['activeJobs'] }}</span></div><div class="crm-wl-lbl">Active Jobs</div></div>
+                    <div><div class="crm-wl-top"><i class="fa-solid fa-crown crm-ic-purple"></i><span class="crm-wl-num">{{ $r['captainJobs'] }}</span></div><div class="crm-wl-lbl">Captain Jobs</div></div>
+                    <div><div class="crm-wl-top"><i class="fa-solid fa-users crm-ic-green"></i><span class="crm-wl-num">{{ $r['trmTalents'] }}</span></div><div class="crm-wl-lbl">TRM Talents</div></div>
                   </div>
                 </td>
                 <td>
@@ -426,8 +437,8 @@ function crmFind(id) {
 
 function crmCardHtml(u) {
     var kebab = u.email
-        ? '<div class="crm-kebab-wrap"><button type="button" class="crm-kebab-btn"><i class="la la-ellipsis-v"></i></button>'
-          + '<div class="crm-kebab-menu"><a href="javascript:void(0);" class="crm-email-action" data-email="' + crmEsc(u.email) + '"><i class="la la-envelope"></i> Email</a></div></div>'
+        ? '<div class="crm-kebab-wrap"><button type="button" class="crm-kebab-btn"><i class="fa-solid fa-ellipsis-vertical"></i></button>'
+          + '<div class="crm-kebab-menu"><a href="javascript:void(0);" class="crm-email-action" data-email="' + crmEsc(u.email) + '"><i class="fa-regular fa-envelope"></i> Email</a></div></div>'
         : '';
     return '<div class="crm-card">'
         + '<div class="d-flex align-items-start justify-content-between gap-2">'
@@ -439,14 +450,14 @@ function crmCardHtml(u) {
         +     '</div>'
         +   '</div>'
         +   '<div class="d-flex align-items-center gap-1 flex-shrink-0">'
-        +     '<span class="crm-badge-assigned"><i class="la la-check-circle" style="font-size:12px;"></i> Assigned</span>'
+        +     '<span class="crm-badge-assigned"><i class="fa-solid fa-circle-check" style="font-size:12px;"></i> Assigned</span>'
         +     kebab
         +   '</div>'
         + '</div>'
         + '<div class="crm-wl">'
-        +   '<div><div class="crm-wl-top"><i class="la la-briefcase crm-ic-blue"></i><span class="crm-wl-num">' + u.jobs + '</span></div><div class="crm-wl-lbl">Active Jobs</div></div>'
-        +   '<div><div class="crm-wl-top"><i class="la la-crown crm-ic-purple"></i><span class="crm-wl-num">' + u.captainJobs + '</span></div><div class="crm-wl-lbl">Captain Jobs</div></div>'
-        +   '<div><div class="crm-wl-top"><i class="la la-user-friends crm-ic-green"></i><span class="crm-wl-num">' + u.trmTalents + '</span></div><div class="crm-wl-lbl">TRM Talents</div></div>'
+        +   '<div><div class="crm-wl-top"><i class="fa-solid fa-briefcase crm-ic-blue"></i><span class="crm-wl-num">' + u.jobs + '</span></div><div class="crm-wl-lbl">Active Jobs</div></div>'
+        +   '<div><div class="crm-wl-top"><i class="fa-solid fa-crown crm-ic-purple"></i><span class="crm-wl-num">' + u.captainJobs + '</span></div><div class="crm-wl-lbl">Captain Jobs</div></div>'
+        +   '<div><div class="crm-wl-top"><i class="fa-solid fa-users crm-ic-green"></i><span class="crm-wl-num">' + u.trmTalents + '</span></div><div class="crm-wl-lbl">TRM Talents</div></div>'
         + '</div>'
         + '<button type="button" class="crm-btn-remove crm-card-remove" data-rmid="' + u.id + '">Remove</button>'
         + '</div>';
