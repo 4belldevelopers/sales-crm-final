@@ -1297,9 +1297,96 @@
 }
 .bd-control--tagify .tagify {
     min-height: 42px;
-    padding-left: 38px;
+    padding: 5px 10px 5px 38px;
     border-color: #D8DEEC !important;
     border-radius: 6px;
+    background: #FFFFFF;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, .03);
+    transition: border-color .16s ease, box-shadow .16s ease, background .16s ease;
+}
+.bd-control--tagify .tagify:hover,
+.bd-control--tagify .tagify.tagify--focus {
+    border-color: #9BA8FF !important;
+    box-shadow: 0 0 0 3px rgba(61, 76, 255, .08);
+}
+.bd-control--tagify .tagify__input {
+    min-width: 180px;
+    color: #53618C;
+    font-size: 1rem;
+    font-weight: 500;
+    margin: 0;
+    padding: 5px 0;
+}
+.bd-control--tagify .tagify__input::before {
+    color: #8A95B5;
+    font-weight: 500;
+}
+.bd-control--tagify .tagify__tag {
+    max-width: calc(100% - 4px);
+    margin: 0;
+    border-radius: 6px;
+    background: #EEF4FF;
+}
+.bd-control--tagify .tagify__tag > div {
+    max-width: 100%;
+    padding: 6px 8px;
+    color: #0B1545;
+    background: transparent;
+    border-radius: 6px;
+    font-weight: 700;
+}
+.bd-control--tagify .tagify__tag-text {
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.bd-control--tagify .tagify__tag__removeBtn {
+    color: #53618C;
+    margin-left: 4px;
+}
+.tagify__dropdown.bd-location-dropdown {
+    border: 1px solid #D8DEEC;
+    border-radius: 8px;
+    background: #FFFFFF;
+    box-shadow: 0 18px 42px rgba(15, 23, 42, .14);
+    overflow: hidden;
+    font-family: 'Poppins', sans-serif;
+}
+.tagify__dropdown.bd-location-dropdown .tagify__dropdown__wrapper {
+    border: 0;
+    max-height: 260px;
+}
+.tagify__dropdown.bd-location-dropdown .tagify__dropdown__item {
+    position: relative;
+    display: flex;
+    align-items: center;
+    min-height: 40px;
+    padding: 10px 14px 10px 38px;
+    color: #0B1545;
+    font-size: 1rem;
+    font-weight: 600;
+    line-height: 1.35;
+    border-bottom: 1px solid #EEF2F8;
+}
+.tagify__dropdown.bd-location-dropdown .tagify__dropdown__item::before {
+    content: "\f3c5";
+    position: absolute;
+    left: 14px;
+    top: 50%;
+    color: #3D4CFF;
+    font-family: "Font Awesome 6 Free";
+    font-size: 1rem;
+    font-weight: 900;
+    transform: translateY(-50%);
+}
+.tagify__dropdown.bd-location-dropdown .tagify__dropdown__item--active,
+.tagify__dropdown.bd-location-dropdown .tagify__dropdown__item:hover {
+    color: #244CFF;
+    background: #F4F7FF;
+}
+.tagify__dropdown.bd-location-dropdown .tagify__dropdown__item:last-child {
+    border-bottom: 0;
 }
 .bd-phone-control .iti {
     width: 100%;
