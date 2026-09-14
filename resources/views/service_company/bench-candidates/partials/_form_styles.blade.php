@@ -22,4 +22,4 @@ body { overflow-x: hidden; }
 .disablesectionOn.setOpacity { cursor: not-allowed; background: #8a878d; opacity: 0.5; }
 </style>
 <link href="{{ asset('demo/css/filterStyle.css') }}{{ TM_VERSION }}" rel="stylesheet" type="text/css" />
-<link href="{{ asset('demo/css/candidate-form.css') }}{{ TM_VERSION }}&bench_commercials=20260914&professional_profile=20260914" rel="stylesheet" type="text/css" />
+<link href="{{ asset('demo/css/candidate-form.css') }}{{ TM_VERSION }}&bench_commercials=20260914&professional_profile=20260914&basic_availability=20260914" rel="stylesheet" type="text/css" />

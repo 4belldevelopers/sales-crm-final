@@ -344,109 +344,229 @@ if($snp_mode== 1){
             <!--end::Upload Photo & Resume/CV-->
 
             <!-- Basic Details -->
-            <div class="fs">
-              <div class="fsh">
-                <h3>Basic Details</h3>
-              </div>
-              <div class="fsc">
-                <div class="g4">
-                  <div class="fg fv-row">
-                    <label>Full Name <span class="rq">*</span></label>
-                    <input type="text" class="form-control form-control-solid" name="full_name" id="full_name" value="{{ @$application->full_name }}"
-                      placeholder="Enter full name" />
-                  </div>
-                  <div class="fg fv-row">
-                    <label>Gender</label>
-                    <select name="gender" id="gender">
-                      <option value="Rather Not Say" {{ (@$application->gender==='Rather Not Say') ? 'selected' : '' }}>Rather
-                        Not Say</option>
-                      <option value="Male" {{ (@$application->gender==='Male') ? 'selected' : '' }}>Male</option>
-                      <option value="Female" {{ (@$application->gender==='Female') ? 'selected' : '' }}>Female</option>
-                    </select>
-                  </div>
-                  <div class="fg fv-row">
-                    <label>Nationality</label>
-                    <select name="nationality" id="nationality">
-                      <option value="">Select nationality</option>
-                      <option {{ (@$application->nationality==='Indian') ? 'selected' : '' }}>Indian</option>
-                      <option {{ (@$application->nationality==='American') ? 'selected' : '' }}>American</option>
-                      <option {{ (@$application->nationality==='British') ? 'selected' : '' }}>British</option>
-                      <option {{ (@$application->nationality==='Other') ? 'selected' : '' }}>Other</option>
-                    </select>
-                  </div>
-                  <div class="fg fv-row">
-                    <label>Date of Birth</label>
-                    <input type="date" name="dob" id="dob" value="{{ @$application->dob }}" onclick="this.showPicker()"
-                      placeholder="Select date" />
-                  </div>
+            <div class="fs bd-card">
+              <div class="bd-hero">
+                <div class="bd-hero-title">
+                  <span class="bd-hero-icon"><i class="fa-regular fa-user"></i></span>
+                  <span>
+                    <strong>Candidate Profile</strong>
+                    <small>Basic information to identify and contact this internal talent.</small>
+                  </span>
                 </div>
-                <div class="g4">
-                  <div class="fg fv-row">
-                    <label>Enter Primary Email ID <span class="rq">*</span></label>
-                    <input type="email" name="email" id="email" value="{{ @$application->email }}" placeholder="Enter primary email" />
+                <span class="bd-talent-badge"><i class="fa-regular fa-building"></i> In-House Talent</span>
+              </div>
+              <div class="fsc bd-body">
+                <div class="bd-grid bd-grid--three">
+                  <div class="fg fv-row bd-field">
+                    <label>Full Name <span class="rq">*</span></label>
+                    <div class="bd-control">
+                      <i class="fa-regular fa-user"></i>
+                      <input type="text" class="form-control form-control-solid" name="full_name" id="full_name" value="{{ @$application->full_name }}" placeholder="Enter full name" />
+                    </div>
                   </div>
-                  <div class="fg fv-row">
-                    <label>Enter Secondary Email ID</label>
-                    <input type="email" name="secondrary_email" id="secondrary_email"
-                      value="{{ @$application->secondrary_email }}" placeholder="Enter secondary email" />
+                  <div class="fg fv-row bd-field">
+                    <label>Professional Email <span class="rq">*</span></label>
+                    <div class="bd-control">
+                      <i class="fa-regular fa-envelope"></i>
+                      <input type="email" name="email" id="email" value="{{ @$application->email }}" placeholder="Enter primary email address" />
+                    </div>
                   </div>
-                  <div class="fg fv-row">
-                    <label>Enter Primary Number <span class="rq">*</span></label>
-                    <div class="ig">
-                      {{-- <span class="ig-p">+91 ▼</span> --}}
-                      <input type="number" name="phone" id="phone" value="{{ @$application->phone }}"
-                        placeholder="Enter primary number" style="padding-left: 76px !important; width: 307px;" />
+                  <div class="fg fv-row bd-field">
+                    <label>Mobile Number <span class="rq">*</span></label>
+                    <div class="bd-phone-control">
+                      <i class="fa-solid fa-mobile-screen-button"></i>
+                      <input type="number" name="phone" id="phone" value="{{ @$application->phone }}" placeholder="Enter mobile number" />
                       <input type="hidden" value="{{ @$phone_code }}" id="primary_country_code" name="primary_country_code">
                     </div>
                   </div>
-                  <div class="fg fv-row">
-                    <label>Enter Secondary Number</label>
-                    <div class="ig">
-                      {{-- <span class="ig-p">+91 ▼</span> --}}
-                      <input type="number" name="secondary_mobile" id="secondary_mobile"
-                        value="{{ @$application->secondary_mobile }}" placeholder="Enter secondary number"
-                        style="padding-left: 76px !important; width: 307px;" />
-                      <input type="hidden" value="{{ @$second_phone_code }}" id="secondary_country_code"
-                        name="secondary_country_code">
+                </div>
+
+                <div class="bd-grid bd-grid--three">
+                  <div class="fg fv-row bd-field">
+                    <label>Current Location <span class="rq">*</span></label>
+                    <div class="bd-control bd-control--tagify">
+                      <i class="fa-solid fa-location-dot"></i>
+                      <input type="text" class="" value="" id="kt_tagify_work_location" name="kt_tagify_work_location" placeholder="Search city, state or country" />
+                    </div>
+                  </div>
+                  <div class="fg fv-row bd-field">
+                    <label>Highest Qualification <span class="rq">*</span></label>
+                    <div class="bd-control bd-control--select">
+                      <i class="fa-solid fa-graduation-cap"></i>
+                      <select name="qualification" id="qualification">
+                        <option value="">Select qualification</option>
+                        @foreach($qualification as $data_value)
+                        @php
+                        $sel = '';
+                        if(@$application->qualification == $data_value->id ){
+                        $sel = 'selected="selected"';
+                        }
+                        @endphp
+                        <option value="{{ @$data_value->id }}" {{ @$sel }}>{{ @$data_value->name }}</option>
+                        @endforeach
+                      </select>
+                    </div>
+                  </div>
+                  <div class="fg fv-row bd-field">
+                    <label>Nationality</label>
+                    <div class="bd-control bd-control--select">
+                      <i class="fa-regular fa-flag"></i>
+                      <select name="nationality" id="nationality">
+                        <option value="">Select nationality</option>
+                        <option {{ (@$application->nationality==='Indian') ? 'selected' : '' }}>Indian</option>
+                        <option {{ (@$application->nationality==='American') ? 'selected' : '' }}>American</option>
+                        <option {{ (@$application->nationality==='British') ? 'selected' : '' }}>British</option>
+                        <option {{ (@$application->nationality==='Other') ? 'selected' : '' }}>Other</option>
+                      </select>
                     </div>
                   </div>
                 </div>
-                <div class="g4">
-                  <div class="fg fv-row" style="grid-column: span 2">
-                    <label>Current Location <span class="rq">*</span></label>
-                        <input type="text" class="" value="" id="kt_tagify_work_location" name="kt_tagify_work_location" placeholder="Enter current location" />
-                  </div>
-                  <div class="fg fv-row">
-                    <label>Highest Education <span class="rq">*</span></label>
-                    <select name="qualification" id="qualification">
-                      <option value="">Select Qualification</option>
-                      @foreach($qualification as $data_value)
-                      @php
-                      $sel = '';
-                      if(@$application->qualification == $data_value->id ){
-                      $sel = 'selected="selected"';
-                      }
-                      @endphp
-                      <option value="{{ @$data_value->id }}" {{ @$sel }}>{{ @$data_value->name }}</option>
-                      @endforeach
-                    </select>
-                  </div>
-                  <div class="fg fv-row">
-                    <label>Preferred Work Mode <span class="rq">*</span></label>
-                    <div class="rg">
-                      <div class="ri"><input type="radio" name="wm" id="wr" {{ @$application->wm == 'remote' ? 'checked' : '' }} value="remote" />
-                        <label for="wr">Remote</label>
+
+                @php
+                  $hasSecondaryContact = !empty(@$application->secondrary_email) || !empty(@$application->secondary_mobile);
+                @endphp
+                <details class="bd-secondary" {{ $hasSecondaryContact ? 'open' : '' }}>
+                  <summary><i class="fa-solid fa-plus"></i> Add Secondary Contact (Optional)</summary>
+                  <div class="bd-grid bd-grid--two bd-secondary-grid">
+                    <div class="fg fv-row bd-field">
+                      <label>Secondary Email</label>
+                      <div class="bd-control">
+                        <i class="fa-regular fa-envelope"></i>
+                        <input type="email" name="secondrary_email" id="secondrary_email" value="{{ @$application->secondrary_email }}" placeholder="Enter secondary email" />
                       </div>
-                      <div class="ri">
-                        <input type="radio" name="wm" id="wh" {{ (@$application->wm == 'hybrid' || empty(@$application->wm)) ? 'checked' : '' }} value="hybrid" checked />
-                        <label for="wh">Hybrid</label>
-                      </div>
-                      <div class="ri">
-                        <input type="radio" name="wm" id="wo" {{ @$application->wm == 'office' ? 'checked' : '' }} value="office" />
-                        <label for="wo">Work From Office</label>
+                    </div>
+                    <div class="fg fv-row bd-field">
+                      <label>Secondary Number</label>
+                      <div class="bd-phone-control">
+                        <i class="fa-solid fa-mobile-screen-button"></i>
+                        <input type="number" name="secondary_mobile" id="secondary_mobile" value="{{ @$application->secondary_mobile }}" placeholder="Enter secondary number" />
+                        <input type="hidden" value="{{ @$second_phone_code }}" id="secondary_country_code" name="secondary_country_code">
                       </div>
                     </div>
                   </div>
+                </details>
+
+                <details class="bd-extra" open>
+                  <summary>
+                    <span class="bd-extra-title">
+                      <span class="bd-extra-icon"><i class="fa-solid fa-ellipsis"></i></span>
+                      <span>
+                        <strong>Additional Personal Information</strong>
+                        <small>These details are optional and can be added if required.</small>
+                      </span>
+                    </span>
+                    <span class="bd-extra-action">Show Details <i class="fa-solid fa-chevron-down"></i></span>
+                  </summary>
+                  <div class="bd-grid bd-grid--two bd-extra-grid">
+                    <div class="fg fv-row bd-field">
+                      <label>Gender</label>
+                      <div class="bd-control bd-control--select">
+                        <i class="fa-regular fa-user"></i>
+                        <select name="gender" id="gender">
+                          <option value="Rather Not Say" {{ (@$application->gender==='Rather Not Say') ? 'selected' : '' }}>Rather Not Say</option>
+                          <option value="Male" {{ (@$application->gender==='Male') ? 'selected' : '' }}>Male</option>
+                          <option value="Female" {{ (@$application->gender==='Female') ? 'selected' : '' }}>Female</option>
+                        </select>
+                      </div>
+                    </div>
+                    <div class="fg fv-row bd-field">
+                      <label>Date of Birth</label>
+                      <div class="bd-control">
+                        <i class="fa-regular fa-calendar-days"></i>
+                        <input type="date" name="dob" id="dob" value="{{ @$application->dob }}" onclick="this.showPicker()" placeholder="Select date" />
+                      </div>
+                    </div>
+                  </div>
+                </details>
+              </div>
+            </div>
+
+            <div class="fs aw-card">
+              <div class="aw-hero">
+                <div class="aw-hero-title">
+                  <span class="aw-hero-icon"><i class="fa-solid fa-briefcase"></i></span>
+                  <span>
+                    <strong>Availability &amp; Work Preferences</strong>
+                    <small>Define the availability and work preferences for this talent.</small>
+                  </span>
+                </div>
+              </div>
+              <div class="fsc aw-body">
+                <div class="aw-grid">
+                  <div class="fg fv-row aw-field aw-field--wide">
+                    <label>Availability Status <span class="rq">*</span></label>
+                    <select name="serving_notice_period" id="serving_notice_period" class="aw-native-select">
+                      <option value="0" {{ ($snp_mode==0) ? 'selected' : '' }} hidden></option>
+                      <option value="1" {{ ($snp_mode===1) ? 'selected' : '' }}>Serving Notice Period</option>
+                      <option value="2" {{ ($snp_mode===2) ? 'selected' : '' }}>Immediate Joiner</option>
+                    </select>
+                    <div class="aw-option-grid" data-aw-options>
+                      <button type="button" class="aw-option {{ ($snp_mode===2) ? 'is-selected' : '' }}" data-snp-value="2">
+                        <span class="aw-radio"></span>
+                        <i class="fa-solid fa-circle-check"></i>
+                        <strong>Immediate Joiner</strong>
+                      </button>
+                      <button type="button" class="aw-option {{ ($snp_mode===1) ? 'is-selected' : '' }}" data-snp-value="1">
+                        <span class="aw-radio"></span>
+                        <i class="fa-regular fa-clock"></i>
+                        <strong>Serving Notice Period</strong>
+                      </button>
+                    </div>
+                  </div>
+
+                  <div class="fg fv-row aw-field">
+                    <label>Available From <span class="rq">*</span></label>
+                    <div class="aw-date-wrap" id="snp-immediate" style="{{ ($snp_mode===1 || $snp_mode===2) ? 'display:flex' : @$snp_text_one }}">
+                      <input type="text" id="text_display" value="{{ ($snp_mode===1) ? 'Available from' : 'Immediate' }}" class="form-control form-control-solid" placeholder="" readonly>
+                      <input type="text" id="np_id_display" class="form-control form-control-solid" placeholder="Select date" name="np_id_display" value="{{ ($snp_last_working) ? date('d/M/Y',strtotime(@$snp_last_working)) : '' }}" onclick="document.getElementById('np_id').click()" readonly>
+                      <input type="date" class="form-control form-control-solid np_id" name="np_id" id="np_id" style="opacity: 0; position: absolute; z-index: -1;top: 0;" onclick="this.showPicker()">
+                    </div>
+                    <select class="form-select form-select-solid aw-notice-days" arial-label="Select ddl_np_id" id="ddl_np_id" name="ddl_np_id" style="display:none;">
+                      <option value="">Select Notice Period</option>
+                      @php 
+                          for ($i = 1; $i <= 200; $i++) {
+                                  $s = 'Day';
+                                  if($i > 1){
+                                      $s = 'Days';
+                                  }
+                                $selected = ($i == @$application->np_id) ? 'selected' : '';
+                              echo "<option value=\"$i\" $selected>{$i} {$s}</option>";
+                          }
+                      @endphp
+                    </select>
+                    <input type="text" id="calender" name="calender" style="display:none">
+                  </div>
+                </div>
+
+                <div class="aw-grid aw-grid--work">
+                  <div class="fg fv-row aw-field aw-field--wide">
+                    <label>Preferred Work Mode <span class="rq">*</span></label>
+                    <div class="aw-work-grid">
+                      <label class="aw-work-option" for="wr">
+                        <input type="radio" name="wm" id="wr" {{ @$application->wm == 'remote' ? 'checked' : '' }} value="remote" />
+                        <span class="aw-radio"></span>
+                        <i class="fa-solid fa-wifi"></i>
+                        <strong>Remote</strong>
+                      </label>
+                      <label class="aw-work-option" for="wh">
+                        <input type="radio" name="wm" id="wh" {{ (@$application->wm == 'hybrid' || empty(@$application->wm)) ? 'checked' : '' }} value="hybrid" checked />
+                        <span class="aw-radio"></span>
+                        <i class="fa-solid fa-location-dot"></i>
+                        <strong>Hybrid</strong>
+                      </label>
+                      <label class="aw-work-option" for="wo">
+                        <input type="radio" name="wm" id="wo" {{ @$application->wm == 'office' ? 'checked' : '' }} value="office" />
+                        <span class="aw-radio"></span>
+                        <i class="fa-regular fa-building"></i>
+                        <strong>Work From Office</strong>
+                      </label>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="aw-info-strip">
+                  <i class="fa-regular fa-circle-info"></i>
+                  <span>Availability and work preferences help match this talent with the right opportunities in the marketplace.</span>
                 </div>
               </div>
             </div>
@@ -531,49 +651,6 @@ if($snp_mode== 1){
                       <input type="email" class="form-control form-control-solid" name="employee_number" id="employee_number" placeholder="Enter employee number" value="{{ @$application->employee_number }}">
                     </div>
                     <small>Internal employee identifier</small>
-                  </div>
-                  <div class="fg fv-row pd-field">
-                    <label>Notice Period <span class="rq">*</span></label>
-                    <div class="pd-control pd-control--select">
-                      <i class="fa-regular fa-clock"></i>
-                      <select name="serving_notice_period" id="serving_notice_period">
-                        <option value="0" {{ ($snp_mode==0) ? 'selected' : '' }}>Select notice period</option>
-                        <option value="1" {{ ($snp_mode===1) ? 'selected' : '' }}>Serving Notice Period</option>
-                        <option value="2" {{ ($snp_mode===2) ? 'selected' : '' }}>Immediate</option>
-                      </select>
-                    </div>
-                  </div>
-                </div>
-
-                <div class="pd-field-grid pd-field-grid--notice">
-                  <div class="fg fv-row pd-field">
-                    <label>Notice Details</label>
-                    <div style="{{ @$snp_text_one }}" id="snp-immediate" class="pd-notice-date" >
-                        <div style="position: relative;">
-                          <input type="text" id="text_display" value="{{ $snp_text_dummy }}" class="form-control form-control-solid" placeholder="" readonly>
-                        </div>
-                      
-                        <div style="position: relative;">
-                            <input type="text" id="np_id_display" class="form-control form-control-solid" placeholder="Select last working date" name="np_id_display" value="{{ ($snp_last_working) ? date('d/M/Y',strtotime(@$snp_last_working)) : '' }}" onclick="document.getElementById('np_id').click()" readonly>
-                            <input type="date" class="form-control form-control-solid np_id" name="np_id" id="np_id" style="opacity: 0; position: absolute; z-index: -1;top: 0;" onclick="this.showPicker()">
-                        </div>
-                    </div>
-                
-                    <select class="form-select form-select-solid" arial-label="Select ddl_np_id" id="ddl_np_id" name="ddl_np_id" style="<?php echo @$snp_text_zero; ?>">
-                      <option value="">Select Notice Period</option>
-                      @php 
-                          for ($i = 1; $i <= 200; $i++) {
-                                  $s = 'Day';
-                                  if($i > 1){
-                                      $s = 'Days';
-                                  }
-                                $selected = ($i == @$application->np_id) ? 'selected' : '';
-                              echo "<option value=\"$i\" $selected>{$i} {$s}</option>";
-                          }
-                      @endphp
-                    </select>
-                    
-                    <input type="text" id="calender" name="calender" style="display:none">
                   </div>
                 </div>
 
@@ -2420,6 +2497,8 @@ $(document).ready(function() {
 
 $(document).on('change','#serving_notice_period',function(){
     var cvalue = $('#serving_notice_period').val();
+    $('.aw-option').removeClass('is-selected');
+    $('.aw-option[data-snp-value="' + cvalue + '"]').addClass('is-selected');
 		$('#np_id').val('');
 		$('#ddl_np_id').val('');
 		if(cvalue == 0){
@@ -2448,6 +2527,16 @@ $(document).on('change','#serving_notice_period',function(){
       dateManageFunc();
 		}	
   })
+
+$(document).on('click', '.aw-option', function(){
+    $('#serving_notice_period').val($(this).data('snp-value')).trigger('change');
+});
+
+$(function(){
+    var selectedAvailability = $('#serving_notice_period').val() || '2';
+    $('.aw-option').removeClass('is-selected');
+    $('.aw-option[data-snp-value="' + selectedAvailability + '"]').addClass('is-selected');
+});
 
    $(document).on('change','#np_id',function(){
         var datess = $(this).val();
