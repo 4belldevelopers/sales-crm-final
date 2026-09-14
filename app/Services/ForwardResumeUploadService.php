@@ -19,26 +19,48 @@ use Illuminate\Support\Str;
  */
 class ForwardResumeUploadService
 {
-    private S3Client $client;
+    private ?S3Client $client = null;
 
     private string $bucket;
 
     public function __construct()
     {
-        $disk = config('filesystems.disks.r2');
+        $disk = config('filesystems.disks.r2') ?: [];
+        $s3Disk = config('filesystems.disks.s3') ?: [];
 
-        $this->bucket = $disk['bucket'] ?? (config('resumes.r2.temp_bucket') ?: 'jero-resume-uploads-temp');
-        $this->client = new S3Client([
-            'version' => 'latest',
-            'region' => 'auto',
-            'endpoint' => $disk['endpoint'] ?? config('resumes.r2.endpoint'),
-            'use_path_style_endpoint' => true,
-            'credentials' => [
-                'key' => $disk['key'] ?? env('AWS_ACCESS_KEY_ID'),
-                'secret' => $disk['secret'] ?? env('AWS_SECRET_ACCESS_KEY'),
-            ],
-            'signature_version' => 'v4',
-        ]);
+        $this->bucket = $disk['bucket'] ?? (config('resumes.r2.temp_bucket') ?: ($s3Disk['bucket'] ?? 'jero-resume-uploads-temp'));
+
+        $key = $disk['key'] ?? ($s3Disk['key'] ?? null);
+        $secret = $disk['secret'] ?? ($s3Disk['secret'] ?? null);
+        $endpoint = $disk['endpoint'] ?? (config('resumes.r2.endpoint') ?: ($s3Disk['endpoint'] ?? null));
+        $region = $disk['region'] ?? (config('resumes.r2.region') ?: 'auto');
+
+        if (! empty($key) && ! empty($secret) && ! empty($endpoint)) {
+            try {
+                $this->client = new S3Client([
+                    'version' => 'latest',
+                    'region' => $region,
+                    'endpoint' => $endpoint,
+                    'use_path_style_endpoint' => true,
+                    'credentials' => [
+                        'key' => $key,
+                        'secret' => $secret,
+                    ],
+                    'signature_version' => 'v4',
+                ]);
+            } catch (\Throwable $e) {
+                \Log::warning('[ForwardResumeUploadService] S3Client initialization skipped: '.$e->getMessage());
+                $this->client = null;
+            }
+        }
+    }
+
+    /**
+     * Check whether Cloudflare R2 / S3 storage is properly configured for presigned direct uploads.
+     */
+    public function isR2Configured(): bool
+    {
+        return $this->client !== null;
     }
 
     /**
@@ -53,6 +75,10 @@ class ForwardResumeUploadService
      */
     public function initiateBatchUploads(int $companyId, int $userId, array $files, int $expirySeconds = 900): array
     {
+        if (! $this->isR2Configured()) {
+            return [];
+        }
+
         $results = [];
 
         foreach ($files as $file) {
@@ -73,18 +99,24 @@ class ForwardResumeUploadService
             $presigned = $this->client->createPresignedRequest($cmd, '+'.$expirySeconds.' seconds');
             $uploadUrl = (string) $presigned->getUri();
 
-            // Insert tracking record with 4-hour safety TTL
-            ForwardAttachment::create([
-                'uuid' => $attUuid,
-                'company_id' => $companyId,
-                'candidate_id' => $candidateId ?: null,
-                'r2_object_key' => $objectKey,
-                'filename' => $rawFilename,
-                'file_size_bytes' => $fileSize,
-                'mime_type' => $mimeType,
-                'status' => 'PENDING',
-                'expires_at' => now()->addHours(4),
-            ]);
+            // Safely record tracking record if table exists (graceful degradation)
+            try {
+                if (\Illuminate\Support\Facades\Schema::hasTable('forward_attachments')) {
+                    ForwardAttachment::create([
+                        'uuid' => $attUuid,
+                        'company_id' => $companyId,
+                        'candidate_id' => $candidateId ?: null,
+                        'r2_object_key' => $objectKey,
+                        'filename' => $rawFilename,
+                        'file_size_bytes' => $fileSize,
+                        'mime_type' => $mimeType,
+                        'status' => 'PENDING',
+                        'expires_at' => now()->addHours(4),
+                    ]);
+                }
+            } catch (\Throwable $dbErr) {
+                \Log::warning('[ForwardResume] Tracking record creation skipped: '.$dbErr->getMessage());
+            }
 
             $results[$candidateId] = [
                 'attachment_id' => $attUuid,
@@ -104,6 +136,10 @@ class ForwardResumeUploadService
      */
     public function getR2ObjectBytes(string $objectKey): ?string
     {
+        if (! $this->client) {
+            return null;
+        }
+
         try {
             $result = $this->client->getObject([
                 'Bucket' => $this->bucket,
@@ -129,6 +165,10 @@ class ForwardResumeUploadService
      */
     public function deleteR2Attachment(string $objectKey): bool
     {
+        if (! $this->client) {
+            return true;
+        }
+
         try {
             $this->client->deleteObject([
                 'Bucket' => $this->bucket,

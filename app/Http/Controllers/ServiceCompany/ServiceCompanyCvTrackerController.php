@@ -4966,20 +4966,43 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
      */
     public function fwd_attachments_initiate(Request $request, ForwardResumeUploadService $uploadService)
     {
-        $companyId = (int) auth()->user()->company_id;
-        $userId = (int) auth()->user()->id;
+        try {
+            $companyId = (int) auth()->user()->company_id;
+            $userId = (int) auth()->user()->id;
 
-        $files = $request->input('files', []);
-        if (empty($files) || ! is_array($files)) {
-            return response()->json(['status' => 'error', 'message' => 'No files provided for upload initiation'], 400);
+            $files = $request->input('files', []);
+            if (empty($files) || ! is_array($files)) {
+                return response()->json(['status' => 'error', 'message' => 'No files provided for upload initiation'], 400);
+            }
+
+            if (! $uploadService->isR2Configured()) {
+                return response()->json([
+                    'status' => 'fallback',
+                    'message' => 'Cloud storage endpoint is not configured; using direct attachment stream.',
+                ]);
+            }
+
+            $results = $uploadService->initiateBatchUploads($companyId, $userId, $files);
+
+            if (empty($results)) {
+                return response()->json([
+                    'status' => 'fallback',
+                    'message' => 'Cloud upload initiation bypassed; using direct attachment stream.',
+                ]);
+            }
+
+            return response()->json([
+                'status' => 'success',
+                'attachments' => $results,
+            ]);
+        } catch (\Throwable $e) {
+            \Log::warning('[fwd_attachments_initiate] Cloud initiation fallback: '.$e->getMessage());
+
+            return response()->json([
+                'status' => 'fallback',
+                'message' => 'Cloud storage initiation unavailable: '.$e->getMessage(),
+            ]);
         }
-
-        $results = $uploadService->initiateBatchUploads($companyId, $userId, $files);
-
-        return response()->json([
-            'status' => 'success',
-            'attachments' => $results,
-        ]);
     }
 
     public function fwd_resume_send(Request $request)
@@ -5071,14 +5094,25 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
 
             $handledCandidates = [];
             if (! empty($r2AttachmentUuids)) {
-                $r2Attachments = ForwardAttachment::whereIn('uuid', $r2AttachmentUuids)
-                    ->forCompany($company_id)
-                    ->get();
+                try {
+                    if (\Illuminate\Support\Facades\Schema::hasTable('forward_attachments')) {
+                        $r2Attachments = ForwardAttachment::whereIn('uuid', $r2AttachmentUuids)
+                            ->forCompany($company_id)
+                            ->get();
 
-                foreach ($r2Attachments as $r2Att) {
-                    if ($r2Att->candidate_id) {
-                        $handledCandidates[] = (int) $r2Att->candidate_id;
+                        foreach ($r2Attachments as $r2Att) {
+                            if ($r2Att->candidate_id) {
+                                $handledCandidates[] = (int) $r2Att->candidate_id;
+                            }
+                        }
                     }
+                } catch (\Throwable $e) {
+                    \Log::warning('[fwd_resume_send] ForwardAttachment lookup skipped: '.$e->getMessage());
+                }
+
+                // If DB table is missing but client successfully uploaded R2 UUIDs, mark all target candidates as handled
+                if (empty($handledCandidates)) {
+                    $handledCandidates = array_map('intval', $arr);
                 }
             }
 
@@ -5096,7 +5130,10 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
                         $candId = (int) $candId;
                         $candidate = DB::table('job_applications')->where('id', $candId)->first();
                         $candName = $candidate ? str_replace(' ', '_', $candidate->full_name) : 'Candidate';
-                        $customFilename = 'JERO_'.$candName.'_'.$candId.'.pdf';
+                        $origName = $uploadedFile->getClientOriginalName();
+                        $customFilename = (! empty($origName) && str_ends_with(strtolower($origName), '.pdf'))
+                            ? $origName
+                            : 'JERO_'.$candName.'_'.$candId.'.pdf';
                         $storedName = 'fwd_'.$candId.'_'.uniqid().'.pdf';
                         $uploadedFile->move($tempDir, $storedName);
 
@@ -5256,61 +5293,73 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
                 $data = ['message' => $template_description, 'subject' => $subject, 'company_name' => $company_name->company_name, 'consultant_name' => '4Bell Technology', 'position' => 'PHP', 'candidate_skills' => $candidateSkills];
                 $checkMailPermision = GeneralMethod::mailPermission(13);
                 if ($checkMailPermision) {
+                    $r2Dispatched = false;
                     if (! empty($r2AttachmentUuids)) {
-                        // Direct-to-R2 Cloudflare Ephemeral Pipeline with Multi-Recipient Delivery Barrier
-                        $fwdRequestUuid = (string) Str::uuid();
-                        $fwdRequest = ForwardRequest::create([
-                            'uuid' => $fwdRequestUuid,
-                            'company_id' => $company_id,
-                            'user_id' => (int) auth()->user()->id,
-                            'candidate_count' => count($r2AttachmentUuids),
-                            'recipient_count' => count($to),
-                            'status' => 'QUEUED',
-                        ]);
+                        try {
+                            if (\Illuminate\Support\Facades\Schema::hasTable('forward_requests') && \Illuminate\Support\Facades\Schema::hasTable('forward_attachments')) {
+                                // Direct-to-R2 Cloudflare Ephemeral Pipeline with Multi-Recipient Delivery Barrier
+                                $fwdRequestUuid = (string) Str::uuid();
+                                $fwdRequest = ForwardRequest::create([
+                                    'uuid' => $fwdRequestUuid,
+                                    'company_id' => $company_id,
+                                    'user_id' => (int) auth()->user()->id,
+                                    'candidate_count' => count($r2AttachmentUuids),
+                                    'recipient_count' => count($to),
+                                    'status' => 'QUEUED',
+                                ]);
 
-                        ForwardAttachment::whereIn('uuid', $r2AttachmentUuids)
-                            ->forCompany($company_id)
-                            ->update([
-                                'forward_request_id' => $fwdRequest->id,
-                                'status' => 'QUEUED',
-                            ]);
-
-                        foreach ($to as $recip) {
-                            $trimmedR = strtolower(trim((string) $recip));
-                            if (! empty($trimmedR) && filter_var($trimmedR, FILTER_VALIDATE_EMAIL)) {
-                                ForwardDeliveryAttempt::firstOrCreate(
-                                    [
+                                ForwardAttachment::whereIn('uuid', $r2AttachmentUuids)
+                                    ->forCompany($company_id)
+                                    ->update([
                                         'forward_request_id' => $fwdRequest->id,
-                                        'recipient_email' => $trimmedR,
-                                    ],
-                                    [
-                                        'status' => 'PENDING',
-                                        'attempt_count' => 0,
-                                        'idempotency_key' => md5($fwdRequestUuid.':'.$trimmedR),
-                                    ]
-                                );
+                                        'status' => 'QUEUED',
+                                    ]);
+
+                                if (\Illuminate\Support\Facades\Schema::hasTable('forward_delivery_attempts')) {
+                                    foreach ($to as $recip) {
+                                        $trimmedR = strtolower(trim((string) $recip));
+                                        if (! empty($trimmedR) && filter_var($trimmedR, FILTER_VALIDATE_EMAIL)) {
+                                            ForwardDeliveryAttempt::firstOrCreate(
+                                                [
+                                                    'forward_request_id' => $fwdRequest->id,
+                                                    'recipient_email' => $trimmedR,
+                                                ],
+                                                [
+                                                    'status' => 'PENDING',
+                                                    'attempt_count' => 0,
+                                                    'idempotency_key' => md5($fwdRequestUuid.':'.$trimmedR),
+                                                ]
+                                            );
+                                        }
+                                    }
+                                }
+
+                                SendForwardResumeBatchMailJob::dispatch(
+                                    $fwdRequestUuid,
+                                    $to,
+                                    $subject,
+                                    'email.resume-forward.forward-resume',
+                                    (object) $data,
+                                    $r2AttachmentUuids,
+                                    $fromAddress,
+                                    $senderName,
+                                    $cc,
+                                    $company_id
+                                )->onConnection('emails');
+
+                                for ($rIdx = 0; $rIdx < count($to); $rIdx++) {
+                                    GeneralMethod::coinsDeductions((int) auth()->user()->company_id, $eventId, auth()->user()->id, auth()->user()->company_id, '', '');
+                                }
+                                $r2Dispatched = true;
+                                break; // Batch job handles all recipients atomically
                             }
+                        } catch (\Throwable $r2JobErr) {
+                            \Log::error('[fwd_resume_send] R2 Batch job dispatch failed: '.$r2JobErr->getMessage());
                         }
+                    }
 
-                        SendForwardResumeBatchMailJob::dispatch(
-                            $fwdRequestUuid,
-                            $to,
-                            $subject,
-                            'email.resume-forward.forward-resume',
-                            (object) $data,
-                            $r2AttachmentUuids,
-                            $fromAddress,
-                            $senderName,
-                            $cc,
-                            $company_id
-                        )->onConnection('emails');
-
-                        for ($rIdx = 0; $rIdx < count($to); $rIdx++) {
-                            GeneralMethod::coinsDeductions((int) auth()->user()->company_id, $eventId, auth()->user()->id, auth()->user()->company_id, '', '');
-                        }
-                        break; // Batch job handles all recipients atomically
-                    } else {
-                        // Legacy queue service fallback
+                    if (! $r2Dispatched) {
+                        // Standard queue mail service (attaches files directly from storage/app/temp-attachments or candidate CVs)
                         QueueCandidatesMailAndResumeForwardMailService::dispatch(
                             $mailto,
                             $subject,
