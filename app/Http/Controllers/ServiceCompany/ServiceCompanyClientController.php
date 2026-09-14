@@ -1581,57 +1581,10 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
         $this->countryArr = GeneralMethod::getAllCountryList();
         $this->statelist = GeneralMethod::statelist(101);
 
-        $this->directClientDetail = DB::table('clients')
-            ->select(
-                'clients.id as client_id',
-                'clients.company_id as clients_company_id',
-                'clients.self_company',
-                'clients.name as client_name',
-                'clients.website as client_website',
-                'clients.logo_logical_path',
-                'clients.logo as client_logo',
-                'clients.industry',
-                'clients.tags',
-                'clients.description as client_description',
-                'clients.company_sizes',
-                'clients.company_type as client_company_type',
-                'clients.founded as client_founded',
-                'companies.id as companies_id',
-                'companies.website as company_website',
-                'companies.description as companies_description',
-                'companies.logo as company_logo',
-                'companies.company_type',
-                'companies.industries',
-                'companies.industries_type',
-                'companies.company_name',
-                'companies.company_size',
-                'companies.founded',
-                'staffing_company_relation.from_company_id',
-                'staffing_company_relation.created_at as to_created_at'
-            )
-            ->leftJoin('companies', 'companies.id', '=', 'clients.company_id')
-            ->leftJoin('staffing_company_relation', function ($join) use ($company_id) {
-                $join->on('staffing_company_relation.from_company_id', '=', 'companies.id')
-                    ->where('staffing_company_relation.to_company_id', '=', $company_id);
-            })
-            ->where('clients.id', '=', $id)
-            ->first();
+        $this->directClientDetail = null;
 
-        if ($this->directClientDetail) {
-            $this->directClientDetail->name = ! empty($this->directClientDetail->client_name) ? $this->directClientDetail->client_name : $this->directClientDetail->company_name;
-            $this->directClientDetail->company_name = $this->directClientDetail->name;
-            $this->directClientDetail->website = ! empty($this->directClientDetail->client_website) ? $this->directClientDetail->client_website : $this->directClientDetail->company_website;
-            $this->directClientDetail->description = ! empty($this->directClientDetail->client_description) ? $this->directClientDetail->client_description : $this->directClientDetail->companies_description;
-            $this->directClientDetail->companies_description = $this->directClientDetail->description;
-            $this->directClientDetail->logo = ! empty($this->directClientDetail->logo_logical_path) ? $this->directClientDetail->logo_logical_path : (! empty($this->directClientDetail->client_logo) ? $this->directClientDetail->client_logo : $this->directClientDetail->company_logo);
-            $this->directClientDetail->founded = ! empty($this->directClientDetail->client_founded) ? $this->directClientDetail->client_founded : $this->directClientDetail->founded;
-            $this->directClientDetail->company_sizes = ! empty($this->directClientDetail->company_sizes) ? $this->directClientDetail->company_sizes : $this->directClientDetail->company_size;
-            $this->directClientDetail->from_company_id = $this->directClientDetail->from_company_id ?? $this->directClientDetail->companies_id ?? $id;
-            $this->directClientDetail->company_id = $this->directClientDetail->from_company_id;
-        }
-
-        // ⚡ Elasticsearch Fallback if DB record missing or null
-        if (! $this->directClientDetail && $this->elasticService->indexExists(ELASTIC_CLIENT_LIST)) {
+        // ⚡ Tier 1a: Primary Read from Elasticsearch by exact _id or client_id (1-to-1 match for clicked row)
+        if ($this->elasticService->indexExists(ELASTIC_CLIENT_LIST)) {
             try {
                 $searchRes = $this->elasticService->getClient()->search([
                     'index' => ELASTIC_CLIENT_LIST,
@@ -1640,57 +1593,87 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
                         'query' => [
                             'bool' => [
                                 'should' => [
-                                    ['term' => ['client_id' => $id]],
-                                    ['term' => ['company_id' => $id]],
                                     ['term' => ['_id' => (string) $id]],
+                                    ['term' => ['client_id' => (int) $id]],
                                 ],
                                 'minimum_should_match' => 1,
                             ],
                         ],
                     ],
                 ]);
+
+                // ⚡ Tier 1b: If not found by _id/client_id, search ES by company_id (preferring self_company=1)
+                if (empty($searchRes['hits']['hits'])) {
+                    $searchRes = $this->elasticService->getClient()->search([
+                        'index' => ELASTIC_CLIENT_LIST,
+                        'body' => [
+                            'size' => 1,
+                            'query' => [
+                                'bool' => [
+                                    'must' => [
+                                        ['term' => ['company_id' => (int) $id]],
+                                    ],
+                                ],
+                            ],
+                            'sort' => [
+                                ['self_company' => ['order' => 'desc']],
+                            ],
+                        ],
+                    ]);
+                }
+
                 if (! empty($searchRes['hits']['hits'][0]['_source'])) {
                     $source = $searchRes['hits']['hits'][0]['_source'];
-                    $cName = $source['name'] ?? $source['company_name'] ?? '';
-                    $cWeb = $source['website'] ?? '';
-                    $cDesc = $source['description'] ?? '';
-                    $cLogo = $source['logo'] ?? '';
+                    $cName = ! empty($source['name']) ? $source['name'] : ($source['company_name'] ?? '');
+                    $cWeb = ! empty($source['website']) ? $source['website'] : ($source['company_website'] ?? '');
+                    $cDesc = ! empty($source['description']) ? $source['description'] : ($source['companies_description'] ?? '');
+                    $cLogo = ! empty($source['logo_logical_path']) ? $source['logo_logical_path'] : ($source['logo'] ?? '');
+                    $cCompId = $source['company_id'] ?? $source['from_company_id'] ?? $id;
+                    $cClientId = $source['client_id'] ?? $source['id'] ?? $id;
+
                     $this->directClientDetail = (object) [
-                        'client_id' => $source['client_id'] ?? $source['id'] ?? $id,
+                        'client_id' => $cClientId,
                         'name' => $cName,
                         'company_name' => $cName,
                         'website' => $cWeb,
                         'company_website' => $cWeb,
                         'logo_logical_path' => $cLogo,
                         'logo' => $cLogo,
-                        'industry' => $source['ind_name'] ?? '',
-                        'industries' => '',
-                        'tags' => $source['tags'] ?? '',
+                        'industry' => $source['ind_name'] ?? $source['industry'] ?? '',
+                        'industries' => $source['industries'] ?? '',
+                        'tags' => is_array($source['tags'] ?? null) ? implode(',', $source['tags']) : ($source['tags'] ?? ''),
                         'description' => $cDesc,
                         'companies_description' => $cDesc,
-                        'companies_id' => $source['company_id'] ?? $id,
-                        'company_type' => '',
-                        'industries_type' => '',
-                        'company_size' => '',
-                        'founded' => '',
-                        'from_company_id' => $source['company_id'] ?? $source['from_company_id'] ?? $id,
-                        'company_id' => $source['company_id'] ?? $source['from_company_id'] ?? $id,
+                        'companies_id' => $cCompId,
+                        'company_type' => $source['company_type'] ?? '',
+                        'industries_type' => $source['industries_type'] ?? '',
+                        'company_size' => $source['company_size'] ?? $source['company_sizes'] ?? '',
+                        'company_sizes' => $source['company_sizes'] ?? $source['company_size'] ?? '',
+                        'founded' => $source['founded'] ?? '',
+                        'from_company_id' => $cCompId,
+                        'company_id' => $cCompId,
                         'to_created_at' => $source['created_at'] ?? date('Y-m-d H:i:s'),
                     ];
                 }
             } catch (\Exception $e) {
-                \Log::warning('dviewMore ES search fallback warning: '.$e->getMessage(), ['id' => $id]);
+                \Log::warning('dviewMore ES primary read warning: '.$e->getMessage(), ['id' => $id]);
             }
         }
 
-        // 🏢 Companies Table Direct Fallback
+        // 🏢 Tier 2a: MySQL DB Companies Table (if direct client id represents company_id)
         if (! $this->directClientDetail) {
             $comp = DB::table('companies')->where('id', $id)->first();
             if ($comp) {
+                $rel = DB::table('staffing_company_relation')
+                    ->where('from_company_id', $comp->id)
+                    ->where('to_company_id', $company_id)
+                    ->first();
+
+                $cName = ! empty($comp->company_name) ? $comp->company_name : 'Direct Client';
                 $this->directClientDetail = (object) [
                     'client_id' => $id,
-                    'name' => $comp->company_name ?? '',
-                    'company_name' => $comp->company_name ?? '',
+                    'name' => $cName,
+                    'company_name' => $cName,
                     'website' => $comp->website ?? '',
                     'company_website' => $comp->website ?? '',
                     'logo_logical_path' => $comp->logo ?? '',
@@ -1704,15 +1687,68 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
                     'company_type' => $comp->company_type ?? '',
                     'industries_type' => $comp->industries_type ?? '',
                     'company_size' => $comp->company_size ?? '',
+                    'company_sizes' => $comp->company_size ?? '',
                     'founded' => $comp->founded ?? '',
                     'from_company_id' => $comp->id,
                     'company_id' => $comp->id,
-                    'to_created_at' => date('Y-m-d H:i:s'),
+                    'to_created_at' => $rel->created_at ?? date('Y-m-d H:i:s'),
                 ];
             }
         }
 
-        // 🛡️ Final Safe Fallback Object (Guarantees zero null pointer exceptions)
+        // 🏢 Tier 2b: MySQL DB Clients Table Fallback
+        if (! $this->directClientDetail) {
+            $clientRec = DB::table('clients')
+                ->select(
+                    'clients.id as client_id',
+                    'clients.company_id as clients_company_id',
+                    'clients.self_company',
+                    'clients.name as client_name',
+                    'clients.website as client_website',
+                    'clients.logo_logical_path',
+                    'clients.logo as client_logo',
+                    'clients.industry',
+                    'clients.tags',
+                    'clients.description as client_description',
+                    'clients.company_sizes',
+                    'clients.company_type as client_company_type',
+                    'clients.founded as client_founded',
+                    'companies.id as companies_id',
+                    'companies.website as company_website',
+                    'companies.description as companies_description',
+                    'companies.logo as company_logo',
+                    'companies.company_type',
+                    'companies.industries',
+                    'companies.industries_type',
+                    'companies.company_name',
+                    'companies.company_size',
+                    'companies.founded',
+                    'staffing_company_relation.from_company_id',
+                    'staffing_company_relation.created_at as to_created_at'
+                )
+                ->leftJoin('companies', 'companies.id', '=', 'clients.company_id')
+                ->leftJoin('staffing_company_relation', function ($join) use ($company_id) {
+                    $join->on('staffing_company_relation.from_company_id', '=', 'companies.id')
+                        ->where('staffing_company_relation.to_company_id', '=', $company_id);
+                })
+                ->where('clients.id', '=', $id)
+                ->first();
+
+            if ($this->directClientDetail) {
+                $this->directClientDetail->name = ! empty($this->directClientDetail->client_name) ? $this->directClientDetail->client_name : $this->directClientDetail->company_name;
+                $this->directClientDetail->company_name = $this->directClientDetail->name;
+                $this->directClientDetail->website = ! empty($this->directClientDetail->client_website) ? $this->directClientDetail->client_website : $this->directClientDetail->company_website;
+                $this->directClientDetail->description = ! empty($this->directClientDetail->client_description) ? $this->directClientDetail->client_description : $this->directClientDetail->companies_description;
+                $this->directClientDetail->companies_description = $this->directClientDetail->description;
+                $this->directClientDetail->logo = ! empty($this->directClientDetail->logo_logical_path) ? $this->directClientDetail->logo_logical_path : (! empty($this->directClientDetail->client_logo) ? $this->directClientDetail->client_logo : $this->directClientDetail->company_logo);
+                $this->directClientDetail->founded = ! empty($this->directClientDetail->client_founded) ? $this->directClientDetail->client_founded : $this->directClientDetail->founded;
+                $this->directClientDetail->company_sizes = ! empty($this->directClientDetail->company_sizes) ? $this->directClientDetail->company_sizes : $this->directClientDetail->company_size;
+                $this->directClientDetail->from_company_id = $this->directClientDetail->from_company_id ?? $this->directClientDetail->companies_id ?? $id;
+                $this->directClientDetail->company_id = $this->directClientDetail->from_company_id;
+            }
+        }
+
+        // 🛡️ Tier 3: Final Safe Fallback Object (Guarantees zero null pointer exceptions)
         if (! $this->directClientDetail) {
             $this->directClientDetail = (object) [
                 'client_id' => $id,
@@ -1731,6 +1767,7 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
                 'company_type' => '',
                 'industries_type' => '',
                 'company_size' => '',
+                'company_sizes' => '',
                 'founded' => '',
                 'from_company_id' => $id,
                 'company_id' => $id,
