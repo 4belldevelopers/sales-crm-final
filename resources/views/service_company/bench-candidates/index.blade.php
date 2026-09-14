@@ -101,11 +101,19 @@
         .bench-dash .tab-exited { --tab-color: #7e8299; --tab-bg: #f1f2f6; }
 
         /* Table */
-        .bench-dash #benchListingTable { width: 100% !important; min-width: 1220px; margin: 0; table-layout: auto; }
-        .bench-dash #benchListingTable .col-talent-name { min-width: 310px; width: 28%; }
-        .bench-dash #benchListingTable .col-manager-name { min-width: 210px; width: 17%; }
-        .bench-dash #benchListingTable thead th { font-size: 11px !important; text-transform: uppercase; letter-spacing: .3px; color: #a1a5b7; font-weight: 600; border-bottom: 1px solid #eef0f4; padding: 8px 8px !important; white-space: nowrap; background: #fff; }
-        .bench-dash #benchListingTable tbody td { font-size: 12px !important; border-bottom: 1px solid #f4f5f8; padding: 8px 8px !important; vertical-align: middle; }
+        .bench-dash .table-responsive { overflow-x: hidden; }
+        .bench-dash #benchListingTable { width: 100% !important; min-width: 0; margin: 0; table-layout: fixed; }
+        .bench-dash #benchListingTable .col-select { width: 3.5%; }
+        .bench-dash #benchListingTable .col-talent-name { width: 22%; }
+        .bench-dash #benchListingTable .col-experience { width: 7.5%; }
+        .bench-dash #benchListingTable .col-availability { width: 9%; }
+        .bench-dash #benchListingTable .col-location { width: 10%; }
+        .bench-dash #benchListingTable .col-salary { width: 10.5%; }
+        .bench-dash #benchListingTable .col-status { width: 8.5%; }
+        .bench-dash #benchListingTable .col-manager-name { width: 12%; }
+        .bench-dash #benchListingTable .col-pipeline-activity { width: 17%; }
+        .bench-dash #benchListingTable thead th { font-size: 10px !important; text-transform: uppercase; letter-spacing: .2px; color: #a1a5b7; font-weight: 600; border-bottom: 1px solid #eef0f4; padding: 7px 6px !important; white-space: normal; line-height: 1.2; background: #fff; }
+        .bench-dash #benchListingTable tbody td { font-size: 12px !important; border-bottom: 1px solid #f4f5f8; padding: 7px 6px !important; vertical-align: middle; min-width: 0; overflow: hidden; }
         .bench-dash #benchListingTable tbody tr:hover td { background: #fafbfc; }
         .bench-dash #benchListingTable a { font-size: 12px !important; }
         .bench-dash #benchListingTable .fs-6 { font-size: 12px !important; }
@@ -119,23 +127,24 @@
         .bench-dash .manager-name-main {
             display: -webkit-box !important;
             -webkit-box-orient: vertical;
-            -webkit-line-clamp: 2;
+            -webkit-line-clamp: 1;
             overflow: hidden;
             white-space: normal !important;
             word-break: break-word;
             line-height: 1.25;
         }
         .bench-dash .talent-name-main,
-        .bench-dash .talent-name-role { max-width: 260px; }
-        .bench-dash .manager-name-main { max-width: 180px; }
+        .bench-dash .talent-name-role,
+        .bench-dash .manager-name-main { max-width: 100%; }
 
         /* Clients Pipeline Activity mini-grid — bold throughout */
-        .bench-dash .pipe { display: flex; align-items: flex-start; gap: 10px; }
-        .bench-dash .pipe-grid { display: grid; grid-template-columns: repeat(7, minmax(24px, 1fr)); text-align: center; gap: 0; }
-        .bench-dash .pipe-grid .h { font-size: 9.5px !important; color: #a1a5b7; font-weight: 700; }
-        .bench-dash .pipe-grid .v { font-size: 11px !important; font-weight: 700; color: #181c32; padding-top: 1px; }
-        .bench-dash .pipe-grid a { font-size: 11px !important; font-weight: 700; }
-        .bench-dash .pipe-foot { font-size: 10px !important; font-weight: 700; color: #3f4254; margin-top: 3px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; line-height: 1; }
+        .bench-dash .pipe { display: flex; align-items: flex-start; gap: 0; width: 100%; min-width: 0; overflow: hidden; }
+        .bench-dash .pipe > div { width: 100%; min-width: 0; }
+        .bench-dash .pipe-grid { display: grid; grid-template-columns: repeat(7, minmax(15px, 1fr)); text-align: center; gap: 0; width: 100%; min-width: 0; }
+        .bench-dash .pipe-grid .h { font-size: 8.5px !important; color: #a1a5b7; font-weight: 700; overflow: hidden; }
+        .bench-dash .pipe-grid .v { font-size: 10px !important; font-weight: 700; color: #181c32; padding-top: 1px; overflow: hidden; }
+        .bench-dash .pipe-grid a { font-size: 10px !important; font-weight: 700; }
+        .bench-dash .pipe-foot { font-size: 9.5px !important; font-weight: 700; color: #3f4254; margin-top: 3px; display: flex; align-items: center; gap: 6px; flex-wrap: nowrap; line-height: 1; white-space: nowrap; overflow: hidden; }
         /* "View" — plain text link (same size as the Interview label it sits next to), opens the profile */
         .bench-dash .pipe-view { color: #3e97ff !important; font-size: 10px !important; font-weight: 700; cursor: pointer; }
         .bench-dash .pipe-view:hover { text-decoration: underline; }
@@ -160,18 +169,17 @@
         .loadingMessagebenchCandidateBenchCandidatesAjax { font-size: 12px !important; }
 
         /* Job Tracker style meta strip: date first, then compact skill chips on the same row */
-        /* Rows need position:relative so the absolute skills strip anchors to them */
-        .bench-dash #benchListingTable tbody tr { position: relative; }
-        .bench-dash #benchListingTable .job-meta-strip { position: absolute; bottom: 4px; left: 8px; right: 86px; overflow: hidden; }
+        .bench-dash #benchListingTable tbody td.col-talent-name { position: relative; padding-bottom: 24px !important; }
+        .bench-dash #benchListingTable .job-meta-strip { position: absolute; bottom: 4px; left: 6px; right: 6px; overflow: hidden; }
         .bench-dash #benchListingTable .job-meta-line { display: flex; align-items: center; gap: 4px; white-space: nowrap; overflow: hidden; }
         .bench-dash #benchListingTable .job-date-tag,
         .bench-dash #benchListingTable .skill-tag {
             display: inline-flex;
             align-items: center;
-            min-height: 19px;
+            min-height: 17px;
             border-radius: 5px;
-            padding: 2px 6px;
-            font-size: 10px !important;
+            padding: 1px 5px;
+            font-size: 9.5px !important;
             line-height: 1.25;
             font-weight: 500;
             background: #f1f3f8;
@@ -179,7 +187,7 @@
             flex-shrink: 0;
         }
         .bench-dash #benchListingTable .job-date-tag { color: #181c32; font-weight: 700; }
-        .bench-dash #benchListingTable .job-date-tag svg { width: 12px; height: 12px; margin-right: 4px; color: #3f4254; flex-shrink: 0; }
+        .bench-dash #benchListingTable .job-date-tag svg { width: 11px; height: 11px; margin-right: 3px; color: #3f4254; flex-shrink: 0; }
         .bench-dash #benchListingTable .skill-tag { color: #7e8299; font-weight: 500; }
 
         /* Fit smaller / 15.6" laptops */
@@ -187,6 +195,12 @@
             .bench-dash .num { font-size: 16px !important; }
             .bench-dash .money { font-size: 14px !important; }
             .bench-dash #benchListingTable tbody td, .bench-dash #benchListingTable a { font-size: 11px !important; }
+            .bench-dash #benchListingTable thead th { font-size: 9.5px !important; padding-left: 5px !important; padding-right: 5px !important; }
+            .bench-dash #benchListingTable tbody td { padding-left: 5px !important; padding-right: 5px !important; }
+            .bench-dash #benchListingTable .symbol-40px { width: 30px !important; height: 30px !important; }
+            .bench-dash .pipe-grid .h { font-size: 8px !important; }
+            .bench-dash .pipe-grid .v,
+            .bench-dash .pipe-grid a { font-size: 9.5px !important; }
         }
         #kt_activitiesHMB { z-index: 999999; }
 
@@ -437,19 +451,19 @@
                             <table class="table align-middle mb-0" id="benchListingTable">
                                 <thead>
                                     <tr role="row">
-                                        <th class="w-10px pe-0">
+                                        <th class="col-select pe-0">
                                             <div class="form-check form-check-sm form-check-custom form-check-solid me-2">
                                                 <input class="form-check-input" type="checkbox" value="1">
                                             </div>
                                         </th>
                                         <th class="col-talent-name">Talent Name</th>
-                                        <th>Experience</th>
-                                        <th>Availability</th>
-                                        <th>Location</th>
-                                        <th>Expected Salary</th>
-                                        <th>Bench Status</th>
+                                        <th class="col-experience">Experience</th>
+                                        <th class="col-availability">Availability</th>
+                                        <th class="col-location">Location</th>
+                                        <th class="col-salary">Expected Salary</th>
+                                        <th class="col-status">Bench Status</th>
                                         <th class="col-manager-name">Relationship Manager</th>
-                                        <th>Clients Pipeline Activity</th>
+                                        <th class="col-pipeline-activity">Clients Pipeline Activity</th>
                                     </tr>
                                 </thead>
                                 <tbody id="benchCandidateBenchCandidatesAjax"></tbody>
