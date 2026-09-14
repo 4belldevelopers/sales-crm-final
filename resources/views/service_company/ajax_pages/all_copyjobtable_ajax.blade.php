@@ -70,30 +70,56 @@
         $logo_path = GeneralMethod::companyDetails($row->id);
 
         /* ── Skills + match ── */
-        $candSkills   = $candidateSkills ?? [];
+        $candSkills = $candidateSkills ?? [];
+        if (is_string($candSkills)) {
+            $candSkills = array_values(array_filter(array_map('strtolower', array_map('trim', explode(',', $candSkills)))));
+        } elseif (is_array($candSkills)) {
+            $candSkills = array_values(array_filter(array_map('strtolower', array_map('trim', $candSkills))));
+        }
+
         $jobSkillNames = collect($row->job_metronics_skills ?? [])->pluck('skill_name')->map(fn($s) => strtolower(trim($s)))->toArray();
         $matchedCount = 0;
         $totalJobSkills = count($jobSkillNames);
         $skilltag = '';
+
         if (collect($row->job_metronics_skills)->isNotEmpty()) {
             $matchedSkills = [];
             $unmatchedSkills = [];
             foreach ($row->job_metronics_skills as $sval) {
-                $sval = (object) $sval;
-                $isMatch = in_array(strtolower(trim($sval->skill_name)), $candSkills);
-                if ($isMatch) { $matchedCount++; $matchedSkills[] = $sval; }
-                else { $unmatchedSkills[] = $sval; }
+                $svalObj = (object) $sval;
+                $svalNameLower = strtolower(trim($svalObj->skill_name ?? ''));
+                $isMatch = in_array($svalNameLower, $candSkills);
+                if ($isMatch) {
+                    $matchedCount++;
+                    $matchedSkills[] = $svalObj;
+                } else {
+                    $unmatchedSkills[] = $svalObj;
+                }
             }
-            foreach ($matchedSkills as $sval) {
-                $skilltag .= '<span class="badge my-1" style="background:#dcfce7;color:#15803d;font-weight:600;">' . ucfirst($sval->skill_name) . '</span>  ';
+
+            $allSkillsList = array_merge($matchedSkills, $unmatchedSkills);
+            $displaySkills = array_slice($allSkillsList, 0, 2);
+            $remainingCount = count($allSkillsList) - count($displaySkills);
+
+            foreach ($displaySkills as $sval) {
+                $svalNameLower = strtolower(trim($sval->skill_name ?? ''));
+                $isMatch = in_array($svalNameLower, $candSkills);
+                if ($isMatch) {
+                    $skilltag .= '<span class="badge my-1" style="background:#dcfce7;color:#15803d;font-weight:600;padding:3px 8px;font-size:10.5px;border:1px solid #bbf7d0;">' . ucfirst($sval->skill_name) . '</span> ';
+                } else {
+                    $skilltag .= '<span class="badge badge-light my-1" style="font-weight:500;padding:3px 8px;font-size:10.5px;">' . ucfirst($sval->skill_name) . '</span> ';
+                }
             }
-            foreach ($unmatchedSkills as $sval) {
-                $skilltag .= '<span class="badge badge-light my-1">' . ucfirst($sval->skill_name) . '</span>  ';
+
+            if ($remainingCount > 0) {
+                $remainingSkillNames = array_map(fn($s) => ucfirst($s->skill_name ?? ''), array_slice($allSkillsList, 2));
+                $skilltag .= '<span class="badge badge-light my-1" style="font-weight:500;color:#64748b;padding:3px 6px;font-size:10px;" title="' . e(implode(', ', $remainingSkillNames)) . '">+' . $remainingCount . ' more</span>';
             }
         }
-        $matchPct = ($totalJobSkills > 0 && !empty($candSkills)) ? round(($matchedCount / $totalJobSkills) * 100) : null;
-        $matchColor = $matchPct >= 70 ? '#15803d' : ($matchPct >= 40 ? '#b45309' : '#dc2626');
-        $matchBg    = $matchPct >= 70 ? '#dcfce7' : ($matchPct >= 40 ? '#fef3c7' : '#fee2e2');
+
+        $matchPct   = ($totalJobSkills > 0) ? (!empty($candSkills) ? round(($matchedCount / $totalJobSkills) * 100) : 0) : null;
+        $matchColor = ($matchPct !== null && $matchPct >= 70) ? '#15803d' : (($matchPct !== null && $matchPct >= 40) ? '#b45309' : '#dc2626');
+        $matchBg    = ($matchPct !== null && $matchPct >= 70) ? '#dcfce7' : (($matchPct !== null && $matchPct >= 40) ? '#fef3c7' : '#fee2e2');
 
         /* ── Department ── */
         $departmentRow = DB::table('job_categories')->where('id', $row->category_id ?? 0)->first();

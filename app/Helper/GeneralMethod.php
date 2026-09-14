@@ -5894,18 +5894,71 @@ END:VCALENDAR";
             ->count();
         $spartnerCounter['sentRequest'] = $sentRequest;
 
-        // Direct Client
-        $spartnerCounter['clientDirect'] = 0;
-        $clientDirect = DB::table('staffing_company_relation')
-            ->select('staffing_company_relation.id')
-            ->where('staffing_company_relation.to_company_id', '=', $company_id)
-            ->where('staffing_company_relation.final_status', '=', 1)
-            ->count();
+        $elasticService = app(\App\Services\ElasticService::class);
+
+        // Direct Client via Elasticsearch
+        $clientDirect = 0;
+        if ($elasticService->indexExists(ELASTIC_CLIENT_AND_AGENCY_RELATION_INDEX)) {
+            try {
+                $response = $elasticService->getClient()->count([
+                    'index' => ELASTIC_CLIENT_AND_AGENCY_RELATION_INDEX,
+                    'body' => [
+                        'query' => [
+                            'bool' => [
+                                'must' => [
+                                    ['term' => ['to_company_id' => (int) $company_id]],
+                                    ['term' => ['final_status' => 1]],
+                                ],
+                                'must_not' => [
+                                    ['term' => ['from_company_id' => (int) $company_id]],
+                                ],
+                            ],
+                        ],
+                    ],
+                ]);
+                $clientDirect = $response['count'] ?? 0;
+            } catch (\Exception $e) {
+                $clientDirect = DB::table('staffing_company_relation')
+                    ->where('staffing_company_relation.to_company_id', '=', $company_id)
+                    ->where('staffing_company_relation.from_company_id', '!=', $company_id)
+                    ->where('staffing_company_relation.final_status', '=', 1)
+                    ->count();
+            }
+        } else {
+            $clientDirect = DB::table('staffing_company_relation')
+                ->where('staffing_company_relation.to_company_id', '=', $company_id)
+                ->where('staffing_company_relation.from_company_id', '!=', $company_id)
+                ->where('staffing_company_relation.final_status', '=', 1)
+                ->count();
+        }
         $spartnerCounter['clientDirect'] = $clientDirect;
 
-        // Custom Client
-        $spartnerCounter['clientCustom'] = 0;
-        $clientCustom = Client::select('clients.id')->where('clients.self_company', '!=', 1)->where('clients.company_id', '=', $company_id)->count();
+        // Custom Client via Elasticsearch
+        $clientCustom = 0;
+        if ($elasticService->indexExists(ELASTIC_CLIENT_LIST)) {
+            try {
+                $response = $elasticService->getClient()->count([
+                    'index' => ELASTIC_CLIENT_LIST,
+                    'body' => [
+                        'query' => [
+                            'bool' => [
+                                'must' => [
+                                    ['term' => ['company_id' => (int) $company_id]],
+                                ],
+                                'must_not' => [
+                                    ['term' => ['self_company' => 1]],
+                                ],
+                            ],
+                        ],
+                    ],
+                ]);
+                $clientCustom = $response['count'] ?? 0;
+            } catch (\Exception $e) {
+                $clientCustom = Client::where('clients.self_company', '!=', 1)->where('clients.company_id', '=', $company_id)->count();
+            }
+        } else {
+            $clientCustom = Client::where('clients.self_company', '!=', 1)->where('clients.company_id', '=', $company_id)->count();
+        }
         $spartnerCounter['clientCustom'] = $clientCustom;
 
         return $spartnerCounter;
@@ -7410,117 +7463,116 @@ END:VCALENDAR";
                         $targetJobId = $application->jobId ?? ($application->job_id ?? null);
 
                         if (! empty($applicationEmail) || ! empty($applicationPhone)) {
-                        $days = (int) ($appDuplicateDays ?? 0);
+                            $days = (int) ($appDuplicateDays ?? 0);
 
-
-                        if (!empty($applicationEmail) || !empty($applicationPhone)) {
-                            $filters = [];
-                            /*
-                            * company_id OR thirdparty_company_id
-                            */
-                            $filters[] = [
-                                'bool' => [
-                                    'should' => [
-                                        [
-                                            'term' => [
-                                                'company_id' => (int) $companyId,
-                                            ],
-                                        ],
-                                        [
-                                            'term' => [
-                                                'thirdparty_company_id' => (int) $companyId,
-                                            ],
-                                        ],
-                                    ],
-                                    'minimum_should_match' => 1,
-                                ],
-                            ];
-
-                            /*
-                            * appDuplicate = 1
-                            * Check duplicate for SAME JOB
-                            *
-                            * appDuplicate = 2
-                            * Check duplicate across ALL JOBS
-                            */
-                            if ((int) $appDuplicate === 1) {
-                                $filters[] = [
-                                    'term' => [
-                                        'jobId' => (int) $targetJobId,
-                                    ],
-                                ];
-                            }
-
-                            /*
-                            * Email OR Phone
-                            *
-                            * Same behavior as:
-                            *
-                            * where('email', $applicationEmail)
-                            * ->orWhere('phone', $applicationPhone)
-                            */
-                            $duplicateFields = [];
-
-                            if (!empty($applicationEmail)) {
-                                $duplicateFields[] = [
-                                    'term' => [
-                                        'email.keyword' => trim($applicationEmail),
-                                    ],
-                                ];
-                            }
-
-                            if (!empty($applicationPhone)) {
-                                $duplicateFields[] = [
-                                    'term' => [
-                                        'phone.keyword' => trim($applicationPhone),
-                                    ],
-                                ];
-                            }
-
-                            if (!empty($duplicateFields)) {
+                            if (! empty($applicationEmail) || ! empty($applicationPhone)) {
+                                $filters = [];
+                                /*
+                                * company_id OR thirdparty_company_id
+                                */
                                 $filters[] = [
                                     'bool' => [
-                                        'should' => $duplicateFields,
+                                        'should' => [
+                                            [
+                                                'term' => [
+                                                    'company_id' => (int) $companyId,
+                                                ],
+                                            ],
+                                            [
+                                                'term' => [
+                                                    'thirdparty_company_id' => (int) $companyId,
+                                                ],
+                                            ],
+                                        ],
                                         'minimum_should_match' => 1,
                                     ],
                                 ];
-                            }
 
-                            /*
-                            * Date condition
-                            *
-                            * MySQL:
-                            *
-                            * created_at >= DATE_SUB(CURDATE(), INTERVAL $days DAY)
-                            */
-                            if ($days > 0) {
-                                $filters[] = [
-                                    'range' => [
-                                        'created_at' => [
-                                            'gte' => "now-{$days}d/d",
+                                /*
+                                * appDuplicate = 1
+                                * Check duplicate for SAME JOB
+                                *
+                                * appDuplicate = 2
+                                * Check duplicate across ALL JOBS
+                                */
+                                if ((int) $appDuplicate === 1) {
+                                    $filters[] = [
+                                        'term' => [
+                                            'jobId' => (int) $targetJobId,
+                                        ],
+                                    ];
+                                }
+
+                                /*
+                                * Email OR Phone
+                                *
+                                * Same behavior as:
+                                *
+                                * where('email', $applicationEmail)
+                                * ->orWhere('phone', $applicationPhone)
+                                */
+                                $duplicateFields = [];
+
+                                if (! empty($applicationEmail)) {
+                                    $duplicateFields[] = [
+                                        'term' => [
+                                            'email.keyword' => trim($applicationEmail),
+                                        ],
+                                    ];
+                                }
+
+                                if (! empty($applicationPhone)) {
+                                    $duplicateFields[] = [
+                                        'term' => [
+                                            'phone.keyword' => trim($applicationPhone),
+                                        ],
+                                    ];
+                                }
+
+                                if (! empty($duplicateFields)) {
+                                    $filters[] = [
+                                        'bool' => [
+                                            'should' => $duplicateFields,
+                                            'minimum_should_match' => 1,
+                                        ],
+                                    ];
+                                }
+
+                                /*
+                                * Date condition
+                                *
+                                * MySQL:
+                                *
+                                * created_at >= DATE_SUB(CURDATE(), INTERVAL $days DAY)
+                                */
+                                if ($days > 0) {
+                                    $filters[] = [
+                                        'range' => [
+                                            'created_at' => [
+                                                'gte' => "now-{$days}d/d",
+                                            ],
+                                        ],
+                                    ];
+                                }
+
+                                /*
+                                * Elasticsearch query
+                                */
+                                $params = [
+                                    'index' => ELASTIC_CANDIDATES,
+                                    'size' => 1,
+                                    'body' => [
+                                        'query' => [
+                                            'bool' => [
+                                                'filter' => $filters,
+                                            ],
                                         ],
                                     ],
                                 ];
-                            }
 
-                            /*
-                            * Elasticsearch query
-                            */
-                            $params = [
-                                'index' => ELASTIC_CANDIDATES,
-                                'size' => 1,
-                                'body' => [
-                                    'query' => [
-                                        'bool' => [
-                                            'filter' => $filters,
-                                        ],
-                                    ],
-                                ],
-                            ];
-
-                            /*
-                            * Execute Elasticsearch query
-                            */
+                                /*
+                                * Execute Elasticsearch query
+                                */
                                 $response = $elasticService->getClient()->search($params);
 
                                 /*
@@ -7528,7 +7580,6 @@ END:VCALENDAR";
                                 */
                                 $duplicate = $response['hits']['total']['value'] ?? 0;
                             }
-                        
 
                             if ($duplicate > 0 || ($application->duplicate ?? 0) == 1) {
                                 $duplicate = 1;

@@ -302,12 +302,12 @@
                                         </span>
                                     </div>
                                     @endif
-                                    @if (@$directClientDetail->company_size)
-                                    <div class="cd-info-row">
-                                        <span class="cd-info-label">Number of Employees</span>
-                                        <span class="cd-info-value">{{ number_format(@$directClientDetail->company_size) }}+</span>
-                                    </div>
-                                    @endif
+                                     @if (@$directClientDetail->company_size)
+                                     <div class="cd-info-row">
+                                         <span class="cd-info-label">Number of Employees</span>
+                                         <span class="cd-info-value">{{ is_numeric(@$directClientDetail->company_size) ? number_format((float)@$directClientDetail->company_size) . '+' : @$directClientDetail->company_size }}</span>
+                                     </div>
+                                     @endif
                                     @if (!empty(@$directClientDetail->to_created_at))
                                     <div class="cd-info-row">
                                         <span class="cd-info-label">Connected On</span>

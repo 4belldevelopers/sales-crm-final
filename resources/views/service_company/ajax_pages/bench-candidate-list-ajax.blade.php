@@ -57,7 +57,7 @@
             {{-- Checkbox --}}
             <td class="col-select">
                 <div class="form-check form-check-sm form-check-custom form-check-solid">
-                    <input class="form-check-input chk_list_item" name="chk_list_item[]" type="checkbox" value="{{ $row->id }}" />
+                    <input class="form-check-input chk_list_item" name="chk_list_item[]" type="checkbox" data-skills="{{ e($row->skills ?? '') }}" data-cname="{{ e($row->full_name ?? '') }}" value="{{ $row->id }}" />
                 </div>
             </td>
 

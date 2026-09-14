@@ -2031,7 +2031,12 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
         // dd($pagination);
 
         $userPermissions = $this->userPermissions;
-        $candidateSkills = array_filter(array_map('strtolower', array_map('trim', explode(',', $request->candidateSkills ?? ''))));
+        $rawCandidateSkills = $request->candidateSkills ?? '';
+        if (is_array($rawCandidateSkills)) {
+            $candidateSkills = array_values(array_filter(array_map('strtolower', array_map('trim', $rawCandidateSkills))));
+        } else {
+            $candidateSkills = array_values(array_filter(array_map('strtolower', array_map('trim', explode(',', (string) $rawCandidateSkills)))));
+        }
         $responseData = [
             'html' => view('service_company.ajax_pages.all_copyjobtable_ajax', compact('data', 'userPermissions', 'company_id', 'candidateSkills', 'findTalentAdd'))->render(),
             'total' => $total,
