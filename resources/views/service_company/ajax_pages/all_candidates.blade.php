@@ -53,7 +53,7 @@
                 @php
                     echo '<div class="form-check form-check-sm form-check-custom form-check-solid">
                     <input class="form-check-input chk_list_item " name="chk_list_item[]" type="checkbox" data-jobId="' .
-                        $row->jobId .'" data-wiseId="' .$row->wiseId .'" value="' .$row->candidate_id .'" />
+                        $row->jobId .'" data-wiseId="' .$row->wiseId .'" data-skills="' . e(@$row->skills ?? '') . '" data-cname="' . e(@$row->full_name ?? '') . '" value="' .$row->candidate_id .'" />
                   </div>';
                 @endphp
             </td>

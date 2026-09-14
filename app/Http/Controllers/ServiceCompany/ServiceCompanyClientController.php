@@ -102,6 +102,13 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
         $sort = [];
         $valCheck = request('sortingfilter');
 
+        $tabFilter = $request->input('tab', $request->input('type', 'all'));
+
+        // If tab is request, delegate to client_request_data method
+        if ($tabFilter === 'request') {
+            return $this->client_request_data($request);
+        }
+
         $cachePayload = [
             'page' => $page,
             'size' => $size,
@@ -111,9 +118,13 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
             'cus_search' => $custom_search,
             'user_id' => $this->user->id,
             'valCheck' => $valCheck,
+            'tab' => $tabFilter,
         ];
 
         $hiringFilter = (int) $request->input('hiring', 0);
+        if ($tabFilter === 'hiring') {
+            $hiringFilter = 1;
+        }
         $cachePayload['hiring'] = $hiringFilter;
 
         $versionKey = 'allclients_version_user_'.$this->user->id;
@@ -135,6 +146,9 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
                         'must' => [
                             ['term' => ['to_company_id' => $company_id]],
                             ['term' => ['final_status' => 1]],
+                        ],
+                        'must_not' => [
+                            ['term' => ['from_company_id' => $company_id]],
                         ],
                     ],
                 ],
@@ -160,35 +174,62 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
         } else {
             $sort[] = ['id' => ['order' => 'desc']];
         }
-        $must[] = [
-            'bool' => [
-                'should' => [
-                    // Case 1: self_company = 0 and from_company_id match
-                    [
-                        'bool' => [
-                            'must' => [
-                                ['term' => ['company_id' => $company_id]],
-                                ['term' => ['self_company' => 0]],
+
+        if ($tabFilter === 'internal' || $tabFilter === 'custom') {
+            $must[] = [
+                'bool' => [
+                    'must' => [
+                        ['term' => ['company_id' => $company_id]],
+                        ['term' => ['self_company' => 0]],
+                    ],
+                ],
+            ];
+        } elseif ($tabFilter === 'direct') {
+            $must[] = [
+                'bool' => [
+                    'must' => [
+                        ['term' => ['self_company' => 1]],
+                        ['terms' => ['company_id' => $companyIds]],
+                    ],
+                    'must_not' => [
+                        ['term' => ['company_id' => $company_id]],
+                    ],
+                ],
+            ];
+        } else {
+            $must[] = [
+                'bool' => [
+                    'should' => [
+                        // Case 1: self_company = 0 and from_company_id match
+                        [
+                            'bool' => [
+                                'must' => [
+                                    ['term' => ['company_id' => $company_id]],
+                                    ['term' => ['self_company' => 0]],
+                                ],
                             ],
                         ],
-                    ],
-                    // Case 2: self_company = 1 and nested relation matches
-                    [
-                        'bool' => [
-                            'must' => [
-                                ['term' => ['self_company' => 1]],
-                                [
-                                    'terms' => [
-                                        'company_id' => $companyIds, // 🔥 from relation index
+                        // Case 2: self_company = 1 and nested relation matches
+                        [
+                            'bool' => [
+                                'must' => [
+                                    ['term' => ['self_company' => 1]],
+                                    [
+                                        'terms' => [
+                                            'company_id' => $companyIds, // 🔥 from relation index
+                                        ],
                                     ],
+                                ],
+                                'must_not' => [
+                                    ['term' => ['company_id' => $company_id]],
                                 ],
                             ],
                         ],
                     ],
+                    'minimum_should_match' => 1,
                 ],
-                'minimum_should_match' => 1,
-            ],
-        ];
+            ];
+        }
 
         if (! empty($customSearch)) {
             $customSearchLower = strtolower($customSearch); // wildcard is case-sensitive
@@ -967,9 +1008,9 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
     }
 
     /**
-     * Compute client counter metrics for header tabs.
-     * Optimized to eliminate dead multi-table joins and leverage clean indexed counts.
-     * Tenancy scope enforced via to_company_id and company_id filters.
+     * Compute client counter metrics for header tabs using Elasticsearch indices with DB fallbacks.
+     * INTENT: Efficiently fetch tenant-scoped client counts (Direct, Custom/Internal, Requests, Total) via Elasticsearch.
+     * TENANCY: Enforces company_id and to_company_id scoping.
      *
      * @return array
      */
@@ -978,18 +1019,75 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
         $company_id = auth()->user()->company_id;
         $clientCounter = [];
 
-        // Direct Client Count (tenant-scoped by to_company_id)
-        $clientDirect = DB::table('staffing_company_relation')
-            ->where('staffing_company_relation.to_company_id', '=', $company_id)
-            ->where('staffing_company_relation.final_status', '=', 1)
-            ->distinct()
-            ->count(DB::raw('CONCAT(from_company_id,"-",to_company_id)'));
+        // Direct Client Count via Elasticsearch (tenant-scoped by to_company_id)
+        $clientDirect = 0;
+        if ($this->elasticService->indexExists(ELASTIC_CLIENT_AND_AGENCY_RELATION_INDEX)) {
+            try {
+                $response = $this->elasticService->getClient()->count([
+                    'index' => ELASTIC_CLIENT_AND_AGENCY_RELATION_INDEX,
+                    'body' => [
+                        'query' => [
+                            'bool' => [
+                                'must' => [
+                                    ['term' => ['to_company_id' => (int) $company_id]],
+                                    ['term' => ['final_status' => 1]],
+                                ],
+                                'must_not' => [
+                                    ['term' => ['from_company_id' => (int) $company_id]],
+                                ],
+                            ],
+                        ],
+                    ],
+                ]);
+                $clientDirect = $response['count'] ?? 0;
+            } catch (\Exception $e) {
+                $clientDirect = DB::table('staffing_company_relation')
+                    ->where('staffing_company_relation.to_company_id', '=', $company_id)
+                    ->where('staffing_company_relation.from_company_id', '!=', $company_id)
+                    ->where('staffing_company_relation.final_status', '=', 1)
+                    ->distinct()
+                    ->count(DB::raw('CONCAT(from_company_id,"-",to_company_id)'));
+            }
+        } else {
+            $clientDirect = DB::table('staffing_company_relation')
+                ->where('staffing_company_relation.to_company_id', '=', $company_id)
+                ->where('staffing_company_relation.from_company_id', '!=', $company_id)
+                ->where('staffing_company_relation.final_status', '=', 1)
+                ->distinct()
+                ->count(DB::raw('CONCAT(from_company_id,"-",to_company_id)'));
+        }
         $clientCounter['clientDirect'] = $clientDirect;
 
-        // Custom Client Count (tenant-scoped by company_id)
-        $clientCustom = Client::where('clients.self_company', '!=', 1)
-            ->where('clients.company_id', '=', $company_id)
-            ->count();
+        // Custom / Internal Client Count via Elasticsearch (tenant-scoped by company_id)
+        $clientCustom = 0;
+        if ($this->elasticService->indexExists(ELASTIC_CLIENT_LIST)) {
+            try {
+                $response = $this->elasticService->getClient()->count([
+                    'index' => ELASTIC_CLIENT_LIST,
+                    'body' => [
+                        'query' => [
+                            'bool' => [
+                                'must' => [
+                                    ['term' => ['company_id' => (int) $company_id]],
+                                ],
+                                'must_not' => [
+                                    ['term' => ['self_company' => 1]],
+                                ],
+                            ],
+                        ],
+                    ],
+                ]);
+                $clientCustom = $response['count'] ?? 0;
+            } catch (\Exception $e) {
+                $clientCustom = Client::where('clients.self_company', '!=', 1)
+                    ->where('clients.company_id', '=', $company_id)
+                    ->count();
+            }
+        } else {
+            $clientCustom = Client::where('clients.self_company', '!=', 1)
+                ->where('clients.company_id', '=', $company_id)
+                ->count();
+        }
         $clientCounter['clientCustom'] = $clientCustom;
 
         // Client Requests Count via Elasticsearch (tenant-scoped by to_company_id)
@@ -1013,8 +1111,12 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
 
         $count = 0;
         if ($this->elasticService->indexExists(ELASTIC_CLIENT_REQUEST)) {
-            $response = $this->elasticService->getClient()->count($params);
-            $count = $response['count'] ?? 0;
+            try {
+                $response = $this->elasticService->getClient()->count($params);
+                $count = $response['count'] ?? 0;
+            } catch (\Exception $e) {
+                $count = 0;
+            }
         }
 
         $clientCounter['clientRequest'] = $count;

@@ -1,25 +1,13 @@
 {{-- Shared jobs table shell keeps Total, Direct Client, and Internal Jobs aligned without changing their data loaders. --}}
 <div class="table-card">
-  <!-- Header -->
-  <div class="table-header">
+  <!-- Standard Header -->
+  <div class="table-header table-header-standard">
     <div class="th">Job Details</div>
     <div class="th">
       Experience
       <svg width="13" height="13" fill="none" viewBox="0 0 24 24">
-        <rect
-          x="2"
-          y="7"
-          width="20"
-          height="14"
-          rx="2"
-          stroke="currentColor"
-          stroke-width="1.8"
-        />
-        <path
-          d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"
-          stroke="currentColor"
-          stroke-width="1.8"
-        />
+        <rect x="2" y="7" width="20" height="14" rx="2" stroke="currentColor" stroke-width="1.8"/>
+        <path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2" stroke="currentColor" stroke-width="1.8"/>
       </svg>
     </div>
     <div class="th">Location</div>
@@ -29,19 +17,31 @@
     <div class="th">
       Hiring Pipeline
       <svg width="13" height="13" fill="none" viewBox="0 0 24 24">
-        <circle
-          cx="12"
-          cy="12"
-          r="10"
-          stroke="currentColor"
-          stroke-width="1.8"
-        />
-        <path
-          d="M12 8v4M12 16h.01"
-          stroke="currentColor"
-          stroke-width="1.8"
-          stroke-linecap="round"
-        />
+        <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="1.8"/>
+        <path d="M12 8v4M12 16h.01" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+      </svg>
+    </div>
+  </div>
+
+  <!-- Job Requests Header -->
+  <div class="table-header table-header-request" style="display: none;">
+    <div class="th">Job Details</div>
+    <div class="th">
+      Experience
+      <svg width="13" height="13" fill="none" viewBox="0 0 24 24">
+        <rect x="2" y="7" width="20" height="14" rx="2" stroke="currentColor" stroke-width="1.8"/>
+        <path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2" stroke="currentColor" stroke-width="1.8"/>
+      </svg>
+    </div>
+    <div class="th">Hiring & Location</div>
+    <div class="th">Hiring Manager</div>
+    <div class="th">Date</div>
+    <div class="th">Terms</div>
+    <div class="th">
+      Action
+      <svg width="13" height="13" fill="none" viewBox="0 0 24 24">
+        <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="1.8"/>
+        <path d="M12 8v4M12 16h.01" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
       </svg>
     </div>
   </div>
@@ -53,6 +53,8 @@
   <div id="pagination"></div>
 
   <!-- LEGEND -->
-  @include('sections.service_company.pipeline')
+  <div class="pipeline-legend-card">
+    @include('sections.service_company.pipeline')
+  </div>
 </div>
 <!-- /table-card -->
