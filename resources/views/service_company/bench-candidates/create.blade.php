@@ -295,13 +295,9 @@ if($snp_mode== 1){
                         <small>A concise summary of this talent's expertise, experience and value to clients.</small>
                       </span>
                     </div>
-                    <button class="summary-ai-button" type="button">
-                      <i class="fa-solid fa-wand-magic-sparkles"></i>
-                      Generate with AI
-                    </button>
                   </div>
                   <div class="fsc summary-card-body">
-                    <textarea placeholder="Enter or generate a professional summary..." id="careersummary" name="careersummary" rows="10">{{ @$application->careersummary }}</textarea>
+                    <textarea placeholder="Enter professional summary..." id="careersummary" name="careersummary" rows="10">{{ @$application->careersummary }}</textarea>
                     <div class="cc summary-counter">0 / 500</div>
                     <div class="summary-tip">
                       <span class="summary-tip-icon"><i class="fa-solid fa-lightbulb"></i></span>
@@ -310,7 +306,6 @@ if($snp_mode== 1){
                         <ul>
                           <li>Highlight key skills, years of experience and major achievements.</li>
                           <li>Keep it concise and client-facing.</li>
-                          <li>Our AI can generate a draft from the uploaded resume, which you can edit.</li>
                         </ul>
                       </div>
                     </div>
@@ -635,7 +630,7 @@ if($snp_mode== 1){
                   </div>
                 </div>
 
-                <div class="pd-field-grid pd-field-grid--three">
+                <div class="pd-field-grid pd-field-grid--two pd-field-grid--employee-row">
                   <div class="fg fv-row pd-field">
                     <label>Employment Type <span class="rq">*</span></label>
                     <div class="pd-control pd-control--select">
@@ -2698,6 +2693,7 @@ function syncRelationshipManagerCard() {
     var selected = names[0] || '';
     window.__rmLastRecruiterValue = $('#recruiter').val() || '';
     $('#rmPicker').toggleClass('has-selection', names.length > 0);
+    $('#job_additional_detail').toggleClass('rm-has-selection', names.length > 0);
 
     if (!selected) {
         $('#rmSelectedCard').hide();
@@ -2721,7 +2717,7 @@ function syncRelationshipManagerCard() {
         contactHtml += '<span class="rm-more-count">+' + (names.length - 1) + ' more selected</span>';
     }
 
-    $('#rmPickerAction').text('Change Relationship Manager');
+    $('#rmPickerAction').text('Select Relationship Manager');
     $('#rmAvatar').text(rmInitials(selected));
     $('#rmSelectedName').text(rmTitleCase(selected));
     $('#rmSelectedRole').text(rmTitleCase(role));
