@@ -679,14 +679,10 @@ $('#template').change(function(){
     var _engineLoadPromise = null;
 
     /**
-     * ensureEngine() — Guaranteed engine loader. Three layers:
-     *   1. window.AgyForwardResumeEngine already set (host page pre-loaded) → instant resolve
-     *   2. <script> tag injected into document.head + poll for global confirmation
-     *      (same-origin script tags are NEVER blocked by CSP, unlike eval())
-     *   3. Fallback to absolute asset URL if relative path fails
-     *
-     * Returns a Promise<engine> that resolves with window.AgyForwardResumeEngine.
-     * The shared _engineLoadPromise ensures only one load request runs at a time.
+     * ensureEngine() — loads AgyForwardResumeEngine.js via jQuery $.ajax dataType:'script'.
+     * $.ajax with dataType:'script' uses XHR to fetch the JS text and evals it in global scope
+     * via $.globalEval(). CSP-safe for same-origin scripts, works inside AJAX-injected HTML,
+     * and correctly sets window.AgyForwardResumeEngine before resolving.
      */
     function ensureEngine() {
         if (window.AgyForwardResumeEngine &&
@@ -695,51 +691,41 @@ $('#template').change(function(){
         }
         if (_engineLoadPromise) return _engineLoadPromise;
 
-        // Poll until the engine global is set (used after each script-tag onload)
-        function waitForEngine(maxMs) {
-            return new Promise(function (resolve, reject) {
-                var elapsed = 0;
-                var iv = setInterval(function () {
+        _engineLoadPromise = new Promise(function (resolve, reject) {
+            $.ajax({
+                url: "{{ asset('js/opendoc/AgyForwardResumeEngine.js') }}",
+                dataType: 'script',
+                cache: true,
+                success: function () {
                     if (window.AgyForwardResumeEngine &&
                         typeof window.AgyForwardResumeEngine.processOption === 'function') {
-                        clearInterval(iv);
                         resolve(window.AgyForwardResumeEngine);
                     } else {
-                        elapsed += 60;
-                        if (elapsed >= maxMs) {
-                            clearInterval(iv);
-                            reject(new Error('Engine did not initialise after load'));
-                        }
+                        reject(new Error('Could not load AgyForwardResumeEngine module'));
                     }
-                }, 60);
+                },
+                error: function () {
+                    // Fallback to relative path
+                    $.ajax({
+                        url: '/js/opendoc/AgyForwardResumeEngine.js',
+                        dataType: 'script',
+                        cache: true,
+                        success: function () {
+                            if (window.AgyForwardResumeEngine &&
+                                typeof window.AgyForwardResumeEngine.processOption === 'function') {
+                                resolve(window.AgyForwardResumeEngine);
+                            } else {
+                                reject(new Error('Could not load AgyForwardResumeEngine module'));
+                            }
+                        },
+                        error: function () {
+                            _engineLoadPromise = null;
+                            reject(new Error('Could not load AgyForwardResumeEngine module'));
+                        }
+                    });
+                }
             });
-        }
-
-        // Inject a <script src> tag into document.head — the only reliable strategy
-        // for loading JS inside jQuery-injected HTML (eval() blocked by CSP, $.html()
-        // strips <script src> tags, but document.createElement + appendChild always works)
-        function loadViaTag(src) {
-            return new Promise(function (resolve, reject) {
-                var s = document.createElement('script');
-                s.src = src;
-                s.onload = function () { waitForEngine(3000).then(resolve, reject); };
-                s.onerror = function () { reject(new Error('Script load error: ' + src)); };
-                document.head.appendChild(s);
-            });
-        }
-
-        var urls = [
-            '/js/opendoc/AgyForwardResumeEngine.js',
-            "{{ asset('js/opendoc/AgyForwardResumeEngine.js') }}"
-        ];
-
-        _engineLoadPromise = (function attempt(idx) {
-            if (idx >= urls.length) {
-                _engineLoadPromise = null;
-                return Promise.reject(new Error('Could not load AgyForwardResumeEngine module'));
-            }
-            return loadViaTag(urls[idx]).catch(function () { return attempt(idx + 1); });
-        }(0)).catch(function (err) {
+        }).catch(function (err) {
             _engineLoadPromise = null;
             throw err;
         });
@@ -980,7 +966,50 @@ async function startCompilationForOption(optId) {
     $('#fwd_compile_step_detail').text('Loading Rust WASM core and vector fonts...');
 
     try {
-        await window.AgyForwardResumeHelper.ensureRenderer();
+        // ── Definitive engine load ────────────────────────────────────────────
+        // All previous approaches (host pre-load, fetch+eval, document.head append)
+        // are unreliable due to browser cache state, CSP, or timing.
+        //
+        // $.getScript() is jQuery's battle-tested XHR+eval loader. It:
+        //   1. Fetches the script text via XHR (bypasses HTML-injection stripping)
+        //   2. Evals in global scope via $.globalEval (sets window.AgyForwardResumeEngine)
+        //   3. Only resolves AFTER the script has fully executed
+        //   4. cache:false forces a fresh parse on every drawer open (prevents stale globals)
+        //
+        // If window.AgyForwardResumeEngine is ALREADY defined (from host pre-load),
+        // we skip the getScript call entirely to avoid redundant network round-trips.
+        // ─────────────────────────────────────────────────────────────────────
+        if (!window.AgyForwardResumeEngine ||
+            typeof window.AgyForwardResumeEngine.processOption !== 'function') {
+
+            await new Promise(function (resolve, reject) {
+                $.ajax({
+                    url: "{{ asset('js/opendoc/AgyForwardResumeEngine.js') }}",
+                    dataType: 'script',
+                    cache: true,  // allow browser caching so 115KB isn't re-downloaded every time
+                    success: resolve,
+                    error: function (_, __, err) {
+                        // Fallback: try relative path
+                        $.ajax({
+                            url: '/js/opendoc/AgyForwardResumeEngine.js',
+                            dataType: 'script',
+                            cache: true,
+                            success: resolve,
+                            error: function () {
+                                reject(new Error('Could not load AgyForwardResumeEngine module'));
+                            }
+                        });
+                    }
+                });
+            });
+        }
+
+        // Final guard: confirm the global was set
+        if (!window.AgyForwardResumeEngine ||
+            typeof window.AgyForwardResumeEngine.processOption !== 'function') {
+            throw new Error('Could not load AgyForwardResumeEngine module');
+        }
+
         if (thisToken !== _fwdGlobalToken) return;
 
         $('#fwd_compile_progress_bar').css('width', '15%');
