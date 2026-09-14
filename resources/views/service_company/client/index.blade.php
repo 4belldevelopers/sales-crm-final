@@ -502,6 +502,7 @@ $(document).on('click', '.request_event', function () {
                         if ($('#span_clientAll').length) $('#span_clientAll').html(response.clientDataCnt.clientAll);
                         if ($('#span_clientDirect').length) $('#span_clientDirect').html(response.clientDataCnt.clientDirect);
                         if ($('#span_clientCustom').length) $('#span_clientCustom').html(response.clientDataCnt.clientCustom);
+                        if ($('#span_clientHiring').length) $('#span_clientHiring').html(response.clientDataCnt.clientHiring);
                         if ($('#span_clientRequest').length) $('#span_clientRequest').html(response.clientDataCnt.clientRequest);
                     }
                     if (response.status == 'success') {
