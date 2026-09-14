@@ -137,15 +137,15 @@
         .bench-dash .talent-name-role,
         .bench-dash .manager-name-main { max-width: 100%; }
 
-        /* Clients Pipeline Activity mini-grid — bold throughout */
+        /* Clients Pipeline Activity mini-grid */
         .bench-dash .pipe { display: flex; align-items: flex-start; gap: 0; width: 100%; min-width: 0; overflow: hidden; }
         .bench-dash .pipe > div { width: 100%; min-width: 0; }
         .bench-dash .pipe-grid { display: grid; grid-template-columns: repeat(7, minmax(15px, 1fr)); text-align: center; gap: 0; width: 100%; min-width: 0; }
         .bench-dash .pipe-grid .h { font-size: 8.5px !important; color: #a1a5b7; font-weight: 700; overflow: hidden; }
         .bench-dash .pipe-grid .v { font-size: 10px !important; font-weight: 700; color: #181c32; padding-top: 1px; overflow: hidden; }
         .bench-dash .pipe-grid a { font-size: 10px !important; font-weight: 700; }
-        .bench-dash .pipe-foot { font-size: 9.5px !important; font-weight: 700; color: #3f4254; margin-top: 3px; display: flex; align-items: center; gap: 4px 7px; flex-wrap: wrap; line-height: 1.15; white-space: normal; overflow: hidden; }
-        .bench-dash .pipe-stat { display: inline-flex; align-items: center; color: #7e8299; font-size: 9.5px !important; font-weight: 600; line-height: 1.15; flex-shrink: 0; }
+        .bench-dash .pipe-foot { font-size: 9.5px !important; font-weight: 500; color: #3f4254; margin-top: 3px; display: flex; align-items: center; gap: 4px 7px; flex-wrap: wrap; line-height: 1.15; white-space: normal; overflow: hidden; }
+        .bench-dash .pipe-stat { display: inline-flex; align-items: center; color: #7e8299; font-size: 9.5px !important; font-weight: 500; line-height: 1.15; flex-shrink: 0; }
 
         /* Manager "Change" — plain text link, no button chrome */
         .bench-dash .manager-change { color: #3e97ff; font-size: 10.5px !important; font-weight: 600; cursor: pointer; width: fit-content; }
@@ -184,7 +184,7 @@
             color: #5e6278;
             flex-shrink: 0;
         }
-        .bench-dash #benchListingTable .job-date-tag { color: #181c32; font-weight: 700; }
+        .bench-dash #benchListingTable .job-date-tag { color: #181c32; font-weight: 500; }
         .bench-dash #benchListingTable .job-date-tag svg { width: 11px; height: 11px; margin-right: 3px; color: #3f4254; flex-shrink: 0; }
         .bench-dash #benchListingTable .skill-tag { color: #7e8299; font-weight: 500; }
 

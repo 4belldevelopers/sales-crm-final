@@ -163,7 +163,7 @@
                             $availLine = 'Immediate';
                             $availClass = 'text-success';
                         } else {
-                            $availLine = 'SNP LWD ' . $lwdDate;
+                            $availLine = 'Date ' . $lwdDate;
                             $availClass = 'text-warning';
                         }
                     } else {
