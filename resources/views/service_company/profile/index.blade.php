@@ -1004,12 +1004,13 @@ body
                     <div class="scp-card">
                       <div class="scp-card-head">
                         <div class="scp-card-title"><span class="ci ic-amber"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2"/><path d="M1 10h22"/></svg></span>Subscription Plan</div>
-                        <a href="javascript:void(0);" class="scp-edit">View Plan</a>
+                        <a href="{{ route('service_company.subscribe.index') }}" class="scp-edit">View Plan</a>
                       </div>
-                      <div class="scp-row"><span class="k">Current Plan</span><span class="v"><span class="scp-pill free">{{ ucwords(@$current_package_name ?? 'Free Plan') }}</span></span></div>
+                      <div class="scp-row"><span class="k">Operational Plan</span><span class="v"><span class="scp-pill free">{{ ucwords(@$operational_package_name ?? 'Free Plan') }}</span></span></div>
+                      <div class="scp-row"><span class="k">Sales Plan</span><span class="v"><span class="scp-pill free">{{ ucwords(@$sales_package_name ?? 'Free Plan') }}</span></span></div>
                       <div class="scp-row"><span class="k">Active Jobs</span><span class="v">{{ $scp_active }}</span></div>
                       <div class="scp-row"><span class="k">Candidates</span><span class="v">{{ number_format($scp_cand) }}</span></div>
-                      <a href="javascript:void(0);" class="scp-upgrade">Upgrade Plan</a>
+                      <a href="{{ route('service_company.subscribe.index') }}" class="scp-upgrade">Upgrade Plan</a>
                     </div>
                   </div>
                 </div>

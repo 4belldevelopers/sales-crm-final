@@ -17,7 +17,6 @@ namespace App\Http\Controllers\ServiceCompany;
 
 namespace App\Services;
 
-use App\Helper\GeneralMethod;
 use App\Models\User;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Cache;
@@ -86,8 +85,8 @@ class ServiceCompanyProfileService
                                 'must' => [
                                     ['term' => ['submitted_by' => $userId]],
                                     ['term' => ['ClientComID' => 0]],
-                                ]
-                            ]
+                                ],
+                            ],
                         ],
                         [
                             'bool' => [
@@ -98,20 +97,20 @@ class ServiceCompanyProfileService
                                     [
                                         'bool' => [
                                             'must_not' => [
-                                                ['terms' => ['job_master_status_id' => [8, 9]]]
-                                            ]
-                                        ]
-                                    ]
-                                ]
-                            ]
+                                                ['terms' => ['job_master_status_id' => [8, 9]]],
+                                            ],
+                                        ],
+                                    ],
+                                ],
+                            ],
                         ],
                         [
                             'bool' => [
                                 'must' => [
                                     ['term' => ['submitted_by' => $userId]],
                                     ['range' => ['jobId' => ['gt' => 0]]],
-                                ]
-                            ]
+                                ],
+                            ],
                         ],
                     ],
                     'minimum_should_match' => 1,
@@ -132,7 +131,7 @@ class ServiceCompanyProfileService
                             ],
                         ],
                     ],
-                ]
+                ],
             ];
 
             $params = [
@@ -146,9 +145,9 @@ class ServiceCompanyProfileService
                         'status_counts' => [
                             'terms' => [
                                 'field' => 'job_master_status_id',
-                                'size' => 10
-                            ]
-                        ]
+                                'size' => 10,
+                            ],
+                        ],
                     ],
                 ],
             ];
@@ -157,7 +156,8 @@ class ServiceCompanyProfileService
             try {
                 $response = $this->elasticService->getClient()->search($params);
                 $bucketData = $response['aggregations']['status_counts']['buckets'] ?? [];
-            } catch (\Throwable $e) {}
+            } catch (\Throwable $e) {
+            }
 
             $result = collect($bucketData)->mapWithKeys(function ($item) {
                 return [$item['key'] => $item['doc_count']];
@@ -212,14 +212,15 @@ class ServiceCompanyProfileService
                         'query' => ['bool' => ['must' => $must]],
                         'aggs' => [
                             'status_counts' => [
-                                'terms' => ['field' => 'status', 'size' => 10]
-                            ]
+                                'terms' => ['field' => 'status', 'size' => 10],
+                            ],
                         ],
                     ],
                 ]);
                 $jobBuckets = $jobResponse['aggregations']['status_counts']['buckets'] ?? [];
-                $jobsCounts = collect($jobBuckets)->mapWithKeys(fn($item) => [$item['key'] => $item['doc_count']]);
-            } catch (\Throwable $e) {}
+                $jobsCounts = collect($jobBuckets)->mapWithKeys(fn ($item) => [$item['key'] => $item['doc_count']]);
+            } catch (\Throwable $e) {
+            }
 
             // Header overall totals
             $scpCandidatesTotal = 0;
@@ -233,7 +234,9 @@ class ServiceCompanyProfileService
                     'body' => ['track_total_hits' => true, 'size' => 0, 'query' => ['bool' => ['must' => [['term' => ['submitted_by' => $userId]]]]]],
                 ]);
                 $scpCandidatesTotal = $cR['hits']['total']['value'] ?? 0;
-            } catch (\Throwable $e) { $scpCandidatesTotal = $total_candidates; }
+            } catch (\Throwable $e) {
+                $scpCandidatesTotal = $total_candidates;
+            }
 
             try {
                 $jR = $this->elasticService->getClient()->search([
@@ -241,7 +244,9 @@ class ServiceCompanyProfileService
                     'body' => ['track_total_hits' => true, 'size' => 0, 'query' => ['bool' => ['must' => [['term' => ['submitted_by' => $userId]], ['term' => ['job_master_status_id' => 6]]]]]],
                 ]);
                 $scpJoiningsTotal = $jR['hits']['total']['value'] ?? 0;
-            } catch (\Throwable $e) { $scpJoiningsTotal = $joined_count; }
+            } catch (\Throwable $e) {
+                $scpJoiningsTotal = $joined_count;
+            }
 
             try {
                 $iR = $this->elasticService->getClient()->search([
@@ -249,7 +254,8 @@ class ServiceCompanyProfileService
                     'body' => ['track_total_hits' => true, 'size' => 0, 'query' => ['bool' => ['filter' => [['term' => ['submitted_by' => $userId]]]]]],
                 ]);
                 $scpInterviewsTotal = $iR['hits']['total']['value'] ?? 0;
-            } catch (\Throwable $e) {}
+            } catch (\Throwable $e) {
+            }
 
             try {
                 $oR = $this->elasticService->getClient()->search([
@@ -257,7 +263,9 @@ class ServiceCompanyProfileService
                     'body' => ['track_total_hits' => true, 'size' => 0, 'query' => ['bool' => ['must' => [['term' => ['submitted_by' => $userId]], ['exists' => ['field' => 'of_created_date']]]]]],
                 ]);
                 $scpOffersTotal = $oR['hits']['total']['value'] ?? 0;
-            } catch (\Throwable $e) { $scpOffersTotal = $offer_count; }
+            } catch (\Throwable $e) {
+                $scpOffersTotal = $offer_count;
+            }
 
             return [
                 'joined_count' => $joined_count,
@@ -295,7 +303,9 @@ class ServiceCompanyProfileService
             for ($year = $startYear; $year <= $currentYear; $year++) {
                 for ($i = 1; $i <= 12; $i++) {
                     $month = Carbon::create($year, $i, 1)->format('Y-m');
-                    if ($month > $currentMonth) break 2;
+                    if ($month > $currentMonth) {
+                        break 2;
+                    }
                     $months->push($month);
                 }
             }
@@ -308,7 +318,7 @@ class ServiceCompanyProfileService
             // Execute rank query only for active months (or latest 6 months to prevent ES explosion)
             $recentMonths = $months->take(6);
             foreach ($recentMonths as $month) {
-                $reportMonth = Carbon::parse($month . '-01');
+                $reportMonth = Carbon::parse($month.'-01');
                 $start = $reportMonth->copy()->startOfMonth()->toIso8601String();
                 $end = $reportMonth->copy()->endOfMonth()->toIso8601String();
 
@@ -355,10 +365,10 @@ class ServiceCompanyProfileService
                                 'screening_sum' => ['sum' => ['field' => 'doc.screening']],
                                 'evaluation_sum' => ['sum' => ['field' => 'doc.evaluation']],
                                 'negotiation_sum' => ['sum' => ['field' => 'doc.negotiation']],
-                            ]
-                        ]
-                    ]
-                ]
+                            ],
+                        ],
+                    ],
+                ],
             ];
 
             $response = $this->elasticService->getClient()->search($rankQuery);
@@ -388,7 +398,9 @@ class ServiceCompanyProfileService
             arsort($allScores);
             $rank = 1;
             foreach ($allScores as $uid => $score) {
-                if ($uid == $userId) break;
+                if ($uid == $userId) {
+                    break;
+                }
                 $rank++;
             }
 
@@ -445,11 +457,13 @@ class ServiceCompanyProfileService
                         + ($item['interviewScheduled_sum']['value'] ?? 0)
                         + ($item['offerReleased_sum']['value'] ?? 0)
                         + ($item['candidateJoined_sum']['value'] ?? 0);
+
                     return [$item['key'] => $score];
                 });
 
                 $ranked = $users->map(function ($user) use ($scoreMap) {
                     $id = $user['id'];
+
                     return [
                         'id' => $id,
                         'name' => $user['name'] ?? 'User',
@@ -459,11 +473,17 @@ class ServiceCompanyProfileService
                         'score' => (int) round($scoreMap[$id] ?? 0),
                     ];
                 })->sort(function ($a, $b) {
-                    if ($a['status'] !== $b['status']) return ($a['status'] === 'active') ? -1 : 1;
-                    if ($a['score'] !== $b['score']) return $b['score'] <=> $a['score'];
+                    if ($a['status'] !== $b['status']) {
+                        return ($a['status'] === 'active') ? -1 : 1;
+                    }
+                    if ($a['score'] !== $b['score']) {
+                        return $b['score'] <=> $a['score'];
+                    }
+
                     return $a['id'] <=> $b['id'];
                 })->values()->map(function ($user, $index) {
                     $user['rank'] = $index + 1;
+
                     return $user;
                 });
 
@@ -502,12 +522,12 @@ class ServiceCompanyProfileService
                             'bool' => [
                                 'must' => [
                                     ['term' => ['company_id' => $companyId]],
-                                    ['term' => ['submitted_by' => $userId]]
+                                    ['term' => ['submitted_by' => $userId]],
                                 ],
                                 'filter' => [
-                                    ['range' => ['created_at' => ['gte' => $startDate->toDateString(), 'lte' => $endDate->toDateString()]]]
-                                ]
-                            ]
+                                    ['range' => ['created_at' => ['gte' => $startDate->toDateString(), 'lte' => $endDate->toDateString()]]],
+                                ],
+                            ],
                         ],
                         'aggs' => [
                             'uploads_over_time' => [
@@ -516,11 +536,11 @@ class ServiceCompanyProfileService
                                     'calendar_interval' => 'day',
                                     'format' => 'yyyy-MM-dd',
                                     'min_doc_count' => 0,
-                                    'extended_bounds' => ['min' => $startDate->toDateString(), 'max' => $endDate->toDateString()]
-                                ]
-                            ]
-                        ]
-                    ]
+                                    'extended_bounds' => ['min' => $startDate->toDateString(), 'max' => $endDate->toDateString()],
+                                ],
+                            ],
+                        ],
+                    ],
                 ]);
                 $candidateBuckets = $responseCandidates['aggregations']['uploads_over_time']['buckets'] ?? [];
 
@@ -530,7 +550,8 @@ class ServiceCompanyProfileService
                     $candidateBucket = collect($candidateBuckets)->firstWhere('key_as_string', $date->format('Y-m-d'));
                     $candidateValues[] = (int) ($candidateBucket['doc_count'] ?? 0);
                 }
-            } catch (\Throwable $e) {}
+            } catch (\Throwable $e) {
+            }
 
             if (array_sum($candidateValues) === 0) {
                 try {
@@ -552,7 +573,8 @@ class ServiceCompanyProfileService
                             $candidateValues[] = (int) ($dbCand[$dKey] ?? 0);
                         }
                     }
-                } catch (\Throwable $e) {}
+                } catch (\Throwable $e) {
+                }
             }
 
             // Last 6 months offer histogram
@@ -573,12 +595,12 @@ class ServiceCompanyProfileService
                                 'must' => [
                                     ['term' => ['company_id' => $companyId]],
                                     ['term' => ['submitted_by' => $userId]],
-                                    ['exists' => ['field' => 'of_created_date']]
+                                    ['exists' => ['field' => 'of_created_date']],
                                 ],
                                 'filter' => [
-                                    ['range' => ['of_created_date' => ['gte' => $startOfMonthcomman->toDateString(), 'lte' => $endOfMonthcomman->toDateString()]]]
-                                ]
-                            ]
+                                    ['range' => ['of_created_date' => ['gte' => $startOfMonthcomman->toDateString(), 'lte' => $endOfMonthcomman->toDateString()]]],
+                                ],
+                            ],
                         ],
                         'aggs' => [
                             'of_offer_count' => [
@@ -587,11 +609,11 @@ class ServiceCompanyProfileService
                                     'calendar_interval' => 'month',
                                     'format' => 'yyyy-MM',
                                     'min_doc_count' => 0,
-                                    'extended_bounds' => ['min' => $startOfMonthcomman->format('Y-m'), 'max' => $endOfMonthcomman->format('Y-m')]
-                                ]
-                            ]
-                        ]
-                    ]
+                                    'extended_bounds' => ['min' => $startOfMonthcomman->format('Y-m'), 'max' => $endOfMonthcomman->format('Y-m')],
+                                ],
+                            ],
+                        ],
+                    ],
                 ]);
                 $candidateBucketsoffer = $responseOffer['aggregations']['of_offer_count']['buckets'] ?? [];
 
@@ -602,7 +624,8 @@ class ServiceCompanyProfileService
                     $candidateBucketoffer = collect($candidateBucketsoffer)->firstWhere('key_as_string', $stDate->format('Y-m'));
                     $candidateValuesCommoffer[] = (int) ($candidateBucketoffer['doc_count'] ?? 0);
                 }
-            } catch (\Throwable $e) {}
+            } catch (\Throwable $e) {
+            }
 
             if (array_sum($candidateValuesCommoffer) === 0) {
                 try {
@@ -626,7 +649,8 @@ class ServiceCompanyProfileService
                             $candidateValuesCommoffer[] = (int) ($dbOffers[$mKey] ?? 0);
                         }
                     }
-                } catch (\Throwable $e) {}
+                } catch (\Throwable $e) {
+                }
             }
 
             // Intent: Aggregate last 6 months joined candidate metrics for recruiter dashboard graph
@@ -673,7 +697,8 @@ class ServiceCompanyProfileService
                     $candidateBucketjoin = collect($candidateBucketsjoin)->firstWhere('key_as_string', $stDate->format('Y-m'));
                     $candidateValuesCommjoin[] = (int) ($candidateBucketjoin['doc_count'] ?? 0);
                 }
-            } catch (\Throwable $e) {}
+            } catch (\Throwable $e) {
+            }
 
             if (array_sum($candidateValuesCommjoin) === 0) {
                 try {
@@ -683,7 +708,7 @@ class ServiceCompanyProfileService
                         ->where('job_applications.submitted_by', $userId)
                         ->where('job_applications.job_master_status_id', 6)
                         ->whereBetween(
-                            DB::raw("COALESCE(offer_job_applications.joined_date, job_applications.joining_date, job_applications.updated_at)"),
+                            DB::raw('COALESCE(offer_job_applications.joined_date, job_applications.joining_date, job_applications.updated_at)'),
                             [$startOfMonthcomman->toDateTimeString(), $endOfMonthcomman->toDateTimeString()]
                         )
                         ->selectRaw("DATE_FORMAT(COALESCE(offer_job_applications.joined_date, job_applications.joining_date, job_applications.updated_at), '%Y-%m') as month_str, COUNT(*) as cnt")
@@ -699,7 +724,8 @@ class ServiceCompanyProfileService
                         $mKey = $stDate->format('Y-m');
                         $candidateValuesCommjoin[] = (int) ($dbJoinings[$mKey] ?? 0);
                     }
-                } catch (\Throwable $e) {}
+                } catch (\Throwable $e) {
+                }
             }
 
             // Intent: Aggregate last 6 months interview trend metrics for recruiter dashboard graph
@@ -827,11 +853,11 @@ class ServiceCompanyProfileService
                         ->where('interview_schedules.available_status', 1)
                         ->where(function ($q) use ($companyId) {
                             $q->where('interview_schedules.company_id', $companyId)
-                              ->orWhere('job_applications.company_id', $companyId);
+                                ->orWhere('job_applications.company_id', $companyId);
                         })
                         ->where(function ($q) use ($userId) {
                             $q->where('job_applications.submitted_by', $userId)
-                              ->orWhere('interview_schedules.interview_created_by', $userId);
+                                ->orWhere('interview_schedules.interview_created_by', $userId);
                         })
                         ->whereBetween('interview_schedules.schedule_date', [$start6Months->toDateTimeString(), $end6Months->toDateTimeString()])
                         ->selectRaw("DATE_FORMAT(interview_schedules.schedule_date, '%Y-%m') as month_str, COUNT(*) as cnt")
@@ -880,7 +906,7 @@ class ServiceCompanyProfileService
      */
     public function getListItemsData(int $userId, int $companyId): array
     {
-        return Cache::remember("profile:list_items:u{$userId}", 1800, function () use ($userId, $companyId) {
+        return Cache::remember("profile:list_items:u{$userId}", 1800, function () use ($userId) {
             $data_list = [];
             $total_candidates_join = 0;
             $upcomingData = [];
@@ -911,9 +937,9 @@ class ServiceCompanyProfileService
                             'bool' => [
                                 'must' => [
                                     ['term' => ['submitted_by' => $userId]],
-                                    ['term' => ['job_master_status_id' => 6]]
-                                ]
-                            ]
+                                    ['term' => ['job_master_status_id' => 6]],
+                                ],
+                            ],
                         ],
                         'aggs' => [
                             'of_joined_count' => [
@@ -924,15 +950,15 @@ class ServiceCompanyProfileService
                                     'min_doc_count' => 0,
                                     'extended_bounds' => [
                                         'min' => $startOfMonthcomman->format('Y-m'),
-                                        'max' => $endOfMonthcomman->format('Y-m')
-                                    ]
-                                ]
-                            ]
-                        ]
-                    ]
+                                        'max' => $endOfMonthcomman->format('Y-m'),
+                                    ],
+                                ],
+                            ],
+                        ],
+                    ],
                 ]);
                 $total_candidates_join = $responseJoined['hits']['total']['value'] ?? 0;
-                $data_list = array_map(fn($hit) => $hit['_source'], $responseJoined['hits']['hits'] ?? []);
+                $data_list = array_map(fn ($hit) => $hit['_source'], $responseJoined['hits']['hits'] ?? []);
 
                 $candidateBucketsjoin = $responseJoined['aggregations']['of_joined_count']['buckets'] ?? [];
                 $candidateValuesCommjoin = [];
@@ -944,7 +970,8 @@ class ServiceCompanyProfileService
                     $candidateValuesCommjoin[] = $candidateBucketjoin['doc_count'] ?? 0;
                 }
                 $candidateValuesTotaljoin = array_sum($candidateValuesCommjoin);
-            } catch (\Throwable $e) {}
+            } catch (\Throwable $e) {
+            }
 
             // Upcoming interview schedule list
             try {
@@ -956,15 +983,16 @@ class ServiceCompanyProfileService
                             'bool' => [
                                 'filter' => [
                                     ['term' => ['submitted_by' => $userId]],
-                                    ['range' => ['schedule_date' => ['gte' => now()->toIso8601String(), 'format' => 'strict_date_optional_time']]]
-                                ]
-                            ]
+                                    ['range' => ['schedule_date' => ['gte' => now()->toIso8601String(), 'format' => 'strict_date_optional_time']]],
+                                ],
+                            ],
                         ],
-                        'sort' => [['schedule_date' => ['order' => 'asc']]]
-                    ]
+                        'sort' => [['schedule_date' => ['order' => 'asc']]],
+                    ],
                 ]);
-                $upcomingData = array_map(fn($hit) => $hit['_source'], $responseInterview['hits']['hits'] ?? []);
-            } catch (\Throwable $e) {}
+                $upcomingData = array_map(fn ($hit) => $hit['_source'], $responseInterview['hits']['hits'] ?? []);
+            } catch (\Throwable $e) {
+            }
 
             return [
                 'data_list' => $data_list,
@@ -973,6 +1001,55 @@ class ServiceCompanyProfileService
                 'labelsCommjoin' => $labelsCommjoin,
                 'candidateValuesCommjoin' => $candidateValuesCommjoin,
                 'candidateValuesTotaljoin' => $candidateValuesTotaljoin,
+            ];
+        });
+    }
+
+    /**
+     * Get active subscription plan names (Operational & Sales) for company (cached 10 mins).
+     *
+     * INTENT:
+     * Retrieve active Operational and Sales subscription plan names for company profile card.
+     *
+     * TENANCY & SCOPING:
+     * Filtered strictly by tenant company_id.
+     */
+    public function getCompanySubscriptionPlans(int $companyId): array
+    {
+        return Cache::remember("profile:subscription_plans:c{$companyId}", 600, function () use ($companyId) {
+            $formatPlanTitle = function (?string $title): string {
+                if (empty($title)) {
+                    return 'Free Plan';
+                }
+                $lower = strtolower($title);
+                if (str_contains($lower, 'plan') || str_contains($lower, 'package')) {
+                    return ucwords($title);
+                }
+
+                return ucwords($title).' Plan';
+            };
+
+            $operPlan = DB::table('company_coins')
+                ->leftJoin('coin_orders', 'coin_orders.id', '=', 'company_coins.coin_order_id')
+                ->leftJoin('coin_packages', 'coin_packages.id', '=', 'coin_orders.coin_package_id')
+                ->leftJoin('coin_package_types', 'coin_package_types.id', '=', 'coin_packages.coin_package_type_id')
+                ->where('company_coins.company_id', $companyId)
+                ->where('company_coins.event_type', 'operational')
+                ->select('coin_package_types.title')
+                ->first();
+
+            $salesPlan = DB::table('company_coins')
+                ->leftJoin('coin_orders', 'coin_orders.id', '=', 'company_coins.coin_order_id')
+                ->leftJoin('coin_packages', 'coin_packages.id', '=', 'coin_orders.coin_package_id')
+                ->leftJoin('coin_package_types', 'coin_package_types.id', '=', 'coin_packages.coin_package_type_id')
+                ->where('company_coins.company_id', $companyId)
+                ->where('company_coins.event_type', 'sales')
+                ->select('coin_package_types.title')
+                ->first();
+
+            return [
+                'operational_package_name' => $formatPlanTitle($operPlan?->title),
+                'sales_package_name' => $formatPlanTitle($salesPlan?->title),
             ];
         });
     }
@@ -988,5 +1065,6 @@ class ServiceCompanyProfileService
         Cache::forget("profile:leaderboard:c{$companyId}:u{$userId}");
         Cache::forget("profile:graphs:u{$userId}");
         Cache::forget("profile:list_items:u{$userId}");
+        Cache::forget("profile:subscription_plans:c{$companyId}");
     }
 }
