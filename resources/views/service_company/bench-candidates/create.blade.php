@@ -629,7 +629,7 @@ if($snp_mode== 1){
                         <select name="comission_type" id="comission_type">
                           <option value="">Select Commision type</option>
                           <option value="1" {{ (@$application->comission_type==1) ? 'selected' : '' }}>Free (Not charged from Clients)</option>
-                          <option value="2" {{ (@$application->comission_type==2) ? 'selected' : '' }}>Paid Service</option>
+                          <option value="2" {{ (@$application->comission_type==2 || @$application->comission_type=='') ? 'selected' : '' }}>Paid Service</option>
                         </select>
                    </div>
                   <div class="fg fv-row">
@@ -715,22 +715,13 @@ if($snp_mode== 1){
                         <small>This talent will be provided to clients at no commercial charge.</small>
                       </span>
                     </button>
-                    <button type="button" class="br-model-option {{ (@$application->comission_type == 2) ? 'is-selected' : '' }}" data-commercial-value="2">
+                    <button type="button" class="br-model-option {{ (@$application->comission_type == 2 || @$application->comission_type == '') ? 'is-selected' : '' }}" data-commercial-value="2">
                       <span class="br-radio"></span>
                       <span class="br-option-icon"><i class="fa fa-rupee-sign"></i></span>
                       <span class="br-option-copy">
                         <strong>Paid Service</strong>
                         <em>Client will be billed</em>
                         <small>Set pay rate, bill rate and manage margin.</small>
-                      </span>
-                    </button>
-                    <button type="button" class="br-model-option {{ (@$application->comission_type === '') ? 'is-selected' : '' }}" data-commercial-value="">
-                      <span class="br-radio"></span>
-                      <span class="br-option-icon"><i class="fa-regular fa-handshake"></i></span>
-                      <span class="br-option-copy">
-                        <strong>Negotiable</strong>
-                        <em>Rate to be discussed</em>
-                        <small>Commercial terms will be decided later based on client requirements.</small>
                       </span>
                     </button>
                   </div>
@@ -928,10 +919,10 @@ if($snp_mode== 1){
                         </span>
                       </div>
                       <div class="br-margin-list">
-                        <span>Annual Pay Rate <b id="br_summary_pay_annual">0</b></span>
-                        <span>Annual Bill Rate <b id="br_summary_bill_annual">0</b></span>
-                        <span>Annual Margin <b id="br_summary_margin">0</b></span>
-                        <span>Margin Percentage <b id="br_summary_percent">0%</b></span>
+                        <span><em id="br_summary_pay_label">Annual Pay Rate</em><b id="br_summary_pay_annual">0</b></span>
+                        <span><em id="br_summary_bill_label">Annual Bill Rate</em><b id="br_summary_bill_annual">0</b></span>
+                        <span><em id="br_summary_margin_label">Annual Margin</em><b id="br_summary_margin">0</b></span>
+                        <span><em id="br_summary_percent_label">Margin Percentage</em><b id="br_summary_percent">0%</b></span>
                       </div>
                       <div class="br-margin-state">
                         <i class="fa-solid fa-check"></i>
@@ -1630,6 +1621,42 @@ $(document).ready(function () {
         return suffix ? formatted + suffix : formatted;
     }
 
+    let commercialSavedPaidValues = null;
+
+    function isFreeCommercialMode() {
+        return ($('#comission_type').val() || '2').toString() === '1';
+    }
+
+    function snapshotPaidBillValues() {
+        commercialSavedPaidValues = {
+            annual: $('#bill_annual').val(),
+            monthly: $('#bill_monthly').val(),
+            hourly: $('#bill_rate_amount').val(),
+            profit: $('#percentage_hike').val()
+        };
+    }
+
+    function restorePaidBillValues() {
+        if (!commercialSavedPaidValues) {
+            return;
+        }
+
+        $('#bill_annual').val(commercialSavedPaidValues.annual || '');
+        $('#bill_monthly').val(commercialSavedPaidValues.monthly || '');
+        $('#bill_rate_amount').val(commercialSavedPaidValues.hourly || '');
+        $('#percentage_hike').val(commercialSavedPaidValues.profit || '');
+    }
+
+    function syncBillFieldsFromAnnual() {
+        let annual = commercialNumber($('#bill_annual').val());
+        let monthly = annual / MONTHS_PER_YEAR;
+        let hourly = monthly / HOURS_PER_MONTH;
+
+        $('#bill_monthly').val(format(monthly));
+        $('#bill_rate_amount').val(format(hourly));
+        updateBillUI();
+    }
+
     function refreshCommercialSummary() {
         let payAnnual = commercialNumber($('#pay_annual').val());
         let payMonthly = commercialNumber($('#pay_monthly').val());
@@ -1639,33 +1666,84 @@ $(document).ready(function () {
         let billHourly = commercialNumber($('#bill_rate_amount').val());
         let margin = billAnnual - payAnnual;
         let computedPercent = payAnnual > 0 ? (margin / payAnnual) * 100 : 0;
-        let displayedPercent = commercialNumber($('#percentage_hike').val()) || computedPercent;
+        let profitValue = $('#percentage_hike').val();
+        let displayedPercent = profitValue !== '' ? commercialNumber(profitValue) : computedPercent;
+        let isFree = isFreeCommercialMode();
 
         $('#br_pay_monthly_display').text(commercialFormat(payMonthly));
         $('#br_pay_hourly_display').text(commercialFormat(payHourly));
-        $('#br_bill_monthly_display').text(commercialFormat(billMonthly));
-        $('#br_bill_hourly_display').text(commercialFormat(billHourly));
         $('#br_summary_pay_annual').text(commercialFormat(payAnnual));
-        $('#br_summary_bill_annual').text(commercialFormat(billAnnual));
-        $('#br_summary_margin').text(commercialFormat(margin));
-        $('#br_summary_percent').text(commercialFormat(displayedPercent, '%'));
 
-        $('.br-margin-state').toggleClass('is-low', margin < 0 || displayedPercent < 10);
-        $('#br_margin_status').text((margin < 0 || displayedPercent < 10) ? 'Review Margin' : 'Healthy Margin');
-        $('#br_margin_note').text((margin < 0 || displayedPercent < 10) ? 'Please review the configured bill rate.' : 'This margin looks good.');
+        if (isFree) {
+            $('#br_bill_monthly_display').text('No billing');
+            $('#br_bill_hourly_display').text('No billing');
+            $('#br_summary_pay_label').text('Annual Pay Rate');
+            $('#br_summary_bill_label').text('Client Billing');
+            $('#br_summary_margin_label').text('Commercial Margin');
+            $('#br_summary_percent_label').text('Selected Model');
+            $('#br_summary_bill_annual').text('Disabled');
+            $('#br_summary_margin').text('Not billed');
+            $('#br_summary_percent').text('Free');
+            $('.br-margin-state').removeClass('is-low').addClass('is-free');
+            $('#br_margin_status').text('Free Service Selected');
+            $('#br_margin_note').text('Client bill rate is locked because this talent will be offered without commercial billing.');
+        } else {
+            $('#br_bill_monthly_display').text(commercialFormat(billMonthly));
+            $('#br_bill_hourly_display').text(commercialFormat(billHourly));
+            $('#br_summary_pay_label').text('Annual Pay Rate');
+            $('#br_summary_bill_label').text('Annual Bill Rate');
+            $('#br_summary_margin_label').text('Annual Margin');
+            $('#br_summary_percent_label').text('Margin Percentage');
+            $('#br_summary_bill_annual').text(commercialFormat(billAnnual));
+            $('#br_summary_margin').text(commercialFormat(margin));
+            $('#br_summary_percent').text(commercialFormat(displayedPercent, '%'));
+            $('.br-margin-state').removeClass('is-free').toggleClass('is-low', margin < 0 || displayedPercent < 10);
+            $('#br_margin_status').text((margin < 0 || displayedPercent < 10) ? 'Review Margin' : 'Healthy Margin');
+            $('#br_margin_note').text((margin < 0 || displayedPercent < 10) ? 'Please review the configured bill rate.' : 'This margin looks good.');
+        }
+
         $('#br_comment_count').text(($('#comment').val() || '').length + ' / 500');
         $('#br_free_notes_count').text(($('#br_free_notes').val() || '').length + ' / 500');
     }
 
     function syncCommercialCards() {
-        let currentValue = $('#comission_type').val() || '';
+        let currentValue = ($('#comission_type').val() || '2').toString();
         $('.br-model-option').removeClass('is-selected');
         $('.br-model-option[data-commercial-value="' + currentValue + '"]').addClass('is-selected');
     }
 
+    function applyCommercialMode() {
+        let currentValue = ($('#comission_type').val() || '2').toString();
+        if (currentValue !== '1' && currentValue !== '2') {
+            currentValue = '2';
+        }
+
+        $('#comission_type').val(currentValue);
+
+        let isFree = currentValue === '1';
+        let wasFree = $('.br-card').hasClass('is-free-service');
+        let billFields = $('#bill_annual, #bill_monthly, #bill_rate_amount, #percentage_hike');
+
+        if (isFree && !wasFree) {
+            snapshotPaidBillValues();
+            $('#bill_annual, #bill_monthly, #bill_rate_amount, #percentage_hike').val('');
+            $('#bill_rate_hourly_usd, #bill_rate_monthly_usd, #bill_rate_annual_usd').text('');
+        } else if (!isFree && wasFree) {
+            restorePaidBillValues();
+            updateBillUI();
+            percentage_hike();
+        }
+
+        billFields.prop('readonly', isFree).attr('aria-readonly', isFree ? 'true' : 'false');
+        $('.br-card').toggleClass('is-free-service', isFree);
+        $('.br-bill-panel').toggleClass('is-locked', isFree);
+        $('.br-free-details').toggleClass('is-emphasized', isFree);
+        syncCommercialCards();
+        refreshCommercialSummary();
+    }
+
     $(document).on('click', '.br-model-option', function () {
         $('#comission_type').val($(this).attr('data-commercial-value')).trigger('change');
-        syncCommercialCards();
     });
 
     $(document).on('click', '.br-rate-tabs button', function () {
@@ -1676,8 +1754,10 @@ $(document).ready(function () {
         $(this).addClass('is-active');
         $('[data-rate-panel^="' + group + '-"]').removeClass('is-active');
         $('[data-rate-panel="' + group + '-' + tab + '"]').addClass('is-active');
+        $('[data-rate-panel="' + group + '-' + tab + '"] input').trigger('focus');
     });
 
+    $(document).on('change', '#comission_type', applyCommercialMode);
     $(document).on('input change', '#pay_annual, #pay_monthly, #pay_rate_amount, #bill_annual, #bill_monthly, #bill_rate_amount, #percentage_hike, #comment, #br_free_notes', refreshCommercialSummary);
 
     function format(val) {
@@ -1810,6 +1890,14 @@ $(document).ready(function () {
         refreshCommercialSummary();
     }
     function updateBillUI() {
+        if (isFreeCommercialMode()) {
+          $('#bill_rate_hourly_usd').text('');
+          $('#bill_rate_monthly_usd').text('');
+          $('#bill_rate_annual_usd').text('');
+          refreshCommercialSummary();
+          return false;
+        }
+
         let currency = $('#pay_rate_currency').val();
         let bill_rate_amount = $('#bill_rate_amount').val();
         let currSet = currencyRateschar[currency];
@@ -1878,9 +1966,9 @@ $(document).ready(function () {
         updatePayUI();
     });
     setTimeout(() => {
-          billRateUpdate();
+          applyCommercialMode();
           payRateUpdate();
-          syncCommercialCards();
+          billRateUpdate();
           refreshCommercialSummary();
       }, 1000);
 
@@ -2887,6 +2975,11 @@ $(document).on('change', '#total_exp, #rel_exp', function() {
 
 
      function percentage_hike(){
+     if (isFreeCommercialMode()) {
+        $('#percentage_hike').val('');
+        refreshCommercialSummary();
+        return;
+     }
      
      var currentCTC = parseFloat($('#pay_annual').val());
      var expectedCTC = parseFloat($('#bill_annual').val());
@@ -2902,10 +2995,21 @@ $(document).on('change', '#total_exp, #rel_exp', function() {
  }
 
  function ectc(){
+     if (isFreeCommercialMode()) {
+        $('#percentage_hike').val('');
+        refreshCommercialSummary();
+        return;
+     }
+
      var currentCTC = parseFloat($('#pay_annual').val());
      var percentage_hike = $('#percentage_hike').val();
+     if (isNaN(currentCTC)) {
+        refreshCommercialSummary();
+        return;
+     }
      var amount = currentCTC*percentage_hike/100;
      $('#bill_annual').val(amount+currentCTC);
+     syncBillFieldsFromAnnual();
      refreshCommercialSummary();
      
  }
