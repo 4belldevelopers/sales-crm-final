@@ -55,7 +55,7 @@
         @endphp
         <tr style="height: 102px; position: relative;">
             {{-- Checkbox --}}
-            <td>
+            <td class="col-select">
                 <div class="form-check form-check-sm form-check-custom form-check-solid">
                     <input class="form-check-input chk_list_item" name="chk_list_item[]" type="checkbox" value="{{ $row->id }}" />
                 </div>
@@ -140,7 +140,7 @@
             </td>
 
             {{-- Experience: Experience (1) · Work preference (2) --}}
-            <td>
+            <td class="col-experience">
                 @php
                     $experience = trim((string) @$row->total_exp);
                     if (strpos($experience, '.') !== false) {
@@ -159,7 +159,7 @@
             </td>
 
             {{-- Availability: conditional notice text (1) · Employment type (2) --}}
-            <td>
+            <td class="col-availability">
                 @php
                     if ($row->serving_notice_period_mode == 2) {
                         $availLine = 'Immediate';
@@ -189,7 +189,7 @@
             </td>
 
             {{-- Location: City & Country (1) · Education (2) --}}
-            <td>
+            <td class="col-location">
                 @php
                     $row_city_name = @$row->city_name;
                     $row_country_name = @$row->country_name;
@@ -205,7 +205,7 @@
             </td>
 
             {{-- Expected Salary: Salary (1) · Free/Paid service (2) --}}
-            <td>
+            <td class="col-salary">
                 @php
                     $currencyBenchMode = $companyCurrencyBenchshowMode ?? GeneralMethod::getCompanyCurrencyBenchshowMode($company_id);
                     $billFormatViewSalary = GeneralMethod::formatViewSalary($row->ectc_yearly, $currencyBenchMode->currency_code, $currencyBenchMode->show_mode);
@@ -223,7 +223,7 @@
             </td>
 
             {{-- Bench Status --}}
-            <td>
+            <td class="col-status">
                 @php
                     // Pool (status 1) always shows purple + "Newly added", matching the Change Status
                     // drawer's Pool colour/description — the shared subline helper doesn't cover this case.
@@ -290,7 +290,7 @@
             </td>
 
             {{-- Clients Pipeline Activity (mini stage grid) --}}
-            <td>
+            <td class="col-pipeline-activity">
                 <div class="pipe">
                     <div>
                         <div class="pipe-grid">
