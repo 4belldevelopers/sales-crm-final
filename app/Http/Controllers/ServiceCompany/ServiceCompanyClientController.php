@@ -284,9 +284,18 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
                 $total = count($orderedClientIds);
                 $pageIds = array_slice($orderedClientIds, $from, $size);
 
-                // Fetch those clients from ES (no sort — we reorder in PHP)
+                // Fetch those clients from ES (matching client_id, company_id, or _id)
                 $hiringMust = $must;
-                $hiringMust[] = ['terms' => ['client_id' => $pageIds]];
+                $hiringMust[] = [
+                    'bool' => [
+                        'should' => [
+                            ['terms' => ['client_id' => $pageIds]],
+                            ['terms' => ['company_id' => $pageIds]],
+                            ['terms' => ['_id' => array_map('strval', $pageIds)]],
+                        ],
+                        'minimum_should_match' => 1,
+                    ],
+                ];
 
                 $hiringParams = [
                     'index' => ELASTIC_CLIENT_LIST,
@@ -303,7 +312,19 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
                 // Re-order ES hits to match MySQL active-count order
                 $hitsByClientId = [];
                 foreach ($hiringResp['hits']['hits'] as $hit) {
-                    $hitsByClientId[$hit['_source']['client_id'] ?? ''] = $hit['_source'];
+                    $src = $hit['_source'];
+                    $cId = $src['client_id'] ?? null;
+                    $compKey = $src['company_id'] ?? null;
+                    $docKey = $hit['_id'] ?? null;
+                    if ($cId) {
+                        $hitsByClientId[$cId] = $src;
+                    }
+                    if ($compKey) {
+                        $hitsByClientId[$compKey] = $src;
+                    }
+                    if ($docKey) {
+                        $hitsByClientId[$docKey] = $src;
+                    }
                 }
                 $data = [];
                 foreach ($pageIds as $cid) {
@@ -1121,6 +1142,16 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
 
         $clientCounter['clientRequest'] = $count;
         $clientCounter['clientAll'] = $clientCustom + $clientDirect;
+
+        // Clients Actively Hiring Count (unique client_ids with active jobs)
+        $clientHiring = DB::table('jobs')
+            ->where('company_id', $company_id)
+            ->where('status', 'active')
+            ->whereNotNull('client_id')
+            ->distinct()
+            ->count('client_id');
+
+        $clientCounter['clientHiring'] = $clientHiring;
 
         return $clientCounter;
     }
