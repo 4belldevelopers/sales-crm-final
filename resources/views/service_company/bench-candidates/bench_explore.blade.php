@@ -181,16 +181,6 @@ a.bxr-sum-link{ color:inherit; cursor:pointer; }
     font-family:'Poppins',sans-serif;
     display:none; /* hidden — status is in filter-form */
 }
-.bxr-refresh{
-    width:44px; height:44px;
-    border:1.5px solid #E5E9F0; border-radius:10px;
-    background:#F8FAFC;
-    display:flex; align-items:center; justify-content:center;
-    cursor:pointer; font-size:17px; color:#64748B;
-    transition:all .2s; flex-shrink:0;
-}
-.bxr-refresh:hover{ background:#2563EB; color:#fff; border-color:#2563EB; transform:rotate(90deg); }
-
 /* ══ 4. STAGE PIPELINE FLOW — same connected circle+chevron pattern as
    AppTracker's .hp-flow (resources/views/service_company/apptracker/index.blade.php),
    bxr- prefixed to match this page's existing naming. ══ */
@@ -257,7 +247,10 @@ a.bxr-sum-link{ color:inherit; cursor:pointer; }
 /* ══ 5. TABLE AREA ══════════════════════════════ */
 .bxr-tbl-wrap{
     background:#fff;
-    border-radius:0;
+    border:1px solid #E8EDF5;
+    border-radius:12px;
+    box-shadow:0 1px 2px rgba(16,24,40,.04);
+    overflow:hidden;
 }
 .bxr-tbl-loading{
     display:none; align-items:center; justify-content:center;
@@ -266,63 +259,77 @@ a.bxr-sum-link{ color:inherit; cursor:pointer; }
 .bxr-tbl-scroll{ overflow-x:auto; }
 .bxr-tbl{
     width:100%; border-collapse:collapse;
-    min-width:860px;
+    min-width:1040px;
+    table-layout:fixed;
 }
 .bxr-tbl thead tr{ background:#F8FAFC; }
 .bxr-tbl thead th{
-    padding:11px 16px;
-    font-size:10px; font-weight:700;
+    padding:10px 14px;
+    font-size:10.5px; font-weight:600;
     color:#94A3B8; text-transform:uppercase;
-    letter-spacing:.6px;
-    border-bottom:1px solid #F0F2F5;
+    letter-spacing:.4px;
+    border-bottom:1.5px solid #E8EDF5;
     white-space:nowrap; font-family:'Poppins',sans-serif;
 }
 .bxr-tbl tbody tr{
-    border-bottom:1px solid #F8FAFC;
+    border-bottom:1px solid #EEF2F7;
     transition:background .13s;
 }
 .bxr-tbl tbody tr:hover{ background:#F8FAFF; }
 .bxr-tbl tbody tr:last-child{ border-bottom:none; }
-.bxr-tbl td{ padding:14px 16px; vertical-align:middle; }
+.bxr-tbl td{ padding:14px; vertical-align:middle; }
+.bxr-tbl thead th:nth-child(1),
+.bxr-tbl tbody td:nth-child(1){ width:30%; }
+.bxr-tbl thead th:nth-child(2),
+.bxr-tbl tbody td:nth-child(2){ width:20%; }
+.bxr-tbl thead th:nth-child(3),
+.bxr-tbl tbody td:nth-child(3){ width:15%; }
+.bxr-tbl thead th:nth-child(4),
+.bxr-tbl tbody td:nth-child(4){ width:15%; }
+.bxr-tbl thead th:nth-child(5),
+.bxr-tbl tbody td:nth-child(5){ width:10%; }
+.bxr-tbl thead th:nth-child(6),
+.bxr-tbl tbody td:nth-child(6){ width:10%; }
 
 /* Company logo */
 .bxr-co-logo{
-    width:36px; height:36px; border-radius:8px;
+    width:44px; height:44px; border-radius:10px;
     object-fit:contain; border:1px solid #EDF2F7;
     background:#F8FAFC; flex-shrink:0;
 }
 .bxr-co-init{
-    width:36px; height:36px; border-radius:8px;
+    width:44px; height:44px; border-radius:10px;
     background:linear-gradient(135deg,#4F46E5,#7C3AED);
     display:flex; align-items:center; justify-content:center;
-    font-size:14px; font-weight:700; color:#fff; flex-shrink:0;
+    font-size:17px; font-weight:800; color:#fff; flex-shrink:0;
 }
-.bxr-job-row{ display:flex; align-items:flex-start; gap:10px; }
-.bxr-job-title{ font-size:13px; font-weight:700; color:#1A1D23; margin-bottom:1px; }
-.bxr-job-co{ font-size:11px; color:#64748B; margin-bottom:5px; }
-.bxr-skills{ display:flex; flex-wrap:wrap; gap:4px; margin-top:3px; }
+.bxr-job-row{ display:flex; align-items:flex-start; gap:10px; min-width:0; }
+.bxr-job-title{ font-size:12.5px; font-weight:700; color:#181C32; margin-bottom:2px; line-height:1.3; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.bxr-job-co{ font-size:11px; color:#64748B; font-weight:500; margin-bottom:6px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.bxr-skills{ display:flex; align-items:center; flex-wrap:nowrap; gap:4px; margin-top:3px; max-width:100%; overflow:hidden; white-space:nowrap; }
 .bxr-skill{
-    font-size:10px; font-weight:600;
+    font-size:10px; font-weight:500;
     background:#F1F5F9; color:#475569;
-    padding:2px 7px; border-radius:4px;
+    padding:2px 7px; border-radius:5px;
+    flex:0 0 auto;
 }
 .bxr-skill.more{ background:#EFF6FF; color:#2563EB; }
 /* Matched keyword — candidate skill that satisfies one of the job's required
    skills (same green treatment as AppTracker's matched-skill badge) */
 .bxr-skill.matched{ background:#DCFCE7; color:#15803D; border:1px solid #BBF7D0; }
 /* Match % badge — AppTracker's exact score-color thresholds, replicated here */
-.bxr-match-badge{ font-size:10px; font-weight:700; padding:2px 8px; border-radius:4px; white-space:nowrap; }
+.bxr-match-badge{ font-size:10px; font-weight:700; padding:2px 8px; border-radius:5px; white-space:nowrap; flex:0 0 auto; }
 
 /* Cell text */
-.bxr-c1{ font-size:12px; font-weight:600; color:#1A1D23; margin-bottom:2px; }
-.bxr-c2{ font-size:11px; color:#64748B; }
+.bxr-c1{ font-size:12px; font-weight:600; color:#181C32; margin-bottom:2px; }
+.bxr-c2{ font-size:11px; color:#64748B; font-weight:500; }
 .bxr-c3{ font-size:11px; color:#94A3B8; margin-top:2px; }
 
 /* Inline badges */
 .bxr-b{
     display:inline-flex; align-items:center; gap:3px;
     font-size:10px; font-weight:600;
-    padding:2px 8px; border-radius:4px;
+    padding:2px 8px; border-radius:5px;
     white-space:nowrap;
 }
 .bxr-b.gr{ background:#DCFCE7; color:#16A34A; }
@@ -410,10 +417,11 @@ a.bxr-sum-link{ color:inherit; cursor:pointer; }
    table. Poppins ≤14px, semantic tokens, vertical centering. ══ */
 .bxr-tbl tbody td{ vertical-align:middle !important; }
 
-.bxr-col-exp-stack{ display:flex; flex-direction:column; gap:6px; min-width:130px; }
+.bxr-col-exp-stack{ display:flex; flex-direction:column; gap:6px; min-width:0; }
 .bxr-col-exp-row{
   display:flex; align-items:center; gap:6px;
-  font-size:11.5px; font-weight:600; color:#181C32; line-height:1.2;
+  font-size:11.5px; font-weight:500; color:#181C32; line-height:1.2;
+  min-width:0;
 }
 .bxr-col-exp-row .bxr-icon-box{
   width:13px; height:13px; display:inline-flex; align-items:center;
@@ -421,19 +429,20 @@ a.bxr-sum-link{ color:inherit; cursor:pointer; }
   line-height:1; font-weight:700;
 }
 .bxr-col-exp-mode{
-  font-size:9.5px; color:#94A3B8; font-weight:600; padding-left:2px;
+  font-size:9.5px; color:#64748B; font-weight:600; padding-left:2px;
   text-transform:uppercase; letter-spacing:0.3px;
 }
-.bxr-col-loc-stack{ display:flex; flex-direction:column; gap:4px; min-width:130px; }
+.bxr-col-loc-stack{ display:flex; flex-direction:column; gap:5px; min-width:0; }
 .bxr-col-loc-row{
   display:flex; align-items:center; gap:6px;
-  font-size:12px; font-weight:600; color:#181C32; line-height:1.2;
+  font-size:11.5px; font-weight:500; color:#181C32; line-height:1.2;
+  min-width:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
 }
 .bxr-col-loc-row .bxr-icon-box{
   width:13px; height:13px; display:inline-flex; align-items:center;
   justify-content:center; color:#2563EB; flex-shrink:0; font-size:12px;
 }
-.bxr-col-loc-mode{ font-size:10.5px; color:#7E8299; }
+.bxr-col-loc-mode{ font-size:10.5px; color:#7E8299; font-weight:500; padding-left:19px; }
 .bxr-col-hm-row{ display:flex; align-items:center; gap:8px; min-width:0; }
 .bxr-col-hm-av{
   width:30px; height:30px; border-radius:8px; flex-shrink:0;
@@ -445,13 +454,40 @@ a.bxr-sum-link{ color:inherit; cursor:pointer; }
 .bxr-col-hm-av--empty{ background:#F1F5F9; color:#94A3B8; border:1px dashed #E4E6EF; }
 .bxr-col-hm-info{ min-width:0; display:flex; flex-direction:column; gap:1px; }
 .bxr-col-hm-name{
-  font-size:12px; font-weight:700; color:#1A1D23; line-height:1.2;
+  font-size:12px; font-weight:600; color:#181C32; line-height:1.2;
   white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
-  max-width:140px;
+  max-width:130px;
 }
 .bxr-col-hm-name.hmlisting{ cursor:pointer; }
 .bxr-col-hm-name.hmlisting:hover{ color:#2563EB; }
-.bxr-col-hm-role{ font-size:10.5px; color:#94A3B8; font-weight:500; }
+.bxr-col-hm-role{ font-size:10.5px; color:#64748B; font-weight:500; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:130px; }
+
+.bxr-tbl tbody td:nth-child(5) .badge {
+  border-radius:5px;
+  font-size:10.5px !important;
+  font-weight:600 !important;
+  line-height:1.1;
+  padding:4px 7px !important;
+}
+
+.bxr-tbl tbody td:nth-child(6) {
+  font-size:11px;
+  font-weight:500;
+  color:#64748B;
+}
+
+@media(max-width:1366px){
+  .bxr-page{ padding-top:12px; }
+  .bxr-tbl{ min-width:980px; }
+  .bxr-tbl thead th{ padding:9px 11px; font-size:10px; }
+  .bxr-tbl td{ padding:12px 11px; }
+  .bxr-co-logo,
+  .bxr-co-init{ width:40px; height:40px; }
+  .bxr-job-title{ font-size:12px; }
+  .bxr-col-exp-row,
+  .bxr-col-loc-row{ font-size:11px; }
+  .bxr-col-hm-av{ width:28px; height:28px; }
+}
 </style>
 @endpush
 
@@ -540,7 +576,7 @@ a.bxr-sum-link{ color:inherit; cursor:pointer; }
     $bxrBillRate = '—';
     if (@$bench_detail->bill_rate_amount) {
         $bxrCurSymMap = \App\Helper\GeneralMethod::currencySymbole();
-        $bxrModeAbbr  = [0=>'yr',1=>'mo',2=>'hr'][(int)@$bench_detail->bill_rate_mode] ?? '';
+        $bxrModeAbbr  = [0=>'annum',1=>'month',2=>'hour'][(int)@$bench_detail->bill_rate_mode] ?? '';
         $bxrBillRate  = ($bxrCurSymMap[@$bench_detail->bill_rate_currency] ?? '₹')
                       . number_format((float)$bench_detail->bill_rate_amount)
                       . ($bxrModeAbbr !== '' ? ' /'.$bxrModeAbbr : '');
@@ -688,9 +724,6 @@ a.bxr-sum-link{ color:inherit; cursor:pointer; }
       <span class="spinner-border spinner-border-sm text-primary" style="width:13px;height:13px;border-width:2px;"></span>
     </div>
 
-    <button class="bxr-refresh" onclick="fetchBenchExploreJobCandidateList()" title="Refresh">
-      <i class="ti ti-refresh"></i>
-    </button>
   </div>
 
   {{-- ══ SECTION 4 · STAGE PIPELINE FLOW — same connected-circle pattern as
