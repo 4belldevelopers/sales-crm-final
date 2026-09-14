@@ -461,23 +461,131 @@ if($snp_mode== 1){
             </div>
 
             <!-- Professional Details -->
-            <div class="fs">
-              <div class="fsh">
-                <h3>Professional Details</h3>
+            <div class="fs pd-card">
+              <div class="pd-hero">
+                <div class="pd-hero-title">
+                  <span class="pd-hero-icon"><i class="fa-solid fa-briefcase"></i></span>
+                  <span>
+                    <strong>Professional Profile</strong>
+                    <small>Define the professional experience and role for this talent. This helps position them correctly in the marketplace.</small>
+                  </span>
+                </div>
+                <span class="pd-talent-badge"><i class="fa-regular fa-building"></i> In-House Talent</span>
               </div>
-              <div class="fsc">
-                <div class="g4">
-                  <div class="fg fv-row">
+              <div class="fsc pd-body">
+                <div class="pd-info-strip">
+                  <i class="fa-regular fa-circle-info"></i>
+                  <span>Some details may be pre-filled from your internal employee records. Please review and update if needed.</span>
+                </div>
+
+                <div class="pd-field-grid pd-field-grid--two">
+                  <div class="fg fv-row pd-field">
                     <label>Current Company <span class="rq">*</span></label>
-                    <input type="text" name="current_company" id="current_company" value="{{ @$application->current_company }}" placeholder="Enter current company" />
+                    <div class="pd-control">
+                      <i class="fa-regular fa-building"></i>
+                      <input type="text" name="current_company" id="current_company" value="{{ @$application->current_company }}" placeholder="Enter current company" />
+                    </div>
+                    <small>Auto-filled from employee records</small>
                   </div>
-                  <div class="fg fv-row">
+                  <div class="fg fv-row pd-field">
                     <label>Current Designation <span class="rq">*</span></label>
-                    <input type="text" name="current_designation" id="current_designation" value="{{( @$application->current_designation) ? @$application->current_designation : @$jobDetail->title }}" placeholder="Enter current designation" />
+                    <div class="pd-control">
+                      <i class="fa-solid fa-briefcase"></i>
+                      <input type="text" name="current_designation" id="current_designation" value="{{( @$application->current_designation) ? @$application->current_designation : @$jobDetail->title }}" placeholder="Enter current designation" />
+                    </div>
                   </div>
-                  <div class="fg fv-row">
-                    <label>Total Experience <span class="rq">*</span></label>
-                    <div class="ei">
+                </div>
+
+                <div class="pd-field-grid pd-field-grid--three">
+                  <div class="fg fv-row pd-field">
+                    <label>Employment Type <span class="rq">*</span></label>
+                    <div class="pd-control pd-control--select">
+                      <i class="fa-solid fa-users"></i>
+                      <select name="employmentType" id="EmploymentType">
+                        <option value="">Select employment type</option>
+                        <option {{ (@$application->employmentType==='Full Time') ? 'selected' : '' }}>Full Time</option>
+                        <option {{ (@$application->employmentType==='Contract') ? 'selected' : '' }}>Contract</option>
+                        <option {{ (@$application->employmentType==='Part Time') ? 'selected' : '' }}>Part Time</option>
+                        <option {{ (@$application->employmentType==='Freelance') ? 'selected' : '' }}>Freelance</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div class="fg fv-row d-none">
+                      <label>Commission Type <span class="rq">*</span></label>
+                      @php
+                          $selected = '';
+                            if(@$application->comission_type==''){
+                              $selected = 'selected';
+                            }
+                      @endphp
+                      <select name="comission_type" id="comission_type">
+                        <option value="">Select Commision type</option>
+                        <option value="1" {{ (@$application->comission_type==1) ? 'selected' : '' }}>Free (Not charged from Clients)</option>
+                        <option value="2" {{ (@$application->comission_type==2 || @$application->comission_type=='') ? 'selected' : '' }}>Paid Service</option>
+                      </select>
+                  </div>
+                  <div class="fg fv-row pd-field">
+                    <label>Employee ID <span>(Optional)</span></label>
+                    <div class="pd-control">
+                      <i class="fa-regular fa-id-card"></i>
+                      <input type="email" class="form-control form-control-solid" name="employee_number" id="employee_number" placeholder="Enter employee number" value="{{ @$application->employee_number }}">
+                    </div>
+                    <small>Internal employee identifier</small>
+                  </div>
+                  <div class="fg fv-row pd-field">
+                    <label>Notice Period <span class="rq">*</span></label>
+                    <div class="pd-control pd-control--select">
+                      <i class="fa-regular fa-clock"></i>
+                      <select name="serving_notice_period" id="serving_notice_period">
+                        <option value="0" {{ ($snp_mode==0) ? 'selected' : '' }}>Select notice period</option>
+                        <option value="1" {{ ($snp_mode===1) ? 'selected' : '' }}>Serving Notice Period</option>
+                        <option value="2" {{ ($snp_mode===2) ? 'selected' : '' }}>Immediate</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="pd-field-grid pd-field-grid--notice">
+                  <div class="fg fv-row pd-field">
+                    <label>Notice Details</label>
+                    <div style="{{ @$snp_text_one }}" id="snp-immediate" class="pd-notice-date" >
+                        <div style="position: relative;">
+                          <input type="text" id="text_display" value="{{ $snp_text_dummy }}" class="form-control form-control-solid" placeholder="" readonly>
+                        </div>
+                      
+                        <div style="position: relative;">
+                            <input type="text" id="np_id_display" class="form-control form-control-solid" placeholder="Select last working date" name="np_id_display" value="{{ ($snp_last_working) ? date('d/M/Y',strtotime(@$snp_last_working)) : '' }}" onclick="document.getElementById('np_id').click()" readonly>
+                            <input type="date" class="form-control form-control-solid np_id" name="np_id" id="np_id" style="opacity: 0; position: absolute; z-index: -1;top: 0;" onclick="this.showPicker()">
+                        </div>
+                    </div>
+                
+                    <select class="form-select form-select-solid" arial-label="Select ddl_np_id" id="ddl_np_id" name="ddl_np_id" style="<?php echo @$snp_text_zero; ?>">
+                      <option value="">Select Notice Period</option>
+                      @php 
+                          for ($i = 1; $i <= 200; $i++) {
+                                  $s = 'Day';
+                                  if($i > 1){
+                                      $s = 'Days';
+                                  }
+                                $selected = ($i == @$application->np_id) ? 'selected' : '';
+                              echo "<option value=\"$i\" $selected>{$i} {$s}</option>";
+                          }
+                      @endphp
+                    </select>
+                    
+                    <input type="text" id="calender" name="calender" style="display:none">
+                  </div>
+                </div>
+
+                <div class="pd-divider"></div>
+
+                <div class="pd-experience-grid">
+                  <div class="fg fv-row pd-exp-card">
+                    <div class="pd-exp-head">
+                      <span><i class="fa-regular fa-clock"></i></span>
+                      <strong>Total Experience <span class="rq">*</span></strong>
+                    </div>
+                    <div class="ei pd-exp-inputs">
                       @php
                        $value = @$application->total_exp; // Convert to string to preserve decimal
                        if(!is_null($value)){
@@ -514,7 +622,7 @@ if($snp_mode== 1){
                             }
                           @endphp
                       </select>
-                     <select class="" arial-label="Select total_exp_month" id="total_exp_month" name="total_exp_month">
+                      <select class="" arial-label="Select total_exp_month" id="total_exp_month" name="total_exp_month">
                           <option value="">Select Month</option>
                           @php 
                                        for ($i = 0; $i <= 11; $i++) {
@@ -537,9 +645,13 @@ if($snp_mode== 1){
                         </select>
                     </div>
                   </div>
-                  <div class="fg fv-row">
-                    <label>Relevant Experience <span class="rq">*</span></label>
-                    <div class="ei">
+
+                  <div class="fg fv-row pd-exp-card pd-exp-card--blue">
+                    <div class="pd-exp-head">
+                      <span><i class="fa-regular fa-file-lines"></i></span>
+                      <strong>Relevant Experience <span class="rq">*</span></strong>
+                    </div>
+                    <div class="ei pd-exp-inputs">
                         @php
 
                             $valuew = @$application->rel_exp;
@@ -604,77 +716,15 @@ if($snp_mode== 1){
                           @endphp
                         </select>
                     </div>
-                  </div>
-                </div>
-                <div class="g4">
-                  
-                  <div class="fg fv-row">
-                    <label>Employment Type</label>
-                    <select name="employmentType" id="EmploymentType">
-                      <option value="">Select employment type</option>
-                      <option {{ (@$application->employmentType==='Full Time') ? 'selected' : '' }}>Full Time</option>
-                      <option {{ (@$application->employmentType==='Contract') ? 'selected' : '' }}>Contract</option>
-                      <option {{ (@$application->employmentType==='Part Time') ? 'selected' : '' }}>Part Time</option>
-                      <option {{ (@$application->employmentType==='Freelance') ? 'selected' : '' }}>Freelance</option>
-                    </select>
-                  </div>
-                   <div class="fg fv-row d-none">
-                        <label>Commission Type <span class="rq">*</span></label>
-                        @php
-                            $selected = '';
-                              if(@$application->comission_type==''){
-                                $selected = 'selected';
-                              }
-                        @endphp
-                        <select name="comission_type" id="comission_type">
-                          <option value="">Select Commision type</option>
-                          <option value="1" {{ (@$application->comission_type==1) ? 'selected' : '' }}>Free (Not charged from Clients)</option>
-                          <option value="2" {{ (@$application->comission_type==2 || @$application->comission_type=='') ? 'selected' : '' }}>Paid Service</option>
-                        </select>
-                   </div>
-                  <div class="fg fv-row">
-                    <label>Notice Period <span class="rq">*</span></label>
-                    <select name="serving_notice_period" id="serving_notice_period">
-                      <option value="0" {{ ($snp_mode==0) ? 'selected' : '' }}>Select notice period</option>
-                      <option value="1" {{ ($snp_mode===1) ? 'selected' : '' }}>Serving Notice Period</option>
-                      <option value="2" {{ ($snp_mode===2) ? 'selected' : '' }}>Immediate</option>
-                    </select>
+                    <small>Relevant experience in the recommended/primary skills.</small>
                   </div>
 
-                    <div class="fg fv-row">
-                       <label>&nbsp;</label>
-                        <div style="{{ @$snp_text_one }}" id="snp-immediate" class="" >
-                            <div style="position: relative;margin-right: 6px;">
-                              <input type="text" id="text_display" value="{{ $snp_text_dummy }}" class="form-control form-control-solid" placeholder="" readonly>
-                            </div>
-                          
-                            <div style="position: relative;">
-                                <input type="text" id="np_id_display" class="form-control form-control-solid" placeholder="Select last working date" name="np_id_display" value="{{ ($snp_last_working) ? date('d/M/Y',strtotime(@$snp_last_working)) : '' }}" onclick="document.getElementById('np_id').click()" readonly>
-                                <input type="date" class="form-control form-control-solid np_id" name="np_id" id="np_id" style="opacity: 0; position: absolute; z-index: -1;top: 0;" onclick="this.showPicker()">
-                            </div>
-                        </div>
-                    
-                        <select class="form-select form-select-solid" arial-label="Select ddl_np_id" id="ddl_np_id" name="ddl_np_id" style="<?php echo @$snp_text_zero; ?>">
-                          <option value="">Select Notice Period</option>
-                          @php 
-                              for ($i = 1; $i <= 200; $i++) {
-                                      $s = 'Day';
-                                      if($i > 1){
-                                          $s = 'Days';
-                                      }
-                                    $selected = ($i == @$application->np_id) ? 'selected' : '';
-                                  echo "<option value=\"$i\" $selected>{$i} {$s}</option>";
-                              }
-                          @endphp
-                        </select>
-                        
-                        <input type="text" id="calender" name="calender" style="display:none">
-                    </div>                  
-                </div>
-                <div class="g4">
-                  <div class="fg fv-row">
-                    <label>Enter Employee ID (If Any)</label>
-                     <input type="email" class="form-control form-control-solid" name="employee_number" id="employee_number" placeholder="Enter employee number" value="{{ @$application->employee_number }}">
+                  <div class="pd-tip-card">
+                    <span class="pd-tip-icon"><i class="fa-regular fa-lightbulb"></i></span>
+                    <div>
+                      <strong>Tip</strong>
+                      <p>Relevant experience should match the skills you want to position this talent for in the marketplace.</p>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -928,44 +978,12 @@ if($snp_mode== 1){
                         <i class="fa-solid fa-check"></i>
                         <span><strong id="br_margin_status">Healthy Margin</strong><small id="br_margin_note">This margin looks good.</small></span>
                       </div>
-                      <div class="fg fv-row br-profit-field">
-                        <label>Profit Percentage</label>
-                        <div class="ig">
-                          <input type="number" value="{{ @$application->percentage_hike }}" name="percentage_hike" id="percentage_hike" />
-                          <span class="ig-a">%</span>
-                        </div>
-                      </div>
+                      <input type="hidden" value="{{ @$application->percentage_hike }}" name="percentage_hike" id="percentage_hike" />
                       <div class="fg fv-row">
                         <label>Comments (Optional)</label>
                         <textarea name="comment" id="comment" maxlength="500" placeholder="Enter comments about salary expectations, client specific rates or any other details..." rows="4">{{ @$application->comment }}</textarea>
                         <div class="cc" id="br_comment_count">0 / 500</div>
                       </div>
-                    </div>
-                  </div>
-                </div>
-
-                <div class="br-free-details">
-                  <div class="br-panel-head">
-                    <span class="br-panel-icon"><i class="fa-regular fa-gift"></i></span>
-                    <span>
-                      <strong>Free Service Details</strong>
-                      <small>No commercial billing required for this talent.</small>
-                    </span>
-                  </div>
-                  <div class="br-free-grid">
-                    <div class="fg fv-row">
-                      <label>Reason for Free Service <span class="rq">*</span></label>
-                      <select id="br_free_reason">
-                        <option value="">Select reason</option>
-                        <option value="relationship">Client relationship</option>
-                        <option value="replacement">Replacement support</option>
-                        <option value="strategic">Strategic proposal</option>
-                      </select>
-                    </div>
-                    <div class="fg fv-row">
-                      <label>Additional Notes (Optional)</label>
-                      <textarea id="br_free_notes" maxlength="500" placeholder="Enter reason or any other details..." rows="2"></textarea>
-                      <div class="cc" id="br_free_notes_count">0 / 500</div>
                     </div>
                   </div>
                 </div>
@@ -1792,7 +1810,6 @@ $(document).ready(function () {
         }
 
         $('#br_comment_count').text(($('#comment').val() || '').length + ' / 500');
-        $('#br_free_notes_count').text(($('#br_free_notes').val() || '').length + ' / 500');
     }
 
     function syncCommercialCards() {
@@ -1827,7 +1844,6 @@ $(document).ready(function () {
         billFields.prop('readonly', isFree).attr('aria-readonly', isFree ? 'true' : 'false');
         $('.br-card').toggleClass('is-free-service', isFree);
         $('.br-bill-panel').toggleClass('is-locked', isFree);
-        $('.br-free-details').toggleClass('is-emphasized', isFree);
         syncCommercialCards();
         refreshCommercialSummary();
     }
@@ -1846,7 +1862,7 @@ $(document).ready(function () {
     });
 
     $(document).on('change', '#comission_type', applyCommercialMode);
-    $(document).on('input change', '#pay_annual, #pay_monthly, #pay_rate_amount, #bill_annual, #bill_monthly, #bill_rate_amount, #percentage_hike, #comment, #br_free_notes', refreshCommercialSummary);
+    $(document).on('input change', '#pay_annual, #pay_monthly, #pay_rate_amount, #bill_annual, #bill_monthly, #bill_rate_amount, #percentage_hike, #comment', refreshCommercialSummary);
 
     window.isFreeCommercialMode = isFreeCommercialMode;
     window.refreshCommercialSummary = refreshCommercialSummary;
