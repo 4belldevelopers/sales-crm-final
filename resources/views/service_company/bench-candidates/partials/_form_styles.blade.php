@@ -17,9 +17,9 @@ body { overflow-x: hidden; }
 @media only screen and (min-width: 1440px) and (max-width: 2560px) {
   #kt_activitiesRecruiter { width: 1200px; }
 }
-.tagify .tagify__tag div .tagify__tag-text { color: #0c0c0c !important; font-weight: 500 !important; font-size: 14px !important; }
-.tagify { height: 37px !important; }
+.tagify .tagify__tag div .tagify__tag-text { color: #0c0c0c !important; font-family: 'Poppins', sans-serif !important; font-weight: 500 !important; font-size: 13px !important; }
+.tagify { height: 38px !important; font-family: 'Poppins', sans-serif !important; }
 .disablesectionOn.setOpacity { cursor: not-allowed; background: #8a878d; opacity: 0.5; }
 </style>
 <link href="{{ asset('demo/css/filterStyle.css') }}{{ TM_VERSION }}" rel="stylesheet" type="text/css" />
-<link href="{{ asset('demo/css/candidate-form.css') }}{{ TM_VERSION }}&bench_commercials=20260914&professional_profile=20260914&basic_availability=20260914&location_dropdown=20260914&location_typography=20260914&availability_date=20260914&fa6_fix=20260914&skills_header=20260914&location_enterprise=20260914&availability_picker=20260914&resume_summary_cards=20260914&relationship_manager_card=20260914&top_header=20260914&additional_details_card=20260914&enterprise_polish=20260914" rel="stylesheet" type="text/css" />
+<link href="{{ asset('demo/css/candidate-form.css') }}{{ TM_VERSION }}&bench_commercials=20260914&professional_profile=20260914&basic_availability=20260914&location_dropdown=20260914&location_typography=20260914&availability_date=20260914&fa6_fix=20260914&skills_header=20260914&location_enterprise=20260914&availability_picker=20260914&resume_summary_cards=20260914&relationship_manager_card=20260914&top_header=20260914&additional_details_card=20260914&enterprise_polish=20260914&professional_row_alignment=20260914&final_enterprise_polish=20260914&rm_summary_fix=20260914" rel="stylesheet" type="text/css" />

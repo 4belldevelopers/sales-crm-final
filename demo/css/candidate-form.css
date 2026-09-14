@@ -826,23 +826,6 @@
     gap: 10px;
     min-width: 0;
   }
-  .summary-ai-button {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 7px;
-    min-height: 30px;
-    padding: 6px 12px;
-    border: 1px solid #5B4DFF;
-    border-radius: 5px;
-    color: #4B35FF;
-    background: #FFFFFF;
-    font-size: .78rem;
-    line-height: 1;
-    font-weight: 700;
-    font-family: 'Poppins', sans-serif;
-    white-space: nowrap;
-  }
   .summary-card-body textarea#careersummary {
     min-height: 136px;
     padding: 11px 12px;
@@ -3937,7 +3920,6 @@ input[type="radio"]:checked {
 }
 
 .talent-topbar-primary,
-.summary-ai-button,
 .resume-card .ub {
     border-radius: 6px !important;
     font-size: 13px !important;
@@ -4079,4 +4061,231 @@ input[type="radio"]:checked {
     .rm-selected-card {
         padding: 14px 18px !important;
     }
+}
+
+/* Professional profile alignment: keeps the second row directly below the two-column row above it. */
+.pd-card .pd-field-grid--employee-row {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    align-items: start !important;
+}
+
+.pd-card .pd-field-grid--employee-row .pd-field {
+    min-width: 0 !important;
+}
+
+@media (max-width: 900px) {
+    .pd-card .pd-field-grid--employee-row {
+        grid-template-columns: 1fr !important;
+    }
+}
+
+/* Final enterprise polish: dropdown typography, stronger cards, required markers, and upload affordance. */
+body,
+.mc {
+    background: #EEF2F7 !important;
+}
+
+.talent-top-toolbar,
+.th,
+.bf {
+    background: #FFFFFF !important;
+}
+
+.resume-card,
+.summary-card,
+.bd-card,
+.aw-card,
+.pd-card,
+.br-card,
+.se-card,
+.rm-card,
+.addl-card {
+    border: 1px solid #D9E1EE !important;
+    box-shadow: 0 8px 22px rgba(15, 23, 42, .07), 0 1px 2px rgba(15, 23, 42, .04) !important;
+}
+
+.resume-card-header,
+.bd-hero,
+.aw-hero,
+.pd-hero,
+.br-hero,
+.se-hero,
+.rm-hero,
+.addl-hero {
+    background: linear-gradient(90deg, #F8FAFF 0%, #FFFFFF 82%) !important;
+}
+
+.rq,
+label .rq,
+th .rq,
+strong .rq,
+.fg label .rq {
+    color: #F1416C !important;
+    font-weight: 700 !important;
+}
+
+.talent-topbar-primary,
+.talent-topbar-primary i,
+.talent-topbar-primary svg {
+    color: #FFFFFF !important;
+}
+
+.resume-card .ut {
+    color: var(--et-text) !important;
+    font-size: 15px !important;
+    line-height: 1.25 !important;
+    font-weight: 600 !important;
+}
+
+.resume-card .us,
+.resume-card .uf {
+    font-size: 12px !important;
+    font-weight: 500 !important;
+}
+
+.pd-exp-head strong {
+    color: var(--et-text) !important;
+    font-size: 14px !important;
+    line-height: 1.25 !important;
+    font-weight: 600 !important;
+    letter-spacing: 0 !important;
+}
+
+.pd-exp-head span,
+.pd-tip-icon {
+    width: 34px !important;
+    height: 34px !important;
+    min-width: 34px !important;
+    flex-basis: 34px !important;
+    font-size: 14px !important;
+}
+
+.pd-exp-card,
+.pd-tip-card {
+    border-color: #DDE5F1 !important;
+    background: #FFFFFF !important;
+    box-shadow: 0 3px 10px rgba(15, 23, 42, .045) !important;
+}
+
+select,
+select option,
+.select2-container,
+.select2-container *,
+.select2-dropdown,
+.select2-results__option,
+.select2-search__field,
+.tagify,
+.tagify *,
+.tagify__dropdown,
+.tagify__dropdown *,
+.iti,
+.iti * {
+    font-family: 'Poppins', sans-serif !important;
+    letter-spacing: 0 !important;
+}
+
+select,
+.select2-container--default .select2-selection--single,
+.select2-container--default .select2-selection--multiple,
+.tagify,
+.iti__selected-country,
+.iti__country {
+    color: var(--et-text) !important;
+    font-size: 13px !important;
+    font-weight: 500 !important;
+}
+
+select option,
+.select2-results__option,
+.tagify__dropdown__item,
+.iti__country {
+    min-height: 34px !important;
+    padding-top: 8px !important;
+    padding-bottom: 8px !important;
+    color: var(--et-text) !important;
+    background: #FFFFFF !important;
+    font-size: 13px !important;
+    line-height: 1.35 !important;
+    font-weight: 500 !important;
+}
+
+.select2-dropdown,
+.tagify__dropdown,
+.iti__country-list {
+    overflow: hidden !important;
+    border: 1px solid #D8DEEC !important;
+    border-radius: 8px !important;
+    background: #FFFFFF !important;
+    box-shadow: 0 16px 34px rgba(15, 23, 42, .14) !important;
+}
+
+.select2-results__option--highlighted,
+.select2-container--default .select2-results__option--highlighted[aria-selected],
+.tagify__dropdown__item--active,
+.tagify__dropdown__item:hover,
+.iti__country:hover,
+.iti__country.iti__highlight {
+    color: var(--et-primary) !important;
+    background: #F4F7FF !important;
+}
+
+.select2-container--default .select2-selection__placeholder,
+.tagify__input::before {
+    color: #8A94B4 !important;
+    font-size: 13px !important;
+    font-weight: 500 !important;
+}
+
+.bd-control--tagify .tagify .tagify__tag div .tagify__tag-text,
+.bd-control--tagify .tagify__input,
+.bd-control--tagify .tagify__input::before {
+    font-size: 13px !important;
+    font-weight: 500 !important;
+}
+
+.bd-control--tagify .tagify__tag > div {
+    font-size: 13px !important;
+    font-weight: 500 !important;
+}
+
+/* Relationship Manager picker fix: keep selected value in the hidden form field, not over the picker text. */
+.rm-picker.has-selection input#recruiter {
+    color: transparent !important;
+    text-shadow: none !important;
+    caret-color: transparent !important;
+}
+
+.rm-picker.has-selection input#recruiter::selection {
+    color: transparent !important;
+    background: transparent !important;
+}
+
+.rm-picker.has-selection .rm-picker-action {
+    display: inline-flex !important;
+    min-width: 220px !important;
+    color: var(--et-primary) !important;
+    font-size: 13px !important;
+    font-weight: 600 !important;
+}
+
+.rm-picker.has-selection .rm-picker-divider {
+    display: block !important;
+}
+
+.rm-picker.has-selection .rm-picker-chevron {
+    display: inline-flex !important;
+}
+
+.rm-content.rm-has-selection .rm-info-card {
+    display: none !important;
+}
+
+.rm-input-placeholder {
+    color: #7C86A5 !important;
+    font-size: 13px !important;
+    font-weight: 500 !important;
+}
+
+.summary-card-header {
+    justify-content: flex-start !important;
 }
