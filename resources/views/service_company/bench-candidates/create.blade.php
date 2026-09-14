@@ -16,6 +16,7 @@
   $phone_code = $country_code;
   $second_phone_code = $country_code;
   $url = '';
+  $account_company_name = @$company_name ?: '';
 
   $resume_url				=	'';	
   $photo  					=	url('public/avatar.png');	
@@ -381,7 +382,7 @@ if($snp_mode== 1){
                     <label>Mobile Number <span class="rq">*</span></label>
                     <div class="bd-phone-control">
                       <i class="fa-solid fa-mobile-screen-button"></i>
-                      <input type="number" name="phone" id="phone" value="{{ @$application->phone }}" placeholder="Enter mobile number" />
+                      <input type="tel" name="phone" id="phone" value="{{ @$application->phone }}" placeholder="Enter mobile number" inputmode="tel" autocomplete="tel" />
                       <input type="hidden" value="{{ @$phone_code }}" id="primary_country_code" name="primary_country_code">
                     </div>
                   </div>
@@ -445,7 +446,7 @@ if($snp_mode== 1){
                       <label>Secondary Number</label>
                       <div class="bd-phone-control">
                         <i class="fa-solid fa-mobile-screen-button"></i>
-                        <input type="number" name="secondary_mobile" id="secondary_mobile" value="{{ @$application->secondary_mobile }}" placeholder="Enter secondary number" />
+                        <input type="tel" name="secondary_mobile" id="secondary_mobile" value="{{ @$application->secondary_mobile }}" placeholder="Enter secondary number" inputmode="tel" autocomplete="tel" />
                         <input type="hidden" value="{{ @$second_phone_code }}" id="secondary_country_code" name="secondary_country_code">
                       </div>
                     </div>
@@ -519,7 +520,7 @@ if($snp_mode== 1){
                     <label>Current Company <span class="rq">*</span></label>
                     <div class="pd-control">
                       <i class="fa-regular fa-building"></i>
-                      <input type="text" name="current_company" id="current_company" value="{{ @$application->current_company }}" placeholder="Enter current company" />
+                      <input type="text" name="current_company" id="current_company" value="{{ @$application->current_company ?: $account_company_name }}" placeholder="Enter current company" />
                     </div>
                     <small>Auto-filled from employee records</small>
                   </div>
@@ -570,8 +571,21 @@ if($snp_mode== 1){
                   </div>
                 </div>
 
-                <div class="pd-divider"></div>
+              </div>
+            </div>
 
+            <div class="fs pd-experience-section-card">
+              <div class="pd-experience-hero">
+                <div class="pd-experience-hero-title">
+                  <span class="pd-experience-hero-icon"><i class="fa-solid fa-chart-line"></i></span>
+                  <span>
+                    <strong>Experience Details</strong>
+                    <small>Capture total and relevant experience for marketplace positioning.</small>
+                  </span>
+                </div>
+                <span class="pd-experience-badge"><i class="fa-regular fa-building"></i> In-House Talent</span>
+              </div>
+              <div class="fsc pd-experience-body">
                 <div class="pd-experience-grid">
                   <div class="fg fv-row pd-exp-card">
                     <div class="pd-exp-head">
@@ -764,7 +778,7 @@ if($snp_mode== 1){
                   </div>
 
                   <div class="fg fv-row aw-field">
-                    <label>Enter the date from which this talent will be available. <span class="rq">*</span></label>
+                    <label class="aw-date-label">Enter the date from which this talent will be available. <span class="rq">*</span></label>
                     <div class="aw-date-wrap" id="snp-immediate" style="display:flex">
                       <input type="text" id="text_display" value="{{ ($snp_mode===1) ? 'Available From' : 'Immediate' }}" class="form-control form-control-solid" placeholder="" readonly>
                       <input type="text" id="np_id_display" class="form-control form-control-solid" placeholder="Select date" name="np_id_display" value="{{ ($snp_last_working) ? date('d/M/Y',strtotime(@$snp_last_working)) : '' }}" readonly>
@@ -1771,6 +1785,46 @@ $(document).ready(function () {
       initialCountry: "{{ $second_phone_code }}",
       preferredCountries: ["in", "us", "gb", "ca", "au"],
     });
+    window.createTalentPhoneInputs = {
+      primary: primaryPhoneInput,
+      secondary: secondaryPhoneInput
+    };
+
+    window.normalizeCreateTalentPhoneDigits = function (value) {
+      return String(value || '').replace(/[^\d]/g, '');
+    };
+
+    window.validateCreateTalentPhone = function (inputId, required) {
+      const input = document.getElementById(inputId);
+      if (!input) {
+        return !required;
+      }
+
+      const rawValue = String(input.value || '').trim();
+      if (!rawValue) {
+        return !required;
+      }
+
+      const itiInstance = inputId === 'secondary_mobile'
+        ? window.createTalentPhoneInputs?.secondary
+        : window.createTalentPhoneInputs?.primary;
+
+      if (window.intlTelInputUtils && itiInstance && typeof itiInstance.isValidNumber === 'function') {
+        return itiInstance.isValidNumber();
+      }
+
+      const digits = window.normalizeCreateTalentPhoneDigits(rawValue);
+      return digits.length >= 6 && digits.length <= 15;
+    };
+
+    window.normalizeCreateTalentPhones = function () {
+      ['phone', 'secondary_mobile'].forEach(function (inputId) {
+        const input = document.getElementById(inputId);
+        if (input) {
+          input.value = window.normalizeCreateTalentPhoneDigits(input.value);
+        }
+      });
+    };
 
       // Function to update hidden country code inputs
     function updateCountryCode(inputField, hiddenField) {
@@ -1781,11 +1835,11 @@ $(document).ready(function () {
       
     }
     // Update country code on input or country flag selection
-    $("#phone").on("input change", function () {
+    $("#phone").on("countrychange input change", function () {
       updateCountryCode(primaryPhoneInput, "#primary_country_code");
     });
 
-    $("#secondary_mobile").on("input change", function () {
+    $("#secondary_mobile").on("countrychange input change", function () {
       updateCountryCode(secondaryPhoneInput, "#secondary_country_code");
     });
     // Update country code dynamically when the user selects a different country flag
@@ -2917,8 +2971,8 @@ var KTAddCandidate = function () {
                         'kt_tagify_work_location'				:	{validators:{notEmpty: {message: "Current Location is required"}} },
                     		'current_designation'	:	{validators:{notEmpty:{message: "Current designation is required"}} },
                     		'employmentType'		:	{validators:{notEmpty:{message: "Employment Type is required"}} },
-                    		'phone':{validators:{notEmpty:{message: "Primary number is required"},digits:{message: "Primary number must contains only digits"},stringLength:{	min: 10, max: 10,	message: "Primary number must contains 10 digits only"}}},
-							          'secondary_mobile':{validators:{digits:{message: "Primary number must contains only digits"},stringLength:{	min: 10, max: 10,	message: "Primary number must contains 10 digits only"}}},
+                        'phone':{validators:{notEmpty:{message: "Primary number is required"},callback:{message: "Enter a valid mobile number for the selected country", callback: function () { return window.validateCreateTalentPhone('phone', true); }}}},
+							          'secondary_mobile':{validators:{callback:{message: "Enter a valid secondary number for the selected country", callback: function () { return window.validateCreateTalentPhone('secondary_mobile', false); }}}},
 							          'email':	{validators:{ notEmpty: {message: 'Primary email is required'}, emailAddress:{message: 'The value is not a valid email address'} } },
                     		'qualification':	{validators:{notEmpty:{message: 'Qualification is required'}}},
                     		'total_exp':	{validators:{ notEmpty:{message:"Total Experience is required"},	digits:	{message: "Total Experience must contain only digits"} }},
@@ -2973,6 +3027,7 @@ var KTAddCandidate = function () {
                         }
 
 
+                          window.normalizeCreateTalentPhones();
 													var formData 	=	new FormData($('#createForm')[0]);							
 													$.ajax({
 															   url 				: '{{route('service_company.bench-candidates.store')}}'+'?_token=' + '{{ csrf_token() }}',								   
@@ -3074,8 +3129,8 @@ var KTEditCandidate = function () {
                         'kt_tagify_work_location'				:	{validators:{notEmpty: {message: "Current Location is required"}} },
                     		'current_designation'	:	{validators:{notEmpty:{message: "Current designation is required"}} },
                     		'employmentType'		:	{validators:{notEmpty:{message: "Employment Type is required"}} },
-                    		'phone':{validators:{notEmpty:{message: "Primary number is required"},digits:{message: "Primary number must contains only digits"},stringLength:{	min: 10, max: 10,	message: "Primary number must contains 10 digits only"}}},
-							          'secondary_mobile':{validators:{digits:{message: "Primary number must contains only digits"},stringLength:{	min: 10, max: 10,	message: "Primary number must contains 10 digits only"}}},
+                        'phone':{validators:{notEmpty:{message: "Primary number is required"},callback:{message: "Enter a valid mobile number for the selected country", callback: function () { return window.validateCreateTalentPhone('phone', true); }}}},
+							          'secondary_mobile':{validators:{callback:{message: "Enter a valid secondary number for the selected country", callback: function () { return window.validateCreateTalentPhone('secondary_mobile', false); }}}},
 							          'email':	{validators:{ notEmpty: {message: 'Primary email is required'}, emailAddress:{message: 'The value is not a valid email address'} } },
                     		'qualification':	{validators:{notEmpty:{message: 'Qualification is required'}}},
                     		'total_exp':	{validators:{ notEmpty:{message:"Total Experience is required"},	digits:	{message: "Total Experience must contain only digits"} }},
@@ -3116,6 +3171,7 @@ var KTEditCandidate = function () {
                         }
 
 
+                          window.normalizeCreateTalentPhones();
 													var formData 	=	new FormData($('#createForm')[0]);							
 													$.ajax({
 															   url 				: '{{route('service_company.bench-candidates.store')}}'+'?_token=' + '{{ csrf_token() }}',								   
