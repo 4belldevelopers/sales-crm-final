@@ -679,10 +679,14 @@ $('#template').change(function(){
     var _engineLoadPromise = null;
 
     /**
-     * Ensures window.AgyForwardResumeEngine is loaded and ready.
-     * Strategy 1: already on window → resolve immediately (common case when host pre-loaded)
-     * Strategy 2: fetch JS text → globalEval (bypasses jQuery .html() script stripping)
-     * Strategy 3: dynamic <script> tag fallback
+     * ensureEngine() — Guaranteed engine loader. Three layers:
+     *   1. window.AgyForwardResumeEngine already set (host page pre-loaded) → instant resolve
+     *   2. <script> tag injected into document.head + poll for global confirmation
+     *      (same-origin script tags are NEVER blocked by CSP, unlike eval())
+     *   3. Fallback to absolute asset URL if relative path fails
+     *
+     * Returns a Promise<engine> that resolves with window.AgyForwardResumeEngine.
+     * The shared _engineLoadPromise ensures only one load request runs at a time.
      */
     function ensureEngine() {
         if (window.AgyForwardResumeEngine &&
@@ -691,53 +695,54 @@ $('#template').change(function(){
         }
         if (_engineLoadPromise) return _engineLoadPromise;
 
-        var engineUrls = [
+        // Poll until the engine global is set (used after each script-tag onload)
+        function waitForEngine(maxMs) {
+            return new Promise(function (resolve, reject) {
+                var elapsed = 0;
+                var iv = setInterval(function () {
+                    if (window.AgyForwardResumeEngine &&
+                        typeof window.AgyForwardResumeEngine.processOption === 'function') {
+                        clearInterval(iv);
+                        resolve(window.AgyForwardResumeEngine);
+                    } else {
+                        elapsed += 60;
+                        if (elapsed >= maxMs) {
+                            clearInterval(iv);
+                            reject(new Error('Engine did not initialise after load'));
+                        }
+                    }
+                }, 60);
+            });
+        }
+
+        // Inject a <script src> tag into document.head — the only reliable strategy
+        // for loading JS inside jQuery-injected HTML (eval() blocked by CSP, $.html()
+        // strips <script src> tags, but document.createElement + appendChild always works)
+        function loadViaTag(src) {
+            return new Promise(function (resolve, reject) {
+                var s = document.createElement('script');
+                s.src = src;
+                s.onload = function () { waitForEngine(3000).then(resolve, reject); };
+                s.onerror = function () { reject(new Error('Script load error: ' + src)); };
+                document.head.appendChild(s);
+            });
+        }
+
+        var urls = [
             '/js/opendoc/AgyForwardResumeEngine.js',
             "{{ asset('js/opendoc/AgyForwardResumeEngine.js') }}"
         ];
 
-        _engineLoadPromise = (function tryUrls(idx) {
-            if (idx >= engineUrls.length) {
+        _engineLoadPromise = (function attempt(idx) {
+            if (idx >= urls.length) {
                 _engineLoadPromise = null;
                 return Promise.reject(new Error('Could not load AgyForwardResumeEngine module'));
             }
-            var url = engineUrls[idx] + '?_cv=' + Date.now();
-            return fetch(url, { cache: 'force-cache' })
-                .then(function (res) {
-                    if (!res.ok) throw new Error('HTTP ' + res.status + ' for ' + url);
-                    return res.text();
-                })
-                .then(function (src) {
-                    try {
-                        // globalEval: runs in global scope, sets window.AgyForwardResumeEngine
-                        var geval = (0, eval); // indirect eval = global scope
-                        geval(src);
-                    } catch (evalErr) {
-                        console.warn('[FwdResume] eval failed, trying script tag:', evalErr);
-                        return new Promise(function (resolve, reject) {
-                            var s = document.createElement('script');
-                            s.src = engineUrls[idx];
-                            s.onload = resolve;
-                            s.onerror = reject;
-                            document.head.appendChild(s);
-                        });
-                    }
-                    // Poll for a short time after eval to confirm global was set
-                    return new Promise(function (resolve, reject) {
-                        var polls = 0;
-                        function check() {
-                            if (window.AgyForwardResumeEngine &&
-                                typeof window.AgyForwardResumeEngine.processOption === 'function') {
-                                return resolve(window.AgyForwardResumeEngine);
-                            }
-                            if (++polls < 20) return setTimeout(check, 50);
-                            reject(new Error('Engine eval completed but window.AgyForwardResumeEngine not set'));
-                        }
-                        check();
-                    });
-                })
-                .catch(function () { return tryUrls(idx + 1); });
-        }(0));
+            return loadViaTag(urls[idx]).catch(function () { return attempt(idx + 1); });
+        }(0)).catch(function (err) {
+            _engineLoadPromise = null;
+            throw err;
+        });
 
         return _engineLoadPromise;
     }
