@@ -33,9 +33,9 @@
 
             $exploreBase = url('/service_company/bench-candidates/bench_explore/' . $row->id);
 
-            // Work preference (Remote/Onsite/Hybrid) — shared by the Experience column's 2nd row.
+            // Work preference (Remote/Hybrid/Work from office) — shared by the Experience column's 2nd row.
             $wm = strtolower((string) @$row->wm);
-            $wmMap = ['remote' => 'Remote', 'hybrid' => 'Hybrid', 'office' => 'Onsite'];
+            $wmMap = ['remote' => 'Remote', 'hybrid' => 'Hybrid', 'office' => 'Work from office'];
             $wmClassMap = ['remote' => 'text-success', 'hybrid' => 'text-primary', 'office' => 'text-warning'];
             $wmLabel = $wmMap[$wm] ?? '—';
             $wmClass = $wmClassMap[$wm] ?? 'text-muted';
@@ -55,7 +55,7 @@
         @endphp
         <tr style="height: 102px; position: relative;">
             {{-- Checkbox --}}
-            <td>
+            <td class="col-select">
                 <div class="form-check form-check-sm form-check-custom form-check-solid">
                     <input class="form-check-input chk_list_item" name="chk_list_item[]" type="checkbox" data-skills="{{ e($row->skills ?? '') }}" data-cname="{{ e($row->full_name ?? '') }}" value="{{ $row->id }}" />
                 </div>
@@ -126,21 +126,10 @@
                 </div>
                 @endif
 
-                {{-- View / Download stats (bottom-right, inline) --}}
-                <div style="position: absolute; bottom: 4px; right: 8px; display: flex; align-items: center; gap: 14px;">
-                    <span style="display: flex; align-items: center; gap: 4px; color: #a1a5b7; font-size: 11px; font-weight: 500;">
-                        <i class="fa fa-eye" style="font-size: 12px;"></i>
-                        {{ $viewCount }}
-                    </span>
-                    <span style="display: flex; align-items: center; gap: 4px; color: #a1a5b7; font-size: 11px; font-weight: 500;">
-                        <i class="fa fa-download" style="font-size: 12px;"></i>
-                        {{ $downloadCount }}
-                    </span>
-                </div>
             </td>
 
             {{-- Experience: Experience (1) · Work preference (2) --}}
-            <td>
+            <td class="col-experience">
                 @php
                     $experience = trim((string) @$row->total_exp);
                     if (strpos($experience, '.') !== false) {
@@ -159,7 +148,7 @@
             </td>
 
             {{-- Availability: conditional notice text (1) · Employment type (2) --}}
-            <td>
+            <td class="col-availability">
                 @php
                     if ($row->serving_notice_period_mode == 2) {
                         $availLine = 'Immediate';
@@ -189,7 +178,7 @@
             </td>
 
             {{-- Location: City & Country (1) · Education (2) --}}
-            <td>
+            <td class="col-location">
                 @php
                     $row_city_name = @$row->city_name;
                     $row_country_name = @$row->country_name;
@@ -205,7 +194,7 @@
             </td>
 
             {{-- Expected Salary: Salary (1) · Free/Paid service (2) --}}
-            <td>
+            <td class="col-salary">
                 @php
                     $currencyBenchMode = $companyCurrencyBenchshowMode ?? GeneralMethod::getCompanyCurrencyBenchshowMode($company_id);
                     $billFormatViewSalary = GeneralMethod::formatViewSalary($row->ectc_yearly, $currencyBenchMode->currency_code, $currencyBenchMode->show_mode);
@@ -223,7 +212,7 @@
             </td>
 
             {{-- Bench Status --}}
-            <td>
+            <td class="col-status">
                 @php
                     // Pool (status 1) always shows purple + "Newly added", matching the Change Status
                     // drawer's Pool colour/description — the shared subline helper doesn't cover this case.
@@ -290,7 +279,7 @@
             </td>
 
             {{-- Clients Pipeline Activity (mini stage grid) --}}
-            <td>
+            <td class="col-pipeline-activity">
                 <div class="pipe">
                     <div>
                         <div class="pipe-grid">
@@ -306,7 +295,8 @@
                         </div>
                         <div class="pipe-foot">
                             Interview: {{ $row->InReview }}
-                            <a href="javascript:void(0);" data-row-id="{{ $row->id }}" class="pipe-view bench_show_application_detail">View</a>
+                            <span class="pipe-stat">Views: {{ $viewCount }}</span>
+                            <span class="pipe-stat">Downloads: {{ $downloadCount }}</span>
                         </div>
                     </div>
                 </div>

@@ -344,109 +344,229 @@ if($snp_mode== 1){
             <!--end::Upload Photo & Resume/CV-->
 
             <!-- Basic Details -->
-            <div class="fs">
-              <div class="fsh">
-                <h3>Basic Details</h3>
-              </div>
-              <div class="fsc">
-                <div class="g4">
-                  <div class="fg fv-row">
-                    <label>Full Name <span class="rq">*</span></label>
-                    <input type="text" class="form-control form-control-solid" name="full_name" id="full_name" value="{{ @$application->full_name }}"
-                      placeholder="Enter full name" />
-                  </div>
-                  <div class="fg fv-row">
-                    <label>Gender</label>
-                    <select name="gender" id="gender">
-                      <option value="Rather Not Say" {{ (@$application->gender==='Rather Not Say') ? 'selected' : '' }}>Rather
-                        Not Say</option>
-                      <option value="Male" {{ (@$application->gender==='Male') ? 'selected' : '' }}>Male</option>
-                      <option value="Female" {{ (@$application->gender==='Female') ? 'selected' : '' }}>Female</option>
-                    </select>
-                  </div>
-                  <div class="fg fv-row">
-                    <label>Nationality</label>
-                    <select name="nationality" id="nationality">
-                      <option value="">Select nationality</option>
-                      <option {{ (@$application->nationality==='Indian') ? 'selected' : '' }}>Indian</option>
-                      <option {{ (@$application->nationality==='American') ? 'selected' : '' }}>American</option>
-                      <option {{ (@$application->nationality==='British') ? 'selected' : '' }}>British</option>
-                      <option {{ (@$application->nationality==='Other') ? 'selected' : '' }}>Other</option>
-                    </select>
-                  </div>
-                  <div class="fg fv-row">
-                    <label>Date of Birth</label>
-                    <input type="date" name="dob" id="dob" value="{{ @$application->dob }}" onclick="this.showPicker()"
-                      placeholder="Select date" />
-                  </div>
+            <div class="fs bd-card">
+              <div class="bd-hero">
+                <div class="bd-hero-title">
+                  <span class="bd-hero-icon"><i class="fa-regular fa-user"></i></span>
+                  <span>
+                    <strong>Candidate Profile</strong>
+                    <small>Basic information to identify and contact this internal talent.</small>
+                  </span>
                 </div>
-                <div class="g4">
-                  <div class="fg fv-row">
-                    <label>Enter Primary Email ID <span class="rq">*</span></label>
-                    <input type="email" name="email" id="email" value="{{ @$application->email }}" placeholder="Enter primary email" />
+                <span class="bd-talent-badge"><i class="fa-regular fa-building"></i> In-House Talent</span>
+              </div>
+              <div class="fsc bd-body">
+                <div class="bd-grid bd-grid--three">
+                  <div class="fg fv-row bd-field">
+                    <label>Full Name <span class="rq">*</span></label>
+                    <div class="bd-control">
+                      <i class="fa-regular fa-user"></i>
+                      <input type="text" class="form-control form-control-solid" name="full_name" id="full_name" value="{{ @$application->full_name }}" placeholder="Enter full name" />
+                    </div>
                   </div>
-                  <div class="fg fv-row">
-                    <label>Enter Secondary Email ID</label>
-                    <input type="email" name="secondrary_email" id="secondrary_email"
-                      value="{{ @$application->secondrary_email }}" placeholder="Enter secondary email" />
+                  <div class="fg fv-row bd-field">
+                    <label>Professional Email <span class="rq">*</span></label>
+                    <div class="bd-control">
+                      <i class="fa-regular fa-envelope"></i>
+                      <input type="email" name="email" id="email" value="{{ @$application->email }}" placeholder="Enter primary email address" />
+                    </div>
                   </div>
-                  <div class="fg fv-row">
-                    <label>Enter Primary Number <span class="rq">*</span></label>
-                    <div class="ig">
-                      {{-- <span class="ig-p">+91 ▼</span> --}}
-                      <input type="number" name="phone" id="phone" value="{{ @$application->phone }}"
-                        placeholder="Enter primary number" style="padding-left: 76px !important; width: 307px;" />
+                  <div class="fg fv-row bd-field">
+                    <label>Mobile Number <span class="rq">*</span></label>
+                    <div class="bd-phone-control">
+                      <i class="fa-solid fa-mobile-screen-button"></i>
+                      <input type="number" name="phone" id="phone" value="{{ @$application->phone }}" placeholder="Enter mobile number" />
                       <input type="hidden" value="{{ @$phone_code }}" id="primary_country_code" name="primary_country_code">
                     </div>
                   </div>
-                  <div class="fg fv-row">
-                    <label>Enter Secondary Number</label>
-                    <div class="ig">
-                      {{-- <span class="ig-p">+91 ▼</span> --}}
-                      <input type="number" name="secondary_mobile" id="secondary_mobile"
-                        value="{{ @$application->secondary_mobile }}" placeholder="Enter secondary number"
-                        style="padding-left: 76px !important; width: 307px;" />
-                      <input type="hidden" value="{{ @$second_phone_code }}" id="secondary_country_code"
-                        name="secondary_country_code">
+                </div>
+
+                <div class="bd-grid bd-grid--three">
+                  <div class="fg fv-row bd-field">
+                    <label>Current Location <span class="rq">*</span></label>
+                    <div class="bd-control bd-control--tagify">
+                      <i class="fa-solid fa-location-dot"></i>
+                      <input type="text" class="" value="" id="kt_tagify_work_location" name="kt_tagify_work_location" placeholder="Search city, state or country" />
+                    </div>
+                  </div>
+                  <div class="fg fv-row bd-field">
+                    <label>Highest Qualification <span class="rq">*</span></label>
+                    <div class="bd-control bd-control--select">
+                      <i class="fa-solid fa-graduation-cap"></i>
+                      <select name="qualification" id="qualification">
+                        <option value="">Select qualification</option>
+                        @foreach($qualification as $data_value)
+                        @php
+                        $sel = '';
+                        if(@$application->qualification == $data_value->id ){
+                        $sel = 'selected="selected"';
+                        }
+                        @endphp
+                        <option value="{{ @$data_value->id }}" {{ @$sel }}>{{ @$data_value->name }}</option>
+                        @endforeach
+                      </select>
+                    </div>
+                  </div>
+                  <div class="fg fv-row bd-field">
+                    <label>Nationality</label>
+                    <div class="bd-control bd-control--select">
+                      <i class="fa-regular fa-flag"></i>
+                      <select name="nationality" id="nationality">
+                        <option value="">Select nationality</option>
+                        <option {{ (@$application->nationality==='Indian') ? 'selected' : '' }}>Indian</option>
+                        <option {{ (@$application->nationality==='American') ? 'selected' : '' }}>American</option>
+                        <option {{ (@$application->nationality==='British') ? 'selected' : '' }}>British</option>
+                        <option {{ (@$application->nationality==='Other') ? 'selected' : '' }}>Other</option>
+                      </select>
                     </div>
                   </div>
                 </div>
-                <div class="g4">
-                  <div class="fg fv-row" style="grid-column: span 2">
-                    <label>Current Location <span class="rq">*</span></label>
-                        <input type="text" class="" value="" id="kt_tagify_work_location" name="kt_tagify_work_location" placeholder="Enter current location" />
-                  </div>
-                  <div class="fg fv-row">
-                    <label>Highest Education <span class="rq">*</span></label>
-                    <select name="qualification" id="qualification">
-                      <option value="">Select Qualification</option>
-                      @foreach($qualification as $data_value)
-                      @php
-                      $sel = '';
-                      if(@$application->qualification == $data_value->id ){
-                      $sel = 'selected="selected"';
-                      }
-                      @endphp
-                      <option value="{{ @$data_value->id }}" {{ @$sel }}>{{ @$data_value->name }}</option>
-                      @endforeach
-                    </select>
-                  </div>
-                  <div class="fg fv-row">
-                    <label>Preferred Work Mode <span class="rq">*</span></label>
-                    <div class="rg">
-                      <div class="ri"><input type="radio" name="wm" id="wr" {{ @$application->wm == 'remote' ? 'checked' : '' }} value="remote" />
-                        <label for="wr">Remote</label>
+
+                @php
+                  $hasSecondaryContact = !empty(@$application->secondrary_email) || !empty(@$application->secondary_mobile);
+                @endphp
+                <details class="bd-secondary" {{ $hasSecondaryContact ? 'open' : '' }}>
+                  <summary><i class="fa-solid fa-plus"></i> Add Secondary Contact (Optional)</summary>
+                  <div class="bd-grid bd-grid--two bd-secondary-grid">
+                    <div class="fg fv-row bd-field">
+                      <label>Secondary Email</label>
+                      <div class="bd-control">
+                        <i class="fa-regular fa-envelope"></i>
+                        <input type="email" name="secondrary_email" id="secondrary_email" value="{{ @$application->secondrary_email }}" placeholder="Enter secondary email" />
                       </div>
-                      <div class="ri">
-                        <input type="radio" name="wm" id="wh" {{ (@$application->wm == 'hybrid' || empty(@$application->wm)) ? 'checked' : '' }} value="hybrid" checked />
-                        <label for="wh">Hybrid</label>
-                      </div>
-                      <div class="ri">
-                        <input type="radio" name="wm" id="wo" {{ @$application->wm == 'office' ? 'checked' : '' }} value="office" />
-                        <label for="wo">Work From Office</label>
+                    </div>
+                    <div class="fg fv-row bd-field">
+                      <label>Secondary Number</label>
+                      <div class="bd-phone-control">
+                        <i class="fa-solid fa-mobile-screen-button"></i>
+                        <input type="number" name="secondary_mobile" id="secondary_mobile" value="{{ @$application->secondary_mobile }}" placeholder="Enter secondary number" />
+                        <input type="hidden" value="{{ @$second_phone_code }}" id="secondary_country_code" name="secondary_country_code">
                       </div>
                     </div>
                   </div>
+                </details>
+
+                <details class="bd-extra" open>
+                  <summary>
+                    <span class="bd-extra-title">
+                      <span class="bd-extra-icon"><i class="fa-solid fa-ellipsis"></i></span>
+                      <span>
+                        <strong>Additional Personal Information</strong>
+                        <small>These details are optional and can be added if required.</small>
+                      </span>
+                    </span>
+                    <span class="bd-extra-action">Show Details <i class="fa-solid fa-chevron-down"></i></span>
+                  </summary>
+                  <div class="bd-grid bd-grid--two bd-extra-grid">
+                    <div class="fg fv-row bd-field">
+                      <label>Gender</label>
+                      <div class="bd-control bd-control--select">
+                        <i class="fa-regular fa-user"></i>
+                        <select name="gender" id="gender">
+                          <option value="Rather Not Say" {{ (@$application->gender==='Rather Not Say') ? 'selected' : '' }}>Rather Not Say</option>
+                          <option value="Male" {{ (@$application->gender==='Male') ? 'selected' : '' }}>Male</option>
+                          <option value="Female" {{ (@$application->gender==='Female') ? 'selected' : '' }}>Female</option>
+                        </select>
+                      </div>
+                    </div>
+                    <div class="fg fv-row bd-field">
+                      <label>Date of Birth</label>
+                      <div class="bd-control">
+                        <i class="fa-regular fa-calendar-days"></i>
+                        <input type="date" name="dob" id="dob" value="{{ @$application->dob }}" onclick="this.showPicker()" placeholder="Select date" />
+                      </div>
+                    </div>
+                  </div>
+                </details>
+              </div>
+            </div>
+
+            <div class="fs aw-card">
+              <div class="aw-hero">
+                <div class="aw-hero-title">
+                  <span class="aw-hero-icon"><i class="fa-solid fa-briefcase"></i></span>
+                  <span>
+                    <strong>Availability &amp; Work Preferences</strong>
+                    <small>Define the availability and work preferences for this talent.</small>
+                  </span>
+                </div>
+              </div>
+              <div class="fsc aw-body">
+                <div class="aw-grid">
+                  <div class="fg fv-row aw-field aw-field--wide">
+                    <label>Availability Status <span class="rq">*</span></label>
+                    <select name="serving_notice_period" id="serving_notice_period" class="aw-native-select">
+                      <option value="0" {{ ($snp_mode==0) ? 'selected' : '' }} hidden></option>
+                      <option value="1" {{ ($snp_mode===1) ? 'selected' : '' }}>Serving Notice Period</option>
+                      <option value="2" {{ ($snp_mode===2) ? 'selected' : '' }}>Immediate Joiner</option>
+                    </select>
+                    <div class="aw-option-grid" data-aw-options>
+                      <button type="button" class="aw-option {{ ($snp_mode===2) ? 'is-selected' : '' }}" data-snp-value="2">
+                        <span class="aw-radio"></span>
+                        <i class="fa-solid fa-circle-check"></i>
+                        <strong>Immediate Joiner</strong>
+                      </button>
+                      <button type="button" class="aw-option {{ ($snp_mode===1) ? 'is-selected' : '' }}" data-snp-value="1">
+                        <span class="aw-radio"></span>
+                        <i class="fa-regular fa-clock"></i>
+                        <strong>Serving Notice Period</strong>
+                      </button>
+                    </div>
+                  </div>
+
+                  <div class="fg fv-row aw-field">
+                    <label>Available From <span class="rq">*</span></label>
+                    <div class="aw-date-wrap" id="snp-immediate" style="{{ ($snp_mode===1 || $snp_mode===2) ? 'display:flex' : @$snp_text_one }}">
+                      <input type="text" id="text_display" value="{{ ($snp_mode===1) ? 'Available from' : 'Immediate' }}" class="form-control form-control-solid" placeholder="" readonly>
+                      <input type="text" id="np_id_display" class="form-control form-control-solid" placeholder="Select date" name="np_id_display" value="{{ ($snp_last_working) ? date('d/M/Y',strtotime(@$snp_last_working)) : '' }}" onclick="document.getElementById('np_id').click()" readonly>
+                      <input type="date" class="form-control form-control-solid np_id" name="np_id" id="np_id" style="opacity: 0; position: absolute; z-index: -1;top: 0;" onclick="this.showPicker()">
+                    </div>
+                    <select class="form-select form-select-solid aw-notice-days" arial-label="Select ddl_np_id" id="ddl_np_id" name="ddl_np_id" style="display:none;">
+                      <option value="">Select Notice Period</option>
+                      @php 
+                          for ($i = 1; $i <= 200; $i++) {
+                                  $s = 'Day';
+                                  if($i > 1){
+                                      $s = 'Days';
+                                  }
+                                $selected = ($i == @$application->np_id) ? 'selected' : '';
+                              echo "<option value=\"$i\" $selected>{$i} {$s}</option>";
+                          }
+                      @endphp
+                    </select>
+                    <input type="text" id="calender" name="calender" style="display:none">
+                  </div>
+                </div>
+
+                <div class="aw-grid aw-grid--work">
+                  <div class="fg fv-row aw-field aw-field--wide">
+                    <label>Preferred Work Mode <span class="rq">*</span></label>
+                    <div class="aw-work-grid">
+                      <label class="aw-work-option" for="wr">
+                        <input type="radio" name="wm" id="wr" {{ @$application->wm == 'remote' ? 'checked' : '' }} value="remote" />
+                        <span class="aw-radio"></span>
+                        <i class="fa-solid fa-wifi"></i>
+                        <strong>Remote</strong>
+                      </label>
+                      <label class="aw-work-option" for="wh">
+                        <input type="radio" name="wm" id="wh" {{ (@$application->wm == 'hybrid' || empty(@$application->wm)) ? 'checked' : '' }} value="hybrid" checked />
+                        <span class="aw-radio"></span>
+                        <i class="fa-solid fa-location-dot"></i>
+                        <strong>Hybrid</strong>
+                      </label>
+                      <label class="aw-work-option" for="wo">
+                        <input type="radio" name="wm" id="wo" {{ @$application->wm == 'office' ? 'checked' : '' }} value="office" />
+                        <span class="aw-radio"></span>
+                        <i class="fa-regular fa-building"></i>
+                        <strong>Work From Office</strong>
+                      </label>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="aw-info-strip">
+                  <i class="fa-regular fa-circle-info"></i>
+                  <span>Availability and work preferences help match this talent with the right opportunities in the marketplace.</span>
                 </div>
               </div>
             </div>
@@ -461,23 +581,88 @@ if($snp_mode== 1){
             </div>
 
             <!-- Professional Details -->
-            <div class="fs">
-              <div class="fsh">
-                <h3>Professional Details</h3>
+            <div class="fs pd-card">
+              <div class="pd-hero">
+                <div class="pd-hero-title">
+                  <span class="pd-hero-icon"><i class="fa-solid fa-briefcase"></i></span>
+                  <span>
+                    <strong>Professional Profile</strong>
+                    <small>Define the professional experience and role for this talent. This helps position them correctly in the marketplace.</small>
+                  </span>
+                </div>
+                <span class="pd-talent-badge"><i class="fa-regular fa-building"></i> In-House Talent</span>
               </div>
-              <div class="fsc">
-                <div class="g4">
-                  <div class="fg fv-row">
+              <div class="fsc pd-body">
+                <div class="pd-info-strip">
+                  <i class="fa-regular fa-circle-info"></i>
+                  <span>Some details may be pre-filled from your internal employee records. Please review and update if needed.</span>
+                </div>
+
+                <div class="pd-field-grid pd-field-grid--two">
+                  <div class="fg fv-row pd-field">
                     <label>Current Company <span class="rq">*</span></label>
-                    <input type="text" name="current_company" id="current_company" value="{{ @$application->current_company }}" placeholder="Enter current company" />
+                    <div class="pd-control">
+                      <i class="fa-regular fa-building"></i>
+                      <input type="text" name="current_company" id="current_company" value="{{ @$application->current_company }}" placeholder="Enter current company" />
+                    </div>
+                    <small>Auto-filled from employee records</small>
                   </div>
-                  <div class="fg fv-row">
+                  <div class="fg fv-row pd-field">
                     <label>Current Designation <span class="rq">*</span></label>
-                    <input type="text" name="current_designation" id="current_designation" value="{{( @$application->current_designation) ? @$application->current_designation : @$jobDetail->title }}" placeholder="Enter current designation" />
+                    <div class="pd-control">
+                      <i class="fa-solid fa-briefcase"></i>
+                      <input type="text" name="current_designation" id="current_designation" value="{{( @$application->current_designation) ? @$application->current_designation : @$jobDetail->title }}" placeholder="Enter current designation" />
+                    </div>
                   </div>
-                  <div class="fg fv-row">
-                    <label>Total Experience <span class="rq">*</span></label>
-                    <div class="ei">
+                </div>
+
+                <div class="pd-field-grid pd-field-grid--three">
+                  <div class="fg fv-row pd-field">
+                    <label>Employment Type <span class="rq">*</span></label>
+                    <div class="pd-control pd-control--select">
+                      <i class="fa-solid fa-users"></i>
+                      <select name="employmentType" id="EmploymentType">
+                        <option value="">Select employment type</option>
+                        <option {{ (@$application->employmentType==='Full Time') ? 'selected' : '' }}>Full Time</option>
+                        <option {{ (@$application->employmentType==='Contract') ? 'selected' : '' }}>Contract</option>
+                        <option {{ (@$application->employmentType==='Part Time') ? 'selected' : '' }}>Part Time</option>
+                        <option {{ (@$application->employmentType==='Freelance') ? 'selected' : '' }}>Freelance</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div class="fg fv-row d-none">
+                      <label>Commission Type <span class="rq">*</span></label>
+                      @php
+                          $selected = '';
+                            if(@$application->comission_type==''){
+                              $selected = 'selected';
+                            }
+                      @endphp
+                      <select name="comission_type" id="comission_type">
+                        <option value="">Select Commision type</option>
+                        <option value="1" {{ (@$application->comission_type==1) ? 'selected' : '' }}>Free (Not charged from Clients)</option>
+                        <option value="2" {{ (@$application->comission_type==2 || @$application->comission_type=='') ? 'selected' : '' }}>Paid Service</option>
+                      </select>
+                  </div>
+                  <div class="fg fv-row pd-field">
+                    <label>Employee ID <span>(Optional)</span></label>
+                    <div class="pd-control">
+                      <i class="fa-regular fa-id-card"></i>
+                      <input type="email" class="form-control form-control-solid" name="employee_number" id="employee_number" placeholder="Enter employee number" value="{{ @$application->employee_number }}">
+                    </div>
+                    <small>Internal employee identifier</small>
+                  </div>
+                </div>
+
+                <div class="pd-divider"></div>
+
+                <div class="pd-experience-grid">
+                  <div class="fg fv-row pd-exp-card">
+                    <div class="pd-exp-head">
+                      <span><i class="fa-regular fa-clock"></i></span>
+                      <strong>Total Experience <span class="rq">*</span></strong>
+                    </div>
+                    <div class="ei pd-exp-inputs">
                       @php
                        $value = @$application->total_exp; // Convert to string to preserve decimal
                        if(!is_null($value)){
@@ -514,7 +699,7 @@ if($snp_mode== 1){
                             }
                           @endphp
                       </select>
-                     <select class="" arial-label="Select total_exp_month" id="total_exp_month" name="total_exp_month">
+                      <select class="" arial-label="Select total_exp_month" id="total_exp_month" name="total_exp_month">
                           <option value="">Select Month</option>
                           @php 
                                        for ($i = 0; $i <= 11; $i++) {
@@ -537,9 +722,13 @@ if($snp_mode== 1){
                         </select>
                     </div>
                   </div>
-                  <div class="fg fv-row">
-                    <label>Relevant Experience <span class="rq">*</span></label>
-                    <div class="ei">
+
+                  <div class="fg fv-row pd-exp-card pd-exp-card--blue">
+                    <div class="pd-exp-head">
+                      <span><i class="fa-regular fa-file-lines"></i></span>
+                      <strong>Relevant Experience <span class="rq">*</span></strong>
+                    </div>
+                    <div class="ei pd-exp-inputs">
                         @php
 
                             $valuew = @$application->rel_exp;
@@ -604,262 +793,274 @@ if($snp_mode== 1){
                           @endphp
                         </select>
                     </div>
-                  </div>
-                </div>
-                <div class="g4">
-                  
-                  <div class="fg fv-row">
-                    <label>Employment Type</label>
-                    <select name="employmentType" id="EmploymentType">
-                      <option value="">Select employment type</option>
-                      <option {{ (@$application->employmentType==='Full Time') ? 'selected' : '' }}>Full Time</option>
-                      <option {{ (@$application->employmentType==='Contract') ? 'selected' : '' }}>Contract</option>
-                      <option {{ (@$application->employmentType==='Part Time') ? 'selected' : '' }}>Part Time</option>
-                      <option {{ (@$application->employmentType==='Freelance') ? 'selected' : '' }}>Freelance</option>
-                    </select>
-                  </div>
-                   <div class="fg fv-row">
-                        <label>Commission Type <span class="rq">*</span></label>
-                        @php
-                            $selected = '';
-                              if(@$application->comission_type==''){
-                                $selected = 'selected';
-                              }
-                        @endphp
-                        <select name="comission_type" id="comission_type">
-                          <option value="">Select Commision type</option>
-                          <option value="1" {{ (@$application->comission_type==1) ? 'selected' : '' }}>Free (Not charged from Clients)</option>
-                          <option value="2" {{ (@$application->comission_type===2) ? 'selected' : '' }}>Paid Service</option>>
-                        </select>
-                   </div>
-                  <div class="fg fv-row">
-                    <label>Notice Period <span class="rq">*</span></label>
-                    <select name="serving_notice_period" id="serving_notice_period">
-                      <option value="0" {{ ($snp_mode==0) ? 'selected' : '' }}>Select notice period</option>
-                      <option value="1" {{ ($snp_mode===1) ? 'selected' : '' }}>Serving Notice Period</option>
-                      <option value="2" {{ ($snp_mode===2) ? 'selected' : '' }}>Immediate</option>
-                    </select>
+                    <small>Relevant experience in the recommended/primary skills.</small>
                   </div>
 
-                    <div class="fg fv-row">
-                       <label>&nbsp;</label>
-                        <div style="{{ @$snp_text_one }}" id="snp-immediate" class="" >
-                            <div style="position: relative;margin-right: 6px;">
-                              <input type="text" id="text_display" value="{{ $snp_text_dummy }}" class="form-control form-control-solid" placeholder="" readonly>
-                            </div>
-                          
-                            <div style="position: relative;">
-                                <input type="text" id="np_id_display" class="form-control form-control-solid" placeholder="Select last working date" name="np_id_display" value="{{ ($snp_last_working) ? date('d/M/Y',strtotime(@$snp_last_working)) : '' }}" onclick="document.getElementById('np_id').click()" readonly>
-                                <input type="date" class="form-control form-control-solid np_id" name="np_id" id="np_id" style="opacity: 0; position: absolute; z-index: -1;top: 0;" onclick="this.showPicker()">
-                            </div>
-                        </div>
-                    
-                        <select class="form-select form-select-solid" arial-label="Select ddl_np_id" id="ddl_np_id" name="ddl_np_id" style="<?php echo @$snp_text_zero; ?>">
-                          <option value="">Select Notice Period</option>
-                          @php 
-                              for ($i = 1; $i <= 200; $i++) {
-                                      $s = 'Day';
-                                      if($i > 1){
-                                          $s = 'Days';
-                                      }
-                                    $selected = ($i == @$application->np_id) ? 'selected' : '';
-                                  echo "<option value=\"$i\" $selected>{$i} {$s}</option>";
-                              }
-                          @endphp
-                        </select>
-                        
-                        <input type="text" id="calender" name="calender" style="display:none">
-                    </div>                  
-                </div>
-                <div class="g4">
-                  <div class="fg fv-row">
-                    <label>Enter Employee ID (If Any)</label>
-                     <input type="email" class="form-control form-control-solid" name="employee_number" id="employee_number" placeholder="Enter employee number" value="{{ @$application->employee_number }}">
+                  <div class="pd-tip-card">
+                    <span class="pd-tip-icon"><i class="fa-regular fa-lightbulb"></i></span>
+                    <div>
+                      <strong>Tip</strong>
+                      <p>Relevant experience should match the skills you want to position this talent for in the marketplace.</p>
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
 
             <!-- Salary Details -->
-            <div class="fs">
-              <div class="fsh">
-                <h3>Bill Rates Details</h3>
+            <div class="fs br-card">
+              <div class="br-hero">
+                <div class="br-hero-title">
+                  <span class="br-hero-icon"><i class="fa-solid fa-coins"></i></span>
+                  <span>
+                    <strong>Commercials &amp; Bill Rates</strong>
+                    <small>Define the commercial model and rates for this talent. Fields will adjust based on your selection.</small>
+                  </span>
+                </div>
+                <div class="br-hero-help">
+                  <i class="fa-regular fa-circle-info"></i>
+                  <span>Choose how this talent will be offered to clients.</span>
+                </div>
               </div>
-              <div class="fsc">
-                <div class="sg">
-                  <div>
-                    <div class="fg fv-row">
-                      <label style="color: var(--p)">Annual Rate</label>
-                      <div style="font-size: 1rem; font-weight: 600; color:var(--t); margin-bottom: 4px;">Currency <span class="rq">*</span>
-                      </div>
-                      
-                      <div class="col-2 pl-0 d-none">
-                        <select class="form-select form-select-solid" arial-label="Select Annual Salary" name="pay_rate_mode" id="pay_rate_mode">                          
-                        @foreach($salaryMode as $key=>$val)
-                          <option value="{{ $key }}" {{ (2==$key) ? 'selected' : '' }}>{{ $val }}</option>	
-                        @endforeach					
-                        </select>
-                      </div>
 
-                      <div class="col-2 pl-0 d-none">
-                        <select class="form-select form-select-solid" arial-label="Select Annual Salary" name="bill_rate_mode" id="bill_rate_mode">                         
-                        @foreach($salaryMode as $key=>$val)							
-                          <option value="{{ $key }}" {{ (2==$key) ? 'selected' : '' }}>{{ $val }}</option>	
-                        @endforeach
-                        </select>
-                      </div>
+              <div class="fsc br-body">
+                <div class="br-step">
+                  <div class="br-step-head">
+                    <span class="br-step-num">1</span>
+                    <span>
+                      <strong>Commercial Model <span class="rq">*</span></strong>
+                      <small>Select how this talent will be offered to clients</small>
+                    </span>
+                  </div>
+                  <div class="br-model-grid">
+                    <button type="button" class="br-model-option {{ (@$application->comission_type == 1) ? 'is-selected' : '' }}" data-commercial-value="1">
+                      <span class="br-radio"></span>
+                      <span class="br-option-icon"><i class="fa-regular fa-gift"></i></span>
+                      <span class="br-option-copy">
+                        <strong>Free Service</strong>
+                        <em>No charge to client</em>
+                        <small>This talent will be provided to clients at no commercial charge.</small>
+                      </span>
+                    </button>
+                    <button type="button" class="br-model-option {{ (@$application->comission_type == 2 || @$application->comission_type == '') ? 'is-selected' : '' }}" data-commercial-value="2">
+                      <span class="br-radio"></span>
+                      <span class="br-option-icon"><i class="fa fa-rupee-sign"></i></span>
+                      <span class="br-option-copy">
+                        <strong>Paid Service</strong>
+                        <em>Client will be billed</em>
+                        <small>Set pay rate, bill rate and manage margin.</small>
+                      </span>
+                    </button>
+                  </div>
+                </div>
 
+                <div class="br-step br-rates-step">
+                  <div class="br-rates-head">
+                    <div class="br-step-head">
+                      <span class="br-step-num">2</span>
+                      <span>
+                        <strong>Rates &amp; Cost Details</strong>
+                        <small>Enter candidate cost and client bill rate. Other values will be calculated automatically.</small>
+                      </span>
+                    </div>
+                    <div class="br-currency">
+                      <label for="pay_rate_currency">Currency</label>
                       <select id="pay_rate_currency" name="pay_rate_currency">
-                          @php  
+                          @php
                               $current_ctc_cur	=	"";
                               $current_ctc_cur	=	@$application->pay_rate_currency;
-                              
+
                               foreach($currency as $key=>$val){
                                   $sel	=	'';
                                   if($current_ctc_cur===null){
                                     if($currency_code==$val){
-                                      $sel	=	'selected="selected"';	
-                                    }	
+                                      $sel	=	'selected="selected"';
+                                    }
                                   }else{
                                     if($current_ctc_cur == $key){
-                                      $sel	=	'selected="selected"';	
-                                  }	
+                                      $sel	=	'selected="selected"';
                                   }
-                                                      
-                                  echo '<option value="'.$key.'"  '.$sel.'>'.$val.'</option>';	
+                                  }
+
+                                  echo '<option value="'.$key.'"  '.$sel.'>'.$val.'</option>';
                               }
                           @endphp
                       </select>
                     </div>
-                    <div class="fg fv-row"><label>Pay Rate (Annual) <span  style="float: right; color: #ef560a;"id="pay_rate_annual_usd"> </span></label>
-                      <div class="ig">
-                        <input type="number" name="pay_annual" id="pay_annual" value="{{ @$application->ctc_yearly }}" placeholder="Enter amount" />
-                        <span class="ig-a changeTextCurrency">INR</span>
-                      </div>
-                      <span class="form-text text-muted payrateannual"></span>
-                    </div>
-                    <div class="fg fv-row"><label>Bill Rate (Annual)  <span style="float: right; color: #ef560a;" id="bill_rate_annual_usd"> </span></label>
-                      <div class="ig">
-                        <input type="number" name="bill_annual" id="bill_annual" value="{{ @$application->ectc_yearly }}" placeholder="Enter amount" />
-                        <span class="ig-a changeTextCurrency">INR</span>
-                      </div>
-                      <span class="form-text text-muted billrateannual"></span>
-                    </div>
                   </div>
-                  <div>
-                    <div class="fg fv-row">
-                      <label style="color: var(--p)">Monthly Rate</label>
-                      <div style="font-size: 1rem; font-weight: 600; color: var(--t); margin-bottom: 4px;">Currency <span class="rq">*</span>
-                      </div>
-                      <select name="bill_rate_currency" id="bill_rate_currency">
-                          @php 
-                                          $current_ectc_cur	=	"";
-                                          $current_ectc_cur	=	@$application->bill_rate_currency;
-                                          foreach($currency as $key=>$val){
-                                            $sel	=	'';
-                                            if($current_ectc_cur===null){
-                                              if($currency_code==$val){
-                                                $sel	=	'selected="selected"';	
-                                              }
-                                            }else{
-                                              if($current_ectc_cur == $key){
-                                              $sel	=	'selected="selected"';	
-                                              }	
-                                            }
-                                            
-                                            echo '<option value="'.$key.'"   '.$sel.' >'.$val.'</option>';	
-                                          }
-                          @endphp
-                      </select>
-                    </div>
-                    <div class="fg fv-row"><label>Pay Rate (Monthly) <span style="float: right; color: #ef560a;" id="pay_rate_monthly_usd"></span></label>
-                      <div class="ig">
-                        <input type="number" name="pay_monthly" id="pay_monthly" value="{{ @$application->ctc_monthly }}" placeholder="Enter amount" />
-                        <span class="ig-a changeTextCurrency">INR</span>
-                      </div>
-                      <span class="form-text text-muted payratemonthly"></span>
-                    </div>
-                    <div class="fg fv-row"><label>Bill Rate (Monthly) <span style="float: right; color: #ef560a;" id="bill_rate_monthly_usd"> </span></label>
-                      <div class="ig"><input type="number" name="bill_monthly" id="bill_monthly" value="{{ @$application->ectc_monthly }}" placeholder="Enter amount" />
-                        <span class="ig-a changeTextCurrency">INR</span>
-                      </div>
-                      <span class="form-text text-muted billratemonthly"></span>
-                    </div>
-                  </div>
-                  <div>
-                    <div class="fg fv-row"><label style="color: var(--p)">Hourly Rate</label>
-                      <div style="font-size: 1rem; font-weight: 600; color: var(--t); margin-bottom: 4px;">Currency <span class="rq">*</span>
-                      </div>
-                      <select name="current_th_cur" id="current_th_cur">
-                          @php
-                              $current_ectc_cur	=	"";
-                              $current_ectc_cur	=	@$application->bill_rate_currency;
-                              foreach($currency as $key=>$val){
-                                $sel	=	'';
-                                if($current_ectc_cur===null){
-                                  if($currency_code==$val){
-                                    $sel	=	'selected="selected"';	
-                                  }
-                                }else{
-                                  if($current_ectc_cur == $key){
-                                  $sel	=	'selected="selected"';	
-                                  }	
+
+                  <div class="d-none">
+                    <select class="form-select form-select-solid" arial-label="Select Annual Salary" name="pay_rate_mode" id="pay_rate_mode">
+                    @foreach($salaryMode as $key=>$val)
+                      <option value="{{ $key }}" {{ (2==$key) ? 'selected' : '' }}>{{ $val }}</option>
+                    @endforeach
+                    </select>
+                    <select class="form-select form-select-solid" arial-label="Select Annual Salary" name="bill_rate_mode" id="bill_rate_mode">
+                    @foreach($salaryMode as $key=>$val)
+                      <option value="{{ $key }}" {{ (2==$key) ? 'selected' : '' }}>{{ $val }}</option>
+                    @endforeach
+                    </select>
+                    <select name="bill_rate_currency" id="bill_rate_currency">
+                        @php
+                            $current_ectc_cur	=	"";
+                            $current_ectc_cur	=	@$application->bill_rate_currency;
+                            foreach($currency as $key=>$val){
+                              $sel	=	'';
+                              if($current_ectc_cur===null){
+                                if($currency_code==$val){
+                                  $sel	=	'selected="selected"';
                                 }
-                                
-                                echo '<option value="'.$key.'"   '.$sel.' >'.$val.'</option>';	
+                              }else{
+                                if($current_ectc_cur == $key){
+                                $sel	=	'selected="selected"';
+                                }
                               }
-                          @endphp
-                      </select>
-                    </div>
-                    <div class="fg fv-row"><label>Pay Rate (Hourly) <span style="float: right; color: #ef560a;" id="pay_rate_hourly_usd"> </span></label>
-                      <div class="ig">
-                        <input type="number" name="pay_rate_amount" id="pay_rate_amount" value="{{ @$application->ctc_hourly }}" placeholder="Enter amount" />
-                        <span class="ig-a changeTextCurrency">INR</span>
-                      </div>
-                      <span class="form-text text-muted payratehourly"></span> 
-                    </div>
-                    <div class="fg fv-row"><label>Bill Rate (Hourly) <span  style="float: right; color: #ef560a;"id="bill_rate_hourly_usd"> </span></label>
-                      <div class="ig">
-                        <input type="number" name="bill_rate_amount" id="bill_rate_amount" value="{{ @$application->ectc_hourly }}" placeholder="Enter amount" />
-                        <span class="ig-a changeTextCurrency">INR</span>
-                      </div>
-                      <span class="form-text text-muted billratehourly"></span>
-                    </div>
+
+                              echo '<option value="'.$key.'"   '.$sel.' >'.$val.'</option>';
+                            }
+                        @endphp
+                    </select>
+                    <select name="current_th_cur" id="current_th_cur">
+                        @php
+                            $current_ectc_cur	=	"";
+                            $current_ectc_cur	=	@$application->bill_rate_currency;
+                            foreach($currency as $key=>$val){
+                              $sel	=	'';
+                              if($current_ectc_cur===null){
+                                if($currency_code==$val){
+                                  $sel	=	'selected="selected"';
+                                }
+                              }else{
+                                if($current_ectc_cur == $key){
+                                $sel	=	'selected="selected"';
+                                }
+                              }
+
+                              echo '<option value="'.$key.'"   '.$sel.' >'.$val.'</option>';
+                            }
+                        @endphp
+                    </select>
                   </div>
-                  <div>
-                    <div class="fg fv-row">
-                          <label style="color: var(--p)">Other Bill Details</label>
-                        <div style="display: flex;">
-                            <div class="">
-                              <label>Profit Percentage</label>
-                              <div class="ig">
-                                <input type="number" value="{{ @$application->percentage_hike }}" name="percentage_hike" id="percentage_hike" style="text-align: center" />
-                                <span class="ig-a">%</span>
-                              </div>
-                              <div style="font-size: 0.95rem; color: var(--t-l); margin-top: 3px;">(Calculated from Annual CTC)</div>
-                            </div>
-                            <div class="d-none" style="margin-left: 10px;">
-                              <div style="margin-bottom: 8px">
-                                <label style="font-size: 1rem; font-weight: 600">Offer in Hand?</label>
-                                <div class="rg">
-                                  <div class="ri">
-                                    <input type="radio" name="oh" id="ohy" value="yes" {{ @$application->oh == 'yes' ? 'checked' : '' }} />
-                                    <label for="ohy">Yes</label>
-                                  </div>
-                                  <div class="ri">
-                                    <input type="radio" name="oh" id="ohn" value="no"  {{ (@$application->wm == 'no' || empty(@$application->oh)) ? 'checked' : '' }}  />
-                                    <label for="ohn">No</label>
-                                  </div>
-                                </div>
-                              </div>
-                            </div>
+
+                  <div class="br-rate-grid">
+                    <div class="br-rate-panel br-pay-panel">
+                      <div class="br-panel-head">
+                        <span class="br-panel-icon"><i class="fa-regular fa-user"></i></span>
+                        <span>
+                          <strong>Candidate Cost (Pay Rate)</strong>
+                          <small>What you pay to the candidate</small>
+                        </span>
+                      </div>
+                      <div class="br-rate-tabs" data-rate-tabs="pay">
+                        <button type="button" class="is-active" data-rate-tab="annual">Annual</button>
+                        <button type="button" data-rate-tab="monthly">Monthly</button>
+                        <button type="button" data-rate-tab="hourly">Hourly</button>
+                      </div>
+                      <div class="br-rate-field is-active" data-rate-panel="pay-annual">
+                        <label>Pay Rate (Annual) <span class="rq">*</span><span id="pay_rate_annual_usd"></span></label>
+                        <div class="ig">
+                          <input type="number" name="pay_annual" id="pay_annual" value="{{ @$application->ctc_yearly }}" placeholder="Enter amount" />
+                          <span class="ig-a changeTextCurrency">INR</span>
                         </div>
+                        <span class="form-text text-muted payrateannual"></span>
+                      </div>
+                      <div class="br-rate-field" data-rate-panel="pay-monthly">
+                        <label>Pay Rate (Monthly) <span class="rq">*</span><span id="pay_rate_monthly_usd"></span></label>
+                        <div class="ig">
+                          <input type="number" name="pay_monthly" id="pay_monthly" value="{{ @$application->ctc_monthly }}" placeholder="Enter amount" />
+                          <span class="ig-a changeTextCurrency">INR</span>
+                        </div>
+                        <span class="form-text text-muted payratemonthly"></span>
+                      </div>
+                      <div class="br-rate-field" data-rate-panel="pay-hourly">
+                        <label>Pay Rate (Hourly) <span class="rq">*</span><span id="pay_rate_hourly_usd"></span></label>
+                        <div class="ig">
+                          <input type="number" name="pay_rate_amount" id="pay_rate_amount" value="{{ @$application->ctc_hourly }}" placeholder="Enter amount" />
+                          <span class="ig-a changeTextCurrency">INR</span>
+                        </div>
+                        <span class="form-text text-muted payratehourly"></span>
+                      </div>
+                      <div class="br-auto-box">
+                        <strong>Auto Calculated</strong>
+                        <div>
+                          <span><em id="br_pay_auto_label_one">Monthly Cost</em><b id="br_pay_monthly_display">0</b></span>
+                          <span><em id="br_pay_auto_label_two">Hourly Cost</em><b id="br_pay_hourly_display">0</b></span>
+                        </div>
+                      </div>
+                      <div class="br-formula"><i class="fa-regular fa-circle-info"></i> Monthly = Annual / 12 <span>|</span> Hourly = Annual / 2080 hours</div>
                     </div>
 
-                    <div class="fg fv-row">
-                      <label>Comments</label>
-                      <textarea name="comment" id="comment" placeholder="Enter comments about salary expectations or any other details..." rows="4">{{ @$application->comment }}</textarea>
-                      <div class="cc">0 / 500</div>
+                    <div class="br-rate-panel br-bill-panel">
+                      <div class="br-panel-head">
+                        <span class="br-panel-icon"><i class="fa-solid fa-coins"></i></span>
+                        <span>
+                          <strong>Client Bill Rate</strong>
+                          <small>What you charge to the client</small>
+                        </span>
+                      </div>
+                      <div class="br-rate-tabs" data-rate-tabs="bill">
+                        <button type="button" class="is-active" data-rate-tab="annual">Annual</button>
+                        <button type="button" data-rate-tab="monthly">Monthly</button>
+                        <button type="button" data-rate-tab="hourly">Hourly</button>
+                      </div>
+                      <div class="br-rate-field is-active" data-rate-panel="bill-annual">
+                        <label>Bill Rate (Annual) <span class="rq">*</span><span id="bill_rate_annual_usd"></span></label>
+                        <div class="ig">
+                          <input type="number" name="bill_annual" id="bill_annual" value="{{ @$application->ectc_yearly }}" placeholder="Enter amount" />
+                          <span class="ig-a changeTextCurrency">INR</span>
+                        </div>
+                        <span class="form-text text-muted billrateannual"></span>
+                      </div>
+                      <div class="br-rate-field" data-rate-panel="bill-monthly">
+                        <label>Bill Rate (Monthly) <span class="rq">*</span><span id="bill_rate_monthly_usd"></span></label>
+                        <div class="ig">
+                          <input type="number" name="bill_monthly" id="bill_monthly" value="{{ @$application->ectc_monthly }}" placeholder="Enter amount" />
+                          <span class="ig-a changeTextCurrency">INR</span>
+                        </div>
+                        <span class="form-text text-muted billratemonthly"></span>
+                      </div>
+                      <div class="br-rate-field" data-rate-panel="bill-hourly">
+                        <label>Bill Rate (Hourly) <span class="rq">*</span><span id="bill_rate_hourly_usd"></span></label>
+                        <div class="ig">
+                          <input type="number" name="bill_rate_amount" id="bill_rate_amount" value="{{ @$application->ectc_hourly }}" placeholder="Enter amount" />
+                          <span class="ig-a changeTextCurrency">INR</span>
+                        </div>
+                        <span class="form-text text-muted billratehourly"></span>
+                      </div>
+                      <div class="br-auto-box">
+                        <strong>Auto Calculated</strong>
+                        <div>
+                          <span><em id="br_bill_auto_label_one">Monthly Bill Rate</em><b id="br_bill_monthly_display">0</b></span>
+                          <span><em id="br_bill_auto_label_two">Hourly Bill Rate</em><b id="br_bill_hourly_display">0</b></span>
+                        </div>
+                      </div>
+                      <div class="br-formula"><i class="fa-regular fa-circle-info"></i> Monthly = Annual / 12 <span>|</span> Hourly = Annual / 2080 hours</div>
+                    </div>
+
+                    <div class="br-margin-panel">
+                      <div class="br-panel-head">
+                        <span class="br-panel-icon"><i class="fa-solid fa-chart-simple"></i></span>
+                        <span>
+                          <strong>Margin Summary</strong>
+                          <small>Calculated automatically</small>
+                        </span>
+                      </div>
+                      <div class="br-margin-list">
+                        <span><em id="br_summary_pay_label">Annual Pay Rate</em><b id="br_summary_pay_annual">0</b></span>
+                        <span><em id="br_summary_bill_label">Annual Bill Rate</em><b id="br_summary_bill_annual">0</b></span>
+                        <span><em id="br_summary_margin_label">Annual Margin</em><b id="br_summary_margin">0</b></span>
+                        <span><em id="br_summary_percent_label">Margin Percentage</em><b id="br_summary_percent">0%</b></span>
+                      </div>
+                      <div class="br-margin-state">
+                        <i class="fa-solid fa-check"></i>
+                        <span><strong id="br_margin_status">Healthy Margin</strong><small id="br_margin_note">This margin looks good.</small></span>
+                      </div>
+                      <input type="hidden" value="{{ @$application->percentage_hike }}" name="percentage_hike" id="percentage_hike" />
+                      <div class="fg fv-row">
+                        <label>Comments (Optional)</label>
+                        <textarea name="comment" id="comment" maxlength="500" placeholder="Enter comments about salary expectations, client specific rates or any other details..." rows="4">{{ @$application->comment }}</textarea>
+                        <div class="cc" id="br_comment_count">0 / 500</div>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -1499,6 +1700,252 @@ $(document).ready(function () {
     let payBase = { hourly: 0 };
     let billBase = { hourly: 0 };
 
+    // Keeps the redesigned commercials UI in sync with the original submitted rate fields.
+    function commercialNumber(value) {
+        return parseFloat((value || '0').toString().replace(/,/g, '')) || 0;
+    }
+
+    function commercialFormat(value, suffix) {
+        let numeric = commercialNumber(value);
+        if (!numeric) {
+            return suffix ? '0' + suffix : '0';
+        }
+        let formatted = numeric.toLocaleString('en-IN', {
+            maximumFractionDigits: 2
+        });
+        return suffix ? formatted + suffix : formatted;
+    }
+
+    let commercialSavedPaidValues = null;
+
+    function isFreeCommercialMode() {
+        return ($('#comission_type').val() || '2').toString() === '1';
+    }
+
+    function snapshotPaidBillValues() {
+        commercialSavedPaidValues = {
+            annual: $('#bill_annual').val(),
+            monthly: $('#bill_monthly').val(),
+            hourly: $('#bill_rate_amount').val(),
+            profit: $('#percentage_hike').val()
+        };
+    }
+
+    function restorePaidBillValues() {
+        if (!commercialSavedPaidValues) {
+            return;
+        }
+
+        $('#bill_annual').val(commercialSavedPaidValues.annual || '');
+        $('#bill_monthly').val(commercialSavedPaidValues.monthly || '');
+        $('#bill_rate_amount').val(commercialSavedPaidValues.hourly || '');
+        $('#percentage_hike').val(commercialSavedPaidValues.profit || '');
+    }
+
+    function syncBillFieldsFromAnnual() {
+        let annual = commercialNumber($('#bill_annual').val());
+        let monthly = annual / MONTHS_PER_YEAR;
+        let hourly = monthly / HOURS_PER_MONTH;
+
+        $('#bill_monthly').val(format(monthly));
+        $('#bill_rate_amount').val(format(hourly));
+        updateBillUI();
+    }
+
+    function syncCommercialRateTab(tab) {
+        $('.br-rate-tabs button').removeClass('is-active');
+        $('.br-rate-tabs button[data-rate-tab="' + tab + '"]').addClass('is-active');
+        $('.br-rate-field').removeClass('is-active');
+        $('[data-rate-panel="pay-' + tab + '"], [data-rate-panel="bill-' + tab + '"]').addClass('is-active');
+    }
+
+    function activeCommercialRateTab() {
+        return $('.br-rate-tabs button.is-active').first().data('rate-tab') || 'annual';
+    }
+
+    function commercialModeConfig(tab, values) {
+        let config = {
+            annual: {
+                payLabel: 'Annual Pay Rate',
+                billLabel: 'Annual Bill Rate',
+                marginLabel: 'Annual Margin',
+                basePay: values.payAnnual,
+                baseBill: values.billAnnual,
+                payAutoOneLabel: 'Monthly Cost',
+                payAutoOneValue: values.payMonthly,
+                payAutoTwoLabel: 'Hourly Cost',
+                payAutoTwoValue: values.payHourly,
+                billAutoOneLabel: 'Monthly Bill Rate',
+                billAutoOneValue: values.billMonthly,
+                billAutoTwoLabel: 'Hourly Bill Rate',
+                billAutoTwoValue: values.billHourly
+            },
+            monthly: {
+                payLabel: 'Monthly Pay Rate',
+                billLabel: 'Monthly Bill Rate',
+                marginLabel: 'Monthly Margin',
+                basePay: values.payMonthly,
+                baseBill: values.billMonthly,
+                payAutoOneLabel: 'Annual Cost',
+                payAutoOneValue: values.payAnnual,
+                payAutoTwoLabel: 'Hourly Cost',
+                payAutoTwoValue: values.payHourly,
+                billAutoOneLabel: 'Annual Bill Rate',
+                billAutoOneValue: values.billAnnual,
+                billAutoTwoLabel: 'Hourly Bill Rate',
+                billAutoTwoValue: values.billHourly
+            },
+            hourly: {
+                payLabel: 'Hourly Pay Rate',
+                billLabel: 'Hourly Bill Rate',
+                marginLabel: 'Hourly Margin',
+                basePay: values.payHourly,
+                baseBill: values.billHourly,
+                payAutoOneLabel: 'Annual Cost',
+                payAutoOneValue: values.payAnnual,
+                payAutoTwoLabel: 'Monthly Cost',
+                payAutoTwoValue: values.payMonthly,
+                billAutoOneLabel: 'Annual Bill Rate',
+                billAutoOneValue: values.billAnnual,
+                billAutoTwoLabel: 'Monthly Bill Rate',
+                billAutoTwoValue: values.billMonthly
+            }
+        };
+
+        return config[tab] || config.annual;
+    }
+
+    function refreshCommercialAfterSplit() {
+        updatePayUI();
+        updateBillUI();
+        refreshCommercialSummary();
+    }
+
+    function refreshCommercialSummary() {
+        let payAnnual = commercialNumber($('#pay_annual').val());
+        let payMonthly = commercialNumber($('#pay_monthly').val());
+        let payHourly = commercialNumber($('#pay_rate_amount').val());
+        let billAnnual = commercialNumber($('#bill_annual').val());
+        let billMonthly = commercialNumber($('#bill_monthly').val());
+        let billHourly = commercialNumber($('#bill_rate_amount').val());
+        if (payAnnual > 0) {
+            payMonthly = payMonthly || (payAnnual / MONTHS_PER_YEAR);
+            payHourly = payHourly || (payAnnual / MONTHS_PER_YEAR / HOURS_PER_MONTH);
+        }
+        if (billAnnual > 0) {
+            billMonthly = billMonthly || (billAnnual / MONTHS_PER_YEAR);
+            billHourly = billHourly || (billAnnual / MONTHS_PER_YEAR / HOURS_PER_MONTH);
+        }
+        let modeConfig = commercialModeConfig(activeCommercialRateTab(), {
+            payAnnual: payAnnual,
+            payMonthly: payMonthly,
+            payHourly: payHourly,
+            billAnnual: billAnnual,
+            billMonthly: billMonthly,
+            billHourly: billHourly
+        });
+        let margin = modeConfig.baseBill - modeConfig.basePay;
+        let computedPercent = modeConfig.basePay > 0 ? (margin / modeConfig.basePay) * 100 : 0;
+        let profitValue = $('#percentage_hike').val();
+        let displayedPercent = profitValue !== '' ? commercialNumber(profitValue) : computedPercent;
+        let isFree = isFreeCommercialMode();
+
+        $('#br_pay_auto_label_one').text(modeConfig.payAutoOneLabel);
+        $('#br_pay_auto_label_two').text(modeConfig.payAutoTwoLabel);
+        $('#br_bill_auto_label_one').text(modeConfig.billAutoOneLabel);
+        $('#br_bill_auto_label_two').text(modeConfig.billAutoTwoLabel);
+        $('#br_pay_monthly_display').text(commercialFormat(modeConfig.payAutoOneValue));
+        $('#br_pay_hourly_display').text(commercialFormat(modeConfig.payAutoTwoValue));
+        $('#br_summary_pay_annual').text(commercialFormat(modeConfig.basePay));
+
+        if (isFree) {
+            $('#br_bill_monthly_display').text('No billing');
+            $('#br_bill_hourly_display').text('No billing');
+            $('#br_summary_pay_label').text(modeConfig.payLabel);
+            $('#br_summary_bill_label').text('Client Billing');
+            $('#br_summary_margin_label').text('Commercial Margin');
+            $('#br_summary_percent_label').text('Selected Model');
+            $('#br_summary_bill_annual').text('Disabled');
+            $('#br_summary_margin').text('Not billed');
+            $('#br_summary_percent').text('Free');
+            $('.br-margin-state').removeClass('is-low').addClass('is-free');
+            $('#br_margin_status').text('Free Service Selected');
+            $('#br_margin_note').text('Client bill rate is locked because this talent will be offered without commercial billing.');
+        } else {
+            $('#br_bill_monthly_display').text(commercialFormat(modeConfig.billAutoOneValue));
+            $('#br_bill_hourly_display').text(commercialFormat(modeConfig.billAutoTwoValue));
+            $('#br_summary_pay_label').text(modeConfig.payLabel);
+            $('#br_summary_bill_label').text(modeConfig.billLabel);
+            $('#br_summary_margin_label').text(modeConfig.marginLabel);
+            $('#br_summary_percent_label').text('Margin Percentage');
+            $('#br_summary_bill_annual').text(commercialFormat(modeConfig.baseBill));
+            $('#br_summary_margin').text(commercialFormat(margin));
+            $('#br_summary_percent').text(commercialFormat(displayedPercent, '%'));
+            $('.br-margin-state').removeClass('is-free').toggleClass('is-low', margin < 0 || displayedPercent < 10);
+            $('#br_margin_status').text((margin < 0 || displayedPercent < 10) ? 'Review Margin' : 'Healthy Margin');
+            $('#br_margin_note').text((margin < 0 || displayedPercent < 10) ? 'Please review the configured bill rate.' : 'This margin looks good.');
+        }
+
+        $('#br_comment_count').text(($('#comment').val() || '').length + ' / 500');
+    }
+
+    function syncCommercialCards() {
+        let currentValue = ($('#comission_type').val() || '2').toString();
+        $('.br-model-option').removeClass('is-selected');
+        $('.br-model-option[data-commercial-value="' + currentValue + '"]').addClass('is-selected');
+    }
+
+    function applyCommercialMode() {
+        let currentValue = ($('#comission_type').val() || '2').toString();
+        if (currentValue !== '1' && currentValue !== '2') {
+            currentValue = '2';
+        }
+
+        $('#comission_type').val(currentValue);
+
+        let isFree = currentValue === '1';
+        let wasFree = $('.br-card').hasClass('is-free-service');
+        let billFields = $('#bill_annual, #bill_monthly, #bill_rate_amount, #percentage_hike');
+
+        if (isFree && !wasFree) {
+            snapshotPaidBillValues();
+            $('#bill_annual, #bill_monthly, #bill_rate_amount, #percentage_hike').val('');
+            $('#bill_rate_hourly_usd, #bill_rate_monthly_usd, #bill_rate_annual_usd').text('');
+        } else if (!isFree && wasFree) {
+            restorePaidBillValues();
+            syncCommercialRateTab($('.br-rate-tabs button.is-active').first().data('rate-tab') || 'annual');
+            updateBillUI();
+            percentage_hike();
+        }
+
+        billFields.prop('readonly', isFree).attr('aria-readonly', isFree ? 'true' : 'false');
+        $('.br-card').toggleClass('is-free-service', isFree);
+        $('.br-bill-panel').toggleClass('is-locked', isFree);
+        syncCommercialCards();
+        refreshCommercialSummary();
+    }
+
+    $(document).on('click', '.br-model-option', function () {
+        $('#comission_type').val($(this).attr('data-commercial-value'));
+        applyCommercialMode();
+    });
+
+    $(document).on('click', '.br-rate-tabs button', function () {
+        let group = $(this).closest('.br-rate-tabs').data('rate-tabs');
+        let tab = $(this).data('rate-tab');
+
+        syncCommercialRateTab(tab);
+        $('[data-rate-panel="' + group + '-' + tab + '"] input').trigger('focus');
+    });
+
+    $(document).on('change', '#comission_type', applyCommercialMode);
+    $(document).on('input change', '#pay_annual, #pay_monthly, #pay_rate_amount, #bill_annual, #bill_monthly, #bill_rate_amount, #percentage_hike, #comment', refreshCommercialSummary);
+
+    window.isFreeCommercialMode = isFreeCommercialMode;
+    window.refreshCommercialSummary = refreshCommercialSummary;
+    window.syncBillFieldsFromAnnual = syncBillFieldsFromAnnual;
+    window.applyCommercialMode = applyCommercialMode;
+
     function format(val) {
         return val ? parseFloat(val).toFixed(2) : '';
     }
@@ -1520,7 +1967,7 @@ $(document).ready(function () {
 
         $('#pay_monthly').val(format(hourly * HOURS_PER_MONTH));
         $('#pay_annual').val(format(hourly * HOURS_PER_MONTH * MONTHS_PER_YEAR));
-        updatePayUI();
+        refreshCommercialAfterSplit();
         percentage_hike();
 
         isUpdating = false;
@@ -1536,7 +1983,7 @@ $(document).ready(function () {
 
         $('#pay_rate_amount').val(format(hourly));
         $('#pay_annual').val(format(monthly * MONTHS_PER_YEAR));
-        updatePayUI();
+        refreshCommercialAfterSplit();
         percentage_hike();
 
         isUpdating = false;
@@ -1553,7 +2000,7 @@ $(document).ready(function () {
 
         $('#pay_rate_amount').val(format(hourly));
         $('#pay_monthly').val(format(monthly));
-        updatePayUI();
+        refreshCommercialAfterSplit();
         percentage_hike();
 
         isUpdating = false;
@@ -1568,7 +2015,7 @@ $(document).ready(function () {
 
         $('#bill_monthly').val(format(hourly * HOURS_PER_MONTH));
         $('#bill_annual').val(format(hourly * HOURS_PER_MONTH * MONTHS_PER_YEAR));
-        updateBillUI();
+        refreshCommercialAfterSplit();
         percentage_hike();
         isUpdating = false;
     });
@@ -1583,7 +2030,7 @@ $(document).ready(function () {
 
         $('#bill_rate_amount').val(format(hourly));
         $('#bill_annual').val(format(monthly * MONTHS_PER_YEAR));
-         updateBillUI();
+        refreshCommercialAfterSplit();
         percentage_hike();
 
         isUpdating = false;
@@ -1600,7 +2047,7 @@ $(document).ready(function () {
 
         $('#bill_rate_amount').val(format(hourly));
         $('#bill_monthly').val(format(monthly));
-         updateBillUI();
+        refreshCommercialAfterSplit();
         percentage_hike();
 
         isUpdating = false;
@@ -1614,6 +2061,7 @@ $(document).ready(function () {
           $('#pay_rate_monthly_usd').text('');
           $('#pay_rate_annual_usd').text('');
           updateCTCFields();
+          refreshCommercialSummary();
           return false;
         }
 
@@ -1625,8 +2073,17 @@ $(document).ready(function () {
         $('#pay_rate_monthly_usd').text('Approx $ '+ format(monthly));
         $('#pay_rate_annual_usd').text('Approx $ '+ format(annual));
         updateCTCFields();
+        refreshCommercialSummary();
     }
     function updateBillUI() {
+        if (isFreeCommercialMode()) {
+          $('#bill_rate_hourly_usd').text('');
+          $('#bill_rate_monthly_usd').text('');
+          $('#bill_rate_annual_usd').text('');
+          refreshCommercialSummary();
+          return false;
+        }
+
         let currency = $('#pay_rate_currency').val();
         let bill_rate_amount = $('#bill_rate_amount').val();
         let currSet = currencyRateschar[currency];
@@ -1635,6 +2092,7 @@ $(document).ready(function () {
           $('#bill_rate_monthly_usd').text('');
           $('#bill_rate_annual_usd').text('');
           updateCTCFields();
+          refreshCommercialSummary();
           return false;
         }
 
@@ -1646,6 +2104,7 @@ $(document).ready(function () {
         $('#bill_rate_monthly_usd').text('Approx $ '+ format(monthly));
         $('#bill_rate_annual_usd').text('Approx $ '+ format(annual));
         updateCTCFields();
+        refreshCommercialSummary();
     }
 
     $('#pay_rate_amount').on('input', function () {
@@ -1693,8 +2152,10 @@ $(document).ready(function () {
         updatePayUI();
     });
     setTimeout(() => {
-          billRateUpdate();
+          applyCommercialMode();
           payRateUpdate();
+          billRateUpdate();
+          refreshCommercialSummary();
       }, 1000);
 
     
@@ -2036,6 +2497,8 @@ $(document).ready(function() {
 
 $(document).on('change','#serving_notice_period',function(){
     var cvalue = $('#serving_notice_period').val();
+    $('.aw-option').removeClass('is-selected');
+    $('.aw-option[data-snp-value="' + cvalue + '"]').addClass('is-selected');
 		$('#np_id').val('');
 		$('#ddl_np_id').val('');
 		if(cvalue == 0){
@@ -2064,6 +2527,16 @@ $(document).on('change','#serving_notice_period',function(){
       dateManageFunc();
 		}	
   })
+
+$(document).on('click', '.aw-option', function(){
+    $('#serving_notice_period').val($(this).data('snp-value')).trigger('change');
+});
+
+$(function(){
+    var selectedAvailability = $('#serving_notice_period').val() || '2';
+    $('.aw-option').removeClass('is-selected');
+    $('.aw-option[data-snp-value="' + selectedAvailability + '"]').addClass('is-selected');
+});
 
    $(document).on('change','#np_id',function(){
         var datess = $(this).val();
@@ -2700,6 +3173,13 @@ $(document).on('change', '#total_exp, #rel_exp', function() {
 
 
      function percentage_hike(){
+     if (window.isFreeCommercialMode && window.isFreeCommercialMode()) {
+        $('#percentage_hike').val('');
+        if (window.refreshCommercialSummary) {
+          window.refreshCommercialSummary();
+        }
+        return;
+     }
      
      var currentCTC = parseFloat($('#pay_annual').val());
      var expectedCTC = parseFloat($('#bill_annual').val());
@@ -2711,13 +3191,36 @@ $(document).on('change', '#total_exp, #rel_exp', function() {
         }else{
           $('#percentage_hike').val('');
       }
+      if (window.refreshCommercialSummary) {
+        window.refreshCommercialSummary();
+      }
  }
 
  function ectc(){
+     if (window.isFreeCommercialMode && window.isFreeCommercialMode()) {
+        $('#percentage_hike').val('');
+        if (window.refreshCommercialSummary) {
+          window.refreshCommercialSummary();
+        }
+        return;
+     }
+
      var currentCTC = parseFloat($('#pay_annual').val());
      var percentage_hike = $('#percentage_hike').val();
+     if (isNaN(currentCTC)) {
+        if (window.refreshCommercialSummary) {
+          window.refreshCommercialSummary();
+        }
+        return;
+     }
      var amount = currentCTC*percentage_hike/100;
      $('#bill_annual').val(amount+currentCTC);
+     if (window.syncBillFieldsFromAnnual) {
+        window.syncBillFieldsFromAnnual();
+     }
+     if (window.refreshCommercialSummary) {
+        window.refreshCommercialSummary();
+     }
      
  }
 
