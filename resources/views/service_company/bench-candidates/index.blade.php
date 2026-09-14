@@ -103,15 +103,15 @@
         /* Table */
         .bench-dash .table-responsive { overflow-x: hidden; }
         .bench-dash #benchListingTable { width: 100% !important; min-width: 0; margin: 0; table-layout: fixed; }
-        .bench-dash #benchListingTable .col-select { width: 3.5%; }
-        .bench-dash #benchListingTable .col-talent-name { width: 22%; }
-        .bench-dash #benchListingTable .col-experience { width: 7.5%; }
+        .bench-dash #benchListingTable .col-select { width: 3%; }
+        .bench-dash #benchListingTable .col-talent-name { width: 21.5%; }
+        .bench-dash #benchListingTable .col-experience { width: 8.5%; }
         .bench-dash #benchListingTable .col-availability { width: 9%; }
-        .bench-dash #benchListingTable .col-location { width: 10%; }
+        .bench-dash #benchListingTable .col-location { width: 9.5%; }
         .bench-dash #benchListingTable .col-salary { width: 10.5%; }
         .bench-dash #benchListingTable .col-status { width: 8.5%; }
-        .bench-dash #benchListingTable .col-manager-name { width: 12%; }
-        .bench-dash #benchListingTable .col-pipeline-activity { width: 17%; }
+        .bench-dash #benchListingTable .col-manager-name { width: 11%; }
+        .bench-dash #benchListingTable .col-pipeline-activity { width: 18.5%; }
         .bench-dash #benchListingTable thead th { font-size: 10px !important; text-transform: uppercase; letter-spacing: .2px; color: #a1a5b7; font-weight: 600; border-bottom: 1px solid #eef0f4; padding: 7px 6px !important; white-space: normal; line-height: 1.2; background: #fff; }
         .bench-dash #benchListingTable tbody td { font-size: 12px !important; border-bottom: 1px solid #f4f5f8; padding: 7px 6px !important; vertical-align: middle; min-width: 0; overflow: hidden; }
         .bench-dash #benchListingTable tbody tr:hover td { background: #fafbfc; }
@@ -144,12 +144,8 @@
         .bench-dash .pipe-grid .h { font-size: 8.5px !important; color: #a1a5b7; font-weight: 700; overflow: hidden; }
         .bench-dash .pipe-grid .v { font-size: 10px !important; font-weight: 700; color: #181c32; padding-top: 1px; overflow: hidden; }
         .bench-dash .pipe-grid a { font-size: 10px !important; font-weight: 700; }
-        .bench-dash .pipe-foot { font-size: 9.5px !important; font-weight: 700; color: #3f4254; margin-top: 3px; display: flex; align-items: center; gap: 6px; flex-wrap: nowrap; line-height: 1; white-space: nowrap; overflow: hidden; }
-        .bench-dash .pipe-stat { display: inline-flex; align-items: center; gap: 3px; color: #a1a5b7; font-size: 9.5px !important; font-weight: 600; line-height: 1; flex-shrink: 0; }
-        .bench-dash .pipe-stat i { font-size: 10px !important; }
-        /* "View" — plain text link (same size as the Interview label it sits next to), opens the profile */
-        .bench-dash .pipe-view { color: #3e97ff !important; font-size: 10px !important; font-weight: 700; cursor: pointer; }
-        .bench-dash .pipe-view:hover { text-decoration: underline; }
+        .bench-dash .pipe-foot { font-size: 9.5px !important; font-weight: 700; color: #3f4254; margin-top: 3px; display: flex; align-items: center; gap: 4px 7px; flex-wrap: wrap; line-height: 1.15; white-space: normal; overflow: hidden; }
+        .bench-dash .pipe-stat { display: inline-flex; align-items: center; color: #7e8299; font-size: 9.5px !important; font-weight: 600; line-height: 1.15; flex-shrink: 0; }
 
         /* Manager "Change" — plain text link, no button chrome */
         .bench-dash .manager-change { color: #3e97ff; font-size: 10.5px !important; font-weight: 600; cursor: pointer; width: fit-content; }
