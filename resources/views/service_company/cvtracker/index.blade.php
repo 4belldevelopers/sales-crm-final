@@ -1669,15 +1669,7 @@
 @push('footer-script')
     <script src="{{ asset('demo/cdn/js/dataTables.fixedHeader.min.js') }}{{ TM_VERSION }}"></script>
 
-    {{-- ═══════════════════════════════════════════════════════════════════════
-         FORWARD RESUME ENGINE — Pre-loaded on host page (Layer 1 of 3).
-         jQuery $.html() strips <script src="…"> from AJAX-injected HTML, so
-         these must load on the host page. The AJAX handler also re-checks via
-         $.getScript() (Layer 2) before injecting the drawer. The inline IIFE
-         inside fwd_resume.blade.php does document.head.appendChild (Layer 3).
-    ══════════════════════════════════════════════════════════════════════════ --}}
-    <script src="{{ asset('js/opendoc/AgyForwardResumeEngine.js') }}"></script>
-    <script src="{{ asset('js/opendoc/AgyForwardResumeHelper.js') }}"></script>
+
 
    
 
@@ -1813,21 +1805,7 @@
                     cache: false,
                     success: function(response) {
                         if (response.status == "success") {
-                            // Engine-first injection: jQuery $.html() strips <script src> tags,
-                            // so the engine must be loaded BEFORE the drawer IIFE runs.
-                            // If host pre-load already executed it, inject immediately.
-                            // Otherwise $.getScript() appends a real <script> to document.head.
-                            var _inject = function() {
-                                $('#application_fwd_resume_body_content').html(response.view);
-                            };
-                            if (window.AgyForwardResumeEngine &&
-                                typeof window.AgyForwardResumeEngine.processOption === 'function') {
-                                _inject();
-                            } else {
-                                $.getScript("{{ asset('js/opendoc/AgyForwardResumeEngine.js') }}")
-                                    .then(_inject)
-                                    .fail(_inject);
-                            }
+                            $('#application_fwd_resume_body_content').html(response.view);
                         }
                     }
                 });
