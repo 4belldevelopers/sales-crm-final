@@ -1297,7 +1297,8 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
             $added = false;
         } else {
             $benchApplication = new JobApplication;
-            $benchApplication->status = 1;
+            // New marketplace publishes should enter Bench directly, not Pool.
+            $benchApplication->status = 2;
             $added = true;
             $eventId = 5;
             $coinsDeductions = GeneralMethod::coinsDeductions((int) $company_id, $eventId, auth()->user()->id, $company_id, '', '');

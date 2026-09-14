@@ -4458,3 +4458,48 @@ select option,
     font-size: 8px !important;
     line-height: 1 !important;
 }
+
+/* Create Talent field polish: keep phone, availability date, and skill inputs aligned with enterprise form typography. */
+.bd-phone-control input,
+.bd-phone-control .iti input,
+#phone,
+#secondary_mobile {
+    min-height: 38px !important;
+    height: 38px !important;
+    color: var(--et-text, #0B1545) !important;
+    font-family: 'Poppins', sans-serif !important;
+    font-size: 13px !important;
+    font-weight: 500 !important;
+    line-height: 1.3 !important;
+    letter-spacing: 0 !important;
+}
+
+.aw-date-wrap {
+    min-height: 38px !important;
+}
+
+.aw-date-wrap input,
+#np_id_display {
+    min-height: 38px !important;
+    height: 38px !important;
+    font-size: 13px !important;
+    font-weight: 500 !important;
+}
+
+.se-card .sk input,
+.se-card .sk select,
+.se-card .tagify,
+.se-card .tagify *,
+.tagify__dropdown .tagify__dropdown__item {
+    font-family: 'Poppins', sans-serif !important;
+    font-size: 13px !important;
+    font-weight: 500 !important;
+    letter-spacing: 0 !important;
+}
+
+.se-card .sk input,
+.se-card .sk select {
+    min-height: 38px !important;
+    height: 38px !important;
+    color: var(--et-text, #0B1545) !important;
+}
