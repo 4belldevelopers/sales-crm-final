@@ -106,37 +106,26 @@ if($snp_mode== 1){
 @endphp 
 
 <!--begin::Toolbar-->
-<div class="toolbar" id="kt_toolbar">
-  <div id="kt_toolbar_container" class="container-fluid d-flex flex-stack">
-    <div data-kt-swapper="true" data-kt-swapper-mode="prepend" data-kt-swapper-parent="{default: '#kt_content_container', 'lg': '#kt_toolbar_container'}" class="page-title d-flex align-items-center flex-wrap me-3 mb-5 mb-lg-0">
-      <div class="d-flex flex-column">
-        <h1 class="d-flex align-items-center text-dark fw-bolder fs-3 my-1"> <a href="javascript:void(0);" class="text-gray-800 mb-1">Add Inhouse Talent</a> </h1>
+<div class="toolbar talent-top-toolbar" id="kt_toolbar">
+  <div id="kt_toolbar_container" class="container-fluid">
+    <div class="talent-topbar">
+      <div class="talent-topbar-copy">
+        <div class="talent-topbar-title-row">
+          <h1>Add In-House Talent</h1>
+          <span class="talent-topbar-badge"><i class="fa-solid fa-briefcase"></i> In-House Talent</span>
+        </div>
+        <p>Add internal talent to the marketplace and make them discoverable for client opportunities.</p>
       </div>
-      <span class="h-20px border-gray-200 border-start mx-4"></span>
-      <span class="text-dark-800 fw-bold" id="kt_subheader_total">Enter Inhouse Talent details and submit</span> 
+      <div class="talent-topbar-actions">
+        @php 
+            if(@$page_event == 'EDIT'){ 
+              echo '<button type="button" name="edit-form" id="edit-form" value="update" class="talent-topbar-primary">Update Candidate <i class="fa-solid fa-arrow-right"></i></button>';
+            }else{
+              echo '<button type="button" name="save" id="save-form" value="save" class="talent-topbar-primary"><i class="fa-solid fa-arrow-up"></i> Publish to Marketplace</button>';	
+            }
+        @endphp
+      </div>
     </div>
-
-  
-      <div class="d-flex align-items-center py-1">
-          <div class="before-event d-flex align-items-center position-relative my-1 me-3">
-            <!--begin::Buttons-->
-                <div class="form-row row fv-row">
-                  <div class="col-12 text-center py-10">
-                  @php 
-                      if(@$page_event == 'EDIT'){ 
-                        echo '<button type="button" name="edit-form" id="edit-form" value="update" class="btn btn-primary">Update Candidate</button>';
-                      }else{
-                        echo '<button type="button" name="save" id="save-form" value="save" class="btn btn-primary">Submit Candidate</button>';	
-                      }
-                  @endphp
-                    {{-- <a href="javascript:void(0);" class="btn btn-secondary">Cancel</a>  --}}
-                  
-                  </div>
-                </div>
-          </div>
-      </div>
-    <!--end::Page title-->
-
   </div>
   <!--end::Container-->
 </div>
@@ -160,14 +149,18 @@ if($snp_mode== 1){
             <input type="hidden" name="resume_session_uuid" id="resume_session_uuid" value="">
           <div class="fc">
             <!-- Upload + Career Summary -->
-            <div class="g2" style="margin-bottom:16px">
+            <div class="g2 resume-summary-grid" style="margin-bottom:16px">
                 <!-- Resume Upload -->
-                <div class="fs fv-row" style="margin-bottom:0">
-                    <div class="fsh">
-                        <h3>Upload Resume <span style="color:red">*</span></h3>
+                <div class="fs fv-row resume-card" style="margin-bottom:0">
+                    <div class="resume-card-header">
+                        <span class="resume-card-icon"><i class="fa-solid fa-file-lines"></i></span>
+                        <span class="resume-card-title">
+                            <strong>Upload Resume <span class="rq">*</span></strong>
+                            <small>Upload the resume and we'll automatically extract the talent details.</small>
+                        </span>
                     </div>
 
-                    <div class="fsc">
+                    <div class="fsc resume-card-body">
                         <div class="ua" id="uploadBox">
 
                             <div class="ui">
@@ -230,6 +223,10 @@ if($snp_mode== 1){
                             </div>
 
                         </div>
+                        <div class="resume-note">
+                            <span class="resume-note-icon"><i class="fa-solid fa-circle-info"></i></span>
+                            <span>Please remove <strong>contact details (phone number, email address)</strong> and <strong>current company name or logo</strong> from the resume before uploading. Resumes containing these details cannot be published to the Talent Marketplace.</span>
+                        </div>
 
                         <!-- After-upload Resume Information card -->
                         <div class="up-info" id="upInfo">
@@ -289,20 +286,34 @@ if($snp_mode== 1){
                         </div>
                     </div>
                 </div>
-                <div class="fs fv-row" style="margin-bottom:0">
-                  <div class="fsh" style="justify-content:space-between">
-                    <h3>Career
-                      Summary <span style="color:var(--r)">*</span></h3>
+                <div class="fs fv-row summary-card" style="margin-bottom:0">
+                  <div class="resume-card-header summary-card-header">
+                    <div class="summary-title-wrap">
+                      <span class="resume-card-icon"><i class="fa-solid fa-file-lines"></i></span>
+                      <span class="resume-card-title">
+                        <strong>Professional Summary <span class="rq">*</span></strong>
+                        <small>A concise summary of this talent's expertise, experience and value to clients.</small>
+                      </span>
+                    </div>
+                    <button class="summary-ai-button" type="button">
+                      <i class="fa-solid fa-wand-magic-sparkles"></i>
+                      Generate with AI
+                    </button>
                   </div>
-                  <div class="fsc">
-                    <textarea placeholder="Enter career summary..." id="careersummary" name="careersummary" rows="10">{{ @$application->careersummary }}</textarea>
-                    <div class="cc">0 / 100</div>
-                    <div class="tip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <circle cx="12" cy="12" r="10" />
-                        <line x1="12" y1="16" x2="12" y2="12" />
-                        <line x1="12" y1="8" x2="12.01" y2="8" />
-                      </svg><span>Tip: A good summary helps the client
-                        understand the candidate quickly.</span></div>
+                  <div class="fsc summary-card-body">
+                    <textarea placeholder="Enter or generate a professional summary..." id="careersummary" name="careersummary" rows="10">{{ @$application->careersummary }}</textarea>
+                    <div class="cc summary-counter">0 / 500</div>
+                    <div class="summary-tip">
+                      <span class="summary-tip-icon"><i class="fa-solid fa-lightbulb"></i></span>
+                      <div>
+                        <strong>Tips for a great summary:</strong>
+                        <ul>
+                          <li>Highlight key skills, years of experience and major achievements.</li>
+                          <li>Keep it concise and client-facing.</li>
+                          <li>Our AI can generate a draft from the uploaded resume, which you can edit.</li>
+                        </ul>
+                      </div>
+                    </div>
                   </div>
                 </div>
             </div>
@@ -525,8 +536,8 @@ if($snp_mode== 1){
                     <label>Available From Date <span class="rq">*</span></label>
                     <div class="aw-date-wrap" id="snp-immediate" style="{{ ($snp_mode===1 || $snp_mode===2) ? 'display:flex' : @$snp_text_one }}">
                       <input type="text" id="text_display" value="{{ ($snp_mode===1) ? 'Available From' : 'Immediate' }}" class="form-control form-control-solid" placeholder="" readonly>
-                      <input type="text" id="np_id_display" class="form-control form-control-solid" placeholder="Select date" name="np_id_display" value="{{ ($snp_last_working) ? date('d/M/Y',strtotime(@$snp_last_working)) : '' }}" onclick="document.getElementById('np_id').click()" readonly>
-                      <input type="date" class="form-control form-control-solid np_id" name="np_id" id="np_id" style="opacity: 0; position: absolute; z-index: -1;top: 0;" onclick="this.showPicker()">
+                      <input type="text" id="np_id_display" class="form-control form-control-solid" placeholder="Select date" name="np_id_display" value="{{ ($snp_last_working) ? date('d/M/Y',strtotime(@$snp_last_working)) : '' }}" onclick="openAvailableFromDatePicker()" readonly>
+                      <input type="date" class="form-control form-control-solid np_id" name="np_id" id="np_id" value="{{ ($snp_last_working) ? date('Y-m-d',strtotime(@$snp_last_working)) : '' }}" style="opacity: 0; position: absolute; z-index: -1;top: 0;">
                     </div>
                     <small class="aw-date-help">Enter the date from which this talent will be available.</small>
                     <select class="form-select form-select-solid aw-notice-days" arial-label="Select ddl_np_id" id="ddl_np_id" name="ddl_np_id" style="display:none;">
@@ -1076,9 +1087,19 @@ if($snp_mode== 1){
             </div>
 
             <!-- Skills Details -->
-            <div class="fs">
-              <div class="fsh">
-                <h3>Job Skills Details</h3>
+            <div class="fs se-card">
+              <div class="se-hero">
+                <div class="se-title">
+                  <span class="se-icon"><i class="fa-solid fa-lightbulb"></i></span>
+                  <span>
+                    <strong>Skills &amp; Expertise</strong>
+                    <small>Add the skills this talent can be positioned and searched for in the marketplace.</small>
+                  </span>
+                </div>
+                <div class="se-actions">
+                  <span class="se-badge"><i class="fa-solid fa-building"></i> In-House Talent</span>
+                  <i class="fa-solid fa-chevron-up"></i>
+                </div>
               </div>
               <div class="fsc">
                 <table class="sk">
@@ -1102,19 +1123,60 @@ if($snp_mode== 1){
               </div>
             </div>
 
-             <!-- Skills Details -->
-            <div class="fs">
-              <div class="fsh">
-                <h3>Relationship Manager</h3>
+             <!-- Relationship Manager -->
+            @php
+              $rmSelectedValue = trim((string) @$recruiterData);
+              $rmSelectedNames = array_values(array_filter(array_map('trim', preg_split('/\s*,\s*/', str_replace(' , ', ',', $rmSelectedValue)))));
+              $rmPrimaryName = $rmSelectedNames[0] ?? '';
+              $rmInitialParts = array_values(array_filter(explode(' ', trim($rmPrimaryName))));
+              $rmInitials = $rmPrimaryName ? strtoupper(substr($rmInitialParts[0] ?? $rmPrimaryName, 0, 1).substr($rmInitialParts[1] ?? '', 0, 1)) : '';
+            @endphp
+            <div class="fs rm-card">
+              <div class="rm-hero">
+                <div class="rm-hero-title">
+                  <span class="rm-hero-icon"><i class="fa-solid fa-user"></i></span>
+                  <span>
+                    <strong>Client Relationship Manager</strong>
+                    <small>Select the person who will coordinate with clients regarding this talent.</small>
+                  </span>
+                </div>
               </div>
-              <div class="fsc fv-row">
+              <div class="fsc fv-row rm-body">
 
                 <!--begin::Custom Details-->
-                <div class="" id="job_additional_detail">
-                  
-                  <input class="form-control form-control-solid" name="recruiter" id="recruiter" value="<?php echo strtolower(@$recruiterData); ?>" readonly="" />
-                    <input type="hidden" class="form-control form-control-solid" name="recruiter_id" id="recruiter_id" value="<?php echo strtolower(@$recruiterDataId); ?>" readonly="" />
-                    <span class="form-text text-muted">*The selected relationship manager's number and email will be shared with clients to coordinate regarding the above candidate.</span> 
+                <div class="rm-content" id="job_additional_detail">
+                  <label class="rm-label">Relationship Manager <span class="rq">*</span></label>
+                  <div class="rm-picker" id="rmPicker">
+                    <span class="rm-search-icon"><i class="fa-solid fa-magnifying-glass"></i></span>
+                    <input class="form-control form-control-solid" name="recruiter" id="recruiter" value="<?php echo strtolower(@$recruiterData); ?>" placeholder="Search by name or email..." readonly="" />
+                    <span class="rm-input-placeholder">Search by name or email...</span>
+                    <span class="rm-picker-divider"></span>
+                    <span class="rm-picker-action" id="rmPickerAction">Select Relationship Manager</span>
+                    <span class="rm-picker-chevron"><i class="fa-solid fa-chevron-down"></i></span>
+                  </div>
+                  <small class="rm-help">Search and select a team member from your organization.</small>
+                  <input type="hidden" class="form-control form-control-solid" name="recruiter_id" id="recruiter_id" value="<?php echo strtolower(@$recruiterDataId); ?>" readonly="" />
+
+                  <div class="rm-selected-card" id="rmSelectedCard" style="{{ $rmPrimaryName ? 'display:flex' : 'display:none' }}">
+                    <button type="button" class="rm-selected-clear" id="rmClearSelection" aria-label="Clear relationship manager"><i class="fa-solid fa-xmark"></i></button>
+                    <div class="rm-selected-eyebrow">SELECTED MANAGER</div>
+                    <div class="rm-selected-content">
+                      <span class="rm-avatar" id="rmAvatar">{{ $rmInitials }}</span>
+                      <div class="rm-selected-copy">
+                        <strong id="rmSelectedName">{{ $rmPrimaryName }}</strong>
+                        <span class="rm-selected-role" id="rmSelectedRole">Relationship Manager</span>
+                        <span class="rm-selected-contact" id="rmSelectedContact"></span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="rm-info-card">
+                    <span class="rm-info-icon"><i class="fa-solid fa-info"></i></span>
+                    <span>
+                      <strong>Client Contact Information</strong>
+                      <small>The selected manager's business phone number and email address may be shared with clients for coordination regarding this talent.</small>
+                    </span>
+                  </div>
 
                 </div>
                 <!--end::Custom Details-->
@@ -1122,45 +1184,102 @@ if($snp_mode== 1){
             </div>
 
             <!-- Additional Information -->
-            <div class="fs">
-              <div class="fsh">
-                <h3>Additional Information</h3>
-              </div>
-              <div class="fsc">
-                <div class="g4">
-                  <div class="fg fv-row">
-                    <label>Likedin Link (Optional)</label>
-                    <input type="url" id="linkedin" name="linkedin" value="{{ @$application->linkedin }}" placeholder="Enter Likedin Link" />
-                  </div>
-                  <div class="fg fv-row">
-                    <label>GitHub Link (Optional)</label>
-                    <input type="url" value="{{ @$application->github }}" id="github" name="github" placeholder="Enter GitHub Link" />
-                  </div>
-                  <div class="fg fv-row">
-                    <label>Behance Link (Optional)</label>
-                    <input type="url" id="behance" name="behance" value="{{ @$application->behance }}" placeholder="Enter Behance Link" />
-                  </div>
-                  <div class="fg fv-row">
-                    <label>Other Link (Optional)</label>
-                    <input type="url" value="{{ @$application->otherLink }}" id="otherLink" name="otherLink" placeholder="Enter URL" />
-                  </div>
+            <div class="fs addl-card">
+              <div class="addl-hero">
+                <div class="addl-hero-title">
+                  <span class="addl-hero-icon"><i class="fa-solid fa-link"></i></span>
+                  <span>
+                    <strong>Professional Links &amp; Additional Details</strong>
+                    <small>Add online profiles and other information that helps clients evaluate this talent.</small>
+                  </span>
                 </div>
-                <div class="g4">
-                  <div class="fg fv-row">
-                    <label>Current Visa Status (For International)</label>
-                    <select name="visastatu" id="visastatu">
-                      <option value="">Select visa status</option>
-                      <option {{ @$application->visastatu == 'H1B' ? 'selected' : '' }}>H1B</option>
-                      <option {{ @$application->visastatu == 'L1' ? 'selected' : '' }}>L1</option>
-                      <option {{ @$application->visastatu == 'F1' ? 'selected' : '' }}>F1</option>
-                      <option {{ @$application->visastatu == 'Green Card' ? 'selected' : '' }}>Green Card</option>
-                      <option {{ @$application->visastatu == 'Citizen' ? 'selected' : '' }}>Citizen</option>
-                    </select>
+              </div>
+              <div class="fsc addl-body">
+                <section class="addl-section">
+                  <div class="addl-section-head">
+                    <span class="addl-section-icon"><i class="fa-solid fa-link"></i></span>
+                    <span>
+                      <strong>Professional Links</strong>
+                      <small>Share your online profiles so clients can learn more about your work.</small>
+                    </span>
                   </div>
-                  <div class="fg fv-row">
-                    <label>Reference Name (Optional)</label>
+
+                  <div class="addl-field fv-row">
+                    <span class="addl-brand-icon addl-brand-linkedin">in</span>
+                    <label>LinkedIn <span>(Optional)</span></label>
+                    <div class="addl-input-wrap">
+                      <i class="fa-solid fa-link"></i>
+                      <input type="url" id="linkedin" name="linkedin" value="{{ @$application->linkedin }}" placeholder="Enter LinkedIn profile URL" />
+                    </div>
+                    <small>e.g. https://www.linkedin.com/in/yourname</small>
+                  </div>
+
+                  <div class="addl-field fv-row">
+                    <span class="addl-brand-icon addl-brand-github">GH</span>
+                    <label>GitHub <span>(Optional)</span></label>
+                    <div class="addl-input-wrap">
+                      <i class="fa-solid fa-link"></i>
+                      <input type="url" value="{{ @$application->github }}" id="github" name="github" placeholder="Enter GitHub profile URL" />
+                    </div>
+                    <small>e.g. https://github.com/yourusername</small>
+                  </div>
+
+                  <div class="addl-field fv-row">
+                    <span class="addl-brand-icon addl-brand-behance">Be</span>
+                    <label>Behance <span>(Optional)</span></label>
+                    <div class="addl-input-wrap">
+                      <i class="fa-solid fa-link"></i>
+                      <input type="url" id="behance" name="behance" value="{{ @$application->behance }}" placeholder="Enter Behance profile URL" />
+                    </div>
+                    <small>e.g. https://www.behance.net/yourname</small>
+                  </div>
+
+                  <div class="addl-field fv-row">
+                    <span class="addl-brand-icon addl-brand-website"><i class="fa-solid fa-globe"></i></span>
+                    <label>Portfolio / Website <span>(Optional)</span></label>
+                    <div class="addl-input-wrap">
+                      <i class="fa-solid fa-link"></i>
+                      <input type="url" value="{{ @$application->otherLink }}" id="otherLink" name="otherLink" placeholder="Enter website or portfolio URL" />
+                    </div>
+                    <small>e.g. https://yourportfolio.com</small>
+                  </div>
+                </section>
+
+                <section class="addl-section addl-section--details">
+                  <div class="addl-section-head">
+                    <span class="addl-section-icon"><i class="fa-solid fa-user"></i></span>
+                    <span>
+                      <strong>Additional Details</strong>
+                      <small>Provide any other relevant information about your professional background.</small>
+                    </span>
+                  </div>
+
+                  <div class="addl-wide-field fv-row">
+                    <label><i class="fa-solid fa-passport"></i> Work Authorization <span>(Optional)</span> <i class="fa-solid fa-circle-info addl-label-info"></i></label>
+                    <div class="addl-select-wrap">
+                      <select name="visastatu" id="visastatu">
+                        <option value="">Select work authorization status</option>
+                        <option {{ @$application->visastatu == 'H1B' ? 'selected' : '' }}>H1B</option>
+                        <option {{ @$application->visastatu == 'L1' ? 'selected' : '' }}>L1</option>
+                        <option {{ @$application->visastatu == 'F1' ? 'selected' : '' }}>F1</option>
+                        <option {{ @$application->visastatu == 'Green Card' ? 'selected' : '' }}>Green Card</option>
+                        <option {{ @$application->visastatu == 'Citizen' ? 'selected' : '' }}>Citizen</option>
+                      </select>
+                      <i class="fa-solid fa-chevron-down"></i>
+                    </div>
+                    <small>Select your current visa or work authorization status, if applicable.</small>
+                  </div>
+
+                  <div class="addl-wide-field fv-row">
+                    <label><i class="fa-solid fa-user-tie"></i> Professional Reference <span>(Optional)</span></label>
                     <input type="text" name="referencename" value="{{ @$application->referencename}}" id="referencename" placeholder="Enter reference name" />
+                    <small>You can provide a reference name who can vouch for your work experience.</small>
                   </div>
+                </section>
+
+                <div class="addl-info-strip">
+                  <span><i class="fa-solid fa-info"></i></span>
+                  <p>All fields in this section are optional. Adding relevant links and details can help clients better understand your expertise and background.</p>
                 </div>
               </div>
             </div>
@@ -2511,13 +2630,147 @@ $(document).ready(function() {
             }	
                                       
   });
+
+  $(document).on('click', '#rmPicker', function(e) {
+      if ($(e.target).is('#recruiter')) {
+          return;
+      }
+      $('#recruiter').trigger('click');
+  });
+
+  $(document).on('click', '#rmClearSelection', function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      $('#recruiter').val('');
+      $('#recruiter_id').val('');
+      syncRelationshipManagerCard();
+  });
+
+  syncRelationshipManagerCard();
+  setInterval(function() {
+      var currentValue = $('#recruiter').val() || '';
+      if (currentValue !== window.__rmLastRecruiterValue) {
+          syncRelationshipManagerCard();
+      }
+  }, 400);
 });
+
+// Keep the redesigned Relationship Manager summary in sync with the existing drawer-owned recruiter fields.
+function rmEscape(value) {
+    return String(value || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+function rmTitleCase(value) {
+    return String(value || '').replace(/\b\w/g, function(char) {
+        return char.toUpperCase();
+    });
+}
+
+function rmSelectedNames() {
+    var value = $('#recruiter').val() || '';
+    return value.split(',').map(function(item) {
+        return item.trim();
+    }).filter(function(item) {
+        return item.length;
+    });
+}
+
+function rmInitials(name) {
+    var parts = String(name || '').trim().split(/\s+/);
+    var first = parts[0] ? parts[0].charAt(0) : '';
+    var second = parts[1] ? parts[1].charAt(0) : '';
+    return (first + second || first || 'RM').toUpperCase();
+}
+
+function rmFindContact(name) {
+    var contacts = window.__teamContacts || [];
+    var normalized = String(name || '').trim().toLowerCase();
+    for (var index = 0; index < contacts.length; index++) {
+        if (String(contacts[index].name || '').trim().toLowerCase() === normalized) {
+            return contacts[index];
+        }
+    }
+    return {};
+}
+
+function syncRelationshipManagerCard() {
+    var names = rmSelectedNames();
+    var selected = names[0] || '';
+    window.__rmLastRecruiterValue = $('#recruiter').val() || '';
+    $('#rmPicker').toggleClass('has-selection', names.length > 0);
+
+    if (!selected) {
+        $('#rmSelectedCard').hide();
+        $('#rmPickerAction').text('Select Relationship Manager');
+        return;
+    }
+
+    var contact = rmFindContact(selected);
+    var role = contact.role || contact.display_name || 'Relationship Manager';
+    var email = contact.email || '';
+    var phone = contact.number || contact.mobile || contact.phone || '';
+    var contactHtml = '';
+
+    if (email) {
+        contactHtml += '<span><i class="fa-solid fa-envelope"></i>' + rmEscape(email) + '</span>';
+    }
+    if (phone) {
+        contactHtml += '<span><i class="fa-solid fa-phone"></i>' + rmEscape(phone) + '</span>';
+    }
+    if (names.length > 1) {
+        contactHtml += '<span class="rm-more-count">+' + (names.length - 1) + ' more selected</span>';
+    }
+
+    $('#rmPickerAction').text('Change Relationship Manager');
+    $('#rmAvatar').text(rmInitials(selected));
+    $('#rmSelectedName').text(rmTitleCase(selected));
+    $('#rmSelectedRole').text(rmTitleCase(role));
+    $('#rmSelectedContact').html(contactHtml).toggle(contactHtml.length > 0);
+    $('#rmSelectedCard').css('display', 'flex');
+}
+
+function isAvailableFromDateMode() {
+    return String($('#serving_notice_period').val() || '') === '1';
+}
+
+function syncAvailableFromDateControl() {
+    var editable = isAvailableFromDateMode();
+    $('#np_id').prop('disabled', !editable);
+    $('#np_id_display')
+        .toggleClass('is-disabled', !editable)
+        .attr('aria-disabled', editable ? 'false' : 'true')
+        .attr('placeholder', editable ? 'Select date' : 'Select Available From (Date) first');
+    $('#snp-immediate').toggleClass('is-disabled', !editable);
+}
+
+function openAvailableFromDatePicker() {
+    if (!isAvailableFromDateMode()) {
+        return;
+    }
+    var dateInput = document.getElementById('np_id');
+    if (!dateInput) {
+        return;
+    }
+    if (dateInput.showPicker) {
+        try {
+            dateInput.showPicker();
+            return;
+        } catch (error) {
+            dateInput.focus();
+        }
+    }
+    if (!dateInput.showPicker) {
+        dateInput.focus();
+    }
+    dateInput.click();
+}
 
 $(document).on('change','#serving_notice_period',function(){
     var cvalue = $('#serving_notice_period').val();
     $('.aw-option').removeClass('is-selected');
     $('.aw-option[data-snp-value="' + cvalue + '"]').addClass('is-selected');
 		$('#np_id').val('');
+		$('#np_id_display').val('');
 		$('#ddl_np_id').val('');
 		if(cvalue == 0){
 			$('#ddl_np_id').show();
@@ -2538,12 +2791,13 @@ $(document).on('change','#serving_notice_period',function(){
 			$('#ddl_np_id').hide();
 			$('#np_id').show();		
 			$("#np_id").attr('type','date');
-			$('#np_id').attr("disabled", false);
+			$('#np_id').attr("disabled", true);
 			$('#text_display').val('Immediate');
       $("#np_id").css({ '-webkit-calendar-picker-indicator':'display(none)' });	
       $("#snp-immediate").attr('style','display:flex');
       dateManageFunc();
 		}	
+    syncAvailableFromDateControl();
   })
 
 $(document).on('click', '.aw-option', function(){
@@ -2554,6 +2808,7 @@ $(function(){
     var selectedAvailability = $('#serving_notice_period').val() || '2';
     $('.aw-option').removeClass('is-selected');
     $('.aw-option[data-snp-value="' + selectedAvailability + '"]').addClass('is-selected');
+    syncAvailableFromDateControl();
 });
 
    $(document).on('change','#np_id',function(){
