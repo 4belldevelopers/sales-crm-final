@@ -115,7 +115,7 @@
     $expRange = ($expMin && $expMax) ? "{$expMin} - {$expMax} Years" : "{$expMax}+ Years";
 
     /* ── Salary — same display format as the jobs page (all_jobs_ajax):
-       "₹ 1500K - 2500K /Annum" via thousandsCurrencyFormat + mode suffix ── */
+       "₹ 1500K - 2500K /annum" via thousandsCurrencyFormat + mode suffix ── */
     $min_salary_raw = (float)($jobDetails->min_salary ?? 0);
     $max_salary_raw = (float)($jobDetails->max_salary ?? 0);
     /* GeneralMethod::currencySymbole() returns raw <i class="fa fa-…"> markup
@@ -124,7 +124,7 @@
        Map currency_id → unicode glyph instead. */
     $currencyGlyphs = [0=>'₹', 1=>'€', 2=>'¥', 3=>'£', 4=>'$', 5=>'د.إ'];
     $salCurrencySym = $currencyGlyphs[(int)@$jobDetails->min_salary_currency] ?? '₹';
-    $salSuffix = ['/Annum', '/Month', '/Hour'][(int)(@$jobDetails->min_sal_mode ?? 0)] ?? '';
+    $salSuffix = ['/annum', '/month', '/hour'][(int)(@$jobDetails->min_sal_mode ?? 0)] ?? '';
     $salaryDisplay = '';
     if ($min_salary_raw > 0 || $max_salary_raw > 0) {
         $salaryDisplay = GeneralMethod::thousandsCurrencyFormat($min_salary_raw)
