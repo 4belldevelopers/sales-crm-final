@@ -21,29 +21,22 @@ return new class extends Migration
      */
     public function up(): void
     {
-        // 1. Bench Assign: Composite index for TRM talent user counts
-        if (Schema::hasTable('bench_assign')) {
-            Schema::table('bench_assign', function (Blueprint $table) {
-                $sm = Schema::getConnection()->getDoctrineSchemaManager();
-                $indexes = array_keys($sm->listTableIndexes('bench_assign'));
-                if (! in_array('idx_bench_assign_user_company', $indexes)) {
-                    $table->index(['user_id', 'company_id'], 'idx_bench_assign_user_company');
-                }
-            });
-        }
+        $indexes = [
+            ['bench_assign', 'idx_bench_assign_user_company', ['user_id', 'company_id']],
+            ['job_assign', 'idx_job_assign_company_spok_job', ['company_id', 'spok_user_id', 'job_id']],
+            ['job_assign', 'idx_job_assign_company_user_job', ['company_id', 'user_id', 'job_id']],
+        ];
 
-        // 2. Job Assign: Composite index for Captain jobs (spok_user_id) distinct count
-        if (Schema::hasTable('job_assign')) {
-            Schema::table('job_assign', function (Blueprint $table) {
-                $sm = Schema::getConnection()->getDoctrineSchemaManager();
-                $indexes = array_keys($sm->listTableIndexes('job_assign'));
-                if (! in_array('idx_job_assign_company_spok_job', $indexes)) {
-                    $table->index(['company_id', 'spok_user_id', 'job_id'], 'idx_job_assign_company_spok_job');
+        foreach ($indexes as [$table, $indexName, $columns]) {
+            try {
+                if (Schema::hasTable($table) && ! Schema::hasIndex($table, $indexName)) {
+                    Schema::table($table, function (Blueprint $t) use ($columns, $indexName) {
+                        $t->index($columns, $indexName);
+                    });
                 }
-                if (! in_array('idx_job_assign_company_user_job', $indexes)) {
-                    $table->index(['company_id', 'user_id', 'job_id'], 'idx_job_assign_company_user_job');
-                }
-            });
+            } catch (\Throwable $e) {
+                report($e);
+            }
         }
     }
 
@@ -52,17 +45,22 @@ return new class extends Migration
      */
     public function down(): void
     {
-        if (Schema::hasTable('bench_assign')) {
-            Schema::table('bench_assign', function (Blueprint $table) {
-                $table->dropIndex('idx_bench_assign_user_company');
-            });
-        }
+        $indexes = [
+            ['bench_assign', 'idx_bench_assign_user_company'],
+            ['job_assign', 'idx_job_assign_company_spok_job'],
+            ['job_assign', 'idx_job_assign_company_user_job'],
+        ];
 
-        if (Schema::hasTable('job_assign')) {
-            Schema::table('job_assign', function (Blueprint $table) {
-                $table->dropIndex('idx_job_assign_company_spok_job');
-                $table->dropIndex('idx_job_assign_company_user_job');
-            });
+        foreach ($indexes as [$table, $indexName]) {
+            try {
+                if (Schema::hasTable($table) && Schema::hasIndex($table, $indexName)) {
+                    Schema::table($table, function (Blueprint $t) use ($indexName) {
+                        $t->dropIndex($indexName);
+                    });
+                }
+            } catch (\Throwable $e) {
+                report($e);
+            }
         }
     }
 };
