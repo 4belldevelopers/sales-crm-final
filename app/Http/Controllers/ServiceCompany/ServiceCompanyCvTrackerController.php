@@ -2770,8 +2770,8 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
 
         // echo $request->id; exit;
         $arr = '';
-        // dd($request->arr);
-        $this->arr = $request->arr;
+        $rawArr = is_array($request->arr) ? $request->arr : [];
+        $this->arr = array_slice($rawArr, 0, 5);
         $this->jobIdArr = $request->jobIdArr;
         $this->applicationDataCount = DB::table('job_applications')->select('*')->whereIn('id', $this->arr)->count();
         // $this->applicationData			=	DB::table('job_applications')->select('job_applications.id')->whereIn('id', $arr)->get();
