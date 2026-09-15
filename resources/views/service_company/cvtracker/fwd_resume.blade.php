@@ -889,7 +889,7 @@ if($cc_email_count > 0){
                         </span>
                       </div>
                       <div class="fwd-cand-filename" id="fwd_cand_filename_{{ $cand->id }}" data-safename="{{ $candSafeName }}" style="font-size:11px;font-family:monospace;color:#059669;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
-                        Original_Resume_{{ $candSafeName }}.pdf
+                        Jeroworks_{{ $candSafeName }}.pdf
                       </div>
                     </div>
                   </div>
@@ -1330,9 +1330,7 @@ function updateRosterFilenames(optId) {
     $('.fwd-cand-filename').each(function () {
         var safeName = $(this).attr('data-safename') || 'Candidate';
         var filename = 'Jeroworks_' + safeName + '.pdf';
-        if (optId === 1) {
-            filename = 'Original_Resume_' + safeName + '.pdf';
-        } else if (optId === 5) {
+        if (optId === 5) {
             filename = 'Prescreen_Report_' + safeName + '.pdf';
         } else if (optId === 49) {
             filename = 'Jeroworks_Resume.pdf';
