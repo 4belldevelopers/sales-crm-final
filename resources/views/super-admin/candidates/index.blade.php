@@ -488,42 +488,84 @@ function cb(start, end) {
       fetchCandidates(); 
     });   
 
-    $(document).on( 'click', '.fwd_resume', function(){
-						
+    $(document).on( 'click', '.fwd_resume', function(e){
             e.preventDefault();		
-            localStorage.setItem('toggleOpen', 'true');
-            $('#application_mass_mail_body_content').html('');
-            $('#application_fwd_resume_body_content').html('');
+            if (window._fwdGlobalToken !== undefined) {
+                window._fwdGlobalToken++;
+                window._fwdIsCompiling = false;
+            }
             var arr 		=	[];
             var jobIdArr = [];
             $('.chk_list_item:checked').each(function () {
-                
                 var jobId = $(this).attr('data-jobId');
                 arr.push($(this).val());
                 jobIdArr.push(jobId);
             });
 
-            console.log(jobIdArr);
+            if (arr.length === 0) {
+                Swal.fire({
+                    title: 'No Candidate Selected',
+                    text: 'Please select at least one candidate before forwarding resumes.',
+                    icon: 'warning',
+                    confirmButtonColor: '#0D9488'
+                });
+                return;
+            }
 
             var id        	=	jobIdArr[0];
             var url       	=	"{{ route('service_company.cvtracker.fwd_resume',':id') }}";
             url         	=	url.replace(':id', id);
-            var baseurl     =	"{{ asset('assets/images/Loading2.gif') }}"; 
             var token       =	"{{ csrf_token() }}";
-          
-           
-            $.ajax({
+
+            function loadFwdResume(selectedArr, selectedJobIds) {
+                localStorage.setItem('toggleOpen', 'true');
+                $('#application_mass_mail_body_content').html('');
+                $('#application_fwd_resume_body_content').html(
+                    '<div class="d-flex align-items-center justify-content-center" style="min-height:200px;">' +
+                    '<span class="spinner-border spinner-border-sm text-primary me-2"></span> Loading...</div>'
+                );
+
+                $.ajax({
                     type		: 'POST',
                     url			: url,
-                    data		: {'_token': token, '_method': 'POST', 'arr' : arr,'jobIdArr':jobIdArr},
+                    data		: {'_token': token, '_method': 'POST', 'arr' : selectedArr,'jobIdArr':selectedJobIds},
                     cache		: false,
                     success 	: function (response) {
-                                        if (response.status == "success") {
-                                            $('#application_fwd_resume_body_content').html(response.view);
-                                        }
+                        if (response.status == "success") {
+                            if (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances && CKEDITOR.instances['editor1']) {
+                                try { CKEDITOR.instances['editor1'].destroy(true); } catch(e) {}
                             }
-              });
-                  
+                            $('#application_fwd_resume_body_content').html(response.view);
+                        }
+                    }
+                });
+            }
+
+            if (arr.length > 5) {
+                var extraCount = arr.length - 5;
+                Swal.fire({
+                    title: 'Batch Limit: Maximum 5 Profiles',
+                    html: '<div class="text-start" style="font-size:13px;line-height:1.6;color:#374151;">' +
+                          '<p>To ensure <strong>100% email deliverability</strong>, prevent recipient mail server attachment clipping, and provide lightning-fast resume compilation, a maximum of <strong>5 candidate profiles</strong> can be forwarded per email batch.</p>' +
+                          '<div class="p-3 my-2 rounded" style="background:#F0FDFA;border:1px solid #99F6E4;color:#0F766E;">' +
+                          '✓ The first <strong>5 candidate profiles</strong> have been automatically queued for this batch.<br>' +
+                          '• You can forward the remaining <strong>' + extraCount + ' candidate(s)</strong> in a subsequent batch.' +
+                          '</div></div>',
+                    icon: 'info',
+                    showCancelButton: true,
+                    confirmButtonText: 'Proceed with First 5 Profiles',
+                    confirmButtonColor: '#0D9488',
+                    cancelButtonText: 'Adjust Selection',
+                    cancelButtonColor: '#6B7280'
+                }).then(function(result) {
+                    if (result.isConfirmed) {
+                        loadFwdResume(arr.slice(0, 5), jobIdArr.slice(0, 5));
+                    }
+                });
+                return;
+            }
+
+            loadFwdResume(arr, jobIdArr);
     });
 
 

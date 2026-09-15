@@ -278,13 +278,13 @@ if($cc_email_count > 0){
             </optgroup>
           </select>
 
-          <!-- Live Attachment Preview Badge -->
+          <!-- Live Attachment Format Summary & Deliverability Badge -->
           <div id="fwd_attachment_preview_card" style="margin-top:8px;padding:9px 12px;background:#F0FDF4;border:1px solid #BBF7D0;border-radius:8px;display:flex;align-items:center;justify-content:space-between;gap:12px;">
             <div style="display:flex;align-items:center;gap:8px;min-width:0;">
               <span style="width:26px;height:26px;border-radius:6px;background:#DCFCE7;color:#15803D;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;font-size:12px;font-weight:700;">PDF</span>
               <div style="min-width:0;">
-                <div id="fwd_preview_filename" style="font-size:12.5px;font-weight:600;color:#166534;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
-                  {{ 'JERO_' . (!empty($applicationData[0]->full_name) ? str_replace(' ', '_', $applicationData[0]->full_name) : 'Candidate') . '_Resume.pdf' }}
+                <div id="fwd_preview_format_title" style="font-size:12.5px;font-weight:600;color:#166534;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+                  1. Original Candidate Resume
                 </div>
                 <div id="fwd_preview_desc" style="font-size:11px;color:#15803D;margin-top:1px;">
                   Pristine resume file as originally uploaded by candidate/agency.
@@ -292,13 +292,66 @@ if($cc_email_count > 0){
               </div>
             </div>
             <div style="display:flex;align-items:center;gap:6px;flex-shrink:0;">
-              <span style="font-size:11px;font-weight:600;color:{{ count($applicationData ?? []) > 10 ? '#B91C1C' : '#15803D' }};background:{{ count($applicationData ?? []) > 10 ? '#FEE2E2' : '#DCFCE7' }};padding:3px 9px;border-radius:12px;white-space:nowrap;">
-                📎 {{ count($applicationData ?? []) }} / 10 Max Resumes
+              <span id="fwd_batch_count_badge" style="font-size:11px;font-weight:600;color:{{ count($applicationData ?? []) > 5 ? '#B91C1C' : '#15803D' }};background:{{ count($applicationData ?? []) > 5 ? '#FEE2E2' : '#DCFCE7' }};padding:3px 9px;border-radius:12px;white-space:nowrap;">
+                📎 {{ count($applicationData ?? []) }} / 5 Max Resumes
               </span>
             </div>
           </div>
 
-          <!-- Percentage-Based Resume Compilation Progress Bar -->
+          <!-- Multi-Profile Attached Resumes Roster -->
+          <div id="fwd_candidate_roster" style="margin-top:10px;display:flex;flex-direction:column;gap:8px;">
+            @foreach($applicationData as $idx => $cand)
+              @php
+                $candSafeName = !empty($cand->full_name) ? str_replace(' ', '_', preg_replace('/[^\w\s.-]/', '', $cand->full_name)) : ('Candidate_' . $cand->id);
+                $candDisplayName = $cand->full_name ?? ('Candidate #' . ($idx + 1));
+                $candDesignation = $cand->current_designation ?? ($cand->job_title ?? 'Profile');
+              @endphp
+              <div class="fwd-cand-card" id="fwd_cand_card_{{ $cand->id }}" style="padding:10px 14px;background:#F0FDF4;border:1px solid #BBF7D0;border-radius:8px;transition:all 0.2s ease;">
+                <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;">
+                  <div style="display:flex;align-items:center;gap:10px;min-width:0;flex:1;">
+                    {{-- Avatar / Sequence badge --}}
+                    <div style="position:relative;flex-shrink:0;">
+                      <span id="fwd_cand_avatar_{{ $cand->id }}" style="width:30px;height:30px;border-radius:7px;background:#DCFCE7;color:#15803D;display:inline-flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;">
+                        {{ $idx + 1 }}
+                      </span>
+                      <span id="fwd_cand_check_{{ $cand->id }}" style="position:absolute;bottom:-3px;right:-3px;width:14px;height:14px;border-radius:50%;background:#10B981;color:#fff;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:bold;box-shadow:0 1px 2px rgba(0,0,0,0.15);">✓</span>
+                    </div>
+
+                    {{-- Candidate Name & Dynamic Filename --}}
+                    <div style="min-width:0;flex:1;">
+                      <div style="display:flex;align-items:center;gap:8px;flex-wrap:nowrap;">
+                        <span style="font-size:12.5px;font-weight:600;color:#111827;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+                          {{ $candDisplayName }}
+                        </span>
+                        <span style="font-size:11px;color:#6B7280;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+                          • {{ $candDesignation }}
+                        </span>
+                      </div>
+                      <div class="fwd-cand-filename" id="fwd_cand_filename_{{ $cand->id }}" data-safename="{{ $candSafeName }}" style="font-size:11px;font-family:monospace;color:#059669;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+                        Original_Resume_{{ $candSafeName }}.pdf
+                      </div>
+                    </div>
+                  </div>
+
+                  {{-- Candidate Status Pill --}}
+                  <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
+                    <div id="fwd_cand_status_{{ $cand->id }}" style="font-size:11px;font-weight:600;padding:3px 10px;border-radius:12px;background:#DCFCE7;color:#15803D;display:inline-flex;align-items:center;gap:5px;white-space:nowrap;">
+                      ✓ Attached (100%)
+                    </div>
+                  </div>
+                </div>
+
+                {{-- Candidate Progress Bar (Active Rendering) --}}
+                <div id="fwd_cand_progress_wrap_{{ $cand->id }}" style="display:none;margin-top:8px;">
+                  <div style="height:4px;width:100%;background:#E5E7EB;border-radius:2px;overflow:hidden;">
+                    <div id="fwd_cand_progress_bar_{{ $cand->id }}" style="height:100%;width:0%;background:linear-gradient(90deg, #0D9488, #059669);border-radius:2px;transition:width 0.2s ease;"></div>
+                  </div>
+                </div>
+              </div>
+            @endforeach
+          </div>
+
+          <!-- Master Resume Compilation Progress Bar -->
           <div id="fwd_compile_progress_container" style="display:none;margin-top:10px;padding:11px 14px;background:#F0FDFA;border:1px solid #99F6E4;border-radius:8px;">
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
               <div style="display:flex;align-items:center;gap:8px;min-width:0;">
@@ -319,10 +372,10 @@ if($cc_email_count > 0){
               <span id="fwd_compile_count">0 / {{ count($applicationData ?? []) }}</span>
             </div>
           </div>
-          @if(count($applicationData ?? []) > 10)
+          @if(count($applicationData ?? []) > 5)
             <div style="margin-top:7px;padding:7px 11px;background:#FEF2F2;border:1px solid #FECACA;border-radius:7px;color:#991B1B;font-size:11.5px;display:flex;align-items:center;gap:6px;">
               <span>⚠️</span>
-              <span><strong>Notice:</strong> You selected {{ count($applicationData) }} candidates. To ensure 100% email deliverability and avoid 25MB mail server rejections, the first 10 resumes will be attached.</span>
+              <span><strong>Notice:</strong> You selected {{ count($applicationData) }} candidates. To ensure 100% email deliverability and avoid mail server rejections, a maximum of 5 resumes will be attached per batch.</span>
             </div>
           @endif
         </div>
@@ -687,25 +740,37 @@ var _fwdCompiledAttachments = window._fwdCompiledAttachments;
 var _fwdIsCompiling = window._fwdIsCompiling;
 var _fwdGlobalToken = window._fwdGlobalToken;
 
+function formatBytes(bytes) {
+    if (!bytes || bytes === 0) return '0 B';
+    var k = 1024;
+    var sizes = ['B', 'KB', 'MB'];
+    var i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+}
+
+function updateRosterFilenames(optId) {
+    $('.fwd-cand-filename').each(function () {
+        var safeName = $(this).attr('data-safename') || 'Candidate';
+        var filename = 'Jeroworks_' + safeName + '.pdf';
+        if (optId === 1) {
+            filename = 'Original_Resume_' + safeName + '.pdf';
+        } else if (optId === 5) {
+            filename = 'Prescreen_Report_' + safeName + '.pdf';
+        } else if (optId === 49) {
+            filename = 'Jeroworks_Resume.pdf';
+        }
+        $(this).text(filename);
+    });
+}
+
 function updateSendButtonState() {
     var isAttach = $('#fwd_attach_cv_toggle').is(':checked');
     var optId = parseInt($('#fwd_resume_format').val(), 10) || 1;
     var btn = document.getElementById('btnSubmit');
     if (!btn) return;
 
-    // Option 1 (Original Resume) or unchecking Attach Resume: Send is immediately active via R2
-    if (!isAttach || optId === 1) {
-        _fwdGlobalToken++; // abort any active custom compile
-        _fwdIsCompiling = false;
-        btn.disabled = false;
-        btn.style.opacity = '1';
-        btn.style.cursor = 'pointer';
-        btn.title = '';
-        $('#fwd_compile_progress_container').hide();
-        return;
-    }
+    updateRosterFilenames(optId);
 
-    // Custom format (Option 5 or 41-53):
     var candidatesList = @json($applicationData ?? []);
     var selectedIds = [];
     $('.chk_list_item:checked').each(function () { selectedIds.push(String($(this).val())); });
@@ -716,6 +781,42 @@ function updateSendButtonState() {
         candidatesToProcess = candidatesList;
     }
 
+    // Option 1 (Original Resume) or unchecking Attach Resume: Send is immediately active via R2
+    if (!isAttach) {
+        _fwdGlobalToken++; // abort active compile
+        _fwdIsCompiling = false;
+        btn.disabled = false;
+        btn.style.opacity = '1';
+        btn.style.cursor = 'pointer';
+        btn.title = '';
+        $('#fwd_compile_progress_container').hide();
+        candidatesToProcess.forEach(function (c) {
+            $('#fwd_cand_card_' + c.id).css({ 'background': '#F9FAFB', 'border-color': '#E5E7EB' });
+            $('#fwd_cand_check_' + c.id).hide();
+            $('#fwd_cand_status_' + c.id).css({ 'background': '#F3F4F6', 'color': '#6B7280' }).text('Not Attached');
+            $('#fwd_cand_progress_wrap_' + c.id).hide();
+        });
+        return;
+    }
+
+    if (optId === 1) {
+        _fwdGlobalToken++; // abort active compile
+        _fwdIsCompiling = false;
+        btn.disabled = false;
+        btn.style.opacity = '1';
+        btn.style.cursor = 'pointer';
+        btn.title = '';
+        $('#fwd_compile_progress_container').hide();
+        candidatesToProcess.forEach(function (c) {
+            $('#fwd_cand_card_' + c.id).css({ 'background': '#F0FDF4', 'border-color': '#BBF7D0' });
+            $('#fwd_cand_check_' + c.id).css('display', 'flex');
+            $('#fwd_cand_status_' + c.id).css({ 'background': '#DCFCE7', 'color': '#15803D' }).text('✓ Attached (100%)');
+            $('#fwd_cand_progress_wrap_' + c.id).hide();
+        });
+        return;
+    }
+
+    // Custom format (Option 5 or 41-53):
     var cached = _fwdCompiledAttachments[optId] || {};
     var allReady = candidatesToProcess.length > 0 && candidatesToProcess.every(function (c) {
         return !!cached[c.id];
@@ -728,12 +829,37 @@ function updateSendButtonState() {
         btn.title = '';
         $('#fwd_compile_progress_container').show();
         $('#fwd_compile_spinner').hide();
-        $('#fwd_compile_status_text').html('✓ All ' + candidatesToProcess.length + ' custom resumes ready for attachment');
+        $('#fwd_compile_status_text').html('✓ All ' + candidatesToProcess.length + ' candidate resumes compiled & verified (100%)');
         $('#fwd_compile_pct_badge').text('100%').css({ 'color': '#0D9488', 'background': '#CCFBF1', 'border-color': '#99F6E4' });
         $('#fwd_compile_progress_bar').css({ 'width': '100%', 'background': '#059669' });
         $('#fwd_compile_count').text(candidatesToProcess.length + ' / ' + candidatesToProcess.length);
-        $('#fwd_compile_step_detail').text('All custom resume attachments ready. You can send now.');
+        $('#fwd_compile_step_detail').text('All candidate attachments ready. You can send now.');
+
+        candidatesToProcess.forEach(function (c) {
+            var blob = cached[c.id];
+            var sizeStr = blob ? (' • ' + formatBytes(blob.size)) : '';
+            $('#fwd_cand_card_' + c.id).css({ 'background': '#F0FDF4', 'border-color': '#BBF7D0' });
+            $('#fwd_cand_check_' + c.id).css('display', 'flex');
+            $('#fwd_cand_status_' + c.id).css({ 'background': '#DCFCE7', 'color': '#15803D' }).text('✓ Attached (100%)' + sizeStr);
+            $('#fwd_cand_progress_wrap_' + c.id).hide();
+        });
     } else {
+        // Mark cached candidates as ready, and uncached as Queued
+        candidatesToProcess.forEach(function (c) {
+            if (cached[c.id]) {
+                var sizeStr = ' • ' + formatBytes(cached[c.id].size);
+                $('#fwd_cand_card_' + c.id).css({ 'background': '#F0FDF4', 'border-color': '#BBF7D0' });
+                $('#fwd_cand_check_' + c.id).css('display', 'flex');
+                $('#fwd_cand_status_' + c.id).css({ 'background': '#DCFCE7', 'color': '#15803D' }).text('✓ Attached (100%)' + sizeStr);
+                $('#fwd_cand_progress_wrap_' + c.id).hide();
+            } else {
+                $('#fwd_cand_card_' + c.id).css({ 'background': '#F9FAFB', 'border-color': '#E5E7EB' });
+                $('#fwd_cand_check_' + c.id).hide();
+                $('#fwd_cand_status_' + c.id).css({ 'background': '#F3F4F6', 'color': '#6B7280' }).text('Queued');
+                $('#fwd_cand_progress_wrap_' + c.id).hide();
+            }
+        });
+
         // Disable Send until compilation reaches 100%
         btn.disabled = true;
         btn.style.opacity = '0.6';
@@ -773,8 +899,8 @@ async function startCompilationForOption(optId) {
 
         if (thisToken !== _fwdGlobalToken) return;
 
-        $('#fwd_compile_progress_bar').css('width', '15%');
-        $('#fwd_compile_pct_badge').text('15%');
+        $('#fwd_compile_progress_bar').css('width', '10%');
+        $('#fwd_compile_pct_badge').text('10%');
         $('#fwd_compile_status_text').text('Engine ready. Preparing candidate resumes...');
 
         var candidatesList = @json($applicationData ?? []);
@@ -802,9 +928,17 @@ async function startCompilationForOption(optId) {
             if (thisToken !== _fwdGlobalToken) return;
 
             var cand = candidatesToProcess[i];
-            var candName = cand.full_name || 'Candidate';
-            var startPct = 15 + Math.round((i / total) * 80);
-            var endPct = 15 + Math.round(((i + 1) / total) * 80);
+            var candName = cand.full_name || ('Candidate #' + (i + 1));
+            var startPct = 10 + Math.round((i / total) * 90);
+            var endPct = 10 + Math.round(((i + 1) / total) * 90);
+
+            // Active candidate card rendering state
+            $('#fwd_cand_card_' + cand.id).css({ 'background': '#F0FDFA', 'border-color': '#99F6E4' });
+            $('#fwd_cand_progress_wrap_' + cand.id).show();
+            $('#fwd_cand_progress_bar_' + cand.id).css('width', '25%');
+            $('#fwd_cand_status_' + cand.id).css({ 'background': '#CCFBF1', 'color': '#0D9488' }).html(
+                '<span class="spinner-border spinner-border-sm" style="width:10px;height:10px;border-width:1.5px;margin-right:4px;"></span> Rendering...'
+            );
 
             $('#fwd_compile_progress_bar').css('width', startPct + '%');
             $('#fwd_compile_pct_badge').text(startPct + '%');
@@ -823,6 +957,7 @@ async function startCompilationForOption(optId) {
                         $('#fwd_compile_progress_bar').css('width', midPct + '%');
                         $('#fwd_compile_pct_badge').text(midPct + '%');
                         $('#fwd_compile_step_detail').text(subMsg);
+                        $('#fwd_cand_progress_bar_' + cand.id).css('width', '65%');
                     }
                 );
 
@@ -833,6 +968,15 @@ async function startCompilationForOption(optId) {
             }
 
             if (thisToken !== _fwdGlobalToken) return;
+
+            // Candidate completed — mark 100% attached on card
+            var blob = _fwdCompiledAttachments[optId][cand.id];
+            var sizeStr = blob ? (' • ' + formatBytes(blob.size)) : '';
+            $('#fwd_cand_card_' + cand.id).css({ 'background': '#F0FDF4', 'border-color': '#BBF7D0' });
+            $('#fwd_cand_check_' + cand.id).css('display', 'flex');
+            $('#fwd_cand_progress_wrap_' + cand.id).hide();
+            $('#fwd_cand_status_' + cand.id).css({ 'background': '#DCFCE7', 'color': '#15803D' }).text('✓ Attached (100%)' + sizeStr);
+
             $('#fwd_compile_progress_bar').css('width', endPct + '%');
             $('#fwd_compile_pct_badge').text(endPct + '%');
             $('#fwd_compile_count').text((i + 1) + ' / ' + total);
@@ -845,7 +989,7 @@ async function startCompilationForOption(optId) {
         $('#fwd_compile_progress_bar').css({ 'width': '100%', 'background': '#059669' });
         $('#fwd_compile_pct_badge').text('100%').css({ 'color': '#059669', 'background': '#DCFCE7', 'border-color': '#86EFAC' });
         $('#fwd_compile_spinner').hide();
-        $('#fwd_compile_status_text').html('✓ All ' + total + ' custom resumes ready for attachment');
+        $('#fwd_compile_status_text').html('✓ All ' + total + ' candidate profiles compiled & verified (100%)');
         $('#fwd_compile_step_detail').text('All attachments generated and verified. Ready to send.');
 
         if (btn) {
@@ -878,15 +1022,7 @@ $(document).off('change', '#fwd_resume_format').on('change', '#fwd_resume_format
     var desc = sel.attr('data-desc') || '';
     var optVal = $(this).val();
 
-    var candName = "{{ !empty($applicationData[0]->full_name) ? str_replace(' ', '_', $applicationData[0]->full_name) : 'Candidate' }}";
-    var filename = 'Jeroworks_' + candName + '.pdf';
-    if (optVal === '5') {
-        filename = 'Prescreen_Report_' + candName + '.pdf';
-    } else if (optVal === '49') {
-        filename = 'Jeroworks_Resume.pdf';
-    }
-
-    $('#fwd_preview_filename').text(filename);
+    $('#fwd_preview_format_title').text(label);
     $('#fwd_preview_desc').text(desc);
 
     updateSendButtonState();
@@ -901,6 +1037,9 @@ $(document).off('change', '#fwd_attach_cv_toggle').on('change', '#fwd_attach_cv_
     }
     updateSendButtonState();
 });
+
+// Initial synchronization on drawer load
+updateSendButtonState();
 
 // Submit click handler
 document.getElementById("btnSubmit").addEventListener("click", async function () {
