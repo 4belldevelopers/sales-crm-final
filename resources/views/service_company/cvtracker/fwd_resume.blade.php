@@ -1989,12 +1989,6 @@ $(document).ready(function () {
 });
 updateSendButtonState();
 
-
- $('.cp_select').on('click', function(e) {
-   			
-			
-			var rel						= 	$(this).attr('rel');
-			var assign					=	$('#team_select_'+rel).attr("data-assign");
 // ══════════════════════════════════════════════════════════════════════════════
 // ENTERPRISE ADD EMAIL RECIPIENT DRAWER CONTROLLER
 // ══════════════════════════════════════════════════════════════════════════════
