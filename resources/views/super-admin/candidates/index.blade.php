@@ -542,14 +542,12 @@ function cb(start, end) {
             }
 
             if (arr.length > 5) {
-                var extraCount = arr.length - 5;
                 Swal.fire({
                     title: 'Maximum 5 Candidates Allowed',
-                    html: '<div class="text-start" style="font-size:13px;line-height:1.6;color:#374151;">' +
-                          '<p>You have selected <strong>' + arr.length + ' candidates</strong>. To ensure optimal email deliverability, adhere to enterprise mail server attachment limits, and maintain high-fidelity PDF rendering, you can select a <strong>maximum of 5 candidates</strong> per forward request.</p>' +
-                          '<div class="p-3 my-2 rounded" style="background:#FEF2F2;border:1px solid #FECACA;color:#991B1B;">' +
-                          '<strong>Action Required:</strong> Please deselect <strong>' + extraCount + ' candidate' + (extraCount > 1 ? 's' : '') + '</strong> so your selection is 5 or fewer, then click <strong>Forward Resume</strong> to continue.' +
-                          '</div></div>',
+                    html: '<div style="font-size:13.5px;line-height:1.6;color:#374151;">' +
+                          '<p style="margin-bottom:8px;">You’ve selected <strong>' + arr.length + ' candidates</strong>. You can forward a maximum of 5 candidates in a single request.</p>' +
+                          '<p style="color:#6B7280;margin:0;">Please select 5 candidates or fewer then click Forward Resume to continue.</p>' +
+                          '</div>',
                     icon: 'warning',
                     confirmButtonText: 'Understood, Adjust Selection',
                     confirmButtonColor: '#0D9488'
