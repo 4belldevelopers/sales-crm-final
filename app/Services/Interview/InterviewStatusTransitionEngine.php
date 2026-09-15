@@ -255,6 +255,10 @@ class InterviewStatusTransitionEngine
     /**
      * Calculate point effect vector E(Status, SubStatus) for a given state.
      *
+     * Intent: Determines point allocations for recruiter and team captain based on attendance & feedback status.
+     * Supported statuses: 1 = Attended (+10 recruiter, +2 captain), 2 & 7 = No Show / Cancelled by Candidate (-5 recruiter no-show penalty), 3 = Rescheduled.
+     * Tenancy Note: Point calculations apply within tenant company context.
+     *
      * @param int $attendanceStatus
      * @param int $feedbackStatus
      * @return array [recruiterScheduled, recruiterNoShow, teamCaptainScheduled]
@@ -266,11 +270,9 @@ class InterviewStatusTransitionEngine
         $teamCaptainScheduled = 0.0;
 
         if ($attendanceStatus == 1) { // Attended
-            if ($feedbackStatus > 0) {
-                $recruiterScheduled = 10.0;
-                $teamCaptainScheduled = 2.0;
-            }
-        } elseif ($attendanceStatus == 2) { // No Show
+            $recruiterScheduled = 10.0;
+            $teamCaptainScheduled = 2.0;
+        } elseif ($attendanceStatus == 2 || $attendanceStatus == 7) { // No Show (2) or Cancelled by Candidate (7)
             $recruiterNoShow = -5.0;
         } elseif ($attendanceStatus == 3) { // Rescheduled
             if ($feedbackStatus == 13) { // Cancelled by Candidate sub-status
@@ -288,6 +290,9 @@ class InterviewStatusTransitionEngine
     /**
      * Calculate net deltas Net = E(New) - E(Previous).
      *
+     * Intent: Computes net delta between new state vector and previous state vector.
+     * Date restriction removal: Allows point deltas for all interviews updated via feedback drawer regardless of schedule date.
+     *
      * @param int $prevStatus
      * @param int $prevSubStatus
      * @param int $newStatus
@@ -297,19 +302,6 @@ class InterviewStatusTransitionEngine
      */
     public function calculateNetDeltas(int $prevStatus, int $prevSubStatus, int $newStatus, int $newSubStatus, ?string $scheduleDate): array
     {
-        // Enforce 30-day date guard for point eligibility
-        if ($scheduleDate) {
-            $scheduleCarbon = Carbon::parse($scheduleDate);
-            $diffInDays = abs(Carbon::today()->diffInDays($scheduleCarbon));
-            if ($diffInDays > 30) {
-                return [
-                    'recruiterScheduled' => 0.0,
-                    'recruiterNoShow' => 0.0,
-                    'teamCaptainScheduled' => 0.0,
-                ];
-            }
-        }
-
         $prevVector = $this->getPointVector($prevStatus, $prevSubStatus);
         $newVector = $this->getPointVector($newStatus, $newSubStatus);
 

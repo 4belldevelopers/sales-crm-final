@@ -8877,7 +8877,25 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
 
             $response = $this->elasticService->getClient()->get($params);
             $data = (object) $response['_source'];
+        } else {
+            $data = (object) [
+                'company_id' => $addJobWiseCondidate->company_id ?? auth()->user()->company_id,
+                'submitted_by' => $addJobWiseCondidate->submitted_by ?? auth()->id(),
+                'candidate_id' => $addJobWiseCondidate->job_application_id ?: $addJobWiseCondidate->id,
+                'job_master_status_id' => $addJobWiseCondidate->master_status_id ?: 8,
+                'jobId' => $addJobWiseCondidate->job_id,
+                'of_offer_amount' => $addJobWiseCondidate->of_offer_amount ?? 0,
+                'of_joined_date' => $addJobWiseCondidate->of_joined_date ?? null,
+                'childStatus' => $addJobWiseCondidate->child_status_id ?? 0,
+            ];
+        }
 
+        $data->company_id = $data->company_id ?? ($addJobWiseCondidate->company_id ?? auth()->user()->company_id);
+        $data->submitted_by = $data->submitted_by ?? ($addJobWiseCondidate->submitted_by ?? auth()->id());
+        $data->candidate_id = $data->candidate_id ?? ($addJobWiseCondidate->job_application_id ?? $addJobWiseCondidate->id);
+        $data->job_master_status_id = $data->job_master_status_id ?? ($addJobWiseCondidate->master_status_id ?? 8);
+
+        if (true) {
             if (($master_status != 6) && ($data->job_master_status_id == 6)) {
 
                 $status_row = DB::table('candidate_status')->select('*')->where('id', '=', $data->childStatus)->first();
@@ -9015,7 +9033,7 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
                     7 => ['display' => 'Rejected',    'order' => 8],
                 ];
 
-                $currentStageId = $data->job_master_status_id;
+                $currentStageId = (int) ($addJobWiseCondidate->master_status_id ?: ($data->job_master_status_id ?: 8));
                 $newStageId = (int) $master_status;
 
                 // ✅ Ensure both exist in mapping
@@ -9140,16 +9158,15 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
                         $sourcing = -1;
                     }
 
-                    $teamRankElastic = [
-                        'company_id' => $data->company_id,
-                        'user_id' => $data->submitted_by,
-                        'candidate_id' => $data->candidate_id,
+                    $pendingTeamRankElastic = [
+                        'company_id' => $data->company_id ?: ($addJobWiseCondidate->company_id ?: auth()->user()->company_id),
+                        'user_id' => $data->submitted_by ?: ($addJobWiseCondidate->submitted_by ?: auth()->id()),
+                        'candidate_id' => $data->candidate_id ?: ($addJobWiseCondidate->job_application_id ?: $addJobWiseCondidate->id),
                         'sourcing' => $sourcing,
                         'screening' => $screening,
                         'evaluation' => $evaluation,
                         'negotiation' => $negotiation,
                     ];
-                    GeneralMethod::teamRankElastic($teamRankElastic);
 
                     DB::table('stage_point_tb')->where('job_id', '=', $data->jobId)->where('candidate_id', '=', $data->candidate_id)->delete();
 
@@ -9281,6 +9298,10 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
         ]);
 
         $addJobWiseCondidate->save();
+
+        if (! empty($pendingTeamRankElastic)) {
+            GeneralMethod::teamRankElastic($pendingTeamRankElastic);
+        }
         // dd($jobApplication);
 
         $jobId = $addJobWiseCondidate->job_id;
@@ -9988,11 +10009,12 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
             // dd($redud);
         }
 
+        $currentUserId = $this->user->id ?? auth()->id();
         $cachekeys = [
-            'alljobslist_version_user_'.$this->user->id,
-            'allcvtracker_version_user_'.$this->user->id,
-            'allapptracker_version_user_'.$this->user->id,
-            'allclientapp_version_user_'.$this->user->id,
+            'alljobslist_version_user_'.$currentUserId,
+            'allcvtracker_version_user_'.$currentUserId,
+            'allapptracker_version_user_'.$currentUserId,
+            'allclientapp_version_user_'.$currentUserId,
         ];
         foreach ($cachekeys as $key) {
             GeneralMethod::cacheClean($key);
@@ -11336,6 +11358,7 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
         $sub_stages = @$request->sub_stages;
         $comment = @$request->comment;
 
+        $addJobWiseCondidate = AddJobWiseCondidate::withoutGlobalScopes()->find($addJobWiseCondidate_id);
         $exists = $this->elasticService->getClient()->exists([
             'index' => ELASTIC_CANDIDATES,
             'id' => $addJobWiseCondidate_id,
@@ -11348,6 +11371,27 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
 
             $response = $this->elasticService->getClient()->get($params);
             $data = (object) $response['_source'];
+        } else {
+            $data = (object) [
+                'company_id' => $addJobWiseCondidate->company_id ?? auth()->user()->company_id,
+                'submitted_by' => $addJobWiseCondidate->submitted_by ?? auth()->id(),
+                'candidate_id' => $addJobWiseCondidate->job_application_id ?: $addJobWiseCondidate->id,
+                'job_master_status_id' => $addJobWiseCondidate->master_status_id ?: 8,
+                'jobId' => $addJobWiseCondidate->job_id,
+                'email' => '',
+                'phone' => '',
+                'of_offer_amount' => $addJobWiseCondidate->of_offer_amount ?? 0,
+                'of_joined_date' => $addJobWiseCondidate->of_joined_date ?? null,
+                'childStatus' => $addJobWiseCondidate->child_status_id ?? 0,
+            ];
+        }
+
+        $data->company_id = $data->company_id ?? ($addJobWiseCondidate->company_id ?? auth()->user()->company_id);
+        $data->submitted_by = $data->submitted_by ?? ($addJobWiseCondidate->submitted_by ?? auth()->id());
+        $data->candidate_id = $data->candidate_id ?? ($addJobWiseCondidate->job_application_id ?? $addJobWiseCondidate->id);
+        $data->job_master_status_id = $data->job_master_status_id ?? ($addJobWiseCondidate->master_status_id ?? 8);
+
+        if (true) {
             $clientConId = $data->company_id;
             $companiesData = DB::table('companies')->select('app_duplicate', 'app_duplicate_days')->where('id', $clientConId)->first();
             $app_duplicate = $companiesData->app_duplicate;
@@ -11683,7 +11727,7 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
                     9 => ['display' => 'Rejected',    'order' => 9],
                 ];
 
-                $currentStageId = $data->job_master_status_id;
+                $currentStageId = (int) ($addJobWiseCondidate->master_status_id ?: ($data->job_master_status_id ?: 8));
                 $newStageId = $master_status;
 
                 // ✅ Ensure both exist in mapping
@@ -11824,7 +11868,7 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
                     $negotiation = 0;
                     // if (!isset($stages[$currentStageId]) || !isset($stages[$newStageId])) {
 
-                    if ($newStageId > $currentStageId) {
+                    if ($newStageId > $currentStageId || $currentStageId == 8) {
                         if ($newStageId == 1) {
                             $sourcing = 1;
                         } elseif ($newStageId == 2) {
@@ -11838,7 +11882,7 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
                     }
 
                     if ($newStageId < $currentStageId) {
-                        if ($currentStageId == -1) {
+                        if ($currentStageId == 1) {
                             $sourcing = -1;
                         } elseif ($currentStageId == 2) {
                             $screening = -1;
@@ -11851,16 +11895,15 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
                         $sourcing = -1;
                     }
 
-                    $teamRankElastic = [
-                        'company_id' => $data->company_id,
-                        'user_id' => $data->submitted_by,
-                        'candidate_id' => $data->candidate_id,
+                    $pendingTeamRankElastic = [
+                        'company_id' => $data->company_id ?: ($addJobWiseCondidate->company_id ?: auth()->user()->company_id),
+                        'user_id' => $data->submitted_by ?: ($addJobWiseCondidate->submitted_by ?: auth()->id()),
+                        'candidate_id' => $data->candidate_id ?: ($addJobWiseCondidate->job_application_id ?: $addJobWiseCondidate->id),
                         'sourcing' => $sourcing,
                         'screening' => $screening,
                         'evaluation' => $evaluation,
                         'negotiation' => $negotiation,
                     ];
-                    GeneralMethod::teamRankElastic($teamRankElastic);
 
                     DB::table('stage_point_tb')->where('job_id', '=', $data->jobId)->where('candidate_id', '=', $data->candidate_id)->delete();
 
@@ -11987,6 +12030,10 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
 
         DB::table('add_job_wise_condidates')->where('add_job_wise_condidates.id', '=', $addJobWiseCondidate_id)->limit(1)->update($client_job_applications);
 
+        if (! empty($pendingTeamRankElastic)) {
+            GeneralMethod::teamRankElastic($pendingTeamRankElastic);
+        }
+
         if (($master_status == 1) && (@$application_id > 0)) {
             $event_name = 'CVACCESS';
             $event_table_name = 'job_applications';
@@ -12039,11 +12086,12 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
 
         }
 
+        $currentUserId = $this->user->id ?? auth()->id();
         $cachekeys = [
-            'alljobslist_version_user_'.$this->user->id,
-            'allcvtracker_version_user_'.$this->user->id,
-            'allapptracker_version_user_'.$this->user->id,
-            'allclientapp_version_user_'.$this->user->id,
+            'alljobslist_version_user_'.$currentUserId,
+            'allcvtracker_version_user_'.$currentUserId,
+            'allapptracker_version_user_'.$currentUserId,
+            'allclientapp_version_user_'.$currentUserId,
         ];
         foreach ($cachekeys as $key) {
             GeneralMethod::cacheClean($key);
