@@ -248,10 +248,13 @@ if($cc_email_count > 0){
   width: 490px;
   max-width: 100vw;
   height: 100vh;
-  background: #FFFFFF;
+  background: #FFFFFF !important;
   font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  z-index: 1055 !important;
-  box-shadow: -8px 0 32px rgba(0, 0, 0, 0.12);
+  z-index: 10055 !important;
+  box-shadow: -8px 0 32px rgba(0, 0, 0, 0.16);
+  position: fixed !important;
+  top: 0 !important;
+  right: 0 !important;
 }
 @media (max-width: 576px) {
   #kt_recipient_drawer { width: 100vw !important; }
@@ -262,8 +265,10 @@ if($cc_email_count > 0){
   flex-direction: column;
   height: 100%;
   min-height: 100%;
-  background: #FFFFFF;
+  background: #FFFFFF !important;
   overflow: hidden;
+  position: relative;
+  z-index: 1;
 }
 
 .rcp-header {
@@ -1298,6 +1303,16 @@ var _fwdIsCompiling = window._fwdIsCompiling;
 var _fwdGlobalToken = window._fwdGlobalToken;
 
 window.closeFwdResumeDrawer = function() {
+    if (typeof window.closeEmailRecipientDrawer === 'function') {
+        try { window.closeEmailRecipientDrawer(); } catch(e) {}
+    }
+    if (typeof $ !== 'undefined') {
+        $('body > #kt_recipient_drawer').remove();
+        $('.drawer-overlay').filter(function() {
+            var z = parseInt($(this).css('z-index'), 10);
+            return z >= 1000;
+        }).remove();
+    }
     if (typeof window._fwdGlobalToken !== 'undefined') {
         window._fwdGlobalToken++;
         window._fwdIsCompiling = false;
@@ -2067,13 +2082,22 @@ window.openEmailRecipientDrawer = function(target) {
     applyRcpSearch();
 
     var drawerEl = document.getElementById('kt_recipient_drawer');
-    if (drawerEl && typeof KTDrawer !== 'undefined') {
-        var drawer = KTDrawer.getInstance(drawerEl);
-        if (!drawer) {
-            KTDrawer.createInstances();
-            drawer = KTDrawer.getInstance(drawerEl);
+    if (drawerEl) {
+        // Move to document.body to avoid being trapped under .drawer-overlay stacking context
+        if (drawerEl.parentElement !== document.body) {
+            $('body > #kt_recipient_drawer').not(drawerEl).remove();
+            document.body.appendChild(drawerEl);
         }
-        if (drawer) { drawer.show(); }
+        if (typeof KTDrawer !== 'undefined') {
+            var drawer = KTDrawer.getInstance(drawerEl);
+            if (!drawer) {
+                KTDrawer.createInstances();
+                drawer = KTDrawer.getInstance(drawerEl);
+            }
+            if (drawer) { 
+                drawer.show(); 
+            }
+        }
     }
 };
 
@@ -2083,7 +2107,23 @@ window.closeEmailRecipientDrawer = function() {
         var drawer = KTDrawer.getInstance(drawerEl);
         if (drawer) { drawer.hide(); }
     }
+    $('.drawer-overlay').filter(function() {
+        var z = parseInt($(this).css('z-index'), 10);
+        return z >= 1000;
+    }).remove();
 };
+
+// Immediate relocation of recipient drawer to body on drawer load
+$(document).ready(function () {
+    var drawerEl = document.getElementById('kt_recipient_drawer');
+    if (drawerEl && drawerEl.parentElement !== document.body) {
+        $('body > #kt_recipient_drawer').not(drawerEl).remove();
+        document.body.appendChild(drawerEl);
+        if (typeof KTDrawer !== 'undefined') {
+            KTDrawer.createInstances();
+        }
+    }
+});
 
 // Override / capture clicks on Add Email buttons
 $(document).off('click', '.to_email_panel').on('click', '.to_email_panel', function(e) {
