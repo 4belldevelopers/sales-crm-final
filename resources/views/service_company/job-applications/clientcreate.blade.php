@@ -2776,86 +2776,80 @@ var KTAddCandidate = function () {
                 if (status == 'Valid') {
                   $("#save-form").prop("disabled", true);
                   $("#save-form").html(
-                    `<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Waiting...`
+                    `<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Submitting...`
                   );
                     submitButton.setAttribute('data-kt-indicator', 'on');
                     submitButton.disabled = true;
-                    setTimeout(function () {					
-					
-												if (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances['recruiter_note']) { CKEDITOR.instances['recruiter_note'].updateElement(); }
-								var formData = new FormData($('#createForm')[0]);
-												$.ajax({
-														  //  url 				: '{{route('service_company.job-applications.store')}}'+'?_token=' + '{{ csrf_token() }}',			
-                              url 				: '{{route('service_company.job-applications.clientappstore')}}'+'?_token=' + '{{ csrf_token() }}',										   
-														   type 			: 'POST',
-														   data 			: formData,
-														   processData		: false,  	// tell jQuery not to process the data
-														   contentType		: false,  	// tell jQuery not to set contentType
-														   redirect			: true,
-														   success			: function (response) {
-                                
-                                if(response.status == 'coinCheck'){
-   																	Swal.fire("Success", response.message , "warning").then(function(){
-																		
-																	});	
-                                   return false;
+
+                    if (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances['recruiter_note']) { CKEDITOR.instances['recruiter_note'].updateElement(); }
+                    var formData = new FormData($('#createForm')[0]);
+                    $.ajax({
+                        url 				: '{{route('service_company.job-applications.clientappstore')}}'+'?_token=' + '{{ csrf_token() }}',
+                        type 			: 'POST',
+                        data 			: formData,
+                        processData		: false,  	// tell jQuery not to process the data
+                        contentType		: false,  	// tell jQuery not to set contentType
+                        redirect			: true,
+                        success			: function (response) {
+                            if(response.status == 'coinCheck'){
+                                $("#save-form").prop("disabled", false).html("Submit");
+                                submitButton.removeAttribute('data-kt-indicator');
+                                submitButton.disabled = false;
+                                Swal.fire("Success", response.message , "warning");
+                                return false;
+                            }
+
+                            if(response.status == 'mailcheck'){
+                                if (!navigator.onLine) {
+                                    Swal.fire({ title: "No Internet", text: "You are currently offline or the server is unreachable.", icon: "warning", confirmButtonText: "Ok, got it!", customClass: { confirmButton: "btn btn-warning" } });
+                                    $("#save-form").prop("disabled", false).html("Submit");
+                                    submitButton.removeAttribute('data-kt-indicator');
+                                    submitButton.disabled = false;
+                                    return;
                                 }
-                                
-                                if(response.status == 'mailcheck'){
-                                  
-                                  if (!navigator.onLine) {
-                                        Swal.fire({ title: "No Internet", text: "You are currently offline or the server is unreachable.", icon: "warning", confirmButtonText: "Ok, got it!", customClass: { confirmButton: "btn btn-warning" } });
-                                        $("#save-form").prop("disabled", false).html("Submit");
-                                        submitButton.removeAttribute('data-kt-indicator');
-                                        submitButton.disabled = false;
-                                        return;
-                                    }
 
-                                   $("#save-form").html(`Submit`);
-   																	Swal.fire("Success", response.message , "warning").then(function(){
-																	});	
-                                   return false;
+                                $("#save-form").prop("disabled", false).html(`Submit`);
+                                submitButton.removeAttribute('data-kt-indicator');
+                                submitButton.disabled = false;
+                                Swal.fire("Success", response.message , "warning");
+                                return false;
+                            }
+
+                            submitButton.removeAttribute('data-kt-indicator');
+                            submitButton.disabled = true;
+                            Swal.fire({
+                                text				: "You have successfully Submitted",
+                                icon				: "success",
+                                buttonsStyling		: false,
+                                confirmButtonText	: "Ok, got it!",
+                                customClass			: {
+                                    confirmButton: "btn btn-primary"
                                 }
-                                
+                            }).then(function (result) {
+                                if (result.isConfirmed) {
+                                    if(form.querySelector('[name="email1"]')) form.querySelector('[name="email1"]').value = "";
+                                    if(form.querySelector('[name="password1"]')) form.querySelector('[name="password1"]').value = "";
+                                }
+                            });
 
-                                   submitButton.removeAttribute('data-kt-indicator');
-                                      submitButton.disabled = true;
-                                      Swal.fire({
-                                  text				: "You have successfully Submitted",
-                                  icon				: "success",
-                                  buttonsStyling		: false,
-                                  confirmButtonText	: "Ok, got it!",
-                                  customClass			: {
-                                                confirmButton: "btn btn-primary"
-                                              }
-                                      }).then(function (result) {
-                                          if (result.isConfirmed) {
-                                              form.querySelector('[name="email1"]').value 		= "";
-                                              form.querySelector('[name="password1"]').value 		= "";
-                                          }
-                                      });
+                            window.location = response.url;
+                        },
+                        error			: function (response) {
+                            if (!navigator.onLine) {
+                                Swal.fire({ title: "No Internet", text: "You are currently offline or the server is unreachable.", icon: "warning", confirmButtonText: "Ok, got it!", customClass: { confirmButton: "btn btn-warning" } });
+                                $("#save-form").prop("disabled", false).html("Submit");
+                                submitButton.removeAttribute('data-kt-indicator');
+                                submitButton.disabled = false;
+                                return;
+                            }
 
-
-																				      window.location = response.url;
-																			},
-															error			: function (response) {
-                                    if (!navigator.onLine) {
-                                        Swal.fire({ title: "No Internet", text: "You are currently offline or the server is unreachable.", icon: "warning", confirmButtonText: "Ok, got it!", customClass: { confirmButton: "btn btn-warning" } });
-                                        $("#save-form").prop("disabled", false).html("Submit");
-                                        submitButton.removeAttribute('data-kt-indicator');
-                                        submitButton.disabled = false;
-                                        return;
-                                    }
-
-																			$("#save-form").prop("disabled", false);
-																			$("#save-form").html("Submit Candidate");
-																			submitButton.removeAttribute('data-kt-indicator');
-																			Swal.fire("Error", "Submission failed. Please try again.", "error");
-																		}
-													});
-							
-                       
-                    }, 2000);
+                            $("#save-form").prop("disabled", false);
+                            $("#save-form").html("Submit Candidate");
+                            submitButton.removeAttribute('data-kt-indicator');
+                            submitButton.disabled = false;
+                            Swal.fire("Error", "Submission failed. Please try again.", "error");
+                        }
+                    });
                 } 
 				else 
 				{

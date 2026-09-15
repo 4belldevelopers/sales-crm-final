@@ -61,7 +61,7 @@ class ProcessCandidateSubmissionJob implements ShouldQueue
             $teamRankElastic = [
                 'company_id'             => $this->userCompanyId,
                 'user_id'                => $this->submittedById,
-                'candidate_id'           => $this->addJobWiseCandidateId,
+                'candidate_id'           => $this->applicationId,
                 'profileUpload'          => 1,
                 'interviewScheduled'     => 0,
                 'interviewNoShow'        => 0,
