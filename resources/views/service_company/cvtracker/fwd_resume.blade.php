@@ -404,9 +404,15 @@ if($cc_email_count > 0){
       <button type="button" class="mm-btn-cancel" onclick="(function(){var d=document.getElementById('kt_fwd_resume_drawer')||document.getElementById('kt_fwd_resume_drawer_aptk');if(d&&typeof KTDrawer!=='undefined'){var dr=KTDrawer.getInstance(d);if(dr)dr.hide();}})()">Cancel</button>
     </div>
     <div class="mm-footer-right">
-      <button type="button" class="mm-btn-send" name="btnSubmit" id="btnSubmit" value="btnSubmit">
-        <span class="indicator-label">Send</span>
-        <span class="indicator-progress">Please wait... <span class="spinner-border spinner-border-sm align-middle ms-2"></span></span>
+      <button type="button" class="mm-btn-send" name="btnSubmit" id="btnSubmit" value="btnSubmit" style="display:inline-flex;align-items:center;justify-content:center;gap:8px;min-width:115px;transition:all 0.2s ease;">
+        <span class="indicator-label" style="display:inline-flex;align-items:center;gap:6px;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+          Send
+        </span>
+        <span class="indicator-progress" style="display:none;align-items:center;gap:6px;">
+          <span class="spinner-border spinner-border-sm" style="width:13px;height:13px;border-width:2px;display:inline-block;"></span>
+          <span id="fwd_btn_progress_text">Sending...</span>
+        </span>
       </button>
     </div>
   </div>
@@ -1041,16 +1047,153 @@ $(document).off('change', '#fwd_attach_cv_toggle').on('change', '#fwd_attach_cv_
 // Initial synchronization on drawer load
 updateSendButtonState();
 
+// Input highlight reset listener
+$(document).off('input', '#to_email, #subject, #cc_email_panel').on('input', '#to_email, #subject, #cc_email_panel', function() {
+    $(this).css('border-color', '#E5E7EB');
+});
+
 // Submit click handler
 document.getElementById("btnSubmit").addEventListener("click", async function () {
     var isAttachChecked = $('#fwd_attach_cv_toggle').is(':checked');
     var attached_cv = isAttachChecked ? 1 : 0;
     var optId = parseInt($('#fwd_resume_format').val(), 10) || 1;
 
+    // ══════════════════════════════════════════════════════════════════════════════
+    // 1. STRICT RECIPIENT & FORM VALIDATION (CLIENT-SIDE)
+    // ══════════════════════════════════════════════════════════════════════════════
+    var to_email = ($('#to_email').val() || '').trim();
+    var cc_email = ($('#cc_email_panel').val() || '').trim();
+    var subject  = ($('#subject').val() || '').trim();
+
+    var emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+
+    // A. Validate To Email (Mandatory)
+    if (!to_email) {
+        $('#to_email').css('border-color', '#EF4444').focus();
+        Swal.fire({
+            title: 'Recipient Email Required',
+            text: 'Please enter at least one valid recipient email address in the "To Email ID" field.',
+            icon: 'warning',
+            confirmButtonColor: '#0D9488'
+        });
+        return;
+    }
+
+    var toList = to_email.split(',').map(function(e) { return e.trim(); }).filter(function(e) { return e.length > 0; });
+    if (toList.length === 0) {
+        $('#to_email').css('border-color', '#EF4444').focus();
+        Swal.fire({
+            title: 'Recipient Email Required',
+            text: 'Please enter at least one valid recipient email address in the "To Email ID" field.',
+            icon: 'warning',
+            confirmButtonColor: '#0D9488'
+        });
+        return;
+    }
+
+    for (var ti = 0; ti < toList.length; ti++) {
+        if (!emailRegex.test(toList[ti])) {
+            $('#to_email').css('border-color', '#EF4444').focus();
+            Swal.fire({
+                title: 'Invalid Email Address',
+                html: 'The recipient email address <code>' + $('<div>').text(toList[ti]).html() + '</code> is invalid. Please enter a valid email address.',
+                icon: 'warning',
+                confirmButtonColor: '#0D9488'
+            });
+            return;
+        }
+    }
+    $('#to_email').css('border-color', '#E5E7EB');
+
+    // B. Validate CC Email (Optional, but if entered, must be valid)
+    if (cc_email) {
+        var ccList = cc_email.split(',').map(function(e) { return e.trim(); }).filter(function(e) { return e.length > 0; });
+        for (var ci = 0; ci < ccList.length; ci++) {
+            if (!emailRegex.test(ccList[ci])) {
+                $('#cc_email_panel').css('border-color', '#EF4444').focus();
+                Swal.fire({
+                    title: 'Invalid CC Email Address',
+                    html: 'The CC email address <code>' + $('<div>').text(ccList[ci]).html() + '</code> is invalid. Please enter a valid email address.',
+                    icon: 'warning',
+                    confirmButtonColor: '#0D9488'
+                });
+                return;
+            }
+        }
+        $('#cc_email_panel').css('border-color', '#E5E7EB');
+    }
+
+    // C. Validate Subject (Mandatory)
+    if (!subject) {
+        $('#subject').css('border-color', '#EF4444').focus();
+        Swal.fire({
+            title: 'Subject Required',
+            text: 'Please enter an email subject before forwarding resumes.',
+            icon: 'warning',
+            confirmButtonColor: '#0D9488'
+        });
+        return;
+    }
+    $('#subject').css('border-color', '#E5E7EB');
+
     // Guard: Prevent sending if still compiling custom attachments
     if (attached_cv === 1 && optId !== 1 && _fwdIsCompiling) {
         Swal.fire('Please Wait', 'Resume attachments are still being prepared. Please wait until progress reaches 100%.', 'info');
         return;
+    }
+
+    // ══════════════════════════════════════════════════════════════════════════════
+    // 2. IMMEDIATE BUTTON LOADING & 10-SECOND COUNTDOWN CONTROLLER
+    // ══════════════════════════════════════════════════════════════════════════════
+    var btn = document.getElementById("btnSubmit");
+    btn.disabled = true;
+    btn.style.cursor = 'not-allowed';
+    btn.style.opacity = '0.85';
+
+    $('.indicator-label').hide();
+    $('.indicator-progress').css('display', 'inline-flex').show();
+    $('#fwd_btn_progress_text').text('Processing...');
+
+    var countdownTimer = null;
+    var remainingSeconds = 10;
+
+    function setBtnStatus(text) {
+        $('#fwd_btn_progress_text').text(text);
+    }
+
+    function startCountdown(label) {
+        if (countdownTimer) clearInterval(countdownTimer);
+        remainingSeconds = 10;
+        var prefix = label || 'Sending';
+        setBtnStatus(prefix + ' (' + remainingSeconds + 's)...');
+        countdownTimer = setInterval(function () {
+            remainingSeconds--;
+            if (remainingSeconds > 0) {
+                setBtnStatus(prefix + ' (' + remainingSeconds + 's)...');
+            } else {
+                setBtnStatus('Finalizing dispatch...');
+                clearInterval(countdownTimer);
+                countdownTimer = null;
+            }
+        }, 1000);
+    }
+
+    function stopCountdown() {
+        if (countdownTimer) {
+            clearInterval(countdownTimer);
+            countdownTimer = null;
+        }
+    }
+
+    function restoreBtn() {
+        stopCountdown();
+        $('.indicator-progress').hide();
+        $('.indicator-label').css('display', 'inline-flex').show();
+        if (btn) {
+            btn.disabled = false;
+            btn.style.cursor = 'pointer';
+            btn.style.opacity = '1';
+        }
     }
 
     var id      = 1;
@@ -1063,9 +1206,6 @@ document.getElementById("btnSubmit").addEventListener("click", async function ()
 
     var template    = $('#template').val();
     var from_email  = $('#from_email').val();
-    var to_email    = $('#to_email').val();
-    var cc_email    = $('#cc_email_panel').val();
-    var subject     = $('#subject').val();
     var editor1     = (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances && CKEDITOR.instances.editor1) ? CKEDITOR.instances.editor1.getData() : ($('#editor1').val() || '');
 
     var formData = new FormData();
@@ -1085,6 +1225,7 @@ document.getElementById("btnSubmit").addEventListener("click", async function ()
 
     // Attach pre-compiled custom PDFs if custom format was chosen
     if (attached_cv === 1 && optId !== 1) {
+        setBtnStatus('Preparing files...');
         var cached = _fwdCompiledAttachments[optId] || {};
         var candidatesList = @json($applicationData ?? []);
         var selectedIds = arr.map(function(aid) { return String(aid); });
@@ -1103,7 +1244,7 @@ document.getElementById("btnSubmit").addEventListener("click", async function ()
                 var cand = candidatesToProcess[c];
                 var blob = cached[cand.id];
                 if (!blob) {
-                    $('.indicator-progress').html('Preparing ' + (cand.full_name || 'Resume') + '... <span class="spinner-border spinner-border-sm align-middle ms-2"></span>');
+                    setBtnStatus('Rendering ' + (cand.full_name || 'Resume') + '...');
                     var companyData = {
                         companyName: @json($companyName ?? 'Hiring Partner'),
                         companyLogo: @json($companyLogo ?? '')
@@ -1135,7 +1276,7 @@ document.getElementById("btnSubmit").addEventListener("click", async function ()
             var uploadedAttachmentIds = [];
 
             if (filesToInitiate.length > 0) {
-                $('.indicator-progress').html('Preparing Cloud Storage Upload... <span class="spinner-border spinner-border-sm align-middle ms-2"></span>');
+                setBtnStatus('Uploading to Cloud...');
 
                 try {
                     var initiateJson = await new Promise(function(resolve, reject) {
@@ -1152,14 +1293,13 @@ document.getElementById("btnSubmit").addEventListener("click", async function ()
                             data: JSON.stringify({ files: filesToInitiate }),
                             success: resolve,
                             error: function(xhr, status, error) {
-                                // Gracefully capture non-200 without throwing fatal syntax error
                                 resolve({ status: 'fallback', message: (xhr.responseJSON && xhr.responseJSON.message) || error });
                             }
                         });
                     });
 
                     if (initiateJson && initiateJson.status === 'success' && initiateJson.attachments) {
-                        $('.indicator-progress').html('Uploading directly to Cloud Storage... <span class="spinner-border spinner-border-sm align-middle ms-2"></span>');
+                        setBtnStatus('Cloud sync...');
 
                         var uploadResults = await Promise.allSettled(filesToInitiate.map(async function (item) {
                             var initInfo = initiateJson.attachments[item.candidate_id];
@@ -1205,9 +1345,7 @@ document.getElementById("btnSubmit").addEventListener("click", async function ()
                     console.warn('[ForwardResume] Cloud storage upload bypassed, using direct attachment:', r2Err);
                 }
 
-                // Step 3: Attach PDF files to request for email dispatch
-                // Always attach compiled PDF Blobs directly to formData so backend queue worker
-                // ALWAYS receives the file for 100% guaranteed attachment on the email across all environments!
+                // Attach files directly to request as guaranteed fallback
                 for (var candId in candidateBlobs) {
                     if (candidateBlobs.hasOwnProperty(candId)) {
                         var bInfo = candidateBlobs[candId];
@@ -1219,9 +1357,7 @@ document.getElementById("btnSubmit").addEventListener("click", async function ()
             }
         } catch (genErr) {
             console.error('Resume preparation failed:', genErr);
-            $('.indicator-progress').hide();
-            $('.indicator-label').show();
-            document.getElementById('btnSubmit').disabled = false;
+            restoreBtn();
             Swal.fire(
                 'Compilation Error',
                 'Could not prepare candidate resume: ' + (genErr.message || 'Engine error') + '. Please try again.',
@@ -1231,9 +1367,10 @@ document.getElementById("btnSubmit").addEventListener("click", async function ()
         }
     }
 
-    $('.indicator-label').hide();
-    $('.indicator-progress').html('Sending Email... <span class="spinner-border spinner-border-sm align-middle ms-2"></span>').show();
-    document.getElementById('btnSubmit').disabled = true;
+    // ══════════════════════════════════════════════════════════════════════════════
+    // 3. DISPATCH WITH ACTIVE 10-SECOND COUNTDOWN TICKER
+    // ══════════════════════════════════════════════════════════════════════════════
+    startCountdown('Sending');
 
     $.ajax({
         type : 'POST',
@@ -1242,9 +1379,12 @@ document.getElementById("btnSubmit").addEventListener("click", async function ()
         processData: false,
         contentType: false,
         success: function (response) {
-            $('.indicator-progress').hide();
-            $('.indicator-label').show();
-            document.getElementById('btnSubmit').disabled = false;
+            restoreBtn();
+
+            if (response.status === 'error') {
+                Swal.fire('Validation Error', response.message || 'Please check your input and try again.', 'warning');
+                return;
+            }
 
             if (response.status === 'coinCheck') {
                 Swal.fire('Failed', response.message, 'warning').then(function () {
@@ -1263,9 +1403,7 @@ document.getElementById("btnSubmit").addEventListener("click", async function ()
             }
         },
         error: function (xhr) {
-            $('.indicator-progress').hide();
-            $('.indicator-label').show();
-            document.getElementById('btnSubmit').disabled = false;
+            restoreBtn();
             var serverMsg = xhr.responseJSON && xhr.responseJSON.message;
             var msg = (xhr.status === 0 || !navigator.onLine)
                 ? 'You are offline. Please check your connection and try again.'

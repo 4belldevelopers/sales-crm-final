@@ -5017,50 +5017,72 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
         // 		$to = $request->to_email;
         // 		$cc = $request->cc_email;
 
-        $subject = $request->subject;
+        $subject = trim((string) $request->subject);
         $attached_cv = $request->attached_cv;
         $message = $request->editor1;
         $arr = $request->arr ?: [];
-        // Intent: Cap maximum forwarded candidates to 10 to prevent SMTP gateway rejections (25MB size limit)
-        if (is_array($arr) && count($arr) > 10) {
-            $arr = array_slice($arr, 0, 10);
+        // Intent: Cap maximum forwarded candidates to 5 to prevent SMTP gateway rejections
+        if (is_array($arr) && count($arr) > 5) {
+            $arr = array_slice($arr, 0, 5);
         }
         $decoded = json_decode($from, true);
         if (is_array($decoded)) {
             $from = implode(',', array_column($decoded, 'value'));
         } // else $from is already a plain email string from the <select>
 
-        // 		$to = json_decode($to, true);
-        // 		$to = array_column($to, 'value');
-        // 		$to = implode(',', $to);
         $to = [];
         if (! empty($request->to_email)) {
             $emails = explode(',', $request->to_email);
-
             foreach ($emails as $keymail => $email) {
-                if (! empty($email)) {
-                    array_push($to, str_replace(' ', '', $email));
+                $cleanEmail = trim(str_replace(' ', '', $email));
+                if (! empty($cleanEmail)) {
+                    array_push($to, $cleanEmail);
                 }
-
             }
         }
+
+        // Server-side validation: To Email is strictly required
+        if (empty($to)) {
+            return Reply::dataOnly([
+                'status' => 'error',
+                'message' => 'Recipient email (To) is required. Please enter at least one valid recipient email address.'
+            ]);
+        }
+
+        // Server-side validation: Validate each recipient email format
+        foreach ($to as $toItem) {
+            if (! filter_var($toItem, FILTER_VALIDATE_EMAIL)) {
+                return Reply::dataOnly([
+                    'status' => 'error',
+                    'message' => "The recipient email '{$toItem}' is invalid. Please verify and try again."
+                ]);
+            }
+        }
+
+        // Server-side validation: Subject is strictly required
+        if (empty($subject)) {
+            return Reply::dataOnly([
+                'status' => 'error',
+                'message' => 'Email subject is required. Please provide a subject before sending.'
+            ]);
+        }
+
         $cc = [];
         if (! empty($request->cc_email)) {
-            // $cc = json_decode($cc, true);
-            // $cc = array_column($cc, 'value');
             $emails = explode(',', $request->cc_email);
-            // 			dd($emails);
-
             foreach ($emails as $keymail => $email) {
-                if (! empty($email)) {
-                    array_push($cc, str_replace(' ', '', $email));
+                $cleanCc = trim(str_replace(' ', '', $email));
+                if (! empty($cleanCc)) {
+                    // Validate each CC email format
+                    if (! filter_var($cleanCc, FILTER_VALIDATE_EMAIL)) {
+                        return Reply::dataOnly([
+                            'status' => 'error',
+                            'message' => "The CC email '{$cleanCc}' is invalid. Please verify and try again."
+                        ]);
+                    }
+                    array_push($cc, $cleanCc);
                 }
-
             }
-            // $cc = implode(',', str_replace(' ','',$emails));
-
-            // $cc = implode(',', $emails);
-            // 			$cc = $request->cc_email;//implode(',', $cc);
         }
 
         $attachments = [];
