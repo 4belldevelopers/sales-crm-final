@@ -6227,6 +6227,18 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
 
         }
 
+        /**
+         * Tenancy / Resilience Note: Ensure Main/Parent Company details are populated safely from MySQL if missing from ES.
+         */
+        if (empty($this->job->company_name) && ! empty($comId)) {
+            $compDb = DB::table('companies')->where('id', $comId)->first();
+            if ($compDb) {
+                $this->job->company_name = $compDb->company_name ?? '';
+                $this->job->company_logo = ! empty($this->job->company_logo) ? $this->job->company_logo : ($compDb->logo ?? '');
+                $this->job->company_description = ! empty($this->job->company_description) ? $this->job->company_description : ($compDb->description ?? '');
+            }
+        }
+
         $qualifications = (object) ($this->job->job_qualifications ?? []);
 
         if (! empty($qualifications)) {
