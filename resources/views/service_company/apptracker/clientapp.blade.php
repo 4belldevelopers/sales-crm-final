@@ -1937,6 +1937,7 @@ if( ($final_status_job == 1) && ($job->status == 'active') )
 		$('.chk_list_item:checked').each(function () {
 				arr.push($(this).val());
 		});
+<<<<<<< HEAD
 	   
 		$.ajax({
 						type		: 'POST',
@@ -1954,6 +1955,55 @@ if( ($final_status_job == 1) && ($job->status == 'active') )
 										}
 							}
                				});
+=======
+
+		if (arr.length === 0) {
+			Swal.fire({
+				title: 'No Candidate Selected',
+				text: 'Please select at least one candidate before forwarding resumes.',
+				icon: 'warning',
+				confirmButtonColor: '#0D9488'
+			});
+			return;
+		}
+
+		function loadFwdResumeDrawer(selectedArr) {
+			$('#application_fwd_resume_body_content').html(
+				'<div class="d-flex align-items-center justify-content-center" style="min-height:200px;">' +
+				'<span class="spinner-border spinner-border-sm text-primary me-2"></span> Loading...</div>'
+			);
+
+			$.ajax({
+				type: 'POST',
+				url: url,
+				data: {'_token': token, '_method': 'POST', 'arr': selectedArr},
+				success: function (response) {
+					if (response.status == "success") {
+						if (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances && CKEDITOR.instances['editor1']) {
+							try { CKEDITOR.instances['editor1'].destroy(true); } catch(e) {}
+						}
+						$('#application_fwd_resume_body_content').html(response.view);
+					}
+				}
+			});
+		}
+
+		if (arr.length > 5) {
+			Swal.fire({
+				title: 'Maximum 5 Candidates Allowed',
+				html: '<div style="font-size:13.5px;line-height:1.6;color:#374151;">' +
+					  '<p style="margin-bottom:8px;">You’ve selected <strong>' + arr.length + ' candidates</strong>. You can forward a maximum of 5 candidates in a single request.</p>' +
+					  '<p style="color:#6B7280;margin:0;">Please select 5 candidates or fewer then click Forward Resume to continue.</p>' +
+					  '</div>',
+				icon: 'warning',
+				confirmButtonText: 'Understood, Adjust Selection',
+				confirmButtonColor: '#0D9488'
+			});
+			return;
+		}
+
+		loadFwdResumeDrawer(arr);
+>>>>>>> staging
 									
 	});
 

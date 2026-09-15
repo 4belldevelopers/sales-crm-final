@@ -2537,7 +2537,8 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
         $custom_status = request('custom_status');
         $custom_hiringtype = request('custom_hiringtype');
         $employment_type = request('employment_type');
-        $custom_search = trim(request('custom_search'));
+        $experience_filter = request('experience_filter');
+        $custom_search = trim(request('custom_search', request('search')));
 
         $requisition_type = request('requisition_type', request('kpi_type', 'all'));
 
@@ -2564,10 +2565,11 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
             'custom_status' => $custom_status,
             'custom_hiringtype' => $custom_hiringtype,
             'employment_type' => $employment_type,
+            'experience_filter' => $experience_filter,
             'user_id' => $this->user->id,
             'custom_search' => $custom_search,
             'requisition_type' => $requisition_type,
-            'v' => 'status_v12',
+            'v' => 'status_v14',
         ];
 
         // Two-axis version key: user (personal filter changes) + company (job creates/updates by any team member).
@@ -2675,6 +2677,21 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
             $filter[] = ['term' => ['employment_type' => (int) $employment_type]];
         }
 
+        // 2b. EXPERIENCE FILTER
+        if (! empty($experience_filter) && $experience_filter !== 'all') {
+            if ($experience_filter === '0-1') {
+                $filter[] = ['range' => ['min_exp' => ['lte' => 1]]];
+            } elseif ($experience_filter === '1-3') {
+                $filter[] = ['range' => ['min_exp' => ['lte' => 3]]];
+                $filter[] = ['range' => ['max_exp' => ['gte' => 1]]];
+            } elseif ($experience_filter === '3-5') {
+                $filter[] = ['range' => ['min_exp' => ['lte' => 5]]];
+                $filter[] = ['range' => ['max_exp' => ['gte' => 3]]];
+            } elseif ($experience_filter === '5+') {
+                $filter[] = ['range' => ['max_exp' => ['gte' => 5]]];
+            }
+        }
+
         // 3. SEARCH CONDITIONS
         if (! empty($custom_search)) {
             // Store the last 5 searches per user in a Redis sorted set (score = epoch, so ZREVRANGE gives newest-first)
@@ -2686,19 +2703,39 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
             }
 
             $lowerSearch = strtolower($custom_search);
+
+            // Prioritize relevance score in sort order when a search query is active
+            if (empty($valCheck) || $valCheck == 1) {
+                array_unshift($sort, ['_score' => ['order' => 'desc']]);
+            }
+
             $must[] = [
                 'bool' => [
                     'should' => [
-                        // Primary: full-text across title (boosted), job_description, skills with fuzziness
+                        // Highest priority: exact phrase match in job title
+                        ['match_phrase' => [
+                            'title' => [
+                                'query' => $custom_search,
+                                'boost' => 20,
+                            ],
+                        ]],
+                        // High priority: strict AND match across title & skills
                         ['multi_match' => [
                             'query' => $custom_search,
-                            'fields' => ['title^3', 'job_description', 'skills'],
-                            'fuzziness' => 'AUTO',
-                            'operator' => 'or',
+                            'fields' => ['title^10', 'skills^5'],
+                            'operator' => 'and',
+                            'boost' => 10,
+                        ]],
+                        // Medium priority: strict AND match across title, skills, description
+                        ['multi_match' => [
+                            'query' => $custom_search,
+                            'fields' => ['title^5', 'skills^3', 'job_description'],
+                            'operator' => 'and',
+                            'boost' => 5,
                         ]],
                         // Exact ID match
                         ['term' => ['id' => (int) $custom_search]],
-                        // Prefix-anchored wildcard for company/client name (cheaper than leading-wildcard)
+                        // Prefix-anchored wildcard for company/client name
                         ['wildcard' => ['client_name' => $lowerSearch.'*']],
                         ['wildcard' => ['company_name' => $lowerSearch.'*']],
                         ['wildcard' => ['job_assign.user_name' => '*'.$lowerSearch.'*']],

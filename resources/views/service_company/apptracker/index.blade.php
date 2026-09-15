@@ -1882,6 +1882,7 @@
         $(document).on('click', '.fwd_resume', function() {
             if (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances && CKEDITOR.instances['editor1']) {
                 try { CKEDITOR.instances['editor1'].destroy(true); } catch(e) {}
+<<<<<<< HEAD
             }
             if (typeof window._fwdGlobalToken !== 'undefined') {
                 window._fwdGlobalToken++;
@@ -1891,22 +1892,24 @@
             if (drawerEl && typeof KTDrawer !== 'undefined') {
                 var drawer = KTDrawer.getInstance(drawerEl);
                 if (drawer) { drawer.show(); }
+=======
+>>>>>>> staging
             }
-            $('#application_mass_mail_body_content').html('');
-            $('#application_fwd_resume_body_content').html(
-                '<div class="d-flex align-items-center justify-content-center" style="min-height:200px;">' +
-                '<span class="spinner-border spinner-border-sm text-primary me-2"></span> Loading...</div>'
-            );
+            if (typeof window._fwdGlobalToken !== 'undefined') {
+                window._fwdGlobalToken++;
+                window._fwdIsCompiling = false;
+            }
+
             var id = {{ $job->id }};
             var url = "{{ route('service_company.cvtracker.fwd_resume', ':id') }}";
             url = url.replace(':id', id);
-            var baseurl = "{{ asset('assets/images/Loading2.gif') }}";
             var token = "{{ csrf_token() }}";
             var arr = [];
             var jobIdArr = [id];
             $('.chk_list_item:checked').each(function() {
                 arr.push($(this).val());
             });
+<<<<<<< HEAD
             $.ajax({
                 type: 'POST',
                 url: url,
@@ -1928,7 +1931,76 @@
                     }
                 }
             });
+=======
+>>>>>>> staging
 
+            if (arr.length === 0) {
+                Swal.fire({
+                    title: 'No Candidate Selected',
+                    text: 'Please select at least one candidate before forwarding resumes.',
+                    icon: 'warning',
+                    confirmButtonColor: '#0D9488'
+                });
+                return;
+            }
+
+            function loadFwdResumeDrawer(selectedArr) {
+                var drawerEl = document.getElementById('kt_fwd_resume_drawer_aptk');
+                if (drawerEl && typeof KTDrawer !== 'undefined') {
+                    var drawer = KTDrawer.getInstance(drawerEl);
+                    if (drawer) { drawer.show(); }
+                }
+                $('#application_mass_mail_body_content').html('');
+                $('#application_fwd_resume_body_content').html(
+                    '<div class="d-flex align-items-center justify-content-center" style="min-height:200px;">' +
+                    '<span class="spinner-border spinner-border-sm text-primary me-2"></span> Loading...</div>'
+                );
+
+                $.ajax({
+                    type: 'POST',
+                    url: url,
+                    data: {
+                        '_token': token,
+                        '_method': 'POST',
+                        'arr': selectedArr,
+                        'jobIdArr': jobIdArr
+                    },
+                    success: function(response) {
+                        if (response.status == "success") {
+                            if (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances && CKEDITOR.instances['editor1']) {
+                                try { CKEDITOR.instances['editor1'].destroy(true); } catch(e) {}
+                            }
+                            $('#application_fwd_resume_body_content').html(response.view);
+                        }
+                    }
+                });
+            }
+
+            if (arr.length > 5) {
+                Swal.fire({
+                    title: 'Maximum 5 Candidates Allowed',
+                    html: '<div style="font-size:13.5px;line-height:1.6;color:#374151;">' +
+                          '<p style="margin-bottom:8px;">You’ve selected <strong>' + arr.length + ' candidates</strong>. You can forward a maximum of 5 candidates in a single request.</p>' +
+                          '<p style="color:#6B7280;margin:0;">Please select 5 candidates or fewer then click Forward Resume to continue.</p>' +
+                          '</div>',
+                    icon: 'warning',
+                    confirmButtonText: 'Understood, Adjust Selection',
+                    confirmButtonColor: '#0D9488'
+                });
+                return;
+            }
+
+            loadFwdResumeDrawer(arr);
+        });
+
+        $(document).on('click', '#kt_fwd_resume_drawer_close_aptk', function() {
+            if (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances && CKEDITOR.instances['editor1']) {
+                try { CKEDITOR.instances['editor1'].destroy(true); } catch(e) {}
+            }
+            if (typeof window._fwdGlobalToken !== 'undefined') {
+                window._fwdGlobalToken++;
+                window._fwdIsCompiling = false;
+            }
         });
 
         $(document).on('click', '#kt_fwd_resume_drawer_close_aptk', function() {

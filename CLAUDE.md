@@ -22,11 +22,13 @@ Full concept: [docs/PRODUCT_VISION.md](docs/PRODUCT_VISION.md).
 > DORMANT — ignore them.** Do not enumerate, fix, refactor, or feature-add in those paths. Full rule:
 > [docs/PERSONA_SCOPE.md](docs/PERSONA_SCOPE.md).
 
-## Where the code lives ⚠️
+## Where the code lives & Git Deployment Rules ⚠️
 **All work happens in this folder — `JWMaincode28June2026` (the `testing.jero.works`
 codebase)** and **only** here. **Never make changes in any other folder** (e.g.
 `hire.jero.works`, which is effectively empty). Every change — code, docs, config — must
 be made inside this folder.
+
+> **Git Deployment Directive (2026-09-15):** **NEVER push git to production (`main` / `hire.jero.works`) unless explicitly asked by the user.** Stick strictly to the `staging` branch only.
 
 ---
 
