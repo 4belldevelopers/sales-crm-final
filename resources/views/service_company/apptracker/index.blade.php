@@ -1041,7 +1041,7 @@
         data-kt-drawer-width="{default:'90%', 'lg': '80%'}" data-kt-drawer-direction="end"
         data-kt-drawer-toggle="#kt_fwd_resume_drawer_toggle_aptk" data-kt-drawer-close="#kt_fwd_resume_drawer_close_aptk">
         <div class="card shadow-none rounded-0 w-100 h-100 d-flex flex-column">
-            <div class="card-header px-5 py-0 flex-shrink-0">
+            <div class="card-header px-5 py-0 flex-shrink-0" style="display:none!important;">
                 <h3 class="card-title fw-bolder text-dark mb-0">Forward Resume</h3>
                 <div class="card-toolbar">
                     <button type="button" class="btn btn-sm btn-icon btn-active-light-danger" id="kt_fwd_resume_drawer_close_aptk">
@@ -1984,8 +1984,24 @@
                           '<p style="color:#6B7280;margin:0;">Please select 5 candidates or fewer then click Forward Resume to continue.</p>' +
                           '</div>',
                     icon: 'warning',
-                    confirmButtonText: 'Understood, Adjust Selection',
-                    confirmButtonColor: '#0D9488'
+                    confirmButtonText: 'OK, I Understand',
+                    confirmButtonColor: '#0D9488',
+                    allowOutsideClick: true,
+                    didOpen: function() {
+                        var popup = Swal.getPopup();
+                        if (popup) {
+                            popup.style.cursor = 'pointer';
+                            popup.addEventListener('click', function(e) {
+                                if (e.target && (e.target.classList.contains('swal2-confirm') || e.target.closest('.swal2-confirm'))) {
+                                    return;
+                                }
+                                Swal.close();
+                                location.reload();
+                            });
+                        }
+                    }
+                }).then(function() {
+                    location.reload();
                 });
                 return;
             }

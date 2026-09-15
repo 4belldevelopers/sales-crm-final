@@ -1024,32 +1024,79 @@ $(document).ready(function() {
 <script>
 
 	$('.fwd_resume').click(function(){
-	
-						var id        	=	{{ $job->id }};
-						var url       	=	"{{ route('product_company.cvtracker.fwd_resume',':id') }}";
-						url         	=	url.replace(':id', id);
-						var baseurl     =	"{{ asset('assets/images/Loading2.gif') }}"; 
-						var token       =	"{{ csrf_token() }}";
-						
-						var arr = [];
-						$('.chk_list_item:checked').each(function () {
-								arr.push($(this).val());
+		if (window._fwdGlobalToken !== undefined) {
+			window._fwdGlobalToken++;
+			window._fwdIsCompiling = false;
+		}
+
+		var id        	=	{{ $job->id }};
+		var url       	=	"{{ route('product_company.cvtracker.fwd_resume',':id') }}";
+		url         	=	url.replace(':id', id);
+		var token       =	"{{ csrf_token() }}";
+		
+		var arr = [];
+		$('.chk_list_item:checked').each(function () {
+			arr.push($(this).val());
+		});
+
+		if (arr.length === 0) {
+			Swal.fire({
+				title: 'No Candidate Selected',
+				text: 'Please select at least one candidate before forwarding resumes.',
+				icon: 'warning',
+				confirmButtonColor: '#0D9488'
+			});
+			return;
+		}
+
+		if (arr.length > 5) {
+			Swal.fire({
+				title: 'Maximum 5 Candidates Allowed',
+				html: '<div style="font-size:13.5px;line-height:1.6;color:#374151;">' +
+					  '<p style="margin-bottom:8px;">You’ve selected <strong>' + arr.length + ' candidates</strong>. You can forward a maximum of 5 candidates in a single request.</p>' +
+					  '<p style="color:#6B7280;margin:0;">Please select 5 candidates or fewer then click Forward Resume to continue.</p>' +
+					  '</div>',
+				icon: 'warning',
+				confirmButtonText: 'OK, I Understand',
+				confirmButtonColor: '#0D9488',
+				allowOutsideClick: true,
+				didOpen: function() {
+					var popup = Swal.getPopup();
+					if (popup) {
+						popup.style.cursor = 'pointer';
+						popup.addEventListener('click', function(e) {
+							if (e.target && (e.target.classList.contains('swal2-confirm') || e.target.closest('.swal2-confirm'))) {
+								return;
+							}
+							Swal.close();
+							location.reload();
 						});
-	   
-						$.ajax({
-										type		: 'POST',
-										url			: url,
-										data		: {'_token': token, '_method': 'POST', 'arr' : arr},
-										beforeSend	: function() {
-																	//$('#childStatus_'+current_application_id).html('<img src="'+baseurl+'" height="35px" width="100%">');
-										},
-										success 	: function (response) {
-														if (response.status == "success") {
-															  $('#application_fwd_resume_body_content').html(response.view);
-														}
-											}
-               				});
-									
+					}
+				}
+			}).then(function() {
+				location.reload();
+			});
+			return;
+		}
+
+		$('#application_fwd_resume_body_content').html(
+			'<div class="d-flex align-items-center justify-content-center" style="min-height:200px;">' +
+			'<span class="spinner-border spinner-border-sm text-primary me-2"></span> Loading...</div>'
+		);
+
+		$.ajax({
+			type		: 'POST',
+			url			: url,
+			data		: {'_token': token, '_method': 'POST', 'arr' : arr},
+			success 	: function (response) {
+				if (response.status == "success") {
+					if (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances && CKEDITOR.instances['editor1']) {
+						try { CKEDITOR.instances['editor1'].destroy(true); } catch(e) {}
+					}
+					$('#application_fwd_resume_body_content').html(response.view);
+				}
+			}
+		});
 	});
  
 </script>
