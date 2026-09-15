@@ -1882,18 +1882,6 @@
         $(document).on('click', '.fwd_resume', function() {
             if (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances && CKEDITOR.instances['editor1']) {
                 try { CKEDITOR.instances['editor1'].destroy(true); } catch(e) {}
-<<<<<<< HEAD
-            }
-            if (typeof window._fwdGlobalToken !== 'undefined') {
-                window._fwdGlobalToken++;
-                window._fwdIsCompiling = false;
-            }
-            var drawerEl = document.getElementById('kt_fwd_resume_drawer_aptk');
-            if (drawerEl && typeof KTDrawer !== 'undefined') {
-                var drawer = KTDrawer.getInstance(drawerEl);
-                if (drawer) { drawer.show(); }
-=======
->>>>>>> staging
             }
             if (typeof window._fwdGlobalToken !== 'undefined') {
                 window._fwdGlobalToken++;
@@ -1909,30 +1897,6 @@
             $('.chk_list_item:checked').each(function() {
                 arr.push($(this).val());
             });
-<<<<<<< HEAD
-            $.ajax({
-                type: 'POST',
-                url: url,
-                data: {
-                    '_token': token,
-                    '_method': 'POST',
-                    'arr': arr,
-                    'jobIdArr': jobIdArr
-                },
-                beforeSend: function() {
-                    //$('#childStatus_'+current_application_id).html('<img src="'+baseurl+'" height="35px" width="100%">');
-                },
-                success: function(response) {
-                    if (response.status == "success") {
-                        if (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances && CKEDITOR.instances['editor1']) {
-                            try { CKEDITOR.instances['editor1'].destroy(true); } catch(e) {}
-                        }
-                        $('#application_fwd_resume_body_content').html(response.view);
-                    }
-                }
-            });
-=======
->>>>>>> staging
 
             if (arr.length === 0) {
                 Swal.fire({
@@ -2007,16 +1971,6 @@
             }
 
             loadFwdResumeDrawer(arr);
-        });
-
-        $(document).on('click', '#kt_fwd_resume_drawer_close_aptk', function() {
-            if (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances && CKEDITOR.instances['editor1']) {
-                try { CKEDITOR.instances['editor1'].destroy(true); } catch(e) {}
-            }
-            if (typeof window._fwdGlobalToken !== 'undefined') {
-                window._fwdGlobalToken++;
-                window._fwdIsCompiling = false;
-            }
         });
 
         $(document).on('click', '#kt_fwd_resume_drawer_close_aptk', function() {

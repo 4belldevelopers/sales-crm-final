@@ -1937,25 +1937,6 @@ if( ($final_status_job == 1) && ($job->status == 'active') )
 		$('.chk_list_item:checked').each(function () {
 				arr.push($(this).val());
 		});
-<<<<<<< HEAD
-	   
-		$.ajax({
-						type		: 'POST',
-						url			: url,
-						data		: {'_token': token, '_method': 'POST', 'arr' : arr},
-						beforeSend	: function() {
-																	//$('#childStatus_'+current_application_id).html('<img src="'+baseurl+'" height="35px" width="100%">');
-						},
-						success 	: function (response) {
-										if (response.status == "success") {
-											if (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances && CKEDITOR.instances['editor1']) {
-												try { CKEDITOR.instances['editor1'].destroy(true); } catch(e) {}
-											}
-											$('#application_fwd_resume_body_content').html(response.view);
-										}
-							}
-               				});
-=======
 
 		if (arr.length === 0) {
 			Swal.fire({
@@ -2019,7 +2000,6 @@ if( ($final_status_job == 1) && ($job->status == 'active') )
 		}
 
 		loadFwdResumeDrawer(arr);
->>>>>>> staging
 									
 	});
 
