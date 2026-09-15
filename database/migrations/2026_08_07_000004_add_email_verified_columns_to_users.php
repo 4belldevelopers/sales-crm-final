@@ -30,8 +30,12 @@ return new class extends Migration
             ->update(['email_verification_code' => null]);
 
         Schema::table('users', function (Blueprint $table) {
-            $table->timestamp('email_verified_at')->nullable()->after('email_verification_code');
-            $table->timestamp('email_verification_expires_at')->nullable()->after('email_verified_at');
+            if (! Schema::hasColumn('users', 'email_verified_at')) {
+                $table->timestamp('email_verified_at')->nullable()->after('email_verification_code');
+            }
+            if (! Schema::hasColumn('users', 'email_verification_expires_at')) {
+                $table->timestamp('email_verification_expires_at')->nullable()->after('email_verified_at');
+            }
         });
 
         // Step 2: back-fill email_verified_at for users who are already active with no pending token.
@@ -49,10 +53,10 @@ return new class extends Migration
             ->having('cnt', '>', 1)
             ->exists();
 
-        if (! $hasDuplicates) {
+        if (! $hasDuplicates && Schema::hasTable('users') && ! Schema::hasIndex('users', 'users_email_verification_code_unique')) {
             DB::statement('ALTER TABLE users ADD UNIQUE KEY users_email_verification_code_unique (email_verification_code), ALGORITHM=INPLACE, LOCK=NONE');
         } else {
-            \Log::warning('V2Registration 5.11 migration: skipped users.email_verification_code UNIQUE — duplicate tokens found. Resolve and re-run.');
+            \Log::warning('V2Registration 5.11 migration: skipped users.email_verification_code UNIQUE — duplicate tokens found or already exists.');
         }
     }
 

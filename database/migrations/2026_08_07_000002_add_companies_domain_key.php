@@ -19,9 +19,11 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::table('companies', function (Blueprint $table) {
-            $table->string('domain_key', 255)->nullable()->after('website');
-        });
+        if (Schema::hasTable('companies') && ! Schema::hasColumn('companies', 'domain_key')) {
+            Schema::table('companies', function (Blueprint $table) {
+                $table->string('domain_key', 255)->nullable()->after('website');
+            });
+        }
 
         // Backfill domain_key for all existing companies from their website column.
         DB::table('companies')
@@ -49,10 +51,10 @@ return new class extends Migration
             ->having('cnt', '>', 1)
             ->exists();
 
-        if (! $hasDuplicates) {
+        if (! $hasDuplicates && Schema::hasTable('companies') && ! Schema::hasIndex('companies', 'companies_domain_key_unique')) {
             DB::statement('ALTER TABLE companies ADD UNIQUE KEY companies_domain_key_unique (domain_key), ALGORITHM=INPLACE, LOCK=NONE');
         } else {
-            \Log::warning('V2Registration migration: skipped companies.domain_key UNIQUE — duplicate domain_key values found. Resolve duplicates and re-run.');
+            \Log::warning('V2Registration migration: skipped companies.domain_key UNIQUE — duplicate domain_key values found or already exists.');
         }
     }
 

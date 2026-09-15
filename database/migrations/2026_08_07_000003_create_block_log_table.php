@@ -15,6 +15,10 @@ return new class extends Migration
 {
     public function up(): void
     {
+        if (Schema::hasTable('block_log')) {
+            return;
+        }
+
         Schema::create('block_log', function (Blueprint $table) {
             $table->id();
             $table->string('target_type', 20)->comment('user | company');

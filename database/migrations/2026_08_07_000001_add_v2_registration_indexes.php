@@ -18,13 +18,19 @@ return new class extends Migration
     public function up(): void
     {
         // packages: speeds up Package::where('is_trial', 1)->first() (Finding #6)
-        DB::statement('ALTER TABLE packages ADD KEY packages_is_trial_status (is_trial, status), ALGORITHM=INPLACE, LOCK=NONE');
+        if (Schema::hasTable('packages') && ! Schema::hasIndex('packages', 'packages_is_trial_status')) {
+            DB::statement('ALTER TABLE packages ADD KEY packages_is_trial_status (is_trial, status), ALGORITHM=INPLACE, LOCK=NONE');
+        }
 
         // subscriptions: preemptive company-scoped lookup index
-        DB::statement('ALTER TABLE subscriptions ADD KEY subscriptions_company_id (company_id), ALGORITHM=INPLACE, LOCK=NONE');
+        if (Schema::hasTable('subscriptions') && ! Schema::hasIndex('subscriptions', 'subscriptions_company_id')) {
+            DB::statement('ALTER TABLE subscriptions ADD KEY subscriptions_company_id (company_id), ALGORITHM=INPLACE, LOCK=NONE');
+        }
 
         // users: composite index for company-scoped user lookups during registration checks
-        DB::statement('ALTER TABLE users ADD KEY users_company_email (company_id, email), ALGORITHM=INPLACE, LOCK=NONE');
+        if (Schema::hasTable('users') && ! Schema::hasIndex('users', 'users_company_email')) {
+            DB::statement('ALTER TABLE users ADD KEY users_company_email (company_id, email), ALGORITHM=INPLACE, LOCK=NONE');
+        }
 
         // companies.sub_domain UNIQUE — treated as unique in code but schema lacked the constraint.
         // Guard: skip if duplicate sub_domain rows exist (should not in production; investigate if this fails).
@@ -36,10 +42,10 @@ return new class extends Migration
             ->having('cnt', '>', 1)
             ->exists();
 
-        if (! $hasDuplicates) {
+        if (! $hasDuplicates && Schema::hasTable('companies') && ! Schema::hasIndex('companies', 'companies_sub_domain_unique')) {
             DB::statement('ALTER TABLE companies ADD UNIQUE KEY companies_sub_domain_unique (sub_domain), ALGORITHM=INPLACE, LOCK=NONE');
         } else {
-            \Log::warning('V2Registration migration: skipped companies.sub_domain UNIQUE — duplicate sub_domain values found. Resolve duplicates and re-run.');
+            \Log::warning('V2Registration migration: skipped companies.sub_domain UNIQUE — duplicate sub_domain values found or already exists.');
         }
     }
 

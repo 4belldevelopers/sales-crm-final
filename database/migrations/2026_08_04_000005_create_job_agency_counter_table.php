@@ -12,6 +12,10 @@ return new class extends Migration
 {
     public function up(): void
     {
+        if (Schema::hasTable('job_agency_counter')) {
+            return;
+        }
+
         Schema::create('job_agency_counter', function (Blueprint $t) {
             $t->unsignedInteger('job_id')->primary();
             $t->unsignedInteger('company_id');
