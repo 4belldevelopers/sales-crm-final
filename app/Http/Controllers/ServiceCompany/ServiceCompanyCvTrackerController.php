@@ -4570,7 +4570,11 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
             // }
 
             //	dd($template_description);
-            $template_description = str_replace(['[{COMPANY_NAME}]', '[{HR_PHONE}]', '[{HR_NAME}]', '[{HR_EMAIL}]', '[{POSITION}]'], [$companyDetails->company_name, auth()->user()->mobile, auth()->user()->name, auth()->user()->email, $companyDetails->designation], $template_description);
+            $template_description = str_replace(
+                ['[{COMPANY_NAME}]', '[{HR_PHONE}]', '[{HR_NAME}]', '[HR_NAME]', '[{HR_EMAIL}]', '[{POSITION}]'],
+                [$companyDetails->company_name, auth()->user()->mobile, auth()->user()->name, auth()->user()->name, auth()->user()->email, $companyDetails->designation],
+                $template_description
+            );
         }
         if ((int) $request->mailtype == 2) {
             // dd($company_name->company_name, auth()->user()->phone, auth()->user()->name, auth()->user()->email);
@@ -5348,19 +5352,22 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
                 }
                 if ($key == 0) {
                     $hr_name_first = DB::table('users')->select('users.*')->where('email', '=', $mailto)->first();
-                    if ($hr_name_first) {
+                    if ($hr_name_first && ! empty($hr_name_first->name)) {
                         $hr_name_first_set = $hr_name_first->name;
                     } else {
                         $hr_name_first = DB::table('client_contact_info')->select('client_contact_info.*')->where('contact_person_email', '=', $mailto)->first();
-                        if ($hr_name_first) {
+                        if ($hr_name_first && ! empty($hr_name_first->contact_person_name)) {
                             $hr_name_first_set = $hr_name_first->contact_person_name;
+                        } else {
+                            $emailPrefix = explode('@', (string) $mailto)[0];
+                            $prettyName = ucwords(str_replace(['.', '_', '-'], ' ', $emailPrefix));
+                            $hr_name_first_set = ! empty($prettyName) ? $prettyName : 'Hiring Team';
                         }
-
                     }
 
-                    $template_description = str_replace(['[HR_NAME]'], [$hr_name_first_set], $message);
+                    $template_description = str_replace(['[HR_NAME]', '[{HR_NAME}]'], [$hr_name_first_set], $message);
                 } else {
-                    $template_description = str_replace(['[HR_NAME]'], [$hr_name_first_set], $message);
+                    $template_description = str_replace(['[HR_NAME]', '[{HR_NAME}]'], [$hr_name_first_set], $message);
                 }
 
                 $data = ['message' => $template_description, 'subject' => $subject, 'company_name' => $company_name->company_name, 'consultant_name' => '4Bell Technology', 'position' => 'PHP', 'candidate_skills' => $candidateSkills];
