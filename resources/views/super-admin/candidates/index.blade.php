@@ -549,8 +549,24 @@ function cb(start, end) {
                           '<p style="color:#6B7280;margin:0;">Please select 5 candidates or fewer then click Forward Resume to continue.</p>' +
                           '</div>',
                     icon: 'warning',
-                    confirmButtonText: 'Understood, Adjust Selection',
-                    confirmButtonColor: '#0D9488'
+                    confirmButtonText: 'OK, I Understand',
+                    confirmButtonColor: '#0D9488',
+                    allowOutsideClick: true,
+                    didOpen: function() {
+                        var popup = Swal.getPopup();
+                        if (popup) {
+                            popup.style.cursor = 'pointer';
+                            popup.addEventListener('click', function(e) {
+                                if (e.target && (e.target.classList.contains('swal2-confirm') || e.target.closest('.swal2-confirm'))) {
+                                    return;
+                                }
+                                Swal.close();
+                                location.reload();
+                            });
+                        }
+                    }
+                }).then(function() {
+                    location.reload();
                 });
                 return;
             }
