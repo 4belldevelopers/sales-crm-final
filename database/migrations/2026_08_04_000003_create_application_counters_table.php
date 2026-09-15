@@ -8,6 +8,10 @@ return new class extends Migration
 {
     public function up(): void
     {
+        if (Schema::hasTable('application_counters')) {
+            return;
+        }
+
         Schema::create('application_counters', function (Blueprint $t) {
             $t->unsignedInteger('job_id')->primary();
             $t->unsignedInteger('total_apps')->default(0);

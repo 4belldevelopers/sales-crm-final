@@ -8,6 +8,10 @@ return new class extends Migration
 {
     public function up(): void
     {
+        if (Schema::hasTable('pipeline_counters')) {
+            return;
+        }
+
         Schema::create('pipeline_counters', function (Blueprint $t) {
             $t->unsignedInteger('job_id')->primary();
             $t->unsignedInteger('company_id');
