@@ -1919,30 +1919,40 @@ if( ($final_status_job == 1) && ($job->status == 'active') )
 <script> 
 
 	$('.fwd_resume').click(function(){
+		if (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances && CKEDITOR.instances['editor1']) {
+			try { CKEDITOR.instances['editor1'].destroy(true); } catch(e) {}
+		}
+		if (typeof window._fwdGlobalToken !== 'undefined') {
+			window._fwdGlobalToken++;
+			window._fwdIsCompiling = false;
+		}
 	
-						var id        	=	'{{ $job->id }}'
-						var url       	=	"{{ route('service_company.cvtracker.fwd_resume',':id') }}";
-						url         	=	url.replace(':id', id);
-						var baseurl     =	"{{ asset('assets/images/Loading2.gif') }}"; 
-						var token       =	"{{ csrf_token() }}";
-						
-						var arr = [];
-						$('.chk_list_item:checked').each(function () {
-								arr.push($(this).val());
-						});
+		var id        	=	'{{ $job->id }}'
+		var url       	=	"{{ route('service_company.cvtracker.fwd_resume',':id') }}";
+		url         	=	url.replace(':id', id);
+		var baseurl     =	"{{ asset('assets/images/Loading2.gif') }}"; 
+		var token       =	"{{ csrf_token() }}";
+		
+		var arr = [];
+		$('.chk_list_item:checked').each(function () {
+				arr.push($(this).val());
+		});
 	   
-						$.ajax({
-										type		: 'POST',
-										url			: url,
-										data		: {'_token': token, '_method': 'POST', 'arr' : arr},
-										beforeSend	: function() {
+		$.ajax({
+						type		: 'POST',
+						url			: url,
+						data		: {'_token': token, '_method': 'POST', 'arr' : arr},
+						beforeSend	: function() {
 																	//$('#childStatus_'+current_application_id).html('<img src="'+baseurl+'" height="35px" width="100%">');
-										},
-										success 	: function (response) {
-														if (response.status == "success") {
-															  $('#application_fwd_resume_body_content').html(response.view);
-														}
+						},
+						success 	: function (response) {
+										if (response.status == "success") {
+											if (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances && CKEDITOR.instances['editor1']) {
+												try { CKEDITOR.instances['editor1'].destroy(true); } catch(e) {}
 											}
+											$('#application_fwd_resume_body_content').html(response.view);
+										}
+							}
                				});
 									
 	});

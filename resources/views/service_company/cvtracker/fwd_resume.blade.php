@@ -30,21 +30,32 @@ var initSample 				= ( function()
 		isBBCodeBuiltIn 			= !!CKEDITOR.plugins.get( 'bbcode' );
 
 	return function() {
-								var editorElement = CKEDITOR.document.getById( 'editor1' );
+		try {
+			if (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances && CKEDITOR.instances['editor1']) {
+				try {
+					CKEDITOR.instances['editor1'].destroy(true);
+				} catch(destroyErr) {
+					console.warn('CKEditor cleanup error:', destroyErr);
+				}
+			}
+		} catch(e) {}
+
+		var editorElement = CKEDITOR.document.getById( 'editor1' );
+		if ( !editorElement ) return;
 						
-								if ( isBBCodeBuiltIn ) {
-									editorElement.setHtml(
-										'Hello world!\n\n' +
-										'I\'m an instance of [url=https://ckeditor.com]CKEditor[/url].'
-									);
-								}
-								if ( wysiwygareaAvailable ) {
-									CKEDITOR.replace( 'editor1' );
-								} else {
-									editorElement.setAttribute( 'contenteditable', 'true' );   
-									CKEDITOR.inline( 'editor1' );
-								}							
-					};
+		if ( isBBCodeBuiltIn ) {
+			editorElement.setHtml(
+				'Hello world!\n\n' +
+				'I\'m an instance of [url=https://ckeditor.com]CKEditor[/url].'
+			);
+		}
+		if ( wysiwygareaAvailable ) {
+			CKEDITOR.replace( 'editor1' );
+		} else {
+			editorElement.setAttribute( 'contenteditable', 'true' );   
+			CKEDITOR.inline( 'editor1' );
+		}							
+	};
 	function isWysiwygareaAvailable() 
 	{
 		if ( CKEDITOR.revision == ( '%RE' + 'V%' ) ) {
@@ -669,9 +680,12 @@ $('#template').change(function(){
 // ══════════════════════════════════════════════════════════════════════════════
 // PERCENTAGE-BASED RESUME COMPILATION & SUBMIT STATE CONTROLLER
 // ══════════════════════════════════════════════════════════════════════════════
-var _fwdCompiledAttachments = {}; // Cached blobs by format: { [optId]: { [candId]: Blob } }
-var _fwdIsCompiling = false;
-var _fwdGlobalToken = 0;
+window._fwdCompiledAttachments = window._fwdCompiledAttachments || {};
+window._fwdIsCompiling = false;
+window._fwdGlobalToken = (window._fwdGlobalToken || 0) + 1;
+var _fwdCompiledAttachments = window._fwdCompiledAttachments;
+var _fwdIsCompiling = window._fwdIsCompiling;
+var _fwdGlobalToken = window._fwdGlobalToken;
 
 function updateSendButtonState() {
     var isAttach = $('#fwd_attach_cv_toggle').is(':checked');
@@ -858,7 +872,7 @@ async function startCompilationForOption(optId) {
 }
 
 // Attachment Format dropdown change
-$(document).on('change', '#fwd_resume_format', function () {
+$(document).off('change', '#fwd_resume_format').on('change', '#fwd_resume_format', function () {
     var sel = $(this).find('option:selected');
     var label = sel.attr('data-label') || sel.text();
     var desc = sel.attr('data-desc') || '';
@@ -867,7 +881,7 @@ $(document).on('change', '#fwd_resume_format', function () {
     var candName = "{{ !empty($applicationData[0]->full_name) ? str_replace(' ', '_', $applicationData[0]->full_name) : 'Candidate' }}";
     var filename = 'Jeroworks_' + candName + '.pdf';
     if (optVal === '5') {
-        filename = 'PRESCREEN_REPORT_' + candName + '.pdf';
+        filename = 'Prescreen_Report_' + candName + '.pdf';
     } else if (optVal === '49') {
         filename = 'Jeroworks_Resume.pdf';
     }
@@ -879,7 +893,7 @@ $(document).on('change', '#fwd_resume_format', function () {
 });
 
 // Toggle checkbox for "Attach Resume"
-$(document).on('change', '#fwd_attach_cv_toggle', function () {
+$(document).off('change', '#fwd_attach_cv_toggle').on('change', '#fwd_attach_cv_toggle', function () {
     if ($(this).is(':checked')) {
         $('#fwd_format_container').slideDown(150);
     } else {
@@ -964,7 +978,8 @@ document.getElementById("btnSubmit").addEventListener("click", async function ()
                 }
                 if (blob) {
                     var safeCandName = (cand.full_name || 'Candidate').replace(/[^\w\s.-]/g, '').replace(/\s+/g, '_');
-                    var outName = (blob && blob.filename) ? blob.filename : ('Jeroworks_' + safeCandName + '.pdf');
+                    var defaultName = (optId === 5) ? ('Prescreen_Report_' + safeCandName + '.pdf') : ('Jeroworks_' + safeCandName + '.pdf');
+                    var outName = (blob && blob.filename) ? blob.filename : defaultName;
                     candidateBlobs[cand.id] = { blob: blob, filename: outName };
                     filesToInitiate.push({
                         candidate_id: cand.id,
@@ -1099,6 +1114,10 @@ document.getElementById("btnSubmit").addEventListener("click", async function ()
                 return;
             }
             if (response.status === 'success') {
+                window._fwdCompiledAttachments = {};
+                if (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances && CKEDITOR.instances['editor1']) {
+                    try { CKEDITOR.instances['editor1'].destroy(true); } catch(e) {}
+                }
                 Swal.fire('Success!', 'Selected Applicant Forwarded.', 'success').then(function () {
                     location.reload();
                 });

@@ -1964,6 +1964,13 @@
 
 
         $(document).on("click", ".fwd_resume", function() {
+            if (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances && CKEDITOR.instances['editor1']) {
+                try { CKEDITOR.instances['editor1'].destroy(true); } catch(e) {}
+            }
+            if (typeof window._fwdGlobalToken !== 'undefined') {
+                window._fwdGlobalToken++;
+                window._fwdIsCompiling = false;
+            }
 
             var id = {{ $job->id }};
             var url = "{{ route('service_company.cvtracker.fwd_resume', ':id') }}";
@@ -1987,6 +1994,9 @@
                 },
                 success: function(response) {
                     if (response.status == "success") {
+                        if (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances && CKEDITOR.instances['editor1']) {
+                            try { CKEDITOR.instances['editor1'].destroy(true); } catch(e) {}
+                        }
                         $('#application_fwd_resume_body_content').html(response.view);
                     }
                 }

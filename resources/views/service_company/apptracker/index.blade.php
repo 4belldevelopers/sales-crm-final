@@ -1880,6 +1880,13 @@
         });
 
         $(document).on('click', '.fwd_resume', function() {
+            if (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances && CKEDITOR.instances['editor1']) {
+                try { CKEDITOR.instances['editor1'].destroy(true); } catch(e) {}
+            }
+            if (typeof window._fwdGlobalToken !== 'undefined') {
+                window._fwdGlobalToken++;
+                window._fwdIsCompiling = false;
+            }
             var drawerEl = document.getElementById('kt_fwd_resume_drawer_aptk');
             if (drawerEl && typeof KTDrawer !== 'undefined') {
                 var drawer = KTDrawer.getInstance(drawerEl);
@@ -1914,11 +1921,24 @@
                 },
                 success: function(response) {
                     if (response.status == "success") {
+                        if (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances && CKEDITOR.instances['editor1']) {
+                            try { CKEDITOR.instances['editor1'].destroy(true); } catch(e) {}
+                        }
                         $('#application_fwd_resume_body_content').html(response.view);
                     }
                 }
             });
 
+        });
+
+        $(document).on('click', '#kt_fwd_resume_drawer_close_aptk', function() {
+            if (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances && CKEDITOR.instances['editor1']) {
+                try { CKEDITOR.instances['editor1'].destroy(true); } catch(e) {}
+            }
+            if (typeof window._fwdGlobalToken !== 'undefined') {
+                window._fwdGlobalToken++;
+                window._fwdIsCompiling = false;
+            }
         });
 
         $(document).on('click', '.mass_mail', function() {
