@@ -3220,12 +3220,7 @@ END:VCALENDAR";
 
     public static function companyDetailsByClient($jobid)
     {
-        $logos = DB::table('companies')
-            ->select('companies.*', 'clients.logo_logical_path', 'jobs.total_positions')
-            ->join('jobs', 'companies.id', 'jobs.company_id')
-            ->join('clients', 'clients.id', 'jobs.client_id')->where('jobs.id', $jobid)->first();
-
-        $company_id = auth()->user()->company_id;
+        $company_id = auth()->user()->company_id ?? 0;
 
         $logos = DB::table('jobs')
             ->select(
@@ -3288,30 +3283,24 @@ END:VCALENDAR";
                 'recommendation_relation.final_status',
                 'recommendation_relation.to_company_id'
             )
-            ->join('clients', 'clients.id', 'jobs.client_id')
-            ->join('companies', 'companies.id', 'jobs.company_id')
+            ->leftJoin('clients', 'clients.id', 'jobs.client_id')
+            ->leftJoin('companies', 'companies.id', 'jobs.company_id')
             ->leftJoin('add_job_wise_condidates as job_applications', 'job_applications.job_id', '=', 'jobs.id')
             ->leftJoin('recommendation_relation', 'recommendation_relation.job_id', '=', 'jobs.id')
             ->where('jobs.id', '>', '0');
         $row = $logos->where('jobs.id', $jobid)->first();
 
-        //  dd($row);
-        $recommendation_id = '';
-        $recommendation_id = $row->recommendation_id;
-        $client_name = @$row->clients_name;
-        if (@$row->company_id != auth()->user()->company_id) {
-            $client_name = @$row->company_name;
-            $client_name = ucwords(substr(@$client_name, 0, 30));
-            if (@$row->company_id != auth()->user()->company_id) {
-                $client_name = @$row->company_name;
-                $client_name = ucwords(substr(@$client_name, 0, 30));
-            }
-
+        if (! $row) {
+            return '';
         }
 
-        // 			dd($client_name);
+        /**
+         * Tenancy / Intent Note: Always resolve Main/Parent Company name (companies.company_name)
+         * rather than Client company name (clients.name) for Job Details display.
+         */
+        $parent_company_name = ! empty($row->company_name) ? $row->company_name : (! empty($row->clients_name) ? $row->clients_name : '');
 
-        return @$client_name;
+        return ucwords(substr((string) $parent_company_name, 0, 30));
     }
 
     public static function companyOrClientDetails($jobid = '')
