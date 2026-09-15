@@ -883,7 +883,7 @@
       var jspdf = await ensureJsPdf();
       var JsPDF = jspdf.jsPDF;
       var pdf = null;
-      var renderDpi = 288;
+      var renderDpi = 150;
 
       for (var i = 0; i < pageCount; i++) {
         if (options.statusCallback) {
@@ -928,7 +928,7 @@
             }
           }
 
-          var imgData = canvas.toDataURL('image/jpeg', 0.98);
+          var imgData = canvas.toDataURL('image/jpeg', 0.78);
           pdf.addImage(imgData, 'JPEG', 0, 0, pageW, pageH, undefined, 'FAST');
         } finally {
           if (bitmap && typeof bitmap.free === 'function') bitmap.free();
@@ -1353,7 +1353,7 @@
       var base = pdfJsPage.getViewport({ scale: 1 });
       var cssScale = Math.min(1.35, 820 / base.width);
       var cssViewport = pdfJsPage.getViewport({ scale: cssScale });
-      var renderScale = Math.min(3, 2800 / base.width);
+      var renderScale = Math.min(2.0, 1600 / base.width);
       var renderViewport = pdfJsPage.getViewport({ scale: renderScale });
       var canvas = document.createElement('canvas');
       canvas.width = Math.floor(renderViewport.width);
@@ -1370,7 +1370,7 @@
       var orient = pageW > pageH ? 'l' : 'p';
       if (!outPdf) outPdf = new JsPDF({ orientation: orient, unit: 'px', format: [pageW, pageH] });
       else outPdf.addPage([pageW, pageH], orient);
-      outPdf.addImage(canvas.toDataURL('image/jpeg', 0.9), 'JPEG', 0, 0, pageW, pageH, undefined, 'FAST');
+      outPdf.addImage(canvas.toDataURL('image/jpeg', 0.78), 'JPEG', 0, 0, pageW, pageH, undefined, 'FAST');
     }
     if (!outPdf) throw new Error('No resume pages were rendered');
     if (!textItems) throw new Error('This resume appears to be scanned/image-only. Browser anonymization needs extractable text.');
@@ -2021,7 +2021,7 @@
       // Option 5: Pre-Screened Report (Standalone)
       if (options.statusCallback) options.statusCallback('Compiling Pre-Screened Report dossier (50%)...');
       pdfBlob = await buildRecruiterSummaryBlob(data, {});
-      outFileName = 'PRESCREEN_REPORT_' + fileSafeName(data.name, 'Candidate') + '.pdf';
+      outFileName = 'Prescreen_Report_' + fileSafeName(data.name, 'Candidate') + '.pdf';
 
     } else if (optNum === 41) {
       // Option 41: Resume + Company Branding
@@ -2045,8 +2045,12 @@
         baseResumeBlob = await renderAgyStrategy2WasmDocxToPdfBlob(docxBytes, { statusCallback: options.statusCallback });
       }
       if (options.statusCallback) options.statusCallback('Merging Report & Resume into A4 package (90%)...');
-      var mergedName = resumeTrackingFileName(data, 'C', 'pdf');
+      var mergedName = resumeTrackingFileName(data, 'PRESCREEN', 'pdf');
       var mergedBlob = await mergePreScreenedReportAndResume(reportBlob, baseResumeBlob, mergedName, { returnBlob: true });
+      if (mergedBlob.size > 2000000 && mergedBlob.type === 'application/pdf') {
+        mergedBlob = await enforcePdfSizeLimit(mergedBlob, 2000000, options.statusCallback);
+      }
+      mergedBlob.filename = mergedName;
       if (options.returnBlob) return mergedBlob;
       downloadBlob(mergedBlob, mergedName);
       return true;
@@ -2062,8 +2066,12 @@
         baseResumeBlob = await renderAgyStrategy2WasmDocxToPdfBlob(docxBytes, { statusCallback: options.statusCallback });
       }
       if (options.statusCallback) options.statusCallback('Merging Report & Resume into A4 package (90%)...');
-      var mergedName = resumeTrackingFileName(data, 'C', 'pdf');
+      var mergedName = resumeTrackingFileName(data, 'PRESCREEN', 'pdf');
       var mergedBlob = await mergePreScreenedReportAndResume(reportBlob, baseResumeBlob, mergedName, { returnBlob: true });
+      if (mergedBlob.size > 2000000 && mergedBlob.type === 'application/pdf') {
+        mergedBlob = await enforcePdfSizeLimit(mergedBlob, 2000000, options.statusCallback);
+      }
+      mergedBlob.filename = mergedName;
       if (options.returnBlob) return mergedBlob;
       downloadBlob(mergedBlob, mergedName);
       return true;
@@ -2125,8 +2133,12 @@
         });
       }
       if (options.statusCallback) options.statusCallback('Merging Report & Highlighted Resume (90%)...');
-      var mergedName = resumeTrackingFileName(data, 'C', 'pdf');
+      var mergedName = resumeTrackingFileName(data, 'PRESCREEN', 'pdf');
       var mergedBlob = await mergePreScreenedReportAndResume(reportBlob, highlightedBlob, mergedName, { returnBlob: true });
+      if (mergedBlob.size > 2000000 && mergedBlob.type === 'application/pdf') {
+        mergedBlob = await enforcePdfSizeLimit(mergedBlob, 2000000, options.statusCallback);
+      }
+      mergedBlob.filename = mergedName;
       if (options.returnBlob) return mergedBlob;
       downloadBlob(mergedBlob, mergedName);
       return true;
@@ -2151,8 +2163,12 @@
         });
       }
       if (options.statusCallback) options.statusCallback('Merging Unbranded Report & Highlighted Resume (90%)...');
-      var mergedName = resumeTrackingFileName(data, 'C', 'pdf');
+      var mergedName = resumeTrackingFileName(data, 'PRESCREEN', 'pdf');
       var mergedBlob = await mergePreScreenedReportAndResume(reportBlob, highlightedBlob, mergedName, { returnBlob: true });
+      if (mergedBlob.size > 2000000 && mergedBlob.type === 'application/pdf') {
+        mergedBlob = await enforcePdfSizeLimit(mergedBlob, 2000000, options.statusCallback);
+      }
+      mergedBlob.filename = mergedName;
       if (options.returnBlob) return mergedBlob;
       downloadBlob(mergedBlob, mergedName);
       return true;
@@ -2216,8 +2232,12 @@
         });
       }
       if (options.statusCallback) options.statusCallback('Merging Report & Anonymized Resume (90%)...');
-      var mergedName = 'Jeroworks_' + fileSafeName(data.name, 'Candidate') + '.pdf';
+      var mergedName = resumeTrackingFileName(data, 'PRESCREEN', 'pdf');
       var mergedBlob = await mergePreScreenedReportAndResume(reportBlob, contactHiddenBlob, mergedName, { returnBlob: true });
+      if (mergedBlob.size > 2000000 && mergedBlob.type === 'application/pdf') {
+        mergedBlob = await enforcePdfSizeLimit(mergedBlob, 2000000, options.statusCallback);
+      }
+      mergedBlob.filename = mergedName;
       if (options.returnBlob) return mergedBlob;
       downloadBlob(mergedBlob, mergedName);
       return true;
@@ -2238,8 +2258,12 @@
         });
       }
       if (options.statusCallback) options.statusCallback('Merging Unbranded Report & Anonymized Resume (90%)...');
-      var mergedName = 'Jeroworks_' + fileSafeName(data.name, 'Candidate') + '.pdf';
+      var mergedName = resumeTrackingFileName(data, 'PRESCREEN', 'pdf');
       var mergedBlob = await mergePreScreenedReportAndResume(reportBlob, contactHiddenBlob, mergedName, { returnBlob: true });
+      if (mergedBlob.size > 2000000 && mergedBlob.type === 'application/pdf') {
+        mergedBlob = await enforcePdfSizeLimit(mergedBlob, 2000000, options.statusCallback);
+      }
+      mergedBlob.filename = mergedName;
       if (options.returnBlob) return mergedBlob;
       downloadBlob(mergedBlob, mergedName);
       return true;
@@ -2267,8 +2291,12 @@
         });
       }
       if (options.statusCallback) options.statusCallback('Merging Report & Anonymized Highlighted Resume (90%)...');
-      var mergedName = 'Jeroworks_' + fileSafeName(data.name, 'Candidate') + '.pdf';
+      var mergedName = resumeTrackingFileName(data, 'PRESCREEN', 'pdf');
       var mergedBlob = await mergePreScreenedReportAndResume(reportBlob, resumeBlob, mergedName, { returnBlob: true });
+      if (mergedBlob.size > 2000000 && mergedBlob.type === 'application/pdf') {
+        mergedBlob = await enforcePdfSizeLimit(mergedBlob, 2000000, options.statusCallback);
+      }
+      mergedBlob.filename = mergedName;
       if (options.returnBlob) return mergedBlob;
       downloadBlob(mergedBlob, mergedName);
       return true;
@@ -2280,6 +2308,11 @@
     if (!(pdfBlob instanceof Blob)) {
       throw new Error('PDF output could not be generated for option ' + optNum);
     }
+
+    if (pdfBlob.size > 2000000 && pdfBlob.type === 'application/pdf') {
+      pdfBlob = await enforcePdfSizeLimit(pdfBlob, 2000000, options.statusCallback);
+    }
+    pdfBlob.filename = outFileName;
 
     if (options.returnBlob === true) {
       return pdfBlob;
@@ -2385,6 +2418,91 @@
   }
 
   /**
+   * Adaptive PDF compression pipeline to guarantee all outputs stay <= maxBytes (default: 2,000,000 bytes = 2MB).
+   * Eliminates 10MB-15MB bloated attachments that cause email bounce/Google rejection.
+   */
+  async function enforcePdfSizeLimit(pdfBlob, maxBytes, statusCallback) {
+    maxBytes = maxBytes || 2000000;
+    if (!pdfBlob || pdfBlob.size <= maxBytes) {
+      return pdfBlob;
+    }
+
+    if (statusCallback) statusCallback('Compressing attachment to fit under 2MB email limit...');
+
+    try {
+      await Promise.all([ensurePdfJs(), ensureJsPdf()]);
+      var sourceBytes = await pdfBlob.arrayBuffer();
+      var bytes = new Uint8Array(sourceBytes);
+      var doc = await window.pdfjsLib.getDocument({ data: bytes }).promise;
+      var JsPDF = window.jspdf.jsPDF;
+
+      // Iterative compression profiles: start with crisp quality, then progressively downsample
+      var profiles = [
+        { scale: 1.5, quality: 0.76 },
+        { scale: 1.3, quality: 0.70 },
+        { scale: 1.1, quality: 0.62 }
+      ];
+
+      var bestBlob = pdfBlob;
+
+      for (var pIdx = 0; pIdx < profiles.length; pIdx++) {
+        var profile = profiles[pIdx];
+        var outPdf = null;
+
+        for (var pageNum = 1; pageNum <= doc.numPages; pageNum++) {
+          var page = await doc.getPage(pageNum);
+          var unscaledViewport = page.getViewport({ scale: 1 });
+          var renderViewport = page.getViewport({ scale: profile.scale });
+
+          var canvas = document.createElement('canvas');
+          canvas.width = Math.floor(renderViewport.width);
+          canvas.height = Math.floor(renderViewport.height);
+          var ctx = canvas.getContext('2d');
+          ctx.fillStyle = '#ffffff';
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+          await page.render({ canvasContext: ctx, viewport: renderViewport }).promise;
+
+          var pageW = Math.round(unscaledViewport.width);
+          var pageH = Math.round(unscaledViewport.height);
+          var orient = pageW > pageH ? 'l' : 'p';
+
+          if (!outPdf) {
+            outPdf = new JsPDF({ orientation: orient, unit: 'pt', format: [pageW, pageH], compress: true });
+          } else {
+            outPdf.addPage([pageW, pageH], orient);
+          }
+
+          var imgData = canvas.toDataURL('image/jpeg', profile.quality);
+          outPdf.addImage(imgData, 'JPEG', 0, 0, pageW, pageH, undefined, 'FAST');
+
+          canvas.width = 0;
+          canvas.height = 0;
+        }
+
+        if (outPdf) {
+          var compressedBlob = outPdf.output('blob');
+          if (compressedBlob && compressedBlob.size < bestBlob.size) {
+            bestBlob = compressedBlob;
+          }
+          if (compressedBlob && compressedBlob.size <= maxBytes) {
+            bestBlob = compressedBlob;
+            break;
+          }
+        }
+      }
+
+      if (pdfBlob.filename) {
+        bestBlob.filename = pdfBlob.filename;
+      }
+      return bestBlob;
+    } catch (compressErr) {
+      console.warn('[ForwardResumeEngine] Compression safeguard bypassed:', compressErr);
+      return pdfBlob;
+    }
+  }
+
+  /**
    * Main entry point called by Forward Resume drawer to compile and return
    * attachment Blob with attached .filename.
    */
@@ -2427,9 +2545,21 @@
       throw new Error('AgyForwardResumeEngine produced an invalid or empty resume blob for: ' + data.name);
     }
 
-    var safeName = String(data.name || 'Candidate').replace(/[\\/:*?"<>|]+/g, ' ').replace(/\s+/g, ' ').trim() || 'Candidate';
+    // Adaptive Compression Safeguard: Enforce strict <= 2MB size cap
+    if (blob.size > 2000000 && blob.type === 'application/pdf') {
+      blob = await enforcePdfSizeLimit(blob, 2000000, statusCallback);
+    }
+
+    var safeName = String(data.name || 'Candidate').replace(/[\\/:*?"<>|]+/g, ' ').replace(/\s+/g, '_').trim() || 'Candidate';
     var ext = (optId === 1 && resumeExt === 'DOCX') ? 'docx' : 'pdf';
-    var filename = 'Jeroworks_' + safeName + '.' + ext;
+    var filename;
+    if (optId === 5) {
+      filename = 'Prescreen_Report_' + safeName + '.pdf';
+    } else if (optId === 49) {
+      filename = 'Jeroworks_Resume.pdf';
+    } else {
+      filename = 'Jeroworks_' + safeName + '.' + ext;
+    }
     blob.filename = filename;
 
     return blob;
@@ -2446,6 +2576,7 @@
     applyCompanyBrandingToPdfBlob: applyCompanyBrandingToPdfBlob,
     buildRecruiterSummaryBlob: buildRecruiterSummaryBlob,
     mergePreScreenedReportAndResume: mergePreScreenedReportAndResume,
+    enforcePdfSizeLimit: enforcePdfSizeLimit,
     copyPdfPagesToA4: copyPdfPagesToA4,
     buildTurboVectorHighlightedResume: buildTurboVectorHighlightedResume,
     renderAnonymizedPdfBlob: renderAnonymizedPdfBlob,
