@@ -495,10 +495,6 @@ data-kt-drawer-toggle="#kt_activitiesJob_toggle" data-kt-drawer-close="#kt_activ
 
 
 
-	   $('#inputSearch').keyup(function() {
-			// table._fnDraw();
-      fetchCandidates();
-	   });
    });
 </script>
 
@@ -594,16 +590,24 @@ data-kt-drawer-toggle="#kt_activitiesJob_toggle" data-kt-drawer-close="#kt_activ
    				
    				}); 
    
-   	// new $.fn.dataTable.FixedHeader( table );
-   	$(document).on('keyup','.inputJobSearch',function(e){
-      // $('#myTable').DataTable().draw();
-          if (e.key === 'Enter' || e.keyCode === 13) {
-            fetchCandidates(); // your custom function
-          }
-            // fetchCandidates();
-   	  //  table._fnDraw();
+    function executeJobSearch(page = 1) {
+        localStorage.setItem('currentPageJobs', page);
+        fetchCandidates(page);
+    }
 
-   	});
+    // Single Enter key handler for search input — NO keystroke search
+    $(document).on('keydown', '.inputJobSearch, #inputSearch', function(e) {
+        if (e.key === 'Enter' || e.keyCode === 13) {
+            e.preventDefault();
+            executeJobSearch(1);
+        }
+    });
+
+    // Single click handler for Search button
+    $(document).on('click', '#jobSearchBtn', function(e) {
+        e.preventDefault();
+        executeJobSearch(1);
+    });
    	$(document).on('change','#status,#hiringtype,#employment_type,#experience_filter',function(){
         if (this.id === 'status') {
             // Sync the tab row to match the selected status
@@ -656,20 +660,7 @@ data-kt-drawer-toggle="#kt_activitiesJob_toggle" data-kt-drawer-close="#kt_activ
         fetchCandidates(1);
     }
 
-    var searchTimer = null;
-    $(document).on('keyup input', '.inputJobSearch, #inputSearch', function(e) {
-        if (e.key === 'Enter' || e.keyCode === 13) {
-            if (searchTimer) clearTimeout(searchTimer);
-            localStorage.setItem('currentPageJobs', 1);
-            fetchCandidates(1);
-            return;
-        }
-        if (searchTimer) clearTimeout(searchTimer);
-        searchTimer = setTimeout(function() {
-            localStorage.setItem('currentPageJobs', 1);
-            fetchCandidates(1);
-        }, 300);
-    });
+
 
     // Called from the tab row in jobHeader — filters table and marks tab active
     function filterJobsByStatus(status) {
@@ -1027,7 +1018,7 @@ $(document).on('click', '.client-hm-listing', function ()
                 const page = $(this).data('page');
                 if (!page) return;
 
-                fetchCandidates(page, $('#search').val());
+                fetchCandidates(page);
             });
 
         });
@@ -1292,8 +1283,13 @@ $(document).on('click', '.client-hm-listing', function ()
         }
 
         function fetchCandidates(page = page_no, search = '', size = pageSize) {
-            var clientid = '1';
-            if($('.inputJobSearch').val()!=''){
+            window.latestSearchRequestId = (window.latestSearchRequestId || 0) + 1;
+            const thisRequestId = window.latestSearchRequestId;
+
+            const searchVal = ($('.inputJobSearch').val() || $('#inputSearch').val() || search || '').trim();
+
+            $('#jobSearchBtn').prop('disabled', true).addClass('disabled');
+            if(searchVal !== ''){
                 $('.loader_search').css({ display: 'block' });
                 $('.page-loader').css('display', 'flex');
             }else{
@@ -1310,14 +1306,19 @@ $(document).on('click', '.client-hm-listing', function ()
                 data: {
                   requisition_type: window.currentKpiFilter || 'all',
                   custom_status : $('#status').val(),
-                  search : $('#inputSearch').val(),
+                  search : searchVal,
                   custom_hiringtype : $('#hiringtype').val(),
                   employment_type : $('#employment_type').val(),
-                  custom_search : $('.inputJobSearch').val(),
+                  experience_filter : $('#experience_filter').val(),
+                  custom_search : searchVal,
                   size : size
                 },
                 success: function(response) {
+                    if (thisRequestId !== window.latestSearchRequestId) {
+                        return; // Ignore superseded / stale responses
+                    }
                     window.currentJobsAjax = null;
+                    $('#jobSearchBtn').prop('disabled', false).removeClass('disabled');
                     $('.loadingMessage').css({ display: 'none' });
                     $('.loader_search').css({ display: 'none' });
                     $('.page-loader').css('display', 'none');
@@ -1378,8 +1379,9 @@ $(document).on('click', '.client-hm-listing', function ()
                     }
                 },
                 error: function(xhr, status, error) {
+                    if (thisRequestId !== window.latestSearchRequestId || status === 'abort') return;
                     window.currentJobsAjax = null;
-                    if (status === 'abort') return;
+                    $('#jobSearchBtn').prop('disabled', false).removeClass('disabled');
                     $('.loadingMessage').css({ display: 'none' });
                     $('.loader_search').css({ display: 'none' });
                     $('.page-loader').css('display', 'none');

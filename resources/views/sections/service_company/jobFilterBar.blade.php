@@ -6,7 +6,7 @@
         <input type="text" class="jh-search-input inputJobSearch" name="inputJobSearch"
                placeholder="Search by job title, skills, company..." id="kt_tagify_2"
                autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
-        <button type="button" id="jobSearchBtn" class="jh-search-btn" onclick="fetchCandidates(1)">
+        <button type="button" id="jobSearchBtn" class="jh-search-btn" onclick="executeJobSearch(1)">
             Search
         </button>
     </div>
