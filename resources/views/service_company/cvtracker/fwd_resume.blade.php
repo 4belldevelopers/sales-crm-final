@@ -17,58 +17,46 @@
 --}}
 <script src="{{ asset('demo/ckeditor/ckeditor.js') }}"></script>
 <script>
-									
-if ( CKEDITOR.env.ie && CKEDITOR.env.version < 9 )
-	
-CKEDITOR.tools.enableHtml5Elements( document );
-CKEDITOR.config.height 		=	350;
-CKEDITOR.config.width 		=	'auto';
+if (typeof CKEDITOR !== 'undefined' && CKEDITOR.env && CKEDITOR.env.ie && CKEDITOR.env.version < 9) {
+    CKEDITOR.tools.enableHtml5Elements(document);
+}
 
-var initSample 				= ( function() 
-{
-		var wysiwygareaAvailable 	= isWysiwygareaAvailable(),
-		isBBCodeBuiltIn 			= !!CKEDITOR.plugins.get( 'bbcode' );
+function initFwdCkEditor() {
+    if (typeof CKEDITOR === 'undefined') {
+        setTimeout(initFwdCkEditor, 100);
+        return;
+    }
+    var editorElement = document.getElementById('editor1');
+    if (!editorElement) {
+        setTimeout(initFwdCkEditor, 100);
+        return;
+    }
+    if (CKEDITOR.instances && CKEDITOR.instances['editor1']) {
+        try {
+            CKEDITOR.instances['editor1'].destroy(true);
+        } catch(destroyErr) {}
+    }
+    try {
+        CKEDITOR.config.height = 300;
+        CKEDITOR.config.width = '100%';
+        CKEDITOR.replace('editor1', {
+            height: 300,
+            width: '100%'
+        });
+    } catch(err) {
+        console.warn('CKEditor init error:', err);
+    }
+}
 
-	return function() {
-		try {
-			if (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances && CKEDITOR.instances['editor1']) {
-				try {
-					CKEDITOR.instances['editor1'].destroy(true);
-				} catch(destroyErr) {
-					console.warn('CKEditor cleanup error:', destroyErr);
-				}
-			}
-		} catch(e) {}
-
-		var editorElement = CKEDITOR.document.getById( 'editor1' );
-		if ( !editorElement ) return;
-						
-		if ( isBBCodeBuiltIn ) {
-			editorElement.setHtml(
-				'Hello world!\n\n' +
-				'I\'m an instance of [url=https://ckeditor.com]CKEditor[/url].'
-			);
-		}
-		if ( wysiwygareaAvailable ) {
-			CKEDITOR.replace( 'editor1' );
-		} else {
-			editorElement.setAttribute( 'contenteditable', 'true' );   
-			CKEDITOR.inline( 'editor1' );
-		}							
-	};
-	function isWysiwygareaAvailable() 
-	{
-		if ( CKEDITOR.revision == ( '%RE' + 'V%' ) ) {
-			return true;
-		}
-		return !!CKEDITOR.plugins.get( 'wysiwygarea' );
-	}
-	
-} )();
-
-
-initSample();
-
+if (document.readyState === 'complete' || document.readyState === 'interactive') {
+    setTimeout(initFwdCkEditor, 50);
+} else {
+    document.addEventListener('DOMContentLoaded', initFwdCkEditor);
+}
+$(document).ready(function() {
+    setTimeout(initFwdCkEditor, 100);
+});
+setTimeout(initFwdCkEditor, 250);
 </script>
 
 <div class="main_container" id="main_container">
@@ -123,7 +111,9 @@ if($cc_email_count > 0){
 .mm-chip-av { width: 22px; height: 22px; border-radius: 50%; background: #DC2626; color: #fff; font-size: 10px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
 .mm-chip-text { max-width: 260px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .mm-chip-x { background: none; border: none; padding: 0; margin-left: 2px; color: #93C5FD; cursor: default; font-size: 13px; line-height: 1; }
-.mm-editor-wrap { border: 1px solid #E5E7EB; border-radius: 8px; overflow: hidden; }
+.mm-editor-wrap { width: 100%; border: 1px solid #E5E7EB; border-radius: 8px; overflow: hidden; background: #FFFFFF; }
+.mm-editor-wrap .cke { width: 100% !important; border: none !important; }
+#editor1 { width: 100% !important; min-height: 250px; padding: 12px 14px; border: 1px solid #E5E7EB; border-radius: 8px; font-family: 'Poppins', sans-serif; font-size: 13px; color: #374151; box-sizing: border-box; }
 .mm-row-body { align-items: flex-start; }
 .mm-add-email-btn { position: absolute; right: 0; top: 0; display: flex; align-items: center; gap: 5px; font-size: 12.5px; font-weight: 600; color: #2563EB; background: none; border: none; cursor: pointer; padding: 9px 14px; }
 .mm-add-email-btn:hover { color: #1d4ed8; }
@@ -1994,10 +1984,15 @@ document.getElementById("btnSubmit").addEventListener("click", async function ()
             }
             if (response.status === 'success') {
                 window._fwdCompiledAttachments = {};
-                if (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances && CKEDITOR.instances['editor1']) {
-                    try { CKEDITOR.instances['editor1'].destroy(true); } catch(e) {}
+                if (typeof window.closeFwdResumeDrawer === 'function') {
+                    try { window.closeFwdResumeDrawer(); } catch(e) {}
                 }
-                Swal.fire('Success!', 'Selected Applicant Forwarded.', 'success').then(function () {
+                Swal.fire({
+                    title: 'Success!',
+                    text: 'Selected Applicant Forwarded.',
+                    icon: 'success',
+                    confirmButtonColor: '#0D9488'
+                }).then(function () {
                     location.reload();
                 });
             }
