@@ -1041,7 +1041,7 @@
         data-kt-drawer-width="{default:'90%', 'lg': '80%'}" data-kt-drawer-direction="end"
         data-kt-drawer-toggle="#kt_fwd_resume_drawer_toggle_aptk" data-kt-drawer-close="#kt_fwd_resume_drawer_close_aptk">
         <div class="card shadow-none rounded-0 w-100 h-100 d-flex flex-column">
-            <div class="card-header px-5 py-0 flex-shrink-0">
+            <div class="card-header px-5 py-0 flex-shrink-0" style="display:none!important;">
                 <h3 class="card-title fw-bolder text-dark mb-0">Forward Resume</h3>
                 <div class="card-toolbar">
                     <button type="button" class="btn btn-sm btn-icon btn-active-light-danger" id="kt_fwd_resume_drawer_close_aptk">

@@ -1011,7 +1011,7 @@ if( ($final_status_job == 1) && ($job->status == 'active') )
     <!--begin::Modal content-->
     <div class="modal-content">
       <!--begin::Modal header-->
-      <div class="modal-header flex-stack">
+      <div class="modal-header flex-stack" style="display:none!important;">
         <!--begin::Title-->
         <h2>Forward Resume</h2>
         <!--end::Title-->
