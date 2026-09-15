@@ -20,8 +20,8 @@
 		$employment_type	=	$employmentType[$job->employment_type];	
 	//}					
 						  
-	$str					=	trim(@$job->client_name);
-	$str	= $strVal		=	strtolower($str[0]);
+	$str					=	trim(@$company_name ?: @$job->client_name ?: @$job->title ?: 'J');
+	$str	= $strVal		=	strtolower($str[0] ?? 'j');
 	$str					=	ord($str);
 	if($str >=97 && $str <=101){
 		$bgTextDecore		=	'fs-3 bg-light-danger text-danger';	

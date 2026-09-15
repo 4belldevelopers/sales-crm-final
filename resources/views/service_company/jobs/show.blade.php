@@ -14,8 +14,8 @@ $employment_type = ($employmentIndex !== null && $employmentIndex !== '' && isse
     ? $employmentType[$employmentIndex]
     : 'Not specified';
 $bgTextDecore = $strVal = '';
-$clientName = trim((string) (@$job->client_name ?? @$job->company_name ?? @$job->title ?? 'J'));
-$strVal = strtolower(substr($clientName, 0, 1) ?: 'j');
+$companyNameDisplay = trim((string) (@$job->company_name ?? @$job->client_name ?? @$job->title ?? 'J'));
+$strVal = strtolower(substr($companyNameDisplay, 0, 1) ?: 'j');
 $str = ord($strVal);
 if ($str >= 97 && $str <= 101) {
     $bgTextDecore = 'fs-3 bg-light-danger text-danger';
@@ -98,10 +98,11 @@ $companySizeRaw = trim((string) (@$companyOrClientDetails->company_size ?? ''));
 $companySizeValue = ($companySizeRaw === '' || $companySizeRaw === '-' || preg_match('/^-\d+/', $companySizeRaw))
     ? 'Not specified'
     : $companySizeRaw;
-// dd($companyOrClientDetails);
+
+// Intent: Always display the Main/Parent Company name in Job Details header
+$company_or_client = !empty(@$job->company_name) ? @$job->company_name : GeneralMethod::companyDetailsByClient($job->id);
+
 if(@$tabshow){
-    $company_or_client = GeneralMethod::companyDetailsByClient($job->id);
-    
     if($job->self_company==1){
       $description = ucfirst(@$job->company_description);
     }else{
@@ -113,9 +114,7 @@ if(@$tabshow){
       
     }
 }else{
-    $company_or_client = GeneralMethod::companyDetailsByClient($job->id);
-    $logo_path =  @$job->company_logo;
-    // $company_or_client = @$company_name;
+    $logo_path = @$job->company_logo;
     $description = ucfirst(@$job->company_description);
 }
 // dd($company_or_client);
@@ -1444,6 +1443,11 @@ $end_date   =	date('d-M-Y', $date);
                                     @endif
                                  @endif
                             @endif
+                        @else
+                            <!-- Heading text displayed when opened from bench explore / candidate view mode -->
+                            <div class="d-flex align-items-center" style="min-height: 36px;">
+                                <h3 class="fw-bolder m-0 text-gray-800" style="font-size: 15px; font-family: 'Poppins', sans-serif;">Job Details</h3>
+                            </div>
                         @endif
 
                     </div>

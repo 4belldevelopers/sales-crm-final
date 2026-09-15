@@ -2952,68 +2952,72 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
         $commonFromArr = [];
         $commonCcArr = [];
 
-        if ($request->id >= 1) {
+        $companyId = auth()->user()->company_id;
 
-            $client_row = DB::table('jobs')->select('jobs.client_id')->where('jobs.id', $request->id)->first();
-            // CLIENT CONTACT INFO
-            $ccInfoCount = DB::table('client_contact_info')->select('client_contact_info.contact_person_email')->where('client_contact_info.client_id', $client_row->client_id)->count();
-            $ccInfo = DB::table('client_contact_info')->select('client_contact_info.contact_person_email')->where('client_contact_info.client_id', $client_row->client_id)->get();
-            if ($ccInfoCount > 0) {
-                $i = 0;
-                foreach ($ccInfo as $ccVal) {
-                    $commonFromArr[$i] = $ccVal->contact_person_email;
-                    $i++;
-                }
-            }
-            $this->to_email_from_count = $ccInfoCount;
-            $this->to_email_from_data = $commonFromArr;
+        // 1. Internal Team Contacts (Users of the company)
+        $assignDataone = DB::table('users')
+            ->leftjoin('role_user', 'role_user.user_id', 'users.id')
+            ->leftjoin('users_profile', 'users_profile.user_id', 'users.id')
+            ->leftjoin('roles', 'roles.id', 'role_user.role_id')
+            ->leftjoin('companies', 'companies.id', 'users.company_id')
+            ->where('users.company_id', '=', $companyId)
+            ->select(
+                'users.id',
+                'users.email',
+                'users.name',
+                'users.image',
+                'users_profile.designation as display_name',
+                'roles.display_name as role_name',
+                'users.working_status',
+                'companies.company_name'
+            )->groupBy('users.id')->get()->toArray();
 
-            // HR ASSIGN JOB
-            $assignCount = DB::table('job_assign')->join('users', 'users.id', '=', 'job_assign.user_id')->select('users.email')->whereIn('job_assign.job_id', $this->jobIdArr)->count();
-
-            $assignDataone = DB::table('users')
-                ->leftjoin('role_user', 'role_user.user_id', 'users.id')
-                ->leftjoin('users_profile', 'users_profile.user_id', 'users.id')
-                ->leftjoin('roles', 'roles.id', 'role_user.role_id')
-                ->leftjoin('companies', 'companies.id', 'users.company_id')
-                ->where('users.company_id', '=', auth()->user()->company_id)
-                ->select('users.id', 'users.email', 'users.name', 'users_profile.designation as display_name', 'users.working_status', 'companies.company_name')->groupBy('users.id')->get()->toArray();
-
-            $assignDatatwo = DB::table('job_assign')->leftjoin('users', 'users.id', '=', 'job_assign.user_id')
-                ->leftjoin('role_user', 'role_user.user_id', 'users.id')
-                ->leftjoin('users_profile', 'users_profile.user_id', 'users.id')
-                ->leftjoin('roles', 'roles.id', 'role_user.role_id')
-                ->leftjoin('companies', 'companies.id', 'job_assign.company_id')
-                ->select('users.id', 'users.email', 'users.name', 'users_profile.designation as display_name', 'users.working_status', 'companies.company_name')->whereIn('job_assign.job_id', $this->jobIdArr)->get()->toArray();
-
-            $mergedData = array_udiff($assignDataone, $assignDatatwo, function ($a, $b) {
-                return $a->id <=> $b->id; // Compare by 'id' field
-            });
-
+        // 2. Client Contacts
+        $clientId = [];
+        if (!empty($this->jobIdArr)) {
             $clientId = Job::whereIn('jobs.id', $this->jobIdArr)
                 ->join('clients', 'clients.id', '=', 'jobs.client_id')
-                ->whereIn('jobs.id', $this->jobIdArr)
-                ->where('clients.self_company', 0)->pluck('jobs.client_id')->toArray();
+                ->where('clients.self_company', 0)
+                ->pluck('jobs.client_id')->toArray();
+        }
+        if (empty($clientId) && !empty($request->id)) {
+            $client_row = DB::table('jobs')->select('jobs.client_id')->where('jobs.id', $request->id)->first();
+            if ($client_row && !empty($client_row->client_id)) {
+                $clientId[] = $client_row->client_id;
+            }
+        }
+        if (empty($clientId)) {
+            $clientId = DB::table('clients')->where('company_id', $companyId)->pluck('id')->toArray();
+        }
 
+        $assignDataclient = [];
+        if (!empty($clientId)) {
             $assignDataclient = DB::table('clients')
                 ->leftjoin('companies', 'companies.id', 'clients.company_id')
                 ->join('client_contact_info', 'clients.id', '=', 'client_contact_info.client_id')
-                ->select('client_contact_info.id', 'client_contact_info.contact_person_email as email', 'client_contact_info.contact_person_name as name', 'client_contact_info.contact_person_designation as display_name', 'clients.name as company_name')
+                ->select(
+                    'client_contact_info.id',
+                    'client_contact_info.contact_person_email as email',
+                    'client_contact_info.contact_person_name as name',
+                    'client_contact_info.contact_person_designation as display_name',
+                    'clients.name as company_name'
+                )
                 ->whereIn('clients.id', $clientId)->get()->toArray();
-
-            if ($assignCount > 0) {
-                $i = 0;
-                foreach ($mergedData as $aval) {
-                    $commonCcArr[$i] = $aval->email;
-                    $i++;
-                }
-            }
-            $assignData = array_merge($assignDataclient, $assignDataone);
-
-            $this->cc_email_count = $assignCount;
-            $this->cc_email_data = $commonCcArr;
-            $this->cc_email_assignData = (object) $assignData;
         }
+
+        if ($request->id >= 1) {
+            $client_row = DB::table('jobs')->select('jobs.client_id')->where('jobs.id', $request->id)->first();
+            if ($client_row) {
+                $ccInfo = DB::table('client_contact_info')->select('client_contact_info.contact_person_email')->where('client_contact_info.client_id', $client_row->client_id)->get();
+                $this->to_email_from_count = count($ccInfo);
+                $this->to_email_from_data = $ccInfo->pluck('contact_person_email')->toArray();
+            }
+        }
+
+        $assignData = array_merge($assignDataclient, $assignDataone);
+        $this->internal_team_data = $assignDataone;
+        $this->client_contacts_data = $assignDataclient;
+        $this->cc_email_assignData = (object) $assignData;
 
         $view = view('service_company.cvtracker.fwd_resume', $this->data)->render();
 
@@ -5017,50 +5021,72 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
         // 		$to = $request->to_email;
         // 		$cc = $request->cc_email;
 
-        $subject = $request->subject;
+        $subject = trim((string) $request->subject);
         $attached_cv = $request->attached_cv;
         $message = $request->editor1;
         $arr = $request->arr ?: [];
-        // Intent: Cap maximum forwarded candidates to 10 to prevent SMTP gateway rejections (25MB size limit)
-        if (is_array($arr) && count($arr) > 10) {
-            $arr = array_slice($arr, 0, 10);
+        // Intent: Cap maximum forwarded candidates to 5 to prevent SMTP gateway rejections
+        if (is_array($arr) && count($arr) > 5) {
+            $arr = array_slice($arr, 0, 5);
         }
         $decoded = json_decode($from, true);
         if (is_array($decoded)) {
             $from = implode(',', array_column($decoded, 'value'));
         } // else $from is already a plain email string from the <select>
 
-        // 		$to = json_decode($to, true);
-        // 		$to = array_column($to, 'value');
-        // 		$to = implode(',', $to);
         $to = [];
         if (! empty($request->to_email)) {
             $emails = explode(',', $request->to_email);
-
             foreach ($emails as $keymail => $email) {
-                if (! empty($email)) {
-                    array_push($to, str_replace(' ', '', $email));
+                $cleanEmail = trim(str_replace(' ', '', $email));
+                if (! empty($cleanEmail)) {
+                    array_push($to, $cleanEmail);
                 }
-
             }
         }
+
+        // Server-side validation: To Email is strictly required
+        if (empty($to)) {
+            return Reply::dataOnly([
+                'status' => 'error',
+                'message' => 'Recipient email (To) is required. Please enter at least one valid recipient email address.'
+            ]);
+        }
+
+        // Server-side validation: Validate each recipient email format
+        foreach ($to as $toItem) {
+            if (! filter_var($toItem, FILTER_VALIDATE_EMAIL)) {
+                return Reply::dataOnly([
+                    'status' => 'error',
+                    'message' => "The recipient email '{$toItem}' is invalid. Please verify and try again."
+                ]);
+            }
+        }
+
+        // Server-side validation: Subject is strictly required
+        if (empty($subject)) {
+            return Reply::dataOnly([
+                'status' => 'error',
+                'message' => 'Email subject is required. Please provide a subject before sending.'
+            ]);
+        }
+
         $cc = [];
         if (! empty($request->cc_email)) {
-            // $cc = json_decode($cc, true);
-            // $cc = array_column($cc, 'value');
             $emails = explode(',', $request->cc_email);
-            // 			dd($emails);
-
             foreach ($emails as $keymail => $email) {
-                if (! empty($email)) {
-                    array_push($cc, str_replace(' ', '', $email));
+                $cleanCc = trim(str_replace(' ', '', $email));
+                if (! empty($cleanCc)) {
+                    // Validate each CC email format
+                    if (! filter_var($cleanCc, FILTER_VALIDATE_EMAIL)) {
+                        return Reply::dataOnly([
+                            'status' => 'error',
+                            'message' => "The CC email '{$cleanCc}' is invalid. Please verify and try again."
+                        ]);
+                    }
+                    array_push($cc, $cleanCc);
                 }
-
             }
-            // $cc = implode(',', str_replace(' ','',$emails));
-
-            // $cc = implode(',', $emails);
-            // 			$cc = $request->cc_email;//implode(',', $cc);
         }
 
         $attachments = [];
@@ -5218,7 +5244,7 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
 
                         if (! empty($hashname) && in_array(strtolower(pathinfo($hashname, PATHINFO_EXTENSION)), ['pdf', 'doc', 'docx'])) {
                             $extension = pathinfo($hashname, PATHINFO_EXTENSION);
-                            $customName = 'JERO_'.$candName.'_'.$documentable_id.'.'.$extension;
+                            $customName = 'Jeroworks_'.$candName.'.'.$extension;
 
                             $localDoc = public_path('user-uploads/documents/'.$documentable_id.'/'.$hashname);
                             $localResume = public_path('user-uploads/resumes/'.$hashname);

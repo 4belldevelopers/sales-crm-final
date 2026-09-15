@@ -129,7 +129,7 @@
     if ($min_salary_raw > 0 || $max_salary_raw > 0) {
         $salaryMinDisplay = GeneralMethod::formatAmount(GeneralMethod::thousandsCurrencyFormat($min_salary_raw));
         $salaryMaxDisplay = GeneralMethod::formatAmount(GeneralMethod::thousandsCurrencyFormat($max_salary_raw));
-        $salaryDisplay = $salCurrencySym . ' ' . $salaryMinDisplay . ' - ' . $salaryMaxDisplay;
+        $salaryDisplay = $salaryMinDisplay . ' - ' . $salaryMaxDisplay;
     }
 
     $employment_type = ($jobDetails->employment_type == 1) ? 'Contract' : 'Full-time';
