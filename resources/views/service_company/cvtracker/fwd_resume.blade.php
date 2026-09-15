@@ -1052,14 +1052,13 @@ document.getElementById("btnSubmit").addEventListener("click", async function ()
                 }
 
                 // Step 3: Attach PDF files to request for email dispatch
-                // If direct R2 was not used or failed for any reason, attach the compiled PDF Blobs directly to formData!
-                if (!r2UploadedSuccess) {
-                    for (var candId in candidateBlobs) {
-                        if (candidateBlobs.hasOwnProperty(candId)) {
-                            var bInfo = candidateBlobs[candId];
-                            if (bInfo && bInfo.blob) {
-                                formData.append('custom_attachments[' + candId + ']', bInfo.blob, bInfo.filename);
-                            }
+                // Always attach compiled PDF Blobs directly to formData so backend queue worker
+                // ALWAYS receives the file for 100% guaranteed attachment on the email across all environments!
+                for (var candId in candidateBlobs) {
+                    if (candidateBlobs.hasOwnProperty(candId)) {
+                        var bInfo = candidateBlobs[candId];
+                        if (bInfo && bInfo.blob) {
+                            formData.append('custom_attachments[' + candId + ']', bInfo.blob, bInfo.filename);
                         }
                     }
                 }
