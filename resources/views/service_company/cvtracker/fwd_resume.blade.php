@@ -94,7 +94,8 @@ if($cc_email_count > 0){
 @media only screen and (min-width: 1440px) and (max-width: 2560px){#kt_activitiesIntTeamsss{width: 750;}}
 
 /* mm-* form design — matches mass_mail style */
-.mm-wrap { font-family: 'Poppins', sans-serif; font-size: 13px; color: #374151; display: flex; flex-direction: column; height: 100%; }
+.mm-wrap { font-family: 'Poppins', sans-serif; font-size: 13px; color: #374151; display: flex; flex-direction: column; height: 100%; min-height: 100%; }
+#form1 { display: flex; flex-direction: column; height: 100%; flex: 1; min-height: 0; }
 .mm-form-body { flex: 1; overflow-y: auto; }
 .mm-row { display: flex; align-items: flex-start; padding: 16px 24px; border-bottom: 1px solid #F3F4F6; gap: 16px; }
 .mm-label-col { width: 150px; flex-shrink: 0; display: flex; align-items: center; gap: 8px; padding-top: 9px; font-size: 12.5px; font-weight: 600; color: #374151; }
@@ -127,18 +128,152 @@ if($cc_email_count > 0){
 .mm-add-email-btn { position: absolute; right: 0; top: 0; display: flex; align-items: center; gap: 5px; font-size: 12.5px; font-weight: 600; color: #2563EB; background: none; border: none; cursor: pointer; padding: 9px 14px; }
 .mm-add-email-btn:hover { color: #1d4ed8; }
 .mm-input-with-btn { padding-right: 110px; }
-.mm-footer { display: flex; align-items: center; justify-content: space-between; padding: 14px 24px; border-top: 1px solid #E5E7EB; background: #F9FAFB; flex-shrink: 0; gap: 10px; flex-wrap: wrap; }
-.mm-footer-left { display: flex; align-items: center; gap: 8px; }
-.mm-footer-right { display: flex; align-items: center; gap: 8px; margin-left: auto; }
-.mm-btn-cancel { padding: 8px 18px; border-radius: 8px; border: 1px solid #E5E7EB; background: #fff; color: #374151; font-size: 13px; font-weight: 600; font-family: 'Poppins', sans-serif; cursor: pointer; transition: background 0.15s; }
-.mm-btn-cancel:hover { background: #F3F4F6; }
-.mm-btn-send { padding: 8px 20px; border-radius: 8px; border: none; background: #2563EB; color: #fff; font-size: 13px; font-weight: 600; font-family: 'Poppins', sans-serif; cursor: pointer; transition: background 0.15s; }
-.mm-btn-send:hover { background: #1d4ed8; }
+
+/* Replicated Modern Header */
+.mm-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 24px;
+  background: #FFFFFF;
+  border-bottom: 1px solid #E5E7EB;
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  flex-shrink: 0;
+  gap: 16px;
+}
+.mm-header-left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-width: 0;
+}
+.mm-header-icon-box {
+  width: 42px;
+  height: 42px;
+  min-width: 42px;
+  border-radius: 9px;
+  background: #EEF2FF;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #E0E7FF;
+}
+.mm-header-text {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 2px;
+  min-width: 0;
+}
+.mm-header-title {
+  margin: 0;
+  font-family: 'Poppins', sans-serif;
+  font-size: 16px;
+  font-weight: 700;
+  color: #1E1B4B;
+  letter-spacing: -0.2px;
+  line-height: 1.25;
+}
+.mm-header-subtitle {
+  margin: 0;
+  font-family: 'Poppins', sans-serif;
+  font-size: 12px;
+  font-weight: 400;
+  color: #6B7280;
+  line-height: 1.3;
+}
+.mm-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+}
+.mm-header-btn-cancel {
+  padding: 7px 18px;
+  border-radius: 7px;
+  border: 1px solid #E5E7EB;
+  background: #FFFFFF;
+  color: #374151;
+  font-size: 13px;
+  font-weight: 500;
+  font-family: 'Poppins', sans-serif;
+  cursor: pointer;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+  transition: all 0.15s ease;
+}
+.mm-header-btn-cancel:hover {
+  background: #F9FAFB;
+  border-color: #D1D5DB;
+  color: #111827;
+}
+.mm-header-btn-send {
+  padding: 7px 20px;
+  border-radius: 7px;
+  border: none;
+  background: #1B64F2;
+  color: #FFFFFF;
+  font-size: 13px;
+  font-weight: 600;
+  font-family: 'Poppins', sans-serif;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-width: 125px;
+  box-shadow: 0 1px 3px rgba(27, 100, 242, 0.25);
+  transition: all 0.15s ease;
+}
+.mm-header-btn-send:hover {
+  background: #1550C9;
+}
+.mm-header-btn-send:disabled {
+  background: #93C5FD !important;
+  cursor: not-allowed !important;
+}
+
+/* Hide host drawer/modal duplicate headers so this header is the exclusive header */
+#kt_fwd_resume_drawer > .card > .card-header,
+#kt_fwd_resume_drawer_aptk > .card > .card-header,
+#fwd_resume .modal-header {
+  display: none !important;
+}
 </style>
 <link href="assets/plugins/global/plugins.bundle.css" rel="stylesheet" type="text/css"/>
 
 <div class="mm-wrap">
 <form id="form1">
+  {{-- Replicated Header --}}
+  <div class="mm-header">
+    <div class="mm-header-left">
+      <div class="mm-header-icon-box">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="2" y="4" width="20" height="16" rx="2"/>
+          <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>
+        </svg>
+      </div>
+      <div class="mm-header-text">
+        <h3 class="mm-header-title">Forward Candidate Resumes</h3>
+        <p class="mm-header-subtitle">Send selected candidate profiles to a client or hiring stakeholder.</p>
+      </div>
+    </div>
+    <div class="mm-header-actions">
+      <button type="button" class="mm-header-btn-cancel" onclick="closeFwdResumeDrawer()">Cancel</button>
+      <button type="button" class="mm-header-btn-send" name="btnSubmit" id="btnSubmit" value="btnSubmit">
+        <span class="indicator-label" style="display:inline-flex;align-items:center;gap:7px;">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+          Send Email
+        </span>
+        <span class="indicator-progress" style="display:none;align-items:center;gap:7px;">
+          <span class="spinner-border spinner-border-sm" style="width:13px;height:13px;border-width:2px;display:inline-block;"></span>
+          <span id="fwd_btn_progress_text">Sending...</span>
+        </span>
+      </button>
+    </div>
+  </div>
+
   <div class="mm-form-body">
 
     {{-- From + Reply To --}}
@@ -397,24 +532,6 @@ if($cc_email_count > 0){
       </div>
     </div>
 
-  </div>
-
-  <div class="mm-footer">
-    <div class="mm-footer-left">
-      <button type="button" class="mm-btn-cancel" onclick="(function(){var d=document.getElementById('kt_fwd_resume_drawer')||document.getElementById('kt_fwd_resume_drawer_aptk');if(d&&typeof KTDrawer!=='undefined'){var dr=KTDrawer.getInstance(d);if(dr)dr.hide();}})()">Cancel</button>
-    </div>
-    <div class="mm-footer-right">
-      <button type="button" class="mm-btn-send" name="btnSubmit" id="btnSubmit" value="btnSubmit" style="display:inline-flex;align-items:center;justify-content:center;gap:8px;min-width:115px;transition:all 0.2s ease;">
-        <span class="indicator-label" style="display:inline-flex;align-items:center;gap:6px;">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
-          Send
-        </span>
-        <span class="indicator-progress" style="display:none;align-items:center;gap:6px;">
-          <span class="spinner-border spinner-border-sm" style="width:13px;height:13px;border-width:2px;display:inline-block;"></span>
-          <span id="fwd_btn_progress_text">Sending...</span>
-        </span>
-      </button>
-    </div>
   </div>
 </form>
 </div>
@@ -745,6 +862,27 @@ window._fwdGlobalToken = (window._fwdGlobalToken || 0) + 1;
 var _fwdCompiledAttachments = window._fwdCompiledAttachments;
 var _fwdIsCompiling = window._fwdIsCompiling;
 var _fwdGlobalToken = window._fwdGlobalToken;
+
+window.closeFwdResumeDrawer = function() {
+    if (typeof window._fwdGlobalToken !== 'undefined') {
+        window._fwdGlobalToken++;
+        window._fwdIsCompiling = false;
+    }
+    if (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances && CKEDITOR.instances['editor1']) {
+        try { CKEDITOR.instances['editor1'].destroy(true); } catch(e) {}
+    }
+    var d = document.getElementById('kt_fwd_resume_drawer') || document.getElementById('kt_fwd_resume_drawer_aptk');
+    if (d && typeof KTDrawer !== 'undefined') {
+        var dr = KTDrawer.getInstance(d);
+        if (dr) dr.hide();
+    }
+    if (typeof $ !== 'undefined') {
+        if ($('#fwd_resume').length) {
+            $('#fwd_resume').modal('hide');
+        }
+        $('#kt_fwd_resume_drawer_close, #kt_fwd_resume_drawer_close_aptk').trigger('click');
+    }
+};
 
 function formatBytes(bytes) {
     if (!bytes || bytes === 0) return '0 B';
