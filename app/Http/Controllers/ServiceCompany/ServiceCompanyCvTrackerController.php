@@ -2952,68 +2952,72 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
         $commonFromArr = [];
         $commonCcArr = [];
 
-        if ($request->id >= 1) {
+        $companyId = auth()->user()->company_id;
 
-            $client_row = DB::table('jobs')->select('jobs.client_id')->where('jobs.id', $request->id)->first();
-            // CLIENT CONTACT INFO
-            $ccInfoCount = DB::table('client_contact_info')->select('client_contact_info.contact_person_email')->where('client_contact_info.client_id', $client_row->client_id)->count();
-            $ccInfo = DB::table('client_contact_info')->select('client_contact_info.contact_person_email')->where('client_contact_info.client_id', $client_row->client_id)->get();
-            if ($ccInfoCount > 0) {
-                $i = 0;
-                foreach ($ccInfo as $ccVal) {
-                    $commonFromArr[$i] = $ccVal->contact_person_email;
-                    $i++;
-                }
-            }
-            $this->to_email_from_count = $ccInfoCount;
-            $this->to_email_from_data = $commonFromArr;
+        // 1. Internal Team Contacts (Users of the company)
+        $assignDataone = DB::table('users')
+            ->leftjoin('role_user', 'role_user.user_id', 'users.id')
+            ->leftjoin('users_profile', 'users_profile.user_id', 'users.id')
+            ->leftjoin('roles', 'roles.id', 'role_user.role_id')
+            ->leftjoin('companies', 'companies.id', 'users.company_id')
+            ->where('users.company_id', '=', $companyId)
+            ->select(
+                'users.id',
+                'users.email',
+                'users.name',
+                'users.image',
+                'users_profile.designation as display_name',
+                'roles.display_name as role_name',
+                'users.working_status',
+                'companies.company_name'
+            )->groupBy('users.id')->get()->toArray();
 
-            // HR ASSIGN JOB
-            $assignCount = DB::table('job_assign')->join('users', 'users.id', '=', 'job_assign.user_id')->select('users.email')->whereIn('job_assign.job_id', $this->jobIdArr)->count();
-
-            $assignDataone = DB::table('users')
-                ->leftjoin('role_user', 'role_user.user_id', 'users.id')
-                ->leftjoin('users_profile', 'users_profile.user_id', 'users.id')
-                ->leftjoin('roles', 'roles.id', 'role_user.role_id')
-                ->leftjoin('companies', 'companies.id', 'users.company_id')
-                ->where('users.company_id', '=', auth()->user()->company_id)
-                ->select('users.id', 'users.email', 'users.name', 'users_profile.designation as display_name', 'users.working_status', 'companies.company_name')->groupBy('users.id')->get()->toArray();
-
-            $assignDatatwo = DB::table('job_assign')->leftjoin('users', 'users.id', '=', 'job_assign.user_id')
-                ->leftjoin('role_user', 'role_user.user_id', 'users.id')
-                ->leftjoin('users_profile', 'users_profile.user_id', 'users.id')
-                ->leftjoin('roles', 'roles.id', 'role_user.role_id')
-                ->leftjoin('companies', 'companies.id', 'job_assign.company_id')
-                ->select('users.id', 'users.email', 'users.name', 'users_profile.designation as display_name', 'users.working_status', 'companies.company_name')->whereIn('job_assign.job_id', $this->jobIdArr)->get()->toArray();
-
-            $mergedData = array_udiff($assignDataone, $assignDatatwo, function ($a, $b) {
-                return $a->id <=> $b->id; // Compare by 'id' field
-            });
-
+        // 2. Client Contacts
+        $clientId = [];
+        if (!empty($this->jobIdArr)) {
             $clientId = Job::whereIn('jobs.id', $this->jobIdArr)
                 ->join('clients', 'clients.id', '=', 'jobs.client_id')
-                ->whereIn('jobs.id', $this->jobIdArr)
-                ->where('clients.self_company', 0)->pluck('jobs.client_id')->toArray();
+                ->where('clients.self_company', 0)
+                ->pluck('jobs.client_id')->toArray();
+        }
+        if (empty($clientId) && !empty($request->id)) {
+            $client_row = DB::table('jobs')->select('jobs.client_id')->where('jobs.id', $request->id)->first();
+            if ($client_row && !empty($client_row->client_id)) {
+                $clientId[] = $client_row->client_id;
+            }
+        }
+        if (empty($clientId)) {
+            $clientId = DB::table('clients')->where('company_id', $companyId)->pluck('id')->toArray();
+        }
 
+        $assignDataclient = [];
+        if (!empty($clientId)) {
             $assignDataclient = DB::table('clients')
                 ->leftjoin('companies', 'companies.id', 'clients.company_id')
                 ->join('client_contact_info', 'clients.id', '=', 'client_contact_info.client_id')
-                ->select('client_contact_info.id', 'client_contact_info.contact_person_email as email', 'client_contact_info.contact_person_name as name', 'client_contact_info.contact_person_designation as display_name', 'clients.name as company_name')
+                ->select(
+                    'client_contact_info.id',
+                    'client_contact_info.contact_person_email as email',
+                    'client_contact_info.contact_person_name as name',
+                    'client_contact_info.contact_person_designation as display_name',
+                    'clients.name as company_name'
+                )
                 ->whereIn('clients.id', $clientId)->get()->toArray();
-
-            if ($assignCount > 0) {
-                $i = 0;
-                foreach ($mergedData as $aval) {
-                    $commonCcArr[$i] = $aval->email;
-                    $i++;
-                }
-            }
-            $assignData = array_merge($assignDataclient, $assignDataone);
-
-            $this->cc_email_count = $assignCount;
-            $this->cc_email_data = $commonCcArr;
-            $this->cc_email_assignData = (object) $assignData;
         }
+
+        if ($request->id >= 1) {
+            $client_row = DB::table('jobs')->select('jobs.client_id')->where('jobs.id', $request->id)->first();
+            if ($client_row) {
+                $ccInfo = DB::table('client_contact_info')->select('client_contact_info.contact_person_email')->where('client_contact_info.client_id', $client_row->client_id)->get();
+                $this->to_email_from_count = count($ccInfo);
+                $this->to_email_from_data = $ccInfo->pluck('contact_person_email')->toArray();
+            }
+        }
+
+        $assignData = array_merge($assignDataclient, $assignDataone);
+        $this->internal_team_data = $assignDataone;
+        $this->client_contacts_data = $assignDataclient;
+        $this->cc_email_assignData = (object) $assignData;
 
         $view = view('service_company.cvtracker.fwd_resume', $this->data)->render();
 
