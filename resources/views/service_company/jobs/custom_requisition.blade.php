@@ -323,10 +323,22 @@
    // 				}); 
    // 	new $.fn.dataTable.FixedHeader( table );
 
-      $(document).on('keyup','.inputJobSearch',function(){
-   	   // table._fnDraw();
-         fetchCandidates();
-   	});
+    function executeJobSearch(page = 1) {
+        localStorage.setItem('currentPageJobs', page);
+        fetchCandidates(page);
+    }
+
+    $(document).on('keydown', '.inputJobSearch, #inputSearch', function(e) {
+        if (e.key === 'Enter' || e.keyCode === 13) {
+            e.preventDefault();
+            executeJobSearch(1);
+        }
+    });
+
+    $(document).on('click', '#jobSearchBtn', function(e) {
+        e.preventDefault();
+        executeJobSearch(1);
+    });
    	
    	$(document).on('change','#status,#hiringtype',function(){
    	   // table._fnDraw();
