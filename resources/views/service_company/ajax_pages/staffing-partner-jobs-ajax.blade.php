@@ -133,7 +133,7 @@
             }
 
             $country_id = $country_name = '';
-            $client_city_jobs = $row->client_city_jobs;
+            $client_city_jobs = $row->client_city_jobs ?? [];
             $jobCitySelected = is_array($client_city_jobs) ? count($client_city_jobs) : 0;
             $firstCity = collect($client_city_jobs)->first();
             $cityName = $firstCity['city_name'] ?? null;

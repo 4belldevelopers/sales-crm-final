@@ -86,9 +86,10 @@
         }
 
         $country_id = $country_name = '';
-        $jobid = $row->id;
+        $jobid = $row->id ?? null;
 
-        $client_city_jobs = $row->client_city_jobs;
+        // Safely retrieve client_city_jobs using null coalescing operator ?? in case $row is an stdClass without this property
+        $client_city_jobs = $row->client_city_jobs ?? [];
         $jobCitySelected = is_array($client_city_jobs) ? count($client_city_jobs) : 0;
 
         $employment_type = 'Full-time';
@@ -160,12 +161,12 @@
                     $matchedSkillsArr = \App\Helper\GeneralMethod::matchedSkillsList($candidateSkillArr, $jobRequiredSkillNames);
 
                     $locPrimary = 'Noida, India';
-                    if ($row->work_type == 'yes') {
+                    if (($row->work_type ?? null) == 'yes') {
                         $locPrimary = 'Remote';
                     } elseif (is_array($client_city_jobs) && count($client_city_jobs) > 0) {
                         $firstCity = collect($client_city_jobs)->first();
-                        $locCity = ucwords($firstCity['city_name'] ?? 'Noida');
-                        $countryNm = ucwords($firstCity['country_name'] ?? 'India');
+                        $locCity = ucwords(data_get($firstCity, 'city_name', 'Noida'));
+                        $countryNm = ucwords(data_get($firstCity, 'country_name', 'India'));
                         $locPrimary = $locCity . ', ' . $countryNm;
                     }
 
