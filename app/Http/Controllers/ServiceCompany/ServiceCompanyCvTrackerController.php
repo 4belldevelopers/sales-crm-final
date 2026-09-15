@@ -5244,7 +5244,7 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
 
                         if (! empty($hashname) && in_array(strtolower(pathinfo($hashname, PATHINFO_EXTENSION)), ['pdf', 'doc', 'docx'])) {
                             $extension = pathinfo($hashname, PATHINFO_EXTENSION);
-                            $customName = 'JERO_'.$candName.'_'.$documentable_id.'.'.$extension;
+                            $customName = 'Jeroworks_'.$candName.'.'.$extension;
 
                             $localDoc = public_path('user-uploads/documents/'.$documentable_id.'/'.$hashname);
                             $localResume = public_path('user-uploads/resumes/'.$hashname);

@@ -642,7 +642,7 @@ a.bxr-sum-link{ color:inherit; cursor:pointer; }
     <div class="bxr-hero-sep"></div>
     <div class="bxr-facts">
       <div>
-        <span class="bxr-fact-label">Bench Status</span>
+        <span class="bxr-fact-label">Talent Status</span>
         <span class="bxr-bench-tag" style="--bxr-stage-bg:{{ $bxrStageBg }};--bxr-stage-color:{{ $bxrStageColor }};--bxr-stage-border:{{ $bxrStageBorder }};"><span class="bxr-bench-dot"></span>{{ $bxrStageLabel }}</span>
       </div>
       <div><span class="bxr-fact-label">{{ $bxrStageDurationLabel }}</span><span class="bxr-fact-value">{{ $bxrStageDays }}</span></div>
