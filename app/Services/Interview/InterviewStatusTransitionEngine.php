@@ -339,7 +339,7 @@ class InterviewStatusTransitionEngine
             $recruiterPointLog = [
                 'company_id' => $wiseCandidate->company_id,
                 'user_id' => $wiseCandidate->submitted_by,
-                'candidate_id' => $wiseCandidate->id,
+                'candidate_id' => $wiseCandidate->job_application_id ?: $wiseCandidate->id,
                 'interviewScheduled' => $deltas['recruiterScheduled'],
                 'interviewNoShow' => $deltas['recruiterNoShow'],
             ];
@@ -357,7 +357,7 @@ class InterviewStatusTransitionEngine
                     $captainPointLog = [
                         'company_id' => $row->company_id,
                         'user_id' => $row->spok_user_id,
-                        'candidate_id' => $wiseCandidate->id,
+                        'candidate_id' => $wiseCandidate->job_application_id ?: $wiseCandidate->id,
                         'teamCaptainInterviewScheduled' => $deltas['teamCaptainScheduled'],
                     ];
                     GeneralMethod::teamRankElastic($captainPointLog);

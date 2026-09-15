@@ -3034,7 +3034,7 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
         $teamRankElastic = [
             'company_id' => $company_id,
             'user_id' => $submitted_by,
-            'candidate_id' => $lastInsertedId,
+            'candidate_id' => $jobApplication->id,
             'profileUpload' => 1,
             'interviewScheduled' => 0,
             'interviewNoShow' => 0,
@@ -5695,7 +5695,7 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
                         $teamRankElastic = [
                             'company_id' => $comId,
                             'user_id' => $captainId[0],
-                            'candidate_id' => $AddJobWiseCondidate->id,
+                            'candidate_id' => $AddJobWiseCondidate->job_application_id ?: $AddJobWiseCondidate->id,
                             'profileUpload' => 0,
                             'interviewScheduled' => 0,
                             'interviewNoShow' => 0,
@@ -5722,7 +5722,7 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
                 $teamRankElastic = [
                     'company_id' => $AddJobWiseCondidate->company_id,
                     'user_id' => $AddJobWiseCondidate->submitted_by,
-                    'candidate_id' => $AddJobWiseCondidate->id,
+                    'candidate_id' => $AddJobWiseCondidate->job_application_id ?: $AddJobWiseCondidate->id,
                     'profileUpload' => 0,
                     'interviewScheduled' => 0,
                     'interviewNoShow' => 0,
@@ -8935,7 +8935,7 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
                                 $teamRankElastic = [
                                     'company_id' => $comId,
                                     'user_id' => $captainId[0],
-                                    'candidate_id' => $AddJobWiseCondidate->id,
+                                    'candidate_id' => $AddJobWiseCondidate->job_application_id ?: $AddJobWiseCondidate->id,
                                     'profileUpload' => 0,
                                     'interviewScheduled' => 0,
                                     'interviewNoShow' => 0,
@@ -8965,7 +8965,7 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
                         $teamRankElastic = [
                             'company_id' => $AddJobWiseCondidate->company_id,
                             'user_id' => $AddJobWiseCondidate->submitted_by,
-                            'candidate_id' => $AddJobWiseCondidate->id,
+                            'candidate_id' => $AddJobWiseCondidate->job_application_id ?: $AddJobWiseCondidate->id,
                             'profileUpload' => 0,
                             'interviewScheduled' => 0,
                             'interviewNoShow' => 0,
@@ -9798,7 +9798,7 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
                     $teamRankElastic = [
                         'company_id' => $comId,
                         'user_id' => $captainId[0],
-                        'candidate_id' => $AddJobWiseCondidate->id,
+                        'candidate_id' => $AddJobWiseCondidate->job_application_id ?: $AddJobWiseCondidate->id,
                         'profileUpload' => 0,
                         'interviewScheduled' => 0,
                         'interviewNoShow' => 0,
@@ -9828,7 +9828,7 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
             $teamRankElastic = [
                 'company_id' => $AddJobWiseCondidate->company_id,
                 'user_id' => $AddJobWiseCondidate->submitted_by,
-                'candidate_id' => $AddJobWiseCondidate->id,
+                'candidate_id' => $AddJobWiseCondidate->job_application_id ?: $AddJobWiseCondidate->id,
                 'profileUpload' => 0,
                 'interviewScheduled' => 0,
                 'interviewNoShow' => 0,
@@ -12772,7 +12772,7 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
                     $teamRankElastic = [
                         'company_id' => $company_id,
                         'user_id' => $submitted_by,
-                        'candidate_id' => $lastInsertedId,
+                        'candidate_id' => $jobApplication->id,
                         'profileUpload' => 1,
                         'interviewScheduled' => 0,
                         'interviewNoShow' => 0,

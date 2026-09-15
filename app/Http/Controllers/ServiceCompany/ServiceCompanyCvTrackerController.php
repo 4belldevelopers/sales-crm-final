@@ -2731,7 +2731,7 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
                         $teamRankElastic = [
                             'company_id' => $company_id,
                             'user_id' => $this->user->id,
-                            'candidate_id' => $lastWiseIs,
+                            'candidate_id' => @$application_id,
                             'profileUpload' => 1,
                             'interviewScheduled' => 0,
                             'interviewNoShow' => 0,

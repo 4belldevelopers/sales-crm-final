@@ -1790,7 +1790,7 @@ END:VCALENDAR";
                     'package_invoice_id' => @$package_active_row->package_invoice_id,
                     'company_id' => $company_id,
                     'package_master_item' => $f_id,
-                    'user_id' => auth()->user()->id,
+                    'user_id' => $user_id ?: (auth()->check() ? auth()->id() : 0),
                     'event_name' => $event_table_name,
                     'event_inserted_id' => @$event_table_id,
                 ];
@@ -9635,6 +9635,224 @@ END:VCALENDAR";
 
         $updateTime = now()->toIso8601String();
 
+        /**
+         * Intent: Project-wide database-level idempotency protection for teamRankElastic point rewards.
+         * Enforces invariants:
+         * 1. Maximum 1 profileUpload point log per unique candidate profile (job_applications.id) per company.
+         * 2. Maximum 1 candidateJoined / candidateJoinedContract point log per unique candidate profile per company.
+         * 3. 10-second duplicate execution window guard for identical point event payloads (prevents queue retry, double-click, and duplicate event dispatch).
+         * Tenancy Note: Scoped strictly by company_id, user_id, and candidate_id. Uses lockForUpdate on candidate profile to prevent concurrent race conditions.
+         */
+        if ($company_id > 0) {
+            $executed = DB::transaction(function () use (
+                $company_id, $user_id, $candidate_id, $profileUpload, $interviewScheduled,
+                $interviewNoShow, $offerReleased, $candidateJoined, $jobsPosted, $feedbackGivenOnCVs,
+                $postJobToVendorMarket, $outsourceJobsToVendors, $listBenchCandidates, $respondToBenchRequests,
+                $interestedCandidates, $notInterestedCandidates, $teamCaptainInterviewScheduled,
+                $teamCaptainInterviewNoShow, $teamCaptainOfferReleased, $teamCaptainCandidateJoined,
+                $candidateJoinedContract, $teamCaptainCandidateJoinedContract, $sourcing, $screening,
+                $evaluation, $negotiation, $backout, $backoutTeam, $backoutContract, $backoutTeamContract,
+                $updateTime
+            ) {
+                // Lock candidate record to serialize concurrent requests for the same candidate profile
+                if ($candidate_id > 0) {
+                    DB::table('job_applications')->where('id', $candidate_id)->where('company_id', $company_id)->lockForUpdate()->first();
+                }
+
+                // 1. Idempotency check for profileUpload: max 1 per candidate profile per company
+                if ($profileUpload > 0 && $candidate_id > 0) {
+                    $alreadyRewarded = DB::table('company_user_points_logs')
+                        ->where('company_id', $company_id)
+                        ->where('candidate_id', $candidate_id)
+                        ->where('profileUpload', '>', 0)
+                        ->exists();
+
+                    if ($alreadyRewarded) {
+                        \Illuminate\Support\Facades\Log::info("teamRankElastic: profileUpload point already awarded for candidate {$candidate_id} in company {$company_id}. Skipping duplicate insertion.", [
+                            'company_id' => $company_id,
+                            'user_id' => $user_id,
+                            'candidate_id' => $candidate_id,
+                        ]);
+                        return false;
+                    }
+                }
+
+                // 2. Idempotency check for candidateJoined / candidateJoinedContract: max 1 per candidate profile per company
+                if ($candidateJoined > 0 && $candidate_id > 0) {
+                    $joinedExists = DB::table('company_user_points_logs')
+                        ->where('company_id', $company_id)
+                        ->where('candidate_id', $candidate_id)
+                        ->where('candidateJoined', '>', 0)
+                        ->exists();
+
+                    if ($joinedExists) {
+                        \Illuminate\Support\Facades\Log::info("teamRankElastic: candidateJoined point already awarded for candidate {$candidate_id} in company {$company_id}. Skipping duplicate insertion.", [
+                            'company_id' => $company_id,
+                            'user_id' => $user_id,
+                            'candidate_id' => $candidate_id,
+                        ]);
+                        return false;
+                    }
+                }
+
+                if ($candidateJoinedContract > 0 && $candidate_id > 0) {
+                    $joinedContractExists = DB::table('company_user_points_logs')
+                        ->where('company_id', $company_id)
+                        ->where('candidate_id', $candidate_id)
+                        ->where('candidateJoinedContract', '>', 0)
+                        ->exists();
+
+                    if ($joinedContractExists) {
+                        \Illuminate\Support\Facades\Log::info("teamRankElastic: candidateJoinedContract point already awarded for candidate {$candidate_id} in company {$company_id}. Skipping duplicate insertion.", [
+                            'company_id' => $company_id,
+                            'user_id' => $user_id,
+                            'candidate_id' => $candidate_id,
+                        ]);
+                        return false;
+                    }
+                }
+
+                // 3. Generic 10-second duplicate window check for identical non-zero event payloads
+                $dupCheckQuery = DB::table('company_user_points_logs')
+                    ->where('company_id', $company_id)
+                    ->where('user_id', $user_id)
+                    ->where('created_at', '>=', now()->subSeconds(10));
+
+                if ($candidate_id > 0) {
+                    $dupCheckQuery->where('candidate_id', $candidate_id);
+                }
+
+                $eventFields = [
+                    'profileUpload' => $profileUpload,
+                    'interviewScheduled' => $interviewScheduled,
+                    'interviewNoShow' => $interviewNoShow,
+                    'offerReleased' => $offerReleased,
+                    'candidateJoined' => $candidateJoined,
+                    'jobsPosted' => $jobsPosted,
+                    'feedbackGivenOnCVs' => $feedbackGivenOnCVs,
+                    'postJobToVendorMarket' => $postJobToVendorMarket,
+                    'outsourceJobsToVendors' => $outsourceJobsToVendors,
+                    'listBenchCandidates' => $listBenchCandidates,
+                    'respondToBenchRequests' => $respondToBenchRequests,
+                    'interestedCandidates' => $interestedCandidates,
+                    'notInterestedCandidates' => $notInterestedCandidates,
+                    'teamCaptainInterviewScheduled' => $teamCaptainInterviewScheduled,
+                    'teamCaptainInterviewNoShow' => $teamCaptainInterviewNoShow,
+                    'teamCaptainOfferReleased' => $teamCaptainOfferReleased,
+                    'teamCaptainCandidateJoined' => $teamCaptainCandidateJoined,
+                    'candidateJoinedContract' => $candidateJoinedContract,
+                    'teamCaptainCandidateJoinedContract' => $teamCaptainCandidateJoinedContract,
+                    'sourcing' => $sourcing,
+                    'screening' => $screening,
+                    'evaluation' => $evaluation,
+                    'negotiation' => $negotiation,
+                    'backout' => $backout,
+                    'backoutTeam' => $backoutTeam,
+                    'backoutContract' => $backoutContract,
+                    'backoutTeamContract' => $backoutTeamContract,
+                ];
+
+                $hasActiveEvent = false;
+                foreach ($eventFields as $field => $val) {
+                    if ($val != 0) {
+                        $hasActiveEvent = true;
+                        $dupCheckQuery->where($field, $val);
+                    }
+                }
+
+                if ($hasActiveEvent && $dupCheckQuery->exists()) {
+                    \Illuminate\Support\Facades\Log::info("teamRankElastic: Duplicate point event payload detected within 10s window for user {$user_id} in company {$company_id}. Skipping duplicate insertion.", [
+                        'company_id' => $company_id,
+                        'user_id' => $user_id,
+                        'candidate_id' => $candidate_id,
+                    ]);
+                    return false;
+                }
+
+                $mysqlId = DB::table('company_user_points_logs')->insertGetId([
+                    'company_id' => $company_id,
+                    'user_id' => $user_id,
+                    'candidate_id' => $candidate_id,
+                    'profileUpload' => $profileUpload,
+                    'interviewScheduled' => $interviewScheduled,
+                    'interviewNoShow' => $interviewNoShow,
+                    'offerReleased' => $offerReleased,
+                    'candidateJoined' => $candidateJoined,
+                    'jobsPosted' => $jobsPosted,
+                    'feedbackGivenOnCVs' => $feedbackGivenOnCVs,
+                    'postJobToVendorMarket' => $postJobToVendorMarket,
+                    'outsourceJobsToVendors' => $outsourceJobsToVendors,
+                    'listBenchCandidates' => $listBenchCandidates,
+                    'respondToBenchRequests' => $respondToBenchRequests,
+                    'interestedCandidates' => $interestedCandidates,
+                    'notInterestedCandidates' => $notInterestedCandidates,
+                    'teamCaptainInterviewScheduled' => $teamCaptainInterviewScheduled,
+                    'teamCaptainInterviewNoShow' => $teamCaptainInterviewNoShow,
+                    'teamCaptainOfferReleased' => $teamCaptainOfferReleased,
+                    'teamCaptainCandidateJoined' => $teamCaptainCandidateJoined,
+                    'candidateJoinedContract' => $candidateJoinedContract,
+                    'teamCaptainCandidateJoinedContract' => $teamCaptainCandidateJoinedContract,
+                    'sourcing' => $sourcing,
+                    'screening' => $screening,
+                    'evaluation' => $evaluation,
+                    'negotiation' => $negotiation,
+                    'backout' => $backout,
+                    'backoutTeam' => $backoutTeam,
+                    'backoutContract' => $backoutContract,
+                    'backoutTeamContract' => $backoutTeamContract,
+                    'total_points' => 0,
+                    'created_at' => isset($updateTime) ? date('Y-m-d H:i:s', strtotime($updateTime)) : null,
+                    'updated_at' => isset($updateTime) ? date('Y-m-d H:i:s', strtotime($updateTime)) : null,
+                ]);
+
+                $docPayload = [
+                    'company_id' => $company_id,
+                    'user_id' => $user_id,
+                    'candidate_id' => $candidate_id,
+                    'profileUpload' => $profileUpload,
+                    'interviewScheduled' => $interviewScheduled,
+                    'interviewNoShow' => $interviewNoShow,
+                    'offerReleased' => $offerReleased,
+                    'candidateJoined' => $candidateJoined,
+                    'jobsPosted' => $jobsPosted,
+                    'feedbackGivenOnCVs' => $feedbackGivenOnCVs,
+                    'postJobToVendorMarket' => $postJobToVendorMarket,
+                    'outsourceJobsToVendors' => $outsourceJobsToVendors,
+                    'listBenchCandidates' => $listBenchCandidates,
+                    'respondToBenchRequests' => $respondToBenchRequests,
+                    'interestedCandidates' => $interestedCandidates,
+                    'notInterestedCandidates' => $notInterestedCandidates,
+                    'teamCaptainInterviewScheduled' => $teamCaptainInterviewScheduled,
+                    'teamCaptainInterviewNoShow' => $teamCaptainInterviewNoShow,
+                    'teamCaptainOfferReleased' => $teamCaptainOfferReleased,
+                    'teamCaptainCandidateJoined' => $teamCaptainCandidateJoined,
+                    'candidateJoinedContract' => $candidateJoinedContract,
+                    'teamCaptainCandidateJoinedContract' => $teamCaptainCandidateJoinedContract,
+                    'sourcing' => $sourcing,
+                    'screening' => $screening,
+                    'evaluation' => $evaluation,
+                    'negotiation' => $negotiation,
+                    'backout' => $backout,
+                    'backoutTeam' => $backoutTeam,
+                    'backoutContract' => $backoutContract,
+                    'backoutTeamContract' => $backoutTeamContract,
+                    'created_at' => $updateTime,
+                    'updated_at' => $updateTime,
+                ];
+
+                DB::afterCommit(function () use ($mysqlId, $docPayload) {
+                    \App\Jobs\SyncTeamRankToElasticJob::dispatch($mysqlId, $docPayload);
+                });
+
+                return true;
+            });
+
+            if (!$executed) {
+                return;
+            }
+            return;
+        }
+
         $mysqlId = DB::table('company_user_points_logs')->insertGetId([
             'company_id' => $company_id,
             'user_id' => $user_id,
@@ -9670,7 +9888,6 @@ END:VCALENDAR";
             'created_at' => isset($updateTime) ? date('Y-m-d H:i:s', strtotime($updateTime)) : null,
             'updated_at' => isset($updateTime) ? date('Y-m-d H:i:s', strtotime($updateTime)) : null,
         ]);
-        // dd("sksk",$mysqlId);
 
         $docPayload = [
             'company_id' => $company_id,
