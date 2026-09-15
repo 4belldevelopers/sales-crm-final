@@ -682,7 +682,7 @@ if($cc_email_count > 0){
     </div>
     <div class="mm-header-actions">
       <button type="button" class="mm-header-btn-cancel" onclick="closeFwdResumeDrawer()">Cancel</button>
-      <button type="button" class="mm-header-btn-send" name="btnSubmit" id="btnSubmit" value="btnSubmit">
+      <button type="button" class="mm-header-btn-send" name="btnSubmit" id="btnSubmit" value="btnSubmit" onclick="if(window.onFwdSubmitClick) window.onFwdSubmitClick(event);">
         <span class="indicator-label" style="display:inline-flex;align-items:center;gap:7px;">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
           Send Email
@@ -800,13 +800,13 @@ if($cc_email_count > 0){
       <div class="mm-field-col">
         <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
           <label style="display:inline-flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;font-weight:600;color:#1F2937;">
-            <input type="checkbox" id="fwd_attach_cv_toggle" name="attached_cv" value="1" checked style="width:16px;height:16px;accent-color:#0D9488;cursor:pointer;">
+            <input type="checkbox" id="fwd_attach_cv_toggle" name="attached_cv" value="1" checked style="width:16px;height:16px;accent-color:#0D9488;cursor:pointer;" onchange="if(window.onFwdAttachToggle) window.onFwdAttachToggle(this);">
             <span>Attach Resume to Email</span>
           </label>
         </div>
 
         <div id="fwd_format_container">
-          <select name="attached_cv_format" id="fwd_resume_format" class="mm-select" style="font-weight:500;">
+          <select name="attached_cv_format" id="fwd_resume_format" class="mm-select" style="font-weight:500;" onchange="if(window.onFwdFormatChange) window.onFwdFormatChange(this);">
             <optgroup label="1. Standard Resume Options">
               <option value="1" selected data-label="Original Candidate Resume" data-desc="Download the candidate's uploaded resume exactly as received, with no edits or formatting changes.">1. Original Resume (Default)</option>
               <option value="41" data-label="Resume + Company Branding" data-desc="Add your company logo and shared-by header above the resume while keeping all candidate details visible.">41. Resume + Company Branding</option>
@@ -1253,14 +1253,13 @@ $('#template').change(function(){
 																				
 																				
 																				if (response.status == "success") {
-																							
-																							
-																							CKEDITOR.instances.editor1.setData(response.template_description); 
+																							if (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances && CKEDITOR.instances.editor1) {
+																								try { CKEDITOR.instances.editor1.setData(response.template_description); } catch(e) {}
+																							}
 																							setTimeout(() => {
 																						$('#editor1').val(response.template_description);
 																						$('#subject').val(response.subject);
 																							}, 500);
-																							
 																				}
 											}
                				}); 
@@ -1600,11 +1599,11 @@ async function startCompilationForOption(optId) {
 }
 
 // Attachment Format dropdown change
-$(document).off('change', '#fwd_resume_format').on('change', '#fwd_resume_format', function () {
-    var sel = $(this).find('option:selected');
+window.onFwdFormatChange = function (el) {
+    var $el = $(el || '#fwd_resume_format');
+    var sel = $el.find('option:selected');
     var label = sel.attr('data-label') || sel.text();
     var desc = sel.attr('data-desc') || '';
-    var optVal = $(this).val();
 
 <<<<<<< HEAD
     var candName = "{{ !empty($applicationData[0]->full_name) ? str_replace(' ', '_', $applicationData[0]->full_name) : 'Candidate' }}";
@@ -1622,16 +1621,25 @@ $(document).off('change', '#fwd_resume_format').on('change', '#fwd_resume_format
     $('#fwd_preview_desc').text(desc);
 
     updateSendButtonState();
+};
+
+$(document).off('change', '#fwd_resume_format').on('change', '#fwd_resume_format', function () {
+    window.onFwdFormatChange(this);
 });
 
 // Toggle checkbox for "Attach Resume"
-$(document).off('change', '#fwd_attach_cv_toggle').on('change', '#fwd_attach_cv_toggle', function () {
-    if ($(this).is(':checked')) {
+window.onFwdAttachToggle = function (el) {
+    var $el = $(el || '#fwd_attach_cv_toggle');
+    if ($el.is(':checked')) {
         $('#fwd_format_container').slideDown(150);
     } else {
         $('#fwd_format_container').slideUp(150);
     }
     updateSendButtonState();
+};
+
+$(document).off('change', '#fwd_attach_cv_toggle').on('change', '#fwd_attach_cv_toggle', function () {
+    window.onFwdAttachToggle(this);
 });
 
 // Initial synchronization on drawer load
@@ -1643,7 +1651,8 @@ $(document).off('input', '#to_email, #subject, #cc_email_panel').on('input', '#t
 });
 
 // Submit click handler
-document.getElementById("btnSubmit").addEventListener("click", async function () {
+window.onFwdSubmitClick = async function (e) {
+    if (e && e.preventDefault) e.preventDefault();
     var isAttachChecked = $('#fwd_attach_cv_toggle').is(':checked');
     var attached_cv = isAttachChecked ? 1 : 0;
     var optId = parseInt($('#fwd_resume_format').val(), 10) || 1;
@@ -2006,6 +2015,12 @@ document.getElementById("btnSubmit").addEventListener("click", async function ()
             Swal.fire('Error', msg, 'error');
         }
     });
+};
+
+$(document).off('click', '#btnSubmit').on('click', '#btnSubmit', function(e) {
+    if (typeof window.onFwdSubmitClick === 'function') {
+        window.onFwdSubmitClick(e);
+    }
 });
 
 // Initialize button state immediately

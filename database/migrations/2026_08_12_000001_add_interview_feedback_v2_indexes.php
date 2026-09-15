@@ -20,8 +20,7 @@ return new class extends Migration
             'interview_feedback',
             'idx_intfb_interview_id',
             'ALTER TABLE `interview_feedback`
-             ADD INDEX `idx_intfb_interview_id` (`interview_id`, `id`)
-             ALGORITHM=INPLACE, LOCK=NONE'
+             ADD INDEX `idx_intfb_interview_id` (`interview_id`, `id`)'
         );
 
         // ── interview_schedules ───────────────────────────────────────────────
@@ -29,8 +28,7 @@ return new class extends Migration
             'interview_schedules',
             'idx_isched_comp_stage',
             'ALTER TABLE `interview_schedules`
-             ADD INDEX `idx_isched_comp_stage` (`company_id`, `stage`, `substage`)
-             ALGORITHM=INPLACE, LOCK=NONE'
+             ADD INDEX `idx_isched_comp_stage` (`company_id`, `stage`, `substage`)'
         );
     }
 
@@ -52,8 +50,13 @@ return new class extends Migration
 
     private function addIndexIfMissing(string $table, string $index, string $sql): void
     {
-        if (! $this->indexExists($table, $index)) {
-            DB::statement($sql);
+        try {
+            if (! $this->indexExists($table, $index)) {
+                DB::statement($sql);
+            }
+        } catch (\Throwable $e) {
+            // Non-fatal: log and proceed
+            report($e);
         }
     }
 

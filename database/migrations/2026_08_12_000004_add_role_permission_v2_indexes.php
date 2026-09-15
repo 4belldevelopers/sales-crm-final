@@ -21,37 +21,22 @@ return new class extends Migration
      */
     public function up(): void
     {
-        // 1. Roles Table: Composite index for tenant role listing & priority sorting
-        if (Schema::hasTable('roles')) {
-            Schema::table('roles', function (Blueprint $table) {
-                $sm = Schema::getConnection()->getDoctrineSchemaManager();
-                $indexes = array_keys($sm->listTableIndexes('roles'));
-                if (! in_array('idx_roles_company_priority_name', $indexes)) {
-                    $table->index(['company_id', 'priority', 'name'], 'idx_roles_company_priority_name');
-                }
-            });
-        }
+        $indexes = [
+            ['roles', 'idx_roles_company_priority_name', ['company_id', 'priority', 'name']],
+            ['permissions', 'idx_permissions_status_group_id', ['status', 'group_name', 'id']],
+            ['role_user', 'idx_role_user_role_user', ['role_id', 'user_id']],
+        ];
 
-        // 2. Permissions Table: Composite index for active permission group counts
-        if (Schema::hasTable('permissions')) {
-            Schema::table('permissions', function (Blueprint $table) {
-                $sm = Schema::getConnection()->getDoctrineSchemaManager();
-                $indexes = array_keys($sm->listTableIndexes('permissions'));
-                if (! in_array('idx_permissions_status_group_id', $indexes)) {
-                    $table->index(['status', 'group_name', 'id'], 'idx_permissions_status_group_id');
+        foreach ($indexes as [$table, $indexName, $columns]) {
+            try {
+                if (Schema::hasTable($table) && ! Schema::hasIndex($table, $indexName)) {
+                    Schema::table($table, function (Blueprint $t) use ($columns, $indexName) {
+                        $t->index($columns, $indexName);
+                    });
                 }
-            });
-        }
-
-        // 3. Role User Table: Composite index for role-user join & count aggregation
-        if (Schema::hasTable('role_user')) {
-            Schema::table('role_user', function (Blueprint $table) {
-                $sm = Schema::getConnection()->getDoctrineSchemaManager();
-                $indexes = array_keys($sm->listTableIndexes('role_user'));
-                if (! in_array('idx_role_user_role_user', $indexes)) {
-                    $table->index(['role_id', 'user_id'], 'idx_role_user_role_user');
-                }
-            });
+            } catch (\Throwable $e) {
+                report($e);
+            }
         }
     }
 
@@ -60,22 +45,22 @@ return new class extends Migration
      */
     public function down(): void
     {
-        if (Schema::hasTable('roles')) {
-            Schema::table('roles', function (Blueprint $table) {
-                $table->dropIndex('idx_roles_company_priority_name');
-            });
-        }
+        $indexes = [
+            ['roles', 'idx_roles_company_priority_name'],
+            ['permissions', 'idx_permissions_status_group_id'],
+            ['role_user', 'idx_role_user_role_user'],
+        ];
 
-        if (Schema::hasTable('permissions')) {
-            Schema::table('permissions', function (Blueprint $table) {
-                $table->dropIndex('idx_permissions_status_group_id');
-            });
-        }
-
-        if (Schema::hasTable('role_user')) {
-            Schema::table('role_user', function (Blueprint $table) {
-                $table->dropIndex('idx_role_user_role_user');
-            });
+        foreach ($indexes as [$table, $indexName]) {
+            try {
+                if (Schema::hasTable($table) && Schema::hasIndex($table, $indexName)) {
+                    Schema::table($table, function (Blueprint $t) use ($indexName) {
+                        $t->dropIndex($indexName);
+                    });
+                }
+            } catch (\Throwable $e) {
+                report($e);
+            }
         }
     }
 };

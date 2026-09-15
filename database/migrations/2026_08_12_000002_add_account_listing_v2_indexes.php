@@ -21,59 +21,24 @@ return new class extends Migration
      */
     public function up(): void
     {
-        // 1. Candidate Status: Composite index for tenant pipeline filtering
-        if (Schema::hasTable('candidate_status')) {
-            Schema::table('candidate_status', function (Blueprint $table) {
-                $sm = Schema::getConnection()->getDoctrineSchemaManager();
-                $indexes = array_keys($sm->listTableIndexes('candidate_status'));
-                if (! in_array('idx_candidate_status_company_parent_priority', $indexes)) {
-                    $table->index(['company_id', 'parent', 'priority'], 'idx_candidate_status_company_parent_priority');
-                }
-            });
-        }
+        $indexes = [
+            ['candidate_status', 'idx_candidate_status_company_parent_priority', ['company_id', 'parent', 'priority']],
+            ['offer_point_companies', 'idx_offer_point_comp_type_divided_sorting', ['company_id', 'section_type', 'section_divided', 'sorting']],
+            ['boostkeywords', 'idx_boostkeywords_company_country_id', ['company_id', 'country_id', 'id']],
+            ['company_coins', 'idx_company_coins_company_event', ['company_id', 'event_type']],
+            ['client_location', 'idx_client_location_client_id_id', ['client_id', 'id']],
+        ];
 
-        // 2. Offer Point Companies: Composite index for section type & sorting lookups
-        if (Schema::hasTable('offer_point_companies')) {
-            Schema::table('offer_point_companies', function (Blueprint $table) {
-                $sm = Schema::getConnection()->getDoctrineSchemaManager();
-                $indexes = array_keys($sm->listTableIndexes('offer_point_companies'));
-                if (! in_array('idx_offer_point_comp_type_divided_sorting', $indexes)) {
-                    $table->index(['company_id', 'section_type', 'section_divided', 'sorting'], 'idx_offer_point_comp_type_divided_sorting');
+        foreach ($indexes as [$table, $indexName, $columns]) {
+            try {
+                if (Schema::hasTable($table) && ! Schema::hasIndex($table, $indexName)) {
+                    Schema::table($table, function (Blueprint $t) use ($columns, $indexName) {
+                        $t->index($columns, $indexName);
+                    });
                 }
-            });
-        }
-
-        // 3. Boost Keywords: Composite index for tenant & country filtering
-        if (Schema::hasTable('boostkeywords')) {
-            Schema::table('boostkeywords', function (Blueprint $table) {
-                $sm = Schema::getConnection()->getDoctrineSchemaManager();
-                $indexes = array_keys($sm->listTableIndexes('boostkeywords'));
-                if (! in_array('idx_boostkeywords_company_country_id', $indexes)) {
-                    $table->index(['company_id', 'country_id', 'id'], 'idx_boostkeywords_company_country_id');
-                }
-            });
-        }
-
-        // 4. Company Coins: Composite index for tenant coin event lookups
-        if (Schema::hasTable('company_coins')) {
-            Schema::table('company_coins', function (Blueprint $table) {
-                $sm = Schema::getConnection()->getDoctrineSchemaManager();
-                $indexes = array_keys($sm->listTableIndexes('company_coins'));
-                if (! in_array('idx_company_coins_company_event', $indexes)) {
-                    $table->index(['company_id', 'event_type'], 'idx_company_coins_company_event');
-                }
-            });
-        }
-
-        // 5. Client Location: Composite index for client address lookups
-        if (Schema::hasTable('client_location')) {
-            Schema::table('client_location', function (Blueprint $table) {
-                $sm = Schema::getConnection()->getDoctrineSchemaManager();
-                $indexes = array_keys($sm->listTableIndexes('client_location'));
-                if (! in_array('idx_client_location_client_id_id', $indexes)) {
-                    $table->index(['client_id', 'id'], 'idx_client_location_client_id_id');
-                }
-            });
+            } catch (\Throwable $e) {
+                report($e);
+            }
         }
     }
 
@@ -82,34 +47,24 @@ return new class extends Migration
      */
     public function down(): void
     {
-        if (Schema::hasTable('candidate_status')) {
-            Schema::table('candidate_status', function (Blueprint $table) {
-                $table->dropIndex('idx_candidate_status_company_parent_priority');
-            });
-        }
+        $indexes = [
+            ['candidate_status', 'idx_candidate_status_company_parent_priority'],
+            ['offer_point_companies', 'idx_offer_point_comp_type_divided_sorting'],
+            ['boostkeywords', 'idx_boostkeywords_company_country_id'],
+            ['company_coins', 'idx_company_coins_company_event'],
+            ['client_location', 'idx_client_location_client_id_id'],
+        ];
 
-        if (Schema::hasTable('offer_point_companies')) {
-            Schema::table('offer_point_companies', function (Blueprint $table) {
-                $table->dropIndex('idx_offer_point_comp_type_divided_sorting');
-            });
-        }
-
-        if (Schema::hasTable('boostkeywords')) {
-            Schema::table('boostkeywords', function (Blueprint $table) {
-                $table->dropIndex('idx_boostkeywords_company_country_id');
-            });
-        }
-
-        if (Schema::hasTable('company_coins')) {
-            Schema::table('company_coins', function (Blueprint $table) {
-                $table->dropIndex('idx_company_coins_company_event');
-            });
-        }
-
-        if (Schema::hasTable('client_location')) {
-            Schema::table('client_location', function (Blueprint $table) {
-                $table->dropIndex('idx_client_location_client_id_id');
-            });
+        foreach ($indexes as [$table, $indexName]) {
+            try {
+                if (Schema::hasTable($table) && Schema::hasIndex($table, $indexName)) {
+                    Schema::table($table, function (Blueprint $t) use ($indexName) {
+                        $t->dropIndex($indexName);
+                    });
+                }
+            } catch (\Throwable $e) {
+                report($e);
+            }
         }
     }
 };
