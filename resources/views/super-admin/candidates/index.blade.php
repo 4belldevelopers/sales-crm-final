@@ -544,23 +544,15 @@ function cb(start, end) {
             if (arr.length > 5) {
                 var extraCount = arr.length - 5;
                 Swal.fire({
-                    title: 'Batch Limit: Maximum 5 Profiles',
+                    title: 'Maximum 5 Candidates Allowed',
                     html: '<div class="text-start" style="font-size:13px;line-height:1.6;color:#374151;">' +
-                          '<p>To ensure <strong>100% email deliverability</strong>, prevent recipient mail server attachment clipping, and provide lightning-fast resume compilation, a maximum of <strong>5 candidate profiles</strong> can be forwarded per email batch.</p>' +
-                          '<div class="p-3 my-2 rounded" style="background:#F0FDFA;border:1px solid #99F6E4;color:#0F766E;">' +
-                          '✓ The first <strong>5 candidate profiles</strong> have been automatically queued for this batch.<br>' +
-                          '• You can forward the remaining <strong>' + extraCount + ' candidate(s)</strong> in a subsequent batch.' +
+                          '<p>You have selected <strong>' + arr.length + ' candidates</strong>. To ensure optimal email deliverability, adhere to enterprise mail server attachment limits, and maintain high-fidelity PDF rendering, you can select a <strong>maximum of 5 candidates</strong> per forward request.</p>' +
+                          '<div class="p-3 my-2 rounded" style="background:#FEF2F2;border:1px solid #FECACA;color:#991B1B;">' +
+                          '<strong>Action Required:</strong> Please deselect <strong>' + extraCount + ' candidate' + (extraCount > 1 ? 's' : '') + '</strong> so your selection is 5 or fewer, then click <strong>Forward Resume</strong> to continue.' +
                           '</div></div>',
-                    icon: 'info',
-                    showCancelButton: true,
-                    confirmButtonText: 'Proceed with First 5 Profiles',
-                    confirmButtonColor: '#0D9488',
-                    cancelButtonText: 'Adjust Selection',
-                    cancelButtonColor: '#6B7280'
-                }).then(function(result) {
-                    if (result.isConfirmed) {
-                        loadFwdResume(arr.slice(0, 5), jobIdArr.slice(0, 5));
-                    }
+                    icon: 'warning',
+                    confirmButtonText: 'Understood, Adjust Selection',
+                    confirmButtonColor: '#0D9488'
                 });
                 return;
             }
