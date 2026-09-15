@@ -88,7 +88,7 @@
         $employment_type = ($row->employment_type == 1) ? 'Contract' : 'Full-time';
 
         // ── Location ──
-        $client_city_jobs  = $row->client_city_jobs;
+        $client_city_jobs  = $row->client_city_jobs ?? [];
         $jobCitySelected   = is_array($client_city_jobs) ? count($client_city_jobs) : 0;
         $locationName      = 'Remote';
         $workTypeLabel     = 'Office';

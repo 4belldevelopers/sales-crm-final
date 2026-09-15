@@ -57,7 +57,7 @@
             $req_id = 'REQ-JERO-' . $row->id;
 
             // ── Location ──────────────────────────────────────────────────────────
-            $client_city_jobs  = $row->client_city_jobs;
+            $client_city_jobs  = $row->client_city_jobs ?? [];
             $jobCitySelected   = is_array($client_city_jobs) ? count($client_city_jobs) : 0;
             $work_type         = match ($row->work_type ?? 'no') {
                 'yes'   => 'Remote',
