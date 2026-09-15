@@ -1762,8 +1762,44 @@
 
 
             $(document).on('click', '.fwd_resume', function(e) {
-
                 e.preventDefault();
+
+                if (window._fwdGlobalToken !== undefined) {
+                    window._fwdGlobalToken++;
+                    window._fwdIsCompiling = false;
+                }
+
+                var arr = [];
+                var jobIdArr = [];
+                $('.chk_list_item:checked').each(function() {
+                    var jobId = $(this).attr('data-jobId');
+                    arr.push($(this).val());
+                    jobIdArr.push(jobId);
+                });
+
+                if (arr.length === 0) {
+                    Swal.fire({
+                        title: 'No Candidate Selected',
+                        text: 'Please select at least one candidate before forwarding resumes.',
+                        icon: 'warning',
+                        confirmButtonColor: '#0D9488'
+                    });
+                    return;
+                }
+
+                if (arr.length > 5) {
+                    Swal.fire({
+                        title: 'Maximum 5 Candidates Allowed',
+                        html: '<div style="font-size:13.5px;line-height:1.6;color:#374151;">' +
+                              '<p style="margin-bottom:8px;">You’ve selected <strong>' + arr.length + ' candidates</strong>. You can forward a maximum of 5 candidates in a single request.</p>' +
+                              '<p style="color:#6B7280;margin:0;">Please select 5 candidates or fewer then click Forward Resume to continue.</p>' +
+                              '</div>',
+                        icon: 'warning',
+                        confirmButtonText: 'Understood, Adjust Selection',
+                        confirmButtonColor: '#0D9488'
+                    });
+                    return;
+                }
 
                 // Open the Forward Resume drawer
                 var drawerEl = document.getElementById('kt_fwd_resume_drawer');
@@ -1777,21 +1813,11 @@
                     '<div class="d-flex align-items-center justify-content-center" style="min-height:200px;">' +
                     '<span class="spinner-border spinner-border-sm text-primary me-2"></span> Loading...</div>'
                 );
-                var arr = [];
-                var jobIdArr = [];
-                $('.chk_list_item:checked').each(function() {
-
-                    var jobId = $(this).attr('data-jobId');
-                    arr.push($(this).val());
-                    jobIdArr.push(jobId);
-                });
 
                 var id = jobIdArr[0];
                 var url = "{{ route('service_company.cvtracker.fwd_resume', ':id') }}";
                 url = url.replace(':id', id);
-                var baseurl = "{{ asset('assets/images/Loading2.gif') }}";
                 var token = "{{ csrf_token() }}";
-
 
                 $.ajax({
                     type: 'POST',
@@ -1805,6 +1831,9 @@
                     cache: false,
                     success: function(response) {
                         if (response.status == "success") {
+                            if (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances && CKEDITOR.instances['editor1']) {
+                                try { CKEDITOR.instances['editor1'].destroy(true); } catch(e) {}
+                            }
                             $('#application_fwd_resume_body_content').html(response.view);
                         }
                     }
