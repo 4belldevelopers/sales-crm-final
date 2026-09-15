@@ -1290,8 +1290,6 @@ window._fwdGlobalToken = (window._fwdGlobalToken || 0) + 1;
 var _fwdCompiledAttachments = window._fwdCompiledAttachments;
 var _fwdIsCompiling = window._fwdIsCompiling;
 var _fwdGlobalToken = window._fwdGlobalToken;
-<<<<<<< HEAD
-=======
 
 window.closeFwdResumeDrawer = function() {
     if (typeof window.closeEmailRecipientDrawer === 'function') {
@@ -1344,7 +1342,6 @@ function updateRosterFilenames(optId) {
         $(this).text(filename);
     });
 }
->>>>>>> staging
 
 function updateSendButtonState() {
     var isAttach = $('#fwd_attach_cv_toggle').is(':checked');
@@ -1605,19 +1602,7 @@ window.onFwdFormatChange = function (el) {
     var label = sel.attr('data-label') || sel.text();
     var desc = sel.attr('data-desc') || '';
 
-<<<<<<< HEAD
-    var candName = "{{ !empty($applicationData[0]->full_name) ? str_replace(' ', '_', $applicationData[0]->full_name) : 'Candidate' }}";
-    var filename = 'Jeroworks_' + candName + '.pdf';
-    if (optVal === '5') {
-        filename = 'Prescreen_Report_' + candName + '.pdf';
-    } else if (optVal === '49') {
-        filename = 'Jeroworks_Resume.pdf';
-    }
-
-    $('#fwd_preview_filename').text(filename);
-=======
     $('#fwd_preview_format_title').text(label);
->>>>>>> staging
     $('#fwd_preview_desc').text(desc);
 
     updateSendButtonState();
