@@ -3357,7 +3357,7 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
         $toRaw = $request->to_email;
         $message = (string) $request->editor1;
         $attachedCv = (int) $request->input('attached_cv', 1);
-        $formatId = (int) $request->input('attached_cv_format', 1);
+        $formatId = (int) $request->input('attached_cv_format', 0);
         $rawArr = $request->arr ?: [];
         $arr = array_slice(is_array($rawArr) ? $rawArr : [], 0, 5);
 
@@ -3384,6 +3384,16 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
 
         if (empty($subject)) {
             return Reply::dataOnly(['status' => 'error', 'message' => 'Subject is required.']);
+        }
+
+        if ($formatId <= 0) {
+            return Reply::dataOnly(['status' => 'error', 'message' => 'Please select a resume format before sending.']);
+        }
+
+        $cleanMsg = trim(strip_tags(html_entity_decode($message, ENT_QUOTES | ENT_HTML5, 'UTF-8')));
+        $cleanMsg = preg_replace('/\s+/', '', $cleanMsg);
+        if ($cleanMsg === '' && stripos($message, '<img') === false) {
+            return Reply::dataOnly(['status' => 'error', 'message' => 'Email message body cannot be blank.']);
         }
 
         // Coin validation
@@ -5652,8 +5662,9 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
         // 		$cc = $request->cc_email;
 
         $subject = trim((string) $request->subject);
-        $attached_cv = $request->attached_cv;
-        $message = $request->editor1;
+        $attached_cv = (int) $request->input('attached_cv', 1);
+        $formatId = (int) $request->input('attached_cv_format', 0);
+        $message = (string) $request->editor1;
         $arr = $request->arr ?: [];
         // Intent: Cap maximum forwarded candidates to 5 to prevent SMTP gateway rejections
         if (is_array($arr) && count($arr) > 5) {
@@ -5698,6 +5709,24 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
             return Reply::dataOnly([
                 'status' => 'error',
                 'message' => 'Email subject is required. Please provide a subject before sending.'
+            ]);
+        }
+
+        // Server-side validation: Resume format is strictly required
+        if ($formatId <= 0) {
+            return Reply::dataOnly([
+                'status' => 'error',
+                'message' => 'Please select a resume format before sending.'
+            ]);
+        }
+
+        // Server-side validation: Email message body cannot be blank
+        $cleanMsg = trim(strip_tags(html_entity_decode($message, ENT_QUOTES | ENT_HTML5, 'UTF-8')));
+        $cleanMsg = preg_replace('/\s+/', '', $cleanMsg);
+        if ($cleanMsg === '' && stripos($message, '<img') === false) {
+            return Reply::dataOnly([
+                'status' => 'error',
+                'message' => 'Email message body cannot be blank. Please provide a message before sending.'
             ]);
         }
 
@@ -5842,7 +5871,6 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
 
             // If custom format requested (Option != 1), verify all requested candidates have client-assembled custom attachments
             $remainingIds = array_diff($arr, $handledCandidates);
-            $formatId = (int) $request->input('attached_cv_format', 1);
 
             if ($formatId !== 1 && ! empty($remainingIds)) {
                 // Strict client-only policy: Never fall back to server-side converter or attach original resume when custom format was chosen.

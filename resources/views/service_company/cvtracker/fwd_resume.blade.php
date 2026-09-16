@@ -890,20 +890,16 @@ if($cc_email_count > 0){
         <span class="mm-label-icon mm-ic-teal">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
         </span>
-        Attach Resume
+        Resume Format <span class="mm-req">*</span>
       </div>
       <div class="mm-field-col">
-        <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
-          <label style="display:inline-flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;font-weight:600;color:#1F2937;">
-            <input type="checkbox" id="fwd_attach_cv_toggle" name="attached_cv" value="1" checked style="width:16px;height:16px;accent-color:#0D9488;cursor:pointer;" onchange="if(window.onFwdAttachToggle) window.onFwdAttachToggle(this);">
-            <span>Attach Resume to Email</span>
-          </label>
-        </div>
+        <input type="hidden" id="fwd_attach_cv_toggle" name="attached_cv" value="1">
 
         <div id="fwd_format_container">
           <select name="attached_cv_format" id="fwd_resume_format" class="mm-select" style="font-weight:500;" onchange="if(window.onFwdFormatChange) window.onFwdFormatChange(this);">
+            <option value="" selected disabled>Select Resume Format...</option>
             <optgroup label="1. Standard Resume Options">
-              <option value="1" selected data-label="Original Candidate Resume" data-desc="Download the candidate's uploaded resume exactly as received, with no edits or formatting changes.">1. Original Resume (Default)</option>
+              <option value="1" data-label="Original Candidate Resume" data-desc="Download the candidate's uploaded resume exactly as received, with no edits or formatting changes.">1. Original Resume (Default)</option>
               <option value="41" data-label="Resume + Company Branding" data-desc="Add your company logo and shared-by header above the resume while keeping all candidate details visible.">41. Resume + Company Branding</option>
             </optgroup>
             <optgroup label="2. Pre-Screened Report">
@@ -930,15 +926,15 @@ if($cc_email_count > 0){
           </select>
 
           <!-- Live Attachment Format Summary & Deliverability Badge -->
-          <div id="fwd_attachment_preview_card" style="margin-top:8px;padding:9px 12px;background:#F0FDF4;border:1px solid #BBF7D0;border-radius:8px;display:flex;align-items:center;justify-content:space-between;gap:12px;">
+          <div id="fwd_attachment_preview_card" style="margin-top:8px;padding:9px 12px;background:#F8FAFC;border:1px solid #E2E8F0;border-radius:8px;display:flex;align-items:center;justify-content:space-between;gap:12px;">
             <div style="display:flex;align-items:center;gap:8px;min-width:0;">
-              <span style="width:26px;height:26px;border-radius:6px;background:#DCFCE7;color:#15803D;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;font-size:12px;font-weight:700;">PDF</span>
+              <span style="width:26px;height:26px;border-radius:6px;background:#E2E8F0;color:#475569;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;font-size:12px;font-weight:700;">PDF</span>
               <div style="min-width:0;">
-                <div id="fwd_preview_format_title" style="font-size:12.5px;font-weight:600;color:#166534;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
-                  1. Original Candidate Resume
+                <div id="fwd_preview_format_title" style="font-size:12.5px;font-weight:600;color:#334155;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+                  Select Resume Format
                 </div>
-                <div id="fwd_preview_desc" style="font-size:11px;color:#15803D;margin-top:1px;">
-                  Pristine resume file as originally uploaded by candidate/agency.
+                <div id="fwd_preview_desc" style="font-size:11px;color:#64748B;margin-top:1px;">
+                  Choose a resume format above to attach candidate resumes.
                 </div>
               </div>
             </div>
@@ -1547,6 +1543,14 @@ function updateRosterFilenames(optId) {
         var card = $(this).closest('.fwd-cand-card');
         var hasResume = card.attr('data-has-resume') === '1';
         var safeName = $(this).attr('data-safename') || 'Candidate';
+        if (!optId) {
+            if (hasResume) {
+                $(this).css('color', '#374151').text(safeName + '.pdf');
+            } else {
+                $(this).css('color', '#B45309').text('No resume uploaded');
+            }
+            return;
+        }
         var filename = 'Jeroworks_' + safeName + '.pdf';
         if (optId === 5) {
             filename = 'Prescreen_Report_' + safeName + '.pdf';
@@ -1563,8 +1567,8 @@ function updateRosterFilenames(optId) {
 }
 
 function updateSendButtonState() {
-    var isAttach = $('#fwd_attach_cv_toggle').is(':checked');
-    var optId = parseInt($('#fwd_resume_format').val(), 10) || 1;
+    var rawOpt = $('#fwd_resume_format').val();
+    var optId = rawOpt ? parseInt(rawOpt, 10) : 0;
     var btn = document.getElementById('btnSubmit');
     if (!btn) return;
 
@@ -1580,8 +1584,36 @@ function updateSendButtonState() {
         candidatesToProcess = candidatesList;
     }
 
-    // Option 1 (Original Resume) or unchecking Attach Resume: Send is immediately active
-    if (!isAttach || optId === 1) {
+    // Default state: No format chosen yet -> Keep Send ready for validation prompt, no background compilation
+    if (!optId) {
+        _fwdGlobalToken++;
+        _fwdIsCompiling = false;
+        btn.disabled = false;
+        btn.style.opacity = '1';
+        btn.style.cursor = 'pointer';
+        btn.title = '';
+        $('#fwd_compile_progress_container').hide();
+        candidatesToProcess.forEach(function (c) {
+            var card = $('#fwd_cand_card_' + c.id);
+            var hasResume = card.attr('data-has-resume') === '1' || !!c.has_resume;
+            if (hasResume) {
+                card.css({ 'background': '#F9FAFB', 'border-color': '#E5E7EB' });
+                $('#fwd_cand_avatar_' + c.id).css({ 'background': '#F3F4F6', 'color': '#374151' });
+                $('#fwd_cand_check_' + c.id).css({ 'background': '#10B981', 'display': 'flex' }).text('✓');
+                $('#fwd_cand_status_' + c.id).css({ 'background': '#F3F4F6', 'color': '#4B5563' }).text('Select Format Above');
+            } else {
+                card.css({ 'background': '#FFFBEB', 'border-color': '#FDE68A' });
+                $('#fwd_cand_avatar_' + c.id).css({ 'background': '#FEF3C7', 'color': '#B45309' });
+                $('#fwd_cand_check_' + c.id).css({ 'background': '#F59E0B', 'display': 'flex' }).text('!');
+                $('#fwd_cand_status_' + c.id).css({ 'background': '#FEF3C7', 'color': '#B45309' }).text('⚠ No Resume');
+            }
+            $('#fwd_cand_progress_wrap_' + c.id).hide();
+        });
+        return;
+    }
+
+    // Option 1 (Original Resume): Send is immediately active
+    if (optId === 1) {
         _fwdGlobalToken++; // abort active compile
         _fwdIsCompiling = false;
         btn.disabled = false;
@@ -1592,11 +1624,7 @@ function updateSendButtonState() {
         candidatesToProcess.forEach(function (c) {
             var card = $('#fwd_cand_card_' + c.id);
             var hasResume = card.attr('data-has-resume') === '1' || !!c.has_resume;
-            if (!isAttach) {
-                card.css({ 'background': '#F9FAFB', 'border-color': '#E5E7EB' });
-                $('#fwd_cand_check_' + c.id).hide();
-                $('#fwd_cand_status_' + c.id).css({ 'background': '#F3F4F6', 'color': '#6B7280' }).text('Not Attached');
-            } else if (hasResume) {
+            if (hasResume) {
                 card.css({ 'background': '#F0FDF4', 'border-color': '#BBF7D0' });
                 $('#fwd_cand_avatar_' + c.id).css({ 'background': '#DCFCE7', 'color': '#15803D' });
                 $('#fwd_cand_check_' + c.id).css({ 'background': '#10B981', 'display': 'flex' }).text('✓');
@@ -1695,7 +1723,7 @@ function updateSendButtonState() {
 }
 
 async function startCompilationForOption(optId) {
-    if (optId === 1) return;
+    if (!optId || optId === 1) return;
     _fwdIsCompiling = true;
     var thisToken = ++_fwdGlobalToken;
 
@@ -1855,12 +1883,23 @@ async function startCompilationForOption(optId) {
 // Attachment Format dropdown change
 window.onFwdFormatChange = function (el) {
     var $el = $(el || '#fwd_resume_format');
+    var val = $el.val();
+    if (!val) {
+        $('#fwd_preview_format_title').text('Select Resume Format');
+        $('#fwd_preview_desc').text('Choose a resume format above to attach candidate resumes.');
+        $('#fwd_attachment_preview_card').css({ 'background': '#F8FAFC', 'border-color': '#E2E8F0' });
+        $el.css('border-color', '#E5E7EB');
+        updateSendButtonState();
+        return;
+    }
     var sel = $el.find('option:selected');
     var label = sel.attr('data-label') || sel.text();
     var desc = sel.attr('data-desc') || '';
 
     $('#fwd_preview_format_title').text(label);
     $('#fwd_preview_desc').text(desc);
+    $('#fwd_attachment_preview_card').css({ 'background': '#F0FDF4', 'border-color': '#BBF7D0' });
+    $el.css('border-color', '#E5E7EB');
 
     updateSendButtonState();
 };
@@ -1895,9 +1934,22 @@ $(document).off('input', '#to_email, #subject, #cc_email_panel').on('input', '#t
 // Submit click handler
 window.onFwdSubmitClick = async function (e) {
     if (e && e.preventDefault) e.preventDefault();
-    var isAttachChecked = $('#fwd_attach_cv_toggle').is(':checked');
-    var attached_cv = isAttachChecked ? 1 : 0;
-    var optId = parseInt($('#fwd_resume_format').val(), 10) || 1;
+    var attached_cv = 1;
+    var rawOpt = $('#fwd_resume_format').val();
+    var optId = rawOpt ? parseInt(rawOpt, 10) : 0;
+
+    // Validate Resume Format (Mandatory)
+    if (!optId) {
+        $('#fwd_resume_format').css('border-color', '#EF4444').focus();
+        Swal.fire({
+            title: 'Resume Format Required',
+            text: 'Please select a resume format from the dropdown before sending.',
+            icon: 'warning',
+            confirmButtonColor: '#0D9488'
+        });
+        return;
+    }
+    $('#fwd_resume_format').css('border-color', '#E5E7EB');
 
     // Commit any typed text in the tag inputs before validating
     if (typeof window.processFwdTagInputText === 'function') {
@@ -1994,6 +2046,19 @@ window.onFwdSubmitClick = async function (e) {
         return;
     }
     $('#subject').css('border-color', '#E5E7EB');
+
+    // D. Validate Email Body (Mandatory)
+    var editor1 = (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances && CKEDITOR.instances.editor1) ? CKEDITOR.instances.editor1.getData() : ($('#editor1').val() || '');
+    var textOnly = $('<div>').html(editor1).text().trim().replace(/[\s\u00A0]+/g, '');
+    if (!textOnly && editor1.indexOf('<img') === -1) {
+        Swal.fire({
+            title: 'Email Message Required',
+            text: 'Email message body cannot be blank. Please enter a message before sending.',
+            icon: 'warning',
+            confirmButtonColor: '#0D9488'
+        });
+        return;
+    }
 
     // Missing Resume Safeguards
     if (attached_cv === 1 && optId !== 5) {
@@ -2100,7 +2165,6 @@ window.onFwdSubmitClick = async function (e) {
     var template    = $('#template').val();
     var from_email  = $('#from_email').val();
     var reply_to_email = $('#reply_to_email').val() || from_email;
-    var editor1     = (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances && CKEDITOR.instances.editor1) ? CKEDITOR.instances.editor1.getData() : ($('#editor1').val() || '');
 
     var formData = new FormData();
     formData.append('_token', token);
