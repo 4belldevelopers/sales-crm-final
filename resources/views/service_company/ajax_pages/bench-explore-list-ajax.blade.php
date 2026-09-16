@@ -283,7 +283,7 @@
 
 @endphp
 
-<tr>
+<tr style="height: 102px; position: relative;">
     {{-- ① JOB DETAILS --}}
     <td>
         <div class="bxr-job-row">
@@ -308,11 +308,11 @@
                     <div class="bxr-job-dept">{{ $deptName }}</div>
                 @endif
                 <div class="bxr-job-co">{{ $company_display_name }}</div>
-                <div class="bxr-skills">
-                    {!! $matchBadge !!}
-                    {!! $skillHtml !!}
-                </div>
             </div>
+        </div>
+        <div class="bxr-skills" style="position: absolute; bottom: 0; white-space: nowrap; width: 94%; overflow: hidden;">
+            {!! $matchBadge !!}
+            {!! $skillHtml !!}
         </div>
     </td>
 
