@@ -1291,13 +1291,28 @@ window.onTestFwdSubmitClick = async function (e) {
         success: function (response) {
             restoreBtn();
             if (response.status === 'success') {
+                window._testFwdCompiledAttachments = {};
+                window._testFwdR2UploadedUuids = [];
+                if (typeof window.closeTestFwdResumeDrawer === 'function') {
+                    try { window.closeTestFwdResumeDrawer(); } catch(e) {}
+                }
+                if (typeof window.resetCvTrackerSelection === 'function') {
+                    try { window.resetCvTrackerSelection(); } catch(e) {}
+                } else if (typeof window.clearCvSelection === 'function') {
+                    try { window.clearCvSelection(); } catch(e) {}
+                } else {
+                    $('.chk_list, .chk_list_item, #cvh_selection_master_chk, #chk_all_list').prop('checked', false);
+                    $('#myTable tbody tr').removeClass('table-active selected');
+                    $('.fwd_resume, .test_fwd_resume, .send_email, .mass_mail, .app_copy, .downloadexcell, .application_copy').addClass('d-none');
+                    $('.custom_hide').removeClass('d-none');
+                    $('#cvh_selected_count').text('0');
+                    $('#cvh_selection_bar').removeClass('show');
+                }
                 Swal.fire({
                     title: 'Forwarded Successfully',
                     text: response.message || 'Resumes forwarded successfully to ' + toList.join(', '),
                     icon: 'success',
                     confirmButtonColor: '#0D9488'
-                }).then(function() {
-                    closeTestFwdResumeDrawer();
                 });
             } else if (response.status === 'coinCheck') {
                 Swal.fire({
