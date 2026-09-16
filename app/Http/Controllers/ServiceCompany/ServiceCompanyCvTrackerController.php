@@ -2779,7 +2779,6 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
         $this->applicationData = DB::table('job_applications')
             ->select(
                 'job_applications.id',
-                'job_applications.candidate_id',
                 'job_applications.condidate_type',
                 'job_applications.full_name',
                 'job_applications.current_designation',
@@ -2804,7 +2803,6 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
                 'job_applications.np_id',
                 'job_applications.serving_notice_period_mode',
                 'job_applications.current_company',
-                'job_applications.cur_company_name',
                 'job_applications.skills',
                 'job_applications.resume',
                 'job_applications.rating',
@@ -2869,7 +2867,6 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
 
         // Bulk-load real skill experiences and ratings for selected candidates matching showdetail logic
         $appIds = collect($this->applicationData)->pluck('id')->toArray();
-        $benchCandIds = collect($this->applicationData)->where('condidate_type', 'bench_condidate')->pluck('candidate_id')->filter()->toArray();
 
         $cjseSkills = collect();
         if (! empty($appIds)) {
@@ -2887,10 +2884,9 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
         }
 
         $benchSkills = collect();
-        $allBenchIds = array_unique(array_filter(array_merge($appIds, $benchCandIds)));
-        if (! empty($allBenchIds)) {
+        if (! empty($appIds)) {
             $benchSkills = DB::table('bench_candidate_skill_experience')
-                ->whereIn('candidate_id', $allBenchIds)
+                ->whereIn('candidate_id', $appIds)
                 ->select('candidate_id', 'skill_key', 'year', 'month', 'total_months', 'rating')
                 ->orderBy('skill_key')
                 ->get()
@@ -2972,7 +2968,7 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
             $seenSkillNames = [];
 
             // A. Check bench candidate skills if applicable
-            $benchList = $benchSkills->get($cand->id) ?? ($cand->candidate_id ? $benchSkills->get($cand->candidate_id) : null);
+            $benchList = $benchSkills->get($cand->id);
             if ($benchList && count($benchList) > 0) {
                 foreach ($benchList as $bRow) {
                     $sn = trim((string) $bRow->skill_key);
@@ -3001,15 +2997,13 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
                     if ($ratingVal <= 0 && ! empty($cand->rating)) {
                         $ratingVal = (int) $cand->rating;
                     }
-                    if ($ratingVal <= 0) {
-                        $ratingVal = 4;
-                    }
+                    $ratingVal = min(5, max(0, $ratingVal));
 
                     $skillsArr[] = [
                         'name' => ucwords($sn),
                         'expText' => $sExpText,
                         'exp' => $yr + ($mo / 12),
-                        'rating' => min(5, max(1, $ratingVal)),
+                        'rating' => $ratingVal,
                     ];
                     if (count($skillsArr) >= 7) {
                         break;
@@ -3040,7 +3034,7 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
                                 $sExpNum = $y + ($mo / 12);
                             } elseif (preg_match('/^(\d+(?:\.\d+)?)/', $rawVal, $m)) {
                                 $sExpNum = (float) $m[1];
-                                $sExpText = $sExpNum.' Year'.($sExpNum == 1.0 ? '' : 's');
+                                $sExpText = $rawVal;
                             } else {
                                 $sExpText = $rawVal;
                             }
@@ -3050,15 +3044,13 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
                         if ($ratingVal <= 0 && ! empty($cand->rating)) {
                             $ratingVal = (int) $cand->rating;
                         }
-                        if ($ratingVal <= 0) {
-                            $ratingVal = 4;
-                        }
+                        $ratingVal = min(5, max(0, $ratingVal));
 
                         $skillsArr[] = [
                             'name' => ucwords($sn),
                             'expText' => $sExpText,
                             'exp' => $sExpNum,
-                            'rating' => min(5, max(1, $ratingVal)),
+                            'rating' => $ratingVal,
                         ];
                         if (count($skillsArr) >= 7) {
                             break;
@@ -3070,7 +3062,7 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
             // C. Fallback to candidate's own parsed skills list with real experience & rating
             if (empty($skillsArr)) {
                 $combinedSkills = array_values(array_unique(array_filter(array_merge($candSkillsList, $jobSkillsList))));
-                $defaultRating = ! empty($cand->rating) ? min(5, max(1, (int) $cand->rating)) : 4;
+                $defaultRating = ! empty($cand->rating) ? min(5, max(0, (int) $cand->rating)) : 0;
                 foreach ($combinedSkills as $skName) {
                     if (! $skName) {
                         continue;
@@ -3229,7 +3221,6 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
         $this->applicationData = DB::table('job_applications')
             ->select(
                 'job_applications.id',
-                'job_applications.candidate_id',
                 'job_applications.condidate_type',
                 'job_applications.full_name',
                 'job_applications.current_designation',
@@ -3254,7 +3245,6 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
                 'job_applications.np_id',
                 'job_applications.serving_notice_period_mode',
                 'job_applications.current_company',
-                'job_applications.cur_company_name',
                 'job_applications.skills',
                 'job_applications.resume',
                 'job_applications.rating',
@@ -3332,7 +3322,6 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
 
         // Bulk-load real skill experiences and ratings for selected candidates matching showdetail logic
         $appIds = collect($this->applicationData)->pluck('id')->toArray();
-        $benchCandIds = collect($this->applicationData)->where('condidate_type', 'bench_condidate')->pluck('candidate_id')->filter()->toArray();
 
         $cjseSkills = collect();
         if (! empty($appIds)) {
@@ -3350,10 +3339,9 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
         }
 
         $benchSkills = collect();
-        $allBenchIds = array_unique(array_filter(array_merge($appIds, $benchCandIds)));
-        if (! empty($allBenchIds)) {
+        if (! empty($appIds)) {
             $benchSkills = DB::table('bench_candidate_skill_experience')
-                ->whereIn('candidate_id', $allBenchIds)
+                ->whereIn('candidate_id', $appIds)
                 ->select('candidate_id', 'skill_key', 'year', 'month', 'total_months', 'rating')
                 ->orderBy('skill_key')
                 ->get()
@@ -3438,7 +3426,7 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
             $seenSkillNames = [];
 
             // A. Check bench candidate skills if applicable
-            $benchList = $benchSkills->get($cand->id) ?? ($cand->candidate_id ? $benchSkills->get($cand->candidate_id) : null);
+            $benchList = $benchSkills->get($cand->id);
             if ($benchList && count($benchList) > 0) {
                 foreach ($benchList as $bRow) {
                     $sn = trim((string) $bRow->skill_key);
@@ -3467,15 +3455,13 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
                     if ($ratingVal <= 0 && ! empty($cand->rating)) {
                         $ratingVal = (int) $cand->rating;
                     }
-                    if ($ratingVal <= 0) {
-                        $ratingVal = 4;
-                    }
+                    $ratingVal = min(5, max(0, $ratingVal));
 
                     $skillsArr[] = [
                         'name' => ucwords($sn),
                         'expText' => $sExpText,
                         'exp' => $yr + ($mo / 12),
-                        'rating' => min(5, max(1, $ratingVal)),
+                        'rating' => $ratingVal,
                     ];
                     if (count($skillsArr) >= 7) {
                         break;
@@ -3516,15 +3502,13 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
                         if ($ratingVal <= 0 && ! empty($cand->rating)) {
                             $ratingVal = (int) $cand->rating;
                         }
-                        if ($ratingVal <= 0) {
-                            $ratingVal = 4;
-                        }
+                        $ratingVal = min(5, max(0, $ratingVal));
 
                         $skillsArr[] = [
                             'name' => ucwords($sn),
                             'expText' => $sExpText,
                             'exp' => $sExpNum,
-                            'rating' => min(5, max(1, $ratingVal)),
+                            'rating' => $ratingVal,
                         ];
                         if (count($skillsArr) >= 7) {
                             break;
@@ -3536,7 +3520,7 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
             // C. Fallback to candidate's own parsed skills list with real experience & rating
             if (empty($skillsArr)) {
                 $combinedSkills = array_values(array_unique(array_filter(array_merge($candSkillsList, $jobSkillsList))));
-                $defaultRating = ! empty($cand->rating) ? min(5, max(1, (int) $cand->rating)) : 4;
+                $defaultRating = ! empty($cand->rating) ? min(5, max(0, (int) $cand->rating)) : 0;
                 foreach ($combinedSkills as $skName) {
                     if (! $skName) {
                         continue;
