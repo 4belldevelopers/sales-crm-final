@@ -3458,11 +3458,12 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
             'candidate_skills' => []
         ];
 
-        $fromAddress = auth()->user()->email;
+        $fromAddress = ! empty($request->from_email) ? trim($request->from_email) : auth()->user()->email;
+        $replyToEmail = ! empty($request->reply_to_email) ? trim($request->reply_to_email) : $fromAddress;
         $senderName = auth()->user()->name ?? 'Recruitment Team';
         $cc = ! empty($request->cc_email) ? array_values(array_filter(array_map('trim', explode(',', $request->cc_email)))) : [];
 
-        // Dispatch SendForwardResumeBatchMailJob (Streams bytes from R2 into RAM, delivers email, and purges R2 files upon delivery)
+        // Dispatch SendForwardResumeBatchMailJob
         \App\Jobs\SendForwardResumeBatchMailJob::dispatch(
             $fwdRequestUuid,
             $to,
@@ -3473,14 +3474,15 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
             $fromAddress,
             $senderName,
             $cc,
-            $companyId
+            $companyId,
+            $replyToEmail
         )->onConnection('emails');
 
         GeneralMethod::coinsDeductions($companyId, $eventId, $userId, $companyId, '', '');
 
         return Reply::dataOnly([
             'status' => 'success',
-            'message' => 'Test email dispatched successfully! Attachments processed via Cloudflare R2 and will be automatically purged upon delivery.'
+            'message' => 'Candidate resumes have been forwarded successfully.'
         ]);
     }
 
@@ -5938,7 +5940,7 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
         }
 
         $senderName = auth()->user()->name;
-        $fromAddress = auth()->user()->email;
+        $fromAddress = ! empty($request->reply_to_email) ? trim($request->reply_to_email) : (! empty($request->from_email) ? trim($request->from_email) : auth()->user()->email);
 
         $eventId = 43;
         $coinsRequ = count($to);

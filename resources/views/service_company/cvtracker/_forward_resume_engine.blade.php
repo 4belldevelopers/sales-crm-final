@@ -46,6 +46,7 @@
   // ═══════════════════════════════════════════════════════════════════════════
   // STATE & CACHES
   // ═══════════════════════════════════════════════════════════════════════════
+  var AGY_MAX_ATTACHMENT_BYTES = 6000000; // 6MB attachment limit per candidate resume
   var rsPdfReady = null;
   var rsPdfLibReady = null;
   var rsPdfJsReady = null;
@@ -2047,8 +2048,8 @@
       if (options.statusCallback) options.statusCallback('Merging Report & Resume into A4 package (90%)...');
       var mergedName = resumeTrackingFileName(data, 'PRESCREEN', 'pdf');
       var mergedBlob = await mergePreScreenedReportAndResume(reportBlob, baseResumeBlob, mergedName, { returnBlob: true });
-      if (mergedBlob.size > 2000000 && mergedBlob.type === 'application/pdf') {
-        mergedBlob = await enforcePdfSizeLimit(mergedBlob, 2000000, options.statusCallback);
+      if (mergedBlob.size > AGY_MAX_ATTACHMENT_BYTES && mergedBlob.type === 'application/pdf') {
+        mergedBlob = await enforcePdfSizeLimit(mergedBlob, AGY_MAX_ATTACHMENT_BYTES, options.statusCallback);
       }
       mergedBlob.filename = mergedName;
       if (options.returnBlob) return mergedBlob;
@@ -2068,8 +2069,8 @@
       if (options.statusCallback) options.statusCallback('Merging Report & Resume into A4 package (90%)...');
       var mergedName = resumeTrackingFileName(data, 'PRESCREEN', 'pdf');
       var mergedBlob = await mergePreScreenedReportAndResume(reportBlob, baseResumeBlob, mergedName, { returnBlob: true });
-      if (mergedBlob.size > 2000000 && mergedBlob.type === 'application/pdf') {
-        mergedBlob = await enforcePdfSizeLimit(mergedBlob, 2000000, options.statusCallback);
+      if (mergedBlob.size > AGY_MAX_ATTACHMENT_BYTES && mergedBlob.type === 'application/pdf') {
+        mergedBlob = await enforcePdfSizeLimit(mergedBlob, AGY_MAX_ATTACHMENT_BYTES, options.statusCallback);
       }
       mergedBlob.filename = mergedName;
       if (options.returnBlob) return mergedBlob;
@@ -2135,8 +2136,8 @@
       if (options.statusCallback) options.statusCallback('Merging Report & Highlighted Resume (90%)...');
       var mergedName = resumeTrackingFileName(data, 'PRESCREEN', 'pdf');
       var mergedBlob = await mergePreScreenedReportAndResume(reportBlob, highlightedBlob, mergedName, { returnBlob: true });
-      if (mergedBlob.size > 2000000 && mergedBlob.type === 'application/pdf') {
-        mergedBlob = await enforcePdfSizeLimit(mergedBlob, 2000000, options.statusCallback);
+      if (mergedBlob.size > AGY_MAX_ATTACHMENT_BYTES && mergedBlob.type === 'application/pdf') {
+        mergedBlob = await enforcePdfSizeLimit(mergedBlob, AGY_MAX_ATTACHMENT_BYTES, options.statusCallback);
       }
       mergedBlob.filename = mergedName;
       if (options.returnBlob) return mergedBlob;
@@ -2165,8 +2166,8 @@
       if (options.statusCallback) options.statusCallback('Merging Unbranded Report & Highlighted Resume (90%)...');
       var mergedName = resumeTrackingFileName(data, 'PRESCREEN', 'pdf');
       var mergedBlob = await mergePreScreenedReportAndResume(reportBlob, highlightedBlob, mergedName, { returnBlob: true });
-      if (mergedBlob.size > 2000000 && mergedBlob.type === 'application/pdf') {
-        mergedBlob = await enforcePdfSizeLimit(mergedBlob, 2000000, options.statusCallback);
+      if (mergedBlob.size > AGY_MAX_ATTACHMENT_BYTES && mergedBlob.type === 'application/pdf') {
+        mergedBlob = await enforcePdfSizeLimit(mergedBlob, AGY_MAX_ATTACHMENT_BYTES, options.statusCallback);
       }
       mergedBlob.filename = mergedName;
       if (options.returnBlob) return mergedBlob;
@@ -2234,8 +2235,8 @@
       if (options.statusCallback) options.statusCallback('Merging Report & Anonymized Resume (90%)...');
       var mergedName = resumeTrackingFileName(data, 'PRESCREEN', 'pdf');
       var mergedBlob = await mergePreScreenedReportAndResume(reportBlob, contactHiddenBlob, mergedName, { returnBlob: true });
-      if (mergedBlob.size > 2000000 && mergedBlob.type === 'application/pdf') {
-        mergedBlob = await enforcePdfSizeLimit(mergedBlob, 2000000, options.statusCallback);
+      if (mergedBlob.size > AGY_MAX_ATTACHMENT_BYTES && mergedBlob.type === 'application/pdf') {
+        mergedBlob = await enforcePdfSizeLimit(mergedBlob, AGY_MAX_ATTACHMENT_BYTES, options.statusCallback);
       }
       mergedBlob.filename = mergedName;
       if (options.returnBlob) return mergedBlob;
@@ -2260,8 +2261,8 @@
       if (options.statusCallback) options.statusCallback('Merging Unbranded Report & Anonymized Resume (90%)...');
       var mergedName = resumeTrackingFileName(data, 'PRESCREEN', 'pdf');
       var mergedBlob = await mergePreScreenedReportAndResume(reportBlob, contactHiddenBlob, mergedName, { returnBlob: true });
-      if (mergedBlob.size > 2000000 && mergedBlob.type === 'application/pdf') {
-        mergedBlob = await enforcePdfSizeLimit(mergedBlob, 2000000, options.statusCallback);
+      if (mergedBlob.size > AGY_MAX_ATTACHMENT_BYTES && mergedBlob.type === 'application/pdf') {
+        mergedBlob = await enforcePdfSizeLimit(mergedBlob, AGY_MAX_ATTACHMENT_BYTES, options.statusCallback);
       }
       mergedBlob.filename = mergedName;
       if (options.returnBlob) return mergedBlob;
@@ -2293,8 +2294,8 @@
       if (options.statusCallback) options.statusCallback('Merging Report & Anonymized Highlighted Resume (90%)...');
       var mergedName = resumeTrackingFileName(data, 'PRESCREEN', 'pdf');
       var mergedBlob = await mergePreScreenedReportAndResume(reportBlob, resumeBlob, mergedName, { returnBlob: true });
-      if (mergedBlob.size > 2000000 && mergedBlob.type === 'application/pdf') {
-        mergedBlob = await enforcePdfSizeLimit(mergedBlob, 2000000, options.statusCallback);
+      if (mergedBlob.size > AGY_MAX_ATTACHMENT_BYTES && mergedBlob.type === 'application/pdf') {
+        mergedBlob = await enforcePdfSizeLimit(mergedBlob, AGY_MAX_ATTACHMENT_BYTES, options.statusCallback);
       }
       mergedBlob.filename = mergedName;
       if (options.returnBlob) return mergedBlob;
@@ -2309,8 +2310,8 @@
       throw new Error('PDF output could not be generated for option ' + optNum);
     }
 
-    if (pdfBlob.size > 2000000 && pdfBlob.type === 'application/pdf') {
-      pdfBlob = await enforcePdfSizeLimit(pdfBlob, 2000000, options.statusCallback);
+    if (pdfBlob.size > AGY_MAX_ATTACHMENT_BYTES && pdfBlob.type === 'application/pdf') {
+      pdfBlob = await enforcePdfSizeLimit(pdfBlob, AGY_MAX_ATTACHMENT_BYTES, options.statusCallback);
     }
     pdfBlob.filename = outFileName;
 
@@ -2418,16 +2419,16 @@
   }
 
   /**
-   * Adaptive PDF compression pipeline to guarantee all outputs stay <= maxBytes (default: 2,000,000 bytes = 2MB).
-   * Eliminates 10MB-15MB bloated attachments that cause email bounce/Google rejection.
+   * Adaptive PDF optimization pipeline to guarantee all outputs stay <= maxBytes (default: 6,000,000 bytes = 6MB).
+   * Ensures high visual fidelity and crisp typography while safely staying within enterprise mail delivery limits.
    */
   async function enforcePdfSizeLimit(pdfBlob, maxBytes, statusCallback) {
-    maxBytes = maxBytes || 2000000;
+    maxBytes = maxBytes || AGY_MAX_ATTACHMENT_BYTES;
     if (!pdfBlob || pdfBlob.size <= maxBytes) {
       return pdfBlob;
     }
 
-    if (statusCallback) statusCallback('Compressing attachment to fit under 2MB email limit...');
+    if (statusCallback) statusCallback('Optimizing document for delivery...');
 
     try {
       await Promise.all([ensurePdfJs(), ensureJsPdf()]);
@@ -2436,11 +2437,11 @@
       var doc = await window.pdfjsLib.getDocument({ data: bytes }).promise;
       var JsPDF = window.jspdf.jsPDF;
 
-      // Iterative compression profiles: start with crisp quality, then progressively downsample
+      // Iterative compression profiles: start with high quality, then progressively adjust
       var profiles = [
-        { scale: 1.5, quality: 0.76 },
-        { scale: 1.3, quality: 0.70 },
-        { scale: 1.1, quality: 0.62 }
+        { scale: 1.8, quality: 0.85 },
+        { scale: 1.5, quality: 0.78 },
+        { scale: 1.3, quality: 0.70 }
       ];
 
       var bestBlob = pdfBlob;
@@ -2497,7 +2498,7 @@
       }
       return bestBlob;
     } catch (compressErr) {
-      console.warn('[ForwardResumeEngine] Compression safeguard bypassed:', compressErr);
+      console.warn('[ForwardResumeEngine] Optimization safeguard bypassed:', compressErr);
       return pdfBlob;
     }
   }
@@ -2530,7 +2531,7 @@
     }
 
     if (statusCallback) {
-      statusCallback('Rendering Option ' + optId + ' for ' + data.name + '...');
+      statusCallback('Preparing ' + (data.name || 'candidate resume') + '...');
     }
 
     var blob = await processOption(optId, data, {
@@ -2542,12 +2543,12 @@
     });
 
     if (!(blob instanceof Blob) || blob.size < 100) {
-      throw new Error('AgyForwardResumeEngine produced an invalid or empty resume blob for: ' + data.name);
+      throw new Error('Could not prepare resume document for: ' + data.name);
     }
 
-    // Adaptive Compression Safeguard: Enforce strict <= 2MB size cap
-    if (blob.size > 2000000 && blob.type === 'application/pdf') {
-      blob = await enforcePdfSizeLimit(blob, 2000000, statusCallback);
+    // Adaptive Optimization Safeguard: Enforce strict <= 6MB size cap
+    if (blob.size > AGY_MAX_ATTACHMENT_BYTES && blob.type === 'application/pdf') {
+      blob = await enforcePdfSizeLimit(blob, AGY_MAX_ATTACHMENT_BYTES, statusCallback);
     }
 
     var safeName = String(data.name || 'Candidate').replace(/[\\/:*?"<>|]+/g, ' ').replace(/\s+/g, '_').trim() || 'Candidate';

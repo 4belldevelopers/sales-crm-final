@@ -1711,8 +1711,8 @@ async function startCompilationForOption(optId) {
     $('#fwd_compile_spinner').show();
     $('#fwd_compile_progress_bar').css({ 'width': '5%', 'background': 'linear-gradient(90deg, #0D9488, #059669)' });
     $('#fwd_compile_pct_badge').text('5%').css({ 'color': '#0D9488', 'background': '#CCFBF1', 'border-color': '#99F6E4' });
-    $('#fwd_compile_status_text').text('Initializing document rendering engine...');
-    $('#fwd_compile_step_detail').text('Loading Rust WASM core and vector fonts...');
+    $('#fwd_compile_status_text').text('Preparing candidate resume attachments for delivery...');
+    $('#fwd_compile_step_detail').text('Formatting candidate documents...');
 
     try {
         var engine = window.AgyForwardResumeEngine || window.AgyForwardResumeHelper;
@@ -1724,7 +1724,7 @@ async function startCompilationForOption(optId) {
 
         $('#fwd_compile_progress_bar').css('width', '10%');
         $('#fwd_compile_pct_badge').text('10%');
-        $('#fwd_compile_status_text').text('Engine ready. Preparing candidate resumes...');
+        $('#fwd_compile_status_text').text('Formatting candidate resumes...');
 
         var candidatesList = @json($applicationData ?? []);
         var companyData = {
@@ -1761,7 +1761,7 @@ async function startCompilationForOption(optId) {
                 card.css({ 'background': '#FFFBEB', 'border-color': '#FDE68A' });
                 $('#fwd_cand_avatar_' + cand.id).css({ 'background': '#FEF3C7', 'color': '#B45309' });
                 $('#fwd_cand_check_' + cand.id).css({ 'background': '#F59E0B', 'display': 'flex' }).text('!');
-                $('#fwd_cand_status_' + cand.id).css({ 'background': '#FEF3C7', 'color': '#B45309' }).text('⚠ Missing Base CV');
+                $('#fwd_cand_status_' + cand.id).css({ 'background': '#FEF3C7', 'color': '#B45309' }).text('⚠ No Resume Attached');
                 $('#fwd_cand_progress_wrap_' + cand.id).hide();
                 continue;
             }
@@ -1771,12 +1771,12 @@ async function startCompilationForOption(optId) {
             $('#fwd_cand_progress_wrap_' + cand.id).show();
             $('#fwd_cand_progress_bar_' + cand.id).css('width', '25%');
             $('#fwd_cand_status_' + cand.id).css({ 'background': '#CCFBF1', 'color': '#0D9488' }).html(
-                '<span class="spinner-border spinner-border-sm" style="width:10px;height:10px;border-width:1.5px;margin-right:4px;"></span> Rendering...'
+                '<span class="spinner-border spinner-border-sm" style="width:10px;height:10px;border-width:1.5px;margin-right:4px;"></span> Preparing...'
             );
 
             $('#fwd_compile_progress_bar').css('width', startPct + '%');
             $('#fwd_compile_pct_badge').text(startPct + '%');
-            $('#fwd_compile_status_text').text('Rendering ' + candName + ' (' + (i + 1) + '/' + total + ')...');
+            $('#fwd_compile_status_text').text('Preparing ' + candName + ' (' + (i + 1) + '/' + total + ')...');
             $('#fwd_compile_count').text(i + ' / ' + total);
 
             if (!_fwdCompiledAttachments[optId][cand.id]) {
@@ -1796,7 +1796,7 @@ async function startCompilationForOption(optId) {
                 );
 
                 if (!pdfBlob) {
-                    throw new Error('Failed to render resume for ' + candName);
+                    throw new Error('Failed to prepare resume for ' + candName);
                 }
                 _fwdCompiledAttachments[optId][cand.id] = pdfBlob;
             }
@@ -1811,7 +1811,7 @@ async function startCompilationForOption(optId) {
             $('#fwd_cand_check_' + cand.id).css({ 'background': '#10B981', 'display': 'flex' }).text('✓');
             $('#fwd_cand_progress_wrap_' + cand.id).hide();
             $('#fwd_cand_status_' + cand.id).css({ 'background': '#DCFCE7', 'color': '#15803D' }).text(
-                (optId === 5 ? '✓ Pre-Screen Ready' : '✓ Attached (100%)') + sizeStr
+                (optId === 5 ? '✓ Report Ready' : '✓ Resume Ready') + sizeStr
             );
 
             $('#fwd_compile_progress_bar').css('width', endPct + '%');
@@ -1826,8 +1826,8 @@ async function startCompilationForOption(optId) {
         $('#fwd_compile_progress_bar').css({ 'width': '100%', 'background': '#059669' });
         $('#fwd_compile_pct_badge').text('100%').css({ 'color': '#059669', 'background': '#DCFCE7', 'border-color': '#86EFAC' });
         $('#fwd_compile_spinner').hide();
-        $('#fwd_compile_status_text').html('✓ All ready candidate attachments compiled & verified (100%)');
-        $('#fwd_compile_step_detail').text('All attachments generated and verified. Ready to send.');
+        $('#fwd_compile_status_text').html('✓ All candidate attachments prepared & verified (100%)');
+        $('#fwd_compile_step_detail').text('All candidate attachments are ready to send.');
 
         if (btn) {
             btn.disabled = false;
@@ -1838,11 +1838,11 @@ async function startCompilationForOption(optId) {
     } catch (err) {
         if (thisToken !== _fwdGlobalToken) return;
         _fwdIsCompiling = false;
-        console.error('Resume compilation error:', err);
+        console.error('Resume preparation error:', err);
         $('#fwd_compile_spinner').hide();
         $('#fwd_compile_progress_bar').css({ 'background': '#EF4444' });
         $('#fwd_compile_pct_badge').text('Error').css({ 'color': '#DC2626', 'background': '#FEE2E2', 'border-color': '#FCA5A5' });
-        $('#fwd_compile_status_text').html('⚠️ Could not prepare custom format: ' + (err.message || 'WASM error'));
+        $('#fwd_compile_status_text').html('⚠️ Unable to prepare the selected resume format: ' + (err.message || 'Formatting error'));
         $('#fwd_compile_step_detail').text('Please re-select the format or switch to Option 1 (Original Resume).');
         if (btn) {
             btn.disabled = false;
@@ -2063,37 +2063,19 @@ window.onFwdSubmitClick = async function (e) {
 
     $('.indicator-label').hide();
     $('.indicator-progress').css('display', 'inline-flex').show();
-    $('#fwd_btn_progress_text').text('Processing...');
-
-    var countdownTimer = null;
-    var remainingSeconds = 10;
+    $('#fwd_btn_progress_text').text('Sending...');
 
     function setBtnStatus(text) {
-        $('#fwd_btn_progress_text').text(text);
+        // Enforce strictly 'Sending...' status during submit
+        $('#fwd_btn_progress_text').text('Sending...');
     }
 
     function startCountdown(label) {
-        if (countdownTimer) clearInterval(countdownTimer);
-        remainingSeconds = 10;
-        var prefix = label || 'Sending';
-        setBtnStatus(prefix + ' (' + remainingSeconds + 's)...');
-        countdownTimer = setInterval(function () {
-            remainingSeconds--;
-            if (remainingSeconds > 0) {
-                setBtnStatus(prefix + ' (' + remainingSeconds + 's)...');
-            } else {
-                setBtnStatus('Finalizing dispatch...');
-                clearInterval(countdownTimer);
-                countdownTimer = null;
-            }
-        }, 1000);
+        // Enforce strictly 'Sending...' status during submit
+        $('#fwd_btn_progress_text').text('Sending...');
     }
 
     function stopCountdown() {
-        if (countdownTimer) {
-            clearInterval(countdownTimer);
-            countdownTimer = null;
-        }
     }
 
     function restoreBtn() {
@@ -2117,6 +2099,7 @@ window.onFwdSubmitClick = async function (e) {
 
     var template    = $('#template').val();
     var from_email  = $('#from_email').val();
+    var reply_to_email = $('#reply_to_email').val() || from_email;
     var editor1     = (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances && CKEDITOR.instances.editor1) ? CKEDITOR.instances.editor1.getData() : ($('#editor1').val() || '');
 
     var formData = new FormData();
@@ -2124,6 +2107,7 @@ window.onFwdSubmitClick = async function (e) {
     formData.append('_method', 'POST');
     formData.append('template', template);
     formData.append('from_email', from_email);
+    formData.append('reply_to_email', reply_to_email);
     formData.append('to_email', to_email);
     formData.append('cc_email', cc_email);
     formData.append('subject', subject);
@@ -2136,7 +2120,6 @@ window.onFwdSubmitClick = async function (e) {
 
     // Attach pre-compiled custom PDFs if custom format was chosen
     if (attached_cv === 1 && optId !== 1) {
-        setBtnStatus('Preparing files...');
         var cached = _fwdCompiledAttachments[optId] || {};
         var candidatesList = @json($applicationData ?? []);
         var selectedIds = arr.map(function(aid) { return String(aid); });
