@@ -1077,15 +1077,43 @@ class SaasFrontController extends SaasFrontBaseController
             $user->status = 'inactive';
             $user->working_status = 1;
             $user->root_user = 1;
-            $user->save();
-            if ($admin = User::find($user->id)) {
-                $admin->assignRole('admin');
+            $companyRow = DB::table('users')->first();
+            if (!$companyRow) {
+                $user->is_superadmin = 1;
             }
+            $user->save();
+            // if ($admin = User::find($user->id)) {
+            //     $admin->assignRole('admin');
+            // }
+            $admin = User::find($user->id);
+
+            if ($admin) {
+
+                $adminRole = DB::table('roles')
+                    ->where('name', 'admin')
+                    ->where('guard_name', 'web')
+                    ->first();
+
+                if ($adminRole) {
+
+                    $alreadyAssigned = DB::table('model_has_roles')
+                        ->where('role_id', $adminRole->id)
+                        ->where('model_id', $admin->id)
+                        ->where('model_type', User::class)
+                        ->exists();
+
+                    if (!$alreadyAssigned) {
+                        $admin->assignRole($adminRole->id);
+                    }
+                }
+            }
+
 
             // assign admin role to default user
             $role = CustomRole::where('company_id', $company->id)->first();
             if ($role) {
-                $user->roles()->attach(@$role->id);
+                // $user->roles()->attach(@$role->id);
+                $user->roles()->syncWithoutDetaching([$role->id]);
             }
 
             $users_profile = [
@@ -1328,7 +1356,6 @@ class SaasFrontController extends SaasFrontBaseController
             $fromAddress = ($basecompany->companyEmail) ? $basecompany->companyEmail : '';
             $attachments = [];
             $cc = [];
-            $subject = 'Company Profile Confirmation';
 
             QueueMailService::dispatch(
                 $to,
@@ -1772,9 +1799,10 @@ class SaasFrontController extends SaasFrontBaseController
         return response()->json(['status' => $status, 'message' => $message, 'logo_url' => $logo_url, 'clientName' => $clientName]);
     }
 
-    public function resend(Request $request)
+    public function resend(Request $request, $id = null)
     {
-        $userId = $request->id;
+        // dd($request->all());
+        $userId = $id ?: $request->id;
         $userCount = DB::table('users')
             ->select('users.id')
             ->where('users.id', $userId)
@@ -1812,7 +1840,7 @@ class SaasFrontController extends SaasFrontBaseController
             $urlLink = URL::temporarySignedRoute('get-email-verification', now()->addHours(72), ['code' => $user->email_verification_code]);
             $message = '<a href="'.$urlLink.'" target="_blank">Account Verification link</a>';
             $data = [
-                'name' => $request->name,
+                'name' => $name,
                 'to' => $to,
                 'cc' => $cc,
                 'from' => $from,
@@ -1826,9 +1854,8 @@ class SaasFrontController extends SaasFrontBaseController
             $fromAddress = ($basecompany->companyEmail) ? $basecompany->companyEmail : '';
             $attachments = [];
             $cc = [];
-            $subject = 'Company Profile Confirmation';
-
-            QueueMailService::dispatch(
+            
+            $trtr =  QueueMailService::dispatch(
                 $to,
                 $subject,
                 'email.company-profile.email-confirmation',
@@ -1839,14 +1866,13 @@ class SaasFrontController extends SaasFrontBaseController
                 $cc,
                 $company_id
             )->onConnection('emails');
-
+            //  dd( $basecompany,$to,$subject,$fromAddress,$senderName,$urlLink);
             //  $result = $this->mailService->sendEmail($to, $subject,'email.company-profile.email-confirmation', $data, $attachments, $fromAddress, $senderName,$cc);
 
             // dd($urlLink);
             // $message = '<a href="' . $urlLink . '" target="_blank">Account Verification link</a>';
 
             // $sendEmail = GeneralMethod::sentEmailUsingSMTP($to, $cc, $subject, $message, $from);
-
             return Reply::dataOnly(['status' => 'success']);
         } else {
             return Reply::dataOnly(['status' => 'fail']);

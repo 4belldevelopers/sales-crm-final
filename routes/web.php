@@ -108,6 +108,9 @@ Route::post('login', [LoginController::class, 'login'])->middleware('throttle:5,
 Route::get('company-login-by-super-admin', [LoginController::class, 'superLoginForms'])->name('super.login.form');
 // Logout
 Route::post('logout', [LoginController::class, 'logout'])->name('logout');
+Route::get('check-device-session', function () {
+    return response()->json(['status' => 'ok']);
+})->middleware(['auth', 'EnsureOneDeviceLogin'])->name('check-device-session');
 
 // Register
 Route::get('register', [RegisterController::class, 'showRegistrationForm'])->name('register');

@@ -1621,6 +1621,46 @@ $.ajaxSetup({ headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('cont
 
                     toastr.success(htmlMessage);
                 });
+
+            // --- Single-Device Real-time Auto-Logout Handler ---
+            function triggerAutoLogout() {
+                window.location.href = "{{ url('/login') }}";
+            }
+
+            function checkDeviceSession() {
+                if (!userId) return;
+                fetch("{{ route('check-device-session') }}", {
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'application/json'
+                    }
+                })
+                .then(response => {
+                    if (response.status === 401) {
+                        triggerAutoLogout();
+                    }
+                })
+                .catch(() => {});
+            }
+
+            // 1. Check every 15 seconds
+            setInterval(checkDeviceSession, 15000);
+
+            // 2. Check immediately when user switches back to this browser tab
+            document.addEventListener('visibilitychange', function () {
+                if (document.visibilityState === 'visible') {
+                    checkDeviceSession();
+                }
+            });
+
+            // 3. WebSockets (Echo) instant logout broadcast listener
+            if (userId && window.Echo) {
+                window.Echo.private(`App.Models.User.${userId}`)
+                    .listen('.SingleDeviceLogout', (data) => {
+                        console.warn("⚠️ Single device logout event received:", data);
+                        triggerAutoLogout();
+                    });
+            }
         });
 </script>
 

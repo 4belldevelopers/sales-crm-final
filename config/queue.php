@@ -43,7 +43,7 @@ return [
             'after_commit' => false,
         ],
         'emails' => [
-            'driver'       => 'redis',
+            'driver'       => env('QUEUE_EMAILS_DRIVER', env('QUEUE_CONNECTION', 'redis')),
             'table'        => 'custom_queue_jobs',
             'queue'        => 'default',
             'retry_after'  => 90,
