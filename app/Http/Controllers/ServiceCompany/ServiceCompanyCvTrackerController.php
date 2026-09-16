@@ -2813,14 +2813,13 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
                 'jobs.title as job_title',
                 'clients.name as client_name'
             )
-            // ->leftjoin('jobs', 'jobs.id', 'job_applications.job_id')
-            ->join('add_job_wise_condidates', 'add_job_wise_condidates.job_application_id', 'job_applications.id')
-            ->join('jobs', function ($join) {
-                $join->on('jobs.id', 'add_job_wise_condidates.job_id');
-            })
-            ->leftjoin('clients', 'clients.id', 'jobs.client_id')
-            ->leftjoin('qualification_master', 'qualification_master.id', 'job_applications.qualification')
-            ->whereIn('job_applications.id', $this->arr)->groupBy('job_applications.id')->get();
+            ->leftJoin('add_job_wise_condidates', 'add_job_wise_condidates.job_application_id', 'job_applications.id')
+            ->leftJoin('jobs', 'jobs.id', 'add_job_wise_condidates.job_id')
+            ->leftJoin('clients', 'clients.id', 'jobs.client_id')
+            ->leftJoin('qualification_master', 'qualification_master.id', 'job_applications.qualification')
+            ->whereIn('job_applications.id', $this->arr)
+            ->groupBy('job_applications.id')
+            ->get();
         // dd($this->applicationData);
 
         // $this->templateData = DB::table('th_email_template')->select('*')->where('th_email_template.status', 1)->where('th_email_template.temptype', 1)->get();
@@ -2936,8 +2935,22 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
             $cand->parsed_skills = $skillsArr;
 
             // Validation badges matching showdetail
+            // Resume presence detection & verification
+            $candResume = trim((string) @$cand->resume);
+            $hasResume = false;
+            $resumeFilename = '';
+            if ($candResume !== '' && $candResume !== '0' && strtolower($candResume) !== 'null') {
+                $hasResume = true;
+                $resumeFilename = basename($candResume);
+            }
+            $cand->has_resume = $hasResume;
+            $cand->resume_filename = $resumeFilename;
+            $cand->resume_status = $hasResume ? 'available' : 'missing';
+            $cand->resume_url = $hasResume ? route('service_company.cvtracker.resume', $cand->id) : '';
+
             $valArr = [];
-            if (! empty($cand->resume)) $valArr[] = ['label' => 'RESUME', 'status' => 'Verified'];
+            if ($hasResume) $valArr[] = ['label' => 'RESUME', 'status' => 'Verified'];
+            else $valArr[] = ['label' => 'RESUME', 'status' => 'Not Uploaded'];
             if (! empty($cand->email) || ! empty($cand->secondrary_email)) $valArr[] = ['label' => 'EMAIL ID', 'status' => 'Verified'];
             if (! empty($cand->phone) || ! empty($cand->secondary_mobile)) $valArr[] = ['label' => 'PHONE NUMBER', 'status' => 'Verified'];
             if (! empty($cand->linkedin)) $valArr[] = ['label' => 'LINKEDIN ID', 'status' => 'Verified'];
@@ -2945,6 +2958,9 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
             if (! empty($cand->current_designation) || ! empty($cand->current_company)) $valArr[] = ['label' => 'JOB DESCRIPTION', 'status' => 'Shared with candidate'];
             $cand->parsed_validation = $valArr;
         }
+
+        $this->candidatesWithResumeCount = collect($this->applicationData)->where('has_resume', true)->count();
+        $this->candidatesWithoutResumeCount = collect($this->applicationData)->where('has_resume', false)->count();
 
         $this->to_email_from_count = $this->cc_email_count = 0;
         $this->to_email_from_data = [];
@@ -3197,8 +3213,22 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
             }
             $cand->parsed_skills = $skillsArr;
 
+            // Resume presence detection & verification
+            $candResume = trim((string) @$cand->resume);
+            $hasResume = false;
+            $resumeFilename = '';
+            if ($candResume !== '' && $candResume !== '0' && strtolower($candResume) !== 'null') {
+                $hasResume = true;
+                $resumeFilename = basename($candResume);
+            }
+            $cand->has_resume = $hasResume;
+            $cand->resume_filename = $resumeFilename;
+            $cand->resume_status = $hasResume ? 'available' : 'missing';
+            $cand->resume_url = $hasResume ? route('service_company.cvtracker.resume', $cand->id) : '';
+
             $valArr = [];
-            if (! empty($cand->resume)) $valArr[] = ['label' => 'RESUME', 'status' => 'Verified'];
+            if ($hasResume) $valArr[] = ['label' => 'RESUME', 'status' => 'Verified'];
+            else $valArr[] = ['label' => 'RESUME', 'status' => 'Not Uploaded'];
             if (! empty($cand->email) || ! empty($cand->secondrary_email)) $valArr[] = ['label' => 'EMAIL ID', 'status' => 'Verified'];
             if (! empty($cand->phone) || ! empty($cand->secondary_mobile)) $valArr[] = ['label' => 'PHONE NUMBER', 'status' => 'Verified'];
             if (! empty($cand->linkedin)) $valArr[] = ['label' => 'LINKEDIN ID', 'status' => 'Verified'];
@@ -3206,6 +3236,9 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
             if (! empty($cand->current_designation) || ! empty($cand->current_company)) $valArr[] = ['label' => 'JOB DESCRIPTION', 'status' => 'Shared with candidate'];
             $cand->parsed_validation = $valArr;
         }
+
+        $this->candidatesWithResumeCount = collect($this->applicationData)->where('has_resume', true)->count();
+        $this->candidatesWithoutResumeCount = collect($this->applicationData)->where('has_resume', false)->count();
 
         $this->to_email_from_count = $this->cc_email_count = 0;
         $this->to_email_from_data = [];
@@ -3448,6 +3481,99 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
         return Reply::dataOnly([
             'status' => 'success',
             'message' => 'Test email dispatched successfully! Attachments processed via Cloudflare R2 and will be automatically purged upon delivery.'
+        ]);
+    }
+
+    /**
+     * Quick Upload Resume directly from Forward Resume Drawer (Zero-context-switch)
+     * Tenancy: Scoped by auth()->user()->company_id
+     */
+    public function quick_upload_resume(Request $request)
+    {
+        $request->validate([
+            'candidate_id' => 'required|integer',
+            'resume' => 'required|file|mimes:pdf,doc,docx|max:15360',
+        ]);
+
+        $companyId = (int) auth()->user()->company_id;
+        $candidateId = (int) $request->input('candidate_id');
+
+        // Tenancy check: Ensure candidate belongs to logged-in user's company
+        $candidate = DB::table('job_applications')
+            ->where('id', $candidateId)
+            ->where(function ($q) use ($companyId) {
+                $q->where('company_id', $companyId)
+                    ->orWhere('thirdparty_company_id', $companyId);
+            })
+            ->first();
+
+        if (! $candidate) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Candidate profile not found or unauthorized.'
+            ], 404);
+        }
+
+        $file = $request->file('resume');
+        $ext = strtolower($file->getClientOriginalExtension());
+        $origName = $file->getClientOriginalName();
+        $safeCandName = preg_replace('/[^a-zA-Z0-9_\-]/', '_', $candidate->full_name ?: 'Candidate');
+        $uniqueSuffix = (string) \Illuminate\Support\Str::uuid();
+        $storedFilename = "{$candidateId}_{$safeCandName}_{$uniqueSuffix}.{$ext}";
+
+        // Save locally to public/user-uploads/resumes/
+        $destinationPath = public_path('user-uploads/resumes');
+        if (! file_exists($destinationPath)) {
+            @mkdir($destinationPath, 0755, true);
+        }
+        $file->move($destinationPath, $storedFilename);
+
+        // Mirror to Cloudflare R2 if available
+        try {
+            $localFilePath = $destinationPath . '/' . $storedFilename;
+            if (file_exists($localFilePath)) {
+                $year = date('Y');
+                $month = date('m');
+                $r2Path = "Companies/{$companyId}/Resumes/{$year}/{$month}/{$storedFilename}";
+                \Illuminate\Support\Facades\Storage::disk('r2')->put($r2Path, file_get_contents($localFilePath));
+            }
+        } catch (\Throwable $e) {
+            \Log::warning('[quick_upload_resume] R2 upload safeguard: ' . $e->getMessage());
+        }
+
+        // Update MySQL job_applications table
+        DB::table('job_applications')->where('id', $candidateId)->update([
+            'resume' => $storedFilename,
+            'updated_at' => now(),
+        ]);
+
+        // Insert or update documents table record
+        try {
+            DB::table('documents')->insert([
+                'name' => 'Resume',
+                'hashname' => $storedFilename,
+                'documentable_type' => 'App\JobApplication',
+                'documentable_id' => $candidateId,
+                'company_id' => $companyId,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+        } catch (\Throwable $e) {}
+
+        // Keep Elasticsearch in sync if job runner exists
+        try {
+            if (class_exists(\App\Jobs\ProcessCandidateUpdateJob::class)) {
+                \App\Jobs\ProcessCandidateUpdateJob::dispatch($candidateId);
+            }
+        } catch (\Throwable $e) {}
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Resume uploaded successfully!',
+            'candidate_id' => $candidateId,
+            'resume_filename' => $storedFilename,
+            'display_filename' => 'Jeroworks_' . $safeCandName . '.' . $ext,
+            'has_resume' => true,
         ]);
     }
 
