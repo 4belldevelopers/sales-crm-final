@@ -4912,7 +4912,7 @@ setTimeout(() => {
       if($sn) $rsSkills[]=['name'=>$sn,'expText'=>'--','exp'=>0,'rating'=>0];
     }
   }
-  $rsMatchPct=(int)round((float)(@$application->skill_match??0));
+  $rsMatchPct = (!empty($__hdrOverallPct) && (int)$__hdrOverallPct > 0) ? (int)$__hdrOverallPct : (int)round((float)(@$application->skill_match??0));
   if($rsMatchPct===0&&!empty($__hdrJobTotal)) $rsMatchPct=(int)round(($__hdrMatchedCount??0)/$__hdrJobTotal*100);
   $rsWm=trim((string)(@$application->wm??''));
   $rsWorkMode=$rsWm!=='' ? ucwords(str_replace(['_', '-'], ' ', strtolower($rsWm))) : '—';
@@ -4920,7 +4920,9 @@ setTimeout(() => {
   $rsNpRaw=trim((string)@$application->np_id);
   $rsNpTs=$rsNpRaw!=='' ? strtotime($rsNpRaw) : false;
   if($rsNpMode===2||strtolower($rsNpRaw)==='immediate'){ $rsNotice='Immediate'; }
-  elseif(($rsNpMode===0||$rsNpMode===1)&&$rsNpTs!==false&&(int)date('Y',$rsNpTs)>1970){ $rsNotice='Available '.date('d M Y',$rsNpTs); }
+  elseif($rsNpMode===0&&(int)$rsNpRaw>0){ $rsNotice=$rsNpRaw.' Days'; }
+  elseif($rsNpMode===1&&$rsNpTs!==false&&(int)date('Y',$rsNpTs)>1970){ $rsNotice='Available '.date('d M Y',$rsNpTs); }
+  elseif($rsNpTs!==false&&(int)date('Y',$rsNpTs)>1970){ $rsNotice='Available '.date('d M Y',$rsNpTs); }
   else { $rsNotice=$rsNpRaw; }
   if($rsNotice===''||$rsNotice==='Available '||str_contains($rsNotice,'01 Jan 1970')) $rsNotice='--';
   $rsIsImmediate=($rsNpMode===2||strtolower($rsNpRaw)==='immediate');

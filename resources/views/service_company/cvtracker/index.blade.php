@@ -1809,10 +1809,16 @@
 
                 var arr = [];
                 var jobIdArr = [];
+                var matchMap = {};
                 $('.chk_list_item:checked').each(function() {
                     var jobId = $(this).attr('data-jobId');
-                    arr.push($(this).val());
+                    var candId = $(this).val();
+                    var matchVal = $(this).attr('data-match');
+                    arr.push(candId);
                     jobIdArr.push(jobId);
+                    if (matchVal !== undefined && matchVal !== '') {
+                        matchMap[candId] = parseInt(matchVal, 10);
+                    }
                 });
 
                 if (arr.length === 0) {
@@ -1880,7 +1886,8 @@
                         '_token': token,
                         '_method': 'POST',
                         'arr': arr,
-                        'jobIdArr': jobIdArr
+                        'jobIdArr': jobIdArr,
+                        'matchMap': matchMap
                     },
                     cache: false,
                     success: function(response) {
@@ -1900,10 +1907,16 @@
 
                 var arr = [];
                 var jobIdArr = [];
+                var matchMap = {};
                 $('.chk_list_item:checked').each(function() {
                     var jobId = $(this).attr('data-jobId');
-                    arr.push($(this).val());
+                    var candId = $(this).val();
+                    var matchVal = $(this).attr('data-match');
+                    arr.push(candId);
                     jobIdArr.push(jobId);
+                    if (matchVal !== undefined && matchVal !== '') {
+                        matchMap[candId] = parseInt(matchVal, 10);
+                    }
                 });
 
                 if (arr.length === 0) {
@@ -1954,7 +1967,8 @@
                         '_token': token,
                         '_method': 'POST',
                         'arr': arr,
-                        'jobIdArr': jobIdArr
+                        'jobIdArr': jobIdArr,
+                        'matchMap': matchMap
                     },
                     cache: false,
                     success: function(response) {
