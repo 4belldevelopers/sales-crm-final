@@ -496,23 +496,35 @@ if(!empty($cc_email_count) && $cc_email_count > 0 && !empty($cc_email_data)){
             </div>
           </div>
 
+          @if(($candidatesWithoutResumeCount ?? 0) > 0)
+            <div id="test_fwd_missing_resume_banner" style="margin-top:10px;padding:9px 13px;background:#FFFBEB;border:1px solid #FCD34D;border-radius:8px;display:flex;align-items:center;gap:10px;">
+              <span style="color:#D97706;font-size:16px;flex-shrink:0;">⚠</span>
+              <div style="font-size:12px;color:#92400E;line-height:1.4;">
+                <strong>Resume Notice:</strong> {{ $candidatesWithoutResumeCount }} of {{ count($applicationData ?? []) }} selected profiles has no resume document uploaded. You can attach a resume directly below or send using Option 5 (Pre-Screened Report).
+              </div>
+            </div>
+          @endif
+
           <!-- Multi-Profile Attached Resumes Roster -->
           <div id="test_fwd_candidate_roster" style="margin-top:10px;display:flex;flex-direction:column;gap:8px;">
             @foreach($applicationData as $idx => $cand)
               @php
+                $hasResume = !empty($cand->has_resume);
                 $candSafeName = !empty($cand->full_name) ? str_replace(' ', '_', preg_replace('/[^\w\s.-]/', '', $cand->full_name)) : ('Candidate_' . $cand->id);
                 $candDisplayName = $cand->full_name ?? ('Candidate #' . ($idx + 1));
                 $candDesignation = $cand->current_designation ?? ($cand->job_title ?? 'Profile');
               @endphp
-              <div class="test-fwd-cand-card" id="test_fwd_cand_card_{{ $cand->id }}" style="padding:10px 14px;background:#F0FDF4;border:1px solid #BBF7D0;border-radius:8px;transition:all 0.2s ease;">
-                <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;">
+              <div class="test-fwd-cand-card" id="test_fwd_cand_card_{{ $cand->id }}" data-cand-id="{{ $cand->id }}" data-has-resume="{{ $hasResume ? '1' : '0' }}" style="padding:10px 14px;background:{{ $hasResume ? '#F0FDF4' : '#FFFBEB' }};border:1px solid {{ $hasResume ? '#BBF7D0' : '#FDE68A' }};border-radius:8px;transition:all 0.2s ease;">
+                <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;">
                   <div style="display:flex;align-items:center;gap:10px;min-width:0;flex:1;">
                     {{-- Avatar / Sequence badge --}}
                     <div style="position:relative;flex-shrink:0;">
-                      <span id="test_fwd_cand_avatar_{{ $cand->id }}" style="width:30px;height:30px;border-radius:7px;background:#DCFCE7;color:#15803D;display:inline-flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;">
+                      <span id="test_fwd_cand_avatar_{{ $cand->id }}" style="width:30px;height:30px;border-radius:7px;background:{{ $hasResume ? '#DCFCE7' : '#FEF3C7' }};color:{{ $hasResume ? '#15803D' : '#B45309' }};display:inline-flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;">
                         {{ $idx + 1 }}
                       </span>
-                      <span id="test_fwd_cand_check_{{ $cand->id }}" style="position:absolute;bottom:-3px;right:-3px;width:14px;height:14px;border-radius:50%;background:#10B981;color:#fff;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:bold;box-shadow:0 1px 2px rgba(0,0,0,0.15);">✓</span>
+                      <span id="test_fwd_cand_check_{{ $cand->id }}" style="position:absolute;bottom:-3px;right:-3px;width:14px;height:14px;border-radius:50%;background:{{ $hasResume ? '#10B981' : '#F59E0B' }};color:#fff;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:bold;box-shadow:0 1px 2px rgba(0,0,0,0.15);">
+                        {{ $hasResume ? '✓' : '!' }}
+                      </span>
                     </div>
 
                     {{-- Candidate Name & Dynamic Filename --}}
@@ -525,16 +537,24 @@ if(!empty($cc_email_count) && $cc_email_count > 0 && !empty($cc_email_data)){
                           • {{ $candDesignation }}
                         </span>
                       </div>
-                      <div class="test-fwd-cand-filename" id="test_fwd_cand_filename_{{ $cand->id }}" data-safename="{{ $candSafeName }}" style="font-size:11px;font-family:monospace;color:#059669;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
-                        Jeroworks_{{ $candSafeName }}.pdf
+                      <div class="test-fwd-cand-filename" id="test_fwd_cand_filename_{{ $cand->id }}" data-safename="{{ $candSafeName }}" style="font-size:11px;font-family:monospace;color:{{ $hasResume ? '#059669' : '#B45309' }};margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+                        {{ $hasResume ? ('Jeroworks_' . $candSafeName . '.pdf') : 'No resume uploaded' }}
                       </div>
                     </div>
                   </div>
 
-                  {{-- Candidate Status Pill --}}
+                  {{-- Candidate Status Pill & Inline Upload Action --}}
                   <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
-                    <div id="test_fwd_cand_status_{{ $cand->id }}" style="font-size:11px;font-weight:600;padding:3px 10px;border-radius:12px;background:#DCFCE7;color:#15803D;display:inline-flex;align-items:center;gap:5px;white-space:nowrap;">
-                      ✓ Attached (100%)
+                    <div id="test_fwd_cand_status_{{ $cand->id }}" style="font-size:11px;font-weight:600;padding:3px 10px;border-radius:12px;background:{{ $hasResume ? '#DCFCE7' : '#FEF3C7' }};color:{{ $hasResume ? '#15803D' : '#B45309' }};display:inline-flex;align-items:center;gap:5px;white-space:nowrap;">
+                      {{ $hasResume ? '✓ Attached (100%)' : '⚠ No Resume' }}
+                    </div>
+
+                    <div id="test_fwd_quick_upload_wrap_{{ $cand->id }}" style="{{ $hasResume ? 'display:none;' : 'display:inline-flex;' }}">
+                      <input type="file" id="test_fwd_quick_file_{{ $cand->id }}" accept=".pdf,.doc,.docx" style="display:none;" onchange="uploadCandidateResumeInline({{ $cand->id }}, this)" />
+                      <button type="button" class="btn btn-xs btn-light-primary fw-bold" onclick="document.getElementById('test_fwd_quick_file_{{ $cand->id }}').click();" style="font-size:10.5px;padding:3px 8px;border-radius:6px;" title="Upload Resume Document">
+                        <span id="test_fwd_upload_spin_{{ $cand->id }}" class="spinner-border spinner-border-sm me-1" style="display:none;width:10px;height:10px;"></span>
+                        <span id="test_fwd_upload_txt_{{ $cand->id }}">+ Upload CV</span>
+                      </button>
                     </div>
                   </div>
                 </div>
@@ -734,16 +754,110 @@ function formatBytes(bytes) {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
 }
 
+window.uploadCandidateResumeInline = function(candidateId, inputEl) {
+    if (!inputEl || !inputEl.files || inputEl.files.length === 0) return;
+    var file = inputEl.files[0];
+
+    var ext = file.name.split('.').pop().toLowerCase();
+    if (['pdf', 'doc', 'docx'].indexOf(ext) === -1) {
+        Swal.fire('Invalid File', 'Please select a PDF, DOC, or DOCX document.', 'warning');
+        return;
+    }
+    if (file.size > 15 * 1024 * 1024) {
+        Swal.fire('File Too Large', 'Maximum resume file size allowed is 15MB.', 'warning');
+        return;
+    }
+
+    var spin = document.getElementById('test_fwd_upload_spin_' + candidateId);
+    var txt = document.getElementById('test_fwd_upload_txt_' + candidateId);
+    if (spin) spin.style.display = 'inline-block';
+    if (txt) txt.textContent = 'Uploading...';
+
+    var fd = new FormData();
+    fd.append('_token', '{{ csrf_token() }}');
+    fd.append('candidate_id', candidateId);
+    fd.append('resume', file);
+
+    $.ajax({
+        url: "{{ route('service_company.cvtracker.quick_upload_resume') }}",
+        type: 'POST',
+        data: fd,
+        processData: false,
+        contentType: false,
+        success: function(res) {
+            if (spin) spin.style.display = 'none';
+            if (txt) txt.textContent = '✓ Uploaded';
+
+            if (res.status === 'success') {
+                var card = $('#test_fwd_cand_card_' + candidateId);
+                card.attr('data-has-resume', '1');
+                card.css({ 'background': '#F0FDF4', 'border-color': '#BBF7D0' });
+                $('#test_fwd_cand_avatar_' + candidateId).css({ 'background': '#DCFCE7', 'color': '#15803D' });
+                $('#test_fwd_cand_check_' + candidateId).css({ 'background': '#10B981' }).text('✓');
+                $('#test_fwd_cand_filename_' + candidateId).css({ 'color': '#059669' }).text(res.display_filename || 'Jeroworks_Resume.pdf');
+                $('#test_fwd_cand_status_' + candidateId).css({ 'background': '#DCFCE7', 'color': '#15803D' }).text('✓ Attached (100%)');
+                $('#test_fwd_quick_upload_wrap_' + candidateId).html(
+                    '<button type="button" class="btn btn-xs btn-light-success fw-bold" onclick="document.getElementById(\'test_fwd_quick_file_' + candidateId + '\').click();" style="font-size:10.5px;padding:3px 8px;border-radius:6px;" title="Replace CV">' +
+                    '✓ CV Ready <span style="font-size:9px;opacity:0.7;">(Change)</span></button>'
+                );
+
+                var remainingMissing = $('.test-fwd-cand-card[data-has-resume="0"]').length;
+                if (remainingMissing === 0) {
+                    $('#test_fwd_missing_resume_banner').fadeOut(200);
+                }
+
+                if (window._testFwdCompiledAttachments) {
+                    for (var k in window._testFwdCompiledAttachments) {
+                        if (window._testFwdCompiledAttachments[k]) {
+                            delete window._testFwdCompiledAttachments[k][candidateId];
+                        }
+                    }
+                }
+
+                updateTestSendButtonState();
+
+                if (typeof cvhToast !== 'undefined') {
+                    cvhToast.fire({ icon: 'success', title: 'Resume attached successfully' });
+                } else {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Resume Uploaded',
+                        text: 'Resume has been attached to candidate profile successfully.',
+                        timer: 2000,
+                        showConfirmButton: false
+                    });
+                }
+            } else {
+                if (txt) txt.textContent = '+ Upload CV';
+                Swal.fire('Upload Failed', res.message || 'Could not upload resume', 'error');
+            }
+        },
+        error: function(xhr) {
+            if (spin) spin.style.display = 'none';
+            if (txt) txt.textContent = '+ Upload CV';
+            var msg = (xhr.responseJSON && xhr.responseJSON.message) ? xhr.responseJSON.message : 'Server error uploading resume';
+            Swal.fire('Upload Error', msg, 'error');
+        }
+    });
+};
+
 function updateTestRosterFilenames(optId) {
     $('.test-fwd-cand-filename').each(function () {
+        var card = $(this).closest('.test-fwd-cand-card');
+        var hasResume = card.attr('data-has-resume') === '1';
         var safeName = $(this).attr('data-safename') || 'Candidate';
         var filename = 'Jeroworks_' + safeName + '.pdf';
         if (optId === 5) {
             filename = 'Prescreen_Report_' + safeName + '.pdf';
-        } else if (optId === 49) {
-            filename = 'Jeroworks_Resume.pdf';
+            $(this).css('color', '#059669').text(filename);
+        } else if (hasResume) {
+            if (optId === 49) {
+                filename = 'Jeroworks_Resume.pdf';
+            }
+            $(this).css('color', '#059669').text(filename);
+        } else {
+            $(this).css('color', '#B45309').text('No resume uploaded');
         }
-        $(this).text(filename);
     });
 }
 
@@ -774,9 +888,19 @@ function updateTestSendButtonState() {
         btn.style.cursor = 'pointer';
         $('#test_fwd_compile_progress_container').hide();
         candidatesToProcess.forEach(function (c) {
-            $('#test_fwd_cand_card_' + c.id).css({ 'background': '#F0FDF4', 'border-color': '#BBF7D0' });
-            $('#test_fwd_cand_check_' + c.id).css('display', 'flex');
-            $('#test_fwd_cand_status_' + c.id).css({ 'background': '#DCFCE7', 'color': '#15803D' }).text('✓ Attached (100%)');
+            var card = $('#test_fwd_cand_card_' + c.id);
+            var hasResume = card.attr('data-has-resume') === '1' || !!c.has_resume;
+            if (hasResume) {
+                card.css({ 'background': '#F0FDF4', 'border-color': '#BBF7D0' });
+                $('#test_fwd_cand_avatar_' + c.id).css({ 'background': '#DCFCE7', 'color': '#15803D' });
+                $('#test_fwd_cand_check_' + c.id).css({ 'background': '#10B981', 'display': 'flex' }).text('✓');
+                $('#test_fwd_cand_status_' + c.id).css({ 'background': '#DCFCE7', 'color': '#15803D' }).text('✓ Attached (100%)');
+            } else {
+                card.css({ 'background': '#FFFBEB', 'border-color': '#FDE68A' });
+                $('#test_fwd_cand_avatar_' + c.id).css({ 'background': '#FEF3C7', 'color': '#B45309' });
+                $('#test_fwd_cand_check_' + c.id).css({ 'background': '#F59E0B', 'display': 'flex' }).text('!');
+                $('#test_fwd_cand_status_' + c.id).css({ 'background': '#FEF3C7', 'color': '#B45309' }).text('⚠ No Resume');
+            }
             $('#test_fwd_cand_progress_wrap_' + c.id).hide();
         });
         return;
@@ -785,6 +909,9 @@ function updateTestSendButtonState() {
     // Custom format (Option 5 or 41-53): Check if already compiled
     var cached = window._testFwdCompiledAttachments[optId] || {};
     var allReady = candidatesToProcess.length > 0 && candidatesToProcess.every(function (c) {
+        var card = $('#test_fwd_cand_card_' + c.id);
+        var hasResume = card.attr('data-has-resume') === '1' || !!c.has_resume;
+        if (optId !== 5 && !hasResume) return true;
         return !!cached[c.id];
     });
 
@@ -794,18 +921,31 @@ function updateTestSendButtonState() {
         btn.style.cursor = 'pointer';
         $('#test_fwd_compile_progress_container').show();
         $('#test_fwd_compile_spinner').hide();
-        $('#test_fwd_compile_status_text').html('✓ All ' + candidatesToProcess.length + ' candidate resumes compiled & verified (100%)');
+        $('#test_fwd_compile_status_text').html('✓ All ready attachments compiled & verified (100%)');
         $('#test_fwd_compile_pct_badge').text('100%').css({ 'color': '#0D9488', 'background': '#CCFBF1', 'border-color': '#99F6E4' });
         $('#test_fwd_compile_progress_bar').css({ 'width': '100%', 'background': '#059669' });
         $('#test_fwd_compile_count').text(candidatesToProcess.length + ' / ' + candidatesToProcess.length);
-        $('#test_fwd_compile_step_detail').text('All candidate attachments ready. You can send now.');
+        $('#test_fwd_compile_step_detail').text('Candidate attachments ready. You can send now.');
 
         candidatesToProcess.forEach(function (c) {
+            var card = $('#test_fwd_cand_card_' + c.id);
+            var hasResume = card.attr('data-has-resume') === '1' || !!c.has_resume;
             var blob = cached[c.id];
             var sizeStr = blob ? (' • ' + formatBytes(blob.size)) : '';
-            $('#test_fwd_cand_card_' + c.id).css({ 'background': '#F0FDF4', 'border-color': '#BBF7D0' });
-            $('#test_fwd_cand_check_' + c.id).css('display', 'flex');
-            $('#test_fwd_cand_status_' + c.id).css({ 'background': '#DCFCE7', 'color': '#15803D' }).text('✓ Attached (100%)' + sizeStr);
+
+            if (optId === 5 || hasResume) {
+                card.css({ 'background': '#F0FDF4', 'border-color': '#BBF7D0' });
+                $('#test_fwd_cand_avatar_' + c.id).css({ 'background': '#DCFCE7', 'color': '#15803D' });
+                $('#test_fwd_cand_check_' + c.id).css({ 'background': '#10B981', 'display': 'flex' }).text('✓');
+                $('#test_fwd_cand_status_' + c.id).css({ 'background': '#DCFCE7', 'color': '#15803D' }).text(
+                    (optId === 5 ? '✓ Pre-Screen Ready' : '✓ Attached (100%)') + sizeStr
+                );
+            } else {
+                card.css({ 'background': '#FFFBEB', 'border-color': '#FDE68A' });
+                $('#test_fwd_cand_avatar_' + c.id).css({ 'background': '#FEF3C7', 'color': '#B45309' });
+                $('#test_fwd_cand_check_' + c.id).css({ 'background': '#F59E0B', 'display': 'flex' }).text('!');
+                $('#test_fwd_cand_status_' + c.id).css({ 'background': '#FEF3C7', 'color': '#B45309' }).text('⚠ Missing Base CV');
+            }
             $('#test_fwd_cand_progress_wrap_' + c.id).hide();
         });
     } else {
@@ -877,8 +1017,19 @@ async function startTestCompilationForOption(optId) {
             var candName = cand.full_name || ('Candidate #' + (i + 1));
             var startPct = 10 + Math.round((i / total) * 90);
             var endPct = 10 + Math.round(((i + 1) / total) * 90);
+            var card = $('#test_fwd_cand_card_' + cand.id);
+            var hasResume = card.attr('data-has-resume') === '1' || !!cand.has_resume;
 
-            $('#test_fwd_cand_card_' + cand.id).css({ 'background': '#F0FDFA', 'border-color': '#99F6E4' });
+            if (optId !== 5 && !hasResume) {
+                card.css({ 'background': '#FFFBEB', 'border-color': '#FDE68A' });
+                $('#test_fwd_cand_avatar_' + cand.id).css({ 'background': '#FEF3C7', 'color': '#B45309' });
+                $('#test_fwd_cand_check_' + cand.id).css({ 'background': '#F59E0B', 'display': 'flex' }).text('!');
+                $('#test_fwd_cand_status_' + cand.id).css({ 'background': '#FEF3C7', 'color': '#B45309' }).text('⚠ Missing Base CV');
+                $('#test_fwd_cand_progress_wrap_' + cand.id).hide();
+                continue;
+            }
+
+            card.css({ 'background': '#F0FDFA', 'border-color': '#99F6E4' });
             $('#test_fwd_cand_progress_wrap_' + cand.id).show();
             $('#test_fwd_cand_progress_bar_' + cand.id).css('width', '25%');
             $('#test_fwd_cand_status_' + cand.id).css({ 'background': '#CCFBF1', 'color': '#0D9488' }).html(
@@ -916,10 +1067,13 @@ async function startTestCompilationForOption(optId) {
 
             var blob = window._testFwdCompiledAttachments[optId][cand.id];
             var sizeStr = blob ? (' • ' + formatBytes(blob.size)) : '';
-            $('#test_fwd_cand_card_' + cand.id).css({ 'background': '#F0FDF4', 'border-color': '#BBF7D0' });
-            $('#test_fwd_cand_check_' + cand.id).css('display', 'flex');
+            card.css({ 'background': '#F0FDF4', 'border-color': '#BBF7D0' });
+            $('#test_fwd_cand_avatar_' + cand.id).css({ 'background': '#DCFCE7', 'color': '#15803D' });
+            $('#test_fwd_cand_check_' + cand.id).css({ 'background': '#10B981', 'display': 'flex' }).text('✓');
             $('#test_fwd_cand_progress_wrap_' + cand.id).hide();
-            $('#test_fwd_cand_status_' + cand.id).css({ 'background': '#DCFCE7', 'color': '#15803D' }).text('✓ Attached (100%)' + sizeStr);
+            $('#test_fwd_cand_status_' + cand.id).css({ 'background': '#DCFCE7', 'color': '#15803D' }).text(
+                (optId === 5 ? '✓ Pre-Screen Ready' : '✓ Attached (100%)') + sizeStr
+            );
 
             $('#test_fwd_compile_progress_bar').css('width', endPct + '%');
             $('#test_fwd_compile_pct_badge').text(endPct + '%');
@@ -932,8 +1086,8 @@ async function startTestCompilationForOption(optId) {
         $('#test_fwd_compile_progress_bar').css({ 'width': '100%', 'background': '#059669' });
         $('#test_fwd_compile_pct_badge').text('100%').css({ 'color': '#059669', 'background': '#DCFCE7', 'border-color': '#86EFAC' });
         $('#test_fwd_compile_spinner').hide();
-        $('#test_fwd_compile_status_text').html('✓ All ' + total + ' candidate profiles compiled & verified (100%)');
-        $('#test_fwd_compile_step_detail').text('All attachments generated and verified. Ready to send.');
+        $('#test_fwd_compile_status_text').html('✓ All attachments compiled & verified (100%)');
+        $('#test_fwd_compile_step_detail').text('All ready attachments generated and verified. Ready to send.');
 
         if (btn) {
             btn.disabled = false;
@@ -1129,6 +1283,58 @@ window.onTestFwdSubmitClick = async function (e) {
         return;
     }
     $('#test_subject').css('border-color', '#E5E7EB');
+
+    // Missing Resume Safeguards
+    if (attached_cv === 1 && optId !== 5) {
+        var withResumeCount = 0;
+        var missingCandNames = [];
+        $('.test-fwd-cand-card').each(function() {
+            var hasResume = $(this).attr('data-has-resume') === '1';
+            var cname = $(this).find('.test-fwd-cand-filename').attr('data-safename') || 'Candidate';
+            if (hasResume) {
+                withResumeCount++;
+            } else {
+                missingCandNames.push(cname.replace(/_/g, ' '));
+            }
+        });
+
+        if (withResumeCount === 0) {
+            Swal.fire({
+                title: 'No Resume Document Found',
+                html: '<div style="font-size:13.5px;line-height:1.6;color:#374151;">' +
+                      '<p style="margin-bottom:8px;">None of the selected candidate profiles have an uploaded resume file.</p>' +
+                      '<p style="color:#6B7280;margin:0;">Please use the <strong>+ Upload CV</strong> button on the candidate card to upload a resume, or select <strong>5. Pre-Screened Report</strong>, or uncheck <em>Attach Candidate Resume</em> to send an email introduction only.</p>' +
+                      '</div>',
+                icon: 'warning',
+                confirmButtonColor: '#0D9488',
+                confirmButtonText: 'OK, Got It'
+            });
+            return;
+        }
+
+        if (missingCandNames.length > 0 && !window._testFwdConfirmedMissing) {
+            Swal.fire({
+                title: 'Missing Resume Notice',
+                html: '<div style="font-size:13.5px;line-height:1.6;color:#374151;">' +
+                      '<p style="margin-bottom:8px;"><strong>' + missingCandNames.length + ' candidate(s)</strong> (' + missingCandNames.slice(0, 3).join(', ') + (missingCandNames.length > 3 ? '...' : '') + ') do not have an uploaded resume document.</p>' +
+                      '<p style="color:#4B5563;margin:0;">Resume attachments will only be included for the remaining <strong>' + withResumeCount + ' candidate(s)</strong>. Do you want to proceed?</p>' +
+                      '</div>',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#0D9488',
+                cancelButtonColor: '#6B7280',
+                confirmButtonText: 'Proceed & Send',
+                cancelButtonText: 'Review & Upload CV'
+            }).then(function(result) {
+                if (result.isConfirmed) {
+                    window._testFwdConfirmedMissing = true;
+                    $('#btnTestSubmit').trigger('click');
+                }
+            });
+            return;
+        }
+        window._testFwdConfirmedMissing = false;
+    }
 
     if (attached_cv === 1 && optId !== 1 && _testFwdIsCompiling) {
         Swal.fire('Please Wait', 'Resume attachments are still being prepared in browser RAM. Please wait until progress reaches 100%.', 'info');

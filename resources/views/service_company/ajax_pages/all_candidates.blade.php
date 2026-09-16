@@ -51,9 +51,10 @@
         <tr style="height: 102px; position: relative;">
             <td>
                 @php
+                    $hasResume = !empty($row->resume);
                     echo '<div class="form-check form-check-sm form-check-custom form-check-solid">
                     <input class="form-check-input chk_list_item " name="chk_list_item[]" type="checkbox" data-jobId="' .
-                        $row->jobId .'" data-wiseId="' .$row->wiseId .'" data-skills="' . e(@$row->skills ?? '') . '" data-cname="' . e(@$row->full_name ?? '') . '" value="' .$row->candidate_id .'" />
+                        $row->jobId .'" data-wiseId="' .$row->wiseId .'" data-skills="' . e(@$row->skills ?? '') . '" data-cname="' . e(@$row->full_name ?? '') . '" data-has-resume="' . ($hasResume ? '1' : '0') . '" value="' .$row->candidate_id .'" />
                   </div>';
                 @endphp
             </td>
@@ -204,6 +205,11 @@
                             $skilltagclass = 'd-none';
                         }
 
+                        $hasResume = !empty($row->resume);
+                        $cvBadge = $hasResume
+                            ? '<span class="badge badge-light-success py-0 px-2 ms-2" style="font-size:10px;font-weight:600;" title="Resume Document Uploaded">✓ CV</span>'
+                            : '<span class="badge badge-light-warning py-0 px-2 ms-2" style="font-size:10px;font-weight:600;" title="No Resume Uploaded">⚠ No CV</span>';
+
                         if ($flag == 1) {
                             echo '<div class="symbol symbol-circle symbol-40px overflow-hidden me-2 border-radius-5" style="float:left">
 																				<a href="javascript:void(0);"  data-row-id="' .
@@ -218,6 +224,7 @@
 																				</a>
 																				</div>                  
 																				<div class="d-flex flex-column">
+																				<div class="d-flex align-items-center">
 																				<a href="javascript:void(0);"  data-row-id="' .
                                 @$row->wiseId .
                                 '"  class="text-danger fw-bolder text-hover-primary fs-6  ' .
@@ -230,7 +237,8 @@
                                 '<sup style="color: #0865dd !important;
 																				font-weight: bold;">' .
                                 $tredmark .
-                                '</sup></a>
+                                '</sup></a>' . $cvBadge . '
+																				</div>
 																				<a href="javascript:void(0);"  data-row-id="' .
                                 @$row->wiseId .
                                 '"  class="text-danger fw-bold d-block fs-7 text-hover-primary ' .
@@ -245,7 +253,7 @@
                                 $skilltagclass .
                                 '" style="position: absolute; bottom: 0; white-space: nowrap; width: 94%; overflow: hidden;">
                                     '.$matchBadge.'
-                                 
+                                  
                                   ' .
                                 $skilltag .
                                 '
@@ -265,6 +273,7 @@
 																				</a>
 																				</div>                  
 																				<div class="d-flex flex-column">
+																				<div class="d-flex align-items-center">
 																				<a href="javascript:void(0);"  data-row-id="' .
                                 @$row->wiseId .
                                 '"  class="text-dark fw-bolder text-hover-primary fs-6 ' .
@@ -277,7 +286,8 @@
                                 '<sup style="color: #0865dd !important;
 																				font-weight: bold;">' .
                                 $tredmark .
-                                '</sup></a>
+                                '</sup></a>' . $cvBadge . '
+																				</div>
 																				<a href="javascript:void(0);"  data-row-id="' .
                                 @$row->wiseId .
                                 '"  class="text-muted fw-bold d-block fs-7 text-hover-primary ' .
