@@ -2773,7 +2773,14 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
         $this->arr = array_slice($rawArr, 0, 5);
         $this->jobIdArr = $request->jobIdArr;
         $clientMatchMap = is_array($request->matchMap) ? $request->matchMap : [];
-        $this->applicationDataCount = DB::table('job_applications')->select('*')->whereIn('id', $this->arr)->count();
+        $companyId = (int) auth()->user()->company_id;
+        $this->applicationDataCount = DB::table('job_applications')
+            ->whereIn('id', $this->arr)
+            ->where(function ($q) use ($companyId) {
+                $q->where('company_id', $companyId)
+                    ->orWhere('thirdparty_company_id', $companyId);
+            })
+            ->count();
         // $this->applicationData			=	DB::table('job_applications')->select('job_applications.id')->whereIn('id', $arr)->get();
 
         $this->applicationData = DB::table('job_applications')
@@ -2822,6 +2829,10 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
             ->leftJoin('clients', 'clients.id', 'jobs.client_id')
             ->leftJoin('qualification_master', 'qualification_master.id', 'job_applications.qualification')
             ->whereIn('job_applications.id', $this->arr)
+            ->where(function ($q) use ($companyId) {
+                $q->where('job_applications.company_id', $companyId)
+                    ->orWhere('job_applications.thirdparty_company_id', $companyId);
+            })
             ->groupBy('job_applications.id')
             ->get();
         // dd($this->applicationData);
@@ -3216,7 +3227,14 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
         $this->arr = array_slice($rawArr, 0, 5);
         $this->jobIdArr = $request->jobIdArr;
         $clientMatchMap = is_array($request->matchMap) ? $request->matchMap : [];
-        $this->applicationDataCount = DB::table('job_applications')->whereIn('id', $this->arr)->count();
+        $companyId = (int) auth()->user()->company_id;
+        $this->applicationDataCount = DB::table('job_applications')
+            ->whereIn('id', $this->arr)
+            ->where(function ($q) use ($companyId) {
+                $q->where('company_id', $companyId)
+                    ->orWhere('thirdparty_company_id', $companyId);
+            })
+            ->count();
 
         $this->applicationData = DB::table('job_applications')
             ->select(
@@ -3264,6 +3282,10 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
             ->leftJoin('clients', 'clients.id', 'jobs.client_id')
             ->leftJoin('qualification_master', 'qualification_master.id', 'job_applications.qualification')
             ->whereIn('job_applications.id', $this->arr)
+            ->where(function ($q) use ($companyId) {
+                $q->where('job_applications.company_id', $companyId)
+                    ->orWhere('job_applications.thirdparty_company_id', $companyId);
+            })
             ->groupBy('job_applications.id')
             ->get();
 
@@ -3750,7 +3772,13 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
         // Option 1 fallback: if attached_cv == 1 and no client uploaded UUIDs, attach candidate original resumes
         if ($attachedCv === 1 && empty($attachmentUuids) && $formatId === 1 && ! empty($arr)) {
             $uploadService = app(\App\Services\ForwardResumeUploadService::class);
-            $candidates = DB::table('job_applications')->whereIn('id', $arr)->get();
+            $candidates = DB::table('job_applications')
+                ->whereIn('id', $arr)
+                ->where(function ($q) use ($companyId) {
+                    $q->where('company_id', $companyId)
+                        ->orWhere('thirdparty_company_id', $companyId);
+                })
+                ->get();
             foreach ($candidates as $cand) {
                 $resumeFile = $cand->resume;
                 if (! empty($resumeFile)) {
@@ -3761,8 +3789,8 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
                     try {
                         if (\Illuminate\Support\Facades\Storage::disk('r2')->exists($resumeFile)) {
                             \Illuminate\Support\Facades\Storage::disk('r2')->copy($resumeFile, $r2Key);
-                        } elseif (file_exists(public_path('user-uploads/resume/'.$resumeFile))) {
-                            \Illuminate\Support\Facades\Storage::disk('r2')->put($r2Key, file_get_contents(public_path('user-uploads/resume/'.$resumeFile)));
+                        } elseif (file_exists(public_path('user-uploads/resumes/'.$resumeFile))) {
+                            \Illuminate\Support\Facades\Storage::disk('r2')->put($r2Key, file_get_contents(public_path('user-uploads/resumes/'.$resumeFile)));
                         }
 
                         \App\Models\ForwardAttachment::create([

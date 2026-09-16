@@ -24,7 +24,6 @@
 <style>
 
 	#send_email .modal-dialog{margin: .3rem auto!important;}
-	#fwd_resume .modal-dialog{margin: .3rem auto!important;}
 
 @media  only screen and (min-width: 900px) and (max-width: 2560px){
   	.table td, .table th, .table tr{width: max-content!important;}
@@ -541,19 +540,6 @@
                 </span> Add Candidate
             </button>
         </a>
-        <!--begin::Forward CV-->
-
-		<a href="javascript:void(0);" type="button" class="btn btn-sm btn-flex btn-light-primary fw-bolder me-3 custombtn aptk-action-btn aptk-legacy-hide  fwd_resume d-none" data-toggle="modal" data-target="#fwd_resume"> <span class="svg-icon svg-icon-primary svg-icon-1x">
-      <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="24px" height="24px" viewBox="0 0 24 24" version="1.1">
-        <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
-          <rect x="0" y="0" width="24" height="24"/>
-          <path d="M18,2 L20,2 C21.6568542,2 23,3.34314575 23,5 L23,19 C23,20.6568542 21.6568542,22 20,22 L18,22 L18,2 Z" fill="#000000" opacity="0.3"/>
-          <path d="M5,2 L17,2 C18.6568542,2 20,3.34314575 20,5 L20,19 C20,20.6568542 18.6568542,22 17,22 L5,22 C4.44771525,22 4,21.5522847 4,21 L4,3 C4,2.44771525 4.44771525,2 5,2 Z M12,11 C13.1045695,11 14,10.1045695 14,9 C14,7.8954305 13.1045695,7 12,7 C10.8954305,7 10,7.8954305 10,9 C10,10.1045695 10.8954305,11 12,11 Z M7.00036205,16.4995035 C6.98863236,16.6619875 7.26484009,17 7.4041679,17 C11.463736,17 14.5228466,17 16.5815,17 C16.9988413,17 17.0053266,16.6221713 16.9988413,16.5 C16.8360465,13.4332455 14.6506758,12 11.9907452,12 C9.36772908,12 7.21569918,13.5165724 7.00036205,16.4995035 Z" fill="#000000"/>
-        </g>
-      </svg>
-      </span> Fwd Resume </a>
-	  
-        <!--end::Forward CV-->
         <!--begin::Send Email-->
         
 		<!--<a href="javascript:void(0);"  type="button" class="btn btn-sm btn-flex btn-light-primary fw-bolder me-3 d-none send_email" data-toggle="modal" data-target="#send_email"> <span class="svg-icon svg-icon-primary svg-icon-1x">
@@ -862,11 +848,10 @@ if( ($final_status_job == 1) && ($job->status == 'active') )
                 <input class="form-check-input" type="checkbox" id="aptk_selection_master_chk" checked title="Clear selection" />
             </div>
             <span class="aptk-selection-count"><span id="aptk_selected_count">0</span> candidates selected</span>
-            <div class="aptk-selection-actions">
-                <a href="javascript:void(0);" type="button" class="btn btn-sm btn-light-primary fwd_resume" data-toggle="modal" data-target="#fwd_resume">
-                    <span class="svg-icon svg-icon-primary svg-icon-1x">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3v4a1 1 0 0 0 1 1h4"/><path d="M17 21H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7l5 5v11a2 2 0 0 1-2 2Z"/><path d="m9 14 3 3 3-3"/><path d="M12 17v-6"/></svg>
-                    </span> Forward Resume
+                <a href="javascript:void(0);" type="button" class="btn btn-sm btn-light-success test_fwd_resume" id="kt_test_fwd_resume_drawer_toggle_clientapp">
+                    <span class="svg-icon svg-icon-success svg-icon-1x">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10 2v7.31"/><path d="M14 9.3V1.99"/><path d="M8.5 2h7"/><path d="M14 9.3a6.5 6.5 0 1 1-4 0"/><path d="M5.52 16h12.96"/></svg>
+                    </span> Test Forward Resume
                 </a>
                 <a href="javascript:void(0);" type="button" class="btn btn-sm btn-light-primary application_copy" data-toggle="modal" data-target="#application_copy">
                     <span class="svg-icon svg-icon-primary svg-icon-1x">
@@ -1005,38 +990,29 @@ if( ($final_status_job == 1) && ($job->status == 'active') )
 </div>
 
 
-<!--begin::Fwd Resume - Modal-->
-<div class="modal fade" id="fwd_resume" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered modal-xl">
-    <!--begin::Modal content-->
-    <div class="modal-content">
-      <!--begin::Modal header-->
-      <div class="modal-header flex-stack" style="display:none!important;">
-        <!--begin::Title-->
-        <h2>Forward Resume</h2>
-        <!--end::Title-->
-        <!--begin::Close-->
-        <div class="btn btn-sm btn-icon btn-active-color-primary" data-dismiss="modal">
-          <!--begin::Svg Icon | path: icons/duotune/arrows/arr061.svg-->
-          <span class="svg-icon svg-icon-1">
-          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none">
-            <rect opacity="0.5" x="6" y="17.3137" width="16" height="2" rx="1" transform="rotate(-45 6 17.3137)" fill="black" />
-            <rect x="7.41422" y="6" width="16" height="2" rx="1" transform="rotate(45 7.41422 6)" fill="black" />
-          </svg>
-          </span>
-          <!--end::Svg Icon-->
+<!--begin::Test Fwd Resume Drawer - ClientApp-->
+<div id="kt_test_fwd_resume_drawer_clientapp" class="bg-body" data-kt-drawer="true" data-kt-drawer-name="test-fwd-resume-clientapp"
+    data-kt-drawer-activate="true" data-kt-drawer-overlay="false"
+    data-kt-drawer-width="{default:'90%', 'lg': '80%'}" data-kt-drawer-direction="end"
+    data-kt-drawer-toggle="#kt_test_fwd_resume_drawer_toggle_clientapp" data-kt-drawer-close="#kt_test_fwd_resume_drawer_close_clientapp">
+    <div class="card shadow-none rounded-0 w-100 h-100 d-flex flex-column">
+        <div class="card-header px-5 py-0 flex-shrink-0" style="display:none!important;">
+            <h3 class="card-title fw-bolder text-dark mb-0">Test Forward Resume</h3>
+            <div class="card-toolbar">
+                <button type="button" class="btn btn-sm btn-icon btn-active-light-danger" id="kt_test_fwd_resume_drawer_close_clientapp">
+                    <span class="svg-icon svg-icon-1">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                            <rect opacity="0.5" x="6" y="17.3137" width="16" height="2" rx="1" transform="rotate(-45 6 17.3137)" />
+                            <rect x="7.41422" y="6" width="16" height="2" rx="1" transform="rotate(45 7.41422 6)" />
+                        </svg>
+                    </span>
+                </button>
+            </div>
         </div>
-        <!--end::Close-->
-      </div>
-      <!--end::Modal header-->
-      <!--begin::Form-->
-      <div class="card-body position-relative px-0 py-0" id="application_fwd_resume_body_content"></div>
-      <!--begin::Form-->
+        <div class="card-body position-relative px-0 py-0 flex-grow-1 overflow-auto" id="application_test_fwd_resume_body_content"></div>
     </div>
-    <!--end::Modal content-->
-  </div>
 </div>
-<!--end::Fwd Resume - Modal-->
+<!--end::Test Fwd Resume Drawer - ClientApp-->
 
 
 
@@ -1777,17 +1753,17 @@ if( ($final_status_job == 1) && ($job->status == 'active') )
 <script>
 
 	$('.chk_list').click(function(){
-
+		$('#application_test_fwd_resume_body_content').html('');
 		if($(".chk_list").prop('checked') == true){
 			var chk_list 	=	$('.chk_list').val();
-			$('.fwd_resume').removeClass("d-none");
+			$('.test_fwd_resume').removeClass("d-none");
       $('.custom_hide').addClass("d-none");
 			$('.send_email').removeClass("d-none");
 			$('.app_copy').removeClass("d-none");
 			$('.application_copy').removeClass("d-none");
 
 		}else{
-			$('.fwd_resume').addClass("d-none");
+			$('.test_fwd_resume').addClass("d-none");
 			$('.send_email').addClass("d-none");
       $('.custom_hide').removeClass("d-none");
 			$('.app_copy').addClass("d-none");
@@ -1829,6 +1805,7 @@ if( ($final_status_job == 1) && ($job->status == 'active') )
 	});
 
 	$(document).on('click', '.chk_list_item', ()=>{
+		$('#application_test_fwd_resume_body_content').html('');
 	   var i=0;
 	   var arr = [];
        $('.chk_list_item:checked').each(function () {
@@ -1836,7 +1813,7 @@ if( ($final_status_job == 1) && ($job->status == 'active') )
        });
 
 	   if(arr.length > 0){
-	   		$('.fwd_resume').removeClass("d-none");
+	   		$('.test_fwd_resume').removeClass("d-none");
 			$('.send_email').removeClass("d-none");
 			$('.app_copy').removeClass("d-none");
 			$('.application_copy').removeClass("d-none");
@@ -1844,7 +1821,7 @@ if( ($final_status_job == 1) && ($job->status == 'active') )
 
 
 	   }else{
-	   		$('.fwd_resume').addClass("d-none");
+	   		$('.test_fwd_resume').addClass("d-none");
 			$('.send_email').addClass("d-none");
 			$('.app_copy').addClass("d-none");
 			$('.application_copy').addClass("d-none");
@@ -1862,8 +1839,9 @@ if( ($final_status_job == 1) && ($job->status == 'active') )
 	}
 	function clearAptkSelection() {
 		$('.chk_list, .chk_list_item').prop('checked', false);
-		$('.fwd_resume, .send_email, .app_copy, .application_copy').addClass('d-none');
+		$('.test_fwd_resume, .send_email, .app_copy, .application_copy').addClass('d-none');
 		$('.custom_hide').removeClass('d-none');
+		$('#application_test_fwd_resume_body_content').html('');
 		updateAptkSelectionBar();
 	}
 	$(document).on('click', '#aptk_selection_close', clearAptkSelection);
@@ -1918,91 +1896,91 @@ if( ($final_status_job == 1) && ($job->status == 'active') )
 
 <script> 
 
-	$('.fwd_resume').click(function(){
-		if (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances && CKEDITOR.instances['editor1']) {
-			try { CKEDITOR.instances['editor1'].destroy(true); } catch(e) {}
+	$(document).on('click', '.test_fwd_resume', function() {
+		if (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances && CKEDITOR.instances['test_editor1']) {
+			try { CKEDITOR.instances['test_editor1'].destroy(true); } catch(e) {}
 		}
-		if (typeof window._fwdGlobalToken !== 'undefined') {
-			window._fwdGlobalToken++;
-			window._fwdIsCompiling = false;
-		}
-	
-		var id        	=	'{{ $job->id }}'
-		var url       	=	"{{ route('service_company.cvtracker.fwd_resume',':id') }}";
-		url         	=	url.replace(':id', id);
-		var baseurl     =	"{{ asset('assets/images/Loading2.gif') }}"; 
-		var token       =	"{{ csrf_token() }}";
-		
+
+		var id = '{{ $job->id }}';
+		var url = "{{ route('service_company.cvtracker.test_fwd_resume', ':id') }}";
+		url = url.replace(':id', id);
+		var token = "{{ csrf_token() }}";
 		var arr = [];
-		$('.chk_list_item:checked').each(function () {
-				arr.push($(this).val());
+		var jobIdArr = [id];
+		$('.chk_list_item:checked').each(function() {
+			arr.push($(this).val());
 		});
 
 		if (arr.length === 0) {
 			Swal.fire({
 				title: 'No Candidate Selected',
-				text: 'Please select at least one candidate before forwarding resumes.',
+				text: 'Please select at least one candidate before testing forward resumes.',
 				icon: 'warning',
 				confirmButtonColor: '#0D9488'
 			});
 			return;
 		}
 
-		function loadFwdResumeDrawer(selectedArr) {
-			$('#application_fwd_resume_body_content').html(
-				'<div class="d-flex align-items-center justify-content-center" style="min-height:200px;">' +
-				'<span class="spinner-border spinner-border-sm text-primary me-2"></span> Loading...</div>'
-			);
-
-			$.ajax({
-				type: 'POST',
-				url: url,
-				data: {'_token': token, '_method': 'POST', 'arr': selectedArr},
-				success: function (response) {
-					if (response.status == "success") {
-						if (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances && CKEDITOR.instances['editor1']) {
-							try { CKEDITOR.instances['editor1'].destroy(true); } catch(e) {}
-						}
-						$('#application_fwd_resume_body_content').html(response.view);
-					}
-				}
-			});
-		}
-
 		if (arr.length > 5) {
 			Swal.fire({
 				title: 'Maximum 5 Candidates Allowed',
 				html: '<div style="font-size:13.5px;line-height:1.6;color:#374151;">' +
-					  '<p style="margin-bottom:8px;">You’ve selected <strong>' + arr.length + ' candidates</strong>. You can forward a maximum of 5 candidates in a single request.</p>' +
-					  '<p style="color:#6B7280;margin:0;">Please select 5 candidates or fewer then click Forward Resume to continue.</p>' +
+					  '<p style="margin-bottom:8px;">You’ve selected <strong>' + arr.length + ' candidates</strong>. The test forward resume engine supports up to 5 candidates.</p>' +
+					  '<p style="color:#6B7280;margin:0;">Please select 5 candidates or fewer to test.</p>' +
 					  '</div>',
 				icon: 'warning',
 				confirmButtonText: 'OK, I Understand',
-				confirmButtonColor: '#0D9488',
-				allowOutsideClick: true,
-				didOpen: function() {
-					var popup = Swal.getPopup();
-					if (popup) {
-						popup.style.cursor = 'pointer';
-						popup.addEventListener('click', function(e) {
-							if (e.target && (e.target.classList.contains('swal2-confirm') || e.target.closest('.swal2-confirm'))) {
-								return;
-							}
-							Swal.close();
-							location.reload();
-						});
-					}
-				}
-			}).then(function() {
-				location.reload();
+				confirmButtonColor: '#0D9488'
 			});
 			return;
 		}
 
-		loadFwdResumeDrawer(arr);
-									
+		var drawerEl = document.getElementById('kt_test_fwd_resume_drawer_clientapp');
+		if (drawerEl && typeof KTDrawer !== 'undefined') {
+			var drawer = KTDrawer.getInstance(drawerEl);
+			if (drawer) { drawer.show(); }
+		}
+		$('#application_test_fwd_resume_body_content').html(
+			'<div class="d-flex align-items-center justify-content-center" style="min-height:200px;">' +
+			'<span class="spinner-border spinner-border-sm text-success me-2"></span> Loading Test Forward Resume Engine...</div>'
+		);
+
+		$.ajax({
+			type: 'POST',
+			url: url,
+			data: {
+				'_token': token,
+				'_method': 'POST',
+				'arr': arr,
+				'jobIdArr': jobIdArr
+			},
+			success: function(response) {
+				if (response.status == "success") {
+					if (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances && CKEDITOR.instances['test_editor1']) {
+						try { CKEDITOR.instances['test_editor1'].destroy(true); } catch(e) {}
+					}
+					$('#application_test_fwd_resume_body_content').html(response.view);
+				} else {
+					toastr.error(response.message || 'Failed to initialize Test Forward Resume');
+				}
+			},
+			error: function() {
+				toastr.error('Server error initializing Test Forward Resume');
+			}
+		});
 	});
 
+	$(document).on('click', '#kt_test_fwd_resume_drawer_close_clientapp', function() {
+		if (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances && CKEDITOR.instances['test_editor1']) {
+			try { CKEDITOR.instances['test_editor1'].destroy(true); } catch(e) {}
+		}
+		var drawerEl = document.getElementById('kt_test_fwd_resume_drawer_clientapp');
+		if (drawerEl && typeof KTDrawer !== 'undefined') {
+			var drawer = KTDrawer.getInstance(drawerEl);
+			if (drawer) { drawer.hide(); }
+		}
+		$('#application_test_fwd_resume_body_content').html('');
+	});
 
 </script>
 

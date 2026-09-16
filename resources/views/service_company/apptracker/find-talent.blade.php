@@ -2409,7 +2409,6 @@ table{
         $(document).on('click', '.chk_list', function() {
             if ($(".chk_list").prop('checked') == true) {
                 var chk_list = $('.chk_list').val();
-                $('.fwd_resume').removeClass("d-none");
                 $('.custom_hide').addClass("d-none");
                 $('.mass_mail').removeClass("d-none");
                 $('.downloadexcell').removeClass("d-none");
@@ -2417,7 +2416,6 @@ table{
                 $('.app_copy').removeClass("d-none");
                 $('.application_copy').removeClass("d-none");
             } else {
-                $('.fwd_resume').addClass("d-none");
                 $('.custom_hide').removeClass("d-none");
                 $('.mass_mail').addClass("d-none");
                 $('.downloadexcell').addClass("d-none");
@@ -2434,7 +2432,6 @@ table{
                 arr.push($(this).val());
             });
             if (arr.length > 0) {
-                $('.fwd_resume').removeClass("d-none");
                 $('.custom_hide').addClass("d-none");
                 $('.mass_mail').removeClass("d-none");
                 $('.downloadexcell').removeClass("d-none");
@@ -2442,7 +2439,6 @@ table{
                 $('.app_copy').removeClass("d-none");
                 $('.application_copy').removeClass("d-none");
             } else {
-                $('.fwd_resume').addClass("d-none");
                 $('.custom_hide').removeClass("d-none");
                 $('.send_email').addClass("d-none");
                 $('.downloadexcell').addClass("d-none");
