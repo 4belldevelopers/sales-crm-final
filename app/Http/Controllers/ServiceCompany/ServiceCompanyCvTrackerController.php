@@ -2997,15 +2997,13 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
                     if ($ratingVal <= 0 && ! empty($cand->rating)) {
                         $ratingVal = (int) $cand->rating;
                     }
-                    if ($ratingVal <= 0) {
-                        $ratingVal = 4;
-                    }
+                    $ratingVal = min(5, max(0, $ratingVal));
 
                     $skillsArr[] = [
                         'name' => ucwords($sn),
                         'expText' => $sExpText,
                         'exp' => $yr + ($mo / 12),
-                        'rating' => min(5, max(1, $ratingVal)),
+                        'rating' => $ratingVal,
                     ];
                     if (count($skillsArr) >= 7) {
                         break;
@@ -3036,7 +3034,7 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
                                 $sExpNum = $y + ($mo / 12);
                             } elseif (preg_match('/^(\d+(?:\.\d+)?)/', $rawVal, $m)) {
                                 $sExpNum = (float) $m[1];
-                                $sExpText = $sExpNum.' Year'.($sExpNum == 1.0 ? '' : 's');
+                                $sExpText = $rawVal;
                             } else {
                                 $sExpText = $rawVal;
                             }
@@ -3046,15 +3044,13 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
                         if ($ratingVal <= 0 && ! empty($cand->rating)) {
                             $ratingVal = (int) $cand->rating;
                         }
-                        if ($ratingVal <= 0) {
-                            $ratingVal = 4;
-                        }
+                        $ratingVal = min(5, max(0, $ratingVal));
 
                         $skillsArr[] = [
                             'name' => ucwords($sn),
                             'expText' => $sExpText,
                             'exp' => $sExpNum,
-                            'rating' => min(5, max(1, $ratingVal)),
+                            'rating' => $ratingVal,
                         ];
                         if (count($skillsArr) >= 7) {
                             break;
@@ -3066,7 +3062,7 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
             // C. Fallback to candidate's own parsed skills list with real experience & rating
             if (empty($skillsArr)) {
                 $combinedSkills = array_values(array_unique(array_filter(array_merge($candSkillsList, $jobSkillsList))));
-                $defaultRating = ! empty($cand->rating) ? min(5, max(1, (int) $cand->rating)) : 4;
+                $defaultRating = ! empty($cand->rating) ? min(5, max(0, (int) $cand->rating)) : 0;
                 foreach ($combinedSkills as $skName) {
                     if (! $skName) {
                         continue;
@@ -3459,15 +3455,13 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
                     if ($ratingVal <= 0 && ! empty($cand->rating)) {
                         $ratingVal = (int) $cand->rating;
                     }
-                    if ($ratingVal <= 0) {
-                        $ratingVal = 4;
-                    }
+                    $ratingVal = min(5, max(0, $ratingVal));
 
                     $skillsArr[] = [
                         'name' => ucwords($sn),
                         'expText' => $sExpText,
                         'exp' => $yr + ($mo / 12),
-                        'rating' => min(5, max(1, $ratingVal)),
+                        'rating' => $ratingVal,
                     ];
                     if (count($skillsArr) >= 7) {
                         break;
@@ -3508,15 +3502,13 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
                         if ($ratingVal <= 0 && ! empty($cand->rating)) {
                             $ratingVal = (int) $cand->rating;
                         }
-                        if ($ratingVal <= 0) {
-                            $ratingVal = 4;
-                        }
+                        $ratingVal = min(5, max(0, $ratingVal));
 
                         $skillsArr[] = [
                             'name' => ucwords($sn),
                             'expText' => $sExpText,
                             'exp' => $sExpNum,
-                            'rating' => min(5, max(1, $ratingVal)),
+                            'rating' => $ratingVal,
                         ];
                         if (count($skillsArr) >= 7) {
                             break;
@@ -3528,7 +3520,7 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
             // C. Fallback to candidate's own parsed skills list with real experience & rating
             if (empty($skillsArr)) {
                 $combinedSkills = array_values(array_unique(array_filter(array_merge($candSkillsList, $jobSkillsList))));
-                $defaultRating = ! empty($cand->rating) ? min(5, max(1, (int) $cand->rating)) : 4;
+                $defaultRating = ! empty($cand->rating) ? min(5, max(0, (int) $cand->rating)) : 0;
                 foreach ($combinedSkills as $skName) {
                     if (! $skName) {
                         continue;

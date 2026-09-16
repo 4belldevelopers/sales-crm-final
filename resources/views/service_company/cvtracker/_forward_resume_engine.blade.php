@@ -2355,7 +2355,7 @@
       skills = candidate.skills;
     } else if (typeof candidate.skills === 'string' && candidate.skills.trim()) {
       var sList = candidate.skills.split(',').map(function (s) { return s.trim(); }).filter(Boolean);
-      var defaultRating = candidate.rating ? Math.min(5, Math.max(1, parseInt(candidate.rating, 10))) : 4;
+      var defaultRating = candidate.rating ? Math.min(5, Math.max(0, parseInt(candidate.rating, 10))) : 0;
       var defaultExp = clean(candidate.experience, '--');
       skills = sList.slice(0, 7).map(function (sName) {
         return {
