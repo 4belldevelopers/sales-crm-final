@@ -341,7 +341,7 @@ if(!empty($cc_email_count) && $cc_email_count > 0 && !empty($cc_email_data)){
 
   <div class="mm-form-body">
 
-    {{-- From --}}
+    {{-- From + Reply To --}}
     <div class="mm-row">
       <div class="mm-label-col">
         <span class="mm-label-icon mm-ic-blue">
@@ -354,6 +354,18 @@ if(!empty($cc_email_count) && $cc_email_count > 0 && !empty($cc_email_data)){
           <option value="notify@jeroworks.com">{{ $userdata->name ?? $userdata->email }} &lt;notify@jeroworks.com&gt;</option>
           @if(!empty($userdata->email) && $userdata->email !== 'notify@jeroworks.com')
             <option value="{{ $userdata->email }}">{{ $userdata->name ?? $userdata->email }} &lt;{{ $userdata->email }}&gt;</option>
+          @endif
+        </select>
+        <div style="display:flex;align-items:center;gap:6px;flex-shrink:0;font-size:12.5px;font-weight:600;color:#374151;">
+          <span class="mm-label-icon mm-ic-purple" style="width:24px;height:24px;border-radius:6px;display:inline-flex;align-items:center;justify-content:center;">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 17 4 12 9 7"/><path d="M20 18v-2a4 4 0 0 0-4-4H4"/></svg>
+          </span>
+          Reply To
+        </div>
+        <select class="mm-select" name="reply_to_email" id="test_reply_to_email" style="flex:1;min-width:0;">
+          <option value="{{ $userdata->email }}">{{ $userdata->email }}</option>
+          @if(!empty(auth()->user()->company->company_email) && auth()->user()->company->company_email !== $userdata->email)
+            <option value="{{ auth()->user()->company->company_email }}">{{ auth()->user()->company->company_email }}</option>
           @endif
         </select>
       </div>
@@ -500,7 +512,7 @@ if(!empty($cc_email_count) && $cc_email_count > 0 && !empty($cc_email_data)){
             <div id="test_fwd_missing_resume_banner" style="margin-top:10px;padding:9px 13px;background:#FFFBEB;border:1px solid #FCD34D;border-radius:8px;display:flex;align-items:center;gap:10px;">
               <span style="color:#D97706;font-size:16px;flex-shrink:0;">⚠</span>
               <div style="font-size:12px;color:#92400E;line-height:1.4;">
-                <strong>Resume Notice:</strong> {{ $candidatesWithoutResumeCount }} of {{ count($applicationData ?? []) }} selected profiles has no resume document uploaded. You can attach a resume directly below or send using Option 5 (Pre-Screened Report).
+                <strong>Notice:</strong> {{ $candidatesWithoutResumeCount }} of {{ count($applicationData ?? []) }} selected candidate profiles do not have a resume attached. You may attach a resume below or proceed using Option 5 (Pre-Screened Report).
               </div>
             </div>
           @endif
@@ -798,7 +810,7 @@ window.uploadCandidateResumeInline = function(candidateId, inputEl) {
                 $('#test_fwd_cand_status_' + candidateId).css({ 'background': '#DCFCE7', 'color': '#15803D' }).text('✓ Attached (100%)');
                 $('#test_fwd_quick_upload_wrap_' + candidateId).html(
                     '<button type="button" class="btn btn-xs btn-light-success fw-bold" onclick="document.getElementById(\'test_fwd_quick_file_' + candidateId + '\').click();" style="font-size:10.5px;padding:3px 8px;border-radius:6px;" title="Replace CV">' +
-                    '✓ CV Ready <span style="font-size:9px;opacity:0.7;">(Change)</span></button>'
+                    '✓ Resume Attached <span style="font-size:9px;opacity:0.7;">(Change)</span></button>'
                 );
 
                 var remainingMissing = $('.test-fwd-cand-card[data-has-resume="0"]').length;
@@ -821,8 +833,8 @@ window.uploadCandidateResumeInline = function(candidateId, inputEl) {
                 } else {
                     Swal.fire({
                         icon: 'success',
-                        title: 'Resume Uploaded',
-                        text: 'Resume has been attached to candidate profile successfully.',
+                        title: 'Resume Attached',
+                        text: 'Resume document has been attached to the candidate profile successfully.',
                         timer: 2000,
                         showConfirmButton: false
                     });
@@ -938,13 +950,13 @@ function updateTestSendButtonState() {
                 $('#test_fwd_cand_avatar_' + c.id).css({ 'background': '#DCFCE7', 'color': '#15803D' });
                 $('#test_fwd_cand_check_' + c.id).css({ 'background': '#10B981', 'display': 'flex' }).text('✓');
                 $('#test_fwd_cand_status_' + c.id).css({ 'background': '#DCFCE7', 'color': '#15803D' }).text(
-                    (optId === 5 ? '✓ Pre-Screen Ready' : '✓ Attached (100%)') + sizeStr
+                    (optId === 5 ? '✓ Report Ready' : '✓ Attached (100%)') + sizeStr
                 );
             } else {
                 card.css({ 'background': '#FFFBEB', 'border-color': '#FDE68A' });
                 $('#test_fwd_cand_avatar_' + c.id).css({ 'background': '#FEF3C7', 'color': '#B45309' });
                 $('#test_fwd_cand_check_' + c.id).css({ 'background': '#F59E0B', 'display': 'flex' }).text('!');
-                $('#test_fwd_cand_status_' + c.id).css({ 'background': '#FEF3C7', 'color': '#B45309' }).text('⚠ Missing Base CV');
+                $('#test_fwd_cand_status_' + c.id).css({ 'background': '#FEF3C7', 'color': '#B45309' }).text('⚠ No Resume Attached');
             }
             $('#test_fwd_cand_progress_wrap_' + c.id).hide();
         });
@@ -974,8 +986,8 @@ async function startTestCompilationForOption(optId) {
     $('#test_fwd_compile_spinner').show();
     $('#test_fwd_compile_progress_bar').css({ 'width': '5%', 'background': 'linear-gradient(90deg, #0D9488, #059669)' });
     $('#test_fwd_compile_pct_badge').text('5%').css({ 'color': '#0D9488', 'background': '#CCFBF1', 'border-color': '#99F6E4' });
-    $('#test_fwd_compile_status_text').text('Initializing document rendering engine...');
-    $('#test_fwd_compile_step_detail').text('Loading Rust WASM core and vector fonts...');
+    $('#test_fwd_compile_status_text').text('Preparing resume attachments for delivery...');
+    $('#test_fwd_compile_step_detail').text('Formatting candidate documents...');
 
     try {
         var engine = window.AgyForwardResumeEngine || window.AgyForwardResumeHelper;
@@ -987,7 +999,7 @@ async function startTestCompilationForOption(optId) {
 
         $('#test_fwd_compile_progress_bar').css('width', '10%');
         $('#test_fwd_compile_pct_badge').text('10%');
-        $('#test_fwd_compile_status_text').text('Engine ready. Preparing candidate resumes...');
+        $('#test_fwd_compile_status_text').text('Formatting ready. Preparing candidate resumes...');
 
         var candidatesList = @json($applicationData ?? []);
         var companyData = {
@@ -1024,7 +1036,7 @@ async function startTestCompilationForOption(optId) {
                 card.css({ 'background': '#FFFBEB', 'border-color': '#FDE68A' });
                 $('#test_fwd_cand_avatar_' + cand.id).css({ 'background': '#FEF3C7', 'color': '#B45309' });
                 $('#test_fwd_cand_check_' + cand.id).css({ 'background': '#F59E0B', 'display': 'flex' }).text('!');
-                $('#test_fwd_cand_status_' + cand.id).css({ 'background': '#FEF3C7', 'color': '#B45309' }).text('⚠ Missing Base CV');
+                $('#test_fwd_cand_status_' + cand.id).css({ 'background': '#FEF3C7', 'color': '#B45309' }).text('⚠ No Resume Attached');
                 $('#test_fwd_cand_progress_wrap_' + cand.id).hide();
                 continue;
             }
@@ -1033,12 +1045,12 @@ async function startTestCompilationForOption(optId) {
             $('#test_fwd_cand_progress_wrap_' + cand.id).show();
             $('#test_fwd_cand_progress_bar_' + cand.id).css('width', '25%');
             $('#test_fwd_cand_status_' + cand.id).css({ 'background': '#CCFBF1', 'color': '#0D9488' }).html(
-                '<span class="spinner-border spinner-border-sm" style="width:10px;height:10px;border-width:1.5px;margin-right:4px;"></span> Rendering...'
+                '<span class="spinner-border spinner-border-sm" style="width:10px;height:10px;border-width:1.5px;margin-right:4px;"></span> Preparing...'
             );
 
             $('#test_fwd_compile_progress_bar').css('width', startPct + '%');
             $('#test_fwd_compile_pct_badge').text(startPct + '%');
-            $('#test_fwd_compile_status_text').text('Rendering ' + candName + ' (' + (i + 1) + '/' + total + ')...');
+            $('#test_fwd_compile_status_text').text('Preparing ' + candName + ' (' + (i + 1) + '/' + total + ')...');
             $('#test_fwd_compile_count').text(i + ' / ' + total);
 
             if (!window._testFwdCompiledAttachments[optId][cand.id]) {
@@ -1058,7 +1070,7 @@ async function startTestCompilationForOption(optId) {
                 );
 
                 if (!pdfBlob) {
-                    throw new Error('Failed to render resume for ' + candName);
+                    throw new Error('Failed to prepare resume for ' + candName);
                 }
                 window._testFwdCompiledAttachments[optId][cand.id] = pdfBlob;
             }
@@ -1072,7 +1084,7 @@ async function startTestCompilationForOption(optId) {
             $('#test_fwd_cand_check_' + cand.id).css({ 'background': '#10B981', 'display': 'flex' }).text('✓');
             $('#test_fwd_cand_progress_wrap_' + cand.id).hide();
             $('#test_fwd_cand_status_' + cand.id).css({ 'background': '#DCFCE7', 'color': '#15803D' }).text(
-                (optId === 5 ? '✓ Pre-Screen Ready' : '✓ Attached (100%)') + sizeStr
+                (optId === 5 ? '✓ Report Ready' : '✓ Attached (100%)') + sizeStr
             );
 
             $('#test_fwd_compile_progress_bar').css('width', endPct + '%');
@@ -1086,8 +1098,8 @@ async function startTestCompilationForOption(optId) {
         $('#test_fwd_compile_progress_bar').css({ 'width': '100%', 'background': '#059669' });
         $('#test_fwd_compile_pct_badge').text('100%').css({ 'color': '#059669', 'background': '#DCFCE7', 'border-color': '#86EFAC' });
         $('#test_fwd_compile_spinner').hide();
-        $('#test_fwd_compile_status_text').html('✓ All attachments compiled & verified (100%)');
-        $('#test_fwd_compile_step_detail').text('All ready attachments generated and verified. Ready to send.');
+        $('#test_fwd_compile_status_text').html('✓ All attachments prepared & verified (100%)');
+        $('#test_fwd_compile_step_detail').text('All candidate attachments are verified and ready to send.');
 
         if (btn) {
             btn.disabled = false;
@@ -1101,7 +1113,7 @@ async function startTestCompilationForOption(optId) {
         $('#test_fwd_compile_spinner').hide();
         $('#test_fwd_compile_progress_bar').css({ 'background': '#EF4444' });
         $('#test_fwd_compile_pct_badge').text('Error').css({ 'color': '#DC2626', 'background': '#FEE2E2', 'border-color': '#FCA5A5' });
-        $('#test_fwd_compile_status_text').html('⚠️ Could not prepare custom format: ' + (err.message || 'WASM error'));
+        $('#test_fwd_compile_status_text').html('⚠️ Unable to prepare the selected resume format: ' + (err.message || 'Formatting error'));
         $('#test_fwd_compile_step_detail').text('Please re-select the format or switch to Option 1 (Original Resume).');
         if (btn) {
             btn.disabled = false;
@@ -1337,7 +1349,7 @@ window.onTestFwdSubmitClick = async function (e) {
     }
 
     if (attached_cv === 1 && optId !== 1 && _testFwdIsCompiling) {
-        Swal.fire('Please Wait', 'Resume attachments are still being prepared in browser RAM. Please wait until progress reaches 100%.', 'info');
+        Swal.fire('Please Wait', 'Resume attachments are still being prepared. Please wait until progress reaches 100%.', 'info');
         return;
     }
 
@@ -1348,7 +1360,7 @@ window.onTestFwdSubmitClick = async function (e) {
 
     $(btn).find('.indicator-label').hide();
     $(btn).find('.indicator-progress').css('display', 'inline-flex').show();
-    $('#test_fwd_btn_progress_text').text('Processing...');
+    $('#test_fwd_btn_progress_text').text('Sending...');
 
     function restoreBtn() {
         $(btn).find('.indicator-progress').hide();
@@ -1364,13 +1376,13 @@ window.onTestFwdSubmitClick = async function (e) {
 
     var template = $('#test_template').val();
     var from_email = $('#test_from_email').val();
+    var reply_to_email = $('#test_reply_to_email').val() || from_email;
     var editor1 = (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances && CKEDITOR.instances.test_editor1) ? CKEDITOR.instances.test_editor1.getData() : ($('#test_editor1').val() || '');
 
     var uploadedAttachmentIds = [];
 
-    // If attached_cv == 1 and optId != 1, upload compiled blobs directly to Cloudflare R2 via presigned PUT URLs
+    // If attached_cv == 1 and optId != 1, prepare attachments
     if (attached_cv === 1 && optId !== 1) {
-        $('#test_fwd_btn_progress_text').text('Preparing files...');
         var cached = window._testFwdCompiledAttachments[optId] || {};
         var candidatesList = @json($applicationData ?? []);
         var selectedIds = arr.map(function(aid) { return String(aid); });
@@ -1389,7 +1401,6 @@ window.onTestFwdSubmitClick = async function (e) {
                 var cand = candidatesToProcess[c];
                 var blob = cached[cand.id];
                 if (!blob) {
-                    $('#test_fwd_btn_progress_text').text('Rendering ' + (cand.full_name || 'Resume') + '...');
                     var companyData = {
                         companyName: @json($companyName ?? 'Hiring Partner'),
                         companyLogo: @json($companyLogo ?? '')
@@ -1415,8 +1426,6 @@ window.onTestFwdSubmitClick = async function (e) {
             }
 
             if (filesToInitiate.length > 0) {
-                $('#test_fwd_btn_progress_text').text('Uploading to R2...');
-
                 var initiateJson = await new Promise(function(resolve, reject) {
                     $.ajax({
                         url: "{{ route('service_company.cvtracker.test_fwd_resume_intent') }}",
@@ -1439,12 +1448,10 @@ window.onTestFwdSubmitClick = async function (e) {
                 var attMap = (initiateJson && (initiateJson.attachments || initiateJson.uploads)) ? (initiateJson.attachments || initiateJson.uploads) : null;
 
                 if (attMap) {
-                    $('#test_fwd_btn_progress_text').text('R2 sync...');
-
                     var uploadResults = await Promise.allSettled(filesToInitiate.map(async function (item) {
                         var initInfo = attMap[item.candidate_id];
                         if (!initInfo || !initInfo.upload_url) {
-                            throw new Error('Missing presigned upload URL for candidate ' + item.candidate_id);
+                            throw new Error('Missing upload URL for candidate ' + item.candidate_id);
                         }
                         var blobInfo = candidateBlobs[item.candidate_id];
                         var r2Res = await fetch(initInfo.upload_url, {
@@ -1455,7 +1462,7 @@ window.onTestFwdSubmitClick = async function (e) {
                             body: blobInfo.blob
                         });
                         if (!r2Res.ok) {
-                            throw new Error('Cloudflare R2 returned HTTP ' + r2Res.status);
+                            throw new Error('Upload service returned HTTP ' + r2Res.status);
                         }
                         return {
                             candidate_id: item.candidate_id,
@@ -1471,11 +1478,9 @@ window.onTestFwdSubmitClick = async function (e) {
                 }
             }
         } catch (prepErr) {
-            console.error('Test attachment preparation error:', prepErr);
+            console.error('Attachment preparation error:', prepErr);
         }
     }
-
-    $('#test_fwd_btn_progress_text').text('Dispatching email...');
 
     $.ajax({
         url: "{{ route('service_company.cvtracker.test_fwd_resume_send') }}",
@@ -1484,6 +1489,7 @@ window.onTestFwdSubmitClick = async function (e) {
             '_token': token,
             'template': template,
             'from_email': from_email,
+            'reply_to_email': reply_to_email,
             'to_email': to_email,
             'cc_email': cc_email,
             'subject': subject,

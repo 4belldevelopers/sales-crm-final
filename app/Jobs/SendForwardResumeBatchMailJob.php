@@ -49,6 +49,8 @@ class SendForwardResumeBatchMailJob implements ShouldQueue
 
     public $companyId;
 
+    public $replyTo;
+
     /**
      * Create a new job instance.
      */
@@ -62,7 +64,8 @@ class SendForwardResumeBatchMailJob implements ShouldQueue
         string $fromAddress,
         string $senderName,
         array $cc,
-        int $companyId
+        int $companyId,
+        ?string $replyTo = null
     ) {
         $this->forwardRequestUuid = $forwardRequestUuid;
         $this->to = $to;
@@ -74,6 +77,7 @@ class SendForwardResumeBatchMailJob implements ShouldQueue
         $this->senderName = $senderName;
         $this->cc = $cc;
         $this->companyId = $companyId;
+        $this->replyTo = $replyTo;
     }
 
     /**
@@ -142,7 +146,7 @@ class SendForwardResumeBatchMailJob implements ShouldQueue
         Mail::purge();
         $this->setDynamicMailConfig($smtp, $this->senderName);
 
-        $fromAddressReply = $this->fromAddress;
+        $fromAddressReply = ! empty($this->replyTo) ? $this->replyTo : $this->fromAddress;
         $fromNameReply = $this->senderName;
         $fromMailAddr = ! empty($smtp->mail_from_email) ? $smtp->mail_from_email : $this->fromAddress;
 
