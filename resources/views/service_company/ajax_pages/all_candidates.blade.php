@@ -52,9 +52,33 @@
             <td>
                 @php
                     $hasResume = !empty($row->resume);
+                    $skillArr = explode(',', (string) @$row->skills);
+                    $candidateSkillsLower = array_map(fn($s) => strtolower(trim($s)), $skillArr);
+                    $mandatoryBasis = $mandatorySkillsForDisplay ?? [];
+                    $optionalBasis = $optionalSkillsForDisplay ?? [];
+                    $hasFilterSkills = !empty($mandatoryBasis) || !empty($optionalBasis);
+                    if (!$hasFilterSkills) {
+                        $optionalBasis = ($jobSkillsByJobId[$row->jobId] ?? []);
+                    }
+                    $percentBasis = array_merge($mandatoryBasis, $optionalBasis);
+                    $percentage = '0%';
+                    if (@$row->wiseId) {
+                        if (!$hasFilterSkills) {
+                            $percentage = GeneralMethod::skill_percentage($row->jobId, $skillArr);
+                        } elseif (!empty($percentBasis)) {
+                            $matches = 0;
+                            foreach ($percentBasis as $req) {
+                                foreach ($candidateSkillsLower as $cand) {
+                                    if (GeneralMethod::skillMatchesPhrasePrefix($req, $cand)) { $matches++; break; }
+                                }
+                            }
+                            $percentage = round(min(($matches / count($percentBasis)) * 100, 100), 1) . '%';
+                        }
+                    }
+                    $matchScore = (int) round((float) rtrim(@$percentage ?: '0', '%'));
                     echo '<div class="form-check form-check-sm form-check-custom form-check-solid">
                     <input class="form-check-input chk_list_item " name="chk_list_item[]" type="checkbox" data-jobId="' .
-                        $row->jobId .'" data-wiseId="' .$row->wiseId .'" data-skills="' . e(@$row->skills ?? '') . '" data-cname="' . e(@$row->full_name ?? '') . '" data-has-resume="' . ($hasResume ? '1' : '0') . '" value="' .$row->candidate_id .'" />
+                        $row->jobId .'" data-wiseId="' .$row->wiseId .'" data-match="' . $matchScore . '" data-skills="' . e(@$row->skills ?? '') . '" data-cname="' . e(@$row->full_name ?? '') . '" data-has-resume="' . ($hasResume ? '1' : '0') . '" value="' .$row->candidate_id .'" />
                   </div>';
                 @endphp
             </td>

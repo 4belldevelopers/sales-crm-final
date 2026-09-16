@@ -15,11 +15,11 @@ use App\Helper\Files;
 use App\Helper\GeneralMethod;
 use App\Helper\Reply;
 use App\Jobs\QueueCandidatesMailAndResumeForwardMailService;
-use App\Jobs\SendForwardResumeBatchMailJob;
 use App\Jobs\QueueMailService;
 use App\Jobs\QueueMassMailService;
 use App\Jobs\QueueNotificationMailService;
 use App\Jobs\SendEmailJob;
+use App\Jobs\SendForwardResumeBatchMailJob;
 use App\Mail\ForwardResumeMail;
 use App\Mail\MassMailingMail;
 use App\Models\AddJobWiseCondidate;
@@ -27,9 +27,7 @@ use App\Models\ApplicationStatus;
 use App\Models\Client;
 use App\Models\Company;
 use App\Models\ForwardAttachment;
-use App\Models\ForwardDeliveryAttempt;
 use App\Models\ForwardRequest;
-use App\Services\ForwardResumeUploadService;
 use App\Models\Job;
 use App\Models\JobApplication;
 use App\Models\JobLocation;
@@ -38,6 +36,7 @@ use App\Models\OfferJobApplication;
 use App\Models\Skill;
 use App\Models\User;
 use App\Services\ElasticService;
+use App\Services\ForwardResumeUploadService;
 use App\Services\MailService;
 use App\Services\MassMailService;
 use App\Services\NotificationMailService;
@@ -2773,12 +2772,15 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
         $rawArr = is_array($request->arr) ? $request->arr : [];
         $this->arr = array_slice($rawArr, 0, 5);
         $this->jobIdArr = $request->jobIdArr;
+        $clientMatchMap = is_array($request->matchMap) ? $request->matchMap : [];
         $this->applicationDataCount = DB::table('job_applications')->select('*')->whereIn('id', $this->arr)->count();
         // $this->applicationData			=	DB::table('job_applications')->select('job_applications.id')->whereIn('id', $arr)->get();
 
         $this->applicationData = DB::table('job_applications')
             ->select(
                 'job_applications.id',
+                'job_applications.candidate_id',
+                'job_applications.condidate_type',
                 'job_applications.full_name',
                 'job_applications.current_designation',
                 'job_applications.phone',
@@ -2802,6 +2804,7 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
                 'job_applications.np_id',
                 'job_applications.serving_notice_period_mode',
                 'job_applications.current_company',
+                'job_applications.cur_company_name',
                 'job_applications.skills',
                 'job_applications.resume',
                 'job_applications.rating',
@@ -2810,8 +2813,11 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
                 'job_applications.recruiter_note',
                 'job_applications.comment',
                 'qualification_master.name as qualification_name',
+                'jobs.id as job_id',
                 'jobs.title as job_title',
-                'clients.name as client_name'
+                'clients.name as client_name',
+                'add_job_wise_condidates.id as wise_id',
+                'add_job_wise_condidates.skill_match as wise_skill_match'
             )
             ->leftJoin('add_job_wise_condidates', 'add_job_wise_condidates.job_application_id', 'job_applications.id')
             ->leftJoin('jobs', 'jobs.id', 'add_job_wise_condidates.job_id')
@@ -2861,20 +2867,52 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
         }
         $this->jobSkills = $jobSkillsList;
 
-        // Enrich applicationData candidate objects with complete dossier data matching showdetail readData()
-        $todayFormatted = now()->format('d M Y');
-        $recruiterName = auth()->user()->name ? ucwords((string) auth()->user()->name) : 'Hiring Team';
+        // Bulk-load real skill experiences and ratings for selected candidates matching showdetail logic
+        $appIds = collect($this->applicationData)->pluck('id')->toArray();
+        $benchCandIds = collect($this->applicationData)->where('condidate_type', 'bench_condidate')->pluck('candidate_id')->filter()->toArray();
+
+        $cjseSkills = collect();
+        if (! empty($appIds)) {
+            $cjseSkills = DB::table('candidate_job_skill_exp')
+                ->join('job_metronics_skills', 'candidate_job_skill_exp.job_skill_id', '=', 'job_metronics_skills.id')
+                ->whereIn('candidate_job_skill_exp.candidate_id', $appIds)
+                ->select(
+                    'candidate_job_skill_exp.candidate_id',
+                    'job_metronics_skills.skill_name',
+                    'candidate_job_skill_exp.skill_value',
+                    'candidate_job_skill_exp.rating'
+                )
+                ->get()
+                ->groupBy('candidate_id');
+        }
+
+        $benchSkills = collect();
+        $allBenchIds = array_unique(array_filter(array_merge($appIds, $benchCandIds)));
+        if (! empty($allBenchIds)) {
+            $benchSkills = DB::table('bench_candidate_skill_experience')
+                ->whereIn('candidate_id', $allBenchIds)
+                ->select('candidate_id', 'skill_key', 'year', 'month', 'total_months', 'rating')
+                ->orderBy('skill_key')
+                ->get()
+                ->groupBy('candidate_id');
+        }
 
         foreach ($this->applicationData as $cand) {
-            // Notice Period formatting
+            // Notice Period formatting (matching showdetail logic)
             $npMode = (int) (@$cand->serving_notice_period_mode ?? -1);
             $npRaw = trim((string) @$cand->np_id);
             $npTs = $npRaw !== '' ? strtotime($npRaw) : false;
             if ($npMode === 2 || strtolower($npRaw) === 'immediate') {
                 $cand->notice = 'Immediate';
                 $cand->is_immediate = true;
-            } elseif (($npMode === 0 || $npMode === 1) && $npTs !== false && (int) date('Y', $npTs) > 1970) {
-                $cand->notice = 'Available ' . date('d M Y', $npTs);
+            } elseif ($npMode === 0 && (int) $npRaw > 0) {
+                $cand->notice = (int) $npRaw.' Days';
+                $cand->is_immediate = false;
+            } elseif ($npMode === 1 && $npTs !== false && (int) date('Y', $npTs) > 1970) {
+                $cand->notice = 'Available '.date('d M Y', $npTs);
+                $cand->is_immediate = false;
+            } elseif ($npTs !== false && (int) date('Y', $npTs) > 1970) {
+                $cand->notice = 'Available '.date('d M Y', $npTs);
                 $cand->is_immediate = false;
             } else {
                 $cand->notice = ($npRaw !== '' && ! str_contains($npRaw, '01 Jan 1970')) ? $npRaw : '--';
@@ -2891,19 +2929,34 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
 
             // Experience string
             $totExp = trim((string) @$cand->total_exp, " \t\n\r\0\x0B.");
-            $cand->experience = ($totExp !== '' && (float) $totExp > 0) ? $totExp . ' Year' . ((float) $totExp == 1.0 ? '' : 's') : '--';
+            $expStr = ($totExp !== '' && (float) $totExp > 0) ? $totExp.' Year'.((float) $totExp == 1.0 ? '' : 's') : '--';
+            $cand->experience = $expStr;
 
             // Report ID & Date & Recruiter
-            $cand->report_id = 'JR' . now()->format('Ymd') . str_pad((string) $cand->id, 6, '0', STR_PAD_LEFT);
+            $cand->report_id = 'JR'.now()->format('Ymd').str_pad((string) $cand->id, 6, '0', STR_PAD_LEFT);
             $cand->report_date = $todayFormatted;
             $cand->recruiter_name = $recruiterName;
             $cand->report_company_name = $this->companyName;
             $cand->report_company_logo = $this->companyLogo;
 
-            // Match score
-            $matchPct = 85;
-            if (! empty($cand->rating)) {
-                $matchPct = min(100, max(40, (int) ($cand->rating * 20)));
+            // Match score / Hiring confidence percentage (exact 1:1 match with profile icon / table)
+            $candSkillsList = array_values(array_filter(array_map('trim', explode(',', (string) @$cand->skills))));
+            $matchPct = 0;
+            if (! empty($clientMatchMap[$cand->id]) && (int) $clientMatchMap[$cand->id] > 0) {
+                $matchPct = (int) $clientMatchMap[$cand->id];
+            } elseif (! empty($cand->wise_skill_match)) {
+                $matchPct = (int) round((float) rtrim((string) $cand->wise_skill_match, '%'));
+            }
+            if ($matchPct === 0 && ! empty($cand->job_id) && ! empty($candSkillsList)) {
+                $calcPct = GeneralMethod::skill_percentage($cand->job_id, $candSkillsList);
+                $matchPct = (int) round((float) rtrim($calcPct, '%'));
+            }
+            if ($matchPct === 0 && ! empty($jobSkillsList) && ! empty($candSkillsList)) {
+                $calcPct = GeneralMethod::skill_percentage_from_array($jobSkillsList, $candSkillsList);
+                $matchPct = (int) round((float) rtrim($calcPct, '%'));
+            }
+            if ($matchPct === 0) {
+                $matchPct = ! empty($cand->rating) ? min(100, max(40, (int) ($cand->rating * 20))) : 85;
             }
             $cand->match = $matchPct;
 
@@ -2914,23 +2967,130 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
             $note = trim(strip_tags(html_entity_decode((string) (@$cand->recruiter_note ?: @$cand->comment), ENT_QUOTES, 'UTF-8')));
             $cand->recruiter_note_text = ! empty($note) ? $note : 'Candidate thoroughly pre-screened for technical competency, communication skills, and delivery readiness. Strongly recommended for technical evaluation.';
 
-            // Skills array for Skill Intelligence card
+            // Real Skills & Ratings for Skill Intelligence card
             $skillsArr = [];
-            $candSkillsList = array_filter(array_map('trim', explode(',', (string) @$cand->skills)));
-            $combinedSkills = array_values(array_unique(array_filter(array_merge($candSkillsList, $jobSkillsList))));
-            $sIdx = 0;
-            foreach ($combinedSkills as $skName) {
-                if (! $skName) continue;
-                $expNum = max(1, 6 - ($sIdx % 4));
-                $rating = max(3, 5 - ($sIdx % 3));
-                $skillsArr[] = [
-                    'name' => $skName,
-                    'expText' => $expNum . ' Year' . ($expNum > 1 ? 's' : ''),
-                    'exp' => $expNum,
-                    'rating' => $rating,
-                ];
-                $sIdx++;
-                if ($sIdx >= 7) break;
+            $seenSkillNames = [];
+
+            // A. Check bench candidate skills if applicable
+            $benchList = $benchSkills->get($cand->id) ?? ($cand->candidate_id ? $benchSkills->get($cand->candidate_id) : null);
+            if ($benchList && count($benchList) > 0) {
+                foreach ($benchList as $bRow) {
+                    $sn = trim((string) $bRow->skill_key);
+                    $snLower = strtolower($sn);
+                    if ($sn === '' || isset($seenSkillNames[$snLower])) {
+                        continue;
+                    }
+                    $seenSkillNames[$snLower] = true;
+
+                    $yr = (int) ($bRow->year ?? 0);
+                    $mo = (int) ($bRow->month ?? 0);
+                    if (isset($bRow->total_months) && is_numeric($bRow->total_months) && (int) $bRow->total_months > 0) {
+                        $yr = intdiv((int) $bRow->total_months, 12);
+                        $mo = (int) $bRow->total_months % 12;
+                    }
+                    $sExpParts = [];
+                    if ($yr > 0) {
+                        $sExpParts[] = $yr.' Year'.($yr > 1 ? 's' : '');
+                    }
+                    if ($mo > 0) {
+                        $sExpParts[] = $mo.' Month'.($mo > 1 ? 's' : '');
+                    }
+                    $sExpText = ! empty($sExpParts) ? implode(' ', $sExpParts) : ($yr === 0 && $mo === 0 ? '0 Years' : '--');
+
+                    $ratingVal = (int) ($bRow->rating ?? 0);
+                    if ($ratingVal <= 0 && ! empty($cand->rating)) {
+                        $ratingVal = (int) $cand->rating;
+                    }
+                    if ($ratingVal <= 0) {
+                        $ratingVal = 4;
+                    }
+
+                    $skillsArr[] = [
+                        'name' => ucwords($sn),
+                        'expText' => $sExpText,
+                        'exp' => $yr + ($mo / 12),
+                        'rating' => min(5, max(1, $ratingVal)),
+                    ];
+                    if (count($skillsArr) >= 7) {
+                        break;
+                    }
+                }
+            }
+
+            // B. Check candidate_job_skill_exp if bench skills empty
+            if (empty($skillsArr)) {
+                $cjseList = $cjseSkills->get($cand->id);
+                if ($cjseList && count($cjseList) > 0) {
+                    foreach ($cjseList as $cRow) {
+                        $sn = trim((string) $cRow->skill_name);
+                        $snLower = strtolower($sn);
+                        if ($sn === '' || isset($seenSkillNames[$snLower])) {
+                            continue;
+                        }
+                        $seenSkillNames[$snLower] = true;
+
+                        $rawVal = trim((string) $cRow->skill_value);
+                        $sExpText = '--';
+                        $sExpNum = 0.0;
+                        if ($rawVal !== '') {
+                            if (preg_match('/(\d+)\s*(?:years?|yrs?)?\s+(\d+)\s*(?:months?|mos?)/i', $rawVal, $m)) {
+                                $y = (int) $m[1];
+                                $mo = (int) $m[2];
+                                $sExpText = $y.' Year'.($y > 1 ? 's' : '').($mo > 0 ? ' '.$mo.' Month'.($mo > 1 ? 's' : '') : '');
+                                $sExpNum = $y + ($mo / 12);
+                            } elseif (preg_match('/^(\d+(?:\.\d+)?)/', $rawVal, $m)) {
+                                $sExpNum = (float) $m[1];
+                                $sExpText = $sExpNum.' Year'.($sExpNum == 1.0 ? '' : 's');
+                            } else {
+                                $sExpText = $rawVal;
+                            }
+                        }
+
+                        $ratingVal = (int) ($cRow->rating ?? 0);
+                        if ($ratingVal <= 0 && ! empty($cand->rating)) {
+                            $ratingVal = (int) $cand->rating;
+                        }
+                        if ($ratingVal <= 0) {
+                            $ratingVal = 4;
+                        }
+
+                        $skillsArr[] = [
+                            'name' => ucwords($sn),
+                            'expText' => $sExpText,
+                            'exp' => $sExpNum,
+                            'rating' => min(5, max(1, $ratingVal)),
+                        ];
+                        if (count($skillsArr) >= 7) {
+                            break;
+                        }
+                    }
+                }
+            }
+
+            // C. Fallback to candidate's own parsed skills list with real experience & rating
+            if (empty($skillsArr)) {
+                $combinedSkills = array_values(array_unique(array_filter(array_merge($candSkillsList, $jobSkillsList))));
+                $defaultRating = ! empty($cand->rating) ? min(5, max(1, (int) $cand->rating)) : 4;
+                foreach ($combinedSkills as $skName) {
+                    if (! $skName) {
+                        continue;
+                    }
+                    $snLower = strtolower($skName);
+                    if (isset($seenSkillNames[$snLower])) {
+                        continue;
+                    }
+                    $seenSkillNames[$snLower] = true;
+
+                    $skillsArr[] = [
+                        'name' => ucwords($skName),
+                        'expText' => $expStr,
+                        'exp' => (float) $totExp ?: 0,
+                        'rating' => $defaultRating,
+                    ];
+                    if (count($skillsArr) >= 7) {
+                        break;
+                    }
+                }
             }
             $cand->parsed_skills = $skillsArr;
 
@@ -2949,13 +3109,25 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
             $cand->resume_url = $hasResume ? route('service_company.cvtracker.resume', $cand->id) : '';
 
             $valArr = [];
-            if ($hasResume) $valArr[] = ['label' => 'RESUME', 'status' => 'Verified'];
-            else $valArr[] = ['label' => 'RESUME', 'status' => 'Not Uploaded'];
-            if (! empty($cand->email) || ! empty($cand->secondrary_email)) $valArr[] = ['label' => 'EMAIL ID', 'status' => 'Verified'];
-            if (! empty($cand->phone) || ! empty($cand->secondary_mobile)) $valArr[] = ['label' => 'PHONE NUMBER', 'status' => 'Verified'];
-            if (! empty($cand->linkedin)) $valArr[] = ['label' => 'LINKEDIN ID', 'status' => 'Verified'];
-            else $valArr[] = ['label' => 'LINKEDIN ID', 'status' => 'Discussed'];
-            if (! empty($cand->current_designation) || ! empty($cand->current_company)) $valArr[] = ['label' => 'JOB DESCRIPTION', 'status' => 'Shared with candidate'];
+            if ($hasResume) {
+                $valArr[] = ['label' => 'RESUME', 'status' => 'Verified'];
+            } else {
+                $valArr[] = ['label' => 'RESUME', 'status' => 'Not Uploaded'];
+            }
+            if (! empty($cand->email) || ! empty($cand->secondrary_email)) {
+                $valArr[] = ['label' => 'EMAIL ID', 'status' => 'Verified'];
+            }
+            if (! empty($cand->phone) || ! empty($cand->secondary_mobile)) {
+                $valArr[] = ['label' => 'PHONE NUMBER', 'status' => 'Verified'];
+            }
+            if (! empty($cand->linkedin)) {
+                $valArr[] = ['label' => 'LINKEDIN ID', 'status' => 'Verified'];
+            } else {
+                $valArr[] = ['label' => 'LINKEDIN ID', 'status' => 'Discussed'];
+            }
+            if (! empty($cand->current_designation) || ! empty($cand->current_company)) {
+                $valArr[] = ['label' => 'JOB DESCRIPTION', 'status' => 'Shared with candidate'];
+            }
             $cand->parsed_validation = $valArr;
         }
 
@@ -2992,15 +3164,15 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
 
         // 2. Client Contacts
         $clientId = [];
-        if (!empty($this->jobIdArr)) {
+        if (! empty($this->jobIdArr)) {
             $clientId = Job::whereIn('jobs.id', $this->jobIdArr)
                 ->join('clients', 'clients.id', '=', 'jobs.client_id')
                 ->where('clients.self_company', 0)
                 ->pluck('jobs.client_id')->toArray();
         }
-        if (empty($clientId) && !empty($request->id)) {
+        if (empty($clientId) && ! empty($request->id)) {
             $client_row = DB::table('jobs')->select('jobs.client_id')->where('jobs.id', $request->id)->first();
-            if ($client_row && !empty($client_row->client_id)) {
+            if ($client_row && ! empty($client_row->client_id)) {
                 $clientId[] = $client_row->client_id;
             }
         }
@@ -3009,7 +3181,7 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
         }
 
         $assignDataclient = [];
-        if (!empty($clientId)) {
+        if (! empty($clientId)) {
             $assignDataclient = DB::table('clients')
                 ->leftjoin('companies', 'companies.id', 'clients.company_id')
                 ->join('client_contact_info', 'clients.id', '=', 'client_contact_info.client_id')
@@ -3051,11 +3223,14 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
         $rawArr = is_array($request->arr) ? $request->arr : [];
         $this->arr = array_slice($rawArr, 0, 5);
         $this->jobIdArr = $request->jobIdArr;
+        $clientMatchMap = is_array($request->matchMap) ? $request->matchMap : [];
         $this->applicationDataCount = DB::table('job_applications')->whereIn('id', $this->arr)->count();
 
         $this->applicationData = DB::table('job_applications')
             ->select(
                 'job_applications.id',
+                'job_applications.candidate_id',
+                'job_applications.condidate_type',
                 'job_applications.full_name',
                 'job_applications.current_designation',
                 'job_applications.phone',
@@ -3079,6 +3254,7 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
                 'job_applications.np_id',
                 'job_applications.serving_notice_period_mode',
                 'job_applications.current_company',
+                'job_applications.cur_company_name',
                 'job_applications.skills',
                 'job_applications.resume',
                 'job_applications.rating',
@@ -3087,8 +3263,11 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
                 'job_applications.recruiter_note',
                 'job_applications.comment',
                 'qualification_master.name as qualification_name',
+                'jobs.id as job_id',
                 'jobs.title as job_title',
-                'clients.name as client_name'
+                'clients.name as client_name',
+                'add_job_wise_condidates.id as wise_id',
+                'add_job_wise_condidates.skill_match as wise_skill_match'
             )
             ->leftJoin('add_job_wise_condidates', 'add_job_wise_condidates.job_application_id', 'job_applications.id')
             ->leftJoin('jobs', 'jobs.id', 'add_job_wise_condidates.job_id')
@@ -3116,12 +3295,13 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
             $response = $this->elasticService->getClient()->search($params);
             $this->templateData = collect($response['hits']['hits'] ?? [])->map(function ($hit) {
                 $src = (object) $hit['_source'];
-                if (!isset($src->id) && isset($src->e_temp_id)) {
+                if (! isset($src->id) && isset($src->e_temp_id)) {
                     $src->id = $src->e_temp_id;
                 }
-                if (!isset($src->e_temp_id) && isset($src->id)) {
+                if (! isset($src->e_temp_id) && isset($src->id)) {
                     $src->e_temp_id = $src->id;
                 }
+
                 return $src;
             });
         } catch (\Throwable $e) {
@@ -3131,6 +3311,7 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
         if (empty($this->templateData) || count($this->templateData) === 0) {
             $this->templateData = DB::table('th_email_template')->where('status', 1)->where('temptype', 1)->get()->map(function ($row) {
                 $row->id = $row->e_temp_id;
+
                 return $row;
             });
         }
@@ -3149,67 +3330,233 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
         }
         $this->jobSkills = $jobSkillsList;
 
+        // Bulk-load real skill experiences and ratings for selected candidates matching showdetail logic
+        $appIds = collect($this->applicationData)->pluck('id')->toArray();
+        $benchCandIds = collect($this->applicationData)->where('condidate_type', 'bench_condidate')->pluck('candidate_id')->filter()->toArray();
+
+        $cjseSkills = collect();
+        if (! empty($appIds)) {
+            $cjseSkills = DB::table('candidate_job_skill_exp')
+                ->join('job_metronics_skills', 'candidate_job_skill_exp.job_skill_id', '=', 'job_metronics_skills.id')
+                ->whereIn('candidate_job_skill_exp.candidate_id', $appIds)
+                ->select(
+                    'candidate_job_skill_exp.candidate_id',
+                    'job_metronics_skills.skill_name',
+                    'candidate_job_skill_exp.skill_value',
+                    'candidate_job_skill_exp.rating'
+                )
+                ->get()
+                ->groupBy('candidate_id');
+        }
+
+        $benchSkills = collect();
+        $allBenchIds = array_unique(array_filter(array_merge($appIds, $benchCandIds)));
+        if (! empty($allBenchIds)) {
+            $benchSkills = DB::table('bench_candidate_skill_experience')
+                ->whereIn('candidate_id', $allBenchIds)
+                ->select('candidate_id', 'skill_key', 'year', 'month', 'total_months', 'rating')
+                ->orderBy('skill_key')
+                ->get()
+                ->groupBy('candidate_id');
+        }
+
         $todayFormatted = now()->format('d M Y');
         $recruiterName = auth()->user()->name ? ucwords((string) auth()->user()->name) : 'Hiring Team';
 
         foreach ($this->applicationData as $cand) {
+            // Notice Period formatting (matching showdetail logic)
             $npMode = (int) (@$cand->serving_notice_period_mode ?? -1);
             $npRaw = trim((string) @$cand->np_id);
             $npTs = $npRaw !== '' ? strtotime($npRaw) : false;
             if ($npMode === 2 || strtolower($npRaw) === 'immediate') {
                 $cand->notice = 'Immediate';
                 $cand->is_immediate = true;
-            } elseif (($npMode === 0 || $npMode === 1) && $npTs !== false && (int) date('Y', $npTs) > 1970) {
-                $cand->notice = 'Available ' . date('d M Y', $npTs);
+            } elseif ($npMode === 0 && (int) $npRaw > 0) {
+                $cand->notice = (int) $npRaw.' Days';
+                $cand->is_immediate = false;
+            } elseif ($npMode === 1 && $npTs !== false && (int) date('Y', $npTs) > 1970) {
+                $cand->notice = 'Available '.date('d M Y', $npTs);
+                $cand->is_immediate = false;
+            } elseif ($npTs !== false && (int) date('Y', $npTs) > 1970) {
+                $cand->notice = 'Available '.date('d M Y', $npTs);
                 $cand->is_immediate = false;
             } else {
                 $cand->notice = ($npRaw !== '' && ! str_contains($npRaw, '01 Jan 1970')) ? $npRaw : '--';
                 $cand->is_immediate = false;
             }
 
+            // Location
             $locParts = array_filter([trim((string) @$cand->city), trim((string) @$cand->state), trim((string) @$cand->country)]);
             $cand->location = ! empty($locParts) ? implode(', ', $locParts) : '--';
 
+            // Work Mode
             $wmRaw = trim((string) @$cand->wm);
             $cand->work_mode = $wmRaw !== '' ? ucwords(str_replace(['_', '-'], ' ', strtolower($wmRaw))) : 'Hybrid';
 
+            // Experience string
             $totExp = trim((string) @$cand->total_exp, " \t\n\r\0\x0B.");
-            $cand->experience = ($totExp !== '' && (float) $totExp > 0) ? $totExp . ' Year' . ((float) $totExp == 1.0 ? '' : 's') : '--';
+            $expStr = ($totExp !== '' && (float) $totExp > 0) ? $totExp.' Year'.((float) $totExp == 1.0 ? '' : 's') : '--';
+            $cand->experience = $expStr;
 
-            $cand->report_id = 'JR' . now()->format('Ymd') . str_pad((string) $cand->id, 6, '0', STR_PAD_LEFT);
+            // Report ID & Date & Recruiter
+            $cand->report_id = 'JR'.now()->format('Ymd').str_pad((string) $cand->id, 6, '0', STR_PAD_LEFT);
             $cand->report_date = $todayFormatted;
             $cand->recruiter_name = $recruiterName;
             $cand->report_company_name = $this->companyName;
             $cand->report_company_logo = $this->companyLogo;
 
-            $matchPct = 85;
-            if (! empty($cand->rating)) {
-                $matchPct = min(100, max(40, (int) ($cand->rating * 20)));
+            // Match score / Hiring confidence percentage (exact 1:1 match with profile icon / table)
+            $candSkillsList = array_values(array_filter(array_map('trim', explode(',', (string) @$cand->skills))));
+            $matchPct = 0;
+            if (! empty($clientMatchMap[$cand->id]) && (int) $clientMatchMap[$cand->id] > 0) {
+                $matchPct = (int) $clientMatchMap[$cand->id];
+            } elseif (! empty($cand->wise_skill_match)) {
+                $matchPct = (int) round((float) rtrim((string) $cand->wise_skill_match, '%'));
+            }
+            if ($matchPct === 0 && ! empty($cand->job_id) && ! empty($candSkillsList)) {
+                $calcPct = GeneralMethod::skill_percentage($cand->job_id, $candSkillsList);
+                $matchPct = (int) round((float) rtrim($calcPct, '%'));
+            }
+            if ($matchPct === 0 && ! empty($jobSkillsList) && ! empty($candSkillsList)) {
+                $calcPct = GeneralMethod::skill_percentage_from_array($jobSkillsList, $candSkillsList);
+                $matchPct = (int) round((float) rtrim($calcPct, '%'));
+            }
+            if ($matchPct === 0) {
+                $matchPct = ! empty($cand->rating) ? min(100, max(40, (int) ($cand->rating * 20))) : 85;
             }
             $cand->match = $matchPct;
 
+            // Career Summary & Recruiter Note
             $sum = trim(strip_tags(html_entity_decode((string) (@$cand->careersummary ?: @$cand->cover_letter), ENT_QUOTES, 'UTF-8')));
             $cand->career_summary = ! empty($sum) ? $sum : 'Experienced professional with demonstrated background in designing, developing, and deploying robust software architectures, driving end-to-end delivery and engineering excellence.';
 
             $note = trim(strip_tags(html_entity_decode((string) (@$cand->recruiter_note ?: @$cand->comment), ENT_QUOTES, 'UTF-8')));
             $cand->recruiter_note_text = ! empty($note) ? $note : 'Candidate thoroughly pre-screened for technical competency, communication skills, and delivery readiness. Strongly recommended for technical evaluation.';
 
+            // Real Skills & Ratings for Skill Intelligence card
             $skillsArr = [];
-            $candSkillsList = array_filter(array_map('trim', explode(',', (string) @$cand->skills)));
-            $combinedSkills = array_values(array_unique(array_filter(array_merge($candSkillsList, $jobSkillsList))));
-            $sIdx = 0;
-            foreach ($combinedSkills as $skName) {
-                if (! $skName) continue;
-                $expNum = max(1, 6 - ($sIdx % 4));
-                $rating = max(3, 5 - ($sIdx % 3));
-                $skillsArr[] = [
-                    'name' => $skName,
-                    'expText' => $expNum . ' Year' . ($expNum > 1 ? 's' : ''),
-                    'exp' => $expNum,
-                    'rating' => $rating,
-                ];
-                $sIdx++;
-                if ($sIdx >= 7) break;
+            $seenSkillNames = [];
+
+            // A. Check bench candidate skills if applicable
+            $benchList = $benchSkills->get($cand->id) ?? ($cand->candidate_id ? $benchSkills->get($cand->candidate_id) : null);
+            if ($benchList && count($benchList) > 0) {
+                foreach ($benchList as $bRow) {
+                    $sn = trim((string) $bRow->skill_key);
+                    $snLower = strtolower($sn);
+                    if ($sn === '' || isset($seenSkillNames[$snLower])) {
+                        continue;
+                    }
+                    $seenSkillNames[$snLower] = true;
+
+                    $yr = (int) ($bRow->year ?? 0);
+                    $mo = (int) ($bRow->month ?? 0);
+                    if (isset($bRow->total_months) && is_numeric($bRow->total_months) && (int) $bRow->total_months > 0) {
+                        $yr = intdiv((int) $bRow->total_months, 12);
+                        $mo = (int) $bRow->total_months % 12;
+                    }
+                    $sExpParts = [];
+                    if ($yr > 0) {
+                        $sExpParts[] = $yr.' Year'.($yr > 1 ? 's' : '');
+                    }
+                    if ($mo > 0) {
+                        $sExpParts[] = $mo.' Month'.($mo > 1 ? 's' : '');
+                    }
+                    $sExpText = ! empty($sExpParts) ? implode(' ', $sExpParts) : ($yr === 0 && $mo === 0 ? '0 Years' : '--');
+
+                    $ratingVal = (int) ($bRow->rating ?? 0);
+                    if ($ratingVal <= 0 && ! empty($cand->rating)) {
+                        $ratingVal = (int) $cand->rating;
+                    }
+                    if ($ratingVal <= 0) {
+                        $ratingVal = 4;
+                    }
+
+                    $skillsArr[] = [
+                        'name' => ucwords($sn),
+                        'expText' => $sExpText,
+                        'exp' => $yr + ($mo / 12),
+                        'rating' => min(5, max(1, $ratingVal)),
+                    ];
+                    if (count($skillsArr) >= 7) {
+                        break;
+                    }
+                }
+            }
+
+            // B. Check candidate_job_skill_exp if bench skills empty
+            if (empty($skillsArr)) {
+                $cjseList = $cjseSkills->get($cand->id);
+                if ($cjseList && count($cjseList) > 0) {
+                    foreach ($cjseList as $cRow) {
+                        $sn = trim((string) $cRow->skill_name);
+                        $snLower = strtolower($sn);
+                        if ($sn === '' || isset($seenSkillNames[$snLower])) {
+                            continue;
+                        }
+                        $seenSkillNames[$snLower] = true;
+
+                        $rawVal = trim((string) $cRow->skill_value);
+                        $sExpText = '--';
+                        $sExpNum = 0.0;
+                        if ($rawVal !== '') {
+                            if (preg_match('/(\d+)\s*(?:years?|yrs?)?\s+(\d+)\s*(?:months?|mos?)/i', $rawVal, $m)) {
+                                $y = (int) $m[1];
+                                $mo = (int) $m[2];
+                                $sExpText = $y.' Year'.($y > 1 ? 's' : '').($mo > 0 ? ' '.$mo.' Month'.($mo > 1 ? 's' : '') : '');
+                                $sExpNum = $y + ($mo / 12);
+                            } elseif (preg_match('/^(\d+(?:\.\d+)?)/', $rawVal, $m)) {
+                                $sExpNum = (float) $m[1];
+                                $sExpText = $sExpNum.' Year'.($sExpNum == 1.0 ? '' : 's');
+                            } else {
+                                $sExpText = $rawVal;
+                            }
+                        }
+
+                        $ratingVal = (int) ($cRow->rating ?? 0);
+                        if ($ratingVal <= 0 && ! empty($cand->rating)) {
+                            $ratingVal = (int) $cand->rating;
+                        }
+                        if ($ratingVal <= 0) {
+                            $ratingVal = 4;
+                        }
+
+                        $skillsArr[] = [
+                            'name' => ucwords($sn),
+                            'expText' => $sExpText,
+                            'exp' => $sExpNum,
+                            'rating' => min(5, max(1, $ratingVal)),
+                        ];
+                        if (count($skillsArr) >= 7) {
+                            break;
+                        }
+                    }
+                }
+            }
+
+            // C. Fallback to candidate's own parsed skills list with real experience & rating
+            if (empty($skillsArr)) {
+                $combinedSkills = array_values(array_unique(array_filter(array_merge($candSkillsList, $jobSkillsList))));
+                $defaultRating = ! empty($cand->rating) ? min(5, max(1, (int) $cand->rating)) : 4;
+                foreach ($combinedSkills as $skName) {
+                    if (! $skName) {
+                        continue;
+                    }
+                    $snLower = strtolower($skName);
+                    if (isset($seenSkillNames[$snLower])) {
+                        continue;
+                    }
+                    $seenSkillNames[$snLower] = true;
+
+                    $skillsArr[] = [
+                        'name' => ucwords($skName),
+                        'expText' => $expStr,
+                        'exp' => (float) $totExp ?: 0,
+                        'rating' => $defaultRating,
+                    ];
+                    if (count($skillsArr) >= 7) {
+                        break;
+                    }
+                }
             }
             $cand->parsed_skills = $skillsArr;
 
@@ -3227,13 +3574,25 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
             $cand->resume_url = $hasResume ? route('service_company.cvtracker.resume', $cand->id) : '';
 
             $valArr = [];
-            if ($hasResume) $valArr[] = ['label' => 'RESUME', 'status' => 'Verified'];
-            else $valArr[] = ['label' => 'RESUME', 'status' => 'Not Uploaded'];
-            if (! empty($cand->email) || ! empty($cand->secondrary_email)) $valArr[] = ['label' => 'EMAIL ID', 'status' => 'Verified'];
-            if (! empty($cand->phone) || ! empty($cand->secondary_mobile)) $valArr[] = ['label' => 'PHONE NUMBER', 'status' => 'Verified'];
-            if (! empty($cand->linkedin)) $valArr[] = ['label' => 'LINKEDIN ID', 'status' => 'Verified'];
-            else $valArr[] = ['label' => 'LINKEDIN ID', 'status' => 'Discussed'];
-            if (! empty($cand->current_designation) || ! empty($cand->current_company)) $valArr[] = ['label' => 'JOB DESCRIPTION', 'status' => 'Shared with candidate'];
+            if ($hasResume) {
+                $valArr[] = ['label' => 'RESUME', 'status' => 'Verified'];
+            } else {
+                $valArr[] = ['label' => 'RESUME', 'status' => 'Not Uploaded'];
+            }
+            if (! empty($cand->email) || ! empty($cand->secondrary_email)) {
+                $valArr[] = ['label' => 'EMAIL ID', 'status' => 'Verified'];
+            }
+            if (! empty($cand->phone) || ! empty($cand->secondary_mobile)) {
+                $valArr[] = ['label' => 'PHONE NUMBER', 'status' => 'Verified'];
+            }
+            if (! empty($cand->linkedin)) {
+                $valArr[] = ['label' => 'LINKEDIN ID', 'status' => 'Verified'];
+            } else {
+                $valArr[] = ['label' => 'LINKEDIN ID', 'status' => 'Discussed'];
+            }
+            if (! empty($cand->current_designation) || ! empty($cand->current_company)) {
+                $valArr[] = ['label' => 'JOB DESCRIPTION', 'status' => 'Shared with candidate'];
+            }
             $cand->parsed_validation = $valArr;
         }
 
@@ -3335,14 +3694,14 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
         if (empty($results)) {
             return response()->json([
                 'status' => 'error',
-                'message' => 'Cloudflare R2 storage is not configured or failed to generate presigned upload URLs.'
+                'message' => 'Cloudflare R2 storage is not configured or failed to generate presigned upload URLs.',
             ], 500);
         }
 
         return response()->json([
             'status' => 'success',
             'attachments' => $results,
-            'uploads' => $results
+            'uploads' => $results,
         ]);
     }
 
@@ -3414,14 +3773,14 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
                     $attUuid = (string) \Illuminate\Support\Str::uuid();
                     $candName = str_replace(' ', '_', preg_replace('/[^\w\s.-]/', '', $cand->full_name ?: 'Candidate'));
                     $r2Key = sprintf('temp-forward/%d/%s.pdf', $companyId, $attUuid);
-                    
+
                     try {
                         if (\Illuminate\Support\Facades\Storage::disk('r2')->exists($resumeFile)) {
                             \Illuminate\Support\Facades\Storage::disk('r2')->copy($resumeFile, $r2Key);
-                        } elseif (file_exists(public_path('user-uploads/resume/' . $resumeFile))) {
-                            \Illuminate\Support\Facades\Storage::disk('r2')->put($r2Key, file_get_contents(public_path('user-uploads/resume/' . $resumeFile)));
+                        } elseif (file_exists(public_path('user-uploads/resume/'.$resumeFile))) {
+                            \Illuminate\Support\Facades\Storage::disk('r2')->put($r2Key, file_get_contents(public_path('user-uploads/resume/'.$resumeFile)));
                         }
-                        
+
                         \App\Models\ForwardAttachment::create([
                             'uuid' => $attUuid,
                             'company_id' => $companyId,
@@ -3429,22 +3788,22 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
                             'candidate_id' => $cand->id,
                             'candidate_name' => $cand->full_name ?: 'Candidate',
                             'r2_object_key' => $r2Key,
-                            'filename' => 'Jeroworks_' . $candName . '.pdf',
+                            'filename' => 'Jeroworks_'.$candName.'.pdf',
                             'mime_type' => 'application/pdf',
                             'size_bytes' => 1024,
                             'status' => 'PENDING',
-                            'expires_at' => now()->addMinutes(30)
+                            'expires_at' => now()->addMinutes(30),
                         ]);
                         $attachmentUuids[] = $attUuid;
                     } catch (\Throwable $e) {
-                        \Log::warning('[test_fwd_resume_send] Option 1 fallback attachment error: ' . $e->getMessage());
+                        \Log::warning('[test_fwd_resume_send] Option 1 fallback attachment error: '.$e->getMessage());
                     }
                 }
             }
         }
 
         $fwdRequestUuid = (string) \Illuminate\Support\Str::uuid();
-        
+
         if (\Illuminate\Support\Facades\Schema::hasTable('forward_requests')) {
             \App\Models\ForwardRequest::create([
                 'uuid' => $fwdRequestUuid,
@@ -3465,7 +3824,7 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
             'company_name' => $companyName,
             'consultant_name' => 'JERO Recruitment',
             'position' => 'Candidate Requisition',
-            'candidate_skills' => []
+            'candidate_skills' => [],
         ];
 
         $fromAddress = ! empty($request->from_email) ? trim($request->from_email) : auth()->user()->email;
@@ -3492,7 +3851,7 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
 
         return Reply::dataOnly([
             'status' => 'success',
-            'message' => 'Candidate resumes have been forwarded successfully.'
+            'message' => 'Candidate resumes have been forwarded successfully.',
         ]);
     }
 
@@ -3522,7 +3881,7 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
         if (! $candidate) {
             return response()->json([
                 'status' => 'error',
-                'message' => 'Candidate profile not found or unauthorized.'
+                'message' => 'Candidate profile not found or unauthorized.',
             ], 404);
         }
 
@@ -3542,7 +3901,7 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
 
         // Mirror to Cloudflare R2 if available
         try {
-            $localFilePath = $destinationPath . '/' . $storedFilename;
+            $localFilePath = $destinationPath.'/'.$storedFilename;
             if (file_exists($localFilePath)) {
                 $year = date('Y');
                 $month = date('m');
@@ -3550,7 +3909,7 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
                 \Illuminate\Support\Facades\Storage::disk('r2')->put($r2Path, file_get_contents($localFilePath));
             }
         } catch (\Throwable $e) {
-            \Log::warning('[quick_upload_resume] R2 upload safeguard: ' . $e->getMessage());
+            \Log::warning('[quick_upload_resume] R2 upload safeguard: '.$e->getMessage());
         }
 
         // Update MySQL job_applications table
@@ -3570,21 +3929,23 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
                 'created_at' => now(),
                 'updated_at' => now(),
             ]);
-        } catch (\Throwable $e) {}
+        } catch (\Throwable $e) {
+        }
 
         // Keep Elasticsearch in sync if job runner exists
         try {
             if (class_exists(\App\Jobs\ProcessCandidateUpdateJob::class)) {
                 \App\Jobs\ProcessCandidateUpdateJob::dispatch($candidateId);
             }
-        } catch (\Throwable $e) {}
+        } catch (\Throwable $e) {
+        }
 
         return response()->json([
             'status' => 'success',
             'message' => 'Resume uploaded successfully!',
             'candidate_id' => $candidateId,
             'resume_filename' => $storedFilename,
-            'display_filename' => 'Jeroworks_' . $safeCandName . '.' . $ext,
+            'display_filename' => 'Jeroworks_'.$safeCandName.'.'.$ext,
             'has_resume' => true,
         ]);
     }
@@ -5690,7 +6051,7 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
         if (empty($to)) {
             return Reply::dataOnly([
                 'status' => 'error',
-                'message' => 'Recipient email (To) is required. Please enter at least one valid recipient email address.'
+                'message' => 'Recipient email (To) is required. Please enter at least one valid recipient email address.',
             ]);
         }
 
@@ -5699,7 +6060,7 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
             if (! filter_var($toItem, FILTER_VALIDATE_EMAIL)) {
                 return Reply::dataOnly([
                     'status' => 'error',
-                    'message' => "The recipient email '{$toItem}' is invalid. Please verify and try again."
+                    'message' => "The recipient email '{$toItem}' is invalid. Please verify and try again.",
                 ]);
             }
         }
@@ -5708,7 +6069,7 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
         if (empty($subject)) {
             return Reply::dataOnly([
                 'status' => 'error',
-                'message' => 'Email subject is required. Please provide a subject before sending.'
+                'message' => 'Email subject is required. Please provide a subject before sending.',
             ]);
         }
 
@@ -5716,7 +6077,7 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
         if ($formatId <= 0) {
             return Reply::dataOnly([
                 'status' => 'error',
-                'message' => 'Please select a resume format before sending.'
+                'message' => 'Please select a resume format before sending.',
             ]);
         }
 
@@ -5726,7 +6087,7 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
         if ($cleanMsg === '' && stripos($message, '<img') === false) {
             return Reply::dataOnly([
                 'status' => 'error',
-                'message' => 'Email message body cannot be blank. Please provide a message before sending.'
+                'message' => 'Email message body cannot be blank. Please provide a message before sending.',
             ]);
         }
 
@@ -5740,7 +6101,7 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
                     if (! filter_var($cleanCc, FILTER_VALIDATE_EMAIL)) {
                         return Reply::dataOnly([
                             'status' => 'error',
-                            'message' => "The CC email '{$cleanCc}' is invalid. Please verify and try again."
+                            'message' => "The CC email '{$cleanCc}' is invalid. Please verify and try again.",
                         ]);
                     }
                     array_push($cc, $cleanCc);

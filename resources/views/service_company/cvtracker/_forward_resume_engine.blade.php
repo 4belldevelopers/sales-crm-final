@@ -2349,20 +2349,20 @@
     exp = exp || '--';
 
     var skills = [];
-    if (Array.isArray(candidate.parsed_skills)) {
+    if (Array.isArray(candidate.parsed_skills) && candidate.parsed_skills.length) {
       skills = candidate.parsed_skills;
-    } else if (Array.isArray(candidate.skills)) {
+    } else if (Array.isArray(candidate.skills) && candidate.skills.length) {
       skills = candidate.skills;
     } else if (typeof candidate.skills === 'string' && candidate.skills.trim()) {
       var sList = candidate.skills.split(',').map(function (s) { return s.trim(); }).filter(Boolean);
-      skills = sList.slice(0, 7).map(function (sName, idx) {
-        var expNum = Math.max(1, 6 - (idx % 4));
-        var rating = Math.max(3, 5 - (idx % 3));
+      var defaultRating = candidate.rating ? Math.min(5, Math.max(1, parseInt(candidate.rating, 10))) : 4;
+      var defaultExp = clean(candidate.experience, '--');
+      skills = sList.slice(0, 7).map(function (sName) {
         return {
           name: sName,
-          expText: expNum + ' Years',
-          exp: expNum,
-          rating: rating
+          expText: defaultExp,
+          exp: parseFloat(defaultExp) || 0,
+          rating: defaultRating
         };
       });
     }
@@ -2384,6 +2384,22 @@
     var todayDate = (new Date()).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
     var reportId = candidate.report_id || ('JR' + (new Date()).toISOString().slice(0, 10).replace(/-/g, '') + String(candidate.id || '000000').padStart(6, '0'));
 
+    var matchScore = 0;
+    if (candidate.match !== undefined && candidate.match !== null && candidate.match !== '') {
+      matchScore = safeNumber(candidate.match, 0, 100);
+    } else if (candidate.skill_match !== undefined && candidate.skill_match !== null && candidate.skill_match !== '') {
+      matchScore = safeNumber(candidate.skill_match, 0, 100);
+    } else if (candidate.rating) {
+      matchScore = Math.min(100, Math.max(40, parseInt(candidate.rating, 10) * 20));
+    } else {
+      matchScore = 85;
+    }
+
+    var rawNotice = candidate.notice || candidate.np_id || '--';
+    if (/01\s*jan\s*1970/i.test(rawNotice)) {
+      rawNotice = candidate.is_immediate ? 'Immediate' : '--';
+    }
+
     return {
       id: candidate.id,
       name: candidate.full_name || candidate.name || 'Candidate',
@@ -2398,7 +2414,7 @@
       company: candidate.current_company || candidate.company || '',
       location: formattedLocation,
       experience: exp,
-      notice: candidate.notice || candidate.np_id || '--',
+      notice: rawNotice,
       education: candidate.qualification_name || candidate.education || 'Graduate',
       workMode: candidate.work_mode || candidate.wm || 'Hybrid',
       reportId: reportId,
@@ -2407,7 +2423,7 @@
       reportCompanyName: companyData.companyName || candidate.report_company_name || 'Hiring Partner',
       reportCompanyLogo: companyData.companyLogo || candidate.report_company_logo || '',
       aiVersion: 'Live Intelligence',
-      match: candidate.match || (candidate.rating ? Math.min(100, Math.max(40, parseInt(candidate.rating, 10) * 20)) : 85),
+      match: matchScore,
       isImmediate: !!candidate.is_immediate,
       recruiterNote: candidate.recruiter_note_text || candidate.recruiter_note || candidate.comment || 'Candidate thoroughly pre-screened for technical competency, communication skills, and delivery readiness. Strongly recommended for technical evaluation.',
       careerSummary: candidate.career_summary || candidate.careersummary || candidate.cover_letter || 'Experienced professional with demonstrated background in designing, developing, and deploying robust software architectures, driving end-to-end delivery and engineering excellence.',
