@@ -163,20 +163,28 @@ class ServiceCompanyCompanyController extends ServiceCompanyBaseController
             ->make(true);
     }
 
+    /**
+     * Intent: Renders the Find Agency discovery page for tenant service companies.
+     * Tenancy: Scoped to authenticated user's company_id. Job lookup uses soft fallback to prevent 404 ModelNotFoundException.
+     *
+     * @param Request $request
+     * @return \Illuminate\Contracts\View\View
+     */
     public function findAgency(Request $request)
 	{
 
-		
-		$id = 48;
-		$this->pageTitle = __('Candidates Recommended');
+		$this->pageTitle = __('Find Agency');
 		$company_id = auth()->user()->company_id;
-		$this->job = Job::withoutGlobalScopes()->findOrFail($id);
+
+		// Resolve job_id dynamically from request or fallback to company's latest job, using find() instead of findOrFail(48) to avoid 404
+		$id = $request->get('id') ?? $request->get('job_id') ?? Job::where('company_id', $company_id)->latest()->value('id');
+		$this->job = $id ? Job::withoutGlobalScopes()->find($id) : null;
 		$this->custome_count = 0;
-       			
-		session()->put('job_id', $id);
 
-
-		$gdFilterData = GeneralMethod::gdFilterData($id);
+		if ($id) {
+			session()->put('job_id', $id);
+			$gdFilterData = GeneralMethod::gdFilterData($id);
+		}
 
 		$this->default_loc = '';
 		$this->qualification ='';
@@ -210,42 +218,49 @@ class ServiceCompanyCompanyController extends ServiceCompanyBaseController
 
             // dd($this->td_industries);
 
-             $params = [
-					'index' => ELASTIC_COMPANIES_INDEX,
-					'body'  => [
-						'size' => 0,
-						'query' => [
-							'bool' => [
-								'must_not' => [
-									['term' => ['id' => $company_id]],
-								]
+		$allCompanies = 0;
+		$activeCompanies = 0;
+		try {
+			$params = [
+				'index' => ELASTIC_COMPANIES_INDEX,
+				'body'  => [
+					'size' => 0,
+					'query' => [
+						'bool' => [
+							'must_not' => [
+								['term' => ['id' => $company_id]],
+							]
+						]
+					],
+					'aggs' => [
+						'all_companies' => [
+							'value_count' => [
+								'field' => 'id'
 							]
 						],
-						'aggs' => [
-							'all_companies' => [
-								'value_count' => [
-									'field' => 'id'
-								]
-							],
-							'active_companies' => [
-								'filter' => [
-									'term' => [
-										'status' => 'active'
-									]
+						'active_companies' => [
+							'filter' => [
+								'term' => [
+									'status' => 'active'
 								]
 							]
 						]
 					]
-				];
+				]
+			];
 
-				$response = $this->elasticService->getClient()->search($params);
-				$allCompanies = $response['aggregations']['all_companies']['value'] ?? 0;
-				$activeCompanies       = $response['aggregations']['active_companies']['doc_count'] ?? 0;
-                
-                $this->allCompanies= $allCompanies;
-                $this->activeCompanies = $activeCompanies;
+			$response = $this->elasticService->getClient()->search($params);
+			$allCompanies = $response['aggregations']['all_companies']['value'] ?? 0;
+			$activeCompanies = $response['aggregations']['active_companies']['doc_count'] ?? 0;
+		} catch (\Throwable $e) {
+			// Intent: Gracefully fallback to database counts if ElasticSearch cluster or index is unavailable
+			$allCompanies = DB::table('companies')->where('id', '!=', $company_id)->count();
+			$activeCompanies = DB::table('companies')->where('id', '!=', $company_id)->where('status', 'active')->count();
+		}
 
-		
+		$this->allCompanies = $allCompanies;
+		$this->activeCompanies = $activeCompanies;
+
 		return view('service_company.common.find-agency', $this->data);
 	}
 
