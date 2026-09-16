@@ -1,5 +1,7 @@
 @extends('layouts.service_company_layout')
 @push('head-script')
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<link href="{{ asset('demo/css/find-market-jobs.css') }}?v={{ time() }}" rel="stylesheet" type="text/css" />
 <style>
 /* ═══════════════════════════════════════════════
    RECOMMENDED CLIENT JOBS — reuses bench_explore's exact header/summary-card
@@ -652,6 +654,18 @@ body > .tagify__dropdown{ z-index:1400 !important; }
   .jc-col-actions{ align-items:flex-start; }
   .action-stack{ flex-direction:row; flex-wrap:wrap; }
   .action-stack .btn-xsm, .action-stack .action-status{ width:auto; }
+}
+
+/* Recommended Client Jobs uses the same Market Jobs card asset; these few
+   local rules only adapt the surrounding bench-results canvas and status pills. */
+.agencies-list{ gap:10px; }
+.rrj-results-wrap{ padding:0; border:none; background:transparent; }
+.job-card{ margin-bottom:0; }
+.skill-tag.skill-matched{ background:#DCFCE7; color:#15803D; border-color:#BBF7D0; }
+.jc-col-actions{ display:flex; flex-direction:column; justify-content:space-between; align-items:stretch; gap:5px; min-width:0; }
+.action-status{
+  min-height:29px; border-radius:6px; font-size:11.5px; font-weight:700;
+  display:inline-flex; align-items:center; justify-content:center; gap:5px; width:100%;
 }
 
 @media(max-width:900px){ .bxr-hero{ flex-direction:column; align-items:flex-start; } .bxr-hero-sep{ display:none; } .bxr-kpis{ width:100%; min-width:0; flex-wrap:wrap; } .bxr-sum-row{ grid-template-columns:1fr; } .card-content{ flex-direction:column; } .card-right{ align-items:flex-start; margin-left:0; } }

@@ -92,10 +92,12 @@
         $client_city_jobs = $row->client_city_jobs ?? [];
         $jobCitySelected = is_array($client_city_jobs) ? count($client_city_jobs) : 0;
 
-        $employment_type = 'Full-time';
-        if ($row->employment_type == 1) {
-            $employment_type = 'Contract';
-        }
+        $employment_type = match ((int) ($row->employment_type ?? 0)) {
+            1 => 'Contract',
+            2 => 'Freelance',
+            3 => 'Part-Time',
+            default => 'Full-Time',
+        };
         $employmentBadgeClass = ($employment_type === 'Contract') ? 'badge-inline badge-contract' : 'badge-inline badge-fulltime';
 
         $classAdd = "bench-match";
@@ -179,23 +181,46 @@
                     if ($currentRowJob->status == 2) {
                         $requestsend = "request-send";
                     }
+                    $rawStatus = strtolower($row->status ?? 'active');
+                    $statusLabel = $rawStatus === 'hold' ? 'HOLD' : 'OPEN';
+                    $statusBadgeCls = $rawStatus === 'hold' ? 'jc-badge-hold' : 'jc-badge-open';
+                    $statusDotCls = $rawStatus === 'hold' ? 'jc-dot-hold' : 'jc-dot-open';
+                    $statusText = $rawStatus === 'hold' ? 'Hold' : 'Active · Open';
+                    $typeBadgeCls = match ($employment_type) {
+                        'Contract' => 'jc-badge-ct',
+                        'Freelance' => 'jc-badge-fl',
+                        'Part-Time' => 'jc-badge-pt',
+                        default => 'jc-badge-ft',
+                    };
+                    $cardAccentCls = ($rawStatus === 'hold' || $employment_type === 'Contract') ? 'jc-accent-yellow' : 'jc-accent-green';
+                    $totalPositions = @$row->total_positions ?: (@$row->vacancies ?: 1);
+                    $salaryModeShort = mb_substr($min_sal_mode ?: 'Annual', 0, 1);
+                    $salaryDisplay = trim(($salary_currency ?? '₹') . $min_salary . ' – ' . $max_salary . ' / ' . $salaryModeShort);
+                    $benchMatchCount = (!empty($currentRowJob->id) && !empty($row->id)) ? 1 : 0;
+                    $ct = $row->v2_commercial_terms ?? null;
+                    $ctVal = function ($key, $default = null) use ($ct) {
+                        if (is_array($ct)) { return $ct[$key] ?? $default; }
+                        if (is_object($ct)) { return $ct->$key ?? $default; }
+                        return $default;
+                    };
                 @endphp
 
-                <div class="jero-job-card-v2">
-                    <!-- COL 1: Title, Department & Skill Tags -->
-                    <div class="jero-col-header">
-                        <div class="tag-row">
-                            <span class="jero-tag-open">OPEN</span>
-                            <span class="jero-tag-type">{{ ucwords($employment_type) }}</span>
-                            <span class="jero-tag-req">REQ-JERO-{{ $row->id }}</span>
+                <div class="job-card {{ $cardAccentCls }}">
+                    <div class="jc-col-main">
+                        <div class="jc-badges-row">
+                            <span class="jc-badge {{ $statusBadgeCls }}">
+                                <span class="jc-dot-mini"></span>{{ $statusLabel }}
+                            </span>
+                            <span class="jc-badge {{ $typeBadgeCls }}">{{ $employment_type }}</span>
+                            <span class="jc-req-id">REQ-JERO-{{ $row->id }}</span>
                         </div>
-                        <h4 class="jero-job-title client-show-detail" data-row-id="{{ $row->id }}">
+                        <h2 class="jc-job-title client-show-detail" data-row-id="{{ $row->id }}" title="{{ @$row->title }}">
                             {{ ucwords(mb_substr(@$row->title, 0, 40)) }}
-                        </h4>
-                        <div class="jero-job-dept">
+                        </h2>
+                        <div class="jc-job-dept" title="{{ @$row->clients_name ?: (@$row->client_name ?: '') }}">
                             {{ ucwords(@$row->clients_name ?: (@$row->client_name ?: 'Marketing / Content')) }}
                         </div>
-                        <div class="jero-skill-list">
+                        <div class="skills-row">
                             @if(!empty($skillArr))
                                 @foreach($skillArr as $key => $sval)
                                     @if($key <= 3)
@@ -203,109 +228,133 @@
                                             $isMatched = in_array($sval->skill_name, $matchedSkillsArr, true)
                                                 || collect($matchedSkillsArr)->contains(fn($m) => strcasecmp($m, $sval->skill_name) === 0);
                                         @endphp
-                                        <span class="jero-skill-pill {{ $isMatched ? 'matched' : '' }}">
+                                        <span class="skill-tag {{ $isMatched ? 'skill-matched' : '' }}">
                                             {{ ucfirst($sval->skill_name) }}
                                         </span>
                                     @endif
                                 @endforeach
+                                @if($skillArr->count() > 4)
+                                    <span class="skill-tag skill-more client-show-detail" data-row-id="{{ $row->id }}">+{{ $skillArr->count() - 4 }}</span>
+                                @endif
                             @endif
                         </div>
                     </div>
 
-                    <!-- COL 2: Specs & Location -->
-                    <div class="jero-specs-list">
-                        <div class="jero-spec-item">
-                            <i class="ri-map-pin-line"></i> <span>{{ $locPrimary }}</span>
+                    <div class="jc-col-meta">
+                        <div class="jc-meta-item" title="Location">
+                            <i class="fa-solid fa-location-dot"></i>
+                            <span>{{ $locPrimary }}</span>
                         </div>
-                        <div class="jero-spec-item">
-                            <i class="ri-building-line"></i> <span>{{ $work_type }}</span>
+                        <div class="jc-meta-item" title="Work Mode">
+                            <i class="fa-solid fa-laptop"></i>
+                            <span>{{ $work_type }}</span>
                         </div>
-                        <div class="jero-spec-item">
-                            <i class="ri-user-line"></i> <span>{{ ((@$row->min_exp) ? @$row->min_exp : '1') }} – {{ ((@$row->max_exp) ? @$row->max_exp : '3') }} Years</span>
+                        <div class="jc-meta-item" title="Experience">
+                            <i class="fa-regular fa-user"></i>
+                            <span>{{ ((@$row->min_exp) ? @$row->min_exp : '1') }} – {{ ((@$row->max_exp) ? @$row->max_exp : '3') }} Years</span>
                         </div>
-                        <div class="jero-spec-item">
-                            <i class="ri-team-line"></i> <span>{{ @$row->vacancies ?: '32' }} Openings</span>
+                        <div class="jc-meta-item" title="Openings">
+                            <i class="fa-solid fa-users"></i>
+                            <span>{{ $totalPositions }} Openings</span>
                         </div>
-                        <div class="jero-spec-item">
-                            <i class="ri-money-dollar-circle-line"></i> <span>{!! $salary_currency !!} {{ $min_salary }} – {{ $max_salary }} / {{ mb_substr($min_sal_mode,0,1) ?? 'H' }}</span>
+                        <div class="jc-meta-item" title="Salary">
+                            <i class="fa-solid fa-indian-rupee-sign"></i>
+                            <span>{!! $salary_currency !!}{{ $min_salary }} – {{ $max_salary }} / {{ $salaryModeShort }}</span>
                         </div>
-                        <div class="jero-spec-item">
-                            <i class="ri-briefcase-line"></i> <span>{{ ucwords(@$row->clients_name ?: 'Marketing / Content') }}</span>
-                        </div>
-                    </div>
-
-                    <!-- COL 3: Timestamps & Status -->
-                    <div class="jero-time-list">
-                        <div class="jero-time-item">
-                            <i class="ri-calendar-event-line"></i>
-                            <div>
-                                <span class="fw-medium">Posted</span><br>
-                                <span class="fw-bold">{{ $createdDateStr }}</span> <span class="text-muted">({{ $postedDiff }})</span>
-                            </div>
-                        </div>
-                        <div class="jero-time-item">
-                            <i class="ri-refresh-line"></i>
-                            <div>
-                                <span class="fw-medium">Last Updated</span><br>
-                                <span class="jero-text-success">{{ $updatedDiff }}</span>
-                            </div>
-                        </div>
-                        <div class="jero-time-item">
-                            <i class="ri-time-line text-danger"></i>
-                            <div>
-                                <span class="fw-medium">Submission Deadline</span><br>
-                                <span class="jero-text-danger">{{ $deadlineStr }}</span>
-                            </div>
-                        </div>
-                        <div class="jero-time-item mt-1">
-                            <span class="fw-medium text-muted">Status</span>
-                            <span class="jero-tag-open ms-1">Active · Open</span>
+                        <div class="jc-meta-item" title="Industry">
+                            <i class="fa-regular fa-building"></i>
+                            <span>{{ ucwords(@$row->clients_name ?: 'Marketing / Content') }}</span>
                         </div>
                     </div>
 
+                    <div class="jc-col-dates">
+                        <div class="jc-date-item">
+                            <i class="fa-regular fa-calendar"></i>
+                            <div class="jc-date-content">
+                                <span class="jc-date-label">Posted</span>
+                                <span class="jc-date-val">{{ $createdDateStr }} ({{ $postedDiff }})</span>
+                            </div>
+                        </div>
+                        <div class="jc-date-item">
+                            <i class="fa-solid fa-rotate"></i>
+                            <div class="jc-date-content">
+                                <span class="jc-date-label">Last Updated</span>
+                                <span class="jc-date-val jc-text-green">{{ $updatedDiff }}</span>
+                            </div>
+                        </div>
+                        <div class="jc-date-item">
+                            <i class="fa-regular fa-clock"></i>
+                            <div class="jc-date-content">
+                                <span class="jc-date-label">Submission Deadline</span>
+                                <span class="jc-date-val jc-text-red">{{ $deadlineStr }}</span>
+                            </div>
+                        </div>
+                        <div class="jc-status-row">
+                            <span class="jc-date-label">Status</span>
+                            <span class="jc-status-indicator">
+                                <span class="{{ $statusDotCls }}"></span>{{ $statusText }}
+                            </span>
+                        </div>
+                    </div>
 
-                    <!-- COL 5: Commercial Terms Box -->
-                    <div class="jero-terms-card">
+                    <div class="jc-subcard jc-bench-subcard">
                         <div>
-                            <div class="jero-terms-head">Commercial Terms</div>
-                            <div class="jero-terms-row">
-                                <span class="jero-terms-label">Hiring Fee</span>
-                                <span class="jero-terms-val">8.33% of CTC</span>
+                            <div class="jc-bench-header">
+                                <i class="fa-solid fa-user-plus"></i>
+                                <span>Your Bench Match</span>
                             </div>
-                            <div class="jero-terms-row">
-                                <span class="jero-terms-label">Replacement</span>
-                                <span class="jero-terms-val">90 Days</span>
-                            </div>
-                            <div class="jero-terms-row">
-                                <span class="jero-terms-label">Payment Terms</span>
-                                <span class="jero-terms-val">30 Days</span>
+                            <div class="jc-bench-num">{{ $benchMatchCount }}</div>
+                            <div class="jc-bench-desc">Matching candidates</div>
+                        </div>
+                        <div class="jc-subcard-link">View Matches &rarr;</div>
+                    </div>
+
+                    <div class="jc-subcard jc-terms-subcard">
+                        <div>
+                            <div class="jc-subcard-title">Commercial Terms</div>
+                            <div class="jc-terms-rows">
+                                @if($employment_type === 'Contract')
+                                    <div class="jc-ct-row"><span class="jc-ct-label">Billing Model</span><span class="jc-ct-val">{{ ucfirst($ctVal('billing_model', 'Monthly')) }}</span></div>
+                                    <div class="jc-ct-row"><span class="jc-ct-label">Billing Rate</span><span class="jc-ct-val">{{ $ctVal('resolved_rate', $salaryDisplay) }}</span></div>
+                                    <div class="jc-ct-row"><span class="jc-ct-label">Payment Terms</span><span class="jc-ct-val">{{ $ctVal('contract_payment_days', $ctVal('payment_days', 30)) }} Days</span></div>
+                                @elseif($employment_type === 'Part-Time' || $employment_type === 'Freelance')
+                                    <div class="jc-ct-row"><span class="jc-ct-label">Engagement</span><span class="jc-ct-val">{{ $employment_type }}</span></div>
+                                    <div class="jc-ct-row"><span class="jc-ct-label">Rate / Budget</span><span class="jc-ct-val">{{ $ctVal('resolved_rate', $salaryDisplay) }}</span></div>
+                                    <div class="jc-ct-row"><span class="jc-ct-label">Payment Terms</span><span class="jc-ct-val">{{ $ctVal('contract_payment_days', $ctVal('payment_days', 30)) }} Days</span></div>
+                                @else
+                                    <div class="jc-ct-row"><span class="jc-ct-label">{{ $ctVal('fulltime_fee_label', 'Hiring Fee') }}</span><span class="jc-ct-val">{{ $ctVal('resolved_fulltime_fee', $ctVal('hiring_fee_pct', 8.33).'% of CTC') }}</span></div>
+                                    <div class="jc-ct-row"><span class="jc-ct-label">Replacement</span><span class="jc-ct-val">{{ $ctVal('replacement_days', 90) }} Days</span></div>
+                                    <div class="jc-ct-row"><span class="jc-ct-label">Payment Terms</span><span class="jc-ct-val">{{ $ctVal('payment_days', 30) }} Days</span></div>
+                                @endif
                             </div>
                         </div>
-                        <a href="javascript:void(0);" class="jero-terms-link client-terms-listing-find-job" data-row-id="{{ $row->id }}" data-row-recommendation_relation_id="{{ $row->recommendation_relation_id }}">
+                        <a href="javascript:void(0);" class="jc-subcard-link client-terms-listing-find-job" data-row-id="{{ $row->id }}" data-row-recommendation_relation_id="{{ $row->recommendation_relation_id }}">
                             View Full Terms &rarr;
                         </a>
                     </div>
 
-                    <!-- COL 6: Actions Stack -->
-                    <div class="jero-actions-stack">
+                    <div class="jc-col-actions">
                         @if ($benchRequestCheck == null)
-                            <a href="javascript:void(0);" data-jobId="{{ $row->id }}" data-conId="{{ $currentRowJob->id }}" class="jero-btn-submit {{ $requestsend }}">
-                                Send Bench Request
+                            <a href="javascript:void(0);" data-jobId="{{ $row->id }}" data-conId="{{ $currentRowJob->id }}" class="btn-cta-primary {{ $requestsend }}">
+                                Submit Candidates
                             </a>
                         @else
                             @if ($benchRequestCheck->ac_status == 1)
-                                <span class="btn btn-sm btn-light-success fw-bold text-success w-100 py-2"><i class="ri-check-line"></i> Added</span>
+                                <span class="action-status action-status--added"><i class="fa-solid fa-check"></i> Added</span>
                             @else
-                                <span class="btn btn-sm btn-light-warning fw-bold text-warning w-100 py-2"><i class="ri-time-line"></i> Request sent</span>
+                                <span class="action-status action-status--sent"><i class="fa-regular fa-clock"></i> Request sent</span>
                             @endif
                         @endif
 
-                        <button class="jero-btn-outline client-terms-listing-find-job" data-row-id="{{ $row->id }}" data-row-recommendation_relation_id="{{ $row->recommendation_relation_id }}">
+                        <button type="button" class="btn-cta-secondary client-show-detail" data-row-id="{{ $row->id }}">
+                            View Requirement
+                        </button>
+                        <button type="button" class="btn-cta-secondary client-terms-listing-find-job" data-row-id="{{ $row->id }}" data-row-recommendation_relation_id="{{ $row->recommendation_relation_id }}">
                             View Terms
                         </button>
-                        <div class="jero-action-tools">
-                            <i class="ri-bookmark-line" title="Bookmark"></i>
-                            <i class="ri-more-2-fill" title="More Options"></i>
+                        <div class="jc-actions-footer">
+                            <i class="fa-regular fa-bookmark jc-icon-btn" title="Save Job"></i>
+                            <i class="fa-solid fa-ellipsis-vertical jc-icon-btn" title="More Options"></i>
                         </div>
                     </div>
                 </div>

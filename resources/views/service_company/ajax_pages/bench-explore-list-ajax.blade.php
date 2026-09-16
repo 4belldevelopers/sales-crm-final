@@ -134,7 +134,7 @@
 
     $employment_type = ($jobDetails->employment_type == 1) ? 'Contract' : 'Full-time';
     $employmentClass = ($jobDetails->employment_type == 1) ? 'bxr-pos-contract' : 'bxr-pos-fulltime';
-    $employmentIcon = ($jobDetails->employment_type == 1) ? 'fa-file-contract' : 'fa-briefcase';
+    $employmentIconSvg = '<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2M3 12h18"/></svg>';
 
     /* ── Location — city list comes straight off the ES job document
        (client_city_jobs is already in $jobDetails), replacing the two
@@ -154,7 +154,13 @@
     } elseif (in_array($jobDetails->work_type, ['any', 'other'], true)) {
         $workMode = 'Hybrid';
     }
-    $workModeIcon = $workMode === 'Remote' ? 'fa-wifi' : ($workMode === 'Hybrid' ? 'fa-location-dot' : 'fa-building');
+    if ($workMode === 'Remote') {
+        $workModeIconSvg = '<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5a10 10 0 0 1 14 0M8.5 16a5 5 0 0 1 7 0M12 20h.01"/></svg>';
+    } elseif ($workMode === 'Hybrid') {
+        $workModeIconSvg = '<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s-7-7.5-7-12a7 7 0 1 1 14 0c0 4.5-7 12-7 12z"/><circle cx="12" cy="10" r="2.5"/></svg>';
+    } else {
+        $workModeIconSvg = '<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 21V5a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v16M9 21v-6h6v6M8 7h.01M12 7h.01M16 7h.01M8 11h.01M12 11h.01M16 11h.01"/></svg>';
+    }
 
     /* ── Client Type Badge — derived from the same branch that the jobs
        page uses to colour its $internalBadge. Pure data-derivation, no
@@ -191,11 +197,19 @@
 
     /* ── Job status ──────────────────────────────── */
     $statusLabel = ucwords($jobDetails->status ?? '');
-    if ($statusLabel == 'Active')   { $statusLabel = 'Hiring'; $statusClass = 'bxr-b gr'; }
-    elseif ($statusLabel == 'Inactive') { $statusLabel = 'Closed'; $statusClass = 'bxr-b rd'; }
-    elseif ($statusLabel == 'Hold')     { $statusLabel = 'Hold';   $statusClass = 'bxr-b yw'; }
-    else                                { $statusClass = 'bxr-b gy'; }
-    $statusIcon = $statusLabel === 'Hiring' ? 'fa-user-group' : ($statusLabel === 'Hold' ? 'fa-pause' : ($statusLabel === 'Closed' ? 'fa-box-archive' : 'fa-circle'));
+    if ($statusLabel == 'Active')   { $statusLabel = 'Hiring'; $statusClass = 'bxr-job-status bxr-job-status--hiring'; }
+    elseif ($statusLabel == 'Inactive') { $statusLabel = 'Closed'; $statusClass = 'bxr-job-status bxr-job-status--closed'; }
+    elseif ($statusLabel == 'Hold')     { $statusLabel = 'Hold';   $statusClass = 'bxr-job-status bxr-job-status--hold'; }
+    else                                { $statusClass = 'bxr-job-status bxr-job-status--neutral'; }
+    if ($statusLabel === 'Hiring') {
+        $statusIconSvg = '<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>';
+    } elseif ($statusLabel === 'Hold') {
+        $statusIconSvg = '<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/></svg>';
+    } elseif ($statusLabel === 'Closed') {
+        $statusIconSvg = '<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7l2-2h14l2 2v13H3z"/><path d="M10 11h4"/></svg>';
+    } else {
+        $statusIconSvg = '<svg viewBox="0 0 24 24" width="13" height="13" fill="currentColor" aria-hidden="true"><circle cx="12" cy="12" r="5"/></svg>';
+    }
 
     /* ── Hiring Manager ──────────────────────────── */
     $hiringManager    = '—';
@@ -317,7 +331,7 @@
             @endif
             <div>
                 <span class="bxr-pos-badge {{ $employmentClass }}">
-                    <i class="fa-solid {{ $employmentIcon }}" aria-hidden="true"></i>
+                    {!! $employmentIconSvg !!}
                     {{ $employment_type }}
                 </span>
             </div>
@@ -329,7 +343,7 @@
         <div class="bxr-col-loc-stack">
             <div>
                 <span class="{{ $statusClass }}">
-                    <i class="fa-solid {{ $statusIcon }}" aria-hidden="true"></i> {{ $statusLabel }}
+                    {!! $statusIconSvg !!} {{ $statusLabel }}
                 </span>
             </div>
             @if($cityDisplay && $cityDisplay !== '—')
@@ -337,7 +351,7 @@
                 <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="#2563EB" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex-shrink:0;display:inline-block;vertical-align:middle;"><path d="M12 22s-7-7.5-7-12a7 7 0 1 1 14 0c0 4.5-7 12-7 12z"/><circle cx="12" cy="10" r="2.5"/></svg>
                 <span>{{ $cityDisplay }}</span>
             </div>
-            <div class="bxr-col-loc-mode"><i class="fa-solid {{ $workModeIcon }}" aria-hidden="true"></i>{{ $workMode }}</div>
+            <div class="bxr-col-loc-mode">{!! $workModeIconSvg !!}{{ $workMode }}</div>
             @endif
         </div>
     </td>
