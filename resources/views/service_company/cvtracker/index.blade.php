@@ -1845,12 +1845,12 @@
                                         return;
                                     }
                                     Swal.close();
-                                    location.reload();
+                                    if (typeof clearCvSelection === 'function') { clearCvSelection(); }
                                 });
                             }
                         }
                     }).then(function() {
-                        location.reload();
+                        if (typeof clearCvSelection === 'function') { clearCvSelection(); }
                     });
                     return;
                 }
@@ -2539,13 +2539,23 @@
                 $('#cvh_selected_count').text(n);
                 $('#cvh_selection_bar').toggleClass('show', n > 0);
                 $('#cvh_selection_master_chk').prop('checked', n > 0);
+                if (n === 0) {
+                    $('.chk_list, #cvh_selection_master_chk').prop('checked', false);
+                    $('.fwd_resume, .test_fwd_resume, .send_email, .mass_mail, .app_copy, .downloadexcell, .application_copy').addClass('d-none');
+                    $('.custom_hide').removeClass('d-none');
+                }
             }
             function clearCvSelection() {
-                $('.chk_list, .chk_list_item').prop('checked', false);
+                $('.chk_list, .chk_list_item, #cvh_selection_master_chk, #chk_all_list').prop('checked', false);
+                $('#myTable tbody tr').removeClass('table-active selected');
                 $('.fwd_resume, .test_fwd_resume, .send_email, .mass_mail, .app_copy, .downloadexcell, .application_copy').addClass('d-none');
                 $('.custom_hide').removeClass('d-none');
+                $('#application_fwd_resume_body_content').html('');
+                $('#application_test_fwd_resume_body_content').html('');
                 updateCvSelectionBar();
             }
+            window.clearCvSelection = clearCvSelection;
+            window.resetCvTrackerSelection = clearCvSelection;
             $(document).on('click', '#cvh_selection_close', clearCvSelection);
             $(document).on('change', '#cvh_selection_master_chk', function() {
                 if (!$(this).is(':checked')) clearCvSelection();
