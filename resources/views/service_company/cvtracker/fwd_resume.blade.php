@@ -1024,7 +1024,7 @@ $getAvatarBg = function($name) {
         </div>
         <div class="rcp-tab-info">
           <div class="rcp-tab-title">Internal Team</div>
-          <div class="rcp-tab-sub">{{ count($internal_team_data ?? []) }} available</div>
+          <div class="rcp-tab-sub">{{ count($internal_team_data ?? []) }} active</div>
         </div>
       </div>
 
@@ -1077,7 +1077,7 @@ $getAvatarBg = function($name) {
 
     {{-- Section Subheading with Count & Sort --}}
     <div class="rcp-subhead-row">
-      <div id="rcp_list_heading" class="rcp-subhead-title">Team Members ({{ count($internal_team_data ?? []) }})</div>
+      <div id="rcp_list_heading" class="rcp-subhead-title">Active Team Members ({{ count($internal_team_data ?? []) }})</div>
       <div class="rcp-sort-box">
         <span class="rcp-sort-label">Sort by:</span>
         <select id="rcp_sort_select" class="rcp-sort-select">
@@ -1104,15 +1104,20 @@ $getAvatarBg = function($name) {
             <div class="rcp-contact-item" data-name="{{ strtolower($iUser->name ?? '') }}" data-email="{{ strtolower($iUser->email ?? '') }}" data-role="{{ strtolower($cRole) }}" data-dept="{{ strtolower($cDept . ' ' . $cComp) }}">
               <div class="rcp-item-left">
                 @if(!empty($iUser->image) && file_exists(public_path('user-uploads/avatar/'.$iUser->image)))
-                  <img src="{{ asset('user-uploads/avatar/'.$iUser->image) }}" class="rcp-avatar-img" alt="{{ $iUser->name }}">
+                  <div style="position:relative;margin-right:12px;flex-shrink:0;">
+                    <img src="{{ asset('user-uploads/avatar/'.$iUser->image) }}" class="rcp-avatar-img" style="margin-right:0;" alt="{{ $iUser->name }}">
+                    <span style="position:absolute;bottom:0;right:0;width:8px;height:8px;border-radius:50%;background:#10B981;border:1.5px solid #fff;" title="Currently Active"></span>
+                  </div>
                 @else
-                  <div class="rcp-avatar-initial" style="background: {{ $cCol['bg'] }}; color: {{ $cCol['text'] }};">
+                  <div class="rcp-avatar-initial" style="background: {{ $cCol['bg'] }}; color: {{ $cCol['text'] }}; position:relative;">
                     {{ $cInitials }}
+                    <span style="position:absolute;bottom:0;right:0;width:8px;height:8px;border-radius:50%;background:#10B981;border:1.5px solid #fff;" title="Currently Active"></span>
                   </div>
                 @endif
                 <div class="rcp-info-col">
                   <div class="rcp-name-row">
                     <span class="rcp-contact-name" title="{{ $iUser->name }}">{{ $iUser->name }}</span>
+                    <span style="font-size:10px;padding:1px 6px;border-radius:10px;background:#DCFCE7;color:#15803D;font-weight:600;margin-left:4px;">Active</span>
                     @if(!empty($cRole))
                       <span class="rcp-role-pill">{{ $cRole }}</span>
                     @endif
@@ -1133,7 +1138,7 @@ $getAvatarBg = function($name) {
             </div>
           @endforeach
         @else
-          <div class="rcp-empty-state">No internal team members found.</div>
+          <div class="rcp-empty-state">No active internal team members found.</div>
         @endif
       </div>
 

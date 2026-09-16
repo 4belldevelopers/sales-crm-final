@@ -2961,6 +2961,8 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
             ->leftjoin('roles', 'roles.id', 'role_user.role_id')
             ->leftjoin('companies', 'companies.id', 'users.company_id')
             ->where('users.company_id', '=', $companyId)
+            ->where('users.status', '=', 'active')
+            ->where('users.working_status', '=', 1)
             ->select(
                 'users.id',
                 'users.email',
@@ -3203,6 +3205,8 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
             ->leftjoin('roles', 'roles.id', 'role_user.role_id')
             ->leftjoin('companies', 'companies.id', 'users.company_id')
             ->where('users.company_id', '=', $companyId)
+            ->where('users.status', '=', 'active')
+            ->where('users.working_status', '=', 1)
             ->select(
                 'users.id',
                 'users.email',

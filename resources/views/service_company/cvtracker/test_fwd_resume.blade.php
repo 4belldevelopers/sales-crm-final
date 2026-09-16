@@ -520,7 +520,7 @@ if(!empty($cc_email_count) && $cc_email_count > 0 && !empty($cc_email_data)){
         </div>
         <div class="rcp-tab-info">
           <div class="rcp-tab-title">Internal Team</div>
-          <div class="rcp-tab-sub">{{ count($internal_team_data ?? []) }} available</div>
+          <div class="rcp-tab-sub">{{ count($internal_team_data ?? []) }} active</div>
         </div>
       </div>
       <div class="rcp-tab-card" id="test_rcp_tab_client" data-tab="client">
@@ -545,13 +545,19 @@ if(!empty($cc_email_count) && $cc_email_count > 0 && !empty($cc_email_data)){
 
     <div class="rcp-body-list">
       <div id="test_rcp_section_internal">
-        @if(!empty($internal_team_data))
+        @if(!empty($internal_team_data) && count($internal_team_data) > 0)
           @foreach($internal_team_data as $itUser)
             <div class="rcp-contact-item" data-name="{{ strtolower($itUser->name ?? '') }}" data-email="{{ strtolower($itUser->email ?? '') }}" data-role="{{ strtolower($itUser->display_name ?? ($itUser->role_name ?? '')) }}">
               <div style="display:flex;align-items:center;min-width:0;flex:1;">
-                <div class="rcp-avatar" style="background:#EFF6FF;color:#2563EB;">{{ strtoupper(substr($itUser->name ?? 'U', 0, 1)) }}</div>
+                <div style="position:relative;margin-right:10px;flex-shrink:0;">
+                  <div class="rcp-avatar" style="background:#EFF6FF;color:#2563EB;margin-right:0;">{{ strtoupper(substr($itUser->name ?? 'U', 0, 1)) }}</div>
+                  <span style="position:absolute;bottom:0;right:0;width:8px;height:8px;border-radius:50%;background:#10B981;border:1.5px solid #fff;" title="Currently Active"></span>
+                </div>
                 <div class="rcp-info">
-                  <div class="rcp-name">{{ $itUser->name ?? 'Team Member' }}</div>
+                  <div style="display:flex;align-items:center;gap:6px;">
+                    <span class="rcp-name">{{ $itUser->name ?? 'Team Member' }}</span>
+                    <span style="font-size:10px;padding:1px 6px;border-radius:10px;background:#DCFCE7;color:#15803D;font-weight:600;">Active</span>
+                  </div>
                   <div class="rcp-email">{{ $itUser->email }}</div>
                   <div class="rcp-role">{{ $itUser->display_name ?? ($itUser->role_name ?? 'Team Member') }}</div>
                 </div>
@@ -562,6 +568,8 @@ if(!empty($cc_email_count) && $cc_email_count > 0 && !empty($cc_email_data)){
               </button>
             </div>
           @endforeach
+        @else
+          <div style="text-align:center;padding:36px 20px;color:#9CA3AF;font-size:13px;">No active internal team members found.</div>
         @endif
       </div>
       <div id="test_rcp_section_client" style="display:none;">
