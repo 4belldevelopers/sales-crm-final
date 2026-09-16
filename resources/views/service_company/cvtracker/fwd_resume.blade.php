@@ -63,9 +63,6 @@ setTimeout(initFwdCkEditor, 250);
 @php
 $template_body = '';
 $to_email = '';
-if($to_email_from_count > 0){
-    $to_email = implode(', ', $to_email_from_data);
-}
 $cc_email = '';
 if($cc_email_count > 0){
     $cc_email = implode(', ', $cc_email_data);
