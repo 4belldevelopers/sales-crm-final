@@ -3099,10 +3099,24 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
             ];
             $response = $this->elasticService->getClient()->search($params);
             $this->templateData = collect($response['hits']['hits'] ?? [])->map(function ($hit) {
-                return (object) $hit['_source'];
+                $src = (object) $hit['_source'];
+                if (!isset($src->id) && isset($src->e_temp_id)) {
+                    $src->id = $src->e_temp_id;
+                }
+                if (!isset($src->e_temp_id) && isset($src->id)) {
+                    $src->e_temp_id = $src->id;
+                }
+                return $src;
             });
         } catch (\Throwable $e) {
-            $this->templateData = DB::table('th_email_template')->where('status', 1)->where('temptype', 1)->get();
+            $this->templateData = collect();
+        }
+
+        if (empty($this->templateData) || count($this->templateData) === 0) {
+            $this->templateData = DB::table('th_email_template')->where('status', 1)->where('temptype', 1)->get()->map(function ($row) {
+                $row->id = $row->e_temp_id;
+                return $row;
+            });
         }
 
         $this->userdata = $this->user ?: auth()->user();
@@ -4419,38 +4433,87 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
             ->leftjoin('clients', 'clients.id', 'jobs.client_id')
             ->leftjoin('companies', 'companies.id', 'job_applications.company_id')
             ->leftjoin('qualification_master', 'qualification_master.id', 'job_applications.qualification');
-        if (isset($request->WijobIdArr) && is_array($request->WijobIdArr)) {
-            $applicationData = $applicationData->whereIn('add_job_wise_condidates.id', $request->WijobIdArr)->groupBy('job_applications.id')->get();
+        $rawListing = is_array($selectedApplicantListing) ? $selectedApplicantListing : (explode(',', (string) $selectedApplicantListing));
+        $cleanListing = array_values(array_filter(array_map('intval', $rawListing)));
+
+        $rawWi = is_array($request->WijobIdArr) ? $request->WijobIdArr : [];
+        $cleanWi = array_values(array_filter(array_map('intval', $rawWi)));
+
+        if (! empty($cleanWi)) {
+            $applicationData = $applicationData->whereIn('add_job_wise_condidates.id', $cleanWi)->groupBy('job_applications.id')->get();
+        } elseif (! empty($cleanListing)) {
+            $applicationData = $applicationData->whereIn('job_applications.id', $cleanListing)->groupBy('job_applications.id')->get();
         } else {
-            $applicationData = $applicationData->whereIn('job_applications.id', $selectedApplicantListing)->groupBy('job_applications.id')->get();
+            $applicationData = collect();
         }
 
-        // 			dd($applicationData[0]->full_name);
+        // Fallback: If add_job_wise_condidates didn't match (e.g. direct candidate without wise candidate entry)
+        if ($applicationData->isEmpty() && ! empty($cleanListing)) {
+            $applicationData = DB::table('job_applications')
+                ->select(
+                    'job_applications.id',
+                    'job_applications.full_name',
+                    'job_applications.current_designation',
+                    'job_applications.phone',
+                    'job_applications.email',
+                    'job_applications.total_exp',
+                    'job_applications.rel_exp',
+                    'job_applications.ctc',
+                    'job_applications.ectc',
+                    'job_applications.city_id',
+                    'job_applications.city',
+                    'job_applications.country',
+                    'job_applications.state',
+                    'job_applications.comment',
+                    'job_applications.np_id',
+                    'job_applications.serving_notice_period_mode',
+                    'job_applications.current_company',
+                    'job_applications.notice_comments',
+                    'job_applications.last_working_date',
+                    'job_applications.skills',
+                    'job_applications.job_id as jobId',
+                    'job_applications.company_id'
+                )
+                ->whereIn('job_applications.id', $cleanListing)
+                ->get();
+        }
 
-        // dd(count($applicationData));
+        $applicationDataCount = count($applicationData);
 
-        $template = '';
-        // dd($request->template);
         $template = (int) $request->template;
-        // $templateData = DB::table('th_email_template')->select('*')->where('th_email_template.status', 1)->where('th_email_template.e_temp_id', '=', $template)->first();
+        $templateData = null;
 
-        $params = [
-            'index' => ELASTIC_EMAIL_TEMPLATE,
-            'body' => [
-                'size' => 1,
-                'query' => [
-                    'bool' => [
-                        'must' => [
-                            ['term' => ['status' => 1]], // OK
-                            ['match' => ['e_temp_id' => $template]],    // TEXT field
+        try {
+            $params = [
+                'index' => ELASTIC_EMAIL_TEMPLATE,
+                'body' => [
+                    'size' => 1,
+                    'query' => [
+                        'bool' => [
+                            'must' => [
+                                ['term' => ['status' => 1]],
+                                ['match' => ['e_temp_id' => $template]],
+                            ],
                         ],
                     ],
                 ],
-            ],
-        ];
+            ];
+            $response = $this->elasticService->getClient()->search($params);
+            $templateData = isset($response['hits']['hits'][0]) ? (object) $response['hits']['hits'][0]['_source'] : null;
+        } catch (\Throwable $e) {
+            // Elasticsearch error fallback
+        }
 
-        $response = $this->elasticService->getClient()->search($params);
-        $templateData = isset($response['hits']['hits'][0]) ? (object) $response['hits']['hits'][0]['_source'] : null;
+        if (! $templateData) {
+            $templateData = DB::table('th_email_template')->where('status', 1)->where('e_temp_id', $template)->first();
+        }
+
+        if (! $templateData) {
+            return Reply::dataOnly([
+                'status' => 'error',
+                'message' => 'Email template not found',
+            ]);
+        }
 
         $company_id = auth()->user()->company_id;
         $company_name = DB::table('companies')->select('companies.company_name')->where('id', '=', $company_id)->first();
@@ -4689,20 +4752,29 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
         $tracker_html .= '<tbody class="text-gray-600 fw-bold">';
         $tracker_html .= '</tbody></table>';
 
-        $jobQuestionCount = DB::table('job_additional_detail')
-            ->select('*')
-            ->where('job_additional_detail.job_id', '=', $appData->jobId)
-            ->where('job_additional_detail.detail_value', '!=', null)
-            ->count();
+        $firstApp = $applicationData->first();
+        $activeJobId = $firstApp->jobId ?? ($firstApp->job_id ?? null);
+        $activeCompanyId = $firstApp->company_id ?? (auth()->user()->company_id ?? null);
 
-        $jobSkill = DB::table('job_metronics_skills')
-            ->select('job_metronics_skills.*')
-            ->where('job_metronics_skills.job_id', '=', $appData->jobId)
-            ->where('job_metronics_skills.company_id', '=', $appData->company_id)
-            ->orderBy('job_metronics_skills.id')
-            ->get();
+        $jobQuestionCount = 0;
+        $jobSkill = collect();
 
-        if (isset($request->WijobIdArr) && is_array($request->WijobIdArr)) {
+        if ($activeJobId) {
+            $jobQuestionCount = DB::table('job_additional_detail')
+                ->select('*')
+                ->where('job_additional_detail.job_id', '=', $activeJobId)
+                ->whereNotNull('job_additional_detail.detail_value')
+                ->count();
+
+            $jobSkill = DB::table('job_metronics_skills')
+                ->select('job_metronics_skills.*')
+                ->where('job_metronics_skills.job_id', '=', $activeJobId)
+                ->where('job_metronics_skills.company_id', '=', $activeCompanyId)
+                ->orderBy('job_metronics_skills.id')
+                ->get();
+        }
+
+        if (! empty($cleanWi)) {
 
             if ($applicationDataCount > 0) {
 
@@ -4742,8 +4814,9 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
 
                     foreach ($applicationData as $key => $appData) {
 
+                        $candJobId = $appData->jobId ?? ($appData->job_id ?? ($activeJobId ?? 0));
                         $skillShow = true;
-                        if (! DB::table('candidate_job_skill_exp')->where('candidate_job_skill_exp.job_id', '=', $appData->jobId)->where('candidate_job_skill_exp.candidate_id', '=', $appData->id)->exists()) {
+                        if (! DB::table('candidate_job_skill_exp')->where('candidate_job_skill_exp.job_id', '=', $candJobId)->where('candidate_job_skill_exp.candidate_id', '=', $appData->id)->exists()) {
                             $skillShow = false;
                         }
 
@@ -4848,16 +4921,17 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
 
                     foreach ($applicationData as $key => $appData) {
 
+                        $candJobId = $appData->jobId ?? ($appData->job_id ?? ($activeJobId ?? 0));
                         $job_additional_detail = DB::table('job_additional_detail')
                             ->select('*')
                         // ->where('job_additional_detail.company_id', '=', $company_id)
-                            ->where('job_additional_detail.job_id', '=', $appData->jobId)
+                            ->where('job_additional_detail.job_id', '=', $candJobId)
                             ->orderBy('job_additional_detail.id', 'ASC')
                             ->get();
                         $application_additional_detail = DB::table('application_additional_detail')
                             ->select('*')
                             ->where('application_additional_detail.application_id', '=', $appData->id)
-                            ->where('application_additional_detail.job_id', '=', $appData->jobId)
+                            ->where('application_additional_detail.job_id', '=', $candJobId)
                             ->where('application_additional_detail.application_detail_value', '!=', null)
                             ->orderBy('application_additional_detail.id', 'ASC')
                             ->get();
@@ -4972,19 +5046,27 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
         $whatlink = '';
         //  dd((int)$request->mailtype);
         if ((int) $request->mailtype == 1) {
-            $companyDetails = Company::join('users_profile', 'users_profile.company_id', 'companies.id')->select('users_profile.designation', 'companies.company_name')
-                ->where('users_profile.user_id', auth()->user()->id)->where('users_profile.company_id', auth()->user()->company_id)->first();
-            // dd($companyDetails->designation);
-            // if(count($applicationData) > 1){
-            // 	$subject = date('d M Y')." | Fresh Profiles";
-            // }else{
-            $subject = str_replace(['[{CURRENTDATE}]', '[{JOB_TITLE}]', '[{CLIENT_NAME_COMPANY_NAME}]', '<br>'], [date('d M Y'), @$job_title, $client_company_name, ''], $templateData->template_subject);
-            // }
+            $companyDetails = Company::leftJoin('users_profile', function ($join) {
+                $join->on('users_profile.company_id', '=', 'companies.id')
+                    ->where('users_profile.user_id', '=', auth()->user()->id);
+            })->select('users_profile.designation', 'companies.company_name')
+                ->where('companies.id', auth()->user()->company_id)->first();
 
-            //	dd($template_description);
+            $companyName = $companyDetails->company_name ?? (DB::table('companies')->where('id', auth()->user()->company_id)->value('company_name') ?? 'Hiring Team');
+            $userDesignation = $companyDetails->designation ?? 'Recruitment Team';
+            $userName = auth()->user()->name ?? 'HR';
+            $userEmail = auth()->user()->email ?? '';
+            $userMobile = auth()->user()->mobile ?? (auth()->user()->phone ?? '');
+
+            $subject = str_replace(
+                ['[{CURRENTDATE}]', '[{JOB_TITLE}]', '[{CLIENT_NAME_COMPANY_NAME}]', '<br>'],
+                [date('d M Y'), @$job_title, $client_company_name, ''],
+                $templateData->template_subject ?? ''
+            );
+
             $template_description = str_replace(
                 ['[{COMPANY_NAME}]', '[{HR_PHONE}]', '[{HR_NAME}]', '[HR_NAME]', '[{HR_EMAIL}]', '[{POSITION}]'],
-                [$companyDetails->company_name, auth()->user()->mobile, auth()->user()->name, auth()->user()->name, auth()->user()->email, $companyDetails->designation],
+                [$companyName, $userMobile, $userName, $userName, $userEmail, $userDesignation],
                 $template_description
             );
         }
@@ -5375,8 +5457,12 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
 
         }
 
-        // $view = view('service_company.cvtracker.fwd_resume', $this->data)->render();
-        return Reply::dataOnly(['status' => 'success', 'template_description' => $template_description, 'subject' => $subject]);
+        return Reply::dataOnly([
+            'status' => 'success',
+            'template_description' => $template_description,
+            'template_body' => $template_description,
+            'subject' => $subject,
+        ]);
 
     }
 

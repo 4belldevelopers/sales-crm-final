@@ -406,11 +406,11 @@ if(!empty($cc_email_count) && $cc_email_count > 0 && !empty($cc_email_data)){
         Template
       </div>
       <div class="mm-field-col">
-        <select name="template" id="test_template" class="mm-select">
+        <select name="template" id="test_template" class="mm-select" onchange="if(window.onTestTemplateChange) window.onTestTemplateChange(this);">
           <option value="">Select Email Template...</option>
           @if(!empty($templateData))
             @foreach($templateData as $tdata)
-              <option value="{{ $tdata->id }}">{{ $tdata->display_name ?? ($tdata->name ?? 'Template #' . $tdata->id) }}</option>
+              <option value="{{ $tdata->e_temp_id ?? ($tdata->id ?? '') }}">{{ $tdata->display_name ?? ($tdata->template_name ?? 'Template #' . ($tdata->e_temp_id ?? $tdata->id)) }}</option>
             @endforeach
           @endif
         </select>
@@ -980,14 +980,14 @@ window.onTestFwdAttachToggle = function (el) {
 };
 
 // Template change populates Subject and Editor
-$('#test_template').on('change', function() {
-    var template = $(this).val();
+window.onTestTemplateChange = function(selectEl) {
+    var template = $(selectEl).val();
     if (template > 0) {
         var id = template;
         var url = "{{ route('service_company.cvtracker.email_template', ':id') }}";
         url = url.replace(':id', id);
         var token = "{{ csrf_token() }}";
-        var to_email = $('#test_to_email').val() || 'info@jero.co.in';
+        var to_email = ($('#test_to_email').val() || '').trim() || 'info@jero.co.in';
 
         var selectedApplicantListing = [];
         var jqueryarray = @json($applicationData ?? []);
@@ -996,8 +996,11 @@ $('#test_template').on('change', function() {
         });
         var WijobIdArr = [];
         $('.chk_list_item:checked').each(function() {
-            WijobIdArr.push($(this).attr('data-wiseid'));
+            var wid = $(this).attr('data-wiseid');
+            if (wid) WijobIdArr.push(wid);
         });
+
+        $('#test_subject').attr('placeholder', 'Loading template...');
 
         $.ajax({
             type: 'POST',
@@ -1013,16 +1016,33 @@ $('#test_template').on('change', function() {
             },
             success: function(response) {
                 if (response.status == "success") {
-                    $('#test_subject').val(response.subject);
+                    var desc = response.template_description || response.template_body || '';
+                    $('#test_subject').val(response.subject || '');
                     if (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances && CKEDITOR.instances['test_editor1']) {
-                        CKEDITOR.instances['test_editor1'].setData(response.template_body);
-                    } else {
-                        $('#test_editor1').val(response.template_body);
+                        try {
+                            CKEDITOR.instances['test_editor1'].setData(desc);
+                        } catch(e) {}
                     }
+                    $('#test_editor1').val(desc);
+                } else if (response.message) {
+                    console.warn('Template load warning:', response.message);
                 }
+            },
+            error: function(xhr) {
+                console.error('Failed to load email template:', xhr);
             }
         });
+    } else {
+        if (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances && CKEDITOR.instances['test_editor1']) {
+            try { CKEDITOR.instances['test_editor1'].setData(''); } catch(e) {}
+        }
+        $('#test_editor1').val('');
+        $('#test_subject').val('');
     }
+};
+
+$(document).off('change', '#test_template').on('change', '#test_template', function() {
+    window.onTestTemplateChange(this);
 });
 
 // Submit click handler

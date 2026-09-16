@@ -859,11 +859,11 @@ if($cc_email_count > 0){
         Template
       </div>
       <div class="mm-field-col">
-        <select name="template" id="template" class="mm-select">
+        <select name="template" id="template" class="mm-select" onchange="if(window.onFwdTemplateChange) window.onFwdTemplateChange(this);">
           <option value="">Select Email Template...</option>
           @if(!empty($templateData))
             @foreach($templateData as $tdata)
-              <option value="{{ $tdata->id }}">{{ $tdata->display_name }}</option>
+              <option value="{{ $tdata->e_temp_id ?? ($tdata->id ?? '') }}">{{ $tdata->display_name ?? ($tdata->template_name ?? 'Template #' . ($tdata->e_temp_id ?? $tdata->id)) }}</option>
             @endforeach
           @endif
         </select>
@@ -1314,64 +1314,68 @@ $('#ck-editor__editable_inline').html("testing");
         
 
 
-$('#template').change(function(){
+window.onFwdTemplateChange = function(selectEl) {
+    var template = $(selectEl).val();
+    if (template > 0) {
+        var id = template;
+        var url = "{{ route('service_company.cvtracker.email_template', ':id') }}";
+        url = url.replace(':id', id);
+        var token = "{{ csrf_token() }}";
+        var to_email = ($('#to_email').val() || '').trim() || 'info@jero.co.in';
+        var mailtype = 1;
 
-	
-		var template	=	$('#template').val();
-		if(template > 0)
-		{
-						var id        	=	$('#template').val();
-						var url       	=	"{{ route('service_company.cvtracker.email_template',':id') }}";
-						url         	=	url.replace(':id', id);
-						var baseurl     =	"{{ asset('assets/images/Loading2.gif') }}"; 
-						var token       =	"{{ csrf_token() }}";
-						var to_email = $('#to_email').val()
-						var mailtype = 1;
-						if(to_email==''){
-						    to_email = 'info@jero.co.in';
-						}
-						
-						var selectedApplicantListing	=	[];
-						var jqueryarray 				=	<?php echo json_encode($applicationData); ?>;
-						jqueryarray.map((mval, mid, marr)=>{
-							selectedApplicantListing.push( mval.id);	
-						});
-						var WijobIdArr = [];
-						$('.chk_list_item:checked').each(function() {
-							var WiidjobId = $(this).attr('data-wiseid');
-							WijobIdArr.push(WiidjobId);
-						});
-	   
-						$.ajax({
-										type		: 'POST',
-										url			: url,
-										data		: {'_token': token, '_method': 'POST', 'template' : template, 'selectedApplicantListing': selectedApplicantListing,'to_email':to_email,'mailtype':mailtype,'WijobIdArr':WijobIdArr},
-										beforeSend	: function() {
-																	//$('#childStatus_'+current_application_id).html('<img src="'+baseurl+'" height="35px" width="100%">');
-										},
-										success 	: function (response) {
-																				
-																				
-																				if (response.status == "success") {
-																							if (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances && CKEDITOR.instances.editor1) {
-																								try { CKEDITOR.instances.editor1.setData(response.template_description); } catch(e) {}
-																							}
-																							setTimeout(() => {
-																						$('#editor1').val(response.template_description);
-																						$('#subject').val(response.subject);
-																							}, 500);
-																				}
-											}
-               				}); 
-							
-		}
-		else
-		{
-			$('#editor').html('Choose email template');	
-		} 
-		
-		 
+        var selectedApplicantListing = [];
+        var jqueryarray = @json($applicationData ?? []);
+        jqueryarray.forEach(function(mval) {
+            selectedApplicantListing.push(mval.id);
+        });
+        var WijobIdArr = [];
+        $('.chk_list_item:checked').each(function() {
+            var WiidjobId = $(this).attr('data-wiseid');
+            if (WiidjobId) WijobIdArr.push(WiidjobId);
+        });
 
+        $('#subject').attr('placeholder', 'Loading template...');
+
+        $.ajax({
+            type: 'POST',
+            url: url,
+            data: {
+                '_token': token,
+                '_method': 'POST',
+                'template': template,
+                'selectedApplicantListing': selectedApplicantListing,
+                'to_email': to_email,
+                'mailtype': mailtype,
+                'WijobIdArr': WijobIdArr
+            },
+            success: function(response) {
+                if (response.status == "success") {
+                    var desc = response.template_description || response.template_body || '';
+                    $('#subject').val(response.subject || '');
+                    if (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances && CKEDITOR.instances.editor1) {
+                        try { CKEDITOR.instances.editor1.setData(desc); } catch(e) {}
+                    }
+                    $('#editor1').val(desc);
+                } else if (response.message) {
+                    console.warn('Template load warning:', response.message);
+                }
+            },
+            error: function(xhr) {
+                console.error('Failed to load email template:', xhr);
+            }
+        });
+    } else {
+        if (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances && CKEDITOR.instances.editor1) {
+            try { CKEDITOR.instances.editor1.setData(''); } catch(e) {}
+        }
+        $('#editor1').val('');
+        $('#subject').val('');
+    }
+};
+
+$(document).off('change', '#template').on('change', '#template', function() {
+    window.onFwdTemplateChange(this);
 });
 </script>
 
